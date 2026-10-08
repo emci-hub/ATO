@@ -2,7 +2,9 @@
 -- The museum of legends (Legends tab rebuilt, emci approved 2026-10-08).
 --
 -- Everything here copies a path that is already live and tested:
---   1. legend_museum        per-account saved rows, own-select RLS, written only
+--   1. legend_museum        per-account saved rows (one per legend + chapter:
+--                           0 = first meeting, 1+ = a new story about a legend
+--                           already met), own-select RLS, written only
 --                           through a security-definer RPC (wave58
 --                           legend_generations / wave69 daily_insights).
 --   2. claim_legend_figure_story  daily cap in app_config, counted in
@@ -12,7 +14,7 @@
 --   3. legend_angle_counts  anonymous totals across accounts (the
 --                           daily_pick_split pattern, wave82, approved by emci as
 --                           "counts only"): per (angle, moment) of ONE legend,
---                           never who; nothing at all under 5 rows for that legend.
+--                           never who; nothing at all under 5 people for that legend.
 --   4. legend_circle_friends  names of connected Circle peers who also met this
 --                           legend (the peer_profile / peer_checks membership
 --                           check); only if the caller has met it too; never a
@@ -36,15 +38,16 @@ create table public.legend_museum (
   angle_id text not null check (angle_id ~ '^a[1-6]$'),
   moment_id text not null check (moment_id ~ '^m[1-3]$'),
   story jsonb not null check (jsonb_typeof(story) = 'object' and octet_length(story::text) <= 6000),
+  chapter int not null default 0 check (chapter between 0 and 20),
   met_on date not null,
   created_at timestamptz not null default now(),
-  unique (user_id, legend_id)
+  unique (user_id, legend_id, chapter)
 );
 
 create index legend_museum_legend_idx on public.legend_museum (legend_id, angle_id, moment_id);
 
 comment on table public.legend_museum is
-  'Legends the person has met (museum of legends, 2026-10-08). One row per legend; story = the saved card json (the "you" part). Ids point at the hand-written roster in src/lib/legend-figures (permanent).';
+  'Legends the person has met (museum of legends, 2026-10-08). One row per legend + chapter (0 = first meeting, 1+ = a later story told from a new angle); story = the saved card json (the "you" part). Ids point at the hand-written roster in src/lib/legend-figures (permanent).';
 
 alter table public.legend_museum enable row level security;
 
@@ -60,7 +63,7 @@ alter table public.app_config
     check (legend_figure_daily_cap >= 0);
 
 comment on column public.app_config.legend_figure_daily_cap is
-  'Per-user daily cap on legend stories (one AI call each): the day''s pick plus the one bonus set a newly settled trait unlocks. Claimed before the vendor call.';
+  'Per-user daily cap on legend stories (one AI call each): the day''s reveal plus the one bonus reveal a newly settled trait unlocks. Claimed before the vendor call.';
 
 create or replace function public.claim_legend_figure_story()
 returns jsonb
@@ -114,9 +117,10 @@ grant execute on function public.claim_legend_figure_story() to authenticated;
 comment on function public.claim_legend_figure_story() is
   'Claim one legend story (legend_figure_daily_cap/day, default 2). Called once per story, BEFORE generateText/ai-generate.';
 
--- Save one met legend (first meeting, or the rare repeat once every legend is met).
+-- Save one met legend (chapter 0) or a later chapter of one already met.
 create or replace function public.save_legend_figure_story(
   p_legend_id text,
+  p_chapter int,
   p_angle_id text,
   p_moment_id text,
   p_story jsonb,
@@ -140,7 +144,12 @@ begin
   -- so nobody can fill the museum at once to read which legends Circle friends met.
   -- One save at a time per account, so two quick saves can't both slip past the limit.
   perform pg_advisory_xact_lock(hashtext(uid::text || ':legend_museum'));
-  if not exists (select 1 from public.legend_museum where user_id = uid and legend_id = p_legend_id) then
+  if p_chapter is null or p_chapter < 0 or p_chapter > 20 then
+    raise exception 'invalid chapter' using errcode = '22023';
+  end if;
+  if not exists (
+    select 1 from public.legend_museum where user_id = uid and legend_id = p_legend_id and chapter = p_chapter
+  ) then
     select legend_figure_daily_cap into strict cap from public.app_config where id = 1;
     -- Counted on the person's own day (met_on, which must be within a day of now).
     select count(*) into added_today from public.legend_museum
@@ -164,21 +173,21 @@ begin
     raise exception 'met_on must be today' using errcode = '22023';
   end if;
 
-  insert into public.legend_museum (user_id, legend_id, angle_id, moment_id, story, met_on)
-  values (uid, p_legend_id, p_angle_id, p_moment_id, p_story, p_met_on)
-  on conflict (user_id, legend_id) do update
+  insert into public.legend_museum (user_id, legend_id, chapter, angle_id, moment_id, story, met_on)
+  values (uid, p_legend_id, p_chapter, p_angle_id, p_moment_id, p_story, p_met_on)
+  on conflict (user_id, legend_id, chapter) do update
     set angle_id = excluded.angle_id,
         moment_id = excluded.moment_id,
         story = excluded.story
-        -- met_on is kept: the first meeting's day counts toward the daily limit.
+        -- met_on is kept: the first save's day counts toward the daily limit.
   returning id into v_id;
 
   return v_id;
 end;
 $$;
 
-revoke all on function public.save_legend_figure_story(text, text, text, jsonb, date) from public, anon;
-grant execute on function public.save_legend_figure_story(text, text, text, jsonb, date) to authenticated;
+revoke all on function public.save_legend_figure_story(text, int, text, text, jsonb, date) from public, anon;
+grant execute on function public.save_legend_figure_story(text, int, text, text, jsonb, date) to authenticated;
 
 -- 3. Anonymous "how often told" ------------------------------------------------------
 
@@ -192,8 +201,8 @@ begin
   if auth.uid() is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
-  -- Nothing under 5 meetings, so a small invite-only group can never be read back.
-  if (select count(*) from public.legend_museum lm where lm.legend_id = p_legend_id) < 5 then
+  -- Nothing under 5 people, so a small invite-only group can never be read back.
+  if (select count(distinct lm.user_id) from public.legend_museum lm where lm.legend_id = p_legend_id) < 5 then
     return;
   end if;
   return query
@@ -215,10 +224,14 @@ language sql
 security definer
 set search_path = public
 as $$
+  -- One row per friend (exists, not a join), however many chapters they have heard.
   select m.name
   from public.me m
-  join public.legend_museum lm on lm.user_id = m.id and lm.legend_id = p_legend_id
   where m.id <> auth.uid()
+    and exists (
+      select 1 from public.legend_museum lm
+      where lm.user_id = m.id and lm.legend_id = p_legend_id
+    )
     and exists (
       select 1 from public.legend_museum mine
       where mine.user_id = auth.uid() and mine.legend_id = p_legend_id

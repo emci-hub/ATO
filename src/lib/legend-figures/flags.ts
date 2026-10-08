@@ -10,8 +10,10 @@ export const LEGEND_FIGURES_COPY_REVIEWED = false;
 
 /**
  * `pilot` — the first 26 legends: every one of the 32 trait sides needs at
- * least one visible legend. `full` — the ~200 roster: at least 8 per side,
- * plus the spread rules. The check reads this.
+ * least one visible legend. `halls` — the 12 halls of 10+ (120 legends,
+ * 2026-10-08): at least 8 per side, every hall spread over many sides, no
+ * region over 45%. `full` — all of that plus 6 regions with 8+ legends each
+ * (not met yet: Africa and Oceania are thin). The check reads this.
  */
-export type LegendRosterStage = 'pilot' | 'full';
-export const LEGEND_ROSTER_STAGE: LegendRosterStage = 'pilot';
+export type LegendRosterStage = 'pilot' | 'halls' | 'full';
+export const LEGEND_ROSTER_STAGE: LegendRosterStage = 'halls';

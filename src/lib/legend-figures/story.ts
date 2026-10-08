@@ -115,6 +115,7 @@ export function buildLegendPrompt(input: {
 }): string {
   const { legend, angle, pairs } = input;
   const isStory = legend.kind === 'story';
+  const isAnimal = legend.kind === 'animal';
   const facts = shownFacts(legend).map((f) => `- ${f.text}`).join('\n');
   const moments = shownMoments(legend)
     .map((m) => `- ${m.id}${m.id === input.focusMomentId ? ' (lead with this one)' : ''}: ${m.text}`)
@@ -129,11 +130,16 @@ export function buildLegendPrompt(input: {
       return `- axis "${p.axis}": the reader leans ${pole} (sounds like: ${sound}). Pair it with ${link}`;
     })
     .join('\n');
-  return `You write the personal part of a museum card that matches a reader with a ${isStory ? 'legend from myth or folklore' : 'real person from history'}.
+  const kindLine = isStory
+    ? 'This is a story, not history. Talk about it as "in the story" / "the tale"; never claim it really happened.'
+    : isAnimal
+      ? 'A real animal. Never give it human thoughts or words it could not have had; describe what it did.'
+      : 'Real person.';
+  return `You write the personal part of a museum card that matches a reader with a ${isStory ? 'legend from myth or folklore' : isAnimal ? 'real animal from history' : 'real person from history'}.
 
 THE LEGEND (the ONLY facts you may use — nothing else about them, ever):
 Name: ${legend.name}
-${isStory ? 'This is a story, not history. Talk about it as "in the story" / "the tale"; never claim it really happened.' : 'Real person.'}
+${kindLine}
 Who they were: ${legend.whoTheyWere}
 Famous for: ${legend.famousFor}
 Facts:

@@ -1,15 +1,16 @@
 /**
  * Museum of legends — the cards (2026-10-08).
  *
- *   LegendLabel      — a museum label in today's three (no AI, nothing spent)
+ *   LegendFrame      — one "???" frame in a hall: no clue, no name (no AI, nothing
+ *                      spent until it is revealed)
  *   LegendStoryCard  — the full card: hand-written label + facts with sources,
  *                      then the "you" part (AI badge only when the model wrote it)
  *   LegendShareSheet — preview, then share the 9:16 image (label + essence only,
  *                      never the story) — the same on-screen Modal capture as
  *                      share-card.tsx, so the card is visible when captured
  *
- * Pure views: no fetches and no model calls here. "Meet them" is a callback
- * the screen owns (`check:no-auto-ai` lists this file).
+ * Pure views: no fetches and no model calls here. "Reveal" is a callback the
+ * screen owns (`check:no-auto-ai` lists this file).
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRef, useState, type ComponentProps } from 'react';
@@ -20,42 +21,51 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AXIS_POLE_NAME } from '@/lib/axis-poles';
-import type { LegendOffer, LegendSlot } from '@/lib/legend-figures/pick';
 import { shownFacts, shownMoments, type LegendStory } from '@/lib/legend-figures/story';
+import {
+  AI_LEGEND_PLACEHOLDER,
+  REAL_ANIMAL,
+  STORY_NOT_HISTORY,
+  frameA11yLabel,
+  legendTitle,
+} from '@/lib/legend-figures/labels';
 import { HALL_LABEL, type LegendFigure, type LegendHall } from '@/lib/legend-figures/types';
 import { SHARE_FAILED_COPY, SHARE_UNAVAILABLE_COPY, shareViewAsImage } from '@/lib/share';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 export const HALL_ICON: Record<LegendHall, IconName> = {
-  history: 'book-open-variant',
   science: 'flask-outline',
   art: 'palette-outline',
+  music: 'music-note',
+  words: 'book-open-page-variant',
+  screen: 'drama-masks',
   explorers: 'compass-outline',
   sport: 'run-fast',
+  healers: 'medical-bag',
+  changemakers: 'hand-heart',
   myth: 'castle',
   ghosts: 'ghost-outline',
+  animals: 'paw',
 };
 
 /** One fixed colour per hall (mid-tones that read on light and dark surfaces). */
 export const HALL_COLOR: Record<LegendHall, string> = {
-  history: '#BA7517',
   science: '#378ADD',
   art: '#7F77DD',
+  music: '#C2549B',
+  words: '#BA7517',
+  screen: '#D4537E',
   explorers: '#1D9E75',
   sport: '#D85A30',
-  myth: '#D4537E',
+  healers: '#2E9E9E',
+  changemakers: '#C9A227',
+  myth: '#9A6FD0',
   ghosts: '#888780',
+  animals: '#7A9A3A',
 };
 
-export const SLOT_LABEL: Record<LegendSlot, string> = {
-  close: 'Close match',
-  surprise: 'A surprise',
-  other_side: 'Your other side',
-  on_this_day: 'On this day',
-};
-
-export const STORY_NOT_HISTORY = 'Story, not history';
+export { AI_LEGEND_PLACEHOLDER, REAL_ANIMAL, STORY_NOT_HISTORY, frameA11yLabel, legendTitle };
 
 function Chip({ label, color }: { label: string; color?: string }) {
   const theme = useTheme();
@@ -87,12 +97,13 @@ function LabelHead({ legend }: { legend: LegendFigure }) {
       <View style={styles.chips}>
         <Chip label={HALL_LABEL[legend.hall]} color={HALL_COLOR[legend.hall]} />
         {legend.kind === 'story' ? <Chip label={STORY_NOT_HISTORY} /> : null}
+        {legend.kind === 'animal' ? <Chip label={REAL_ANIMAL} /> : null}
         <Chip label={`${legend.place} · ${legend.era}`} />
       </View>
       <View style={styles.nameRow}>
         <HallBadge hall={legend.hall} />
         <View style={styles.flex}>
-          <ThemedText type="subheading">{legend.name}</ThemedText>
+          <ThemedText type="subheading">{legendTitle(legend)}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             {legend.essence}
           </ThemedText>
@@ -102,48 +113,69 @@ function LabelHead({ legend }: { legend: LegendFigure }) {
   );
 }
 
-/** A label in today's three. */
-export function LegendLabel({
-  legend,
-  offer,
-  teaser,
+/** One "???" frame in a hall. No name, no clue: the legend shows on reveal. */
+export function LegendFrame({
+  hall,
+  index,
+  total,
+  chapter,
   state,
-  onMeet,
+  onReveal,
 }: {
-  legend: LegendFigure;
-  offer: LegendOffer;
-  teaser: string;
-  /** ready = "Meet them" live; loading = this one is being written; done = a pick was made today. */
-  state: 'ready' | 'loading' | 'done';
-  onMeet: () => void;
+  hall: LegendHall;
+  index: number;
+  total: number;
+  /** The frame hides a new chapter of a legend already met. */
+  chapter: boolean;
+  /** ready = tap to reveal; loading = this one is being written; spent = no
+   * reveals left today. */
+  state: 'ready' | 'loading' | 'spent';
+  onReveal: () => void;
 }) {
   const theme = useTheme();
-  const slot = offer.hidden ? 'Hidden legend' : SLOT_LABEL[offer.slot];
+  const color = HALL_COLOR[hall];
+  const disabled = state !== 'ready';
   return (
-    <View style={[styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }, state === 'done' && styles.dim]}>
-      <ThemedText type="smallBold" style={{ color: HALL_COLOR[legend.hall] }}>
-        {slot}
-      </ThemedText>
-      <LabelHead legend={legend} />
-      <ThemedText type="small" style={styles.teaser}>
-        {teaser}
-      </ThemedText>
-      {state === 'done' ? null : (
-        <Pressable
-          onPress={onMeet}
-          disabled={state === 'loading'}
-          accessibilityRole="button"
-          accessibilityLabel={`Meet ${legend.name}`}
-          style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
-          {state === 'loading' ? (
-            <ActivityIndicator color={theme.onAccent} />
-          ) : (
-            <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-              Meet them
-            </ThemedText>
-          )}
-        </Pressable>
+    <Pressable
+      onPress={onReveal}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={frameA11yLabel(index, total, chapter)}
+      accessibilityState={{ disabled, busy: state === 'loading' }}
+      style={({ pressed }) => [
+        styles.frame,
+        { borderColor: color, backgroundColor: `${color}12` },
+        state === 'spent' && styles.dim,
+        pressed && styles.pressed,
+      ]}>
+      {state === 'loading' ? (
+        <ActivityIndicator color={color} />
+      ) : (
+        <ThemedText type="subtitle" style={{ color }}>
+          ???
+        </ThemedText>
       )}
+      <ThemedText type="small" themeColor="textSecondary" style={styles.frameCaption}>
+        {chapter ? 'A new chapter' : 'A hidden legend'}
+      </ThemedText>
+    </Pressable>
+  );
+}
+
+/** The disabled "find a new legend with AI" placeholder. Pre-launch builds
+ * only, always last in a hall, never calls anything. */
+export function LegendAiPlaceholder() {
+  const theme = useTheme();
+  return (
+    <View
+      accessibilityRole="button"
+      accessibilityLabel={`${AI_LEGEND_PLACEHOLDER}. Not available yet.`}
+      accessibilityState={{ disabled: true }}
+      style={[styles.secondary, styles.dim, { borderColor: theme.border, borderStyle: 'dashed' }]}>
+      <MaterialCommunityIcons name="robot-outline" size={16} color={theme.textSecondary} />
+      <ThemedText type="small" themeColor="textSecondary">
+        {AI_LEGEND_PLACEHOLDER}
+      </ThemedText>
     </View>
   );
 }
@@ -162,6 +194,9 @@ export function LegendStoryCard({
   friends,
   aiOff,
   onShare,
+  notes = [],
+  matchedOn = null,
+  chapters = null,
 }: {
   legend: LegendFigure;
   story: LegendStory;
@@ -169,6 +204,13 @@ export function LegendStoryCard({
   /** AI was off for this card, so the "you" part is the museum's own words. */
   aiOff: boolean;
   onShare: () => void;
+  /** Shown only after a reveal: "Born on this day", "Hidden legend found",
+   * "Another side of Leonardo da Vinci". */
+  notes?: readonly string[];
+  /** "Matched on: Adventurous · Learning · from your Curiosity category". */
+  matchedOn?: string | null;
+  /** More than one chapter: the tabs to switch between them. */
+  chapters?: { labels: readonly string[]; selected: number; onSelect: (index: number) => void } | null;
 }) {
   const theme = useTheme();
   const moments = shownMoments(legend);
@@ -176,12 +218,42 @@ export function LegendStoryCard({
   const circle = circleLine(friends, legend.name);
   return (
     <View style={[styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+      {notes.map((note) => (
+        <ThemedText key={note} type="smallBold" style={{ color: HALL_COLOR[legend.hall] }}>
+          {note}
+        </ThemedText>
+      ))}
       <LabelHead legend={legend} />
+      {matchedOn ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {matchedOn}
+        </ThemedText>
+      ) : null}
 
       <Section title="Who they were">{legend.whoTheyWere}</Section>
       <Section title={legend.kind === 'story' ? 'Known for, in the story' : 'Famous for'}>{legend.famousFor}</Section>
 
       <View style={[styles.rule, { borderColor: theme.border }]} />
+      {chapters && chapters.labels.length > 1 ? (
+        <View style={styles.chips}>
+          {chapters.labels.map((label, index) => (
+            <Pressable
+              key={label}
+              onPress={() => chapters.onSelect(index)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: index === chapters.selected }}
+              style={({ pressed }) => [
+                styles.chip,
+                index === chapters.selected
+                  ? { backgroundColor: `${HALL_COLOR[legend.hall]}22`, borderColor: HALL_COLOR[legend.hall] }
+                  : { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="small">{label}</ThemedText>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
       <View style={styles.sectionHead}>
         <ThemedText type="small" themeColor="textSecondary">
           Where you match
@@ -254,7 +326,7 @@ export function LegendStoryCard({
       <Pressable
         onPress={onShare}
         accessibilityRole="button"
-        accessibilityLabel={`Share ${legend.name}`}
+        accessibilityLabel={`Share ${legendTitle(legend)}`}
         style={({ pressed }) => [styles.secondary, { borderColor: theme.controlBorder ?? theme.border }, pressed && styles.pressed]}>
         <MaterialCommunityIcons name="share-variant-outline" size={16} color={theme.text} />
         <ThemedText type="smallBold">Share this legend</ThemedText>
@@ -310,11 +382,15 @@ export function LegendShareSheet({
           </View>
           <HallBadge hall={legend.hall} size={96} />
           <ThemedText type="subtitle" style={styles.shareName}>
-            {legend.name}
+            {legendTitle(legend)}
           </ThemedText>
           <ThemedText style={styles.shareEssence}>{legend.essence}</ThemedText>
           <ThemedText type="small" style={styles.shareMeta}>
-            {legend.kind === 'story' ? `${STORY_NOT_HISTORY} · ${legend.place}` : `${legend.place} · ${legend.era}`}
+            {legend.kind === 'story'
+              ? `${STORY_NOT_HISTORY} · ${legend.place}`
+              : legend.kind === 'animal'
+                ? `${REAL_ANIMAL} · ${legend.place} · ${legend.era}`
+                : `${legend.place} · ${legend.era}`}
           </ThemedText>
           <ThemedText type="smallBold" style={styles.shareFoot}>
             A legend from my museum on ATO
@@ -360,14 +436,18 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   badge: { alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
-  teaser: { fontStyle: 'italic' },
-  button: {
-    minHeight: 44,
-    borderRadius: 10,
+  frame: {
+    flex: 1,
+    minHeight: 120,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: Spacing.one,
+    padding: Spacing.two,
+    gap: 4,
   },
+  frameCaption: { textAlign: 'center' },
   secondary: {
     minHeight: 44,
     borderRadius: 10,

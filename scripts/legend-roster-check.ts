@@ -4,19 +4,23 @@
  *
  * Pins, like check:question-bank does for the fixed questions:
  * - the roster: permanent ids (roster-ids.json, append-only — an id can never
- *   vanish, be renamed or be reused), the real/story rules (real people died
- *   2005 or earlier; myths labelled), a source URL + check phrases on every
- *   fact, moment and birthday, sizes (3–5 facts, 2–3 moments, 4–6 angles, 3–5
- *   tags), voice, and coverage: every one of the 32 trait sides has at least
- *   1 visible legend in the pilot and at least 8 in the full roster;
- * - the picker: locked on a flat profile, three different legends, stable,
- *   no repeats, hidden legends only when unlocked, On this day, the bonus set,
- *   least-told angle;
+ *   vanish, be renamed or be reused), the real/animal/story rules (people and
+ *   animals died 2005 or earlier; myths labelled; no office-holders), roles
+ *   (Leonardo as an artist / as an inventor), a source URL + check phrases on
+ *   every fact, moment and birthday, sizes (3–5 facts, 2–3 moments, 4–6 angles,
+ *   3–5 tags), voice, and coverage: 12 halls of at least 10, every one of the 32
+ *   trait sides on at least 8 visible legends in the full roster, every hall
+ *   spread over many sides (low ones too);
+ * - the hall walk: locked on a flat profile, three "???" frames per hall,
+ *   stable per person and day, refilled in place, no repeats, hidden legends
+ *   only when unlocked, On this day first, chapters once a hall is met, one
+ *   reveal a day plus the bonus, least-told angle, the "Matched on" line;
  * - the AI story: good answers pass; any number, name or quote not in the
  *   entry, an unknown axis or moment, "you are", "!" or a myth told as history
  *   is rejected; the fallback uses only hand-written words;
- * - the wiring: no model call outside "Meet them", wave89's privacy rules,
- *   the dev tool inside the tools branch, the review doc and flag.
+ * - the wiring: no model call outside a reveal tap, the AI placeholder never
+ *   calls anything and shows pre-launch only, wave89's privacy and chapter
+ *   rules, the dev tool inside the tools branch, the review doc and flag.
  *
  * Facts are checked against their sources by hand with network
  * (`npx tsx scripts/legend-roster-verify.ts <cache-dir>`), never in the gate.
@@ -27,12 +31,21 @@ import { resolve } from 'node:path';
 
 import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
 import { LEGEND_FIGURES_COPY_REVIEWED, LEGEND_ROSTER_STAGE } from '../src/lib/legend-figures/flags';
+import { AI_LEGEND_PLACEHOLDER, frameA11yLabel } from '../src/lib/legend-figures/labels';
 import {
+  LEGEND_FRAMES,
   LEGEND_MIN_CLEAR_LEANS,
+  chapterKey,
+  chapterOrder,
   chooseAngle,
+  hallComplete,
+  hallFrames,
+  hallOrder,
   hasNewSettledLean,
   legendLocked,
-  pickLegendSet,
+  matchedOnLine,
+  parseFrameKey,
+  revealsLeft,
   scoreLegend,
 } from '../src/lib/legend-figures/pick';
 import { LEGEND_ROSTER, legendById } from '../src/lib/legend-figures/roster';
@@ -67,6 +80,8 @@ function words(text: string): number {
 }
 
 const full = LEGEND_ROSTER_STAGE === 'full';
+/** 'halls' and 'full' share the trait and hall bars; only 'full' adds the region bar. */
+const grown = LEGEND_ROSTER_STAGE !== 'pilot';
 
 /* ------------------------------------------------------------------ ids --- */
 
@@ -84,6 +99,7 @@ ok(`${ids.length} legends; ids unique, pinned in roster-ids.json, never renamed 
 
 /* --------------------------------------------------------------- shape --- */
 
+const OFFICE = /\b(president|prime minister|head of state|general|admiral|commander|pope|prophet|emperor|bishop|imam|rabbi|saint)\b/i;
 const BANNED_STORED = [/!/, /\balways\b/i, /\p{Extended_Pictographic}/u, /\byou are\b/i, /\bjourney\b/i, /\bself-care\b/i, /\bmanifest\b/i, /\bconsider\b/i];
 function storedClean(text: string, where: string) {
   assert.ok(text.trim().length > 0, `${where}: empty`);
@@ -98,9 +114,22 @@ for (const l of LEGEND_ROSTER) {
   if (l.kind === 'real') {
     assert.ok(typeof l.died === 'number' && l.died <= 2005, `${at}: a real legend died 2005 or earlier`);
     assert.notEqual(l.gender, 'none', `${at}: a real person has a gender for the spread rule`);
+    // Vetting: no heads of state, military commanders or religious leaders.
+    assert.doesNotMatch(`${l.field} ${l.whoTheyWere}`, OFFICE, `${at}: no office-holders, commanders or religious leaders`);
+  } else if (l.kind === 'animal') {
+    assert.equal(l.hall, 'animals', `${at}: real animals live in the Animal legends hall`);
+    assert.ok(typeof l.died === 'number' && l.died <= 2005, `${at}: a real animal died 2005 or earlier`);
+    assert.equal(l.gender, 'none', `${at}: animals take no gender`);
   } else {
     assert.equal(l.died, undefined, `${at}: a story legend has no death year`);
     assert.equal(l.birthday, undefined, `${at}: a story legend has no birthday`);
+  }
+  if (l.role || l.roleOf) {
+    assert.ok(l.role && l.roleOf, `${at}: role and roleOf go together`);
+    assert.match(l.role, /^as an? /, `${at}: a role reads "as an artist"`);
+    const sides = LEGEND_ROSTER.filter((o) => o.roleOf === l.roleOf);
+    assert.ok(sides.length >= 2, `${at}: a role has another side`);
+    assert.equal(new Set(sides.map((o) => o.hall)).size, sides.length, `${at}: each side of ${l.roleOf} is in a different hall`);
   }
   assert.ok(l.facts.length >= 3 && l.facts.length <= 5, `${at}: 3–5 facts`);
   assert.ok(l.moments.length >= 2 && l.moments.length <= 3, `${at}: 2–3 moments`);
@@ -126,6 +155,7 @@ for (const l of LEGEND_ROSTER) {
     assert.match(a.teaser, /\?$/, `${at} ${a.id}: a teaser is a question`);
     assert.ok(words(a.teaser) <= 24, `${at} ${a.id}: teaser ≤ 24 words`);
     assert.ok(words(a.meaning) <= 30, `${at} ${a.id}: meaning ≤ 30 words`);
+    storedClean(a.name, `${at} ${a.id} name`);
     storedClean(a.teaser, `${at} ${a.id} teaser`);
     storedClean(a.meaning, `${at} ${a.id} meaning`);
   }
@@ -144,11 +174,11 @@ for (const l of LEGEND_ROSTER) {
     }
   }
 }
-ok('every legend: real ≤ 2005 / story labelled, sources on every fact, sizes, voice, hidden rules');
+ok('every legend: people and animals ≤ 2005, no office-holders, myths labelled, roles paired, sources on every fact, sizes, voice, hidden rules');
 
 /* ------------------------------------------------------------ coverage --- */
 
-const minPerPole = full ? 8 : 1;
+const minPerPole = grown ? 8 : 1;
 const visible = LEGEND_ROSTER.filter((l) => !l.hidden);
 const thin: string[] = [];
 for (const axis of TRAIT_AXES) {
@@ -158,22 +188,34 @@ for (const axis of TRAIT_AXES) {
   }
 }
 assert.deepEqual(thin, [], `every trait side needs ≥ ${minPerPole} visible legends: ${thin.join('; ')}`);
+const MIN_HALL = grown ? 10 : 3;
+const MIN_HALL_SIDES = 15;
+const MIN_HALL_LOW_SIDES = 4;
 for (const hall of LEGEND_HALLS) {
-  assert.ok(LEGEND_ROSTER.filter((l) => l.hall === hall).length >= 3, `${hall}: at least 3 legends`);
+  const inHall = LEGEND_ROSTER.filter((l) => l.hall === hall);
+  assert.ok(inHall.length >= MIN_HALL, `${hall}: at least ${MIN_HALL} legends (${inHall.length})`);
+  if (grown) {
+    const sides = new Set(inHall.flatMap((l) => l.tags.map((tg) => `${tg.axis}:${tg.lean}`)));
+    const lows = [...sides].filter((s) => s.endsWith(':low')).length;
+    assert.ok(sides.size >= MIN_HALL_SIDES, `${hall}: legends spread over ≥ ${MIN_HALL_SIDES} trait sides (${sides.size})`);
+    assert.ok(lows >= MIN_HALL_LOW_SIDES, `${hall}: ≥ ${MIN_HALL_LOW_SIDES} low trait sides, so low-pole people match too (${lows})`);
+  }
 }
 const real = LEGEND_ROSTER.filter((l) => l.kind === 'real');
 const women = real.filter((l) => l.gender === 'woman').length / real.length;
-assert.ok(women >= (full ? 0.35 : 0.3), `women among real legends: ${(women * 100).toFixed(0)}%`);
+assert.ok(women >= (grown ? 0.35 : 0.3), `women among real legends: ${(women * 100).toFixed(0)}%`);
 const regionCounts = new Map<string, number>();
 for (const l of LEGEND_ROSTER) regionCounts.set(l.region, (regionCounts.get(l.region) ?? 0) + 1);
 if (full) {
   assert.ok([...regionCounts.values()].filter((n) => n >= 8).length >= 6, 'full roster: 6 regions with 8+ legends');
 } else {
-  assert.ok(regionCounts.size >= 6, `pilot: legends from at least 6 regions (${regionCounts.size})`);
+  assert.ok(regionCounts.size >= 6, `legends from at least 6 regions (${regionCounts.size})`);
 }
-ok(`coverage (${LEGEND_ROSTER_STAGE}): all 32 trait sides ≥ ${minPerPole}; every hall ≥ 3; women ${(women * 100).toFixed(0)}% of real legends; ${regionCounts.size} regions`);
+const topRegion = Math.max(...regionCounts.values()) / LEGEND_ROSTER.length;
+if (grown) assert.ok(topRegion <= 0.45, `no region holds more than 45% of the museum (${(topRegion * 100).toFixed(0)}%)`);
+ok(`coverage (${LEGEND_ROSTER_STAGE}): all 32 trait sides ≥ ${minPerPole}; ${LEGEND_HALLS.length} halls ≥ ${MIN_HALL}; women ${(women * 100).toFixed(0)}% of real legends; ${regionCounts.size} regions, largest ${(topRegion * 100).toFixed(0)}%`);
 
-/* -------------------------------------------------------------- picker --- */
+/* ----------------------------------------------------------- hall walk --- */
 
 const NOW = new Date('2026-10-08T12:00:00Z');
 function track(axis: TraitAxis, value: number, answers = 6): TraitTrack {
@@ -183,39 +225,63 @@ function profile(leans: Partial<Record<TraitAxis, number>>): TraitTrack[] {
   return TRAIT_AXES.map((axis) => track(axis, leans[axis] ?? 0.5));
 }
 const none = new Set<string>();
+const YMD = '2026-10-08';
 
 assert.equal(legendLocked(profile({})), true, 'a flat profile is locked');
 assert.equal(legendLocked(profile({ openness: 0.9 })), true, `one clear lean is not enough (need ${LEGEND_MIN_CLEAR_LEANS})`);
-assert.equal(pickLegendSet({ tracks: profile({ openness: 0.9 }), userId: 'u1', ymd: '2026-10-08', setNo: 0, met: none, now: NOW }), null);
-ok('flat or one-lean profiles are locked (no set, no AI)');
+assert.equal(hallOrder({ tracks: profile({ openness: 0.9 }), userId: 'u1', ymd: YMD, hall: 'art', met: none, now: NOW }), null);
+ok('flat or one-lean profiles are locked (no frames, no AI)');
 
 const mixed = profile({ openness: 0.92, extraversion: 0.2, playfulness: 0.8, steadiness: 0.3 });
-const setA = pickLegendSet({ tracks: mixed, userId: 'u1', ymd: '2026-10-08', setNo: 0, met: none, now: NOW })!;
-const setA2 = pickLegendSet({ tracks: mixed, userId: 'u1', ymd: '2026-10-08', setNo: 0, met: none, now: NOW })!;
-assert.deepEqual(setA, setA2, 'same person, same day → same three');
-assert.equal(setA.offers.length, 3, 'three labels');
-assert.equal(new Set(setA.offers.map((o) => o.legendId)).size, 3, 'three different legends');
-assert.deepEqual(setA.offers.map((o) => o.slot).slice(0, 2), ['close', 'surprise']);
-const closeHall = legendById(setA.offers[0]!.legendId)!.hall;
-assert.notEqual(legendById(setA.offers[1]!.legendId)!.hall, closeHall, 'the surprise is from another hall');
-const seen = new Set<string>();
+const orderA = hallOrder({ tracks: mixed, userId: 'u1', ymd: YMD, hall: 'art', met: none, now: NOW })!;
+const orderA2 = hallOrder({ tracks: mixed, userId: 'u1', ymd: YMD, hall: 'art', met: none, now: NOW })!;
+assert.deepEqual(orderA, orderA2, 'same person, same day, same hall → same order');
+const artOpen = LEGEND_ROSTER.filter((l) => l.hall === 'art' && !l.hidden);
+assert.equal(orderA.length, artOpen.length, 'the order holds every open legend in the hall');
+for (const id of orderA) assert.equal(legendById(id)!.hall, 'art', 'only legends from the chosen hall');
+const framesA = hallFrames(orderA, none, 'u1|seed');
+assert.equal(framesA.length, LEGEND_FRAMES, 'three frames');
+assert.equal(new Set(framesA).size, 3, 'three different legends');
+assert.deepEqual(new Set(framesA), new Set(orderA.slice(0, 3)), 'the frames are the order’s first three');
+const seenFirst = new Set<string>();
 for (let u = 0; u < 40; u += 1) {
-  const s = pickLegendSet({ tracks: mixed, userId: `user-${u}`, ymd: '2026-10-08', setNo: 0, met: none, now: NOW })!;
-  seen.add(s.offers.map((o) => o.legendId).join(','));
+  const o = hallOrder({ tracks: mixed, userId: `user-${u}`, ymd: YMD, hall: 'art', met: none, now: NOW })!;
+  seenFirst.add([...o.slice(0, 3)].sort().join(','));
 }
-assert.ok(seen.size >= 5, `different people with the same profile get different sets (${seen.size} distinct of 40)`);
-ok(`three distinct labels, stable per person and day, varied across people (${seen.size}/40 distinct)`);
+assert.ok(seenFirst.size >= 8, `different people with the same profile get different frames (${seenFirst.size} distinct of 40)`);
+ok(`three "???" frames per hall, stable per person and day, varied across people (${seenFirst.size}/40 distinct)`);
 
-// No repeats: met legends are skipped until fewer than three are left.
-const metSome = new Set(setA.offers.map((o) => o.legendId));
-const next = pickLegendSet({ tracks: mixed, userId: 'u1', ymd: '2026-10-09', setNo: 0, met: metSome, now: NOW })!;
-for (const o of next.offers) assert.ok(!metSome.has(o.legendId), 'a met legend is not offered again');
-const almostAll = new Set(LEGEND_ROSTER.map((l) => l.id).slice(0, LEGEND_ROSTER.length - 1));
-const dry = pickLegendSet({ tracks: mixed, userId: 'u1', ymd: '2026-10-10', setNo: 0, met: almostAll, now: NOW })!;
-assert.equal(dry.offers.length, 3, 'a nearly full museum still gets three (repeat rather than an empty wall)');
-ok('no repeats while fresh legends remain; never an empty set');
+// Reveal refills that frame in place; met legends never come back.
+const used = new Set([framesA[1]!]);
+const refilled = hallFrames(orderA, used, 'u1|seed');
+assert.equal(refilled[0], framesA[0], 'the other frames stay put');
+assert.equal(refilled[2], framesA[2], 'the other frames stay put');
+assert.equal(refilled[1], orderA[3], 'the revealed frame refills with the next legend');
+const metArt = new Set(orderA.slice(0, 4));
+const nextDay = hallOrder({ tracks: mixed, userId: 'u1', ymd: '2026-10-09', hall: 'art', met: metArt, now: NOW })!;
+for (const id of nextDay) assert.ok(!metArt.has(id), 'a met legend is not hidden behind a frame again');
+const allUsed = new Set(orderA);
+assert.deepEqual(hallFrames(orderA, allUsed, 'u1|seed'), [null, null, null], 'an emptied hall shows no frames');
+// Two reveals in one day (the bonus): each refills its own frame.
+const seq = [framesA[1]!, framesA[0]!];
+const twice = hallFrames(orderA, new Set(seq), 'u1|seed', seq);
+assert.equal(twice[2], framesA[2], 'the untouched frame stays put');
+assert.equal(twice[1], orderA[3], 'the first reveal’s frame keeps its refill');
+assert.equal(twice[0], orderA[4], 'the second reveal’s frame gets the next one');
+ok('a reveal refills its frame in place (also after the bonus reveal); no repeats; an emptied hall has no frames');
 
-// Every trait side finds a legend tagged with it.
+// Strong matches come first more often than weak ones.
+let topHits = 0;
+for (let u = 0; u < 60; u += 1) {
+  const o = hallOrder({ tracks: mixed, userId: `bias-${u}`, ymd: YMD, hall: 'words', met: none, now: NOW })!;
+  const ranked = rankStoryAxes(mixed);
+  const first = legendById(o[0]!)!;
+  const last = legendById(o[o.length - 1]!)!;
+  if (scoreLegend(first, ranked, new Set()).score >= scoreLegend(last, ranked, new Set()).score) topHits += 1;
+}
+assert.ok(topHits >= 45, `the first frame usually matches better than the last (${topHits}/60)`);
+
+// Every trait side finds a legend tagged with it, in some hall's frames.
 const misses: string[] = [];
 for (const axis of TRAIT_AXES) {
   for (const lean of ['high', 'low'] as const) {
@@ -225,56 +291,85 @@ for (const axis of TRAIT_AXES) {
     const best = [...visible]
       .map((l) => ({ l, ...scoreLegend(l, ranked, new Set()) }))
       .sort((a, b) => b.score - a.score)[0]!;
-    if (!best.l.tags.some((t) => t.axis === axis && t.lean === lean)) misses.push(`${axis}:${lean}`);
-    const set = pickLegendSet({ tracks, userId: `pole-${axis}-${lean}`, ymd: '2026-10-08', setNo: 0, met: none, now: NOW })!;
-    if (!set.offers.some((o) => o.matched.includes(axis))) misses.push(`${axis}:${lean} (set)`);
+    if (!best.l.tags.some((tg) => tg.axis === axis && tg.lean === lean)) misses.push(`${axis}:${lean}`);
+    const shown = LEGEND_HALLS.flatMap((hall) => {
+      const o = hallOrder({ tracks, userId: `pole-${axis}-${lean}`, ymd: YMD, hall, met: none, now: NOW })!;
+      return hallFrames(o, none, `pole|${hall}`).filter((k): k is string => k != null);
+    });
+    if (!shown.some((id) => legendById(id)!.tags.some((tg) => tg.axis === axis && tg.lean === lean))) misses.push(`${axis}:${lean} (frames)`);
   }
 }
 assert.deepEqual(misses, [], `a strong lean on each of the 32 sides is matched: ${misses.join(', ')}`);
-ok('all 32 trait sides (high AND low): the best match carries that side, and the set offers it');
+ok(`best matches come first (${topHits}/60); all 32 trait sides (high AND low) appear behind some hall’s frames`);
 
-// Hidden legends: never offered until unlocked; then as the surprise.
+// Hidden legends: never behind a frame until unlocked.
 const hiddenOnes = LEGEND_ROSTER.filter((l) => l.hidden);
-for (let u = 0; u < 30; u += 1) {
-  const s = pickLegendSet({ tracks: mixed, userId: `h-${u}`, ymd: '2026-10-08', setNo: 0, met: none, now: NOW })!;
-  for (const o of s.offers) {
-    const l = legendById(o.legendId)!;
-    if (l.hidden) {
-      const ranked = rankStoryAxes(mixed);
-      assert.ok(l.hidden.needs.every((n) => ranked.some((r) => r.axis === n.axis && r.lean === n.lean)), `${l.id} offered while locked`);
-    }
-  }
+for (const h of hiddenOnes) {
+  const o = hallOrder({ tracks: mixed, userId: 'h1', ymd: YMD, hall: h.hall, met: none, now: NOW })!;
+  const ranked = rankStoryAxes(mixed);
+  const open = h.hidden!.needs.every((n) => ranked.some((r) => r.axis === n.axis && r.lean === n.lean));
+  assert.equal(o.includes(h.id), open, `${h.id} is behind a frame only when unlocked`);
 }
 const tanuki = hiddenOnes.find((l) => l.id === 'lf_tanuki')!;
 const unlockTracks = profile(Object.fromEntries(tanuki.hidden!.needs.map((n) => [n.axis, n.lean === 'high' ? 0.9 : 0.1])));
-const unlocked = pickLegendSet({ tracks: unlockTracks, userId: 'u9', ymd: '2026-10-08', setNo: 0, met: none, now: NOW })!;
-const hiddenOffer = unlocked.offers.find((o) => o.hidden);
-assert.ok(hiddenOffer && hiddenOffer.slot === 'surprise', 'an unlocked hidden legend comes as the surprise');
-ok(`hidden legends (${hiddenOnes.length}) appear only for their trait combo, as the surprise`);
+assert.ok(hallOrder({ tracks: unlockTracks, userId: 'u9', ymd: YMD, hall: tanuki.hall, met: none, now: NOW })!.includes(tanuki.id));
+ok(`hidden legends (${hiddenOnes.length}) join a hall only for their trait combo`);
 
-// On this day.
+// On this day: a legend born today is first in its hall.
 const curie = legendById('lf_marie_curie')!;
-const bday = pickLegendSet({ tracks: profile({ playfulness: 0.9, agreeableness: 0.85 }), userId: 'u1', ymd: `2026-${curie.birthday!.md}`, setNo: 0, met: none, now: NOW })!;
-assert.ok(bday.offers.some((o) => o.legendId === curie.id && (o.slot === 'on_this_day' || o.slot === 'close' || o.slot === 'surprise')), 'a legend born today is in the set');
-assert.ok(bday.offers.some((o) => o.slot === 'on_this_day') || bday.offers.slice(0, 2).some((o) => o.legendId === curie.id));
-ok('On this day: a legend born on today’s date takes the third slot');
+const bday = hallOrder({ tracks: mixed, userId: 'u1', ymd: `2026-${curie.birthday!.md}`, hall: curie.hall, met: none, now: NOW })!;
+assert.equal(bday[0], curie.id, 'a legend born on today’s date is first in its hall');
+ok('On this day: a legend born today goes behind the first frame');
 
-// The bonus set: only for a newly settled lean.
+// Chapters: once every open legend in a hall is met.
+const artAll = new Set(LEGEND_ROSTER.filter((l) => l.hall === 'art').map((l) => l.id));
+assert.equal(hallComplete('art', mixed, new Set(orderA.slice(0, 3))), false);
+assert.equal(hallComplete('art', mixed, artAll), true, 'every open legend met → the hall is complete');
+const told = new Map([...artAll].map((id) => [id, new Set(['a1'])]));
+const chapters = chapterOrder({ tracks: mixed, userId: 'u1', ymd: YMD, hall: 'art', told, now: NOW });
+const untoldTotal = LEGEND_ROSTER.filter((l) => l.hall === 'art').reduce((n, l) => n + l.angles.length - 1, 0);
+assert.equal(chapters.length, untoldTotal, 'every untold angle becomes a chapter');
+assert.equal(new Set(chapters).size, chapters.length, 'no chapter twice');
+for (const key of chapters) {
+  const { legendId, angleId } = parseFrameKey(key);
+  assert.ok(artAll.has(legendId) && angleId && angleId !== 'a1', `${key}: an untold angle of a met legend`);
+}
+const firstRound = chapters.slice(0, artAll.size).map((k) => parseFrameKey(k).legendId);
+assert.equal(new Set(firstRound).size, artAll.size, 'every met legend gets a new chapter before any gets two');
+assert.equal(chapterKey('lf_hokusai', 'a3'), 'lf_hokusai#a3');
+const chFrames = hallFrames(chapters, new Set([chapters[0]!]), 'u1|ch');
+assert.ok(!chFrames.includes(chapters[0]!), 'a told chapter is not offered again');
+ok('chapters: a finished hall offers untold angles of met legends, least-chaptered first, never twice');
+
+// Pace: one reveal a day, plus one when a new trait side settles.
+assert.equal(revealsLeft(0, false), 1);
+assert.equal(revealsLeft(1, false), 0);
+assert.equal(revealsLeft(1, true), 1, 'the bonus opens one more');
+assert.equal(revealsLeft(2, true), 0);
 assert.equal(hasNewSettledLean('openness:high', 'openness:high'), false);
 assert.equal(hasNewSettledLean('openness:high', 'extraversion:low,openness:high'), true);
 assert.equal(hasNewSettledLean('openness:high,playfulness:high', 'openness:high'), false, 'losing a lean is not a bonus');
-const bonus = pickLegendSet({ tracks: mixed, userId: 'u1', ymd: '2026-10-08', setNo: 1, met: metSome, now: NOW })!;
-assert.notDeepEqual(bonus.offers.map((o) => o.legendId), setA.offers.map((o) => o.legendId), 'the bonus set differs');
-ok('bonus set only when a new trait side settles; it differs from the day’s set');
+ok('one reveal a day; one bonus only when a new trait side settles');
 
-// Least-told angle.
+// Least-told angle; chapters pin theirs.
 const hok = legendById('lf_hokusai')!;
 const counts = { 'a1|m1': 9, 'a1|m2': 9, 'a2|m1': 4, 'a2|m2': 4, 'a3|m1': 0, 'a3|m2': 1, 'a4|m1': 7, 'a4|m2': 7 };
 assert.deepEqual(chooseAngle(hok, 'anyone', counts), { angleId: 'a3', momentId: 'm1' }, 'least-told angle, then least-told moment');
+assert.equal(chooseAngle(hok, 'anyone', counts, { onlyAngle: 'a4' }).angleId, 'a4', 'a chapter keeps its own angle');
+assert.notEqual(chooseAngle(hok, 'anyone', counts, { skipAngles: new Set(['a3']) }).angleId, 'a3', 'a told angle is skipped');
 const spread = new Set<string>();
 for (let u = 0; u < 30; u += 1) spread.add(chooseAngle(hok, `p${u}`, null).angleId);
 assert.ok(spread.size >= 3, 'with no counts, people still get different angles');
-ok('angles: the least-told one first (anonymous counts); seeded per person when there are none');
+ok('angles: the least-told one first (anonymous counts); chapters keep theirs; seeded per person when there are none');
+
+// "Matched on" line.
+const hokTracks = profile({ growth_mindset: 0.95, openness: 0.9 });
+const line = matchedOnLine(hok, hokTracks, NOW);
+assert.ok(line && line.startsWith('Matched on: '), 'the matched-on line starts "Matched on:"');
+assert.ok(line!.includes(AXIS_POLE_NAME.growth_mindset.high) && line!.includes(AXIS_POLE_NAME.openness.high), 'it names the shared sides');
+assert.equal(matchedOnLine(hok, profile({ extraversion: 0.05, agreeableness: 0.05 }), NOW), null, 'no shared side → no line');
+assert.equal(frameA11yLabel(0, 3, false), 'Hidden legend 1 of 3, double tap to reveal', 'screen readers hear the frame, never the name');
+ok('"Matched on" names the shared sides (and the category when one is ready); frames read as "Hidden legend 1 of 3"');
 
 /* --------------------------------------------------------------- story --- */
 
@@ -351,34 +446,53 @@ ok('prompt: moment voice, entry-only facts, verified only, no account details, m
 
 const screen = read('src/app/(tabs)/legends.tsx');
 assert.doesNotMatch(screen, /generateText\(/, 'the screen never calls the model directly');
-const meetStart = screen.indexOf('const meet = useCallback');
-assert.ok(meetStart > 0 && screen.indexOf('writeLegendStory(') > meetStart, 'the story is written only inside "Meet them"');
+const revealStart = screen.indexOf('const reveal = useCallback');
+assert.ok(revealStart > 0 && screen.indexOf('writeLegendStory(') > revealStart, 'the story is written only inside a reveal tap');
 assert.equal(screen.split('writeLegendStory(').length - 1, 1, 'exactly one call site');
 assert.match(screen, /legendsUnlocked\(tracks\)/, 'same unlock as the rest of the app');
 const gen = read('src/lib/legend-figures/generate.ts');
 assert.ok(gen.indexOf('claimLegendStory()') < gen.indexOf('generateText('), 'the server claim comes before the call');
 assert.match(gen, /if \(!\(await claimLegendStory\(\)\)\) return fallback\(\);/, 'no claim, no AI call');
 assert.match(screen, /meetingRef\.current\) return;/, 'a second tap while a story is being written does nothing');
-assert.match(screen, /if \(!meetingRef\.current\) persist\(withDay\);/, 'a reload never overwrites a pick being saved');
+assert.match(screen, /if \(revealsLeft\(revealedBefore, bonus\) <= 0\) return;/, 'no reveal past the day’s allowance');
+assert.match(screen, /if \(!meetingRef\.current\) persist\(next\);/, 'a reload never overwrites a reveal being saved');
 assert.match(screen, /LegendShareSheet/, 'share uses the on-screen Modal capture (share-card.tsx pattern)');
-assert.doesNotMatch(read('src/components/legend-figure-card.tsx'), /left: -10000/, 'never an off-screen capture');
-ok('one AI call, only on "Meet them", after the server claim; double taps and reloads can’t pay twice or lose a pick');
+const cardSrc = read('src/components/legend-figure-card.tsx');
+assert.doesNotMatch(cardSrc, /left: -10000/, 'never an off-screen capture');
+// Notes like "Born on this day" / "Hidden legend found" are set only by a reveal.
+assert.equal(screen.split('setRevealNotes((prev)').length - 1, 1);
+assert.ok(screen.indexOf('setRevealNotes((prev)') > revealStart, 'reveal-only notes');
+ok('one AI call, only on a reveal tap, after the server claim; double taps and reloads can’t pay twice or lose a reveal');
+
+// The "find a new legend with AI" placeholder: disabled, last, pre-launch only.
+const placeholderSrc = cardSrc.slice(cardSrc.indexOf('export function LegendAiPlaceholder'), cardSrc.indexOf('export function circleLine'));
+assert.doesNotMatch(placeholderSrc, /onPress|generateText|writeLegendStory|supabase/, 'the placeholder does nothing');
+assert.match(placeholderSrc, /accessibilityState=\{\{ disabled: true \}\}/, 'announced as disabled');
+assert.match(AI_LEGEND_PLACEHOLDER, /coming soon/);
+assert.match(screen, /\{PRE_LAUNCH_DEV \? \(\s*<View style=\{styles\.placeholder\}>\s*<LegendAiPlaceholder \/>/, 'shown only while PRE_LAUNCH_DEV');
+assert.equal(screen.split('<LegendAiPlaceholder').length - 1, 1, 'one placeholder');
+const hallViewEnd = screen.indexOf(') : (\n                card');
+assert.ok(screen.indexOf('<LegendAiPlaceholder') < hallViewEnd && screen.lastIndexOf('<LegendFrame') < screen.indexOf('<LegendAiPlaceholder'), 'the placeholder comes last in a hall');
+ok('AI placeholder: disabled, last in the hall, pre-launch builds only, never calls anything');
 
 const sql = read('supabase/migrations/wave89_legend_museum.sql');
 assert.match(sql, /create policy legend_museum_select_own on public\.legend_museum\s+for select using \(auth\.uid\(\) = user_id\);/);
 assert.match(sql, /revoke insert, update, delete on public\.legend_museum from public, anon, authenticated;/);
-assert.match(sql, /< 5 then\s+return;/, 'angle counts: nothing under 5');
+assert.match(sql, /count\(distinct lm\.user_id\)[^;]*< 5 then\s+return;/, 'angle counts: nothing under 5 people');
+assert.match(sql, /unique \(user_id, legend_id, chapter\)/, 'one row per legend + chapter');
+assert.match(sql, /invalid chapter/, 'chapter numbers are bounded');
 assert.doesNotMatch(sql.slice(sql.indexOf('legend_angle_counts'), sql.indexOf('legend_circle_friends')), /user_id\s*,|select m\.user_id|lm\.user_id/, 'angle counts never return who');
 const friends = sql.slice(sql.indexOf('create or replace function public.legend_circle_friends'));
 assert.match(friends, /from public\.connections c/, 'Circle line: connected friends only');
 assert.match(friends, /mine\.user_id = auth\.uid\(\) and mine\.legend_id = p_legend_id/, 'only if you met them too');
 assert.match(friends, /from public\.blocks b/, 'blocked people never appear');
 assert.match(friends, /returns table \(name text\)/, 'names only — never a story');
-for (const fn of ['claim_legend_figure_story()', 'save_legend_figure_story(text, text, text, jsonb, date)', 'legend_angle_counts(text)', 'legend_circle_friends(text)']) {
+assert.doesNotMatch(friends.slice(0, friends.indexOf('where')), /join public\.legend_museum/, 'each friend once (exists, not a join), however many chapters');
+for (const fn of ['claim_legend_figure_story()', 'save_legend_figure_story(text, int, text, text, jsonb, date)', 'legend_angle_counts(text)', 'legend_circle_friends(text)']) {
   assert.ok(sql.includes(`revoke all on function public.${fn} from public, anon;`), `${fn} revoked from anon`);
 }
 assert.match(sql, /added_today >= cap then\s+raise exception 'daily limit'/, 'new museum rows are limited to the daily cap');
-ok('wave89: own rows only, written by RPC at the daily pace; counts anonymous (≥5); Circle names only, connected and unblocked');
+ok('wave89: own rows only (one per legend + chapter), written by RPC at the daily pace; counts anonymous (≥5 people); Circle names once, connected and unblocked');
 
 const devLab = read('src/app/dev-lab.tsx');
 const toolsStart = devLab.indexOf('{tools ? (');

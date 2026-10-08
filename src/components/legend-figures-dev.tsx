@@ -104,7 +104,7 @@ export function LegendFiguresDev({ userId }: { userId: string }) {
               twoTap(
                 `date-${l.id}`,
                 () => setDevLegendDate(ymd).then(() => setDevDate(ymd)),
-                'Date set. Reset today’s three to see On this day. While a fake date is set, the server refuses to save picks.',
+                'Date set. Reset today’s frames to see On this day. While a fake date is set, the server refuses to save picks.',
               );
             }}
           />
@@ -117,8 +117,8 @@ export function LegendFiguresDev({ userId }: { userId: string }) {
       </View>
 
       <View style={styles.row}>
-        <Btn id="reset-day" label="Reset today’s three" onPress={() => twoTap('reset-day', () => devResetLegendDay(userId), 'Today’s three cleared.')} />
-        <Btn id="bonus" label="Pretend a trait settled" onPress={() => twoTap('bonus', () => devForceLegendBonus(userId), 'Bonus set armed.')} />
+        <Btn id="reset-day" label="Reset today’s frames" onPress={() => twoTap('reset-day', () => devResetLegendDay(userId), 'Today’s frames and reveals cleared.')} />
+        <Btn id="bonus" label="Pretend a trait settled" onPress={() => twoTap('bonus', () => devForceLegendBonus(userId), 'Bonus reveal armed (needs one reveal today first).')} />
         <Btn id="clear" label="Clear this phone’s museum" onPress={() => twoTap('clear', () => devClearLocalMuseum(userId), 'Phone museum cleared (server rows stay).')} />
       </View>
       {note ? (

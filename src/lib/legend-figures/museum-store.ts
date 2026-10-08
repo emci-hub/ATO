@@ -2,14 +2,14 @@
  * Legend figures — where the museum lives.
  *
  * Server (wave89): `legend_museum` (own rows only), written through
- * `save_legend_figure_story`; the daily claim `claim_legend_figure_story`
- * (cap 2/day: the day's pick + one bonus); anonymous angle counts
+ * `save_legend_figure_story` (one row per legend + chapter); the daily claim
+ * `claim_legend_figure_story` (cap 2/day: the day's reveal + one bonus); anonymous angle counts
  * `legend_angle_counts`; and `legend_circle_friends` (names of connected
  * friends who met the same legend — never their stories).
  *
  * Phone (`ato.legendMuseum.v1`, account-scoped: wiped on sign-out by the
- * deny-by-default keep list): today's sets, which one was picked, the trait
- * fingerprint for the bonus set, and a copy of the museum so the screen works
+ * deny-by-default keep list): today's frame order per hall, the trait
+ * fingerprint for the bonus reveal, and a copy of the museum so the screen works
  * before wave89 is applied or offline. With no server claim there is NO AI
  * call — the story falls back to the hand-written version (the server decides
  * whether a paid call happens, never the phone).
@@ -18,28 +18,36 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
 
-import type { AngleCounts, LegendSet } from './pick';
+import type { AngleCounts } from './pick';
 import { parseStoredLegendStory, type LegendStory } from './story';
+import { LEGEND_HALLS, type LegendHall } from './types';
 
 export const LEGEND_MUSEUM_KEY = 'ato.legendMuseum.v1';
 
 export interface MuseumEntry {
   legendId: string;
+  /** 0 = the first meeting; 1, 2, … = later chapters (a new angle, same legend). */
+  chapter: number;
   story: LegendStory;
-  /** Local YYYY-MM-DD the person met this legend. */
+  /** Local YYYY-MM-DD the person met this legend (or heard this chapter). */
   metOn: string;
+}
+
+/** One hall's frames for the day: the order is fixed the first time the hall
+ * opens that day, so the "???" frames stay put until revealed. */
+export interface LegendHallDay {
+  order: string[];
+  /** Made once every open legend in the hall is met (chapter frame keys). */
+  chapters?: string[];
 }
 
 export interface LegendDayState {
   ymd: string;
-  /** Settled-lean fingerprint when the day's first set was made. */
+  /** Settled-lean fingerprint at the day's first reveal ('' before it). */
   fingerprint: string;
-  sets: LegendSet[];
-  /** setNo → the legend picked from that set. */
-  picked: Record<number, string>;
-  /** legendId → the angle + moment chosen when its label was shown (the
-   * teaser promises that angle, so the story keeps it). */
-  angles: Record<string, { angleId: string; momentId: string }>;
+  halls: Partial<Record<LegendHall, LegendHallDay>>;
+  /** Frame keys revealed today (a legend id, or `<legendId>#<angleId>` for a chapter). */
+  revealed: string[];
 }
 
 export interface LegendLocalState {
@@ -49,6 +57,7 @@ export interface LegendLocalState {
 }
 
 const ID_RE = /^lf_[a-z0-9_]{2,40}$/;
+const KEY_RE = /^lf_[a-z0-9_]{2,40}(#a\d{1,2})?$/;
 
 function emptyState(userId: string): LegendLocalState {
   return { userId, museum: [], day: null };
@@ -59,7 +68,33 @@ function parseEntry(raw: unknown): MuseumEntry | null {
   const obj = raw as Record<string, unknown>;
   const story = parseStoredLegendStory(obj.story);
   if (typeof obj.legendId !== 'string' || !ID_RE.test(obj.legendId) || !story) return null;
-  return { legendId: obj.legendId, story, metOn: typeof obj.metOn === 'string' ? obj.metOn : '' };
+  const chapter =
+    typeof obj.chapter === 'number' && Number.isInteger(obj.chapter) && obj.chapter >= 0 ? obj.chapter : 0;
+  return { legendId: obj.legendId, chapter, story, metOn: typeof obj.metOn === 'string' ? obj.metOn : '' };
+}
+
+function parseKeys(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  return raw.filter((key): key is string => typeof key === 'string' && KEY_RE.test(key));
+}
+
+function parseDay(raw: unknown): LegendDayState | null {
+  if (typeof raw !== 'object' || raw == null) return null;
+  const day = raw as Record<string, unknown>;
+  if (typeof day.ymd !== 'string' || typeof day.fingerprint !== 'string') return null;
+  const rawHalls = typeof day.halls === 'object' && day.halls != null ? (day.halls as Record<string, unknown>) : {};
+  const halls: Partial<Record<LegendHall, LegendHallDay>> = {};
+  for (const hall of LEGEND_HALLS) {
+    const row = rawHalls[hall] as Record<string, unknown> | undefined;
+    const order = parseKeys(row?.order);
+    if (!order) continue;
+    const chapters = parseKeys(row?.chapters);
+    halls[hall] = chapters ? { order, chapters } : { order };
+  }
+  // A pilot-era day (`picked`: setNo → legend id) keeps its picks as reveals.
+  const legacy =
+    typeof day.picked === 'object' && day.picked != null ? parseKeys(Object.values(day.picked)) ?? [] : [];
+  return { ymd: day.ymd, fingerprint: day.fingerprint, halls, revealed: parseKeys(day.revealed) ?? legacy };
 }
 
 export function parseLocalState(raw: string | null, userId: string): LegendLocalState {
@@ -70,15 +105,7 @@ export function parseLocalState(raw: string | null, userId: string): LegendLocal
     const museum = Array.isArray(data.museum)
       ? data.museum.map(parseEntry).filter((row): row is MuseumEntry => row != null)
       : [];
-    const day = data.day as LegendDayState | null;
-    const dayOk =
-      day != null &&
-      typeof day.ymd === 'string' &&
-      typeof day.fingerprint === 'string' &&
-      Array.isArray(day.sets) &&
-      typeof day.picked === 'object' &&
-      day.picked != null;
-    return { userId, museum, day: dayOk ? { ...day, angles: typeof day.angles === 'object' && day.angles ? day.angles : {} } : null };
+    return { userId, museum, day: parseDay(data.day) };
   } catch {
     return emptyState(userId);
   }
@@ -100,12 +127,40 @@ export async function saveLocalState(state: LegendLocalState): Promise<void> {
   }
 }
 
-/** Merge museum rows: server wins per legend, local fills what the server lacks. */
+export function entryKey(row: { legendId: string; chapter: number }): string {
+  return `${row.legendId}#${row.chapter}`;
+}
+
+/** Merge museum rows: server wins per (legend, chapter), local fills what the
+ * server lacks. Newest first. */
 export function mergeMuseum(server: readonly MuseumEntry[], local: readonly MuseumEntry[]): MuseumEntry[] {
-  const byId = new Map<string, MuseumEntry>();
-  for (const row of local) byId.set(row.legendId, row);
-  for (const row of server) byId.set(row.legendId, row);
-  return [...byId.values()].sort((a, b) => (a.metOn < b.metOn ? 1 : a.metOn > b.metOn ? -1 : 0));
+  const byKey = new Map<string, MuseumEntry>();
+  for (const row of local) byKey.set(entryKey(row), row);
+  for (const row of server) byKey.set(entryKey(row), row);
+  return [...byKey.values()].sort((a, b) =>
+    a.metOn < b.metOn ? 1 : a.metOn > b.metOn ? -1 : b.chapter - a.chapter,
+  );
+}
+
+/** legendId → the angle ids this person has been told (every chapter). */
+export function toldAngles(museum: readonly MuseumEntry[]): Map<string, Set<string>> {
+  const out = new Map<string, Set<string>>();
+  for (const row of museum) {
+    const set = out.get(row.legendId) ?? new Set<string>();
+    set.add(row.story.angleId);
+    out.set(row.legendId, set);
+  }
+  return out;
+}
+
+/** Frame keys already used: met legend ids, and told `<legendId>#<angleId>`. */
+export function usedFrameKeys(museum: readonly MuseumEntry[]): Set<string> {
+  const out = new Set<string>();
+  for (const row of museum) {
+    out.add(row.legendId);
+    out.add(`${row.legendId}#${row.story.angleId}`);
+  }
+  return out;
 }
 
 /** The server museum, or null when the table isn't there yet / offline. */
@@ -113,13 +168,14 @@ export async function fetchServerMuseum(): Promise<MuseumEntry[] | null> {
   try {
     const { data, error } = await supabase
       .from('legend_museum')
-      .select('legend_id, story, met_on')
+      .select('legend_id, chapter, story, met_on')
       .order('met_on', { ascending: false });
     if (error || !Array.isArray(data)) return null;
     return data
       .map((row) =>
         parseEntry({
           legendId: (row as { legend_id?: unknown }).legend_id,
+          chapter: (row as { chapter?: unknown }).chapter,
           story: (row as { story?: unknown }).story,
           metOn: (row as { met_on?: unknown }).met_on,
         }),
@@ -145,6 +201,7 @@ export async function saveServerEntry(entry: MuseumEntry): Promise<boolean> {
   try {
     const { error } = await supabase.rpc('save_legend_figure_story', {
       p_legend_id: entry.legendId,
+      p_chapter: entry.chapter,
       p_angle_id: entry.story.angleId,
       p_moment_id: entry.story.momentId,
       p_story: entry.story,
@@ -153,6 +210,29 @@ export async function saveServerEntry(entry: MuseumEntry): Promise<boolean> {
     return !error;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Phone rows the server does not have yet (offline, or met before wave89 was
+ * applied), re-sent oldest chapter first. The server only takes rows dated
+ * within a day of now, so older ones stay on this phone.
+ */
+export async function resendMissingEntries(
+  server: readonly MuseumEntry[],
+  local: readonly MuseumEntry[],
+  today: string,
+  yesterday: string,
+  /** False once the account data was wiped: stop, never write it back. */
+  stillValid: () => boolean,
+): Promise<void> {
+  const have = new Set(server.map(entryKey));
+  const missing = local
+    .filter((row) => !have.has(entryKey(row)) && (row.metOn === today || row.metOn === yesterday))
+    .sort((a, b) => a.chapter - b.chapter);
+  for (const row of missing) {
+    if (!stillValid()) return;
+    await saveServerEntry(row);
   }
 }
 
@@ -211,20 +291,20 @@ export async function setDevLegendDate(ymd: string | null): Promise<void> {
   }
 }
 
-/** Forget today's sets on this phone (the museum is kept). */
+/** Forget today's frames on this phone (the museum is kept). */
 export async function devResetLegendDay(userId: string): Promise<void> {
   const state = await loadLocalState(userId);
   await saveLocalState({ ...state, day: null });
 }
 
-/** Pretend a new trait settled since today's first set (the bonus set shows
- * once today's legend is picked). */
+/** Pretend a new trait settled since today's first reveal (the bonus reveal
+ * opens once today's legend is revealed). */
 export async function devForceLegendBonus(userId: string): Promise<void> {
   const state = await loadLocalState(userId);
-  if (state.day) await saveLocalState({ ...state, day: { ...state.day, fingerprint: '' } });
+  if (state.day) await saveLocalState({ ...state, day: { ...state.day, fingerprint: 'dev:bonus' } });
 }
 
-/** Clear this phone's copy of the museum and today's sets (server rows stay). */
+/** Clear this phone's copy of the museum and today's frames (server rows stay). */
 export async function devClearLocalMuseum(userId: string): Promise<void> {
   await saveLocalState({ userId, museum: [], day: null });
 }

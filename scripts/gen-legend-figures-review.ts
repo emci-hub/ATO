@@ -13,8 +13,18 @@ import { resolve } from 'node:path';
 
 import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
 import { LEGEND_ROSTER } from '../src/lib/legend-figures/roster';
+import { legendTitle } from '../src/lib/legend-figures/labels';
 import { buildLegendPrompt, legendPairs } from '../src/lib/legend-figures/story';
 import { HALL_LABEL, LEGEND_HALLS } from '../src/lib/legend-figures/types';
+
+const phrases = LEGEND_ROSTER.reduce(
+  (n, l) => n + [...l.facts, ...l.moments].reduce((m, x) => m + x.source.check.length, 0) + (l.birthday?.source.check.length ?? 0),
+  0,
+);
+const unverified = LEGEND_ROSTER.reduce(
+  (n, l) => n + [...l.facts, ...l.moments].filter((x) => !x.source.verified).length,
+  0,
+);
 
 const lines: string[] = [];
 const push = (...rows: string[]) => lines.push(...rows);
@@ -26,13 +36,19 @@ push(
   '',
   '**How to review:** tick each legend once you are happy with every line under it (label, facts, moments, angles, trait tags). Tell me anything to change. When every box is ticked, `LEGEND_FIGURES_COPY_REVIEWED` flips to `true`. The app shows no draft badge either way.',
   '',
-  '**How facts were checked (2026-10-08):** every fact, moment and birthday cites an English Wikipedia page, and each one names exact phrases that were found in that page’s text by `scripts/legend-roster-verify.ts` (all 183 phrases found). That proves the source says it, not that every nuance is perfect, so a human read is still the bar. Anything that could not be confirmed would be marked **UNVERIFIED** below; it is never shown in the app or sent to the AI. (None in this pilot.)',
+  `**How facts were checked (2026-10-08):** every fact, moment and birthday cites an English Wikipedia page, and each one names exact phrases that were found in that page’s text by \`scripts/legend-roster-verify.ts\` (all ${phrases} phrases found). That proves the source says it, not that every nuance is perfect, so a human read is still the bar. Anything that could not be confirmed is marked **UNVERIFIED** below; it is never shown in the app or sent to the AI. (${unverified === 0 ? 'None right now.' : `${unverified} right now.`})`,
   '',
-  '**Rules every legend follows:** real people died 2005 or earlier; no heads of state or government, military commanders or religious founders/leaders; nobody with credible abuse or eugenics ties. Myth, folklore and ghost tales are labelled “Story, not history”, never a figure sacred in a religion practised today, never a tale built on harm to children (Zashiki-warashi was dropped for this reason: one origin theory involves harm to children).',
+  '**Rules every legend follows:** real people and real animals died 2005 or earlier; no heads of state or government, military commanders or religious founders/leaders; nobody with credible abuse, eugenics, colonial violence, racism or antisemitism ties. Myth, folklore and ghost tales are labelled “Story, not history”, never a figure sacred in a religion practised today, never a tale built on harm to children. Animals are labelled “A real animal”.',
+  '',
+  '**Left out on purpose:** Zashiki-warashi (one origin theory involves harm to children), Thor Heyerdahl (racial migration theory; Roald Amundsen took his place), Charlie Chaplin, Edward Jenner and Helen Keller (eugenics-related statements or ties). Jim Thorpe and Umm Kulthum have disputed birth dates, so no On this day.',
+  '',
+  '**One person, two halls:** Leonardo da Vinci has two labels, *as an artist* (Art and design) and *as an inventor* (Science and invention). Whoever meets the second one sees “Another side of Leonardo da Vinci”.',
   '',
   '**Your calls (from the review):** (1) Anansi’s tale names Nyame, the sky god of Akan religion, which people still practise; Anansi himself is a folktale trickster, not worshipped. Keep, or drop Anansi? (2) Umm Kulthum’s birth date is disputed, so she has no On this day.',
   '',
-  `**Pilot:** ${LEGEND_ROSTER.length} legends across ${LEGEND_HALLS.length} halls; every one of the 32 trait sides has at least one visible legend (the full roster will need 8 each).`,
+  `**Roster:** ${LEGEND_ROSTER.length} legends across ${LEGEND_HALLS.length} halls; every one of the 32 trait sides has at least 8 visible legends, and every hall spreads over many sides, low ones included. Sources: English Wikipedia only (your call, 2026-10-08).`,
+  '',
+  '**Gaps to know about:** Africa (2 legends) and Oceania (1) are thin; Europe (50) and the Americas (42) are heavy. Worth a wider pass before launch.',
   '',
 );
 
@@ -40,8 +56,8 @@ for (const hall of LEGEND_HALLS) {
   const hallLegends = LEGEND_ROSTER.filter((l) => l.hall === hall);
   push(`## ${HALL_LABEL[hall]} (${hallLegends.length})`, '');
   for (const l of hallLegends) {
-    const kind = l.kind === 'story' ? 'Story, not history' : `Real, died ${l.died}`;
-    push(`- [ ] \`${l.id}\` — **${l.name}** · ${kind} · ${l.place} · ${l.era}${l.hidden ? ' · **HIDDEN**' : ''}`);
+    const kind = l.kind === 'story' ? 'Story, not history' : l.kind === 'animal' ? `A real animal, died ${l.died}` : `Real, died ${l.died}`;
+    push(`- [ ] \`${l.id}\` — **${legendTitle(l)}** · ${kind} · ${l.place} · ${l.era}${l.hidden ? ' · **HIDDEN**' : ''}`);
     push(`  - Essence: ${l.essence}`);
     push(`  - Who they were: ${l.whoTheyWere}`);
     push(`  - Famous for: ${l.famousFor}`);

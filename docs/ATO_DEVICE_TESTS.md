@@ -272,6 +272,25 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Open the keyboard (tap the composer). Confirm the thread still scrolls to keep the latest message visible above the keyboard.
 - [ ] Screenshot: Sage tab mid-scroll showing the 8-ball/facts card fixed at top with messages scrolled underneath.
 
+## Box 29 — Legends: the museum of legends (12 halls, "???" frames)
+
+Use the dev-test account (`@atodev`), or any account that has finished Questions.
+
+- [ ] Open Legends. Confirm 12 hall tiles (Science and invention … Animal legends), each with an icon, a progress bar and "0 of 120 legends met" above them.
+- [ ] Tap a hall. Confirm three dashed "???" frames with NO name or clue, and "One reveal a day. Pick a frame."
+- [ ] With VoiceOver on, swipe to a frame. Confirm it reads "Hidden legend 1 of 3, double tap to reveal" (never a name).
+- [ ] Leave the hall and come back (and kill/relaunch the app). Confirm the same three frames, in the same places.
+- [ ] Tap one frame. Confirm a spinner, then the card: hall + place chips, name, essence, "Matched on: … " line, Who they were, Famous for, Where you match, The moment it mattered, What it means for you, facts with sources, Share.
+- [ ] Confirm the tapped frame now holds a new "???" and the other two stayed put; all three are dimmed with "That’s today’s legend. Come back tomorrow…".
+- [ ] Tap a fact. Confirm it opens the Wikipedia page.
+- [ ] Open the Animal legends hall on another day (or after Dev Hub → Legends museum → Reset today’s frames). Confirm an animal card shows the "A real animal" chip.
+- [ ] Dev Hub → Legends museum → "Pretend a trait settled", then back to Legends. Confirm "Your answers changed who you’d meet. One more reveal is open today." and one more reveal works; a third does not.
+- [ ] Dev Hub → set a fake date on a legend's birthday (e.g. Marie Curie 11-07), Reset today’s frames, open Science and invention, reveal the first frame. Confirm "Born on this day" on the card.
+- [ ] Confirm "Find a new legend with AI · coming soon" shows greyed out, last in the hall, and tapping it does nothing.
+- [ ] Turn AI off on You, reveal a legend next day. Confirm the card says "AI is off, so this card uses the museum’s own words." and has no AI badge.
+- [ ] Share a met legend. Confirm the preview shows name, essence and hall, never the story.
+- [ ] Screenshot: a hall with three "???" frames, and one revealed card.
+
 ---
 
 **All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–28).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`; Box 28 specifically needs OTA `0ff16d9d` or later), not per box.

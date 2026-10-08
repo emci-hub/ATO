@@ -22,17 +22,38 @@
  */
 import type { TraitAxis, TraitLean } from '@/lib/traits';
 
-export const LEGEND_HALLS = ['history', 'science', 'art', 'explorers', 'sport', 'myth', 'ghosts'] as const;
+/** The 12 halls (emci, 2026-10-08), from the main groups of Wikipedia's list of
+ * history's most important people, minus what the rules exclude (politicians,
+ * military, religious figures, business), plus myth, ghosts and animals. */
+export const LEGEND_HALLS = [
+  'science',
+  'art',
+  'music',
+  'words',
+  'screen',
+  'explorers',
+  'sport',
+  'healers',
+  'changemakers',
+  'myth',
+  'ghosts',
+  'animals',
+] as const;
 export type LegendHall = (typeof LEGEND_HALLS)[number];
 
 export const HALL_LABEL: Record<LegendHall, string> = {
-  history: 'Hall of history',
-  science: 'Hall of science',
-  art: 'Hall of art and music',
-  explorers: 'Hall of explorers',
-  sport: 'Hall of sport',
-  myth: 'Hall of myth and folklore',
-  ghosts: 'Hall of ghosts and strange tales',
+  science: 'Science and invention',
+  art: 'Art and design',
+  music: 'Music',
+  words: 'Words',
+  screen: 'Stage and screen',
+  explorers: 'Explorers',
+  sport: 'Sport',
+  healers: 'Healers',
+  changemakers: 'Changemakers',
+  myth: 'Myth and folklore',
+  ghosts: 'Ghosts and strange tales',
+  animals: 'Animal legends',
 };
 
 export const LEGEND_REGIONS = [
@@ -46,7 +67,9 @@ export const LEGEND_REGIONS = [
 ] as const;
 export type LegendRegion = (typeof LEGEND_REGIONS)[number];
 
-export type LegendKind = 'real' | 'story';
+/** real = a real person; animal = a real animal (same date rules, no gender);
+ * story = myth, folklore, ghosts and strange tales. */
+export type LegendKind = 'real' | 'animal' | 'story';
 export type LegendGender = 'woman' | 'man' | 'none';
 
 /** Where a fact comes from. `check` = phrases that must appear in the source
@@ -104,7 +127,7 @@ export interface LegendFigure {
   place: string;
   /** Shown on the label: "1760–1849" or "Told since the 1700s". */
   era: string;
-  /** Real people only: year of death (the check enforces ≤ 2005). */
+  /** Real people and animals: year of death (the check enforces ≤ 2005). */
   died?: number;
   /** Real people only, when the source gives it: MM-DD, for "On this day". */
   birthday?: { md: string; source: LegendSource };
@@ -118,6 +141,11 @@ export interface LegendFigure {
   moments: readonly LegendMoment[];
   angles: readonly LegendAngle[];
   tags: readonly LegendTag[];
+  /** A person with a role in more than one hall (Leonardo as an artist / as an
+   * inventor) has one entry per role: `role` is shown ("as an artist") and
+   * `roleOf` names the shared person, so the card can say "Another side of …". */
+  role?: string;
+  roleOf?: string;
   /** Hidden legends appear only when every listed trait side is a clear lean. */
   hidden?: { needs: readonly { axis: TraitAxis; lean: TraitLean }[] };
   /** One line on why this figure is safe to include (non-polarizing / myth rules). */

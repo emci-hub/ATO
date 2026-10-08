@@ -7,9 +7,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   HALL_COLOR,
   HALL_ICON,
-  LegendLabel,
+  LegendAiPlaceholder,
+  LegendFrame,
   LegendShareSheet,
   LegendStoryCard,
+  legendTitle,
 } from '@/components/legend-figure-card';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
@@ -30,22 +32,30 @@ import {
   loadDevLegendDate,
   loadLocalState,
   mergeMuseum,
+  resendMissingEntries,
   saveLocalState,
   saveServerEntry,
+  toldAngles,
+  usedFrameKeys,
   type LegendLocalState,
   type MuseumEntry,
 } from '@/lib/legend-figures/museum-store';
 import {
+  chapterOrder,
   chooseAngle,
+  hallComplete,
+  hallFrames,
+  hallOrder,
   hasNewSettledLean,
   legendLocked,
-  pickLegendSet,
+  matchedOnLine,
+  parseFrameKey,
+  revealsLeft,
   settledFingerprint,
-  type LegendOffer,
 } from '@/lib/legend-figures/pick';
 import { LEGEND_ROSTER, legendById, legendsInHall } from '@/lib/legend-figures/roster';
 import { fallbackLegendStory, legendPairs } from '@/lib/legend-figures/story';
-import { HALL_LABEL, LEGEND_HALLS, type LegendFigure, type LegendHall } from '@/lib/legend-figures/types';
+import { HALL_LABEL, LEGEND_HALLS, type LegendHall } from '@/lib/legend-figures/types';
 import { localYmd } from '@/lib/local-date';
 import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
@@ -56,19 +66,63 @@ import type { TraitTrack } from '@/lib/trait-stability';
 import { withTimeout } from '@/lib/timeout';
 
 export const LEGENDS_LEDE =
-  'A museum of legends from history, science, art, sport, myth and stranger tales. Each day, three of them have something in common with you.';
-export const LEGENDS_TOMORROW_COPY = 'Come back tomorrow for three new legends.';
-export const LEGENDS_BONUS_COPY = 'Your answers changed who you’d meet. A new three is waiting.';
+  'A museum of legends: inventors, artists, healers, explorers, myths, ghosts and famous animals. Pick a hall. Behind each ??? is someone who has something in common with you.';
+export const LEGENDS_TOMORROW_COPY = 'That’s today’s legend. Come back tomorrow to reveal the next one.';
+export const LEGENDS_BONUS_COPY = 'Your answers changed who you’d meet. One more reveal is open today.';
+export const LEGENDS_ONE_TODAY_COPY = 'One reveal a day. Pick a frame.';
+export const HALL_CHAPTERS_COPY = 'You’ve met every legend here. The frames now hide new chapters about them.';
+export const HALL_EMPTY_COPY = 'Nothing left to reveal in this hall today. Try another hall.';
+export const HALL_ALL_TOLD_COPY = 'You’ve heard every story in this hall.';
+export const AI_PLACEHOLDER_NOTE = 'Opens after you’ve met every legend in a hall.';
+
+/** Counts fetch is a nice-to-have: never hold a reveal on it. */
+const COUNTS_TIMEOUT_MS = 4000;
+
+function chapterLabel(chapter: number): string {
+  return chapter === 0 ? 'First meeting' : `Chapter ${chapter + 1}`;
+}
+
+/** Make sure a hall has today's order (and its chapters once it is finished). */
+function ensureHall(
+  state: LegendLocalState,
+  hall: LegendHall,
+  tracks: readonly TraitTrack[],
+  today: string,
+): LegendLocalState {
+  if (!legendsUnlocked(tracks) || legendLocked(tracks)) return state;
+  const day =
+    state.day?.ymd === today ? state.day : { ymd: today, fingerprint: '', halls: {}, revealed: [] };
+  const met = new Set(state.museum.map((row) => row.legendId));
+  const used = usedFrameKeys(state.museum);
+  let hallDay = day.halls[hall];
+  if (!hallDay) {
+    const order = hallOrder({ tracks, userId: state.userId, ymd: today, hall, met });
+    if (!order) return state;
+    hallDay = { order };
+  }
+  const legendsLeft = hallFrames(hallDay.order, used, `${state.userId}|${today}|${hall}`, day.revealed).some(
+    (key) => key != null,
+  );
+  if (!legendsLeft && !hallDay.chapters && hallComplete(hall, tracks, met)) {
+    hallDay = {
+      ...hallDay,
+      chapters: chapterOrder({ tracks, userId: state.userId, ymd: today, hall, told: toldAngles(state.museum) }),
+    };
+  }
+  if (state.day === day && day.halls[hall] === hallDay) return state;
+  return { ...state, day: { ...day, halls: { ...day.halls, [hall]: hallDay } } };
+}
 
 /**
- * Legends — the museum of legends (rebuilt 2026-10-08; it was parked since
- * 2026-09-15). Same gate as every other unlock: `legendsUnlocked(tracks)`
- * (the finished intake), plus at least two clear trait leans.
+ * Legends — the museum of legends (rebuilt 2026-10-08). Same gate as every
+ * other unlock: `legendsUnlocked(tracks)` (the finished intake), plus at least
+ * two clear trait leans.
  *
- * Nothing here spends on its own: today's three are picked on the phone with
- * no AI (`pick.ts`), and the one model call runs only on "Meet them"
- * (`writeLegendStory`, claimed on the server first). Opening a met legend is
- * free — the story was saved.
+ * Pick a hall → three "???" frames (no clue) → reveal one a day (plus one bonus
+ * when a new trait side settles). Nothing here spends on its own: the frames
+ * are picked on the phone with no AI (`pick.ts`), and the one model call runs
+ * only on a reveal tap (`writeLegendStory`, claimed on the server first).
+ * Opening a met legend is free — the story was saved.
  */
 export default function LegendsScreen() {
   const theme = useTheme();
@@ -76,10 +130,14 @@ export default function LegendsScreen() {
   const [tracks, setTracks] = useState<readonly TraitTrack[]>([]);
   const [ready, setReady] = useState(false);
   const [crisisToday, setCrisisToday] = useState(false);
+  const [today, setToday] = useState<string | null>(null);
   const [local, setLocal] = useState<LegendLocalState | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [hall, setHall] = useState<LegendHall | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const [openHall, setOpenHall] = useState<LegendHall | null>(null);
+  const [openChapter, setOpenChapter] = useState(0);
+  /** Notes shown on a card right after its reveal ("Born on this day", …). */
+  const [revealNotes, setRevealNotes] = useState<Record<string, string[]>>({});
   const [friends, setFriends] = useState<Record<string, string[]>>({});
   const [shareOpen, setShareOpen] = useState(false);
   const requestRef = useRef(0);
@@ -88,6 +146,7 @@ export default function LegendsScreen() {
   const meetingRef = useRef(false);
   /** The newest state in memory, newer than storage while a write is pending. */
   const localRef = useRef<LegendLocalState | null>(null);
+  const hallRef = useRef<LegendHall | null>(null);
 
   const dataEpoch = useAccountDataEpoch();
   const userId = me?.id ?? null;
@@ -99,35 +158,6 @@ export default function LegendsScreen() {
     setLocal(next);
     void saveLocalState(next);
   }, []);
-
-  /** Make (or keep) today's set. Counts are fetched once per label so the
-   * teaser shown is the angle the story will use. */
-  const ensureDay = useCallback(
-    async (state: LegendLocalState, nextTracks: readonly TraitTrack[], today: string): Promise<LegendLocalState> => {
-      if (state.day?.ymd === today) return state;
-      // Locked (e.g. right after Change answers): keep whatever day exists, make nothing new.
-      if (!legendsUnlocked(nextTracks) || legendLocked(nextTracks)) return state;
-      const met = new Set(state.museum.map((row) => row.legendId));
-      const visitedHalls = new Set(
-        state.museum.map((row) => legendById(row.legendId)?.hall).filter((h): h is LegendHall => h != null),
-      );
-      const set = pickLegendSet({ tracks: nextTracks, userId: state.userId, ymd: today, setNo: 0, met, visitedHalls });
-      if (!set) return { ...state, day: null };
-      const angles: Record<string, { angleId: string; momentId: string }> = {};
-      await Promise.all(
-        set.offers.map(async (offer) => {
-          const legend = legendById(offer.legendId);
-          if (!legend) return;
-          angles[legend.id] = chooseAngle(legend, state.userId, await fetchAngleCounts(legend.id));
-        }),
-      );
-      return {
-        ...state,
-        day: { ymd: today, fingerprint: settledFingerprint(nextTracks), sets: [set], picked: {}, angles },
-      };
-    },
-    [],
-  );
 
   const reload = useCallback(async () => {
     if (!userId || !me) return;
@@ -144,28 +174,33 @@ export default function LegendsScreen() {
         crisisNotedToday(),
         PRE_LAUNCH_DEV ? loadDevLegendDate() : Promise.resolve(null),
       ]);
-      if (request !== requestRef.current) return;
-      const today = devDate ?? localYmd(new Date(), timeZone);
-      // Memory can be newer than storage (a pick saved a moment ago): keep its
-      // day and museum rows, never roll them back.
+      if (request !== requestRef.current || epoch !== epochRef.current) return;
+      const day = devDate ?? localYmd(new Date(), timeZone);
+      // Memory can be newer than storage (a reveal saved a moment ago): keep
+      // its day and museum rows, never roll them back.
       const memory = localRef.current?.userId === userId ? localRef.current : null;
-      const base: LegendLocalState = {
+      let next: LegendLocalState = {
         ...localState,
-        day: memory?.day?.ymd === today ? memory.day : localState.day,
+        day: memory?.day?.ymd === day ? memory.day : localState.day?.ymd === day ? localState.day : null,
         museum: mergeMuseum(server ?? [], [...(memory?.museum ?? []), ...localState.museum]),
       };
-      const withDay = await ensureDay(base, boot.tracks, today);
-      if (request !== requestRef.current || epoch !== epochRef.current) return;
+      if (hallRef.current) next = ensureHall(next, hallRef.current, boot.tracks, day);
+      // A save that failed (offline, wave89 not applied yet) is retried here.
+      if (server) {
+        const yesterday = localYmd(new Date(Date.now() - 86_400_000), timeZone);
+        void resendMissingEntries(server, next.museum, day, yesterday, () => epoch === epochRef.current);
+      }
       setTracks(boot.tracks);
+      setToday(day);
       setCrisisToday(boot.crisisToday || crisisLocal);
       // A story being written owns the state until it is saved.
-      if (!meetingRef.current) persist(withDay);
+      if (!meetingRef.current) persist(next);
     } catch (err) {
       console.log('[legends] load error:', err);
     } finally {
       if (request === requestRef.current) setReady(true);
     }
-  }, [userId, me, timeZone, ensureDay, persist, dataEpoch]);
+  }, [userId, me, timeZone, persist, dataEpoch]);
 
   // Reset account, Preview as new user, sign-out and the dev Legends tools
   // wipe phone storage and bump the account-data epoch: forget everything held
@@ -178,6 +213,7 @@ export default function LegendsScreen() {
     requestRef.current += 1;
     setLocal(null);
     setOpenId(null);
+    setRevealNotes({});
     setFriends({});
   }, [dataEpoch]);
 
@@ -188,104 +224,155 @@ export default function LegendsScreen() {
   );
 
   const unlocked = legendsUnlocked(tracks) && !legendLocked(tracks);
-  const day = local?.day ?? null;
-  const currentSet = day ? day.sets[day.sets.length - 1] : null;
-  const pickedToday = currentSet && day ? day.picked[currentSet.setNo] ?? null : null;
-  const bonusReady =
-    day != null &&
-    day.sets.length === 1 &&
-    day.picked[0] != null &&
-    hasNewSettledLean(day.fingerprint, settledFingerprint(tracks));
+  const museum = useMemo(() => local?.museum ?? [], [local]);
+  const metIds = useMemo(() => new Set(museum.map((row) => row.legendId)), [museum]);
+  const used = useMemo(() => usedFrameKeys(museum), [museum]);
+  const day = local?.day?.ymd === today ? local?.day ?? null : null;
+  const revealedToday = day?.revealed.length ?? 0;
+  const bonusUnlocked = revealedToday >= 1 && day != null && hasNewSettledLean(day.fingerprint, settledFingerprint(tracks));
+  const left = revealsLeft(revealedToday, bonusUnlocked);
 
-  const museumById = useMemo(() => {
-    const map = new Map<string, MuseumEntry>();
-    for (const row of local?.museum ?? []) map.set(row.legendId, row);
-    return map;
-  }, [local]);
-
-  const openBonus = useCallback(async () => {
-    if (!local?.day || !userId) return;
-    const met = new Set(local.museum.map((row) => row.legendId));
-    const visitedHalls = new Set(
-      local.museum.map((row) => legendById(row.legendId)?.hall).filter((h): h is LegendHall => h != null),
-    );
-    const set = pickLegendSet({ tracks, userId, ymd: local.day.ymd, setNo: 1, met, visitedHalls });
-    if (!set) return;
-    const angles = { ...local.day.angles };
-    await Promise.all(
-      set.offers.map(async (offer) => {
-        const legend = legendById(offer.legendId);
-        if (legend) angles[legend.id] = chooseAngle(legend, userId, await fetchAngleCounts(legend.id));
-      }),
-    );
-    persist({ ...local, day: { ...local.day, sets: [...local.day.sets, set], angles } });
-  }, [local, tracks, userId, persist]);
+  const chooseHall = useCallback(
+    (next: LegendHall) => {
+      // Stay in the hall while its story is being written.
+      if (meetingRef.current) return;
+      const current = localRef.current;
+      hallRef.current = next;
+      setHall(next);
+      setOpenId(null);
+      if (!current || !today) return;
+      const withHall = ensureHall(current, next, tracks, today);
+      if (withHall !== current) persist(withHall);
+    },
+    [today, tracks, persist],
+  );
 
   const loadFriends = useCallback(async (legendId: string) => {
     const names = await fetchCircleFriends(legendId);
     setFriends((prev) => ({ ...prev, [legendId]: names }));
   }, []);
 
-  const meet = useCallback(
-    async (offer: LegendOffer) => {
-      if (!local?.day || !currentSet || busyId || pickedToday || meetingRef.current) return;
-      const legend = legendById(offer.legendId);
+  const reveal = useCallback(
+    async (key: string) => {
+      const start = localRef.current;
+      if (!start || !hall || !today || busyKey || meetingRef.current) return;
+      const startDay = start.day?.ymd === today ? start.day : null;
+      const revealedBefore = startDay?.revealed.length ?? 0;
+      const bonus = revealedBefore >= 1 && startDay != null && hasNewSettledLean(startDay.fingerprint, settledFingerprint(tracks));
+      if (revealsLeft(revealedBefore, bonus) <= 0) return;
+      const { legendId, angleId } = parseFrameKey(key);
+      const legend = legendById(legendId);
       if (!legend) return;
       meetingRef.current = true;
-      setBusyId(legend.id);
+      setBusyKey(key);
       const epochAtStart = epochRef.current;
       try {
-      const chosen = local.day.angles[legend.id] ?? chooseAngle(legend, local.userId, null);
-      const angle = legend.angles.find((a) => a.id === chosen.angleId) ?? legend.angles[0]!;
-      const pairs = legendPairs(
-        legend,
-        rankStoryAxes(tracks).map((row) => ({ axis: row.axis, lean: row.lean, strength: row.strength })),
-      );
-      const input = { legend, angle, momentId: chosen.momentId, pairs };
-      let story;
-      try {
-        story = await withTimeout(writeLegendStory({ ...input, consentGranted }), AI_TAP_TIMEOUT_MS, 'legend-story');
-      } catch {
-        story = fallbackLegendStory(input);
-      }
-      const entry: MuseumEntry = { legendId: legend.id, story, metOn: local.day.ymd };
-      const latest = localRef.current ?? local;
-      const day = latest.day ?? local.day;
-      const next: LegendLocalState = {
-        ...latest,
-        museum: mergeMuseum([], [entry, ...latest.museum.filter((row) => row.legendId !== legend.id)]),
-        day: {
-          ...day,
-          picked: { ...day.picked, [currentSet.setNo]: legend.id },
-          // The bonus set counts traits that settle AFTER this pick.
-          fingerprint: currentSet.setNo === 0 ? settledFingerprint(tracks) : day.fingerprint,
-        },
-      };
-      // A wipe while the story was being written wins: never write it back.
-      if (epochRef.current !== epochAtStart) return;
-      persist(next);
-      setOpenId(legend.id);
-      void saveServerEntry(entry);
-      void loadFriends(legend.id);
+        const chapter = start.museum.filter((row) => row.legendId === legend.id).length;
+        const told = toldAngles(start.museum).get(legend.id);
+        const counts = await withTimeout(fetchAngleCounts(legend.id), COUNTS_TIMEOUT_MS, 'legend-counts').catch(() => null);
+        const chosen = chooseAngle(legend, start.userId, counts, { onlyAngle: angleId, skipAngles: told });
+        const angle = legend.angles.find((a) => a.id === chosen.angleId) ?? legend.angles[0]!;
+        const pairs = legendPairs(
+          legend,
+          rankStoryAxes(tracks).map((row) => ({ axis: row.axis, lean: row.lean, strength: row.strength })),
+        );
+        const input = { legend, angle, momentId: chosen.momentId, pairs };
+        let story;
+        try {
+          story = await withTimeout(writeLegendStory({ ...input, consentGranted }), AI_TAP_TIMEOUT_MS, 'legend-story');
+        } catch {
+          story = fallbackLegendStory(input);
+        }
+        // A wipe while the story was being written wins: never write it back.
+        if (epochRef.current !== epochAtStart) return;
+        const entry: MuseumEntry = { legendId: legend.id, chapter, story, metOn: today };
+        const latest = localRef.current ?? start;
+        const latestDay =
+          latest.day?.ymd === today ? latest.day : { ymd: today, fingerprint: '', halls: {}, revealed: [] };
+        let next: LegendLocalState = {
+          ...latest,
+          museum: mergeMuseum([], [entry, ...latest.museum]),
+          day: {
+            ...latestDay,
+            revealed: [...latestDay.revealed, key],
+            // The bonus counts trait sides that settle AFTER the first reveal.
+            fingerprint: latestDay.revealed.length === 0 ? settledFingerprint(tracks) : latestDay.fingerprint,
+          },
+        };
+        next = ensureHall(next, hall, tracks, today);
+        const notes: string[] = [];
+        if (chapter > 0) notes.push(`${chapterLabel(chapter)} · a new story`);
+        if (chapter === 0 && legend.birthday?.md === today.slice(5, 10)) notes.push('Born on this day');
+        if (chapter === 0 && legend.hidden) notes.push('Hidden legend found');
+        if (
+          chapter === 0 &&
+          legend.roleOf &&
+          start.museum.some((row) => row.legendId !== legend.id && legendById(row.legendId)?.roleOf === legend.roleOf)
+        ) {
+          notes.push(`Another side of ${legend.roleOf}`);
+        }
+        persist(next);
+        setRevealNotes((prev) => ({ ...prev, [legend.id]: notes }));
+        setOpenId(legend.id);
+        setOpenChapter(chapter);
+        void saveServerEntry(entry);
+        void loadFriends(legend.id);
       } finally {
-        // Never leave "Meet them" dead after an unexpected error.
+        // Never leave the frames dead after an unexpected error.
         meetingRef.current = false;
-        setBusyId(null);
+        setBusyKey(null);
       }
     },
-    [local, currentSet, busyId, pickedToday, tracks, consentGranted, persist, loadFriends],
+    [hall, today, busyKey, tracks, consentGranted, persist, loadFriends],
   );
 
   const openLegend = useCallback(
     (legendId: string) => {
       setOpenId((cur) => (cur === legendId ? null : legendId));
+      setOpenChapter(0);
       if (!friends[legendId]) void loadFriends(legendId);
     },
     [friends, loadFriends],
   );
 
-  const openEntry = openId ? museumById.get(openId) ?? null : null;
+  const openEntries = useMemo(
+    () => (openId ? museum.filter((row) => row.legendId === openId).sort((a, b) => a.chapter - b.chapter) : []),
+    [museum, openId],
+  );
   const openLegendDef = openId ? legendById(openId) : null;
+  const openEntry = openEntries.find((row) => row.chapter === openChapter) ?? openEntries[0] ?? null;
+
+  const hallDay = hall && day ? day.halls[hall] ?? null : null;
+  const seed = `${local?.userId ?? ''}|${today ?? ''}|${hall ?? ''}`;
+  const revealedSeq = day?.revealed ?? [];
+  const legendFrames = hallDay ? hallFrames(hallDay.order, used, seed, revealedSeq) : [];
+  const showingChapters = legendFrames.every((key) => key == null) && hallDay?.chapters != null;
+  const frames = showingChapters
+    ? hallFrames(hallDay!.chapters!, used, `${seed}|chapters`, revealedSeq)
+    : legendFrames;
+  const framesLeft = frames.filter((key) => key != null).length;
+  const hallMet = hall ? legendsInHall(hall).filter((legend) => metIds.has(legend.id)) : [];
+
+  const card =
+    openEntry && openLegendDef ? (
+      <>
+        <LegendStoryCard
+          legend={openLegendDef}
+          story={openEntry.story}
+          friends={friends[openLegendDef.id] ?? []}
+          aiOff={openEntry.story.source === 'fallback' && !consentGranted}
+          onShare={() => setShareOpen(true)}
+          notes={revealNotes[openLegendDef.id] ?? []}
+          matchedOn={matchedOnLine(openLegendDef, tracks)}
+          chapters={{
+            labels: openEntries.map((row) => chapterLabel(row.chapter)),
+            selected: openEntries.indexOf(openEntry),
+            onSelect: (index) => setOpenChapter(openEntries[index]?.chapter ?? 0),
+          }}
+        />
+        <LegendShareSheet legend={openLegendDef} visible={shareOpen} onClose={() => setShareOpen(false)} />
+      </>
+    ) : null;
 
   return (
     <ThemedView style={styles.container}>
@@ -305,7 +392,7 @@ export default function LegendsScreen() {
                 {tracks.length > 0 ? fullProfileLockedLine(fullProfileProgress(tracks)) : FULL_PROFILE_LOCKED_COPY}
               </ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                Your first three legends will be waiting once your answers show a clear side or two.
+                The museum opens once your answers show a clear side or two.
               </ThemedText>
               <Pressable
                 onPress={() => router.push('/intake-sweep')}
@@ -314,157 +401,167 @@ export default function LegendsScreen() {
                 <ThemedText type="linkPrimary">Go to Questions</ThemedText>
               </Pressable>
             </View>
-          ) : crisisToday ? null : (
+          ) : (
             <>
-              <ThemedText type="heading" style={styles.heading}>
-                {pickedToday ? 'Today’s legend' : 'Today’s three'}
+              <ThemedText type="small" themeColor="textSecondary">
+                {metIds.size} of {LEGEND_ROSTER.length} legends met
               </ThemedText>
-              {pickedToday && openId !== pickedToday ? (
-                <Pressable onPress={() => openLegend(pickedToday)} accessibilityRole="button">
-                  <ThemedText type="linkPrimary">Open {legendById(pickedToday)?.name ?? 'your legend'}</ThemedText>
-                </Pressable>
-              ) : null}
-              {currentSet?.offers.map((offer) => {
-                const legend = legendById(offer.legendId);
-                if (!legend) return null;
-                if (pickedToday === legend.id) return null;
-                const chosen = day?.angles[legend.id];
-                const teaser = legend.angles.find((a) => a.id === chosen?.angleId)?.teaser ?? legend.angles[0]!.teaser;
-                return (
-                  <LegendLabel
-                    key={`${currentSet.setNo}-${legend.id}`}
-                    legend={legend}
-                    offer={offer}
-                    teaser={teaser}
-                    state={pickedToday ? 'done' : busyId === legend.id ? 'loading' : 'ready'}
-                    onMeet={() => void meet(offer)}
+              <View style={styles.tiles}>
+                {LEGEND_HALLS.map((h) => (
+                  <HallTile
+                    key={h}
+                    hall={h}
+                    selected={hall === h}
+                    met={metIds}
+                    disabled={busyKey != null}
+                    onPress={() => chooseHall(h)}
                   />
-                );
-              })}
-              {pickedToday ? (
-                bonusReady ? (
-                  <Pressable
-                    onPress={() => void openBonus()}
-                    accessibilityRole="button"
-                    style={({ pressed }) => [styles.bonus, { borderColor: theme.accent }, pressed && styles.pressed]}>
-                    <MaterialCommunityIcons name="star-four-points-outline" size={18} color={theme.accent} />
-                    <ThemedText type="smallBold" style={styles.flex}>
-                      {LEGENDS_BONUS_COPY}
+                ))}
+              </View>
+
+              {hall ? (
+                <>
+                  <View style={styles.hallHead}>
+                    <MaterialCommunityIcons name={HALL_ICON[hall]} size={22} color={HALL_COLOR[hall]} />
+                    <ThemedText type="heading" style={styles.flex}>
+                      {HALL_LABEL[hall]}
                     </ThemedText>
-                  </Pressable>
-                ) : (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {LEGENDS_TOMORROW_COPY}
-                  </ThemedText>
-                )
-              ) : null}
+                  </View>
+
+                  {crisisToday ? null : (
+                    <>
+                      {showingChapters && framesLeft > 0 ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {HALL_CHAPTERS_COPY}
+                        </ThemedText>
+                      ) : null}
+                      {framesLeft > 0 ? (
+                        <View style={styles.frames}>
+                          {frames.map((key, index) =>
+                            key == null ? (
+                              <View key={`empty-${index}`} style={styles.flex} />
+                            ) : (
+                              <LegendFrame
+                                key={key}
+                                hall={hall}
+                                index={index}
+                                total={frames.length}
+                                chapter={showingChapters}
+                                state={busyKey === key ? 'loading' : left > 0 && !busyKey ? 'ready' : 'spent'}
+                                onReveal={() => void reveal(key)}
+                              />
+                            ),
+                          )}
+                        </View>
+                      ) : (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {hallDay?.chapters != null ? HALL_ALL_TOLD_COPY : HALL_EMPTY_COPY}
+                        </ThemedText>
+                      )}
+                      {framesLeft > 0 ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {left > 0
+                            ? revealedToday >= 1
+                              ? LEGENDS_BONUS_COPY
+                              : LEGENDS_ONE_TODAY_COPY
+                            : LEGENDS_TOMORROW_COPY}
+                        </ThemedText>
+                      ) : null}
+                    </>
+                  )}
+
+                  {card}
+
+                  {hallMet.length > 0 ? (
+                    <>
+                      <ThemedText type="small" themeColor="textSecondary" style={styles.heading}>
+                        Met in this hall · {hallMet.length}/{legendsInHall(hall).length}
+                      </ThemedText>
+                      <View style={styles.metList}>
+                        {hallMet.map((legend) => (
+                          <Pressable
+                            key={legend.id}
+                            onPress={() => openLegend(legend.id)}
+                            accessibilityRole="button"
+                            accessibilityState={{ expanded: openId === legend.id }}
+                            style={({ pressed }) => [
+                              styles.metChip,
+                              { borderColor: HALL_COLOR[hall] },
+                              pressed && styles.pressed,
+                            ]}>
+                            <ThemedText type="small">{legendTitle(legend)}</ThemedText>
+                          </Pressable>
+                        ))}
+                      </View>
+                    </>
+                  ) : null}
+
+                  {PRE_LAUNCH_DEV ? (
+                    <View style={styles.placeholder}>
+                      <LegendAiPlaceholder />
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {AI_PLACEHOLDER_NOTE}
+                      </ThemedText>
+                    </View>
+                  ) : null}
+                </>
+              ) : (
+                card
+              )}
             </>
           )}
-
-          {openEntry && openLegendDef ? (
-            <>
-              <LegendStoryCard
-                legend={openLegendDef}
-                story={openEntry.story}
-                friends={friends[openLegendDef.id] ?? []}
-                aiOff={openEntry.story.source === 'fallback' && !consentGranted}
-                onShare={() => setShareOpen(true)}
-              />
-              <LegendShareSheet legend={openLegendDef} visible={shareOpen} onClose={() => setShareOpen(false)} />
-            </>
-          ) : null}
-
-          {ready && unlocked ? (
-            <>
-              <ThemedText type="heading" style={styles.heading}>
-                Your museum
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {(local?.museum.length ?? 0)} of {LEGEND_ROSTER.length} legends met
-              </ThemedText>
-              {LEGEND_HALLS.map((hall) => (
-                <HallRow
-                  key={hall}
-                  hall={hall}
-                  open={openHall === hall}
-                  onToggle={() => setOpenHall((cur) => (cur === hall ? null : hall))}
-                  met={museumById}
-                  onOpenLegend={openLegend}
-                />
-              ))}
-            </>
-          ) : null}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
   );
 }
 
-function HallRow({
+function HallTile({
   hall,
-  open,
-  onToggle,
+  selected,
   met,
-  onOpenLegend,
+  disabled,
+  onPress,
 }: {
   hall: LegendHall;
-  open: boolean;
-  onToggle: () => void;
-  met: ReadonlyMap<string, MuseumEntry>;
-  onOpenLegend: (legendId: string) => void;
+  selected: boolean;
+  met: ReadonlySet<string>;
+  /** A story is being written: stay in this hall until it is saved. */
+  disabled: boolean;
+  onPress: () => void;
 }) {
   const theme = useTheme();
   const all = legendsInHall(hall);
-  const metHere = all.filter((legend) => met.has(legend.id));
-  const hiddenLeft = all.filter((legend) => legend.hidden && !met.has(legend.id)).length;
-  const plainLeft = all.length - metHere.length - hiddenLeft;
+  const metHere = all.filter((legend) => met.has(legend.id)).length;
   const color = HALL_COLOR[hall];
   return (
-    <View style={[styles.panel, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-      <Pressable
-        onPress={onToggle}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        style={({ pressed }) => [styles.hallHead, pressed && styles.pressed]}>
-        <MaterialCommunityIcons name={HALL_ICON[hall]} size={20} color={color} />
-        <ThemedText type="smallBold" style={styles.flex}>
-          {HALL_LABEL[hall]}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {metHere.length}/{all.length}
-        </ThemedText>
-      </Pressable>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${HALL_LABEL[hall]}, ${metHere} of ${all.length} met`}
+      disabled={disabled}
+      accessibilityState={{ selected, disabled }}
+      style={({ pressed }) => [
+        styles.tile,
+        {
+          backgroundColor: selected ? `${color}22` : theme.backgroundElement,
+          borderColor: selected ? color : theme.border,
+        },
+        pressed && styles.pressed,
+      ]}>
+      <MaterialCommunityIcons name={HALL_ICON[hall]} size={22} color={color} />
+      <ThemedText type="small" style={styles.tileLabel} numberOfLines={2}>
+        {HALL_LABEL[hall]}
+      </ThemedText>
       <View style={[styles.progress, { backgroundColor: theme.backgroundSelected }]}>
-        <View style={[styles.progressFill, { backgroundColor: color, width: `${all.length ? (metHere.length / all.length) * 100 : 0}%` }]} />
+        <View
+          style={[
+            styles.progressFill,
+            { backgroundColor: color, width: `${all.length ? (metHere / all.length) * 100 : 0}%` },
+          ]}
+        />
       </View>
-      {open ? (
-        <View style={styles.frames}>
-          {metHere.map((legend: LegendFigure) => (
-            <Pressable
-              key={legend.id}
-              onPress={() => onOpenLegend(legend.id)}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.frame, { borderColor: color }, pressed && styles.pressed]}>
-              <ThemedText type="small">{legend.name}</ThemedText>
-            </Pressable>
-          ))}
-          {Array.from({ length: plainLeft }, (_, i) => (
-            <View key={`empty-${i}`} style={[styles.frame, styles.frameEmpty, { borderColor: theme.border }]}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Not met yet
-              </ThemedText>
-            </View>
-          ))}
-          {Array.from({ length: hiddenLeft }, (_, i) => (
-            <View key={`hidden-${i}`} style={[styles.frame, styles.frameEmpty, { borderColor: theme.border }]}>
-              <ThemedText type="small" themeColor="textSecondary">
-                ??? · hidden
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-      ) : null}
-    </View>
+    </Pressable>
   );
 }
 
@@ -489,18 +586,22 @@ const styles = StyleSheet.create({
   link: { paddingVertical: 4 },
   pressed: { opacity: 0.7 },
   flex: { flex: 1 },
-  bonus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tile: {
+    width: '31.5%',
+    minHeight: 92,
     borderWidth: 1,
     borderRadius: 12,
-    padding: Spacing.three,
+    padding: 8,
+    gap: 4,
+    justifyContent: 'space-between',
   },
-  hallHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  progress: { height: 6, borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: 6, borderRadius: 3 },
-  frames: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  frame: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
-  frameEmpty: { borderStyle: 'dashed' },
+  tileLabel: { lineHeight: 16 },
+  hallHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: Spacing.two },
+  frames: { flexDirection: 'row', gap: 8 },
+  progress: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  progressFill: { height: 4, borderRadius: 2 },
+  metList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
+  placeholder: { gap: 4, marginTop: Spacing.two },
 });
