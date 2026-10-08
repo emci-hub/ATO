@@ -433,7 +433,7 @@ export default function HomeScreen() {
   /*
     Today's Pick (emci, 2026-10-05) replaces the daily line card: one
     either/or question a day, the same for everyone, one tap. The week strip
-    rides under it.
+    moved to the very top of Home (emci, 2026-10-07).
   */
   const pickBlock =
     me && todayYmd && userId ? (
@@ -449,11 +449,6 @@ export default function HomeScreen() {
             }}
           />
         </Appear>
-        {todayLine ? (
-          <Appear index={1}>
-            <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} />
-          </Appear>
-        ) : null}
       </>
     ) : null;
 
@@ -481,6 +476,13 @@ export default function HomeScreen() {
           {...NO_PINCH_ZOOM}
           contentContainerStyle={styles.scrollContent}
           contentInsetAdjustmentBehavior="never">
+          {/* "This week" first, above everything (emci, 2026-10-07), in both Home states. */}
+          {me && todayYmd && todayLine ? (
+            <Appear>
+              <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} />
+            </Appear>
+          ) : null}
+
           {/* No "Home" title: the tab bar already says it, and a 32px label
               above the fold pushed the card the user came for off-screen. */}
           <View style={styles.header}>

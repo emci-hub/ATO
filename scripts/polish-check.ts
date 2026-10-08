@@ -114,6 +114,8 @@ ok('the +21 coin appears only when +21 was really paid');
 // ── Placement ────────────────────────────────────────────────────────────────
 const home = read('src/app/(tabs)/index.tsx');
 assert.match(home, /<WeekStrip userId=\{me\.id\} todayYmd=\{todayYmd\}/);
+// "This week" is the very first thing on Home (emci, 2026-10-07), above the lede and every card.
+assert.ok(home.indexOf('<WeekStrip') > home.indexOf('<ScrollView') && home.indexOf('<WeekStrip') < home.indexOf('<View style={styles.header}>'), 'the week strip sits at the very top of Home');
 assert.match(home, /face=\{faceRecipe\}/);
 assert.match(home, /<ProgressRing value=\{roundAnswered \?\? 0\}/);
 assert.match(read('src/app/(tabs)/explore.tsx'), /<ShapeCard/);
