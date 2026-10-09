@@ -129,8 +129,8 @@ no private-trait words. Pinned by `check:legends64`. Order below is HHH, HHL, HL
 - Roles: Main Character, Designated Driver, Mad Scientist, Hall Monitor, Plus-One, Mom Friend, Tab Collector, Homebody
 
 **Dark**
-- Describers: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Smirking, Unmoved
-- Roles: Conqueror, Usurper, Necromancer, Gravekeeper, Trickster, Ringleader, Fortune Teller, Reaper
+- Describers: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Sinister, Cold-Blooded
+- Roles: Conqueror, Tyrant, Necromancer, Gravekeeper, Puppet Master, Ringleader, Heretic, Reaper
 
 ## 3. Traits: names, the word for each end, and what it sounds like (approved 2026-10-02)
 

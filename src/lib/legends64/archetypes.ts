@@ -179,12 +179,12 @@ export const CORE_ROLES: SkinMap = {
   },
   dark: {
     HHH: 'Conqueror',
-    HHL: 'Usurper',
+    HHL: 'Tyrant',
     HLH: 'Necromancer',
     HLL: 'Gravekeeper',
-    LHH: 'Trickster',
+    LHH: 'Puppet Master',
     LHL: 'Ringleader',
-    LLH: 'Fortune Teller',
+    LLH: 'Heretic',
     LLL: 'Reaper',
   },
 };
@@ -286,8 +286,8 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
     HLL: 'Elegant',
     LHH: 'Relentless',
     LHL: 'Unapologetic',
-    LLH: 'Smirking',
-    LLL: 'Unmoved',
+    LLH: 'Sinister',
+    LLL: 'Cold-Blooded',
   },
 };
 
