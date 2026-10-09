@@ -267,6 +267,18 @@ async function main() {
   assert.match(consent, /shared between people with similar leanings and never include your name or your answers/);
   ok('phone: kind + bucket only; free first, brand-new priced; footer on all three; consent says cards are shared');
 
+  // --- wave95: Postgres regexes allow a repeat count of at most 255 --------------------
+  // ('{3,300}' compiled fine in JS and in CREATE, then failed on the first live save.)
+  const sql95 = read('supabase/migrations/wave95_ai_library_key_regex.sql');
+  for (const name of ['library_serve', 'claim_library_write', 'library_add_cards', 'library_want']) {
+    assert.ok(sql95.includes(`create or replace function public.${name}(`), `wave95 restates ${name}`);
+  }
+  for (const m of sql95.replace(/--[^\n]*/g, '').matchAll(/\{(\d+),(\d+)\}/g)) {
+    assert.ok(Number(m[2]) <= 255, `Postgres repeat count ${m[0]} over 255`);
+  }
+  assert.ok(BUCKET_KEY_RE.source.includes('{3,255}'), 'the phone uses the same key shape as the server');
+  ok('wave95: every bucket-key pattern stays within Postgres’s 255 repeat limit');
+
   // --- wave94: the library fills itself ------------------------------------------------
   const sql94 = read('supabase/migrations/wave94_ai_library_fill.sql').replace(/--[^\n]*/g, '');
   const fn94 = (name: string) => {
@@ -305,7 +317,7 @@ async function main() {
   assert.doesNotMatch(sql94, /from public\.trait_tracks|from public\.me\b/, 'no cross-account trait read');
   const fill = read('supabase/functions/ai-library-fill/index.ts');
   assert.ok(fill.indexOf("rpc('library_fill_token_ok'") < fill.indexOf("rpc('library_fill_queue'"), 'the token is checked first');
-  assert.ok(fill.indexOf("rpc('library_fill_begin')") < fill.indexOf('await complete('), 'the cap is claimed before every model call');
+  assert.ok(fill.indexOf("rpc('library_fill_begin')") < fill.indexOf('await completeDetailed('), 'the cap is claimed before every model call');
   assert.ok(fill.includes("p_source: 'seed'"));
   assert.ok(fill.includes('checkLibraryAnswer(item.kind, item.bucket, plan.angles, raw)'), 'the app’s own checks');
   assert.doesNotMatch(fill, /console\.log\([^)]*raw/, 'never logs the text');

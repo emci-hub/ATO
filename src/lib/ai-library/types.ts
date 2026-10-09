@@ -42,7 +42,7 @@ export function sharedCardLine(others: number | null): string | null {
 }
 
 /** Bucket keys: short, lowercase, no spaces (server CHECK uses the same shape). */
-export const BUCKET_KEY_RE = /^[a-z0-9_|:=+,.!-]{3,300}$/;
+export const BUCKET_KEY_RE = /^[a-z0-9_|:=+,.!-]{3,255}$/;
 
 /** One card the AI wrote, with the angle it was written from. */
 export interface LibraryCardDraft<T> {

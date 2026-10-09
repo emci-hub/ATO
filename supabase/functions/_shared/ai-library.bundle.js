@@ -1886,7 +1886,7 @@ var LIBRARY_VERSION = {
   story: "l1",
   legend: "l1"
 };
-var BUCKET_KEY_RE = /^[a-z0-9_|:=+,.!-]{3,300}$/;
+var BUCKET_KEY_RE = /^[a-z0-9_|:=+,.!-]{3,255}$/;
 
 // src/lib/ai-library/deep-dive.ts
 var DIVE_ANGLES = {

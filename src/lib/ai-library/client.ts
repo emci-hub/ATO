@@ -111,7 +111,7 @@ export async function writeLibraryCard<T>(
  * and instant. Best effort: a failure changes nothing on screen.
  */
 export async function wantLibraryCards(kind: LibraryKind, buckets: readonly string[]): Promise<boolean> {
-  const list = [...new Set(buckets)].filter((b) => /^[a-z0-9_|:=+,.!-]{3,300}$/.test(b)).slice(0, 11);
+  const list = [...new Set(buckets)].filter((b) => /^[a-z0-9_|:=+,.!-]{3,255}$/.test(b)).slice(0, 11);
   if (list.length === 0) return false;
   try {
     const { data, error } = await supabase.rpc('library_want', {

@@ -25,7 +25,7 @@ import {
   isLibraryKind,
   planLibraryCall,
 } from '../_shared/ai-library.bundle.js';
-import { complete } from '../_shared/ai-vendors.ts';
+import { completeDetailed } from '../_shared/ai-vendors.ts';
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -71,6 +71,11 @@ Deno.serve(async (request) => {
 
   let calls = 0;
   let written = 0;
+  /** Why calls wrote nothing (reason labels only, never text), for the counter and debugging. */
+  const reasons: Record<string, number> = {};
+  const why = (r: string) => {
+    reasons[r] = (reasons[r] ?? 0) + 1;
+  };
   for (const item of items) {
     if (calls >= perRun) break;
     const angles = await admin.rpc('library_angle_counts', { p_kind: item.kind, p_bucket: item.bucket, p_version: item.version });
@@ -84,7 +89,9 @@ Deno.serve(async (request) => {
     if (go.data !== true) break; // today's cap
     calls += 1;
     let cards = 0;
-    const raw = await complete(plan.prompt, plan.maxOutputTokens);
+    const answer = await completeDetailed(plan.prompt, plan.maxOutputTokens);
+    const raw = answer.text;
+    if (!raw) why(`model: ${answer.error ?? 'no answer'}`);
     if (raw) {
       const checked = checkLibraryAnswer(item.kind, item.bucket, plan.angles, raw);
       if (checked.cards.length > 0) {
@@ -98,7 +105,10 @@ Deno.serve(async (request) => {
         });
         const ids = (added.data as { ids?: unknown[] } | null)?.ids;
         cards = Array.isArray(ids) ? ids.length : 0;
+        if (added.error) why(`store: ${added.error.message.slice(0, 80)}`);
+        else if (cards === 0) why('store: backstop guard');
       } else {
+        why(`rejected: ${checked.reason ?? 'unknown'}`);
         console.log(`[ai-library-fill] ${item.kind} rejected: ${checked.reason ?? 'unknown'}`);
       }
     }
@@ -106,5 +116,5 @@ Deno.serve(async (request) => {
     await admin.rpc('library_fill_done', { p_kind: item.kind, p_bucket: item.bucket, p_version: item.version, p_cards: cards });
   }
 
-  return json({ ok: true, waiting: items.length, calls, written });
+  return json({ ok: true, waiting: items.length, calls, written, reasons });
 });

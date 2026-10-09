@@ -80,3 +80,18 @@ export async function complete(prompt: string, maxOutputTokens: number): Promise
   }
 }
 
+/** Same as `complete`, plus why both vendors failed (status codes only, never text). */
+export async function completeDetailed(prompt: string, maxOutputTokens: number): Promise<{ text: string | null; error: string | null }> {
+  const cap = Math.min(MAX_OUTPUT_TOKENS, Math.max(1, Math.floor(maxOutputTokens)));
+  let first = '';
+  try {
+    return { text: await completeGemini(prompt, cap), error: null };
+  } catch (err) {
+    first = err instanceof Error ? err.message.slice(0, 60) : 'gemini failed';
+  }
+  try {
+    return { text: await completeDeepSeek(prompt, cap), error: null };
+  } catch (err) {
+    return { text: null, error: `${first} / ${err instanceof Error ? err.message.slice(0, 60) : 'deepseek failed'}` };
+  }
+}
