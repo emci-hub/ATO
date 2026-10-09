@@ -239,7 +239,10 @@ assert.match(
 assert.doesNotMatch(home, /needsConsentPrompt/);
 assert.match(home, /const consentGranted = consent === 'granted';/);
 assert.match(home, /\{AI_USE_DISCLOSURE\}/);
-assert.match(consent, /AI_USE_DISCLOSURE = 'Sage uses AI only to write your Story\.'/);
+assert.match(
+  consent,
+  /AI_USE_DISCLOSURE = 'Sage uses AI only to write your Story, your Legends cards and your category deep dives\.'/,
+);
 // The AI mark (emci 2026-10-07): a small icon you tap to read what it means,
 // on every mounted surface that shows model output (today: the Story fold).
 const aiBadge = read('src/components/ai-badge.tsx');

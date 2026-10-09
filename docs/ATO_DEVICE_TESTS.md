@@ -291,6 +291,18 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] Share a met legend. Confirm the preview shows name, essence and hall, never the story.
 - [ ] Screenshot: a hall with three "???" frames, and one revealed card.
 
+## Box 30 — Home: category deep dive (needs wave90 applied)
+
+- [ ] Home (Questions finished): under today's insight, a "Deep dive" card with your ready categories as chips.
+- [ ] Tap a category. Confirm "Your leanings in …" with a bar per trait, e.g. "Adventurous · Curiosity 78%", and the note "50% is the middle…".
+- [ ] Tap "Write my deep dive". Confirm a spinner, then: Your title here, Where it shows up (one line per top trait), How they mix, What others might notice, What it means for you — each with the small AI icon.
+- [ ] Tap another category. Confirm its leanings show and the button says you've had today's deep dive (1 a day).
+- [ ] Go back to the first category, kill and reopen the app. Confirm the written card is still there (no new AI call).
+- [ ] Open Love / closeness (next day). Confirm the wording is warm and never says anxious, insecure, avoidant or attachment.
+- [ ] Turn AI off on You. Confirm the leanings still show, with "Turn on AI on You to get the written deep dive."
+- [ ] Confirm Home's AI line now reads "Sage uses AI only to write your Story, your Legends cards and your category deep dives."
+- [ ] Screenshot: a written deep dive with its leanings.
+
 ---
 
 **All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–28).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`; Box 28 specifically needs OTA `0ff16d9d` or later), not per box.

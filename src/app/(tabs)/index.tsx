@@ -14,6 +14,7 @@ import { WeekStrip } from '@/components/week-strip';
 import { IdentityTitleChip } from '@/components/identity-title-chip';
 import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { SageStoryFold } from '@/components/sage-story-fold';
+import { CategoryDeepDiveCard } from '@/components/category-deep-dive-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -574,8 +575,8 @@ export default function HomeScreen() {
           ) : (
             /*
              * STATE 2 — unlocked. emci's order (2026-10-05): Story, then the
-             * insight (or its sealed card), then Today's Pick and the week, then
-             * the next round.
+             * insight (or its sealed card), then the category deep dive
+             * (2026-10-08), then Today's Pick and the week, then the next round.
              */
             <>
               {me ? (
@@ -694,6 +695,12 @@ export default function HomeScreen() {
                     </ThemedText>
                   ) : null}
                 </ThemedView>
+              ) : null}
+
+              {/* Category deep dive (emci, 2026-10-08): pick a category, one AI
+                  card a day. Under the stored insight; hidden on a crisis day. */}
+              {me && tracksUserId === me.id && !crisisToday ? (
+                <CategoryDeepDiveCard userId={me.id} tracks={tracks} consentGranted={consentGranted} />
               ) : null}
 
               {pickBlock}

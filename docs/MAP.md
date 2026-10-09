@@ -78,6 +78,8 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `dev-unlock-gate.tsx` | 7-tap version number → password prompt → session-only Dev Tools unlock |
 | `kenney-character.tsx`, `kenney-credits-card.tsx`, `pixel-face.tsx`, `animated-icon*.tsx` | Sprite character, credits, splash |
 | `trace-pipeline.tsx` | Generic dev trace viewer |
+| `legend-figure-card.tsx`, `legend-figures-dev.tsx` | Legends museum: ??? frames, story card, share sheet; dev tool |
+| `category-deep-dive-card.tsx` | Home: category picker, leanings %, the deep-dive card (one AI call on tap) |
 
 ## `src/lib` — logic (no React except `*-context.tsx`)
 
@@ -98,6 +100,8 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | Crisis | `crisis/{detect,copy,days,log,region,region-context,region-storage}.ts` | Keyword detect, static card, region |
 | Around | `around/{fetch,fixture,going,weekend,tickets,ages,slug,map-edmtrain,edmtrain-api,types}.ts` | Weekend shows, going |
 | Legends | `legends64/{classify,archetypes,generate-story,store}.ts` | 64-archetype classify, name content (6 skins), story generation, storage |
+| Legends museum | `legend-figures/{types,labels,pick,story,generate,museum-store,flags}.ts`, `legend-figures/roster/*` | 12 halls × 10 hand-written legends, ??? frames, chapters, the one AI story call |
+| Category deep dive | `category-deep-dive/{dive,generate,state,store,flags}.ts` | Home: leanings % per category + one AI card a day (wave90) |
 | Nav | `nav/{nav-order,nav-context}.tsx` | Persisted tab order + gates |
 | Theme | `theme/{context,chrome,contrast,navigation,storage}.ts`, `color.ts` | Appearance modes |
 | Push | `push.ts`, `push-policy.ts`, `push-copy.ts` | Local schedules, copy |

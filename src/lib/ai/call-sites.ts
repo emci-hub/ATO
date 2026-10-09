@@ -122,6 +122,16 @@ export const LEGEND_FIGURE_META: AiCallMetadata = {
   latencySensitive: true,
 };
 
+/** Category deep dive (Home, 2026-10-08) — one card about the person inside
+ * ONE category they picked, grounded in their leanings there. Manual tap only,
+ * one per day, saved after. */
+export const CATEGORY_DEEP_DIVE_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: true,
+};
+
 export const AI_CALL_SITES: readonly AiCallSite[] = [
   {
     feature: 'Infinite Questions',
@@ -162,6 +172,11 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Legend figure story',
     location: 'src/lib/legend-figures/generate.ts → writeLegendStory()',
     meta: LEGEND_FIGURE_META,
+  },
+  {
+    feature: 'Category deep dive',
+    location: 'src/lib/category-deep-dive/generate.ts → writeCategoryDeepDive()',
+    meta: CATEGORY_DEEP_DIVE_META,
   },
   {
     feature: 'Category statements',

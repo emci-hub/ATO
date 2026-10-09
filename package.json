@@ -83,6 +83,7 @@
     "check:kits": "tsx ./scripts/check-kits.ts",
     "check:legends": "tsx ./scripts/check-legends.ts",
     "check:legend-roster": "tsx ./scripts/legend-roster-check.ts",
+    "check:category-deep-dive": "tsx ./scripts/category-deep-dive-check.ts",
     "check:pet": "tsx ./scripts/check-pet.ts",
     "check:pet-eggs": "tsx ./scripts/check-pet-eggs.ts",
     "check:play-settings": "tsx ./scripts/check-play-settings.ts",

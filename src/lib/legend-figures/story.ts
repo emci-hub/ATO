@@ -314,6 +314,23 @@ export function legendLineViolation(text: string, allowed: string, isStory: bool
   return null;
 }
 
+/**
+ * A shareable "the patient rebuilder" title (Legends and category deep dives):
+ * two to four lowercase words starting with "the", nothing that reads as worry,
+ * doubt or struggle on a share image, and the usual line rules.
+ */
+export function titleViolation(title: string, allowed: string): string | null {
+  if (!/^the( [a-z][a-z'’-]*){1,3}$/.test(title) || words(title) > TITLE_MAX_WORDS) return 'title shape';
+  if (
+    /\b(anxi|worr|lonel|alone|sad|fear|struggl|broken|overthink|second-guess|doubt|nerv|insecur|clingy|needy|lost|fragile|timid|shy|avoidant|attach)/.test(
+      title,
+    )
+  ) {
+    return 'title tone';
+  }
+  return legendLineViolation(title, allowed, false);
+}
+
 /** Parse + validate the model's answer. Null = reject (retry or fall back). */
 export function parseLegendStory(
   raw: string,
@@ -345,11 +362,7 @@ export function parseLegendStory(
 
   if (typeof obj.title !== 'string') return null;
   const title = obj.title.trim().toLowerCase();
-  if (!/^the( [a-z][a-z'’-]*){1,3}$/.test(title) || words(title) > TITLE_MAX_WORDS) return null;
-  if (/\b(anxi|worr|lonel|alone|sad|fear|struggl|broken|overthink|second-guess|doubt|nerv|insecur|clingy|needy|lost|fragile|timid|shy)/.test(title)) {
-    return null;
-  }
-  if (legendLineViolation(title, allowed, isStory)) return null;
+  if (titleViolation(title, allowed)) return null;
 
   if (typeof obj.metScene !== 'string') return null;
   const metScene = obj.metScene.trim();

@@ -188,6 +188,7 @@ const METADATA_CALL_FILES = new Set([
   'src/lib/category-statements/generate-statements.ts',
   'src/lib/insight/generate-insight.ts',
   'src/lib/legend-figures/generate.ts',
+  'src/lib/category-deep-dive/generate.ts',
 ]);
 const CALL_WITH_META =
   /generateText\(\s*\{[\s\S]*?\}\s*,\s*[A-Za-z0-9_$.[\]]+\s*\)/g;
@@ -227,7 +228,7 @@ const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
   'bucketShareable',
   'latencySensitive',
 ];
-assert.equal(AI_CALL_SITES.length, 10, 'one catalog entry per AI call site');
+assert.equal(AI_CALL_SITES.length, 11, 'one catalog entry per AI call site');
 const features = new Set<string>();
 for (const site of AI_CALL_SITES) {
   assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);

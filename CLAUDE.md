@@ -68,6 +68,14 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   (Focus · try · watch, `src/lib/insight-bank/`) and the Explore category cards (`src/lib/category-bank/`)
   are written by hand, picked on the device, and never call a model. Ids are forever (`ftw_<axis>_<h|l>_<nn>`).
   Both ship with `*_COPY_REVIEWED = false` and a review doc, and show NO draft badge in the app (emci 2026-10-07).
+- **Category deep dive on Home is the one AI card there (emci 2026-10-08).** Under the stored insight (State 2
+  only, hidden on a crisis day): pick a category → leanings worked out on the phone ("Adventurous 78%") →
+  "Write my deep dive" = one AI call (`src/lib/category-deep-dive/`: consent, then `claim_category_deep_dive`,
+  1/day, wave90), strict validator, no clinical words, gentle block for Love / closeness. It never touches
+  insight-bank or category-bank. `CATEGORY_DEEP_DIVE_COPY_REVIEWED = false`, review doc
+  `docs/category-deep-dive-review.md`, pinned by `check:category-deep-dive`.
+- **The AI consent copy names every real AI use** (Story, Legends cards, category deep dives —
+  `AI_USE_DISCLOSURE`). A new AI surface updates it in the same change (Apple 5.1.2).
 - **Questions come from the fixed bank (wave85, emci 2026-10-06).** 400 questions, 25 per trait,
   one file per trait in `src/lib/questions/bank/`; the server copy (`question_bank`) is generated
   by `scripts/gen-wave85-bank.ts` and pinned by `check:question-bank`. No AI writes a question and

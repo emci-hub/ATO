@@ -59,6 +59,7 @@ import { DAILY_LINE_COPY_REVIEWED } from '@/lib/daily-line/bank';
 import { DAILY_INSIGHT_COPY_REVIEWED } from '@/lib/insight/generate-insight';
 import { LEGENDS64_COPY_REVIEWED, NAME_STYLES_V2_COPY_REVIEWED } from '@/lib/legends64/archetypes';
 import { LEGEND_FIGURES_COPY_REVIEWED } from '@/lib/legend-figures/flags';
+import { CATEGORY_DEEP_DIVE_COPY_REVIEWED } from '@/lib/category-deep-dive/flags';
 import { DAILY_PICK_COPY_REVIEWED } from '@/lib/daily-pick/bank';
 import { POLISH_COPY_REVIEWED } from '@/lib/polish-copy';
 import { PROFILE_FILL_COPY_REVIEWED } from '@/lib/profile-fill';
@@ -577,7 +578,8 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Category bands', reviewed: CATEGORY_BAND_COPY_REVIEWED },
   { name: 'Concept explainers', reviewed: CONCEPT_COPY_REVIEWED },
   { name: 'Archetype names', reviewed: LEGENDS64_COPY_REVIEWED },
-  { name: 'Legends museum (26 legends, teasers, AI prompt)', reviewed: LEGEND_FIGURES_COPY_REVIEWED },
+  { name: 'Legends museum (120 legends, teasers, AI prompt)', reviewed: LEGEND_FIGURES_COPY_REVIEWED },
+  { name: 'Category deep dive (Home, AI prompt + card wording)', reviewed: CATEGORY_DEEP_DIVE_COPY_REVIEWED },
   { name: 'Name styles v2 (Primal Genius, High Fantasy, Corporate Realist, Oxymoron)', reviewed: NAME_STYLES_V2_COPY_REVIEWED },
   { name: 'Profile fill', reviewed: PROFILE_FILL_COPY_REVIEWED },
   { name: 'Polish pass (shape, week, set done, sealed read)', reviewed: POLISH_COPY_REVIEWED },

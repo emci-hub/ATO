@@ -18,20 +18,22 @@ export type ConsentContext = 'home' | 'talk';
  * outside every consent branch -- Home does so today. Any future surface that
  * mounts this card owes the same line.
  */
-export const AI_USE_DISCLOSURE = 'Sage uses AI only to write your Story.';
+export const AI_USE_DISCLOSURE = 'Sage uses AI only to write your Story, your Legends cards and your category deep dives.';
 
-// Bodies rewritten 2026-10-07 (emci). The daily focus, the questions and the
-// category cards are stored copy now, so the only thing ai_consent gates is
-// the Story. The copy has to say exactly that, because this is the Apple
+// Bodies rewritten 2026-10-07 (emci), widened 2026-10-08: the daily focus, the
+// questions and the Explore category cards are stored copy, so ai_consent gates
+// the Story, the Legends cards' "you" part and the Home category deep dive. The copy has to say exactly that, because this is the Apple
 // 5.1.2 consent surface: it may not claim AI where there is none, or leave
 // out where there is.
 const COPY: Record<ConsentContext, { title: string; body: string }> = {
   home: {
-    title: 'Can Sage use AI to write your Story?',
+    title: 'Can Sage use AI to write for you?',
     body:
-      'Sage writes your Story using AI, based on your answers. Sage is a coach in the app, ' +
-      'not a person. You’ll only be asked once. Say no and the Story stays off. Your daily ' +
-      'focus, your questions and your categories don’t use AI, so they keep working either way.',
+      'Sage uses AI, based on your answers, to write your Story, the personal part of your ' +
+      'Legends cards and the category deep dives you ask for. Sage is a coach in the app, not a ' +
+      'person. You’ll only be asked once. Say no and those stay off (Legends uses the museum’s own ' +
+      'words). Your daily focus, your questions and your category cards don’t use AI, so they ' +
+      'keep working either way.',
   },
   talk: {
     title: 'Can Sage use AI to talk with you?',
