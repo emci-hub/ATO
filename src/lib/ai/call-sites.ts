@@ -122,7 +122,7 @@ export const LEGEND_FIGURE_META: AiCallMetadata = {
   latencySensitive: true,
 };
 
-/** Category deep dive (Home, 2026-10-08) — one card about the person inside
+/** Category deep dive (Explore; built 2026-10-08) — one card about the person inside
  * ONE category they picked, grounded in their leanings there. Manual tap only,
  * one per day, saved after. */
 export const CATEGORY_DEEP_DIVE_META: AiCallMetadata = {

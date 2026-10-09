@@ -74,6 +74,7 @@ const GENERATORS = [
   'generateText',
   'generateDailyInsight',
   'generateStoryBody',
+  'generateStoryCardText',
   'generateExploreBody',
   'generateQuestionBatch',
   'generateOngoingRoundBatch',

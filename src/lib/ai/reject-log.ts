@@ -9,7 +9,7 @@ import { Sentry } from '@/lib/sentry';
 
 import { reasonOnly } from './reject-reason';
 
-export type AiSurface = 'legend_figure' | 'category_deep_dive';
+export type AiSurface = 'legend_figure' | 'category_deep_dive' | 'story';
 
 export function logAiReject(surface: AiSurface, reason: string, pass: number): void {
   try {

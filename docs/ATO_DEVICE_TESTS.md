@@ -291,9 +291,9 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] Share a met legend. Confirm the preview shows name, essence and hall, never the story.
 - [ ] Screenshot: a hall with three "???" frames, and one revealed card.
 
-## Box 30 — Home: category deep dive (needs wave90 applied)
+## Box 30 — Explore: category deep dive (needs wave90 + wave91; moved from Home 2026-10-09)
 
-- [ ] Home (Questions finished): under today's insight, a "Deep dive" card with your ready categories as chips.
+- [ ] Explore (Questions finished): between Categories and "How you've changed", a "Deep dive" list, one number per category, strongest first. Home no longer shows it.
 - [ ] Tap a category. Confirm "Your leanings in …" with a bar per trait, e.g. "Adventurous · Curiosity 78%", and the note "50% is the middle…".
 - [ ] Tap "Write my deep dive". Confirm a spinner, then: Your title here, Where it shows up (one line per top trait), How they mix, What others might notice, What it means for you — each with the small AI icon.
 - [ ] Tap another category. Confirm its leanings show and the button says you've had today's deep dive (1 a day).
@@ -302,6 +302,12 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] Turn AI off on You. Confirm the leanings still show, with "Turn on AI on You to get the written deep dive."
 - [ ] Confirm Home's AI line now reads "Sage uses AI only to write your Story, your Legends cards and your category deep dives."
 - [ ] Screenshot: a written deep dive with its leanings.
+
+## Box 31 — Home: The Story as a card (2026-10-09)
+
+- [ ] Home → The Story → Load story. Confirm parts, each with the AI icon: Your story title, The scene, The moment, How you handle it, What it means for you, and (sometimes) The funny part.
+- [ ] Confirm the story text never says a trait or category word ("your Steady side", "Drive"), and a small "Built from: …" line names the categories with their letters and number.
+- [ ] An older saved story (before this update) still shows as one paragraph until you load a new one.
 
 ---
 

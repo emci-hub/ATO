@@ -31,6 +31,7 @@ import { leanHighLow, type TraitAxis } from '@/lib/traits';
 import { CLEAR_VOICE_RULES } from '@/lib/voice/clear-voice';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { jokeHasBannedTopic } from '@/lib/voice/card-joke';
+import { parseStoredStoryCard, type StoryCard } from '@/lib/story-card';
 import { MOMENT_VOICE_BLOCK, STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
 export const STORY_COPY_REVIEWED = false;
@@ -44,6 +45,8 @@ export interface SageStory {
   categoryIds: CategoryId[];
   /** Story v2: which 1–2 categories this story was about, so the next load takes a new angle. */
   thread?: StoryThreadRecord;
+  /** Story v3 (2026-10-09): the card parts. Older stories have only `body`. */
+  card?: StoryCard;
 }
 
 export interface StorySample {
@@ -126,9 +129,15 @@ export function parseSageStory(raw: unknown): SageStory | null {
     }
   }
   const thread = parseStoryThreadRecord(row.thread);
-  return thread
-    ? { body, fingerprint, generatedOn, categoryIds, thread }
-    : { body, fingerprint, generatedOn, categoryIds };
+  const card = parseStoredStoryCard(row.card);
+  return {
+    body,
+    fingerprint,
+    generatedOn,
+    categoryIds,
+    ...(thread ? { thread } : {}),
+    ...(card ? { card } : {}),
+  };
 }
 
 export const STORY_MAX_WORDS = 180;

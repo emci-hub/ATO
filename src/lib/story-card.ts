@@ -1,0 +1,244 @@
+/**
+ * The Story as a card (emci, 2026-10-09: "reformat it so it's like how legends
+ * and categorize deep dive are"). Same ONE call, same claim, same thread
+ * picker — the answer is parts instead of one block:
+ *
+ *   title    — "the calm fixer" (shared title rules)
+ *   scene    — one ordinary setting
+ *   moment   — where the two sides meet
+ *   handle   — how the person tends to handle it (optional)
+ *   means    — what it means for them, plain and kind
+ *   joke     — the Story's one joke line (its named exception), optional
+ *
+ * Why the rebuild: the one 90–160-word block mixed three voices, read as a
+ * jumble, and trait words ("your Accountable side") leaked through because
+ * only category names were checked. Now every part is checked, no trait or
+ * category word may appear (`storyLabelLeak`), and optional parts that fail
+ * are dropped instead of paid for twice. The traits behind it show as a
+ * "Built from" label on the card, never in the text.
+ *
+ * Stories saved before this keep their `body` and render as before.
+ */
+import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
+import { getCategoryDefs } from '@/lib/categories';
+import { pickCategoryCard } from '@/lib/category-bank';
+import { diveLineViolation } from '@/lib/category-deep-dive/dive';
+import { CATEGORY_DISPLAY_NAMES } from '@/lib/category-labels';
+import { titleViolation } from '@/lib/legend-figures/story';
+import { localYmd } from '@/lib/local-date';
+import { poleWord, threadAxes, type StoryThread } from '@/lib/story-thread';
+import type { TraitTrack } from '@/lib/trait-stability';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { cardJokeViolation, jokeHasBannedTopic } from '@/lib/voice/card-joke';
+import { MOMENT_VOICE_BLOCK, STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
+
+export interface StoryCard {
+  title: string | null;
+  scene: string;
+  moment: string;
+  handle: string | null;
+  means: string;
+  joke: string | null;
+}
+
+export const STORY_SCENE_WORDS = [12, 45] as const;
+export const STORY_MOMENT_WORDS = [12, 45] as const;
+export const STORY_HANDLE_WORDS = [10, 40] as const;
+export const STORY_MEANS_WORDS = [15, 45] as const;
+
+/** Every trait and category word that must never appear in the story text. */
+const LABEL_WORDS: readonly string[] = [
+  ...TRAIT_AXES.flatMap((axis) => [AXIS_POLE_NAME[axis].high, AXIS_POLE_NAME[axis].low, AXIS_SHORT_NAME[axis]]),
+];
+
+/**
+ * A trait or category label leaked into the text: "your Accountable side",
+ * a capitalised trait word mid-sentence ("the Steady one"), a short trait
+ * name used as a label, or a category name (catalog or friendly). Plain
+ * lowercase use of an everyday word ("a quiet café") is fine.
+ */
+export function storyLabelLeak(text: string): string | null {
+  const lower = text.toLowerCase();
+  for (const word of LABEL_WORDS) {
+    const w = word.toLowerCase().replace(/[-]/g, '[- ]');
+    if (new RegExp(`\\b(your|the|their|that)\\s+${w}\\s+side\\b`).test(lower)) return `side label`;
+    if (new RegExp(`(?<![.?:;]\\s)(?<!^)\\b${word.replace(/-/g, '-')}\\b`).test(text)) return 'capitalised trait word';
+  }
+  // Friendly names ("How You Love", "When Things Get Hard") are everyday phrases in
+  // lowercase, so only their title-case form counts as a label.
+  for (const name of Object.values(CATEGORY_DISPLAY_NAMES)) {
+    if (text.includes(name)) return 'names a category';
+  }
+  for (const name of getCategoryDefs().map((def) => def.name)) {
+    if (/[\s/&]/.test(name)) {
+      // Catalog multi-word names ("Openness to life", "Love / closeness") are never everyday phrases.
+      if (lower.includes(name.toLowerCase())) return 'names a category';
+    } else if (new RegExp(`(?<![.?:;]\\s)(?<!^)\\b${name}\\b`).test(text)) {
+      // Single words ("Drive", "Levity") only as a capitalised label mid-sentence, so "drive" stays allowed.
+      return 'names a category';
+    }
+  }
+  return null;
+}
+
+/** One story line: the deep-dive line rules (no names, no counting, no clinical
+ * words, no advice), the Story's banned topics, and no trait/category labels. */
+export function storyCardLineViolation(text: string): string | null {
+  if (jokeHasBannedTopic(text)) return 'banned topic';
+  return storyLabelLeak(text) ?? diveLineViolation(text, '');
+}
+
+/** The byte-identical opening of every Story prompt (cache-friendly). */
+export const STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. This is The Story: ONE ordinary day, ONE setting, the same people
+throughout, told as a short card in parts. The SIDES at the end say what to draw on; write from their meaning, never
+their labels.
+
+${MOMENT_VOICE_BLOCK}
+
+RULES
+- Second person ("you", "your"). A typical day, never a claimed event ("on a day like this", "you might").
+- Never "you are", never "always", no "!", no emoji, no advice, no "should".
+- Never name a trait, a category or a side, and never print any word listed in the SIDES (no "your Steady side").
+- Use no quotation marks, and name no people, apps, brands or places.
+- No counting and no exaggeration: never a number or a number word above two. Say "a few", "a couple" or nothing.
+- Stay in the one setting: no second scene, no new set of people.
+- Never leave square or angle brackets in the answer.
+
+STYLE — CLEAR FIRST, MOMENT SECOND (this overrides "Describe the moment and stop" above, and the counts in the
+register examples there are exactly what NOT to do here):
+- Each part is short and plain, like a smart friend texting you what they noticed. Nobody should reread it to get it.
+- Realistic everyday detail (the kind that happens every week), never a strange one-off scene or a riddle.
+- A quiet or low side is a style with an upside, never a weakness.
+
+THE PARTS
+"title" — a name for the reader in this story, two to four lowercase words, starting with "the". Fresh and flattering.
+  Never about worry, doubt, loneliness or struggle.
+"scene" — ${STORY_SCENE_WORDS[0]}–${STORY_SCENE_WORDS[1]} words: the one ordinary setting and what is going on.
+"moment" — ${STORY_MOMENT_WORDS[0]}–${STORY_MOMENT_WORDS[1]} words: the moment where SIDE A shows (and, when there is a SIDE B, where the two pull against each other).
+"handle" — ${STORY_HANDLE_WORDS[0]}–${STORY_HANDLE_WORDS[1]} words: how the reader tends to handle it ("you might", "usually"). If a TOLD-VS-PLAYED note is given,
+  you may fold it in here, warmly, with no winner.
+"means" — ${STORY_MEANS_WORDS[0]}–${STORY_MEANS_WORDS[1]} words: one plain, kind closing line on what it all says about the reader. Only this part explains.
+"joke" — only when a JOKE TARGET is given. Exactly one sentence, about the situation that side lands them in.
+${STORY_JOKE_RULES}
+
+Return JSON only, exactly this shape (leave out "joke" when JOKE TARGET is none):
+{"title": "<the ...>", "scene": "...", "moment": "...", "handle": "...", "means": "...", "joke": "<one sentence>"}`;
+
+/** The Story card prompt: the fixed block first, then this person's sides. */
+export function buildStoryCardPrompt(input: {
+  tracks: readonly TraitTrack[];
+  divergenceNote: string | null;
+  divergenceAxis?: TraitAxis | null;
+  thread: StoryThread;
+  userId: string;
+  ymd?: string;
+}): string {
+  const { thread } = input;
+  const ymd = input.ymd ?? localYmd(new Date(), 'UTC');
+  const sides = thread.categories.map((row, index) => {
+    const label = index === 0 ? 'SIDE A' : 'SIDE B';
+    const card = pickCategoryCard({ userId: input.userId, reading: row.reading, ymd });
+    const bits = [
+      row.lead ? `- Lead lean, in one word (never print it): ${poleWord(row.lead)}` : null,
+      card ? `- How it tends to show: ${card.summary}` : null,
+      card ? `- What it does well: ${card.strength}` : null,
+      card ? `- Where it can catch: ${card.watchOut}` : null,
+    ].filter((line): line is string => line != null);
+    return `${label} (internal; never name it)\n${bits.join('\n') || '- (no stored lines)'}`;
+  });
+  const axes = threadAxes(thread);
+  const tensionOn = !!input.divergenceNote && !!input.divergenceAxis && axes.includes(input.divergenceAxis);
+  return `${STORY_CARD_PROMPT_STATIC}
+
+${sides.join('\n\n')}
+
+${tensionOn ? `TOLD-VS-PLAYED (optional; warm, not an accusation, no winner)\n- ${input.divergenceNote}` : 'TOLD-VS-PLAYED: none. Do not invent a split.'}
+${thread.joke ? `JOKE TARGET: the ${AXIS_POLE_NAME[thread.joke.axis][thread.joke.lean]} side (never print that word).` : 'JOKE TARGET: none.'}`;
+}
+
+function words(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function within(text: string, [min, max]: readonly [number, number]): boolean {
+  const n = words(text);
+  return n >= min && n <= max;
+}
+
+export interface StoryCardResult {
+  card: StoryCard | null;
+  /** Why it was rejected (reason only, for the log). */
+  reason: string | null;
+}
+
+/**
+ * Parse + check the model's answer. The core (scene, moment, means) must pass
+ * or it is rejected (one retry); the title, "how you handle it" and the joke
+ * are dropped when they fail — never shown, never a second paid call.
+ */
+export function parseStoryCardAnswer(raw: string, opts: { jokeAsked: boolean }): StoryCardResult {
+  const reject = (reason: string): StoryCardResult => ({ card: null, reason });
+  let data: unknown;
+  try {
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    if (start < 0 || end <= start) return reject('not json');
+    data = JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return reject('not json');
+  }
+  if (typeof data !== 'object' || data == null) return reject('not an object');
+  const obj = data as Record<string, unknown>;
+
+  const core: Record<'scene' | 'moment' | 'means', string> = { scene: '', moment: '', means: '' };
+  const limits = { scene: STORY_SCENE_WORDS, moment: STORY_MOMENT_WORDS, means: STORY_MEANS_WORDS } as const;
+  for (const key of ['scene', 'moment', 'means'] as const) {
+    const value = obj[key];
+    if (typeof value !== 'string') return reject(`${key} missing`);
+    const line = value.trim();
+    if (!within(line, limits[key])) return reject(`${key}: length`);
+    const bad = storyCardLineViolation(line);
+    if (bad) return reject(`${key}: ${bad}`);
+    core[key] = line;
+  }
+
+  const optional = (value: unknown, limit: readonly [number, number]): string | null => {
+    if (typeof value !== 'string') return null;
+    const line = value.trim();
+    return within(line, limit) && !storyCardLineViolation(line) ? line : null;
+  };
+  const handle = optional(obj.handle, STORY_HANDLE_WORDS);
+
+  let title: string | null = null;
+  if (typeof obj.title === 'string') {
+    const t = obj.title.trim().toLowerCase();
+    // Lowercase, so the capital-letter check can't see a trait word: test the words directly.
+    const hasLabel = LABEL_WORDS.some((word) => new RegExp(`\\b${word.toLowerCase()}\\b`).test(t));
+    if (!titleViolation(t, '') && !storyLabelLeak(t) && !hasLabel) title = t;
+  }
+
+  let joke: string | null = null;
+  if (opts.jokeAsked && typeof obj.joke === 'string') {
+    const line = obj.joke.trim();
+    if (!cardJokeViolation(line) && !storyLabelLeak(line) && !diveLineViolation(line, '')) joke = line;
+  }
+
+  return { card: { title, scene: core.scene, moment: core.moment, handle, means: core.means, joke }, reason: null };
+}
+
+/** The card as one block, for older readers of `story.body` (Explore, Rolls). */
+export function storyCardBody(card: StoryCard): string {
+  return [card.scene, card.moment, card.handle, card.means].filter(Boolean).join(' ');
+}
+
+/** Loose read of a saved card. */
+export function parseStoredStoryCard(raw: unknown): StoryCard | null {
+  if (typeof raw !== 'object' || raw == null) return null;
+  const obj = raw as Record<string, unknown>;
+  const s = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+  const scene = s(obj.scene);
+  const moment = s(obj.moment);
+  const means = s(obj.means);
+  if (!scene || !moment || !means) return null;
+  return { title: s(obj.title), scene, moment, handle: s(obj.handle), means, joke: s(obj.joke) };
+}

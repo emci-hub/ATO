@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoriesFold } from '@/components/categories-fold';
+import { CategoryDeepDiveCard } from '@/components/category-deep-dive-card';
 import { ChangeCard } from '@/components/change-card';
 import { FullProfileFold } from '@/components/full-profile-fold';
 import { Appear, SkeletonCard } from '@/components/motion';
@@ -18,6 +19,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { useMeContext } from '@/lib/me-context';
+import { aiConsentFor } from '@/lib/me';
+import { crisisNotedToday } from '@/lib/crisis/local-flag';
+import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -35,6 +39,8 @@ export default function ExploreScreen() {
   const { me, refresh: refreshMe } = useMeContext();
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
+  /** A crisis noted today hides every AI offer (the deep dive), as on Home. */
+  const [crisisToday, setCrisisToday] = useState(false);
   const dataEpoch = useAccountDataEpoch();
 
   /**
@@ -50,9 +56,17 @@ export default function ExploreScreen() {
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
     try {
-      const rows = await fetchTraitTracks(userId);
+      // Crisis: the phone's flag OR the server's crisis day, the same two Home reads.
+      const [rows, crisisLocal, crisisServer] = await Promise.all([
+        fetchTraitTracks(userId),
+        crisisNotedToday(),
+        fetchHomeBootstrap(me?.timezone || 'UTC')
+          .then((boot) => boot.crisisToday)
+          .catch(() => false),
+      ]);
       if (requestId !== requestIdRef.current) return;
       setTracks(rows);
+      setCrisisToday(crisisLocal || crisisServer);
     } catch (err) {
       console.log('[explore] tracks error:', err);
     } finally {
@@ -114,6 +128,12 @@ export default function ExploreScreen() {
                 onUpdated={() => refreshMe()}
                 unlocked={isFullProfileDone(tracks, tracksReady)}
               />
+              {/* Category deep dive (moved from Home, emci 2026-10-09): one AI card
+                  a day, only on its button. After Questions are finished; hidden on
+                  a crisis day. */}
+              {isFullProfileDone(tracks, tracksReady) && !crisisToday ? (
+                <CategoryDeepDiveCard userId={me.id} tracks={tracks} consentGranted={aiConsentFor(me) === 'granted'} />
+              ) : null}
               {/* What actually moved lately, from the answer history. No model call. */}
               <ChangeCard userId={me.id} />
               <TraitBandsFold me={me} tracks={tracks} />

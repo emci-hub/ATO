@@ -579,7 +579,7 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Concept explainers', reviewed: CONCEPT_COPY_REVIEWED },
   { name: 'Archetype names', reviewed: LEGENDS64_COPY_REVIEWED },
   { name: 'Legends museum (120 legends, teasers, AI prompt)', reviewed: LEGEND_FIGURES_COPY_REVIEWED },
-  { name: 'Category deep dive (Home, AI prompt + card wording)', reviewed: CATEGORY_DEEP_DIVE_COPY_REVIEWED },
+  { name: 'Category deep dive (Explore, AI prompt + card wording)', reviewed: CATEGORY_DEEP_DIVE_COPY_REVIEWED },
   { name: 'Name styles v2 (Primal Genius, High Fantasy, Corporate Realist, Oxymoron)', reviewed: NAME_STYLES_V2_COPY_REVIEWED },
   { name: 'Profile fill', reviewed: PROFILE_FILL_COPY_REVIEWED },
   { name: 'Polish pass (shape, week, set done, sealed read)', reviewed: POLISH_COPY_REVIEWED },

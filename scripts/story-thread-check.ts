@@ -20,6 +20,7 @@ import {
   parseStoryBody,
   STORY_MAX_WORDS,
 } from '../src/lib/sage-story';
+import { STORY_CARD_PROMPT_STATIC, buildStoryCardPrompt, parseStoryCardAnswer, storyCardBody, storyLabelLeak } from '../src/lib/story-card';
 import {
   partnerScore,
   pickJokeTarget,
@@ -270,6 +271,45 @@ const rich = tracksOf({
   const thread = read('src/lib/story-thread.ts');
   assert.doesNotMatch(thread, /generateText|supabase|fetch\(/, 'the picker is pure');
   ok('the thread is saved with the story, old stories still read, and the fold passes tracks, last thread and crisis');
+}
+
+// Story v3 (emci, 2026-10-09): the Story as a card, checked part by part.
+{
+  const good = {
+    title: 'the calm fixer',
+    scene: 'On a day like this, the group chat lights up about a dinner plan while you finish up at work.',
+    moment: 'The plan starts to wobble, and you notice you want it settled while a friend wants to keep it loose.',
+    handle: 'You might offer a simple time and place, then leave a little room for the others to add to it.',
+    means: 'You tend to bring calm to a messy plan, and people quietly count on that more than they say.',
+    joke: 'Your calendar has seen more drafts of this dinner than the restaurant has seen guests.',
+  };
+  const parsed = parseStoryCardAnswer(JSON.stringify(good), { jokeAsked: true });
+  assert.ok(parsed.card, `a grounded card is accepted (${parsed.reason})`);
+  assert.equal(parsed.card!.joke, good.joke);
+  assert.equal(parseStoryCardAnswer(JSON.stringify(good), { jokeAsked: false }).card!.joke, null, 'no joke asked → none kept');
+  const bad = (patch: Record<string, unknown>) => JSON.stringify({ ...good, ...patch });
+  assert.match(parseStoryCardAnswer(bad({ moment: 'Your Accountable side kicks in the moment the dinner plan starts to wobble with friends.' }), { jokeAsked: false }).reason ?? '', /moment: side label/, 'a trait label in the text is rejected');
+  assert.match(parseStoryCardAnswer(bad({ scene: 'On a day like this, twelve messages about dinner arrive before you finish work.' }), { jokeAsked: false }).reason ?? '', /count word/, 'no counting');
+  assert.equal(parseStoryCardAnswer('nope', { jokeAsked: false }).reason, 'not json');
+  const noHandle = parseStoryCardAnswer(bad({ handle: 'Your Steady side handles it.' }), { jokeAsked: false }).card!;
+  assert.equal(noHandle.handle, null, 'a bad optional part is dropped, never shown, not paid for twice');
+  assert.equal(parseStoryCardAnswer(bad({ title: 'the anxious planner' }), { jokeAsked: false }).card!.title, null);
+  assert.equal(storyLabelLeak('You pull into the driveway as the chat buzzes.'), null, 'everyday words stay allowed');
+  assert.equal(storyLabelLeak('Then How You Love shows up again.'), 'names a category');
+  assert.equal(storyLabelLeak('It is how you love the people around you, plainly.'), null, 'the same words in lowercase are an everyday phrase');
+  assert.equal(parseStoryCardAnswer(bad({ title: 'the steady planner' }), { jokeAsked: false }).card!.title, null, 'a trait word in the title is dropped');
+  const card = parsed.card!;
+  const saved = parseSageStory({ body: storyCardBody(card), fingerprint: 'f', generatedOn: '2026-10-09', card })!;
+  assert.deepEqual(saved.card, card, 'the card is saved and read back');
+  assert.equal(parseSageStory({ body: 'A day.', fingerprint: 'f', generatedOn: '2026-10-09' })!.card, undefined, 'old body-only stories still read');
+  const t2 = pickStoryThread({ tracks: rich, last: null, crisisToday: false })!;
+  const p1 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: t2, userId: 'u1', ymd: '2026-10-09' });
+  assert.ok(p1.startsWith(STORY_CARD_PROMPT_STATIC), 'fixed instructions first (cache-friendly)');
+  const foldSrc = read('src/components/sage-story-fold.tsx');
+  assert.match(foldSrc, /story\?\.card \? \(\s*<StoryCardView/, 'a card story renders as parts');
+  assert.match(foldSrc, /Built from: /, 'the categories behind it show as a label');
+  assert.match(foldSrc, /logAiReject\('story'/, 'a rejection is logged with its reason only');
+  ok('Story v3: a card in parts, no trait words in the text, optional parts dropped, old stories still read');
 }
 
 console.log(`\n${passed} story-thread checks passed`);

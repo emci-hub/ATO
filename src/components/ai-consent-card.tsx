@@ -22,7 +22,7 @@ export const AI_USE_DISCLOSURE = 'Sage uses AI only to write your Story, your Le
 
 // Bodies rewritten 2026-10-07 (emci), widened 2026-10-08: the daily focus, the
 // questions and the Explore category cards are stored copy, so ai_consent gates
-// the Story, the Legends cards' "you" part and the Home category deep dive. The copy has to say exactly that, because this is the Apple
+// the Story, the Legends cards' "you" part and the Explore category deep dive. The copy has to say exactly that, because this is the Apple
 // 5.1.2 consent surface: it may not claim AI where there is none, or leave
 // out where there is.
 const COPY: Record<ConsentContext, { title: string; body: string }> = {

@@ -1,5 +1,5 @@
 /**
- * Home — the category deep dive (emci, 2026-10-08).
+ * Explore — the category deep dive (emci, 2026-10-08; moved from Home 2026-10-09).
  *
  * Pick a category → your leanings in it ("Adventurous 78%", worked out on the
  * phone, no AI) → "Write my deep dive" runs the ONE model call

@@ -229,15 +229,16 @@ assert.match(gen, /const claim = await claimCategoryDeepDive\(\);\s*if \(claim !
 assert.match(read('src/lib/category-deep-dive/store.ts'), /PGRST202/, 'before wave90 is applied it says "not switched on yet", never "used"');
 assert.match(card, /madeToday\(state\.dives, diveDay\(\)\)/, 'the phone counts the day the way the server does (UTC)');
 assert.match(card, /outcome = await pending;/, 'a slow answer is waited for, never thrown away (the claim is spent)');
+// Moved from Home to Explore (emci, 2026-10-09): between Categories and "How you've changed".
 const home = read('src/app/(tabs)/index.tsx');
-const state2 = home.indexOf('STATE 2');
-const cardAt = home.indexOf('<CategoryDeepDiveCard');
-assert.ok(state2 > 0 && cardAt > state2, 'only in State 2 (after Questions are finished)');
-assert.ok(cardAt > home.indexOf('INSIGHT_LOAD_LABEL}'), 'under the daily insight');
-assert.ok(cardAt < home.lastIndexOf('{pickBlock}'), 'above Today’s Pick');
-assert.match(home, /!crisisToday \? \(\s*<CategoryDeepDiveCard/, 'hidden on a crisis day');
-assert.equal(home.split('<CategoryDeepDiveCard').length - 1, 1);
-ok('one AI call, only on "Write my deep dive", after consent and the server claim; on Home under the insight, State 2 only, hidden on a crisis day');
+assert.doesNotMatch(home, /<CategoryDeepDiveCard/, 'no longer on Home');
+const explore = read('src/app/(tabs)/explore.tsx');
+const cardAt = explore.indexOf('<CategoryDeepDiveCard');
+assert.ok(cardAt > explore.indexOf('<CategoriesFold') && cardAt < explore.indexOf('<ChangeCard'), 'between Categories and How you’ve changed');
+assert.match(explore, /isFullProfileDone\(tracks, tracksReady\) && !crisisToday \? \(\s*<CategoryDeepDiveCard/, 'after Questions are finished; hidden on a crisis day');
+assert.match(explore, /consentGranted=\{aiConsentFor\(me\) === 'granted'\}/, 'needs AI consent');
+assert.equal(explore.split('<CategoryDeepDiveCard').length - 1, 1);
+ok('one AI call, only on "Write my deep dive", after consent and the server claim; on Explore between Categories and How you’ve changed, after Questions, hidden on a crisis day');
 
 const sql = read('supabase/migrations/wave90_category_deep_dive.sql');
 assert.match(sql, /create policy category_deep_dives_select_own on public\.category_deep_dives\s+for select using \(auth\.uid\(\) = user_id\);/);
