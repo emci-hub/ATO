@@ -79,6 +79,7 @@ const KEEP: Record<string, string> = {
   ai_library_cards: 'shared AI library cards served to everyone (created_by is only the writer)',
   ai_library_seen: 'which shared cards were shown: kept so a reset never re-serves the same free cards',
   ai_library_reports: 'safety: reports about shared cards',
+  ai_library_wanted: 'look-ahead group keys (no text); the phone re-sends them on the next open, deleted with the account',
   dev_access_grants: 'root-managed tester grants, not game data',
   dev_trace_sessions: 'debug traces, expire on their own',
   dev_trace_events: 'debug traces, expire on their own',

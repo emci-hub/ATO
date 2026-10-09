@@ -105,6 +105,36 @@ export async function writeLibraryCard<T>(
   }
 }
 
+/**
+ * Look-ahead (wave94): tell the server which groups this reader will need
+ * (keys only, never text). The hourly fill writes them so the next tap is free
+ * and instant. Best effort: a failure changes nothing on screen.
+ */
+export async function wantLibraryCards(kind: LibraryKind, buckets: readonly string[]): Promise<boolean> {
+  const list = [...new Set(buckets)].filter((b) => /^[a-z0-9_|:=+,.!-]{3,300}$/.test(b)).slice(0, 11);
+  if (list.length === 0) return false;
+  try {
+    const { data, error } = await supabase.rpc('library_want', {
+      p_kind: kind,
+      p_buckets: list,
+      p_version: LIBRARY_VERSION[kind],
+    });
+    return !error && (data as { ok?: unknown } | null)?.ok === true;
+  } catch {
+    return false;
+  }
+}
+
+/** Team size for a deep-dive group (only from 5 people up, never who), or null. */
+export async function fetchTeamSize(bucket: string): Promise<number | null> {
+  try {
+    const { data, error } = await supabase.rpc('library_team_size', { p_bucket: bucket });
+    return !error && typeof data === 'number' && data >= 5 ? data : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function reportLibraryCard(cardId: string): Promise<boolean> {
   try {
     const { data, error } = await supabase.rpc('library_report', { p_card_id: cardId });
@@ -119,3 +149,5 @@ export { sharedCardLine };
 export const LIBRARY_REPORT_LABEL = 'Report this card';
 export const LIBRARY_REPORT_CONFIRM = 'Tap again to report';
 export const LIBRARY_REPORTED = 'Thanks. Two reports take a card out for everyone.';
+/** The group is queued for the hourly fill: say so instead of offering a paid card first. */
+export const LIBRARY_QUEUED = 'Being written for you, free. Check back in about an hour.';

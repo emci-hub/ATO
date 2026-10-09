@@ -1895,6 +1895,16 @@ var DIVE_ANGLES = {
   solo: "in the reader\u2019s own time: errands, hobbies, a free evening"
 };
 var ANGLE_IDS = Object.keys(DIVE_ANGLES);
+function allDiveBuckets(categoryId) {
+  const def = categoryById(categoryId);
+  if (!def) return [];
+  const axes = [...def.axes].sort((a, b) => TRAIT_AXES.indexOf(a) - TRAIT_AXES.indexOf(b));
+  let combos = [[]];
+  for (const axis of axes) {
+    combos = combos.flatMap((row) => ["h", "l", "m"].map((state) => [...row, `${axis}:${state}`]));
+  }
+  return combos.map((row) => `dd|${categoryId}|${row.join(",")}`);
+}
 function parseDiveBucket(key) {
   const m = /^dd\|(cat_[a-z]{2,20})\|([a-z_]+:[hlm](?:,[a-z_]+:[hlm]){0,5})$/.exec(key);
   if (!m) return null;
@@ -9608,10 +9618,16 @@ function checkLibraryAnswer(kind, key, angles, raw) {
     angles
   );
 }
+function deepDiveBaseline() {
+  return CATEGORY_DEFS.flatMap((def) => allDiveBuckets(def.id));
+}
+var DEEP_DIVE_FILL_TARGET = 3;
 export {
   BUCKET_KEY_RE,
+  DEEP_DIVE_FILL_TARGET,
   LIBRARY_VERSION,
   checkLibraryAnswer,
+  deepDiveBaseline,
   isLibraryKind,
   planLibraryCall
 };

@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { AiBadge } from '@/components/ai-badge';
 import { LibraryCardFooter } from '@/components/library-card-footer';
 import { STORY_LIBRARY, storyBucketKey } from '@/lib/ai-library/story';
-import { serveLibraryCard, writeLibraryCard } from '@/lib/ai-library/client';
+import { serveLibraryCard, wantLibraryCards, writeLibraryCard } from '@/lib/ai-library/client';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -36,7 +36,7 @@ import {
 } from '@/lib/sage-story';
 import { claimStoryGenerate, saveSageStory } from '@/lib/sage-story-store';
 import { categoryById, readyCategories } from '@/lib/categories';
-import { pickStoryThread, threadRecord } from '@/lib/story-thread';
+import { pickJokeTarget, pickStoryThread, rankStoryCombos, scoreReadyCategories, threadRecord } from '@/lib/story-thread';
 import { divergingAxesFromTracks } from '@/lib/trait-history';
 import { type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -53,7 +53,8 @@ export const STORY_STALE_COPY = 'Your answers have moved since this was written.
 export const STORY_OPEN_LABEL = 'Load story · free';
 export const STORY_ANOTHER_LABEL = 'Load a new story · free';
 export const STORY_NEW_LABEL = 'Write me a brand-new story';
-export const STORY_EMPTY_COPY = 'You’ve read every story for leanings like yours. Sage can write a brand-new one.';
+export const STORY_EMPTY_COPY =
+  'You’ve read every story for leanings like yours. A new one is being written for you, free: check back in about an hour. Or write one now.';
 export const STORY_DAILY_COPY = 'That’s today’s free stories. A brand-new one is still open, or come back tomorrow.';
 
 type LoadState = 'idle' | 'loading' | 'not_ready' | 'unavailable' | 'tokens' | 'empty' | 'daily';
@@ -107,6 +108,19 @@ export function SageStoryFold({
   const fingerprint = storyFingerprint(tracks, divergenceNote);
   /** The library had nothing new for this reader today: offer a brand-new story. */
   const [needNew, setNeedNew] = useState(false);
+
+  // Look-ahead (wave94): tell the server which Story groups this reader's next
+  // loads will use (group keys only, never text), so the hourly fill writes
+  // them ahead of time and "Load a new story" stays free. No model call here.
+  const lookAheadRef = useRef(false);
+  useEffect(() => {
+    if (lookAheadRef.current || !unlocked || !consentGranted || !tracksReady || crisisToday) return;
+    lookAheadRef.current = true;
+    const buckets = rankStoryCombos(scoreReadyCategories(tracks))
+      .map((combo) => storyBucketKey({ categories: combo, joke: pickJokeTarget(tracks, combo, false) }))
+      .filter((key): key is string => key != null);
+    if (buckets.length > 0) void wantLibraryCards('story', buckets);
+  }, [unlocked, consentGranted, tracksReady, crisisToday, tracks]);
 
   // A local parse of what is already on the `me` row. No network, no model —
   // this is the only thing that runs without a tap.
@@ -164,6 +178,7 @@ export function SageStoryFold({
         if (res.reason === 'missing') return 'missing';
         if (res.reason === 'empty' || res.reason === 'daily') {
           emptyReasonRef.current = res.reason;
+          if (res.reason === 'empty') void wantLibraryCards('story', [bucket]);
         } else if (res.reason === 'tokens') {
           tokensShortRef.current = true;
         }

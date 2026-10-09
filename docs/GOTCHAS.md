@@ -203,3 +203,8 @@ Read before editing the area. Each one has bitten this repo at least once.
   cards are not served to the new app (root: Dev Hub → AI → AI library, or
   `library_retire_old_versions`).
 - **Postgres regex `` is a backspace, not a word boundary.** Use `\m` / `\M` / `\y`.
+- **`ai-library-fill` must be deployed with `--no-verify-jwt`** (wave94). The pg_cron job
+  sends a random token from Vault (`ai_library_fill_token`), not a user JWT; the function
+  checks it with `library_fill_token_ok`. Deployed with JWT checking on, every cron call
+  is refused at the gateway and the library silently stops filling. Pause the fill with
+  `update public.app_config set library_fill_daily_cap = 0 where id = 1;`.

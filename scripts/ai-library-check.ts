@@ -19,13 +19,15 @@
  *   Report), and the consent copy says cards are shared.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { allDiveBuckets, diveBucketKey, parseDiveBucket, DEEP_DIVE_LIBRARY } from '../src/lib/ai-library/deep-dive';
 import { LEGEND_LIBRARY, legendBucketKey, parseLegendBucket } from '../src/lib/ai-library/legend';
 import { checkLibraryAnswer, planLibraryCall } from '../src/lib/ai-library/server';
 import { STORY_LIBRARY, parseStoryBucket } from '../src/lib/ai-library/story';
+import { TEAM_COPY_REVIEWED, TEAM_SIDES, teamForBucket } from '../src/lib/ai-library/teams';
+import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
 import { BUCKET_KEY_RE, LIBRARY_VERSION, sharedCardLine } from '../src/lib/ai-library/types';
 import { CATEGORY_DEFS } from '../src/lib/categories';
 import { legendPairs, legendDiffer } from '../src/lib/legend-figures/story';
@@ -264,6 +266,96 @@ async function main() {
   const consent = read('src/components/ai-consent-card.tsx');
   assert.match(consent, /shared between people with similar leanings and never include your name or your answers/);
   ok('phone: kind + bucket only; free first, brand-new priced; footer on all three; consent says cards are shared');
+
+  // --- wave94: the library fills itself ------------------------------------------------
+  const sql94 = read('supabase/migrations/wave94_ai_library_fill.sql').replace(/--[^\n]*/g, '');
+  const fn94 = (name: string) => {
+    const start = sql94.indexOf(`create or replace function public.${name}(`);
+    assert.ok(start >= 0, `${name} exists`);
+    return sql94.slice(start, sql94.indexOf('$$;', start));
+  };
+  for (const t of ['ai_library_wanted', 'ai_library_fill_fails', 'ai_library_fill_days']) {
+    assert.ok(sql94.includes(`alter table public.${t} enable row level security;`), `${t}: RLS on`);
+    assert.ok(sql94.includes(`revoke all on public.${t} from public, anon, authenticated;`), `${t}: no direct access`);
+  }
+  assert.doesNotMatch(sql94, /create policy/i);
+  assert.match(sql94, /user_id uuid not null references auth\.users\(id\) on delete cascade/, 'wanted keys go with the account');
+  const want = fn94('library_want');
+  assert.ok(want.includes("cap := case p_kind when 'deep_dive' then 11 when 'story' then 3 else 6 end;"), 'capped per account');
+  assert.ok(want.includes('_library_crisis(uid)'));
+  assert.ok(want.includes('array_length(p_buckets, 1), 0) not between 1 and 11'));
+  for (const name of ['library_fill_token_ok', 'library_fill_queue', 'library_fill_state', 'library_fill_begin', 'library_fill_done']) {
+    assert.match(sql94, new RegExp(`revoke all on function public\\.${name}\\([^)]*\\) from public, anon, authenticated;`), `${name}: no phone`);
+    assert.match(sql94, new RegExp(`grant execute on function public\\.${name}\\([^)]*\\) to service_role;`), `${name}: service role only`);
+  }
+  assert.ok(fn94('library_fill_token_ok').includes('vault.decrypted_secrets'), 'the token lives in Vault');
+  assert.ok(fn94('library_fill_token_ok').includes('length(p_token) >= 32'));
+  assert.match(fn94('library_fill_begin'), /if used >= cap then\s*return false;/, 'a hard daily cap');
+  assert.ok(sql94.includes('library_fill_daily_cap int not null default 400'));
+  assert.ok(fn94('library_fill_queue').includes('f.fails >= 3'), 'a group that keeps failing is skipped for the day');
+  assert.ok(fn94('library_fill_queue').includes("interval '7 days'"), 'only people active this week');
+  assert.ok(fn94('library_coverage').includes('perform public.require_root();'));
+  const teamSize = fn94('library_team_size');
+  assert.ok(teamSize.includes('when n >= 5 then (n / 5) * 5 else null end'), 'team size only from 5 up, in steps of 5');
+  assert.ok(teamSize.includes("p_bucket not like 'dd|cat_love|%'"), 'never for How You Love');
+  assert.ok(teamSize.includes('mine.user_id = auth.uid()'), 'only for a group the caller is in');
+  assert.ok(sql94.includes('check (library_fill_per_run between 0 and 5)'), 'a run fits the function time limit');
+  assert.ok(want.includes('now() - make_interval(secs => i / 1000.0)'), 'the trim keeps the phone’s best groups');
+  assert.match(sql94, /cron\.schedule\(\s*'ai-library-fill',\s*'\*\/10 \* \* \* \*'/);
+  assert.doesNotMatch(sql94, /from public\.trait_tracks|from public\.me\b/, 'no cross-account trait read');
+  const fill = read('supabase/functions/ai-library-fill/index.ts');
+  assert.ok(fill.indexOf("rpc('library_fill_token_ok'") < fill.indexOf("rpc('library_fill_queue'"), 'the token is checked first');
+  assert.ok(fill.indexOf("rpc('library_fill_begin')") < fill.indexOf('await complete('), 'the cap is claimed before every model call');
+  assert.ok(fill.includes("p_source: 'seed'"));
+  assert.ok(fill.includes('checkLibraryAnswer(item.kind, item.bucket, plan.angles, raw)'), 'the app’s own checks');
+  assert.doesNotMatch(fill, /console\.log\([^)]*raw/, 'never logs the text');
+  ok('wave94: look-ahead keys capped per account, token in Vault, service-role fill, daily cap, fail skip, no trait read');
+
+  // --- phone look-ahead ---------------------------------------------------------------
+  const legendsScreen = read('src/app/(tabs)/legends.tsx');
+  assert.ok(fold.includes("wantLibraryCards('story', buckets)"), 'Story tells the server its next groups');
+  assert.ok(legendsScreen.includes("wantLibraryCards('legend', buckets)"), 'Legends tells the server today’s frames');
+  assert.ok(legendsScreen.includes('planLegendReveal({ legend, frameAngleId: angleId, userId: start.userId, counts, told, tracks })'), 'one planner for reveal and look-ahead');
+  assert.ok(card.includes("wantLibraryCards('deep_dive', [diveBucketKey(def.id, leans)])"), 'a used-up deep-dive group is queued, free');
+  ok('the phone sends group keys ahead of time: Story, today’s Legends frames, a used-up deep dive');
+
+  // --- teams -------------------------------------------------------------------------------
+  const glyphs = JSON.parse(
+    readFileSync(resolve(root, 'node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json'), 'utf8'),
+  ) as Record<string, number>;
+  const names = new Map<string, string>();
+  let teams = 0;
+  for (const def of CATEGORY_DEFS) {
+    for (const bucket of allDiveBuckets(def.id)) {
+      const team = teamForBucket(bucket);
+      if (def.id === 'cat_love') {
+        assert.equal(team, null, 'no team for How You Love');
+        continue;
+      }
+      assert.ok(team, `a team for ${bucket}`);
+      assert.ok(!names.has(team!.name), `unique: ${team!.name}`);
+      names.set(team!.name, bucket);
+      for (const icon of team!.icons) assert.ok(icon in glyphs, `icon exists: ${icon}`);
+      assert.equal(team!.icons.length, def.axes.length);
+      teams += 1;
+    }
+  }
+  assert.equal(teams, 198, '207 groups minus the 9 of How You Love');
+  assert.equal(teamForBucket('dd|cat_social|extraversion:l,agreeableness:l,playfulness:h')!.name, 'Night-In Hot-Take Chaos Club', 'names are stable');
+  const poleWords = new Set(TRAIT_AXES.flatMap((a) => [AXIS_POLE_NAME[a].high, AXIS_POLE_NAME[a].low].map((w) => w.toLowerCase())));
+  for (const sides of Object.values(TEAM_SIDES)) {
+    for (const side of Object.values(sides!)) {
+      for (const word of side.phrase.toLowerCase().split('-')) assert.ok(!poleWords.has(word), `no test word in a team phrase: ${side.phrase}`);
+      assert.doesNotMatch(side.phrase, /anxi|insecur|needy|clingy|toxic|lazy|weird|rizz|slay|no-cap|bestie/i);
+    }
+  }
+  assert.equal(TEAM_COPY_REVIEWED, false, 'team names ship unreviewed');
+  assert.ok(existsSync(resolve(root, 'docs/team-names-review.md')), 'review doc exists');
+  const badge = read('src/components/team-badge.tsx');
+  assert.ok(badge.includes('setShown(map[categoryId] === true)'), 'hidden by default, shown only by choice');
+  assert.ok(badge.includes('TEAM_HIDDEN_ICON'));
+  assert.ok(card.includes('<TeamBadge'));
+  ok(`teams: ${teams} unique names from the reader’s sides, real icons, none for How You Love, hidden by default`);
 
   console.log(`\n${passed} ai-library checks passed`);
 }

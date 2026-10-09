@@ -14,6 +14,9 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { AiBadge } from '@/components/ai-badge';
 import { LibraryCardFooter } from '@/components/library-card-footer';
+import { TeamBadge } from '@/components/team-badge';
+import { wantLibraryCards } from '@/lib/ai-library/client';
+import { diveBucketKey } from '@/lib/ai-library/deep-dive';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -60,7 +63,8 @@ export const DEEP_DIVE_WRITE_LABEL = 'Write my deep dive';
 export const DEEP_DIVE_OPEN_LABEL = 'Open my deep dive · free';
 export const DEEP_DIVE_ANOTHER_LABEL = 'Show me another angle · free';
 export const DEEP_DIVE_NEW_LABEL = 'Write me a brand-new one';
-export const DEEP_DIVE_EMPTY = 'You’ve read every deep dive for leanings like yours. Sage can write a brand-new one.';
+export const DEEP_DIVE_EMPTY =
+  'You’ve read every deep dive for leanings like yours. A new one is being written for you, free: check back in about an hour. Or write one now.';
 export const DEEP_DIVE_DAILY = 'That’s today’s free deep dives. A brand-new one is still open, or come back tomorrow.';
 export const DEEP_DIVE_USED = 'That’s the most deep dives for today. Come back tomorrow.';
 export const DEEP_DIVE_FAILED = 'Sage couldn’t write this one just now. Try again tomorrow.';
@@ -261,6 +265,8 @@ export function CategoryDeepDiveCard({
             return;
           }
           if (outcome.reason === 'empty' || outcome.reason === 'daily') setNeedNew(def.id);
+          // Look-ahead (wave94): the hourly fill writes this group next, free.
+          if (outcome.reason === 'empty') void wantLibraryCards('deep_dive', [diveBucketKey(def.id, leans)]);
           setNote(
             outcome.reason === 'empty'
               ? DEEP_DIVE_EMPTY
@@ -320,6 +326,15 @@ export function CategoryDeepDiveCard({
       <ThemedText type="small" themeColor="textSecondary">
         {DEEP_DIVE_PCT_NOTE}
       </ThemedText>
+      <TeamBadge
+        categoryId={def.id}
+        bucket={diveBucketKey(def.id, leans)}
+        previousBucket={
+          entry && entry.dive.leansKey !== key && entry.dive.leansKey.startsWith(`${LIBRARY_VERSION.deep_dive}|dd|`)
+            ? entry.dive.leansKey.slice(LIBRARY_VERSION.deep_dive.length + 1)
+            : null
+        }
+      />
 
       {entry && opensLater ? (
         <ThemedText type="small" themeColor="textSecondary">

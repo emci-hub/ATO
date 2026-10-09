@@ -24,7 +24,9 @@ import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
-import { revealLegendStory } from '@/lib/legend-figures/generate';
+import { planLegendReveal, revealLegendStory } from '@/lib/legend-figures/generate';
+import { legendBucketKey } from '@/lib/ai-library/legend';
+import { wantLibraryCards } from '@/lib/ai-library/client';
 import {
   fetchAngleCounts,
   fetchCircleFriends,
@@ -42,7 +44,6 @@ import {
 } from '@/lib/legend-figures/museum-store';
 import {
   chapterOrder,
-  chooseAngle,
   hallComplete,
   hallFrames,
   hallOrder,
@@ -57,8 +58,6 @@ import { LEGEND_ROSTER, legendById, legendsInHall } from '@/lib/legend-figures/r
 import {
   didYouKnowFact,
   fallbackLegendStory,
-  legendDiffer,
-  legendPairs,
   nextChapterTeaser,
 } from '@/lib/legend-figures/story';
 import { HALL_LABEL, LEGEND_HALLS, type LegendHall } from '@/lib/legend-figures/types';
@@ -69,7 +68,6 @@ import { cardJokeStyle } from '@/lib/voice/card-joke';
 import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
 import { legendsUnlocked } from '@/lib/questions/progressive-unlock';
-import { rankStoryAxes } from '@/lib/story-thread';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { withTimeout } from '@/lib/timeout';
@@ -294,14 +292,11 @@ export default function LegendsScreen() {
         const chapter = start.museum.filter((row) => row.legendId === legend.id).length;
         const told = toldAngles(start.museum).get(legend.id);
         const counts = await withTimeout(fetchAngleCounts(legend.id), COUNTS_TIMEOUT_MS, 'legend-counts').catch(() => null);
-        const chosen = chooseAngle(legend, start.userId, counts, { onlyAngle: angleId, skipAngles: told });
-        const angle = legend.angles.find((a) => a.id === chosen.angleId) ?? legend.angles[0]!;
-        const leans = rankStoryAxes(tracks).map((row) => ({ axis: row.axis, lean: row.lean, strength: row.strength }));
-        const pairs = legendPairs(legend, leans);
-        const differ = legendDiffer(legend, leans, new Set(pairs.map((p) => p.axis)));
+        const plan = planLegendReveal({ legend, frameAngleId: angleId, userId: start.userId, counts, told, tracks });
+        const { angle, pairs, differ } = plan;
         // The joke style is picked here, never by the model: seeded per card so neighbours differ.
         const jokeStyle = cardJokeStyle(`${start.userId}|${legend.id}|${chapter}`);
-        const input = { legend, angle, momentId: chosen.momentId, pairs, differ, jokeStyle };
+        const input = { legend, angle, momentId: plan.momentId, pairs, differ, jokeStyle };
         let story;
         try {
           story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), AI_TAP_TIMEOUT_MS, 'legend-story');
@@ -385,6 +380,39 @@ export default function LegendsScreen() {
     ? hallFrames(hallDay!.chapters!, used, `${seed}|chapters`, revealedSeq)
     : legendFrames;
   const framesLeft = frames.filter((key) => key != null).length;
+
+  // Look-ahead (wave94): the day's frames are fixed, so tell the server which
+  // library cards this reader will need. It writes them within the hour, and the
+  // reveal is then instant and from the library. Group keys only, never text.
+  const frameKeysSig = frames.filter((key): key is string => key != null).join(',');
+  useEffect(() => {
+    if (!consentGranted || !local || !frameKeysSig || crisisToday) return;
+    let live = true;
+    void (async () => {
+      const buckets: string[] = [];
+      for (const key of frameKeysSig.split(',')) {
+        const { legendId, angleId } = parseFrameKey(key);
+        const legend = legendById(legendId);
+        if (!legend) continue;
+        const counts = await withTimeout(fetchAngleCounts(legend.id), COUNTS_TIMEOUT_MS, 'legend-counts').catch(() => null);
+        const plan = planLegendReveal({
+          legend,
+          frameAngleId: angleId,
+          userId: local.userId,
+          counts,
+          told: toldAngles(local.museum).get(legend.id),
+          tracks,
+        });
+        if (plan.pairs.length > 0) buckets.push(legendBucketKey({ legend, ...plan }));
+      }
+      if (live && buckets.length > 0) void wantLibraryCards('legend', buckets);
+    })();
+    return () => {
+      live = false;
+    };
+    // Once per set of frames: the reveal itself re-plans with fresh counts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameKeysSig, consentGranted, crisisToday]);
   const hallMet = hall ? legendsInHall(hall).filter((legend) => metIds.has(legend.id)) : [];
 
   const card =

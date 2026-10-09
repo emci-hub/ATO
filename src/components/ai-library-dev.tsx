@@ -6,6 +6,10 @@
  *     today's free library cards vs. newly written ones (the hit rate);
  *   - newest cards (waiting first): Approve (skips the 24-hour cooling period)
  *     or Retire, two taps each;
+ *   - coverage (wave94): how far the library is from needing the paid AI —
+ *     deep-dive groups ready, groups readers are waiting on, people who would
+ *     hit the paid AI today, the typical reader's free cards waiting, today's
+ *     automatic fill vs. paid AI cards, groups skipped after failures;
  *   - "Fill the deep-dive library": the server writes cards for the thinnest
  *     deep-dive buckets (up to 3 per bucket, 2 per call), as approved seed cards,
  *     on its own root cap (library_seed_daily_cap). Two taps; stops on the cap.
@@ -20,7 +24,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { writeLibraryCard } from '@/lib/ai-library/client';
 import { DEEP_DIVE_LIBRARY, allDiveBuckets } from '@/lib/ai-library/deep-dive';
-import { LIBRARY_VERSION } from '@/lib/ai-library/types';
+import { LIBRARY_KINDS, LIBRARY_VERSION } from '@/lib/ai-library/types';
 import { CATEGORY_DEFS } from '@/lib/categories';
 import { useMeContext } from '@/lib/me-context';
 import { supabase } from '@/lib/supabase';
@@ -29,6 +33,28 @@ import { supabase } from '@/lib/supabase';
 export const SEED_TARGET_PER_BUCKET = 3;
 /** AI calls one tap of "Fill" makes at most. */
 export const SEED_CALLS_PER_TAP = 20;
+
+type Coverage = {
+  deep_dive_counts?: Record<string, number>;
+  wanted?: Record<string, { groups: number; ready: number; queued: number }>;
+  people?: number;
+  people_need_ai?: number;
+  typical_waiting?: number | null;
+  versions?: Record<string, number>;
+  today?: { fill_calls: number; fill_cards: number; fill_cap: number; free_served: number; tap_ai: number; skipped: number };
+};
+
+const ALL_DIVE_BUCKETS = CATEGORY_DEFS.flatMap((def) => allDiveBuckets(def.id));
+
+function Bar({ value, total }: { value: number; total: number }) {
+  const theme = useTheme();
+  const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
+  return (
+    <View style={[styles.track, { backgroundColor: theme.backgroundSelected }]}>
+      <View style={[styles.fill, { width: `${pct}%`, backgroundColor: theme.accent }]} />
+    </View>
+  );
+}
 
 type Row = {
   id: string;
@@ -50,6 +76,7 @@ export function AiLibraryDev() {
   const theme = useTheme();
   const { devAccess } = useMeContext();
   const [stats, setStats] = useState<Record<string, Record<string, number>> | null>(null);
+  const [coverage, setCoverage] = useState<Coverage | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [armed, setArmed] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -57,10 +84,12 @@ export function AiLibraryDev() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
-    const [s, list] = await Promise.all([
+    const [s, list, cov] = await Promise.all([
       supabase.rpc('library_stats'),
       supabase.rpc('library_admin_list', { p_kind: null, p_limit: 15, p_pending_only: false }),
+      supabase.rpc('library_coverage'),
     ]);
+    setCoverage(cov.error ? null : ((cov.data as Coverage | null) ?? null));
     if (s.error) {
       setNote(`Not loaded: ${s.error.message}`);
       return;
@@ -147,8 +176,52 @@ export function AiLibraryDev() {
     );
   }
 
+  const diveCounts = coverage?.deep_dive_counts ?? {};
+  const diveReady = ALL_DIVE_BUCKETS.filter((b) => (diveCounts[`${b}#${LIBRARY_VERSION.deep_dive}`] ?? 0) >= SEED_TARGET_PER_BUCKET).length;
+  const oldCards = Object.entries(coverage?.versions ?? {})
+    .filter(([key]) => {
+      const [kind, version] = key.split('#');
+      return !(LIBRARY_KINDS as readonly string[]).includes(kind ?? '') || LIBRARY_VERSION[kind as (typeof LIBRARY_KINDS)[number]] !== version;
+    })
+    .reduce((sum, [, n]) => sum + n, 0);
+  const t = coverage?.today;
+
   return (
     <View style={styles.wrap}>
+      {coverage ? (
+        <View style={styles.coverage}>
+          <ThemedText type="smallBold">Coverage: how far from needing the paid AI</ThemedText>
+          <ThemedText type="small">
+            Deep dives: {diveReady} of {ALL_DIVE_BUCKETS.length} groups ready ({SEED_TARGET_PER_BUCKET}+ cards)
+          </ThemedText>
+          <Bar value={diveReady} total={ALL_DIVE_BUCKETS.length} />
+          {Object.entries(coverage.wanted ?? {}).map(([kind, w]) => (
+            <View key={kind} style={styles.coverage}>
+              <ThemedText type="small">
+                {kind}: {w.ready} of {w.groups} groups people need are ready · {w.queued} in the queue
+              </ThemedText>
+              <Bar value={w.ready} total={w.groups} />
+            </View>
+          ))}
+          <ThemedText type="small">
+            People who’d hit the paid AI today: {coverage.people_need_ai ?? 0} of {coverage.people ?? 0} active
+          </ThemedText>
+          <ThemedText type="small">
+            Typical reader: {coverage.typical_waiting != null ? Math.round(coverage.typical_waiting) : 0} free cards waiting
+          </ThemedText>
+          {t ? (
+            <ThemedText type="small">
+              Today: fill {t.fill_calls}/{t.fill_cap} calls, {t.fill_cards} cards · {t.free_served} free cards served · {t.tap_ai} written on a tap (paid or free reveal) ·{' '}
+              {t.skipped} groups skipped after failures
+            </ThemedText>
+          ) : null}
+          {oldCards > 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {oldCards} live cards are on an old prompt version (not served).
+            </ThemedText>
+          ) : null}
+        </View>
+      ) : null}
       {stats
         ? Object.entries(stats).map(([kind, s]) => (
             <ThemedText key={kind} type="small">
@@ -200,6 +273,9 @@ export function AiLibraryDev() {
 
 const styles = StyleSheet.create({
   wrap: { gap: Spacing.two },
+  coverage: { gap: 4 },
+  track: { height: 6, borderRadius: 3, overflow: 'hidden' },
+  fill: { height: 6, borderRadius: 3 },
   button: { borderWidth: 1, borderRadius: 10, paddingVertical: 10, paddingHorizontal: Spacing.two, alignItems: 'center' },
   row: { borderWidth: 1, borderRadius: 10, padding: Spacing.two, gap: 4 },
   actions: { flexDirection: 'row', gap: Spacing.three },

@@ -7,7 +7,9 @@
  * and checks cards with exactly the app's code. `check:ai-library` fails when
  * the committed bundle is out of date.
  */
-import { DEEP_DIVE_LIBRARY } from './deep-dive';
+import { CATEGORY_DEFS } from '@/lib/categories';
+
+import { DEEP_DIVE_LIBRARY, allDiveBuckets } from './deep-dive';
 import { LEGEND_LIBRARY } from './legend';
 import { STORY_LIBRARY } from './story';
 import { BUCKET_KEY_RE, LIBRARY_VERSION, isLibraryKind, type LibraryKind } from './types';
@@ -61,3 +63,11 @@ export function checkLibraryAnswer(
     angles,
   );
 }
+
+/** Every deep-dive group (207): the automatic fill keeps each at 3 cards (wave94). */
+export function deepDiveBaseline(): string[] {
+  return CATEGORY_DEFS.flatMap((def) => allDiveBuckets(def.id));
+}
+
+/** Cards a deep-dive group should hold before the fill moves on. */
+export const DEEP_DIVE_FILL_TARGET = 3;

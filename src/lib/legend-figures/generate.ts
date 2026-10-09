@@ -14,17 +14,45 @@ import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { LEGEND_LIBRARY, legendBucketKey } from '@/lib/ai-library/legend';
 import { writeLibraryCard, type LibraryServed } from '@/lib/ai-library/client';
 import type { CardJokeStyle } from '@/lib/voice/card-joke';
+import { rankStoryAxes } from '@/lib/story-thread';
+import type { TraitTrack } from '@/lib/trait-stability';
+
+import { chooseAngle, type AngleCounts } from './pick';
 
 import { claimLegendStory } from './museum-store';
 import {
   buildLegendPrompt,
   fallbackLegendStory,
+  legendDiffer,
+  legendPairs,
   parseLegendStoryResult,
   type LegendDiffer,
   type LegendPair,
   type LegendStory,
 } from './story';
 import type { LegendAngle, LegendFigure } from './types';
+
+/**
+ * What one reveal is about: the angle and moment (least-told first), the
+ * reader's matched sides and the side the legend doesn't share. Pure, so the
+ * reveal and the look-ahead (wave94: the server writes the day's frames ahead
+ * of time) always build the same library bucket.
+ */
+export function planLegendReveal(input: {
+  legend: LegendFigure;
+  frameAngleId: string | null;
+  userId: string;
+  counts: AngleCounts | null;
+  told: ReadonlySet<string> | undefined;
+  tracks: readonly TraitTrack[];
+}): { angle: LegendAngle; momentId: string; pairs: LegendPair[]; differ: LegendDiffer | null } {
+  const chosen = chooseAngle(input.legend, input.userId, input.counts, { onlyAngle: input.frameAngleId, skipAngles: input.told });
+  const angle = input.legend.angles.find((a) => a.id === chosen.angleId) ?? input.legend.angles[0]!;
+  const leans = rankStoryAxes(input.tracks).map((row) => ({ axis: row.axis, lean: row.lean, strength: row.strength }));
+  const pairs = legendPairs(input.legend, leans);
+  const differ = legendDiffer(input.legend, leans, new Set(pairs.map((p) => p.axis)));
+  return { angle, momentId: chosen.momentId, pairs, differ };
+}
 
 /**
  * Library first (wave93, emci 2026-10-09). The phone sends only the bucket key:
