@@ -4,7 +4,7 @@
 **Gates:** A ✓ (non-goals in archive/OLD_PLAN.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Gemini (`gemini-3.7-flash`), with DeepSeek (`deepseek-v4-flash`) as the fallback — both chosen inside the `ai-generate` Edge Function, never on the phone. Expo SDK 54. (This line used to say "Cursor, Grok 4.6", which was stale. There are 16 axes, not 15, and Infinite Questions was removed on 2026-09-16 — where older text below disagrees, `docs/system-map.html` is current.)
-**Latest production OTA (2026-10-08, The funny part + AI token savings):** group `d1df0465-e1e7-46ae-a091-e46da84e0b8a` (commit `8bee5f6`). Gate green, reviewer PASS, not device-verified. **wave91 NOT applied yet.**
+**Latest production OTA (2026-10-08, The funny part + AI token savings):** group `d1df0465-e1e7-46ae-a091-e46da84e0b8a` (commit `8bee5f6`). Gate green, reviewer PASS, not device-verified. **wave91 APPLIED 2026-10-09.**
 
 **Previous OTA (2026-10-08, deep dive wording: plain first, no counting):** group `45f74d4a-0de7-46a4-b7bc-dc0ee32bc865` (commit `25688d0`). Gate green, reviewer PASS, not device-verified.
 
