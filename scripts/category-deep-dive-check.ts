@@ -19,6 +19,7 @@ import { CATEGORY_DEFS } from '../src/lib/categories';
 import {
   buildDivePrompt,
   categoryLeans,
+  categoryScore,
   diveLineViolation,
   leanPct,
   leansKey,
@@ -205,8 +206,31 @@ assert.equal(categoryDisplayName(openDef), 'Your Sense of Adventure');
 assert.equal(categoryAxisCodes(openDef), 'OP·EX');
 assert.match(read('src/components/categories-fold.tsx'), /from '@\/lib\/category-labels'/, 'Explore uses the same names');
 assert.match(card, /categoryAxisCodes\(row\)/, 'each row shows its trait letters');
-assert.match(card, /rowLeans\.map\(\(lean\) => `\$\{leanLabel\(lean\)\} \$\{lean\.pct\}%`\)/, 'every row shows its numbers without a tap');
+assert.match(card, /\{score\}/, 'every row shows its one number without a tap');
+assert.match(card, /rowLeans\.map\(\(lean\) => leanLabel\(lean\)\)/, 'and its sides in words (the per-trait numbers open on tap)');
 assert.match(card, /\{on \? detail : null\}/, 'the detail opens right under its row');
+assert.equal(categoryScore([{ axis: 'steadiness', lean: 'high', pct: 72 }, { axis: 'agreeableness', lean: 'low', pct: 63 }, { axis: 'conscientiousness', lean: 'high', pct: 52 }]), 62, 'equal confidence → the average lean');
+assert.equal(
+  categoryScore([
+    { axis: 'steadiness', lean: 'high', pct: 90, confidence: 0.9 },
+    { axis: 'agreeableness', lean: 'low', pct: 50, confidence: 0.1 },
+  ]),
+  86,
+  'the surer answer counts most (a shaky trait barely moves the number)',
+);
+assert.equal(
+  categoryScore([
+    { axis: 'steadiness', lean: 'high', pct: 80, weight: 2 },
+    { axis: 'agreeableness', lean: 'high', pct: 50, weight: 1 },
+  ]),
+  70,
+  'the category’s own weights count',
+);
+const realLeans = categoryLeans(openDef, tracks, NOW);
+assert.ok(realLeans.every((r) => typeof r.confidence === 'number' && r.confidence > 0), 'real leanings carry their confidence');
+assert.equal(categoryScore([]), null, 'a locked category has no number');
+assert.match(card, /\.sort\(\(a, b\) => \(b\.score \?\? -1\) - \(a\.score \?\? -1\) \|\| a\.index - b\.index\)/, 'strongest first, locked last');
+ok('one number per category (lean weighted by the category’s weights and answer confidence), sorted strongest first');
 ok('friendly names on Home and Explore (catalog names kept for AI), trait letters as a legend, numbers on every row');
 
 console.log(`\ncheck:category-deep-dive — ${passed} groups passed.`);

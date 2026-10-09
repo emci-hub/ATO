@@ -21,7 +21,7 @@ import { AXIS_POLES, AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import type { CategoryDef } from '@/lib/categories';
 import { readCategory } from '@/lib/categories';
 import { legendLineViolation, titleViolation } from '@/lib/legend-figures/story';
-import { trackFor, type TraitTrack } from '@/lib/trait-stability';
+import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 
@@ -30,6 +30,10 @@ export interface DiveLean {
   lean: TraitLean;
   /** How far toward that side, 50–100 ("Adventurous 78%"). */
   pct: number;
+  /** How much the category's own formula counts this trait (default 1). */
+  weight?: number;
+  /** How sure we are of this answer, 0–1 (`effectiveStability`: answers + agreement, aged). */
+  confidence?: number;
 }
 
 export interface DiveLine {
@@ -78,10 +82,39 @@ export function categoryLeans(def: CategoryDef, tracks: readonly TraitTrack[], n
   if (!reading.ready) return [];
   return reading.stableAxes
     .map((axis) => {
-      const value = trackFor(tracks, axis, 'report')?.value ?? 0.5;
-      return { axis, lean: (value >= 0.5 ? 'high' : 'low') as TraitLean, pct: leanPct(value) };
+      const row = trackFor(tracks, axis, 'report');
+      const value = row?.value ?? 0.5;
+      return {
+        axis,
+        lean: (value >= 0.5 ? 'high' : 'low') as TraitLean,
+        pct: leanPct(value),
+        weight: def.weights[axis] ?? 1,
+        confidence: effectiveStability(row, now),
+      };
     })
     .sort((a, b) => b.pct - a.pct || TRAIT_AXES.indexOf(a.axis) - TRAIT_AXES.indexOf(b.axis));
+}
+
+/**
+ * ONE number per category (emci, 2026-10-08: "1 total number and the most
+ * accurate"), 50–100: how strongly the person leans overall in this part of
+ * them. Each trait's lean counts by the category's own weight for it TIMES how
+ * sure we are of that answer (`confidence`), so a well-answered trait drives
+ * the number and a shaky one barely moves it. High = clearly defined; near 50
+ * = they sit in the middle here. Sorts the list, strongest first. Null when
+ * the category isn't open yet.
+ */
+export function categoryScore(leans: readonly DiveLean[]): number | null {
+  if (leans.length === 0) return null;
+  let num = 0;
+  let den = 0;
+  for (const row of leans) {
+    // Clamped: a zero/negative catalog weight can never push the number outside 50–100.
+    const w = Math.max(row.weight ?? 1, 0) * Math.max(row.confidence ?? 1, 0.05);
+    num += row.pct * w;
+    den += w;
+  }
+  return den > 0 ? Math.round(num / den) : null;
 }
 
 /** A new card only when a side flips or a leaning moves by about ten points. */

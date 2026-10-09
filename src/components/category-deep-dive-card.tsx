@@ -24,7 +24,7 @@ import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { readCategory, type CategoryDef } from '@/lib/categories';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import { categoryAxisCodes, categoryDisplayName } from '@/lib/category-labels';
-import { categoryLeans, leanLabel, leansKey, type DiveLean } from '@/lib/category-deep-dive/dive';
+import { categoryLeans, categoryScore, leanLabel, leansKey, type DiveLean } from '@/lib/category-deep-dive/dive';
 import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
 import {
   diveDay,
@@ -43,7 +43,8 @@ import { withTimeout } from '@/lib/timeout';
 
 export const DEEP_DIVE_KICKER = 'Deep dive';
 export const DEEP_DIVE_LEDE = 'How far you lean in each part of you. Tap one and Sage writes a deep dive about it.';
-export const DEEP_DIVE_LEGEND = 'The small letters are the traits behind each one.';
+export const DEEP_DIVE_LEGEND =
+  'One number for each part of you: how strongly you lean overall, counting your surest answers most (strongest first). Tap for each trait. The small letters are the traits behind it.';
 export const DEEP_DIVE_ROW_LOCKED = 'Answer more questions to open this one.';
 export const DEEP_DIVE_WRITE_LABEL = 'Write my deep dive';
 export const DEEP_DIVE_DONE_TODAY = 'You’ve had today’s deep dive. Come back tomorrow for another.';
@@ -103,6 +104,18 @@ export function CategoryDeepDiveCard({
     };
   }, [userId, epoch]);
 
+  // One number per category, strongest first; locked ones last (catalog order otherwise).
+  const rows = useMemo(
+    () =>
+      defs
+        .map((row, index) => {
+          const open = readyIds.has(row.id);
+          const rowLeans = open ? categoryLeans(row, tracks) : [];
+          return { def: row, index, open, rowLeans, score: categoryScore(rowLeans) };
+        })
+        .sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.index - b.index),
+    [defs, readyIds, tracks],
+  );
   const def: CategoryDef | null = defs.find((row) => row.id === selected && readyIds.has(row.id)) ?? null;
   const leans: DiveLean[] = useMemo(() => (def ? categoryLeans(def, tracks) : []), [def, tracks]);
   const key = leansKey(leans);
@@ -228,13 +241,11 @@ export function CategoryDeepDiveCard({
         {DEEP_DIVE_LEGEND}
       </ThemedText>
 
-      {defs.map((row) => {
-        const open = readyIds.has(row.id);
+      {rows.map(({ def: row, open, rowLeans, score }) => {
         const on = open && row.id === selected;
-        const rowLeans = open ? categoryLeans(row, tracks) : [];
         const name = categoryDisplayName(row);
         const summary = open
-          ? rowLeans.map((lean) => `${leanLabel(lean)} ${lean.pct}%`).join(' · ')
+          ? rowLeans.map((lean) => leanLabel(lean)).join(' · ')
           : DEEP_DIVE_ROW_LOCKED;
         return (
           <View key={row.id}>
@@ -245,7 +256,7 @@ export function CategoryDeepDiveCard({
               }}
               disabled={!open || busy}
               accessibilityRole="button"
-              accessibilityLabel={`${name}, traits ${categoryAxisCodes(row)}. ${summary}`}
+              accessibilityLabel={`${name}${score != null ? `, ${score} overall` : ''}, traits ${categoryAxisCodes(row)}. ${summary}`}
               accessibilityState={{ expanded: on, disabled: !open || busy }}
               style={({ pressed }) => [
                 styles.row,
@@ -266,6 +277,11 @@ export function CategoryDeepDiveCard({
                   {summary}
                 </ThemedText>
               </View>
+              {score != null ? (
+                <ThemedText type="subheading" style={[styles.score, { color: theme.accent }]}>
+                  {score}
+                </ThemedText>
+              ) : null}
               {open ? (
                 <ThemedText themeColor="textSecondary" style={styles.chevron}>
                   {on ? '⌄' : '›'}
@@ -349,6 +365,7 @@ const styles = StyleSheet.create({
   /** The two-letter trait legend, small and raised like a superscript. */
   codes: { fontSize: 10, lineHeight: 12, letterSpacing: 0.5 },
   chevron: { fontSize: 20 },
+  score: { minWidth: 32, textAlign: 'right' },
   detail: { gap: Spacing.two, paddingTop: Spacing.two, paddingHorizontal: Spacing.one },
   pressed: { opacity: 0.7 },
   leanRow: { gap: 4 },
