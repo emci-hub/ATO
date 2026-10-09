@@ -33,6 +33,7 @@ import {
   type DiveLean,
 } from '@/lib/category-deep-dive/dive';
 import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
+import { cardJokeStyle } from '@/lib/voice/card-joke';
 import {
   diveDay,
   fetchServerDives,
@@ -62,6 +63,8 @@ export const DEEP_DIVE_SLOW = 'Taking a little longer than usual. It will appear
 export const DEEP_DIVE_AI_OFF = 'Turn on AI on You to get the written deep dive. Your leanings show either way.';
 export const DEEP_DIVE_STALE = 'Written before your answers moved. A fresh one is ready to write.';
 export const DEEP_DIVE_REWRITE = 'Sage writes these more clearly now. A fresh one is ready to write.';
+export const DEEP_DIVE_OPENS_TOMORROW = 'Already written with today’s deep dive. It opens here tomorrow, free.';
+export const DEEP_DIVE_READY_TOMORROW = 'deep dive ready tomorrow';
 export const DEEP_DIVE_PCT_NOTE = '50% is the middle; 100% is all the way to that side.';
 
 export function CategoryDeepDiveCard({
@@ -129,6 +132,8 @@ export function CategoryDeepDiveCard({
   const key = leansKey(leans);
   const entry: DiveEntry | null = def && state ? state.dives[def.id] ?? null : null;
   const fresh = entry != null && entry.dive.leansKey === key;
+  /** A bundled card written today for tomorrow: shown once its day comes. */
+  const opensLater = entry?.dive.opensOn != null && entry.dive.opensOn > diveDay();
   const usedToday = state ? madeToday(state.dives, diveDay()) : false;
 
   const write = useCallback(async () => {
@@ -140,7 +145,22 @@ export function CategoryDeepDiveCard({
     try {
       // The day's claim is spent once the call starts, so a slow answer is
       // waited for (with a note), never thrown away.
-      const pending = writeCategoryDeepDive({ def, leans, consentGranted }).catch(
+      // Bundle: the next strongest open category without a fresh card rides
+      // along in the same call and opens tomorrow (emci, 2026-10-08).
+      const today = diveDay();
+      const extraRow = rows.find(
+        (row) =>
+          row.open &&
+          row.def.id !== def.id &&
+          row.rowLeans.length > 0 &&
+          // Only a category with no card yet: never overwrite one the person already has.
+          stateRef.current?.dives[row.def.id] == null,
+      );
+      const main = { def, leans, jokeStyle: cardJokeStyle(`${userId}|${def.id}|${today}`) };
+      const extra = extraRow
+        ? { def: extraRow.def, leans: extraRow.rowLeans, jokeStyle: cardJokeStyle(`${userId}|${extraRow.def.id}|${today}`) }
+        : null;
+      const pending = writeCategoryDeepDive({ main, extra, consentGranted }).catch(
         () => ({ ok: false, reason: 'failed' }) as const,
       );
       let outcome = await withTimeout(pending, AI_TAP_TIMEOUT_MS, 'deep-dive').catch(() => null);
@@ -163,18 +183,31 @@ export function CategoryDeepDiveCard({
         return;
       }
       setNote(null);
-      const made: DiveEntry = { dive: outcome.dive, madeOn: diveDay() };
+      const made: DiveEntry = { dive: outcome.dive, madeOn: today };
+      const extraMade: DiveEntry | null = outcome.extra
+        ? { dive: { ...outcome.extra, opensOn: diveDay(new Date(Date.now() + 86_400_000)) }, madeOn: today }
+        : null;
       const base = stateRef.current ?? { userId, dives: {} };
-      const next: DiveLocalState = { ...base, dives: { ...base.dives, [def.id]: made } };
+      const next: DiveLocalState = {
+        ...base,
+        dives: {
+          ...base.dives,
+          [def.id]: made,
+          ...(extraMade ? { [extraMade.dive.categoryId]: extraMade } : {}),
+        },
+      };
       stateRef.current = next;
       setState(next);
       void saveDiveState(next);
-      void saveServerDive(made);
+      void (async () => {
+        await saveServerDive(made);
+        if (extraMade) await saveServerDive(extraMade);
+      })();
     } finally {
       writingRef.current = false;
       setBusy(false);
     }
-  }, [def, leans, consentGranted, userId]);
+  }, [def, leans, consentGranted, userId, rows]);
 
   const detail = def ? (
     <View style={styles.detail}>
@@ -198,7 +231,13 @@ export function CategoryDeepDiveCard({
         {DEEP_DIVE_PCT_NOTE}
       </ThemedText>
 
-      {entry ? <DiveBody entry={entry} /> : null}
+      {entry && opensLater ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {DEEP_DIVE_OPENS_TOMORROW}
+        </ThemedText>
+      ) : entry ? (
+        <DiveBody entry={entry} />
+      ) : null}
       {entry && !fresh ? (
         <ThemedText type="small" themeColor="textSecondary">
           {entry.dive.leansKey.startsWith(`${DIVE_PROMPT_VERSION}|`) ? DEEP_DIVE_STALE : DEEP_DIVE_REWRITE}
@@ -252,8 +291,9 @@ export function CategoryDeepDiveCard({
       {rows.map(({ def: row, open, rowLeans, score }) => {
         const on = open && row.id === selected;
         const name = categoryDisplayName(row);
+        const waiting = (state?.dives[row.id]?.dive.opensOn ?? '') > diveDay();
         const summary = open
-          ? rowLeans.map((lean) => leanLabel(lean)).join(' · ')
+          ? `${rowLeans.map((lean) => leanLabel(lean)).join(' · ')}${waiting ? ` · ${DEEP_DIVE_READY_TOMORROW}` : ''}`
           : DEEP_DIVE_ROW_LOCKED;
         return (
           <View key={row.id}>
@@ -331,12 +371,19 @@ function DiveBody({ entry }: { entry: DiveEntry }) {
           <ThemedText>{dive.mix}</ThemedText>
         </Part>
       ) : null}
-      <Part title="What others might notice">
-        <ThemedText>{dive.othersNotice}</ThemedText>
-      </Part>
+      {dive.othersNotice ? (
+        <Part title="What others might notice">
+          <ThemedText>{dive.othersNotice}</ThemedText>
+        </Part>
+      ) : null}
       <Part title="What it means for you">
         <ThemedText>{dive.whatItMeansForYou}</ThemedText>
       </Part>
+      {dive.joke ? (
+        <Part title="The funny part">
+          <ThemedText>{dive.joke}</ThemedText>
+        </Part>
+      ) : null}
     </View>
   );
 }

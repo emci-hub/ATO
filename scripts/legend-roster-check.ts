@@ -55,9 +55,11 @@ import {
   legendLineViolation,
   legendPairs,
   parseLegendStory,
+  parseLegendStoryResult,
   shownFacts,
   MEANS_MAX_WORDS,
   MEANS_MIN_WORDS,
+  LEGEND_PROMPT_STATIC,
   didYouKnowFact,
   entryText,
   legendDiffer,
@@ -71,6 +73,7 @@ import { rankStoryAxes } from '../src/lib/story-thread';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
 import { MOMENT_VOICE_BLOCK } from '../src/lib/voice/moment-voice';
+import { CARD_JOKE_STYLES, cardJokeStyle, cardJokeViolation } from '../src/lib/voice/card-joke';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 
 let passed = 0;
@@ -410,8 +413,6 @@ const rejects: [string, string][] = [
   ['title about worry', bad({ title: 'the anxious redrawer' })],
   ['title overthinker', bad({ title: 'the quiet overthinker' })],
   ['title template', bad({ title: 'the [title]' })],
-  ['no scene', bad({ metScene: undefined })],
-  ['scene too short', bad({ metScene: 'You draw a mountain with him.' })],
   ['made-up moment', bad({ howTheTraitWon: [{ axis: 'openness', momentId: 'm3', line: 'A fine line.' }] })],
   ['number not in entry', bad({ whatItMeansForYou: 'He made 300 prints in a single year, and so can you with your tabs and notes this week. Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
   ['name not in entry', bad({ whatItMeansForYou: 'Like his friend Hiroshige, you keep a notebook of every view you ever liked, which is very you. Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
@@ -450,36 +451,54 @@ assert.equal(legendLineViolation('You reopened it at 51, like him.', hokAllowed,
 assert.match(legendLineViolation('Your note to Émile can wait.', hokAllowed, false) ?? '', /name not in entry/, 'accented names are checked too');
 assert.equal(legendLineViolation('He kept going. Your draft can too.', hokAllowed, false), null, 'a new sentence may start with a capital');
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /Write numbers as words, use no quotation marks, and name no apps, brands or people/);
-assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), new RegExp(`The bridge: say plainly what ${hok.name} did`), 'what it means starts from what the legend did');
+assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /The bridge: say plainly what the legend did/, 'what it means starts from what the legend did');
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /must make physical sense/, 'the everyday moment must make sense');
 // Where you differ: asked only when the reader has a side the legend doesn't share.
 const differCtx = { ...ctx, differ: legendDiffer(hok, [{ axis: 'extraversion', lean: 'high', strength: 0.4 }]) };
 assert.ok(differCtx.differ && differCtx.differ.tag === null, 'a trait the label never shows');
 const opposite = legendDiffer(hok, [{ axis: 'growth_mindset', lean: 'low', strength: 0.4 }]);
 assert.ok(opposite && opposite.tag?.lean === 'high', 'an outright opposite comes first');
-assert.equal(parseLegendStory(good, differCtx), null, 'differ asked but missing → rejected');
+assert.ok(parseLegendStory(good, differCtx) && !parseLegendStory(good, differCtx)!.differ, 'differ asked but missing → card kept, no differ shown');
 const withDiffer = parseLegendStory(
   bad({ differ: 'He kept his attention on one mountain for decades, while you light up when the group chat gets loud and busy.' }),
   differCtx,
 );
 assert.ok(withDiffer?.differ?.axis === 'extraversion' && withDiffer.differ.lean === 'high', 'the differ side comes from the code, never the model');
-assert.equal(
-  parseLegendStory(bad({ differ: 'Unlike his friend Hiroshige, he kept to one mountain while you light up in a loud and busy group chat.' }), differCtx),
-  null,
-  'a made-up name in Where you differ is rejected',
-);
-assert.equal(
-  parseLegendStory(bad({ metScene: 'You and Hokusai take the train to Kyoto with his student Hiroshige and sketch the river together all afternoon.' }), ctx),
-  null,
-  'a made-up place or person in If you’d met is rejected',
-);
+// Optional parts that fail are DROPPED (never shown), not paid for twice (token savings, 2026-10-08).
+const badDiffer = parseLegendStory(bad({ differ: 'Unlike his friend Hiroshige, he kept to one mountain while you light up in a loud and busy group chat.' }), differCtx);
+assert.ok(badDiffer && badDiffer.differ === undefined, 'a made-up name in Where you differ is never shown');
+const badScene = parseLegendStory(bad({ metScene: 'You and Hokusai take the train to Kyoto with his student Hiroshige and sketch the river together all afternoon.' }), ctx);
+assert.ok(badScene && badScene.metScene === undefined, 'a made-up place or person in If you’d met is never shown');
+const noScene = parseLegendStory(bad({ metScene: undefined }), ctx);
+assert.ok(noScene && noScene.metScene === undefined, 'a missing scene drops only the scene');
+const shortScene = parseLegendStory(bad({ metScene: 'You draw a mountain with him.' }), ctx);
+assert.ok(shortScene && shortScene.metScene === undefined, 'a too-short scene is dropped');
+assert.equal(parseLegendStoryResult('nope', ctx).reason, 'not json', 'a rejection carries its reason (logged, never the text)');
+assert.match(parseLegendStoryResult(bad({ title: 'the anxious redrawer' }), ctx).reason ?? '', /^title:/);
+// The funny part: one joke line in the app-picked style, same hard bans as the Story joke.
+const jokeCtx = { ...ctx, jokeStyle: cardJokeStyle('u1|lf_hokusai|0') };
+assert.ok(CARD_JOKE_STYLES.includes(jokeCtx.jokeStyle), 'the style is one of the five, picked by the app');
+assert.equal(cardJokeStyle('u1|lf_hokusai|0'), cardJokeStyle('u1|lf_hokusai|0'), 'same card → same style');
+assert.ok(new Set(Array.from({ length: 30 }, (_, i) => cardJokeStyle(`u${i}|lf_hokusai|0`))).size >= 4, 'styles vary across cards');
+const withJoke = parseLegendStory(bad({ funny: 'Your drafts folder has more versions of one mountain than a postcard shop.' }), jokeCtx);
+assert.equal(withJoke?.joke, 'Your drafts folder has more versions of one mountain than a postcard shop.');
+assert.equal(parseLegendStory(bad({ funny: 'Your drafts outlived three phones and one houseplant that died of neglect.' }), jokeCtx)?.joke, undefined, 'a banned topic (death) is dropped');
+assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is huge.' }), ctx)?.joke, undefined, 'no joke asked → none kept');
+assert.equal(cardJokeViolation('A short one. And another.'), 'more than one sentence');
+assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs, jokeStyle: 'deadpan' }), /JOKE STYLE \(for "funny"\): deadpan/);
+assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /JOKE STYLE: none/);
+// Fixed instructions first: the opening is byte-identical across legends and readers (prompt caching).
+const pA = buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs });
+const pB = buildLegendPrompt({ legend: mulan, angle: mulan.angles[0]!, focusMomentId: 'm1', pairs: mulanPairs, jokeStyle: 'dry' });
+assert.ok(pA.startsWith(LEGEND_PROMPT_STATIC) && pB.startsWith(LEGEND_PROMPT_STATIC), 'every prompt opens with the same fixed block');
+assert.ok(!LEGEND_PROMPT_STATIC.includes(hok.name) && !LEGEND_PROMPT_STATIC.includes(mulan.name), 'nothing personal or legend-specific in the fixed block');
 assert.equal(
   legendDiffer(hok, [{ axis: 'extraversion', lean: 'high', strength: 0.4 }], new Set(['extraversion'] as const)),
   null,
   'Where you differ never repeats a trait shown under Where you match',
 );
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs, differ: differCtx.differ }), /"differ"/);
-assert.doesNotMatch(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs, differ: null }), /"differ"/);
+assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs, differ: null }), /DIFFERENCE: none — leave out "differ"/);
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /"title"[\s\S]*"metScene"/);
 assert.doesNotMatch(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /"whereYouMatch"/, 'the model no longer rewrites Where you match');
 // Free extras: no AI.

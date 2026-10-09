@@ -63,6 +63,7 @@ import {
 } from '@/lib/legend-figures/story';
 import { HALL_LABEL, LEGEND_HALLS, type LegendHall } from '@/lib/legend-figures/types';
 import { localYmd } from '@/lib/local-date';
+import { cardJokeStyle } from '@/lib/voice/card-joke';
 import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
 import { legendsUnlocked } from '@/lib/questions/progressive-unlock';
@@ -281,7 +282,9 @@ export default function LegendsScreen() {
         const leans = rankStoryAxes(tracks).map((row) => ({ axis: row.axis, lean: row.lean, strength: row.strength }));
         const pairs = legendPairs(legend, leans);
         const differ = legendDiffer(legend, leans, new Set(pairs.map((p) => p.axis)));
-        const input = { legend, angle, momentId: chosen.momentId, pairs, differ };
+        // The joke style is picked here, never by the model: seeded per card so neighbours differ.
+        const jokeStyle = cardJokeStyle(`${start.userId}|${legend.id}|${chapter}`);
+        const input = { legend, angle, momentId: chosen.momentId, pairs, differ, jokeStyle };
         let story;
         try {
           story = await withTimeout(writeLegendStory({ ...input, consentGranted }), AI_TAP_TIMEOUT_MS, 'legend-story');

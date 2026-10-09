@@ -9,12 +9,14 @@
 import { LEGEND_FIGURE_META } from '@/lib/ai/call-sites';
 import { generateText } from '@/lib/ai/generate';
 import { shouldUseLocalAi } from '@/lib/ai/override';
+import { logAiReject } from '@/lib/ai/reject-log';
+import type { CardJokeStyle } from '@/lib/voice/card-joke';
 
 import { claimLegendStory } from './museum-store';
 import {
   buildLegendPrompt,
   fallbackLegendStory,
-  parseLegendStory,
+  parseLegendStoryResult,
   type LegendDiffer,
   type LegendPair,
   type LegendStory,
@@ -28,6 +30,8 @@ export async function writeLegendStory(input: {
   pairs: readonly LegendPair[];
   /** The reader's side the legend doesn't share ("Where you differ"). */
   differ: LegendDiffer | null;
+  /** The joke style for this card (seeded by the screen), or none. */
+  jokeStyle: CardJokeStyle | null;
   /** The person said yes to AI (the server refuses without it anyway). */
   consentGranted: boolean;
 }): Promise<LegendStory> {
@@ -41,14 +45,16 @@ export async function writeLegendStory(input: {
     focusMomentId: input.momentId,
     pairs: input.pairs,
     differ: input.differ,
+    jokeStyle: input.jokeStyle,
   });
   for (let pass = 1; pass <= 2; pass += 1) {
     try {
-      const request = { prompt, temperature: 0.9, maxOutputTokens: 800, responseFormat: 'json' as const };
+      const request = { prompt, temperature: 0.9, maxOutputTokens: 600, responseFormat: 'json' as const };
       const text = await generateText({ ...request }, LEGEND_FIGURE_META);
       if (!text) break;
-      const story = parseLegendStory(text, input);
+      const { story, reason } = parseLegendStoryResult(text, input);
       if (story) return story;
+      logAiReject('legend_figure', reason ?? 'unknown', pass);
     } catch (err) {
       console.log('[legend-figures] generate error:', err);
       break;

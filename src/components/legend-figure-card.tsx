@@ -337,6 +337,11 @@ export function LegendStoryCard({
       <Section title="What it means for you" ai={story.source === 'ai'}>
         {story.whatItMeansForYou}
       </Section>
+      {story.joke ? (
+        <Section title="The funny part" ai={story.source === 'ai'}>
+          {story.joke}
+        </Section>
+      ) : null}
       {aiOff ? (
         <ThemedText type="small" themeColor="textSecondary">
           AI is off, so this card uses the museum’s own words.

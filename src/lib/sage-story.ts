@@ -30,6 +30,7 @@ import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stabil
 import { leanHighLow, type TraitAxis } from '@/lib/traits';
 import { CLEAR_VOICE_RULES } from '@/lib/voice/clear-voice';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { jokeHasBannedTopic } from '@/lib/voice/card-joke';
 import { MOMENT_VOICE_BLOCK, STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
 export const STORY_COPY_REVIEWED = false;
@@ -134,26 +135,9 @@ export const STORY_MAX_WORDS = 180;
 export const STORY_MAX_PARAGRAPHS = 3;
 export const STORY_JOKE_MAX_CHARS = 120;
 
-/**
- * The hard joke bans as keywords (Story v2 §7). A backstop for the prompt, not
- * the whole rule: the model is told the bans in words. Word-bounded so
- * "deadline", "deadpan" and "skill" stay allowed.
- */
-const STORY_BANNED_TOPIC: readonly RegExp[] = [
-  /\b(die|dies|died|dying|dead|death|deaths)\b/i,
-  /\bkill(s|ed|ing)?\b/i,
-  /\bsuicid/i,
-  /\bself[- ]harm/i,
-  /\bdepress(ed|ion|ing)?\b/i,
-  /\banxiety\b/i,
-  /\btherap(y|ist|ists)\b/i,
-  /\bdrunk\b/i,
-  /\bsex(y|ual|ually)?\b/i,
-  /\b(fuck|shit|bitch|asshole)/i,
-];
-
+/** The hard joke bans as keywords (Story v2 §7), shared with the cards' joke line. */
 export function storyHasBannedTopic(text: string): boolean {
-  return STORY_BANNED_TOPIC.some((re) => re.test(text));
+  return jokeHasBannedTopic(text);
 }
 
 /** Labels the model's plan line must never echo: category names, axis labels and ids, short trait names. */

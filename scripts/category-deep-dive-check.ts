@@ -17,6 +17,10 @@ import { resolve } from 'node:path';
 import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
 import { CATEGORY_DEFS } from '../src/lib/categories';
 import {
+  DIVE_CARDS_PER_CALL,
+  DIVE_PROMPT_STATIC,
+  buildDiveBundlePrompt,
+  diveOutputTokens,
   buildDivePrompt,
   categoryLeans,
   categoryScore,
@@ -24,10 +28,13 @@ import {
   leanPct,
   leansKey,
   parseDive,
+  parseDiveBundle,
   parseStoredDive,
   type DiveLean,
 } from '../src/lib/category-deep-dive/dive';
 import { CATEGORY_DEEP_DIVE_COPY_REVIEWED } from '../src/lib/category-deep-dive/flags';
+import { cardJokeStyle } from '../src/lib/voice/card-joke';
+import { reasonOnly } from '../src/lib/ai/reject-reason';
 import { madeToday, mergeDives, parseDiveState } from '../src/lib/category-deep-dive/state';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
@@ -88,15 +95,16 @@ const prompt = buildDivePrompt(openDef, leans);
 assert.ok(prompt.includes(MOMENT_VOICE_BLOCK), 'moment voice');
 assert.ok(prompt.includes('THE CATEGORY: Openness to life'));
 assert.ok(!/\b90\b|\b80\b/.test(prompt), 'the percentages are never sent as numbers (the card shows them, the AI never repeats them)');
-assert.match(prompt, /"mix"/, 'two leanings → how they mix');
+assert.match(prompt, /MIX: yes/, 'two leanings → how they mix');
 assert.doesNotMatch(prompt, /userId|user_id|@|handle/i, 'no account details in the prompt');
 const loveLeans: DiveLean[] = [
   { axis: 'attachment_avoidance', lean: 'low', pct: 74 },
   { axis: 'attachment_anxiety', lean: 'high', pct: 66 },
 ];
-assert.match(buildDivePrompt(loveDef, loveLeans), /Be extra gentle/, 'Love / closeness gets the gentle block');
-assert.doesNotMatch(prompt, /Be extra gentle/);
-assert.doesNotMatch(buildDivePrompt(openDef, leans.slice(0, 1)), /"mix"/, 'one leaning → no mix asked');
+assert.match(buildDivePrompt(loveDef, loveLeans), /THE CATEGORY: Love \/ closeness \(GENTLE\)/, 'Love / closeness is marked GENTLE');
+assert.match(DIVE_PROMPT_STATIC, /A card marked GENTLE is about closeness/, 'and the gentle rules are in every prompt');
+assert.doesNotMatch(prompt, /\(GENTLE\)/);
+assert.match(buildDivePrompt(openDef, leans.slice(0, 1)), /MIX: no/, 'one leaning → no mix asked');
 assert.match(prompt, /CLEAR FIRST, MOMENT SECOND/, 'plain insight first, one realistic example second');
 assert.match(prompt, /No counting and no exaggeration/);
 assert.match(prompt, /A low or "quiet" side is a style with an upside/);
@@ -121,25 +129,76 @@ assert.equal(parsed.leansKey, leansKey(leans));
 assert.equal(parsed.categoryId, 'cat_openness');
 const bad = (patch: Record<string, unknown>) => JSON.stringify({ ...good, ...patch });
 const rejects: [string, string][] = [
-  ['digit', bad({ othersNotice: 'Friends notice you try 3 new things a week and still pick small plans over the big ones.' })],
-  ['count word', bad({ othersNotice: 'Friends notice you open twelve tabs about a trip and still pick small plans over the big ones.' })],
-  ['name not allowed', bad({ othersNotice: 'Friends notice you queue up Netflix documentaries about places, and pick small plans over big ones.' })],
-  ['clinical word', bad({ othersNotice: 'Friends notice you get a little anxious at big parties and pick small plans over the big ones.' })],
+  ['digit', bad({ whatItMeansForYou: 'You try 3 new places a month and go to them alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
+  ['count word', bad({ whatItMeansForYou: 'You open twelve tabs about a trip and still visit one place alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
+  ['name not allowed', bad({ whatItMeansForYou: 'You queue up Netflix documentaries about places and visit one alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
+  ['clinical word', bad({ whatItMeansForYou: 'You get a little anxious at big parties and visit new places alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
   ['advice', bad({ whatItMeansForYou: 'You keep a list of places to try and visit them alone on a Sunday. You should share that list with someone, it is a good one.' })],
-  ['you are', bad({ mix: 'You are curious but solo, so new things tend to arrive through a book, a tab or a long walk instead of a crowd.' })],
-  ['always', bad({ mix: 'Your curiosity always travels solo, so new things tend to arrive through a book, a tab or a long walk, not a crowd.' })],
-  ['brackets', bad({ mix: 'Your curiosity mostly travels solo, so new things arrive through [one modern moment] rather than a crowd, quietly.' })],
+  ['you are', bad({ whatItMeansForYou: 'You are curious but solo, so new places arrive on a quiet Sunday walk. That quiet kind of exploring says you trust your own taste.' })],
+  ['always', bad({ whatItMeansForYou: 'Your curiosity always travels solo, so new places arrive on a quiet Sunday walk. That quiet kind of exploring says you trust your own taste.' })],
+  ['brackets', bad({ whatItMeansForYou: 'Your curiosity mostly travels solo, so new things arrive through [one modern moment] instead. That quiet kind of exploring says you trust your own taste.' })],
   ['bad title', bad({ title: 'The Curious Homebody Of Sundays' })],
   ['worry title', bad({ title: 'the anxious explorer' })],
   ['wrong axis', bad({ showsUp: [good.showsUp[0], { axis: 'autonomy', line: good.showsUp[1]!.line }] })],
   ['missing leaning', bad({ showsUp: [good.showsUp[0]] })],
   ['duplicate leaning', bad({ showsUp: [good.showsUp[0], good.showsUp[0]] })],
-  ['no mix', bad({ mix: undefined })],
-  ['too short', bad({ othersNotice: 'You like small plans.' })],
+  ['short meaning', bad({ whatItMeansForYou: 'You trust your taste.' })],
+  ['bad shows-up line', bad({ showsUp: [good.showsUp[0], { axis: 'extraversion', line: 'You leave the party early, all twelve times this year, and feel fine.' }] })],
   ['not json', 'Here is your deep dive: title...'],
 ];
 for (const [label, raw] of rejects) assert.equal(parseDive(raw, openDef, leans), null, `rejects: ${label}`);
+// Each line-rule case is long enough to pass the length rule, so it fails for its named reason.
+for (const [label, raw] of rejects) {
+  if (!['digit', 'count word', 'name not allowed', 'clinical word', 'advice', 'you are', 'always', 'brackets'].includes(label)) continue;
+  const means = (JSON.parse(raw) as { whatItMeansForYou: string }).whatItMeansForYou;
+  const n = means.trim().split(/\s+/).length;
+  assert.ok(n >= 20 && n <= 60, `${label}: within the length limits (${n})`);
+  assert.ok(diveLineViolation(means, 'Openness to life Adventurous Curiosity Reserved Sociability'), `${label}: rejected by the line rules themselves`);
+}
 assert.equal(diveLineViolation('You are calm.', 'x'), 'you are');
+// Optional parts are DROPPED when they fail (never shown, never a second paid call).
+assert.equal(parseDive(bad({ mix: undefined }), openDef, leans)?.mix, null, 'a missing mix drops only the mix');
+assert.equal(parseDive(bad({ othersNotice: 'You like small plans.' }), openDef, leans)?.othersNotice, null, 'a too-short notice is dropped');
+assert.equal(
+  parseDive(bad({ othersNotice: 'Friends notice you open twelve tabs about a trip and still pick small plans over the big ones.' }), openDef, leans)?.othersNotice,
+  null,
+  'a counting notice is dropped',
+);
+// Bundle: two cards in one call; the first must pass, a failed extra is left out.
+const socialDef = CATEGORY_DEFS.find((d) => d.id === 'cat_social')!;
+const socialLeans = categoryLeans(socialDef, profile({ openness: 0.9, extraversion: 0.2, agreeableness: 0.7, playfulness: 0.8 }), NOW);
+const specA = { def: openDef, leans, jokeStyle: cardJokeStyle('u1|cat_openness|2026-10-08') };
+const specB = { def: socialDef, leans: socialLeans, jokeStyle: null };
+const bundlePrompt = buildDiveBundlePrompt([specA, specB]);
+assert.ok(bundlePrompt.startsWith(DIVE_PROMPT_STATIC), 'fixed instructions first (cache-friendly)');
+assert.match(bundlePrompt, /CARD 1 — THE CATEGORY: Openness to life[\s\S]*CARD 2 — THE CATEGORY: Everyday social energy/);
+assert.ok(!DIVE_PROMPT_STATIC.includes('Openness to life'), 'nothing card-specific in the fixed block');
+const socialCard = {
+  title: 'the easy company',
+  showsUp: socialLeans.slice(0, 3).map((row) => ({ axis: row.axis, line: 'You make room for people around you and keep the mood light, like when you start the silly thread everyone joins.' })),
+  whatItMeansForYou: 'You bring an easy warmth to the people around you. You see it when a quiet group chat wakes up after your message. That says people feel at home with you.',
+};
+const both = parseDiveBundle(JSON.stringify({ cards: [{ ...good, funny: 'Your saved recipes folder is a travel blog that never left the kitchen.' }, socialCard] }), [specA, specB]);
+assert.ok(both.dives[0] && both.dives[1], 'both cards kept');
+assert.equal(both.dives[0]!.joke, 'Your saved recipes folder is a travel blog that never left the kitchen.', 'the funny part is kept');
+assert.equal(both.dives[1]!.joke, undefined, 'no joke asked for the extra → none kept');
+const firstBad = parseDiveBundle(JSON.stringify({ cards: [{ ...good, title: 'the anxious one' }, socialCard] }), [specA, specB]);
+assert.deepEqual(firstBad.dives, [], 'the tapped card must pass, or the answer is rejected');
+assert.match(firstBad.reason ?? '', /^title:/, 'with its reason (logged, never the text)');
+const extraBad = parseDiveBundle(JSON.stringify({ cards: [good, { ...socialCard, whatItMeansForYou: 'Short.' }] }), [specA, specB]);
+assert.ok(extraBad.dives[0] && !extraBad.dives[1], 'a failed extra card is simply left out');
+assert.equal(
+  parseDiveBundle(JSON.stringify({ cards: [{ ...good, funny: 'Your plants have died of politeness twice this month, honestly.' }] }), [specA]).dives[0]?.joke,
+  undefined,
+  'a banned joke topic is dropped',
+);
+assert.equal(diveOutputTokens(1), 600, 'one card: a trimmed answer budget');
+assert.ok(diveOutputTokens(2) <= 1024, 'two cards stay under the server’s 1024 output cap');
+assert.equal(DIVE_CARDS_PER_CALL, 2);
+assert.match(read('src/lib/category-deep-dive/generate.ts'), /const specs = pass === 1 \? bundle : \[input\.main\];/, 'the retry asks for the tapped card only');
+assert.equal(reasonOnly('moment line: name not in entry: Kyoto'), 'moment line: name not in entry', 'logs keep the rule, never the quoted word');
+assert.equal(reasonOnly('means: number not in entry: 5'), 'means: number not in entry');
+assert.equal(reasonOnly('not json'), 'not json');
 ok(`AI answers: grounded ones pass; ${rejects.length} kinds of made-up, clinical or off-voice answers are rejected`);
 
 const stored = parseStoredDive(JSON.parse(JSON.stringify(parsed)));
@@ -189,6 +248,11 @@ for (const fn of ['claim_category_deep_dive()', 'save_category_deep_dive(text, t
   assert.ok(sql.includes(`revoke all on function public.${fn} from public, anon;`), `${fn} revoked from anon`);
 }
 assert.match(sql, /delete from public\.category_deep_dives where user_id = uid;/, 'Reset account wipes the deep dives');
+const sql91 = read('supabase/migrations/wave91_category_deep_dive_bundle.sql');
+assert.match(sql91, /added_today >= cap \* 2 then\s+raise exception 'daily limit'/, 'wave91: two new cards per claimed call (the bundle)');
+assert.doesNotMatch(sql91, /claim_category_deep_dive\(\)\s*returns/, 'the one-call-a-day claim is unchanged');
+assert.match(card, /opensOn: diveDay\(new Date\(Date\.now\(\) \+ 86_400_000\)\)/, 'the extra card opens tomorrow');
+assert.match(card, /opensLater \? \(/, 'and stays closed until then');
 ok('wave90: own rows only, written by RPC, one new card a day, wiped by Reset account');
 
 const consent = read('src/components/ai-consent-card.tsx');
@@ -197,7 +261,7 @@ assert.match(consent, /category deep dives you ask for/, 'so does the consent as
 assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, false, 'ships unreviewed until emci reads the review doc');
 assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY_REVIEWED/, 'listed on the dev hub copy list');
 assert.ok(existsSync(resolve(root, 'docs/category-deep-dive-review.md')), 'review doc exists');
-assert.ok(read('docs/category-deep-dive-review.md').includes('Be extra gentle'), 'the review doc shows the Love / closeness prompt');
+assert.ok(read('docs/category-deep-dive-review.md').includes('(GENTLE)'), 'the review doc shows the Love / closeness prompt');
 ok('consent copy names deep dives; flag off; review doc with both sample prompts');
 
 // Friendly names + the two-letter legend (emci, 2026-10-08), shared by Home and Explore.

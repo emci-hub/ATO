@@ -23,6 +23,7 @@ import { readCategory } from '@/lib/categories';
 import { legendLineViolation, titleViolation } from '@/lib/legend-figures/story';
 import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
+import { CARD_JOKE_RULES, cardJokeViolation, type CardJokeStyle } from '@/lib/voice/card-joke';
 import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 
 export interface DiveLean {
@@ -48,8 +49,13 @@ export interface CategoryDive {
   title: string;
   showsUp: DiveLine[];
   mix: string | null;
-  othersNotice: string;
+  /** Optional: dropped (null) when it failed the checks. */
+  othersNotice: string | null;
   whatItMeansForYou: string;
+  /** "The funny part", in the app-picked style; absent when none passed. */
+  joke?: string;
+  /** A bundled extra card opens on this UTC day (YYYY-MM-DD); absent = open now. */
+  opensOn?: string;
   source: 'ai';
 }
 
@@ -145,28 +151,26 @@ function allowedText(def: CategoryDef, leans: readonly DiveLean[]): string {
   ].join(' ');
 }
 
-export function buildDivePrompt(def: CategoryDef, leans: readonly DiveLean[]): string {
-  const top = leans.slice(0, DIVE_TOP_LEANS);
-  const rows = leans
-    .map(
-      (row) =>
-        `- axis "${row.axis}": leans ${AXIS_POLE_NAME[row.axis][row.lean]} (${row.pct >= 75 ? 'strongly' : row.pct >= 60 ? 'clearly' : 'slightly'}; sounds like: ${AXIS_POLES[row.axis][row.lean]})`,
-    )
-    .join('\n');
-  const gentle =
-    def.id === 'cat_love'
-      ? `
-THIS CATEGORY IS ABOUT CLOSENESS. Be extra gentle: describe habits with people the reader is close to warmly and
-plainly. Never diagnose, never use words like anxious, insecure, avoidant, attachment, needy or clingy, and never
-suggest anything is wrong with the reader or their relationships.
-`
-      : '';
-  return `You write a short "deep dive" card about ONE reader inside ONE category of their personality, for a self-discovery app.
+/** One card asked for in a call: its category, the leanings, and its joke style. */
+export interface DiveSpec {
+  def: CategoryDef;
+  leans: readonly DiveLean[];
+  jokeStyle: CardJokeStyle | null;
+}
 
-THE CATEGORY: ${def.name}
-THE READER'S LEANINGS IN IT (strongest first; never repeat any number):
-${rows}
-${gentle}
+/** Cards per AI call (emci, 2026-10-08: bundle). Two fit safely under the
+ * 1024 output-token cap; a third would risk a cut-off (wasted) answer. */
+export const DIVE_CARDS_PER_CALL = 2;
+
+/** Output budget: one card ~450 tokens; two ~900, safely under the server's 1024 cap. */
+export function diveOutputTokens(cards: number): number {
+  return cards >= 2 ? 1000 : 600;
+}
+
+/** The byte-identical opening of every deep-dive prompt (cache-friendly). */
+export const DIVE_PROMPT_STATIC = `You write short "deep dive" cards about ONE reader, each inside ONE category of their personality, for a self-discovery app.
+The CARD sections at the end give, for each card, the category and the reader's leanings in it.
+
 ${MOMENT_VOICE_BLOCK}
 
 RULES
@@ -174,29 +178,29 @@ RULES
 - Use no quotation marks, and name no people, apps or brands.
   (Everyday things still work: "the group chat", "a tab you keep open", "a playlist".)
 - No counting and no exaggeration: never a number or a number word above two ("three towns", "twelve
-  checklists", "eleven ways" all read as made up). Say "a few", "a couple" or nothing.
-- Name the reader's sides only with the words given above. No test, score or framework words.
+  checklists", "eleven ways" all read as made up). Say "a few", "a couple" or nothing. Never repeat a percentage.
+- Name the reader's sides only with the words given in that card's LEANINGS. No test, score or framework words.
 - Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
 - Kind, specific, modern, warm, a little delighted. Never a diagnosis, never a flaw.
+- A card marked GENTLE is about closeness: describe habits with close people warmly and plainly. Never diagnose, never
+  use words like anxious, insecure, avoidant, attachment, needy or clingy, never suggest anything is wrong.
+- Never leave square or angle brackets in the answer.
 
-STYLE FOR THIS CARD — CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop"
-above, and the counts in the register examples there — "eleven ways", "47 tabs" — are exactly what NOT to do here):
+STYLE — CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop" above, and the
+counts in the register examples there — "eleven ways", "47 tabs" — are exactly what NOT to do here):
 - Every part opens with a plain, true sentence about the reader that a friend would nod at.
   Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
   not a strange one-off scene). Nobody should have to reread it to get the point.
 - A low or "quiet" side is a style with an upside, never a weakness: say what it gives the reader.
 - Modern and natural, like a smart friend texting you an observation. No riddles, no stacked details.
 
+FOR EACH CARD:
 "title" — a name for the reader in this category, two to four lowercase words, starting with "the".
   Fresh and flattering, something they'd want to share. Never about worry, doubt, loneliness or struggle.
-"showsUp" — one item for each of the top ${top.length} axes above (${top.map((row) => row.axis).join(', ')}):
-  ${SHOWS_MIN_WORDS}–${SHOWS_MAX_WORDS} words. First what this side looks like in the reader's life in plain words, then
-  optionally one short realistic example ("..., like when you ...").${
-    top.length >= 2
-      ? `
-"mix" — ${MIX_MIN_WORDS}–${MIX_MAX_WORDS} words in plain words on how the two strongest leanings work TOGETHER (a blend or a fun tension), then optionally one quick example.`
-      : ''
-  }
+"showsUp" — one item for each axis the card lists under SHOWS UP, ${SHOWS_MIN_WORDS}–${SHOWS_MAX_WORDS} words: first what this side looks
+  like in the reader's life in plain words, then optionally one short realistic example ("..., like when you ...").
+"mix" — only when the card says MIX: yes. ${MIX_MIN_WORDS}–${MIX_MAX_WORDS} words, in plain words, on how the two strongest leanings
+  work TOGETHER (a blend or a fun tension), then optionally one quick example.
 "othersNotice" — ${NOTICE_MIN_WORDS}–${NOTICE_MAX_WORDS} words: what the people around the reader probably notice about them here. Kind, specific.
 "whatItMeansForYou" — ${DIVE_MEANS_MIN_WORDS}–${DIVE_MEANS_MAX_WORDS} words, 2 or 3 sentences, in this order:
   1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
@@ -204,17 +208,43 @@ above, and the counts in the register examples there — "eleven ways", "47 tabs
   3. A short, kind closing line on what that quietly says about the reader. No advice.
   Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What that quietly says about you]."
   Reread it once: if a friend would ask "wait, what?", rewrite it.
-Never leave square or angle brackets in the answer.
+${CARD_JOKE_RULES}
 
-Return JSON only, exactly this shape:
-{
+Return JSON only: one object per CARD, in the same order, exactly this shape
+(leave out "mix" when MIX: no, and "funny" when JOKE STYLE: none):
+{"cards": [{
   "title": "<two to four lowercase words starting with the>",
-  "showsUp": [{"axis": "<axis id>", "line": "<${SHOWS_MIN_WORDS}–${SHOWS_MAX_WORDS} words>"}],${
-    top.length >= 2 ? `\n  "mix": "<${MIX_MIN_WORDS}–${MIX_MAX_WORDS} words>",` : ''
-  }
+  "showsUp": [{"axis": "<axis id>", "line": "<${SHOWS_MIN_WORDS}–${SHOWS_MAX_WORDS} words>"}],
+  "mix": "<${MIX_MIN_WORDS}–${MIX_MAX_WORDS} words>",
   "othersNotice": "<${NOTICE_MIN_WORDS}–${NOTICE_MAX_WORDS} words>",
+  "funny": "<one sentence>",
   "whatItMeansForYou": "<${DIVE_MEANS_MIN_WORDS}–${DIVE_MEANS_MAX_WORDS} words>"
-}`;
+}]}`;
+
+function cardBlock(spec: DiveSpec, index: number): string {
+  const top = spec.leans.slice(0, DIVE_TOP_LEANS);
+  const rows = spec.leans
+    .map(
+      (row) =>
+        `- axis "${row.axis}": leans ${AXIS_POLE_NAME[row.axis][row.lean]} (${row.pct >= 75 ? 'strongly' : row.pct >= 60 ? 'clearly' : 'slightly'}; sounds like: ${AXIS_POLES[row.axis][row.lean]})`,
+    )
+    .join('\n');
+  return `CARD ${index + 1} — THE CATEGORY: ${spec.def.name}${spec.def.id === 'cat_love' ? ' (GENTLE)' : ''}
+LEANINGS (strongest first):
+${rows}
+SHOWS UP: ${top.map((row) => row.axis).join(', ')}
+MIX: ${top.length >= 2 ? 'yes' : 'no'}
+JOKE STYLE: ${spec.jokeStyle ?? 'none'}`;
+}
+
+/** Fixed instructions FIRST, the cards LAST (prompt caching bills a repeated opening at a discount). */
+export function buildDiveBundlePrompt(specs: readonly DiveSpec[]): string {
+  return `${DIVE_PROMPT_STATIC}\n\n${specs.map((spec, i) => cardBlock(spec, i)).join('\n\n')}`;
+}
+
+/** One card, no joke (the review doc and older callers). */
+export function buildDivePrompt(def: CategoryDef, leans: readonly DiveLean[], jokeStyle: CardJokeStyle | null = null): string {
+  return buildDiveBundlePrompt([{ def, leans, jokeStyle }]);
 }
 
 function words(text: string): number {
@@ -233,58 +263,110 @@ export function diveLineViolation(text: string, allowed: string): string | null 
   return legendLineViolation(text, allowed, false);
 }
 
-function lineOk(text: unknown, min: number, max: number, allowed: string): text is string {
-  if (typeof text !== 'string') return false;
+function optionalLine(text: unknown, min: number, max: number, allowed: string): string | null {
+  if (typeof text !== 'string') return null;
   const n = words(text);
-  return n >= min && n <= max && diveLineViolation(text, allowed) == null;
+  return n >= min && n <= max && diveLineViolation(text, allowed) == null ? text.trim() : null;
 }
 
-/** Parse + validate the model's answer. Null = reject (retry, then no card). */
-export function parseDive(raw: string, def: CategoryDef, leans: readonly DiveLean[]): CategoryDive | null {
-  let data: unknown;
-  try {
-    data = JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g, ''));
-  } catch {
-    return null;
-  }
-  if (typeof data !== 'object' || data == null) return null;
-  const obj = data as Record<string, unknown>;
-  const allowed = allowedText(def, leans);
-  const top = leans.slice(0, DIVE_TOP_LEANS);
+/** One card checked: the dive, or why it was rejected (reason only, for the log). */
+export interface DiveCardResult {
+  dive: CategoryDive | null;
+  reason: string | null;
+}
 
-  if (typeof obj.title !== 'string') return null;
-  const title = obj.title.trim().toLowerCase();
-  if (titleViolation(title, allowed) || CLINICAL.test(title)) return null;
+/**
+ * One card. The core (title, where it shows up, what it means) must pass; the
+ * optional parts (how they mix, what others notice, the funny part) are
+ * DROPPED when they fail — never shown, and never worth a second paid call.
+ */
+export function parseDiveCard(obj: unknown, spec: DiveSpec): DiveCardResult {
+  const reject = (reason: string): DiveCardResult => ({ dive: null, reason });
+  if (typeof obj !== 'object' || obj == null) return reject('card not an object');
+  const card = obj as Record<string, unknown>;
+  const allowed = allowedText(spec.def, spec.leans);
+  const top = spec.leans.slice(0, DIVE_TOP_LEANS);
 
-  if (!Array.isArray(obj.showsUp)) return null;
+  if (typeof card.title !== 'string') return reject('title missing');
+  const title = card.title.trim().toLowerCase();
+  const titleBad = titleViolation(title, allowed) ?? (CLINICAL.test(title) ? 'clinical word' : null);
+  if (titleBad) return reject(`title: ${titleBad}`);
+
+  if (!Array.isArray(card.showsUp)) return reject('shows up missing');
   const showsUp: DiveLine[] = [];
-  for (const item of obj.showsUp) {
+  for (const item of card.showsUp) {
     const row = item as Record<string, unknown>;
     const axis = top.find((lean) => lean.axis === row.axis)?.axis;
-    if (!axis || showsUp.some((line) => line.axis === axis)) return null;
-    if (!lineOk(row.line, SHOWS_MIN_WORDS, SHOWS_MAX_WORDS, allowed)) return null;
+    if (!axis || showsUp.some((line) => line.axis === axis)) return reject('shows up: axis');
+    if (typeof row.line !== 'string') return reject('shows up: line missing');
+    const n = words(row.line);
+    if (n < SHOWS_MIN_WORDS || n > SHOWS_MAX_WORDS) return reject('shows up: length');
+    const bad = diveLineViolation(row.line, allowed);
+    if (bad) return reject(`shows up: ${bad}`);
     showsUp.push({ axis, line: row.line.trim() });
   }
-  if (showsUp.length !== top.length) return null;
+  if (showsUp.length !== top.length) return reject('shows up: count');
 
-  let mix: string | null = null;
-  if (top.length >= 2) {
-    if (!lineOk(obj.mix, MIX_MIN_WORDS, MIX_MAX_WORDS, allowed)) return null;
-    mix = obj.mix.trim();
+  if (typeof card.whatItMeansForYou !== 'string') return reject('means missing');
+  const means = card.whatItMeansForYou.trim();
+  if (words(means) < DIVE_MEANS_MIN_WORDS || words(means) > DIVE_MEANS_MAX_WORDS) return reject('means: length');
+  const meansBad = diveLineViolation(means, allowed);
+  if (meansBad) return reject(`means: ${meansBad}`);
+
+  const mix = top.length >= 2 ? optionalLine(card.mix, MIX_MIN_WORDS, MIX_MAX_WORDS, allowed) : null;
+  const othersNotice = optionalLine(card.othersNotice, NOTICE_MIN_WORDS, NOTICE_MAX_WORDS, allowed);
+  let joke: string | null = null;
+  if (spec.jokeStyle && typeof card.funny === 'string') {
+    const line = card.funny.trim();
+    if (!cardJokeViolation(line) && !diveLineViolation(line, allowed)) joke = line;
   }
-  if (!lineOk(obj.othersNotice, NOTICE_MIN_WORDS, NOTICE_MAX_WORDS, allowed)) return null;
-  if (!lineOk(obj.whatItMeansForYou, DIVE_MEANS_MIN_WORDS, DIVE_MEANS_MAX_WORDS, allowed)) return null;
 
   return {
-    categoryId: def.id,
-    leansKey: leansKey(leans),
-    title,
-    showsUp,
-    mix,
-    othersNotice: obj.othersNotice.trim(),
-    whatItMeansForYou: obj.whatItMeansForYou.trim(),
-    source: 'ai',
+    dive: {
+      categoryId: spec.def.id,
+      leansKey: leansKey(spec.leans),
+      title,
+      showsUp,
+      mix,
+      othersNotice,
+      whatItMeansForYou: means,
+      ...(joke ? { joke } : {}),
+      source: 'ai',
+    },
+    reason: null,
   };
+}
+
+function parseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g, ''));
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * A bundle answer: `{"cards": [...]}` in the order asked. The FIRST card (the
+ * one the person tapped) must pass or the whole answer is rejected; a failed
+ * extra card is simply left out.
+ */
+export function parseDiveBundle(
+  raw: string,
+  specs: readonly DiveSpec[],
+): { dives: (CategoryDive | null)[]; reason: string | null } {
+  const data = parseJson(raw);
+  if (data === undefined) return { dives: [], reason: 'not json' };
+  const cards = (data as { cards?: unknown } | null)?.cards;
+  const list: unknown[] = Array.isArray(cards) ? cards : [data];
+  const results = specs.map((spec, i) => parseDiveCard(list[i], spec));
+  const first = results[0];
+  if (!first?.dive) return { dives: [], reason: first?.reason ?? 'no card' };
+  return { dives: results.map((r) => r.dive), reason: null };
+}
+
+/** One card from a raw answer (older callers and the check). Null = reject. */
+export function parseDive(raw: string, def: CategoryDef, leans: readonly DiveLean[]): CategoryDive | null {
+  return parseDiveBundle(raw, [{ def, leans, jokeStyle: null }]).dives[0] ?? null;
 }
 
 /** Loose read of a saved card (server row or phone cache). */
@@ -296,7 +378,6 @@ export function parseStoredDive(raw: unknown): CategoryDive | null {
     typeof obj.categoryId !== 'string' ||
     typeof obj.leansKey !== 'string' ||
     typeof obj.title !== 'string' ||
-    typeof obj.othersNotice !== 'string' ||
     typeof obj.whatItMeansForYou !== 'string' ||
     !Array.isArray(obj.showsUp)
   ) {
@@ -311,8 +392,10 @@ export function parseStoredDive(raw: unknown): CategoryDive | null {
       .filter((r) => isAxis(r.axis) && typeof r.line === 'string')
       .map((r) => ({ axis: r.axis as TraitAxis, line: r.line as string })),
     mix: typeof obj.mix === 'string' ? obj.mix : null,
-    othersNotice: obj.othersNotice,
+    othersNotice: typeof obj.othersNotice === 'string' ? obj.othersNotice : null,
     whatItMeansForYou: obj.whatItMeansForYou,
+    ...(typeof obj.joke === 'string' ? { joke: obj.joke } : {}),
+    ...(typeof obj.opensOn === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(obj.opensOn) ? { opensOn: obj.opensOn } : {}),
     source: 'ai',
   };
 }

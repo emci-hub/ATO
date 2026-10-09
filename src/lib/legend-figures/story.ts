@@ -20,6 +20,7 @@ import { AXIS_POLES, AXIS_POLE_NAME } from '@/lib/axis-poles';
 import { fnv1a } from '@/lib/daily-line/bank';
 import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { CARD_JOKE_RULES, cardJokeViolation, type CardJokeStyle } from '@/lib/voice/card-joke';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 
 import type { LegendAngle, LegendFact, LegendFigure, LegendTag } from './types';
@@ -50,6 +51,8 @@ export interface LegendStory {
   metScene?: string;
   /** AI only: "Where you differ" — the reader's side the legend doesn't share. */
   differ?: { axis: TraitAxis; lean: TraitLean; line: string };
+  /** AI only: "The funny part" — one joke line in the app-picked style. */
+  joke?: string;
   /** 'ai' = written by the model (shows the AI badge); 'fallback' = hand-written. */
   source: 'ai' | 'fallback';
 }
@@ -182,6 +185,8 @@ export function buildLegendPrompt(input: {
   focusMomentId: string;
   pairs: readonly LegendPair[];
   differ?: LegendDiffer | null;
+  /** The joke style for this card (seeded by the app), or none. */
+  jokeStyle?: CardJokeStyle | null;
 }): string {
   const { legend, angle, pairs } = input;
   const differ = input.differ ?? null;
@@ -205,7 +210,7 @@ export function buildLegendPrompt(input: {
     ? `- axis "${differ.axis}": the reader leans ${AXIS_POLE_NAME[differ.axis][differ.lean]} (sounds like: ${AXIS_POLES[differ.axis][differ.lean]}). ${
         differ.tag
           ? `${legend.name} shows the other side: "${differ.tag.them}" (${differ.tag.why})`
-          : `the entry says nothing about this side of ${legend.name}: do NOT claim they lacked it; contrast the reader's side with what ${legend.name} is known for above`
+          : `the entry says nothing about this side of ${legend.name}`
       }`
     : null;
   const kindLine = isStory
@@ -213,7 +218,10 @@ export function buildLegendPrompt(input: {
     : isAnimal
       ? 'A real animal. Never give it human thoughts or words it could not have had; describe what it did.'
       : 'Real person.';
-  return `You write the personal part of a museum card that matches a reader with a ${isStory ? 'legend from myth or folklore' : isAnimal ? 'real animal from history' : 'real person from history'}.
+  // Fixed instructions FIRST, the legend and the reader LAST: providers bill a
+  // repeated opening at a discount (prompt caching), so the static part must be
+  // byte-identical across every call (emci, 2026-10-08: "use the most of the AI tokens").
+  return `${LEGEND_PROMPT_STATIC}
 
 THE LEGEND (the ONLY facts you may use — nothing else about them, ever):
 Name: ${legend.name}
@@ -230,52 +238,58 @@ THE ANGLE for this card: "${angle.name}" — ${angle.teaser}
 THE READER (only these trait sides, never any label, score or framework word):
 ${traits}
 
+${differLine ? `DIFFERENCE (for "differ"):\n${differLine}` : 'DIFFERENCE: none — leave out "differ".'}
+${input.jokeStyle ? `JOKE STYLE (for "funny"): ${input.jokeStyle}` : 'JOKE STYLE: none — leave out "funny".'}`;
+}
+
+/** The byte-identical opening of every Legends prompt (cache-friendly). */
+export const LEGEND_PROMPT_STATIC = `You write the personal part of a museum card that matches a reader with a legend: a real person from history,
+a real animal, or a figure from myth or folklore. THE LEGEND at the end says which, and is the only source of facts.
+
 ${MOMENT_VOICE_BLOCK}
 
 RULES
-- Use no fact, date, number, name, place or quote that is not written above. No invented quotes.
-- Write numbers as words, use no quotation marks, and name no apps, brands or people other than ${legend.name}.
+- Use no fact, date, number, name, place or quote that is not written in THE LEGEND. No invented quotes.
+- Write numbers as words, use no quotation marks, and name no apps, brands or people other than the legend.
   (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice lists.
-- Do not name the reader's trait sides with any word other than the ones given above.
+- Do not name the reader's trait sides with any word other than the ones given in THE READER.
 - Kind, specific, modern, warm. Write like a friend who just spotted the link and is a little delighted by it.
+- Never leave square or angle brackets in the answer.
 
 "whatItMeansForYou" — 2 or 3 sentences, in this order (emci, 2026-10-08):
-  1. The bridge: say plainly what ${legend.name} did${isStory ? ' in the story' : ''}, in a few words from the entry, and the side of the reader it shares.
+  1. The bridge: say plainly what the legend did (in the story, for a tale), in a few words from the entry, and the side of the reader it shares.
   2. One everyday moment the reader would recognise that shows that same side. It must make physical sense
      (a voice note is recorded, not typed; a text is sent, not said) and it must clearly be the SAME trait as the bridge.
   3. A short, kind closing line on what that says about the reader. No advice, no "should".
-  Never write a moment that has no link to ${legend.name}. Never stack two unrelated moments.
+  Never write a moment that has no link to the legend. Never stack two unrelated moments.
   Shape only (do not copy the words, and vary how you open each sentence): "[Legend] did [thing from the entry]. You do a smaller version of that when [one modern moment showing the same side]. [What that quietly says about you]."
   Reread it once: if a friend would ask "wait, what does that have to do with it?", rewrite it.
-  Never leave square or angle brackets in the answer.
 
 "title" — a name for the reader, two to ${TITLE_MAX_WORDS} words, all lowercase, starting with "the".
-  It names ONE side they share with ${legend.name} (from THE READER above) in a fresh, flattering way the reader would want to share.
+  It names ONE side they share with the legend (from THE READER) in a fresh, flattering way the reader would want to share.
   Never about worry, doubt, overthinking, loneliness, sadness or struggle, even if that side is one of them. No names, no numbers, no trait words from a test.
 
 "metScene" — "If you'd met": ${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words, two sentences. Imagine one ordinary hour the reader spends
-  with ${legend.name}${isStory ? ' inside the tale' : ''}, built only from the facts and moments above: one thing you do together,
-  and one thing ${legend.name} would notice about the reader's shared side. Fun and specific. What you do together comes
-  ONLY from the facts and moments above; no new events, places, people or facts about ${legend.name}.
-${
-  differLine
-    ? `
-"differ" — "Where you differ": one sentence, ${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words, on this difference:
-${differLine}
-  Make the difference sound interesting, never a flaw on either side.
-`
-    : ''
-}
-Return JSON only, exactly this shape:
+  with the legend (inside the tale, for a story), built only from THE LEGEND's facts and moments: one thing you do together,
+  and one thing the legend would notice about the reader's shared side. Fun and specific; no new events, places, people or facts.
+
+"differ" — only when a DIFFERENCE is given at the end: "Where you differ", one sentence, ${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words, on that
+  difference. Make it sound interesting, never a flaw on either side. If the entry says nothing about that side of the legend,
+  do NOT claim they lacked it; contrast the reader's side with what the legend is known for.
+
+${CARD_JOKE_RULES}
+
+Return JSON only, exactly this shape (leave out "differ" when DIFFERENCE is none, and "funny" when JOKE STYLE is none):
 {
   "title": "<two to ${TITLE_MAX_WORDS} lowercase words starting with the>",
-  "howTheTraitWon": [{"axis": "<axis id from THE READER>", "momentId": "<a moment id from above>", "line": "<max ${WON_MAX_WORDS} words linking that moment to the reader's side>"}],
-  "metScene": "<${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words>",${differLine ? `\n  "differ": "<${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words>",` : ''}
+  "howTheTraitWon": [{"axis": "<axis id from THE READER>", "momentId": "<a moment id from THE LEGEND>", "line": "<max ${WON_MAX_WORDS} words linking that moment to the reader's side>"}],
+  "metScene": "<${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words>",
+  "differ": "<${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words>",
+  "funny": "<one sentence>",
   "whatItMeansForYou": "<${MEANS_MIN_WORDS}–${MEANS_MAX_WORDS} words>"
 }
 howTheTraitWon: 1–2 items.`;
-}
 
 const DAY_WORDS = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
 
@@ -331,8 +345,21 @@ export function titleViolation(title: string, allowed: string): string | null {
   return legendLineViolation(title, allowed, false);
 }
 
-/** Parse + validate the model's answer. Null = reject (retry or fall back). */
-export function parseLegendStory(
+/** The model's answer, checked: the story, or why it was rejected (for the
+ * reason-only log — never the text itself). */
+export interface LegendParseResult {
+  story: LegendStory | null;
+  reason: string | null;
+}
+
+/**
+ * Parse + validate the model's answer. The core (title, the moment line, what
+ * it means) must pass or the answer is rejected (retry, then fallback). The
+ * optional parts (If you'd met, Where you differ, The funny part) are DROPPED
+ * when they fail instead — the bad text is never shown, and a good card is
+ * not paid for twice over one weak line (emci, 2026-10-08: token savings).
+ */
+export function parseLegendStoryResult(
   raw: string,
   ctx: {
     legend: LegendFigure;
@@ -340,15 +367,17 @@ export function parseLegendStory(
     momentId: string;
     pairs: readonly LegendPair[];
     differ?: LegendDiffer | null;
+    jokeStyle?: CardJokeStyle | null;
   },
-): LegendStory | null {
+): LegendParseResult {
+  const reject = (reason: string): LegendParseResult => ({ story: null, reason });
   let data: unknown;
   try {
     data = JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g, ''));
   } catch {
-    return null;
+    return reject('not json');
   }
-  if (typeof data !== 'object' || data == null) return null;
+  if (typeof data !== 'object' || data == null) return reject('not an object');
   const obj = data as Record<string, unknown>;
   const axes = new Set(ctx.pairs.map((p) => p.axis));
   const momentIds = new Set(shownMoments(ctx.legend).map((m) => m.id));
@@ -360,55 +389,78 @@ export function parseLegendStory(
   // "Where you match" is the hand-written tag phrases, never the model's.
   const match: LegendMatchLine[] = ctx.pairs.map((p) => ({ axis: p.axis, lean: p.lean, them: p.tag.them }));
 
-  if (typeof obj.title !== 'string') return null;
+  if (typeof obj.title !== 'string') return reject('title missing');
   const title = obj.title.trim().toLowerCase();
-  if (titleViolation(title, allowed)) return null;
+  const titleBad = titleViolation(title, allowed);
+  if (titleBad) return reject(`title: ${titleBad}`);
 
-  if (typeof obj.metScene !== 'string') return null;
-  const metScene = obj.metScene.trim();
-  if (words(metScene) < SCENE_MIN_WORDS || words(metScene) > SCENE_MAX_WORDS) return null;
-  if (legendLineViolation(metScene, allowed, isStory)) return null;
-
-  const differCtx = ctx.differ ?? null;
-  let differ: LegendStory['differ'];
-  if (differCtx) {
-    if (typeof obj.differ !== 'string') return null;
-    const line = obj.differ.trim();
-    if (words(line) < DIFFER_MIN_WORDS || words(line) > DIFFER_MAX_WORDS) return null;
-    const differAllowed = `${allowed} ${AXIS_POLE_NAME[differCtx.axis][differCtx.lean]} ${AXIS_POLES[differCtx.axis][differCtx.lean]}`;
-    if (legendLineViolation(line, differAllowed, isStory)) return null;
-    differ = { axis: differCtx.axis, lean: differCtx.lean, line };
+  if (!Array.isArray(obj.howTheTraitWon) || obj.howTheTraitWon.length < 1 || obj.howTheTraitWon.length > 2) {
+    return reject('moment lines shape');
   }
-
-  if (!Array.isArray(obj.howTheTraitWon) || obj.howTheTraitWon.length < 1 || obj.howTheTraitWon.length > 2) return null;
   const won: LegendWonLine[] = [];
   for (const item of obj.howTheTraitWon) {
     const row = item as Record<string, unknown>;
-    if (typeof row.axis !== 'string' || !axes.has(row.axis as TraitAxis)) return null;
-    if (typeof row.momentId !== 'string' || !momentIds.has(row.momentId)) return null;
-    if (typeof row.line !== 'string' || words(row.line) > WON_MAX_WORDS) return null;
-    if (legendLineViolation(row.line, allowed, isStory)) return null;
+    if (typeof row.axis !== 'string' || !axes.has(row.axis as TraitAxis)) return reject('moment line: unknown axis');
+    if (typeof row.momentId !== 'string' || !momentIds.has(row.momentId)) return reject('moment line: unknown moment');
+    if (typeof row.line !== 'string' || words(row.line) > WON_MAX_WORDS) return reject('moment line: length');
+    const bad = legendLineViolation(row.line, allowed, isStory);
+    if (bad) return reject(`moment line: ${bad}`);
     won.push({ axis: row.axis as TraitAxis, momentId: row.momentId, line: row.line.trim() });
   }
 
-  if (typeof obj.whatItMeansForYou !== 'string') return null;
+  if (typeof obj.whatItMeansForYou !== 'string') return reject('means missing');
   const means = obj.whatItMeansForYou.trim();
   const n = words(means);
-  if (n < MEANS_MIN_WORDS || n > MEANS_MAX_WORDS) return null;
-  if (legendLineViolation(means, allowed, isStory)) return null;
+  if (n < MEANS_MIN_WORDS || n > MEANS_MAX_WORDS) return reject('means: length');
+  const meansBad = legendLineViolation(means, allowed, isStory);
+  if (meansBad) return reject(`means: ${meansBad}`);
+
+  // Optional parts: kept only when they pass, dropped otherwise.
+  let metScene: string | undefined;
+  if (typeof obj.metScene === 'string') {
+    const line = obj.metScene.trim();
+    if (words(line) >= SCENE_MIN_WORDS && words(line) <= SCENE_MAX_WORDS && !legendLineViolation(line, allowed, isStory)) {
+      metScene = line;
+    }
+  }
+
+  const differCtx = ctx.differ ?? null;
+  let differ: LegendStory['differ'];
+  if (differCtx && typeof obj.differ === 'string') {
+    const line = obj.differ.trim();
+    const differAllowed = `${allowed} ${AXIS_POLE_NAME[differCtx.axis][differCtx.lean]} ${AXIS_POLES[differCtx.axis][differCtx.lean]}`;
+    if (words(line) >= DIFFER_MIN_WORDS && words(line) <= DIFFER_MAX_WORDS && !legendLineViolation(line, differAllowed, isStory)) {
+      differ = { axis: differCtx.axis, lean: differCtx.lean, line };
+    }
+  }
+
+  let joke: string | undefined;
+  if (ctx.jokeStyle && typeof obj.funny === 'string') {
+    const line = obj.funny.trim();
+    if (!cardJokeViolation(line) && !legendLineViolation(line, allowed, isStory)) joke = line;
+  }
 
   return {
-    legendId: ctx.legend.id,
-    angleId: ctx.angle.id,
-    momentId: ctx.momentId,
-    whereYouMatch: match,
-    howTheTraitWon: won,
-    whatItMeansForYou: means,
-    title,
-    metScene,
-    ...(differ ? { differ } : {}),
-    source: 'ai',
+    story: {
+      legendId: ctx.legend.id,
+      angleId: ctx.angle.id,
+      momentId: ctx.momentId,
+      whereYouMatch: match,
+      howTheTraitWon: won,
+      whatItMeansForYou: means,
+      title,
+      ...(metScene ? { metScene } : {}),
+      ...(differ ? { differ } : {}),
+      ...(joke ? { joke } : {}),
+      source: 'ai',
+    },
+    reason: null,
   };
+}
+
+/** Parse + validate the model's answer. Null = reject (retry or fall back). */
+export function parseLegendStory(raw: string, ctx: Parameters<typeof parseLegendStoryResult>[1]): LegendStory | null {
+  return parseLegendStoryResult(raw, ctx).story;
 }
 
 /** The no-AI story: every word hand-written (tags, the chosen moment, the angle's meaning). */
@@ -457,6 +509,7 @@ export function parseStoredLegendStory(raw: unknown): LegendStory | null {
     ...(typeof obj.title === 'string' ? { title: obj.title } : {}),
     ...(typeof obj.metScene === 'string' ? { metScene: obj.metScene } : {}),
     ...(storedDiffer(obj.differ) ?? {}),
+    ...(typeof obj.joke === 'string' ? { joke: obj.joke } : {}),
     source: obj.source === 'ai' ? 'ai' : 'fallback',
   };
 }
