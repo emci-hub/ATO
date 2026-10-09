@@ -14,7 +14,7 @@ import { resolve } from 'node:path';
 import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
 import { LEGEND_ROSTER } from '../src/lib/legend-figures/roster';
 import { legendTitle } from '../src/lib/legend-figures/labels';
-import { buildLegendPrompt, legendPairs } from '../src/lib/legend-figures/story';
+import { buildLegendPrompt, legendDiffer, legendPairs } from '../src/lib/legend-figures/story';
 import { HALL_LABEL, LEGEND_HALLS } from '../src/lib/legend-figures/types';
 
 const phrases = LEGEND_ROSTER.reduce(
@@ -86,10 +86,16 @@ const samplePairs = legendPairs(sample, [
 push(
   '## The AI prompt (sample: Hokusai, a reader who leans Learning + Adventurous)',
   '',
-  'The AI only writes “Where you match”, the one line under each moment, and “What it means for you”. The moment text, the facts and the label are always the hand-written ones above. Answers are rejected (one retry, then the hand-written fallback) if they contain any number, name or quote that is not in the entry, an unknown trait or moment, “you are”, “always”, “!”, emoji, a framework word, or a myth told as history.',
+  'The AI writes (one call per reveal): the reader’s legend title, the one line under each moment, “If you’d met”, “Where you differ” and “What it means for you”. “Where you match”, “Did you know?” and “Still to come” are hand-written, no AI. The moment text, the facts and the label are always the hand-written ones above. Answers are rejected (one retry, then the hand-written fallback) if they contain any number, name or quote that is not in the entry, an unknown trait or moment, “you are”, “always”, “!”, emoji, a framework word, or a myth told as history.',
   '',
   '```',
-  buildLegendPrompt({ legend: sample, angle: sample.angles[0]!, focusMomentId: 'm1', pairs: samplePairs }),
+  buildLegendPrompt({
+    legend: sample,
+    angle: sample.angles[0]!,
+    focusMomentId: 'm1',
+    pairs: samplePairs,
+    differ: legendDiffer(sample, [{ axis: 'extraversion', lean: 'high', strength: 0.4 }]),
+  }),
   '```',
   '',
 );

@@ -15,6 +15,7 @@ import {
   buildLegendPrompt,
   fallbackLegendStory,
   parseLegendStory,
+  type LegendDiffer,
   type LegendPair,
   type LegendStory,
 } from './story';
@@ -25,6 +26,8 @@ export async function writeLegendStory(input: {
   angle: LegendAngle;
   momentId: string;
   pairs: readonly LegendPair[];
+  /** The reader's side the legend doesn't share ("Where you differ"). */
+  differ: LegendDiffer | null;
   /** The person said yes to AI (the server refuses without it anyway). */
   consentGranted: boolean;
 }): Promise<LegendStory> {
@@ -37,10 +40,11 @@ export async function writeLegendStory(input: {
     angle: input.angle,
     focusMomentId: input.momentId,
     pairs: input.pairs,
+    differ: input.differ,
   });
   for (let pass = 1; pass <= 2; pass += 1) {
     try {
-      const request = { prompt, temperature: 0.9, maxOutputTokens: 700, responseFormat: 'json' as const };
+      const request = { prompt, temperature: 0.9, maxOutputTokens: 800, responseFormat: 'json' as const };
       const text = await generateText({ ...request }, LEGEND_FIGURE_META);
       if (!text) break;
       const story = parseLegendStory(text, input);

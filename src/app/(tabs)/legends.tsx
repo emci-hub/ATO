@@ -54,7 +54,13 @@ import {
   settledFingerprint,
 } from '@/lib/legend-figures/pick';
 import { LEGEND_ROSTER, legendById, legendsInHall } from '@/lib/legend-figures/roster';
-import { fallbackLegendStory, legendPairs } from '@/lib/legend-figures/story';
+import {
+  didYouKnowFact,
+  fallbackLegendStory,
+  legendDiffer,
+  legendPairs,
+  nextChapterTeaser,
+} from '@/lib/legend-figures/story';
 import { HALL_LABEL, LEGEND_HALLS, type LegendHall } from '@/lib/legend-figures/types';
 import { localYmd } from '@/lib/local-date';
 import { aiConsentFor } from '@/lib/me';
@@ -272,11 +278,10 @@ export default function LegendsScreen() {
         const counts = await withTimeout(fetchAngleCounts(legend.id), COUNTS_TIMEOUT_MS, 'legend-counts').catch(() => null);
         const chosen = chooseAngle(legend, start.userId, counts, { onlyAngle: angleId, skipAngles: told });
         const angle = legend.angles.find((a) => a.id === chosen.angleId) ?? legend.angles[0]!;
-        const pairs = legendPairs(
-          legend,
-          rankStoryAxes(tracks).map((row) => ({ axis: row.axis, lean: row.lean, strength: row.strength })),
-        );
-        const input = { legend, angle, momentId: chosen.momentId, pairs };
+        const leans = rankStoryAxes(tracks).map((row) => ({ axis: row.axis, lean: row.lean, strength: row.strength }));
+        const pairs = legendPairs(legend, leans);
+        const differ = legendDiffer(legend, leans, new Set(pairs.map((p) => p.axis)));
+        const input = { legend, angle, momentId: chosen.momentId, pairs, differ };
         let story;
         try {
           story = await withTimeout(writeLegendStory({ ...input, consentGranted }), AI_TAP_TIMEOUT_MS, 'legend-story');
@@ -364,13 +369,25 @@ export default function LegendsScreen() {
           onShare={() => setShareOpen(true)}
           notes={revealNotes[openLegendDef.id] ?? []}
           matchedOn={matchedOnLine(openLegendDef, tracks)}
+          didYouKnow={didYouKnowFact(openLegendDef, openEntry.story, local?.userId ?? '')}
+          nextTeaser={nextChapterTeaser(openLegendDef, toldAngles(museum).get(openLegendDef.id))}
+          nextNote={
+            hallComplete(openLegendDef.hall, tracks, metIds)
+              ? 'It can turn up behind this hall’s frames.'
+              : 'Chapters open once you’ve met every legend in this hall.'
+          }
           chapters={{
             labels: openEntries.map((row) => chapterLabel(row.chapter)),
             selected: openEntries.indexOf(openEntry),
             onSelect: (index) => setOpenChapter(openEntries[index]?.chapter ?? 0),
           }}
         />
-        <LegendShareSheet legend={openLegendDef} visible={shareOpen} onClose={() => setShareOpen(false)} />
+        <LegendShareSheet
+          legend={openLegendDef}
+          title={openEntry.story.title ?? null}
+          visible={shareOpen}
+          onClose={() => setShareOpen(false)}
+        />
       </>
     ) : null;
 

@@ -21,7 +21,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AXIS_POLE_NAME } from '@/lib/axis-poles';
-import { shownFacts, shownMoments, type LegendStory } from '@/lib/legend-figures/story';
+import { shownFacts, shownMoments, titleCase, type LegendStory } from '@/lib/legend-figures/story';
 import {
   AI_LEGEND_PLACEHOLDER,
   REAL_ANIMAL,
@@ -29,7 +29,7 @@ import {
   frameA11yLabel,
   legendTitle,
 } from '@/lib/legend-figures/labels';
-import { HALL_LABEL, type LegendFigure, type LegendHall } from '@/lib/legend-figures/types';
+import { HALL_LABEL, type LegendFact, type LegendFigure, type LegendHall } from '@/lib/legend-figures/types';
 import { SHARE_FAILED_COPY, SHARE_UNAVAILABLE_COPY, shareViewAsImage } from '@/lib/share';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -132,7 +132,6 @@ export function LegendFrame({
   state: 'ready' | 'loading' | 'spent';
   onReveal: () => void;
 }) {
-  const theme = useTheme();
   const color = HALL_COLOR[hall];
   const disabled = state !== 'ready';
   return (
@@ -197,6 +196,9 @@ export function LegendStoryCard({
   notes = [],
   matchedOn = null,
   chapters = null,
+  didYouKnow = null,
+  nextTeaser = null,
+  nextNote = '',
 }: {
   legend: LegendFigure;
   story: LegendStory;
@@ -211,10 +213,16 @@ export function LegendStoryCard({
   matchedOn?: string | null;
   /** More than one chapter: the tabs to switch between them. */
   chapters?: { labels: readonly string[]; selected: number; onSelect: (index: number) => void } | null;
+  /** "Did you know?" (no AI): one verified fact, lifted out of the list below. */
+  didYouKnow?: LegendFact | null;
+  /** "Still to come" (no AI): the teaser of a story not told yet, and when it opens. */
+  nextTeaser?: string | null;
+  nextNote?: string;
 }) {
   const theme = useTheme();
   const moments = shownMoments(legend);
-  const facts = shownFacts(legend);
+  const facts = shownFacts(legend).filter((fact) => fact.id !== didYouKnow?.id);
+  const color = HALL_COLOR[legend.hall];
   const circle = circleLine(friends, legend.name);
   return (
     <View style={[styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
@@ -228,6 +236,31 @@ export function LegendStoryCard({
         <ThemedText type="small" themeColor="textSecondary">
           {matchedOn}
         </ThemedText>
+      ) : null}
+      {story.title ? (
+        <View style={[styles.titleBox, { borderColor: color, backgroundColor: `${color}14` }]}>
+          <View style={styles.sectionHead}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Your legend title
+            </ThemedText>
+            {story.source === 'ai' ? <AiBadge /> : null}
+          </View>
+          <ThemedText type="subheading" style={{ color }}>
+            {titleCase(story.title)}
+          </ThemedText>
+        </View>
+      ) : null}
+      {didYouKnow ? (
+        <Pressable
+          onPress={() => void Linking.openURL(didYouKnow.source.url)}
+          accessibilityRole="link"
+          accessibilityLabel={`Did you know? ${didYouKnow.text} Open the source`}
+          style={({ pressed }) => [styles.moment, { backgroundColor: theme.backgroundSelected }, pressed && styles.pressed]}>
+          <ThemedText type="smallBold" style={{ color }}>
+            Did you know?
+          </ThemedText>
+          <ThemedText type="small">{didYouKnow.text}</ThemedText>
+        </Pressable>
       ) : null}
 
       <Section title="Who they were">{legend.whoTheyWere}</Section>
@@ -254,12 +287,9 @@ export function LegendStoryCard({
           ))}
         </View>
       ) : null}
-      <View style={styles.sectionHead}>
-        <ThemedText type="small" themeColor="textSecondary">
-          Where you match
-        </ThemedText>
-        {story.source === 'ai' ? <AiBadge /> : null}
-      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        Where you match
+      </ThemedText>
       {story.whereYouMatch.map((row) => (
         <View key={row.axis} style={styles.matchRow}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
@@ -271,9 +301,12 @@ export function LegendStoryCard({
         </View>
       ))}
 
-      <ThemedText type="small" themeColor="textSecondary" style={styles.sectionTitle}>
-        The moment it mattered
-      </ThemedText>
+      <View style={[styles.sectionHead, styles.sectionTitle]}>
+        <ThemedText type="small" themeColor="textSecondary">
+          The moment it mattered
+        </ThemedText>
+        {story.source === 'ai' ? <AiBadge /> : null}
+      </View>
       {story.howTheTraitWon.map((row, index) => {
         const moment = moments.find((m) => m.id === row.momentId);
         if (!moment) return null;
@@ -289,11 +322,41 @@ export function LegendStoryCard({
         );
       })}
 
-      <Section title="What it means for you">{story.whatItMeansForYou}</Section>
+      {story.metScene ? (
+        <Section title={`If you’d met ${legend.name}`} ai={story.source === 'ai'}>
+          {story.metScene}
+        </Section>
+      ) : null}
+      {story.differ ? (
+        <Section
+          title={`Where you differ · your ${AXIS_POLE_NAME[story.differ.axis][story.differ.lean]} side`}
+          ai={story.source === 'ai'}>
+          {story.differ.line}
+        </Section>
+      ) : null}
+      <Section title="What it means for you" ai={story.source === 'ai'}>
+        {story.whatItMeansForYou}
+      </Section>
       {aiOff ? (
         <ThemedText type="small" themeColor="textSecondary">
           AI is off, so this card uses the museum’s own words.
         </ThemedText>
+      ) : null}
+
+      {nextTeaser ? (
+        <View style={[styles.moment, { backgroundColor: theme.backgroundSelected }]}>
+          <ThemedText type="smallBold" style={{ color }}>
+            Still to come
+          </ThemedText>
+          <ThemedText type="small" style={styles.italic}>
+            {nextTeaser}
+          </ThemedText>
+          {nextNote ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {nextNote}
+            </ThemedText>
+          ) : null}
+        </View>
       ) : null}
 
       {circle ? (
@@ -337,12 +400,15 @@ export function LegendStoryCard({
   );
 }
 
-function Section({ title, children }: { title: string; children: string }) {
+function Section({ title, children, ai = false }: { title: string; children: string; ai?: boolean }) {
   return (
     <View style={styles.section}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {title}
-      </ThemedText>
+      <View style={styles.sectionHead}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
+          {title}
+        </ThemedText>
+        {ai ? <AiBadge /> : null}
+      </View>
       <ThemedText>{children}</ThemedText>
     </View>
   );
@@ -351,10 +417,13 @@ function Section({ title, children }: { title: string; children: string }) {
 /** Preview first, then share (a visible card in a Modal, as share-card.tsx does). */
 export function LegendShareSheet({
   legend,
+  title = null,
   visible,
   onClose,
 }: {
   legend: LegendFigure;
+  /** The reader's AI legend title, when the story has one ("The Patient Rebuilder"). */
+  title?: string | null;
   visible: boolean;
   onClose: () => void;
 }) {
@@ -389,6 +458,11 @@ export function LegendShareSheet({
           <ThemedText style={styles.shareEssence} numberOfLines={4} adjustsFontSizeToFit>
             {legend.essence}
           </ThemedText>
+          {title ? (
+            <ThemedText type="smallBold" style={[styles.shareTitle, { color }]} numberOfLines={2} adjustsFontSizeToFit>
+              My legend title: {titleCase(title)}
+            </ThemedText>
+          ) : null}
           <ThemedText type="small" style={styles.shareMeta} numberOfLines={3} adjustsFontSizeToFit>
             {legend.kind === 'story'
               ? `${STORY_NOT_HISTORY} · ${legend.place}`
@@ -474,7 +548,10 @@ const styles = StyleSheet.create({
   matchRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
   matchThem: { flex: 1, textAlign: 'right' },
   momentBlock: { gap: 4 },
-  moment: { borderRadius: 10, padding: Spacing.two },
+  moment: { borderRadius: 10, padding: Spacing.two, gap: 2 },
+  titleBox: { borderWidth: 1, borderRadius: 12, padding: Spacing.two, gap: 2 },
+  italic: { fontStyle: 'italic' },
+  shareTitle: { textAlign: 'center' },
   circleRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   factRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 2 },
   factIcon: { marginTop: 3 },

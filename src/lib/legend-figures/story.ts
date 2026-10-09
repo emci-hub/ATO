@@ -2,9 +2,12 @@
  * Legend figures — the "you" part of a legend's story.
  *
  * The museum label (who they were, famous for, facts, moments) is hand-written
- * and shown as-is. The AI writes ONLY:
- *   whereYouMatch      — each of the person's trait sides → the legend's side
+ * and shown as-is, and so is "Where you match" (the hand-written tag phrases,
+ * emci 2026-10-08: the model was only rewording them). The ONE AI call writes:
+ *   title              — a 2–4 word name for the reader ("the patient rebuilder")
  *   howTheTraitWon     — each trait → one REAL moment, by id, + one line linking it
+ *   metScene           — "If you'd met them": a short scene built from the entry
+ *   differ             — "Where you differ": one line on a side they don't share
  *   whatItMeansForYou  — a few sentences in the moment voice
  * The moment text itself is always the hand-written one, never AI.
  *
@@ -14,11 +17,12 @@
  * (one retry, then the no-AI fallback — never a dead end).
  */
 import { AXIS_POLES, AXIS_POLE_NAME } from '@/lib/axis-poles';
+import { fnv1a } from '@/lib/daily-line/bank';
 import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 
-import type { LegendAngle, LegendFigure, LegendTag } from './types';
+import type { LegendAngle, LegendFact, LegendFigure, LegendTag } from './types';
 
 export interface LegendMatchLine {
   axis: TraitAxis;
@@ -40,8 +44,22 @@ export interface LegendStory {
   whereYouMatch: LegendMatchLine[];
   howTheTraitWon: LegendWonLine[];
   whatItMeansForYou: string;
+  /** AI only: a 2–4 word name for the reader, stored lowercase ("the patient rebuilder"). */
+  title?: string;
+  /** AI only: "If you'd met them". */
+  metScene?: string;
+  /** AI only: "Where you differ" — the reader's side the legend doesn't share. */
+  differ?: { axis: TraitAxis; lean: TraitLean; line: string };
   /** 'ai' = written by the model (shows the AI badge); 'fallback' = hand-written. */
   source: 'ai' | 'fallback';
+}
+
+/** A side of the reader the legend does not share: the opposite of one of its
+ * tags (`tag` set), or a trait its label never shows (`tag` null). */
+export interface LegendDiffer {
+  axis: TraitAxis;
+  lean: TraitLean;
+  tag: LegendTag | null;
 }
 
 /** One of the person's trait sides paired with a legend tag. `contrast` = the
@@ -59,6 +77,11 @@ export const THEM_MAX_WORDS = 6;
 export const WON_MAX_WORDS = 35;
 export const MEANS_MIN_WORDS = 20;
 export const MEANS_MAX_WORDS = 60;
+export const TITLE_MAX_WORDS = 4;
+export const SCENE_MIN_WORDS = 15;
+export const SCENE_MAX_WORDS = 45;
+export const DIFFER_MIN_WORDS = 8;
+export const DIFFER_MAX_WORDS = 30;
 
 /** Facts and moments the app may show or send: verified only. */
 export function shownFacts(legend: LegendFigure) {
@@ -91,6 +114,52 @@ export function legendPairs(
   return pairs;
 }
 
+/** The reader's strongest side the legend does NOT share: first an outright
+ * opposite of one of its tags, else a trait its label never shows. */
+export function legendDiffer(
+  legend: LegendFigure,
+  leans: readonly { axis: TraitAxis; lean: TraitLean; strength: number }[],
+  /** Axes already shown under "Where you match" (never the same trait twice). */
+  skipAxes: ReadonlySet<TraitAxis> = new Set(),
+): LegendDiffer | null {
+  const sorted = [...leans].filter((lean) => !skipAxes.has(lean.axis)).sort((a, b) => b.strength - a.strength || TRAIT_AXES.indexOf(a.axis) - TRAIT_AXES.indexOf(b.axis));
+  for (const lean of sorted) {
+    const tag = legend.tags.find((t) => t.axis === lean.axis && t.lean !== lean.lean);
+    if (tag) return { axis: lean.axis, lean: lean.lean, tag };
+  }
+  for (const lean of sorted) {
+    if (!legend.tags.some((t) => t.axis === lean.axis)) return { axis: lean.axis, lean: lean.lean, tag: null };
+  }
+  return null;
+}
+
+/** "Did you know?" (no AI): the verified fact that shares the most words with
+ * the matched tags' evidence; ties broken per person, so two people differ. */
+export function didYouKnowFact(legend: LegendFigure, story: LegendStory, userId: string): LegendFact | null {
+  const facts = shownFacts(legend);
+  if (facts.length === 0) return null;
+  const axes = new Set(story.whereYouMatch.map((row) => row.axis));
+  const clue = new Set(
+    legend.tags
+      .filter((tag) => axes.has(tag.axis))
+      .flatMap((tag) => `${tag.why} ${tag.them}`.toLowerCase().match(/[\p{L}]{4,}/gu) ?? []),
+  );
+  const score = (fact: LegendFact) =>
+    (fact.text.toLowerCase().match(/[\p{L}]{4,}/gu) ?? []).filter((word) => clue.has(word)).length;
+  const tie = (fact: LegendFact) => fnv1a(`${userId}|${legend.id}|${fact.id}`);
+  return [...facts].sort((a, b) => score(b) - score(a) || tie(a) - tie(b))[0]!;
+}
+
+/** "Still to come" (no AI): the teaser of a story this person hasn't heard yet. */
+export function nextChapterTeaser(legend: LegendFigure, told: ReadonlySet<string> | undefined): string | null {
+  return legend.angles.find((angle) => !told?.has(angle.id))?.teaser ?? null;
+}
+
+/** "the patient rebuilder" → "The Patient Rebuilder". */
+export function titleCase(title: string): string {
+  return title.replace(/(^|[\s-])(\p{L})/gu, (_, sep: string, ch: string) => sep + ch.toUpperCase());
+}
+
 /** Every word the AI may borrow: the hand-written entry, pole names, and the angle. */
 export function entryText(legend: LegendFigure, angle: LegendAngle | null): string {
   return [
@@ -112,8 +181,10 @@ export function buildLegendPrompt(input: {
   angle: LegendAngle;
   focusMomentId: string;
   pairs: readonly LegendPair[];
+  differ?: LegendDiffer | null;
 }): string {
   const { legend, angle, pairs } = input;
+  const differ = input.differ ?? null;
   const isStory = legend.kind === 'story';
   const isAnimal = legend.kind === 'animal';
   const facts = shownFacts(legend).map((f) => `- ${f.text}`).join('\n');
@@ -130,6 +201,13 @@ export function buildLegendPrompt(input: {
       return `- axis "${p.axis}": the reader leans ${pole} (sounds like: ${sound}). Pair it with ${link}`;
     })
     .join('\n');
+  const differLine = differ
+    ? `- axis "${differ.axis}": the reader leans ${AXIS_POLE_NAME[differ.axis][differ.lean]} (sounds like: ${AXIS_POLES[differ.axis][differ.lean]}). ${
+        differ.tag
+          ? `${legend.name} shows the other side: "${differ.tag.them}" (${differ.tag.why})`
+          : `the entry says nothing about this side of ${legend.name}: do NOT claim they lacked it; contrast the reader's side with what ${legend.name} is known for above`
+      }`
+    : null;
   const kindLine = isStory
     ? 'This is a story, not history. Talk about it as "in the story" / "the tale"; never claim it really happened.'
     : isAnimal
@@ -172,13 +250,31 @@ RULES
   Reread it once: if a friend would ask "wait, what does that have to do with it?", rewrite it.
   Never leave square or angle brackets in the answer.
 
+"title" — a name for the reader, two to ${TITLE_MAX_WORDS} words, all lowercase, starting with "the".
+  It names ONE side they share with ${legend.name} (from THE READER above) in a fresh, flattering way the reader would want to share.
+  Never about worry, doubt, overthinking, loneliness, sadness or struggle, even if that side is one of them. No names, no numbers, no trait words from a test.
+
+"metScene" — "If you'd met": ${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words, two sentences. Imagine one ordinary hour the reader spends
+  with ${legend.name}${isStory ? ' inside the tale' : ''}, built only from the facts and moments above: one thing you do together,
+  and one thing ${legend.name} would notice about the reader's shared side. Fun and specific. What you do together comes
+  ONLY from the facts and moments above; no new events, places, people or facts about ${legend.name}.
+${
+  differLine
+    ? `
+"differ" — "Where you differ": one sentence, ${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words, on this difference:
+${differLine}
+  Make the difference sound interesting, never a flaw on either side.
+`
+    : ''
+}
 Return JSON only, exactly this shape:
 {
-  "whereYouMatch": [{"axis": "<one axis id from THE READER>", "them": "<their side, max ${THEM_MAX_WORDS} words>"}],
-  "howTheTraitWon": [{"axis": "<axis id>", "momentId": "<a moment id from above>", "line": "<max ${WON_MAX_WORDS} words linking that moment to the reader's side>"}],
+  "title": "<two to ${TITLE_MAX_WORDS} lowercase words starting with the>",
+  "howTheTraitWon": [{"axis": "<axis id from THE READER>", "momentId": "<a moment id from above>", "line": "<max ${WON_MAX_WORDS} words linking that moment to the reader's side>"}],
+  "metScene": "<${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words>",${differLine ? `\n  "differ": "<${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words>",` : ''}
   "whatItMeansForYou": "<${MEANS_MIN_WORDS}–${MEANS_MAX_WORDS} words>"
 }
-whereYouMatch: one item per reader axis above (${pairs.length}). howTheTraitWon: 1–2 items.`;
+howTheTraitWon: 1–2 items.`;
 }
 
 const DAY_WORDS = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
@@ -226,6 +322,7 @@ export function parseLegendStory(
     angle: LegendAngle;
     momentId: string;
     pairs: readonly LegendPair[];
+    differ?: LegendDiffer | null;
   },
 ): LegendStory | null {
   let data: unknown;
@@ -243,19 +340,31 @@ export function parseLegendStory(
     .join(' ')}`;
   const isStory = ctx.legend.kind === 'story';
 
-  if (!Array.isArray(obj.whereYouMatch) || obj.whereYouMatch.length < 1 || obj.whereYouMatch.length > STORY_MAX_PAIRS) {
+  // "Where you match" is the hand-written tag phrases, never the model's.
+  const match: LegendMatchLine[] = ctx.pairs.map((p) => ({ axis: p.axis, lean: p.lean, them: p.tag.them }));
+
+  if (typeof obj.title !== 'string') return null;
+  const title = obj.title.trim().toLowerCase();
+  if (!/^the( [a-z][a-z'’-]*){1,3}$/.test(title) || words(title) > TITLE_MAX_WORDS) return null;
+  if (/\b(anxi|worr|lonel|alone|sad|fear|struggl|broken|overthink|second-guess|doubt|nerv|insecur|clingy|needy|lost|fragile|timid|shy)/.test(title)) {
     return null;
   }
-  const match: LegendMatchLine[] = [];
-  const seen = new Set<string>();
-  for (const item of obj.whereYouMatch) {
-    const row = item as Record<string, unknown>;
-    if (typeof row.axis !== 'string' || !axes.has(row.axis as TraitAxis) || seen.has(row.axis)) return null;
-    if (typeof row.them !== 'string' || words(row.them) > THEM_MAX_WORDS) return null;
-    if (legendLineViolation(row.them, allowed, isStory)) return null;
-    seen.add(row.axis);
-    const pair = ctx.pairs.find((p) => p.axis === row.axis)!;
-    match.push({ axis: pair.axis, lean: pair.lean, them: row.them.trim() });
+  if (legendLineViolation(title, allowed, isStory)) return null;
+
+  if (typeof obj.metScene !== 'string') return null;
+  const metScene = obj.metScene.trim();
+  if (words(metScene) < SCENE_MIN_WORDS || words(metScene) > SCENE_MAX_WORDS) return null;
+  if (legendLineViolation(metScene, allowed, isStory)) return null;
+
+  const differCtx = ctx.differ ?? null;
+  let differ: LegendStory['differ'];
+  if (differCtx) {
+    if (typeof obj.differ !== 'string') return null;
+    const line = obj.differ.trim();
+    if (words(line) < DIFFER_MIN_WORDS || words(line) > DIFFER_MAX_WORDS) return null;
+    const differAllowed = `${allowed} ${AXIS_POLE_NAME[differCtx.axis][differCtx.lean]} ${AXIS_POLES[differCtx.axis][differCtx.lean]}`;
+    if (legendLineViolation(line, differAllowed, isStory)) return null;
+    differ = { axis: differCtx.axis, lean: differCtx.lean, line };
   }
 
   if (!Array.isArray(obj.howTheTraitWon) || obj.howTheTraitWon.length < 1 || obj.howTheTraitWon.length > 2) return null;
@@ -282,6 +391,9 @@ export function parseLegendStory(
     whereYouMatch: match,
     howTheTraitWon: won,
     whatItMeansForYou: means,
+    title,
+    metScene,
+    ...(differ ? { differ } : {}),
     source: 'ai',
   };
 }
@@ -329,6 +441,18 @@ export function parseStoredLegendStory(raw: unknown): LegendStory | null {
     whereYouMatch: match,
     howTheTraitWon: won,
     whatItMeansForYou: obj.whatItMeansForYou,
+    ...(typeof obj.title === 'string' ? { title: obj.title } : {}),
+    ...(typeof obj.metScene === 'string' ? { metScene: obj.metScene } : {}),
+    ...(storedDiffer(obj.differ) ?? {}),
     source: obj.source === 'ai' ? 'ai' : 'fallback',
   };
+}
+
+function storedDiffer(raw: unknown): { differ: NonNullable<LegendStory['differ']> } | null {
+  if (typeof raw !== 'object' || raw == null) return null;
+  const row = raw as Record<string, unknown>;
+  if (typeof row.axis !== 'string' || !(TRAIT_AXES as readonly string[]).includes(row.axis) || typeof row.line !== 'string') {
+    return null;
+  }
+  return { differ: { axis: row.axis as TraitAxis, lean: row.lean === 'low' ? 'low' : 'high', line: row.line } };
 }

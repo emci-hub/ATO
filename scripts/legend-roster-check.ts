@@ -58,7 +58,11 @@ import {
   shownFacts,
   MEANS_MAX_WORDS,
   MEANS_MIN_WORDS,
+  didYouKnowFact,
   entryText,
+  legendDiffer,
+  nextChapterTeaser,
+  titleCase,
   shownMoments,
   type LegendPair,
 } from '../src/lib/legend-figures/story';
@@ -384,10 +388,8 @@ assert.equal(ctxPairs.length, 2);
 const angle = hok.angles[0]!;
 const ctx = { legend: hok, angle, momentId: 'm1', pairs: ctxPairs };
 const good = JSON.stringify({
-  whereYouMatch: [
-    { axis: 'growth_mindset', them: 'still improving at seventy' },
-    { axis: 'openness', them: 'kept trying new styles' },
-  ],
+  title: 'the late bloomer',
+  metScene: 'You spend a quiet afternoon beside Hokusai while he sketches the same mountain again. He would notice how you reopen a finished draft just to make one line a little better.',
   howTheTraitWon: [{ axis: 'growth_mindset', momentId: 'm1', line: 'He looked back at decades of work and decided the best part was still ahead, which is how you treat a draft you keep reopening.' }],
   whatItMeansForYou: 'That note titled try again later is not a failure pile. It is your Mount Fuji, and you get to keep drawing it.',
 });
@@ -395,9 +397,21 @@ const parsed = parseLegendStory(good, ctx);
 assert.ok(parsed, 'a grounded answer is accepted');
 assert.equal(parsed.source, 'ai');
 assert.equal(parsed.whereYouMatch[0]!.lean, 'high', 'the side comes from the pairing, never the model');
+assert.deepEqual(parsed.whereYouMatch.map((r) => r.them), ctxPairs.map((p) => p.tag.them), 'Where you match is the hand-written tag phrases');
+assert.equal(parsed.title, 'the late bloomer');
+assert.equal(titleCase(parsed.title!), 'The Late Bloomer');
+assert.ok(parsed.metScene && !parsed.differ, 'no differ asked → none stored');
 const bad = (patch: Record<string, unknown>) => JSON.stringify({ ...JSON.parse(good), ...patch });
 const rejects: [string, string][] = [
-  ['unknown axis', bad({ whereYouMatch: [{ axis: 'autonomy', them: 'renamed himself' }] })],
+  ['unknown axis', bad({ howTheTraitWon: [{ axis: 'autonomy', momentId: 'm1', line: 'A fine line.' }] })],
+  ['no title', bad({ title: undefined })],
+  ['title without the', bad({ title: 'a late bloomer' })],
+  ['title too long', bad({ title: 'the late bloomer of every mountain' })],
+  ['title about worry', bad({ title: 'the anxious redrawer' })],
+  ['title overthinker', bad({ title: 'the quiet overthinker' })],
+  ['title template', bad({ title: 'the [title]' })],
+  ['no scene', bad({ metScene: undefined })],
+  ['scene too short', bad({ metScene: 'You draw a mountain with him.' })],
   ['made-up moment', bad({ howTheTraitWon: [{ axis: 'openness', momentId: 'm3', line: 'A fine line.' }] })],
   ['number not in entry', bad({ whatItMeansForYou: 'He made 300 prints in a single year, and so can you with your tabs and notes this week. Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
   ['name not in entry', bad({ whatItMeansForYou: 'Like his friend Hiroshige, you keep a notebook of every view you ever liked, which is very you. Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
@@ -414,7 +428,7 @@ for (const [label, raw] of rejects) assert.equal(parseLegendStory(raw, ctx), nul
 // rejected for the reason it is named after, not for being short.
 const hokAllowedAll = entryText(hok, angle);
 for (const [label, raw] of rejects) {
-  if (['unknown axis', 'made-up moment', 'too long', 'too short', 'not json'].includes(label)) continue;
+  if (!['number not in entry', 'name not in entry', 'invented quote', 'you are', 'exclamation', 'template left in'].includes(label)) continue;
   const means = (JSON.parse(raw) as { whatItMeansForYou: string }).whatItMeansForYou;
   assert.ok(words(means) >= MEANS_MIN_WORDS && words(means) <= MEANS_MAX_WORDS, `${label}: fixture is within the length limits`);
   assert.ok(legendLineViolation(means, hokAllowedAll, false), `${label}: rejected by the line rules themselves`);
@@ -438,6 +452,42 @@ assert.equal(legendLineViolation('He kept going. Your draft can too.', hokAllowe
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /Write numbers as words, use no quotation marks, and name no apps, brands or people/);
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), new RegExp(`The bridge: say plainly what ${hok.name} did`), 'what it means starts from what the legend did');
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /must make physical sense/, 'the everyday moment must make sense');
+// Where you differ: asked only when the reader has a side the legend doesn't share.
+const differCtx = { ...ctx, differ: legendDiffer(hok, [{ axis: 'extraversion', lean: 'high', strength: 0.4 }]) };
+assert.ok(differCtx.differ && differCtx.differ.tag === null, 'a trait the label never shows');
+const opposite = legendDiffer(hok, [{ axis: 'growth_mindset', lean: 'low', strength: 0.4 }]);
+assert.ok(opposite && opposite.tag?.lean === 'high', 'an outright opposite comes first');
+assert.equal(parseLegendStory(good, differCtx), null, 'differ asked but missing → rejected');
+const withDiffer = parseLegendStory(
+  bad({ differ: 'He kept his attention on one mountain for decades, while you light up when the group chat gets loud and busy.' }),
+  differCtx,
+);
+assert.ok(withDiffer?.differ?.axis === 'extraversion' && withDiffer.differ.lean === 'high', 'the differ side comes from the code, never the model');
+assert.equal(
+  parseLegendStory(bad({ differ: 'Unlike his friend Hiroshige, he kept to one mountain while you light up in a loud and busy group chat.' }), differCtx),
+  null,
+  'a made-up name in Where you differ is rejected',
+);
+assert.equal(
+  parseLegendStory(bad({ metScene: 'You and Hokusai take the train to Kyoto with his student Hiroshige and sketch the river together all afternoon.' }), ctx),
+  null,
+  'a made-up place or person in If you’d met is rejected',
+);
+assert.equal(
+  legendDiffer(hok, [{ axis: 'extraversion', lean: 'high', strength: 0.4 }], new Set(['extraversion'] as const)),
+  null,
+  'Where you differ never repeats a trait shown under Where you match',
+);
+assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs, differ: differCtx.differ }), /"differ"/);
+assert.doesNotMatch(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs, differ: null }), /"differ"/);
+assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /"title"[\s\S]*"metScene"/);
+assert.doesNotMatch(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /"whereYouMatch"/, 'the model no longer rewrites Where you match');
+// Free extras: no AI.
+const dyk = didYouKnowFact(hok, parsed, 'u1');
+assert.ok(dyk && shownFacts(hok).some((f) => f.id === dyk.id), 'Did you know is a verified fact');
+assert.deepEqual(didYouKnowFact(hok, parsed, 'u1'), dyk, 'stable per person');
+assert.equal(nextChapterTeaser(hok, new Set(['a1'])), hok.angles[1]!.teaser, 'Still to come: an untold angle');
+assert.equal(nextChapterTeaser(hok, new Set(hok.angles.map((a) => a.id))), null, 'nothing left → nothing shown');
 ok(`AI answers: grounded ones pass; ${rejects.length} kinds of made-up or off-voice answers are rejected; numbers whole, accents checked`);
 
 const fb = fallbackLegendStory(ctx);
