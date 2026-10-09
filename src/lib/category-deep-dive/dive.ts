@@ -35,6 +35,9 @@ export interface DiveLean {
   weight?: number;
   /** How sure we are of this answer, 0–1 (`effectiveStability`: answers + agreement, aged). */
   confidence?: number;
+  /** Shared library (wave93): this trait sits in the middle (under 60%), so the card
+   * describes the balance and names neither side as theirs. */
+  middle?: boolean;
 }
 
 export interface DiveLine {
@@ -143,11 +146,13 @@ export function leanLabel(row: Pick<DiveLean, 'axis' | 'lean'>): string {
 function allowedText(def: CategoryDef, leans: readonly DiveLean[]): string {
   return [
     def.name,
-    ...leans.flatMap((row) => [
-      AXIS_POLE_NAME[row.axis][row.lean],
-      AXIS_SHORT_NAME[row.axis],
-      AXIS_POLES[row.axis][row.lean],
-    ]),
+    ...leans.flatMap((row) =>
+      (row.middle ? (['high', 'low'] as const) : [row.lean]).flatMap((lean) => [
+        AXIS_POLE_NAME[row.axis][lean],
+        AXIS_SHORT_NAME[row.axis],
+        AXIS_POLES[row.axis][lean],
+      ]),
+    ),
   ].join(' ');
 }
 
@@ -156,6 +161,8 @@ export interface DiveSpec {
   def: CategoryDef;
   leans: readonly DiveLean[];
   jokeStyle: CardJokeStyle | null;
+  /** Shared library (wave93): the part of life every example is set in. */
+  angle?: string;
 }
 
 /** Cards per AI call (emci, 2026-10-08: bundle). Two fit safely under the
@@ -185,6 +192,9 @@ RULES
 - A card marked GENTLE is about closeness: describe habits with close people warmly and plainly. Never diagnose, never
   use words like anxious, insecure, avoidant, attachment, needy or clingy, never suggest anything is wrong.
 - Never leave square or angle brackets in the answer.
+- A leaning marked "in the middle" is a balance: describe how it depends on the moment, and never say which side
+  the reader is on.
+- When a card gives an ANGLE, set every example in that part of life.
 
 STYLE — CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop" above, and the
 counts in the register examples there — "eleven ways", "47 tabs" — are exactly what NOT to do here):
@@ -224,16 +234,17 @@ Return JSON only: one object per CARD, in the same order, exactly this shape
 function cardBlock(spec: DiveSpec, index: number): string {
   const top = spec.leans.slice(0, DIVE_TOP_LEANS);
   const rows = spec.leans
-    .map(
-      (row) =>
-        `- axis "${row.axis}": leans ${AXIS_POLE_NAME[row.axis][row.lean]} (${row.pct >= 75 ? 'strongly' : row.pct >= 60 ? 'clearly' : 'slightly'}; sounds like: ${AXIS_POLES[row.axis][row.lean]})`,
+    .map((row) =>
+      row.middle
+        ? `- axis "${row.axis}": in the middle, between ${AXIS_POLE_NAME[row.axis].high} and ${AXIS_POLE_NAME[row.axis].low} (sounds like: ${AXIS_POLES[row.axis].high} / ${AXIS_POLES[row.axis].low})`
+        : `- axis "${row.axis}": leans ${AXIS_POLE_NAME[row.axis][row.lean]} (${row.pct >= 75 ? 'strongly' : row.pct >= 60 ? 'clearly' : 'slightly'}; sounds like: ${AXIS_POLES[row.axis][row.lean]})`,
     )
     .join('\n');
   return `CARD ${index + 1} — THE CATEGORY: ${spec.def.name}${spec.def.id === 'cat_love' ? ' (GENTLE)' : ''}
 LEANINGS (strongest first):
 ${rows}
 SHOWS UP: ${top.map((row) => row.axis).join(', ')}
-MIX: ${top.length >= 2 ? 'yes' : 'no'}
+MIX: ${top.length >= 2 ? 'yes' : 'no'}${spec.angle ? `\nANGLE: ${spec.angle}` : ''}
 JOKE STYLE: ${spec.jokeStyle ?? 'none'}`;
 }
 

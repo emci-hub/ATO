@@ -25,6 +25,15 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 - **No vendor key in the bundle.** Every model call goes `generateText` → `ai-generate`
   Edge Function; keys are Supabase secrets. `check:ai-provider` fails on any
   `EXPO_PUBLIC_*_API_KEY` reference under `src/`.
+- **Shared AI library (wave93, emci 2026-10-09).** Deep dives, Story and Legends cards are
+  library first: a free unseen card from the reader's bucket (`library_serve`; Legends
+  through `claim_library_write`), else the `ai-library` Edge Function writes one. That
+  function is the second server-side model path: the phone sends only `{kind, bucket,
+  mode}`, never text; the server rebuilds the prompt and runs the app's checks from
+  `supabase/functions/_shared/ai-library.bundle.js`. Any edit under the prompts/checks it
+  bundles needs `npm run gen:ai-library` + `supabase functions deploy ai-library`
+  (`check:ai-library` fails on a stale bundle). Bump `LIBRARY_VERSION` when a prompt or
+  card shape changes. Nothing personal (user id, told-vs-played) may enter a shared prompt.
 - **Quota is claimed server-side** (`claim_ai_call` inside `ai-generate`), output tokens
   capped at 1024. The client never decides whether a paid call happens.
 - **Root is `me.is_root`**, never a handle string. `is_root()` / `require_root()` read it;

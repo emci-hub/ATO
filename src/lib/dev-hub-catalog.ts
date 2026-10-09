@@ -231,6 +231,14 @@ export const HUB_TOOLS: readonly HubToolDef[] = [
     details: 'Read-only. Needs the quota grant or root.',
     keywords: ['quota', 'cost', 'calls', 'usage'],
   },
+  {
+    id: 'ai-library',
+    section: 'ai',
+    name: 'AI library',
+    summary: 'Shared AI cards: counts, hit rate, review, retire, fill the deep dives.',
+    details: 'The shared AI library (wave93). Counts per kind and today’s free library cards vs. newly written ones. Newest cards, waiting first: Approve skips the 24-hour cooling period, Retire takes a card out for everyone. Fill writes approved cards for the thinnest deep-dive buckets on its own root cap. Root only (checked on the server). Two taps each.',
+    keywords: ['ai', 'library', 'shared', 'cards', 'seed', 'retire', 'approve', 'report', 'deep dive', 'story', 'legends'],
+  },
   // Labs
   {
     id: 'labs',

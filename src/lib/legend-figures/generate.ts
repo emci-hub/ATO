@@ -11,6 +11,8 @@ import { generateText } from '@/lib/ai/generate';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 import { logAiReject } from '@/lib/ai/reject-log';
 import { refundAiTokens } from '@/lib/ato-tokens-server';
+import { LEGEND_LIBRARY, legendBucketKey } from '@/lib/ai-library/legend';
+import { writeLibraryCard, type LibraryServed } from '@/lib/ai-library/client';
 import type { CardJokeStyle } from '@/lib/voice/card-joke';
 
 import { claimLegendStory } from './museum-store';
@@ -24,6 +26,45 @@ import {
 } from './story';
 import type { LegendAngle, LegendFigure } from './types';
 
+/**
+ * Library first (wave93, emci 2026-10-09). The phone sends only the bucket key:
+ *   free reveal  the server claims the free reveal (its own small cap, never
+ *                charged), then gives an unseen library card or writes a new one;
+ *                else the hand-written card
+ *   paid reveal  the server claims 5 tokens, then the same; a failed write is
+ *                refunded on the server
+ * 'missing' (wave93 not live yet) = the old one-person path below.
+ */
+export async function revealLegendStory(input: {
+  legend: LegendFigure;
+  angle: LegendAngle;
+  momentId: string;
+  pairs: readonly LegendPair[];
+  differ: LegendDiffer | null;
+  jokeStyle: CardJokeStyle | null;
+  consentGranted: boolean;
+  /** The day's free reveal (or the bonus): never charged. */
+  free: boolean;
+}): Promise<LegendStory> {
+  const fallback = () => fallbackLegendStory(input);
+  if (!input.consentGranted || input.pairs.length === 0) return fallback();
+  const bucket = legendBucketKey(input);
+  const take = (served: LibraryServed<LegendStory>): LegendStory => ({
+    ...served.card,
+    // "Where you match" is the reader's own pairing, always (same sides as the bucket).
+    whereYouMatch: input.pairs.map((p) => ({ axis: p.axis, lean: p.lean, them: p.tag.them })),
+    libraryId: served.id,
+    others: served.others,
+  });
+  // One server call: the reveal is claimed (free cap or 5 tokens), then an
+  // unseen library card is given, or a new one is written.
+  const res = await writeLibraryCard('legend', bucket, input.free ? 'free_legend' : 'paid', LEGEND_LIBRARY.readCard);
+  if (res.ok && res.served) return take(res.served);
+  if (!res.ok && res.reason === 'missing') return writeLegendStory(input);
+  return fallback();
+}
+
+/** Before wave93 is live: the old one-person path (always a paid claim). */
 export async function writeLegendStory(input: {
   legend: LegendFigure;
   angle: LegendAngle;

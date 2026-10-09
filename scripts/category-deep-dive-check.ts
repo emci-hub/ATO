@@ -216,9 +216,17 @@ ok('saved cards: read back the same, per account only, newest per category, one 
 
 const card = read('src/components/category-deep-dive-card.tsx');
 assert.doesNotMatch(card, /generateText\(/, 'the card never calls the model directly');
-const writeAt = card.indexOf('const write = useCallback');
-assert.ok(writeAt > 0 && card.indexOf('writeCategoryDeepDive(') > writeAt, 'the call is only inside the button handler');
+// wave93: library first. The button runs `open` (free library card, or a brand-new
+// one written on the server); the old one-person call lives only in `writeOld`,
+// which only `open` reaches, and only when wave93 isn't live yet.
+const writeAt = card.indexOf('const writeOld = useCallback');
+const openAt = card.indexOf('const open = useCallback');
+assert.ok(writeAt > 0 && card.indexOf('writeCategoryDeepDive(') > writeAt && card.indexOf('writeCategoryDeepDive(') < openAt, 'the old call is only inside writeOld');
 assert.equal(card.split('writeCategoryDeepDive(').length - 1, 1, 'exactly one call site');
+assert.equal(card.split('await writeOld()').length - 1, 1, 'writeOld only runs from open, when wave93 is missing');
+assert.match(card, /if \(outcome\.reason === 'missing'\) \{\s*await writeOld\(\);/);
+assert.match(card, /onPress=\{\(\) => void open\('library'\)\}/, 'the free library card is a tap');
+assert.match(card, /onPress=\{\(\) => void open\('new'\)\}/, 'the brand-new card is a tap');
 assert.match(card, /if \(!def \|\| writingRef\.current \|\| leans\.length === 0\) return;/, 'a double tap does nothing');
 assert.match(card, /if \(epochRef\.current !== epochAtStart\) return;/, 'a wipe while writing is never written back');
 assert.doesNotMatch(card, /COPY_REVIEWED|[Dd]raft/, 'no draft badge in the app');
@@ -230,7 +238,7 @@ assert.match(gen, /await refundAiTokens\('deep_dive'\);\s*return \{ ok: false, r
 assert.match(read('src/lib/category-deep-dive/store.ts'), /PGRST202/, 'before wave90 is applied it says "not switched on yet", never "used"');
 // wave92: tokens decide how often (the server keeps a safety ceiling); the button shows the price.
 assert.match(card, /const affordable = tokens >= AI_TOKEN_PRICE;/, 'one deep dive needs one AI view of tokens');
-assert.match(card, /\{DEEP_DIVE_WRITE_LABEL\} · \{AI_PRICE_LABEL\}/, 'the button shows its price');
+assert.match(card, /\{DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'the brand-new button shows its price');
 assert.match(card, /outcome\.reason === 'tokens'\s*\? AI_TOKENS_NEEDED/, 'too few tokens says how to earn more');
 assert.match(card, /outcome = await pending;/, 'a slow answer is waited for, never thrown away (the claim is spent)');
 // Moved from Home to Explore (emci, 2026-10-09): between Categories and "How you've changed".
@@ -261,7 +269,7 @@ assert.match(card, /opensLater \? \(/, 'and stays closed until then');
 ok('wave90: own rows only, written by RPC, one new card a day, wiped by Reset account');
 
 const consent = read('src/components/ai-consent-card.tsx');
-assert.match(consent, /AI_USE_DISCLOSURE = '[^']*category deep dives/, 'the disclosure names this AI use (Apple 5.1.2)');
+assert.match(consent, /AI_USE_DISCLOSURE =\s*'[^']*category deep dives/, 'the disclosure names this AI use (Apple 5.1.2)');
 assert.match(consent, /category deep dives you ask for/, 'so does the consent ask');
 assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, false, 'ships unreviewed until emci reads the review doc');
 assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY_REVIEWED/, 'listed on the dev hub copy list');

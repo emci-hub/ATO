@@ -3,6 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AiBadge } from '@/components/ai-badge';
+import { LibraryCardFooter } from '@/components/library-card-footer';
+import { STORY_LIBRARY, storyBucketKey } from '@/lib/ai-library/story';
+import { serveLibraryCard, writeLibraryCard } from '@/lib/ai-library/client';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -46,8 +49,14 @@ export const STORY_NOT_READY_COPY =
   'Not ready yet — your answers still need to settle. Nothing was generated.';
 export const STORY_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const STORY_STALE_COPY = 'Your answers have moved since this was written.';
+/** Shared library (wave93): stories from people with leanings like yours, free. */
+export const STORY_OPEN_LABEL = 'Load story · free';
+export const STORY_ANOTHER_LABEL = 'Load a new story · free';
+export const STORY_NEW_LABEL = 'Write me a brand-new story';
+export const STORY_EMPTY_COPY = 'You’ve read every story for leanings like yours. Sage can write a brand-new one.';
+export const STORY_DAILY_COPY = 'That’s today’s free stories. A brand-new one is still open, or come back tomorrow.';
 
-type LoadState = 'idle' | 'loading' | 'not_ready' | 'unavailable' | 'tokens';
+type LoadState = 'idle' | 'loading' | 'not_ready' | 'unavailable' | 'tokens' | 'empty' | 'daily';
 
 /**
  * Longer-form Story on Home. **Tap-only** (ISOLATION_PLAN §7 Card B, emci
@@ -89,12 +98,15 @@ export function SageStoryFold({
   // saves. A retry joins that run instead of paying for a second one.
   const runningRef = useRef<Promise<SageStory | null> | null>(null);
   const tokensShortRef = useRef(false);
+  const emptyReasonRef = useRef<'empty' | 'daily' | null>(null);
   const { refresh: refreshMe } = useMeContext();
   const tokens = atoTokenBalanceOf(me);
   const divergence = divergingAxesFromTracks(tracks);
   const divergenceNote = formatStoryTensionNote(divergence);
   const divergenceAxis = divergence[0]?.axis ?? null;
   const fingerprint = storyFingerprint(tracks, divergenceNote);
+  /** The library had nothing new for this reader today: offer a brand-new story. */
+  const [needNew, setNeedNew] = useState(false);
 
   // A local parse of what is already on the `me` row. No network, no model —
   // this is the only thing that runs without a tap.
@@ -103,7 +115,7 @@ export function SageStoryFold({
     setState('idle');
   }, [me.sage_story]);
 
-  const loadStory = useCallback(async () => {
+  const loadStory = useCallback(async (mode: 'library' | 'new' = 'library') => {
     if (state === 'loading') return;
     if (!consentGranted) return;
     const attempt = attemptRef.current + 1;
@@ -132,7 +144,51 @@ export function SageStoryFold({
     }
     const ymd = localYmd(new Date(), me.timezone || 'UTC');
 
+    // Library first (wave93): the phone sends only the bucket; the server serves
+    // an unseen story free, or writes a brand-new one for 5 tokens.
+    const bucket = storyBucketKey(thread);
+    const libraryRun = async (): Promise<SageStory | null | 'missing'> => {
+      if (!bucket) {
+        // No shared bucket for this thread: a free tap never charges; offer the paid one.
+        if (mode === 'library') {
+          emptyReasonRef.current = 'empty';
+          return null;
+        }
+        return 'missing';
+      }
+      const res =
+        mode === 'library'
+          ? await serveLibraryCard('story', bucket, STORY_LIBRARY.readCard)
+          : await writeLibraryCard('story', bucket, 'paid', STORY_LIBRARY.readCard);
+      if (!res.ok) {
+        if (res.reason === 'missing') return 'missing';
+        if (res.reason === 'empty' || res.reason === 'daily') {
+          emptyReasonRef.current = res.reason;
+        } else if (res.reason === 'tokens') {
+          tokensShortRef.current = true;
+        }
+        return null;
+      }
+      const served = 'served' in res ? res.served : null;
+      if (!served) return null;
+      const next: SageStory = {
+        body: storyCardBody(served.card),
+        card: served.card,
+        fingerprint,
+        generatedOn: ymd,
+        categoryIds: readyCategories(tracks).map((row) => row.def.id),
+        thread: threadRecord(thread),
+        libraryId: served.id,
+        others: served.others,
+      };
+      await saveSageStory(me.id, next);
+      return next;
+    };
+
+    /** Before wave93 is live: the old one-person path. */
     const run = async (): Promise<SageStory | null> => {
+      const lib = await libraryRun();
+      if (lib !== 'missing') return lib;
       const claim = await claimStoryGenerate();
       if (!claim.ok) {
         // wave92: a new Story is one AI view (5 ATO tokens).
@@ -196,10 +252,14 @@ export function SageStoryFold({
       if (attempt !== attemptRef.current) return;
       void refreshMe();
       if (!next) {
-        setState(tokensShortRef.current ? 'tokens' : 'unavailable');
+        const empty = emptyReasonRef.current;
+        emptyReasonRef.current = null;
+        if (empty) setNeedNew(true);
+        setState(tokensShortRef.current ? 'tokens' : empty ?? 'unavailable');
         tokensShortRef.current = false;
         return;
       }
+      setNeedNew(false);
       setStory(next);
       setState('idle');
     } catch (err) {
@@ -238,7 +298,13 @@ export function SageStoryFold({
   }
 
   const fresh = story?.body != null && story.fingerprint === fingerprint;
-  const loadLabel = `${story?.body ? STORY_RELOAD_LABEL : STORY_LOAD_LABEL} · ${AI_PRICE_LABEL}`;
+  const loadLabel = needNew ? `${STORY_NEW_LABEL} · ${AI_PRICE_LABEL}` : story?.body ? STORY_ANOTHER_LABEL : STORY_OPEN_LABEL;
+  // The told-vs-played line is personal, so it is never in a shared story: it
+  // shows here, on this phone only, when the story covers that trait (wave93).
+  const storyAxes = story?.thread
+    ? story.thread.categories.flatMap((id) => categoryById(id)?.axes ?? [])
+    : [];
+  const tensionLine = story?.card && divergenceNote && divergenceAxis && storyAxes.includes(divergenceAxis) ? divergenceNote : null;
 
   return (
     <View style={styles.wrap} testID="sage-story-fold">
@@ -250,7 +316,15 @@ export function SageStoryFold({
 
           {/* A model wrote the story, so it carries the tap-for-details AI icon (emci 2026-10-07). */}
           {story?.card ? (
-            <StoryCardView card={story.card} categoryIds={story.thread?.categories ?? []} tracks={tracks} />
+            <>
+              <StoryCardView card={story.card} categoryIds={story.thread?.categories ?? []} tracks={tracks} />
+              {tensionLine ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {tensionLine}
+                </ThemedText>
+              ) : null}
+              <LibraryCardFooter libraryId={story.libraryId} others={story.others} />
+            </>
           ) : (
             <>
               {story?.body ? <AiBadge /> : null}
@@ -273,6 +347,11 @@ export function SageStoryFold({
               {STORY_UNAVAILABLE_COPY}
             </ThemedText>
           ) : null}
+          {state === 'empty' || state === 'daily' ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {state === 'empty' ? STORY_EMPTY_COPY : STORY_DAILY_COPY}
+            </ThemedText>
+          ) : null}
 
           {/*
             The tap. `tracksReady` gates only the BUTTON, not the cached story
@@ -288,7 +367,7 @@ export function SageStoryFold({
             <ThemedText type="small" themeColor="textSecondary">
               {AI_CONSENT_NEEDED_COPY}
             </ThemedText>
-          ) : tracksReady && tokens < AI_TOKEN_PRICE ? (
+          ) : tracksReady && needNew && tokens < AI_TOKEN_PRICE ? (
             <ThemedText type="small" themeColor="textSecondary">
               {AI_TOKENS_NEEDED}
             </ThemedText>
@@ -298,7 +377,7 @@ export function SageStoryFold({
               accessibilityLabel={loadLabel}
               disabled={state === 'loading'}
               onPress={() => {
-                void loadStory();
+                void loadStory(needNew ? 'new' : 'library');
               }}
               style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
               <ThemedText type="link">

@@ -333,7 +333,7 @@ const rich = tracksOf({
   const p1 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: t2, userId: 'u1', ymd: '2026-10-09' });
   assert.ok(p1.startsWith(STORY_CARD_PROMPT_STATIC), 'fixed instructions first (cache-friendly)');
   const foldSrc = read('src/components/sage-story-fold.tsx');
-  assert.match(foldSrc, /story\?\.card \? \(\s*<StoryCardView/, 'a card story renders as parts');
+  assert.match(foldSrc, /story\?\.card \? \(\s*<>\s*<StoryCardView/, 'a card story renders as parts');
   assert.match(foldSrc, /Built from: /, 'the categories behind it show as a label');
   assert.match(foldSrc, /logAiReject\('story'/, 'a rejection is logged with its reason only');
   // Deeper Story (emci 2026-10-09): what they noticed, the other way, next time — optional, checked, dropped when weak.

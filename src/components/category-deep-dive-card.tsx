@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { AiBadge } from '@/components/ai-badge';
+import { LibraryCardFooter } from '@/components/library-card-footer';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -25,14 +26,14 @@ import { readCategory, type CategoryDef } from '@/lib/categories';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import { categoryAxisCodes, categoryDisplayName } from '@/lib/category-labels';
 import {
-  DIVE_PROMPT_VERSION,
   categoryLeans,
   categoryScore,
   leanLabel,
-  leansKey,
   type DiveLean,
 } from '@/lib/category-deep-dive/dive';
 import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
+import { diveLibraryKey, openLibraryDive, writeNewDive, type LibraryDiveOutcome } from '@/lib/category-deep-dive/library';
+import { LIBRARY_VERSION } from '@/lib/ai-library/types';
 import { cardJokeStyle } from '@/lib/voice/card-joke';
 import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
 import {
@@ -55,6 +56,12 @@ export const DEEP_DIVE_LEGEND =
   'One number for each part of you: how strongly you lean overall, counting your surest answers most (strongest first). Tap for each trait. The small letters are the traits behind it.';
 export const DEEP_DIVE_ROW_LOCKED = 'Answer more questions to open this one.';
 export const DEEP_DIVE_WRITE_LABEL = 'Write my deep dive';
+/** Shared library (wave93): a card from people with leanings like yours, free. */
+export const DEEP_DIVE_OPEN_LABEL = 'Open my deep dive · free';
+export const DEEP_DIVE_ANOTHER_LABEL = 'Show me another angle · free';
+export const DEEP_DIVE_NEW_LABEL = 'Write me a brand-new one';
+export const DEEP_DIVE_EMPTY = 'You’ve read every deep dive for leanings like yours. Sage can write a brand-new one.';
+export const DEEP_DIVE_DAILY = 'That’s today’s free deep dives. A brand-new one is still open, or come back tomorrow.';
 export const DEEP_DIVE_USED = 'That’s the most deep dives for today. Come back tomorrow.';
 export const DEEP_DIVE_FAILED = 'Sage couldn’t write this one just now. Try again tomorrow.';
 export const DEEP_DIVE_UNAVAILABLE = 'Deep dives aren’t switched on yet. Your leanings show either way.';
@@ -134,7 +141,9 @@ export function CategoryDeepDiveCard({
   );
   const def: CategoryDef | null = defs.find((row) => row.id === selected && readyIds.has(row.id)) ?? null;
   const leans: DiveLean[] = useMemo(() => (def ? categoryLeans(def, tracks) : []), [def, tracks]);
-  const key = leansKey(leans);
+  const key = def ? diveLibraryKey(def.id, leans) : '';
+  /** The library had nothing new for this bucket today: offer a brand-new card. */
+  const [needNew, setNeedNew] = useState<string | null>(null);
   const entry: DiveEntry | null = def && state ? state.dives[def.id] ?? null : null;
   const fresh = entry != null && entry.dive.leansKey === key;
   /** A bundled card written today for tomorrow: shown once its day comes. */
@@ -142,13 +151,11 @@ export function CategoryDeepDiveCard({
   // Tokens decide how often now (wave92); the server keeps a safety ceiling of 5 a day.
   const affordable = tokens >= AI_TOKEN_PRICE;
 
-  const write = useCallback(async () => {
-    if (!def || writingRef.current || leans.length === 0) return;
-    writingRef.current = true;
-    setBusy(true);
-    setNote(null);
+  /** Before wave93 is live: the old one-person path (one paid call, two categories). */
+  const writeOld = useCallback(async () => {
+    if (!def || leans.length === 0) return;
     const epochAtStart = epochRef.current;
-    try {
+    {
       // The day's claim is spent once the call starts, so a slow answer is
       // waited for (with a note), never thrown away.
       // Bundle: the next strongest open category without a fresh card rides
@@ -192,10 +199,19 @@ export function CategoryDeepDiveCard({
         return;
       }
       setNote(null);
-      const made: DiveEntry = { dive: outcome.dive, madeOn: today };
-      const extraMade: DiveEntry | null = outcome.extra
-        ? { dive: { ...outcome.extra, opensOn: diveDay(new Date(Date.now() + 86_400_000)) }, madeOn: today }
-        : null;
+      // Saved under the library key, so the card counts as fresh and the free button doesn't charge again.
+      const made: DiveEntry = { dive: { ...outcome.dive, leansKey: key }, madeOn: today };
+      const extraMade: DiveEntry | null =
+        outcome.extra && extraRow
+          ? {
+              dive: {
+                ...outcome.extra,
+                leansKey: diveLibraryKey(extraRow.def.id, extraRow.rowLeans),
+                opensOn: diveDay(new Date(Date.now() + 86_400_000)),
+              },
+              madeOn: today,
+            }
+          : null;
       const base = stateRef.current ?? { userId, dives: {} };
       const next: DiveLocalState = {
         ...base,
@@ -212,11 +228,76 @@ export function CategoryDeepDiveCard({
         await saveServerDive(made);
         if (extraMade) await saveServerDive(extraMade);
       })();
-    } finally {
-      writingRef.current = false;
-      setBusy(false);
     }
-  }, [def, leans, consentGranted, userId, rows, onSpent]);
+  }, [def, leans, key, consentGranted, userId, rows, onSpent]);
+
+  /**
+   * Library first (wave93): 'library' serves an unseen card from people with
+   * leanings like yours, free; 'new' asks the server to write a brand-new one
+   * (5 tokens). The phone never sends any text, only the bucket.
+   */
+  const open = useCallback(
+    async (mode: 'library' | 'new') => {
+      if (!def || writingRef.current || leans.length === 0) return;
+      writingRef.current = true;
+      setBusy(true);
+      setNote(null);
+      const epochAtStart = epochRef.current;
+      try {
+        const pending: Promise<LibraryDiveOutcome> = (
+          mode === 'library' ? openLibraryDive(def.id, leans) : writeNewDive(def.id, leans)
+        ).catch(() => ({ ok: false, reason: 'failed' }) as const);
+        let outcome = await withTimeout(pending, AI_TAP_TIMEOUT_MS, 'deep-dive').catch(() => null);
+        if (outcome == null) {
+          setNote(DEEP_DIVE_SLOW);
+          outcome = await pending;
+        }
+        // A wipe while it was being written wins: never write it back.
+        if (epochRef.current !== epochAtStart) return;
+        if (mode === 'new') onSpent();
+        if (!outcome.ok) {
+          if (outcome.reason === 'missing') {
+            await writeOld();
+            return;
+          }
+          if (outcome.reason === 'empty' || outcome.reason === 'daily') setNeedNew(def.id);
+          setNote(
+            outcome.reason === 'empty'
+              ? DEEP_DIVE_EMPTY
+              : outcome.reason === 'daily'
+                ? DEEP_DIVE_DAILY
+                : outcome.reason === 'tokens'
+                  ? AI_TOKENS_NEEDED
+                  : outcome.reason === 'quota'
+                    ? DEEP_DIVE_USED
+                    : outcome.reason === 'consent'
+                      ? DEEP_DIVE_AI_OFF
+                      : DEEP_DIVE_FAILED,
+          );
+          return;
+        }
+        setNeedNew(null);
+        const today = diveDay();
+        const served = outcome.served;
+        const made: DiveEntry = {
+          dive: { ...served.card, categoryId: def.id, leansKey: key },
+          madeOn: today,
+          libraryId: served.id,
+          others: served.others,
+        };
+        const base = stateRef.current ?? { userId, dives: {} };
+        const next: DiveLocalState = { ...base, dives: { ...base.dives, [def.id]: made } };
+        stateRef.current = next;
+        setState(next);
+        void saveDiveState(next);
+        void saveServerDive(made);
+      } finally {
+        writingRef.current = false;
+        setBusy(false);
+      }
+    },
+    [def, leans, key, userId, onSpent, writeOld],
+  );
 
   const detail = def ? (
     <View style={styles.detail}>
@@ -245,40 +326,62 @@ export function CategoryDeepDiveCard({
           {DEEP_DIVE_OPENS_TOMORROW}
         </ThemedText>
       ) : entry ? (
-        <DiveBody entry={entry} />
+        <>
+          <DiveBody entry={entry} />
+          <LibraryCardFooter libraryId={entry.libraryId} others={entry.others} />
+        </>
       ) : null}
       {entry && !fresh ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {entry.dive.leansKey.startsWith(`${DIVE_PROMPT_VERSION}|`) ? DEEP_DIVE_STALE : DEEP_DIVE_REWRITE}
+          {entry.dive.leansKey.startsWith(`${LIBRARY_VERSION.deep_dive}|dd|`) ? DEEP_DIVE_STALE : DEEP_DIVE_REWRITE}
         </ThemedText>
       ) : null}
 
-      {!fresh ? (
-        !consentGranted ? (
+      {!consentGranted ? (
+        fresh ? null : (
           <ThemedText type="small" themeColor="textSecondary">
             {DEEP_DIVE_AI_OFF}
           </ThemedText>
-        ) : !affordable ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {AI_TOKENS_NEEDED}
-          </ThemedText>
-        ) : (
-          <Pressable
-            onPress={() => void write()}
-            disabled={busy || state == null}
-            accessibilityRole="button"
-            accessibilityLabel={`${DEEP_DIVE_WRITE_LABEL}: ${categoryDisplayName(def)}`}
-            style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, (pressed || busy) && styles.pressed]}>
-            {busy ? (
-              <ActivityIndicator color={theme.onAccent} />
-            ) : (
-              <ThemedText type="smallBold" style={[styles.buttonText, { color: theme.onAccent }]}>
-                {DEEP_DIVE_WRITE_LABEL} · {AI_PRICE_LABEL}
-              </ThemedText>
-            )}
-          </Pressable>
         )
-      ) : null}
+      ) : needNew !== def.id ? (
+        <Pressable
+          onPress={() => void open('library')}
+          disabled={busy || state == null}
+          accessibilityRole="button"
+          accessibilityLabel={`${fresh ? DEEP_DIVE_ANOTHER_LABEL : DEEP_DIVE_OPEN_LABEL}: ${categoryDisplayName(def)}`}
+          style={({ pressed }) => [
+            fresh ? styles.secondary : styles.button,
+            fresh ? { borderColor: theme.border } : { backgroundColor: theme.accentFill },
+            (pressed || busy) && styles.pressed,
+          ]}>
+          {busy ? (
+            <ActivityIndicator color={fresh ? theme.text : theme.onAccent} />
+          ) : (
+            <ThemedText type="smallBold" style={[styles.buttonText, { color: fresh ? theme.text : theme.onAccent }]}>
+              {fresh ? DEEP_DIVE_ANOTHER_LABEL : DEEP_DIVE_OPEN_LABEL}
+            </ThemedText>
+          )}
+        </Pressable>
+      ) : !affordable ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {AI_TOKENS_NEEDED}
+        </ThemedText>
+      ) : (
+        <Pressable
+          onPress={() => void open('new')}
+          disabled={busy || state == null}
+          accessibilityRole="button"
+          accessibilityLabel={`${DEEP_DIVE_NEW_LABEL}, ${AI_PRICE_LABEL}: ${categoryDisplayName(def)}`}
+          style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, (pressed || busy) && styles.pressed]}>
+          {busy ? (
+            <ActivityIndicator color={theme.onAccent} />
+          ) : (
+            <ThemedText type="smallBold" style={[styles.buttonText, { color: theme.onAccent }]}>
+              {DEEP_DIVE_NEW_LABEL} · {AI_PRICE_LABEL}
+            </ThemedText>
+          )}
+        </Pressable>
+      )}
       {note ? (
         <ThemedText type="small" themeColor="textSecondary">
           {note}
@@ -441,6 +544,15 @@ const styles = StyleSheet.create({
   titleBox: { borderWidth: 1, borderRadius: 12, padding: Spacing.two, gap: 2 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   part: { gap: 4 },
+  secondary: {
+    minHeight: 44,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.three,
+    marginTop: Spacing.one,
+  },
   button: { minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.three, marginTop: Spacing.one },
   buttonText: { flexShrink: 1, textAlign: 'center' },
 });

@@ -10,6 +10,10 @@ export interface DiveEntry {
   dive: CategoryDive;
   /** Local YYYY-MM-DD it was written. */
   madeOn: string;
+  /** Shared library (wave93): the library card's id (for Report), absent for a one-person card. */
+  libraryId?: string;
+  /** "You and N others got this card" (only from 5 people up). */
+  others?: number | null;
 }
 
 export interface DiveLocalState {
@@ -29,7 +33,12 @@ export function parseDiveEntry(raw: unknown): DiveEntry | null {
   const obj = raw as Record<string, unknown>;
   const dive = parseStoredDive(obj.dive);
   if (!dive || !CAT_RE.test(dive.categoryId)) return null;
-  return { dive, madeOn: typeof obj.madeOn === 'string' ? obj.madeOn : '' };
+  return {
+    dive,
+    madeOn: typeof obj.madeOn === 'string' ? obj.madeOn : '',
+    ...(typeof obj.libraryId === 'string' && /^[0-9a-f-]{36}$/.test(obj.libraryId) ? { libraryId: obj.libraryId } : {}),
+    ...(typeof obj.others === 'number' ? { others: obj.others } : {}),
+  };
 }
 
 export function parseDiveState(raw: string | null, userId: string): DiveLocalState {

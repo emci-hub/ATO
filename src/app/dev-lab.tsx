@@ -29,6 +29,7 @@ import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
 import { LegendFiguresDev } from '@/components/legend-figures-dev';
 import { AiLimitsDev } from '@/components/ai-limits-dev';
+import { AiLibraryDev } from '@/components/ai-library-dev';
 import { DailyLineDev } from '@/components/daily-line-dev';
 import {
   AppReloadPanel,
@@ -234,6 +235,7 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
 
               <HubSection id="ai">
                 {canSeeHubSection('quota', gate) ? <HubTool id="quota"><QuotaDashboard /></HubTool> : null}
+                {devAccess.isRoot ? <HubTool id="ai-library"><AiLibraryDev /></HubTool> : null}
               </HubSection>
 
               <HubSection id="labs">

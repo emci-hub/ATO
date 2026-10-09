@@ -192,3 +192,14 @@ Read before editing the area. Each one has bitten this repo at least once.
 - **Never say "AI" or "tokens" in user copy** (`voice/quota.ts` comment); Sage is a
   "coach", Notes are "notes".
 - **MBTI four-letter codes were removed for trademark reasons** — do not reintroduce.
+- **The shared AI library bundle goes stale silently on the server** (wave93). The
+  `ai-library` Edge Function runs `supabase/functions/_shared/ai-library.bundle.js`, a
+  build of `src/lib/ai-library/server.ts` and everything it imports (deep-dive, Story and
+  Legends prompts and validators, the category bank, the legend roster). Changing any of
+  those changes the app at once (OTA) but not the server until you run
+  `npm run gen:ai-library` and `supabase functions deploy ai-library`. `check:ai-library`
+  fails on a stale bundle. Deploy order for a library change: SQL first, then the
+  function, then the OTA. If a prompt or card shape changed, bump `LIBRARY_VERSION` so old
+  cards are not served to the new app (root: Dev Hub → AI → AI library, or
+  `library_retire_old_versions`).
+- **Postgres regex `` is a backspace, not a word boundary.** Use `\m` / `\M` / `\y`.

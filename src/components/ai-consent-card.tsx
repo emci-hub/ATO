@@ -18,7 +18,9 @@ export type ConsentContext = 'home' | 'talk';
  * outside every consent branch -- Home does so today. Any future surface that
  * mounts this card owes the same line.
  */
-export const AI_USE_DISCLOSURE = 'Sage uses AI only to write your Story, your Legends cards and your category deep dives.';
+// wave93 (emci 2026-10-09): AI cards live in a shared library, so the disclosure says so.
+export const AI_USE_DISCLOSURE =
+  'Sage uses AI only to write your Story, your Legends cards and your category deep dives. These cards are shared between people with similar leanings and never include your name or your answers.';
 
 // Bodies rewritten 2026-10-07 (emci), widened 2026-10-08: the daily focus, the
 // questions and the Explore category cards are stored copy, so ai_consent gates
@@ -33,7 +35,8 @@ const COPY: Record<ConsentContext, { title: string; body: string }> = {
       'Legends cards and the category deep dives you ask for. Sage is a coach in the app, not a ' +
       'person. You’ll only be asked once. Say no and those stay off (Legends uses the museum’s own ' +
       'words). Your daily focus, your questions and your category cards don’t use AI, so they ' +
-      'keep working either way.',
+      'keep working either way. AI cards are shared between people with similar leanings and never ' +
+      'include your name or your answers.',
   },
   talk: {
     title: 'Can Sage use AI to talk with you?',

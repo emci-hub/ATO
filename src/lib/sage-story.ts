@@ -47,6 +47,9 @@ export interface SageStory {
   thread?: StoryThreadRecord;
   /** Story v3 (2026-10-09): the card parts. Older stories have only `body`. */
   card?: StoryCard;
+  /** Shared library (wave93): the library card's id (Report) and "you and N others". */
+  libraryId?: string;
+  others?: number | null;
 }
 
 export interface StorySample {
@@ -137,6 +140,8 @@ export function parseSageStory(raw: unknown): SageStory | null {
     categoryIds,
     ...(thread ? { thread } : {}),
     ...(card ? { card } : {}),
+    ...(typeof row.libraryId === 'string' && /^[0-9a-f-]{36}$/.test(row.libraryId) ? { libraryId: row.libraryId } : {}),
+    ...(typeof row.others === 'number' ? { others: row.others } : {}),
   };
 }
 

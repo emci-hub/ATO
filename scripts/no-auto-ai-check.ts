@@ -204,7 +204,7 @@ ok('Home generates the daily insight only from "Load insight"');
 
 const story = codeOnly(read('src/components/sage-story-fold.tsx'));
 assert.match(story, /const loadStory = useCallback/, 'the Story fold must load from a tap handler');
-assert.match(story, /onPress=\{\(\) => \{\s*void loadStory\(\);/, 'the story handler must be wired to a press');
+assert.match(story, /onPress=\{\(\) => \{\s*void loadStory\(needNew \? 'new' : 'library'\);/, 'the story handler must be wired to a press');
 // Readiness is reported, not paid for.
 assert.match(
   story,

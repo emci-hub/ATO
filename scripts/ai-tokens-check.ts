@@ -80,8 +80,9 @@ assert.equal(atoTokenCopyClean(), true);
 const story = read('src/components/sage-story-fold.tsx');
 assert.match(story, /await refundAiTokens\('story'\);/, 'Story: refunded when no card comes back');
 assert.match(story, /claim\.reason === 'tokens'/, 'Story: too few tokens says so');
-assert.match(story, /tokens < AI_TOKEN_PRICE \? \(/, 'Story: no button without the tokens');
-assert.match(story, /STORY_LOAD_LABEL\} · \$\{AI_PRICE_LABEL\}/, 'Story: the button shows its price');
+assert.match(story, /needNew && tokens < AI_TOKEN_PRICE \? \(/, 'Story: no brand-new button without the tokens');
+// wave93: library stories are free; the brand-new one shows its price.
+assert.match(story, /STORY_NEW_LABEL\} · \$\{AI_PRICE_LABEL\}/, 'Story: the brand-new button shows its price');
 const home = read('src/app/(tabs)/index.tsx');
 const state2 = home.indexOf('STATE 2');
 assert.ok(home.indexOf('<DailyCheckinCard') > state2, 'the check-in is on Home after Questions are finished');

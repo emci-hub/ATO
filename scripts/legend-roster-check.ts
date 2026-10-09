@@ -532,8 +532,9 @@ ok('prompt: moment voice, entry-only facts, verified only, no account details, m
 const screen = read('src/app/(tabs)/legends.tsx');
 assert.doesNotMatch(screen, /generateText\(/, 'the screen never calls the model directly');
 const revealStart = screen.indexOf('const reveal = useCallback');
-assert.ok(revealStart > 0 && screen.indexOf('writeLegendStory(') > revealStart, 'the story is written only inside a reveal tap');
-assert.equal(screen.split('writeLegendStory(').length - 1, 1, 'exactly one call site');
+// wave93: library first (revealLegendStory), the old one-person path only when wave93 is missing.
+assert.ok(revealStart > 0 && screen.indexOf('revealLegendStory(') > revealStart, 'the story is written only inside a reveal tap');
+assert.equal(screen.split('revealLegendStory(').length - 1, 1, 'exactly one call site');
 assert.match(screen, /legendsUnlocked\(tracks\)/, 'same unlock as the rest of the app');
 const gen = read('src/lib/legend-figures/generate.ts');
 assert.ok(gen.indexOf('claimLegendStory()') < gen.indexOf('generateText('), 'the server claim comes before the call');

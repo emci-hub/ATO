@@ -26,9 +26,9 @@ import { diveLineViolation } from '@/lib/category-deep-dive/dive';
 import { CATEGORY_DISPLAY_NAMES } from '@/lib/category-labels';
 import { titleViolation } from '@/lib/legend-figures/story';
 import { localYmd } from '@/lib/local-date';
-import { poleWord, threadAxes, type StoryThread } from '@/lib/story-thread';
+import type { StoryThread } from '@/lib/story-thread';
 import type { TraitTrack } from '@/lib/trait-stability';
-import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 import { cardJokeViolation, jokeHasBannedTopic } from '@/lib/voice/card-joke';
 import { MOMENT_VOICE_BLOCK, STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
@@ -177,7 +177,48 @@ ${STORY_JOKE_RULES}
 Return JSON only, exactly this shape:
 {"plan": "<four short lines>", "scene": "...", "moment": "...", "handle": "...", "noticed": "...", "otherWay": "...", "means": "...", "joke": "<one sentence>", "nextTime": "<a question>", "title": "<the ...>"}`;
 
-/** The Story card prompt: the fixed block first, then this person's sides. */
+/** One side of a Story, ready for the prompt: its lead lean and its stored lines. */
+export interface StoryPromptSide {
+  lead: { axis: TraitAxis; lean: TraitLean } | null;
+  card: { summary: string; strength: string; watchOut: string } | null;
+}
+
+/**
+ * The Story prompt from its parts (the shared library builds it from a bucket
+ * key on the server, wave93). The told-vs-played line is NOT in it any more:
+ * it is personal, so the phone shows it under the card instead.
+ */
+export function buildStoryPromptFromSides(input: {
+  sides: readonly StoryPromptSide[];
+  jokeTarget: { axis: TraitAxis; lean: TraitLean } | null;
+  /** Shared library: the everyday setting this card is told in. */
+  setting?: string | null;
+}): string {
+  const sides = input.sides.map((row, index) => {
+    const label = index === 0 ? 'SIDE A' : 'SIDE B';
+    const bits = [
+      row.lead ? `- Lead lean, in one word (never print it): ${AXIS_POLE_NAME[row.lead.axis][row.lead.lean]}` : null,
+      row.card ? `- How it tends to show: ${row.card.summary}` : null,
+      row.card ? `- What it does well: ${row.card.strength}` : null,
+      row.card ? `- Where it can catch: ${row.card.watchOut}` : null,
+    ].filter((line): line is string => line != null);
+    return `${label} (internal; never name it)\n${bits.join('\n') || '- (no stored lines)'}`;
+  });
+  const jokeTarget = input.jokeTarget;
+  const otherWay = input.sides[0]?.lead ?? null;
+  return `${STORY_CARD_PROMPT_STATIC}
+
+${sides.join('\n\n')}
+
+TOLD-VS-PLAYED: none. Do not invent a split.
+${jokeTarget ? `JOKE TARGET: the ${AXIS_POLE_NAME[jokeTarget.axis][jokeTarget.lean]} side (never print that word).` : 'JOKE TARGET: none.'}
+${otherWay ? `OTHER WAY (for "otherWay"; never print the word): ${AXIS_POLE_NAME[otherWay.axis][otherWay.lean === 'high' ? 'low' : 'high']}` : 'OTHER WAY: the opposite of SIDE A’s lead lean.'}${
+    input.setting ? `\nSETTING FOR THIS STORY: ${input.setting}` : ''
+  }`;
+}
+
+/** The Story card prompt for one person (older callers and the check): their
+ * thread's sides, with this week's stored lines. */
 export function buildStoryCardPrompt(input: {
   tracks: readonly TraitTrack[];
   divergenceNote: string | null;
@@ -188,29 +229,14 @@ export function buildStoryCardPrompt(input: {
 }): string {
   const { thread } = input;
   const ymd = input.ymd ?? localYmd(new Date(), 'UTC');
-  const sides = thread.categories.map((row, index) => {
-    const label = index === 0 ? 'SIDE A' : 'SIDE B';
-    const card = pickCategoryCard({ userId: input.userId, reading: row.reading, ymd });
-    const bits = [
-      row.lead ? `- Lead lean, in one word (never print it): ${poleWord(row.lead)}` : null,
-      card ? `- How it tends to show: ${card.summary}` : null,
-      card ? `- What it does well: ${card.strength}` : null,
-      card ? `- Where it can catch: ${card.watchOut}` : null,
-    ].filter((line): line is string => line != null);
-    return `${label} (internal; never name it)\n${bits.join('\n') || '- (no stored lines)'}`;
+  return buildStoryPromptFromSides({
+    sides: thread.categories.map((row) => ({
+      lead: row.lead ? { axis: row.lead.axis, lean: row.lead.lean } : null,
+      card: pickCategoryCard({ userId: input.userId, reading: row.reading, ymd }),
+    })),
+    // Every Story gets its joke now (emci 2026-10-09): the thread's target, else SIDE A's lead lean.
+    jokeTarget: thread.joke ?? thread.categories[0]?.lead ?? null,
   });
-  const axes = threadAxes(thread);
-  // Every Story gets its joke now (emci 2026-10-09): the thread's target, else SIDE A's lead lean.
-  const jokeTarget = thread.joke ?? thread.categories[0]?.lead ?? null;
-  const otherWay = thread.categories[0]?.lead ?? null;
-  const tensionOn = !!input.divergenceNote && !!input.divergenceAxis && axes.includes(input.divergenceAxis);
-  return `${STORY_CARD_PROMPT_STATIC}
-
-${sides.join('\n\n')}
-
-${tensionOn ? `TOLD-VS-PLAYED (optional; warm, not an accusation, no winner)\n- ${input.divergenceNote}` : 'TOLD-VS-PLAYED: none. Do not invent a split.'}
-${jokeTarget ? `JOKE TARGET: the ${AXIS_POLE_NAME[jokeTarget.axis][jokeTarget.lean]} side (never print that word).` : 'JOKE TARGET: none.'}
-${otherWay ? `OTHER WAY (for "otherWay"; never print the word): ${AXIS_POLE_NAME[otherWay.axis][otherWay.lean === 'high' ? 'low' : 'high']}` : 'OTHER WAY: the opposite of SIDE A’s lead lean.'}`;
 }
 
 function words(text: string): number {

@@ -173,7 +173,7 @@ assert.match(fold, /FULL_PROFILE_LOCKED_COPY/);
 assert.doesNotMatch(fold, /PROFILE_LOCKED_CTA/);
 // Nothing generates without a press, and an unready profile costs nothing.
 assert.doesNotMatch(fold, /void run\(\)/);
-assert.match(fold, /void loadStory\(\)/);
+assert.match(fold, /void loadStory\(needNew \? 'new' : 'library'\)/);
 assert.match(fold, /STORY_NOT_READY_COPY/);
 ok('Story is tap-only: crisis hides it, the shared gate locks it, and Load is the only thing that can spend a call');
 

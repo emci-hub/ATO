@@ -24,7 +24,7 @@ import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
-import { writeLegendStory } from '@/lib/legend-figures/generate';
+import { revealLegendStory } from '@/lib/legend-figures/generate';
 import {
   fetchAngleCounts,
   fetchCircleFriends,
@@ -304,7 +304,7 @@ export default function LegendsScreen() {
         const input = { legend, angle, momentId: chosen.momentId, pairs, differ, jokeStyle };
         let story;
         try {
-          story = await withTimeout(writeLegendStory({ ...input, consentGranted }), AI_TAP_TIMEOUT_MS, 'legend-story');
+          story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), AI_TAP_TIMEOUT_MS, 'legend-story');
         } catch {
           story = fallbackLegendStory(input);
           // The outer wait ran out: a paid reveal must not keep the charge.

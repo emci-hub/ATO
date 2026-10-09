@@ -17,6 +17,7 @@ import { useRef, useState, type ComponentProps } from 'react';
 import { ActivityIndicator, Linking, Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { AiBadge } from '@/components/ai-badge';
+import { LibraryCardFooter } from '@/components/library-card-footer';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -347,6 +348,7 @@ export function LegendStoryCard({
           AI is off, so this card uses the museum’s own words.
         </ThemedText>
       ) : null}
+      {story.source === 'ai' ? <LibraryCardFooter libraryId={story.libraryId} others={story.others} /> : null}
 
       {nextTeaser ? (
         <View style={[styles.moment, { backgroundColor: theme.backgroundSelected }]}>
