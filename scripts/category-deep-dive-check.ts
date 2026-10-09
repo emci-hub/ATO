@@ -31,6 +31,8 @@ import { madeToday, mergeDives, parseDiveState } from '../src/lib/category-deep-
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
 import { MOMENT_VOICE_BLOCK } from '../src/lib/voice/moment-voice';
+import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
+import { categoryAxisCodes, categoryDisplayName } from '../src/lib/category-labels';
 
 let passed = 0;
 function ok(label: string) {
@@ -191,5 +193,20 @@ assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY
 assert.ok(existsSync(resolve(root, 'docs/category-deep-dive-review.md')), 'review doc exists');
 assert.ok(read('docs/category-deep-dive-review.md').includes('Be extra gentle'), 'the review doc shows the Love / closeness prompt');
 ok('consent copy names deep dives; flag off; review doc with both sample prompts');
+
+// Friendly names + the two-letter legend (emci, 2026-10-08), shared by Home and Explore.
+for (const def of CATEGORY_DEFS) {
+  const shown = categoryDisplayName(def);
+  assert.ok(shown && shown !== def.name, `${def.id} has a friendly name`);
+  assert.ok(!containsFrameworkTerm(shown), `${def.id}: no framework word in "${shown}"`);
+}
+assert.equal(new Set(CATEGORY_DEFS.map((d) => categoryDisplayName(d))).size, CATEGORY_DEFS.length, 'every name is different');
+assert.equal(categoryDisplayName(openDef), 'Your Sense of Adventure');
+assert.equal(categoryAxisCodes(openDef), 'OP·EX');
+assert.match(read('src/components/categories-fold.tsx'), /from '@\/lib\/category-labels'/, 'Explore uses the same names');
+assert.match(card, /categoryAxisCodes\(row\)/, 'each row shows its trait letters');
+assert.match(card, /rowLeans\.map\(\(lean\) => `\$\{leanLabel\(lean\)\} \$\{lean\.pct\}%`\)/, 'every row shows its numbers without a tap');
+assert.match(card, /\{on \? detail : null\}/, 'the detail opens right under its row');
+ok('friendly names on Home and Explore (catalog names kept for AI), trait letters as a legend, numbers on every row');
 
 console.log(`\ncheck:category-deep-dive — ${passed} groups passed.`);

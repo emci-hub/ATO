@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { categoryTags, pickCategoryCard } from '@/lib/category-bank';
 import { useCategoryDefs } from '@/lib/category-catalog';
+import { categoryDisplayName } from '@/lib/category-labels';
 import { categoryConcept } from '@/lib/concept-explainers';
 import { SHAPED_BY_LABEL, shapedByRows } from '@/lib/shaped-by';
 import {
@@ -53,19 +54,7 @@ export function categoryWaitingCopy(reading: CategoryReading): string {
   return waiting.length > 0 ? categoryWaitingLine(waiting) : CATEGORY_NOT_READY_COPY;
 }
 
-/**
- * Display-only names. "Love / closeness" (attachment) and "Independence &
- * closeness" (autonomy vs. connection) read like duplicates but are built from
- * different traits, so they stay two categories — only the labels change.
- */
-const CATEGORY_DISPLAY_NAMES: Partial<Record<CategoryId, string>> = {
-  cat_love: 'Love & closeness',
-  cat_independence: 'Independence',
-};
-
-function categoryDisplayName(def: { id: CategoryId; name: string }): string {
-  return CATEGORY_DISPLAY_NAMES[def.id] ?? def.name;
-}
+// Display names live in lib/category-labels.ts (shared with Home's deep dive).
 
 /**
  * Categories on Explore (release pass, emci 2026-09-16; stored cards, emci

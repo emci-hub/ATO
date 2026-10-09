@@ -19,9 +19,11 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
+import { codeForAxis } from '@/lib/axis-codes';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { readCategory, type CategoryDef } from '@/lib/categories';
 import { useCategoryDefs } from '@/lib/category-catalog';
+import { categoryAxisCodes, categoryDisplayName } from '@/lib/category-labels';
 import { categoryLeans, leanLabel, leansKey, type DiveLean } from '@/lib/category-deep-dive/dive';
 import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
 import {
@@ -40,7 +42,9 @@ import type { TraitTrack } from '@/lib/trait-stability';
 import { withTimeout } from '@/lib/timeout';
 
 export const DEEP_DIVE_KICKER = 'Deep dive';
-export const DEEP_DIVE_LEDE = 'Pick a category. Sage writes about your strongest leanings in it.';
+export const DEEP_DIVE_LEDE = 'How far you lean in each part of you. Tap one and Sage writes a deep dive about it.';
+export const DEEP_DIVE_LEGEND = 'The small letters are the traits behind each one.';
+export const DEEP_DIVE_ROW_LOCKED = 'Answer more questions to open this one.';
 export const DEEP_DIVE_WRITE_LABEL = 'Write my deep dive';
 export const DEEP_DIVE_DONE_TODAY = 'You’ve had today’s deep dive. Come back tomorrow for another.';
 export const DEEP_DIVE_USED = 'No deep dive left today. Come back tomorrow.';
@@ -49,7 +53,6 @@ export const DEEP_DIVE_UNAVAILABLE = 'Deep dives aren’t switched on yet. Your 
 export const DEEP_DIVE_SLOW = 'Taking a little longer than usual. It will appear here when it’s ready.';
 export const DEEP_DIVE_AI_OFF = 'Turn on AI on You to get the written deep dive. Your leanings show either way.';
 export const DEEP_DIVE_STALE = 'Written before your answers moved. A fresh one is ready to write.';
-export const DEEP_DIVE_NONE_READY = 'Categories open here as your answers settle.';
 export const DEEP_DIVE_PCT_NOTE = '50% is the middle; 100% is all the way to that side.';
 
 export function CategoryDeepDiveCard({
@@ -73,7 +76,10 @@ export function CategoryDeepDiveCard({
   const stateRef = useRef<DiveLocalState | null>(null);
   const epochRef = useRef(epoch);
 
-  const ready = useMemo(() => defs.filter((def) => readCategory(def, tracks).ready), [defs, tracks]);
+  const readyIds = useMemo(
+    () => new Set(defs.filter((row) => readCategory(row, tracks).ready).map((row) => row.id)),
+    [defs, tracks],
+  );
 
   useEffect(() => {
     epochRef.current = epoch;
@@ -97,7 +103,7 @@ export function CategoryDeepDiveCard({
     };
   }, [userId, epoch]);
 
-  const def: CategoryDef | null = ready.find((row) => row.id === selected) ?? null;
+  const def: CategoryDef | null = defs.find((row) => row.id === selected && readyIds.has(row.id)) ?? null;
   const leans: DiveLean[] = useMemo(() => (def ? categoryLeans(def, tracks) : []), [def, tracks]);
   const key = leansKey(leans);
   const entry: DiveEntry | null = def && state ? state.dives[def.id] ?? null : null;
@@ -149,111 +155,127 @@ export function CategoryDeepDiveCard({
     }
   }, [def, leans, consentGranted, userId]);
 
+  const detail = def ? (
+    <View style={styles.detail}>
+      {leans.map((row) => (
+        <View key={row.axis} style={styles.leanRow} accessible accessibilityLabel={`${leanLabel(row)}, ${row.pct} percent`}>
+          <View style={styles.leanHead}>
+            <ThemedText type="smallBold" style={styles.flex}>
+              {leanLabel(row)}{' '}
+              <ThemedText type="small" themeColor="textSecondary">
+                · {AXIS_SHORT_NAME[row.axis]} ({codeForAxis(row.axis)})
+              </ThemedText>
+            </ThemedText>
+            <ThemedText type="smallBold">{row.pct}%</ThemedText>
+          </View>
+          <View style={[styles.track, { backgroundColor: theme.backgroundSelected }]}>
+            <View style={[styles.fill, { width: `${row.pct}%`, backgroundColor: theme.accent }]} />
+          </View>
+        </View>
+      ))}
+      <ThemedText type="small" themeColor="textSecondary">
+        {DEEP_DIVE_PCT_NOTE}
+      </ThemedText>
+
+      {entry ? <DiveBody entry={entry} /> : null}
+      {entry && !fresh ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {DEEP_DIVE_STALE}
+        </ThemedText>
+      ) : null}
+
+      {!fresh ? (
+        !consentGranted ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {DEEP_DIVE_AI_OFF}
+          </ThemedText>
+        ) : usedToday ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {DEEP_DIVE_DONE_TODAY}
+          </ThemedText>
+        ) : (
+          <Pressable
+            onPress={() => void write()}
+            disabled={busy || state == null}
+            accessibilityRole="button"
+            accessibilityLabel={`${DEEP_DIVE_WRITE_LABEL}: ${categoryDisplayName(def)}`}
+            style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, (pressed || busy) && styles.pressed]}>
+            {busy ? (
+              <ActivityIndicator color={theme.onAccent} />
+            ) : (
+              <ThemedText type="smallBold" style={[styles.buttonText, { color: theme.onAccent }]}>
+                {DEEP_DIVE_WRITE_LABEL}
+              </ThemedText>
+            )}
+          </Pressable>
+        )
+      ) : null}
+      {note ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {note}
+        </ThemedText>
+      ) : null}
+    </View>
+  ) : null;
+
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
         {DEEP_DIVE_KICKER}
       </ThemedText>
       <ThemedText themeColor="textSecondary">{DEEP_DIVE_LEDE}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {DEEP_DIVE_LEGEND}
+      </ThemedText>
 
-      {ready.length === 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {DEEP_DIVE_NONE_READY}
-        </ThemedText>
-      ) : (
-        <View style={styles.chips}>
-          {ready.map((row) => {
-            const on = row.id === selected;
-            return (
-              <Pressable
-                key={row.id}
-                onPress={() => {
-                  setSelected(on ? null : row.id);
-                  setNote(null);
-                }}
-                disabled={busy}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on, disabled: busy }}
-                style={({ pressed }) => [
-                  styles.chip,
-                  {
-                    borderColor: on ? theme.accent : theme.border,
-                    backgroundColor: on ? theme.backgroundSelected : 'transparent',
-                  },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="small">{row.name}</ThemedText>
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
-
-      {def ? (
-        <>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.section}>
-            Your leanings in {def.name}
-          </ThemedText>
-          {leans.map((row) => (
-            <View key={row.axis} style={styles.leanRow} accessible accessibilityLabel={`${leanLabel(row)}, ${row.pct} percent`}>
-              <View style={styles.leanHead}>
-                <ThemedText type="smallBold" style={styles.flex}>
-                  {leanLabel(row)}{' '}
-                  <ThemedText type="small" themeColor="textSecondary">
-                    · {AXIS_SHORT_NAME[row.axis]}
+      {defs.map((row) => {
+        const open = readyIds.has(row.id);
+        const on = open && row.id === selected;
+        const rowLeans = open ? categoryLeans(row, tracks) : [];
+        const name = categoryDisplayName(row);
+        const summary = open
+          ? rowLeans.map((lean) => `${leanLabel(lean)} ${lean.pct}%`).join(' · ')
+          : DEEP_DIVE_ROW_LOCKED;
+        return (
+          <View key={row.id}>
+            <Pressable
+              onPress={() => {
+                setSelected(on ? null : row.id);
+                setNote(null);
+              }}
+              disabled={!open || busy}
+              accessibilityRole="button"
+              accessibilityLabel={`${name}, traits ${categoryAxisCodes(row)}. ${summary}`}
+              accessibilityState={{ expanded: on, disabled: !open || busy }}
+              style={({ pressed }) => [
+                styles.row,
+                { borderColor: on ? theme.accent : theme.border },
+                !open && styles.locked,
+                pressed && styles.pressed,
+              ]}>
+              <View style={styles.flex}>
+                <View style={styles.nameRow}>
+                  <ThemedText type="smallBold" style={styles.name}>
+                    {name}
                   </ThemedText>
+                  <ThemedText themeColor="textSecondary" style={styles.codes}>
+                    {categoryAxisCodes(row)}
+                  </ThemedText>
+                </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {summary}
                 </ThemedText>
-                <ThemedText type="smallBold">{row.pct}%</ThemedText>
               </View>
-              <View style={[styles.track, { backgroundColor: theme.backgroundSelected }]}>
-                <View style={[styles.fill, { width: `${row.pct}%`, backgroundColor: theme.accent }]} />
-              </View>
-            </View>
-          ))}
-          <ThemedText type="small" themeColor="textSecondary">
-            {DEEP_DIVE_PCT_NOTE}
-          </ThemedText>
-
-          {entry ? <DiveBody entry={entry} /> : null}
-          {entry && !fresh ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {DEEP_DIVE_STALE}
-            </ThemedText>
-          ) : null}
-
-          {!fresh ? (
-            !consentGranted ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {DEEP_DIVE_AI_OFF}
-              </ThemedText>
-            ) : usedToday ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {DEEP_DIVE_DONE_TODAY}
-              </ThemedText>
-            ) : (
-              <Pressable
-                onPress={() => void write()}
-                disabled={busy || state == null}
-                accessibilityRole="button"
-                accessibilityLabel={`${DEEP_DIVE_WRITE_LABEL}: ${def.name}`}
-                style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, (pressed || busy) && styles.pressed]}>
-                {busy ? (
-                  <ActivityIndicator color={theme.onAccent} />
-                ) : (
-                  <ThemedText type="smallBold" style={[styles.buttonText, { color: theme.onAccent }]}>
-                    {DEEP_DIVE_WRITE_LABEL}
-                  </ThemedText>
-                )}
-              </Pressable>
-            )
-          ) : null}
-          {note ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {note}
-            </ThemedText>
-          ) : null}
-        </>
-      ) : null}
+              {open ? (
+                <ThemedText themeColor="textSecondary" style={styles.chevron}>
+                  {on ? '⌄' : '›'}
+                </ThemedText>
+              ) : null}
+            </Pressable>
+            {on ? detail : null}
+          </View>
+        );
+      })}
     </ThemedView>
   );
 }
@@ -312,10 +334,23 @@ function Part({ title, children }: { title: string; children: React.ReactNode })
 const styles = StyleSheet.create({
   card: { borderRadius: Spacing.four, padding: Spacing.four, gap: Spacing.two },
   kicker: { textTransform: 'uppercase' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, maxWidth: '100%' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  locked: { opacity: 0.55 },
+  nameRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
+  name: { flexShrink: 1 },
+  /** The two-letter trait legend, small and raised like a superscript. */
+  codes: { fontSize: 10, lineHeight: 12, letterSpacing: 0.5 },
+  chevron: { fontSize: 20 },
+  detail: { gap: Spacing.two, paddingTop: Spacing.two, paddingHorizontal: Spacing.one },
   pressed: { opacity: 0.7 },
-  section: { marginTop: Spacing.one },
   leanRow: { gap: 4 },
   leanHead: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   flex: { flex: 1 },
