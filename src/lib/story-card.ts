@@ -85,8 +85,27 @@ export function storyLabelLeak(text: string): string | null {
  * words, no advice), the Story's banned topics, and no trait/category labels. */
 export function storyCardLineViolation(text: string): string | null {
   if (jokeHasBannedTopic(text)) return 'banned topic';
+  // Niche phone details most people don't use or picture (emci, 2026-10-09).
+  if (/\b(voice ?notes?|voice ?memos?|voicemails?|typing bubbles?|grey bubbles?|gray bubbles?|read receipts?)\b/i.test(text)) {
+    return 'niche phone detail';
+  }
   return storyLabelLeak(text) ?? diveLineViolation(text, '');
 }
+
+/** Share of `a`'s content words (5+ letters) that also appear in `b` — a part
+ * that mostly repeats the one before it adds nothing to the story. */
+export function storyOverlap(a: string, b: string): number {
+  const bag = (text: string) => new Set((text.toLowerCase().match(/[a-z]{5,}/g) ?? []).map((w) => w.slice(0, 6)));
+  const left = bag(a);
+  if (left.size === 0) return 0;
+  const right = bag(b);
+  let shared = 0;
+  for (const word of left) if (right.has(word)) shared += 1;
+  return shared / left.size;
+}
+
+/** Above this, "how you handle it" is a repeat of "the moment" and is dropped. */
+export const STORY_REPEAT_LIMIT = 0.5;
 
 /** The byte-identical opening of every Story prompt (cache-friendly). */
 export const STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. This is The Story: ONE ordinary day, ONE setting, the same people
@@ -99,6 +118,7 @@ RULES
 - Second person ("you", "your"). A typical day, never a claimed event ("on a day like this", "you might").
 - Never "you are", never "always", no "!", no emoji, no advice, no "should".
 - Never name a trait, a category or a side, and never print any word listed in the SIDES (no "your Steady side").
+  The one exception is the title, which may use a plain describing word.
 - Use no quotation marks, and name no people, apps, brands or places.
 - No counting and no exaggeration: never a number or a number word above two. Say "a few", "a couple" or nothing.
 - Stay in the one setting: no second scene, no new set of people.
@@ -110,19 +130,37 @@ register examples there are exactly what NOT to do here):
 - Realistic everyday detail (the kind that happens every week), never a strange one-off scene or a riddle.
 - A quiet or low side is a style with an upside, never a weakness.
 
-THE PARTS
-"title" — a name for the reader in this story, two to four lowercase words, starting with "the". Fresh and flattering.
-  Never about worry, doubt, loneliness or struggle.
-"scene" — ${STORY_SCENE_WORDS[0]}–${STORY_SCENE_WORDS[1]} words: the one ordinary setting and what is going on.
-"moment" — ${STORY_MOMENT_WORDS[0]}–${STORY_MOMENT_WORDS[1]} words: the moment where SIDE A shows (and, when there is a SIDE B, where the two pull against each other).
-"handle" — ${STORY_HANDLE_WORDS[0]}–${STORY_HANDLE_WORDS[1]} words: how the reader tends to handle it ("you might", "usually"). If a TOLD-VS-PLAYED note is given,
-  you may fold it in here, warmly, with no winner.
-"means" — ${STORY_MEANS_WORDS[0]}–${STORY_MEANS_WORDS[1]} words: one plain, kind closing line on what it all says about the reader. Only this part explains.
-"joke" — only when a JOKE TARGET is given. Exactly one sentence, about the situation that side lands them in.
+SETTING (emci, 2026-10-09; this overrides the "how people live now" list in the VOICE block above — texts,
+voice notes, typing bubbles and read receipts are NOT the default setting here)
+- Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
+  a shared chore, a busy commute. A phone can be a detail, but never voice notes, typing bubbles or read receipts.
+- Keep it literal and easy to picture. If a detail needs explaining, cut it.
+
+FLOW — ONE STORY, NOT SEPARATE BOXES (plan first, then write; every part follows from the one before)
+"plan" — write this FIRST, four short lines, not shown to the reader:
+  1. Situation: who is there and what needs to happen.
+  2. Tension: what complicates it, in a way that tests SIDE A (and pulls against SIDE B, if there is one).
+  3. Choice: what the reader does about it, and what happens because of it.
+  4. Payoff: what that shows about them.
+Then write the parts from the plan, in order:
+"scene" — ${STORY_SCENE_WORDS[0]}–${STORY_SCENE_WORDS[1]} words: the situation (plan line 1). Who, where, and what needs to happen.
+"moment" — ${STORY_MOMENT_WORDS[0]}–${STORY_MOMENT_WORDS[1]} words: the tension (plan line 2). It must grow out of the scene, and it is something that
+  happens, not something the reader thinks about.
+"handle" — ${STORY_HANDLE_WORDS[0]}–${STORY_HANDLE_WORDS[1]} words: the choice (plan line 3): the NEXT thing the reader does and what happens because of it
+  ("you might", "usually"). Never repeat an action or phrase from "moment". If a TOLD-VS-PLAYED note is given, you may fold
+  it in here, warmly, with no winner.
+"means" — ${STORY_MEANS_WORDS[0]}–${STORY_MEANS_WORDS[1]} words: the payoff (plan line 4): one plain, kind line on what that choice says about the reader.
+  Only this part explains.
+"joke" — only when a JOKE TARGET is given. Exactly one sentence that CALLS BACK to one concrete detail from the scene
+  (the best jokes land on something the reader already saw). It must make sense to someone who just read the story.
 ${STORY_JOKE_RULES}
+"title" — written LAST: two to four lowercase words, starting with "the", that describe the reader plainly, the way a
+  friend would sum them up after hearing this story: a kind describing word plus a role word (shape only: "the
+  [describing word] [role]"). Someone who never read the story should still get it. No metaphors or objects
+  ("the open door"), never about worry, doubt, loneliness or struggle.
 
 Return JSON only, exactly this shape (leave out "joke" when JOKE TARGET is none):
-{"title": "<the ...>", "scene": "...", "moment": "...", "handle": "...", "means": "...", "joke": "<one sentence>"}`;
+{"plan": "<four short lines>", "scene": "...", "moment": "...", "handle": "...", "means": "...", "joke": "<one sentence>", "title": "<the ...>"}`;
 
 /** The Story card prompt: the fixed block first, then this person's sides. */
 export function buildStoryCardPrompt(input: {
@@ -207,20 +245,22 @@ export function parseStoryCardAnswer(raw: string, opts: { jokeAsked: boolean }):
     const line = value.trim();
     return within(line, limit) && !storyCardLineViolation(line) ? line : null;
   };
-  const handle = optional(obj.handle, STORY_HANDLE_WORDS);
+  const handleRaw = optional(obj.handle, STORY_HANDLE_WORDS);
+  // "How you handle it" must move the story on, not restate the moment.
+  const handle = handleRaw && storyOverlap(handleRaw, core.moment) <= STORY_REPEAT_LIMIT ? handleRaw : null;
 
   let title: string | null = null;
   if (typeof obj.title === 'string') {
     const t = obj.title.trim().toLowerCase();
-    // Lowercase, so the capital-letter check can't see a trait word: test the words directly.
-    const hasLabel = LABEL_WORDS.some((word) => new RegExp(`\\b${word.toLowerCase()}\\b`).test(t));
-    if (!titleViolation(t, '') && !storyLabelLeak(t) && !hasLabel) title = t;
+    // A plain describing word is the point of the title now ("the warm straight talker", emci
+    // 2026-10-09); the tone rules and "your X side" still apply.
+    if (!titleViolation(t, '') && !storyLabelLeak(t)) title = t;
   }
 
   let joke: string | null = null;
   if (opts.jokeAsked && typeof obj.joke === 'string') {
     const line = obj.joke.trim();
-    if (!cardJokeViolation(line) && !storyLabelLeak(line) && !diveLineViolation(line, '')) joke = line;
+    if (!cardJokeViolation(line) && !storyCardLineViolation(line)) joke = line;
   }
 
   return { card: { title, scene: core.scene, moment: core.moment, handle, means: core.means, joke }, reason: null };

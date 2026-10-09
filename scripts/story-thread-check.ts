@@ -20,7 +20,15 @@ import {
   parseStoryBody,
   STORY_MAX_WORDS,
 } from '../src/lib/sage-story';
-import { STORY_CARD_PROMPT_STATIC, buildStoryCardPrompt, parseStoryCardAnswer, storyCardBody, storyLabelLeak } from '../src/lib/story-card';
+import {
+  STORY_CARD_PROMPT_STATIC,
+  STORY_REPEAT_LIMIT,
+  buildStoryCardPrompt,
+  parseStoryCardAnswer,
+  storyCardBody,
+  storyLabelLeak,
+  storyOverlap,
+} from '../src/lib/story-card';
 import {
   partnerScore,
   pickJokeTarget,
@@ -297,7 +305,26 @@ const rich = tracksOf({
   assert.equal(storyLabelLeak('You pull into the driveway as the chat buzzes.'), null, 'everyday words stay allowed');
   assert.equal(storyLabelLeak('Then How You Love shows up again.'), 'names a category');
   assert.equal(storyLabelLeak('It is how you love the people around you, plainly.'), null, 'the same words in lowercase are an everyday phrase');
-  assert.equal(parseStoryCardAnswer(bad({ title: 'the steady planner' }), { jokeAsked: false }).card!.title, null, 'a trait word in the title is dropped');
+  assert.equal(parseStoryCardAnswer(bad({ title: 'the steady planner' }), { jokeAsked: false }).card!.title, 'the steady planner', 'a plain describing title is kept (emci 2026-10-09)');
+  assert.equal(parseStoryCardAnswer(bad({ title: 'the anxious planner' }), { jokeAsked: false }).card!.title, null, 'a worry title is still dropped');
+  // Flow (emci 2026-10-09): everyday settings, no niche phone details, no repeated part.
+  assert.match(
+    parseStoryCardAnswer(bad({ scene: 'A voice note arrives while you make tea in your kitchen, and the kettle begins to whistle loudly.' }), { jokeAsked: false }).reason ?? '',
+    /scene: niche phone detail/,
+    'no voice notes, typing bubbles or read receipts',
+  );
+  const repeat = parseStoryCardAnswer(
+    bad({ handle: 'The dinner plan starts to wobble, and you want it settled while a friend wants to keep things loose.' }),
+    { jokeAsked: false },
+  ).card!;
+  assert.equal(repeat.handle, null, 'a handle that repeats the moment is dropped');
+  assert.ok(storyOverlap(good.handle, good.moment) <= STORY_REPEAT_LIMIT, 'a handle that moves on is kept');
+  const flowPrompt = STORY_CARD_PROMPT_STATIC;
+  assert.match(flowPrompt, /"plan" — write this FIRST/, 'plan first');
+  assert.match(flowPrompt, /CALLS BACK to one concrete detail from the scene/, 'callback joke');
+  assert.match(flowPrompt, /never voice notes, typing bubbles or read receipts/);
+  assert.match(flowPrompt, /this overrides the "how people live now" list/, 'the setting rule wins over the voice block');
+  assert.equal(parseStoryCardAnswer(bad({ joke: 'Your voice notes about dinner are longer than the dinner itself.' }), { jokeAsked: true }).card!.joke, null, 'no niche phone details in the joke either');
   const card = parsed.card!;
   const saved = parseSageStory({ body: storyCardBody(card), fingerprint: 'f', generatedOn: '2026-10-09', card })!;
   assert.deepEqual(saved.card, card, 'the card is saved and read back');
