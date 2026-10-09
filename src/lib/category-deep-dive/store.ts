@@ -66,14 +66,17 @@ export async function fetchServerDives(): Promise<DiveEntry[] | null> {
 
 /** Claim today's deep dive (server cap). Anything but 'ok' = no AI call;
  * 'missing' = wave90 isn't applied yet (PostgREST PGRST202). */
-export async function claimCategoryDeepDive(): Promise<'ok' | 'used' | 'missing' | 'failed'> {
+export async function claimCategoryDeepDive(): Promise<'ok' | 'used' | 'tokens' | 'missing' | 'failed'> {
   try {
     const { data, error } = await supabase.rpc('claim_category_deep_dive');
     if (error) {
       return /PGRST202|Could not find the function/i.test(`${error.code ?? ''} ${error.message ?? ''}`) ? 'missing' : 'failed';
     }
     if (!data || typeof data !== 'object') return 'failed';
-    return (data as { ok?: unknown }).ok === true ? 'ok' : 'used';
+    const row = data as { ok?: unknown; reason?: unknown };
+    if (row.ok === true) return 'ok';
+    // wave92: not enough ATO tokens for one AI view.
+    return row.reason === 'tokens' ? 'tokens' : 'used';
   } catch {
     return 'failed';
   }

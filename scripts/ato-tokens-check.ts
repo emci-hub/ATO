@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
+  AI_TOKEN_PRICE,
   ATO_TOKEN_EARN,
   ATO_TOKEN_PRICE,
   atoPriceLine,
@@ -21,9 +22,16 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-assert.deepEqual(ATO_TOKEN_EARN, { full_profile_complete: 21, ongoing_round_complete: 21 });
+// wave92 (emci 2026-10-09): one AI view = AI_TOKEN_PRICE; check-in and a set of 16 are one view each,
+// the 7th check-in two, the first 48 all three.
+assert.deepEqual(ATO_TOKEN_EARN, { full_profile_complete: 15, ongoing_round_complete: 5, daily_checkin: 5, checkin_week_bonus: 10 });
+assert.equal(AI_TOKEN_PRICE, 5);
+assert.equal(ATO_TOKEN_EARN.daily_checkin, AI_TOKEN_PRICE, 'a check-in buys one AI view');
+assert.equal(ATO_TOKEN_EARN.ongoing_round_complete, AI_TOKEN_PRICE, 'a set of 16 buys one AI view');
+assert.equal(ATO_TOKEN_EARN.checkin_week_bonus, AI_TOKEN_PRICE * 2, 'the 7th check-in buys two');
+assert.equal(ATO_TOKEN_EARN.full_profile_complete, AI_TOKEN_PRICE * 3, 'the first 48 buy one of each AI view');
 assert.deepEqual(ATO_TOKEN_PRICE, { legend_reroll: 10, category_reroll: 1, question_reroll: 1 });
-ok('earn/price constants match the finalized plan exactly (21/21 earn, 10/1/1 spend)');
+ok('earn/price constants match the plan exactly (wave92: 15 once, 5 per set, 5 check-in, 10 every 7th; AI 5; rerolls 10/1/1)');
 
 assert.equal(atoTokenBalanceOf({ ato_tokens: 42 }), 42);
 assert.equal(atoTokenBalanceOf({ ato_tokens: -3 }), 0, 'negative/invalid never displays as a negative balance');

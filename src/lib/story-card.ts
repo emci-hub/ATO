@@ -39,8 +39,17 @@ export interface StoryCard {
   handle: string | null;
   means: string;
   joke: string | null;
+  /** Deeper Story (emci 2026-10-09), all optional: what the others noticed, */
+  noticed?: string | null;
+  /** how the reader's other side would have played the same moment, */
+  otherWay?: string | null;
+  /** and a teaser for the next story. */
+  nextTime?: string | null;
 }
 
+export const STORY_NOTICED_WORDS = [10, 35] as const;
+export const STORY_OTHER_WAY_WORDS = [12, 40] as const;
+export const STORY_NEXT_WORDS = [5, 20] as const;
 export const STORY_SCENE_WORDS = [12, 45] as const;
 export const STORY_MOMENT_WORDS = [12, 45] as const;
 export const STORY_HANDLE_WORDS = [10, 40] as const;
@@ -159,8 +168,14 @@ ${STORY_JOKE_RULES}
   [describing word] [role]"). Someone who never read the story should still get it. No metaphors or objects
   ("the open door"), never about worry, doubt, loneliness or struggle.
 
-Return JSON only, exactly this shape (leave out "joke" when JOKE TARGET is none):
-{"plan": "<four short lines>", "scene": "...", "moment": "...", "handle": "...", "means": "...", "joke": "<one sentence>", "title": "<the ...>"}`;
+"noticed" — ${STORY_NOTICED_WORDS[0]}–${STORY_NOTICED_WORDS[1]} words: what the other people in the scene probably noticed about the reader in that
+  moment. Kind and specific, from their side.
+"otherWay" — ${STORY_OTHER_WAY_WORDS[0]}–${STORY_OTHER_WAY_WORDS[1]} words: how the same moment might have gone if the reader had leaned the other way
+  (the OTHER WAY given at the end). Interesting, never better or worse; no labels.
+"nextTime" — ${STORY_NEXT_WORDS[0]}–${STORY_NEXT_WORDS[1]} words, one short question that teases a different everyday moment for the next story.
+
+Return JSON only, exactly this shape:
+{"plan": "<four short lines>", "scene": "...", "moment": "...", "handle": "...", "noticed": "...", "otherWay": "...", "means": "...", "joke": "<one sentence>", "nextTime": "<a question>", "title": "<the ...>"}`;
 
 /** The Story card prompt: the fixed block first, then this person's sides. */
 export function buildStoryCardPrompt(input: {
@@ -185,13 +200,17 @@ export function buildStoryCardPrompt(input: {
     return `${label} (internal; never name it)\n${bits.join('\n') || '- (no stored lines)'}`;
   });
   const axes = threadAxes(thread);
+  // Every Story gets its joke now (emci 2026-10-09): the thread's target, else SIDE A's lead lean.
+  const jokeTarget = thread.joke ?? thread.categories[0]?.lead ?? null;
+  const otherWay = thread.categories[0]?.lead ?? null;
   const tensionOn = !!input.divergenceNote && !!input.divergenceAxis && axes.includes(input.divergenceAxis);
   return `${STORY_CARD_PROMPT_STATIC}
 
 ${sides.join('\n\n')}
 
 ${tensionOn ? `TOLD-VS-PLAYED (optional; warm, not an accusation, no winner)\n- ${input.divergenceNote}` : 'TOLD-VS-PLAYED: none. Do not invent a split.'}
-${thread.joke ? `JOKE TARGET: the ${AXIS_POLE_NAME[thread.joke.axis][thread.joke.lean]} side (never print that word).` : 'JOKE TARGET: none.'}`;
+${jokeTarget ? `JOKE TARGET: the ${AXIS_POLE_NAME[jokeTarget.axis][jokeTarget.lean]} side (never print that word).` : 'JOKE TARGET: none.'}
+${otherWay ? `OTHER WAY (for "otherWay"; never print the word): ${AXIS_POLE_NAME[otherWay.axis][otherWay.lean === 'high' ? 'low' : 'high']}` : 'OTHER WAY: the opposite of SIDE A’s lead lean.'}`;
 }
 
 function words(text: string): number {
@@ -263,7 +282,14 @@ export function parseStoryCardAnswer(raw: string, opts: { jokeAsked: boolean }):
     if (!cardJokeViolation(line) && !storyCardLineViolation(line)) joke = line;
   }
 
-  return { card: { title, scene: core.scene, moment: core.moment, handle, means: core.means, joke }, reason: null };
+  const noticed = optional(obj.noticed, STORY_NOTICED_WORDS);
+  const otherWay = optional(obj.otherWay, STORY_OTHER_WAY_WORDS);
+  const nextRaw = optional(obj.nextTime, STORY_NEXT_WORDS);
+  const nextTime = nextRaw && /\?$/.test(nextRaw) ? nextRaw : null;
+  return {
+    card: { title, scene: core.scene, moment: core.moment, handle, means: core.means, joke, noticed, otherWay, nextTime },
+    reason: null,
+  };
 }
 
 /** The card as one block, for older readers of `story.body` (Explore, Rolls). */
@@ -280,5 +306,15 @@ export function parseStoredStoryCard(raw: unknown): StoryCard | null {
   const moment = s(obj.moment);
   const means = s(obj.means);
   if (!scene || !moment || !means) return null;
-  return { title: s(obj.title), scene, moment, handle: s(obj.handle), means, joke: s(obj.joke) };
+  return {
+    title: s(obj.title),
+    scene,
+    moment,
+    handle: s(obj.handle),
+    means,
+    joke: s(obj.joke),
+    noticed: s(obj.noticed),
+    otherWay: s(obj.otherWay),
+    nextTime: s(obj.nextTime),
+  };
 }

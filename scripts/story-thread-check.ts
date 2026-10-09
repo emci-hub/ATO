@@ -336,7 +336,26 @@ const rich = tracksOf({
   assert.match(foldSrc, /story\?\.card \? \(\s*<StoryCardView/, 'a card story renders as parts');
   assert.match(foldSrc, /Built from: /, 'the categories behind it show as a label');
   assert.match(foldSrc, /logAiReject\('story'/, 'a rejection is logged with its reason only');
-  ok('Story v3: a card in parts, no trait words in the text, optional parts dropped, old stories still read');
+  // Deeper Story (emci 2026-10-09): what they noticed, the other way, next time — optional, checked, dropped when weak.
+  const deep = parseStoryCardAnswer(
+    bad({
+      noticed: 'Your friend notices you made the plan easier for everyone without making a big deal of it.',
+      otherWay: 'Had you leaned the other way, you might have let the plan drift and enjoyed seeing where the evening took everyone.',
+      nextTime: 'What happens when the plan is yours to make?',
+    }),
+    { jokeAsked: true },
+  ).card!;
+  assert.ok(deep.noticed && deep.otherWay && deep.nextTime, 'the deeper parts are kept when they pass');
+  const deepBad = parseStoryCardAnswer(
+    bad({ noticed: 'Your Steady side was obvious.', nextTime: 'Next time, a new plan.' }),
+    { jokeAsked: true },
+  ).card!;
+  assert.equal(deepBad.noticed, null, 'a weak noticed line is dropped');
+  assert.equal(deepBad.nextTime, null, 'next time must be a question');
+  assert.match(STORY_CARD_PROMPT_STATIC, /"otherWay" — /);
+  const p2 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: { ...t2, joke: null }, userId: 'u1', ymd: '2026-10-09' });
+  assert.doesNotMatch(p2, /JOKE TARGET: none/, 'every Story gets its joke now');
+  ok('Story v3: a card in parts, no trait words in the text, optional parts dropped, old stories still read, deeper parts checked');
 }
 
 console.log(`\n${passed} story-thread checks passed`);

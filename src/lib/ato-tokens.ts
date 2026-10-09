@@ -18,10 +18,21 @@ import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
  */
 export const ROUND_PAYOUTS_PER_DAY = 2;
 
+/** Earn (wave92, emci 2026-10-09): one AI view = AI_TOKEN_PRICE, so a check-in
+ * or a set of 16 is one AI view, the 7th check-in two, the first 48 all three. */
 export const ATO_TOKEN_EARN = {
-  full_profile_complete: 21,
-  ongoing_round_complete: 21,
+  full_profile_complete: 15,
+  ongoing_round_complete: 5,
+  daily_checkin: 5,
+  checkin_week_bonus: 10,
 } as const;
+
+/** Every AI view costs the same (wave92): a Legends AI card, a deep dive (2 cards), a new Story. */
+export const AI_TOKEN_PRICE = 5;
+export type AiTokenKind = 'story' | 'legend' | 'deep_dive';
+export const AI_PRICE_LABEL = `${AI_TOKEN_PRICE} tokens`;
+/** What a screen says when the balance is below one AI view. */
+export const AI_TOKENS_NEEDED = `You need ${AI_TOKEN_PRICE} ATO tokens for this. Check in on Home or answer a set of 16 questions to earn more.`;
 
 export const ATO_TOKEN_PRICE = {
   legend_reroll: 10,
@@ -29,11 +40,11 @@ export const ATO_TOKEN_PRICE = {
   question_reroll: 1,
 } as const;
 
-export type AtoTokenEarnReason = keyof typeof ATO_TOKEN_EARN;
+export type AtoTokenEarnReason = 'full_profile_complete' | 'ongoing_round_complete';
 export type AtoTokenSpendReason = keyof typeof ATO_TOKEN_PRICE;
 
 export const ATO_TOKEN_LABEL = 'ATO tokens';
-export const ATO_TOKEN_LEDE = 'Earned by finishing rounds. Spent on rerolls and name styles.';
+export const ATO_TOKEN_LEDE = 'Earned by checking in and answering questions. Spent on AI views.';
 /**
  * How the currency works, said before a limit is hit rather than after. Built
  * from the constants above so a price change cannot leave this stale. The
@@ -42,12 +53,12 @@ export const ATO_TOKEN_LEDE = 'Earned by finishing rounds. Spent on rerolls and 
  * Legends tab is a placeholder, and that spend function had no other caller.
  */
 export const ATO_TOKEN_HOW_LINES: readonly string[] = [
-  `Earn: +${ATO_TOKEN_EARN.full_profile_complete} for finishing the 48 questions, +${ATO_TOKEN_EARN.ongoing_round_complete} for each round of 16 after that (up to ${ROUND_PAYOUTS_PER_DAY} a day).`,
-  `Spend: ${ATO_TOKEN_PRICE.question_reroll} to reroll a question, ${ATO_TOKEN_PRICE.category_reroll} to reroll a category, ${ATO_TOKEN_PRICE.legend_reroll} to unlock a name style.`,
-  'Limit: each question and each category can be rerolled once a day, and one name style can be unlocked a day.',
-  'Out of tokens? Finish the round you are on.',
+  `Check in on Home once a day: +${ATO_TOKEN_EARN.daily_checkin}. Every 7th check-in: +${ATO_TOKEN_EARN.checkin_week_bonus}. A missed day never resets your count. New check-in at midnight.`,
+  `Answer a set of 16 questions: +${ATO_TOKEN_EARN.ongoing_round_complete} (up to ${ROUND_PAYOUTS_PER_DAY} sets a day). Finishing the first 48: +${ATO_TOKEN_EARN.full_profile_complete} once.`,
+  `Spend: ${AI_TOKEN_PRICE} for each AI view — a new Story on Home, a Legends AI card, or a deep dive on Explore (2 cards). If the AI fails, your tokens come back (once a day for each).`,
+  `Also: ${ATO_TOKEN_PRICE.question_reroll} to reroll a question, ${ATO_TOKEN_PRICE.legend_reroll} to unlock a name style.`,
 ];
-export const ATO_TOKEN_NEED_MORE = 'Not enough ATO tokens yet — finish another round to earn more.';
+export const ATO_TOKEN_NEED_MORE = 'Not enough ATO tokens yet. Check in on Home or answer a set of 16 to earn more.';
 export const ATO_TOKEN_SPENT = 'Rerolled.';
 
 export function atoTokenBalanceOf(row: { ato_tokens?: number | null }): number {

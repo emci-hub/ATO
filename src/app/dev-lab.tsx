@@ -28,6 +28,7 @@ import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
 import { LegendFiguresDev } from '@/components/legend-figures-dev';
+import { AiLimitsDev } from '@/components/ai-limits-dev';
 import { DailyLineDev } from '@/components/daily-line-dev';
 import {
   AppReloadPanel,
@@ -202,6 +203,7 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
                 <HubTool id="intake-status"><IntakeStatus /></HubTool>
                 <HubTool id="next-round"><NextRoundPreview /></HubTool>
                 <HubTool id="tokens-today"><TokensToday /></HubTool>
+                {me ? <HubTool id="ai-limits"><AiLimitsDev userId={me.id} /></HubTool> : null}
                 {canSeeHubSection('traits', gate) ? <HubTool id="traits"><TraitViewer /></HubTool> : null}
                 <HubTool id="band-stepper"><BandDetailStepper /></HubTool>
               </HubSection>

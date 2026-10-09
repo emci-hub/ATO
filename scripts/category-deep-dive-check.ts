@@ -225,9 +225,13 @@ assert.doesNotMatch(card, /COPY_REVIEWED|[Dd]raft/, 'no draft badge in the app')
 const gen = read('src/lib/category-deep-dive/generate.ts');
 assert.ok(gen.indexOf('consentGranted') < gen.indexOf('claimCategoryDeepDive()'), 'consent before the claim');
 assert.ok(gen.indexOf('claimCategoryDeepDive()') < gen.indexOf('generateText('), 'the server claim before the call');
-assert.match(gen, /const claim = await claimCategoryDeepDive\(\);\s*if \(claim !== 'ok'\) return \{ ok: false,/, 'no claim, no AI call');
+assert.match(gen, /const claim = await claimCategoryDeepDive\(\);\s*if \(claim !== 'ok'\) \{\s*return \{\s*ok: false,/, 'no claim, no AI call');
+assert.match(gen, /await refundAiTokens\('deep_dive'\);\s*return \{ ok: false, reason: 'failed' \};/, 'charged but no card → refunded');
 assert.match(read('src/lib/category-deep-dive/store.ts'), /PGRST202/, 'before wave90 is applied it says "not switched on yet", never "used"');
-assert.match(card, /madeToday\(state\.dives, diveDay\(\)\)/, 'the phone counts the day the way the server does (UTC)');
+// wave92: tokens decide how often (the server keeps a safety ceiling); the button shows the price.
+assert.match(card, /const affordable = tokens >= AI_TOKEN_PRICE;/, 'one deep dive needs one AI view of tokens');
+assert.match(card, /\{DEEP_DIVE_WRITE_LABEL\} · \{AI_PRICE_LABEL\}/, 'the button shows its price');
+assert.match(card, /outcome\.reason === 'tokens'\s*\? AI_TOKENS_NEEDED/, 'too few tokens says how to earn more');
 assert.match(card, /outcome = await pending;/, 'a slow answer is waited for, never thrown away (the claim is spent)');
 // Moved from Home to Explore (emci, 2026-10-09): between Categories and "How you've changed".
 const home = read('src/app/(tabs)/index.tsx');

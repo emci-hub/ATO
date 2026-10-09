@@ -14,6 +14,7 @@ import { WeekStrip } from '@/components/week-strip';
 import { IdentityTitleChip } from '@/components/identity-title-chip';
 import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { SageStoryFold } from '@/components/sage-story-fold';
+import { DailyCheckinCard } from '@/components/daily-checkin-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -39,7 +40,7 @@ import { fetchInsightHistory, fetchTodayInsight, saveInsight } from '@/lib/insig
 import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
 import { cachedFromInsight, saveCachedInsight, writeWidgetLine } from '@/lib/insight/today-insight';
 import type { TraitTrack } from '@/lib/trait-stability';
-import { ATO_TOKEN_EARN } from '@/lib/ato-tokens';
+import { ATO_TOKEN_EARN, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { hubAccess } from '@/lib/dev-access';
 import { DEV_TOOLS_AVAILABLE, PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { recipeForAccount } from '@/lib/kenney/registry';
@@ -578,6 +579,10 @@ export default function HomeScreen() {
              * the next round. (The category deep dive moved to Explore, 2026-10-09.)
              */
             <>
+              {/* Daily check-in (wave92): +5 ATO tokens a day, which pay for AI views. */}
+              {me && todayYmd ? (
+                <DailyCheckinCard todayYmd={todayYmd} tokens={atoTokenBalanceOf(me)} onEarned={() => void refreshMe()} />
+              ) : null}
               {me ? (
                 <SageStoryFold
                   me={me}

@@ -33,7 +33,7 @@ export async function generateExploreBody(
 /** Story card lane (2026-10-09): the raw JSON text; the fold parses it with
  * `parseStoryCardAnswer` so a rejection can be logged with its reason. */
 export async function generateStoryCardText(prompt: string, meta: AiCallMetadata): Promise<string | null> {
-  return generateJson(prompt, 700, meta);
+  return generateJson(prompt, 900, meta);
 }
 
 /** Story lane — longer output. Returns null when the model is unreachable or the answer fails the checks. No fallback parse-to-prose. */

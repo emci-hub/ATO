@@ -34,11 +34,11 @@ import {
 } from '@/lib/category-deep-dive/dive';
 import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
 import { cardJokeStyle } from '@/lib/voice/card-joke';
+import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
 import {
   diveDay,
   fetchServerDives,
   loadDiveState,
-  madeToday,
   mergeDives,
   saveDiveState,
   saveServerDive,
@@ -55,8 +55,7 @@ export const DEEP_DIVE_LEGEND =
   'One number for each part of you: how strongly you lean overall, counting your surest answers most (strongest first). Tap for each trait. The small letters are the traits behind it.';
 export const DEEP_DIVE_ROW_LOCKED = 'Answer more questions to open this one.';
 export const DEEP_DIVE_WRITE_LABEL = 'Write my deep dive';
-export const DEEP_DIVE_DONE_TODAY = 'You’ve had today’s deep dive. Come back tomorrow for another.';
-export const DEEP_DIVE_USED = 'No deep dive left today. Come back tomorrow.';
+export const DEEP_DIVE_USED = 'That’s the most deep dives for today. Come back tomorrow.';
 export const DEEP_DIVE_FAILED = 'Sage couldn’t write this one just now. Try again tomorrow.';
 export const DEEP_DIVE_UNAVAILABLE = 'Deep dives aren’t switched on yet. Your leanings show either way.';
 export const DEEP_DIVE_SLOW = 'Taking a little longer than usual. It will appear here when it’s ready.';
@@ -71,10 +70,16 @@ export function CategoryDeepDiveCard({
   userId,
   tracks,
   consentGranted,
+  tokens,
+  onSpent,
 }: {
   userId: string;
   tracks: readonly TraitTrack[];
   consentGranted: boolean;
+  /** ATO token balance: each deep dive (2 cards) costs one AI view (wave92). */
+  tokens: number;
+  /** Refresh the balance after a charge or refund. */
+  onSpent: () => void;
 }) {
   const theme = useTheme();
   const defs = useCategoryDefs();
@@ -134,7 +139,8 @@ export function CategoryDeepDiveCard({
   const fresh = entry != null && entry.dive.leansKey === key;
   /** A bundled card written today for tomorrow: shown once its day comes. */
   const opensLater = entry?.dive.opensOn != null && entry.dive.opensOn > diveDay();
-  const usedToday = state ? madeToday(state.dives, diveDay()) : false;
+  // Tokens decide how often now (wave92); the server keeps a safety ceiling of 5 a day.
+  const affordable = tokens >= AI_TOKEN_PRICE;
 
   const write = useCallback(async () => {
     if (!def || writingRef.current || leans.length === 0) return;
@@ -170,9 +176,12 @@ export function CategoryDeepDiveCard({
       }
       // A wipe while it was being written wins: never write it back.
       if (epochRef.current !== epochAtStart) return;
+      onSpent();
       if (!outcome.ok) {
         setNote(
-          outcome.reason === 'used'
+          outcome.reason === 'tokens'
+            ? AI_TOKENS_NEEDED
+            : outcome.reason === 'used'
             ? DEEP_DIVE_USED
             : outcome.reason === 'consent'
               ? DEEP_DIVE_AI_OFF
@@ -207,7 +216,7 @@ export function CategoryDeepDiveCard({
       writingRef.current = false;
       setBusy(false);
     }
-  }, [def, leans, consentGranted, userId, rows]);
+  }, [def, leans, consentGranted, userId, rows, onSpent]);
 
   const detail = def ? (
     <View style={styles.detail}>
@@ -249,9 +258,9 @@ export function CategoryDeepDiveCard({
           <ThemedText type="small" themeColor="textSecondary">
             {DEEP_DIVE_AI_OFF}
           </ThemedText>
-        ) : usedToday ? (
+        ) : !affordable ? (
           <ThemedText type="small" themeColor="textSecondary">
-            {DEEP_DIVE_DONE_TODAY}
+            {AI_TOKENS_NEEDED}
           </ThemedText>
         ) : (
           <Pressable
@@ -264,7 +273,7 @@ export function CategoryDeepDiveCard({
               <ActivityIndicator color={theme.onAccent} />
             ) : (
               <ThemedText type="smallBold" style={[styles.buttonText, { color: theme.onAccent }]}>
-                {DEEP_DIVE_WRITE_LABEL}
+                {DEEP_DIVE_WRITE_LABEL} · {AI_PRICE_LABEL}
               </ThemedText>
             )}
           </Pressable>

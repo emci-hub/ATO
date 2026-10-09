@@ -20,6 +20,7 @@ import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { useMeContext } from '@/lib/me-context';
 import { aiConsentFor } from '@/lib/me';
+import { atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
@@ -132,7 +133,13 @@ export default function ExploreScreen() {
                   a day, only on its button. After Questions are finished; hidden on
                   a crisis day. */}
               {isFullProfileDone(tracks, tracksReady) && !crisisToday ? (
-                <CategoryDeepDiveCard userId={me.id} tracks={tracks} consentGranted={aiConsentFor(me) === 'granted'} />
+                <CategoryDeepDiveCard
+                  userId={me.id}
+                  tracks={tracks}
+                  consentGranted={aiConsentFor(me) === 'granted'}
+                  tokens={atoTokenBalanceOf(me)}
+                  onSpent={() => void refreshMe()}
+                />
               ) : null}
               {/* What actually moved lately, from the answer history. No model call. */}
               <ChangeCard userId={me.id} />

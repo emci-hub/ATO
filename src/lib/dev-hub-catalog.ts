@@ -150,6 +150,14 @@ export const HUB_TOOLS: readonly HubToolDef[] = [
     keywords: ['celebration', 'streak', 'unlock'],
   },
   {
+    id: 'ai-limits',
+    section: 'account',
+    name: 'AI limits',
+    summary: 'Reset today’s AI counters for this account or any handle.',
+    details: 'Clears today’s Story, Legends and deep-dive counters and the shared daily AI quota, so the AI can run again. This account, or another one by typing its handle. Root only (checked on the server). Tokens, cards and answers are untouched. Two taps.',
+    keywords: ['ai', 'limits', 'quota', 'reset', 'tokens', 'story', 'deep dive', 'legends'],
+  },
+  {
     id: 'legend-museum',
     section: 'content',
     name: 'Legends museum',

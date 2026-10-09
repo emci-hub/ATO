@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
-import { parseAtoTokenResult, type AtoTokenResult } from '@/lib/ato-tokens';
+import { parseAtoTokenResult, type AiTokenKind, type AtoTokenResult } from '@/lib/ato-tokens';
 
-/** +21, once ever, for finishing the intake (48 = 3 per trait, or the old 50). */
+/** +15 (wave92; was +21), once ever, for finishing the intake (48 = 3 per trait, or the old 50). */
 export async function claimFullProfileComplete(): Promise<AtoTokenResult> {
   const { data, error } = await supabase.rpc('claim_full_profile_complete');
   if (error) throw error;
@@ -9,7 +9,7 @@ export async function claimFullProfileComplete(): Promise<AtoTokenResult> {
 }
 
 /**
- * +21, once per finished round. Server verifies completion itself (every
+ * +5 (wave92; was +21), once per finished round. Server verifies completion itself (every
  * question_items row in the pack is answered) — the caller does not need to
  * prove anything, just pass the pack id.
  */
@@ -86,6 +86,56 @@ export function claimFullProfileCompleteQuiet(onPaid?: () => void): void {
     .catch((err) => {
       console.log('[ato-tokens] claim full profile complete error:', err);
     });
+}
+
+/** The daily check-in (wave92): +5, every 7th +10, once per local day. */
+export async function claimDailyCheckin(): Promise<{ ok: boolean; already: boolean; delta: number; balance: number; weekCount: number }> {
+  const { data, error } = await supabase.rpc('claim_daily_checkin');
+  if (error) throw error;
+  const row = (data ?? {}) as Record<string, unknown>;
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+  return {
+    ok: row.ok === true,
+    already: row.already === true,
+    delta: num(row.delta),
+    balance: num(row.balance),
+    weekCount: num(row.week_count),
+  };
+}
+
+/** Has this account checked in today (local day), and how many check-ins so far. */
+export async function fetchCheckinStatus(localToday: string): Promise<{ checkedIn: boolean; total: number } | null> {
+  try {
+    const { data, error } = await supabase
+      .from('ato_token_events')
+      .select('local_day')
+      .eq('reason', 'daily_checkin')
+      .order('created_at', { ascending: false })
+      .limit(400);
+    if (error || !Array.isArray(data)) return null;
+    const days = data.map((row) => (row as { local_day?: unknown }).local_day);
+    return { checkedIn: days.includes(localToday), total: days.length };
+  } catch {
+    return null;
+  }
+}
+
+/** Give back an AI view's tokens when the call failed after it was charged
+ * (server: once a day per feature, within 15 minutes of the charge). */
+export async function refundAiTokens(kind: AiTokenKind): Promise<void> {
+  try {
+    await supabase.rpc('refund_ai_tokens', { p_kind: kind });
+  } catch {
+    // Best effort; the claim already capped the cost.
+  }
+}
+
+/** Dev (root only, server-checked): clear today's AI counters for root or a named handle. */
+export async function devResetAiLimits(handle: string | null): Promise<{ ok: boolean; handle: string | null }> {
+  const { data, error } = await supabase.rpc('dev_reset_ai_limits', { p_handle: handle });
+  if (error) throw error;
+  const row = (data ?? {}) as Record<string, unknown>;
+  return { ok: row.ok === true, handle: typeof row.handle === 'string' ? row.handle : null };
 }
 
 export type AtoTokenEvent = { id: string; delta: number; reason: string; created_at: string };

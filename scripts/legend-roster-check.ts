@@ -539,7 +539,14 @@ const gen = read('src/lib/legend-figures/generate.ts');
 assert.ok(gen.indexOf('claimLegendStory()') < gen.indexOf('generateText('), 'the server claim comes before the call');
 assert.match(gen, /if \(!\(await claimLegendStory\(\)\)\) return fallback\(\);/, 'no claim, no AI call');
 assert.match(screen, /meetingRef\.current\) return;/, 'a second tap while a story is being written does nothing');
-assert.match(screen, /if \(revealsLeft\(revealedBefore, bonus\) <= 0\) return;/, 'no reveal past the day’s allowance');
+// wave92: past the free reveal(s), one more is an AI view paid in tokens; no AI card → no reveal.
+assert.match(
+  screen,
+  /const free = revealsLeft\(revealedBefore, bonus\) > 0;\s*if \(!free && !\(consentGranted && \(me \? atoTokenBalanceOf\(me\) : 0\) >= AI_TOKEN_PRICE\)\) return;/,
+  'no reveal past the day’s allowance unless it is paid for',
+);
+assert.match(screen, /if \(!free && story\.source !== 'ai'\) \{/, 'a paid reveal without an AI card is never saved');
+assert.match(gen, /await refundAiTokens\('legend'\);\s*return fallback\(\);/, 'charged but no AI card → refunded');
 assert.match(screen, /if \(!meetingRef\.current\) persist\(next\);/, 'a reload never overwrites a reveal being saved');
 assert.match(screen, /LegendShareSheet/, 'share uses the on-screen Modal capture (share-card.tsx pattern)');
 const cardSrc = read('src/components/legend-figure-card.tsx');

@@ -8,6 +8,9 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { generateStoryCardText } from '@/lib/explore/generate';
 import { logAiReject } from '@/lib/ai/reject-log';
+import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED, atoTokenBalanceOf } from '@/lib/ato-tokens';
+import { refundAiTokens } from '@/lib/ato-tokens-server';
+import { useMeContext } from '@/lib/me-context';
 import { categoryAxisCodes, categoryDisplayName } from '@/lib/category-labels';
 import { categoryLeans, categoryScore } from '@/lib/category-deep-dive/dive';
 import { buildStoryCardPrompt, parseStoryCardAnswer, storyCardBody, type StoryCard } from '@/lib/story-card';
@@ -44,7 +47,7 @@ export const STORY_NOT_READY_COPY =
 export const STORY_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const STORY_STALE_COPY = 'Your answers have moved since this was written.';
 
-type LoadState = 'idle' | 'loading' | 'not_ready' | 'unavailable';
+type LoadState = 'idle' | 'loading' | 'not_ready' | 'unavailable' | 'tokens';
 
 /**
  * Longer-form Story on Home. **Tap-only** (ISOLATION_PLAN §7 Card B, emci
@@ -85,6 +88,9 @@ export function SageStoryFold({
   // A timeout only stops the WAIT: the claimed, paid run keeps going and still
   // saves. A retry joins that run instead of paying for a second one.
   const runningRef = useRef<Promise<SageStory | null> | null>(null);
+  const tokensShortRef = useRef(false);
+  const { refresh: refreshMe } = useMeContext();
+  const tokens = atoTokenBalanceOf(me);
   const divergence = divergingAxesFromTracks(tracks);
   const divergenceNote = formatStoryTensionNote(divergence);
   const divergenceAxis = divergence[0]?.axis ?? null;
@@ -128,7 +134,11 @@ export function SageStoryFold({
 
     const run = async (): Promise<SageStory | null> => {
       const claim = await claimStoryGenerate();
-      if (!claim.ok) return null;
+      if (!claim.ok) {
+        // wave92: a new Story is one AI view (5 ATO tokens).
+        if (claim.reason === 'tokens') tokensShortRef.current = true;
+        return null;
+      }
       // Story v3 (2026-10-09): one call, answered as card parts and checked part by part.
       let card: StoryCard | null = null;
       for (let pass = 1; pass <= 2; pass += 1) {
@@ -137,15 +147,23 @@ export function SageStoryFold({
           SAGE_STORY_META,
         );
         if (!text) break;
-        const parsed = parseStoryCardAnswer(text, { jokeAsked: thread.joke != null });
-        const joined = parsed.card ? storyCardBody(parsed.card) : '';
+        const parsed = parseStoryCardAnswer(text, { jokeAsked: true });
+        const c = parsed.card;
+        // Every shown part, not just the body: the deeper parts and the title/joke too.
+        const joined = c
+          ? [storyCardBody(c), c.noticed, c.otherWay, c.nextTime, c.joke, c.title].filter(Boolean).join(' ')
+          : '';
         if (parsed.card && !containsFrameworkTerm(joined) && !matchingJargonTerm(joined) && !storyNamesACategory(joined)) {
           card = parsed.card;
           break;
         }
         logAiReject('story', parsed.reason ?? 'framework or jargon', pass);
       }
-      if (!card) return null;
+      if (!card) {
+        // Charged at the claim but no card came back: give the tokens back.
+        await refundAiTokens('story');
+        return null;
+      }
       const next: SageStory = {
         body: storyCardBody(card),
         card,
@@ -176,8 +194,10 @@ export function SageStoryFold({
       // Bounded: slow networks end in "tap to try again", not a spinner.
       const next = await withTimeout(pending, AI_TAP_TIMEOUT_MS, 'story-generate');
       if (attempt !== attemptRef.current) return;
+      void refreshMe();
       if (!next) {
-        setState('unavailable');
+        setState(tokensShortRef.current ? 'tokens' : 'unavailable');
+        tokensShortRef.current = false;
         return;
       }
       setStory(next);
@@ -186,7 +206,7 @@ export function SageStoryFold({
       console.log('[sage-story] generate error:', err);
       if (attempt === attemptRef.current) setState('unavailable');
     }
-  }, [state, consentGranted, tracks, story, crisisToday, divergenceNote, divergenceAxis, fingerprint, me.id, me.timezone]);
+  }, [state, consentGranted, tracks, story, crisisToday, divergenceNote, divergenceAxis, fingerprint, me.id, me.timezone, refreshMe]);
 
   // Crisis still suppresses Story entirely — unchanged, and the one case where
   // the fold shows nothing at all.
@@ -218,7 +238,7 @@ export function SageStoryFold({
   }
 
   const fresh = story?.body != null && story.fingerprint === fingerprint;
-  const loadLabel = story?.body ? STORY_RELOAD_LABEL : STORY_LOAD_LABEL;
+  const loadLabel = `${story?.body ? STORY_RELOAD_LABEL : STORY_LOAD_LABEL} · ${AI_PRICE_LABEL}`;
 
   return (
     <View style={styles.wrap} testID="sage-story-fold">
@@ -259,9 +279,18 @@ export function SageStoryFold({
             above it: generating from a half-loaded `tracks` would write a
             story against the wrong profile.
           */}
+          {state === 'tokens' ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {AI_TOKENS_NEEDED}
+            </ThemedText>
+          ) : null}
           {!consentGranted ? (
             <ThemedText type="small" themeColor="textSecondary">
               {AI_CONSENT_NEEDED_COPY}
+            </ThemedText>
+          ) : tracksReady && tokens < AI_TOKEN_PRICE ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {AI_TOKENS_NEEDED}
             </ThemedText>
           ) : tracksReady ? (
             <Pressable
@@ -320,12 +349,27 @@ function StoryCardView({
           <ThemedText>{card.handle}</ThemedText>
         </StoryPart>
       ) : null}
+      {card.noticed ? (
+        <StoryPart title="What they noticed">
+          <ThemedText>{card.noticed}</ThemedText>
+        </StoryPart>
+      ) : null}
+      {card.otherWay ? (
+        <StoryPart title="The other way it could have gone">
+          <ThemedText>{card.otherWay}</ThemedText>
+        </StoryPart>
+      ) : null}
       <StoryPart title="What it means for you">
         <ThemedText>{card.means}</ThemedText>
       </StoryPart>
       {card.joke ? (
         <StoryPart title="The funny part">
           <ThemedText>{card.joke}</ThemedText>
+        </StoryPart>
+      ) : null}
+      {card.nextTime ? (
+        <StoryPart title="Next time">
+          <ThemedText style={styles.italic}>{card.nextTime}</ThemedText>
         </StoryPart>
       ) : null}
       {built.length > 0 ? (
@@ -353,6 +397,7 @@ function StoryPart({ title, children }: { title: string; children: React.ReactNo
 
 const styles = StyleSheet.create({
   card: { gap: Spacing.two },
+  italic: { fontStyle: 'italic' },
   part: { gap: 4 },
   partHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   flex: { flex: 1 },

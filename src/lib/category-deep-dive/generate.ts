@@ -15,13 +15,14 @@ import { CATEGORY_DEEP_DIVE_META } from '@/lib/ai/call-sites';
 import { generateText } from '@/lib/ai/generate';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 import { logAiReject } from '@/lib/ai/reject-log';
+import { refundAiTokens } from '@/lib/ato-tokens-server';
 
 import { buildDiveBundlePrompt, diveOutputTokens, parseDiveBundle, type CategoryDive, type DiveSpec } from './dive';
 import { claimCategoryDeepDive } from './store';
 
 export type DiveOutcome =
   | { ok: true; dive: CategoryDive; extra: CategoryDive | null }
-  | { ok: false; reason: 'consent' | 'no_leanings' | 'used' | 'unavailable' | 'failed' };
+  | { ok: false; reason: 'consent' | 'no_leanings' | 'used' | 'tokens' | 'unavailable' | 'failed' };
 
 export async function writeCategoryDeepDive(input: {
   main: DiveSpec;
@@ -34,7 +35,12 @@ export async function writeCategoryDeepDive(input: {
   if (input.main.leans.length === 0) return { ok: false, reason: 'no_leanings' };
   if (await shouldUseLocalAi()) return { ok: false, reason: 'failed' };
   const claim = await claimCategoryDeepDive();
-  if (claim !== 'ok') return { ok: false, reason: claim === 'used' ? 'used' : claim === 'missing' ? 'unavailable' : 'failed' };
+  if (claim !== 'ok') {
+    return {
+      ok: false,
+      reason: claim === 'used' ? 'used' : claim === 'tokens' ? 'tokens' : claim === 'missing' ? 'unavailable' : 'failed',
+    };
+  }
   const bundle = input.extra && input.extra.leans.length > 0 ? [input.main, input.extra] : [input.main];
   for (let pass = 1; pass <= 2; pass += 1) {
     // The retry asks for the tapped card only: a cut-off two-card answer must
@@ -58,5 +64,7 @@ export async function writeCategoryDeepDive(input: {
       break;
     }
   }
+  // Charged at the claim but no card came back: give the tokens back (wave92).
+  await refundAiTokens('deep_dive');
   return { ok: false, reason: 'failed' };
 }

@@ -74,6 +74,11 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   1/day, wave90), strict validator, no clinical words, gentle block for Love / closeness. It never touches
   insight-bank or category-bank. `CATEGORY_DEEP_DIVE_COPY_REVIEWED = false`, review doc
   `docs/category-deep-dive-review.md`, pinned by `check:category-deep-dive`.
+- **AI views cost ATO tokens (wave92, emci 2026-10-09).** Every AI view (new Story, Legends AI card,
+  deep dive) costs `ai_token_price` (5), charged on the server inside its claim RPC (after the safety cap of
+  5/day), refunded once a day per feature on failure (`refund_ai_tokens`). Earn: daily check-in +5 (every
+  7th +10), first 48 +15, set of 16 +5. The client never decides a charge. Root can clear today's AI counters
+  for any handle from the Dev Hub (`dev_reset_ai_limits`). Pinned by `check:ai-tokens`.
 - **The AI consent copy names every real AI use** (Story, Legends cards, category deep dives —
   `AI_USE_DISCLOSURE`). A new AI surface updates it in the same change (Apple 5.1.2).
 - **Questions come from the fixed bank (wave85, emci 2026-10-06).** 400 questions, 25 per trait,

@@ -309,6 +309,16 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] Confirm the story text never says a trait or category word ("your Steady side", "Drive"), and a small "Built from: …" line names the categories with their letters and number.
 - [ ] An older saved story (before this update) still shows as one paragraph until you load a new one.
 
+## Box 32 — ATO tokens pay for AI (wave92, 2026-10-09)
+
+- [ ] Home (Questions finished): a "Daily check-in" card. Tap "Check in · +5 tokens". Confirm "+5 tokens", "Checked in today", the week count, and the balance line.
+- [ ] Tap again later the same day: it stays "Checked in today" (no second +5).
+- [ ] The Story button reads "Load a new story · 5 tokens"; loading one takes 5 tokens (balance on the check-in card drops by 5).
+- [ ] Explore → deep dive button reads "Write my deep dive · 5 tokens"; writing one takes 5 (2 cards). With under 5 tokens it says how to earn more.
+- [ ] Legends: the first reveal of the day is free; with 5+ tokens it comes with the AI card (balance −5). After it, "Reveal one more for 5 tokens" works while you have tokens.
+- [ ] You → ATO tokens: "Check in on Home…", "Answer a set of 16…", "Spend: 5 for each AI view…"; history shows "Daily check-in" and "AI view".
+- [ ] Dev Hub → Account → AI limits: leave the handle empty, tap twice. Confirm "AI limits cleared for this account". Type @atodev, tap twice: cleared for that handle.
+
 ---
 
 **All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–28).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`; Box 28 specifically needs OTA `0ff16d9d` or later), not per box.

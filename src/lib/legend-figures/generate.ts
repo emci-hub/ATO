@@ -10,6 +10,7 @@ import { LEGEND_FIGURE_META } from '@/lib/ai/call-sites';
 import { generateText } from '@/lib/ai/generate';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 import { logAiReject } from '@/lib/ai/reject-log';
+import { refundAiTokens } from '@/lib/ato-tokens-server';
 import type { CardJokeStyle } from '@/lib/voice/card-joke';
 
 import { claimLegendStory } from './museum-store';
@@ -60,5 +61,7 @@ export async function writeLegendStory(input: {
       break;
     }
   }
+  // Charged at the claim but no AI card came back: give the tokens back (wave92).
+  await refundAiTokens('legend');
   return fallback();
 }

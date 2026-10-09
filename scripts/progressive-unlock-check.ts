@@ -39,6 +39,7 @@ import { isFullProfileDone } from '../src/lib/full-profile-gate';
 import { MILESTONE_DEFS } from '../src/lib/milestones';
 import { bankTotalProgress } from '../src/lib/questions/local';
 import { TRAIT_AXES } from '../src/lib/traits';
+import { ATO_TOKEN_EARN } from '../src/lib/ato-tokens';
 import {
   applyCountOnlyAnswer,
   applyEwmaAnswer,
@@ -233,9 +234,10 @@ ok('the count-only branch skips the value blend (wiring)');
 
   const unsettled = oldFifty;
   assert.doesNotMatch(roundCompleteBody(unsettled, false), /ATO tokens/, 'an unpaid round never names the +21');
-  assert.match(roundCompleteBody(unsettled, true), /^\+21 ATO tokens\. \d+ of 16 settled\./);
+  // The amount comes from the constant (wave92 changed it from 21 to 5).
+  assert.match(roundCompleteBody(unsettled, true), new RegExp(`^\\+${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens\\. \\d+ of 16 settled\\.`));
   assert.match(roundStandingLine(unsettled), /keep settling the rest/);
-  ok('round-end toast names the +21 only when paid, and always says where the profile stands');
+  ok('round-end toast names the round payout only when paid, and always says where the profile stands');
 
   const banner = readFileSync(resolve(__dirname, '../src/components/full-profile-banner.tsx'), 'utf8');
   assert.match(banner, /persistCelebratedMilestones\(userId, \[INTAKE_REVEAL_SEEN_ID\]\)/, 'seen is written to the account, not the device');
