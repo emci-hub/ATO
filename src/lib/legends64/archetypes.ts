@@ -31,8 +31,8 @@ import { POLE_COMBOS } from '@/lib/legends64/classify';
  * across gaming (all 8), anime (2), funny (3), and dark (2) — real and
  * godType were already adjectives, left as-is. This same pass also
  * resolved the earlier-flagged 'Senpai Senpai' collision (anime
- * core-code LHL vs. modifier-code LLH): LLH's modifier is now 'Watchful',
- * so code 'LHL-LLH' composes to 'Watchful Senpai', not a repeated word.
+ * core-code LHL vs. modifier-code LLH): LLH's modifier is now 'Deadpan'
+ * (was 'Watchful' until the 2026-10-09 name formula), not a repeated word.
  */
 
 /**
@@ -82,7 +82,8 @@ export const DEFAULT_LEGEND_SKIN: LegendSkin = 'primal';
 // emci approved 2026-10-02, with 13 words replaced in the funny, dark and
 // anime styles (names that stung on a share card, slang that dates, and
 // untranslated terms). The names now show on the identity card and share image.
-export const LEGENDS64_COPY_REVIEWED = true;
+// Back to draft 2026-10-09: the name formula replaced words in every style.
+export const LEGENDS64_COPY_REVIEWED = false;
 
 type PoleComboMap = Readonly<Record<string, string>>;
 type SkinMap = Readonly<Record<LegendSkin, PoleComboMap>>;
@@ -97,7 +98,7 @@ export const CORE_ROLES: SkinMap = {
   primal: {
     HHH: 'Ringmaster',
     HHL: 'Captain',
-    HLH: 'Mad Scientist',
+    HLH: 'Tinkerer',
     HLL: 'Archivist',
     LHH: 'Artist',
     LHL: 'Host',
@@ -105,24 +106,24 @@ export const CORE_ROLES: SkinMap = {
     LLL: 'Hermit',
   },
   highFantasy: {
-    HHH: 'Pathfinder',
-    HHL: 'Warden',
-    HLH: 'Architect',
-    HLL: 'Keeper',
-    LHH: 'Rebel',
-    LHL: 'Champion',
-    LLH: 'Starcaller',
-    LLL: 'Nomad',
+    HHH: 'Guildmaster',
+    HHL: 'Knight',
+    HLH: 'Wizard',
+    HLL: 'Scribe',
+    LHH: 'Bard',
+    LHL: 'Innkeeper',
+    LLH: 'Druid',
+    LLL: 'Hermit',
   },
   corporate: {
     HHH: 'Director',
     HHL: 'Manager',
     HLH: 'Strategist',
-    HLL: 'Perfectionist',
+    HLL: 'Analyst',
     LHH: 'Creative',
     LHL: 'Networker',
     LLH: 'Freelancer',
-    LLL: 'Remote Worker',
+    LLL: 'Contractor',
   },
   oxymoron: {
     HHH: 'Leader',
@@ -134,16 +135,18 @@ export const CORE_ROLES: SkinMap = {
     LLH: 'Writer',
     LLL: 'Drifter',
   },
+  // Team roles, never "Boss" (emci, 2026-10-09).
   gaming: {
-    HHH: 'Vanguard',
-    HHL: 'Warlord',
-    HLH: 'Artificer',
-    HLL: 'Engineer',
-    LHH: 'Bard',
-    LHL: 'Ranger',
-    LLH: 'Mystic',
-    LLL: 'Wanderer',
+    HHH: 'Raid Leader',
+    HHL: 'Squad Captain',
+    HLH: 'Theorycrafter',
+    HLL: 'Main Tank',
+    LHH: 'Shot Caller',
+    LHL: 'Healer',
+    LLH: 'Scout',
+    LLL: 'Benchwarmer',
   },
+  // Mythic reads "The {role} Who {verb}" (see composeName).
   godType: {
     HHH: 'Herald',
     HHL: 'Sovereign',
@@ -152,36 +155,36 @@ export const CORE_ROLES: SkinMap = {
     LHH: 'Reveler',
     LHL: 'Hearthkeeper',
     LLH: 'Oracle',
-    LLL: 'Wildkeeper',
+    LLL: 'Hermit',
   },
   anime: {
-    HHH: 'Hot-Blooded Hero',
+    HHH: 'Hero',
     HHL: 'Class President',
-    HLH: 'Lone Genius',
-    HLL: 'Silent Ace',
-    LHH: 'Wildcard Sidekick',
+    HLH: 'Prodigy',
+    HLL: 'Honor Student',
+    LHH: 'Sidekick',
     LHL: 'Senpai',
-    LLH: 'Dreaming Outsider',
+    LLH: 'Transfer Student',
     LLL: 'Ronin',
   },
   funny: {
     HHH: 'Main Character',
-    HHL: 'Group Chat CEO',
+    HHL: 'Designated Driver',
     HLH: 'Mad Scientist',
-    HLL: 'Spreadsheet Goblin',
-    LHH: 'Feral Party Gremlin',
-    LHL: 'Group Mom Friend',
-    LLH: '3AM Thoughts Poster',
-    LLL: 'Airplane Mode Icon',
+    HLL: 'Hall Monitor',
+    LHH: 'Plus-One',
+    LHL: 'Mom Friend',
+    LLH: 'Tab Collector',
+    LLL: 'Homebody',
   },
   dark: {
     HHH: 'Conqueror',
     HHL: 'Usurper',
     HLH: 'Necromancer',
     HLL: 'Gravekeeper',
-    LHH: 'Trickster Fiend',
+    LHH: 'Trickster',
     LHL: 'Ringleader',
-    LLH: 'Wandering Ghost',
+    LLH: 'Fortune Teller',
     LLL: 'Reaper',
   },
 };
@@ -190,7 +193,9 @@ export const CORE_ROLES: SkinMap = {
  * Modifier descriptor word, per skin, per 3-letter code (agreeableness x
  * conflict_assertiveness x relatedness — see classify.ts's MODIFIER_AXES
  * order; matches the archive draft's A-S-R code order, so HHH here =
- * draft's 'ASR', LHH = draft's 'aSR', etc.).
+ * draft's 'ASR', LHH = draft's 'aSR', etc.). Always how a person acts, never
+ * a fancy adjective, never a private trait (no Watchful, Private, Silent).
+ * Mythic holds a verb ("The Herald Who Listens").
  */
 export const MODIFIER_DESCRIPTORS: SkinMap = {
   primal: {
@@ -204,20 +209,20 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
     LLL: 'Stoic',
   },
   highFantasy: {
-    HHH: 'Golden',
-    HHL: 'Boundless',
-    HLH: 'Evergreen',
-    HLL: 'Moonlit',
-    LHH: 'Great',
-    LHL: 'Iron',
-    LLH: 'Twilight',
-    LLL: 'Last',
+    HHH: 'Big-Hearted',
+    HHL: 'Silver-Tongued',
+    HLH: 'Soft-Spoken',
+    HLL: 'Starry-Eyed',
+    LHH: 'Bold',
+    LHL: 'Iron-Willed',
+    LLH: 'Wry',
+    LLL: 'Unfazed',
   },
   corporate: {
     HHH: 'Optimistic',
     HHL: 'Chill',
     HLH: 'Agreeable',
-    HLL: 'Daydreaming',
+    HLL: 'Easygoing',
     LHH: 'Blunt',
     LHL: 'Unfiltered',
     LLH: 'Skeptical',
@@ -228,51 +233,51 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
     HHH: 'Polite',
     HHL: 'Cheerful',
     HLH: 'Gentle',
-    HLL: 'Sleepy',
+    HLL: 'Mellow',
     LHH: 'Friendly',
-    LHL: 'Lazy',
+    LHL: 'Low-Key',
     LLH: 'Shy',
     LLL: 'Quiet',
   },
   gaming: {
-    HHH: 'Healing',
-    HHL: 'Valiant',
-    HLH: 'Supportive',
-    HLL: 'Sylvan',
-    LHH: 'Fierce',
-    LHL: 'Untamed',
-    LLH: 'Vigilant',
-    LLL: 'Elusive',
+    HHH: 'Wholesome',
+    HHL: 'Upbeat',
+    HLH: 'Patient',
+    HLL: 'Laid-Back',
+    LHH: 'Trash-Talking',
+    LHL: 'Blunt',
+    LLH: 'Deadpan',
+    LLL: 'Unbothered',
   },
   godType: {
-    HHH: 'Devoted',
-    HHL: 'Radiant',
-    HLH: 'Gentle',
-    HLL: 'Serene',
-    LHH: 'Vengeful',
-    LHL: 'Unbending',
-    LLH: 'Veiled',
-    LLL: 'Solitary',
+    HHH: 'Cheers',
+    HHL: 'Laughs',
+    HLH: 'Listens',
+    HLL: 'Daydreams',
+    LHH: 'Charges',
+    LHL: 'Insists',
+    LLH: 'Smirks',
+    LLL: 'Shrugs',
   },
   anime: {
     HHH: 'Prickly-Sweet',
     HHL: 'Genki',
     HLH: 'Shy',
-    HLL: 'Deadpan',
+    HLL: 'Dreamy',
     LHH: 'Protective',
     LHL: 'Effortless',
-    LLH: 'Watchful',
-    LLL: 'Mysterious',
+    LLH: 'Deadpan',
+    LLL: 'Cool-Headed',
   },
   funny: {
     HHH: 'Charming',
     HHL: 'Unbothered',
     HLH: 'Soft',
-    HLL: 'Cozy',
+    HLL: 'Easy-Breezy',
     LHH: 'Scorekeeping',
     LHL: 'No-Filter',
     LLH: 'Side-Eye',
-    LLL: 'Do-Not-Disturb',
+    LLL: 'Thumbs-Up',
   },
   dark: {
     HHH: 'Beloved',
@@ -281,8 +286,8 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
     HLL: 'Elegant',
     LHH: 'Relentless',
     LHL: 'Unapologetic',
-    LLH: 'Silent',
-    LLL: 'Shadowy',
+    LLH: 'Smirking',
+    LLL: 'Unmoved',
   },
 };
 
@@ -291,28 +296,29 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
  * steadiness x playfulness — classify.ts THIRD_AXES order).
  * Primal Genius: a primal need or physical state. Corporate Realist: a work
  * habit (opt-in only — a person sees it only by picking that style).
- * Oxymoron: always the SHARP half of the paradox.
+ * Oxymoron: always the SHARP half of the paradox. Never a word that reads as
+ * a struggle (low steadiness / growth are private leans).
  */
 export const THIRD_WORDS: Readonly<Partial<Record<LegendSkin, PoleComboMap>>> = {
   primal: {
     HHH: 'Caffeinated',
     HHL: 'Hungry',
-    HLH: 'Wired',
-    HLL: 'Sleepless',
+    HLH: 'Sugar-High',
+    HLL: 'Early-Rising',
     LHH: 'Sun-Warmed',
     LHL: 'Well-Rested',
-    LLH: 'Restless',
+    LLH: 'Barefoot',
     LLL: 'Nocturnal',
   },
   corporate: {
-    HHH: 'Podcast-Fueled',
+    HHH: 'Podcast-Fed',
     HHL: 'Upskilling',
     HLH: 'Double-Shot',
-    HLL: 'Overthinking',
-    LHH: 'Out-of-Office',
+    HLL: 'Deep-Work',
+    LHH: 'Long-Lunch',
     LHL: 'Nine-to-Five',
     LLH: 'Meme-Sharing',
-    LLL: 'Burned-Out',
+    LLL: 'Reply-All',
   },
   oxymoron: {
     HHH: 'Anarchist',
@@ -322,7 +328,7 @@ export const THIRD_WORDS: Readonly<Partial<Record<LegendSkin, PoleComboMap>>> = 
     LHH: 'Troublemaker',
     LHL: 'Hardliner',
     LLH: 'Wildcard',
-    LLL: 'Lone Wolf',
+    LLL: 'Outlaw',
   },
 };
 
@@ -335,12 +341,14 @@ export function isThreeWordSkin(skin: LegendSkin): boolean {
  * Puts the parts in the style's own order (null = not settled yet, shown as
  * "…"). Primal Genius and Corporate Realist: third + descriptor + role
  * ("Hungry Stoic Archivist"). Oxymoron: soft descriptor + sharp third + role
- * ("Polite Anarchist Leader"). Two-word styles: descriptor + role.
+ * ("Polite Anarchist Leader"). Mythic: "The {role} Who {verb}" ("The Herald
+ * Who Listens"). Other styles: descriptor + role.
  */
 export function composeName(
   skin: LegendSkin,
   parts: { third: string | null; descriptor: string | null; role: string | null },
 ): (string | null)[] {
+  if (skin === 'godType') return ['The', parts.role, 'Who', parts.descriptor];
   if (!isThreeWordSkin(skin)) return [parts.descriptor, parts.role];
   if (skin === 'oxymoron') return [parts.descriptor, parts.third, parts.role];
   return [parts.third, parts.descriptor, parts.role];
@@ -359,7 +367,7 @@ export function splitArchetypeCode(code: string): { core: string; modifier: stri
 /**
  * Resolves the display name for a full archetype code under a given skin:
  * "descriptor + role, no articles" (the archive draft's own rule), e.g.
- * archetypeName('LHH-LHH', 'highFantasy') === 'Great Rebel', and with a third
+ * archetypeName('LHH-LHH', 'highFantasy') === 'Bold Bard', and with a third
  * code archetypeName('LHH-HHH', 'primal', 'HHL') === 'Hungry Warm Artist'. Returns null for an invalid code or an
  * unrecognized skin — callers should treat that as a data bug, not a
  * silent fallback (use `isLegendSkin` to validate a persisted/user-chosen

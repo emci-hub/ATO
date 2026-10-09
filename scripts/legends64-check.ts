@@ -123,10 +123,29 @@ ok(`every code resolves a name under all ${LEGEND_SKINS.length} styles (${allCom
 const CLINICAL = /(anxious|anxiety|depress\w*|ocd|adhd|bipolar|autis\w*|narcissis\w*|psycho\w*|schizo\w*|toxic|addict\w*|trauma\w*|disorder\w*|panic|suicid\w*|mental)/i;
 for (const name of allComposedNames) {
   assert.doesNotMatch(name, CLINICAL, `"${name}" uses a clinical word`);
-  assert.ok(name.length <= 40, `"${name}" is ${name.length} characters (max 40: the share image fits it on two lines, shrunk to fit)`);
+  assert.ok(name.length <= 34, `"${name}" is ${name.length} characters (max 34, name formula 2026-10-09)`);
 }
 assert.equal(NAME_STYLES_V2_COPY_REVIEWED, false, 'the new words are draft until emci reads them');
-ok('no clinical words, every name is 40 characters or less, and the new words are draft');
+ok('no clinical words, every name is 34 characters or less, and the new words are draft');
+
+// Name formula (emci, 2026-10-09): describer + role + one twist. Roles are
+// people, never places or things; gaming roles are team roles, never "Boss";
+// Mythic reads "The {role} Who {verb}"; never a private-trait word.
+const PRIVATE_WORDS = /(watchful|private|secretive|mysterious|shadowy|silent|elusive|vigilant|veiled|solitary|lone|loner|guarded|burned-out|overthinking|sleepless)/i;
+for (const name of allComposedNames) assert.doesNotMatch(name, PRIVATE_WORDS, `"${name}" uses a private-trait word`);
+for (const skin of LEGEND_SKINS) {
+  for (const role of Object.values(CORE_ROLES[skin])) {
+    assert.doesNotMatch(role, /(group chat|ceo|icon|goblin|gremlin|poster|warden)/i, `role "${role}" must be a person, not a place or thing`);
+  }
+}
+for (const role of Object.values(CORE_ROLES.gaming)) assert.doesNotMatch(role, /boss/i, `gaming role "${role}" must be a team role`);
+for (const code of ALL_ARCHETYPE_CODES) {
+  assert.match(archetypeName(code, 'godType')!, /^The \S.* Who \S/, `Mythic "${archetypeName(code, 'godType')}" reads "The {role} Who {verb}"`);
+  const words = archetypeName(code, 'primal')!.split(' ').length;
+  assert.ok(words >= 2 && words <= 4, 'two to four words');
+}
+for (const name of allComposedNames) assert.ok(name.split(' ').length <= 4, `"${name}" is 2–4 words`);
+ok('name formula: people roles, gaming team roles, Mythic "The X Who Y", no private-trait words, 2–4 words');
 
 for (const name of allComposedNames) {
   assert.doesNotMatch(name, /\bThe\s+.*\bThe\b/i, `"${name}" should not double up an article/title word`);
@@ -137,11 +156,12 @@ ok('no composed name shows the double-article/run-on defect caught in review (e.
 assert.equal(DEFAULT_LEGEND_SKIN, 'primal', 'Primal Genius replaced Plain as the default (2026-10-05)');
 assert.equal(archetypeName('LHH-HHH', 'primal', 'HHL'), 'Hungry Warm Artist');
 assert.equal(archetypeName('HHH-HHH', 'oxymoron', 'HHH'), 'Polite Anarchist Leader', 'oxymoron: soft, sharp, role');
-assert.equal(archetypeName('LHH-LHH', 'highFantasy'), 'Great Rebel');
+assert.equal(archetypeName('LHH-LHH', 'highFantasy'), 'Bold Bard');
+assert.equal(archetypeName('HHL-HLH', 'godType'), 'The Sovereign Who Listens', 'Mythic: The role Who verb');
 assert.equal(
   archetypeName('LHH-HHH', 'gaming'),
-  'Healing Bard',
-  "matches the plan's own worked example (core=LHH i.e. low-conscientiousness/high-extraversion/high-openness, modifier=HHH i.e. all-high) — corrected in review from an earlier, wrong HHH-HHH assumption",
+  'Wholesome Shot Caller',
+  'core=LHH (low follow-through, high sociability, high curiosity), modifier=HHH (all-high)',
 );
 ok("worked examples compose in each style's own word order");
 
@@ -163,14 +183,15 @@ assert.equal(isLegendSkin('nonsense'), false);
 assert.equal(isLegendSkin(null), false);
 ok('isLegendSkin validates a persisted/user-chosen skin string before it reaches archetypeName');
 
-// emci approved the names on 2026-10-02 after 13 words were replaced.
-assert.equal(LEGENDS64_COPY_REVIEWED, true);
+// emci approved the names on 2026-10-02 after 13 words were replaced; the
+// 2026-10-09 name formula changed words in every style, so it is draft again.
+assert.equal(LEGENDS64_COPY_REVIEWED, false);
 for (const word of ['Rizzy', 'MIA', 'Petty', 'Judgy', 'Savage', 'Cult Leader', 'Ruthless', 'Unrepentant', 'Tsundere', 'Dandere', 'Kuudere', 'Kakkoii', 'Genius Loner']) {
   for (const name of allComposedNames) {
     assert.ok(!name.includes(word), `retired word "${word}" is back in "${name}"`);
   }
 }
-ok(`LEGENDS64_COPY_REVIEWED is true, and none of the 13 retired words appears in any of the ${allComposedNames.length} names`);
+ok(`LEGENDS64_COPY_REVIEWED is false (draft), and none of the 13 retired words appears in any of the ${allComposedNames.length} names`);
 
 const allAuthoredStrings: string[] = [];
 for (const skin of LEGEND_SKINS) {

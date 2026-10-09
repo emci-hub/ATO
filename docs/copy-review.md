@@ -87,33 +87,50 @@ For three categories, a more exact version is used once both of their traits are
 - You like a set path and you stay on it, even on the boring days.
 - You chase the new thing and still finish the plan you already made.
 
-## 2. Archetype names (13 words replaced)
+## 2. Archetype names — name formula (emci, 2026-10-09), draft until read
 
-Each name is one describing word plus one role. Plain is the free default.
+Formula: describer (how they act: Harmony · Directness · Connection) + role (a person or
+position: Follow-through · Sociability · Curiosity) + one twist. 2–4 words, 34 characters max,
+no private-trait words. Pinned by `check:legends64`. Order below is HHH, HHL, HLH, HLL, LHH, LHL, LLH, LLL.
 
-**Plain**
-- Describing words: People-First, Self-Made, Team-Oriented, Independent, Results-Driven, Self-Reliant, Behind-the-Scenes, Low-Key
-- Roles: Founder, Executive, Inventor, Specialist, Creative Director, Account Manager, Consultant, Freelancer
+**Primal Genius** (extra word + describer + role)
+- Extra words: Caffeinated, Hungry, Sugar-High, Early-Rising, Sun-Warmed, Well-Rested, Barefoot, Nocturnal
+- Describers: Warm, Breezy, Gentle, Dreamy, Fierce, Stubborn, Dry-Witted, Stoic
+- Roles: Ringmaster, Captain, Tinkerer, Archivist, Artist, Host, Poet, Hermit
 
-**Gaming**
-- Describing words: Healing, Valiant, Supportive, Sylvan, Fierce, Untamed, Vigilant, Elusive
-- Roles: Vanguard, Warlord, Artificer, Engineer, Bard, Ranger, Mystic, Wanderer
+**High Fantasy**
+- Describers: Big-Hearted, Silver-Tongued, Soft-Spoken, Starry-Eyed, Bold, Iron-Willed, Wry, Unfazed
+- Roles: Guildmaster, Knight, Wizard, Scribe, Bard, Innkeeper, Druid, Hermit
 
-**Mythic**
-- Describing words: Devoted, Radiant, Gentle, Serene, Vengeful, Unbending, Veiled, Solitary
-- Roles: Herald, Sovereign, Forgemaster, Artisan, Reveler, Hearthkeeper, Oracle, Wildkeeper
+**Corporate Realist** (extra word + describer + role)
+- Extra words: Podcast-Fed, Upskilling, Double-Shot, Deep-Work, Long-Lunch, Nine-to-Five, Meme-Sharing, Reply-All
+- Describers: Optimistic, Chill, Agreeable, Easygoing, Blunt, Unfiltered, Skeptical, Heads-Down
+- Roles: Director, Manager, Strategist, Analyst, Creative, Networker, Freelancer, Contractor
+
+**Oxymoron** (soft describer + sharp word + role)
+- Soft: Polite, Cheerful, Gentle, Mellow, Friendly, Low-Key, Shy, Quiet
+- Sharp: Anarchist, Overachiever, Firestarter, Mastermind, Troublemaker, Hardliner, Wildcard, Outlaw
+- Roles: Leader, Boss, Inventor, Planner, Showrunner, Host, Writer, Drifter
+
+**Gaming** (team roles, never Boss)
+- Describers: Wholesome, Upbeat, Patient, Laid-Back, Trash-Talking, Blunt, Deadpan, Unbothered
+- Roles: Raid Leader, Squad Captain, Theorycrafter, Main Tank, Shot Caller, Healer, Scout, Benchwarmer
+
+**Mythic** ("The {role} Who {verb}")
+- Verbs: Cheers, Laughs, Listens, Daydreams, Charges, Insists, Smirks, Shrugs
+- Roles: Herald, Sovereign, Forgemaster, Artisan, Reveler, Hearthkeeper, Oracle, Hermit
 
 **Anime**
-- Describing words: Prickly-Sweet, Genki, Shy, Deadpan, Protective, Effortless, Watchful, Mysterious
-- Roles: Hot-Blooded Hero, Class President, Lone Genius, Silent Ace, Wildcard Sidekick, Senpai, Dreaming Outsider, Ronin
+- Describers: Prickly-Sweet, Genki, Shy, Dreamy, Protective, Effortless, Deadpan, Cool-Headed
+- Roles: Hero, Class President, Prodigy, Honor Student, Sidekick, Senpai, Transfer Student, Ronin
 
 **Funny**
-- Describing words: Charming, Unbothered, Soft, Cozy, Scorekeeping, No-Filter, Side-Eye, Do-Not-Disturb
-- Roles: Main Character, Group Chat CEO, Mad Scientist, Spreadsheet Goblin, Feral Party Gremlin, Group Mom Friend, 3AM Thoughts Poster, Airplane Mode Icon
+- Describers: Charming, Unbothered, Soft, Easy-Breezy, Scorekeeping, No-Filter, Side-Eye, Thumbs-Up
+- Roles: Main Character, Designated Driver, Mad Scientist, Hall Monitor, Plus-One, Mom Friend, Tab Collector, Homebody
 
 **Dark**
-- Describing words: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Silent, Shadowy
-- Roles: Conqueror, Usurper, Necromancer, Gravekeeper, Trickster Fiend, Ringleader, Wandering Ghost, Reaper
+- Describers: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Smirking, Unmoved
+- Roles: Conqueror, Usurper, Necromancer, Gravekeeper, Trickster, Ringleader, Fortune Teller, Reaper
 
 ## 3. Traits: names, the word for each end, and what it sounds like (approved 2026-10-02)
 
