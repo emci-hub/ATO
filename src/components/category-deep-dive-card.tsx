@@ -24,7 +24,14 @@ import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { readCategory, type CategoryDef } from '@/lib/categories';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import { categoryAxisCodes, categoryDisplayName } from '@/lib/category-labels';
-import { categoryLeans, categoryScore, leanLabel, leansKey, type DiveLean } from '@/lib/category-deep-dive/dive';
+import {
+  DIVE_PROMPT_VERSION,
+  categoryLeans,
+  categoryScore,
+  leanLabel,
+  leansKey,
+  type DiveLean,
+} from '@/lib/category-deep-dive/dive';
 import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
 import {
   diveDay,
@@ -54,6 +61,7 @@ export const DEEP_DIVE_UNAVAILABLE = 'Deep dives aren’t switched on yet. Your 
 export const DEEP_DIVE_SLOW = 'Taking a little longer than usual. It will appear here when it’s ready.';
 export const DEEP_DIVE_AI_OFF = 'Turn on AI on You to get the written deep dive. Your leanings show either way.';
 export const DEEP_DIVE_STALE = 'Written before your answers moved. A fresh one is ready to write.';
+export const DEEP_DIVE_REWRITE = 'Sage writes these more clearly now. A fresh one is ready to write.';
 export const DEEP_DIVE_PCT_NOTE = '50% is the middle; 100% is all the way to that side.';
 
 export function CategoryDeepDiveCard({
@@ -193,7 +201,7 @@ export function CategoryDeepDiveCard({
       {entry ? <DiveBody entry={entry} /> : null}
       {entry && !fresh ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {DEEP_DIVE_STALE}
+          {entry.dive.leansKey.startsWith(`${DIVE_PROMPT_VERSION}|`) ? DEEP_DIVE_STALE : DEEP_DIVE_REWRITE}
         </ThemedText>
       ) : null}
 

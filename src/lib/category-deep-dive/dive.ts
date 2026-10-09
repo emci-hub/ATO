@@ -117,9 +117,12 @@ export function categoryScore(leans: readonly DiveLean[]): number | null {
   return den > 0 ? Math.round(num / den) : null;
 }
 
+/** Bumped when the prompt changes enough that old cards should offer a rewrite. */
+export const DIVE_PROMPT_VERSION = 'v2';
+
 /** A new card only when a side flips or a leaning moves by about ten points. */
 export function leansKey(leans: readonly DiveLean[]): string {
-  return [...leans]
+  return `${DIVE_PROMPT_VERSION}|` + [...leans]
     .sort((a, b) => TRAIT_AXES.indexOf(a.axis) - TRAIT_AXES.indexOf(b.axis))
     .map((row) => `${row.axis}:${row.lean}:${Math.round(row.pct / 10)}`)
     .join(',');
@@ -168,24 +171,39 @@ ${MOMENT_VOICE_BLOCK}
 
 RULES
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice, no "should".
-- Write numbers as words, use no quotation marks, and name no people, apps or brands.
-  (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
+- Use no quotation marks, and name no people, apps or brands.
+  (Everyday things still work: "the group chat", "a tab you keep open", "a playlist".)
+- No counting and no exaggeration: never a number or a number word above two ("three towns", "twelve
+  checklists", "eleven ways" all read as made up). Say "a few", "a couple" or nothing.
 - Name the reader's sides only with the words given above. No test, score or framework words.
 - Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
 - Kind, specific, modern, warm, a little delighted. Never a diagnosis, never a flaw.
 
+STYLE FOR THIS CARD — CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop"
+above, and the counts in the register examples there — "eleven ways", "47 tabs" — are exactly what NOT to do here):
+- Every part opens with a plain, true sentence about the reader that a friend would nod at.
+  Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
+  not a strange one-off scene). Nobody should have to reread it to get the point.
+- A low or "quiet" side is a style with an upside, never a weakness: say what it gives the reader.
+- Modern and natural, like a smart friend texting you an observation. No riddles, no stacked details.
+
 "title" — a name for the reader in this category, two to four lowercase words, starting with "the".
   Fresh and flattering, something they'd want to share. Never about worry, doubt, loneliness or struggle.
 "showsUp" — one item for each of the top ${top.length} axes above (${top.map((row) => row.axis).join(', ')}):
-  one everyday moment where that leaning shows, ${SHOWS_MIN_WORDS}–${SHOWS_MAX_WORDS} words.${
+  ${SHOWS_MIN_WORDS}–${SHOWS_MAX_WORDS} words. First what this side looks like in the reader's life in plain words, then
+  optionally one short realistic example ("..., like when you ...").${
     top.length >= 2
       ? `
-"mix" — ${MIX_MIN_WORDS}–${MIX_MAX_WORDS} words on how the two strongest leanings work TOGETHER in the reader's day (a blend or a fun tension).`
+"mix" — ${MIX_MIN_WORDS}–${MIX_MAX_WORDS} words in plain words on how the two strongest leanings work TOGETHER (a blend or a fun tension), then optionally one quick example.`
       : ''
   }
 "othersNotice" — ${NOTICE_MIN_WORDS}–${NOTICE_MAX_WORDS} words: what the people around the reader probably notice about them here. Kind, specific.
-"whatItMeansForYou" — ${DIVE_MEANS_MIN_WORDS}–${DIVE_MEANS_MAX_WORDS} words, 2 or 3 sentences: one everyday moment that ties the leanings together,
-  then a short, kind line on what that quietly says about the reader. No advice.
+"whatItMeansForYou" — ${DIVE_MEANS_MIN_WORDS}–${DIVE_MEANS_MAX_WORDS} words, 2 or 3 sentences, in this order:
+  1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
+  2. One realistic everyday moment that shows it.
+  3. A short, kind closing line on what that quietly says about the reader. No advice.
+  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What that quietly says about you]."
+  Reread it once: if a friend would ask "wait, what?", rewrite it.
 Never leave square or angle brackets in the answer.
 
 Return JSON only, exactly this shape:
@@ -204,8 +222,12 @@ function words(text: string): number {
 }
 
 /** One AI line: the Legends line rules, no digits at all, no clinical words. */
+const COUNT_WORDS =
+  /\b(three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|hundred|thousand|dozen|dozens)\b/i;
+
 export function diveLineViolation(text: string, allowed: string): string | null {
   if (/\d/.test(text)) return 'digit';
+  if (COUNT_WORDS.test(text)) return 'count word';
   if (CLINICAL.test(text)) return 'clinical word';
   if (/\bshould\b/i.test(text)) return 'advice';
   return legendLineViolation(text, allowed, false);

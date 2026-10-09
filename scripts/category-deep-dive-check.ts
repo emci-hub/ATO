@@ -97,7 +97,11 @@ const loveLeans: DiveLean[] = [
 assert.match(buildDivePrompt(loveDef, loveLeans), /Be extra gentle/, 'Love / closeness gets the gentle block');
 assert.doesNotMatch(prompt, /Be extra gentle/);
 assert.doesNotMatch(buildDivePrompt(openDef, leans.slice(0, 1)), /"mix"/, 'one leaning → no mix asked');
-ok('prompt: moment voice, category + sides only, no numbers repeated, gentle block for Love / closeness');
+assert.match(prompt, /CLEAR FIRST, MOMENT SECOND/, 'plain insight first, one realistic example second');
+assert.match(prompt, /No counting and no exaggeration/);
+assert.match(prompt, /A low or "quiet" side is a style with an upside/);
+assert.ok(leansKey(leans).startsWith('v2|'), 'cards from the old prompt offer a rewrite');
+ok('prompt: moment voice + clear-first style, category + sides only, no numbers or counting, gentle block for Love / closeness');
 
 /* ------------------------------------------------------------ validator --- */
 
@@ -118,6 +122,7 @@ assert.equal(parsed.categoryId, 'cat_openness');
 const bad = (patch: Record<string, unknown>) => JSON.stringify({ ...good, ...patch });
 const rejects: [string, string][] = [
   ['digit', bad({ othersNotice: 'Friends notice you try 3 new things a week and still pick small plans over the big ones.' })],
+  ['count word', bad({ othersNotice: 'Friends notice you open twelve tabs about a trip and still pick small plans over the big ones.' })],
   ['name not allowed', bad({ othersNotice: 'Friends notice you queue up Netflix documentaries about places, and pick small plans over big ones.' })],
   ['clinical word', bad({ othersNotice: 'Friends notice you get a little anxious at big parties and pick small plans over the big ones.' })],
   ['advice', bad({ whatItMeansForYou: 'You keep a list of places to try and visit them alone on a Sunday. You should share that list with someone, it is a good one.' })],

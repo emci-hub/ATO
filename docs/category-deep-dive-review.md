@@ -40,20 +40,35 @@ REGISTER (match it, do not reuse these):
 
 RULES
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice, no "should".
-- Write numbers as words, use no quotation marks, and name no people, apps or brands.
-  (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
+- Use no quotation marks, and name no people, apps or brands.
+  (Everyday things still work: "the group chat", "a tab you keep open", "a playlist".)
+- No counting and no exaggeration: never a number or a number word above two ("three towns", "twelve
+  checklists", "eleven ways" all read as made up). Say "a few", "a couple" or nothing.
 - Name the reader's sides only with the words given above. No test, score or framework words.
 - Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
 - Kind, specific, modern, warm, a little delighted. Never a diagnosis, never a flaw.
 
+STYLE FOR THIS CARD — CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop"
+above, and the counts in the register examples there — "eleven ways", "47 tabs" — are exactly what NOT to do here):
+- Every part opens with a plain, true sentence about the reader that a friend would nod at.
+  Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
+  not a strange one-off scene). Nobody should have to reread it to get the point.
+- A low or "quiet" side is a style with an upside, never a weakness: say what it gives the reader.
+- Modern and natural, like a smart friend texting you an observation. No riddles, no stacked details.
+
 "title" — a name for the reader in this category, two to four lowercase words, starting with "the".
   Fresh and flattering, something they'd want to share. Never about worry, doubt, loneliness or struggle.
 "showsUp" — one item for each of the top 2 axes above (openness, extraversion):
-  one everyday moment where that leaning shows, 10–35 words.
-"mix" — 12–40 words on how the two strongest leanings work TOGETHER in the reader's day (a blend or a fun tension).
+  10–35 words. First what this side looks like in the reader's life in plain words, then
+  optionally one short realistic example ("..., like when you ...").
+"mix" — 12–40 words in plain words on how the two strongest leanings work TOGETHER (a blend or a fun tension), then optionally one quick example.
 "othersNotice" — 10–35 words: what the people around the reader probably notice about them here. Kind, specific.
-"whatItMeansForYou" — 20–60 words, 2 or 3 sentences: one everyday moment that ties the leanings together,
-  then a short, kind line on what that quietly says about the reader. No advice.
+"whatItMeansForYou" — 20–60 words, 2 or 3 sentences, in this order:
+  1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
+  2. One realistic everyday moment that shows it.
+  3. A short, kind closing line on what that quietly says about the reader. No advice.
+  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What that quietly says about you]."
+  Reread it once: if a friend would ask "wait, what?", rewrite it.
 Never leave square or angle brackets in the answer.
 
 Return JSON only, exactly this shape:
@@ -98,20 +113,35 @@ REGISTER (match it, do not reuse these):
 
 RULES
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice, no "should".
-- Write numbers as words, use no quotation marks, and name no people, apps or brands.
-  (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
+- Use no quotation marks, and name no people, apps or brands.
+  (Everyday things still work: "the group chat", "a tab you keep open", "a playlist".)
+- No counting and no exaggeration: never a number or a number word above two ("three towns", "twelve
+  checklists", "eleven ways" all read as made up). Say "a few", "a couple" or nothing.
 - Name the reader's sides only with the words given above. No test, score or framework words.
 - Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
 - Kind, specific, modern, warm, a little delighted. Never a diagnosis, never a flaw.
 
+STYLE FOR THIS CARD — CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop"
+above, and the counts in the register examples there — "eleven ways", "47 tabs" — are exactly what NOT to do here):
+- Every part opens with a plain, true sentence about the reader that a friend would nod at.
+  Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
+  not a strange one-off scene). Nobody should have to reread it to get the point.
+- A low or "quiet" side is a style with an upside, never a weakness: say what it gives the reader.
+- Modern and natural, like a smart friend texting you an observation. No riddles, no stacked details.
+
 "title" — a name for the reader in this category, two to four lowercase words, starting with "the".
   Fresh and flattering, something they'd want to share. Never about worry, doubt, loneliness or struggle.
 "showsUp" — one item for each of the top 2 axes above (attachment_avoidance, attachment_anxiety):
-  one everyday moment where that leaning shows, 10–35 words.
-"mix" — 12–40 words on how the two strongest leanings work TOGETHER in the reader's day (a blend or a fun tension).
+  10–35 words. First what this side looks like in the reader's life in plain words, then
+  optionally one short realistic example ("..., like when you ...").
+"mix" — 12–40 words in plain words on how the two strongest leanings work TOGETHER (a blend or a fun tension), then optionally one quick example.
 "othersNotice" — 10–35 words: what the people around the reader probably notice about them here. Kind, specific.
-"whatItMeansForYou" — 20–60 words, 2 or 3 sentences: one everyday moment that ties the leanings together,
-  then a short, kind line on what that quietly says about the reader. No advice.
+"whatItMeansForYou" — 20–60 words, 2 or 3 sentences, in this order:
+  1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
+  2. One realistic everyday moment that shows it.
+  3. A short, kind closing line on what that quietly says about the reader. No advice.
+  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What that quietly says about you]."
+  Reread it once: if a friend would ask "wait, what?", rewrite it.
 Never leave square or angle brackets in the answer.
 
 Return JSON only, exactly this shape:
