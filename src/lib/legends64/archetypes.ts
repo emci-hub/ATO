@@ -67,10 +67,10 @@ export const LEGEND_SKINS: readonly LegendSkin[] = [
 ];
 
 /**
- * The new words are draft until emci reads them (the six older styles were
- * approved 2026-10-02, LEGENDS64_COPY_REVIEWED below).
+ * The words in the four newer styles. emci approved them 2026-10-09 with the
+ * name formula (the six older styles: LEGENDS64_COPY_REVIEWED below).
  */
-export const NAME_STYLES_V2_COPY_REVIEWED = false;
+export const NAME_STYLES_V2_COPY_REVIEWED = true;
 
 export function isLegendSkin(value: unknown): value is LegendSkin {
   return typeof value === 'string' && (LEGEND_SKINS as readonly string[]).includes(value);
@@ -82,8 +82,8 @@ export const DEFAULT_LEGEND_SKIN: LegendSkin = 'primal';
 // emci approved 2026-10-02, with 13 words replaced in the funny, dark and
 // anime styles (names that stung on a share card, slang that dates, and
 // untranslated terms). The names now show on the identity card and share image.
-// Back to draft 2026-10-09: the name formula replaced words in every style.
-export const LEGENDS64_COPY_REVIEWED = false;
+// The 2026-10-09 name formula replaced words in every style; emci approved them the same day.
+export const LEGENDS64_COPY_REVIEWED = true;
 
 type PoleComboMap = Readonly<Record<string, string>>;
 type SkinMap = Readonly<Record<LegendSkin, PoleComboMap>>;

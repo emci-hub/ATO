@@ -125,8 +125,8 @@ for (const name of allComposedNames) {
   assert.doesNotMatch(name, CLINICAL, `"${name}" uses a clinical word`);
   assert.ok(name.length <= 34, `"${name}" is ${name.length} characters (max 34, name formula 2026-10-09)`);
 }
-assert.equal(NAME_STYLES_V2_COPY_REVIEWED, false, 'the new words are draft until emci reads them');
-ok('no clinical words, every name is 34 characters or less, and the new words are draft');
+assert.equal(NAME_STYLES_V2_COPY_REVIEWED, true, 'emci approved the name formula words 2026-10-09');
+ok('no clinical words, every name is 34 characters or less, and the new words are approved');
 
 // Name formula (emci, 2026-10-09): describer + role + one twist. Roles are
 // people, never places or things; gaming roles are team roles, never "Boss";
@@ -184,14 +184,14 @@ assert.equal(isLegendSkin(null), false);
 ok('isLegendSkin validates a persisted/user-chosen skin string before it reaches archetypeName');
 
 // emci approved the names on 2026-10-02 after 13 words were replaced; the
-// 2026-10-09 name formula changed words in every style, so it is draft again.
-assert.equal(LEGENDS64_COPY_REVIEWED, false);
+// 2026-10-09 name formula changed words in every style; emci approved them the same day.
+assert.equal(LEGENDS64_COPY_REVIEWED, true);
 for (const word of ['Rizzy', 'MIA', 'Petty', 'Judgy', 'Savage', 'Cult Leader', 'Ruthless', 'Unrepentant', 'Tsundere', 'Dandere', 'Kuudere', 'Kakkoii', 'Genius Loner']) {
   for (const name of allComposedNames) {
     assert.ok(!name.includes(word), `retired word "${word}" is back in "${name}"`);
   }
 }
-ok(`LEGENDS64_COPY_REVIEWED is false (draft), and none of the 13 retired words appears in any of the ${allComposedNames.length} names`);
+ok(`LEGENDS64_COPY_REVIEWED is true, and none of the 13 retired words appears in any of the ${allComposedNames.length} names`);
 
 const allAuthoredStrings: string[] = [];
 for (const skin of LEGEND_SKINS) {

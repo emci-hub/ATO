@@ -87,7 +87,7 @@ For three categories, a more exact version is used once both of their traits are
 - You like a set path and you stay on it, even on the boring days.
 - You chase the new thing and still finish the plan you already made.
 
-## 2. Archetype names — name formula (emci, 2026-10-09), draft until read
+## 2. Archetype names — name formula (emci, 2026-10-09), approved 2026-10-09
 
 Formula: describer (how they act: Harmony · Directness · Connection) + role (a person or
 position: Follow-through · Sociability · Curiosity) + one twist. 2–4 words, 34 characters max,
