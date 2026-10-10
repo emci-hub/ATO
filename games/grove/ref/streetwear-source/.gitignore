@@ -1,0 +1,2 @@
+# Raw PixelLab export zips stay local (re-download by id: see STATE.md / MANIFEST.md).
+*.zip
