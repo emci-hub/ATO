@@ -8,24 +8,49 @@ working ID log are in `games/grove/ref/streetwear-source/` (`STATE.md`).
 **Style:** urban streetwear remix, gritty cel-shaded hi-bit pixel art, bold black outlines, flat
 2-3 tone shading. Palette mustard `#E0A526`, charcoal `#2B2B2E`, off-white `#F2EDE4`, paint red `#C8202B`.
 
-**Generations:** 828 used today (balance 4,692 → 3,864 left; resets 2026-10-11). No Pro mode used
-(the anchor was made with v3, cheaper than Pro).
+**Generations:** 1,746 used today (balance 4,692 → 2,946 left; resets 2026-10-11). No Pro mode used
+(the anchor was made with v3, cheaper than Pro). Weapon moves cost 3-4 gen per direction.
 
 ## Layout rules (match `skins/cast`)
 
-- Characters: `<slug>/rotations/<dir>.png` (8 dirs) + `<slug>/animations/<Clip>/<east|west>/frame_###.png`.
+- Characters: `<slug>/rotations/<dir>.png` (8 dirs) + `<slug>/animations/<Clip>/<east|west|north|south>/frame_###.png`
+  (north/south added on emci's ask; the game only plays east/west today).
   Clip names `Idle / Walk / Dash / Attack / Skill / Hurt` (heroes) and `Idle / Walk / Death` (creeps)
   so `play-art-pack.ts` role words map them without a human pick.
 - **One canvas per character, never cropped.** PixelLab grows the canvas per clip (128 → 160/176,
   sometimes different E vs W), so every frame was padded onto one square canvas: heroes 192×192,
   creeps 96×96. Horizontal: centred (PixelLab canvases are pivot-centred). Vertical: each clip moved
-  as a whole so its first-frame feet sit on the idle stance line (max shift 8px). East and west have
+  as a whole so its first-frame feet sit on the idle stance line (max shift 8px). All four facings have
   equal frame counts in every clip. Measure `footAt` when wiring; figures are bigger in their canvas
   than the cast heroes (cast fills ~50%).
-- Hero animations: Idle = `breathing-idle` template; Walk/Dash/Attack/Skill/Hurt = `skeleton-v3` with
-  templates `walking-8-frames`, `running-8-frames`, `cross-punch`, `fireball`, `taking-punch`
-  (template mode drifted off-model in QA; skeleton-v3 keeps identity). Creeps: all skeleton-v3
-  (`breathing-idle`, `walking-8-frames`, `falling-back-death`).
+- Hero animations: Idle = `breathing-idle` template; Walk/Dash/Hurt = `skeleton-v3` with
+  `walking-8-frames`, `running-8-frames`, `taking-punch` (template mode drifted off-model in QA;
+  skeleton-v3 keeps identity). **Attack and Skill are each hero's own weapon move** (8 frames,
+  PixelLab custom v3 with a written motion): the first pass used the unarmed `cross-punch` /
+  `fireball` templates, which made heroes drop or glitch their weapons. Raven keeps its skeleton
+  `cross-punch` attack (emci liked it). Void Raven and Velkhar idles were redone holding their weapon.
+  Creeps: all skeleton-v3 (`breathing-idle`, `walking-8-frames`, `falling-back-death`).
+
+### Weapon moves (Attack / Skill)
+
+| Hero | Weapon | Attack | Skill |
+|---|---|---|---|
+| corvus | none (crow) | lunging clawed-hand slash | releases a swarm of crows |
+| archangel | flaming sword | diagonal sword slash | overhead strike, wings spread |
+| oni | katana | horizontal katana slash | rising two-handed slash, red flame |
+| aurex | greatsword | wide two-handed swing | spinning slash trailing flames |
+| kitsune | two katanas | X-cross slash, both blades | dashing dual-blade flurry |
+| cyber-shinobi | katana (back) | draw-and-slash | iaido draw, blue trail |
+| elowen | sword | forward thrust | spinning slash, green leaves |
+| kael | energy blade | fast cyan slash | overhead slash, energy wave |
+| maldrath | greatsword | overhead ground slam | wide sweep |
+| morwen | staff | staff swing | purple magic bolt |
+| neon-viper | none | spinning roundhouse kick | neon dash punch |
+| raven | axe | (skeleton cross-punch, kept) | overhead axe chop |
+| sak | ice sword | quick slash | thrust, ghost wisps |
+| frost-lich | ice greatsword | heavy swing | plants sword, ice spikes |
+| velkhar | skull staff | staff strike | purple flame cast |
+| void-raven | scythe | wide two-handed sweep | full spinning slash |
 
 ## Assets
 
@@ -48,9 +73,9 @@ working ID log are in `games/grove/ref/streetwear-source/` (`STATE.md`).
 | hero restyled fronts (ref only) | edit_image, 4 heroes per call (4 × 10) | 8143ed97, c6fe6cd0, 86602f34, 6cb0b7f8 |
 | creep restyled fronts (ref only) | edit_image, 3 per call (10) | 96ddbec7 |
 
-### Heroes (`heroes/<slug>/`, 84 PNG each, 192×192)
+### Heroes (`heroes/<slug>/`, 176 PNG each — raven 168, its Attack is 6 frames — 192×192)
 
-Each: create_character v3 from its restyled front (2 gen) + Idle template (1/dir) + 5 skeleton-v3 clips (2-4/dir).
+Each: create_character v3 from its restyled front (2 gen) + Idle template (1/dir) + Walk/Dash/Hurt skeleton-v3 (2-4/dir) + Attack/Skill custom v3 weapon moves (3-4/dir; raven Attack stays skeleton).
 Corvus and Archangel also paid for a first template-mode set (kept in their source zips, not used).
 
 | Hero | Character id |
@@ -72,7 +97,7 @@ Corvus and Archangel also paid for a first template-mode set (kept in their sour
 | velkhar | 358cfbd9-31c7-49e3-ac71-2c19ed9b1bd8 |
 | void-raven | 5e3b9e12-997e-4d5c-9efa-c38707e9cc4a |
 
-### Creeps (`creeps/<slug>/`, 46 PNG each, 96×96; created at 64px)
+### Creeps (`creeps/<slug>/`, 84 PNG each, 96×96; created at 64px)
 
 | Creep | Character id |
 |---|---|
@@ -82,9 +107,9 @@ Corvus and Archangel also paid for a first template-mode set (kept in their sour
 
 ## Known issues (read before wiring)
 
-- `Skill` (fireball template) draws an orange flame on every hero, also ice/void ones — tint or overlay per element.
-- 4 frames touch the canvas edge at source (sword tip / flame, 1-2px): oni Attack/west, oni Skill/west ×2, archangel Skill/west.
-- Skeleton-v3 sometimes drops the held weapon mid-action (e.g. archangel sword).
+- Weapon Attack/Skill clips are redrawn per frame (PixelLab custom v3), so a weapon can wobble slightly between frames. For pixel-perfect weapons long term, PixelLab's own advice is to draw the weapon as a separate layer at runtime.
+- Dash and Hurt are still skeleton templates; a few heroes lower or hide the weapon during them.
+- North/south clips: the game plays east/west only today; north/south are for a future top-down use.
 - Knight creep's side rotations read paler than its front.
 - Icons flagged for emci's look: `ui/icons/REVIEW-leaf.png` (reads as cannabis), `REVIEW-price-tag-dollar.png` and `REVIEW-chain-99.png` (contain characters), `REVIEW-brass-knuckles.png`. `props/graffiti-tag-decal.png` and `ui/icons/graffiti-tag.png` are letter-like wildstyle (not readable).
 - Map objects (create_map_object) were not used, so nothing here is subject to the 8-hour auto-delete.
@@ -92,7 +117,7 @@ Corvus and Archangel also paid for a first template-mode set (kept in their sour
 - `ui/card-frame.png` has fake barcode / glyph decoration (not readable).
 - `ui/button-normal.png` (150×68) and `button-pressed.png` (138×56) differ in size — pad to one box when wiring.
 - Tone check for emci: red paint drips + skull on panel / card / health bar can read like blood.
-- **Wiring risk:** `scripts/play-art-prep.ts` has `'skins'` in `FAMILIES` and `PACKED_HERO_ART` only excludes `skins/cast/heroes/`. Re-running prep as-is would bundle ~1,480 loose streetwear frames into `generated-play-assets.ts`. Widen the exclusion (and pack via `play-art-pack.ts`) in the wiring change.
+- **Wiring risk:** `scripts/play-art-prep.ts` has `'skins'` in `FAMILIES` and `PACKED_HERO_ART` only excludes `skins/cast/heroes/`. Re-running prep as-is would bundle ~3,060 loose streetwear character frames (plus the other art) into `generated-play-assets.ts`. Widen the exclusion (and pack via `play-art-pack.ts`) in the wiring change.
 
 ## Files
 
@@ -157,22 +182,22 @@ Corvus and Archangel also paid for a first template-mode set (kept in their sour
 | `ui/health-bar.png` | 1 | 579x134 |
 | `ui/icons/` | 56 | 32x32 |
 | `ui/panel-frame.png` | 1 | 384x288 |
-| `heroes/archangel/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/aurex/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/corvus/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/cyber-shinobi/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/elowen/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/frost-lich/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/kael/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/kitsune/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/maldrath/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/morwen/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/neon-viper/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/oni/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/raven/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/sak/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/velkhar/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `heroes/void-raven/` | 84 | 192x192 — 8 rotations; E+W: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 6f, Walk 8f |
-| `creeps/knight/` | 46 | 96x96 — 8 rotations; E+W: Death 7f, Idle 4f, Walk 8f |
-| `creeps/village-girl/` | 46 | 96x96 — 8 rotations; E+W: Death 7f, Idle 4f, Walk 8f |
-| `creeps/wizard/` | 46 | 96x96 — 8 rotations; E+W: Death 7f, Idle 4f, Walk 8f |
+| `heroes/archangel/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/aurex/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/corvus/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/cyber-shinobi/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/elowen/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/frost-lich/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/kael/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/kitsune/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/maldrath/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/morwen/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/neon-viper/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/oni/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/raven/` | 168 | 192x192 — 8 rotations; E, W, N, S each: Attack 6f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/sak/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/velkhar/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `heroes/void-raven/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `creeps/knight/` | 84 | 96x96 — 8 rotations; E, W, N, S each: Death 7f, Idle 4f, Walk 8f |
+| `creeps/village-girl/` | 84 | 96x96 — 8 rotations; E, W, N, S each: Death 7f, Idle 4f, Walk 8f |
+| `creeps/wizard/` | 84 | 96x96 — 8 rotations; E, W, N, S each: Death 7f, Idle 4f, Walk 8f |
