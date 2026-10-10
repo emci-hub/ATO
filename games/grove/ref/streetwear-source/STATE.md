@@ -41,6 +41,63 @@ Raw PixelLab exports live here; clean copies go to `assets/play/skins/streetwear
 ## + neon-viper, raven ingested. ALL ingested heroes normalized to 192x192 (normalize.js, feet aligned) — hero.sh now does it.
 ## + sak, frost-lich, velkhar ingested. void-raven: all queued except HurtSK West -> group 3c4792c9-c8d3-4237-94bc-a92d137cbbe6.
 ## ALL 16 HEROES INGESTED + normalized.
+## WEAPON PASS (emci: each hero uses its own weapon; outranks the NS pass)
+Root cause: Attack/Skill used cross-punch/fireball skeleton templates = unarmed poses, so weapons drop/glitch.
+Fix: animate_character mode=v3 + action_description, frame_count 8, keep_first_frame=false. Names AttackW / SkillW (E+W) and AttackW_NS / SkillW_NS (N+S);
+hero.sh WEAPON=1 maps those (and drops AttackSK/SkillSK). Raven keeps AttackSK (emci likes it), only Skill becomes SkillW.
+NS pass from elowen on: only Idle_NS, WalkSK_NS, DashSK_NS, HurtSK_NS (attack/skill come from the weapon pass).
+Moves:
+- corvus (no weapon, crow): A "lunging forward and slashing with a clawed gloved hand while the crow flaps" / S "throwing both arms forward to release a swarm of black crows"
+- archangel (one-handed flaming sword): A "a fast diagonal sword slash with the flaming sword, then back to guard" / S "raising the flaming sword overhead with wings spread, then a heavy downward strike"
+- oni (single katana): A "a quick horizontal katana slash, then back to guard" / S "a two-handed rising katana slash with a burst of red flame"
+- aurex (greatsword, flames): A "a heavy two-handed greatsword swing in a wide arc" / S "a spinning greatsword slash trailing flames"
+- kitsune (two katanas): A "drawing both katanas and slashing in a fast X cross" / S "a dashing dual-katana flurry of slashes"
+- cyber-shinobi (katana on back): A "drawing the katana from the back and slashing forward" / S "a lightning-fast iaido draw slash with a glowing trail"
+- elowen (sword): A "a quick forward sword thrust then recover" / S "a spinning sword slash with green leaves swirling"
+- kael (glowing cyan blade): A "a fast slash with the glowing energy blade" / S "a charged overhead slash releasing a cyan energy wave"
+- maldrath (greatsword): A "a slow heavy overhead greatsword slam into the ground" / S "a wide two-handed greatsword sweep"
+- morwen (staff): A "swinging the staff forward like a club" / S "raising the staff and casting a purple magic bolt forward"
+- neon-viper (unarmed): A "a fast spinning roundhouse kick" / S "a neon-charged dash punch"
+- raven (big axe): keep AttackSK / S "a heavy two-handed overhead axe chop slamming down"
+- sak (ice sword): A "a quick ice sword slash" / S "thrusting the ice sword forward as ghost wisps rush ahead"
+- frost-lich (ice greatsword): A "a heavy ice greatsword swing" / S "planting the greatsword and raising a burst of ice"
+- velkhar (skull staff): A "striking forward with the skull staff" / S "raising the skull staff and casting purple flame forward"
+- void-raven (scythe): A "a wide two-handed scythe sweep from back to front, then recover" / S "a full spinning scythe slash in a circle"
+
+Weapon test groups (east only so far; add west/N/S via animation_group_id + same action_description):
+archangel AttackW ff796e32-a66f-46c8-bacb-e4868fea5b3b; oni AttackW 4e1188b7-f759-409c-9e07-2c36bab5d95f; kitsune AttackW 1d5b2e24-de80-4179-8e81-706d82d1ed28; raven SkillW 95944a8e-5521-4e8b-8b9c-978294570369; void-raven AttackW 70225ffc-822f-475f-ad19-14f7e6e74933
+(Adding N/S into the SAME group is fine: ingest maps AttackW -> Attack for any facing.)
+Weapon groups (desc must match when appending):
+| hero | AttackW group | SkillW group | queued dirs |
+| archangel | ff796e32-a66f-46c8-bacb-e4868fea5b3b | 81d7fa40-e4e6-41ce-82d7-7da413ad6233 | A E,W  S E,W |
+| oni | 4e1188b7-f759-409c-9e07-2c36bab5d95f | 9462230d-ecd6-4ba0-9c2f-3d0f78d73d44 | A E,W  S E,W |
+| kitsune | 1d5b2e24-de80-4179-8e81-706d82d1ed28 | 434637c3-7ba7-4154-875e-ad06b9bb25ad ("a dashing flurry of slashes with a katana in each hand") | A E,W  S E |
+| raven | (AttackSK kept) | 95944a8e-5521-4e8b-8b9c-978294570369 | S E,W |
+| void-raven | 70225ffc-822f-475f-ad19-14f7e6e74933 | c89e4879-1ad1-46c0-a039-cb53c9b229ac | A E,W  S E,W |
+| corvus | ddfebf9a-deef-445d-9643-37275b69785f | e686b5fd-a21b-4f42-8633-d1d6d20d2c87 | A E,W  S E,W |
+| aurex | 5df70183-82cc-45b5-bd32-dd94125eb7e3 | 22ab82da-47b2-4bba-84d9-8f30c6655664 | A E,W  S E,W |
+| cyber-shinobi | aad5f9d2-f574-4ab4-ba7d-a2358c799669 | 53a4cb39-642d-421e-85a0-d9bf94531d9a ("a lightning-fast iaido draw slash with a glowing blue trail") | A E,W  S E (needs W) |
+| elowen | aa09a79e-fb8f-4bbd-98cc-73323dbb5753 ("a quick forward sword thrust, then recover") | eaf059be-57c2-4e4f-a45e-c817bb128a25 ("a spinning sword slash with green leaves swirling around") | A E,W  S E,W |
+| kael | 3d6e3eb1-e629-420c-83e2-72dd6f23d70e ("a fast slash with the glowing cyan energy blade") | 8be3e0b8-3b77-4c15-aef4-92085b9a9881 ("a charged overhead slash with the energy blade releasing a cyan energy wave") | A E,W  S E (needs W) |
+| maldrath | 80c27099-4b22-46f0-8533-f3f7c265897b ("a slow heavy overhead greatsword slam into the ground") | a89eb2c2-4e6e-4959-9842-336f98ffaafc ("a wide two-handed greatsword sweep") | A E,W  S E,W |
+| morwen | 986308f4-0ee4-4989-82ea-caaed8dc6ad5 ("swinging the wooden staff forward like a club") | e7ba44a9-bb97-4ad1-908a-967b9f8524f1 ("raising the staff and casting a purple magic bolt forward from its tip") | A E,W  S E,W |
+| neon-viper | 6e91f8a4-6e61-4dde-a305-e4124dbecabf ("a fast spinning roundhouse kick") | c4059359-17e6-4174-833c-ed20c4d6a389 ("a neon-charged dash punch with a pink and teal energy trail") | A E,W  S E,W |
+| sak | aced066b-86e7-4a5b-b9ab-4de96ae7160d ("a quick ice sword slash") | 7fc6065f-307b-4e01-a9a2-e0a4f55d8b19 ("thrusting the ice sword forward as ghost wisps rush ahead") | A E,W  S E,W |
+| frost-lich | 0c6f27e5-6d38-4954-aac7-73a849b3f49a ("a heavy ice greatsword swing") | 15d955da-b2e4-4d0d-be86-e0567e707136 ("planting the ice greatsword into the ground and raising a burst of ice spikes") | A E,W  S E (needs W) |
+Ingested WEAPON=1 also: elowen, kael, maldrath, morwen.
+| velkhar | 61915507-cae4-456c-81f6-a2fe42915f24 ("striking forward with the skull staff") | 6b674f3a-dca1-4f5d-a05b-bb2e0954800e ("raising the skull staff and casting purple flame forward") | A E,W  S E,W |
+Weapon-holding idle rerolls (ingest with IDLE=IdleW; add N/S into the same group): void-raven IdleW 5d87467a-0aad-4804-bcc5-9076df712368 ("standing idle, breathing slowly while holding the scythe upright, cloak gently moving"); velkhar IdleW 76238a54-b583-4ba7-bb87-9d3f00898d79 ("standing idle, breathing slowly while holding the skull staff upright, purple flames flickering").
+ALL 16 E/W WEAPON INGESTED (velkhar pending IdleW). (A) progress: archangel A+S NS queued; oni A NS queued; void IdleW north queued.
+Next (A): void IdleW south, oni S, kitsune A,S, void A,S, raven S (+AttackSK_NS template), corvus, aurex, cyber, elowen, kael, maldrath, morwen, neon, sak, frost, velkhar (+IdleW NS).
+PLAN AFTER E/W: (A) weapon N/S into each AttackW/SkillW group (+IdleW N/S for void-raven, velkhar), (B) NS Idle_NS/WalkSK_NS/DashSK_NS/HurtSK_NS for kael, maldrath, morwen, neon-viper, raven, sak, frost-lich, velkhar(no Idle), void-raven(no Idle) + elowen HurtSK_NS; raven AttackSK_NS, (C) creeps IdleSK_NS/WalkSK_NS/DeathSK_NS.
+Audit: other heroes keep weapons in idle/walk/hurt; skip phase-3 for them.
+ALL E/W WEAPON CLIPS QUEUED. Ingested WEAPON=1 also: neon-viper. Pending ingest: sak, frost-lich, velkhar.
+(kael S W queued.) Ingested with WEAPON=1: archangel, oni, kitsune, raven (WEAPON_ATTACK=AttackSK), void-raven, corvus, aurex, cyber-shinobi.
+PHASE 3 idea (leftover credits): template Idle/Walk/Dash/Hurt drop weapons too (void-raven west idle has no scythe, thin). Redo with v3 custom "idle/walking while holding the <weapon>" for weapon heroes.
+Next E/W: cyber-shinobi, elowen, kael, maldrath, morwen, neon-viper, sak, frost-lich, velkhar.
+
+## NS PASS (emci "add ns"): new groups named Idle_NS (template; creeps IdleSK_NS skeleton), WalkSK_NS, DashSK_NS, AttackSK_NS, SkillSK_NS, HurtSK_NS, DeathSK_NS with directions north+south; hero.sh maps them into the same clip folders. Order: corvus, archangel, oni, aurex, kitsune, cyber-shinobi, elowen, kael, maldrath, morwen, neon-viper, raven, sak, frost-lich, velkhar, void-raven, girl, wizard, knight.
+## NS done (re-ingested): corvus, archangel, oni. aurex: all queued. kitsune: all queued. cyber-shinobi: all queued except HurtSK_NS south -> group 18b7fe81-926c-4a10-9977-885079dc1722. Next elowen 535363cd.
 ## creeps queued: girl all; wizard all; knight Idle east -> group 834e7674-727b-4311-a767-49384f805750 needs West, then WalkSK, DeathSK
 ## creep chars: village-girl 8da68657-9b0c-408d-b081-ece6da0a2d50, wizard f968dd5f-76ef-49ee-9bcb-d1631e003580, knight 2fbc9bc6-bfe4-4bfb-b40f-2cef6d14dbb8
 ## creeps: restyle edit job 96ddbec7-0246-4d7d-9a07-86e325cc2c0d (girl, wizard, knight @64) -> then create_character v3 64px, anims Idle(template), WalkSK, DeathSK(falling-back-death) E/W; ingest with ROOT=creeps CANVAS=96 Then velkhar, void-raven, creeps.
