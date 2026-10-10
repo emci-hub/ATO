@@ -274,6 +274,11 @@ assert.equal(coach({ status: 'choose_egg' }).action, 'hatch');
 assert.equal(coach({ status: 'chilly' }).action, 'warm');
 assert.match(coach({ status: 'chilly' }).tip, /warm/i);
 assert.equal(coach({ status: 'egg' }).action, null, 'a warm egg needs nothing');
+assert.equal(coach({ status: 'okay', offerFork: true, diveCharges: 2, expeditionReady: true }).action, 'dive', 'after Tend, Dive wins over expedition');
+assert.equal(coach({ status: 'okay', offerFork: true }).alt?.action, 'defend', 'the other choice is Defend');
+assert.equal(coach({ status: 'hungry', offerFork: true, pantryTotal: 1 }).action, 'feed', 'hunger still beats the fork');
+assert.equal(coach({ status: 'okay', offerDress: true }).alt?.action, 'dress');
+assert.equal(coach({ status: 'okay' }).alt, null);
 ok('coach: every status has a tip, buttons go to the right sheet, empty pantry → Catch the food');
 
 /* -------------------------------------------------------- sharp box --- */

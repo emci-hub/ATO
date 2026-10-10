@@ -1,49 +1,69 @@
 /**
- * The Divecore Guide screen (v26, Part C) — renders `guideSections()` (every
- * number from the game's own constants). Section chips on top; a "?" button
- * elsewhere opens it straight at its section. Used in Pet → Info → Guide and
- * in the Dive Info sheet.
+ * The Divecore Guide — seven short cards. Each face is a mark, a title, and
+ * one or two lines. More opens the full constants (the same numbers the game
+ * rolls). It never blocks play.
  */
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
-import { GUIDE_SECTIONS, GUIDE_TITLE, guideSections, type GuideSection } from '@/play/guide-content';
-import { NeonChip, NeonLabel } from '@/play/neon-ui';
+import { GUIDE_TITLE, guideSections, type GuideSection } from '@/play/guide-content';
+import { NeonChip } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { PLAY_BODY_FONT, PLAY_HUD_FONT } from '@/play/play-fonts';
 
-export function GuideView({ initial = 'pet' }: { initial?: GuideSection | null }) {
-  const [section, setSection] = useState<GuideSection>(initial ?? 'pet');
+export function GuideView({ initial = null }: { initial?: GuideSection | null }) {
+  const [openId, setOpenId] = useState<GuideSection | null>(initial ?? null);
   useEffect(() => {
-    if (initial) setSection(initial);
+    setOpenId(initial ?? null);
   }, [initial]);
-  const shown = guideSections().find((s) => s.id === section);
+  const cards = guideSections();
   return (
     <View style={styles.wrap}>
-      <View style={styles.chips}>
-        {GUIDE_SECTIONS.map((id) => (
-          <NeonChip key={id} label={GUIDE_TITLE[id]} selected={id === section} onPress={() => setSection(id)} />
-        ))}
-      </View>
-      {shown ? (
-        <>
-          <NeonLabel>{shown.title}</NeonLabel>
-          {shown.lines.map((line) => (
-            <Text key={line} style={styles.body}>
-              • {line}
-            </Text>
-          ))}
-        </>
-      ) : null}
+      {cards.map((card) => {
+        const open = openId === card.id;
+        return (
+          <View key={card.id} style={styles.card}>
+            <View style={styles.row}>
+              <View style={styles.mark}>
+                <Text style={styles.markText}>{card.mark}</Text>
+              </View>
+              <View style={styles.copy}>
+                <Text style={styles.title} accessibilityRole="header">
+                  {card.title}
+                </Text>
+                {card.face.map((line) => (
+                  <Text key={line} style={styles.face}>
+                    {line}
+                  </Text>
+                ))}
+              </View>
+            </View>
+            <Pressable
+              onPress={() => setOpenId(open ? null : card.id)}
+              accessibilityRole="button"
+              accessibilityLabel={open ? `Hide ${card.title}` : `More about ${card.title}`}
+              style={styles.moreHit}>
+              <Text style={styles.more}>{open ? 'Hide' : 'More'}</Text>
+            </Pressable>
+            {open
+              ? card.lines.map((line) => (
+                  <Text key={line} style={styles.body}>
+                    {line}
+                  </Text>
+                ))
+              : null}
+          </View>
+        );
+      })}
     </View>
   );
 }
 
-/** A small "?" that opens the Guide at a section. */
+/** A small "?" that opens the Guide at a section (More already open). */
 export function GuideLink({ section, onOpen, label }: { section: GuideSection; onOpen: (s: GuideSection) => void; label?: string }) {
   return (
     <NeonChip
-      label={`? ${label ?? GUIDE_TITLE[section]}`}
+      label={label ?? `? ${GUIDE_TITLE[section]}`}
       onPress={() => onOpen(section)}
       accessibilityLabel={`Open the Guide: ${GUIDE_TITLE[section]}`}
     />
@@ -51,7 +71,50 @@ export function GuideLink({ section, onOpen, label }: { section: GuideSection; o
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
+  wrap: { gap: 12 },
+  card: {
+    gap: 8,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: NEON.cyanBorder,
+    borderRadius: 8,
+    backgroundColor: NEON.panel,
+  },
+  row: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  mark: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: NEON.cyanDim,
+    backgroundColor: NEON.cyanSoft,
+  },
+  markText: { fontSize: 22 },
+  copy: { flex: 1, gap: 4 },
+  title: {
+    fontFamily: PLAY_HUD_FONT,
+    fontSize: 16,
+    letterSpacing: 0.6,
+    color: NEON.cyan,
+  },
+  face: {
+    fontFamily: PLAY_BODY_FONT,
+    fontSize: 15,
+    lineHeight: 20,
+    color: NEON.textPrimary,
+  },
+  moreHit: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
+  more: {
+    fontFamily: PLAY_HUD_FONT,
+    fontSize: 13,
+    letterSpacing: 0.8,
+    color: NEON.cyan,
+  },
+  body: {
+    fontFamily: PLAY_BODY_FONT,
+    fontSize: 14,
+    lineHeight: 20,
+    color: NEON.textMuted,
+  },
 });

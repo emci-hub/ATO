@@ -20,7 +20,8 @@ import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
+import { CARE_ACT } from '@/play/pet-eggs';
+import { hasTended, PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { PetDevPanel } from '@/play/pet-dev-panel';
 import { usePetDevRoom } from '@/play/pet-dev-state';
@@ -101,6 +102,7 @@ import {
 import { PlaySheet, SheetTabs } from '@/play/play-sheet';
 import {
   ackPetRevealsDoc,
+  setPlaySettings,
   warmEggDoc,
   finishPetRound,
   type PetRoundKind,
@@ -250,6 +252,8 @@ export function PetScreen({
   reduceMotion,
   onBack,
   onGoDive,
+  onGoDefend,
+  onGoDress,
   talkEvent = null,
   onTalkConsumed,
   onReplayTutorial,
@@ -269,6 +273,10 @@ export function PetScreen({
   onBack: () => void;
   /** Opens Dive full screen; its back returns here. */
   onGoDive: () => void;
+  /** Defend is a Hub tile. The coach can jump there after the first Tend. */
+  onGoDefend?: () => void;
+  /** Dress tease after the first outing pays off. */
+  onGoDress?: () => void;
   /** The last dive / TD / find moment, to talk about once. */
   talkEvent?: PetTalkEvent;
   /** Called once the room has said the event, so it is never replayed. */
@@ -333,7 +341,7 @@ export function PetScreen({
   const [guideSection, setGuideSection] = useState<GuideSection | null>(null);
   // Bumped on every "?" tap so the same section re-opens after you browsed away.
   const [guideNonce, setGuideNonce] = useState(0);
-  const openGuide = (section: GuideSection) => {
+  const openGuide = (section: GuideSection | null) => {
     setGame(null);
     setGuideSection(section);
     setGuideNonce((n) => n + 1);
@@ -343,7 +351,7 @@ export function PetScreen({
   useEffect(() => {
     if (!openGuideReq) return;
     setGame(null);
-    setGuideSection('pet');
+    setGuideSection(null);
     setInfoTab('guide');
     setSheet('info');
     onGuideOpened?.();
@@ -362,6 +370,18 @@ export function PetScreen({
     warmth: pet.warmth,
   });
   const status = dev && devStatus ? devStatus : realStatus;
+  const didDive = view.stats.dives > 0 || view.stats.surfaces > 0;
+  const didDefend = view.lifetimeWavesCleared > 0;
+  const offerFork = hasTended(pet) && view.settings.loopFork == null && !didDive && !didDefend;
+  const offerDress =
+    !offerFork &&
+    view.settings.loopFork != null &&
+    !view.settings.dressTeaseSeen &&
+    (view.stats.surfaces > 0 || didDefend);
+  const showLaterRooms =
+    view.stats.surfaces > 0 ||
+    (pet.care_acts & CARE_ACT.fed) !== 0 ||
+    (pet.stage !== 'egg' && pet.stage !== 'baby');
   const coach = petCoachTip({
     status,
     hunger: pet.hunger,
@@ -371,6 +391,8 @@ export function PetScreen({
     diveCharges: view.dive.current,
     tokensLeftToday: pv.tokensLeftToday,
     backIn: pv.expeditionBackInMs != null ? durationLabel(pv.expeditionBackInMs) : null,
+    offerFork,
+    offerDress,
   });
   const pulseIcon = coach.action ? PET_COACH_ICON[coach.action] : null;
 
@@ -523,6 +545,9 @@ export function PetScreen({
 
   const openIcon = (id: PetCoachIcon) => {
     if (id === 'dive') {
+      if (view.settings.loopFork == null && hasTended(pet)) {
+        commit((doc) => setPlaySettings(doc, { loopFork: 'dive' }));
+      }
       setSheet(null);
       if (motionOn) setWipe('cover');
       else onGoDive();
@@ -552,6 +577,21 @@ export function PetScreen({
     const icon = PET_COACH_ICON[coach.action];
     if (icon === 'feed') setJuiceKey((n) => n + 1);
     if (icon) openIcon(icon);
+  };
+  const pressCoachAlt = () => {
+    const alt = coach.alt;
+    if (!alt) return;
+    if (alt.action === 'dive') {
+      openIcon('dive');
+      return;
+    }
+    if (alt.action === 'defend') {
+      commit((doc) => (doc.play_settings.loopFork ? null : setPlaySettings(doc, { loopFork: 'defend' })));
+      onGoDefend?.();
+      return;
+    }
+    commit((doc) => setPlaySettings(doc, { dressTeaseSeen: true }));
+    onGoDress?.();
   };
   const closeSheet = () => {
     setGame(null); // an unfinished round does not count
@@ -748,14 +788,16 @@ export function PetScreen({
           {title}
         </PixelLabel>
         <View style={styles.topActions}>
-          <Pressable
-            onPress={() => setSheet('den')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={`The Den, ${pv.den.used} of ${pv.den.slots} slots`}
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            <Text style={styles.topButtonText}>🏠</Text>
-          </Pressable>
+          {showLaterRooms ? (
+            <Pressable
+              onPress={() => setSheet('den')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={`The Den, ${pv.den.used} of ${pv.den.slots} slots`}
+              style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
+              <Text style={styles.topButtonText}>🏠</Text>
+            </Pressable>
+          ) : null}
           <Pressable
             onPress={() => setSheet('menu')}
             hitSlop={8}
@@ -793,6 +835,7 @@ export function PetScreen({
         auraElement={view.swords.equipped?.element ?? null}
         onTapPet={tapPet}
         onCoach={pressCoach}
+        onCoachAlt={pressCoachAlt}
         recolor={recolor}
         onBadge={() => setSheet('card')}
         buffs={roomBuffs}
@@ -805,7 +848,7 @@ export function PetScreen({
       />
 
       <View style={styles.iconRow}>
-        {ICONS.map((icon) => (
+        {ICONS.filter((icon) => icon.id !== 'expedition' || showLaterRooms).map((icon) => (
           <RoomIcon
             key={icon.id}
             emoji={icon.emoji}
@@ -825,7 +868,7 @@ export function PetScreen({
         ) : (
           <FeedSheetBody view={view} commit={commit} onFed={() => setJuiceKey((n) => n + 1)} />
         )}
-        <GuideLink section="pet" onOpen={openGuide} />
+        <GuideLink section="tend" onOpen={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'play'} title={SHEET_TITLE.play} onClose={closeSheet} reduceMotion={reduceMotion}>
         <PlaySheetBody
@@ -834,7 +877,7 @@ export function PetScreen({
           lastResult={lastResult}
           lastRound={lastRound}
           still={reduceMotion || fxQuality !== 'full'}
-          onGuide={() => openGuide('games')}
+          onGuide={() => openGuide('tend')}
         />
       </PlaySheet>
       <PlaySheet
@@ -858,7 +901,7 @@ export function PetScreen({
         ) : (
           <OddsPanel view={view} />
         )}
-        <GuideLink section="eggs" onOpen={openGuide} />
+        <GuideLink section="odds" onOpen={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'card'} title={heroLabel ?? SHEET_TITLE.card} onClose={closeSheet} reduceMotion={reduceMotion}>
         {cardInfo ? (
@@ -899,15 +942,15 @@ export function PetScreen({
           }}
           onViewActiveCard={() => setSheet('card')}
         />
-        <GuideLink section="den" onOpen={openGuide} />
+        <GuideLink section="tend" onOpen={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'stone'} title={SHEET_TITLE.stone} onClose={closeSheet} reduceMotion={reduceMotion}>
         <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} />
-        <GuideLink section="stones" onOpen={openGuide} />
+        <GuideLink section="odds" onOpen={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'prism'} title={SHEET_TITLE.prism} onClose={closeSheet} reduceMotion={reduceMotion}>
         <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} mode="prism" />
-        <GuideLink section="tide" onOpen={openGuide} />
+        <GuideLink section="shop" onOpen={openGuide} />
       </PlaySheet>
       <DivecoreSettingsSheet
         open={settingsOpen}
@@ -916,7 +959,7 @@ export function PetScreen({
         commit={commit}
         reduceMotion={reduceMotion}
         onReplayTutorial={() => onReplayTutorial?.()}
-        onOpenGuide={() => openGuide('pet')}
+        onOpenGuide={() => openGuide(null)}
       />
       <PlaySheet
         open={sheet === 'info'}
@@ -929,17 +972,17 @@ export function PetScreen({
         ) : infoTab === 'journal' ? (
           <>
             <JournalTab view={view} commit={commit} />
-            <GuideLink section="collection" onOpen={openGuide} />
+            <GuideLink section="settings" onOpen={openGuide} />
           </>
         ) : infoTab === 'book' ? (
           <>
             <BookTab view={view} commit={commit} eggColor={eggColor} />
-            <GuideLink section="collection" onOpen={openGuide} />
+            <GuideLink section="settings" onOpen={openGuide} />
           </>
         ) : infoTab === 'hall' ? (
           <>
             <HallTab view={view} eggColor={eggColor} />
-            <GuideLink section="collection" onOpen={openGuide} />
+            <GuideLink section="settings" onOpen={openGuide} />
           </>
         ) : infoTab === 'style' ? (
           <StyleTab view={view} commit={commit} />

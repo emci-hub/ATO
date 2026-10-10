@@ -52,6 +52,15 @@ export type PlaySettings = {
   skipReveals: boolean;
   /** Seen (or skipped) the first-time tutorial. */
   tutorialSeen: boolean;
+  /**
+   * Which outing they picked after the first Tend. Null until they choose.
+   * The other Hub destination pulses until they open it.
+   */
+  loopFork: 'dive' | 'defend' | null;
+  /** They opened the outing they skipped. The Hub pulse stops. */
+  loopOtherSeen: boolean;
+  /** They followed (or passed) the Dress tease. */
+  dressTeaseSeen: boolean;
 };
 
 export const DEFAULT_WINDOW: DayWindow = { from: 22 * 60, to: 7 * 60 };
@@ -65,7 +74,25 @@ export function defaultSettings(): PlaySettings {
     chatter: 'normal',
     skipReveals: false,
     tutorialSeen: false,
+    loopFork: null,
+    loopOtherSeen: false,
+    dressTeaseSeen: false,
   };
+}
+
+/** Hub tile to soft-pulse: the outing they have not tried yet. */
+export function skippedHubPulse(input: {
+  loopFork: 'dive' | 'defend' | null;
+  loopOtherSeen: boolean;
+  didDive: boolean;
+  didDefend: boolean;
+}): 'pet' | 'defend' | null {
+  if (input.loopOtherSeen) return null;
+  if (input.loopFork === 'dive') return input.didDefend ? null : 'defend';
+  if (input.loopFork === 'defend') return input.didDive ? null : 'pet';
+  if (input.didDive && !input.didDefend) return 'defend';
+  if (input.didDefend && !input.didDive) return 'pet';
+  return null;
 }
 
 function minuteOf(v: unknown, fallback: number): number {
@@ -107,6 +134,9 @@ export function parseSettings(raw: unknown, legacy: { remind: boolean; hasProgre
     chatter: (CHATTER_LEVELS as readonly string[]).includes(r.chatter as string) ? (r.chatter as ChatterLevel) : base.chatter,
     skipReveals: flag(r.skipReveals, false),
     tutorialSeen: flag(r.tutorialSeen, false),
+    loopFork: r.loopFork === 'dive' || r.loopFork === 'defend' ? r.loopFork : null,
+    loopOtherSeen: flag(r.loopOtherSeen, false),
+    dressTeaseSeen: flag(r.dressTeaseSeen, false),
   };
 }
 

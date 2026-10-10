@@ -18,7 +18,10 @@ import { useAppearance } from '@/lib/theme/context';
 import { AboutScreen } from '@/play/about-screen';
 import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
 import { CommandHub } from '@/play/command-hub';
+import { hasTended } from '@/play/coach';
 import { NEON, shopUnlocked, type HubDestination } from '@/play/neon-viper';
+import { usePixelFonts } from '@/play/pixel-ui';
+import { skippedHubPulse } from '@/play/play-settings';
 import { PlayThemeProvider } from '@/play/play-theme';
 import { PlayBanner } from '@/play/play-banner';
 import {
@@ -144,6 +147,7 @@ function bannerReducer(q: BannerQueue, action: BannerAction): BannerQueue {
 }
 
 export default function PlayScreen() {
+  usePixelFonts();
   const theme = useTheme();
   // Reduce motion (v24): follows the phone unless overridden in Divecore
   // Settings — Play only; the rest of the app keeps following the phone.
@@ -767,8 +771,37 @@ export default function PlayScreen() {
               scrap={view?.tokens ?? null}
               wave={view?.campaign.wave_in_phase ?? 1}
               onTile={(to: HubDestination) => {
-                if (to !== 'shop' || shopUnlocked(devUnlocked)) setMode(to);
+                if (to === 'shop' && !shopUnlocked(devUnlocked)) return;
+                if (view) {
+                  const pulse = skippedHubPulse({
+                    loopFork: view.settings.loopFork,
+                    loopOtherSeen: view.settings.loopOtherSeen,
+                    didDive: view.stats.dives > 0 || view.stats.surfaces > 0,
+                    didDefend: view.lifetimeWavesCleared > 0,
+                  });
+                  commit((doc) => {
+                    const patch: Partial<typeof doc.play_settings> = {};
+                    if (pulse && to === pulse) patch.loopOtherSeen = true;
+                    if (to === 'dress' && !doc.play_settings.dressTeaseSeen) patch.dressTeaseSeen = true;
+                    if (to === 'defend' && doc.play_settings.loopFork == null && hasTended(view.pet.state)) {
+                      patch.loopFork = 'defend';
+                    }
+                    return Object.keys(patch).length ? setPlaySettings(doc, patch) : null;
+                  });
+                }
+                setMode(to);
               }}
+              pulse={
+                view
+                  ? skippedHubPulse({
+                      loopFork: view.settings.loopFork,
+                      loopOtherSeen: view.settings.loopOtherSeen,
+                      didDive: view.stats.dives > 0 || view.stats.surfaces > 0,
+                      didDefend: view.lifetimeWavesCleared > 0,
+                    })
+                  : null
+              }
+              reduceMotion={reduceMotion}
               onSettings={() => setHubSettingsOpen(true)}>
               {/* Research / Claim — the token income the old Grove card carried,
                * kept reachable now that the hub replaces that card. */}
@@ -848,6 +881,8 @@ export default function PlayScreen() {
                   onTalkConsumed={clearPetTalk}
                   onBack={() => setMode('grove')}
                   onGoDive={() => setMode('dive')}
+                  onGoDefend={() => setMode('defend')}
+                  onGoDress={() => setMode('dress')}
                   onReplayTutorial={() => setTutorialReplay(true)}
                   openJournal={openJournal}
                   onJournalOpened={journalOpened}
@@ -919,7 +954,14 @@ export default function PlayScreen() {
                     onBackToDivecore={() => setMode('grove')}
                   />
                 ) : mode === 'about' ? (
-                  <AboutScreen onBackToDivecore={() => setMode('grove')} />
+                  <AboutScreen
+                    onBackToDivecore={() => setMode('grove')}
+                    onOpenGuide={() => {
+                      setMode('pet');
+                      setOpenGuide(true);
+                    }}
+                    onReplayTips={() => setTutorialReplay(true)}
+                  />
                 ) : mode === 'sheetlab' ? (
                   <SheetLabScreen onBack={() => setMode('grove')} />
                 ) : mode === 'swords' && view ? (

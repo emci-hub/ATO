@@ -137,21 +137,40 @@ import { DIVE_BUST_FLOOR, DIVE_BUST_TABLE, DIVE_CHARGE_CAP, DIVE_CHARGE_REFILL_M
 import { finishColors, finishPrice } from '@/play/finishes';
 import { heroName } from '@/play/heroes-data';
 
-export const GUIDE_SECTIONS = ['pet', 'eggs', 'den', 'stones', 'tide', 'dive', 'expeditions', 'games', 'buffs', 'collection', 'td'] as const;
+/** Seven cards. The old essays live under More, grouped here. */
+export const GUIDE_SECTIONS = ['tend', 'dive', 'defend', 'shop', 'odds', 'currencies', 'settings'] as const;
 export type GuideSection = (typeof GUIDE_SECTIONS)[number];
 
 export const GUIDE_TITLE: Record<GuideSection, string> = {
-  pet: 'Your pet',
-  eggs: 'Eggs & grades',
-  den: 'The Den',
-  stones: 'Shine Stones & styles',
-  tide: 'Tide Pass & Shop',
+  tend: 'Tend',
   dive: 'Dive',
-  expeditions: 'Expeditions',
-  games: 'Mini-games',
-  buffs: 'Buffs',
-  collection: 'Collection & Journal',
-  td: 'How Divecore helps TD',
+  defend: 'Defend',
+  shop: 'Shop & Dress',
+  odds: 'Odds & drops',
+  currencies: 'Currencies',
+  settings: 'Settings',
+};
+
+/** One mark per card. The face stays a title plus one or two lines. */
+export const GUIDE_MARK: Record<GuideSection, string> = {
+  tend: '🐾',
+  dive: '🤿',
+  defend: '🛡',
+  shop: '👗',
+  odds: '✦',
+  currencies: '🐚',
+  settings: '⚙',
+};
+
+/** First glance. No tables — those stay in `lines` behind More. */
+const GUIDE_FACE: Record<GuideSection, readonly string[]> = {
+  tend: ['Warm, feed, or play. Catch and Train sit under Play.', 'The Den is extra pets, later.'],
+  dive: ['Dive is the underwater run, from Pet.', 'Surface keeps the haul. More has the real chances.'],
+  defend: ['Defend is the tower map, from the Hub.', 'Your pet can help a wave. It is never required.'],
+  shop: ['Shop spends what you earn. Dress shows it off.', 'Prices sit under More. Nothing is for sale yet.'],
+  odds: ['The chances here are the ones the game rolls.', 'More has the tables. Buttons show the same percent.'],
+  currencies: ['Shells, tokens, and the Tide Pass are the spends.', 'What each one pays is under More.'],
+  settings: ['Notices, quiet hours, and Replay tips live in Settings.', 'More lists the Journal and the collection.'],
 };
 
 /* ----------------------------------------------------------- helpers --- */
@@ -278,7 +297,7 @@ function diveSection(): string[] {
     `Rescue: on a bust it saves your best finds — ${grown.filter((s) => PET_RESCUE_KEEP[s] > 0).map((s) => `${PET_STAGE_LABEL[s]} ${PET_RESCUE_KEEP[s]}`).join(' · ')} (never more than ${PET_RESCUE_MAX}).`,
     `Gear (yours for good): ${gear} The Net works from depth ${NET_MIN_DEPTH}.`,
     `Charges: up to ${DIVE_CHARGE_CAP}, one back every ${span(DIVE_CHARGE_REFILL_MS)}. With none left, a free dive keeps only shells and mood: ${FREE_DIVE_BASE_SHELLS} + the depth, full for the first ${FREE_DIVE_FULL} free dives a day, then ×${FREE_DIVE_DECAY} each.`,
-    `Powers today: Divecore gives at most ${DIVECORE_POWERS_PER_DAY} Powers a day (dives, rescues, the Net, Hearty meal and expeditions together) — the Dive screen shows "Powers today". Each Power past that becomes ${POWER_OVERFLOW_SHELLS} shells.`,
+    `Powers today: at most ${DIVECORE_POWERS_PER_DAY} Powers a day (dives, rescues, the Net, Hearty meal and expeditions together) — the Dive screen shows "Powers today". Each Power past that becomes ${POWER_OVERFLOW_SHELLS} shells.`,
     `Food goes to the pantry (up to ${PANTRY_MAX}); your pet only eats when you tap Feed.`,
   ];
 }
@@ -347,27 +366,55 @@ function tdSection(): string[] {
   return [
     `Pet pounce: once a wave, from Child — ${pounce} damage at wave one, growing with the wave (Battle ×${PET_BRANCH_POUNCE.battle}).`,
     `Inside one TD run, everything the pet and Dive add stays between ${pct(TD_HELP_BAND.min)} and ${pct(TD_HELP_BAND.max)} less damage needed — it helps, it's never required. Pumped is capped (pounce ${PET_POUNCE_CAP}) to keep it there.`,
-    `Powers from Dive and expeditions go into the same gear slots under the same gear caps — at most ${DIVECORE_POWERS_PER_DAY} a day from Divecore.`,
+    `Powers from Dive and expeditions go into the same gear slots under the same gear caps — at most ${DIVECORE_POWERS_PER_DAY} a day, shared by Dive and Defend.`,
     `TD gives back: ${SHELLS_PER_CLEAR} shells a cleared wave (${SHELLS_PER_REPLAY} on a replay) for Dive gear, and every wave feeds your pet a heart.`,
     `Rebirth's +${pct(PET_REBIRTH_CAP)} is long-term progress, outside that band.`,
   ];
 }
 
-export function guideSections(): { id: GuideSection; title: string; lines: string[] }[] {
+function currenciesSection(): string[] {
+  return [
+    `Shells: ${SHELLS_PER_CLEAR} for a cleared Defend wave, ${SHELLS_PER_REPLAY} on a replay. A free Dive pays ${FREE_DIVE_BASE_SHELLS} plus the depth. Each Power past the daily cap becomes ${POWER_OVERFLOW_SHELLS} shells.`,
+    `Tokens: a passed mini-game pays ${PET_TOKENS_PER_ROUND} (${PET_TOKENS_DAILY_CAP} a day). Shop spends tokens and shells.`,
+    `Streak: day one gives ${STREAK_SHELLS} shells. Day ${STREAK_DAYS} gives a Tide day. The Tide Pass itself is not for sale yet.`,
+  ];
+}
+
+function settingsSection(): string[] {
+  return [
+    ...collectionSection(),
+    'Replay tips: More, then Guide, or Settings, then Replay tips. The cards never block play.',
+    'Notices, quiet hours, chatter and Reduce motion live in Settings. They do not change odds.',
+  ];
+}
+
+export type GuideCard = {
+  id: GuideSection;
+  title: string;
+  mark: string;
+  /** One or two plain lines. No odds table. */
+  face: readonly string[];
+  /** Full constants. Shown only after More. */
+  lines: string[];
+};
+
+export function guideSections(): GuideCard[] {
   const body: Record<GuideSection, () => string[]> = {
-    pet: petSection,
-    eggs: eggsSection,
-    den: denSection,
-    stones: stonesSection,
-    tide: tideSection,
-    dive: diveSection,
-    expeditions: expeditionsSection,
-    games: gamesSection,
-    buffs: buffsSection,
-    collection: collectionSection,
-    td: tdSection,
+    tend: () => [...petSection(), ...gamesSection(), ...denSection()],
+    dive: () => [...diveSection(), ...expeditionsSection()],
+    defend: tdSection,
+    shop: tideSection,
+    odds: () => [...eggsSection(), ...stonesSection(), ...buffsSection()],
+    currencies: currenciesSection,
+    settings: settingsSection,
   };
-  return GUIDE_SECTIONS.map((id) => ({ id, title: GUIDE_TITLE[id], lines: body[id]() }));
+  return GUIDE_SECTIONS.map((id) => ({
+    id,
+    title: GUIDE_TITLE[id],
+    mark: GUIDE_MARK[id],
+    face: GUIDE_FACE[id],
+    lines: body[id](),
+  }));
 }
 
 /** The stage-power line the status card and Dive Info show. */

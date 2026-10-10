@@ -1,10 +1,9 @@
 /**
  * Shop-hidden check (v27, Part D · T-D5/T-D7). Run: npm run check:shop-hidden
  *
- * The Shop stays hidden until the owner turns it on: the Command Hub shows
- * its tile only with the dev unlock in a pre-launch build, and the Play shell
- * refuses to route to (or render) the Shop otherwise. No purchase code: the
- * Prism Stone is a preview that is never for sale.
+ * Pre-launch (`PLAY_EVERYTHING_FREE`): the Shop tile is on the Hub for
+ * everyone. A release build still hides it. The Play shell refuses a locked
+ * Shop tap. No purchase code: the Prism Stone is a preview that is never for sale.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -22,27 +21,30 @@ const ROOT = path.join(__dirname, '..');
 const read = (f: string) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 {
-  assert.ok(HUB_TILES.some((t) => t.to === 'shop'), 'the Shop tile exists (to hide)');
-  for (const pre of [false, true]) {
-    assert.ok(!hubTilesFor(false, pre).some((t) => t.to === 'shop'), `no Shop tile without the dev unlock (pre-launch ${pre})`);
-  }
-  assert.ok(!hubTilesFor(true, false).some((t) => t.to === 'shop'), 'no Shop tile in a release build, even unlocked');
-  assert.ok(hubTilesFor(true, true).some((t) => t.to === 'shop'), 'pre-launch + dev unlock shows it');
+  assert.ok(HUB_TILES.some((t) => t.to === 'shop'), 'the Shop tile exists');
+  assert.ok(HUB_TILES.some((t) => t.label === 'Defend' && t.subtitle === 'Tower map' && t.to === 'defend'), 'Defend is the tower tile');
+  assert.ok(HUB_TILES.some((t) => t.label === 'Pet' && t.to === 'pet' && t.subtitle.includes('Dive')), 'Pet keeps Dive in its subtitle');
+  assert.ok(!HUB_TILES.some((t) => t.to === 'dive'), 'Dive is not a Hub tile yet');
+  assert.ok(!HUB_TILES.some((t) => t.label === 'Divecore'), 'Divecore is not a tile name');
+  assert.ok(hubTilesFor(false, true).some((t) => t.to === 'shop'), 'pre-launch shows Shop without the dev unlock');
+  assert.ok(hubTilesFor(true, true).some((t) => t.to === 'shop'), 'pre-launch + unlock still shows Shop');
+  assert.ok(!hubTilesFor(false, false).some((t) => t.to === 'shop'), 'a release build hides Shop');
+  assert.ok(!hubTilesFor(true, false).some((t) => t.to === 'shop'), 'a release build hides Shop even if unlocked');
   assert.deepEqual(
     [shopUnlocked(false, false), shopUnlocked(true, false), shopUnlocked(false, true), shopUnlocked(true, true)],
-    [false, false, false, true],
-    'shopUnlocked needs both the pre-launch flag and the dev unlock',
+    [false, false, true, true],
+    'shopUnlocked follows PLAY_EVERYTHING_FREE, not the dev unlock',
   );
-  assert.equal(hubTilesFor(false).length, HUB_TILES.length - 1, 'every other tile stays');
+  assert.equal(hubTilesFor(false).length, HUB_TILES.length, 'the pre-launch default shows every tile, including Shop');
 }
-ok('the Hub shows the Shop tile only with PRE_LAUNCH_DEV and the dev unlock');
+ok('pre-launch shows the Shop tile for everyone; a release build still hides it');
 
 {
   const hub = read('src/play/command-hub.tsx');
   assert.ok(hub.includes('hubTilesFor(devUnlocked)'), 'the Hub renders hubTilesFor(devUnlocked)');
   assert.ok(!/HUB_TILES\.map/.test(hub), 'the Hub never maps the raw tile list');
   const shell = read('src/app/play.tsx');
-  assert.ok(/to !== 'shop' \|\| shopUnlocked\(devUnlocked\)/.test(shell), 'a Shop tap is ignored when locked');
+  assert.ok(/to === 'shop' && !shopUnlocked\(devUnlocked\)/.test(shell), 'a Shop tap is ignored when locked');
   assert.ok(/mode === 'shop' && view && shopUnlocked\(devUnlocked\)/.test(shell), 'the Shop screen renders only when unlocked');
   assert.equal((shell.match(/<ShopScreen\b/g) ?? []).length, 1, 'one Shop render, the guarded one');
   assert.ok(!/setMode\('shop'\)/.test(shell), 'nothing routes straight to the Shop');
