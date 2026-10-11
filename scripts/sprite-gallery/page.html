@@ -78,7 +78,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
     <h1>Streetwear <span>Skin</span></h1>
     <p class="lede">Every piece of art PixelLab made for ATO on 2026-10-10 and 11. Characters play live in all four facings; pick a clip on each card, turn it with ↻, or switch them all at once. Attack and Skill are each hero's own weapon move. Nothing here is in the game yet.</p>
     <div class="stats">
-      <span class="stat"><b>16</b> heroes</span><span class="stat"><b>3</b> road enemies</span><span class="stat"><b>3</b> towers</span><span class="stat"><b>2</b> bosses</span><span class="stat"><b>4</b> facings</span><span class="stat"><b>32</b> props</span><span class="stat"><b>56</b> icons</span><span class="stat"><b>6</b> hit splats</span><span class="stat"><b>~1,900</b> generations used</span>
+      <span class="stat"><b>16</b> heroes</span><span class="stat"><b>3</b> road enemies</span><span class="stat"><b>3</b> towers</span><span class="stat"><b>2</b> bosses</span><span class="stat"><b>4</b> facings</span><span class="stat"><b>32</b> props</span><span class="stat"><b>56</b> icons</span><span class="stat"><b>6</b> hit splats</span><span class="stat"><b>~2,090</b> generations used</span>
     </div>
     <div class="palette">
       <span class="swatch"><i style="background:#E0A526"></i>#E0A526</span>
@@ -105,7 +105,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
   </section>
 
   <section id="towers">
-    <h2>Towers <small>8 directions · still, like the cast · ~240px canvas</small></h2>
+    <h2>Towers <small>8 directions · Idle / Attack / Skill east + west · ~240px canvas</small></h2>
     <div class="grid" id="towerGrid"></div>
   </section>
 
@@ -143,7 +143,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
   </section>
 
   <section id="icons">
-    <h2>Sticker icons <small>32px · red border = needs your look</small></h2>
+    <h2>Sticker icons <small>32px</small></h2>
     <div class="stills icons" id="iconGrid"></div>
   </section>
 
@@ -155,10 +155,9 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
         <li>Dash and Hurt still come from body templates; a few heroes lower or hide their weapon during those.</li>
         <li>The game only plays east and west today; north and south are ready for a future top-down use.</li>
         <li>The knight's side views read paler than its front.</li>
-        <li>Four icons are flagged: a leaf that reads as cannabis, a $ price tag, a chain with “99”, brass knuckles.</li>
-        <li>Red drips plus a skull on the panel, card and health bar can read like blood.</li>
-        <li>The pressed button is smaller than the normal one; pad both to one size when wiring.</li>
-        <li>Towers are still images like the cast (no attack or idle clips yet). The game can already play tower idle / attack / skill clips once art exists.</li>
+        <li>Fixed 2026-10-11: the 4 flagged icons are replaced (oak leaf, blank price tag, plain chain, boxing glove); panel, card and health bar re-made without drips, skull or barcode; both buttons are one 150×68 box.</li>
+        <li>The two buttons still carry red paint drips.</li>
+        <li>Towers have Idle / Attack / Skill in east and west only (all the game reads for towers).</li>
         <li>Oni Warlord needs a 264px canvas: its flaming katana and cape fill the whole frame. Its east Death ends kneeling; south ends flat.</li>
         <li>Titan-X swaps which arm holds the cannon between some directions.</li>
       </ul>
@@ -185,7 +184,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
 <script>
 const DATA = __DATA__;
 const NAMES = { archangel: 'Archangel', aurex: 'Aurex', corvus: 'Corvus', kitsune: 'Kitsune', oni: 'Crimson Oni', 'cyber-shinobi': 'Cyber Shinobi', elowen: 'Elowen', kael: 'Kael-09', maldrath: 'Maldrath', morwen: 'Morwen', 'neon-viper': 'Neon Viper', raven: 'Raven', sak: 'Sak', 'frost-lich': 'Frost Lich', velkhar: 'Velkhar', 'void-raven': 'Void Raven', 'village-girl': 'Village Girl', wizard: 'Wizard', knight: 'Knight', anchor: 'Street Ninja', ghost: 'Ghost', lux: 'Lux', viper: 'Viper', 'boss-oni': 'Oni Warlord', 'boss-titan-x': 'Titan-X' };
-const ROLES = { ghost: 'Vine tower · slows and roots', lux: 'Crystal tower · arcing burst', viper: 'Archer tower · fast single shots', 'boss-oni': 'Boss scout + mini-boss', 'boss-titan-x': 'Spare boss art · no game role yet' };
+const ROLES = { ghost: 'Vine tower · drone bolts · energy-ring pulse', lux: 'Crystal tower · light beams · lightning burst', viper: 'Archer tower · rifle shot · kneeling burst', 'boss-oni': 'Boss scout + mini-boss', 'boss-titan-x': 'Spare boss art · no game role yet' };
 const MOVES = { corvus: 'Claw slash · crow swarm', archangel: 'Sword slash · overhead strike', oni: 'Katana slash · rising flame slash', aurex: 'Greatsword swing · flame spin', kitsune: 'Dual X-slash · blade flurry', 'cyber-shinobi': 'Draw slash · iaido strike', elowen: 'Sword thrust · leaf spin', kael: 'Energy slash · energy wave', maldrath: 'Ground slam · wide sweep', morwen: 'Staff swing · magic bolt', 'neon-viper': 'Roundhouse kick · neon dash punch', raven: 'Punch · axe chop', sak: 'Ice slash · ghost thrust', 'frost-lich': 'Ice swing · ice spikes', velkhar: 'Staff strike · purple flame', 'void-raven': 'Scythe sweep · spinning slash' };
 const HERO_ORDER = ['corvus', 'archangel', 'oni', 'aurex', 'kitsune', 'cyber-shinobi', 'elowen', 'kael', 'maldrath', 'morwen', 'neon-viper', 'raven', 'sak', 'frost-lich', 'velkhar', 'void-raven'];
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -247,7 +246,8 @@ groupControls(document.getElementById('heroAll'), HERO_CLIPS, heroActors);
 const CREEP_CLIPS = ['Idle', 'Walk', 'Death'];
 const creepActors = ['village-girl', 'wizard', 'knight'].map((c) => { const x = actor(c, DATA.creeps[c], CREEP_CLIPS, 'Walk'); document.getElementById('creepGrid').append(x.card); return x.actor; });
 groupControls(document.getElementById('creepAll'), CREEP_CLIPS, creepActors);
-['ghost', 'lux', 'viper'].forEach((t) => { const x = actor(t, DATA.towers[t], [], 'Idle'); x.actor.set({ turning: true }); document.getElementById('towerGrid').append(x.card); });
+const TOWER_CLIPS = ['Idle', 'Attack', 'Skill'];
+['ghost', 'lux', 'viper'].forEach((t) => { const x = actor(t, DATA.towers[t], TOWER_CLIPS, 'Attack'); document.getElementById('towerGrid').append(x.card); });
 const BOSS_CLIPS = ['Idle', 'Walk', 'Run', 'Death'];
 const oniBoss = actor('boss-oni', DATA.bosses.oni, BOSS_CLIPS, 'Walk'); document.getElementById('bossGrid').append(oniBoss.card);const titan = actor('boss-titan-x', DATA.bosses['titan-x'], [], 'Idle'); titan.actor.set({ turning: true }); document.getElementById('bossGrid').append(titan.card);
 const anc = actor('anchor', DATA.anchor, [], 'Idle'); anc.actor.set({ turning: true }); document.getElementById('anchorGrid').append(anc.card);

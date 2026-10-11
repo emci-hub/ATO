@@ -122,5 +122,16 @@ Batch 2 = 68 gen (balance 5,000 → 4,932). Boss oni ingested on a 264 canvas (c
 Ingest tool for this pass lived in the session scratchpad (ingest.js: centre horizontally, shift each clip/dir so first-frame feet = that dir's rotation feet, refuse to crop). hero.sh / normalize.js from the earlier session are gone.
 Zips: games/grove/ref/streetwear-source/towers/{ghost,lux,viper}.zip, boss/{oni,titan-x}.zip; fronts in restyled-fronts/{tower-*,boss-*}.png
 
+## BATCH 3 (2026-10-11, emci approved: tower clips E/W + 4 icons + UI without drips/skull + button pad)
+Balance before: 4,932.
+Tower AttackW custom v3 8f E/W: ghost eb0956c2-6080-4253-a974-df98b5584269 (16), lux c32c5817-f824-493f-a516-8a571eef3df9 (16), viper fb3f0610-49c3-4220-9738-6093033c894c (14)
+UI v2: panel 8d6f2575-c85d-4792-af75-81a7a184f303 (15), card 41c4d8ae-d291-4357-b711-2023ec18d6fa (15), health bar bf073805-680c-4c9b-8509-05917d042d30 (25, 688x384 → crop)
+Tower SkillW custom v3 8f E/W: ghost 992e0769-055e-4e94-8482-4706a7a969d8 (16), lux aff32539-db1f-4ab9-b5db-5e888ce11410 (16), viper 4ae9a363-ce25-4c52-9b8f-f6e21ec0d64f (14)
+ghost AttackW REJECTED (east body flashes blue/off-model, west fires nothing) → reroll AttackW2 (16) "standing in place and pointing one hand forward while the small hovering drones around him fire thin cyan laser bolts forward; his body, hoodie and colours stay exactly the same". Ghost ingest map uses AttackW2→Attack.
+Batch 3 total = 191 gen (4,932 → 4,741). All three towers ingested at their cast canvas (no crop needed). Gallery version 5.
+Tower IdleSK breathing-idle E/W (≈18 total, rest of the 191): ghost 1af3750e-b558-427f-80a0-a2dee6a0b3fc, lux c23e847e-f37f-4852-a3f5-32c01ec94dfb, viper e6e83aad-8efd-4932-b9fd-278a96f4654c. Ghost Attack east f5 / west f7 bolts touch the frame edge in PixelLab's own 240 output (nothing cropped by us).
+UI v2 saved: panel + card as-is, health bar cropped to 591x125; old v1 copies in rejected/v1-ui/. button-pressed padded locally to 150x68 (centred, bottom-aligned). NOTE: both buttons still carry red drips (not in the approved batch).
+Icons v2 (leaf, blank price tag, chain, boxing glove; style refs sneaker/cap/spray-can/heart): object f8075fcf-57e8-414e-95f2-d899b521eb89 (10)
+
 ## Clip names (template → saved clip folder)
 breathing-idle→Idle, walking-8-frames→Walk, running-8-frames→Dash, cross-punch→Attack, fireball→Skill, taking-punch→Hurt. East + West only.

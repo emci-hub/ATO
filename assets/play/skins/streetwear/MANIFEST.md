@@ -9,7 +9,8 @@ working ID log are in `games/grove/ref/streetwear-source/` (`STATE.md`).
 2-3 tone shading. Palette mustard `#E0A526`, charcoal `#2B2B2E`, off-white `#F2EDE4`, paint red `#C8202B`.
 
 **Generations:** 1,746 on 2026-10-10 (balance 4,692 → 2,946), then ~154 for towers + bosses on 2026-10-11
-(cycle reset mid-batch; 4,932 left, next reset 2026-11-11). No Pro mode used
+(cycle reset mid-batch; 4,932 left, next reset 2026-11-11), then 191 for tower clips + icon/UI fixes
+(4,932 → 4,741; includes one ghost Attack reroll). No Pro mode used
 (the anchor was made with v3, cheaper than Pro). Weapon moves cost 3-4 gen per direction.
 
 ## Layout rules (match `skins/cast`)
@@ -98,9 +99,17 @@ Corvus and Archangel also paid for a first template-mode set (kept in their sour
 | velkhar | 358cfbd9-31c7-49e3-ac71-2c19ed9b1bd8 |
 | void-raven | 5e3b9e12-997e-4d5c-9efa-c38707e9cc4a |
 
-### Towers (`towers/<slug>/rotations/`, 8 PNG each, still like the cast) — 2026-10-11
+### Towers (`towers/<slug>/`, 48 PNG each: 8 rotations + E/W Idle/Attack/Skill) — 2026-10-11
 
 Each: edit_image restyle of the cast front (10) + create_character v3 from it (7-8). One canvas per tower = the cast tower's size.
+Clips (2026-10-11, east + west only — the engine reads tower clips E/W from `data/towerSkins.json`): `animations/{Idle,Attack,Skill}/{east,west}/`.
+Idle = skeleton-v3 `breathing-idle` (4f); Attack / Skill = custom v3, 8f (7-8 gen per direction):
+
+| Tower | Attack | Skill |
+|---|---|---|
+| ghost | points, drones dart out and fire cyan bolts | arms up, drones spin and release a cyan energy-ring pulse |
+| lux | hand forward, drones fire blue light beams | hand up, drones + crystals release a blue lightning burst |
+| viper | rifle to shoulder, one shot, muzzle flash | kneels, rapid burst of green shots |
 
 | Tower | Role | Canvas | Character id | Restyle job |
 |---|---|---|---|---|
@@ -137,14 +146,13 @@ Cost: ~86 (batch 1, before the cycle reset) + 68 (oni clips) ≈ 154 generations
 - Dash and Hurt are still skeleton templates; a few heroes lower or hide the weapon during them.
 - North/south clips: the game plays east/west only today; north/south are for a future top-down use.
 - Knight creep's side rotations read paler than its front.
-- Icons flagged for emci's look: `ui/icons/REVIEW-leaf.png` (reads as cannabis), `REVIEW-price-tag-dollar.png` and `REVIEW-chain-99.png` (contain characters), `REVIEW-brass-knuckles.png`. `props/graffiti-tag-decal.png` and `ui/icons/graffiti-tag.png` are letter-like wildstyle (not readable).
+- 2026-10-11: the 4 flagged icons were replaced by `ui/icons/leaf.png` (oak leaf), `price-tag.png` (blank), `chain.png` (plain), `boxing-glove.png` (create_1_direction_object, 10 gen, object f8075fcf-57e8-414e-95f2-d899b521eb89, styled on sneaker/cap/spray-can/heart). Old ones in `games/grove/ref/streetwear-source/rejected/v1-icons/`. `props/graffiti-tag-decal.png` and `ui/icons/graffiti-tag.png` are letter-like wildstyle (not readable).
 - Map objects (create_map_object) were not used, so nothing here is subject to the 8-hour auto-delete.
-- Towers are still images (like the cast). The engine can already play tower `idle` / `attack` / `skill` clips (E/W, from `data/towerSkins.json`), but no tower has any yet.
+- Tower clips are east/west only (all the engine reads for towers). Wiring = point `data/towerSkins.json` `clips` at Idle / Attack / Skill.
 - Oni Warlord's east Death ends kneeling; south ends flat. Titan-X swaps its cannon arm between some directions.
-- `ui/card-frame.png` has fake barcode / glyph decoration (not readable).
-- `ui/button-normal.png` (150×68) and `button-pressed.png` (138×56) differ in size — pad to one box when wiring.
-- Tone check for emci: red paint drips + skull on panel / card / health bar can read like blood.
-- **Wiring risk:** `scripts/play-art-prep.ts` has `'skins'` in `FAMILIES` and `PACKED_HERO_ART` only excludes `skins/cast/heroes/`. Re-running prep as-is would bundle ~3,060 loose streetwear character frames (plus the other art) into `generated-play-assets.ts`. Widen the exclusion (and pack via `play-art-pack.ts`) in the wiring change.
+- 2026-10-11: `ui/panel-frame.png`, `card-frame.png`, `health-bar.png` re-made with no drips, skull or barcode (create_ui_asset: 8d6f2575-c85d-4792-af75-81a7a184f303, 41c4d8ae-d291-4357-b711-2023ec18d6fa, bf073805-680c-4c9b-8509-05917d042d30 cropped to 591×125; 15+15+25 gen). v1 copies in `games/grove/ref/streetwear-source/rejected/v1-ui/`.
+- 2026-10-11: `ui/button-pressed.png` padded locally onto the normal button's 150×68 box (centred, bottom-aligned so it reads as pushed in). Both buttons still carry red paint drips (not re-made yet).
+- **Wiring risk:** `scripts/play-art-prep.ts` has `'skins'` in `FAMILIES` and `PACKED_HERO_ART` only excludes `skins/cast/heroes/`. Re-running prep as-is would bundle ~3,180 loose streetwear character frames (plus the other art) into `generated-play-assets.ts`. Widen the exclusion (and pack via `play-art-pack.ts`) in the wiring change.
 
 ## Files
 
@@ -204,9 +212,9 @@ Cost: ~86 (batch 1, before the cycle reset) + 68 (oni clips) ≈ 154 generations
 | `fx/shot-red.png` | 1 | 32x32 |
 | `fx/shot-white.png` | 1 | 32x32 |
 | `ui/button-normal.png` | 1 | 150x68 |
-| `ui/button-pressed.png` | 1 | 138x56 |
+| `ui/button-pressed.png` | 1 | 150x68 |
 | `ui/card-frame.png` | 1 | 288x384 |
-| `ui/health-bar.png` | 1 | 579x134 |
+| `ui/health-bar.png` | 1 | 591x125 |
 | `ui/icons/` | 56 | 32x32 |
 | `ui/panel-frame.png` | 1 | 384x288 |
 | `heroes/archangel/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
@@ -225,9 +233,9 @@ Cost: ~86 (batch 1, before the cycle reset) + 68 (oni clips) ≈ 154 generations
 | `heroes/sak/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
 | `heroes/velkhar/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
 | `heroes/void-raven/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
-| `towers/ghost/` | 8 | 240x240 — 8 rotations |
-| `towers/lux/` | 8 | 244x244 — 8 rotations |
-| `towers/viper/` | 8 | 236x236 — 8 rotations |
+| `towers/ghost/` | 48 | 240x240 — 8 rotations; E, W each: Attack 8f, Idle 4f, Skill 8f |
+| `towers/lux/` | 48 | 244x244 — 8 rotations; E, W each: Attack 8f, Idle 4f, Skill 8f |
+| `towers/viper/` | 48 | 236x236 — 8 rotations; E, W each: Attack 8f, Idle 4f, Skill 8f |
 | `boss/oni/` | 120 | 264x264 — 8 rotations; E, W, N, S each: Death 8f, Idle 4f, Run 8f, Walk 8f |
 | `boss/titan-x/` | 8 | 244x244 — 8 rotations |
 | `creeps/knight/` | 84 | 96x96 — 8 rotations; E, W, N, S each: Death 7f, Idle 4f, Walk 8f |
