@@ -130,9 +130,10 @@ const sheetRegistryText = fs.readFileSync(
  * src/play/skin.ts, kept independent so this check never trusts the code
  * it's checking. */
 function heroRotationBundled(key: string): boolean {
-  const m = /^skins\/cast\/heroes\/([^/]+)\/rotations\/(.+)$/.exec(key);
+  // Every cast character (heroes / creeps / towers / boss) is packed now.
+  const m = /^skins\/cast\/([^/]+\/[^/]+)\/rotations\/(.+)$/.exec(key);
   if (!m) return false;
-  const marker = `"sheets/cast/heroes/${m[1]}/rotations": {`;
+  const marker = `"sheets/cast/${m[1]}/rotations": {`;
   const start = sheetRegistryText.indexOf(marker);
   if (start === -1) return false;
   // Top-level keys are indented exactly 2 spaces; a nested value line (e.g.
@@ -184,8 +185,8 @@ function frameKey(base: string, face: string, frame: number): string {
  * src/play/skin.ts, kept independent so this check never trusts the code
  * it's checking. */
 function sheetKeyFor(base: string): string | undefined {
-  const m = /^skins\/cast\/heroes\/([^/]+)\/animations\/(.+)$/.exec(base);
-  return m ? `sheets/cast/heroes/${m[1]}/${m[2]}` : undefined;
+  const m = /^skins\/cast\/([^/]+\/[^/]+)\/animations\/(.+)$/.exec(base);
+  return m ? `sheets/cast/${m[1]}/${m[2]}` : undefined;
 }
 
 function sheetClipBlock(sheetKey: string): string | undefined {

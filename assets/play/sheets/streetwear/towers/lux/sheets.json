@@ -2,7 +2,7 @@
   "sheets/streetwear/towers/lux/Attack": {
     "sheet": "sheets/streetwear/towers/lux/atlas-0.png",
     "sheetW": 1959,
-    "sheetH": 489,
+    "sheetH": 979,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -158,103 +158,103 @@
     }
   },
   "sheets/streetwear/towers/lux/Skill": {
-    "sheet": "sheets/streetwear/towers/lux/atlas-2.png",
+    "sheet": "sheets/streetwear/towers/lux/atlas-0.png",
     "sheetW": 1959,
-    "sheetH": 489,
+    "sheetH": 979,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "east/frame_001": {
         "x": 245,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "east/frame_002": {
         "x": 490,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "east/frame_003": {
         "x": 735,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "east/frame_004": {
         "x": 980,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "east/frame_005": {
         "x": 1225,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "east/frame_006": {
         "x": 1470,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "east/frame_007": {
         "x": 1715,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "west/frame_000": {
         "x": 0,
-        "y": 245,
+        "y": 735,
         "w": 244,
         "h": 244
       },
       "west/frame_001": {
         "x": 245,
-        "y": 245,
+        "y": 735,
         "w": 244,
         "h": 244
       },
       "west/frame_002": {
         "x": 490,
-        "y": 245,
+        "y": 735,
         "w": 244,
         "h": 244
       },
       "west/frame_003": {
         "x": 735,
-        "y": 245,
+        "y": 735,
         "w": 244,
         "h": 244
       },
       "west/frame_004": {
         "x": 980,
-        "y": 245,
+        "y": 735,
         "w": 244,
         "h": 244
       },
       "west/frame_005": {
         "x": 1225,
-        "y": 245,
+        "y": 735,
         "w": 244,
         "h": 244
       },
       "west/frame_006": {
         "x": 1470,
-        "y": 245,
+        "y": 735,
         "w": 244,
         "h": 244
       },
       "west/frame_007": {
         "x": 1715,
-        "y": 245,
+        "y": 735,
         "w": 244,
         "h": 244
       }

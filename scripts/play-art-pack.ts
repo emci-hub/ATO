@@ -279,7 +279,7 @@ function packClip(
 
   const dirs = fs
     .readdirSync(clipPath, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && (!onlyDirs || onlyDirs.includes(d.name)))
+    .filter((d) => d.isDirectory() && (!onlyDirs || onlyDirs.includes(d.name.replace(HASH_SUFFIX, ''))))
     .map((d) => d.name);
 
   const rows = dirs.map((dir) => {
@@ -287,7 +287,9 @@ function packClip(
       .readdirSync(path.join(clipPath, dir))
       .filter((f) => f.toLowerCase().endsWith('.png'))
       .sort();
-    return { dir, files: files.map((f) => path.join(clipPath, dir, f)), names: files };
+    // A facing folder can carry an export hash (`west-0247c925`); the key
+    // drops it, exactly as play-art-prep does for every segment.
+    return { dir: dir.replace(HASH_SUFFIX, ''), files: files.map((f) => path.join(clipPath, dir, f)), names: files };
   });
 
   if (rows.length === 0) throw new Error(`${clipKey}: no direction folders`);
@@ -351,6 +353,7 @@ function packClip(
 }
 
 const HEROES_ROOT = 'assets/play/skins/cast/heroes';
+const CAST_GROUPS = ['heroes', 'creeps', 'towers', 'boss'];
 
 function main() {
   const repo = path.resolve(__dirname, '..');
@@ -377,18 +380,21 @@ function main() {
     return;
   }
 
+  // --all packs every cast character: heroes, creeps, towers and bosses.
+  const groupOf = (g: string) =>
+    fs
+      .readdirSync(path.join(repo, path.dirname(HEROES_ROOT), g), { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => ({ group: g, hero: d.name }))
+      .sort((a, b) => a.hero.localeCompare(b.hero));
   const heroes = all
-    ? fs
-        .readdirSync(path.join(repo, HEROES_ROOT), { withFileTypes: true })
-        .filter((d) => d.isDirectory())
-        .map((d) => d.name)
-        .sort()
-    : [one as string];
+    ? CAST_GROUPS.flatMap(groupOf)
+    : [{ group: 'heroes', hero: one as string }];
 
   let failures = 0;
-  for (const hero of heroes) {
+  for (const { group, hero } of heroes) {
     try {
-      packHero(repo, hero);
+      packHero(repo, hero, group);
     } catch (err) {
       // One bad hero folder must not abandon the rest of the library.
       failures += 1;
@@ -770,7 +776,7 @@ function atlasSheetsDir(repo: string, dir: string): number {
   }
   const pngs = new Map(sources.map((s) => [s, readPng(path.join(repo, 'assets/play', s))]));
   // Group sheets so each atlas keeps ≤256 colours (the pixel-exact palette
-  // PNG); a sheet that is already truecolour gets its own group.
+  // PNG); sheets that are already truecolour go together.
   const colours = (png: PNG) => {
     const set = new Set<number>();
     for (let i = 0; i < png.data.length; i += 4) set.add(png.data.readUInt32BE(i));
@@ -780,9 +786,11 @@ function atlasSheetsDir(repo: string, dir: string): number {
   const bins: { set: Set<number> | null; items: string[] }[] = [];
   for (const s of byHeight) {
     const own = colours(pngs.get(s)!);
-    const bin = own.size > 256 ? undefined : bins.find((b) => b.set && new Set([...b.set, ...own]).size <= 256);
+    // Truecolour sheets share one group: merging them costs no extra bytes.
+    const bin =
+      own.size > 256 ? bins.find((b) => !b.set) : bins.find((b) => b.set && new Set([...b.set, ...own]).size <= 256);
     if (bin) {
-      own.forEach((c) => bin.set!.add(c));
+      if (bin.set) own.forEach((c) => bin.set!.add(c));
       bin.items.push(s);
     } else bins.push({ set: own.size > 256 ? null : own, items: [s] });
   }
@@ -853,11 +861,12 @@ function walk(dir: string): string[] {
   return out;
 }
 
-function packHero(repo: string, hero: string) {
-  const heroDir = path.join(repo, HEROES_ROOT, hero);
-  if (!fs.existsSync(heroDir)) throw new Error(`no art folder at ${HEROES_ROOT}/${hero}`);
+function packHero(repo: string, hero: string, group = 'heroes') {
+  const root = path.posix.join(path.posix.dirname(HEROES_ROOT), group);
+  const heroDir = path.join(repo, root, hero);
+  if (!fs.existsSync(heroDir)) throw new Error(`no art folder at ${root}/${hero}`);
 
-  const keyBase = `sheets/cast/heroes/${hero}`;
+  const keyBase = `sheets/cast/${group}/${hero}`;
   const outDir = path.join(repo, 'assets/play', keyBase);
   fs.rmSync(outDir, { recursive: true, force: true });
 
@@ -903,9 +912,12 @@ function packHero(repo: string, hero: string) {
   console.log(warned === 0 ? 'no warnings' : `${warned} clip(s) need a human decision`);
   console.log(`manifest: ${path.relative(repo, manifestPath)}`);
 
-  writeCatalog(repo, hero, keyBase, packed);
+  // The action catalog is a hero thing (it proposes heroes.json roles).
+  if (group === 'heroes') writeCatalog(repo, hero, keyBase, packed);
 
   if (process.argv.includes('--preview')) writePreview(repo, hero, keyBase, manifest);
+  // Last: merge the clip sheets into atlases (fewer OTA assets, same keys).
+  console.log(`  → ${atlasSheetsDir(repo, path.join(repo, 'assets/play', keyBase))} atlas file(s)`);
 }
 
 /**

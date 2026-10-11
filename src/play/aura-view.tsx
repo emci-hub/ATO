@@ -310,7 +310,8 @@ function spritePack(style: AuraStyle, layer: 'behind' | 'front', element: string
       }
       frames.push([...groups.entries()].map(([color, d]) => ({ color, d })));
     }
-    return { cell: sheet.sheetH, frames };
+    // The frame cell, not the sheet: auras share one atlas.
+    return { cell: Object.values(sheet.frames)[0]?.h ?? sheet.sheetH, frames };
   })();
   remember(spritePacks, key, job, SPRITE_PACK_CAP);
   job.catch(() => {

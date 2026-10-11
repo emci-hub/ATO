@@ -43,7 +43,7 @@ const EXTRA_FILES = ['tiles/scribble-dungeons/crate.png'] as const;
  * ~2100 files for zero benefit. Excluded from `skins` only — every other
  * `skins/**` path (towers, cycle bosses, fx) still bundles as before.
  */
-const PACKED_HERO_ART = /^skins\/cast\/heroes\/[^/]+\/(animations|rotations)\//;
+const PACKED_HERO_ART = /^skins\/cast\/(heroes|creeps|boss|towers)\/[^/]+\/(animations|rotations)\//;
 /**
  * The Streetwear skin is drawn ONLY from `play-art-pack.ts --skin streetwear`
  * sheets (characters, effects, auras). Its loose frames (~3,000 PNGs, north/

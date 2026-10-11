@@ -1,8 +1,8 @@
 {
   "sheets/cast/heroes/corvus/BLACK_DEATH_RITUAL": {
-    "sheet": "sheets/cast/heroes/corvus/BLACK_DEATH_RITUAL.png",
+    "sheet": "sheets/cast/heroes/corvus/atlas.png",
     "sheetW": 2056,
-    "sheetH": 241,
+    "sheetH": 1209,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -211,678 +211,678 @@
     }
   },
   "sheets/cast/heroes/corvus/DOCTOR_WALK": {
-    "sheet": "sheets/cast/heroes/corvus/DOCTOR_WALK.png",
-    "sheetW": 1088,
-    "sheetH": 241,
+    "sheet": "sheets/cast/heroes/corvus/atlas.png",
+    "sheetW": 2056,
+    "sheetH": 1209,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_001": {
         "x": 121,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_002": {
         "x": 242,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_003": {
         "x": 363,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_004": {
         "x": 484,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_005": {
         "x": 605,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_006": {
         "x": 726,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_007": {
         "x": 847,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_008": {
         "x": 968,
-        "y": 0,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "west/frame_000": {
         "x": 0,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_001": {
         "x": 121,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_002": {
         "x": 242,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_003": {
         "x": 363,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_004": {
         "x": 484,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_005": {
         "x": 605,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_006": {
         "x": 726,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_007": {
         "x": 847,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_008": {
         "x": 968,
-        "y": 121,
+        "y": 363,
         "w": 120,
         "h": 120
       }
     }
   },
   "sheets/cast/heroes/corvus/HURT": {
-    "sheet": "sheets/cast/heroes/corvus/HURT.png",
-    "sheetW": 604,
-    "sheetH": 241,
+    "sheet": "sheets/cast/heroes/corvus/atlas.png",
+    "sheetW": 2056,
+    "sheetH": 1209,
     "frames": {
       "east/frame_000": {
-        "x": 0,
-        "y": 0,
+        "x": 1089,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_001": {
-        "x": 121,
-        "y": 0,
+        "x": 1210,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_002": {
-        "x": 242,
-        "y": 0,
+        "x": 1331,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_003": {
-        "x": 363,
-        "y": 0,
+        "x": 1452,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "east/frame_004": {
-        "x": 484,
-        "y": 0,
+        "x": 1573,
+        "y": 242,
         "w": 120,
         "h": 120
       },
       "west/frame_000": {
-        "x": 0,
-        "y": 121,
+        "x": 1089,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_001": {
-        "x": 121,
-        "y": 121,
+        "x": 1210,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_002": {
-        "x": 242,
-        "y": 121,
+        "x": 1331,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_003": {
-        "x": 363,
-        "y": 121,
+        "x": 1452,
+        "y": 363,
         "w": 120,
         "h": 120
       },
       "west/frame_004": {
-        "x": 484,
-        "y": 121,
+        "x": 1573,
+        "y": 363,
         "w": 120,
         "h": 120
       }
     }
   },
   "sheets/cast/heroes/corvus/PESTILENCE_WAVE": {
-    "sheet": "sheets/cast/heroes/corvus/PESTILENCE_WAVE.png",
-    "sheetW": 1572,
-    "sheetH": 241,
+    "sheet": "sheets/cast/heroes/corvus/atlas.png",
+    "sheetW": 2056,
+    "sheetH": 1209,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_001": {
         "x": 121,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_002": {
         "x": 242,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_003": {
         "x": 363,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_004": {
         "x": 484,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_005": {
         "x": 605,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_006": {
         "x": 726,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_007": {
         "x": 847,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_008": {
         "x": 968,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_009": {
         "x": 1089,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_010": {
         "x": 1210,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_011": {
         "x": 1331,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "east/frame_012": {
         "x": 1452,
-        "y": 0,
+        "y": 484,
         "w": 120,
         "h": 120
       },
       "west/frame_000": {
         "x": 0,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_001": {
         "x": 121,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_002": {
         "x": 242,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_003": {
         "x": 363,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_004": {
         "x": 484,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_005": {
         "x": 605,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_006": {
         "x": 726,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_007": {
         "x": 847,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_008": {
         "x": 968,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_009": {
         "x": 1089,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_010": {
         "x": 1210,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_011": {
         "x": 1331,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       },
       "west/frame_012": {
         "x": 1452,
-        "y": 121,
+        "y": 605,
         "w": 120,
         "h": 120
       }
     }
   },
   "sheets/cast/heroes/corvus/PLAGUE_IDLE": {
-    "sheet": "sheets/cast/heroes/corvus/PLAGUE_IDLE.png",
-    "sheetW": 1572,
-    "sheetH": 241,
+    "sheet": "sheets/cast/heroes/corvus/atlas.png",
+    "sheetW": 2056,
+    "sheetH": 1209,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_001": {
         "x": 121,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_002": {
         "x": 242,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_003": {
         "x": 363,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_004": {
         "x": 484,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_005": {
         "x": 605,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_006": {
         "x": 726,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_007": {
         "x": 847,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_008": {
         "x": 968,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_009": {
         "x": 1089,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_010": {
         "x": 1210,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_011": {
         "x": 1331,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "east/frame_012": {
         "x": 1452,
-        "y": 0,
+        "y": 726,
         "w": 120,
         "h": 120
       },
       "west/frame_000": {
         "x": 0,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_001": {
         "x": 121,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_002": {
         "x": 242,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_003": {
         "x": 363,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_004": {
         "x": 484,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_005": {
         "x": 605,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_006": {
         "x": 726,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_007": {
         "x": 847,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_008": {
         "x": 968,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_009": {
         "x": 1089,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_010": {
         "x": 1210,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_011": {
         "x": 1331,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       },
       "west/frame_012": {
         "x": 1452,
-        "y": 121,
+        "y": 847,
         "w": 120,
         "h": 120
       }
     }
   },
   "sheets/cast/heroes/corvus/SHADOW_DASH": {
-    "sheet": "sheets/cast/heroes/corvus/SHADOW_DASH.png",
-    "sheetW": 1088,
-    "sheetH": 241,
+    "sheet": "sheets/cast/heroes/corvus/atlas.png",
+    "sheetW": 2056,
+    "sheetH": 1209,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east/frame_001": {
         "x": 121,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east/frame_002": {
         "x": 242,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east/frame_003": {
         "x": 363,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east/frame_004": {
         "x": 484,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east/frame_005": {
         "x": 605,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east/frame_006": {
         "x": 726,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east/frame_007": {
         "x": 847,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east/frame_008": {
         "x": 968,
-        "y": 0,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "west/frame_000": {
         "x": 0,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       },
       "west/frame_001": {
         "x": 121,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       },
       "west/frame_002": {
         "x": 242,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       },
       "west/frame_003": {
         "x": 363,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       },
       "west/frame_004": {
         "x": 484,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       },
       "west/frame_005": {
         "x": 605,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       },
       "west/frame_006": {
         "x": 726,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       },
       "west/frame_007": {
         "x": 847,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       },
       "west/frame_008": {
         "x": 968,
-        "y": 121,
+        "y": 1089,
         "w": 120,
         "h": 120
       }
     }
   },
   "sheets/cast/heroes/corvus/rotations": {
-    "sheet": "sheets/cast/heroes/corvus/rotations.png",
-    "sheetW": 967,
-    "sheetH": 120,
+    "sheet": "sheets/cast/heroes/corvus/atlas.png",
+    "sheetW": 2056,
+    "sheetH": 1209,
     "frames": {
       "north": {
-        "x": 0,
-        "y": 0,
+        "x": 1089,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "north-east": {
-        "x": 121,
-        "y": 0,
+        "x": 1210,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "east": {
-        "x": 242,
-        "y": 0,
+        "x": 1331,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "south-east": {
-        "x": 363,
-        "y": 0,
+        "x": 1452,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "south": {
-        "x": 484,
-        "y": 0,
+        "x": 1573,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "south-west": {
-        "x": 605,
-        "y": 0,
+        "x": 1694,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "west": {
-        "x": 726,
-        "y": 0,
+        "x": 1815,
+        "y": 968,
         "w": 120,
         "h": 120
       },
       "north-west": {
-        "x": 847,
-        "y": 0,
+        "x": 1936,
+        "y": 968,
         "w": 120,
         "h": 120
       }

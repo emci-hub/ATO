@@ -198,7 +198,7 @@ export function skinArt(
  * packed it under, or the hero rotation sheet already packed alongside its
  * clips. Two shapes today, checked in order:
  *   `kenney-td/<file>`                      → `sheets/kenney-td`, frame `<file>`
- *   `skins/cast/heroes/<hero>/rotations/<d>` → `sheets/cast/heroes/<hero>/rotations`, frame `<d>`
+ *   `skins/cast/<group>/<id>/rotations/<d>` → `sheets/cast/<group>/<id>/rotations`, frame `<d>`
  * Undefined for anything else — every other family stays on legacy `PLAY_ART`
  * until it's packed too, with no code change needed then.
  */
@@ -208,11 +208,12 @@ function staticKeyDrawable(key: string): ClipDrawable | undefined {
     const frame = PLAY_SHEETS['sheets/kenney-td']?.frames[kenneyTd[1]];
     if (frame) return { kind: 'sheet', sheetKey: 'sheets/kenney-td', frameKey: kenneyTd[1] };
   }
-  const heroRotation = /^skins\/cast\/heroes\/([^/]+)\/rotations\/(.+)$/.exec(key);
-  if (heroRotation) {
-    const sheetKey = `sheets/cast/heroes/${heroRotation[1]}/rotations`;
-    if (PLAY_SHEETS[sheetKey]?.frames[heroRotation[2]]) {
-      return { kind: 'sheet', sheetKey, frameKey: heroRotation[2] };
+  // Every cast character (heroes / creeps / towers / boss) is packed.
+  const castRotation = /^skins\/cast\/([^/]+\/[^/]+)\/rotations\/(.+)$/.exec(key);
+  if (castRotation) {
+    const sheetKey = `sheets/cast/${castRotation[1]}/rotations`;
+    if (PLAY_SHEETS[sheetKey]?.frames[castRotation[2]]) {
+      return { kind: 'sheet', sheetKey, frameKey: castRotation[2] };
     }
   }
   // Every Streetwear character (heroes / creeps / towers / boss) is packed.
@@ -471,8 +472,8 @@ export function directionalClipArt(
  * until their categories are packed too, with no code change needed then.
  */
 function sheetKeyForClipBase(base: string): string | undefined {
-  const m = /^skins\/cast\/heroes\/([^/]+)\/animations\/(.+)$/.exec(base);
-  if (m) return `sheets/cast/heroes/${m[1]}/${m[2]}`;
+  const m = /^skins\/cast\/([^/]+\/[^/]+)\/animations\/(.+)$/.exec(base);
+  if (m) return `sheets/cast/${m[1]}/${m[2]}`;
   const sw = /^skins\/streetwear\/([^/]+\/[^/]+)\/animations\/(.+)$/.exec(base);
   return sw ? `sheets/streetwear/${sw[1]}/${sw[2]}` : undefined;
 }
@@ -766,7 +767,7 @@ export function heroAvatarRole(heroId: string): SkinRole {
   // None of the hero's art is bundled (no clips AND no rotations) — the honest
   // stub. Keep the Corvus role so the board always has a sprite to draw.
   const anyArt =
-    walk != null || Object.keys(anims).length > 0 || PLAY_ART[keys[2]] != null;
+    walk != null || Object.keys(anims).length > 0 || keyToDrawable(keys[2]) != null;
   if (!anyArt) return fallback ?? { keys: [], dirs: 8, pivot: 'feet' };
 
   return {
@@ -843,8 +844,14 @@ export const TOWER_KIND_ROLE: Record<TowerSkinRole, SkinRoleId> = {
 function towerClipWalk(skin: TowerSkinDef, name: string | undefined): SkinWalk | undefined {
   if (!name) return undefined;
   const base = `${skin.folder.replace(/^assets\/play\//, '')}/animations/${name}`;
+  const sheetKey = sheetKeyForClipBase(base);
+  const sheet = sheetKey ? PLAY_SHEETS[sheetKey] : undefined;
   let frames = 0;
-  while (PLAY_ART[`${base}/east/frame_${String(frames).padStart(3, '0')}`]) frames += 1;
+  if (sheet) {
+    while (sheet.frames[`east/frame_${String(frames).padStart(3, '0')}`]) frames += 1;
+  } else {
+    while (PLAY_ART[`${base}/east/frame_${String(frames).padStart(3, '0')}`]) frames += 1;
+  }
   return frames > 0 ? { dirs: 2, order: ['east', 'west'], frames, base } : undefined;
 }
 

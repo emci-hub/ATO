@@ -2,7 +2,7 @@
   "sheets/streetwear/heroes/elowen/Attack": {
     "sheet": "sheets/streetwear/heroes/elowen/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 385,
+    "sheetH": 771,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -340,103 +340,103 @@
     }
   },
   "sheets/streetwear/heroes/elowen/Skill": {
-    "sheet": "sheets/streetwear/heroes/elowen/atlas-2.png",
+    "sheet": "sheets/streetwear/heroes/elowen/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 385,
+    "sheetH": 771,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -546,7 +546,7 @@
     }
   },
   "sheets/streetwear/heroes/elowen/rotations": {
-    "sheet": "sheets/streetwear/heroes/elowen/atlas-3.png",
+    "sheet": "sheets/streetwear/heroes/elowen/atlas-2.png",
     "sheetW": 1543,
     "sheetH": 192,
     "frames": {
