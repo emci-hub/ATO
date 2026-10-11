@@ -119,6 +119,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 | Product, roster, live AI model | `docs/ME.md` |
 | Legal, brand, cost | `docs/BUSINESS.md` |
 | Device test checklist | `docs/ATO_DEVICE_TESTS.md` |
+| Sprite gallery artifact (Streetwear art, all facings) — "update the sprite gallery" | `scripts/sprite-gallery/README.md` · https://claude.ai/artifact/9wjcLv4FQu4S8dwqT2RBho |
 | Old plan (reference only, not rules) | `docs/archive/OLD_PLAN.md` |
 | Schema + RLS + RPCs | `supabase/migrations/*.sql` (chronological: stage* → wave*) |
 | Edge Functions (Deno) | `supabase/functions/{ai-generate,apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` |
