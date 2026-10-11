@@ -297,7 +297,7 @@ function SpeechBubble({
       pointerEvents="none"
       accessibilityLiveRegion="polite"
       accessibilityLabel={speaker ? `${speaker} says ${shown}` : shown}>
-      <PixelFrame align="stretch">
+      <PixelFrame streetPiece="panel" align="stretch">
         <PixelBody style={styles.speechText}>{shown || ' '}</PixelBody>
       </PixelFrame>
     </Animated.View>
@@ -556,7 +556,7 @@ export function PetRoom({
       {/* Meters, the scene, and the coach are three rows. None is positioned
           on top of another, so a short phone cannot stack them. */}
       <View style={styles.metersSlot} pointerEvents="box-none">
-      <PixelFrame align="stretch" enter style={styles.meters}>
+      <PixelFrame streetPiece="panel" align="stretch" enter style={styles.meters}>
         <View style={styles.meterHead}>
         <View style={styles.meterMain} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
         {picking ? (
@@ -764,7 +764,7 @@ export function PetRoom({
       </View>
 
       <View style={styles.coachSlot}>
-      <PixelFrame align="stretch" enter style={styles.coach}>
+      <PixelFrame streetPiece="panel" align="stretch" enter style={styles.coach}>
         <View style={styles.coachRow}>
           <View style={styles.coachCopy}>
             <PixelBody color={PIXEL.text} style={styles.coachText} numberOfLines={3}>

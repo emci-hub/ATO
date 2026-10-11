@@ -153,5 +153,15 @@ Status loops were made around the village-girl creep (character:8da68657…:east
 Rarity frame base 0db9eee4-69f3-47fe-bb14-fb104e310c18 (10) → 5 tiers by local palette map (scratchpad gradmap.js). Icons object 4dda15c1-951d-466f-ac1e-146afd70a112 (10), 16 picks all kept (new object ids listed in select result; files fetched from objects/<id>/rotations/unknown.png).
 Theme plan: ATO-streetwear-theme-plan.md never existed on disk (only named in a pasted prompt 2026-10-10); a new wiring plan is written to docs/streetwear-wiring-plan.md.
 
+## BATCH 6 — MENU UI KIT (2026-10-11, emci: "change the UI menu, pet, divecore, shop … use the ui sprites")
+Balance before 4,582 → after 4,502 (80 generations, no rerolls). All `create_ui_asset`, no Pro mode. Saved to `assets/play/skins/streetwear/ui/kit/`.
+| file | id | gens | notes |
+|---|---|---|---|
+| panel.png (384×288) | 36a3b469-008e-4820-927d-7b8e308dc94b | 15 | taped asphalt panel, 9-slice inset 56 |
+| button-grey.png (384×192) | 01998f9f-0c37-48f1-a814-40f839fc1016 | 15 | one greyscale button → primary/secondary/danger + pressed baked at pack time |
+| header.png (688×384) | ae0579b1-bd4a-4baa-9e9d-f69cc5b93f00 | 25 | hazard-tape nameplate, inset 48/96 |
+| pieces.png (512×512) | 54986e34-7f61-4d26-9eb9-39a11d53850c | 25 | used: back button, yellow chip (→ dark "off" chip baked), toggle. Brown pieces unused (off-style). |
+Packed by `packSwUiKit` (play-art-pack.ts) into `sheets/streetwear/ui-kit/atlas.png`; insets + scale in `meta.json` `ui`.
+
 ## Clip names (template → saved clip folder)
 breathing-idle→Idle, walking-8-frames→Walk, running-8-frames→Dash, cross-punch→Attack, fireball→Skill, taking-punch→Hurt. East + West only.

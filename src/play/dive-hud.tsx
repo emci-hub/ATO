@@ -151,7 +151,7 @@ export function DiveTopBar({
   const label = { fontSize: labelPt, lineHeight: labelLh };
   return (
     <View style={styles.bar} pointerEvents="box-none">
-      <PixelFrame align="stretch" padded={false} enter style={styles.panel}>
+      <PixelFrame streetPiece="panel" align="stretch" padded={false} enter style={styles.panel}>
         <View style={styles.stack}>
           <View style={styles.row}>
             <View style={styles.side}>

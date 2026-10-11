@@ -31584,6 +31584,162 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
         "h": 236
       }
     }
+  },
+  "sheets/streetwear/ui-kit/back": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 451,
+        "y": 643,
+        "w": 65,
+        "h": 65
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/button-danger": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 710,
+        "w": 119,
+        "h": 44
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/button-danger-pressed": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 517,
+        "y": 643,
+        "w": 119,
+        "h": 44
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/button-primary": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 240,
+        "y": 710,
+        "w": 119,
+        "h": 44
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/button-primary-pressed": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 120,
+        "y": 710,
+        "w": 119,
+        "h": 44
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/button-secondary": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 480,
+        "y": 710,
+        "w": 119,
+        "h": 44
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/button-secondary-pressed": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 360,
+        "y": 710,
+        "w": 119,
+        "h": 44
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/chip-off": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 576,
+        "w": 450,
+        "h": 66
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/chip-on": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 643,
+        "w": 450,
+        "h": 66
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/header": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 0,
+        "w": 642,
+        "h": 335
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/panel": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 336,
+        "w": 318,
+        "h": 239
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/toggle": {
+    "sheet": "sheets/streetwear/ui-kit/atlas.png",
+    "sheetW": 642,
+    "sheetH": 799,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 755,
+        "w": 144,
+        "h": 44
+      }
+    }
   }
 } as const;
 
@@ -31903,4 +32059,16 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/towers/viper/Idle': require('@/assets/play/sheets/streetwear/towers/viper/atlas-0.png'),
   'sheets/streetwear/towers/viper/Skill': require('@/assets/play/sheets/streetwear/towers/viper/atlas-1.png'),
   'sheets/streetwear/towers/viper/rotations': require('@/assets/play/sheets/streetwear/towers/viper/atlas-2.png'),
+  'sheets/streetwear/ui-kit/back': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/button-danger': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/button-danger-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/button-primary': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/button-primary-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/button-secondary': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/button-secondary-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/chip-off': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/chip-on': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/header': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/panel': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/toggle': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
 };

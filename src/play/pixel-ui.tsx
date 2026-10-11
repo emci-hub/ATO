@@ -29,6 +29,15 @@ import { useFxQuality } from '@/play/fx-quality';
 import { usePlayReduceMotion } from '@/play/play-motion';
 import { AtlasSprite } from '@/play/pixel-atlas';
 import {
+  STREET_FONT,
+  StreetBackdrop,
+  streetButtonPiece,
+  streetButtonText,
+  streetUiOn,
+  useStreetFonts,
+  type StreetPiece,
+} from '@/play/street-ui';
+import {
   ART_PT,
   PIXEL,
   PIXEL_BODY_PT,
@@ -129,6 +138,8 @@ type FrameProps = {
    * framed arena is the safe-area remainder, not a hug of its children.
    */
   grow?: boolean;
+  /** Streetwear art style: the kit piece drawn instead of the stepped frame. */
+  streetPiece?: StreetPiece;
 };
 
 /** True when art pixel (x, y) sits inside a stepped rectangle. */
@@ -189,8 +200,13 @@ export function PixelFrame({
   lined = true,
   sunk = false,
   grow = false,
+  streetPiece,
 }: FrameProps) {
   const alive = useAmbientOn();
+  // Streetwear art style, opt-in per call site (`streetPiece`): the kit art
+  // replaces the fill, stairs, glow and bevel. Arenas, cue frames and the app's
+  // profile card pass none, so they stay as they are.
+  const street = streetUiOn() && streetPiece != null;
   const enterT = useSharedValue(1);
   const glowPulse = useSharedValue(0);
   const [box, setBox] = useState({ w: 0, h: 0 });
@@ -223,7 +239,7 @@ export function PixelFrame({
   const stair = Math.max(1, step);
   const artW = Math.max(1, Math.round(box.w / px));
   const artH = Math.max(1, Math.round(box.h / px));
-  const glowCol = glow && !bevel ? glowInk(border) : null;
+  const glowCol = glow && !bevel && !street ? glowInk(border) : null;
   const rings = useMemo(() => {
     if (!glowCol || artW < 4 || artH < 4) return null;
     return {
@@ -259,6 +275,7 @@ export function PixelFrame({
         style,
         motion,
       ]}>
+      {street ? <StreetBackdrop piece={streetPiece ?? 'panel'} /> : null}
       {rings && glowCol ? (
         <Svg
           pointerEvents="none"
@@ -272,14 +289,14 @@ export function PixelFrame({
       <View
         style={{
           margin: px,
-          backgroundColor: fill,
-          padding: padded ? px * 2 : 0,
+          backgroundColor: street ? 'transparent' : fill,
+          padding: padded ? px * (street ? 4 : 2) : 0,
           minHeight: grow ? 0 : minHeight != null ? Math.max(0, minHeight - px * 2) : undefined,
           ...(grow ? { flexGrow: 1, flexShrink: 1 } : null),
           alignItems: align === 'stretch' ? 'stretch' : 'center',
           justifyContent: grow ? 'flex-start' : 'center',
         }}>
-        {bevel ? (
+        {bevel && !street ? (
           <>
             <View
               pointerEvents="none"
@@ -307,11 +324,15 @@ export function PixelFrame({
         ) : null}
         {children}
       </View>
-      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: notch, right: notch, height: px, backgroundColor: outline }} />
-      <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: notch, right: notch, height: px, backgroundColor: outline }} />
-      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: notch, bottom: notch, width: px, backgroundColor: outline }} />
-      <View pointerEvents="none" style={{ position: 'absolute', right: 0, top: notch, bottom: notch, width: px, backgroundColor: outline }} />
-      {showLine ? (
+      {street ? null : (
+        <>
+          <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: notch, right: notch, height: px, backgroundColor: outline }} />
+          <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: notch, right: notch, height: px, backgroundColor: outline }} />
+          <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: notch, bottom: notch, width: px, backgroundColor: outline }} />
+          <View pointerEvents="none" style={{ position: 'absolute', right: 0, top: notch, bottom: notch, width: px, backgroundColor: outline }} />
+        </>
+      )}
+      {showLine && !street ? (
         <>
           <View pointerEvents="none" style={{ position: 'absolute', top: px, left: notch, right: notch, height: px, backgroundColor: inner }} />
           <View pointerEvents="none" style={{ position: 'absolute', bottom: px, left: notch, right: notch, height: px, backgroundColor: inner }} />
@@ -319,7 +340,7 @@ export function PixelFrame({
           <View pointerEvents="none" style={{ position: 'absolute', right: px, top: notch, bottom: notch, width: px, backgroundColor: inner }} />
         </>
       ) : null}
-      {stair >= 2 ? (
+      {stair >= 2 && !street ? (
         <>
           <View pointerEvents="none" style={{ position: 'absolute', left: px, top: px, width: px, height: px, backgroundColor: outline }} />
           <View pointerEvents="none" style={{ position: 'absolute', right: px, top: px, width: px, height: px, backgroundColor: outline }} />
@@ -450,10 +471,20 @@ export function PixelButton({
    */
   hug?: boolean;
 }) {
+  useStreetFonts();
+  // Streetwear art style: cyan → mustard primary, amber → tag red, muted → concrete.
+  const street = streetUiOn();
+  const streetVariant = variant === 'amber' ? 'danger' : variant === 'muted' ? 'secondary' : 'primary';
   const fill = variant === 'amber' ? PIXEL.amber : variant === 'muted' ? PIXEL.ink : PIXEL.cyan;
   const border = variant === 'muted' ? PIXEL.muted : PIXEL.ink;
-  const text = variant === 'muted' ? PIXEL.muted : PIXEL.onFill;
-  const shade = variant === 'amber' ? PIXEL.amberLo : variant === 'muted' ? PIXEL.ink : PIXEL.cyanLo;
+  const text = street ? streetButtonText(streetVariant) : variant === 'muted' ? PIXEL.muted : PIXEL.onFill;
+  const shade = street
+    ? 'transparent'
+    : variant === 'amber'
+      ? PIXEL.amberLo
+      : variant === 'muted'
+        ? PIXEL.ink
+        : PIXEL.cyanLo;
   const alive = useAmbientOn();
   const lines = buttonLines(label);
   const glyphs = Math.max(1, lines.title.length);
@@ -507,7 +538,8 @@ export function PixelButton({
           padded={false}
           align="center"
           minHeight={faceH}
-          pulse={variant === 'cyan' && !disabled}
+          pulse={variant === 'cyan' && !disabled && !street}
+          streetPiece={streetButtonPiece(streetVariant, pressed && !disabled)}
           style={{ flexGrow: 1, width: '100%', height: faceH }}>
           <PixelLabel
             color={text}
@@ -515,7 +547,13 @@ export function PixelButton({
             numberOfLines={1}
             adjustsFontSizeToFit={rowShare}
             minimumFontScale={0.55}
-            style={{ fontSize, lineHeight, textAlign: 'center', alignSelf: 'stretch' }}>
+            style={{
+              fontSize,
+              lineHeight,
+              textAlign: 'center',
+              alignSelf: 'stretch',
+              ...(street ? { fontFamily: STREET_FONT.bold, marginTop: pressed && !disabled ? 1 : -2 } : null),
+            }}>
             {lines.title}
           </PixelLabel>
           {lines.caption ? (

@@ -1,7 +1,7 @@
 <title>Streetwear Skin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Chivo:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Pixelify+Sans:wght@400;700&family=Chivo:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: a contact-sheet wall — sticky section nav, dense card grids, every sprite on a dark "asphalt" tile */
 :root {
@@ -71,12 +71,28 @@ button.chip:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 .issues li { max-width: 80ch; }
 footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .sprite { transition: none; } }
+#menu .menu-demo { display: flex; justify-content: center; margin: 12px 0 20px; }
+.m-screen { width: min(360px, 100%); background: #121214; padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 6px; }
+.m-screen, .m-screen * { font-family: 'Pixelify Sans', monospace; image-rendering: pixelated; box-sizing: border-box; }
+.m-back { display: flex; align-items: center; gap: 8px; color: #F2EDE4; font-weight: 700; }
+.m-plate { display: flex; flex-direction: column; align-items: center; }
+.m-eyebrow { color: #E0A526; font-size: 11px; letter-spacing: .16em; }
+.m-title { color: #F2EDE4; font-weight: 700; font-size: 26px; text-transform: uppercase; line-height: 1.1; }
+.m-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.m-chip { font-weight: 700; font-size: 12px; text-transform: uppercase; color: #A1A1AA; padding: 0 2px; }
+.m-chip.on { color: #1A1A1D; }
+.m-panel { color: #D4D4D8; display: flex; flex-direction: column; gap: 10px; }
+.m-panel p { margin: 0; font-size: 13px; }
+.m-label { color: #E0A526; font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+.m-row { display: flex; gap: 8px; }
+.m-btn { flex: 1; text-align: center; font-weight: 700; font-size: 14px; text-transform: uppercase; color: #F2EDE4; }
+.m-btn.m-primary { color: #1A1A1D; }
 </style>
 
 <div class="wrap">
   <header>
     <h1>Streetwear <span>Skin</span></h1>
-    <p class="lede">Every piece of art PixelLab made for ATO on 2026-10-10 and 11. Characters play live in all four facings; pick a clip on each card, turn it with ↻, or switch them all at once. Attack and Skill are each hero's own weapon move. Nothing here is in the game yet.</p>
+    <p class="lede">Every piece of art PixelLab made for ATO on 2026-10-10 and 11. Characters play live in all four facings; pick a clip on each card, turn it with ↻, or switch them all at once. Attack and Skill are each hero's own weapon move. In the game behind the Streetwear art style switch (Pet → Info → Dev, two taps; Classic stays the default).</p>
     <div class="stats">
       <span class="stat"><b>16</b> heroes</span><span class="stat"><b>3</b> road enemies</span><span class="stat"><b>3</b> towers</span><span class="stat"><b>2</b> bosses</span><span class="stat"><b>4</b> facings</span><span class="stat"><b>32</b> props</span><span class="stat"><b>56</b> icons</span><span class="stat"><b>6</b> hit splats</span><span class="stat"><b>~2,250</b> generations used</span>
     </div>
@@ -89,7 +105,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
   </header>
 
   <nav aria-label="Sections"><div class="in">
-    <a href="#heroes">Heroes</a><a href="#enemies">Enemies</a><a href="#towers">Towers</a><a href="#bosses">Bosses</a><a href="#effects">Effects</a><a href="#auras">Auras</a><a href="#shop">Shop</a><a href="#anchor">Anchor</a><a href="#map">Map</a><a href="#props">Props</a><a href="#fx">FX</a><a href="#ui">UI</a><a href="#icons">Icons</a><a href="#issues">Known issues</a><a href="#update">How to update</a>
+    <a href="#heroes">Heroes</a><a href="#enemies">Enemies</a><a href="#towers">Towers</a><a href="#bosses">Bosses</a><a href="#effects">Effects</a><a href="#auras">Auras</a><a href="#shop">Shop</a><a href="#menu">Menus</a><a href="#anchor">Anchor</a><a href="#map">Map</a><a href="#props">Props</a><a href="#fx">FX</a><a href="#ui">UI</a><a href="#icons">Icons</a><a href="#issues">Known issues</a><a href="#update">How to update</a>
   </div></nav>
 
   <section id="heroes">
@@ -128,6 +144,12 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
     <h2>Shop &amp; rarity <small>tier = colour + gem shape · swords tinted per element</small></h2>
     <div class="stills wide" id="cardGrid"></div>
     <div class="stills icons" id="shopIconGrid"></div>
+  </section>
+
+  <section id="menu">
+    <h2>Menus <small>9-slice UI kit + Pixelify Sans · how a Divecore screen looks with Streetwear on</small></h2>
+    <div class="menu-demo" id="menuDemo"></div>
+    <div class="stills icons" id="menuPieces"></div>
   </section>
 
   <section id="anchor">
@@ -307,6 +329,31 @@ stills('fxGrid', S.fx, (i) => i.name.replace(/-/g, ' '));
 stills('uiGrid', S.ui, (i) => `${i.name.replace(/-/g, ' ')} · ${i.w}×${i.h}`);
 stills('cardGrid', DATA.shop.cards);
 stills('shopIconGrid', DATA.shop.icons, (i) => i.name.replace(/-/g, ' '));
+// Menus: the game's 9-slice (corners fixed, edges + middle stretch), via CSS border-image.
+function slice(name, extra = '') {
+  const p = DATA.menu && DATA.menu[name];
+  if (!p) return '';
+  const [t, r, b, l] = p.inset;
+  const s = p.scale * 1.6;
+  return `border-style:solid;border-width:${t * s}px ${r * s}px ${b * s}px ${l * s}px;border-image:url(${p.src}) ${t} ${r} ${b} ${l} fill / ${t * s}px ${r * s}px ${b * s}px ${l * s}px stretch;${extra}`;
+}
+if (DATA.menu && DATA.menu.panel) {
+  const btn = (v, label, pressed) => `<div class="m-btn m-${v}" style="${slice(`button-${v}${pressed ? '-pressed' : ''}`)}">${label}</div>`;
+  const back = DATA.menu.back;
+  document.getElementById('menuDemo').innerHTML = `
+    <div class="m-screen">
+      <div class="m-back"><img src="${back.src}" width="${back.w * 0.6}" height="${back.h * 0.6}" alt="">Command Hub</div>
+      <div class="m-plate" style="${slice('header')}"><span class="m-eyebrow">DIVECORE</span><span class="m-title">Shop</span></div>
+      <div class="m-chips"><span class="m-chip on" style="${slice('chip-on')}">All</span><span class="m-chip" style="${slice('chip-off')}">Stones</span><span class="m-chip" style="${slice('chip-off')}">Crates</span></div>
+      <div class="m-panel" style="${slice('panel')}">
+        <div class="m-label">Merge crate</div>
+        <p>Open for a random sword. Three of one tier merge up.</p>
+        <div class="m-row">${btn('primary', 'Open', false)}${btn('secondary', 'Later', false)}</div>
+        <div class="m-row">${btn('danger', 'Sell', false)}${btn('primary', 'Pressed', true)}</div>
+      </div>
+    </div>`;
+  stills('menuPieces', Object.entries(DATA.menu).map(([name, p]) => ({ src: p.src, name, w: p.w, h: p.h })));
+}
 stills('iconGrid', S.icons, (i) => i.name.replace('REVIEW-', '').replace(/-/g, ' '), (i) => i.name.startsWith('REVIEW-'));
 
 if (!reduce) setInterval(() => actors.forEach((a) => a.tick()), 110);

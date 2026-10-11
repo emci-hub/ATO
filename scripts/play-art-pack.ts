@@ -693,6 +693,66 @@ function rampMap(src: PNG, ramp: [number, number, number][]): PNG {
   return p;
 }
 
+/** One Streetwear menu piece: its crop, the stretch insets (art px; the
+ * corners never stretch) and the drawn size of one art pixel in dp. */
+type SwUiPiece = { w: number; h: number; inset: [number, number, number, number]; scale: number };
+
+/**
+ * Menu UI kit (2026-10-11): crops the PixelLab kit sheets in `ui/kit/` into
+ * 9-slice pieces, bakes the three button colours + pressed states from the one
+ * greyscale button, and a dark "off" chip from the yellow one. One frame
+ * (`img`) per piece; the atlas pass merges them into one file.
+ */
+function packSwUiKit(repo: string): Record<string, SwUiPiece> {
+  const kit = path.join(repo, SW_SRC, 'ui/kit');
+  const crop = (file: string, x: number, y: number, w: number, h: number) => {
+    const src = readPng(path.join(kit, file));
+    const out = new PNG({ width: w, height: h, fill: true });
+    PNG.bitblt(src, out, x, y, w, h, 0, 0);
+    return out;
+  };
+  const mix = (c: [number, number, number], t: [number, number, number], k: number) =>
+    [0, 1, 2].map((i) => Math.round(c[i] + (t[i] - c[i]) * k)) as [number, number, number];
+  const BLACK: [number, number, number] = [12, 10, 14];
+  const WHITE: [number, number, number] = [255, 255, 255];
+  // Face → the colour, bevel → darker, top highlight → lighter. Outline stays.
+  const buttonRamp = (hex: string, dim = 0) => {
+    const c = mix(hexRgb(hex), BLACK, dim);
+    return [mix(c, BLACK, 0.6), mix(c, BLACK, 0.45), mix(c, BLACK, 0.25), c, mix(c, WHITE, 0.5)];
+  };
+  const button = crop('button-grey.png', 51, 53, 119, 44);
+  const chipOn = crop('pieces.png', 31, 159, 450, 66);
+  const pieces: Record<string, { png: PNG; inset: [number, number, number, number]; scale: number }> = {
+    panel: { png: crop('panel.png', 34, 19, 318, 239), inset: [56, 56, 56, 56], scale: 0.5 },
+    header: { png: crop('header.png', 23, 21, 642, 335), inset: [48, 96, 48, 96], scale: 0.3 },
+    back: { png: crop('pieces.png', 256, 64, 65, 65), inset: [0, 0, 0, 0], scale: 0.6 },
+    toggle: { png: crop('pieces.png', 185, 238, 144, 44), inset: [0, 0, 0, 0], scale: 0.5 },
+    'chip-on': { png: chipOn, inset: [16, 100, 16, 100], scale: 0.3 },
+    'chip-off': {
+      png: rampMap(chipOn, ['#1f1f23', '#2b2b2e', '#3f3f46', '#52525b', '#a1a1aa'].map(hexRgb)),
+      inset: [16, 100, 16, 100],
+      scale: 0.3,
+    },
+  };
+  for (const [name, hex] of [['primary', '#E0A526'], ['secondary', '#4B5563'], ['danger', '#C8202B']] as const) {
+    pieces[`button-${name}`] = { png: rampMap(button, buttonRamp(hex)), inset: [8, 12, 12, 12], scale: 0.75 };
+    pieces[`button-${name}-pressed`] = { png: rampMap(button, buttonRamp(hex, 0.25)), inset: [8, 12, 12, 12], scale: 0.75 };
+  }
+  const outDir = path.join(repo, 'assets/play', SW_SHEETS, 'ui-kit');
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  const manifest: Record<string, SheetEntry> = {};
+  const meta: Record<string, SwUiPiece> = {};
+  for (const [name, p] of Object.entries(pieces)) {
+    const key = `${SW_SHEETS}/ui-kit/${name}`;
+    fs.writeFileSync(path.join(repo, 'assets/play', `${key}.png`), encodeSheetPng(p.png));
+    manifest[key] = { sheet: `${key}.png`, sheetW: p.png.width, sheetH: p.png.height, frames: { img: { x: 0, y: 0, w: p.png.width, h: p.png.height } } };
+    meta[name] = { w: p.png.width, h: p.png.height, inset: p.inset, scale: p.scale };
+  }
+  fs.writeFileSync(path.join(outDir, 'sheets.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  return meta;
+}
+
 function hexRgb(hex: string): [number, number, number] {
   const n = Number.parseInt(hex.replace('#', ''), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -749,7 +809,8 @@ function packStreetwear(repo: string) {
   fs.writeFileSync(path.join(auraDir, 'sheets.json'), `${JSON.stringify(auras.manifest, null, 2)}\n`);
   const swords = bakeSwSwords(repo);
   const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
-  fs.writeFileSync(metaPath, `${JSON.stringify({ chars, fx: fx.meta, auras: auras.meta }, null, 2)}\n`);
+  const ui = packSwUiKit(repo);
+  fs.writeFileSync(metaPath, `${JSON.stringify({ chars, fx: fx.meta, auras: auras.meta, ui }, null, 2)}\n`);
   let files = 0;
   for (const manifest of walk(path.join(repo, 'assets/play', SW_SHEETS)).filter((f) => f.endsWith('sheets.json'))) {
     files += atlasSheetsDir(repo, path.dirname(manifest));

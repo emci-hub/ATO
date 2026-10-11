@@ -199,6 +199,31 @@ function buildShop() {
   return { cards, icons };
 }
 
+/** Menu UI kit pieces, cut back out of the packed atlas (what the game draws). */
+function buildMenu() {
+  type Piece = { src: string; w: number; h: number; inset: number[]; scale: number };
+  const sheetDir = path.join(SRC, '../../sheets/streetwear/ui-kit');
+  const metaFile = path.join(SRC, '../../sheets/streetwear/meta.json');
+  if (!fs.existsSync(path.join(sheetDir, 'sheets.json'))) return {} as Record<string, Piece>;
+  const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8')).ui as Record<string, { inset: number[]; scale: number }>;
+  const manifest = JSON.parse(fs.readFileSync(path.join(sheetDir, 'sheets.json'), 'utf8')) as Record<
+    string,
+    { sheet: string; frames: { img: { x: number; y: number; w: number; h: number } } }
+  >;
+  const out: Record<string, Piece> = {};
+  for (const [key, entry] of Object.entries(manifest)) {
+    const name = key.split('/').pop()!;
+    const atlas = read(path.join(SRC, '../..', entry.sheet));
+    const r = entry.frames.img;
+    const piece = new PNG({ width: r.w, height: r.h });
+    PNG.bitblt(atlas, piece, r.x, r.y, r.w, r.h, 0, 0);
+    const src = `img/ui-${name}.png`;
+    fs.writeFileSync(path.join(OUT, src), PNG.sync.write(piece));
+    out[name] = { src, w: r.w, h: r.h, inset: meta[name]?.inset ?? [0, 0, 0, 0], scale: meta[name]?.scale ?? 1 };
+  }
+  return out;
+}
+
 function main() {
   fs.rmSync(path.join(OUT, 'img'), { recursive: true, force: true });
   fs.mkdirSync(path.join(OUT, 'img'), { recursive: true });
@@ -212,6 +237,7 @@ function main() {
     effects: Record<string, Record<string, Strip>>;
     auras: Record<string, Record<string, Strip>>;
     shop: { cards: Still[]; icons: Still[] };
+    menu: ReturnType<typeof buildMenu>;
     splats: Record<string, { sheet: string; n: number }>;
     stills: Record<string, Still[]>;
   } = {
@@ -223,6 +249,7 @@ function main() {
     effects: buildEffects(),
     auras: buildAuras(),
     shop: buildShop(),
+    menu: buildMenu(),
     splats: {},
     stills: {},
   };

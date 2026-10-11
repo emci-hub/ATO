@@ -28,7 +28,7 @@ const ok = (msg: string) => {
 // 1. Nothing loose from Streetwear in the PLAY_ART registry.
 const assets = fs.readFileSync(path.join(repo, 'src/play/generated-play-assets.ts'), 'utf8');
 const swKeys = [...assets.matchAll(/'(skins\/streetwear\/[^']+)'/g)].map((m) => m[1]);
-const loose = swKeys.filter((k) => !/^skins\/streetwear\/ui\/(rarity|shop)\//.test(k));
+const loose = swKeys.filter((k) => !/^skins\/streetwear\/ui\/(rarity|shop|icons)\//.test(k));
 assert.deepEqual(loose, [], `loose Streetwear frames are bundled: ${loose.slice(0, 5).join(', ')}`);
 ok(`only ${swKeys.length} small Streetwear stills are bundled by key (no loose frames)`);
 
@@ -38,7 +38,7 @@ const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEE
 const sheets = JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
 const swSheets = Object.entries(sheets).filter(([k]) => k.startsWith('sheets/streetwear/'));
 for (const [key, entry] of swSheets) {
-  if (key.endsWith('/rotations') || /\/(fx|auras|swords)\//.test(key)) continue;
+  if (key.endsWith('/rotations') || /\/(fx|auras|swords|ui-kit)\//.test(key)) continue;
   const dirs = new Set(Object.keys(entry.frames).map((f) => f.split('/')[0]));
   for (const d of dirs) assert.ok(d === 'east' || d === 'west', `${key} ships a "${d}" row`);
 }
@@ -112,6 +112,23 @@ const swordTiers = JSON.parse(fs.readFileSync(path.join(repo, 'src/play/data/swo
 for (const tier of swordTiers.tiers) {
   for (const el of swordTiers.elements) assert.ok(sheets[`sheets/streetwear/swords/${tier}`]?.frames[el.id], `sword ${el.id}-${tier} not packed`);
 }
+
+// Menu UI kit: every piece the street chrome draws is packed with its insets.
+const uiMeta = (meta as unknown as { ui: Record<string, { inset: number[]; scale: number }> }).ui ?? {};
+for (const piece of ['panel', 'header', 'back', 'chip-on', 'chip-off', ...['primary', 'secondary', 'danger'].flatMap((v) => [`button-${v}`, `button-${v}-pressed`])]) {
+  assert.ok(uiMeta[piece]?.inset.length === 4 && uiMeta[piece].scale > 0, `ui kit piece ${piece} has no meta`);
+  assert.ok(sheets[`sheets/streetwear/ui-kit/${piece}`]?.frames.img, `ui kit piece ${piece} not packed`);
+}
+// Every item sticker the art map names is bundled.
+const artSrc = fs.readFileSync(path.join(repo, 'src/play/art.ts'), 'utf8');
+const stickerBlock = artSrc.slice(artSrc.indexOf('STREET_ICON_BY_ART'), artSrc.indexOf('};', artSrc.indexOf('STREET_ICON_BY_ART')));
+for (const [, sticker] of stickerBlock.matchAll(/:\s*'([a-z-]+)'/g)) {
+  assert.ok(swKeys.includes(`skins/streetwear/ui/icons/${sticker}`), `sticker ${sticker} is mapped but not bundled`);
+}
+for (const font of ['PixelifySans-Regular.ttf', 'PixelifySans-Bold.ttf', 'OFL-PixelifySans.txt']) {
+  assert.ok(fs.existsSync(path.join(repo, 'assets/play/fonts', font)), `font file ${font} missing`);
+}
+ok(`menu UI kit (${Object.keys(uiMeta).length} pieces), item stickers and Pixelify Sans are in place`);
 
 // 5. Default stays cast.
 const settings = fs.readFileSync(path.join(repo, 'src/play/play-settings.ts'), 'utf8');

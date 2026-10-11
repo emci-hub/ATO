@@ -336,7 +336,7 @@ export function PlaySheetBody({
         const goldBuff = buffForMedal(g, 'gold');
         const daily = pv.daily[g];
         return (
-          <PixelFrame key={g} align="stretch" glow={false}>
+          <PixelFrame streetPiece="panel" key={g} align="stretch" glow={false}>
             <View style={styles.gameCard}>
               <View style={styles.gameTitleRow}>
                 <PixelLabel numberOfLines={1} style={styles.gameTitle}>{GAME_LABEL[g]}</PixelLabel>

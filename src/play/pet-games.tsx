@@ -421,7 +421,7 @@ function GamePlate({
   return (
     <Animated.View style={[styles.screen, style]}>
       <View style={styles.top}>
-        <PixelFrame align="stretch" padded={false} enter>
+        <PixelFrame streetPiece="panel" align="stretch" padded={false} enter>
           <View style={styles.topPad}>
             <View style={styles.topRow}>
               <Pressable
@@ -459,7 +459,7 @@ function GamePlate({
         </PixelFrame>
       </View>
       <View style={styles.dock}>
-        <PixelFrame align="stretch" padded={false}>
+        <PixelFrame streetPiece="panel" align="stretch" padded={false}>
           <View style={styles.dockPad}>{dock}</View>
         </PixelFrame>
       </View>

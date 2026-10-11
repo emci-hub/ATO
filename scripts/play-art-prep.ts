@@ -50,7 +50,12 @@ const PACKED_HERO_ART = /^skins\/cast\/(heroes|creeps|boss|towers)\/[^/]+\/(anim
  * south included) never enter the bundle; just the small shop/rarity/sword
  * stills are bundled by key.
  */
-const STREETWEAR_UNBUNDLED = /^skins\/streetwear\/(?!ui\/(rarity|shop)\/)/;
+// The item stickers the game shows (art.ts STREET_ICON_BY_ART); the other
+// ~44 stickers stay out of the bundle until something uses them.
+const STREETWEAR_ICONS = ['hoodie', 'shades', 'bandana', 'flame', 'marker', 'cap', 'bucket-hat', 'gem', 'coin-stack', 'sword', 'bat', 'shield'];
+const STREETWEAR_UNBUNDLED = new RegExp(
+  `^skins/streetwear/(?!ui/(rarity|shop)/|ui/icons/(${STREETWEAR_ICONS.join('|')})$)`,
+);
 const HASH_SUFFIX = /-[0-9a-f]{8}(?=\/|$)/g;
 
 /**

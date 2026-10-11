@@ -11,6 +11,7 @@
  */
 import type { ImageSourcePropType } from 'react-native';
 
+import { artSkin } from '@/play/art-skin';
 import { PLAY_ART } from '@/play/generated-play-assets';
 
 /** An 8-way facing (matches the rotation folders the packs ship). */
@@ -64,8 +65,33 @@ const ITEM_ICON_BY_ART: Record<string, string> = {
   shield_ember_01: 'gauntlet_open',
 };
 
+/**
+ * Streetwear sticker for the same items (art style switch, 2026-10-11). Only
+ * these stickers are bundled (`STREETWEAR_ICONS` in play-art-prep.ts).
+ */
+export const STREET_ICON_BY_ART: Record<string, string> = {
+  cape_leaf_01: 'hoodie',
+  cape_glow_01: 'shades',
+  cloak_curator_01: 'bandana',
+  cloak_ember_01: 'flame',
+  staff_bud_01: 'marker',
+  helm_salt_01: 'cap',
+  robe_moss_01: 'bucket-hat',
+  trinket_pearl_01: 'gem',
+  trinket_copper_01: 'coin-stack',
+  blade_tide_01: 'sword',
+  blade_ember_01: 'bat',
+  shield_bark_01: 'shield',
+  shield_ember_01: 'shield',
+};
+
 /** Item art source for a `core.art` value, or undefined (render a placeholder). */
 export function itemArtSource(itemArt: string): ImageSourcePropType | undefined {
+  if (artSkin() === 'streetwear') {
+    const sticker = STREET_ICON_BY_ART[itemArt];
+    const source = sticker ? art(`skins/streetwear/ui/icons/${sticker}`) : undefined;
+    if (source) return source;
+  }
   const file = ITEM_ICON_BY_ART[itemArt];
   return file ? art(`kenney-icons/${file}`) : undefined;
 }

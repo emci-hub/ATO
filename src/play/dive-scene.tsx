@@ -634,7 +634,7 @@ export function DiveScene({
     </View>
   ) : caption ? (
     <View pointerEvents="none" style={styles.toast}>
-      <PixelFrame>
+      <PixelFrame streetPiece="panel">
         <PixelBody numberOfLines={2} style={styles.captionText}>{caption}</PixelBody>
       </PixelFrame>
     </View>
@@ -748,7 +748,7 @@ export function DiveScene({
       {toast}
       {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
       <View style={styles.dock}>
-        <PixelFrame align="stretch" padded={false}>
+        <PixelFrame streetPiece="panel" align="stretch" padded={false}>
           <View style={styles.dockPad}>
             <View pointerEvents="none" style={styles.haulRow}>
               <PixelLabel color={PIXEL.cyan}>Haul</PixelLabel>
