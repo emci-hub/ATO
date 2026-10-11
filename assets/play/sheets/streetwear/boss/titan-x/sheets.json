@@ -1,0 +1,57 @@
+{
+  "sheets/streetwear/boss/titan-x/rotations": {
+    "sheet": "sheets/streetwear/boss/titan-x/rotations.png",
+    "sheetW": 1959,
+    "sheetH": 244,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "north-east": {
+        "x": 245,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east": {
+        "x": 490,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south-east": {
+        "x": 735,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south": {
+        "x": 980,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south-west": {
+        "x": 1225,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "west": {
+        "x": 1470,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "north-west": {
+        "x": 1715,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      }
+    }
+  }
+}

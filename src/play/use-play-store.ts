@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
+import { setArtSkin } from '@/play/art-skin';
 import type { ItemSlot } from '@/play/items';
 import { bumpSaveEpoch, enqueuePlaySave, saveEpoch, saveIsCurrent, whenPlaySavesSettled } from '@/play/play-save';
 import {
@@ -110,6 +111,7 @@ export function usePlayStore() {
    * the screen now; the Stone path paints only after the save resolves. */
   const remember = useCallback((next: PlayStoreDoc, paint: boolean): Promise<void> => {
     bumpSaveEpoch();
+    setArtSkin(next.play_settings.artSkin);
     docRef.current = next;
     if (paint) setDoc(next);
     return enqueuePlaySave(() => savePlayStore(next));
@@ -127,6 +129,8 @@ export function usePlayStore() {
     // mark, so time away is counted once (the view alone never saves it).
     const next = touchPet(loaded, Date.now());
     if (!saveIsCurrent(started)) return;
+    // Art style (paint only) is applied before anything draws this doc.
+    setArtSkin(next.play_settings.artSkin);
     docRef.current = next;
     setDoc(next);
     if (next !== loaded) {
@@ -186,7 +190,10 @@ export function usePlayStore() {
     try {
       await remember(next, false);
     } catch {
-      if (docRef.current === next) docRef.current = current;
+      if (docRef.current === next) {
+        docRef.current = current;
+        setArtSkin(current.play_settings.artSkin);
+      }
       return false;
     }
     if (docRef.current === next) setDoc(next);

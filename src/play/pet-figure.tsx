@@ -18,7 +18,8 @@ import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
-import { PetAura } from '@/play/aura-view';
+import { artSkin } from '@/play/art-skin';
+import { PetAura, PetAuraSprite } from '@/play/aura-view';
 import { auraConfig, auraElementOf, auraPaintOrder } from '@/play/auras';
 import type { FinishKind, FinishMotion } from '@/play/finishes';
 import { ClipImage } from '@/play/sheet-sprite';
@@ -135,10 +136,13 @@ export function PetFigure({
   const worn = auraPaintOrder(pet.auras);
   const sword = auraElement || auraConfig().fallback_element;
   const blaze = worn.find((wear) => wear.style === 'blaze');
+  // Streetwear art style: the packed sprite auras (every style has a front layer).
+  const spriteAuras = artSkin() === 'streetwear';
+  const Aura = spriteAuras ? PetAuraSprite : PetAura;
   return (
     <View style={{ width: box, height: box, overflow: 'visible' }}>
       {worn.map((wear) => (
-        <PetAura
+        <Aura
           key={wear.style}
           drawable={drawable}
           styleId={wear.style}
@@ -173,9 +177,20 @@ export function PetFigure({
         </View>
       ) : null}
       </View>
-      {blaze ? (
-        <PetAura drawable={drawable} styleId="blaze" element={auraElementOf(blaze.color, sword)} box={box} layer="front" />
-      ) : null}
+      {spriteAuras
+        ? worn.map((wear) => (
+            <PetAuraSprite
+              key={`front-${wear.style}`}
+              drawable={drawable}
+              styleId={wear.style}
+              element={auraElementOf(wear.color, sword)}
+              box={box}
+              layer="front"
+            />
+          ))
+        : blaze ? (
+            <PetAura drawable={drawable} styleId="blaze" element={auraElementOf(blaze.color, sword)} box={box} layer="front" />
+          ) : null}
       {badgeArt ? (
         <Image
           source={badgeArt}

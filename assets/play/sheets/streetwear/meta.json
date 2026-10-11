@@ -1,0 +1,537 @@
+{
+  "chars": {
+    "heroes/archangel": {
+      "footAt": 0.8177,
+      "bodyRatio": 0.5625,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/aurex": {
+      "footAt": 0.7969,
+      "bodyRatio": 0.5469,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/corvus": {
+      "footAt": 0.7969,
+      "bodyRatio": 0.5521,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/cyber-shinobi": {
+      "footAt": 0.7865,
+      "bodyRatio": 0.5729,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/elowen": {
+      "footAt": 0.8177,
+      "bodyRatio": 0.5781,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/frost-lich": {
+      "footAt": 0.7917,
+      "bodyRatio": 0.5938,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/kael": {
+      "footAt": 0.7813,
+      "bodyRatio": 0.5625,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/kitsune": {
+      "footAt": 0.7917,
+      "bodyRatio": 0.5781,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/maldrath": {
+      "footAt": 0.7969,
+      "bodyRatio": 0.6042,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/morwen": {
+      "footAt": 0.7813,
+      "bodyRatio": 0.5521,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/neon-viper": {
+      "footAt": 0.7813,
+      "bodyRatio": 0.5521,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/oni": {
+      "footAt": 0.7969,
+      "bodyRatio": 0.5469,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/raven": {
+      "footAt": 0.776,
+      "bodyRatio": 0.5417,
+      "clips": {
+        "Attack": 6,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/sak": {
+      "footAt": 0.7969,
+      "bodyRatio": 0.5833,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/velkhar": {
+      "footAt": 0.7969,
+      "bodyRatio": 0.5885,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "heroes/void-raven": {
+      "footAt": 0.7917,
+      "bodyRatio": 0.5625,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8
+      }
+    },
+    "creeps/knight": {
+      "footAt": 0.7292,
+      "bodyRatio": 0.4271,
+      "clips": {
+        "Death": 7,
+        "Idle": 4,
+        "Walk": 8
+      }
+    },
+    "creeps/village-girl": {
+      "footAt": 0.7708,
+      "bodyRatio": 0.5104,
+      "clips": {
+        "Death": 7,
+        "Idle": 4,
+        "Walk": 8
+      }
+    },
+    "creeps/wizard": {
+      "footAt": 0.7396,
+      "bodyRatio": 0.4688,
+      "clips": {
+        "Death": 7,
+        "Idle": 4,
+        "Walk": 8
+      }
+    },
+    "towers/ghost": {
+      "footAt": 0.7667,
+      "bodyRatio": 0.5375,
+      "clips": {
+        "Attack": 8,
+        "Idle": 4,
+        "Skill": 8
+      }
+    },
+    "towers/lux": {
+      "footAt": 0.7664,
+      "bodyRatio": 0.5164,
+      "clips": {
+        "Attack": 8,
+        "Idle": 4,
+        "Skill": 8
+      }
+    },
+    "towers/viper": {
+      "footAt": 0.7542,
+      "bodyRatio": 0.5,
+      "clips": {
+        "Attack": 8,
+        "Idle": 4,
+        "Skill": 8
+      }
+    },
+    "boss/oni": {
+      "footAt": 0.8523,
+      "bodyRatio": 0.7008,
+      "clips": {
+        "Death": 8,
+        "Idle": 4,
+        "Run": 8,
+        "Walk": 8
+      }
+    },
+    "boss/titan-x": {
+      "footAt": 0.7787,
+      "bodyRatio": 0.5246,
+      "clips": {}
+    }
+  },
+  "fx": {
+    "ember/shot": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.7593,
+      "anchorY": 0.4815
+    },
+    "ember/hit": {
+      "frames": 5,
+      "fps": 16,
+      "loop": false,
+      "cell": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "ember/burst": {
+      "frames": 12,
+      "fps": 12,
+      "loop": false,
+      "cell": 87,
+      "anchorX": 0.5287,
+      "anchorY": 0.6207
+    },
+    "ember/status": {
+      "frames": 12,
+      "fps": 12,
+      "loop": true,
+      "cell": 47,
+      "anchorX": 0.4894,
+      "anchorY": 0.8936
+    },
+    "ember/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "plain/shot": {
+      "frames": 4,
+      "fps": 12,
+      "loop": true,
+      "cell": 43,
+      "anchorX": 0.7907,
+      "anchorY": 0.4651
+    },
+    "plain/hit": {
+      "frames": 6,
+      "fps": 16,
+      "loop": false,
+      "cell": 45,
+      "anchorX": 0.4667,
+      "anchorY": 0.5111
+    },
+    "plain/burst": {
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "cell": 112,
+      "anchorX": 0.5,
+      "anchorY": 0.5714
+    },
+    "plain/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "root/shot": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.7593,
+      "anchorY": 0.4815
+    },
+    "root/hit": {
+      "frames": 8,
+      "fps": 11,
+      "loop": false,
+      "cell": 67,
+      "anchorX": 0.5224,
+      "anchorY": 0.5672
+    },
+    "root/burst": {
+      "frames": 12,
+      "fps": 12,
+      "loop": false,
+      "cell": 116,
+      "anchorX": 0.5,
+      "anchorY": 0.5431
+    },
+    "root/status": {
+      "frames": 13,
+      "fps": 12,
+      "loop": false,
+      "cell": 59,
+      "anchorX": 0.4915,
+      "anchorY": 0.6949
+    },
+    "root/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "spark/shot": {
+      "frames": 4,
+      "fps": 12,
+      "loop": true,
+      "cell": 43,
+      "anchorX": 0.7907,
+      "anchorY": 0.4651
+    },
+    "spark/hit": {
+      "frames": 8,
+      "fps": 16,
+      "loop": false,
+      "cell": 67,
+      "anchorX": 0.4925,
+      "anchorY": 0.5075
+    },
+    "spark/burst": {
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "cell": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.8594
+    },
+    "spark/status": {
+      "frames": 12,
+      "fps": 12,
+      "loop": true,
+      "cell": 44,
+      "anchorX": 0.4773,
+      "anchorY": 1.0909
+    },
+    "spark/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "tide/shot": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.7593,
+      "anchorY": 0.4815
+    },
+    "tide/hit": {
+      "frames": 8,
+      "fps": 11,
+      "loop": false,
+      "cell": 70,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "tide/burst": {
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "cell": 112,
+      "anchorX": 0.5,
+      "anchorY": 0.5714
+    },
+    "tide/status": {
+      "frames": 12,
+      "fps": 10,
+      "loop": true,
+      "cell": 37,
+      "anchorX": 0.4595,
+      "anchorY": 0.8378
+    },
+    "tide/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "void/shot": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.7593,
+      "anchorY": 0.4815
+    },
+    "void/hit": {
+      "frames": 8,
+      "fps": 16,
+      "loop": false,
+      "cell": 67,
+      "anchorX": 0.4925,
+      "anchorY": 0.4925
+    },
+    "void/burst": {
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "cell": 116,
+      "anchorX": 0.5,
+      "anchorY": 0.6552
+    },
+    "void/status": {
+      "frames": 12,
+      "fps": 6,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.5,
+      "anchorY": 0.9444
+    },
+    "void/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    }
+  },
+  "auras": {
+    "blaze": {
+      "frames": 8,
+      "fps": 8,
+      "loop": true,
+      "cell": 98,
+      "anchorX": 0.5,
+      "anchorY": 0.8776,
+      "refBodyPx": 49
+    },
+    "bubbles": {
+      "frames": 6,
+      "fps": 8,
+      "loop": true,
+      "cell": 61,
+      "anchorX": 0.459,
+      "anchorY": 0.9016,
+      "refBodyPx": 49
+    },
+    "rune": {
+      "frames": 6,
+      "fps": 8,
+      "loop": true,
+      "cell": 70,
+      "anchorX": 0.5,
+      "anchorY": 0.7286,
+      "refBodyPx": 49
+    },
+    "spiky": {
+      "frames": 6,
+      "fps": 8,
+      "loop": true,
+      "cell": 84,
+      "anchorX": 0.5119,
+      "anchorY": 0.7857,
+      "refBodyPx": 49
+    }
+  }
+}

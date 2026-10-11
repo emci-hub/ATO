@@ -90,6 +90,7 @@ import {
   BOARD_SKIN_LABEL,
   bandUnitRole,
   directionalClipDrawable,
+  artSkin,
   heroAvatarRole,
   isPathWalker,
   roleAnimFaceIndex,
@@ -117,6 +118,7 @@ import {
   skinWalkFrames,
   resolveBoundHeroTowerKit,
   towerSkinRole,
+  type ArtSkinId,
   type ClipDrawable,
   type SkinRole,
   type SkinRoleId,
@@ -1087,9 +1089,12 @@ export function DefendScreen({
   /** The `unit.avatar` role for the hero set in Dress (`active_avatar_hero_id`).
    * Rebuilt only when the hero id changes; every Avatar draw/clip read below
    * resolves through this, so the board never hard-codes Corvus. */
+  const art = artSkin();
   const avatarRole = useMemo(
     () => heroAvatarRole(view.activeAvatarHeroId),
-    [view.activeAvatarHeroId],
+    // `art` re-resolves the Avatar when the art style switches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [view.activeAvatarHeroId, art],
   );
 
   /** The veil the active hero casts (its `skills.json` row resolved through
@@ -1178,7 +1183,7 @@ export function DefendScreen({
       if (!current || (current.towers.length === 0 && current.boundBosses.length === 0)) return;
       let changed = false;
       for (const tower of current.towers) {
-        const role = TOWER_KIT_ROLES[tower.kind];
+        const role = towerKitRole(tower.kind);
         const hasClips =
           castActorClipFrames('idle', role) > 0 ||
           castActorClipFrames('attack', role) > 0 ||
@@ -1979,7 +1984,7 @@ export function DefendScreen({
         const after = step.state.towers.find((t) => t.id === tower.id);
         const fired = after != null && after.cooldownMs > tower.cooldownMs + 1;
         if (fired) {
-          startTowerOnce('attack', tower.id, TOWER_KIT_ROLES[tower.kind]);
+          startTowerOnce('attack', tower.id, towerKitRole(tower.kind));
         }
         // K1b — the auto-skill cast: the engine reset `skillCooldownMs`, so a
         // skill one-shot plays (if the skin authors it); the tower's face is
@@ -1987,7 +1992,7 @@ export function DefendScreen({
         // clip ladder, so a same-tick shot keeps its FX but skips its clip.
         const skillCast = after != null && after.skillCooldownMs > tower.skillCooldownMs + 1;
         if (skillCast) {
-          startTowerOnce('skill', tower.id, TOWER_KIT_ROLES[tower.kind]);
+          startTowerOnce('skill', tower.id, towerKitRole(tower.kind));
         }
       }
       // A6 — a hero bound as a tower (and a cycle boss mapped to a hero, e.g.
@@ -2984,7 +2989,7 @@ export function DefendScreen({
               {sim?.towers.map((tower) => {
                 const pad = boardMap.pads[tower.pad];
                 const role = TOWER_ROLE[tower.kind];
-                const kitRole = TOWER_KIT_ROLES[tower.kind];
+                const kitRole = towerKitRole(tower.kind);
                 const dirs = skinDirs(role);
                 const deg = towerFacingRef.current[tower.id] ?? 0;
                 const heading = headingVectorFromDeg(deg);
@@ -4823,14 +4828,20 @@ const TOWER_ROLE: Record<TowerKind, SkinRoleId> = {
   crystal: 'tower.crystal',
 };
 
-/** Tower draw roles with the clip kit resolved: the static cast rotation role
- * PLUS the tower skin's idle/attack `anims` when its art is bundled. Used by the
- * clip player + renderer; `TOWER_ROLE` above stays the metadata/static-art id. */
-const TOWER_KIT_ROLES: Record<TowerKind, SkinRole> = {
-  archer: towerSkinRole('archer'),
-  vine: towerSkinRole('vine'),
-  crystal: towerSkinRole('crystal'),
-};
+/** Tower draw roles with the clip kit resolved: the static rotation role PLUS
+ * the tower skin's idle/attack `anims` when its art is bundled. Used by the
+ * clip player + renderer; `TOWER_ROLE` above stays the metadata/static-art id.
+ * Cached per art skin (PlaySettings.artSkin), so switching styles re-resolves. */
+const TOWER_KIT_CACHE = new Map<ArtSkinId, Record<TowerKind, SkinRole>>();
+function towerKitRole(kind: TowerKind): SkinRole {
+  const art = artSkin();
+  let roles = TOWER_KIT_CACHE.get(art);
+  if (!roles) {
+    roles = { archer: towerSkinRole('archer'), vine: towerSkinRole('vine'), crystal: towerSkinRole('crystal') };
+    TOWER_KIT_CACHE.set(art, roles);
+  }
+  return roles[kind];
+}
 
 /** Fallback tower box, board units, when a role omits `units`. */
 const TOWER_PAD_UNITS = 17;

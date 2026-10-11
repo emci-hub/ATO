@@ -1,0 +1,370 @@
+{
+  "sheets/streetwear/auras/blaze/behind": {
+    "sheet": "sheets/streetwear/auras/blaze/behind.png",
+    "sheetW": 791,
+    "sheetH": 98,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_001": {
+        "x": 99,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_002": {
+        "x": 198,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_003": {
+        "x": 297,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_004": {
+        "x": 396,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_005": {
+        "x": 495,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_006": {
+        "x": 594,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_007": {
+        "x": 693,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      }
+    }
+  },
+  "sheets/streetwear/auras/blaze/front": {
+    "sheet": "sheets/streetwear/auras/blaze/front.png",
+    "sheetW": 791,
+    "sheetH": 98,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_001": {
+        "x": 99,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_002": {
+        "x": 198,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_003": {
+        "x": 297,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_004": {
+        "x": 396,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_005": {
+        "x": 495,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_006": {
+        "x": 594,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_007": {
+        "x": 693,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      }
+    }
+  },
+  "sheets/streetwear/auras/bubbles/behind": {
+    "sheet": "sheets/streetwear/auras/bubbles/behind.png",
+    "sheetW": 371,
+    "sheetH": 61,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_001": {
+        "x": 62,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_002": {
+        "x": 124,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_003": {
+        "x": 186,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_004": {
+        "x": 248,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_005": {
+        "x": 310,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      }
+    }
+  },
+  "sheets/streetwear/auras/bubbles/front": {
+    "sheet": "sheets/streetwear/auras/bubbles/front.png",
+    "sheetW": 371,
+    "sheetH": 61,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_001": {
+        "x": 62,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_002": {
+        "x": 124,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_003": {
+        "x": 186,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_004": {
+        "x": 248,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_005": {
+        "x": 310,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      }
+    }
+  },
+  "sheets/streetwear/auras/rune/behind": {
+    "sheet": "sheets/streetwear/auras/rune/behind.png",
+    "sheetW": 425,
+    "sheetH": 70,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_001": {
+        "x": 71,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_002": {
+        "x": 142,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_003": {
+        "x": 213,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_004": {
+        "x": 284,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_005": {
+        "x": 355,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      }
+    }
+  },
+  "sheets/streetwear/auras/rune/front": {
+    "sheet": "sheets/streetwear/auras/rune/front.png",
+    "sheetW": 425,
+    "sheetH": 70,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_001": {
+        "x": 71,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_002": {
+        "x": 142,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_003": {
+        "x": 213,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_004": {
+        "x": 284,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_005": {
+        "x": 355,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      }
+    }
+  },
+  "sheets/streetwear/auras/spiky/behind": {
+    "sheet": "sheets/streetwear/auras/spiky/behind.png",
+    "sheetW": 509,
+    "sheetH": 84,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_001": {
+        "x": 85,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_002": {
+        "x": 170,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_003": {
+        "x": 255,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_004": {
+        "x": 340,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_005": {
+        "x": 425,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      }
+    }
+  },
+  "sheets/streetwear/auras/spiky/front": {
+    "sheet": "sheets/streetwear/auras/spiky/front.png",
+    "sheetW": 509,
+    "sheetH": 84,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_001": {
+        "x": 85,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_002": {
+        "x": 170,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_003": {
+        "x": 255,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_004": {
+        "x": 340,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_005": {
+        "x": 425,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      }
+    }
+  }
+}

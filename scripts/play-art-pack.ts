@@ -23,8 +23,64 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 
 import { PNG } from 'pngjs';
+
+/**
+ * Write a sheet as a PALETTE png when it has ≤256 distinct RGBA colours (pixel
+ * art nearly always does) — pixel-exact, typically 3-4x smaller than RGBA,
+ * which is what keeps an OTA's first download small. Falls back to RGBA.
+ */
+function encodeSheetPng(png: PNG): Buffer {
+  const index = new Map<number, number>();
+  const px = new Uint32Array(png.width * png.height);
+  for (let i = 0; i < px.length; i += 1) {
+    const o = i * 4;
+    const a = png.data[o + 3];
+    const c = a === 0 ? 0 : ((png.data[o] << 24) | (png.data[o + 1] << 16) | (png.data[o + 2] << 8) | a) >>> 0;
+    px[i] = c;
+    if (!index.has(c)) {
+      if (index.size === 256) return PNG.sync.write(png, { deflateLevel: 9 });
+      index.set(c, index.size);
+    }
+  }
+  const colors = [...index.keys()];
+  const chunk = (type: string, data: Buffer) => {
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(zlib.crc32(body));
+    return Buffer.concat([len, body, crc]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(png.width, 0);
+  ihdr.writeUInt32BE(png.height, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 3; // colour type: palette
+  const plte = Buffer.alloc(colors.length * 3);
+  const trns = Buffer.alloc(colors.length);
+  colors.forEach((c, i) => {
+    plte[i * 3] = (c >>> 24) & 255;
+    plte[i * 3 + 1] = (c >>> 16) & 255;
+    plte[i * 3 + 2] = (c >>> 8) & 255;
+    trns[i] = c & 255;
+  });
+  const raw = Buffer.alloc((png.width + 1) * png.height);
+  for (let y = 0; y < png.height; y += 1) {
+    raw[y * (png.width + 1)] = 0; // filter: none (the norm for palette images)
+    for (let x = 0; x < png.width; x += 1) raw[y * (png.width + 1) + 1 + x] = index.get(px[y * png.width + x])!;
+  }
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr),
+    chunk('PLTE', plte),
+    chunk('tRNS', trns),
+    chunk('IDAT', zlib.deflateSync(raw, { level: 9 })),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
 
 /** Transparent gutter between frames, px. 1px is the pixel-art default. */
 const GUTTER = 1;
@@ -194,7 +250,7 @@ function packRotations(heroDir: string, outDir: string, keyBase: string): Packed
 
   const outPath = path.join(outDir, 'rotations.png');
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, PNG.sync.write(sheet));
+  fs.writeFileSync(outPath, encodeSheetPng(sheet));
 
   return {
     key: `${keyBase}/rotations`,
@@ -207,15 +263,23 @@ function packRotations(heroDir: string, outDir: string, keyBase: string): Packed
   };
 }
 
-/** Pack one `<clip>/<dir>/frame_NNN.png` tree into a single sheet. */
-function packClip(heroDir: string, clipDirName: string, outDir: string, keyBase: string): PackedClip {
+/** Pack one `<clip>/<dir>/frame_NNN.png` tree into a single sheet. `onlyDirs`
+ * keeps just those facings (the Streetwear pack ships east/west only — the
+ * board never draws north/south, so they stay in the repo, out of the bundle). */
+function packClip(
+  heroDir: string,
+  clipDirName: string,
+  outDir: string,
+  keyBase: string,
+  onlyDirs?: readonly string[],
+): PackedClip {
   const clipPath = path.join(heroDir, 'animations', clipDirName);
   const clipKey = clipDirName.replace(HASH_SUFFIX, '');
   const warnings: string[] = [];
 
   const dirs = fs
     .readdirSync(clipPath, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
+    .filter((d) => d.isDirectory() && (!onlyDirs || onlyDirs.includes(d.name)))
     .map((d) => d.name);
 
   const rows = dirs.map((dir) => {
@@ -273,7 +337,7 @@ function packClip(heroDir: string, clipDirName: string, outDir: string, keyBase:
   const sheetFile = `${keyBase}/${clipKey}.png`;
   const outPath = path.join(outDir, `${clipKey}.png`);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, PNG.sync.write(sheet));
+  fs.writeFileSync(outPath, encodeSheetPng(sheet));
 
   return {
     key: `${keyBase}/${clipKey}`,
@@ -293,10 +357,18 @@ function main() {
   const one = arg('hero');
   const all = process.argv.includes('--all');
   const family = arg('family');
-  if (!one && !all && !family) {
+  const skin = arg('skin');
+  if (!one && !all && !family && !skin) {
     throw new Error(
-      'Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all | --family <name>) [--preview]',
+      'Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all | --family <name> | --skin streetwear) [--preview]',
     );
+  }
+
+  if (skin) {
+    if (skin !== 'streetwear') throw new Error(`unknown skin "${skin}" (only streetwear packs this way)`);
+    packStreetwear(repo);
+    writeRegistry(repo);
+    return;
   }
 
   if (family) {
@@ -390,6 +462,285 @@ function packFlatFamily(repo: string, family: string) {
   console.log(
     `packed ${family}: ${files.length} files → 1 sheet (${sheetW}x${sheetH}, ${perRow}×${rows} grid)`,
   );
+}
+
+/* ------------------------------------------------ Streetwear skin pack ---- */
+
+const SW_SRC = 'assets/play/skins/streetwear';
+const SW_SHEETS = 'sheets/streetwear';
+/** The board only ever draws east/west clip rows (path walkers keep a side
+ * profile; towers/avatar play E/W). North/south stay in the repo. */
+const SW_DIRS = ['east', 'west'] as const;
+
+type SwCharMeta = {
+  /** Feet line of the east rotation, fraction of the frame height from the top. */
+  footAt: number;
+  /** Visible body height / frame height (east rotation) — sizes the box so a
+   * Streetwear figure matches the cast figure it replaces on screen. */
+  bodyRatio: number;
+  /** Clip name → frames per facing (east == west). */
+  clips: Record<string, number>;
+};
+
+type SwFxMeta = { frames: number; fps: number; loop: boolean; cell: number; anchorX: number; anchorY: number };
+
+/** Bounding box of opaque pixels, or null for an empty frame. */
+function alphaBox(png: PNG): { x0: number; y0: number; x1: number; y1: number } | null {
+  let x0 = png.width, y0 = png.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < png.height; y += 1) {
+    for (let x = 0; x < png.width; x += 1) {
+      if (png.data[(y * png.width + x) * 4 + 3] > 8) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    }
+  }
+  return x1 < 0 ? null : { x0, y0, x1, y1 };
+}
+
+/** Pack one Streetwear character folder: E/W clip sheets + the 8-rotation strip. */
+function packSwCharacter(repo: string, group: string, slug: string): SwCharMeta {
+  const dir = path.join(repo, SW_SRC, group, slug);
+  const keyBase = `${SW_SHEETS}/${group}/${slug}`;
+  const outDir = path.join(repo, 'assets/play', keyBase);
+  fs.rmSync(outDir, { recursive: true, force: true });
+  const packed: PackedClip[] = [];
+  const clips: Record<string, number> = {};
+  const animRoot = path.join(dir, 'animations');
+  if (fs.existsSync(animRoot)) {
+    for (const clip of fs.readdirSync(animRoot, { withFileTypes: true }).filter((d) => d.isDirectory())) {
+      const p = packClip(dir, clip.name, outDir, keyBase, SW_DIRS);
+      for (const w of p.warnings) throw new Error(`${group}/${slug}/${clip.name}: ${w}`);
+      packed.push(p);
+      clips[p.action] = p.frameCount;
+    }
+  }
+  const rotations = packRotations(dir, outDir, keyBase);
+  if (!rotations) throw new Error(`${group}/${slug}: no rotations`);
+  packed.push(rotations);
+  const manifest: Record<string, SheetEntry> = {};
+  for (const p of packed) manifest[p.key] = p.entry;
+  fs.writeFileSync(path.join(outDir, 'sheets.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+
+  const east = readPng(path.join(dir, 'rotations', 'east.png'));
+  const box = alphaBox(east);
+  if (!box) throw new Error(`${group}/${slug}: empty east rotation`);
+  return {
+    footAt: Number(((box.y1 + 1) / east.height).toFixed(4)),
+    bodyRatio: Number(((box.y1 - box.y0 + 1) / east.height).toFixed(4)),
+    clips,
+  };
+}
+
+/** Crop the frames of a PixelLab VFX export: TexturePacker `<kind>.json`
+ * (pivot = anchor) or a `--part` / game-pack `manifest.json` clip (offset =
+ * frame top-left relative to the anchor). */
+function vfxExportFrames(
+  png: string,
+  meta: string,
+  clipName?: string,
+): { frames: PNG[]; anchor: { x: number; y: number }; fps: number; loop: boolean } {
+  const sheet = readPng(png);
+  const j = JSON.parse(fs.readFileSync(meta, 'utf8'));
+  const cut = (x: number, y: number, w: number, h: number) => {
+    const p = new PNG({ width: w, height: h, fill: true });
+    PNG.bitblt(sheet, p, x, y, w, h, 0, 0);
+    return p;
+  };
+  if (Array.isArray(j.frames)) {
+    const f0 = j.frames[0];
+    const ms = Number(f0.duration) || 83;
+    return {
+      frames: j.frames.map((f: { frame: FrameRect }) => cut(f.frame.x, f.frame.y, f.frame.w, f.frame.h)),
+      anchor: { x: f0.pivot.x * f0.frame.w, y: f0.pivot.y * f0.frame.h },
+      fps: Math.round(1000 / ms),
+      loop: false,
+    };
+  }
+  const c = clipName ? j.clips.find((k: { name: string }) => k.name === clipName) : j.clips[0];
+  if (!c) throw new Error(`${meta}: no clip ${clipName}`);
+  // The manifest names its own sheet file, which we saved under a different
+  // name — the grid geometry is what we trust.
+  const cols = c.sheets[0].columns as number;
+  const frames: PNG[] = [];
+  for (let i = 0; i < c.frames; i += 1) {
+    frames.push(cut((i % cols) * c.frame.w, Math.floor(i / cols) * c.frame.h, c.frame.w, c.frame.h));
+  }
+  return { frames, anchor: { x: -c.offset.x, y: -c.offset.y }, fps: j.fps ?? 12, loop: !!c.loop };
+}
+
+/** One horizontal strip of square cells (frames centred), keyed `frame_NNN`. */
+function writeSquareStrip(
+  repo: string,
+  key: string,
+  layers: { frames: PNG[]; dx: number; dy: number }[],
+  cell: number,
+): SheetEntry {
+  const n = layers[0].frames.length;
+  const sheetW = n * cell + (n - 1) * GUTTER;
+  if (sheetW > MAX_SHEET_PX) throw new Error(`${key}: strip ${sheetW}px over the cap`);
+  const sheet = new PNG({ width: sheetW, height: cell, fill: true });
+  const frames: Record<string, FrameRect> = {};
+  for (let i = 0; i < n; i += 1) {
+    const x = i * (cell + GUTTER);
+    for (const layer of layers) {
+      const f = layer.frames[i % layer.frames.length];
+      PNG.bitblt(f, sheet, 0, 0, f.width, f.height, x + layer.dx, layer.dy);
+    }
+    frames[`frame_${String(i).padStart(3, '0')}`] = { x, y: 0, w: cell, h: cell };
+  }
+  const file = path.join(repo, 'assets/play', `${key}.png`);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, encodeSheetPng(sheet));
+  return { sheet: `${key}.png`, sheetW, sheetH: cell, frames };
+}
+
+/** Element effects → square-cell strips (the board's sprite drawer is square). */
+function packSwEffects(repo: string): { manifest: Record<string, SheetEntry>; meta: Record<string, SwFxMeta> } {
+  const manifest: Record<string, SheetEntry> = {};
+  const meta: Record<string, SwFxMeta> = {};
+  const root = path.join(repo, SW_SRC, 'fx/elements');
+  for (const el of fs.readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory())) {
+    for (const kind of ['shot', 'hit', 'burst', 'status', 'slash']) {
+      const png = path.join(root, el.name, `${kind}.png`);
+      const metaFile = [`${kind}.json`, `${kind}.manifest.json`].map((m) => path.join(root, el.name, m)).find((m) => fs.existsSync(m));
+      if (!fs.existsSync(png) || !metaFile) continue;
+      const fx = vfxExportFrames(png, metaFile);
+      const w = fx.frames[0].width;
+      const h = fx.frames[0].height;
+      const cell = Math.max(w, h);
+      const dx = (cell - w) >> 1;
+      const dy = (cell - h) >> 1;
+      const key = `${SW_SHEETS}/fx/${el.name}/${kind}`;
+      manifest[key] = writeSquareStrip(repo, key, [{ frames: fx.frames, dx, dy }], cell);
+      meta[`${el.name}/${kind}`] = {
+        frames: fx.frames.length,
+        fps: fx.fps,
+        loop: kind === 'shot' || (kind === 'status' && el.name !== 'root'),
+        cell,
+        anchorX: Number(((fx.anchor.x + dx) / cell).toFixed(4)),
+        anchorY: Number(((fx.anchor.y + dy) / cell).toFixed(4)),
+      };
+    }
+  }
+  return { manifest, meta };
+}
+
+/** Pet auras → a behind strip and a front strip sharing one square cell, both
+ * anchored at the pet's feet. Greyscale: the app palette-maps them at runtime. */
+function packSwAuras(repo: string): { manifest: Record<string, SheetEntry>; meta: Record<string, SwFxMeta & { refBodyPx: number }> } {
+  const manifest: Record<string, SheetEntry> = {};
+  const meta: Record<string, SwFxMeta & { refBodyPx: number }> = {};
+  const root = path.join(repo, SW_SRC, 'fx/auras');
+  // Authored around the 64px Village Girl creep (visible body 49px tall).
+  const REF_BODY_PX = 49;
+  for (const style of fs.readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory())) {
+    const metaFile = path.join(root, style.name, 'manifest.json');
+    const back = vfxExportFrames(path.join(root, style.name, 'behind.png'), metaFile, 'behind');
+    const hasFront = fs.existsSync(path.join(root, style.name, 'front.png'));
+    const front = hasFront ? vfxExportFrames(path.join(root, style.name, 'front.png'), metaFile, 'front') : null;
+    const parts = [back, ...(front ? [front] : [])].map((p) => ({
+      p,
+      left: -p.anchor.x,
+      top: -p.anchor.y,
+      w: p.frames[0].width,
+      h: p.frames[0].height,
+    }));
+    const left = Math.min(...parts.map((q) => q.left));
+    const top = Math.min(...parts.map((q) => q.top));
+    const right = Math.max(...parts.map((q) => q.left + q.w));
+    const bottom = Math.max(...parts.map((q) => q.top + q.h));
+    const cell = Math.max(right - left, bottom - top);
+    const ox = ((cell - (right - left)) >> 1) - left; // anchor x inside the cell
+    const oy = ((cell - (bottom - top)) >> 1) - top;
+    for (const q of parts) {
+      const which = q.p === back ? 'behind' : 'front';
+      const key = `${SW_SHEETS}/auras/${style.name}/${which}`;
+      manifest[key] = writeSquareStrip(repo, key, [{ frames: q.p.frames, dx: ox + q.left, dy: oy + q.top }], cell);
+    }
+    meta[style.name] = {
+      frames: back.frames.length,
+      fps: back.fps,
+      loop: true,
+      cell,
+      anchorX: Number((ox / cell).toFixed(4)),
+      anchorY: Number((oy / cell).toFixed(4)),
+      refBodyPx: REF_BODY_PX,
+    };
+  }
+  return { manifest, meta };
+}
+
+/** Stepped greyscale → 5-stop ramp (dark → light), outline (< 28) kept. */
+function rampMap(src: PNG, ramp: [number, number, number][]): PNG {
+  const p = new PNG({ width: src.width, height: src.height });
+  src.data.copy(p.data);
+  for (let i = 0; i < p.data.length; i += 4) {
+    if (!p.data[i + 3]) continue;
+    const L = 0.299 * p.data[i] + 0.587 * p.data[i + 1] + 0.114 * p.data[i + 2];
+    if (L < 28) continue;
+    const k = Math.min(ramp.length - 1, Math.round(((L - 28) / 227) * (ramp.length - 1)));
+    [p.data[i], p.data[i + 1], p.data[i + 2]] = ramp[k];
+  }
+  return p;
+}
+
+function hexRgb(hex: string): [number, number, number] {
+  const n = Number.parseInt(hex.replace('#', ''), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** 5-stop ramp from one element colour: deep shadow → base → near white. */
+function rampFromColor(hex: string): [number, number, number][] {
+  const c = hexRgb(hex);
+  const mix = (t: [number, number, number], k: number): [number, number, number] =>
+    [0, 1, 2].map((i) => Math.round(c[i] + (t[i] - c[i]) * k)) as [number, number, number];
+  return [mix([12, 6, 10], 0.75), mix([12, 6, 10], 0.4), c, mix([255, 255, 255], 0.55), [255, 255, 255]];
+}
+
+/** Bake every sword element × tier icon (greyscale tier sword tinted per
+ * element). Tiny 48px PNGs, so baking beats runtime recolouring in a list. */
+function bakeSwSwords(repo: string): number {
+  const swords = JSON.parse(fs.readFileSync(path.join(repo, 'src/play/data/swords.json'), 'utf8')) as {
+    tiers: string[];
+    elements: { id: string; color: string }[];
+  };
+  const out = path.join(repo, SW_SRC, 'ui/swords/baked');
+  fs.rmSync(out, { recursive: true, force: true });
+  fs.mkdirSync(out, { recursive: true });
+  let n = 0;
+  for (const tier of swords.tiers) {
+    const base = readPng(path.join(repo, SW_SRC, `ui/swords/sword-${tier}.png`));
+    for (const el of swords.elements) {
+      fs.writeFileSync(path.join(out, `${el.id}-${tier}.png`), encodeSheetPng(rampMap(base, rampFromColor(el.color))));
+      n += 1;
+    }
+  }
+  return n;
+}
+
+function packStreetwear(repo: string) {
+  const chars: Record<string, SwCharMeta> = {};
+  for (const group of ['heroes', 'creeps', 'towers', 'boss']) {
+    const groupDir = path.join(repo, SW_SRC, group);
+    for (const slug of fs.readdirSync(groupDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort()) {
+      chars[`${group}/${slug}`] = packSwCharacter(repo, group, slug);
+      console.log(`packed streetwear ${group}/${slug}: ${Object.keys(chars[`${group}/${slug}`].clips).join(', ') || 'rotations only'}`);
+    }
+  }
+  const fx = packSwEffects(repo);
+  const auras = packSwAuras(repo);
+  const fxDir = path.join(repo, 'assets/play', SW_SHEETS, 'fx');
+  fs.writeFileSync(path.join(fxDir, 'sheets.json'), `${JSON.stringify(fx.manifest, null, 2)}\n`);
+  const auraDir = path.join(repo, 'assets/play', SW_SHEETS, 'auras');
+  fs.writeFileSync(path.join(auraDir, 'sheets.json'), `${JSON.stringify(auras.manifest, null, 2)}\n`);
+  const swords = bakeSwSwords(repo);
+  const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
+  fs.writeFileSync(metaPath, `${JSON.stringify({ chars, fx: fx.meta, auras: auras.meta }, null, 2)}\n`);
+  console.log(`packed streetwear fx: ${Object.keys(fx.meta).length} effects, ${Object.keys(auras.meta).length} auras, ${swords} baked sword icons`);
+  console.log(`meta: ${path.relative(repo, metaPath)}`);
 }
 
 function walk(dir: string): string[] {

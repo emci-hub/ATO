@@ -44,6 +44,13 @@ const EXTRA_FILES = ['tiles/scribble-dungeons/crate.png'] as const;
  * `skins/**` path (towers, cycle bosses, fx) still bundles as before.
  */
 const PACKED_HERO_ART = /^skins\/cast\/heroes\/[^/]+\/(animations|rotations)\//;
+/**
+ * The Streetwear skin is drawn ONLY from `play-art-pack.ts --skin streetwear`
+ * sheets (characters, effects, auras). Its loose frames (~3,000 PNGs, north/
+ * south included) never enter the bundle; just the small shop/rarity/sword
+ * stills are bundled by key.
+ */
+const STREETWEAR_UNBUNDLED = /^skins\/streetwear\/(?!ui\/(rarity|shop|swords\/baked)\/)/;
 const HASH_SUFFIX = /-[0-9a-f]{8}(?=\/|$)/g;
 
 /**
@@ -115,7 +122,7 @@ function main() {
     }
     for (const file of walk(dir).sort((a, b) => a.localeCompare(b))) {
       const base = keyFor(root, file);
-      if (family === 'skins' && PACKED_HERO_ART.test(base)) continue;
+      if (family === 'skins' && (PACKED_HERO_ART.test(base) || STREETWEAR_UNBUNDLED.test(base))) continue;
       let key = base;
       // Two pack folders can share a name after the hash is stripped (e.g.
       // Masterpiece ships two `Walking/.../west` variants). Keep both, stable.

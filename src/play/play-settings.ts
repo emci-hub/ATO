@@ -16,6 +16,7 @@
  *   - Days played (v27) use the pet's day rule (`petDayHolds`), so setting
  *     the clock back and forth can't farm the every-5th-day Shine Stone.
  */
+import { ART_SKINS, type ArtSkinId } from '@/play/art-skin';
 import { petDayHolds } from '@/play/pet';
 import type { Grade } from './pet-eggs';
 
@@ -52,6 +53,8 @@ export type PlaySettings = {
   skipReveals: boolean;
   /** Seen (or skipped) the first-time tutorial. */
   tutorialSeen: boolean;
+  /** Art style the game is drawn in. Paint only; `cast` until switched. */
+  artSkin: ArtSkinId;
 };
 
 export const DEFAULT_WINDOW: DayWindow = { from: 22 * 60, to: 7 * 60 };
@@ -65,6 +68,7 @@ export function defaultSettings(): PlaySettings {
     chatter: 'normal',
     skipReveals: false,
     tutorialSeen: false,
+    artSkin: 'cast',
   };
 }
 
@@ -107,6 +111,7 @@ export function parseSettings(raw: unknown, legacy: { remind: boolean; hasProgre
     chatter: (CHATTER_LEVELS as readonly string[]).includes(r.chatter as string) ? (r.chatter as ChatterLevel) : base.chatter,
     skipReveals: flag(r.skipReveals, false),
     tutorialSeen: flag(r.tutorialSeen, false),
+    artSkin: (ART_SKINS as readonly unknown[]).includes(r.artSkin) ? (r.artSkin as ArtSkinId) : base.artSkin,
   };
 }
 

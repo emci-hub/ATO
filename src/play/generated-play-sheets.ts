@@ -14649,6 +14649,13967 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
         "h": 64
       }
     }
+  },
+  "sheets/streetwear/auras/blaze/behind": {
+    "sheet": "sheets/streetwear/auras/blaze/behind.png",
+    "sheetW": 791,
+    "sheetH": 98,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_001": {
+        "x": 99,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_002": {
+        "x": 198,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_003": {
+        "x": 297,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_004": {
+        "x": 396,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_005": {
+        "x": 495,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_006": {
+        "x": 594,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_007": {
+        "x": 693,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      }
+    }
+  },
+  "sheets/streetwear/auras/blaze/front": {
+    "sheet": "sheets/streetwear/auras/blaze/front.png",
+    "sheetW": 791,
+    "sheetH": 98,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_001": {
+        "x": 99,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_002": {
+        "x": 198,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_003": {
+        "x": 297,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_004": {
+        "x": 396,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_005": {
+        "x": 495,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_006": {
+        "x": 594,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_007": {
+        "x": 693,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      }
+    }
+  },
+  "sheets/streetwear/auras/bubbles/behind": {
+    "sheet": "sheets/streetwear/auras/bubbles/behind.png",
+    "sheetW": 371,
+    "sheetH": 61,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_001": {
+        "x": 62,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_002": {
+        "x": 124,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_003": {
+        "x": 186,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_004": {
+        "x": 248,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_005": {
+        "x": 310,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      }
+    }
+  },
+  "sheets/streetwear/auras/bubbles/front": {
+    "sheet": "sheets/streetwear/auras/bubbles/front.png",
+    "sheetW": 371,
+    "sheetH": 61,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_001": {
+        "x": 62,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_002": {
+        "x": 124,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_003": {
+        "x": 186,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_004": {
+        "x": 248,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      },
+      "frame_005": {
+        "x": 310,
+        "y": 0,
+        "w": 61,
+        "h": 61
+      }
+    }
+  },
+  "sheets/streetwear/auras/rune/behind": {
+    "sheet": "sheets/streetwear/auras/rune/behind.png",
+    "sheetW": 425,
+    "sheetH": 70,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_001": {
+        "x": 71,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_002": {
+        "x": 142,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_003": {
+        "x": 213,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_004": {
+        "x": 284,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_005": {
+        "x": 355,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      }
+    }
+  },
+  "sheets/streetwear/auras/rune/front": {
+    "sheet": "sheets/streetwear/auras/rune/front.png",
+    "sheetW": 425,
+    "sheetH": 70,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_001": {
+        "x": 71,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_002": {
+        "x": 142,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_003": {
+        "x": 213,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_004": {
+        "x": 284,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_005": {
+        "x": 355,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      }
+    }
+  },
+  "sheets/streetwear/auras/spiky/behind": {
+    "sheet": "sheets/streetwear/auras/spiky/behind.png",
+    "sheetW": 509,
+    "sheetH": 84,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_001": {
+        "x": 85,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_002": {
+        "x": 170,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_003": {
+        "x": 255,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_004": {
+        "x": 340,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_005": {
+        "x": 425,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      }
+    }
+  },
+  "sheets/streetwear/auras/spiky/front": {
+    "sheet": "sheets/streetwear/auras/spiky/front.png",
+    "sheetW": 509,
+    "sheetH": 84,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_001": {
+        "x": 85,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_002": {
+        "x": 170,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_003": {
+        "x": 255,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_004": {
+        "x": 340,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_005": {
+        "x": 425,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      }
+    }
+  },
+  "sheets/streetwear/boss/oni/Death": {
+    "sheet": "sheets/streetwear/boss/oni/Death.png",
+    "sheetW": 2119,
+    "sheetH": 529,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_001": {
+        "x": 265,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_002": {
+        "x": 530,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_003": {
+        "x": 795,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_004": {
+        "x": 1060,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_005": {
+        "x": 1325,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_006": {
+        "x": 1590,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_007": {
+        "x": 1855,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_001": {
+        "x": 265,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_002": {
+        "x": 530,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_003": {
+        "x": 795,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_004": {
+        "x": 1060,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_005": {
+        "x": 1325,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_006": {
+        "x": 1590,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_007": {
+        "x": 1855,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      }
+    }
+  },
+  "sheets/streetwear/boss/oni/Idle": {
+    "sheet": "sheets/streetwear/boss/oni/Idle.png",
+    "sheetW": 1059,
+    "sheetH": 529,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_001": {
+        "x": 265,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_002": {
+        "x": 530,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_003": {
+        "x": 795,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_001": {
+        "x": 265,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_002": {
+        "x": 530,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_003": {
+        "x": 795,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      }
+    }
+  },
+  "sheets/streetwear/boss/oni/Run": {
+    "sheet": "sheets/streetwear/boss/oni/Run.png",
+    "sheetW": 2119,
+    "sheetH": 529,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_001": {
+        "x": 265,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_002": {
+        "x": 530,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_003": {
+        "x": 795,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_004": {
+        "x": 1060,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_005": {
+        "x": 1325,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_006": {
+        "x": 1590,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_007": {
+        "x": 1855,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_001": {
+        "x": 265,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_002": {
+        "x": 530,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_003": {
+        "x": 795,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_004": {
+        "x": 1060,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_005": {
+        "x": 1325,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_006": {
+        "x": 1590,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_007": {
+        "x": 1855,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      }
+    }
+  },
+  "sheets/streetwear/boss/oni/Walk": {
+    "sheet": "sheets/streetwear/boss/oni/Walk.png",
+    "sheetW": 2119,
+    "sheetH": 529,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_001": {
+        "x": 265,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_002": {
+        "x": 530,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_003": {
+        "x": 795,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_004": {
+        "x": 1060,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_005": {
+        "x": 1325,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_006": {
+        "x": 1590,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east/frame_007": {
+        "x": 1855,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_001": {
+        "x": 265,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_002": {
+        "x": 530,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_003": {
+        "x": 795,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_004": {
+        "x": 1060,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_005": {
+        "x": 1325,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_006": {
+        "x": 1590,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      },
+      "west/frame_007": {
+        "x": 1855,
+        "y": 265,
+        "w": 264,
+        "h": 264
+      }
+    }
+  },
+  "sheets/streetwear/boss/oni/rotations": {
+    "sheet": "sheets/streetwear/boss/oni/rotations.png",
+    "sheetW": 2119,
+    "sheetH": 264,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "north-east": {
+        "x": 265,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "east": {
+        "x": 530,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "south-east": {
+        "x": 795,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "south": {
+        "x": 1060,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "south-west": {
+        "x": 1325,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "west": {
+        "x": 1590,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      },
+      "north-west": {
+        "x": 1855,
+        "y": 0,
+        "w": 264,
+        "h": 264
+      }
+    }
+  },
+  "sheets/streetwear/boss/titan-x/rotations": {
+    "sheet": "sheets/streetwear/boss/titan-x/rotations.png",
+    "sheetW": 1959,
+    "sheetH": 244,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "north-east": {
+        "x": 245,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east": {
+        "x": 490,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south-east": {
+        "x": 735,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south": {
+        "x": 980,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south-west": {
+        "x": 1225,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "west": {
+        "x": 1470,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "north-west": {
+        "x": 1715,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      }
+    }
+  },
+  "sheets/streetwear/creeps/knight/Death": {
+    "sheet": "sheets/streetwear/creeps/knight/Death.png",
+    "sheetW": 678,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_004": {
+        "x": 388,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_005": {
+        "x": 485,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_006": {
+        "x": 582,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/knight/Idle": {
+    "sheet": "sheets/streetwear/creeps/knight/Idle.png",
+    "sheetW": 387,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/knight/Walk": {
+    "sheet": "sheets/streetwear/creeps/knight/Walk.png",
+    "sheetW": 775,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_007": {
+        "x": 679,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_004": {
+        "x": 388,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_005": {
+        "x": 485,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_006": {
+        "x": 582,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_007": {
+        "x": 679,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/knight/rotations": {
+    "sheet": "sheets/streetwear/creeps/knight/rotations.png",
+    "sheetW": 775,
+    "sheetH": 96,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "north-east": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south-east": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south-west": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "north-west": {
+        "x": 679,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/village-girl/Death": {
+    "sheet": "sheets/streetwear/creeps/village-girl/Death.png",
+    "sheetW": 678,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_004": {
+        "x": 388,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_005": {
+        "x": 485,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_006": {
+        "x": 582,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/village-girl/Idle": {
+    "sheet": "sheets/streetwear/creeps/village-girl/Idle.png",
+    "sheetW": 387,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/village-girl/Walk": {
+    "sheet": "sheets/streetwear/creeps/village-girl/Walk.png",
+    "sheetW": 775,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_007": {
+        "x": 679,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_004": {
+        "x": 388,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_005": {
+        "x": 485,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_006": {
+        "x": 582,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_007": {
+        "x": 679,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/village-girl/rotations": {
+    "sheet": "sheets/streetwear/creeps/village-girl/rotations.png",
+    "sheetW": 775,
+    "sheetH": 96,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "north-east": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south-east": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south-west": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "north-west": {
+        "x": 679,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/wizard/Death": {
+    "sheet": "sheets/streetwear/creeps/wizard/Death.png",
+    "sheetW": 678,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_004": {
+        "x": 388,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_005": {
+        "x": 485,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_006": {
+        "x": 582,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/wizard/Idle": {
+    "sheet": "sheets/streetwear/creeps/wizard/Idle.png",
+    "sheetW": 387,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/wizard/Walk": {
+    "sheet": "sheets/streetwear/creeps/wizard/Walk.png",
+    "sheetW": 775,
+    "sheetH": 193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east/frame_007": {
+        "x": 679,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_001": {
+        "x": 97,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_002": {
+        "x": 194,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_003": {
+        "x": 291,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_004": {
+        "x": 388,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_005": {
+        "x": 485,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_006": {
+        "x": 582,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      },
+      "west/frame_007": {
+        "x": 679,
+        "y": 97,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/creeps/wizard/rotations": {
+    "sheet": "sheets/streetwear/creeps/wizard/rotations.png",
+    "sheetW": 775,
+    "sheetH": 96,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "north-east": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "east": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south-east": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "south-west": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "west": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "north-west": {
+        "x": 679,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/fx/ember/burst": {
+    "sheet": "sheets/streetwear/fx/ember/burst.png",
+    "sheetW": 1055,
+    "sheetH": 87,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_001": {
+        "x": 88,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_002": {
+        "x": 176,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_003": {
+        "x": 264,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_004": {
+        "x": 352,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_005": {
+        "x": 440,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_006": {
+        "x": 528,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_007": {
+        "x": 616,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_008": {
+        "x": 704,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_009": {
+        "x": 792,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_010": {
+        "x": 880,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      },
+      "frame_011": {
+        "x": 968,
+        "y": 0,
+        "w": 87,
+        "h": 87
+      }
+    }
+  },
+  "sheets/streetwear/fx/ember/hit": {
+    "sheet": "sheets/streetwear/fx/ember/hit.png",
+    "sheetW": 324,
+    "sheetH": 64,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 64,
+        "h": 64
+      },
+      "frame_001": {
+        "x": 65,
+        "y": 0,
+        "w": 64,
+        "h": 64
+      },
+      "frame_002": {
+        "x": 130,
+        "y": 0,
+        "w": 64,
+        "h": 64
+      },
+      "frame_003": {
+        "x": 195,
+        "y": 0,
+        "w": 64,
+        "h": 64
+      },
+      "frame_004": {
+        "x": 260,
+        "y": 0,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "sheets/streetwear/fx/ember/shot": {
+    "sheet": "sheets/streetwear/fx/ember/shot.png",
+    "sheetW": 439,
+    "sheetH": 54,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_001": {
+        "x": 55,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_002": {
+        "x": 110,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_003": {
+        "x": 165,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_004": {
+        "x": 220,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_005": {
+        "x": 275,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_006": {
+        "x": 330,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_007": {
+        "x": 385,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      }
+    }
+  },
+  "sheets/streetwear/fx/ember/slash": {
+    "sheet": "sheets/streetwear/fx/ember/slash.png",
+    "sheetW": 678,
+    "sheetH": 96,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/fx/ember/status": {
+    "sheet": "sheets/streetwear/fx/ember/status.png",
+    "sheetW": 575,
+    "sheetH": 47,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_001": {
+        "x": 48,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_002": {
+        "x": 96,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_003": {
+        "x": 144,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_004": {
+        "x": 192,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_005": {
+        "x": 240,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_006": {
+        "x": 288,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_007": {
+        "x": 336,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_008": {
+        "x": 384,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_009": {
+        "x": 432,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_010": {
+        "x": 480,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      },
+      "frame_011": {
+        "x": 528,
+        "y": 0,
+        "w": 47,
+        "h": 47
+      }
+    }
+  },
+  "sheets/streetwear/fx/plain/burst": {
+    "sheet": "sheets/streetwear/fx/plain/burst.png",
+    "sheetW": 903,
+    "sheetH": 112,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_001": {
+        "x": 113,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_002": {
+        "x": 226,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_003": {
+        "x": 339,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_004": {
+        "x": 452,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_005": {
+        "x": 565,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_006": {
+        "x": 678,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_007": {
+        "x": 791,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      }
+    }
+  },
+  "sheets/streetwear/fx/plain/hit": {
+    "sheet": "sheets/streetwear/fx/plain/hit.png",
+    "sheetW": 275,
+    "sheetH": 45,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frame_001": {
+        "x": 46,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frame_002": {
+        "x": 92,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frame_003": {
+        "x": 138,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frame_004": {
+        "x": 184,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      },
+      "frame_005": {
+        "x": 230,
+        "y": 0,
+        "w": 45,
+        "h": 45
+      }
+    }
+  },
+  "sheets/streetwear/fx/plain/shot": {
+    "sheet": "sheets/streetwear/fx/plain/shot.png",
+    "sheetW": 175,
+    "sheetH": 43,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      },
+      "frame_001": {
+        "x": 44,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      },
+      "frame_002": {
+        "x": 88,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      },
+      "frame_003": {
+        "x": 132,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      }
+    }
+  },
+  "sheets/streetwear/fx/plain/slash": {
+    "sheet": "sheets/streetwear/fx/plain/slash.png",
+    "sheetW": 678,
+    "sheetH": 96,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/fx/root/burst": {
+    "sheet": "sheets/streetwear/fx/root/burst.png",
+    "sheetW": 1403,
+    "sheetH": 116,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_001": {
+        "x": 117,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_002": {
+        "x": 234,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_003": {
+        "x": 351,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_004": {
+        "x": 468,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_005": {
+        "x": 585,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_006": {
+        "x": 702,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_007": {
+        "x": 819,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_008": {
+        "x": 936,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_009": {
+        "x": 1053,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_010": {
+        "x": 1170,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_011": {
+        "x": 1287,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      }
+    }
+  },
+  "sheets/streetwear/fx/root/hit": {
+    "sheet": "sheets/streetwear/fx/root/hit.png",
+    "sheetW": 543,
+    "sheetH": 67,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_001": {
+        "x": 68,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_002": {
+        "x": 136,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_003": {
+        "x": 204,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_004": {
+        "x": 272,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_005": {
+        "x": 340,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_006": {
+        "x": 408,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_007": {
+        "x": 476,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      }
+    }
+  },
+  "sheets/streetwear/fx/root/shot": {
+    "sheet": "sheets/streetwear/fx/root/shot.png",
+    "sheetW": 439,
+    "sheetH": 54,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_001": {
+        "x": 55,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_002": {
+        "x": 110,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_003": {
+        "x": 165,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_004": {
+        "x": 220,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_005": {
+        "x": 275,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_006": {
+        "x": 330,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_007": {
+        "x": 385,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      }
+    }
+  },
+  "sheets/streetwear/fx/root/slash": {
+    "sheet": "sheets/streetwear/fx/root/slash.png",
+    "sheetW": 678,
+    "sheetH": 96,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/fx/root/status": {
+    "sheet": "sheets/streetwear/fx/root/status.png",
+    "sheetW": 779,
+    "sheetH": 59,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_001": {
+        "x": 60,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_002": {
+        "x": 120,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_003": {
+        "x": 180,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_004": {
+        "x": 240,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_005": {
+        "x": 300,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_006": {
+        "x": 360,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_007": {
+        "x": 420,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_008": {
+        "x": 480,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_009": {
+        "x": 540,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_010": {
+        "x": 600,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_011": {
+        "x": 660,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      },
+      "frame_012": {
+        "x": 720,
+        "y": 0,
+        "w": 59,
+        "h": 59
+      }
+    }
+  },
+  "sheets/streetwear/fx/spark/burst": {
+    "sheet": "sheets/streetwear/fx/spark/burst.png",
+    "sheetW": 1289,
+    "sheetH": 128,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_001": {
+        "x": 129,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_002": {
+        "x": 258,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_003": {
+        "x": 387,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_004": {
+        "x": 516,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_005": {
+        "x": 645,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_006": {
+        "x": 774,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_007": {
+        "x": 903,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_008": {
+        "x": 1032,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "frame_009": {
+        "x": 1161,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      }
+    }
+  },
+  "sheets/streetwear/fx/spark/hit": {
+    "sheet": "sheets/streetwear/fx/spark/hit.png",
+    "sheetW": 543,
+    "sheetH": 67,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_001": {
+        "x": 68,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_002": {
+        "x": 136,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_003": {
+        "x": 204,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_004": {
+        "x": 272,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_005": {
+        "x": 340,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_006": {
+        "x": 408,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_007": {
+        "x": 476,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      }
+    }
+  },
+  "sheets/streetwear/fx/spark/shot": {
+    "sheet": "sheets/streetwear/fx/spark/shot.png",
+    "sheetW": 175,
+    "sheetH": 43,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      },
+      "frame_001": {
+        "x": 44,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      },
+      "frame_002": {
+        "x": 88,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      },
+      "frame_003": {
+        "x": 132,
+        "y": 0,
+        "w": 43,
+        "h": 43
+      }
+    }
+  },
+  "sheets/streetwear/fx/spark/slash": {
+    "sheet": "sheets/streetwear/fx/spark/slash.png",
+    "sheetW": 678,
+    "sheetH": 96,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/fx/spark/status": {
+    "sheet": "sheets/streetwear/fx/spark/status.png",
+    "sheetW": 539,
+    "sheetH": 44,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_001": {
+        "x": 45,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_002": {
+        "x": 90,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_003": {
+        "x": 135,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_004": {
+        "x": 180,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_005": {
+        "x": 225,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_006": {
+        "x": 270,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_007": {
+        "x": 315,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_008": {
+        "x": 360,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_009": {
+        "x": 405,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_010": {
+        "x": 450,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frame_011": {
+        "x": 495,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      }
+    }
+  },
+  "sheets/streetwear/fx/tide/burst": {
+    "sheet": "sheets/streetwear/fx/tide/burst.png",
+    "sheetW": 903,
+    "sheetH": 112,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_001": {
+        "x": 113,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_002": {
+        "x": 226,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_003": {
+        "x": 339,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_004": {
+        "x": 452,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_005": {
+        "x": 565,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_006": {
+        "x": 678,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      },
+      "frame_007": {
+        "x": 791,
+        "y": 0,
+        "w": 112,
+        "h": 112
+      }
+    }
+  },
+  "sheets/streetwear/fx/tide/hit": {
+    "sheet": "sheets/streetwear/fx/tide/hit.png",
+    "sheetW": 567,
+    "sheetH": 70,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_001": {
+        "x": 71,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_002": {
+        "x": 142,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_003": {
+        "x": 213,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_004": {
+        "x": 284,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_005": {
+        "x": 355,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_006": {
+        "x": 426,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      },
+      "frame_007": {
+        "x": 497,
+        "y": 0,
+        "w": 70,
+        "h": 70
+      }
+    }
+  },
+  "sheets/streetwear/fx/tide/shot": {
+    "sheet": "sheets/streetwear/fx/tide/shot.png",
+    "sheetW": 439,
+    "sheetH": 54,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_001": {
+        "x": 55,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_002": {
+        "x": 110,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_003": {
+        "x": 165,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_004": {
+        "x": 220,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_005": {
+        "x": 275,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_006": {
+        "x": 330,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_007": {
+        "x": 385,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      }
+    }
+  },
+  "sheets/streetwear/fx/tide/slash": {
+    "sheet": "sheets/streetwear/fx/tide/slash.png",
+    "sheetW": 678,
+    "sheetH": 96,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/fx/tide/status": {
+    "sheet": "sheets/streetwear/fx/tide/status.png",
+    "sheetW": 455,
+    "sheetH": 37,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_001": {
+        "x": 38,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_002": {
+        "x": 76,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_003": {
+        "x": 114,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_004": {
+        "x": 152,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_005": {
+        "x": 190,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_006": {
+        "x": 228,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_007": {
+        "x": 266,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_008": {
+        "x": 304,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_009": {
+        "x": 342,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_010": {
+        "x": 380,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      },
+      "frame_011": {
+        "x": 418,
+        "y": 0,
+        "w": 37,
+        "h": 37
+      }
+    }
+  },
+  "sheets/streetwear/fx/void/burst": {
+    "sheet": "sheets/streetwear/fx/void/burst.png",
+    "sheetW": 935,
+    "sheetH": 116,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_001": {
+        "x": 117,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_002": {
+        "x": 234,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_003": {
+        "x": 351,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_004": {
+        "x": 468,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_005": {
+        "x": 585,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_006": {
+        "x": 702,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      },
+      "frame_007": {
+        "x": 819,
+        "y": 0,
+        "w": 116,
+        "h": 116
+      }
+    }
+  },
+  "sheets/streetwear/fx/void/hit": {
+    "sheet": "sheets/streetwear/fx/void/hit.png",
+    "sheetW": 543,
+    "sheetH": 67,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_001": {
+        "x": 68,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_002": {
+        "x": 136,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_003": {
+        "x": 204,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_004": {
+        "x": 272,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_005": {
+        "x": 340,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_006": {
+        "x": 408,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      },
+      "frame_007": {
+        "x": 476,
+        "y": 0,
+        "w": 67,
+        "h": 67
+      }
+    }
+  },
+  "sheets/streetwear/fx/void/shot": {
+    "sheet": "sheets/streetwear/fx/void/shot.png",
+    "sheetW": 439,
+    "sheetH": 54,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_001": {
+        "x": 55,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_002": {
+        "x": 110,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_003": {
+        "x": 165,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_004": {
+        "x": 220,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_005": {
+        "x": 275,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_006": {
+        "x": 330,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_007": {
+        "x": 385,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      }
+    }
+  },
+  "sheets/streetwear/fx/void/slash": {
+    "sheet": "sheets/streetwear/fx/void/slash.png",
+    "sheetW": 678,
+    "sheetH": 96,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_001": {
+        "x": 97,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_002": {
+        "x": 194,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_003": {
+        "x": 291,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_004": {
+        "x": 388,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_005": {
+        "x": 485,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "frame_006": {
+        "x": 582,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      }
+    }
+  },
+  "sheets/streetwear/fx/void/status": {
+    "sheet": "sheets/streetwear/fx/void/status.png",
+    "sheetW": 659,
+    "sheetH": 54,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_001": {
+        "x": 55,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_002": {
+        "x": 110,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_003": {
+        "x": 165,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_004": {
+        "x": 220,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_005": {
+        "x": 275,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_006": {
+        "x": 330,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_007": {
+        "x": 385,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_008": {
+        "x": 440,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_009": {
+        "x": 495,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_010": {
+        "x": 550,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      },
+      "frame_011": {
+        "x": 605,
+        "y": 0,
+        "w": 54,
+        "h": 54
+      }
+    }
+  },
+  "sheets/streetwear/heroes/archangel/Attack": {
+    "sheet": "sheets/streetwear/heroes/archangel/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/archangel/Dash": {
+    "sheet": "sheets/streetwear/heroes/archangel/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/archangel/Hurt": {
+    "sheet": "sheets/streetwear/heroes/archangel/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/archangel/Idle": {
+    "sheet": "sheets/streetwear/heroes/archangel/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/archangel/Skill": {
+    "sheet": "sheets/streetwear/heroes/archangel/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/archangel/Walk": {
+    "sheet": "sheets/streetwear/heroes/archangel/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/archangel/rotations": {
+    "sheet": "sheets/streetwear/heroes/archangel/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/aurex/Attack": {
+    "sheet": "sheets/streetwear/heroes/aurex/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/aurex/Dash": {
+    "sheet": "sheets/streetwear/heroes/aurex/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/aurex/Hurt": {
+    "sheet": "sheets/streetwear/heroes/aurex/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/aurex/Idle": {
+    "sheet": "sheets/streetwear/heroes/aurex/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/aurex/Skill": {
+    "sheet": "sheets/streetwear/heroes/aurex/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/aurex/Walk": {
+    "sheet": "sheets/streetwear/heroes/aurex/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/aurex/rotations": {
+    "sheet": "sheets/streetwear/heroes/aurex/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/corvus/Attack": {
+    "sheet": "sheets/streetwear/heroes/corvus/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/corvus/Dash": {
+    "sheet": "sheets/streetwear/heroes/corvus/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/corvus/Hurt": {
+    "sheet": "sheets/streetwear/heroes/corvus/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/corvus/Idle": {
+    "sheet": "sheets/streetwear/heroes/corvus/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/corvus/Skill": {
+    "sheet": "sheets/streetwear/heroes/corvus/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/corvus/Walk": {
+    "sheet": "sheets/streetwear/heroes/corvus/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/corvus/rotations": {
+    "sheet": "sheets/streetwear/heroes/corvus/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/cyber-shinobi/Attack": {
+    "sheet": "sheets/streetwear/heroes/cyber-shinobi/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/cyber-shinobi/Dash": {
+    "sheet": "sheets/streetwear/heroes/cyber-shinobi/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/cyber-shinobi/Hurt": {
+    "sheet": "sheets/streetwear/heroes/cyber-shinobi/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/cyber-shinobi/Idle": {
+    "sheet": "sheets/streetwear/heroes/cyber-shinobi/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/cyber-shinobi/Skill": {
+    "sheet": "sheets/streetwear/heroes/cyber-shinobi/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/cyber-shinobi/Walk": {
+    "sheet": "sheets/streetwear/heroes/cyber-shinobi/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/cyber-shinobi/rotations": {
+    "sheet": "sheets/streetwear/heroes/cyber-shinobi/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/elowen/Attack": {
+    "sheet": "sheets/streetwear/heroes/elowen/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/elowen/Dash": {
+    "sheet": "sheets/streetwear/heroes/elowen/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/elowen/Hurt": {
+    "sheet": "sheets/streetwear/heroes/elowen/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/elowen/Idle": {
+    "sheet": "sheets/streetwear/heroes/elowen/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/elowen/Skill": {
+    "sheet": "sheets/streetwear/heroes/elowen/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/elowen/Walk": {
+    "sheet": "sheets/streetwear/heroes/elowen/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/elowen/rotations": {
+    "sheet": "sheets/streetwear/heroes/elowen/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/frost-lich/Attack": {
+    "sheet": "sheets/streetwear/heroes/frost-lich/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/frost-lich/Dash": {
+    "sheet": "sheets/streetwear/heroes/frost-lich/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/frost-lich/Hurt": {
+    "sheet": "sheets/streetwear/heroes/frost-lich/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/frost-lich/Idle": {
+    "sheet": "sheets/streetwear/heroes/frost-lich/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/frost-lich/Skill": {
+    "sheet": "sheets/streetwear/heroes/frost-lich/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/frost-lich/Walk": {
+    "sheet": "sheets/streetwear/heroes/frost-lich/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/frost-lich/rotations": {
+    "sheet": "sheets/streetwear/heroes/frost-lich/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kael/Attack": {
+    "sheet": "sheets/streetwear/heroes/kael/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kael/Dash": {
+    "sheet": "sheets/streetwear/heroes/kael/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kael/Hurt": {
+    "sheet": "sheets/streetwear/heroes/kael/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kael/Idle": {
+    "sheet": "sheets/streetwear/heroes/kael/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kael/Skill": {
+    "sheet": "sheets/streetwear/heroes/kael/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kael/Walk": {
+    "sheet": "sheets/streetwear/heroes/kael/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kael/rotations": {
+    "sheet": "sheets/streetwear/heroes/kael/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kitsune/Attack": {
+    "sheet": "sheets/streetwear/heroes/kitsune/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kitsune/Dash": {
+    "sheet": "sheets/streetwear/heroes/kitsune/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kitsune/Hurt": {
+    "sheet": "sheets/streetwear/heroes/kitsune/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kitsune/Idle": {
+    "sheet": "sheets/streetwear/heroes/kitsune/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kitsune/Skill": {
+    "sheet": "sheets/streetwear/heroes/kitsune/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kitsune/Walk": {
+    "sheet": "sheets/streetwear/heroes/kitsune/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/kitsune/rotations": {
+    "sheet": "sheets/streetwear/heroes/kitsune/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/maldrath/Attack": {
+    "sheet": "sheets/streetwear/heroes/maldrath/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/maldrath/Dash": {
+    "sheet": "sheets/streetwear/heroes/maldrath/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/maldrath/Hurt": {
+    "sheet": "sheets/streetwear/heroes/maldrath/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/maldrath/Idle": {
+    "sheet": "sheets/streetwear/heroes/maldrath/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/maldrath/Skill": {
+    "sheet": "sheets/streetwear/heroes/maldrath/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/maldrath/Walk": {
+    "sheet": "sheets/streetwear/heroes/maldrath/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/maldrath/rotations": {
+    "sheet": "sheets/streetwear/heroes/maldrath/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/morwen/Attack": {
+    "sheet": "sheets/streetwear/heroes/morwen/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/morwen/Dash": {
+    "sheet": "sheets/streetwear/heroes/morwen/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/morwen/Hurt": {
+    "sheet": "sheets/streetwear/heroes/morwen/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/morwen/Idle": {
+    "sheet": "sheets/streetwear/heroes/morwen/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/morwen/Skill": {
+    "sheet": "sheets/streetwear/heroes/morwen/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/morwen/Walk": {
+    "sheet": "sheets/streetwear/heroes/morwen/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/morwen/rotations": {
+    "sheet": "sheets/streetwear/heroes/morwen/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/neon-viper/Attack": {
+    "sheet": "sheets/streetwear/heroes/neon-viper/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/neon-viper/Dash": {
+    "sheet": "sheets/streetwear/heroes/neon-viper/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/neon-viper/Hurt": {
+    "sheet": "sheets/streetwear/heroes/neon-viper/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/neon-viper/Idle": {
+    "sheet": "sheets/streetwear/heroes/neon-viper/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/neon-viper/Skill": {
+    "sheet": "sheets/streetwear/heroes/neon-viper/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/neon-viper/Walk": {
+    "sheet": "sheets/streetwear/heroes/neon-viper/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/neon-viper/rotations": {
+    "sheet": "sheets/streetwear/heroes/neon-viper/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Attack": {
+    "sheet": "sheets/streetwear/heroes/oni/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Dash": {
+    "sheet": "sheets/streetwear/heroes/oni/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Hurt": {
+    "sheet": "sheets/streetwear/heroes/oni/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Idle": {
+    "sheet": "sheets/streetwear/heroes/oni/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Skill": {
+    "sheet": "sheets/streetwear/heroes/oni/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Walk": {
+    "sheet": "sheets/streetwear/heroes/oni/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/rotations": {
+    "sheet": "sheets/streetwear/heroes/oni/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/raven/Attack": {
+    "sheet": "sheets/streetwear/heroes/raven/Attack.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/raven/Dash": {
+    "sheet": "sheets/streetwear/heroes/raven/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/raven/Hurt": {
+    "sheet": "sheets/streetwear/heroes/raven/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/raven/Idle": {
+    "sheet": "sheets/streetwear/heroes/raven/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/raven/Skill": {
+    "sheet": "sheets/streetwear/heroes/raven/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/raven/Walk": {
+    "sheet": "sheets/streetwear/heroes/raven/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/raven/rotations": {
+    "sheet": "sheets/streetwear/heroes/raven/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/sak/Attack": {
+    "sheet": "sheets/streetwear/heroes/sak/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/sak/Dash": {
+    "sheet": "sheets/streetwear/heroes/sak/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/sak/Hurt": {
+    "sheet": "sheets/streetwear/heroes/sak/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/sak/Idle": {
+    "sheet": "sheets/streetwear/heroes/sak/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/sak/Skill": {
+    "sheet": "sheets/streetwear/heroes/sak/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/sak/Walk": {
+    "sheet": "sheets/streetwear/heroes/sak/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/sak/rotations": {
+    "sheet": "sheets/streetwear/heroes/sak/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/velkhar/Attack": {
+    "sheet": "sheets/streetwear/heroes/velkhar/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/velkhar/Dash": {
+    "sheet": "sheets/streetwear/heroes/velkhar/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/velkhar/Hurt": {
+    "sheet": "sheets/streetwear/heroes/velkhar/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/velkhar/Idle": {
+    "sheet": "sheets/streetwear/heroes/velkhar/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/velkhar/Skill": {
+    "sheet": "sheets/streetwear/heroes/velkhar/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/velkhar/Walk": {
+    "sheet": "sheets/streetwear/heroes/velkhar/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/velkhar/rotations": {
+    "sheet": "sheets/streetwear/heroes/velkhar/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/void-raven/Attack": {
+    "sheet": "sheets/streetwear/heroes/void-raven/Attack.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/void-raven/Dash": {
+    "sheet": "sheets/streetwear/heroes/void-raven/Dash.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/void-raven/Hurt": {
+    "sheet": "sheets/streetwear/heroes/void-raven/Hurt.png",
+    "sheetW": 1157,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/void-raven/Idle": {
+    "sheet": "sheets/streetwear/heroes/void-raven/Idle.png",
+    "sheetW": 771,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/void-raven/Skill": {
+    "sheet": "sheets/streetwear/heroes/void-raven/Skill.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/void-raven/Walk": {
+    "sheet": "sheets/streetwear/heroes/void-raven/Walk.png",
+    "sheetW": 1543,
+    "sheetH": 385,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/void-raven/rotations": {
+    "sheet": "sheets/streetwear/heroes/void-raven/rotations.png",
+    "sheetW": 1543,
+    "sheetH": 192,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/towers/ghost/Attack": {
+    "sheet": "sheets/streetwear/towers/ghost/Attack.png",
+    "sheetW": 1927,
+    "sheetH": 481,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_001": {
+        "x": 241,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_002": {
+        "x": 482,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_003": {
+        "x": 723,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_004": {
+        "x": 964,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_005": {
+        "x": 1205,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_006": {
+        "x": 1446,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_007": {
+        "x": 1687,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_001": {
+        "x": 241,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_002": {
+        "x": 482,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_003": {
+        "x": 723,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_004": {
+        "x": 964,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_005": {
+        "x": 1205,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_006": {
+        "x": 1446,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_007": {
+        "x": 1687,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      }
+    }
+  },
+  "sheets/streetwear/towers/ghost/Idle": {
+    "sheet": "sheets/streetwear/towers/ghost/Idle.png",
+    "sheetW": 963,
+    "sheetH": 481,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_001": {
+        "x": 241,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_002": {
+        "x": 482,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_003": {
+        "x": 723,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_001": {
+        "x": 241,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_002": {
+        "x": 482,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_003": {
+        "x": 723,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      }
+    }
+  },
+  "sheets/streetwear/towers/ghost/Skill": {
+    "sheet": "sheets/streetwear/towers/ghost/Skill.png",
+    "sheetW": 1927,
+    "sheetH": 481,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_001": {
+        "x": 241,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_002": {
+        "x": 482,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_003": {
+        "x": 723,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_004": {
+        "x": 964,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_005": {
+        "x": 1205,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_006": {
+        "x": 1446,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east/frame_007": {
+        "x": 1687,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_001": {
+        "x": 241,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_002": {
+        "x": 482,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_003": {
+        "x": 723,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_004": {
+        "x": 964,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_005": {
+        "x": 1205,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_006": {
+        "x": 1446,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      },
+      "west/frame_007": {
+        "x": 1687,
+        "y": 241,
+        "w": 240,
+        "h": 240
+      }
+    }
+  },
+  "sheets/streetwear/towers/ghost/rotations": {
+    "sheet": "sheets/streetwear/towers/ghost/rotations.png",
+    "sheetW": 1927,
+    "sheetH": 240,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "north-east": {
+        "x": 241,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "east": {
+        "x": 482,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "south-east": {
+        "x": 723,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "south": {
+        "x": 964,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "south-west": {
+        "x": 1205,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "west": {
+        "x": 1446,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      },
+      "north-west": {
+        "x": 1687,
+        "y": 0,
+        "w": 240,
+        "h": 240
+      }
+    }
+  },
+  "sheets/streetwear/towers/lux/Attack": {
+    "sheet": "sheets/streetwear/towers/lux/Attack.png",
+    "sheetW": 1959,
+    "sheetH": 489,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_001": {
+        "x": 245,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_002": {
+        "x": 490,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_003": {
+        "x": 735,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_004": {
+        "x": 980,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_005": {
+        "x": 1225,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_006": {
+        "x": 1470,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_007": {
+        "x": 1715,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_001": {
+        "x": 245,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_002": {
+        "x": 490,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_003": {
+        "x": 735,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_004": {
+        "x": 980,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_005": {
+        "x": 1225,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_006": {
+        "x": 1470,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_007": {
+        "x": 1715,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      }
+    }
+  },
+  "sheets/streetwear/towers/lux/Idle": {
+    "sheet": "sheets/streetwear/towers/lux/Idle.png",
+    "sheetW": 979,
+    "sheetH": 489,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_001": {
+        "x": 245,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_002": {
+        "x": 490,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_003": {
+        "x": 735,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_001": {
+        "x": 245,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_002": {
+        "x": 490,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_003": {
+        "x": 735,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      }
+    }
+  },
+  "sheets/streetwear/towers/lux/Skill": {
+    "sheet": "sheets/streetwear/towers/lux/Skill.png",
+    "sheetW": 1959,
+    "sheetH": 489,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_001": {
+        "x": 245,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_002": {
+        "x": 490,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_003": {
+        "x": 735,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_004": {
+        "x": 980,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_005": {
+        "x": 1225,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_006": {
+        "x": 1470,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east/frame_007": {
+        "x": 1715,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_001": {
+        "x": 245,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_002": {
+        "x": 490,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_003": {
+        "x": 735,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_004": {
+        "x": 980,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_005": {
+        "x": 1225,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_006": {
+        "x": 1470,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      },
+      "west/frame_007": {
+        "x": 1715,
+        "y": 245,
+        "w": 244,
+        "h": 244
+      }
+    }
+  },
+  "sheets/streetwear/towers/lux/rotations": {
+    "sheet": "sheets/streetwear/towers/lux/rotations.png",
+    "sheetW": 1959,
+    "sheetH": 244,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "north-east": {
+        "x": 245,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "east": {
+        "x": 490,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south-east": {
+        "x": 735,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south": {
+        "x": 980,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "south-west": {
+        "x": 1225,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "west": {
+        "x": 1470,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      },
+      "north-west": {
+        "x": 1715,
+        "y": 0,
+        "w": 244,
+        "h": 244
+      }
+    }
+  },
+  "sheets/streetwear/towers/viper/Attack": {
+    "sheet": "sheets/streetwear/towers/viper/Attack.png",
+    "sheetW": 1895,
+    "sheetH": 473,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_001": {
+        "x": 237,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_002": {
+        "x": 474,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_003": {
+        "x": 711,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_004": {
+        "x": 948,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_005": {
+        "x": 1185,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_006": {
+        "x": 1422,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_007": {
+        "x": 1659,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_001": {
+        "x": 237,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_002": {
+        "x": 474,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_003": {
+        "x": 711,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_004": {
+        "x": 948,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_005": {
+        "x": 1185,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_006": {
+        "x": 1422,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_007": {
+        "x": 1659,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      }
+    }
+  },
+  "sheets/streetwear/towers/viper/Idle": {
+    "sheet": "sheets/streetwear/towers/viper/Idle.png",
+    "sheetW": 947,
+    "sheetH": 473,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_001": {
+        "x": 237,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_002": {
+        "x": 474,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_003": {
+        "x": 711,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_001": {
+        "x": 237,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_002": {
+        "x": 474,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_003": {
+        "x": 711,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      }
+    }
+  },
+  "sheets/streetwear/towers/viper/Skill": {
+    "sheet": "sheets/streetwear/towers/viper/Skill.png",
+    "sheetW": 1895,
+    "sheetH": 473,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_001": {
+        "x": 237,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_002": {
+        "x": 474,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_003": {
+        "x": 711,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_004": {
+        "x": 948,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_005": {
+        "x": 1185,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_006": {
+        "x": 1422,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_007": {
+        "x": 1659,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_001": {
+        "x": 237,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_002": {
+        "x": 474,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_003": {
+        "x": 711,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_004": {
+        "x": 948,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_005": {
+        "x": 1185,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_006": {
+        "x": 1422,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_007": {
+        "x": 1659,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      }
+    }
+  },
+  "sheets/streetwear/towers/viper/rotations": {
+    "sheet": "sheets/streetwear/towers/viper/rotations.png",
+    "sheetW": 1895,
+    "sheetH": 236,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "north-east": {
+        "x": 237,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east": {
+        "x": 474,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "south-east": {
+        "x": 711,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "south": {
+        "x": 948,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "south-west": {
+        "x": 1185,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "west": {
+        "x": 1422,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "north-west": {
+        "x": 1659,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      }
+    }
   }
 } as const;
 
@@ -14761,4 +28722,183 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/cast/heroes/void-raven/Walk_11_frames': require('@/assets/play/sheets/cast/heroes/void-raven/Walk_11_frames.png'),
   'sheets/cast/heroes/void-raven/rotations': require('@/assets/play/sheets/cast/heroes/void-raven/rotations.png'),
   'sheets/kenney-td': require('@/assets/play/sheets/kenney-td/atlas.png'),
+  'sheets/streetwear/auras/blaze/behind': require('@/assets/play/sheets/streetwear/auras/blaze/behind.png'),
+  'sheets/streetwear/auras/blaze/front': require('@/assets/play/sheets/streetwear/auras/blaze/front.png'),
+  'sheets/streetwear/auras/bubbles/behind': require('@/assets/play/sheets/streetwear/auras/bubbles/behind.png'),
+  'sheets/streetwear/auras/bubbles/front': require('@/assets/play/sheets/streetwear/auras/bubbles/front.png'),
+  'sheets/streetwear/auras/rune/behind': require('@/assets/play/sheets/streetwear/auras/rune/behind.png'),
+  'sheets/streetwear/auras/rune/front': require('@/assets/play/sheets/streetwear/auras/rune/front.png'),
+  'sheets/streetwear/auras/spiky/behind': require('@/assets/play/sheets/streetwear/auras/spiky/behind.png'),
+  'sheets/streetwear/auras/spiky/front': require('@/assets/play/sheets/streetwear/auras/spiky/front.png'),
+  'sheets/streetwear/boss/oni/Death': require('@/assets/play/sheets/streetwear/boss/oni/Death.png'),
+  'sheets/streetwear/boss/oni/Idle': require('@/assets/play/sheets/streetwear/boss/oni/Idle.png'),
+  'sheets/streetwear/boss/oni/Run': require('@/assets/play/sheets/streetwear/boss/oni/Run.png'),
+  'sheets/streetwear/boss/oni/Walk': require('@/assets/play/sheets/streetwear/boss/oni/Walk.png'),
+  'sheets/streetwear/boss/oni/rotations': require('@/assets/play/sheets/streetwear/boss/oni/rotations.png'),
+  'sheets/streetwear/boss/titan-x/rotations': require('@/assets/play/sheets/streetwear/boss/titan-x/rotations.png'),
+  'sheets/streetwear/creeps/knight/Death': require('@/assets/play/sheets/streetwear/creeps/knight/Death.png'),
+  'sheets/streetwear/creeps/knight/Idle': require('@/assets/play/sheets/streetwear/creeps/knight/Idle.png'),
+  'sheets/streetwear/creeps/knight/Walk': require('@/assets/play/sheets/streetwear/creeps/knight/Walk.png'),
+  'sheets/streetwear/creeps/knight/rotations': require('@/assets/play/sheets/streetwear/creeps/knight/rotations.png'),
+  'sheets/streetwear/creeps/village-girl/Death': require('@/assets/play/sheets/streetwear/creeps/village-girl/Death.png'),
+  'sheets/streetwear/creeps/village-girl/Idle': require('@/assets/play/sheets/streetwear/creeps/village-girl/Idle.png'),
+  'sheets/streetwear/creeps/village-girl/Walk': require('@/assets/play/sheets/streetwear/creeps/village-girl/Walk.png'),
+  'sheets/streetwear/creeps/village-girl/rotations': require('@/assets/play/sheets/streetwear/creeps/village-girl/rotations.png'),
+  'sheets/streetwear/creeps/wizard/Death': require('@/assets/play/sheets/streetwear/creeps/wizard/Death.png'),
+  'sheets/streetwear/creeps/wizard/Idle': require('@/assets/play/sheets/streetwear/creeps/wizard/Idle.png'),
+  'sheets/streetwear/creeps/wizard/Walk': require('@/assets/play/sheets/streetwear/creeps/wizard/Walk.png'),
+  'sheets/streetwear/creeps/wizard/rotations': require('@/assets/play/sheets/streetwear/creeps/wizard/rotations.png'),
+  'sheets/streetwear/fx/ember/burst': require('@/assets/play/sheets/streetwear/fx/ember/burst.png'),
+  'sheets/streetwear/fx/ember/hit': require('@/assets/play/sheets/streetwear/fx/ember/hit.png'),
+  'sheets/streetwear/fx/ember/shot': require('@/assets/play/sheets/streetwear/fx/ember/shot.png'),
+  'sheets/streetwear/fx/ember/slash': require('@/assets/play/sheets/streetwear/fx/ember/slash.png'),
+  'sheets/streetwear/fx/ember/status': require('@/assets/play/sheets/streetwear/fx/ember/status.png'),
+  'sheets/streetwear/fx/plain/burst': require('@/assets/play/sheets/streetwear/fx/plain/burst.png'),
+  'sheets/streetwear/fx/plain/hit': require('@/assets/play/sheets/streetwear/fx/plain/hit.png'),
+  'sheets/streetwear/fx/plain/shot': require('@/assets/play/sheets/streetwear/fx/plain/shot.png'),
+  'sheets/streetwear/fx/plain/slash': require('@/assets/play/sheets/streetwear/fx/plain/slash.png'),
+  'sheets/streetwear/fx/root/burst': require('@/assets/play/sheets/streetwear/fx/root/burst.png'),
+  'sheets/streetwear/fx/root/hit': require('@/assets/play/sheets/streetwear/fx/root/hit.png'),
+  'sheets/streetwear/fx/root/shot': require('@/assets/play/sheets/streetwear/fx/root/shot.png'),
+  'sheets/streetwear/fx/root/slash': require('@/assets/play/sheets/streetwear/fx/root/slash.png'),
+  'sheets/streetwear/fx/root/status': require('@/assets/play/sheets/streetwear/fx/root/status.png'),
+  'sheets/streetwear/fx/spark/burst': require('@/assets/play/sheets/streetwear/fx/spark/burst.png'),
+  'sheets/streetwear/fx/spark/hit': require('@/assets/play/sheets/streetwear/fx/spark/hit.png'),
+  'sheets/streetwear/fx/spark/shot': require('@/assets/play/sheets/streetwear/fx/spark/shot.png'),
+  'sheets/streetwear/fx/spark/slash': require('@/assets/play/sheets/streetwear/fx/spark/slash.png'),
+  'sheets/streetwear/fx/spark/status': require('@/assets/play/sheets/streetwear/fx/spark/status.png'),
+  'sheets/streetwear/fx/tide/burst': require('@/assets/play/sheets/streetwear/fx/tide/burst.png'),
+  'sheets/streetwear/fx/tide/hit': require('@/assets/play/sheets/streetwear/fx/tide/hit.png'),
+  'sheets/streetwear/fx/tide/shot': require('@/assets/play/sheets/streetwear/fx/tide/shot.png'),
+  'sheets/streetwear/fx/tide/slash': require('@/assets/play/sheets/streetwear/fx/tide/slash.png'),
+  'sheets/streetwear/fx/tide/status': require('@/assets/play/sheets/streetwear/fx/tide/status.png'),
+  'sheets/streetwear/fx/void/burst': require('@/assets/play/sheets/streetwear/fx/void/burst.png'),
+  'sheets/streetwear/fx/void/hit': require('@/assets/play/sheets/streetwear/fx/void/hit.png'),
+  'sheets/streetwear/fx/void/shot': require('@/assets/play/sheets/streetwear/fx/void/shot.png'),
+  'sheets/streetwear/fx/void/slash': require('@/assets/play/sheets/streetwear/fx/void/slash.png'),
+  'sheets/streetwear/fx/void/status': require('@/assets/play/sheets/streetwear/fx/void/status.png'),
+  'sheets/streetwear/heroes/archangel/Attack': require('@/assets/play/sheets/streetwear/heroes/archangel/Attack.png'),
+  'sheets/streetwear/heroes/archangel/Dash': require('@/assets/play/sheets/streetwear/heroes/archangel/Dash.png'),
+  'sheets/streetwear/heroes/archangel/Hurt': require('@/assets/play/sheets/streetwear/heroes/archangel/Hurt.png'),
+  'sheets/streetwear/heroes/archangel/Idle': require('@/assets/play/sheets/streetwear/heroes/archangel/Idle.png'),
+  'sheets/streetwear/heroes/archangel/Skill': require('@/assets/play/sheets/streetwear/heroes/archangel/Skill.png'),
+  'sheets/streetwear/heroes/archangel/Walk': require('@/assets/play/sheets/streetwear/heroes/archangel/Walk.png'),
+  'sheets/streetwear/heroes/archangel/rotations': require('@/assets/play/sheets/streetwear/heroes/archangel/rotations.png'),
+  'sheets/streetwear/heroes/aurex/Attack': require('@/assets/play/sheets/streetwear/heroes/aurex/Attack.png'),
+  'sheets/streetwear/heroes/aurex/Dash': require('@/assets/play/sheets/streetwear/heroes/aurex/Dash.png'),
+  'sheets/streetwear/heroes/aurex/Hurt': require('@/assets/play/sheets/streetwear/heroes/aurex/Hurt.png'),
+  'sheets/streetwear/heroes/aurex/Idle': require('@/assets/play/sheets/streetwear/heroes/aurex/Idle.png'),
+  'sheets/streetwear/heroes/aurex/Skill': require('@/assets/play/sheets/streetwear/heroes/aurex/Skill.png'),
+  'sheets/streetwear/heroes/aurex/Walk': require('@/assets/play/sheets/streetwear/heroes/aurex/Walk.png'),
+  'sheets/streetwear/heroes/aurex/rotations': require('@/assets/play/sheets/streetwear/heroes/aurex/rotations.png'),
+  'sheets/streetwear/heroes/corvus/Attack': require('@/assets/play/sheets/streetwear/heroes/corvus/Attack.png'),
+  'sheets/streetwear/heroes/corvus/Dash': require('@/assets/play/sheets/streetwear/heroes/corvus/Dash.png'),
+  'sheets/streetwear/heroes/corvus/Hurt': require('@/assets/play/sheets/streetwear/heroes/corvus/Hurt.png'),
+  'sheets/streetwear/heroes/corvus/Idle': require('@/assets/play/sheets/streetwear/heroes/corvus/Idle.png'),
+  'sheets/streetwear/heroes/corvus/Skill': require('@/assets/play/sheets/streetwear/heroes/corvus/Skill.png'),
+  'sheets/streetwear/heroes/corvus/Walk': require('@/assets/play/sheets/streetwear/heroes/corvus/Walk.png'),
+  'sheets/streetwear/heroes/corvus/rotations': require('@/assets/play/sheets/streetwear/heroes/corvus/rotations.png'),
+  'sheets/streetwear/heroes/cyber-shinobi/Attack': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/Attack.png'),
+  'sheets/streetwear/heroes/cyber-shinobi/Dash': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/Dash.png'),
+  'sheets/streetwear/heroes/cyber-shinobi/Hurt': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/Hurt.png'),
+  'sheets/streetwear/heroes/cyber-shinobi/Idle': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/Idle.png'),
+  'sheets/streetwear/heroes/cyber-shinobi/Skill': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/Skill.png'),
+  'sheets/streetwear/heroes/cyber-shinobi/Walk': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/Walk.png'),
+  'sheets/streetwear/heroes/cyber-shinobi/rotations': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/rotations.png'),
+  'sheets/streetwear/heroes/elowen/Attack': require('@/assets/play/sheets/streetwear/heroes/elowen/Attack.png'),
+  'sheets/streetwear/heroes/elowen/Dash': require('@/assets/play/sheets/streetwear/heroes/elowen/Dash.png'),
+  'sheets/streetwear/heroes/elowen/Hurt': require('@/assets/play/sheets/streetwear/heroes/elowen/Hurt.png'),
+  'sheets/streetwear/heroes/elowen/Idle': require('@/assets/play/sheets/streetwear/heroes/elowen/Idle.png'),
+  'sheets/streetwear/heroes/elowen/Skill': require('@/assets/play/sheets/streetwear/heroes/elowen/Skill.png'),
+  'sheets/streetwear/heroes/elowen/Walk': require('@/assets/play/sheets/streetwear/heroes/elowen/Walk.png'),
+  'sheets/streetwear/heroes/elowen/rotations': require('@/assets/play/sheets/streetwear/heroes/elowen/rotations.png'),
+  'sheets/streetwear/heroes/frost-lich/Attack': require('@/assets/play/sheets/streetwear/heroes/frost-lich/Attack.png'),
+  'sheets/streetwear/heroes/frost-lich/Dash': require('@/assets/play/sheets/streetwear/heroes/frost-lich/Dash.png'),
+  'sheets/streetwear/heroes/frost-lich/Hurt': require('@/assets/play/sheets/streetwear/heroes/frost-lich/Hurt.png'),
+  'sheets/streetwear/heroes/frost-lich/Idle': require('@/assets/play/sheets/streetwear/heroes/frost-lich/Idle.png'),
+  'sheets/streetwear/heroes/frost-lich/Skill': require('@/assets/play/sheets/streetwear/heroes/frost-lich/Skill.png'),
+  'sheets/streetwear/heroes/frost-lich/Walk': require('@/assets/play/sheets/streetwear/heroes/frost-lich/Walk.png'),
+  'sheets/streetwear/heroes/frost-lich/rotations': require('@/assets/play/sheets/streetwear/heroes/frost-lich/rotations.png'),
+  'sheets/streetwear/heroes/kael/Attack': require('@/assets/play/sheets/streetwear/heroes/kael/Attack.png'),
+  'sheets/streetwear/heroes/kael/Dash': require('@/assets/play/sheets/streetwear/heroes/kael/Dash.png'),
+  'sheets/streetwear/heroes/kael/Hurt': require('@/assets/play/sheets/streetwear/heroes/kael/Hurt.png'),
+  'sheets/streetwear/heroes/kael/Idle': require('@/assets/play/sheets/streetwear/heroes/kael/Idle.png'),
+  'sheets/streetwear/heroes/kael/Skill': require('@/assets/play/sheets/streetwear/heroes/kael/Skill.png'),
+  'sheets/streetwear/heroes/kael/Walk': require('@/assets/play/sheets/streetwear/heroes/kael/Walk.png'),
+  'sheets/streetwear/heroes/kael/rotations': require('@/assets/play/sheets/streetwear/heroes/kael/rotations.png'),
+  'sheets/streetwear/heroes/kitsune/Attack': require('@/assets/play/sheets/streetwear/heroes/kitsune/Attack.png'),
+  'sheets/streetwear/heroes/kitsune/Dash': require('@/assets/play/sheets/streetwear/heroes/kitsune/Dash.png'),
+  'sheets/streetwear/heroes/kitsune/Hurt': require('@/assets/play/sheets/streetwear/heroes/kitsune/Hurt.png'),
+  'sheets/streetwear/heroes/kitsune/Idle': require('@/assets/play/sheets/streetwear/heroes/kitsune/Idle.png'),
+  'sheets/streetwear/heroes/kitsune/Skill': require('@/assets/play/sheets/streetwear/heroes/kitsune/Skill.png'),
+  'sheets/streetwear/heroes/kitsune/Walk': require('@/assets/play/sheets/streetwear/heroes/kitsune/Walk.png'),
+  'sheets/streetwear/heroes/kitsune/rotations': require('@/assets/play/sheets/streetwear/heroes/kitsune/rotations.png'),
+  'sheets/streetwear/heroes/maldrath/Attack': require('@/assets/play/sheets/streetwear/heroes/maldrath/Attack.png'),
+  'sheets/streetwear/heroes/maldrath/Dash': require('@/assets/play/sheets/streetwear/heroes/maldrath/Dash.png'),
+  'sheets/streetwear/heroes/maldrath/Hurt': require('@/assets/play/sheets/streetwear/heroes/maldrath/Hurt.png'),
+  'sheets/streetwear/heroes/maldrath/Idle': require('@/assets/play/sheets/streetwear/heroes/maldrath/Idle.png'),
+  'sheets/streetwear/heroes/maldrath/Skill': require('@/assets/play/sheets/streetwear/heroes/maldrath/Skill.png'),
+  'sheets/streetwear/heroes/maldrath/Walk': require('@/assets/play/sheets/streetwear/heroes/maldrath/Walk.png'),
+  'sheets/streetwear/heroes/maldrath/rotations': require('@/assets/play/sheets/streetwear/heroes/maldrath/rotations.png'),
+  'sheets/streetwear/heroes/morwen/Attack': require('@/assets/play/sheets/streetwear/heroes/morwen/Attack.png'),
+  'sheets/streetwear/heroes/morwen/Dash': require('@/assets/play/sheets/streetwear/heroes/morwen/Dash.png'),
+  'sheets/streetwear/heroes/morwen/Hurt': require('@/assets/play/sheets/streetwear/heroes/morwen/Hurt.png'),
+  'sheets/streetwear/heroes/morwen/Idle': require('@/assets/play/sheets/streetwear/heroes/morwen/Idle.png'),
+  'sheets/streetwear/heroes/morwen/Skill': require('@/assets/play/sheets/streetwear/heroes/morwen/Skill.png'),
+  'sheets/streetwear/heroes/morwen/Walk': require('@/assets/play/sheets/streetwear/heroes/morwen/Walk.png'),
+  'sheets/streetwear/heroes/morwen/rotations': require('@/assets/play/sheets/streetwear/heroes/morwen/rotations.png'),
+  'sheets/streetwear/heroes/neon-viper/Attack': require('@/assets/play/sheets/streetwear/heroes/neon-viper/Attack.png'),
+  'sheets/streetwear/heroes/neon-viper/Dash': require('@/assets/play/sheets/streetwear/heroes/neon-viper/Dash.png'),
+  'sheets/streetwear/heroes/neon-viper/Hurt': require('@/assets/play/sheets/streetwear/heroes/neon-viper/Hurt.png'),
+  'sheets/streetwear/heroes/neon-viper/Idle': require('@/assets/play/sheets/streetwear/heroes/neon-viper/Idle.png'),
+  'sheets/streetwear/heroes/neon-viper/Skill': require('@/assets/play/sheets/streetwear/heroes/neon-viper/Skill.png'),
+  'sheets/streetwear/heroes/neon-viper/Walk': require('@/assets/play/sheets/streetwear/heroes/neon-viper/Walk.png'),
+  'sheets/streetwear/heroes/neon-viper/rotations': require('@/assets/play/sheets/streetwear/heroes/neon-viper/rotations.png'),
+  'sheets/streetwear/heroes/oni/Attack': require('@/assets/play/sheets/streetwear/heroes/oni/Attack.png'),
+  'sheets/streetwear/heroes/oni/Dash': require('@/assets/play/sheets/streetwear/heroes/oni/Dash.png'),
+  'sheets/streetwear/heroes/oni/Hurt': require('@/assets/play/sheets/streetwear/heroes/oni/Hurt.png'),
+  'sheets/streetwear/heroes/oni/Idle': require('@/assets/play/sheets/streetwear/heroes/oni/Idle.png'),
+  'sheets/streetwear/heroes/oni/Skill': require('@/assets/play/sheets/streetwear/heroes/oni/Skill.png'),
+  'sheets/streetwear/heroes/oni/Walk': require('@/assets/play/sheets/streetwear/heroes/oni/Walk.png'),
+  'sheets/streetwear/heroes/oni/rotations': require('@/assets/play/sheets/streetwear/heroes/oni/rotations.png'),
+  'sheets/streetwear/heroes/raven/Attack': require('@/assets/play/sheets/streetwear/heroes/raven/Attack.png'),
+  'sheets/streetwear/heroes/raven/Dash': require('@/assets/play/sheets/streetwear/heroes/raven/Dash.png'),
+  'sheets/streetwear/heroes/raven/Hurt': require('@/assets/play/sheets/streetwear/heroes/raven/Hurt.png'),
+  'sheets/streetwear/heroes/raven/Idle': require('@/assets/play/sheets/streetwear/heroes/raven/Idle.png'),
+  'sheets/streetwear/heroes/raven/Skill': require('@/assets/play/sheets/streetwear/heroes/raven/Skill.png'),
+  'sheets/streetwear/heroes/raven/Walk': require('@/assets/play/sheets/streetwear/heroes/raven/Walk.png'),
+  'sheets/streetwear/heroes/raven/rotations': require('@/assets/play/sheets/streetwear/heroes/raven/rotations.png'),
+  'sheets/streetwear/heroes/sak/Attack': require('@/assets/play/sheets/streetwear/heroes/sak/Attack.png'),
+  'sheets/streetwear/heroes/sak/Dash': require('@/assets/play/sheets/streetwear/heroes/sak/Dash.png'),
+  'sheets/streetwear/heroes/sak/Hurt': require('@/assets/play/sheets/streetwear/heroes/sak/Hurt.png'),
+  'sheets/streetwear/heroes/sak/Idle': require('@/assets/play/sheets/streetwear/heroes/sak/Idle.png'),
+  'sheets/streetwear/heroes/sak/Skill': require('@/assets/play/sheets/streetwear/heroes/sak/Skill.png'),
+  'sheets/streetwear/heroes/sak/Walk': require('@/assets/play/sheets/streetwear/heroes/sak/Walk.png'),
+  'sheets/streetwear/heroes/sak/rotations': require('@/assets/play/sheets/streetwear/heroes/sak/rotations.png'),
+  'sheets/streetwear/heroes/velkhar/Attack': require('@/assets/play/sheets/streetwear/heroes/velkhar/Attack.png'),
+  'sheets/streetwear/heroes/velkhar/Dash': require('@/assets/play/sheets/streetwear/heroes/velkhar/Dash.png'),
+  'sheets/streetwear/heroes/velkhar/Hurt': require('@/assets/play/sheets/streetwear/heroes/velkhar/Hurt.png'),
+  'sheets/streetwear/heroes/velkhar/Idle': require('@/assets/play/sheets/streetwear/heroes/velkhar/Idle.png'),
+  'sheets/streetwear/heroes/velkhar/Skill': require('@/assets/play/sheets/streetwear/heroes/velkhar/Skill.png'),
+  'sheets/streetwear/heroes/velkhar/Walk': require('@/assets/play/sheets/streetwear/heroes/velkhar/Walk.png'),
+  'sheets/streetwear/heroes/velkhar/rotations': require('@/assets/play/sheets/streetwear/heroes/velkhar/rotations.png'),
+  'sheets/streetwear/heroes/void-raven/Attack': require('@/assets/play/sheets/streetwear/heroes/void-raven/Attack.png'),
+  'sheets/streetwear/heroes/void-raven/Dash': require('@/assets/play/sheets/streetwear/heroes/void-raven/Dash.png'),
+  'sheets/streetwear/heroes/void-raven/Hurt': require('@/assets/play/sheets/streetwear/heroes/void-raven/Hurt.png'),
+  'sheets/streetwear/heroes/void-raven/Idle': require('@/assets/play/sheets/streetwear/heroes/void-raven/Idle.png'),
+  'sheets/streetwear/heroes/void-raven/Skill': require('@/assets/play/sheets/streetwear/heroes/void-raven/Skill.png'),
+  'sheets/streetwear/heroes/void-raven/Walk': require('@/assets/play/sheets/streetwear/heroes/void-raven/Walk.png'),
+  'sheets/streetwear/heroes/void-raven/rotations': require('@/assets/play/sheets/streetwear/heroes/void-raven/rotations.png'),
+  'sheets/streetwear/towers/ghost/Attack': require('@/assets/play/sheets/streetwear/towers/ghost/Attack.png'),
+  'sheets/streetwear/towers/ghost/Idle': require('@/assets/play/sheets/streetwear/towers/ghost/Idle.png'),
+  'sheets/streetwear/towers/ghost/Skill': require('@/assets/play/sheets/streetwear/towers/ghost/Skill.png'),
+  'sheets/streetwear/towers/ghost/rotations': require('@/assets/play/sheets/streetwear/towers/ghost/rotations.png'),
+  'sheets/streetwear/towers/lux/Attack': require('@/assets/play/sheets/streetwear/towers/lux/Attack.png'),
+  'sheets/streetwear/towers/lux/Idle': require('@/assets/play/sheets/streetwear/towers/lux/Idle.png'),
+  'sheets/streetwear/towers/lux/Skill': require('@/assets/play/sheets/streetwear/towers/lux/Skill.png'),
+  'sheets/streetwear/towers/lux/rotations': require('@/assets/play/sheets/streetwear/towers/lux/rotations.png'),
+  'sheets/streetwear/towers/viper/Attack': require('@/assets/play/sheets/streetwear/towers/viper/Attack.png'),
+  'sheets/streetwear/towers/viper/Idle': require('@/assets/play/sheets/streetwear/towers/viper/Idle.png'),
+  'sheets/streetwear/towers/viper/Skill': require('@/assets/play/sheets/streetwear/towers/viper/Skill.png'),
+  'sheets/streetwear/towers/viper/rotations': require('@/assets/play/sheets/streetwear/towers/viper/rotations.png'),
 };

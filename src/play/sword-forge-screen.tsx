@@ -2,12 +2,35 @@
  * Element swords — bag, mix, merge, undo. Opened from Defend.
  * The rules live in `swords.ts`; this screen only sends an action up.
  */
+import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { NeonBackLink, NeonHeader, NeonPanel } from '@/play/neon-ui';
+import { artSkin } from '@/play/art-skin';
+import { PLAY_ART } from '@/play/generated-play-assets';
+import { pixelRenderStyle } from '@/play/pixel-theme';
 import type { SwordAction } from '@/play/playStore';
 import { tierWord, type SwordPanel, type SwordTier } from '@/play/swords';
+
+/**
+ * The sword's badge. With the Streetwear art style: a rarity card — the tier's
+ * frame + gem (colour AND gem cut differ per tier) holding the tier's sword in
+ * its element colour (pre-baked). Otherwise the element colour swatch.
+ */
+function SwordBadge({ element, tier, color }: { element: string; tier: SwordTier; color: string }) {
+  const frame = artSkin() === 'streetwear' ? PLAY_ART[`skins/streetwear/ui/rarity/frame-${tier}`] : undefined;
+  const sword = PLAY_ART[`skins/streetwear/ui/swords/baked/${element}-${tier}`];
+  const gem = PLAY_ART[`skins/streetwear/ui/rarity/gem-${tier}`];
+  if (!frame || !sword) return <View style={[styles.swatch, { backgroundColor: color }]} />;
+  return (
+    <View style={styles.card} accessibilityLabel={`${tierWord(tier)} sword`}>
+      <Image source={frame} contentFit="contain" style={{ ...StyleSheet.absoluteFillObject, ...pixelRenderStyle }} />
+      <Image source={sword} contentFit="contain" style={{ ...styles.cardSword, ...pixelRenderStyle }} />
+      {gem ? <Image source={gem} contentFit="contain" style={{ ...styles.cardGem, ...pixelRenderStyle }} /> : null}
+    </View>
+  );
+}
 
 export function SwordForgeScreen({
   swords,
@@ -70,7 +93,7 @@ export function SwordForgeScreen({
       ) : (
         swords.groups.map((group) => (
           <View key={`${group.element}-${group.tier}`} style={styles.row}>
-            <View style={[styles.swatch, { backgroundColor: group.color }]} />
+            <SwordBadge element={group.element} tier={group.tier} color={group.color} />
             <View style={styles.copy}>
               <ThemedText type="smallBold">
                 {group.name} ×{group.count}
@@ -152,6 +175,9 @@ const styles = StyleSheet.create({
   wrap: { padding: 16, gap: 12, paddingBottom: 48 },
   row: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   swatch: { width: 14, height: 14, borderRadius: 7, marginTop: 4 },
+  card: { width: 56, height: 56 },
+  cardSword: { position: 'absolute', left: 10, top: 10, width: 36, height: 36 },
+  cardGem: { position: 'absolute', left: 20, top: -6, width: 16, height: 16 },
   copy: { flex: 1, gap: 4 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   action: { paddingVertical: 4, paddingHorizontal: 8 },

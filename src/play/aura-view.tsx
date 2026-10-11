@@ -13,6 +13,7 @@ import {
   auraFps,
   auraMaskFromAlpha,
   paintAuraMask,
+  swordRamp,
   type AuraFrame,
   type AuraMask,
   type AuraStyle,
@@ -22,7 +23,7 @@ import { useOsReduceMotion } from '@/play/finish-foil';
 import { useFxQuality } from '@/play/fx-quality';
 import { PLAY_SHEETS } from '@/play/generated-play-sheets';
 import { playSheetArt, sheetFrame } from '@/play/sheet-sprite';
-import type { ClipDrawable } from '@/play/skin';
+import { STREETWEAR_META, type ClipDrawable } from '@/play/skin';
 
 const sheets = new Map<string, Promise<Rgba>>();
 /** One distance field per sprite frame. A few poses stay; older ones drop. */
@@ -248,6 +249,160 @@ export function PetAura({
   return (
     <View pointerEvents="none" style={[styles.layer, { left, top, width, height }]}>
       <Svg width={width} height={height} viewBox={`${-pad} ${-pad} ${shown.w + pad * 2} ${shown.h + pad * 2}`}>
+        {paths.map((path) => (
+          <Path key={path.color} d={path.d} fill={path.color} />
+        ))}
+      </Svg>
+    </View>
+  );
+}
+
+/* ------------------------------------------------ Streetwear sprite aura ---- */
+/* With the Streetwear art style on, a worn aura is the packed PixelLab aura
+ * (behind the pet + a few particles in front), drawn in greyscale and
+ * palette-mapped here to the wearer's colour — so every tint (sword, named,
+ * custom #hex) still works. It is scaled to the pet's visible body and stood on
+ * its feet. Same fps, same Reduce Motion / Effects rules as the painted aura. */
+
+type SpritePack = { cell: number; frames: { color: string; d: string }[][] };
+const spritePacks = new Map<string, Promise<SpritePack>>();
+const SPRITE_PACK_CAP = 24;
+type BodyBox = { cx: number; feet: number; h: number; fw: number; fh: number };
+const bodies = new Map<string, Promise<BodyBox | null>>();
+
+function mix(a: Rgb, b: Rgb, t: number): Rgb {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+/** 5 stops dark → light from the wearer's colour (same source as the painted aura). */
+function auraRamp(element: string): string[] {
+  const r = swordRamp(element);
+  return [mix(r.tip, [0, 0, 0], 0.4), r.tip, r.mid, r.core, [255, 255, 255] as Rgb].map(rgb);
+}
+
+/** Recoloured pixel paths for every frame of one aura layer. */
+function spritePack(style: AuraStyle, layer: 'behind' | 'front', element: string): Promise<SpritePack> {
+  const key = `${style}|${layer}|${element}`;
+  const hit = spritePacks.get(key);
+  if (hit) {
+    remember(spritePacks, key, hit, SPRITE_PACK_CAP);
+    return hit;
+  }
+  const job = (async () => {
+    const sheetKey = `sheets/streetwear/auras/${style}/${layer}`;
+    const sheet = PLAY_SHEETS[sheetKey];
+    if (!sheet) throw new Error('aura sheet');
+    const rgba = await sheetRgba(sheetKey);
+    const ramp = auraRamp(element);
+    const frames: { color: string; d: string }[][] = [];
+    for (const rect of Object.values(sheet.frames)) {
+      const groups = new Map<string, string>();
+      for (let y = 0; y < rect.h; y++) {
+        for (let x = 0; x < rect.w; x++) {
+          const o = ((rect.y + y) * rgba.w + rect.x + x) * 4;
+          if (rgba.data[o + 3] < 128) continue;
+          const L = 0.299 * rgba.data[o] + 0.587 * rgba.data[o + 1] + 0.114 * rgba.data[o + 2];
+          const color = L < 28 ? 'rgb(12,10,14)' : ramp[Math.min(4, Math.round(((L - 28) / 227) * 4))];
+          groups.set(color, `${groups.get(color) ?? ''}M${x} ${y}h1v1h-1`);
+        }
+      }
+      frames.push([...groups.entries()].map(([color, d]) => ({ color, d })));
+    }
+    return { cell: sheet.sheetH, frames };
+  })();
+  remember(spritePacks, key, job, SPRITE_PACK_CAP);
+  job.catch(() => {
+    if (spritePacks.get(key) === job) spritePacks.delete(key);
+  });
+  return job;
+}
+
+/** Where the pet's body sits inside its frame (feet line, centre, height). */
+function bodyBox(drawable: { sheetKey: string; frameKey: string }): Promise<BodyBox | null> {
+  const key = `${drawable.sheetKey}|${drawable.frameKey}`;
+  const hit = bodies.get(key);
+  if (hit) return hit;
+  const job = (async () => {
+    const rect = PLAY_SHEETS[drawable.sheetKey]?.frames[drawable.frameKey];
+    if (!rect) return null;
+    const alpha = cropAlpha(await sheetRgba(drawable.sheetKey), rect.x, rect.y, rect.w, rect.h);
+    let x0 = rect.w, x1 = -1, y0 = rect.h, y1 = -1;
+    for (let y = 0; y < rect.h; y++) {
+      for (let x = 0; x < rect.w; x++) {
+        if (alpha[y * rect.w + x] > 8) {
+          if (x < x0) x0 = x;
+          if (x > x1) x1 = x;
+          if (y < y0) y0 = y;
+          if (y > y1) y1 = y;
+        }
+      }
+    }
+    if (x1 < 0) return null;
+    return { cx: (x0 + x1 + 1) / 2, feet: y1 + 1, h: y1 - y0 + 1, fw: rect.w, fh: rect.h };
+  })();
+  remember(bodies, key, job, MASK_CAP * 4);
+  return job;
+}
+
+export function PetAuraSprite({
+  drawable,
+  styleId,
+  element,
+  box,
+  layer,
+}: {
+  drawable?: ClipDrawable;
+  styleId: AuraStyle;
+  element: string;
+  box: number;
+  layer: 'back' | 'front';
+}) {
+  const reduceMotion = useOsReduceMotion();
+  const fxFull = useFxQuality() === 'full';
+  const frozen = reduceMotion || !fxFull;
+  const meta = STREETWEAR_META.auras[styleId];
+  const which = layer === 'back' ? 'behind' : 'front';
+  const [pack, setPack] = useState<SpritePack | null>(null);
+  const [body, setBody] = useState<BodyBox | null>(null);
+  const [tick, setTick] = useState(0);
+  const sheetKey = drawable?.kind === 'sheet' ? drawable.sheetKey : '';
+  const frameKey = drawable?.kind === 'sheet' ? drawable.frameKey : '';
+  useEffect(() => {
+    if (!meta) return;
+    let live = true;
+    void spritePack(styleId, which, element)
+      .then((next) => live && setPack(next))
+      .catch(() => live && setPack(null));
+    return () => {
+      live = false;
+    };
+  }, [meta, styleId, which, element]);
+  useEffect(() => {
+    if (!sheetKey) return;
+    let live = true;
+    void bodyBox({ sheetKey, frameKey })
+      .then((next) => live && setBody(next))
+      .catch(() => live && setBody(null));
+    return () => {
+      live = false;
+    };
+  }, [sheetKey, frameKey]);
+  useEffect(() => {
+    if (frozen) return;
+    const id = setInterval(() => setTick((n) => n + 1), Math.round(1000 / auraFps()));
+    return () => clearInterval(id);
+  }, [frozen, styleId]);
+  if (!meta || !pack || !body || pack.frames.length === 0) return null;
+  const paths = pack.frames[frozen ? 0 : tick % pack.frames.length];
+  if (!paths?.length) return null;
+  const px = box / body.fw; // screen px per pet frame px
+  const scale = (body.h * px) / meta.refBodyPx; // aura art px → screen px
+  const size = pack.cell * scale;
+  const left = body.cx * px - meta.anchorX * size;
+  const top = body.feet * (box / body.fh) - meta.anchorY * size;
+  return (
+    <View pointerEvents="none" style={[styles.layer, { left, top, width: size, height: size }]}>
+      <Svg width={size} height={size} viewBox={`0 0 ${pack.cell} ${pack.cell}`}>
         {paths.map((path) => (
           <Path key={path.color} d={path.d} fill={path.color} />
         ))}

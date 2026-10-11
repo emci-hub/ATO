@@ -27,7 +27,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { artSkin } from '@/play/art-skin';
 import { cursorIcon } from '@/play/art';
+import { PLAY_ART } from '@/play/generated-play-assets';
 import {
   NEON_ROW_LINE,
   NeonBackLink,
@@ -92,17 +94,30 @@ const PAID_ICON_FILES: Record<ShopPaidRow['kind'], string | null> = {
   stub: 'tool_torch',
 };
 
-/** Shop row icon: Kenney Cursor Pack art, falling back to a glyph. */
+/** Streetwear pixel icons per row kind (shown only with that art style on). */
+const STREETWEAR_SHOP_ART: Partial<Record<string, string>> = {
+  dive_charge: 'dive-charge',
+  merge_crate: 'merge-crate',
+  shine_stone: 'shine-stone',
+  prism_stone: 'prism-stone',
+  star_pearl: 'star-pearl',
+};
+
+/** Shop row icon: the Streetwear icon when that style is on, else Kenney
+ * Cursor Pack art, falling back to a glyph. */
 function ShopRowIcon({
+  kind,
   file,
   fallback,
   color,
 }: {
+  kind: string;
   file: string | null;
   fallback: ShopIcon;
   color: string;
 }) {
-  const source = file ? cursorIcon(file) : undefined;
+  const sw = artSkin() === 'streetwear' ? STREETWEAR_SHOP_ART[kind] : undefined;
+  const source = (sw ? PLAY_ART[`skins/streetwear/ui/shop/${sw}`] : undefined) ?? (file ? cursorIcon(file) : undefined);
   return (
     <NeonIconFrame size={34}>
       {source ? (
@@ -266,7 +281,7 @@ export function ShopScreen({
             const state = tokenRowState(view, row, busyRow === row.id);
             return (
               <View key={row.id} style={styles.row}>
-                <ShopRowIcon file={TOKEN_ICON_FILES[row.kind]} fallback={TOKEN_ICONS[row.kind]} color={NEON.cyan} />
+                <ShopRowIcon kind={row.kind} file={TOKEN_ICON_FILES[row.kind]} fallback={TOKEN_ICONS[row.kind]} color={NEON.cyan} />
                 <View style={styles.rowText}>
                   <ThemedText type="smallBold">{row.name}</ThemedText>
                   {row.blurb ? (
@@ -303,6 +318,7 @@ export function ShopScreen({
             return (
               <View key={row.id} style={styles.row}>
                 <ShopRowIcon
+                  kind={row.kind}
                   file={TOKEN_ICON_FILES[row.kind]}
                   fallback={TOKEN_ICONS[row.kind]}
                   color={NEON.cyan}
@@ -341,6 +357,7 @@ export function ShopScreen({
           {paidShopRows().map((row) => (
             <View key={row.id} style={styles.row}>
               <ShopRowIcon
+                kind={row.kind}
                 file={PAID_ICON_FILES[row.kind]}
                 fallback={PAID_ICONS[row.kind]}
                 color={NEON.textMuted}
