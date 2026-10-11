@@ -1,8 +1,8 @@
 {
   "sheets/streetwear/towers/ghost/Attack": {
-    "sheet": "sheets/streetwear/towers/ghost/Attack.png",
+    "sheet": "sheets/streetwear/towers/ghost/atlas-0.png",
     "sheetW": 1927,
-    "sheetH": 481,
+    "sheetH": 963,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -103,62 +103,62 @@
     }
   },
   "sheets/streetwear/towers/ghost/Idle": {
-    "sheet": "sheets/streetwear/towers/ghost/Idle.png",
-    "sheetW": 963,
-    "sheetH": 481,
+    "sheet": "sheets/streetwear/towers/ghost/atlas-0.png",
+    "sheetW": 1927,
+    "sheetH": 963,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 482,
         "w": 240,
         "h": 240
       },
       "east/frame_001": {
         "x": 241,
-        "y": 0,
+        "y": 482,
         "w": 240,
         "h": 240
       },
       "east/frame_002": {
         "x": 482,
-        "y": 0,
+        "y": 482,
         "w": 240,
         "h": 240
       },
       "east/frame_003": {
         "x": 723,
-        "y": 0,
+        "y": 482,
         "w": 240,
         "h": 240
       },
       "west/frame_000": {
         "x": 0,
-        "y": 241,
+        "y": 723,
         "w": 240,
         "h": 240
       },
       "west/frame_001": {
         "x": 241,
-        "y": 241,
+        "y": 723,
         "w": 240,
         "h": 240
       },
       "west/frame_002": {
         "x": 482,
-        "y": 241,
+        "y": 723,
         "w": 240,
         "h": 240
       },
       "west/frame_003": {
         "x": 723,
-        "y": 241,
+        "y": 723,
         "w": 240,
         "h": 240
       }
     }
   },
   "sheets/streetwear/towers/ghost/Skill": {
-    "sheet": "sheets/streetwear/towers/ghost/Skill.png",
+    "sheet": "sheets/streetwear/towers/ghost/atlas-1.png",
     "sheetW": 1927,
     "sheetH": 481,
     "frames": {
@@ -261,7 +261,7 @@
     }
   },
   "sheets/streetwear/towers/ghost/rotations": {
-    "sheet": "sheets/streetwear/towers/ghost/rotations.png",
+    "sheet": "sheets/streetwear/towers/ghost/atlas-2.png",
     "sheetW": 1927,
     "sheetH": 240,
     "frames": {

@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/towers/lux/Attack": {
-    "sheet": "sheets/streetwear/towers/lux/Attack.png",
+    "sheet": "sheets/streetwear/towers/lux/atlas-0.png",
     "sheetW": 1959,
     "sheetH": 489,
     "frames": {
@@ -103,9 +103,9 @@
     }
   },
   "sheets/streetwear/towers/lux/Idle": {
-    "sheet": "sheets/streetwear/towers/lux/Idle.png",
-    "sheetW": 979,
-    "sheetH": 489,
+    "sheet": "sheets/streetwear/towers/lux/atlas-1.png",
+    "sheetW": 1959,
+    "sheetH": 734,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -158,7 +158,7 @@
     }
   },
   "sheets/streetwear/towers/lux/Skill": {
-    "sheet": "sheets/streetwear/towers/lux/Skill.png",
+    "sheet": "sheets/streetwear/towers/lux/atlas-2.png",
     "sheetW": 1959,
     "sheetH": 489,
     "frames": {
@@ -261,55 +261,55 @@
     }
   },
   "sheets/streetwear/towers/lux/rotations": {
-    "sheet": "sheets/streetwear/towers/lux/rotations.png",
+    "sheet": "sheets/streetwear/towers/lux/atlas-1.png",
     "sheetW": 1959,
-    "sheetH": 244,
+    "sheetH": 734,
     "frames": {
       "north": {
         "x": 0,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "north-east": {
         "x": 245,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "east": {
         "x": 490,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "south-east": {
         "x": 735,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "south": {
         "x": 980,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "south-west": {
         "x": 1225,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "west": {
         "x": 1470,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       },
       "north-west": {
         "x": 1715,
-        "y": 0,
+        "y": 490,
         "w": 244,
         "h": 244
       }

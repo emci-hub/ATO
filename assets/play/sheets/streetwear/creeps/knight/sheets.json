@@ -1,8 +1,8 @@
 {
   "sheets/streetwear/creeps/knight/Death": {
-    "sheet": "sheets/streetwear/creeps/knight/Death.png",
-    "sheetW": 678,
-    "sheetH": 193,
+    "sheet": "sheets/streetwear/creeps/knight/atlas.png",
+    "sheetW": 775,
+    "sheetH": 678,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -91,213 +91,213 @@
     }
   },
   "sheets/streetwear/creeps/knight/Idle": {
-    "sheet": "sheets/streetwear/creeps/knight/Idle.png",
-    "sheetW": 387,
-    "sheetH": 193,
+    "sheet": "sheets/streetwear/creeps/knight/atlas.png",
+    "sheetW": 775,
+    "sheetH": 678,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 194,
         "w": 96,
         "h": 96
       },
       "east/frame_001": {
         "x": 97,
-        "y": 0,
+        "y": 194,
         "w": 96,
         "h": 96
       },
       "east/frame_002": {
         "x": 194,
-        "y": 0,
+        "y": 194,
         "w": 96,
         "h": 96
       },
       "east/frame_003": {
         "x": 291,
-        "y": 0,
+        "y": 194,
         "w": 96,
         "h": 96
       },
       "west/frame_000": {
         "x": 0,
-        "y": 97,
+        "y": 291,
         "w": 96,
         "h": 96
       },
       "west/frame_001": {
         "x": 97,
-        "y": 97,
+        "y": 291,
         "w": 96,
         "h": 96
       },
       "west/frame_002": {
         "x": 194,
-        "y": 97,
+        "y": 291,
         "w": 96,
         "h": 96
       },
       "west/frame_003": {
         "x": 291,
-        "y": 97,
+        "y": 291,
         "w": 96,
         "h": 96
       }
     }
   },
   "sheets/streetwear/creeps/knight/Walk": {
-    "sheet": "sheets/streetwear/creeps/knight/Walk.png",
+    "sheet": "sheets/streetwear/creeps/knight/atlas.png",
     "sheetW": 775,
-    "sheetH": 193,
+    "sheetH": 678,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 388,
         "w": 96,
         "h": 96
       },
       "east/frame_001": {
         "x": 97,
-        "y": 0,
+        "y": 388,
         "w": 96,
         "h": 96
       },
       "east/frame_002": {
         "x": 194,
-        "y": 0,
+        "y": 388,
         "w": 96,
         "h": 96
       },
       "east/frame_003": {
         "x": 291,
-        "y": 0,
+        "y": 388,
         "w": 96,
         "h": 96
       },
       "east/frame_004": {
         "x": 388,
-        "y": 0,
+        "y": 388,
         "w": 96,
         "h": 96
       },
       "east/frame_005": {
         "x": 485,
-        "y": 0,
+        "y": 388,
         "w": 96,
         "h": 96
       },
       "east/frame_006": {
         "x": 582,
-        "y": 0,
+        "y": 388,
         "w": 96,
         "h": 96
       },
       "east/frame_007": {
         "x": 679,
-        "y": 0,
+        "y": 388,
         "w": 96,
         "h": 96
       },
       "west/frame_000": {
         "x": 0,
-        "y": 97,
+        "y": 485,
         "w": 96,
         "h": 96
       },
       "west/frame_001": {
         "x": 97,
-        "y": 97,
+        "y": 485,
         "w": 96,
         "h": 96
       },
       "west/frame_002": {
         "x": 194,
-        "y": 97,
+        "y": 485,
         "w": 96,
         "h": 96
       },
       "west/frame_003": {
         "x": 291,
-        "y": 97,
+        "y": 485,
         "w": 96,
         "h": 96
       },
       "west/frame_004": {
         "x": 388,
-        "y": 97,
+        "y": 485,
         "w": 96,
         "h": 96
       },
       "west/frame_005": {
         "x": 485,
-        "y": 97,
+        "y": 485,
         "w": 96,
         "h": 96
       },
       "west/frame_006": {
         "x": 582,
-        "y": 97,
+        "y": 485,
         "w": 96,
         "h": 96
       },
       "west/frame_007": {
         "x": 679,
-        "y": 97,
+        "y": 485,
         "w": 96,
         "h": 96
       }
     }
   },
   "sheets/streetwear/creeps/knight/rotations": {
-    "sheet": "sheets/streetwear/creeps/knight/rotations.png",
+    "sheet": "sheets/streetwear/creeps/knight/atlas.png",
     "sheetW": 775,
-    "sheetH": 96,
+    "sheetH": 678,
     "frames": {
       "north": {
         "x": 0,
-        "y": 0,
+        "y": 582,
         "w": 96,
         "h": 96
       },
       "north-east": {
         "x": 97,
-        "y": 0,
+        "y": 582,
         "w": 96,
         "h": 96
       },
       "east": {
         "x": 194,
-        "y": 0,
+        "y": 582,
         "w": 96,
         "h": 96
       },
       "south-east": {
         "x": 291,
-        "y": 0,
+        "y": 582,
         "w": 96,
         "h": 96
       },
       "south": {
         "x": 388,
-        "y": 0,
+        "y": 582,
         "w": 96,
         "h": 96
       },
       "south-west": {
         "x": 485,
-        "y": 0,
+        "y": 582,
         "w": 96,
         "h": 96
       },
       "west": {
         "x": 582,
-        "y": 0,
+        "y": 582,
         "w": 96,
         "h": 96
       },
       "north-west": {
         "x": 679,
-        "y": 0,
+        "y": 582,
         "w": 96,
         "h": 96
       }

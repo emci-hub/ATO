@@ -1,8 +1,8 @@
 {
   "sheets/streetwear/boss/oni/Death": {
-    "sheet": "sheets/streetwear/boss/oni/Death.png",
+    "sheet": "sheets/streetwear/boss/oni/atlas.png",
     "sheetW": 2119,
-    "sheetH": 529,
+    "sheetH": 2384,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -103,316 +103,316 @@
     }
   },
   "sheets/streetwear/boss/oni/Idle": {
-    "sheet": "sheets/streetwear/boss/oni/Idle.png",
-    "sheetW": 1059,
-    "sheetH": 529,
+    "sheet": "sheets/streetwear/boss/oni/atlas.png",
+    "sheetW": 2119,
+    "sheetH": 2384,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 530,
         "w": 264,
         "h": 264
       },
       "east/frame_001": {
         "x": 265,
-        "y": 0,
+        "y": 530,
         "w": 264,
         "h": 264
       },
       "east/frame_002": {
         "x": 530,
-        "y": 0,
+        "y": 530,
         "w": 264,
         "h": 264
       },
       "east/frame_003": {
         "x": 795,
-        "y": 0,
+        "y": 530,
         "w": 264,
         "h": 264
       },
       "west/frame_000": {
         "x": 0,
-        "y": 265,
+        "y": 795,
         "w": 264,
         "h": 264
       },
       "west/frame_001": {
         "x": 265,
-        "y": 265,
+        "y": 795,
         "w": 264,
         "h": 264
       },
       "west/frame_002": {
         "x": 530,
-        "y": 265,
+        "y": 795,
         "w": 264,
         "h": 264
       },
       "west/frame_003": {
         "x": 795,
-        "y": 265,
+        "y": 795,
         "w": 264,
         "h": 264
       }
     }
   },
   "sheets/streetwear/boss/oni/Run": {
-    "sheet": "sheets/streetwear/boss/oni/Run.png",
+    "sheet": "sheets/streetwear/boss/oni/atlas.png",
     "sheetW": 2119,
-    "sheetH": 529,
+    "sheetH": 2384,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 1060,
         "w": 264,
         "h": 264
       },
       "east/frame_001": {
         "x": 265,
-        "y": 0,
+        "y": 1060,
         "w": 264,
         "h": 264
       },
       "east/frame_002": {
         "x": 530,
-        "y": 0,
+        "y": 1060,
         "w": 264,
         "h": 264
       },
       "east/frame_003": {
         "x": 795,
-        "y": 0,
+        "y": 1060,
         "w": 264,
         "h": 264
       },
       "east/frame_004": {
         "x": 1060,
-        "y": 0,
+        "y": 1060,
         "w": 264,
         "h": 264
       },
       "east/frame_005": {
         "x": 1325,
-        "y": 0,
+        "y": 1060,
         "w": 264,
         "h": 264
       },
       "east/frame_006": {
         "x": 1590,
-        "y": 0,
+        "y": 1060,
         "w": 264,
         "h": 264
       },
       "east/frame_007": {
         "x": 1855,
-        "y": 0,
+        "y": 1060,
         "w": 264,
         "h": 264
       },
       "west/frame_000": {
         "x": 0,
-        "y": 265,
+        "y": 1325,
         "w": 264,
         "h": 264
       },
       "west/frame_001": {
         "x": 265,
-        "y": 265,
+        "y": 1325,
         "w": 264,
         "h": 264
       },
       "west/frame_002": {
         "x": 530,
-        "y": 265,
+        "y": 1325,
         "w": 264,
         "h": 264
       },
       "west/frame_003": {
         "x": 795,
-        "y": 265,
+        "y": 1325,
         "w": 264,
         "h": 264
       },
       "west/frame_004": {
         "x": 1060,
-        "y": 265,
+        "y": 1325,
         "w": 264,
         "h": 264
       },
       "west/frame_005": {
         "x": 1325,
-        "y": 265,
+        "y": 1325,
         "w": 264,
         "h": 264
       },
       "west/frame_006": {
         "x": 1590,
-        "y": 265,
+        "y": 1325,
         "w": 264,
         "h": 264
       },
       "west/frame_007": {
         "x": 1855,
-        "y": 265,
+        "y": 1325,
         "w": 264,
         "h": 264
       }
     }
   },
   "sheets/streetwear/boss/oni/Walk": {
-    "sheet": "sheets/streetwear/boss/oni/Walk.png",
+    "sheet": "sheets/streetwear/boss/oni/atlas.png",
     "sheetW": 2119,
-    "sheetH": 529,
+    "sheetH": 2384,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 1590,
         "w": 264,
         "h": 264
       },
       "east/frame_001": {
         "x": 265,
-        "y": 0,
+        "y": 1590,
         "w": 264,
         "h": 264
       },
       "east/frame_002": {
         "x": 530,
-        "y": 0,
+        "y": 1590,
         "w": 264,
         "h": 264
       },
       "east/frame_003": {
         "x": 795,
-        "y": 0,
+        "y": 1590,
         "w": 264,
         "h": 264
       },
       "east/frame_004": {
         "x": 1060,
-        "y": 0,
+        "y": 1590,
         "w": 264,
         "h": 264
       },
       "east/frame_005": {
         "x": 1325,
-        "y": 0,
+        "y": 1590,
         "w": 264,
         "h": 264
       },
       "east/frame_006": {
         "x": 1590,
-        "y": 0,
+        "y": 1590,
         "w": 264,
         "h": 264
       },
       "east/frame_007": {
         "x": 1855,
-        "y": 0,
+        "y": 1590,
         "w": 264,
         "h": 264
       },
       "west/frame_000": {
         "x": 0,
-        "y": 265,
+        "y": 1855,
         "w": 264,
         "h": 264
       },
       "west/frame_001": {
         "x": 265,
-        "y": 265,
+        "y": 1855,
         "w": 264,
         "h": 264
       },
       "west/frame_002": {
         "x": 530,
-        "y": 265,
+        "y": 1855,
         "w": 264,
         "h": 264
       },
       "west/frame_003": {
         "x": 795,
-        "y": 265,
+        "y": 1855,
         "w": 264,
         "h": 264
       },
       "west/frame_004": {
         "x": 1060,
-        "y": 265,
+        "y": 1855,
         "w": 264,
         "h": 264
       },
       "west/frame_005": {
         "x": 1325,
-        "y": 265,
+        "y": 1855,
         "w": 264,
         "h": 264
       },
       "west/frame_006": {
         "x": 1590,
-        "y": 265,
+        "y": 1855,
         "w": 264,
         "h": 264
       },
       "west/frame_007": {
         "x": 1855,
-        "y": 265,
+        "y": 1855,
         "w": 264,
         "h": 264
       }
     }
   },
   "sheets/streetwear/boss/oni/rotations": {
-    "sheet": "sheets/streetwear/boss/oni/rotations.png",
+    "sheet": "sheets/streetwear/boss/oni/atlas.png",
     "sheetW": 2119,
-    "sheetH": 264,
+    "sheetH": 2384,
     "frames": {
       "north": {
         "x": 0,
-        "y": 0,
+        "y": 2120,
         "w": 264,
         "h": 264
       },
       "north-east": {
         "x": 265,
-        "y": 0,
+        "y": 2120,
         "w": 264,
         "h": 264
       },
       "east": {
         "x": 530,
-        "y": 0,
+        "y": 2120,
         "w": 264,
         "h": 264
       },
       "south-east": {
         "x": 795,
-        "y": 0,
+        "y": 2120,
         "w": 264,
         "h": 264
       },
       "south": {
         "x": 1060,
-        "y": 0,
+        "y": 2120,
         "w": 264,
         "h": 264
       },
       "south-west": {
         "x": 1325,
-        "y": 0,
+        "y": 2120,
         "w": 264,
         "h": 264
       },
       "west": {
         "x": 1590,
-        "y": 0,
+        "y": 2120,
         "w": 264,
         "h": 264
       },
       "north-west": {
         "x": 1855,
-        "y": 0,
+        "y": 2120,
         "w": 264,
         "h": 264
       }

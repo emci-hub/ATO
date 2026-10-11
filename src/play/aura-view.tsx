@@ -79,7 +79,9 @@ function sheetUri(source: unknown): string | undefined {
 }
 
 async function sheetRgba(sheetKey: string): Promise<Rgba> {
-  const hit = sheets.get(sheetKey);
+  // Cache by image file: Streetwear clips share one atlas per character.
+  const id = PLAY_SHEETS[sheetKey]?.sheet ?? sheetKey;
+  const hit = sheets.get(id);
   if (hit) return hit;
   const job = (async () => {
     const source = playSheetArt(sheetKey);
@@ -89,11 +91,11 @@ async function sheetRgba(sheetKey: string): Promise<Rgba> {
     if (!res.ok) throw new Error(`sheet ${res.status}`);
     return decodePng(new Uint8Array(await res.arrayBuffer()));
   })();
-  sheets.set(sheetKey, job);
+  sheets.set(id, job);
   try {
     return await job;
   } catch (err) {
-    sheets.delete(sheetKey);
+    sheets.delete(id);
     throw err;
   }
 }

@@ -1,8 +1,8 @@
 {
   "sheets/streetwear/heroes/velkhar/Attack": {
-    "sheet": "sheets/streetwear/heroes/velkhar/Attack.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 385,
+    "sheetH": 1157,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -103,9 +103,9 @@
     }
   },
   "sheets/streetwear/heroes/velkhar/Dash": {
-    "sheet": "sheets/streetwear/heroes/velkhar/Dash.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-1.png",
     "sheetW": 1543,
-    "sheetH": 385,
+    "sheetH": 771,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -206,141 +206,141 @@
     }
   },
   "sheets/streetwear/heroes/velkhar/Hurt": {
-    "sheet": "sheets/streetwear/heroes/velkhar/Hurt.png",
-    "sheetW": 1157,
-    "sheetH": 385,
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-0.png",
+    "sheetW": 1543,
+    "sheetH": 1157,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/velkhar/Idle": {
-    "sheet": "sheets/streetwear/heroes/velkhar/Idle.png",
-    "sheetW": 771,
-    "sheetH": 385,
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-1.png",
+    "sheetW": 1543,
+    "sheetH": 771,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 579,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/velkhar/Skill": {
-    "sheet": "sheets/streetwear/heroes/velkhar/Skill.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-2.png",
     "sheetW": 1543,
     "sheetH": 385,
     "frames": {
@@ -443,110 +443,110 @@
     }
   },
   "sheets/streetwear/heroes/velkhar/Walk": {
-    "sheet": "sheets/streetwear/heroes/velkhar/Walk.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 385,
+    "sheetH": 1157,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/velkhar/rotations": {
-    "sheet": "sheets/streetwear/heroes/velkhar/rotations.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-3.png",
     "sheetW": 1543,
     "sheetH": 192,
     "frames": {

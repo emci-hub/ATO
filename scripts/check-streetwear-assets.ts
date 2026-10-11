@@ -28,7 +28,7 @@ const ok = (msg: string) => {
 // 1. Nothing loose from Streetwear in the PLAY_ART registry.
 const assets = fs.readFileSync(path.join(repo, 'src/play/generated-play-assets.ts'), 'utf8');
 const swKeys = [...assets.matchAll(/'(skins\/streetwear\/[^']+)'/g)].map((m) => m[1]);
-const loose = swKeys.filter((k) => !/^skins\/streetwear\/ui\/(rarity|shop|swords\/baked)\//.test(k));
+const loose = swKeys.filter((k) => !/^skins\/streetwear\/ui\/(rarity|shop)\//.test(k));
 assert.deepEqual(loose, [], `loose Streetwear frames are bundled: ${loose.slice(0, 5).join(', ')}`);
 ok(`only ${swKeys.length} small Streetwear stills are bundled by key (no loose frames)`);
 
@@ -38,7 +38,7 @@ const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEE
 const sheets = JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
 const swSheets = Object.entries(sheets).filter(([k]) => k.startsWith('sheets/streetwear/'));
 for (const [key, entry] of swSheets) {
-  if (key.endsWith('/rotations') || key.includes('/fx/') || key.includes('/auras/')) continue;
+  if (key.endsWith('/rotations') || /\/(fx|auras|swords)\//.test(key)) continue;
   const dirs = new Set(Object.keys(entry.frames).map((f) => f.split('/')[0]));
   for (const d of dirs) assert.ok(d === 'east' || d === 'west', `${key} ships a "${d}" row`);
 }
@@ -93,13 +93,25 @@ for (const tower of ['viper', 'ghost', 'lux']) {
 ok(`meta matches the sheets: ${Object.keys(meta.chars).length} characters, ${Object.keys(meta.fx).length} effects, ${auraIds.length} auras`);
 
 // 3. Budget.
+// Clips share atlases, so count each image file once.
+const swFiles = new Set(swSheets.map(([, entry]) => entry.sheet));
 let bytes = 0;
-for (const [, entry] of swSheets) bytes += fs.statSync(path.join(repo, 'assets/play', entry.sheet)).size;
-const stills = path.join(repo, 'assets/play/skins/streetwear/ui');
+for (const file of swFiles) bytes += fs.statSync(path.join(repo, 'assets/play', file)).size;
 for (const k of swKeys) bytes += fs.statSync(path.join(repo, 'assets/play', `${k}.png`)).size;
-assert.ok(fs.existsSync(stills));
 assert.ok(bytes <= BUDGET_BYTES, `Streetwear art is ${(bytes / 1048576).toFixed(1)} MB, over the ${BUDGET_BYTES / 1048576} MB budget`);
 ok(`Streetwear art ${(bytes / 1048576).toFixed(1)} MB (budget ${BUDGET_BYTES / 1048576} MB)`);
+
+// EAS refuses an update with more than 1000 assets. Every require()d image is
+// one: the PLAY_ART stills + one per distinct sheet file. Keep headroom for fonts etc.
+const sheetFiles = new Set(Object.values(sheets).map((e) => e.sheet)).size;
+const stillCount = [...assets.matchAll(/require\(/g)].length;
+const MAX_PLAY_IMAGES = 900;
+assert.ok(sheetFiles + stillCount <= MAX_PLAY_IMAGES, `${stillCount} stills + ${sheetFiles} sheet files is over ${MAX_PLAY_IMAGES} (EAS caps an update at 1000 assets)`);
+ok(`${swFiles.size} Streetwear image files; Play bundles ${stillCount + sheetFiles} images (cap ${MAX_PLAY_IMAGES})`);
+const swordTiers = JSON.parse(fs.readFileSync(path.join(repo, 'src/play/data/swords.json'), 'utf8')) as { tiers: string[]; elements: { id: string }[] };
+for (const tier of swordTiers.tiers) {
+  for (const el of swordTiers.elements) assert.ok(sheets[`sheets/streetwear/swords/${tier}`]?.frames[el.id], `sword ${el.id}-${tier} not packed`);
+}
 
 // 5. Default stays cast.
 const settings = fs.readFileSync(path.join(repo, 'src/play/play-settings.ts'), 'utf8');

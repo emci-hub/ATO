@@ -701,23 +701,28 @@ function rampFromColor(hex: string): [number, number, number][] {
 }
 
 /** Bake every sword element × tier icon (greyscale tier sword tinted per
- * element). Tiny 48px PNGs, so baking beats runtime recolouring in a list. */
+ * element) into one strip per tier. Baking beats runtime recolouring in a list. */
 function bakeSwSwords(repo: string): number {
   const swords = JSON.parse(fs.readFileSync(path.join(repo, 'src/play/data/swords.json'), 'utf8')) as {
     tiers: string[];
     elements: { id: string; color: string }[];
   };
-  const out = path.join(repo, SW_SRC, 'ui/swords/baked');
-  fs.rmSync(out, { recursive: true, force: true });
-  fs.mkdirSync(out, { recursive: true });
+  // Packed as sheets (keys `sheets/streetwear/swords/<tier>`, frames keyed by
+  // element id), not 105 loose PNGs: each loose still is one OTA asset.
+  fs.rmSync(path.join(repo, SW_SRC, 'ui/swords/baked'), { recursive: true, force: true });
+  const outDir = path.join(repo, 'assets/play', SW_SHEETS, 'swords');
+  fs.rmSync(outDir, { recursive: true, force: true });
+  const manifest: Record<string, SheetEntry> = {};
   let n = 0;
   for (const tier of swords.tiers) {
     const base = readPng(path.join(repo, SW_SRC, `ui/swords/sword-${tier}.png`));
-    for (const el of swords.elements) {
-      fs.writeFileSync(path.join(out, `${el.id}-${tier}.png`), encodeSheetPng(rampMap(base, rampFromColor(el.color))));
-      n += 1;
-    }
+    const key = `${SW_SHEETS}/swords/${tier}`;
+    const entry = writeSquareStrip(repo, key, [{ frames: swords.elements.map((el) => rampMap(base, rampFromColor(el.color))), dx: 0, dy: 0 }], base.width);
+    entry.frames = Object.fromEntries(Object.values(entry.frames).map((rect, i) => [swords.elements[i].id, rect]));
+    manifest[key] = entry;
+    n += swords.elements.length;
   }
+  fs.writeFileSync(path.join(outDir, 'sheets.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   return n;
 }
 
@@ -739,8 +744,103 @@ function packStreetwear(repo: string) {
   const swords = bakeSwSwords(repo);
   const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
   fs.writeFileSync(metaPath, `${JSON.stringify({ chars, fx: fx.meta, auras: auras.meta }, null, 2)}\n`);
+  let files = 0;
+  for (const manifest of walk(path.join(repo, 'assets/play', SW_SHEETS)).filter((f) => f.endsWith('sheets.json'))) {
+    files += atlasSheetsDir(repo, path.dirname(manifest));
+  }
   console.log(`packed streetwear fx: ${Object.keys(fx.meta).length} effects, ${Object.keys(auras.meta).length} auras, ${swords} baked sword icons`);
+  console.log(`streetwear atlases: ${files} PNG files (EAS caps an update at 1000 assets)`);
   console.log(`meta: ${path.relative(repo, metaPath)}`);
+}
+
+/**
+ * Merge every clip sheet listed in one `sheets.json` into as few atlases as
+ * fit the 4096px cap (shelf packing, whole sheets as blocks, 1px gutter). The
+ * keys stay per clip — only `sheet`, `sheetW/H` and the rects move — so the
+ * drawers are unchanged. One PNG per character instead of one per clip keeps
+ * the OTA under EAS's 1000-assets-per-update limit. Returns the file count.
+ */
+function atlasSheetsDir(repo: string, dir: string): number {
+  const manifestPath = path.join(dir, 'sheets.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as Record<string, SheetEntry>;
+  const sources = [...new Set(Object.values(manifest).map((e) => e.sheet))];
+  // Clear atlases from an earlier run that are not this run's sources.
+  for (const f of fs.readdirSync(dir).filter((f) => /^atlas(-\d+)?\.png$/.test(f))) {
+    if (!sources.includes(`${path.relative(path.join(repo, 'assets/play'), dir).split(path.sep).join('/')}/${f}`)) fs.rmSync(path.join(dir, f));
+  }
+  const pngs = new Map(sources.map((s) => [s, readPng(path.join(repo, 'assets/play', s))]));
+  // Group sheets so each atlas keeps ≤256 colours (the pixel-exact palette
+  // PNG); a sheet that is already truecolour gets its own group.
+  const colours = (png: PNG) => {
+    const set = new Set<number>();
+    for (let i = 0; i < png.data.length; i += 4) set.add(png.data.readUInt32BE(i));
+    return set;
+  };
+  const byHeight = [...sources].sort((a, b) => pngs.get(b)!.height - pngs.get(a)!.height || a.localeCompare(b));
+  const bins: { set: Set<number> | null; items: string[] }[] = [];
+  for (const s of byHeight) {
+    const own = colours(pngs.get(s)!);
+    const bin = own.size > 256 ? undefined : bins.find((b) => b.set && new Set([...b.set, ...own]).size <= 256);
+    if (bin) {
+      own.forEach((c) => bin.set!.add(c));
+      bin.items.push(s);
+    } else bins.push({ set: own.size > 256 ? null : own, items: [s] });
+  }
+  // Shelf placement per group: atlas index + offset per source sheet.
+  const place = new Map<string, { atlas: number; x: number; y: number }>();
+  const heights: number[] = [];
+  const widths: number[] = [];
+  let atlas = -1;
+  for (const bin of bins) {
+    const area = bin.items.reduce((sum, s) => sum + (pngs.get(s)!.width + GUTTER) * (pngs.get(s)!.height + GUTTER), 0);
+    const widest = Math.max(...bin.items.map((s) => pngs.get(s)!.width));
+    const width = Math.min(MAX_SHEET_PX, Math.max(widest, Math.ceil(Math.sqrt(area) * 1.1)));
+    atlas += 1;
+    let x = 0;
+    let y = 0;
+    let shelf = 0;
+    for (const s of bin.items) {
+      const png = pngs.get(s)!;
+      if (x > 0 && x + png.width > width) {
+        y += shelf + GUTTER;
+        x = 0;
+        shelf = 0;
+      }
+      if (y + png.height > MAX_SHEET_PX) {
+        atlas += 1;
+        x = 0;
+        y = 0;
+        shelf = 0;
+      }
+      place.set(s, { atlas, x, y });
+      shelf = Math.max(shelf, png.height);
+      heights[atlas] = Math.max(heights[atlas] ?? 0, y + png.height);
+      widths[atlas] = Math.max(widths[atlas] ?? 0, x + png.width);
+      x += png.width + GUTTER;
+    }
+  }
+  const order = byHeight;
+  const rel = path.relative(path.join(repo, 'assets/play'), dir).split(path.sep).join('/');
+  const names = heights.map((_, i) => (heights.length === 1 ? 'atlas.png' : `atlas-${i}.png`));
+  const outs = heights.map((h, i) => new PNG({ width: widths[i], height: h, fill: true }));
+  for (const s of order) {
+    const p = place.get(s)!;
+    blit(pngs.get(s)!, outs[p.atlas], p.x, p.y);
+  }
+  for (const entry of Object.values(manifest)) {
+    const p = place.get(entry.sheet)!;
+    for (const rect of Object.values(entry.frames)) {
+      rect.x += p.x;
+      rect.y += p.y;
+    }
+    entry.sheet = `${rel}/${names[p.atlas]}`;
+    entry.sheetW = widths[p.atlas];
+    entry.sheetH = heights[p.atlas];
+  }
+  for (const s of sources) fs.rmSync(path.join(repo, 'assets/play', s));
+  outs.forEach((png, i) => fs.writeFileSync(path.join(dir, names[i]), encodeSheetPng(png)));
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  return outs.length;
 }
 
 function walk(dir: string): string[] {

@@ -50,7 +50,7 @@ const PACKED_HERO_ART = /^skins\/cast\/heroes\/[^/]+\/(animations|rotations)\//;
  * south included) never enter the bundle; just the small shop/rarity/sword
  * stills are bundled by key.
  */
-const STREETWEAR_UNBUNDLED = /^skins\/streetwear\/(?!ui\/(rarity|shop|swords\/baked)\/)/;
+const STREETWEAR_UNBUNDLED = /^skins\/streetwear\/(?!ui\/(rarity|shop)\/)/;
 const HASH_SUFFIX = /-[0-9a-f]{8}(?=\/|$)/g;
 
 /**
