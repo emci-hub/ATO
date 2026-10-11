@@ -734,6 +734,62 @@ function packSwUiKit(repo: string): Record<string, SwUiPiece> {
       scale: 0.3,
     },
   };
+  // Street shell v2 (batch 7): bars, sheet, toast, HUD bits, portrait, icons, rooms.
+  const sheet = crop('sheet.png', 0, 95, 448, 394);
+  // The drag handle sits in the stretching top edge: cut it out as its own
+  // piece and patch the hole with the panel texture 24 rows below.
+  let hx0 = 1e9, hy0 = 1e9, hx1 = -1, hy1 = -1;
+  for (let y = 25; y < 75; y += 1) {
+    for (let x = 150; x < 300; x += 1) {
+      // Background removal punched the handle's white face out: find the hole.
+      const i = (y * sheet.width + x) * 4;
+      if (sheet.data[i + 3] < 10) {
+        hx0 = Math.min(hx0, x); hy0 = Math.min(hy0, y); hx1 = Math.max(hx1, x); hy1 = Math.max(hy1, y);
+      }
+    }
+  }
+  if (hx1 < 0) throw new Error('ui kit: sheet handle not found');
+  [hx0, hy0, hx1, hy1] = [hx0 - 10, hy0 - 10, hx1 + 10, hy1 + 10];
+  const handle = new PNG({ width: hx1 - hx0 + 1, height: hy1 - hy0 + 1, fill: true });
+  PNG.bitblt(sheet, handle, hx0, hy0, handle.width, handle.height, 0, 0);
+  for (let i = 0; i < handle.data.length; i += 4) {
+    if (handle.data[i + 3] < 10) [handle.data[i], handle.data[i + 1], handle.data[i + 2], handle.data[i + 3]] = [242, 237, 228, 255];
+  }
+  for (let y = hy0; y <= hy1; y += 1) {
+    for (let x = hx0; x <= hx1; x += 1) {
+      const d = (y * sheet.width + x) * 4;
+      const s = ((y + 24) * sheet.width + x) * 4;
+      for (let c = 0; c < 4; c += 1) sheet.data[d + c] = sheet.data[s + c];
+    }
+  }
+  const toast = crop('toast.png', 17, 23, 653, 331);
+  // The reroll left smudges in the middle: repaint the paper flat, keep the
+  // outline (outer 14px) and the mustard tab (first 80px).
+  for (let y = 14; y < toast.height - 14; y += 1) {
+    for (let x = 80; x < toast.width - 14; x += 1) {
+      const i = (y * toast.width + x) * 4;
+      if (toast.data[i] < 40 && toast.data[i + 1] < 40 && toast.data[i + 2] < 40 && toast.data[i + 3] > 200) continue;
+      [toast.data[i], toast.data[i + 1], toast.data[i + 2], toast.data[i + 3]] = [242, 237, 228, 255];
+    }
+  }
+  Object.assign(pieces, {
+    resbar: { png: crop('resbar.png', 42, 214, 604, 88), inset: [16, 40, 16, 40], scale: 0.5 },
+    tabbar: { png: crop('tabbar.png', 38, 215, 611, 87), inset: [20, 48, 16, 48], scale: 0.7 },
+    sheet: { png: sheet, inset: [120, 120, 40, 40], scale: 0.5 },
+    'sheet-handle': { png: handle, inset: [0, 0, 0, 0], scale: 0.5 },
+    toast: { png: toast, inset: [24, 24, 24, 90], scale: 0.3 },
+    pause: { png: crop('hud.png', 190, 38, 132, 125), inset: [0, 0, 0, 0], scale: 0.3 },
+    alert: { png: crop('hud.png', 125, 204, 261, 115), inset: [30, 40, 30, 40], scale: 0.4 },
+    portrait: { png: crop('portrait.png', 300, 64, 159, 124), inset: [0, 0, 0, 0], scale: 0.4 },
+  });
+  for (const f of fs.readdirSync(path.join(kit, '../nav')).filter((f) => f.endsWith('.png'))) {
+    const png = readPng(path.join(kit, '../nav', f));
+    pieces[`nav-${f.replace(/\.png$/, '')}`] = { png, inset: [0, 0, 0, 0], scale: 1 };
+  }
+  for (const f of fs.readdirSync(path.join(kit, '../rooms')).filter((f) => f.endsWith('.png'))) {
+    const png = readPng(path.join(kit, '../rooms', f));
+    pieces[`room-${f.replace(/\.png$/, '')}`] = { png, inset: [0, 0, 0, 0], scale: 1 };
+  }
   for (const [name, hex] of [['primary', '#E0A526'], ['secondary', '#4B5563'], ['danger', '#C8202B']] as const) {
     pieces[`button-${name}`] = { png: rampMap(button, buttonRamp(hex)), inset: [8, 12, 12, 12], scale: 0.75 };
     pieces[`button-${name}-pressed`] = { png: rampMap(button, buttonRamp(hex, 0.25)), inset: [8, 12, 12, 12], scale: 0.75 };

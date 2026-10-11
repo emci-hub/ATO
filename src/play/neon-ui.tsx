@@ -35,6 +35,7 @@ import {
   streetUiOn,
   useStreetFonts,
 } from '@/play/street-ui';
+import { tapHaptic } from '@/play/street-feel';
 
 /** Hub tile-icon border/fill (rgba, kept local — the token set has no pair). */
 const ICON_BORDER = 'rgba(0, 234, 255, 0.1)';
@@ -96,7 +97,7 @@ export function NeonHeader({
     return (
       <View style={styles.header}>
         <StreetFrame piece="header" style={styles.streetPlate}>
-          <Text style={styles.streetEyebrow}>{eyebrow}</Text>
+          <Text style={styles.streetEyebrow}>{eyebrow === 'NEON VIPER' ? 'DIVECORE' : eyebrow}</Text>
           <Text style={styles.streetTitle}>{title}</Text>
         </StreetFrame>
         {lede ? <Text style={styles.lede}>{lede}</Text> : null}
@@ -249,12 +250,21 @@ export function NeonButton({
     const art = disabled ? 'secondary' : variant;
     return (
       <Pressable
-        onPress={onPress}
+        onPress={() => {
+          tapHaptic();
+          onPress();
+        }}
         disabled={disabled}
         accessibilityRole="button"
         accessibilityState={{ disabled }}
         accessibilityLabel={accessibilityLabel}
-        style={[styles.button, styles.streetButton, disabled && styles.streetDisabled, style]}>
+        style={({ pressed }) => [
+          styles.button,
+          styles.streetButton,
+          disabled && styles.streetDisabled,
+          style,
+          pressed && !disabled && styles.streetSquash,
+        ]}>
         {({ pressed }) => (
           <>
             <StreetBackdrop piece={streetButtonPiece(art, pressed && !disabled)} />
@@ -489,7 +499,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 7,
     minWidth: 56,
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   streetChipText: {
     fontFamily: STREET_FONT.bold,
@@ -517,14 +529,19 @@ const styles = StyleSheet.create({
   streetPillTextEmphasis: {
     color: STREET.mustard,
   },
+  // Every street control is at least 48pt tall (plan: sizing system).
   streetButton: {
     borderWidth: 0,
     backgroundColor: 'transparent',
-    minHeight: 40,
+    minHeight: 48,
     paddingHorizontal: 16,
   },
   streetDisabled: {
     opacity: 0.45,
+  },
+  // Press squash (plan: 0.95, under 100ms) — the art also swaps to its pressed bevel.
+  streetSquash: {
+    transform: [{ scaleX: 0.96 }, { scaleY: 0.93 }],
   },
   streetButtonText: {
     fontFamily: STREET_FONT.bold,

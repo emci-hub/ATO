@@ -15,6 +15,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Fonts } from '@/constants/theme';
 import { setFxQuality, useFxQuality } from '@/play/fx-quality';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
+import { streetUiOn } from '@/play/street-ui';
 import { NEON } from '@/play/neon-viper';
 import { GRADES, heroStars } from '@/play/pet-eggs';
 import { askPetReminderPermission, cancelPlayNotices, petNoticesAllowed } from '@/play/pet-reminder';
@@ -215,6 +216,14 @@ export function DivecoreSettingsSheet({
         selected={settings.skipReveals}
         onPress={() => commit((doc) => setPlaySettings(doc, { skipReveals: !doc.play_settings.skipReveals }))}
       />
+      {/* Only the street shell vibrates, so the switch shows only there. */}
+      {streetUiOn() ? (
+        <NeonChip
+          label={`Vibration on taps · ${settings.haptics ? 'On' : 'Off'}`}
+          selected={settings.haptics}
+          onPress={() => commit((doc) => setPlaySettings(doc, { haptics: !doc.play_settings.haptics }))}
+        />
+      ) : null}
       <Text style={styles.body}>Reduce motion:</Text>
       <View style={styles.chips}>
         {PLAY_MOTION_MODES.map((m) => (

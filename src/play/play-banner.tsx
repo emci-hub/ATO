@@ -7,6 +7,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { Fonts } from '@/constants/theme';
 import { NEON } from '@/play/neon-viper';
 import { BANNER_MS, type Banner } from '@/play/play-banner-queue';
+import { STREET, STREET_FONT, StreetBackdrop, streetUiOn } from '@/play/street-ui';
 
 /**
  * The one floating Play banner (v25, 2026-09-30). Absolute over every Play
@@ -87,23 +88,26 @@ export function PlayBanner({
   );
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ translateY: y.value }] }));
+  // Streetwear art style: the paper sticker toast (mustard tab on the left).
+  const street = streetUiOn();
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { top: insets.top + TOP_BAR_H }]}>
-      <Animated.View style={[styles.card, style]} {...pan.panHandlers}>
+      <Animated.View style={[styles.card, street && styles.streetCard, style]} {...pan.panHandlers}>
+        {street ? <StreetBackdrop piece="toast" /> : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`${banner.title}. ${banner.body}`}
           accessibilityHint={banner.target ? 'Opens it' : 'Dismisses the notice'}
           onPress={() => leave(banner.target ? 'tap' : 'dismiss')}
-          style={styles.press}>
-          <Text style={styles.title} numberOfLines={1}>
+          style={[styles.press, street && styles.streetPress]}>
+          <Text style={[styles.title, street && styles.streetTitle]} numberOfLines={1}>
             {banner.title}
           </Text>
-          <Text style={styles.body} numberOfLines={3}>
+          <Text style={[styles.body, street && styles.streetBody]} numberOfLines={3}>
             {banner.body}
           </Text>
-          <View style={styles.grip} />
+          <View style={[styles.grip, street && styles.streetGrip]} />
         </Pressable>
       </Animated.View>
     </View>
@@ -111,6 +115,12 @@ export function PlayBanner({
 }
 
 const styles = StyleSheet.create({
+  // Streetwear art style.
+  streetCard: { backgroundColor: 'transparent', borderWidth: 0, borderRadius: 0 },
+  streetPress: { paddingLeft: 40, paddingRight: 16, paddingTop: 12, paddingBottom: 10 },
+  streetTitle: { fontFamily: STREET_FONT.bold, fontSize: 15, color: STREET.ink, textTransform: 'uppercase' },
+  streetBody: { color: '#2B2B2E' },
+  streetGrip: { backgroundColor: '#2B2B2E', borderRadius: 0 },
   wrap: { position: 'absolute', left: 12, right: 12, zIndex: 50, elevation: 50 },
   card: {
     backgroundColor: NEON.panel,

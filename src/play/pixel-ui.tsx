@@ -28,6 +28,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useFxQuality } from '@/play/fx-quality';
 import { usePlayReduceMotion } from '@/play/play-motion';
 import { AtlasSprite } from '@/play/pixel-atlas';
+import { tapHaptic } from '@/play/street-feel';
 import {
   STREET_FONT,
   StreetBackdrop,
@@ -507,7 +508,10 @@ export function PixelButton({
   const shareMin = Math.max(PIXEL_TAP_PT, callerMin);
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        if (street) tapHaptic();
+        onPress();
+      }}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ disabled }}

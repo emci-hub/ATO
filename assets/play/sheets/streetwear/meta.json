@@ -601,6 +601,237 @@
       ],
       "scale": 0.3
     },
+    "resbar": {
+      "w": 604,
+      "h": 88,
+      "inset": [
+        16,
+        40,
+        16,
+        40
+      ],
+      "scale": 0.5
+    },
+    "tabbar": {
+      "w": 611,
+      "h": 87,
+      "inset": [
+        20,
+        48,
+        16,
+        48
+      ],
+      "scale": 0.7
+    },
+    "sheet": {
+      "w": 448,
+      "h": 394,
+      "inset": [
+        120,
+        120,
+        40,
+        40
+      ],
+      "scale": 0.5
+    },
+    "sheet-handle": {
+      "w": 104,
+      "h": 30,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    },
+    "toast": {
+      "w": 653,
+      "h": 331,
+      "inset": [
+        24,
+        24,
+        24,
+        90
+      ],
+      "scale": 0.3
+    },
+    "pause": {
+      "w": 132,
+      "h": 125,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 0.3
+    },
+    "alert": {
+      "w": 261,
+      "h": 115,
+      "inset": [
+        30,
+        40,
+        30,
+        40
+      ],
+      "scale": 0.4
+    },
+    "portrait": {
+      "w": 159,
+      "h": 124,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 0.4
+    },
+    "nav-cur-caps": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-cur-prism": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-cur-shine": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-cur-token": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-settings": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-block": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-hideout": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-locker": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-store": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-turf": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-locker": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-underground": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
     "button-primary": {
       "w": 119,
       "h": 44,

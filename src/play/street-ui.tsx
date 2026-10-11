@@ -33,7 +33,15 @@ export type StreetPiece =
   | 'button-secondary'
   | 'button-secondary-pressed'
   | 'button-danger'
-  | 'button-danger-pressed';
+  | 'button-danger-pressed'
+  | 'resbar'
+  | 'tabbar'
+  | 'sheet'
+  | 'sheet-handle'
+  | 'toast'
+  | 'pause'
+  | 'alert'
+  | 'portrait';
 
 type PieceMeta = { w: number; h: number; inset: [number, number, number, number]; scale: number };
 const UI = (streetwearMeta as unknown as { ui: Record<StreetPiece, PieceMeta> }).ui;

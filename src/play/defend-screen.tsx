@@ -24,7 +24,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
+import { AppState, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -84,7 +84,10 @@ import { avatarDef } from '@/play/avatars';
 import { allHeroes, heroById, heroName } from '@/play/heroes-data';
 import { PlayFrame } from '@/play/play-frame';
 import { HeroOwnSheet } from '@/play/hero-own-sheet';
-import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
+import { NeonButton, NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
+import { StreetDockFill, StreetHudFill } from '@/play/street-shell';
+import { alertHaptic } from '@/play/street-feel';
+import { STREET, STREET_FONT, StreetBackdrop, StreetFrame, streetUiOn } from '@/play/street-ui';
 import {
   BOARD_SKIN,
   BOARD_SKIN_LABEL,
@@ -936,6 +939,8 @@ export function DefendScreen({
   const [corpses, setCorpses] = useState<CreepCorpse[]>([]);
   /** §9m boss warn banner — band label + boss name, raised as the boss nears. */
   const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
+  // Streetwear art style: Turf War — pinned HUD + dock in the street shell (paint/layout only).
+  const street = streetUiOn();
   /** Mid-run leave confirmation (one tap to confirm, Cancel stays in the fight). */
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   /** One warn per wave run — the banner must not re-arm every tick. */
@@ -2054,6 +2059,7 @@ export function DefendScreen({
         if (imminent || step.bossSpawned) {
           bossWarnedRef.current = true;
           setBossAlert({ label: bandNow.label, name: bandNow.boss.name });
+          if (street) alertHaptic();
         }
       }
       // Display-only floaters: any puff that lost HP this tick, or vanished
@@ -2634,8 +2640,8 @@ export function DefendScreen({
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.topRow}>
+      <SafeAreaView style={styles.safeArea} edges={street ? ['left', 'right'] : undefined}>
+        <View style={[styles.topRow, street && styles.streetHidden]}>
           <Pressable
             onPress={onBackToGrove}
             hitSlop={12}
@@ -2656,13 +2662,15 @@ export function DefendScreen({
           </Pressable>
         </View>
 
-        <ThemedText type="subtitle">Defend</ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.lede}>
+        <ThemedText type="subtitle" style={street ? styles.streetTitle : undefined}>
+          {street ? 'Turf War' : 'Defend'}
+        </ThemedText>
+        <ThemedText themeColor="textSecondary" style={[styles.lede, street && phase === 'running' && styles.streetHidden]}>
           Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
         </ThemedText>
 
         {/* HUD */}
-        <PlayFrame style={styles.card}>
+        <PlayFrame style={[styles.card, street && phase === 'running' && styles.streetHidden]}>
           <View style={styles.statRow}>
             <ThemedText type="smallBold">
               {campaignPhaseLabel(labelPhase)} wave {displayedWave}
@@ -3924,7 +3932,66 @@ export function DefendScreen({
         {/* §9m live bottom HUD — row 1: Skill (ONE button, full width; Bound
          * Bosses stay auto). Row 2: Pause · Speed · Leave. Shown only while a
          * run is live; setup never casts. */}
-        {phase === 'running' ? (
+        {phase === 'running' && street ? (
+          <>
+            <StreetHudFill>
+              <StreetFrame piece="resbar" style={styles.streetHud}>
+                <View style={styles.streetWave}>
+                  <StreetBackdrop piece="chip-on" />
+                  <Text style={styles.streetWaveText} numberOfLines={1}>
+                    {campaignPhaseLabel(labelPhase)} wave {displayedWave}
+                  </Text>
+                </View>
+                <Text style={styles.streetHudCaps} numberOfLines={1} accessibilityLabel={`${scrap} run caps`}>
+                  {scrap} caps
+                </Text>
+                <Pressable
+                  onPress={() => setPaused((value) => !value)}
+                  accessibilityRole="button"
+                  accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.streetPause, pressed && styles.pressed]}>
+                  {paused ? <Text style={styles.streetResume}>▶</Text> : <StreetBackdrop piece="pause" />}
+                </Pressable>
+              </StreetFrame>
+            </StreetHudFill>
+            <StreetDockFill>
+              <NeonButton
+                label={skillReady ? `Cast · ${activeSkill.name}` : `${activeSkill.name} · ${skillSeconds}s`}
+                variant="danger"
+                disabled={!skillReady}
+                onPress={castSkill}
+                accessibilityLabel={
+                  skillReady ? `Cast ${activeSkill.name}` : `Skill ${activeSkill.name} cooling, ${skillSeconds} seconds`
+                }
+                style={styles.streetSkill}
+              />
+              <View style={styles.streetDockRow}>
+                {pounceAvailable ? (
+                  <NeonButton
+                    label={`${pounceReady ? 'Pounce' : 'Pounce used'}${pumpedLabel ?? ''}`}
+                    variant={pumpedOn ? 'primary' : 'secondary'}
+                    disabled={!pounceReady}
+                    onPress={castPounce}
+                    style={styles.streetGrow}
+                  />
+                ) : null}
+                {GAME_SPEEDS.map((value) => (
+                  <NeonButton
+                    key={value}
+                    label={`${value}×`}
+                    variant={speed === value ? 'primary' : 'secondary'}
+                    onPress={() => setSpeed(value)}
+                    accessibilityLabel={`Speed ${value} times`}
+                    style={styles.streetSpeed}
+                  />
+                ))}
+                <NeonButton label="Leave" variant="secondary" onPress={requestLeaveRun} style={styles.streetSpeed} />
+              </View>
+            </StreetDockFill>
+          </>
+        ) : null}
+        {phase === 'running' && !street ? (
           <ThemedView type="backgroundElement" style={styles.bottomHud}>
             <Pressable
               onPress={castSkill}
@@ -5002,6 +5069,28 @@ async function shareDefendClear(wave: number, level: number): Promise<void> {
 }
 
 const styles = StyleSheet.create({
+  // Streetwear art style (Turf War).
+  streetHidden: { display: 'none' },
+  streetTitle: { fontFamily: STREET_FONT.bold, color: STREET.paper, textTransform: 'uppercase' },
+  streetHud: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 48,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginHorizontal: 8,
+    marginTop: 4,
+  },
+  streetWave: { paddingHorizontal: 18, paddingVertical: 6, justifyContent: 'center' },
+  streetWaveText: { fontFamily: STREET_FONT.bold, fontSize: 13, color: STREET.ink, textTransform: 'uppercase' },
+  streetHudCaps: { fontFamily: STREET_FONT.bold, fontSize: 15, color: STREET.mustard, marginLeft: 'auto' },
+  streetPause: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  streetResume: { fontFamily: STREET_FONT.bold, fontSize: 20, color: STREET.mustard },
+  streetSkill: { minHeight: 52 },
+  streetDockRow: { flexDirection: 'row', gap: 6, alignItems: 'stretch' },
+  streetGrow: { flex: 1 },
+  streetSpeed: { minWidth: 52, minHeight: 48 },
   container: {
     flex: 1,
     flexDirection: 'row',

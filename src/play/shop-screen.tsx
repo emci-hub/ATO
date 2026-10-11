@@ -45,6 +45,7 @@ import { NEON } from '@/play/neon-viper';
 import { STAR_PEARL_PITY } from '@/play/pet-eggs';
 import { GuideView } from '@/play/guide-sheet';
 import { DIVE_CHARGE_CAP, type PlayView, type ShopPurchaseResult } from '@/play/playStore';
+import { streetUiOn } from '@/play/street-ui';
 import {
   paidShopRows,
   tideShopRows,
@@ -166,8 +167,8 @@ function tokenRowState(view: PlayView, row: ShopTokenRow, busy: boolean): TokenR
   else if (dailyCapped) actionLabel = 'Daily limit reached';
   else if (weeklyCapped) actionLabel = 'Weekly limit reached';
   else if (passCapped) actionLabel = 'Pass limit reached';
-  else if (!affordable) actionLabel = `Need ${row.price} tokens`;
-  else actionLabel = `Buy · ${row.price} tokens`;
+  else if (!affordable) actionLabel = `Need ${row.price} ${streetUiOn() ? 'Caps' : 'tokens'}`;
+  else actionLabel = `Buy · ${row.price} ${streetUiOn() ? 'Caps' : 'tokens'}`;
 
   let note: string | null = null;
   if (row.kind === 'dive_charge') {
@@ -234,13 +235,13 @@ export function ShopScreen({
       <NeonBackLink onPress={onBackToDivecore} />
 
       <NeonHeader
-        title="Shop"
+        title={streetUiOn() ? 'Corner Store' : 'Shop'}
         lede="Spend soft tokens on a small boost — or window-shop what is coming."
       />
 
       <NeonPanel>
         <View style={styles.statRow}>
-          <NeonLabel>Tokens</NeonLabel>
+          <NeonLabel>{streetUiOn() ? 'Caps' : 'Tokens'}</NeonLabel>
           <ThemedText type="subheading" themeColor="emphasis">
             {view.tokens}
           </ThemedText>

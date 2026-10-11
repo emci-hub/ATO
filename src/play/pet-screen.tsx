@@ -19,6 +19,9 @@ import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } fr
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
+import { ClipImage } from '@/play/sheet-sprite';
+import { tapHaptic } from '@/play/street-feel';
+import { STREET, STREET_FONT, streetUiOn } from '@/play/street-ui';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
@@ -221,19 +224,35 @@ function RoomIcon({
   fontSize: number;
   onPress: () => void;
 }) {
+  const street = streetUiOn();
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        if (street) tapHaptic();
+        onPress();
+      }}
       accessibilityRole="button"
       accessibilityLabel={`${emoji} ${label}${badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
-      style={({ pressed }) => [styles.icon, { flexGrow }, pressed && styles.pressed]}>
-      <PixelFrame fill={pulse ? PIXEL.cyan : PIXEL.ink} border={PIXEL.cyan} minHeight={48} style={styles.iconFrame}>
+      style={({ pressed }) => [styles.icon, { flexGrow }, pressed && (street ? styles.streetSquash : styles.pressed)]}>
+      <PixelFrame
+        fill={pulse ? PIXEL.cyan : PIXEL.ink}
+        border={PIXEL.cyan}
+        minHeight={48}
+        style={styles.iconFrame}
+        streetPiece={street ? (pulse ? 'button-primary' : 'button-secondary') : undefined}>
         <PixelLabel
-          color={pulse ? PIXEL.onFill : PIXEL.cyan}
+          color={street ? (pulse ? STREET.ink : STREET.paper) : pulse ? PIXEL.onFill : PIXEL.cyan}
+          shadowColor={street ? 'transparent' : undefined}
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.85}
-          style={{ fontSize, lineHeight: fontSize + 4, textAlign: 'center', width: '100%' }}>
+          style={{
+            fontSize,
+            lineHeight: fontSize + 4,
+            textAlign: 'center',
+            width: '100%',
+            ...(street ? { fontFamily: STREET_FONT.bold, textTransform: 'uppercase' as const } : null),
+          }}>
           {label}
         </PixelLabel>
       </PixelFrame>
@@ -727,12 +746,22 @@ export function PetScreen({
   };
 
   if (!fontsReady) return <View style={styles.screen} />;
+  const street = streetUiOn();
+  const kitIcon = (name: string, size: number) => (
+    <View style={{ width: size, height: size }}>
+      <ClipImage drawable={{ kind: 'sheet', sheetKey: `sheets/streetwear/ui-kit/${name}`, frameKey: 'img' }} />
+    </View>
+  );
 
   return (
     <View style={styles.screen}>
       <FinishMotionHost reduceMotion={reduceMotion} />
       <View style={styles.topBar}>
-        <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Command Hub" style={styles.backHit}>
+        <Pressable
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Back to Command Hub"
+          style={[styles.backHit, street && styles.streetGone]}>
           <PixelLabel
             color={PIXEL.cyan}
             numberOfLines={1}
@@ -752,9 +781,9 @@ export function PetScreen({
             onPress={() => setSheet('den')}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel={`The Den, ${pv.den.used} of ${pv.den.slots} slots`}
+            accessibilityLabel={`${street ? 'The Stash' : 'The Den'}, ${pv.den.used} of ${pv.den.slots} slots`}
             style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            <Text style={styles.topButtonText}>🏠</Text>
+            {street ? kitIcon('nav-tab-locker', 28) : <Text style={styles.topButtonText}>🏠</Text>}
           </Pressable>
           <Pressable
             onPress={() => setSheet('menu')}
@@ -770,7 +799,7 @@ export function PetScreen({
             accessibilityRole="button"
             accessibilityLabel="Divecore settings"
             style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            <Text style={styles.topButtonText}>⚙</Text>
+            {street ? kitIcon('nav-settings', 28) : <Text style={styles.topButtonText}>⚙</Text>}
           </Pressable>
         </View>
       </View>
@@ -882,7 +911,11 @@ export function PetScreen({
           }}
         />
       </PlaySheet>
-      <PlaySheet open={sheet === 'den'} title={SHEET_TITLE.den} onClose={closeSheet} reduceMotion={reduceMotion}>
+      <PlaySheet
+        open={sheet === 'den'}
+        title={street ? 'The Stash' : SHEET_TITLE.den}
+        onClose={closeSheet}
+        reduceMotion={reduceMotion}>
         <DenSheetBody
           view={view}
           commit={commit}
@@ -1022,6 +1055,9 @@ export function PetScreen({
 }
 
 const styles = StyleSheet.create({
+  // Streetwear art style (Hideout).
+  streetGone: { display: 'none' },
+  streetSquash: { transform: [{ scaleX: 0.96 }, { scaleY: 0.93 }] },
   screen: { flex: 1, backgroundColor: NEON.ink },
   gameOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 30, backgroundColor: PIXEL.ink },
   topBar: {

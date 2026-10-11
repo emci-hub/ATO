@@ -75,6 +75,11 @@ import {
 } from '@/play/pixel-ui';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
 import { roleFootAt } from '@/play/skin';
+import { ClipImage } from '@/play/sheet-sprite';
+import { streetUiOn } from '@/play/street-ui';
+
+/** The Streetwear Hideout art's own background (night blue). */
+const HIDEOUT_NIGHT = '#0c0d23';
 
 // The nameplate hangs BELOW the feet line. The floor ring runs from feet-8 to
 // feet+6, so +8 clears it and the sprite for every stage (it used to sit at -4
@@ -164,6 +169,28 @@ function RoomBackdrop({
 }) {
   const origin = placePlate(width, height, MOCKUP_ROOM.feet, NAME_RESERVE);
   const k = ART_PT;
+  if (streetUiOn()) {
+    // Streetwear Hideout: the brick room diorama (256×320) scaled to the plate's
+    // width, its floor centre (y 235) on the plate's feet line; the night blue
+    // around it is the art's own background. The lamp / window / glow overlays
+    // belong to the Classic plate and are left out.
+    const s = MOCKUP_PLATE.w / 256;
+    const top = MOCKUP_ROOM.feet - 235 * s;
+    return (
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: HIDEOUT_NIGHT }]}>
+        <View style={{ position: 'absolute', left: origin.left, top: origin.top + top * k, width: 256 * s * k, height: 320 * s * k }}>
+          <ClipImage drawable={{ kind: 'sheet', sheetKey: 'sheets/streetwear/ui-kit/room-hideout', frameKey: 'img' }} />
+        </View>
+        <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>
+          {MOCKUP_ROOM.motes.map((m, i) => (
+            <MoteRise key={i} alive={alive} left={m.x * k} top={m.y * k} distance={28 + i * 10} ms={3600 + i * 500} delay={i * 700}>
+              <AtlasSprite atlas="room" frame="mote" />
+            </MoteRise>
+          ))}
+        </View>
+      </View>
+    );
+  }
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>

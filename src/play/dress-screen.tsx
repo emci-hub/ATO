@@ -81,6 +81,7 @@ import {
   NeonPill,
 } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { streetUiOn } from '@/play/street-ui';
 import {
   formatItemStats,
   formatMult,
@@ -230,7 +231,7 @@ export function DressScreen({
       <NeonBackLink onPress={onBackToGrove} />
 
       <NeonHeader
-        title="Dress"
+        title={streetUiOn() ? 'Locker · Fits' : 'Dress'}
         lede="Four slots. Equip Powers to shape your Basecore — Looks are for the eye."
       />
 

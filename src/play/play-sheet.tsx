@@ -12,6 +12,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { PixelLabel, usePixelFonts } from '@/play/pixel-ui';
+import { STREET, STREET_FONT, StreetBackdrop, streetPieceSize, streetUiOn } from '@/play/street-ui';
 
 const OPEN_MS = 240;
 const CLOSE_DRAG = 70;
@@ -70,16 +71,28 @@ export function PlaySheet({
   );
 
   if (!mounted) return null;
+  // Streetwear art style: the taped sheet frame + its handle piece, Pixelify title.
+  const street = streetUiOn();
+  const handle = streetPieceSize('sheet-handle');
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" accessibilityRole="button" />
       </Animated.View>
-      <Animated.View style={[styles.panel, { maxHeight: height * 0.8 }, panelStyle]} accessibilityViewIsModal>
-        <View {...drag.panHandlers} style={styles.handleZone}>
-          <View style={styles.handle} />
+      <Animated.View
+        style={[styles.panel, street && styles.streetPanel, { maxHeight: height * (street ? 0.85 : 0.8) }, panelStyle]}
+        accessibilityViewIsModal>
+        {street ? <StreetBackdrop piece="sheet" /> : null}
+        <View {...drag.panHandlers} style={[styles.handleZone, street && styles.streetHandleZone]}>
+          {street ? (
+            <View style={[styles.streetHandle, { width: handle.width, height: handle.height }]}>
+              <StreetBackdrop piece="sheet-handle" />
+            </View>
+          ) : (
+            <View style={styles.handle} />
+          )}
           <View style={styles.titleRow}>
-            <PixelLabel numberOfLines={1} style={styles.title} accessibilityRole="header">
+            <PixelLabel numberOfLines={1} style={[styles.title, street && styles.streetTitle]} accessibilityRole="header">
               {title}
             </PixelLabel>
             <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel={`Close ${title}`} style={styles.closeHit}>
@@ -106,6 +119,7 @@ export function SheetTabs<T extends string>({
   value: T;
   onChange: (id: T) => void;
 }) {
+  const street = streetUiOn();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
       {tabs.map((tab) => {
@@ -116,8 +130,12 @@ export function SheetTabs<T extends string>({
             onPress={() => onChange(tab.id)}
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
-            style={[styles.tab, on && styles.tabOn]}>
-            <PixelLabel color={on ? PIXEL.ink : PIXEL.cyan} numberOfLines={1}>
+            style={[styles.tab, on && styles.tabOn, street && styles.streetTab]}>
+            {street ? <StreetBackdrop piece={on ? 'chip-on' : 'chip-off'} /> : null}
+            <PixelLabel
+              color={street ? (on ? STREET.ink : STREET.muted) : on ? PIXEL.ink : PIXEL.cyan}
+              numberOfLines={1}
+              style={street ? styles.streetTabText : undefined}>
               {tab.label}
             </PixelLabel>
           </Pressable>
@@ -129,6 +147,13 @@ export function SheetTabs<T extends string>({
 
 const styles = StyleSheet.create({
   backdrop: { backgroundColor: '#000000' },
+  // Streetwear art style.
+  streetPanel: { backgroundColor: 'transparent', borderTopWidth: 0, paddingHorizontal: 8, paddingBottom: 20 },
+  streetHandleZone: { paddingTop: 14, paddingHorizontal: 18 },
+  streetHandle: { alignSelf: 'center', marginBottom: 6 },
+  streetTitle: { fontFamily: STREET_FONT.bold, color: STREET.paper, textTransform: 'uppercase' },
+  streetTab: { borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 22 },
+  streetTabText: { fontFamily: STREET_FONT.bold, textTransform: 'uppercase' },
   panel: {
     position: 'absolute',
     left: 0,

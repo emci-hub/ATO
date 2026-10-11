@@ -190,6 +190,9 @@ glyphs. Icons: one 48px create_1_direction_object batch (10 gen, object 4dda15c1
 ### Menu UI kit (2026-10-11, batch 6)
 `ui/kit/`: panel.png, button-grey.png, header.png, pieces.png (PixelLab ids in STATE.md batch 6, 80 generations). The game draws them as 9-slices from `sheets/streetwear/ui-kit/atlas.png` (`street-ui.tsx`) only while the Streetwear art style is on: panel, header plate, back button, chip on/off, toggle, and buttons primary (mustard) / secondary (concrete) / danger (red) with pressed states baked from the one grey button. Font: Pixelify Sans (OFL, `assets/play/fonts/`). Item stickers in the game: hoodie, shades, bandana, flame, marker, cap, bucket-hat, gem, coin-stack, sword, bat, shield (`STREET_ICON_BY_ART`, art.ts).
 
+### Street shell kit (2026-10-11, batch 7)
+`ui/kit/` resbar, tabbar, sheet (+ handle cut at pack), toast, hud (pause, alert), portrait; `ui/nav/` 5 tab icons + Caps / Subway Token / Shine / Prism + settings (32px); `ui/rooms/` hideout, underground, locker (256×320). Ids in STATE.md batch 7 (188 gens). Drawn by `street-shell.tsx`, `play-sheet.tsx`, `play-banner.tsx`, `pet-room.tsx` only while Streetwear is on.
+
 ## Known issues (read before wiring)
 
 - 2026-10-11 frame-consistency pass: all 14 template hero Idles re-made (velkhar + void-raven already were); 8 single facings rerolled once (kitsune N, elowen W, kael E/W, morwen E/W, frost-lich E/W). Morwen east idle is a 2-pose loop (her still pose hides the staff, so the model kept popping it in). Leftover PixelLab grey work-background patches cut out of 9 boss-oni frames (Walk/Run/Idle). Raven Attack south last frame (smudged) replaced by its stance frame. Old frames: `games/grove/ref/streetwear-source/rejected/`. Archangel keeps its grey wing feathers (same grey as the work background; never auto-clean it).

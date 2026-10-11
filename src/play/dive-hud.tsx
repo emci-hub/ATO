@@ -15,6 +15,7 @@ import { getItemDef, type ItemSlot } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { ART_PT, PIXEL, crispSpan } from '@/play/pixel-theme';
 import { PixelBody, PixelFrame, PixelLabel, pixelRenderStyle } from '@/play/pixel-ui';
+import { streetUiOn } from '@/play/street-ui';
 import { cosmeticById } from '@/play/pet-cosmetics';
 
 const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
@@ -156,7 +157,7 @@ export function DiveTopBar({
           <View style={styles.row}>
             <View style={styles.side}>
               <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
-                <PixelLabel color={PIXEL.cyan} numberOfLines={1} style={label}>{'< Pet'}</PixelLabel>
+                <PixelLabel color={PIXEL.cyan} numberOfLines={1} style={label}>{streetUiOn() ? '< Hideout' : '< Pet'}</PixelLabel>
               </Pressable>
             </View>
             <PixelLabel numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.zone, label]}>{zone}</PixelLabel>

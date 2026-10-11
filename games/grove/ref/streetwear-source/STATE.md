@@ -163,5 +163,21 @@ Balance before 4,582 → after 4,502 (80 generations, no rerolls). All `create_u
 | pieces.png (512×512) | 54986e34-7f61-4d26-9eb9-39a11d53850c | 25 | used: back button, yellow chip (→ dark "off" chip baked), toggle. Brown pieces unused (off-style). |
 Packed by `packSwUiKit` (play-art-pack.ts) into `sheets/streetwear/ui-kit/atlas.png`; insets + scale in `meta.json` `ui`.
 
+## BATCH 7 — STREET SHELL KIT (2026-10-11, emci approved the redesign plan, ~300 gens budget)
+Balance before 4,502 → after 4,314 (188 generations; one reroll: the toast). No Pro mode. Saved to `ui/kit/`, `ui/nav/`, `ui/rooms/`.
+| file | id | gens | notes |
+|---|---|---|---|
+| kit/resbar.png | c44f85eb-84d0-4ed0-9179-08c6c32b020c | 25 | top resource bar plate |
+| kit/tabbar.png | 916ccad9-df66-492e-abbd-49a9f2faa341 | 25 | bottom tab bar plate |
+| kit/sheet.png | c2aa5f36-b36a-4313-9cbd-a475733a1f47 | 25 | sheet frame; handle cut out at pack time (bg removal punched its face out) |
+| kit/toast.png | 80ed1d8b-2c80-438f-8be2-57713615defd | 25 | reroll of 42f9cef6 (had a barcode); middle repainted flat at pack time |
+| kit/hud.png | 3051123d-cb49-40d7-9de2-cdb79d2acce0 | 25 | used: pause button, red alert plate; segmented meter unused (meters drawn in code) |
+| kit/portrait.png | e6877009-ca7e-4907-8ccb-74d7f8fa6016 | 25 | used: portrait ring only (brown pieces off-style) |
+| nav/*.png (10) | review 6e6bebe8-54a7-4217-a1f4-f3b6fdb18d8c → kept 0,2,4,6,8,10,11,12,13,15 | 10 | tab-block/turf/hideout/locker/store, cur-caps/token/shine/prism, settings (32px, style refs = spray-can + heart stickers) |
+| rooms/hideout.png | 3e20ea23-3da1-4257-b766-7c173d4e3060 | 1 | pixflux 256×320 brick room diorama (Hideout backdrop) |
+| rooms/underground.png | 276f5164-0cc0-4923-9209-d9cd26ecb55b | 1 | subway platform (Underground tile on The Block) |
+| rooms/locker.png | 789d6b32-390e-4609-8c29-80e62c339841 | 1 | locker room (packed, not drawn yet) |
+All packed into `sheets/streetwear/ui-kit/atlas-0/1.png` by `packSwUiKit`.
+
 ## Clip names (template → saved clip folder)
 breathing-idle→Idle, walking-8-frames→Walk, running-8-frames→Dash, cross-punch→Attack, fireball→Skill, taking-punch→Hurt. East + West only.

@@ -13,6 +13,7 @@ import { pixelRenderStyle } from '@/play/pixel-theme';
 import { ClipImage, sheetFrame } from '@/play/sheet-sprite';
 import type { SwordAction } from '@/play/playStore';
 import { tierWord, type SwordPanel, type SwordTier } from '@/play/swords';
+import { streetUiOn } from '@/play/street-ui';
 
 /**
  * The sword's badge. With the Streetwear art style: a rarity card — the tier's
@@ -51,7 +52,7 @@ export function SwordForgeScreen({
     <ScrollView contentContainerStyle={styles.wrap}>
       <NeonBackLink onPress={onBack} />
       <NeonHeader
-        title="Swords"
+        title={streetUiOn() ? 'Locker · Blades' : 'Swords'}
         lede="Mix two base swords of the same tier. Merge 3 to climb, or 5 to climb and keep a Common. Epic mixes with a Relic become Legendary. Divine needs a Legendary and 3 Relics."
       />
       <NeonPanel>

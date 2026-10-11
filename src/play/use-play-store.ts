@@ -19,6 +19,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { setArtSkin } from '@/play/art-skin';
+import { setStreetHaptics } from '@/play/street-feel';
 import type { ItemSlot } from '@/play/items';
 import { bumpSaveEpoch, enqueuePlaySave, saveEpoch, saveIsCurrent, whenPlaySavesSettled } from '@/play/play-save';
 import {
@@ -112,6 +113,7 @@ export function usePlayStore() {
   const remember = useCallback((next: PlayStoreDoc, paint: boolean): Promise<void> => {
     bumpSaveEpoch();
     setArtSkin(next.play_settings.artSkin);
+    setStreetHaptics(next.play_settings.haptics);
     docRef.current = next;
     if (paint) setDoc(next);
     return enqueuePlaySave(() => savePlayStore(next));
@@ -131,6 +133,7 @@ export function usePlayStore() {
     if (!saveIsCurrent(started)) return;
     // Art style (paint only) is applied before anything draws this doc.
     setArtSkin(next.play_settings.artSkin);
+    setStreetHaptics(next.play_settings.haptics);
     docRef.current = next;
     setDoc(next);
     if (next !== loaded) {

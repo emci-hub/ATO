@@ -31585,157 +31585,430 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
       }
     }
   },
+  "sheets/streetwear/ui-kit/alert": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 293,
+        "y": 0,
+        "w": 261,
+        "h": 115
+      }
+    }
+  },
   "sheets/streetwear/ui-kit/back": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
         "x": 451,
-        "y": 643,
+        "y": 370,
         "w": 65,
         "h": 65
       }
     }
   },
   "sheets/streetwear/ui-kit/button-danger": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
-        "x": 0,
-        "y": 710,
+        "x": 120,
+        "y": 437,
         "w": 119,
         "h": 44
       }
     }
   },
   "sheets/streetwear/ui-kit/button-danger-pressed": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
-        "x": 517,
-        "y": 643,
+        "x": 0,
+        "y": 437,
         "w": 119,
         "h": 44
       }
     }
   },
   "sheets/streetwear/ui-kit/button-primary": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
-        "x": 240,
-        "y": 710,
+        "x": 360,
+        "y": 437,
         "w": 119,
         "h": 44
       }
     }
   },
   "sheets/streetwear/ui-kit/button-primary-pressed": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
-        "x": 120,
-        "y": 710,
+        "x": 240,
+        "y": 437,
         "w": 119,
         "h": 44
       }
     }
   },
   "sheets/streetwear/ui-kit/button-secondary": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
-        "x": 480,
-        "y": 710,
+        "x": 0,
+        "y": 482,
         "w": 119,
         "h": 44
       }
     }
   },
   "sheets/streetwear/ui-kit/button-secondary-pressed": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
-        "x": 360,
-        "y": 710,
+        "x": 480,
+        "y": 437,
         "w": 119,
         "h": 44
       }
     }
   },
   "sheets/streetwear/ui-kit/chip-off": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
         "x": 0,
-        "y": 576,
+        "y": 303,
         "w": 450,
         "h": 66
       }
     }
   },
   "sheets/streetwear/ui-kit/chip-on": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
         "x": 0,
-        "y": 643,
+        "y": 370,
         "w": 450,
         "h": 66
       }
     }
   },
   "sheets/streetwear/ui-kit/header": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+    "sheet": "sheets/streetwear/ui-kit/atlas-0.png",
+    "sheetW": 937,
+    "sheetH": 1383,
     "frames": {
       "img": {
         "x": 0,
-        "y": 0,
+        "y": 395,
         "w": 642,
         "h": 335
       }
     }
   },
-  "sheets/streetwear/ui-kit/panel": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+  "sheets/streetwear/ui-kit/nav-cur-caps": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
-        "x": 0,
-        "y": 336,
+        "x": 265,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-cur-prism": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 298,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-cur-shine": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 331,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-cur-token": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 364,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-settings": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 397,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-tab-block": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 430,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-tab-hideout": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 463,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-tab-locker": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 496,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-tab-store": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 529,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/nav-tab-turf": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 562,
+        "y": 482,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/panel": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-0.png",
+    "sheetW": 937,
+    "sheetH": 1383,
+    "frames": {
+      "img": {
+        "x": 514,
+        "y": 1063,
         "w": 318,
         "h": 239
       }
     }
   },
-  "sheets/streetwear/ui-kit/toggle": {
-    "sheet": "sheets/streetwear/ui-kit/atlas.png",
-    "sheetW": 642,
-    "sheetH": 799,
+  "sheets/streetwear/ui-kit/pause": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
     "frames": {
       "img": {
         "x": 0,
-        "y": 755,
+        "y": 0,
+        "w": 132,
+        "h": 125
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/portrait": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 133,
+        "y": 0,
+        "w": 159,
+        "h": 124
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/resbar": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 126,
+        "w": 604,
+        "h": 88
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/room-hideout": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-0.png",
+    "sheetW": 937,
+    "sheetH": 1383,
+    "frames": {
+      "img": {
+        "x": 654,
+        "y": 731,
+        "w": 256,
+        "h": 320
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/room-locker": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-0.png",
+    "sheetW": 937,
+    "sheetH": 1383,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 1063,
+        "w": 256,
+        "h": 320
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/room-underground": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-0.png",
+    "sheetW": 937,
+    "sheetH": 1383,
+    "frames": {
+      "img": {
+        "x": 257,
+        "y": 1063,
+        "w": 256,
+        "h": 320
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/sheet": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-0.png",
+    "sheetW": 937,
+    "sheetH": 1383,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 0,
+        "w": 448,
+        "h": 394
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/sheet-handle": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-0.png",
+    "sheetW": 937,
+    "sheetH": 1383,
+    "frames": {
+      "img": {
+        "x": 833,
+        "y": 1063,
+        "w": 104,
+        "h": 30
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/tabbar": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 215,
+        "w": 611,
+        "h": 87
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/toast": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-0.png",
+    "sheetW": 937,
+    "sheetH": 1383,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 731,
+        "w": 653,
+        "h": 331
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/toggle": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-1.png",
+    "sheetW": 611,
+    "sheetH": 526,
+    "frames": {
+      "img": {
+        "x": 120,
+        "y": 482,
         "w": 144,
         "h": 44
       }
@@ -32059,16 +32332,37 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/towers/viper/Idle': require('@/assets/play/sheets/streetwear/towers/viper/atlas-0.png'),
   'sheets/streetwear/towers/viper/Skill': require('@/assets/play/sheets/streetwear/towers/viper/atlas-1.png'),
   'sheets/streetwear/towers/viper/rotations': require('@/assets/play/sheets/streetwear/towers/viper/atlas-2.png'),
-  'sheets/streetwear/ui-kit/back': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/button-danger': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/button-danger-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/button-primary': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/button-primary-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/button-secondary': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/button-secondary-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/chip-off': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/chip-on': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/header': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/panel': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
-  'sheets/streetwear/ui-kit/toggle': require('@/assets/play/sheets/streetwear/ui-kit/atlas.png'),
+  'sheets/streetwear/ui-kit/alert': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/back': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/button-danger': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/button-danger-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/button-primary': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/button-primary-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/button-secondary': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/button-secondary-pressed': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/chip-off': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/chip-on': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/header': require('@/assets/play/sheets/streetwear/ui-kit/atlas-0.png'),
+  'sheets/streetwear/ui-kit/nav-cur-caps': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-cur-prism': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-cur-shine': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-cur-token': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-settings': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-tab-block': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-tab-hideout': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-tab-locker': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-tab-store': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/nav-tab-turf': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/panel': require('@/assets/play/sheets/streetwear/ui-kit/atlas-0.png'),
+  'sheets/streetwear/ui-kit/pause': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/portrait': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/resbar': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/room-hideout': require('@/assets/play/sheets/streetwear/ui-kit/atlas-0.png'),
+  'sheets/streetwear/ui-kit/room-locker': require('@/assets/play/sheets/streetwear/ui-kit/atlas-0.png'),
+  'sheets/streetwear/ui-kit/room-underground': require('@/assets/play/sheets/streetwear/ui-kit/atlas-0.png'),
+  'sheets/streetwear/ui-kit/sheet': require('@/assets/play/sheets/streetwear/ui-kit/atlas-0.png'),
+  'sheets/streetwear/ui-kit/sheet-handle': require('@/assets/play/sheets/streetwear/ui-kit/atlas-0.png'),
+  'sheets/streetwear/ui-kit/tabbar': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
+  'sheets/streetwear/ui-kit/toast': require('@/assets/play/sheets/streetwear/ui-kit/atlas-0.png'),
+  'sheets/streetwear/ui-kit/toggle': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
 };

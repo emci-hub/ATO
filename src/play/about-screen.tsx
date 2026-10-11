@@ -12,6 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { PLAY_CC0_LINE, PLAY_CREDITS, PLAY_OPTIONAL_LINE } from '@/play/credits';
 import { NeonBackLink, NeonHeader, NeonLabel, NeonPanel } from '@/play/neon-ui';
+import { streetUiOn } from '@/play/street-ui';
 
 async function openUrl(url: string) {
   try {
@@ -27,7 +28,7 @@ export function AboutScreen({ onBackToDivecore }: { onBackToDivecore: () => void
       <NeonBackLink onPress={onBackToDivecore} />
 
       <NeonHeader
-        title="About"
+        title={streetUiOn() ? 'Credits' : 'About'}
         lede="Divecore is built on a handful of pixel-art packs. Here is what is bundled and who made it."
       />
 

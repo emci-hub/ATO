@@ -55,6 +55,8 @@ export type PlaySettings = {
   tutorialSeen: boolean;
   /** Art style the game is drawn in. Paint only; `cast` until switched. */
   artSkin: ArtSkinId;
+  /** Small vibrations on taps and big moments (Streetwear shell). */
+  haptics: boolean;
 };
 
 export const DEFAULT_WINDOW: DayWindow = { from: 22 * 60, to: 7 * 60 };
@@ -69,6 +71,7 @@ export function defaultSettings(): PlaySettings {
     skipReveals: false,
     tutorialSeen: false,
     artSkin: 'cast',
+    haptics: true,
   };
 }
 
@@ -112,6 +115,7 @@ export function parseSettings(raw: unknown, legacy: { remind: boolean; hasProgre
     skipReveals: flag(r.skipReveals, false),
     tutorialSeen: flag(r.tutorialSeen, false),
     artSkin: (ART_SKINS as readonly unknown[]).includes(r.artSkin) ? (r.artSkin as ArtSkinId) : base.artSkin,
+    haptics: flag(r.haptics, true),
   };
 }
 

@@ -115,7 +115,20 @@ for (const tier of swordTiers.tiers) {
 
 // Menu UI kit: every piece the street chrome draws is packed with its insets.
 const uiMeta = (meta as unknown as { ui: Record<string, { inset: number[]; scale: number }> }).ui ?? {};
-for (const piece of ['panel', 'header', 'back', 'chip-on', 'chip-off', ...['primary', 'secondary', 'danger'].flatMap((v) => [`button-${v}`, `button-${v}-pressed`])]) {
+const shellPieces = ['resbar', 'tabbar', 'sheet', 'sheet-handle', 'toast', 'pause', 'alert', 'portrait'];
+const navPieces = ['tab-block', 'tab-turf', 'tab-hideout', 'tab-locker', 'tab-store', 'cur-caps', 'cur-token', 'cur-shine', 'cur-prism', 'settings'].map((n) => `nav-${n}`);
+const roomPieces = ['hideout', 'underground', 'locker'].map((n) => `room-${n}`);
+for (const piece of [
+  'panel',
+  'header',
+  'back',
+  'chip-on',
+  'chip-off',
+  ...['primary', 'secondary', 'danger'].flatMap((v) => [`button-${v}`, `button-${v}-pressed`]),
+  ...shellPieces,
+  ...navPieces,
+  ...roomPieces,
+]) {
   assert.ok(uiMeta[piece]?.inset.length === 4 && uiMeta[piece].scale > 0, `ui kit piece ${piece} has no meta`);
   assert.ok(sheets[`sheets/streetwear/ui-kit/${piece}`]?.frames.img, `ui kit piece ${piece} not packed`);
 }
