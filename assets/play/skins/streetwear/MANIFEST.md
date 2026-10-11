@@ -8,7 +8,8 @@ working ID log are in `games/grove/ref/streetwear-source/` (`STATE.md`).
 **Style:** urban streetwear remix, gritty cel-shaded hi-bit pixel art, bold black outlines, flat
 2-3 tone shading. Palette mustard `#E0A526`, charcoal `#2B2B2E`, off-white `#F2EDE4`, paint red `#C8202B`.
 
-**Generations:** 1,746 used today (balance 4,692 → 2,946 left; resets 2026-10-11). No Pro mode used
+**Generations:** 1,746 on 2026-10-10 (balance 4,692 → 2,946), then ~154 for towers + bosses on 2026-10-11
+(cycle reset mid-batch; 4,932 left, next reset 2026-11-11). No Pro mode used
 (the anchor was made with v3, cheaper than Pro). Weapon moves cost 3-4 gen per direction.
 
 ## Layout rules (match `skins/cast`)
@@ -97,6 +98,31 @@ Corvus and Archangel also paid for a first template-mode set (kept in their sour
 | velkhar | 358cfbd9-31c7-49e3-ac71-2c19ed9b1bd8 |
 | void-raven | 5e3b9e12-997e-4d5c-9efa-c38707e9cc4a |
 
+### Towers (`towers/<slug>/rotations/`, 8 PNG each, still like the cast) — 2026-10-11
+
+Each: edit_image restyle of the cast front (10) + create_character v3 from it (7-8). One canvas per tower = the cast tower's size.
+
+| Tower | Role | Canvas | Character id | Restyle job |
+|---|---|---|---|---|
+| ghost (hooded drone operator) | tower.vine | 240×240 | 47597b73-27eb-4773-8033-52efaa1aab77 | 711340eb-13cc-4d26-a54e-b9c221864891 |
+| lux (blue-haired drone pilot) | tower.crystal | 244×244 | 6159cb5b-4748-4d9a-b485-fb2ffafb5c8e | 9fa06993-6688-4558-8cf8-67517fd63ba0 |
+| viper (lizard sniper) | tower.archer | 236×236 | 422ec80c-0e0e-4a4a-88a5-4e81844eb212 | df8ff551-1fc2-434e-9a44-679af179129c |
+
+### Bosses (`boss/<slug>/`) — 2026-10-11
+
+| Boss | Role | Canvas | Clips | Character id |
+|---|---|---|---|---|
+| oni ("Oni Warlord") | unit.boss_scout (also the `scout_mini` mini-boss band) | 264×264 | 8 rotations; E/W/N/S: Idle 4f, Walk 8f, Run 8f, Death 8f | 85d9255b-ad31-4ddf-825c-256aeadf9cf1 |
+| titan-x (mech) | none — cast has it but no skin.json role; `unit.final` is the archangel hero | 244×244 | 8 rotations only (like the cast) | 552049dc-1093-49e1-8211-2b293544169d |
+
+Oni Warlord is a NEW character (emci's pick), not the hero scaled up: edit_image turned the Streetwear Oni hero's front
+into a bulkier armoured boss (10, job cef42ec0-41ae-4bf3-b746-549d29fe16cb), then create_character v3 at 192 (5).
+Idle/Walk/Run = skeleton-v3 `breathing-idle` / `walking-8-frames` / `running-8-frames`; Death = custom v3, 8 frames
+(10 refused at its 256 animation canvas), "staggering back, dropping to one knee leaning on the katana as its flame dies
+out, then collapsing forward". Canvas 264 because the katana flame and cape reach the edges of PixelLab's 256 frames.
+Titan-X: restyle 0cd3dacc-d77c-4842-a321-ef5b83f0cf87 (10) + v3 (8).
+Cost: ~86 (batch 1, before the cycle reset) + 68 (oni clips) ≈ 154 generations.
+
 ### Creeps (`creeps/<slug>/`, 84 PNG each, 96×96; created at 64px)
 
 | Creep | Character id |
@@ -113,7 +139,8 @@ Corvus and Archangel also paid for a first template-mode set (kept in their sour
 - Knight creep's side rotations read paler than its front.
 - Icons flagged for emci's look: `ui/icons/REVIEW-leaf.png` (reads as cannabis), `REVIEW-price-tag-dollar.png` and `REVIEW-chain-99.png` (contain characters), `REVIEW-brass-knuckles.png`. `props/graffiti-tag-decal.png` and `ui/icons/graffiti-tag.png` are letter-like wildstyle (not readable).
 - Map objects (create_map_object) were not used, so nothing here is subject to the 8-hour auto-delete.
-- No boss or tower art yet (no `boss/` or `towers/` folder).
+- Towers are still images (like the cast). The engine can already play tower `idle` / `attack` / `skill` clips (E/W, from `data/towerSkins.json`), but no tower has any yet.
+- Oni Warlord's east Death ends kneeling; south ends flat. Titan-X swaps its cannon arm between some directions.
 - `ui/card-frame.png` has fake barcode / glyph decoration (not readable).
 - `ui/button-normal.png` (150×68) and `button-pressed.png` (138×56) differ in size — pad to one box when wiring.
 - Tone check for emci: red paint drips + skull on panel / card / health bar can read like blood.
@@ -198,6 +225,11 @@ Corvus and Archangel also paid for a first template-mode set (kept in their sour
 | `heroes/sak/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
 | `heroes/velkhar/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
 | `heroes/void-raven/` | 176 | 192x192 — 8 rotations; E, W, N, S each: Attack 8f, Dash 8f, Hurt 6f, Idle 4f, Skill 8f, Walk 8f |
+| `towers/ghost/` | 8 | 240x240 — 8 rotations |
+| `towers/lux/` | 8 | 244x244 — 8 rotations |
+| `towers/viper/` | 8 | 236x236 — 8 rotations |
+| `boss/oni/` | 120 | 264x264 — 8 rotations; E, W, N, S each: Death 8f, Idle 4f, Run 8f, Walk 8f |
+| `boss/titan-x/` | 8 | 244x244 — 8 rotations |
 | `creeps/knight/` | 84 | 96x96 — 8 rotations; E, W, N, S each: Death 7f, Idle 4f, Walk 8f |
 | `creeps/village-girl/` | 84 | 96x96 — 8 rotations; E, W, N, S each: Death 7f, Idle 4f, Walk 8f |
 | `creeps/wizard/` | 84 | 96x96 — 8 rotations; E, W, N, S each: Death 7f, Idle 4f, Walk 8f |

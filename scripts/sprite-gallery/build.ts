@@ -21,7 +21,7 @@ const SRC = path.join(REPO, 'assets/play/skins/streetwear');
 const OUT = path.resolve(process.argv[2] ?? path.join(os.tmpdir(), 'ato-sprite-gallery'));
 
 const ROT = ['south', 'south-east', 'east', 'north-east', 'north', 'north-west', 'west', 'south-west'];
-const CLIPS = ['Idle', 'Walk', 'Dash', 'Attack', 'Skill', 'Hurt', 'Death'];
+const CLIPS = ['Idle', 'Walk', 'Run', 'Dash', 'Attack', 'Skill', 'Hurt', 'Death'];
 const FACES = ['east', 'west', 'north', 'south'];
 
 type Row = { key: string; row: number; n: number };
@@ -62,12 +62,16 @@ function main() {
   const data: {
     heroes: Record<string, Sheet>;
     creeps: Record<string, Sheet>;
+    towers: Record<string, Sheet>;
+    bosses: Record<string, Sheet>;
     anchor: Sheet;
     splats: Record<string, { sheet: string; n: number }>;
     stills: Record<string, Still[]>;
   } = {
     heroes: {},
     creeps: {},
+    towers: {},
+    bosses: {},
     anchor: sheetFor(path.join(SRC, '_anchor/street-ninja'), 'anchor'),
     splats: {},
     stills: {},
@@ -77,6 +81,12 @@ function main() {
   }
   for (const c of fs.readdirSync(path.join(SRC, 'creeps'))) {
     data.creeps[c] = sheetFor(path.join(SRC, 'creeps', c), `creep-${c}`);
+  }
+  for (const t of fs.readdirSync(path.join(SRC, 'towers'))) {
+    data.towers[t] = sheetFor(path.join(SRC, 'towers', t), `tower-${t}`);
+  }
+  for (const b of fs.readdirSync(path.join(SRC, 'boss'))) {
+    data.bosses[b] = sheetFor(path.join(SRC, 'boss', b), `boss-${b}`);
   }
 
   for (const s of ['hit-splat', 'hit-splat-ember', 'hit-splat-tide', 'hit-splat-spark', 'hit-splat-root', 'hit-splat-void']) {

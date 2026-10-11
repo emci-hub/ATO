@@ -109,5 +109,18 @@ Next E/W: cyber-shinobi, elowen, kael, maldrath, morwen, neon-viper, sak, frost-
 Idle stays template; Walk/Dash/Attack/Skill/Hurt use mode=skeleton-v3, saved under names WalkSK/DashSK/AttackSK/SkillSK/HurtSK
 and ingested as Walk/Dash/Attack/Skill/Hurt. Corvus + Archangel template clips kept in the source zip only (rerolled once).
 
+## TOWERS + BOSSES (2026-10-11, emci: new boss oni from hero look; titan-x rotations only)
+Balance before batch 1: 2,946.
+Uploads (3 days): cast fronts ghost 92459be4-9829-421c-8983-c3cf98141bab, lux 579e45ba-23d0-4cec-9e8f-82eb75ad82dd, viper e101af27-38a4-4aea-9eca-d6686fe23233, titan-x 46b8d658-f04c-4116-a6f7-9164c61dd0d0; SW oni hero south 784413f1-c661-4a5b-9a89-6705b8652a8b; anchor 21c1bbb2-9c28-4a54-9f75-b3923072635d
+Restyle edit jobs (10 gen each, 1 per call >128px): ghost 711340eb-13cc-4d26-a54e-b9c221864891, lux 9fa06993-6688-4558-8cf8-67517fd63ba0, viper df8ff551-1fc2-434e-9a44-679af179129c, titan-x 0cd3dacc-d77c-4842-a321-ef5b83f0cf87, boss oni cef42ec0-41ae-4bf3-b746-549d29fe16cb
+Characters (v3 from restyled front, 8 gen): tower ghost 47597b73-27eb-4773-8033-52efaa1aab77, tower lux 6159cb5b-4748-4d9a-b485-fb2ffafb5c8e, boss oni 85d9255b-ad31-4ddf-825c-256aeadf9cf1 (5 gen, 192), boss titan-x 552049dc-1093-49e1-8211-2b293544169d, tower viper 422ec80c-0e0e-4a4a-88a5-4e81844eb212 (7 gen)
+Batch 1 ≈ 86 gen (5 edits x10 + chars 8+8+5+8+7). Towers ingested (rotations only, canvas = cast size 240/244/236). titan-x ingested 244.
+PixelLab cycle reset mid-session: balance before batch 2 = 5,000 (next reset 2026-11-11).
+Boss oni anims (E,W,N,S): IdleSK breathing-idle group 5716a92e-f7bb-4fb2-b426-f1a06dfc41a9; WalkSK walking-8-frames group 0bfc4df3-769d-4419-b8c6-4e54f944a367; RunSK running-8-frames group 9992bbf5-3e0a-4878-97a6-4901358c3684; DeathW custom v3 8f (10f refused at 256 canvas, 8/dir = 32) group 22cdfc0a-3b6f-4667-9346-d4761f9f04bc ("a dramatic death: staggering back, dropping to one knee leaning on the katana as its flame dies out, then collapsing forward onto the ground")
+
+Batch 2 = 68 gen (balance 5,000 → 4,932). Boss oni ingested on a 264 canvas (content fills PixelLab's 256 frames), clip map IdleSK→Idle, WalkSK→Walk, RunSK→Run, DeathW→Death; all 4 facings equal frame counts. No rerolls used.
+Ingest tool for this pass lived in the session scratchpad (ingest.js: centre horizontally, shift each clip/dir so first-frame feet = that dir's rotation feet, refuse to crop). hero.sh / normalize.js from the earlier session are gone.
+Zips: games/grove/ref/streetwear-source/towers/{ghost,lux,viper}.zip, boss/{oni,titan-x}.zip; fronts in restyled-fronts/{tower-*,boss-*}.png
+
 ## Clip names (template → saved clip folder)
 breathing-idle→Idle, walking-8-frames→Walk, running-8-frames→Dash, cross-punch→Attack, fireball→Skill, taking-punch→Hurt. East + West only.
