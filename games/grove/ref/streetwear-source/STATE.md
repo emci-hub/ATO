@@ -133,5 +133,17 @@ Tower IdleSK breathing-idle E/W (≈18 total, rest of the 191): ghost 1af3750e-b
 UI v2 saved: panel + card as-is, health bar cropped to 591x125; old v1 copies in rejected/v1-ui/. button-pressed padded locally to 150x68 (centred, bottom-aligned). NOTE: both buttons still carry red drips (not in the approved batch).
 Icons v2 (leaf, blank price tag, chain, boxing glove; style refs sneaker/cap/spray-can/heart): object f8075fcf-57e8-414e-95f2-d899b521eb89 (10)
 
+## BATCH 4 — FRAME CONSISTENCY (2026-10-11, emci: re-make hero idles + fix worst attack/skill frames)
+Audit tools (scratchpad): audit.js (4x4-block A-B-A flicker, palette drift, area jump), debg.js (removes leftover PixelLab work-background grey #7A7C83 blobs >=200px connected to the outside).
+Free fix applied: debg on boss/ only → 9 boss-oni frames (Walk W f3/f7, Run W f0/f1/f2/f5, Run N f5, Walk E f5, Idle N f1). NOT on archangel: its wing feathers are the same grey (debg ate wing chunks in dry run).
+Finding: all hero Idles were template mode → hair/cape/weapon blink (oni N bald on f0/f2, aurex N cape on f3, raven W cape on f0, velkhar staff). Fix: custom v3 IdleW "standing idle, breathing slowly while holding <weapon>", 4f, keep_first_frame=false, E/W/N/S, 2 gen/dir. velkhar + void-raven already IdleW (kept).
+Balance before batch 4: 4,741.
+IdleW groups: oni f40769f5-af61-4765-bf67-01a017ac397b, aurex a3dd83fe-b7fa-492f-b0f1-9768ee402224, archangel 4f5d2be6-e40c-4183-8c38-8f9752e92a16, corvus 56ca4fa1-bb5a-464f-86ec-d7da825ae607, kitsune 4ccd144b-c824-41d2-ae27-03d7e03f6490 (north rerolled: IdleW2 783d0848-35ee-44d3-b40b-755131e80b2a, hair went grey), cyber-shinobi 071c01f4-0bfb-4cf6-b8c1-a8a9110159aa, elowen fed105ce-3b90-462b-b3ab-e48767f1aa65
+kael b939d6c3-0d1b-4db6-ade1-76f04f5f170b (E/W rerolled IdleW2 71865eaa-7ceb-45c9-8d71-164b4cd5435a; red blade tip is in his own design), elowen W rerolled IdleW2 4648c546-4b06-4d8c-8de1-a409da874448 (head turned to camera), maldrath d00e1606-8da1-47db-890d-15325fc278b5, morwen 3a38af31-cc3c-4486-bcc9-bf17c030dca3 (E/W rerolled IdleW2 3306b522-7025-4573-8c09-a4df29c38100: staff blinked / head turned), neon-viper 2ab7e07e-6286-46f7-8f06-74941f238afa, raven e2937778-afc1-4c5b-9db5-17ef434b85e0
+Installed (Idle folder only, rotations untouched; tools/idle.sh stages + sheets): oni, aurex, archangel, corvus, cyber-shinobi, kitsune (N from reroll), elowen (W from reroll), kael (E/W reroll), maldrath, morwen N/S
+Also: neon-viper, raven, sak 6f533186-1cc0-4fed-bbe1-2e00cf23cfed (E/W/N, then S appended), frost-lich b913257d-deee-4670-9e8c-102daad5cc58 (E/W rerolled IdleW2 911e2bdb-f5dc-4df8-a7fd-307a03f6d053: dark blob behind head). morwen E/W reroll: W used; E = first-try frames 0,1,0,1 (staff pops in otherwise). ALL 14 installed. Batch 4 total 128 gen (4,741 → 4,613). Gallery version 7.
+Attack/Skill triage (most spikes are intended slash/flash FX). Real off-model frames, NOT yet fixed (await emci's ok, ~4 gen each = re-run that facing with the same move text): kitsune Attack N f5 (both katanas vanish), morwen Skill W f5-7 (turns to camera), sak Attack W f5-6 (turns to camera).
+Free frame fix: raven Attack south frame_005 (smudged dark) replaced by frame_000 (stance); original kept in rejected/v1-frames/.
+
 ## Clip names (template → saved clip folder)
 breathing-idle→Idle, walking-8-frames→Walk, running-8-frames→Dash, cross-punch→Attack, fireball→Skill, taking-punch→Hurt. East + West only.

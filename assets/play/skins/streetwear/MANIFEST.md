@@ -10,7 +10,7 @@ working ID log are in `games/grove/ref/streetwear-source/` (`STATE.md`).
 
 **Generations:** 1,746 on 2026-10-10 (balance 4,692 → 2,946), then ~154 for towers + bosses on 2026-10-11
 (cycle reset mid-batch; 4,932 left, next reset 2026-11-11), then 191 for tower clips + icon/UI fixes
-(4,932 → 4,741; includes one ghost Attack reroll). No Pro mode used
+(4,932 → 4,741; includes one ghost Attack reroll), then 128 for the frame-consistency pass (4,741 → 4,613). No Pro mode used
 (the anchor was made with v3, cheaper than Pro). Weapon moves cost 3-4 gen per direction.
 
 ## Layout rules (match `skins/cast`)
@@ -25,7 +25,7 @@ working ID log are in `games/grove/ref/streetwear-source/` (`STATE.md`).
   as a whole so its first-frame feet sit on the idle stance line (max shift 8px). All four facings have
   equal frame counts in every clip. Measure `footAt` when wiring; figures are bigger in their canvas
   than the cast heroes (cast fills ~50%).
-- Hero animations: Idle = `breathing-idle` template; Walk/Dash/Hurt = `skeleton-v3` with
+- Hero animations: Idle = custom v3 "standing idle, breathing slowly while holding <weapon>" (4f; re-made 2026-10-11 — the old `breathing-idle` template idles made hair/capes/weapons blink); Walk/Dash/Hurt = `skeleton-v3` with
   `walking-8-frames`, `running-8-frames`, `taking-punch` (template mode drifted off-model in QA;
   skeleton-v3 keeps identity). **Attack and Skill are each hero's own weapon move** (8 frames,
   PixelLab custom v3 with a written motion): the first pass used the unarmed `cross-punch` /
@@ -141,6 +141,8 @@ Cost: ~86 (batch 1, before the cycle reset) + 68 (oni clips) ≈ 154 generations
 | knight | 2fbc9bc6-bfe4-4bfb-b40f-2cef6d14dbb8 |
 
 ## Known issues (read before wiring)
+
+- 2026-10-11 frame-consistency pass: all 14 template hero Idles re-made (velkhar + void-raven already were); 8 single facings rerolled once (kitsune N, elowen W, kael E/W, morwen E/W, frost-lich E/W). Morwen east idle is a 2-pose loop (her still pose hides the staff, so the model kept popping it in). Leftover PixelLab grey work-background patches cut out of 9 boss-oni frames (Walk/Run/Idle). Raven Attack south last frame (smudged) replaced by its stance frame. Old frames: `games/grove/ref/streetwear-source/rejected/`. Archangel keeps its grey wing feathers (same grey as the work background; never auto-clean it).
 
 - Weapon Attack/Skill clips are redrawn per frame (PixelLab custom v3), so a weapon can wobble slightly between frames. For pixel-perfect weapons long term, PixelLab's own advice is to draw the weapon as a separate layer at runtime.
 - Dash and Hurt are still skeleton templates; a few heroes lower or hide the weapon during them.
