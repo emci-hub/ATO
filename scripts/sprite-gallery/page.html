@@ -89,7 +89,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
   </header>
 
   <nav aria-label="Sections"><div class="in">
-    <a href="#heroes">Heroes</a><a href="#enemies">Enemies</a><a href="#anchor">Anchor</a><a href="#map">Map</a><a href="#props">Props</a><a href="#fx">FX</a><a href="#ui">UI</a><a href="#icons">Icons</a><a href="#issues">Known issues</a>
+    <a href="#heroes">Heroes</a><a href="#enemies">Enemies</a><a href="#anchor">Anchor</a><a href="#map">Map</a><a href="#props">Props</a><a href="#fx">FX</a><a href="#ui">UI</a><a href="#icons">Icons</a><a href="#issues">Known issues</a><a href="#update">How to update</a>
   </div></nav>
 
   <section id="heroes">
@@ -148,6 +148,20 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
         <li>Four icons are flagged: a leaf that reads as cannabis, a $ price tag, a chain with “99”, brass knuckles.</li>
         <li>Red drips plus a skull on the panel, card and health bar can read like blood.</li>
         <li>The pressed button is smaller than the normal one; pad both to one size when wiring.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="update">
+    <h2>How to update this page</h2>
+    <div class="issues" style="border-left-color: var(--mustard)">
+      <p>This page does not refresh by itself. After any sprite change, open Claude Code in the ATO repo (any chat) and say:</p>
+      <pre style="font-family: var(--mono); background: var(--tile); padding: 10px 12px; border-radius: 3px; overflow-x: auto; margin: 10px 0">update the sprite gallery</pre>
+      <ul>
+        <li>Claude runs <code>npx tsx scripts/sprite-gallery/build.ts</code>, then republishes to this same link. Full steps: <code>scripts/sprite-gallery/README.md</code>.</li>
+        <li>Where everything lives: art in <code>assets/play/skins/streetwear/</code>; every PixelLab id, cost and weapon move in its <code>MANIFEST.md</code>; working log and raw exports in <code>games/grove/ref/streetwear-source/</code> (<code>STATE.md</code>).</li>
+        <li>Sprite rules: Walk/Dash/Hurt use PixelLab skeleton-v3; Attack/Skill are custom v3 weapon moves; every frame is padded to one canvas per character (heroes 192px, enemies 96px) with feet aligned; 4 facings per clip.</li>
+        <li>Link to keep: https://claude.ai/artifact/9wjcLv4FQu4S8dwqT2RBho</li>
       </ul>
     </div>
   </section>
