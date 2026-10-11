@@ -1,0 +1,45 @@
+{
+ "app": "PixelLab VFX Creator",
+ "name": "SW void status",
+ "fps": 6,
+ "frame_ms": 167,
+ "frames": 12,
+ "loop": true,
+ "canvas": {
+  "w": 58,
+  "h": 55
+ },
+ "anchor": {
+  "kind": "feet",
+  "x": 29,
+  "y": 52
+ },
+ "clips": [
+  {
+   "name": "part-orbit_motes",
+   "title": "the orbit motes part",
+   "part": "orbit_motes",
+   "depth": "behind",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 12,
+   "frame": {
+    "w": 54,
+    "h": 25
+   },
+   "sheets": [
+    {
+     "file": "part-orbit_motes.png",
+     "first_frame": 0,
+     "frames": 12,
+     "columns": 4,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -27,
+    "y": -37
+   }
+  }
+ ]
+}

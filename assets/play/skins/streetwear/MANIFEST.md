@@ -3,14 +3,16 @@
 Art only. **Nothing here is wired into the game** and nothing is in the app bundle: no
 `skin.json`, no registry entry, `play-art-prep` / `play-art-pack` were NOT run. Wiring follows
 ATO-streetwear-theme-plan.md later. Raw PixelLab exports (zips, restyled fronts, rejects) and the
-working ID log are in `games/grove/ref/streetwear-source/` (`STATE.md`).
+working ID log are in `games/grove/ref/streetwear-source/` (`STATE.md`). Wiring plan: `docs/streetwear-wiring-plan.md`
+(the old ATO-streetwear-theme-plan.md never existed on disk).
 
 **Style:** urban streetwear remix, gritty cel-shaded hi-bit pixel art, bold black outlines, flat
 2-3 tone shading. Palette mustard `#E0A526`, charcoal `#2B2B2E`, off-white `#F2EDE4`, paint red `#C8202B`.
 
 **Generations:** 1,746 on 2026-10-10 (balance 4,692 → 2,946), then ~154 for towers + bosses on 2026-10-11
 (cycle reset mid-batch; 4,932 left, next reset 2026-11-11), then 191 for tower clips + icon/UI fixes
-(4,932 → 4,741; includes one ghost Attack reroll), then 128 for the frame-consistency pass (4,741 → 4,613). No Pro mode used
+(4,932 → 4,741; includes one ghost Attack reroll), then 128 for the frame-consistency pass (4,741 → 4,613), then 31 for 3 attack fixes + shop icons + rarity
+frame (4,613 → 4,582); all effects and auras were free (VFX workbench). No Pro mode used
 (the anchor was made with v3, cheaper than Pro). Weapon moves cost 3-4 gen per direction.
 
 ## Layout rules (match `skins/cast`)
@@ -132,6 +134,51 @@ out, then collapsing forward". Canvas 264 because the katana flame and cape reac
 Titan-X: restyle 0cd3dacc-d77c-4842-a321-ef5b83f0cf87 (10) + v3 (8).
 Cost: ~86 (batch 1, before the cycle reset) + 68 (oni clips) ≈ 154 generations.
 
+### Element effects (`fx/elements/<element>/<kind>.png` + `.json` or `.manifest.json`) — 2026-10-11, 0 generations
+
+Made with PixelLab's free VFX workbench (presets/parts recoloured with our element ramps), each saved to
+emci's PixelLab "My effects" (re-editable there). Sheet + TexturePacker-style JSON (frame rects, pivot,
+per-frame ms); ember/tide/spark/void status loops are effect-only pieces (`.manifest.json`: anchor = unit's feet + offset; its `sheets[].file` name is stale, the sheet is `status.png`; root status is a one-shot TexturePacker sheet; draw
+**behind** the unit unless `depth` says front). One colour AND one shape per element (research: hue alone
+blurs ice vs void on dark maps):
+
+| Element | Ramp (dark → light) | shot (loop) | hit | burst (skill AoE) | status (loop) | slash |
+|---|---|---|---|---|---|---|
+| ember | #3a0d05 #C8202B #FB923C #FFE29A | fire orb | flash ring | cartoon fire boom | flames licking up | arc |
+| tide | #0a1f3d #1d5fa8 #38BDF8 #B8ECFF | water orb | water splash | splash + ground ring | ice crystals at feet (slow) | arc |
+| root | #0b2a1a #1f7a4a #34D399 #C2F5D9 | green orb | leaf burst | vines + ground ring | vines erupt (snare, one-shot) | arc |
+| spark | #3a2a00 #b8860b #FACC15 #FFF4A8 | bolt | spark flash | lightning strike from above | crackling arcs | arc |
+| void | #1a0b2e #4c1d95 #8b5cf6 #c4b5fd | violet orb | implosion | violet eruption + ring | orbiting motes | arc |
+| plain | #2B2B2E #8a5a10 #E0A526 #F2EDE4 | paint bolt | hit star | ground ring | — | arc |
+
+Towers: viper (archer) = plain, ghost (vine) = root, lux (crystal) = spark. Shots fly +x (mirror for left).
+
+### Pet auras (`fx/auras/<style>/behind.png`, `front.png`, `manifest.json`) — 2026-10-11, 0 generations
+
+Replace the runtime-painted SVG auras (emci: "they look bad"). Research: aura layer **behind** the
+character, a few particles **in front**, 2-4 tones of one hue, tapered wisps, smooth loop. Drawn in
+**greyscale** so the game keeps every tint option (sword element, named element, any #hex) with a stepped
+palette map (luminance → 5-stop ramp, outline < 28 kept; reference: `scripts/sprite-gallery/build.ts`
+`gradMap`). Frame counts match `data/auras.json` at 8 fps:
+
+| Style | Look | Frames |
+|---|---|---|
+| blaze | flame tongues + ground ring + sparks | 8 |
+| spiky | 12 bold rays turning (seamless) + outline sparks | 6 |
+| rune | small ground sigil (8-point, no pentagram) + 4 runes orbiting the waist | 6 |
+| bubbles | rising bubbles + soft ground glow | 6 |
+
+### Shop & rarity (`ui/rarity/`, `ui/swords/`, `ui/shop/`) — 2026-10-11, 20 generations
+
+Research: tier colour on frame + glow, colour is never the only signal (gem cut per tier), animated shine only
+on the top tiers. `frame-base.png` (greyscale, create_ui_asset 0db9eee4-69f3-47fe-bb14-fb104e310c18, 10 gen)
+palette-mapped locally to `frame-{common,rare,epic,legendary,divine}.png` (grey / blue / purple / gold /
+pearl). Gems `gem-<tier>.png`: round, square, hexagon, star, winged. `shine.png/.json` = glint + twinkles loop
+(free) for legendary/divine only. Swords `sword-<tier>.png` (Splinter → Brand → Cleaver → Mythblade →
+Ascendant) + `relic.png` are **greyscale** → tinted per element like auras (21 elements × 5 tiers from 6
+icons). Shop items `ui/shop/{dive-charge,merge-crate,shine-stone,prism-stone,star-pearl}.png` replace the stock
+glyphs. Icons: one 48px create_1_direction_object batch (10 gen, object 4dda15c1-951d-466f-ac1e-146afd70a112).
+
 ### Creeps (`creeps/<slug>/`, 84 PNG each, 96×96; created at 64px)
 
 | Creep | Character id |
@@ -209,6 +256,11 @@ Cost: ~86 (batch 1, before the cycle reset) + 68 (oni clips) ≈ 154 generations
 | `fx/hit-splat-spark/` | 9 | 64x64 |
 | `fx/hit-splat-tide/` | 9 | 64x64 |
 | `fx/hit-splat-void/` | 9 | 64x64 |
+| `fx/elements/<element>/` | 29 (+29 json) | sheets: ember/tide/root/spark/void × shot/hit/burst/status/slash, plain × shot/hit/burst/slash |
+| `fx/auras/<style>/` | 8 (+4 json) | blaze/spiky/rune/bubbles × behind.png + front.png, greyscale |
+| `ui/rarity/` | 12 (+1 json) | frame-base + 5 tier frames (192x192), 5 gems (48x48), shine sheet |
+| `ui/swords/` | 6 | 48x48 greyscale: 5 tier swords + relic |
+| `ui/shop/` | 5 | 48x48 shop item icons |
 | `fx/shot-mist.png` | 1 | 32x32 |
 | `fx/shot-mustard.png` | 1 | 32x32 |
 | `fx/shot-red.png` | 1 | 32x32 |

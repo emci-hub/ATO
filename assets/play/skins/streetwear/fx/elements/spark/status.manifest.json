@@ -1,0 +1,45 @@
+{
+ "app": "PixelLab VFX Creator",
+ "name": "SW spark status",
+ "fps": 12,
+ "frame_ms": 83,
+ "frames": 12,
+ "loop": true,
+ "canvas": {
+  "w": 43,
+  "h": 55
+ },
+ "anchor": {
+  "kind": "feet",
+  "x": 21,
+  "y": 52
+ },
+ "clips": [
+  {
+   "name": "part-lightning_arcs",
+   "title": "the lightning arcs part",
+   "part": "lightning_arcs",
+   "depth": "front",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 12,
+   "frame": {
+    "w": 37,
+    "h": 44
+   },
+   "sheets": [
+    {
+     "file": "part-lightning_arcs.png",
+     "first_frame": 0,
+     "frames": 12,
+     "columns": 4,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -18,
+    "y": -48
+   }
+  }
+ ]
+}

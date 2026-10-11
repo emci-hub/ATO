@@ -78,7 +78,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
     <h1>Streetwear <span>Skin</span></h1>
     <p class="lede">Every piece of art PixelLab made for ATO on 2026-10-10 and 11. Characters play live in all four facings; pick a clip on each card, turn it with ↻, or switch them all at once. Attack and Skill are each hero's own weapon move. Nothing here is in the game yet.</p>
     <div class="stats">
-      <span class="stat"><b>16</b> heroes</span><span class="stat"><b>3</b> road enemies</span><span class="stat"><b>3</b> towers</span><span class="stat"><b>2</b> bosses</span><span class="stat"><b>4</b> facings</span><span class="stat"><b>32</b> props</span><span class="stat"><b>56</b> icons</span><span class="stat"><b>6</b> hit splats</span><span class="stat"><b>~2,220</b> generations used</span>
+      <span class="stat"><b>16</b> heroes</span><span class="stat"><b>3</b> road enemies</span><span class="stat"><b>3</b> towers</span><span class="stat"><b>2</b> bosses</span><span class="stat"><b>4</b> facings</span><span class="stat"><b>32</b> props</span><span class="stat"><b>56</b> icons</span><span class="stat"><b>6</b> hit splats</span><span class="stat"><b>~2,250</b> generations used</span>
     </div>
     <div class="palette">
       <span class="swatch"><i style="background:#E0A526"></i>#E0A526</span>
@@ -89,7 +89,7 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
   </header>
 
   <nav aria-label="Sections"><div class="in">
-    <a href="#heroes">Heroes</a><a href="#enemies">Enemies</a><a href="#towers">Towers</a><a href="#bosses">Bosses</a><a href="#anchor">Anchor</a><a href="#map">Map</a><a href="#props">Props</a><a href="#fx">FX</a><a href="#ui">UI</a><a href="#icons">Icons</a><a href="#issues">Known issues</a><a href="#update">How to update</a>
+    <a href="#heroes">Heroes</a><a href="#enemies">Enemies</a><a href="#towers">Towers</a><a href="#bosses">Bosses</a><a href="#effects">Effects</a><a href="#auras">Auras</a><a href="#shop">Shop</a><a href="#anchor">Anchor</a><a href="#map">Map</a><a href="#props">Props</a><a href="#fx">FX</a><a href="#ui">UI</a><a href="#icons">Icons</a><a href="#issues">Known issues</a><a href="#update">How to update</a>
   </div></nav>
 
   <section id="heroes">
@@ -112,6 +112,22 @@ footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var
   <section id="bosses">
     <h2>Bosses <small>Oni Warlord: 4 facings · Titan-X: 8 directions</small></h2>
     <div class="grid" id="bossGrid"></div>
+  </section>
+
+  <section id="effects">
+    <h2>Element effects <small>shot · hit · skill burst · status · slash — one colour and one shape per element</small></h2>
+    <div class="grid fxgrid" id="effectGrid"></div>
+  </section>
+
+  <section id="auras">
+    <h2>Pet auras <small>drawn in greyscale, coloured by the game · behind + in front of the pet</small></h2>
+    <div class="grid fxgrid" id="auraGrid"></div>
+  </section>
+
+  <section id="shop">
+    <h2>Shop &amp; rarity <small>tier = colour + gem shape · swords tinted per element</small></h2>
+    <div class="stills wide" id="cardGrid"></div>
+    <div class="stills icons" id="shopIconGrid"></div>
   </section>
 
   <section id="anchor">
@@ -263,6 +279,17 @@ for (const [k, label] of Object.entries(SPLAT)) {
   document.getElementById('splatGrid').append(el('article', { class: 'card' }, [el('h3', {}, [document.createTextNode(label), el('span', { text: `${s.n}f` })]), el('div', { class: 'stage' }, [sprite])]));
 }
 
+function strip(hostId, label, sub, s) {
+  const sprite = el('div', { class: 'sprite', role: 'img', 'aria-label': `${label} ${sub}` });
+  sprite.dataset.src = s.sheet; sprite.style.backgroundSize = `${s.n * 100}% 100%`; sprite.style.aspectRatio = `${s.w} / ${s.h}`; io.observe(sprite);
+  let f = 0; const draw = () => { sprite.style.backgroundPosition = `${s.n > 1 ? ((f % s.n) / (s.n - 1)) * 100 : 0}% 0%`; };
+  actors.push({ tick() { f++; draw(); } }); draw();
+  document.getElementById(hostId).append(el('article', { class: 'card' }, [el('h3', {}, [document.createTextNode(label), el('span', { text: `${sub} · ${s.n}f` })]), el('div', { class: 'stage' }, [sprite])]));
+}
+const EL_ORDER = ['ember', 'tide', 'root', 'spark', 'void', 'plain'];
+for (const e of EL_ORDER) for (const k of ['shot', 'hit', 'burst', 'status', 'slash']) { const s = DATA.effects[e]?.[k]; if (s) strip('effectGrid', e[0].toUpperCase() + e.slice(1), k, s); }
+for (const [style, byEl] of Object.entries(DATA.auras)) for (const e of EL_ORDER) if (byEl[e]) strip('auraGrid', style[0].toUpperCase() + style.slice(1), e, byEl[e]);
+
 const ROAD_MASK = { 0: 'ground', 1: 'ground', 2: 'N', 3: 'E', 4: 'S', 5: 'W', 6: 'E+W', 7: 'N+S', 8: 'E+S', 9: 'S+W', 10: 'N+E', 11: 'N+W', 12: 'E+S+W', 13: 'N+S+W', 14: 'N+E+W', 15: 'N+E+S', 16: 'cross', 17: 'stamp' };
 function stills(id, items, capFn = (i) => i.name, flagFn = () => false) {
   const host = document.getElementById(id);
@@ -278,6 +305,8 @@ const pads = S.props.filter((p) => p.name.startsWith('pad-')), rest = S.props.fi
 stills('propsGrid', [...pads, ...rest], (i) => i.name.replace(/-/g, ' '));
 stills('fxGrid', S.fx, (i) => i.name.replace(/-/g, ' '));
 stills('uiGrid', S.ui, (i) => `${i.name.replace(/-/g, ' ')} · ${i.w}×${i.h}`);
+stills('cardGrid', DATA.shop.cards);
+stills('shopIconGrid', DATA.shop.icons, (i) => i.name.replace(/-/g, ' '));
 stills('iconGrid', S.icons, (i) => i.name.replace('REVIEW-', '').replace(/-/g, ' '), (i) => i.name.startsWith('REVIEW-'));
 
 if (!reduce) setInterval(() => actors.forEach((a) => a.tick()), 110);

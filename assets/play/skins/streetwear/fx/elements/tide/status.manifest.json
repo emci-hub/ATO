@@ -1,0 +1,45 @@
+{
+ "app": "PixelLab VFX Creator",
+ "name": "SW tide status",
+ "fps": 10,
+ "frame_ms": 100,
+ "frames": 12,
+ "loop": true,
+ "canvas": {
+  "w": 36,
+  "h": 61
+ },
+ "anchor": {
+  "kind": "feet",
+  "x": 17,
+  "y": 52
+ },
+ "clips": [
+  {
+   "name": "part-freeze_status",
+   "title": "the freeze status part",
+   "part": "freeze_status",
+   "depth": "both",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 12,
+   "frame": {
+    "w": 30,
+    "h": 37
+   },
+   "sheets": [
+    {
+     "file": "part-freeze_status.png",
+     "first_frame": 0,
+     "frames": 12,
+     "columns": 4,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -14,
+    "y": -31
+   }
+  }
+ ]
+}

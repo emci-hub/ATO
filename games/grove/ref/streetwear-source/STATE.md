@@ -145,5 +145,13 @@ Also: neon-viper, raven, sak 6f533186-1cc0-4fed-bbe1-2e00cf23cfed (E/W/N, then S
 Attack/Skill triage (most spikes are intended slash/flash FX). Real off-model frames, NOT yet fixed (await emci's ok, ~4 gen each = re-run that facing with the same move text): kitsune Attack N f5 (both katanas vanish), morwen Skill W f5-7 (turns to camera), sak Attack W f5-6 (turns to camera).
 Free frame fix: raven Attack south frame_005 (smudged dark) replaced by frame_000 (stance); original kept in rejected/v1-frames/.
 
+## BATCH 5 (2026-10-11, emci: attack fixes + element effects + rarity/icons + aura layers "fix so it looks good")
+Balance before: 4,613; after: 4,582 (31).
+Attack fixes (custom v3 8f, same move text + "stays facing"): kitsune Attack N AttackFix 74a20683-62c0-41e0-9871-f51460f65bb5; morwen Skill W SkillFix 7f41abd2-514a-4c8f-a978-f420fbcf26df; sak Attack W AttackFix da330864-88a7-4458-a35c-9bc7f533aa68. Originals in rejected/v1-frames/<hero>-<clip>-<dir>/.
+VFX (free, vfx_workbench, all saved to emci's PixelLab My effects as "SW <element> <kind>" / "SW aura <style>" / "SW rarity shine"): 29 element effects (plain has no status; root status is a one-shot snare, TexturePacker json) + 4 auras (game packs: behind/front) + shine. Tools: scratchpad fxget.sh (sheet+json), fxpart.sh (--part piece), fxpack.sh (--game-pack behind/front).
+Status loops were made around the village-girl creep (character:8da68657…:east) so they hug a 64px body; exported effect-only.
+Rarity frame base 0db9eee4-69f3-47fe-bb14-fb104e310c18 (10) → 5 tiers by local palette map (scratchpad gradmap.js). Icons object 4dda15c1-951d-466f-ac1e-146afd70a112 (10), 16 picks all kept (new object ids listed in select result; files fetched from objects/<id>/rotations/unknown.png).
+Theme plan: ATO-streetwear-theme-plan.md never existed on disk (only named in a pasted prompt 2026-10-10); a new wiring plan is written to docs/streetwear-wiring-plan.md.
+
 ## Clip names (template → saved clip folder)
 breathing-idle→Idle, walking-8-frames→Walk, running-8-frames→Dash, cross-punch→Attack, fireball→Skill, taking-punch→Hurt. East + West only.

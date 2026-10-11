@@ -1,0 +1,145 @@
+{
+ "app": "PixelLab VFX Creator",
+ "name": "SW aura blaze",
+ "fps": 8,
+ "frame_ms": 125,
+ "frames": 8,
+ "loop": true,
+ "canvas": {
+  "w": 70,
+  "h": 102
+ },
+ "anchor": {
+  "kind": "feet",
+  "x": 35,
+  "y": 87
+ },
+ "clips": [
+  {
+   "name": "whole",
+   "title": "the whole effect, no sprite",
+   "depth": "both",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 8,
+   "frame": {
+    "w": 64,
+    "h": 98
+   },
+   "sheets": [
+    {
+     "file": "whole.png",
+     "first_frame": 0,
+     "frames": 8,
+     "columns": 3,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -32,
+    "y": -86
+   }
+  },
+  {
+   "name": "whole-with-sprite",
+   "title": "the whole effect with the sprite in it",
+   "depth": "both",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 8,
+   "frame": {
+    "w": 64,
+    "h": 98
+   },
+   "sheets": [
+    {
+     "file": "whole-with-sprite.png",
+     "first_frame": 0,
+     "frames": 8,
+     "columns": 3,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -32,
+    "y": -86
+   }
+  },
+  {
+   "name": "behind",
+   "title": "everything behind the sprite",
+   "depth": "behind",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 8,
+   "frame": {
+    "w": 64,
+    "h": 98
+   },
+   "sheets": [
+    {
+     "file": "behind.png",
+     "first_frame": 0,
+     "frames": 8,
+     "columns": 3,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -32,
+    "y": -86
+   }
+  },
+  {
+   "name": "front",
+   "title": "everything in front of the sprite",
+   "depth": "front",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 8,
+   "frame": {
+    "w": 37,
+    "h": 62
+   },
+   "sheets": [
+    {
+     "file": "front.png",
+     "first_frame": 0,
+     "frames": 8,
+     "columns": 3,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -18,
+    "y": -61
+   }
+  },
+  {
+   "name": "part-flame_aura",
+   "title": "the flame aura part",
+   "part": "flame_aura",
+   "depth": "both",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 8,
+   "frame": {
+    "w": 64,
+    "h": 98
+   },
+   "sheets": [
+    {
+     "file": "part-flame_aura.png",
+     "first_frame": 0,
+     "frames": 8,
+     "columns": 3,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -32,
+    "y": -86
+   }
+  }
+ ]
+}

@@ -1,0 +1,339 @@
+{
+ "frames": [
+  {
+   "filename": "sw-ember-burst 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 1.png",
+   "frame": {
+    "x": 80,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 2.png",
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 3.png",
+   "frame": {
+    "x": 240,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 4.png",
+   "frame": {
+    "x": 0,
+    "y": 87,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 5.png",
+   "frame": {
+    "x": 80,
+    "y": 87,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 6.png",
+   "frame": {
+    "x": 160,
+    "y": 87,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 7.png",
+   "frame": {
+    "x": 240,
+    "y": 87,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 8.png",
+   "frame": {
+    "x": 0,
+    "y": 174,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 9.png",
+   "frame": {
+    "x": 80,
+    "y": 174,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 10.png",
+   "frame": {
+    "x": 160,
+    "y": 174,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-ember-burst 11.png",
+   "frame": {
+    "x": 240,
+    "y": 174,
+    "w": 80,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 80,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5375,
+    "y": 0.6206896551724138
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "sw-ember-burst.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 320,
+   "h": 261
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 43,
+   "y": 54
+  },
+  "frameTags": [
+   {
+    "name": "sw-ember-burst",
+    "from": 0,
+    "to": 11,
+    "direction": "forward"
+   }
+  ]
+ }
+}
