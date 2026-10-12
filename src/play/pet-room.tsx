@@ -167,9 +167,14 @@ export type RoomSpeech = { text: string; key: number } | null;
  * whole street floor (bowl, boombox, manhole) shows; the pet, nameplate, speech
  * and spots all read this same origin, so they stay aligned.
  */
+/** Street room window in plate art px: the string lights (top) to the floor's
+ * last row (bottom, under the art's empty bottom border). */
+const STREET_ROOM_TOP = 138;
+const STREET_ROOM_BOTTOM = 414;
+
 function roomOrigin(width: number, height: number) {
   const base = placePlate(width, height, MOCKUP_ROOM.feet, NAME_RESERVE);
-  return streetUiOn() ? { ...base, top: height - MOCKUP_PLATE.h * ART_PT } : base;
+  return streetUiOn() ? { ...base, top: height - STREET_ROOM_BOTTOM * ART_PT } : base;
 }
 
 function RoomBackdrop({
@@ -415,10 +420,15 @@ export function PetRoom({
     playHit.current();
   }, [fxAnimate, juiceKey]);
   useFinishLease((pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') && pet.finish_color != null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [real, setReal] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
-    setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
-  const { width, height } = size;
+    setReal({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
+  // Streetwear: the tall street room is scaled to fit the stage (art, pet,
+  // plates and spots together) so it shows from the string lights to the floor.
+  const roomScale =
+    streetUiOn() && real.height > 0 ? Math.min(1, real.height / ((STREET_ROOM_BOTTOM - STREET_ROOM_TOP) * ART_PT)) : 1;
+  const width = real.width / roomScale;
+  const height = real.height / roomScale;
 
   const art = usePetArt(pet);
   const away = status === 'away';
@@ -678,6 +688,19 @@ export function PetRoom({
       </View>
 
       <View style={styles.stage} onLayout={onLayout}>
+      <View
+        style={
+          roomScale < 1
+            ? {
+                position: 'absolute',
+                width,
+                height,
+                left: (real.width - width) / 2,
+                top: (real.height - height) / 2,
+                transform: [{ scale: roomScale }],
+              }
+            : StyleSheet.absoluteFill
+        }>
       {width > 0 ? <RoomBackdrop width={width} height={height} alive={fxAnimate} /> : null}
       {width > 0 && streetSpots && streetUiOn() && !picking ? (
         <StreetRoomSpots left={origin.left} top={origin.top} still={!fxAnimate} {...streetSpots} />
@@ -856,6 +879,7 @@ export function PetRoom({
           ) : null}
         </Animated.View>
       ) : null}
+      </View>
       </View>
 
       <View style={styles.coachSlot}>
