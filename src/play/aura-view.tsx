@@ -197,7 +197,9 @@ export function PetAura({
   /** `back` is the aura. `front` is the blaze sparks, outside the sprite. */
   layer: 'back' | 'front';
 }) {
-  const frozen = usePlayMotion().cosmeticsStill || useFxQuality() !== 'full';
+  const motionFlags = usePlayMotion();
+  const fxQuality = useFxQuality();
+  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
   const [pack, setPack] = useState<AuraPack | null>(null);
   const [tick, setTick] = useState(0);
   const frameKey =
@@ -358,7 +360,9 @@ export function PetAuraSprite({
   box: number;
   layer: 'back' | 'front';
 }) {
-  const frozen = usePlayMotion().cosmeticsStill || useFxQuality() !== 'full';
+  const motionFlags = usePlayMotion();
+  const fxQuality = useFxQuality();
+  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
   const meta = STREETWEAR_META.auras[styleId];
   const which = layer === 'back' ? 'behind' : 'front';
   const [pack, setPack] = useState<SpritePack | null>(null);
@@ -420,7 +424,9 @@ export function HideoutAuraStrip({
   layer: 'back' | 'front';
   box: number;
 }) {
-  const frozen = usePlayMotion().cosmeticsStill || useFxQuality() !== 'full';
+  const motionFlags = usePlayMotion();
+  const fxQuality = useFxQuality();
+  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
   const which = layer === 'back' ? 'behind' : 'front';
   const name = styleId === 'blaze' ? `blaze-84-${which}` : `bubbles-outlined-${which}`;
   const sheetKey = `sheets/streetwear/hideout-fx/${name}`;

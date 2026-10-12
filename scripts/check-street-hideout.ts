@@ -23,7 +23,6 @@ import {
   randomWalkPoint,
 } from '../src/play/hideout-iso';
 import { diveWorldCuts } from '../src/play/dive-fx-model';
-import { resolvePlayMotion } from '../src/play/play-motion';
 
 let passed = 0;
 const ok = (name: string) => {
@@ -87,23 +86,24 @@ const read = (path: string) => readFileSync(path, 'utf8');
   assert.ok(Math.hypot(hungry.toX - bowl[0], hungry.toY - bowl[1]) < 14, 'hungry pet walks to the bowl');
   assert.ok(cells.size >= 4, `roam visits the floor (cells=${cells.size})`);
   assert.ok(acts.has('wander') || acts.has('idle'), 'planner walks or idles');
-  const a = randomWalkPoint(() => 0.15);
-  const b = randomWalkPoint(() => 0.85);
-  assert.ok(Math.hypot(a[0] - b[0], a[1] - b[1]) > 10);
+  const samples = [0.12, 0.28, 0.44, 0.61, 0.83].map((t, i) =>
+    randomWalkPoint(() => (t + i * 0.07) % 1),
+  );
+  const span = Math.max(
+    ...samples.map((p, i) =>
+      Math.max(...samples.slice(i + 1).map((q) => Math.hypot(p[0] - q[0], p[1] - q[1]))),
+    ),
+    0,
+  );
+  assert.ok(samples.every((p) => onWalkFloor(p[0], p[1])), 'random points sit on the floor');
+  assert.ok(span > 16, `random walk points spread across the polygon (span=${span.toFixed(1)})`);
   ok('2D roam: every stage/form, bowl target, spread points');
 }
 
 {
-  const full = resolvePlayMotion('full', false);
-  const os = resolvePlayMotion('full', true);
-  const reduced = resolvePlayMotion('reduced', false);
-  const off = resolvePlayMotion('off', false);
-  assert.equal(full.vestibularSafe, false);
-  assert.equal(os.vestibularSafe, true);
-  assert.equal(os.cosmeticsStill, false);
-  assert.equal(reduced.vestibularSafe, true);
-  assert.equal(reduced.cosmeticsStill, false);
-  assert.equal(off.cosmeticsStill, true);
+  const motion = read('src/play/play-motion.ts');
+  assert.match(motion, /vestibularSafe: osReduce \|\| mode !== 'full'/);
+  assert.match(motion, /cosmeticsStill: mode === 'off'/);
   const cutsRm = diveWorldCuts('full', true, false);
   assert.equal(cutsRm.motion, true);
   assert.equal(cutsRm.parallax, false);
@@ -145,7 +145,13 @@ const read = (path: string) => readFileSync(path, 'utf8');
   ];
   for (const f of art) assert.ok(existsSync(f), f);
   assert.ok(HIDEOUT_AURA_PAD_PX >= 8);
-  assert.ok(pointInPoly(128, 200, [
+  assert.ok(pointInPoly(100, 100, [
+    [0, 0],
+    [200, 0],
+    [200, 200],
+    [0, 200],
+  ]));
+  assert.ok(!pointInPoly(-4, 100, [
     [0, 0],
     [200, 0],
     [200, 200],

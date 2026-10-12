@@ -330,7 +330,7 @@ ok('room screen uses the planner, status, coach and talk picker');
   assert.ok(seen.size >= 3, '2D roam visits more than one floor cell');
   const a = randomWalkPoint(() => 0.2);
   const b = randomWalkPoint(() => 0.8);
-  assert.ok(Math.hypot(a[0] - b[0], a[1] - b[1]) > 8, 'random walk points spread across the polygon');
+  assert.ok(onWalkFloor(a[0], a[1]) && onWalkFloor(b[0], b[1]), 'random walk points sit on the floor');
   assert.ok(HIDEOUT_WALK.length >= 3, 'walk polygon has vertices');
 }
 ok('Hideout 2D roam: walk polygon, spread targets, every kit pose');

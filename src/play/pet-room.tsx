@@ -507,27 +507,26 @@ export function PetRoom({
   const faceRef = useRef<PetFace>('e');
   const tapUntilRef = useRef(0);
 
-  const playBounce = (amount: number, ms: number, hopAct: boolean) => {
-    cancelAnimation(hop);
-    if (amount > 0) {
-      const hops = Math.max(1, Math.round(ms / 360));
-      hop.value = withRepeat(
-        withSequence(
-          withTiming(-amount, { duration: 180, easing: Easing.out(Easing.quad) }),
-          withTiming(0, { duration: 180, easing: Easing.in(Easing.quad) }),
-        ),
-        hops,
-      );
-    } else if (hopAct) {
-      hop.value = withSequence(withTiming(-14, { duration: 200 }), withTiming(0, { duration: 260, easing: Easing.bounce }));
-    } else {
-      hop.value = withTiming(0, { duration: 150 });
-    }
-  };
-
   // The behaviour loop. Street Hideout: 2D roam on the walk polygon (every
   // kit / stage / skin). Classic: the 0..1 rug. Walk unless Motion is Off.
   useEffect(() => {
+    const playBounce = (amount: number, ms: number, hopAct: boolean) => {
+      cancelAnimation(hop);
+      if (amount > 0) {
+        const hops = Math.max(1, Math.round(ms / 360));
+        hop.value = withRepeat(
+          withSequence(
+            withTiming(-amount, { duration: 180, easing: Easing.out(Easing.quad) }),
+            withTiming(0, { duration: 180, easing: Easing.in(Easing.quad) }),
+          ),
+          hops,
+        );
+      } else if (hopAct) {
+        hop.value = withSequence(withTiming(-14, { duration: 200 }), withTiming(0, { duration: 260, easing: Easing.bounce }));
+      } else {
+        hop.value = withTiming(0, { duration: 150 });
+      }
+    };
     if (width <= 0 || away || egg) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let alive = true;

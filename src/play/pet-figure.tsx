@@ -198,7 +198,7 @@ export function PetFigure({
               layer="front"
             />
             ),
-          )}
+          )
         : blaze ? (
             <PetAura drawable={drawable} styleId="blaze" element={auraElementOf(blaze.color, sword)} box={box} layer="front" />
           ) : null}

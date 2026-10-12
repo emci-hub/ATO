@@ -22,12 +22,10 @@ import { GRADE_LABEL, WARMTH_MAX, type Grade } from '@/play/pet-eggs';
 import {
   HIDEOUT_DECALS,
   HIDEOUT_LIGHTS,
-  HIDEOUT_NIGHT,
   HIDEOUT_SPOTS,
   hideoutLabelAnchor,
   type HideoutScale,
   type HideoutSpot,
-  type HideoutSpotId,
 } from '@/play/hideout-iso';
 import { PIXEL_FONT } from '@/play/pixel-theme';
 import { ClipImage } from '@/play/sheet-sprite';

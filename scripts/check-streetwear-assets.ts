@@ -38,7 +38,7 @@ const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEE
 const sheets = JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
 const swSheets = Object.entries(sheets).filter(([k]) => k.startsWith('sheets/streetwear/'));
 for (const [key, entry] of swSheets) {
-  if (key.endsWith('/rotations') || /\/(fx|auras|swords|ui-kit|board)\//.test(key)) continue;
+  if (key.endsWith('/rotations') || /\/(fx|hideout-fx|auras|swords|ui-kit|board)\//.test(key)) continue;
   const dirs = new Set(Object.keys(entry.frames).map((f) => f.split('/')[0]));
   for (const d of dirs) assert.ok(d === 'east' || d === 'west', `${key} ships a "${d}" row`);
 }

@@ -70,7 +70,6 @@ import { StopAmbience, StreetUndergroundWorld, SubwayDoors } from '@/play/dive-s
 import { streetFindName, streetStop } from '@/play/dive-street-names';
 import { hideoutIntegerScale, hideoutPetBox } from '@/play/hideout-iso';
 import { usePlayMotion } from '@/play/play-motion';
-import { sharpPetBox } from '@/play/pet-actor';
 import { alertHaptic, rewardHaptic } from '@/play/street-feel';
 import { streetUiOn } from '@/play/street-ui';
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
