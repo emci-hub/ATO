@@ -57,8 +57,9 @@ Characters/pets: `create_character` (+ `create_character_state`, `animate_charac
   check every asset; prompt "purely pictorial with zero writing"; fix by inpaint or recolour.
 
 ## 4. Gotchas we hit (save generations)
-- `create_image_pixflux` `init_image_strength` = how much of the init image to **keep**:
-  ~80–150 = layout guide, 400+ copies the greybox almost unchanged.
+- `init_image_strength` = how much of the init image to **keep**. PixelLab's guide: 0–300 rough
+  colour, 300–400 rough shapes, 400–600 variations of an existing image, 600–900 detail tweaks. For a
+  flat greybox used only as a layout guide we got real art at ~80–150; 400+ copied the greybox.
 - Standard Wang tilesets are 16 or 32 px only; `mode: "pro"` allows 64.
 - A tileset can ignore direction words ("horizontal planks") — the building-kit floor did better.
 - "hoodie"/"person-ish" words can spawn a character inside a prop — say "empty, no person".
@@ -79,7 +80,89 @@ Characters/pets: `create_character` (+ `create_character_state`, `animate_charac
 - Sample first, stop for approval, then build. No commit/PR/OTA of art without approval.
 - Report generations used and remaining (`get_balance`).
 
-## 7. Staying current
+## 7. Every art request: library first, then the rule book
+Run these steps for any request, whether it's "make a new hero", "edit the couch" or "add a glow":
+1. **Check the library.** Is there already an asset or a close one?
+   - Library location: the sorted art library + registry (being organised by Cursor; **update this
+     line with its path when it lands**). Until then: heroes `assets/play/skins/streetwear/heroes/<slug>/`
+     (rotations + animations), packed sheets `assets/play/sheets/streetwear/*`, sources
+     `games/grove/ref/*-source/`, UI kit `assets/play/sheets/streetwear/ui-kit/`.
+   - Found and fits → reuse it. Found but not quite → **edit** it (step 3). Not found → **create** (step 3).
+2. **Pick the style anchors** for that type (§9): 2–10 approved assets of the same kind. Every
+   generation passes them as style references, and every result is checked against them side by side.
+3. **Follow the recipe** for the type in §8. Edits never regenerate from scratch: they change the
+   existing asset (identity and style drift come from regenerating).
+4. **Clean up and lock:** `reduce_colors` with `docs/art/palette-streetwear-night.png` (all frames
+   together), `pixelart_workbench repair` + `score` (≥ 90), no fake text.
+5. **Show emci a sample** (side by side with the anchors / the old version, phone size), then save:
+   raw source + settings (tool, prompt, seed, sizes, generations) in the library registry.
+
+## 8. Recipes by asset type
+### Heroes and pets (characters)
+- **New:** draw the south-facing sprite first with style references (`create_image_pro`
+  reference_images = 2–4 approved heroes, 128 canvas), pick the best, then rotate it into 8
+  directions with `create_character` mode `v3` + `reference_image_url` (2–9 gens). Alternative:
+  `create_character` mode `pro` with `style_character_id` = an approved hero (10–25 gens).
+  View `low top-down`; south must be straight-on (a ¾ turn offsets every direction).
+- **Edit (look/outfit/accessory):** `edit_image` (Pro) "with reference" or "with text" on the existing
+  frame; across an animation use Edit animation (Pro) or `transfer_outfit`. Never re-create the hero.
+- **Growth stages:** derive each stage from the previous one (edit/inpaint, same seed) and keep 2–3
+  identifiers (palette core, signature shape, eye style). Size is shown by code, not new art.
+- **Animations:** `animate_character` / `animate_with_skeleton_v3` (skeleton keeps identity better than
+  templates at 128). Walk 6–8 frames at 100–150 ms, idle 2–4 frames at 200–400 ms. After the first
+  good frame, **set it as the reference** for every further batch (PixelLab's consistency rule).
+  Canvas sizes for skeleton tools: 16/32/64/128/256 only. Pad every frame of a hero onto one square
+  canvas with feet aligned (existing pipeline: 192 cell, no cropping). Mirror west↔east.
+- Pets that are animals: `body_type: quadruped` + template (cat, dog, bear, horse, lion).
+
+### Props and objects
+- Static prop in a room: `create_map_object` (view `low top-down`, outline `selective outline`,
+  shading `medium shading`, detail `medium detail`) at the ladder size. To match existing props
+  exactly use `create_1_direction_object` with `style_images` (approved props) — small canvases give
+  more candidates per generation.
+- Needs to face different walls: `create_8_direction_object` (style_object_id = an approved one).
+- States (on/off, open/closed, used/new): `create_object_state` from the base object — same
+  object, so it never drifts. Idle loops: `animate_object` mode `v3`.
+- Wall items (posters, signs, tags): front-on, flat, "purely pictorial with zero writing".
+
+### Effects (VFX)
+- `vfx_workbench` (free): start with `--sprite` = the hero/prop it belongs to; export spritesheet.
+- Ground effects (auras, rings, dust) are flat ellipses under the feet; body effects float.
+- Timing: fast start, slow fade (impact ~6 frames ≈ 0.5 s). Max two neon hues; no black outlines on
+  glows. Every effect needs a Reduce Motion version (gentle, no flashing).
+- Animating a still image (sign buzz, screen loop): Animate with text (new) — 64 px: 4/8/16 frames =
+  1/2/3 gens; 128 px: 3/5/9 gens; frame count must be even; first frame is kept.
+
+### Rooms, floors, walls
+- §1 order: building kit → tilesets (chain `lower_base_tile_id`/`upper_base_tile_id` so terrains
+  match) → map objects → states → light layer. Tiles 32 px.
+
+### UI
+- Check the Streetwear UI kit first (`assets/play/sheets/streetwear/ui-kit/`). New pieces:
+  `create_ui_asset` (1 gen, ≤ 400×400 on Tier 2) with the kit pieces as init/reference; 9-slice by
+  hand after. Icons 16/32 px, ≥ 1 px dark outline, readable on light and dark, info never by colour alone.
+
+### Fixing part of anything
+- Small area: `inpaint_image` (mask only the bad region; describe the whole visible area).
+- Whole-image instruction ("add a hat", "remove the text"): `edit_image`.
+- Many frames: Edit animation (Pro). Never regenerate a whole asset to fix one part.
+
+## 9. Style anchors (anti-drift)
+Keep 5–10 approved, cleaned, native-size assets per type as the reference set (never upscaled
+copies). **Fill these lists from the sorted library when it lands:**
+- Heroes: kael (scale reference), sak, raven, … (from `heroes/`)
+- Room props: Hideout pipeline test props (couch, lamp, plant, speaker, arcade, rug, table, beanbag,
+  shoebox, skateboard, hatch, flowers, window, crown sign)
+- VFX: hideout-fx blaze / outlined bubbles
+- UI: Streetwear ui-kit panels, buttons, nav icons
+Same outline/shading/detail strings per type every time (the "style card"):
+| Type | outline | shading | detail | view |
+|---|---|---|---|---|
+| Room props | selective outline | medium shading | medium detail | low top-down |
+| Neon signs / tags | lineless | flat shading | medium detail | low top-down |
+| Heroes / pets | match the anchors (dark single-colour outline) | — | — | low top-down |
+
+## 10. Staying current
 `npm run pixellab:watch` downloads PixelLab's public docs, compares them with
 `docs/art/pixellab-snapshot.json`, and prints what changed (new/removed endpoints, changed
 parameters, changed doc sections). It never edits this guide. A weekly scheduled task runs it; when
