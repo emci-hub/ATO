@@ -40,15 +40,41 @@ Characters/pets: `create_character` (+ `create_character_state`, `animate_charac
 | VFX | 64 / 128 | |
 | UI icons, emotes | 16 / 32 | |
 
-- **Open conflict (2026-10-12):** the merged Hideout code (#27, `src/play/hideout-iso.ts`) still uses
-  a 264×576 room, a 12 px grid and the hero at 1/2 scale (~53 px). emci approved this ladder instead.
-  Do not build room art for either size until emci picks (`docs/art/size-conflict-compare.png`).
+- **Decided (emci 2026-10-12): option A** — this ladder, hero 1:1 (`docs/art/size-conflict-compare.png`).
+  The merged Hideout code (#27, `src/play/hideout-iso.ts`: 264×576, 12 px grid, hero ×1/2 ≈ 53 px)
+  still has to be converted to it; until then build art for A, never for the old values.
 - Heroes and pets: character canvas 128, shown **1:1, never rescaled** (uneven scaling breaks
-  pixels). Grown figure ≈ 101–111 px (~104). Feet on one floor line. Younger stages shrink in code.
-- Inside its canvas a prop keeps real-world size vs the grown hero (H ≈ 104 px ≈ 1.75 m):
-  couch seat ≈ knee (0.28H), table ≈ 0.25H, sill ≈ 0.55H, speaker ≈ 0.6H, lamp ≈ 0.85–1.5H,
-  arcade ≈ 1.0–1.1H, door ≈ 1.25H. Props never scale with the pet's growth stage.
+  pixels). Grown figure ≈ 101–111 px (~106). Feet on one floor line. Younger stages shrink in code.
 - Small canvases are cheaper per idea: ≤42 px returns 64 candidates, ≤85 → 16, ≤170 → 4.
+
+### Scale consistency (rule for every new or edited asset)
+The **scale reference** is the fully grown hero (kael, H ≈ 106 px ≈ 1.75 m). Everything in the world
+(props, tiles, doors, effects, in-world UI) is sized against H as a real object would be, then drawn
+at that size natively — never stretched afterwards. Props never scale with the pet's growth stage.
+
+In 3/4 low top-down you see the front AND half the top, so a sprite's box is
+**height + ½ depth** tall (real sizes ÷ 1.75 m × H). Measure the sprite's opaque box, not the canvas.
+
+| Object | Real size (h × w × d, m) | Sprite box (w × h, px at H=106) |
+|---|---|---|
+| Couch / sofa | 0.85 × 2.0 × 0.9 | 121 × 79 (seat ≈ knee) |
+| Bed | 0.55 × 1.0 × 2.0 (long side down) | 61 × 94 |
+| Beanbag | 0.6 × 0.8 × 0.8 | 48 × 60 |
+| Coffee table | 0.45 × 1.1 × 0.6 | 67 × 45 |
+| Speaker (floor) | 1.0 × 0.3 × 0.35 | 18 × 71 |
+| Floor lamp | 1.7 × 0.4 (shade) | 24 × 113 |
+| Arcade cabinet | 1.8 × 0.7 × 0.8 | 42 × 133 |
+| Plant (floor pot) | 1.0 × 0.5 × 0.5 | 30 × 75 |
+| Door (on the wall, flat) | 2.0 × 0.9 | 55 × 121 |
+| Window sill height | 0.95 above floor | sill at 58 |
+| Floor tile | — | 32 × 32 |
+
+- **Scale sheet before approval:** every new or edited asset is shown to emci standing next to the
+  scale-reference hero (same 1:1 pixels, feet on one line, the target box from the table drawn in).
+  More than ±10 % off the table = regenerate at the right canvas size (don't stretch). Example:
+  `docs/art/scale-sheet-hideout-test.png` (the first test-room props: couch, table, lamp, arcade,
+  plant came out too small).
+- Not in the table? Use the real-world size ÷ 1.75 m × H, and add the row here.
 
 ## 3. Camera and style (locked)
 - 3/4 **low top-down**, orthographic: tops and fronts only, no side faces, no vanishing points,
@@ -98,19 +124,34 @@ Run these steps for any request, whether it's "make a new hero", "edit the couch
      dungeon-legends, scribble, classic, kenney/craftpix, Expo leftovers) in a streetwear screen, even
      when their status says `resource` (the `needs-restyle` status exists but isn't applied yet, so go
      by set name); regenerate them here with `replaces` instead.
+   - Look in the skeleton too (`src/art/skeletons.ts`, generated `SHEET` / `ROOM` / `ART` in
+     `src/art/generated-art.ts`): which slots does this kind need, and which are already filled?
+   - **Recommend before making anything:** show emci what the library already has that could work
+     (picture + id + status), with a pick: reuse as is / edit it / make new. Then follow emci's choice.
    - Found and fits → reuse it. Found but not quite → **edit** it (step 3). Not found → **create** (step 3).
 2. **Pick the style anchors** for that type (§9): 2–10 approved assets of the same kind. Every
    generation passes them as style references, and every result is checked against them side by side.
 3. **Follow the recipe** for the type in §8. Edits never regenerate from scratch: they change the
    existing asset (identity and style drift come from regenerating).
 4. **Clean up and lock:** `reduce_colors` with `docs/art/palette-streetwear-night.png` (all frames
-   together), `pixelart_workbench repair` + `score` (≥ 90), no fake text.
-5. **Show emci a sample** (side by side with the anchors / the old version, phone size). After emci's
-   ok, save it into the library: `npm run art:import -- --from … --id …` (raw + `gen.json` to
+   together), `pixelart_workbench repair` + `score` (≥ 90), no fake text, and the **scale check** (§2).
+5. **Show emci a sample** (side by side with the anchors / the old version, phone size, plus the
+   scale sheet). After emci's ok, save it into the library: `npm run art:import -- --from … --id …` (raw + `gen.json` to
    `art-src/`), `npm run art:pack -- --id …`, then `npm run art:sync` and commit the generated files
    (the pre-commit hook does this; never hand-edit `registry.json` / `ART_LIBRARY.md`). A new version
-   points at the old one with `replaces`. Code reads art through the typed tree (`ART.room.<room>.<part>`,
-   `HERO.<hero>.idle`), never an id string or a loose path. Status starts `candidate`; only emci sets `approved`.
+   points at the old one with `replaces`. Code reads art through the skeletons (`ROOM.<room>.<slot>`,
+   `SHEET.<family>.<item>.<slot>`, `HERO.<hero>.idle`) or the typed tree (`ART.<kind>.<set>…`), never an
+   id string or a loose path. Status starts `candidate`; only emci sets `approved`.
+6. **Keep the library current — every time, in the same change:**
+   - **New:** import + pack + sync (step 5). A new part that fits no skeleton slot stops the sync: add
+     the slot to `src/art/skeletons.ts` (and say so in the report) or rename the art.
+   - **Edit:** import the new version with `replaces: <old id>`; the old one goes `unused/` and stays as
+     history. Never overwrite a file in place.
+   - **Remove:** tag it `remove` in the viewer (exports `art-decisions.json`), then
+     `npm run art:apply-decisions -- --apply` — files go to `art-src/art-trash/`, never hard-deleted.
+   - **Started or stopped using one:** just `npm run art:sync` (the hook does it) — in-use / unused
+     folders and `usedBy` follow the code.
+   - Report what was added / replaced / archived in the task report.
 
 ## 8. Recipes by asset type
 ### Heroes and pets (characters)
