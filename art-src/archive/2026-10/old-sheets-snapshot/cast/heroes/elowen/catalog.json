@@ -1,0 +1,61 @@
+{
+  "hero": "elowen",
+  "actions": {
+    "Crescent_Bloom": {
+      "sheetKey": "sheets/cast/heroes/elowen/Crescent_Bloom",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.8984
+    },
+    "Forest_Idle": {
+      "sheetKey": "sheets/cast/heroes/elowen/Forest_Idle",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.7891
+    },
+    "Moonlit_Walk": {
+      "sheetKey": "sheets/cast/heroes/elowen/Moonlit_Walk",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.7656
+    },
+    "Nature_Slash": {
+      "sheetKey": "sheets/cast/heroes/elowen/Nature_Slash",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.7813
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/elowen/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "idle": "Forest_Idle",
+    "walk": "Moonlit_Walk",
+    "attack": "Nature_Slash"
+  }
+}

@@ -58,6 +58,15 @@ const NEUTRAL: RegExp[] = [
   /^\.gitignore$/,
   /^\.expo\//,
   /^\.vscode\//,
+  /^src\/art\//,                    // shared art library
+  /^assets\/art\//,
+  /^art-src\//,
+  /^scripts\/art-/,
+  /^scripts\/check-art-/,
+  /^tools\/art-viewer\//,
+  /^metro\.config\.js$/,
+  /^app\.json$/,
+  /^eslint\.config\.js$/,
 ];
 
 const APP: RegExp[] = [

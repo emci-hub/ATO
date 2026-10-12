@@ -1,0 +1,318 @@
+{
+  "sheets/streetwear/towers/viper/Attack": {
+    "sheet": "sheets/streetwear/towers/viper/atlas-0.png",
+    "sheetW": 1895,
+    "sheetH": 947,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_001": {
+        "x": 237,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_002": {
+        "x": 474,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_003": {
+        "x": 711,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_004": {
+        "x": 948,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_005": {
+        "x": 1185,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_006": {
+        "x": 1422,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_007": {
+        "x": 1659,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_001": {
+        "x": 237,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_002": {
+        "x": 474,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_003": {
+        "x": 711,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_004": {
+        "x": 948,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_005": {
+        "x": 1185,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_006": {
+        "x": 1422,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_007": {
+        "x": 1659,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      }
+    }
+  },
+  "sheets/streetwear/towers/viper/Idle": {
+    "sheet": "sheets/streetwear/towers/viper/atlas-0.png",
+    "sheetW": 1895,
+    "sheetH": 947,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 474,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_001": {
+        "x": 237,
+        "y": 474,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_002": {
+        "x": 474,
+        "y": 474,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_003": {
+        "x": 711,
+        "y": 474,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 711,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_001": {
+        "x": 237,
+        "y": 711,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_002": {
+        "x": 474,
+        "y": 711,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_003": {
+        "x": 711,
+        "y": 711,
+        "w": 236,
+        "h": 236
+      }
+    }
+  },
+  "sheets/streetwear/towers/viper/Skill": {
+    "sheet": "sheets/streetwear/towers/viper/atlas-1.png",
+    "sheetW": 1895,
+    "sheetH": 473,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_001": {
+        "x": 237,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_002": {
+        "x": 474,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_003": {
+        "x": 711,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_004": {
+        "x": 948,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_005": {
+        "x": 1185,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_006": {
+        "x": 1422,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east/frame_007": {
+        "x": 1659,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_001": {
+        "x": 237,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_002": {
+        "x": 474,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_003": {
+        "x": 711,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_004": {
+        "x": 948,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_005": {
+        "x": 1185,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_006": {
+        "x": 1422,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      },
+      "west/frame_007": {
+        "x": 1659,
+        "y": 237,
+        "w": 236,
+        "h": 236
+      }
+    }
+  },
+  "sheets/streetwear/towers/viper/rotations": {
+    "sheet": "sheets/streetwear/towers/viper/atlas-2.png",
+    "sheetW": 1895,
+    "sheetH": 236,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "north-east": {
+        "x": 237,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "east": {
+        "x": 474,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "south-east": {
+        "x": 711,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "south": {
+        "x": 948,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "south-west": {
+        "x": 1185,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "west": {
+        "x": 1422,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      },
+      "north-west": {
+        "x": 1659,
+        "y": 0,
+        "w": 236,
+        "h": 236
+      }
+    }
+  }
+}

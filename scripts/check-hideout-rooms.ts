@@ -57,10 +57,10 @@ import {
   startDive,
   deeperDive,
 } from '../src/play/playStore';
-import hideoutMap from '../assets/play/rooms/hideout-td.map.json';
-import loftMap from '../assets/play/rooms/loft-td.map.json';
-import undergroundMap from '../assets/play/rooms/underground-td.map.json';
-import teaseLayout from '../assets/play/rooms/hideout-tease.json';
+import hideoutMap from '../assets/art/rooms/hideout/hideout-td.map.json';
+import loftMap from '../assets/art/rooms/loft/loft-td.map.json';
+import undergroundMap from '../assets/art/rooms/underground/underground-td.map.json';
+import teaseLayout from '../assets/art/rooms/hideout/hideout-tease.json';
 
 let passed = 0;
 const ok = (name: string) => {
@@ -281,27 +281,27 @@ const HOUR = 60 * 60 * 1000;
   assert.ok(teaseLayout.scaffold.pos[0] > teaseLayout.boarded.pos[0], 'scaffold leans outside to the right');
   assert.ok(teaseLayout.sign.pos[1] > teaseLayout.boarded.pos[1], 'sign sits in front of the boarded door');
   const art = readFileSync(path.join(ROOT, 'src/play/hideout-art.ts'), 'utf8');
-  assert.ok(art.includes('assets/play/rooms/loft-td-back.png'));
+  assert.ok(art.includes("png('room.loft.back')") || art.includes('room.loft.back'));
   assert.ok(art.includes('occludeDayA'));
   assert.ok(art.includes('HIDEOUT_ART_SWAP'));
   assert.ok(art.includes('sprite-smith-out'));
-  for (const f of [
-    'loft-td-back.png',
-    'loft-td-floor.png',
-    'loft-td-props.png',
-    'loft-td-occlude-day-a.png',
-    'loft-td-window-day.png',
-    'loft-td-window-night.png',
-    'loft-td-glow.png',
-    'boarded.png',
-    'tarp.png',
-    'scaffold.png',
-    'build-sign.png',
-    'zzz-0.png',
-    'zzz-1.png',
-    'zzz-2.png',
-  ]) {
-    assert.ok(existsSync(path.join(ROOT, 'assets/play/rooms', f)), f);
+  for (const [dir, f] of [
+    ['loft', 'loft-td-back.png'],
+    ['loft', 'loft-td-floor.png'],
+    ['loft', 'loft-td-props.png'],
+    ['loft', 'loft-td-occlude-day-a.png'],
+    ['loft', 'loft-td-window-day.png'],
+    ['loft', 'loft-td-window-night.png'],
+    ['loft', 'loft-td-glow.png'],
+    ['hideout', 'boarded.png'],
+    ['hideout', 'tarp.png'],
+    ['hideout', 'scaffold.png'],
+    ['hideout', 'build-sign.png'],
+    ['hideout', 'zzz-0.png'],
+    ['hideout', 'zzz-1.png'],
+    ['hideout', 'zzz-2.png'],
+  ] as const) {
+    assert.ok(existsSync(path.join(ROOT, 'assets/art/rooms', dir, f)), `${dir}/${f}`);
   }
   ok('tease is wall-mounted; placeholders are swappable in hideout-art.ts');
 }

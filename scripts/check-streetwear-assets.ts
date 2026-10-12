@@ -34,9 +34,16 @@ assert.deepEqual(loose, [], `loose Streetwear frames are bundled: ${loose.slice(
 ok(`only ${swKeys.length} small Streetwear stills are bundled by key (no loose frames)`);
 
 // 2 + 4. Sheets: E/W only, and every referenced frame exists.
-const sheetsSrc = fs.readFileSync(path.join(repo, 'src/play/generated-play-sheets.ts'), 'utf8');
-const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEETS:')), sheetsSrc.indexOf(' as const;'));
-const sheets = JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
+function loadPlaySheets(): Record<string, { sheet: string; frames: Record<string, unknown> }> {
+  const legacy = path.join(repo, 'assets/art/legacy-play-sheets.json');
+  if (fs.existsSync(legacy)) {
+    return JSON.parse(fs.readFileSync(legacy, 'utf8')) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
+  }
+  const sheetsSrc = fs.readFileSync(path.join(repo, 'src/play/generated-play-sheets.ts'), 'utf8');
+  const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEETS:')), sheetsSrc.indexOf(' as const;'));
+  return JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
+}
+const sheets = loadPlaySheets();
 const swSheets = Object.entries(sheets).filter(([k]) => k.startsWith('sheets/streetwear/'));
 const HERO_WALK = /^sheets\/streetwear\/heroes\/[^/]+\/Walk$/;
 const CARDINALS = new Set(['north', 'east', 'south', 'west']);
@@ -108,7 +115,9 @@ ok(`meta matches the sheets: ${Object.keys(meta.chars).length} characters, ${Obj
 // Clips share atlases, so count each image file once.
 const swFiles = new Set(swSheets.map(([, entry]) => entry.sheet));
 let bytes = 0;
-for (const file of swFiles) bytes += fs.statSync(path.join(repo, 'assets/play', file)).size;
+const sheetFilePath = (file: string) =>
+  file.startsWith('art/') ? path.join(repo, 'assets', file) : path.join(repo, 'assets/play', file);
+for (const file of swFiles) bytes += fs.statSync(sheetFilePath(file)).size;
 for (const k of swKeys) bytes += fs.statSync(path.join(repo, 'assets/play', `${k}.png`)).size;
 assert.ok(bytes <= BUDGET_BYTES, `Streetwear art is ${(bytes / 1048576).toFixed(1)} MB, over the ${BUDGET_BYTES / 1048576} MB budget`);
 ok(`Streetwear art ${(bytes / 1048576).toFixed(1)} MB (budget ${BUDGET_BYTES / 1048576} MB)`);

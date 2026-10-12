@@ -1,0 +1,86 @@
+# Art library: keep the registry + viewer in sync.
+#
+# PRs — verify only (do not auto-commit). Auto-commit races agent pushes,
+# needs write tokens, and can loop. Pre-commit + check:art-registry --fresh
+# already regenerate locally. If this job fails: npm run art:sync && commit.
+#
+# master — regenerate, upload library-portable.html as a workflow artifact,
+# and try GitHub Pages (emci must flip Settings → Pages → Source = GitHub Actions).
+name: Art library
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: art-library-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Regenerate registry + catalog
+        run: npm run art:sync
+      - name: Fail if generated files drifted
+        run: |
+          if ! git diff --exit-code -- assets/art/registry.json src/art/generated-art.ts assets/art/ART_LIBRARY.md assets/art/_contact tools/art-viewer/README.md assets/art/legacy-play-sheets.json src/play/generated-play-sheets.ts; then
+            echo "::error::Art library is stale. Run: npm run art:sync"
+            echo "Commit the generated files. Never hand-edit them."
+            git status --porcelain
+            exit 1
+          fi
+          extras=$(git ls-files --others --exclude-standard -- assets/art/_contact)
+          if [ -n "$extras" ]; then
+            echo "::error::Untracked catalog files after art:sync:"
+            echo "$extras"
+            exit 1
+          fi
+
+  publish:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run art:sync
+      - name: Upload portable viewer
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-portable
+          path: assets/art/_contact/library-portable.html
+      - name: Stage GitHub Pages
+        run: |
+          mkdir -p _site
+          cp assets/art/_contact/library-portable.html _site/index.html
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+        continue-on-error: true
+      - name: Deploy Pages
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+        id: pages
+      - name: Pages URL
+        if: steps.pages.outputs.page_url
+        run: echo "Viewer ${{ steps.pages.outputs.page_url }}"

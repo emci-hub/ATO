@@ -43,6 +43,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { playSheetsSearchText, resolvePlaySource } from './art-sheets';
 import {
   CAST_CLIP_SLOTS,
   CREEP_PATH_CLIPS,
@@ -51,6 +52,12 @@ import {
   type CreepPathClip,
 } from '../src/play/cast-kits';
 import { castActorPathFrame } from '../src/play/cast-actor';
+
+function sourceFromArtRoot(repo: string, artRoot: string): string {
+  const [group, slug] = artRoot.split('/');
+  const kind = group === 'heroes' ? 'hero' : group === 'creeps' ? 'creep' : group === 'boss' ? 'boss' : 'tower';
+  return resolvePlaySource(repo, kind, slug ?? artRoot, 'cast');
+}
 
 /**
  * Every path walker, in the art order the board maps them (see `puffUnitRole`
@@ -120,10 +127,7 @@ const repoRoot = path.resolve(__dirname, '..');
 // (play-art-pack.ts --all), so its loose PNGs are excluded from
 // generated-play-assets.ts. "Is this art bundled" has two registries to check
 // for a hero rotation key now, not one.
-const sheetRegistryText = fs.readFileSync(
-  path.resolve(__dirname, '../src/play/generated-play-sheets.ts'),
-  'utf8',
-);
+const sheetRegistryText = playSheetsSearchText(repoRoot);
 
 /** `skins/cast/heroes/<hero>/rotations/<dir>` → true when that facing is
  * packed into the hero's rotation sheet. Mirrors `staticKeyDrawable` in
@@ -331,7 +335,7 @@ const parked: string[] = [];
 
 for (const { role, artRoot } of PATH_ROSTER) {
   const def = walkerRoleDef(role);
-  const animations = path.join(repoRoot, `assets/play/skins/cast/${artRoot}/animations`);
+  const animations = path.join(sourceFromArtRoot(repoRoot, artRoot), 'animations');
   const onDisk = clipFolders(animations);
   const declared = new Map<CreepPathClip, SkinWalkDef>();
   if (def.walk) declared.set('walk', def.walk);

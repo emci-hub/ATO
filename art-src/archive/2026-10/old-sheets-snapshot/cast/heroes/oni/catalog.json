@@ -1,0 +1,71 @@
+{
+  "hero": "oni",
+  "actions": {
+    "ATTACK_01_Swift_Crescent_Slash": {
+      "sheetKey": "sheets/cast/heroes/oni/ATTACK_01_Swift_Crescent_Slash",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.75
+    },
+    "BLOOD_MOON_IAIJUTSU": {
+      "sheetKey": "sheets/cast/heroes/oni/BLOOD_MOON_IAIJUTSU",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.8777
+    },
+    "Breathing_Idle": {
+      "sheetKey": "sheets/cast/heroes/oni/Breathing_Idle",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 4,
+      "footAt": 0.75
+    },
+    "DASH_Phantom_Step": {
+      "sheetKey": "sheets/cast/heroes/oni/DASH_Phantom_Step",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.766
+    },
+    "Walking": {
+      "sheetKey": "sheets/cast/heroes/oni/Walking",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 8,
+      "footAt": 0.75
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/oni/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "attack": "ATTACK_01_Swift_Crescent_Slash",
+    "idle": "Breathing_Idle",
+    "dash": "DASH_Phantom_Step",
+    "walk": "Walking"
+  }
+}

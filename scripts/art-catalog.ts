@@ -1,0 +1,1393 @@
+/**
+ * npm run art:catalog
+ *   writes ART_LIBRARY.md + assets/art/_contact/library.html
+ * npm run art:catalog -- --portable
+ *   also writes library-portable.html — one self-contained file (previews inlined)
+ *   for iPhone / Airdrop / static host. Target < 25 MB.
+ * Prefer `npm run art:sync` (registry + portable catalog). Output is deterministic.
+ *
+ * Viewer: Metro-blocked. Open file:// or host the portable HTML.
+ * Visual language from scripts/sprite-gallery/page.html (Streetwear Skin).
+ * Grid tiles are a representative preview (still main frame, or
+ * individual icons) — never the raw packed sheet. Phone chrome is
+ * Photos-style 2-col + full-screen detail + thumb-zone dock.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+
+import type { ArtAsset, ArtRegistry } from '../src/art/registry.types';
+import { ART_CATEGORIES, ART_CATEGORY_LABELS } from '../src/art/registry.types';
+import { pickMainVariant, setKey } from './art-sets';
+import {
+  bakePreview,
+  buildLegacyIndex,
+  clearPreviewCache,
+  titleClip,
+  type BakeOpts,
+  type ItemPreview,
+} from './art-preview';
+
+const repo = path.resolve(__dirname, '..');
+const PORTABLE = process.argv.includes('--portable');
+const PORTABLE_CAP_BYTES = 25 * 1048576;
+
+function displayStatus(a: ArtAsset): string {
+  if (a.status === 'archived' || a.status === 'deprecated') return 'orphan';
+  if (a.status === 'needs-restyle') return 'needs-restyle';
+  if (a.status === 'alt-skin') return 'alt-skin';
+  if (a.inUse || (a.usedBy ?? []).length > 0) return 'in-use';
+  if (a.status === 'resource') return 'resource';
+  return 'resource';
+}
+
+type CatalogItem = {
+  id: string;
+  category: string;
+  type: string;
+  theme: string;
+  placement: string;
+  status: string;
+  display: string;
+  w: number;
+  h: number;
+  disk: number;
+  decoded: number;
+  score: number | null;
+  usedBy: string[];
+  tags: string[];
+  path: string;
+  rel: string;
+  restyle: ArtAsset['restyle'] | null;
+  md5: string;
+  inUse: boolean;
+  set: string;
+  variant: string;
+  part: string;
+  kind: ItemPreview['kind'] | 'empty';
+  preview: string;
+  pw: number;
+  ph: number;
+  pn: number;
+  pms: number[];
+  clips: ItemPreview['clips'];
+  icons: ItemPreview['icons'];
+  sheet: string;
+  bg: ItemPreview['bg'] | 'checker';
+  mainClip: string;
+  mainDir: string;
+};
+
+function emptyPreview(): Pick<
+  CatalogItem,
+  'kind' | 'preview' | 'pw' | 'ph' | 'pn' | 'pms' | 'clips' | 'icons' | 'sheet' | 'bg' | 'mainClip' | 'mainDir'
+> {
+  return {
+    kind: 'empty',
+    preview: '',
+    pw: 1,
+    ph: 1,
+    pn: 1,
+    pms: [100],
+    clips: [],
+    icons: [],
+    sheet: '',
+    bg: 'checker',
+    mainClip: '',
+    mainDir: '',
+  };
+}
+
+function buildItems(registry: ArtRegistry, opts: BakeOpts): CatalogItem[] {
+  const legacy = buildLegacyIndex(repo);
+  const items: CatalogItem[] = [];
+  let i = 0;
+  for (const a of registry.assets) {
+    i += 1;
+    if (i % 80 === 0) console.log(`  preview ${i}/${registry.assets.length}`);
+    const notes = a.notes ?? '';
+    const md5 = notes.startsWith('md5:') ? notes.slice(4) : '';
+    const rel = path.posix.relative(
+      '_contact',
+      path.relative(path.join(repo, 'assets/art'), a.path).split(path.sep).join('/'),
+    );
+    const baked = bakePreview(repo, a, legacy, opts) ?? emptyPreview();
+    items.push({
+      id: a.id,
+      category: a.category,
+      type: a.type,
+      theme: String(a.theme),
+      placement: String(a.placement),
+      status: a.status,
+      display: displayStatus(a),
+      w: a.size.w,
+      h: a.size.h,
+      disk: a.diskBytes ?? 0,
+      decoded: a.decodedBytes ?? 0,
+      score: a.critiqueScore ?? null,
+      usedBy: a.usedBy ?? [],
+      tags: a.tags ?? [],
+      path: a.path,
+      rel: rel.startsWith('.') ? rel : `../${rel}`,
+      restyle: a.restyle ?? null,
+      md5,
+      inUse: a.inUse || (a.usedBy ?? []).length > 0,
+      set: a.set || a.id,
+      variant: a.variant || 'default',
+      part: a.part || a.id,
+      kind: baked.kind,
+      preview: baked.preview,
+      pw: baked.pw,
+      ph: baked.ph,
+      pn: baked.pn,
+      pms: baked.pms,
+      clips: baked.clips,
+      icons: baked.icons,
+      sheet: baked.sheet,
+      bg: baked.bg,
+      mainClip: baked.mainClip,
+      mainDir: baked.mainDir,
+    });
+  }
+  clearPreviewCache();
+  return items;
+}
+
+type CatalogSet = {
+  key: string;
+  category: string;
+  set: string;
+  inUse: boolean;
+  variants: string[];
+  variantCount: number;
+  partCount: number;
+  clipCount: number;
+  mainId: string;
+};
+
+function buildSets(items: CatalogItem[]): CatalogSet[] {
+  const groups = new Map<string, CatalogItem[]>();
+  for (const a of items) {
+    const key = setKey(a.category, a.set);
+    const list = groups.get(key) ?? [];
+    list.push(a);
+    groups.set(key, list);
+  }
+  const out: CatalogSet[] = [];
+  for (const [key, list] of [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const variants = [...new Set(list.map((a) => a.variant))].sort((a, b) => a.localeCompare(b));
+    const inUseVariant = list.find((a) => a.inUse)?.variant ?? null;
+    const mainVar = pickMainVariant(variants, inUseVariant);
+    const pool = list.filter((a) => a.variant === mainVar);
+    const main =
+      pool.find((a) => a.inUse && a.kind === 'clip') ||
+      pool.find((a) => a.kind === 'clip') ||
+      pool.find((a) => a.inUse) ||
+      pool[0] ||
+      list[0];
+    const clipCount = list.reduce((n, a) => n + (a.clips?.length || (a.kind === 'clip' && a.pn > 1 ? 1 : 0)), 0);
+    out.push({
+      key,
+      category: list[0].category,
+      set: list[0].set,
+      inUse: list.some((a) => a.inUse),
+      variants,
+      variantCount: variants.length,
+      partCount: list.length,
+      clipCount,
+      mainId: main.id,
+    });
+  }
+  return out;
+}
+
+function dupeGroups(items: CatalogItem[]) {
+  const hashGroups = new Map<string, string[]>();
+  for (const a of items) {
+    if (!a.md5) continue;
+    const g = hashGroups.get(a.md5) ?? [];
+    g.push(a.id);
+    hashGroups.set(a.md5, g);
+  }
+  return [...hashGroups.entries()]
+    .filter(([, ids]) => ids.length > 1)
+    .map(([hash, ids]) => ({
+      hash,
+      ids,
+      bytes: items.filter((i) => ids.includes(i.id)).reduce((s, i) => s + i.disk, 0),
+    }));
+}
+
+function safeName(id: string): string {
+  return id.replace(/[^a-z0-9._-]+/gi, '_').slice(0, 80);
+}
+
+function writeDataPng(contactDir: string, id: string, name: string, uri: string): string {
+  if (!uri.startsWith('data:image/png;base64,')) return uri;
+  const rel = `preview/${safeName(id)}/${name}.png`;
+  const dest = path.join(contactDir, rel);
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.writeFileSync(dest, Buffer.from(uri.slice('data:image/png;base64,'.length), 'base64'));
+  return rel;
+}
+
+/** Local viewer loads files next to library.html — keeps the HTML light. */
+function materializeLocal(items: CatalogItem[], contactDir: string) {
+  const prev = path.join(contactDir, 'preview');
+  fs.rmSync(prev, { recursive: true, force: true });
+  fs.mkdirSync(prev, { recursive: true });
+  for (const a of items) {
+    a.preview = writeDataPng(contactDir, a.id, 'main', a.preview);
+    a.sheet = writeDataPng(contactDir, a.id, 'sheet', a.sheet);
+    a.clips = a.clips.map((c, i) => ({
+      ...c,
+      strip: writeDataPng(contactDir, a.id, `${i}-${safeName(c.clip)}-${safeName(c.dir)}`, c.strip),
+    }));
+    a.icons = a.icons.map((ic, i) => ({
+      ...ic,
+      src: writeDataPng(contactDir, a.id, `icon-${i}`, ic.src),
+    }));
+  }
+}
+
+function writeLibraryMd(registry: ArtRegistry) {
+  const live = registry.assets.filter((a) => a.status !== 'archived');
+  const groups = new Map<string, typeof live>();
+  for (const a of live) {
+    const key = `${a.category} · ${a.set} · ${a.variant} · ${a.inUse ? 'in-use' : 'unused'}`;
+    const list = groups.get(key) ?? [];
+    list.push(a);
+    groups.set(key, list);
+  }
+  const catCounts = Object.fromEntries(
+    ART_CATEGORIES.map((c) => {
+      const list = live.filter((a) => a.category === c);
+      const used = list.filter((a) => a.inUse).length;
+      return [c, { total: list.length, used, unused: list.length - used }];
+    }),
+  ) as Record<string, { total: number; used: number; unused: number }>;
+
+  const md: string[] = [
+    '# ATO art library',
+    '',
+    `Generated. ${live.length} live entries.`,
+    'Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.',
+    'Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.',
+    'Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.',
+    'Viewer lists one card per set (not each clip/file).',
+    '',
+    '## Categories',
+    '',
+    ...ART_CATEGORIES.map((c) => {
+      const n = catCounts[c] ?? { total: 0, used: 0, unused: 0 };
+      return `- **${c}** (${n.total}: ${n.used} in use / ${n.unused} unused) — ${ART_CATEGORY_LABELS[c]}`;
+    }),
+    '',
+  ];
+  const catOrder = new Map(ART_CATEGORIES.map((c, i) => [c, i]));
+  for (const [key, list] of [...groups.entries()].sort((a, b) => {
+    const ca = a[0].split(' · ')[0];
+    const cb = b[0].split(' · ')[0];
+    const d = (catOrder.get(ca as (typeof ART_CATEGORIES)[number]) ?? 99) - (catOrder.get(cb as (typeof ART_CATEGORIES)[number]) ?? 99);
+    return d !== 0 ? d : a[0].localeCompare(b[0]);
+  })) {
+    md.push(`## ${key}`, '');
+    md.push('| id | size | status | score | usedBy |');
+    md.push('|---|---|---|---|---|');
+    for (const a of list.sort((x, y) => x.id.localeCompare(y.id))) {
+      md.push(
+        `| \`${a.id}\` | ${a.size.w}×${a.size.h} | ${a.status} | ${a.critiqueScore ?? '—'} | ${(a.usedBy ?? []).join(', ') || '—'} |`,
+      );
+    }
+    md.push('');
+  }
+  fs.writeFileSync(path.join(repo, 'assets/art/ART_LIBRARY.md'), md.join('\n'));
+}
+
+function main() {
+  const registry = JSON.parse(fs.readFileSync(path.join(repo, 'assets/art/registry.json'), 'utf8')) as ArtRegistry;
+  const contactDir = path.join(repo, 'assets/art/_contact');
+  fs.mkdirSync(contactDir, { recursive: true });
+  writeLibraryMd(registry);
+
+  console.log('art:catalog baking local previews…');
+  const localItems = buildItems(registry, { cell: 72, still: 128, allClips: true });
+  materializeLocal(localItems, contactDir);
+  const localData = { portable: false, items: localItems, sets: buildSets(localItems), dupes: dupeGroups(localItems) };
+  fs.writeFileSync(path.join(contactDir, 'library.html'), viewerHtml(localData, false));
+
+  let portableBytes = 0;
+  if (PORTABLE) {
+    let cell = 48;
+    let still = 80;
+    console.log(`art:catalog baking portable previews cell=${cell} still=${still}`);
+    let portableItems = buildItems(registry, { cell, still, allClips: true });
+    let html = viewerHtml({ portable: true, items: portableItems, sets: buildSets(portableItems), dupes: dupeGroups(portableItems) }, true);
+    while (Buffer.byteLength(html) > PORTABLE_CAP_BYTES && cell > 28) {
+      cell = Math.max(28, Math.floor(cell * 0.75));
+      still = Math.max(48, Math.floor(still * 0.8));
+      console.log(`art:catalog rebake portable cell=${cell} still=${still}`);
+      portableItems = buildItems(registry, { cell, still, allClips: true });
+      html = viewerHtml({ portable: true, items: portableItems, sets: buildSets(portableItems), dupes: dupeGroups(portableItems) }, true);
+    }
+    const out = path.join(contactDir, 'library-portable.html');
+    fs.writeFileSync(out, html);
+    portableBytes = fs.statSync(out).size;
+    console.log(`portable ${out} ${(portableBytes / 1048576).toFixed(2)} MB (cell ${cell}px)`);
+    if (portableBytes > PORTABLE_CAP_BYTES) {
+      console.warn(`WARN portable ${(portableBytes / 1048576).toFixed(2)} MB over the 25 MB target`);
+    }
+  }
+
+  fs.writeFileSync(path.join(repo, 'tools/art-viewer/README.md'), viewerReadme());
+  console.log(`art:catalog ${registry.assets.length} entries, local viewer ${localItems.length} items`);
+}
+
+function viewerReadme(): string {
+  return `# Art library viewer
+
+## Open it
+- Desktop / Windows: double-click \`assets/art/_contact/library.html\` (file://, no server).
+- iPhone: run \`npm run art:catalog -- --portable\`, then AirDrop / host
+  \`assets/art/_contact/library-portable.html\`. One file; previews are inlined.
+  Add to Home Screen from Safari for a full-screen library.
+
+Phone-first (research, 440pt iPhone 16 Pro Max):
+- 2-column ~200pt sprite grid (Photos image-first; pixel art stays readable —
+  3–4 postage stamps do not). 3 columns only ≥600pt.
+- Sticky search + category chips on top (itch.io / Unity Asset Store / Figma).
+  Photos iOS 26 moved Search to the thumb zone; we keep it up top so chips
+  stay next to the query and the dock is not crowded (HIG: tab bars vs tools).
+- Bottom dock: All | In use | Unused as peer browse modes (Photos iOS 26
+  brought Library/Collections tabs back after the iOS 18 unified layout
+  failed; HIG tab bars for parallel sections). Filters + More are sheets.
+- Detail is a full-screen large-detent sheet (HIG: full height when the
+  content needs the room). Play sits on the preview (Photos video / Aseprite).
+  Swipe L/R for the next **set**, swipe down to close. 48pt decision bar stays in
+  the thumb zone (HIG 44pt minimum; tagging is the job, so chrome does not fade).
+- Grid is one card per **set** (Spine skeleton / Figma component / Addressables
+  group). Tap opens variant switcher (Spine skin / Figma variant) and that
+  variant’s clips/parts (Aseprite tags / Godot SpriteFrames). Breadcrumb back.
+
+Grid tiles show a **preview**, not the packed sheet:
+- Sheets / clips: Idle frame 0 (or Walk S/front). Animate on Play / hover / hold.
+- Stills: the image. Icon atlases: sprites, not the packed sheet.
+- Autoplay previews (default off) lives in Filters and localStorage.
+
+This extends the earlier Streetwear Skin artifact at \`scripts/sprite-gallery/\`
+(Claude artifact https://claude.ai/artifact/9wjcLv4FQu4S8dwqT2RBho). That page
+is still the live Streetwear *skin* contact sheet. This viewer is the **full**
+library: every registry item, decisions, duplicates, memory.
+
+## Decisions
+Keep / use / needs-restyle / remove persist in \`localStorage\`.
+Export (Share on iOS, download elsewhere) writes \`art-decisions.json\`.
+Import merges a previously exported file (imported ids win).
+
+Apply on the machine: copy the JSON to \`assets/art/art-decisions.json\`, then
+\`npm run art:apply-decisions\` (dry-run) or \`npm run art:apply-decisions -- --apply\`.
+
+Regenerate: \`npm run art:catalog\` · portable: \`npm run art:catalog -- --portable\`
+`;
+}
+
+function viewerHtml(data: unknown, portable: boolean): string {
+  const json = JSON.stringify(data).replace(/</g, '\\u003c');
+  return `<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1d1d20">
+<meta name="mobile-web-app-capable" content="yes">
+<title>ATO art library${portable ? ' (portable)' : ''}</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#0f0f12; --panel:#1c1c21; --tile:#121214; --line:#3d3d44;
+  --fg:#f5f0e8; --muted:#c4bfb6; --mustard:#e0a526; --red:#ff5a5f; --ok:#7dce5b;
+  --tap:48px; --room:#1a1612; --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px); --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px); --dock: 64px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin:0; width:100%; max-width:100%; overflow-x:clip; background:var(--bg); color:var(--fg);
+  font:17px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; }
+html { -webkit-text-size-adjust: 100%; }
+body { padding:0; }
+.topbar { position:sticky; top:0; z-index:6; background:rgba(15,15,18,.94); backdrop-filter:saturate(1.4) blur(16px);
+  -webkit-backdrop-filter:saturate(1.4) blur(16px); padding: calc(8px + var(--safe-t)) 12px 8px; border-bottom:1px solid var(--line); }
+.brand { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-height:28px; }
+h1 { font:700 22px/1.1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; margin:0; letter-spacing:-.02em; }
+h1 span { color:var(--mustard); }
+#count { font:600 15px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--muted); }
+.lede, .stats { display:none; }
+.chip { min-height:var(--tap); padding:10px 14px; border:1px solid var(--line); border-radius:999px; background:var(--tile); color:var(--fg); font:600 15px/1.2 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; cursor:pointer; touch-action:manipulation; flex:0 0 auto; }
+.chip b { color:var(--mustard); }
+.chip.on { background:var(--mustard); color:#1d1d20; border-color:var(--mustard); }
+.chip.on b { color:#1d1d20; }
+.chip .use { color:var(--ok); }
+.chip .off { color:var(--muted); }
+.chip.on .use, .chip.on .off { color:#1d1d20; }
+.cats { display:flex; flex-wrap:nowrap; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; width:100%; padding:8px 0 2px; scrollbar-width:none; }
+.cats::-webkit-scrollbar { display:none; }
+input, select, textarea, button { font:inherit; font-size:17px; border-radius:12px; }
+input[type=search] { width:100%; min-height:var(--tap); background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:10px 14px; margin-top:8px; }
+input[type=range] { width:100%; accent-color:var(--mustard); min-height:44px; }
+select { width:100%; min-height:var(--tap); background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:10px 12px; }
+button { min-height:var(--tap); min-width:44px; background:transparent; color:var(--fg); border:1px solid var(--line); padding:10px 14px; cursor:pointer; touch-action:manipulation; }
+button.on, button[aria-pressed=true] { background:var(--mustard); color:#1d1d20; border-color:var(--mustard); font-weight:700; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px 8px calc(var(--dock) + 16px + var(--safe-b)); }
+.card { background:var(--panel); border:0; border-radius:10px; padding:0 0 8px; display:grid; gap:6px; min-width:0; touch-action:manipulation; content-visibility:auto; contain-intrinsic-size: 260px; overflow:hidden; }
+.card:active { outline:2px solid var(--mustard); }
+.stage { aspect-ratio:1; min-height:168px; display:grid; place-items:center; overflow:hidden; position:relative; }
+.stage.checker { background-color:var(--tile); background-image:linear-gradient(45deg,#1a1a1e 25%,transparent 25%),linear-gradient(-45deg,#1a1a1e 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1a1a1e 75%),linear-gradient(-45deg,transparent 75%,#1a1a1e 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
+.stage.room { background:#1a1612; }
+.cap { padding:0 8px; min-width:0; }
+.cap .id { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font:600 15px/1.25 ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--fg); word-break:break-word; }
+.meta-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 8px; align-items:center; }
+.stamp { font:700 15px/1.1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing:.02em; text-transform:uppercase; padding:5px 8px; border-radius:6px; }
+.stamp.yes { background:var(--ok); color:#0c160a; }
+.stamp.no { background:#3a3a42; color:#f2ede4; }
+.tile-play { position:absolute; right:8px; bottom:8px; z-index:2; min-height:44px; min-width:52px; padding:8px 12px; font:700 15px/1 -apple-system,system-ui,sans-serif; background:#000c; color:#fff; border-color:#fff4; }
+.sprite { image-rendering:pixelated; image-rendering:crisp-edges; background-repeat:no-repeat; flex:0 0 auto; }
+.stage img { image-rendering:pixelated; image-rendering:crisp-edges; max-width:92%; max-height:92%; object-fit:contain; }
+.icons { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:8px; max-height:100%; overflow:hidden; }
+.icons img { image-rendering:pixelated; width:36px; height:36px; object-fit:contain; }
+.meta { font:15px/1.35 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color:var(--muted); overflow-wrap:anywhere; }
+.meta b { color:var(--fg); }
+.badge { display:inline-block; font:600 15px/1.1 -apple-system,system-ui,sans-serif; text-transform:uppercase; padding:5px 8px; border-radius:6px; border:1px solid var(--line); color:var(--fg); }
+.badge.in-use { border-color:var(--ok); color:var(--ok); }
+.badge.resource { color:var(--muted); }
+.badge.needs-restyle { border-color:var(--mustard); color:var(--mustard); }
+.badge.alt-skin { color:#9cc4ff; border-color:#9cc4ff; }
+.badge.orphan { border-color:var(--red); color:var(--red); }
+.dock { position:fixed; left:0; right:0; bottom:0; z-index:7; display:flex; gap:8px; align-items:stretch;
+  padding:8px 10px calc(8px + var(--safe-b)); background:rgba(15,15,18,.94); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-top:1px solid var(--line); }
+.dock .seg { display:flex; flex:1 1 auto; min-width:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.dock .seg button { flex:1; border:0; border-radius:0; min-height:var(--tap); font:600 15px/1.1 -apple-system,system-ui,sans-serif; padding:8px 6px; white-space:nowrap; }
+.dock .ico { flex:0 0 auto; min-width:64px; padding:8px 12px; font:600 15px/1.1 -apple-system,system-ui,sans-serif; white-space:nowrap; }
+.sheet-bg { display:none; position:fixed; inset:0; z-index:12; background:#000a; }
+.sheet-bg.show { display:block; }
+.sheet-card { position:absolute; left:0; right:0; bottom:0; max-height:72vh; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+  background:var(--panel); border-radius:16px 16px 0 0; padding:8px 16px calc(20px + var(--safe-b)); display:flex; flex-direction:column; }
+.grabber { width:36px; height:5px; border-radius:99px; background:#6a6a72; margin:6px auto 12px; }
+.sheet-card h2 { font:700 20px/1.2 -apple-system,system-ui,sans-serif; margin:0 0 12px; }
+.sheet-card label { display:block; font:600 15px/1.3 -apple-system,system-ui,sans-serif; margin:12px 0 6px; color:var(--muted); }
+.sheet-card .row { display:flex; flex-wrap:wrap; gap:8px; }
+.sheet-card .done { position:sticky; bottom:0; width:100%; margin-top:16px; background:var(--panel); }
+#sheet { display:none; position:fixed; inset:0; z-index:14; background:#000; }
+#sheet.show { display:block; }
+#sheet .panel { position:absolute; inset:0; overflow:auto; -webkit-overflow-scrolling:touch; background:var(--bg);
+  padding: calc(6px + var(--safe-t)) 12px 0; display:flex; flex-direction:column; gap:10px; }
+#sheet .grabber { margin-top:2px; }
+#sheet .nav { display:flex; gap:8px; align-items:center; }
+#sheet .nav #sheetClose { min-width:72px; }
+#sheet .nav .grow { flex:1; font:600 15px/1.2 ui-monospace,Menlo,monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.crumb { display:flex; gap:6px; align-items:center; flex-wrap:wrap; font:600 15px/1.2 -apple-system,system-ui,sans-serif; }
+.crumb button { min-height:44px; padding:8px 10px; }
+.preview-wrap { position:relative; }
+#sheet .preview { min-height:42vh; height:48vh; display:grid; place-items:center; border-radius:12px; overflow:hidden; touch-action:pan-y; position:relative; }
+#sheet .preview.checker { background-color:var(--tile); background-image:linear-gradient(45deg,#1a1a1e 25%,transparent 25%),linear-gradient(-45deg,#1a1a1e 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1a1a1e 75%),linear-gradient(-45deg,transparent 75%,#1a1a1e 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
+#sheet .preview.room { background:#1a1612; }
+#sheet .preview img, #sheet .preview .sprite { image-rendering:pixelated; image-rendering:crisp-edges; }
+#sheet .preview img { max-width:100%; max-height:48vh; object-fit:contain; }
+#playBtn { position:absolute; left:10px; right:10px; bottom:10px; z-index:2; min-height:56px; font:700 18px/1 -apple-system,system-ui,sans-serif; background:#000c; color:#fff; border-color:#fff4; }
+#playBtn[hidden] { display:none; }
+.seg-scroll { display:flex; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px; flex:0 0 auto; min-height:var(--tap); }
+.seg-scroll:empty, .film:empty, .icon-grid:empty { display:none; }
+.seg-scroll button { flex:1 0 auto; border:0; border-right:1px solid var(--line); border-radius:0; min-height:var(--tap); font:600 15px/1.1 -apple-system,system-ui,sans-serif; padding:10px 14px; }
+.seg-scroll button:last-child { border-right:0; }
+#sheet .tools { display:flex; gap:8px; align-items:center; flex:0 0 auto; }
+#sheet .film { display:flex; gap:6px; overflow:auto; -webkit-overflow-scrolling:touch; flex:0 0 auto; min-height:48px; }
+#sheet .film button { min-width:48px; min-height:48px; padding:0; overflow:hidden; }
+#sheet .film .cell { width:48px; height:48px; image-rendering:pixelated; background-repeat:no-repeat; }
+#sheet .icon-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(56px,1fr)); gap:8px; }
+#sheet .icon-grid button { min-height:56px; padding:6px; }
+#sheet .icon-grid img { image-rendering:pixelated; width:40px; height:40px; object-fit:contain; }
+.sheet-body { flex:0 0 auto; display:flex; flex-direction:column; gap:10px; padding-bottom:8px; }
+.decbar { position:sticky; bottom:0; display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  padding:10px 0 calc(12px + var(--safe-b)); background:linear-gradient(180deg, transparent, var(--bg) 18%); }
+.decbar button { min-height:var(--tap); font:700 16px/1 -apple-system,system-ui,sans-serif; }
+textarea { width:100%; min-height:72px; background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:12px; }
+.dupes { padding:8px 12px calc(var(--dock) + 24px + var(--safe-b)); overflow:auto; }
+.dupes table { width:100%; border-collapse:collapse; font:15px/1.35 ui-monospace,Menlo,monospace; }
+.dupes td, .dupes th { border:1px solid var(--line); padding:10px; text-align:left; }
+.toast { position:fixed; left:12px; right:12px; bottom:calc(var(--dock) + 12px + var(--safe-b)); background:var(--mustard); color:#1d1d20; padding:14px 16px; border-radius:12px; z-index:20; display:none; font:700 17px/1.3 -apple-system,system-ui,sans-serif; }
+.toast.show { display:block; }
+@media (min-width:600px) {
+  .grid { grid-template-columns:repeat(3, 1fr); gap:10px; padding:12px 16px calc(var(--dock) + 20px); }
+}
+@media (min-width:900px) {
+  .grid { grid-template-columns:repeat(4, 1fr); }
+  .lede, .stats { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; font:15px/1.35 -apple-system,system-ui,sans-serif; color:var(--muted); }
+  .stat { font:15px ui-monospace,Menlo,monospace; border:1px solid var(--line); padding:6px 10px; border-radius:8px; }
+  .stat b { color:var(--mustard); }
+}
+@media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+<header class="topbar">
+  <div class="brand"><h1>ATO <span>library</span></h1><div id="count"></div></div>
+  <p class="lede">Previews, not sheets. Play / hover / hold to animate. Decisions stay on this device. ${portable ? 'Portable — previews inlined.' : 'Local — raw sheets load from this folder.'}</p>
+  <div class="stats" id="stats"></div>
+  <input type="search" id="q" placeholder="Search art…" enterkeyhint="search" autocapitalize="off" autocomplete="off" spellcheck="false">
+  <div class="cats" id="cats" role="tablist" aria-label="Categories"></div>
+</header>
+<div class="grid" id="grid"></div>
+<section class="dupes" id="dupes" hidden>
+  <h2>Duplicates</h2>
+  <table><thead><tr><th>hash</th><th>ids</th><th>bytes</th></tr></thead><tbody id="dupBody"></tbody></table>
+</section>
+<nav class="dock" aria-label="Browse">
+  <div class="seg" id="usage" role="group" aria-label="In use or unused"></div>
+  <button type="button" class="ico" id="filtersBtn">Filters</button>
+  <button type="button" class="ico" id="menuBtn" aria-label="More">More</button>
+</nav>
+<div class="sheet-bg" id="filters" role="dialog" aria-modal="true" aria-label="Filters">
+  <div class="sheet-card">
+    <div class="grabber"></div>
+    <h2>Filters</h2>
+    <label for="status">Status</label>
+    <select id="status"><option value="">all statuses</option>
+      <option>in-use</option><option>resource</option><option>needs-restyle</option><option>alt-skin</option><option>orphan</option></select>
+    <label for="theme">Theme</label>
+    <select id="theme"><option value="">all themes</option></select>
+    <label for="sort">Sort</label>
+    <select id="sort">
+      <option value="id">id</option>
+      <option value="decoded">decoded</option>
+      <option value="disk">disk</option>
+      <option value="status">status</option>
+      <option value="category">category</option>
+    </select>
+    <label>Playback</label>
+    <div class="row" id="autoplayRow"></div>
+    <label>More</label>
+    <div class="row"><button type="button" id="dupBtn">Duplicates</button></div>
+    <button type="button" id="filtersDone" class="done">Done</button>
+  </div>
+</div>
+<div class="sheet-bg" id="menu" role="dialog" aria-modal="true" aria-label="More">
+  <div class="sheet-card">
+    <div class="grabber"></div>
+    <h2>Library</h2>
+    <div class="row" style="flex-direction:column">
+      <button type="button" id="exportBtn">Share decisions</button>
+      <button type="button" id="importBtn">Import decisions</button>
+    </div>
+    <input id="importFile" type="file" accept="application/json,.json" hidden>
+    <button type="button" id="menuDone" class="done">Done</button>
+  </div>
+</div>
+<div id="sheet" role="dialog" aria-modal="true"><div class="panel" id="sheetPanel"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const DATA = ${json};
+const PORTABLE = ${portable ? 'true' : 'false'};
+const KEY = 'ato-art-decisions-v1';
+const PLAY_KEY = 'ato-art-autoplay-v1';
+const CAT_ORDER = ${JSON.stringify([...ART_CATEGORIES])};
+const CAT_LABEL = ${JSON.stringify(ART_CATEGORY_LABELS)};
+const CLIP_TITLE = ${JSON.stringify(Object.fromEntries([...new Set((data as { items: CatalogItem[] }).items.flatMap((a) => a.clips.map((c) => c.clip)))].map((c) => [c, titleClip(c)])))};
+const DIR_SHORT = ${JSON.stringify({
+    north: 'N',
+    'north-east': 'NE',
+    east: 'E',
+    'south-east': 'SE',
+    south: 'S',
+    'south-west': 'SW',
+    west: 'W',
+    'north-west': 'NW',
+    front: 'S',
+    none: '',
+  })};
+let cat = '';
+let usage = 'all';
+let decisions = {};
+let autoplay = false;
+let reduceMotion = false;
+try { reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+try { decisions = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { decisions = {}; }
+try { autoplay = localStorage.getItem(PLAY_KEY) === '1'; } catch (e) { autoplay = false; }
+if (reduceMotion) autoplay = false;
+function saveAutoplay(){
+  try { localStorage.setItem(PLAY_KEY, autoplay ? '1' : '0'); } catch (e) {}
+}
+function canAutoplay(){ return autoplay && !reduceMotion; }
+function setGridPlaying(on){
+  document.querySelectorAll('.stage').forEach((stage) => {
+    const p = stage._player;
+    if (!p) return;
+    p.playing = !!(on && p.n>1 && !reduceMotion);
+    if (!p.playing) p.setFrame(0);
+    const btn = stage.querySelector('.tile-play');
+    if (btn) {
+      btn.textContent = p.playing ? 'Pause' : 'Play';
+      btn.classList.toggle('on', p.playing);
+      btn.setAttribute('aria-pressed', p.playing ? 'true' : 'false');
+    }
+  });
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(decisions)); } catch (e) { toast('Could not save decisions on this device'); }
+  renderStats();
+}
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function mb(n){ return (n/1048576).toFixed(2); }
+function payload(){ return { version:1, decidedAt: new Date().toISOString(), decisions }; }
+function clipLabel(name){ return CLIP_TITLE[name] || name; }
+function dirLabel(dir){ return DIR_SHORT[dir] || (dir && dir !== 'none' ? dir : ''); }
+function renderStats(){
+  const items = DATA.items;
+  const counts = { 'in-use':0, resource:0, 'needs-restyle':0, 'alt-skin':0, orphan:0 };
+  let disk=0, decoded=0, removeB=0, removeN=0, needN=0;
+  for (const a of items) {
+    counts[a.display] = (counts[a.display]||0)+1;
+    disk += a.disk; decoded += a.decoded;
+    const d = decisions[a.id];
+    if (d && d.action==='remove') { removeN++; removeB += a.disk; }
+    if (a.display==='in-use' || (d && d.action==='use')) needN++;
+  }
+  let usedN=0, unusedN=0;
+  for (const a of items) { if (a.inUse) usedN++; else unusedN++; }
+  const stats = document.getElementById('stats');
+  if (stats) stats.innerHTML =
+    '<span class="stat"><b>'+usedN+'</b> in use</span>' +
+    '<span class="stat"><b>'+unusedN+'</b> unused</span>' +
+    Object.entries(counts).map(([k,v]) => '<span class="stat"><b>'+v+'</b> '+k+'</span>').join('') +
+    '<span class="stat">disk <b>'+mb(disk)+'</b> MB</span>' +
+    '<span class="stat">decoded <b>'+mb(decoded)+'</b> MB</span>' +
+    '<span class="stat">needed <b>'+needN+'</b></span>' +
+    '<span class="stat">removable <b>'+removeN+'</b> ('+mb(removeB)+' MB)</span>';
+  const count = document.getElementById('count');
+  const sets = DATA.sets || [];
+  const setUsed = sets.filter(s => s.inUse).length;
+  if (count) count.textContent = sets.length+' sets · '+setUsed+' in use';
+}
+function itemById(id){ return DATA.items.find(a => a.id===id); }
+function itemsInSet(s){ return DATA.items.filter(a => a.category===s.category && a.set===s.set); }
+function filtered(){
+  const q = document.getElementById('q').value.toLowerCase();
+  const st = document.getElementById('status').value;
+  const th = document.getElementById('theme').value;
+  const sort = document.getElementById('sort').value;
+  let list = (DATA.sets || []).filter(s => {
+    if (cat && s.category !== cat) return false;
+    if (usage==='in-use' && !s.inUse) return false;
+    if (usage==='unused' && s.inUse) return false;
+    const parts = itemsInSet(s);
+    if (st && !parts.some(a => a.display===st)) return false;
+    if (th && !parts.some(a => a.theme===th)) return false;
+    if (!q) return true;
+    const blob = [s.set, s.category, s.variants.join(' '), parts.map(a => a.id+' '+a.path+' '+(a.tags||[]).join(' ')).join(' ')].join(' ');
+    return blob.toLowerCase().includes(q);
+  });
+  list.sort((a,b) => {
+    if (sort==='category') return String(a.category).localeCompare(b.category) || a.set.localeCompare(b.set);
+    if (sort==='status') return Number(b.inUse)-Number(a.inUse) || a.set.localeCompare(b.set);
+    return a.set.localeCompare(b.set);
+  });
+  return list;
+}
+const players = new Set();
+let raf = 0;
+function tickPlayers(now){
+  for (const p of players) p.tick(now);
+  raf = players.size ? requestAnimationFrame(tickPlayers) : 0;
+}
+function addPlayer(p){
+  players.add(p);
+  if (!raf) raf = requestAnimationFrame(tickPlayers);
+}
+function fitZoom(fw, fh, boxW, boxH, want){
+  const maxS = Math.max(1, Math.floor(Math.min(boxW / Math.max(fw,1), boxH / Math.max(fh,1))));
+  return Math.max(1, Math.min(want, maxS));
+}
+function applySprite(el, strip, fw, fh, n, i, zoom){
+  const z = Math.max(1, zoom|0);
+  el.style.width = (fw*z)+'px';
+  el.style.height = (fh*z)+'px';
+  el.style.backgroundImage = strip ? 'url("'+strip+'")' : 'none';
+  el.style.backgroundSize = (fw*n*z)+'px '+(fh*z)+'px';
+  el.style.backgroundPosition = (-i*fw*z)+'px 0';
+}
+function makeAnim(host, strip, fw, fh, n, ms, zoom, playing){
+  const sprite = document.createElement('div');
+  sprite.className = 'sprite';
+  host.appendChild(sprite);
+  const p = {
+    i: 0,
+    acc: 0,
+    last: 0,
+    playing: playing && n>1 && !reduceMotion,
+    zoom: zoom,
+    strip: strip,
+    fw: fw, fh: fh, n: n, ms: ms,
+    el: sprite,
+    host: host,
+    tick(now){
+      if (!this.el.isConnected) { players.delete(this); return; }
+      if (!this.playing || this.n<2) { this.last = now; return; }
+      if (!this.last) this.last = now;
+      this.acc += now - this.last;
+      this.last = now;
+      const wait = (this.ms[this.i] || 100);
+      if (this.acc >= wait) {
+        this.acc = 0;
+        this.i = (this.i+1) % this.n;
+        applySprite(this.el, this.strip, this.fw, this.fh, this.n, this.i, this.zoom);
+      }
+    },
+    draw(){ applySprite(this.el, this.strip, this.fw, this.fh, this.n, this.i, this.zoom); },
+    setFrame(i){ this.i = ((i%this.n)+this.n)%this.n; this.draw(); },
+    setZoom(z){ this.zoom = z; this.draw(); },
+    setStrip(s, fw, fh, n, ms){
+      this.strip=s; this.fw=fw; this.fh=fh; this.n=n; this.ms=ms; this.i=0; this.acc=0; this.draw();
+    }
+  };
+  p.draw();
+  addPlayer(p);
+  return p;
+}
+function lazyStage(stage, a){
+  stage.classList.add(a.bg==='room' ? 'room' : 'checker');
+  stage.dataset.ready = '0';
+  const io = lazyStage.io || (lazyStage.io = new IntersectionObserver((ents) => {
+    for (const e of ents) {
+      if (e.isIntersecting) bindStage(e.target);
+      else unbindStage(e.target);
+    }
+  }, { rootMargin: '160px' }));
+  io.observe(stage);
+}
+function bindStage(stage){
+  if (stage.dataset.ready === '1') return;
+  const a = stage._item;
+  if (!a) return;
+  stage.dataset.ready = '1';
+  if (a.kind==='clip' && a.preview && a.pn>1) {
+    const box = stage.getBoundingClientRect();
+    const z = fitZoom(a.pw, a.ph, Math.max(120, box.width-12), Math.max(160, box.height-12), 2);
+    stage._player = makeAnim(stage, a.preview, a.pw, a.ph, a.pn, a.pms, z, canAutoplay());
+    return;
+  }
+  if (a.kind==='icons' && a.icons && a.icons.length) {
+    const wrap = document.createElement('div');
+    wrap.className = 'icons';
+    a.icons.slice(0, 16).forEach(ic => {
+      const img = document.createElement('img');
+      img.src = ic.src; img.alt = '';
+      img.width = 28; img.height = 28;
+      wrap.appendChild(img);
+    });
+    stage.appendChild(wrap);
+    return;
+  }
+  if (a.preview) {
+    const img = document.createElement('img');
+    img.src = a.preview; img.alt = a.id;
+    stage.appendChild(img);
+    return;
+  }
+  const miss = document.createElement('div');
+  miss.className = 'meta';
+  miss.textContent = a.w && a.h ? a.w+'×'+a.h : 'no pixels';
+  stage.appendChild(miss);
+}
+function unbindStage(stage){
+  if (stage.dataset.ready !== '1') return;
+  if (stage._player) { players.delete(stage._player); stage._player = null; }
+  [...stage.querySelectorAll('img,.sprite,.icons')].forEach(n => n.remove());
+  stage.dataset.ready = '0';
+}
+function card(s){
+  const a = itemById(s.mainId) || itemsInSet(s)[0];
+  if (!a) return document.createElement('article');
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.setAttribute('role', 'button');
+  el.tabIndex = 0;
+  el.innerHTML = '<div class="stage"></div><div class="cap"><div class="id">'+s.set+'</div></div><div class="meta-row"></div>';
+  const stage = el.querySelector('.stage');
+  stage._item = a;
+  lazyStage(stage, a);
+  const stamp = document.createElement('span');
+  stamp.className = 'stamp '+(s.inUse?'yes':'no');
+  stamp.textContent = s.inUse ? 'IN USE' : 'UNUSED';
+  const badge = document.createElement('span');
+  badge.className = 'badge';
+  badge.textContent = s.variantCount+' var · '+s.clipCount+' clips';
+  el.querySelector('.meta-row').append(stamp, badge);
+  if (a.kind==='clip' && a.pn>1) {
+    const play = document.createElement('button');
+    play.type = 'button';
+    play.className = 'tile-play';
+    play.textContent = 'Play';
+    play.setAttribute('aria-pressed', 'false');
+    play.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const p = stage._player;
+      if (!p) bindStage(stage);
+      const player = stage._player;
+      if (!player) return;
+      player.playing = !player.playing;
+      if (!player.playing) player.setFrame(0);
+      play.textContent = player.playing ? 'Pause' : 'Play';
+      play.classList.toggle('on', player.playing);
+      play.setAttribute('aria-pressed', player.playing ? 'true' : 'false');
+    });
+    stage.appendChild(play);
+    bindPreviewGestures(el, stage);
+  }
+  const open = () => { if (el._skipOpen) { el._skipOpen = false; return; } openSheet(s); };
+  el.addEventListener('click', open);
+  el.addEventListener('keydown', (ev) => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); open(); } });
+  return el;
+}
+function bindPreviewGestures(card, stage){
+  let holdT = 0;
+  let held = false;
+  const start = () => {
+    if (!stage._player) bindStage(stage);
+    const p = stage._player;
+    if (!p || p.n<2 || reduceMotion) return;
+    p.playing = true;
+    p.last = 0;
+    const btn = stage.querySelector('.tile-play');
+    if (btn) { btn.textContent = 'Pause'; btn.classList.add('on'); btn.setAttribute('aria-pressed', 'true'); }
+  };
+  const stop = () => {
+    if (canAutoplay()) return;
+    const p = stage._player;
+    if (!p) return;
+    p.playing = false;
+    p.setFrame(0);
+    const btn = stage.querySelector('.tile-play');
+    if (btn) { btn.textContent = 'Play'; btn.classList.remove('on'); btn.setAttribute('aria-pressed', 'false'); }
+  };
+  card.addEventListener('mouseenter', () => {
+    let hover = false;
+    try { hover = window.matchMedia('(hover:hover) and (pointer:fine)').matches; } catch (e) {}
+    if (hover) start();
+  });
+  card.addEventListener('mouseleave', stop);
+  card.addEventListener('touchstart', () => {
+    held = false;
+    clearTimeout(holdT);
+    holdT = setTimeout(() => { held = true; start(); }, 180);
+  }, {passive:true});
+  const endHold = () => {
+    clearTimeout(holdT);
+    if (held) {
+      stop();
+      card._skipOpen = true;
+    }
+  };
+  card.addEventListener('touchend', endHold);
+  card.addEventListener('touchcancel', endHold);
+}
+let detail = null;
+function uniqueClips(a){
+  const names = [];
+  (a.clips||[]).forEach(c => { if (names.indexOf(c.clip)<0) names.push(c.clip); });
+  return names;
+}
+function dirsFor(a, clip){
+  return (a.clips||[]).filter(c => c.clip===clip).map(c => c.dir);
+}
+function findClip(a, clip, dir){
+  return (a.clips||[]).find(c => c.clip===clip && c.dir===dir)
+    || (a.clips||[]).find(c => c.clip===clip)
+    || null;
+}
+function pickSetItem(s, variant){
+  const parts = itemsInSet(s).filter(a => a.variant===variant);
+  return parts.find(a => a.inUse && a.kind==='clip') || parts.find(a => a.kind==='clip') || parts.find(a => a.inUse) || parts[0] || itemsInSet(s)[0];
+}
+function openSheet(s){
+  const list = filtered();
+  const idx = Math.max(0, list.findIndex(x => x.key===s.key));
+  const variant = s.variants.includes('streetwear') ? 'streetwear' : (s.variants[0] || 'default');
+  const inUseVar = itemsInSet(s).find(a => a.inUse)?.variant;
+  const startVar = (inUseVar && s.variants.includes(inUseVar)) ? inUseVar : variant;
+  const a = pickSetItem(s, startVar);
+  const d = decisions[a.id] || { action:'keep', notes:'' };
+  const clips = uniqueClips(a);
+  const start = findClip(a, a.mainClip || clips[0], a.mainDir) || a.clips[0];
+  const catLabel = CAT_LABEL[s.category] || s.category;
+  const panel = document.getElementById('sheetPanel');
+  panel.innerHTML =
+    '<div class="grabber" id="sheetGrab"></div>' +
+    '<div class="crumb">' +
+      '<button type="button" id="sheetClose">Library</button>' +
+      '<span>›</span><span>'+catLabel+'</span>' +
+      '<span>›</span><span>'+s.set+'</span>' +
+    '</div>' +
+    '<div class="nav">' +
+      '<div class="grow">'+s.set+'</div>' +
+      '<button type="button" id="sheetPrevItem" aria-label="Previous">‹</button>' +
+      '<button type="button" id="sheetNextItem" aria-label="Next">›</button>' +
+    '</div>' +
+    '<div class="preview-wrap">' +
+      '<div class="preview '+(a.bg==='room'?'room':'checker')+'" id="sheetPrev"></div>' +
+      '<button type="button" id="playBtn" aria-pressed="false">Play</button>' +
+    '</div>' +
+    '<div class="sheet-body">' +
+    '<div class="seg-scroll" id="varPick"></div>' +
+    '<div class="seg-scroll" id="partPick"></div>' +
+    '<div class="seg-scroll" id="clipPick"></div>' +
+    '<div class="seg-scroll" id="dirPick"></div>' +
+    '<div class="tools">' +
+      '<button type="button" data-zoom="1">1×</button>' +
+      '<button type="button" data-zoom="2" class="on">2×</button>' +
+      '<button type="button" data-zoom="4">4×</button>' +
+      '<button type="button" id="rawBtn" aria-pressed="false">Raw</button>' +
+    '</div>' +
+    '<input type="range" id="scrub" min="0" max="0" value="0" aria-label="Frame">' +
+    '<div class="film" id="film"></div>' +
+    '<div class="icon-grid" id="iconGrid"></div>' +
+    '<div class="meta">'+(a.inUse?'IN USE':'UNUSED')+' · '+a.category+' · '+a.theme+' · '+a.w+'×'+a.h+'</div>' +
+    '<textarea id="sheetNotes" placeholder="notes">'+((d.notes||'').replace(/</g,'&lt;'))+'</textarea>' +
+    '</div>' +
+    '<div class="decbar">' +
+      ['keep','use','needs-restyle','remove'].map(x =>
+        '<button type="button" data-act="'+x+'"'+(d.action===x?' class="on"':'')+'>'+x+'</button>').join('') +
+    '</div>';
+  document.getElementById('sheet').classList.add('show');
+  detail = {
+    set: s, a, list, idx,
+    variant: startVar,
+    clip: start ? start.clip : '',
+    dir: start ? start.dir : '',
+    zoom: 2,
+    raw: false,
+    playing: false,
+    player: null,
+    iconI: 0
+  };
+  paintDetail();
+  document.getElementById('sheetClose').onclick = closeSheet;
+  document.getElementById('sheetPrevItem').onclick = () => stepItem(-1);
+  document.getElementById('sheetNextItem').onclick = () => stepItem(1);
+  panel.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!detail) return;
+      decisions[detail.a.id] = { action: btn.getAttribute('data-act'), notes: document.getElementById('sheetNotes').value };
+      save();
+      panel.querySelectorAll('[data-act]').forEach(b => b.classList.toggle('on', b===btn));
+      render();
+    });
+  });
+  document.getElementById('sheetNotes').addEventListener('change', (ev) => {
+    if (!detail) return;
+    decisions[detail.a.id] = { action: (decisions[detail.a.id]&&decisions[detail.a.id].action)||'keep', notes: ev.target.value };
+    save();
+  });
+  document.getElementById('playBtn').onclick = () => {
+    if (!detail || !detail.player) return;
+    detail.playing = !detail.playing;
+    detail.player.playing = detail.playing;
+    document.getElementById('playBtn').textContent = detail.playing ? 'Pause' : 'Play';
+    document.getElementById('playBtn').setAttribute('aria-pressed', detail.playing ? 'true' : 'false');
+  };
+  document.getElementById('rawBtn').onclick = () => {
+    if (!detail) return;
+    detail.raw = !detail.raw;
+    document.getElementById('rawBtn').setAttribute('aria-pressed', detail.raw ? 'true' : 'false');
+    document.getElementById('rawBtn').classList.toggle('on', detail.raw);
+    paintDetail();
+  };
+  panel.querySelectorAll('[data-zoom]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!detail) return;
+      detail.zoom = Number(btn.getAttribute('data-zoom'))||1;
+      panel.querySelectorAll('[data-zoom]').forEach(b => b.classList.toggle('on', b===btn));
+      paintDetail();
+    });
+  });
+  document.getElementById('scrub').addEventListener('input', (ev) => {
+    if (!detail || !detail.player) return;
+    detail.playing = false;
+    detail.player.playing = false;
+    document.getElementById('playBtn').textContent = 'Play';
+    detail.player.setFrame(Number(ev.target.value)||0);
+    paintFilm(detail.player.i);
+  });
+  bindSwipe();
+}
+function stepItem(delta){
+  if (!detail) return;
+  const next = detail.list[detail.idx + delta];
+  if (!next) return;
+  openSheet(next);
+}
+function paintChips(box, values, current, labelFn, onPick){
+  box.innerHTML = '';
+  values.forEach(v => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = labelFn(v);
+    if (v===current) b.className = 'on';
+    b.addEventListener('click', () => onPick(v));
+    box.appendChild(b);
+  });
+}
+function paintFilm(i){
+  const film = document.getElementById('film');
+  if (!film || !detail) return;
+  const c = findClip(detail.a, detail.clip, detail.dir);
+  if (!c) { film.innerHTML=''; return; }
+  film.innerHTML = '';
+  for (let f=0; f<c.n; f++){
+    const b = document.createElement('button');
+    b.type = 'button';
+    if (f===i) b.className = 'on';
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    applySprite(cell, c.strip, c.w, c.h, c.n, f, 1);
+    cell.style.width = '44px';
+    cell.style.height = '44px';
+    const s = Math.max(0.2, Math.min(44/c.w, 44/c.h));
+    cell.style.backgroundSize = (c.w*c.n*s)+'px '+(c.h*s)+'px';
+    cell.style.backgroundPosition = (-f*c.w*s)+'px '+((44-c.h*s)/2)+'px';
+    b.appendChild(cell);
+    b.addEventListener('click', () => {
+      if (!detail.player) return;
+      detail.playing = false;
+      detail.player.playing = false;
+      document.getElementById('playBtn').textContent = 'Play';
+      detail.player.setFrame(f);
+      document.getElementById('scrub').value = String(f);
+      paintFilm(f);
+    });
+    film.appendChild(b);
+  }
+}
+function paintSetPicks(){
+  if (!detail || !detail.set) return;
+  const varPick = document.getElementById('varPick');
+  const partPick = document.getElementById('partPick');
+  if (varPick) {
+    paintChips(varPick, detail.set.variants, detail.variant, (v)=>v, (variant) => {
+      const next = pickSetItem(detail.set, variant);
+      if (!next) return;
+      detail.variant = variant;
+      detail.a = next;
+      detail.clip = next.mainClip || (uniqueClips(next)[0] || '');
+      detail.dir = next.mainDir || '';
+      detail.playing = false;
+      paintDetail();
+    });
+  }
+  if (partPick) {
+    const parts = itemsInSet(detail.set).filter(a => a.variant===detail.variant);
+    paintChips(partPick, parts.map(a => a.id), detail.a.id, (id) => {
+      const it = itemById(id);
+      return (it && it.part) || id.split('.').pop();
+    }, (id) => {
+      const next = itemById(id);
+      if (!next) return;
+      detail.a = next;
+      detail.clip = next.mainClip || (uniqueClips(next)[0] || '');
+      detail.dir = next.mainDir || '';
+      detail.playing = false;
+      paintDetail();
+    });
+  }
+}
+function paintDetail(){
+  if (!detail) return;
+  paintSetPicks();
+  const a = detail.a;
+  const host = document.getElementById('sheetPrev');
+  if (detail.player) { players.delete(detail.player); detail.player = null; }
+  host.innerHTML = '';
+  const clipPick = document.getElementById('clipPick');
+  const dirPick = document.getElementById('dirPick');
+  const iconGrid = document.getElementById('iconGrid');
+  const film = document.getElementById('film');
+  const scrub = document.getElementById('scrub');
+  const playBtn = document.getElementById('playBtn');
+  if (playBtn) { playBtn.hidden = true; playBtn.style.display = 'none'; }
+  if (detail.raw) {
+    const img = document.createElement('img');
+    img.alt = a.id+' raw sheet';
+    img.src = (!PORTABLE && a.rel) ? a.rel : (a.sheet || a.preview);
+    img.onerror = () => { img.onerror = null; img.src = a.sheet || a.preview; };
+    host.appendChild(img);
+    clipPick.innerHTML = '';
+    dirPick.innerHTML = '';
+    film.innerHTML = '';
+    iconGrid.innerHTML = '';
+    return;
+  }
+  if (a.kind==='icons' && a.icons && a.icons.length) {
+    const ic = a.icons[detail.iconI] || a.icons[0];
+    const img = document.createElement('img');
+    img.src = ic.src; img.alt = a.id;
+    img.style.width = (ic.w*detail.zoom)+'px';
+    img.style.height = (ic.h*detail.zoom)+'px';
+    host.appendChild(img);
+    iconGrid.innerHTML = '';
+    a.icons.forEach((x, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      if (i===detail.iconI) b.className = 'on';
+      const im = document.createElement('img');
+      im.src = x.src; im.alt = '';
+      b.appendChild(im);
+      b.addEventListener('click', () => { detail.iconI = i; paintDetail(); });
+      iconGrid.appendChild(b);
+    });
+    clipPick.innerHTML = '';
+    dirPick.innerHTML = '';
+    film.innerHTML = '';
+    return;
+  }
+  const c = findClip(a, detail.clip, detail.dir);
+  if (c && c.n) {
+    const box = host.getBoundingClientRect();
+    const z = fitZoom(c.w, c.h, Math.max(120, box.width-16), Math.max(160, box.height-16), detail.zoom);
+    detail.player = makeAnim(host, c.strip, c.w, c.h, c.n, c.ms, z, detail.playing);
+    scrub.max = String(Math.max(0, c.n-1));
+    scrub.value = '0';
+    playBtn.hidden = c.n<2;
+    playBtn.style.display = c.n>1 ? '' : 'none';
+    playBtn.textContent = detail.playing ? 'Pause' : 'Play';
+    playBtn.setAttribute('aria-pressed', detail.playing ? 'true' : 'false');
+    paintChips(clipPick, uniqueClips(a), detail.clip, clipLabel, (name) => {
+      detail.clip = name;
+      const dirs = dirsFor(a, name);
+      detail.dir = dirs.indexOf(detail.dir)>=0 ? detail.dir : (dirs.find(d=>d==='south')||dirs.find(d=>d==='east')||dirs[0]);
+      paintDetail();
+    });
+    paintChips(dirPick, dirsFor(a, detail.clip), detail.dir, (d)=> dirLabel(d)||d, (dir) => {
+      detail.dir = dir;
+      paintDetail();
+    });
+    paintFilm(0);
+    iconGrid.innerHTML = '';
+    return;
+  }
+  if (a.preview) {
+    const img = document.createElement('img');
+    img.src = a.preview; img.alt = a.id;
+    img.style.width = (a.pw*detail.zoom)+'px';
+    img.style.height = (a.ph*detail.zoom)+'px';
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '48vh';
+    host.appendChild(img);
+  }
+  clipPick.innerHTML = '';
+  dirPick.innerHTML = '';
+  film.innerHTML = '';
+  iconGrid.innerHTML = '';
+}
+function bindSwipe(){
+  if (bindSwipe.done) return;
+  bindSwipe.done = true;
+  const panel = document.getElementById('sheetPanel');
+  let sx=0, sy=0, sArmed=false;
+  panel.addEventListener('touchstart', (ev) => {
+    if (ev.target.closest('.film,input,textarea,.decbar,#playBtn')) { sArmed=false; return; }
+    const t=ev.changedTouches[0]; sx=t.clientX; sy=t.clientY; sArmed=true;
+  }, {passive:true});
+  panel.addEventListener('touchend', (ev) => {
+    if (!sArmed || !detail) return;
+    sArmed=false;
+    const t=ev.changedTouches[0];
+    const dx=t.clientX-sx, dy=t.clientY-sy;
+    if (dy>72 && dy>Math.abs(dx)*1.15) { closeSheet(); return; }
+    if (Math.abs(dx)<48 || Math.abs(dx)<Math.abs(dy)) return;
+    stepItem(dx<0?1:-1);
+  }, {passive:true});
+}
+bindSwipe.done = false;
+function bindModalSwipe(id){
+  const el = document.getElementById(id);
+  const card = el && el.querySelector('.sheet-card');
+  if (!card) return;
+  let y0=0, armed=false;
+  card.addEventListener('touchstart', (ev) => {
+    const t=ev.changedTouches[0]; y0=t.clientY; armed=true;
+  }, {passive:true});
+  card.addEventListener('touchend', (ev) => {
+    if (!armed) return;
+    armed=false;
+    const t=ev.changedTouches[0];
+    if (t.clientY-y0>80) closeModal(id);
+  }, {passive:true});
+}
+function closeSheet(){
+  if (detail && detail.player) players.delete(detail.player);
+  detail = null;
+  document.getElementById('sheet').classList.remove('show');
+}
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.getElementById('filtersBtn').addEventListener('click', () => openModal('filters'));
+document.getElementById('menuBtn').addEventListener('click', () => openModal('menu'));
+document.getElementById('filtersDone').addEventListener('click', () => closeModal('filters'));
+document.getElementById('menuDone').addEventListener('click', () => closeModal('menu'));
+document.getElementById('filters').addEventListener('click', (ev) => { if (ev.target.id==='filters') closeModal('filters'); });
+document.getElementById('menu').addEventListener('click', (ev) => { if (ev.target.id==='menu') closeModal('menu'); });
+bindModalSwipe('filters');
+bindModalSwipe('menu');
+document.addEventListener('keydown', (ev) => {
+  if (!document.getElementById('sheet').classList.contains('show') || !detail) return;
+  if (ev.key==='Escape') { closeSheet(); return; }
+  if (ev.key==='ArrowLeft' && ev.shiftKey) { stepItem(-1); ev.preventDefault(); return; }
+  if (ev.key==='ArrowRight' && ev.shiftKey) { stepItem(1); ev.preventDefault(); return; }
+  if (ev.key==='ArrowLeft' && detail.player) { detail.player.setFrame(detail.player.i-1); document.getElementById('scrub').value=String(detail.player.i); paintFilm(detail.player.i); ev.preventDefault(); }
+  if (ev.key==='ArrowRight' && detail.player) { detail.player.setFrame(detail.player.i+1); document.getElementById('scrub').value=String(detail.player.i); paintFilm(detail.player.i); ev.preventDefault(); }
+  if (ev.key===' ') { document.getElementById('playBtn').click(); ev.preventDefault(); }
+});
+function render(){
+  const grid = document.getElementById('grid');
+  if (lazyStage.io) lazyStage.io.disconnect();
+  players.clear();
+  grid.innerHTML = '';
+  const list = filtered();
+  list.forEach(a => grid.appendChild(card(a)));
+}
+(function fillFilters(){
+  const themes = [...new Set(DATA.items.map(a => a.theme))].sort();
+  for (const t of themes) document.getElementById('theme').append(new Option(t,t));
+  const counts = {};
+  const used = {};
+  for (const s of (DATA.sets||[])) {
+    counts[s.category] = (counts[s.category]||0)+1;
+    if (s.inUse) used[s.category] = (used[s.category]||0)+1;
+  }
+  const cats = document.getElementById('cats');
+  const usageBox = document.getElementById('usage');
+  const allN = (DATA.sets||[]).length;
+  const allUsed = (DATA.sets||[]).filter(s => s.inUse).length;
+  const mk = (id, label, nUse, nOff) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip'+(cat===id?' on':'');
+    b.setAttribute('role','tab');
+    b.setAttribute('aria-selected', cat===id ? 'true' : 'false');
+    b.innerHTML = label+' <b class="use">'+nUse+'</b>/<span class="off">'+nOff+'</span>';
+    b.addEventListener('click', () => { cat = id; paintCats(); paintUsage(); render(); });
+    return b;
+  };
+  function paintCats(){
+    cats.innerHTML = '';
+    cats.appendChild(mk('', 'All', allUsed, allN-allUsed));
+    for (const c of CAT_ORDER) {
+      const n = counts[c]||0;
+      if (!n && c==='misc') continue;
+      cats.appendChild(mk(c, CAT_LABEL[c]||c, used[c]||0, n-(used[c]||0)));
+    }
+  }
+  function paintUsage(){
+    usageBox.innerHTML = '';
+    const pool = cat ? (DATA.sets||[]).filter(s => s.category===cat) : (DATA.sets||[]);
+    const u = pool.filter(s => s.inUse).length;
+    const n = pool.length - u;
+    const mkU = (id, label, count) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      if (usage===id) b.className = 'on';
+      b.setAttribute('aria-pressed', usage===id ? 'true' : 'false');
+      b.textContent = label;
+      b.title = count+' items';
+      b.addEventListener('click', () => { usage = id; paintUsage(); render(); });
+      return b;
+    };
+    usageBox.appendChild(mkU('all', 'All', pool.length));
+    usageBox.appendChild(mkU('in-use', 'In use', u));
+    usageBox.appendChild(mkU('unused', 'Unused', n));
+  }
+  function paintAutoplay(){
+    const box = document.getElementById('autoplayRow');
+    box.innerHTML = '';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip'+(canAutoplay()?' on':'');
+    b.setAttribute('aria-pressed', canAutoplay() ? 'true' : 'false');
+    b.textContent = 'Autoplay previews';
+    b.addEventListener('click', () => {
+      autoplay = !autoplay;
+      if (reduceMotion) autoplay = false;
+      saveAutoplay();
+      paintAutoplay();
+      setGridPlaying(canAutoplay());
+    });
+    box.appendChild(b);
+  }
+  paintCats();
+  paintUsage();
+  paintAutoplay();
+})();
+['q','status','theme','sort'].forEach(id => document.getElementById(id).addEventListener('input', render));
+document.getElementById('dupBtn').addEventListener('click', () => {
+  const box = document.getElementById('dupes');
+  box.hidden = !box.hidden;
+  const body = document.getElementById('dupBody');
+  body.innerHTML = DATA.dupes.map(d => '<tr><td>'+d.hash.slice(0,8)+'</td><td>'+d.ids.join(', ')+'</td><td>'+mb(d.bytes)+' MB</td></tr>').join('') || '<tr><td colspan=3>none</td></tr>';
+});
+async function exportDecisions(){
+  const text = JSON.stringify(payload(), null, 2);
+  const file = new File([text], 'art-decisions.json', { type: 'application/json' });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'ATO art decisions' });
+      toast('Shared art-decisions.json');
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'ATO art decisions', text: text });
+      toast('Shared decisions');
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'art-decisions.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('Downloaded art-decisions.json');
+}
+function mergeDecisions(incoming){
+  const src = incoming && incoming.decisions ? incoming.decisions : incoming;
+  if (!src || typeof src !== 'object') throw new Error('not a decisions file');
+  let n = 0;
+  for (const [id, d] of Object.entries(src)) {
+    if (!d || typeof d !== 'object') continue;
+    decisions[id] = { action: d.action || 'keep', notes: d.notes || '' };
+    n++;
+  }
+  save();
+  render();
+  toast('Imported '+n+' decision'+(n===1?'':'s'));
+}
+document.getElementById('exportBtn').addEventListener('click', () => { exportDecisions().catch(() => toast('Export failed')); });
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (ev) => {
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try { mergeDecisions(JSON.parse(String(reader.result))); }
+    catch (e) { toast('Import failed: not valid JSON'); }
+  };
+  reader.readAsText(file);
+});
+renderStats();
+render();
+</script>
+</html>
+`;
+}
+
+main();

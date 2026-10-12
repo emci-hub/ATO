@@ -4,7 +4,7 @@
  * Canvas 264×576, 8px collision grid, A* roam, depth sort by footprint
  * bottom Y. Greybox art from the map until Sprite Smith lands.
  */
-import hideoutMap from '@/assets/play/rooms/hideout-td.map.json';
+import hideoutMap from '@/assets/art/rooms/hideout/hideout-td.map.json';
 import type { PetStage } from '@/play/pet';
 import {
   PET_FORM_MOTION,

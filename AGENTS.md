@@ -47,3 +47,41 @@ and Bound Boss via `PLAY_EVERYTHING_FREE`; path cast unchanged (Girl/Wizard/Knig
 + Oni/Archangel enemies); `INFERNA` + `masterpiece_premium_*` skipped. Premium is
 parked — everything free until the owner returns. CastActor slot masks: avatar =
 idle/walk/dash/attack/skill/hurt, path = idle/walk/death, tower = idle/attack/skill.
+
+## Art library (mandatory for any art work)
+1. Library first. Before creating, generating or placing ANY image/animation, search
+   assets/art/registry.json (and ART_LIBRARY.md / _contact sheets) by type, theme, placement, tags.
+2. Reuse before create. If an approved or candidate asset fits (same camera, theme, placement, scale), use it.
+   Variants (colour/state) are new entries with `replaces`/`tags`, not copies.
+3. Create in PixelLab first. Follow the pixellab-workflow skill: grey blockout at our camera
+   (3/4 low top-down, td-3q-low), locked streetwear palette, reference images from the registry.
+   Hand work only for cleanup or after 3 failed PixelLab tries. Log every generation.
+4. Import, never drop files. Bring raw output in with `npm run art:import -- --from … --id …`
+   (saves prompt/seed/params to art-src/pixellab/<id>/<gen>/gen.json), then `npm run art:pack -- --id …`.
+   Never commit raw frames or PixelLab exports under assets/; raw lives only in art-src/.
+   New art goes in `assets/art/<category>/in-use/<set>/<variant>/` or
+   `…/unused/<set>/<variant>/` (art:registry recomputes `inUse` + `usedBy` +
+   `set`/`variant` and moves the file). Viewer is one card per set. Categories:
+   `heroes/<slug>/<skin-set>/` (pets + characters), `enemies-bosses/<slug>/<skin-set>/`,
+   `ui/` (buttons, frames, bars, panels, kit), `icons/` (items, currency, stats, tabs),
+   `rooms/<room>/` (live Hideout packs stay here — equivalent in-use), `rooms/unused/`,
+   `props/` (furniture/decor by room or theme), `tiles/`, `fx/`, `backgrounds/`, `branding/`.
+   `misc/` is last resort (aim ~0). Classify by what the file is, not the old folder.
+5. Register. Every bundled file has a registry entry: id, category, inUse, type, theme (streetwear default), placement,
+   camera, heroRelativeHeight (vs final hero, 53 art px), footprintTiles (12px), sortY/occluder,
+   clips (dirs/frames/ms), palette, status, critiqueScore, source, genCount, tags.
+6. Style rules. One camera for everything (perspective guide): tops + fronts, no side faces, light from
+   top-left, shadow down-right, footprint = collision, tall props get occluders. Props are sized to the
+   FINAL hero and never scale with evolution stage. Streetwear palette only; ≤256 colours per sheet.
+7. Critique gate. Score with pixel-art-critique; ≥22/28 with no zero before status can leave `candidate`.
+   Only emci sets `approved`.
+8. Code uses ids only: getArt('<id>') / findArt({...}) from src/art. No direct require() of image paths.
+9. Off-style art (kenney, craftpix, scribble, primal, dungeon-legends, classic) is `needs-restyle`:
+   don't place it in new streetwear screens; regenerate in PixelLab with `replaces`. Never auto-filter/restyle.
+10. After any art add/remove/usage change: `npm run art:sync` and commit the
+    result. Never hand-edit generated files (`registry.json`, `generated-art.ts`,
+    `ART_LIBRARY.md`, `_contact/`, `tools/art-viewer/README.md`). The viewer is
+    the source of truth for what's implemented. `check:art-registry --fresh`
+    (in `check:ota-gate`) fails if they are stale. A pre-commit hook runs
+    `art:sync` when staged files touch art. Never delete art; archive it
+    (status archived, files to art-src/archive/).
