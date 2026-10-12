@@ -6,10 +6,11 @@
  * fades to 40% after its first tap. "Show labels" in Info restores them.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Defs, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
+  ReduceMotion,
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
@@ -26,11 +27,12 @@ import {
   HIDEOUT_LIGHTS,
   HIDEOUT_NIGHT,
   HIDEOUT_SPOTS,
+  HIDEOUT_SPOT_HIT_PT,
   hideoutLabelAnchor,
   type HideoutScale,
   type HideoutSpot,
 } from '@/play/hideout-iso';
-import { PIXEL_FONT } from '@/play/pixel-theme';
+import { PIXEL, PIXEL_FONT } from '@/play/pixel-theme';
 import { ClipImage } from '@/play/sheet-sprite';
 import { AmbientSprite, Drift, Twinkle, kitDrawable } from '@/play/street-ambient';
 import { KEEP_TRAVEL_PT } from '@/play/play-motion';
@@ -114,6 +116,43 @@ export function StreetRoomArt({
           </View>
         );
       })}
+    </View>
+  );
+}
+
+/**
+ * Habbo-style room surround: the iso diamond sits in a rectangle, so the
+ * leftover viewport is a tiled night brick (palette only, integer cells) plus
+ * a radial vignette that keeps the room the lit focus.
+ */
+export function StreetRoomYard({ width, height, scale }: { width: number; height: number; scale: HideoutScale }) {
+  const pt = scale.pt;
+  const bw = Math.max(2, Math.round(10 * pt));
+  const bh = Math.max(2, Math.round(5 * pt));
+  const m = Math.max(1, Math.round(pt));
+  const pw = bw * 2 + m;
+  const ph = (bh + m) * 2;
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Svg width={width} height={height}>
+        <Defs>
+          <Pattern id="hideoutBricks" x={0} y={0} width={pw} height={ph} patternUnits="userSpaceOnUse">
+            <Rect x={0} y={0} width={pw} height={ph} fill="#08090F" />
+            <Rect x={m} y={m} width={bw - m} height={bh} fill="#1C1522" />
+            <Rect x={bw + m} y={m} width={bw - m} height={bh} fill="#251A28" />
+            <Rect x={m - bw / 2} y={bh + m * 2} width={bw - m} height={bh} fill="#16111C" />
+            <Rect x={m + bw / 2} y={bh + m * 2} width={bw - m} height={bh} fill="#1C1522" />
+            <Rect x={m + bw + bw / 2} y={bh + m * 2} width={bw - m} height={bh} fill="#221824" />
+          </Pattern>
+          <RadialGradient id="hideoutVignette" cx="50%" cy="46%" rx="62%" ry="54%">
+            <Stop offset="0" stopColor={HIDEOUT_NIGHT} stopOpacity="0.12" />
+            <Stop offset="0.55" stopColor={HIDEOUT_NIGHT} stopOpacity="0.42" />
+            <Stop offset="1" stopColor={HIDEOUT_NIGHT} stopOpacity="0.92" />
+          </RadialGradient>
+        </Defs>
+        <Rect width={width} height={height} fill="url(#hideoutBricks)" />
+        <Rect width={width} height={height} fill="url(#hideoutVignette)" />
+      </Svg>
     </View>
   );
 }
@@ -231,11 +270,38 @@ function PulseRing({ still }: { still: boolean }) {
       t.value = 1;
       return;
     }
-    t.value = withRepeat(withSequence(withTiming(0.35, { duration: 700 }), withTiming(1, { duration: 700 })), -1);
+    t.value = withRepeat(
+      withSequence(
+        withTiming(0.35, { duration: 700, reduceMotion: ReduceMotion.Never }),
+        withTiming(1, { duration: 700, reduceMotion: ReduceMotion.Never }),
+      ),
+      -1,
+    );
     return () => cancelAnimation(t);
   }, [still, t]);
   const style = useAnimatedStyle(() => ({ opacity: t.value }));
   return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.pulse, style]} />;
+}
+
+/** Unvisited chip bob — KEEP loop; amplitude ≤1.04, smaller under vestibularSafe. */
+function ChipBob({ still, gentle, children }: { still: boolean; gentle: boolean; children: ReactNode }) {
+  const t = useSharedValue(1);
+  useEffect(() => {
+    cancelAnimation(t);
+    t.value = 1;
+    if (still) return;
+    const peak = gentle ? 1.015 : 1.03;
+    t.value = withRepeat(
+      withSequence(
+        withTiming(peak, { duration: 900, reduceMotion: ReduceMotion.Never }),
+        withTiming(1, { duration: 900, reduceMotion: ReduceMotion.Never }),
+      ),
+      -1,
+    );
+    return () => cancelAnimation(t);
+  }, [still, gentle, t]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: t.value }] }));
+  return <Animated.View style={style}>{children}</Animated.View>;
 }
 
 export function StreetRoomSpots({
@@ -246,13 +312,16 @@ export function StreetRoomSpots({
   pulse,
   notes,
   still,
+  gentle = false,
   petHit,
 }: StreetRoomSpotsProps & {
   left: number;
   top: number;
   scale: HideoutScale;
   still: boolean;
-  /** Pet hit box in screen pt — slop must not overlap it. */
+  /** OS RM / in-game Reduced — smaller idle bob. */
+  gentle?: boolean;
+  /** Pet hit box in screen pt — chip must not cover the figure. */
   petHit: { x: number; y: number; w: number; h: number } | null;
 }) {
   const k = scale.pt;
@@ -286,60 +355,64 @@ export function StreetRoomSpots({
     }
     onSpot(spot.coach);
   };
+  const hit = HIDEOUT_SPOT_HIT_PT;
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
       {HIDEOUT_SPOTS.map((s) => {
-        const [x, y, w, h] = s.rect;
         const note = notes[s.coach];
-        const leftPt = left + x * k;
-        const topPt = top + y * k;
-        const width = w * k;
-        const height = h * k;
-        let slopX = Math.max(0, (48 - width) / 2);
-        let slopY = Math.max(0, (48 - height) / 2);
-        if (petHit) {
-          const hitL = leftPt - slopX;
-          const hitR = leftPt + width + slopX;
-          const hitT = topPt - slopY;
-          const hitB = topPt + height + slopY;
-          const overlap =
-            hitL < petHit.x + petHit.w && hitR > petHit.x && hitT < petHit.y + petHit.h && hitB > petHit.y;
-          if (overlap) {
-            slopX = 0;
-            slopY = 0;
-          }
-        }
         const faded = !showAll && seen[s.id] && pulse !== s.coach;
+        const unvisited = !seen[s.id];
         const anchor = hideoutLabelAnchor(s.id);
+        const label = s.id === 'manhole' ? 'manhole · Underground' : s.action;
+        const chipW = Math.max(hit, s.id === 'manhole' ? 188 : 108);
+        const chipH = hit;
+        const cx = left + anchor[0] * k;
+        const cy = top + anchor[1] * k;
+        let leftPt = Math.round(cx - chipW / 2);
+        let topPt = Math.round(cy - chipH / 2);
+        if (petHit) {
+          const overlap =
+            leftPt < petHit.x + petHit.w &&
+            leftPt + chipW > petHit.x &&
+            topPt < petHit.y + petHit.h &&
+            topPt + chipH > petHit.y;
+          if (overlap) topPt = Math.round(petHit.y - chipH - 6);
+        }
+        const face = (
+          <View
+            style={[
+              styles.chip,
+              { width: chipW, height: chipH },
+              faded && styles.chipFaded,
+              pulse === s.coach && styles.chipHot,
+            ]}>
+            <Text style={[styles.chipText, pulse === s.coach && styles.chipTextHot]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+              {label}
+            </Text>
+            <Text style={[styles.chipArrow, pulse === s.coach && styles.chipTextHot]} maxFontSizeMultiplier={1}>
+              ›
+            </Text>
+          </View>
+        );
         return (
           <Pressable
             key={s.id}
             onPress={() => press(s)}
-            hitSlop={{ left: slopX, right: slopX, top: slopY, bottom: slopY }}
             accessibilityRole="button"
             accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
             style={({ pressed }) => [
               styles.spot,
-              { left: leftPt, top: topPt, width, height },
-              pressed && styles.pressed,
+              { left: leftPt, top: topPt, width: chipW, height: chipH, minWidth: hit, minHeight: hit },
+              pressed && styles.chipPressed,
             ]}>
             {pulse === s.coach ? <PulseRing still={still} /> : null}
-            <View
-              pointerEvents="none"
-              style={[
-                styles.tagWrap,
-                {
-                  width: s.id === 'manhole' ? 168 : 108,
-                  left: left + anchor[0] * k - leftPt - (s.id === 'manhole' ? 84 : 54),
-                  top: top + anchor[1] * k - topPt - (s.id === 'manhole' ? 4 : 16),
-                  opacity: faded ? 0.4 : 1,
-                },
-              ]}>
-              <View style={styles.dot} />
-              <Text style={[styles.tag, pulse === s.coach && styles.tagHot]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
-                {s.id === 'manhole' ? 'manhole · Underground' : s.action}
-              </Text>
-            </View>
+            {unvisited && !still ? (
+              <ChipBob still={still} gentle={gentle}>
+                {face}
+              </ChipBob>
+            ) : (
+              face
+            )}
           </Pressable>
         );
       })}
@@ -512,26 +585,38 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   spot: { position: 'absolute', borderRadius: 4 },
-  pulse: { borderWidth: 2, borderColor: STREET.mustard, borderStyle: 'dashed' },
-  pressed: { backgroundColor: 'rgba(224, 165, 38, 0.18)' },
-  tagWrap: { position: 'absolute', width: 108, alignItems: 'center' },
-  dot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: STREET.mustard, marginBottom: 3 },
-  tag: {
+  pulse: { borderWidth: 2, borderColor: PIXEL.cyan, borderStyle: 'dashed' },
+  chip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: STREET.ink,
+    borderWidth: 2,
+    borderColor: PIXEL.cyan,
+    paddingHorizontal: 8,
+  },
+  chipHot: { backgroundColor: PIXEL.glow, borderColor: PIXEL.cyanHi },
+  chipFaded: { backgroundColor: 'rgba(26, 26, 29, 0.72)' },
+  chipPressed: { transform: [{ translateY: 1 }], backgroundColor: PIXEL.glow },
+  chipText: {
     fontFamily: PIXEL_FONT.label,
     fontSize: 12,
     lineHeight: 16,
     color: STREET.mustard,
-    backgroundColor: 'rgba(12, 13, 35, 0.92)',
-    overflow: 'hidden',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: STREET.mustard,
     includeFontPadding: false,
     textTransform: 'uppercase',
-    textAlign: 'center',
+    flexShrink: 1,
   },
-  tagHot: { color: STREET.paper, borderColor: STREET.paper },
+  chipTextHot: { color: PIXEL.cyanHi },
+  chipArrow: {
+    fontFamily: PIXEL_FONT.label,
+    fontSize: 16,
+    lineHeight: 18,
+    color: PIXEL.cyan,
+    includeFontPadding: false,
+  },
   bubble: {
     position: 'absolute',
     maxWidth: 200,

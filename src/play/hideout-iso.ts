@@ -28,11 +28,19 @@ export const HIDEOUT_AURA_PAD_PX = 12;
  * overlapped the string lights (y≈76–99). Land on the door panel below them.
  */
 export const HIDEOUT_DOOR_LABEL_NUDGE: readonly [number, number] = [0, 52];
-export const HIDEOUT_MARGIN_PT = 16;
-export const HIDEOUT_PHONE_CAP_DPX = 4;
-export const HIDEOUT_IPAD_CAP_DPX = 6;
+export const HIDEOUT_MARGIN_PT = 8;
+/**
+ * Fit math wins. 4 was an old 3x-phone cap that left ~60% of the stage empty;
+ * a 430pt 3x Pro Max can take 5 dpx on the 226×237 content bounds.
+ */
+export const HIDEOUT_PHONE_CAP_DPX = 8;
+export const HIDEOUT_IPAD_CAP_DPX = 10;
+/** Apple HIG 44pt + Material 48dp — chips use the stricter floor. */
+export const HIDEOUT_SPOT_HIT_PT = 48;
 /** Layout widths the feet-on-floor check pins (SE / 14 / 15 Pro Max logical pt). */
 export const HIDEOUT_PHONE_WIDTHS_PT: readonly number[] = [375, 393, 430];
+/** Constant walk speed in art px / second (iso screen space = this map). */
+export const HIDEOUT_WALK_ART_PX_PER_SEC = 22;
 
 type Rect = readonly [number, number, number, number];
 type Pt = readonly [number, number];
@@ -259,8 +267,8 @@ export type HideoutScale = {
 };
 
 /**
- * Largest whole device-px-per-art-px that fits width−32pt and the free height,
- * using the art's trimmed content bounds. 3x phones cap at 4; iPad at 6.
+ * Largest whole device-px-per-art-px that fits the stage, using the art's
+ * trimmed content bounds (transparent canvas margin may bleed). Integer only.
  */
 export function hideoutIntegerScale(input: {
   availW: number;
@@ -306,11 +314,16 @@ export function hideoutPetBox(cellPx: number, scale: HideoutScale, pixelRatio: n
 
 export type HideoutOrigin = { left: number; top: number };
 
-/** Center the 256×320 canvas in the stage. Same origin as the room image. */
+/**
+ * Place the canvas so the *visible* content bounds are centered in the stage.
+ * Transparent padding (15,42 on the 256×320) bleeds; the stage clips it.
+ */
 export function hideoutStageOrigin(width: number, height: number, scale: HideoutScale): HideoutOrigin {
+  const pt = scale.pt;
+  const [ox, oy] = HIDEOUT_CONTENT;
   return {
-    left: Math.round((width - scale.canvasW) / 2),
-    top: Math.round(Math.max(0, (height - scale.canvasH) / 2)),
+    left: Math.round((width - scale.contentW) / 2 - ox * pt),
+    top: Math.round((height - scale.contentH) / 2 - oy * pt),
   };
 }
 
@@ -398,9 +411,14 @@ export type HideoutStep = {
   loop: boolean;
 };
 
-const CROSS_MS = 5200;
-const BASE_BOUNCE = 8;
 const TARGET_IDS: readonly HideoutTargetId[] = ['bowl', 'cushion', 'chair', 'door', 'boombox'];
+
+/** Duration for a constant-speed iso lerp in art px (this map is already screen-space). */
+export function hideoutWalkMs(dx: number, dy: number, speed: number): number {
+  const dist = Math.hypot(dx, dy);
+  const v = Math.max(0.2, speed) * HIDEOUT_WALK_ART_PX_PER_SEC;
+  return Math.max(480, Math.round((dist / v) * 1000));
+}
 
 export function hideoutTargetPoint(id: HideoutTargetId): Pt {
   return clampToWalk(HIDEOUT_TARGETS[id][0], HIDEOUT_TARGETS[id][1]);
@@ -423,14 +441,13 @@ export function planHideoutStep(
     const far = Math.hypot(here[0] - bed[0], here[1] - bed[1]) > 8;
     if (far) {
       const speed = Math.max(0.2, form.speed);
-      const dist = Math.hypot(bed[0] - here[0], bed[1] - here[1]) / 80;
       return {
         act: 'wander',
         pose: petPose(kit, 'walk'),
-        ms: Math.max(700, Math.round((dist * CROSS_MS) / speed)),
+        ms: hideoutWalkMs(bed[0] - here[0], bed[1] - here[1], speed),
         toX: bed[0],
         toY: bed[1],
-        bounce: Math.round(BASE_BOUNCE * form.bounce),
+        bounce: 0,
         squash: false,
         loop: true,
       };
@@ -443,14 +460,13 @@ export function planHideoutStep(
     const bowl = hideoutTargetPoint('bowl');
     if (Math.hypot(here[0] - bowl[0], here[1] - bowl[1]) > 6) {
       const speed = Math.max(0.2, form.speed * m.speed);
-      const dist = Math.hypot(bowl[0] - here[0], bowl[1] - here[1]) / 80;
       return {
         act: 'wander',
         pose: petPose(kit, 'walk'),
-        ms: Math.max(600, Math.round((dist * CROSS_MS) / speed)),
+        ms: hideoutWalkMs(bowl[0] - here[0], bowl[1] - here[1], speed),
         toX: bowl[0],
         toY: bowl[1],
-        bounce: Math.round(BASE_BOUNCE * form.bounce * m.bounce),
+        bounce: 0,
         squash: mood === 'sad',
         loop: true,
       };
@@ -479,14 +495,13 @@ export function planHideoutStep(
       return { act: rng() < m.sit ? 'sit' : 'idle', pose: petPose(kit, 'idle'), ms: restMs, squash: true, ...still };
     }
     const speed = Math.max(0.2, form.speed * m.speed);
-    const dist = Math.hypot(dest[0] - here[0], dest[1] - here[1]) / 80;
     return {
       act: 'wander',
       pose: petPose(kit, 'walk'),
-      ms: Math.max(600, Math.round((dist * CROSS_MS) / speed)),
+      ms: hideoutWalkMs(dest[0] - here[0], dest[1] - here[1], speed),
       toX: dest[0],
       toY: dest[1],
-      bounce: Math.round(BASE_BOUNCE * form.bounce * m.bounce),
+      bounce: 0,
       squash: mood === 'sad',
       loop: true,
     };
