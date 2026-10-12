@@ -1,6 +1,8 @@
 /**
- * Art library accessors. Code uses ids only: `getArt('hero.kael.streetwear')`
- * / `findArt({ type: 'prop', theme: 'streetwear', placement: 'floor' })`.
+ * Art library accessors. Code uses the typed tree, never a typed-out string:
+ * `getArtSource(ART.room.<room>.<part>)` / `HERO.<hero>.idle` /
+ * `findArt({ type: 'prop', theme: 'streetwear', placement: 'floor' })`.
+ * Old ids still resolve through `ART_ALIASES`, so a rename never breaks a caller.
  *
  * Image sources come from `generated-art.ts` (literal require()s for Metro).
  */
@@ -8,14 +10,20 @@ import type { ImageSourcePropType } from 'react-native';
 
 import registryJson from '../../assets/art/registry.json';
 import type { ArtAsset, ArtRegistry } from '@/art/registry.types';
-import { ART_SOURCES, type ArtId } from '@/art/generated-art';
+import { ART, ART_ALIASES, ART_SOURCES, HERO, type ArtId, type HeroSlug } from '@/art/generated-art';
 
 const registry = registryJson as ArtRegistry;
 
 const byId = new Map<string, ArtAsset>();
 for (const asset of registry.assets) byId.set(asset.id, asset);
 
-export type { ArtId, ArtAsset };
+export { ART, HERO };
+export type { ArtId, ArtAsset, HeroSlug };
+
+/** Current id for an id or an old (renamed) id. */
+export function resolveArtId(id: ArtId | string): string {
+  return ART_ALIASES[id] ?? id;
+}
 
 export type ArtQuery = {
   category?: string;
@@ -33,11 +41,11 @@ export function allArt(): ArtAsset[] {
 }
 
 export function getArt(id: ArtId | string): ArtAsset | undefined {
-  return byId.get(id);
+  return byId.get(resolveArtId(id));
 }
 
 export function getArtSource(id: ArtId | string): ImageSourcePropType | undefined {
-  return ART_SOURCES[id];
+  return ART_SOURCES[resolveArtId(id)];
 }
 
 export function findArt(query: ArtQuery): ArtAsset[] {

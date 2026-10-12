@@ -24,33 +24,33 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-north` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-north-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-north-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-south` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-south-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-south-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-west` | 252×252 | resource | — | — |
+| `npc.abyssal-assassin.dungeon-legends.east` | 252×252 | resource | — | — |
+| `npc.abyssal-assassin.dungeon-legends.north` | 252×252 | resource | — | — |
+| `npc.abyssal-assassin.dungeon-legends.north-east` | 252×252 | resource | — | — |
+| `npc.abyssal-assassin.dungeon-legends.north-west` | 252×252 | resource | — | — |
+| `npc.abyssal-assassin.dungeon-legends.south` | 252×252 | resource | — | — |
+| `npc.abyssal-assassin.dungeon-legends.south-east` | 252×252 | resource | — | — |
+| `npc.abyssal-assassin.dungeon-legends.south-west` | 252×252 | resource | — | — |
+| `npc.abyssal-assassin.dungeon-legends.west` | 252×252 | resource | — | — |
 
 ## heroes · arcane-engineer · dungeon-legends · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-north` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-north-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-north-west` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-south` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-south-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-south-west` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-west` | 244×244 | resource | — | — |
+| `npc.arcane-engineer.dungeon-legends.east` | 244×244 | resource | — | — |
+| `npc.arcane-engineer.dungeon-legends.north` | 244×244 | resource | — | — |
+| `npc.arcane-engineer.dungeon-legends.north-east` | 244×244 | resource | — | — |
+| `npc.arcane-engineer.dungeon-legends.north-west` | 244×244 | resource | — | — |
+| `npc.arcane-engineer.dungeon-legends.south` | 244×244 | resource | — | — |
+| `npc.arcane-engineer.dungeon-legends.south-east` | 244×244 | resource | — | — |
+| `npc.arcane-engineer.dungeon-legends.south-west` | 244×244 | resource | — | — |
+| `npc.arcane-engineer.dungeon-legends.west` | 244×244 | resource | — | — |
 
 ## heroes · archangel · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.archangel.cast.core` | 2192×1934 | alt-skin | — | — |
+| `hero.archangel.cast.atlas` | 2192×1934 | alt-skin | — | — |
 
 ## heroes · archangel · streetwear · in-use
 
@@ -63,7 +63,7 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.aurex.cast.core` | 1676×1031 | alt-skin | — | — |
+| `hero.aurex.cast.atlas` | 1676×1031 | alt-skin | — | — |
 
 ## heroes · aurex · streetwear · in-use
 
@@ -76,33 +76,33 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-north` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-north-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-north-west` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-south` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-south-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-south-west` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-west` | 252×252 | resource | — | — |
+| `pet.buffalo-earthshaker.primal.east` | 252×252 | resource | — | — |
+| `pet.buffalo-earthshaker.primal.north` | 252×252 | resource | — | — |
+| `pet.buffalo-earthshaker.primal.north-east` | 252×252 | resource | — | — |
+| `pet.buffalo-earthshaker.primal.north-west` | 252×252 | resource | — | — |
+| `pet.buffalo-earthshaker.primal.south` | 252×252 | resource | — | — |
+| `pet.buffalo-earthshaker.primal.south-east` | 252×252 | resource | — | — |
+| `pet.buffalo-earthshaker.primal.south-west` | 252×252 | resource | — | — |
+| `pet.buffalo-earthshaker.primal.west` | 252×252 | resource | — | — |
 
 ## heroes · cobra-oracle · primal · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-cobra-oracle-idle-rotations-east` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-cobra-oracle-idle-rotations-north` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-cobra-oracle-idle-rotations-north-east` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-cobra-oracle-idle-rotations-north-west` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-cobra-oracle-idle-rotations-south` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-cobra-oracle-idle-rotations-south-east` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-cobra-oracle-idle-rotations-south-west` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-cobra-oracle-idle-rotations-west` | 248×248 | resource | — | — |
+| `pet.cobra-oracle.primal.east` | 248×248 | resource | — | — |
+| `pet.cobra-oracle.primal.north` | 248×248 | resource | — | — |
+| `pet.cobra-oracle.primal.north-east` | 248×248 | resource | — | — |
+| `pet.cobra-oracle.primal.north-west` | 248×248 | resource | — | — |
+| `pet.cobra-oracle.primal.south` | 248×248 | resource | — | — |
+| `pet.cobra-oracle.primal.south-east` | 248×248 | resource | — | — |
+| `pet.cobra-oracle.primal.south-west` | 248×248 | resource | — | — |
+| `pet.cobra-oracle.primal.west` | 248×248 | resource | — | — |
 
 ## heroes · corvus · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.corvus.cast.core` | 2056×1209 | alt-skin | — | — |
+| `hero.corvus.cast.atlas` | 2056×1209 | alt-skin | — | — |
 
 ## heroes · corvus · streetwear · in-use
 
@@ -115,20 +115,20 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-north` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-north-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-north-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-south` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-south-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-south-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-west` | 252×252 | resource | — | — |
+| `npc.crystal-berserker.dungeon-legends.east` | 252×252 | resource | — | — |
+| `npc.crystal-berserker.dungeon-legends.north` | 252×252 | resource | — | — |
+| `npc.crystal-berserker.dungeon-legends.north-east` | 252×252 | resource | — | — |
+| `npc.crystal-berserker.dungeon-legends.north-west` | 252×252 | resource | — | — |
+| `npc.crystal-berserker.dungeon-legends.south` | 252×252 | resource | — | — |
+| `npc.crystal-berserker.dungeon-legends.south-east` | 252×252 | resource | — | — |
+| `npc.crystal-berserker.dungeon-legends.south-west` | 252×252 | resource | — | — |
+| `npc.crystal-berserker.dungeon-legends.west` | 252×252 | resource | — | — |
 
 ## heroes · cyber-shinobi · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.cyber-shinobi.cast.core` | 1988×1520 | alt-skin | — | — |
+| `hero.cyber-shinobi.cast.atlas` | 1988×1520 | alt-skin | — | — |
 
 ## heroes · cyber-shinobi · streetwear · in-use
 
@@ -141,59 +141,59 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-north` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-north-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-north-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-south` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-south-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-south-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-west` | 252×252 | resource | — | — |
+| `npc.death-knight.dungeon-legends.east` | 252×252 | resource | — | — |
+| `npc.death-knight.dungeon-legends.north` | 252×252 | resource | — | — |
+| `npc.death-knight.dungeon-legends.north-east` | 252×252 | resource | — | — |
+| `npc.death-knight.dungeon-legends.north-west` | 252×252 | resource | — | — |
+| `npc.death-knight.dungeon-legends.south` | 252×252 | resource | — | — |
+| `npc.death-knight.dungeon-legends.south-east` | 252×252 | resource | — | — |
+| `npc.death-knight.dungeon-legends.south-west` | 252×252 | resource | — | — |
+| `npc.death-knight.dungeon-legends.west` | 252×252 | resource | — | — |
 
 ## heroes · dragonblood-champion · dungeon-legends · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-north` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-north-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-north-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-south` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-south-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-south-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-west` | 252×252 | resource | — | — |
+| `npc.dragonblood-champion.dungeon-legends.east` | 252×252 | resource | — | — |
+| `npc.dragonblood-champion.dungeon-legends.north` | 252×252 | resource | — | — |
+| `npc.dragonblood-champion.dungeon-legends.north-east` | 252×252 | resource | — | — |
+| `npc.dragonblood-champion.dungeon-legends.north-west` | 252×252 | resource | — | — |
+| `npc.dragonblood-champion.dungeon-legends.south` | 252×252 | resource | — | — |
+| `npc.dragonblood-champion.dungeon-legends.south-east` | 252×252 | resource | — | — |
+| `npc.dragonblood-champion.dungeon-legends.south-west` | 252×252 | resource | — | — |
+| `npc.dragonblood-champion.dungeon-legends.west` | 252×252 | resource | — | — |
 
 ## heroes · dungeon-druid · dungeon-legends · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-north` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-north-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-north-west` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-south` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-south-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-south-west` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-west` | 244×244 | resource | — | — |
+| `npc.dungeon-druid.dungeon-legends.east` | 244×244 | resource | — | — |
+| `npc.dungeon-druid.dungeon-legends.north` | 244×244 | resource | — | — |
+| `npc.dungeon-druid.dungeon-legends.north-east` | 244×244 | resource | — | — |
+| `npc.dungeon-druid.dungeon-legends.north-west` | 244×244 | resource | — | — |
+| `npc.dungeon-druid.dungeon-legends.south` | 244×244 | resource | — | — |
+| `npc.dungeon-druid.dungeon-legends.south-east` | 244×244 | resource | — | — |
+| `npc.dungeon-druid.dungeon-legends.south-west` | 244×244 | resource | — | — |
+| `npc.dungeon-druid.dungeon-legends.west` | 244×244 | resource | — | — |
 
 ## heroes · dungeon-witch · dungeon-legends · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-north` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-north-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-north-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-south` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-south-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-south-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-west` | 252×252 | resource | — | — |
+| `npc.dungeon-witch.dungeon-legends.east` | 252×252 | resource | — | — |
+| `npc.dungeon-witch.dungeon-legends.north` | 252×252 | resource | — | — |
+| `npc.dungeon-witch.dungeon-legends.north-east` | 252×252 | resource | — | — |
+| `npc.dungeon-witch.dungeon-legends.north-west` | 252×252 | resource | — | — |
+| `npc.dungeon-witch.dungeon-legends.south` | 252×252 | resource | — | — |
+| `npc.dungeon-witch.dungeon-legends.south-east` | 252×252 | resource | — | — |
+| `npc.dungeon-witch.dungeon-legends.south-west` | 252×252 | resource | — | — |
+| `npc.dungeon-witch.dungeon-legends.west` | 252×252 | resource | — | — |
 
 ## heroes · elowen · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.elowen.cast.core` | 2192×1160 | alt-skin | — | — |
+| `hero.elowen.cast.atlas` | 2192×1160 | alt-skin | — | — |
 
 ## heroes · elowen · streetwear · in-use
 
@@ -206,7 +206,7 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.frost-lich.cast.core` | 2124×1249 | alt-skin | — | — |
+| `hero.frost-lich.cast.atlas` | 2124×1249 | alt-skin | — | — |
 
 ## heroes · frost-lich · streetwear · in-use
 
@@ -219,33 +219,33 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-gorilla-titan-idle-rotations-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-gorilla-titan-idle-rotations-north` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-gorilla-titan-idle-rotations-north-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-gorilla-titan-idle-rotations-north-west` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-gorilla-titan-idle-rotations-south` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-gorilla-titan-idle-rotations-south-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-gorilla-titan-idle-rotations-south-west` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-gorilla-titan-idle-rotations-west` | 244×244 | resource | — | — |
+| `pet.gorilla-titan.primal.east` | 244×244 | resource | — | — |
+| `pet.gorilla-titan.primal.north` | 244×244 | resource | — | — |
+| `pet.gorilla-titan.primal.north-east` | 244×244 | resource | — | — |
+| `pet.gorilla-titan.primal.north-west` | 244×244 | resource | — | — |
+| `pet.gorilla-titan.primal.south` | 244×244 | resource | — | — |
+| `pet.gorilla-titan.primal.south-east` | 244×244 | resource | — | — |
+| `pet.gorilla-titan.primal.south-west` | 244×244 | resource | — | — |
+| `pet.gorilla-titan.primal.west` | 244×244 | resource | — | — |
 
 ## heroes · jaguar-sun-guardian · primal · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-north` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-north-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-north-west` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-south` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-south-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-south-west` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-west` | 252×252 | resource | — | — |
+| `pet.jaguar-sun-guardian.primal.east` | 252×252 | resource | — | — |
+| `pet.jaguar-sun-guardian.primal.north` | 252×252 | resource | — | — |
+| `pet.jaguar-sun-guardian.primal.north-east` | 252×252 | resource | — | — |
+| `pet.jaguar-sun-guardian.primal.north-west` | 252×252 | resource | — | — |
+| `pet.jaguar-sun-guardian.primal.south` | 252×252 | resource | — | — |
+| `pet.jaguar-sun-guardian.primal.south-east` | 252×252 | resource | — | — |
+| `pet.jaguar-sun-guardian.primal.south-west` | 252×252 | resource | — | — |
+| `pet.jaguar-sun-guardian.primal.west` | 252×252 | resource | — | — |
 
 ## heroes · kael · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.kael.cast.core` | 1624×1624 | alt-skin | — | — |
+| `hero.kael.cast.atlas` | 1624×1624 | alt-skin | — | — |
 
 ## heroes · kael · streetwear · in-use
 
@@ -258,7 +258,7 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.kitsune.cast.core` | 2668×1726 | alt-skin | — | — |
+| `hero.kitsune.cast.atlas` | 2668×1726 | alt-skin | — | — |
 
 ## heroes · kitsune · streetwear · in-use
 
@@ -271,20 +271,20 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-lynx-huntress-idle-rotations-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-lynx-huntress-idle-rotations-north` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-lynx-huntress-idle-rotations-north-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-lynx-huntress-idle-rotations-north-west` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-lynx-huntress-idle-rotations-south` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-lynx-huntress-idle-rotations-south-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-lynx-huntress-idle-rotations-south-west` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-lynx-huntress-idle-rotations-west` | 244×244 | resource | — | — |
+| `pet.lynx-huntress.primal.east` | 244×244 | resource | — | — |
+| `pet.lynx-huntress.primal.north` | 244×244 | resource | — | — |
+| `pet.lynx-huntress.primal.north-east` | 244×244 | resource | — | — |
+| `pet.lynx-huntress.primal.north-west` | 244×244 | resource | — | — |
+| `pet.lynx-huntress.primal.south` | 244×244 | resource | — | — |
+| `pet.lynx-huntress.primal.south-east` | 244×244 | resource | — | — |
+| `pet.lynx-huntress.primal.south-west` | 244×244 | resource | — | — |
+| `pet.lynx-huntress.primal.west` | 244×244 | resource | — | — |
 
 ## heroes · maldrath · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.maldrath.cast.core` | 2192×1418 | alt-skin | — | — |
+| `hero.maldrath.cast.atlas` | 2192×1418 | alt-skin | — | — |
 
 ## heroes · maldrath · streetwear · in-use
 
@@ -297,20 +297,20 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-mammoth-warchief-idle-rotations-east` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-mammoth-warchief-idle-rotations-north` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-mammoth-warchief-idle-rotations-north-east` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-mammoth-warchief-idle-rotations-north-west` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-mammoth-warchief-idle-rotations-south` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-mammoth-warchief-idle-rotations-south-east` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-mammoth-warchief-idle-rotations-south-west` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-mammoth-warchief-idle-rotations-west` | 248×248 | resource | — | — |
+| `pet.mammoth-warchief.primal.east` | 248×248 | resource | — | — |
+| `pet.mammoth-warchief.primal.north` | 248×248 | resource | — | — |
+| `pet.mammoth-warchief.primal.north-east` | 248×248 | resource | — | — |
+| `pet.mammoth-warchief.primal.north-west` | 248×248 | resource | — | — |
+| `pet.mammoth-warchief.primal.south` | 248×248 | resource | — | — |
+| `pet.mammoth-warchief.primal.south-east` | 248×248 | resource | — | — |
+| `pet.mammoth-warchief.primal.south-west` | 248×248 | resource | — | — |
+| `pet.mammoth-warchief.primal.west` | 248×248 | resource | — | — |
 
 ## heroes · morwen · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.morwen.cast.core` | 2124×1374 | alt-skin | — | — |
+| `hero.morwen.cast.atlas` | 2124×1374 | alt-skin | — | — |
 
 ## heroes · morwen · streetwear · in-use
 
@@ -323,7 +323,7 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.neon-viper.cast.core` | 1289×1418 | alt-skin | — | — |
+| `hero.neon-viper.cast.atlas` | 1289×1418 | alt-skin | — | — |
 
 ## heroes · neon-viper · streetwear · in-use
 
@@ -336,7 +336,7 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.oni.cast.core` | 1700×2078 | alt-skin | — | — |
+| `hero.oni.cast.atlas` | 1700×2078 | alt-skin | — | — |
 
 ## heroes · oni · streetwear · in-use
 
@@ -349,33 +349,33 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-panther-shadowblade-idle-rotations-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-panther-shadowblade-idle-rotations-north` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-panther-shadowblade-idle-rotations-north-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-panther-shadowblade-idle-rotations-north-west` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-panther-shadowblade-idle-rotations-south` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-panther-shadowblade-idle-rotations-south-east` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-panther-shadowblade-idle-rotations-south-west` | 244×244 | resource | — | — |
-| `pet.characters-pets-primal-panther-shadowblade-idle-rotations-west` | 244×244 | resource | — | — |
+| `pet.panther-shadowblade.primal.east` | 244×244 | resource | — | — |
+| `pet.panther-shadowblade.primal.north` | 244×244 | resource | — | — |
+| `pet.panther-shadowblade.primal.north-east` | 244×244 | resource | — | — |
+| `pet.panther-shadowblade.primal.north-west` | 244×244 | resource | — | — |
+| `pet.panther-shadowblade.primal.south` | 244×244 | resource | — | — |
+| `pet.panther-shadowblade.primal.south-east` | 244×244 | resource | — | — |
+| `pet.panther-shadowblade.primal.south-west` | 244×244 | resource | — | — |
+| `pet.panther-shadowblade.primal.west` | 244×244 | resource | — | — |
 
 ## heroes · ratkin-treasure-hunter · dungeon-legends · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-north` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-north-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-north-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-south` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-south-east` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-south-west` | 252×252 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-west` | 252×252 | resource | — | — |
+| `npc.ratkin-treasure-hunter.dungeon-legends.east` | 252×252 | resource | — | — |
+| `npc.ratkin-treasure-hunter.dungeon-legends.north` | 252×252 | resource | — | — |
+| `npc.ratkin-treasure-hunter.dungeon-legends.north-east` | 252×252 | resource | — | — |
+| `npc.ratkin-treasure-hunter.dungeon-legends.north-west` | 252×252 | resource | — | — |
+| `npc.ratkin-treasure-hunter.dungeon-legends.south` | 252×252 | resource | — | — |
+| `npc.ratkin-treasure-hunter.dungeon-legends.south-east` | 252×252 | resource | — | — |
+| `npc.ratkin-treasure-hunter.dungeon-legends.south-west` | 252×252 | resource | — | — |
+| `npc.ratkin-treasure-hunter.dungeon-legends.west` | 252×252 | resource | — | — |
 
 ## heroes · raven · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.raven.cast.core` | 1418×1676 | alt-skin | — | — |
+| `hero.raven.cast.atlas` | 1418×1676 | alt-skin | — | — |
 
 ## heroes · raven · streetwear · in-use
 
@@ -388,33 +388,33 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-raven-deathcaller-idle-rotations-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-raven-deathcaller-idle-rotations-north` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-raven-deathcaller-idle-rotations-north-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-raven-deathcaller-idle-rotations-north-west` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-raven-deathcaller-idle-rotations-south` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-raven-deathcaller-idle-rotations-south-east` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-raven-deathcaller-idle-rotations-south-west` | 252×252 | resource | — | — |
-| `pet.characters-pets-primal-raven-deathcaller-idle-rotations-west` | 252×252 | resource | — | — |
+| `pet.raven-deathcaller.primal.east` | 252×252 | resource | — | — |
+| `pet.raven-deathcaller.primal.north` | 252×252 | resource | — | — |
+| `pet.raven-deathcaller.primal.north-east` | 252×252 | resource | — | — |
+| `pet.raven-deathcaller.primal.north-west` | 252×252 | resource | — | — |
+| `pet.raven-deathcaller.primal.south` | 252×252 | resource | — | — |
+| `pet.raven-deathcaller.primal.south-east` | 252×252 | resource | — | — |
+| `pet.raven-deathcaller.primal.south-west` | 252×252 | resource | — | — |
+| `pet.raven-deathcaller.primal.west` | 252×252 | resource | — | — |
 
 ## heroes · rhino-juggernaut · primal · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.characters-pets-primal-rhino-juggernaut-idle-rotations-north` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-rhino-juggernaut-idle-rotations-north-east` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-rhino-juggernaut-idle-rotations-north-west` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-rhino-juggernaut-idle-rotations-south` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-rhino-juggernaut-idle-rotations-south-east` | 248×248 | resource | — | — |
-| `pet.characters-pets-primal-rhino-juggernaut-idle-rotations-south-west` | 248×248 | resource | — | — |
-| `pet.east` | 248×248 | resource | — | — |
-| `pet.west` | 248×248 | resource | — | — |
+| `pet.rhino-juggernaut.primal.east` | 248×248 | resource | — | — |
+| `pet.rhino-juggernaut.primal.north` | 248×248 | resource | — | — |
+| `pet.rhino-juggernaut.primal.north-east` | 248×248 | resource | — | — |
+| `pet.rhino-juggernaut.primal.north-west` | 248×248 | resource | — | — |
+| `pet.rhino-juggernaut.primal.south` | 248×248 | resource | — | — |
+| `pet.rhino-juggernaut.primal.south-east` | 248×248 | resource | — | — |
+| `pet.rhino-juggernaut.primal.south-west` | 248×248 | resource | — | — |
+| `pet.rhino-juggernaut.primal.west` | 248×248 | resource | — | — |
 
 ## heroes · sak · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.sak.cast.core` | 2056×1330 | alt-skin | — | — |
+| `hero.sak.cast.atlas` | 2056×1330 | alt-skin | — | — |
 
 ## heroes · sak · streetwear · in-use
 
@@ -427,31 +427,31 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-north` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-north-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-north-west` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-south` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-south-east` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-south-west` | 244×244 | resource | — | — |
-| `npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-west` | 244×244 | resource | — | — |
+| `npc.seraphic-dungeon-cleric.dungeon-legends.east` | 244×244 | resource | — | — |
+| `npc.seraphic-dungeon-cleric.dungeon-legends.north` | 244×244 | resource | — | — |
+| `npc.seraphic-dungeon-cleric.dungeon-legends.north-east` | 244×244 | resource | — | — |
+| `npc.seraphic-dungeon-cleric.dungeon-legends.north-west` | 244×244 | resource | — | — |
+| `npc.seraphic-dungeon-cleric.dungeon-legends.south` | 244×244 | resource | — | — |
+| `npc.seraphic-dungeon-cleric.dungeon-legends.south-east` | 244×244 | resource | — | — |
+| `npc.seraphic-dungeon-cleric.dungeon-legends.south-west` | 244×244 | resource | — | — |
+| `npc.seraphic-dungeon-cleric.dungeon-legends.west` | 244×244 | resource | — | — |
 
 ## heroes · shark-tide-knight · primal · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `pet.north` | 248×248 | resource | — | — |
-| `pet.north-east` | 248×248 | resource | — | — |
-| `pet.north-west` | 248×248 | resource | — | — |
-| `pet.south` | 248×248 | resource | — | — |
-| `pet.south-east` | 248×248 | resource | — | — |
-| `pet.south-west` | 248×248 | resource | — | — |
+| `pet.shark-tide-knight.primal.north` | 248×248 | resource | — | — |
+| `pet.shark-tide-knight.primal.north-east` | 248×248 | resource | — | — |
+| `pet.shark-tide-knight.primal.north-west` | 248×248 | resource | — | — |
+| `pet.shark-tide-knight.primal.south` | 248×248 | resource | — | — |
+| `pet.shark-tide-knight.primal.south-east` | 248×248 | resource | — | — |
+| `pet.shark-tide-knight.primal.south-west` | 248×248 | resource | — | — |
 
 ## heroes · velkhar · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.velkhar.cast.core` | 1624×1624 | alt-skin | — | — |
+| `hero.velkhar.cast.atlas` | 1624×1624 | alt-skin | — | — |
 
 ## heroes · velkhar · streetwear · in-use
 
@@ -464,7 +464,7 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.void-raven.cast.core` | 1418×1676 | alt-skin | — | — |
+| `hero.void-raven.cast.atlas` | 1418×1676 | alt-skin | — | — |
 
 ## heroes · void-raven · streetwear · in-use
 
@@ -477,90 +477,90 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `npc.east` | 248×248 | resource | — | — |
-| `npc.north` | 248×248 | resource | — | — |
-| `npc.north-east` | 248×248 | resource | — | — |
-| `npc.north-west` | 248×248 | resource | — | — |
-| `npc.south` | 248×248 | resource | — | — |
-| `npc.south-east` | 248×248 | resource | — | — |
-| `npc.south-west` | 248×248 | resource | — | — |
-| `npc.west` | 248×248 | resource | — | — |
+| `npc.abyssal-demon-guardian.dungeon-legends.east` | 248×248 | resource | — | — |
+| `npc.abyssal-demon-guardian.dungeon-legends.north` | 248×248 | resource | — | — |
+| `npc.abyssal-demon-guardian.dungeon-legends.north-east` | 248×248 | resource | — | — |
+| `npc.abyssal-demon-guardian.dungeon-legends.north-west` | 248×248 | resource | — | — |
+| `npc.abyssal-demon-guardian.dungeon-legends.south` | 248×248 | resource | — | — |
+| `npc.abyssal-demon-guardian.dungeon-legends.south-east` | 248×248 | resource | — | — |
+| `npc.abyssal-demon-guardian.dungeon-legends.south-west` | 248×248 | resource | — | — |
+| `npc.abyssal-demon-guardian.dungeon-legends.west` | 248×248 | resource | — | — |
 
 ## enemies-bosses · ghost · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tower.ghost.cast.core` | 1927×240 | alt-skin | — | — |
+| `tower.ghost.cast.atlas` | 1927×240 | alt-skin | — | — |
 
 ## enemies-bosses · knight · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `creep.knight.cast.core` | 368×532 | alt-skin | — | — |
+| `creep.knight.cast.atlas` | 368×532 | alt-skin | — | — |
 
 ## enemies-bosses · lux · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tower.lux.cast.core` | 1959×244 | alt-skin | — | — |
+| `tower.lux.cast.atlas` | 1959×244 | alt-skin | — | — |
 
 ## enemies-bosses · oni · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `boss.oni.cast.core` | 1700×1700 | alt-skin | — | — |
+| `boss.oni.cast.atlas` | 1700×1700 | alt-skin | — | — |
 
 ## enemies-bosses · titan-x · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `boss.titan-x.cast.core` | 1959×244 | alt-skin | — | — |
+| `boss.titan-x.cast.atlas` | 1959×244 | alt-skin | — | — |
 
 ## enemies-bosses · village-girl · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `creep.village-girl.cast.atlas0` | 404×584 | alt-skin | — | — |
-| `creep.village-girl.cast.core` | 404×44 | alt-skin | — | — |
+| `creep.village-girl.cast.atlas-0` | 404×584 | alt-skin | — | — |
+| `creep.village-girl.cast.atlas-1` | 404×44 | alt-skin | — | — |
 
 ## enemies-bosses · viper · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tower.viper.cast.core` | 1895×236 | alt-skin | — | — |
+| `tower.viper.cast.atlas` | 1895×236 | alt-skin | — | — |
 
 ## enemies-bosses · wizard · cast · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `creep.wizard.cast.atlas0` | 368×286 | alt-skin | — | — |
-| `creep.wizard.cast.core` | 368×163 | alt-skin | — | — |
+| `creep.wizard.cast.atlas-0` | 368×286 | alt-skin | — | — |
+| `creep.wizard.cast.atlas-1` | 368×163 | alt-skin | — | — |
 
 ## ui · frames · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-rarity-frame-base` | 192×192 | resource | — | — |
-| `ui.ui-streetwear-rarity-frame-common` | 192×192 | resource | — | — |
-| `ui.ui-streetwear-rarity-frame-divine` | 192×192 | resource | — | — |
-| `ui.ui-streetwear-rarity-frame-epic` | 192×192 | resource | — | — |
-| `ui.ui-streetwear-rarity-frame-legendary` | 192×192 | resource | — | — |
-| `ui.ui-streetwear-rarity-frame-rare` | 192×192 | resource | — | — |
+| `ui.frames.streetwear.frame-base` | 192×192 | resource | — | — |
+| `ui.frames.streetwear.frame-common` | 192×192 | resource | — | — |
+| `ui.frames.streetwear.frame-divine` | 192×192 | resource | — | — |
+| `ui.frames.streetwear.frame-epic` | 192×192 | resource | — | — |
+| `ui.frames.streetwear.frame-legendary` | 192×192 | resource | — | — |
+| `ui.frames.streetwear.frame-rare` | 192×192 | resource | — | — |
 
 ## ui · kit · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-kit-button-grey` | 384×192 | resource | — | — |
-| `ui.ui-streetwear-kit-header` | 688×384 | resource | — | — |
-| `ui.ui-streetwear-kit-hud` | 512×512 | resource | — | — |
-| `ui.ui-streetwear-kit-panel` | 384×288 | resource | — | — |
-| `ui.ui-streetwear-kit-pieces` | 512×512 | resource | — | — |
-| `ui.ui-streetwear-kit-portrait` | 512×512 | resource | — | — |
-| `ui.ui-streetwear-kit-resbar` | 688×384 | resource | — | — |
-| `ui.ui-streetwear-kit-sheet` | 448×600 | resource | — | — |
-| `ui.ui-streetwear-kit-tabbar` | 688×384 | resource | — | — |
-| `ui.ui-streetwear-kit-toast` | 688×384 | resource | — | — |
+| `ui.kit.streetwear.button-grey` | 384×192 | resource | — | — |
+| `ui.kit.streetwear.header` | 688×384 | resource | — | — |
+| `ui.kit.streetwear.hud` | 512×512 | resource | — | — |
+| `ui.kit.streetwear.panel` | 384×288 | resource | — | — |
+| `ui.kit.streetwear.pieces` | 512×512 | resource | — | — |
+| `ui.kit.streetwear.portrait` | 512×512 | resource | — | — |
+| `ui.kit.streetwear.resbar` | 688×384 | resource | — | — |
+| `ui.kit.streetwear.sheet` | 448×600 | resource | — | — |
+| `ui.kit.streetwear.tabbar` | 688×384 | resource | — | — |
+| `ui.kit.streetwear.toast` | 688×384 | resource | — | — |
 
 ## ui · markers · streetwear · in-use
 
@@ -576,134 +576,134 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-button-normal` | 150×68 | resource | — | — |
-| `ui.ui-streetwear-button-pressed` | 150×68 | resource | — | — |
-| `ui.ui-streetwear-card-frame` | 288×384 | resource | — | — |
-| `ui.ui-streetwear-health-bar` | 591×125 | resource | — | — |
-| `ui.ui-streetwear-panel-frame` | 384×288 | resource | — | — |
+| `ui.streetwear.button-normal` | 150×68 | resource | — | — |
+| `ui.streetwear.button-pressed` | 150×68 | resource | — | — |
+| `ui.streetwear.card-frame` | 288×384 | resource | — | — |
+| `ui.streetwear.health-bar` | 591×125 | resource | — | — |
+| `ui.streetwear.panel-frame` | 384×288 | resource | — | — |
 
 ## icons · currency · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-nav-cur-caps` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-nav-cur-prism` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-nav-cur-shine` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-nav-cur-token` | 32×32 | resource | — | — |
+| `icon.currency.streetwear.cur-caps` | 32×32 | resource | — | — |
+| `icon.currency.streetwear.cur-prism` | 32×32 | resource | — | — |
+| `icon.currency.streetwear.cur-shine` | 32×32 | resource | — | — |
+| `icon.currency.streetwear.cur-token` | 32×32 | resource | — | — |
 
 ## icons · rarity · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-rarity-gem-common` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-rarity-gem-divine` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-rarity-gem-epic` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-rarity-gem-legendary` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-rarity-gem-rare` | 48×48 | resource | — | — |
+| `icon.rarity.streetwear.gem-common` | 48×48 | resource | — | — |
+| `icon.rarity.streetwear.gem-divine` | 48×48 | resource | — | — |
+| `icon.rarity.streetwear.gem-epic` | 48×48 | resource | — | — |
+| `icon.rarity.streetwear.gem-legendary` | 48×48 | resource | — | — |
+| `icon.rarity.streetwear.gem-rare` | 48×48 | resource | — | — |
 
 ## icons · shop · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-shop-dive-charge` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-shop-merge-crate` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-shop-prism-stone` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-shop-shine-stone` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-shop-star-pearl` | 48×48 | resource | — | — |
+| `icon.shop.streetwear.dive-charge` | 48×48 | resource | — | — |
+| `icon.shop.streetwear.merge-crate` | 48×48 | resource | — | — |
+| `icon.shop.streetwear.prism-stone` | 48×48 | resource | — | — |
+| `icon.shop.streetwear.shine-stone` | 48×48 | resource | — | — |
+| `icon.shop.streetwear.star-pearl` | 48×48 | resource | — | — |
 
 ## icons · streetwear · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-icons-backpack` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-bandana` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-bat` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-bolt` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-bomb` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-boombox` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-boxing-glove` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-brick-paint` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-brick-wall` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-bucket-hat` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-cap` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-card` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-cassette` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-chain` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-chain-lock` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-clock` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-coin-stack` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-crown` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-dice` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-dpad` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-drop` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-fist` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-flame` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-gear` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-gem` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-graffiti-tag` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-headphones` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-heart` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-hoodie` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-key` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-leaf` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-marker` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-mic` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-padlock` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-padlock-chain` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-paint-bucket` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-paint-roller` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-potion` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-price-tag` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-shades` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-shield` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-skateboard` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-skull-mask` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-sneaker` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-speech` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-spray-can` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-star` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-subway-train` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-sword` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-traffic-cone` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-trash-can` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-trophy` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-upgrade` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-vinyl` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-void-eye` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-icons-warning` | 32×32 | resource | — | — |
+| `icon.streetwear.backpack` | 32×32 | resource | — | — |
+| `icon.streetwear.bandana` | 32×32 | resource | — | — |
+| `icon.streetwear.bat` | 32×32 | resource | — | — |
+| `icon.streetwear.bolt` | 32×32 | resource | — | — |
+| `icon.streetwear.bomb` | 32×32 | resource | — | — |
+| `icon.streetwear.boombox` | 32×32 | resource | — | — |
+| `icon.streetwear.boxing-glove` | 32×32 | resource | — | — |
+| `icon.streetwear.brick-paint` | 32×32 | resource | — | — |
+| `icon.streetwear.brick-wall` | 32×32 | resource | — | — |
+| `icon.streetwear.bucket-hat` | 32×32 | resource | — | — |
+| `icon.streetwear.cap` | 32×32 | resource | — | — |
+| `icon.streetwear.card` | 32×32 | resource | — | — |
+| `icon.streetwear.cassette` | 32×32 | resource | — | — |
+| `icon.streetwear.chain` | 32×32 | resource | — | — |
+| `icon.streetwear.chain-lock` | 32×32 | resource | — | — |
+| `icon.streetwear.clock` | 32×32 | resource | — | — |
+| `icon.streetwear.coin-stack` | 32×32 | resource | — | — |
+| `icon.streetwear.crown` | 32×32 | resource | — | — |
+| `icon.streetwear.dice` | 32×32 | resource | — | — |
+| `icon.streetwear.dpad` | 32×32 | resource | — | — |
+| `icon.streetwear.drop` | 32×32 | resource | — | — |
+| `icon.streetwear.fist` | 32×32 | resource | — | — |
+| `icon.streetwear.flame` | 32×32 | resource | — | — |
+| `icon.streetwear.gear` | 32×32 | resource | — | — |
+| `icon.streetwear.gem` | 32×32 | resource | — | — |
+| `icon.streetwear.graffiti-tag` | 32×32 | resource | — | — |
+| `icon.streetwear.headphones` | 32×32 | resource | — | — |
+| `icon.streetwear.heart` | 32×32 | resource | — | — |
+| `icon.streetwear.hoodie` | 32×32 | resource | — | — |
+| `icon.streetwear.key` | 32×32 | resource | — | — |
+| `icon.streetwear.leaf` | 32×32 | resource | — | — |
+| `icon.streetwear.marker` | 32×32 | resource | — | — |
+| `icon.streetwear.mic` | 32×32 | resource | — | — |
+| `icon.streetwear.padlock` | 32×32 | resource | — | — |
+| `icon.streetwear.padlock-chain` | 32×32 | resource | — | — |
+| `icon.streetwear.paint-bucket` | 32×32 | resource | — | — |
+| `icon.streetwear.paint-roller` | 32×32 | resource | — | — |
+| `icon.streetwear.potion` | 32×32 | resource | — | — |
+| `icon.streetwear.price-tag` | 32×32 | resource | — | — |
+| `icon.streetwear.shades` | 32×32 | resource | — | — |
+| `icon.streetwear.shield` | 32×32 | resource | — | — |
+| `icon.streetwear.skateboard` | 32×32 | resource | — | — |
+| `icon.streetwear.skull-mask` | 32×32 | resource | — | — |
+| `icon.streetwear.sneaker` | 32×32 | resource | — | — |
+| `icon.streetwear.speech` | 32×32 | resource | — | — |
+| `icon.streetwear.spray-can` | 32×32 | resource | — | — |
+| `icon.streetwear.star` | 32×32 | resource | — | — |
+| `icon.streetwear.subway-train` | 32×32 | resource | — | — |
+| `icon.streetwear.sword` | 32×32 | resource | — | — |
+| `icon.streetwear.traffic-cone` | 32×32 | resource | — | — |
+| `icon.streetwear.trash-can` | 32×32 | resource | — | — |
+| `icon.streetwear.trophy` | 32×32 | resource | — | — |
+| `icon.streetwear.upgrade` | 32×32 | resource | — | — |
+| `icon.streetwear.vinyl` | 32×32 | resource | — | — |
+| `icon.streetwear.void-eye` | 32×32 | resource | — | — |
+| `icon.streetwear.warning` | 32×32 | resource | — | — |
 
 ## icons · swords · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-swords-relic` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-swords-sword-common` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-swords-sword-divine` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-swords-sword-epic` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-swords-sword-legendary` | 48×48 | resource | — | — |
-| `ui.ui-streetwear-swords-sword-rare` | 48×48 | resource | — | — |
+| `icon.swords.streetwear.relic` | 48×48 | resource | — | — |
+| `icon.swords.streetwear.sword-common` | 48×48 | resource | — | — |
+| `icon.swords.streetwear.sword-divine` | 48×48 | resource | — | — |
+| `icon.swords.streetwear.sword-epic` | 48×48 | resource | — | — |
+| `icon.swords.streetwear.sword-legendary` | 48×48 | resource | — | — |
+| `icon.swords.streetwear.sword-rare` | 48×48 | resource | — | — |
 
 ## icons · tabs · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-nav-settings` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-nav-tab-block` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-nav-tab-hideout` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-nav-tab-locker` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-nav-tab-store` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-nav-tab-turf` | 32×32 | resource | — | — |
+| `icon.tabs.streetwear.settings` | 32×32 | resource | — | — |
+| `icon.tabs.streetwear.tab-block` | 32×32 | resource | — | — |
+| `icon.tabs.streetwear.tab-hideout` | 32×32 | resource | — | — |
+| `icon.tabs.streetwear.tab-locker` | 32×32 | resource | — | — |
+| `icon.tabs.streetwear.tab-store` | 32×32 | resource | — | — |
+| `icon.tabs.streetwear.tab-turf` | 32×32 | resource | — | — |
 
 ## icons · tabs · template · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-template-explore` | 25×25 | resource | — | — |
-| `ui.ui-template-explore-2x` | 49×49 | resource | — | — |
-| `ui.ui-template-explore-3x` | 73×73 | resource | — | — |
-| `ui.ui-template-home` | 24×24 | resource | — | — |
-| `ui.ui-template-home-2x` | 48×48 | resource | — | — |
-| `ui.ui-template-home-3x` | 72×72 | resource | — | — |
+| `icon.tabs.template.explore` | 25×25 | resource | — | — |
+| `icon.tabs.template.explore-2x` | 49×49 | resource | — | — |
+| `icon.tabs.template.explore-3x` | 73×73 | resource | — | — |
+| `icon.tabs.template.home` | 24×24 | resource | — | — |
+| `icon.tabs.template.home-2x` | 48×48 | resource | — | — |
+| `icon.tabs.template.home-3x` | 72×72 | resource | — | — |
 
 ## rooms · hideout · default · in-use
 
@@ -731,21 +731,21 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
+| `room.hideout.full` | 200×400 | resource | — | — |
+| `room.hideout.hideout` | 256×320 | resource | — | — |
+| `room.hideout.iso` | 256×320 | resource | — | — |
+| `room.hideout.iso-bowl` | 14×8 | resource | — | — |
+| `room.hideout.iso-cushion` | 22×12 | resource | — | — |
+| `room.hideout.iso-front` | 256×320 | resource | — | — |
+| `room.hideout.iso-manhole` | 36×18 | resource | — | — |
+| `room.hideout.iso-mask` | 256×320 | resource | — | — |
 | `room.hideout.neighbor-boarded` | 256×320 | candidate | — | — |
-| `ui.ui-streetwear-rooms-hideout` | 256×320 | resource | — | — |
-| `ui.ui-streetwear-rooms-hideout-full` | 200×400 | resource | — | — |
-| `ui.ui-streetwear-rooms-hideout-iso` | 256×320 | resource | — | — |
-| `ui.ui-streetwear-rooms-hideout-iso-bowl` | 14×8 | resource | — | — |
-| `ui.ui-streetwear-rooms-hideout-iso-cushion` | 22×12 | resource | — | — |
-| `ui.ui-streetwear-rooms-hideout-iso-front` | 256×320 | resource | — | — |
-| `ui.ui-streetwear-rooms-hideout-iso-manhole` | 36×18 | resource | — | — |
-| `ui.ui-streetwear-rooms-hideout-iso-mask` | 256×320 | resource | — | — |
 
 ## rooms · locker · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-rooms-locker` | 256×320 | resource | — | — |
+| `room.locker` | 256×320 | resource | — | — |
 
 ## rooms · loft · default · in-use
 
@@ -768,22 +768,22 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `rooms.loft.loft.glow` | 256×320 | resource | — | — |
-| `rooms.loft.loft.iso` | 256×320 | resource | — | — |
-| `rooms.loft.loft.iso.front` | 256×320 | resource | — | — |
-| `rooms.loft.loft.window.day` | 48×40 | resource | — | — |
-| `rooms.loft.loft.window.night` | 48×40 | resource | — | — |
+| `room.loft.glow-2` | 256×320 | resource | — | — |
+| `room.loft.iso` | 256×320 | resource | — | — |
+| `room.loft.iso-front` | 256×320 | resource | — | — |
+| `room.loft.window-day-2` | 48×40 | resource | — | — |
+| `room.loft.window-night-2` | 48×40 | resource | — | — |
 
 ## rooms · stops · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-stops-core` | 256×320 | resource | — | — |
-| `ui.ui-streetwear-stops-ghost` | 256×320 | resource | — | — |
-| `ui.ui-streetwear-stops-platform` | 256×320 | resource | — | — |
-| `ui.ui-streetwear-stops-sewers` | 256×320 | resource | — | — |
-| `ui.ui-streetwear-stops-train` | 256×80 | resource | — | — |
-| `ui.ui-streetwear-stops-tunnels` | 256×320 | resource | — | — |
+| `room.stops.core` | 256×320 | resource | — | — |
+| `room.stops.ghost` | 256×320 | resource | — | — |
+| `room.stops.platform` | 256×320 | resource | — | — |
+| `room.stops.sewers` | 256×320 | resource | — | — |
+| `room.stops.train` | 256×80 | resource | — | — |
+| `room.stops.tunnels` | 256×320 | resource | — | — |
 
 ## rooms · underground · default · in-use
 
@@ -803,351 +803,351 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-rooms-underground` | 256×320 | resource | — | — |
+| `room.underground.underground` | 256×320 | resource | — | — |
 
 ## props · loft · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `rooms.loft.loft.bed` | 64×28 | resource | — | — |
-| `rooms.loft.loft.lamp` | 18×36 | resource | — | — |
+| `prop.loft.bed` | 64×28 | resource | — | — |
+| `prop.loft.lamp` | 18×36 | resource | — | — |
 
 ## props · scribble-dungeons · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tile.barrels-stacked` | 64×64 | resource | — | — |
-| `tile.bed` | 64×64 | resource | — | — |
-| `tile.bed-luxurious` | 64×64 | resource | — | — |
-| `tile.campfire` | 64×64 | resource | — | — |
-| `tile.carpet` | 64×64 | resource | — | — |
-| `tile.cart` | 64×64 | resource | — | — |
-| `tile.chair` | 64×64 | resource | — | — |
-| `tile.crate` | 64×64 | resource | — | — |
-| `tile.floor-barrel` | 64×64 | resource | — | — |
-| `tile.floor-barrels` | 64×64 | resource | — | — |
-| `tile.floor-barrels-stacked` | 64×64 | resource | — | — |
-| `tile.floor-bed` | 64×64 | resource | — | — |
-| `tile.floor-bed-luxurious` | 64×64 | resource | — | — |
-| `tile.floor-campfire` | 64×64 | resource | — | — |
-| `tile.floor-cart` | 64×64 | resource | — | — |
-| `tile.floor-chair` | 64×64 | resource | — | — |
-| `tile.floor-chest` | 64×64 | resource | — | — |
-| `tile.floor-coffin` | 64×64 | resource | — | — |
-| `tile.floor-crate-small` | 64×64 | resource | — | — |
-| `tile.floor-dragon` | 64×64 | resource | — | — |
-| `tile.floor-plants` | 64×64 | resource | — | — |
-| `tile.floor-table` | 64×64 | resource | — | — |
-| `tile.floor-track-cart` | 64×64 | resource | — | — |
-| `tile.floor-tree` | 64×64 | resource | — | — |
-| `tile.table` | 64×64 | resource | — | — |
-| `tile.track-cart` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.barrels-stacked` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.bed` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.bed-luxurious` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.campfire` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.carpet` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.cart` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.chair` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.crate` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-barrel` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-barrels` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-barrels-stacked` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-bed` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-bed-luxurious` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-campfire` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-cart` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-chair` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-chest` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-coffin` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-crate-small` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-dragon` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-plants` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-table` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-track-cart` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.floor-tree` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.table` | 64×64 | resource | — | — |
+| `prop.scribble-dungeons.track-cart` | 64×64 | resource | — | — |
 
 ## props · storage · third-party-scribble · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `prop.prop-crate-scribble` | 64×64 | resource | — | — |
+| `prop.storage.third-party-scribble.prop-crate-scribble` | 64×64 | resource | — | — |
 
 ## props · streetwear · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `prop.barrel-fire` | 64×64 | resource | — | — |
-| `prop.bench-graffiti` | 64×64 | resource | — | — |
-| `prop.boombox` | 64×64 | resource | — | — |
-| `prop.boombox-crate` | 64×64 | resource | — | — |
-| `prop.crate` | 64×64 | resource | — | — |
-| `prop.crates-stacked` | 64×64 | resource | — | — |
-| `prop.dumpster` | 64×64 | resource | — | — |
-| `prop.dumpster-open` | 64×64 | resource | — | — |
-| `prop.fence-chainlink` | 64×64 | resource | — | — |
-| `prop.fence-chainlink-torn` | 64×64 | resource | — | — |
-| `prop.fire-hydrant` | 64×64 | resource | — | — |
-| `prop.fire-hydrant-spray` | 64×64 | resource | — | — |
-| `prop.graffiti-tag-decal` | 64×64 | resource | — | — |
-| `prop.jersey-barrier` | 64×64 | resource | — | — |
-| `prop.newspaper-box` | 64×64 | resource | — | — |
-| `prop.oil-drum` | 64×64 | resource | — | — |
-| `prop.pad-concrete-x` | 64×64 | resource | — | — |
-| `prop.pad-manhole-ring` | 64×64 | resource | — | — |
-| `prop.pad-manhole-splat` | 64×64 | resource | — | — |
-| `prop.pad-sticker-slab` | 64×64 | resource | — | — |
-| `prop.paint-splat-decal` | 64×64 | resource | — | — |
-| `prop.shopping-cart` | 64×64 | resource | — | — |
-| `prop.shopping-cart-tipped` | 64×64 | resource | — | — |
-| `prop.spray-can-single` | 64×64 | resource | — | — |
-| `prop.spray-cans` | 64×64 | resource | — | — |
-| `prop.streetlight` | 64×64 | resource | — | — |
-| `prop.streetlight-broken` | 64×64 | resource | — | — |
-| `prop.tire-stack` | 64×64 | resource | — | — |
-| `prop.traffic-cone` | 64×64 | resource | — | — |
-| `prop.traffic-cone-fallen` | 64×64 | resource | — | — |
-| `prop.trash-bags` | 64×64 | resource | — | — |
-| `prop.trash-bags-cup` | 64×64 | resource | — | — |
+| `prop.streetwear.barrel-fire` | 64×64 | resource | — | — |
+| `prop.streetwear.bench-graffiti` | 64×64 | resource | — | — |
+| `prop.streetwear.boombox` | 64×64 | resource | — | — |
+| `prop.streetwear.boombox-crate` | 64×64 | resource | — | — |
+| `prop.streetwear.crate` | 64×64 | resource | — | — |
+| `prop.streetwear.crates-stacked` | 64×64 | resource | — | — |
+| `prop.streetwear.dumpster` | 64×64 | resource | — | — |
+| `prop.streetwear.dumpster-open` | 64×64 | resource | — | — |
+| `prop.streetwear.fence-chainlink` | 64×64 | resource | — | — |
+| `prop.streetwear.fence-chainlink-torn` | 64×64 | resource | — | — |
+| `prop.streetwear.fire-hydrant` | 64×64 | resource | — | — |
+| `prop.streetwear.fire-hydrant-spray` | 64×64 | resource | — | — |
+| `prop.streetwear.graffiti-tag-decal` | 64×64 | resource | — | — |
+| `prop.streetwear.jersey-barrier` | 64×64 | resource | — | — |
+| `prop.streetwear.newspaper-box` | 64×64 | resource | — | — |
+| `prop.streetwear.oil-drum` | 64×64 | resource | — | — |
+| `prop.streetwear.pad-concrete-x` | 64×64 | resource | — | — |
+| `prop.streetwear.pad-manhole-ring` | 64×64 | resource | — | — |
+| `prop.streetwear.pad-manhole-splat` | 64×64 | resource | — | — |
+| `prop.streetwear.pad-sticker-slab` | 64×64 | resource | — | — |
+| `prop.streetwear.paint-splat-decal` | 64×64 | resource | — | — |
+| `prop.streetwear.shopping-cart` | 64×64 | resource | — | — |
+| `prop.streetwear.shopping-cart-tipped` | 64×64 | resource | — | — |
+| `prop.streetwear.spray-can-single` | 64×64 | resource | — | — |
+| `prop.streetwear.spray-cans` | 64×64 | resource | — | — |
+| `prop.streetwear.streetlight` | 64×64 | resource | — | — |
+| `prop.streetwear.streetlight-broken` | 64×64 | resource | — | — |
+| `prop.streetwear.tire-stack` | 64×64 | resource | — | — |
+| `prop.streetwear.traffic-cone` | 64×64 | resource | — | — |
+| `prop.streetwear.traffic-cone-fallen` | 64×64 | resource | — | — |
+| `prop.streetwear.trash-bags` | 64×64 | resource | — | — |
+| `prop.streetwear.trash-bags-cup` | 64×64 | resource | — | — |
 
 ## tiles · streetwear · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tile.asphalt-sidewalk` | 128×128 | resource | — | — |
-| `tile.brick-graffiti-sidescroller` | 128×128 | resource | — | — |
-| `tile.sidewalk-lot` | 128×128 | resource | — | — |
+| `tile.streetwear.asphalt-sidewalk` | 128×128 | resource | — | — |
+| `tile.streetwear.brick-graffiti-sidescroller` | 128×128 | resource | — | — |
+| `tile.streetwear.sidewalk-lot` | 128×128 | resource | — | — |
 
 ## tiles · streetwear · road-path · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tile.tile-0` | 32×32 | resource | — | — |
-| `tile.tile-1` | 32×32 | resource | — | — |
-| `tile.tile-10` | 32×32 | resource | — | — |
-| `tile.tile-11` | 32×32 | resource | — | — |
-| `tile.tile-12` | 32×32 | resource | — | — |
-| `tile.tile-13` | 32×32 | resource | — | — |
-| `tile.tile-14` | 32×32 | resource | — | — |
-| `tile.tile-15` | 32×32 | resource | — | — |
-| `tile.tile-16` | 32×32 | resource | — | — |
-| `tile.tile-17` | 32×32 | resource | — | — |
-| `tile.tile-2` | 32×32 | resource | — | — |
-| `tile.tile-3` | 32×32 | resource | — | — |
-| `tile.tile-4` | 32×32 | resource | — | — |
-| `tile.tile-5` | 32×32 | resource | — | — |
-| `tile.tile-6` | 32×32 | resource | — | — |
-| `tile.tile-7` | 32×32 | resource | — | — |
-| `tile.tile-8` | 32×32 | resource | — | — |
-| `tile.tile-9` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-0` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-1` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-10` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-11` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-12` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-13` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-14` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-15` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-16` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-17` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-2` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-3` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-4` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-5` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-6` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-7` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-8` | 32×32 | resource | — | — |
+| `tile.streetwear.road-path.tile-9` | 32×32 | resource | — | — |
 
 ## tiles · third-party-scribble · scribble-dungeons · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tile.arrow` | 64×64 | resource | — | — |
-| `tile.arrow-circle` | 64×64 | resource | — | — |
-| `tile.arrow-curve` | 64×64 | resource | — | — |
-| `tile.arrow-head` | 64×64 | resource | — | — |
-| `tile.bridge` | 64×64 | resource | — | — |
-| `tile.bridge-end` | 64×64 | resource | — | — |
-| `tile.door-closed` | 64×64 | resource | — | — |
-| `tile.door-open` | 64×64 | resource | — | — |
-| `tile.doorway` | 64×64 | resource | — | — |
-| `tile.floor-arrow` | 64×64 | resource | — | — |
-| `tile.floor-arrow-circle` | 64×64 | resource | — | — |
-| `tile.floor-arrow-curve` | 64×64 | resource | — | — |
-| `tile.floor-arrow-head` | 64×64 | resource | — | — |
-| `tile.floor-door-closed` | 64×64 | resource | — | — |
-| `tile.floor-door-open` | 64×64 | resource | — | — |
-| `tile.floor-doorway` | 64×64 | resource | — | — |
-| `tile.floor-inner-diagonal` | 64×64 | resource | — | — |
-| `tile.floor-inner-long-diagonal` | 64×64 | resource | — | — |
-| `tile.floor-inner-long-round` | 64×64 | resource | — | — |
-| `tile.floor-inner-round` | 64×64 | resource | — | — |
-| `tile.floor-path` | 64×64 | resource | — | — |
-| `tile.floor-path-crossing` | 64×64 | resource | — | — |
-| `tile.floor-path-curve` | 64×64 | resource | — | — |
-| `tile.floor-planks` | 64×64 | resource | — | — |
-| `tile.floor-puddle` | 64×64 | resource | — | — |
-| `tile.floor-track` | 64×64 | resource | — | — |
-| `tile.floor-track-crossing` | 64×64 | resource | — | — |
-| `tile.floor-track-curve` | 64×64 | resource | — | — |
-| `tile.floor-trap` | 64×64 | resource | — | — |
-| `tile.floor-trapdoor-round` | 64×64 | resource | — | — |
-| `tile.floor-trapdoor-square` | 64×64 | resource | — | — |
-| `tile.floor-wall` | 64×64 | resource | — | — |
-| `tile.floor-wall-corner` | 64×64 | resource | — | — |
-| `tile.floor-wall-curve` | 64×64 | resource | — | — |
-| `tile.floor-wall-damaged` | 64×64 | resource | — | — |
-| `tile.floor-wall-demolished` | 64×64 | resource | — | — |
-| `tile.floor-wall-diagonal` | 64×64 | resource | — | — |
-| `tile.floor-wall-edge` | 64×64 | resource | — | — |
-| `tile.floor-wall-half` | 64×64 | resource | — | — |
-| `tile.floor-wall-secret` | 64×64 | resource | — | — |
-| `tile.floor-wall-trap` | 64×64 | resource | — | — |
-| `tile.grass` | 64×64 | resource | — | — |
-| `tile.inner-diagonal` | 64×64 | resource | — | — |
-| `tile.inner-long-diagonal` | 64×64 | resource | — | — |
-| `tile.inner-long-round` | 64×64 | resource | — | — |
-| `tile.inner-round` | 64×64 | resource | — | — |
-| `tile.path` | 64×64 | resource | — | — |
-| `tile.path-crossing` | 64×64 | resource | — | — |
-| `tile.path-curve` | 64×64 | resource | — | — |
-| `tile.planks` | 64×64 | resource | — | — |
-| `tile.stairs-down-detail` | 64×64 | resource | — | — |
-| `tile.tile` | 64×64 | resource | — | — |
-| `tile.tiles` | 64×64 | resource | — | — |
-| `tile.tiles-center` | 64×64 | resource | — | — |
-| `tile.tiles-corner` | 64×64 | resource | — | — |
-| `tile.tiles-decorative` | 64×64 | resource | — | — |
-| `tile.track` | 64×64 | resource | — | — |
-| `tile.track-crossing` | 64×64 | resource | — | — |
-| `tile.track-curve` | 64×64 | resource | — | — |
-| `tile.trap` | 64×64 | resource | — | — |
-| `tile.trap-door` | 64×64 | resource | — | — |
-| `tile.trapdoor-round` | 64×64 | resource | — | — |
-| `tile.trapdoor-square` | 64×64 | resource | — | — |
-| `tile.wall-curve` | 64×64 | resource | — | — |
-| `tile.wall-demolished` | 64×64 | resource | — | — |
-| `tile.wall-diagonal` | 64×64 | resource | — | — |
-| `tile.wall-edge` | 64×64 | resource | — | — |
-| `tile.wall-secret` | 64×64 | resource | — | — |
-| `tile.wall-trap` | 64×64 | resource | — | — |
-| `tile.water` | 64×64 | resource | — | — |
-| `tile.wood` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.arrow` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.arrow-circle` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.arrow-curve` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.arrow-head` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.bridge` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.bridge-end` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.door-closed` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.door-open` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.doorway` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-arrow` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-arrow-circle` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-arrow-curve` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-arrow-head` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-door-closed` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-door-open` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-doorway` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-inner-diagonal` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-inner-long-diagonal` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-inner-long-round` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-inner-round` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-path` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-path-crossing` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-path-curve` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-planks` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-puddle` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-track` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-track-crossing` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-track-curve` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-trap` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-trapdoor-round` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-trapdoor-square` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-corner` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-curve` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-damaged` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-demolished` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-diagonal` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-edge` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-half` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-secret` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.floor-wall-trap` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.grass` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.inner-diagonal` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.inner-long-diagonal` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.inner-long-round` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.inner-round` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.path` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.path-crossing` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.path-curve` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.planks` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.stairs-down-detail` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.tile` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.tiles` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.tiles-center` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.tiles-corner` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.tiles-decorative` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.track` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.track-crossing` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.track-curve` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.trap` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.trap-door` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.trapdoor-round` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.trapdoor-square` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.wall-curve` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.wall-demolished` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.wall-diagonal` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.wall-edge` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.wall-secret` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.wall-trap` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.water` | 64×64 | resource | — | — |
+| `tile.third-party-scribble.scribble-dungeons.wood` | 64×64 | resource | — | — |
 
 ## fx · drip · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-drip` | 32×32 | resource | — | — |
+| `fx.drip.streetwear` | 32×32 | resource | — | — |
 
 ## fx · moth · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-moth` | 32×32 | resource | — | — |
+| `fx.moth.streetwear` | 32×32 | resource | — | — |
 
 ## fx · note · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-note` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-ambient-note2` | 32×32 | resource | — | — |
+| `fx.note.streetwear.note` | 32×32 | resource | — | — |
+| `fx.note.streetwear.note2` | 32×32 | resource | — | — |
 
 ## fx · pigeon · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-pigeon` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-ambient-pigeon-peck` | 32×32 | resource | — | — |
+| `fx.pigeon.streetwear.peck` | 32×32 | resource | — | — |
+| `fx.pigeon.streetwear.pigeon` | 32×32 | resource | — | — |
 
 ## fx · plane · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-plane` | 32×32 | resource | — | — |
+| `fx.plane.streetwear` | 32×32 | resource | — | — |
 
 ## fx · rat · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-rat` | 32×32 | resource | — | — |
-| `ui.ui-streetwear-ambient-rat-run` | 32×32 | resource | — | — |
+| `fx.rat.streetwear.rat` | 32×32 | resource | — | — |
+| `fx.rat.streetwear.run` | 32×32 | resource | — | — |
 
 ## fx · shine · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-rarity-shine` | 160×180 | resource | — | — |
+| `fx.shine.streetwear` | 160×180 | resource | — | — |
 
 ## fx · spark · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-spark` | 32×32 | resource | — | — |
+| `fx.spark.streetwear` | 32×32 | resource | — | — |
 
 ## fx · star · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-star` | 32×32 | resource | — | — |
+| `fx.star.streetwear` | 32×32 | resource | — | — |
 
 ## fx · steam · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-steam` | 32×32 | resource | — | — |
+| `fx.steam.streetwear` | 32×32 | resource | — | — |
 
 ## fx · wisp · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-streetwear-ambient-wisp` | 32×32 | resource | — | — |
+| `fx.wisp.streetwear` | 32×32 | resource | — | — |
 
 ## backgrounds · dive-atlas · classic · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `background.dive-atlas` | 477×683 | resource | — | — |
+| `background.dive-atlas.classic` | 477×683 | resource | — | — |
 
 ## backgrounds · room-atlas · classic · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `background.room-atlas` | 303×454 | resource | — | — |
+| `background.room-atlas.classic` | 303×454 | resource | — | — |
 
 ## branding · brand_android-background · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.brand-android-background` | 512×512 | candidate | — | — |
+| `brand.android-background` | 512×512 | candidate | — | — |
 
 ## branding · brand_android-foreground · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.brand-android-foreground` | 512×512 | candidate | — | — |
+| `brand.android-foreground` | 512×512 | candidate | — | — |
 
 ## branding · brand_android-monochrome · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.brand-android-monochrome` | 432×432 | candidate | — | — |
+| `brand.android-monochrome` | 432×432 | candidate | — | — |
 
 ## branding · brand_favicon · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.brand-favicon` | 48×48 | candidate | — | — |
+| `brand.favicon` | 48×48 | candidate | — | — |
 
 ## branding · brand_icon · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.brand-icon` | 1024×1024 | candidate | — | — |
+| `brand.icon` | 1024×1024 | candidate | — | — |
 
 ## branding · brand_logo-glow · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.brand-logo-glow` | 604×604 | candidate | — | — |
+| `brand.logo-glow` | 604×604 | candidate | — | — |
 
 ## branding · brand_splash · default · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.brand-splash` | 228×213 | candidate | — | — |
+| `brand.splash` | 228×213 | candidate | — | — |
 
 ## branding · expo-badge · template · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-template-expo-badge` | 371×72 | resource | — | — |
+| `brand.expo-badge.template` | 371×72 | resource | — | — |
 
 ## branding · expo-badge-white · template · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-template-expo-badge-white` | 371×72 | resource | — | — |
+| `brand.expo-badge-white.template` | 371×72 | resource | — | — |
 
 ## branding · react-logo · template · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-template-react-logo` | 100×100 | resource | — | — |
+| `brand.react-logo.template` | 100×100 | resource | — | — |
 
 ## branding · react-logo-2x · template · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-template-react-logo-2x` | 200×200 | resource | — | — |
+| `brand.react-logo-2x.template` | 200×200 | resource | — | — |
 
 ## branding · react-logo-3x · template · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-template-react-logo-3x` | 300×300 | resource | — | — |
+| `brand.react-logo-3x.template` | 300×300 | resource | — | — |
 
 ## branding · tutorial-web · template · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.ui-template-tutorial-web` | 1480×855 | resource | — | — |
+| `brand.tutorial-web.template` | 1480×855 | resource | — | — |

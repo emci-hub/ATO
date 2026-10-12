@@ -162,6 +162,35 @@ function main() {
   assert.deepEqual(banned, [], `direct art requires outside generated-art: ${banned.join(', ')}`);
   passed = ok(passed, 'src/play uses getArt / generated shims, not raw requires');
 
+  // Clean ids + typed tree: every old id still resolves, and code names art by
+  // the typed ART tree, never a typed-out id string (a rename would break it silently).
+  const currentIds = new Set(registry.assets.map((a) => a.id));
+  const aliasRows = [...generated.matchAll(/^ {2}'([^']+)': '([^']+)',$/gm)];
+  const aliasMap = new Map(aliasRows.filter((m) => !m[2].startsWith('@/')).map((m) => [m[1], m[2]]));
+  const lostAliases: string[] = [];
+  for (const a of registry.assets) {
+    for (const old of a.legacyKeys ?? []) {
+      if (currentIds.has(old)) lostAliases.push(`${old} is both an old and a current id`);
+      else if (aliasMap.get(old) !== a.id) lostAliases.push(`${old} → ${a.id} missing from ART_ALIASES`);
+    }
+  }
+  assert.deepEqual(lostAliases.slice(0, 20), [], `renamed ids must resolve: ${lostAliases.slice(0, 20).join('; ')}`);
+  const stringIds: string[] = [];
+  for (const file of walkFiles(path.join(repo, 'src'))) {
+    if (!/\.(ts|tsx)$/.test(file)) continue;
+    const rel = path.relative(repo, file).split(path.sep).join('/');
+    if (rel === 'src/art/generated-art.ts') continue;
+    const src = fs
+      .readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '') // doc examples are not code
+      .replace(/^\s*\/\/.*$/gm, '');
+    for (const m of src.matchAll(/\b(?:getArt|getArtSource|png)\(\s*['"]([^'"]+)['"]/g)) stringIds.push(`${rel}: ${m[1]}`);
+  }
+  assert.deepEqual(stringIds, [], `use the typed ART tree, not id strings: ${stringIds.join(', ')}`);
+  assert.match(generated, /export const ART = \{/, 'generated-art exports the typed ART tree');
+  assert.match(generated, /export const HERO = \{/, 'generated-art exports the HERO skeleton');
+  passed = ok(passed, `clean ids: ${aliasMap.size} old ids alias to current ones; code uses ART / HERO, no id strings`);
+
   const metro = fs.readFileSync(path.join(repo, 'metro.config.js'), 'utf8');
   assert.match(metro, /art-src/, 'metro blockList includes art-src');
   const app = fs.readFileSync(path.join(repo, 'app.json'), 'utf8');

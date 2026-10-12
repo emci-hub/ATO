@@ -40,7 +40,7 @@ function main() {
   const missing: string[] = [];
 
   for (const [id, d] of Object.entries(decisions.decisions ?? {})) {
-    const asset = byId.get(id);
+    const asset = byId.get(id) ?? registry.assets.find((a) => (a.legacyKeys ?? []).includes(id));
     if (!asset) {
       missing.push(id);
       continue;

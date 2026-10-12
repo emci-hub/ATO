@@ -30,7 +30,7 @@ alwaysApply: false
    FINAL hero and never scale with evolution stage. Streetwear palette only; ≤256 colours per sheet.
 7. Critique gate. Score with pixel-art-critique; ≥22/28 with no zero before status can leave `candidate`.
    Only emci sets `approved`.
-8. Code uses ids only: getArt('<id>') / findArt({...}) from src/art. No direct require() of image paths.
+8. Code names art through the typed tree, never a typed-out id: getArtSource(ART.room.<room>.<part>), HERO.<hero>.<slot> (idle/walk/dash/attack/skill/hurt/rotations), findArt({...}) from src/art. Ids are clean (<kind>.<set>[.<variant>][.<part>]); old ids still resolve via ART_ALIASES. check:art-registry fails on id strings. No direct require() of image paths.
 9. Off-style art (kenney, craftpix, scribble, primal, dungeon-legends, classic) is `needs-restyle`:
    don't place it in new streetwear screens; regenerate in PixelLab with `replaces`. Never auto-filter/restyle.
 10. After any art add/remove/usage change: `npm run art:sync` and commit the

@@ -1,7 +1,8 @@
 /**
  * Art library registry types (`assets/art/registry.json`).
  *
- * Ids are stable and used in code (`getArt('prop.couch.streetwear')`).
+ * Ids read `<kind>.<set>[.<variant>][.<part>]`; code names them through the
+ * generated typed tree (`ART.prop.<set>.<part>`), never as strings.
  * Packed atlases live under `assets/art/`; raw PixelLab output lives in `art-src/`.
  */
 
@@ -224,7 +225,7 @@ export type ArtAsset = {
   restyleTarget?: string;
   replaces?: string | null;
   notes?: string;
-  /** Legacy PLAY_ART / PLAY_SHEETS keys this id satisfies (one-release shim). */
+  /** Old ids this asset had before a rename; getArt resolves them via ART_ALIASES. */
   legacyKeys?: string[];
 };
 

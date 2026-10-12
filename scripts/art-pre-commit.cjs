@@ -26,7 +26,7 @@ const staged = execFileSync('git', ['diff', '--cached', '--name-only', '-z'], { 
 if (staged.length === 0) process.exit(0);
 
 const PATH_HIT = /^(assets\/art\/|art-src\/|src\/art\/|scripts\/art-|scripts\/check-art-|tools\/art-viewer\/)/;
-const CODE_HIT = /getArt\s*\(|getArtSource\s*\(|findArt\s*\(|@\/assets\/art\/|ART_SOURCES/;
+const CODE_HIT = /getArt\s*\(|getArtSource\s*\(|findArt\s*\(|@\/assets\/art\/|ART_SOURCES|\bART\.[a-z]|\bHERO\b/;
 
 function stagedText(rel) {
   try {

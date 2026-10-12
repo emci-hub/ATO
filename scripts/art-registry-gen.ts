@@ -16,6 +16,7 @@ import { detectFormat, walkFiles } from './art-png';
 import { kebab } from './art-dirs';
 import { classifyArt, placeWithUsage, stripUsageFolder } from './art-categories';
 import { inferSetVariant } from './art-sets';
+import { HERO_CLIPS } from '../src/play/heroes-data';
 
 const repo = path.resolve(__dirname, '..');
 
@@ -232,6 +233,128 @@ function guess(input: string): Partial<ArtAsset> {
   };
 }
 
+/* ------------------------------------------------ clean ids + typed tree -- */
+/* Every id reads `<kind>.<set>[.<variant>][.<part>]` (variant `default` and
+ * repeats of the set are dropped). Hand-set room ids are kept as they are.
+ * A renamed asset keeps its old ids in `legacyKeys`, which getArt resolves. */
+
+const KIND_BY_CATEGORY: Record<string, string> = {
+  icons: 'icon',
+  ui: 'ui',
+  fx: 'fx',
+  props: 'prop',
+  tiles: 'tile',
+  rooms: 'room',
+  backgrounds: 'background',
+  branding: 'brand',
+};
+const CHARACTER_KINDS = new Set(['hero', 'pet', 'npc', 'creep', 'tower', 'boss']);
+const FIXED_IDS = new Set(Object.values(ROOM_IDS).map((r) => r.id));
+
+function canonicalId(asset: ArtAsset, soloSets: Set<string>): string {
+  if (FIXED_IDS.has(asset.id)) return asset.id;
+  const { set: rawSet, variant: rawVariant, part: rawPart } = inferSetVariant(asset.path, asset.category, asset.id);
+  const head = asset.id.split('.')[0] ?? '';
+  const kind = CHARACTER_KINDS.has(head) ? head : (KIND_BY_CATEGORY[asset.category] ?? head);
+  const set = kebab(rawSet).replace(/^brand-/, '');
+  const variant = kebab(rawVariant);
+  let part = kebab(rawPart)
+    .replace(/^brand-/, '')
+    .replace(new RegExp(`^${set}-td-`), '')
+    .replace(new RegExp(`^${set}-`), '');
+  const segs = [kind, set];
+  if (variant && variant !== 'default' && variant !== set) segs.push(variant);
+  // A one-picture set needs no part name (brand.icon, not brand.icon.icon); a
+  // set with several keeps every part so no id is also another id's folder.
+  const solo = soloSets.has(`${asset.category}/${rawSet}/${rawVariant}`);
+  if (part && !(solo && (part === set || part === variant))) segs.push(part);
+  return segs.join('.');
+}
+
+function soloSetKeys(assets: ArtAsset[]): Set<string> {
+  const count = new Map<string, number>();
+  for (const a of assets) {
+    const { set, variant } = inferSetVariant(a.path, a.category, a.id);
+    const k = `${a.category}/${set}/${variant}`;
+    count.set(k, (count.get(k) ?? 0) + 1);
+  }
+  return new Set([...count].filter(([, n]) => n === 1).map(([k]) => k));
+}
+
+/** Rename every asset to its clean id (deterministic: path order, numbered on a clash). */
+function applyCleanIds(assets: ArtAsset[], fresh: Set<ArtAsset>) {
+  const taken = new Set<string>();
+  const solo = soloSetKeys(assets);
+  for (const a of [...assets].sort((x, y) => x.path.localeCompare(y.path))) {
+    const base = canonicalId(a, solo);
+    let id = base;
+    for (let n = 2; taken.has(id); n += 1) id = `${base}-${n}`;
+    taken.add(id);
+    if (fresh.has(a)) {
+      a.id = id; // a brand-new file never had an old id worth keeping
+    } else if (id !== a.id) {
+      a.legacyKeys = [...new Set([...(a.legacyKeys ?? []), a.id])].filter((k) => k !== id).sort();
+      a.id = id;
+    }
+  }
+}
+
+/** room.hideout.neon-a → ['room','hideout','neonA'] (a valid TS property path). */
+function accessorPath(id: string): string[] {
+  return id.split('.').map((seg) => {
+    const camel = seg.replace(/[-_]+([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+    return /^[0-9]/.test(camel) ? `_${camel}` : camel;
+  });
+}
+
+type Tree = { [k: string]: Tree | string };
+
+function artTree(ids: string[]): Tree {
+  const root: Tree = {};
+  for (const id of ids) {
+    const keys = accessorPath(id);
+    let node = root;
+    keys.forEach((k, i) => {
+      const leaf = i === keys.length - 1;
+      const cur = node[k];
+      if (leaf) {
+        if (cur !== undefined) throw new Error(`art tree clash at ${id} (${keys.join('.')})`);
+        node[k] = id;
+      } else {
+        if (typeof cur === 'string') throw new Error(`art tree clash: ${cur} is also a folder of ${id}`);
+        node = (node[k] ??= {}) as Tree;
+      }
+    });
+  }
+  return root;
+}
+
+function printTree(tree: Tree, indent: string): string[] {
+  const out: string[] = [];
+  for (const k of Object.keys(tree).sort()) {
+    const v = tree[k];
+    if (typeof v === 'string') out.push(`${indent}${k}: '${v}',`);
+    else out.push(`${indent}${k}: {`, ...printTree(v, `${indent}  `), `${indent}},`);
+  }
+  return out;
+}
+
+/** Streetwear hero skeleton: slug → { rotations, idle, walk, dash, attack, skill, hurt } sheet keys. */
+function heroSheets(): Record<string, Record<string, string>> {
+  const file = path.join(repo, 'assets/art/legacy-play-sheets.json');
+  if (!fs.existsSync(file)) return {};
+  const keys = Object.keys(JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>);
+  const out: Record<string, Record<string, string>> = {};
+  for (const key of keys) {
+    const m = /^sheets\/streetwear\/heroes\/([^/]+)\/([^/]+)$/.exec(key);
+    if (!m) continue;
+    const slot = m[2] === 'rotations' ? 'rotations' : m[2].toLowerCase();
+    if (slot !== 'rotations' && !(HERO_CLIPS as readonly string[]).includes(slot)) continue;
+    (out[m[1]] ??= {})[slot] = key;
+  }
+  return out;
+}
+
 function restyleFor(theme: string | undefined): ArtAsset['restyle'] | undefined {
   if (!theme || theme === 'streetwear' || theme === 'cast' || theme === 'none') return undefined;
   const preset = theme.includes('kenney') || theme.includes('scribble') || theme.includes('craftpix') ? 'tile' : 'char8';
@@ -254,6 +377,8 @@ function usedByScan(assets: ArtAsset[]): Map<string, string[]> {
   const map = new Map<string, string[]>();
   const byPath = new Map(assets.map((a) => [a.path, a.id]));
   const byArt = new Map(assets.map((a) => [a.path.replace(/^assets\//, ''), a.id]));
+  const byAccessor = new Map(assets.map((a) => [accessorPath(a.id).join('.'), a.id]));
+  const byLegacy = new Map(assets.flatMap((a) => (a.legacyKeys ?? []).map((k) => [k, a.id] as const)));
 
   const roots = [path.join(repo, 'src')];
   for (const root of roots) {
@@ -263,7 +388,12 @@ function usedByScan(assets: ArtAsset[]): Map<string, string[]> {
       if (rel === 'src/art/generated-art.ts') continue;
       const src = fs.readFileSync(file, 'utf8');
       for (const m of src.matchAll(/(?:getArt|getArtSource|png)\(\s*['"]([^'"]+)['"]/g)) {
-        addUsed(map, m[1], rel);
+        addUsed(map, byLegacy.get(m[1]) ?? m[1], rel);
+      }
+      // Typed tree: ART.room.hideout.neonA → room.hideout.neon-a
+      for (const m of src.matchAll(/\bART((?:\.[A-Za-z_$][\w$]*)+)/g)) {
+        const id = byAccessor.get(m[1].slice(1));
+        if (id) addUsed(map, id, rel);
       }
       for (const m of src.matchAll(/require\(\s*['"]@\/(assets\/art\/[^'"]+)['"]\s*\)/g)) {
         const artPath = m[1];
@@ -329,6 +459,7 @@ function main() {
   const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as ArtRegistry;
   const byId = new Map(registry.assets.map((a) => [a.id, a]));
   const byPath = new Map(registry.assets.map((a) => [a.path, a]));
+  const byLegacyId = new Map(registry.assets.flatMap((a) => (a.legacyKeys ?? []).map((k) => [k, a] as const)));
 
   const artRoot = path.join(repo, 'assets/art');
   const skip = (rel: string) =>
@@ -348,12 +479,13 @@ function main() {
     return /\.(png)$/i.test(f) && !skip(rel);
   });
 
+  const fresh = new Set<ArtAsset>();
   for (const file of pngs) {
     const rel = relArt(file);
     const artPath = `assets/art/${rel}`;
     const guessed = guess(rel);
     const id = guessed.id!;
-    let asset = byId.get(id) ?? byPath.get(artPath);
+    let asset = byId.get(id) ?? byPath.get(artPath) ?? byLegacyId.get(id);
     const buf = fs.readFileSync(file);
     let w = 0;
     let h = 0;
@@ -390,6 +522,7 @@ function main() {
       };
       registry.assets.push(asset);
       byId.set(id, asset);
+      fresh.add(asset);
     } else {
       asset.path = artPath;
       asset.category = guessed.category ?? asset.category ?? classifiedCategory(rel);
@@ -404,6 +537,10 @@ function main() {
     }
   }
 
+  applyCleanIds(
+    registry.assets.filter((a) => a.status !== 'archived'),
+    fresh,
+  );
   const used = usedByScan(registry.assets);
   const pathRewrites: [string, string][] = [];
   for (const asset of registry.assets) {
@@ -503,6 +640,41 @@ function main() {
       lines.push(`  | '${id}'${i === ids.length - 1 ? ';' : ''}`);
     });
   }
+  lines.push('');
+  lines.push('/** Old id → current id. getArt / getArtSource accept either, so a rename never breaks code. */');
+  lines.push('export const ART_ALIASES: Record<string, ArtId> = {');
+  const aliases = live
+    .flatMap((a) => (a.legacyKeys ?? []).map((k) => [k, a.id] as const))
+    .sort((x, y) => x[0].localeCompare(y[0]));
+  for (const [from, to] of aliases) lines.push(`  '${from}': '${to}',`);
+  lines.push('};');
+  lines.push('');
+  lines.push('/**');
+  lines.push(' * Every library id as a typed path: `getArtSource(ART.room.hideout.neonA)`.');
+  lines.push(' * Segments are camelCase (`neon-a` → `neonA`; a leading digit gets `_`).');
+  lines.push(' * A renamed or deleted id is a type error, not a blank image at runtime.');
+  lines.push(' */');
+  lines.push('export const ART = {');
+  lines.push(...printTree(artTree(ids), '  '));
+  lines.push('} as const;');
+  lines.push('');
+  lines.push('/**');
+  lines.push(' * Streetwear hero skeleton: every hero has the same slots (`HERO_CLIPS` +');
+  lines.push(' * `rotations`), each a packed sheet key in PLAY_SHEETS. `HERO.kael.idle`.');
+  lines.push(' */');
+  lines.push('export const HERO = {');
+  const heroes = heroSheets();
+  for (const slug of Object.keys(heroes).sort()) {
+    lines.push(`  ${/^[a-z_$][\w$]*$/i.test(slug) ? slug : `'${slug}'`}: {`); // keyed by hero id, as heroes.json spells it
+    for (const slot of ['rotations', ...HERO_CLIPS]) {
+      const key = heroes[slug][slot];
+      if (key) lines.push(`    ${slot}: '${key}',`);
+    }
+    lines.push('  },');
+  }
+  lines.push('} as const;');
+  lines.push('');
+  lines.push('export type HeroSlug = keyof typeof HERO;');
   lines.push('');
   fs.writeFileSync(path.join(repo, 'src/art/generated-art.ts'), `${lines.join('\n')}\n`);
   console.log(`art:registry ${live.length} live / ${registry.assets.length} total → src/art/generated-art.ts`);

@@ -78,7 +78,7 @@ function main() {
 
   const registryPath = path.join(repo, 'assets/art/registry.json');
   const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as ArtRegistry;
-  const existing = registry.assets.find((a) => a.id === id);
+  const existing = registry.assets.find((a) => a.id === id || (a.legacyKeys ?? []).includes(id));
   const guessed = classifyArt(`misc/${kebab(id)}.png`);
   const destTop = id.startsWith('hero.') || id.startsWith('pet.')
     ? 'heroes'

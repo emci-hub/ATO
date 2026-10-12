@@ -26,7 +26,8 @@ import streetwearMeta from '@/assets/play/sheets/streetwear/meta.json';
 import { artSkin } from '@/play/art-skin';
 import { PLAY_ART } from '@/play/generated-play-assets';
 import { PLAY_SHEETS } from '@/play/generated-play-sheets';
-import { heroById, type HeroDef, BOUND_HERO_TOWER_CLIPS } from '@/play/heroes-data';
+import { HERO } from '@/art/art';
+import { heroById, type HeroDef, BOUND_HERO_TOWER_CLIPS, HERO_CLIPS, type HeroClip } from '@/play/heroes-data';
 import { defaultTowerSkin, type TowerSkinDef, type TowerSkinRole } from '@/play/tower-skins-data';
 import {
   SKIN_WALK_4DIR_ORDER,
@@ -811,14 +812,17 @@ function fourDirWalkPacked(
 function streetwearHeroRole(heroId: string): SkinRole | undefined {
   const char = `heroes/${heroId}`;
   const meta = STREETWEAR_META.chars[char];
-  if (!meta || !PLAY_SHEETS[`sheets/streetwear/${char}/rotations`]) return undefined;
+  // The hero skeleton (generated from the packed sheets): one sheet key per slot.
+  const sheets = (HERO as Record<string, Partial<Record<HeroClip | 'rotations', string>>>)[heroId];
+  if (!meta || !sheets?.rotations || !PLAY_SHEETS[sheets.rotations]) return undefined;
   const ref = (rawStreetwear as unknown as SkinFile).roles['unit.avatar'];
   const refRatio = STREETWEAR_META.chars['heroes/corvus']?.bodyRatio ?? meta.bodyRatio;
   const base = `skins/streetwear/${char}`;
   const anims: SkinRole['anims'] = {};
-  const slots = { idle: 'Idle', attack: 'Attack', skill: 'Skill', hurt: 'Hurt', dash: 'Dash' } as const;
-  for (const [slot, name] of Object.entries(slots) as [keyof typeof slots, string][]) {
-    const clip = streetwearClip(char, name);
+  for (const slot of HERO_CLIPS) {
+    const key = sheets[slot];
+    if (slot === 'walk' || !key) continue;
+    const clip = streetwearClip(char, key.slice(key.lastIndexOf('/') + 1));
     if (clip) anims[slot] = clip;
   }
   return {
