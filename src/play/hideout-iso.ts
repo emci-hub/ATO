@@ -23,17 +23,22 @@ export const HIDEOUT_NIGHT = '#0C0D23';
 export const HIDEOUT_PET_ART_PX = 64;
 /** Blaze cell (84) minus the 64px body, per side, plus a little air. */
 export const HIDEOUT_AURA_PAD_PX = 12;
-/** Door tag sits below the string lights (map anchor is on the bulbs). */
-export const HIDEOUT_DOOR_LABEL_NUDGE: readonly [number, number] = [0, 28];
+/**
+ * Door tag: map anchor sits on the bulbs (`labelAnchors.door` y=84). +28 still
+ * overlapped the string lights (y≈76–99). Land on the door panel below them.
+ */
+export const HIDEOUT_DOOR_LABEL_NUDGE: readonly [number, number] = [0, 52];
 export const HIDEOUT_MARGIN_PT = 16;
 export const HIDEOUT_PHONE_CAP_DPX = 4;
 export const HIDEOUT_IPAD_CAP_DPX = 6;
+/** Layout widths the feet-on-floor check pins (SE / 14 / 15 Pro Max logical pt). */
+export const HIDEOUT_PHONE_WIDTHS_PT: readonly number[] = [375, 393, 430];
 
 type Rect = readonly [number, number, number, number];
 type Pt = readonly [number, number];
 
 export type HideoutSpotId = 'door' | 'chair' | 'boombox' | 'manhole';
-export type HideoutTargetId = 'bowl' | 'bed' | 'cushion' | 'door' | 'chair';
+export type HideoutTargetId = 'bowl' | 'bed' | 'cushion' | 'door' | 'chair' | 'boombox';
 
 export type HideoutSpot = {
   id: HideoutSpotId;
@@ -51,7 +56,7 @@ export type HideoutProp = {
   footprint: readonly Pt[];
 };
 
-export type HideoutDecal = { id: string; sprite: string; pos: Pt };
+export type HideoutDecal = { id: string; sprite: string; pos: Pt; size: Pt };
 
 type RawMap = {
   spots: Record<string, number[]>;
@@ -94,11 +99,15 @@ export const HIDEOUT_PROPS: readonly HideoutProp[] = raw.props.map((p) => ({
   frontCorner: pt2(p.frontCorner),
   footprint: poly(p.footprint),
 }));
-export const HIDEOUT_DECALS: readonly HideoutDecal[] = raw.decals.map((d) => ({
-  id: d.id,
-  sprite: d.sprite,
-  pos: pt2(d.pos),
-}));
+export const HIDEOUT_DECALS: readonly HideoutDecal[] = raw.decals.map((d) => {
+  const spot = raw.spots[d.id];
+  return {
+    id: d.id,
+    sprite: d.sprite,
+    pos: pt2(d.pos),
+    size: spot && spot.length >= 4 ? ([spot[2], spot[3]] as Pt) : ([0, 0] as Pt),
+  };
+});
 
 export const HIDEOUT_TARGETS: Record<HideoutTargetId, Pt> = {
   bowl: pt2(raw.targets.bowl),
@@ -107,6 +116,8 @@ export const HIDEOUT_TARGETS: Record<HideoutTargetId, Pt> = {
   door: pt2(raw.targets.door),
   // A step in front of the chair, on the floor (nap on the chair is bonus idle).
   chair: [148, 214],
+  // A step in front of the boombox, on the walk floor (footprint ends ~x=82).
+  boombox: [96, 228],
 };
 
 export const HIDEOUT_SPOTS: readonly HideoutSpot[] = [
@@ -280,11 +291,98 @@ export function hideoutIntegerScale(input: {
   };
 }
 
+/**
+ * Drawn square in points at the room's integer device-px scale.
+ * Hideout must pass `HIDEOUT_PET_ART_PX` (64), not the animation cell
+ * (Sak idle is 192px — that box was the whole wall). Underground still
+ * passes `art.cellPx` so the ledge pet stays large.
+ */
 export function hideoutPetBox(cellPx: number, scale: HideoutScale, pixelRatio: number): number {
   const cell = Math.max(1, cellPx);
   const ratio = pixelRatio > 0 ? pixelRatio : 1;
   const k = Math.max(1, Math.round(scale.dpx));
   return (k * cell) / ratio;
+}
+
+export type HideoutOrigin = { left: number; top: number };
+
+/** Center the 256×320 canvas in the stage. Same origin as the room image. */
+export function hideoutStageOrigin(width: number, height: number, scale: HideoutScale): HideoutOrigin {
+  return {
+    left: Math.round((width - scale.canvasW) / 2),
+    top: Math.round(Math.max(0, (height - scale.canvasH) / 2)),
+  };
+}
+
+/** Map art-px (canvas top-left origin) → stage points. Feet sit on this point. */
+export function hideoutArtToScreen(
+  artX: number,
+  artY: number,
+  origin: HideoutOrigin,
+  scale: HideoutScale,
+): { x: number; y: number } {
+  return { x: origin.left + artX * scale.pt, y: origin.top + artY * scale.pt };
+}
+
+export function hideoutScreenPoly(
+  polyPts: readonly Pt[],
+  origin: HideoutOrigin,
+  scale: HideoutScale,
+): Pt[] {
+  return polyPts.map((p) => {
+    const s = hideoutArtToScreen(p[0], p[1], origin, scale);
+    return [s.x, s.y] as Pt;
+  });
+}
+
+/**
+ * Sprite wrap top-left so the role's foot line lands on the art-px feet point.
+ * `box` is the drawn square in pt (native 64 art px at the room's integer scale).
+ */
+export function hideoutPetWrapOrigin(
+  artX: number,
+  artY: number,
+  origin: HideoutOrigin,
+  scale: HideoutScale,
+  box: number,
+  footAt: number,
+): { x: number; y: number } {
+  const feet = hideoutArtToScreen(artX, artY, origin, scale);
+  const foot = footAt > 0 && footAt <= 1 ? footAt : 1;
+  return { x: feet.x - box / 2, y: feet.y - foot * box };
+}
+
+export function hideoutFeetInFloorScreen(
+  artX: number,
+  artY: number,
+  origin: HideoutOrigin,
+  scale: HideoutScale,
+  floor: readonly Pt[] = HIDEOUT_FLOOR,
+): boolean {
+  const feet = hideoutArtToScreen(artX, artY, origin, scale);
+  return pointInPoly(feet.x, feet.y, hideoutScreenPoly(floor, origin, scale));
+}
+
+/** Layout used by the Hideout stage on a phone width (margin already applied). */
+export function hideoutPhoneLayout(
+  widthPt: number,
+  pixelRatio: number,
+  stageH = 520,
+): { scale: HideoutScale; origin: HideoutOrigin; width: number; height: number } {
+  const width = widthPt;
+  const height = stageH;
+  const scale = hideoutIntegerScale({
+    availW: Math.max(0, width - HIDEOUT_MARGIN_PT * 2),
+    availH: height,
+    pixelRatio,
+  });
+  return { scale, origin: hideoutStageOrigin(width, height, scale), width, height };
+}
+
+/** East/west facing from an iso step. Walk clips are 2-dir; dx wins on diagonals. */
+export function hideoutFace(dx: number, dy: number, prev: 'e' | 'w'): 'e' | 'w' {
+  if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return prev;
+  return dx >= 0 ? 'e' : 'w';
 }
 
 /* ------------------------------------------------------- 2D wander --- */
@@ -302,7 +400,7 @@ export type HideoutStep = {
 
 const CROSS_MS = 5200;
 const BASE_BOUNCE = 8;
-const TARGET_IDS: readonly HideoutTargetId[] = ['bowl', 'cushion', 'chair', 'door'];
+const TARGET_IDS: readonly HideoutTargetId[] = ['bowl', 'cushion', 'chair', 'door', 'boombox'];
 
 export function hideoutTargetPoint(id: HideoutTargetId): Pt {
   return clampToWalk(HIDEOUT_TARGETS[id][0], HIDEOUT_TARGETS[id][1]);
@@ -368,10 +466,14 @@ export function planHideoutStep(
     return { act: 'showoff', pose, ms: petPoseMs(kit, pose), squash: false, ...still, loop: false };
   }
   if (roll < showoffChance + Math.max(0.42, m.wander)) {
-    const visit = rng() < 0.45;
-    const dest = visit
-      ? hideoutTargetPoint(TARGET_IDS[Math.floor(rng() * TARGET_IDS.length)] ?? 'door')
-      : randomWalkPoint(rng);
+    const visit = rng() < 0.55;
+    let dest: Pt = here;
+    for (let n = 0; n < 6; n += 1) {
+      dest = visit
+        ? hideoutTargetPoint(TARGET_IDS[Math.floor(rng() * TARGET_IDS.length)] ?? 'door')
+        : randomWalkPoint(rng);
+      if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) >= 18) break;
+    }
     if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) < 10) {
       const restMs = Math.round((1600 + rng() * 2000) * form.rest * m.rest);
       return { act: rng() < m.sit ? 'sit' : 'idle', pose: petPose(kit, 'idle'), ms: restMs, squash: true, ...still };
