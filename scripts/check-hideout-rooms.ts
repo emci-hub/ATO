@@ -281,7 +281,7 @@ const HOUR = 60 * 60 * 1000;
   assert.ok(teaseLayout.scaffold.pos[0] > teaseLayout.boarded.pos[0], 'scaffold leans outside to the right');
   assert.ok(teaseLayout.sign.pos[1] > teaseLayout.boarded.pos[1], 'sign sits in front of the boarded door');
   const art = readFileSync(path.join(ROOT, 'src/play/hideout-art.ts'), 'utf8');
-  assert.ok(art.includes("png('room.loft.back')") || art.includes('room.loft.back'));
+  assert.ok(art.includes('ROOM.loft.back'), 'loft back layer is wired through the ROOM skeleton');
   assert.ok(art.includes('occludeDayA'));
   assert.ok(art.includes('HIDEOUT_ART_SWAP'));
   assert.ok(art.includes('sprite-smith-out'));

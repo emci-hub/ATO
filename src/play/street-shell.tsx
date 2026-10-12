@@ -20,6 +20,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from '
 
 import { PET_METER_MAX, type PetState } from '@/play/pet';
 import { PetFigure } from '@/play/pet-figure';
+import { uiDrawable, type UiPiece } from '@/art/art';
 import { ClipImage } from '@/play/sheet-sprite';
 import { STREET_MOTION, STREET_SIZE, tapHaptic } from '@/play/street-feel';
 import { NeonButton } from '@/play/neon-ui';
@@ -74,10 +75,10 @@ export const StreetHudOutlet = hud.Outlet;
 
 /* ------------------------------------------------------------ pieces --- */
 
-function KitIcon({ name, size }: { name: string; size: number }) {
+function KitIcon({ name, size }: { name: UiPiece; size: number }) {
   return (
     <View style={{ width: size, height: size }}>
-      <ClipImage drawable={{ kind: 'sheet', sheetKey: `sheets/streetwear/ui-kit/${name}`, frameKey: 'img' }} />
+      <ClipImage drawable={uiDrawable(name)} />
     </View>
   );
 }
@@ -107,7 +108,7 @@ function useCountUp(value: number, still: boolean): number {
   return shown;
 }
 
-function Resource({ icon, label, value, a11y }: { icon: string; label: string; value: string; a11y: string }) {
+function Resource({ icon, label, value, a11y }: { icon: UiPiece; label: string; value: string; a11y: string }) {
   return (
     <View style={styles.res} accessible accessibilityLabel={a11y}>
       <KitIcon name={icon} size={22} />
@@ -174,7 +175,7 @@ export function StreetResourceBar({
 
 export type StreetTab = 'block' | 'turf' | 'hideout' | 'locker' | 'store';
 
-const TAB_DEF: Record<StreetTab, { label: string; icon: string }> = {
+const TAB_DEF: Record<StreetTab, { label: string; icon: UiPiece }> = {
   block: { label: 'Block', icon: 'nav-tab-block' },
   turf: { label: 'Turf War', icon: 'nav-tab-turf' },
   hideout: { label: 'Hideout', icon: 'nav-tab-hideout' },
@@ -392,7 +393,7 @@ export function StreetBlock({
             <View style={styles.roomTile}>
               {/* Cover-fit the portrait room art: full width, centred, top and bottom cropped. */}
               <View style={styles.roomArt}>
-                <ClipImage drawable={{ kind: 'sheet', sheetKey: 'sheets/streetwear/ui-kit/room-underground', frameKey: 'img' }} />
+                <ClipImage drawable={uiDrawable('room-underground')} />
               </View>
               <View style={styles.roomShade}>
                 <Text style={styles.tileTitle}>Underground</Text>

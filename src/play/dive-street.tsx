@@ -24,6 +24,7 @@ import type { DiveWorldCuts } from '@/play/dive-fx-model';
 import { hideoutIntegerScale } from '@/play/hideout-iso';
 import { KEEP_TRAVEL_PT } from '@/play/play-motion';
 import { streetStop } from '@/play/dive-street-names';
+import { uiDrawable, type UiPiece } from '@/art/art';
 import { ClipImage } from '@/play/sheet-sprite';
 import { AmbientSprite, Drift } from '@/play/street-ambient';
 import { STREET, STREET_FONT } from '@/play/street-ui';
@@ -35,8 +36,8 @@ const TRAIN_ASPECT = 256 / 80;
 const TRAIN_CROSS_MS = 1600;
 const TRAIN_PERIOD_MS = 9000;
 
-function kit(name: string) {
-  return { kind: 'sheet' as const, sheetKey: `sheets/streetwear/ui-kit/${name}`, frameKey: 'img' };
+function kit(name: UiPiece) {
+  return uiDrawable(name);
 }
 
 /** The current stop, cover-fit, darkening as the ride goes down. */

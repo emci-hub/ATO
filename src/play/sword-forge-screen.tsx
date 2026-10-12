@@ -10,6 +10,7 @@ import { NeonBackLink, NeonHeader, NeonPanel } from '@/play/neon-ui';
 import { artSkin } from '@/play/art-skin';
 import { PLAY_ART } from '@/play/generated-play-assets';
 import { pixelRenderStyle } from '@/play/pixel-theme';
+import { SHEET } from '@/art/art';
 import { ClipImage, sheetFrame } from '@/play/sheet-sprite';
 import type { SwordAction } from '@/play/playStore';
 import { tierWord, type SwordPanel, type SwordTier } from '@/play/swords';
@@ -22,14 +23,14 @@ import { streetUiOn } from '@/play/street-ui';
  */
 function SwordBadge({ element, tier, color }: { element: string; tier: SwordTier; color: string }) {
   const frame = artSkin() === 'streetwear' ? PLAY_ART[`skins/streetwear/ui/rarity/frame-${tier}`] : undefined;
-  const sword = sheetFrame(`sheets/streetwear/swords/${tier}`, element);
+  const sword = sheetFrame(SHEET.sword[tier], element);
   const gem = PLAY_ART[`skins/streetwear/ui/rarity/gem-${tier}`];
   if (!frame || !sword) return <View style={[styles.swatch, { backgroundColor: color }]} />;
   return (
     <View style={styles.card} accessibilityLabel={`${tierWord(tier)} sword`}>
       <Image source={frame} contentFit="contain" style={{ ...StyleSheet.absoluteFillObject, ...pixelRenderStyle }} />
       <View style={styles.cardSword}>
-        <ClipImage drawable={{ kind: 'sheet', sheetKey: `sheets/streetwear/swords/${tier}`, frameKey: element }} />
+        <ClipImage drawable={{ kind: 'sheet', sheetKey: SHEET.sword[tier], frameKey: element }} />
       </View>
       {gem ? <Image source={gem} contentFit="contain" style={{ ...styles.cardGem, ...pixelRenderStyle }} /> : null}
     </View>

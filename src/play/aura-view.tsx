@@ -21,6 +21,7 @@ import {
 } from '@/play/auras';
 import { usePlayMotion } from '@/play/play-motion';
 import { useFxQuality } from '@/play/fx-quality';
+import { SHEET } from '@/art/art';
 import { PLAY_SHEETS } from '@/play/generated-play-sheets';
 import { ClipImage, playSheetArt, sheetFrame } from '@/play/sheet-sprite';
 import { STREETWEAR_META, type ClipDrawable } from '@/play/skin';
@@ -291,7 +292,7 @@ function spritePack(style: AuraStyle, layer: 'behind' | 'front', element: string
     return hit;
   }
   const job = (async () => {
-    const sheetKey = `sheets/streetwear/auras/${style}/${layer}`;
+    const sheetKey = SHEET.aura[style][layer];
     const sheet = PLAY_SHEETS[sheetKey];
     if (!sheet) throw new Error('aura sheet');
     const rgba = await sheetRgba(sheetKey);
@@ -428,8 +429,7 @@ export function HideoutAuraStrip({
   const fxQuality = useFxQuality();
   const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
   const which = layer === 'back' ? 'behind' : 'front';
-  const name = styleId === 'blaze' ? `blaze-84-${which}` : `bubbles-outlined-${which}`;
-  const sheetKey = `sheets/streetwear/hideout-fx/${name}`;
+  const sheetKey = SHEET.hideoutFx[styleId === 'blaze' ? 'blaze-84' : 'bubbles-outlined'][which];
   const frames = Object.keys(PLAY_SHEETS[sheetKey]?.frames ?? {})
     .filter((k) => k.startsWith('frame_'))
     .sort();

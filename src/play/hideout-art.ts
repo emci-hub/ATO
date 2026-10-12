@@ -3,7 +3,8 @@
  *
  * Placeholders until Sprite Smith art lands at sprite-smith-out. Replace the
  * files under `assets/art/rooms/` (ids in the art registry) and, if names
- * change, the `ART.room.*` paths in `ROOM_ART` (a missing id is a type error).
+ * change, the `ROOM.<room>.<slot>` layers (skeleton: src/art/skeletons.ts) and `ART.*` extras
+ * in `ROOM_ART` (a missing id is a type error).
  * Maps use the 264×576 / 12px schema
  * (hideout-td.map.json): floor 20×36 tiles, door gap 4, occluders as ONE
  * combined layer per time/neon state with per-prop crop + sortY.
@@ -18,7 +19,7 @@ import hideoutMap from '@/assets/art/rooms/hideout/hideout-td.map.json';
 import loftMap from '@/assets/art/rooms/loft/loft-td.map.json';
 import undergroundMap from '@/assets/art/rooms/underground/underground-td.map.json';
 import teaseLayout from '@/assets/art/rooms/hideout/hideout-tease.json';
-import { ART, getArtSource, type ArtId } from '@/art/art';
+import { ART, ROOM, getArtSource, type ArtId } from '@/art/art';
 import { HIDEOUT_ART_PLACEHOLDER, type HideoutRoomId } from '@/play/hideout-progress';
 
 function png(id: ArtId): ImageSourcePropType {
@@ -76,33 +77,33 @@ export const ROOM_ART: Record<
   hideout: {
     placeholder: HIDEOUT_ART_PLACEHOLDER,
     map: hideoutMap,
-    back: png(ART.room.hideout.back),
-    floor: png(ART.room.hideout.floor),
-    props: png(ART.room.hideout.props),
-    neonA: png(ART.room.hideout.neonA),
-    neonB: png(ART.room.hideout.neonB),
-    occludeDayA: png(ART.room.hideout.occluderDayA),
-    occludeDayB: png(ART.room.hideout.occluderDayB),
-    occludeNightA: png(ART.room.hideout.occluderNightA),
-    occludeNightB: png(ART.room.hideout.occluderNightB),
-    snapshot: png(ART.room.hideout.back),
+    back: png(ROOM.hideout.back),
+    floor: png(ROOM.hideout.floor),
+    props: png(ROOM.hideout.props),
+    neonA: png(ROOM.hideout.neonA),
+    neonB: png(ROOM.hideout.neonB),
+    occludeDayA: png(ROOM.hideout.occluderDayA),
+    occludeDayB: png(ROOM.hideout.occluderDayB),
+    occludeNightA: png(ROOM.hideout.occluderNightA),
+    occludeNightB: png(ROOM.hideout.occluderNightB),
+    snapshot: png(ROOM.hideout.back),
   },
   loft: {
     placeholder: HIDEOUT_ART_PLACEHOLDER,
     map: loftMap,
-    back: png(ART.room.loft.back),
-    floor: png(ART.room.loft.floor),
-    props: png(ART.room.loft.props),
-    neonA: png(ART.room.loft.neonA),
-    neonB: png(ART.room.loft.neonB),
-    occludeDayA: png(ART.room.loft.occluderDayA),
-    occludeDayB: png(ART.room.loft.occluderDayB),
-    occludeNightA: png(ART.room.loft.occluderNightA),
-    occludeNightB: png(ART.room.loft.occluderNightB),
-    windowDay: png(ART.room.loft.windowDay),
-    windowNight: png(ART.room.loft.windowNight),
-    glow: png(ART.room.loft.glow),
-    snapshot: png(ART.room.loft.back),
+    back: png(ROOM.loft.back),
+    floor: png(ROOM.loft.floor),
+    props: png(ROOM.loft.props),
+    neonA: png(ROOM.loft.neonA),
+    neonB: png(ROOM.loft.neonB),
+    occludeDayA: png(ROOM.loft.occluderDayA),
+    occludeDayB: png(ROOM.loft.occluderDayB),
+    occludeNightA: png(ROOM.loft.occluderNightA),
+    occludeNightB: png(ROOM.loft.occluderNightB),
+    windowDay: png(ROOM.loft.windowDay),
+    windowNight: png(ROOM.loft.windowNight),
+    glow: png(ROOM.loft.glow),
+    snapshot: png(ROOM.loft.back),
   },
   garage: {
     placeholder: true,
@@ -124,16 +125,16 @@ export const UNDERGROUND_ART: Partial<Record<RoomArtKey, ImageSourcePropType>> &
 } = {
   placeholder: true,
   map: undergroundMap,
-  back: png(ART.room.underground.back),
-  floor: png(ART.room.underground.floor),
-  props: png(ART.room.underground.props),
-  neonA: png(ART.room.underground.neonA),
-  neonB: png(ART.room.underground.neonB),
-  occludeDayA: png(ART.room.underground.occluderDayA),
-  occludeDayB: png(ART.room.underground.occluderDayB),
-  occludeNightA: png(ART.room.underground.occluderNightA),
-  occludeNightB: png(ART.room.underground.occluderNightB),
-  snapshot: png(ART.room.underground.back),
+  back: png(ROOM.underground.back),
+  floor: png(ROOM.underground.floor),
+  props: png(ROOM.underground.props),
+  neonA: png(ROOM.underground.neonA),
+  neonB: png(ROOM.underground.neonB),
+  occludeDayA: png(ROOM.underground.occluderDayA),
+  occludeDayB: png(ROOM.underground.occluderDayB),
+  occludeNightA: png(ROOM.underground.occluderNightA),
+  occludeNightB: png(ROOM.underground.occluderNightB),
+  snapshot: png(ROOM.underground.back),
 };
 
 export const TEASE_ART = {

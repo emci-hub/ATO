@@ -128,6 +128,7 @@ import {
   type BoardSkinId,
   type SkinWalkFace,
 } from '@/play/skin';
+import { boardSheet } from '@/art/art';
 import { ClipImage, ClipSprite, SheetSprite, sheetFrame } from '@/play/sheet-sprite';
 import {
   CREEP_STILL_MS,
@@ -2645,7 +2646,8 @@ export function DefendScreen({
   );
 
   // The baked street board for this map (Streetwear only; play-art-pack packSwBoards).
-  const streetBoard = street ? sheetFrame(`sheets/streetwear/board/${boardMap.id}`, 'img') : undefined;
+  const streetBoardKey = street ? boardSheet(boardMap.id) : undefined;
+  const streetBoard = streetBoardKey ? sheetFrame(streetBoardKey, 'img') : undefined;
 
   return (
     <ThemedView style={styles.container}>

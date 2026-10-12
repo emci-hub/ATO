@@ -11,11 +11,12 @@
  *   depth 4      Ghost Station   (Abyss)
  *   depth 5      The Core        (Hadal, Oxygen only)
  */
+import type { UiPiece } from '@/art/art';
 import type { DiveButton } from '@/play/dive-buttons';
 import { artSkin } from '@/play/art-skin';
 import { findKind, findName } from '@/play/dive-loot';
 
-export type StreetStop = { name: string; art: string };
+export type StreetStop = { name: string; art: UiPiece };
 
 /** One stop per depth band (6 bands; Tunnels covers both Reef bands). */
 export const STREET_STOPS: readonly StreetStop[] = [

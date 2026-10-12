@@ -21,6 +21,7 @@ import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
 import { ManholeTransit } from '@/play/dive-street';
 import { usePlayMotion } from '@/play/play-motion';
 import { PixelBody, PixelButton, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
+import { uiDrawable, type UiPiece } from '@/art/art';
 import { ClipImage } from '@/play/sheet-sprite';
 import { tapHaptic } from '@/play/street-feel';
 import { STREET, STREET_FONT, streetUiOn } from '@/play/street-ui';
@@ -803,9 +804,9 @@ export function PetScreen({
     build: view.hideout.state.builds[teaseRoom],
     tokens: view.tokens,
   });
-  const kitIcon = (name: string, size: number) => (
+  const kitIcon = (name: UiPiece, size: number) => (
     <View style={{ width: size, height: size }}>
-      <ClipImage drawable={{ kind: 'sheet', sheetKey: `sheets/streetwear/ui-kit/${name}`, frameKey: 'img' }} />
+      <ClipImage drawable={uiDrawable(name)} />
     </View>
   );
 

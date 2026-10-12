@@ -103,9 +103,12 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   Retest is retired: after set 25 it is Change answers + Undo. No AI anywhere in cards/history.
 - **Unreviewed copy ships behind `*_COPY_REVIEWED = false` flags.** Story / Levity are
   diagnosis-adjacent; not shippable as reviewed without emci's read.
-- **Game art follows `docs/art/PIXELLAB_GUIDE.md` (emci 2026-10-12).** PixelLab's dedicated tools first
+- **Game art follows `docs/art/PIXELLAB_GUIDE.md` (emci 2026-10-12).** Every art request: check the art
+  library first and recommend what's there (reuse / edit / new), then PixelLab's dedicated tools
   (building kit, tilesets, map objects, object states, VFX/pixelart workbench, reduce_colors); sizes on the
-  32 px ladder (heroes 128 at 1:1); show emci rendered samples before any art choice.
+  32 px ladder (option A: heroes 128 at 1:1); every new or edited asset passes the scale check against the
+  grown hero (guide §2 table); show emci rendered samples + a scale sheet before any art choice; and the
+  same change updates the library (import / `replaces` / archive via art-decisions, then `art:sync`).
 - Do not change dependencies, auth, env config, or secrets without emci's ok.
 - **Schema changes that copy a tested path need no ask (emci 2026-10-02).** A new table /
   RLS / RPC built the same way as one already live here (e.g. the question pool) is
@@ -159,7 +162,7 @@ Expo docs for this repo: https://docs.expo.dev/versions/v54.0.0/ (SDK 54 — che
    FINAL hero and never scale with evolution stage. Streetwear palette only; ≤256 colours per sheet.
 7. Critique gate. Score with pixel-art-critique; ≥22/28 with no zero before status can leave `candidate`.
    Only emci sets `approved`.
-8. Code names art through the typed tree, never a typed-out id: getArtSource(ART.room.<room>.<part>), HERO.<hero>.<slot> (idle/walk/dash/attack/skill/hurt/rotations), findArt({...}) from src/art. Ids are clean (<kind>.<set>[.<variant>][.<part>]); old ids still resolve via ART_ALIASES. check:art-registry fails on id strings. No direct require() of image paths.
+8. Code names art through the skeletons (src/art/skeletons.ts), never a typed-out id or sheet path: ROOM.<room>.<slot>, SHEET.<hero|enemy|tower|fx|aura|hideoutFx>.<item>.<slot>, SHEET.ui['<piece>'] / SHEET.sword.<tier> / SHEET.board, HERO.<hero>.<slot>, or ART.<kind>.<set>... for anything else; findArt({...}) from src/art. Art that fits no skeleton slot stops art:sync. Ids are clean (<kind>.<set>[.<variant>][.<part>]); old ids still resolve via ART_ALIASES. check:art-registry fails on id strings. No direct require() of image paths.
 9. Off-style art (kenney, craftpix, scribble, primal, dungeon-legends, classic) is `needs-restyle`:
    don't place it in new streetwear screens; regenerate in PixelLab with `replaces`. Never auto-filter/restyle.
 10. After any art add/remove/usage change: `npm run art:sync` and commit the

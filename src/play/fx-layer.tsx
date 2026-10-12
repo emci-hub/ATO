@@ -25,6 +25,7 @@ import { artSkin } from '@/play/art-skin';
 import type { FxQuality } from '@/play/fx-quality';
 import type { KitHit } from '@/play/kit-combat';
 import { ELEMENT_COLOR, type Element } from '@/play/kits';
+import { SHEET } from '@/art/art';
 import { SheetSprite, sheetFrame } from '@/play/sheet-sprite';
 import { STREETWEAR_META } from '@/play/skin';
 
@@ -292,7 +293,9 @@ function swSprite(key: string, t: number, at: FxPoint, size: number, angle: numb
   if (!meta) return null;
   const n = meta.frames;
   const i = meta.loop ? Math.floor(t * n * 2) % n : Math.min(n - 1, Math.max(0, Math.floor(t * n)));
-  const frame = sheetFrame(`sheets/streetwear/fx/${key}`, `frame_${String(i).padStart(3, '0')}`);
+  const [el, beat] = key.split('/');
+  const sheetKey = (SHEET.fx as Record<string, Record<string, string>>)[el]?.[beat];
+  const frame = sheetKey ? sheetFrame(sheetKey, `frame_${String(i).padStart(3, '0')}`) : undefined;
   if (!frame) return null;
   const sprite = <SheetSprite key={id} frame={frame} x={at.x - meta.anchorX * size} y={at.y - meta.anchorY * size} size={size} />;
   return angle == null ? sprite : <G key={id} transform={`rotate(${angle.toFixed(1)} ${at.x.toFixed(1)} ${at.y.toFixed(1)})`}>{sprite}</G>;

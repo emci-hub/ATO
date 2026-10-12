@@ -21,10 +21,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { uiDrawable, type UiPiece } from '@/art/art';
 import { ClipImage } from '@/play/sheet-sprite';
 
-export function kitDrawable(name: string) {
-  return { kind: 'sheet' as const, sheetKey: `sheets/streetwear/ui-kit/${name}`, frameKey: 'img' };
+export function kitDrawable(name: UiPiece) {
+  return uiDrawable(name);
 }
 
 /**
@@ -99,7 +100,7 @@ export function Twinkle({ x, y, size, ms, delay = 0, alive, color }: { x: number
 }
 
 /** A packed ambient sprite (rat, pigeon, note …). `flip` mirrors it. */
-export function AmbientSprite({ name, size, flip = false }: { name: string; size: number; flip?: boolean }) {
+export function AmbientSprite({ name, size, flip = false }: { name: UiPiece; size: number; flip?: boolean }) {
   return (
     <View style={{ width: size, height: size, transform: flip ? [{ scaleX: -1 }] : undefined }}>
       <ClipImage drawable={kitDrawable(name)} />

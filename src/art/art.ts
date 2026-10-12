@@ -1,6 +1,7 @@
 /**
  * Art library accessors. Code uses the typed tree, never a typed-out string:
- * `getArtSource(ART.room.<room>.<part>)` / `HERO.<hero>.idle` /
+ * `getArtSource(ROOM.<room>.<slot>)` / `SHEET.<family>.<item>.<slot>` (skeletons in
+ * `skeletons.ts`) / `HERO.<hero>.idle` / `ART.<kind>.<set>…` for anything else /
  * `findArt({ type: 'prop', theme: 'streetwear', placement: 'floor' })`.
  * Old ids still resolve through `ART_ALIASES`, so a rename never breaks a caller.
  *
@@ -10,15 +11,36 @@ import type { ImageSourcePropType } from 'react-native';
 
 import registryJson from '../../assets/art/registry.json';
 import type { ArtAsset, ArtRegistry } from '@/art/registry.types';
-import { ART, ART_ALIASES, ART_SOURCES, HERO, type ArtId, type HeroSlug } from '@/art/generated-art';
+import {
+  ART,
+  ART_ALIASES,
+  ART_SOURCES,
+  HERO,
+  ROOM,
+  SHEET,
+  type ArtId,
+  type BoardId,
+  type HeroSlug,
+  type UiPiece,
+} from '@/art/generated-art';
 
 const registry = registryJson as ArtRegistry;
 
 const byId = new Map<string, ArtAsset>();
 for (const asset of registry.assets) byId.set(asset.id, asset);
 
-export { ART, HERO };
-export type { ArtId, ArtAsset, HeroSlug };
+export { ART, HERO, ROOM, SHEET };
+export type { ArtId, ArtAsset, BoardId, HeroSlug, UiPiece };
+
+/** The packed sheet for one menu/HUD piece, as a ClipImage drawable. */
+export function uiDrawable(piece: UiPiece) {
+  return { kind: 'sheet' as const, sheetKey: SHEET.ui[piece], frameKey: 'img' };
+}
+
+/** A sheet key from an open family (map id from data) — undefined when not packed. */
+export function boardSheet(id: string): string | undefined {
+  return (SHEET.board as Record<string, string>)[id];
+}
 
 /** Current id for an id or an old (renamed) id. */
 export function resolveArtId(id: ArtId | string): string {

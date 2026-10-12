@@ -16,7 +16,7 @@ import { detectFormat, walkFiles } from './art-png';
 import { kebab } from './art-dirs';
 import { classifyArt, placeWithUsage, stripUsageFolder } from './art-categories';
 import { inferSetVariant } from './art-sets';
-import { HERO_CLIPS } from '../src/play/heroes-data';
+import { FLAT_SKELETONS, ROOM_SLOTS, SHEET_SKELETONS } from '../src/art/skeletons';
 
 const repo = path.resolve(__dirname, '..');
 
@@ -339,21 +339,76 @@ function printTree(tree: Tree, indent: string): string[] {
   return out;
 }
 
-/** Streetwear hero skeleton: slug → { rotations, idle, walk, dash, attack, skill, hurt } sheet keys. */
-function heroSheets(): Record<string, Record<string, string>> {
+type Grouped = Record<string, Record<string, Record<string, string>>>;
+type Flat = Record<string, Record<string, string>>;
+
+/**
+ * Streetwear packed sheets sorted into skeletons (src/art/skeletons.ts):
+ * grouped families give item → slot → sheet key, flat ones name → sheet key.
+ * A part that is not a slot of its family stops the sync with a fix-it message.
+ */
+function sheetSkeletons(): { grouped: Grouped; flat: Flat } {
+  const grouped: Grouped = Object.fromEntries(Object.keys(SHEET_SKELETONS).map((f) => [f, {}]));
+  const flat: Flat = Object.fromEntries(Object.keys(FLAT_SKELETONS).map((f) => [f, {}]));
   const file = path.join(repo, 'assets/art/legacy-play-sheets.json');
-  if (!fs.existsSync(file)) return {};
-  const keys = Object.keys(JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>);
+  if (!fs.existsSync(file)) return { grouped, flat };
+  const problems: string[] = [];
+  const put = (family: keyof typeof SHEET_SKELETONS, item: string, slot: string, key: string) => {
+    if (!(SHEET_SKELETONS[family] as readonly string[]).includes(slot)) {
+      problems.push(`${key}: "${slot}" is not a ${family} slot (${SHEET_SKELETONS[family].join('/')})`);
+      return;
+    }
+    const prev = grouped[family][item]?.[slot];
+    if (prev && prev !== key) {
+      problems.push(`${key}: ${family} "${item}" already has ${slot} from ${prev} — rename one`);
+      return;
+    }
+    (grouped[family][item] ??= {})[slot] = key;
+  };
+  const putFlat = (family: keyof typeof FLAT_SKELETONS, name: string, key: string) => {
+    const slots = FLAT_SKELETONS[family];
+    if (slots && !slots.includes(name)) problems.push(`${key}: "${name}" is not a ${family} slot`);
+    else flat[family][name] = key;
+  };
+  const clip = (s: string) => (s === 'rotations' ? s : s.toLowerCase());
+  for (const key of Object.keys(JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>)) {
+    const p = key.split('/');
+    if (p[0] !== 'sheets' || p[1] !== 'streetwear') continue;
+    const [group, a, b] = [p[2], p[3], p[4]];
+    if (group === 'heroes' && b) put('hero', a, clip(b), key);
+    else if ((group === 'creeps' || group === 'boss') && b) put('enemy', a, clip(b), key);
+    else if (group === 'towers' && b) put('tower', a, clip(b), key);
+    else if (group === 'fx' && b) put('fx', a, b, key);
+    else if (group === 'auras' && b) put('aura', a, b, key);
+    else if (group === 'hideout-fx' && a) {
+      const m = /^(.+)-(behind|front)$/.exec(a);
+      if (m) put('hideoutFx', m[1], m[2], key);
+      else problems.push(`${key}: hideout-fx sheets end in -behind or -front`);
+    } else if (group === 'ui-kit' && a) putFlat('ui', a, key);
+    else if (group === 'swords' && a) putFlat('sword', a, key);
+    else if (group === 'board' && a) putFlat('board', a, key);
+    else if (group !== 'meta.json') problems.push(`${key}: "${group}" has no skeleton — add a family to src/art/skeletons.ts`);
+  }
+  if (problems.length > 0) {
+    throw new Error(`art skeletons: ${problems.length} part(s) fit no slot — add the slot to src/art/skeletons.ts or rename the art:\n  ${problems.join('\n  ')}`);
+  }
+  return { grouped, flat };
+}
+
+/** ROOM skeleton: room → ROOM_SLOTS slot → registry id (room layers only). */
+function roomSkeleton(ids: string[]): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {};
-  for (const key of keys) {
-    const m = /^sheets\/streetwear\/heroes\/([^/]+)\/([^/]+)$/.exec(key);
+  for (const id of ids) {
+    if (!FIXED_IDS.has(id)) continue;
+    const m = /^room\.([^.]+)\.([^.]+)$/.exec(id);
     if (!m) continue;
-    const slot = m[2] === 'rotations' ? 'rotations' : m[2].toLowerCase();
-    if (slot !== 'rotations' && !(HERO_CLIPS as readonly string[]).includes(slot)) continue;
-    (out[m[1]] ??= {})[slot] = key;
+    const slot = accessorPath(m[2])[0];
+    if ((ROOM_SLOTS as readonly string[]).includes(slot)) (out[m[1]] ??= {})[slot] = id;
   }
   return out;
 }
+
+const tsKey = (k: string) => (/^[a-z_$][\w$]*$/i.test(k) ? k : `'${k}'`);
 
 function restyleFor(theme: string | undefined): ArtAsset['restyle'] | undefined {
   if (!theme || theme === 'streetwear' || theme === 'cast' || theme === 'none') return undefined;
@@ -393,6 +448,11 @@ function usedByScan(assets: ArtAsset[]): Map<string, string[]> {
       // Typed tree: ART.room.hideout.neonA → room.hideout.neon-a
       for (const m of src.matchAll(/\bART((?:\.[A-Za-z_$][\w$]*)+)/g)) {
         const id = byAccessor.get(m[1].slice(1));
+        if (id) addUsed(map, id, rel);
+      }
+      // Room skeleton: ROOM.hideout.neonA → room.hideout.neon-a
+      for (const m of src.matchAll(/\bROOM\.([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)/g)) {
+        const id = byAccessor.get(`room.${m[1]}.${m[2]}`);
         if (id) addUsed(map, id, rel);
       }
       for (const m of src.matchAll(/require\(\s*['"]@\/(assets\/art\/[^'"]+)['"]\s*\)/g)) {
@@ -659,22 +719,47 @@ function main() {
   lines.push('} as const;');
   lines.push('');
   lines.push('/**');
-  lines.push(' * Streetwear hero skeleton: every hero has the same slots (`HERO_CLIPS` +');
-  lines.push(' * `rotations`), each a packed sheet key in PLAY_SHEETS. `HERO.kael.idle`.');
+  lines.push(' * Packed Streetwear sheets by skeleton (src/art/skeletons.ts). Each value is a');
+  lines.push(' * PLAY_SHEETS key. Items are keyed as the game spells them (hero/enemy ids,');
+  lines.push(' * element, aura style, ui piece): `SHEET.hero.kael.idle`, `SHEET.fx.ember.hit`,');
+  lines.push(" * `SHEET.aura.blaze.front`, `SHEET.ui['button-primary']`, `SHEET.sword.epic`.");
   lines.push(' */');
-  lines.push('export const HERO = {');
-  const heroes = heroSheets();
-  for (const slug of Object.keys(heroes).sort()) {
-    lines.push(`  ${/^[a-z_$][\w$]*$/i.test(slug) ? slug : `'${slug}'`}: {`); // keyed by hero id, as heroes.json spells it
-    for (const slot of ['rotations', ...HERO_CLIPS]) {
-      const key = heroes[slug][slot];
-      if (key) lines.push(`    ${slot}: '${key}',`);
+  lines.push('export const SHEET = {');
+  const { grouped, flat } = sheetSkeletons();
+  for (const family of Object.keys(SHEET_SKELETONS) as (keyof typeof SHEET_SKELETONS)[]) {
+    lines.push(`  ${family}: {`);
+    for (const item of Object.keys(grouped[family]).sort()) {
+      lines.push(`    ${tsKey(item)}: {`);
+      for (const slot of SHEET_SKELETONS[family]) {
+        const key = grouped[family][item][slot];
+        if (key) lines.push(`      ${slot}: '${key}',`);
+      }
+      lines.push('    },');
     }
+    lines.push('  },');
+  }
+  for (const family of Object.keys(FLAT_SKELETONS)) {
+    lines.push(`  ${family}: {`);
+    for (const name of Object.keys(flat[family]).sort()) lines.push(`    ${tsKey(name)}: '${flat[family][name]}',`);
     lines.push('  },');
   }
   lines.push('} as const;');
   lines.push('');
+  lines.push('/** Hero skeleton (rotations + HERO_CLIPS): `HERO.kael.idle`. Same as SHEET.hero. */');
+  lines.push('export const HERO = SHEET.hero;');
   lines.push('export type HeroSlug = keyof typeof HERO;');
+  lines.push('export type UiPiece = keyof typeof SHEET.ui;');
+  lines.push('export type BoardId = keyof typeof SHEET.board;');
+  lines.push('');
+  lines.push('/** Room / map skeleton (ROOM_SLOTS): `ROOM.hideout.neonA` → registry id. */');
+  lines.push('export const ROOM = {');
+  const rooms = roomSkeleton(ids);
+  for (const room of Object.keys(rooms).sort()) {
+    lines.push(`  ${tsKey(room)}: {`);
+    for (const slot of ROOM_SLOTS) if (rooms[room][slot]) lines.push(`    ${slot}: '${rooms[room][slot]}',`);
+    lines.push('  },');
+  }
+  lines.push('} as const;');
   lines.push('');
   fs.writeFileSync(path.join(repo, 'src/art/generated-art.ts'), `${lines.join('\n')}\n`);
   console.log(`art:registry ${live.length} live / ${registry.assets.length} total → src/art/generated-art.ts`);

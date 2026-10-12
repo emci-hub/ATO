@@ -18,6 +18,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import streetwearMeta from '@/assets/play/sheets/streetwear/meta.json';
 import { artSkin } from '@/play/art-skin';
+import { SHEET } from '@/art/art';
 import { PLAY_SHEET_ART, PLAY_SHEETS } from '@/play/generated-play-sheets';
 import { pixelRenderStyle } from '@/play/pixel-theme';
 
@@ -99,7 +100,7 @@ function Cell({
   sh: number;
   style: ViewStyle;
 }) {
-  const key = `sheets/streetwear/ui-kit/${piece}`;
+  const key = SHEET.ui[piece];
   const sheet = PLAY_SHEETS[key];
   const rect = sheet?.frames.img;
   const source = PLAY_SHEET_ART[key];

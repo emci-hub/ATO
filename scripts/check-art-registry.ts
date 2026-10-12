@@ -187,9 +187,25 @@ function main() {
     for (const m of src.matchAll(/\b(?:getArt|getArtSource|png)\(\s*['"]([^'"]+)['"]/g)) stringIds.push(`${rel}: ${m[1]}`);
   }
   assert.deepEqual(stringIds, [], `use the typed ART tree, not id strings: ${stringIds.join(', ')}`);
+  // Skeletons: packed sheets are named through SHEET.<family>…, never a typed path.
+  // skin.ts is the one translator from skin.json keys to sheet keys.
+  const sheetPaths: string[] = [];
+  for (const file of walkFiles(path.join(repo, 'src'))) {
+    if (!/\.(ts|tsx)$/.test(file)) continue;
+    const rel = path.relative(repo, file).split(path.sep).join('/');
+    if (/\/generated-[^/]+\.ts$/.test(rel) || rel === 'src/play/skin.ts') continue;
+    const src = fs
+      .readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    if (/['"`]sheets\/streetwear\//.test(src)) sheetPaths.push(rel);
+  }
+  assert.deepEqual(sheetPaths, [], `use SHEET.<family> (src/art/skeletons.ts), not 'sheets/streetwear/…' paths: ${sheetPaths.join(', ')}`);
+  assert.match(generated, /export const SHEET = \{/, 'generated-art exports the SHEET skeletons');
+  assert.match(generated, /export const ROOM = \{/, 'generated-art exports the ROOM skeleton');
   assert.match(generated, /export const ART = \{/, 'generated-art exports the typed ART tree');
-  assert.match(generated, /export const HERO = \{/, 'generated-art exports the HERO skeleton');
-  passed = ok(passed, `clean ids: ${aliasMap.size} old ids alias to current ones; code uses ART / HERO, no id strings`);
+  assert.match(generated, /export const HERO = SHEET\.hero;/, 'generated-art exports the HERO skeleton');
+  passed = ok(passed, `clean ids: ${aliasMap.size} old ids alias to current ones; code uses ART / ROOM / SHEET skeletons, no id strings or sheet paths`);
 
   const metro = fs.readFileSync(path.join(repo, 'metro.config.js'), 'utf8');
   assert.match(metro, /art-src/, 'metro blockList includes art-src');
