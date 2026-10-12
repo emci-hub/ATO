@@ -25,6 +25,7 @@ import {
   heroUnlockLine,
   setAvatarUnbinds,
 } from '../src/play/hero-copy';
+import { playSheetsSearchText } from './art-sheets';
 import { allHeroes } from '../src/play/heroes-data';
 import { BEHAVIOR_LABEL, ELEMENTS, ELEMENT_LABEL } from '../src/play/kits';
 
@@ -40,10 +41,7 @@ const heroes = allHeroes();
 // sheet. `skin.ts` can't be imported here (the generated registry `require`s
 // PNGs, which plain Node can't load), so the registry is read as text — the
 // same approach `check-heroes.ts` uses.
-const sheetRegistry = fs.readFileSync(
-  path.resolve(process.cwd(), 'src/play/generated-play-sheets.ts'),
-  'utf8',
-);
+const sheetRegistry = playSheetsSearchText(path.resolve(process.cwd()));
 for (const hero of heroes) {
   const base = hero.folder.replace(/^assets\/play\//, '');
   assert.ok(

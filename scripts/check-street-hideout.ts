@@ -210,19 +210,19 @@ const read = (path: string) => readFileSync(path, 'utf8');
 
 {
   const art = [
-    'assets/play/rooms/hideout-td.map.json',
-    'assets/play/rooms/hideout-td-back.png',
-    'assets/play/rooms/hideout-td-floor.png',
-    'assets/play/rooms/hideout-td-props.png',
-    'assets/play/rooms/hideout-td-occlude-day-a.png',
-    'assets/play/rooms/hideout-td-occlude-day-b.png',
-    'assets/play/rooms/hideout-td-occlude-night-a.png',
-    'assets/play/rooms/hideout-td-occlude-night-b.png',
-    'assets/play/rooms/hideout-td-neon-a.png',
-    'assets/play/rooms/hideout-td-neon-b.png',
-    'assets/play/skins/streetwear/fx/hideout/blaze-84-behind.png',
-    'assets/play/skins/streetwear/fx/hideout/bubbles-outlined-behind.png',
-    'assets/play/skins/streetwear/fx/hideout/sheets.json',
+    'assets/art/rooms/hideout/hideout-td.map.json',
+    'assets/art/rooms/hideout/hideout-td-back.png',
+    'assets/art/rooms/hideout/hideout-td-floor.png',
+    'assets/art/rooms/hideout/hideout-td-props.png',
+    'assets/art/rooms/hideout/hideout-td-occlude-day-a.png',
+    'assets/art/rooms/hideout/hideout-td-occlude-day-b.png',
+    'assets/art/rooms/hideout/hideout-td-occlude-night-a.png',
+    'assets/art/rooms/hideout/hideout-td-occlude-night-b.png',
+    'assets/art/rooms/hideout/hideout-td-neon-a.png',
+    'assets/art/rooms/hideout/hideout-td-neon-b.png',
+    'art-src/pixellab/streetwear-pack/migrated/raw/fx/hideout/blaze-84-behind.png',
+    'art-src/pixellab/streetwear-pack/migrated/raw/fx/hideout/bubbles-outlined-behind.png',
+    'art-src/pixellab/streetwear-pack/migrated/raw/fx/hideout/sheets.json',
   ];
   for (const f of art) assert.ok(existsSync(f), f);
   assert.ok(HIDEOUT_AURA_PAD_PX >= 8);

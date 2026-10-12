@@ -1,0 +1,80 @@
+{
+  "hero": "neon-viper",
+  "actions": {
+    "Breathing_Idle": {
+      "sheetKey": "sheets/cast/heroes/neon-viper/Breathing_Idle",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 4,
+      "footAt": 0.75
+    },
+    "Cross_Punch": {
+      "sheetKey": "sheets/cast/heroes/neon-viper/Cross_Punch",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 6,
+      "footAt": 0.7578
+    },
+    "Falling_Back_Death": {
+      "sheetKey": "sheets/cast/heroes/neon-viper/Falling_Back_Death",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 7,
+      "footAt": 0.7344
+    },
+    "Jumping": {
+      "sheetKey": "sheets/cast/heroes/neon-viper/Jumping",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7734
+    },
+    "Surprise_Uppercut": {
+      "sheetKey": "sheets/cast/heroes/neon-viper/Surprise_Uppercut",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 7,
+      "footAt": 0.7656
+    },
+    "Walking": {
+      "sheetKey": "sheets/cast/heroes/neon-viper/Walking",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 6,
+      "footAt": 0.7578
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/neon-viper/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "idle": "Breathing_Idle",
+    "attack": "Cross_Punch",
+    "hurt": "Falling_Back_Death",
+    "walk": "Walking"
+  }
+}

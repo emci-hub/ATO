@@ -1,7 +1,7 @@
 /**
  * Streetwear Hideout — 3/4 top-down room, map-driven spots, room life, slim strip.
  *
- * Art is the swappable greybox under assets/play/rooms/ (hideout-td-*). Spots /
+ * Art is the swappable greybox under assets/art/rooms/ (hideout-td-*). Spots /
  * walk / lights come from hideout-td.map.json. Spot labels are Departure Mono
  * mustard tags; each fades to 40% after its first tap. "Show labels" in Info
  * restores them.

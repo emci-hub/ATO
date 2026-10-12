@@ -24,8 +24,34 @@ import {
 } from '../src/play/skin-walk-dir';
 
 const repo = path.resolve(__dirname, '..');
-const HEROES = path.join(repo, 'assets/play/skins/streetwear/heroes');
 const SHEETS = path.join(repo, 'assets/play/sheets/streetwear/heroes');
+
+function streetwearHeroRaw(slug: string): string {
+  for (const gen of ['picked', 'migrated']) {
+    const d = path.join(repo, 'art-src/pixellab', `hero.${slug}.streetwear`, gen, 'raw');
+    if (fs.existsSync(d)) return d;
+  }
+  return path.join(repo, 'assets/play/skins/streetwear/heroes', slug);
+}
+
+function listStreetwearHeroes(): string[] {
+  const rawRoot = path.join(repo, 'art-src/pixellab');
+  if (fs.existsSync(rawRoot)) {
+    const slugs = fs
+      .readdirSync(rawRoot)
+      .filter((n) => n.startsWith('hero.') && n.endsWith('.streetwear'))
+      .map((n) => n.slice('hero.'.length, n.length - '.streetwear'.length))
+      .sort();
+    if (slugs.length > 0) return slugs;
+  }
+  const legacy = path.join(repo, 'assets/play/skins/streetwear/heroes');
+  if (!fs.existsSync(legacy)) return [];
+  return fs
+    .readdirSync(legacy, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .sort();
+}
 
 let passed = 0;
 const ok = (msg: string) => {
@@ -33,17 +59,13 @@ const ok = (msg: string) => {
   console.log(`  ✓ ${msg}`);
 };
 
-const heroes = fs
-  .readdirSync(HEROES, { withFileTypes: true })
-  .filter((d) => d.isDirectory())
-  .map((d) => d.name)
-  .sort();
+const heroes = listStreetwearHeroes();
 assert.ok(heroes.length >= 1, 'no streetwear heroes on disk');
 
 const missingSource: string[] = [];
 const partialSource: string[] = [];
 for (const slug of heroes) {
-  const walk = path.join(HEROES, slug, 'animations', 'Walk');
+  const walk = path.join(streetwearHeroRaw(slug), 'animations', 'Walk');
   if (!fs.existsSync(walk)) {
     missingSource.push(slug);
     continue;
@@ -66,12 +88,19 @@ assert.deepEqual(
 );
 ok(`${heroes.length} streetwear heroes author Walk N,E,S,W on disk`);
 
-const sheetsSrc = fs.readFileSync(path.join(repo, 'src/play/generated-play-sheets.ts'), 'utf8');
-const json = sheetsSrc.slice(
-  sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEETS:')),
-  sheetsSrc.indexOf(' as const;'),
-);
-const sheets = JSON.parse(json) as Record<string, { frames: Record<string, unknown> }>;
+function loadPlaySheets(): Record<string, { frames: Record<string, unknown> }> {
+  const legacy = path.join(repo, 'assets/art/legacy-play-sheets.json');
+  if (fs.existsSync(legacy)) {
+    return JSON.parse(fs.readFileSync(legacy, 'utf8')) as Record<string, { frames: Record<string, unknown> }>;
+  }
+  const sheetsSrc = fs.readFileSync(path.join(repo, 'src/play/generated-play-sheets.ts'), 'utf8');
+  const json = sheetsSrc.slice(
+    sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEETS:')),
+    sheetsSrc.indexOf(' as const;'),
+  );
+  return JSON.parse(json) as Record<string, { frames: Record<string, unknown> }>;
+}
+const sheets = loadPlaySheets();
 
 const meta = JSON.parse(
   fs.readFileSync(path.join(repo, 'assets/play/sheets/streetwear/meta.json'), 'utf8'),
@@ -141,7 +170,7 @@ assert.doesNotMatch(
   /order\.indexOf\(folder\)/,
   'poseDrawable walk must not indexOf the walk folder (that would skip skinWalkDirIndex)',
 );
-const packSrc = fs.readFileSync(path.join(repo, 'scripts/play-art-pack.ts'), 'utf8');
+const packSrc = fs.readFileSync(path.join(repo, 'scripts/art-pack.ts'), 'utf8');
 assert.match(packSrc, /SW_WALK_ORDER = \['north', 'east', 'south', 'west'\]/, 'packer Walk order is NESW');
 assert.match(
   packSrc,

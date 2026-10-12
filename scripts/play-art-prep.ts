@@ -1,4 +1,5 @@
 /**
+ * Thin one-release wrapper. New work uses `npm run art:registry`.
  * Play art-prep script.
  *
  * Scans the unpacked Play art packs under `assets/play/` (Scribble Dungeons

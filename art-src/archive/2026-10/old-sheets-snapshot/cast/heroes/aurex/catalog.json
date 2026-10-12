@@ -1,0 +1,61 @@
+{
+  "hero": "aurex",
+  "actions": {
+    "DRAGON_SLASH": {
+      "sheetKey": "sheets/cast/heroes/aurex/DRAGON_SLASH",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.8984
+    },
+    "FIRE_WAVE": {
+      "sheetKey": "sheets/cast/heroes/aurex/FIRE_WAVE",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.8906
+    },
+    "FLAME_DASH": {
+      "sheetKey": "sheets/cast/heroes/aurex/FLAME_DASH",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.8203
+    },
+    "HURT": {
+      "sheetKey": "sheets/cast/heroes/aurex/HURT",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 5,
+      "footAt": 0.75
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/aurex/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "attack": "DRAGON_SLASH",
+    "dash": "FLAME_DASH",
+    "hurt": "HURT"
+  }
+}

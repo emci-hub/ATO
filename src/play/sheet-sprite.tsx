@@ -43,6 +43,10 @@ export type SheetFrame = {
   rect: SheetFrameRect;
   sheetW: number;
   sheetH: number;
+  sourceW?: number;
+  sourceH?: number;
+  offsetX?: number;
+  offsetY?: number;
 };
 
 /**
@@ -53,7 +57,16 @@ export function sheetFrame(sheetKey: string, frameKey: string): SheetFrame | und
   const sheet = PLAY_SHEETS[sheetKey];
   const rect = sheet?.frames[frameKey];
   if (!sheet || !rect) return undefined;
-  return { sheetKey, rect, sheetW: sheet.sheetW, sheetH: sheet.sheetH };
+  return {
+    sheetKey,
+    rect,
+    sheetW: sheet.sheetW,
+    sheetH: sheet.sheetH,
+    sourceW: sheet.sourceW,
+    sourceH: sheet.sourceH,
+    offsetX: sheet.offsetX,
+    offsetY: sheet.offsetY,
+  };
 }
 
 /** The sheet's image source. Swapped for a cached remote URI when the art moves
@@ -93,7 +106,16 @@ export function SheetSprite({ frame, x, y, size, opacity }: Props) {
   if (!source) return null;
   // Placement maths lives in `sheet-sprite-math.ts` so `check:sheet-sprite`
   // can assert it at a NON-ZERO position in plain Node.
-  const place = sheetSpritePlacement(frame.rect, x, y, size);
+  const cell =
+    frame.sourceW && frame.sourceH
+      ? {
+          sourceW: frame.sourceW,
+          sourceH: frame.sourceH,
+          offsetX: frame.offsetX ?? 0,
+          offsetY: frame.offsetY ?? 0,
+        }
+      : undefined;
+  const place = sheetSpritePlacement(frame.rect, x, y, size, cell);
   return (
     <G transform={place.transform} opacity={opacity}>
       <Defs>
@@ -195,22 +217,37 @@ export function ClipImage({ drawable, tintColor }: ClipImageProps) {
   // sprite quietly rather than crash.
   if (!frame || !source) return null;
   const { rect } = frame;
+  const srcW = frame.sourceW ?? rect.w;
+  const srcH = frame.sourceH ?? rect.h;
+  const ox = frame.offsetX ?? 0;
+  const oy = frame.offsetY ?? 0;
   return (
     <View style={styles.cropWrap}>
-      <ExpoImage
-        source={source}
-        contentFit="fill"
-        transition={0}
-        tintColor={tintColor}
+      <View
         style={{
-          ...pixelRenderStyle,
           position: 'absolute',
-          width: `${(frame.sheetW / rect.w) * 100}%`,
-          height: `${(frame.sheetH / rect.h) * 100}%`,
-          left: `${(-rect.x / rect.w) * 100}%`,
-          top: `${(-rect.y / rect.h) * 100}%`,
+          left: `${(ox / srcW) * 100}%`,
+          top: `${(oy / srcH) * 100}%`,
+          width: `${(rect.w / srcW) * 100}%`,
+          height: `${(rect.h / srcH) * 100}%`,
+          overflow: 'hidden',
         }}
-      />
+      >
+        <ExpoImage
+          source={source}
+          contentFit="fill"
+          transition={0}
+          tintColor={tintColor}
+          style={{
+            ...pixelRenderStyle,
+            position: 'absolute',
+            width: `${(frame.sheetW / rect.w) * 100}%`,
+            height: `${(frame.sheetH / rect.h) * 100}%`,
+            left: `${(-rect.x / rect.w) * 100}%`,
+            top: `${(-rect.y / rect.h) * 100}%`,
+          }}
+        />
+      </View>
     </View>
   );
 }

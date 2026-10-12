@@ -1,0 +1,69 @@
+{
+  "hero": "morwen",
+  "actions": {
+    "ARCANE_BLAST": {
+      "sheetKey": "sheets/cast/heroes/morwen/ARCANE_BLAST",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.8226
+    },
+    "ARCANE_IDLE": {
+      "sheetKey": "sheets/cast/heroes/morwen/ARCANE_IDLE",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.75
+    },
+    "HURT": {
+      "sheetKey": "sheets/cast/heroes/morwen/HURT",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 5,
+      "footAt": 0.75
+    },
+    "MOON_RITUAL": {
+      "sheetKey": "sheets/cast/heroes/morwen/MOON_RITUAL",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.9355
+    },
+    "TELEPORT": {
+      "sheetKey": "sheets/cast/heroes/morwen/TELEPORT",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.7903
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/morwen/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "idle": "ARCANE_IDLE",
+    "hurt": "HURT"
+  }
+}
