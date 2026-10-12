@@ -7,8 +7,9 @@
  *
  * Viewer: Metro-blocked. Open file:// or host the portable HTML.
  * Visual language from scripts/sprite-gallery/page.html (Streetwear Skin).
- * Grid tiles are a representative preview (animated main clip, still, or
- * individual icons) — never the raw packed sheet.
+ * Grid tiles are a representative preview (still main frame, or
+ * individual icons) — never the raw packed sheet. Phone chrome is
+ * Photos-style 2-col + full-screen detail + thumb-zone dock.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -293,16 +294,24 @@ function viewerReadme(): string {
   \`assets/art/_contact/library-portable.html\`. One file; previews are inlined.
   Add to Home Screen from Safari for a full-screen library.
 
-Grid tiles show a **preview**, not the packed sheet:
-- Sheets / clips: the best still (Idle frame 0, or Walk S/front for heroes).
-  Animation stays off until Play, hover (desktop), or press-and-hold (iPhone).
-  “Autoplay previews” (default off) is saved in localStorage.
-- Stills: the image, scaled to fit.
-- Multi-icon atlases: the sprites individually (mosaic on the tile).
+Phone-first (research, 440pt iPhone 16 Pro Max):
+- 2-column ~200pt sprite grid (Photos image-first; pixel art stays readable —
+  3–4 postage stamps do not). 3 columns only ≥600pt.
+- Sticky search + category chips on top (itch.io / Unity Asset Store / Figma).
+  Photos iOS 26 moved Search to the thumb zone; we keep it up top so chips
+  stay next to the query and the dock is not crowded (HIG: tab bars vs tools).
+- Bottom dock: All | In use | Unused as peer browse modes (Photos iOS 26
+  brought Library/Collections tabs back after the iOS 18 unified layout
+  failed; HIG tab bars for parallel sections). Filters + More are sheets.
+- Detail is a full-screen large-detent sheet (HIG: full height when the
+  content needs the room). Play sits on the preview (Photos video / Aseprite).
+  Swipe L/R for next item, swipe down to close. 48pt decision bar stays in
+  the thumb zone (HIG 44pt minimum; tagging is the job, so chrome does not fade).
 
-Tap a tile for clip + direction pickers, play/pause (opens paused), a frame
-scrubber, swipe through frames and prev/next items, 1×/2×/4× zoom, and a
-secondary “show raw sheet” toggle.
+Grid tiles show a **preview**, not the packed sheet:
+- Sheets / clips: Idle frame 0 (or Walk S/front). Animate on Play / hover / hold.
+- Stills: the image. Icon atlases: sprites, not the packed sheet.
+- Autoplay previews (default off) lives in Filters and localStorage.
 
 This extends the earlier Streetwear Skin artifact at \`scripts/sprite-gallery/\`
 (Claude artifact https://claude.ai/artifact/9wjcLv4FQu4S8dwqT2RBho). That page
@@ -333,129 +342,180 @@ function viewerHtml(data: unknown, portable: boolean): string {
 <meta name="mobile-web-app-capable" content="yes">
 <title>ATO art library${portable ? ' (portable)' : ''}</title>
 <style>
-:root { color-scheme: dark; --bg:#1d1d20; --panel:#26262a; --tile:#141416; --line:#3a3a3f; --fg:#f2ede4; --muted:#a9a49b; --mustard:#e0a526; --red:#c8202b; --ok:#6aa84f; --tap:48px; --room:#1a1612; }
+:root {
+  color-scheme: dark;
+  --bg:#0f0f12; --panel:#1c1c21; --tile:#121214; --line:#3d3d44;
+  --fg:#f5f0e8; --muted:#c4bfb6; --mustard:#e0a526; --red:#ff5a5f; --ok:#7dce5b;
+  --tap:48px; --room:#1a1612; --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px); --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px); --dock: 64px;
+}
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+html, body { margin:0; width:100%; max-width:100%; overflow-x:clip; background:var(--bg); color:var(--fg);
+  font:17px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; }
 html { -webkit-text-size-adjust: 100%; }
-body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-header { padding: 16px 16px 8px; }
-h1 { font:700 28px/1.05 Impact,"Arial Black",sans-serif; margin:0; }
+body { padding:0; }
+.topbar { position:sticky; top:0; z-index:6; background:rgba(15,15,18,.94); backdrop-filter:saturate(1.4) blur(16px);
+  -webkit-backdrop-filter:saturate(1.4) blur(16px); padding: calc(8px + var(--safe-t)) 12px 8px; border-bottom:1px solid var(--line); }
+.brand { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-height:28px; }
+h1 { font:700 22px/1.1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; margin:0; letter-spacing:-.02em; }
 h1 span { color:var(--mustard); }
-.lede { color:var(--muted); max-width:72ch; font-size:14px; }
-.stats { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 0; }
-.stat { font:12px ui-monospace,Consolas,monospace; border:1px solid var(--line); padding:6px 10px; border-radius:3px; }
-.stat b { color:var(--mustard); }
-.bar { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); padding:10px 12px; display:flex; flex-wrap:wrap; gap:8px; align-items:stretch; }
-.cats { display:flex; flex-wrap:wrap; gap:6px; width:100%; }
-.chip { min-height:var(--tap); padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:var(--tile); color:var(--fg); font:13px/1.2 ui-monospace,Consolas,monospace; cursor:pointer; touch-action:manipulation; }
+#count { font:600 15px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--muted); }
+.lede, .stats { display:none; }
+.chip { min-height:var(--tap); padding:10px 14px; border:1px solid var(--line); border-radius:999px; background:var(--tile); color:var(--fg); font:600 15px/1.2 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; cursor:pointer; touch-action:manipulation; flex:0 0 auto; }
 .chip b { color:var(--mustard); }
-.chip.on { background:var(--mustard); color:#1d1d20; border-color:var(--mustard); font-weight:700; }
+.chip.on { background:var(--mustard); color:#1d1d20; border-color:var(--mustard); }
 .chip.on b { color:#1d1d20; }
 .chip .use { color:var(--ok); }
 .chip .off { color:var(--muted); }
 .chip.on .use, .chip.on .off { color:#1d1d20; }
-.usage { display:flex; flex-wrap:wrap; gap:6px; width:100%; }
-.sub { display:flex; flex-wrap:wrap; gap:8px; width:100%; align-items:stretch; }
-input, select, textarea, button { font:inherit; font-size:16px; border-radius:6px; }
-input[type=search] { flex:1 1 100%; min-height:var(--tap); background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:10px 12px; }
-input[type=range] { width:100%; accent-color:var(--mustard); }
-select { flex:1 1 140px; min-height:var(--tap); background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:8px 10px; }
-button { min-height:var(--tap); background:transparent; color:var(--fg); border:1px solid var(--line); padding:10px 14px; cursor:pointer; touch-action:manipulation; }
+.cats { display:flex; flex-wrap:nowrap; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; width:100%; padding:8px 0 2px; scrollbar-width:none; }
+.cats::-webkit-scrollbar { display:none; }
+input, select, textarea, button { font:inherit; font-size:17px; border-radius:12px; }
+input[type=search] { width:100%; min-height:var(--tap); background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:10px 14px; margin-top:8px; }
+input[type=range] { width:100%; accent-color:var(--mustard); min-height:44px; }
+select { width:100%; min-height:var(--tap); background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:10px 12px; }
+button { min-height:var(--tap); min-width:44px; background:transparent; color:var(--fg); border:1px solid var(--line); padding:10px 14px; cursor:pointer; touch-action:manipulation; }
 button.on, button[aria-pressed=true] { background:var(--mustard); color:#1d1d20; border-color:var(--mustard); font-weight:700; }
-.actions { display:flex; flex-wrap:wrap; gap:8px; width:100%; }
-.actions button { flex:1 1 140px; }
-.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; padding:12px 12px 96px; }
-.card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px; display:grid; gap:6px; min-width:0; min-height:var(--tap); touch-action:manipulation; content-visibility:auto; contain-intrinsic-size: 220px; }
-.card:active { border-color:var(--mustard); }
-.stage { min-height:108px; display:grid; place-items:center; border-radius:4px; overflow:hidden; position:relative; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px 8px calc(var(--dock) + 16px + var(--safe-b)); }
+.card { background:var(--panel); border:0; border-radius:10px; padding:0 0 8px; display:grid; gap:6px; min-width:0; touch-action:manipulation; content-visibility:auto; contain-intrinsic-size: 260px; overflow:hidden; }
+.card:active { outline:2px solid var(--mustard); }
+.stage { aspect-ratio:1; min-height:168px; display:grid; place-items:center; overflow:hidden; position:relative; }
 .stage.checker { background-color:var(--tile); background-image:linear-gradient(45deg,#1a1a1e 25%,transparent 25%),linear-gradient(-45deg,#1a1a1e 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1a1a1e 75%),linear-gradient(-45deg,transparent 75%,#1a1a1e 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
 .stage.room { background:#1a1612; }
-.stamp { position:absolute; top:6px; left:6px; z-index:2; font:700 9px/1 ui-monospace,Consolas,monospace; letter-spacing:.04em; text-transform:uppercase; padding:4px 6px; border-radius:3px; }
-.stamp.yes { background:var(--ok); color:#0e1a0c; }
-.stamp.no { background:#3a3a3f; color:var(--muted); }
-.tile-play { position:absolute; right:6px; bottom:6px; z-index:2; min-height:36px; min-width:44px; padding:6px 10px; font:700 11px/1 ui-monospace,Consolas,monospace; background:#000a; }
+.cap { padding:0 8px; min-width:0; }
+.cap .id { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font:600 15px/1.25 ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--fg); word-break:break-word; }
+.meta-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 8px; align-items:center; }
+.stamp { font:700 15px/1.1 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing:.02em; text-transform:uppercase; padding:5px 8px; border-radius:6px; }
+.stamp.yes { background:var(--ok); color:#0c160a; }
+.stamp.no { background:#3a3a42; color:#f2ede4; }
+.tile-play { position:absolute; right:8px; bottom:8px; z-index:2; min-height:44px; min-width:52px; padding:8px 12px; font:700 15px/1 -apple-system,system-ui,sans-serif; background:#000c; color:#fff; border-color:#fff4; }
 .sprite { image-rendering:pixelated; image-rendering:crisp-edges; background-repeat:no-repeat; flex:0 0 auto; }
-.stage img { image-rendering:pixelated; image-rendering:crisp-edges; max-width:100%; max-height:120px; object-fit:contain; }
-.icons { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; align-items:center; padding:6px; max-height:120px; overflow:hidden; }
-.icons img { image-rendering:pixelated; width:28px; height:28px; object-fit:contain; }
-.meta { font:12px/1.35 ui-monospace,Consolas,monospace; color:var(--muted); overflow-wrap:anywhere; }
+.stage img { image-rendering:pixelated; image-rendering:crisp-edges; max-width:92%; max-height:92%; object-fit:contain; }
+.icons { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; padding:8px; max-height:100%; overflow:hidden; }
+.icons img { image-rendering:pixelated; width:36px; height:36px; object-fit:contain; }
+.meta { font:15px/1.35 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color:var(--muted); overflow-wrap:anywhere; }
 .meta b { color:var(--fg); }
-.badge { display:inline-block; font:10px ui-monospace,Consolas,monospace; text-transform:uppercase; padding:3px 7px; border-radius:3px; border:1px solid var(--line); }
+.badge { display:inline-block; font:600 15px/1.1 -apple-system,system-ui,sans-serif; text-transform:uppercase; padding:5px 8px; border-radius:6px; border:1px solid var(--line); color:var(--fg); }
 .badge.in-use { border-color:var(--ok); color:var(--ok); }
 .badge.resource { color:var(--muted); }
 .badge.needs-restyle { border-color:var(--mustard); color:var(--mustard); }
-.badge.alt-skin { color:#8ab4f8; border-color:#8ab4f8; }
+.badge.alt-skin { color:#9cc4ff; border-color:#9cc4ff; }
 .badge.orphan { border-color:var(--red); color:var(--red); }
-#sheet { display:none; position:fixed; inset:0; z-index:10; background:#000c; }
+.dock { position:fixed; left:0; right:0; bottom:0; z-index:7; display:flex; gap:8px; align-items:stretch;
+  padding:8px 10px calc(8px + var(--safe-b)); background:rgba(15,15,18,.94); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-top:1px solid var(--line); }
+.dock .seg { display:flex; flex:1 1 auto; min-width:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.dock .seg button { flex:1; border:0; border-radius:0; min-height:var(--tap); font:600 15px/1.1 -apple-system,system-ui,sans-serif; padding:8px 6px; white-space:nowrap; }
+.dock .ico { flex:0 0 auto; min-width:64px; padding:8px 12px; font:600 15px/1.1 -apple-system,system-ui,sans-serif; white-space:nowrap; }
+.sheet-bg { display:none; position:fixed; inset:0; z-index:12; background:#000a; }
+.sheet-bg.show { display:block; }
+.sheet-card { position:absolute; left:0; right:0; bottom:0; max-height:56vh; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+  background:var(--panel); border-radius:16px 16px 0 0; padding:8px 16px calc(20px + var(--safe-b)); }
+.grabber { width:36px; height:5px; border-radius:99px; background:#6a6a72; margin:6px auto 12px; }
+.sheet-card h2 { font:700 20px/1.2 -apple-system,system-ui,sans-serif; margin:0 0 12px; }
+.sheet-card label { display:block; font:600 15px/1.3 -apple-system,system-ui,sans-serif; margin:12px 0 6px; color:var(--muted); }
+.sheet-card .row { display:flex; flex-wrap:wrap; gap:8px; }
+#sheet { display:none; position:fixed; inset:0; z-index:14; background:#000; }
 #sheet.show { display:block; }
-#sheet .panel { position:absolute; left:0; right:0; bottom:0; max-height:96%; overflow:auto; -webkit-overflow-scrolling:touch; background:var(--panel); border-radius:16px 16px 0 0; padding:12px 16px calc(20px + env(safe-area-inset-bottom)); display:grid; gap:10px; }
-#sheet .nav { display:flex; gap:8px; }
-#sheet .nav button { flex:1; }
-#sheet .preview { min-height:220px; max-height:46vh; display:grid; place-items:center; border-radius:8px; overflow:hidden; touch-action:pan-y; }
+#sheet .panel { position:absolute; inset:0; overflow:auto; -webkit-overflow-scrolling:touch; background:var(--bg);
+  padding: calc(6px + var(--safe-t)) 12px 0; display:flex; flex-direction:column; gap:10px; }
+#sheet .grabber { margin-top:2px; }
+#sheet .nav { display:flex; gap:8px; align-items:center; }
+#sheet .nav #sheetClose { min-width:72px; }
+#sheet .nav .grow { flex:1; font:600 15px/1.2 ui-monospace,Menlo,monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.preview-wrap { position:relative; }
+#sheet .preview { min-height:42vh; height:48vh; display:grid; place-items:center; border-radius:12px; overflow:hidden; touch-action:pan-y; position:relative; }
 #sheet .preview.checker { background-color:var(--tile); background-image:linear-gradient(45deg,#1a1a1e 25%,transparent 25%),linear-gradient(-45deg,#1a1a1e 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1a1a1e 75%),linear-gradient(-45deg,transparent 75%,#1a1a1e 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
 #sheet .preview.room { background:#1a1612; }
 #sheet .preview img, #sheet .preview .sprite { image-rendering:pixelated; image-rendering:crisp-edges; }
-#sheet .preview img { max-width:100%; max-height:46vh; object-fit:contain; }
-#sheet .pick { display:flex; flex-wrap:wrap; gap:6px; }
-#sheet .pick button { min-height:40px; padding:8px 10px; font:13px ui-monospace,Consolas,monospace; }
-#sheet .tools { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-#sheet .tools button { flex:0 0 auto; }
-#sheet .film { display:flex; gap:6px; overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px; }
-#sheet .film button { min-width:44px; padding:0; overflow:hidden; }
-#sheet .film .cell { width:44px; height:44px; image-rendering:pixelated; background-repeat:no-repeat; }
+#sheet .preview img { max-width:100%; max-height:48vh; object-fit:contain; }
+#playBtn { position:absolute; left:10px; right:10px; bottom:10px; z-index:2; min-height:56px; font:700 18px/1 -apple-system,system-ui,sans-serif; background:#000c; color:#fff; border-color:#fff4; }
+#playBtn[hidden] { display:none; }
+.seg-scroll { display:flex; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px; }
+.seg-scroll:empty, .film:empty, .icon-grid:empty { display:none; }
+.seg-scroll button { flex:1 0 auto; border:0; border-right:1px solid var(--line); border-radius:0; min-height:var(--tap); font:600 15px/1.1 -apple-system,system-ui,sans-serif; padding:10px 14px; }
+.seg-scroll button:last-child { border-right:0; }
+#sheet .tools { display:flex; gap:8px; align-items:center; }
+#sheet .film { display:flex; gap:6px; overflow:auto; -webkit-overflow-scrolling:touch; }
+#sheet .film button { min-width:48px; min-height:48px; padding:0; overflow:hidden; }
+#sheet .film .cell { width:48px; height:48px; image-rendering:pixelated; background-repeat:no-repeat; }
 #sheet .icon-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(56px,1fr)); gap:8px; }
 #sheet .icon-grid button { min-height:56px; padding:6px; }
 #sheet .icon-grid img { image-rendering:pixelated; width:40px; height:40px; object-fit:contain; }
-.dec { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.dec button { min-height:52px; }
-textarea { width:100%; min-height:72px; background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:10px; }
-.dupes { padding:0 12px 40px; overflow:auto; }
-.dupes table { width:100%; border-collapse:collapse; font:12px ui-monospace,Consolas,monospace; }
-.dupes td, .dupes th { border:1px solid var(--line); padding:8px; text-align:left; }
-.toast { position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); background:var(--mustard); color:#1d1d20; padding:12px 14px; border-radius:8px; z-index:20; display:none; font-weight:600; }
+.sheet-body { flex:1; display:flex; flex-direction:column; gap:10px; min-height:0; padding-bottom:8px; }
+.decbar { position:sticky; bottom:0; display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  padding:10px 0 calc(12px + var(--safe-b)); background:linear-gradient(180deg, transparent, var(--bg) 18%); }
+.decbar button { min-height:var(--tap); font:700 16px/1 -apple-system,system-ui,sans-serif; }
+textarea { width:100%; min-height:72px; background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:12px; }
+.dupes { padding:8px 12px calc(var(--dock) + 24px + var(--safe-b)); overflow:auto; }
+.dupes table { width:100%; border-collapse:collapse; font:15px/1.35 ui-monospace,Menlo,monospace; }
+.dupes td, .dupes th { border:1px solid var(--line); padding:10px; text-align:left; }
+.toast { position:fixed; left:12px; right:12px; bottom:calc(var(--dock) + 12px + var(--safe-b)); background:var(--mustard); color:#1d1d20; padding:14px 16px; border-radius:12px; z-index:20; display:none; font:700 17px/1.3 -apple-system,system-ui,sans-serif; }
 .toast.show { display:block; }
-@media (min-width:720px) {
-  .grid { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); padding:16px 20px 80px; }
-  input[type=search] { flex:1 1 220px; }
-  .chip { min-height:40px; }
-  #sheet .panel { left:50%; right:auto; top:4%; bottom:4%; width:min(640px,94vw); transform:translateX(-50%); border-radius:12px; max-height:none; }
+@media (min-width:600px) {
+  .grid { grid-template-columns:repeat(3, 1fr); gap:10px; padding:12px 16px calc(var(--dock) + 20px); }
+}
+@media (min-width:900px) {
+  .grid { grid-template-columns:repeat(4, 1fr); }
+  .lede, .stats { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; font:15px/1.35 -apple-system,system-ui,sans-serif; color:var(--muted); }
+  .stat { font:15px ui-monospace,Menlo,monospace; border:1px solid var(--line); padding:6px 10px; border-radius:8px; }
+  .stat b { color:var(--mustard); }
 }
 @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
 </style>
-<header>
-  <h1>ATO <span>art library</span></h1>
-  <p class="lede">Every tile is a preview — a still of the main clip (Idle, or Walk S/front for heroes), the image for stills, individual sprites for icon atlases. Animation stays off until you tap Play, hover (desktop), or press-and-hold (iPhone). Tap a tile for clip, facing, frames, zoom. Decisions stay on this device. Export / Share writes <code>art-decisions.json</code>. ${portable ? 'Portable build — previews are inlined.' : 'Local build — raw sheets can load from the folder next to this page.'}</p>
+<header class="topbar">
+  <div class="brand"><h1>ATO <span>library</span></h1><div id="count"></div></div>
+  <p class="lede">Previews, not sheets. Play / hover / hold to animate. Decisions stay on this device. ${portable ? 'Portable — previews inlined.' : 'Local — raw sheets load from this folder.'}</p>
   <div class="stats" id="stats"></div>
-</header>
-<div class="bar">
+  <input type="search" id="q" placeholder="Search art…" enterkeyhint="search" autocapitalize="off" autocomplete="off" spellcheck="false">
   <div class="cats" id="cats" role="tablist" aria-label="Categories"></div>
-  <div class="usage" id="usage" role="group" aria-label="In use or unused"></div>
-  <div class="usage" id="autoplayRow" role="group" aria-label="Preview playback"></div>
-  <input type="search" id="q" placeholder="Search id, category, theme, path…" enterkeyhint="search" autocapitalize="off" autocomplete="off" spellcheck="false">
-  <div class="sub">
-  <select id="status" aria-label="Status"><option value="">all statuses</option>
-    <option>in-use</option><option>resource</option><option>needs-restyle</option><option>alt-skin</option><option>orphan</option></select>
-  <select id="theme" aria-label="Theme"><option value="">all themes</option></select>
-  <select id="sort" aria-label="Sort">
-    <option value="id">sort: id</option>
-    <option value="decoded">sort: decoded</option>
-    <option value="disk">sort: disk</option>
-    <option value="status">sort: status</option>
-    <option value="category">sort: category</option>
-  </select>
-  </div>
-  <div class="actions">
-    <button type="button" id="dupBtn">Duplicates</button>
-    <button type="button" id="exportBtn">Share / export</button>
-    <button type="button" id="importBtn">Import</button>
-    <input id="importFile" type="file" accept="application/json,.json" hidden>
-  </div>
-</div>
+</header>
 <div class="grid" id="grid"></div>
 <section class="dupes" id="dupes" hidden>
-  <h2>Duplicates (identical md5)</h2>
+  <h2>Duplicates</h2>
   <table><thead><tr><th>hash</th><th>ids</th><th>bytes</th></tr></thead><tbody id="dupBody"></tbody></table>
 </section>
+<nav class="dock" aria-label="Browse">
+  <div class="seg" id="usage" role="group" aria-label="In use or unused"></div>
+  <button type="button" class="ico" id="filtersBtn">Filters</button>
+  <button type="button" class="ico" id="menuBtn" aria-label="More">More</button>
+</nav>
+<div class="sheet-bg" id="filters" role="dialog" aria-modal="true" aria-label="Filters">
+  <div class="sheet-card">
+    <div class="grabber"></div>
+    <h2>Filters</h2>
+    <label for="status">Status</label>
+    <select id="status"><option value="">all statuses</option>
+      <option>in-use</option><option>resource</option><option>needs-restyle</option><option>alt-skin</option><option>orphan</option></select>
+    <label for="theme">Theme</label>
+    <select id="theme"><option value="">all themes</option></select>
+    <label for="sort">Sort</label>
+    <select id="sort">
+      <option value="id">id</option>
+      <option value="decoded">decoded</option>
+      <option value="disk">disk</option>
+      <option value="status">status</option>
+      <option value="category">category</option>
+    </select>
+    <label>Playback</label>
+    <div class="row" id="autoplayRow"></div>
+    <label>More</label>
+    <div class="row"><button type="button" id="dupBtn">Duplicates</button></div>
+    <button type="button" id="filtersDone" style="width:100%;margin-top:16px">Done</button>
+  </div>
+</div>
+<div class="sheet-bg" id="menu" role="dialog" aria-modal="true" aria-label="More">
+  <div class="sheet-card">
+    <div class="grabber"></div>
+    <h2>Library</h2>
+    <div class="row" style="flex-direction:column">
+      <button type="button" id="exportBtn">Share decisions</button>
+      <button type="button" id="importBtn">Import decisions</button>
+    </div>
+    <input id="importFile" type="file" accept="application/json,.json" hidden>
+    <button type="button" id="menuDone" style="width:100%;margin-top:16px">Done</button>
+  </div>
+</div>
 <div id="sheet" role="dialog" aria-modal="true"><div class="panel" id="sheetPanel"></div></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -531,7 +591,8 @@ function renderStats(){
   }
   let usedN=0, unusedN=0;
   for (const a of items) { if (a.inUse) usedN++; else unusedN++; }
-  document.getElementById('stats').innerHTML =
+  const stats = document.getElementById('stats');
+  if (stats) stats.innerHTML =
     '<span class="stat"><b>'+usedN+'</b> in use</span>' +
     '<span class="stat"><b>'+unusedN+'</b> unused</span>' +
     Object.entries(counts).map(([k,v]) => '<span class="stat"><b>'+v+'</b> '+k+'</span>').join('') +
@@ -539,6 +600,8 @@ function renderStats(){
     '<span class="stat">decoded <b>'+mb(decoded)+'</b> MB</span>' +
     '<span class="stat">needed <b>'+needN+'</b></span>' +
     '<span class="stat">removable <b>'+removeN+'</b> ('+mb(removeB)+' MB)</span>';
+  const count = document.getElementById('count');
+  if (count) count.textContent = usedN+' in use · '+unusedN+' unused';
 }
 function filtered(){
   const q = document.getElementById('q').value.toLowerCase();
@@ -641,7 +704,7 @@ function bindStage(stage){
   stage.dataset.ready = '1';
   if (a.kind==='clip' && a.preview && a.pn>1) {
     const box = stage.getBoundingClientRect();
-    const z = fitZoom(a.pw, a.ph, Math.max(80, box.width-8), 112, 2);
+    const z = fitZoom(a.pw, a.ph, Math.max(120, box.width-12), Math.max(160, box.height-12), 2);
     stage._player = makeAnim(stage, a.preview, a.pw, a.ph, a.pn, a.pms, z, canAutoplay());
     return;
   }
@@ -680,14 +743,17 @@ function card(a){
   el.className = 'card';
   el.setAttribute('role', 'button');
   el.tabIndex = 0;
-  el.innerHTML = '<div class="stage"></div><div class="meta"><b>'+a.id+'</b></div><span class="badge '+(a.inUse?'in-use':'resource')+'">'+(a.inUse?'in use':'unused')+'</span> <span class="badge '+a.display+'">'+a.display+(d.action&&d.action!=='keep'?' · '+d.action:'')+'</span>';
+  el.innerHTML = '<div class="stage"></div><div class="cap"><div class="id">'+a.id+'</div></div><div class="meta-row"></div>';
   const stage = el.querySelector('.stage');
   stage._item = a;
   lazyStage(stage, a);
   const stamp = document.createElement('span');
   stamp.className = 'stamp '+(a.inUse?'yes':'no');
   stamp.textContent = a.inUse ? 'IN USE' : 'UNUSED';
-  stage.appendChild(stamp);
+  const badge = document.createElement('span');
+  badge.className = 'badge '+a.display;
+  badge.textContent = a.display+(d.action&&d.action!=='keep'?' · '+d.action:'');
+  el.querySelector('.meta-row').append(stamp, badge);
   if (a.kind==='clip' && a.pn>1) {
     const play = document.createElement('button');
     play.type = 'button';
@@ -778,37 +844,37 @@ function openSheet(a){
   const start = findClip(a, a.mainClip || clips[0], a.mainDir) || a.clips[0];
   const panel = document.getElementById('sheetPanel');
   panel.innerHTML =
+    '<div class="grabber" id="sheetGrab"></div>' +
     '<div class="nav">' +
-      '<button type="button" id="sheetPrevItem">Prev</button>' +
       '<button type="button" id="sheetClose">Close</button>' +
-      '<button type="button" id="sheetNextItem">Next</button>' +
+      '<div class="grow">'+a.id+'</div>' +
+      '<button type="button" id="sheetPrevItem" aria-label="Previous">‹</button>' +
+      '<button type="button" id="sheetNextItem" aria-label="Next">›</button>' +
     '</div>' +
-    '<div class="preview '+(a.bg==='room'?'room':'checker')+'" id="sheetPrev"></div>' +
-    '<div class="pick" id="clipPick"></div>' +
-    '<div class="pick" id="dirPick"></div>' +
-    '<div class="tools">' +
+    '<div class="preview-wrap">' +
+      '<div class="preview '+(a.bg==='room'?'room':'checker')+'" id="sheetPrev"></div>' +
       '<button type="button" id="playBtn" aria-pressed="false">Play</button>' +
+    '</div>' +
+    '<div class="sheet-body">' +
+    '<div class="seg-scroll" id="clipPick"></div>' +
+    '<div class="seg-scroll" id="dirPick"></div>' +
+    '<div class="tools">' +
       '<button type="button" data-zoom="1">1×</button>' +
       '<button type="button" data-zoom="2" class="on">2×</button>' +
       '<button type="button" data-zoom="4">4×</button>' +
-      '<button type="button" id="rawBtn" aria-pressed="false">Show raw sheet</button>' +
+      '<button type="button" id="rawBtn" aria-pressed="false">Raw</button>' +
     '</div>' +
     '<input type="range" id="scrub" min="0" max="0" value="0" aria-label="Frame">' +
     '<div class="film" id="film"></div>' +
     '<div class="icon-grid" id="iconGrid"></div>' +
-    '<div class="meta"><b>'+a.id+'</b><br>'+
-    (a.inUse?'IN USE':'UNUSED')+' · '+a.category+' · '+a.type+' · '+a.theme+' · '+a.placement+'<br>'+
-    a.w+'×'+a.h+' · disk '+mb(a.disk)+' MB · decoded '+mb(a.decoded)+' MB<br>'+
-    'score '+(a.score==null?'—':a.score+'/28')+' · usedBy '+(a.usedBy[0]||'—')+
-    (a.usedBy.length>1?' +'+(a.usedBy.length-1):'')+'<br>'+a.path+'</div>' +
-    '<span class="badge '+a.display+'">'+a.display+'</span>' +
-    '<div class="dec">' +
+    '<div class="meta">'+(a.inUse?'IN USE':'UNUSED')+' · '+a.category+' · '+a.theme+' · '+a.w+'×'+a.h+'</div>' +
+    '<textarea id="sheetNotes" placeholder="notes">'+((d.notes||'').replace(/</g,'&lt;'))+'</textarea>' +
+    '</div>' +
+    '<div class="decbar">' +
       ['keep','use','needs-restyle','remove'].map(x =>
         '<button type="button" data-act="'+x+'"'+(d.action===x?' class="on"':'')+'>'+x+'</button>').join('') +
-    '</div>' +
-    '<textarea id="sheetNotes" placeholder="notes">'+((d.notes||'').replace(/</g,'&lt;'))+'</textarea>';
+    '</div>';
   document.getElementById('sheet').classList.add('show');
-  const host = document.getElementById('sheetPrev');
   detail = {
     a, list, idx,
     clip: start ? start.clip : '',
@@ -865,7 +931,7 @@ function openSheet(a){
     detail.player.setFrame(Number(ev.target.value)||0);
     paintFilm(detail.player.i);
   });
-  bindSwipe(host);
+  bindSwipe();
 }
 function stepItem(delta){
   if (!detail) return;
@@ -927,6 +993,7 @@ function paintDetail(){
   const film = document.getElementById('film');
   const scrub = document.getElementById('scrub');
   const playBtn = document.getElementById('playBtn');
+  if (playBtn) { playBtn.hidden = true; playBtn.style.display = 'none'; }
   if (detail.raw) {
     const img = document.createElement('img');
     img.alt = a.id+' raw sheet';
@@ -969,6 +1036,7 @@ function paintDetail(){
     detail.player = makeAnim(host, c.strip, c.w, c.h, c.n, c.ms, z, detail.playing);
     scrub.max = String(Math.max(0, c.n-1));
     scrub.value = '0';
+    playBtn.hidden = c.n<2;
     playBtn.style.display = c.n>1 ? '' : 'none';
     playBtn.textContent = detail.playing ? 'Pause' : 'Play';
     playBtn.setAttribute('aria-pressed', detail.playing ? 'true' : 'false');
@@ -992,7 +1060,7 @@ function paintDetail(){
     img.style.width = (a.pw*detail.zoom)+'px';
     img.style.height = (a.ph*detail.zoom)+'px';
     img.style.maxWidth = '100%';
-    img.style.maxHeight = '46vh';
+    img.style.maxHeight = '48vh';
     host.appendChild(img);
   }
   clipPick.innerHTML = '';
@@ -1000,43 +1068,39 @@ function paintDetail(){
   film.innerHTML = '';
   iconGrid.innerHTML = '';
 }
-function bindSwipe(host){
-  let x0=0, y0=0, t0=0, armed=false;
-  host.addEventListener('touchstart', (ev) => {
-    const t = ev.changedTouches[0];
-    x0=t.clientX; y0=t.clientY; t0=Date.now(); armed=true;
-  }, {passive:true});
-  host.addEventListener('touchend', (ev) => {
-    if (!armed || !detail) return;
-    armed=false;
-    const t = ev.changedTouches[0];
-    const dx=t.clientX-x0, dy=t.clientY-y0;
-    if (Math.abs(dx)<36 || Math.abs(dx)<Math.abs(dy)) return;
-    if (detail.player && detail.a.kind==='clip' && !detail.raw) {
-      detail.playing=false; detail.player.playing=false;
-      document.getElementById('playBtn').textContent='Play';
-      detail.player.setFrame(detail.player.i + (dx<0?1:-1));
-      document.getElementById('scrub').value=String(detail.player.i);
-      paintFilm(detail.player.i);
-    } else if (detail.a.kind==='icons') {
-      const n=detail.a.icons.length;
-      detail.iconI = (detail.iconI + (dx<0?1:-1) + n) % n;
-      paintDetail();
-    }
-  }, {passive:true});
-  let sx=0, sy=0, sArmed=false;
+function bindSwipe(){
+  if (bindSwipe.done) return;
+  bindSwipe.done = true;
   const panel = document.getElementById('sheetPanel');
+  let sx=0, sy=0, sArmed=false;
   panel.addEventListener('touchstart', (ev) => {
-    if (ev.target.closest('#sheetPrev,.film,input,textarea')) { sArmed=false; return; }
+    if (ev.target.closest('.film,input,textarea,.decbar,#playBtn')) { sArmed=false; return; }
     const t=ev.changedTouches[0]; sx=t.clientX; sy=t.clientY; sArmed=true;
   }, {passive:true});
   panel.addEventListener('touchend', (ev) => {
-    if (!sArmed) return;
+    if (!sArmed || !detail) return;
     sArmed=false;
     const t=ev.changedTouches[0];
     const dx=t.clientX-sx, dy=t.clientY-sy;
-    if (Math.abs(dx)<56 || Math.abs(dx)<Math.abs(dy)*1.2) return;
+    if (dy>72 && dy>Math.abs(dx)*1.15) { closeSheet(); return; }
+    if (Math.abs(dx)<48 || Math.abs(dx)<Math.abs(dy)) return;
     stepItem(dx<0?1:-1);
+  }, {passive:true});
+}
+bindSwipe.done = false;
+function bindModalSwipe(id){
+  const el = document.getElementById(id);
+  const card = el && el.querySelector('.sheet-card');
+  if (!card) return;
+  let y0=0, armed=false;
+  card.addEventListener('touchstart', (ev) => {
+    const t=ev.changedTouches[0]; y0=t.clientY; armed=true;
+  }, {passive:true});
+  card.addEventListener('touchend', (ev) => {
+    if (!armed) return;
+    armed=false;
+    const t=ev.changedTouches[0];
+    if (t.clientY-y0>80) closeModal(id);
   }, {passive:true});
 }
 function closeSheet(){
@@ -1044,7 +1108,16 @@ function closeSheet(){
   detail = null;
   document.getElementById('sheet').classList.remove('show');
 }
-document.getElementById('sheet').addEventListener('click', (ev) => { if (ev.target.id==='sheet') closeSheet(); });
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.getElementById('filtersBtn').addEventListener('click', () => openModal('filters'));
+document.getElementById('menuBtn').addEventListener('click', () => openModal('menu'));
+document.getElementById('filtersDone').addEventListener('click', () => closeModal('filters'));
+document.getElementById('menuDone').addEventListener('click', () => closeModal('menu'));
+document.getElementById('filters').addEventListener('click', (ev) => { if (ev.target.id==='filters') closeModal('filters'); });
+document.getElementById('menu').addEventListener('click', (ev) => { if (ev.target.id==='menu') closeModal('menu'); });
+bindModalSwipe('filters');
+bindModalSwipe('menu');
 document.addEventListener('keydown', (ev) => {
   if (!document.getElementById('sheet').classList.contains('show') || !detail) return;
   if (ev.key==='Escape') { closeSheet(); return; }
@@ -1102,13 +1175,14 @@ function render(){
     const mkU = (id, label, count) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'chip'+(usage===id?' on':'');
+      if (usage===id) b.className = 'on';
       b.setAttribute('aria-pressed', usage===id ? 'true' : 'false');
-      b.innerHTML = label+' <b>'+count+'</b>';
+      b.textContent = label;
+      b.title = count+' items';
       b.addEventListener('click', () => { usage = id; paintUsage(); render(); });
       return b;
     };
-    usageBox.appendChild(mkU('all', 'All in category', pool.length));
+    usageBox.appendChild(mkU('all', 'All', pool.length));
     usageBox.appendChild(mkU('in-use', 'In use', u));
     usageBox.appendChild(mkU('unused', 'Unused', n));
   }
