@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/elowen/Attack": {
-    "sheet": "art/characters/heroes/streetwear/elowen/hero_elowen_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
     "sheetW": 1047,
     "sheetH": 947,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/elowen/Dash": {
-    "sheet": "art/characters/heroes/streetwear/elowen/hero_elowen_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
     "sheetW": 1047,
     "sheetH": 947,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/elowen/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/elowen/hero_elowen_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
     "sheetW": 1047,
     "sheetH": 947,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/elowen/Idle": {
-    "sheet": "art/characters/heroes/streetwear/elowen/hero_elowen_streetwear.core.png",
+    "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.core.png",
     "sheetW": 1055,
     "sheetH": 823,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/elowen/Skill": {
-    "sheet": "art/characters/heroes/streetwear/elowen/hero_elowen_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
     "sheetW": 1047,
     "sheetH": 947,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/elowen/Walk": {
-    "sheet": "art/characters/heroes/streetwear/elowen/hero_elowen_streetwear.core.png",
+    "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.core.png",
     "sheetW": 1055,
     "sheetH": 823,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/elowen/rotations": {
-    "sheet": "art/characters/heroes/streetwear/elowen/hero_elowen_streetwear.core.png",
+    "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.core.png",
     "sheetW": 1055,
     "sheetH": 823,
     "frames": {

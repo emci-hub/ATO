@@ -14,6 +14,7 @@ import path from 'node:path';
 import { PNG } from 'pngjs';
 
 import type { ArtAsset, ArtRegistry } from '../src/art/registry.types';
+import { ART_CATEGORIES, ART_CATEGORY_LABELS } from '../src/art/registry.types';
 import { readPng } from './art-png';
 
 const repo = path.resolve(__dirname, '..');
@@ -50,9 +51,8 @@ function displayStatus(a: ArtAsset): string {
   if (a.status === 'archived' || a.status === 'deprecated') return 'orphan';
   if (a.status === 'needs-restyle') return 'needs-restyle';
   if (a.status === 'alt-skin') return 'alt-skin';
+  if (a.inUse || (a.usedBy ?? []).length > 0) return 'in-use';
   if (a.status === 'resource') return 'resource';
-  if ((a.usedBy ?? []).length > 0) return 'in-use';
-  if (a.type === 'character' || a.type === 'boss' || a.type === 'creep' || a.type === 'room-layer') return 'in-use';
   return 'resource';
 }
 
@@ -86,6 +86,7 @@ function clipPreview(a: ArtAsset): { image: string; frames: { x: number; y: numb
 
 type CatalogItem = {
   id: string;
+  category: string;
   type: string;
   theme: string;
   placement: string;
@@ -104,6 +105,7 @@ type CatalogItem = {
   restyle: ArtAsset['restyle'] | null;
   anim: ReturnType<typeof clipPreview>;
   md5: string;
+  inUse: boolean;
 };
 
 function buildItems(registry: ArtRegistry, thumbPx: number, includeAnim: boolean): CatalogItem[] {
@@ -117,6 +119,7 @@ function buildItems(registry: ArtRegistry, thumbPx: number, includeAnim: boolean
     );
     items.push({
       id: a.id,
+      category: a.category,
       type: a.type,
       theme: String(a.theme),
       placement: String(a.placement),
@@ -135,6 +138,7 @@ function buildItems(registry: ArtRegistry, thumbPx: number, includeAnim: boolean
       restyle: a.restyle ?? null,
       anim: includeAnim ? clipPreview(a) : null,
       md5,
+      inUse: a.inUse || (a.usedBy ?? []).length > 0,
     });
   }
   return items;
@@ -162,11 +166,18 @@ function main() {
   const live = registry.assets.filter((a) => a.status !== 'archived');
   const groups = new Map<string, typeof live>();
   for (const a of live) {
-    const key = `${a.type}/${a.theme}`;
+    const key = `${a.category} · ${a.inUse ? 'in-use' : 'unused'} · ${a.theme}`;
     const list = groups.get(key) ?? [];
     list.push(a);
     groups.set(key, list);
   }
+  const catCounts = Object.fromEntries(
+    ART_CATEGORIES.map((c) => {
+      const list = live.filter((a) => a.category === c);
+      const used = list.filter((a) => a.inUse).length;
+      return [c, { total: list.length, used, unused: list.length - used }];
+    }),
+  ) as Record<string, { total: number; used: number; unused: number }>;
 
   const contactDir = path.join(repo, 'assets/art/_contact');
   fs.mkdirSync(contactDir, { recursive: true });
@@ -176,10 +187,23 @@ function main() {
     '',
     `Generated. ${live.length} live entries.`,
     'Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.',
-    'Reuse before create.',
+    'Reuse before create. New art goes in `assets/art/<category>/in-use|unused/…`.',
+    '',
+    '## Categories',
+    '',
+    ...ART_CATEGORIES.map((c) => {
+      const n = catCounts[c] ?? { total: 0, used: 0, unused: 0 };
+      return `- **${c}** (${n.total}: ${n.used} in use / ${n.unused} unused) — ${ART_CATEGORY_LABELS[c]}`;
+    }),
     '',
   ];
-  for (const [key, list] of [...groups.entries()].sort()) {
+  const catOrder = new Map(ART_CATEGORIES.map((c, i) => [c, i]));
+  for (const [key, list] of [...groups.entries()].sort((a, b) => {
+    const ca = a[0].split(' · ')[0];
+    const cb = b[0].split(' · ')[0];
+    const d = (catOrder.get(ca as (typeof ART_CATEGORIES)[number]) ?? 99) - (catOrder.get(cb as (typeof ART_CATEGORIES)[number]) ?? 99);
+    return d !== 0 ? d : a[0].localeCompare(b[0]);
+  })) {
     md.push(`## ${key}`, '');
     md.push('| id | size | status | score | usedBy |');
     md.push('|---|---|---|---|---|');
@@ -270,6 +294,16 @@ h1 span { color:var(--mustard); }
 .stat { font:12px ui-monospace,Consolas,monospace; border:1px solid var(--line); padding:6px 10px; border-radius:3px; }
 .stat b { color:var(--mustard); }
 .bar { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); padding:10px 12px; display:flex; flex-wrap:wrap; gap:8px; align-items:stretch; }
+.cats { display:flex; flex-wrap:wrap; gap:6px; width:100%; }
+.chip { min-height:var(--tap); padding:8px 12px; border:1px solid var(--line); border-radius:999px; background:var(--tile); color:var(--fg); font:13px/1.2 ui-monospace,Consolas,monospace; cursor:pointer; touch-action:manipulation; }
+.chip b { color:var(--mustard); }
+.chip.on { background:var(--mustard); color:#1d1d20; border-color:var(--mustard); font-weight:700; }
+.chip.on b { color:#1d1d20; }
+.chip .use { color:var(--ok); }
+.chip .off { color:var(--muted); }
+.chip.on .use, .chip.on .off { color:#1d1d20; }
+.usage { display:flex; flex-wrap:wrap; gap:6px; width:100%; }
+.sub { display:flex; flex-wrap:wrap; gap:8px; width:100%; align-items:stretch; }
 input, select, textarea, button { font:inherit; font-size:16px; border-radius:6px; }
 input[type=search] { flex:1 1 100%; min-height:var(--tap); background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:10px 12px; }
 select { flex:1 1 140px; min-height:var(--tap); background:var(--tile); color:var(--fg); border:1px solid var(--line); padding:8px 10px; }
@@ -280,7 +314,10 @@ button.on, button[aria-pressed=true] { background:var(--mustard); color:#1d1d20;
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; padding:12px 12px 96px; }
 .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px; display:grid; gap:6px; min-width:0; min-height:var(--tap); touch-action:manipulation; }
 .card:active { border-color:var(--mustard); }
-.stage { background:var(--tile); min-height:88px; display:grid; place-items:center; border-radius:4px; overflow:hidden; }
+.stage { background:var(--tile); min-height:88px; display:grid; place-items:center; border-radius:4px; overflow:hidden; position:relative; }
+.stamp { position:absolute; top:6px; left:6px; font:700 9px/1 ui-monospace,Consolas,monospace; letter-spacing:.04em; text-transform:uppercase; padding:4px 6px; border-radius:3px; }
+.stamp.yes { background:var(--ok); color:#0e1a0c; }
+.stamp.no { background:#3a3a3f; color:var(--muted); }
 .stage img, .stage canvas { image-rendering:pixelated; image-rendering:crisp-edges; max-width:100%; max-height:120px; }
 .meta { font:12px/1.35 ui-monospace,Consolas,monospace; color:var(--muted); overflow-wrap:anywhere; }
 .meta b { color:var(--fg); }
@@ -306,6 +343,7 @@ textarea { width:100%; min-height:72px; background:var(--tile); color:var(--fg);
 @media (min-width:720px) {
   .grid { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); padding:16px 20px 80px; }
   input[type=search] { flex:1 1 220px; }
+  .chip { min-height:40px; }
   #sheet .panel { left:50%; right:auto; top:6%; bottom:6%; width:min(520px,92vw); transform:translateX(-50%); border-radius:12px; max-height:none; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
@@ -316,17 +354,21 @@ textarea { width:100%; min-height:72px; background:var(--tile); color:var(--fg);
   <div class="stats" id="stats"></div>
 </header>
 <div class="bar">
-  <input type="search" id="q" placeholder="Search id, type, theme, path…" enterkeyhint="search" autocapitalize="off" autocomplete="off" spellcheck="false">
+  <div class="cats" id="cats" role="tablist" aria-label="Categories"></div>
+  <div class="usage" id="usage" role="group" aria-label="In use or unused"></div>
+  <input type="search" id="q" placeholder="Search id, category, theme, path…" enterkeyhint="search" autocapitalize="off" autocomplete="off" spellcheck="false">
+  <div class="sub">
   <select id="status" aria-label="Status"><option value="">all statuses</option>
     <option>in-use</option><option>resource</option><option>needs-restyle</option><option>alt-skin</option><option>orphan</option></select>
-  <select id="type" aria-label="Type"><option value="">all types</option></select>
   <select id="theme" aria-label="Theme"><option value="">all themes</option></select>
   <select id="sort" aria-label="Sort">
     <option value="id">sort: id</option>
     <option value="decoded">sort: decoded</option>
     <option value="disk">sort: disk</option>
     <option value="status">sort: status</option>
+    <option value="category">sort: category</option>
   </select>
+  </div>
   <div class="actions">
     <button type="button" id="dupBtn">Duplicates</button>
     <button type="button" id="exportBtn">Share / export</button>
@@ -345,6 +387,10 @@ textarea { width:100%; min-height:72px; background:var(--tile); color:var(--fg);
 const DATA = ${json};
 const PORTABLE = ${portable ? 'true' : 'false'};
 const KEY = 'ato-art-decisions-v1';
+const CAT_ORDER = ${JSON.stringify([...ART_CATEGORIES])};
+const CAT_LABEL = ${JSON.stringify(ART_CATEGORY_LABELS)};
+let cat = '';
+let usage = 'all';
 let decisions = {};
 try { decisions = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { decisions = {}; }
 function save() {
@@ -369,7 +415,11 @@ function renderStats(){
     if (d && d.action==='remove') { removeN++; removeB += a.disk; }
     if (a.display==='in-use' || (d && d.action==='use')) needN++;
   }
+  let usedN=0, unusedN=0;
+  for (const a of items) { if (a.inUse) usedN++; else unusedN++; }
   document.getElementById('stats').innerHTML =
+    '<span class="stat"><b>'+usedN+'</b> in use</span>' +
+    '<span class="stat"><b>'+unusedN+'</b> unused</span>' +
     Object.entries(counts).map(([k,v]) => '<span class="stat"><b>'+v+'</b> '+k+'</span>').join('') +
     '<span class="stat">disk <b>'+mb(disk)+'</b> MB</span>' +
     '<span class="stat">decoded <b>'+mb(decoded)+'</b> MB</span>' +
@@ -379,20 +429,22 @@ function renderStats(){
 function filtered(){
   const q = document.getElementById('q').value.toLowerCase();
   const st = document.getElementById('status').value;
-  const ty = document.getElementById('type').value;
   const th = document.getElementById('theme').value;
   const sort = document.getElementById('sort').value;
   let list = DATA.items.filter(a => {
+    if (cat && a.category !== cat) return false;
+    if (usage==='in-use' && !a.inUse) return false;
+    if (usage==='unused' && a.inUse) return false;
     if (st && a.display !== st) return false;
-    if (ty && a.type !== ty) return false;
     if (th && a.theme !== th) return false;
     if (!q) return true;
-    return (a.id+' '+a.type+' '+a.theme+' '+a.path+' '+(a.usedBy||[]).join(' ')+' '+(a.tags||[]).join(' ')).toLowerCase().includes(q);
+    return (a.id+' '+a.category+' '+a.type+' '+a.theme+' '+a.path+' '+(a.usedBy||[]).join(' ')+' '+(a.tags||[]).join(' ')).toLowerCase().includes(q);
   });
   list.sort((a,b) => {
     if (sort==='decoded') return b.decoded-a.decoded;
     if (sort==='disk') return b.disk-a.disk;
     if (sort==='status') return String(a.display).localeCompare(b.display);
+    if (sort==='category') return String(a.category).localeCompare(b.category) || a.id.localeCompare(b.id);
     return a.id.localeCompare(b.id);
   });
   return list;
@@ -435,8 +487,12 @@ function card(a){
   el.className = 'card';
   el.setAttribute('role', 'button');
   el.tabIndex = 0;
-  el.innerHTML = '<div class="stage"></div><div class="meta"><b>'+a.id+'</b></div><span class="badge '+a.display+'">'+a.display+(d.action&&d.action!=='keep'?' · '+d.action:'')+'</span>';
+  el.innerHTML = '<div class="stage"></div><div class="meta"><b>'+a.id+'</b></div><span class="badge '+(a.inUse?'in-use':'resource')+'">'+(a.inUse?'in use':'unused')+'</span> <span class="badge '+a.display+'">'+a.display+(d.action&&d.action!=='keep'?' · '+d.action:'')+'</span>';
   paintStage(el.querySelector('.stage'), a, false);
+  const stamp = document.createElement('span');
+  stamp.className = 'stamp '+(a.inUse?'yes':'no');
+  stamp.textContent = a.inUse ? 'IN USE' : 'UNUSED';
+  el.querySelector('.stage').appendChild(stamp);
   const open = () => openSheet(a);
   el.addEventListener('click', open);
   el.addEventListener('keydown', (ev) => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); open(); } });
@@ -449,7 +505,7 @@ function openSheet(a){
     '<button type="button" id="sheetClose">Close</button>' +
     '<div class="preview" id="sheetPrev"></div>' +
     '<div class="meta"><b>'+a.id+'</b><br>'+
-    a.type+' · '+a.theme+' · '+a.placement+'<br>'+
+    (a.inUse?'IN USE':'UNUSED')+' · '+a.category+' · '+a.type+' · '+a.theme+' · '+a.placement+'<br>'+
     a.w+'×'+a.h+' · disk '+mb(a.disk)+' MB · decoded '+mb(a.decoded)+' MB<br>'+
     'score '+(a.score==null?'—':a.score+'/28')+' · usedBy '+(a.usedBy[0]||'—')+
     (a.usedBy.length>1?' +'+(a.usedBy.length-1):'')+'<br>'+a.path+'</div>' +
@@ -499,12 +555,59 @@ function render(){
   }
 }
 (function fillFilters(){
-  const types = [...new Set(DATA.items.map(a => a.type))].sort();
   const themes = [...new Set(DATA.items.map(a => a.theme))].sort();
-  for (const t of types) document.getElementById('type').append(new Option(t,t));
   for (const t of themes) document.getElementById('theme').append(new Option(t,t));
+  const counts = {};
+  const used = {};
+  for (const a of DATA.items) {
+    counts[a.category] = (counts[a.category]||0)+1;
+    if (a.inUse) used[a.category] = (used[a.category]||0)+1;
+  }
+  const cats = document.getElementById('cats');
+  const usageBox = document.getElementById('usage');
+  const allN = DATA.items.length;
+  const allUsed = DATA.items.filter(a => a.inUse).length;
+  const mk = (id, label, nUse, nOff) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip'+(cat===id?' on':'');
+    b.setAttribute('role','tab');
+    b.setAttribute('aria-selected', cat===id ? 'true' : 'false');
+    b.innerHTML = label+' <b class="use">'+nUse+'</b>/<span class="off">'+nOff+'</span>';
+    b.addEventListener('click', () => { cat = id; paintCats(); paintUsage(); render(); });
+    return b;
+  };
+  function paintCats(){
+    cats.innerHTML = '';
+    cats.appendChild(mk('', 'All', allUsed, allN-allUsed));
+    for (const c of CAT_ORDER) {
+      const n = counts[c]||0;
+      if (!n && c==='misc') continue;
+      cats.appendChild(mk(c, CAT_LABEL[c]||c, used[c]||0, n-(used[c]||0)));
+    }
+  }
+  function paintUsage(){
+    usageBox.innerHTML = '';
+    const pool = cat ? DATA.items.filter(a => a.category===cat) : DATA.items;
+    const u = pool.filter(a => a.inUse).length;
+    const n = pool.length - u;
+    const mkU = (id, label, count) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip'+(usage===id?' on':'');
+      b.setAttribute('aria-pressed', usage===id ? 'true' : 'false');
+      b.innerHTML = label+' <b>'+count+'</b>';
+      b.addEventListener('click', () => { usage = id; paintUsage(); render(); });
+      return b;
+    };
+    usageBox.appendChild(mkU('all', 'All in category', pool.length));
+    usageBox.appendChild(mkU('in-use', 'In use', u));
+    usageBox.appendChild(mkU('unused', 'Unused', n));
+  }
+  paintCats();
+  paintUsage();
 })();
-['q','status','type','theme','sort'].forEach(id => document.getElementById(id).addEventListener('input', render));
+['q','status','theme','sort'].forEach(id => document.getElementById(id).addEventListener('input', render));
 document.getElementById('dupBtn').addEventListener('click', () => {
   const box = document.getElementById('dupes');
   box.hidden = !box.hidden;

@@ -18,12 +18,14 @@ for (const asset of registry.assets) byId.set(asset.id, asset);
 export type { ArtId, ArtAsset };
 
 export type ArtQuery = {
+  category?: string;
   type?: string;
   theme?: string;
   placement?: string;
   tags?: string[];
   status?: string;
   role?: string;
+  inUse?: boolean;
 };
 
 export function allArt(): ArtAsset[] {
@@ -41,10 +43,12 @@ export function getArtSource(id: ArtId | string): ImageSourcePropType | undefine
 export function findArt(query: ArtQuery): ArtAsset[] {
   return registry.assets.filter((a) => {
     if (a.status === 'archived' || a.status === 'deprecated') return false;
+    if (query.category && a.category !== query.category) return false;
     if (query.type && a.type !== query.type) return false;
     if (query.theme && a.theme !== query.theme) return false;
     if (query.placement && a.placement !== query.placement) return false;
     if (query.status && a.status !== query.status) return false;
+    if (query.inUse !== undefined && a.inUse !== query.inUse) return false;
     if (query.tags && query.tags.length > 0) {
       const have = new Set(a.tags ?? []);
       if (!query.tags.every((t) => have.has(t))) return false;

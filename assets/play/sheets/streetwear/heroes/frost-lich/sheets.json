@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/frost-lich/Attack": {
-    "sheet": "art/characters/heroes/streetwear/frost-lich/hero_frost-lich_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
     "sheetW": 1231,
     "sheetH": 971,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/frost-lich/Dash": {
-    "sheet": "art/characters/heroes/streetwear/frost-lich/hero_frost-lich_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
     "sheetW": 1231,
     "sheetH": 971,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/frost-lich/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/frost-lich/hero_frost-lich_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
     "sheetW": 1231,
     "sheetH": 971,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/frost-lich/Idle": {
-    "sheet": "art/characters/heroes/streetwear/frost-lich/hero_frost-lich_streetwear.core.png",
+    "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.core.png",
     "sheetW": 1119,
     "sheetH": 842,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/frost-lich/Skill": {
-    "sheet": "art/characters/heroes/streetwear/frost-lich/hero_frost-lich_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
     "sheetW": 1231,
     "sheetH": 971,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/frost-lich/Walk": {
-    "sheet": "art/characters/heroes/streetwear/frost-lich/hero_frost-lich_streetwear.core.png",
+    "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.core.png",
     "sheetW": 1119,
     "sheetH": 842,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/frost-lich/rotations": {
-    "sheet": "art/characters/heroes/streetwear/frost-lich/hero_frost-lich_streetwear.core.png",
+    "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.core.png",
     "sheetW": 1119,
     "sheetH": 842,
     "frames": {

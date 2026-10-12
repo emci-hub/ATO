@@ -10,6 +10,7 @@ import path from 'node:path';
 
 import type { ArtAsset, ArtRegistry } from '../src/art/registry.types';
 import { HASH_SUFFIX, kebab, toShortDir } from './art-dirs';
+import { classifyArt } from './art-categories';
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -78,9 +79,32 @@ function main() {
   const registryPath = path.join(repo, 'assets/art/registry.json');
   const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8')) as ArtRegistry;
   const existing = registry.assets.find((a) => a.id === id);
+  const guessed = classifyArt(`misc/${kebab(id)}.png`);
+  const destTop = id.startsWith('hero.') || id.startsWith('pet.')
+    ? 'heroes'
+    : id.startsWith('boss.') || id.startsWith('creep.') || id.startsWith('tower.')
+      ? 'enemies-bosses'
+      : id.startsWith('icon.')
+        ? 'icons'
+        : id.startsWith('room.')
+          ? 'rooms'
+          : id.startsWith('prop.')
+            ? 'props'
+            : id.startsWith('tile.')
+              ? 'tiles'
+              : id.startsWith('fx.')
+                ? 'fx'
+                : id.startsWith('brand.')
+                  ? 'branding'
+                  : id.startsWith('background.')
+                    ? 'backgrounds'
+                    : id.startsWith('ui.')
+                      ? 'ui'
+                      : guessed.category;
   const stub: ArtAsset = existing ?? {
     id,
-    path: `assets/art/_unpacked/${kebab(id)}.png`,
+    path: `assets/art/${destTop}/unused/_unpacked/${kebab(id)}.png`,
+    category: destTop as ArtAsset['category'],
     type: 'character',
     theme: 'streetwear',
     placement: 'floor',
@@ -90,6 +114,7 @@ function main() {
     source: 'pixellab',
     sourceRef: `art-src/pixellab/${id}/${gen}`,
     genCount: 1,
+    inUse: false,
     tags: [],
     notes: 'imported; run art:pack -- --id ' + id,
   };

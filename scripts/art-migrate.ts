@@ -137,7 +137,7 @@ function main() {
   fs.mkdirSync(path.join(repo, 'art-src/third-party'), { recursive: true });
   fs.mkdirSync(path.join(repo, 'art-src/hand'), { recursive: true });
   fs.mkdirSync(path.join(repo, 'assets/art/rooms'), { recursive: true });
-  fs.mkdirSync(path.join(repo, 'assets/art/brand'), { recursive: true });
+  fs.mkdirSync(path.join(repo, 'assets/art/branding'), { recursive: true });
 
   // Snapshot current packed sheets so a failed pack can be compared / restored.
   const oldSheets = path.join(repo, 'assets/play/sheets');
@@ -177,6 +177,7 @@ function main() {
   copyResourceStills(path.join(swPack, 'ui'), path.join(repo, 'assets/art/ui/streetwear'), '');
   copyResourceStills(path.join(swPack, 'props'), path.join(repo, 'assets/art/props/streetwear'), '');
   copyResourceStills(path.join(swPack, 'map'), path.join(repo, 'assets/art/tiles/streetwear'), '');
+  // Recategorize stills after copy (buttons stay ui; icons/kit/nav split in art-recategorize).
 
   // Cast skin.json stays (role map). Streetwear skin.json stays.
   // Third-party play packs → art-src (raw) + we'll copy referenced stills into assets/art later.
@@ -199,7 +200,7 @@ function main() {
   const legends = path.join(repo, 'assets/play/avatars');
   if (fs.existsSync(legends)) {
     moveTree(legends, path.join(repo, 'art-src/third-party/dungeon-legends'), 'copy');
-    copyResourceStills(legends, path.join(repo, 'assets/art/characters/npcs/dungeon-legends'), '');
+    copyResourceStills(legends, path.join(repo, 'assets/art/heroes'), '');
   }
 
   // Unused packs stay in the library as `resource` (never archived).
@@ -209,7 +210,7 @@ function main() {
     moveTree(primal, path.join(repo, 'art-src/pixellab/primal-pack/migrated/raw'), 'move');
     copyResourceStills(
       path.join(repo, 'art-src/pixellab/primal-pack/migrated/raw'),
-      path.join(repo, 'assets/art/characters/pets/primal'),
+      path.join(repo, 'assets/art/heroes'),
       '',
     );
   }
@@ -229,8 +230,10 @@ function main() {
     for (const file of walk(rooms)) {
       const base = path.basename(file);
       let dest: string;
-      if (base.startsWith('hideout-td') || base.startsWith('hideout-tease') || base.startsWith('bar-hideout')) {
+      if (base.startsWith('hideout-td') || base.startsWith('hideout-tease')) {
         dest = path.join(repo, 'assets/art/rooms/hideout', base);
+      } else if (base === 'loft-bed.png' || base === 'loft-lamp.png') {
+        dest = path.join(repo, 'assets/art/props/loft', base);
       } else if (base.startsWith('loft-')) {
         dest = path.join(repo, 'assets/art/rooms/loft', base);
       } else if (base.startsWith('underground-')) {
@@ -282,21 +285,21 @@ function main() {
   for (const rel of expo) {
     const from = path.join(repo, rel);
     if (fs.existsSync(from)) {
-      relocate(from, path.join(repo, 'assets/art/ui/template', kebabPngName(path.basename(rel))), 'copy');
+      relocate(from, path.join(repo, 'assets/art/branding/template', kebabPngName(path.basename(rel))), 'copy');
     }
   }
   const tab = path.join(repo, 'assets/images/tabIcons');
-  if (fs.existsSync(tab)) copyResourceStills(tab, path.join(repo, 'assets/art/ui/template'), '');
+  if (fs.existsSync(tab)) copyResourceStills(tab, path.join(repo, 'assets/art/icons/tabs/template'), '');
 
   // Brand copies (app.json keeps assets/images until emci OKs the swap).
   for (const [from, to] of [
-    ['assets/images/icon.png', 'assets/art/brand/brand_icon.png'],
-    ['assets/images/splash-icon.png', 'assets/art/brand/brand_splash.png'],
-    ['assets/images/favicon.png', 'assets/art/brand/brand_favicon.png'],
-    ['assets/images/android-icon-foreground.png', 'assets/art/brand/brand_android-foreground.png'],
-    ['assets/images/android-icon-background.png', 'assets/art/brand/brand_android-background.png'],
-    ['assets/images/android-icon-monochrome.png', 'assets/art/brand/brand_android-monochrome.png'],
-    ['assets/images/logo-glow.png', 'assets/art/brand/brand_logo-glow.png'],
+    ['assets/images/icon.png', 'assets/art/branding/brand_icon.png'],
+    ['assets/images/splash-icon.png', 'assets/art/branding/brand_splash.png'],
+    ['assets/images/favicon.png', 'assets/art/branding/brand_favicon.png'],
+    ['assets/images/android-icon-foreground.png', 'assets/art/branding/brand_android-foreground.png'],
+    ['assets/images/android-icon-background.png', 'assets/art/branding/brand_android-background.png'],
+    ['assets/images/android-icon-monochrome.png', 'assets/art/branding/brand_android-monochrome.png'],
+    ['assets/images/logo-glow.png', 'assets/art/branding/brand_logo-glow.png'],
   ] as const) {
     const src = path.join(repo, from);
     if (fs.existsSync(src)) relocate(src, path.join(repo, to), 'copy');

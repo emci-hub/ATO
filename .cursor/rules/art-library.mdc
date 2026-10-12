@@ -14,7 +14,14 @@ alwaysApply: false
 4. Import, never drop files. Bring raw output in with `npm run art:import -- --from … --id …`
    (saves prompt/seed/params to art-src/pixellab/<id>/<gen>/gen.json), then `npm run art:pack -- --id …`.
    Never commit raw frames or PixelLab exports under assets/; raw lives only in art-src/.
-5. Register. Every bundled file has a registry entry: id, type, theme (streetwear default), placement,
+   New art goes in `assets/art/<category>/in-use/…` or `…/unused/…` (art:registry
+   recomputes `inUse` + `usedBy` and moves the file). Categories:
+   `heroes/<slug>/<skin-set>/` (pets + characters), `enemies-bosses/<slug>/<skin-set>/`,
+   `ui/` (buttons, frames, bars, panels, kit), `icons/` (items, currency, stats, tabs),
+   `rooms/<room>/` (live Hideout packs stay here — equivalent in-use), `rooms/unused/`,
+   `props/` (furniture/decor by room or theme), `tiles/`, `fx/`, `backgrounds/`, `branding/`.
+   `misc/` is last resort (aim ~0). Classify by what the file is, not the old folder.
+5. Register. Every bundled file has a registry entry: id, category, inUse, type, theme (streetwear default), placement,
    camera, heroRelativeHeight (vs final hero, 53 art px), footprintTiles (12px), sortY/occluder,
    clips (dirs/frames/ms), palette, status, critiqueScore, source, genCount, tags.
 6. Style rules. One camera for everything (perspective guide): tops + fronts, no side faces, light from

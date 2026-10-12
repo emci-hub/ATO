@@ -9,6 +9,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { ArtRegistry } from '../src/art/registry.types';
+import { ART_CATEGORIES } from '../src/art/registry.types';
+import { classifyArt, placeWithUsage, usageFolderOf } from './art-categories';
 import { walkFiles } from './art-png';
 
 const repo = path.resolve(__dirname, '..');
@@ -70,7 +72,38 @@ function main() {
     assert.ok(mb <= BUDGET_MB, `${a.id} decoded ${mb.toFixed(1)} MB over ${BUDGET_MB} MB budget`);
   }
   assert.deepEqual(dupes, [], `duplicate ids: ${dupes.join(', ')}`);
-  passed = ok(passed, `ids unique, paths exist, names match, decoded ≤ ${BUDGET_MB} MB`);
+  const cats = new Set<string>(ART_CATEGORIES);
+  const misc: string[] = [];
+  const mismatch: string[] = [];
+  for (const a of registry.assets) {
+    if (a.status === 'archived') continue;
+    assert.ok(a.category, `missing category ${a.id}`);
+    assert.ok(cats.has(a.category), `unknown category ${a.category} on ${a.id}`);
+    const rel = a.path.replace(/^assets\/art\//, '');
+    const top = rel.split('/')[0];
+    if (top !== a.category) mismatch.push(`${a.id}: path ${top} vs category ${a.category}`);
+    const classified = classifyArt(rel);
+    const expected = placeWithUsage(classified.dest, a.inUse);
+    if (expected !== rel) mismatch.push(`${a.id}: should live at ${expected} (have ${rel})`);
+    if (a.category === 'misc') misc.push(a.id);
+  }
+  assert.deepEqual(mismatch.slice(0, 20), [], `category/path mismatch (≤20): ${mismatch.slice(0, 20).join('; ')}`);
+  assert.deepEqual(misc, [], `misc should be empty, found ${misc.join(', ')}`);
+  passed = ok(passed, `ids unique, paths exist, names match, decoded ≤ ${BUDGET_MB} MB, categories match folders`);
+
+  const unusedRefs: string[] = [];
+  const inUseFlag: string[] = [];
+  for (const a of registry.assets) {
+    if (a.status === 'archived') continue;
+    const rel = a.path.replace(/^assets\/art\//, '');
+    const folder = usageFolderOf(rel);
+    const referenced = (a.usedBy ?? []).length > 0;
+    if (folder === 'unused' && referenced) unusedRefs.push(`${a.id} usedBy=${(a.usedBy ?? []).join(',')}`);
+    if (a.inUse !== referenced) inUseFlag.push(a.id);
+  }
+  assert.deepEqual(unusedRefs.slice(0, 20), [], `unused/ items that are referenced (≤20): ${unusedRefs.slice(0, 20).join('; ')}`);
+  assert.deepEqual(inUseFlag.slice(0, 20), [], `inUse flag mismatch (≤20): ${inUseFlag.slice(0, 20).join('; ')}`);
+  passed = ok(passed, 'inUse matches usedBy; unused/ has no referenced items');
 
   // No raw PixelLab frames bundled.
   const generated = fs.readFileSync(path.join(repo, 'src/art/generated-art.ts'), 'utf8');

@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/kael/Attack": {
-    "sheet": "art/characters/heroes/streetwear/kael/hero_kael_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
     "sheetW": 1087,
     "sheetH": 877,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/kael/Dash": {
-    "sheet": "art/characters/heroes/streetwear/kael/hero_kael_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
     "sheetW": 1087,
     "sheetH": 877,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/kael/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/kael/hero_kael_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
     "sheetW": 1087,
     "sheetH": 877,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/kael/Idle": {
-    "sheet": "art/characters/heroes/streetwear/kael/hero_kael_streetwear.core.png",
+    "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.core.png",
     "sheetW": 975,
     "sheetH": 794,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/kael/Skill": {
-    "sheet": "art/characters/heroes/streetwear/kael/hero_kael_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
     "sheetW": 1087,
     "sheetH": 877,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/kael/Walk": {
-    "sheet": "art/characters/heroes/streetwear/kael/hero_kael_streetwear.core.png",
+    "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.core.png",
     "sheetW": 975,
     "sheetH": 794,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/kael/rotations": {
-    "sheet": "art/characters/heroes/streetwear/kael/hero_kael_streetwear.core.png",
+    "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.core.png",
     "sheetW": 975,
     "sheetH": 794,
     "frames": {

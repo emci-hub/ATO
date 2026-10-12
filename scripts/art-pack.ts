@@ -42,6 +42,7 @@ import {
   toLongDir,
 } from './art-dirs';
 import type { AtlasJson, ArtFormat, ArtTrim } from '../src/art/registry.types';
+import { charArtRel } from './art-categories';
 
 /**
  * Word → role guesses, checked in order. These only ever PROPOSE a role: the
@@ -554,8 +555,7 @@ function charArtId(theme: string, group: string, slug: string): string {
 }
 
 function charArtDir(repo: string, theme: string, group: string, slug: string): string {
-  const folder = group === 'boss' ? 'bosses' : group;
-  return path.join(repo, 'assets/art/characters', folder, theme, slug);
+  return path.join(repo, 'assets/art', charArtRel(theme, group, slug));
 }
 
 type SwCharMeta = {

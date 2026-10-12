@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/morwen/Attack": {
-    "sheet": "art/characters/heroes/streetwear/morwen/hero_morwen_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
     "sheetW": 991,
     "sheetH": 887,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/morwen/Dash": {
-    "sheet": "art/characters/heroes/streetwear/morwen/hero_morwen_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
     "sheetW": 991,
     "sheetH": 887,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/morwen/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/morwen/hero_morwen_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
     "sheetW": 991,
     "sheetH": 887,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/morwen/Idle": {
-    "sheet": "art/characters/heroes/streetwear/morwen/hero_morwen_streetwear.core.png",
+    "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.core.png",
     "sheetW": 719,
     "sheetH": 785,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/morwen/Skill": {
-    "sheet": "art/characters/heroes/streetwear/morwen/hero_morwen_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
     "sheetW": 991,
     "sheetH": 887,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/morwen/Walk": {
-    "sheet": "art/characters/heroes/streetwear/morwen/hero_morwen_streetwear.core.png",
+    "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.core.png",
     "sheetW": 719,
     "sheetH": 785,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/morwen/rotations": {
-    "sheet": "art/characters/heroes/streetwear/morwen/hero_morwen_streetwear.core.png",
+    "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.core.png",
     "sheetW": 719,
     "sheetH": 785,
     "frames": {

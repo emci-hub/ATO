@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/velkhar/Attack": {
-    "sheet": "art/characters/heroes/streetwear/velkhar/hero_velkhar_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
     "sheetW": 1023,
     "sheetH": 1007,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/velkhar/Dash": {
-    "sheet": "art/characters/heroes/streetwear/velkhar/hero_velkhar_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
     "sheetW": 1023,
     "sheetH": 1007,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/velkhar/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/velkhar/hero_velkhar_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
     "sheetW": 1023,
     "sheetH": 1007,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/velkhar/Idle": {
-    "sheet": "art/characters/heroes/streetwear/velkhar/hero_velkhar_streetwear.core.png",
+    "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.core.png",
     "sheetW": 911,
     "sheetH": 891,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/velkhar/Skill": {
-    "sheet": "art/characters/heroes/streetwear/velkhar/hero_velkhar_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
     "sheetW": 1023,
     "sheetH": 1007,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/velkhar/Walk": {
-    "sheet": "art/characters/heroes/streetwear/velkhar/hero_velkhar_streetwear.core.png",
+    "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.core.png",
     "sheetW": 911,
     "sheetH": 891,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/velkhar/rotations": {
-    "sheet": "art/characters/heroes/streetwear/velkhar/hero_velkhar_streetwear.core.png",
+    "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.core.png",
     "sheetW": 911,
     "sheetH": 891,
     "frames": {

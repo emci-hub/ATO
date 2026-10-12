@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/aurex/Attack": {
-    "sheet": "art/characters/heroes/streetwear/aurex/hero_aurex_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.combat.png",
     "sheetW": 1055,
     "sheetH": 951,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/aurex/Dash": {
-    "sheet": "art/characters/heroes/streetwear/aurex/hero_aurex_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.combat.png",
     "sheetW": 1055,
     "sheetH": 951,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/aurex/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/aurex/hero_aurex_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.combat.png",
     "sheetW": 1055,
     "sheetH": 951,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/aurex/Idle": {
-    "sheet": "art/characters/heroes/streetwear/aurex/hero_aurex_streetwear.core.png",
+    "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.core.png",
     "sheetW": 1023,
     "sheetH": 813,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/aurex/Skill": {
-    "sheet": "art/characters/heroes/streetwear/aurex/hero_aurex_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.combat.png",
     "sheetW": 1055,
     "sheetH": 951,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/aurex/Walk": {
-    "sheet": "art/characters/heroes/streetwear/aurex/hero_aurex_streetwear.core.png",
+    "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.core.png",
     "sheetW": 1023,
     "sheetH": 813,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/aurex/rotations": {
-    "sheet": "art/characters/heroes/streetwear/aurex/hero_aurex_streetwear.core.png",
+    "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.core.png",
     "sheetW": 1023,
     "sheetH": 813,
     "frames": {

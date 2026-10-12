@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/maldrath/Attack": {
-    "sheet": "art/characters/heroes/streetwear/maldrath/hero_maldrath_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/maldrath/streetwear/hero_maldrath_streetwear.combat.png",
     "sheetW": 1231,
     "sheetH": 953,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/maldrath/Dash": {
-    "sheet": "art/characters/heroes/streetwear/maldrath/hero_maldrath_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/maldrath/streetwear/hero_maldrath_streetwear.combat.png",
     "sheetW": 1231,
     "sheetH": 953,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/maldrath/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/maldrath/hero_maldrath_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/maldrath/streetwear/hero_maldrath_streetwear.combat.png",
     "sheetW": 1231,
     "sheetH": 953,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/maldrath/Idle": {
-    "sheet": "art/characters/heroes/streetwear/maldrath/hero_maldrath_streetwear.core.png",
+    "sheet": "art/heroes/in-use/maldrath/streetwear/hero_maldrath_streetwear.core.png",
     "sheetW": 1127,
     "sheetH": 848,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/maldrath/Skill": {
-    "sheet": "art/characters/heroes/streetwear/maldrath/hero_maldrath_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/maldrath/streetwear/hero_maldrath_streetwear.combat.png",
     "sheetW": 1231,
     "sheetH": 953,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/maldrath/Walk": {
-    "sheet": "art/characters/heroes/streetwear/maldrath/hero_maldrath_streetwear.core.png",
+    "sheet": "art/heroes/in-use/maldrath/streetwear/hero_maldrath_streetwear.core.png",
     "sheetW": 1127,
     "sheetH": 848,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/maldrath/rotations": {
-    "sheet": "art/characters/heroes/streetwear/maldrath/hero_maldrath_streetwear.core.png",
+    "sheet": "art/heroes/in-use/maldrath/streetwear/hero_maldrath_streetwear.core.png",
     "sheetW": 1127,
     "sheetH": 848,
     "frames": {

@@ -19,13 +19,57 @@ export type ArtType =
   | 'npc'
   | 'boss'
   | 'creep'
+  | 'tower'
   | 'room-layer'
   | 'prop'
   | 'tile'
   | 'background'
   | 'fx'
   | 'ui'
+  | 'icon'
   | 'brand';
+
+/** Top-level library folders (`assets/art/<category>/…`). */
+export type ArtCategory =
+  | 'heroes'
+  | 'enemies-bosses'
+  | 'ui'
+  | 'icons'
+  | 'rooms'
+  | 'props'
+  | 'tiles'
+  | 'fx'
+  | 'backgrounds'
+  | 'branding'
+  | 'misc';
+
+export const ART_CATEGORIES: readonly ArtCategory[] = [
+  'heroes',
+  'enemies-bosses',
+  'ui',
+  'icons',
+  'rooms',
+  'props',
+  'tiles',
+  'fx',
+  'backgrounds',
+  'branding',
+  'misc',
+] as const;
+
+export const ART_CATEGORY_LABELS: Record<ArtCategory, string> = {
+  heroes: 'Heroes',
+  'enemies-bosses': 'Enemies / bosses',
+  ui: 'UI',
+  icons: 'Icons',
+  rooms: 'Rooms',
+  props: 'Props',
+  tiles: 'Tiles',
+  fx: 'FX',
+  backgrounds: 'Backgrounds',
+  branding: 'Branding',
+  misc: 'Misc',
+};
 
 export type ArtTheme =
   | 'streetwear'
@@ -139,6 +183,7 @@ export type ArtAnim = {
 export type ArtAsset = {
   id: string;
   path: string;
+  category: ArtCategory;
   type: ArtType;
   theme: ArtTheme | string;
   placement: ArtPlacement | string;
@@ -165,6 +210,8 @@ export type ArtAsset = {
   sourceRef?: string | null;
   genCount?: number;
   license?: string | null;
+  /** True when static requires / getArt / sheet manifests / registry refs point here. Recomputed by art:registry. */
+  inUse: boolean;
   usedBy?: string[];
   tags?: string[];
   restyle?: ArtRestyle;

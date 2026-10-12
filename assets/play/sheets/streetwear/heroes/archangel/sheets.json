@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/archangel/Attack": {
-    "sheet": "art/characters/heroes/streetwear/archangel/hero_archangel_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
     "sheetW": 1263,
     "sheetH": 955,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/archangel/Dash": {
-    "sheet": "art/characters/heroes/streetwear/archangel/hero_archangel_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
     "sheetW": 1263,
     "sheetH": 955,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/archangel/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/archangel/hero_archangel_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
     "sheetW": 1263,
     "sheetH": 955,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/archangel/Idle": {
-    "sheet": "art/characters/heroes/streetwear/archangel/hero_archangel_streetwear.core.png",
+    "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.core.png",
     "sheetW": 1279,
     "sheetH": 786,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/archangel/Skill": {
-    "sheet": "art/characters/heroes/streetwear/archangel/hero_archangel_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
     "sheetW": 1263,
     "sheetH": 955,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/archangel/Walk": {
-    "sheet": "art/characters/heroes/streetwear/archangel/hero_archangel_streetwear.core.png",
+    "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.core.png",
     "sheetW": 1279,
     "sheetH": 786,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/archangel/rotations": {
-    "sheet": "art/characters/heroes/streetwear/archangel/hero_archangel_streetwear.core.png",
+    "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.core.png",
     "sheetW": 1279,
     "sheetH": 786,
     "frames": {

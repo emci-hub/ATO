@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/sak/Attack": {
-    "sheet": "art/characters/heroes/streetwear/sak/hero_sak_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
     "sheetW": 1031,
     "sheetH": 939,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/sak/Dash": {
-    "sheet": "art/characters/heroes/streetwear/sak/hero_sak_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
     "sheetW": 1031,
     "sheetH": 939,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/sak/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/sak/hero_sak_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
     "sheetW": 1031,
     "sheetH": 939,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/sak/Idle": {
-    "sheet": "art/characters/heroes/streetwear/sak/hero_sak_streetwear.core.png",
+    "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.core.png",
     "sheetW": 1239,
     "sheetH": 814,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/sak/Skill": {
-    "sheet": "art/characters/heroes/streetwear/sak/hero_sak_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
     "sheetW": 1031,
     "sheetH": 939,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/sak/Walk": {
-    "sheet": "art/characters/heroes/streetwear/sak/hero_sak_streetwear.core.png",
+    "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.core.png",
     "sheetW": 1239,
     "sheetH": 814,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/sak/rotations": {
-    "sheet": "art/characters/heroes/streetwear/sak/hero_sak_streetwear.core.png",
+    "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.core.png",
     "sheetW": 1239,
     "sheetH": 814,
     "frames": {

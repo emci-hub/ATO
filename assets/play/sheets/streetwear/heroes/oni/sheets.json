@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/oni/Attack": {
-    "sheet": "art/characters/heroes/streetwear/oni/hero_oni_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.combat.png",
     "sheetW": 1119,
     "sheetH": 909,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/oni/Dash": {
-    "sheet": "art/characters/heroes/streetwear/oni/hero_oni_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.combat.png",
     "sheetW": 1119,
     "sheetH": 909,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/oni/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/oni/hero_oni_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.combat.png",
     "sheetW": 1119,
     "sheetH": 909,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/oni/Idle": {
-    "sheet": "art/characters/heroes/streetwear/oni/hero_oni_streetwear.core.png",
+    "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.core.png",
     "sheetW": 1263,
     "sheetH": 769,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/oni/Skill": {
-    "sheet": "art/characters/heroes/streetwear/oni/hero_oni_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.combat.png",
     "sheetW": 1119,
     "sheetH": 909,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/oni/Walk": {
-    "sheet": "art/characters/heroes/streetwear/oni/hero_oni_streetwear.core.png",
+    "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.core.png",
     "sheetW": 1263,
     "sheetH": 769,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/oni/rotations": {
-    "sheet": "art/characters/heroes/streetwear/oni/hero_oni_streetwear.core.png",
+    "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.core.png",
     "sheetW": 1263,
     "sheetH": 769,
     "frames": {

@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/kitsune/Attack": {
-    "sheet": "art/characters/heroes/streetwear/kitsune/hero_kitsune_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.combat.png",
     "sheetW": 879,
     "sheetH": 919,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/kitsune/Dash": {
-    "sheet": "art/characters/heroes/streetwear/kitsune/hero_kitsune_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.combat.png",
     "sheetW": 879,
     "sheetH": 919,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/kitsune/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/kitsune/hero_kitsune_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.combat.png",
     "sheetW": 879,
     "sheetH": 919,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/kitsune/Idle": {
-    "sheet": "art/characters/heroes/streetwear/kitsune/hero_kitsune_streetwear.core.png",
+    "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.core.png",
     "sheetW": 903,
     "sheetH": 816,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/kitsune/Skill": {
-    "sheet": "art/characters/heroes/streetwear/kitsune/hero_kitsune_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.combat.png",
     "sheetW": 879,
     "sheetH": 919,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/kitsune/Walk": {
-    "sheet": "art/characters/heroes/streetwear/kitsune/hero_kitsune_streetwear.core.png",
+    "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.core.png",
     "sheetW": 903,
     "sheetH": 816,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/kitsune/rotations": {
-    "sheet": "art/characters/heroes/streetwear/kitsune/hero_kitsune_streetwear.core.png",
+    "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.core.png",
     "sheetW": 903,
     "sheetH": 816,
     "frames": {

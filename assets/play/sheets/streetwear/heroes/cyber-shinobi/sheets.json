@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/cyber-shinobi/Attack": {
-    "sheet": "art/characters/heroes/streetwear/cyber-shinobi/hero_cyber-shinobi_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
     "sheetW": 919,
     "sheetH": 921,
     "frames": {
@@ -113,7 +113,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/cyber-shinobi/Dash": {
-    "sheet": "art/characters/heroes/streetwear/cyber-shinobi/hero_cyber-shinobi_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
     "sheetW": 919,
     "sheetH": 921,
     "frames": {
@@ -226,7 +226,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/cyber-shinobi/Hurt": {
-    "sheet": "art/characters/heroes/streetwear/cyber-shinobi/hero_cyber-shinobi_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
     "sheetW": 919,
     "sheetH": 921,
     "frames": {
@@ -315,7 +315,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/cyber-shinobi/Idle": {
-    "sheet": "art/characters/heroes/streetwear/cyber-shinobi/hero_cyber-shinobi_streetwear.core.png",
+    "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.core.png",
     "sheetW": 687,
     "sheetH": 819,
     "frames": {
@@ -380,7 +380,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/cyber-shinobi/Skill": {
-    "sheet": "art/characters/heroes/streetwear/cyber-shinobi/hero_cyber-shinobi_streetwear.combat.png",
+    "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
     "sheetW": 919,
     "sheetH": 921,
     "frames": {
@@ -493,7 +493,7 @@
     "tier": "combat"
   },
   "sheets/streetwear/heroes/cyber-shinobi/Walk": {
-    "sheet": "art/characters/heroes/streetwear/cyber-shinobi/hero_cyber-shinobi_streetwear.core.png",
+    "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.core.png",
     "sheetW": 687,
     "sheetH": 819,
     "frames": {
@@ -704,7 +704,7 @@
     "tier": "core"
   },
   "sheets/streetwear/heroes/cyber-shinobi/rotations": {
-    "sheet": "art/characters/heroes/streetwear/cyber-shinobi/hero_cyber-shinobi_streetwear.core.png",
+    "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.core.png",
     "sheetW": 687,
     "sheetH": 819,
     "frames": {
