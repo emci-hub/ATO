@@ -66,7 +66,7 @@ export type HideoutProp = {
 
 export type HideoutDecal = { id: string; sprite: string; pos: Pt; size: Pt };
 
-type RawMap = {
+export type IsoRawMap = {
   spots: Record<string, number[]>;
   labelAnchors: Record<string, number[]>;
   floor: number[][];
@@ -79,12 +79,27 @@ type RawMap = {
   }[];
   targets: Record<string, number[]>;
   lights: number[][];
-  decals: { id: string; sprite: string; pos: number[] }[];
+  decals: { id: string; sprite: string; pos: number[]; size?: number[] }[];
   interior: { polygon: number[][] };
-  _meta: { contentBounds: number[] };
+  _meta: { contentBounds: number[]; canvas?: number[] };
 };
 
-const raw = hideoutMap as unknown as RawMap;
+/** Per-room iso geometry. Hideout constants below are this map with sleepOnBed off. */
+export type IsoRoomGeom = {
+  canvas: readonly [number, number];
+  content: Rect;
+  floor: readonly Pt[];
+  walk: readonly Pt[];
+  interior: readonly Pt[];
+  lights: readonly Pt[];
+  props: readonly HideoutProp[];
+  decals: readonly HideoutDecal[];
+  targets: Record<string, Pt>;
+  /** Sleep target sits on the bed top (inside the bed footprint) — do not clamp. */
+  sleepOnBed: boolean;
+};
+
+const raw = hideoutMap as unknown as IsoRawMap;
 
 function rect4(v: number[]): Rect {
   return [v[0] ?? 0, v[1] ?? 0, v[2] ?? 0, v[3] ?? 0];
@@ -94,6 +109,42 @@ function pt2(v: number[]): Pt {
 }
 function poly(v: number[][]): Pt[] {
   return v.map(pt2);
+}
+
+export function parseIsoGeom(rawMap: unknown, opts?: { sleepOnBed?: boolean }): IsoRoomGeom {
+  const m = rawMap as IsoRawMap;
+  const canvas = (m._meta.canvas && m._meta.canvas.length >= 2
+    ? [m._meta.canvas[0], m._meta.canvas[1]]
+    : [256, 320]) as [number, number];
+  const content = rect4(m._meta.contentBounds ?? [15, 42, 226, 237]);
+  const floor = poly(m.floor ?? []);
+  const props: HideoutProp[] = (m.props ?? []).map((p) => ({
+    id: p.id,
+    rect: rect4(p.rect),
+    baselineY: p.baselineY,
+    frontCorner: pt2(p.frontCorner),
+    footprint: poly(p.footprint),
+  }));
+  const walk = insetPoly(floor, HIDEOUT_AURA_PAD_PX);
+  const targets: Record<string, Pt> = {};
+  for (const [k, v] of Object.entries(m.targets ?? {})) targets[k] = pt2(v);
+  const decals: HideoutDecal[] = (m.decals ?? []).map((d) => {
+    const spot = m.spots?.[d.id];
+    const size = d.size && d.size.length >= 2 ? pt2(d.size) : spot && spot.length >= 4 ? ([spot[2], spot[3]] as Pt) : ([0, 0] as Pt);
+    return { id: d.id, sprite: d.sprite, pos: pt2(d.pos), size };
+  });
+  return {
+    canvas,
+    content,
+    floor,
+    walk,
+    interior: poly(m.interior?.polygon ?? []),
+    lights: (m.lights ?? []).map(pt2),
+    props,
+    decals,
+    targets,
+    sleepOnBed: opts?.sleepOnBed === true,
+  };
 }
 
 export const HIDEOUT_CONTENT: Rect = rect4(raw._meta.contentBounds);
@@ -227,6 +278,21 @@ export function clampToWalk(x: number, y: number): Pt {
   return v;
 }
 
+export function isoRandomWalkPoint(geom: IsoRoomGeom, rng: () => number): Pt {
+  const xs = geom.walk.map((p) => p[0]);
+  const ys = geom.walk.map((p) => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  for (let i = 0; i < 40; i += 1) {
+    const x = minX + rng() * (maxX - minX);
+    const y = minY + rng() * (maxY - minY);
+    if (isoOnWalkFloor(x, y, geom)) return [x, y];
+  }
+  return isoClampToWalk((minX + maxX) / 2, (minY + maxY) / 2, geom);
+}
+
 export function randomWalkPoint(rng: () => number): Pt {
   const xs = HIDEOUT_WALK.map((p) => p[0]);
   const ys = HIDEOUT_WALK.map((p) => p[1]);
@@ -253,6 +319,56 @@ export function petBehindProp(feetX: number, feetY: number, prop: HideoutProp): 
 
 export function petBehindAny(feetX: number, feetY: number): boolean {
   return HIDEOUT_PROPS.some((p) => petBehindProp(feetX, feetY, p));
+}
+
+export function isoInFootprint(x: number, y: number, geom: IsoRoomGeom): boolean {
+  return geom.props.some((p) => pointInPoly(x, y, p.footprint));
+}
+
+export function isoOnWalkFloor(x: number, y: number, geom: IsoRoomGeom): boolean {
+  return pointInPoly(x, y, geom.walk) && !isoInFootprint(x, y, geom);
+}
+
+export function isoClampToWalk(x: number, y: number, geom: IsoRoomGeom): Pt {
+  if (isoOnWalkFloor(x, y, geom)) return [x, y];
+  const c: Pt = [
+    geom.walk.reduce((s, p) => s + p[0], 0) / Math.max(1, geom.walk.length),
+    geom.walk.reduce((s, p) => s + p[1], 0) / Math.max(1, geom.walk.length),
+  ];
+  let best: Pt = c;
+  let bestD = Infinity;
+  for (let i = 0; i <= 24; i += 1) {
+    const t = i / 24;
+    const px = x + (c[0] - x) * t;
+    const py = y + (c[1] - y) * t;
+    if (!isoOnWalkFloor(px, py, geom)) continue;
+    const d = (px - x) * (px - x) + (py - y) * (py - y);
+    if (d < bestD) {
+      best = [px, py];
+      bestD = d;
+    }
+  }
+  if (bestD < Infinity) return best;
+  let v = geom.walk[0] ?? c;
+  let vd = dist2([x, y], v);
+  for (const p of geom.walk) {
+    const d = dist2([x, y], p);
+    if (d < vd) {
+      v = p;
+      vd = d;
+    }
+  }
+  return v;
+}
+
+export function isoPetBehindAny(feetX: number, feetY: number, geom: IsoRoomGeom): boolean {
+  return geom.props.some((p) => petBehindProp(feetX, feetY, p));
+}
+
+export function isoSleepPoint(geom: IsoRoomGeom): Pt {
+  const bed = geom.targets.bed ?? geom.targets.cushion;
+  if (!bed) return isoClampToWalk(128, 214, geom);
+  return geom.sleepOnBed ? bed : isoClampToWalk(bed[0], bed[1], geom);
 }
 
 /* ------------------------------------------------------- integer scale --- */
@@ -318,9 +434,14 @@ export type HideoutOrigin = { left: number; top: number };
  * Place the canvas so the *visible* content bounds are centered in the stage.
  * Transparent padding (15,42 on the 256×320) bleeds; the stage clips it.
  */
-export function hideoutStageOrigin(width: number, height: number, scale: HideoutScale): HideoutOrigin {
+export function hideoutStageOrigin(
+  width: number,
+  height: number,
+  scale: HideoutScale,
+  content: Rect = HIDEOUT_CONTENT,
+): HideoutOrigin {
   const pt = scale.pt;
-  const [ox, oy] = HIDEOUT_CONTENT;
+  const [ox, oy] = content;
   return {
     left: Math.round((width - scale.contentW) / 2 - ox * pt),
     top: Math.round((height - scale.contentH) / 2 - oy * pt),
@@ -430,14 +551,27 @@ export function hideoutTargetPoint(id: HideoutTargetId): Pt {
  * the caller only freezes when Motion is Off (`cosmeticsStill`).
  */
 export function planHideoutStep(
-  input: PetPlanInput & { x: number; y: number; hungry?: boolean },
+  input: PetPlanInput & { x: number; y: number; hungry?: boolean; geom?: IsoRoomGeom },
 ): HideoutStep {
-  const { kit, mood, branch, rng } = input;
+  const { kit, mood, branch, rng, geom } = input;
   const form = PET_FORM_MOTION[branch];
-  const here = clampToWalk(input.x, input.y);
+  const bedPt = geom ? isoSleepPoint(geom) : hideoutTargetPoint('cushion');
+  const onBed =
+    geom?.sleepOnBed === true && Math.hypot(input.x - bedPt[0], input.y - bedPt[1]) <= 12;
+  const here = onBed
+    ? ([input.x, input.y] as Pt)
+    : geom
+      ? isoClampToWalk(input.x, input.y, geom)
+      : clampToWalk(input.x, input.y);
   const still = { toX: here[0], toY: here[1], bounce: 0, loop: true };
+  const target = (id: HideoutTargetId): Pt => {
+    if (!geom) return hideoutTargetPoint(id);
+    if (id === 'cushion' || id === 'bed') return isoSleepPoint(geom);
+    const t = geom.targets[id] ?? geom.targets.door ?? here;
+    return isoClampToWalk(t[0], t[1], geom);
+  };
   if (mood === 'asleep') {
-    const bed = hideoutTargetPoint('cushion');
+    const bed = target('cushion');
     const far = Math.hypot(here[0] - bed[0], here[1] - bed[1]) > 8;
     if (far) {
       const speed = Math.max(0.2, form.speed);
@@ -452,12 +586,16 @@ export function planHideoutStep(
         loop: true,
       };
     }
+    // Sleep ON the bed (Loft) — use the unclamped bed point as the rest pose.
+    if (geom?.sleepOnBed) {
+      return { act: 'sleep', pose: petPose(kit, 'idle'), ms: 6000, squash: true, toX: bed[0], toY: bed[1], bounce: 0, loop: true };
+    }
     return { act: 'sleep', pose: petPose(kit, 'idle'), ms: 6000, squash: true, ...still };
   }
   const m = MOOD_MOTION[mood];
   const roll = rng();
   if (input.hungry && roll < 0.55) {
-    const bowl = hideoutTargetPoint('bowl');
+    const bowl = target('bowl');
     if (Math.hypot(here[0] - bowl[0], here[1] - bowl[1]) > 6) {
       const speed = Math.max(0.2, form.speed * m.speed);
       return {
@@ -486,8 +624,10 @@ export function planHideoutStep(
     let dest: Pt = here;
     for (let n = 0; n < 6; n += 1) {
       dest = visit
-        ? hideoutTargetPoint(TARGET_IDS[Math.floor(rng() * TARGET_IDS.length)] ?? 'door')
-        : randomWalkPoint(rng);
+        ? target(TARGET_IDS[Math.floor(rng() * TARGET_IDS.length)] ?? 'door')
+        : geom
+          ? isoRandomWalkPoint(geom, rng)
+          : randomWalkPoint(rng);
       if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) >= 18) break;
     }
     if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) < 10) {

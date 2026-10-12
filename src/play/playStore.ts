@@ -98,6 +98,7 @@ import {
   PET_METER_MAX,
   PET_STAGES,
   PET_STAGE_MS,
+  PET_DEEP_MIN_DEPTH,
   advancePet,
   expeditionBlock,
   expeditionStepsToday,
@@ -235,6 +236,28 @@ import {
   type StreakAdvance,
   type StreakState,
 } from '@/play/play-settings';
+import {
+  applySpeedup,
+  careTokenBonus,
+  canStartBuild,
+  countDeepSurface,
+  countTendDay,
+  emptyHideout,
+  hideoutProgressOf,
+  inProgressBuild,
+  logReadyRooms,
+  markEverChild,
+  migrateHideout,
+  noteTokens,
+  pushHideoutEvent,
+  roomTokenPrice,
+  startBuild,
+  tickHideoutBuilds,
+  type HideoutProgressInput,
+  type HideoutRoomId,
+  type HideoutState,
+} from '@/play/hideout-progress';
+import { startCall, stampPeekaboo, tapWake } from '@/play/hideout-presence';
 import {
   TIDE_PASS_DAYS,
   emptyTide,
@@ -841,7 +864,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 32;
+  version: 33;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -1004,6 +1027,8 @@ export type PlayStoreDoc = {
   finish_wallet: FinishWallet;
   /** v31 — aura styles this save has bought. The colour is the equipped sword. */
   aura_owned: AuraStyle[];
+  /** v33 — multi-room Hideout. Unlocks survive rebirth; builds use counted time. */
+  hideout: HideoutState;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -1137,6 +1162,8 @@ export type PlayView = {
   chargesArmed: boolean;
   /** v29 — element swords (bag, equipped, relics, undo). */
   swords: SwordPanel;
+  /** v33 — multi-room Hideout. */
+  hideout: HideoutView;
 };
 
 /** Read-model of the pet for the screens. */
@@ -1241,6 +1268,13 @@ export type PetView = {
   auraSlot: { worn: readonly AuraWear[]; owned: readonly AuraStyle[]; element: string | null; pass: boolean; free: boolean };
 };
 
+export type HideoutView = {
+  state: HideoutState;
+  progress: HideoutProgressInput;
+  viewed: HideoutRoomId;
+  build: { room: HideoutRoomId; remainingMs: number } | null;
+};
+
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
 export type StatSums = Record<ItemStat, number>;
 
@@ -1304,7 +1338,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 32,
+    version: 33,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1385,6 +1419,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     sword_bag: emptySwordBag(),
     finish_wallet: emptyFinishWallet(),
     aura_owned: [],
+    hideout: emptyHideout(),
   };
 }
 
@@ -1483,6 +1518,12 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     chargesFullAt: chargesFullAt(doc, now),
     chargesArmed: doc.charges_armed,
     swords: swordPanel(doc.sword_bag),
+    hideout: {
+      state: doc.hideout,
+      progress: hideoutProgressOf(doc),
+      viewed: doc.hideout.viewed_room,
+      build: inProgressBuild(doc.hideout, now),
+    },
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
       return {
@@ -1857,6 +1898,13 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
  * collect an expedition whose time is up: one find to the bag, a Logbook
  * entry (depth 0), and the "brought back" note (v21). Returns
  * the same doc when nothing changed. */
+function syncHideout(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  let h = tickHideoutBuilds(doc.hideout, now);
+  h = markEverChild(h, doc.pet, doc.pet_hall, doc.pet_rebirths);
+  h = logReadyRooms(h, hideoutProgressOf({ ...doc, hideout: h }), now);
+  return h === doc.hideout ? doc : { ...doc, hideout: h };
+}
+
 export function touchPet(
   doc: PlayStoreDoc,
   now: number,
@@ -1868,6 +1916,8 @@ export function touchPet(
   doc = countPlayDay(settlePetAging(doc, doc.pet, pet), now);
   const armed = doc.charges_armed && !diveChargeAt(doc, now).full;
   if (armed !== doc.charges_armed) doc = { ...doc, charges_armed: armed };
+  const withPet = pet === doc.pet ? doc : { ...doc, pet };
+  doc = syncHideout(withPet, now);
   const exp = doc.pet_expedition;
   if (exp && expeditionLeftMs(pet, exp) <= 0) {
     // A solo dive: it can't bust, it always brings back one find — what, by
@@ -2735,6 +2785,64 @@ export function setPlaySettings(doc: PlayStoreDoc, patch: Partial<PlaySettings>)
   return { ...doc, play_settings: settings, pet_remind: settings.notif.hunger };
 }
 
+export function startHideoutBuild(doc: PlayStoreDoc, now: number, room: HideoutRoomId): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  const p = hideoutProgressOf(touched);
+  const gate = canStartBuild(room, touched.hideout, p, touched.tokens);
+  if (!gate.ok) return null;
+  return {
+    ...touched,
+    tokens: touched.tokens - roomTokenPrice(room),
+    hideout: startBuild(touched.hideout, room, now),
+  };
+}
+
+export function viewHideoutRoom(doc: PlayStoreDoc, now: number, room: HideoutRoomId): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  const vis = touched.hideout.rooms_unlocked[room] || touched.hideout.builds[room] != null || room === 'hideout';
+  const stageOk = vis || touched.hideout.rooms_unlocked.hideout;
+  if (!stageOk) return touched;
+  return {
+    ...touched,
+    hideout: pushHideoutEvent({ ...touched.hideout, viewed_room: room }, { t: now, kind: 'room_swipe', room }),
+  };
+}
+
+export function callPetToRoom(doc: PlayStoreDoc, now: number, room: HideoutRoomId): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  if (touched.pet_expedition) return null;
+  const h = startCall({ ...touched.hideout, viewed_room: room }, touched.pet, room);
+  return { ...touched, hideout: pushHideoutEvent(h, { t: now, kind: 'call_used', room }) };
+}
+
+export function wakeHideoutPet(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return {
+    ...touched,
+    hideout: pushHideoutEvent(tapWake(touched.hideout, touched.pet), { t: now, kind: 'pet_asleep_tap' }),
+  };
+}
+
+export function toggleLoftLamp(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return { ...touched, hideout: { ...touched.hideout, lamp_on: !touched.hideout.lamp_on } };
+}
+
+export function markHideoutCoach(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return { ...touched, hideout: { ...touched.hideout, coach_swipe_seen: true } };
+}
+
+export function markBuildNotifAsked(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return { ...touched, hideout: { ...touched.hideout, build_notif_asked: true } };
+}
+
+export function stampHideoutPeekaboo(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return { ...touched, hideout: stampPeekaboo(touched.hideout, localYmd(new Date(now))) };
+}
+
 /** Reset Divecore progress: a brand-new Play save that keeps the settings.
  * Never touches the main app's data (a different store). */
 export function resetDivecore(doc: PlayStoreDoc, now: number): PlayStoreDoc {
@@ -2861,12 +2969,16 @@ export function finishPetRound(
       ? `${sworded.grant.name} (bag full)`
       : sworded.grant.name
     : null;
+  const loftGames = careTokenBonus(pay.tokens, 'games', touchedDoc.hideout);
+  let hideout = noteTokens(touchedDoc.hideout, today, 'games', pay.tokens);
+  if (loftGames) hideout = noteTokens(hideout, today, 'loft_bonus', loftGames);
   return {
     doc: {
       ...touchedDoc,
       sword_bag: sworded.bag,
       pet,
-      tokens: doc.tokens + pay.tokens,
+      tokens: doc.tokens + pay.tokens + loftGames,
+      hideout,
       pet_tokens_today: pay.paid,
       pet_tokens_ymd: pay.ymd,
       game_records: rec.records,
@@ -2924,6 +3036,7 @@ export function rebirthPetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | nu
     pet: next.pet,
     pet_hall: next.hall,
     pet_rebirths: next.rebirths,
+    hideout: { ...touched.hideout, call_until_age_ms: null, wake_until_age_ms: null },
   };
 }
 
@@ -3428,6 +3541,15 @@ export function recordDefendWin(
       // v26 Pumped: a use only on a wave where it actually changed the pounce
       // (never while it is a "Maxed aura", or with no pounce).
       buffs: pumpedStateOf(doc, now).boosted ? spendBuff(doc.buffs, 'pumped') : doc.buffs,
+      hideout: (() => {
+        const today = localYmd(new Date(now));
+        let h = noteTokens(doc.hideout, today, 'defend', tokensGranted);
+        if (!isReplay) {
+          const sped = applySpeedup(h, now);
+          h = sped.hideout;
+        }
+        return h;
+      })(),
       // v24 Journal: a hatch / reveal that happens in this same aging counts;
       // v27 and so does its pity step.
       ...settledPetFields(doc, now),
@@ -4359,6 +4481,8 @@ export function claimResearch(
   const todayYmd = localYmd(new Date(now));
   const dailyBonusTokens =
     doc.last_tend_bonus_ymd === todayYmd ? 0 : DAILY_TEND_BONUS_TOKENS;
+  const loftTend = careTokenBonus(tendTokens, 'tend', doc.hideout);
+  const loftBonus = careTokenBonus(dailyBonusTokens, 'tend_bonus', doc.hideout);
 
   const dive = diveChargeAt(doc, now);
   const diveChargeGranted =
@@ -4372,9 +4496,16 @@ export function claimResearch(
   // keeps the raw rolls so the UI can name them.
   const items = Array.from({ length: research.readyFinds }, () => rollResearchFind(rng));
 
+  let hideout = countTendDay(doc.hideout, todayYmd);
+  hideout = noteTokens(hideout, todayYmd, 'tend', tendTokens);
+  if (dailyBonusTokens) hideout = noteTokens(hideout, todayYmd, 'tend_bonus', dailyBonusTokens);
+  if (loftTend) hideout = noteTokens(hideout, todayYmd, 'loft_bonus', loftTend);
+  if (loftBonus) hideout = noteTokens(hideout, todayYmd, 'loft_bonus', loftBonus);
+
   const next: PlayStoreDoc = {
     ...doc,
-    tokens: doc.tokens + tendTokens + dailyBonusTokens,
+    tokens: doc.tokens + tendTokens + dailyBonusTokens + loftTend + loftBonus,
+    hideout,
     ...nextDive,
     inventory: addManyToBag(doc.inventory, items),
     research_accrued_ms: 0,
@@ -4572,8 +4703,12 @@ export function surfaceDive(
       ? `${sworded.grant.name} (bag full)`
       : sworded.grant.name
     : null;
+  let hideout = countDeepSurface(next.hideout, run.deepers, free);
+  if (!free && run.deepers >= PET_DEEP_MIN_DEPTH) {
+    hideout = applySpeedup(hideout, now).hideout;
+  }
   return {
-    doc: { ...next, sword_bag: sworded.bag },
+    doc: { ...next, sword_bag: sworded.bag, hideout },
     banked: brought,
     netFind,
     heartyFind,
@@ -5326,7 +5461,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
       version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
-      version !== 26 && version !== 27 && version !== 28 &&       version !== 29 && version !== 30 && version !== 31 && version !== 32
+      version !== 26 && version !== 27 && version !== 28 &&       version !== 29 && version !== 30 && version !== 31 && version !== 32 && version !== 33
     ) {
       return null;
     }
@@ -5460,7 +5595,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
       retroShineStones(typeof version === 'number' ? version : 28, milestones);
     return {
-      version: 32,
+      version: 33,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -5571,6 +5706,21 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       sword_bag: v29 ? parseSwordBag(data.sword_bag) : emptySwordBag(),
       finish_wallet: v30 ? parseFinishWallet(data.finish_wallet) : emptyFinishWallet(),
       aura_owned: v31 ? parseAuraOwned(data.aura_owned) : [],
+      hideout: migrateHideout({
+        version: typeof version === 'number' ? version : 0,
+        raw: data.hideout,
+        pet,
+        hall,
+        rebirths: petRebirths,
+        lastTendYmd: lastTend,
+        daysPlayed: v24 && typeof data.play_stats === 'object' && data.play_stats != null
+          ? Math.max(0, Math.floor(finiteNumber((data.play_stats as Record<string, unknown>).days_played) ?? 0))
+          : 0,
+        lifetimeWaves: Math.max(0, Math.floor(lifetimeWaves)),
+        campaignPhase: campaign.phase,
+        conqueredCycles,
+        now,
+      }),
     };
   } catch {
     return null;

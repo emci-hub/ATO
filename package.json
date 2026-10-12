@@ -99,6 +99,7 @@
     "check:pet-talk": "tsx ./scripts/check-pet-talk.ts",
     "check:dive-fx": "tsx ./scripts/check-dive-fx.ts",
     "check:street-hideout": "tsx ./scripts/check-street-hideout.ts",
+    "check:hideout-rooms": "tsx ./scripts/check-hideout-rooms.ts",
     "check:dive": "tsx ./scripts/check-dive.ts",
     "check:stage-power": "tsx ./scripts/check-stage-power.ts",
     "check:buffs": "tsx ./scripts/check-buffs.ts",

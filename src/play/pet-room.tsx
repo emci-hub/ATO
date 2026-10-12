@@ -107,6 +107,9 @@ import {
   StreetStatusStrip,
   type StreetRoomSpotsProps,
 } from '@/play/street-room';
+import { HideoutStageChrome, roomGeom } from '@/play/hideout-stage';
+import type { HideoutProgressInput, HideoutRoomId, HideoutState } from '@/play/hideout-progress';
+import type { Presence } from '@/play/hideout-presence';
 import { STREET_MOTION } from '@/play/street-feel';
 import { STREET_FONT, streetUiOn } from '@/play/street-ui';
 
@@ -202,6 +205,7 @@ function RoomBackdrop({
   scale,
   gentle,
   minimal,
+  skipArt,
 }: {
   width: number;
   height: number;
@@ -209,6 +213,7 @@ function RoomBackdrop({
   scale: HideoutScale | null;
   gentle: boolean;
   minimal: boolean;
+  skipArt?: boolean;
 }) {
   const origin = roomOrigin(width, height);
   const k = ART_PT;
@@ -217,8 +222,8 @@ function RoomBackdrop({
     return (
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: HIDEOUT_NIGHT }]}>
         <StreetRoomYard width={width} height={height} scale={scale} />
-        <StreetRoomArt left={iso.left} top={iso.top} scale={scale} alive={alive} />
-        <StreetRoomLife left={iso.left} top={iso.top} scale={scale} alive={alive} gentle={gentle} minimal={minimal} />
+        {skipArt ? null : <StreetRoomArt left={iso.left} top={iso.top} scale={scale} alive={alive} />}
+        {skipArt ? null : <StreetRoomLife left={iso.left} top={iso.top} scale={scale} alive={alive} gentle={gentle} minimal={minimal} />}
       </View>
     );
   }
@@ -390,6 +395,7 @@ export function PetRoom({
   maxedAura = false,
   auraElement = null,
   juiceKey = 0,
+  hideoutStage = null,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -430,6 +436,18 @@ export function PetRoom({
   auraElement?: string | null;
   /** Bumps when Feed lands a treat, to flash and shake the pet. */
   juiceKey?: number;
+  hideoutStage?: {
+    hideout: HideoutState;
+    progress: HideoutProgressInput;
+    presence: Presence;
+    viewed: HideoutRoomId;
+    expeditionBackMs: number | null;
+    onView: (id: HideoutRoomId) => void;
+    onTease: () => void;
+    onLamp: () => void;
+    onCall: () => void;
+    onCoachSeen: () => void;
+  } | null;
 }) {
   // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
   const fontsReady = usePixelFonts();
@@ -563,6 +581,7 @@ export function PetRoom({
           y: fromY,
           rng: Math.random,
           hungry: hungerRef.current <= 1,
+          geom: hideoutStage ? roomGeom(hideoutStage.presence.room) : undefined,
         });
         const dx = step.toX - fromX;
         const dy = step.toY - fromY;
@@ -619,7 +638,7 @@ export function PetRoom({
       alive = false;
       if (timer) clearTimeout(timer);
     };
-  }, [width, away, egg, art.kit, mood, pet.branch, pet.stage, walkOn, streetRoom, hideoutPt, artX, artY, x, hop, squash]);
+  }, [width, away, egg, art.kit, mood, pet.branch, pet.stage, walkOn, streetRoom, hideoutPt, artX, artY, x, hop, squash, hideoutStage]);
 
   // Depth vs props follows the live feet, not only the step's destination.
   useEffect(() => {
@@ -809,6 +828,7 @@ export function PetRoom({
           scale={hideoutScale}
           gentle={motion.vestibularSafe}
           minimal={fxMinimal}
+          skipArt={!!hideoutStage}
         />
       ) : null}
       {width > 0 && picking && onPickEgg ? (
@@ -833,7 +853,28 @@ export function PetRoom({
         </View>
       ) : null}
 
-      {width > 0 && !away && !picking ? (
+      {width > 0 && hideoutStage && hideoutScale ? (
+        <HideoutStageChrome
+          hideout={hideoutStage.hideout}
+          progress={hideoutStage.progress}
+          presence={hideoutStage.presence}
+          viewed={hideoutStage.viewed}
+          scale={hideoutScale}
+          origin={origin}
+          width={width}
+          night={night}
+          behind={behind}
+          expeditionBackMs={hideoutStage.expeditionBackMs}
+          onView={hideoutStage.onView}
+          onTease={hideoutStage.onTease}
+          onLamp={hideoutStage.onLamp}
+          onCall={hideoutStage.onCall}
+          coach={!hideoutStage.hideout.coach_swipe_seen}
+          onCoachSeen={hideoutStage.onCoachSeen}
+        />
+      ) : null}
+
+      {width > 0 && !away && !picking && (!hideoutStage || (hideoutStage.presence.room === hideoutStage.viewed && !hideoutStage.presence.away)) ? (
         <Animated.View pointerEvents={streetRoom ? 'box-none' : 'auto'} style={[styles.petWrap, { top: isoOn ? 0 : top, width: box, height: box }, petStyle]}>
           {streetRoom ? null : (
           <View
@@ -980,8 +1021,8 @@ export function PetRoom({
       {streetRoom && hideoutScale ? (
         <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} />
       ) : null}
-      {streetRoom && hideoutScale && behind ? <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} /> : null}
-      {width > 0 && streetSpots && hideoutScale && !picking ? (
+      {streetRoom && hideoutScale && behind && !hideoutStage ? <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} /> : null}
+      {width > 0 && streetSpots && hideoutScale && !picking && (!hideoutStage || hideoutStage.viewed === 'hideout') ? (
         <StreetRoomSpots
           {...streetSpots}
           left={origin.left}

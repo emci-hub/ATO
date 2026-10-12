@@ -133,7 +133,8 @@ export function DivecoreSettingsSheet({
 
   const toggle = async (kind: NotifKind) => {
     const on = !settings.notif[kind];
-    if (on) {
+    // Build notices: don't ask for permission until the first build starts.
+    if (on && kind !== 'build') {
       const granted = await askPetReminderPermission();
       setAllowed(granted);
       setPermNote(granted ? null : 'Notifications are off for ATO — turn them on in your phone’s Settings to get these.');
