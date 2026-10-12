@@ -20,6 +20,7 @@ import { PixelRatio, Pressable, StyleSheet, Text, View, type LayoutChangeEvent }
 import Animated, {
   FadeInDown,
   Easing,
+  ReduceMotion,
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
@@ -101,6 +102,7 @@ import {
   StreetRoomFront,
   StreetRoomLife,
   StreetRoomSpots,
+  StreetRoomYard,
   StreetSpeechBubble,
   StreetStatusStrip,
   type StreetRoomSpotsProps,
@@ -214,6 +216,7 @@ function RoomBackdrop({
     const iso = hideoutOrigin(width, height, scale);
     return (
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: HIDEOUT_NIGHT }]}>
+        <StreetRoomYard width={width} height={height} scale={scale} />
         <StreetRoomArt left={iso.left} top={iso.top} scale={scale} alive={alive} />
         <StreetRoomLife left={iso.left} top={iso.top} scale={scale} alive={alive} gentle={gentle} minimal={minimal} />
       </View>
@@ -519,8 +522,8 @@ export function PetRoom({
         const hops = Math.max(1, Math.round(ms / 360));
         hop.value = withRepeat(
           withSequence(
-            withTiming(-amount, { duration: 180, easing: Easing.out(Easing.quad) }),
-            withTiming(0, { duration: 180, easing: Easing.in(Easing.quad) }),
+            withTiming(-amount, { duration: 180, easing: Easing.out(Easing.quad), reduceMotion: ReduceMotion.Never }),
+            withTiming(0, { duration: 180, easing: Easing.in(Easing.quad), reduceMotion: ReduceMotion.Never }),
           ),
           hops,
         );
@@ -547,18 +550,22 @@ export function PetRoom({
       }
       const iso = streetRoom && hideoutPt > 0;
       if (iso) {
+        // Live feet, not the previous dest — otherwise a skipped tween (OS RM)
+        // or a restarted effect plans the next step from the wrong place.
+        const fromX = artX.value;
+        const fromY = artY.value;
         const step = planHideoutStep({
           kit: art.kit,
           mood,
           branch: pet.branch,
           stage: pet.stage,
-          x: artXRef.current,
-          y: artYRef.current,
+          x: fromX,
+          y: fromY,
           rng: Math.random,
           hungry: hungerRef.current <= 1,
         });
-        const dx = step.toX - artXRef.current;
-        const dy = step.toY - artYRef.current;
+        const dx = step.toX - fromX;
+        const dy = step.toY - fromY;
         let face = hideoutFace(dx, dy, faceRef.current === 'w' ? 'w' : 'e');
         if (step.act === 'idle' && Math.abs(dx) < 2 && Math.abs(dy) < 2 && Math.random() < 0.3) {
           face = face === 'e' ? 'w' : 'e';
@@ -566,14 +573,19 @@ export function PetRoom({
         faceRef.current = face;
         setAct({ pose: step.pose, loop: step.loop, startedAt: Date.now(), face, squash: step.squash });
         setBehind(petBehindAny(step.toX, step.toY));
-        squash.value = withTiming(step.squash ? 0.92 : 1, { duration: 300 });
-        if (step.toX !== artXRef.current || step.toY !== artYRef.current) {
-          artX.value = withTiming(step.toX, { duration: step.ms, easing: Easing.linear });
-          artY.value = withTiming(step.toY, { duration: step.ms, easing: Easing.linear });
-          artXRef.current = step.toX;
-          artYRef.current = step.toY;
+        squash.value = withTiming(step.squash ? 0.92 : 1, { duration: 300, reduceMotion: ReduceMotion.Never });
+        cancelAnimation(artX);
+        cancelAnimation(artY);
+        if (step.toX !== fromX || step.toY !== fromY) {
+          // KEEP locomotion under OS Reduce Motion. Reanimated's default
+          // ReduceMotion.System skips withTiming and the pet teleports.
+          const keep = { duration: step.ms, easing: Easing.linear, reduceMotion: ReduceMotion.Never };
+          artX.value = withTiming(step.toX, keep);
+          artY.value = withTiming(step.toY, keep);
         }
-        playBounce(step.bounce, step.ms, false);
+        artXRef.current = step.toX;
+        artYRef.current = step.toY;
+        playBounce(step.act === 'wander' ? 0 : step.bounce, step.ms, false);
         timer = setTimeout(run, step.ms);
         return;
       }
@@ -596,7 +608,7 @@ export function PetRoom({
       setAct({ pose: step.pose, loop: step.loop, startedAt: Date.now(), face, squash: step.squash });
       squash.value = withTiming(step.squash ? 0.92 : 1, { duration: 300 });
       if (step.toX !== xRef.current) {
-        x.value = withTiming(step.toX, { duration: step.ms, easing: Easing.linear });
+        x.value = withTiming(step.toX, { duration: step.ms, easing: Easing.linear, reduceMotion: ReduceMotion.Never });
         xRef.current = step.toX;
       }
       playBounce(step.bounce, step.ms, step.act === 'hop');
@@ -971,15 +983,16 @@ export function PetRoom({
       {streetRoom && hideoutScale && behind ? <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} /> : null}
       {width > 0 && streetSpots && hideoutScale && !picking ? (
         <StreetRoomSpots
+          {...streetSpots}
           left={origin.left}
           top={origin.top}
           scale={hideoutScale}
           still={motion.cosmeticsStill}
+          gentle={motion.vestibularSafe}
           petHit={(() => {
             const wrap = hideoutPetWrapOrigin(artXRef.current, artYRef.current, origin, hideoutScale, box, footAt);
             return { x: wrap.x, y: wrap.y, w: box, h: box };
           })()}
-          {...streetSpots}
         />
       ) : null}
       {streetRoom && hideoutScale && speech ? (

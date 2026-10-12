@@ -12,11 +12,14 @@ import {
   HIDEOUT_DECALS,
   HIDEOUT_DOOR_LABEL_NUDGE,
   HIDEOUT_FLOOR,
+  HIDEOUT_MARGIN_PT,
   HIDEOUT_PET_ART_PX,
   HIDEOUT_PHONE_CAP_DPX,
   HIDEOUT_PHONE_WIDTHS_PT,
   HIDEOUT_SPOTS,
+  HIDEOUT_SPOT_HIT_PT,
   HIDEOUT_TARGETS,
+  HIDEOUT_WALK_ART_PX_PER_SEC,
   clampToWalk,
   hideoutArtToScreen,
   hideoutFeetInFloorScreen,
@@ -24,7 +27,9 @@ import {
   hideoutLabelAnchor,
   hideoutPetBox,
   hideoutPhoneLayout,
+  hideoutStageOrigin,
   hideoutTargetPoint,
+  hideoutWalkMs,
   onWalkFloor,
   planHideoutStep,
   pointInPoly,
@@ -42,7 +47,9 @@ const read = (path: string) => readFileSync(path, 'utf8');
 {
   assert.deepEqual([...HIDEOUT_CANVAS], [256, 320]);
   assert.deepEqual([...HIDEOUT_CONTENT], [15, 42, 226, 237]);
-  assert.equal(HIDEOUT_PHONE_CAP_DPX, 4);
+  assert.ok(HIDEOUT_PHONE_CAP_DPX >= 8, 'phone cap lets Pro Max take 5 dpx');
+  assert.equal(HIDEOUT_SPOT_HIT_PT, 48);
+  assert.ok(HIDEOUT_SPOT_HIT_PT >= 44, 'HIG 44pt floor');
   assert.deepEqual([...HIDEOUT_DOOR_LABEL_NUDGE], [0, 52]);
   const door = hideoutLabelAnchor('door');
   const raw = hideoutLabelAnchor('chair');
@@ -57,9 +64,15 @@ const read = (path: string) => readFileSync(path, 'utf8');
   const mid = clampToWalk(128, 200);
   assert.ok(onWalkFloor(mid[0], mid[1]));
   const phone = hideoutIntegerScale({ availW: 430, availH: 700, pixelRatio: 3 });
-  assert.ok(phone.dpx <= 4 && phone.dpx >= 2);
-  assert.ok(Math.abs(phone.pt * 3 - phone.dpx) < 1e-9);
-  ok('iso map: canvas, content bounds, 4 dpx cap, door nudge, walk targets');
+  assert.equal(phone.dpx, 5, `430pt 3x Pro Max should take 5 dpx (got ${phone.dpx})`);
+  assert.ok(Math.abs(phone.pt * 3 - phone.dpx) < 1e-9, 'integer device px, no fractional scale');
+  const se = hideoutIntegerScale({ availW: 375 - HIDEOUT_MARGIN_PT * 2, availH: 520, pixelRatio: 2 });
+  assert.ok(se.dpx >= 2 && Number.isInteger(se.dpx));
+  const a = hideoutWalkMs(40, 0, 1);
+  const b = hideoutWalkMs(80, 0, 1);
+  assert.ok(Math.abs(b / a - 2) < 0.15, 'walk duration scales with distance (constant speed)');
+  assert.ok(HIDEOUT_WALK_ART_PX_PER_SEC >= 16);
+  ok('iso map: canvas, content bounds, integer scale, door nudge, walk targets');
 }
 
 {
@@ -132,14 +145,21 @@ const read = (path: string) => readFileSync(path, 'utf8');
   assert.match(room, /ox \+ artX\.value \* isoPt - box \/ 2/);
   assert.match(room, /oy \+ artY\.value \* isoPt - footAt \* box/);
   assert.match(room, /StreetRoomAuraClip/);
+  assert.match(room, /StreetRoomYard/);
   assert.match(room, /hideoutFace/);
+  assert.match(room, /ReduceMotion\.Never/);
+  assert.match(room, /reduceMotion: ReduceMotion\.Never/);
   assert.doesNotMatch(room, /if \(reduceMotion\) step = \{ \.\.\.step, act: step\.act === 'sleep'/);
   const street = read('src/play/street-room.tsx');
   assert.match(street, /room-hideout-iso/);
   assert.match(street, /PIXEL_FONT\.label/);
   assert.match(street, /StreetRoomAuraClip/);
+  assert.match(street, /StreetRoomYard/);
+  assert.match(street, /hideoutBricks/);
   assert.match(street, /d\.size\[0\]/);
-  assert.match(street, /fontSize: 12/);
+  assert.match(street, /HIDEOUT_SPOT_HIT_PT/);
+  assert.match(street, /PIXEL\.cyan/);
+  assert.match(street, /chipFaded/);
   assert.match(street, /fillRule="evenodd"/);
   const dive = read('src/play/dive-street.tsx');
   assert.match(dive, /ManholeTransit/);
@@ -201,6 +221,13 @@ const read = (path: string) => readFileSync(path, 'utf8');
   for (const width of HIDEOUT_PHONE_WIDTHS_PT) {
     for (const pr of [2, 3]) {
       const { scale, origin } = hideoutPhoneLayout(width, pr);
+      assert.ok(Number.isInteger(scale.dpx), `integer dpx at ${width}@${pr}x`);
+      assert.ok(Math.abs(scale.pt * pr - scale.dpx) < 1e-9, `no fractional scale at ${width}@${pr}x`);
+      if (width === 430 && pr === 3) assert.equal(scale.dpx, 5, 'Pro Max 3x fills at 5 dpx');
+      const placed = hideoutStageOrigin(width, 520, scale);
+      assert.equal(placed.left, origin.left);
+      const expectLeft = Math.round((width - scale.contentW) / 2 - HIDEOUT_CONTENT[0] * scale.pt);
+      assert.equal(origin.left, expectLeft, `content-centered origin at ${width}@${pr}x`);
       const box = hideoutPetBox(HIDEOUT_PET_ART_PX, scale, pr);
       assert.ok(Math.abs(box - HIDEOUT_PET_ART_PX * scale.pt) < 1e-6, `pet box is 64 art px at ${width}@${pr}x`);
       assert.ok(box + 1e-6 < doorH * scale.pt, `pet box shorter than the door at ${width}@${pr}x`);
@@ -222,6 +249,15 @@ const read = (path: string) => readFileSync(path, 'utf8');
     }
   }
   ok('screen-space feet sit inside the floor polygon at 375/393/430pt');
+}
+
+{
+  const street = read('src/play/street-room.tsx');
+  assert.match(street, /minWidth: hit/);
+  assert.match(street, /minHeight: hit/);
+  assert.match(street, /HIDEOUT_SPOT_HIT_PT/);
+  assert.equal(HIDEOUT_SPOT_HIT_PT, 48);
+  ok('hotspot chips are 48pt hit targets with a cyan frame');
 }
 
 console.log(`\ncheck:street-hideout — ${passed} groups passed.`);
