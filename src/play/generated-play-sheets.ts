@@ -20407,7 +20407,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/archangel/Attack": {
-    "sheet": "sheets/streetwear/heroes/archangel/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/archangel/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 385,
     "frames": {
@@ -20510,237 +20510,237 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/archangel/Dash": {
-    "sheet": "sheets/streetwear/heroes/archangel/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/archangel/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/archangel/Hurt": {
-    "sheet": "sheets/streetwear/heroes/archangel/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/archangel/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/archangel/Idle": {
-    "sheet": "sheets/streetwear/heroes/archangel/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/archangel/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -20850,103 +20850,199 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/archangel/Walk": {
-    "sheet": "sheets/streetwear/heroes/archangel/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/archangel/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -21009,102 +21105,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/aurex/Attack": {
     "sheet": "sheets/streetwear/heroes/aurex/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -21112,102 +21208,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/aurex/Dash": {
     "sheet": "sheets/streetwear/heroes/aurex/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -21215,78 +21311,78 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/aurex/Hurt": {
     "sheet": "sheets/streetwear/heroes/aurex/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -21294,54 +21390,54 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/aurex/Idle": {
     "sheet": "sheets/streetwear/heroes/aurex/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
-        "x": 0,
-        "y": 1158,
+        "x": 1158,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
-        "x": 193,
-        "y": 1158,
+        "x": 1351,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
-        "x": 386,
-        "y": 1158,
+        "x": 1544,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
-        "x": 579,
-        "y": 1158,
+        "x": 1737,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
-        "x": 0,
-        "y": 1351,
+        "x": 1158,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
-        "x": 193,
-        "y": 1351,
+        "x": 1351,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
-        "x": 386,
-        "y": 1351,
+        "x": 1544,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
-        "x": 579,
-        "y": 1351,
+        "x": 1737,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -21452,102 +21548,198 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/aurex/Walk": {
     "sheet": "sheets/streetwear/heroes/aurex/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1544,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -21610,102 +21802,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/corvus/Attack": {
     "sheet": "sheets/streetwear/heroes/corvus/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -21713,102 +21905,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/corvus/Dash": {
     "sheet": "sheets/streetwear/heroes/corvus/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -21816,78 +22008,78 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/corvus/Hurt": {
     "sheet": "sheets/streetwear/heroes/corvus/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -21895,54 +22087,54 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/corvus/Idle": {
     "sheet": "sheets/streetwear/heroes/corvus/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
-        "x": 0,
-        "y": 1158,
+        "x": 1158,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
-        "x": 193,
-        "y": 1158,
+        "x": 1351,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
-        "x": 386,
-        "y": 1158,
+        "x": 1544,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
-        "x": 579,
-        "y": 1158,
+        "x": 1737,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
-        "x": 0,
-        "y": 1351,
+        "x": 1158,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
-        "x": 193,
-        "y": 1351,
+        "x": 1351,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
-        "x": 386,
-        "y": 1351,
+        "x": 1544,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
-        "x": 579,
-        "y": 1351,
+        "x": 1737,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -22053,102 +22245,198 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/corvus/Walk": {
     "sheet": "sheets/streetwear/heroes/corvus/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1544,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -22156,7 +22444,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/corvus/rotations": {
     "sheet": "sheets/streetwear/heroes/corvus/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "north": {
@@ -22212,101 +22500,101 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/cyber-shinobi/Attack": {
     "sheet": "sheets/streetwear/heroes/cyber-shinobi/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -22315,101 +22603,101 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/cyber-shinobi/Dash": {
     "sheet": "sheets/streetwear/heroes/cyber-shinobi/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -22418,77 +22706,77 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/cyber-shinobi/Hurt": {
     "sheet": "sheets/streetwear/heroes/cyber-shinobi/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -22655,101 +22943,197 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/cyber-shinobi/Walk": {
     "sheet": "sheets/streetwear/heroes/cyber-shinobi/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -22811,7 +23195,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/elowen/Attack": {
-    "sheet": "sheets/streetwear/heroes/elowen/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/elowen/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -22914,244 +23298,244 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/elowen/Dash": {
-    "sheet": "sheets/streetwear/heroes/elowen/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/elowen/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/elowen/Hurt": {
-    "sheet": "sheets/streetwear/heroes/elowen/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/elowen/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/elowen/Idle": {
-    "sheet": "sheets/streetwear/heroes/elowen/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/elowen/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/elowen/Skill": {
-    "sheet": "sheets/streetwear/heroes/elowen/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/elowen/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -23254,103 +23638,199 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/elowen/Walk": {
-    "sheet": "sheets/streetwear/heroes/elowen/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/elowen/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -23413,102 +23893,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/frost-lich/Attack": {
     "sheet": "sheets/streetwear/heroes/frost-lich/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -23516,102 +23996,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/frost-lich/Dash": {
     "sheet": "sheets/streetwear/heroes/frost-lich/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -23619,78 +24099,78 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/frost-lich/Hurt": {
     "sheet": "sheets/streetwear/heroes/frost-lich/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -23698,54 +24178,54 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/frost-lich/Idle": {
     "sheet": "sheets/streetwear/heroes/frost-lich/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
-        "x": 0,
-        "y": 1158,
+        "x": 1158,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
-        "x": 193,
-        "y": 1158,
+        "x": 1351,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
-        "x": 386,
-        "y": 1158,
+        "x": 1544,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
-        "x": 579,
-        "y": 1158,
+        "x": 1737,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
-        "x": 0,
-        "y": 1351,
+        "x": 1158,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
-        "x": 193,
-        "y": 1351,
+        "x": 1351,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
-        "x": 386,
-        "y": 1351,
+        "x": 1544,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
-        "x": 579,
-        "y": 1351,
+        "x": 1737,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -23856,102 +24336,198 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/frost-lich/Walk": {
     "sheet": "sheets/streetwear/heroes/frost-lich/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1544,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -23959,7 +24535,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/frost-lich/rotations": {
     "sheet": "sheets/streetwear/heroes/frost-lich/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "north": {
@@ -24013,7 +24589,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/kael/Attack": {
-    "sheet": "sheets/streetwear/heroes/kael/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/kael/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -24116,244 +24692,244 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/kael/Dash": {
-    "sheet": "sheets/streetwear/heroes/kael/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/kael/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/kael/Hurt": {
-    "sheet": "sheets/streetwear/heroes/kael/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/kael/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/kael/Idle": {
-    "sheet": "sheets/streetwear/heroes/kael/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/kael/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/kael/Skill": {
-    "sheet": "sheets/streetwear/heroes/kael/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/kael/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -24456,103 +25032,199 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/kael/Walk": {
-    "sheet": "sheets/streetwear/heroes/kael/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/kael/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -24616,101 +25288,101 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/kitsune/Attack": {
     "sheet": "sheets/streetwear/heroes/kitsune/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -24719,101 +25391,101 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/kitsune/Dash": {
     "sheet": "sheets/streetwear/heroes/kitsune/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -24822,77 +25494,77 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/kitsune/Hurt": {
     "sheet": "sheets/streetwear/heroes/kitsune/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -25059,101 +25731,197 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/kitsune/Walk": {
     "sheet": "sheets/streetwear/heroes/kitsune/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -25216,102 +25984,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/maldrath/Attack": {
     "sheet": "sheets/streetwear/heroes/maldrath/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -25319,102 +26087,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/maldrath/Dash": {
     "sheet": "sheets/streetwear/heroes/maldrath/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -25422,78 +26190,78 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/maldrath/Hurt": {
     "sheet": "sheets/streetwear/heroes/maldrath/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -25501,54 +26269,54 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/maldrath/Idle": {
     "sheet": "sheets/streetwear/heroes/maldrath/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "east/frame_000": {
-        "x": 0,
-        "y": 1158,
+        "x": 1158,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
-        "x": 193,
-        "y": 1158,
+        "x": 1351,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
-        "x": 386,
-        "y": 1158,
+        "x": 1544,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
-        "x": 579,
-        "y": 1158,
+        "x": 1737,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
-        "x": 0,
-        "y": 1351,
+        "x": 1158,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
-        "x": 193,
-        "y": 1351,
+        "x": 1351,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
-        "x": 386,
-        "y": 1351,
+        "x": 1544,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
-        "x": 579,
-        "y": 1351,
+        "x": 1737,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -25659,102 +26427,198 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/maldrath/Walk": {
     "sheet": "sheets/streetwear/heroes/maldrath/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1544,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -25762,7 +26626,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/maldrath/rotations": {
     "sheet": "sheets/streetwear/heroes/maldrath/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 2122,
     "frames": {
       "north": {
@@ -25817,102 +26681,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/morwen/Attack": {
     "sheet": "sheets/streetwear/heroes/morwen/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -25920,102 +26784,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/morwen/Dash": {
     "sheet": "sheets/streetwear/heroes/morwen/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -26023,78 +26887,78 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/morwen/Hurt": {
     "sheet": "sheets/streetwear/heroes/morwen/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -26102,54 +26966,54 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/morwen/Idle": {
     "sheet": "sheets/streetwear/heroes/morwen/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
-        "x": 0,
-        "y": 1158,
+        "x": 1158,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
-        "x": 193,
-        "y": 1158,
+        "x": 1351,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
-        "x": 386,
-        "y": 1158,
+        "x": 1544,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
-        "x": 579,
-        "y": 1158,
+        "x": 1737,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
-        "x": 0,
-        "y": 1351,
+        "x": 1158,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
-        "x": 193,
-        "y": 1351,
+        "x": 1351,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
-        "x": 386,
-        "y": 1351,
+        "x": 1544,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
-        "x": 579,
-        "y": 1351,
+        "x": 1737,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -26260,102 +27124,198 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/morwen/Walk": {
     "sheet": "sheets/streetwear/heroes/morwen/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1544,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -26417,7 +27377,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/neon-viper/Attack": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -26520,7 +27480,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/neon-viper/Dash": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-2.png",
     "sheetW": 1543,
     "sheetH": 385,
     "frames": {
@@ -26623,9 +27583,9 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/neon-viper/Hurt": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-2.png",
-    "sheetW": 1543,
-    "sheetH": 771,
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-3.png",
+    "sheetW": 1157,
+    "sheetH": 385,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -26702,7 +27662,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/neon-viper/Idle": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-3.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-4.png",
     "sheetW": 771,
     "sheetH": 385,
     "frames": {
@@ -26757,7 +27717,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/neon-viper/Skill": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -26860,7 +27820,601 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/neon-viper/Walk": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-2.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-0.png",
+    "sheetW": 1543,
+    "sheetH": 964,
+    "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 579,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 579,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 579,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 579,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 579,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 579,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 579,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 579,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/neon-viper/rotations": {
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-0.png",
+    "sheetW": 1543,
+    "sheetH": 964,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "north-east": {
+        "x": 193,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "east": {
+        "x": 386,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "south-east": {
+        "x": 579,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "south": {
+        "x": 772,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "south-west": {
+        "x": 965,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "west": {
+        "x": 1158,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "north-west": {
+        "x": 1351,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Attack": {
+    "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
+    "sheetW": 1543,
+    "sheetH": 2122,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 772,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 965,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 965,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 965,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 965,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 965,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 965,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 965,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 965,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Dash": {
+    "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
+    "sheetW": 1543,
+    "sheetH": 2122,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 1158,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 1158,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 1158,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 1158,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 1158,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 1158,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_006": {
+        "x": 1158,
+        "y": 1158,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_007": {
+        "x": 1351,
+        "y": 1158,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 1351,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 1351,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 1351,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 1351,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 1351,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 1351,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_006": {
+        "x": 1158,
+        "y": 1351,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_007": {
+        "x": 1351,
+        "y": 1351,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Hurt": {
+    "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
+    "sheetW": 1543,
+    "sheetH": 2122,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 1544,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 1544,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 1544,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 1544,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_004": {
+        "x": 772,
+        "y": 1544,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_005": {
+        "x": 965,
+        "y": 1544,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 1737,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 1737,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 1737,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 1737,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_004": {
+        "x": 772,
+        "y": 1737,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_005": {
+        "x": 965,
+        "y": 1737,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Idle": {
+    "sheet": "sheets/streetwear/heroes/oni/atlas-1.png",
+    "sheetW": 1543,
+    "sheetH": 771,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "east/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_001": {
+        "x": 193,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_002": {
+        "x": 386,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "west/frame_003": {
+        "x": 579,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      }
+    }
+  },
+  "sheets/streetwear/heroes/oni/Skill": {
+    "sheet": "sheets/streetwear/heroes/oni/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -26962,657 +28516,255 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
       }
     }
   },
-  "sheets/streetwear/heroes/neon-viper/rotations": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-4.png",
-    "sheetW": 1543,
-    "sheetH": 192,
-    "frames": {
-      "north": {
-        "x": 0,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "north-east": {
-        "x": 193,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east": {
-        "x": 386,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "south-east": {
-        "x": 579,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "south": {
-        "x": 772,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "south-west": {
-        "x": 965,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "west": {
-        "x": 1158,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "north-west": {
-        "x": 1351,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      }
-    }
-  },
-  "sheets/streetwear/heroes/oni/Attack": {
-    "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
-    "sheetW": 1543,
-    "sheetH": 1929,
-    "frames": {
-      "east/frame_000": {
-        "x": 0,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_001": {
-        "x": 193,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_002": {
-        "x": 386,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_003": {
-        "x": 579,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_004": {
-        "x": 772,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_005": {
-        "x": 965,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_006": {
-        "x": 1158,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_007": {
-        "x": 1351,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_000": {
-        "x": 0,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_001": {
-        "x": 193,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_002": {
-        "x": 386,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_003": {
-        "x": 579,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_004": {
-        "x": 772,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_005": {
-        "x": 965,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_006": {
-        "x": 1158,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_007": {
-        "x": 1351,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      }
-    }
-  },
-  "sheets/streetwear/heroes/oni/Dash": {
-    "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
-    "sheetW": 1543,
-    "sheetH": 1929,
-    "frames": {
-      "east/frame_000": {
-        "x": 0,
-        "y": 386,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_001": {
-        "x": 193,
-        "y": 386,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_002": {
-        "x": 386,
-        "y": 386,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_003": {
-        "x": 579,
-        "y": 386,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_004": {
-        "x": 772,
-        "y": 386,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_005": {
-        "x": 965,
-        "y": 386,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_006": {
-        "x": 1158,
-        "y": 386,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_007": {
-        "x": 1351,
-        "y": 386,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_000": {
-        "x": 0,
-        "y": 579,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_001": {
-        "x": 193,
-        "y": 579,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_002": {
-        "x": 386,
-        "y": 579,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_003": {
-        "x": 579,
-        "y": 579,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_004": {
-        "x": 772,
-        "y": 579,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_005": {
-        "x": 965,
-        "y": 579,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_006": {
-        "x": 1158,
-        "y": 579,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_007": {
-        "x": 1351,
-        "y": 579,
-        "w": 192,
-        "h": 192
-      }
-    }
-  },
-  "sheets/streetwear/heroes/oni/Hurt": {
-    "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
-    "sheetW": 1543,
-    "sheetH": 1929,
-    "frames": {
-      "east/frame_000": {
-        "x": 0,
-        "y": 772,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_001": {
-        "x": 193,
-        "y": 772,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_002": {
-        "x": 386,
-        "y": 772,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_003": {
-        "x": 579,
-        "y": 772,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_004": {
-        "x": 772,
-        "y": 772,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_005": {
-        "x": 965,
-        "y": 772,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_000": {
-        "x": 0,
-        "y": 965,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_001": {
-        "x": 193,
-        "y": 965,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_002": {
-        "x": 386,
-        "y": 965,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_003": {
-        "x": 579,
-        "y": 965,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_004": {
-        "x": 772,
-        "y": 965,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_005": {
-        "x": 965,
-        "y": 965,
-        "w": 192,
-        "h": 192
-      }
-    }
-  },
-  "sheets/streetwear/heroes/oni/Idle": {
-    "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
-    "sheetW": 1543,
-    "sheetH": 1929,
-    "frames": {
-      "east/frame_000": {
-        "x": 0,
-        "y": 1158,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_001": {
-        "x": 193,
-        "y": 1158,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_002": {
-        "x": 386,
-        "y": 1158,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_003": {
-        "x": 579,
-        "y": 1158,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_000": {
-        "x": 0,
-        "y": 1351,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_001": {
-        "x": 193,
-        "y": 1351,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_002": {
-        "x": 386,
-        "y": 1351,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_003": {
-        "x": 579,
-        "y": 1351,
-        "w": 192,
-        "h": 192
-      }
-    }
-  },
-  "sheets/streetwear/heroes/oni/Skill": {
-    "sheet": "sheets/streetwear/heroes/oni/atlas-1.png",
-    "sheetW": 1543,
-    "sheetH": 578,
-    "frames": {
-      "east/frame_000": {
-        "x": 0,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_001": {
-        "x": 193,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_002": {
-        "x": 386,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_003": {
-        "x": 579,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_004": {
-        "x": 772,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_005": {
-        "x": 965,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_006": {
-        "x": 1158,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "east/frame_007": {
-        "x": 1351,
-        "y": 0,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_000": {
-        "x": 0,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_001": {
-        "x": 193,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_002": {
-        "x": 386,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_003": {
-        "x": 579,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_004": {
-        "x": 772,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_005": {
-        "x": 965,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_006": {
-        "x": 1158,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      },
-      "west/frame_007": {
-        "x": 1351,
-        "y": 193,
-        "w": 192,
-        "h": 192
-      }
-    }
-  },
   "sheets/streetwear/heroes/oni/Walk": {
     "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1929,
+    "sheetH": 2122,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1544,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/oni/rotations": {
-    "sheet": "sheets/streetwear/heroes/oni/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/oni/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 578,
+    "sheetH": 2122,
     "frames": {
       "north": {
         "x": 0,
-        "y": 386,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "north-east": {
         "x": 193,
-        "y": 386,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "east": {
         "x": 386,
-        "y": 386,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "south-east": {
         "x": 579,
-        "y": 386,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "south": {
         "x": 772,
-        "y": 386,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "south-west": {
         "x": 965,
-        "y": 386,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "west": {
         "x": 1158,
-        "y": 386,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "north-west": {
         "x": 1351,
-        "y": 386,
+        "y": 1930,
         "w": 192,
         "h": 192
       }
@@ -27621,77 +28773,77 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/raven/Attack": {
     "sheet": "sheets/streetwear/heroes/raven/atlas.png",
     "sheetW": 1929,
-    "sheetH": 2122,
+    "sheetH": 2508,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -27700,101 +28852,101 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/raven/Dash": {
     "sheet": "sheets/streetwear/heroes/raven/atlas.png",
     "sheetW": 1929,
-    "sheetH": 2122,
+    "sheetH": 2508,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -27803,77 +28955,77 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/raven/Hurt": {
     "sheet": "sheets/streetwear/heroes/raven/atlas.png",
     "sheetW": 1929,
-    "sheetH": 2122,
+    "sheetH": 2508,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -27882,53 +29034,53 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/raven/Idle": {
     "sheet": "sheets/streetwear/heroes/raven/atlas.png",
     "sheetW": 1929,
-    "sheetH": 2122,
+    "sheetH": 2508,
     "frames": {
       "east/frame_000": {
         "x": 1158,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 1351,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 1544,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 1737,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 1158,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 1351,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 1544,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 1737,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -27937,101 +29089,101 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/raven/Skill": {
     "sheet": "sheets/streetwear/heroes/raven/atlas.png",
     "sheetW": 1929,
-    "sheetH": 2122,
+    "sheetH": 2508,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 1158,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1158,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1158,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1158,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1158,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1158,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1158,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1158,
+        "y": 1930,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1351,
+        "y": 2123,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1351,
+        "y": 2123,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1351,
+        "y": 2123,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1351,
+        "y": 2123,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1351,
+        "y": 2123,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1351,
+        "y": 2123,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1351,
+        "y": 2123,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1351,
+        "y": 2123,
         "w": 192,
         "h": 192
       }
@@ -28040,101 +29192,197 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/raven/Walk": {
     "sheet": "sheets/streetwear/heroes/raven/atlas.png",
     "sheetW": 1929,
-    "sheetH": 2122,
+    "sheetH": 2508,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1544,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -28143,53 +29391,53 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/raven/rotations": {
     "sheet": "sheets/streetwear/heroes/raven/atlas.png",
     "sheetW": 1929,
-    "sheetH": 2122,
+    "sheetH": 2508,
     "frames": {
       "north": {
         "x": 0,
-        "y": 1930,
+        "y": 2316,
         "w": 192,
         "h": 192
       },
       "north-east": {
         "x": 193,
-        "y": 1930,
+        "y": 2316,
         "w": 192,
         "h": 192
       },
       "east": {
         "x": 386,
-        "y": 1930,
+        "y": 2316,
         "w": 192,
         "h": 192
       },
       "south-east": {
         "x": 579,
-        "y": 1930,
+        "y": 2316,
         "w": 192,
         "h": 192
       },
       "south": {
         "x": 772,
-        "y": 1930,
+        "y": 2316,
         "w": 192,
         "h": 192
       },
       "south-west": {
         "x": 965,
-        "y": 1930,
+        "y": 2316,
         "w": 192,
         "h": 192
       },
       "west": {
         "x": 1158,
-        "y": 1930,
+        "y": 2316,
         "w": 192,
         "h": 192
       },
       "north-west": {
         "x": 1351,
-        "y": 1930,
+        "y": 2316,
         "w": 192,
         "h": 192
       }
@@ -28197,102 +29445,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/sak/Attack": {
     "sheet": "sheets/streetwear/heroes/sak/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -28300,102 +29548,102 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/sak/Dash": {
     "sheet": "sheets/streetwear/heroes/sak/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -28403,78 +29651,78 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/sak/Hurt": {
     "sheet": "sheets/streetwear/heroes/sak/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -28482,54 +29730,54 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/sak/Idle": {
     "sheet": "sheets/streetwear/heroes/sak/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
       "east/frame_000": {
-        "x": 0,
-        "y": 1158,
+        "x": 1158,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
-        "x": 193,
-        "y": 1158,
+        "x": 1351,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
-        "x": 386,
-        "y": 1158,
+        "x": 1544,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
-        "x": 579,
-        "y": 1158,
+        "x": 1737,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
-        "x": 0,
-        "y": 1351,
+        "x": 1158,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
-        "x": 193,
-        "y": 1351,
+        "x": 1351,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
-        "x": 386,
-        "y": 1351,
+        "x": 1544,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
-        "x": 579,
-        "y": 1351,
+        "x": 1737,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -28640,102 +29888,198 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   },
   "sheets/streetwear/heroes/sak/Walk": {
     "sheet": "sheets/streetwear/heroes/sak/atlas-0.png",
-    "sheetW": 1543,
+    "sheetW": 1929,
     "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1544,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1544,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1737,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -28797,9 +30141,9 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/velkhar/Attack": {
-    "sheet": "sheets/streetwear/heroes/velkhar/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-1.png",
     "sheetW": 1543,
-    "sheetH": 1157,
+    "sheetH": 385,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -28900,103 +30244,103 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/heroes/velkhar/Dash": {
-    "sheet": "sheets/streetwear/heroes/velkhar/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 771,
+    "sheetH": 1736,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -29005,139 +30349,139 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/velkhar/Hurt": {
     "sheet": "sheets/streetwear/heroes/velkhar/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1157,
+    "sheetH": 1736,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/velkhar/Idle": {
-    "sheet": "sheets/streetwear/heroes/velkhar/atlas-1.png",
-    "sheetW": 1543,
-    "sheetH": 771,
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-2.png",
+    "sheetW": 771,
+    "sheetH": 385,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 0,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 0,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 0,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 0,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 193,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/velkhar/Skill": {
-    "sheet": "sheets/streetwear/heroes/velkhar/atlas-2.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-3.png",
     "sheetW": 1543,
     "sheetH": 385,
     "frames": {
@@ -29242,156 +30586,252 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/velkhar/Walk": {
     "sheet": "sheets/streetwear/heroes/velkhar/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1157,
+    "sheetH": 1736,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 772,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 772,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 965,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 965,
+        "y": 579,
         "w": 192,
         "h": 192
       }
     }
   },
   "sheets/streetwear/heroes/velkhar/rotations": {
-    "sheet": "sheets/streetwear/heroes/velkhar/atlas-3.png",
+    "sheet": "sheets/streetwear/heroes/velkhar/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 192,
+    "sheetH": 1736,
     "frames": {
       "north": {
         "x": 0,
-        "y": 0,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "north-east": {
         "x": 193,
-        "y": 0,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east": {
         "x": 386,
-        "y": 0,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "south-east": {
         "x": 579,
-        "y": 0,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "south": {
         "x": 772,
-        "y": 0,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "south-west": {
         "x": 965,
-        "y": 0,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west": {
         "x": 1158,
-        "y": 0,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "north-west": {
         "x": 1351,
-        "y": 0,
+        "y": 1544,
         "w": 192,
         "h": 192
       }
@@ -29400,101 +30840,101 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/void-raven/Attack": {
     "sheet": "sheets/streetwear/heroes/void-raven/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 193,
+        "y": 965,
         "w": 192,
         "h": 192
       }
@@ -29503,101 +30943,101 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/void-raven/Dash": {
     "sheet": "sheets/streetwear/heroes/void-raven/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 386,
+        "y": 1158,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 579,
+        "y": 1351,
         "w": 192,
         "h": 192
       }
@@ -29606,77 +31046,77 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/void-raven/Hurt": {
     "sheet": "sheets/streetwear/heroes/void-raven/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 772,
+        "y": 1544,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 965,
+        "y": 1737,
         "w": 192,
         "h": 192
       }
@@ -29843,101 +31283,197 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
   "sheets/streetwear/heroes/void-raven/Walk": {
     "sheet": "sheets/streetwear/heroes/void-raven/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 1543,
+    "sheetH": 1929,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 1158,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
         "x": 1351,
-        "y": 1158,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
+        "x": 1351,
+        "y": 386,
         "w": 192,
         "h": 192
       },
       "west/frame_000": {
         "x": 0,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_001": {
         "x": 193,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_002": {
         "x": 386,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_003": {
         "x": 579,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_004": {
         "x": 772,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_005": {
         "x": 965,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_006": {
         "x": 1158,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       },
       "west/frame_007": {
         "x": 1351,
-        "y": 1351,
+        "y": 579,
         "w": 192,
         "h": 192
       }
@@ -32739,12 +34275,12 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/fx/void/shot': require('@/assets/play/sheets/streetwear/fx/atlas.png'),
   'sheets/streetwear/fx/void/slash': require('@/assets/play/sheets/streetwear/fx/atlas.png'),
   'sheets/streetwear/fx/void/status': require('@/assets/play/sheets/streetwear/fx/atlas.png'),
-  'sheets/streetwear/heroes/archangel/Attack': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-0.png'),
-  'sheets/streetwear/heroes/archangel/Dash': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-1.png'),
-  'sheets/streetwear/heroes/archangel/Hurt': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-1.png'),
-  'sheets/streetwear/heroes/archangel/Idle': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-1.png'),
+  'sheets/streetwear/heroes/archangel/Attack': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-1.png'),
+  'sheets/streetwear/heroes/archangel/Dash': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-0.png'),
+  'sheets/streetwear/heroes/archangel/Hurt': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-0.png'),
+  'sheets/streetwear/heroes/archangel/Idle': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-0.png'),
   'sheets/streetwear/heroes/archangel/Skill': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-2.png'),
-  'sheets/streetwear/heroes/archangel/Walk': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-1.png'),
+  'sheets/streetwear/heroes/archangel/Walk': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-0.png'),
   'sheets/streetwear/heroes/archangel/rotations': require('@/assets/play/sheets/streetwear/heroes/archangel/atlas-3.png'),
   'sheets/streetwear/heroes/aurex/Attack': require('@/assets/play/sheets/streetwear/heroes/aurex/atlas-0.png'),
   'sheets/streetwear/heroes/aurex/Dash': require('@/assets/play/sheets/streetwear/heroes/aurex/atlas-0.png'),
@@ -32767,12 +34303,12 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/heroes/cyber-shinobi/Skill': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/atlas-2.png'),
   'sheets/streetwear/heroes/cyber-shinobi/Walk': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/atlas-0.png'),
   'sheets/streetwear/heroes/cyber-shinobi/rotations': require('@/assets/play/sheets/streetwear/heroes/cyber-shinobi/atlas-1.png'),
-  'sheets/streetwear/heroes/elowen/Attack': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-0.png'),
-  'sheets/streetwear/heroes/elowen/Dash': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-1.png'),
-  'sheets/streetwear/heroes/elowen/Hurt': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-1.png'),
-  'sheets/streetwear/heroes/elowen/Idle': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-1.png'),
-  'sheets/streetwear/heroes/elowen/Skill': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-0.png'),
-  'sheets/streetwear/heroes/elowen/Walk': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-1.png'),
+  'sheets/streetwear/heroes/elowen/Attack': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-1.png'),
+  'sheets/streetwear/heroes/elowen/Dash': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-0.png'),
+  'sheets/streetwear/heroes/elowen/Hurt': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-0.png'),
+  'sheets/streetwear/heroes/elowen/Idle': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-0.png'),
+  'sheets/streetwear/heroes/elowen/Skill': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-1.png'),
+  'sheets/streetwear/heroes/elowen/Walk': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-0.png'),
   'sheets/streetwear/heroes/elowen/rotations': require('@/assets/play/sheets/streetwear/heroes/elowen/atlas-2.png'),
   'sheets/streetwear/heroes/frost-lich/Attack': require('@/assets/play/sheets/streetwear/heroes/frost-lich/atlas-0.png'),
   'sheets/streetwear/heroes/frost-lich/Dash': require('@/assets/play/sheets/streetwear/heroes/frost-lich/atlas-0.png'),
@@ -32781,12 +34317,12 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/heroes/frost-lich/Skill': require('@/assets/play/sheets/streetwear/heroes/frost-lich/atlas-1.png'),
   'sheets/streetwear/heroes/frost-lich/Walk': require('@/assets/play/sheets/streetwear/heroes/frost-lich/atlas-0.png'),
   'sheets/streetwear/heroes/frost-lich/rotations': require('@/assets/play/sheets/streetwear/heroes/frost-lich/atlas-0.png'),
-  'sheets/streetwear/heroes/kael/Attack': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-0.png'),
-  'sheets/streetwear/heroes/kael/Dash': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-1.png'),
-  'sheets/streetwear/heroes/kael/Hurt': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-1.png'),
-  'sheets/streetwear/heroes/kael/Idle': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-1.png'),
-  'sheets/streetwear/heroes/kael/Skill': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-0.png'),
-  'sheets/streetwear/heroes/kael/Walk': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-1.png'),
+  'sheets/streetwear/heroes/kael/Attack': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-1.png'),
+  'sheets/streetwear/heroes/kael/Dash': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-0.png'),
+  'sheets/streetwear/heroes/kael/Hurt': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-0.png'),
+  'sheets/streetwear/heroes/kael/Idle': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-0.png'),
+  'sheets/streetwear/heroes/kael/Skill': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-1.png'),
+  'sheets/streetwear/heroes/kael/Walk': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-0.png'),
   'sheets/streetwear/heroes/kael/rotations': require('@/assets/play/sheets/streetwear/heroes/kael/atlas-2.png'),
   'sheets/streetwear/heroes/kitsune/Attack': require('@/assets/play/sheets/streetwear/heroes/kitsune/atlas-0.png'),
   'sheets/streetwear/heroes/kitsune/Dash': require('@/assets/play/sheets/streetwear/heroes/kitsune/atlas-0.png'),
@@ -32809,20 +34345,20 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/heroes/morwen/Skill': require('@/assets/play/sheets/streetwear/heroes/morwen/atlas-1.png'),
   'sheets/streetwear/heroes/morwen/Walk': require('@/assets/play/sheets/streetwear/heroes/morwen/atlas-0.png'),
   'sheets/streetwear/heroes/morwen/rotations': require('@/assets/play/sheets/streetwear/heroes/morwen/atlas-2.png'),
-  'sheets/streetwear/heroes/neon-viper/Attack': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-0.png'),
-  'sheets/streetwear/heroes/neon-viper/Dash': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-1.png'),
-  'sheets/streetwear/heroes/neon-viper/Hurt': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-2.png'),
-  'sheets/streetwear/heroes/neon-viper/Idle': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-3.png'),
-  'sheets/streetwear/heroes/neon-viper/Skill': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-0.png'),
-  'sheets/streetwear/heroes/neon-viper/Walk': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-2.png'),
-  'sheets/streetwear/heroes/neon-viper/rotations': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-4.png'),
+  'sheets/streetwear/heroes/neon-viper/Attack': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-1.png'),
+  'sheets/streetwear/heroes/neon-viper/Dash': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-2.png'),
+  'sheets/streetwear/heroes/neon-viper/Hurt': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-3.png'),
+  'sheets/streetwear/heroes/neon-viper/Idle': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-4.png'),
+  'sheets/streetwear/heroes/neon-viper/Skill': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-1.png'),
+  'sheets/streetwear/heroes/neon-viper/Walk': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-0.png'),
+  'sheets/streetwear/heroes/neon-viper/rotations': require('@/assets/play/sheets/streetwear/heroes/neon-viper/atlas-0.png'),
   'sheets/streetwear/heroes/oni/Attack': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-0.png'),
   'sheets/streetwear/heroes/oni/Dash': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-0.png'),
   'sheets/streetwear/heroes/oni/Hurt': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-0.png'),
-  'sheets/streetwear/heroes/oni/Idle': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-0.png'),
+  'sheets/streetwear/heroes/oni/Idle': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-1.png'),
   'sheets/streetwear/heroes/oni/Skill': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-1.png'),
   'sheets/streetwear/heroes/oni/Walk': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-0.png'),
-  'sheets/streetwear/heroes/oni/rotations': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-1.png'),
+  'sheets/streetwear/heroes/oni/rotations': require('@/assets/play/sheets/streetwear/heroes/oni/atlas-0.png'),
   'sheets/streetwear/heroes/raven/Attack': require('@/assets/play/sheets/streetwear/heroes/raven/atlas.png'),
   'sheets/streetwear/heroes/raven/Dash': require('@/assets/play/sheets/streetwear/heroes/raven/atlas.png'),
   'sheets/streetwear/heroes/raven/Hurt': require('@/assets/play/sheets/streetwear/heroes/raven/atlas.png'),
@@ -32837,13 +34373,13 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/heroes/sak/Skill': require('@/assets/play/sheets/streetwear/heroes/sak/atlas-1.png'),
   'sheets/streetwear/heroes/sak/Walk': require('@/assets/play/sheets/streetwear/heroes/sak/atlas-0.png'),
   'sheets/streetwear/heroes/sak/rotations': require('@/assets/play/sheets/streetwear/heroes/sak/atlas-1.png'),
-  'sheets/streetwear/heroes/velkhar/Attack': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-0.png'),
-  'sheets/streetwear/heroes/velkhar/Dash': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-1.png'),
+  'sheets/streetwear/heroes/velkhar/Attack': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-1.png'),
+  'sheets/streetwear/heroes/velkhar/Dash': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-0.png'),
   'sheets/streetwear/heroes/velkhar/Hurt': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-0.png'),
-  'sheets/streetwear/heroes/velkhar/Idle': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-1.png'),
-  'sheets/streetwear/heroes/velkhar/Skill': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-2.png'),
+  'sheets/streetwear/heroes/velkhar/Idle': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-2.png'),
+  'sheets/streetwear/heroes/velkhar/Skill': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-3.png'),
   'sheets/streetwear/heroes/velkhar/Walk': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-0.png'),
-  'sheets/streetwear/heroes/velkhar/rotations': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-3.png'),
+  'sheets/streetwear/heroes/velkhar/rotations': require('@/assets/play/sheets/streetwear/heroes/velkhar/atlas-0.png'),
   'sheets/streetwear/heroes/void-raven/Attack': require('@/assets/play/sheets/streetwear/heroes/void-raven/atlas-0.png'),
   'sheets/streetwear/heroes/void-raven/Dash': require('@/assets/play/sheets/streetwear/heroes/void-raven/atlas-0.png'),
   'sheets/streetwear/heroes/void-raven/Hurt': require('@/assets/play/sheets/streetwear/heroes/void-raven/atlas-0.png'),

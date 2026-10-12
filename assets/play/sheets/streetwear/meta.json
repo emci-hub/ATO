@@ -10,7 +10,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/aurex": {
       "footAt": 0.7969,
@@ -22,7 +28,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/corvus": {
       "footAt": 0.7969,
@@ -34,7 +46,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/cyber-shinobi": {
       "footAt": 0.7865,
@@ -46,7 +64,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/elowen": {
       "footAt": 0.8177,
@@ -58,7 +82,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/frost-lich": {
       "footAt": 0.7917,
@@ -70,7 +100,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/kael": {
       "footAt": 0.7813,
@@ -82,7 +118,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/kitsune": {
       "footAt": 0.7917,
@@ -94,7 +136,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/maldrath": {
       "footAt": 0.7969,
@@ -106,7 +154,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/morwen": {
       "footAt": 0.7813,
@@ -118,7 +172,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/neon-viper": {
       "footAt": 0.7813,
@@ -130,7 +190,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/oni": {
       "footAt": 0.7969,
@@ -142,7 +208,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/raven": {
       "footAt": 0.776,
@@ -154,7 +226,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/sak": {
       "footAt": 0.7969,
@@ -166,7 +244,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/velkhar": {
       "footAt": 0.7969,
@@ -178,7 +262,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "heroes/void-raven": {
       "footAt": 0.7917,
@@ -190,7 +280,13 @@
         "Idle": 4,
         "Skill": 8,
         "Walk": 8
-      }
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
     },
     "creeps/knight": {
       "footAt": 0.7292,

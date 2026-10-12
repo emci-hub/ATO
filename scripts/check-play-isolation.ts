@@ -39,6 +39,8 @@ const PLAY: RegExp[] = [
   /^scripts\/check-swords\.ts$/,
   /^scripts\/check-finishes\.ts$/,
   /^scripts\/check-auras\.ts$/,
+  /^scripts\/check-streetwear-assets\.ts$/,
+  /^scripts\/check-streetwear-walk\.ts$/,
 ];
 
 const NEUTRAL: RegExp[] = [

@@ -115,6 +115,7 @@
     "check:finishes": "tsx ./scripts/check-finishes.ts",
     "check:auras": "tsx ./scripts/check-auras.ts",
     "check:streetwear-assets": "tsx ./scripts/check-streetwear-assets.ts",
+    "check:streetwear-walk": "tsx ./scripts/check-streetwear-walk.ts",
     "check:play-save": "tsx ./scripts/check-play-save.ts",
     "check:shop-hidden": "tsx ./scripts/check-shop-hidden.ts",
     "check:edge-back": "tsx ./scripts/check-edge-back.ts",

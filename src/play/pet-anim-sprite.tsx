@@ -32,6 +32,8 @@ import {
   roleArtDrawable,
   roleFaceArtIndex,
   roleWalkFaceIndex,
+  skinWalkClipDirIndex,
+  SKIN_WALK_NO_DIR,
   type ClipDrawable,
   type SkinRole,
 } from '@/play/skin';
@@ -123,6 +125,14 @@ function walkFolder(face: PetFace): 'north' | 'east' | 'south' | 'west' {
   return 'east';
 }
 
+/** Unit heading for `skinWalkClipDirIndex` from a 4-dir walk folder. */
+function walkFolderHeading(folder: 'north' | 'east' | 'south' | 'west'): { dx: number; dy: number } {
+  if (folder === 'north') return { dx: 0, dy: -1 };
+  if (folder === 'south') return { dx: 0, dy: 1 };
+  if (folder === 'west') return { dx: -1, dy: 0 };
+  return { dx: 1, dy: 0 };
+}
+
 function rotationIndex(role: SkinRole, face: PetFace): number {
   const folder = face === 'front' ? 'south' : FACE_ROTATION[face];
   const re = new RegExp(`(?:^|/)${folder}$`);
@@ -143,8 +153,12 @@ export function poseDrawable(
   }
   const folder = walkFolder(face);
   if (pose.clip === 'walk') {
-    const idx = role.walk?.order.indexOf(folder) ?? -1;
-    if (idx >= 0) return directionalClipDrawable(role.walk, idx, frame);
+    // Same snap as `skinWalkDirIndex`: 4-dir plays N/S/E/W; 2-dir vertical
+    // returns SKIN_WALK_NO_DIR and we keep the standing pose — never a side
+    // walk when a north/south cycle exists, never a side walk when it doesn't.
+    const heading = walkFolderHeading(folder);
+    const idx = skinWalkClipDirIndex(role.walk, heading.dx, heading.dy);
+    if (idx !== SKIN_WALK_NO_DIR) return directionalClipDrawable(role.walk, idx, frame);
     return roleArtDrawable(role, rotationIndex(role, face));
   }
   const anim = role.anims?.[pose.clip];

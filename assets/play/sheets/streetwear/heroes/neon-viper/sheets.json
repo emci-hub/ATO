@@ -1,6 +1,6 @@
 {
   "sheets/streetwear/heroes/neon-viper/Attack": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -103,7 +103,7 @@
     }
   },
   "sheets/streetwear/heroes/neon-viper/Dash": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-1.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-2.png",
     "sheetW": 1543,
     "sheetH": 385,
     "frames": {
@@ -206,9 +206,9 @@
     }
   },
   "sheets/streetwear/heroes/neon-viper/Hurt": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-2.png",
-    "sheetW": 1543,
-    "sheetH": 771,
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-3.png",
+    "sheetW": 1157,
+    "sheetH": 385,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -285,7 +285,7 @@
     }
   },
   "sheets/streetwear/heroes/neon-viper/Idle": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-3.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-4.png",
     "sheetW": 771,
     "sheetH": 385,
     "frames": {
@@ -340,7 +340,7 @@
     }
   },
   "sheets/streetwear/heroes/neon-viper/Skill": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-0.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-1.png",
     "sheetW": 1543,
     "sheetH": 771,
     "frames": {
@@ -443,53 +443,149 @@
     }
   },
   "sheets/streetwear/heroes/neon-viper/Walk": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-2.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 771,
+    "sheetH": 964,
     "frames": {
+      "north/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_001": {
+        "x": 193,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_002": {
+        "x": 386,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_003": {
+        "x": 579,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_004": {
+        "x": 772,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_005": {
+        "x": 965,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_006": {
+        "x": 1158,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
+      "north/frame_007": {
+        "x": 1351,
+        "y": 0,
+        "w": 192,
+        "h": 192
+      },
       "east/frame_000": {
         "x": 0,
-        "y": 386,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_001": {
         "x": 193,
-        "y": 386,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_002": {
         "x": 386,
-        "y": 386,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_003": {
         "x": 579,
-        "y": 386,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_004": {
         "x": 772,
-        "y": 386,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_005": {
         "x": 965,
-        "y": 386,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_006": {
         "x": 1158,
-        "y": 386,
+        "y": 193,
         "w": 192,
         "h": 192
       },
       "east/frame_007": {
+        "x": 1351,
+        "y": 193,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_000": {
+        "x": 0,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_001": {
+        "x": 193,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_002": {
+        "x": 386,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_003": {
+        "x": 579,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_004": {
+        "x": 772,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_005": {
+        "x": 965,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_006": {
+        "x": 1158,
+        "y": 386,
+        "w": 192,
+        "h": 192
+      },
+      "south/frame_007": {
         "x": 1351,
         "y": 386,
         "w": 192,
@@ -546,55 +642,55 @@
     }
   },
   "sheets/streetwear/heroes/neon-viper/rotations": {
-    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-4.png",
+    "sheet": "sheets/streetwear/heroes/neon-viper/atlas-0.png",
     "sheetW": 1543,
-    "sheetH": 192,
+    "sheetH": 964,
     "frames": {
       "north": {
         "x": 0,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "north-east": {
         "x": 193,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "east": {
         "x": 386,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "south-east": {
         "x": 579,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "south": {
         "x": 772,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "south-west": {
         "x": 965,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "west": {
         "x": 1158,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       },
       "north-west": {
         "x": 1351,
-        "y": 0,
+        "y": 772,
         "w": 192,
         "h": 192
       }

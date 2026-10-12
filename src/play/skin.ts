@@ -28,6 +28,14 @@ import { PLAY_ART } from '@/play/generated-play-assets';
 import { PLAY_SHEETS } from '@/play/generated-play-sheets';
 import { heroById, type HeroDef, BOUND_HERO_TOWER_CLIPS } from '@/play/heroes-data';
 import { defaultTowerSkin, type TowerSkinDef, type TowerSkinRole } from '@/play/tower-skins-data';
+import {
+  SKIN_WALK_4DIR_ORDER,
+  SKIN_WALK_NO_DIR,
+  WALK_2DIR_MIN_DX,
+  walkClipDirIndex,
+} from '@/play/skin-walk-dir';
+
+export { SKIN_WALK_4DIR_ORDER, SKIN_WALK_NO_DIR, walkClipDirIndex };
 
 export type SkinRoleId =
   | 'map.grass'
@@ -127,14 +135,6 @@ export type SkinRole = {
 /** One skin file: the roles it defines. A skin may define only a subset. */
 type SkinFile = { pack: string; roles: Record<string, SkinRole> };
 
-/** Minimum |dx| for a heading to count as honestly east/west. Below this the
- * heading is effectively vertical and the 2-facing walk clip has no art to show
- * for it, so `skinWalkDirIndex` declines and the static rotation stays — while
- * `skinWalkFace` (humanoid path walkers) keeps the last side profile instead.
- * Roads in this game are axis-aligned, so real headings sit near |dx| = 1 or
- * |dx| = 0. */
-const WALK_2DIR_MIN_DX = 0.35;
-
 /** Active skin first, fallbacks after. Per-role resolution walks the stack so a
  * partial skin only overrides the roles it actually defines. The cast skin
  * (PixelLab defaults) leads; craftpix-td owns map/props; kenney-td stays the
@@ -159,7 +159,16 @@ function skinStack(): readonly SkinFile[] {
 export { artSkin, setArtSkin, ART_SKINS, type ArtSkinId } from '@/play/art-skin';
 export type StreetwearFxMeta = { frames: number; fps: number; loop: boolean; cell: number; anchorX: number; anchorY: number };
 type StreetwearMeta = {
-  chars: Record<string, { footAt: number; bodyRatio: number; clips: Record<string, number> }>;
+  chars: Record<
+    string,
+    {
+      footAt: number;
+      bodyRatio: number;
+      clips: Record<string, number>;
+      /** Walk facing folders actually packed, in `skinWalkDirIndex` order. */
+      walkOrder?: readonly string[];
+    }
+  >;
   fx: Record<string, StreetwearFxMeta>;
   auras: Record<string, StreetwearFxMeta & { refBodyPx: number }>;
 };
@@ -326,14 +335,10 @@ export function skinWalkFrames(role: SkinRoleId): number {
   return resolveRole(role)?.walk?.frames ?? 0;
 }
 
-/** Sentinel from `skinWalkDirIndex` meaning "this heading has no honest walk
- * frame" — the caller keeps the static rotation instead. */
-export const SKIN_WALK_NO_DIR = -1;
-
 /**
  * Walk facing bucket for a role's walk clip (0..`skinWalkDirs(role)`-1).
  * 2-dir clips snap to east/west; 4-dir clips snap to the nearest cardinal
- * (diagonals fall to the closer cardinal, matching the `order` array below).
+ * (diagonals fall to the closer cardinal, matching `[north, east, south, west]`).
  * Returns `SKIN_WALK_NO_DIR` when the role has no walk clip, or when a 2-dir
  * clip is asked for a near-vertical heading it cannot express (playing a
  * sideways cycle there would be worse than the static rotation).
@@ -342,28 +347,20 @@ export const SKIN_WALK_NO_DIR = -1;
  * would freeze them (`SKIN_WALK_NO_DIR`) or snap them north/south (4-dir clips).
  * They use `skinWalkFace` + `skinWalkFaceIndex` instead, which keep the last
  * east/west profile through the vertical run while the legs keep cycling.
+ *
+ * Room movement uses the same snap through `skinWalkClipDirIndex` on the
+ * resolved walk clip (pets have a `SkinRole`, not a `SkinRoleId`).
  */
+export function skinWalkClipDirIndex(
+  walk: SkinWalk | undefined,
+  dx: number,
+  dy: number,
+): number {
+  return walkClipDirIndex(walk, dx, dy);
+}
+
 export function skinWalkDirIndex(role: SkinRoleId, dx: number, dy: number): number {
-  const walk = resolveRole(role)?.walk;
-  if (!walk) return SKIN_WALK_NO_DIR;
-  if (walk.dirs === 2) {
-    // A 2-facing clip only has east + west art. Roads are axis-aligned, so a
-    // vertical heading (|dx| ≈ 0) must fall back rather than pick a side.
-    if (Math.abs(dx) < WALK_2DIR_MIN_DX) return SKIN_WALK_NO_DIR;
-    return dx > 0 ? 0 : 1; // [east, west]
-  }
-  if (walk.dirs === 8) {
-    const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
-    const bearing = deg + 90;
-    return ((Math.round(bearing / 45) % 8) + 8) % 8;
-  }
-  // 4-dir: nearest cardinal, order [north, east, south, west].
-  const deg = (Math.atan2(dy, dx) * 180) / Math.PI; // east = 0
-  const a = ((deg % 360) + 360) % 360; // 0..360 clockwise from east
-  if (a < 45 || a >= 315) return 1; // east
-  if (a < 135) return 2; // south
-  if (a < 225) return 3; // west
-  return 0; // north
+  return skinWalkClipDirIndex(resolveRole(role)?.walk, dx, dy);
 }
 
 /* -------------------------------------------- humanoid path walkers ------ */
@@ -782,13 +779,30 @@ export function heroAvatarRole(heroId: string): SkinRole {
   };
 }
 
-/** A 2-dir E/W clip from the Streetwear pack, or undefined when unpacked. */
+/** A Streetwear clip from the packed sheet, or undefined when unpacked.
+ * Hero Walk packs 4 cardinals (`walkOrder` = N,E,S,W) when those folders
+ * exist; everything else stays E/W. Never claims a facing the sheet omitted. */
 function streetwearClip(char: string, name: string): SkinWalk | undefined {
-  const frames = STREETWEAR_META.chars[char]?.clips[name] ?? 0;
+  const meta = STREETWEAR_META.chars[char];
+  const frames = meta?.clips[name] ?? 0;
   const base = `skins/streetwear/${char}/animations/${name}`;
   const sheetKey = sheetKeyForClipBase(base);
   if (frames <= 0 || !sheetKey || !PLAY_SHEETS[sheetKey]) return undefined;
+  if (name === 'Walk' && fourDirWalkPacked(meta?.walkOrder, PLAY_SHEETS[sheetKey]?.frames)) {
+    return { dirs: 4, order: SKIN_WALK_4DIR_ORDER, frames, base };
+  }
   return { dirs: 2, order: ['east', 'west'], frames, base };
+}
+
+/** True when the packed Walk sheet (and meta.walkOrder) actually has N,E,S,W. */
+function fourDirWalkPacked(
+  walkOrder: readonly string[] | undefined,
+  frames: Record<string, unknown> | undefined,
+): boolean {
+  if (!walkOrder || walkOrder.length !== SKIN_WALK_4DIR_ORDER.length) return false;
+  if (!SKIN_WALK_4DIR_ORDER.every((d, i) => walkOrder[i] === d)) return false;
+  if (!frames) return false;
+  return SKIN_WALK_4DIR_ORDER.every((d) => frames[`${d}/frame_000`]);
 }
 
 /** The Streetwear version of a hero's Avatar role (every Streetwear hero ships

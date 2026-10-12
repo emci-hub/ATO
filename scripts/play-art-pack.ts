@@ -264,8 +264,8 @@ function packRotations(heroDir: string, outDir: string, keyBase: string): Packed
 }
 
 /** Pack one `<clip>/<dir>/frame_NNN.png` tree into a single sheet. `onlyDirs`
- * keeps just those facings (the Streetwear pack ships east/west only — the
- * board never draws north/south, so they stay in the repo, out of the bundle). */
+ * keeps just those facings, in that order (Streetwear default is east/west;
+ * hero Walk passes N,E,S,W). */
 function packClip(
   heroDir: string,
   clipDirName: string,
@@ -277,10 +277,15 @@ function packClip(
   const clipKey = clipDirName.replace(HASH_SUFFIX, '');
   const warnings: string[] = [];
 
-  const dirs = fs
+  const listed = fs
     .readdirSync(clipPath, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && (!onlyDirs || onlyDirs.includes(d.name.replace(HASH_SUFFIX, ''))))
+    .filter((d) => d.isDirectory())
     .map((d) => d.name);
+  const dirs = onlyDirs
+    ? onlyDirs
+        .map((want) => listed.find((n) => n.replace(HASH_SUFFIX, '') === want))
+        .filter((n): n is string => !!n)
+    : listed;
 
   const rows = dirs.map((dir) => {
     const files = fs
@@ -363,7 +368,7 @@ function main() {
   const skin = arg('skin');
   if (!one && !all && !family && !skin) {
     throw new Error(
-      'Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all | --family <name> | --skin streetwear [--ui-only]) [--preview]',
+      'Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all | --family <name> | --skin streetwear [--ui-only | --heroes-only]) [--preview]',
     );
   }
 
@@ -371,6 +376,11 @@ function main() {
     if (skin !== 'streetwear') throw new Error(`unknown skin "${skin}" (only streetwear packs this way)`);
     if (process.argv.includes('--ui-only')) {
       packStreetwearUiOnly(repo);
+      writeRegistry(repo);
+      return;
+    }
+    if (process.argv.includes('--heroes-only')) {
+      packStreetwearHeroes(repo);
       writeRegistry(repo);
       return;
     }
@@ -479,9 +489,11 @@ function packFlatFamily(repo: string, family: string) {
 
 const SW_SRC = 'assets/play/skins/streetwear';
 const SW_SHEETS = 'sheets/streetwear';
-/** The board only ever draws east/west clip rows (path walkers keep a side
- * profile; towers/avatar play E/W). North/south stay in the repo. */
+/** Default Streetwear clip rows: path walkers, towers, and non-Walk hero
+ * clips stay east/west (side profile). Hero Walk packs the cardinals below. */
 const SW_DIRS = ['east', 'west'] as const;
+/** Hero Walk row order — matches `skinWalkDirIndex` / `SKIN_WALK_4DIR_ORDER`. */
+const SW_WALK_ORDER = ['north', 'east', 'south', 'west'] as const;
 
 type SwCharMeta = {
   /** Feet line of the east rotation, fraction of the frame height from the top. */
@@ -489,8 +501,10 @@ type SwCharMeta = {
   /** Visible body height / frame height (east rotation) — sizes the box so a
    * Streetwear figure matches the cast figure it replaces on screen. */
   bodyRatio: number;
-  /** Clip name → frames per facing (east == west). */
+  /** Clip name → frames per facing (uniform across packed facings). */
   clips: Record<string, number>;
+  /** Walk facing folders actually packed, in `skinWalkDirIndex` order. */
+  walkOrder?: string[];
 };
 
 type SwFxMeta = { frames: number; fps: number; loop: boolean; cell: number; anchorX: number; anchorY: number };
@@ -511,7 +525,21 @@ function alphaBox(png: PNG): { x0: number; y0: number; x1: number; y1: number } 
   return x1 < 0 ? null : { x0, y0, x1, y1 };
 }
 
-/** Pack one Streetwear character folder: E/W clip sheets + the 8-rotation strip. */
+/** Facings present on disk for one clip, in `wanted` order (missing skipped). */
+function existingClipDirs(clipPath: string, wanted: readonly string[]): string[] {
+  if (!fs.existsSync(clipPath)) return [];
+  const found = new Set(
+    fs
+      .readdirSync(clipPath, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name.replace(HASH_SUFFIX, '')),
+  );
+  return wanted.filter((d) => found.has(d));
+}
+
+/** Pack one Streetwear character folder: clip sheets + the 8-rotation strip.
+ * Hero Walk packs N/E/S/W when those folders exist; every other clip stays E/W
+ * so path walkers keep a side profile. */
 function packSwCharacter(repo: string, group: string, slug: string): SwCharMeta {
   const dir = path.join(repo, SW_SRC, group, slug);
   const keyBase = `${SW_SHEETS}/${group}/${slug}`;
@@ -519,13 +547,20 @@ function packSwCharacter(repo: string, group: string, slug: string): SwCharMeta 
   fs.rmSync(outDir, { recursive: true, force: true });
   const packed: PackedClip[] = [];
   const clips: Record<string, number> = {};
+  let walkOrder: string[] | undefined;
   const animRoot = path.join(dir, 'animations');
   if (fs.existsSync(animRoot)) {
     for (const clip of fs.readdirSync(animRoot, { withFileTypes: true }).filter((d) => d.isDirectory())) {
-      const p = packClip(dir, clip.name, outDir, keyBase, SW_DIRS);
+      const clipPath = path.join(animRoot, clip.name);
+      const dirs =
+        group === 'heroes' && clip.name === 'Walk'
+          ? existingClipDirs(clipPath, SW_WALK_ORDER)
+          : [...SW_DIRS];
+      const p = packClip(dir, clip.name, outDir, keyBase, dirs.length > 0 ? dirs : SW_DIRS);
       for (const w of p.warnings) throw new Error(`${group}/${slug}/${clip.name}: ${w}`);
       packed.push(p);
       clips[p.action] = p.frameCount;
+      if (p.action === 'Walk') walkOrder = p.dirs;
     }
   }
   const rotations = packRotations(dir, outDir, keyBase);
@@ -542,6 +577,7 @@ function packSwCharacter(repo: string, group: string, slug: string): SwCharMeta 
     footAt: Number(((box.y1 + 1) / east.height).toFixed(4)),
     bodyRatio: Number(((box.y1 - box.y0 + 1) / east.height).toFixed(4)),
     clips,
+    ...(walkOrder && walkOrder.length > 0 ? { walkOrder } : {}),
   };
 }
 
@@ -1078,6 +1114,37 @@ function packStreetwearUiOnly(repo: string) {
   atlasSheetsDir(repo, path.join(repo, 'assets/play', SW_SHEETS, 'ui-kit'));
   atlasSheetsDir(repo, path.join(repo, 'assets/play', SW_SHEETS, 'hideout-fx'));
   console.log(`packed streetwear ui-kit + hideout FX (${Object.keys(hideoutFx).length} strips)`);
+}
+
+/** Re-pack every Streetwear hero (Walk N/E/S/W + other clips E/W) without
+ * touching creeps, towers, FX, UI kit or boards. Atlases each hero before the
+ * next so a mid-run failure does not leave a wiped folder. */
+function packStreetwearHeroes(repo: string) {
+  const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
+  const prev = JSON.parse(fs.readFileSync(metaPath, 'utf8')) as {
+    chars: Record<string, SwCharMeta>;
+    fx: unknown;
+    auras: unknown;
+    ui: unknown;
+    boards: unknown;
+    hideoutFx?: unknown;
+  };
+  const groupDir = path.join(repo, SW_SRC, 'heroes');
+  const slugs = fs
+    .readdirSync(groupDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .sort();
+  for (const slug of slugs) {
+    prev.chars[`heroes/${slug}`] = packSwCharacter(repo, 'heroes', slug);
+    const files = atlasSheetsDir(repo, path.join(repo, 'assets/play', SW_SHEETS, 'heroes', slug));
+    const walk = prev.chars[`heroes/${slug}`].walkOrder?.join('+') ?? 'none';
+    console.log(
+      `packed streetwear heroes/${slug}: ${Object.keys(prev.chars[`heroes/${slug}`].clips).join(', ')} (Walk ${walk}, ${files} atlas)`,
+    );
+  }
+  fs.writeFileSync(metaPath, `${JSON.stringify(prev, null, 2)}\n`);
+  console.log(`meta: ${path.relative(repo, metaPath)} (${slugs.length} heroes)`);
 }
 
 function packStreetwear(repo: string) {
