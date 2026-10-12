@@ -210,6 +210,12 @@ export type ArtAsset = {
   sourceRef?: string | null;
   genCount?: number;
   license?: string | null;
+  /** Family folder (`heroes/kitsune`, `fx/lightning`, `tiles/streetwear`). */
+  set: string;
+  /** Look / skin / tileset part (`streetwear`, `cast`, `walls`, `default`). */
+  variant: string;
+  /** File role inside the variant (`core`, `combat`, `bolt`, stem). */
+  part?: string;
   /** True when static requires / getArt / sheet manifests / registry refs point here. Recomputed by art:registry. */
   inUse: boolean;
   usedBy?: string[];

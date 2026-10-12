@@ -12,6 +12,7 @@ scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live sta
 | Typecheck | `npm run typecheck` |
 | Lint | `npm run lint` |
 | One check | `npm run check:<name>` (see `package.json`; `scripts/*-check.ts`) |
+| Art library | `npm run art:sync` — registry + catalog/portable (commit the result) |
 | Full gate | `npm run check:ota-gate` — typecheck + lint + every offline check |
 | Publish OTA | `npm run ota:publish -- <eas args>` — refuses unless the gate is green. Never bare `eas update`. |
 | Release mode | `RELEASE_MODE=1 npm run check:release-mode` (auto on EAS production builds) |
@@ -138,8 +139,9 @@ Expo docs for this repo: https://docs.expo.dev/versions/v54.0.0/ (SDK 54 — che
 4. Import, never drop files. Bring raw output in with `npm run art:import -- --from … --id …`
    (saves prompt/seed/params to art-src/pixellab/<id>/<gen>/gen.json), then `npm run art:pack -- --id …`.
    Never commit raw frames or PixelLab exports under assets/; raw lives only in art-src/.
-   New art goes in `assets/art/<category>/in-use/…` or `…/unused/…` (art:registry
-   recomputes `inUse` + `usedBy` and moves the file). Categories:
+   New art goes in `assets/art/<category>/in-use/<set>/<variant>/` or
+   `…/unused/<set>/<variant>/` (art:registry recomputes `inUse` + `usedBy` +
+   `set`/`variant` and moves the file). Viewer is one card per set. Categories:
    `heroes/<slug>/<skin-set>/` (pets + characters), `enemies-bosses/<slug>/<skin-set>/`,
    `ui/` (buttons, frames, bars, panels, kit), `icons/` (items, currency, stats, tabs),
    `rooms/<room>/` (live Hideout packs stay here — equivalent in-use), `rooms/unused/`,
@@ -156,5 +158,10 @@ Expo docs for this repo: https://docs.expo.dev/versions/v54.0.0/ (SDK 54 — che
 8. Code uses ids only: getArt('<id>') / findArt({...}) from src/art. No direct require() of image paths.
 9. Off-style art (kenney, craftpix, scribble, primal, dungeon-legends, classic) is `needs-restyle`:
    don't place it in new streetwear screens; regenerate in PixelLab with `replaces`. Never auto-filter/restyle.
-10. Before committing: npm run art:pack && npm run art:registry && npm run art:catalog && npm run check:art-registry.
-    Never delete art; archive it (status archived, files to art-src/archive/).
+10. After any art add/remove/usage change: `npm run art:sync` and commit the
+    result. Never hand-edit generated files (`registry.json`, `generated-art.ts`,
+    `ART_LIBRARY.md`, `_contact/`, `tools/art-viewer/README.md`). The viewer is
+    the source of truth for what's implemented. `check:art-registry --fresh`
+    (in `check:ota-gate`) fails if they are stale. A pre-commit hook runs
+    `art:sync` when staged files touch art. Never delete art; archive it
+    (status archived, files to art-src/archive/).

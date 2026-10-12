@@ -17,8 +17,11 @@ Phone-first (research, 440pt iPhone 16 Pro Max):
   failed; HIG tab bars for parallel sections). Filters + More are sheets.
 - Detail is a full-screen large-detent sheet (HIG: full height when the
   content needs the room). Play sits on the preview (Photos video / Aseprite).
-  Swipe L/R for next item, swipe down to close. 48pt decision bar stays in
+  Swipe L/R for the next **set**, swipe down to close. 48pt decision bar stays in
   the thumb zone (HIG 44pt minimum; tagging is the job, so chrome does not fade).
+- Grid is one card per **set** (Spine skeleton / Figma component / Addressables
+  group). Tap opens variant switcher (Spine skin / Figma variant) and that
+  variant’s clips/parts (Aseprite tags / Godot SpriteFrames). Breadcrumb back.
 
 Grid tiles show a **preview**, not the packed sheet:
 - Sheets / clips: Idle frame 0 (or Walk S/front). Animate on Play / hover / hold.

@@ -15,6 +15,7 @@ import type { ArtAsset, ArtRegistry, ArtStatus, ArtType } from '../src/art/regis
 import { detectFormat, walkFiles } from './art-png';
 import { kebab } from './art-dirs';
 import { classifyArt, placeWithUsage, stripUsageFolder } from './art-categories';
+import { inferSetVariant } from './art-sets';
 
 const repo = path.resolve(__dirname, '..');
 
@@ -383,6 +384,8 @@ function main() {
         restyle: restyleFor(guessed.theme),
         restyleTarget: guessed.status === 'alt-skin' ? 'streetwear' : undefined,
         inUse: false,
+        set: '',
+        variant: 'default',
         tags: [],
       };
       registry.assets.push(asset);
@@ -404,7 +407,7 @@ function main() {
   const used = usedByScan(registry.assets);
   const pathRewrites: [string, string][] = [];
   for (const asset of registry.assets) {
-    asset.usedBy = used.get(asset.id) ?? [];
+    asset.usedBy = (used.get(asset.id) ?? []).slice().sort((a, b) => a.localeCompare(b));
     asset.inUse = asset.usedBy.length > 0;
     if (
       !asset.inUse &&
@@ -439,6 +442,10 @@ function main() {
         asset.atlas.json = asset.atlas.json.replace(rel, destRel);
       }
     }
+    const grouped = inferSetVariant(asset.path, asset.category, asset.id);
+    asset.set = grouped.set;
+    asset.variant = grouped.variant;
+    asset.part = grouped.part;
   }
   rmEmpty(artRoot, artRoot);
 

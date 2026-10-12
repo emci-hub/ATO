@@ -4,6 +4,7 @@
  * npm run art:catalog -- --portable
  *   also writes library-portable.html — one self-contained file (previews inlined)
  *   for iPhone / Airdrop / static host. Target < 25 MB.
+ * Prefer `npm run art:sync` (registry + portable catalog). Output is deterministic.
  *
  * Viewer: Metro-blocked. Open file:// or host the portable HTML.
  * Visual language from scripts/sprite-gallery/page.html (Streetwear Skin).
@@ -16,6 +17,7 @@ import path from 'node:path';
 
 import type { ArtAsset, ArtRegistry } from '../src/art/registry.types';
 import { ART_CATEGORIES, ART_CATEGORY_LABELS } from '../src/art/registry.types';
+import { pickMainVariant, setKey } from './art-sets';
 import {
   bakePreview,
   buildLegacyIndex,
@@ -58,6 +60,9 @@ type CatalogItem = {
   restyle: ArtAsset['restyle'] | null;
   md5: string;
   inUse: boolean;
+  set: string;
+  variant: string;
+  part: string;
   kind: ItemPreview['kind'] | 'empty';
   preview: string;
   pw: number;
@@ -126,6 +131,9 @@ function buildItems(registry: ArtRegistry, opts: BakeOpts): CatalogItem[] {
       restyle: a.restyle ?? null,
       md5,
       inUse: a.inUse || (a.usedBy ?? []).length > 0,
+      set: a.set || a.id,
+      variant: a.variant || 'default',
+      part: a.part || a.id,
       kind: baked.kind,
       preview: baked.preview,
       pw: baked.pw,
@@ -142,6 +150,54 @@ function buildItems(registry: ArtRegistry, opts: BakeOpts): CatalogItem[] {
   }
   clearPreviewCache();
   return items;
+}
+
+type CatalogSet = {
+  key: string;
+  category: string;
+  set: string;
+  inUse: boolean;
+  variants: string[];
+  variantCount: number;
+  partCount: number;
+  clipCount: number;
+  mainId: string;
+};
+
+function buildSets(items: CatalogItem[]): CatalogSet[] {
+  const groups = new Map<string, CatalogItem[]>();
+  for (const a of items) {
+    const key = setKey(a.category, a.set);
+    const list = groups.get(key) ?? [];
+    list.push(a);
+    groups.set(key, list);
+  }
+  const out: CatalogSet[] = [];
+  for (const [key, list] of [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const variants = [...new Set(list.map((a) => a.variant))].sort((a, b) => a.localeCompare(b));
+    const inUseVariant = list.find((a) => a.inUse)?.variant ?? null;
+    const mainVar = pickMainVariant(variants, inUseVariant);
+    const pool = list.filter((a) => a.variant === mainVar);
+    const main =
+      pool.find((a) => a.inUse && a.kind === 'clip') ||
+      pool.find((a) => a.kind === 'clip') ||
+      pool.find((a) => a.inUse) ||
+      pool[0] ||
+      list[0];
+    const clipCount = list.reduce((n, a) => n + (a.clips?.length || (a.kind === 'clip' && a.pn > 1 ? 1 : 0)), 0);
+    out.push({
+      key,
+      category: list[0].category,
+      set: list[0].set,
+      inUse: list.some((a) => a.inUse),
+      variants,
+      variantCount: variants.length,
+      partCount: list.length,
+      clipCount,
+      mainId: main.id,
+    });
+  }
+  return out;
 }
 
 function dupeGroups(items: CatalogItem[]) {
@@ -197,7 +253,7 @@ function writeLibraryMd(registry: ArtRegistry) {
   const live = registry.assets.filter((a) => a.status !== 'archived');
   const groups = new Map<string, typeof live>();
   for (const a of live) {
-    const key = `${a.category} · ${a.inUse ? 'in-use' : 'unused'} · ${a.theme}`;
+    const key = `${a.category} · ${a.set} · ${a.variant} · ${a.inUse ? 'in-use' : 'unused'}`;
     const list = groups.get(key) ?? [];
     list.push(a);
     groups.set(key, list);
@@ -216,7 +272,8 @@ function writeLibraryMd(registry: ArtRegistry) {
     `Generated. ${live.length} live entries.`,
     'Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.',
     'Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.',
-    'Reuse before create. New art goes in `assets/art/<category>/in-use|unused/…`.',
+    'Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.',
+    'Viewer lists one card per set (not each clip/file).',
     '',
     '## Categories',
     '',
@@ -255,7 +312,7 @@ function main() {
   console.log('art:catalog baking local previews…');
   const localItems = buildItems(registry, { cell: 72, still: 128, allClips: true });
   materializeLocal(localItems, contactDir);
-  const localData = { generatedAt: new Date().toISOString(), portable: false, items: localItems, dupes: dupeGroups(localItems) };
+  const localData = { portable: false, items: localItems, sets: buildSets(localItems), dupes: dupeGroups(localItems) };
   fs.writeFileSync(path.join(contactDir, 'library.html'), viewerHtml(localData, false));
 
   let portableBytes = 0;
@@ -264,13 +321,13 @@ function main() {
     let still = 80;
     console.log(`art:catalog baking portable previews cell=${cell} still=${still}`);
     let portableItems = buildItems(registry, { cell, still, allClips: true });
-    let html = viewerHtml({ generatedAt: new Date().toISOString(), portable: true, items: portableItems, dupes: dupeGroups(portableItems) }, true);
+    let html = viewerHtml({ portable: true, items: portableItems, sets: buildSets(portableItems), dupes: dupeGroups(portableItems) }, true);
     while (Buffer.byteLength(html) > PORTABLE_CAP_BYTES && cell > 28) {
       cell = Math.max(28, Math.floor(cell * 0.75));
       still = Math.max(48, Math.floor(still * 0.8));
       console.log(`art:catalog rebake portable cell=${cell} still=${still}`);
       portableItems = buildItems(registry, { cell, still, allClips: true });
-      html = viewerHtml({ generatedAt: new Date().toISOString(), portable: true, items: portableItems, dupes: dupeGroups(portableItems) }, true);
+      html = viewerHtml({ portable: true, items: portableItems, sets: buildSets(portableItems), dupes: dupeGroups(portableItems) }, true);
     }
     const out = path.join(contactDir, 'library-portable.html');
     fs.writeFileSync(out, html);
@@ -305,8 +362,11 @@ Phone-first (research, 440pt iPhone 16 Pro Max):
   failed; HIG tab bars for parallel sections). Filters + More are sheets.
 - Detail is a full-screen large-detent sheet (HIG: full height when the
   content needs the room). Play sits on the preview (Photos video / Aseprite).
-  Swipe L/R for next item, swipe down to close. 48pt decision bar stays in
+  Swipe L/R for the next **set**, swipe down to close. 48pt decision bar stays in
   the thumb zone (HIG 44pt minimum; tagging is the job, so chrome does not fade).
+- Grid is one card per **set** (Spine skeleton / Figma component / Addressables
+  group). Tap opens variant switcher (Spine skin / Figma variant) and that
+  variant’s clips/parts (Aseprite tags / Godot SpriteFrames). Breadcrumb back.
 
 Grid tiles show a **preview**, not the packed sheet:
 - Sheets / clips: Idle frame 0 (or Walk S/front). Animate on Play / hover / hold.
@@ -424,6 +484,8 @@ button.on, button[aria-pressed=true] { background:var(--mustard); color:#1d1d20;
 #sheet .nav { display:flex; gap:8px; align-items:center; }
 #sheet .nav #sheetClose { min-width:72px; }
 #sheet .nav .grow { flex:1; font:600 15px/1.2 ui-monospace,Menlo,monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.crumb { display:flex; gap:6px; align-items:center; flex-wrap:wrap; font:600 15px/1.2 -apple-system,system-ui,sans-serif; }
+.crumb button { min-height:44px; padding:8px 10px; }
 .preview-wrap { position:relative; }
 #sheet .preview { min-height:42vh; height:48vh; display:grid; place-items:center; border-radius:12px; overflow:hidden; touch-action:pan-y; position:relative; }
 #sheet .preview.checker { background-color:var(--tile); background-image:linear-gradient(45deg,#1a1a1e 25%,transparent 25%),linear-gradient(-45deg,#1a1a1e 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1a1a1e 75%),linear-gradient(-45deg,transparent 75%,#1a1a1e 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
@@ -602,28 +664,32 @@ function renderStats(){
     '<span class="stat">needed <b>'+needN+'</b></span>' +
     '<span class="stat">removable <b>'+removeN+'</b> ('+mb(removeB)+' MB)</span>';
   const count = document.getElementById('count');
-  if (count) count.textContent = usedN+' in use · '+unusedN+' unused';
+  const sets = DATA.sets || [];
+  const setUsed = sets.filter(s => s.inUse).length;
+  if (count) count.textContent = sets.length+' sets · '+setUsed+' in use';
 }
+function itemById(id){ return DATA.items.find(a => a.id===id); }
+function itemsInSet(s){ return DATA.items.filter(a => a.category===s.category && a.set===s.set); }
 function filtered(){
   const q = document.getElementById('q').value.toLowerCase();
   const st = document.getElementById('status').value;
   const th = document.getElementById('theme').value;
   const sort = document.getElementById('sort').value;
-  let list = DATA.items.filter(a => {
-    if (cat && a.category !== cat) return false;
-    if (usage==='in-use' && !a.inUse) return false;
-    if (usage==='unused' && a.inUse) return false;
-    if (st && a.display !== st) return false;
-    if (th && a.theme !== th) return false;
+  let list = (DATA.sets || []).filter(s => {
+    if (cat && s.category !== cat) return false;
+    if (usage==='in-use' && !s.inUse) return false;
+    if (usage==='unused' && s.inUse) return false;
+    const parts = itemsInSet(s);
+    if (st && !parts.some(a => a.display===st)) return false;
+    if (th && !parts.some(a => a.theme===th)) return false;
     if (!q) return true;
-    return (a.id+' '+a.category+' '+a.type+' '+a.theme+' '+a.path+' '+(a.usedBy||[]).join(' ')+' '+(a.tags||[]).join(' ')).toLowerCase().includes(q);
+    const blob = [s.set, s.category, s.variants.join(' '), parts.map(a => a.id+' '+a.path+' '+(a.tags||[]).join(' ')).join(' ')].join(' ');
+    return blob.toLowerCase().includes(q);
   });
   list.sort((a,b) => {
-    if (sort==='decoded') return b.decoded-a.decoded;
-    if (sort==='disk') return b.disk-a.disk;
-    if (sort==='status') return String(a.display).localeCompare(b.display);
-    if (sort==='category') return String(a.category).localeCompare(b.category) || a.id.localeCompare(b.id);
-    return a.id.localeCompare(b.id);
+    if (sort==='category') return String(a.category).localeCompare(b.category) || a.set.localeCompare(b.set);
+    if (sort==='status') return Number(b.inUse)-Number(a.inUse) || a.set.localeCompare(b.set);
+    return a.set.localeCompare(b.set);
   });
   return list;
 }
@@ -738,22 +804,23 @@ function unbindStage(stage){
   [...stage.querySelectorAll('img,.sprite,.icons')].forEach(n => n.remove());
   stage.dataset.ready = '0';
 }
-function card(a){
-  const d = decisions[a.id] || { action:'keep', notes:'' };
+function card(s){
+  const a = itemById(s.mainId) || itemsInSet(s)[0];
+  if (!a) return document.createElement('article');
   const el = document.createElement('article');
   el.className = 'card';
   el.setAttribute('role', 'button');
   el.tabIndex = 0;
-  el.innerHTML = '<div class="stage"></div><div class="cap"><div class="id">'+a.id+'</div></div><div class="meta-row"></div>';
+  el.innerHTML = '<div class="stage"></div><div class="cap"><div class="id">'+s.set+'</div></div><div class="meta-row"></div>';
   const stage = el.querySelector('.stage');
   stage._item = a;
   lazyStage(stage, a);
   const stamp = document.createElement('span');
-  stamp.className = 'stamp '+(a.inUse?'yes':'no');
-  stamp.textContent = a.inUse ? 'IN USE' : 'UNUSED';
+  stamp.className = 'stamp '+(s.inUse?'yes':'no');
+  stamp.textContent = s.inUse ? 'IN USE' : 'UNUSED';
   const badge = document.createElement('span');
-  badge.className = 'badge '+a.display;
-  badge.textContent = a.display+(d.action&&d.action!=='keep'?' · '+d.action:'');
+  badge.className = 'badge';
+  badge.textContent = s.variantCount+' var · '+s.clipCount+' clips';
   el.querySelector('.meta-row').append(stamp, badge);
   if (a.kind==='clip' && a.pn>1) {
     const play = document.createElement('button');
@@ -776,7 +843,7 @@ function card(a){
     stage.appendChild(play);
     bindPreviewGestures(el, stage);
   }
-  const open = () => { if (el._skipOpen) { el._skipOpen = false; return; } openSheet(a); };
+  const open = () => { if (el._skipOpen) { el._skipOpen = false; return; } openSheet(s); };
   el.addEventListener('click', open);
   el.addEventListener('keydown', (ev) => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); open(); } });
   return el;
@@ -837,18 +904,31 @@ function findClip(a, clip, dir){
     || (a.clips||[]).find(c => c.clip===clip)
     || null;
 }
-function openSheet(a){
+function pickSetItem(s, variant){
+  const parts = itemsInSet(s).filter(a => a.variant===variant);
+  return parts.find(a => a.inUse && a.kind==='clip') || parts.find(a => a.kind==='clip') || parts.find(a => a.inUse) || parts[0] || itemsInSet(s)[0];
+}
+function openSheet(s){
   const list = filtered();
-  const idx = Math.max(0, list.findIndex(x => x.id===a.id));
+  const idx = Math.max(0, list.findIndex(x => x.key===s.key));
+  const variant = s.variants.includes('streetwear') ? 'streetwear' : (s.variants[0] || 'default');
+  const inUseVar = itemsInSet(s).find(a => a.inUse)?.variant;
+  const startVar = (inUseVar && s.variants.includes(inUseVar)) ? inUseVar : variant;
+  const a = pickSetItem(s, startVar);
   const d = decisions[a.id] || { action:'keep', notes:'' };
   const clips = uniqueClips(a);
   const start = findClip(a, a.mainClip || clips[0], a.mainDir) || a.clips[0];
+  const catLabel = CAT_LABEL[s.category] || s.category;
   const panel = document.getElementById('sheetPanel');
   panel.innerHTML =
     '<div class="grabber" id="sheetGrab"></div>' +
+    '<div class="crumb">' +
+      '<button type="button" id="sheetClose">Library</button>' +
+      '<span>›</span><span>'+catLabel+'</span>' +
+      '<span>›</span><span>'+s.set+'</span>' +
+    '</div>' +
     '<div class="nav">' +
-      '<button type="button" id="sheetClose">Close</button>' +
-      '<div class="grow">'+a.id+'</div>' +
+      '<div class="grow">'+s.set+'</div>' +
       '<button type="button" id="sheetPrevItem" aria-label="Previous">‹</button>' +
       '<button type="button" id="sheetNextItem" aria-label="Next">›</button>' +
     '</div>' +
@@ -857,6 +937,8 @@ function openSheet(a){
       '<button type="button" id="playBtn" aria-pressed="false">Play</button>' +
     '</div>' +
     '<div class="sheet-body">' +
+    '<div class="seg-scroll" id="varPick"></div>' +
+    '<div class="seg-scroll" id="partPick"></div>' +
     '<div class="seg-scroll" id="clipPick"></div>' +
     '<div class="seg-scroll" id="dirPick"></div>' +
     '<div class="tools">' +
@@ -877,7 +959,8 @@ function openSheet(a){
     '</div>';
   document.getElementById('sheet').classList.add('show');
   detail = {
-    a, list, idx,
+    set: s, a, list, idx,
+    variant: startVar,
     clip: start ? start.clip : '',
     dir: start ? start.dir : '',
     zoom: 2,
@@ -892,14 +975,16 @@ function openSheet(a){
   document.getElementById('sheetNextItem').onclick = () => stepItem(1);
   panel.querySelectorAll('[data-act]').forEach(btn => {
     btn.addEventListener('click', () => {
-      decisions[a.id] = { action: btn.getAttribute('data-act'), notes: document.getElementById('sheetNotes').value };
+      if (!detail) return;
+      decisions[detail.a.id] = { action: btn.getAttribute('data-act'), notes: document.getElementById('sheetNotes').value };
       save();
       panel.querySelectorAll('[data-act]').forEach(b => b.classList.toggle('on', b===btn));
       render();
     });
   });
   document.getElementById('sheetNotes').addEventListener('change', (ev) => {
-    decisions[a.id] = { action: (decisions[a.id]&&decisions[a.id].action)||'keep', notes: ev.target.value };
+    if (!detail) return;
+    decisions[detail.a.id] = { action: (decisions[detail.a.id]&&decisions[detail.a.id].action)||'keep', notes: ev.target.value };
     save();
   });
   document.getElementById('playBtn').onclick = () => {
@@ -982,8 +1067,41 @@ function paintFilm(i){
     film.appendChild(b);
   }
 }
+function paintSetPicks(){
+  if (!detail || !detail.set) return;
+  const varPick = document.getElementById('varPick');
+  const partPick = document.getElementById('partPick');
+  if (varPick) {
+    paintChips(varPick, detail.set.variants, detail.variant, (v)=>v, (variant) => {
+      const next = pickSetItem(detail.set, variant);
+      if (!next) return;
+      detail.variant = variant;
+      detail.a = next;
+      detail.clip = next.mainClip || (uniqueClips(next)[0] || '');
+      detail.dir = next.mainDir || '';
+      detail.playing = false;
+      paintDetail();
+    });
+  }
+  if (partPick) {
+    const parts = itemsInSet(detail.set).filter(a => a.variant===detail.variant);
+    paintChips(partPick, parts.map(a => a.id), detail.a.id, (id) => {
+      const it = itemById(id);
+      return (it && it.part) || id.split('.').pop();
+    }, (id) => {
+      const next = itemById(id);
+      if (!next) return;
+      detail.a = next;
+      detail.clip = next.mainClip || (uniqueClips(next)[0] || '');
+      detail.dir = next.mainDir || '';
+      detail.playing = false;
+      paintDetail();
+    });
+  }
+}
 function paintDetail(){
   if (!detail) return;
+  paintSetPicks();
   const a = detail.a;
   const host = document.getElementById('sheetPrev');
   if (detail.player) { players.delete(detail.player); detail.player = null; }
@@ -1141,14 +1259,14 @@ function render(){
   for (const t of themes) document.getElementById('theme').append(new Option(t,t));
   const counts = {};
   const used = {};
-  for (const a of DATA.items) {
-    counts[a.category] = (counts[a.category]||0)+1;
-    if (a.inUse) used[a.category] = (used[a.category]||0)+1;
+  for (const s of (DATA.sets||[])) {
+    counts[s.category] = (counts[s.category]||0)+1;
+    if (s.inUse) used[s.category] = (used[s.category]||0)+1;
   }
   const cats = document.getElementById('cats');
   const usageBox = document.getElementById('usage');
-  const allN = DATA.items.length;
-  const allUsed = DATA.items.filter(a => a.inUse).length;
+  const allN = (DATA.sets||[]).length;
+  const allUsed = (DATA.sets||[]).filter(s => s.inUse).length;
   const mk = (id, label, nUse, nOff) => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -1170,8 +1288,8 @@ function render(){
   }
   function paintUsage(){
     usageBox.innerHTML = '';
-    const pool = cat ? DATA.items.filter(a => a.category===cat) : DATA.items;
-    const u = pool.filter(a => a.inUse).length;
+    const pool = cat ? (DATA.sets||[]).filter(s => s.category===cat) : (DATA.sets||[]);
+    const u = pool.filter(s => s.inUse).length;
     const n = pool.length - u;
     const mkU = (id, label, count) => {
       const b = document.createElement('button');

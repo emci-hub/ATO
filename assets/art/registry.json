@@ -27,7 +27,10 @@
       "tags": [],
       "usedBy": [],
       "category": "backgrounds",
-      "inUse": false
+      "inUse": false,
+      "set": "dive-atlas",
+      "variant": "classic",
+      "part": "dive-atlas"
     },
     {
       "id": "background.room-atlas",
@@ -55,7 +58,10 @@
       "tags": [],
       "usedBy": [],
       "category": "backgrounds",
-      "inUse": false
+      "inUse": false,
+      "set": "room-atlas",
+      "variant": "classic",
+      "part": "room-atlas"
     },
     {
       "id": "boss.oni.cast.core",
@@ -78,7 +84,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "oni",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "boss.titan-x.cast.core",
@@ -101,7 +110,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "titan-x",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "brand.brand-android-background",
@@ -123,7 +135,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "brand_android-background",
+      "variant": "default",
+      "part": "brand_android-background"
     },
     {
       "id": "brand.brand-android-foreground",
@@ -145,7 +160,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "brand_android-foreground",
+      "variant": "default",
+      "part": "brand_android-foreground"
     },
     {
       "id": "brand.brand-android-monochrome",
@@ -167,7 +185,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "brand_android-monochrome",
+      "variant": "default",
+      "part": "brand_android-monochrome"
     },
     {
       "id": "brand.brand-favicon",
@@ -189,7 +210,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "brand_favicon",
+      "variant": "default",
+      "part": "brand_favicon"
     },
     {
       "id": "brand.brand-icon",
@@ -211,7 +235,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "brand_icon",
+      "variant": "default",
+      "part": "brand_icon"
     },
     {
       "id": "brand.brand-logo-glow",
@@ -233,7 +260,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "brand_logo-glow",
+      "variant": "default",
+      "part": "brand_logo-glow"
     },
     {
       "id": "brand.brand-splash",
@@ -255,7 +285,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "brand_splash",
+      "variant": "default",
+      "part": "brand_splash"
     },
     {
       "id": "creep.knight.cast.core",
@@ -278,7 +311,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "knight",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "creep.village-girl.cast.atlas0",
@@ -301,7 +337,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "village-girl",
+      "variant": "cast",
+      "part": "atlas-0"
     },
     {
       "id": "creep.village-girl.cast.core",
@@ -324,7 +363,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "village-girl",
+      "variant": "cast",
+      "part": "atlas-1"
     },
     {
       "id": "creep.wizard.cast.atlas0",
@@ -347,7 +389,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "wizard",
+      "variant": "cast",
+      "part": "atlas-0"
     },
     {
       "id": "creep.wizard.cast.core",
@@ -370,7 +415,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "wizard",
+      "variant": "cast",
+      "part": "atlas-1"
     },
     {
       "id": "hero.archangel.cast.core",
@@ -393,7 +441,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "archangel",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.archangel.streetwear.combat",
@@ -414,12 +465,15 @@
       "notes": "md5:ac8006060f2cf3eb17654a8ef8e16104",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/archangel/sheets.json"
+        "assets/play/sheets/streetwear/heroes/archangel/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "archangel",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.archangel.streetwear.core",
@@ -440,12 +494,15 @@
       "notes": "md5:d26f825a9cc9895558c26849e4d344a0",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/archangel/sheets.json"
+        "assets/play/sheets/streetwear/heroes/archangel/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "archangel",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.aurex.cast.core",
@@ -468,7 +525,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "aurex",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.aurex.streetwear.combat",
@@ -489,12 +549,15 @@
       "notes": "md5:f6db33a500faaa067c6956b95792f1d9",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/aurex/sheets.json"
+        "assets/play/sheets/streetwear/heroes/aurex/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "aurex",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.aurex.streetwear.core",
@@ -515,12 +578,15 @@
       "notes": "md5:809672f8a7ceb3171a28cfa6e48c9974",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/aurex/sheets.json"
+        "assets/play/sheets/streetwear/heroes/aurex/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "aurex",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.corvus.cast.core",
@@ -543,7 +609,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "corvus",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.corvus.streetwear.combat",
@@ -564,12 +633,15 @@
       "notes": "md5:4f01b0161cf883c7d72e3b225fde34a7",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/corvus/sheets.json"
+        "assets/play/sheets/streetwear/heroes/corvus/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "corvus",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.corvus.streetwear.core",
@@ -590,12 +662,15 @@
       "notes": "md5:e14c1d8b2a8ecca50fc8641b337dc62d",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/corvus/sheets.json"
+        "assets/play/sheets/streetwear/heroes/corvus/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "corvus",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.cyber-shinobi.cast.core",
@@ -618,7 +693,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cyber-shinobi",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.cyber-shinobi.streetwear.combat",
@@ -639,12 +717,15 @@
       "notes": "md5:e84a44b8251300726f18950b09dbce79",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/cyber-shinobi/sheets.json"
+        "assets/play/sheets/streetwear/heroes/cyber-shinobi/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "cyber-shinobi",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.cyber-shinobi.streetwear.core",
@@ -665,12 +746,15 @@
       "notes": "md5:72f3ed25de5f8427dbcfad0c1dd47219",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/cyber-shinobi/sheets.json"
+        "assets/play/sheets/streetwear/heroes/cyber-shinobi/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "cyber-shinobi",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.elowen.cast.core",
@@ -693,7 +777,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "elowen",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.elowen.streetwear.combat",
@@ -714,12 +801,15 @@
       "notes": "md5:2e34d0b16bf2c97c12348e7350516a9e",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/elowen/sheets.json"
+        "assets/play/sheets/streetwear/heroes/elowen/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "elowen",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.elowen.streetwear.core",
@@ -740,12 +830,15 @@
       "notes": "md5:19ab714aa24f3bf02485ffd8954828cd",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/elowen/sheets.json"
+        "assets/play/sheets/streetwear/heroes/elowen/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "elowen",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.frost-lich.cast.core",
@@ -768,7 +861,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "frost-lich",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.frost-lich.streetwear.combat",
@@ -789,12 +885,15 @@
       "notes": "md5:beed96ad96b098a6ca0f255ea60466bd",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/frost-lich/sheets.json"
+        "assets/play/sheets/streetwear/heroes/frost-lich/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "frost-lich",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.frost-lich.streetwear.core",
@@ -815,12 +914,15 @@
       "notes": "md5:c7c60daa0994ffd82df52a3c23e9404e",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/frost-lich/sheets.json"
+        "assets/play/sheets/streetwear/heroes/frost-lich/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "frost-lich",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.kael.cast.core",
@@ -843,7 +945,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "kael",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.kael.streetwear.combat",
@@ -864,12 +969,15 @@
       "notes": "md5:08405d9fa8ec269921ec223f6e938c5a",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/kael/sheets.json"
+        "assets/play/sheets/streetwear/heroes/kael/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "kael",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.kael.streetwear.core",
@@ -890,12 +998,15 @@
       "notes": "md5:40fef74b0d60d2e0a8b6385cb97f45fc",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/kael/sheets.json"
+        "assets/play/sheets/streetwear/heroes/kael/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "kael",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.kitsune.cast.core",
@@ -918,7 +1029,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "kitsune",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.kitsune.streetwear.combat",
@@ -939,12 +1053,15 @@
       "notes": "md5:0c461dd71dd7797b09365c1ad313def5",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/kitsune/sheets.json"
+        "assets/play/sheets/streetwear/heroes/kitsune/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "kitsune",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.kitsune.streetwear.core",
@@ -965,12 +1082,15 @@
       "notes": "md5:3b29b3dec72c59e8d56412bef071a638",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/kitsune/sheets.json"
+        "assets/play/sheets/streetwear/heroes/kitsune/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "kitsune",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.maldrath.cast.core",
@@ -993,7 +1113,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "maldrath",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.maldrath.streetwear.combat",
@@ -1014,12 +1137,15 @@
       "notes": "md5:2e1bf3ba7d9f38de1cbe48045d44cb7a",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/maldrath/sheets.json"
+        "assets/play/sheets/streetwear/heroes/maldrath/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "maldrath",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.maldrath.streetwear.core",
@@ -1040,12 +1166,15 @@
       "notes": "md5:3aeb2464518c31cf54a16b20c720fc2c",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/maldrath/sheets.json"
+        "assets/play/sheets/streetwear/heroes/maldrath/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "maldrath",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.morwen.cast.core",
@@ -1068,7 +1197,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "morwen",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.morwen.streetwear.combat",
@@ -1089,12 +1221,15 @@
       "notes": "md5:b354ad35eb75e37dafb04bab529f3205",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/morwen/sheets.json"
+        "assets/play/sheets/streetwear/heroes/morwen/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "morwen",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.morwen.streetwear.core",
@@ -1115,12 +1250,15 @@
       "notes": "md5:a959c825835bf29fff5ce134c497539f",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/morwen/sheets.json"
+        "assets/play/sheets/streetwear/heroes/morwen/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "morwen",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.neon-viper.cast.core",
@@ -1143,7 +1281,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "neon-viper",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.neon-viper.streetwear.combat",
@@ -1164,12 +1305,15 @@
       "notes": "md5:a02ae28a42b49b4b473f25ed5e01129a",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/neon-viper/sheets.json"
+        "assets/play/sheets/streetwear/heroes/neon-viper/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "neon-viper",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.neon-viper.streetwear.core",
@@ -1190,12 +1334,15 @@
       "notes": "md5:815fc8f97992b8cb3c4e2793d135a57c",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/neon-viper/sheets.json"
+        "assets/play/sheets/streetwear/heroes/neon-viper/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "neon-viper",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.oni.cast.core",
@@ -1218,7 +1365,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "oni",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.oni.streetwear.combat",
@@ -1239,12 +1389,15 @@
       "notes": "md5:6dbcdaffa4b4f2659b10f6e1644c288a",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/oni/sheets.json"
+        "assets/play/sheets/streetwear/heroes/oni/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "oni",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.oni.streetwear.core",
@@ -1265,12 +1418,15 @@
       "notes": "md5:e9944d888a4e21225fb233ecf95c0b05",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/oni/sheets.json"
+        "assets/play/sheets/streetwear/heroes/oni/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "oni",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.raven.cast.core",
@@ -1293,7 +1449,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.raven.streetwear.combat",
@@ -1314,12 +1473,15 @@
       "notes": "md5:d69f4c40becc2693a06a95ca65fbad23",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/raven/sheets.json"
+        "assets/play/sheets/streetwear/heroes/raven/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "raven",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.raven.streetwear.core",
@@ -1340,12 +1502,15 @@
       "notes": "md5:12c69dc496e85ddd1ce1ca05c3c82947",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/raven/sheets.json"
+        "assets/play/sheets/streetwear/heroes/raven/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "raven",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.sak.cast.core",
@@ -1368,7 +1533,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "sak",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.sak.streetwear.combat",
@@ -1389,12 +1557,15 @@
       "notes": "md5:71322e83d6fabf56e90fb2ca3468efb3",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/sak/sheets.json"
+        "assets/play/sheets/streetwear/heroes/sak/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "sak",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.sak.streetwear.core",
@@ -1415,12 +1586,15 @@
       "notes": "md5:b4372eb326f9e1a341c45fc7b30c92c1",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/sak/sheets.json"
+        "assets/play/sheets/streetwear/heroes/sak/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "sak",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.velkhar.cast.core",
@@ -1443,7 +1617,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "velkhar",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.velkhar.streetwear.combat",
@@ -1464,12 +1641,15 @@
       "notes": "md5:c70e89fad963f5429b8e757fba946239",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/velkhar/sheets.json"
+        "assets/play/sheets/streetwear/heroes/velkhar/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "velkhar",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.velkhar.streetwear.core",
@@ -1490,12 +1670,15 @@
       "notes": "md5:fc2e075631452bb27fca0fac12babffb",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/velkhar/sheets.json"
+        "assets/play/sheets/streetwear/heroes/velkhar/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "velkhar",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "hero.void-raven.cast.core",
@@ -1518,7 +1701,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "void-raven",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "hero.void-raven.streetwear.combat",
@@ -1539,12 +1725,15 @@
       "notes": "md5:122610857002d69294f094a087e9e31b",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/void-raven/sheets.json"
+        "assets/play/sheets/streetwear/heroes/void-raven/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "void-raven",
+      "variant": "streetwear",
+      "part": "combat"
     },
     {
       "id": "hero.void-raven.streetwear.core",
@@ -1565,12 +1754,15 @@
       "notes": "md5:cc0974a16a928e28e12e5e7b707cdddd",
       "tags": [],
       "usedBy": [
-        "src/play/generated-play-sheets.ts",
         "assets/art/legacy-play-sheets.json",
-        "assets/play/sheets/streetwear/heroes/void-raven/sheets.json"
+        "assets/play/sheets/streetwear/heroes/void-raven/sheets.json",
+        "src/play/generated-play-sheets.ts"
       ],
       "category": "heroes",
-      "inUse": true
+      "inUse": true,
+      "set": "void-raven",
+      "variant": "streetwear",
+      "part": "core"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-east",
@@ -1598,7 +1790,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-assassin",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-north",
@@ -1626,7 +1821,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-assassin",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-north-east",
@@ -1654,7 +1852,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-assassin",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-north-west",
@@ -1682,7 +1883,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-assassin",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-south",
@@ -1710,7 +1914,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-assassin",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-south-east",
@@ -1738,7 +1945,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-assassin",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-south-west",
@@ -1766,7 +1976,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-assassin",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-02-abyssal-assassin-rotations-west",
@@ -1794,7 +2007,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-assassin",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-east",
@@ -1822,7 +2038,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-druid",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-north",
@@ -1850,7 +2069,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-druid",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-north-east",
@@ -1878,7 +2100,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-druid",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-north-west",
@@ -1906,7 +2131,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-druid",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-south",
@@ -1934,7 +2162,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-druid",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-south-east",
@@ -1962,7 +2193,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-druid",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-south-west",
@@ -1990,7 +2224,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-druid",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-03-dungeon-druid-rotations-west",
@@ -2018,7 +2255,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-druid",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-east",
@@ -2046,7 +2286,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dragonblood-champion",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-north",
@@ -2074,7 +2317,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dragonblood-champion",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-north-east",
@@ -2102,7 +2348,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dragonblood-champion",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-north-west",
@@ -2130,7 +2379,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dragonblood-champion",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-south",
@@ -2158,7 +2410,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dragonblood-champion",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-south-east",
@@ -2186,7 +2441,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dragonblood-champion",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-south-west",
@@ -2214,7 +2472,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dragonblood-champion",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-04-dragonblood-champion-rotations-west",
@@ -2242,7 +2503,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dragonblood-champion",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-east",
@@ -2270,7 +2534,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "arcane-engineer",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-north",
@@ -2298,7 +2565,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "arcane-engineer",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-north-east",
@@ -2326,7 +2596,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "arcane-engineer",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-north-west",
@@ -2354,7 +2627,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "arcane-engineer",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-south",
@@ -2382,7 +2658,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "arcane-engineer",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-south-east",
@@ -2410,7 +2689,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "arcane-engineer",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-south-west",
@@ -2438,7 +2720,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "arcane-engineer",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-05-arcane-engineer-rotations-west",
@@ -2466,7 +2751,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "arcane-engineer",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-east",
@@ -2494,7 +2782,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-witch",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-north",
@@ -2522,7 +2813,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-witch",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-north-east",
@@ -2550,7 +2844,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-witch",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-north-west",
@@ -2578,7 +2875,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-witch",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-south",
@@ -2606,7 +2906,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-witch",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-south-east",
@@ -2634,7 +2937,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-witch",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-south-west",
@@ -2662,7 +2968,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-witch",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-06-dungeon-witch-rotations-west",
@@ -2690,7 +2999,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "dungeon-witch",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-east",
@@ -2718,7 +3030,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "ratkin-treasure-hunter",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-north",
@@ -2746,7 +3061,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "ratkin-treasure-hunter",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-north-east",
@@ -2774,7 +3092,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "ratkin-treasure-hunter",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-north-west",
@@ -2802,7 +3123,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "ratkin-treasure-hunter",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-south",
@@ -2830,7 +3154,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "ratkin-treasure-hunter",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-south-east",
@@ -2858,7 +3185,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "ratkin-treasure-hunter",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-south-west",
@@ -2886,7 +3216,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "ratkin-treasure-hunter",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-07-ratkin-treasure-hunter-rotations-west",
@@ -2914,7 +3247,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "ratkin-treasure-hunter",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-east",
@@ -2942,7 +3278,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "crystal-berserker",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-north",
@@ -2970,7 +3309,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "crystal-berserker",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-north-east",
@@ -2998,7 +3340,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "crystal-berserker",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-north-west",
@@ -3026,7 +3371,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "crystal-berserker",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-south",
@@ -3054,7 +3402,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "crystal-berserker",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-south-east",
@@ -3082,7 +3433,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "crystal-berserker",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-south-west",
@@ -3110,7 +3464,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "crystal-berserker",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-08-crystal-berserker-rotations-west",
@@ -3138,7 +3495,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "crystal-berserker",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-east",
@@ -3166,7 +3526,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "death-knight",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-north",
@@ -3194,7 +3557,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "death-knight",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-north-east",
@@ -3222,7 +3588,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "death-knight",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-north-west",
@@ -3250,7 +3619,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "death-knight",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-south",
@@ -3278,7 +3650,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "death-knight",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-south-east",
@@ -3306,7 +3681,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "death-knight",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-south-west",
@@ -3334,7 +3712,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "death-knight",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-09-death-knight-rotations-west",
@@ -3362,7 +3743,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "death-knight",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-east",
@@ -3390,7 +3774,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "seraphic-dungeon-cleric",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-north",
@@ -3418,7 +3805,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "seraphic-dungeon-cleric",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-north-east",
@@ -3446,7 +3836,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "seraphic-dungeon-cleric",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-north-west",
@@ -3474,7 +3867,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "seraphic-dungeon-cleric",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-south",
@@ -3502,7 +3898,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "seraphic-dungeon-cleric",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-south-east",
@@ -3530,7 +3929,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "seraphic-dungeon-cleric",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-south-west",
@@ -3558,7 +3960,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "seraphic-dungeon-cleric",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.characters-npcs-dungeon-legends-dungeon-legends-10-seraphic-dungeon-cleric-rotations-west",
@@ -3586,7 +3991,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "seraphic-dungeon-cleric",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "npc.east",
@@ -3614,7 +4022,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-demon-guardian",
+      "variant": "dungeon-legends",
+      "part": "east"
     },
     {
       "id": "npc.north",
@@ -3642,7 +4053,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-demon-guardian",
+      "variant": "dungeon-legends",
+      "part": "north"
     },
     {
       "id": "npc.north-east",
@@ -3670,7 +4084,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-demon-guardian",
+      "variant": "dungeon-legends",
+      "part": "north-east"
     },
     {
       "id": "npc.north-west",
@@ -3698,7 +4115,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-demon-guardian",
+      "variant": "dungeon-legends",
+      "part": "north-west"
     },
     {
       "id": "npc.south",
@@ -3726,7 +4146,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-demon-guardian",
+      "variant": "dungeon-legends",
+      "part": "south"
     },
     {
       "id": "npc.south-east",
@@ -3754,7 +4177,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-demon-guardian",
+      "variant": "dungeon-legends",
+      "part": "south-east"
     },
     {
       "id": "npc.south-west",
@@ -3782,7 +4208,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-demon-guardian",
+      "variant": "dungeon-legends",
+      "part": "south-west"
     },
     {
       "id": "npc.west",
@@ -3810,7 +4239,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "abyssal-demon-guardian",
+      "variant": "dungeon-legends",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-east",
@@ -3838,7 +4270,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "buffalo-earthshaker",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-north",
@@ -3866,7 +4301,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "buffalo-earthshaker",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-north-east",
@@ -3894,7 +4332,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "buffalo-earthshaker",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-north-west",
@@ -3922,7 +4363,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "buffalo-earthshaker",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-south",
@@ -3950,7 +4394,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "buffalo-earthshaker",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-south-east",
@@ -3978,7 +4425,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "buffalo-earthshaker",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-south-west",
@@ -4006,7 +4456,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "buffalo-earthshaker",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.characters-pets-primal-buffalo-earthshaker-idle-rotations-west",
@@ -4034,7 +4487,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "buffalo-earthshaker",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-cobra-oracle-idle-rotations-east",
@@ -4062,7 +4518,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cobra-oracle",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.characters-pets-primal-cobra-oracle-idle-rotations-north",
@@ -4090,7 +4549,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cobra-oracle",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-cobra-oracle-idle-rotations-north-east",
@@ -4118,7 +4580,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cobra-oracle",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-cobra-oracle-idle-rotations-north-west",
@@ -4146,7 +4611,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cobra-oracle",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-cobra-oracle-idle-rotations-south",
@@ -4174,7 +4642,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cobra-oracle",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-cobra-oracle-idle-rotations-south-east",
@@ -4202,7 +4673,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cobra-oracle",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-cobra-oracle-idle-rotations-south-west",
@@ -4230,7 +4704,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cobra-oracle",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.characters-pets-primal-cobra-oracle-idle-rotations-west",
@@ -4258,7 +4735,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "cobra-oracle",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-gorilla-titan-idle-rotations-east",
@@ -4286,7 +4766,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "gorilla-titan",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.characters-pets-primal-gorilla-titan-idle-rotations-north",
@@ -4314,7 +4797,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "gorilla-titan",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-gorilla-titan-idle-rotations-north-east",
@@ -4342,7 +4828,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "gorilla-titan",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-gorilla-titan-idle-rotations-north-west",
@@ -4370,7 +4859,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "gorilla-titan",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-gorilla-titan-idle-rotations-south",
@@ -4398,7 +4890,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "gorilla-titan",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-gorilla-titan-idle-rotations-south-east",
@@ -4426,7 +4921,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "gorilla-titan",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-gorilla-titan-idle-rotations-south-west",
@@ -4454,7 +4952,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "gorilla-titan",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.characters-pets-primal-gorilla-titan-idle-rotations-west",
@@ -4482,7 +4983,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "gorilla-titan",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-east",
@@ -4510,7 +5014,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "jaguar-sun-guardian",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-north",
@@ -4538,7 +5045,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "jaguar-sun-guardian",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-north-east",
@@ -4566,7 +5076,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "jaguar-sun-guardian",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-north-west",
@@ -4594,7 +5107,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "jaguar-sun-guardian",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-south",
@@ -4622,7 +5138,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "jaguar-sun-guardian",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-south-east",
@@ -4650,7 +5169,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "jaguar-sun-guardian",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-south-west",
@@ -4678,7 +5200,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "jaguar-sun-guardian",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.characters-pets-primal-jaguar-sun-guardian-idle-rotations-west",
@@ -4706,7 +5231,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "jaguar-sun-guardian",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-lynx-huntress-idle-rotations-east",
@@ -4734,7 +5262,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "lynx-huntress",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.characters-pets-primal-lynx-huntress-idle-rotations-north",
@@ -4762,7 +5293,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "lynx-huntress",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-lynx-huntress-idle-rotations-north-east",
@@ -4790,7 +5324,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "lynx-huntress",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-lynx-huntress-idle-rotations-north-west",
@@ -4818,7 +5355,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "lynx-huntress",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-lynx-huntress-idle-rotations-south",
@@ -4846,7 +5386,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "lynx-huntress",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-lynx-huntress-idle-rotations-south-east",
@@ -4874,7 +5417,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "lynx-huntress",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-lynx-huntress-idle-rotations-south-west",
@@ -4902,7 +5448,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "lynx-huntress",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.characters-pets-primal-lynx-huntress-idle-rotations-west",
@@ -4930,7 +5479,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "lynx-huntress",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-mammoth-warchief-idle-rotations-east",
@@ -4958,7 +5510,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "mammoth-warchief",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.characters-pets-primal-mammoth-warchief-idle-rotations-north",
@@ -4986,7 +5541,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "mammoth-warchief",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-mammoth-warchief-idle-rotations-north-east",
@@ -5014,7 +5572,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "mammoth-warchief",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-mammoth-warchief-idle-rotations-north-west",
@@ -5042,7 +5603,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "mammoth-warchief",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-mammoth-warchief-idle-rotations-south",
@@ -5070,7 +5634,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "mammoth-warchief",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-mammoth-warchief-idle-rotations-south-east",
@@ -5098,7 +5665,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "mammoth-warchief",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-mammoth-warchief-idle-rotations-south-west",
@@ -5126,7 +5696,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "mammoth-warchief",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.characters-pets-primal-mammoth-warchief-idle-rotations-west",
@@ -5154,7 +5727,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "mammoth-warchief",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-panther-shadowblade-idle-rotations-east",
@@ -5182,7 +5758,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "panther-shadowblade",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.characters-pets-primal-panther-shadowblade-idle-rotations-north",
@@ -5210,7 +5789,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "panther-shadowblade",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-panther-shadowblade-idle-rotations-north-east",
@@ -5238,7 +5820,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "panther-shadowblade",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-panther-shadowblade-idle-rotations-north-west",
@@ -5266,7 +5851,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "panther-shadowblade",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-panther-shadowblade-idle-rotations-south",
@@ -5294,7 +5882,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "panther-shadowblade",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-panther-shadowblade-idle-rotations-south-east",
@@ -5322,7 +5913,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "panther-shadowblade",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-panther-shadowblade-idle-rotations-south-west",
@@ -5350,7 +5944,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "panther-shadowblade",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.characters-pets-primal-panther-shadowblade-idle-rotations-west",
@@ -5378,7 +5975,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "panther-shadowblade",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-raven-deathcaller-idle-rotations-east",
@@ -5406,7 +6006,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven-deathcaller",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.characters-pets-primal-raven-deathcaller-idle-rotations-north",
@@ -5434,7 +6037,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven-deathcaller",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-raven-deathcaller-idle-rotations-north-east",
@@ -5462,7 +6068,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven-deathcaller",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-raven-deathcaller-idle-rotations-north-west",
@@ -5490,7 +6099,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven-deathcaller",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-raven-deathcaller-idle-rotations-south",
@@ -5518,7 +6130,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven-deathcaller",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-raven-deathcaller-idle-rotations-south-east",
@@ -5546,7 +6161,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven-deathcaller",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-raven-deathcaller-idle-rotations-south-west",
@@ -5574,7 +6192,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven-deathcaller",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.characters-pets-primal-raven-deathcaller-idle-rotations-west",
@@ -5602,7 +6223,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "raven-deathcaller",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "pet.characters-pets-primal-rhino-juggernaut-idle-rotations-north",
@@ -5630,7 +6254,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "rhino-juggernaut",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.characters-pets-primal-rhino-juggernaut-idle-rotations-north-east",
@@ -5658,7 +6285,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "rhino-juggernaut",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.characters-pets-primal-rhino-juggernaut-idle-rotations-north-west",
@@ -5686,7 +6316,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "rhino-juggernaut",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.characters-pets-primal-rhino-juggernaut-idle-rotations-south",
@@ -5714,7 +6347,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "rhino-juggernaut",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.characters-pets-primal-rhino-juggernaut-idle-rotations-south-east",
@@ -5742,7 +6378,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "rhino-juggernaut",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.characters-pets-primal-rhino-juggernaut-idle-rotations-south-west",
@@ -5770,7 +6409,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "rhino-juggernaut",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.east",
@@ -5798,7 +6440,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "rhino-juggernaut",
+      "variant": "primal",
+      "part": "east"
     },
     {
       "id": "pet.north",
@@ -5826,7 +6471,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "shark-tide-knight",
+      "variant": "primal",
+      "part": "north"
     },
     {
       "id": "pet.north-east",
@@ -5854,7 +6502,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "shark-tide-knight",
+      "variant": "primal",
+      "part": "north-east"
     },
     {
       "id": "pet.north-west",
@@ -5882,7 +6533,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "shark-tide-knight",
+      "variant": "primal",
+      "part": "north-west"
     },
     {
       "id": "pet.south",
@@ -5910,7 +6564,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "shark-tide-knight",
+      "variant": "primal",
+      "part": "south"
     },
     {
       "id": "pet.south-east",
@@ -5938,7 +6595,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "shark-tide-knight",
+      "variant": "primal",
+      "part": "south-east"
     },
     {
       "id": "pet.south-west",
@@ -5966,7 +6626,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "shark-tide-knight",
+      "variant": "primal",
+      "part": "south-west"
     },
     {
       "id": "pet.west",
@@ -5994,7 +6657,10 @@
       "tags": [],
       "usedBy": [],
       "category": "heroes",
-      "inUse": false
+      "inUse": false,
+      "set": "rhino-juggernaut",
+      "variant": "primal",
+      "part": "west"
     },
     {
       "id": "prop.barrel-fire",
@@ -6016,7 +6682,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "barrel-fire"
     },
     {
       "id": "prop.bench-graffiti",
@@ -6038,7 +6707,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "bench-graffiti"
     },
     {
       "id": "prop.boombox",
@@ -6060,7 +6732,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "boombox"
     },
     {
       "id": "prop.boombox-crate",
@@ -6082,7 +6757,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "boombox-crate"
     },
     {
       "id": "prop.crate",
@@ -6104,7 +6782,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "crate"
     },
     {
       "id": "prop.crates-stacked",
@@ -6126,7 +6807,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "crates-stacked"
     },
     {
       "id": "prop.dumpster",
@@ -6148,7 +6832,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "dumpster"
     },
     {
       "id": "prop.dumpster-open",
@@ -6170,7 +6857,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "dumpster-open"
     },
     {
       "id": "prop.fence-chainlink",
@@ -6192,7 +6882,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "fence-chainlink"
     },
     {
       "id": "prop.fence-chainlink-torn",
@@ -6214,7 +6907,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "fence-chainlink-torn"
     },
     {
       "id": "prop.fire-hydrant",
@@ -6236,7 +6932,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "fire-hydrant"
     },
     {
       "id": "prop.fire-hydrant-spray",
@@ -6258,7 +6957,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "fire-hydrant-spray"
     },
     {
       "id": "prop.graffiti-tag-decal",
@@ -6280,7 +6982,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "graffiti-tag-decal"
     },
     {
       "id": "prop.jersey-barrier",
@@ -6302,7 +7007,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "jersey-barrier"
     },
     {
       "id": "prop.newspaper-box",
@@ -6324,7 +7032,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "newspaper-box"
     },
     {
       "id": "prop.oil-drum",
@@ -6346,7 +7057,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "oil-drum"
     },
     {
       "id": "prop.pad-concrete-x",
@@ -6368,7 +7082,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "pad-concrete-x"
     },
     {
       "id": "prop.pad-manhole-ring",
@@ -6390,7 +7107,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "pad-manhole-ring"
     },
     {
       "id": "prop.pad-manhole-splat",
@@ -6412,7 +7132,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "pad-manhole-splat"
     },
     {
       "id": "prop.pad-sticker-slab",
@@ -6434,7 +7157,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "pad-sticker-slab"
     },
     {
       "id": "prop.paint-splat-decal",
@@ -6456,7 +7182,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "paint-splat-decal"
     },
     {
       "id": "prop.prop-crate-scribble",
@@ -6484,7 +7213,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "storage",
+      "variant": "third-party-scribble",
+      "part": "prop_crate_scribble"
     },
     {
       "id": "prop.shopping-cart",
@@ -6506,7 +7238,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "shopping-cart"
     },
     {
       "id": "prop.shopping-cart-tipped",
@@ -6528,7 +7263,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "shopping-cart-tipped"
     },
     {
       "id": "prop.spray-can-single",
@@ -6550,7 +7288,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "spray-can-single"
     },
     {
       "id": "prop.spray-cans",
@@ -6572,7 +7313,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "spray-cans"
     },
     {
       "id": "prop.streetlight",
@@ -6594,7 +7338,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "streetlight"
     },
     {
       "id": "prop.streetlight-broken",
@@ -6616,7 +7363,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "streetlight-broken"
     },
     {
       "id": "prop.tire-stack",
@@ -6638,7 +7388,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "tire-stack"
     },
     {
       "id": "prop.traffic-cone",
@@ -6660,7 +7413,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "traffic-cone"
     },
     {
       "id": "prop.traffic-cone-fallen",
@@ -6682,7 +7438,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "traffic-cone-fallen"
     },
     {
       "id": "prop.trash-bags",
@@ -6704,7 +7463,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "trash-bags"
     },
     {
       "id": "prop.trash-bags-cup",
@@ -6726,7 +7488,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "trash-bags-cup"
     },
     {
       "id": "room.hideout.back",
@@ -6750,7 +7515,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-back"
     },
     {
       "id": "room.hideout.boarded",
@@ -6774,7 +7542,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "boarded"
     },
     {
       "id": "room.hideout.build-sign",
@@ -6798,7 +7569,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "build-sign"
     },
     {
       "id": "room.hideout.floor",
@@ -6822,7 +7596,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-floor"
     },
     {
       "id": "room.hideout.neighbor-boarded",
@@ -6844,7 +7621,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "neighbor-boarded"
     },
     {
       "id": "room.hideout.neighbor-boarded-td",
@@ -6868,7 +7648,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "neighbor-boarded-td"
     },
     {
       "id": "room.hideout.neon-a",
@@ -6892,7 +7675,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-neon-a"
     },
     {
       "id": "room.hideout.neon-b",
@@ -6916,7 +7702,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-neon-b"
     },
     {
       "id": "room.hideout.occluder-day-a",
@@ -6940,7 +7729,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-occlude-day-a"
     },
     {
       "id": "room.hideout.occluder-day-b",
@@ -6964,7 +7756,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-occlude-day-b"
     },
     {
       "id": "room.hideout.occluder-night-a",
@@ -6988,7 +7783,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-occlude-night-a"
     },
     {
       "id": "room.hideout.occluder-night-b",
@@ -7012,7 +7810,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-occlude-night-b"
     },
     {
       "id": "room.hideout.props",
@@ -7036,7 +7837,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-td-props"
     },
     {
       "id": "room.hideout.scaffold",
@@ -7060,7 +7864,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "scaffold"
     },
     {
       "id": "room.hideout.tarp",
@@ -7084,7 +7891,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "tarp"
     },
     {
       "id": "room.hideout.zzz-0",
@@ -7108,7 +7918,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "zzz-0"
     },
     {
       "id": "room.hideout.zzz-1",
@@ -7132,7 +7945,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "zzz-1"
     },
     {
       "id": "room.hideout.zzz-2",
@@ -7156,7 +7972,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "hideout",
+      "variant": "default",
+      "part": "zzz-2"
     },
     {
       "id": "room.loft.back",
@@ -7180,7 +7999,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-back"
     },
     {
       "id": "room.loft.floor",
@@ -7204,7 +8026,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-floor"
     },
     {
       "id": "room.loft.glow",
@@ -7228,7 +8053,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-glow"
     },
     {
       "id": "room.loft.neon-a",
@@ -7252,7 +8080,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-neon-a"
     },
     {
       "id": "room.loft.neon-b",
@@ -7276,7 +8107,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-neon-b"
     },
     {
       "id": "room.loft.occluder-day-a",
@@ -7300,7 +8134,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-occlude-day-a"
     },
     {
       "id": "room.loft.occluder-day-b",
@@ -7324,7 +8161,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-occlude-day-b"
     },
     {
       "id": "room.loft.occluder-night-a",
@@ -7348,7 +8188,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-occlude-night-a"
     },
     {
       "id": "room.loft.occluder-night-b",
@@ -7372,7 +8215,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-occlude-night-b"
     },
     {
       "id": "room.loft.props",
@@ -7396,7 +8242,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-props"
     },
     {
       "id": "room.loft.window-day",
@@ -7420,7 +8269,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-window-day"
     },
     {
       "id": "room.loft.window-night",
@@ -7444,7 +8296,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-td-window-night"
     },
     {
       "id": "room.underground.back",
@@ -7468,7 +8323,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-back"
     },
     {
       "id": "room.underground.floor",
@@ -7492,7 +8350,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-floor"
     },
     {
       "id": "room.underground.neon-a",
@@ -7516,7 +8377,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-neon-a"
     },
     {
       "id": "room.underground.neon-b",
@@ -7540,7 +8404,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-neon-b"
     },
     {
       "id": "room.underground.occluder-day-a",
@@ -7564,7 +8431,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-occlude-day-a"
     },
     {
       "id": "room.underground.occluder-day-b",
@@ -7588,7 +8458,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-occlude-day-b"
     },
     {
       "id": "room.underground.occluder-night-a",
@@ -7612,7 +8485,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-occlude-night-a"
     },
     {
       "id": "room.underground.occluder-night-b",
@@ -7636,7 +8512,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-occlude-night-b"
     },
     {
       "id": "room.underground.props",
@@ -7660,7 +8539,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "rooms",
-      "inUse": true
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground-td-props"
     },
     {
       "id": "rooms.loft.loft.bed",
@@ -7682,7 +8564,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-bed"
     },
     {
       "id": "rooms.loft.loft.glow",
@@ -7704,7 +8589,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-glow"
     },
     {
       "id": "rooms.loft.loft.iso",
@@ -7726,7 +8614,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-iso"
     },
     {
       "id": "rooms.loft.loft.iso.front",
@@ -7748,7 +8639,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-iso-front"
     },
     {
       "id": "rooms.loft.loft.lamp",
@@ -7770,7 +8664,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-lamp"
     },
     {
       "id": "rooms.loft.loft.window.day",
@@ -7792,7 +8689,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-window-day"
     },
     {
       "id": "rooms.loft.loft.window.night",
@@ -7814,7 +8714,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "loft",
+      "variant": "default",
+      "part": "loft-window-night"
     },
     {
       "id": "tile.arrow",
@@ -7842,7 +8745,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "arrow"
     },
     {
       "id": "tile.arrow-circle",
@@ -7870,7 +8776,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "arrow-circle"
     },
     {
       "id": "tile.arrow-curve",
@@ -7898,7 +8807,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "arrow-curve"
     },
     {
       "id": "tile.arrow-head",
@@ -7926,7 +8838,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "arrow-head"
     },
     {
       "id": "tile.asphalt-sidewalk",
@@ -7948,7 +8863,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "default",
+      "part": "asphalt-sidewalk"
     },
     {
       "id": "tile.barrels-stacked",
@@ -7976,7 +8894,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "barrels-stacked"
     },
     {
       "id": "tile.bed",
@@ -8004,7 +8925,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "bed"
     },
     {
       "id": "tile.bed-luxurious",
@@ -8032,7 +8956,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "bed-luxurious"
     },
     {
       "id": "tile.brick-graffiti-sidescroller",
@@ -8054,7 +8981,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "default",
+      "part": "brick-graffiti-sidescroller"
     },
     {
       "id": "tile.bridge",
@@ -8082,7 +9012,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "bridge"
     },
     {
       "id": "tile.bridge-end",
@@ -8110,7 +9043,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "bridge-end"
     },
     {
       "id": "tile.campfire",
@@ -8138,7 +9074,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "campfire"
     },
     {
       "id": "tile.carpet",
@@ -8166,7 +9105,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "carpet"
     },
     {
       "id": "tile.cart",
@@ -8194,7 +9136,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "cart"
     },
     {
       "id": "tile.chair",
@@ -8222,7 +9167,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "chair"
     },
     {
       "id": "tile.crate",
@@ -8250,7 +9198,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "crate"
     },
     {
       "id": "tile.door-closed",
@@ -8278,7 +9229,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "door-closed"
     },
     {
       "id": "tile.door-open",
@@ -8306,7 +9260,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "door-open"
     },
     {
       "id": "tile.doorway",
@@ -8334,7 +9291,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "doorway"
     },
     {
       "id": "tile.floor-arrow",
@@ -8362,7 +9322,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-arrow"
     },
     {
       "id": "tile.floor-arrow-circle",
@@ -8390,7 +9353,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-arrow-circle"
     },
     {
       "id": "tile.floor-arrow-curve",
@@ -8418,7 +9384,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-arrow-curve"
     },
     {
       "id": "tile.floor-arrow-head",
@@ -8446,7 +9415,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-arrow-head"
     },
     {
       "id": "tile.floor-barrel",
@@ -8474,7 +9446,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-barrel"
     },
     {
       "id": "tile.floor-barrels",
@@ -8502,7 +9477,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-barrels"
     },
     {
       "id": "tile.floor-barrels-stacked",
@@ -8530,7 +9508,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-barrels-stacked"
     },
     {
       "id": "tile.floor-bed",
@@ -8558,7 +9539,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-bed"
     },
     {
       "id": "tile.floor-bed-luxurious",
@@ -8586,7 +9570,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-bed-luxurious"
     },
     {
       "id": "tile.floor-campfire",
@@ -8614,7 +9601,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-campfire"
     },
     {
       "id": "tile.floor-cart",
@@ -8642,7 +9632,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-cart"
     },
     {
       "id": "tile.floor-chair",
@@ -8670,7 +9663,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-chair"
     },
     {
       "id": "tile.floor-chest",
@@ -8698,7 +9694,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-chest"
     },
     {
       "id": "tile.floor-coffin",
@@ -8726,7 +9725,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-coffin"
     },
     {
       "id": "tile.floor-crate-small",
@@ -8754,7 +9756,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-crate-small"
     },
     {
       "id": "tile.floor-door-closed",
@@ -8782,7 +9787,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-door-closed"
     },
     {
       "id": "tile.floor-door-open",
@@ -8810,7 +9818,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-door-open"
     },
     {
       "id": "tile.floor-doorway",
@@ -8838,7 +9849,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-doorway"
     },
     {
       "id": "tile.floor-dragon",
@@ -8866,7 +9880,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-dragon"
     },
     {
       "id": "tile.floor-inner-diagonal",
@@ -8894,7 +9911,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-inner-diagonal"
     },
     {
       "id": "tile.floor-inner-long-diagonal",
@@ -8922,7 +9942,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-inner-long-diagonal"
     },
     {
       "id": "tile.floor-inner-long-round",
@@ -8950,7 +9973,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-inner-long-round"
     },
     {
       "id": "tile.floor-inner-round",
@@ -8978,7 +10004,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-inner-round"
     },
     {
       "id": "tile.floor-path",
@@ -9006,7 +10035,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-path"
     },
     {
       "id": "tile.floor-path-crossing",
@@ -9034,7 +10066,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-path-crossing"
     },
     {
       "id": "tile.floor-path-curve",
@@ -9062,7 +10097,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-path-curve"
     },
     {
       "id": "tile.floor-planks",
@@ -9090,7 +10128,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-planks"
     },
     {
       "id": "tile.floor-plants",
@@ -9118,7 +10159,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-plants"
     },
     {
       "id": "tile.floor-puddle",
@@ -9146,7 +10190,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-puddle"
     },
     {
       "id": "tile.floor-table",
@@ -9174,7 +10221,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-table"
     },
     {
       "id": "tile.floor-track",
@@ -9202,7 +10252,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-track"
     },
     {
       "id": "tile.floor-track-cart",
@@ -9230,7 +10283,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-track-cart"
     },
     {
       "id": "tile.floor-track-crossing",
@@ -9258,7 +10314,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-track-crossing"
     },
     {
       "id": "tile.floor-track-curve",
@@ -9286,7 +10345,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-track-curve"
     },
     {
       "id": "tile.floor-trap",
@@ -9314,7 +10376,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-trap"
     },
     {
       "id": "tile.floor-trapdoor-round",
@@ -9342,7 +10407,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-trapdoor-round"
     },
     {
       "id": "tile.floor-trapdoor-square",
@@ -9370,7 +10438,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-trapdoor-square"
     },
     {
       "id": "tile.floor-tree",
@@ -9398,7 +10469,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "floor-tree"
     },
     {
       "id": "tile.floor-wall",
@@ -9426,7 +10500,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall"
     },
     {
       "id": "tile.floor-wall-corner",
@@ -9454,7 +10531,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-corner"
     },
     {
       "id": "tile.floor-wall-curve",
@@ -9482,7 +10562,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-curve"
     },
     {
       "id": "tile.floor-wall-damaged",
@@ -9510,7 +10593,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-damaged"
     },
     {
       "id": "tile.floor-wall-demolished",
@@ -9538,7 +10624,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-demolished"
     },
     {
       "id": "tile.floor-wall-diagonal",
@@ -9566,7 +10655,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-diagonal"
     },
     {
       "id": "tile.floor-wall-edge",
@@ -9594,7 +10686,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-edge"
     },
     {
       "id": "tile.floor-wall-half",
@@ -9622,7 +10717,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-half"
     },
     {
       "id": "tile.floor-wall-secret",
@@ -9650,7 +10748,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-secret"
     },
     {
       "id": "tile.floor-wall-trap",
@@ -9678,7 +10779,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "floor-wall-trap"
     },
     {
       "id": "tile.grass",
@@ -9706,7 +10810,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "grass"
     },
     {
       "id": "tile.inner-diagonal",
@@ -9734,7 +10841,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "inner-diagonal"
     },
     {
       "id": "tile.inner-long-diagonal",
@@ -9762,7 +10872,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "inner-long-diagonal"
     },
     {
       "id": "tile.inner-long-round",
@@ -9790,7 +10903,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "inner-long-round"
     },
     {
       "id": "tile.inner-round",
@@ -9818,7 +10934,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "inner-round"
     },
     {
       "id": "tile.path",
@@ -9846,7 +10965,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "path"
     },
     {
       "id": "tile.path-crossing",
@@ -9874,7 +10996,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "path-crossing"
     },
     {
       "id": "tile.path-curve",
@@ -9902,7 +11027,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "path-curve"
     },
     {
       "id": "tile.planks",
@@ -9930,7 +11058,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "planks"
     },
     {
       "id": "tile.sidewalk-lot",
@@ -9952,7 +11083,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "default",
+      "part": "sidewalk-lot"
     },
     {
       "id": "tile.stairs-down-detail",
@@ -9980,7 +11114,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "stairs-down-detail"
     },
     {
       "id": "tile.table",
@@ -10008,7 +11145,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "table"
     },
     {
       "id": "tile.tile",
@@ -10036,7 +11176,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "tile"
     },
     {
       "id": "tile.tile-0",
@@ -10058,7 +11201,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-0"
     },
     {
       "id": "tile.tile-1",
@@ -10080,7 +11226,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-1"
     },
     {
       "id": "tile.tile-10",
@@ -10102,7 +11251,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-10"
     },
     {
       "id": "tile.tile-11",
@@ -10124,7 +11276,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-11"
     },
     {
       "id": "tile.tile-12",
@@ -10146,7 +11301,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-12"
     },
     {
       "id": "tile.tile-13",
@@ -10168,7 +11326,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-13"
     },
     {
       "id": "tile.tile-14",
@@ -10190,7 +11351,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-14"
     },
     {
       "id": "tile.tile-15",
@@ -10212,7 +11376,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-15"
     },
     {
       "id": "tile.tile-16",
@@ -10234,7 +11401,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-16"
     },
     {
       "id": "tile.tile-17",
@@ -10256,7 +11426,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-17"
     },
     {
       "id": "tile.tile-2",
@@ -10278,7 +11451,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-2"
     },
     {
       "id": "tile.tile-3",
@@ -10300,7 +11476,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-3"
     },
     {
       "id": "tile.tile-4",
@@ -10322,7 +11501,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-4"
     },
     {
       "id": "tile.tile-5",
@@ -10344,7 +11526,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-5"
     },
     {
       "id": "tile.tile-6",
@@ -10366,7 +11551,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-6"
     },
     {
       "id": "tile.tile-7",
@@ -10388,7 +11576,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-7"
     },
     {
       "id": "tile.tile-8",
@@ -10410,7 +11601,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-8"
     },
     {
       "id": "tile.tile-9",
@@ -10432,7 +11626,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "road-path",
+      "part": "tile-9"
     },
     {
       "id": "tile.tiles",
@@ -10460,7 +11657,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "tiles"
     },
     {
       "id": "tile.tiles-center",
@@ -10488,7 +11688,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "tiles-center"
     },
     {
       "id": "tile.tiles-corner",
@@ -10516,7 +11719,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "tiles-corner"
     },
     {
       "id": "tile.tiles-decorative",
@@ -10544,7 +11750,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "tiles-decorative"
     },
     {
       "id": "tile.track",
@@ -10572,7 +11781,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "track"
     },
     {
       "id": "tile.track-cart",
@@ -10600,7 +11812,10 @@
       "tags": [],
       "usedBy": [],
       "category": "props",
-      "inUse": false
+      "inUse": false,
+      "set": "scribble-dungeons",
+      "variant": "default",
+      "part": "track-cart"
     },
     {
       "id": "tile.track-crossing",
@@ -10628,7 +11843,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "track-crossing"
     },
     {
       "id": "tile.track-curve",
@@ -10656,7 +11874,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "track-curve"
     },
     {
       "id": "tile.trap",
@@ -10684,7 +11905,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "trap"
     },
     {
       "id": "tile.trap-door",
@@ -10712,7 +11936,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "trap-door"
     },
     {
       "id": "tile.trapdoor-round",
@@ -10740,7 +11967,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "trapdoor-round"
     },
     {
       "id": "tile.trapdoor-square",
@@ -10768,7 +11998,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "trapdoor-square"
     },
     {
       "id": "tile.wall-curve",
@@ -10796,7 +12029,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "wall-curve"
     },
     {
       "id": "tile.wall-demolished",
@@ -10824,7 +12060,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "wall-demolished"
     },
     {
       "id": "tile.wall-diagonal",
@@ -10852,7 +12091,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "wall-diagonal"
     },
     {
       "id": "tile.wall-edge",
@@ -10880,7 +12122,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "wall-edge"
     },
     {
       "id": "tile.wall-secret",
@@ -10908,7 +12153,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "wall-secret"
     },
     {
       "id": "tile.wall-trap",
@@ -10936,7 +12184,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "wall-trap"
     },
     {
       "id": "tile.water",
@@ -10964,7 +12215,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "water"
     },
     {
       "id": "tile.wood",
@@ -10992,7 +12246,10 @@
       "tags": [],
       "usedBy": [],
       "category": "tiles",
-      "inUse": false
+      "inUse": false,
+      "set": "third-party-scribble",
+      "variant": "scribble-dungeons",
+      "part": "wood"
     },
     {
       "id": "tower.ghost.cast.core",
@@ -11015,7 +12272,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "ghost",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "tower.lux.cast.core",
@@ -11038,7 +12298,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "lux",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "tower.viper.cast.core",
@@ -11061,7 +12324,10 @@
       "tags": [],
       "usedBy": [],
       "category": "enemies-bosses",
-      "inUse": false
+      "inUse": false,
+      "set": "viper",
+      "variant": "cast",
+      "part": "atlas"
     },
     {
       "id": "ui.markers.streetwear.bar-garage",
@@ -11085,7 +12351,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "ui",
-      "inUse": true
+      "inUse": true,
+      "set": "markers",
+      "variant": "streetwear",
+      "part": "bar-garage"
     },
     {
       "id": "ui.markers.streetwear.bar-hideout",
@@ -11109,7 +12378,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "ui",
-      "inUse": true
+      "inUse": true,
+      "set": "markers",
+      "variant": "streetwear",
+      "part": "bar-hideout"
     },
     {
       "id": "ui.markers.streetwear.bar-loft",
@@ -11133,7 +12405,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "ui",
-      "inUse": true
+      "inUse": true,
+      "set": "markers",
+      "variant": "streetwear",
+      "part": "bar-loft"
     },
     {
       "id": "ui.markers.streetwear.bar-marker",
@@ -11157,7 +12432,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "ui",
-      "inUse": true
+      "inUse": true,
+      "set": "markers",
+      "variant": "streetwear",
+      "part": "bar-marker"
     },
     {
       "id": "ui.markers.streetwear.bar-rooftop",
@@ -11181,7 +12459,10 @@
         "src/play/hideout-art.ts"
       ],
       "category": "ui",
-      "inUse": true
+      "inUse": true,
+      "set": "markers",
+      "variant": "streetwear",
+      "part": "bar-rooftop"
     },
     {
       "id": "ui.ui-streetwear-ambient-drip",
@@ -11203,7 +12484,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "drip",
+      "variant": "streetwear",
+      "part": "drip"
     },
     {
       "id": "ui.ui-streetwear-ambient-moth",
@@ -11225,7 +12509,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "moth",
+      "variant": "streetwear",
+      "part": "moth"
     },
     {
       "id": "ui.ui-streetwear-ambient-note",
@@ -11247,7 +12534,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "note",
+      "variant": "streetwear",
+      "part": "note"
     },
     {
       "id": "ui.ui-streetwear-ambient-note2",
@@ -11269,7 +12559,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "note",
+      "variant": "streetwear",
+      "part": "note2"
     },
     {
       "id": "ui.ui-streetwear-ambient-pigeon",
@@ -11291,7 +12584,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "pigeon",
+      "variant": "streetwear",
+      "part": "pigeon"
     },
     {
       "id": "ui.ui-streetwear-ambient-pigeon-peck",
@@ -11313,7 +12609,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "pigeon",
+      "variant": "streetwear",
+      "part": "pigeon-peck"
     },
     {
       "id": "ui.ui-streetwear-ambient-plane",
@@ -11335,7 +12634,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "plane",
+      "variant": "streetwear",
+      "part": "plane"
     },
     {
       "id": "ui.ui-streetwear-ambient-rat",
@@ -11357,7 +12659,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "rat",
+      "variant": "streetwear",
+      "part": "rat"
     },
     {
       "id": "ui.ui-streetwear-ambient-rat-run",
@@ -11379,7 +12684,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "rat",
+      "variant": "streetwear",
+      "part": "rat-run"
     },
     {
       "id": "ui.ui-streetwear-ambient-spark",
@@ -11401,7 +12709,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "spark",
+      "variant": "streetwear",
+      "part": "spark"
     },
     {
       "id": "ui.ui-streetwear-ambient-star",
@@ -11423,7 +12734,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "star",
+      "variant": "streetwear",
+      "part": "star"
     },
     {
       "id": "ui.ui-streetwear-ambient-steam",
@@ -11445,7 +12759,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "steam",
+      "variant": "streetwear",
+      "part": "steam"
     },
     {
       "id": "ui.ui-streetwear-ambient-wisp",
@@ -11467,7 +12784,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "wisp",
+      "variant": "streetwear",
+      "part": "wisp"
     },
     {
       "id": "ui.ui-streetwear-button-normal",
@@ -11489,7 +12809,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "button-normal"
     },
     {
       "id": "ui.ui-streetwear-button-pressed",
@@ -11511,7 +12834,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "button-pressed"
     },
     {
       "id": "ui.ui-streetwear-card-frame",
@@ -11533,7 +12859,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "card-frame"
     },
     {
       "id": "ui.ui-streetwear-health-bar",
@@ -11555,7 +12884,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "health-bar"
     },
     {
       "id": "ui.ui-streetwear-icons-backpack",
@@ -11577,7 +12909,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "backpack"
     },
     {
       "id": "ui.ui-streetwear-icons-bandana",
@@ -11599,7 +12934,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "bandana"
     },
     {
       "id": "ui.ui-streetwear-icons-bat",
@@ -11621,7 +12959,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "bat"
     },
     {
       "id": "ui.ui-streetwear-icons-bolt",
@@ -11643,7 +12984,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "bolt"
     },
     {
       "id": "ui.ui-streetwear-icons-bomb",
@@ -11665,7 +13009,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "bomb"
     },
     {
       "id": "ui.ui-streetwear-icons-boombox",
@@ -11687,7 +13034,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "boombox"
     },
     {
       "id": "ui.ui-streetwear-icons-boxing-glove",
@@ -11709,7 +13059,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "boxing-glove"
     },
     {
       "id": "ui.ui-streetwear-icons-brick-paint",
@@ -11731,7 +13084,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "brick-paint"
     },
     {
       "id": "ui.ui-streetwear-icons-brick-wall",
@@ -11753,7 +13109,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "brick-wall"
     },
     {
       "id": "ui.ui-streetwear-icons-bucket-hat",
@@ -11775,7 +13134,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "bucket-hat"
     },
     {
       "id": "ui.ui-streetwear-icons-cap",
@@ -11797,7 +13159,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "cap"
     },
     {
       "id": "ui.ui-streetwear-icons-card",
@@ -11819,7 +13184,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "card"
     },
     {
       "id": "ui.ui-streetwear-icons-cassette",
@@ -11841,7 +13209,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "cassette"
     },
     {
       "id": "ui.ui-streetwear-icons-chain",
@@ -11863,7 +13234,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "chain"
     },
     {
       "id": "ui.ui-streetwear-icons-chain-lock",
@@ -11885,7 +13259,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "chain-lock"
     },
     {
       "id": "ui.ui-streetwear-icons-clock",
@@ -11907,7 +13284,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "clock"
     },
     {
       "id": "ui.ui-streetwear-icons-coin-stack",
@@ -11929,7 +13309,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "coin-stack"
     },
     {
       "id": "ui.ui-streetwear-icons-crown",
@@ -11951,7 +13334,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "crown"
     },
     {
       "id": "ui.ui-streetwear-icons-dice",
@@ -11973,7 +13359,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "dice"
     },
     {
       "id": "ui.ui-streetwear-icons-dpad",
@@ -11995,7 +13384,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "dpad"
     },
     {
       "id": "ui.ui-streetwear-icons-drop",
@@ -12017,7 +13409,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "drop"
     },
     {
       "id": "ui.ui-streetwear-icons-fist",
@@ -12039,7 +13434,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "fist"
     },
     {
       "id": "ui.ui-streetwear-icons-flame",
@@ -12061,7 +13459,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "flame"
     },
     {
       "id": "ui.ui-streetwear-icons-gear",
@@ -12083,7 +13484,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "gear"
     },
     {
       "id": "ui.ui-streetwear-icons-gem",
@@ -12105,7 +13509,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "gem"
     },
     {
       "id": "ui.ui-streetwear-icons-graffiti-tag",
@@ -12127,7 +13534,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "graffiti-tag"
     },
     {
       "id": "ui.ui-streetwear-icons-headphones",
@@ -12149,7 +13559,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "headphones"
     },
     {
       "id": "ui.ui-streetwear-icons-heart",
@@ -12171,7 +13584,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "heart"
     },
     {
       "id": "ui.ui-streetwear-icons-hoodie",
@@ -12193,7 +13609,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "hoodie"
     },
     {
       "id": "ui.ui-streetwear-icons-key",
@@ -12215,7 +13634,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "key"
     },
     {
       "id": "ui.ui-streetwear-icons-leaf",
@@ -12237,7 +13659,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "leaf"
     },
     {
       "id": "ui.ui-streetwear-icons-marker",
@@ -12259,7 +13684,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "marker"
     },
     {
       "id": "ui.ui-streetwear-icons-mic",
@@ -12281,7 +13709,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "mic"
     },
     {
       "id": "ui.ui-streetwear-icons-padlock",
@@ -12303,7 +13734,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "padlock"
     },
     {
       "id": "ui.ui-streetwear-icons-padlock-chain",
@@ -12325,7 +13759,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "padlock-chain"
     },
     {
       "id": "ui.ui-streetwear-icons-paint-bucket",
@@ -12347,7 +13784,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "paint-bucket"
     },
     {
       "id": "ui.ui-streetwear-icons-paint-roller",
@@ -12369,7 +13809,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "paint-roller"
     },
     {
       "id": "ui.ui-streetwear-icons-potion",
@@ -12391,7 +13834,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "potion"
     },
     {
       "id": "ui.ui-streetwear-icons-price-tag",
@@ -12413,7 +13859,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "price-tag"
     },
     {
       "id": "ui.ui-streetwear-icons-shades",
@@ -12435,7 +13884,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "shades"
     },
     {
       "id": "ui.ui-streetwear-icons-shield",
@@ -12457,7 +13909,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "shield"
     },
     {
       "id": "ui.ui-streetwear-icons-skateboard",
@@ -12479,7 +13934,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "skateboard"
     },
     {
       "id": "ui.ui-streetwear-icons-skull-mask",
@@ -12501,7 +13959,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "skull-mask"
     },
     {
       "id": "ui.ui-streetwear-icons-sneaker",
@@ -12523,7 +13984,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "sneaker"
     },
     {
       "id": "ui.ui-streetwear-icons-speech",
@@ -12545,7 +14009,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "speech"
     },
     {
       "id": "ui.ui-streetwear-icons-spray-can",
@@ -12567,7 +14034,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "spray-can"
     },
     {
       "id": "ui.ui-streetwear-icons-star",
@@ -12589,7 +14059,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "star"
     },
     {
       "id": "ui.ui-streetwear-icons-subway-train",
@@ -12611,7 +14084,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "subway-train"
     },
     {
       "id": "ui.ui-streetwear-icons-sword",
@@ -12633,7 +14109,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "sword"
     },
     {
       "id": "ui.ui-streetwear-icons-traffic-cone",
@@ -12655,7 +14134,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "traffic-cone"
     },
     {
       "id": "ui.ui-streetwear-icons-trash-can",
@@ -12677,7 +14159,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "trash-can"
     },
     {
       "id": "ui.ui-streetwear-icons-trophy",
@@ -12699,7 +14184,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "trophy"
     },
     {
       "id": "ui.ui-streetwear-icons-upgrade",
@@ -12721,7 +14209,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "upgrade"
     },
     {
       "id": "ui.ui-streetwear-icons-vinyl",
@@ -12743,7 +14234,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "vinyl"
     },
     {
       "id": "ui.ui-streetwear-icons-void-eye",
@@ -12765,7 +14259,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "void-eye"
     },
     {
       "id": "ui.ui-streetwear-icons-warning",
@@ -12787,7 +14284,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "warning"
     },
     {
       "id": "ui.ui-streetwear-kit-button-grey",
@@ -12809,7 +14309,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "button-grey"
     },
     {
       "id": "ui.ui-streetwear-kit-header",
@@ -12831,7 +14334,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "header"
     },
     {
       "id": "ui.ui-streetwear-kit-hud",
@@ -12853,7 +14359,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "hud"
     },
     {
       "id": "ui.ui-streetwear-kit-panel",
@@ -12875,7 +14384,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "panel"
     },
     {
       "id": "ui.ui-streetwear-kit-pieces",
@@ -12897,7 +14409,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "pieces"
     },
     {
       "id": "ui.ui-streetwear-kit-portrait",
@@ -12919,7 +14434,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "portrait"
     },
     {
       "id": "ui.ui-streetwear-kit-resbar",
@@ -12941,7 +14459,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "resbar"
     },
     {
       "id": "ui.ui-streetwear-kit-sheet",
@@ -12963,7 +14484,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "sheet"
     },
     {
       "id": "ui.ui-streetwear-kit-tabbar",
@@ -12985,7 +14509,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "tabbar"
     },
     {
       "id": "ui.ui-streetwear-kit-toast",
@@ -13007,7 +14534,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "kit",
+      "variant": "streetwear",
+      "part": "toast"
     },
     {
       "id": "ui.ui-streetwear-nav-cur-caps",
@@ -13029,7 +14559,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "currency",
+      "variant": "streetwear",
+      "part": "cur-caps"
     },
     {
       "id": "ui.ui-streetwear-nav-cur-prism",
@@ -13051,7 +14584,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "currency",
+      "variant": "streetwear",
+      "part": "cur-prism"
     },
     {
       "id": "ui.ui-streetwear-nav-cur-shine",
@@ -13073,7 +14609,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "currency",
+      "variant": "streetwear",
+      "part": "cur-shine"
     },
     {
       "id": "ui.ui-streetwear-nav-cur-token",
@@ -13095,7 +14634,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "currency",
+      "variant": "streetwear",
+      "part": "cur-token"
     },
     {
       "id": "ui.ui-streetwear-nav-settings",
@@ -13117,7 +14659,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "streetwear",
+      "part": "settings"
     },
     {
       "id": "ui.ui-streetwear-nav-tab-block",
@@ -13139,7 +14684,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "streetwear",
+      "part": "tab-block"
     },
     {
       "id": "ui.ui-streetwear-nav-tab-hideout",
@@ -13161,7 +14709,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "streetwear",
+      "part": "tab-hideout"
     },
     {
       "id": "ui.ui-streetwear-nav-tab-locker",
@@ -13183,7 +14734,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "streetwear",
+      "part": "tab-locker"
     },
     {
       "id": "ui.ui-streetwear-nav-tab-store",
@@ -13205,7 +14759,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "streetwear",
+      "part": "tab-store"
     },
     {
       "id": "ui.ui-streetwear-nav-tab-turf",
@@ -13227,7 +14784,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "streetwear",
+      "part": "tab-turf"
     },
     {
       "id": "ui.ui-streetwear-panel-frame",
@@ -13249,7 +14809,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "part": "panel-frame"
     },
     {
       "id": "ui.ui-streetwear-rarity-frame-base",
@@ -13271,7 +14834,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "frames",
+      "variant": "streetwear",
+      "part": "frame-base"
     },
     {
       "id": "ui.ui-streetwear-rarity-frame-common",
@@ -13293,7 +14859,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "frames",
+      "variant": "streetwear",
+      "part": "frame-common"
     },
     {
       "id": "ui.ui-streetwear-rarity-frame-divine",
@@ -13315,7 +14884,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "frames",
+      "variant": "streetwear",
+      "part": "frame-divine"
     },
     {
       "id": "ui.ui-streetwear-rarity-frame-epic",
@@ -13337,7 +14909,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "frames",
+      "variant": "streetwear",
+      "part": "frame-epic"
     },
     {
       "id": "ui.ui-streetwear-rarity-frame-legendary",
@@ -13359,7 +14934,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "frames",
+      "variant": "streetwear",
+      "part": "frame-legendary"
     },
     {
       "id": "ui.ui-streetwear-rarity-frame-rare",
@@ -13381,7 +14959,10 @@
       "tags": [],
       "usedBy": [],
       "category": "ui",
-      "inUse": false
+      "inUse": false,
+      "set": "frames",
+      "variant": "streetwear",
+      "part": "frame-rare"
     },
     {
       "id": "ui.ui-streetwear-rarity-gem-common",
@@ -13403,7 +14984,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "rarity",
+      "variant": "streetwear",
+      "part": "gem-common"
     },
     {
       "id": "ui.ui-streetwear-rarity-gem-divine",
@@ -13425,7 +15009,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "rarity",
+      "variant": "streetwear",
+      "part": "gem-divine"
     },
     {
       "id": "ui.ui-streetwear-rarity-gem-epic",
@@ -13447,7 +15034,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "rarity",
+      "variant": "streetwear",
+      "part": "gem-epic"
     },
     {
       "id": "ui.ui-streetwear-rarity-gem-legendary",
@@ -13469,7 +15059,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "rarity",
+      "variant": "streetwear",
+      "part": "gem-legendary"
     },
     {
       "id": "ui.ui-streetwear-rarity-gem-rare",
@@ -13491,7 +15084,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "rarity",
+      "variant": "streetwear",
+      "part": "gem-rare"
     },
     {
       "id": "ui.ui-streetwear-rarity-shine",
@@ -13513,7 +15109,10 @@
       "tags": [],
       "usedBy": [],
       "category": "fx",
-      "inUse": false
+      "inUse": false,
+      "set": "shine",
+      "variant": "streetwear",
+      "part": "shine"
     },
     {
       "id": "ui.ui-streetwear-rooms-hideout",
@@ -13535,7 +15134,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout"
     },
     {
       "id": "ui.ui-streetwear-rooms-hideout-full",
@@ -13557,7 +15159,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-full"
     },
     {
       "id": "ui.ui-streetwear-rooms-hideout-iso",
@@ -13579,7 +15184,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-iso"
     },
     {
       "id": "ui.ui-streetwear-rooms-hideout-iso-bowl",
@@ -13601,7 +15209,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-iso-bowl"
     },
     {
       "id": "ui.ui-streetwear-rooms-hideout-iso-cushion",
@@ -13623,7 +15234,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-iso-cushion"
     },
     {
       "id": "ui.ui-streetwear-rooms-hideout-iso-front",
@@ -13645,7 +15259,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-iso-front"
     },
     {
       "id": "ui.ui-streetwear-rooms-hideout-iso-manhole",
@@ -13667,7 +15284,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-iso-manhole"
     },
     {
       "id": "ui.ui-streetwear-rooms-hideout-iso-mask",
@@ -13689,7 +15309,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "hideout",
+      "variant": "default",
+      "part": "hideout-iso-mask"
     },
     {
       "id": "ui.ui-streetwear-rooms-locker",
@@ -13711,7 +15334,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "locker",
+      "variant": "default",
+      "part": "locker"
     },
     {
       "id": "ui.ui-streetwear-rooms-underground",
@@ -13733,7 +15359,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "underground",
+      "variant": "default",
+      "part": "underground"
     },
     {
       "id": "ui.ui-streetwear-shop-dive-charge",
@@ -13755,7 +15384,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "shop",
+      "variant": "streetwear",
+      "part": "dive-charge"
     },
     {
       "id": "ui.ui-streetwear-shop-merge-crate",
@@ -13777,7 +15409,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "shop",
+      "variant": "streetwear",
+      "part": "merge-crate"
     },
     {
       "id": "ui.ui-streetwear-shop-prism-stone",
@@ -13799,7 +15434,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "shop",
+      "variant": "streetwear",
+      "part": "prism-stone"
     },
     {
       "id": "ui.ui-streetwear-shop-shine-stone",
@@ -13821,7 +15459,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "shop",
+      "variant": "streetwear",
+      "part": "shine-stone"
     },
     {
       "id": "ui.ui-streetwear-shop-star-pearl",
@@ -13843,7 +15484,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "shop",
+      "variant": "streetwear",
+      "part": "star-pearl"
     },
     {
       "id": "ui.ui-streetwear-stops-core",
@@ -13865,7 +15509,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "stops",
+      "variant": "default",
+      "part": "core"
     },
     {
       "id": "ui.ui-streetwear-stops-ghost",
@@ -13887,7 +15534,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "stops",
+      "variant": "default",
+      "part": "ghost"
     },
     {
       "id": "ui.ui-streetwear-stops-platform",
@@ -13909,7 +15559,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "stops",
+      "variant": "default",
+      "part": "platform"
     },
     {
       "id": "ui.ui-streetwear-stops-sewers",
@@ -13931,7 +15584,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "stops",
+      "variant": "default",
+      "part": "sewers"
     },
     {
       "id": "ui.ui-streetwear-stops-train",
@@ -13953,7 +15609,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "stops",
+      "variant": "default",
+      "part": "train"
     },
     {
       "id": "ui.ui-streetwear-stops-tunnels",
@@ -13975,7 +15634,10 @@
       "tags": [],
       "usedBy": [],
       "category": "rooms",
-      "inUse": false
+      "inUse": false,
+      "set": "stops",
+      "variant": "default",
+      "part": "tunnels"
     },
     {
       "id": "ui.ui-streetwear-swords-relic",
@@ -13997,7 +15659,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "swords",
+      "variant": "streetwear",
+      "part": "relic"
     },
     {
       "id": "ui.ui-streetwear-swords-sword-common",
@@ -14019,7 +15684,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "swords",
+      "variant": "streetwear",
+      "part": "sword-common"
     },
     {
       "id": "ui.ui-streetwear-swords-sword-divine",
@@ -14041,7 +15709,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "swords",
+      "variant": "streetwear",
+      "part": "sword-divine"
     },
     {
       "id": "ui.ui-streetwear-swords-sword-epic",
@@ -14063,7 +15734,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "swords",
+      "variant": "streetwear",
+      "part": "sword-epic"
     },
     {
       "id": "ui.ui-streetwear-swords-sword-legendary",
@@ -14085,7 +15759,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "swords",
+      "variant": "streetwear",
+      "part": "sword-legendary"
     },
     {
       "id": "ui.ui-streetwear-swords-sword-rare",
@@ -14107,7 +15784,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "swords",
+      "variant": "streetwear",
+      "part": "sword-rare"
     },
     {
       "id": "ui.ui-template-explore",
@@ -14129,7 +15809,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "template",
+      "part": "explore"
     },
     {
       "id": "ui.ui-template-explore-2x",
@@ -14151,7 +15834,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "template",
+      "part": "explore-2x"
     },
     {
       "id": "ui.ui-template-explore-3x",
@@ -14173,7 +15859,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "template",
+      "part": "explore-3x"
     },
     {
       "id": "ui.ui-template-expo-badge",
@@ -14195,7 +15884,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "expo-badge",
+      "variant": "template",
+      "part": "expo-badge"
     },
     {
       "id": "ui.ui-template-expo-badge-white",
@@ -14217,7 +15909,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "expo-badge-white",
+      "variant": "template",
+      "part": "expo-badge-white"
     },
     {
       "id": "ui.ui-template-home",
@@ -14239,7 +15934,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "template",
+      "part": "home"
     },
     {
       "id": "ui.ui-template-home-2x",
@@ -14261,7 +15959,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "template",
+      "part": "home-2x"
     },
     {
       "id": "ui.ui-template-home-3x",
@@ -14283,7 +15984,10 @@
       "tags": [],
       "usedBy": [],
       "category": "icons",
-      "inUse": false
+      "inUse": false,
+      "set": "tabs",
+      "variant": "template",
+      "part": "home-3x"
     },
     {
       "id": "ui.ui-template-react-logo",
@@ -14305,7 +16009,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "react-logo",
+      "variant": "template",
+      "part": "react-logo"
     },
     {
       "id": "ui.ui-template-react-logo-2x",
@@ -14327,7 +16034,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "react-logo-2x",
+      "variant": "template",
+      "part": "react-logo-2x"
     },
     {
       "id": "ui.ui-template-react-logo-3x",
@@ -14349,7 +16059,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "react-logo-3x",
+      "variant": "template",
+      "part": "react-logo-3x"
     },
     {
       "id": "ui.ui-template-tutorial-web",
@@ -14371,7 +16084,10 @@
       "tags": [],
       "usedBy": [],
       "category": "branding",
-      "inUse": false
+      "inUse": false,
+      "set": "tutorial-web",
+      "variant": "template",
+      "part": "tutorial-web"
     }
   ]
 }

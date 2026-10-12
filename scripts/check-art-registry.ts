@@ -3,8 +3,10 @@
  *
  * --release  placeholder assets fail
  * --budget N decoded-MB cap per atlas (default 48)
+ * --fresh    fail if registry/catalog would change (`npm run art:sync`)
  */
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -12,9 +14,11 @@ import type { ArtRegistry } from '../src/art/registry.types';
 import { ART_CATEGORIES } from '../src/art/registry.types';
 import { classifyArt, placeWithUsage, usageFolderOf } from './art-categories';
 import { walkFiles } from './art-png';
+import { ART_GENERATED_PATHS, runArtSync } from './art-sync';
 
 const repo = path.resolve(__dirname, '..');
 const release = process.argv.includes('--release');
+const fresh = process.argv.includes('--fresh');
 const budgetArg = process.argv.indexOf('--budget');
 const BUDGET_MB = budgetArg === -1 ? 48 : Number(process.argv[budgetArg + 1]);
 
@@ -25,8 +29,32 @@ function ok(n: number, msg: string) {
   return n + 1;
 }
 
+function hashGenerated(): string {
+  const h = crypto.createHash('sha256');
+  for (const rel of ART_GENERATED_PATHS) {
+    const abs = path.join(repo, rel);
+    if (!fs.existsSync(abs)) {
+      h.update(`${rel}\0missing\0`);
+      continue;
+    }
+    const files = fs.statSync(abs).isDirectory() ? walkFiles(abs) : [abs];
+    for (const file of files) {
+      h.update(path.relative(repo, file).split(path.sep).join('/'));
+      h.update('\0');
+      h.update(fs.readFileSync(file));
+    }
+  }
+  return h.digest('hex');
+}
+
 function main() {
   let passed = 0;
+  let stale = false;
+  if (fresh) {
+    const before = hashGenerated();
+    runArtSync();
+    stale = hashGenerated() !== before;
+  }
   const registry = JSON.parse(fs.readFileSync(path.join(repo, 'assets/art/registry.json'), 'utf8')) as ArtRegistry;
   const artRoot = path.join(repo, 'assets/art');
   const skip = (rel: string) =>
@@ -100,6 +128,7 @@ function main() {
     const referenced = (a.usedBy ?? []).length > 0;
     if (folder === 'unused' && referenced) unusedRefs.push(`${a.id} usedBy=${(a.usedBy ?? []).join(',')}`);
     if (a.inUse !== referenced) inUseFlag.push(a.id);
+    if (!a.set || !a.variant) inUseFlag.push(`${a.id} missing set/variant`);
   }
   assert.deepEqual(unusedRefs.slice(0, 20), [], `unused/ items that are referenced (≤20): ${unusedRefs.slice(0, 20).join('; ')}`);
   assert.deepEqual(inUseFlag.slice(0, 20), [], `inUse flag mismatch (≤20): ${inUseFlag.slice(0, 20).join('; ')}`);
@@ -143,6 +172,13 @@ function main() {
   const gold = pixelGold(['kael', 'archangel']);
   passed = ok(passed, gold);
 
+  if (stale) {
+    console.error('\ncheck:art-registry --fresh: registry/catalog are stale versus the code and art.');
+    console.error('  Run:  npm run art:sync');
+    console.error('  Then commit the generated files. Never hand-edit them.');
+    process.exit(1);
+  }
+  if (fresh) passed = ok(passed, 'registry + catalog match art:sync (fresh)');
   console.log(`\ncheck:art-registry — ${passed} groups passed.`);
 }
 

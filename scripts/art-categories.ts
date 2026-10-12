@@ -1,8 +1,9 @@
 /**
  * Top-level art library folders. Classify by what the file is, not the old path.
  *
- *   assets/art/<category>/in-use/…   referenced by code
- *   assets/art/<category>/unused/…   not referenced
+ *   assets/art/<category>/in-use/<set>/<variant>/…   referenced by code
+ *   assets/art/<category>/unused/<set>/<variant>/…   not referenced
+ *   set = family (kitsune, lightning, cyberpunk); variant = look/part (streetwear, walls, default)
  *   assets/art/rooms/<room>/         live Hideout packs (equivalent in-use split;
  *                                   hideout-art.ts + room-map checks import these)
  *   assets/art/rooms/unused/…        unused room stills

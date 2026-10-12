@@ -296,7 +296,7 @@ export function walkFiles(dir: string): string[] {
     if (entry.isDirectory()) out.push(...walkFiles(full));
     else out.push(full);
   }
-  return out;
+  return out.sort((a, b) => a.split(path.sep).join('/').localeCompare(b.split(path.sep).join('/')));
 }
 
 /** MaxRects BSSF — packs `{id,w,h}` into one atlas, growing toward `target` then `cap`. */

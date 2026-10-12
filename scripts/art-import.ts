@@ -115,6 +115,8 @@ function main() {
     sourceRef: `art-src/pixellab/${id}/${gen}`,
     genCount: 1,
     inUse: false,
+    set: id.split('.')[1] || id,
+    variant: 'default',
     tags: [],
     notes: 'imported; run art:pack -- --id ' + id,
   };
