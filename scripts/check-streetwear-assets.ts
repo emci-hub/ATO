@@ -38,7 +38,7 @@ const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEE
 const sheets = JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
 const swSheets = Object.entries(sheets).filter(([k]) => k.startsWith('sheets/streetwear/'));
 for (const [key, entry] of swSheets) {
-  if (key.endsWith('/rotations') || /\/(fx|auras|swords|ui-kit)\//.test(key)) continue;
+  if (key.endsWith('/rotations') || /\/(fx|auras|swords|ui-kit|board)\//.test(key)) continue;
   const dirs = new Set(Object.keys(entry.frames).map((f) => f.split('/')[0]));
   for (const d of dirs) assert.ok(d === 'east' || d === 'west', `${key} ships a "${d}" row`);
 }
@@ -142,6 +142,17 @@ for (const font of ['PixelifySans-Regular.ttf', 'PixelifySans-Bold.ttf', 'OFL-Pi
   assert.ok(fs.existsSync(path.join(repo, 'assets/play/fonts', font)), `font file ${font} missing`);
 }
 ok(`menu UI kit (${Object.keys(uiMeta).length} pieces), item stickers and Pixelify Sans are in place`);
+
+// Turf War boards: one baked 512×512 picture per map, pads counted from board-data.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { BOARD_MAPS } = require('../src/play/board-data') as typeof import('../src/play/board-data');
+const boardsMeta = (meta as unknown as { boards: Record<string, { pads: number }> }).boards ?? {};
+for (const map of Object.values(BOARD_MAPS)) {
+  const frame = sheets[`sheets/streetwear/board/${map.id}`]?.frames.img as { w: number; h: number } | undefined;
+  assert.ok(frame && frame.w === 512 && frame.h === 512, `board ${map.id} is not baked at 512×512`);
+  assert.equal(boardsMeta[map.id]?.pads, map.pads.length, `board ${map.id}: baked pads differ from board-data`);
+}
+ok(`${Object.keys(BOARD_MAPS).length} Turf War boards baked, pads match board-data`);
 
 // 5. Default stays cast.
 const settings = fs.readFileSync(path.join(repo, 'src/play/play-settings.ts'), 'utf8');

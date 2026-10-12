@@ -898,5 +898,13 @@
       ],
       "scale": 0.75
     }
+  },
+  "boards": {
+    "ato": {
+      "pads": 15
+    },
+    "neon-maze": {
+      "pads": 6
+    }
   }
 }

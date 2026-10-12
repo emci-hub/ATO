@@ -809,6 +809,163 @@ function packSwUiKit(repo: string): Record<string, SwUiPiece> {
   return meta;
 }
 
+/** Nearest-neighbour scale (keeps pixel art crisp). */
+function scaleNearest(src: PNG, w: number, h: number): PNG {
+  const out = new PNG({ width: w, height: h, fill: true });
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      const sx = Math.min(src.width - 1, Math.floor((x * src.width) / w));
+      const sy = Math.min(src.height - 1, Math.floor((y * src.height) / h));
+      src.data.copy(out.data, (y * w + x) * 4, (sy * src.width + sx) * 4, (sy * src.width + sx) * 4 + 4);
+    }
+  }
+  return out;
+}
+
+/** Alpha-blend `src` onto `dst` at (dx, dy), clipped to `dst`. */
+function overBlend(src: PNG, dst: PNG, dx: number, dy: number) {
+  for (let y = 0; y < src.height; y += 1) {
+    const ty = dy + y;
+    if (ty < 0 || ty >= dst.height) continue;
+    for (let x = 0; x < src.width; x += 1) {
+      const tx = dx + x;
+      if (tx < 0 || tx >= dst.width) continue;
+      const si = (y * src.width + x) * 4;
+      const a = src.data[si + 3] / 255;
+      if (a === 0) continue;
+      const di = (ty * dst.width + tx) * 4;
+      for (let c = 0; c < 3; c += 1) dst.data[di + c] = Math.round(src.data[si + c] * a + dst.data[di + c] * (1 - a));
+      dst.data[di + 3] = 255;
+    }
+  }
+}
+
+/**
+ * Turf War boards (2026-10-11): one 512×512 picture per map, baked from the
+ * Streetwear map art so the board draws as ONE sprite (paint only — path,
+ * pads and hit-testing still come from `board-data.ts`).
+ *   ground  — the asphalt/sidewalk Wang set on a dual grid (road = PATH/START cells)
+ *   paint   — a dashed mustard centre line along the walk polyline
+ *   pads    — a manhole cover on every tower pad
+ *   props   — street props on open sidewalk away from road and pads
+ *   ends    — a paint splat at the spawn, a graffiti tag at the exit
+ */
+function packSwBoards(repo: string): Record<string, { pads: number }> {
+  const CELL_PX = 32;
+  const N = 16;
+  const SIZE = CELL_PX * N;
+  const UNIT = SIZE / 100; // board units → px
+  const mapDir = path.join(repo, SW_SRC, 'map');
+  const wangPng = readPng(path.join(mapDir, 'asphalt-sidewalk.png'));
+  const wangJson = JSON.parse(fs.readFileSync(path.join(mapDir, 'asphalt-sidewalk.json'), 'utf8')) as {
+    tileset_data: { tiles: { corners: Record<'NE' | 'NW' | 'SE' | 'SW', 'lower' | 'upper'>; bounding_box: { x: number; y: number; width: number; height: number } }[] };
+  };
+  const tileFor = new Map<string, PNG>();
+  for (const t of wangJson.tileset_data.tiles) {
+    const key = `${t.corners.NW}${t.corners.NE}${t.corners.SW}${t.corners.SE}`;
+    const b = t.bounding_box;
+    const tile = new PNG({ width: b.width, height: b.height, fill: true });
+    PNG.bitblt(wangPng, tile, b.x, b.y, b.width, b.height, 0, 0);
+    if (!tileFor.has(key)) tileFor.set(key, tile);
+  }
+  const prop = (name: string, px: number) => scaleNearest(readPng(path.join(repo, SW_SRC, 'props', `${name}.png`)), px, px);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { BOARD_MAPS, TILE } = require('../src/play/board-data') as typeof import('../src/play/board-data');
+
+  const outDir = path.join(repo, 'assets/play', SW_SHEETS, 'board');
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  const manifest: Record<string, SheetEntry> = {};
+  const meta: Record<string, { pads: number }> = {};
+  for (const map of Object.values(BOARD_MAPS)) {
+    const board = new PNG({ width: SIZE, height: SIZE, fill: true });
+    const road = (cx: number, cy: number) => {
+      const x = Math.max(0, Math.min(N - 1, cx));
+      const y = Math.max(0, Math.min(N - 1, cy));
+      const v = map.grid[y][x];
+      return v === TILE.PATH || v === TILE.START ? 'lower' : 'upper';
+    };
+    // Ground: dual grid — a tile sits on every cell corner, half a cell offset.
+    for (let vy = 0; vy <= N; vy += 1) {
+      for (let vx = 0; vx <= N; vx += 1) {
+        const key = `${road(vx - 1, vy - 1)}${road(vx, vy - 1)}${road(vx - 1, vy)}${road(vx, vy)}`;
+        const tile = tileFor.get(key) ?? tileFor.get('upperupperupperupper');
+        if (tile) overBlend(tile, board, vx * CELL_PX - CELL_PX / 2, vy * CELL_PX - CELL_PX / 2);
+      }
+    }
+    // Dim the pale sidewalk so towers and foes read on top (road stays dark).
+    for (let i = 0; i < board.data.length; i += 4) {
+      for (let c = 0; c < 3; c += 1) board.data[i + c] = Math.round(board.data[i + c] * 0.74);
+    }
+    // Centre line: 6px-wide mustard dashes (12 on, 10 off) along the polyline.
+    const pts = map.path.map((p) => ({ x: p.x * SIZE, y: p.y * SIZE }));
+    let run = 0;
+    for (let i = 1; i < pts.length; i += 1) {
+      const a = pts[i - 1];
+      const b = pts[i];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      for (let d = 0; d < len; d += 1, run += 1) {
+        if (run % 22 >= 12) continue;
+        const x = Math.round(a.x + ((b.x - a.x) * d) / len);
+        const y = Math.round(a.y + ((b.y - a.y) * d) / len);
+        for (let oy = -2; oy <= 2; oy += 1) {
+          for (let ox = -2; ox <= 2; ox += 1) {
+            const tx = x + ox;
+            const ty = y + oy;
+            if (tx < 0 || ty < 0 || tx >= SIZE || ty >= SIZE) continue;
+            const di = (ty * SIZE + tx) * 4;
+            [board.data[di], board.data[di + 1], board.data[di + 2], board.data[di + 3]] = [224, 165, 38, 255];
+          }
+        }
+      }
+    }
+    // Spawn + exit marks.
+    const mark = (name: string, p: { x: number; y: number }) => {
+      const s = prop(name, 56);
+      const clamp = (v: number) => Math.max(0, Math.min(SIZE - 56, Math.round(v - 28)));
+      overBlend(s, board, clamp(p.x), clamp(p.y));
+    };
+    mark('paint-splat-decal', pts[0]);
+    mark('graffiti-tag-decal', pts[pts.length - 1]);
+    // Pads: a manhole cover on each tower pad.
+    const padArt = prop('pad-manhole-ring', 44);
+    for (const pad of map.pads) overBlend(padArt, board, Math.round(pad.x * UNIT - 22), Math.round(pad.y * UNIT - 22));
+    // Props on open sidewalk: the cell and its 4 neighbours are sidewalk, no pad within 1 cell.
+    const PROPS = ['fire-hydrant', 'dumpster', 'traffic-cone', 'crate', 'streetlight', 'tire-stack', 'trash-bags', 'oil-drum', 'newspaper-box', 'barrel-fire'];
+    const padCells = map.pads.map((p) => ({ x: Math.floor(p.x / (100 / N)), y: Math.floor(p.y / (100 / N)) }));
+    const taken: { x: number; y: number }[] = [];
+    let placed = 0;
+    for (let cy = 0; cy < N && placed < PROPS.length; cy += 1) {
+      for (let cx = 0; cx < N && placed < PROPS.length; cx += 1) {
+        let open = true;
+        for (const [ox, oy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) if (road(cx + ox, cy + oy) === 'lower') open = false;
+        if (!open) continue;
+        if (padCells.some((p) => Math.abs(p.x - cx) <= 1 && Math.abs(p.y - cy) <= 1)) continue;
+        if (taken.some((t) => Math.abs(t.x - cx) <= 2 && Math.abs(t.y - cy) <= 2)) continue;
+        taken.push({ x: cx, y: cy });
+        overBlend(prop(PROPS[placed], 40), board, cx * CELL_PX - 4, cy * CELL_PX - 8);
+        placed += 1;
+      }
+    }
+    // Soft edge vignette so the board sits in the dark screen.
+    for (let y = 0; y < SIZE; y += 1) {
+      for (let x = 0; x < SIZE; x += 1) {
+        const edge = Math.min(x, y, SIZE - 1 - x, SIZE - 1 - y);
+        if (edge >= 24) continue;
+        const k = 0.55 + 0.45 * (edge / 24);
+        const di = (y * SIZE + x) * 4;
+        for (let c = 0; c < 3; c += 1) board.data[di + c] = Math.round(board.data[di + c] * k);
+      }
+    }
+    const key = `${SW_SHEETS}/board/${map.id}`;
+    fs.writeFileSync(path.join(repo, 'assets/play', `${key}.png`), encodeSheetPng(board));
+    manifest[key] = { sheet: `${key}.png`, sheetW: SIZE, sheetH: SIZE, frames: { img: { x: 0, y: 0, w: SIZE, h: SIZE } } };
+    meta[map.id] = { pads: map.pads.length };
+  }
+  fs.writeFileSync(path.join(outDir, 'sheets.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  return meta;
+}
+
 function hexRgb(hex: string): [number, number, number] {
   const n = Number.parseInt(hex.replace('#', ''), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -866,7 +1023,8 @@ function packStreetwear(repo: string) {
   const swords = bakeSwSwords(repo);
   const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
   const ui = packSwUiKit(repo);
-  fs.writeFileSync(metaPath, `${JSON.stringify({ chars, fx: fx.meta, auras: auras.meta, ui }, null, 2)}\n`);
+  const boards = packSwBoards(repo);
+  fs.writeFileSync(metaPath, `${JSON.stringify({ chars, fx: fx.meta, auras: auras.meta, ui, boards }, null, 2)}\n`);
   let files = 0;
   for (const manifest of walk(path.join(repo, 'assets/play', SW_SHEETS)).filter((f) => f.endsWith('sheets.json'))) {
     files += atlasSheetsDir(repo, path.dirname(manifest));

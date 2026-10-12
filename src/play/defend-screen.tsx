@@ -128,7 +128,7 @@ import {
   type BoardSkinId,
   type SkinWalkFace,
 } from '@/play/skin';
-import { ClipImage, ClipSprite } from '@/play/sheet-sprite';
+import { ClipImage, ClipSprite, SheetSprite, sheetFrame } from '@/play/sheet-sprite';
 import {
   CREEP_STILL_MS,
   creepClip,
@@ -2638,6 +2638,9 @@ export function DefendScreen({
     </ThemedView>
   );
 
+  // The baked street board for this map (Streetwear only; play-art-pack packSwBoards).
+  const streetBoard = street ? sheetFrame(`sheets/streetwear/board/${boardMap.id}`, 'img') : undefined;
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={street ? ['left', 'right'] : undefined}>
@@ -2889,7 +2892,12 @@ export function DefendScreen({
                 (click-to-move / pad select). */}
             <View style={styles.boardArt} pointerEvents="none">
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
-              {boardSkin === 'neon' ? (
+              {street && streetBoard ? (
+                /* Streetwear Turf War: the baked street board (asphalt roads,
+                 * sidewalks, manhole pads, props) as ONE sprite. Paint only —
+                 * the path, pads and taps still come from board-data. */
+                <SheetSprite frame={streetBoard} x={0} y={0} size={100} />
+              ) : boardSkin === 'neon' ? (
                 /* Neon chrome — void/wall, ATO ghost, glowing path corridor and
                  * magenta pad brackets. Painted FIRST so every gameplay layer
                  * (pad rings, towers, enemies, shots) sits on top of it, and the

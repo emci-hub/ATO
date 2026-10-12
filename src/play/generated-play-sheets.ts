@@ -17327,6 +17327,32 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
       }
     }
   },
+  "sheets/streetwear/board/ato": {
+    "sheet": "sheets/streetwear/board/atlas.png",
+    "sheetW": 512,
+    "sheetH": 1025,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/neon-maze": {
+    "sheet": "sheets/streetwear/board/atlas.png",
+    "sheetW": 512,
+    "sheetH": 1025,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 513,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
   "sheets/streetwear/boss/oni/Death": {
     "sheet": "sheets/streetwear/boss/oni/atlas.png",
     "sheetW": 2119,
@@ -32156,6 +32182,8 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/auras/rune/front': require('@/assets/play/sheets/streetwear/auras/atlas.png'),
   'sheets/streetwear/auras/spiky/behind': require('@/assets/play/sheets/streetwear/auras/atlas.png'),
   'sheets/streetwear/auras/spiky/front': require('@/assets/play/sheets/streetwear/auras/atlas.png'),
+  'sheets/streetwear/board/ato': require('@/assets/play/sheets/streetwear/board/atlas.png'),
+  'sheets/streetwear/board/neon-maze': require('@/assets/play/sheets/streetwear/board/atlas.png'),
   'sheets/streetwear/boss/oni/Death': require('@/assets/play/sheets/streetwear/boss/oni/atlas.png'),
   'sheets/streetwear/boss/oni/Idle': require('@/assets/play/sheets/streetwear/boss/oni/atlas.png'),
   'sheets/streetwear/boss/oni/Run': require('@/assets/play/sheets/streetwear/boss/oni/atlas.png'),
