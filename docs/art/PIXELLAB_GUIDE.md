@@ -40,6 +40,9 @@ Characters/pets: `create_character` (+ `create_character_state`, `animate_charac
 | VFX | 64 / 128 | |
 | UI icons, emotes | 16 / 32 | |
 
+- **Open conflict (2026-10-12):** the merged Hideout code (#27, `src/play/hideout-iso.ts`) still uses
+  a 264×576 room, a 12 px grid and the hero at 1/2 scale (~53 px). emci approved this ladder instead.
+  Do not build room art for either size until emci picks (`docs/art/size-conflict-compare.png`).
 - Heroes and pets: character canvas 128, shown **1:1, never rescaled** (uneven scaling breaks
   pixels). Grown figure ≈ 101–111 px (~104). Feet on one floor line. Younger stages shrink in code.
 - Inside its canvas a prop keeps real-world size vs the grown hero (H ≈ 104 px ≈ 1.75 m):
@@ -83,10 +86,18 @@ Characters/pets: `create_character` (+ `create_character_state`, `animate_charac
 ## 7. Every art request: library first, then the rule book
 Run these steps for any request, whether it's "make a new hero", "edit the couch" or "add a glow":
 1. **Check the library.** Is there already an asset or a close one?
-   - Library location: the sorted art library + registry (being organised by Cursor; **update this
-     line with its path when it lands**). Until then: heroes `assets/play/skins/streetwear/heroes/<slug>/`
-     (rotations + animations), packed sheets `assets/play/sheets/streetwear/*`, sources
-     `games/grove/ref/*-source/`, UI kit `assets/play/sheets/streetwear/ui-kit/`.
+   - Search `assets/art/registry.json` (by category, set, variant, tags, status) and
+     `assets/art/ART_LIBRARY.md`, or browse `assets/art/_contact/library.html` (phone:
+     `assets/art/_contact/library-portable.html`). Library rules: `.cursor/rules/art-library.mdc`.
+   - Packed art lives in `assets/art/<category>/in-use|unused/<set>/<variant>/` (category > set >
+     variant, e.g. `heroes/kael/streetwear/`). Raw PixelLab exports live in `art-src/pixellab/<id>/`
+     with a `gen.json` per generation at `art-src/pixellab/<id>/<gen>/gen.json` (prompt, seed,
+     settings, cost, score) — use the raw frames as edit sources and style references, never the
+     packed sheets.
+   - Include the `resource` items under `unused/`. Never place off-style sets (primal,
+     dungeon-legends, scribble, classic, kenney/craftpix, Expo leftovers) in a streetwear screen, even
+     when their status says `resource` (the `needs-restyle` status exists but isn't applied yet, so go
+     by set name); regenerate them here with `replaces` instead.
    - Found and fits → reuse it. Found but not quite → **edit** it (step 3). Not found → **create** (step 3).
 2. **Pick the style anchors** for that type (§9): 2–10 approved assets of the same kind. Every
    generation passes them as style references, and every result is checked against them side by side.
@@ -94,8 +105,12 @@ Run these steps for any request, whether it's "make a new hero", "edit the couch
    existing asset (identity and style drift come from regenerating).
 4. **Clean up and lock:** `reduce_colors` with `docs/art/palette-streetwear-night.png` (all frames
    together), `pixelart_workbench repair` + `score` (≥ 90), no fake text.
-5. **Show emci a sample** (side by side with the anchors / the old version, phone size), then save:
-   raw source + settings (tool, prompt, seed, sizes, generations) in the library registry.
+5. **Show emci a sample** (side by side with the anchors / the old version, phone size). After emci's
+   ok, save it into the library: `npm run art:import -- --from … --id …` (raw + `gen.json` to
+   `art-src/`), `npm run art:pack -- --id …`, then `npm run art:sync` and commit the generated files
+   (the pre-commit hook does this; never hand-edit `registry.json` / `ART_LIBRARY.md`). A new version
+   points at the old one with `replaces`. Code reads art by registry id (`getArt('<id>')`), never a
+   loose path. Status starts `candidate`; only emci sets `approved`.
 
 ## 8. Recipes by asset type
 ### Heroes and pets (characters)
@@ -149,12 +164,18 @@ Run these steps for any request, whether it's "make a new hero", "edit the couch
 
 ## 9. Style anchors (anti-drift)
 Keep 5–10 approved, cleaned, native-size assets per type as the reference set (never upscaled
-copies). **Fill these lists from the sorted library when it lands:**
-- Heroes: kael (scale reference), sak, raven, … (from `heroes/`)
-- Room props: Hideout pipeline test props (couch, lamp, plant, speaker, arcade, rug, table, beanbag,
-  shoebox, skateboard, hatch, flowers, window, crown sign)
-- VFX: hideout-fx blaze / outlined bubbles
-- UI: Streetwear ui-kit panels, buttons, nav icons
+copies). Pass the raw frames from `art-src/pixellab/<id>/` as references. Only `approved` (or
+emci-picked) items are anchors; `needs-restyle` items never are.
+- Heroes (16 approved streetwear sets, `heroes/<slug>/streetwear/`): kael (scale reference), sak,
+  raven, kitsune, neon-viper. Raw frames: `art-src/pixellab/hero.<slug>.streetwear/`; registry ids
+  `hero.<slug>.streetwear.core` / `.combat`. The `cast` variants are alt skins, not style anchors.
+- Room props: none approved in the library yet (`props/` is all `resource`, mostly off-style). Until the
+  Hideout build is approved, the anchors are the approved pipeline-test props (couch, lamp, plant,
+  speaker, arcade, rug, table, beanbag); import them as the first `props/hideout/streetwear` set.
+- Icons / UI: `icons/streetwear/streetwear` (32 px icon set), `icons/currency|tabs/streetwear`,
+  `ui/kit/streetwear`, `ui/frames/streetwear`, `ui/streetwear/streetwear`, all status `resource`
+  (house style, not yet emci-approved).
+- VFX: none approved in `fx/` yet; the first approved effect becomes the anchor.
 Same outline/shading/detail strings per type every time (the "style card"):
 | Type | outline | shading | detail | view |
 |---|---|---|---|---|

@@ -161,7 +161,7 @@ assert.match(
   /SKIN_WALK_NO_DIR/,
   'poseDrawable walk must fall back to the standing pose when the heading has no row',
 );
-const walkBranch = /if \(pose\.clip === 'walk'\) \{[\s\S]*?return roleArtDrawable\(role, rotationIndex\(role, face\)\);\n  \}/.exec(
+const walkBranch = /if \(pose\.clip === 'walk'\) \{[\s\S]*?return roleArtDrawable\(role, rotationIndex\(role, face\)\);\r?\n  \}/.exec(
   poseSrc,
 )?.[0];
 assert.ok(walkBranch, 'poseDrawable has a walk branch');
