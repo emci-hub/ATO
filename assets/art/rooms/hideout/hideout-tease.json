@@ -1,0 +1,44 @@
+{
+  "placeholder": true,
+  "_comment": "PLACEHOLDER — Hideout right-wall tease (Loft side), on the side cap / back-right wall, not the floor.",
+  "boarded": {
+    "pos": [
+      240,
+      24
+    ],
+    "size": [
+      24,
+      96
+    ]
+  },
+  "tarp": {
+    "pos": [
+      232,
+      16
+    ],
+    "size": [
+      32,
+      40
+    ]
+  },
+  "scaffold": {
+    "pos": [
+      252,
+      36
+    ],
+    "size": [
+      12,
+      100
+    ]
+  },
+  "sign": {
+    "pos": [
+      228,
+      100
+    ],
+    "size": [
+      36,
+      32
+    ]
+  }
+}

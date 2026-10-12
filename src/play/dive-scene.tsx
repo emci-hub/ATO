@@ -218,7 +218,7 @@ function SwimmingPet({
   }, [turn]);
   return (
     <>
-      <GradeAura grade={grade} size={box} animate={turn} trail={face === 'front' ? null : face} />
+      <GradeAura grade={grade} size={box} animate={turn} trail={face === 'e' || face === 'w' ? face : null} />
       {trail
         ? [0, 1, 2].map((i) => (
             <Bubble key={i} x={face === 'e' ? box * 0.2 : box * 0.75} height={box * 0.6} dur={1400 + i * 300} delay={i * 450} alive={turn} />

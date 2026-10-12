@@ -1,0 +1,341 @@
+{
+  "_meta": {
+    "canvas": [
+      264,
+      576
+    ],
+    "tile": 12,
+    "cols": 22,
+    "rows": 48,
+    "floor": [
+      20,
+      36
+    ],
+    "doorTiles": 4,
+    "projection": "three-quarter-topdown",
+    "heroCellPx": 96,
+    "heroFigurePx": 53,
+    "heroRenderScale": 0.5,
+    "contentBounds": [
+      0,
+      0,
+      264,
+      576
+    ],
+    "placeholder": true,
+    "sleepOnBed": false,
+    "source": "scripts/gen-hideout-td.ts — greybox until Sprite Smith art lands at sprite-smith-out"
+  },
+  "layers": {
+    "back": "underground-td-back.png",
+    "floor": "underground-td-floor.png",
+    "props": "underground-td-props.png",
+    "neonA": "underground-td-neon-a.png",
+    "neonB": "underground-td-neon-b.png",
+    "occluder": {
+      "day-a": "underground-td-occlude-day-a.png",
+      "day-b": "underground-td-occlude-day-b.png",
+      "night-a": "underground-td-occlude-night-a.png",
+      "night-b": "underground-td-occlude-night-b.png"
+    }
+  },
+  "collision": {
+    "tile": 12,
+    "cols": 22,
+    "rows": 48,
+    "walkable": [
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0001111111111111111000",
+      "0001111111111111111000",
+      "0001111111111111111000",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0000000001111000000000",
+      "0000000001111000000000"
+    ]
+  },
+  "props": [
+    {
+      "id": "speakerL",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        1,
+        20,
+        2,
+        3
+      ],
+      "sprite": [
+        12,
+        204,
+        24,
+        72
+      ],
+      "crop": [
+        12,
+        204,
+        24,
+        72
+      ],
+      "sortY": 276,
+      "baselineY": 276,
+      "occluder": true
+    },
+    {
+      "id": "speakerR",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        19,
+        20,
+        2,
+        3
+      ],
+      "sprite": [
+        228,
+        204,
+        24,
+        72
+      ],
+      "crop": [
+        228,
+        204,
+        24,
+        72
+      ],
+      "sortY": 276,
+      "baselineY": 276,
+      "occluder": true
+    },
+    {
+      "id": "hatch",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        10,
+        43,
+        2,
+        2
+      ],
+      "sprite": [
+        120,
+        516,
+        24,
+        24
+      ],
+      "crop": [
+        120,
+        516,
+        24,
+        24
+      ],
+      "sortY": 540,
+      "baselineY": 540,
+      "occluder": false
+    },
+    {
+      "id": "near-rim-l",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        1,
+        46,
+        8,
+        2
+      ],
+      "sprite": [
+        12,
+        552,
+        96,
+        24
+      ],
+      "crop": [
+        12,
+        552,
+        96,
+        24
+      ],
+      "sortY": 576,
+      "baselineY": 576,
+      "occluder": true
+    },
+    {
+      "id": "near-rim-r",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        13,
+        46,
+        8,
+        2
+      ],
+      "sprite": [
+        156,
+        552,
+        96,
+        24
+      ],
+      "crop": [
+        156,
+        552,
+        96,
+        24
+      ],
+      "sortY": 576,
+      "baselineY": 576,
+      "occluder": true
+    }
+  ],
+  "hotspots": [
+    {
+      "id": "manhole",
+      "kind": "hatch",
+      "ellipse": [
+        132,
+        528,
+        16,
+        10
+      ],
+      "footprint": [
+        10,
+        43,
+        2,
+        2
+      ],
+      "labelAnchor": [
+        132,
+        516
+      ],
+      "walk": [
+        132,
+        498
+      ],
+      "thing": "Hatch",
+      "action": "Hideout",
+      "coach": "dive"
+    },
+    {
+      "id": "door",
+      "kind": "door",
+      "ellipse": [
+        132,
+        564,
+        24,
+        10
+      ],
+      "footprint": [
+        9,
+        46,
+        4,
+        2
+      ],
+      "labelAnchor": [
+        132,
+        552
+      ],
+      "walk": [
+        132,
+        534
+      ],
+      "thing": "Door",
+      "action": "Up",
+      "coach": "expedition"
+    }
+  ],
+  "spawns": {
+    "default": [
+      132,
+      336
+    ],
+    "hatch": [
+      132,
+      498
+    ],
+    "door": [
+      132,
+      534
+    ]
+  },
+  "targets": {
+    "bowl": [
+      132,
+      390
+    ],
+    "bed": [
+      132,
+      336
+    ],
+    "cushion": [
+      132,
+      336
+    ],
+    "door": [
+      132,
+      534
+    ],
+    "chair": [
+      132,
+      360
+    ],
+    "boombox": [
+      132,
+      390
+    ]
+  },
+  "window": null,
+  "lights": [
+    [
+      80,
+      48
+    ],
+    [
+      132,
+      40
+    ],
+    [
+      184,
+      48
+    ]
+  ],
+  "rugs": []
+}

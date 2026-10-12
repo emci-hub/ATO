@@ -38,7 +38,14 @@ import {
 } from '../src/play/hideout-progress';
 import { resolvePresence, startCall, tapWake } from '../src/play/hideout-presence';
 import { HIDEOUT_LOG_KINDS, hideoutLogLine } from '../src/play/hideout-log';
-import { isoSleepPoint, parseIsoGeom, planHideoutStep } from '../src/play/hideout-iso';
+import {
+  HIDEOUT_HERO_RENDER_SCALE,
+  HIDEOUT_TILE,
+  assertRoomReachable,
+  isoSleepPoint,
+  parseIsoGeom,
+  planHideoutStep,
+} from '../src/play/hideout-iso';
 import { PET_DEEP_MIN_DEPTH, PET_MAX_GAP_MS, newPet, rebirthPet } from '../src/play/pet';
 import {
   defaultPlayStore,
@@ -50,8 +57,10 @@ import {
   startDive,
   deeperDive,
 } from '../src/play/playStore';
-import loftMap from '../assets/play/rooms/loft-iso.map.json';
-import teaseLayout from '../assets/play/rooms/hideout-tease.json';
+import hideoutMap from '../assets/art/rooms/hideout/hideout-td.map.json';
+import loftMap from '../assets/art/rooms/loft/loft-td.map.json';
+import undergroundMap from '../assets/art/rooms/underground/underground-td.map.json';
+import teaseLayout from '../assets/art/rooms/hideout/hideout-tease.json';
 
 let passed = 0;
 const ok = (name: string) => {
@@ -223,6 +232,7 @@ const HOUR = 60 * 60 * 1000;
   const bed = isoSleepPoint(geom);
   assert.ok(geom.sleepOnBed);
   assert.ok(geom.props.some((p) => p.id === 'bed'));
+  assert.ok(geom.props.filter((p) => p.occluder).every((p) => p.crop[2] > 0 && p.sortY > 0), 'occluders carry crop + sortY');
   const kit = { idle: 4, walk: 4, attack: 4, skill: 4 };
   const step = planHideoutStep({
     kit,
@@ -240,29 +250,58 @@ const HOUR = 60 * 60 * 1000;
 }
 
 {
+  assert.equal(HIDEOUT_TILE, 12);
+  assert.equal(HIDEOUT_HERO_RENDER_SCALE, 1 / 2);
+  for (const [name, raw, sleep] of [
+    ['hideout', hideoutMap, false],
+    ['loft', loftMap, true],
+    ['underground', undergroundMap, false],
+  ] as const) {
+    const geom = parseIsoGeom(raw, { sleepOnBed: sleep });
+    assert.equal(geom.tile, 12, `${name} tile`);
+    assert.equal(geom.grid.cols, 22, `${name} cols`);
+    assert.equal(geom.grid.rows, 48, `${name} rows`);
+    const layers = geom.layers.occluder;
+    assert.ok(layers && typeof layers === 'object', `${name} has combined occluder layers`);
+    const occ = layers as Record<string, string>;
+    for (const key of ['day-a', 'day-b', 'night-a', 'night-b']) {
+      assert.ok(typeof occ[key] === 'string' && occ[key].includes('occlude'), `${name} occluder ${key}`);
+    }
+    for (const stage of ['baby', 'adult', 'god'] as const) {
+      const r = assertRoomReachable(geom, stage);
+      assert.equal(r.ok, true, r.ok ? `${name}/${stage}` : `${name}/${stage}: ${r.reason}`);
+    }
+  }
+  ok('12px grid; occluder states; every room reachable at baby/adult/god clearance');
+}
+
+{
   const boardedY = teaseLayout.boarded.pos[1];
-  const floorFront = 264;
   assert.ok(boardedY < 180, `boarded door is on the wall (y=${boardedY}), not the floor`);
   assert.ok(teaseLayout.scaffold.pos[0] > teaseLayout.boarded.pos[0], 'scaffold leans outside to the right');
   assert.ok(teaseLayout.sign.pos[1] > teaseLayout.boarded.pos[1], 'sign sits in front of the boarded door');
   const art = readFileSync(path.join(ROOT, 'src/play/hideout-art.ts'), 'utf8');
-  assert.ok(art.includes('assets/play/rooms/loft-iso.png'));
+  assert.ok(art.includes("png('room.loft.back')") || art.includes('room.loft.back'));
+  assert.ok(art.includes('occludeDayA'));
   assert.ok(art.includes('HIDEOUT_ART_SWAP'));
-  for (const f of [
-    'loft-iso.png',
-    'loft-iso-front.png',
-    'loft-window-day.png',
-    'loft-window-night.png',
-    'loft-glow.png',
-    'boarded.png',
-    'tarp.png',
-    'scaffold.png',
-    'build-sign.png',
-    'zzz-0.png',
-    'zzz-1.png',
-    'zzz-2.png',
-  ]) {
-    assert.ok(existsSync(path.join(ROOT, 'assets/play/rooms', f)), f);
+  assert.ok(art.includes('sprite-smith-out'));
+  for (const [dir, f] of [
+    ['loft', 'loft-td-back.png'],
+    ['loft', 'loft-td-floor.png'],
+    ['loft', 'loft-td-props.png'],
+    ['loft', 'loft-td-occlude-day-a.png'],
+    ['loft', 'loft-td-window-day.png'],
+    ['loft', 'loft-td-window-night.png'],
+    ['loft', 'loft-td-glow.png'],
+    ['hideout', 'boarded.png'],
+    ['hideout', 'tarp.png'],
+    ['hideout', 'scaffold.png'],
+    ['hideout', 'build-sign.png'],
+    ['hideout', 'zzz-0.png'],
+    ['hideout', 'zzz-1.png'],
+    ['hideout', 'zzz-2.png'],
+  ] as const) {
+    assert.ok(existsSync(path.join(ROOT, 'assets/art/rooms', dir, f)), `${dir}/${f}`);
   }
   ok('tease is wall-mounted; placeholders are swappable in hideout-art.ts');
 }
@@ -277,7 +316,9 @@ const HOUR = 60 * 60 * 1000;
   assert.ok(stage.includes('HIDEOUT_DISSOLVE_MS'));
   assert.ok(stage.includes('windowNight'));
   assert.ok(stage.includes('lampOn'));
-  assert.ok(stage.includes('art.glow'), 'lamp uses the baked glow overlay');
+  const street = readFileSync(path.join(ROOT, 'src/play/street-room.tsx'), 'utf8');
+  assert.ok(street.includes('art.glow'), 'lamp uses the baked glow overlay');
+  assert.ok(street.includes('occludeDayA'));
   assert.ok(!stage.includes('RadialGradient') && !stage.includes('expo-linear-gradient'));
   ok('Zzz 3-frame/4fps; Reduced dissolve; lamp uses baked glow');
 }

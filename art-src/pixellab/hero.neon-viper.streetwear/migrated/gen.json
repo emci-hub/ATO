@@ -1,0 +1,16 @@
+{
+  "tool": "pixellab",
+  "model": null,
+  "prompt": null,
+  "negative": null,
+  "seed": null,
+  "view": "low top-down",
+  "palette": null,
+  "createdAt": "2026-10-12T00:00:00.000Z",
+  "operator": "art-migrate",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": "migrated from assets/play; no generation params on file"
+  }
+}

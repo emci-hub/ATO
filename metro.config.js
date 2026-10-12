@@ -8,4 +8,15 @@ const config = getSentryExpoConfig(__dirname);
 // production probe stub before signup_mode goes public — see PROJECT_CONTEXT.md
 // "Pre-launch re-gating checklist".
 
+// Raw PixelLab exports, contact sheets and grove ref packs are never bundled
+// (EAS Update + Metro). Runtime art is the packed tree under assets/art/.
+const blockList = [
+  /[\\/]art-src[\\/].*/,
+  /[\\/]assets[\\/]art[\\/]_contact[\\/].*/,
+  /[\\/]games[\\/]grove[\\/]ref[\\/].*/,
+];
+const prev = config.resolver?.blockList;
+config.resolver = config.resolver ?? {};
+config.resolver.blockList = prev ? [prev, ...blockList].flat() : blockList;
+
 module.exports = config;

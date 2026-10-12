@@ -5,7 +5,17 @@
     "version": "1.0.0",
     "runtimeVersion": "1.0.0",
     "updates": {
-      "url": "https://u.expo.dev/03d53c8c-91ae-4993-aba9-edf0b2eefd1e"
+      "url": "https://u.expo.dev/03d53c8c-91ae-4993-aba9-edf0b2eefd1e",
+      "assetPatternsToBeBundled": [
+        "assets/art/**/*",
+        "assets/fonts/**/*",
+        "assets/brand/**/*",
+        "assets/images/**/*",
+        "assets/kenney/**/*",
+        "assets/play/fonts/**/*",
+        "assets/play/skins/**/*.json",
+        "assets/play/avatars/**/*"
+      ]
     },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

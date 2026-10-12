@@ -1,12 +1,11 @@
 /**
- * Streetwear Hideout — isometric room map, integer scale, and 2D floor walk.
+ * Streetwear Hideout — 3/4 top-down enclosed room (layout A).
  *
- * Spots, walk polygon, prop baselines and bowl/cushion/door targets come from
- * Sprite Smith's hideout-iso.map.json. No hand-tuned spot numbers.
- *
- * The door label is nudged in code so it clears the string lights.
+ * Canvas 264×576, 8px collision grid, A* roam, depth sort by footprint
+ * bottom Y. Greybox art from the map until Sprite Smith lands.
  */
-import hideoutMap from '@/assets/play/skins/streetwear/ui/rooms/hideout-iso.map.json';
+import hideoutMap from '@/assets/art/rooms/hideout/hideout-td.map.json';
+import type { PetStage } from '@/play/pet';
 import {
   PET_FORM_MOTION,
   MOOD_MOTION,
@@ -16,78 +15,171 @@ import {
   type PetPlanInput,
   type PetPose,
 } from '@/play/pet-actor';
+import {
+  astar,
+  clampToGrid,
+  isWalkableArt,
+  pathClear,
+  randomWalkable,
+  route,
+  tileCenter,
+  withClearance,
+  type CollisionGrid,
+  type Pt,
+} from '@/play/hideout-path';
 
-export const HIDEOUT_CANVAS: readonly [number, number] = [256, 320];
+export type { CollisionGrid, Pt } from '@/play/hideout-path';
+export { astar, clampToGrid, isWalkableArt, lineOfSight, pathClear, route, stringPull, withClearance } from '@/play/hideout-path';
+
+export const HIDEOUT_CANVAS: readonly [number, number] = [264, 576];
 export const HIDEOUT_NIGHT = '#0C0D23';
-/** Visible body the mockup treats as native. The sprite cell may be larger. */
-export const HIDEOUT_PET_ART_PX = 64;
-/** Blaze cell (84) minus the 64px body, per side, plus a little air. */
+/** PixelLab Streetwear hero cell. Room/prop art is authored against this. */
+export const HIDEOUT_HERO_SRC_PX = 192;
+/**
+ * Hero-in-room render scale for the FINAL fully grown hero (god). Room and
+ * props are sized to this and never change. Stages interpolate below it
+ * (`HIDEOUT_STAGE_SCALE`). Sprite Smith: 1/2 of the 192px cell = 96px.
+ */
+export const HIDEOUT_HERO_RENDER_SCALE = 1 / 2;
+/** Drawn cell for the fully grown hero, in art px (192 × 1/2 = 96). */
+export const HIDEOUT_PET_ART_PX = Math.round(HIDEOUT_HERO_SRC_PX * HIDEOUT_HERO_RENDER_SCALE);
+/** Visible body in that cell at the locked god scale (~53 art px tall). */
+export const HIDEOUT_HERO_FIGURE_PX = 53;
+/**
+ * Per-stage fraction of the 192px source cell (art-px). Map and props stay
+ * put; only the pet sprite (and its floor-contact clearance) grows.
+ * egg/baby = 1/3 (64px cell); child 0.37; teen 0.42; adult 0.46; god 0.5.
+ */
+export const HIDEOUT_STAGE_SCALE: Record<PetStage, number> = {
+  egg: 1 / 3,
+  baby: 1 / 3,
+  child: 0.37,
+  teen: 0.42,
+  adult: 0.46,
+  god: 1 / 2,
+};
+
+export function hideoutHeroArtPx(stage: PetStage): number {
+  return Math.max(8, Math.round(HIDEOUT_HERO_SRC_PX * HIDEOUT_STAGE_SCALE[stage]));
+}
+
+/** Floor-contact radius in art px from the current stage's visible body. */
+export function hideoutClearancePx(stage: PetStage): number {
+  const figure = HIDEOUT_HERO_FIGURE_PX * (HIDEOUT_STAGE_SCALE[stage] / HIDEOUT_HERO_RENDER_SCALE);
+  return Math.max(2, Math.round(figure * 0.25));
+}
 export const HIDEOUT_AURA_PAD_PX = 12;
-/**
- * Door tag: map anchor sits on the bulbs (`labelAnchors.door` y=84). +28 still
- * overlapped the string lights (y≈76–99). Land on the door panel below them.
- */
-export const HIDEOUT_DOOR_LABEL_NUDGE: readonly [number, number] = [0, 52];
-export const HIDEOUT_MARGIN_PT = 8;
-/**
- * Fit math wins. 4 was an old 3x-phone cap that left ~60% of the stage empty;
- * a 430pt 3x Pro Max can take 5 dpx on the 226×237 content bounds.
- */
+export const HIDEOUT_DOOR_LABEL_NUDGE: readonly [number, number] = [0, 0];
+export const HIDEOUT_MARGIN_PT = 0;
 export const HIDEOUT_PHONE_CAP_DPX = 8;
 export const HIDEOUT_IPAD_CAP_DPX = 10;
 /** Apple HIG 44pt + Material 48dp — chips use the stricter floor. */
 export const HIDEOUT_SPOT_HIT_PT = 48;
-/** Layout widths the feet-on-floor check pins (SE / 14 / 15 Pro Max logical pt). */
-export const HIDEOUT_PHONE_WIDTHS_PT: readonly number[] = [375, 393, 430];
-/** Constant walk speed in art px / second (iso screen space = this map). */
+/** Layout widths the fit-to-screen check pins. */
+export const HIDEOUT_PHONE_WIDTHS_PT: readonly number[] = [430, 440];
+/** Constant walk speed in art px / second. */
 export const HIDEOUT_WALK_ART_PX_PER_SEC = 22;
+/** Sprite Smith room grid: 12px tiles, 22×48 canvas, floor 20×36, door 4. */
+export const HIDEOUT_TILE = 12;
+export const HIDEOUT_GRID_COLS = 22;
+export const HIDEOUT_GRID_ROWS = 48;
+export const HIDEOUT_FLOOR_COLS = 20;
+export const HIDEOUT_FLOOR_ROWS = 36;
+export const HIDEOUT_DOOR_TILES = 4;
+export const HIDEOUT_CAP_TILES = 1;
+export const HIDEOUT_CEIL_TILES = 1;
+export const HIDEOUT_WALL_TILES = 9;
 
 type Rect = readonly [number, number, number, number];
-type Pt = readonly [number, number];
 
-export type HideoutSpotId = 'door' | 'chair' | 'boombox' | 'manhole';
+export type HideoutSpotId = 'door' | 'chair' | 'boombox' | 'manhole' | 'bed' | 'lamp';
 export type HideoutTargetId = 'bowl' | 'bed' | 'cushion' | 'door' | 'chair' | 'boombox';
+
+export const HIDEOUT_IDLE_FACES = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'] as const;
+export type HideoutIdleFace = (typeof HIDEOUT_IDLE_FACES)[number];
+export type HideoutWalkFace = 'n' | 'e' | 's' | 'w';
 
 export type HideoutSpot = {
   id: HideoutSpotId;
+  kind: string;
   rect: Rect;
   thing: string;
   action: string;
   coach: 'expedition' | 'den' | 'play' | 'dive';
+  ellipse: Rect;
+  footprint: Rect;
+  walk: Pt;
 };
 
 export type HideoutProp = {
   id: string;
   rect: Rect;
+  /** Source rect in the combined occluder layer (art px). */
+  crop: Rect;
+  /** Depth key — footprint bottom Y. Pet with feetY < sortY is behind. */
+  sortY: number;
   baselineY: number;
   frontCorner: Pt;
   footprint: readonly Pt[];
+  footprintCells: Rect;
+  occluder: boolean;
+  rotated: boolean;
+  facing: string;
 };
 
 export type HideoutDecal = { id: string; sprite: string; pos: Pt; size: Pt };
 
-export type IsoRawMap = {
-  spots: Record<string, number[]>;
-  labelAnchors: Record<string, number[]>;
-  floor: number[][];
-  props: {
-    id: string;
-    rect: number[];
-    baselineY: number;
-    frontCorner: number[];
-    footprint: number[][];
-  }[];
-  targets: Record<string, number[]>;
-  lights: number[][];
-  decals: { id: string; sprite: string; pos: number[]; size?: number[] }[];
-  interior: { polygon: number[][] };
-  _meta: { contentBounds: number[]; canvas?: number[] };
+type RawHotspot = {
+  id: string;
+  kind: string;
+  ellipse: number[];
+  footprint: number[];
+  labelAnchor: number[];
+  walk: number[];
+  thing: string;
+  action: string;
+  coach: string;
 };
 
-/** Per-room iso geometry. Hideout constants below are this map with sleepOnBed off. */
+type RawProp = {
+  id: string;
+  facing: string;
+  rotated: boolean;
+  footprint: number[];
+  sprite: number[];
+  crop?: number[];
+  sortY?: number;
+  baselineY: number;
+  occluder: boolean;
+};
+
+export type TdRawMap = {
+  _meta: {
+    canvas: number[];
+    tile: number;
+    contentBounds: number[];
+    sleepOnBed?: boolean;
+    placeholder?: boolean;
+    heroCellPx?: number;
+    heroFigurePx?: number | number[];
+  };
+  layers: Record<string, string | Record<string, string>>;
+  collision: { tile: number; cols: number; rows: number; walkable: string[] };
+  props: RawProp[];
+  hotspots: RawHotspot[];
+  spawns: Record<string, number[]>;
+  targets: Record<string, number[]>;
+  window?: { pos: number[]; size: number[] };
+  lights: number[][];
+  rugs?: number[][];
+};
+
+/** Per-room top-down geometry. */
 export type IsoRoomGeom = {
   canvas: readonly [number, number];
   content: Rect;
+  tile: number;
+  grid: CollisionGrid;
   floor: readonly Pt[];
   walk: readonly Pt[];
   interior: readonly Pt[];
@@ -95,11 +187,12 @@ export type IsoRoomGeom = {
   props: readonly HideoutProp[];
   decals: readonly HideoutDecal[];
   targets: Record<string, Pt>;
-  /** Sleep target sits on the bed top (inside the bed footprint) — do not clamp. */
+  spawns: Record<string, Pt>;
+  hotspots: readonly HideoutSpot[];
+  window: { pos: Pt; size: Pt } | null;
   sleepOnBed: boolean;
+  layers: Record<string, string | Record<string, string>>;
 };
-
-const raw = hideoutMap as unknown as IsoRawMap;
 
 function rect4(v: number[]): Rect {
   return [v[0] ?? 0, v[1] ?? 0, v[2] ?? 0, v[3] ?? 0];
@@ -107,90 +200,158 @@ function rect4(v: number[]): Rect {
 function pt2(v: number[]): Pt {
   return [v[0] ?? 0, v[1] ?? 0];
 }
-function poly(v: number[][]): Pt[] {
-  return v.map(pt2);
+
+function cellsToPoly(foot: Rect, tile: number): Pt[] {
+  const [c, r, w, h] = foot;
+  const x = c * tile;
+  const y = r * tile;
+  const bw = w * tile;
+  const bh = h * tile;
+  return [
+    [x, y],
+    [x + bw, y],
+    [x + bw, y + bh],
+    [x, y + bh],
+  ];
+}
+
+function floorPoly(content: Rect, tile: number): Pt[] {
+  const cap = HIDEOUT_CAP_TILES * tile;
+  const wallBottom = (HIDEOUT_CEIL_TILES + HIDEOUT_WALL_TILES) * tile;
+  const floorBottom = wallBottom + HIDEOUT_FLOOR_ROWS * tile;
+  const door0 = Math.floor((content[2] / tile - HIDEOUT_DOOR_TILES) / 2) * tile;
+  const door1 = door0 + HIDEOUT_DOOR_TILES * tile;
+  return [
+    [cap, wallBottom],
+    [content[2] - cap, wallBottom],
+    [content[2] - cap, floorBottom],
+    [door1, floorBottom],
+    [door1, content[3]],
+    [door0, content[3]],
+    [door0, floorBottom],
+    [cap, floorBottom],
+  ];
 }
 
 export function parseIsoGeom(rawMap: unknown, opts?: { sleepOnBed?: boolean }): IsoRoomGeom {
-  const m = rawMap as IsoRawMap;
+  const m = rawMap as TdRawMap;
   const canvas = (m._meta.canvas && m._meta.canvas.length >= 2
     ? [m._meta.canvas[0], m._meta.canvas[1]]
-    : [256, 320]) as [number, number];
-  const content = rect4(m._meta.contentBounds ?? [15, 42, 226, 237]);
-  const floor = poly(m.floor ?? []);
-  const props: HideoutProp[] = (m.props ?? []).map((p) => ({
-    id: p.id,
-    rect: rect4(p.rect),
-    baselineY: p.baselineY,
-    frontCorner: pt2(p.frontCorner),
-    footprint: poly(p.footprint),
-  }));
-  const walk = insetPoly(floor, HIDEOUT_AURA_PAD_PX);
+    : [264, 576]) as [number, number];
+  const content = rect4(m._meta.contentBounds ?? [0, 0, canvas[0], canvas[1]]);
+  const tile = m.collision?.tile ?? m._meta.tile ?? HIDEOUT_TILE;
+  const grid: CollisionGrid = {
+    tile,
+    cols: m.collision?.cols ?? Math.floor(canvas[0] / tile),
+    rows: m.collision?.rows ?? Math.floor(canvas[1] / tile),
+    walkable: m.collision?.walkable ?? [],
+  };
+  const props: HideoutProp[] = (m.props ?? []).map((p) => {
+    const footprintCells = rect4(p.footprint);
+    const sprite = rect4(p.sprite);
+    const crop = rect4(p.crop ?? p.sprite);
+    const poly = cellsToPoly(footprintCells, tile);
+    const bottom = footprintCells[1] * tile + footprintCells[3] * tile;
+    const sortY = p.sortY ?? bottom;
+    return {
+      id: p.id,
+      rect: sprite,
+      crop,
+      sortY,
+      baselineY: p.baselineY ?? bottom,
+      frontCorner: [sprite[0] + sprite[2] / 2, bottom],
+      footprint: poly,
+      footprintCells,
+      occluder: p.occluder === true,
+      rotated: p.rotated === true,
+      facing: p.facing,
+    };
+  });
   const targets: Record<string, Pt> = {};
   for (const [k, v] of Object.entries(m.targets ?? {})) targets[k] = pt2(v);
-  const decals: HideoutDecal[] = (m.decals ?? []).map((d) => {
-    const spot = m.spots?.[d.id];
-    const size = d.size && d.size.length >= 2 ? pt2(d.size) : spot && spot.length >= 4 ? ([spot[2], spot[3]] as Pt) : ([0, 0] as Pt);
-    return { id: d.id, sprite: d.sprite, pos: pt2(d.pos), size };
+  const spawns: Record<string, Pt> = {};
+  for (const [k, v] of Object.entries(m.spawns ?? {})) spawns[k] = pt2(v);
+  const hotspots: HideoutSpot[] = (m.hotspots ?? []).map((h) => {
+    const fp = rect4(h.footprint);
+    const px = cellsToPoly(fp, tile);
+    const xs = px.map((p) => p[0]);
+    const ys = px.map((p) => p[1]);
+    const x0 = Math.min(...xs);
+    const y0 = Math.min(...ys);
+    return {
+      id: (h.id as HideoutSpotId) ?? 'door',
+      kind: h.kind ?? h.id,
+      rect: [x0, y0, Math.max(...xs) - x0, Math.max(...ys) - y0],
+      thing: h.thing,
+      action: h.action,
+      coach: (h.coach as HideoutSpot['coach']) ?? 'play',
+      ellipse: rect4(h.ellipse),
+      footprint: fp,
+      walk: pt2(h.walk),
+    };
   });
+  const floor = floorPoly(content, tile);
+  const window = m.window?.pos && m.window.size
+    ? { pos: pt2(m.window.pos), size: pt2(m.window.size) }
+    : null;
   return {
     canvas,
     content,
+    tile,
+    grid,
     floor,
-    walk,
-    interior: poly(m.interior?.polygon ?? []),
+    walk: floor,
+    interior: floor,
     lights: (m.lights ?? []).map(pt2),
     props,
-    decals,
+    decals: hotspots
+      .filter((h) => h.id === 'manhole' || h.coach === 'dive')
+      .map((h) => ({
+        id: h.id,
+        sprite: 'hatch',
+        pos: [h.ellipse[0] - h.ellipse[2], h.ellipse[1] - h.ellipse[3]] as Pt,
+        size: [h.ellipse[2] * 2, h.ellipse[3] * 2] as Pt,
+      })),
     targets,
-    sleepOnBed: opts?.sleepOnBed === true,
+    spawns,
+    hotspots,
+    window,
+    sleepOnBed: opts?.sleepOnBed === true || m._meta.sleepOnBed === true,
+    layers: m.layers ?? {},
   };
 }
 
-export const HIDEOUT_CONTENT: Rect = rect4(raw._meta.contentBounds);
-export const HIDEOUT_FLOOR: readonly Pt[] = poly(raw.floor);
-export const HIDEOUT_INTERIOR: readonly Pt[] = poly(raw.interior.polygon);
-export const HIDEOUT_LIGHTS: readonly Pt[] = raw.lights.map(pt2);
-export const HIDEOUT_PROPS: readonly HideoutProp[] = raw.props.map((p) => ({
-  id: p.id,
-  rect: rect4(p.rect),
-  baselineY: p.baselineY,
-  frontCorner: pt2(p.frontCorner),
-  footprint: poly(p.footprint),
-}));
-export const HIDEOUT_DECALS: readonly HideoutDecal[] = raw.decals.map((d) => {
-  const spot = raw.spots[d.id];
-  return {
-    id: d.id,
-    sprite: d.sprite,
-    pos: pt2(d.pos),
-    size: spot && spot.length >= 4 ? ([spot[2], spot[3]] as Pt) : ([0, 0] as Pt),
-  };
-});
+const raw = hideoutMap as unknown as TdRawMap;
+const HOME = parseIsoGeom(raw, { sleepOnBed: false });
+
+export const HIDEOUT_CONTENT: Rect = HOME.content;
+export const HIDEOUT_FLOOR: readonly Pt[] = HOME.floor;
+export const HIDEOUT_INTERIOR: readonly Pt[] = HOME.interior;
+export const HIDEOUT_LIGHTS: readonly Pt[] = HOME.lights;
+export const HIDEOUT_PROPS: readonly HideoutProp[] = HOME.props;
+export const HIDEOUT_DECALS: readonly HideoutDecal[] = HOME.decals;
+export const HIDEOUT_GRID: CollisionGrid = HOME.grid;
+export const HIDEOUT_GEOM: IsoRoomGeom = HOME;
 
 export const HIDEOUT_TARGETS: Record<HideoutTargetId, Pt> = {
-  bowl: pt2(raw.targets.bowl),
-  bed: pt2(raw.targets.bed),
-  cushion: pt2(raw.targets.cushion ?? raw.targets.bed),
-  door: pt2(raw.targets.door),
-  // A step in front of the chair, on the floor (nap on the chair is bonus idle).
-  chair: [148, 214],
-  // A step in front of the boombox, on the walk floor (footprint ends ~x=82).
-  boombox: [96, 228],
+  bowl: HOME.targets.bowl ?? [78, 486],
+  bed: HOME.targets.bed ?? HOME.targets.cushion ?? [174, 390],
+  cushion: HOME.targets.cushion ?? HOME.targets.bed ?? [174, 390],
+  door: HOME.targets.door ?? [132, 534],
+  chair: HOME.targets.chair ?? [174, 330],
+  boombox: HOME.targets.boombox ?? [66, 270],
 };
 
-export const HIDEOUT_SPOTS: readonly HideoutSpot[] = [
-  { id: 'door', rect: rect4(raw.spots.door), thing: 'Door', action: 'Explore', coach: 'expedition' },
-  { id: 'chair', rect: rect4(raw.spots.chair), thing: 'Chair', action: 'Stash', coach: 'den' },
-  { id: 'boombox', rect: rect4(raw.spots.boombox), thing: 'Boombox', action: 'Play', coach: 'play' },
-  { id: 'manhole', rect: rect4(raw.spots.manhole), thing: 'Manhole', action: 'Underground', coach: 'dive' },
-];
+export const HIDEOUT_SPOTS: readonly HideoutSpot[] = HOME.hotspots.filter((h) =>
+  (['door', 'chair', 'boombox', 'manhole'] as string[]).includes(h.id),
+) as HideoutSpot[];
 
 export function hideoutLabelAnchor(id: HideoutSpotId): Pt {
-  const a = raw.labelAnchors[id];
-  const base = a ? pt2(a) : ([0, 0] as Pt);
-  if (id !== 'door') return base;
-  return [base[0] + HIDEOUT_DOOR_LABEL_NUDGE[0], base[1] + HIDEOUT_DOOR_LABEL_NUDGE[1]];
+  const spot = HIDEOUT_SPOTS.find((s) => s.id === id);
+  if (!spot) return [0, 0];
+  const [cx, cy] = [spot.ellipse[0], spot.ellipse[1]];
+  if (id !== 'door') return [cx, cy - 12];
+  return [cx + HIDEOUT_DOOR_LABEL_NUDGE[0], cy + HIDEOUT_DOOR_LABEL_NUDGE[1] - 8];
 }
 
 /* ------------------------------------------------------- geometry --- */
@@ -208,13 +369,6 @@ export function pointInPoly(x: number, y: number, polyPts: readonly Pt[]): boole
   return inside;
 }
 
-function dist2(a: Pt, b: Pt): number {
-  const dx = a[0] - b[0];
-  const dy = a[1] - b[1];
-  return dx * dx + dy * dy;
-}
-
-/** Shrink a convex polygon toward its centroid by `pad` art px. */
 export function insetPoly(polyPts: readonly Pt[], pad: number): Pt[] {
   if (polyPts.length < 3 || pad <= 0) return polyPts.map((p) => [p[0], p[1]] as Pt);
   let cx = 0;
@@ -234,144 +388,85 @@ export function insetPoly(polyPts: readonly Pt[], pad: number): Pt[] {
   });
 }
 
-export const HIDEOUT_WALK: readonly Pt[] = insetPoly(HIDEOUT_FLOOR, HIDEOUT_AURA_PAD_PX);
+export const HIDEOUT_WALK: readonly Pt[] = HOME.walk;
+
+const gridCache = new Map<string, CollisionGrid>();
+export function hideoutGridFor(stage: PetStage, geom?: IsoRoomGeom): CollisionGrid {
+  const base = geom?.grid ?? HIDEOUT_GRID;
+  const pad = hideoutClearancePx(stage);
+  const key = `${base.cols}x${base.rows}:${base.walkable[22] ?? ''}:${pad}`;
+  const hit = gridCache.get(key);
+  if (hit) return hit;
+  const next = withClearance(base, pad);
+  gridCache.set(key, next);
+  return next;
+}
 
 export function inFootprint(x: number, y: number): boolean {
-  return HIDEOUT_PROPS.some((p) => pointInPoly(x, y, p.footprint));
+  return HIDEOUT_PROPS.some((p) => p.id !== 'hatch' && pointInPoly(x, y, p.footprint));
 }
 
-export function onWalkFloor(x: number, y: number): boolean {
-  return pointInPoly(x, y, HIDEOUT_WALK) && !inFootprint(x, y);
+export function onWalkFloor(x: number, y: number, stage: PetStage = 'adult'): boolean {
+  return isWalkableArt(hideoutGridFor(stage), x, y);
 }
 
-/** Project a point onto the walkable floor (inside inset polygon, off props). */
-export function clampToWalk(x: number, y: number): Pt {
-  if (onWalkFloor(x, y)) return [x, y];
-  const c: Pt = [
-    HIDEOUT_WALK.reduce((s, p) => s + p[0], 0) / HIDEOUT_WALK.length,
-    HIDEOUT_WALK.reduce((s, p) => s + p[1], 0) / HIDEOUT_WALK.length,
-  ];
-  let best: Pt = c;
-  let bestD = Infinity;
-  for (let i = 0; i <= 24; i += 1) {
-    const t = i / 24;
-    const px = x + (c[0] - x) * t;
-    const py = y + (c[1] - y) * t;
-    if (!onWalkFloor(px, py)) continue;
-    const d = (px - x) * (px - x) + (py - y) * (py - y);
-    if (d < bestD) {
-      best = [px, py];
-      bestD = d;
-    }
-  }
-  if (bestD < Infinity) return best;
-  // Last resort: the nearest walk-vertex.
-  let v = HIDEOUT_WALK[0];
-  let vd = dist2([x, y], v);
-  for (const p of HIDEOUT_WALK) {
-    const d = dist2([x, y], p);
-    if (d < vd) {
-      v = p;
-      vd = d;
-    }
-  }
-  return v;
+export function clampToWalk(x: number, y: number, stage: PetStage = 'adult'): Pt {
+  return clampToGrid(hideoutGridFor(stage), x, y);
 }
 
-export function isoRandomWalkPoint(geom: IsoRoomGeom, rng: () => number): Pt {
-  const xs = geom.walk.map((p) => p[0]);
-  const ys = geom.walk.map((p) => p[1]);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  for (let i = 0; i < 40; i += 1) {
-    const x = minX + rng() * (maxX - minX);
-    const y = minY + rng() * (maxY - minY);
-    if (isoOnWalkFloor(x, y, geom)) return [x, y];
-  }
-  return isoClampToWalk((minX + maxX) / 2, (minY + maxY) / 2, geom);
+export function isoRandomWalkPoint(geom: IsoRoomGeom, rng: () => number, stage: PetStage = 'adult'): Pt {
+  return randomWalkable(hideoutGridFor(stage, geom), rng) ?? isoClampToWalk(geom.canvas[0] / 2, geom.canvas[1] / 2, geom, stage);
 }
 
-export function randomWalkPoint(rng: () => number): Pt {
-  const xs = HIDEOUT_WALK.map((p) => p[0]);
-  const ys = HIDEOUT_WALK.map((p) => p[1]);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-  for (let i = 0; i < 40; i += 1) {
-    const x = minX + rng() * (maxX - minX);
-    const y = minY + rng() * (maxY - minY);
-    if (onWalkFloor(x, y)) return [x, y];
-  }
-  return clampToWalk((minX + maxX) / 2, (minY + maxY) / 2);
+export function randomWalkPoint(rng: () => number, stage: PetStage = 'adult'): Pt {
+  return randomWalkable(hideoutGridFor(stage), rng) ?? clampToWalk(HIDEOUT_CANVAS[0] / 2, 360, stage);
 }
 
-/** Iso box rule: pet is behind the prop when feet y is above the 2:1 front edge. */
-export function petBehindProp(feetX: number, feetY: number, prop: HideoutProp): boolean {
-  const [fx, fy] = prop.frontCorner;
-  const edgeY = fy - Math.abs(feetX - fx) / 2;
-  const [rx, ry, rw, rh] = prop.rect;
-  const overlap = feetX > rx - 20 && feetX < rx + rw + 20 && feetY > ry && feetY < ry + rh + 24;
-  return overlap && feetY < edgeY;
+/**
+ * Depth: pet is behind the prop when feet Y is above the footprint bottom
+ * (guide rule 9) and the sprite overlaps in X.
+ */
+export function petBehindProp(feetX: number, feetY: number, prop: HideoutProp, tile = HIDEOUT_TILE): boolean {
+  const [c, r, w, h] = prop.footprintCells;
+  const x0 = c * tile;
+  const y0 = r * tile;
+  const x1 = x0 + w * tile;
+  const y1 = prop.sortY || y0 + h * tile;
+  const overlapX = feetX > x0 - tile && feetX < x1 + tile;
+  return overlapX && feetY < y1 && feetY > y0 - (prop.rect[3] || tile * 3);
 }
 
 export function petBehindAny(feetX: number, feetY: number): boolean {
-  return HIDEOUT_PROPS.some((p) => petBehindProp(feetX, feetY, p));
+  return HIDEOUT_PROPS.some((p) => p.occluder && petBehindProp(feetX, feetY, p));
 }
 
 export function isoInFootprint(x: number, y: number, geom: IsoRoomGeom): boolean {
-  return geom.props.some((p) => pointInPoly(x, y, p.footprint));
+  return geom.props.some((p) => p.id !== 'hatch' && pointInPoly(x, y, p.footprint));
 }
 
-export function isoOnWalkFloor(x: number, y: number, geom: IsoRoomGeom): boolean {
-  return pointInPoly(x, y, geom.walk) && !isoInFootprint(x, y, geom);
+export function isoOnWalkFloor(x: number, y: number, geom: IsoRoomGeom, stage: PetStage = 'adult'): boolean {
+  return isWalkableArt(hideoutGridFor(stage, geom), x, y);
 }
 
-export function isoClampToWalk(x: number, y: number, geom: IsoRoomGeom): Pt {
-  if (isoOnWalkFloor(x, y, geom)) return [x, y];
-  const c: Pt = [
-    geom.walk.reduce((s, p) => s + p[0], 0) / Math.max(1, geom.walk.length),
-    geom.walk.reduce((s, p) => s + p[1], 0) / Math.max(1, geom.walk.length),
-  ];
-  let best: Pt = c;
-  let bestD = Infinity;
-  for (let i = 0; i <= 24; i += 1) {
-    const t = i / 24;
-    const px = x + (c[0] - x) * t;
-    const py = y + (c[1] - y) * t;
-    if (!isoOnWalkFloor(px, py, geom)) continue;
-    const d = (px - x) * (px - x) + (py - y) * (py - y);
-    if (d < bestD) {
-      best = [px, py];
-      bestD = d;
-    }
-  }
-  if (bestD < Infinity) return best;
-  let v = geom.walk[0] ?? c;
-  let vd = dist2([x, y], v);
-  for (const p of geom.walk) {
-    const d = dist2([x, y], p);
-    if (d < vd) {
-      v = p;
-      vd = d;
-    }
-  }
-  return v;
+export function isoClampToWalk(x: number, y: number, geom: IsoRoomGeom, stage: PetStage = 'adult'): Pt {
+  return clampToGrid(hideoutGridFor(stage, geom), x, y);
 }
 
 export function isoPetBehindAny(feetX: number, feetY: number, geom: IsoRoomGeom): boolean {
-  return geom.props.some((p) => petBehindProp(feetX, feetY, p));
+  return geom.props.some((p) => p.occluder && petBehindProp(feetX, feetY, p, geom.tile));
 }
 
 export function isoSleepPoint(geom: IsoRoomGeom): Pt {
   const bed = geom.targets.bed ?? geom.targets.cushion;
-  if (!bed) return isoClampToWalk(128, 214, geom);
+  if (!bed) return isoClampToWalk(geom.canvas[0] / 2, 360, geom);
   return geom.sleepOnBed ? bed : isoClampToWalk(bed[0], bed[1], geom);
 }
 
-/* ------------------------------------------------------- integer scale --- */
+export function occluderProps(geom: IsoRoomGeom, feetX: number, feetY: number): HideoutProp[] {
+  return geom.props.filter((p) => p.occluder && petBehindProp(feetX, feetY, p, geom.tile));
+}
+
+/* ------------------------------------------------------- integer / fit scale --- */
 
 export type HideoutScale = {
   dpx: number;
@@ -382,9 +477,14 @@ export type HideoutScale = {
   contentH: number;
 };
 
+function isRoomCanvas(canvas: readonly [number, number]): boolean {
+  return canvas[0] === HIDEOUT_CANVAS[0] && canvas[1] === HIDEOUT_CANVAS[1];
+}
+
 /**
- * Largest whole device-px-per-art-px that fits the stage, using the art's
- * trimmed content bounds (transparent canvas margin may bleed). Integer only.
+ * Room canvases (264×576) fit-to-contain the stage (fills 430pt and 440pt
+ * when height allows; 440pt @ 3x is exactly 5 device px / art px).
+ * Dive 256×320 callers keep the old integer device-px scale.
  */
 export function hideoutIntegerScale(input: {
   availW: number;
@@ -398,6 +498,21 @@ export function hideoutIntegerScale(input: {
   const content = input.content ?? HIDEOUT_CONTENT;
   const canvas = input.canvas ?? HIDEOUT_CANVAS;
   const pr = input.pixelRatio > 0 ? input.pixelRatio : 1;
+  if (isRoomCanvas(canvas)) {
+    const fitPt = Math.min(
+      Math.max(0, input.availW) / Math.max(1, content[2]),
+      Math.max(0, input.availH) / Math.max(1, content[3]),
+    );
+    const pt = fitPt > 0 ? fitPt : 1;
+    return {
+      dpx: pt * pr,
+      pt,
+      canvasW: canvas[0] * pt,
+      canvasH: canvas[1] * pt,
+      contentW: content[2] * pt,
+      contentH: content[3] * pt,
+    };
+  }
   const phoneCap = input.phoneCap ?? HIDEOUT_PHONE_CAP_DPX;
   const padCap = input.padCap ?? HIDEOUT_IPAD_CAP_DPX;
   const cap = input.availW >= 600 ? padCap : phoneCap;
@@ -415,25 +530,16 @@ export function hideoutIntegerScale(input: {
   };
 }
 
-/**
- * Drawn square in points at the room's integer device-px scale.
- * Hideout must pass `HIDEOUT_PET_ART_PX` (64), not the animation cell
- * (Sak idle is 192px — that box was the whole wall). Underground still
- * passes `art.cellPx` so the ledge pet stays large.
- */
 export function hideoutPetBox(cellPx: number, scale: HideoutScale, pixelRatio: number): number {
   const cell = Math.max(1, cellPx);
   const ratio = pixelRatio > 0 ? pixelRatio : 1;
+  if (!Number.isInteger(scale.dpx) && scale.pt > 0) return cell * scale.pt;
   const k = Math.max(1, Math.round(scale.dpx));
   return (k * cell) / ratio;
 }
 
 export type HideoutOrigin = { left: number; top: number };
 
-/**
- * Place the canvas so the *visible* content bounds are centered in the stage.
- * Transparent padding (15,42 on the 256×320) bleeds; the stage clips it.
- */
 export function hideoutStageOrigin(
   width: number,
   height: number,
@@ -448,7 +554,6 @@ export function hideoutStageOrigin(
   };
 }
 
-/** Map art-px (canvas top-left origin) → stage points. Feet sit on this point. */
 export function hideoutArtToScreen(
   artX: number,
   artY: number,
@@ -469,10 +574,6 @@ export function hideoutScreenPoly(
   });
 }
 
-/**
- * Sprite wrap top-left so the role's foot line lands on the art-px feet point.
- * `box` is the drawn square in pt (native 64 art px at the room's integer scale).
- */
 export function hideoutPetWrapOrigin(
   artX: number,
   artY: number,
@@ -497,14 +598,14 @@ export function hideoutFeetInFloorScreen(
   return pointInPoly(feet.x, feet.y, hideoutScreenPoly(floor, origin, scale));
 }
 
-/** Layout used by the Hideout stage on a phone width (margin already applied). */
+/** Layout used by the Hideout stage. Default height matches width-fit canvas. */
 export function hideoutPhoneLayout(
   widthPt: number,
   pixelRatio: number,
-  stageH = 520,
+  stageH?: number,
 ): { scale: HideoutScale; origin: HideoutOrigin; width: number; height: number } {
   const width = widthPt;
-  const height = stageH;
+  const height = stageH ?? Math.ceil((HIDEOUT_CANVAS[1] * widthPt) / HIDEOUT_CANVAS[0]);
   const scale = hideoutIntegerScale({
     availW: Math.max(0, width - HIDEOUT_MARGIN_PT * 2),
     availH: height,
@@ -513,10 +614,38 @@ export function hideoutPhoneLayout(
   return { scale, origin: hideoutStageOrigin(width, height, scale), width, height };
 }
 
-/** East/west facing from an iso step. Walk clips are 2-dir; dx wins on diagonals. */
-export function hideoutFace(dx: number, dy: number, prev: 'e' | 'w'): 'e' | 'w' {
-  if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return prev;
-  return dx >= 0 ? 'e' : 'w';
+/**
+ * Nearest of the 4 walk cycles (E,N,S,W) from velocity — same snap as
+ * `skinWalkDirIndex` for 4-dir clips. Idle/tap use the 8 standing poses.
+ */
+export function hideoutFace(dx: number, dy: number, prev: HideoutIdleFace | 'e' | 'w' | 'front'): HideoutIdleFace {
+  if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+    if (prev === 'front') return 's';
+    if (HIDEOUT_IDLE_FACES.includes(prev as HideoutIdleFace)) return prev as HideoutIdleFace;
+    return 's';
+  }
+  const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const a = ((deg % 360) + 360) % 360;
+  if (a < 45 || a >= 315) return 'e';
+  if (a < 135) return 's';
+  if (a < 225) return 'w';
+  return 'n';
+}
+
+export function hideoutIdleFace(dx: number, dy: number, prev: HideoutIdleFace): HideoutIdleFace {
+  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return prev;
+  const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const bearing = deg + 90;
+  const i = ((Math.round(bearing / 45) % 8) + 8) % 8;
+  return HIDEOUT_IDLE_FACES[i] ?? prev;
+}
+
+export function hideoutWalkDirIndex(dx: number, dy: number): number {
+  const face = hideoutFace(dx, dy, 's');
+  if (face === 'n') return 0;
+  if (face === 'e') return 1;
+  if (face === 's') return 2;
+  return 3;
 }
 
 /* ------------------------------------------------------- 2D wander --- */
@@ -530,13 +659,22 @@ export type HideoutStep = {
   bounce: number;
   squash: boolean;
   loop: boolean;
+  path: readonly Pt[];
 };
 
 const TARGET_IDS: readonly HideoutTargetId[] = ['bowl', 'cushion', 'chair', 'door', 'boombox'];
 
-/** Duration for a constant-speed iso lerp in art px (this map is already screen-space). */
 export function hideoutWalkMs(dx: number, dy: number, speed: number): number {
   const dist = Math.hypot(dx, dy);
+  const v = Math.max(0.2, speed) * HIDEOUT_WALK_ART_PX_PER_SEC;
+  return Math.max(480, Math.round((dist / v) * 1000));
+}
+
+export function hideoutPathMs(path: readonly Pt[], speed: number): number {
+  let dist = 0;
+  for (let i = 1; i < path.length; i += 1) {
+    dist += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
+  }
   const v = Math.max(0.2, speed) * HIDEOUT_WALK_ART_PX_PER_SEC;
   return Math.max(480, Math.round((dist / v) * 1000));
 }
@@ -545,50 +683,93 @@ export function hideoutTargetPoint(id: HideoutTargetId): Pt {
   return clampToWalk(HIDEOUT_TARGETS[id][0], HIDEOUT_TARGETS[id][1]);
 }
 
-/**
- * Next Hideout step. Works for every kit / stage / skin — poses come from
- * the live `kit`, the path is the iso floor. Walks under Reduce Motion;
- * the caller only freezes when Motion is Off (`cosmeticsStill`).
- */
+function sleepAllow(geom: IsoRoomGeom | undefined): Pt[] | undefined {
+  if (!geom?.sleepOnBed) return undefined;
+  const bed = geom.props.find((p) => p.id === 'bed');
+  if (!bed) {
+    const t = geom.targets.bed ?? geom.targets.cushion;
+    return t ? [t] : undefined;
+  }
+  const [c, r, w, h] = bed.footprintCells;
+  const seen = new Set<string>();
+  const pts: Pt[] = [];
+  const add = (cc: number, rr: number) => {
+    const k = `${cc}:${rr}`;
+    if (seen.has(k)) return;
+    seen.add(k);
+    pts.push(tileCenter(cc, rr, geom.tile));
+  };
+  for (let cc = c; cc < c + w; cc += 1) {
+    for (let rr = r; rr < r + h; rr += 1) {
+      add(cc, rr);
+      // One-tile ring of originally-walkable floor so stage clearance
+      // does not leave a moat the pet cannot step across onto the bed.
+      for (let dc = -1; dc <= 1; dc += 1) {
+        for (let dr = -1; dr <= 1; dr += 1) {
+          if (dc === 0 && dr === 0) continue;
+          const nc = cc + dc;
+          const nr = rr + dr;
+          if (isWalkableArt(geom.grid, (nc + 0.5) * geom.tile, (nr + 0.5) * geom.tile)) add(nc, nr);
+        }
+      }
+    }
+  }
+  return pts;
+}
+
+function planPath(geom: IsoRoomGeom | undefined, from: Pt, to: Pt, stage: PetStage, allow?: readonly Pt[]): Pt[] {
+  const grid = hideoutGridFor(stage, geom);
+  const opts = allow && allow.length > 0 ? { allow } : undefined;
+  const pulled = route(grid, from, to, opts);
+  if (pulled && pulled.length >= 2 && pathClear(grid, pulled, 2, opts)) return pulled;
+  const raw = astar(grid, from, to, opts);
+  if (raw && raw.length >= 2) return raw;
+  return [from, to];
+}
+
 export function planHideoutStep(
   input: PetPlanInput & { x: number; y: number; hungry?: boolean; geom?: IsoRoomGeom },
 ): HideoutStep {
-  const { kit, mood, branch, rng, geom } = input;
+  const { kit, mood, branch, rng, geom, stage } = input;
   const form = PET_FORM_MOTION[branch];
   const bedPt = geom ? isoSleepPoint(geom) : hideoutTargetPoint('cushion');
-  const onBed =
-    geom?.sleepOnBed === true && Math.hypot(input.x - bedPt[0], input.y - bedPt[1]) <= 12;
+  const onBed = geom?.sleepOnBed === true && Math.hypot(input.x - bedPt[0], input.y - bedPt[1]) <= 12;
   const here = onBed
     ? ([input.x, input.y] as Pt)
     : geom
-      ? isoClampToWalk(input.x, input.y, geom)
-      : clampToWalk(input.x, input.y);
-  const still = { toX: here[0], toY: here[1], bounce: 0, loop: true };
+      ? isoClampToWalk(input.x, input.y, geom, stage)
+      : clampToWalk(input.x, input.y, stage);
+  const still = { toX: here[0], toY: here[1], bounce: 0, loop: true, path: [here] as Pt[] };
   const target = (id: HideoutTargetId): Pt => {
     if (!geom) return hideoutTargetPoint(id);
     if (id === 'cushion' || id === 'bed') return isoSleepPoint(geom);
     const t = geom.targets[id] ?? geom.targets.door ?? here;
-    return isoClampToWalk(t[0], t[1], geom);
+    return isoClampToWalk(t[0], t[1], geom, stage);
+  };
+  const go = (dest: Pt, act: HideoutStep['act'], pose: PetPose | null, squash: boolean, allow?: readonly Pt[]): HideoutStep => {
+    const path = planPath(geom, here, dest, stage, allow);
+    const end = path[path.length - 1] ?? dest;
+    const speed = Math.max(0.2, form.speed * (mood === 'asleep' ? 1 : MOOD_MOTION[mood].speed));
+    return {
+      act,
+      pose,
+      ms: hideoutPathMs(path, speed),
+      toX: end[0],
+      toY: end[1],
+      bounce: 0,
+      squash,
+      loop: true,
+      path,
+    };
   };
   if (mood === 'asleep') {
     const bed = target('cushion');
     const far = Math.hypot(here[0] - bed[0], here[1] - bed[1]) > 8;
     if (far) {
-      const speed = Math.max(0.2, form.speed);
-      return {
-        act: 'wander',
-        pose: petPose(kit, 'walk'),
-        ms: hideoutWalkMs(bed[0] - here[0], bed[1] - here[1], speed),
-        toX: bed[0],
-        toY: bed[1],
-        bounce: 0,
-        squash: false,
-        loop: true,
-      };
+      return go(bed, 'wander', petPose(kit, 'walk'), false, sleepAllow(geom));
     }
-    // Sleep ON the bed (Loft) — use the unclamped bed point as the rest pose.
     if (geom?.sleepOnBed) {
-      return { act: 'sleep', pose: petPose(kit, 'idle'), ms: 6000, squash: true, toX: bed[0], toY: bed[1], bounce: 0, loop: true };
+      return { act: 'sleep', pose: petPose(kit, 'idle'), ms: 6000, squash: true, toX: bed[0], toY: bed[1], bounce: 0, loop: true, path: [bed] };
     }
     return { act: 'sleep', pose: petPose(kit, 'idle'), ms: 6000, squash: true, ...still };
   }
@@ -597,17 +778,7 @@ export function planHideoutStep(
   if (input.hungry && roll < 0.55) {
     const bowl = target('bowl');
     if (Math.hypot(here[0] - bowl[0], here[1] - bowl[1]) > 6) {
-      const speed = Math.max(0.2, form.speed * m.speed);
-      return {
-        act: 'wander',
-        pose: petPose(kit, 'walk'),
-        ms: hideoutWalkMs(bowl[0] - here[0], bowl[1] - here[1], speed),
-        toX: bowl[0],
-        toY: bowl[1],
-        bounce: 0,
-        squash: mood === 'sad',
-        loop: true,
-      };
+      return go(bowl, 'wander', petPose(kit, 'walk'), mood === 'sad');
     }
   }
   const showoffChance = Math.min(0.55, form.showoff * m.showoff);
@@ -626,37 +797,59 @@ export function planHideoutStep(
       dest = visit
         ? target(TARGET_IDS[Math.floor(rng() * TARGET_IDS.length)] ?? 'door')
         : geom
-          ? isoRandomWalkPoint(geom, rng)
-          : randomWalkPoint(rng);
+          ? isoRandomWalkPoint(geom, rng, stage)
+          : randomWalkPoint(rng, stage);
       if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) >= 18) break;
     }
     if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) < 10) {
       const restMs = Math.round((1600 + rng() * 2000) * form.rest * m.rest);
       return { act: rng() < m.sit ? 'sit' : 'idle', pose: petPose(kit, 'idle'), ms: restMs, squash: true, ...still };
     }
-    const speed = Math.max(0.2, form.speed * m.speed);
-    return {
-      act: 'wander',
-      pose: petPose(kit, 'walk'),
-      ms: hideoutWalkMs(dest[0] - here[0], dest[1] - here[1], speed),
-      toX: dest[0],
-      toY: dest[1],
-      bounce: 0,
-      squash: mood === 'sad',
-      loop: true,
-    };
+    return go(dest, 'wander', petPose(kit, 'walk'), mood === 'sad');
   }
   const sit = rng() < m.sit;
   const restMs = Math.round((1800 + rng() * 2200) * form.rest * m.rest);
   return { act: sit ? 'sit' : 'idle', pose: petPose(kit, 'idle'), ms: restMs, squash: sit || mood === 'sad', ...still };
 }
 
-/* ------------------------------------------------------- spots / labels --- */
-
 export function hideoutSpotHit(artX: number, artY: number): HideoutSpot | null {
+  const tile = HIDEOUT_GEOM.tile;
   for (const s of HIDEOUT_SPOTS) {
-    const [x, y, w, h] = s.rect;
-    if (artX >= x && artX <= x + w && artY >= y && artY <= y + h) return s;
+    const [c, r, w, h] = s.footprint;
+    const x0 = c * tile;
+    const y0 = r * tile;
+    if (artX >= x0 && artX <= x0 + w * tile && artY >= y0 && artY <= y0 + h * tile) return s;
   }
   return null;
+}
+
+/** Every authored walk target / hotspot is reachable from spawn, path stays on walkable tiles. */
+export function assertRoomReachable(geom: IsoRoomGeom, stage: PetStage = 'adult'): { ok: true } | { ok: false; reason: string } {
+  const grid = hideoutGridFor(stage, geom);
+  const spawn = geom.spawns.default ?? clampToGrid(grid, geom.canvas[0] / 2, 360);
+  if (!isWalkableArt(grid, spawn[0], spawn[1])) return { ok: false, reason: 'spawn is not walkable' };
+  const bedCells = sleepAllow(geom);
+  const points: { id: string; pt: Pt; allow?: readonly Pt[] }[] = [];
+  for (const [id, pt] of Object.entries(geom.targets)) {
+    const onBed = geom.sleepOnBed && (id === 'bed' || id === 'cushion');
+    points.push({ id: `target:${id}`, pt, allow: onBed ? bedCells : undefined });
+  }
+  for (const h of geom.hotspots) {
+    const onBed = geom.sleepOnBed && (h.id === 'bed' || h.kind === 'bed');
+    points.push({ id: `hotspot:${h.id}`, pt: h.walk, allow: onBed ? bedCells : undefined });
+  }
+  for (const s of Object.entries(geom.spawns)) points.push({ id: `spawn:${s[0]}`, pt: s[1] });
+  for (const p of points) {
+    const goal = p.pt;
+    const opts = p.allow && p.allow.length > 0 ? { allow: p.allow } : undefined;
+    const startOk = isWalkableArt(grid, spawn[0], spawn[1]);
+    const goalOk = opts ? true : isWalkableArt(grid, goal[0], goal[1]);
+    if (!startOk || !goalOk) return { ok: false, reason: `${p.id} is not walkable` };
+    const path = route(grid, spawn, goal, opts);
+    if (!path) return { ok: false, reason: `${p.id} unreachable` };
+    if (!pathClear(grid, path, 2, opts)) {
+      return { ok: false, reason: `${p.id} path crosses a blocked tile` };
+    }
+  }
+  return { ok: true };
 }

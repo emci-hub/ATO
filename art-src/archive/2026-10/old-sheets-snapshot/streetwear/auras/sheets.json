@@ -1,0 +1,370 @@
+{
+  "sheets/streetwear/auras/blaze/behind": {
+    "sheet": "sheets/streetwear/auras/atlas.png",
+    "sheetW": 791,
+    "sheetH": 571,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_001": {
+        "x": 99,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_002": {
+        "x": 198,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_003": {
+        "x": 297,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_004": {
+        "x": 396,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_005": {
+        "x": 495,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_006": {
+        "x": 594,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      },
+      "frame_007": {
+        "x": 693,
+        "y": 0,
+        "w": 98,
+        "h": 98
+      }
+    }
+  },
+  "sheets/streetwear/auras/blaze/front": {
+    "sheet": "sheets/streetwear/auras/atlas.png",
+    "sheetW": 791,
+    "sheetH": 571,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 99,
+        "w": 98,
+        "h": 98
+      },
+      "frame_001": {
+        "x": 99,
+        "y": 99,
+        "w": 98,
+        "h": 98
+      },
+      "frame_002": {
+        "x": 198,
+        "y": 99,
+        "w": 98,
+        "h": 98
+      },
+      "frame_003": {
+        "x": 297,
+        "y": 99,
+        "w": 98,
+        "h": 98
+      },
+      "frame_004": {
+        "x": 396,
+        "y": 99,
+        "w": 98,
+        "h": 98
+      },
+      "frame_005": {
+        "x": 495,
+        "y": 99,
+        "w": 98,
+        "h": 98
+      },
+      "frame_006": {
+        "x": 594,
+        "y": 99,
+        "w": 98,
+        "h": 98
+      },
+      "frame_007": {
+        "x": 693,
+        "y": 99,
+        "w": 98,
+        "h": 98
+      }
+    }
+  },
+  "sheets/streetwear/auras/bubbles/behind": {
+    "sheet": "sheets/streetwear/auras/atlas.png",
+    "sheetW": 791,
+    "sheetH": 571,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_001": {
+        "x": 62,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_002": {
+        "x": 124,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_003": {
+        "x": 186,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_004": {
+        "x": 248,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_005": {
+        "x": 310,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      }
+    }
+  },
+  "sheets/streetwear/auras/bubbles/front": {
+    "sheet": "sheets/streetwear/auras/atlas.png",
+    "sheetW": 791,
+    "sheetH": 571,
+    "frames": {
+      "frame_000": {
+        "x": 372,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_001": {
+        "x": 434,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_002": {
+        "x": 496,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_003": {
+        "x": 558,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_004": {
+        "x": 620,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      },
+      "frame_005": {
+        "x": 682,
+        "y": 510,
+        "w": 61,
+        "h": 61
+      }
+    }
+  },
+  "sheets/streetwear/auras/rune/behind": {
+    "sheet": "sheets/streetwear/auras/atlas.png",
+    "sheetW": 791,
+    "sheetH": 571,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 368,
+        "w": 70,
+        "h": 70
+      },
+      "frame_001": {
+        "x": 71,
+        "y": 368,
+        "w": 70,
+        "h": 70
+      },
+      "frame_002": {
+        "x": 142,
+        "y": 368,
+        "w": 70,
+        "h": 70
+      },
+      "frame_003": {
+        "x": 213,
+        "y": 368,
+        "w": 70,
+        "h": 70
+      },
+      "frame_004": {
+        "x": 284,
+        "y": 368,
+        "w": 70,
+        "h": 70
+      },
+      "frame_005": {
+        "x": 355,
+        "y": 368,
+        "w": 70,
+        "h": 70
+      }
+    }
+  },
+  "sheets/streetwear/auras/rune/front": {
+    "sheet": "sheets/streetwear/auras/atlas.png",
+    "sheetW": 791,
+    "sheetH": 571,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 439,
+        "w": 70,
+        "h": 70
+      },
+      "frame_001": {
+        "x": 71,
+        "y": 439,
+        "w": 70,
+        "h": 70
+      },
+      "frame_002": {
+        "x": 142,
+        "y": 439,
+        "w": 70,
+        "h": 70
+      },
+      "frame_003": {
+        "x": 213,
+        "y": 439,
+        "w": 70,
+        "h": 70
+      },
+      "frame_004": {
+        "x": 284,
+        "y": 439,
+        "w": 70,
+        "h": 70
+      },
+      "frame_005": {
+        "x": 355,
+        "y": 439,
+        "w": 70,
+        "h": 70
+      }
+    }
+  },
+  "sheets/streetwear/auras/spiky/behind": {
+    "sheet": "sheets/streetwear/auras/atlas.png",
+    "sheetW": 791,
+    "sheetH": 571,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 198,
+        "w": 84,
+        "h": 84
+      },
+      "frame_001": {
+        "x": 85,
+        "y": 198,
+        "w": 84,
+        "h": 84
+      },
+      "frame_002": {
+        "x": 170,
+        "y": 198,
+        "w": 84,
+        "h": 84
+      },
+      "frame_003": {
+        "x": 255,
+        "y": 198,
+        "w": 84,
+        "h": 84
+      },
+      "frame_004": {
+        "x": 340,
+        "y": 198,
+        "w": 84,
+        "h": 84
+      },
+      "frame_005": {
+        "x": 425,
+        "y": 198,
+        "w": 84,
+        "h": 84
+      }
+    }
+  },
+  "sheets/streetwear/auras/spiky/front": {
+    "sheet": "sheets/streetwear/auras/atlas.png",
+    "sheetW": 791,
+    "sheetH": 571,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 283,
+        "w": 84,
+        "h": 84
+      },
+      "frame_001": {
+        "x": 85,
+        "y": 283,
+        "w": 84,
+        "h": 84
+      },
+      "frame_002": {
+        "x": 170,
+        "y": 283,
+        "w": 84,
+        "h": 84
+      },
+      "frame_003": {
+        "x": 255,
+        "y": 283,
+        "w": 84,
+        "h": 84
+      },
+      "frame_004": {
+        "x": 340,
+        "y": 283,
+        "w": 84,
+        "h": 84
+      },
+      "frame_005": {
+        "x": 425,
+        "y": 283,
+        "w": 84,
+        "h": 84
+      }
+    }
+  }
+}

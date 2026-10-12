@@ -5,7 +5,8 @@
  * --skin streetwear`). This fails the gate when:
  *   1. a loose Streetwear frame is require()d into the bundle (only the small
  *      shop / rarity / baked-sword stills may be);
- *   2. a north/south row leaks into a Streetwear sheet (the board draws E/W);
+ *   2. a north/south row leaks into a Streetwear sheet that is not hero Walk
+ *      (path walkers / towers stay E/W; hero Walk packs N/E/S/W);
  *   3. the Streetwear sheets + stills exceed the OTA budget;
  *   4. a skin.json role, a hero/tower clip or an effect points at a sheet or
  *      frame that is not packed (it would draw nothing);
@@ -33,16 +34,29 @@ assert.deepEqual(loose, [], `loose Streetwear frames are bundled: ${loose.slice(
 ok(`only ${swKeys.length} small Streetwear stills are bundled by key (no loose frames)`);
 
 // 2 + 4. Sheets: E/W only, and every referenced frame exists.
-const sheetsSrc = fs.readFileSync(path.join(repo, 'src/play/generated-play-sheets.ts'), 'utf8');
-const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEETS:')), sheetsSrc.indexOf(' as const;'));
-const sheets = JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
+function loadPlaySheets(): Record<string, { sheet: string; frames: Record<string, unknown> }> {
+  const legacy = path.join(repo, 'assets/art/legacy-play-sheets.json');
+  if (fs.existsSync(legacy)) {
+    return JSON.parse(fs.readFileSync(legacy, 'utf8')) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
+  }
+  const sheetsSrc = fs.readFileSync(path.join(repo, 'src/play/generated-play-sheets.ts'), 'utf8');
+  const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEETS:')), sheetsSrc.indexOf(' as const;'));
+  return JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
+}
+const sheets = loadPlaySheets();
 const swSheets = Object.entries(sheets).filter(([k]) => k.startsWith('sheets/streetwear/'));
+const HERO_WALK = /^sheets\/streetwear\/heroes\/[^/]+\/Walk$/;
+const CARDINALS = new Set(['north', 'east', 'south', 'west']);
 for (const [key, entry] of swSheets) {
   if (key.endsWith('/rotations') || /\/(fx|hideout-fx|auras|swords|ui-kit|board)\//.test(key)) continue;
   const dirs = new Set(Object.keys(entry.frames).map((f) => f.split('/')[0]));
-  for (const d of dirs) assert.ok(d === 'east' || d === 'west', `${key} ships a "${d}" row`);
+  if (HERO_WALK.test(key)) {
+    for (const d of dirs) assert.ok(CARDINALS.has(d), `${key} ships a "${d}" row`);
+  } else {
+    for (const d of dirs) assert.ok(d === 'east' || d === 'west', `${key} ships a "${d}" row`);
+  }
 }
-ok(`${swSheets.length} Streetwear sheets, every clip sheet east/west only`);
+ok(`${swSheets.length} Streetwear sheets, clip sheets E/W (hero Walk may add N/S)`);
 
 const skin = JSON.parse(fs.readFileSync(path.join(repo, 'assets/play/skins/streetwear/skin.json'), 'utf8')) as {
   roles: Record<string, { keys: string[]; walk?: Clip; anims?: Record<string, Clip> }>;
@@ -76,7 +90,12 @@ for (const [char, m] of Object.entries(meta.chars)) {
   for (const [clip, frames] of Object.entries(m.clips)) {
     const sheet = sheets[`sheets/streetwear/${char}/${clip}`];
     assert.ok(sheet, `${char}/${clip} not packed`);
-    assert.equal(Object.keys(sheet.frames).length, frames * 2, `${char}/${clip}: expected ${frames} frames × E/W`);
+    const dirCount = new Set(Object.keys(sheet.frames).map((f) => f.split('/')[0])).size;
+    assert.equal(
+      Object.keys(sheet.frames).length,
+      frames * dirCount,
+      `${char}/${clip}: expected ${frames} frames × ${dirCount} dirs`,
+    );
   }
 }
 for (const [key, m] of Object.entries(meta.fx)) {
@@ -96,7 +115,9 @@ ok(`meta matches the sheets: ${Object.keys(meta.chars).length} characters, ${Obj
 // Clips share atlases, so count each image file once.
 const swFiles = new Set(swSheets.map(([, entry]) => entry.sheet));
 let bytes = 0;
-for (const file of swFiles) bytes += fs.statSync(path.join(repo, 'assets/play', file)).size;
+const sheetFilePath = (file: string) =>
+  file.startsWith('art/') ? path.join(repo, 'assets', file) : path.join(repo, 'assets/play', file);
+for (const file of swFiles) bytes += fs.statSync(sheetFilePath(file)).size;
 for (const k of swKeys) bytes += fs.statSync(path.join(repo, 'assets/play', `${k}.png`)).size;
 assert.ok(bytes <= BUDGET_BYTES, `Streetwear art is ${(bytes / 1048576).toFixed(1)} MB, over the ${BUDGET_BYTES / 1048576} MB budget`);
 ok(`Streetwear art ${(bytes / 1048576).toFixed(1)} MB (budget ${BUDGET_BYTES / 1048576} MB)`);
