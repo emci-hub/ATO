@@ -50,8 +50,13 @@ import {
 import {
   HIDEOUT_MARGIN_PT,
   HIDEOUT_NIGHT,
+  HIDEOUT_PET_ART_PX,
+  hideoutArtToScreen,
+  hideoutFace,
   hideoutIntegerScale,
   hideoutPetBox,
+  hideoutPetWrapOrigin,
+  hideoutStageOrigin,
   hideoutTargetPoint,
   petBehindAny,
   planHideoutStep,
@@ -92,6 +97,7 @@ import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
 import { roleFootAt } from '@/play/skin';
 import {
   StreetRoomArt,
+  StreetRoomAuraClip,
   StreetRoomFront,
   StreetRoomLife,
   StreetRoomSpots,
@@ -184,10 +190,7 @@ function roomOrigin(width: number, height: number) {
 }
 
 function hideoutOrigin(width: number, height: number, scale: HideoutScale) {
-  return {
-    left: Math.round((width - scale.canvasW) / 2),
-    top: Math.round(Math.max(0, (height - scale.canvasH) / 2)),
-  };
+  return hideoutStageOrigin(width, height, scale);
 }
 
 function RoomBackdrop({
@@ -468,7 +471,7 @@ export function PetRoom({
   const box = egg
     ? PET_ROOM_BOX.egg
     : streetRoom && hideoutScale
-      ? hideoutPetBox(art.cellPx, hideoutScale, pr)
+      ? hideoutPetBox(HIDEOUT_PET_ART_PX, hideoutScale, pr)
       : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, pr);
   const footAt = egg ? 1 : roleFootAt(art.role);
   const origin = streetRoom && hideoutScale
@@ -554,11 +557,12 @@ export function PetRoom({
           rng: Math.random,
           hungry: hungerRef.current <= 1,
         });
-        let face = faceRef.current;
         const dx = step.toX - artXRef.current;
         const dy = step.toY - artYRef.current;
-        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) face = dx >= 0 ? 'e' : 'w';
-        else if (step.act === 'idle' && Math.random() < 0.3) face = face === 'e' ? 'w' : 'e';
+        let face = hideoutFace(dx, dy, faceRef.current === 'w' ? 'w' : 'e');
+        if (step.act === 'idle' && Math.abs(dx) < 2 && Math.abs(dy) < 2 && Math.random() < 0.3) {
+          face = face === 'e' ? 'w' : 'e';
+        }
         faceRef.current = face;
         setAct({ pose: step.pose, loop: step.loop, startedAt: Date.now(), face, squash: step.squash });
         setBehind(petBehindAny(step.toX, step.toY));
@@ -604,6 +608,15 @@ export function PetRoom({
       if (timer) clearTimeout(timer);
     };
   }, [width, away, egg, art.kit, mood, pet.branch, pet.stage, walkOn, streetRoom, hideoutPt, artX, artY, x, hop, squash]);
+
+  // Depth vs props follows the live feet, not only the step's destination.
+  useEffect(() => {
+    if (!streetRoom || away || egg) return;
+    const tick = () => setBehind(petBehindAny(artX.value, artY.value));
+    tick();
+    const id = setInterval(tick, 80);
+    return () => clearInterval(id);
+  }, [streetRoom, away, egg, artX, artY]);
 
   // Deep drifts: a slow float. KEEP under Reduce Motion, smaller travel.
   useEffect(() => {
@@ -654,6 +667,9 @@ export function PetRoom({
   const oy = origin.top;
   const petStyle = useAnimatedStyle(() => {
     if (isoOn) {
+      // Feet = origin + art * pt. Wrap top-left = feet - (box/2, footAt*box).
+      // Do NOT also apply the classic-room `top = floorY - footAt*box` on the
+      // wrap — that double-counted origin, footAt, and a phantom y=224 floor line.
       return {
         transform: [
           { translateX: ox + artX.value * isoPt - box / 2 },
@@ -783,22 +799,6 @@ export function PetRoom({
           minimal={fxMinimal}
         />
       ) : null}
-      {width > 0 && streetSpots && hideoutScale && !picking ? (
-        <StreetRoomSpots
-          left={origin.left}
-          top={origin.top}
-          scale={hideoutScale}
-          still={motion.cosmeticsStill}
-          petHit={{
-            x: origin.left + artXRef.current * isoPt - box / 2,
-            y: origin.top + artYRef.current * isoPt - footAt * box,
-            w: box,
-            h: box,
-          }}
-          {...streetSpots}
-        />
-      ) : null}
-
       {width > 0 && picking && onPickEgg ? (
         <View style={[styles.eggRow, { top: floorY - 96 }]}>
           {EGG_TYPES.map((e) => (
@@ -822,7 +822,7 @@ export function PetRoom({
       ) : null}
 
       {width > 0 && !away && !picking ? (
-        <Animated.View pointerEvents={streetRoom ? 'box-none' : 'auto'} style={[styles.petWrap, { top, width: box, height: box }, petStyle]}>
+        <Animated.View pointerEvents={streetRoom ? 'box-none' : 'auto'} style={[styles.petWrap, { top: isoOn ? 0 : top, width: box, height: box }, petStyle]}>
           {streetRoom ? null : (
           <View
             pointerEvents="none"
@@ -965,14 +965,30 @@ export function PetRoom({
           ) : null}
         </Animated.View>
       ) : null}
+      {streetRoom && hideoutScale ? (
+        <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} />
+      ) : null}
+      {streetRoom && hideoutScale && behind ? <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} /> : null}
+      {width > 0 && streetSpots && hideoutScale && !picking ? (
+        <StreetRoomSpots
+          left={origin.left}
+          top={origin.top}
+          scale={hideoutScale}
+          still={motion.cosmeticsStill}
+          petHit={(() => {
+            const wrap = hideoutPetWrapOrigin(artXRef.current, artYRef.current, origin, hideoutScale, box, footAt);
+            return { x: wrap.x, y: wrap.y, w: box, h: box };
+          })()}
+          {...streetSpots}
+        />
+      ) : null}
       {streetRoom && hideoutScale && speech ? (
         <StreetSpeechBubble
           text={speech.text}
-          left={Math.round(origin.left + artXRef.current * isoPt - 40)}
-          top={Math.round(origin.top + artYRef.current * isoPt - footAt * box - 36)}
+          left={Math.round(hideoutArtToScreen(artXRef.current, artYRef.current, origin, hideoutScale).x - 40)}
+          top={Math.round(hideoutArtToScreen(artXRef.current, artYRef.current, origin, hideoutScale).y - footAt * box - 36)}
         />
       ) : null}
-      {streetRoom && hideoutScale && behind ? <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} /> : null}
       </View>
       </View>
 

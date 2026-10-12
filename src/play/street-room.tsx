@@ -8,6 +8,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -21,7 +22,9 @@ import { PET_METER_MAX } from '@/play/pet';
 import { GRADE_LABEL, WARMTH_MAX, type Grade } from '@/play/pet-eggs';
 import {
   HIDEOUT_DECALS,
+  HIDEOUT_INTERIOR,
   HIDEOUT_LIGHTS,
+  HIDEOUT_NIGHT,
   HIDEOUT_SPOTS,
   hideoutLabelAnchor,
   type HideoutScale,
@@ -93,18 +96,24 @@ export function StreetRoomArt({
   return (
     <View style={{ position: 'absolute', left, top, width: scale.canvasW, height: scale.canvasH }}>
       <ClipImage drawable={kitDrawable('room-hideout-iso')} />
-      {HIDEOUT_DECALS.map((d) => (
-        <View
-          key={d.id}
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            left: Math.round(d.pos[0] * k),
-            top: Math.round(d.pos[1] * k),
-          }}>
-          <ClipImage drawable={kitDrawable(`room-hideout-iso-${d.id}`)} />
-        </View>
-      ))}
+      {HIDEOUT_DECALS.map((d) => {
+        const dw = Math.max(1, Math.round(d.size[0] * k));
+        const dh = Math.max(1, Math.round(d.size[1] * k));
+        return (
+          <View
+            key={d.id}
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              left: Math.round(d.pos[0] * k),
+              top: Math.round(d.pos[1] * k),
+              width: dw,
+              height: dh,
+            }}>
+            <ClipImage drawable={kitDrawable(`room-hideout-iso-${d.id}`)} />
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -113,6 +122,27 @@ export function StreetRoomFront({ left, top, scale }: { left: number; top: numbe
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left, top, width: scale.canvasW, height: scale.canvasH }}>
       <ClipImage drawable={kitDrawable('room-hideout-iso-front')} />
+    </View>
+  );
+}
+
+/**
+ * Night even-odd overlay: a canvas rect minus the interior silhouette.
+ * Sits above the pet so auras/FX that spill past the walls are clipped to
+ * the room; labels and prop-front stay siblings above this layer.
+ */
+export function StreetRoomAuraClip({ left, top, scale }: { left: number; top: number; scale: HideoutScale }) {
+  const k = scale.pt;
+  const w = scale.canvasW;
+  const h = scale.canvasH;
+  const outer = `M0 0H${w}V${h}H0Z`;
+  const inner =
+    HIDEOUT_INTERIOR.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0] * k},${p[1] * k}`).join('') + 'Z';
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left, top, width: w, height: h }}>
+      <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
+        <Path d={`${outer}${inner}`} fill={HIDEOUT_NIGHT} fillRule="evenodd" />
+      </Svg>
     </View>
   );
 }
@@ -299,8 +329,9 @@ export function StreetRoomSpots({
               style={[
                 styles.tagWrap,
                 {
-                  left: left + anchor[0] * k - leftPt - 40,
-                  top: top + anchor[1] * k - topPt - 14,
+                  width: s.id === 'manhole' ? 168 : 108,
+                  left: left + anchor[0] * k - leftPt - (s.id === 'manhole' ? 84 : 54),
+                  top: top + anchor[1] * k - topPt - (s.id === 'manhole' ? 4 : 16),
                   opacity: faded ? 0.4 : 1,
                 },
               ]}>
@@ -483,16 +514,24 @@ const styles = StyleSheet.create({
   spot: { position: 'absolute', borderRadius: 4 },
   pulse: { borderWidth: 2, borderColor: STREET.mustard, borderStyle: 'dashed' },
   pressed: { backgroundColor: 'rgba(224, 165, 38, 0.18)' },
-  tagWrap: { position: 'absolute', width: 80, alignItems: 'center' },
-  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: STREET.mustard, marginBottom: 2 },
+  tagWrap: { position: 'absolute', width: 108, alignItems: 'center' },
+  dot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: STREET.mustard, marginBottom: 3 },
   tag: {
     fontFamily: PIXEL_FONT.label,
-    fontSize: 10,
+    fontSize: 12,
+    lineHeight: 16,
     color: STREET.mustard,
+    backgroundColor: 'rgba(12, 13, 35, 0.92)',
+    overflow: 'hidden',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: STREET.mustard,
     includeFontPadding: false,
     textTransform: 'uppercase',
+    textAlign: 'center',
   },
-  tagHot: { color: STREET.paper },
+  tagHot: { color: STREET.paper, borderColor: STREET.paper },
   bubble: {
     position: 'absolute',
     maxWidth: 200,
