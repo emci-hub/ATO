@@ -224,12 +224,15 @@ export function DivecoreSettingsSheet({
           onPress={() => commit((doc) => setPlaySettings(doc, { haptics: !doc.play_settings.haptics }))}
         />
       ) : null}
-      <Text style={styles.body}>Reduce motion:</Text>
+      <Text style={styles.body}>Motion: Full / Reduced / Off</Text>
       <View style={styles.chips}>
         {PLAY_MOTION_MODES.map((m) => (
           <NeonChip key={m} label={PLAY_MOTION_LABEL[m]} selected={motion === m} onPress={() => setPlayMotionMode(m)} />
         ))}
       </View>
+      {motion === 'reduced' ? (
+        <Text style={styles.body}>Your phone’s Reduce Motion setting also turns this on for camera and shake.</Text>
+      ) : null}
 
       <NeonLabel>Daily limits</NeonLabel>
       <Text style={styles.body}>

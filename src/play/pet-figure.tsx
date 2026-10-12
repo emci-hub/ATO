@@ -19,7 +19,7 @@ import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { artSkin } from '@/play/art-skin';
-import { PetAura, PetAuraSprite } from '@/play/aura-view';
+import { HideoutAuraStrip, PetAura, PetAuraSprite } from '@/play/aura-view';
 import { auraConfig, auraElementOf, auraPaintOrder } from '@/play/auras';
 import type { FinishKind, FinishMotion } from '@/play/finishes';
 import { ClipImage } from '@/play/sheet-sprite';
@@ -80,6 +80,7 @@ export function PetFigure({
   reverseHost = false,
   auraElement = null,
   flash = null,
+  hideoutFx = false,
 }: {
   pet: PetState;
   baseBox: number;
@@ -107,6 +108,8 @@ export function PetFigure({
   auraElement?: string | null;
   /** 0–1 white copy of the sprite (feed / find). Null skips the extra image. */
   flash?: SharedValue<number> | null;
+  /** Hideout / Underground: 84px blaze + outlined bubbles. */
+  hideoutFx?: boolean;
 }) {
   const flashFallback = useSharedValue(0);
   const flashT = flash ?? flashFallback;
@@ -141,16 +144,20 @@ export function PetFigure({
   const Aura = spriteAuras ? PetAuraSprite : PetAura;
   return (
     <View style={{ width: box, height: box, overflow: 'visible' }}>
-      {worn.map((wear) => (
-        <Aura
-          key={wear.style}
-          drawable={drawable}
-          styleId={wear.style}
-          element={auraElementOf(wear.color, sword)}
-          box={box}
-          layer="back"
-        />
-      ))}
+      {worn.map((wear) =>
+        hideoutFx && (wear.style === 'blaze' || wear.style === 'bubbles') ? (
+          <HideoutAuraStrip key={wear.style} styleId={wear.style} layer="back" box={box} />
+        ) : (
+          <Aura
+            key={wear.style}
+            drawable={drawable}
+            styleId={wear.style}
+            element={auraElementOf(wear.color, sword)}
+            box={box}
+            layer="back"
+          />
+        ),
+      )}
       {look.aura ? (
         <Svg width={box * 1.5} height={box * 1.5} viewBox="0 0 100 100" style={[styles.aura, { left: -box * 0.25, top: -box * 0.25 }]} pointerEvents="none">
           <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
@@ -178,7 +185,10 @@ export function PetFigure({
       ) : null}
       </View>
       {spriteAuras
-        ? worn.map((wear) => (
+        ? worn.map((wear) =>
+            hideoutFx && (wear.style === 'blaze' || wear.style === 'bubbles') ? (
+              <HideoutAuraStrip key={`front-${wear.style}`} styleId={wear.style} layer="front" box={box} />
+            ) : (
             <PetAuraSprite
               key={`front-${wear.style}`}
               drawable={drawable}
@@ -187,7 +197,8 @@ export function PetFigure({
               box={box}
               layer="front"
             />
-          ))
+            ),
+          )
         : blaze ? (
             <PetAura drawable={drawable} styleId="blaze" element={auraElementOf(blaze.color, sword)} box={box} layer="front" />
           ) : null}

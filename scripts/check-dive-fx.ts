@@ -209,9 +209,11 @@ ok('hub: Dive tile gone, Pet tile shows a dive in progress');
   const full = diveWorldCuts('full', false);
   const low = diveWorldCuts('low', false);
   const still = diveWorldCuts('full', true);
+  const off = diveWorldCuts('full', true, true);
   assert.ok(full.shark && full.dragon && full.parallax && full.props && full.trail && full.motion, 'full draws it all');
   assert.ok(!low.shark && !low.dragon && !low.parallax && low.props, 'Low cuts shark, dragon, parallax; keeps props');
-  assert.ok(!still.shark && !still.parallax && !still.trail && !still.motion && still.props, 'reduced motion: scenery only');
+  assert.ok(!still.shark && !still.parallax && still.motion && still.props, 'reduced motion: no pans, idle life stays');
+  assert.ok(!off.motion && !off.trail && !off.shark, 'Motion Off freezes KEEP loops');
   const scene = read('src/play/dive-scene.tsx');
   assert.match(scene, /cuts\.shark && !atSurface && SHARK_DEPTHS\.includes\(depth\)/, 'the shark obeys the cut and the zones');
   assert.match(scene, /findBoxArt\(depth\)/, 'the chest is picked by depth, not a roll');
@@ -237,7 +239,7 @@ ok('sunken ruin: bundled art only, shark in Reef/Trench, Low cuts shark → drag
     if (!id.startsWith('food_')) assert.equal(streetFindName(id), findName(id), `${id}: only foods are renamed`);
   }
   const ui = (JSON.parse(read('assets/play/sheets/streetwear/meta.json')) as { ui: Record<string, unknown> }).ui;
-  for (const piece of [...new Set(STREET_STOPS.map((x) => x.art)), 'stop-train', 'room-hideout-full', 'amb-rat-run', 'amb-pigeon', 'amb-note', 'amb-drip', 'amb-spark', 'amb-wisp']) {
+  for (const piece of [...new Set(STREET_STOPS.map((x) => x.art)), 'stop-train', 'room-hideout-iso', 'room-hideout-iso-front', 'room-hideout-iso-manhole', 'room-hideout-iso-bowl', 'room-hideout-iso-cushion', 'amb-rat-run', 'amb-pigeon', 'amb-note', 'amb-drip', 'amb-spark', 'amb-wisp']) {
     assert.ok(ui[piece], `street art ${piece} is packed`);
   }
 }

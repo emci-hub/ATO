@@ -78,6 +78,8 @@ import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
 import { ScoreBurst } from '@/play/score-burst';
 import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
+import { setHideoutShowLabels, useHideoutShowLabels } from '@/play/street-room';
+import { streetUiOn } from '@/play/street-ui';
 import { AURA_COLORS, AURA_HUES, AURA_VALUES, auraCustomParts, auraHueHex, auraPrice, auraStyles, auraTintLabel, type AuraTint } from '@/play/auras';
 import { swordElement } from '@/play/swords';
 import {
@@ -491,7 +493,29 @@ export function infoTabs(dev: boolean): { id: InfoTab; label: string }[] {
   return dev ? [...tabs, { id: 'dev', label: 'Dev' }] : tabs;
 }
 
-export function StatusTab({ view, onGuide }: { view: PlayView; onGuide?: (s: GuideSection) => void }) {
+function HideoutInfoExtras({ onSettings }: { onSettings?: () => void }) {
+  const show = useHideoutShowLabels();
+  return (
+    <View style={styles.chips}>
+      <NeonChip
+        label={show ? 'Show labels · On' : 'Show labels'}
+        selected={show}
+        onPress={() => setHideoutShowLabels(!show)}
+      />
+      {onSettings ? <NeonChip label="Settings" onPress={onSettings} /> : null}
+    </View>
+  );
+}
+
+export function StatusTab({
+  view,
+  onGuide,
+  onSettings,
+}: {
+  view: PlayView;
+  onGuide?: (s: GuideSection) => void;
+  onSettings?: () => void;
+}) {
   const pv = view.pet;
   const pet = pv.state;
   const stageName = PET_STAGE_LABEL[pet.stage];
@@ -559,6 +583,7 @@ export function StatusTab({ view, onGuide }: { view: PlayView; onGuide?: (s: Gui
       <Text style={styles.body}>Right now: {perksNow}</Text>
       {pet.stage !== 'egg' ? <Text style={styles.body}>{stagePowerLine(pv.stagePower)}</Text> : null}
       <BuffLines view={view} />
+      {streetUiOn() ? <HideoutInfoExtras onSettings={onSettings} /> : null}
       {onGuide ? (
         <View style={styles.chips}>
           <GuideLink section="pet" onOpen={onGuide} />

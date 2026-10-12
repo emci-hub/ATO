@@ -236,8 +236,9 @@ export function foilSparkles(id: string, count = 28): FoilSparkle[] {
 }
 
 /**
- * The sweep runs only on a surface that asked for it, and only while neither
- * Reduce Motion (the Play override or the OS) nor Low effects is on.
+ * The sweep runs only on a surface that asked for it, and only while
+ * in-game Motion is not Off and Effects are Full. OS Reduce Motion /
+ * Reduced do not freeze cosmetics (Motion v2).
  */
 export function finishSweepRuns(input: {
   motion: FinishMotion;
@@ -245,7 +246,8 @@ export function finishSweepRuns(input: {
   osReduceMotion: boolean;
   fxFull: boolean;
 }): boolean {
-  return input.motion === 'sweep' && !input.reduceMotion && !input.osReduceMotion && input.fxFull;
+  void input.osReduceMotion;
+  return input.motion === 'sweep' && !input.reduceMotion && input.fxFull;
 }
 
 export type GradientStop = { offset: number; color: string };

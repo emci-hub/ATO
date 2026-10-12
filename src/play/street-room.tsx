@@ -1,21 +1,14 @@
 /**
- * Streetwear Hideout room (emci 2026-10-11) — the full-height street room on
- * the pet plate, its tappable spots, and its ambient life.
+ * Streetwear Hideout — isometric room, map-driven spots, room life, slim strip.
  *
- * The art is fitted at pack time to the plate (197×426 art px, MOCKUP_PLATE),
- * so every rect below is in plate art px, the same frame the pet's feet line,
- * nameplate and speech bubble use. Spots sit ABOVE the art and BELOW the pet:
- * where they overlap, a tap on the pet stays a tap on the pet.
- *
- * Spots call the screen's own `openIcon` / Stash sheet — the same handlers the
- * buttons use; nothing new happens. The first time, each spot shows a small
- * label; one tap on any spot hides them (device-local flag).
+ * Art is rooms/hideout-iso (packed ui-kit). Spots / walk / lights come from
+ * hideout-iso.map.json. Spot labels are Departure Mono mustard tags; each
+ * fades to 40% after its first tap. "Show labels" in Info restores them.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
-  FadeIn,
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
@@ -25,143 +18,182 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { PET_METER_MAX } from '@/play/pet';
-import { WARMTH_MAX } from '@/play/pet-eggs';
-import { MOCKUP_PLATE } from '@/play/pixel-atlas';
-import { ART_PT } from '@/play/pixel-theme';
+import { GRADE_LABEL, WARMTH_MAX, type Grade } from '@/play/pet-eggs';
+import {
+  HIDEOUT_DECALS,
+  HIDEOUT_LIGHTS,
+  HIDEOUT_SPOTS,
+  hideoutLabelAnchor,
+  type HideoutScale,
+  type HideoutSpot,
+} from '@/play/hideout-iso';
+import { PIXEL_FONT } from '@/play/pixel-theme';
 import { ClipImage } from '@/play/sheet-sprite';
 import { AmbientSprite, Drift, Twinkle, kitDrawable } from '@/play/street-ambient';
-import { STREET_MOTION, tapHaptic } from '@/play/street-feel';
-import { STREET, STREET_FONT } from '@/play/street-ui';
+import { KEEP_TRAVEL_PT } from '@/play/play-motion';
+import { tapHaptic } from '@/play/street-feel';
+import { STREET } from '@/play/street-ui';
 
 export type StreetSpotId = 'feed' | 'play' | 'expedition' | 'dive' | 'den';
 
-/** Spot rects in plate art px: [x, y, w, h], plus the object + action words. */
-export const STREET_SPOTS: readonly { id: StreetSpotId; rect: [number, number, number, number]; thing: string; action: string; tagSide?: boolean }[] = [
-  { id: 'expedition', rect: [22, 169, 60, 114], thing: 'Door', action: 'Explore' },
-  { id: 'den', rect: [97, 224, 64, 64], thing: 'Chair', action: 'Stash' },
-  { id: 'play', rect: [9, 324, 38, 64], thing: 'Boombox', action: 'Play' },
-  { id: 'dive', rect: [77, 329, 44, 30], thing: 'Manhole', action: 'Underground', tagSide: true },
-  { id: 'feed', rect: [155, 366, 38, 32], thing: 'Bowl', action: 'Feed' },
-];
+const SEEN_KEY = 'ato.street.hideoutSpotsSeen.v2';
+const SHOW_KEY = 'ato.street.hideoutShowLabels';
 
-const SEEN_KEY = 'ato.street.hideoutSpotsSeen';
+const listeners = new Set<() => void>();
+let showAllLabels = false;
 
-export type StreetRoomSpotsProps = {
-  onSpot: (id: StreetSpotId) => void;
-  /** The coach's suggested action (colour only, so Reduce Motion stays still). */
-  pulse: StreetSpotId | null;
-  /** Short state notes ("Ride in progress", "7/10 tokens", "Back in 4m"). */
-  notes: Partial<Record<StreetSpotId, string>>;
-};
-
-/** The room art, covering the plate. */
-export function StreetRoomArt({ left, top, alive }: { left: number; top: number; alive: boolean }) {
-  const k = ART_PT;
-  return (
-    <Animated.View
-      entering={alive ? FadeIn.duration(STREET_MOTION.sheet) : undefined}
-      style={{ position: 'absolute', left, top, width: MOCKUP_PLATE.w * k, height: MOCKUP_PLATE.h * k }}>
-      <ClipImage drawable={kitDrawable('room-hideout-full')} />
-    </Animated.View>
-  );
+function emitLabels() {
+  for (const fn of listeners) fn();
 }
 
-/** Room life: string lights, city windows, boombox notes, a moth, a pigeon on the sill. */
-export function StreetRoomLife({ left, top, alive }: { left: number; top: number; alive: boolean }) {
-  const k = ART_PT;
-  const at = (x: number) => left + x * k;
-  const y = (v: number) => top + v * k;
-  return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {Array.from({ length: 9 }, (_, i) => (
-        <Twinkle key={`l${i}`} x={at(13 + i * 21)} y={y(147)} size={2 * k} ms={1400 + (i % 4) * 380} delay={i * 170} alive={alive} color="#FFE29A" />
-      ))}
-      {[[50, 40], [62, 52], [76, 34], [90, 60]].map(([x, v], i) => (
-        <Twinkle key={`w${i}`} x={at(x)} y={y(v)} size={k * 1.5} ms={2600 + i * 700} delay={i * 900} alive={alive} color="#FCD34D" />
-      ))}
-      <Drift alive={alive} size={26} x0={at(26)} y0={y(318)} x1={at(34)} y1={y(268)} ms={2600} rest={1200}>
-        <AmbientSprite name="amb-note" size={26} />
-      </Drift>
-      <Drift alive={alive} size={26} x0={at(34)} y0={y(318)} x1={at(20)} y1={y(272)} ms={3100} rest={1700} delay={1300}>
-        <AmbientSprite name="amb-note2" size={26} />
-      </Drift>
-      <Drift alive={alive} size={22} x0={at(120)} y0={y(160)} x1={at(150)} y1={y(140)} ms={3800} rest={2400} delay={800}>
-        <AmbientSprite name="amb-moth" size={22} />
-      </Drift>
-      <Drift alive={alive} size={30} x0={at(40)} y0={y(70)} x1={at(110)} y1={y(70)} ms={8000} rest={11000} delay={4000} bob={2}>
-        <AmbientSprite name="amb-pigeon" size={30} />
-      </Drift>
-    </View>
-  );
+export function setHideoutShowLabels(on: boolean): void {
+  showAllLabels = on;
+  emitLabels();
+  AsyncStorage.setItem(SHOW_KEY, on ? '1' : '0').catch(() => {});
 }
 
-/** The tappable spots (accessible buttons, at least 48pt with slop). */
-export function StreetRoomSpots({
-  left,
-  top,
-  onSpot,
-  pulse,
-  notes,
-  still,
-}: StreetRoomSpotsProps & { left: number; top: number; still: boolean }) {
-  const k = ART_PT;
-  const [seen, setSeen] = useState(true);
+export function useHideoutShowLabels(): boolean {
+  const [on, setOn] = useState(showAllLabels);
   useEffect(() => {
-    let live = true;
-    AsyncStorage.getItem(SEEN_KEY)
+    const fn = () => setOn(showAllLabels);
+    listeners.add(fn);
+    AsyncStorage.getItem(SHOW_KEY)
       .then((v) => {
-        if (live) setSeen(v === '1');
+        if (v === '1') {
+          showAllLabels = true;
+          setOn(true);
+        }
       })
       .catch(() => {});
     return () => {
-      live = false;
+      listeners.delete(fn);
     };
   }, []);
-  const press = (id: StreetSpotId) => {
-    tapHaptic();
-    if (!seen) {
-      setSeen(true);
-      AsyncStorage.setItem(SEEN_KEY, '1').catch(() => {});
-    }
-    onSpot(id);
-  };
+  return on;
+}
+
+export type StreetRoomSpotsProps = {
+  onSpot: (id: StreetSpotId) => void;
+  pulse: StreetSpotId | null;
+  notes: Partial<Record<StreetSpotId, string>>;
+};
+
+export function StreetRoomArt({
+  left,
+  top,
+  scale,
+  alive,
+}: {
+  left: number;
+  top: number;
+  scale: HideoutScale;
+  alive: boolean;
+}) {
+  const k = scale.pt;
   return (
-    <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-      {STREET_SPOTS.map((s) => {
-        const [x, y, w, h] = s.rect;
-        const note = notes[s.id];
-        const slopX = Math.max(0, (48 - w * k) / 2);
-        const slopY = Math.max(0, (48 - h * k) / 2);
-        return (
-          <Pressable
-            key={s.id}
-            onPress={() => press(s.id)}
-            hitSlop={{ left: slopX, right: slopX, top: slopY, bottom: slopY }}
-            accessibilityRole="button"
-            accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
-            style={({ pressed }) => [
-              styles.spot,
-              { left: left + x * k, top: top + y * k, width: w * k, height: h * k },
-              pressed && styles.pressed,
-            ]}>
-            {pulse === s.id ? <PulseRing still={still} /> : null}
-            {/* Tags only on the first visit or for the coach's hint; notes stay in the a11y label. */}
-            {!seen || pulse === s.id ? (
-              <View style={s.tagSide ? styles.tagSide : styles.tagWrap} pointerEvents="none">
-                <Text style={[styles.tag, pulse === s.id && styles.tagHot]} numberOfLines={1}>
-                  {note && !s.tagSide ? `${s.action} · ${note}` : s.action}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
-        );
-      })}
+    <View style={{ position: 'absolute', left, top, width: scale.canvasW, height: scale.canvasH }}>
+      <ClipImage drawable={kitDrawable('room-hideout-iso')} />
+      {HIDEOUT_DECALS.map((d) => (
+        <View
+          key={d.id}
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: Math.round(d.pos[0] * k),
+            top: Math.round(d.pos[1] * k),
+          }}>
+          <ClipImage drawable={kitDrawable(`room-hideout-iso-${d.id}`)} />
+        </View>
+      ))}
     </View>
   );
 }
 
-/** The coach's suggested spot: a mustard ring that breathes (still under Reduce Motion — the
- * ring itself is the cue, colour not motion). */
+export function StreetRoomFront({ left, top, scale }: { left: number; top: number; scale: HideoutScale }) {
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left, top, width: scale.canvasW, height: scale.canvasH }}>
+      <ClipImage drawable={kitDrawable('room-hideout-iso-front')} />
+    </View>
+  );
+}
+
+/** String-light twinkles + boombox notes + a moth. Travel capped under vestibularSafe. */
+export function StreetRoomLife({
+  left,
+  top,
+  scale,
+  alive,
+  gentle,
+  minimal,
+}: {
+  left: number;
+  top: number;
+  scale: HideoutScale;
+  alive: boolean;
+  gentle: boolean;
+  minimal: boolean;
+}) {
+  const k = scale.pt;
+  const lights = minimal ? HIDEOUT_LIGHTS.filter((_, i) => i % 2 === 0) : HIDEOUT_LIGHTS;
+  const travel = gentle ? Math.min(18, KEEP_TRAVEL_PT) : 28;
+  const at = (x: number, y: number) => ({ x: left + x * k, y: top + y * k });
+  const boom = at(40, 170);
+  const moth0 = at(130, 90);
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      {lights.map(([x, y], i) => (
+        <Twinkle
+          key={`l${i}`}
+          x={left + x * k}
+          y={top + y * k}
+          size={2 * k}
+          ms={1400 + (i % 4) * 380}
+          delay={i * 170}
+          alive={alive}
+          color="#FFE29A"
+        />
+      ))}
+      <Drift
+        alive={alive}
+        size={22}
+        x0={boom.x}
+        y0={boom.y}
+        x1={boom.x + travel}
+        y1={boom.y - travel}
+        ms={2600}
+        rest={1200}>
+        <AmbientSprite name="amb-note" size={22} />
+      </Drift>
+      {minimal ? null : (
+        <Drift
+          alive={alive}
+          size={22}
+          x0={boom.x + 8}
+          y0={boom.y}
+          x1={boom.x - travel * 0.6}
+          y1={boom.y - travel}
+          ms={3100}
+          rest={1700}
+          delay={1300}>
+          <AmbientSprite name="amb-note2" size={22} />
+        </Drift>
+      )}
+      <Drift
+        alive={alive}
+        size={20}
+        x0={moth0.x}
+        y0={moth0.y}
+        x1={moth0.x + (gentle ? 16 : 28)}
+        y1={moth0.y - 12}
+        ms={3800}
+        rest={2400}
+        delay={800}>
+        <AmbientSprite name="amb-moth" size={20} />
+      </Drift>
+    </View>
+  );
+}
+
 function PulseRing({ still }: { still: boolean }) {
   const t = useSharedValue(1);
   useEffect(() => {
@@ -176,20 +208,141 @@ function PulseRing({ still }: { still: boolean }) {
   return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.pulse, style]} />;
 }
 
-/** One small meter: label + 4 cells; the row pops when the value changes. */
-function Cells({ label, value, max, color, still }: { label: string; value: number; max: number; color: string; still: boolean }) {
+export function StreetRoomSpots({
+  left,
+  top,
+  scale,
+  onSpot,
+  pulse,
+  notes,
+  still,
+  petHit,
+}: StreetRoomSpotsProps & {
+  left: number;
+  top: number;
+  scale: HideoutScale;
+  still: boolean;
+  /** Pet hit box in screen pt — slop must not overlap it. */
+  petHit: { x: number; y: number; w: number; h: number } | null;
+}) {
+  const k = scale.pt;
+  const showAll = useHideoutShowLabels();
+  const [seen, setSeen] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    let live = true;
+    AsyncStorage.getItem(SEEN_KEY)
+      .then((v) => {
+        if (!live || !v) return;
+        try {
+          const ids = JSON.parse(v) as string[];
+          const next: Record<string, boolean> = {};
+          for (const id of ids) next[id] = true;
+          setSeen(next);
+        } catch {
+          // ignore
+        }
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  const press = (spot: HideoutSpot) => {
+    tapHaptic();
+    if (!seen[spot.id]) {
+      const next = { ...seen, [spot.id]: true };
+      setSeen(next);
+      AsyncStorage.setItem(SEEN_KEY, JSON.stringify(Object.keys(next))).catch(() => {});
+    }
+    onSpot(spot.coach);
+  };
+  return (
+    <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      {HIDEOUT_SPOTS.map((s) => {
+        const [x, y, w, h] = s.rect;
+        const note = notes[s.coach];
+        const leftPt = left + x * k;
+        const topPt = top + y * k;
+        const width = w * k;
+        const height = h * k;
+        let slopX = Math.max(0, (48 - width) / 2);
+        let slopY = Math.max(0, (48 - height) / 2);
+        if (petHit) {
+          const hitL = leftPt - slopX;
+          const hitR = leftPt + width + slopX;
+          const hitT = topPt - slopY;
+          const hitB = topPt + height + slopY;
+          const overlap =
+            hitL < petHit.x + petHit.w && hitR > petHit.x && hitT < petHit.y + petHit.h && hitB > petHit.y;
+          if (overlap) {
+            slopX = 0;
+            slopY = 0;
+          }
+        }
+        const faded = !showAll && seen[s.id] && pulse !== s.coach;
+        const anchor = hideoutLabelAnchor(s.id);
+        return (
+          <Pressable
+            key={s.id}
+            onPress={() => press(s)}
+            hitSlop={{ left: slopX, right: slopX, top: slopY, bottom: slopY }}
+            accessibilityRole="button"
+            accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
+            style={({ pressed }) => [
+              styles.spot,
+              { left: leftPt, top: topPt, width, height },
+              pressed && styles.pressed,
+            ]}>
+            {pulse === s.coach ? <PulseRing still={still} /> : null}
+            <View
+              pointerEvents="none"
+              style={[
+                styles.tagWrap,
+                {
+                  left: left + anchor[0] * k - leftPt - 40,
+                  top: top + anchor[1] * k - topPt - 14,
+                  opacity: faded ? 0.4 : 1,
+                },
+              ]}>
+              <View style={styles.dot} />
+              <Text style={[styles.tag, pulse === s.coach && styles.tagHot]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+                {s.id === 'manhole' ? 'manhole · Underground' : s.action}
+              </Text>
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function Cells({
+  label,
+  value,
+  max,
+  color,
+  still,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+  still: boolean;
+}) {
   const pop = useSharedValue(1);
   const last = useRef(value);
   useEffect(() => {
     if (last.current === value) return;
     last.current = value;
     if (still) return;
-    pop.value = withSequence(withTiming(1.18, { duration: 110 }), withTiming(1, { duration: 160 }));
+    pop.value = withSequence(withTiming(1.04, { duration: 110 }), withTiming(1, { duration: 160 }));
   }, [pop, still, value]);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
   return (
     <View style={styles.meter}>
-      <Text style={styles.meterLabel}>{label}</Text>
+      <Text style={styles.meterLabel} maxFontSizeMultiplier={1.2}>
+        {label}
+      </Text>
       <Animated.View style={[styles.cells, style]}>
         {Array.from({ length: max }, (_, i) => (
           <View key={i} style={[styles.cell, i < value ? { backgroundColor: color } : null]} />
@@ -199,11 +352,7 @@ function Cells({ label, value, max, color, still }: { label: string; value: numb
   );
 }
 
-/**
- * Streetwear Hideout status strip — one slim row (≈40pt) instead of the hearts
- * panel: Hunger + Mood (or Warmth for an egg), the stage and the treats left.
- * Same screen-reader words as the Classic panel.
- */
+/** Slim Hideout strip: name · stage · Hunger · Mood · grade chip. */
 export function StreetStatusStrip({
   egg,
   picking,
@@ -211,7 +360,9 @@ export function StreetStatusStrip({
   mood,
   warmth,
   stageLabel,
-  pantry,
+  name,
+  grade,
+  shiny,
   reduceMotion,
 }: {
   egg: boolean;
@@ -220,12 +371,24 @@ export function StreetStatusStrip({
   mood: number;
   warmth: number;
   stageLabel: string;
-  pantry: number;
+  name?: string | null;
+  grade?: Grade | null;
+  shiny?: boolean;
   reduceMotion: boolean;
 }) {
   const low = (v: number) => (v <= 1 ? STREET.red : STREET.mustard);
   return (
     <View style={styles.strip}>
+      {name ? (
+        <Text style={styles.name} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+          {name}
+        </Text>
+      ) : null}
+      {!picking ? (
+        <Text style={styles.stage} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+          {stageLabel}
+        </Text>
+      ) : null}
       <View
         style={styles.stripMain}
         accessible
@@ -233,7 +396,9 @@ export function StreetStatusStrip({
           egg ? `Warmth ${warmth} of ${WARMTH_MAX}` : `Hunger ${hunger} of ${PET_METER_MAX}, mood ${mood} of ${PET_METER_MAX}`
         }>
         {picking ? (
-          <Text style={styles.stripText}>Pick an egg</Text>
+          <Text style={styles.stripText} maxFontSizeMultiplier={1.2}>
+            Pick an egg
+          </Text>
         ) : egg ? (
           <Cells label="Warmth" value={warmth} max={WARMTH_MAX} color={STREET.mustard} still={reduceMotion} />
         ) : (
@@ -243,10 +408,24 @@ export function StreetStatusStrip({
           </>
         )}
       </View>
-      {!picking ? <Text style={styles.stage}>{stageLabel}</Text> : null}
-      <Text style={styles.pantry} accessibilityLabel={`${pantry} ${pantry === 1 ? 'treat' : 'treats'} in the pantry`}>
-        {`×${pantry}`}
+      {grade ? (
+        <Text style={styles.grade} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+          {GRADE_LABEL[grade]}
+          {shiny ? ' ★' : ''}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** Paper speech bubble with a tail — coach tip or a spoken line. */
+export function StreetSpeechBubble({ text, left, top }: { text: string; left: number; top: number }) {
+  return (
+    <View pointerEvents="none" style={[styles.bubble, { left, top }]}>
+      <Text style={styles.bubbleText} maxFontSizeMultiplier={1.2}>
+        {text}
       </Text>
+      <View style={styles.tail} />
     </View>
   );
 }
@@ -254,50 +433,92 @@ export function StreetStatusStrip({
 const styles = StyleSheet.create({
   strip: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     marginHorizontal: 8,
     marginTop: 4,
-    paddingHorizontal: 12,
-    minHeight: 40,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    minHeight: 36,
     backgroundColor: 'rgba(26, 26, 29, 0.92)',
     borderWidth: 2,
     borderColor: '#000',
   },
-  stripMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 },
-  stripText: { fontFamily: STREET_FONT.bold, fontSize: 13, color: STREET.paper },
-  meter: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  meterLabel: { fontFamily: STREET_FONT.bold, fontSize: 12, color: STREET.muted, textTransform: 'uppercase' },
-  cells: { flexDirection: 'row', gap: 2 },
-  cell: { width: 9, height: 12, backgroundColor: '#3f3f46', borderWidth: 1, borderColor: '#000' },
-  stage: {
-    fontFamily: STREET_FONT.bold,
+  stripMain: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 10, minWidth: 0 },
+  stripText: { fontFamily: PIXEL_FONT.label, fontSize: 12, color: STREET.paper, includeFontPadding: false },
+  name: {
+    fontFamily: PIXEL_FONT.label,
     fontSize: 12,
-    color: STREET.ink,
-    backgroundColor: STREET.mustard,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    color: STREET.paper,
     textTransform: 'uppercase',
-    overflow: 'hidden',
+    includeFontPadding: false,
+    flexShrink: 1,
   },
-  pantry: { fontFamily: STREET_FONT.bold, fontSize: 13, color: STREET.mustard },
-  spot: { position: 'absolute', borderRadius: 4 },
-  pulse: { borderWidth: 2, borderColor: STREET.mustard, borderStyle: 'dashed' },
-  pressed: { backgroundColor: 'rgba(224, 165, 38, 0.18)' },
-  tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center' },
-  // The manhole sits under the pet's grade plate: its tag goes beside it, clear of the plate.
-  tagSide: { position: 'absolute', left: '100%', marginLeft: 26, top: 6, width: 130, alignItems: 'flex-start' },
-  tag: {
-    fontFamily: STREET_FONT.bold,
+  meter: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  meterLabel: { fontFamily: PIXEL_FONT.label, fontSize: 11, color: STREET.muted, textTransform: 'uppercase', includeFontPadding: false },
+  cells: { flexDirection: 'row', gap: 2 },
+  cell: { width: 8, height: 10, backgroundColor: '#3f3f46', borderWidth: 1, borderColor: '#000' },
+  stage: {
+    fontFamily: PIXEL_FONT.label,
     fontSize: 11,
     color: STREET.ink,
-    backgroundColor: STREET.paper,
-    borderWidth: 2,
-    borderColor: '#000',
+    backgroundColor: STREET.mustard,
     paddingHorizontal: 5,
     paddingVertical: 1,
     textTransform: 'uppercase',
+    includeFontPadding: false,
     overflow: 'hidden',
   },
-  tagHot: { backgroundColor: STREET.mustard },
+  grade: {
+    fontFamily: PIXEL_FONT.label,
+    fontSize: 10,
+    color: STREET.ink,
+    backgroundColor: STREET.paper,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    textTransform: 'uppercase',
+    includeFontPadding: false,
+  },
+  spot: { position: 'absolute', borderRadius: 4 },
+  pulse: { borderWidth: 2, borderColor: STREET.mustard, borderStyle: 'dashed' },
+  pressed: { backgroundColor: 'rgba(224, 165, 38, 0.18)' },
+  tagWrap: { position: 'absolute', width: 80, alignItems: 'center' },
+  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: STREET.mustard, marginBottom: 2 },
+  tag: {
+    fontFamily: PIXEL_FONT.label,
+    fontSize: 10,
+    color: STREET.mustard,
+    includeFontPadding: false,
+    textTransform: 'uppercase',
+  },
+  tagHot: { color: STREET.paper },
+  bubble: {
+    position: 'absolute',
+    maxWidth: 200,
+    backgroundColor: STREET.paper,
+    borderWidth: 2,
+    borderColor: '#000',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  bubbleText: {
+    fontFamily: PIXEL_FONT.label,
+    fontSize: 11,
+    color: STREET.ink,
+    includeFontPadding: false,
+  },
+  tail: {
+    position: 'absolute',
+    left: 16,
+    bottom: -8,
+    width: 10,
+    height: 8,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: STREET.paper,
+  },
 });

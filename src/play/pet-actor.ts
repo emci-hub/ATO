@@ -150,7 +150,7 @@ export const PET_FORM_MOTION: Record<PetBranch, PetFormMotion> = {
   deep: { speed: 0.8, bounce: 0, rest: 1.1, showoff: 0.1, drift: true },
 };
 
-const MOOD_MOTION: Record<Exclude<PetMoodKind, 'asleep'>, { speed: number; bounce: number; rest: number; showoff: number; sit: number; wander: number }> = {
+export const MOOD_MOTION: Record<Exclude<PetMoodKind, 'asleep'>, { speed: number; bounce: number; rest: number; showoff: number; sit: number; wander: number }> = {
   happy: { speed: 1.2, bounce: 1.3, rest: 0.7, showoff: 1.5, sit: 0.05, wander: 0.5 },
   okay: { speed: 1, bounce: 1, rest: 1, showoff: 1, sit: 0.15, wander: 0.4 },
   hungry: { speed: 0.5, bounce: 0, rest: 2, showoff: 0.3, sit: 0.6, wander: 0.2 },

@@ -39,6 +39,8 @@ import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
+import { ManholeTransit } from '@/play/dive-street';
+import { usePlayMotion } from '@/play/play-motion';
 import { PixelBody, PixelButton, PixelLabel, usePixelFonts, type PixelButtonVariant } from '@/play/pixel-ui';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { petRecolor } from '@/play/pet-looks';
@@ -137,8 +139,8 @@ export function DiveScreen({
   const leaveRef = useRef<() => void>(() => onBack());
 
   useEffect(() => {
-    if (fxLevel === 'full' && !reduceMotion && takeWipe('dive')) setWipe('reveal');
-  }, [fxLevel, reduceMotion]);
+    if (takeWipe('dive')) setWipe('reveal');
+  }, []);
 
   useEffect(() => {
     if (!registerBack) return;
@@ -257,12 +259,8 @@ export function DiveScreen({
   const revealed = st.hero != null && st.stage !== 'egg' && st.stage !== 'baby';
   const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
 
-  const motionOn = fxLevel === 'full' && !reduceMotion;
+  const playMotion = usePlayMotion();
   const leave = () => {
-    if (!motionOn) {
-      onBack();
-      return;
-    }
     setWipe('cover');
   };
   leaveRef.current = leave;
@@ -407,17 +405,32 @@ export function DiveScreen({
         })}
         {gearNote ? <PixelBody>{gearNote}</PixelBody> : null}
       </PlaySheet>
-      <DiamondWipe
-        mode={wipe}
-        onDone={
-          wipe === 'cover'
-            ? () => {
-                armWipe('room');
-                onBack();
-              }
-            : () => setWipe('off')
-        }
-      />
+      {street ? (
+        <ManholeTransit
+          mode={wipe}
+          gentle={playMotion.vestibularSafe}
+          onDone={
+            wipe === 'cover'
+              ? () => {
+                  armWipe('room');
+                  onBack();
+                }
+              : () => setWipe('off')
+          }
+        />
+      ) : (
+        <DiamondWipe
+          mode={wipe}
+          onDone={
+            wipe === 'cover'
+              ? () => {
+                  armWipe('room');
+                  onBack();
+                }
+              : () => setWipe('off')
+          }
+        />
+      )}
     </View>
   );
 }

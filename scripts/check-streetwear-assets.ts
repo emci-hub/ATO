@@ -38,7 +38,7 @@ const json = sheetsSrc.slice(sheetsSrc.indexOf('{', sheetsSrc.indexOf('PLAY_SHEE
 const sheets = JSON.parse(json) as Record<string, { sheet: string; frames: Record<string, unknown> }>;
 const swSheets = Object.entries(sheets).filter(([k]) => k.startsWith('sheets/streetwear/'));
 for (const [key, entry] of swSheets) {
-  if (key.endsWith('/rotations') || /\/(fx|auras|swords|ui-kit|board)\//.test(key)) continue;
+  if (key.endsWith('/rotations') || /\/(fx|hideout-fx|auras|swords|ui-kit|board)\//.test(key)) continue;
   const dirs = new Set(Object.keys(entry.frames).map((f) => f.split('/')[0]));
   for (const d of dirs) assert.ok(d === 'east' || d === 'west', `${key} ships a "${d}" row`);
 }
@@ -117,7 +117,9 @@ for (const tier of swordTiers.tiers) {
 const uiMeta = (meta as unknown as { ui: Record<string, { inset: number[]; scale: number }> }).ui ?? {};
 const shellPieces = ['resbar', 'tabbar', 'sheet', 'sheet-handle', 'toast', 'pause', 'alert', 'portrait'];
 const navPieces = ['tab-block', 'tab-turf', 'tab-hideout', 'tab-locker', 'tab-store', 'cur-caps', 'cur-token', 'cur-shine', 'cur-prism', 'settings'].map((n) => `nav-${n}`);
-const roomPieces = ['hideout', 'underground', 'locker'].map((n) => `room-${n}`);
+const roomPieces = ['hideout-iso', 'hideout-iso-front', 'hideout-iso-manhole', 'underground', 'locker'].map(
+  (n) => `room-${n}`,
+);
 for (const piece of [
   'panel',
   'header',

@@ -383,7 +383,7 @@ ok('a v29 save becomes v32 with no finish; a real finish round-trips; version 33
   assert.equal(finishSweepRuns({ motion: 'still', reduceMotion: false, osReduceMotion: false, fxFull: true }), false);
   assert.equal(finishSweepRuns({ motion: 'off', reduceMotion: false, osReduceMotion: false, fxFull: true }), false);
   assert.equal(finishSweepRuns({ motion: 'sweep', reduceMotion: true, osReduceMotion: false, fxFull: true }), false);
-  assert.equal(finishSweepRuns({ motion: 'sweep', reduceMotion: false, osReduceMotion: true, fxFull: true }), false);
+  assert.equal(finishSweepRuns({ motion: 'sweep', reduceMotion: false, osReduceMotion: true, fxFull: true }), true);
   assert.equal(finishSweepRuns({ motion: 'sweep', reduceMotion: false, osReduceMotion: false, fxFull: false }), false);
 
   const foil = read('src/play/finish-foil.tsx');

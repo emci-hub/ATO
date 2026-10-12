@@ -19,10 +19,10 @@ import {
   type AuraStyle,
   type Rgb,
 } from '@/play/auras';
-import { useOsReduceMotion } from '@/play/finish-foil';
+import { usePlayMotion } from '@/play/play-motion';
 import { useFxQuality } from '@/play/fx-quality';
 import { PLAY_SHEETS } from '@/play/generated-play-sheets';
-import { playSheetArt, sheetFrame } from '@/play/sheet-sprite';
+import { ClipImage, playSheetArt, sheetFrame } from '@/play/sheet-sprite';
 import { STREETWEAR_META, type ClipDrawable } from '@/play/skin';
 
 const sheets = new Map<string, Promise<Rgba>>();
@@ -197,9 +197,9 @@ export function PetAura({
   /** `back` is the aura. `front` is the blaze sparks, outside the sprite. */
   layer: 'back' | 'front';
 }) {
-  const reduceMotion = useOsReduceMotion();
-  const fxFull = useFxQuality() === 'full';
-  const frozen = reduceMotion || !fxFull;
+  const motionFlags = usePlayMotion();
+  const fxQuality = useFxQuality();
+  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
   const [pack, setPack] = useState<AuraPack | null>(null);
   const [tick, setTick] = useState(0);
   const frameKey =
@@ -360,9 +360,9 @@ export function PetAuraSprite({
   box: number;
   layer: 'back' | 'front';
 }) {
-  const reduceMotion = useOsReduceMotion();
-  const fxFull = useFxQuality() === 'full';
-  const frozen = reduceMotion || !fxFull;
+  const motionFlags = usePlayMotion();
+  const fxQuality = useFxQuality();
+  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
   const meta = STREETWEAR_META.auras[styleId];
   const which = layer === 'back' ? 'behind' : 'front';
   const [pack, setPack] = useState<SpritePack | null>(null);
@@ -410,6 +410,43 @@ export function PetAuraSprite({
           <Path key={path.color} d={path.d} fill={path.color} />
         ))}
       </Svg>
+    </View>
+  );
+}
+
+/** 84px blaze / outlined bubbles on the iso Hideout and Underground. */
+export function HideoutAuraStrip({
+  styleId,
+  layer,
+  box,
+}: {
+  styleId: 'blaze' | 'bubbles';
+  layer: 'back' | 'front';
+  box: number;
+}) {
+  const motionFlags = usePlayMotion();
+  const fxQuality = useFxQuality();
+  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
+  const which = layer === 'back' ? 'behind' : 'front';
+  const name = styleId === 'blaze' ? `blaze-84-${which}` : `bubbles-outlined-${which}`;
+  const sheetKey = `sheets/streetwear/hideout-fx/${name}`;
+  const frames = Object.keys(PLAY_SHEETS[sheetKey]?.frames ?? {})
+    .filter((k) => k.startsWith('frame_'))
+    .sort();
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (frozen || frames.length === 0) return;
+    const id = setInterval(() => setTick((n) => n + 1), Math.round(1000 / auraFps()));
+    return () => clearInterval(id);
+  }, [frozen, frames.length]);
+  if (frames.length === 0) return null;
+  const frameKey = frames[frozen ? 0 : tick % frames.length] ?? frames[0];
+  const size = Math.round(box * (styleId === 'blaze' ? 84 / 64 : 61 / 64));
+  return (
+    <View
+      pointerEvents="none"
+      style={[styles.layer, { left: (box - size) / 2, top: (box - size) / 2, width: size, height: size }]}>
+      <ClipImage drawable={{ kind: 'sheet', sheetKey, frameKey }} />
     </View>
   );
 }

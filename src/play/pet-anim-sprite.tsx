@@ -144,6 +144,7 @@ export function PetAnimSprite({
   reverseHost = false,
   auraElement = null,
   flash = null,
+  hideoutFx = false,
 }: {
   pet: PetState;
   art: PetArt;
@@ -170,6 +171,7 @@ export function PetAnimSprite({
   auraElement?: string | null;
   /** White image copy. Opacity is this value (80ms on, then a fade). */
   flash?: SharedValue<number> | null;
+  hideoutFx?: boolean;
 }) {
   const blend = useBlendRecolor();
   const ticking = animate && pose != null && !pose.hold && pet.stage !== 'egg';
@@ -194,6 +196,7 @@ export function PetAnimSprite({
       reverseHost={reverseHost}
       auraElement={auraElement}
       flash={flash}
+      hideoutFx={hideoutFx}
     />
   );
 }

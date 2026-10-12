@@ -1,0 +1,198 @@
+{
+  "sheets/streetwear/hideout-fx/blaze-84-behind": {
+    "sheet": "sheets/streetwear/hideout-fx/atlas.png",
+    "sheetW": 679,
+    "sheetH": 293,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_001": {
+        "x": 85,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_002": {
+        "x": 170,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_003": {
+        "x": 255,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_004": {
+        "x": 340,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_005": {
+        "x": 425,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_006": {
+        "x": 510,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "frame_007": {
+        "x": 595,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      }
+    }
+  },
+  "sheets/streetwear/hideout-fx/bubbles-outlined-behind": {
+    "sheet": "sheets/streetwear/hideout-fx/atlas.png",
+    "sheetW": 679,
+    "sheetH": 293,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 170,
+        "w": 61,
+        "h": 61
+      },
+      "frame_001": {
+        "x": 62,
+        "y": 170,
+        "w": 61,
+        "h": 61
+      },
+      "frame_002": {
+        "x": 124,
+        "y": 170,
+        "w": 61,
+        "h": 61
+      },
+      "frame_003": {
+        "x": 186,
+        "y": 170,
+        "w": 61,
+        "h": 61
+      },
+      "frame_004": {
+        "x": 248,
+        "y": 170,
+        "w": 61,
+        "h": 61
+      },
+      "frame_005": {
+        "x": 310,
+        "y": 170,
+        "w": 61,
+        "h": 61
+      }
+    }
+  },
+  "sheets/streetwear/hideout-fx/blaze-84-front": {
+    "sheet": "sheets/streetwear/hideout-fx/atlas.png",
+    "sheetW": 679,
+    "sheetH": 293,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 85,
+        "w": 84,
+        "h": 84
+      },
+      "frame_001": {
+        "x": 85,
+        "y": 85,
+        "w": 84,
+        "h": 84
+      },
+      "frame_002": {
+        "x": 170,
+        "y": 85,
+        "w": 84,
+        "h": 84
+      },
+      "frame_003": {
+        "x": 255,
+        "y": 85,
+        "w": 84,
+        "h": 84
+      },
+      "frame_004": {
+        "x": 340,
+        "y": 85,
+        "w": 84,
+        "h": 84
+      },
+      "frame_005": {
+        "x": 425,
+        "y": 85,
+        "w": 84,
+        "h": 84
+      },
+      "frame_006": {
+        "x": 510,
+        "y": 85,
+        "w": 84,
+        "h": 84
+      },
+      "frame_007": {
+        "x": 595,
+        "y": 85,
+        "w": 84,
+        "h": 84
+      }
+    }
+  },
+  "sheets/streetwear/hideout-fx/bubbles-outlined-front": {
+    "sheet": "sheets/streetwear/hideout-fx/atlas.png",
+    "sheetW": 679,
+    "sheetH": 293,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 232,
+        "w": 61,
+        "h": 61
+      },
+      "frame_001": {
+        "x": 62,
+        "y": 232,
+        "w": 61,
+        "h": 61
+      },
+      "frame_002": {
+        "x": 124,
+        "y": 232,
+        "w": 61,
+        "h": 61
+      },
+      "frame_003": {
+        "x": 186,
+        "y": 232,
+        "w": 61,
+        "h": 61
+      },
+      "frame_004": {
+        "x": 248,
+        "y": 232,
+        "w": 61,
+        "h": 61
+      },
+      "frame_005": {
+        "x": 310,
+        "y": 232,
+        "w": 61,
+        "h": 61
+      }
+    }
+  }
+}

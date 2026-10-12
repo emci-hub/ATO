@@ -3,12 +3,12 @@
  * and the line map that replaces the depth pips. Paint only: nothing here
  * reads or changes odds, finds or charges.
  *
- * Motion runs on fixed, repeating timings (never a random roll) and only mounts
- * when the Dive's cuts allow it: the train with `cuts.parallax`, the light
- * flicker with `cuts.motion` (both off under Reduce Motion / Low effects).
+ * Motion v2: KEEP idle life (`cuts.motion`) runs unless Motion is Off.
+ * REPLACE pans (the crossing train, sliding doors) need `cuts.parallax`.
+ * Under vestibularSafe the doors / enter-exit become a crossfade.
  */
 import { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { PixelRatio, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -21,13 +21,16 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { DiveWorldCuts } from '@/play/dive-fx-model';
+import { hideoutIntegerScale } from '@/play/hideout-iso';
+import { KEEP_TRAVEL_PT } from '@/play/play-motion';
+import { PIXEL_FONT } from '@/play/pixel-theme';
 import { streetStop } from '@/play/dive-street-names';
 import { ClipImage } from '@/play/sheet-sprite';
 import { AmbientSprite, Drift } from '@/play/street-ambient';
 import { STREET, STREET_FONT } from '@/play/street-ui';
 
-/** Backdrop art aspect (all stops are 256×320). */
-const STOP_ASPECT = 256 / 320;
+/** Backdrop art (all stops are 256×320). Stage at 4 dpx → ~341×427pt on 3x. */
+const STOP_CANVAS: readonly [number, number] = [256, 320];
 /** Train art 256×80; it crosses every TRAIN_PERIOD_MS. */
 const TRAIN_ASPECT = 256 / 80;
 const TRAIN_CROSS_MS = 1600;
@@ -50,10 +53,25 @@ export function StreetUndergroundWorld({
   cuts: DiveWorldCuts;
 }) {
   const stop = streetStop(depth);
-  // Cover: fill the width; if that is too short for the stage, fill the height.
-  const byWidth = { w: width, h: width / STOP_ASPECT };
-  const art = byWidth.h >= height ? byWidth : { w: height * STOP_ASPECT, h: height };
+  const scale = hideoutIntegerScale({
+    availW: width,
+    availH: height,
+    pixelRatio: PixelRatio.get(),
+    canvas: STOP_CANVAS,
+    content: [0, 0, STOP_CANVAS[0], STOP_CANVAS[1]],
+  });
+  const art = { w: scale.canvasW, h: scale.canvasH };
   const shade = Math.min(0.45, depth * 0.08);
+  const pulse = useSharedValue(1);
+  useEffect(() => {
+    cancelAnimation(pulse);
+    pulse.value = 1;
+    if (!cuts.motion) return;
+    // In-place breathe so Reduced never sits still (no pan).
+    pulse.value = withRepeat(withSequence(withTiming(1.03, { duration: 1400 }), withTiming(1, { duration: 1400 })), -1);
+    return () => cancelAnimation(pulse);
+  }, [cuts.motion, pulse]);
+  const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
 
   const flicker = useSharedValue(0);
   useEffect(() => {
@@ -97,9 +115,13 @@ export function StreetUndergroundWorld({
 
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.world]}>
-      <View style={{ position: 'absolute', width: art.w, height: art.h, left: (width - art.w) / 2, top: (height - art.h) / 2 }}>
+      <Animated.View
+        style={[
+          { position: 'absolute', width: art.w, height: art.h, left: (width - art.w) / 2, top: (height - art.h) / 2 },
+          pulseStyle,
+        ]}>
         <ClipImage drawable={kit(stop.art)} />
-      </View>
+      </Animated.View>
       {cuts.parallax ? (
         <Animated.View style={[styles.train, { width: trainW, height: trainH, top: height * 0.42 }, trainStyle]}>
           <ClipImage drawable={kit('stop-train')} />
@@ -114,14 +136,14 @@ export function StreetUndergroundWorld({
 /**
  * Life on the line: drifting dust everywhere, plus one thing per stop — a
  * pigeon on the Platform, a rat in the Tunnels, drips and steam in the Sewers,
- * wisps in the Ghost Station, sparks at The Core. Particles need `cuts.motion`;
- * critters need `cuts.parallax`. Every loop has its own length.
+ * wisps in the Ghost Station, sparks at The Core. KEEP idle life needs
+ * `cuts.motion`. Big crossings shrink under vestibularSafe (no parallax).
  */
 export function StopAmbience({ width, height, depth, cuts }: { width: number; height: number; depth: number; cuts: DiveWorldCuts }) {
   const w = width;
   const h = height;
   const motes = cuts.motion;
-  const critters = cuts.parallax;
+  const critters = cuts.motion;
   const band = streetStop(depth).art;
   const dust = [0.12, 0.31, 0.54, 0.73, 0.9].map((x, i) => (
     <Drift key={`m${i}`} alive={motes} size={3} x0={x * w} y0={h * 0.85} x1={x * w + 14} y1={h * 0.18} ms={6400 + i * 900} delay={i * 1100}>
@@ -132,7 +154,7 @@ export function StopAmbience({ width, height, depth, cuts }: { width: number; he
   if (band === 'stop-platform') {
     extra = (
       <>
-        <Drift alive={critters} size={36} x0={-40} y0={h * 0.8} x1={w + 40} y1={h * 0.8} ms={9000} rest={6000} delay={2000} bob={2}>
+        <Drift alive={critters} size={36} x0={cuts.parallax ? -40 : w * 0.2} y0={h * 0.8} x1={cuts.parallax ? w + 40 : w * 0.2 + KEEP_TRAVEL_PT} y1={h * 0.8} ms={9000} rest={6000} delay={2000} bob={2}>
           <AmbientSprite name="amb-pigeon" size={36} />
         </Drift>
         <Drift alive={critters} size={28} x0={w + 30} y0={h * 0.22} x1={-30} y1={h * 0.34} ms={5200} rest={13000} delay={7000}>
@@ -143,7 +165,7 @@ export function StopAmbience({ width, height, depth, cuts }: { width: number; he
   } else if (band === 'stop-tunnels') {
     extra = (
       <>
-        <Drift alive={critters} size={34} x0={w + 40} y0={h * 0.84} x1={-40} y1={h * 0.84} ms={2600} rest={8000} delay={1500} bob={1}>
+        <Drift alive={critters} size={34} x0={cuts.parallax ? w + 40 : w * 0.7} y0={h * 0.84} x1={cuts.parallax ? -40 : w * 0.7 - KEEP_TRAVEL_PT} y1={h * 0.84} ms={2600} rest={8000} delay={1500} bob={1}>
           <AmbientSprite name="amb-rat-run" size={34} flip />
         </Drift>
         <Drift alive={motes} size={22} x0={w * 0.2} y0={h * 0.3} x1={w * 0.34} y1={h * 0.22} ms={3600} rest={2500}>
@@ -190,34 +212,51 @@ export function StopAmbience({ width, height, depth, cuts }: { width: number; he
  * standard door-close cut): the doors slide shut (200ms), the next stop's
  * sign shows (160ms), the doors open on the new stop (220ms). 580ms total,
  * inside the Dive's 650ms action pace; fire-and-forget, never awaited.
- * Plays when `cue` rises to a new stop (not on mount, bust or head up). Off under Reduce Motion.
+ * Plays when `cue` rises to a new stop (not on mount, bust or head up).
+ * Full: barn-door slide. vestibularSafe (`gentle`): crossfade + sign.
  */
-export function SubwayDoors({ cue, label, alive, width, height }: { cue: number; label: string; alive: boolean; width: number; height: number }) {
+export function SubwayDoors({
+  cue,
+  label,
+  alive,
+  gentle = false,
+  width,
+  height,
+}: {
+  cue: number;
+  label: string;
+  alive: boolean;
+  gentle?: boolean;
+  width: number;
+  height: number;
+}) {
   const t = useSharedValue(0);
   const last = useRef(cue);
   useEffect(() => {
-    // Only a NEW stop going down (or a ride starting) closes the doors — never
-    // a bust / head up (cue < 0), a remount, or an effects-setting change.
     const prev = last.current;
     last.current = cue;
     if (cue === prev || cue < 0 || !alive) return;
     t.value = 0;
     t.value = withSequence(
-      withTiming(1, { duration: 200, easing: Easing.in(Easing.quad) }),
-      withDelay(160, withTiming(2, { duration: 220, easing: Easing.out(Easing.quad) })),
+      withTiming(1, { duration: gentle ? 180 : 200, easing: Easing.in(Easing.quad) }),
+      withDelay(gentle ? 120 : 160, withTiming(2, { duration: gentle ? 180 : 220, easing: Easing.out(Easing.quad) })),
       withTiming(0, { duration: 0 }),
     );
-  }, [alive, cue, t]);
+  }, [alive, cue, gentle, t]);
   const half = width / 2 + 2;
   const leftStyle = useAnimatedStyle(() => {
     const v = t.value;
     const shut = v <= 1 ? v : 2 - v;
-    return { transform: [{ translateX: -half + shut * half }] };
+    return gentle
+      ? { opacity: shut }
+      : { transform: [{ translateX: -half + shut * half }] };
   });
   const rightStyle = useAnimatedStyle(() => {
     const v = t.value;
     const shut = v <= 1 ? v : 2 - v;
-    return { transform: [{ translateX: width - shut * half }] };
+    return gentle
+      ? { opacity: shut }
+      : { transform: [{ translateX: width - shut * half }] };
   });
   const signStyle = useAnimatedStyle(() => ({ opacity: t.value > 0.85 && t.value < 1.5 ? 1 : 0 }));
   if (!alive || width <= 0) return null;
@@ -251,7 +290,12 @@ export function StreetLineMap({ depth, max }: { depth: number; max: number }) {
         {stops.map((i) => (
           <View key={i} style={styles.stopWrap}>
             {i > 0 ? <View style={[styles.seg, i <= depth && styles.segOn]} /> : null}
-            <View style={[styles.dot, i <= depth && styles.dotOn, i === depth && styles.dotHere]} />
+            <View style={styles.dotCol}>
+              <View style={[styles.dot, i <= depth && styles.dotOn, i === depth && styles.dotHere]} />
+              <Text style={[styles.stopTag, i === depth && styles.stopTagHere]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+                {streetStop(i).name}
+              </Text>
+            </View>
           </View>
         ))}
       </View>
@@ -259,13 +303,60 @@ export function StreetLineMap({ depth, max }: { depth: number; max: number }) {
   );
 }
 
+/**
+ * Enter / leave the Underground through the manhole. Full: a dramatic drop
+ * into the hole. vestibularSafe: a crossfade. Never a hard cut.
+ */
+export function ManholeTransit({
+  mode,
+  gentle,
+  onDone,
+}: {
+  mode: 'off' | 'cover' | 'reveal';
+  gentle: boolean;
+  onDone?: () => void;
+}) {
+  const t = useSharedValue(mode === 'reveal' ? 1 : 0);
+  const done = useRef(onDone);
+  done.current = onDone;
+  useEffect(() => {
+    if (mode === 'off') return;
+    const to = mode === 'cover' ? 1 : 0;
+    t.value = mode === 'cover' ? 0 : 1;
+    t.value = withTiming(to, { duration: gentle ? 280 : 520, easing: Easing.inOut(Easing.cubic) });
+    const id = setTimeout(() => done.current?.(), gentle ? 300 : 540);
+    return () => clearTimeout(id);
+  }, [mode, gentle, t]);
+  const style = useAnimatedStyle(() => {
+    const v = t.value;
+    if (gentle) return { opacity: v, backgroundColor: '#05060c' };
+    return {
+      opacity: v,
+      backgroundColor: '#05060c',
+      transform: [{ translateY: (1 - v) * -80 }, { scale: 1 + v * 0.35 }],
+    };
+  });
+  if (mode === 'off') return null;
+  return <Animated.View pointerEvents="auto" style={[StyleSheet.absoluteFill, style]} />;
+}
+
 const styles = StyleSheet.create({
   world: { overflow: 'hidden', backgroundColor: '#0b1020' },
   train: { position: 'absolute', left: 0 },
   flicker: { backgroundColor: '#000' },
   map: { alignItems: 'center', justifyContent: 'center' },
-  line: { flexDirection: 'row', alignItems: 'center' },
-  stopWrap: { flexDirection: 'row', alignItems: 'center' },
+  line: { flexDirection: 'row', alignItems: 'flex-start' },
+  stopWrap: { flexDirection: 'row', alignItems: 'flex-start' },
+  dotCol: { alignItems: 'center', width: 44 },
+  stopTag: {
+    marginTop: 2,
+    fontFamily: PIXEL_FONT.label,
+    fontSize: 8,
+    color: STREET.muted,
+    textTransform: 'uppercase',
+    includeFontPadding: false,
+  },
+  stopTagHere: { color: STREET.mustard },
   seg: { width: 12, height: 4, backgroundColor: '#4b5563', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#000' },
   segOn: { backgroundColor: STREET.mustard },
   dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: '#000', backgroundColor: '#4b5563' },
