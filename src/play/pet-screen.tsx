@@ -18,6 +18,8 @@ import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } fr
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
+import { ManholeTransit } from '@/play/dive-street';
+import { usePlayMotion } from '@/play/play-motion';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import { ClipImage } from '@/play/sheet-sprite';
 import { tapHaptic } from '@/play/street-feel';
@@ -213,6 +215,7 @@ function RoomIcon({
   label,
   pulse,
   badge,
+  badgeCount,
   flexGrow,
   fontSize,
   onPress,
@@ -221,6 +224,7 @@ function RoomIcon({
   label: string;
   pulse: boolean;
   badge: boolean;
+  badgeCount?: number;
   flexGrow: number;
   fontSize: number;
   onPress: () => void;
@@ -233,7 +237,7 @@ function RoomIcon({
         onPress();
       }}
       accessibilityRole="button"
-      accessibilityLabel={`${emoji} ${label}${badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
+      accessibilityLabel={`${emoji} ${label}${badgeCount ? `, ${badgeCount} buffs` : badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
       style={({ pressed }) => [styles.icon, { flexGrow }, pressed && (street ? styles.streetSquash : styles.pressed)]}>
       <PixelFrame
         fill={pulse ? PIXEL.cyan : PIXEL.ink}
@@ -257,7 +261,13 @@ function RoomIcon({
           {label}
         </PixelLabel>
       </PixelFrame>
-      {badge ? <View style={styles.badge} /> : null}
+      {badgeCount && badgeCount > 0 ? (
+        <View style={styles.countBadge} accessible={false}>
+          <Text style={styles.countBadgeText}>{badgeCount > 9 ? '9+' : String(badgeCount)}</Text>
+        </View>
+      ) : badge ? (
+        <View style={styles.badge} />
+      ) : null}
     </Pressable>
   );
 }
@@ -345,10 +355,10 @@ export function PetScreen({
   const fxQuality = useFxQuality();
   const [juiceKey, setJuiceKey] = useState(0);
   const [wipe, setWipe] = useState<'off' | 'cover' | 'reveal'>('off');
-  const motionOn = fxQuality === 'full' && !reduceMotion;
+  const playMotion = usePlayMotion();
   useEffect(() => {
-    if (motionOn && takeWipe('room')) setWipe('reveal');
-  }, [motionOn]);
+    if (takeWipe('room')) setWipe('reveal');
+  }, []);
   // v26 Guide: "?" buttons open Info → Guide at a section.
   const [guideSection, setGuideSection] = useState<GuideSection | null>(null);
   // Bumped on every "?" tap so the same section re-opens after you browsed away.
@@ -544,8 +554,7 @@ export function PetScreen({
   const openIcon = (id: PetCoachIcon) => {
     if (id === 'dive') {
       setSheet(null);
-      if (motionOn) setWipe('cover');
-      else onGoDive();
+      setWipe('cover');
       return;
     }
     if (id === 'info') setInfoTab('status');
@@ -757,7 +766,7 @@ export function PetScreen({
   return (
     <View style={styles.screen}>
       <FinishMotionHost reduceMotion={reduceMotion} />
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, street && styles.streetGone]}>
         <Pressable
           onPress={onBack}
           accessibilityRole="button"
@@ -820,6 +829,7 @@ export function PetScreen({
         tapKey={tapKey}
         juiceKey={juiceKey}
         reduceMotion={reduceMotion}
+        sceneActive={game == null && wipe === 'off'}
         auraElement={view.swords.equipped?.element ?? null}
         onTapPet={tapPet}
         onCoach={pressCoach}
@@ -859,6 +869,7 @@ export function PetScreen({
             fontSize={street ? 14 : tabPt}
             pulse={pulseIcon === icon.id}
             badge={icon.id === 'dive' && view.diveRun.active}
+            badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
             onPress={() => openIcon(icon.id)}
           />
         ))}
@@ -974,7 +985,7 @@ export function PetScreen({
         reduceMotion={reduceMotion}
         header={<SheetTabs tabs={infoTabs(dev)} value={infoTab} onChange={setInfoTab} />}>
         {infoTab === 'status' ? (
-          <StatusTab view={view} onGuide={openGuide} />
+          <StatusTab view={view} onGuide={openGuide} onSettings={() => setSettingsOpen(true)} />
         ) : infoTab === 'journal' ? (
           <>
             <JournalTab view={view} commit={commit} />
@@ -1055,17 +1066,32 @@ export function PetScreen({
           />
         </View>
       ) : null}
-      <DiamondWipe
-        mode={wipe}
-        onDone={
-          wipe === 'cover'
-            ? () => {
-                armWipe('dive');
-                onGoDive();
-              }
-            : () => setWipe('off')
-        }
-      />
+      {street ? (
+        <ManholeTransit
+          mode={wipe}
+          gentle={playMotion.vestibularSafe}
+          onDone={
+            wipe === 'cover'
+              ? () => {
+                  armWipe('dive');
+                  onGoDive();
+                }
+              : () => setWipe('off')
+          }
+        />
+      ) : (
+        <DiamondWipe
+          mode={wipe}
+          onDone={
+            wipe === 'cover'
+              ? () => {
+                  armWipe('dive');
+                  onGoDive();
+                }
+              : () => setWipe('off')
+          }
+        />
+      )}
     </View>
   );
 }
@@ -1120,6 +1146,20 @@ const styles = StyleSheet.create({
     height: 8,
     backgroundColor: NEON.pink,
   },
+  countBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    backgroundColor: STREET.mustard,
+    borderWidth: 1,
+    borderColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countBadgeText: { fontFamily: STREET_FONT.bold, fontSize: 10, color: STREET.ink, includeFontPadding: false },
   pressed: { opacity: 0.82 },
   cardCenter: { alignItems: 'center', paddingVertical: 8 },
 });

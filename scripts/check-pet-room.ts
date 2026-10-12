@@ -304,9 +304,35 @@ ok('pixel grid: art snap, integer icon scale, Departure Mono size');
 
 // The room screen wires the pure pieces (not a stub).
 const room = fs.readFileSync('src/play/pet-room.tsx', 'utf8');
-for (const needle of ['planPetStep', 'petStatus(', 'petCoachTip(', 'pickPetLine(', 'PET_COACH_ICON']) {
+for (const needle of ['planPetStep', 'planHideoutStep', 'petStatus(', 'petCoachTip(', 'pickPetLine(', 'PET_COACH_ICON']) {
   assert.ok(room.includes(needle) || fs.readFileSync('src/play/pet-screen.tsx', 'utf8').includes(needle), `room uses ${needle}`);
 }
 ok('room screen uses the planner, status, coach and talk picker');
+
+{
+  const { onWalkFloor, planHideoutStep, randomWalkPoint, HIDEOUT_WALK } = require('../src/play/hideout-iso') as typeof import('../src/play/hideout-iso');
+  const kit: PetClipKit = { idle: 4, walk: 4 };
+  let seed = 1;
+  const rng = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const seen = new Set<string>();
+  let x = 128;
+  let y = 214;
+  for (let i = 0; i < 40; i += 1) {
+    const step = planHideoutStep({ kit, mood: 'happy', branch: 'standard', stage: 'teen', x, y, rng });
+    assert.ok(onWalkFloor(step.toX, step.toY) || Math.hypot(step.toX - x, step.toY - y) < 1, 'hideout step lands on the walk floor');
+    seen.add(`${Math.round(step.toX / 16)}:${Math.round(step.toY / 16)}`);
+    x = step.toX;
+    y = step.toY;
+  }
+  assert.ok(seen.size >= 3, '2D roam visits more than one floor cell');
+  const a = randomWalkPoint(() => 0.2);
+  const b = randomWalkPoint(() => 0.8);
+  assert.ok(Math.hypot(a[0] - b[0], a[1] - b[1]) > 8, 'random walk points spread across the polygon');
+  assert.ok(HIDEOUT_WALK.length >= 3, 'walk polygon has vertices');
+}
+ok('Hideout 2D roam: walk polygon, spread targets, every kit pose');
 
 console.log(`\ncheck:pet-room — ${passed} groups passed.`);

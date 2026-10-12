@@ -363,12 +363,17 @@ function main() {
   const skin = arg('skin');
   if (!one && !all && !family && !skin) {
     throw new Error(
-      'Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all | --family <name> | --skin streetwear) [--preview]',
+      'Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all | --family <name> | --skin streetwear [--ui-only]) [--preview]',
     );
   }
 
   if (skin) {
     if (skin !== 'streetwear') throw new Error(`unknown skin "${skin}" (only streetwear packs this way)`);
+    if (process.argv.includes('--ui-only')) {
+      packStreetwearUiOnly(repo);
+      writeRegistry(repo);
+      return;
+    }
     packStreetwear(repo);
     writeRegistry(repo);
     return;
@@ -798,18 +803,10 @@ function packSwUiKit(repo: string): Record<string, SwUiPiece> {
     pieces[`nav-${f.replace(/\.png$/, '')}`] = { png, inset: [0, 0, 0, 0], scale: 1 };
   }
   for (const f of fs.readdirSync(path.join(kit, '../rooms')).filter((f) => f.endsWith('.png'))) {
-    let png = readPng(path.join(kit, '../rooms', f));
-    if (f === 'hideout-full.png') {
-      // Fit the Hideout to the room plate (197×426 art px, MOCKUP_PLATE) so the
-      // pet's feet line, nameplate and speech column all line up: trim 3px of
-      // width, add 26px of top wall (the art's own top-row colour) above it.
-      const fitted = new PNG({ width: 197, height: 426, fill: true });
-      for (let y = 0; y < 26; y += 1) {
-        for (let x = 0; x < 197; x += 1) png.data.copy(fitted.data, (y * 197 + x) * 4, (x + 1) * 4, (x + 1) * 4 + 4);
-      }
-      PNG.bitblt(png, fitted, 1, 0, 197, png.height, 0, 26);
-      png = fitted;
-    }
+    // The isometric Hideout (hideout-iso*) is the live room. Skip the unused
+    // flat hideout-full fit and the opaque hideout.png (replaced by iso).
+    if (f === 'hideout-full.png' || f === 'hideout.png') continue;
+    const png = readPng(path.join(kit, '../rooms', f));
     pieces[`room-${f.replace(/\.png$/, '')}`] = { png, inset: [0, 0, 0, 0], scale: 1 };
   }
   // Ambient critters / particles (32px) for the Hideout and Underground.
@@ -1035,6 +1032,54 @@ function bakeSwSwords(repo: string): number {
   return n;
 }
 
+/** 84px blaze + outlined bubbles for the iso Hideout (Sprite Smith strips). */
+function packHideoutAuraStrips(repo: string): Record<string, SheetEntry> {
+  const srcDir = path.join(repo, SW_SRC, 'fx/hideout');
+  const raw = JSON.parse(fs.readFileSync(path.join(srcDir, 'sheets.json'), 'utf8')) as {
+    [name: string]: { sheet: string; frames: Record<string, { x: number; y: number; w: number; h: number }> };
+  };
+  const outDir = path.join(repo, 'assets/play', SW_SHEETS, 'hideout-fx');
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  const manifest: Record<string, SheetEntry> = {};
+  for (const [name, entry] of Object.entries(raw)) {
+    if (name.startsWith('_')) continue;
+    const png = readPng(path.join(srcDir, entry.sheet));
+    const key = `${SW_SHEETS}/hideout-fx/${name}`;
+    const dest = path.join(repo, 'assets/play', `${key}.png`);
+    fs.writeFileSync(dest, encodeSheetPng(png));
+    manifest[key] = {
+      sheet: `${key}.png`,
+      sheetW: png.width,
+      sheetH: png.height,
+      frames: entry.frames,
+    };
+  }
+  fs.writeFileSync(path.join(outDir, 'sheets.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  return manifest;
+}
+
+/** Rebuild ui-kit + hideout FX atlases without re-packing every character. */
+function packStreetwearUiOnly(repo: string) {
+  const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
+  const prev = JSON.parse(fs.readFileSync(metaPath, 'utf8')) as {
+    chars: unknown;
+    fx: unknown;
+    auras: unknown;
+    ui: unknown;
+    boards: unknown;
+  };
+  const ui = packSwUiKit(repo);
+  const hideoutFx = packHideoutAuraStrips(repo);
+  fs.writeFileSync(
+    metaPath,
+    `${JSON.stringify({ ...prev, ui, hideoutFx: Object.keys(hideoutFx) }, null, 2)}\n`,
+  );
+  atlasSheetsDir(repo, path.join(repo, 'assets/play', SW_SHEETS, 'ui-kit'));
+  atlasSheetsDir(repo, path.join(repo, 'assets/play', SW_SHEETS, 'hideout-fx'));
+  console.log(`packed streetwear ui-kit + hideout FX (${Object.keys(hideoutFx).length} strips)`);
+}
+
 function packStreetwear(repo: string) {
   const chars: Record<string, SwCharMeta> = {};
   for (const group of ['heroes', 'creeps', 'towers', 'boss']) {
@@ -1051,10 +1096,11 @@ function packStreetwear(repo: string) {
   const auraDir = path.join(repo, 'assets/play', SW_SHEETS, 'auras');
   fs.writeFileSync(path.join(auraDir, 'sheets.json'), `${JSON.stringify(auras.manifest, null, 2)}\n`);
   const swords = bakeSwSwords(repo);
+  const hideoutFx = packHideoutAuraStrips(repo);
   const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
   const ui = packSwUiKit(repo);
   const boards = packSwBoards(repo);
-  fs.writeFileSync(metaPath, `${JSON.stringify({ chars, fx: fx.meta, auras: auras.meta, ui, boards }, null, 2)}\n`);
+  fs.writeFileSync(metaPath, `${JSON.stringify({ chars, fx: fx.meta, auras: auras.meta, ui, boards, hideoutFx: Object.keys(hideoutFx) }, null, 2)}\n`);
   let files = 0;
   for (const manifest of walk(path.join(repo, 'assets/play', SW_SHEETS)).filter((f) => f.endsWith('sheets.json'))) {
     files += atlasSheetsDir(repo, path.dirname(manifest));

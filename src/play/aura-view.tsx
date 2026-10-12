@@ -19,7 +19,7 @@ import {
   type AuraStyle,
   type Rgb,
 } from '@/play/auras';
-import { useOsReduceMotion } from '@/play/finish-foil';
+import { usePlayMotion } from '@/play/play-motion';
 import { useFxQuality } from '@/play/fx-quality';
 import { PLAY_SHEETS } from '@/play/generated-play-sheets';
 import { playSheetArt, sheetFrame } from '@/play/sheet-sprite';
@@ -197,9 +197,7 @@ export function PetAura({
   /** `back` is the aura. `front` is the blaze sparks, outside the sprite. */
   layer: 'back' | 'front';
 }) {
-  const reduceMotion = useOsReduceMotion();
-  const fxFull = useFxQuality() === 'full';
-  const frozen = reduceMotion || !fxFull;
+  const frozen = usePlayMotion().cosmeticsStill || useFxQuality() !== 'full';
   const [pack, setPack] = useState<AuraPack | null>(null);
   const [tick, setTick] = useState(0);
   const frameKey =
@@ -360,9 +358,7 @@ export function PetAuraSprite({
   box: number;
   layer: 'back' | 'front';
 }) {
-  const reduceMotion = useOsReduceMotion();
-  const fxFull = useFxQuality() === 'full';
-  const frozen = reduceMotion || !fxFull;
+  const frozen = usePlayMotion().cosmeticsStill || useFxQuality() !== 'full';
   const meta = STREETWEAR_META.auras[styleId];
   const which = layer === 'back' ? 'behind' : 'front';
   const [pack, setPack] = useState<SpritePack | null>(null);

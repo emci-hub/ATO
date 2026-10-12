@@ -68,6 +68,8 @@ import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } fr
 import { findName } from '@/play/dive-loot';
 import { StopAmbience, StreetUndergroundWorld, SubwayDoors } from '@/play/dive-street';
 import { streetFindName, streetStop } from '@/play/dive-street-names';
+import { hideoutIntegerScale, hideoutPetBox } from '@/play/hideout-iso';
+import { usePlayMotion } from '@/play/play-motion';
 import { sharpPetBox } from '@/play/pet-actor';
 import { alertHaptic, rewardHaptic } from '@/play/street-feel';
 import { streetUiOn } from '@/play/street-ui';
@@ -308,8 +310,9 @@ export function DiveScene({
   const onLayout = (e: LayoutChangeEvent) =>
     setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
   const { width, height } = size;
-  const full = fxLevel === 'full' && !reduceMotion;
-  const cuts = diveWorldCuts(fxLevel, reduceMotion);
+  const playMotion = usePlayMotion();
+  const full = fxLevel === 'full' && !playMotion.vestibularSafe;
+  const cuts = diveWorldCuts(fxLevel, playMotion.vestibularSafe, playMotion.cosmeticsStill);
   const band = Math.max(1, height * 0.9);
   // Streetwear: the Underground (subway stops) instead of the reef; paint only.
   const street = streetUiOn();
@@ -321,14 +324,14 @@ export function DiveScene({
   const lastEventKey = useRef(event?.key ?? 0);
   useEffect(() => {
     const freshBust = event?.kind === 'bust' && event.key !== lastEventKey.current;
-    if (reduceMotion) {
+    if (playMotion.vestibularSafe) {
       cam.value = depth;
       return;
     }
     cam.value = freshBust
       ? withDelay(750, withTiming(depth, { duration: 650, easing: Easing.inOut(Easing.cubic) }))
       : withTiming(depth, { duration: 800, easing: Easing.inOut(Easing.cubic) });
-  }, [cam, depth, event?.key, event?.kind, reduceMotion]);
+  }, [cam, depth, event?.key, event?.kind, playMotion.vestibularSafe]);
 
   const worldStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band }] }));
 
@@ -339,9 +342,19 @@ export function DiveScene({
   // Street: the pet stands big on the platform. The sprite canvas is mostly
   // transparent padding, so the BOX may reach 80% of the stage (the figure is
   // ~a third of it); on whole device pixels; the feet stay on the floor line.
+  const ugScale =
+    street && width > 0 && height > 0
+      ? hideoutIntegerScale({
+          availW: width,
+          availH: height,
+          pixelRatio: PixelRatio.get(),
+          canvas: [256, 320],
+          content: [0, 0, 256, 320],
+        })
+      : null;
   const box =
-    street && pet.stage !== 'egg' && height > 0
-      ? sharpPetBox(Math.min(classicBox * 3.4, height * 0.8), art.cellPx, PixelRatio.get())
+    street && pet.stage !== 'egg' && ugScale
+      ? hideoutPetBox(art.cellPx, ugScale, PixelRatio.get())
       : classicBox;
   // The mockup pet hovers over the ledge. The surface perch uses the same spot,
   // so the reef composition stays put when a dive hasn't started.
@@ -416,16 +429,17 @@ export function DiveScene({
   useEffect(() => {
     cancelAnimation(sway);
     sway.value = 0;
-    if (reduceMotion || away) return;
+    if (playMotion.cosmeticsStill || away) return;
+    const amp = playMotion.vestibularSafe ? 6 : 18;
     sway.value = withRepeat(
       withSequence(
-        withTiming(18, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-18, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+        withTiming(amp, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-amp, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
     );
     return () => cancelAnimation(sway);
-  }, [sway, reduceMotion, away]);
+  }, [sway, playMotion.cosmeticsStill, playMotion.vestibularSafe, away]);
 
   useEffect(() => {
     cancelAnimation(wiggle);
@@ -538,9 +552,15 @@ export function DiveScene({
   const slotX = (slot: number) => ROW_PAD + slot * SLOT;
   useEffect(() => {
     if (!reveal) return;
-    if (reduceMotion) {
-      setLandedKey(reveal.key);
-      return;
+    if (playMotion.vestibularSafe) {
+      rv.value = 0;
+      rv.value = withTiming(2, { duration: 240 });
+      const id = setTimeout(() => {
+        setLandedKey(reveal.key);
+        setPopSlot(reveal.slot);
+        if (street) rewardHaptic();
+      }, 260);
+      return () => clearTimeout(id);
     }
     const rare = isRareOrBetter(reveal.glow);
     rv.value = 0;
@@ -561,7 +581,7 @@ export function DiveScene({
       }
     }, revealMs(reveal.glow));
     return () => clearTimeout(id);
-  }, [reveal, reduceMotion, rv, flash, fxLevel, street]);
+  }, [reveal, playMotion.vestibularSafe, rv, flash, fxLevel, street]);
   const revealTo = reveal ? slotX(reveal.slot) : 0;
   // v25: the find bursts out of a crate / chest on the right-hand ledge.
   const boxX = origin.left + 124 * ART_PT;
@@ -775,6 +795,7 @@ export function DiveScene({
               cue={atSurface ? -1 : depth}
               label={atSurface ? 'Street level' : streetStop(depth).name}
               alive={cuts.motion}
+              gentle={!cuts.parallax}
               width={width}
               height={height}
             />

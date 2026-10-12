@@ -1,0 +1,194 @@
+{
+ "blaze-84-behind": {
+  "sheet": "blaze-84-behind.png",
+  "frames": {
+   "frame_000": {
+    "x": 0,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_001": {
+    "x": 85,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_002": {
+    "x": 170,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_003": {
+    "x": 255,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_004": {
+    "x": 340,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_005": {
+    "x": 425,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_006": {
+    "x": 510,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_007": {
+    "x": 595,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   }
+  }
+ },
+ "bubbles-outlined-behind": {
+  "sheet": "bubbles-outlined-behind.png",
+  "frames": {
+   "frame_000": {
+    "x": 0,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_001": {
+    "x": 62,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_002": {
+    "x": 124,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_003": {
+    "x": 186,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_004": {
+    "x": 248,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_005": {
+    "x": 310,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   }
+  }
+ },
+ "blaze-84-front": {
+  "sheet": "blaze-84-front.png",
+  "frames": {
+   "frame_000": {
+    "x": 0,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_001": {
+    "x": 85,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_002": {
+    "x": 170,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_003": {
+    "x": 255,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_004": {
+    "x": 340,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_005": {
+    "x": 425,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_006": {
+    "x": 510,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   },
+   "frame_007": {
+    "x": 595,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   }
+  }
+ },
+ "bubbles-outlined-front": {
+  "sheet": "bubbles-outlined-front.png",
+  "frames": {
+   "frame_000": {
+    "x": 0,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_001": {
+    "x": 62,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_002": {
+    "x": 124,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_003": {
+    "x": 186,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_004": {
+    "x": 248,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   },
+   "frame_005": {
+    "x": 310,
+    "y": 0,
+    "w": 61,
+    "h": 61
+   }
+  }
+ },
+ "_notes": {
+  "blaze-84": "98px cell -> 84px by integer row/col decimation (kept src index = floor(i*7/6)); no resampling, colours unchanged. Feet anchor moves from cell (49,86) to (42,74). Content 64x98 -> 55x84.",
+  "bubbles-outlined": "original 61px bubbles + 1px #1C1C1C outline on transparent pixels 4-adjacent to bubble pixels (colour already in the aura atlas). Same cell size/anchor."
+ }
+}
