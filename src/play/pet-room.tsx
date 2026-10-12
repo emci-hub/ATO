@@ -652,13 +652,29 @@ export function PetRoom({
         </View>
       </PixelFrame>
       )}
-      {buffs.map((b) => (
-        <PixelFrame key={b.key} style={styles.buffChip}>
-          <View accessible accessibilityLabel={b.a11y}>
-            <PixelLabel color={PIXEL.amber}>{b.text}</PixelLabel>
+      {streetRoom ? (
+        // Street: buffs are one compact row of small chips (the stacked Classic
+        // panels pushed the room down and left an empty dark band).
+        buffs.length > 0 ? (
+          <View style={styles.streetBuffRow}>
+            {buffs.map((b) => (
+              <View key={b.key} style={styles.streetBuff} accessible accessibilityLabel={b.a11y}>
+                <Text style={styles.streetBuffText} numberOfLines={1}>
+                  {b.text}
+                </Text>
+              </View>
+            ))}
           </View>
-        </PixelFrame>
-      ))}
+        ) : null
+      ) : (
+        buffs.map((b) => (
+          <PixelFrame key={b.key} style={styles.buffChip}>
+            <View accessible accessibilityLabel={b.a11y}>
+              <PixelLabel color={PIXEL.amber}>{b.text}</PixelLabel>
+            </View>
+          </PixelFrame>
+        ))
+      )}
       </View>
 
       <View style={styles.stage} onLayout={onLayout}>
@@ -894,6 +910,9 @@ const styles = StyleSheet.create({
   streetPlateGrade: { fontFamily: STREET_FONT.bold, fontSize: 12, lineHeight: 15 },
   streetCoachText: { fontSize: 14, lineHeight: 18 },
   streetCoach: { paddingHorizontal: 12 },
+  streetBuffRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 6, marginTop: -2 },
+  streetBuff: { maxWidth: '100%', flexShrink: 1, backgroundColor: 'rgba(26, 26, 29, 0.92)', borderWidth: 2, borderColor: '#000', paddingHorizontal: 8, paddingVertical: 2 },
+  streetBuffText: { fontFamily: STREET_FONT.bold, fontSize: 12, lineHeight: 16, color: '#E0A526' },
   meterHead: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   meterMain: { flexGrow: 1, flexShrink: 1, minWidth: 180, gap: 4 },
   meterSide: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
