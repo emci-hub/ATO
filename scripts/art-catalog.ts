@@ -409,12 +409,13 @@ button.on, button[aria-pressed=true] { background:var(--mustard); color:#1d1d20;
 .dock .ico { flex:0 0 auto; min-width:64px; padding:8px 12px; font:600 15px/1.1 -apple-system,system-ui,sans-serif; white-space:nowrap; }
 .sheet-bg { display:none; position:fixed; inset:0; z-index:12; background:#000a; }
 .sheet-bg.show { display:block; }
-.sheet-card { position:absolute; left:0; right:0; bottom:0; max-height:56vh; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
-  background:var(--panel); border-radius:16px 16px 0 0; padding:8px 16px calc(20px + var(--safe-b)); }
+.sheet-card { position:absolute; left:0; right:0; bottom:0; max-height:72vh; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+  background:var(--panel); border-radius:16px 16px 0 0; padding:8px 16px calc(20px + var(--safe-b)); display:flex; flex-direction:column; }
 .grabber { width:36px; height:5px; border-radius:99px; background:#6a6a72; margin:6px auto 12px; }
 .sheet-card h2 { font:700 20px/1.2 -apple-system,system-ui,sans-serif; margin:0 0 12px; }
 .sheet-card label { display:block; font:600 15px/1.3 -apple-system,system-ui,sans-serif; margin:12px 0 6px; color:var(--muted); }
 .sheet-card .row { display:flex; flex-wrap:wrap; gap:8px; }
+.sheet-card .done { position:sticky; bottom:0; width:100%; margin-top:16px; background:var(--panel); }
 #sheet { display:none; position:fixed; inset:0; z-index:14; background:#000; }
 #sheet.show { display:block; }
 #sheet .panel { position:absolute; inset:0; overflow:auto; -webkit-overflow-scrolling:touch; background:var(--bg);
@@ -431,18 +432,18 @@ button.on, button[aria-pressed=true] { background:var(--mustard); color:#1d1d20;
 #sheet .preview img { max-width:100%; max-height:48vh; object-fit:contain; }
 #playBtn { position:absolute; left:10px; right:10px; bottom:10px; z-index:2; min-height:56px; font:700 18px/1 -apple-system,system-ui,sans-serif; background:#000c; color:#fff; border-color:#fff4; }
 #playBtn[hidden] { display:none; }
-.seg-scroll { display:flex; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px; }
+.seg-scroll { display:flex; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px; flex:0 0 auto; min-height:var(--tap); }
 .seg-scroll:empty, .film:empty, .icon-grid:empty { display:none; }
 .seg-scroll button { flex:1 0 auto; border:0; border-right:1px solid var(--line); border-radius:0; min-height:var(--tap); font:600 15px/1.1 -apple-system,system-ui,sans-serif; padding:10px 14px; }
 .seg-scroll button:last-child { border-right:0; }
-#sheet .tools { display:flex; gap:8px; align-items:center; }
-#sheet .film { display:flex; gap:6px; overflow:auto; -webkit-overflow-scrolling:touch; }
+#sheet .tools { display:flex; gap:8px; align-items:center; flex:0 0 auto; }
+#sheet .film { display:flex; gap:6px; overflow:auto; -webkit-overflow-scrolling:touch; flex:0 0 auto; min-height:48px; }
 #sheet .film button { min-width:48px; min-height:48px; padding:0; overflow:hidden; }
 #sheet .film .cell { width:48px; height:48px; image-rendering:pixelated; background-repeat:no-repeat; }
 #sheet .icon-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(56px,1fr)); gap:8px; }
 #sheet .icon-grid button { min-height:56px; padding:6px; }
 #sheet .icon-grid img { image-rendering:pixelated; width:40px; height:40px; object-fit:contain; }
-.sheet-body { flex:1; display:flex; flex-direction:column; gap:10px; min-height:0; padding-bottom:8px; }
+.sheet-body { flex:0 0 auto; display:flex; flex-direction:column; gap:10px; padding-bottom:8px; }
 .decbar { position:sticky; bottom:0; display:grid; grid-template-columns:1fr 1fr; gap:8px;
   padding:10px 0 calc(12px + var(--safe-b)); background:linear-gradient(180deg, transparent, var(--bg) 18%); }
 .decbar button { min-height:var(--tap); font:700 16px/1 -apple-system,system-ui,sans-serif; }
@@ -501,7 +502,7 @@ textarea { width:100%; min-height:72px; background:var(--tile); color:var(--fg);
     <div class="row" id="autoplayRow"></div>
     <label>More</label>
     <div class="row"><button type="button" id="dupBtn">Duplicates</button></div>
-    <button type="button" id="filtersDone" style="width:100%;margin-top:16px">Done</button>
+    <button type="button" id="filtersDone" class="done">Done</button>
   </div>
 </div>
 <div class="sheet-bg" id="menu" role="dialog" aria-modal="true" aria-label="More">
@@ -513,7 +514,7 @@ textarea { width:100%; min-height:72px; background:var(--tile); color:var(--fg);
       <button type="button" id="importBtn">Import decisions</button>
     </div>
     <input id="importFile" type="file" accept="application/json,.json" hidden>
-    <button type="button" id="menuDone" style="width:100%;margin-top:16px">Done</button>
+    <button type="button" id="menuDone" class="done">Done</button>
   </div>
 </div>
 <div id="sheet" role="dialog" aria-modal="true"><div class="panel" id="sheetPanel"></div></div>
