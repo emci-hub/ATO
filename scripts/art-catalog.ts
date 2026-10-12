@@ -931,6 +931,7 @@ function paintDetail(){
     const img = document.createElement('img');
     img.alt = a.id+' raw sheet';
     img.src = (!PORTABLE && a.rel) ? a.rel : (a.sheet || a.preview);
+    img.onerror = () => { img.onerror = null; img.src = a.sheet || a.preview; };
     host.appendChild(img);
     clipPick.innerHTML = '';
     dirPick.innerHTML = '';
