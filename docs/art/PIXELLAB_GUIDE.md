@@ -109,8 +109,8 @@ Run these steps for any request, whether it's "make a new hero", "edit the couch
    ok, save it into the library: `npm run art:import -- --from … --id …` (raw + `gen.json` to
    `art-src/`), `npm run art:pack -- --id …`, then `npm run art:sync` and commit the generated files
    (the pre-commit hook does this; never hand-edit `registry.json` / `ART_LIBRARY.md`). A new version
-   points at the old one with `replaces`. Code reads art by registry id (`getArt('<id>')`), never a
-   loose path. Status starts `candidate`; only emci sets `approved`.
+   points at the old one with `replaces`. Code reads art through the typed tree (`ART.room.<room>.<part>`,
+   `HERO.<hero>.idle`), never an id string or a loose path. Status starts `candidate`; only emci sets `approved`.
 
 ## 8. Recipes by asset type
 ### Heroes and pets (characters)
