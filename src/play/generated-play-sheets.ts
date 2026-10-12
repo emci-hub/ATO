@@ -31638,19 +31638,6 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
     }
   },
   "sheets/streetwear/ui-kit/amb-moth": {
-    "sheet": "sheets/streetwear/ui-kit/atlas-3.png",
-    "sheetW": 131,
-    "sheetH": 164,
-    "frames": {
-      "img": {
-        "x": 0,
-        "y": 0,
-        "w": 32,
-        "h": 32
-      }
-    }
-  },
-  "sheets/streetwear/ui-kit/amb-note": {
     "sheet": "sheets/streetwear/ui-kit/atlas-2.png",
     "sheetW": 707,
     "sheetH": 735,
@@ -31663,7 +31650,7 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
       }
     }
   },
-  "sheets/streetwear/ui-kit/amb-note2": {
+  "sheets/streetwear/ui-kit/amb-note": {
     "sheet": "sheets/streetwear/ui-kit/atlas-2.png",
     "sheetW": 707,
     "sheetH": 735,
@@ -31671,6 +31658,19 @@ export const PLAY_SHEETS: Record<string, PlaySheet> = {
       "img": {
         "x": 211,
         "y": 691,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/amb-note2": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-3.png",
+    "sheetW": 131,
+    "sheetH": 164,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 0,
         "w": 32,
         "h": 32
       }
@@ -32622,9 +32622,9 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/towers/viper/rotations': require('@/assets/play/sheets/streetwear/towers/viper/atlas-2.png'),
   'sheets/streetwear/ui-kit/alert': require('@/assets/play/sheets/streetwear/ui-kit/atlas-1.png'),
   'sheets/streetwear/ui-kit/amb-drip': require('@/assets/play/sheets/streetwear/ui-kit/atlas-2.png'),
-  'sheets/streetwear/ui-kit/amb-moth': require('@/assets/play/sheets/streetwear/ui-kit/atlas-3.png'),
+  'sheets/streetwear/ui-kit/amb-moth': require('@/assets/play/sheets/streetwear/ui-kit/atlas-2.png'),
   'sheets/streetwear/ui-kit/amb-note': require('@/assets/play/sheets/streetwear/ui-kit/atlas-2.png'),
-  'sheets/streetwear/ui-kit/amb-note2': require('@/assets/play/sheets/streetwear/ui-kit/atlas-2.png'),
+  'sheets/streetwear/ui-kit/amb-note2': require('@/assets/play/sheets/streetwear/ui-kit/atlas-3.png'),
   'sheets/streetwear/ui-kit/amb-pigeon': require('@/assets/play/sheets/streetwear/ui-kit/atlas-3.png'),
   'sheets/streetwear/ui-kit/amb-pigeon-peck': require('@/assets/play/sheets/streetwear/ui-kit/atlas-3.png'),
   'sheets/streetwear/ui-kit/amb-plane': require('@/assets/play/sheets/streetwear/ui-kit/atlas-3.png'),

@@ -50,6 +50,9 @@ export type FxEvent = {
   /** The area is centred on the firing pad (area ultimates), so there is no
    * travelling bolt first. */
   centredOnSource: boolean;
+  /** The Avatar's own weapon hit (sword / melee). Streetwear draws its element
+   * slash at the target instead of a travelling shot. Optional: towers omit it. */
+  melee?: boolean;
 };
 
 export const FX_LIFE_MS = 280;
@@ -274,6 +277,8 @@ const SW_HIT_UNITS = 8;
 const SW_HIT_ULT_UNITS = 12;
 /** Burst cell edge per unit of blast radius (the ring art fills ~80% of the cell). */
 const SW_BURST_PER_RADIUS = 2.4;
+/** The weapon slash cell (96px art) on a melee hit, in board units. */
+const SW_SLASH_UNITS = 16;
 
 function swKey(element: Element | null, kind: string): string | null {
   const el = element ?? 'plain';
@@ -301,6 +306,20 @@ function headingDeg(a: FxPoint, b: FxPoint): number {
 function renderSprite(fx: FxEvent, now: number) {
   if (fx.behavior === 'chain') return null; // chain lightning keeps its vector bolts
   const k = Math.max(0, Math.min(1, (now - fx.bornAt) / fx.lifeMs));
+  // A weapon hit: the element's slash sweeps over the target (no travelling bolt),
+  // then the hit pop under it; an area weapon hit still bursts.
+  if (fx.melee && fx.radius <= 0) {
+    const slash = swKey(fx.element, 'slash');
+    const hitKey = swKey(fx.element, 'hit');
+    const target = fx.points[0] ?? fx.center;
+    if (!slash && !hitKey) return null;
+    return (
+      <G key={`fx-${fx.id}`}>
+        {slash ? swSprite(slash, k, target, SW_SLASH_UNITS * (fx.ultimate ? 1.3 : 1), headingDeg(fx.from, target), 'slash') : null}
+        {hitKey && k > 0.35 ? swSprite(hitKey, (k - 0.35) / 0.65, target, SW_HIT_UNITS, null, 'hit') : null}
+      </G>
+    );
+  }
   const shot = swKey(fx.element, 'shot');
   const target = fx.radius > 0 ? fx.center : (fx.points[0] ?? fx.center);
   const travelEnd = fx.radius > 0 ? 0.3 : 0.35;

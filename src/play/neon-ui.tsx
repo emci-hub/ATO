@@ -503,12 +503,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Readable on the plain asphalt chip (the striped ends are gone).
   streetChipText: {
     fontFamily: STREET_FONT.bold,
-    fontSize: 12,
+    fontSize: 13,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    color: STREET.muted,
+    color: STREET.paper,
   },
   streetChipTextSelected: {
     color: STREET.ink,

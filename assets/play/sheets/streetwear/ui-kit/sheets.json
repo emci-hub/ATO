@@ -377,19 +377,6 @@
     }
   },
   "sheets/streetwear/ui-kit/amb-moth": {
-    "sheet": "sheets/streetwear/ui-kit/atlas-3.png",
-    "sheetW": 131,
-    "sheetH": 164,
-    "frames": {
-      "img": {
-        "x": 0,
-        "y": 0,
-        "w": 32,
-        "h": 32
-      }
-    }
-  },
-  "sheets/streetwear/ui-kit/amb-note": {
     "sheet": "sheets/streetwear/ui-kit/atlas-2.png",
     "sheetW": 707,
     "sheetH": 735,
@@ -402,7 +389,7 @@
       }
     }
   },
-  "sheets/streetwear/ui-kit/amb-note2": {
+  "sheets/streetwear/ui-kit/amb-note": {
     "sheet": "sheets/streetwear/ui-kit/atlas-2.png",
     "sheetW": 707,
     "sheetH": 735,
@@ -410,6 +397,19 @@
       "img": {
         "x": 211,
         "y": 691,
+        "w": 32,
+        "h": 32
+      }
+    }
+  },
+  "sheets/streetwear/ui-kit/amb-note2": {
+    "sheet": "sheets/streetwear/ui-kit/atlas-3.png",
+    "sheetW": 131,
+    "sheetH": 164,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 0,
         "w": 32,
         "h": 32
       }

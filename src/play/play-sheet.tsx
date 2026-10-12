@@ -133,7 +133,7 @@ export function SheetTabs<T extends string>({
             style={[styles.tab, on && styles.tabOn, street && styles.streetTab]}>
             {street ? <StreetBackdrop piece={on ? 'chip-on' : 'chip-off'} /> : null}
             <PixelLabel
-              color={street ? (on ? STREET.ink : STREET.muted) : on ? PIXEL.ink : PIXEL.cyan}
+              color={street ? (on ? STREET.ink : STREET.paper) : on ? PIXEL.ink : PIXEL.cyan}
               numberOfLines={1}
               style={street ? styles.streetTabText : undefined}>
               {tab.label}

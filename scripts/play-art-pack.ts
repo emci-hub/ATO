@@ -722,15 +722,26 @@ function packSwUiKit(repo: string): Record<string, SwUiPiece> {
   };
   const button = crop('button-grey.png', 51, 53, 119, 44);
   const chipOn = crop('pieces.png', 31, 159, 450, 66);
+  // Plain chips (emci 2026-10-11): the hazard stripes at both ends sat under
+  // short labels and made them unreadable — paint them with the face colour,
+  // keep the outline and the top highlight line.
+  for (let y = 8; y <= 54; y += 1) {
+    for (let x = 10; x < chipOn.width - 8; x += 1) {
+      if (x > 100 && x < 350) continue;
+      const i = (y * chipOn.width + x) * 4;
+      if (chipOn.data[i + 3] < 10 || chipOn.data[i] + chipOn.data[i + 1] + chipOn.data[i + 2] < 40) continue;
+      [chipOn.data[i], chipOn.data[i + 1], chipOn.data[i + 2]] = [222, 165, 49];
+    }
+  }
   const pieces: Record<string, { png: PNG; inset: [number, number, number, number]; scale: number }> = {
     panel: { png: crop('panel.png', 34, 19, 318, 239), inset: [56, 56, 56, 56], scale: 0.5 },
     header: { png: crop('header.png', 23, 21, 642, 335), inset: [48, 96, 48, 96], scale: 0.3 },
     back: { png: crop('pieces.png', 256, 64, 65, 65), inset: [0, 0, 0, 0], scale: 0.6 },
     toggle: { png: crop('pieces.png', 185, 238, 144, 44), inset: [0, 0, 0, 0], scale: 0.5 },
-    'chip-on': { png: chipOn, inset: [16, 100, 16, 100], scale: 0.3 },
+    'chip-on': { png: chipOn, inset: [16, 24, 16, 24], scale: 0.3 },
     'chip-off': {
       png: rampMap(chipOn, ['#1f1f23', '#2b2b2e', '#3f3f46', '#52525b', '#a1a1aa'].map(hexRgb)),
-      inset: [16, 100, 16, 100],
+      inset: [16, 24, 16, 24],
       scale: 0.3,
     },
   };

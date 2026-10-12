@@ -16,6 +16,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
+  FadeInDown,
   Easing,
   cancelAnimation,
   useAnimatedStyle,
@@ -76,8 +77,9 @@ import {
 } from '@/play/pixel-ui';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
 import { roleFootAt } from '@/play/skin';
-import { StreetRoomArt, StreetRoomLife, StreetRoomSpots, type StreetRoomSpotsProps } from '@/play/street-room';
-import { streetUiOn } from '@/play/street-ui';
+import { StreetRoomArt, StreetRoomLife, StreetRoomSpots, StreetStatusStrip, type StreetRoomSpotsProps } from '@/play/street-room';
+import { STREET_MOTION } from '@/play/street-feel';
+import { STREET_FONT, streetUiOn } from '@/play/street-ui';
 
 /** The Streetwear Hideout art's own background (night blue). */
 const HIDEOUT_NIGHT = '#0c0d23';
@@ -186,7 +188,7 @@ function RoomBackdrop({
     // pack time (197×426), plus its life (lights, notes, moth, pigeon).
     return (
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: HIDEOUT_NIGHT }]}>
-        <StreetRoomArt left={origin.left} top={origin.top} />
+        <StreetRoomArt left={origin.left} top={origin.top} alive={alive} />
         <StreetRoomLife left={origin.left} top={origin.top} alive={alive} />
       </View>
     );
@@ -600,6 +602,18 @@ export function PetRoom({
       {/* Meters, the scene, and the coach are three rows. None is positioned
           on top of another, so a short phone cannot stack them. */}
       <View style={styles.metersSlot} pointerEvents="box-none">
+      {streetRoom ? (
+        <StreetStatusStrip
+          egg={egg}
+          picking={picking}
+          hunger={pet.hunger}
+          mood={pet.mood}
+          warmth={pet.warmth}
+          stageLabel={PET_STAGE_LABEL[pet.stage]}
+          pantry={pantry}
+          reduceMotion={reduceMotion}
+        />
+      ) : (
       <PixelFrame streetPiece="panel" align="stretch" enter style={[styles.meters, streetUiOn() && styles.streetMeters]}>
         <View style={styles.meterHead}>
         <View style={styles.meterMain} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
@@ -637,6 +651,7 @@ export function PetRoom({
         </View>
         </View>
       </PixelFrame>
+      )}
       {buffs.map((b) => (
         <PixelFrame key={b.key} style={styles.buffChip}>
           <View accessible accessibilityLabel={b.a11y}>
@@ -649,7 +664,7 @@ export function PetRoom({
       <View style={styles.stage} onLayout={onLayout}>
       {width > 0 ? <RoomBackdrop width={width} height={height} alive={fxAnimate} /> : null}
       {width > 0 && streetSpots && streetUiOn() && !picking ? (
-        <StreetRoomSpots left={origin.left} top={origin.top} {...streetSpots} />
+        <StreetRoomSpots left={origin.left} top={origin.top} still={!fxAnimate} {...streetSpots} />
       ) : null}
 
       {width > 0 && picking && onPickEgg ? (
@@ -781,9 +796,13 @@ export function PetRoom({
             <SpeechBubble speech={speech} reduceMotion={reduceMotion} speaker={name} />
             <PixelNameplate label={false}>
               <View style={styles.nameRow}>
-                {name ? <PixelLabel color={PIXEL.cyan}>{name}</PixelLabel> : null}
+                {name ? (
+                  <PixelLabel color={PIXEL.cyan} style={streetRoom ? styles.streetPlateName : undefined}>
+                    {name}
+                  </PixelLabel>
+                ) : null}
                 {name ? <View style={styles.moodPip} /> : null}
-                <PixelBody size="sm" color="#C7DCD0" numberOfLines={1}>
+                <PixelBody size="sm" color="#C7DCD0" numberOfLines={1} style={streetRoom ? styles.streetPlateBody : undefined}>
                   {plateStatus(status, pet.stage, stageLeftMs)}
                 </PixelBody>
               </View>
@@ -806,7 +825,7 @@ export function PetRoom({
                       <PixelStar key={i} color={GRADE_COLOR[grade]} />
                     ))}
                   </View>
-                  <PixelLabel color={GRADE_COLOR[grade]} numberOfLines={1}>
+                  <PixelLabel color={GRADE_COLOR[grade]} numberOfLines={1} style={streetRoom ? styles.streetPlateGrade : undefined}>
                     {GRADE_LABEL[grade]}
                     {pet.shiny ? ' shiny' : ''}
                   </PixelLabel>
@@ -824,15 +843,23 @@ export function PetRoom({
       </View>
 
       <View style={styles.coachSlot}>
-      <PixelFrame streetPiece="panel" align="stretch" enter style={styles.coach}>
-        <View style={styles.coachRow}>
+      <PixelFrame streetPiece="panel" align="stretch" enter style={[styles.coach, streetRoom && styles.streetCoach]}>
+        <Animated.View
+          key={streetRoom ? coach.tip : 'coach'}
+          entering={streetRoom && !reduceMotion ? FadeInDown.duration(STREET_MOTION.sheet) : undefined}
+          style={styles.coachRow}>
           <View style={styles.coachCopy}>
-            <PixelBody color={PIXEL.text} style={styles.coachText} numberOfLines={3}>
+            <PixelBody
+              color={PIXEL.text}
+              style={[styles.coachText, streetRoom && styles.streetCoachText]}
+              numberOfLines={streetRoom ? 2 : 3}>
               {coach.tip}
             </PixelBody>
-            <PixelBody size="sm" color={PIXEL.dim} numberOfLines={1}>
-              {pantry === 1 ? '1 treat left' : `${pantry} treats left`}
-            </PixelBody>
+            {streetRoom ? null : (
+              <PixelBody size="sm" color={PIXEL.dim} numberOfLines={1}>
+                {pantry === 1 ? '1 treat left' : `${pantry} treats left`}
+              </PixelBody>
+            )}
           </View>
           {coach.button ? (
             <PixelButton
@@ -840,11 +867,11 @@ export function PetRoom({
               hug
               onPress={onCoach}
               width={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_W : undefined}
-              height={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_H : undefined}
+              height={streetRoom ? 44 : coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_H : undefined}
               style={styles.coachButton}
             />
           ) : null}
-        </View>
+        </Animated.View>
       </PixelFrame>
       </View>
     </View>
@@ -861,6 +888,12 @@ const styles = StyleSheet.create({
   plateWrap: { position: 'absolute', alignItems: 'center' },
   meters: { alignSelf: 'stretch' },
   streetMeters: { paddingHorizontal: 10, paddingVertical: 4 },
+  // Street sizing: plates 13/12pt, coach 14pt.
+  streetPlateName: { fontFamily: STREET_FONT.bold, fontSize: 13, lineHeight: 16 },
+  streetPlateBody: { fontSize: 12, lineHeight: 15 },
+  streetPlateGrade: { fontFamily: STREET_FONT.bold, fontSize: 12, lineHeight: 15 },
+  streetCoachText: { fontSize: 14, lineHeight: 18 },
+  streetCoach: { paddingHorizontal: 12 },
   meterHead: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   meterMain: { flexGrow: 1, flexShrink: 1, minWidth: 180, gap: 4 },
   meterSide: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },

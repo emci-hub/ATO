@@ -12,24 +12,35 @@
  * label; one tap on any spot hides them (device-local flag).
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  FadeIn,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
+import { PET_METER_MAX } from '@/play/pet';
+import { WARMTH_MAX } from '@/play/pet-eggs';
 import { MOCKUP_PLATE } from '@/play/pixel-atlas';
 import { ART_PT } from '@/play/pixel-theme';
 import { ClipImage } from '@/play/sheet-sprite';
 import { AmbientSprite, Drift, Twinkle, kitDrawable } from '@/play/street-ambient';
-import { tapHaptic } from '@/play/street-feel';
+import { STREET_MOTION, tapHaptic } from '@/play/street-feel';
 import { STREET, STREET_FONT } from '@/play/street-ui';
 
 export type StreetSpotId = 'feed' | 'play' | 'expedition' | 'dive' | 'den';
 
 /** Spot rects in plate art px: [x, y, w, h], plus the object + action words. */
-export const STREET_SPOTS: readonly { id: StreetSpotId; rect: [number, number, number, number]; thing: string; action: string }[] = [
+export const STREET_SPOTS: readonly { id: StreetSpotId; rect: [number, number, number, number]; thing: string; action: string; tagSide?: boolean }[] = [
   { id: 'expedition', rect: [22, 169, 60, 114], thing: 'Door', action: 'Explore' },
   { id: 'den', rect: [97, 224, 64, 64], thing: 'Chair', action: 'Stash' },
   { id: 'play', rect: [9, 324, 38, 64], thing: 'Boombox', action: 'Play' },
-  { id: 'dive', rect: [77, 329, 44, 30], thing: 'Manhole', action: 'Underground' },
+  { id: 'dive', rect: [77, 329, 44, 30], thing: 'Manhole', action: 'Underground', tagSide: true },
   { id: 'feed', rect: [155, 366, 38, 32], thing: 'Bowl', action: 'Feed' },
 ];
 
@@ -44,12 +55,14 @@ export type StreetRoomSpotsProps = {
 };
 
 /** The room art, covering the plate. */
-export function StreetRoomArt({ left, top }: { left: number; top: number }) {
+export function StreetRoomArt({ left, top, alive }: { left: number; top: number; alive: boolean }) {
   const k = ART_PT;
   return (
-    <View style={{ position: 'absolute', left, top, width: MOCKUP_PLATE.w * k, height: MOCKUP_PLATE.h * k }}>
+    <Animated.View
+      entering={alive ? FadeIn.duration(STREET_MOTION.sheet) : undefined}
+      style={{ position: 'absolute', left, top, width: MOCKUP_PLATE.w * k, height: MOCKUP_PLATE.h * k }}>
       <ClipImage drawable={kitDrawable('room-hideout-full')} />
-    </View>
+    </Animated.View>
   );
 }
 
@@ -83,7 +96,14 @@ export function StreetRoomLife({ left, top, alive }: { left: number; top: number
 }
 
 /** The tappable spots (accessible buttons, at least 48pt with slop). */
-export function StreetRoomSpots({ left, top, onSpot, pulse, notes }: StreetRoomSpotsProps & { left: number; top: number }) {
+export function StreetRoomSpots({
+  left,
+  top,
+  onSpot,
+  pulse,
+  notes,
+  still,
+}: StreetRoomSpotsProps & { left: number; top: number; still: boolean }) {
   const k = ART_PT;
   const [seen, setSeen] = useState(true);
   useEffect(() => {
@@ -122,14 +142,14 @@ export function StreetRoomSpots({ left, top, onSpot, pulse, notes }: StreetRoomS
             style={({ pressed }) => [
               styles.spot,
               { left: left + x * k, top: top + y * k, width: w * k, height: h * k },
-              pulse === s.id && styles.pulse,
               pressed && styles.pressed,
             ]}>
+            {pulse === s.id ? <PulseRing still={still} /> : null}
             {/* Tags only on the first visit or for the coach's hint; notes stay in the a11y label. */}
             {!seen || pulse === s.id ? (
-              <View style={styles.tagWrap} pointerEvents="none">
+              <View style={s.tagSide ? styles.tagSide : styles.tagWrap} pointerEvents="none">
                 <Text style={[styles.tag, pulse === s.id && styles.tagHot]} numberOfLines={1}>
-                  {note ? `${s.action} · ${note}` : s.action}
+                  {note && !s.tagSide ? `${s.action} · ${note}` : s.action}
                 </Text>
               </View>
             ) : null}
@@ -140,11 +160,133 @@ export function StreetRoomSpots({ left, top, onSpot, pulse, notes }: StreetRoomS
   );
 }
 
+/** The coach's suggested spot: a mustard ring that breathes (still under Reduce Motion — the
+ * ring itself is the cue, colour not motion). */
+function PulseRing({ still }: { still: boolean }) {
+  const t = useSharedValue(1);
+  useEffect(() => {
+    if (still) {
+      t.value = 1;
+      return;
+    }
+    t.value = withRepeat(withSequence(withTiming(0.35, { duration: 700 }), withTiming(1, { duration: 700 })), -1);
+    return () => cancelAnimation(t);
+  }, [still, t]);
+  const style = useAnimatedStyle(() => ({ opacity: t.value }));
+  return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.pulse, style]} />;
+}
+
+/** One small meter: label + 4 cells; the row pops when the value changes. */
+function Cells({ label, value, max, color, still }: { label: string; value: number; max: number; color: string; still: boolean }) {
+  const pop = useSharedValue(1);
+  const last = useRef(value);
+  useEffect(() => {
+    if (last.current === value) return;
+    last.current = value;
+    if (still) return;
+    pop.value = withSequence(withTiming(1.18, { duration: 110 }), withTiming(1, { duration: 160 }));
+  }, [pop, still, value]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
+  return (
+    <View style={styles.meter}>
+      <Text style={styles.meterLabel}>{label}</Text>
+      <Animated.View style={[styles.cells, style]}>
+        {Array.from({ length: max }, (_, i) => (
+          <View key={i} style={[styles.cell, i < value ? { backgroundColor: color } : null]} />
+        ))}
+      </Animated.View>
+    </View>
+  );
+}
+
+/**
+ * Streetwear Hideout status strip — one slim row (≈40pt) instead of the hearts
+ * panel: Hunger + Mood (or Warmth for an egg), the stage and the treats left.
+ * Same screen-reader words as the Classic panel.
+ */
+export function StreetStatusStrip({
+  egg,
+  picking,
+  hunger,
+  mood,
+  warmth,
+  stageLabel,
+  pantry,
+  reduceMotion,
+}: {
+  egg: boolean;
+  picking: boolean;
+  hunger: number;
+  mood: number;
+  warmth: number;
+  stageLabel: string;
+  pantry: number;
+  reduceMotion: boolean;
+}) {
+  const low = (v: number) => (v <= 1 ? STREET.red : STREET.mustard);
+  return (
+    <View style={styles.strip}>
+      <View
+        style={styles.stripMain}
+        accessible
+        accessibilityLabel={
+          egg ? `Warmth ${warmth} of ${WARMTH_MAX}` : `Hunger ${hunger} of ${PET_METER_MAX}, mood ${mood} of ${PET_METER_MAX}`
+        }>
+        {picking ? (
+          <Text style={styles.stripText}>Pick an egg</Text>
+        ) : egg ? (
+          <Cells label="Warmth" value={warmth} max={WARMTH_MAX} color={STREET.mustard} still={reduceMotion} />
+        ) : (
+          <>
+            <Cells label="Hunger" value={hunger} max={PET_METER_MAX} color={low(hunger)} still={reduceMotion} />
+            <Cells label="Mood" value={mood} max={PET_METER_MAX} color={low(mood)} still={reduceMotion} />
+          </>
+        )}
+      </View>
+      {!picking ? <Text style={styles.stage}>{stageLabel}</Text> : null}
+      <Text style={styles.pantry} accessibilityLabel={`${pantry} ${pantry === 1 ? 'treat' : 'treats'} in the pantry`}>
+        {`×${pantry}`}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  strip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 8,
+    marginTop: 4,
+    paddingHorizontal: 12,
+    minHeight: 40,
+    backgroundColor: 'rgba(26, 26, 29, 0.92)',
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  stripMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 },
+  stripText: { fontFamily: STREET_FONT.bold, fontSize: 13, color: STREET.paper },
+  meter: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  meterLabel: { fontFamily: STREET_FONT.bold, fontSize: 12, color: STREET.muted, textTransform: 'uppercase' },
+  cells: { flexDirection: 'row', gap: 2 },
+  cell: { width: 9, height: 12, backgroundColor: '#3f3f46', borderWidth: 1, borderColor: '#000' },
+  stage: {
+    fontFamily: STREET_FONT.bold,
+    fontSize: 12,
+    color: STREET.ink,
+    backgroundColor: STREET.mustard,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    textTransform: 'uppercase',
+    overflow: 'hidden',
+  },
+  pantry: { fontFamily: STREET_FONT.bold, fontSize: 13, color: STREET.mustard },
   spot: { position: 'absolute', borderRadius: 4 },
   pulse: { borderWidth: 2, borderColor: STREET.mustard, borderStyle: 'dashed' },
   pressed: { backgroundColor: 'rgba(224, 165, 38, 0.18)' },
   tagWrap: { position: 'absolute', left: -40, right: -40, top: -22, alignItems: 'center' },
+  // The manhole sits under the pet's grade plate: its tag goes beside it, clear of the plate.
+  tagSide: { position: 'absolute', left: '100%', marginLeft: 26, top: 6, width: 130, alignItems: 'flex-start' },
   tag: {
     fontFamily: STREET_FONT.bold,
     fontSize: 11,

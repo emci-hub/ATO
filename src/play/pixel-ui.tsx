@@ -491,7 +491,10 @@ export function PixelButton({
   const glyphs = Math.max(1, lines.title.length);
   // Long mono titles ("CATCH THE FOOD" is ~14 em) shrink so the button keeps
   // a min width instead of covering the row beside it.
-  const fontSize = hug ? Math.max(11, Math.min(PIXEL_LABEL_PT, Math.floor(176 / glyphs))) : PIXEL_LABEL_PT;
+  const baseFont = hug ? Math.max(11, Math.min(PIXEL_LABEL_PT, Math.floor(176 / glyphs))) : PIXEL_LABEL_PT;
+  // Street sizing system: button labels top out at 15pt (Pixelify is wider and
+  // heavier than Departure Mono at the same size).
+  const fontSize = street ? Math.min(baseFont, 15) : baseFont;
   const lineHeight = Math.max(fontSize + 2, Math.round(fontSize * (PIXEL_LABEL_LH / PIXEL_LABEL_PT)));
   const hugW = hug && width == null ? Math.max(112, glyphs * fontSize + ART_PT * 10) : width;
   const faceH = height ?? (lines.caption ? lineHeight + pixelBodyLine(PIXEL_CAPTION_PT) + ART_PT * 4 : PIXEL_TAP_PT);

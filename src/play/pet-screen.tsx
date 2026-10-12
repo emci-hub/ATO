@@ -774,7 +774,7 @@ export function PetScreen({
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.7}
-          style={[styles.title, { fontSize: titlePt, lineHeight: titlePt + 4 }]}>
+          style={[styles.title, { fontSize: titlePt, lineHeight: titlePt + 4 }, street && styles.streetTitle]}>
           {title}
         </PixelLabel>
         <View style={styles.topActions}>
@@ -783,24 +783,24 @@ export function PetScreen({
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={`${street ? 'The Stash' : 'The Den'}, ${pv.den.used} of ${pv.den.slots} slots`}
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            {street ? kitIcon('nav-tab-locker', 28) : <Text style={styles.topButtonText}>🏠</Text>}
+            style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
+            {street ? kitIcon('nav-tab-locker', 26) : <Text style={styles.topButtonText}>🏠</Text>}
           </Pressable>
           <Pressable
             onPress={() => setSheet('menu')}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Pet menu"
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            <Text style={styles.topButtonText}>⋯</Text>
+            style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
+            <Text style={[styles.topButtonText, street && styles.streetTopText]}>⋯</Text>
           </Pressable>
           <Pressable
             onPress={() => setSettingsOpen(true)}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Divecore settings"
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            {street ? kitIcon('nav-settings', 28) : <Text style={styles.topButtonText}>⚙</Text>}
+            style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
+            {street ? kitIcon('nav-settings', 26) : <Text style={styles.topButtonText}>⚙</Text>}
           </Pressable>
         </View>
       </View>
@@ -856,7 +856,7 @@ export function PetScreen({
             emoji={icon.emoji}
             label={icon.label}
             flexGrow={icon.id === 'expedition' ? 1.85 : 1}
-            fontSize={tabPt}
+            fontSize={street ? 14 : tabPt}
             pulse={pulseIcon === icon.id}
             badge={icon.id === 'dive' && view.diveRun.active}
             onPress={() => openIcon(icon.id)}
@@ -1073,6 +1073,10 @@ export function PetScreen({
 const styles = StyleSheet.create({
   // Streetwear art style (Hideout).
   streetGone: { display: 'none' },
+  // Street top bar: kit icons on a quiet chip, 44pt taps, a 14pt Pixelify title.
+  streetTopButton: { borderWidth: 0, backgroundColor: 'rgba(43, 43, 46, 0.9)', minWidth: 44, minHeight: 44 },
+  streetTopText: { color: STREET.paper, fontSize: 18 },
+  streetTitle: { fontFamily: STREET_FONT.bold, fontSize: 14, lineHeight: 18, color: STREET.paper },
   streetSquash: { transform: [{ scaleX: 0.96 }, { scaleY: 0.93 }] },
   screen: { flex: 1, backgroundColor: NEON.ink },
   gameOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 30, backgroundColor: PIXEL.ink },

@@ -941,6 +941,9 @@ export function DefendScreen({
   const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
   // Streetwear art style: Turf War — pinned HUD + dock in the street shell (paint/layout only).
   const street = streetUiOn();
+  // Read inside the game tick / hit callbacks without restarting them.
+  const streetRef = useRef(street);
+  streetRef.current = street;
   /** Mid-run leave confirmation (one tap to confirm, Cancel stays in the fight). */
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   /** One warn per wave run — the banner must not re-arm every tick. */
@@ -1748,7 +1751,9 @@ export function DefendScreen({
     (hit: KitHit, pos: ReadonlyMap<number, FxPoint>) => {
       const primary = pos.get(hit.primaryId);
       if (!primary) return;
-      if (hit.element == null && !hit.ultimate) {
+      // Streetwear: the Avatar's weapon hits always become an effect (a slash), even plain ones.
+      const melee = streetRef.current && hit.source === 'avatar';
+      if (hit.element == null && !hit.ultimate && !melee) {
         spawnShot(hit.from.x, hit.from.y, primary.x, primary.y);
         return;
       }
@@ -1771,6 +1776,7 @@ export function DefendScreen({
         radius: hit.radius,
         center: hit.centredOnSource ? hit.from : primary,
         centredOnSource: hit.centredOnSource,
+        melee,
       };
       const cap = FX_CAP[fxQualityRef.current];
       const merged = [...fxRef.current, fx];
@@ -2059,7 +2065,7 @@ export function DefendScreen({
         if (imminent || step.bossSpawned) {
           bossWarnedRef.current = true;
           setBossAlert({ label: bandNow.label, name: bandNow.boss.name });
-          if (street) alertHaptic();
+          if (streetRef.current) alertHaptic();
         }
       }
       // Display-only floaters: any puff that lost HP this tick, or vanished
