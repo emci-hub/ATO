@@ -250,17 +250,18 @@ const HOUR = 60 * 60 * 1000;
 }
 
 {
-  assert.equal(HIDEOUT_TILE, 12);
-  assert.equal(HIDEOUT_HERO_RENDER_SCALE, 1 / 2);
+  assert.equal(HIDEOUT_TILE, 16);
+  assert.equal(HIDEOUT_HERO_RENDER_SCALE, 1);
   for (const [name, raw, sleep] of [
     ['hideout', hideoutMap, false],
     ['loft', loftMap, true],
     ['underground', undergroundMap, false],
   ] as const) {
     const geom = parseIsoGeom(raw, { sleepOnBed: sleep });
-    assert.equal(geom.tile, 12, `${name} tile`);
-    assert.equal(geom.grid.cols, 22, `${name} cols`);
-    assert.equal(geom.grid.rows, 48, `${name} rows`);
+    assert.equal(geom.tile, 16, `${name} tile`);
+    assert.equal(geom.grid.cols, 16, `${name} cols`);
+    assert.equal(geom.grid.rows, 36, `${name} rows`);
+    assert.deepEqual([...geom.canvas], [256, 576], `${name} canvas (option A)`);
     const layers = geom.layers.occluder;
     assert.ok(layers && typeof layers === 'object', `${name} has combined occluder layers`);
     const occ = layers as Record<string, string>;
@@ -272,7 +273,7 @@ const HOUR = 60 * 60 * 1000;
       assert.equal(r.ok, true, r.ok ? `${name}/${stage}` : `${name}/${stage}: ${r.reason}`);
     }
   }
-  ok('12px grid; occluder states; every room reachable at baby/adult/god clearance');
+  ok('option A: 256×576, 16px walk grid; occluder states; every room reachable at baby/adult/god clearance');
 }
 
 {

@@ -1,5 +1,5 @@
 /**
- * 3/4 top-down Hideout pathing — 12px collision grid, A* (8-neighbour, no
+ * 3/4 top-down Hideout pathing — 16px collision grid (half a 32px art tile), A* (8-neighbour, no
  * corner cutting), string-pull / line-of-sight smoothing.
  *
  * Collision and depth sort use each prop's floor footprint (guide rule 9).

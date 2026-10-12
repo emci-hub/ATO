@@ -1,7 +1,7 @@
 /**
  * Streetwear Hideout — 3/4 top-down enclosed room (layout A).
  *
- * Canvas 264×576, 8px collision grid, A* roam, depth sort by footprint
+ * Canvas 256×576 (option A: 32px art tiles, hero 1:1), 16px walk grid, A* roam, depth sort by footprint
  * bottom Y. Greybox art from the map until Sprite Smith lands.
  */
 import hideoutMap from '@/assets/art/rooms/hideout/hideout-td.map.json';
@@ -31,32 +31,36 @@ import {
 export type { CollisionGrid, Pt } from '@/play/hideout-path';
 export { astar, clampToGrid, isWalkableArt, lineOfSight, pathClear, route, stringPull, withClearance } from '@/play/hideout-path';
 
-export const HIDEOUT_CANVAS: readonly [number, number] = [264, 576];
+/**
+ * Option A (emci 2026-10-12, docs/art/PIXELLAB_GUIDE.md §2): PixelLab-native
+ * 32 px art tiles, room 256×576 (8×18 art tiles), grown hero drawn 1:1.
+ */
+export const HIDEOUT_CANVAS: readonly [number, number] = [256, 576];
 export const HIDEOUT_NIGHT = '#0C0D23';
 /** PixelLab Streetwear hero cell. Room/prop art is authored against this. */
 export const HIDEOUT_HERO_SRC_PX = 192;
 /**
- * Hero-in-room render scale for the FINAL fully grown hero (god). Room and
- * props are sized to this and never change. Stages interpolate below it
- * (`HIDEOUT_STAGE_SCALE`). Sprite Smith: 1/2 of the 192px cell = 96px.
+ * Hero-in-room render scale for the FINAL fully grown hero (god): 1:1, never
+ * rescaled (pixels stay crisp). Room and props are sized to this and never
+ * change. Stages interpolate below it (`HIDEOUT_STAGE_SCALE`).
  */
-export const HIDEOUT_HERO_RENDER_SCALE = 1 / 2;
-/** Drawn cell for the fully grown hero, in art px (192 × 1/2 = 96). */
+export const HIDEOUT_HERO_RENDER_SCALE = 1;
+/** Drawn cell for the fully grown hero, in art px (192 × 1 = 192). */
 export const HIDEOUT_PET_ART_PX = Math.round(HIDEOUT_HERO_SRC_PX * HIDEOUT_HERO_RENDER_SCALE);
-/** Visible body in that cell at the locked god scale (~53 art px tall). */
-export const HIDEOUT_HERO_FIGURE_PX = 53;
+/** Visible body in that cell at the god scale (kael ≈ 106 art px tall) — the scale reference. */
+export const HIDEOUT_HERO_FIGURE_PX = 106;
 /**
  * Per-stage fraction of the 192px source cell (art-px). Map and props stay
  * put; only the pet sprite (and its floor-contact clearance) grows.
- * egg/baby = 1/3 (64px cell); child 0.37; teen 0.42; adult 0.46; god 0.5.
+ * egg/baby = 2/3 (128px cell); child 0.74; teen 0.84; adult 0.92; god 1.
  */
 export const HIDEOUT_STAGE_SCALE: Record<PetStage, number> = {
-  egg: 1 / 3,
-  baby: 1 / 3,
-  child: 0.37,
-  teen: 0.42,
-  adult: 0.46,
-  god: 1 / 2,
+  egg: 2 / 3,
+  baby: 2 / 3,
+  child: 0.74,
+  teen: 0.84,
+  adult: 0.92,
+  god: 1,
 };
 
 export function hideoutHeroArtPx(stage: PetStage): number {
@@ -66,7 +70,9 @@ export function hideoutHeroArtPx(stage: PetStage): number {
 /** Floor-contact radius in art px from the current stage's visible body. */
 export function hideoutClearancePx(stage: PetStage): number {
   const figure = HIDEOUT_HERO_FIGURE_PX * (HIDEOUT_STAGE_SCALE[stage] / HIDEOUT_HERO_RENDER_SCALE);
-  return Math.max(2, Math.round(figure * 0.25));
+  // Feet radius (~0.15 of the figure): god ≈ 16 art px = one walk cell, so
+  // the pet hugs props without its feet ever entering a blocked cell.
+  return Math.max(2, Math.round(figure * 0.15));
 }
 export const HIDEOUT_AURA_PAD_PX = 12;
 export const HIDEOUT_DOOR_LABEL_NUDGE: readonly [number, number] = [0, 0];
@@ -77,18 +83,24 @@ export const HIDEOUT_IPAD_CAP_DPX = 10;
 export const HIDEOUT_SPOT_HIT_PT = 48;
 /** Layout widths the fit-to-screen check pins. */
 export const HIDEOUT_PHONE_WIDTHS_PT: readonly number[] = [430, 440];
-/** Constant walk speed in art px / second. */
-export const HIDEOUT_WALK_ART_PX_PER_SEC = 22;
-/** Sprite Smith room grid: 12px tiles, 22×48 canvas, floor 20×36, door 4. */
-export const HIDEOUT_TILE = 12;
-export const HIDEOUT_GRID_COLS = 22;
-export const HIDEOUT_GRID_ROWS = 48;
-export const HIDEOUT_FLOOR_COLS = 20;
-export const HIDEOUT_FLOOR_ROWS = 36;
+/** Constant walk speed in art px / second (doubled with the 1:1 hero so the stride feels the same). */
+export const HIDEOUT_WALK_ART_PX_PER_SEC = 44;
+/** Art tile (PixelLab tilesets / building kit): 32 px, room = 8×18 art tiles. */
+export const HIDEOUT_ART_TILE = 32;
+/**
+ * Walk / collision cell: half an art tile (16 px) so A* paths stay smooth in
+ * an 8-tile-wide room. Map footprints, hotspots and the walkable grid use it.
+ * Grid 16×36: ceiling 2, back wall 6, floor 26 (14 wide), near rim 2, caps 1, door 4.
+ */
+export const HIDEOUT_TILE = 16;
+export const HIDEOUT_GRID_COLS = 16;
+export const HIDEOUT_GRID_ROWS = 36;
+export const HIDEOUT_FLOOR_COLS = 14;
+export const HIDEOUT_FLOOR_ROWS = 26;
 export const HIDEOUT_DOOR_TILES = 4;
 export const HIDEOUT_CAP_TILES = 1;
-export const HIDEOUT_CEIL_TILES = 1;
-export const HIDEOUT_WALL_TILES = 9;
+export const HIDEOUT_CEIL_TILES = 2;
+export const HIDEOUT_WALL_TILES = 6;
 
 type Rect = readonly [number, number, number, number];
 
@@ -237,7 +249,7 @@ export function parseIsoGeom(rawMap: unknown, opts?: { sleepOnBed?: boolean }): 
   const m = rawMap as TdRawMap;
   const canvas = (m._meta.canvas && m._meta.canvas.length >= 2
     ? [m._meta.canvas[0], m._meta.canvas[1]]
-    : [264, 576]) as [number, number];
+    : [HIDEOUT_CANVAS[0], HIDEOUT_CANVAS[1]]) as [number, number];
   const content = rect4(m._meta.contentBounds ?? [0, 0, canvas[0], canvas[1]]);
   const tile = m.collision?.tile ?? m._meta.tile ?? HIDEOUT_TILE;
   const grid: CollisionGrid = {
@@ -334,12 +346,12 @@ export const HIDEOUT_GRID: CollisionGrid = HOME.grid;
 export const HIDEOUT_GEOM: IsoRoomGeom = HOME;
 
 export const HIDEOUT_TARGETS: Record<HideoutTargetId, Pt> = {
-  bowl: HOME.targets.bowl ?? [78, 486],
-  bed: HOME.targets.bed ?? HOME.targets.cushion ?? [174, 390],
-  cushion: HOME.targets.cushion ?? HOME.targets.bed ?? [174, 390],
-  door: HOME.targets.door ?? [132, 534],
-  chair: HOME.targets.chair ?? [174, 330],
-  boombox: HOME.targets.boombox ?? [66, 270],
+  bowl: HOME.targets.bowl ?? [80, 470],
+  bed: HOME.targets.bed ?? HOME.targets.cushion ?? [176, 400],
+  cushion: HOME.targets.cushion ?? HOME.targets.bed ?? [176, 400],
+  door: HOME.targets.door ?? [128, 520],
+  chair: HOME.targets.chair ?? [148, 336],
+  boombox: HOME.targets.boombox ?? [80, 264],
 };
 
 export const HIDEOUT_SPOTS: readonly HideoutSpot[] = HOME.hotspots.filter((h) =>
@@ -390,15 +402,21 @@ export function insetPoly(polyPts: readonly Pt[], pad: number): Pt[] {
 
 export const HIDEOUT_WALK: readonly Pt[] = HOME.walk;
 
-const gridCache = new Map<string, CollisionGrid>();
+// Keyed on the room's own grid object (rooms can share any single row, so a
+// row is not an id), then on the clearance radius.
+const gridCache = new WeakMap<CollisionGrid, Map<number, CollisionGrid>>();
 export function hideoutGridFor(stage: PetStage, geom?: IsoRoomGeom): CollisionGrid {
   const base = geom?.grid ?? HIDEOUT_GRID;
   const pad = hideoutClearancePx(stage);
-  const key = `${base.cols}x${base.rows}:${base.walkable[22] ?? ''}:${pad}`;
-  const hit = gridCache.get(key);
+  let byPad = gridCache.get(base);
+  if (!byPad) {
+    byPad = new Map();
+    gridCache.set(base, byPad);
+  }
+  const hit = byPad.get(pad);
   if (hit) return hit;
   const next = withClearance(base, pad);
-  gridCache.set(key, next);
+  byPad.set(pad, next);
   return next;
 }
 
@@ -482,8 +500,8 @@ function isRoomCanvas(canvas: readonly [number, number]): boolean {
 }
 
 /**
- * Room canvases (264×576) fit-to-contain the stage (fills 430pt and 440pt
- * when height allows; 440pt @ 3x is exactly 5 device px / art px).
+ * Room canvases (256×576) fit-to-contain the stage (fills 430pt and 440pt
+ * when height allows).
  * Dive 256×320 callers keep the old integer device-px scale.
  */
 export function hideoutIntegerScale(input: {
@@ -733,7 +751,7 @@ export function planHideoutStep(
   const { kit, mood, branch, rng, geom, stage } = input;
   const form = PET_FORM_MOTION[branch];
   const bedPt = geom ? isoSleepPoint(geom) : hideoutTargetPoint('cushion');
-  const onBed = geom?.sleepOnBed === true && Math.hypot(input.x - bedPt[0], input.y - bedPt[1]) <= 12;
+  const onBed = geom?.sleepOnBed === true && Math.hypot(input.x - bedPt[0], input.y - bedPt[1]) <= 16;
   const here = onBed
     ? ([input.x, input.y] as Pt)
     : geom
@@ -799,9 +817,9 @@ export function planHideoutStep(
         : geom
           ? isoRandomWalkPoint(geom, rng, stage)
           : randomWalkPoint(rng, stage);
-      if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) >= 18) break;
+      if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) >= 24) break;
     }
-    if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) < 10) {
+    if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) < 14) {
       const restMs = Math.round((1600 + rng() * 2000) * form.rest * m.rest);
       return { act: rng() < m.sit ? 'sit' : 'idle', pose: petPose(kit, 'idle'), ms: restMs, squash: true, ...still };
     }

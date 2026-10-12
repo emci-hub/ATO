@@ -55,37 +55,39 @@ const ok = (name: string) => {
 const read = (path: string) => readFileSync(path, 'utf8');
 
 {
-  assert.deepEqual([...HIDEOUT_CANVAS], [264, 576]);
-  assert.deepEqual([...HIDEOUT_CONTENT], [0, 0, 264, 576]);
-  assert.equal(HIDEOUT_TILE, 12);
-  assert.equal(HIDEOUT_GRID_COLS, 22);
-  assert.equal(HIDEOUT_GRID_ROWS, 48);
-  assert.equal(HIDEOUT_FLOOR_COLS, 20);
-  assert.equal(HIDEOUT_FLOOR_ROWS, 36);
+  // Option A (emci 2026-10-12): 256×576, 32px art tiles, 16px walk grid, hero 1:1.
+  assert.deepEqual([...HIDEOUT_CANVAS], [256, 576]);
+  assert.deepEqual([...HIDEOUT_CONTENT], [0, 0, 256, 576]);
+  assert.equal(HIDEOUT_TILE, 16);
+  assert.equal(HIDEOUT_GRID_COLS, 16);
+  assert.equal(HIDEOUT_GRID_ROWS, 36);
+  assert.equal(HIDEOUT_FLOOR_COLS, 14);
+  assert.equal(HIDEOUT_FLOOR_ROWS, 26);
   assert.equal(HIDEOUT_DOOR_TILES, 4);
-  assert.equal(HIDEOUT_GEOM.grid.cols, 22);
-  assert.equal(HIDEOUT_GEOM.grid.rows, 48);
-  assert.equal(HIDEOUT_GEOM.tile, 12);
+  assert.equal(HIDEOUT_GEOM.grid.cols, 16);
+  assert.equal(HIDEOUT_GEOM.grid.rows, 36);
+  assert.equal(HIDEOUT_GEOM.tile, 16);
   assert.equal(HIDEOUT_HERO_SRC_PX, 192);
-  assert.equal(HIDEOUT_HERO_RENDER_SCALE, 1 / 2);
-  assert.equal(HIDEOUT_PET_ART_PX, 96);
-  assert.equal(HIDEOUT_HERO_FIGURE_PX, 53);
-  assert.equal(hideoutHeroArtPx('egg'), 64);
-  assert.equal(hideoutHeroArtPx('baby'), 64);
-  assert.equal(hideoutHeroArtPx('child'), Math.round(192 * 0.37));
-  assert.equal(hideoutHeroArtPx('teen'), Math.round(192 * 0.42));
-  assert.equal(hideoutHeroArtPx('adult'), Math.round(192 * 0.46));
+  assert.equal(HIDEOUT_HERO_RENDER_SCALE, 1);
+  assert.equal(HIDEOUT_PET_ART_PX, 192);
+  assert.equal(HIDEOUT_HERO_FIGURE_PX, 106);
+  assert.equal(hideoutHeroArtPx('egg'), 128);
+  assert.equal(hideoutHeroArtPx('baby'), 128);
+  assert.equal(hideoutHeroArtPx('child'), Math.round(192 * 0.74));
+  assert.equal(hideoutHeroArtPx('teen'), Math.round(192 * 0.84));
+  assert.equal(hideoutHeroArtPx('adult'), Math.round(192 * 0.92));
   assert.equal(hideoutHeroArtPx('god'), HIDEOUT_PET_ART_PX);
   assert.ok(hideoutHeroArtPx('baby') < hideoutHeroArtPx('child'));
   assert.ok(hideoutHeroArtPx('child') < hideoutHeroArtPx('teen'));
   assert.ok(hideoutHeroArtPx('teen') < hideoutHeroArtPx('adult'));
   assert.ok(hideoutHeroArtPx('adult') < hideoutHeroArtPx('god'));
   assert.ok(hideoutClearancePx('baby') < hideoutClearancePx('god'), 'clearance follows stage footprint');
-  assert.equal(HIDEOUT_STAGE_SCALE.egg, 1 / 3);
-  assert.equal(HIDEOUT_STAGE_SCALE.god, 1 / 2);
-  assert.equal(HIDEOUT_STAGE_SCALE.child, 0.37);
-  assert.equal(HIDEOUT_STAGE_SCALE.teen, 0.42);
-  assert.equal(HIDEOUT_STAGE_SCALE.adult, 0.46);
+  assert.equal(HIDEOUT_STAGE_SCALE.egg, 2 / 3);
+  assert.equal(HIDEOUT_STAGE_SCALE.god, 1);
+  assert.equal(HIDEOUT_STAGE_SCALE.child, 0.74);
+  assert.equal(HIDEOUT_STAGE_SCALE.teen, 0.84);
+  assert.equal(HIDEOUT_STAGE_SCALE.adult, 0.92);
+  assert.ok(hideoutClearancePx('god') <= HIDEOUT_TILE, 'god feet clearance fits one walk cell');
   const reachable = assertRoomReachable(HIDEOUT_GEOM, 'god');
   assert.equal(reachable.ok, true, reachable.ok ? '' : reachable.reason);
   assert.ok(HIDEOUT_GEOM.props.some((p) => p.occluder && p.crop[2] > 0 && p.sortY > 0), 'occluders have crop + sortY');
@@ -97,18 +99,18 @@ const read = (path: string) => readFileSync(path, 'utf8');
   assert.ok(onWalkFloor(...hideoutTargetPoint('door')));
   assert.ok(onWalkFloor(...hideoutTargetPoint('chair')));
   assert.ok(onWalkFloor(...hideoutTargetPoint('boombox')));
-  const mid = clampToWalk(132, 360);
+  const mid = clampToWalk(128, 360);
   assert.ok(onWalkFloor(mid[0], mid[1]));
   const at440 = hideoutIntegerScale({ availW: 440, availH: 1000, pixelRatio: 3 });
   assert.ok(Math.abs(at440.canvasW - 440) < 0.5, `440pt fills width (got ${at440.canvasW})`);
-  assert.ok(Math.abs(at440.dpx - 5) < 1e-6, `440pt @ 3x is 5 dpx (got ${at440.dpx})`);
+  assert.ok(Math.abs(at440.dpx - (440 * 3) / 256) < 1e-6, `440pt @ 3x is 440·3/256 dpx (got ${at440.dpx})`);
   const at430 = hideoutIntegerScale({ availW: 430, availH: 1000, pixelRatio: 3 });
   assert.ok(Math.abs(at430.canvasW - 430) < 0.5, `430pt fills width (got ${at430.canvasW})`);
   const a = hideoutWalkMs(40, 0, 1);
   const b = hideoutWalkMs(80, 0, 1);
   assert.ok(Math.abs(b / a - 2) < 0.15, 'walk duration scales with distance (constant speed)');
   assert.ok(HIDEOUT_WALK_ART_PX_PER_SEC >= 16);
-  ok('3/4 map: 264×576, 430+440pt fit, hero scale config, walk targets');
+  ok('3/4 map: 256×576 (option A), 430+440pt fit, hero 1:1 scale config, walk targets');
 }
 
 {
@@ -242,7 +244,7 @@ const read = (path: string) => readFileSync(path, 'utf8');
 }
 
 {
-  assert.equal(HIDEOUT_PET_ART_PX, 96);
+  assert.equal(HIDEOUT_PET_ART_PX, 192);
   assert.deepEqual([...HIDEOUT_PHONE_WIDTHS_PT], [430, 440]);
   for (const id of ['manhole'] as const) {
     const d = HIDEOUT_DECALS.find((x) => x.id === id);
@@ -261,13 +263,13 @@ const read = (path: string) => readFileSync(path, 'utf8');
     for (const pr of [2, 3]) {
       const { scale, origin } = hideoutPhoneLayout(width, pr);
       assert.ok(Math.abs(scale.canvasW - width) < 0.5, `${width}pt fills width (got ${scale.canvasW})`);
-      if (width === 440 && pr === 3) assert.ok(Math.abs(scale.dpx - 5) < 1e-6, '440pt @ 3x is 5 dpx');
-      const placed = hideoutStageOrigin(width, Math.ceil((576 * width) / 264), scale);
+      if (width === 440 && pr === 3) assert.ok(Math.abs(scale.dpx - (440 * 3) / 256) < 1e-6, '440pt @ 3x fills the width');
+      const placed = hideoutStageOrigin(width, Math.ceil((576 * width) / 256), scale);
       assert.equal(placed.left, origin.left);
       const expectLeft = Math.round((width - scale.contentW) / 2 - HIDEOUT_CONTENT[0] * scale.pt);
       assert.equal(origin.left, expectLeft, `content-centered origin at ${width}@${pr}x`);
       const box = hideoutPetBox(HIDEOUT_PET_ART_PX, scale, pr);
-      assert.ok(Math.abs(box - HIDEOUT_PET_ART_PX * scale.pt) < 1e-6, `god pet box is 96 art px at ${width}@${pr}x`);
+      assert.ok(Math.abs(box - HIDEOUT_PET_ART_PX * scale.pt) < 1e-6, `god pet box is 192 art px (1:1 cell) at ${width}@${pr}x`);
       const baby = hideoutPetBox(hideoutHeroArtPx('baby'), scale, pr);
       assert.ok(baby < box, 'baby cell is smaller than god in the same room');
       const floorS = HIDEOUT_FLOOR.map((p) => {
