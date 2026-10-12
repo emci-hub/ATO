@@ -41,8 +41,9 @@ Characters/pets: `create_character` (+ `create_character_state`, `animate_charac
 | UI icons, emotes | 16 / 32 | |
 
 - **Decided (emci 2026-10-12): option A** — this ladder, hero 1:1 (`docs/art/size-conflict-compare.png`).
-  The merged Hideout code (#27, `src/play/hideout-iso.ts`: 264×576, 12 px grid, hero ×1/2 ≈ 53 px)
-  still has to be converted to it; until then build art for A, never for the old values.
+  The Hideout code runs on it (`src/play/hideout-iso.ts`): canvas 256×576, 32 px art tiles,
+  16 px walk cells (half a tile, so paths stay smooth), grown hero 1:1. Room layouts and greybox:
+  `scripts/gen-hideout-td.ts` (props placed from the scale table below).
 - Heroes and pets: character canvas 128, shown **1:1, never rescaled** (uneven scaling breaks
   pixels). Grown figure ≈ 101–111 px (~106). Feet on one floor line. Younger stages shrink in code.
 - Small canvases are cheaper per idea: ≤42 px returns 64 candidates, ≤85 → 16, ≤170 → 4.
