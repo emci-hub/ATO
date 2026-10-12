@@ -102,6 +102,9 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   Retest is retired: after set 25 it is Change answers + Undo. No AI anywhere in cards/history.
 - **Unreviewed copy ships behind `*_COPY_REVIEWED = false` flags.** Story / Levity are
   diagnosis-adjacent; not shippable as reviewed without emci's read.
+- **Game art follows `docs/art/PIXELLAB_GUIDE.md` (emci 2026-10-12).** PixelLab's dedicated tools first
+  (building kit, tilesets, map objects, object states, VFX/pixelart workbench, reduce_colors); sizes on the
+  32 px ladder (heroes 128 at 1:1); show emci rendered samples before any art choice.
 - Do not change dependencies, auth, env config, or secrets without emci's ok.
 - **Schema changes that copy a tested path need no ask (emci 2026-10-02).** A new table /
   RLS / RPC built the same way as one already live here (e.g. the question pool) is
@@ -120,6 +123,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 | Legal, brand, cost | `docs/BUSINESS.md` |
 | Device test checklist | `docs/ATO_DEVICE_TESTS.md` |
 | Sprite gallery artifact (Streetwear art, all facings) — "update the sprite gallery" | `scripts/sprite-gallery/README.md` · https://claude.ai/artifact/9wjcLv4FQu4S8dwqT2RBho |
+| **Making or editing any game art (PixelLab)** — tools order, size ladder, gates | `docs/art/PIXELLAB_GUIDE.md` (read first) · `npm run pixellab:watch` = has PixelLab changed? |
 | Old plan (reference only, not rules) | `docs/archive/OLD_PLAN.md` |
 | Schema + RLS + RPCs | `supabase/migrations/*.sql` (chronological: stage* → wave*) |
 | Edge Functions (Deno) | `supabase/functions/{ai-generate,apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` |

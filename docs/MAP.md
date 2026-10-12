@@ -138,3 +138,5 @@ signs in as the dev-test user and calls `ai-generate`, so a live check spends th
 and never needs a vendor key on the machine.
 `ota-gate.ts` runs typecheck + lint + all offline checks; `ota-publish.ts` wraps `eas update`
 behind it; `release-mode-check.ts` blocks production builds while `PRE_LAUNCH_DEV` is true.
+`pixellab-watch.ts` (`npm run pixellab:watch`, network, not in the gate) diffs PixelLab's public docs against
+`docs/art/pixellab-snapshot.json`; the art rules it keeps current are in `docs/art/PIXELLAB_GUIDE.md`.
