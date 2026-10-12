@@ -184,7 +184,7 @@ ok('frames match the samples: thin blaze, calm spiky, twinkling rune, attached b
   assert.equal(mixed.doc.pet.auras.find((wear) => wear.style === 'blaze')?.color, snapAuraHex('#FF00AA'));
   const round = parsePlayStore(JSON.stringify(mixed.doc), T0);
   assert.ok(round);
-  assert.equal(round.version, 32);
+  assert.equal(round.version, 33);
   assert.equal(round.pet.auras.find((wear) => wear.style === 'blaze')?.color, snapAuraHex('#FF00AA'));
   assert.equal(round.pet.auras.length, 2);
   assert.ok(round.aura_owned.includes('blaze'));
@@ -194,7 +194,7 @@ ok('frames match the samples: thin blaze, calm spiky, twinkling rune, attached b
   delete legacy.aura_owned;
   const loaded = parsePlayStore(JSON.stringify(legacy), T0);
   assert.ok(loaded);
-  assert.equal(loaded.version, 32);
+  assert.equal(loaded.version, 33);
   assert.deepEqual(loaded.pet.auras, []);
   assert.deepEqual(loaded.aura_owned, []);
 

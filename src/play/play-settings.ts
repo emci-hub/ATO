@@ -22,8 +22,8 @@ import type { Grade } from './pet-eggs';
 
 /* ------------------------------------------------------------ settings --- */
 
-export type NotifKind = 'hunger' | 'egg' | 'expedition' | 'charges' | 'tide' | 'eggs_ready';
-export const NOTIF_KINDS: readonly NotifKind[] = ['hunger', 'egg', 'expedition', 'charges', 'tide', 'eggs_ready'];
+export type NotifKind = 'hunger' | 'egg' | 'expedition' | 'charges' | 'tide' | 'eggs_ready' | 'build';
+export const NOTIF_KINDS: readonly NotifKind[] = ['hunger', 'egg', 'expedition', 'charges', 'tide', 'eggs_ready', 'build'];
 export const NOTIF_LABEL: Record<NotifKind, string> = {
   hunger: 'Pet getting hungry',
   egg: 'Egg hatched / hero revealed',
@@ -31,6 +31,7 @@ export const NOTIF_LABEL: Record<NotifKind, string> = {
   charges: 'Dive charges full',
   tide: 'Tide Pass: last day',
   eggs_ready: 'Free eggs ready',
+  build: 'Hideout room finished',
 };
 
 export const CHATTER_LEVELS = ['chatty', 'normal', 'quiet', 'off'] as const;
@@ -64,7 +65,7 @@ export const DEFAULT_WINDOW: DayWindow = { from: 22 * 60, to: 7 * 60 };
 /** New saves: hunger, egg and expedition on; charges full off (emci). */
 export function defaultSettings(): PlaySettings {
   return {
-    notif: { hunger: true, egg: true, expedition: true, charges: false, tide: true, eggs_ready: true },
+    notif: { hunger: true, egg: true, expedition: true, charges: false, tide: true, eggs_ready: true, build: true },
     quiet: { ...DEFAULT_WINDOW },
     bedtime: { ...DEFAULT_WINDOW },
     chatter: 'normal',
@@ -108,6 +109,7 @@ export function parseSettings(raw: unknown, legacy: { remind: boolean; hasProgre
       charges: flag(n.charges, base.notif.charges),
       tide: flag(n.tide, base.notif.tide),
       eggs_ready: flag(n.eggs_ready, base.notif.eggs_ready),
+      build: flag(n.build, base.notif.build),
     },
     quiet: parseWindow(r.quiet, DEFAULT_WINDOW),
     bedtime: parseWindow(r.bedtime, DEFAULT_WINDOW),

@@ -33,6 +33,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { playSheetsSearchText, resolvePlaySource } from './art-sheets';
 import {
   DEFAULT_AVATAR_HERO_ID,
   HERO_CLIPS,
@@ -124,10 +125,7 @@ const registryText = fs.readFileSync(
 // --all packs them into a sheet instead, and play-art-prep.ts excludes them
 // from generated-play-assets.ts to avoid doubling ~2000 files) — so "is this
 // clip actually bundled" now has two places to look, not one.
-const sheetRegistryText = fs.readFileSync(
-  path.resolve(repoRoot, 'src/play/generated-play-sheets.ts'),
-  'utf8',
-);
+const sheetRegistryText = playSheetsSearchText(repoRoot);
 
 let passed = 0;
 function ok(label: string) {
@@ -250,7 +248,7 @@ const stubs: string[] = [];
 const bundledHeroIds = new Set<string>();
 
 for (const hero of heroes) {
-  const animations = path.join(repoRoot, hero.folder, 'animations');
+  const animations = path.join(resolvePlaySource(repoRoot, 'hero', hero.id, 'cast'), 'animations');
   const onDisk = clipFolders(animations);
   const authored = Object.entries(hero.clips);
   assert.ok(authored.length > 0, `${hero.id}: authors at least one clip`);
@@ -580,7 +578,7 @@ const v17 = JSON.stringify({
 });
 const migrated = parsePlayStore(v17, 0);
 assert.ok(migrated, 'a v17 save still parses');
-assert.equal(migrated.version, 32, "and is written back as the current version (v32)");
+assert.equal(migrated.version, 33, "and is written back as the current version (v33)");
 assert.equal(migrated.tokens, 1234, 'its tokens survive');
 assert.equal(migrated.lifetime_waves_cleared, 42, 'its lifetime clears survive');
 assert.equal(migrated.avatars[0]?.level, 7, 'its Avatar level survives');

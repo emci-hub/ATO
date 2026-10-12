@@ -1,0 +1,43 @@
+{
+  "_comment": "PLACEHOLDER token prices and build lengths — swap only this file to retune. Phase 2 ships Loft; Garage/Rooftop use the same gates for tease + build.",
+  "tokenPricesPlaceholder": true,
+  "artPlaceholder": true,
+  "rooms": [
+    {
+      "id": "hideout",
+      "label": "Hideout",
+      "tokens": 0,
+      "buildMs": 0
+    },
+    {
+      "id": "loft",
+      "label": "Loft",
+      "tokens": 600,
+      "buildMs": 7200000,
+      "gate": { "everChild": true, "tendDays": 3 }
+    },
+    {
+      "id": "garage",
+      "label": "Garage",
+      "tokens": 1200,
+      "buildMs": 28800000,
+      "gate": { "trialCleared": true, "deepSurfaces": 5, "tendDays": 7 }
+    },
+    {
+      "id": "rooftop",
+      "label": "Rooftop",
+      "tokens": 2000,
+      "buildMs": 86400000,
+      "gate": { "mainCycles": 1, "deepSurfaces": 15, "tendDays": 14 }
+    }
+  ],
+  "speedupMs": 3600000,
+  "speedupCap": 0.5,
+  "callStayMs": 600000,
+  "wakeMs": 1800000,
+  "tokenBonusCap": 0.1,
+  "dissolveMs": 150,
+  "zzzFps": 4,
+  "zzzFrames": 3,
+  "veteranBuildMult": 0.5
+}

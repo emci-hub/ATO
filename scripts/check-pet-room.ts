@@ -17,6 +17,9 @@
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
+
+import { playSheetsSearchText } from './art-sheets';
 
 import { PET_COACH_ICON, petCoachTip, type PetCoachInput } from '../src/play/coach';
 import { allHeroes } from '../src/play/heroes-data';
@@ -56,7 +59,7 @@ function ok(label: string) {
 
 /* ------------------------------------------------------------- kits --- */
 
-const sheetsText = fs.readFileSync('src/play/generated-play-sheets.ts', 'utf8');
+const sheetsText = playSheetsSearchText(path.resolve(__dirname, '..'));
 /** East-facing frame count of a packed hero clip sheet (0 = not packed). */
 function sheetFrames(heroId: string, clip: string): number {
   const key = `"sheets/cast/heroes/${heroId}/${clip}": {`;
@@ -318,8 +321,8 @@ ok('room screen uses the planner, status, coach and talk picker');
     return seed / 0x7fffffff;
   };
   const seen = new Set<string>();
-  let x = 128;
-  let y = 214;
+  let x = 132;
+  let y = 336;
   for (let i = 0; i < 40; i += 1) {
     const step = planHideoutStep({ kit, mood: 'happy', branch: 'standard', stage: 'teen', x, y, rng });
     assert.ok(onWalkFloor(step.toX, step.toY) || Math.hypot(step.toX - x, step.toY - y) < 1, 'hideout step lands on the walk floor');

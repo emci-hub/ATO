@@ -20,7 +20,7 @@ import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
 import { ManholeTransit } from '@/play/dive-street';
 import { usePlayMotion } from '@/play/play-motion';
-import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
+import { PixelBody, PixelButton, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import { ClipImage } from '@/play/sheet-sprite';
 import { tapHaptic } from '@/play/street-feel';
 import { STREET, STREET_FONT, streetUiOn } from '@/play/street-ui';
@@ -33,7 +33,7 @@ import { petBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { NEON } from '@/play/neon-viper';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
-import { syncPlayNotices } from '@/play/pet-reminder';
+import { askPetReminderPermission, syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
 import { petPose, sharpPetBox } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt } from '@/play/pet-anim-sprite';
@@ -54,6 +54,9 @@ import { isStrongResult } from '@/play/score-burst-model';
 import type { GuideSection } from '@/play/guide-content';
 import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
+import { resolvePresence, wokeUp } from '@/play/hideout-presence';
+import { HideoutTeaseSheetCopy } from '@/play/hideout-tease';
+import { canStartBuild, roomStage, type HideoutRoomId } from '@/play/hideout-progress';
 import { tripLabel } from '@/play/expedition-ladder';
 import {
   EGG_COLOR,
@@ -112,6 +115,15 @@ import {
   type PetRoundResult,
   type PlayView,
   DIVE_CHARGE_CAP,
+  startHideoutBuild,
+  viewHideoutRoom,
+  callPetToRoom,
+  wakeHideoutPet,
+  toggleLoftLamp,
+  markHideoutCoach,
+  markBuildNotifAsked,
+  stampHideoutPeekaboo,
+  localYmd,
 } from '@/play/playStore';
 import type { PlayTransition } from '@/play/use-play-store';
 
@@ -166,6 +178,8 @@ export function usePlayNoticesSync(view: PlayView | null): void {
         view.pet.tide.daysHeld,
         view.pet.eggDay.nextPrice,
         view.pet.state.egg,
+        view.hideout.build?.room,
+        view.hideout.build?.remainingMs,
       ].join('|')
     : '';
   useEffect(() => {
@@ -185,6 +199,8 @@ export function usePlayNoticesSync(view: PlayView | null): void {
       tideActive: v.pet.tide.active,
       tideDaysHeld: v.pet.tide.daysHeld,
       freeEggsReady: v.pet.state.stage === 'egg' && v.pet.state.egg == null && v.pet.eggDay.nextPrice === 0,
+      buildRoom: v.hideout.build?.room ?? null,
+      buildRemainingMs: v.hideout.build?.remainingMs ?? null,
     });
   }, [key]);
 }
@@ -339,6 +355,7 @@ export function PetScreen({
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [lastRound, setLastRound] = useState<{ key: string; score: number; strong: boolean } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [teaseOpen, setTeaseOpen] = useState(false);
 
   // Dev-only room hooks (Info → Dev).
   // Dev room toggles live in a store so the floating DEV kit can drive them too.
@@ -380,7 +397,24 @@ export function PetScreen({
   }, [openGuideReq, onGuideOpened]);
 
   const hour = useHour();
-  const night = devNight === 'auto' ? isBedtime(new Date(), view.settings.bedtime) : devNight === 'on';
+  const clockNight = isBedtime(new Date(), view.settings.bedtime);
+  const night =
+    devNight === 'auto'
+      ? clockNight && !wokeUp(view.hideout.state, pet)
+      : devNight === 'on';
+  const presence = resolvePresence({
+    pet,
+    hideout: view.hideout.state,
+    interaction: sheet != null || game != null || settingsOpen,
+    expeditionAway: pv.away,
+    bedtime: view.settings.bedtime,
+    now: new Date(),
+    todayYmd: localYmd(),
+  });
+  useEffect(() => {
+    if (!presence.peekaboo) return;
+    commit((doc, now) => stampHideoutPeekaboo(doc, now));
+  }, [presence.peekaboo, commit]);
   const realStatus = petStatus({
     stage: pet.stage,
     hunger: pet.hunger,
@@ -532,6 +566,9 @@ export function PetScreen({
   const tipNextRef = useRef(true);
   const tapPet = () => {
     setTapKey((k) => k + 1);
+    if (clockNight && !eggRef.current) {
+      commit((doc, now) => wakeHideoutPet(doc, now));
+    }
     if (eggRef.current) {
       if (pet.egg == null) {
         setSheet('eggs');
@@ -757,6 +794,15 @@ export function PetScreen({
 
   if (!fontsReady) return <View style={styles.screen} />;
   const street = streetUiOn();
+  const teaseRoom: HideoutRoomId = roomStage('loft', view.hideout.state) === 'done' ? 'garage' : 'loft';
+  const teaseStage = roomStage(teaseRoom, view.hideout.state);
+  const teaseCopy = HideoutTeaseSheetCopy({
+    room: teaseRoom,
+    stage: teaseStage === 'building' ? 'building' : 'tease',
+    progress: view.hideout.progress,
+    build: view.hideout.state.builds[teaseRoom],
+    tokens: view.tokens,
+  });
   const kitIcon = (name: string, size: number) => (
     <View style={{ width: size, height: size }}>
       <ClipImage drawable={{ kind: 'sheet', sheetKey: `sheets/streetwear/ui-kit/${name}`, frameKey: 'img' }} />
@@ -856,6 +902,25 @@ export function PetScreen({
           setSheet('eggs');
         }}
         tide={pv.tide.active}
+        hideoutStage={
+          street
+            ? {
+                hideout: view.hideout.state,
+                progress: view.hideout.progress,
+                presence,
+                viewed: view.hideout.viewed,
+                expeditionBackMs: pv.away ? pv.expeditionBackInMs : null,
+                onView: (id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id)),
+                onTease: () => setTeaseOpen(true),
+                onLamp: () => commit((doc, now) => toggleLoftLamp(doc, now)),
+                onCall: () => {
+                  if (pv.away) return;
+                  commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
+                },
+                onCoachSeen: () => commit((doc, now) => markHideoutCoach(doc, now)),
+              }
+            : null
+        }
       />
 
       <View style={styles.iconRow}>
@@ -900,6 +965,25 @@ export function PetScreen({
         onClose={closeSheet}
         reduceMotion={reduceMotion}>
         <ExpeditionSheetBody view={view} commit={commit} onGuide={openGuide} />
+      </PlaySheet>
+      <PlaySheet open={teaseOpen} title={teaseCopy.title} onClose={() => setTeaseOpen(false)} reduceMotion={reduceMotion}>
+        <PixelBody>{teaseCopy.body}</PixelBody>
+        {teaseCopy.canStart ? (
+          <PixelButton
+            label={`Build for ${teaseCopy.price} tokens`}
+            onPress={() => {
+              const ok = canStartBuild(teaseRoom, view.hideout.state, view.hideout.progress, view.tokens);
+              if (!ok.ok) return;
+              commit((doc, now) => startHideoutBuild(doc, now, teaseRoom));
+              setTeaseOpen(false);
+              if (!view.hideout.state.build_notif_asked && view.settings.notif.build) {
+                void askPetReminderPermission().then(() => {
+                  commit((doc, now) => markBuildNotifAsked(doc, now));
+                });
+              }
+            }}
+          />
+        ) : null}
       </PlaySheet>
       <PlaySheet open={sheet === 'eggs'} title={SHEET_TITLE.eggs} onClose={closeSheet} reduceMotion={reduceMotion}>
         {pet.egg == null ? (

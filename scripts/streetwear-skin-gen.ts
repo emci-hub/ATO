@@ -1,4 +1,5 @@
 /**
+ * Thin one-release wrapper. New work uses `npm run art:pack` + `art:registry`.
  * Writes `assets/play/skins/streetwear/skin.json` from the packed Streetwear
  * sheets' `meta.json` (run after `play-art-pack.ts --skin streetwear`).
  *

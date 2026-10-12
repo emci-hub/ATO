@@ -39,6 +39,8 @@ const PLAY: RegExp[] = [
   /^scripts\/check-swords\.ts$/,
   /^scripts\/check-finishes\.ts$/,
   /^scripts\/check-auras\.ts$/,
+  /^scripts\/check-streetwear-assets\.ts$/,
+  /^scripts\/check-streetwear-walk\.ts$/,
 ];
 
 const NEUTRAL: RegExp[] = [
@@ -56,6 +58,15 @@ const NEUTRAL: RegExp[] = [
   /^\.gitignore$/,
   /^\.expo\//,
   /^\.vscode\//,
+  /^src\/art\//,                    // shared art library
+  /^assets\/art\//,
+  /^art-src\//,
+  /^scripts\/art-/,
+  /^scripts\/check-art-/,
+  /^tools\/art-viewer\//,
+  /^metro\.config\.js$/,
+  /^app\.json$/,
+  /^eslint\.config\.js$/,
 ];
 
 const APP: RegExp[] = [

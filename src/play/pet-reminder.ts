@@ -26,6 +26,9 @@ export const PET_EXPEDITION_PUSH_ID = 'ato.play.pet.expedition';
 export const DIVE_CHARGES_PUSH_ID = 'ato.play.dive.charges';
 export const TIDE_PASS_PUSH_ID = 'ato.play.pet.tide';
 export const FREE_EGGS_PUSH_ID = 'ato.play.pet.eggs';
+export const HIDEOUT_BUILD_PUSH_ID = 'ato.play.pet.build';
+
+const BUILD_PUSH_IDS = ['loft', 'garage', 'rooftop'].map((id) => `${HIDEOUT_BUILD_PUSH_ID}.${id}`);
 
 const PUSH_ID: Record<NotifKind, string> = {
   hunger: PET_HUNGER_PUSH_ID,
@@ -34,6 +37,7 @@ const PUSH_ID: Record<NotifKind, string> = {
   charges: DIVE_CHARGES_PUSH_ID,
   tide: TIDE_PASS_PUSH_ID,
   eggs_ready: FREE_EGGS_PUSH_ID,
+  build: HIDEOUT_BUILD_PUSH_ID,
 };
 
 /** Fired / pending logs for the notices with a minimum gap. */
@@ -98,7 +102,7 @@ export async function petNoticesAllowed(): Promise<boolean> {
 /** Cancel every Divecore notice (reset, or nothing to send). */
 export async function cancelPlayNotices(): Promise<void> {
   if (Platform.OS === 'web') return;
-  for (const id of Object.values(PUSH_ID)) {
+  for (const id of [...Object.values(PUSH_ID), ...BUILD_PUSH_IDS]) {
     try {
       await Notifications.cancelScheduledNotificationAsync(id);
     } catch {
@@ -139,7 +143,7 @@ export async function syncPlayNotices(input: Omit<NoticeInput, 'hungerLastFiredA
     }
     for (const n of plan) {
       await Notifications.scheduleNotificationAsync({
-        identifier: PUSH_ID[n.kind],
+        identifier: n.kind === 'build' && n.room ? `${HIDEOUT_BUILD_PUSH_ID}.${n.room}` : PUSH_ID[n.kind],
         content: { title: n.title, body: n.body, sound: false },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
