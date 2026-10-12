@@ -49,17 +49,17 @@ import {
   type PetStep,
 } from '@/play/pet-actor';
 import {
+  HIDEOUT_IDLE_FACES,
   HIDEOUT_MARGIN_PT,
   HIDEOUT_NIGHT,
-  HIDEOUT_PET_ART_PX,
   hideoutArtToScreen,
   hideoutFace,
+  hideoutHeroArtPx,
   hideoutIntegerScale,
   hideoutPetBox,
   hideoutPetWrapOrigin,
   hideoutStageOrigin,
   hideoutTargetPoint,
-  petBehindAny,
   planHideoutStep,
   type HideoutScale,
 } from '@/play/hideout-iso';
@@ -222,7 +222,7 @@ function RoomBackdrop({
     return (
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: HIDEOUT_NIGHT }]}>
         <StreetRoomYard width={width} height={height} scale={scale} />
-        {skipArt ? null : <StreetRoomArt left={iso.left} top={iso.top} scale={scale} alive={alive} />}
+        {skipArt ? null : <StreetRoomArt left={iso.left} top={iso.top} scale={scale} alive={alive} gentle={gentle} />}
         {skipArt ? null : <StreetRoomLife left={iso.left} top={iso.top} scale={scale} alive={alive} gentle={gentle} minimal={minimal} />}
       </View>
     );
@@ -489,11 +489,12 @@ export function PetRoom({
   const art = usePetArt(pet);
   const away = status === 'away';
   const egg = pet.stage === 'egg';
-  const box = egg
-    ? PET_ROOM_BOX.egg
-    : streetRoom && hideoutScale
-      ? hideoutPetBox(HIDEOUT_PET_ART_PX, hideoutScale, pr)
-      : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, pr);
+  const box =
+    streetRoom && hideoutScale
+      ? hideoutPetBox(hideoutHeroArtPx(pet.stage), hideoutScale, pr)
+      : egg
+        ? PET_ROOM_BOX.egg
+        : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, pr);
   const footAt = egg ? 1 : roleFootAt(art.role);
   const origin = streetRoom && hideoutScale
     ? hideoutOrigin(Math.max(width, 1), Math.max(height, 1), hideoutScale)
@@ -513,8 +514,8 @@ export function PetRoom({
   const [act, setAct] = useState<{ pose: PetPose | null; loop: boolean; startedAt: number; face: PetFace; squash: boolean }>(
     () => ({ pose: petPose(art.kit, 'idle'), loop: true, startedAt: Date.now(), face: 'e', squash: false }),
   );
-  const [behind, setBehind] = useState(false);
   const startFeet = hideoutTargetPoint('cushion');
+  const [feet, setFeet] = useState({ x: startFeet[0], y: startFeet[1] });
   const x = useSharedValue(0.5);
   const artX = useSharedValue(startFeet[0]);
   const artY = useSharedValue(startFeet[1]);
@@ -529,6 +530,7 @@ export function PetRoom({
   const hungerRef = useRef(pet.hunger);
   hungerRef.current = pet.hunger;
   const faceRef = useRef<PetFace>('e');
+  const faceTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const tapUntilRef = useRef(0);
 
   // The behaviour loop. Street Hideout: 2D roam on the walk polygon (every
@@ -583,24 +585,59 @@ export function PetRoom({
           hungry: hungerRef.current <= 1,
           geom: hideoutStage ? roomGeom(hideoutStage.presence.room) : undefined,
         });
-        const dx = step.toX - fromX;
-        const dy = step.toY - fromY;
-        let face = hideoutFace(dx, dy, faceRef.current === 'w' ? 'w' : 'e');
-        if (step.act === 'idle' && Math.abs(dx) < 2 && Math.abs(dy) < 2 && Math.random() < 0.3) {
-          face = face === 'e' ? 'w' : 'e';
+        const path = step.path.length >= 2 ? step.path : ([[fromX, fromY], [step.toX, step.toY]] as const);
+        const dx0 = path[Math.min(1, path.length - 1)][0] - fromX;
+        const dy0 = path[Math.min(1, path.length - 1)][1] - fromY;
+        let face: PetFace = hideoutFace(dx0, dy0, faceRef.current);
+        if (step.act === 'idle' && Math.abs(step.toX - fromX) < 2 && Math.abs(step.toY - fromY) < 2 && Math.random() < 0.3) {
+          face = HIDEOUT_IDLE_FACES[Math.floor(Math.random() * HIDEOUT_IDLE_FACES.length)] ?? 's';
         }
         faceRef.current = face;
         setAct({ pose: step.pose, loop: step.loop, startedAt: Date.now(), face, squash: step.squash });
-        setBehind(petBehindAny(step.toX, step.toY));
         squash.value = withTiming(step.squash ? 0.92 : 1, { duration: 300, reduceMotion: ReduceMotion.Never });
         cancelAnimation(artX);
         cancelAnimation(artY);
+        for (const t of faceTimers.current) clearTimeout(t);
+        faceTimers.current = [];
         if (step.toX !== fromX || step.toY !== fromY) {
           // KEEP locomotion under OS Reduce Motion. Reanimated's default
           // ReduceMotion.System skips withTiming and the pet teleports.
-          const keep = { duration: step.ms, easing: Easing.linear, reduceMotion: ReduceMotion.Never };
-          artX.value = withTiming(step.toX, keep);
-          artY.value = withTiming(step.toY, keep);
+          const keepWalk = { easing: Easing.linear, reduceMotion: ReduceMotion.Never };
+          const xSegs: ReturnType<typeof withTiming>[] = [];
+          const ySegs: ReturnType<typeof withTiming>[] = [];
+          let px = fromX;
+          let py = fromY;
+          let delay = 0;
+          const total = Math.max(
+            1e-3,
+            path.slice(1).reduce((s, p, i) => {
+              const a = i === 0 ? ([fromX, fromY] as const) : path[i];
+              return s + Math.hypot(p[0] - a[0], p[1] - a[1]);
+            }, 0),
+          );
+          for (let i = 1; i < path.length; i += 1) {
+            const nx = path[i][0];
+            const ny = path[i][1];
+            const dist = Math.hypot(nx - px, ny - py);
+            const ms = Math.max(16, Math.round((step.ms * dist) / total));
+            xSegs.push(withTiming(nx, { duration: ms, ...keepWalk }));
+            ySegs.push(withTiming(ny, { duration: ms, ...keepWalk }));
+            if (i > 1) {
+              const segFace = hideoutFace(nx - px, ny - py, faceRef.current);
+              const at = delay;
+              faceTimers.current.push(
+                setTimeout(() => {
+                  faceRef.current = segFace;
+                  setAct((prev) => ({ ...prev, face: segFace }));
+                }, at),
+              );
+            }
+            delay += ms;
+            px = nx;
+            py = ny;
+          }
+          artX.value = (xSegs.length === 1 ? xSegs[0]! : withSequence(...xSegs)) as number;
+          artY.value = (ySegs.length === 1 ? ySegs[0]! : withSequence(...ySegs)) as number;
         }
         artXRef.current = step.toX;
         artYRef.current = step.toY;
@@ -637,17 +674,21 @@ export function PetRoom({
     return () => {
       alive = false;
       if (timer) clearTimeout(timer);
+      for (const t of faceTimers.current) clearTimeout(t);
+      faceTimers.current = [];
     };
   }, [width, away, egg, art.kit, mood, pet.branch, pet.stage, walkOn, streetRoom, hideoutPt, artX, artY, x, hop, squash, hideoutStage]);
 
   // Depth vs props follows the live feet, not only the step's destination.
   useEffect(() => {
     if (!streetRoom || away || egg) return;
-    const tick = () => setBehind(petBehindAny(artX.value, artY.value));
+    const tick = () => {
+      setFeet({ x: artX.value, y: artY.value });
+    };
     tick();
     const id = setInterval(tick, 80);
     return () => clearInterval(id);
-  }, [streetRoom, away, egg, artX, artY]);
+  }, [streetRoom, away, egg, artX, artY, hideoutStage]);
 
   // Deep drifts: a slow float. KEEP under Reduce Motion, smaller travel.
   useEffect(() => {
@@ -863,7 +904,8 @@ export function PetRoom({
           origin={origin}
           width={width}
           night={night}
-          behind={behind}
+          feetX={feet.x}
+          feetY={feet.y}
           expeditionBackMs={hideoutStage.expeditionBackMs}
           onView={hideoutStage.onView}
           onTease={hideoutStage.onTease}
@@ -894,7 +936,7 @@ export function PetRoom({
           )}
           {pet.stage === 'god' && aura && !streetRoom ? <GodAura element={aura} size={box * 1.4} reduceMotion={motion.cosmeticsStill} /> : null}
           {maxedAura ? <MaxedAura size={box} animate={fxAnimate} /> : null}
-          <GradeAura grade={grade} size={box} animate={fxAnimate} trail={act.face === 'front' ? null : act.face} />
+          <GradeAura grade={grade} size={box} animate={fxAnimate} trail={act.face === 'e' || act.face === 'w' ? act.face : null} />
           {pet.finish_color && (pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') ? (
             <View
               pointerEvents="none"
@@ -1021,7 +1063,9 @@ export function PetRoom({
       {streetRoom && hideoutScale ? (
         <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} />
       ) : null}
-      {streetRoom && hideoutScale && behind && !hideoutStage ? <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} /> : null}
+      {streetRoom && hideoutScale && !hideoutStage ? (
+        <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} feetX={feet.x} feetY={feet.y} night={night} gentle={motion.vestibularSafe} />
+      ) : null}
       {width > 0 && streetSpots && hideoutScale && !picking && (!hideoutStage || hideoutStage.viewed === 'hideout') ? (
         <StreetRoomSpots
           {...streetSpots}

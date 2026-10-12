@@ -318,8 +318,8 @@ ok('room screen uses the planner, status, coach and talk picker');
     return seed / 0x7fffffff;
   };
   const seen = new Set<string>();
-  let x = 128;
-  let y = 214;
+  let x = 132;
+  let y = 336;
   for (let i = 0; i < 40; i += 1) {
     const step = planHideoutStep({ kit, mood: 'happy', branch: 'standard', stage: 'teen', x, y, rng });
     assert.ok(onWalkFloor(step.toX, step.toY) || Math.hypot(step.toX - x, step.toY - y) < 1, 'hideout step lands on the walk floor');

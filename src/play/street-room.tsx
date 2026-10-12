@@ -1,14 +1,16 @@
 /**
- * Streetwear Hideout — isometric room, map-driven spots, room life, slim strip.
+ * Streetwear Hideout — 3/4 top-down room, map-driven spots, room life, slim strip.
  *
- * Art is rooms/hideout-iso (packed ui-kit). Spots / walk / lights come from
- * hideout-iso.map.json. Spot labels are Departure Mono mustard tags; each
- * fades to 40% after its first tap. "Show labels" in Info restores them.
+ * Art is the swappable greybox under assets/play/rooms/ (hideout-td-*). Spots /
+ * walk / lights come from hideout-td.map.json. Spot labels are Departure Mono
+ * mustard tags; each fades to 40% after its first tap. "Show labels" in Info
+ * restores them.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Defs, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Ellipse, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   ReduceMotion,
   cancelAnimation,
@@ -21,20 +23,24 @@ import Animated, {
 
 import { PET_METER_MAX } from '@/play/pet';
 import { GRADE_LABEL, WARMTH_MAX, type Grade } from '@/play/pet-eggs';
+import { LOFT_WINDOW_POS, LOFT_WINDOW_SIZE, ROOM_ART } from '@/play/hideout-art';
 import {
-  HIDEOUT_DECALS,
   HIDEOUT_INTERIOR,
   HIDEOUT_LIGHTS,
   HIDEOUT_NIGHT,
   HIDEOUT_SPOTS,
   HIDEOUT_SPOT_HIT_PT,
+  HIDEOUT_TILE,
   hideoutLabelAnchor,
+  occluderProps,
+  parseIsoGeom,
+  type HideoutProp,
   type HideoutScale,
   type HideoutSpot,
 } from '@/play/hideout-iso';
-import { PIXEL, PIXEL_FONT } from '@/play/pixel-theme';
-import { ClipImage } from '@/play/sheet-sprite';
-import { AmbientSprite, Drift, Twinkle, kitDrawable } from '@/play/street-ambient';
+import type { HideoutRoomId } from '@/play/hideout-progress';
+import { PIXEL, PIXEL_FONT, pixelRenderStyle } from '@/play/pixel-theme';
+import { AmbientSprite, Drift, Twinkle } from '@/play/street-ambient';
 import { KEEP_TRAVEL_PT } from '@/play/play-motion';
 import { tapHaptic } from '@/play/street-feel';
 import { STREET } from '@/play/street-ui';
@@ -83,39 +89,114 @@ export type StreetRoomSpotsProps = {
   notes: Partial<Record<StreetSpotId, string>>;
 };
 
+function Layer({
+  source,
+  w,
+  h,
+}: {
+  source: unknown;
+  w: number;
+  h: number;
+}) {
+  if (!source) return null;
+  return (
+    <Image source={source as never} style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, ...pixelRenderStyle }} contentFit="fill" transition={0} />
+  );
+}
+
+function NeonLayers({
+  a,
+  b,
+  w,
+  h,
+  alive,
+  gentle,
+}: {
+  a: unknown;
+  b: unknown;
+  w: number;
+  h: number;
+  alive: boolean;
+  gentle: boolean;
+}) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    cancelAnimation(t);
+    t.value = 0;
+    if (!alive) return;
+    const keep = { reduceMotion: ReduceMotion.Never };
+    const ms = gentle ? 2200 : 1600;
+    t.value = withRepeat(withSequence(withTiming(1, { duration: ms, ...keep }), withTiming(0, { duration: ms, ...keep })), -1);
+    return () => cancelAnimation(t);
+  }, [alive, gentle, t]);
+  const aStyle = useAnimatedStyle(() => ({ opacity: 0.85 - t.value * 0.25 }));
+  const bStyle = useAnimatedStyle(() => ({ opacity: 0.45 + t.value * 0.5 }));
+  return (
+    <>
+      {a ? (
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: w, height: h }, aStyle]}>
+          <Image source={a as never} style={{ width: w, height: h, ...pixelRenderStyle }} contentFit="fill" transition={0} />
+        </Animated.View>
+      ) : null}
+      {b ? (
+        <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: w, height: h }, bStyle]}>
+          <Image source={b as never} style={{ width: w, height: h, ...pixelRenderStyle }} contentFit="fill" transition={0} />
+        </Animated.View>
+      ) : null}
+    </>
+  );
+}
+
+/** Map-driven 3/4 room stack: back, floor, neon A/B, props. Occluder crops are a sibling. */
 export function StreetRoomArt({
   left,
   top,
   scale,
   alive,
+  room = 'hideout',
+  night = false,
+  gentle = false,
+  lampOn = false,
 }: {
   left: number;
   top: number;
   scale: HideoutScale;
   alive: boolean;
+  room?: HideoutRoomId;
+  night?: boolean;
+  gentle?: boolean;
+  lampOn?: boolean;
 }) {
+  const art = ROOM_ART[room];
+  const w = scale.canvasW;
+  const h = scale.canvasH;
   const k = scale.pt;
+  const win = room === 'loft' ? art : null;
   return (
-    <View style={{ position: 'absolute', left, top, width: scale.canvasW, height: scale.canvasH }}>
-      <ClipImage drawable={kitDrawable('room-hideout-iso')} />
-      {HIDEOUT_DECALS.map((d) => {
-        const dw = Math.max(1, Math.round(d.size[0] * k));
-        const dh = Math.max(1, Math.round(d.size[1] * k));
-        return (
-          <View
-            key={d.id}
-            pointerEvents="none"
-            style={{
-              position: 'absolute',
-              left: Math.round(d.pos[0] * k),
-              top: Math.round(d.pos[1] * k),
-              width: dw,
-              height: dh,
-            }}>
-            <ClipImage drawable={kitDrawable(`room-hideout-iso-${d.id}`)} />
-          </View>
-        );
-      })}
+    <View style={{ position: 'absolute', left, top, width: w, height: h }}>
+      <Layer source={art.back ?? art.shell} w={w} h={h} />
+      <Layer source={art.floor} w={w} h={h} />
+      {win?.windowDay || win?.windowNight ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: LOFT_WINDOW_POS[0] * k,
+            top: LOFT_WINDOW_POS[1] * k,
+            width: LOFT_WINDOW_SIZE[0] * k,
+            height: LOFT_WINDOW_SIZE[1] * k,
+          }}>
+          <Image
+            source={(night ? win.windowNight : win.windowDay) as never}
+            style={{ width: LOFT_WINDOW_SIZE[0] * k, height: LOFT_WINDOW_SIZE[1] * k, ...pixelRenderStyle }}
+            contentFit="fill"
+            transition={0}
+          />
+        </View>
+      ) : null}
+      <NeonLayers a={art.neonA} b={art.neonB} w={w} h={h} alive={alive} gentle={gentle} />
+      <Layer source={art.props} w={w} h={h} />
+      {night && lampOn && art.glow ? <Layer source={art.glow} w={w} h={h} /> : null}
     </View>
   );
 }
@@ -157,11 +238,119 @@ export function StreetRoomYard({ width, height, scale }: { width: number; height
   );
 }
 
-export function StreetRoomFront({ left, top, scale }: { left: number; top: number; scale: HideoutScale }) {
+function CropFromLayer({
+  source,
+  crop,
+  scale,
+}: {
+  source: unknown;
+  crop: HideoutProp['crop'];
+  scale: HideoutScale;
+}) {
+  const k = scale.pt;
+  const [x, y, w, h] = crop;
+  if (!source || w <= 0 || h <= 0) return null;
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: x * k,
+        top: y * k,
+        width: w * k,
+        height: h * k,
+        overflow: 'hidden',
+      }}>
+      <Image
+        source={source as never}
+        style={{
+          position: 'absolute',
+          left: -x * k,
+          top: -y * k,
+          width: scale.canvasW,
+          height: scale.canvasH,
+          ...pixelRenderStyle,
+        }}
+        contentFit="fill"
+        transition={0}
+      />
+    </View>
+  );
+}
+
+/**
+ * Combined occluder layer (one image per time/neon state). Crops each
+ * prop whose sortY is in front of the pet's feet and pulses neon A/B.
+ */
+export function StreetRoomFront({
+  left,
+  top,
+  scale,
+  room = 'hideout',
+  night = false,
+  feetX,
+  feetY,
+  alive = true,
+  gentle = false,
+}: {
+  left: number;
+  top: number;
+  scale: HideoutScale;
+  room?: HideoutRoomId;
+  night?: boolean;
+  feetX: number;
+  feetY: number;
+  alive?: boolean;
+  gentle?: boolean;
+}) {
+  const art = ROOM_ART[room];
+  const geom = parseIsoGeom(art.map, { sleepOnBed: room === 'loft' });
+  const props = occluderProps(geom, feetX, feetY);
+  if (props.length === 0) return null;
+  const a = night ? art.occludeNightA : art.occludeDayA;
+  const b = night ? art.occludeNightB : art.occludeDayB;
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left, top, width: scale.canvasW, height: scale.canvasH }}>
-      <ClipImage drawable={kitDrawable('room-hideout-iso-front')} />
+      {props.map((p) => (
+        <CropFromLayer key={`${p.id}-a`} source={a} crop={p.crop} scale={scale} />
+      ))}
+      {b ? (
+        <NeonOccludeCrops source={b} props={props} scale={scale} alive={alive} gentle={gentle} />
+      ) : null}
     </View>
+  );
+}
+
+function NeonOccludeCrops({
+  source,
+  props,
+  scale,
+  alive,
+  gentle,
+}: {
+  source: unknown;
+  props: readonly HideoutProp[];
+  scale: HideoutScale;
+  alive: boolean;
+  gentle: boolean;
+}) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    cancelAnimation(t);
+    t.value = 0;
+    if (!alive) return;
+    const keep = { reduceMotion: ReduceMotion.Never };
+    const ms = gentle ? 2200 : 1600;
+    t.value = withRepeat(withSequence(withTiming(1, { duration: ms, ...keep }), withTiming(0, { duration: ms, ...keep })), -1);
+    return () => cancelAnimation(t);
+  }, [alive, gentle, t]);
+  const style = useAnimatedStyle(() => ({ opacity: t.value * 0.55 }));
+  return (
+    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, style]}>
+      {props.map((p) => (
+        <CropFromLayer key={`${p.id}-b`} source={source} crop={p.crop} scale={scale} />
+      ))}
+    </Animated.View>
   );
 }
 
@@ -363,9 +552,16 @@ export function StreetRoomSpots({
         const faded = !showAll && seen[s.id] && pulse !== s.coach;
         const unvisited = !seen[s.id];
         const anchor = hideoutLabelAnchor(s.id);
-        const label = s.id === 'manhole' ? 'manhole · Underground' : s.action;
+        const label = s.id === 'manhole' ? 'hatch · Underground' : s.action;
         const chipW = Math.max(hit, s.id === 'manhole' ? 188 : 108);
         const chipH = hit;
+        const [ecx, ecy, erx, ery] = s.ellipse;
+        const [fc, fr, fw, fh] = s.footprint;
+        const tile = HIDEOUT_TILE;
+        const footW = Math.max(hit, fw * tile * k);
+        const footH = Math.max(hit, fh * tile * k);
+        const footLeft = left + fc * tile * k + (fw * tile * k) / 2 - footW / 2;
+        const footTop = top + fr * tile * k + (fh * tile * k) / 2 - footH / 2;
         const cx = left + anchor[0] * k;
         const cy = top + anchor[1] * k;
         let leftPt = Math.round(cx - chipW / 2);
@@ -395,25 +591,57 @@ export function StreetRoomSpots({
           </View>
         );
         return (
-          <Pressable
-            key={s.id}
-            onPress={() => press(s)}
-            accessibilityRole="button"
-            accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
-            style={({ pressed }) => [
-              styles.spot,
-              { left: leftPt, top: topPt, width: chipW, height: chipH, minWidth: hit, minHeight: hit },
-              pressed && styles.chipPressed,
-            ]}>
-            {pulse === s.coach ? <PulseRing still={still} /> : null}
-            {unvisited && !still ? (
-              <ChipBob still={still} gentle={gentle}>
-                {face}
-              </ChipBob>
-            ) : (
-              face
-            )}
-          </Pressable>
+          <View key={s.id} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+            <Svg
+              pointerEvents="none"
+              style={{ position: 'absolute', left: left + (ecx - erx) * k, top: top + (ecy - ery) * k, width: erx * 2 * k, height: ery * 2 * k }}>
+              <Ellipse
+                cx={erx * k}
+                cy={ery * k}
+                rx={erx * k}
+                ry={ery * k}
+                fill="none"
+                stroke={PIXEL.cyan}
+                strokeWidth={1.5}
+                strokeOpacity={faded ? 0.28 : 0.7}
+              />
+            </Svg>
+            <Pressable
+              onPress={() => press(s)}
+              accessibilityRole="button"
+              accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
+              style={({ pressed }) => [
+                styles.spot,
+                {
+                  left: Math.round(footLeft),
+                  top: Math.round(footTop),
+                  width: Math.round(footW),
+                  height: Math.round(footH),
+                  minWidth: hit,
+                  minHeight: hit,
+                },
+                pressed && styles.chipPressed,
+              ]}
+            />
+            <Pressable
+              onPress={() => press(s)}
+              accessibilityRole="button"
+              accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
+              style={({ pressed }) => [
+                styles.spot,
+                { left: leftPt, top: topPt, width: chipW, height: chipH, minWidth: hit, minHeight: hit },
+                pressed && styles.chipPressed,
+              ]}>
+              {pulse === s.coach ? <PulseRing still={still} /> : null}
+              {unvisited && !still ? (
+                <ChipBob still={still} gentle={gentle}>
+                  {face}
+                </ChipBob>
+              ) : (
+                face
+              )}
+            </Pressable>
+          </View>
         );
       })}
     </View>

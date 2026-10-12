@@ -102,7 +102,33 @@ export function usePetArt(pet: PetState): PetArt {
   }, [pet.line, pet.stage]);
 }
 
-export type PetFace = 'e' | 'w' | 'front';
+export type PetFace = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw' | 'front';
+
+const FACE_ROTATION: Record<Exclude<PetFace, 'front'>, string> = {
+  n: 'north',
+  ne: 'north-east',
+  e: 'east',
+  se: 'south-east',
+  s: 'south',
+  sw: 'south-west',
+  w: 'west',
+  nw: 'north-west',
+};
+
+/** Snap a compass face to a walk-clip folder (4-dir: E,N,S,W). */
+function walkFolder(face: PetFace): 'north' | 'east' | 'south' | 'west' {
+  if (face === 'n' || face === 'nw' || face === 'ne') return 'north';
+  if (face === 's' || face === 'sw' || face === 'se' || face === 'front') return 'south';
+  if (face === 'w') return 'west';
+  return 'east';
+}
+
+function rotationIndex(role: SkinRole, face: PetFace): number {
+  const folder = face === 'front' ? 'south' : FACE_ROTATION[face];
+  const re = new RegExp(`(?:^|/)${folder}$`);
+  const index = role.keys.findIndex((key) => re.test(key));
+  return index >= 0 ? index : roleFaceArtIndex(role, face === 'w' ? 'w' : 'e');
+}
 
 /** One frame of a pose at a facing (undefined → PetFigure's still pose). */
 export function poseDrawable(
@@ -113,13 +139,22 @@ export function poseDrawable(
 ): ClipDrawable | undefined {
   if (!role) return undefined;
   if (face === 'front' || !pose) {
-    const south = role.keys.findIndex((key) => /(?:^|\/)south$/.test(key));
-    if (face === 'front' && south >= 0) return roleArtDrawable(role, south);
-    return roleArtDrawable(role, roleFaceArtIndex(role, face === 'w' ? 'w' : 'e'));
+    return roleArtDrawable(role, rotationIndex(role, face === 'front' ? 'front' : face));
   }
-  const side = face === 'w' ? 'w' : 'e';
-  if (pose.clip === 'walk') return directionalClipDrawable(role.walk, roleWalkFaceIndex(role, side), frame);
-  return directionalClipDrawable(role.anims?.[pose.clip], roleAnimFaceIndex(role, pose.clip, side), frame);
+  const folder = walkFolder(face);
+  if (pose.clip === 'walk') {
+    const idx = role.walk?.order.indexOf(folder) ?? -1;
+    if (idx >= 0) return directionalClipDrawable(role.walk, idx, frame);
+    return roleArtDrawable(role, rotationIndex(role, face));
+  }
+  const anim = role.anims?.[pose.clip];
+  const idx = anim?.order.indexOf(folder) ?? -1;
+  if (idx >= 0) return directionalClipDrawable(anim, idx, frame);
+  const side = face === 'w' || face === 'nw' || face === 'sw' ? 'w' : 'e';
+  return (
+    directionalClipDrawable(role.anims?.[pose.clip], roleAnimFaceIndex(role, pose.clip, side), frame) ??
+    roleArtDrawable(role, rotationIndex(role, face))
+  );
 }
 
 /* ----------------------------------------------------------- sprite --- */

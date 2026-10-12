@@ -1,0 +1,445 @@
+{
+  "_meta": {
+    "canvas": [
+      264,
+      576
+    ],
+    "tile": 12,
+    "cols": 22,
+    "rows": 48,
+    "floor": [
+      20,
+      36
+    ],
+    "doorTiles": 4,
+    "projection": "three-quarter-topdown",
+    "heroCellPx": 96,
+    "heroFigurePx": 53,
+    "heroRenderScale": 0.5,
+    "contentBounds": [
+      0,
+      0,
+      264,
+      576
+    ],
+    "placeholder": true,
+    "sleepOnBed": false,
+    "source": "scripts/gen-hideout-td.ts — greybox until Sprite Smith art lands at sprite-smith-out"
+  },
+  "layers": {
+    "back": "hideout-td-back.png",
+    "floor": "hideout-td-floor.png",
+    "props": "hideout-td-props.png",
+    "neonA": "hideout-td-neon-a.png",
+    "neonB": "hideout-td-neon-b.png",
+    "occluder": {
+      "day-a": "hideout-td-occlude-day-a.png",
+      "day-b": "hideout-td-occlude-day-b.png",
+      "night-a": "hideout-td-occlude-night-a.png",
+      "night-b": "hideout-td-occlude-night-b.png"
+    }
+  },
+  "collision": {
+    "tile": 12,
+    "cols": 22,
+    "rows": 48,
+    "walkable": [
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0111111111111111111010",
+      "0111111111111111111010",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0100111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111001110",
+      "0111111111111111001110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0000000001111000000000",
+      "0000000001111000000000"
+    ]
+  },
+  "props": [
+    {
+      "id": "boombox",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        2,
+        22,
+        2,
+        1
+      ],
+      "sprite": [
+        24,
+        246,
+        24,
+        30
+      ],
+      "crop": [
+        24,
+        246,
+        24,
+        30
+      ],
+      "sortY": 276,
+      "baselineY": 276,
+      "occluder": false
+    },
+    {
+      "id": "chair",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        16,
+        26,
+        2,
+        2
+      ],
+      "sprite": [
+        192,
+        288,
+        24,
+        48
+      ],
+      "crop": [
+        192,
+        288,
+        24,
+        48
+      ],
+      "sortY": 336,
+      "baselineY": 336,
+      "occluder": true
+    },
+    {
+      "id": "lamp",
+      "facing": "back-wall",
+      "rotated": false,
+      "footprint": [
+        19,
+        10,
+        1,
+        2
+      ],
+      "sprite": [
+        228,
+        84,
+        12,
+        60
+      ],
+      "crop": [
+        228,
+        84,
+        12,
+        60
+      ],
+      "sortY": 144,
+      "baselineY": 144,
+      "occluder": true
+    },
+    {
+      "id": "hatch",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        10,
+        43,
+        2,
+        2
+      ],
+      "sprite": [
+        120,
+        516,
+        24,
+        24
+      ],
+      "crop": [
+        120,
+        516,
+        24,
+        24
+      ],
+      "sortY": 540,
+      "baselineY": 540,
+      "occluder": false
+    },
+    {
+      "id": "near-rim-l",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        1,
+        46,
+        8,
+        2
+      ],
+      "sprite": [
+        12,
+        552,
+        96,
+        24
+      ],
+      "crop": [
+        12,
+        552,
+        96,
+        24
+      ],
+      "sortY": 576,
+      "baselineY": 576,
+      "occluder": true
+    },
+    {
+      "id": "near-rim-r",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        13,
+        46,
+        8,
+        2
+      ],
+      "sprite": [
+        156,
+        552,
+        96,
+        24
+      ],
+      "crop": [
+        156,
+        552,
+        96,
+        24
+      ],
+      "sortY": 576,
+      "baselineY": 576,
+      "occluder": true
+    }
+  ],
+  "hotspots": [
+    {
+      "id": "door",
+      "kind": "door",
+      "ellipse": [
+        132,
+        564,
+        24,
+        10
+      ],
+      "footprint": [
+        9,
+        46,
+        4,
+        2
+      ],
+      "labelAnchor": [
+        132,
+        552
+      ],
+      "walk": [
+        132,
+        534
+      ],
+      "thing": "Door",
+      "action": "Explore",
+      "coach": "expedition"
+    },
+    {
+      "id": "chair",
+      "kind": "chair",
+      "ellipse": [
+        204,
+        324,
+        12,
+        8
+      ],
+      "footprint": [
+        16,
+        26,
+        2,
+        2
+      ],
+      "labelAnchor": [
+        204,
+        300
+      ],
+      "walk": [
+        174,
+        330
+      ],
+      "thing": "Chair",
+      "action": "Stash",
+      "coach": "den"
+    },
+    {
+      "id": "boombox",
+      "kind": "boombox",
+      "ellipse": [
+        36,
+        270,
+        12,
+        6
+      ],
+      "footprint": [
+        2,
+        22,
+        2,
+        1
+      ],
+      "labelAnchor": [
+        36,
+        252
+      ],
+      "walk": [
+        66,
+        270
+      ],
+      "thing": "Boombox",
+      "action": "Play",
+      "coach": "play"
+    },
+    {
+      "id": "manhole",
+      "kind": "hatch",
+      "ellipse": [
+        132,
+        528,
+        16,
+        10
+      ],
+      "footprint": [
+        10,
+        43,
+        2,
+        2
+      ],
+      "labelAnchor": [
+        132,
+        516
+      ],
+      "walk": [
+        132,
+        498
+      ],
+      "thing": "Hatch",
+      "action": "Underground",
+      "coach": "dive"
+    }
+  ],
+  "spawns": {
+    "default": [
+      132,
+      336
+    ],
+    "door": [
+      132,
+      534
+    ],
+    "hatch": [
+      132,
+      498
+    ]
+  },
+  "targets": {
+    "bowl": [
+      78,
+      486
+    ],
+    "bed": [
+      174,
+      390
+    ],
+    "cushion": [
+      174,
+      390
+    ],
+    "door": [
+      132,
+      534
+    ],
+    "chair": [
+      174,
+      330
+    ],
+    "boombox": [
+      66,
+      270
+    ]
+  },
+  "window": {
+    "pos": [
+      72,
+      24
+    ],
+    "size": [
+      120,
+      84
+    ]
+  },
+  "lights": [
+    [
+      88,
+      36
+    ],
+    [
+      132,
+      32
+    ],
+    [
+      176,
+      36
+    ],
+    [
+      72,
+      72
+    ],
+    [
+      192,
+      72
+    ]
+  ],
+  "rugs": [
+    [
+      132,
+      336,
+      40,
+      16
+    ]
+  ]
+}

@@ -1,8 +1,44 @@
 {
-  "_comment": "PLACEHOLDER layout — Hideout right-wall tease, near the room-bar side (Loft is to the right). NOT on the floor. Swap positions with real art in hideout-art.ts.",
   "placeholder": true,
-  "boarded": { "pos": [194, 96], "size": [38, 88] },
-  "tarp": { "pos": [188, 84], "size": [52, 40] },
-  "scaffold": { "pos": [222, 108], "size": [28, 100] },
-  "sign": { "pos": [186, 168], "size": [48, 36] }
+  "_comment": "PLACEHOLDER — Hideout right-wall tease (Loft side), on the side cap / back-right wall, not the floor.",
+  "boarded": {
+    "pos": [
+      240,
+      24
+    ],
+    "size": [
+      24,
+      96
+    ]
+  },
+  "tarp": {
+    "pos": [
+      232,
+      16
+    ],
+    "size": [
+      32,
+      40
+    ]
+  },
+  "scaffold": {
+    "pos": [
+      252,
+      36
+    ],
+    "size": [
+      12,
+      100
+    ]
+  },
+  "sign": {
+    "pos": [
+      228,
+      100
+    ],
+    "size": [
+      36,
+      32
+    ]
+  }
 }

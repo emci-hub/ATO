@@ -37,6 +37,8 @@ import {
   type HideoutState,
 } from '@/play/hideout-progress';
 import {
+  HIDEOUT_SPOT_HIT_PT,
+  isoSleepPoint,
   parseIsoGeom,
   type HideoutOrigin,
   type HideoutScale,
@@ -48,8 +50,6 @@ import { usePlayMotion } from '@/play/play-motion';
 import { EDGE_ZONE } from '@/play/edge-back';
 import { STREET, STREET_FONT } from '@/play/street-ui';
 import { StreetRoomArt, StreetRoomFront } from '@/play/street-room';
-import { kitDrawable } from '@/play/street-ambient';
-import { ClipImage } from '@/play/sheet-sprite';
 
 function Place({
   source,
@@ -101,11 +101,7 @@ function SnapshotRoom({
         height: scale.canvasH,
         opacity: 0.55,
       }}>
-      {id === 'hideout' ? (
-        <ClipImage drawable={kitDrawable('room-hideout-iso')} />
-      ) : (
-        <Image source={src} style={{ width: scale.canvasW, height: scale.canvasH, ...pixelRenderStyle }} contentFit="fill" transition={0} />
-      )}
+      <Image source={src} style={{ width: scale.canvasW, height: scale.canvasH, ...pixelRenderStyle }} contentFit="fill" transition={0} />
       {id === 'loft' && art.windowNight && art.windowDay ? (
         <Place
           source={night ? art.windowNight : art.windowDay}
@@ -132,22 +128,24 @@ function LiveLoft({
   lampOn: boolean;
   onLamp: () => void;
 }) {
-  const art = ROOM_ART.loft;
+  const geom = roomGeom('loft');
   const k = scale.pt;
-  const lamp = { left: origin.left + 196 * k, top: origin.top + 148 * k, w: 28 * k, h: 48 * k };
+  const lampHot = geom.hotspots.find((h) => h.id === 'lamp' || h.kind === 'lamp');
+  const fp = lampHot?.footprint ?? ([19, 10, 1, 2] as const);
+  const hit = HIDEOUT_SPOT_HIT_PT;
+  const fw = Math.max(hit, fp[2] * geom.tile * k);
+  const fh = Math.max(hit, fp[3] * geom.tile * k);
+  const lamp = {
+    left: origin.left + fp[0] * geom.tile * k + (fp[2] * geom.tile * k) / 2 - fw / 2,
+    top: origin.top + fp[1] * geom.tile * k + (fp[3] * geom.tile * k) / 2 - fh / 2,
+    width: fw,
+    height: fh,
+    minWidth: hit,
+    minHeight: hit,
+  };
   return (
     <View style={{ position: 'absolute', left: origin.left, top: origin.top, width: scale.canvasW, height: scale.canvasH }}>
-      <Place source={art.shell} left={0} top={0} w={scale.canvasW} h={scale.canvasH} />
-      <Place
-        source={night ? art.windowNight : art.windowDay}
-        left={LOFT_WINDOW_POS[0] * k}
-        top={LOFT_WINDOW_POS[1] * k}
-        w={LOFT_WINDOW_SIZE[0] * k}
-        h={LOFT_WINDOW_SIZE[1] * k}
-      />
-      <Place source={art.bed} left={132 * k} top={188 * k} w={64 * k} h={28 * k} />
-      <Place source={art.lamp} left={200 * k} top={152 * k} w={18 * k} h={36 * k} />
-      {night && lampOn ? <Place source={art.glow} left={0} top={0} w={scale.canvasW} h={scale.canvasH} /> : null}
+      <StreetRoomArt left={0} top={0} scale={scale} alive room="loft" night={night} lampOn={lampOn} />
       <Pressable
         onPress={onLamp}
         accessibilityRole="button"
@@ -167,7 +165,8 @@ export function HideoutStageChrome({
   origin,
   width,
   night,
-  behind,
+  feetX,
+  feetY,
   expeditionBackMs,
   onView,
   onTease,
@@ -184,7 +183,8 @@ export function HideoutStageChrome({
   origin: HideoutOrigin;
   width: number;
   night: boolean;
-  behind: boolean;
+  feetX: number;
+  feetY: number;
   expeditionBackMs: number | null;
   onView: (id: HideoutRoomId) => void;
   onTease: () => void;
@@ -279,7 +279,15 @@ export function HideoutStageChrome({
           if (want) onView(want);
         }}>
         {liveIsHideout ? (
-          <StreetRoomArt left={origin.left} top={origin.top} scale={scale} alive />
+          <StreetRoomArt
+            left={origin.left}
+            top={origin.top}
+            scale={scale}
+            alive
+            room="hideout"
+            night={night}
+            gentle={motion.vestibularSafe}
+          />
         ) : liveIsLoft ? (
           <LiveLoft scale={scale} origin={origin} night={night} lampOn={hideout.lamp_on} onLamp={onLamp} />
         ) : (
@@ -291,13 +299,36 @@ export function HideoutStageChrome({
         <HideoutTease hideout={hideout} progress={progress} scale={scale} origin={origin} onPress={onTease} />
       ) : null}
 
-      {liveIsHideout && behind ? <StreetRoomFront left={origin.left} top={origin.top} scale={scale} /> : null}
-      {liveIsLoft && behind && ROOM_ART.loft.front ? (
-        <Place source={ROOM_ART.loft.front} left={origin.left} top={origin.top} w={scale.canvasW} h={scale.canvasH} />
+      {liveIsHideout && petHere ? (
+        <StreetRoomFront
+          left={origin.left}
+          top={origin.top}
+          scale={scale}
+          room="hideout"
+          night={night}
+          feetX={feetX}
+          feetY={feetY}
+          gentle={motion.vestibularSafe}
+        />
+      ) : null}
+      {liveIsLoft && petHere ? (
+        <StreetRoomFront
+          left={origin.left}
+          top={origin.top}
+          scale={scale}
+          room="loft"
+          night={night}
+          feetX={feetX}
+          feetY={feetY}
+          gentle={motion.vestibularSafe}
+        />
       ) : null}
 
       {petHere && presence.asleep ? (
-        <HideoutZzz x={origin.left + (presence.room === 'loft' ? 164 : 160) * k - 8} y={origin.top + (presence.room === 'loft' ? 176 : 186) * k - 36} />
+        <HideoutZzz
+          x={origin.left + isoSleepPoint(roomGeom(presence.room))[0] * k - 8}
+          y={origin.top + isoSleepPoint(roomGeom(presence.room))[1] * k - 36}
+        />
       ) : null}
 
       {presence.away ? (
