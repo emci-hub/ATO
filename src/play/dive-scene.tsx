@@ -189,6 +189,7 @@ function SwimmingPet({
   tilt,
   auraElement = null,
   flash = null,
+  hideoutFx = false,
 }: {
   pet: PetState;
   art: PetArt;
@@ -206,6 +207,7 @@ function SwimmingPet({
   tilt: SharedValue<number>;
   auraElement?: string | null;
   flash?: SharedValue<number> | null;
+  hideoutFx?: boolean;
 }) {
   const [face, setFace] = useState<PetFace>('e');
   const facingEast = face === 'e';
@@ -239,6 +241,7 @@ function SwimmingPet({
           lockColour={shiny}
           auraElement={auraElement}
           flash={flash}
+          hideoutFx={hideoutFx}
         />
       </Animated.View>
       {shiny ? <ShinyOverlay size={box} footAt={0.75} animate={turn} /> : null}
@@ -719,7 +722,7 @@ export function DiveScene({
                 eggColor={eggColor}
                 pose={pose}
                 box={box}
-                turn={!reduceMotion}
+                turn={!playMotion.cosmeticsStill}
                 trail={cuts.trail && pet.stage !== 'egg'}
                 tilt={tilt}
                 grade={grade}
@@ -727,6 +730,7 @@ export function DiveScene({
                 recolor={recolor}
                 auraElement={auraElement}
                 flash={hit.flash}
+                hideoutFx={street}
               />
               {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}
               </Animated.View>

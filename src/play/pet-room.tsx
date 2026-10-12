@@ -897,6 +897,7 @@ export function PetRoom({
                 reverseHost
                 auraElement={auraElement}
                 flash={hit.flash}
+                hideoutFx={streetRoom}
               />
               </Animated.View>
             </Animated.View>

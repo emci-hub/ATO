@@ -799,9 +799,9 @@
       ],
       "scale": 1
     },
-    "room-hideout-full": {
-      "w": 197,
-      "h": 426,
+    "room-hideout-iso-bowl": {
+      "w": 14,
+      "h": 8,
       "inset": [
         0,
         0,
@@ -810,7 +810,51 @@
       ],
       "scale": 1
     },
-    "room-hideout": {
+    "room-hideout-iso-cushion": {
+      "w": 22,
+      "h": 12,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso-front": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso-manhole": {
+      "w": 36,
+      "h": 18,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso-mask": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso": {
       "w": 256,
       "h": 320,
       "inset": [
@@ -1126,5 +1170,11 @@
     "neon-maze": {
       "pads": 6
     }
-  }
+  },
+  "hideoutFx": [
+    "sheets/streetwear/hideout-fx/blaze-84-behind",
+    "sheets/streetwear/hideout-fx/bubbles-outlined-behind",
+    "sheets/streetwear/hideout-fx/blaze-84-front",
+    "sheets/streetwear/hideout-fx/bubbles-outlined-front"
+  ]
 }
