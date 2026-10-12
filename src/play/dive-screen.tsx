@@ -217,6 +217,9 @@ export function DiveScreen({
     });
   };
   const [gearNote, setGearNote] = useState<string | null>(null);
+  // Measured width of the action rows. Each button gets an exact width: a
+  // flex-grow row stayed at its 96pt floor on iPhone (half-width buttons).
+  const [actionsW, setActionsW] = useState(0);
   const buyGear = (gear: DiveGear) => {
     let note = '';
     commit((doc) => {
@@ -298,7 +301,12 @@ export function DiveScreen({
               <PixelBody size="sm" numberOfLines={2} style={styles.note}>
                 {dockStatus(run, charges)}
               </PixelBody>
-              <View style={styles.actions}>
+              <View
+                style={styles.actions}
+                onLayout={(e) => {
+                  const w = Math.floor(e.nativeEvent.layout.width);
+                  setActionsW((prev) => (prev === w ? prev : w));
+                }}>
                 {buttonRows.map((row, i) => (
                   <View key={i} style={styles.buttonRow}>
                     {row.map((b) => (
@@ -318,7 +326,8 @@ export function DiveScreen({
                         disabled={busy || !b.enabled}
                         onPress={() => pressButton(b)}
                         accessibilityLabel={street ? streetDiveA11y(b) : b.label.toLowerCase()}
-                        style={styles.button}
+                        width={actionsW > 0 ? Math.floor((actionsW - 8 * (row.length - 1)) / row.length) : undefined}
+                        style={actionsW > 0 ? styles.buttonFixed : styles.button}
                       />
                     ))}
                   </View>
@@ -476,6 +485,7 @@ const styles = StyleSheet.create({
   // minWidth 0 collapses this row to ~0 width on iOS (empty ink gap).
   buttonRow: { flexDirection: 'row', width: '100%', gap: 8, alignItems: 'stretch' },
   button: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
+  buttonFixed: { minHeight: 50 },
   note: { textAlign: 'center' },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   buyButton: { flexGrow: 0 },

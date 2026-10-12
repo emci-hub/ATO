@@ -808,7 +808,8 @@ export function PetScreen({
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Divecore settings"
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
+            // Street: the resource bar's gear opens this same sheet (one gear, not two).
+            style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetGone]}>
             {street ? kitIcon('nav-settings', 26) : <Text style={styles.topButtonText}>⚙</Text>}
           </Pressable>
         </View>

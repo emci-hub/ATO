@@ -165,7 +165,9 @@ export function DiveTopBar({
                 </PixelLabel>
               </Pressable>
             </View>
-            <PixelLabel numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.zone, label]}>{zone}</PixelLabel>
+            {street ? null : (
+              <PixelLabel numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.zone, label]}>{zone}</PixelLabel>
+            )}
             <View style={[styles.side, styles.sideEnd]}>
               <View style={styles.shells} accessible accessibilityLabel={`${shells} shells`}>
                 <ShellMark />
@@ -173,6 +175,9 @@ export function DiveTopBar({
               </View>
             </View>
           </View>
+          {/* Street: the line map gets its own full-width row with stop names
+              (the zone label squeezed between the sides shrank to ~6pt). */}
+          {street ? <StreetLineMap depth={depth} max={maxDepth} /> : null}
           <View style={styles.row}>
             <View style={styles.side}>
               <View style={styles.links}>
@@ -184,7 +189,7 @@ export function DiveTopBar({
                 </Pressable>
               </View>
             </View>
-            {street ? <StreetLineMap depth={depth} max={maxDepth} /> : <DepthMeter depth={depth} max={maxDepth} />}
+            {street ? null : <DepthMeter depth={depth} max={maxDepth} />}
             <View
               style={[styles.side, styles.sideEnd]}
               accessible

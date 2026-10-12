@@ -71,7 +71,7 @@ import { streetFindName, streetStop } from '@/play/dive-street-names';
 import { hideoutIntegerScale, hideoutPetBox } from '@/play/hideout-iso';
 import { usePlayMotion } from '@/play/play-motion';
 import { alertHaptic, rewardHaptic } from '@/play/street-feel';
-import { streetUiOn } from '@/play/street-ui';
+import { STREET_FONT, streetUiOn } from '@/play/street-ui';
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { MOCKUP_DIVE, placePlate } from '@/play/pixel-atlas';
 import { PixelBody, PixelFrame, PixelLabel, PixelRisk, usePixelFonts } from '@/play/pixel-ui';
@@ -813,9 +813,11 @@ export function DiveScene({
       {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
       <View style={styles.dock}>
         <PixelFrame streetPiece="panel" align="stretch" padded={false}>
-          <View style={styles.dockPad}>
+          <View style={[styles.dockPad, street && styles.streetDockPad]}>
             <View pointerEvents="none" style={styles.haulRow}>
-              <PixelLabel color={PIXEL.cyan}>{street ? 'Bag' : 'Haul'}</PixelLabel>
+              <PixelLabel color={street ? STREET_DIM : PIXEL.cyan} style={street ? styles.streetLabel : undefined}>
+                {street ? 'Bag' : 'Haul'}
+              </PixelLabel>
               {Array.from({ length: 4 }, (_, i) => {
                 const item = rowItems[i];
                 const icon = item ? (
@@ -839,7 +841,12 @@ export function DiveScene({
             </View>
             {bustPct != null ? (
               <View pointerEvents="none">
-                <PixelRisk pct={bustPct} label={street ? 'Heat' : undefined} />
+                <PixelRisk
+                  pct={bustPct}
+                  label={street ? 'Heat' : undefined}
+                  labelColor={street ? STREET_DIM : undefined}
+                  labelStyle={street ? styles.streetLabel : undefined}
+                />
               </View>
             ) : null}
             {dock}
@@ -849,6 +856,9 @@ export function DiveScene({
     </View>
   );
 }
+
+/** Street label grey (Bag, Heat). */
+const STREET_DIM = '#9AA3AD';
 
 const styles = StyleSheet.create({
   scene: { flex: 1, minHeight: 0, backgroundColor: '#0b5e65' },
@@ -872,6 +882,10 @@ const styles = StyleSheet.create({
   dock: { flexGrow: 0, flexShrink: 0, width: '100%', paddingHorizontal: 8, paddingBottom: 8 },
   dockPad: { width: '100%', padding: 12, gap: 8 },
   haulRow: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
+  // Street: Bag / Heat are small quiet labels (the mockup), not 16pt headers.
+  streetLabel: { fontFamily: STREET_FONT.bold, fontSize: 14, lineHeight: 18, minWidth: 44 },
+  // Street: clear the panel's tape corners.
+  streetDockPad: { paddingHorizontal: 18 },
   rareRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 2 },
   row: { position: 'absolute', left: ROW_PAD, right: ROW_PAD, flexDirection: 'row' },
   slot: { width: SLOT },

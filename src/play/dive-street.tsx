@@ -23,7 +23,6 @@ import Animated, {
 import type { DiveWorldCuts } from '@/play/dive-fx-model';
 import { hideoutIntegerScale } from '@/play/hideout-iso';
 import { KEEP_TRAVEL_PT } from '@/play/play-motion';
-import { PIXEL_FONT } from '@/play/pixel-theme';
 import { streetStop } from '@/play/dive-street-names';
 import { ClipImage } from '@/play/sheet-sprite';
 import { AmbientSprite, Drift } from '@/play/street-ambient';
@@ -281,24 +280,38 @@ export function SubwayDoors({
   );
 }
 
-/** Subway line map: one stop per depth the run allows; the current one is lit. */
+/** Short map label; a stop that repeats the one before shows no name. */
+function mapName(i: number): string {
+  const name = streetStop(i).name;
+  if (i > 0 && streetStop(i - 1).name === name) return '';
+  return name.replace(/^The /, '').replace(/ Station$/, '');
+}
+
+/** Full-width subway line: one column per stop, the dot over its name. */
 export function StreetLineMap({ depth, max }: { depth: number; max: number }) {
   const stops = Array.from({ length: max + 1 }, (_, i) => i);
+  const n = stops.length;
+  const edge = `${50 / n}%` as const;
+  // Percent of the track itself (dot 0 → dot n-1).
+  const done = n > 1 ? `${(Math.max(0, Math.min(depth, max)) / (n - 1)) * 100}%` : '0%';
   return (
     <View style={styles.map} accessible accessibilityLabel={`${streetStop(depth).name}, stop ${depth + 1} of ${max + 1}`}>
-      <View style={styles.line}>
-        {stops.map((i) => (
-          <View key={i} style={styles.stopWrap}>
-            {i > 0 ? <View style={[styles.seg, i <= depth && styles.segOn]} /> : null}
-            <View style={styles.dotCol}>
-              <View style={[styles.dot, i <= depth && styles.dotOn, i === depth && styles.dotHere]} />
-              <Text style={[styles.stopTag, i === depth && styles.stopTagHere]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
-                {streetStop(i).name}
-              </Text>
-            </View>
-          </View>
-        ))}
+      <View style={[styles.track, { left: edge, right: edge }]}>
+        <View style={[styles.trackOn, { width: done as `${number}%` }]} />
       </View>
+      {stops.map((i) => (
+        <View key={i} style={styles.stopCol}>
+          <View style={styles.dotSlot}>
+            <View style={[styles.dot, i <= depth && styles.dotOn, i === depth && styles.dotHere]} />
+          </View>
+          <Text
+            numberOfLines={1}
+            allowFontScaling={false}
+            style={[styles.mapName, i === depth && styles.mapNameHere]}>
+            {mapName(i)}
+          </Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -344,21 +357,14 @@ const styles = StyleSheet.create({
   world: { overflow: 'hidden', backgroundColor: '#0b1020' },
   train: { position: 'absolute', left: 0 },
   flicker: { backgroundColor: '#000' },
-  map: { alignItems: 'center', justifyContent: 'center' },
-  line: { flexDirection: 'row', alignItems: 'flex-start' },
-  stopWrap: { flexDirection: 'row', alignItems: 'flex-start' },
-  dotCol: { alignItems: 'center', width: 44 },
-  stopTag: {
-    marginTop: 2,
-    fontFamily: PIXEL_FONT.label,
-    fontSize: 8,
-    color: STREET.muted,
-    textTransform: 'uppercase',
-    includeFontPadding: false,
-  },
-  stopTagHere: { color: STREET.mustard },
-  seg: { width: 12, height: 4, backgroundColor: '#4b5563', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#000' },
-  segOn: { backgroundColor: STREET.mustard },
+  map: { flexDirection: 'row', width: '100%', paddingVertical: 2 },
+  // The track runs centre-to-centre behind the dots (dot slot is 16pt tall).
+  track: { position: 'absolute', top: 2 + 6, height: 4, backgroundColor: '#4b5563', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#000' },
+  trackOn: { height: '100%', backgroundColor: STREET.mustard },
+  stopCol: { flex: 1, alignItems: 'center', gap: 2 },
+  dotSlot: { height: 16, alignItems: 'center', justifyContent: 'center' },
+  mapName: { fontFamily: STREET_FONT.regular, fontSize: 11, lineHeight: 14, color: '#9AA3AD', textAlign: 'center' },
+  mapNameHere: { fontFamily: STREET_FONT.bold, color: STREET.mustard },
   dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: '#000', backgroundColor: '#4b5563' },
   dotOn: { backgroundColor: STREET.mustard },
   dotHere: { width: 14, height: 14, borderRadius: 7, backgroundColor: STREET.paper, borderColor: STREET.mustard },
