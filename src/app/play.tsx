@@ -48,7 +48,8 @@ import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen, type DiveDeeperResult, type DiveSurfaceSummary } from '@/play/dive-screen';
-import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS, findName, type DivePath } from '@/play/dive-loot';
+import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS, type DivePath } from '@/play/dive-loot';
+import { shownFindName } from '@/play/dive-street-names';
 import { DressScreen } from '@/play/dress-screen';
 import {
   backDecision,
@@ -370,7 +371,7 @@ export default function PlayScreen() {
         kind: 'banner',
         banner: {
           title: 'Your pet is back',
-          body: `It brought back ${findName(expeditionNote)} — it’s waiting for you.`,
+          body: `It brought back ${shownFindName(expeditionNote)} — it’s waiting for you.`,
           target: 'pet',
         },
       });
@@ -1558,7 +1559,7 @@ function toastBanner(toast: PlayToast): Omit<Banner, 'id'> {
           : toast.kind === 'surface'
             ? (toast.free
                 ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''}`
-                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${findName(toast.heartyFind)}.` : ''}${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
+                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${shownFindName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${shownFindName(toast.heartyFind)}.` : ''}${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
               (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
             : toast.kind === 'bust'
               ? (toast.rescued.length > 0
@@ -1574,7 +1575,7 @@ function summarizeNames(itemIds: readonly string[]): string {
   const shown = Math.min(itemIds.length, 3);
   const names = itemIds
     .slice(0, shown)
-    .map((id) => findName(id))
+    .map((id) => shownFindName(id))
     .join(', ');
   const hidden = itemIds.length - shown;
   return hidden > 0 ? `${names} +${hidden} more` : names;

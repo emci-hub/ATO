@@ -684,13 +684,13 @@ export function PixelHearts({
 }
 
 /** Shown bust chance. One amber bar, the mockup's track and highlight. */
-export function PixelRisk({ pct }: { pct: number }) {
+export function PixelRisk({ pct, label = 'Risk' }: { pct: number; label?: string }) {
   const clamped = Math.max(0, Math.min(100, Math.round(pct)));
   return (
     <View
       style={{ flexDirection: 'row', alignItems: 'center', gap: ART_PT * 3 }}
-      accessibilityLabel={`Risk ${clamped} percent`}>
-      <PixelLabel color={PIXEL.amber}>Risk</PixelLabel>
+      accessibilityLabel={`${label} ${clamped} percent`}>
+      <PixelLabel color={PIXEL.amber}>{label}</PixelLabel>
       <View style={{ flex: 1, height: ART_PT * 7, backgroundColor: PIXEL.cyanLo, padding: ART_PT }}>
         <View style={{ flex: 1, backgroundColor: PIXEL.slot }}>
           <View style={{ width: `${clamped}%`, height: '100%', backgroundColor: PIXEL.amber }}>

@@ -186,10 +186,16 @@ export type PetPlanInput = {
   x: number;
   /** 0..1 random source (seeded in the check). */
   rng: () => number;
+  /** Streetwear Hideout: where the bowl is (0..1); with `hungry`, the pet
+   * often walks over to it. Omitted in Classic (behaviour unchanged). */
+  bowlX?: number;
+  hungry?: boolean;
 };
 
 /** Room edges the pet stays within (0..1). */
 /** The pet stays on the rug. The bowl, bush and bed sit outside this span. */
+/** Streetwear Hideout: the spot beside the bowl (plate x ≈ 158 of 197). */
+export const PET_STREET_BOWL_X = 0.8;
 export const PET_ROOM_MIN_X = 0.38;
 export const PET_ROOM_MAX_X = 0.64;
 /** Where the bed is — the pet sleeps here. */
@@ -208,6 +214,20 @@ export function planPetStep(input: PetPlanInput): PetStep {
   }
   const m = MOOD_MOTION[mood];
   const roll = rng();
+  // Hungry in the street Hideout: about half the time, go and wait by the bowl.
+  if (input.bowlX != null && input.hungry && Math.abs(x - input.bowlX) > 0.05 && roll < 0.5) {
+    const speed = Math.max(0.2, form.speed * m.speed);
+    return {
+      act: 'wander',
+      pose: petPose(kit, 'walk'),
+      ms: Math.max(600, Math.round((Math.abs(input.bowlX - x) * CROSS_MS) / speed)),
+      toX: input.bowlX,
+      bounce: Math.round(BASE_BOUNCE * form.bounce * m.bounce),
+      squash: mood === 'sad',
+      drift: form.drift,
+      loop: true,
+    };
+  }
   const showoffChance = Math.min(0.6, form.showoff * m.showoff);
   if (roll < showoffChance) {
     const want: PetClip = rng() < 0.5 ? 'attack' : 'skill';

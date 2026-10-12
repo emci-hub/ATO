@@ -15,7 +15,8 @@ import { getItemDef, type ItemSlot } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { ART_PT, PIXEL, crispSpan } from '@/play/pixel-theme';
 import { PixelBody, PixelFrame, PixelLabel, pixelRenderStyle } from '@/play/pixel-ui';
-import { streetUiOn } from '@/play/street-ui';
+import { StreetLineMap } from '@/play/dive-street';
+import { STREET, streetUiOn } from '@/play/street-ui';
 import { cosmeticById } from '@/play/pet-cosmetics';
 
 const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
@@ -146,6 +147,8 @@ export function DiveTopBar({
   onGear: () => void;
 }) {
   const shortCharges = charges.split(' · ')[0] ?? charges;
+  // Streetwear: the subway line map + tokens (dive-street.tsx).
+  const street = streetUiOn();
   const { width } = useWindowDimensions();
   const labelPt = width < 400 ? 12 : 16;
   const labelLh = labelPt + 4;
@@ -153,11 +156,13 @@ export function DiveTopBar({
   return (
     <View style={styles.bar} pointerEvents="box-none">
       <PixelFrame streetPiece="panel" align="stretch" padded={false} enter style={styles.panel}>
-        <View style={styles.stack}>
+        <View style={[styles.stack, street && styles.streetStack]}>
           <View style={styles.row}>
             <View style={styles.side}>
               <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
-                <PixelLabel color={PIXEL.cyan} numberOfLines={1} style={label}>{streetUiOn() ? '< Hideout' : '< Pet'}</PixelLabel>
+                <PixelLabel color={street ? STREET.paper : PIXEL.cyan} numberOfLines={1} style={label}>
+                  {street ? '< Hideout' : '< Pet'}
+                </PixelLabel>
               </Pressable>
             </View>
             <PixelLabel numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.zone, label]}>{zone}</PixelLabel>
@@ -179,9 +184,12 @@ export function DiveTopBar({
                 </Pressable>
               </View>
             </View>
-            <DepthMeter depth={depth} max={maxDepth} />
-            <View style={[styles.side, styles.sideEnd]} accessible accessibilityLabel={`Dive charges ${charges}`}>
-              <PixelBody size="sm" color={PIXEL.dim}>{shortCharges}</PixelBody>
+            {street ? <StreetLineMap depth={depth} max={maxDepth} /> : <DepthMeter depth={depth} max={maxDepth} />}
+            <View
+              style={[styles.side, styles.sideEnd]}
+              accessible
+              accessibilityLabel={street ? `Subway Tokens ${charges}` : `Dive charges ${charges}`}>
+              <PixelBody size="sm" color={PIXEL.dim}>{street ? `${shortCharges} tokens` : shortCharges}</PixelBody>
             </View>
           </View>
         </View>
@@ -201,6 +209,8 @@ const styles = StyleSheet.create({
   bar: { paddingHorizontal: 8, paddingTop: 4 },
   panel: { alignSelf: 'stretch' },
   stack: { paddingHorizontal: 10, paddingVertical: 6, gap: 2 },
+  // Street: clear the panel's tape corners.
+  streetStack: { paddingHorizontal: 20, paddingVertical: 8 },
   row: { flexDirection: 'row', alignItems: 'center' },
   side: { flex: 1, justifyContent: 'center' },
   sideEnd: { alignItems: 'flex-end' },

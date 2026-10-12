@@ -43,6 +43,8 @@ import {
   vignetteFor,
 } from '../src/play/dive-fx-model';
 import { diveButtons } from '../src/play/dive-buttons';
+import { STREET_STOPS, streetDiveLabel, streetFindName } from '../src/play/dive-street-names';
+import { diveCollectibleIds, findName } from '../src/play/dive-loot';
 import { COSMETICS } from '../src/play/pet-cosmetics';
 import { HUB_TILES } from '../src/play/neon-viper';
 
@@ -61,6 +63,10 @@ const UI_FILES = [
   'src/play/dive-fx-model.ts',
   'src/play/dive-fx-level.ts',
   'src/play/dive-world.tsx',
+  // Streetwear Underground (2026-10-11): same odds isolation + no Math.random.
+  'src/play/dive-street.tsx',
+  'src/play/dive-street-names.ts',
+  'src/play/street-ambient.tsx',
 ];
 const ODDS_NAMES = [
   'pathBaseBust',
@@ -212,5 +218,29 @@ ok('hub: Dive tile gone, Pet tile shows a dive in progress');
   assert.match(read('src/play/dive-screen.tsx'), /atSurface=\{!run\.active\}/, 'the surface start shows before a dive');
 }
 ok('sunken ruin: bundled art only, shark in Reef/Trench, Low cuts shark → dragon → parallax');
+
+// Streetwear Underground: display names only — one stop per depth band, the SAME
+// % on Local / Express as the Classic Deeper buttons, every find still named.
+{
+  assert.equal(STREET_STOPS.length, ZONE_BANDS.length, 'a street stop for every depth band');
+  const live = diveButtons({ active: true, canDeeper: true, bustPct: { safe: 20, rich: 36 }, charges: 1, nextChargeInMs: null });
+  for (const b of live) {
+    const street = streetDiveLabel(b);
+    assert.ok(street.length > 0, `${b.id} has a street label`);
+    const pct = /(\d+)%/.exec(b.label)?.[1];
+    if (pct) assert.ok(street.includes(`${pct}%`), `${b.id}: street label keeps the shown ${pct}%`);
+  }
+  assert.equal(streetDiveLabel(live[0]), 'LOCAL · SAFER 20%');
+  assert.equal(streetDiveLabel(live[1]), 'EXPRESS · RICHER 36%');
+  for (const id of diveCollectibleIds()) {
+    assert.ok(streetFindName(id).length > 0 && streetFindName(id) !== 'Unknown find', `${id} has a street name`);
+    if (!id.startsWith('food_')) assert.equal(streetFindName(id), findName(id), `${id}: only foods are renamed`);
+  }
+  const ui = (JSON.parse(read('assets/play/sheets/streetwear/meta.json')) as { ui: Record<string, unknown> }).ui;
+  for (const piece of [...new Set(STREET_STOPS.map((x) => x.art)), 'stop-train', 'room-hideout-full', 'amb-rat-run', 'amb-pigeon', 'amb-note', 'amb-drip', 'amb-spark', 'amb-wisp']) {
+    assert.ok(ui[piece], `street art ${piece} is packed`);
+  }
+}
+ok('Underground street names: a stop per band, same % on Local / Express, foods only renamed, art packed');
 
 console.log(`\ncheck:dive-fx — ${passed} groups passed.`);

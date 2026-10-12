@@ -27,7 +27,6 @@ import {
   PANTRY_MAX,
   diveCollectibleIds,
   findKind,
-  findName,
   firstTierOf,
   type FoodId,
 } from '@/play/dive-loot';
@@ -95,6 +94,7 @@ import {
 } from '@/play/playStore';
 import { todayPlan } from '@/play/today-plan';
 import type { PlayTransition } from '@/play/use-play-store';
+import { shownFindName } from '@/play/dive-street-names';
 
 type Commit = (transition: PlayTransition) => boolean;
 
@@ -444,7 +444,7 @@ export function ExpeditionSheetBody({
         : pv.expedition === 'away'
           ? `Away on a ${tripLabel(pv.expeditionTripMs ?? 0)} trip — back in ${durationLabel(pv.expeditionBackInMs ?? 0)}.`
           : 'Done for today — the next trip (1m) is at midnight.';
-  const noteName = pv.expeditionNote ? findName(pv.expeditionNote) : null;
+  const noteName = pv.expeditionNote ? shownFindName(pv.expeditionNote) : null;
   return (
     <>
       <Text style={styles.body}>{line}</Text>
@@ -613,7 +613,7 @@ function LogRow({ id, entry }: { id: string; entry: { depth: number; count: numb
         )}
       </View>
       <View style={styles.flex}>
-        <Text style={styles.logName}>{entry ? findName(id) : '???'}</Text>
+        <Text style={styles.logName}>{entry ? shownFindName(id) : '???'}</Text>
         <Text style={styles.subtleLeft}>
           {entry
             ? `found ×${entry.count} · first at ${entry.depth === 0 ? 'the surface' : `depth ${entry.depth}`}`

@@ -179,5 +179,19 @@ Balance before 4,502 → after 4,314 (188 generations; one reroll: the toast). N
 | rooms/locker.png | 789d6b32-390e-4609-8c29-80e62c339841 | 1 | locker room (packed, not drawn yet) |
 All packed into `sheets/streetwear/ui-kit/atlas-0/1.png` by `packSwUiKit`.
 
+## BATCH 8 — HIDEOUT + UNDERGROUND (2026-10-11, emci approved; red-teamed)
+Balance before 4,314 → after 4,294 (20 generations; rerolls: platform (had a commuter), sewers (badge-shaped)). No Pro mode.
+| file | id | gens | notes |
+|---|---|---|---|
+| rooms/hideout-full.png (200×400) | b812f4c1-c9e7-4a68-bc38-c0ceb9b3bf8e | 1 | picked over cbb70cec (isometric); fitted to the 197×426 plate at pack time |
+| stops/platform.png | ff239fc0-dea9-41d1-8193-886e8e050533 | 1 | reroll of 1f42bef9 |
+| stops/tunnels.png | fa550f98-bad4-4c34-bc85-f0834343b3a5 | 1 | |
+| stops/sewers.png | cf86521b-221d-4764-b51a-5ab28d528d95 | 1 | reroll of 8ae733a9 |
+| stops/ghost.png | 3941d220-d0b4-4b30-aaed-209583965784 | 1 | sign text is garbled (fits a ghost station) |
+| stops/core.png | 376258be-76d8-4893-bc8c-a25bc8158b2f | 1 | |
+| stops/train.png | 71d5606e-fd0b-480b-9125-8d856870a1f6 | 1 | passing train |
+| ambient/*.png (13) | review c76fc01b-3791-4199-a7c5-f6835c7a8198 → kept 0-7, 9-13 | 10 | rat, rat-run, pigeon, pigeon-peck, note, note2, steam, moth, drip, spark, wisp, star, plane |
+All packed into the ui-kit atlases (`room-*`, `stop-*`, `amb-*`).
+
 ## Clip names (template → saved clip folder)
 breathing-idle→Idle, walking-8-frames→Walk, running-8-frames→Dash, cross-punch→Attack, fireball→Skill, taking-punch→Hurt. East + West only.

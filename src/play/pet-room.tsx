@@ -36,6 +36,7 @@ import { NEON } from '@/play/neon-viper';
 import { PET_BRANCH_TINT, PET_METER_MAX, PET_STAGE_LABEL, type PetState } from '@/play/pet';
 import {
   PET_BED_X,
+  PET_STREET_BOWL_X,
   PET_ROOM_BOX,
   petMoodKind,
   petPose,
@@ -75,7 +76,7 @@ import {
 } from '@/play/pixel-ui';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
 import { roleFootAt } from '@/play/skin';
-import { ClipImage } from '@/play/sheet-sprite';
+import { StreetRoomArt, StreetRoomLife, StreetRoomSpots, type StreetRoomSpotsProps } from '@/play/street-room';
 import { streetUiOn } from '@/play/street-ui';
 
 /** The Streetwear Hideout art's own background (night blue). */
@@ -158,6 +159,17 @@ export type RoomSpeech = { text: string; key: number } | null;
 
 /* ------------------------------------------------------------ backdrop --- */
 
+/**
+ * Where the room plate sits in the stage. Classic: anchored on the feet line
+ * (placePlate). Streetwear: the plate's bottom on the stage's bottom, so the
+ * whole street floor (bowl, boombox, manhole) shows; the pet, nameplate, speech
+ * and spots all read this same origin, so they stay aligned.
+ */
+function roomOrigin(width: number, height: number) {
+  const base = placePlate(width, height, MOCKUP_ROOM.feet, NAME_RESERVE);
+  return streetUiOn() ? { ...base, top: height - MOCKUP_PLATE.h * ART_PT } : base;
+}
+
 function RoomBackdrop({
   width,
   height,
@@ -167,27 +179,15 @@ function RoomBackdrop({
   height: number;
   alive: boolean;
 }) {
-  const origin = placePlate(width, height, MOCKUP_ROOM.feet, NAME_RESERVE);
+  const origin = roomOrigin(width, height);
   const k = ART_PT;
   if (streetUiOn()) {
-    // Streetwear Hideout: the brick room diorama (256×320) scaled to the plate's
-    // width, its floor centre (y 235) on the plate's feet line; the night blue
-    // around it is the art's own background. The lamp / window / glow overlays
-    // belong to the Classic plate and are left out.
-    const s = MOCKUP_PLATE.w / 256;
-    const top = MOCKUP_ROOM.feet - 235 * s;
+    // Streetwear Hideout: the full-height street room, fitted to the plate at
+    // pack time (197×426), plus its life (lights, notes, moth, pigeon).
     return (
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: HIDEOUT_NIGHT }]}>
-        <View style={{ position: 'absolute', left: origin.left, top: origin.top + top * k, width: 256 * s * k, height: 320 * s * k }}>
-          <ClipImage drawable={{ kind: 'sheet', sheetKey: 'sheets/streetwear/ui-kit/room-hideout', frameKey: 'img' }} />
-        </View>
-        <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>
-          {MOCKUP_ROOM.motes.map((m, i) => (
-            <MoteRise key={i} alive={alive} left={m.x * k} top={m.y * k} distance={28 + i * 10} ms={3600 + i * 500} delay={i * 700}>
-              <AtlasSprite atlas="room" frame="mote" />
-            </MoteRise>
-          ))}
-        </View>
+        <StreetRoomArt left={origin.left} top={origin.top} />
+        <StreetRoomLife left={origin.left} top={origin.top} alive={alive} />
       </View>
     );
   }
@@ -347,6 +347,7 @@ export function PetRoom({
   tapKey,
   reduceMotion,
   onTapPet,
+  streetSpots,
   onCoach,
   recolor = null,
   onBadge,
@@ -374,6 +375,8 @@ export function PetRoom({
   tapKey: number;
   reduceMotion: boolean;
   onTapPet: () => void;
+  /** Streetwear Hideout: tappable room spots (pet-screen wires the handlers). */
+  streetSpots?: StreetRoomSpotsProps;
   onCoach: () => void;
   /** v23 — shiny / 3★ dye recolour of the sprite. */
   recolor?: string | null;
@@ -420,9 +423,11 @@ export function PetRoom({
   const egg = pet.stage === 'egg';
   const box = egg ? PET_ROOM_BOX.egg : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, PixelRatio.get());
   const footAt = egg ? 1 : roleFootAt(art.role);
+  // Streetwear Hideout: room spots + a figure-sized pet hit box (see the pet Pressable).
+  const streetRoom = streetUiOn();
   // Feet sit just above the nameplate reserve so the grade badge stays in the
   // scene, and the coach (a row below this view) cannot cover it.
-  const origin = placePlate(Math.max(width, 1), Math.max(height, 1), MOCKUP_ROOM.feet, NAME_RESERVE);
+  const origin = roomOrigin(Math.max(width, 1), Math.max(height, 1));
   const floorY = origin.top + MOCKUP_ROOM.feet * ART_PT;
   const plateW = MOCKUP_PLATE.w * ART_PT;
   const plateLeft = origin.left;
@@ -443,6 +448,9 @@ export function PetRoom({
   const squash = useSharedValue(1);
   const heart = useSharedValue(0);
   const xRef = useRef(0.5);
+  // Read inside the walk loop without restarting it on every hunger change.
+  const hungerRef = useRef(pet.hunger);
+  hungerRef.current = pet.hunger;
   const faceRef = useRef<PetFace>('e');
   const tapUntilRef = useRef(0);
 
@@ -458,7 +466,16 @@ export function PetRoom({
         timer = setTimeout(run, tapUntilRef.current - now);
         return;
       }
-      let step: PetStep = planPetStep({ kit: art.kit, mood, branch: pet.branch, stage: pet.stage, x: xRef.current, rng: Math.random });
+      let step: PetStep = planPetStep({
+        kit: art.kit,
+        mood,
+        branch: pet.branch,
+        stage: pet.stage,
+        x: xRef.current,
+        rng: Math.random,
+        // Streetwear Hideout: a hungry pet goes and waits by the bowl.
+        ...(streetUiOn() ? { bowlX: PET_STREET_BOWL_X, hungry: hungerRef.current <= 1 } : null),
+      });
       if (reduceMotion) step = { ...step, act: step.act === 'sleep' ? 'sleep' : 'idle', pose: petPose(art.kit, 'idle'), toX: xRef.current, bounce: 0, drift: false, loop: true, ms: 4000 };
       if (step.act === 'sleep' && Math.abs(xRef.current - PET_BED_X) > 0.02 && !reduceMotion) {
         step = { ...step, act: 'wander', pose: petPose(art.kit, 'walk'), toX: PET_BED_X, ms: 2600, squash: false };
@@ -583,7 +600,7 @@ export function PetRoom({
       {/* Meters, the scene, and the coach are three rows. None is positioned
           on top of another, so a short phone cannot stack them. */}
       <View style={styles.metersSlot} pointerEvents="box-none">
-      <PixelFrame streetPiece="panel" align="stretch" enter style={styles.meters}>
+      <PixelFrame streetPiece="panel" align="stretch" enter style={[styles.meters, streetUiOn() && styles.streetMeters]}>
         <View style={styles.meterHead}>
         <View style={styles.meterMain} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
         {picking ? (
@@ -631,6 +648,9 @@ export function PetRoom({
 
       <View style={styles.stage} onLayout={onLayout}>
       {width > 0 ? <RoomBackdrop width={width} height={height} alive={fxAnimate} /> : null}
+      {width > 0 && streetSpots && streetUiOn() && !picking ? (
+        <StreetRoomSpots left={origin.left} top={origin.top} {...streetSpots} />
+      ) : null}
 
       {width > 0 && picking && onPickEgg ? (
         <View style={[styles.eggRow, { top: floorY - 96 }]}>
@@ -655,7 +675,7 @@ export function PetRoom({
       ) : null}
 
       {width > 0 && !away && !picking ? (
-        <Animated.View style={[styles.petWrap, { top, width: box, height: box }, petStyle]}>
+        <Animated.View pointerEvents={streetRoom ? 'box-none' : 'auto'} style={[styles.petWrap, { top, width: box, height: box }, petStyle]}>
           {/* Floor ring (form colour; a worn ring cosmetic changes its style). */}
           <View
             pointerEvents="none"
@@ -701,8 +721,13 @@ export function PetRoom({
             onPress={onTapPet}
             accessibilityRole="button"
             accessibilityLabel={`Your pet. ${label}. Tap to say hi.`}
+            accessibilityElementsHidden={streetRoom}
+            importantForAccessibility={streetRoom ? 'no-hide-descendants' : 'auto'}
+            // Streetwear: the sprite box is mostly transparent and would cover
+            // the room spots — touches pass through; the figure gets its own hit box below.
+            pointerEvents={streetRoom ? 'box-none' : 'auto'}
             style={StyleSheet.absoluteFill}>
-            <Animated.View style={[StyleSheet.absoluteFill, bodyStyle]}>
+            <Animated.View pointerEvents={streetRoom ? 'none' : 'auto'} style={[StyleSheet.absoluteFill, bodyStyle]}>
               <Animated.View style={[StyleSheet.absoluteFill, hit.shakeStyle]}>
               <PetAnimSprite
                 pet={pet}
@@ -727,6 +752,14 @@ export function PetRoom({
               </Animated.View>
             </Animated.View>
           </Pressable>
+          {streetRoom ? (
+            <Pressable
+              onPress={onTapPet}
+              accessibilityRole="button"
+              accessibilityLabel={`Your pet. ${label}. Tap to say hi.`}
+              style={{ position: 'absolute', left: box * 0.3, width: box * 0.4, top: footAt * box - box * 0.42, height: box * 0.42 }}
+            />
+          ) : null}
           {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={fxAnimate} style={pet.shiny_style} /> : null}
           {revealed && !pet.shiny && pet.glimmer ? <GlimmerGlow size={box} footAt={footAt} animate={fxAnimate} /> : null}
           {asleep ? <Text style={[styles.zzz, { left: box * 0.6, top: box * 0.25 }]}>💤</Text> : null}
@@ -827,6 +860,7 @@ const styles = StyleSheet.create({
   foodChip: { flexGrow: 0 },
   plateWrap: { position: 'absolute', alignItems: 'center' },
   meters: { alignSelf: 'stretch' },
+  streetMeters: { paddingHorizontal: 10, paddingVertical: 4 },
   meterHead: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   meterMain: { flexGrow: 1, flexShrink: 1, minWidth: 180, gap: 4 },
   meterSide: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },

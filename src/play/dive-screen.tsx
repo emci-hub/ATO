@@ -49,6 +49,8 @@ import { GuideView } from '@/play/guide-sheet';
 import { stagePowerLine } from '@/play/guide-content';
 import { SNACK_BUST_PP } from '@/play/play-buffs';
 import type { PlayTransition } from '@/play/use-play-store';
+import { streetDiveA11y, streetDiveLabel, streetStop } from '@/play/dive-street-names';
+import { streetUiOn } from '@/play/street-ui';
 
 /** The pet dive buddy, in one honest line (v20; away + Dive care in v21). */
 export function diveBuddyLine(view: PlayView): string {
@@ -232,6 +234,8 @@ export function DiveScreen({
   const depth = run.active ? run.deepers : 0;
   // The control strip, from one pure model (every state has a real label —
   // check:dive-fx holds it). The % is run.bustPct exactly.
+  // Streetwear: Underground names over the same buttons (dive-street-names.ts).
+  const street = streetUiOn();
   const buttons = diveButtons({
     active: run.active,
     canDeeper: run.canDeeper,
@@ -302,11 +306,20 @@ export function DiveScreen({
                     {row.map((b) => (
                       <PixelButton
                         key={b.id}
-                        label={b.label}
-                        variant={diveButtonVariant(b)}
+                        label={street ? streetDiveLabel(b) : b.label}
+                        variant={
+                          street
+                            ? // Head up is the safe, positive choice; Express is the risky one.
+                              b.id === 'surface' || b.id === 'dive' || b.id === 'free'
+                              ? 'cyan'
+                              : b.id === 'deeper_rich'
+                                ? 'amber'
+                                : 'muted'
+                            : diveButtonVariant(b)
+                        }
                         disabled={busy || !b.enabled}
                         onPress={() => pressButton(b)}
-                        accessibilityLabel={b.label.toLowerCase()}
+                        accessibilityLabel={street ? streetDiveA11y(b) : b.label.toLowerCase()}
                         style={styles.button}
                       />
                     ))}
@@ -317,7 +330,7 @@ export function DiveScreen({
           )
         }>
         <DiveTopBar
-          zone={diveZone(depth)}
+          zone={street ? streetStop(depth).name : diveZone(depth)}
           depth={depth}
           maxDepth={maxDepth}
           charges={chargeText(view)}
@@ -328,7 +341,20 @@ export function DiveScreen({
         />
       </DiveScene>
 
-      <PlaySheet open={sheet === 'info'} title="Dive · info" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
+      <PlaySheet
+        open={sheet === 'info'}
+        title={street ? 'Underground · info' : 'Dive · info'}
+        onClose={() => setSheet(null)}
+        reduceMotion={reduceMotion}>
+        {street ? (
+          <>
+            <PixelLabel>Street words</PixelLabel>
+            <PixelBody>
+              Local = Deeper, safer · Express = Deeper, richer · Head up = Surface · Bag = your haul · Heat = the chance
+              to lose it · Subway Token = one charge. Stops: Platform, Tunnels, Sewers, Ghost Station, The Core.
+            </PixelBody>
+          </>
+        ) : null}
         <PixelBody>{diveBuddyLine(view)}</PixelBody>
         {view.pet.state.stage !== 'egg' ? <PixelBody>{stagePowerLine(view.pet.stagePower)}</PixelBody> : null}
         <PixelBody>

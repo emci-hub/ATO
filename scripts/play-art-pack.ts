@@ -787,8 +787,27 @@ function packSwUiKit(repo: string): Record<string, SwUiPiece> {
     pieces[`nav-${f.replace(/\.png$/, '')}`] = { png, inset: [0, 0, 0, 0], scale: 1 };
   }
   for (const f of fs.readdirSync(path.join(kit, '../rooms')).filter((f) => f.endsWith('.png'))) {
-    const png = readPng(path.join(kit, '../rooms', f));
+    let png = readPng(path.join(kit, '../rooms', f));
+    if (f === 'hideout-full.png') {
+      // Fit the Hideout to the room plate (197×426 art px, MOCKUP_PLATE) so the
+      // pet's feet line, nameplate and speech column all line up: trim 3px of
+      // width, add 26px of top wall (the art's own top-row colour) above it.
+      const fitted = new PNG({ width: 197, height: 426, fill: true });
+      for (let y = 0; y < 26; y += 1) {
+        for (let x = 0; x < 197; x += 1) png.data.copy(fitted.data, (y * 197 + x) * 4, (x + 1) * 4, (x + 1) * 4 + 4);
+      }
+      PNG.bitblt(png, fitted, 1, 0, 197, png.height, 0, 26);
+      png = fitted;
+    }
     pieces[`room-${f.replace(/\.png$/, '')}`] = { png, inset: [0, 0, 0, 0], scale: 1 };
+  }
+  // Ambient critters / particles (32px) for the Hideout and Underground.
+  for (const f of fs.readdirSync(path.join(kit, '../ambient')).filter((f) => f.endsWith('.png'))) {
+    pieces[`amb-${f.replace(/\.png$/, '')}`] = { png: readPng(path.join(kit, '../ambient', f)), inset: [0, 0, 0, 0], scale: 1 };
+  }
+  // Underground stops (one backdrop per depth band) + the passing train.
+  for (const f of fs.readdirSync(path.join(kit, '../stops')).filter((f) => f.endsWith('.png'))) {
+    pieces[`stop-${f.replace(/\.png$/, '')}`] = { png: readPng(path.join(kit, '../stops', f)), inset: [0, 0, 0, 0], scale: 1 };
   }
   for (const [name, hex] of [['primary', '#E0A526'], ['secondary', '#4B5563'], ['danger', '#C8202B']] as const) {
     pieces[`button-${name}`] = { png: rampMap(button, buttonRamp(hex)), inset: [8, 12, 12, 12], scale: 0.75 };

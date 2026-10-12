@@ -32,7 +32,7 @@
  * parallax (then props, trail) — see `diveWorldCuts`.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { PixelRatio, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -66,6 +66,11 @@ import {
 import { FindIcon } from '@/play/dive-hud';
 import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
 import { findName } from '@/play/dive-loot';
+import { StopAmbience, StreetUndergroundWorld, SubwayDoors } from '@/play/dive-street';
+import { streetFindName, streetStop } from '@/play/dive-street-names';
+import { sharpPetBox } from '@/play/pet-actor';
+import { alertHaptic, rewardHaptic } from '@/play/street-feel';
+import { streetUiOn } from '@/play/street-ui';
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { MOCKUP_DIVE, placePlate } from '@/play/pixel-atlas';
 import { PixelBody, PixelFrame, PixelLabel, PixelRisk, usePixelFonts } from '@/play/pixel-ui';
@@ -306,6 +311,9 @@ export function DiveScene({
   const full = fxLevel === 'full' && !reduceMotion;
   const cuts = diveWorldCuts(fxLevel, reduceMotion);
   const band = Math.max(1, height * 0.9);
+  // Streetwear: the Underground (subway stops) instead of the reef; paint only.
+  const street = streetUiOn();
+  const nameOf = street ? streetFindName : findName;
 
   // -- Camera: one band per Deeper; after a bust it waits for the pet to
   // shoot up, then rises. Reduced motion snaps.
@@ -327,13 +335,20 @@ export function DiveScene({
   // -- The pet: swims (walk clip) with a gentle sway; reacts to the shown %.
   const art = usePetArt(pet);
   // 1 sprite px = 2pt. The room pet stays on its own enlarged scale.
-  const box = pet.stage === 'egg' ? 70 : art.cellPx * ART_PT;
+  const classicBox = pet.stage === 'egg' ? 70 : art.cellPx * ART_PT;
+  // Street: the pet stands big on the platform. The sprite canvas is mostly
+  // transparent padding, so the BOX may reach 80% of the stage (the figure is
+  // ~a third of it); on whole device pixels; the feet stay on the floor line.
+  const box =
+    street && pet.stage !== 'egg' && height > 0
+      ? sharpPetBox(Math.min(classicBox * 3.4, height * 0.8), art.cellPx, PixelRatio.get())
+      : classicBox;
   // The mockup pet hovers over the ledge. The surface perch uses the same spot,
   // so the reef composition stays put when a dive hasn't started.
   const origin = placePlate(Math.max(width, 1), Math.max(height, 1), MOCKUP_DIVE.feet, 24);
   const footAt = roleFootAt(art.role);
-  const petX = origin.left + MOCKUP_DIVE.petX * ART_PT;
-  const petFeet = origin.top + MOCKUP_DIVE.feet * ART_PT;
+  const petX = street ? width / 2 : origin.left + MOCKUP_DIVE.petX * ART_PT;
+  const petFeet = street ? height * 0.9 : origin.top + MOCKUP_DIVE.feet * ART_PT;
   const petY = petFeet - footAt * box + box / 2;
   const edgeX = petX;
   const edgeY = petY;
@@ -435,6 +450,7 @@ export function DiveScene({
     const timers: ReturnType<typeof setTimeout>[] = [];
     const now = () => Date.now();
     if (event.kind === 'bust') {
+      if (street) alertHaptic();
       setShown(null);
       const hurt = petPose(art.kit, 'hurt');
       if (hurt) setPose({ pose: hurt, loop: false, at: now() });
@@ -538,13 +554,14 @@ export function DiveScene({
     const id = setTimeout(() => {
       setLandedKey(reveal.key);
       setPopSlot(reveal.slot);
+      if (street) rewardHaptic();
       if (fxLevel === 'full' && !reduceMotion) {
         playHit.current();
         playPop.current();
       }
     }, revealMs(reveal.glow));
     return () => clearTimeout(id);
-  }, [reveal, reduceMotion, rv, flash, fxLevel]);
+  }, [reveal, reduceMotion, rv, flash, fxLevel, street]);
   const revealTo = reveal ? slotX(reveal.slot) : 0;
   // v25: the find bursts out of a crate / chest on the right-hand ledge.
   const boxX = origin.left + 124 * ART_PT;
@@ -602,11 +619,15 @@ export function DiveScene({
     : haul.length > 0
       ? revealing
         ? null
-        : `Found ${findName(haul[haul.length - 1])}`
+        : `Found ${nameOf(haul[haul.length - 1])}`
       : event?.kind === 'bust'
         ? event.saved.length > 0
-          ? `Bust — the haul sank. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
-          : 'Bust — the haul sank. Your pet is fine.'
+          ? street
+            ? `Busted — the bag dropped. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
+            : `Bust — the haul sank. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
+          : street
+            ? 'Busted — the bag dropped. Your pet is fine.'
+            : 'Bust — the haul sank. Your pet is fine.'
         : event?.kind === 'surface' && shown && event.finds === 0 && event.ids.length > 0
           ? `Back up! ${event.ids.length} ${event.ids.length === 1 ? 'sighting' : 'sightings'} for the Logbook${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
         : event?.kind === 'surface' && shown
@@ -614,7 +635,7 @@ export function DiveScene({
           : null;
   const lastId = haul.length > 0 ? haul[haul.length - 1] : null;
   const rareFind =
-    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? findName(lastId) : null;
+    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? nameOf(lastId) : null;
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
 
@@ -641,20 +662,29 @@ export function DiveScene({
   ) : null;
 
   return (
-    <View style={styles.scene} accessibilityLabel={`${diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
+    <View
+      style={[styles.scene, street && styles.streetScene]}
+      accessibilityLabel={`${street ? streetStop(depth).name : diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
       <View style={styles.topSlot}>{children}</View>
       <Animated.View style={[styles.stage, shakeStyle]} onLayout={onLayout}>
       {width > 0 ? (
         <>
           {/* Approved reef plate. Fixed to the viewport; kelp, fish, bubbles and the ray shimmer sit on it. */}
-          <MockupReef width={width} height={height} alive={full} />
+          {street ? (
+            <>
+              <StreetUndergroundWorld width={width} height={height} depth={depth} cuts={cuts} />
+              <StopAmbience width={width} height={height} depth={depth} cuts={cuts} />
+            </>
+          ) : (
+            <MockupReef width={width} height={height} alive={full} />
+          )}
 
           {/* The abyss statue scrolls in with the camera. Props stay on the plate. */}
           <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: worldH }, worldStyle]}>
-            {cuts.dragon ? <AbyssDragon width={width} band={band} /> : null}
+            {cuts.dragon && !street ? <AbyssDragon width={width} band={band} /> : null}
           </Animated.View>
 
-          {cuts.shark && !atSurface && SHARK_DEPTHS.includes(depth) ? (
+          {!street && cuts.shark && !atSurface && SHARK_DEPTHS.includes(depth) ? (
             <SharkGlide key={depth} width={width} height={height} rightward={depth % 2 === 1} />
           ) : null}
 
@@ -695,7 +725,7 @@ export function DiveScene({
               <Rect x={0} y={0} width={width} height={height} fill="url(#sun)" />
             </Svg>
           </Animated.View>
-          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: 90 }, splashStyle]}>
+          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: 90 }, splashStyle, street && styles.gone]}>
             <Svg width={width} height={90}>
               {[-3, -2, -1, 1, 2, 3].map((k) => (
                 <Ellipse key={k} cx={width / 2 + k * 22} cy={60 - Math.abs(k) * 6} rx={4} ry={7} fill="#FFFFFF" fillOpacity={0.8} />
@@ -739,6 +769,16 @@ export function DiveScene({
             </Animated.View>
           ) : null}
 
+          {/* Street: subway doors between stops (start, each Deeper, head up). */}
+          {street ? (
+            <SubwayDoors
+              cue={atSurface ? -1 : depth}
+              label={atSurface ? 'Street level' : streetStop(depth).name}
+              alive={cuts.motion}
+              width={width}
+              height={height}
+            />
+          ) : null}
           {sinking.map((id, i) => (
             <Sinking key={`${id}-${i}-${event?.key}`} id={id} left={slotX(event?.saved.length ?? 0) + i * SLOT} top={rowY} drop={height * 0.4} reduceMotion={reduceMotion} />
           ))}
@@ -751,11 +791,11 @@ export function DiveScene({
         <PixelFrame streetPiece="panel" align="stretch" padded={false}>
           <View style={styles.dockPad}>
             <View pointerEvents="none" style={styles.haulRow}>
-              <PixelLabel color={PIXEL.cyan}>Haul</PixelLabel>
+              <PixelLabel color={PIXEL.cyan}>{street ? 'Bag' : 'Haul'}</PixelLabel>
               {Array.from({ length: 4 }, (_, i) => {
                 const item = rowItems[i];
                 const icon = item ? (
-                  <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={findName(item.id)}>
+                  <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={nameOf(item.id)}>
                     <FindIcon id={item.id} size={11 * ART_PT} bare />
                   </View>
                 ) : null;
@@ -775,7 +815,7 @@ export function DiveScene({
             </View>
             {bustPct != null ? (
               <View pointerEvents="none">
-                <PixelRisk pct={bustPct} />
+                <PixelRisk pct={bustPct} label={street ? 'Heat' : undefined} />
               </View>
             ) : null}
             {dock}
@@ -788,6 +828,8 @@ export function DiveScene({
 
 const styles = StyleSheet.create({
   scene: { flex: 1, minHeight: 0, backgroundColor: '#0b5e65' },
+  streetScene: { backgroundColor: '#0b1020' },
+  gone: { display: 'none' },
   topSlot: { flexGrow: 0, flexShrink: 0, zIndex: 2 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
   toast: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 12, paddingBottom: 4, alignItems: 'center' },

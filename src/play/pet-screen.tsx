@@ -109,6 +109,7 @@ import {
   type PetRoundKind,
   type PetRoundResult,
   type PlayView,
+  DIVE_CHARGE_CAP,
 } from '@/play/playStore';
 import type { PlayTransition } from '@/play/use-play-store';
 
@@ -242,7 +243,7 @@ function RoomIcon({
         streetPiece={street ? (pulse ? 'button-primary' : 'button-secondary') : undefined}>
         <PixelLabel
           color={street ? (pulse ? STREET.ink : STREET.paper) : pulse ? PIXEL.onFill : PIXEL.cyan}
-          shadowColor={street ? 'transparent' : undefined}
+          shadowColor={street || pulse ? 'transparent' : undefined}
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.85}
@@ -826,6 +827,19 @@ export function PetScreen({
         onBadge={() => setSheet('card')}
         buffs={roomBuffs}
         maxedAura={pv.pumped.maxed}
+        streetSpots={
+          street
+            ? {
+                onSpot: (id) => (id === 'den' ? setSheet('den') : openIcon(id)),
+                pulse: pulseIcon === 'info' ? null : pulseIcon,
+                notes: {
+                  dive: view.diveRun.active ? 'Ride in progress' : `${view.dive.current}/${DIVE_CHARGE_CAP}`,
+                  expedition: pv.away ? 'Away' : undefined,
+                  feed: pet.stage === 'egg' ? 'Hatches first' : undefined,
+                },
+              }
+            : undefined
+        }
         onPickEgg={(e) => {
           setFocusEgg(e);
           setSheet('eggs');
@@ -834,7 +848,9 @@ export function PetScreen({
       />
 
       <View style={styles.iconRow}>
-        {ICONS.map((icon) => (
+        {/* Streetwear: Play, Underground and Explore live in the room (tap spots); the dock keeps Feed + Info.
+            While it is still an egg (picking hides the spots) the full dock stays. */}
+        {(street && pet.stage !== 'egg' ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
           <RoomIcon
             key={icon.id}
             emoji={icon.emoji}

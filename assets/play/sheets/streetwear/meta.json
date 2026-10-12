@@ -799,6 +799,17 @@
       ],
       "scale": 1
     },
+    "room-hideout-full": {
+      "w": 197,
+      "h": 426,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
     "room-hideout": {
       "w": 256,
       "h": 320,
@@ -822,6 +833,215 @@
       "scale": 1
     },
     "room-underground": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-drip": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-moth": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-note": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-note2": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-pigeon-peck": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-pigeon": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-plane": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-rat-run": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-rat": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-spark": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-star": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-steam": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-wisp": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-core": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-ghost": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-platform": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-sewers": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-train": {
+      "w": 256,
+      "h": 80,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-tunnels": {
       "w": 256,
       "h": 320,
       "inset": [
