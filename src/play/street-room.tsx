@@ -25,7 +25,6 @@ import { PET_METER_MAX } from '@/play/pet';
 import { GRADE_LABEL, WARMTH_MAX, type Grade } from '@/play/pet-eggs';
 import { LOFT_WINDOW_POS, LOFT_WINDOW_SIZE, ROOM_ART } from '@/play/hideout-art';
 import {
-  HIDEOUT_INTERIOR,
   HIDEOUT_LIGHTS,
   HIDEOUT_NIGHT,
   HIDEOUT_SPOTS,
@@ -355,20 +354,32 @@ function NeonOccludeCrops({
 }
 
 /**
- * Night even-odd overlay: a canvas rect minus the interior silhouette.
- * Sits above the pet so auras/FX that spill past the walls are clipped to
- * the room; labels and prop-front stay siblings above this layer.
+ * Night even-odd overlay: the stage minus the room picture. Sits above the pet
+ * so auras/FX that spill past the room's edges are clipped; labels and
+ * prop-front stay siblings above this layer. (It used to cut out only the
+ * floor silhouette, which painted over the 3/4 room's walls, window and tall
+ * props — 2026-10-12.)
  */
-export function StreetRoomAuraClip({ left, top, scale }: { left: number; top: number; scale: HideoutScale }) {
-  const k = scale.pt;
+export function StreetRoomAuraClip({
+  left,
+  top,
+  scale,
+  stageW,
+  stageH,
+}: {
+  left: number;
+  top: number;
+  scale: HideoutScale;
+  stageW: number;
+  stageH: number;
+}) {
   const w = scale.canvasW;
   const h = scale.canvasH;
-  const outer = `M0 0H${w}V${h}H0Z`;
-  const inner =
-    HIDEOUT_INTERIOR.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0] * k},${p[1] * k}`).join('') + 'Z';
+  const outer = `M0 0H${stageW}V${stageH}H0Z`;
+  const inner = `M${left} ${top}H${left + w}V${top + h}H${left}Z`;
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', left, top, width: w, height: h }}>
-      <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Svg width={stageW} height={stageH} style={StyleSheet.absoluteFill}>
         <Path d={`${outer}${inner}`} fill={HIDEOUT_NIGHT} fillRule="evenodd" />
       </Svg>
     </View>
@@ -574,14 +585,16 @@ export function StreetRoomSpots({
             topPt + chipH > petHit.y;
           if (overlap) topPt = Math.round(petHit.y - chipH - 6);
         }
-        const face = (
+        // Pulse ring + press flash live on the small pill, not the 48 pt hit area around it.
+        const face = (pressed: boolean) => (
           <View
             style={[
               styles.chip,
-              { width: chipW, height: chipH },
               faded && styles.chipFaded,
               pulse === s.coach && styles.chipHot,
+              pressed && styles.chipPressed,
             ]}>
+            {pulse === s.coach ? <PulseRing still={still} /> : null}
             <Text style={[styles.chipText, pulse === s.coach && styles.chipTextHot]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
               {label}
             </Text>
@@ -627,19 +640,20 @@ export function StreetRoomSpots({
               onPress={() => press(s)}
               accessibilityRole="button"
               accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
-              style={({ pressed }) => [
+              style={[
                 styles.spot,
+                styles.chipHit,
                 { left: leftPt, top: topPt, width: chipW, height: chipH, minWidth: hit, minHeight: hit },
-                pressed && styles.chipPressed,
               ]}>
-              {pulse === s.coach ? <PulseRing still={still} /> : null}
-              {unvisited && !still ? (
-                <ChipBob still={still} gentle={gentle}>
-                  {face}
-                </ChipBob>
-              ) : (
-                face
-              )}
+              {({ pressed }) =>
+                unvisited && !still ? (
+                  <ChipBob still={still} gentle={gentle}>
+                    {face(pressed)}
+                  </ChipBob>
+                ) : (
+                  face(pressed)
+                )
+              }
             </Pressable>
           </View>
         );
@@ -813,9 +827,12 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   spot: { position: 'absolute', borderRadius: 4 },
+  chipHit: { alignItems: 'center', justifyContent: 'center' },
   pulse: { borderWidth: 2, borderColor: PIXEL.cyan, borderStyle: 'dashed' },
+  // The visible pill stays compact; the Pressable around it keeps the 48 pt tap area.
   chip: {
-    flex: 1,
+    height: 24,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

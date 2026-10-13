@@ -107,7 +107,7 @@ import {
   StreetStatusStrip,
   type StreetRoomSpotsProps,
 } from '@/play/street-room';
-import { HideoutStageChrome, roomGeom } from '@/play/hideout-stage';
+import { HIDEOUT_BAR_RESERVE_PT, HideoutStageChrome, roomGeom } from '@/play/hideout-stage';
 import type { HideoutProgressInput, HideoutRoomId, HideoutState } from '@/play/hideout-progress';
 import type { Presence } from '@/play/hideout-presence';
 import { STREET_MOTION } from '@/play/street-feel';
@@ -474,11 +474,14 @@ export function PetRoom({
     setReal({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
   const streetRoom = streetUiOn();
   const pr = PixelRatio.get();
+  // The Hideout stage pins its room bar + "Call to" pill to the bottom: fit and
+  // centre the room above them so the manhole and door stay clear.
+  const barReserve = hideoutStage ? HIDEOUT_BAR_RESERVE_PT : 0;
   const hideoutScale =
     streetRoom && real.width > 0 && real.height > 0
       ? hideoutIntegerScale({
           availW: real.width - HIDEOUT_MARGIN_PT * 2,
-          availH: real.height,
+          availH: Math.max(1, real.height - barReserve),
           pixelRatio: pr,
         })
       : null;
@@ -497,7 +500,7 @@ export function PetRoom({
         : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, pr);
   const footAt = egg ? 1 : roleFootAt(art.role);
   const origin = streetRoom && hideoutScale
-    ? hideoutOrigin(Math.max(width, 1), Math.max(height, 1), hideoutScale)
+    ? hideoutOrigin(Math.max(width, 1), Math.max(height - barReserve, 1), hideoutScale)
     : roomOrigin(Math.max(width, 1), Math.max(height, 1));
   const k = hideoutScale?.pt ?? ART_PT;
   const floorY = streetRoom && hideoutScale ? origin.top + 224 * k : origin.top + MOCKUP_ROOM.feet * ART_PT;
@@ -1061,7 +1064,7 @@ export function PetRoom({
         </Animated.View>
       ) : null}
       {streetRoom && hideoutScale ? (
-        <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} />
+        <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} stageW={width} stageH={Math.max(1, height - barReserve)} />
       ) : null}
       {streetRoom && hideoutScale && !hideoutStage ? (
         <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} feetX={feet.x} feetY={feet.y} night={night} gentle={motion.vestibularSafe} />

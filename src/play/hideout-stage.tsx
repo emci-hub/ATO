@@ -77,6 +77,9 @@ export function roomGeom(id: HideoutRoomId): IsoRoomGeom {
   return parseIsoGeom(art.map, { sleepOnBed: id === 'loft' });
 }
 
+/** Height the bottom room bar (44 pt tabs + padding) and the "Call to" pill take; the room fits above it. */
+export const HIDEOUT_BAR_RESERVE_PT = 92;
+
 function SnapshotRoom({
   id,
   scale,
@@ -240,12 +243,13 @@ export function HideoutStageChrome({
   }, [neighbors]);
 
   const leftSnapOrigin = useMemo(
-    () => ({ left: origin.left - scale.canvasW * 0.92, top: origin.top }),
+    () => ({ left: Math.min(origin.left - scale.canvasW * 0.92, -scale.canvasW), top: origin.top }),
     [origin.left, origin.top, scale.canvasW],
   );
   const rightSnapOrigin = useMemo(
-    () => ({ left: origin.left + scale.canvasW * 0.92, top: origin.top }),
-    [origin.left, origin.top, scale.canvasW],
+    // Off-screen until the swipe brings it in (a narrow room used to show it as a peek).
+    () => ({ left: Math.max(origin.left + scale.canvasW * 0.92, width), top: origin.top }),
+    [origin.left, origin.top, scale.canvasW, width],
   );
 
   const startX = useRef(0);
