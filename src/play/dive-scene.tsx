@@ -674,10 +674,10 @@ export function DiveScene({
       : event?.kind === 'bust'
         ? event.saved.length > 0
           ? street
-            ? `Busted — the bag dropped. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
+            ? `Busted!\nYour pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
             : `Bust — the haul sank. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
           : street
-            ? 'Busted — the bag dropped. Your pet is fine.'
+            ? 'Busted!\nThe bag dropped. Your pet is fine.'
             : 'Bust — the haul sank. Your pet is fine.'
         : event?.kind === 'surface' && shown && event.finds === 0 && event.ids.length > 0
           ? `Back up! ${event.ids.length} ${event.ids.length === 1 ? 'sighting' : 'sightings'} for the Logbook${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
@@ -706,8 +706,8 @@ export function DiveScene({
     </View>
   ) : caption ? (
     <View pointerEvents="none" style={styles.toast}>
-      <PixelFrame streetPiece="panel">
-        <PixelBody numberOfLines={2} style={styles.captionText}>{caption}</PixelBody>
+      <PixelFrame streetPiece="panel" style={styles.captionFrame}>
+        <PixelBody numberOfLines={3} style={styles.captionText}>{caption}</PixelBody>
       </PixelFrame>
     </View>
   ) : null;
@@ -838,7 +838,7 @@ export function DiveScene({
           ))}
         </>
       ) : null}
-      {/* Find / caption toast floats over the bottom of the scene, so it never pushes the
+      {/* Find / caption toast floats over the top of the scene, so it never pushes the
           picture or the panel around (emci 2026-10-13). */}
       {toast}
       </Animated.View>
@@ -924,10 +924,12 @@ const styles = StyleSheet.create({
   streetLabel: { fontFamily: STREET_FONT.bold, fontSize: 14, lineHeight: 18, minWidth: 44 },
   // Street: clear the panel's tape corners.
   streetDockPad: { paddingHorizontal: 18 },
-  rareRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 2 },
+  rareRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
   row: { position: 'absolute', left: ROW_PAD, right: ROW_PAD, flexDirection: 'row' },
   slot: { width: SLOT },
   hidden: { opacity: 0 },
   caption: { alignItems: 'center' },
-  captionText: { textAlign: 'center' },
+  // Room inside the panel's corner tape so the words never touch the frame.
+  captionFrame: { maxWidth: '88%' },
+  captionText: { textAlign: 'center', fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 6 },
 });
