@@ -211,8 +211,9 @@ function main() {
   const metro = fs.readFileSync(path.join(repo, 'metro.config.js'), 'utf8');
   assert.match(metro, /art-src/, 'metro blockList includes art-src');
   const app = fs.readFileSync(path.join(repo, 'app.json'), 'utf8');
-  assert.match(app, /assetPatternsToBeBundled/, 'app.json lists OTA asset patterns');
-  passed = ok(passed, 'Metro blockList + OTA assetPatternsToBeBundled are set');
+  // The OTA must carry every asset: this key filtered OTA 9089184e down to zero (see check:streetwear-assets).
+  assert.doesNotMatch(app, /assetPatternsToBeBundled/, 'app.json must not filter OTA assets');
+  passed = ok(passed, 'Metro blockList keeps art-src out; app.json does not filter OTA assets');
 
   // Hero pixel-identity: Walk/Idle east frame_000 of kael + archangel reconstructs the source cell.
   const gold = pixelGold(['kael', 'archangel']);
