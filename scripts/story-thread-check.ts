@@ -408,7 +408,32 @@ const rich = tracksOf({
   const view = read('src/components/story-v2-view.tsx');
   assert.match(view, /reduceMotion\s*\?[\s\S]*FadeIn\.duration\(180\)/, 'Reduce Motion is a cross-fade, never static');
   assert.match(view, /FadeInDown[\s\S]*springify/, 'Motion Full is a bigger fade and rise');
+  assert.doesNotMatch(view, /theme\.motionMs >= 500/, 'Motion Full is OS !reduceMotion, not only Zen');
+  assert.match(view, /Previous beat/, 'VoiceOver has a swipe alternative');
+  assert.match(view, /accessibilityRole="adjustable"/, 'the pager is adjustable');
+  assert.doesNotMatch(view, /allowFontScaling=\{false\}/, 'Dynamic Type stays on');
+  assert.match(view, /Share\.share[\s\S]*catch/, 'share failures do not throw');
   assert.doesNotMatch(view, /What they noticed|What it means for you/);
+  assert.equal(parseStoryCardAnswer('{not json').reason, 'not json', 'malformed JSON is rejected');
+  assert.match(
+    parseStoryCardAnswer(
+      bad({
+        hook: 'The kitchen door has been ignored through tiny glances from the waiting table and then some more waiting again.',
+      }),
+      { allowExampleHooks: true },
+    ).reason ?? '',
+    /hook: length/,
+    'an over-long hook is rejected',
+  );
+  assert.equal(punchlineCraftViolation('The buffer looks like luck to everyone else tonight.'), 'banned cliché');
+  const rewriteFn = foldSrc.slice(
+    foldSrc.indexOf('const rewriteOldStory'),
+    foldSrc.indexOf('Crisis still suppresses'),
+  );
+  assert.doesNotMatch(rewriteFn, /claimStoryGenerate/, 'a lazy rewrite never spends the Story token claim');
+  assert.match(rewriteFn, /markStoryRewriteTried/, 'a failed rewrite is remembered so remounts do not mass-call');
+  assert.match(foldSrc, /withTimeout\(pending, AI_TAP_TIMEOUT_MS/, 'AI timeout falls through to the bank');
+  assert.match(read('scripts/live-ai.ts'), /request\.topP/, 'live Story checks pass topP 0.95');
   ok('Story v4: six beats, nickname titles, numbers and one quote allowed, v1 still reads, Plot B optional');
 }
 

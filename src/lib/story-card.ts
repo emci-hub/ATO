@@ -228,7 +228,7 @@ export const STORY_FEW_SHOTS: readonly StoryFewShot[] = [
     twist: 'Your boss mouths "slides?" across the room. The backup laptop asks for an update. All 212 of them.',
     move: 'You already printed the deck just in case. You hand out copies still warm from the printer and run the meeting like it was meant to be paper.',
     punchline: 'The client asks if printed decks are new. Your boss has never said yes faster.',
-    reveal: 'Your just in case is everyone else\'s rescue.',
+    reveal: 'Your just in case is the room\'s rescue.',
     next: 'Next: a group trip, and you\'re not the one planning it.',
   },
   {
@@ -247,7 +247,7 @@ function formatFewShot(row: StoryFewShot): string {
 }
 
 const BANNED_CLICHE_PROMPT =
-  'like nothing happened, take a breath, shoulders drop, small hiccups, just another, a ruined schedule, sweat onto, the whole table, you might have, on a day like this, the real win, in that moment, little did, walk into a bar, living the dream, it is what it is';
+  'like nothing happened, take a breath, shoulders drop, small hiccups, just another, a ruined schedule, sweat onto, the whole table, you might have, on a day like this, the real win, in that moment, little did, walk into a bar, that\'s what she said, plot twist, living the dream, it is what it is, say less, no cap, spoiler alert, everyone else';
 
 /** The byte-identical opening of every Story prompt (cache-friendly). */
 export const STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. Write a 100-word micro-story starring the reader ("you"), told in

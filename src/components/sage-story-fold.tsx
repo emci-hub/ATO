@@ -6,6 +6,16 @@ import { AiBadge } from '@/components/ai-badge';
 import { LibraryCardFooter } from '@/components/library-card-footer';
 import { STORY_LIBRARY, storyBucketKey, type StoryAngle } from '@/lib/ai-library/story';
 import { pickStoryBankCard } from '@/lib/story-bank';
+import {
+  loadStoryBankHistory,
+  loadStoryRewriteTried,
+  markStoryRewriteTried,
+  nextBankRecentHooks,
+  nextBankSeenIds,
+  rememberStoryBankHistory,
+  storyRewriteAttemptKey,
+  type StoryBankHistory,
+} from '@/lib/story-bank/history';
 import { StoryV2View } from '@/components/story-v2-view';
 import { serveLibraryCard, wantLibraryCards, writeLibraryCard } from '@/lib/ai-library/client';
 import { SettingsFold } from '@/components/settings-fold';
@@ -118,6 +128,8 @@ export function SageStoryFold({
   const tokensShortRef = useRef(false);
   const emptyReasonRef = useRef<'empty' | 'daily' | null>(null);
   const rewriteRef = useRef(false);
+  const historyRef = useRef<StoryBankHistory>({ seenIds: [], recentHooks: [] });
+  const rewriteTriedRef = useRef<Set<string>>(new Set());
   const { refresh: refreshMe } = useMeContext();
   const tokens = atoTokenBalanceOf(me);
   const divergence = divergingAxesFromTracks(tracks);
@@ -146,6 +158,15 @@ export function SageStoryFold({
     setStory(parseSageStory(me.sage_story));
     setState('idle');
   }, [me.sage_story]);
+
+  useEffect(() => {
+    void loadStoryBankHistory(me.id).then((history) => {
+      historyRef.current = history;
+    });
+    void loadStoryRewriteTried(me.id).then((tried) => {
+      rewriteTriedRef.current = new Set(tried);
+    });
+  }, [me.id]);
 
   const loadStory = useCallback(async (mode: 'library' | 'new' = 'library') => {
     if (state === 'loading') return;
@@ -178,10 +199,19 @@ export function SageStoryFold({
       categoryId: lead?.reading.def.id ?? '',
       setting,
       lean: lead?.lead?.lean ?? null,
-      seenIds: story?.card?.bankId ? [story.card.bankId] : [],
-      recentHooks: story?.card?.hook ? [story.card.hook] : [],
+      seenIds: nextBankSeenIds(historyRef.current.seenIds, story?.card?.bankId ?? ''),
+      recentHooks: story?.card?.hook
+        ? nextBankRecentHooks(historyRef.current.recentHooks, story.card.hook)
+        : historyRef.current.recentHooks,
       seed: `${me.id}|${ymd}|${fingerprint}`,
     });
+    if (bankCard?.bankId) {
+      historyRef.current = {
+        seenIds: nextBankSeenIds(historyRef.current.seenIds, bankCard.bankId),
+        recentHooks: nextBankRecentHooks(historyRef.current.recentHooks, bankCard.hook ?? ''),
+      };
+      void rememberStoryBankHistory(me.id, historyRef.current);
+    }
     const bankStory: SageStory | null = bankCard
       ? {
           body: storyCardBody(bankCard),
@@ -335,6 +365,15 @@ export function SageStoryFold({
       setNeedNew(false);
       setStory(next);
       setState('idle');
+      if (next.card?.hook) {
+        historyRef.current = {
+          seenIds: next.card.bankId
+            ? nextBankSeenIds(historyRef.current.seenIds, next.card.bankId)
+            : historyRef.current.seenIds,
+          recentHooks: nextBankRecentHooks(historyRef.current.recentHooks, next.card.hook),
+        };
+        void rememberStoryBankHistory(me.id, historyRef.current);
+      }
     } catch (err) {
       console.log('[sage-story] generate error:', err);
       if (attempt !== attemptRef.current) return;
@@ -358,35 +397,43 @@ export function SageStoryFold({
     if (story.card && isStoryV2(story.card)) return;
     if (story.card?.source === 'bank') return;
     if (rewriteRef.current) return;
+    const triedKey = storyRewriteAttemptKey(story.fingerprint, story.generatedOn, story.body);
+    if (rewriteTriedRef.current.has(triedKey)) return;
     rewriteRef.current = true;
+    rewriteTriedRef.current.add(triedKey);
+    await markStoryRewriteTried(me.id, triedKey);
     if (await shouldUseLocalAi()) return;
-    const ymd = localYmd(new Date(), me.timezone || 'UTC');
-    const scored = scoreReadyCategories(tracks);
-    const ids = story.thread?.categories ?? [];
-    const chosen = scored.filter((row) => ids.includes(row.reading.def.id));
-    const sides = chosen.map((row) => ({
-      lead: row.lead ? { axis: row.lead.axis, lean: row.lead.lean } : null,
-      card: pickCategoryCard({ userId: me.id, reading: row.reading, ymd }),
-    }));
-    const prompt = buildStoryRewritePrompt({
-      oldText: story.card ? storyCardBody(story.card) : story.body,
-      sides,
-      jokeTarget: pickJokeTarget(tracks, chosen, crisisToday),
-      setting: storyAngleFor(`${ids.join('+')}|${ymd}`),
-    });
-    for (let pass = 1; pass <= 2; pass += 1) {
-      const text = await generateStoryCardText(prompt, SAGE_STORY_META);
-      if (!text) break;
-      const parsed = parseStoryCardAnswer(text, { jokeAsked: true });
-      const c = parsed.card;
-      const joined = c ? [storyCardBody(c), c.otherWay, c.title].filter(Boolean).join(' ') : '';
-      if (c && !containsFrameworkTerm(joined) && !matchingJargonTerm(joined) && !storyNamesACategory(joined)) {
-        const next: SageStory = { ...story, body: storyCardBody(c), card: c };
-        await saveSageStory(me.id, next);
-        setStory(next);
-        return;
-      }
+    try {
+      const ymd = localYmd(new Date(), me.timezone || 'UTC');
+      const scored = scoreReadyCategories(tracks);
+      const ids = story.thread?.categories ?? [];
+      const chosen = scored.filter((row) => ids.includes(row.reading.def.id));
+      const sides = chosen.map((row) => ({
+        lead: row.lead ? { axis: row.lead.axis, lean: row.lead.lean } : null,
+        card: pickCategoryCard({ userId: me.id, reading: row.reading, ymd }),
+      }));
+      const prompt = buildStoryRewritePrompt({
+        oldText: story.card ? storyCardBody(story.card) : story.body,
+        sides,
+        jokeTarget: pickJokeTarget(tracks, chosen, crisisToday),
+        setting: storyAngleFor(`${ids.join('+')}|${ymd}`),
+      });
+      for (let pass = 1; pass <= 2; pass += 1) {
+        const text = await generateStoryCardText(prompt, SAGE_STORY_META);
+        if (!text) break;
+        const parsed = parseStoryCardAnswer(text, { jokeAsked: true });
+        const c = parsed.card;
+        const joined = c ? [storyCardBody(c), c.otherWay, c.title].filter(Boolean).join(' ') : '';
+        if (c && !containsFrameworkTerm(joined) && !matchingJargonTerm(joined) && !storyNamesACategory(joined)) {
+          const next: SageStory = { ...story, body: storyCardBody(c), card: c };
+          await saveSageStory(me.id, next);
+          setStory(next);
+          return;
+        }
         logAiReject('story', parsed.reason ?? 'framework or jargon', pass);
+      }
+    } catch {
+      // Failed rewrite keeps the old labelled card. No second mass call.
     }
   }, [consentGranted, tracks, story, me.id, me.timezone, crisisToday]);
 

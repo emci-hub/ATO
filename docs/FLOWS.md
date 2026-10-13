@@ -102,7 +102,9 @@ once) → `sage_messages`.
   (`supabase/migrations/wave22_levity_story.sql:30`). Library first (wave93,
   `LIBRARY_VERSION.story` = `l2`); the hand-written bank (`src/lib/story-bank/`)
   is the instant fallback and the first paint while a library/AI card loads.
-  Old labelled cards rewrite lazily on open; a failed rewrite keeps the old one.
+  Bank picks skip recently seen ids/hooks (`src/lib/story-bank/history.ts`).
+  Old labelled cards rewrite lazily on open (once per saved card, persisted);
+  a failed rewrite keeps the old one and never calls `claimStoryGenerate`.
 
 ## 8. Legends
 

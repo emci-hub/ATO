@@ -19,6 +19,11 @@ import {
   rawStoryBank,
 } from '../src/lib/story-bank';
 import {
+  BANK_SKIP_RECENT,
+  bankIdsToSkip,
+  nextBankSeenIds,
+} from '../src/lib/story-bank/history';
+import {
   STORY_FEW_SHOTS,
   STORY_HOOK_VARIETY_LIMIT,
   parseStoryCardAnswer,
@@ -101,13 +106,25 @@ const again = pickStoryBankCard({
   seed: 'check',
 });
 assert.equal(again?.title, picked!.title, 'same seed → same pick');
-ok('picker is stable and returns a v2 bank card');
+const skipped = pickStoryBankCard({
+  categoryId: 'cat_steadiness',
+  setting: 'friends',
+  lean: 'high',
+  seed: 'check',
+  seenIds: picked?.bankId ? [picked.bankId] : ['missing'],
+});
+assert.ok(skipped && skipped.bankId !== picked!.bankId, 'picker skips a recently seen bank id');
+assert.deepEqual(nextBankSeenIds(['a'], 'b').slice(-1), ['b']);
+assert.equal(bankIdsToSkip(['a', 'b'], 2).length, Math.min(BANK_SKIP_RECENT, 1));
+ok('picker is stable, skips seen ids, and recycles after the pool is exhausted');
 
 const fold = readFileSync(resolve(root, 'src/components/sage-story-fold.tsx'), 'utf8');
 assert.match(fold, /pickStoryBankCard\(/);
 assert.match(fold, /StoryV2View/);
 assert.match(fold, /rewriteOldStory/);
-ok('the fold uses the bank as fallback and rewrites old cards on open');
+assert.match(fold, /loadStoryBankHistory/);
+assert.match(fold, /markStoryRewriteTried/);
+ok('the fold uses the bank as fallback, remembers seen cards, and rewrites old cards on open');
 
 const review = readFileSync(resolve(root, 'docs/story-review.md'), 'utf8');
 assert.match(review, /STORY_COPY_REVIEWED = false/);

@@ -32,8 +32,10 @@ Dropped as on-screen blocks: "What they noticed", "What it means for you". Plot 
 - **Reveal:** When plans break, you quietly turn the delay into the good part.
 - **Next:** Next time: you're first at the cinema. Your friends are not.
 
-**Bank:** 66 hand-written cards in `src/lib/story-bank/stories.json` (11 categories × friends/work/home × high/low). Same validators as a model card. Instant fallback when AI fails / times out / is offline / is over budget; also the first paint while a library card loads (serve first, then upgrade). Copy unreviewed.
+**Bank:** 66 hand-written cards in `src/lib/story-bank/stories.json` (11 categories × friends/work/home × high/low). Same validators as a model card. Instant fallback when AI fails / times out / is offline / is over budget; also the first paint while a library card loads (serve first, then upgrade). Device-local seen-id + hook history (last 40 ids / 8 hooks) so a tap does not re-show the same card too soon. Copy unreviewed.
 
-**Motion:** fade + rise per beat. Reduce Motion = a 180 ms cross-fade (never fully static). Appearance motion 500 ms+ (Zen) = a bigger springy rise.
+**Motion:** fade + rise per beat. Reduce Motion = a 180 ms cross-fade (never fully static). Motion Full (OS Reduce Motion off) = a springy fade-and-rise; Zen's longer `motionMs` makes that rise extra-dramatic.
+
+**Access:** VoiceOver labels on the title, beat pager (adjustable), Previous/Next beat buttons as a swipe alternative, Plot B, Share, and Built from. Dynamic Type stays on (`allowFontScaling` is not disabled). Share is title + reveal; a failed share sheet does not throw.
 
 **Pins:** `check:story-thread`, `check:story-bank` (in `check:ota-gate`), `LIBRARY_VERSION.story` = `l2` (old library cards stay on `l1` until rewritten). To approve: flip `STORY_COPY_REVIEWED` in `src/lib/sage-story.ts` and `STORY_BANK_COPY_REVIEWED` in `src/lib/story-bank/index.ts` after you have read live cards and the bank.

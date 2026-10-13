@@ -17,6 +17,7 @@ import {
 } from '@/lib/story-card';
 import type { TraitLean } from '@/lib/traits';
 
+import { bankIdsToSkip } from './history';
 import raw from './stories.json';
 
 export const STORY_BANK_COPY_REVIEWED = false;
@@ -110,21 +111,27 @@ export function pickStoryBankCard(opts: {
   recentHooks?: readonly string[];
   seed?: string;
 }): StoryCard | null {
-  const seen = new Set(opts.seenIds ?? []);
+  const seen = opts.seenIds ?? [];
   const recent = opts.recentHooks ?? [];
-  const usable = (row: StoryBankEntry) => {
-    if (seen.has(row.id)) return false;
-    if (recent.some((hook) => storyOverlap(row.hook, hook) >= STORY_HOOK_VARIETY_LIMIT)) return false;
-    return bankEntryToCard(row) != null;
+  const usableIn = (rows: StoryBankEntry[]) => {
+    const inPool = seen.filter((id) => rows.some((row) => row.id === id));
+    const skip = new Set(bankIdsToSkip(inPool, rows.length));
+    return rows.filter((row) => {
+      if (skip.has(row.id)) return false;
+      if (recent.some((hook) => storyOverlap(row.hook, hook) >= STORY_HOOK_VARIETY_LIMIT)) return false;
+      return bankEntryToCard(row) != null;
+    });
   };
   const pools: StoryBankEntry[][] = [
-    STORY_BANK.filter(
-      (row) => row.categoryId === opts.categoryId && row.setting === opts.setting && (!opts.lean || row.lean === opts.lean) && usable(row),
+    usableIn(
+      STORY_BANK.filter(
+        (row) => row.categoryId === opts.categoryId && row.setting === opts.setting && (!opts.lean || row.lean === opts.lean),
+      ),
     ),
-    STORY_BANK.filter((row) => row.categoryId === opts.categoryId && row.setting === opts.setting && usable(row)),
-    STORY_BANK.filter((row) => row.categoryId === opts.categoryId && usable(row)),
-    STORY_BANK.filter((row) => row.setting === opts.setting && usable(row)),
-    STORY_BANK.filter(usable),
+    usableIn(STORY_BANK.filter((row) => row.categoryId === opts.categoryId && row.setting === opts.setting)),
+    usableIn(STORY_BANK.filter((row) => row.categoryId === opts.categoryId)),
+    usableIn(STORY_BANK.filter((row) => row.setting === opts.setting)),
+    usableIn([...STORY_BANK]),
   ];
   const pool = pools.find((rows) => rows.length > 0) ?? [];
   if (pool.length === 0) return null;

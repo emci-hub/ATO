@@ -67,6 +67,7 @@ export const STORY_BANNED_CLICHES: readonly RegExp[] = [
   /\bsay less\b/i,
   /\bno cap\b/i,
   /\bspoiler alert\b/i,
+  /\beveryone else\b/i,
 ];
 
 export function storyClicheViolation(text: string): string | null {
