@@ -180,6 +180,11 @@ Read before editing the area. Each one has bitten this repo at least once.
   4. Text lives in boxes with a set width + `numberOfLines`, padded inside frame art.
   5. Loading states keep the final size (a placeholder of the same height), never a
      smaller spinner row.
+  Kit: `src/play/fixed-region.tsx` (`ReservedRegion`, `Reserve`, `useGrowOnlyHeight`);
+  rule `.cursor/rules/fixed-regions.mdc`; gate `check:fixed-regions` (pins + bans
+  unmarked run-phase collapses). Exception: a deliberate screen switch (Turf War setup →
+  wave) may re-lay out once, marked `fixed-regions: screen switch`. Applied to Dive, Turf
+  War's coach line, the Hideout strip, pet games, the Locker tip and the sword notice.
 
 ## Copy
 
