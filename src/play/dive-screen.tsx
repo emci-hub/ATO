@@ -37,7 +37,7 @@ import { DiveTopBar } from '@/play/dive-hud';
 import { DiveScene, diveZone, type DiveReveal, type DiveSceneEvent } from '@/play/dive-scene';
 import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
-import { PIXEL } from '@/play/pixel-theme';
+import { PIXEL, PIXEL_CAPTION_PT, pixelBodyLine } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
 import { ManholeTransit } from '@/play/dive-street';
 import { usePlayMotion } from '@/play/play-motion';
@@ -99,6 +99,9 @@ function lostFinds(haul: readonly string[], saved: readonly string[]): string[] 
 }
 
 type SheetId = 'info' | 'gear';
+
+/** Most button rows any dive state shows (Local/Express, then Head up). */
+const DIVE_DOCK_ROWS = 2;
 
 export function DiveScreen({
   view,
@@ -332,6 +335,18 @@ export function DiveScreen({
                     ))}
                   </View>
                 ))}
+                {/* Reserve the tallest state (2 rows: Local/Express + Head up) so the panel —
+                    and the scene above it — never changes size between states. */}
+                {Array.from({ length: Math.max(0, DIVE_DOCK_ROWS - buttonRows.length) }, (_, i) => (
+                  <View
+                    key={`spacer-${i}`}
+                    style={[styles.buttonRow, styles.spacerRow]}
+                    pointerEvents="none"
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants">
+                    <PixelButton label="x · x" variant="muted" disabled onPress={() => undefined} style={styles.button} />
+                  </View>
+                ))}
               </View>
             </View>
           )
@@ -486,7 +501,9 @@ const styles = StyleSheet.create({
   buttonRow: { flexDirection: 'row', width: '100%', gap: 8, alignItems: 'stretch' },
   button: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
   buttonFixed: { minHeight: 50 },
-  note: { textAlign: 'center' },
+  // Always two lines tall, so a short status doesn't shrink the panel.
+  note: { textAlign: 'center', minHeight: pixelBodyLine(PIXEL_CAPTION_PT) * 2 },
+  spacerRow: { opacity: 0 },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   buyButton: { flexGrow: 0 },
   splashRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },

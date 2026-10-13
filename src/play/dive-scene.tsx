@@ -662,6 +662,7 @@ export function DiveScene({
   // Mystery finds: names stay hidden while diving; the haul sheet reveals them on surfacing.
   const diving = haul.length > 0;
   const [revealedKey, setRevealedKey] = useState(event?.key ?? 0);
+  const [dockMinH, setDockMinH] = useState(0);
   const showHaulReveal =
     event?.kind === 'surface' && event.finds > 0 && event.ids.length > 0 && event.key !== revealedKey;
 
@@ -843,8 +844,15 @@ export function DiveScene({
       {toast}
       </Animated.View>
       {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
-      <View style={styles.dock}>
-        <PixelFrame streetPiece="panel" align="stretch" padded={false}>
+      <View
+        style={[styles.dock, { minHeight: dockMinH }]}
+        onLayout={(e) => {
+          // Safety net: the panel only ever grows to its tallest state, never shrinks back
+          // (a shrinking panel made the scene picture jump bigger / smaller).
+          const h = Math.ceil(e.nativeEvent.layout.height);
+          setDockMinH((m) => (h > m ? h : m));
+        }}>
+        <PixelFrame streetPiece="panel" align="stretch" padded={false} style={styles.dockFrame}>
           <View style={[styles.dockPad, street && styles.streetDockPad]}>
             <View pointerEvents="none" style={styles.haulRow}>
               <PixelLabel color={street ? STREET_DIM : PIXEL.cyan} style={street ? styles.streetLabel : undefined}>
@@ -873,16 +881,19 @@ export function DiveScene({
                 );
               })}
             </View>
-            {bustPct != null ? (
-              <View pointerEvents="none">
-                <PixelRisk
-                  pct={bustPct}
-                  label={street ? 'Heat' : undefined}
-                  labelColor={street ? STREET_DIM : undefined}
-                  labelStyle={street ? styles.streetLabel : undefined}
-                />
-              </View>
-            ) : null}
+            {/* Heat row always takes its space (hidden off a run) so the panel keeps one height. */}
+            <View
+              pointerEvents="none"
+              style={bustPct == null ? styles.reserved : undefined}
+              accessibilityElementsHidden={bustPct == null}
+              importantForAccessibility={bustPct == null ? 'no-hide-descendants' : 'auto'}>
+              <PixelRisk
+                pct={bustPct ?? 0}
+                label={street ? 'Heat' : undefined}
+                labelColor={street ? STREET_DIM : undefined}
+                labelStyle={street ? styles.streetLabel : undefined}
+              />
+            </View>
             {dock}
           </View>
         </PixelFrame>
@@ -906,6 +917,9 @@ const styles = StyleSheet.create({
   // Top of the scene: the pet stands at the bottom, so the toast never covers it.
   toast: { position: 'absolute', left: 0, right: 0, top: 10, paddingHorizontal: 12, alignItems: 'center' },
   abs: { position: 'absolute' },
+  reserved: { opacity: 0 },
+  // The panel art fills the reserved height (e.g. while "Searching…" shows one short row).
+  dockFrame: { flexGrow: 1 },
   hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
   flash: { backgroundColor: '#FFFFFF' },
   revealGlow: {
