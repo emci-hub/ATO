@@ -1,4 +1,5 @@
 import { PreviewBanner } from '@/components/preview-banner';
+import { UpdateReadyBanner } from '@/components/update-ready-banner';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
@@ -123,6 +124,8 @@ function RootNavigator() {
           <AppDevFab />
           {/* Dev "Preview as new user": a red bar over every screen while it is on. */}
           <PreviewBanner />
+          {/* A downloaded OTA update only runs after a restart: offer it with one tap. */}
+          <UpdateReadyBanner />
         </>
       )}
     </>
