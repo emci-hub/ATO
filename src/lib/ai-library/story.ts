@@ -14,6 +14,7 @@ import type { CardCell } from '@/lib/category-bank/define';
 import { categoryById } from '@/lib/categories';
 import { storyNamesACategory } from '@/lib/sage-story';
 import {
+  STORY_OUTPUT_TOKENS,
   buildStoryPromptFromSides,
   parseStoredStoryCard,
   parseStoryCardAnswer,
@@ -127,7 +128,7 @@ export const STORY_LIBRARY: LibraryKindSpec<StoryBucket, StoryCard> = {
         jokeTarget: bucket.joke,
         setting: STORY_ANGLES[angle as StoryAngle] ?? null,
       }),
-      maxOutputTokens: 700,
+      maxOutputTokens: STORY_OUTPUT_TOKENS,
     };
   },
   parse(raw, _bucket, angles): LibraryParse<StoryCard> {
@@ -135,7 +136,7 @@ export const STORY_LIBRARY: LibraryKindSpec<StoryBucket, StoryCard> = {
     const c = parsed.card;
     if (!c) return { cards: [], reason: parsed.reason ?? 'no card' };
     // Every shown part, not just the body: the deeper parts and the title/joke too.
-    const joined = [storyCardBody(c), c.noticed, c.otherWay, c.nextTime, c.joke, c.title].filter(Boolean).join(' ');
+    const joined = [storyCardBody(c), c.otherWay, c.title].filter(Boolean).join(' ');
     if (containsFrameworkTerm(joined) || matchingJargonTerm(joined) || storyNamesACategory(joined)) {
       return { cards: [], reason: 'framework or jargon' };
     }

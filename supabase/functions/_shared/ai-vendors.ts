@@ -30,6 +30,7 @@ async function completeGemini(prompt: string, maxOutputTokens: number): Promise<
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.9,
+          topP: 0.95,
           maxOutputTokens,
           responseMimeType: 'application/json',
           thinkingConfig: { thinkingLevel: 'low' },
@@ -54,6 +55,7 @@ async function completeDeepSeek(prompt: string, maxOutputTokens: number): Promis
       model: Deno.env.get('DEEPSEEK_MODEL') || 'deepseek-v4-flash',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.9,
+      top_p: 0.95,
       max_tokens: maxOutputTokens,
       stream: false,
       response_format: { type: 'json_object' },

@@ -3,17 +3,20 @@ import type { AiCallMetadata } from '@/lib/ai/types';
 
 import { parseExploreBody } from './prompt';
 import { parseStoryAnswer, type StoryAnswer } from '@/lib/sage-story';
+import { STORY_OUTPUT_TOKENS } from '@/lib/story-card';
 
 async function generateJson(
   prompt: string,
   maxOutputTokens: number,
   meta: AiCallMetadata,
+  topP?: number,
 ): Promise<string | null> {
   return generateText({
     prompt,
     temperature: 0.9,
     maxOutputTokens,
     responseFormat: 'json',
+    ...(topP != null ? { topP } : {}),
   }, meta);
 }
 
@@ -33,7 +36,7 @@ export async function generateExploreBody(
 /** Story card lane (2026-10-09): the raw JSON text; the fold parses it with
  * `parseStoryCardAnswer` so a rejection can be logged with its reason. */
 export async function generateStoryCardText(prompt: string, meta: AiCallMetadata): Promise<string | null> {
-  return generateJson(prompt, 900, meta);
+  return generateJson(prompt, STORY_OUTPUT_TOKENS, meta, 0.95);
 }
 
 /** Story lane — longer output. Returns null when the model is unreachable or the answer fails the checks. No fallback parse-to-prose. */

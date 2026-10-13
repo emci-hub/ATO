@@ -97,8 +97,12 @@ once) → `sage_messages`.
   `QuestionsFold` → `tracks`, and it is still not mounted until `tracksReady`.
   Sage chat
   (`routeTalkReply`, `src/lib/voice/talk.ts`) is a separate path and is never gated.
-- Story: `src/lib/sage-story.ts`, own quota `claim_story_generate`
-  (`supabase/migrations/wave22_levity_story.sql:30`), no offline fallback.
+- Story: `src/lib/story-card.ts` (six-beat swipe: hook / twist / move / punchline /
+  reveal / next) + `src/lib/sage-story.ts`, own quota `claim_story_generate`
+  (`supabase/migrations/wave22_levity_story.sql:30`). Library first (wave93,
+  `LIBRARY_VERSION.story` = `l2`); the hand-written bank (`src/lib/story-bank/`)
+  is the instant fallback and the first paint while a library/AI card loads.
+  Old labelled cards rewrite lazily on open; a failed rewrite keeps the old one.
 
 ## 8. Legends
 

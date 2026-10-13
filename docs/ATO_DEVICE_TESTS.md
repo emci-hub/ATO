@@ -303,11 +303,14 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] Confirm Home's AI line now reads "Sage uses AI only to write your Story, your Legends cards and your category deep dives."
 - [ ] Screenshot: a written deep dive with its leanings.
 
-## Box 31 — Home: The Story as a card (2026-10-09)
+## Box 31 — Home: The Story as swipe beats (2026-10-13)
 
-- [ ] Home → The Story → Load story. Confirm parts, each with the AI icon: Your story title, The scene, The moment, How you handle it, What it means for you, and (sometimes) The funny part.
-- [ ] Confirm the story text never says a trait or category word ("your Steady side", "Drive"), and a small "Built from: …" line names the categories with their letters and number.
-- [ ] An older saved story (before this update) still shows as one paragraph until you load a new one.
+- [ ] Home → The Story → Load story. Confirm a nickname title, swipe cards (one beat each, no section labels: hook, twist, move, punchline, reveal, then a recap), progress dots, and **one** AI badge (none if the card came from the bank).
+- [ ] Confirm there is no "What they noticed" or "What it means for you". Optional tap: "The other way it could have gone". ⓘ opens Built from.
+- [ ] Confirm the story text never says a trait or category word ("your Steady side", "Drive"). The punchline should callback to the opening detail, not explain itself.
+- [ ] Settings → Reduce Motion on: beats still cross-fade (never freeze). Motion Full / Zen: a bigger fade-and-rise.
+- [ ] An older labelled story (scene / moment / means) still shows until you open the fold; opening it rewrites once. If rewrite fails, the old card stays.
+- [ ] Turn AI off / go offline: a bank story still opens (no spinner forever). A later successful library/AI card can replace it.
 
 ## Box 32 — ATO tokens pay for AI (wave92, 2026-10-09)
 

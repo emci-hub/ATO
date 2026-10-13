@@ -1,6 +1,7 @@
 /**
  * The Story — longer-form Sage prose from currently settled categories.
- * Own generation call and quota lane. No offline fallback.
+ * Own generation call and quota lane. The hand-written bank is the
+ * instant fallback when AI fails, times out, is offline or is over budget.
  *
  * UNREVIEWED. Diagnosis-adjacent. Nothing here is shippable without emci's
  * direct read — same bar as the Crisis spec.

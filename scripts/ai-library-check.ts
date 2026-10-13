@@ -133,6 +133,10 @@ async function main() {
   const sp = planLibraryCall('story', storyKey, {});
   assert.ok(sp.ok);
   if (!sp.ok) return;
+  assert.equal(LIBRARY_VERSION.story, 'l2', 'story prompt/shape bump: old library cards stay on l1');
+  assert.equal(sp.maxOutputTokens, 800);
+  assert.match(sp.prompt, /The Bread Basket Diplomat/);
+  assert.match(sp.prompt, /"hook".*"twist".*"move".*"punchline".*"reveal"/s);
   assert.match(sp.prompt, /TOLD-VS-PLAYED: none\. Do not invent a split\./, 'the personal told-vs-played line never reaches a shared story');
   assert.match(sp.prompt, /SETTING FOR THIS STORY: a plan with friends/);
   const sp2 = planLibraryCall('story', storyKey, { friends: 1 });
