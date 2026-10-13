@@ -193,6 +193,21 @@ Run these steps for any request, whether it's "make a new hero", "edit the couch
 ### Rooms, floors, walls
 - §1 order: building kit → tilesets (chain `lower_base_tile_id`/`upper_base_tile_id` so terrains
   match) → map objects → states → light layer. Tiles 32 px.
+- Worked example (Hideout, emci approved 2026-10-12): `art-src/pixellab/room.hideout.streetwear/`
+  (gen.json lists every tool, id and canvas) → `scripts/hideout-room-art.ts` paints the layers →
+  `npx tsx scripts/gen-hideout-td.ts` writes them + the map. Re-run after swapping any part.
+- What makes high-detail rooms read (research 2026-10-12, Slynyrd Pixelblog 35 + interior write-ups):
+  one camera tilt for every piece; a darker back-wall band 2–3 tiles tall is the main depth cue;
+  build from parts (floor tiles + wall pieces + props as separate sprites, never one image); mix
+  2+ floor variants (base ~55 %, scuffs/knots the rest) so the floor isn't a stamp; flat things
+  (rug, hatch, bowl) go on the floor layer; tall props are occluders; light lives on its own layer
+  (contact shadows, warm lamp pool, screen spill), not painted into props.
+- Building kit `square_topdown` returns 52×111 frames: floor piece is 32×24 at (10,79), back wall
+  32×81 at (10,7), side cap 12×24 at (10,7). Floor variants: `create_tiles_pro` with the kit floor as
+  `style_images` keeps them on the same 32×24 shape and palette.
+- Prop size: `create_map_object` draws ~10–20 % inside its canvas and flattens low-top-down
+  furniture. Set the canvas to the §2 target box + ~10 % and say "fills the whole canvas edge to
+  edge"; couches need extra height ("seat cushions clearly visible from above").
 
 ### UI
 - Check the Streetwear UI kit first (`assets/play/sheets/streetwear/ui-kit/`). New pieces:
@@ -211,9 +226,10 @@ emci-picked) items are anchors; `needs-restyle` items never are.
 - Heroes (16 approved streetwear sets, `heroes/<slug>/streetwear/`): kael (scale reference), sak,
   raven, kitsune, neon-viper. Raw frames: `art-src/pixellab/hero.<slug>.streetwear/`; registry ids
   `hero.<slug>.streetwear.core` / `.combat`. The `cast` variants are alt skins, not style anchors.
-- Room props: none approved in the library yet (`props/` is all `resource`, mostly off-style). Until the
-  Hideout build is approved, the anchors are the approved pipeline-test props (couch, lamp, plant,
-  speaker, arcade, rug, table, beanbag); import them as the first `props/hideout/streetwear` set.
+- Room props: the Hideout set (emci approved the room 2026-10-12) — `props/*/hideout/streetwear/`
+  (couch, table, lamp, arcade, plant, stereo, speaker, beanbag, window, rug, manhole, bowl, cushion,
+  lamp-off, arcade-off); raw + gen.json in `art-src/pixellab/room.hideout.streetwear/`. Wall/floor
+  anchor: that folder's `kit/` (building kit) and `floor-variants/`.
 - Icons / UI: `icons/streetwear/streetwear` (32 px icon set), `icons/currency|tabs/streetwear`,
   `ui/kit/streetwear`, `ui/frames/streetwear`, `ui/streetwear/streetwear`, all status `resource`
   (house style, not yet emci-approved).
