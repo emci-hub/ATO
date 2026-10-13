@@ -177,11 +177,16 @@ for (const map of Object.values(BOARD_MAPS)) {
 }
 ok(`${Object.keys(BOARD_MAPS).length} Turf War boards baked, pads match board-data`);
 
-// 5. Default stays cast.
+// 5. Classic retired (emci 2026-10-12): Streetwear is the only look, in every build.
 const settings = fs.readFileSync(path.join(repo, 'src/play/play-settings.ts'), 'utf8');
-assert.match(settings, /artSkin: 'cast',/, 'defaultSettings().artSkin must stay cast');
+assert.match(settings, /artSkin: 'streetwear',/, 'defaultSettings().artSkin is streetwear');
 const artSkinSrc = fs.readFileSync(path.join(repo, 'src/play/art-skin.ts'), 'utf8');
-assert.match(artSkinSrc, /let active: ArtSkinId = 'cast';/, 'the runtime art style starts as cast');
-ok('art style defaults to cast (Streetwear is opt-in)');
+assert.match(artSkinSrc, /export const ART_SKINS: readonly ArtSkinId\[\] = \['streetwear'\];/, 'streetwear is the only art style');
+assert.match(artSkinSrc, /const active: ArtSkinId = 'streetwear';/, 'the runtime art style is streetwear');
+assert.doesNotMatch(artSkinSrc, /PRE_LAUNCH_DEV/, 'Streetwear is not gated to pre-launch builds');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { parseSettings } = require('../src/play/play-settings') as typeof import('../src/play/play-settings');
+assert.equal(parseSettings({ artSkin: 'cast' }, null).artSkin, 'streetwear', 'an old Classic save loads as streetwear');
+ok('Classic retired: Streetwear is the only art style, old Classic saves load as Streetwear');
 
 console.log(`\ncheck:streetwear-assets — ${passed} groups passed.`);

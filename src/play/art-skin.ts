@@ -6,19 +6,19 @@
  * The Play store sets it whenever a save is loaded or committed
  * (`use-play-store.ts`), before the board mounts; `skin.ts` reads it to put
  * the Streetwear skin in front of the role stack.
+ *
+ * Classic (`cast`) was retired as a look (emci 2026-10-12): Streetwear is the
+ * only game style, in every build. The cast / craftpix-td / kenney-td skins
+ * stay in the stack only as fallbacks for roles Streetwear doesn't draw yet
+ * (Defend board ground/roads/props, the shot sprite) — see skin.ts.
  */
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+export type ArtSkinId = 'streetwear';
+export const ART_SKINS: readonly ArtSkinId[] = ['streetwear'];
 
-export type ArtSkinId = 'cast' | 'streetwear';
-export const ART_SKINS: readonly ArtSkinId[] = ['cast', 'streetwear'];
+const active: ArtSkinId = 'streetwear';
 
-let active: ArtSkinId = 'cast';
-
-export function setArtSkin(id: ArtSkinId): void {
-  // Streetwear is a pre-launch preview: a public build always draws cast,
-  // even if an old save still says streetwear (the toggle is dev-only).
-  active = PRE_LAUNCH_DEV && id === 'streetwear' ? 'streetwear' : 'cast';
-}
+/** Kept for the store's load/commit calls; an old `cast` save draws Streetwear. */
+export function setArtSkin(_id: ArtSkinId | string): void {}
 
 export function artSkin(): ArtSkinId {
   return active;

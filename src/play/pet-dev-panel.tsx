@@ -18,7 +18,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { ART_SKINS, artSkin, type ArtSkinId } from '@/play/art-skin';
 import { auraStyles } from '@/play/auras';
 import { finishColors } from '@/play/finishes';
 import { NeonChip } from '@/play/neon-ui';
@@ -56,14 +55,11 @@ import {
   devSetPetFinish,
   devSetPity,
   devSetStreakDay,
-  setPlaySettings,
 } from '@/play/playStore';
 import type { PlayTransition } from '@/play/use-play-store';
 
 /** Pity positions worth testing: fresh, just before soft pity, inside it, last before hard. */
 export const DEV_PITY_PRESETS = [0, PITY_SOFT_FROM - 1, PITY_SOFT_FROM + 4, PITY_HARD - 1] as const;
-
-const ART_SKIN_LABEL: Record<ArtSkinId, string> = { cast: 'Classic', streetwear: 'Streetwear' };
 
 export const PET_DEV_GROUPS = [
   { id: 'pet', title: 'Pet · stage & care' },
@@ -74,7 +70,6 @@ export const PET_DEV_GROUPS = [
   { id: 'room', title: 'Room · look & talk' },
   { id: 'finish', title: 'Finishes' },
   { id: 'aura', title: 'Aura' },
-  { id: 'art', title: 'Art style (paint only)' },
 ] as const;
 export type PetDevGroupId = (typeof PET_DEV_GROUPS)[number]['id'];
 
@@ -89,8 +84,6 @@ export function PetDevPanel({
   startOpen?: readonly PetDevGroupId[];
 }) {
   const room = usePetDevRoom();
-  /** Art style switch: first tap arms, second writes (dev writes take two taps). */
-  const [artArmed, setArtArmed] = useState<ArtSkinId | null>(null);
   const [open, setOpen] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(PET_DEV_GROUPS.map((g) => [g.id, startOpen.includes(g.id)])),
   );
@@ -165,26 +158,6 @@ export function PetDevPanel({
       <>
         {btn('Auras off', (doc, now) => devSetPetAura(doc, now, pet.uid, 'none'))}
         {auraStyles().map((row) => btn(row.name, (doc, now) => devSetPetAura(doc, now, pet.uid, row.id)))}
-      </>
-    ),
-    art: (
-      <>
-        {ART_SKINS.map((id) => (
-          <NeonChip
-            key={id}
-            label={artArmed === id ? `Tap again: ${ART_SKIN_LABEL[id]}` : ART_SKIN_LABEL[id]}
-            selected={artSkin() === id}
-            onPress={() => {
-              if (artSkin() === id) return;
-              if (artArmed !== id) {
-                setArtArmed(id);
-                return;
-              }
-              setArtArmed(null);
-              commit((doc) => setPlaySettings(doc, { artSkin: id }));
-            }}
-          />
-        ))}
       </>
     ),
   };

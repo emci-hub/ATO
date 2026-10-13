@@ -54,7 +54,7 @@ export type PlaySettings = {
   skipReveals: boolean;
   /** Seen (or skipped) the first-time tutorial. */
   tutorialSeen: boolean;
-  /** Art style the game is drawn in. Paint only; `cast` until switched. */
+  /** Art style the game is drawn in. Paint only; Streetwear is the only look (Classic retired). */
   artSkin: ArtSkinId;
   /** Small vibrations on taps and big moments (Streetwear shell). */
   haptics: boolean;
@@ -71,7 +71,7 @@ export function defaultSettings(): PlaySettings {
     chatter: 'normal',
     skipReveals: false,
     tutorialSeen: false,
-    artSkin: 'cast',
+    artSkin: 'streetwear',
     haptics: true,
   };
 }

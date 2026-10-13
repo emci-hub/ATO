@@ -1,0 +1,398 @@
+{
+  "version": 1,
+  "decidedAt": "2026-10-12",
+  "decisions": {
+    "prop.scribble-dungeons.barrels-stacked": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.bed": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.bed-luxurious": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.campfire": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.carpet": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.cart": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.chair": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.crate": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-barrel": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-barrels": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-barrels-stacked": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-bed": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-bed-luxurious": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-campfire": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-cart": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-chair": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-chest": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-coffin": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-crate-small": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-dragon": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-plants": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-table": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-track-cart": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.floor-tree": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.table": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.scribble-dungeons.track-cart": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "prop.storage.third-party-scribble.prop-crate-scribble": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.arrow": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.arrow-circle": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.arrow-curve": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.arrow-head": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.bridge": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.bridge-end": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.door-closed": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.door-open": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.doorway": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-arrow": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-arrow-circle": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-arrow-curve": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-arrow-head": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-door-closed": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-door-open": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-doorway": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-inner-diagonal": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-inner-long-diagonal": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-inner-long-round": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-inner-round": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-path": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-path-crossing": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-path-curve": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-planks": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-puddle": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-track": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-track-crossing": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-track-curve": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-trap": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-trapdoor-round": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-trapdoor-square": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-corner": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-curve": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-damaged": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-demolished": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-diagonal": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-edge": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-half": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-secret": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.floor-wall-trap": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.grass": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.inner-diagonal": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.inner-long-diagonal": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.inner-long-round": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.inner-round": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.path": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.path-crossing": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.path-curve": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.planks": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.stairs-down-detail": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.tile": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.tiles": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.tiles-center": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.tiles-corner": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.tiles-decorative": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.track": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.track-crossing": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.track-curve": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.trap": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.trap-door": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.trapdoor-round": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.trapdoor-square": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.wall-curve": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.wall-demolished": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.wall-diagonal": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.wall-edge": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.wall-secret": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.wall-trap": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.water": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    },
+    "tile.third-party-scribble.scribble-dungeons.wood": {
+      "action": "remove",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)"
+    }
+  }
+}

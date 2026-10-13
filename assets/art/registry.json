@@ -10323,12 +10323,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1433,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:b21e1bb124f407d59181879452e73d20",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10344,7 +10344,8 @@
       "part": "barrels-stacked",
       "legacyKeys": [
         "tile.barrels-stacked"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/barrels-stacked.png"
     },
     {
       "id": "prop.scribble-dungeons.bed",
@@ -10357,12 +10358,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1585,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:4c2ffcbcf020680809fb948b0494427c",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10378,7 +10379,8 @@
       "part": "bed",
       "legacyKeys": [
         "tile.bed"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/bed.png"
     },
     {
       "id": "prop.scribble-dungeons.bed-luxurious",
@@ -10391,12 +10393,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1025,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:2a30ef4fddd8368033c409347ff4a191",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10412,7 +10414,8 @@
       "part": "bed-luxurious",
       "legacyKeys": [
         "tile.bed-luxurious"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/bed-luxurious.png"
     },
     {
       "id": "prop.scribble-dungeons.campfire",
@@ -10425,12 +10428,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1666,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:9543890dffa1b082b4b577dc6c68da58",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10446,7 +10449,8 @@
       "part": "campfire",
       "legacyKeys": [
         "tile.campfire"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/campfire.png"
     },
     {
       "id": "prop.scribble-dungeons.carpet",
@@ -10459,12 +10463,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 900,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:421558bbbbb0e24e257bba3b19042e60",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10480,7 +10484,8 @@
       "part": "carpet",
       "legacyKeys": [
         "tile.carpet"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/carpet.png"
     },
     {
       "id": "prop.scribble-dungeons.cart",
@@ -10493,12 +10498,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1022,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:9126bb39acd07c4d158d41c7ee2f52d9",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10514,7 +10519,8 @@
       "part": "cart",
       "legacyKeys": [
         "tile.cart"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/cart.png"
     },
     {
       "id": "prop.scribble-dungeons.chair",
@@ -10527,12 +10533,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 690,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:91d1a67e4b26b1fde71c6208f7ecb166",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10548,7 +10554,8 @@
       "part": "chair",
       "legacyKeys": [
         "tile.chair"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/chair.png"
     },
     {
       "id": "prop.scribble-dungeons.crate",
@@ -10561,12 +10568,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1056,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:1ed5bf31d52de201704c888c94f53da2",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10582,7 +10589,8 @@
       "part": "crate",
       "legacyKeys": [
         "tile.crate"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/crate.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-barrel",
@@ -10595,12 +10603,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1253,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:40152a82bca2962016fdd7a8fb625b7c",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10616,7 +10624,8 @@
       "part": "floor-barrel",
       "legacyKeys": [
         "tile.floor-barrel"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-barrel.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-barrels",
@@ -10629,12 +10638,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1876,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:14e2caa66e8e04d35d8403060d29cc81",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10650,7 +10659,8 @@
       "part": "floor-barrels",
       "legacyKeys": [
         "tile.floor-barrels"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-barrels.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-barrels-stacked",
@@ -10663,12 +10673,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1879,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:12b95f8841d585cf435dc29e195352e3",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10684,7 +10694,8 @@
       "part": "floor-barrels-stacked",
       "legacyKeys": [
         "tile.floor-barrels-stacked"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-barrels-stacked.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-bed",
@@ -10697,12 +10708,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1976,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:f56b092328ca74d71588796fc0e890e5",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10718,7 +10729,8 @@
       "part": "floor-bed",
       "legacyKeys": [
         "tile.floor-bed"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-bed.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-bed-luxurious",
@@ -10731,12 +10743,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1481,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:7dbeea64b5d2cfb8c97bfe4cc066da54",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10752,7 +10764,8 @@
       "part": "floor-bed-luxurious",
       "legacyKeys": [
         "tile.floor-bed-luxurious"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-bed-luxurious.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-campfire",
@@ -10765,12 +10778,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1843,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:1a7820fb7e377c30d9c2b7fc9fc260ed",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10786,7 +10799,8 @@
       "part": "floor-campfire",
       "legacyKeys": [
         "tile.floor-campfire"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-campfire.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-cart",
@@ -10799,12 +10813,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1413,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:f195a3653e83631fed303aec3acffe9c",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10820,7 +10834,8 @@
       "part": "floor-cart",
       "legacyKeys": [
         "tile.floor-cart"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-cart.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-chair",
@@ -10833,12 +10848,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1211,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:6fc93f5b405ff4c07d218e71070474c1",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10854,7 +10869,8 @@
       "part": "floor-chair",
       "legacyKeys": [
         "tile.floor-chair"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-chair.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-chest",
@@ -10867,12 +10883,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1436,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:c1f57394fff788ebc3fc5114d64c2711",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10888,7 +10904,8 @@
       "part": "floor-chest",
       "legacyKeys": [
         "tile.floor-chest"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-chest.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-coffin",
@@ -10901,12 +10918,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1508,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:73e51851435c3ec66c5519ca380f7048",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10922,7 +10939,8 @@
       "part": "floor-coffin",
       "legacyKeys": [
         "tile.floor-coffin"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-coffin.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-crate-small",
@@ -10935,12 +10953,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1157,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:1878cda18a6c66c1f7192028e35db331",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10956,7 +10974,8 @@
       "part": "floor-crate-small",
       "legacyKeys": [
         "tile.floor-crate-small"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-crate-small.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-dragon",
@@ -10969,12 +10988,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1856,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:9288994041edc94d70b68103e034ef57",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -10990,7 +11009,8 @@
       "part": "floor-dragon",
       "legacyKeys": [
         "tile.floor-dragon"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-dragon.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-plants",
@@ -11003,12 +11023,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1605,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:1f3fac139ad7404a13377f23170550fc",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -11024,7 +11044,8 @@
       "part": "floor-plants",
       "legacyKeys": [
         "tile.floor-plants"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-plants.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-table",
@@ -11037,12 +11058,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1108,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:7b6b17b797dbc3f26acf713f2efc1a69",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -11058,7 +11079,8 @@
       "part": "floor-table",
       "legacyKeys": [
         "tile.floor-table"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-table.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-track-cart",
@@ -11071,12 +11093,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 2083,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:fd4aad4596a0ab552f7b0ebc4ca9db4e",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -11092,7 +11114,8 @@
       "part": "floor-track-cart",
       "legacyKeys": [
         "tile.floor-track-cart"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-track-cart.png"
     },
     {
       "id": "prop.scribble-dungeons.floor-tree",
@@ -11105,12 +11128,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1798,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:1cdc463d3ccfde04400d47b1d3881aab",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -11126,7 +11149,8 @@
       "part": "floor-tree",
       "legacyKeys": [
         "tile.floor-tree"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/floor-tree.png"
     },
     {
       "id": "prop.scribble-dungeons.table",
@@ -11139,12 +11163,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 769,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:ab2d5723c60223e04a2166e1a74daef8",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -11160,7 +11184,8 @@
       "part": "table",
       "legacyKeys": [
         "tile.table"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/table.png"
     },
     {
       "id": "prop.scribble-dungeons.track-cart",
@@ -11173,12 +11198,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1719,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:fa20cfd063072127396d8462f6d4035c",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -11194,7 +11219,8 @@
       "part": "track-cart",
       "legacyKeys": [
         "tile.track-cart"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/scribble-dungeons/track-cart.png"
     },
     {
       "id": "prop.storage.third-party-scribble.prop-crate-scribble",
@@ -11207,12 +11233,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1056,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:1ed5bf31d52de201704c888c94f53da2",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -11228,7 +11254,8 @@
       "part": "prop_crate_scribble",
       "legacyKeys": [
         "prop.prop-crate-scribble"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/props/unused/storage/third-party-scribble/prop_crate_scribble.png"
     },
     {
       "id": "prop.streetwear.barrel-fire",
@@ -14364,12 +14391,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 532,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:eba9e61b3739a9ca3f624f46d8d319de",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14385,7 +14412,8 @@
       "part": "arrow",
       "legacyKeys": [
         "tile.arrow"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/arrow.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.arrow-circle",
@@ -14398,12 +14426,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 583,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:8015d4c5356782d1251df0a87ebeba58",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14419,7 +14447,8 @@
       "part": "arrow-circle",
       "legacyKeys": [
         "tile.arrow-circle"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/arrow-circle.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.arrow-curve",
@@ -14432,12 +14461,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 614,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:0a602e2eb3eed2375192213107edf329",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14453,7 +14482,8 @@
       "part": "arrow-curve",
       "legacyKeys": [
         "tile.arrow-curve"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/arrow-curve.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.arrow-head",
@@ -14466,12 +14496,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 657,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:8756e7d4ea382d8a129d6e9aa3d6059f",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14487,7 +14517,8 @@
       "part": "arrow-head",
       "legacyKeys": [
         "tile.arrow-head"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/arrow-head.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.bridge",
@@ -14500,12 +14531,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1043,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:fc020b566e8baa568018a9cb51f9d858",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14521,7 +14552,8 @@
       "part": "bridge",
       "legacyKeys": [
         "tile.bridge"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/bridge.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.bridge-end",
@@ -14534,12 +14566,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1024,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:e1cc09a3fdaa9e303d5a23caf1e0e341",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14555,7 +14587,8 @@
       "part": "bridge-end",
       "legacyKeys": [
         "tile.bridge-end"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/bridge-end.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.door-closed",
@@ -14568,12 +14601,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 612,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:0090b26ecbff6046a4945a76cc9fd6aa",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14589,7 +14622,8 @@
       "part": "door-closed",
       "legacyKeys": [
         "tile.door-closed"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/door-closed.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.door-open",
@@ -14602,12 +14636,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 887,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:c61beef6f43b6b643a5c7475f365a4c3",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14623,7 +14657,8 @@
       "part": "door-open",
       "legacyKeys": [
         "tile.door-open"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/door-open.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.doorway",
@@ -14636,12 +14671,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 447,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:a8b4a980cf6385d76c7ec9c734176a3a",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14657,7 +14692,8 @@
       "part": "doorway",
       "legacyKeys": [
         "tile.doorway"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/doorway.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-arrow",
@@ -14670,12 +14706,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 914,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:9524086a6368f0136dd5bb4719d64362",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14691,7 +14727,8 @@
       "part": "floor-arrow",
       "legacyKeys": [
         "tile.floor-arrow"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-arrow.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-arrow-circle",
@@ -14704,12 +14741,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 938,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:7c3c98d9f650dd2e1f64e40265f32444",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14725,7 +14762,8 @@
       "part": "floor-arrow-circle",
       "legacyKeys": [
         "tile.floor-arrow-circle"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-arrow-circle.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-arrow-curve",
@@ -14738,12 +14776,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 992,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d871eda7a9e077acd64be0ace8575480",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14759,7 +14797,8 @@
       "part": "floor-arrow-curve",
       "legacyKeys": [
         "tile.floor-arrow-curve"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-arrow-curve.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-arrow-head",
@@ -14772,12 +14811,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1006,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:03246d6ba46b5e1853f5be38b6607661",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14793,7 +14832,8 @@
       "part": "floor-arrow-head",
       "legacyKeys": [
         "tile.floor-arrow-head"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-arrow-head.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-door-closed",
@@ -14806,12 +14846,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1089,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:3e0301efc199ba02c13856cd89cc1281",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14827,7 +14867,8 @@
       "part": "floor-door-closed",
       "legacyKeys": [
         "tile.floor-door-closed"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-door-closed.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-door-open",
@@ -14840,12 +14881,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1437,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d4d3bf2073362e94d7355852a07da721",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14861,7 +14902,8 @@
       "part": "floor-door-open",
       "legacyKeys": [
         "tile.floor-door-open"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-door-open.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-doorway",
@@ -14874,12 +14916,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1004,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:b0fa0b77a3579c86c6ad118134ebfd69",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14895,7 +14937,8 @@
       "part": "floor-doorway",
       "legacyKeys": [
         "tile.floor-doorway"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-doorway.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-inner-diagonal",
@@ -14908,12 +14951,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 954,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:547137419bb32dc40bc4b3f87df499df",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14929,7 +14972,8 @@
       "part": "floor-inner-diagonal",
       "legacyKeys": [
         "tile.floor-inner-diagonal"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-inner-diagonal.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-inner-long-diagonal",
@@ -14942,12 +14986,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 967,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:837e6a2cb9c49600c8100ace7dcfc9bd",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14963,7 +15007,8 @@
       "part": "floor-inner-long-diagonal",
       "legacyKeys": [
         "tile.floor-inner-long-diagonal"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-inner-long-diagonal.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-inner-long-round",
@@ -14976,12 +15021,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 974,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:1ec6953c157389aa11eb9ab8fb3195d5",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -14997,7 +15042,8 @@
       "part": "floor-inner-long-round",
       "legacyKeys": [
         "tile.floor-inner-long-round"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-inner-long-round.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-inner-round",
@@ -15010,12 +15056,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 986,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:61dd66e00a645ed1cdee9ab5f2bdbc4a",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15031,7 +15077,8 @@
       "part": "floor-inner-round",
       "legacyKeys": [
         "tile.floor-inner-round"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-inner-round.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-path",
@@ -15044,12 +15091,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 977,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:8c08b91f2138f388550165a7b9d6a87c",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15065,7 +15112,8 @@
       "part": "floor-path",
       "legacyKeys": [
         "tile.floor-path"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-path.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-path-crossing",
@@ -15078,12 +15126,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 865,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:69af715ac0a62cc9b3f1d1186c326c84",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15099,7 +15147,8 @@
       "part": "floor-path-crossing",
       "legacyKeys": [
         "tile.floor-path-crossing"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-path-crossing.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-path-curve",
@@ -15112,12 +15161,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1127,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:74c4d61c243624c9c20744b7ef46ad23",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15133,7 +15182,8 @@
       "part": "floor-path-curve",
       "legacyKeys": [
         "tile.floor-path-curve"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-path-curve.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-planks",
@@ -15146,12 +15196,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1545,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:411d677f2d752183ea98d83207fcc758",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15167,7 +15217,8 @@
       "part": "floor-planks",
       "legacyKeys": [
         "tile.floor-planks"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-planks.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-puddle",
@@ -15180,12 +15231,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1320,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:3917b17bd24e2d934ea05d4b8805762b",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15201,7 +15252,8 @@
       "part": "floor-puddle",
       "legacyKeys": [
         "tile.floor-puddle"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-puddle.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-track",
@@ -15214,12 +15266,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1683,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d3086acb5ead3af1d3736c945bb5dfe8",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15235,7 +15287,8 @@
       "part": "floor-track",
       "legacyKeys": [
         "tile.floor-track"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-track.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-track-crossing",
@@ -15248,12 +15301,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1530,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:8d20e18b2079688b32d88a7be0f89f52",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15269,7 +15322,8 @@
       "part": "floor-track-crossing",
       "legacyKeys": [
         "tile.floor-track-crossing"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-track-crossing.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-track-curve",
@@ -15282,12 +15336,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1718,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:83a9e1af80dca8aa139773003d44cc9a",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15303,7 +15357,8 @@
       "part": "floor-track-curve",
       "legacyKeys": [
         "tile.floor-track-curve"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-track-curve.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-trap",
@@ -15316,12 +15371,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1508,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:138fd39ceef5ba53516d5cc976ded041",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15337,7 +15392,8 @@
       "part": "floor-trap",
       "legacyKeys": [
         "tile.floor-trap"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-trap.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-trapdoor-round",
@@ -15350,12 +15406,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1477,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:02b9c489a09333ae28981d5c8c10cd04",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15371,7 +15427,8 @@
       "part": "floor-trapdoor-round",
       "legacyKeys": [
         "tile.floor-trapdoor-round"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-trapdoor-round.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-trapdoor-square",
@@ -15384,12 +15441,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1259,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:ec2b1ef839791a9c839f243122fde7ae",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15405,7 +15462,8 @@
       "part": "floor-trapdoor-square",
       "legacyKeys": [
         "tile.floor-trapdoor-square"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-trapdoor-square.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall",
@@ -15418,12 +15476,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 909,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:c4e0bb835a41b0db9c54098354a345c9",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15439,7 +15497,8 @@
       "part": "floor-wall",
       "legacyKeys": [
         "tile.floor-wall"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-corner",
@@ -15452,12 +15511,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1252,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:84477585496edf668071a54b996680cb",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15473,7 +15532,8 @@
       "part": "floor-wall-corner",
       "legacyKeys": [
         "tile.floor-wall-corner"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-corner.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-curve",
@@ -15486,12 +15546,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1229,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:5ce852da0ab02ca7d566c45ca8e4622a",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15507,7 +15567,8 @@
       "part": "floor-wall-curve",
       "legacyKeys": [
         "tile.floor-wall-curve"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-curve.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-damaged",
@@ -15520,12 +15581,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1293,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:f490f77a0bfb76b6230323878c0133bb",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15541,7 +15602,8 @@
       "part": "floor-wall-damaged",
       "legacyKeys": [
         "tile.floor-wall-damaged"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-damaged.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-demolished",
@@ -15554,12 +15616,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1475,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:a78310bee5f41bc7fc9e1b38e3615a1a",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15575,7 +15637,8 @@
       "part": "floor-wall-demolished",
       "legacyKeys": [
         "tile.floor-wall-demolished"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-demolished.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-diagonal",
@@ -15588,12 +15651,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1068,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:e1af932c6e8f46bef09c06d0ea083c64",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15609,7 +15672,8 @@
       "part": "floor-wall-diagonal",
       "legacyKeys": [
         "tile.floor-wall-diagonal"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-diagonal.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-edge",
@@ -15622,12 +15686,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1263,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:413b0895b65010342dd5a152b4714573",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15643,7 +15707,8 @@
       "part": "floor-wall-edge",
       "legacyKeys": [
         "tile.floor-wall-edge"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-edge.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-half",
@@ -15656,12 +15721,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 905,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:5d4646718392d293c8a05814fefc6537",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15677,7 +15742,8 @@
       "part": "floor-wall-half",
       "legacyKeys": [
         "tile.floor-wall-half"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-half.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-secret",
@@ -15690,12 +15756,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 949,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:c0afce08aa82906f4b1050ff1ba6d327",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15711,7 +15777,8 @@
       "part": "floor-wall-secret",
       "legacyKeys": [
         "tile.floor-wall-secret"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-secret.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.floor-wall-trap",
@@ -15724,12 +15791,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1307,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:0573b0eeb4f51b4ff90e9c3ae6fb56f8",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15745,7 +15812,8 @@
       "part": "floor-wall-trap",
       "legacyKeys": [
         "tile.floor-wall-trap"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-trap.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.grass",
@@ -15758,12 +15826,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 843,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:f72878aed4ebb18f14f6fbac1b15b264",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15779,7 +15847,8 @@
       "part": "grass",
       "legacyKeys": [
         "tile.grass"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/grass.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.inner-diagonal",
@@ -15792,12 +15861,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 395,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d151d9176b0310143ec81ebb171e27cb",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15813,7 +15882,8 @@
       "part": "inner-diagonal",
       "legacyKeys": [
         "tile.inner-diagonal"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/inner-diagonal.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.inner-long-diagonal",
@@ -15826,12 +15896,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 449,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:797d4b1f71258d3c9f09c94f7b700333",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15847,7 +15917,8 @@
       "part": "inner-long-diagonal",
       "legacyKeys": [
         "tile.inner-long-diagonal"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/inner-long-diagonal.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.inner-long-round",
@@ -15860,12 +15931,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 450,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d53003468bef3080a2ed102d73754107",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15881,7 +15952,8 @@
       "part": "inner-long-round",
       "legacyKeys": [
         "tile.inner-long-round"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/inner-long-round.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.inner-round",
@@ -15894,12 +15966,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 409,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:56706c49292845930e7fd17fbd1212a1",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15915,7 +15987,8 @@
       "part": "inner-round",
       "legacyKeys": [
         "tile.inner-round"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/inner-round.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.path",
@@ -15928,12 +16001,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 732,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d0a31293face9f7a18270d3f51a26086",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15949,7 +16022,8 @@
       "part": "path",
       "legacyKeys": [
         "tile.path"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/path.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.path-crossing",
@@ -15962,12 +16036,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 800,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:12b2a38e396cb1cdf5f8b6ff7da4f6a8",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -15983,7 +16057,8 @@
       "part": "path-crossing",
       "legacyKeys": [
         "tile.path-crossing"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/path-crossing.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.path-curve",
@@ -15996,12 +16071,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 851,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:41802c69f9c6fe1454b71675cb8af173",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16017,7 +16092,8 @@
       "part": "path-curve",
       "legacyKeys": [
         "tile.path-curve"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/path-curve.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.planks",
@@ -16030,12 +16106,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1023,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:4a8fb776cb2a9f76eba73f0d70e44dde",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16051,7 +16127,8 @@
       "part": "planks",
       "legacyKeys": [
         "tile.planks"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/planks.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.stairs-down-detail",
@@ -16064,12 +16141,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1254,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:44ad3591e27e9f280ee3042ff7c21d9b",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16085,7 +16162,8 @@
       "part": "stairs-down-detail",
       "legacyKeys": [
         "tile.stairs-down-detail"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/stairs-down-detail.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.tile",
@@ -16098,12 +16176,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 583,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:5851ff0efcb98c26119d61806dafa0a8",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16119,7 +16197,8 @@
       "part": "tile",
       "legacyKeys": [
         "tile.tile"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/tile.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.tiles",
@@ -16132,12 +16211,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 742,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:bd9df86bd49dafa15526aeab5ac069a5",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16153,7 +16232,8 @@
       "part": "tiles",
       "legacyKeys": [
         "tile.tiles"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/tiles.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.tiles-center",
@@ -16166,12 +16246,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 839,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d1ee488a244c5cd25bc1e9c934fb2dd5",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16187,7 +16267,8 @@
       "part": "tiles-center",
       "legacyKeys": [
         "tile.tiles-center"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/tiles-center.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.tiles-corner",
@@ -16200,12 +16281,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 763,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:e6080d31a5be575abe2c04344e1de6f2",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16221,7 +16302,8 @@
       "part": "tiles-corner",
       "legacyKeys": [
         "tile.tiles-corner"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/tiles-corner.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.tiles-decorative",
@@ -16234,12 +16316,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 934,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:178763f15d5e7fd5fbee9ff7771d2573",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16255,7 +16337,8 @@
       "part": "tiles-decorative",
       "legacyKeys": [
         "tile.tiles-decorative"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/tiles-decorative.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.track",
@@ -16268,12 +16351,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1269,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:6fb1ca07fa96f0eaa74f77cc3170b076",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16289,7 +16372,8 @@
       "part": "track",
       "legacyKeys": [
         "tile.track"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/track.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.track-crossing",
@@ -16302,12 +16386,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1124,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:338ec3b299f92ff6bc86782701b2d2ca",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16323,7 +16407,8 @@
       "part": "track-crossing",
       "legacyKeys": [
         "tile.track-crossing"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/track-crossing.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.track-curve",
@@ -16336,12 +16421,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1375,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:c5789a867fb90108d93325882e8e351f",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16357,7 +16442,8 @@
       "part": "track-curve",
       "legacyKeys": [
         "tile.track-curve"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/track-curve.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.trap",
@@ -16370,12 +16456,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1137,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:c7a59d023e4fa442352c4854e2fdee7d",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16391,7 +16477,8 @@
       "part": "trap",
       "legacyKeys": [
         "tile.trap"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/trap.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.trap-door",
@@ -16404,12 +16491,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1050,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:039bdd51164b3cc6d9684ec20dcf58f6",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16425,7 +16512,8 @@
       "part": "trap-door",
       "legacyKeys": [
         "tile.trap-door"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/trap-door.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.trapdoor-round",
@@ -16438,12 +16526,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 1007,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:fd4d09521c3a216e499c29700af77722",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16459,7 +16547,8 @@
       "part": "trapdoor-round",
       "legacyKeys": [
         "tile.trapdoor-round"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/trapdoor-round.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.trapdoor-square",
@@ -16472,12 +16561,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 766,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d5d692f875ec7c48954cd8756878cba3",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16493,7 +16582,8 @@
       "part": "trapdoor-square",
       "legacyKeys": [
         "tile.trapdoor-square"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/trapdoor-square.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.wall-curve",
@@ -16506,12 +16596,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 928,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:86f0a4b4ba29072404a65ad002d133bb",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16527,7 +16617,8 @@
       "part": "wall-curve",
       "legacyKeys": [
         "tile.wall-curve"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/wall-curve.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.wall-demolished",
@@ -16540,12 +16631,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 989,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:0d42ab56a33f5e13a180b7120057d508",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16561,7 +16652,8 @@
       "part": "wall-demolished",
       "legacyKeys": [
         "tile.wall-demolished"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/wall-demolished.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.wall-diagonal",
@@ -16574,12 +16666,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 773,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:d15b7cf2dbbc53979c7c41ff543166c3",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16595,7 +16687,8 @@
       "part": "wall-diagonal",
       "legacyKeys": [
         "tile.wall-diagonal"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/wall-diagonal.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.wall-edge",
@@ -16608,12 +16701,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 868,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:0d99ec53903fdf1246f2fba2e922cec4",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16629,7 +16722,8 @@
       "part": "wall-edge",
       "legacyKeys": [
         "tile.wall-edge"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/wall-edge.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.wall-secret",
@@ -16642,12 +16736,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 390,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:413ad3d49bee9c77cfee3a9ba02fdcbb",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16663,7 +16757,8 @@
       "part": "wall-secret",
       "legacyKeys": [
         "tile.wall-secret"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/wall-secret.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.wall-trap",
@@ -16676,12 +16771,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 774,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:fdf3184a4664ce1bafa21d1420b5ad79",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16697,7 +16792,8 @@
       "part": "wall-trap",
       "legacyKeys": [
         "tile.wall-trap"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/wall-trap.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.water",
@@ -16710,12 +16806,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 776,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:0d6345d3d78e86354e47f17a13073648",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16731,7 +16827,8 @@
       "part": "water",
       "legacyKeys": [
         "tile.water"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/water.png"
     },
     {
       "id": "tile.third-party-scribble.scribble-dungeons.wood",
@@ -16744,12 +16841,12 @@
         "w": 64,
         "h": 64
       },
-      "status": "resource",
+      "status": "archived",
       "source": "third-party",
       "diskBytes": 961,
       "decodedBytes": 16384,
       "format": "png8",
-      "notes": "md5:1ce252acb65cac0d867018b9539081a3",
+      "notes": "emci 2026-10-12: archive Scribble (off-style; PixelLab replaces it)",
       "restyle": {
         "priority": 3,
         "reason": "third-party-scribble is off-style for streetwear screens",
@@ -16765,7 +16862,8 @@
       "part": "wood",
       "legacyKeys": [
         "tile.wood"
-      ]
+      ],
+      "sourceRef": "art-src/art-trash/2026-10/tiles/unused/third-party-scribble/scribble-dungeons/wood.png"
     },
     {
       "id": "tower.ghost.cast.atlas",

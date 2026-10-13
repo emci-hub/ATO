@@ -67,10 +67,12 @@ function main() {
       if (APPLY) {
         const from = path.join(repo, asset.path);
         if (fs.existsSync(from)) {
-          const dest = path.join(trash, path.basename(asset.path));
+          // Keep the library path so two files with the same name never overwrite each other.
+          const dest = path.join(trash, asset.path.replace(/^assets\/art\//, ''));
+          if (fs.existsSync(dest)) throw new Error(`art-trash already has ${dest} — not overwriting`);
           fs.mkdirSync(path.dirname(dest), { recursive: true });
           fs.renameSync(from, dest);
-          asset.sourceRef = path.relative(repo, dest);
+          asset.sourceRef = path.relative(repo, dest).split(path.sep).join('/');
         }
         asset.status = 'archived';
         if (d.notes) asset.notes = d.notes;

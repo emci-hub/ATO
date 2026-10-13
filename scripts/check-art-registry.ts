@@ -169,6 +169,7 @@ function main() {
   const aliasMap = new Map(aliasRows.filter((m) => !m[2].startsWith('@/')).map((m) => [m[1], m[2]]));
   const lostAliases: string[] = [];
   for (const a of registry.assets) {
+    if (a.status === 'archived') continue; // archived art is meant to stop resolving
     for (const old of a.legacyKeys ?? []) {
       if (currentIds.has(old)) lostAliases.push(`${old} is both an old and a current id`);
       else if (aliasMap.get(old) !== a.id) lostAliases.push(`${old} → ${a.id} missing from ART_ALIASES`);

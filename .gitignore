@@ -55,3 +55,7 @@ assets/play/.staging/
 
 # Sprite-sheet review pages: 1MB+ of inlined base64, regenerate with play-art-pack
 assets/play/sheets/**/preview.html
+
+
+# Original PixelLab download zips (kept locally as source backups, too big for git; emci 2026-10-12)
+games/grove/ref/**/*.zip

@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 572 live entries.
+Generated. 474 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -13,8 +13,8 @@ Viewer lists one card per set (not each clip/file).
 - **ui** (26: 5 in use / 21 unused) — UI
 - **icons** (88: 0 in use / 88 unused) — Icons
 - **rooms** (60: 38 in use / 22 unused) — Rooms
-- **props** (61: 0 in use / 61 unused) — Props
-- **tiles** (92: 0 in use / 92 unused) — Tiles
+- **props** (34: 0 in use / 34 unused) — Props
+- **tiles** (21: 0 in use / 21 unused) — Tiles
 - **fx** (14: 0 in use / 14 unused) — FX
 - **backgrounds** (2: 0 in use / 2 unused) — Backgrounds
 - **branding** (13: 0 in use / 13 unused) — Branding
@@ -812,43 +812,6 @@ Viewer lists one card per set (not each clip/file).
 | `prop.loft.bed` | 64×28 | resource | — | — |
 | `prop.loft.lamp` | 18×36 | resource | — | — |
 
-## props · scribble-dungeons · default · unused
-
-| id | size | status | score | usedBy |
-|---|---|---|---|---|
-| `prop.scribble-dungeons.barrels-stacked` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.bed` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.bed-luxurious` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.campfire` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.carpet` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.cart` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.chair` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.crate` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-barrel` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-barrels` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-barrels-stacked` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-bed` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-bed-luxurious` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-campfire` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-cart` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-chair` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-chest` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-coffin` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-crate-small` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-dragon` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-plants` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-table` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-track-cart` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.floor-tree` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.table` | 64×64 | resource | — | — |
-| `prop.scribble-dungeons.track-cart` | 64×64 | resource | — | — |
-
-## props · storage · third-party-scribble · unused
-
-| id | size | status | score | usedBy |
-|---|---|---|---|---|
-| `prop.storage.third-party-scribble.prop-crate-scribble` | 64×64 | resource | — | — |
-
 ## props · streetwear · streetwear · unused
 
 | id | size | status | score | usedBy |
@@ -916,82 +879,6 @@ Viewer lists one card per set (not each clip/file).
 | `tile.streetwear.road-path.tile-7` | 32×32 | resource | — | — |
 | `tile.streetwear.road-path.tile-8` | 32×32 | resource | — | — |
 | `tile.streetwear.road-path.tile-9` | 32×32 | resource | — | — |
-
-## tiles · third-party-scribble · scribble-dungeons · unused
-
-| id | size | status | score | usedBy |
-|---|---|---|---|---|
-| `tile.third-party-scribble.scribble-dungeons.arrow` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.arrow-circle` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.arrow-curve` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.arrow-head` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.bridge` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.bridge-end` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.door-closed` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.door-open` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.doorway` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-arrow` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-arrow-circle` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-arrow-curve` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-arrow-head` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-door-closed` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-door-open` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-doorway` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-inner-diagonal` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-inner-long-diagonal` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-inner-long-round` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-inner-round` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-path` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-path-crossing` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-path-curve` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-planks` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-puddle` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-track` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-track-crossing` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-track-curve` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-trap` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-trapdoor-round` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-trapdoor-square` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-corner` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-curve` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-damaged` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-demolished` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-diagonal` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-edge` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-half` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-secret` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.floor-wall-trap` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.grass` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.inner-diagonal` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.inner-long-diagonal` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.inner-long-round` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.inner-round` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.path` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.path-crossing` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.path-curve` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.planks` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.stairs-down-detail` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.tile` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.tiles` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.tiles-center` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.tiles-corner` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.tiles-decorative` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.track` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.track-crossing` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.track-curve` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.trap` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.trap-door` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.trapdoor-round` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.trapdoor-square` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.wall-curve` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.wall-demolished` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.wall-diagonal` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.wall-edge` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.wall-secret` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.wall-trap` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.water` | 64×64 | resource | — | — |
-| `tile.third-party-scribble.scribble-dungeons.wood` | 64×64 | resource | — | — |
 
 ## fx · drip · streetwear · unused
 

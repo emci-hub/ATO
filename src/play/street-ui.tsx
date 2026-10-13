@@ -1,6 +1,6 @@
 /**
- * Streetwear menu chrome (emci 2026-10-11) — drawn only while the art style is
- * Streetwear (`artSkin()`), so Classic stays exactly as it was.
+ * Streetwear menu chrome (emci 2026-10-11). Streetwear is the only art style
+ * since Classic was retired (2026-10-12), so `streetUiOn()` is always true.
  *
  * The pieces are PixelLab art packed by `play-art-pack.ts --skin streetwear`
  * (`packSwUiKit`) into one atlas. Each is drawn as a 9-slice: the corners keep

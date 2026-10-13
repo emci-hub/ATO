@@ -335,33 +335,6 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'pet.shark-tide-knight.primal.south-west': require('@/assets/art/heroes/unused/shark-tide-knight/primal/idle/rotations/south-west.png'),
   'prop.loft.bed': require('@/assets/art/props/unused/loft/loft-bed.png'),
   'prop.loft.lamp': require('@/assets/art/props/unused/loft/loft-lamp.png'),
-  'prop.scribble-dungeons.barrels-stacked': require('@/assets/art/props/unused/scribble-dungeons/barrels-stacked.png'),
-  'prop.scribble-dungeons.bed': require('@/assets/art/props/unused/scribble-dungeons/bed.png'),
-  'prop.scribble-dungeons.bed-luxurious': require('@/assets/art/props/unused/scribble-dungeons/bed-luxurious.png'),
-  'prop.scribble-dungeons.campfire': require('@/assets/art/props/unused/scribble-dungeons/campfire.png'),
-  'prop.scribble-dungeons.carpet': require('@/assets/art/props/unused/scribble-dungeons/carpet.png'),
-  'prop.scribble-dungeons.cart': require('@/assets/art/props/unused/scribble-dungeons/cart.png'),
-  'prop.scribble-dungeons.chair': require('@/assets/art/props/unused/scribble-dungeons/chair.png'),
-  'prop.scribble-dungeons.crate': require('@/assets/art/props/unused/scribble-dungeons/crate.png'),
-  'prop.scribble-dungeons.floor-barrel': require('@/assets/art/props/unused/scribble-dungeons/floor-barrel.png'),
-  'prop.scribble-dungeons.floor-barrels': require('@/assets/art/props/unused/scribble-dungeons/floor-barrels.png'),
-  'prop.scribble-dungeons.floor-barrels-stacked': require('@/assets/art/props/unused/scribble-dungeons/floor-barrels-stacked.png'),
-  'prop.scribble-dungeons.floor-bed': require('@/assets/art/props/unused/scribble-dungeons/floor-bed.png'),
-  'prop.scribble-dungeons.floor-bed-luxurious': require('@/assets/art/props/unused/scribble-dungeons/floor-bed-luxurious.png'),
-  'prop.scribble-dungeons.floor-campfire': require('@/assets/art/props/unused/scribble-dungeons/floor-campfire.png'),
-  'prop.scribble-dungeons.floor-cart': require('@/assets/art/props/unused/scribble-dungeons/floor-cart.png'),
-  'prop.scribble-dungeons.floor-chair': require('@/assets/art/props/unused/scribble-dungeons/floor-chair.png'),
-  'prop.scribble-dungeons.floor-chest': require('@/assets/art/props/unused/scribble-dungeons/floor-chest.png'),
-  'prop.scribble-dungeons.floor-coffin': require('@/assets/art/props/unused/scribble-dungeons/floor-coffin.png'),
-  'prop.scribble-dungeons.floor-crate-small': require('@/assets/art/props/unused/scribble-dungeons/floor-crate-small.png'),
-  'prop.scribble-dungeons.floor-dragon': require('@/assets/art/props/unused/scribble-dungeons/floor-dragon.png'),
-  'prop.scribble-dungeons.floor-plants': require('@/assets/art/props/unused/scribble-dungeons/floor-plants.png'),
-  'prop.scribble-dungeons.floor-table': require('@/assets/art/props/unused/scribble-dungeons/floor-table.png'),
-  'prop.scribble-dungeons.floor-track-cart': require('@/assets/art/props/unused/scribble-dungeons/floor-track-cart.png'),
-  'prop.scribble-dungeons.floor-tree': require('@/assets/art/props/unused/scribble-dungeons/floor-tree.png'),
-  'prop.scribble-dungeons.table': require('@/assets/art/props/unused/scribble-dungeons/table.png'),
-  'prop.scribble-dungeons.track-cart': require('@/assets/art/props/unused/scribble-dungeons/track-cart.png'),
-  'prop.storage.third-party-scribble.prop-crate-scribble': require('@/assets/art/props/unused/storage/third-party-scribble/prop_crate_scribble.png'),
   'prop.streetwear.barrel-fire': require('@/assets/art/props/unused/streetwear/barrel-fire.png'),
   'prop.streetwear.bench-graffiti': require('@/assets/art/props/unused/streetwear/bench-graffiti.png'),
   'prop.streetwear.boombox': require('@/assets/art/props/unused/streetwear/boombox.png'),
@@ -475,77 +448,6 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'tile.streetwear.road-path.tile-8': require('@/assets/art/tiles/unused/streetwear/road-path/tile-8.png'),
   'tile.streetwear.road-path.tile-9': require('@/assets/art/tiles/unused/streetwear/road-path/tile-9.png'),
   'tile.streetwear.sidewalk-lot': require('@/assets/art/tiles/unused/streetwear/sidewalk-lot.png'),
-  'tile.third-party-scribble.scribble-dungeons.arrow': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/arrow.png'),
-  'tile.third-party-scribble.scribble-dungeons.arrow-circle': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/arrow-circle.png'),
-  'tile.third-party-scribble.scribble-dungeons.arrow-curve': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/arrow-curve.png'),
-  'tile.third-party-scribble.scribble-dungeons.arrow-head': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/arrow-head.png'),
-  'tile.third-party-scribble.scribble-dungeons.bridge': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/bridge.png'),
-  'tile.third-party-scribble.scribble-dungeons.bridge-end': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/bridge-end.png'),
-  'tile.third-party-scribble.scribble-dungeons.door-closed': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/door-closed.png'),
-  'tile.third-party-scribble.scribble-dungeons.door-open': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/door-open.png'),
-  'tile.third-party-scribble.scribble-dungeons.doorway': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/doorway.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-arrow': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-arrow.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-arrow-circle': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-arrow-circle.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-arrow-curve': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-arrow-curve.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-arrow-head': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-arrow-head.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-door-closed': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-door-closed.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-door-open': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-door-open.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-doorway': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-doorway.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-inner-diagonal': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-inner-diagonal.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-inner-long-diagonal': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-inner-long-diagonal.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-inner-long-round': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-inner-long-round.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-inner-round': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-inner-round.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-path': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-path.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-path-crossing': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-path-crossing.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-path-curve': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-path-curve.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-planks': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-planks.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-puddle': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-puddle.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-track': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-track.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-track-crossing': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-track-crossing.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-track-curve': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-track-curve.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-trap': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-trap.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-trapdoor-round': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-trapdoor-round.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-trapdoor-square': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-trapdoor-square.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-corner': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-corner.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-curve': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-curve.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-damaged': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-damaged.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-demolished': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-demolished.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-diagonal': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-diagonal.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-edge': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-edge.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-half': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-half.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-secret': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-secret.png'),
-  'tile.third-party-scribble.scribble-dungeons.floor-wall-trap': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/floor-wall-trap.png'),
-  'tile.third-party-scribble.scribble-dungeons.grass': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/grass.png'),
-  'tile.third-party-scribble.scribble-dungeons.inner-diagonal': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/inner-diagonal.png'),
-  'tile.third-party-scribble.scribble-dungeons.inner-long-diagonal': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/inner-long-diagonal.png'),
-  'tile.third-party-scribble.scribble-dungeons.inner-long-round': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/inner-long-round.png'),
-  'tile.third-party-scribble.scribble-dungeons.inner-round': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/inner-round.png'),
-  'tile.third-party-scribble.scribble-dungeons.path': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/path.png'),
-  'tile.third-party-scribble.scribble-dungeons.path-crossing': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/path-crossing.png'),
-  'tile.third-party-scribble.scribble-dungeons.path-curve': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/path-curve.png'),
-  'tile.third-party-scribble.scribble-dungeons.planks': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/planks.png'),
-  'tile.third-party-scribble.scribble-dungeons.stairs-down-detail': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/stairs-down-detail.png'),
-  'tile.third-party-scribble.scribble-dungeons.tile': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/tile.png'),
-  'tile.third-party-scribble.scribble-dungeons.tiles': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/tiles.png'),
-  'tile.third-party-scribble.scribble-dungeons.tiles-center': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/tiles-center.png'),
-  'tile.third-party-scribble.scribble-dungeons.tiles-corner': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/tiles-corner.png'),
-  'tile.third-party-scribble.scribble-dungeons.tiles-decorative': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/tiles-decorative.png'),
-  'tile.third-party-scribble.scribble-dungeons.track': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/track.png'),
-  'tile.third-party-scribble.scribble-dungeons.track-crossing': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/track-crossing.png'),
-  'tile.third-party-scribble.scribble-dungeons.track-curve': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/track-curve.png'),
-  'tile.third-party-scribble.scribble-dungeons.trap': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/trap.png'),
-  'tile.third-party-scribble.scribble-dungeons.trap-door': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/trap-door.png'),
-  'tile.third-party-scribble.scribble-dungeons.trapdoor-round': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/trapdoor-round.png'),
-  'tile.third-party-scribble.scribble-dungeons.trapdoor-square': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/trapdoor-square.png'),
-  'tile.third-party-scribble.scribble-dungeons.wall-curve': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/wall-curve.png'),
-  'tile.third-party-scribble.scribble-dungeons.wall-demolished': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/wall-demolished.png'),
-  'tile.third-party-scribble.scribble-dungeons.wall-diagonal': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/wall-diagonal.png'),
-  'tile.third-party-scribble.scribble-dungeons.wall-edge': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/wall-edge.png'),
-  'tile.third-party-scribble.scribble-dungeons.wall-secret': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/wall-secret.png'),
-  'tile.third-party-scribble.scribble-dungeons.wall-trap': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/wall-trap.png'),
-  'tile.third-party-scribble.scribble-dungeons.water': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/water.png'),
-  'tile.third-party-scribble.scribble-dungeons.wood': require('@/assets/art/tiles/unused/third-party-scribble/scribble-dungeons/wood.png'),
   'tower.ghost.cast.atlas': require('@/assets/art/enemies-bosses/unused/ghost/cast/atlas.png'),
   'tower.lux.cast.atlas': require('@/assets/art/enemies-bosses/unused/lux/cast/atlas.png'),
   'tower.viper.cast.atlas': require('@/assets/art/enemies-bosses/unused/viper/cast/atlas.png'),
@@ -910,33 +812,6 @@ export type ArtId =
   | 'pet.shark-tide-knight.primal.south-west'
   | 'prop.loft.bed'
   | 'prop.loft.lamp'
-  | 'prop.scribble-dungeons.barrels-stacked'
-  | 'prop.scribble-dungeons.bed'
-  | 'prop.scribble-dungeons.bed-luxurious'
-  | 'prop.scribble-dungeons.campfire'
-  | 'prop.scribble-dungeons.carpet'
-  | 'prop.scribble-dungeons.cart'
-  | 'prop.scribble-dungeons.chair'
-  | 'prop.scribble-dungeons.crate'
-  | 'prop.scribble-dungeons.floor-barrel'
-  | 'prop.scribble-dungeons.floor-barrels'
-  | 'prop.scribble-dungeons.floor-barrels-stacked'
-  | 'prop.scribble-dungeons.floor-bed'
-  | 'prop.scribble-dungeons.floor-bed-luxurious'
-  | 'prop.scribble-dungeons.floor-campfire'
-  | 'prop.scribble-dungeons.floor-cart'
-  | 'prop.scribble-dungeons.floor-chair'
-  | 'prop.scribble-dungeons.floor-chest'
-  | 'prop.scribble-dungeons.floor-coffin'
-  | 'prop.scribble-dungeons.floor-crate-small'
-  | 'prop.scribble-dungeons.floor-dragon'
-  | 'prop.scribble-dungeons.floor-plants'
-  | 'prop.scribble-dungeons.floor-table'
-  | 'prop.scribble-dungeons.floor-track-cart'
-  | 'prop.scribble-dungeons.floor-tree'
-  | 'prop.scribble-dungeons.table'
-  | 'prop.scribble-dungeons.track-cart'
-  | 'prop.storage.third-party-scribble.prop-crate-scribble'
   | 'prop.streetwear.barrel-fire'
   | 'prop.streetwear.bench-graffiti'
   | 'prop.streetwear.boombox'
@@ -1050,77 +925,6 @@ export type ArtId =
   | 'tile.streetwear.road-path.tile-8'
   | 'tile.streetwear.road-path.tile-9'
   | 'tile.streetwear.sidewalk-lot'
-  | 'tile.third-party-scribble.scribble-dungeons.arrow'
-  | 'tile.third-party-scribble.scribble-dungeons.arrow-circle'
-  | 'tile.third-party-scribble.scribble-dungeons.arrow-curve'
-  | 'tile.third-party-scribble.scribble-dungeons.arrow-head'
-  | 'tile.third-party-scribble.scribble-dungeons.bridge'
-  | 'tile.third-party-scribble.scribble-dungeons.bridge-end'
-  | 'tile.third-party-scribble.scribble-dungeons.door-closed'
-  | 'tile.third-party-scribble.scribble-dungeons.door-open'
-  | 'tile.third-party-scribble.scribble-dungeons.doorway'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-arrow'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-arrow-circle'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-arrow-curve'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-arrow-head'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-door-closed'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-door-open'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-doorway'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-inner-diagonal'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-inner-long-diagonal'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-inner-long-round'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-inner-round'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-path'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-path-crossing'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-path-curve'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-planks'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-puddle'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-track'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-track-crossing'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-track-curve'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-trap'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-trapdoor-round'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-trapdoor-square'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-corner'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-curve'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-damaged'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-demolished'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-diagonal'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-edge'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-half'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-secret'
-  | 'tile.third-party-scribble.scribble-dungeons.floor-wall-trap'
-  | 'tile.third-party-scribble.scribble-dungeons.grass'
-  | 'tile.third-party-scribble.scribble-dungeons.inner-diagonal'
-  | 'tile.third-party-scribble.scribble-dungeons.inner-long-diagonal'
-  | 'tile.third-party-scribble.scribble-dungeons.inner-long-round'
-  | 'tile.third-party-scribble.scribble-dungeons.inner-round'
-  | 'tile.third-party-scribble.scribble-dungeons.path'
-  | 'tile.third-party-scribble.scribble-dungeons.path-crossing'
-  | 'tile.third-party-scribble.scribble-dungeons.path-curve'
-  | 'tile.third-party-scribble.scribble-dungeons.planks'
-  | 'tile.third-party-scribble.scribble-dungeons.stairs-down-detail'
-  | 'tile.third-party-scribble.scribble-dungeons.tile'
-  | 'tile.third-party-scribble.scribble-dungeons.tiles'
-  | 'tile.third-party-scribble.scribble-dungeons.tiles-center'
-  | 'tile.third-party-scribble.scribble-dungeons.tiles-corner'
-  | 'tile.third-party-scribble.scribble-dungeons.tiles-decorative'
-  | 'tile.third-party-scribble.scribble-dungeons.track'
-  | 'tile.third-party-scribble.scribble-dungeons.track-crossing'
-  | 'tile.third-party-scribble.scribble-dungeons.track-curve'
-  | 'tile.third-party-scribble.scribble-dungeons.trap'
-  | 'tile.third-party-scribble.scribble-dungeons.trap-door'
-  | 'tile.third-party-scribble.scribble-dungeons.trapdoor-round'
-  | 'tile.third-party-scribble.scribble-dungeons.trapdoor-square'
-  | 'tile.third-party-scribble.scribble-dungeons.wall-curve'
-  | 'tile.third-party-scribble.scribble-dungeons.wall-demolished'
-  | 'tile.third-party-scribble.scribble-dungeons.wall-diagonal'
-  | 'tile.third-party-scribble.scribble-dungeons.wall-edge'
-  | 'tile.third-party-scribble.scribble-dungeons.wall-secret'
-  | 'tile.third-party-scribble.scribble-dungeons.wall-trap'
-  | 'tile.third-party-scribble.scribble-dungeons.water'
-  | 'tile.third-party-scribble.scribble-dungeons.wood'
   | 'tower.ghost.cast.atlas'
   | 'tower.lux.cast.atlas'
   | 'tower.viper.cast.atlas'
@@ -1364,7 +1168,6 @@ export const ART_ALIASES: Record<string, ArtId> = {
   'prop.pad-manhole-splat': 'prop.streetwear.pad-manhole-splat',
   'prop.pad-sticker-slab': 'prop.streetwear.pad-sticker-slab',
   'prop.paint-splat-decal': 'prop.streetwear.paint-splat-decal',
-  'prop.prop-crate-scribble': 'prop.storage.third-party-scribble.prop-crate-scribble',
   'prop.shopping-cart': 'prop.streetwear.shopping-cart',
   'prop.shopping-cart-tipped': 'prop.streetwear.shopping-cart-tipped',
   'prop.spray-can-single': 'prop.streetwear.spray-can-single',
@@ -1383,86 +1186,9 @@ export const ART_ALIASES: Record<string, ArtId> = {
   'rooms.loft.loft.lamp': 'prop.loft.lamp',
   'rooms.loft.loft.window.day': 'room.loft.window-day-2',
   'rooms.loft.loft.window.night': 'room.loft.window-night-2',
-  'tile.arrow': 'tile.third-party-scribble.scribble-dungeons.arrow',
-  'tile.arrow-circle': 'tile.third-party-scribble.scribble-dungeons.arrow-circle',
-  'tile.arrow-curve': 'tile.third-party-scribble.scribble-dungeons.arrow-curve',
-  'tile.arrow-head': 'tile.third-party-scribble.scribble-dungeons.arrow-head',
   'tile.asphalt-sidewalk': 'tile.streetwear.asphalt-sidewalk',
-  'tile.barrels-stacked': 'prop.scribble-dungeons.barrels-stacked',
-  'tile.bed': 'prop.scribble-dungeons.bed',
-  'tile.bed-luxurious': 'prop.scribble-dungeons.bed-luxurious',
   'tile.brick-graffiti-sidescroller': 'tile.streetwear.brick-graffiti-sidescroller',
-  'tile.bridge': 'tile.third-party-scribble.scribble-dungeons.bridge',
-  'tile.bridge-end': 'tile.third-party-scribble.scribble-dungeons.bridge-end',
-  'tile.campfire': 'prop.scribble-dungeons.campfire',
-  'tile.carpet': 'prop.scribble-dungeons.carpet',
-  'tile.cart': 'prop.scribble-dungeons.cart',
-  'tile.chair': 'prop.scribble-dungeons.chair',
-  'tile.crate': 'prop.scribble-dungeons.crate',
-  'tile.door-closed': 'tile.third-party-scribble.scribble-dungeons.door-closed',
-  'tile.door-open': 'tile.third-party-scribble.scribble-dungeons.door-open',
-  'tile.doorway': 'tile.third-party-scribble.scribble-dungeons.doorway',
-  'tile.floor-arrow': 'tile.third-party-scribble.scribble-dungeons.floor-arrow',
-  'tile.floor-arrow-circle': 'tile.third-party-scribble.scribble-dungeons.floor-arrow-circle',
-  'tile.floor-arrow-curve': 'tile.third-party-scribble.scribble-dungeons.floor-arrow-curve',
-  'tile.floor-arrow-head': 'tile.third-party-scribble.scribble-dungeons.floor-arrow-head',
-  'tile.floor-barrel': 'prop.scribble-dungeons.floor-barrel',
-  'tile.floor-barrels': 'prop.scribble-dungeons.floor-barrels',
-  'tile.floor-barrels-stacked': 'prop.scribble-dungeons.floor-barrels-stacked',
-  'tile.floor-bed': 'prop.scribble-dungeons.floor-bed',
-  'tile.floor-bed-luxurious': 'prop.scribble-dungeons.floor-bed-luxurious',
-  'tile.floor-campfire': 'prop.scribble-dungeons.floor-campfire',
-  'tile.floor-cart': 'prop.scribble-dungeons.floor-cart',
-  'tile.floor-chair': 'prop.scribble-dungeons.floor-chair',
-  'tile.floor-chest': 'prop.scribble-dungeons.floor-chest',
-  'tile.floor-coffin': 'prop.scribble-dungeons.floor-coffin',
-  'tile.floor-crate-small': 'prop.scribble-dungeons.floor-crate-small',
-  'tile.floor-door-closed': 'tile.third-party-scribble.scribble-dungeons.floor-door-closed',
-  'tile.floor-door-open': 'tile.third-party-scribble.scribble-dungeons.floor-door-open',
-  'tile.floor-doorway': 'tile.third-party-scribble.scribble-dungeons.floor-doorway',
-  'tile.floor-dragon': 'prop.scribble-dungeons.floor-dragon',
-  'tile.floor-inner-diagonal': 'tile.third-party-scribble.scribble-dungeons.floor-inner-diagonal',
-  'tile.floor-inner-long-diagonal': 'tile.third-party-scribble.scribble-dungeons.floor-inner-long-diagonal',
-  'tile.floor-inner-long-round': 'tile.third-party-scribble.scribble-dungeons.floor-inner-long-round',
-  'tile.floor-inner-round': 'tile.third-party-scribble.scribble-dungeons.floor-inner-round',
-  'tile.floor-path': 'tile.third-party-scribble.scribble-dungeons.floor-path',
-  'tile.floor-path-crossing': 'tile.third-party-scribble.scribble-dungeons.floor-path-crossing',
-  'tile.floor-path-curve': 'tile.third-party-scribble.scribble-dungeons.floor-path-curve',
-  'tile.floor-planks': 'tile.third-party-scribble.scribble-dungeons.floor-planks',
-  'tile.floor-plants': 'prop.scribble-dungeons.floor-plants',
-  'tile.floor-puddle': 'tile.third-party-scribble.scribble-dungeons.floor-puddle',
-  'tile.floor-table': 'prop.scribble-dungeons.floor-table',
-  'tile.floor-track': 'tile.third-party-scribble.scribble-dungeons.floor-track',
-  'tile.floor-track-cart': 'prop.scribble-dungeons.floor-track-cart',
-  'tile.floor-track-crossing': 'tile.third-party-scribble.scribble-dungeons.floor-track-crossing',
-  'tile.floor-track-curve': 'tile.third-party-scribble.scribble-dungeons.floor-track-curve',
-  'tile.floor-trap': 'tile.third-party-scribble.scribble-dungeons.floor-trap',
-  'tile.floor-trapdoor-round': 'tile.third-party-scribble.scribble-dungeons.floor-trapdoor-round',
-  'tile.floor-trapdoor-square': 'tile.third-party-scribble.scribble-dungeons.floor-trapdoor-square',
-  'tile.floor-tree': 'prop.scribble-dungeons.floor-tree',
-  'tile.floor-wall': 'tile.third-party-scribble.scribble-dungeons.floor-wall',
-  'tile.floor-wall-corner': 'tile.third-party-scribble.scribble-dungeons.floor-wall-corner',
-  'tile.floor-wall-curve': 'tile.third-party-scribble.scribble-dungeons.floor-wall-curve',
-  'tile.floor-wall-damaged': 'tile.third-party-scribble.scribble-dungeons.floor-wall-damaged',
-  'tile.floor-wall-demolished': 'tile.third-party-scribble.scribble-dungeons.floor-wall-demolished',
-  'tile.floor-wall-diagonal': 'tile.third-party-scribble.scribble-dungeons.floor-wall-diagonal',
-  'tile.floor-wall-edge': 'tile.third-party-scribble.scribble-dungeons.floor-wall-edge',
-  'tile.floor-wall-half': 'tile.third-party-scribble.scribble-dungeons.floor-wall-half',
-  'tile.floor-wall-secret': 'tile.third-party-scribble.scribble-dungeons.floor-wall-secret',
-  'tile.floor-wall-trap': 'tile.third-party-scribble.scribble-dungeons.floor-wall-trap',
-  'tile.grass': 'tile.third-party-scribble.scribble-dungeons.grass',
-  'tile.inner-diagonal': 'tile.third-party-scribble.scribble-dungeons.inner-diagonal',
-  'tile.inner-long-diagonal': 'tile.third-party-scribble.scribble-dungeons.inner-long-diagonal',
-  'tile.inner-long-round': 'tile.third-party-scribble.scribble-dungeons.inner-long-round',
-  'tile.inner-round': 'tile.third-party-scribble.scribble-dungeons.inner-round',
-  'tile.path': 'tile.third-party-scribble.scribble-dungeons.path',
-  'tile.path-crossing': 'tile.third-party-scribble.scribble-dungeons.path-crossing',
-  'tile.path-curve': 'tile.third-party-scribble.scribble-dungeons.path-curve',
-  'tile.planks': 'tile.third-party-scribble.scribble-dungeons.planks',
   'tile.sidewalk-lot': 'tile.streetwear.sidewalk-lot',
-  'tile.stairs-down-detail': 'tile.third-party-scribble.scribble-dungeons.stairs-down-detail',
-  'tile.table': 'prop.scribble-dungeons.table',
-  'tile.tile': 'tile.third-party-scribble.scribble-dungeons.tile',
   'tile.tile-0': 'tile.streetwear.road-path.tile-0',
   'tile.tile-1': 'tile.streetwear.road-path.tile-1',
   'tile.tile-10': 'tile.streetwear.road-path.tile-10',
@@ -1481,26 +1207,6 @@ export const ART_ALIASES: Record<string, ArtId> = {
   'tile.tile-7': 'tile.streetwear.road-path.tile-7',
   'tile.tile-8': 'tile.streetwear.road-path.tile-8',
   'tile.tile-9': 'tile.streetwear.road-path.tile-9',
-  'tile.tiles': 'tile.third-party-scribble.scribble-dungeons.tiles',
-  'tile.tiles-center': 'tile.third-party-scribble.scribble-dungeons.tiles-center',
-  'tile.tiles-corner': 'tile.third-party-scribble.scribble-dungeons.tiles-corner',
-  'tile.tiles-decorative': 'tile.third-party-scribble.scribble-dungeons.tiles-decorative',
-  'tile.track': 'tile.third-party-scribble.scribble-dungeons.track',
-  'tile.track-cart': 'prop.scribble-dungeons.track-cart',
-  'tile.track-crossing': 'tile.third-party-scribble.scribble-dungeons.track-crossing',
-  'tile.track-curve': 'tile.third-party-scribble.scribble-dungeons.track-curve',
-  'tile.trap': 'tile.third-party-scribble.scribble-dungeons.trap',
-  'tile.trap-door': 'tile.third-party-scribble.scribble-dungeons.trap-door',
-  'tile.trapdoor-round': 'tile.third-party-scribble.scribble-dungeons.trapdoor-round',
-  'tile.trapdoor-square': 'tile.third-party-scribble.scribble-dungeons.trapdoor-square',
-  'tile.wall-curve': 'tile.third-party-scribble.scribble-dungeons.wall-curve',
-  'tile.wall-demolished': 'tile.third-party-scribble.scribble-dungeons.wall-demolished',
-  'tile.wall-diagonal': 'tile.third-party-scribble.scribble-dungeons.wall-diagonal',
-  'tile.wall-edge': 'tile.third-party-scribble.scribble-dungeons.wall-edge',
-  'tile.wall-secret': 'tile.third-party-scribble.scribble-dungeons.wall-secret',
-  'tile.wall-trap': 'tile.third-party-scribble.scribble-dungeons.wall-trap',
-  'tile.water': 'tile.third-party-scribble.scribble-dungeons.water',
-  'tile.wood': 'tile.third-party-scribble.scribble-dungeons.wood',
   'tower.ghost.cast.core': 'tower.ghost.cast.atlas',
   'tower.lux.cast.core': 'tower.lux.cast.atlas',
   'tower.viper.cast.core': 'tower.viper.cast.atlas',
@@ -2274,39 +1980,6 @@ export const ART = {
       bed: 'prop.loft.bed',
       lamp: 'prop.loft.lamp',
     },
-    scribbleDungeons: {
-      barrelsStacked: 'prop.scribble-dungeons.barrels-stacked',
-      bed: 'prop.scribble-dungeons.bed',
-      bedLuxurious: 'prop.scribble-dungeons.bed-luxurious',
-      campfire: 'prop.scribble-dungeons.campfire',
-      carpet: 'prop.scribble-dungeons.carpet',
-      cart: 'prop.scribble-dungeons.cart',
-      chair: 'prop.scribble-dungeons.chair',
-      crate: 'prop.scribble-dungeons.crate',
-      floorBarrel: 'prop.scribble-dungeons.floor-barrel',
-      floorBarrels: 'prop.scribble-dungeons.floor-barrels',
-      floorBarrelsStacked: 'prop.scribble-dungeons.floor-barrels-stacked',
-      floorBed: 'prop.scribble-dungeons.floor-bed',
-      floorBedLuxurious: 'prop.scribble-dungeons.floor-bed-luxurious',
-      floorCampfire: 'prop.scribble-dungeons.floor-campfire',
-      floorCart: 'prop.scribble-dungeons.floor-cart',
-      floorChair: 'prop.scribble-dungeons.floor-chair',
-      floorChest: 'prop.scribble-dungeons.floor-chest',
-      floorCoffin: 'prop.scribble-dungeons.floor-coffin',
-      floorCrateSmall: 'prop.scribble-dungeons.floor-crate-small',
-      floorDragon: 'prop.scribble-dungeons.floor-dragon',
-      floorPlants: 'prop.scribble-dungeons.floor-plants',
-      floorTable: 'prop.scribble-dungeons.floor-table',
-      floorTrackCart: 'prop.scribble-dungeons.floor-track-cart',
-      floorTree: 'prop.scribble-dungeons.floor-tree',
-      table: 'prop.scribble-dungeons.table',
-      trackCart: 'prop.scribble-dungeons.track-cart',
-    },
-    storage: {
-      thirdPartyScribble: {
-        propCrateScribble: 'prop.storage.third-party-scribble.prop-crate-scribble',
-      },
-    },
     streetwear: {
       barrelFire: 'prop.streetwear.barrel-fire',
       benchGraffiti: 'prop.streetwear.bench-graffiti',
@@ -2437,81 +2110,6 @@ export const ART = {
         tile9: 'tile.streetwear.road-path.tile-9',
       },
       sidewalkLot: 'tile.streetwear.sidewalk-lot',
-    },
-    thirdPartyScribble: {
-      scribbleDungeons: {
-        arrow: 'tile.third-party-scribble.scribble-dungeons.arrow',
-        arrowCircle: 'tile.third-party-scribble.scribble-dungeons.arrow-circle',
-        arrowCurve: 'tile.third-party-scribble.scribble-dungeons.arrow-curve',
-        arrowHead: 'tile.third-party-scribble.scribble-dungeons.arrow-head',
-        bridge: 'tile.third-party-scribble.scribble-dungeons.bridge',
-        bridgeEnd: 'tile.third-party-scribble.scribble-dungeons.bridge-end',
-        doorClosed: 'tile.third-party-scribble.scribble-dungeons.door-closed',
-        doorOpen: 'tile.third-party-scribble.scribble-dungeons.door-open',
-        doorway: 'tile.third-party-scribble.scribble-dungeons.doorway',
-        floorArrow: 'tile.third-party-scribble.scribble-dungeons.floor-arrow',
-        floorArrowCircle: 'tile.third-party-scribble.scribble-dungeons.floor-arrow-circle',
-        floorArrowCurve: 'tile.third-party-scribble.scribble-dungeons.floor-arrow-curve',
-        floorArrowHead: 'tile.third-party-scribble.scribble-dungeons.floor-arrow-head',
-        floorDoorClosed: 'tile.third-party-scribble.scribble-dungeons.floor-door-closed',
-        floorDoorOpen: 'tile.third-party-scribble.scribble-dungeons.floor-door-open',
-        floorDoorway: 'tile.third-party-scribble.scribble-dungeons.floor-doorway',
-        floorInnerDiagonal: 'tile.third-party-scribble.scribble-dungeons.floor-inner-diagonal',
-        floorInnerLongDiagonal: 'tile.third-party-scribble.scribble-dungeons.floor-inner-long-diagonal',
-        floorInnerLongRound: 'tile.third-party-scribble.scribble-dungeons.floor-inner-long-round',
-        floorInnerRound: 'tile.third-party-scribble.scribble-dungeons.floor-inner-round',
-        floorPath: 'tile.third-party-scribble.scribble-dungeons.floor-path',
-        floorPathCrossing: 'tile.third-party-scribble.scribble-dungeons.floor-path-crossing',
-        floorPathCurve: 'tile.third-party-scribble.scribble-dungeons.floor-path-curve',
-        floorPlanks: 'tile.third-party-scribble.scribble-dungeons.floor-planks',
-        floorPuddle: 'tile.third-party-scribble.scribble-dungeons.floor-puddle',
-        floorTrack: 'tile.third-party-scribble.scribble-dungeons.floor-track',
-        floorTrackCrossing: 'tile.third-party-scribble.scribble-dungeons.floor-track-crossing',
-        floorTrackCurve: 'tile.third-party-scribble.scribble-dungeons.floor-track-curve',
-        floorTrap: 'tile.third-party-scribble.scribble-dungeons.floor-trap',
-        floorTrapdoorRound: 'tile.third-party-scribble.scribble-dungeons.floor-trapdoor-round',
-        floorTrapdoorSquare: 'tile.third-party-scribble.scribble-dungeons.floor-trapdoor-square',
-        floorWall: 'tile.third-party-scribble.scribble-dungeons.floor-wall',
-        floorWallCorner: 'tile.third-party-scribble.scribble-dungeons.floor-wall-corner',
-        floorWallCurve: 'tile.third-party-scribble.scribble-dungeons.floor-wall-curve',
-        floorWallDamaged: 'tile.third-party-scribble.scribble-dungeons.floor-wall-damaged',
-        floorWallDemolished: 'tile.third-party-scribble.scribble-dungeons.floor-wall-demolished',
-        floorWallDiagonal: 'tile.third-party-scribble.scribble-dungeons.floor-wall-diagonal',
-        floorWallEdge: 'tile.third-party-scribble.scribble-dungeons.floor-wall-edge',
-        floorWallHalf: 'tile.third-party-scribble.scribble-dungeons.floor-wall-half',
-        floorWallSecret: 'tile.third-party-scribble.scribble-dungeons.floor-wall-secret',
-        floorWallTrap: 'tile.third-party-scribble.scribble-dungeons.floor-wall-trap',
-        grass: 'tile.third-party-scribble.scribble-dungeons.grass',
-        innerDiagonal: 'tile.third-party-scribble.scribble-dungeons.inner-diagonal',
-        innerLongDiagonal: 'tile.third-party-scribble.scribble-dungeons.inner-long-diagonal',
-        innerLongRound: 'tile.third-party-scribble.scribble-dungeons.inner-long-round',
-        innerRound: 'tile.third-party-scribble.scribble-dungeons.inner-round',
-        path: 'tile.third-party-scribble.scribble-dungeons.path',
-        pathCrossing: 'tile.third-party-scribble.scribble-dungeons.path-crossing',
-        pathCurve: 'tile.third-party-scribble.scribble-dungeons.path-curve',
-        planks: 'tile.third-party-scribble.scribble-dungeons.planks',
-        stairsDownDetail: 'tile.third-party-scribble.scribble-dungeons.stairs-down-detail',
-        tile: 'tile.third-party-scribble.scribble-dungeons.tile',
-        tiles: 'tile.third-party-scribble.scribble-dungeons.tiles',
-        tilesCenter: 'tile.third-party-scribble.scribble-dungeons.tiles-center',
-        tilesCorner: 'tile.third-party-scribble.scribble-dungeons.tiles-corner',
-        tilesDecorative: 'tile.third-party-scribble.scribble-dungeons.tiles-decorative',
-        track: 'tile.third-party-scribble.scribble-dungeons.track',
-        trackCrossing: 'tile.third-party-scribble.scribble-dungeons.track-crossing',
-        trackCurve: 'tile.third-party-scribble.scribble-dungeons.track-curve',
-        trap: 'tile.third-party-scribble.scribble-dungeons.trap',
-        trapDoor: 'tile.third-party-scribble.scribble-dungeons.trap-door',
-        trapdoorRound: 'tile.third-party-scribble.scribble-dungeons.trapdoor-round',
-        trapdoorSquare: 'tile.third-party-scribble.scribble-dungeons.trapdoor-square',
-        wallCurve: 'tile.third-party-scribble.scribble-dungeons.wall-curve',
-        wallDemolished: 'tile.third-party-scribble.scribble-dungeons.wall-demolished',
-        wallDiagonal: 'tile.third-party-scribble.scribble-dungeons.wall-diagonal',
-        wallEdge: 'tile.third-party-scribble.scribble-dungeons.wall-edge',
-        wallSecret: 'tile.third-party-scribble.scribble-dungeons.wall-secret',
-        wallTrap: 'tile.third-party-scribble.scribble-dungeons.wall-trap',
-        water: 'tile.third-party-scribble.scribble-dungeons.water',
-        wood: 'tile.third-party-scribble.scribble-dungeons.wood',
-      },
     },
   },
   tower: {
