@@ -59,6 +59,7 @@ const UI_FILES = [
   'src/play/dive-screen.tsx',
   'src/play/dive-scene.tsx',
   'src/play/dive-hud.tsx',
+  'src/play/dive-reveal.tsx',
   'src/play/dive-buttons.ts',
   'src/play/dive-fx-model.ts',
   'src/play/dive-fx-level.ts',

@@ -133,6 +133,49 @@ export function findKind(id: string): FindKind {
   return 'unknown';
 }
 
+/**
+ * Mystery finds (emci 2026-10-13): during a run the scene and the bag show only WHAT KIND
+ * of thing was found (and its rarity colour); the name is revealed when you head up
+ * (`HaulReveal`). Items split by slot; everything else by kind.
+ */
+export type FindCategory = 'weapon' | 'gear' | 'trinket' | 'snack' | 'shells' | 'stone' | 'style' | 'mystery';
+
+export const FIND_CATEGORY_LABEL: Record<FindCategory, string> = {
+  weapon: 'Weapon',
+  gear: 'Gear',
+  trinket: 'Trinket',
+  snack: 'Snack',
+  shells: 'Shells',
+  stone: 'Stone',
+  style: 'Style',
+  mystery: 'Mystery',
+};
+
+/** "Found …" phrasing for a category ("Found a weapon", "Found some gear"). */
+export const FIND_CATEGORY_PHRASE: Record<FindCategory, string> = {
+  weapon: 'a weapon',
+  gear: 'some gear',
+  trinket: 'a trinket',
+  snack: 'a snack',
+  shells: 'shells',
+  stone: 'a stone',
+  style: 'a style piece',
+  mystery: 'something',
+};
+
+export function findCategory(id: string): FindCategory {
+  const kind = findKind(id);
+  if (kind === 'item') {
+    const slot = getItemDef(id)?.core.slot;
+    return slot === 'weapon' ? 'weapon' : slot === 'trinket' ? 'trinket' : slot ? 'gear' : 'mystery';
+  }
+  if (kind === 'food') return 'snack';
+  if (kind === 'shells') return 'shells';
+  if (kind === 'cosmetic') return 'style';
+  if (kind === 'stone') return 'stone';
+  return 'mystery';
+}
+
 /** Display name for any find id. */
 export function findName(id: string): string {
   const kind = findKind(id);

@@ -36,6 +36,8 @@ import { PixelRatio, StyleSheet, View, type LayoutChangeEvent } from 'react-nati
 import Animated, {
   Easing,
   cancelAnimation,
+  runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -65,7 +67,8 @@ import {
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
 import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
-import { findName } from '@/play/dive-loot';
+import { FIND_CATEGORY_LABEL, FIND_CATEGORY_PHRASE, findCategory, findName } from '@/play/dive-loot';
+import { HaulReveal } from '@/play/dive-reveal';
 import { StopAmbience, StreetUndergroundWorld, SubwayDoors } from '@/play/dive-street';
 import { streetFindName, streetStop } from '@/play/dive-street-names';
 import { hideoutIntegerScale, hideoutPetBox } from '@/play/hideout-iso';
@@ -122,6 +125,9 @@ export type DiveSceneEvent = {
 
 /** A new find to reveal: rises from the pet into haul slot `slot`. */
 export type DiveReveal = { id: string; key: number; glow: FindGlow; slot: number } | null;
+
+/** Underground pet size vs the whole-pixel fit (which drew it ~30pt tall on a phone). */
+const DIVE_STREET_PET_ZOOM = 2;
 
 /* --------------------------------------------------------------- life --- */
 
@@ -189,6 +195,7 @@ function SwimmingPet({
   auraElement = null,
   flash = null,
   hideoutFx = false,
+  faceFrom = null,
 }: {
   pet: PetState;
   art: PetArt;
@@ -207,15 +214,25 @@ function SwimmingPet({
   auraElement?: string | null;
   flash?: SharedValue<number> | null;
   hideoutFx?: boolean;
+  /** Face the way this x offset is moving (the Underground wander) instead of flipping on a timer. */
+  faceFrom?: SharedValue<number> | null;
 }) {
   const [face, setFace] = useState<PetFace>('e');
   const facingEast = face === 'e';
   const tiltStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${tilt.value * (facingEast ? 32 : -32)}deg` }] }));
   useEffect(() => {
-    if (!turn) return;
+    if (!turn || faceFrom) return;
     const id = setInterval(() => setFace((f) => (f === 'e' ? 'w' : 'e')), 1300);
     return () => clearInterval(id);
-  }, [turn]);
+  }, [turn, faceFrom]);
+  useAnimatedReaction(
+    () => (faceFrom ? faceFrom.value : 0),
+    (cur, prev) => {
+      if (!faceFrom || prev == null || Math.abs(cur - prev) < 0.05) return;
+      runOnJS(setFace)(cur > prev ? 'e' : 'w');
+    },
+    [faceFrom],
+  );
   return (
     <>
       <GradeAura grade={grade} size={box} animate={turn} trail={face === 'e' || face === 'w' ? face : null} />
@@ -354,9 +371,11 @@ export function DiveScene({
           content: [0, 0, 256, 320],
         })
       : null;
+  // Underground: the whole-pixel cap drew the pet ~30pt tall on a phone; it stands about
+  // twice that now (emci 2026-10-13, "pet tiny in the Dive").
   const box =
     street && pet.stage !== 'egg' && ugScale
-      ? hideoutPetBox(art.cellPx, ugScale, PixelRatio.get())
+      ? hideoutPetBox(art.cellPx, ugScale, PixelRatio.get()) * DIVE_STREET_PET_ZOOM
       : classicBox;
   // The mockup pet hovers over the ledge. The surface perch uses the same spot,
   // so the reef composition stays put when a dive hasn't started.
@@ -428,20 +447,25 @@ export function DiveScene({
     return () => cancelAnimation(bob);
   }, [bob, cuts.motion, away]);
 
+  const swayArtW = ugScale ? ugScale.canvasW : width;
   useEffect(() => {
     cancelAnimation(sway);
     sway.value = 0;
     if (playMotion.cosmeticsStill || away) return;
-    const amp = playMotion.vestibularSafe ? 6 : 18;
+    // Underground: the pet wanders the platform (about a third of the scene each way); the
+    // reef keeps its small swim sway.
+    // Stay on the drawn picture (it can be narrower than the stage), feet within ~30 % of centre.
+    const amp = playMotion.vestibularSafe ? 6 : street ? Math.max(18, swayArtW * 0.3 - box * 0.15) : 18;
+    const legMs = street && !playMotion.vestibularSafe ? 3200 : 1300;
     sway.value = withRepeat(
       withSequence(
-        withTiming(amp, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-amp, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+        withTiming(amp, { duration: legMs, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-amp, { duration: legMs, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
     );
     return () => cancelAnimation(sway);
-  }, [sway, playMotion.cosmeticsStill, playMotion.vestibularSafe, away]);
+  }, [sway, playMotion.cosmeticsStill, playMotion.vestibularSafe, away, street, swayArtW, box]);
 
   useEffect(() => {
     cancelAnimation(wiggle);
@@ -635,13 +659,18 @@ export function DiveScene({
           ? event.saved.map((id) => ({ id, hidden: false }))
           : [];
   const sinking = haul.length === 0 && event?.kind === 'bust' ? event.lost : [];
+  // Mystery finds: names stay hidden while diving; the haul sheet reveals them on surfacing.
+  const diving = haul.length > 0;
+  const [revealedKey, setRevealedKey] = useState(event?.key ?? 0);
+  const showHaulReveal =
+    event?.kind === 'surface' && event.finds > 0 && event.ids.length > 0 && event.key !== revealedKey;
 
   const caption = away
     ? 'Your pet is away on an expedition — diving solo.'
     : haul.length > 0
       ? revealing
         ? null
-        : `Found ${nameOf(haul[haul.length - 1])}`
+        : `Found ${FIND_CATEGORY_PHRASE[findCategory(haul[haul.length - 1])]}`
       : event?.kind === 'bust'
         ? event.saved.length > 0
           ? street
@@ -657,7 +686,7 @@ export function DiveScene({
           : null;
   const lastId = haul.length > 0 ? haul[haul.length - 1] : null;
   const rareFind =
-    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? nameOf(lastId) : null;
+    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? `${FIND_CATEGORY_LABEL[findCategory(lastId)]} ?` : null;
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
 
@@ -669,7 +698,7 @@ export function DiveScene({
     <View pointerEvents="none" style={styles.toast}>
       <PixelFrame fill={PIXEL.ink} border={PIXEL.amber} padded={false} align="center">
         <View style={styles.rareRow}>
-          <FindIcon id={lastId} size={14} bare />
+          <FindIcon id={lastId} size={14} bare mystery />
           <PixelLabel color={PIXEL.amber}>Rare find</PixelLabel>
           <PixelBody size="sm" color={PIXEL.text} numberOfLines={1}>{rareFind}</PixelBody>
         </View>
@@ -730,6 +759,7 @@ export function DiveScene({
                 auraElement={auraElement}
                 flash={hit.flash}
                 hideoutFx={street}
+                faceFrom={street && !playMotion.vestibularSafe ? sway : null}
               />
               {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}
               </Animated.View>
@@ -781,7 +811,7 @@ export function DiveScene({
           {reveal && revealing ? (
             <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0 }, revealStyle]}>
               <View style={[styles.revealGlow, { backgroundColor: GLOW_COLOR[reveal.glow] }]} />
-              <FindIcon id={reveal.id} size={ICON} />
+              <FindIcon id={reveal.id} size={ICON} mystery />
             </Animated.View>
           ) : null}
 
@@ -823,8 +853,10 @@ export function DiveScene({
               {Array.from({ length: 4 }, (_, i) => {
                 const item = rowItems[i];
                 const icon = item ? (
-                  <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={nameOf(item.id)}>
-                    <FindIcon id={item.id} size={11 * ART_PT} bare />
+                  <View
+                    style={item.hidden ? styles.hidden : undefined}
+                    accessibilityLabel={diving ? `${FIND_CATEGORY_LABEL[findCategory(item.id)]}, not revealed yet` : nameOf(item.id)}>
+                    <FindIcon id={item.id} size={11 * ART_PT} bare mystery={diving} />
                   </View>
                 ) : null;
                 return (
@@ -834,7 +866,7 @@ export function DiveScene({
                     lined={false}
                     padded={false}
                     step={1}
-                    border={PIXEL.slot}
+                    border={item && diving ? GLOW_COLOR[findGlow(item.id)] : PIXEL.slot}
                     style={{ width: 13 * ART_PT, height: 13 * ART_PT }}>
                     {i === popSlot && item && !item.hidden ? <Animated.View style={pop.style}>{icon}</Animated.View> : icon}
                   </PixelFrame>
@@ -855,6 +887,9 @@ export function DiveScene({
           </View>
         </PixelFrame>
       </View>
+      {showHaulReveal && event ? (
+        <HaulReveal ids={event.ids} still={playMotion.cosmeticsStill} onDone={() => setRevealedKey(event.key)} />
+      ) : null}
     </View>
   );
 }
@@ -868,7 +903,8 @@ const styles = StyleSheet.create({
   gone: { display: 'none' },
   topSlot: { flexGrow: 0, flexShrink: 0, zIndex: 2 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
-  toast: { position: 'absolute', left: 0, right: 0, bottom: 10, paddingHorizontal: 12, alignItems: 'center' },
+  // Top of the scene: the pet stands at the bottom, so the toast never covers it.
+  toast: { position: 'absolute', left: 0, right: 0, top: 10, paddingHorizontal: 12, alignItems: 'center' },
   abs: { position: 'absolute' },
   hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
   flash: { backgroundColor: '#FFFFFF' },
