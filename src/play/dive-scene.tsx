@@ -808,8 +808,10 @@ export function DiveScene({
           ))}
         </>
       ) : null}
-      </Animated.View>
+      {/* Find / caption toast floats over the bottom of the scene, so it never pushes the
+          picture or the panel around (emci 2026-10-13). */}
       {toast}
+      </Animated.View>
       {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
       <View style={styles.dock}>
         <PixelFrame streetPiece="panel" align="stretch" padded={false}>
@@ -866,7 +868,7 @@ const styles = StyleSheet.create({
   gone: { display: 'none' },
   topSlot: { flexGrow: 0, flexShrink: 0, zIndex: 2 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
-  toast: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 12, paddingBottom: 4, alignItems: 'center' },
+  toast: { position: 'absolute', left: 0, right: 0, bottom: 10, paddingHorizontal: 12, alignItems: 'center' },
   abs: { position: 'absolute' },
   hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
   flash: { backgroundColor: '#FFFFFF' },
