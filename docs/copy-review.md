@@ -87,50 +87,66 @@ For three categories, a more exact version is used once both of their traits are
 - You like a set path and you stay on it, even on the boring days.
 - You chase the new thing and still finish the plan you already made.
 
-## 2. Archetype names — name formula (emci, 2026-10-09), approved 2026-10-09
+## 2. Archetype names — name styles v5 (emci, 2026-10-12)
 
-Formula: describer (how they act: Harmony · Directness · Connection) + role (a person or
-position: Follow-through · Sociability · Curiosity) + one twist. 2–4 words, 34 characters max,
-no private-trait words. Pinned by `check:legends64`. Order below is HHH, HHL, HLH, HLL, LHH, LHL, LLH, LLL.
+Each style has its own template. Codes still come from the same traits: role =
+Follow-through · Sociability · Curiosity; describer / place / verb / epithet =
+Harmony · Directness · Connection; extra / domain / sharp =
+Growth · Composure · Playfulness (three-word styles only). 2–4 words, 34
+characters max, no trait-end words, no token or stem reused across or within
+styles. Pinned by `check:legends64` against `src/lib/legends64/ato-titles-v5.csv`.
+Order below is HHH, HHL, HLH, HLL, LHH, LHL, LLH, LLL.
 
-**Primal Genius** (extra word + describer + role)
-- Extra words: Caffeinated, Hungry, Sugar-High, Early-Rising, Sun-Warmed, Well-Rested, Barefoot, Nocturnal
-- Describers: Warm, Breezy, Gentle, Dreamy, Fierce, Stubborn, Dry-Witted, Stoic
-- Roles: Ringmaster, Captain, Tinkerer, Archivist, Artist, Host, Poet, Hermit
+**Primal Genius** (`{Describer} {Role}, {Extra}`)
+- Extra: Caffeinated, Hungry, Sugar-High, Dawn-Ready, Sun-Warmed, Well-Rested, Barefoot, Nocturnal
+- Describers: Grinning, Breezy, Snuggly, Moonstruck, Fierce, Stubborn, Dry-Witted, Stoic
+- Roles: Pathfinder, Wrangler, Tinkerer, Fossil Fan, Muralist, Crooner, Stargazer, Burrower
 
-**High Fantasy**
-- Describers: Big-Hearted, Silver-Tongued, Soft-Spoken, Starry-Eyed, Bold, Iron-Willed, Wry, Unfazed
-- Roles: Guildmaster, Knight, Wizard, Scribe, Bard, Innkeeper, Druid, Hermit
+**High Fantasy** (`{Role} of the {Place}`)
+- Places: Tavern, Court, Glade, Stars, Vanguard, Anvil, Riddles, Moors
+- Roles: Paladin, Knight-Errant, Wizard, Scribe, Bard, Innkeeper, Druid, Truffle-Hunter
 
-**Corporate Realist** (extra word + describer + role)
-- Extra words: Podcast-Fed, Upskilling, Double-Shot, Deep-Work, Long-Lunch, Nine-to-Five, Meme-Sharing, Reply-All
-- Describers: Optimistic, Chill, Agreeable, Easygoing, Blunt, Unfiltered, Skeptical, Heads-Down
-- Roles: Director, Manager, Strategist, Analyst, Creative, Networker, Freelancer, Contractor
+**Corporate Realist** (`{Describer} {Role} of {Domain}`)
+- Domains: Synergy, KPIs, Inboxes, Focus, Pivots, Overtime, Memes, Pings
+- Describers: Visionary, Win-Win, On-Brand, Documented, Disruptive, Escalating, Contrarian, Async
+- Roles: Founder, Scheduler, Strategist, Quant, Creative, Schmoozer, Consultant, Contractor
 
-**Oxymoron** (soft describer + sharp word + role)
-- Soft: Polite, Cheerful, Gentle, Mellow, Friendly, Low-Key, Shy, Quiet
-- Sharp: Anarchist, Overachiever, Firestarter, Mastermind, Troublemaker, Hardliner, Wildcard, Outlaw
-- Roles: Leader, Boss, Inventor, Planner, Showrunner, Host, Writer, Drifter
+**Oxymoron** (`{Soft} {Sharp} {Role}`)
+- Soft: Polite, Cheerful, Huggable, Mellow, Friendly, Low-Key, Bashful, Whispering
+- Sharp: Anarchist, Overachiever, Firestarter, Kingpin, Troublemaker, Hardliner, Wildcard, Outlaw
+- Roles: Ambassador, Enforcer, Inventor, Tactician, Impresario, Emcee, Poet, Loafer
 
-**Gaming** (team roles, never Boss)
-- Describers: Wholesome, Upbeat, Patient, Laid-Back, Trash-Talking, Blunt, Deadpan, Unbothered
-- Roles: Raid Leader, Squad Captain, Theorycrafter, Main Tank, Shot Caller, Healer, Scout, Benchwarmer
+**Gaming** (`{Describer} {Role}`; team roles, never Boss)
+- Describers: MVP, Hype, Clutch, Stealth-Mode, Tryhard, Salty, Min-Maxing, Solo-Queue
+- Roles: Raid Leader, Lobby Host, Theorycrafter, Frontline Tank, Shot Caller, Pocket Healer, Speedrunner, Side-Quest NPC
 
-**Mythic** ("The {role} Who {verb}")
-- Verbs: Cheers, Laughs, Listens, Daydreams, Charges, Insists, Smirks, Shrugs
-- Roles: Herald, Sovereign, Forgemaster, Artisan, Reveler, Hearthkeeper, Oracle, Hermit
+**Mythic** (`The {Role} Who {Verb}`)
+- Verbs: Rallies, Bargains, Listens, Wonders, Charges, Haggles, Smirks, Vanishes
+- Roles: Storm-Herald, Oathbinder, Artificer, Weaver, Reveler, Hearth-Warden, Oracle, Mist-Walker
 
-**Anime**
-- Describers: Prickly-Sweet, Genki, Shy, Dreamy, Protective, Effortless, Deadpan, Cool-Headed
-- Roles: Hero, Class President, Prodigy, Honor Student, Sidekick, Senpai, Transfer Student, Ronin
+**Anime** (`{Describer} {Role}`; plain-English tropes)
+- Describers: Secretly-Sweet, Sunshine, Ice-Cool, Daydreaming, Ride-or-Die, Unstoppable, Mysterious, Lone-Wolf
+- Roles: Chosen One, Council President, Rival, Library Ghost, Comic Relief, Club Captain, Transfer Student, Background Extra
 
-**Funny**
-- Describers: Charming, Unbothered, Soft, Easy-Breezy, Scorekeeping, No-Filter, Side-Eye, Thumbs-Up
-- Roles: Main Character, Designated Driver, Mad Scientist, Hall Monitor, Plus-One, Mom Friend, Tab Collector, Homebody
+**Funny** (`{Describer} {Role}`)
+- Describers: Smooth-Talking, Snack-Bringing, Overthinking, Playlist-Hogging, Receipt-Saving, No-Filter, Eyebrow-Raising, Emoji-Only
+- Roles: Main Character, Designated Driver, Mad Scientist, Hall Monitor, Party Crasher, Mom Friend, Group-Chat Lurker, Homebody
 
-**Dark**
-- Describers: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Sinister, Cold-Blooded
-- Roles: Conqueror, Tyrant, Necromancer, Gravekeeper, Puppet Master, Ringleader, Heretic, Reaper
+**Dark** (`{Role} the {Epithet}`)
+- Epithets: Adored, Alluring, Velvet-Gloved, Elegant, Relentless, Unrepentant, Sinister, Cold-Blooded
+- Roles: Conqueror, Dread Tyrant, Necromancer, Crypt Curator, Puppeteer, Warlock, Heretic, Reaper
+
+**Legendary ★** — fires only when every code the style uses is all-High (all-Low
+for Mythic and Anime):
+- Primal Genius (all HHH): Pure Sunbeam Energy
+- High Fantasy (all HHH): Prophesied Dragon-Tamer
+- Corporate Realist (all HHH): Employee of Every Month
+- Oxymoron (all HHH): Courteous Apocalypse
+- Gaming (all HHH): Undisputed Final Boss
+- Mythic (all LLL): The Rumor Who Lingers
+- Anime (all LLL): Mid-Credits Twist
+- Funny (all HHH): Plot Armor Personified
+- Dark (all HHH): Beloved Doom Incarnate
 
 ## 3. Traits: names, the word for each end, and what it sounds like (approved 2026-10-02)
 
