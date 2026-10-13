@@ -8,17 +8,23 @@ Viewer lists one card per set (not each clip/file).
 
 ## Categories
 
-- **heroes** (198: 32 in use / 166 unused) — Heroes
-- **enemies-bosses** (18: 0 in use / 18 unused) — Enemies / bosses
-- **ui** (26: 5 in use / 21 unused) — UI
-- **icons** (88: 0 in use / 88 unused) — Icons
+- **heroes** (198: 56 in use / 142 unused) — Heroes
+- **enemies-bosses** (18: 10 in use / 8 unused) — Enemies / bosses
+- **ui** (26: 11 in use / 15 unused) — UI
+- **icons** (88: 22 in use / 66 unused) — Icons
 - **rooms** (60: 38 in use / 22 unused) — Rooms
 - **props** (34: 0 in use / 34 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
-- **fx** (14: 0 in use / 14 unused) — FX
-- **backgrounds** (2: 0 in use / 2 unused) — Backgrounds
-- **branding** (13: 0 in use / 13 unused) — Branding
+- **fx** (14: 1 in use / 13 unused) — FX
+- **backgrounds** (2: 2 in use / 0 unused) — Backgrounds
+- **branding** (13: 2 in use / 11 unused) — Branding
 - **misc** (0: 0 in use / 0 unused) — Misc
+
+## heroes · abyssal-assassin · dungeon-legends · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `npc.abyssal-assassin.dungeon-legends.south` | 252×252 | resource | — | src/components/profile-card.tsx |
 
 ## heroes · abyssal-assassin · dungeon-legends · unused
 
@@ -28,10 +34,15 @@ Viewer lists one card per set (not each clip/file).
 | `npc.abyssal-assassin.dungeon-legends.north` | 252×252 | resource | — | — |
 | `npc.abyssal-assassin.dungeon-legends.north-east` | 252×252 | resource | — | — |
 | `npc.abyssal-assassin.dungeon-legends.north-west` | 252×252 | resource | — | — |
-| `npc.abyssal-assassin.dungeon-legends.south` | 252×252 | resource | — | — |
 | `npc.abyssal-assassin.dungeon-legends.south-east` | 252×252 | resource | — | — |
 | `npc.abyssal-assassin.dungeon-legends.south-west` | 252×252 | resource | — | — |
 | `npc.abyssal-assassin.dungeon-legends.west` | 252×252 | resource | — | — |
+
+## heroes · arcane-engineer · dungeon-legends · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `npc.arcane-engineer.dungeon-legends.south` | 244×244 | resource | — | src/components/profile-card.tsx |
 
 ## heroes · arcane-engineer · dungeon-legends · unused
 
@@ -41,16 +52,15 @@ Viewer lists one card per set (not each clip/file).
 | `npc.arcane-engineer.dungeon-legends.north` | 244×244 | resource | — | — |
 | `npc.arcane-engineer.dungeon-legends.north-east` | 244×244 | resource | — | — |
 | `npc.arcane-engineer.dungeon-legends.north-west` | 244×244 | resource | — | — |
-| `npc.arcane-engineer.dungeon-legends.south` | 244×244 | resource | — | — |
 | `npc.arcane-engineer.dungeon-legends.south-east` | 244×244 | resource | — | — |
 | `npc.arcane-engineer.dungeon-legends.south-west` | 244×244 | resource | — | — |
 | `npc.arcane-engineer.dungeon-legends.west` | 244×244 | resource | — | — |
 
-## heroes · archangel · cast · unused
+## heroes · archangel · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.archangel.cast.atlas` | 2192×1934 | alt-skin | — | — |
+| `hero.archangel.cast.atlas` | 2192×1934 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · archangel · streetwear · in-use
 
@@ -59,11 +69,11 @@ Viewer lists one card per set (not each clip/file).
 | `hero.archangel.streetwear.combat` | 1263×955 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/archangel/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.archangel.streetwear.core` | 1279×786 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/archangel/sheets.json, src/play/generated-play-sheets.ts |
 
-## heroes · aurex · cast · unused
+## heroes · aurex · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.aurex.cast.atlas` | 1676×1031 | alt-skin | — | — |
+| `hero.aurex.cast.atlas` | 1676×1031 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · aurex · streetwear · in-use
 
@@ -98,11 +108,11 @@ Viewer lists one card per set (not each clip/file).
 | `pet.cobra-oracle.primal.south-west` | 248×248 | resource | — | — |
 | `pet.cobra-oracle.primal.west` | 248×248 | resource | — | — |
 
-## heroes · corvus · cast · unused
+## heroes · corvus · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.corvus.cast.atlas` | 2056×1209 | alt-skin | — | — |
+| `hero.corvus.cast.atlas` | 2056×1209 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · corvus · streetwear · in-use
 
@@ -110,6 +120,12 @@ Viewer lists one card per set (not each clip/file).
 |---|---|---|---|---|
 | `hero.corvus.streetwear.combat` | 1015×971 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/corvus/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.corvus.streetwear.core` | 967×808 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/corvus/sheets.json, src/play/generated-play-sheets.ts |
+
+## heroes · crystal-berserker · dungeon-legends · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `npc.crystal-berserker.dungeon-legends.south` | 252×252 | resource | — | src/components/profile-card.tsx |
 
 ## heroes · crystal-berserker · dungeon-legends · unused
 
@@ -119,16 +135,15 @@ Viewer lists one card per set (not each clip/file).
 | `npc.crystal-berserker.dungeon-legends.north` | 252×252 | resource | — | — |
 | `npc.crystal-berserker.dungeon-legends.north-east` | 252×252 | resource | — | — |
 | `npc.crystal-berserker.dungeon-legends.north-west` | 252×252 | resource | — | — |
-| `npc.crystal-berserker.dungeon-legends.south` | 252×252 | resource | — | — |
 | `npc.crystal-berserker.dungeon-legends.south-east` | 252×252 | resource | — | — |
 | `npc.crystal-berserker.dungeon-legends.south-west` | 252×252 | resource | — | — |
 | `npc.crystal-berserker.dungeon-legends.west` | 252×252 | resource | — | — |
 
-## heroes · cyber-shinobi · cast · unused
+## heroes · cyber-shinobi · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.cyber-shinobi.cast.atlas` | 1988×1520 | alt-skin | — | — |
+| `hero.cyber-shinobi.cast.atlas` | 1988×1520 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · cyber-shinobi · streetwear · in-use
 
@@ -136,6 +151,12 @@ Viewer lists one card per set (not each clip/file).
 |---|---|---|---|---|
 | `hero.cyber-shinobi.streetwear.combat` | 919×921 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/cyber-shinobi/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.cyber-shinobi.streetwear.core` | 687×819 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/cyber-shinobi/sheets.json, src/play/generated-play-sheets.ts |
+
+## heroes · death-knight · dungeon-legends · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `npc.death-knight.dungeon-legends.south` | 252×252 | resource | — | src/components/profile-card.tsx |
 
 ## heroes · death-knight · dungeon-legends · unused
 
@@ -145,10 +166,15 @@ Viewer lists one card per set (not each clip/file).
 | `npc.death-knight.dungeon-legends.north` | 252×252 | resource | — | — |
 | `npc.death-knight.dungeon-legends.north-east` | 252×252 | resource | — | — |
 | `npc.death-knight.dungeon-legends.north-west` | 252×252 | resource | — | — |
-| `npc.death-knight.dungeon-legends.south` | 252×252 | resource | — | — |
 | `npc.death-knight.dungeon-legends.south-east` | 252×252 | resource | — | — |
 | `npc.death-knight.dungeon-legends.south-west` | 252×252 | resource | — | — |
 | `npc.death-knight.dungeon-legends.west` | 252×252 | resource | — | — |
+
+## heroes · dragonblood-champion · dungeon-legends · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `npc.dragonblood-champion.dungeon-legends.south` | 252×252 | resource | — | src/components/profile-card.tsx |
 
 ## heroes · dragonblood-champion · dungeon-legends · unused
 
@@ -158,10 +184,15 @@ Viewer lists one card per set (not each clip/file).
 | `npc.dragonblood-champion.dungeon-legends.north` | 252×252 | resource | — | — |
 | `npc.dragonblood-champion.dungeon-legends.north-east` | 252×252 | resource | — | — |
 | `npc.dragonblood-champion.dungeon-legends.north-west` | 252×252 | resource | — | — |
-| `npc.dragonblood-champion.dungeon-legends.south` | 252×252 | resource | — | — |
 | `npc.dragonblood-champion.dungeon-legends.south-east` | 252×252 | resource | — | — |
 | `npc.dragonblood-champion.dungeon-legends.south-west` | 252×252 | resource | — | — |
 | `npc.dragonblood-champion.dungeon-legends.west` | 252×252 | resource | — | — |
+
+## heroes · dungeon-druid · dungeon-legends · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `npc.dungeon-druid.dungeon-legends.south` | 244×244 | resource | — | src/components/profile-card.tsx |
 
 ## heroes · dungeon-druid · dungeon-legends · unused
 
@@ -171,10 +202,15 @@ Viewer lists one card per set (not each clip/file).
 | `npc.dungeon-druid.dungeon-legends.north` | 244×244 | resource | — | — |
 | `npc.dungeon-druid.dungeon-legends.north-east` | 244×244 | resource | — | — |
 | `npc.dungeon-druid.dungeon-legends.north-west` | 244×244 | resource | — | — |
-| `npc.dungeon-druid.dungeon-legends.south` | 244×244 | resource | — | — |
 | `npc.dungeon-druid.dungeon-legends.south-east` | 244×244 | resource | — | — |
 | `npc.dungeon-druid.dungeon-legends.south-west` | 244×244 | resource | — | — |
 | `npc.dungeon-druid.dungeon-legends.west` | 244×244 | resource | — | — |
+
+## heroes · dungeon-witch · dungeon-legends · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `npc.dungeon-witch.dungeon-legends.south` | 252×252 | resource | — | src/components/profile-card.tsx |
 
 ## heroes · dungeon-witch · dungeon-legends · unused
 
@@ -184,16 +220,15 @@ Viewer lists one card per set (not each clip/file).
 | `npc.dungeon-witch.dungeon-legends.north` | 252×252 | resource | — | — |
 | `npc.dungeon-witch.dungeon-legends.north-east` | 252×252 | resource | — | — |
 | `npc.dungeon-witch.dungeon-legends.north-west` | 252×252 | resource | — | — |
-| `npc.dungeon-witch.dungeon-legends.south` | 252×252 | resource | — | — |
 | `npc.dungeon-witch.dungeon-legends.south-east` | 252×252 | resource | — | — |
 | `npc.dungeon-witch.dungeon-legends.south-west` | 252×252 | resource | — | — |
 | `npc.dungeon-witch.dungeon-legends.west` | 252×252 | resource | — | — |
 
-## heroes · elowen · cast · unused
+## heroes · elowen · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.elowen.cast.atlas` | 2192×1160 | alt-skin | — | — |
+| `hero.elowen.cast.atlas` | 2192×1160 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · elowen · streetwear · in-use
 
@@ -202,11 +237,11 @@ Viewer lists one card per set (not each clip/file).
 | `hero.elowen.streetwear.combat` | 1047×947 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/elowen/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.elowen.streetwear.core` | 1055×823 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/elowen/sheets.json, src/play/generated-play-sheets.ts |
 
-## heroes · frost-lich · cast · unused
+## heroes · frost-lich · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.frost-lich.cast.atlas` | 2124×1249 | alt-skin | — | — |
+| `hero.frost-lich.cast.atlas` | 2124×1249 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · frost-lich · streetwear · in-use
 
@@ -241,11 +276,11 @@ Viewer lists one card per set (not each clip/file).
 | `pet.jaguar-sun-guardian.primal.south-west` | 252×252 | resource | — | — |
 | `pet.jaguar-sun-guardian.primal.west` | 252×252 | resource | — | — |
 
-## heroes · kael · cast · unused
+## heroes · kael · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.kael.cast.atlas` | 1624×1624 | alt-skin | — | — |
+| `hero.kael.cast.atlas` | 1624×1624 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · kael · streetwear · in-use
 
@@ -254,11 +289,11 @@ Viewer lists one card per set (not each clip/file).
 | `hero.kael.streetwear.combat` | 1087×877 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kael/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.kael.streetwear.core` | 975×794 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kael/sheets.json, src/play/generated-play-sheets.ts |
 
-## heroes · kitsune · cast · unused
+## heroes · kitsune · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.kitsune.cast.atlas` | 2668×1726 | alt-skin | — | — |
+| `hero.kitsune.cast.atlas` | 2668×1726 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · kitsune · streetwear · in-use
 
@@ -280,11 +315,11 @@ Viewer lists one card per set (not each clip/file).
 | `pet.lynx-huntress.primal.south-west` | 244×244 | resource | — | — |
 | `pet.lynx-huntress.primal.west` | 244×244 | resource | — | — |
 
-## heroes · maldrath · cast · unused
+## heroes · maldrath · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.maldrath.cast.atlas` | 2192×1418 | alt-skin | — | — |
+| `hero.maldrath.cast.atlas` | 2192×1418 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · maldrath · streetwear · in-use
 
@@ -306,11 +341,11 @@ Viewer lists one card per set (not each clip/file).
 | `pet.mammoth-warchief.primal.south-west` | 248×248 | resource | — | — |
 | `pet.mammoth-warchief.primal.west` | 248×248 | resource | — | — |
 
-## heroes · morwen · cast · unused
+## heroes · morwen · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.morwen.cast.atlas` | 2124×1374 | alt-skin | — | — |
+| `hero.morwen.cast.atlas` | 2124×1374 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · morwen · streetwear · in-use
 
@@ -319,11 +354,11 @@ Viewer lists one card per set (not each clip/file).
 | `hero.morwen.streetwear.combat` | 991×887 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/morwen/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.morwen.streetwear.core` | 719×785 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/morwen/sheets.json, src/play/generated-play-sheets.ts |
 
-## heroes · neon-viper · cast · unused
+## heroes · neon-viper · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.neon-viper.cast.atlas` | 1289×1418 | alt-skin | — | — |
+| `hero.neon-viper.cast.atlas` | 1289×1418 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · neon-viper · streetwear · in-use
 
@@ -332,11 +367,11 @@ Viewer lists one card per set (not each clip/file).
 | `hero.neon-viper.streetwear.combat` | 967×885 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/neon-viper/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.neon-viper.streetwear.core` | 599×780 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/neon-viper/sheets.json, src/play/generated-play-sheets.ts |
 
-## heroes · oni · cast · unused
+## heroes · oni · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.oni.cast.atlas` | 1700×2078 | alt-skin | — | — |
+| `hero.oni.cast.atlas` | 1700×2078 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · oni · streetwear · in-use
 
@@ -358,6 +393,12 @@ Viewer lists one card per set (not each clip/file).
 | `pet.panther-shadowblade.primal.south-west` | 244×244 | resource | — | — |
 | `pet.panther-shadowblade.primal.west` | 244×244 | resource | — | — |
 
+## heroes · ratkin-treasure-hunter · dungeon-legends · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `npc.ratkin-treasure-hunter.dungeon-legends.south` | 252×252 | resource | — | src/components/profile-card.tsx |
+
 ## heroes · ratkin-treasure-hunter · dungeon-legends · unused
 
 | id | size | status | score | usedBy |
@@ -366,16 +407,15 @@ Viewer lists one card per set (not each clip/file).
 | `npc.ratkin-treasure-hunter.dungeon-legends.north` | 252×252 | resource | — | — |
 | `npc.ratkin-treasure-hunter.dungeon-legends.north-east` | 252×252 | resource | — | — |
 | `npc.ratkin-treasure-hunter.dungeon-legends.north-west` | 252×252 | resource | — | — |
-| `npc.ratkin-treasure-hunter.dungeon-legends.south` | 252×252 | resource | — | — |
 | `npc.ratkin-treasure-hunter.dungeon-legends.south-east` | 252×252 | resource | — | — |
 | `npc.ratkin-treasure-hunter.dungeon-legends.south-west` | 252×252 | resource | — | — |
 | `npc.ratkin-treasure-hunter.dungeon-legends.west` | 252×252 | resource | — | — |
 
-## heroes · raven · cast · unused
+## heroes · raven · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.raven.cast.atlas` | 1418×1676 | alt-skin | — | — |
+| `hero.raven.cast.atlas` | 1418×1676 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · raven · streetwear · in-use
 
@@ -410,11 +450,11 @@ Viewer lists one card per set (not each clip/file).
 | `pet.rhino-juggernaut.primal.south-west` | 248×248 | resource | — | — |
 | `pet.rhino-juggernaut.primal.west` | 248×248 | resource | — | — |
 
-## heroes · sak · cast · unused
+## heroes · sak · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.sak.cast.atlas` | 2056×1330 | alt-skin | — | — |
+| `hero.sak.cast.atlas` | 2056×1330 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · sak · streetwear · in-use
 
@@ -447,11 +487,11 @@ Viewer lists one card per set (not each clip/file).
 | `pet.shark-tide-knight.primal.south-east` | 248×248 | resource | — | — |
 | `pet.shark-tide-knight.primal.south-west` | 248×248 | resource | — | — |
 
-## heroes · velkhar · cast · unused
+## heroes · velkhar · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.velkhar.cast.atlas` | 1624×1624 | alt-skin | — | — |
+| `hero.velkhar.cast.atlas` | 1624×1624 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · velkhar · streetwear · in-use
 
@@ -460,11 +500,11 @@ Viewer lists one card per set (not each clip/file).
 | `hero.velkhar.streetwear.combat` | 1023×1007 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/velkhar/sheets.json, src/play/generated-play-sheets.ts |
 | `hero.velkhar.streetwear.core` | 911×891 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/velkhar/sheets.json, src/play/generated-play-sheets.ts |
 
-## heroes · void-raven · cast · unused
+## heroes · void-raven · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `hero.void-raven.cast.atlas` | 1418×1676 | alt-skin | — | — |
+| `hero.void-raven.cast.atlas` | 1418×1676 | alt-skin | — | src/play/generated-play-sheets.ts |
 
 ## heroes · void-raven · streetwear · in-use
 
@@ -486,66 +526,66 @@ Viewer lists one card per set (not each clip/file).
 | `npc.abyssal-demon-guardian.dungeon-legends.south-west` | 248×248 | resource | — | — |
 | `npc.abyssal-demon-guardian.dungeon-legends.west` | 248×248 | resource | — | — |
 
-## enemies-bosses · ghost · cast · unused
+## enemies-bosses · ghost · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tower.ghost.cast.atlas` | 1927×240 | alt-skin | — | — |
+| `tower.ghost.cast.atlas` | 1927×240 | alt-skin | — | src/play/generated-play-sheets.ts |
 
-## enemies-bosses · knight · cast · unused
-
-| id | size | status | score | usedBy |
-|---|---|---|---|---|
-| `creep.knight.cast.atlas` | 368×532 | alt-skin | — | — |
-
-## enemies-bosses · lux · cast · unused
+## enemies-bosses · knight · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tower.lux.cast.atlas` | 1959×244 | alt-skin | — | — |
+| `creep.knight.cast.atlas` | 368×532 | alt-skin | — | src/play/generated-play-sheets.ts |
 
-## enemies-bosses · oni · cast · unused
-
-| id | size | status | score | usedBy |
-|---|---|---|---|---|
-| `boss.oni.cast.atlas` | 1700×1700 | alt-skin | — | — |
-
-## enemies-bosses · titan-x · cast · unused
+## enemies-bosses · lux · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `boss.titan-x.cast.atlas` | 1959×244 | alt-skin | — | — |
+| `tower.lux.cast.atlas` | 1959×244 | alt-skin | — | src/play/generated-play-sheets.ts |
 
-## enemies-bosses · village-girl · cast · unused
-
-| id | size | status | score | usedBy |
-|---|---|---|---|---|
-| `creep.village-girl.cast.atlas-0` | 404×584 | alt-skin | — | — |
-| `creep.village-girl.cast.atlas-1` | 404×44 | alt-skin | — | — |
-
-## enemies-bosses · viper · cast · unused
+## enemies-bosses · oni · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tower.viper.cast.atlas` | 1895×236 | alt-skin | — | — |
+| `boss.oni.cast.atlas` | 1700×1700 | alt-skin | — | src/play/generated-play-sheets.ts |
 
-## enemies-bosses · wizard · cast · unused
-
-| id | size | status | score | usedBy |
-|---|---|---|---|---|
-| `creep.wizard.cast.atlas-0` | 368×286 | alt-skin | — | — |
-| `creep.wizard.cast.atlas-1` | 368×163 | alt-skin | — | — |
-
-## ui · frames · streetwear · unused
+## enemies-bosses · titan-x · cast · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `ui.frames.streetwear.frame-base` | 192×192 | resource | — | — |
-| `ui.frames.streetwear.frame-common` | 192×192 | resource | — | — |
-| `ui.frames.streetwear.frame-divine` | 192×192 | resource | — | — |
-| `ui.frames.streetwear.frame-epic` | 192×192 | resource | — | — |
-| `ui.frames.streetwear.frame-legendary` | 192×192 | resource | — | — |
-| `ui.frames.streetwear.frame-rare` | 192×192 | resource | — | — |
+| `boss.titan-x.cast.atlas` | 1959×244 | alt-skin | — | src/play/generated-play-sheets.ts |
+
+## enemies-bosses · village-girl · cast · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `creep.village-girl.cast.atlas-0` | 404×584 | alt-skin | — | src/play/generated-play-sheets.ts |
+| `creep.village-girl.cast.atlas-1` | 404×44 | alt-skin | — | src/play/generated-play-sheets.ts |
+
+## enemies-bosses · viper · cast · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `tower.viper.cast.atlas` | 1895×236 | alt-skin | — | src/play/generated-play-sheets.ts |
+
+## enemies-bosses · wizard · cast · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `creep.wizard.cast.atlas-0` | 368×286 | alt-skin | — | src/play/generated-play-sheets.ts |
+| `creep.wizard.cast.atlas-1` | 368×163 | alt-skin | — | src/play/generated-play-sheets.ts |
+
+## ui · frames · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `ui.frames.streetwear.frame-base` | 192×192 | resource | — | src/play/generated-play-assets.ts |
+| `ui.frames.streetwear.frame-common` | 192×192 | resource | — | src/play/generated-play-assets.ts |
+| `ui.frames.streetwear.frame-divine` | 192×192 | resource | — | src/play/generated-play-assets.ts |
+| `ui.frames.streetwear.frame-epic` | 192×192 | resource | — | src/play/generated-play-assets.ts |
+| `ui.frames.streetwear.frame-legendary` | 192×192 | resource | — | src/play/generated-play-assets.ts |
+| `ui.frames.streetwear.frame-rare` | 192×192 | resource | — | src/play/generated-play-assets.ts |
 
 ## ui · kit · streetwear · unused
 
@@ -591,62 +631,70 @@ Viewer lists one card per set (not each clip/file).
 | `icon.currency.streetwear.cur-shine` | 32×32 | resource | — | — |
 | `icon.currency.streetwear.cur-token` | 32×32 | resource | — | — |
 
-## icons · rarity · streetwear · unused
+## icons · rarity · streetwear · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `icon.rarity.streetwear.gem-common` | 48×48 | resource | — | — |
-| `icon.rarity.streetwear.gem-divine` | 48×48 | resource | — | — |
-| `icon.rarity.streetwear.gem-epic` | 48×48 | resource | — | — |
-| `icon.rarity.streetwear.gem-legendary` | 48×48 | resource | — | — |
-| `icon.rarity.streetwear.gem-rare` | 48×48 | resource | — | — |
+| `icon.rarity.streetwear.gem-common` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+| `icon.rarity.streetwear.gem-divine` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+| `icon.rarity.streetwear.gem-epic` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+| `icon.rarity.streetwear.gem-legendary` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+| `icon.rarity.streetwear.gem-rare` | 48×48 | resource | — | src/play/generated-play-assets.ts |
 
-## icons · shop · streetwear · unused
+## icons · shop · streetwear · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `icon.shop.streetwear.dive-charge` | 48×48 | resource | — | — |
-| `icon.shop.streetwear.merge-crate` | 48×48 | resource | — | — |
-| `icon.shop.streetwear.prism-stone` | 48×48 | resource | — | — |
-| `icon.shop.streetwear.shine-stone` | 48×48 | resource | — | — |
-| `icon.shop.streetwear.star-pearl` | 48×48 | resource | — | — |
+| `icon.shop.streetwear.dive-charge` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+| `icon.shop.streetwear.merge-crate` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+| `icon.shop.streetwear.prism-stone` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+| `icon.shop.streetwear.shine-stone` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+| `icon.shop.streetwear.star-pearl` | 48×48 | resource | — | src/play/generated-play-assets.ts |
+
+## icons · streetwear · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.streetwear.bandana` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.bat` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.bucket-hat` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.cap` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.coin-stack` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.flame` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.gem` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.hoodie` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.marker` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.shades` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.shield` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.sword` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 
 ## icons · streetwear · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `icon.streetwear.backpack` | 32×32 | resource | — | — |
-| `icon.streetwear.bandana` | 32×32 | resource | — | — |
-| `icon.streetwear.bat` | 32×32 | resource | — | — |
 | `icon.streetwear.bolt` | 32×32 | resource | — | — |
 | `icon.streetwear.bomb` | 32×32 | resource | — | — |
 | `icon.streetwear.boombox` | 32×32 | resource | — | — |
 | `icon.streetwear.boxing-glove` | 32×32 | resource | — | — |
 | `icon.streetwear.brick-paint` | 32×32 | resource | — | — |
 | `icon.streetwear.brick-wall` | 32×32 | resource | — | — |
-| `icon.streetwear.bucket-hat` | 32×32 | resource | — | — |
-| `icon.streetwear.cap` | 32×32 | resource | — | — |
 | `icon.streetwear.card` | 32×32 | resource | — | — |
 | `icon.streetwear.cassette` | 32×32 | resource | — | — |
 | `icon.streetwear.chain` | 32×32 | resource | — | — |
 | `icon.streetwear.chain-lock` | 32×32 | resource | — | — |
 | `icon.streetwear.clock` | 32×32 | resource | — | — |
-| `icon.streetwear.coin-stack` | 32×32 | resource | — | — |
 | `icon.streetwear.crown` | 32×32 | resource | — | — |
 | `icon.streetwear.dice` | 32×32 | resource | — | — |
 | `icon.streetwear.dpad` | 32×32 | resource | — | — |
 | `icon.streetwear.drop` | 32×32 | resource | — | — |
 | `icon.streetwear.fist` | 32×32 | resource | — | — |
-| `icon.streetwear.flame` | 32×32 | resource | — | — |
 | `icon.streetwear.gear` | 32×32 | resource | — | — |
-| `icon.streetwear.gem` | 32×32 | resource | — | — |
 | `icon.streetwear.graffiti-tag` | 32×32 | resource | — | — |
 | `icon.streetwear.headphones` | 32×32 | resource | — | — |
 | `icon.streetwear.heart` | 32×32 | resource | — | — |
-| `icon.streetwear.hoodie` | 32×32 | resource | — | — |
 | `icon.streetwear.key` | 32×32 | resource | — | — |
 | `icon.streetwear.leaf` | 32×32 | resource | — | — |
-| `icon.streetwear.marker` | 32×32 | resource | — | — |
 | `icon.streetwear.mic` | 32×32 | resource | — | — |
 | `icon.streetwear.padlock` | 32×32 | resource | — | — |
 | `icon.streetwear.padlock-chain` | 32×32 | resource | — | — |
@@ -654,8 +702,6 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.paint-roller` | 32×32 | resource | — | — |
 | `icon.streetwear.potion` | 32×32 | resource | — | — |
 | `icon.streetwear.price-tag` | 32×32 | resource | — | — |
-| `icon.streetwear.shades` | 32×32 | resource | — | — |
-| `icon.streetwear.shield` | 32×32 | resource | — | — |
 | `icon.streetwear.skateboard` | 32×32 | resource | — | — |
 | `icon.streetwear.skull-mask` | 32×32 | resource | — | — |
 | `icon.streetwear.sneaker` | 32×32 | resource | — | — |
@@ -663,7 +709,6 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.spray-can` | 32×32 | resource | — | — |
 | `icon.streetwear.star` | 32×32 | resource | — | — |
 | `icon.streetwear.subway-train` | 32×32 | resource | — | — |
-| `icon.streetwear.sword` | 32×32 | resource | — | — |
 | `icon.streetwear.traffic-cone` | 32×32 | resource | — | — |
 | `icon.streetwear.trash-can` | 32×32 | resource | — | — |
 | `icon.streetwear.trophy` | 32×32 | resource | — | — |
@@ -919,11 +964,11 @@ Viewer lists one card per set (not each clip/file).
 | `fx.rat.streetwear.rat` | 32×32 | resource | — | — |
 | `fx.rat.streetwear.run` | 32×32 | resource | — | — |
 
-## fx · shine · streetwear · unused
+## fx · shine · streetwear · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `fx.shine.streetwear` | 160×180 | resource | — | — |
+| `fx.shine.streetwear` | 160×180 | resource | — | src/play/generated-play-assets.ts |
 
 ## fx · spark · streetwear · unused
 
@@ -949,17 +994,17 @@ Viewer lists one card per set (not each clip/file).
 |---|---|---|---|---|
 | `fx.wisp.streetwear` | 32×32 | resource | — | — |
 
-## backgrounds · dive-atlas · classic · unused
+## backgrounds · dive-atlas · classic · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `background.dive-atlas.classic` | 477×683 | resource | — | — |
+| `background.dive-atlas.classic` | 477×683 | resource | — | src/play/pixel-atlas.tsx |
 
-## backgrounds · room-atlas · classic · unused
+## backgrounds · room-atlas · classic · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `background.room-atlas.classic` | 303×454 | resource | — | — |
+| `background.room-atlas.classic` | 303×454 | resource | — | src/play/pixel-atlas.tsx |
 
 ## branding · brand_android-background · default · unused
 
@@ -991,17 +1036,17 @@ Viewer lists one card per set (not each clip/file).
 |---|---|---|---|---|
 | `brand.icon` | 1024×1024 | candidate | — | — |
 
-## branding · brand_logo-glow · default · unused
+## branding · brand_logo-glow · default · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.logo-glow` | 604×604 | candidate | — | — |
+| `brand.logo-glow` | 604×604 | candidate | — | src/components/animated-icon.tsx |
 
-## branding · brand_splash · default · unused
+## branding · brand_splash · default · in-use
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `brand.splash` | 228×213 | candidate | — | — |
+| `brand.splash` | 228×213 | candidate | — | src/components/animated-icon.tsx |
 
 ## branding · expo-badge · template · unused
 

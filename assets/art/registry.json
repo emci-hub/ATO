@@ -3,7 +3,7 @@
   "assets": [
     {
       "id": "background.dive-atlas.classic",
-      "path": "assets/art/backgrounds/unused/classic/dive-atlas.png",
+      "path": "assets/art/backgrounds/in-use/classic/dive-atlas.png",
       "type": "background",
       "theme": "classic",
       "placement": "back-wall",
@@ -25,9 +25,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/pixel-atlas.tsx"
+      ],
       "category": "backgrounds",
-      "inUse": false,
+      "inUse": true,
       "set": "dive-atlas",
       "variant": "classic",
       "part": "dive-atlas",
@@ -37,7 +39,7 @@
     },
     {
       "id": "background.room-atlas.classic",
-      "path": "assets/art/backgrounds/unused/classic/room-atlas.png",
+      "path": "assets/art/backgrounds/in-use/classic/room-atlas.png",
       "type": "background",
       "theme": "classic",
       "placement": "back-wall",
@@ -59,9 +61,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/pixel-atlas.tsx"
+      ],
       "category": "backgrounds",
-      "inUse": false,
+      "inUse": true,
       "set": "room-atlas",
       "variant": "classic",
       "part": "room-atlas",
@@ -71,7 +75,7 @@
     },
     {
       "id": "boss.oni.cast.atlas",
-      "path": "assets/art/enemies-bosses/unused/oni/cast/atlas.png",
+      "path": "assets/art/enemies-bosses/in-use/oni/cast/atlas.png",
       "type": "boss",
       "theme": "cast",
       "placement": "floor",
@@ -88,9 +92,11 @@
       "notes": "md5:c6e515dd1c150987bf824c4f0528ecca",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "oni",
       "variant": "cast",
       "part": "atlas",
@@ -100,7 +106,7 @@
     },
     {
       "id": "boss.titan-x.cast.atlas",
-      "path": "assets/art/enemies-bosses/unused/titan-x/cast/atlas.png",
+      "path": "assets/art/enemies-bosses/in-use/titan-x/cast/atlas.png",
       "type": "boss",
       "theme": "cast",
       "placement": "floor",
@@ -117,9 +123,11 @@
       "notes": "md5:f955f20965f01e004ea2259d5afeac1c",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "titan-x",
       "variant": "cast",
       "part": "atlas",
@@ -325,7 +333,7 @@
     },
     {
       "id": "brand.logo-glow",
-      "path": "assets/art/branding/unused/brand_logo-glow.png",
+      "path": "assets/art/branding/in-use/brand_logo-glow.png",
       "type": "brand",
       "theme": "none",
       "placement": "screen-ui",
@@ -341,9 +349,11 @@
       "format": "png32",
       "notes": "md5:dbca075a49dc45e550c5d2e3e9601039",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/animated-icon.tsx"
+      ],
       "category": "branding",
-      "inUse": false,
+      "inUse": true,
       "set": "brand_logo-glow",
       "variant": "default",
       "part": "brand_logo-glow",
@@ -437,7 +447,7 @@
     },
     {
       "id": "brand.splash",
-      "path": "assets/art/branding/unused/brand_splash.png",
+      "path": "assets/art/branding/in-use/brand_splash.png",
       "type": "brand",
       "theme": "none",
       "placement": "screen-ui",
@@ -453,9 +463,11 @@
       "format": "png32",
       "notes": "md5:5ee5db91d59518c45ebcc99a2f5afc57",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/animated-icon.tsx"
+      ],
       "category": "branding",
-      "inUse": false,
+      "inUse": true,
       "set": "brand_splash",
       "variant": "default",
       "part": "brand_splash",
@@ -493,7 +505,7 @@
     },
     {
       "id": "creep.knight.cast.atlas",
-      "path": "assets/art/enemies-bosses/unused/knight/cast/atlas.png",
+      "path": "assets/art/enemies-bosses/in-use/knight/cast/atlas.png",
       "type": "creep",
       "theme": "cast",
       "placement": "floor",
@@ -510,9 +522,11 @@
       "notes": "md5:19a42d1fc5565171c4e69e580a328926",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "knight",
       "variant": "cast",
       "part": "atlas",
@@ -522,7 +536,7 @@
     },
     {
       "id": "creep.village-girl.cast.atlas-0",
-      "path": "assets/art/enemies-bosses/unused/village-girl/cast/atlas-0.png",
+      "path": "assets/art/enemies-bosses/in-use/village-girl/cast/atlas-0.png",
       "type": "creep",
       "theme": "cast",
       "placement": "floor",
@@ -539,9 +553,11 @@
       "notes": "md5:64b0f2b64d1485c90d85a2f263b1cb80",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "village-girl",
       "variant": "cast",
       "part": "atlas-0",
@@ -551,7 +567,7 @@
     },
     {
       "id": "creep.village-girl.cast.atlas-1",
-      "path": "assets/art/enemies-bosses/unused/village-girl/cast/atlas-1.png",
+      "path": "assets/art/enemies-bosses/in-use/village-girl/cast/atlas-1.png",
       "type": "creep",
       "theme": "cast",
       "placement": "floor",
@@ -568,9 +584,11 @@
       "notes": "md5:75e05f4e441fc068674d037407445966",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "village-girl",
       "variant": "cast",
       "part": "atlas-1",
@@ -580,7 +598,7 @@
     },
     {
       "id": "creep.wizard.cast.atlas-0",
-      "path": "assets/art/enemies-bosses/unused/wizard/cast/atlas-0.png",
+      "path": "assets/art/enemies-bosses/in-use/wizard/cast/atlas-0.png",
       "type": "creep",
       "theme": "cast",
       "placement": "floor",
@@ -597,9 +615,11 @@
       "notes": "md5:4e688059ed253e1cfd84e2e04eeb0c1c",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "wizard",
       "variant": "cast",
       "part": "atlas-0",
@@ -609,7 +629,7 @@
     },
     {
       "id": "creep.wizard.cast.atlas-1",
-      "path": "assets/art/enemies-bosses/unused/wizard/cast/atlas-1.png",
+      "path": "assets/art/enemies-bosses/in-use/wizard/cast/atlas-1.png",
       "type": "creep",
       "theme": "cast",
       "placement": "floor",
@@ -626,9 +646,11 @@
       "notes": "md5:e0f8765163d21d22877136661626f93e",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "wizard",
       "variant": "cast",
       "part": "atlas-1",
@@ -890,7 +912,7 @@
     },
     {
       "id": "fx.shine.streetwear",
-      "path": "assets/art/fx/unused/streetwear/shine.png",
+      "path": "assets/art/fx/in-use/streetwear/shine.png",
       "type": "fx",
       "theme": "streetwear",
       "placement": "hud",
@@ -906,9 +928,11 @@
       "format": "png32",
       "notes": "md5:b2f7d6274f669f9f072e4dbc8b5a4fd5",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "fx",
-      "inUse": false,
+      "inUse": true,
       "set": "shine",
       "variant": "streetwear",
       "part": "shine",
@@ -1030,7 +1054,7 @@
     },
     {
       "id": "hero.archangel.cast.atlas",
-      "path": "assets/art/heroes/unused/archangel/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/archangel/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1047,9 +1071,11 @@
       "notes": "md5:62288f0711c410a0356c0eb71b5168a0",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "archangel",
       "variant": "cast",
       "part": "atlas",
@@ -1117,7 +1143,7 @@
     },
     {
       "id": "hero.aurex.cast.atlas",
-      "path": "assets/art/heroes/unused/aurex/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/aurex/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1134,9 +1160,11 @@
       "notes": "md5:198038c35c4f877f4f89e73402f5d85f",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "aurex",
       "variant": "cast",
       "part": "atlas",
@@ -1204,7 +1232,7 @@
     },
     {
       "id": "hero.corvus.cast.atlas",
-      "path": "assets/art/heroes/unused/corvus/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/corvus/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1221,9 +1249,11 @@
       "notes": "md5:b474c647c960e11cbf2654f75dfa20f0",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "corvus",
       "variant": "cast",
       "part": "atlas",
@@ -1291,7 +1321,7 @@
     },
     {
       "id": "hero.cyber-shinobi.cast.atlas",
-      "path": "assets/art/heroes/unused/cyber-shinobi/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/cyber-shinobi/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1308,9 +1338,11 @@
       "notes": "md5:32fb6917ef9288ee794137e959acc89c",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "cyber-shinobi",
       "variant": "cast",
       "part": "atlas",
@@ -1378,7 +1410,7 @@
     },
     {
       "id": "hero.elowen.cast.atlas",
-      "path": "assets/art/heroes/unused/elowen/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/elowen/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1395,9 +1427,11 @@
       "notes": "md5:04e38762ff503b944e4ef9f161e64fb4",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "elowen",
       "variant": "cast",
       "part": "atlas",
@@ -1465,7 +1499,7 @@
     },
     {
       "id": "hero.frost-lich.cast.atlas",
-      "path": "assets/art/heroes/unused/frost-lich/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/frost-lich/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1482,9 +1516,11 @@
       "notes": "md5:6e9016a8e1d2172f19a83275e03cf243",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "frost-lich",
       "variant": "cast",
       "part": "atlas",
@@ -1552,7 +1588,7 @@
     },
     {
       "id": "hero.kael.cast.atlas",
-      "path": "assets/art/heroes/unused/kael/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/kael/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1569,9 +1605,11 @@
       "notes": "md5:0d820bd3593f1b49b4a26a0be1c80e8a",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "kael",
       "variant": "cast",
       "part": "atlas",
@@ -1639,7 +1677,7 @@
     },
     {
       "id": "hero.kitsune.cast.atlas",
-      "path": "assets/art/heroes/unused/kitsune/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/kitsune/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1656,9 +1694,11 @@
       "notes": "md5:17bb364a08587c84041286084c38fa86",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "kitsune",
       "variant": "cast",
       "part": "atlas",
@@ -1726,7 +1766,7 @@
     },
     {
       "id": "hero.maldrath.cast.atlas",
-      "path": "assets/art/heroes/unused/maldrath/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/maldrath/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1743,9 +1783,11 @@
       "notes": "md5:53bcde66b797f3e94cf7bb39b1dd6ba1",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "maldrath",
       "variant": "cast",
       "part": "atlas",
@@ -1813,7 +1855,7 @@
     },
     {
       "id": "hero.morwen.cast.atlas",
-      "path": "assets/art/heroes/unused/morwen/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/morwen/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1830,9 +1872,11 @@
       "notes": "md5:3bd585ac104c1992b999f9c5d0c05115",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "morwen",
       "variant": "cast",
       "part": "atlas",
@@ -1900,7 +1944,7 @@
     },
     {
       "id": "hero.neon-viper.cast.atlas",
-      "path": "assets/art/heroes/unused/neon-viper/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/neon-viper/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -1917,9 +1961,11 @@
       "notes": "md5:e07f3449d3887fb7f9af88da50b5d31a",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "neon-viper",
       "variant": "cast",
       "part": "atlas",
@@ -1987,7 +2033,7 @@
     },
     {
       "id": "hero.oni.cast.atlas",
-      "path": "assets/art/heroes/unused/oni/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/oni/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -2004,9 +2050,11 @@
       "notes": "md5:506af059d05ac409d62f589faa1411d5",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "oni",
       "variant": "cast",
       "part": "atlas",
@@ -2074,7 +2122,7 @@
     },
     {
       "id": "hero.raven.cast.atlas",
-      "path": "assets/art/heroes/unused/raven/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/raven/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -2091,9 +2139,11 @@
       "notes": "md5:c89949ac08497e6e069e60ec1c77754d",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "raven",
       "variant": "cast",
       "part": "atlas",
@@ -2161,7 +2211,7 @@
     },
     {
       "id": "hero.sak.cast.atlas",
-      "path": "assets/art/heroes/unused/sak/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/sak/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -2178,9 +2228,11 @@
       "notes": "md5:7e6e1daf98eb6fbcc8c8e4f1e1b75b7c",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "sak",
       "variant": "cast",
       "part": "atlas",
@@ -2248,7 +2300,7 @@
     },
     {
       "id": "hero.velkhar.cast.atlas",
-      "path": "assets/art/heroes/unused/velkhar/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/velkhar/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -2265,9 +2317,11 @@
       "notes": "md5:5e2153824801b8e6f1091e6d6a074b8f",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "velkhar",
       "variant": "cast",
       "part": "atlas",
@@ -2335,7 +2389,7 @@
     },
     {
       "id": "hero.void-raven.cast.atlas",
-      "path": "assets/art/heroes/unused/void-raven/cast/atlas.png",
+      "path": "assets/art/heroes/in-use/void-raven/cast/atlas.png",
       "type": "character",
       "theme": "cast",
       "placement": "floor",
@@ -2352,9 +2406,11 @@
       "notes": "md5:97ba2e1680f01162e596b31f6297aa2d",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "void-raven",
       "variant": "cast",
       "part": "atlas",
@@ -2534,7 +2590,7 @@
     },
     {
       "id": "icon.rarity.streetwear.gem-common",
-      "path": "assets/art/icons/unused/rarity/streetwear/gem-common.png",
+      "path": "assets/art/icons/in-use/rarity/streetwear/gem-common.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2550,9 +2606,11 @@
       "format": "png32",
       "notes": "md5:3ed42d58c60e68a07158ba579ee50496",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "rarity",
       "variant": "streetwear",
       "part": "gem-common",
@@ -2562,7 +2620,7 @@
     },
     {
       "id": "icon.rarity.streetwear.gem-divine",
-      "path": "assets/art/icons/unused/rarity/streetwear/gem-divine.png",
+      "path": "assets/art/icons/in-use/rarity/streetwear/gem-divine.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2578,9 +2636,11 @@
       "format": "png32",
       "notes": "md5:5fe0fe8ac77824b252a8cb096c256c40",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "rarity",
       "variant": "streetwear",
       "part": "gem-divine",
@@ -2590,7 +2650,7 @@
     },
     {
       "id": "icon.rarity.streetwear.gem-epic",
-      "path": "assets/art/icons/unused/rarity/streetwear/gem-epic.png",
+      "path": "assets/art/icons/in-use/rarity/streetwear/gem-epic.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2606,9 +2666,11 @@
       "format": "png32",
       "notes": "md5:406f9b56717a54c527a55b3ecf21d2ab",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "rarity",
       "variant": "streetwear",
       "part": "gem-epic",
@@ -2618,7 +2680,7 @@
     },
     {
       "id": "icon.rarity.streetwear.gem-legendary",
-      "path": "assets/art/icons/unused/rarity/streetwear/gem-legendary.png",
+      "path": "assets/art/icons/in-use/rarity/streetwear/gem-legendary.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2634,9 +2696,11 @@
       "format": "png32",
       "notes": "md5:cc4330fd31ab924d97e1550ae2ebeaa8",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "rarity",
       "variant": "streetwear",
       "part": "gem-legendary",
@@ -2646,7 +2710,7 @@
     },
     {
       "id": "icon.rarity.streetwear.gem-rare",
-      "path": "assets/art/icons/unused/rarity/streetwear/gem-rare.png",
+      "path": "assets/art/icons/in-use/rarity/streetwear/gem-rare.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2662,9 +2726,11 @@
       "format": "png32",
       "notes": "md5:4b0f89c84e06f889f53b03a7412cbb92",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "rarity",
       "variant": "streetwear",
       "part": "gem-rare",
@@ -2674,7 +2740,7 @@
     },
     {
       "id": "icon.shop.streetwear.dive-charge",
-      "path": "assets/art/icons/unused/shop/streetwear/dive-charge.png",
+      "path": "assets/art/icons/in-use/shop/streetwear/dive-charge.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2690,9 +2756,11 @@
       "format": "png32",
       "notes": "md5:c02be451eeb1061cfb94915e3b736fd8",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "shop",
       "variant": "streetwear",
       "part": "dive-charge",
@@ -2702,7 +2770,7 @@
     },
     {
       "id": "icon.shop.streetwear.merge-crate",
-      "path": "assets/art/icons/unused/shop/streetwear/merge-crate.png",
+      "path": "assets/art/icons/in-use/shop/streetwear/merge-crate.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2718,9 +2786,11 @@
       "format": "png32",
       "notes": "md5:987fef4c3cb60bb9bebcc808d7721313",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "shop",
       "variant": "streetwear",
       "part": "merge-crate",
@@ -2730,7 +2800,7 @@
     },
     {
       "id": "icon.shop.streetwear.prism-stone",
-      "path": "assets/art/icons/unused/shop/streetwear/prism-stone.png",
+      "path": "assets/art/icons/in-use/shop/streetwear/prism-stone.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2746,9 +2816,11 @@
       "format": "png32",
       "notes": "md5:10ca8bb12d2a5cde67ae3c0b34f46d9e",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "shop",
       "variant": "streetwear",
       "part": "prism-stone",
@@ -2758,7 +2830,7 @@
     },
     {
       "id": "icon.shop.streetwear.shine-stone",
-      "path": "assets/art/icons/unused/shop/streetwear/shine-stone.png",
+      "path": "assets/art/icons/in-use/shop/streetwear/shine-stone.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2774,9 +2846,11 @@
       "format": "png32",
       "notes": "md5:58a4a084b3eb5d8950137d0538aea456",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "shop",
       "variant": "streetwear",
       "part": "shine-stone",
@@ -2786,7 +2860,7 @@
     },
     {
       "id": "icon.shop.streetwear.star-pearl",
-      "path": "assets/art/icons/unused/shop/streetwear/star-pearl.png",
+      "path": "assets/art/icons/in-use/shop/streetwear/star-pearl.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2802,9 +2876,11 @@
       "format": "png32",
       "notes": "md5:62a2d523f6750ff80a0a103452c37506",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "shop",
       "variant": "streetwear",
       "part": "star-pearl",
@@ -2842,7 +2918,7 @@
     },
     {
       "id": "icon.streetwear.bandana",
-      "path": "assets/art/icons/unused/streetwear/bandana.png",
+      "path": "assets/art/icons/in-use/streetwear/bandana.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2858,9 +2934,11 @@
       "format": "png32",
       "notes": "md5:32b28efaf691d6248067f95ff057025c",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "bandana",
@@ -2870,7 +2948,7 @@
     },
     {
       "id": "icon.streetwear.bat",
-      "path": "assets/art/icons/unused/streetwear/bat.png",
+      "path": "assets/art/icons/in-use/streetwear/bat.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2886,9 +2964,11 @@
       "format": "png32",
       "notes": "md5:85ce2ad9f2c72afcb0f2efa464a5e0bb",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "bat",
@@ -3066,7 +3146,7 @@
     },
     {
       "id": "icon.streetwear.bucket-hat",
-      "path": "assets/art/icons/unused/streetwear/bucket-hat.png",
+      "path": "assets/art/icons/in-use/streetwear/bucket-hat.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3082,9 +3162,11 @@
       "format": "png32",
       "notes": "md5:fd7c7a6773195497c694dcb8cdc071a5",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "bucket-hat",
@@ -3094,7 +3176,7 @@
     },
     {
       "id": "icon.streetwear.cap",
-      "path": "assets/art/icons/unused/streetwear/cap.png",
+      "path": "assets/art/icons/in-use/streetwear/cap.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3110,9 +3192,11 @@
       "format": "png32",
       "notes": "md5:5e71566b9ff78343514ee1337cb00bd9",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "cap",
@@ -3262,7 +3346,7 @@
     },
     {
       "id": "icon.streetwear.coin-stack",
-      "path": "assets/art/icons/unused/streetwear/coin-stack.png",
+      "path": "assets/art/icons/in-use/streetwear/coin-stack.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3278,9 +3362,11 @@
       "format": "png32",
       "notes": "md5:fd505d3a4b58dc439de99787bf81d595",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "coin-stack",
@@ -3430,7 +3516,7 @@
     },
     {
       "id": "icon.streetwear.flame",
-      "path": "assets/art/icons/unused/streetwear/flame.png",
+      "path": "assets/art/icons/in-use/streetwear/flame.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3446,9 +3532,11 @@
       "format": "png32",
       "notes": "md5:618efd7cf3306ba79e08eb4e288a97de",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "flame",
@@ -3486,7 +3574,7 @@
     },
     {
       "id": "icon.streetwear.gem",
-      "path": "assets/art/icons/unused/streetwear/gem.png",
+      "path": "assets/art/icons/in-use/streetwear/gem.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3502,9 +3590,11 @@
       "format": "png32",
       "notes": "md5:18ef4003bcf3d56d1c9ac2d2f2e588bc",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "gem",
@@ -3598,7 +3688,7 @@
     },
     {
       "id": "icon.streetwear.hoodie",
-      "path": "assets/art/icons/unused/streetwear/hoodie.png",
+      "path": "assets/art/icons/in-use/streetwear/hoodie.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3614,9 +3704,11 @@
       "format": "png32",
       "notes": "md5:408187c420d02ffa97988c056e0daf94",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "hoodie",
@@ -3682,7 +3774,7 @@
     },
     {
       "id": "icon.streetwear.marker",
-      "path": "assets/art/icons/unused/streetwear/marker.png",
+      "path": "assets/art/icons/in-use/streetwear/marker.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3698,9 +3790,11 @@
       "format": "png32",
       "notes": "md5:d1ca4903da94bec1898e2160d467bc7a",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "marker",
@@ -3906,7 +4000,7 @@
     },
     {
       "id": "icon.streetwear.shades",
-      "path": "assets/art/icons/unused/streetwear/shades.png",
+      "path": "assets/art/icons/in-use/streetwear/shades.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3922,9 +4016,11 @@
       "format": "png32",
       "notes": "md5:67af54f4e82730d4f1e550d917d7c1c1",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "shades",
@@ -3934,7 +4030,7 @@
     },
     {
       "id": "icon.streetwear.shield",
-      "path": "assets/art/icons/unused/streetwear/shield.png",
+      "path": "assets/art/icons/in-use/streetwear/shield.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3950,9 +4046,11 @@
       "format": "png32",
       "notes": "md5:4fc257c27a7e1c3610e3706a44b154e0",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "shield",
@@ -4158,7 +4256,7 @@
     },
     {
       "id": "icon.streetwear.sword",
-      "path": "assets/art/icons/unused/streetwear/sword.png",
+      "path": "assets/art/icons/in-use/streetwear/sword.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4174,9 +4272,11 @@
       "format": "png32",
       "notes": "md5:ceca5bb0f74ea9adbb1aaad81c267bcc",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "sword",
@@ -5022,7 +5122,7 @@
     },
     {
       "id": "npc.abyssal-assassin.dungeon-legends.south",
-      "path": "assets/art/heroes/unused/abyssal-assassin/dungeon-legends/rotations/south.png",
+      "path": "assets/art/heroes/in-use/abyssal-assassin/dungeon-legends/rotations/south.png",
       "type": "npc",
       "theme": "dungeon-legends",
       "placement": "floor",
@@ -5044,9 +5144,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/profile-card.tsx"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "abyssal-assassin",
       "variant": "dungeon-legends",
       "part": "south",
@@ -5566,7 +5668,7 @@
     },
     {
       "id": "npc.arcane-engineer.dungeon-legends.south",
-      "path": "assets/art/heroes/unused/arcane-engineer/dungeon-legends/rotations/south.png",
+      "path": "assets/art/heroes/in-use/arcane-engineer/dungeon-legends/rotations/south.png",
       "type": "npc",
       "theme": "dungeon-legends",
       "placement": "floor",
@@ -5588,9 +5690,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/profile-card.tsx"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "arcane-engineer",
       "variant": "dungeon-legends",
       "part": "south",
@@ -5838,7 +5942,7 @@
     },
     {
       "id": "npc.crystal-berserker.dungeon-legends.south",
-      "path": "assets/art/heroes/unused/crystal-berserker/dungeon-legends/rotations/south.png",
+      "path": "assets/art/heroes/in-use/crystal-berserker/dungeon-legends/rotations/south.png",
       "type": "npc",
       "theme": "dungeon-legends",
       "placement": "floor",
@@ -5860,9 +5964,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/profile-card.tsx"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "crystal-berserker",
       "variant": "dungeon-legends",
       "part": "south",
@@ -6110,7 +6216,7 @@
     },
     {
       "id": "npc.death-knight.dungeon-legends.south",
-      "path": "assets/art/heroes/unused/death-knight/dungeon-legends/rotations/south.png",
+      "path": "assets/art/heroes/in-use/death-knight/dungeon-legends/rotations/south.png",
       "type": "npc",
       "theme": "dungeon-legends",
       "placement": "floor",
@@ -6132,9 +6238,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/profile-card.tsx"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "death-knight",
       "variant": "dungeon-legends",
       "part": "south",
@@ -6382,7 +6490,7 @@
     },
     {
       "id": "npc.dragonblood-champion.dungeon-legends.south",
-      "path": "assets/art/heroes/unused/dragonblood-champion/dungeon-legends/rotations/south.png",
+      "path": "assets/art/heroes/in-use/dragonblood-champion/dungeon-legends/rotations/south.png",
       "type": "npc",
       "theme": "dungeon-legends",
       "placement": "floor",
@@ -6404,9 +6512,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/profile-card.tsx"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "dragonblood-champion",
       "variant": "dungeon-legends",
       "part": "south",
@@ -6654,7 +6764,7 @@
     },
     {
       "id": "npc.dungeon-druid.dungeon-legends.south",
-      "path": "assets/art/heroes/unused/dungeon-druid/dungeon-legends/rotations/south.png",
+      "path": "assets/art/heroes/in-use/dungeon-druid/dungeon-legends/rotations/south.png",
       "type": "npc",
       "theme": "dungeon-legends",
       "placement": "floor",
@@ -6676,9 +6786,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/profile-card.tsx"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "dungeon-druid",
       "variant": "dungeon-legends",
       "part": "south",
@@ -6926,7 +7038,7 @@
     },
     {
       "id": "npc.dungeon-witch.dungeon-legends.south",
-      "path": "assets/art/heroes/unused/dungeon-witch/dungeon-legends/rotations/south.png",
+      "path": "assets/art/heroes/in-use/dungeon-witch/dungeon-legends/rotations/south.png",
       "type": "npc",
       "theme": "dungeon-legends",
       "placement": "floor",
@@ -6948,9 +7060,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/profile-card.tsx"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "dungeon-witch",
       "variant": "dungeon-legends",
       "part": "south",
@@ -7198,7 +7312,7 @@
     },
     {
       "id": "npc.ratkin-treasure-hunter.dungeon-legends.south",
-      "path": "assets/art/heroes/unused/ratkin-treasure-hunter/dungeon-legends/rotations/south.png",
+      "path": "assets/art/heroes/in-use/ratkin-treasure-hunter/dungeon-legends/rotations/south.png",
       "type": "npc",
       "theme": "dungeon-legends",
       "placement": "floor",
@@ -7220,9 +7334,11 @@
         "refIds": []
       },
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/components/profile-card.tsx"
+      ],
       "category": "heroes",
-      "inUse": false,
+      "inUse": true,
       "set": "ratkin-treasure-hunter",
       "variant": "dungeon-legends",
       "part": "south",
@@ -16867,7 +16983,7 @@
     },
     {
       "id": "tower.ghost.cast.atlas",
-      "path": "assets/art/enemies-bosses/unused/ghost/cast/atlas.png",
+      "path": "assets/art/enemies-bosses/in-use/ghost/cast/atlas.png",
       "type": "tower",
       "theme": "cast",
       "placement": "floor",
@@ -16884,9 +17000,11 @@
       "notes": "md5:14a62682419ef3205f154dc60a9b2c3d",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "ghost",
       "variant": "cast",
       "part": "atlas",
@@ -16896,7 +17014,7 @@
     },
     {
       "id": "tower.lux.cast.atlas",
-      "path": "assets/art/enemies-bosses/unused/lux/cast/atlas.png",
+      "path": "assets/art/enemies-bosses/in-use/lux/cast/atlas.png",
       "type": "tower",
       "theme": "cast",
       "placement": "floor",
@@ -16913,9 +17031,11 @@
       "notes": "md5:9042d012bb5e6cf27d2abfd1793d0ac6",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "lux",
       "variant": "cast",
       "part": "atlas",
@@ -16925,7 +17045,7 @@
     },
     {
       "id": "tower.viper.cast.atlas",
-      "path": "assets/art/enemies-bosses/unused/viper/cast/atlas.png",
+      "path": "assets/art/enemies-bosses/in-use/viper/cast/atlas.png",
       "type": "tower",
       "theme": "cast",
       "placement": "floor",
@@ -16942,9 +17062,11 @@
       "notes": "md5:8dc5495f8fbf14a9aefd1a45d44a9309",
       "restyleTarget": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-sheets.ts"
+      ],
       "category": "enemies-bosses",
-      "inUse": false,
+      "inUse": true,
       "set": "viper",
       "variant": "cast",
       "part": "atlas",
@@ -16954,7 +17076,7 @@
     },
     {
       "id": "ui.frames.streetwear.frame-base",
-      "path": "assets/art/ui/unused/frames/streetwear/frame-base.png",
+      "path": "assets/art/ui/in-use/frames/streetwear/frame-base.png",
       "type": "ui",
       "theme": "streetwear",
       "placement": "hud",
@@ -16970,9 +17092,11 @@
       "format": "png32",
       "notes": "md5:3e441e77655ab4e6b18883f256ae74d5",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "ui",
-      "inUse": false,
+      "inUse": true,
       "set": "frames",
       "variant": "streetwear",
       "part": "frame-base",
@@ -16982,7 +17106,7 @@
     },
     {
       "id": "ui.frames.streetwear.frame-common",
-      "path": "assets/art/ui/unused/frames/streetwear/frame-common.png",
+      "path": "assets/art/ui/in-use/frames/streetwear/frame-common.png",
       "type": "ui",
       "theme": "streetwear",
       "placement": "hud",
@@ -16998,9 +17122,11 @@
       "format": "png32",
       "notes": "md5:4a893715b5bbe8a1f761bcecf4050257",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "ui",
-      "inUse": false,
+      "inUse": true,
       "set": "frames",
       "variant": "streetwear",
       "part": "frame-common",
@@ -17010,7 +17136,7 @@
     },
     {
       "id": "ui.frames.streetwear.frame-divine",
-      "path": "assets/art/ui/unused/frames/streetwear/frame-divine.png",
+      "path": "assets/art/ui/in-use/frames/streetwear/frame-divine.png",
       "type": "ui",
       "theme": "streetwear",
       "placement": "hud",
@@ -17026,9 +17152,11 @@
       "format": "png32",
       "notes": "md5:3718f2e1a19b025afdf45acd1b6f80ce",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "ui",
-      "inUse": false,
+      "inUse": true,
       "set": "frames",
       "variant": "streetwear",
       "part": "frame-divine",
@@ -17038,7 +17166,7 @@
     },
     {
       "id": "ui.frames.streetwear.frame-epic",
-      "path": "assets/art/ui/unused/frames/streetwear/frame-epic.png",
+      "path": "assets/art/ui/in-use/frames/streetwear/frame-epic.png",
       "type": "ui",
       "theme": "streetwear",
       "placement": "hud",
@@ -17054,9 +17182,11 @@
       "format": "png32",
       "notes": "md5:180678d5f7006d4b9aa8e8e597f7ec2c",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "ui",
-      "inUse": false,
+      "inUse": true,
       "set": "frames",
       "variant": "streetwear",
       "part": "frame-epic",
@@ -17066,7 +17196,7 @@
     },
     {
       "id": "ui.frames.streetwear.frame-legendary",
-      "path": "assets/art/ui/unused/frames/streetwear/frame-legendary.png",
+      "path": "assets/art/ui/in-use/frames/streetwear/frame-legendary.png",
       "type": "ui",
       "theme": "streetwear",
       "placement": "hud",
@@ -17082,9 +17212,11 @@
       "format": "png32",
       "notes": "md5:74206abf382c142c90df7607723277ab",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "ui",
-      "inUse": false,
+      "inUse": true,
       "set": "frames",
       "variant": "streetwear",
       "part": "frame-legendary",
@@ -17094,7 +17226,7 @@
     },
     {
       "id": "ui.frames.streetwear.frame-rare",
-      "path": "assets/art/ui/unused/frames/streetwear/frame-rare.png",
+      "path": "assets/art/ui/in-use/frames/streetwear/frame-rare.png",
       "type": "ui",
       "theme": "streetwear",
       "placement": "hud",
@@ -17110,9 +17242,11 @@
       "format": "png32",
       "notes": "md5:98c36e57dc495720b19b19487ad363a6",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/generated-play-assets.ts"
+      ],
       "category": "ui",
-      "inUse": false,
+      "inUse": true,
       "set": "frames",
       "variant": "streetwear",
       "part": "frame-rare",

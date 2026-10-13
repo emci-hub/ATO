@@ -435,6 +435,9 @@ function usedByScan(assets: ArtAsset[]): Map<string, string[]> {
   const byAccessor = new Map(assets.map((a) => [accessorPath(a.id).join('.'), a.id]));
   const byLegacy = new Map(assets.flatMap((a) => (a.legacyKeys ?? []).map((k) => [k, a.id] as const)));
 
+  // Images the app loads from outside the library (assets/play/...), by content hash:
+  // a library file with the same bytes is in use too (e.g. the cast hero atlases).
+  const copyUsers = new Map<string, Set<string>>();
   const roots = [path.join(repo, 'src')];
   for (const root of roots) {
     for (const file of walkFiles(root)) {
@@ -465,7 +468,22 @@ function usedByScan(assets: ArtAsset[]): Map<string, string[]> {
         const id = byPath.get(artPath);
         if (id) addUsed(map, id, rel);
       }
+      for (const m of src.matchAll(/require\(\s*['"]@\/(assets\/(?!art\/)[^'"]+\.png)['"]\s*\)/g)) {
+        const abs = path.join(repo, m[1]);
+        if (!fs.existsSync(abs)) continue;
+        const md5 = crypto.createHash('md5').update(fs.readFileSync(abs)).digest('hex');
+        const users = copyUsers.get(md5) ?? new Set<string>();
+        users.add(rel);
+        copyUsers.set(md5, users);
+      }
     }
+  }
+  for (const a of assets) {
+    if (a.status === 'archived' || !a.path.endsWith('.png')) continue;
+    const abs = path.join(repo, a.path);
+    if (!fs.existsSync(abs)) continue;
+    const users = copyUsers.get(crypto.createHash('md5').update(fs.readFileSync(abs)).digest('hex'));
+    for (const rel of users ?? []) addUsed(map, a.id, rel);
   }
 
   const sheetFiles = [
