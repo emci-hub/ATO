@@ -2890,7 +2890,7 @@
     },
     {
       "id": "icon.streetwear.backpack",
-      "path": "assets/art/icons/unused/streetwear/backpack.png",
+      "path": "assets/art/icons/in-use/streetwear/backpack.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -2906,9 +2906,11 @@
       "format": "png32",
       "notes": "md5:3d45ba2b8cec594af63b679135e8de41",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "backpack",
@@ -3632,7 +3634,7 @@
     },
     {
       "id": "icon.streetwear.headphones",
-      "path": "assets/art/icons/unused/streetwear/headphones.png",
+      "path": "assets/art/icons/in-use/streetwear/headphones.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3648,9 +3650,11 @@
       "format": "png32",
       "notes": "md5:d569b5e8b1d27e6b957b4cca6542d74a",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "headphones",
@@ -3832,7 +3836,7 @@
     },
     {
       "id": "icon.streetwear.padlock",
-      "path": "assets/art/icons/unused/streetwear/padlock.png",
+      "path": "assets/art/icons/in-use/streetwear/padlock.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3848,9 +3852,11 @@
       "format": "png32",
       "notes": "md5:18d24fa141cd3b758ddb9a040b3c3ac7",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "padlock",
@@ -4116,7 +4122,7 @@
     },
     {
       "id": "icon.streetwear.sneaker",
-      "path": "assets/art/icons/unused/streetwear/sneaker.png",
+      "path": "assets/art/icons/in-use/streetwear/sneaker.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4132,9 +4138,11 @@
       "format": "png32",
       "notes": "md5:80cbbfcaa3658251c49ec1f904964174",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "sneaker",
@@ -4144,7 +4152,7 @@
     },
     {
       "id": "icon.streetwear.speech",
-      "path": "assets/art/icons/unused/streetwear/speech.png",
+      "path": "assets/art/icons/in-use/streetwear/speech.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4160,9 +4168,11 @@
       "format": "png32",
       "notes": "md5:cf4b19f7c8ed5edd88624a6769d8de17",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "speech",
@@ -4228,7 +4238,7 @@
     },
     {
       "id": "icon.streetwear.subway-train",
-      "path": "assets/art/icons/unused/streetwear/subway-train.png",
+      "path": "assets/art/icons/in-use/streetwear/subway-train.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4244,9 +4254,11 @@
       "format": "png32",
       "notes": "md5:54756b60005b306614a26d1cf1803b72",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "subway-train",

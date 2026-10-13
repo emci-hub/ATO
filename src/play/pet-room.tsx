@@ -107,7 +107,8 @@ import {
   StreetStatusStrip,
   type StreetRoomSpotsProps,
 } from '@/play/street-room';
-import { HIDEOUT_BAR_RESERVE_PT, HideoutStageChrome, roomGeom } from '@/play/hideout-stage';
+import { HIDEOUT_ROW_RESERVE_PT, HIDEOUT_SIDE_COLUMN_PT } from '@/play/hideout-bar';
+import { HideoutStageChrome, HideoutStageControls, roomGeom } from '@/play/hideout-stage';
 import type { HideoutProgressInput, HideoutRoomId, HideoutState } from '@/play/hideout-progress';
 import type { Presence } from '@/play/hideout-presence';
 import { STREET_MOTION } from '@/play/street-feel';
@@ -474,9 +475,15 @@ export function PetRoom({
     setReal({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
   const streetRoom = streetUiOn();
   const pr = PixelRatio.get();
-  // The Hideout stage pins its room bar + "Call to" pill to the bottom: fit and
-  // centre the room above them so the manhole and door stay clear.
-  const barReserve = hideoutStage ? HIDEOUT_BAR_RESERVE_PT : 0;
+  // Hideout room + Call buttons: a column in the right gutter when the room leaves one
+  // (the room then uses the full stage height), else a row under the room that the
+  // room is fitted above so the manhole and door stay clear.
+  const fullFit =
+    streetRoom && real.width > 0 && real.height > 0
+      ? hideoutIntegerScale({ availW: real.width - HIDEOUT_MARGIN_PT * 2, availH: real.height, pixelRatio: pr })
+      : null;
+  const controlsSide = !!hideoutStage && !!fullFit && (real.width - fullFit.canvasW) / 2 >= HIDEOUT_SIDE_COLUMN_PT;
+  const barReserve = hideoutStage && !controlsSide ? HIDEOUT_ROW_RESERVE_PT : 0;
   const hideoutScale =
     streetRoom && real.width > 0 && real.height > 0
       ? hideoutIntegerScale({
@@ -913,9 +920,6 @@ export function PetRoom({
           onView={hideoutStage.onView}
           onTease={hideoutStage.onTease}
           onLamp={hideoutStage.onLamp}
-          onCall={hideoutStage.onCall}
-          coach={!hideoutStage.hideout.coach_swipe_seen}
-          onCoachSeen={hideoutStage.onCoachSeen}
         />
       ) : null}
 
@@ -1088,6 +1092,21 @@ export function PetRoom({
           text={speech.text}
           left={Math.round(hideoutArtToScreen(artXRef.current, artYRef.current, origin, hideoutScale).x - 40)}
           top={Math.round(hideoutArtToScreen(artXRef.current, artYRef.current, origin, hideoutScale).y - footAt * box - 36)}
+        />
+      ) : null}
+      {width > 0 && hideoutStage && hideoutScale ? (
+        <HideoutStageControls
+          hideout={hideoutStage.hideout}
+          presence={hideoutStage.presence}
+          viewed={hideoutStage.viewed}
+          scale={hideoutScale}
+          origin={origin}
+          expeditionBackMs={hideoutStage.expeditionBackMs}
+          onView={hideoutStage.onView}
+          onCall={hideoutStage.onCall}
+          coach={!hideoutStage.hideout.coach_swipe_seen}
+          onCoachSeen={hideoutStage.onCoachSeen}
+          controlsSide={controlsSide}
         />
       ) : null}
       </View>

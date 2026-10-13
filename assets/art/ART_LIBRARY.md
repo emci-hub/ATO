@@ -11,7 +11,7 @@ Viewer lists one card per set (not each clip/file).
 - **heroes** (198: 56 in use / 142 unused) — Heroes
 - **enemies-bosses** (18: 10 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
-- **icons** (88: 22 in use / 66 unused) — Icons
+- **icons** (88: 28 in use / 60 unused) — Icons
 - **rooms** (60: 38 in use / 22 unused) — Rooms
 - **props** (49: 0 in use / 49 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
@@ -655,6 +655,7 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
+| `icon.streetwear.backpack` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.bandana` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.bat` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.bucket-hat` | 32×32 | resource | — | src/play/generated-play-assets.ts |
@@ -662,17 +663,21 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.coin-stack` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.flame` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.gem` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.headphones` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.hoodie` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.marker` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.padlock` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.shades` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.shield` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.sneaker` | 32×32 | resource | — | src/play/hideout-art.ts |
+| `icon.streetwear.speech` | 32×32 | resource | — | src/play/hideout-art.ts |
+| `icon.streetwear.subway-train` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.sword` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 
 ## icons · streetwear · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `icon.streetwear.backpack` | 32×32 | resource | — | — |
 | `icon.streetwear.bolt` | 32×32 | resource | — | — |
 | `icon.streetwear.bomb` | 32×32 | resource | — | — |
 | `icon.streetwear.boombox` | 32×32 | resource | — | — |
@@ -691,12 +696,10 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.fist` | 32×32 | resource | — | — |
 | `icon.streetwear.gear` | 32×32 | resource | — | — |
 | `icon.streetwear.graffiti-tag` | 32×32 | resource | — | — |
-| `icon.streetwear.headphones` | 32×32 | resource | — | — |
 | `icon.streetwear.heart` | 32×32 | resource | — | — |
 | `icon.streetwear.key` | 32×32 | resource | — | — |
 | `icon.streetwear.leaf` | 32×32 | resource | — | — |
 | `icon.streetwear.mic` | 32×32 | resource | — | — |
-| `icon.streetwear.padlock` | 32×32 | resource | — | — |
 | `icon.streetwear.padlock-chain` | 32×32 | resource | — | — |
 | `icon.streetwear.paint-bucket` | 32×32 | resource | — | — |
 | `icon.streetwear.paint-roller` | 32×32 | resource | — | — |
@@ -704,11 +707,8 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.price-tag` | 32×32 | resource | — | — |
 | `icon.streetwear.skateboard` | 32×32 | resource | — | — |
 | `icon.streetwear.skull-mask` | 32×32 | resource | — | — |
-| `icon.streetwear.sneaker` | 32×32 | resource | — | — |
-| `icon.streetwear.speech` | 32×32 | resource | — | — |
 | `icon.streetwear.spray-can` | 32×32 | resource | — | — |
 | `icon.streetwear.star` | 32×32 | resource | — | — |
-| `icon.streetwear.subway-train` | 32×32 | resource | — | — |
 | `icon.streetwear.traffic-cone` | 32×32 | resource | — | — |
 | `icon.streetwear.trash-can` | 32×32 | resource | — | — |
 | `icon.streetwear.trophy` | 32×32 | resource | — | — |

@@ -25,13 +25,15 @@ import {
   NEIGHBOR_BOARDED_ART,
   ROOM_ART,
 } from '@/play/hideout-art';
-import { HideoutRoomBar } from '@/play/hideout-bar';
+import { HIDEOUT_CONTROL_PT, HideoutRoomBar } from '@/play/hideout-bar';
 import { HideoutTease } from '@/play/hideout-tease';
 import { HideoutTravelTag, HideoutZzz } from '@/play/hideout-zzz';
 import {
   HIDEOUT_DISSOLVE_MS,
+  HIDEOUT_ROOM_IDS,
   neighborRooms,
   roomDef,
+  roomStage,
   type HideoutProgressInput,
   type HideoutRoomId,
   type HideoutState,
@@ -76,9 +78,6 @@ export function roomGeom(id: HideoutRoomId): IsoRoomGeom {
   const art = ROOM_ART[id];
   return parseIsoGeom(art.map, { sleepOnBed: id === 'loft' });
 }
-
-/** Height the bottom room bar (44 pt tabs + padding) and the "Call to" pill take; the room fits above it. */
-export const HIDEOUT_BAR_RESERVE_PT = 92;
 
 function SnapshotRoom({
   id,
@@ -174,9 +173,6 @@ export function HideoutStageChrome({
   onView,
   onTease,
   onLamp,
-  onCall,
-  coach,
-  onCoachSeen,
 }: {
   hideout: HideoutState;
   progress: HideoutProgressInput;
@@ -192,9 +188,6 @@ export function HideoutStageChrome({
   onView: (id: HideoutRoomId) => void;
   onTease: () => void;
   onLamp: () => void;
-  onCall: () => void;
-  coach: boolean;
-  onCoachSeen: () => void;
 }) {
   const motion = usePlayMotion();
   const fade = useSharedValue(1);
@@ -343,31 +336,72 @@ export function HideoutStageChrome({
         />
       ) : null}
 
-      <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }} pointerEvents="box-none">
-        <HideoutRoomBar hideout={hideout} petRoom={presence.room} viewed={viewed} onSelect={onView} />
-        <Pressable
-          onPress={onCall}
-          accessibilityRole="button"
-          accessibilityLabel={
+    </View>
+  );
+}
+
+/**
+ * Room + Call buttons and the first-run swipe hint. Drawn by PetRoom ABOVE the aura
+ * mask (StreetRoomAuraClip), so the side-gutter column and the hint are never painted over.
+ */
+export function HideoutStageControls({
+  hideout,
+  presence,
+  viewed,
+  scale,
+  origin,
+  expeditionBackMs,
+  onView,
+  onCall,
+  coach,
+  onCoachSeen,
+  controlsSide,
+}: {
+  hideout: HideoutState;
+  presence: Presence;
+  viewed: HideoutRoomId;
+  scale: HideoutScale;
+  origin: HideoutOrigin;
+  expeditionBackMs: number | null;
+  onView: (id: HideoutRoomId) => void;
+  onCall: () => void;
+  coach: boolean;
+  onCoachSeen: () => void;
+  controlsSide: boolean;
+}) {
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+      <View
+        style={
+          controlsSide
+            ? {
+                position: 'absolute',
+                right: Math.max(4, (origin.left - HIDEOUT_CONTROL_PT) / 2),
+                // Lower half of the room, beside the floor; ends at the room's bottom edge at the latest.
+                top: Math.min(
+                  origin.top + scale.canvasH * 0.45,
+                  origin.top + scale.canvasH - (HIDEOUT_ROOM_IDS.filter((id) => roomStage(id, hideout) !== 'hidden').length + 1) * (HIDEOUT_CONTROL_PT + 10) - 6,
+                ),
+              }
+            : { position: 'absolute', left: 0, right: 0, bottom: 0 }
+        }
+        pointerEvents="box-none">
+        <HideoutRoomBar
+          hideout={hideout}
+          petRoom={presence.room}
+          viewed={viewed}
+          onSelect={onView}
+          direction={controlsSide ? 'column' : 'row'}
+          callLabel={presence.away ? 'Away' : 'Call'}
+          callA11y={
             presence.away
               ? expeditionBackMs != null
                 ? expeditionCallCopy(expeditionBackMs)
                 : 'Out on a trip'
               : `Call pet to ${roomDef(viewed).label}`
           }
-          style={{
-            alignSelf: 'center',
-            marginBottom: 4,
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            backgroundColor: STREET.ink,
-            borderWidth: 1,
-            borderColor: STREET.mustard,
-          }}>
-          <Text style={{ color: STREET.paper, fontFamily: STREET_FONT.regular, fontSize: 12 }}>
-            {presence.away ? 'Out on a trip' : `Call to ${roomDef(viewed).label}`}
-          </Text>
-        </Pressable>
+          onCall={onCall}
+        />
       </View>
 
       {coach ? (

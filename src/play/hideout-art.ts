@@ -154,6 +154,16 @@ export const BAR_ART: Record<HideoutRoomId, ImageSourcePropType> = {
 
 export const BAR_MARKER_ART: ImageSourcePropType = png(ART.ui.markers.streetwear.barMarker);
 
+/** Streetwear 32 px icons on the Hideout's kit buttons (hotspots, Call, locked rooms). */
+export const SPOT_ICON_ART: Partial<Record<string, ImageSourcePropType>> = {
+  door: png(ART.icon.streetwear.sneaker),
+  chair: png(ART.icon.streetwear.backpack),
+  boombox: png(ART.icon.streetwear.headphones),
+  manhole: png(ART.icon.streetwear.subwayTrain),
+};
+export const CALL_ICON_ART: ImageSourcePropType = png(ART.icon.streetwear.speech);
+export const LOCK_ICON_ART: ImageSourcePropType = png(ART.icon.streetwear.padlock);
+
 export const ZZZ_ART: readonly ImageSourcePropType[] = [
   png(ART.room.hideout.zzz0),
   png(ART.room.hideout.zzz1),

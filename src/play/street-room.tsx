@@ -23,7 +23,7 @@ import Animated, {
 
 import { PET_METER_MAX } from '@/play/pet';
 import { GRADE_LABEL, WARMTH_MAX, type Grade } from '@/play/pet-eggs';
-import { LOFT_WINDOW_POS, LOFT_WINDOW_SIZE, ROOM_ART } from '@/play/hideout-art';
+import { LOFT_WINDOW_POS, LOFT_WINDOW_SIZE, ROOM_ART, SPOT_ICON_ART } from '@/play/hideout-art';
 import {
   HIDEOUT_LIGHTS,
   HIDEOUT_NIGHT,
@@ -42,7 +42,7 @@ import { PIXEL, PIXEL_FONT, pixelRenderStyle } from '@/play/pixel-theme';
 import { AmbientSprite, Drift, Twinkle } from '@/play/street-ambient';
 import { KEEP_TRAVEL_PT } from '@/play/play-motion';
 import { tapHaptic } from '@/play/street-feel';
-import { STREET } from '@/play/street-ui';
+import { STREET, STREET_FONT, StreetFrame, streetButtonPiece, streetButtonText } from '@/play/street-ui';
 
 export type StreetSpotId = 'feed' | 'play' | 'expedition' | 'dive' | 'den';
 
@@ -563,8 +563,10 @@ export function StreetRoomSpots({
         const faded = !showAll && seen[s.id] && pulse !== s.coach;
         const unvisited = !seen[s.id];
         const anchor = hideoutLabelAnchor(s.id);
-        const label = s.id === 'manhole' ? 'hatch · Underground' : s.action;
-        const chipW = Math.max(hit, s.id === 'manhole' ? 188 : 108);
+        const label = s.action;
+        const hot = pulse === s.coach;
+        const variant = hot ? 'primary' : 'secondary';
+        const chipW = Math.max(hit, s.id === 'manhole' ? 132 : 108);
         const chipH = hit;
         const [ecx, ecy, erx, ery] = s.ellipse;
         const [fc, fr, fw, fh] = s.footprint;
@@ -585,23 +587,19 @@ export function StreetRoomSpots({
             topPt + chipH > petHit.y;
           if (overlap) topPt = Math.round(petHit.y - chipH - 6);
         }
-        // Pulse ring + press flash live on the small pill, not the 48 pt hit area around it.
+        // The app's kit button (same family as FEED / INFO): slate, mustard when something is
+        // new there; icon + label. Pulse ring + press state live on the button, not the 48 pt
+        // hit area around it.
         const face = (pressed: boolean) => (
-          <View
-            style={[
-              styles.chip,
-              faded && styles.chipFaded,
-              pulse === s.coach && styles.chipHot,
-              pressed && styles.chipPressed,
-            ]}>
-            {pulse === s.coach ? <PulseRing still={still} /> : null}
-            <Text style={[styles.chipText, pulse === s.coach && styles.chipTextHot]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+          <StreetFrame piece={streetButtonPiece(variant, pressed)} style={[styles.chip, faded && styles.chipFaded]}>
+            {hot ? <PulseRing still={still} /> : null}
+            {SPOT_ICON_ART[s.id] ? (
+              <Image source={SPOT_ICON_ART[s.id]} style={styles.chipIcon} contentFit="contain" transition={0} />
+            ) : null}
+            <Text style={[styles.chipText, { color: streetButtonText(variant) }]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
               {label}
             </Text>
-            <Text style={[styles.chipArrow, pulse === s.coach && styles.chipTextHot]} maxFontSizeMultiplier={1}>
-              ›
-            </Text>
-          </View>
+          </StreetFrame>
         );
         return (
           <View key={s.id} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
@@ -829,38 +827,27 @@ const styles = StyleSheet.create({
   spot: { position: 'absolute', borderRadius: 4 },
   chipHit: { alignItems: 'center', justifyContent: 'center' },
   pulse: { borderWidth: 2, borderColor: PIXEL.cyan, borderStyle: 'dashed' },
-  // The visible pill stays compact; the Pressable around it keeps the 48 pt tap area.
+  // The visible kit button stays compact; the Pressable around it keeps the 48 pt tap area.
   chip: {
-    height: 24,
+    height: 30,
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    backgroundColor: STREET.ink,
-    borderWidth: 2,
-    borderColor: PIXEL.cyan,
-    paddingHorizontal: 8,
+    gap: 5,
+    paddingLeft: 8,
+    paddingRight: 11,
   },
-  chipHot: { backgroundColor: PIXEL.glow, borderColor: PIXEL.cyanHi },
-  chipFaded: { backgroundColor: 'rgba(26, 26, 29, 0.72)' },
-  chipPressed: { transform: [{ translateY: 1 }], backgroundColor: PIXEL.glow },
+  chipFaded: { opacity: 0.82 },
+  // Press flash on the prop's own tap area (footprint).
+  chipPressed: { backgroundColor: PIXEL.glow },
+  chipIcon: { width: 18, height: 18, ...pixelRenderStyle },
   chipText: {
-    fontFamily: PIXEL_FONT.label,
-    fontSize: 12,
+    fontFamily: STREET_FONT.bold,
+    fontSize: 13,
     lineHeight: 16,
-    color: STREET.mustard,
     includeFontPadding: false,
-    textTransform: 'uppercase',
     flexShrink: 1,
-  },
-  chipTextHot: { color: PIXEL.cyanHi },
-  chipArrow: {
-    fontFamily: PIXEL_FONT.label,
-    fontSize: 16,
-    lineHeight: 18,
-    color: PIXEL.cyan,
-    includeFontPadding: false,
   },
   bubble: {
     position: 'absolute',
