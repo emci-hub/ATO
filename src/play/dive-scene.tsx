@@ -36,6 +36,8 @@ import { PixelRatio, StyleSheet, View, type LayoutChangeEvent } from 'react-nati
 import Animated, {
   Easing,
   cancelAnimation,
+  runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -65,7 +67,9 @@ import {
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
 import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
-import { findName } from '@/play/dive-loot';
+import { FIND_CATEGORY_LABEL, FIND_CATEGORY_PHRASE, findCategory, findName } from '@/play/dive-loot';
+import { HaulReveal } from '@/play/dive-reveal';
+import { useGrowOnlyHeight } from '@/play/fixed-region';
 import { StopAmbience, StreetUndergroundWorld, SubwayDoors } from '@/play/dive-street';
 import { streetFindName, streetStop } from '@/play/dive-street-names';
 import { hideoutIntegerScale, hideoutPetBox } from '@/play/hideout-iso';
@@ -122,6 +126,9 @@ export type DiveSceneEvent = {
 
 /** A new find to reveal: rises from the pet into haul slot `slot`. */
 export type DiveReveal = { id: string; key: number; glow: FindGlow; slot: number } | null;
+
+/** Underground pet size vs the whole-pixel fit (which drew it ~30pt tall on a phone). */
+const DIVE_STREET_PET_ZOOM = 2;
 
 /* --------------------------------------------------------------- life --- */
 
@@ -189,6 +196,7 @@ function SwimmingPet({
   auraElement = null,
   flash = null,
   hideoutFx = false,
+  faceFrom = null,
 }: {
   pet: PetState;
   art: PetArt;
@@ -207,15 +215,25 @@ function SwimmingPet({
   auraElement?: string | null;
   flash?: SharedValue<number> | null;
   hideoutFx?: boolean;
+  /** Face the way this x offset is moving (the Underground wander) instead of flipping on a timer. */
+  faceFrom?: SharedValue<number> | null;
 }) {
   const [face, setFace] = useState<PetFace>('e');
   const facingEast = face === 'e';
   const tiltStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${tilt.value * (facingEast ? 32 : -32)}deg` }] }));
   useEffect(() => {
-    if (!turn) return;
+    if (!turn || faceFrom) return;
     const id = setInterval(() => setFace((f) => (f === 'e' ? 'w' : 'e')), 1300);
     return () => clearInterval(id);
-  }, [turn]);
+  }, [turn, faceFrom]);
+  useAnimatedReaction(
+    () => (faceFrom ? faceFrom.value : 0),
+    (cur, prev) => {
+      if (!faceFrom || prev == null || Math.abs(cur - prev) < 0.05) return;
+      runOnJS(setFace)(cur > prev ? 'e' : 'w');
+    },
+    [faceFrom],
+  );
   return (
     <>
       <GradeAura grade={grade} size={box} animate={turn} trail={face === 'e' || face === 'w' ? face : null} />
@@ -354,9 +372,11 @@ export function DiveScene({
           content: [0, 0, 256, 320],
         })
       : null;
+  // Underground: the whole-pixel cap drew the pet ~30pt tall on a phone; it stands about
+  // twice that now (emci 2026-10-13, "pet tiny in the Dive").
   const box =
     street && pet.stage !== 'egg' && ugScale
-      ? hideoutPetBox(art.cellPx, ugScale, PixelRatio.get())
+      ? hideoutPetBox(art.cellPx, ugScale, PixelRatio.get()) * DIVE_STREET_PET_ZOOM
       : classicBox;
   // The mockup pet hovers over the ledge. The surface perch uses the same spot,
   // so the reef composition stays put when a dive hasn't started.
@@ -428,20 +448,25 @@ export function DiveScene({
     return () => cancelAnimation(bob);
   }, [bob, cuts.motion, away]);
 
+  const swayArtW = ugScale ? ugScale.canvasW : width;
   useEffect(() => {
     cancelAnimation(sway);
     sway.value = 0;
     if (playMotion.cosmeticsStill || away) return;
-    const amp = playMotion.vestibularSafe ? 6 : 18;
+    // Underground: the pet wanders the platform (about a third of the scene each way); the
+    // reef keeps its small swim sway.
+    // Stay on the drawn picture (it can be narrower than the stage), feet within ~30 % of centre.
+    const amp = playMotion.vestibularSafe ? 6 : street ? Math.max(18, swayArtW * 0.3 - box * 0.15) : 18;
+    const legMs = street && !playMotion.vestibularSafe ? 3200 : 1300;
     sway.value = withRepeat(
       withSequence(
-        withTiming(amp, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-amp, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+        withTiming(amp, { duration: legMs, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-amp, { duration: legMs, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
     );
     return () => cancelAnimation(sway);
-  }, [sway, playMotion.cosmeticsStill, playMotion.vestibularSafe, away]);
+  }, [sway, playMotion.cosmeticsStill, playMotion.vestibularSafe, away, street, swayArtW, box]);
 
   useEffect(() => {
     cancelAnimation(wiggle);
@@ -635,20 +660,26 @@ export function DiveScene({
           ? event.saved.map((id) => ({ id, hidden: false }))
           : [];
   const sinking = haul.length === 0 && event?.kind === 'bust' ? event.lost : [];
+  // Mystery finds: names stay hidden while diving; the haul sheet reveals them on surfacing.
+  const diving = haul.length > 0;
+  const [revealedKey, setRevealedKey] = useState(event?.key ?? 0);
+  const dockGrow = useGrowOnlyHeight();
+  const showHaulReveal =
+    event?.kind === 'surface' && event.finds > 0 && event.ids.length > 0 && event.key !== revealedKey;
 
   const caption = away
     ? 'Your pet is away on an expedition — diving solo.'
     : haul.length > 0
       ? revealing
         ? null
-        : `Found ${nameOf(haul[haul.length - 1])}`
+        : `Found ${FIND_CATEGORY_PHRASE[findCategory(haul[haul.length - 1])]}`
       : event?.kind === 'bust'
         ? event.saved.length > 0
           ? street
-            ? `Busted — the bag dropped. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
+            ? `Busted!\nYour pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
             : `Bust — the haul sank. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
           : street
-            ? 'Busted — the bag dropped. Your pet is fine.'
+            ? 'Busted!\nThe bag dropped. Your pet is fine.'
             : 'Bust — the haul sank. Your pet is fine.'
         : event?.kind === 'surface' && shown && event.finds === 0 && event.ids.length > 0
           ? `Back up! ${event.ids.length} ${event.ids.length === 1 ? 'sighting' : 'sightings'} for the Logbook${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
@@ -657,7 +688,7 @@ export function DiveScene({
           : null;
   const lastId = haul.length > 0 ? haul[haul.length - 1] : null;
   const rareFind =
-    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? nameOf(lastId) : null;
+    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? `${FIND_CATEGORY_LABEL[findCategory(lastId)]} ?` : null;
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
 
@@ -669,7 +700,7 @@ export function DiveScene({
     <View pointerEvents="none" style={styles.toast}>
       <PixelFrame fill={PIXEL.ink} border={PIXEL.amber} padded={false} align="center">
         <View style={styles.rareRow}>
-          <FindIcon id={lastId} size={14} bare />
+          <FindIcon id={lastId} size={14} bare mystery />
           <PixelLabel color={PIXEL.amber}>Rare find</PixelLabel>
           <PixelBody size="sm" color={PIXEL.text} numberOfLines={1}>{rareFind}</PixelBody>
         </View>
@@ -677,8 +708,8 @@ export function DiveScene({
     </View>
   ) : caption ? (
     <View pointerEvents="none" style={styles.toast}>
-      <PixelFrame streetPiece="panel">
-        <PixelBody numberOfLines={2} style={styles.captionText}>{caption}</PixelBody>
+      <PixelFrame streetPiece="panel" style={styles.captionFrame}>
+        <PixelBody numberOfLines={3} style={styles.captionText}>{caption}</PixelBody>
       </PixelFrame>
     </View>
   ) : null;
@@ -730,6 +761,7 @@ export function DiveScene({
                 auraElement={auraElement}
                 flash={hit.flash}
                 hideoutFx={street}
+                faceFrom={street && !playMotion.vestibularSafe ? sway : null}
               />
               {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}
               </Animated.View>
@@ -781,7 +813,7 @@ export function DiveScene({
           {reveal && revealing ? (
             <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0 }, revealStyle]}>
               <View style={[styles.revealGlow, { backgroundColor: GLOW_COLOR[reveal.glow] }]} />
-              <FindIcon id={reveal.id} size={ICON} />
+              <FindIcon id={reveal.id} size={ICON} mystery />
             </Animated.View>
           ) : null}
 
@@ -808,13 +840,17 @@ export function DiveScene({
           ))}
         </>
       ) : null}
-      {/* Find / caption toast floats over the bottom of the scene, so it never pushes the
+      {/* Find / caption toast floats over the top of the scene, so it never pushes the
           picture or the panel around (emci 2026-10-13). */}
       {toast}
       </Animated.View>
       {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
-      <View style={styles.dock}>
-        <PixelFrame streetPiece="panel" align="stretch" padded={false}>
+      <View
+        // Fixed regions: the panel grows to its tallest state and never shrinks back
+        // (a shrinking panel made the scene picture jump bigger / smaller).
+        style={[styles.dock, { minHeight: dockGrow.minHeight }]}
+        onLayout={dockGrow.onLayout}>
+        <PixelFrame streetPiece="panel" align="stretch" padded={false} style={styles.dockFrame}>
           <View style={[styles.dockPad, street && styles.streetDockPad]}>
             <View pointerEvents="none" style={styles.haulRow}>
               <PixelLabel color={street ? STREET_DIM : PIXEL.cyan} style={street ? styles.streetLabel : undefined}>
@@ -823,8 +859,10 @@ export function DiveScene({
               {Array.from({ length: 4 }, (_, i) => {
                 const item = rowItems[i];
                 const icon = item ? (
-                  <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={nameOf(item.id)}>
-                    <FindIcon id={item.id} size={11 * ART_PT} bare />
+                  <View
+                    style={item.hidden ? styles.hidden : undefined}
+                    accessibilityLabel={diving ? `${FIND_CATEGORY_LABEL[findCategory(item.id)]}, not revealed yet` : nameOf(item.id)}>
+                    <FindIcon id={item.id} size={11 * ART_PT} bare mystery={diving} />
                   </View>
                 ) : null;
                 return (
@@ -834,27 +872,33 @@ export function DiveScene({
                     lined={false}
                     padded={false}
                     step={1}
-                    border={PIXEL.slot}
+                    border={item && diving ? GLOW_COLOR[findGlow(item.id)] : PIXEL.slot}
                     style={{ width: 13 * ART_PT, height: 13 * ART_PT }}>
                     {i === popSlot && item && !item.hidden ? <Animated.View style={pop.style}>{icon}</Animated.View> : icon}
                   </PixelFrame>
                 );
               })}
             </View>
-            {bustPct != null ? (
-              <View pointerEvents="none">
-                <PixelRisk
-                  pct={bustPct}
-                  label={street ? 'Heat' : undefined}
-                  labelColor={street ? STREET_DIM : undefined}
-                  labelStyle={street ? styles.streetLabel : undefined}
-                />
-              </View>
-            ) : null}
+            {/* Heat row always takes its space (hidden off a run) so the panel keeps one height. */}
+            <View
+              pointerEvents="none"
+              style={bustPct == null ? styles.reserved : undefined}
+              accessibilityElementsHidden={bustPct == null}
+              importantForAccessibility={bustPct == null ? 'no-hide-descendants' : 'auto'}>
+              <PixelRisk
+                pct={bustPct ?? 0}
+                label={street ? 'Heat' : undefined}
+                labelColor={street ? STREET_DIM : undefined}
+                labelStyle={street ? styles.streetLabel : undefined}
+              />
+            </View>
             {dock}
           </View>
         </PixelFrame>
       </View>
+      {showHaulReveal && event ? (
+        <HaulReveal ids={event.ids} still={playMotion.cosmeticsStill} onDone={() => setRevealedKey(event.key)} />
+      ) : null}
     </View>
   );
 }
@@ -868,8 +912,12 @@ const styles = StyleSheet.create({
   gone: { display: 'none' },
   topSlot: { flexGrow: 0, flexShrink: 0, zIndex: 2 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
-  toast: { position: 'absolute', left: 0, right: 0, bottom: 10, paddingHorizontal: 12, alignItems: 'center' },
+  // Top of the scene: the pet stands at the bottom, so the toast never covers it.
+  toast: { position: 'absolute', left: 0, right: 0, top: 10, paddingHorizontal: 12, alignItems: 'center' },
   abs: { position: 'absolute' },
+  reserved: { opacity: 0 },
+  // The panel art fills the reserved height (e.g. while "Searching…" shows one short row).
+  dockFrame: { flexGrow: 1 },
   hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
   flash: { backgroundColor: '#FFFFFF' },
   revealGlow: {
@@ -888,10 +936,12 @@ const styles = StyleSheet.create({
   streetLabel: { fontFamily: STREET_FONT.bold, fontSize: 14, lineHeight: 18, minWidth: 44 },
   // Street: clear the panel's tape corners.
   streetDockPad: { paddingHorizontal: 18 },
-  rareRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 2 },
+  rareRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
   row: { position: 'absolute', left: ROW_PAD, right: ROW_PAD, flexDirection: 'row' },
   slot: { width: SLOT },
   hidden: { opacity: 0 },
   caption: { alignItems: 'center' },
-  captionText: { textAlign: 'center' },
+  // Room inside the panel's corner tape so the words never touch the frame.
+  captionFrame: { maxWidth: '88%' },
+  captionText: { textAlign: 'center', fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 6 },
 });

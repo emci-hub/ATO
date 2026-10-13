@@ -2676,11 +2676,13 @@ export function DefendScreen({
         <ThemedText type="subtitle" style={street ? styles.streetTitle : undefined}>
           {street ? 'Turf War' : 'Defend'}
         </ThemedText>
+        {/* fixed-regions: screen switch — setup → run collapses the setup header once so the board fills the screen. */}
         <ThemedText themeColor="textSecondary" style={[styles.lede, street && phase === 'running' && styles.streetHidden]}>
           Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
         </ThemedText>
 
         {/* HUD */}
+        {/* fixed-regions: screen switch (setup → run). */}
         <PlayFrame style={[styles.card, street && phase === 'running' && styles.streetHidden]}>
           <View style={styles.statRow}>
             <ThemedText type="smallBold">
@@ -3927,13 +3929,18 @@ export function DefendScreen({
           </>
         ) : null}
 
-        {phase === 'running' && !paused ? (
+        {phase === 'running' ? (
+          // Fixed regions: one 2-line box for the whole run (paused or not), so the coach
+          // line never pushes the board or the HUD around.
           <Pressable
             onPress={() => setRunCoachOpen((value) => !value)}
-            disabled={coachHidden}
+            disabled={coachHidden || paused}
             accessibilityRole="button"
-            accessibilityLabel={runCoachOpen ? 'Hide coach tip' : 'Show coach tip'}>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+            accessibilityLabel={runCoachOpen ? 'Hide coach tip' : 'Show coach tip'}
+            accessibilityElementsHidden={paused}
+            importantForAccessibility={paused ? 'no-hide-descendants' : 'auto'}
+            style={[styles.coachLine, paused && styles.streetReserved]}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.centerText} numberOfLines={3}>
               {swordFx
                 ? `Aura: ${swordFx.name} — ${swordFx.auraLabel}.`
                 : coachHidden
@@ -5087,6 +5094,9 @@ async function shareDefendClear(wave: number, level: number): Promise<void> {
 const styles = StyleSheet.create({
   // Streetwear art style (Turf War).
   streetHidden: { display: 'none' },
+  // Fixed regions: hidden but still holding its space (the paused coach line).
+  streetReserved: { opacity: 0, pointerEvents: 'none' },
+  coachLine: { minHeight: 58, justifyContent: 'center' },
   streetTitle: { fontFamily: STREET_FONT.bold, color: STREET.paper, textTransform: 'uppercase' },
   streetHud: {
     flexDirection: 'row',

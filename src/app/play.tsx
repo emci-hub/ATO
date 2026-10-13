@@ -1019,6 +1019,8 @@ export default function PlayScreen() {
       <Stack.Screen options={{ gestureEnabled: mode === 'grove' && !hubOverlayOpen }} />
       {street && view ? (
         <View style={[styles.streetColumn, { paddingTop: insets.top }]}>
+          {/* Fixed regions: only Turf War swaps these bars, at setup → run — a screen switch
+              (see src/play/fixed-region.tsx), so they are not reserved. */}
           {streetDockFilled ? (
             <StreetHudOutlet />
           ) : (
@@ -1559,7 +1561,7 @@ function toastBanner(toast: PlayToast): Omit<Banner, 'id'> {
           : toast.kind === 'surface'
             ? (toast.free
                 ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''}`
-                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${shownFindName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${shownFindName(toast.heartyFind)}.` : ''}${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
+                : `Brought up ${toast.itemIds.length === 0 ? 'nothing' : `${toast.itemIds.length} ${toast.itemIds.length === 1 ? 'find' : 'finds'} (see Your haul)`}.${toast.netFind ? ` The Net caught ${shownFindName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${shownFindName(toast.heartyFind)}.` : ''}${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
               (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
             : toast.kind === 'bust'
               ? (toast.rescued.length > 0

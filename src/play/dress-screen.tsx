@@ -395,12 +395,26 @@ const LegendElementContext = createContext<Element | null>(null);
 
 /** One-time first-visit tip key (device-local; dismissing it is permanent). */
 const LEGEND_TIP_KEY = 'ato.play.tip.legends.v1';
+// Fixed regions (rule 5): read the flag when the game loads, so the tip is decided before
+// the Locker paints — it used to pop in after a storage read and push the screen down.
+let legendTipSeen: boolean | null = null;
+AsyncStorage.getItem(LEGEND_TIP_KEY)
+  .then((seen) => {
+    legendTipSeen = !!seen;
+  })
+  .catch(() => {
+    legendTipSeen = true;
+  });
 
 /** The first-visit tip explaining Legend → hero → gear. Hidden until the
  * saved flag is read, so it never flashes for a player who dismissed it. */
 function LegendFirstTip() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(legendTipSeen === false);
   useEffect(() => {
+    if (legendTipSeen !== null) {
+      setShow(legendTipSeen === false);
+      return;
+    }
     let alive = true;
     AsyncStorage.getItem(LEGEND_TIP_KEY)
       .then((seen) => {
@@ -422,6 +436,7 @@ function LegendFirstTip() {
         label="Got it"
         onPress={() => {
           setShow(false);
+          legendTipSeen = true;
           AsyncStorage.setItem(LEGEND_TIP_KEY, '1').catch(() => {});
         }}
         variant="secondary"

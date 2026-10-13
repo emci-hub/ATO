@@ -1,0 +1,34 @@
+---
+description: Game screens are fixed regions — content never resizes a region (no "big and small" jumps). Kit in src/play/fixed-region.tsx; gate check:fixed-regions.
+globs: src/play/**,src/app/play.tsx
+alwaysApply: true
+---
+
+# Fixed regions (emci 2026-10-13)
+
+Every game screen is a stack of REGIONS — top bar · viewport (the picture / board / room)
+· bottom panel — plus a floating OVERLAY layer. Content may change inside a region; it
+may NEVER change the region's size, or the viewport next to it rescales.
+
+1. **Viewport: one size per screen.** It fills what the fixed regions leave.
+2. **Bars and panels reserve their tallest state.** Wrap swapping bars in
+   `ReservedRegion` (grow-only); keep hidden rows in layout with `Reserve` or an
+   `opacity: 0, pointerEvents: 'none'` style (never `display: 'none'` / unmount keyed on
+   the run phase); keep button areas at their max row count (invisible spacers); give
+   status text a min height for the lines it may use.
+3. **Announcements float.** Found / busted / rare / toasts / coach hints / speech go on
+   the overlay (`position: 'absolute'`) or the `PlayBanner` queue — never an in-flow row
+   between regions.
+4. **Text in fixed boxes.** Set width + `numberOfLines`, padded inside frame art.
+5. **Loading keeps the final size.** Placeholders match the loaded height; flags that
+   decide what shows are read before first paint (see `legendTipSeen` in dress-screen).
+
+**Exception — a screen switch.** A deliberate change of WHAT the screen is (Turf War setup →
+wave) may re-lay out once, at that moment; mark it with a `fixed-regions: screen switch`
+comment on the line above. Never re-lay out WITHIN a state (pause, a find, a hint, a load).
+
+Kit: `src/play/fixed-region.tsx` (`useGrowOnlyHeight`, `ReservedRegion`, `Reserve`).
+Reference fixes: Dive (`dive-scene.tsx` / `dive-screen.tsx`), Turf War (`coachLine`, marked
+screen switch), Hideout status strip, pet-game hint, Locker tip, sword notice.
+`npm run check:fixed-regions` (in `check:ota-gate`) pins them and bans run-phase collapses.
+A new game screen adds its pins to that check.

@@ -109,6 +109,11 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   32 px ladder (option A: heroes 128 at 1:1); every new or edited asset passes the scale check against the
   grown hero (guide §2 table); show emci rendered samples + a scale sheet before any art choice; and the
   same change updates the library (import / `replaces` / archive via art-decisions, then `art:sync`).
+- **Game screens use fixed regions (emci 2026-10-13).** Top bar · viewport · bottom panel + a floating
+  overlay; content never resizes a region (bars reserve their tallest state, announcements float, text in
+  fixed boxes, loading keeps final size; a deliberate screen switch like Turf War setup → wave may
+  re-lay out once, marked `fixed-regions: screen switch`). Kit `src/play/fixed-region.tsx`, rule `.cursor/rules/fixed-regions.mdc`,
+  gate `check:fixed-regions` — a new game screen adds its pins there.
 - Do not change dependencies, auth, env config, or secrets without emci's ok.
 - **Schema changes that copy a tested path need no ask (emci 2026-10-02).** A new table /
   RLS / RPC built the same way as one already live here (e.g. the question pool) is

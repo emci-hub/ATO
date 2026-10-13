@@ -77,11 +77,17 @@ export function SwordForgeScreen({
             <ThemedText type="smallBold">Undo last merge</ThemedText>
           </Pressable>
         ) : null}
-        {notice ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {notice}
-          </ThemedText>
-        ) : null}
+        {/* Fixed regions: the notice line always holds its 2 lines, so a message appearing
+            never pushes the list down. */}
+        <ThemedText
+          type="small"
+          themeColor="textSecondary"
+          numberOfLines={2}
+          style={{ minHeight: 40 }}
+          accessibilityElementsHidden={!notice}
+          importantForAccessibility={notice ? 'auto' : 'no-hide-descendants'}>
+          {notice ?? ' '}
+        </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {swords.swords}/{swords.swordCap} swords · {swords.relicCount}/{swords.relicCap} relics
         </ThemedText>

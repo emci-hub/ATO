@@ -789,21 +789,24 @@ export function StreetSpeechBubble({
 }
 
 const styles = StyleSheet.create({
+  // Fixed regions: one row, one height — a name, a stage or a grade chip appearing never
+  // adds a second row (that resized the room below).
   strip: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
+    height: 36,
+    overflow: 'hidden',
     alignItems: 'center',
     gap: 8,
     marginHorizontal: 8,
     marginTop: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    minHeight: 36,
     backgroundColor: 'rgba(26, 26, 29, 0.92)',
     borderWidth: 2,
     borderColor: '#000',
   },
-  stripMain: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 10, minWidth: 0 },
+  stripMain: { flexGrow: 1, flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
   stripText: { fontFamily: PIXEL_FONT.label, fontSize: 12, color: STREET.paper, includeFontPadding: false },
   name: {
     fontFamily: PIXEL_FONT.label,
@@ -812,6 +815,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     includeFontPadding: false,
     flexShrink: 1,
+    minWidth: 0,
   },
   meter: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   meterLabel: { fontFamily: PIXEL_FONT.label, fontSize: 11, color: STREET.muted, textTransform: 'uppercase', includeFontPadding: false },

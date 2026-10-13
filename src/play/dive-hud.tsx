@@ -9,7 +9,8 @@ import { type ComponentProps } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { itemArtSource } from '@/play/art';
-import { findKind } from '@/play/dive-loot';
+import { findCategory, findKind, type FindCategory } from '@/play/dive-loot';
+import { ART, getArtSource } from '@/art/art';
 import { GLOW_COLOR, findGlow } from '@/play/dive-fx-model';
 import { getItemDef, type ItemSlot } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
@@ -26,24 +27,41 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   trinket: 'star-four-points',
 };
 
+/** Streetwear library icon per find category (mystery finds). */
+const CATEGORY_ICON_ART: Record<FindCategory, ReturnType<typeof getArtSource>> = {
+  weapon: getArtSource(ART.icon.streetwear.sword),
+  gear: getArtSource(ART.icon.streetwear.shield),
+  trinket: getArtSource(ART.icon.streetwear.gem),
+  snack: getArtSource(ART.icon.streetwear.potion),
+  shells: getArtSource(ART.icon.streetwear.coinStack),
+  stone: getArtSource(ART.icon.streetwear.star),
+  style: getArtSource(ART.icon.streetwear.cap),
+  mystery: getArtSource(ART.icon.streetwear.voidEye),
+};
+
 /** One find as an icon with its rarity glow ring. */
 export function FindIcon({
   id,
   size = 34,
   dim = false,
   bare = false,
+  mystery = false,
 }: {
   id: string;
   size?: number;
   dim?: boolean;
   /** Skip the rarity frame — the haul slot draws its own. */
   bare?: boolean;
+  /** Show only the find's category icon (+ "?") — the name is revealed when you head up. */
+  mystery?: boolean;
 }) {
   const kind = findKind(id);
   const glow = GLOW_COLOR[findGlow(id)];
   const cos = kind === 'cosmetic' ? cosmeticById(id) : undefined;
   const def = kind === 'item' ? getItemDef(id) : undefined;
-  const art = def
+  const art = mystery
+    ? CATEGORY_ICON_ART[findCategory(id)]
+    : def
     ? itemArtSource(def.core.art)
     : cos?.itemId
       ? itemArtSource(getItemDef(cos.itemId)?.core.art ?? '')
@@ -76,8 +94,18 @@ export function FindIcon({
       color={cos?.color ?? (cos?.element ? ELEMENT_COLOR[cos.element] : glow)}
     />
   );
+  const badge = mystery ? (
+    <View pointerEvents="none" style={styles.mysteryBadge}>
+      <PixelLabel color={PIXEL.amber} style={styles.mysteryMark}>?</PixelLabel>
+    </View>
+  ) : null;
   if (bare) {
-    return <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', opacity: dim ? 0.45 : 1 }}>{glyph}</View>;
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', opacity: dim ? 0.45 : 1 }}>
+        {glyph}
+        {badge}
+      </View>
+    );
   }
   return (
     <PixelFrame
@@ -87,6 +115,7 @@ export function FindIcon({
       glow={false}
       style={{ width: artBox + ART_PT * 2, height: artBox + ART_PT * 2, opacity: dim ? 0.45 : 1 }}>
       {glyph}
+      {badge}
     </PixelFrame>
   );
 }
@@ -204,6 +233,8 @@ export function DiveTopBar({
 }
 
 const styles = StyleSheet.create({
+  mysteryBadge: { position: 'absolute', right: -2, bottom: -4 },
+  mysteryMark: { fontSize: 11, lineHeight: 12 },
   meter: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 3 },
   pip: { width: ART_PT * 8, height: ART_PT * 5, padding: ART_PT },
   pipOn: { backgroundColor: PIXEL.ink },

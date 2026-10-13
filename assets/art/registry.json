@@ -3195,6 +3195,7 @@
       "notes": "md5:5e71566b9ff78343514ee1337cb00bd9",
       "tags": [],
       "usedBy": [
+        "src/play/dive-hud.tsx",
         "src/play/generated-play-assets.ts"
       ],
       "category": "icons",
@@ -3365,6 +3366,7 @@
       "notes": "md5:fd505d3a4b58dc439de99787bf81d595",
       "tags": [],
       "usedBy": [
+        "src/play/dive-hud.tsx",
         "src/play/generated-play-assets.ts"
       ],
       "category": "icons",
@@ -3593,6 +3595,7 @@
       "notes": "md5:18ef4003bcf3d56d1c9ac2d2f2e588bc",
       "tags": [],
       "usedBy": [
+        "src/play/dive-hud.tsx",
         "src/play/generated-play-assets.ts"
       ],
       "category": "icons",
@@ -3950,7 +3953,7 @@
     },
     {
       "id": "icon.streetwear.potion",
-      "path": "assets/art/icons/unused/streetwear/potion.png",
+      "path": "assets/art/icons/in-use/streetwear/potion.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3966,9 +3969,11 @@
       "format": "png32",
       "notes": "md5:159f949a19cdcbe85b6a58d5d4cf57d6",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/dive-hud.tsx"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "potion",
@@ -4053,6 +4058,7 @@
       "notes": "md5:4fc257c27a7e1c3610e3706a44b154e0",
       "tags": [],
       "usedBy": [
+        "src/play/dive-hud.tsx",
         "src/play/generated-play-assets.ts"
       ],
       "category": "icons",
@@ -4210,7 +4216,7 @@
     },
     {
       "id": "icon.streetwear.star",
-      "path": "assets/art/icons/unused/streetwear/star.png",
+      "path": "assets/art/icons/in-use/streetwear/star.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4226,9 +4232,11 @@
       "format": "png32",
       "notes": "md5:f2abccd2d756c1dc10bd5add908364de",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/dive-hud.tsx"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "star",
@@ -4285,6 +4293,7 @@
       "notes": "md5:ceca5bb0f74ea9adbb1aaad81c267bcc",
       "tags": [],
       "usedBy": [
+        "src/play/dive-hud.tsx",
         "src/play/generated-play-assets.ts"
       ],
       "category": "icons",
@@ -4438,7 +4447,7 @@
     },
     {
       "id": "icon.streetwear.void-eye",
-      "path": "assets/art/icons/unused/streetwear/void-eye.png",
+      "path": "assets/art/icons/in-use/streetwear/void-eye.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4454,9 +4463,11 @@
       "format": "png32",
       "notes": "md5:d85a6ea9e37e4aace6b31ed55032038a",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/dive-hud.tsx"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "void-eye",
