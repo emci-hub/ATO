@@ -2,7 +2,8 @@
  * Room controls — one kit button per room (+ pet-head marker on the room the pet is
  * in) and the Call button, all in the app's kit-button style (same family as FEED /
  * INFO and the room's hotspot buttons). A column in the side gutter when the room
- * leaves room for it, else a row under the room (emci 2026-10-12, layout C).
+ * leaves room for it, else compact in the room's dark ceiling band, else a row under
+ * the room (emci 2026-10-12/13, layout C, 352-wide room).
  * VoiceOver: each button plus a "Pet is in Loft" live label.
  */
 import { Pressable, Text, View } from 'react-native';
@@ -26,8 +27,14 @@ export const HIDEOUT_CONTROL_PT = 52;
 export const HIDEOUT_SIDE_COLUMN_PT = HIDEOUT_CONTROL_PT + 12;
 /** Height the row takes under the room when there is no side gutter. */
 export const HIDEOUT_ROW_RESERVE_PT = HIDEOUT_CONTROL_PT + 12;
+/** Compact button (44 pt HIG floor) for the room's dark ceiling band. */
+export const HIDEOUT_CONTROL_COMPACT_PT = 44;
+/** Art px of dark ceiling above the back wall the compact row sits in. */
+// 38 (not the full 46): the 44 pt row (2 pt down) then ends above the Loft window top at art y 40.
+export const HIDEOUT_CEILING_ART_PX = 38;
 
 function ControlButton({
+  size = HIDEOUT_CONTROL_PT,
   icon,
   label,
   selected,
@@ -38,6 +45,7 @@ function ControlButton({
   a11yRole,
   a11yLabel,
 }: {
+  size?: number;
   icon: unknown;
   label: string;
   selected: boolean;
@@ -55,7 +63,7 @@ function ControlButton({
       accessibilityRole={a11yRole}
       accessibilityState={a11yRole === 'tab' ? { selected, disabled: false } : undefined}
       accessibilityLabel={a11yLabel}
-      style={{ width: HIDEOUT_CONTROL_PT, height: HIDEOUT_CONTROL_PT }}>
+      style={{ width: size, height: size }}>
       {({ pressed }) => (
         <StreetFrame
           piece={streetButtonPiece(variant, pressed)}
@@ -66,9 +74,9 @@ function ControlButton({
             paddingBottom: 3,
             opacity: dim ? 0.78 : 1,
           }}>
-          <Image source={icon as number} style={{ width: 24, height: 24, ...pixelRenderStyle }} contentFit="contain" transition={0} />
+          <Image source={icon as number} style={{ width: size * 0.46, height: size * 0.46, ...pixelRenderStyle }} contentFit="contain" transition={0} />
           <Text
-            style={{ color: streetButtonText(variant), fontSize: 10, lineHeight: 12, fontFamily: STREET_FONT.bold, marginTop: 1 }}
+            style={{ color: streetButtonText(variant), fontSize: size < HIDEOUT_CONTROL_PT ? 9 : 10, lineHeight: size < HIDEOUT_CONTROL_PT ? 10 : 12, fontFamily: STREET_FONT.bold, marginTop: 1 }}
             numberOfLines={1}
             maxFontSizeMultiplier={1.1}>
             {label}
@@ -95,6 +103,7 @@ export function HideoutRoomBar({
   viewed,
   onSelect,
   direction = 'row',
+  compact = false,
   callLabel,
   callA11y,
   onCall,
@@ -104,6 +113,8 @@ export function HideoutRoomBar({
   viewed: HideoutRoomId;
   onSelect: (id: HideoutRoomId) => void;
   direction?: 'row' | 'column';
+  /** 44 pt buttons, no outer padding (the room's ceiling band). */
+  compact?: boolean;
   callLabel: string;
   callA11y: string;
   onCall: () => void;
@@ -116,9 +127,9 @@ export function HideoutRoomBar({
         flexDirection: direction,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: direction === 'row' ? EDGE_ZONE + 8 : 0,
-        paddingVertical: 6,
-        gap: 10,
+        paddingHorizontal: direction === 'row' && !compact ? EDGE_ZONE + 8 : 0,
+        paddingVertical: compact ? 0 : 6,
+        gap: compact ? 6 : 10,
       }}
       accessibilityRole="tablist"
       accessibilityLabel={`Rooms. ${petLabel}`}>
@@ -135,6 +146,7 @@ export function HideoutRoomBar({
         return (
           <ControlButton
             key={id}
+            size={compact ? HIDEOUT_CONTROL_COMPACT_PT : HIDEOUT_CONTROL_PT}
             icon={BAR_ART[id]}
             label={roomDef(id).label}
             selected={selected}
@@ -147,7 +159,7 @@ export function HideoutRoomBar({
           />
         );
       })}
-      <ControlButton icon={CALL_ICON_ART} label={callLabel} selected={false} onPress={onCall} a11yRole="button" a11yLabel={callA11y} />
+      <ControlButton size={compact ? HIDEOUT_CONTROL_COMPACT_PT : HIDEOUT_CONTROL_PT} icon={CALL_ICON_ART} label={callLabel} selected={false} onPress={onCall} a11yRole="button" a11yLabel={callA11y} />
     </View>
   );
 }

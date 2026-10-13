@@ -330,7 +330,7 @@ export function HideoutStageChrome({
 
       {presence.away ? (
         <HideoutTravelTag
-          x={origin.left + 88 * k}
+          x={origin.left + (scale.canvasW / k / 2 - 40) * k}
           y={origin.top + 200 * k}
           text={expeditionBackMs != null ? expeditionCallCopy(expeditionBackMs) : 'Out on a trip'}
         />
@@ -355,7 +355,7 @@ export function HideoutStageControls({
   onCall,
   coach,
   onCoachSeen,
-  controlsSide,
+  controlsMode,
 }: {
   hideout: HideoutState;
   presence: Presence;
@@ -367,13 +367,14 @@ export function HideoutStageControls({
   onCall: () => void;
   coach: boolean;
   onCoachSeen: () => void;
-  controlsSide: boolean;
+  /** side: column in the right gutter · ceiling: compact row in the room's ceiling band · row: under the room. */
+  controlsMode: 'side' | 'ceiling' | 'row';
 }) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       <View
         style={
-          controlsSide
+          controlsMode === 'side'
             ? {
                 position: 'absolute',
                 right: Math.max(4, (origin.left - HIDEOUT_CONTROL_PT) / 2),
@@ -383,7 +384,10 @@ export function HideoutStageControls({
                   origin.top + scale.canvasH - (HIDEOUT_ROOM_IDS.filter((id) => roomStage(id, hideout) !== 'hidden').length + 1) * (HIDEOUT_CONTROL_PT + 10) - 6,
                 ),
               }
-            : { position: 'absolute', left: 0, right: 0, bottom: 0 }
+            : controlsMode === 'ceiling'
+              ? // The room's dark ceiling band above the back wall, left side (the right wall holds the Loft tease).
+                { position: 'absolute', left: origin.left + 8 * scale.pt, top: origin.top + 2 }
+              : { position: 'absolute', left: 0, right: 0, bottom: 0 }
         }
         pointerEvents="box-none">
         <HideoutRoomBar
@@ -391,7 +395,8 @@ export function HideoutStageControls({
           petRoom={presence.room}
           viewed={viewed}
           onSelect={onView}
-          direction={controlsSide ? 'column' : 'row'}
+          direction={controlsMode === 'side' ? 'column' : 'row'}
+          compact={controlsMode === 'ceiling'}
           callLabel={presence.away ? 'Away' : 'Call'}
           callA11y={
             presence.away

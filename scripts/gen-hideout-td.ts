@@ -1,5 +1,5 @@
 /**
- * Greybox 3/4 top-down room art + maps from the locked layout A.
+ * 3/4 top-down room art + maps (layout A, 352×576 since 2026-10-13; Hideout = PixelLab art).
  * Run: npx tsx scripts/gen-hideout-td.ts   then   npm run art:sync
  *
  * Placeholders until real PixelLab room art lands. Option A (emci
@@ -18,14 +18,15 @@ import { hideoutArtAvailable, paintHideoutArt } from './hideout-room-art';
 
 /** Room art lives in the art library: assets/art/rooms/<room>/. */
 const ROOT = join(__dirname, '..', 'assets', 'art', 'rooms');
-export const TD_CANVAS = [256, 576] as const;
+// 352 wide (emci 2026-10-13, layout C+: "expand the room horizontally"); was 256.
+export const TD_CANVAS = [352, 576] as const;
 /** PixelLab art tile (floor checker / tilesets). */
 export const TD_ART_TILE = 32;
 /** Walk / collision cell (footprints, hotspots, walkable grid). */
 export const TD_TILE = 16;
-export const TD_COLS = 16;
+export const TD_COLS = 22;
 export const TD_ROWS = 36;
-export const TD_FLOOR_COLS = 14;
+export const TD_FLOOR_COLS = 20;
 export const TD_FLOOR_ROWS = 26;
 export const TD_DOOR_TILES = 4;
 export const TD_CAP_TILES = 1;
@@ -465,6 +466,57 @@ const TEASE = {
   sign: { pos: [220, 92], size: [36, 32] }, // bottom 124: stays on the wall (floor starts at 128)
 };
 
+/* ---------------------------------------------- widen --- */
+// Layouts are authored on the 256-wide grid; the room is now 352 (3 more walk columns each
+// side). Things by the left wall stay, the middle moves 48 px, things by the right wall 96 px.
+const WIDEN_PX = (TD_CANVAS[0] - 256) / 2;
+const WIDEN_COLS = WIDEN_PX / TD_TILE;
+function wx(x: number): number {
+  return x < 48 ? x : x >= 176 ? x + WIDEN_PX * 2 : x + WIDEN_PX;
+}
+function wc(c: number): number {
+  return c < 3 ? c : c >= 11 ? c + WIDEN_COLS * 2 : c + WIDEN_COLS;
+}
+const wpt = (p: Pt): Pt => [wx(p[0]), p[1]];
+const wfoot = (f: Foot): Foot => [wc(f[0]), f[1], f[2], f[3]];
+function widen(layout: Layout): Layout {
+  return {
+    ...layout,
+    window: layout.window ? { pos: wpt(layout.window.pos), size: layout.window.size } : null,
+    props: layout.props.map((p) =>
+      p.id === 'near-rim-l'
+        ? { ...p, footprint: [1, 34, DOOR_COL0 - 1, 2] as Foot }
+        : p.id === 'near-rim-r'
+          ? { ...p, footprint: [DOOR_COL1, 34, TD_COLS - 1 - DOOR_COL1, 2] as Foot }
+          : { ...p, footprint: wfoot(p.footprint) },
+    ),
+    hotspots: layout.hotspots.map((h) => ({
+      ...h,
+      ellipse: [wx(h.ellipse[0]), h.ellipse[1], h.ellipse[2], h.ellipse[3]] as const,
+      footprint: wfoot(h.footprint),
+      labelAnchor: wpt(h.labelAnchor),
+      walk: wpt(h.walk),
+    })),
+    spawns: Object.fromEntries(Object.entries(layout.spawns).map(([k, v]) => [k, wpt(v)])),
+    targets: Object.fromEntries(Object.entries(layout.targets).map(([k, v]) => [k, wpt(v)])),
+    lights: layout.lights.map(wpt),
+    rugs: layout.rugs.map(([cx, cy, rx, ry]) => [wx(cx), cy, rx, ry] as const),
+  };
+}
+/** Hideout after widening: the lamp goes back beside the couch (the widen split moved the couch 3 cols). */
+function tweakHideout(layout: Layout): Layout {
+  return { ...layout, props: layout.props.map((p) => (p.id === 'lamp' ? { ...p, footprint: [4, 13, 2, 1] as Foot } : p)) };
+}
+/** Warm lamp pool centred on the Hideout lamp. */
+function lampGlow(layout: Layout): Pt {
+  const lamp = layout.props.find((p) => p.id === 'lamp');
+  return lamp ? [(lamp.footprint[0] + lamp.footprint[2] / 2) * TD_TILE, 150] : [32, 150];
+}
+function widenTease(t: typeof TEASE): typeof TEASE {
+  const r = (v: { pos: number[]; size: number[] }) => ({ pos: [wx(v.pos[0]!), v.pos[1]!], size: v.size });
+  return { ...t, boarded: r(t.boarded), tarp: r(t.tarp), scaffold: r(t.scaffold), sign: r(t.sign) };
+}
+
 /* ---------------------------------------------- paint --- */
 
 type RGBA = [number, number, number, number];
@@ -621,7 +673,7 @@ function paintNeon(layout: Layout, variant: 'a' | 'b'): Buffer {
   return png(W, H, (x, y) => {
     if (!win) {
       // Underground: cool floor ellipse spotlight.
-      if (inEllipse(x, y, 128, 360, 56, 20)) {
+      if (inEllipse(x, y, TD_CANVAS[0] / 2, 360, 56, 20)) {
         const a = variant === 'a' ? 50 : 70;
         return [80, 160, 200, a];
       }
@@ -656,7 +708,7 @@ function windowSprite(night: boolean): Buffer {
 
 function glowOverlay(): Buffer {
   return png(W, H, (x, y) => {
-    const dx = (x - 224) / 56;
+    const dx = (x - wx(224)) / 56; // Loft lamp (widened)
     const dy = (y - 136) / 48;
     const d = dx * dx + dy * dy;
     if (d > 1) return [0, 0, 0, 0];
@@ -739,8 +791,8 @@ function emitArt(layout: Layout) {
         const f = footPx(p.footprint);
         return { id: p.id, file: HIDEOUT_FILES[p.id]!, foot: { x: f.x, w: f.w, bottom: f.bottom }, occluder: p.occluder };
       }),
-    flats: HIDEOUT_FLATS,
-    lamp: [32, 150],
+    flats: HIDEOUT_FLATS.map((f) => ({ ...f, cx: wx(f.cx) })),
+    lamp: lampGlow(layout),
     screen: [40, 110],
   });
   const rects = new Map(art.sprites.map((s) => [s.id, s.rect]));
@@ -786,12 +838,12 @@ function emit(layout: Layout, night: boolean) {
   }
 }
 
-emit(HIDEOUT, false);
-emit(LOFT, false);
-emit(UNDERGROUND, true);
+emit(tweakHideout(widen(HIDEOUT)), false);
+emit(widen(LOFT), false);
+emit(widen(UNDERGROUND), true);
 write('loft/loft-td-window-day.png', windowSprite(false));
 write('loft/loft-td-window-night.png', windowSprite(true));
 write('loft/loft-td-glow.png', glowOverlay());
-writeJson('hideout/hideout-tease.json', TEASE);
-write('hideout/neighbor-boarded-td.png', paintBack({ ...UNDERGROUND, window: null }, true));
+writeJson('hideout/hideout-tease.json', widenTease(TEASE));
+write('hideout/neighbor-boarded-td.png', paintBack({ ...widen(UNDERGROUND), window: null }, true));
 console.log('hideout 3/4 top-down greybox written (option A) — now run npm run art:sync');

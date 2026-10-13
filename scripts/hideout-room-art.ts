@@ -1,5 +1,5 @@
 /**
- * Hideout room art (option A, 256×576) from PixelLab parts — called by gen-hideout-td.ts.
+ * Hideout room art (option A, 352×576) from PixelLab parts — called by gen-hideout-td.ts.
  *
  * Sources (raw PixelLab output + gen.json, never bundled):
  *   art-src/pixellab/room.hideout.streetwear/<gen>/raw/

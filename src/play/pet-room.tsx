@@ -107,7 +107,12 @@ import {
   StreetStatusStrip,
   type StreetRoomSpotsProps,
 } from '@/play/street-room';
-import { HIDEOUT_ROW_RESERVE_PT, HIDEOUT_SIDE_COLUMN_PT } from '@/play/hideout-bar';
+import {
+  HIDEOUT_CEILING_ART_PX,
+  HIDEOUT_CONTROL_COMPACT_PT,
+  HIDEOUT_ROW_RESERVE_PT,
+  HIDEOUT_SIDE_COLUMN_PT,
+} from '@/play/hideout-bar';
 import { HideoutStageChrome, HideoutStageControls, roomGeom } from '@/play/hideout-stage';
 import type { HideoutProgressInput, HideoutRoomId, HideoutState } from '@/play/hideout-progress';
 import type { Presence } from '@/play/hideout-presence';
@@ -482,8 +487,14 @@ export function PetRoom({
     streetRoom && real.width > 0 && real.height > 0
       ? hideoutIntegerScale({ availW: real.width - HIDEOUT_MARGIN_PT * 2, availH: real.height, pixelRatio: pr })
       : null;
-  const controlsSide = !!hideoutStage && !!fullFit && (real.width - fullFit.canvasW) / 2 >= HIDEOUT_SIDE_COLUMN_PT;
-  const barReserve = hideoutStage && !controlsSide ? HIDEOUT_ROW_RESERVE_PT : 0;
+  const controlsMode: 'side' | 'ceiling' | 'row' = !hideoutStage || !fullFit
+    ? 'row'
+    : (real.width - fullFit.canvasW) / 2 >= HIDEOUT_SIDE_COLUMN_PT
+      ? 'side'
+      : HIDEOUT_CEILING_ART_PX * fullFit.pt >= HIDEOUT_CONTROL_COMPACT_PT
+        ? 'ceiling'
+        : 'row';
+  const barReserve = hideoutStage && controlsMode === 'row' ? HIDEOUT_ROW_RESERVE_PT : 0;
   const hideoutScale =
     streetRoom && real.width > 0 && real.height > 0
       ? hideoutIntegerScale({
@@ -1106,7 +1117,7 @@ export function PetRoom({
           onCall={hideoutStage.onCall}
           coach={!hideoutStage.hideout.coach_swipe_seen}
           onCoachSeen={hideoutStage.onCoachSeen}
-          controlsSide={controlsSide}
+          controlsMode={controlsMode}
         />
       ) : null}
       </View>

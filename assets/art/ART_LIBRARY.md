@@ -754,18 +754,18 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `room.hideout.back` | 256×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.back` | 352×576 | candidate | — | src/play/hideout-art.ts |
 | `room.hideout.boarded` | 38×88 | candidate | — | src/play/hideout-art.ts |
 | `room.hideout.build-sign` | 48×36 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.floor` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.neighbor-boarded-td` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.neon-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.neon-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.occluder-day-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.occluder-day-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.occluder-night-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.occluder-night-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.props` | 256×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.floor` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.neighbor-boarded-td` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.neon-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.neon-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.occluder-day-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.occluder-day-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.occluder-night-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.occluder-night-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.props` | 352×576 | candidate | — | src/play/hideout-art.ts |
 | `room.hideout.scaffold` | 28×100 | candidate | — | src/play/hideout-art.ts |
 | `room.hideout.tarp` | 52×40 | candidate | — | src/play/hideout-art.ts |
 | `room.hideout.zzz-0` | 24×32 | candidate | — | src/play/hideout-art.ts |
@@ -796,16 +796,16 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `room.loft.back` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.floor` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.glow` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.neon-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.neon-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.occluder-day-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.occluder-day-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.occluder-night-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.occluder-night-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.loft.props` | 256×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.back` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.floor` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.glow` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.neon-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.neon-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.occluder-day-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.occluder-day-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.occluder-night-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.occluder-night-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.loft.props` | 352×576 | candidate | — | src/play/hideout-art.ts |
 | `room.loft.window-day` | 128×72 | candidate | — | src/play/hideout-art.ts |
 | `room.loft.window-night` | 128×72 | candidate | — | src/play/hideout-art.ts |
 
@@ -834,15 +834,15 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `room.underground.back` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.underground.floor` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.underground.neon-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.underground.neon-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.underground.occluder-day-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.underground.occluder-day-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.underground.occluder-night-a` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.underground.occluder-night-b` | 256×576 | candidate | — | src/play/hideout-art.ts |
-| `room.underground.props` | 256×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.back` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.floor` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.neon-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.neon-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.occluder-day-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.occluder-day-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.occluder-night-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.occluder-night-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.props` | 352×576 | candidate | — | src/play/hideout-art.ts |
 
 ## rooms · underground · default · unused
 

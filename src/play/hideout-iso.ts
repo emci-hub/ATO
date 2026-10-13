@@ -1,7 +1,7 @@
 /**
  * Streetwear Hideout — 3/4 top-down enclosed room (layout A).
  *
- * Canvas 256×576 (option A: 32px art tiles, hero 1:1), 16px walk grid, A* roam, depth sort by footprint
+ * Canvas 352×576 (option A tiles, widened 2026-10-13; 32px art tiles, hero 1:1), 16px walk grid, A* roam, depth sort by footprint
  * bottom Y. Greybox art from the map until Sprite Smith lands.
  */
 import hideoutMap from '@/assets/art/rooms/hideout/hideout-td.map.json';
@@ -33,9 +33,9 @@ export { astar, clampToGrid, isWalkableArt, lineOfSight, pathClear, route, strin
 
 /**
  * Option A (emci 2026-10-12, docs/art/PIXELLAB_GUIDE.md §2): PixelLab-native
- * 32 px art tiles, room 256×576 (8×18 art tiles), grown hero drawn 1:1.
+ * 32 px art tiles, room 352×576 (11×18 art tiles; was 256 wide), grown hero drawn 1:1.
  */
-export const HIDEOUT_CANVAS: readonly [number, number] = [256, 576];
+export const HIDEOUT_CANVAS: readonly [number, number] = [352, 576];
 export const HIDEOUT_NIGHT = '#0C0D23';
 /** PixelLab Streetwear hero cell. Room/prop art is authored against this. */
 export const HIDEOUT_HERO_SRC_PX = 192;
@@ -93,9 +93,9 @@ export const HIDEOUT_ART_TILE = 32;
  * Grid 16×36: ceiling 2, back wall 6, floor 26 (14 wide), near rim 2, caps 1, door 4.
  */
 export const HIDEOUT_TILE = 16;
-export const HIDEOUT_GRID_COLS = 16;
+export const HIDEOUT_GRID_COLS = 22;
 export const HIDEOUT_GRID_ROWS = 36;
-export const HIDEOUT_FLOOR_COLS = 14;
+export const HIDEOUT_FLOOR_COLS = 20;
 export const HIDEOUT_FLOOR_ROWS = 26;
 export const HIDEOUT_DOOR_TILES = 4;
 export const HIDEOUT_CAP_TILES = 1;
@@ -500,7 +500,7 @@ function isRoomCanvas(canvas: readonly [number, number]): boolean {
 }
 
 /**
- * Room canvases (256×576) fit-to-contain the stage (fills 430pt and 440pt
+ * Room canvases (352×576) fit-to-contain the stage (fills 430pt and 440pt
  * when height allows).
  * Dive 256×320 callers keep the old integer device-px scale.
  */

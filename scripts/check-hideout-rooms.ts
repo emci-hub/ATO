@@ -259,9 +259,9 @@ const HOUR = 60 * 60 * 1000;
   ] as const) {
     const geom = parseIsoGeom(raw, { sleepOnBed: sleep });
     assert.equal(geom.tile, 16, `${name} tile`);
-    assert.equal(geom.grid.cols, 16, `${name} cols`);
+    assert.equal(geom.grid.cols, 22, `${name} cols`);
     assert.equal(geom.grid.rows, 36, `${name} rows`);
-    assert.deepEqual([...geom.canvas], [256, 576], `${name} canvas (option A)`);
+    assert.deepEqual([...geom.canvas], [352, 576], `${name} canvas (option A, widened 2026-10-13)`);
     const layers = geom.layers.occluder;
     assert.ok(layers && typeof layers === 'object', `${name} has combined occluder layers`);
     const occ = layers as Record<string, string>;
@@ -273,7 +273,7 @@ const HOUR = 60 * 60 * 1000;
       assert.equal(r.ok, true, r.ok ? `${name}/${stage}` : `${name}/${stage}: ${r.reason}`);
     }
   }
-  ok('option A: 256×576, 16px walk grid; occluder states; every room reachable at baby/adult/god clearance');
+  ok('option A: 352×576, 16px walk grid; occluder states; every room reachable at baby/adult/god clearance');
 }
 
 {

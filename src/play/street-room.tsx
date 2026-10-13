@@ -407,7 +407,7 @@ export function StreetRoomLife({
   const travel = gentle ? Math.min(18, KEEP_TRAVEL_PT) : 28;
   const at = (x: number, y: number) => ({ x: left + x * k, y: top + y * k });
   const boom = at(40, 170);
-  const moth0 = at(130, 90);
+  const moth0 = at(178, 90); // by the window (352-wide room)
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {lights.map(([x, y], i) => (

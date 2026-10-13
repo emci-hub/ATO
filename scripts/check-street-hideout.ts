@@ -55,16 +55,16 @@ const ok = (name: string) => {
 const read = (path: string) => readFileSync(path, 'utf8');
 
 {
-  // Option A (emci 2026-10-12): 256×576, 32px art tiles, 16px walk grid, hero 1:1.
-  assert.deepEqual([...HIDEOUT_CANVAS], [256, 576]);
-  assert.deepEqual([...HIDEOUT_CONTENT], [0, 0, 256, 576]);
+  // Option A (emci 2026-10-12): 32px art tiles, 16px walk grid, hero 1:1; widened to 352 (emci 2026-10-13).
+  assert.deepEqual([...HIDEOUT_CANVAS], [352, 576]);
+  assert.deepEqual([...HIDEOUT_CONTENT], [0, 0, 352, 576]);
   assert.equal(HIDEOUT_TILE, 16);
-  assert.equal(HIDEOUT_GRID_COLS, 16);
+  assert.equal(HIDEOUT_GRID_COLS, 22);
   assert.equal(HIDEOUT_GRID_ROWS, 36);
-  assert.equal(HIDEOUT_FLOOR_COLS, 14);
+  assert.equal(HIDEOUT_FLOOR_COLS, 20);
   assert.equal(HIDEOUT_FLOOR_ROWS, 26);
   assert.equal(HIDEOUT_DOOR_TILES, 4);
-  assert.equal(HIDEOUT_GEOM.grid.cols, 16);
+  assert.equal(HIDEOUT_GEOM.grid.cols, 22);
   assert.equal(HIDEOUT_GEOM.grid.rows, 36);
   assert.equal(HIDEOUT_GEOM.tile, 16);
   assert.equal(HIDEOUT_HERO_SRC_PX, 192);
@@ -103,14 +103,14 @@ const read = (path: string) => readFileSync(path, 'utf8');
   assert.ok(onWalkFloor(mid[0], mid[1]));
   const at440 = hideoutIntegerScale({ availW: 440, availH: 1000, pixelRatio: 3 });
   assert.ok(Math.abs(at440.canvasW - 440) < 0.5, `440pt fills width (got ${at440.canvasW})`);
-  assert.ok(Math.abs(at440.dpx - (440 * 3) / 256) < 1e-6, `440pt @ 3x is 440·3/256 dpx (got ${at440.dpx})`);
+  assert.ok(Math.abs(at440.dpx - (440 * 3) / 352) < 1e-6, `440pt @ 3x is 440·3/352 dpx (got ${at440.dpx})`);
   const at430 = hideoutIntegerScale({ availW: 430, availH: 1000, pixelRatio: 3 });
   assert.ok(Math.abs(at430.canvasW - 430) < 0.5, `430pt fills width (got ${at430.canvasW})`);
   const a = hideoutWalkMs(40, 0, 1);
   const b = hideoutWalkMs(80, 0, 1);
   assert.ok(Math.abs(b / a - 2) < 0.15, 'walk duration scales with distance (constant speed)');
   assert.ok(HIDEOUT_WALK_ART_PX_PER_SEC >= 16);
-  ok('3/4 map: 256×576 (option A), 430+440pt fit, hero 1:1 scale config, walk targets');
+  ok('3/4 map: 352×576 (option A, widened), 430+440pt fit, hero 1:1 scale config, walk targets');
 }
 
 {
@@ -263,8 +263,8 @@ const read = (path: string) => readFileSync(path, 'utf8');
     for (const pr of [2, 3]) {
       const { scale, origin } = hideoutPhoneLayout(width, pr);
       assert.ok(Math.abs(scale.canvasW - width) < 0.5, `${width}pt fills width (got ${scale.canvasW})`);
-      if (width === 440 && pr === 3) assert.ok(Math.abs(scale.dpx - (440 * 3) / 256) < 1e-6, '440pt @ 3x fills the width');
-      const placed = hideoutStageOrigin(width, Math.ceil((576 * width) / 256), scale);
+      if (width === 440 && pr === 3) assert.ok(Math.abs(scale.dpx - (440 * 3) / 352) < 1e-6, '440pt @ 3x fills the width');
+      const placed = hideoutStageOrigin(width, Math.ceil((576 * width) / 352), scale);
       assert.equal(placed.left, origin.left);
       const expectLeft = Math.round((width - scale.contentW) / 2 - HIDEOUT_CONTENT[0] * scale.pt);
       assert.equal(origin.left, expectLeft, `content-centered origin at ${width}@${pr}x`);

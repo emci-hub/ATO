@@ -12664,15 +12664,15 @@
       "placement": "back-wall",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 22836,
-      "decodedBytes": 589824,
+      "diskBytes": 28023,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:ca951da92f25cc8a9af590c4da8fb258",
+      "notes": "md5:e474680b31560959ab758344e0399b9c",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -12745,15 +12745,15 @@
       "placement": "floor",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 60419,
-      "decodedBytes": 589824,
+      "diskBytes": 79690,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:fe7620e736d0b76c02c70353887bc9d8",
+      "notes": "md5:4bd98145080077397e29940e51148c87",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13021,15 +13021,15 @@
       "placement": "back-wall",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 2775,
-      "decodedBytes": 589824,
+      "diskBytes": 3259,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:e364731faf8961abb330c71e7d284491",
+      "notes": "md5:edcdc134c085e26f473830388a3541c7",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13048,15 +13048,15 @@
       "placement": "overlay",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 10104,
-      "decodedBytes": 589824,
+      "diskBytes": 11902,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:ffe970ca654b304211d58de7dda3c163",
+      "notes": "md5:27c2ab48e0fbc8763803f7f1ba345e01",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13075,15 +13075,15 @@
       "placement": "overlay",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 9303,
-      "decodedBytes": 589824,
+      "diskBytes": 10698,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:1fbbce89c1e39726bd6a8ae0a863c901",
+      "notes": "md5:e91e2948ac90f2e3c4482cd126451400",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13102,15 +13102,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 16401,
-      "decodedBytes": 589824,
+      "diskBytes": 16848,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:ba47541797aa35fcc54dbc213e6a7b09",
+      "notes": "md5:560e5fc3a73413ffa4c43e359b174c10",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13129,15 +13129,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 16401,
-      "decodedBytes": 589824,
+      "diskBytes": 16848,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:ba47541797aa35fcc54dbc213e6a7b09",
+      "notes": "md5:560e5fc3a73413ffa4c43e359b174c10",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13156,15 +13156,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 16401,
-      "decodedBytes": 589824,
+      "diskBytes": 16848,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:ba47541797aa35fcc54dbc213e6a7b09",
+      "notes": "md5:560e5fc3a73413ffa4c43e359b174c10",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13183,15 +13183,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 16401,
-      "decodedBytes": 589824,
+      "diskBytes": 16848,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:ba47541797aa35fcc54dbc213e6a7b09",
+      "notes": "md5:560e5fc3a73413ffa4c43e359b174c10",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13210,15 +13210,15 @@
       "placement": "floor",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 23520,
-      "decodedBytes": 589824,
+      "diskBytes": 23895,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:adbdc9b98f153c6d44731fe84dba0fba",
+      "notes": "md5:438827fa80635357bf5d1da5775e150b",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13400,15 +13400,15 @@
       "placement": "back-wall",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 3288,
-      "decodedBytes": 589824,
+      "diskBytes": 3847,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:1de65753e4176572f681edf9b86053c2",
+      "notes": "md5:217bd805e00ba780db9f2bdbf466eb8e",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13427,15 +13427,15 @@
       "placement": "floor",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 3196,
-      "decodedBytes": 589824,
+      "diskBytes": 4676,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:6225606feeb425e293b59b60dddc0b3b",
+      "notes": "md5:168c77fd3d26615645c607d8f24c4ce8",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13454,15 +13454,15 @@
       "placement": "overlay",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 4322,
-      "decodedBytes": 589824,
+      "diskBytes": 4753,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:2a4aef9cc79b6a8d3226e60a2ff24329",
+      "notes": "md5:f199c241a915c6dcf0c38213ebb8db2e",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13565,15 +13565,15 @@
       "placement": "overlay",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 2404,
-      "decodedBytes": 589824,
+      "diskBytes": 2629,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:4a67ebfeb88c7789eed53ea840006417",
+      "notes": "md5:c3d3444f2190030f0eb85fa033b433b1",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13592,15 +13592,15 @@
       "placement": "overlay",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 2078,
-      "decodedBytes": 589824,
+      "diskBytes": 2294,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:f04e60624e2a6fc021be488c046dea38",
+      "notes": "md5:4bdfd3ab55d263cd303d6787752f10ed",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13619,15 +13619,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1020,
-      "decodedBytes": 589824,
+      "diskBytes": 1236,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:30eaead61b009dce90485d0c3703c699",
+      "notes": "md5:1d01214187afef60d25e8f1e1207cd88",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13646,15 +13646,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1021,
-      "decodedBytes": 589824,
+      "diskBytes": 1237,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:fb1331c26e47f9574bbcd17ca9419591",
+      "notes": "md5:dcdb8e003ba96ad4b12a7fb410b52d77",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13673,15 +13673,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1018,
-      "decodedBytes": 589824,
+      "diskBytes": 1233,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:61c67b66e85e998813d20120cb29f71b",
+      "notes": "md5:949a232b5ec669bc1327bb0f5666e85c",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13700,15 +13700,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1021,
-      "decodedBytes": 589824,
+      "diskBytes": 1237,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:1a9507f111e4054195523727999111df",
+      "notes": "md5:234c5fe8f42d41c4139e6437636e8e30",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -13727,15 +13727,15 @@
       "placement": "floor",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1797,
-      "decodedBytes": 589824,
+      "diskBytes": 2065,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:f7cf2098508dab44524a2b554eb03473",
+      "notes": "md5:1b7e46d5f1d95cc7258f7722bc7c4651",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14032,15 +14032,15 @@
       "placement": "back-wall",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 2775,
-      "decodedBytes": 589824,
+      "diskBytes": 3259,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:e364731faf8961abb330c71e7d284491",
+      "notes": "md5:edcdc134c085e26f473830388a3541c7",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14059,15 +14059,15 @@
       "placement": "floor",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 3138,
-      "decodedBytes": 589824,
+      "diskBytes": 4665,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:075521d27c123742438066af6798d088",
+      "notes": "md5:9891215ca38a0b1e7ebf08433b97ae23",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14086,15 +14086,15 @@
       "placement": "overlay",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 885,
-      "decodedBytes": 589824,
+      "diskBytes": 1094,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:4e73ea664f7ef6de9857049451d84599",
+      "notes": "md5:50a886e16f5b7ae4b40e80c58aec4871",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14113,15 +14113,15 @@
       "placement": "overlay",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 884,
-      "decodedBytes": 589824,
+      "diskBytes": 1094,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:2ff83b789edcd50fa02d64f470f83ee3",
+      "notes": "md5:7ee78f31728b24d0689952e33d374113",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14140,15 +14140,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1154,
-      "decodedBytes": 589824,
+      "diskBytes": 1361,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:be88576365f4bd01759f75bf34baf7db",
+      "notes": "md5:9683a483130fd07b5a78516e8d640a67",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14167,15 +14167,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1153,
-      "decodedBytes": 589824,
+      "diskBytes": 1362,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:f26993cb8e309dc8c206715b215cf0ee",
+      "notes": "md5:34b7be62ac829b2c1c33356f208b9690",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14194,15 +14194,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1151,
-      "decodedBytes": 589824,
+      "diskBytes": 1359,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:286f009e24596a0bed762534e6189520",
+      "notes": "md5:7854b645bc90c25355df9322d740ff17",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14221,15 +14221,15 @@
       "placement": "front-occluder",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1153,
-      "decodedBytes": 589824,
+      "diskBytes": 1362,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:0b576e89a3051f1ea7cad72752986d8b",
+      "notes": "md5:cb47d3d2b10894912a7982c8647a3fdb",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14248,15 +14248,15 @@
       "placement": "floor",
       "camera": "td-3q-low",
       "size": {
-        "w": 256,
+        "w": 352,
         "h": 576
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 850,
-      "decodedBytes": 589824,
+      "diskBytes": 1074,
+      "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:326b0b09e1e396fdd35bdda2333dd08f",
+      "notes": "md5:7d9f9d9f9ed860425fb5051e3a87b5d8",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"

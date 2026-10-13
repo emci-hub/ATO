@@ -5,7 +5,7 @@
  * files under `assets/art/rooms/` (ids in the art registry) and, if names
  * change, the `ROOM.<room>.<slot>` layers (skeleton: src/art/skeletons.ts) and `ART.*` extras
  * in `ROOM_ART` (a missing id is a type error).
- * Maps use the option A 256×576 schema (32px art tiles, 16px walk cells;
+ * Maps use the option A 352×576 schema (32px art tiles, 16px walk cells;
  * hideout-td.map.json): floor 14×26 cells, door gap 4, occluders as ONE
  * combined layer per time/neon state with per-prop crop + sortY.
  * Tease pieces are Hideout *wall* overlays, not floor props.
@@ -172,5 +172,7 @@ export const ZZZ_ART: readonly ImageSourcePropType[] = [
 
 export const NEIGHBOR_BOARDED_ART: ImageSourcePropType = png(ART.room.hideout.neighborBoardedTd);
 
-export const LOFT_WINDOW_POS: readonly [number, number] = [64, 40];
-export const LOFT_WINDOW_SIZE: readonly [number, number] = [128, 72];
+// From the Loft map, so the window overlay follows the room layout (352 wide since 2026-10-13).
+const LOFT_WINDOW = (loftMap as { window?: { pos: number[]; size: number[] } | null }).window;
+export const LOFT_WINDOW_POS: readonly [number, number] = [LOFT_WINDOW?.pos[0] ?? 112, LOFT_WINDOW?.pos[1] ?? 40];
+export const LOFT_WINDOW_SIZE: readonly [number, number] = [LOFT_WINDOW?.size[0] ?? 128, LOFT_WINDOW?.size[1] ?? 72];

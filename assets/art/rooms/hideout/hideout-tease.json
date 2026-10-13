@@ -3,7 +3,7 @@
   "_comment": "PLACEHOLDER — Hideout right-wall tease (Loft side), on the side cap / back-right wall, not the floor.",
   "boarded": {
     "pos": [
-      232,
+      328,
       32
     ],
     "size": [
@@ -13,7 +13,7 @@
   },
   "tarp": {
     "pos": [
-      224,
+      320,
       24
     ],
     "size": [
@@ -23,7 +23,7 @@
   },
   "scaffold": {
     "pos": [
-      244,
+      340,
       40
     ],
     "size": [
@@ -33,7 +33,7 @@
   },
   "sign": {
     "pos": [
-      220,
+      316,
       92
     ],
     "size": [
