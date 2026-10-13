@@ -303,14 +303,14 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] Confirm Home's AI line now reads "Sage uses AI only to write your Story, your Legends cards and your category deep dives."
 - [ ] Screenshot: a written deep dive with its leanings.
 
-## Box 31 — Home: The Story as swipe beats (2026-10-13)
+## Box 31 — Home: The Story as script swipe cards (2026-10-13)
 
-- [ ] Home → The Story → Load story. Confirm a nickname title, swipe cards (one beat each, no section labels: hook, twist, move, punchline, reveal, then a recap), progress dots, Previous/Next beat buttons, and **one** AI badge (none if the card came from the bank).
+- [ ] Home → The Story → Load story. Confirm a nickname title, script swipe cards (📍 setting on card 1, one sentence per line, bold speaker tags, card 5 = Next + italic reveal, card 6 = Why this is you). No recap card. Progress dots, Previous/Next beat buttons. **No** AI badge on a template card (`STORY_AI_POLISH` is off).
 - [ ] Confirm there is no "What they noticed" or "What it means for you". Optional tap: "The other way it could have gone". ⓘ opens Built from. Share title pastes title + reveal.
-- [ ] Confirm the story text never says a trait or category word ("your Steady side", "Drive"). The punchline should callback to the opening detail, not explain itself.
+- [ ] Confirm the story text never names a trait. Card 6 may use the real catalog category name. Romantic roles stay "your date" / "your partner" (never a name or he/she).
 - [ ] Settings → Reduce Motion on: beats still cross-fade (never freeze). Motion Full / Zen: a bigger fade-and-rise. VoiceOver: Previous/Next beat and the adjustable pager. Dynamic Type: text still grows.
 - [ ] An older labelled story (scene / moment / means) still shows until you open the fold; opening it rewrites once. If rewrite fails, the old card stays. Reopening Home must not fire another rewrite for that same card.
-- [ ] Turn AI off / go offline / hit quota: a bank story still opens (no spinner forever). Load again: a different bank card, not an instant repeat. A later successful library/AI card can replace it.
+- [ ] Load again: a different template, not an instant repeat. Captain Table for Three (first-date, social / high) is the screenshot story: cards 1, 3, 6 and the other-way tap.
 
 ## Box 32 — ATO tokens pay for AI (wave92, 2026-10-09)
 

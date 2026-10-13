@@ -1975,7 +1975,7 @@ function isLibraryKind(value) {
 }
 var LIBRARY_VERSION = {
   deep_dive: "l1",
-  story: "l2",
+  story: "l3",
   legend: "l1"
 };
 var BUCKET_KEY_RE = /^[a-z0-9_|:=+,.!-]{3,255}$/;
@@ -6880,6 +6880,33 @@ var LEGEND_LIBRARY = {
   }
 };
 
+// src/lib/story-v3/polish.ts
+var STORY_POLISH_PROMPT_STATIC = `You polish tiny comic stories for the ATO app. You never invent a plot, a trait, a character, or a joke. If anything is unclear, return the input story unchanged.
+
+WHO YOU ARE
+You write tiny comic stories (~100 words, 6 beats) starring the user, in second person ("you"). Bright humor plus dark humor that stays absurd. The user is always the competent, lovable lead. Low lean is a different superpower, never a loser.
+
+HARD RULES
+Never cruel. Banned: self-harm, suicide, abuse, trauma, illness, death of people or pets, real tragedies, disasters, war, addiction, weight/appearance, politics, religion, real brands' failures, real people.
+Dark stays absurd. Stakes are tiny and treated as enormous.
+2-3 short dialogue lines (\u226412 words), from side characters only. You never speak in quotes.
+One LIGHT joke and one DARK joke. \u2264120 words. Reveal \u226415 words. No therapy-speak.
+Romantic roles are never named or gendered: "your date", "your partner", "an ex", "Rory's date".
+Named characters must use the approved list: Sam, Alex, Jordan, Kim, Ari, Rory, Casey, Jamie, Taylor, Riley, Quinn, Rowan, Avery, Morgan, Blair, Drew, Reese, Sky, Parker, Emerson, Remy, Shay, Dakota, Hayden, Kai, Phoenix.
+Family roles (Aunt Rosa) may keep natural pronouns. No two names sharing a first letter.
+
+SCRIPT FORMAT
+\u{1F4CD} *Room. Time. Day.*
+One sentence per line. Blank line between beats.
+Dialogue is **Name:** "line".
+Card 5 is Next: \u2026 then an italic reveal.
+Card 6 is Why this is you (categoryName from the catalog, leanPhrase, Proof, Tip/Watch out).
+
+POLISH ONLY
+Never invent plot or traits. Keep every beat, name, callback, and joke. You may fix grammar, split a long line, or swap a word for clarity. If you cannot polish, return the JSON unchanged.
+Return JSON only:
+{"title":"...","settingTag":"...","hook":["..."],"twist":["..."],"move":["..."],"punchline":["..."],"next":"...","reveal":"...","otherWay":"..."}`;
+
 // src/lib/legends64/classify.ts
 var CORE_AXES = ["conscientiousness", "extraversion", "openness"];
 var MODIFIER_AXES = [
@@ -9523,29 +9550,6 @@ Plan silently first in "plan" (hook detail, stake, move, callback). Return JSON 
 
 EXAMPLES (match the energy, never reuse the content):
 ${STORY_FEW_SHOTS.map((row, i) => `${i + 1}. ${formatFewShot(row)}`).join("\n")}`;
-function buildStoryPromptFromSides(input) {
-  const sides = input.sides.map((row, index) => {
-    const label = index === 0 ? "SIDE A" : "SIDE B";
-    const bits = [
-      row.lead ? `- Lead lean, in one word (never print it): ${AXIS_POLE_NAME[row.lead.axis][row.lead.lean]}` : null,
-      row.card ? `- How it tends to show: ${row.card.summary}` : null,
-      row.card ? `- What it does well: ${row.card.strength}` : null,
-      row.card ? `- Where it can catch: ${row.card.watchOut}` : null
-    ].filter((line) => line != null);
-    return `${label} (internal; never name it)
-${bits.join("\n") || "- (no stored lines)"}`;
-  });
-  const jokeTarget = input.jokeTarget;
-  const otherWay = input.sides[0]?.lead ?? null;
-  return `${STORY_CARD_PROMPT_STATIC}
-
-${sides.join("\n\n")}
-
-TOLD-VS-PLAYED: none. Do not invent a split.
-${jokeTarget ? `JOKE TARGET: the ${AXIS_POLE_NAME[jokeTarget.axis][jokeTarget.lean]} side (never print that word). Let the punchline call back to the situation that side lands them in.` : "JOKE TARGET: none. Keep the punchline warm, not dry-dark."}
-${otherWay ? `OTHER WAY (for "otherWay"; never print the word): ${AXIS_POLE_NAME[otherWay.axis][otherWay.lean === "high" ? "low" : "high"]}` : "OTHER WAY: the opposite of SIDE A\u2019s lead lean."}${input.setting ? `
-SETTING FOR THIS STORY: ${input.setting}` : ""}`;
-}
 function words3(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -9555,6 +9559,9 @@ function within(text, [min, max]) {
 }
 function isStoryV2(card) {
   return card.v === 2 && !!(card.hook && card.twist && card.move && card.punchline && card.reveal);
+}
+function isStoryV3(card) {
+  return card.v === 3 && !!(card.settingTag && (card.lines?.hook?.length || card.hook));
 }
 function beatsOverlap(parts) {
   for (let i = 0; i < parts.length; i += 1) {
@@ -9649,7 +9656,13 @@ function parseStoryCardAnswer(raw, opts = {}) {
   };
 }
 function storyCardBody(card) {
-  if (isStoryV2(card)) {
+  if (isStoryV3(card) && card.lines) {
+    const texts = [...card.lines.hook, ...card.lines.twist, ...card.lines.move, ...card.lines.punchline].map(
+      (line) => line.kind === "dialogue" ? line.text : line.text
+    );
+    return [...texts, card.reveal, card.next].filter(Boolean).join(" ");
+  }
+  if (isStoryV2(card) || isStoryV3(card)) {
     return [card.hook, card.twist, card.move, card.punchline, card.reveal, card.next].filter(Boolean).join(" ");
   }
   return [card.scene, card.moment, card.handle, card.means].filter(Boolean).join(" ");
@@ -9665,10 +9678,13 @@ function parseStoredStoryCard(raw) {
   const move = s(obj.move);
   const punchline = s(obj.punchline);
   const reveal = s(obj.reveal);
-  if (obj.v === 2 || hook && twist && move && punchline && reveal) {
+  if (obj.v === 3 || obj.v === 2 && hook && twist && move && punchline && reveal || hook && twist && move && punchline && reveal) {
     if (!hook || !twist || !move || !punchline || !reveal) return null;
+    const source = obj.source === "bank" ? "bank" : obj.source === "template" ? "template" : "ai";
+    const lines = obj.lines && typeof obj.lines === "object" ? obj.lines : void 0;
+    const card6 = obj.card6 && typeof obj.card6 === "object" ? obj.card6 : void 0;
     return {
-      v: 2,
+      v: obj.v === 3 ? 3 : 2,
       title: s(obj.title),
       hook,
       twist,
@@ -9677,8 +9693,13 @@ function parseStoredStoryCard(raw) {
       reveal,
       next: s(obj.next),
       otherWay: s(obj.otherWay),
-      source: obj.source === "bank" ? "bank" : "ai",
-      ...typeof obj.bankId === "string" && obj.bankId.trim() ? { bankId: obj.bankId.trim() } : {}
+      settingTag: s(obj.settingTag) ?? void 0,
+      ...lines ? { lines } : {},
+      ...card6 ? { card6 } : {},
+      source,
+      ...typeof obj.bankId === "string" && obj.bankId.trim() ? { bankId: obj.bankId.trim() } : {},
+      ...typeof obj.topicId === "string" ? { topicId: obj.topicId } : {},
+      ...obj.romance === true ? { romance: true } : {}
     };
   }
   const scene = s(obj.scene);
@@ -9811,12 +9832,17 @@ var STORY_LIBRARY = {
   cardsPerCall: 1,
   buildPrompt(bucket, angles) {
     const angle2 = angles[0] ?? "friends";
+    const sides = promptSides(bucket, angle2);
     return {
-      prompt: buildStoryPromptFromSides({
-        sides: promptSides(bucket, angle2),
-        jokeTarget: bucket.joke,
-        setting: STORY_ANGLES[angle2] ?? null
-      }),
+      prompt: `${STORY_POLISH_PROMPT_STATIC}
+
+SETTING FOR THIS STORY: ${STORY_ANGLES[angle2] ?? "a plan with friends"}
+TOLD-VS-PLAYED: none. Do not invent a split.
+SIDES (internal; never name them, never invent a trait from them):
+${sides.map((row, i) => `${i === 0 ? "SIDE A" : "SIDE B"}: ${row.lead ? `${row.lead.axis}.${row.lead.lean}` : "none"}`).join("\n")}
+${bucket.joke ? `JOKE TARGET (never print the word): ${bucket.joke.axis}.${bucket.joke.lean}` : "JOKE TARGET: none."}
+
+If no finished template story is supplied below, return empty JSON {}. Never invent a plot.`,
       maxOutputTokens: STORY_OUTPUT_TOKENS
     };
   },

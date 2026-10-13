@@ -129,7 +129,7 @@ ok('the fold uses the bank as fallback, remembers seen cards, and rewrites old c
 const review = readFileSync(resolve(root, 'docs/story-review.md'), 'utf8');
 assert.match(review, /STORY_COPY_REVIEWED = false/);
 assert.match(review, /STORY_BANK_COPY_REVIEWED = false/);
-assert.match(review, /The Bread Basket Diplomat/);
+assert.match(review, /Captain Table for Three/);
 ok('review doc names the flags and the screenshot story');
 
 const hub = readFileSync(resolve(root, 'src/components/dev-hub-panels.tsx'), 'utf8');

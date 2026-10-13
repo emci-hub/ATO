@@ -1,0 +1,117 @@
+{
+  "_meta": {
+    "skeleton": "home.object-revolt.02",
+    "rulebook": "/workspace/ato-story-rulebook.md (skeleton contract §1, slot spec §2)",
+    "syntax": "Tracery (Apache-2.0): #symbol#, #symbol.cap#, [push:value]. Our extension: keyed symbols name__categoryId__lean.",
+    "keys": {
+      "categoryId": [
+        "cat_structure",
+        "cat_resilience"
+      ],
+      "setting": [
+        "home"
+      ],
+      "lean": [
+        "high",
+        "low"
+      ]
+    },
+    "callbacks": {
+      "guest": "guestPayoff (punchline L1)",
+      "objectVillain": "objectQuirk -> objectTrigger -> grudgeLine -> objectSting (punchline L2-3)",
+      "sideCharacter": "sideLines (twist) -> moveAudience (move L3, optional)"
+    },
+    "jokeTags": {
+      "jokeDark": "twist L4 (grudgeLine)",
+      "jokeLight": "move L3, except move__cat_structure__low = L1 ('like it owes you money')",
+      "jokeDarkSecondary": "punchline L3 (sting)"
+    },
+    "compatibility": {
+      "the toaster": {
+        "rooms": [
+          "Kitchen"
+        ]
+      },
+      "the kettle": {
+        "rooms": [
+          "Kitchen"
+        ]
+      },
+      "the washing machine": {
+        "rooms": [
+          "Laundry room"
+        ]
+      },
+      "the Wi-Fi router": {
+        "rooms": [
+          "Living room",
+          "Home office"
+        ]
+      }
+    },
+    "copiedVsOurs": "Copied: Tracery syntax only. Borrowed ideas: Story Spine order, Polti deadline+adversary, rule of three, callback. All text is original.",
+    "objectWin": "Each object carries a 'win' line so the move resolves its own trigger (rulebook §4 'no unpaid setups')."
+  },
+  "objectVillain": [
+    "[v:the toaster][room:Kitchen][quirk:burns the left side of every slice, and only the left side][trigger:You drop in two slices for a quick snack.][grudge:It fires both slices at the ceiling, like a warning shot.][win:The next slice pops up golden on both sides.][vLine:It's doing it on purpose. Look at it.]",
+    "[v:the kettle][room:Kitchen][quirk:clicks off exactly one degree before the water boils][trigger:You need one cup of hot water, just one.][grudge:It clicks off four times in a row, like it's counting your mistakes.][win:The water finally boils, with a sulky little hiss.][vLine:It's mocking you. That click was sarcastic.]",
+    "[v:the washing machine][room:Laundry room][quirk:eats exactly one sock per load, never two][trigger:You need your only matching pair of socks, fast.][grudge:It has kept every sock it ever took, and it will never say where.][win:It spits out both socks, damp but matching.][vLine:I think it's building something in there.]",
+    "[v:the Wi-Fi router][room:#routerRoom#][quirk:drops the internet whenever someone says \"one more episode\"][trigger:You need it to play some calm background music.][grudge:Its little light turns red and stays red, like an evil eye.][win:The music starts, soft and calm.][vLine:Don't say the word 'episode.' It's listening.]"
+  ],
+  "routerRoom": [
+    "Living room",
+    "Home office"
+  ],
+  "guestBundle": [
+    "[guest:your aunt][deadline:Your aunt is coming over for tea in twenty minutes.][guestPayoff:Your aunt arrives, sips her tea, and calls the place \"very lived in.\"]",
+    "[guest:your landlord][deadline:Your landlord arrives for an inspection in fifteen minutes.][guestPayoff:Your landlord arrives and ticks every box on his clipboard.]",
+    "[guest:your new neighbour][deadline:Your new neighbour is coming by in ten minutes to borrow a ladder.][guestPayoff:Your new neighbour arrives, takes the ladder, and says the place smells nice.]"
+  ],
+  "sideCharacter": [
+    "[p:Sam][rel:roommate]",
+    "[p:Rowan][rel:sibling]",
+    "[p:Ari][rel:roommate]"
+  ],
+  "panicLine": [
+    "Please tell me you have a plan.",
+    "We have minutes. Minutes!",
+    "Should I hide? I feel like I should hide."
+  ],
+  "time": [
+    "7:40 PM",
+    "8:15 PM",
+    "9:05 PM",
+    "6:50 PM"
+  ],
+  "day": [
+    "Sunday",
+    "Wednesday",
+    "Saturday",
+    "Thursday"
+  ],
+  "next": [
+    "Next: a fitted sheet, and it refuses to be folded.",
+    "Next: a jar lid that has never been opened by anyone.",
+    "Next: a doorbell that rings when nobody is there."
+  ],
+  "hook": "#deadline#\n#v.cap# #quirk#.\n#trigger#",
+  "twist": "Your #rel# #p# watches #v# and backs away slowly.\n**#p#:** \"#vLine#\"\n**#p#:** \"#panicLine#\"\n#grudge#",
+  "move__cat_structure__high": "You pull out your binder of household instructions.\nPage four covers #v#, with diagrams.\nYou follow them like a bomb squad with a label maker.\n#win#",
+  "move__cat_structure__low": "You give #v# two firm taps, like it owes you money.\n#win#\nYou take a small bow for #p#.",
+  "move__cat_resilience__high": "You try again, then again, then a third time with snacks.\nOn try four, you start humming a training-montage song.\n#p.cap# joins in, badly, on the harmony.\n#win#",
+  "move__cat_resilience__low": "You decide #v# can win this one.\nYou drape a tea towel over it, like a white flag.\nThe tea towel has a duck on it, which feels respectful.",
+  "punchline": [
+    "#guestPayoff#\n#v.cap# stays silent the whole visit.\nIt is clearly saving its energy for you.",
+    "#guestPayoff#\nNobody mentions #v# once.\n#v.cap# has noticed that nobody mentions it.",
+    "#guestPayoff#\n#v.cap# behaves perfectly until the front door closes.\nThen it does its thing again, just for you.",
+    "#guestPayoff#\nOn the way out, #guest# compliments #v#.\n#v.cap# has never looked so smug."
+  ],
+  "reveal__cat_structure__high": "Your systems aren't fussy. They're armour.",
+  "reveal__cat_structure__low": "No system, yet somehow everything works. That's your system.",
+  "reveal__cat_resilience__high": "You don't win first. You win last.",
+  "reveal__cat_resilience__low": "You pick your battles, yet you never lose the war.",
+  "title__cat_structure__high": "Chief of House Rules",
+  "title__cat_structure__low": "Captain Two Taps",
+  "title__cat_resilience__high": "Saint of Round Four",
+  "title__cat_resilience__low": "Professor Tea Towel"
+}

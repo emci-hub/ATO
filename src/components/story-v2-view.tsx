@@ -1,9 +1,9 @@
 /**
- * Story v2 swipe cards (emci 2026-10-13): one beat per card, Wrapped-style,
- * no section labels, one shareable title + reveal. Motion: fade+rise by
- * default (Motion Full always springy; Zen extra-long), a plain cross-fade
- * under Reduce Motion — never fully static. VoiceOver gets Previous/Next
- * plus an adjustable pager; Dynamic Type stays on.
+ * Story swipe cards (emci 2026-10-13): one beat per card, Wrapped-style.
+ * v3 = script (📍 setting, one sentence per line, bold speakers, card 6).
+ * v2 = six-beat prose. Reduce Motion = 180 ms cross-fade, never static.
+ * Motion Full = springy fade-and-rise. VoiceOver Previous/Next + pager.
+ * Dynamic Type stays on.
  */
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -22,7 +22,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppearance } from '@/lib/theme/context';
-import { isStoryV2, type StoryCard } from '@/lib/story-card';
+import { isStoryV2, isStoryV3, type StoryCard, type StoryScriptLine } from '@/lib/story-card';
 import { categoryAxisCodes, categoryDisplayName } from '@/lib/category-labels';
 import { categoryLeans, categoryScore } from '@/lib/category-deep-dive/dive';
 import { categoryById } from '@/lib/categories';
@@ -33,7 +33,70 @@ const SHARE_LABEL = 'Share title';
 const PREV_BEAT = 'Previous beat';
 const NEXT_BEAT = 'Next beat';
 
-type Beat = { key: string; text: string; kind: 'body' | 'punch' | 'reveal' | 'next' | 'recap' };
+type Beat =
+  | { key: string; kind: 'script'; lines: StoryScriptLine[]; settingTag?: string }
+  | { key: string; kind: 'nextReveal'; next: string; reveal: string }
+  | { key: string; kind: 'why' }
+  | { key: string; kind: 'body' | 'punch' | 'reveal' | 'next' | 'recap'; text: string };
+
+function parseJoinedLines(text: string): StoryScriptLine[] {
+  return text
+    .split('\n')
+    .map((row) => row.trim())
+    .filter(Boolean)
+    .map((row) => {
+      const talk = /^\*\*([^*]+):\*\*\s*"([^"]+)"$/.exec(row);
+      if (talk) return { kind: 'dialogue' as const, speaker: talk[1]!.trim(), text: talk[2]!.trim() };
+      return { kind: 'narrator' as const, text: row };
+    });
+}
+
+function ScriptLines({
+  lines,
+  settingTag,
+}: {
+  lines: readonly StoryScriptLine[];
+  settingTag?: string;
+}) {
+  return (
+    <View style={styles.script}>
+      {settingTag ? (
+        <ThemedText type="small" themeColor="textSecondary" style={styles.setting}>
+          📍 {settingTag}
+        </ThemedText>
+      ) : null}
+      {lines.map((line, i) =>
+        line.kind === 'dialogue' ? (
+          <ThemedText key={`${line.speaker}-${i}`}>
+            <ThemedText type="smallBold">{line.speaker}:</ThemedText>
+            {` "${line.text}"`}
+          </ThemedText>
+        ) : (
+          <ThemedText key={`n-${i}`}>{line.text}</ThemedText>
+        ),
+      )}
+    </View>
+  );
+}
+
+function Card6Block({
+  card,
+  score,
+}: {
+  card: NonNullable<StoryCard['card6']>;
+  score?: number | null;
+}) {
+  const scoreLine = card.scoreLine ?? (typeof score === 'number' ? `You scored ${score}.` : null);
+  return (
+    <View style={styles.script} accessibilityRole="summary">
+      <ThemedText type="smallBold">Why this is you</ThemedText>
+      <ThemedText>{`This is your ${card.categoryName}: ${card.leanPhrase}.`}</ThemedText>
+      {scoreLine ? <ThemedText>{scoreLine}</ThemedText> : null}
+      <ThemedText>{`Proof: ${card.evidence}.`}</ThemedText>
+      <ThemedText>{card.tip}</ThemedText>
+    </View>
+  );
+}
 
 export function StoryV2View({
   card,
@@ -52,7 +115,28 @@ export function StoryV2View({
   const [plotOpen, setPlotOpen] = useState(false);
   const [builtOpen, setBuiltOpen] = useState(false);
 
+  const leadId = categoryIds[0];
+  const leadDef = leadId ? categoryById(leadId) : undefined;
+  const score = leadDef ? categoryScore(categoryLeans(leadDef, tracks)) : null;
+
   const beats: Beat[] = useMemo(() => {
+    if (isStoryV3(card)) {
+      const lines = card.lines ?? {
+        hook: parseJoinedLines(card.hook ?? ''),
+        twist: parseJoinedLines(card.twist ?? ''),
+        move: parseJoinedLines(card.move ?? ''),
+        punchline: parseJoinedLines(card.punchline ?? ''),
+      };
+      const rows: Beat[] = [
+        { key: 'hook', kind: 'script', lines: lines.hook, settingTag: card.settingTag },
+        { key: 'twist', kind: 'script', lines: lines.twist },
+        { key: 'move', kind: 'script', lines: lines.move },
+        { key: 'punch', kind: 'script', lines: lines.punchline },
+        { key: 'next', kind: 'nextReveal', next: card.next ?? '', reveal: card.reveal ?? '' },
+      ];
+      if (card.card6) rows.push({ key: 'why', kind: 'why' });
+      return rows;
+    }
     if (!isStoryV2(card)) return [];
     const rows: Beat[] = [
       { key: 'hook', text: card.hook!, kind: 'body' },
@@ -103,12 +187,11 @@ export function StoryV2View({
     .map((id) => categoryById(id))
     .filter((def): def is NonNullable<ReturnType<typeof categoryById>> => def != null)
     .map((def) => {
-      const score = categoryScore(categoryLeans(def, tracks));
-      return `${categoryDisplayName(def)} ${categoryAxisCodes(def)}${score != null ? ` ${score}` : ''}`;
+      const builtScore = categoryScore(categoryLeans(def, tracks));
+      return `${categoryDisplayName(def)} ${categoryAxisCodes(def)}${builtScore != null ? ` ${builtScore}` : ''}`;
     });
 
   const title = card.title ?? '';
-  const current = beats[index];
   const beatLabel = `Story beat ${index + 1} of ${beats.length}`;
 
   return (
@@ -157,7 +240,22 @@ export function StoryV2View({
             {beats.map((row) => (
               <View key={row.key} style={{ width, minHeight: 220 }}>
                 <Animated.View key={`${row.key}-${index === beats.indexOf(row) ? 'on' : 'off'}`} entering={entering}>
-                  {row.kind === 'punch' ? (
+                  {row.kind === 'script' ? (
+                    <ScriptLines lines={row.lines} settingTag={row.settingTag} />
+                  ) : row.kind === 'nextReveal' ? (
+                    <View style={styles.script}>
+                      {row.next ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          Next: {row.next}
+                        </ThemedText>
+                      ) : null}
+                      <ThemedText type="smallBold" style={styles.revealItalic}>
+                        {row.reveal}
+                      </ThemedText>
+                    </View>
+                  ) : row.kind === 'why' && card.card6 ? (
+                    <Card6Block card={card.card6} score={score} />
+                  ) : row.kind === 'punch' ? (
                     <ThemedText type="subheading" style={styles.punch}>
                       {row.text}
                     </ThemedText>
@@ -169,16 +267,16 @@ export function StoryV2View({
                     <ThemedText type="small" themeColor="textSecondary" style={styles.next}>
                       → {row.text}
                     </ThemedText>
-                  ) : (
+                  ) : row.kind === 'body' || row.kind === 'recap' ? (
                     <ThemedText style={row.kind === 'recap' ? styles.recap : undefined}>{row.text}</ThemedText>
-                  )}
+                  ) : null}
                 </Animated.View>
               </View>
             ))}
           </ScrollView>
         </View>
       ) : (
-        <ThemedText>{current?.text}</ThemedText>
+        <ThemedText>{title}</ThemedText>
       )}
 
       <View style={styles.pagerNav}>
@@ -211,7 +309,7 @@ export function StoryV2View({
           accessibilityHint={plotOpen ? 'Hides the other way' : 'Shows the other way it could have gone'}
           onPress={() => setPlotOpen((v) => !v)}
           style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="small" themeColor="textSecondary" style={plotOpen ? styles.revealItalic : undefined}>
             {plotOpen ? card.otherWay : `${PLOT_B_HINT} →`}
           </ThemedText>
         </Pressable>
@@ -249,9 +347,12 @@ const styles = StyleSheet.create({
   title: { marginBottom: 4 },
   dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   dot: { width: 7, height: 7, borderRadius: 4 },
+  script: { gap: Spacing.one },
+  setting: { marginBottom: 4 },
   punch: { fontWeight: '600' },
   pill: { borderRadius: 16, paddingVertical: 10, paddingHorizontal: 14, borderWidth: StyleSheet.hairlineWidth },
   next: { fontStyle: 'italic' },
+  revealItalic: { fontStyle: 'italic' },
   recap: { lineHeight: 22 },
   pagerNav: { flexDirection: 'row', gap: Spacing.three, alignItems: 'center' },
   cta: { alignSelf: 'flex-start', paddingVertical: Spacing.one, minHeight: 44, justifyContent: 'center' },

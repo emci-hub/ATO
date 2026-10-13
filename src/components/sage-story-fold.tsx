@@ -32,10 +32,12 @@ import {
   buildStoryCardPrompt,
   buildStoryRewritePrompt,
   isStoryV2,
+  isStoryV3,
   parseStoryCardAnswer,
   storyCardBody,
   type StoryCard,
 } from '@/lib/story-card';
+import { pickStoryTemplate, scriptToCard, STORY_AI_POLISH } from '@/lib/story-v3';
 import { pickCategoryCard } from '@/lib/category-bank';
 import { fnv1a } from '@/lib/daily-line/bank';
 import { titleCase } from '@/lib/legend-figures/story';
@@ -56,7 +58,7 @@ import {
   type SageStory,
 } from '@/lib/sage-story';
 import { claimStoryGenerate, saveSageStory } from '@/lib/sage-story-store';
-import { categoryById, readyCategories } from '@/lib/categories';
+import { categoryById, readyCategories, type CategoryId } from '@/lib/categories';
 import { pickJokeTarget, pickStoryThread, rankStoryCombos, scoreReadyCategories, threadRecord } from '@/lib/story-thread';
 import { divergingAxesFromTracks } from '@/lib/trait-history';
 import { type TraitTrack } from '@/lib/trait-stability';
@@ -195,37 +197,49 @@ export function SageStoryFold({
     const ymd = localYmd(new Date(), me.timezone || 'UTC');
     const lead = thread.categories[0];
     const setting = storyAngleFor(`${threadRecord(thread).categories.join('+')}|${ymd}`);
+    const seenIds = nextBankSeenIds(historyRef.current.seenIds, story?.card?.bankId ?? '');
+    const template = pickStoryTemplate({
+      categoryId: (lead?.reading.def.id ?? 'cat_social') as CategoryId,
+      setting,
+      lean: lead?.lead?.lean ?? 'high',
+      seenIds,
+      seed: `${me.id}|${ymd}|${fingerprint}`,
+      traitScore: lead ? categoryScore(categoryLeans(lead.reading.def, tracks)) : null,
+    });
+    const templateCard = template ? scriptToCard(template, lead ? categoryScore(categoryLeans(lead.reading.def, tracks)) : null) : null;
+    // v2 bank stays as last-resort fallback if a template cannot be built.
     const bankCard = pickStoryBankCard({
       categoryId: lead?.reading.def.id ?? '',
       setting,
       lean: lead?.lead?.lean ?? null,
-      seenIds: nextBankSeenIds(historyRef.current.seenIds, story?.card?.bankId ?? ''),
+      seenIds,
       recentHooks: story?.card?.hook
         ? nextBankRecentHooks(historyRef.current.recentHooks, story.card.hook)
         : historyRef.current.recentHooks,
       seed: `${me.id}|${ymd}|${fingerprint}`,
     });
-    if (bankCard?.bankId) {
+    const servedCard = templateCard ?? bankCard;
+    if (servedCard?.bankId) {
       historyRef.current = {
-        seenIds: nextBankSeenIds(historyRef.current.seenIds, bankCard.bankId),
-        recentHooks: nextBankRecentHooks(historyRef.current.recentHooks, bankCard.hook ?? ''),
+        seenIds: nextBankSeenIds(historyRef.current.seenIds, servedCard.bankId),
+        recentHooks: nextBankRecentHooks(historyRef.current.recentHooks, servedCard.hook ?? ''),
       };
       void rememberStoryBankHistory(me.id, historyRef.current);
     }
-    const bankStory: SageStory | null = bankCard
+    const bankStory: SageStory | null = servedCard
       ? {
-          body: storyCardBody(bankCard),
-          card: bankCard,
+          body: storyCardBody(servedCard),
+          card: servedCard,
           fingerprint,
           generatedOn: ymd,
           categoryIds: readyCategories(tracks).map((row) => row.def.id),
           thread: threadRecord(thread),
         }
       : null;
-    // Serve the bank first, then upgrade if the library / model returns.
+    // Templates are primary (v3). Paint immediately; optional polish may replace later.
     if (bankStory) setStory(bankStory);
 
-    if (localOnly) {
+    if (localOnly || !STORY_AI_POLISH) {
       if (bankStory) {
         await saveSageStory(me.id, bankStory);
         if (attempt === attemptRef.current) {
@@ -394,7 +408,7 @@ export function SageStoryFold({
 
   const rewriteOldStory = useCallback(async () => {
     if (!consentGranted || !storyReady(tracks) || !story) return;
-    if (story.card && isStoryV2(story.card)) return;
+    if (story.card && (isStoryV2(story.card) || isStoryV3(story.card))) return;
     if (story.card?.source === 'bank') return;
     if (rewriteRef.current) return;
     const triedKey = storyRewriteAttemptKey(story.fingerprint, story.generatedOn, story.body);
@@ -484,9 +498,9 @@ export function SageStoryFold({
           </ThemedText>
 
           {/* A model wrote the story, so it carries the tap-for-details AI icon (emci 2026-10-07). Bank cards skip it. */}
-          {story?.card && isStoryV2(story.card) ? (
+          {story?.card && (isStoryV2(story.card) || isStoryV3(story.card)) ? (
             <>
-              {story.card.source !== 'bank' ? <AiBadge /> : null}
+              {story.card.source !== 'bank' && story.card.source !== 'template' ? <AiBadge /> : null}
               <StoryV2View card={story.card} categoryIds={story.thread?.categories ?? []} tracks={tracks} />
               {tensionLine ? (
                 <ThemedText type="small" themeColor="textSecondary">

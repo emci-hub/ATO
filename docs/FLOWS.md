@@ -97,14 +97,15 @@ once) → `sage_messages`.
   `QuestionsFold` → `tracks`, and it is still not mounted until `tracksReady`.
   Sage chat
   (`routeTalkReply`, `src/lib/voice/talk.ts`) is a separate path and is never gated.
-- Story: `src/lib/story-card.ts` (six-beat swipe: hook / twist / move / punchline /
-  reveal / next) + `src/lib/sage-story.ts`, own quota `claim_story_generate`
-  (`supabase/migrations/wave22_levity_story.sql:30`). Library first (wave93,
-  `LIBRARY_VERSION.story` = `l2`); the hand-written bank (`src/lib/story-bank/`)
-  is the instant fallback and the first paint while a library/AI card loads.
-  Bank picks skip recently seen ids/hooks (`src/lib/story-bank/history.ts`).
-  Old labelled cards rewrite lazily on open (once per saved card, persisted);
-  a failed rewrite keeps the old one and never calls `claimStoryGenerate`.
+- Story: `src/lib/story-v3/` templates first (script swipe: 📍 setting, hook /
+  twist / move / punchline / next+reveal / card 6) + `src/lib/story-card.ts` +
+  `src/lib/sage-story.ts`. Specs: `docs/story/`. Gemini/DeepSeek polish is
+  behind `STORY_AI_POLISH` (default off) and uses the writer bible; any failure
+  serves the template. `LIBRARY_VERSION.story` = `l3`. No-repeat history reuses
+  `src/lib/story-bank/history.ts`. Old labelled cards rewrite lazily on open
+  (once per saved card, persisted); a failed rewrite keeps the old one and
+  never calls `claimStoryGenerate`. Map-category high/low for `cat_love`,
+  `cat_independence`, `cat_structure` is still open (`STORY_MAP_CATEGORY_LEAN_TODO`).
 
 ## 8. Legends
 

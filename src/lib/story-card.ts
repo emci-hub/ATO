@@ -33,11 +33,15 @@ import { STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
 export const STORY_CARD_VERSION = 2 as const;
 
+export type StoryScriptLine =
+  | { kind: 'narrator'; text: string }
+  | { kind: 'dialogue'; speaker: string; text: string };
+
 export interface StoryCard {
-  /** 2 = six-beat redesign. Missing / 1 = the older labelled card. */
-  v?: 1 | 2;
+  /** 3 = script templates. 2 = six-beat redesign. Missing / 1 = labelled card. */
+  v?: 1 | 2 | 3;
   title: string | null;
-  /** v2 beats */
+  /** v2/v3 beats (v3 also has `lines` + `settingTag`). */
   hook?: string;
   twist?: string;
   move?: string;
@@ -46,6 +50,26 @@ export interface StoryCard {
   next?: string | null;
   /** Optional Plot B, behind a tap. */
   otherWay?: string | null;
+  /** v3 script header: "Café. 7:02 PM. Friday." */
+  settingTag?: string;
+  lines?: {
+    hook: StoryScriptLine[];
+    twist: StoryScriptLine[];
+    move: StoryScriptLine[];
+    punchline: StoryScriptLine[];
+  };
+  card6?: {
+    categoryName: string;
+    leanPhrase: string;
+    scoreLine?: string;
+    evidence: string;
+    tip: string;
+  };
+  romance?: boolean;
+  topicId?: string;
+  jokeLight?: { beat: string; line: number };
+  jokeDark?: { beat: string; line: number };
+  jokeDarkSecondary?: { beat: string; line: number };
   /** v1 parts (kept so old saved cards still read). */
   scene?: string;
   moment?: string;
@@ -54,8 +78,8 @@ export interface StoryCard {
   joke?: string | null;
   noticed?: string | null;
   nextTime?: string | null;
-  /** Pre-written bank vs a model. Bank cards skip the AI badge. */
-  source?: 'ai' | 'bank';
+  /** Pre-written bank vs a model vs a v3 template. Bank/template skip the AI badge. */
+  source?: 'ai' | 'bank' | 'template';
   /** Hand-written bank id, when source is bank (so the next pick can skip it). */
   bankId?: string;
 }
@@ -381,6 +405,10 @@ export function isStoryV2(card: Pick<StoryCard, 'v' | 'hook' | 'twist' | 'move' 
   return card.v === 2 && !!(card.hook && card.twist && card.move && card.punchline && card.reveal);
 }
 
+export function isStoryV3(card: Pick<StoryCard, 'v' | 'settingTag' | 'lines' | 'hook'>): boolean {
+  return card.v === 3 && !!(card.settingTag && (card.lines?.hook?.length || card.hook));
+}
+
 export interface StoryCardResult {
   card: StoryCard | null;
   /** Why it was rejected (reason only, for the log). */
@@ -498,7 +526,13 @@ export function parseStoryCardAnswer(
 
 /** The card as one block, for older readers of `story.body` (Explore, Rolls). */
 export function storyCardBody(card: StoryCard): string {
-  if (isStoryV2(card)) {
+  if (isStoryV3(card) && card.lines) {
+    const texts = [...card.lines.hook, ...card.lines.twist, ...card.lines.move, ...card.lines.punchline].map((line) =>
+      line.kind === 'dialogue' ? line.text : line.text,
+    );
+    return [...texts, card.reveal, card.next].filter(Boolean).join(' ');
+  }
+  if (isStoryV2(card) || isStoryV3(card)) {
     return [card.hook, card.twist, card.move, card.punchline, card.reveal, card.next].filter(Boolean).join(' ');
   }
   return [card.scene, card.moment, card.handle, card.means].filter(Boolean).join(' ');
@@ -517,10 +551,13 @@ export function parseStoredStoryCard(raw: unknown): StoryCard | null {
   const move = s(obj.move);
   const punchline = s(obj.punchline);
   const reveal = s(obj.reveal);
-  if (obj.v === 2 || (hook && twist && move && punchline && reveal)) {
+  if (obj.v === 3 || (obj.v === 2 && hook && twist && move && punchline && reveal) || (hook && twist && move && punchline && reveal)) {
     if (!hook || !twist || !move || !punchline || !reveal) return null;
+    const source = obj.source === 'bank' ? 'bank' : obj.source === 'template' ? 'template' : 'ai';
+    const lines = obj.lines && typeof obj.lines === 'object' ? (obj.lines as StoryCard['lines']) : undefined;
+    const card6 = obj.card6 && typeof obj.card6 === 'object' ? (obj.card6 as StoryCard['card6']) : undefined;
     return {
-      v: 2,
+      v: obj.v === 3 ? 3 : 2,
       title: s(obj.title),
       hook,
       twist,
@@ -529,8 +566,13 @@ export function parseStoredStoryCard(raw: unknown): StoryCard | null {
       reveal,
       next: s(obj.next),
       otherWay: s(obj.otherWay),
-      source: obj.source === 'bank' ? 'bank' : 'ai',
+      settingTag: s(obj.settingTag) ?? undefined,
+      ...(lines ? { lines } : {}),
+      ...(card6 ? { card6 } : {}),
+      source,
       ...(typeof obj.bankId === 'string' && obj.bankId.trim() ? { bankId: obj.bankId.trim() } : {}),
+      ...(typeof obj.topicId === 'string' ? { topicId: obj.topicId } : {}),
+      ...(obj.romance === true ? { romance: true } : {}),
     };
   }
   const scene = s(obj.scene);
