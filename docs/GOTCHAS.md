@@ -167,6 +167,19 @@ Read before editing the area. Each one has bitten this repo at least once.
   (`constants/appearance.ts`). A new component owes QA to all five.
 - **`checks` array identity churns** on every fetch; effects keyed on it re-run. Key on
   `todayDay`/ids, not the array.
+- **Game screens use fixed regions — content never resizes a region (emci 2026-10-13).**
+  A flex:1 scene next to a panel whose height depends on its buttons makes the picture
+  jump bigger/smaller on every state change (Dive did this). The game-UI rule:
+  1. The scene/viewport has one size per screen (it fills what the fixed bars leave).
+  2. HUD bars and bottom panels reserve their TALLEST state: hidden rows stay in layout
+     (`opacity: 0`, a11y hidden), button areas keep their max row count with invisible
+     spacers, status text keeps a min height (`dive-screen.tsx` `DIVE_DOCK_ROWS`,
+     `dive-scene.tsx` reserved Heat row + grow-only `dockMinH`).
+  3. Announcements (found, busted, rare, coach hints, speech) float on an overlay layer
+     (`position: absolute`) — never an in-flow row.
+  4. Text lives in boxes with a set width + `numberOfLines`, padded inside frame art.
+  5. Loading states keep the final size (a placeholder of the same height), never a
+     smaller spinner row.
 
 ## Copy
 
