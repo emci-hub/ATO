@@ -53,6 +53,8 @@ import {
   HIDEOUT_MARGIN_PT,
   HIDEOUT_NIGHT,
   hideoutFace,
+  HIDEOUT_HERO_FIGURE_PX,
+  HIDEOUT_STAGE_SCALE,
   hideoutHeroArtPx,
   hideoutIntegerScale,
   hideoutPetBox,
@@ -781,10 +783,12 @@ export function PetRoom({
   // Fit the bubble to its line (11 pt pixel label ≈ 7 pt per char) so the tail stays over the pet.
   const speechBubbleW = speech ? Math.min(200, Math.max(64, speech.text.length * 7 + 22)) : 200;
   const speechRoomW = hideoutScale ? hideoutScale.canvasW : width;
+  // The drawn figure (~106 art px grown, × stage scale) stands on its feet: the head is
+  // that far above them, whatever the sprite cell's padding.
+  const figurePt = HIDEOUT_HERO_FIGURE_PX * HIDEOUT_STAGE_SCALE[pet.stage] * isoPt;
   const isoSpeechStyle = useAnimatedStyle(() => {
     const cx = ox + artX.value * isoPt;
-    // The figure fills ~55 % of its 192 px cell (guide §2: ~106 px), so the head is ~0.6 box above the feet.
-    const headY = oy + artY.value * isoPt - box * 0.6 + hop.value + drift.value;
+    const headY = oy + artY.value * isoPt - figurePt + hop.value + drift.value;
     const left = Math.min(Math.max(cx - 24, ox + 4), ox + speechRoomW - speechBubbleW - 4);
     return { transform: [{ translateX: left }, { translateY: headY - 6 }] };
   });
