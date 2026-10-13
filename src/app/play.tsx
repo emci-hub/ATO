@@ -1019,6 +1019,8 @@ export default function PlayScreen() {
       <Stack.Screen options={{ gestureEnabled: mode === 'grove' && !hubOverlayOpen }} />
       {street && view ? (
         <View style={[styles.streetColumn, { paddingTop: insets.top }]}>
+          {/* Fixed regions: only Turf War swaps these bars, at setup → run — a screen switch
+              (see src/play/fixed-region.tsx), so they are not reserved. */}
           {streetDockFilled ? (
             <StreetHudOutlet />
           ) : (

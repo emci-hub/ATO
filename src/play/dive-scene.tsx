@@ -69,6 +69,7 @@ import { FindIcon } from '@/play/dive-hud';
 import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
 import { FIND_CATEGORY_LABEL, FIND_CATEGORY_PHRASE, findCategory, findName } from '@/play/dive-loot';
 import { HaulReveal } from '@/play/dive-reveal';
+import { useGrowOnlyHeight } from '@/play/fixed-region';
 import { StopAmbience, StreetUndergroundWorld, SubwayDoors } from '@/play/dive-street';
 import { streetFindName, streetStop } from '@/play/dive-street-names';
 import { hideoutIntegerScale, hideoutPetBox } from '@/play/hideout-iso';
@@ -662,7 +663,7 @@ export function DiveScene({
   // Mystery finds: names stay hidden while diving; the haul sheet reveals them on surfacing.
   const diving = haul.length > 0;
   const [revealedKey, setRevealedKey] = useState(event?.key ?? 0);
-  const [dockMinH, setDockMinH] = useState(0);
+  const dockGrow = useGrowOnlyHeight();
   const showHaulReveal =
     event?.kind === 'surface' && event.finds > 0 && event.ids.length > 0 && event.key !== revealedKey;
 
@@ -845,13 +846,10 @@ export function DiveScene({
       </Animated.View>
       {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
       <View
-        style={[styles.dock, { minHeight: dockMinH }]}
-        onLayout={(e) => {
-          // Safety net: the panel only ever grows to its tallest state, never shrinks back
-          // (a shrinking panel made the scene picture jump bigger / smaller).
-          const h = Math.ceil(e.nativeEvent.layout.height);
-          setDockMinH((m) => (h > m ? h : m));
-        }}>
+        // Fixed regions: the panel grows to its tallest state and never shrinks back
+        // (a shrinking panel made the scene picture jump bigger / smaller).
+        style={[styles.dock, { minHeight: dockGrow.minHeight }]}
+        onLayout={dockGrow.onLayout}>
         <PixelFrame streetPiece="panel" align="stretch" padded={false} style={styles.dockFrame}>
           <View style={[styles.dockPad, street && styles.streetDockPad]}>
             <View pointerEvents="none" style={styles.haulRow}>

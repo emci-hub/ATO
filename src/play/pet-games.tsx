@@ -35,7 +35,7 @@ import { GAME_LABEL } from '@/play/game-records';
 import { PLAY_ART } from '@/play/generated-play-assets';
 import { Drift, Flicker, MoteRise, Sway, Twinkle } from '@/play/pixel-ambient';
 import { AtlasSprite, MOCKUP_DIVE, MOCKUP_ROOM, placePlate } from '@/play/pixel-atlas';
-import { ART_PT, PIXEL } from '@/play/pixel-theme';
+import { ART_PT, PIXEL, PIXEL_CAPTION_PT, pixelBodyLine } from '@/play/pixel-theme';
 import { CausticWash, DitherPool, useHitJuice } from '@/play/pixel-fx';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import type { PetState } from '@/play/pet';
@@ -855,7 +855,8 @@ const styles = StyleSheet.create({
     width: FOOD_SIZE,
     height: FOOD_SIZE,
   },
-  hint: { textAlign: 'center' },
+  // Fixed regions: always 2 lines tall, so a longer hint never shrinks the playfield.
+  hint: { textAlign: 'center', minHeight: pixelBodyLine(PIXEL_CAPTION_PT) * 2 },
   crate: { width: 56, height: 56 },
   bar: {
     height: 36,
