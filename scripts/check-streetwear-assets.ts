@@ -10,7 +10,8 @@
  *   3. the Streetwear sheets + stills exceed the OTA budget;
  *   4. a skin.json role, a hero/tower clip or an effect points at a sheet or
  *      frame that is not packed (it would draw nothing);
- *   5. the art style default is not `cast` (switching is a deliberate choice).
+ *   5. Streetwear is not the only art style (Classic retired 2026-10-12);
+ *   6. app.json filters the OTA's assets (`updates.assetPatternsToBeBundled`).
  *
  * Run: npm run check:streetwear-assets
  */
@@ -188,5 +189,12 @@ assert.doesNotMatch(artSkinSrc, /PRE_LAUNCH_DEV/, 'Streetwear is not gated to pr
 const { parseSettings } = require('../src/play/play-settings') as typeof import('../src/play/play-settings');
 assert.equal(parseSettings({ artSkin: 'cast' }, null).artSkin, 'streetwear', 'an old Classic save loads as streetwear');
 ok('Classic retired: Streetwear is the only art style, old Classic saves load as Streetwear');
+
+// 6. The OTA ships every image and font. `updates.assetPatternsToBeBundled` filters the
+// export: on Windows it matched nothing and OTA 9089184e went out with zero assets (no art,
+// no Pixelify). It also left out assets/play/sheets. Keep it out of app.json.
+const appJson = JSON.parse(fs.readFileSync(path.join(repo, 'app.json'), 'utf8')) as { expo: { updates?: Record<string, unknown> } };
+assert.equal(appJson.expo.updates?.assetPatternsToBeBundled, undefined, 'app.json must not set updates.assetPatternsToBeBundled (it drops OTA assets)');
+ok('app.json does not filter OTA assets');
 
 console.log(`\ncheck:streetwear-assets — ${passed} groups passed.`);
