@@ -56,18 +56,18 @@ REGISTER (match it, do not reuse these):
 ${MOMENT_VOICE_EXAMPLES.map((line) => `- ${line}`).join('\n')}`;
 
 /**
- * Named exception (emci, 2026-10-08): the Story's one joke line. The moment
- * voice says "tease kindly, never cruel"; this one sentence may be drier or
- * darker, within the bans below. Nothing else in the Story, and nothing on any
- * other surface, gets this exception. `parseStoryAnswer`
- * (src/lib/sage-story.ts) is the mechanical half of the bans.
+ * Comedy craft for The Story's punchline (emci, 2026-10-13: funnier jokes).
+ * The moment voice still says "tease kindly"; the punchline may be drier, as
+ * long as it follows real joke construction and the hard bans. Mechanical
+ * half: `punchlineCraftViolation` / `pickBestPunchline` in card-joke.ts.
  */
 export const STORY_JOKE_STYLES: readonly string[] = [
-  'dry',
-  'deadpan',
-  'self-aware',
-  'satire of modern life: group chats, calendars, read receipts, productivity culture, open tabs',
-  'mild gallows humour about everyday absurdity, never about real harm',
+  'specific concrete detail the reader already saw',
+  'setup early, payoff as a callback',
+  'rule of three with a twist on the third',
+  'escalation (each beat a little worse or stranger)',
+  'misdirection then a reversal',
+  'understatement (the situation is chaos; the line is calm)',
 ];
 
 export const STORY_JOKE_BANS: readonly string[] = [
@@ -78,14 +78,23 @@ export const STORY_JOKE_BANS: readonly string[] = [
   'swearing, slurs, sexual content',
   'mocking the person rather than the situation',
   '"!", emoji, hashtags',
+  'explaining the joke ("which is funny because", "the joke is", "get it")',
+  'puns for their own sake, with no callback to the scene',
+  'stock clichés: walk into a bar, that is what she said, plot twist, living the dream, it is what it is, say less, no cap, spoiler alert',
 ];
 
-/** Approved register for the joke. Match it, never reuse it. */
-export const STORY_JOKE_EXAMPLES: readonly string[] = ['Your to-do list has outlived two phones.'];
+/** Approved register for the punchline. Match the energy, never reuse it. */
+export const STORY_JOKE_EXAMPLES: readonly string[] = [
+  'By the time the food lands, nobody wants it. They want round two of the rankings. And more bread.',
+  'The client asks if printed decks are new. Your boss has never said yes faster.',
+  'The shelf goes up crooked. Mom loves it. She loves the hat guy\'s drill more.',
+];
 
-export const STORY_JOKE_RULES = `THE ONE JOKE (a named exception to "tease kindly": this single sentence may be drier or darker)
-- Allowed styles: ${STORY_JOKE_STYLES.join('; ')}.
+export const STORY_JOKE_RULES = `PUNCHLINE CRAFT (the funny beat is a constructed joke, not an observation)
+- Build it: ${STORY_JOKE_STYLES.join('; ')}.
+- Land the laugh in the last 6–8 words. The reader should not need the next sentence.
+- Write 2–3 candidate punchlines in "punchlines", then the JSON "punchline" is your best one.
+- Joke about the situation, never the person. Keep it kind enough to screenshot.
 - Never, whatever the style:
 ${STORY_JOKE_BANS.map((line) => `  - ${line}`).join('\n')}
-- Exactly one sentence, under 120 characters, woven into the story. Joke about the situation, never the person.
-- Register (match it, do not reuse it): ${STORY_JOKE_EXAMPLES.map((line) => `"${line}"`).join(' ')}`;
+- Register (match the energy, do not reuse): ${STORY_JOKE_EXAMPLES.map((line) => `"${line}"`).join(' ')}`;

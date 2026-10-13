@@ -9,12 +9,13 @@
  * a different wording of the stored category lines, so two people in the same
  * bucket get different stories.
  */
+import { STORY_POLISH_PROMPT_STATIC } from '@/lib/story-v3/polish';
 import { bankForCategory, cellForReading } from '@/lib/category-bank';
 import type { CardCell } from '@/lib/category-bank/define';
 import { categoryById } from '@/lib/categories';
 import { storyNamesACategory } from '@/lib/sage-story';
 import {
-  buildStoryPromptFromSides,
+  STORY_OUTPUT_TOKENS,
   parseStoredStoryCard,
   parseStoryCardAnswer,
   storyCardBody,
@@ -121,13 +122,21 @@ export const STORY_LIBRARY: LibraryKindSpec<StoryBucket, StoryCard> = {
   cardsPerCall: 1,
   buildPrompt(bucket, angles) {
     const angle = angles[0] ?? 'friends';
+    const sides = promptSides(bucket, angle);
+    // v3: templates are the story. The model may only polish. Never invent plot or traits.
     return {
-      prompt: buildStoryPromptFromSides({
-        sides: promptSides(bucket, angle),
-        jokeTarget: bucket.joke,
-        setting: STORY_ANGLES[angle as StoryAngle] ?? null,
-      }),
-      maxOutputTokens: 700,
+      prompt: `${STORY_POLISH_PROMPT_STATIC}
+
+SETTING FOR THIS STORY: ${STORY_ANGLES[angle as StoryAngle] ?? 'a plan with friends'}
+TOLD-VS-PLAYED: none. Do not invent a split.
+SIDES (internal; never name them, never invent a trait from them):
+${sides
+  .map((row, i) => `${i === 0 ? 'SIDE A' : 'SIDE B'}: ${row.lead ? `${row.lead.axis}.${row.lead.lean}` : 'none'}`)
+  .join('\n')}
+${bucket.joke ? `JOKE TARGET (never print the word): ${bucket.joke.axis}.${bucket.joke.lean}` : 'JOKE TARGET: none.'}
+
+If no finished template story is supplied below, return empty JSON {}. Never invent a plot.`,
+      maxOutputTokens: STORY_OUTPUT_TOKENS,
     };
   },
   parse(raw, _bucket, angles): LibraryParse<StoryCard> {
@@ -135,7 +144,7 @@ export const STORY_LIBRARY: LibraryKindSpec<StoryBucket, StoryCard> = {
     const c = parsed.card;
     if (!c) return { cards: [], reason: parsed.reason ?? 'no card' };
     // Every shown part, not just the body: the deeper parts and the title/joke too.
-    const joined = [storyCardBody(c), c.noticed, c.otherWay, c.nextTime, c.joke, c.title].filter(Boolean).join(' ');
+    const joined = [storyCardBody(c), c.otherWay, c.title].filter(Boolean).join(' ');
     if (containsFrameworkTerm(joined) || matchingJargonTerm(joined) || storyNamesACategory(joined)) {
       return { cards: [], reason: 'framework or jargon' };
     }

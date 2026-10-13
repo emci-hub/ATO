@@ -66,6 +66,7 @@ import { POLISH_COPY_REVIEWED } from '@/lib/polish-copy';
 import { PROFILE_FILL_COPY_REVIEWED } from '@/lib/profile-fill';
 import { CATEGORY_READ_COPY_REVIEWED } from '@/lib/rolls/category-read';
 import { STORY_COPY_REVIEWED } from '@/lib/sage-story';
+import { STORY_BANK_COPY_REVIEWED } from '@/lib/story-bank';
 import { TITLE_COPY_REVIEWED } from '@/lib/sage-title';
 import { STAGED_INTAKE_COPY_REVIEWED } from '@/lib/questions/staged-intake-copy';
 
@@ -570,6 +571,7 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Category statements (AI)', reviewed: CATEGORY_STATEMENTS_COPY_REVIEWED },
   { name: 'Category read (rolls)', reviewed: CATEGORY_READ_COPY_REVIEWED },
   { name: 'Story', reviewed: STORY_COPY_REVIEWED },
+  { name: 'Story bank (66 hand-written six-beat cards)', reviewed: STORY_BANK_COPY_REVIEWED },
   { name: 'Sage title', reviewed: TITLE_COPY_REVIEWED },
   { name: 'Daily lines', reviewed: DAILY_LINE_COPY_REVIEWED },
   { name: 'Today’s Pick (64 daily questions)', reviewed: DAILY_PICK_COPY_REVIEWED },

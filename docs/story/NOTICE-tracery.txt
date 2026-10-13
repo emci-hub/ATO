@@ -1,0 +1,8 @@
+Apache-2.0 notice for the Tracery-style grammar syntax used in ATO Story v3.
+
+Tracery is copyright Kate Compton and contributors.
+https://github.com/galaxykate/tracery
+Licensed under the Apache License, Version 2.0.
+
+ATO copies the `#symbol#` / `[push:value]` / `.cap` syntax only.
+Every story word in this app is original. See `sources.md`.

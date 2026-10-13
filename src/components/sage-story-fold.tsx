@@ -4,7 +4,19 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AiBadge } from '@/components/ai-badge';
 import { LibraryCardFooter } from '@/components/library-card-footer';
-import { STORY_LIBRARY, storyBucketKey } from '@/lib/ai-library/story';
+import { STORY_LIBRARY, storyBucketKey, type StoryAngle } from '@/lib/ai-library/story';
+import { pickStoryBankCard } from '@/lib/story-bank';
+import {
+  loadStoryBankHistory,
+  loadStoryRewriteTried,
+  markStoryRewriteTried,
+  nextBankRecentHooks,
+  nextBankSeenIds,
+  rememberStoryBankHistory,
+  storyRewriteAttemptKey,
+  type StoryBankHistory,
+} from '@/lib/story-bank/history';
+import { StoryV2View } from '@/components/story-v2-view';
 import { serveLibraryCard, wantLibraryCards, writeLibraryCard } from '@/lib/ai-library/client';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
@@ -16,7 +28,18 @@ import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { useMeContext } from '@/lib/me-context';
 import { categoryAxisCodes, categoryDisplayName } from '@/lib/category-labels';
 import { categoryLeans, categoryScore } from '@/lib/category-deep-dive/dive';
-import { buildStoryCardPrompt, parseStoryCardAnswer, storyCardBody, type StoryCard } from '@/lib/story-card';
+import {
+  buildStoryCardPrompt,
+  buildStoryRewritePrompt,
+  isStoryV2,
+  isStoryV3,
+  parseStoryCardAnswer,
+  storyCardBody,
+  type StoryCard,
+} from '@/lib/story-card';
+import { pickStoryTemplate, scriptToCard, STORY_AI_POLISH } from '@/lib/story-v3';
+import { pickCategoryCard } from '@/lib/category-bank';
+import { fnv1a } from '@/lib/daily-line/bank';
 import { titleCase } from '@/lib/legend-figures/story';
 import { SAGE_STORY_META } from '@/lib/ai/call-sites';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
@@ -35,7 +58,7 @@ import {
   type SageStory,
 } from '@/lib/sage-story';
 import { claimStoryGenerate, saveSageStory } from '@/lib/sage-story-store';
-import { categoryById, readyCategories } from '@/lib/categories';
+import { categoryById, readyCategories, type CategoryId } from '@/lib/categories';
 import { pickJokeTarget, pickStoryThread, rankStoryCombos, scoreReadyCategories, threadRecord } from '@/lib/story-thread';
 import { divergingAxesFromTracks } from '@/lib/trait-history';
 import { type TraitTrack } from '@/lib/trait-stability';
@@ -58,6 +81,12 @@ export const STORY_EMPTY_COPY =
 export const STORY_DAILY_COPY = 'That’s today’s free stories. A brand-new one is still open, or come back tomorrow.';
 
 type LoadState = 'idle' | 'loading' | 'not_ready' | 'unavailable' | 'tokens' | 'empty' | 'daily';
+
+const STORY_ANGLES_CYCLE: readonly StoryAngle[] = ['friends', 'work', 'home'];
+
+function storyAngleFor(seed: string): StoryAngle {
+  return STORY_ANGLES_CYCLE[fnv1a(seed) % STORY_ANGLES_CYCLE.length]!;
+}
 
 /**
  * Longer-form Story on Home. **Tap-only** (ISOLATION_PLAN §7 Card B, emci
@@ -100,6 +129,9 @@ export function SageStoryFold({
   const runningRef = useRef<Promise<SageStory | null> | null>(null);
   const tokensShortRef = useRef(false);
   const emptyReasonRef = useRef<'empty' | 'daily' | null>(null);
+  const rewriteRef = useRef(false);
+  const historyRef = useRef<StoryBankHistory>({ seenIds: [], recentHooks: [] });
+  const rewriteTriedRef = useRef<Set<string>>(new Set());
   const { refresh: refreshMe } = useMeContext();
   const tokens = atoTokenBalanceOf(me);
   const divergence = divergingAxesFromTracks(tracks);
@@ -129,6 +161,15 @@ export function SageStoryFold({
     setState('idle');
   }, [me.sage_story]);
 
+  useEffect(() => {
+    void loadStoryBankHistory(me.id).then((history) => {
+      historyRef.current = history;
+    });
+    void loadStoryRewriteTried(me.id).then((tried) => {
+      rewriteTriedRef.current = new Set(tried);
+    });
+  }, [me.id]);
+
   const loadStory = useCallback(async (mode: 'library' | 'new' = 'library') => {
     if (state === 'loading') return;
     if (!consentGranted) return;
@@ -144,10 +185,7 @@ export function SageStoryFold({
       return;
     }
 
-    if (await shouldUseLocalAi()) {
-      setState('unavailable');
-      return;
-    }
+    const localOnly = await shouldUseLocalAi();
 
     // Story v2: the app picks the 1–2 categories and the joke target before
     // any call; the next load takes the best combo that is not the last one.
@@ -157,6 +195,63 @@ export function SageStoryFold({
       return;
     }
     const ymd = localYmd(new Date(), me.timezone || 'UTC');
+    const lead = thread.categories[0];
+    const setting = storyAngleFor(`${threadRecord(thread).categories.join('+')}|${ymd}`);
+    const seenIds = nextBankSeenIds(historyRef.current.seenIds, story?.card?.bankId ?? '');
+    const template = pickStoryTemplate({
+      categoryId: (lead?.reading.def.id ?? 'cat_social') as CategoryId,
+      setting,
+      lean: lead?.lead?.lean ?? 'high',
+      seenIds,
+      seed: `${me.id}|${ymd}|${fingerprint}`,
+      traitScore: lead ? categoryScore(categoryLeans(lead.reading.def, tracks)) : null,
+    });
+    const templateCard = template ? scriptToCard(template, lead ? categoryScore(categoryLeans(lead.reading.def, tracks)) : null) : null;
+    // v2 bank stays as last-resort fallback if a template cannot be built.
+    const bankCard = pickStoryBankCard({
+      categoryId: lead?.reading.def.id ?? '',
+      setting,
+      lean: lead?.lead?.lean ?? null,
+      seenIds,
+      recentHooks: story?.card?.hook
+        ? nextBankRecentHooks(historyRef.current.recentHooks, story.card.hook)
+        : historyRef.current.recentHooks,
+      seed: `${me.id}|${ymd}|${fingerprint}`,
+    });
+    const servedCard = templateCard ?? bankCard;
+    if (servedCard?.bankId) {
+      historyRef.current = {
+        seenIds: nextBankSeenIds(historyRef.current.seenIds, servedCard.bankId),
+        recentHooks: nextBankRecentHooks(historyRef.current.recentHooks, servedCard.hook ?? ''),
+      };
+      void rememberStoryBankHistory(me.id, historyRef.current);
+    }
+    const bankStory: SageStory | null = servedCard
+      ? {
+          body: storyCardBody(servedCard),
+          card: servedCard,
+          fingerprint,
+          generatedOn: ymd,
+          categoryIds: readyCategories(tracks).map((row) => row.def.id),
+          thread: threadRecord(thread),
+        }
+      : null;
+    // Templates are primary (v3). Paint immediately; optional polish may replace later.
+    if (bankStory) setStory(bankStory);
+
+    if (localOnly || !STORY_AI_POLISH) {
+      if (bankStory) {
+        await saveSageStory(me.id, bankStory);
+        if (attempt === attemptRef.current) {
+          setNeedNew(false);
+          setStory(bankStory);
+          setState('idle');
+        }
+        return;
+      }
+      setState('unavailable');
+      return;
+    }
 
     // Library first (wave93): the phone sends only the bucket; the server serves
     // an unseen story free, or writes a brand-new one for 5 tokens.
@@ -221,9 +316,7 @@ export function SageStoryFold({
         const parsed = parseStoryCardAnswer(text, { jokeAsked: true });
         const c = parsed.card;
         // Every shown part, not just the body: the deeper parts and the title/joke too.
-        const joined = c
-          ? [storyCardBody(c), c.noticed, c.otherWay, c.nextTime, c.joke, c.title].filter(Boolean).join(' ')
-          : '';
+        const joined = c ? [storyCardBody(c), c.otherWay, c.title].filter(Boolean).join(' ') : '';
         if (parsed.card && !containsFrameworkTerm(joined) && !matchingJargonTerm(joined) && !storyNamesACategory(joined)) {
           card = parsed.card;
           break;
@@ -267,6 +360,15 @@ export function SageStoryFold({
       if (attempt !== attemptRef.current) return;
       void refreshMe();
       if (!next) {
+        if (bankStory) {
+          await saveSageStory(me.id, bankStory);
+          setNeedNew(false);
+          setStory(bankStory);
+          setState('idle');
+          emptyReasonRef.current = null;
+          tokensShortRef.current = false;
+          return;
+        }
         const empty = emptyReasonRef.current;
         emptyReasonRef.current = null;
         if (empty) setNeedNew(true);
@@ -277,11 +379,77 @@ export function SageStoryFold({
       setNeedNew(false);
       setStory(next);
       setState('idle');
+      if (next.card?.hook) {
+        historyRef.current = {
+          seenIds: next.card.bankId
+            ? nextBankSeenIds(historyRef.current.seenIds, next.card.bankId)
+            : historyRef.current.seenIds,
+          recentHooks: nextBankRecentHooks(historyRef.current.recentHooks, next.card.hook),
+        };
+        void rememberStoryBankHistory(me.id, historyRef.current);
+      }
     } catch (err) {
       console.log('[sage-story] generate error:', err);
-      if (attempt === attemptRef.current) setState('unavailable');
+      if (attempt !== attemptRef.current) return;
+      if (bankStory) {
+        try {
+          await saveSageStory(me.id, bankStory);
+          setNeedNew(false);
+          setStory(bankStory);
+          setState('idle');
+          return;
+        } catch {
+          // keep going to unavailable
+        }
+      }
+      setState('unavailable');
     }
   }, [state, consentGranted, tracks, story, crisisToday, divergenceNote, divergenceAxis, fingerprint, me.id, me.timezone, refreshMe]);
+
+  const rewriteOldStory = useCallback(async () => {
+    if (!consentGranted || !storyReady(tracks) || !story) return;
+    if (story.card && (isStoryV2(story.card) || isStoryV3(story.card))) return;
+    if (story.card?.source === 'bank') return;
+    if (rewriteRef.current) return;
+    const triedKey = storyRewriteAttemptKey(story.fingerprint, story.generatedOn, story.body);
+    if (rewriteTriedRef.current.has(triedKey)) return;
+    rewriteRef.current = true;
+    rewriteTriedRef.current.add(triedKey);
+    await markStoryRewriteTried(me.id, triedKey);
+    if (await shouldUseLocalAi()) return;
+    try {
+      const ymd = localYmd(new Date(), me.timezone || 'UTC');
+      const scored = scoreReadyCategories(tracks);
+      const ids = story.thread?.categories ?? [];
+      const chosen = scored.filter((row) => ids.includes(row.reading.def.id));
+      const sides = chosen.map((row) => ({
+        lead: row.lead ? { axis: row.lead.axis, lean: row.lead.lean } : null,
+        card: pickCategoryCard({ userId: me.id, reading: row.reading, ymd }),
+      }));
+      const prompt = buildStoryRewritePrompt({
+        oldText: story.card ? storyCardBody(story.card) : story.body,
+        sides,
+        jokeTarget: pickJokeTarget(tracks, chosen, crisisToday),
+        setting: storyAngleFor(`${ids.join('+')}|${ymd}`),
+      });
+      for (let pass = 1; pass <= 2; pass += 1) {
+        const text = await generateStoryCardText(prompt, SAGE_STORY_META);
+        if (!text) break;
+        const parsed = parseStoryCardAnswer(text, { jokeAsked: true });
+        const c = parsed.card;
+        const joined = c ? [storyCardBody(c), c.otherWay, c.title].filter(Boolean).join(' ') : '';
+        if (c && !containsFrameworkTerm(joined) && !matchingJargonTerm(joined) && !storyNamesACategory(joined)) {
+          const next: SageStory = { ...story, body: storyCardBody(c), card: c };
+          await saveSageStory(me.id, next);
+          setStory(next);
+          return;
+        }
+        logAiReject('story', parsed.reason ?? 'framework or jargon', pass);
+      }
+    } catch {
+      // Failed rewrite keeps the old labelled card. No second mass call.
+    }
+  }, [consentGranted, tracks, story, me.id, me.timezone, crisisToday]);
 
   // Crisis still suppresses Story entirely — unchanged, and the one case where
   // the fold shows nothing at all.
@@ -323,15 +491,27 @@ export function SageStoryFold({
 
   return (
     <View style={styles.wrap} testID="sage-story-fold">
-      <SettingsFold title={STORY_LABEL}>
+      <SettingsFold title={STORY_LABEL} onOpen={() => { void rewriteOldStory(); }}>
         <View style={styles.body}>
           <ThemedText type="small" themeColor="textSecondary">
             {STORY_LEDE}
           </ThemedText>
 
-          {/* A model wrote the story, so it carries the tap-for-details AI icon (emci 2026-10-07). */}
-          {story?.card ? (
+          {/* A model wrote the story, so it carries the tap-for-details AI icon (emci 2026-10-07). Bank cards skip it. */}
+          {story?.card && (isStoryV2(story.card) || isStoryV3(story.card)) ? (
             <>
+              {story.card.source !== 'bank' && story.card.source !== 'template' ? <AiBadge /> : null}
+              <StoryV2View card={story.card} categoryIds={story.thread?.categories ?? []} tracks={tracks} />
+              {tensionLine ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {tensionLine}
+                </ThemedText>
+              ) : null}
+              <LibraryCardFooter libraryId={story.libraryId} others={story.others} />
+            </>
+          ) : story?.card ? (
+            <>
+              <AiBadge />
               <StoryCardView card={story.card} categoryIds={story.thread?.categories ?? []} tracks={tracks} />
               {tensionLine ? (
                 <ThemedText type="small" themeColor="textSecondary">
@@ -478,12 +658,9 @@ function StoryCardView({
 function StoryPart({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={styles.part}>
-      <View style={styles.partHead}>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
-          {title}
-        </ThemedText>
-        <AiBadge />
-      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        {title}
+      </ThemedText>
       {children}
     </View>
   );
@@ -493,8 +670,6 @@ const styles = StyleSheet.create({
   card: { gap: Spacing.two },
   italic: { fontStyle: 'italic' },
   part: { gap: 4 },
-  partHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  flex: { flex: 1 },
   wrap: {
     paddingBottom: Spacing.two,
   },

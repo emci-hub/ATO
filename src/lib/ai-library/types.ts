@@ -26,7 +26,7 @@ export function isLibraryKind(value: unknown): value is LibraryKind {
  */
 export const LIBRARY_VERSION: Readonly<Record<LibraryKind, string>> = {
   deep_dive: 'l1',
-  story: 'l1',
+  story: 'l3',
   legend: 'l1',
 };
 

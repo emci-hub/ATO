@@ -81,6 +81,7 @@ interface GenerateInput {
   temperature: number;
   maxOutputTokens: number;
   responseFormat: 'json' | 'text';
+  topP?: number;
 }
 
 function json(body: unknown, status = 200): Response {
@@ -156,6 +157,7 @@ async function completeGemini(input: GenerateInput): Promise<string> {
     maxOutputTokens: input.maxOutputTokens,
     thinkingConfig: { thinkingLevel: 'low' },
   };
+  if (typeof input.topP === 'number') generationConfig.topP = input.topP;
   if (input.responseFormat === 'json') generationConfig.responseMimeType = 'application/json';
 
   const res = await fetchWithTimeout(
@@ -193,6 +195,7 @@ async function completeOpenAiChat(opts: {
     messages: [{ role: 'user', content: opts.input.prompt }],
     temperature: opts.input.temperature,
     max_tokens: opts.input.maxOutputTokens,
+    ...(typeof opts.input.topP === 'number' ? { top_p: opts.input.topP } : {}),
     stream: false,
     ...opts.extraBody,
   };
@@ -306,6 +309,7 @@ Deno.serve(async (request) => {
     prompt?: unknown;
     temperature?: unknown;
     maxOutputTokens?: unknown;
+    topP?: unknown;
     responseFormat?: unknown;
     callType?: unknown;
     ping?: unknown;
@@ -349,6 +353,9 @@ Deno.serve(async (request) => {
       : DEFAULT_OUTPUT_TOKENS;
   const maxOutputTokens = Math.min(MAX_OUTPUT_TOKENS, Math.max(1, requested));
   const responseFormat: 'json' | 'text' = payload.responseFormat === 'json' ? 'json' : 'text';
+  const requestedTopP =
+    typeof payload.topP === 'number' && Number.isFinite(payload.topP) ? payload.topP : undefined;
+  const topP = requestedTopP != null ? Math.min(1, Math.max(0, requestedTopP)) : undefined;
   const callType = payload.callType === 'explore' ? 'explore' : 'sage';
 
   // AI consent is enforced HERE, for every content call, before quota is
@@ -379,6 +386,7 @@ Deno.serve(async (request) => {
       temperature,
       maxOutputTokens,
       responseFormat,
+      topP,
     });
     return json({ text });
   } catch (err) {

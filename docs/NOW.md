@@ -4,6 +4,9 @@
 **Gates:** A ✓ (non-goals in archive/OLD_PLAN.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Gemini (`gemini-3.7-flash`), with DeepSeek (`deepseek-v4-flash`) as the fallback — both chosen inside the `ai-generate` Edge Function, never on the phone. Expo SDK 54. (This line used to say "Cursor, Grok 4.6", which was stale. There are 16 axes, not 15, and Infinite Questions was removed on 2026-09-16 — where older text below disagrees, `docs/system-map.html` is current.)
+
+**Built and pushed, OTA NOT published (2026-10-13, Story v3):** script-style swipe cards (📍 setting, one sentence per line, bold speakers, card 6 "Why this is you"). Templates are primary (`src/lib/story-v3/`, 14 star topics + object-revolt grammar). Gemini/DeepSeek polish is behind `STORY_AI_POLISH` (default off); any failure serves the template. `LIBRARY_VERSION.story` = `l3`. Specs in `docs/story/`. Four approved references pinned (incl. Captain Table for Three). Motion unchanged (Reduce Motion = 180 ms cross-fade, never static; Motion Full = springy fade-and-rise). VoiceOver Previous/Next, Dynamic Type, share. Copy unreviewed: `STORY_COPY_REVIEWED` / `STORY_BANK_COPY_REVIEWED` = false, review doc `docs/story-review.md`. Open: map-category high/low for `cat_love` / `cat_independence` / `cat_structure` (`STORY_MAP_CATEGORY_LEAN_TODO`). Draft PR, no merge, no OTA. Device test: Box 31 in `docs/ATO_DEVICE_TESTS.md`.
+
 **Latest production OTA (2026-10-09, shared AI library):** group `43dc8d6e-b2e2-4131-9a8b-e65c4761d285` (commit `9cb7626`). wave93/94/95 APPLIED; `ai-library` + `ai-library-fill` deployed; auto-fill every 10 min (verified: 5 calls → 10 cards). Free library cards first (deep dives, Story, Legends), brand-new = 5 tokens, free Legends reveal never charged, deep-dive teams. Gate green (139), reviewer PASS, not device-verified.
 
 **Previous OTA (2026-10-09, ATO tokens pay for AI + check-in):** group `88dfbce4-e6be-4622-9060-ee7aa54a4fad` (commit `80a760b`). wave92 APPLIED. Gate green (138), reviewer PASS, not device-verified. Next: shared AI library.
@@ -315,7 +318,7 @@ for `anon` and that the function's response never contains the email.
 
 Every flag below is `false` in code; nothing ships as reviewed without emci's direct read. Story/Levity are diagnosis-adjacent — same bar as the Crisis spec.
 
-1. **The Story + told-vs-played samples** — `STORY_COPY_REVIEWED = false` (`sage-story.ts`). Sample paragraph, 3 tension lines, live Story prompt. `TITLE_COPY_REVIEWED = false` (`sage-title.ts`) for title samples.
+1. **The Story + told-vs-played samples + story bank** — `STORY_COPY_REVIEWED = false` (`sage-story.ts`) and `STORY_BANK_COPY_REVIEWED = false` (`src/lib/story-bank/`). v3 templates first (`docs/story/`), 14 star topics, polish flag off. Review: `docs/story-review.md`. `TITLE_COPY_REVIEWED = false` (`sage-title.ts`) for title samples.
 2. **Playfulness poles + stems** — `POLE_COPY_REVIEWED = false` (`axis-poles.ts`): Full Profile poles for all 16 axes. Playfulness ranking items, scenario first + second stems (`SCENARIO_DECK_MORE`), `TRAIT_POLE_LINES`/mid lines.
 3. **Levity copy** — category def/name (`categories.ts`), fallback band + map-quadrant lines (`category-bands.ts`, `CATEGORY_BAND_COPY_REVIEWED = false`), category concept explainer, Explore category grounding for `cat_levity`.
 4. **Category bands + category copy** — `CATEGORY_COPY_REVIEWED = false` (`categories.ts`) and `CATEGORY_BAND_COPY_REVIEWED = false` (`category-bands.ts`): offline fallback bands + live category line copy (Explore pinned card, You fold, teaser, Circle compare).

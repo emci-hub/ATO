@@ -1,55 +1,102 @@
 /**
- * The Story as a card (emci, 2026-10-09: "reformat it so it's like how legends
- * and categorize deep dive are"). Same ONE call, same claim, same thread
- * picker — the answer is parts instead of one block:
+ * The Story as a swipe card (emci, 2026-10-13 redesign). Same one call, same
+ * claim, same thread picker — the answer is six beats plus a nickname title:
  *
- *   title    — "the calm fixer" (shared title rules)
- *   scene    — one ordinary setting
- *   moment   — where the two sides meet
- *   handle   — how the person tends to handle it (optional)
- *   means    — what it means for them, plain and kind
- *   joke     — the Story's one joke line (its named exception), optional
+ *   hook       — cold open, mid-action
+ *   twist      — it gets worse; one spoken line allowed
+ *   move       — what the reader does (the trait, shown)
+ *   punchline  — callback to the hook
+ *   reveal     — one flattering trait line
+ *   next       — cliffhanger statement
+ *   title      — memorable nickname ("The Bread Basket Diplomat")
+ *   otherWay   — optional Plot B, behind a tap
  *
- * Why the rebuild: the one 90–160-word block mixed three voices, read as a
- * jumble, and trait words ("your Accountable side") leaked through because
- * only category names were checked. Now every part is checked, no trait or
- * category word may appear (`storyLabelLeak`), and optional parts that fail
- * are dropped instead of paid for twice. The traits behind it show as a
- * "Built from" label on the card, never in the text.
- *
- * Stories saved before this keep their `body` and render as before.
+ * v: 2 on every new card. Stories saved before this keep their v1
+ * scene/moment/means parts and still render until a lazy rewrite lands.
  */
 import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { getCategoryDefs } from '@/lib/categories';
 import { pickCategoryCard } from '@/lib/category-bank';
-import { diveLineViolation } from '@/lib/category-deep-dive/dive';
 import { CATEGORY_DISPLAY_NAMES } from '@/lib/category-labels';
-import { titleViolation } from '@/lib/legend-figures/story';
 import { localYmd } from '@/lib/local-date';
 import type { StoryThread } from '@/lib/story-thread';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
-import { cardJokeViolation, jokeHasBannedTopic } from '@/lib/voice/card-joke';
-import { MOMENT_VOICE_BLOCK, STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
+import {
+  jokeHasBannedTopic,
+  pickBestPunchline,
+  punchlineCraftViolation,
+  storyClicheViolation,
+} from '@/lib/voice/card-joke';
+import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
+
+export const STORY_CARD_VERSION = 2 as const;
+
+export type StoryScriptLine =
+  | { kind: 'narrator'; text: string }
+  | { kind: 'dialogue'; speaker: string; text: string };
 
 export interface StoryCard {
+  /** 3 = script templates. 2 = six-beat redesign. Missing / 1 = labelled card. */
+  v?: 1 | 2 | 3;
   title: string | null;
-  scene: string;
-  moment: string;
-  handle: string | null;
-  means: string;
-  joke: string | null;
-  /** Deeper Story (emci 2026-10-09), all optional: what the others noticed, */
-  noticed?: string | null;
-  /** how the reader's other side would have played the same moment, */
+  /** v2/v3 beats (v3 also has `lines` + `settingTag`). */
+  hook?: string;
+  twist?: string;
+  move?: string;
+  punchline?: string;
+  reveal?: string;
+  next?: string | null;
+  /** Optional Plot B, behind a tap. */
   otherWay?: string | null;
-  /** and a teaser for the next story. */
+  /** v3 script header: "Café. 7:02 PM. Friday." */
+  settingTag?: string;
+  lines?: {
+    hook: StoryScriptLine[];
+    twist: StoryScriptLine[];
+    move: StoryScriptLine[];
+    punchline: StoryScriptLine[];
+  };
+  card6?: {
+    categoryName: string;
+    leanPhrase: string;
+    scoreLine?: string;
+    evidence: string;
+    tip: string;
+  };
+  romance?: boolean;
+  topicId?: string;
+  jokeLight?: { beat: string; line: number };
+  jokeDark?: { beat: string; line: number };
+  jokeDarkSecondary?: { beat: string; line: number };
+  /** v1 parts (kept so old saved cards still read). */
+  scene?: string;
+  moment?: string;
+  handle?: string | null;
+  means?: string;
+  joke?: string | null;
+  noticed?: string | null;
   nextTime?: string | null;
+  /** Pre-written bank vs a model vs a v3 template. Bank/template skip the AI badge. */
+  source?: 'ai' | 'bank' | 'template';
+  /** Hand-written bank id, when source is bank (so the next pick can skip it). */
+  bankId?: string;
 }
 
+export const STORY_HOOK_WORDS = [8, 18] as const;
+export const STORY_TWIST_WORDS = [12, 30] as const;
+export const STORY_MOVE_WORDS = [15, 35] as const;
+export const STORY_PUNCHLINE_WORDS = [6, 20] as const;
+export const STORY_REVEAL_WORDS = [6, 14] as const;
+export const STORY_NEXT_WORDS = [4, 12] as const;
+export const STORY_TITLE_WORDS = [2, 5] as const;
+export const STORY_TITLE_MAX_CHARS = 40;
+export const STORY_OTHER_WAY_WORDS = [10, 35] as const;
+export const STORY_OUTPUT_TOKENS = 800;
+
+/** v1 limits — still used to read older saved cards, never to write new ones. */
 export const STORY_NOTICED_WORDS = [10, 35] as const;
-export const STORY_OTHER_WAY_WORDS = [12, 40] as const;
-export const STORY_NEXT_WORDS = [5, 20] as const;
 export const STORY_SCENE_WORDS = [12, 45] as const;
 export const STORY_MOMENT_WORDS = [12, 45] as const;
 export const STORY_HANDLE_WORDS = [10, 40] as const;
@@ -59,6 +106,27 @@ export const STORY_MEANS_WORDS = [15, 45] as const;
 const LABEL_WORDS: readonly string[] = [
   ...TRAIT_AXES.flatMap((axis) => [AXIS_POLE_NAME[axis].high, AXIS_POLE_NAME[axis].low, AXIS_SHORT_NAME[axis]]),
 ];
+
+const CLINICAL =
+  /\b(anxious|anxiety|insecure|insecurity|avoidant|attachment|disorder|trauma|toxic|needy|clingy|codependent|diagnos|therapy|therapist|symptom|red flag)\b/i;
+
+const GENERIC_CAPS = new Set([
+  'Mom',
+  'Dad',
+  'Grandma',
+  'Grandpa',
+  'Nana',
+  'Papa',
+  'Uncle',
+  'Aunt',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+]);
 
 /**
  * A trait or category label leaked into the text: "your Accountable side",
@@ -73,36 +141,59 @@ export function storyLabelLeak(text: string): string | null {
     if (new RegExp(`\\b(your|the|their|that)\\s+${w}\\s+side\\b`).test(lower)) return `side label`;
     if (new RegExp(`(?<![.?:;]\\s)(?<!^)\\b${word.replace(/-/g, '-')}\\b`).test(text)) return 'capitalised trait word';
   }
-  // Friendly names ("How You Love", "When Things Get Hard") are everyday phrases in
-  // lowercase, so only their title-case form counts as a label.
   for (const name of Object.values(CATEGORY_DISPLAY_NAMES)) {
     if (text.includes(name)) return 'names a category';
   }
   for (const name of getCategoryDefs().map((def) => def.name)) {
     if (/[\s/&]/.test(name)) {
-      // Catalog multi-word names ("Openness to life", "Love / closeness") are never everyday phrases.
       if (lower.includes(name.toLowerCase())) return 'names a category';
     } else if (new RegExp(`(?<![.?:;]\\s)(?<!^)\\b${name}\\b`).test(text)) {
-      // Single words ("Drive", "Levity") only as a capitalised label mid-sentence, so "drive" stays allowed.
       return 'names a category';
     }
   }
   return null;
 }
 
-/** One story line: the deep-dive line rules (no names, no counting, no clinical
- * words, no advice), the Story's banned topics, and no trait/category labels. */
-export function storyCardLineViolation(text: string): string | null {
+function properNameLeak(text: string): string | null {
+  const re = /(^|[.?:;][”"’)]?\s+|\n\s*|[“"(—–-]\s*)?(?<![\p{L}’'])(\p{Lu}[\p{L}’'-]*)/gu;
+  for (const m of text.matchAll(re)) {
+    const word = m[2]!;
+    const sentenceStart = m[1] != null || m.index === 0;
+    if (sentenceStart) continue;
+    if (word === 'I' || GENERIC_CAPS.has(word)) continue;
+    return `proper name: ${word}`;
+  }
+  return null;
+}
+
+export function quotedLineCount(text: string): number {
+  return (text.match(/[“"]([^”"]+)[”"]/g) ?? []).length;
+}
+
+/** One story line: safety + voice, with numbers, one quote, and unnamed side characters allowed. */
+export function storyCardLineViolation(text: string, opts: { allowYouAre?: boolean } = {}): string | null {
   if (jokeHasBannedTopic(text)) return 'banned topic';
-  // Niche phone details most people don't use or picture (emci, 2026-10-09).
   if (/\b(voice ?notes?|voice ?memos?|voicemails?|typing bubbles?|grey bubbles?|gray bubbles?|read receipts?)\b/i.test(text)) {
     return 'niche phone detail';
   }
-  return storyLabelLeak(text) ?? diveLineViolation(text, '');
+  if (/!/.test(text)) return 'exclamation';
+  if (/[[\]<>]/.test(text)) return 'template left in';
+  if (/\p{Extended_Pictographic}/u.test(text)) return 'emoji';
+  if (/\balways\b/i.test(text)) return 'always';
+  if (!opts.allowYouAre && /\byou(?:'|’)?re\b|\byou are\b/i.test(text)) return 'you are';
+  if (/\bshould\b/i.test(text)) return 'advice';
+  if (CLINICAL.test(text)) return 'clinical word';
+  if (/\byou might\b/i.test(text)) return 'hedge';
+  if (/\bon a day like this\b/i.test(text)) return 'hedge';
+  const cliche = storyClicheViolation(text);
+  if (cliche) return cliche;
+  const leak = storyLabelLeak(text);
+  if (leak) return leak;
+  if (containsFrameworkTerm(text)) return 'framework term';
+  return properNameLeak(text);
 }
 
-/** Share of `a`'s content words (5+ letters) that also appear in `b` — a part
- * that mostly repeats the one before it adds nothing to the story. */
+/** Share of `a`'s content words (5+ letters) that also appear in `b`. */
 export function storyOverlap(a: string, b: string): number {
   const bag = (text: string) => new Set((text.toLowerCase().match(/[a-z]{5,}/g) ?? []).map((w) => w.slice(0, 6)));
   const left = bag(a);
@@ -113,69 +204,116 @@ export function storyOverlap(a: string, b: string): number {
   return shared / left.size;
 }
 
-/** Above this, "how you handle it" is a repeat of "the moment" and is dropped. */
+/** Above this, one beat is a repeat of another and the card is rejected. */
 export const STORY_REPEAT_LIMIT = 0.5;
+/** Hook vs the last few stories (or the few-shots): too similar, try again. */
+export const STORY_HOOK_VARIETY_LIMIT = 0.6;
+
+export function storyTitleViolation(title: string): string | null {
+  const t = title.trim();
+  if (t.length > STORY_TITLE_MAX_CHARS) return 'title: too long';
+  const parts = t.split(/\s+/).filter(Boolean);
+  if (parts.length < STORY_TITLE_WORDS[0] || parts.length > STORY_TITLE_WORDS[1]) return 'title: length';
+  if (!parts.every((p) => /^[A-Z][A-Za-z'’-]*$/.test(p))) return 'title: shape';
+  if (
+    /\b(Anxi|Worr|Lonel|Alone|Sad|Fear|Struggl|Broken|Overthink|Doubt|Nerv|Insecur|Clingy|Needy|Lost|Fragile|Timid|Shy|Avoidant|Attach)/.test(
+      t,
+    )
+  ) {
+    return 'title: tone';
+  }
+  return storyLabelLeak(t);
+}
+
+export interface StoryFewShot {
+  title: string;
+  hook: string;
+  twist: string;
+  move: string;
+  punchline: string;
+  reveal: string;
+  next: string;
+}
+
+/** Three few-shots from the approved redesign. Match the energy, never the content. */
+export const STORY_FEW_SHOTS: readonly StoryFewShot[] = [
+  {
+    title: 'The Bread Basket Diplomat',
+    hook: 'Friday, 8:40. Your table has been staring at the kitchen door like it owes them money.',
+    twist: 'The server arrives empty-handed. "So the kitchen lost your slip." Your friend\'s eye starts to twitch. Someone opens a delivery app under the table.',
+    move: 'You slide the bread basket to the middle like a peace treaty, order whatever is fastest plus fries for the hostages, and start a ranking of everyone\'s worst-ever restaurant disaster.',
+    punchline: 'By the time the food lands, nobody wants it. They want round two of the rankings. And more bread.',
+    reveal: 'When plans break, you quietly turn the delay into the good part.',
+    next: 'Next time: you\'re first at the cinema. Your friends are not.',
+  },
+  {
+    title: 'The Spreadsheet Whisperer',
+    hook: 'The projector cuts out four minutes before the client walks in.',
+    twist: 'Your boss mouths "slides?" across the room. The backup laptop asks for an update. All 212 of them.',
+    move: 'You already printed the deck just in case. You hand out copies still warm from the printer and run the meeting like it was meant to be paper.',
+    punchline: 'The client asks if printed decks are new. Your boss has never said yes faster.',
+    reveal: 'Your just in case is the room\'s rescue.',
+    next: 'Next: a group trip, and you\'re not the one planning it.',
+  },
+  {
+    title: 'The Detour Captain',
+    hook: 'The hardware store is closed. The sign says back in 10 and it is clearly been weeks.',
+    twist: 'Your sibling wants to go home. The shelf you promised Mom is still in pieces in the trunk. "We are not driving across town," they say.',
+    move: 'You turn toward the flea market. Twenty minutes later you haggle for a vintage drill with a man named only by his hat.',
+    punchline: 'The shelf goes up crooked. Mom loves it. She loves the hat guy\'s drill more.',
+    reveal: 'A closed door just looks like a side quest to you.',
+    next: 'Next time: someone else picks the restaurant. Brave.',
+  },
+];
+
+function formatFewShot(row: StoryFewShot): string {
+  return `{"title":"${row.title}","hook":"${row.hook}","twist":"${row.twist}","move":"${row.move}","punchline":"${row.punchline}","reveal":"${row.reveal}","next":"${row.next}"}`;
+}
+
+const BANNED_CLICHE_PROMPT =
+  'like nothing happened, take a breath, shoulders drop, small hiccups, just another, a ruined schedule, sweat onto, the whole table, you might have, on a day like this, the real win, in that moment, little did, walk into a bar, that\'s what she said, plot twist, living the dream, it is what it is, say less, no cap, spoiler alert, everyone else';
 
 /** The byte-identical opening of every Story prompt (cache-friendly). */
-export const STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. This is The Story: ONE ordinary day, ONE setting, the same people
-throughout, told as a short card in parts. The SIDES at the end say what to draw on; write from their meaning, never
-their labels.
+export const STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. Write a 100-word micro-story starring the reader ("you"), told in
+present tense, that shows one trait from the SIDES through what they DO — never by naming it.
 
-${MOMENT_VOICE_BLOCK}
+SHAPE (cold open → twist → move → punchline → reveal → teaser):
+"hook" ${STORY_HOOK_WORDS[0]}–${STORY_HOOK_WORDS[1]} words: open mid-action, the second something goes wrong. One vivid, specific detail. No setup.
+"twist" ${STORY_TWIST_WORDS[0]}–${STORY_TWIST_WORDS[1]} words: it escalates. Raise the stakes for the reader. You may include ONE short line someone says, in quotes.
+"move" ${STORY_MOVE_WORDS[0]}–${STORY_MOVE_WORDS[1]} words: the reader's surprising, specific response, plus how the others react. Show, don't explain.
+"punchline" ${STORY_PUNCHLINE_WORDS[0]}–${STORY_PUNCHLINE_WORDS[1]} words: call back to the hook's detail with a reversal or rule-of-three. Make a reader smirk.
+"reveal" ${STORY_REVEAL_WORDS[0]}–${STORY_REVEAL_WORDS[1]} words: the one line that names what this says about them, as a compliment. No trait labels. "You're the person who…" is allowed here only.
+"next" ${STORY_NEXT_WORDS[0]}–${STORY_NEXT_WORDS[1]} words: a cliffhanger for the next story, a statement, not a question.
+"title" ${STORY_TITLE_WORDS[0]}–${STORY_TITLE_WORDS[1]} words, Title Case: a memorable nickname from the story's best detail ("The Bread Basket Diplomat").
+"otherWay" ${STORY_OTHER_WAY_WORDS[0]}–${STORY_OTHER_WAY_WORDS[1]} words, optional: how the same moment goes if the reader leans the OTHER WAY. Interesting, never better or worse; no labels.
+"punchlines" — two or three candidate punchlines (the craft block). "punchline" is the best of them.
 
-RULES
-- Second person ("you", "your"). A typical day, never a claimed event ("on a day like this", "you might").
-- Never "you are", never "always", no "!", no emoji, no advice, no "should".
-- Never name a trait, a category or a side, and never print any word listed in the SIDES (no "your Steady side").
-  The one exception is the title, which may use a plain describing word.
-- Use no quotation marks, and name no people, apps, brands or places.
-- No counting and no exaggeration: never a number or a number word above two. Say "a few", "a couple" or nothing.
-- Stay in the one setting: no second scene, no new set of people.
-- Never leave square or angle brackets in the answer.
+VOICE: punchy, warm, a little cheeky, like the funniest friend retelling your night. Specific beats general.
+Present tense, second person, plus ONE other voice: a friend, sibling, boss or server says one short line in quotes.
+Exaggerated numbers are fine when funny ("the fourth any minute now", "all 212 of them"). Unnamed side characters are fine ("the hat guy").
+Vary sentence length. No "!", no emoji, no advice, no "should", no "always".
+Show the trait through action. Only "reveal" may name what it shows, in plain words, never a trait or category label.
 
-STYLE — CLEAR FIRST, MOMENT SECOND (this overrides "Describe the moment and stop" above, and the counts in the
-register examples there are exactly what NOT to do here):
-- Each part is short and plain, like a smart friend texting you what they noticed. Nobody should reread it to get it.
-- Realistic everyday detail (the kind that happens every week), never a strange one-off scene or a riddle.
-- A quiet or low side is a style with an upside, never a weakness.
+NEVER: real names, brands, places, diagnosis, cruelty, trait/category words, hedges ("you might", "on a day like this"),
+niche phone details (voice notes, typing bubbles, read receipts), or these clichés: ${BANNED_CLICHE_PROMPT}.
+Stay in ONE setting. Never leave square or angle brackets in the answer.
 
-SETTING (emci, 2026-10-09; this overrides the "how people live now" list in the VOICE block above — texts,
-voice notes, typing bubbles and read receipts are NOT the default setting here)
-- Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
-  a shared chore, a busy commute. A phone can be a detail, but never voice notes, typing bubbles or read receipts.
-- Keep it literal and easy to picture. If a detail needs explaining, cut it.
-
-FLOW — ONE STORY, NOT SEPARATE BOXES (plan first, then write; every part follows from the one before)
-"plan" — write this FIRST, four short lines, not shown to the reader:
-  1. Situation: who is there and what needs to happen.
-  2. Tension: what complicates it, in a way that tests SIDE A (and pulls against SIDE B, if there is one).
-  3. Choice: what the reader does about it, and what happens because of it.
-  4. Payoff: what that shows about them.
-Then write the parts from the plan, in order:
-"scene" — ${STORY_SCENE_WORDS[0]}–${STORY_SCENE_WORDS[1]} words: the situation (plan line 1). Who, where, and what needs to happen.
-"moment" — ${STORY_MOMENT_WORDS[0]}–${STORY_MOMENT_WORDS[1]} words: the tension (plan line 2). It must grow out of the scene, and it is something that
-  happens, not something the reader thinks about.
-"handle" — ${STORY_HANDLE_WORDS[0]}–${STORY_HANDLE_WORDS[1]} words: the choice (plan line 3): the NEXT thing the reader does and what happens because of it
-  ("you might", "usually"). Never repeat an action or phrase from "moment". If a TOLD-VS-PLAYED note is given, you may fold
-  it in here, warmly, with no winner.
-"means" — ${STORY_MEANS_WORDS[0]}–${STORY_MEANS_WORDS[1]} words: the payoff (plan line 4): one plain, kind line on what that choice says about the reader.
-  Only this part explains.
-"joke" — only when a JOKE TARGET is given. Exactly one sentence that CALLS BACK to one concrete detail from the scene
-  (the best jokes land on something the reader already saw). It must make sense to someone who just read the story.
 ${STORY_JOKE_RULES}
-"title" — written LAST: two to four lowercase words, starting with "the", that describe the reader plainly, the way a
-  friend would sum them up after hearing this story: a kind describing word plus a role word (shape only: "the
-  [describing word] [role]"). Someone who never read the story should still get it. No metaphors or objects
-  ("the open door"), never about worry, doubt, loneliness or struggle.
 
-"noticed" — ${STORY_NOTICED_WORDS[0]}–${STORY_NOTICED_WORDS[1]} words: what the other people in the scene probably noticed about the reader in that
-  moment. Kind and specific, from their side.
-"otherWay" — ${STORY_OTHER_WAY_WORDS[0]}–${STORY_OTHER_WAY_WORDS[1]} words: how the same moment might have gone if the reader had leaned the other way
-  (the OTHER WAY given at the end). Interesting, never better or worse; no labels.
-"nextTime" — ${STORY_NEXT_WORDS[0]}–${STORY_NEXT_WORDS[1]} words, one short question that teases a different everyday moment for the next story.
+SETTING (this overrides the "how people live now" list in any voice block — texts, voice notes, typing bubbles and
+read receipts are NOT the default setting here)
+- Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
+  a shared chore, a busy commute. A phone can be a detail, never voice notes, typing bubbles or read receipts.
+- Unusual-but-plausible is good (a laminated dessert menu, a birthday balloon on the wrong table). If a detail needs a
+  footnote, cut it.
 
-Return JSON only, exactly this shape:
-{"plan": "<four short lines>", "scene": "...", "moment": "...", "handle": "...", "noticed": "...", "otherWay": "...", "means": "...", "joke": "<one sentence>", "nextTime": "<a question>", "title": "<the ...>"}`;
+The SIDES at the end say what to draw on; write from their meaning, never their labels.
+
+Plan silently first in "plan" (hook detail, stake, move, callback). Return JSON only:
+{"plan":"...","hook":"...","twist":"...","move":"...","punchline":"...","punchlines":["...","...","..."],"reveal":"...","next":"...","title":"...","otherWay":"..."}
+
+EXAMPLES (match the energy, never reuse the content):
+${STORY_FEW_SHOTS.map((row, i) => `${i + 1}. ${formatFewShot(row)}`).join('\n')}`;
 
 /** One side of a Story, ready for the prompt: its lead lean and its stored lines. */
 export interface StoryPromptSide {
@@ -211,10 +349,26 @@ export function buildStoryPromptFromSides(input: {
 ${sides.join('\n\n')}
 
 TOLD-VS-PLAYED: none. Do not invent a split.
-${jokeTarget ? `JOKE TARGET: the ${AXIS_POLE_NAME[jokeTarget.axis][jokeTarget.lean]} side (never print that word).` : 'JOKE TARGET: none.'}
+${jokeTarget ? `JOKE TARGET: the ${AXIS_POLE_NAME[jokeTarget.axis][jokeTarget.lean]} side (never print that word). Let the punchline call back to the situation that side lands them in.` : 'JOKE TARGET: none. Keep the punchline warm, not dry-dark.'}
 ${otherWay ? `OTHER WAY (for "otherWay"; never print the word): ${AXIS_POLE_NAME[otherWay.axis][otherWay.lean === 'high' ? 'low' : 'high']}` : 'OTHER WAY: the opposite of SIDE A’s lead lean.'}${
     input.setting ? `\nSETTING FOR THIS STORY: ${input.setting}` : ''
   }`;
+}
+
+/** Rewrite an older saved story into the six-beat shape. Same static opening. */
+export function buildStoryRewritePrompt(input: {
+  oldText: string;
+  sides: readonly StoryPromptSide[];
+  jokeTarget: { axis: TraitAxis; lean: TraitLean } | null;
+  setting?: string | null;
+}): string {
+  return `${buildStoryPromptFromSides(input)}
+
+REWRITE the older story below into the new shape. Keep the same setting and the same trait shown through action.
+Do not reuse hedged wording. Invent a stronger hook detail if the old one is generic.
+
+OLD STORY:
+${input.oldText.trim()}`;
 }
 
 /** The Story card prompt for one person (older callers and the check): their
@@ -234,12 +388,11 @@ export function buildStoryCardPrompt(input: {
       lead: row.lead ? { axis: row.lead.axis, lean: row.lead.lean } : null,
       card: pickCategoryCard({ userId: input.userId, reading: row.reading, ymd }),
     })),
-    // Every Story gets its joke now (emci 2026-10-09): the thread's target, else SIDE A's lead lean.
     jokeTarget: thread.joke ?? thread.categories[0]?.lead ?? null,
   });
 }
 
-function words(text: string): number {
+export function words(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
@@ -248,18 +401,38 @@ function within(text: string, [min, max]: readonly [number, number]): boolean {
   return n >= min && n <= max;
 }
 
+export function isStoryV2(card: Pick<StoryCard, 'v' | 'hook' | 'twist' | 'move' | 'punchline' | 'reveal'>): boolean {
+  return card.v === 2 && !!(card.hook && card.twist && card.move && card.punchline && card.reveal);
+}
+
+export function isStoryV3(card: Pick<StoryCard, 'v' | 'settingTag' | 'lines' | 'hook'>): boolean {
+  return card.v === 3 && !!(card.settingTag && (card.lines?.hook?.length || card.hook));
+}
+
 export interface StoryCardResult {
   card: StoryCard | null;
   /** Why it was rejected (reason only, for the log). */
   reason: string | null;
 }
 
+function beatsOverlap(parts: readonly string[]): string | null {
+  for (let i = 0; i < parts.length; i += 1) {
+    for (let j = i + 1; j < parts.length; j += 1) {
+      if (storyOverlap(parts[i]!, parts[j]!) > STORY_REPEAT_LIMIT) return 'repeat';
+    }
+  }
+  return null;
+}
+
 /**
- * Parse + check the model's answer. The core (scene, moment, means) must pass
- * or it is rejected (one retry); the title, "how you handle it" and the joke
- * are dropped when they fail — never shown, never a second paid call.
+ * Parse + check the model's answer. Core v2 beats must pass or it is rejected
+ * (one retry). otherWay is dropped when it fails. Punchline candidates are
+ * reranked locally.
  */
-export function parseStoryCardAnswer(raw: string, opts: { jokeAsked: boolean }): StoryCardResult {
+export function parseStoryCardAnswer(
+  raw: string,
+  opts: { jokeAsked?: boolean; recentHooks?: readonly string[]; allowExampleHooks?: boolean } = {},
+): StoryCardResult {
   const reject = (reason: string): StoryCardResult => ({ card: null, reason });
   let data: unknown;
   try {
@@ -273,66 +446,141 @@ export function parseStoryCardAnswer(raw: string, opts: { jokeAsked: boolean }):
   if (typeof data !== 'object' || data == null) return reject('not an object');
   const obj = data as Record<string, unknown>;
 
-  const core: Record<'scene' | 'moment' | 'means', string> = { scene: '', moment: '', means: '' };
-  const limits = { scene: STORY_SCENE_WORDS, moment: STORY_MOMENT_WORDS, means: STORY_MEANS_WORDS } as const;
-  for (const key of ['scene', 'moment', 'means'] as const) {
+  const required = {
+    hook: STORY_HOOK_WORDS,
+    twist: STORY_TWIST_WORDS,
+    move: STORY_MOVE_WORDS,
+    reveal: STORY_REVEAL_WORDS,
+  } as const;
+  const core: Record<keyof typeof required, string> = { hook: '', twist: '', move: '', reveal: '' };
+  for (const key of Object.keys(required) as (keyof typeof required)[]) {
     const value = obj[key];
     if (typeof value !== 'string') return reject(`${key} missing`);
     const line = value.trim();
-    if (!within(line, limits[key])) return reject(`${key}: length`);
-    const bad = storyCardLineViolation(line);
+    if (!within(line, required[key])) return reject(`${key}: length`);
+    const bad = storyCardLineViolation(line, { allowYouAre: key === 'reveal' });
     if (bad) return reject(`${key}: ${bad}`);
     core[key] = line;
   }
 
-  const optional = (value: unknown, limit: readonly [number, number]): string | null => {
+  if (typeof obj.title !== 'string') return reject('title missing');
+  const title = obj.title.trim();
+  const titleBad = storyTitleViolation(title);
+  if (titleBad) return reject(titleBad);
+
+  const candidatePunchlines: string[] = [];
+  if (typeof obj.punchline === 'string' && obj.punchline.trim()) candidatePunchlines.push(obj.punchline.trim());
+  if (Array.isArray(obj.punchlines)) {
+    for (const item of obj.punchlines) {
+      if (typeof item === 'string' && item.trim()) candidatePunchlines.push(item.trim());
+    }
+  }
+  const punchline = pickBestPunchline(candidatePunchlines, core, (line) => {
+    if (!within(line, STORY_PUNCHLINE_WORDS)) return false;
+    if (storyCardLineViolation(line)) return false;
+    if (punchlineCraftViolation(line)) return false;
+    return true;
+  });
+  if (!punchline) return reject('punchline');
+
+  const optional = (value: unknown, limit: readonly [number, number], allowYouAre = false): string | null => {
     if (typeof value !== 'string') return null;
     const line = value.trim();
-    return within(line, limit) && !storyCardLineViolation(line) ? line : null;
+    return within(line, limit) && !storyCardLineViolation(line, { allowYouAre }) ? line : null;
   };
-  const handleRaw = optional(obj.handle, STORY_HANDLE_WORDS);
-  // "How you handle it" must move the story on, not restate the moment.
-  const handle = handleRaw && storyOverlap(handleRaw, core.moment) <= STORY_REPEAT_LIMIT ? handleRaw : null;
-
-  let title: string | null = null;
-  if (typeof obj.title === 'string') {
-    const t = obj.title.trim().toLowerCase();
-    // A plain describing word is the point of the title now ("the warm straight talker", emci
-    // 2026-10-09); the tone rules and "your X side" still apply.
-    if (!titleViolation(t, '') && !storyLabelLeak(t)) title = t;
-  }
-
-  let joke: string | null = null;
-  if (opts.jokeAsked && typeof obj.joke === 'string') {
-    const line = obj.joke.trim();
-    if (!cardJokeViolation(line) && !storyCardLineViolation(line)) joke = line;
-  }
-
-  const noticed = optional(obj.noticed, STORY_NOTICED_WORDS);
+  const nextRaw = optional(obj.next, STORY_NEXT_WORDS, true);
+  const next = nextRaw && !/\?$/.test(nextRaw) ? nextRaw : null;
   const otherWay = optional(obj.otherWay, STORY_OTHER_WAY_WORDS);
-  const nextRaw = optional(obj.nextTime, STORY_NEXT_WORDS);
-  const nextTime = nextRaw && /\?$/.test(nextRaw) ? nextRaw : null;
+
+  const allBeats = [core.hook, core.twist, core.move, punchline, core.reveal, next, otherWay].filter(
+    (part): part is string => !!part,
+  );
+  if (quotedLineCount(allBeats.join('\n')) > 1) return reject('too many quotes');
+  const overlap = beatsOverlap(allBeats);
+  if (overlap) return reject(overlap);
+
+  const recent = [
+    ...(opts.recentHooks ?? []),
+    ...(opts.allowExampleHooks ? [] : STORY_FEW_SHOTS.map((row) => row.hook)),
+  ];
+  if (recent.some((hook) => storyOverlap(core.hook, hook) >= STORY_HOOK_VARIETY_LIMIT)) {
+    return reject('hook: too similar');
+  }
+
   return {
-    card: { title, scene: core.scene, moment: core.moment, handle, means: core.means, joke, noticed, otherWay, nextTime },
+    card: {
+      v: STORY_CARD_VERSION,
+      title,
+      hook: core.hook,
+      twist: core.twist,
+      move: core.move,
+      punchline,
+      reveal: core.reveal,
+      next,
+      otherWay,
+      source: 'ai',
+    },
     reason: null,
   };
 }
 
 /** The card as one block, for older readers of `story.body` (Explore, Rolls). */
 export function storyCardBody(card: StoryCard): string {
+  if (isStoryV3(card) && card.lines) {
+    const texts = [...card.lines.hook, ...card.lines.twist, ...card.lines.move, ...card.lines.punchline].map((line) =>
+      line.kind === 'dialogue' ? line.text : line.text,
+    );
+    return [...texts, card.reveal, card.next].filter(Boolean).join(' ');
+  }
+  if (isStoryV2(card) || isStoryV3(card)) {
+    return [card.hook, card.twist, card.move, card.punchline, card.reveal, card.next].filter(Boolean).join(' ');
+  }
   return [card.scene, card.moment, card.handle, card.means].filter(Boolean).join(' ');
 }
 
-/** Loose read of a saved card. */
+function s(v: unknown): string | null {
+  return typeof v === 'string' && v.trim() ? v.trim() : null;
+}
+
+/** Loose read of a saved card (v1 or v2). */
 export function parseStoredStoryCard(raw: unknown): StoryCard | null {
   if (typeof raw !== 'object' || raw == null) return null;
   const obj = raw as Record<string, unknown>;
-  const s = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+  const hook = s(obj.hook);
+  const twist = s(obj.twist);
+  const move = s(obj.move);
+  const punchline = s(obj.punchline);
+  const reveal = s(obj.reveal);
+  if (obj.v === 3 || (obj.v === 2 && hook && twist && move && punchline && reveal) || (hook && twist && move && punchline && reveal)) {
+    if (!hook || !twist || !move || !punchline || !reveal) return null;
+    const source = obj.source === 'bank' ? 'bank' : obj.source === 'template' ? 'template' : 'ai';
+    const lines = obj.lines && typeof obj.lines === 'object' ? (obj.lines as StoryCard['lines']) : undefined;
+    const card6 = obj.card6 && typeof obj.card6 === 'object' ? (obj.card6 as StoryCard['card6']) : undefined;
+    return {
+      v: obj.v === 3 ? 3 : 2,
+      title: s(obj.title),
+      hook,
+      twist,
+      move,
+      punchline,
+      reveal,
+      next: s(obj.next),
+      otherWay: s(obj.otherWay),
+      settingTag: s(obj.settingTag) ?? undefined,
+      ...(lines ? { lines } : {}),
+      ...(card6 ? { card6 } : {}),
+      source,
+      ...(typeof obj.bankId === 'string' && obj.bankId.trim() ? { bankId: obj.bankId.trim() } : {}),
+      ...(typeof obj.topicId === 'string' ? { topicId: obj.topicId } : {}),
+      ...(obj.romance === true ? { romance: true } : {}),
+    };
+  }
   const scene = s(obj.scene);
   const moment = s(obj.moment);
   const means = s(obj.means);
   if (!scene || !moment || !means) return null;
   return {
+    v: 1,
     title: s(obj.title),
     scene,
     moment,

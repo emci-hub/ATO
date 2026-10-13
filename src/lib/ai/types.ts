@@ -34,6 +34,8 @@ export interface GenerateRequest {
   temperature: number;
   maxOutputTokens: number;
   responseFormat: AiResponseFormat;
+  /** Nucleus sampling. Story uses 0.95; omitted elsewhere. */
+  topP?: number;
 }
 
 /**

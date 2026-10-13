@@ -1356,11 +1356,12 @@ ${MOMENT_VOICE_RULES.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
 REGISTER (match it, do not reuse these):
 ${MOMENT_VOICE_EXAMPLES.map((line) => `- ${line}`).join("\n")}`;
 var STORY_JOKE_STYLES = [
-  "dry",
-  "deadpan",
-  "self-aware",
-  "satire of modern life: group chats, calendars, read receipts, productivity culture, open tabs",
-  "mild gallows humour about everyday absurdity, never about real harm"
+  "specific concrete detail the reader already saw",
+  "setup early, payoff as a callback",
+  "rule of three with a twist on the third",
+  "escalation (each beat a little worse or stranger)",
+  "misdirection then a reversal",
+  "understatement (the situation is chaos; the line is calm)"
 ];
 var STORY_JOKE_BANS = [
   "death, self-harm, suicide, illness, mental health, trauma, abuse, addiction",
@@ -1369,15 +1370,24 @@ var STORY_JOKE_BANS = [
   "money troubles; relationships ending; real people, brands or politics",
   "swearing, slurs, sexual content",
   "mocking the person rather than the situation",
-  '"!", emoji, hashtags'
+  '"!", emoji, hashtags',
+  'explaining the joke ("which is funny because", "the joke is", "get it")',
+  "puns for their own sake, with no callback to the scene",
+  "stock clich\xE9s: walk into a bar, that is what she said, plot twist, living the dream, it is what it is, say less, no cap, spoiler alert"
 ];
-var STORY_JOKE_EXAMPLES = ["Your to-do list has outlived two phones."];
-var STORY_JOKE_RULES = `THE ONE JOKE (a named exception to "tease kindly": this single sentence may be drier or darker)
-- Allowed styles: ${STORY_JOKE_STYLES.join("; ")}.
+var STORY_JOKE_EXAMPLES = [
+  "By the time the food lands, nobody wants it. They want round two of the rankings. And more bread.",
+  "The client asks if printed decks are new. Your boss has never said yes faster.",
+  "The shelf goes up crooked. Mom loves it. She loves the hat guy's drill more."
+];
+var STORY_JOKE_RULES = `PUNCHLINE CRAFT (the funny beat is a constructed joke, not an observation)
+- Build it: ${STORY_JOKE_STYLES.join("; ")}.
+- Land the laugh in the last 6\u20138 words. The reader should not need the next sentence.
+- Write 2\u20133 candidate punchlines in "punchlines", then the JSON "punchline" is your best one.
+- Joke about the situation, never the person. Keep it kind enough to screenshot.
 - Never, whatever the style:
 ${STORY_JOKE_BANS.map((line) => `  - ${line}`).join("\n")}
-- Exactly one sentence, under 120 characters, woven into the story. Joke about the situation, never the person.
-- Register (match it, do not reuse it): ${STORY_JOKE_EXAMPLES.map((line) => `"${line}"`).join(" ")}`;
+- Register (match the energy, do not reuse): ${STORY_JOKE_EXAMPLES.map((line) => `"${line}"`).join(" ")}`;
 
 // src/lib/voice/card-joke.ts
 var CARD_JOKE_STYLES = [
@@ -1403,12 +1413,93 @@ var JOKE_BANNED_TOPIC = [
 function jokeHasBannedTopic(text) {
   return JOKE_BANNED_TOPIC.some((re) => re.test(text));
 }
+var STORY_BANNED_CLICHES = [
+  /\blike nothing happened\b/i,
+  /\btake a breath\b/i,
+  /\bshoulders drop\b/i,
+  /\bsmall hiccups\b/i,
+  /\bjust another\b/i,
+  /\ba ruined schedule\b/i,
+  /\bsweat onto\b/i,
+  /\bthe whole table\b/i,
+  /\byou might have\b/i,
+  /\bon a day like this\b/i,
+  /\bthe real win\b/i,
+  /\bin that moment\b/i,
+  /\blittle did\b/i,
+  /\bwalk(?:s|ed|ing)? into a bar\b/i,
+  /\bthat(?:'|’)s what she said\b/i,
+  /\bplot twist\b/i,
+  /\bliving the dream\b/i,
+  /\bit is what it is\b/i,
+  /\bsay less\b/i,
+  /\bno cap\b/i,
+  /\bspoiler alert\b/i,
+  /\beveryone else\b/i
+];
+function storyClicheViolation(text) {
+  for (const re of STORY_BANNED_CLICHES) {
+    if (re.test(text)) return "banned clich\xE9";
+  }
+  return null;
+}
+var EXPLAINS_THE_JOKE = /\b(which is (?:why|funny|hilarious)|the joke is|that(?:'|’)s the (?:joke|funny part)|get it\b|as a joke|ironically|pun intended)\b/i;
+function punchlineCraftViolation(text) {
+  const line = text.trim();
+  if (!line) return "empty";
+  if (jokeHasBannedTopic(line)) return "banned topic";
+  if (/#/.test(line)) return "hashtag";
+  if (EXPLAINS_THE_JOKE.test(line)) return "explains the joke";
+  return storyClicheViolation(line);
+}
+function contentStems(text) {
+  return new Set((text.toLowerCase().match(/[a-z]{4,}/g) ?? []).map((w) => w.slice(0, 6)));
+}
+function scorePunchline(line, setup) {
+  if (punchlineCraftViolation(line)) return -1;
+  const stems = contentStems(line);
+  const hookStems = contentStems(setup.hook);
+  const prior = /* @__PURE__ */ new Set([...contentStems(setup.twist), ...contentStems(setup.move), ...hookStems]);
+  let sharedHook = 0;
+  for (const stem of stems) if (hookStems.has(stem)) sharedHook += 1;
+  let sharedPrior = 0;
+  for (const stem of stems) if (prior.has(stem)) sharedPrior += 1;
+  const words4 = line.trim().split(/\s+/).filter(Boolean);
+  const tail = words4.slice(-8).join(" ").toLowerCase();
+  const tailStems = contentStems(tail);
+  let tailCallback = 0;
+  for (const stem of tailStems) if (hookStems.has(stem)) tailCallback += 1;
+  const concrete = (line.match(/\b[a-z]{5,}\b/gi) ?? []).length;
+  const thirds = (line.match(/,/g) ?? []).length >= 2 || /\. .+\. .+\./.test(line) ? 1 : 0;
+  const lastClause = words4.slice(-6).join(" ");
+  const understated = /\b(quietly|just|only|still|already|never)\b/i.test(lastClause) ? 1 : 0;
+  return sharedHook * 3 + sharedPrior + tailCallback * 2 + Math.min(2, Math.floor(concrete / 4)) + thirds + understated;
+}
+function pickBestPunchline(candidates, setup, extraOk = () => true) {
+  let best = null;
+  let bestScore = -1;
+  const seen = /* @__PURE__ */ new Set();
+  for (const raw of candidates) {
+    const line = raw.trim();
+    if (!line || seen.has(line.toLowerCase())) continue;
+    seen.add(line.toLowerCase());
+    if (!extraOk(line)) continue;
+    const score = scorePunchline(line, setup);
+    if (score > bestScore) {
+      best = line;
+      bestScore = score;
+    }
+  }
+  return best;
+}
 function cardJokeStyle(seed) {
   return CARD_JOKE_STYLES[fnv1a(seed) % CARD_JOKE_STYLES.length];
 }
 var CARD_JOKE_RULES = `"funny" \u2014 THE ONE JOKE (a named exception to "tease kindly": this single sentence may be drier or darker).
   Use the JOKE STYLE given at the end. One sentence, under ${CARD_JOKE_MAX_CHARS} characters, about a situation the reader's
-  side lands them in. Joke about the situation, never the person. Clearly funny on its own, not a riddle.
+  side lands them in. Joke about the situation, never the person. Specific concrete detail beats a general observation.
+  Land the laugh in the last six to eight words. Never explain the joke. No puns for their own sake. No stock clich\xE9s
+  (walk into a bar, plot twist, living the dream). Clearly funny on its own, not a riddle.
   Never, whatever the style:
 ${STORY_JOKE_BANS.map((line) => `  - ${line}`).join("\n")}`;
 function cardJokeViolation(text) {
@@ -1418,6 +1509,7 @@ function cardJokeViolation(text) {
   if ((line.match(/[.?]\s+\S/g) ?? []).length > 0) return "more than one sentence";
   if (jokeHasBannedTopic(line)) return "banned topic";
   if (/#/.test(line)) return "hashtag";
+  if (EXPLAINS_THE_JOKE.test(line)) return "explains the joke";
   return null;
 }
 
@@ -1883,7 +1975,7 @@ function isLibraryKind(value) {
 }
 var LIBRARY_VERSION = {
   deep_dive: "l1",
-  story: "l1",
+  story: "l3",
   legend: "l1"
 };
 var BUCKET_KEY_RE = /^[a-z0-9_|:=+,.!-]{3,255}$/;
@@ -6788,6 +6880,33 @@ var LEGEND_LIBRARY = {
   }
 };
 
+// src/lib/story-v3/polish.ts
+var STORY_POLISH_PROMPT_STATIC = `You polish tiny comic stories for the ATO app. You never invent a plot, a trait, a character, or a joke. If anything is unclear, return the input story unchanged.
+
+WHO YOU ARE
+You write tiny comic stories (~100 words, 6 beats) starring the user, in second person ("you"). Bright humor plus dark humor that stays absurd. The user is always the competent, lovable lead. Low lean is a different superpower, never a loser.
+
+HARD RULES
+Never cruel. Banned: self-harm, suicide, abuse, trauma, illness, death of people or pets, real tragedies, disasters, war, addiction, weight/appearance, politics, religion, real brands' failures, real people.
+Dark stays absurd. Stakes are tiny and treated as enormous.
+2-3 short dialogue lines (\u226412 words), from side characters only. You never speak in quotes.
+One LIGHT joke and one DARK joke. \u2264120 words. Reveal \u226415 words. No therapy-speak.
+Romantic roles are never named or gendered: "your date", "your partner", "an ex", "Rory's date".
+Named characters must use the approved list: Sam, Alex, Jordan, Kim, Ari, Rory, Casey, Jamie, Taylor, Riley, Quinn, Rowan, Avery, Morgan, Blair, Drew, Reese, Sky, Parker, Emerson, Remy, Shay, Dakota, Hayden, Kai, Phoenix.
+Family roles (Aunt Rosa) may keep natural pronouns. No two names sharing a first letter.
+
+SCRIPT FORMAT
+\u{1F4CD} *Room. Time. Day.*
+One sentence per line. Blank line between beats.
+Dialogue is **Name:** "line".
+Card 5 is Next: \u2026 then an italic reveal.
+Card 6 is Why this is you (categoryName from the catalog, leanPhrase, Proof, Tip/Watch out).
+
+POLISH ONLY
+Never invent plot or traits. Keep every beat, name, callback, and joke. You may fix grammar, split a long line, or swap a word for clarity. If you cannot polish, return the JSON unchanged.
+Return JSON only:
+{"title":"...","settingTag":"...","hook":["..."],"twist":["..."],"move":["..."],"punchline":["..."],"next":"...","reveal":"...","otherWay":"..."}`;
+
 // src/lib/legends64/classify.ts
 var CORE_AXES = ["conscientiousness", "extraversion", "openness"];
 var MODIFIER_AXES = [
@@ -9248,16 +9367,38 @@ var CATEGORY_DISPLAY_NAMES = {
 };
 
 // src/lib/story-card.ts
-var STORY_NOTICED_WORDS = [10, 35];
-var STORY_OTHER_WAY_WORDS = [12, 40];
-var STORY_NEXT_WORDS = [5, 20];
-var STORY_SCENE_WORDS = [12, 45];
-var STORY_MOMENT_WORDS = [12, 45];
-var STORY_HANDLE_WORDS = [10, 40];
-var STORY_MEANS_WORDS = [15, 45];
+var STORY_CARD_VERSION = 2;
+var STORY_HOOK_WORDS = [8, 18];
+var STORY_TWIST_WORDS = [12, 30];
+var STORY_MOVE_WORDS = [15, 35];
+var STORY_PUNCHLINE_WORDS = [6, 20];
+var STORY_REVEAL_WORDS = [6, 14];
+var STORY_NEXT_WORDS = [4, 12];
+var STORY_TITLE_WORDS = [2, 5];
+var STORY_TITLE_MAX_CHARS = 40;
+var STORY_OTHER_WAY_WORDS = [10, 35];
+var STORY_OUTPUT_TOKENS = 800;
 var LABEL_WORDS = [
   ...TRAIT_AXES.flatMap((axis) => [AXIS_POLE_NAME[axis].high, AXIS_POLE_NAME[axis].low, AXIS_SHORT_NAME[axis]])
 ];
+var CLINICAL2 = /\b(anxious|anxiety|insecure|insecurity|avoidant|attachment|disorder|trauma|toxic|needy|clingy|codependent|diagnos|therapy|therapist|symptom|red flag)\b/i;
+var GENERIC_CAPS = /* @__PURE__ */ new Set([
+  "Mom",
+  "Dad",
+  "Grandma",
+  "Grandpa",
+  "Nana",
+  "Papa",
+  "Uncle",
+  "Aunt",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+]);
 function storyLabelLeak(text) {
   const lower = text.toLowerCase();
   for (const word of LABEL_WORDS) {
@@ -9277,12 +9418,40 @@ function storyLabelLeak(text) {
   }
   return null;
 }
-function storyCardLineViolation(text) {
+function properNameLeak(text) {
+  const re = /(^|[.?:;][”"’)]?\s+|\n\s*|[“"(—–-]\s*)?(?<![\p{L}’'])(\p{Lu}[\p{L}’'-]*)/gu;
+  for (const m of text.matchAll(re)) {
+    const word = m[2];
+    const sentenceStart = m[1] != null || m.index === 0;
+    if (sentenceStart) continue;
+    if (word === "I" || GENERIC_CAPS.has(word)) continue;
+    return `proper name: ${word}`;
+  }
+  return null;
+}
+function quotedLineCount(text) {
+  return (text.match(/[“"]([^”"]+)[”"]/g) ?? []).length;
+}
+function storyCardLineViolation(text, opts = {}) {
   if (jokeHasBannedTopic(text)) return "banned topic";
   if (/\b(voice ?notes?|voice ?memos?|voicemails?|typing bubbles?|grey bubbles?|gray bubbles?|read receipts?)\b/i.test(text)) {
     return "niche phone detail";
   }
-  return storyLabelLeak(text) ?? diveLineViolation(text, "");
+  if (/!/.test(text)) return "exclamation";
+  if (/[[\]<>]/.test(text)) return "template left in";
+  if (/\p{Extended_Pictographic}/u.test(text)) return "emoji";
+  if (/\balways\b/i.test(text)) return "always";
+  if (!opts.allowYouAre && /\byou(?:'|’)?re\b|\byou are\b/i.test(text)) return "you are";
+  if (/\bshould\b/i.test(text)) return "advice";
+  if (CLINICAL2.test(text)) return "clinical word";
+  if (/\byou might\b/i.test(text)) return "hedge";
+  if (/\bon a day like this\b/i.test(text)) return "hedge";
+  const cliche = storyClicheViolation(text);
+  if (cliche) return cliche;
+  const leak = storyLabelLeak(text);
+  if (leak) return leak;
+  if (containsFrameworkTerm(text)) return "framework term";
+  return properNameLeak(text);
 }
 function storyOverlap(a, b) {
   const bag = (text) => new Set((text.toLowerCase().match(/[a-z]{5,}/g) ?? []).map((w) => w.slice(0, 6)));
@@ -9294,88 +9463,93 @@ function storyOverlap(a, b) {
   return shared / left.size;
 }
 var STORY_REPEAT_LIMIT = 0.5;
-var STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. This is The Story: ONE ordinary day, ONE setting, the same people
-throughout, told as a short card in parts. The SIDES at the end say what to draw on; write from their meaning, never
-their labels.
-
-${MOMENT_VOICE_BLOCK}
-
-RULES
-- Second person ("you", "your"). A typical day, never a claimed event ("on a day like this", "you might").
-- Never "you are", never "always", no "!", no emoji, no advice, no "should".
-- Never name a trait, a category or a side, and never print any word listed in the SIDES (no "your Steady side").
-  The one exception is the title, which may use a plain describing word.
-- Use no quotation marks, and name no people, apps, brands or places.
-- No counting and no exaggeration: never a number or a number word above two. Say "a few", "a couple" or nothing.
-- Stay in the one setting: no second scene, no new set of people.
-- Never leave square or angle brackets in the answer.
-
-STYLE \u2014 CLEAR FIRST, MOMENT SECOND (this overrides "Describe the moment and stop" above, and the counts in the
-register examples there are exactly what NOT to do here):
-- Each part is short and plain, like a smart friend texting you what they noticed. Nobody should reread it to get it.
-- Realistic everyday detail (the kind that happens every week), never a strange one-off scene or a riddle.
-- A quiet or low side is a style with an upside, never a weakness.
-
-SETTING (emci, 2026-10-09; this overrides the "how people live now" list in the VOICE block above \u2014 texts,
-voice notes, typing bubbles and read receipts are NOT the default setting here)
-- Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
-  a shared chore, a busy commute. A phone can be a detail, but never voice notes, typing bubbles or read receipts.
-- Keep it literal and easy to picture. If a detail needs explaining, cut it.
-
-FLOW \u2014 ONE STORY, NOT SEPARATE BOXES (plan first, then write; every part follows from the one before)
-"plan" \u2014 write this FIRST, four short lines, not shown to the reader:
-  1. Situation: who is there and what needs to happen.
-  2. Tension: what complicates it, in a way that tests SIDE A (and pulls against SIDE B, if there is one).
-  3. Choice: what the reader does about it, and what happens because of it.
-  4. Payoff: what that shows about them.
-Then write the parts from the plan, in order:
-"scene" \u2014 ${STORY_SCENE_WORDS[0]}\u2013${STORY_SCENE_WORDS[1]} words: the situation (plan line 1). Who, where, and what needs to happen.
-"moment" \u2014 ${STORY_MOMENT_WORDS[0]}\u2013${STORY_MOMENT_WORDS[1]} words: the tension (plan line 2). It must grow out of the scene, and it is something that
-  happens, not something the reader thinks about.
-"handle" \u2014 ${STORY_HANDLE_WORDS[0]}\u2013${STORY_HANDLE_WORDS[1]} words: the choice (plan line 3): the NEXT thing the reader does and what happens because of it
-  ("you might", "usually"). Never repeat an action or phrase from "moment". If a TOLD-VS-PLAYED note is given, you may fold
-  it in here, warmly, with no winner.
-"means" \u2014 ${STORY_MEANS_WORDS[0]}\u2013${STORY_MEANS_WORDS[1]} words: the payoff (plan line 4): one plain, kind line on what that choice says about the reader.
-  Only this part explains.
-"joke" \u2014 only when a JOKE TARGET is given. Exactly one sentence that CALLS BACK to one concrete detail from the scene
-  (the best jokes land on something the reader already saw). It must make sense to someone who just read the story.
-${STORY_JOKE_RULES}
-"title" \u2014 written LAST: two to four lowercase words, starting with "the", that describe the reader plainly, the way a
-  friend would sum them up after hearing this story: a kind describing word plus a role word (shape only: "the
-  [describing word] [role]"). Someone who never read the story should still get it. No metaphors or objects
-  ("the open door"), never about worry, doubt, loneliness or struggle.
-
-"noticed" \u2014 ${STORY_NOTICED_WORDS[0]}\u2013${STORY_NOTICED_WORDS[1]} words: what the other people in the scene probably noticed about the reader in that
-  moment. Kind and specific, from their side.
-"otherWay" \u2014 ${STORY_OTHER_WAY_WORDS[0]}\u2013${STORY_OTHER_WAY_WORDS[1]} words: how the same moment might have gone if the reader had leaned the other way
-  (the OTHER WAY given at the end). Interesting, never better or worse; no labels.
-"nextTime" \u2014 ${STORY_NEXT_WORDS[0]}\u2013${STORY_NEXT_WORDS[1]} words, one short question that teases a different everyday moment for the next story.
-
-Return JSON only, exactly this shape:
-{"plan": "<four short lines>", "scene": "...", "moment": "...", "handle": "...", "noticed": "...", "otherWay": "...", "means": "...", "joke": "<one sentence>", "nextTime": "<a question>", "title": "<the ...>"}`;
-function buildStoryPromptFromSides(input) {
-  const sides = input.sides.map((row, index) => {
-    const label = index === 0 ? "SIDE A" : "SIDE B";
-    const bits = [
-      row.lead ? `- Lead lean, in one word (never print it): ${AXIS_POLE_NAME[row.lead.axis][row.lead.lean]}` : null,
-      row.card ? `- How it tends to show: ${row.card.summary}` : null,
-      row.card ? `- What it does well: ${row.card.strength}` : null,
-      row.card ? `- Where it can catch: ${row.card.watchOut}` : null
-    ].filter((line) => line != null);
-    return `${label} (internal; never name it)
-${bits.join("\n") || "- (no stored lines)"}`;
-  });
-  const jokeTarget = input.jokeTarget;
-  const otherWay = input.sides[0]?.lead ?? null;
-  return `${STORY_CARD_PROMPT_STATIC}
-
-${sides.join("\n\n")}
-
-TOLD-VS-PLAYED: none. Do not invent a split.
-${jokeTarget ? `JOKE TARGET: the ${AXIS_POLE_NAME[jokeTarget.axis][jokeTarget.lean]} side (never print that word).` : "JOKE TARGET: none."}
-${otherWay ? `OTHER WAY (for "otherWay"; never print the word): ${AXIS_POLE_NAME[otherWay.axis][otherWay.lean === "high" ? "low" : "high"]}` : "OTHER WAY: the opposite of SIDE A\u2019s lead lean."}${input.setting ? `
-SETTING FOR THIS STORY: ${input.setting}` : ""}`;
+var STORY_HOOK_VARIETY_LIMIT = 0.6;
+function storyTitleViolation(title) {
+  const t = title.trim();
+  if (t.length > STORY_TITLE_MAX_CHARS) return "title: too long";
+  const parts = t.split(/\s+/).filter(Boolean);
+  if (parts.length < STORY_TITLE_WORDS[0] || parts.length > STORY_TITLE_WORDS[1]) return "title: length";
+  if (!parts.every((p) => /^[A-Z][A-Za-z'’-]*$/.test(p))) return "title: shape";
+  if (/\b(Anxi|Worr|Lonel|Alone|Sad|Fear|Struggl|Broken|Overthink|Doubt|Nerv|Insecur|Clingy|Needy|Lost|Fragile|Timid|Shy|Avoidant|Attach)/.test(
+    t
+  )) {
+    return "title: tone";
+  }
+  return storyLabelLeak(t);
 }
+var STORY_FEW_SHOTS = [
+  {
+    title: "The Bread Basket Diplomat",
+    hook: "Friday, 8:40. Your table has been staring at the kitchen door like it owes them money.",
+    twist: `The server arrives empty-handed. "So the kitchen lost your slip." Your friend's eye starts to twitch. Someone opens a delivery app under the table.`,
+    move: "You slide the bread basket to the middle like a peace treaty, order whatever is fastest plus fries for the hostages, and start a ranking of everyone's worst-ever restaurant disaster.",
+    punchline: "By the time the food lands, nobody wants it. They want round two of the rankings. And more bread.",
+    reveal: "When plans break, you quietly turn the delay into the good part.",
+    next: "Next time: you're first at the cinema. Your friends are not."
+  },
+  {
+    title: "The Spreadsheet Whisperer",
+    hook: "The projector cuts out four minutes before the client walks in.",
+    twist: 'Your boss mouths "slides?" across the room. The backup laptop asks for an update. All 212 of them.',
+    move: "You already printed the deck just in case. You hand out copies still warm from the printer and run the meeting like it was meant to be paper.",
+    punchline: "The client asks if printed decks are new. Your boss has never said yes faster.",
+    reveal: "Your just in case is the room's rescue.",
+    next: "Next: a group trip, and you're not the one planning it."
+  },
+  {
+    title: "The Detour Captain",
+    hook: "The hardware store is closed. The sign says back in 10 and it is clearly been weeks.",
+    twist: 'Your sibling wants to go home. The shelf you promised Mom is still in pieces in the trunk. "We are not driving across town," they say.',
+    move: "You turn toward the flea market. Twenty minutes later you haggle for a vintage drill with a man named only by his hat.",
+    punchline: "The shelf goes up crooked. Mom loves it. She loves the hat guy's drill more.",
+    reveal: "A closed door just looks like a side quest to you.",
+    next: "Next time: someone else picks the restaurant. Brave."
+  }
+];
+function formatFewShot(row) {
+  return `{"title":"${row.title}","hook":"${row.hook}","twist":"${row.twist}","move":"${row.move}","punchline":"${row.punchline}","reveal":"${row.reveal}","next":"${row.next}"}`;
+}
+var BANNED_CLICHE_PROMPT = "like nothing happened, take a breath, shoulders drop, small hiccups, just another, a ruined schedule, sweat onto, the whole table, you might have, on a day like this, the real win, in that moment, little did, walk into a bar, that's what she said, plot twist, living the dream, it is what it is, say less, no cap, spoiler alert, everyone else";
+var STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. Write a 100-word micro-story starring the reader ("you"), told in
+present tense, that shows one trait from the SIDES through what they DO \u2014 never by naming it.
+
+SHAPE (cold open \u2192 twist \u2192 move \u2192 punchline \u2192 reveal \u2192 teaser):
+"hook" ${STORY_HOOK_WORDS[0]}\u2013${STORY_HOOK_WORDS[1]} words: open mid-action, the second something goes wrong. One vivid, specific detail. No setup.
+"twist" ${STORY_TWIST_WORDS[0]}\u2013${STORY_TWIST_WORDS[1]} words: it escalates. Raise the stakes for the reader. You may include ONE short line someone says, in quotes.
+"move" ${STORY_MOVE_WORDS[0]}\u2013${STORY_MOVE_WORDS[1]} words: the reader's surprising, specific response, plus how the others react. Show, don't explain.
+"punchline" ${STORY_PUNCHLINE_WORDS[0]}\u2013${STORY_PUNCHLINE_WORDS[1]} words: call back to the hook's detail with a reversal or rule-of-three. Make a reader smirk.
+"reveal" ${STORY_REVEAL_WORDS[0]}\u2013${STORY_REVEAL_WORDS[1]} words: the one line that names what this says about them, as a compliment. No trait labels. "You're the person who\u2026" is allowed here only.
+"next" ${STORY_NEXT_WORDS[0]}\u2013${STORY_NEXT_WORDS[1]} words: a cliffhanger for the next story, a statement, not a question.
+"title" ${STORY_TITLE_WORDS[0]}\u2013${STORY_TITLE_WORDS[1]} words, Title Case: a memorable nickname from the story's best detail ("The Bread Basket Diplomat").
+"otherWay" ${STORY_OTHER_WAY_WORDS[0]}\u2013${STORY_OTHER_WAY_WORDS[1]} words, optional: how the same moment goes if the reader leans the OTHER WAY. Interesting, never better or worse; no labels.
+"punchlines" \u2014 two or three candidate punchlines (the craft block). "punchline" is the best of them.
+
+VOICE: punchy, warm, a little cheeky, like the funniest friend retelling your night. Specific beats general.
+Present tense, second person, plus ONE other voice: a friend, sibling, boss or server says one short line in quotes.
+Exaggerated numbers are fine when funny ("the fourth any minute now", "all 212 of them"). Unnamed side characters are fine ("the hat guy").
+Vary sentence length. No "!", no emoji, no advice, no "should", no "always".
+Show the trait through action. Only "reveal" may name what it shows, in plain words, never a trait or category label.
+
+NEVER: real names, brands, places, diagnosis, cruelty, trait/category words, hedges ("you might", "on a day like this"),
+niche phone details (voice notes, typing bubbles, read receipts), or these clich\xE9s: ${BANNED_CLICHE_PROMPT}.
+Stay in ONE setting. Never leave square or angle brackets in the answer.
+
+${STORY_JOKE_RULES}
+
+SETTING (this overrides the "how people live now" list in any voice block \u2014 texts, voice notes, typing bubbles and
+read receipts are NOT the default setting here)
+- Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
+  a shared chore, a busy commute. A phone can be a detail, never voice notes, typing bubbles or read receipts.
+- Unusual-but-plausible is good (a laminated dessert menu, a birthday balloon on the wrong table). If a detail needs a
+  footnote, cut it.
+
+The SIDES at the end say what to draw on; write from their meaning, never their labels.
+
+Plan silently first in "plan" (hook detail, stake, move, callback). Return JSON only:
+{"plan":"...","hook":"...","twist":"...","move":"...","punchline":"...","punchlines":["...","...","..."],"reveal":"...","next":"...","title":"...","otherWay":"..."}
+
+EXAMPLES (match the energy, never reuse the content):
+${STORY_FEW_SHOTS.map((row, i) => `${i + 1}. ${formatFewShot(row)}`).join("\n")}`;
 function words3(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -9383,7 +9557,21 @@ function within(text, [min, max]) {
   const n = words3(text);
   return n >= min && n <= max;
 }
-function parseStoryCardAnswer(raw, opts) {
+function isStoryV2(card) {
+  return card.v === 2 && !!(card.hook && card.twist && card.move && card.punchline && card.reveal);
+}
+function isStoryV3(card) {
+  return card.v === 3 && !!(card.settingTag && (card.lines?.hook?.length || card.hook));
+}
+function beatsOverlap(parts) {
+  for (let i = 0; i < parts.length; i += 1) {
+    for (let j = i + 1; j < parts.length; j += 1) {
+      if (storyOverlap(parts[i], parts[j]) > STORY_REPEAT_LIMIT) return "repeat";
+    }
+  }
+  return null;
+}
+function parseStoryCardAnswer(raw, opts = {}) {
   const reject = (reason) => ({ card: null, reason });
   let data;
   try {
@@ -9396,55 +9584,130 @@ function parseStoryCardAnswer(raw, opts) {
   }
   if (typeof data !== "object" || data == null) return reject("not an object");
   const obj = data;
-  const core = { scene: "", moment: "", means: "" };
-  const limits = { scene: STORY_SCENE_WORDS, moment: STORY_MOMENT_WORDS, means: STORY_MEANS_WORDS };
-  for (const key of ["scene", "moment", "means"]) {
+  const required = {
+    hook: STORY_HOOK_WORDS,
+    twist: STORY_TWIST_WORDS,
+    move: STORY_MOVE_WORDS,
+    reveal: STORY_REVEAL_WORDS
+  };
+  const core = { hook: "", twist: "", move: "", reveal: "" };
+  for (const key of Object.keys(required)) {
     const value = obj[key];
     if (typeof value !== "string") return reject(`${key} missing`);
     const line = value.trim();
-    if (!within(line, limits[key])) return reject(`${key}: length`);
-    const bad = storyCardLineViolation(line);
+    if (!within(line, required[key])) return reject(`${key}: length`);
+    const bad = storyCardLineViolation(line, { allowYouAre: key === "reveal" });
     if (bad) return reject(`${key}: ${bad}`);
     core[key] = line;
   }
-  const optional = (value, limit) => {
+  if (typeof obj.title !== "string") return reject("title missing");
+  const title = obj.title.trim();
+  const titleBad = storyTitleViolation(title);
+  if (titleBad) return reject(titleBad);
+  const candidatePunchlines = [];
+  if (typeof obj.punchline === "string" && obj.punchline.trim()) candidatePunchlines.push(obj.punchline.trim());
+  if (Array.isArray(obj.punchlines)) {
+    for (const item of obj.punchlines) {
+      if (typeof item === "string" && item.trim()) candidatePunchlines.push(item.trim());
+    }
+  }
+  const punchline = pickBestPunchline(candidatePunchlines, core, (line) => {
+    if (!within(line, STORY_PUNCHLINE_WORDS)) return false;
+    if (storyCardLineViolation(line)) return false;
+    if (punchlineCraftViolation(line)) return false;
+    return true;
+  });
+  if (!punchline) return reject("punchline");
+  const optional = (value, limit, allowYouAre = false) => {
     if (typeof value !== "string") return null;
     const line = value.trim();
-    return within(line, limit) && !storyCardLineViolation(line) ? line : null;
+    return within(line, limit) && !storyCardLineViolation(line, { allowYouAre }) ? line : null;
   };
-  const handleRaw = optional(obj.handle, STORY_HANDLE_WORDS);
-  const handle = handleRaw && storyOverlap(handleRaw, core.moment) <= STORY_REPEAT_LIMIT ? handleRaw : null;
-  let title = null;
-  if (typeof obj.title === "string") {
-    const t = obj.title.trim().toLowerCase();
-    if (!titleViolation(t, "") && !storyLabelLeak(t)) title = t;
-  }
-  let joke = null;
-  if (opts.jokeAsked && typeof obj.joke === "string") {
-    const line = obj.joke.trim();
-    if (!cardJokeViolation(line) && !storyCardLineViolation(line)) joke = line;
-  }
-  const noticed = optional(obj.noticed, STORY_NOTICED_WORDS);
+  const nextRaw = optional(obj.next, STORY_NEXT_WORDS, true);
+  const next = nextRaw && !/\?$/.test(nextRaw) ? nextRaw : null;
   const otherWay = optional(obj.otherWay, STORY_OTHER_WAY_WORDS);
-  const nextRaw = optional(obj.nextTime, STORY_NEXT_WORDS);
-  const nextTime = nextRaw && /\?$/.test(nextRaw) ? nextRaw : null;
+  const allBeats = [core.hook, core.twist, core.move, punchline, core.reveal, next, otherWay].filter(
+    (part) => !!part
+  );
+  if (quotedLineCount(allBeats.join("\n")) > 1) return reject("too many quotes");
+  const overlap = beatsOverlap(allBeats);
+  if (overlap) return reject(overlap);
+  const recent = [
+    ...opts.recentHooks ?? [],
+    ...opts.allowExampleHooks ? [] : STORY_FEW_SHOTS.map((row) => row.hook)
+  ];
+  if (recent.some((hook) => storyOverlap(core.hook, hook) >= STORY_HOOK_VARIETY_LIMIT)) {
+    return reject("hook: too similar");
+  }
   return {
-    card: { title, scene: core.scene, moment: core.moment, handle, means: core.means, joke, noticed, otherWay, nextTime },
+    card: {
+      v: STORY_CARD_VERSION,
+      title,
+      hook: core.hook,
+      twist: core.twist,
+      move: core.move,
+      punchline,
+      reveal: core.reveal,
+      next,
+      otherWay,
+      source: "ai"
+    },
     reason: null
   };
 }
 function storyCardBody(card) {
+  if (isStoryV3(card) && card.lines) {
+    const texts = [...card.lines.hook, ...card.lines.twist, ...card.lines.move, ...card.lines.punchline].map(
+      (line) => line.kind === "dialogue" ? line.text : line.text
+    );
+    return [...texts, card.reveal, card.next].filter(Boolean).join(" ");
+  }
+  if (isStoryV2(card) || isStoryV3(card)) {
+    return [card.hook, card.twist, card.move, card.punchline, card.reveal, card.next].filter(Boolean).join(" ");
+  }
   return [card.scene, card.moment, card.handle, card.means].filter(Boolean).join(" ");
+}
+function s(v) {
+  return typeof v === "string" && v.trim() ? v.trim() : null;
 }
 function parseStoredStoryCard(raw) {
   if (typeof raw !== "object" || raw == null) return null;
   const obj = raw;
-  const s = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+  const hook = s(obj.hook);
+  const twist = s(obj.twist);
+  const move = s(obj.move);
+  const punchline = s(obj.punchline);
+  const reveal = s(obj.reveal);
+  if (obj.v === 3 || obj.v === 2 && hook && twist && move && punchline && reveal || hook && twist && move && punchline && reveal) {
+    if (!hook || !twist || !move || !punchline || !reveal) return null;
+    const source = obj.source === "bank" ? "bank" : obj.source === "template" ? "template" : "ai";
+    const lines = obj.lines && typeof obj.lines === "object" ? obj.lines : void 0;
+    const card6 = obj.card6 && typeof obj.card6 === "object" ? obj.card6 : void 0;
+    return {
+      v: obj.v === 3 ? 3 : 2,
+      title: s(obj.title),
+      hook,
+      twist,
+      move,
+      punchline,
+      reveal,
+      next: s(obj.next),
+      otherWay: s(obj.otherWay),
+      settingTag: s(obj.settingTag) ?? void 0,
+      ...lines ? { lines } : {},
+      ...card6 ? { card6 } : {},
+      source,
+      ...typeof obj.bankId === "string" && obj.bankId.trim() ? { bankId: obj.bankId.trim() } : {},
+      ...typeof obj.topicId === "string" ? { topicId: obj.topicId } : {},
+      ...obj.romance === true ? { romance: true } : {}
+    };
+  }
   const scene = s(obj.scene);
   const moment2 = s(obj.moment);
   const means = s(obj.means);
   if (!scene || !moment2 || !means) return null;
   return {
+    v: 1,
     title: s(obj.title),
     scene,
     moment: moment2,
@@ -9569,20 +9832,25 @@ var STORY_LIBRARY = {
   cardsPerCall: 1,
   buildPrompt(bucket, angles) {
     const angle2 = angles[0] ?? "friends";
+    const sides = promptSides(bucket, angle2);
     return {
-      prompt: buildStoryPromptFromSides({
-        sides: promptSides(bucket, angle2),
-        jokeTarget: bucket.joke,
-        setting: STORY_ANGLES[angle2] ?? null
-      }),
-      maxOutputTokens: 700
+      prompt: `${STORY_POLISH_PROMPT_STATIC}
+
+SETTING FOR THIS STORY: ${STORY_ANGLES[angle2] ?? "a plan with friends"}
+TOLD-VS-PLAYED: none. Do not invent a split.
+SIDES (internal; never name them, never invent a trait from them):
+${sides.map((row, i) => `${i === 0 ? "SIDE A" : "SIDE B"}: ${row.lead ? `${row.lead.axis}.${row.lead.lean}` : "none"}`).join("\n")}
+${bucket.joke ? `JOKE TARGET (never print the word): ${bucket.joke.axis}.${bucket.joke.lean}` : "JOKE TARGET: none."}
+
+If no finished template story is supplied below, return empty JSON {}. Never invent a plot.`,
+      maxOutputTokens: STORY_OUTPUT_TOKENS
     };
   },
   parse(raw, _bucket, angles) {
     const parsed = parseStoryCardAnswer(raw, { jokeAsked: true });
     const c = parsed.card;
     if (!c) return { cards: [], reason: parsed.reason ?? "no card" };
-    const joined = [storyCardBody(c), c.noticed, c.otherWay, c.nextTime, c.joke, c.title].filter(Boolean).join(" ");
+    const joined = [storyCardBody(c), c.otherWay, c.title].filter(Boolean).join(" ");
     if (containsFrameworkTerm(joined) || matchingJargonTerm(joined) || storyNamesACategory(joined)) {
       return { cards: [], reason: "framework or jargon" };
     }

@@ -22,13 +22,19 @@ import {
 } from '../src/lib/sage-story';
 import {
   STORY_CARD_PROMPT_STATIC,
+  STORY_FEW_SHOTS,
+  STORY_OUTPUT_TOKENS,
   STORY_REPEAT_LIMIT,
   buildStoryCardPrompt,
+  isStoryV2,
+  parseStoredStoryCard,
   parseStoryCardAnswer,
   storyCardBody,
   storyLabelLeak,
   storyOverlap,
 } from '../src/lib/story-card';
+import { pickBestPunchline, punchlineCraftViolation } from '../src/lib/voice/card-joke';
+import { STORY_JOKE_RULES } from '../src/lib/voice/moment-voice';
 import {
   partnerScore,
   pickJokeTarget,
@@ -42,7 +48,6 @@ import {
 } from '../src/lib/story-thread';
 import { applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
 import type { TraitAxis } from '../src/lib/traits';
-import { STORY_JOKE_RULES } from '../src/lib/voice/moment-voice';
 
 let passed = 0;
 function ok(label: string) {
@@ -281,81 +286,155 @@ const rich = tracksOf({
   ok('the thread is saved with the story, old stories still read, and the fold passes tracks, last thread and crisis');
 }
 
-// Story v3 (emci, 2026-10-09): the Story as a card, checked part by part.
+// Story v4 (emci, 2026-10-13): six beats, nickname titles, punchline craft.
 {
   const good = {
-    title: 'the calm fixer',
-    scene: 'On a day like this, the group chat lights up about a dinner plan while you finish up at work.',
-    moment: 'The plan starts to wobble, and you notice you want it settled while a friend wants to keep it loose.',
-    handle: 'You might offer a simple time and place, then leave a little room for the others to add to it.',
-    means: 'You tend to bring calm to a messy plan, and people quietly count on that more than they say.',
-    joke: 'Your calendar has seen more drafts of this dinner than the restaurant has seen guests.',
+    title: 'The Bread Basket Diplomat',
+    hook: 'Friday, 8:40. Your table has been staring at the kitchen door like it owes them money.',
+    twist: 'The server arrives empty-handed. "So the kitchen lost your slip." Your friend\'s eye starts to twitch. Someone opens a delivery app under the table.',
+    move: 'You slide the bread basket to the middle like a peace treaty, order whatever is fastest plus fries for the hostages, and start a ranking of everyone\'s worst-ever restaurant disaster.',
+    punchline: 'By the time the food lands, nobody wants it. They want round two of the rankings. And more bread.',
+    punchlines: [
+      'By the time the food lands, nobody wants it. They want round two of the rankings. And more bread.',
+      'Things worked out in the end for everyone.',
+    ],
+    reveal: 'When plans break, you quietly turn the delay into the good part.',
+    next: 'Next time: you\'re first at the cinema. Your friends are not.',
   };
-  const parsed = parseStoryCardAnswer(JSON.stringify(good), { jokeAsked: true });
-  assert.ok(parsed.card, `a grounded card is accepted (${parsed.reason})`);
-  assert.equal(parsed.card!.joke, good.joke);
-  assert.equal(parseStoryCardAnswer(JSON.stringify(good), { jokeAsked: false }).card!.joke, null, 'no joke asked → none kept');
+  const parsed = parseStoryCardAnswer(JSON.stringify(good), { jokeAsked: true, allowExampleHooks: true });
+  assert.ok(parsed.card, `a grounded v2 card is accepted (${parsed.reason})`);
+  assert.equal(parsed.card!.v, 2);
+  assert.ok(isStoryV2(parsed.card!));
+  assert.equal(parsed.card!.punchline, good.punchline);
   const bad = (patch: Record<string, unknown>) => JSON.stringify({ ...good, ...patch });
-  assert.match(parseStoryCardAnswer(bad({ moment: 'Your Accountable side kicks in the moment the dinner plan starts to wobble with friends.' }), { jokeAsked: false }).reason ?? '', /moment: side label/, 'a trait label in the text is rejected');
-  assert.match(parseStoryCardAnswer(bad({ scene: 'On a day like this, twelve messages about dinner arrive before you finish work.' }), { jokeAsked: false }).reason ?? '', /count word/, 'no counting');
+  assert.match(
+    parseStoryCardAnswer(bad({ twist: 'Your Accountable side kicks in the moment the kitchen loses the slip with friends around.' }), {
+      allowExampleHooks: true,
+    }).reason ?? '',
+    /twist: side label/,
+    'a trait label in the text is rejected',
+  );
+  assert.ok(
+    parseStoryCardAnswer(bad({ hook: 'The kitchen door has been ignored through 212 tiny glances from the table.' }), { allowExampleHooks: true })
+      .card,
+    'exaggerated numbers are allowed',
+  );
   assert.equal(parseStoryCardAnswer('nope', { jokeAsked: false }).reason, 'not json');
-  const noHandle = parseStoryCardAnswer(bad({ handle: 'Your Steady side handles it.' }), { jokeAsked: false }).card!;
-  assert.equal(noHandle.handle, null, 'a bad optional part is dropped, never shown, not paid for twice');
-  assert.equal(parseStoryCardAnswer(bad({ title: 'the anxious planner' }), { jokeAsked: false }).card!.title, null);
+  assert.match(
+    parseStoryCardAnswer(bad({ title: 'The Anxious Planner' }), { allowExampleHooks: true }).reason ?? '',
+    /title: tone/,
+  );
   assert.equal(storyLabelLeak('You pull into the driveway as the chat buzzes.'), null, 'everyday words stay allowed');
   assert.equal(storyLabelLeak('Then How You Love shows up again.'), 'names a category');
   assert.equal(storyLabelLeak('It is how you love the people around you, plainly.'), null, 'the same words in lowercase are an everyday phrase');
-  assert.equal(parseStoryCardAnswer(bad({ title: 'the steady planner' }), { jokeAsked: false }).card!.title, 'the steady planner', 'a plain describing title is kept (emci 2026-10-09)');
-  assert.equal(parseStoryCardAnswer(bad({ title: 'the anxious planner' }), { jokeAsked: false }).card!.title, null, 'a worry title is still dropped');
-  // Flow (emci 2026-10-09): everyday settings, no niche phone details, no repeated part.
   assert.match(
-    parseStoryCardAnswer(bad({ scene: 'A voice note arrives while you make tea in your kitchen, and the kettle begins to whistle loudly.' }), { jokeAsked: false }).reason ?? '',
-    /scene: niche phone detail/,
+    parseStoryCardAnswer(
+      bad({ hook: 'A voice note arrives while you make tea in your kitchen, and the kettle begins to whistle loudly.' }),
+      { allowExampleHooks: true },
+    ).reason ?? '',
+    /hook: niche phone detail/,
     'no voice notes, typing bubbles or read receipts',
   );
   const repeat = parseStoryCardAnswer(
-    bad({ handle: 'The dinner plan starts to wobble, and you want it settled while a friend wants to keep things loose.' }),
-    { jokeAsked: false },
-  ).card!;
-  assert.equal(repeat.handle, null, 'a handle that repeats the moment is dropped');
-  assert.ok(storyOverlap(good.handle, good.moment) <= STORY_REPEAT_LIMIT, 'a handle that moves on is kept');
+    bad({
+      move: 'Friday, 8:40. Your table has been staring at the kitchen door like it owes them money and then some more.',
+    }),
+    { allowExampleHooks: true },
+  );
+  assert.match(repeat.reason ?? '', /repeat|move: length/);
+  assert.ok(storyOverlap(good.move, good.twist) <= STORY_REPEAT_LIMIT, 'a move that moves on is kept');
   const flowPrompt = STORY_CARD_PROMPT_STATIC;
-  assert.match(flowPrompt, /"plan" — write this FIRST/, 'plan first');
-  assert.match(flowPrompt, /CALLS BACK to one concrete detail from the scene/, 'callback joke');
+  assert.match(flowPrompt, /Plan silently first in "plan"/, 'plan first');
+  assert.match(flowPrompt, /call back to the hook/);
   assert.match(flowPrompt, /never voice notes, typing bubbles or read receipts/);
   assert.match(flowPrompt, /this overrides the "how people live now" list/, 'the setting rule wins over the voice block');
-  assert.equal(parseStoryCardAnswer(bad({ joke: 'Your voice notes about dinner are longer than the dinner itself.' }), { jokeAsked: true }).card!.joke, null, 'no niche phone details in the joke either');
+  assert.match(flowPrompt, /The Bread Basket Diplomat/);
+  for (const shot of STORY_FEW_SHOTS) {
+    const row = parseStoryCardAnswer(JSON.stringify(shot), { allowExampleHooks: true });
+    assert.ok(row.card, `few-shot ${shot.title} fails: ${row.reason}`);
+  }
   const card = parsed.card!;
-  const saved = parseSageStory({ body: storyCardBody(card), fingerprint: 'f', generatedOn: '2026-10-09', card })!;
-  assert.deepEqual(saved.card, card, 'the card is saved and read back');
-  assert.equal(parseSageStory({ body: 'A day.', fingerprint: 'f', generatedOn: '2026-10-09' })!.card, undefined, 'old body-only stories still read');
+  const saved = parseSageStory({ body: storyCardBody(card), fingerprint: 'f', generatedOn: '2026-10-13', card })!;
+  assert.equal(saved.card!.hook, card.hook, 'the v2 card is saved and read back');
+  assert.equal(parseSageStory({ body: 'A day.', fingerprint: 'f', generatedOn: '2026-10-13' })!.card, undefined, 'old body-only stories still read');
+  const v1 = parseStoredStoryCard({
+    title: 'the calm fixer',
+    scene: 'On a day like this the group chat lights up.',
+    moment: 'The plan starts to wobble between friends who want different things tonight.',
+    means: 'You tend to bring calm to a messy plan more than they say.',
+  });
+  assert.ok(v1 && !isStoryV2(v1), 'v1 saved cards still parse');
   const t2 = pickStoryThread({ tracks: rich, last: null, crisisToday: false })!;
-  const p1 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: t2, userId: 'u1', ymd: '2026-10-09' });
+  const p1 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: t2, userId: 'u1', ymd: '2026-10-13' });
   assert.ok(p1.startsWith(STORY_CARD_PROMPT_STATIC), 'fixed instructions first (cache-friendly)');
   const foldSrc = read('src/components/sage-story-fold.tsx');
-  assert.match(foldSrc, /story\?\.card \? \(\s*<>\s*<StoryCardView/, 'a card story renders as parts');
-  assert.match(foldSrc, /Built from: /, 'the categories behind it show as a label');
+  assert.match(foldSrc, /StoryV2View/, 'a v2 card renders as swipe beats');
+  assert.match(foldSrc, /StoryCardView/, 'a v1 card still has the labelled path');
+  assert.match(read('src/components/story-v2-view.tsx'), /Built from:/, 'the categories behind it sit behind an info tap');
   assert.match(foldSrc, /logAiReject\('story'/, 'a rejection is logged with its reason only');
-  // Deeper Story (emci 2026-10-09): what they noticed, the other way, next time — optional, checked, dropped when weak.
   const deep = parseStoryCardAnswer(
     bad({
-      noticed: 'Your friend notices you made the plan easier for everyone without making a big deal of it.',
-      otherWay: 'Had you leaned the other way, you might have let the plan drift and enjoyed seeing where the evening took everyone.',
-      nextTime: 'What happens when the plan is yours to make?',
+      otherWay: 'Had you panicked, the delivery app would have won and the bread basket would have stayed in the corner.',
     }),
-    { jokeAsked: true },
+    { allowExampleHooks: true, jokeAsked: true },
   ).card!;
-  assert.ok(deep.noticed && deep.otherWay && deep.nextTime, 'the deeper parts are kept when they pass');
-  const deepBad = parseStoryCardAnswer(
-    bad({ noticed: 'Your Steady side was obvious.', nextTime: 'Next time, a new plan.' }),
-    { jokeAsked: true },
-  ).card!;
-  assert.equal(deepBad.noticed, null, 'a weak noticed line is dropped');
-  assert.equal(deepBad.nextTime, null, 'next time must be a question');
-  assert.match(STORY_CARD_PROMPT_STATIC, /"otherWay" — /);
-  const p2 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: { ...t2, joke: null }, userId: 'u1', ymd: '2026-10-09' });
-  assert.doesNotMatch(p2, /JOKE TARGET: none/, 'every Story gets its joke now');
-  ok('Story v3: a card in parts, no trait words in the text, optional parts dropped, old stories still read, deeper parts checked');
+  assert.ok(deep.otherWay, 'Plot B is kept when it passes');
+  const deepBad = parseStoryCardAnswer(bad({ otherWay: 'Your Steady side would have panicked.' }), { allowExampleHooks: true }).card;
+  assert.equal(deepBad?.otherWay ?? null, null, 'a weak Plot B is dropped');
+  assert.match(STORY_CARD_PROMPT_STATIC, /"otherWay"/);
+  const p2 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: { ...t2, joke: null }, userId: 'u1', ymd: '2026-10-13' });
+  assert.doesNotMatch(p2, /JOKE TARGET: none/, 'every Story still gets a joke target from SIDE A');
+  assert.match(STORY_JOKE_RULES, /rule of three/);
+  assert.match(STORY_JOKE_RULES, /last 6/);
+  assert.match(STORY_JOKE_RULES, /candidate punchlines/);
+  assert.match(STORY_JOKE_RULES, /explaining the joke/);
+  assert.match(STORY_JOKE_RULES, /puns for their own sake/);
+  assert.equal(punchlineCraftViolation('The joke is that the bread won.'), 'explains the joke');
+  assert.equal(punchlineCraftViolation('Living the dream, the table is fine.'), 'banned cliché');
+  assert.equal(punchlineCraftViolation(good.punchline), null);
+  const picked = pickBestPunchline(
+    [
+      'Things worked out in the end for everyone.',
+      good.punchline,
+      'Which is funny because the wait became the night.',
+    ],
+    { hook: good.hook, twist: good.twist, move: good.move },
+  );
+  assert.equal(picked, good.punchline, 'the rerank keeps the callback punchline');
+  assert.equal(STORY_OUTPUT_TOKENS, 800);
+  assert.match(read('src/lib/explore/generate.ts'), /STORY_OUTPUT_TOKENS, meta, 0\.95/);
+  assert.match(foldSrc, /for \(let pass = 1; pass <= 2/, 'one retry on a rejected story');
+  assert.match(foldSrc, /onOpen=\{\(\) => \{ void rewriteOldStory\(\); \}\}/, 'old cards rewrite on open, not on mount');
+  const view = read('src/components/story-v2-view.tsx');
+  assert.match(view, /reduceMotion\s*\?[\s\S]*FadeIn\.duration\(180\)/, 'Reduce Motion is a cross-fade, never static');
+  assert.match(view, /FadeInDown[\s\S]*springify/, 'Motion Full is a bigger fade and rise');
+  assert.doesNotMatch(view, /theme\.motionMs >= 500/, 'Motion Full is OS !reduceMotion, not only Zen');
+  assert.match(view, /Previous beat/, 'VoiceOver has a swipe alternative');
+  assert.match(view, /accessibilityRole="adjustable"/, 'the pager is adjustable');
+  assert.doesNotMatch(view, /allowFontScaling=\{false\}/, 'Dynamic Type stays on');
+  assert.match(view, /Share\.share[\s\S]*catch/, 'share failures do not throw');
+  assert.doesNotMatch(view, /What they noticed|What it means for you/);
+  assert.equal(parseStoryCardAnswer('{not json').reason, 'not json', 'malformed JSON is rejected');
+  assert.match(
+    parseStoryCardAnswer(
+      bad({
+        hook: 'The kitchen door has been ignored through tiny glances from the waiting table and then some more waiting again.',
+      }),
+      { allowExampleHooks: true },
+    ).reason ?? '',
+    /hook: length/,
+    'an over-long hook is rejected',
+  );
+  assert.equal(punchlineCraftViolation('The buffer looks like luck to everyone else tonight.'), 'banned cliché');
+  const rewriteFn = foldSrc.slice(
+    foldSrc.indexOf('const rewriteOldStory'),
+    foldSrc.indexOf('Crisis still suppresses'),
+  );
+  assert.doesNotMatch(rewriteFn, /claimStoryGenerate/, 'a lazy rewrite never spends the Story token claim');
+  assert.match(rewriteFn, /markStoryRewriteTried/, 'a failed rewrite is remembered so remounts do not mass-call');
+  assert.match(foldSrc, /withTimeout\(pending, AI_TAP_TIMEOUT_MS/, 'AI timeout falls through to the bank');
+  assert.match(read('scripts/live-ai.ts'), /request\.topP/, 'live Story checks pass topP 0.95');
+  ok('Story v4: six beats, nickname titles, numbers and one quote allowed, v1 still reads, Plot B optional');
 }
 
 console.log(`\n${passed} story-thread checks passed`);

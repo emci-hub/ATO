@@ -249,7 +249,7 @@ const aiBadge = read('src/components/ai-badge.tsx');
 assert.match(aiBadge, /<Pressable[\s\S]*accessibilityRole="button"[\s\S]*onPress=\{\(\) => setOpen\(\(v\) => !v\)\}/);
 assert.match(aiBadge, /MaterialCommunityIcons name="creation"/);
 assert.match(aiBadge, /\{open \? \([\s\S]*\{AI_BADGE_DESCRIPTION\}/);
-assert.match(read('src/components/sage-story-fold.tsx'), /\{story\?\.body \? <AiBadge \/> : null\}/);
+assert.match(read('src/components/sage-story-fold.tsx'), /source !== 'bank' && story\.card\.source !== 'template' \? <AiBadge \/>/, 'a model Story carries one AI badge; bank and template cards skip it');
 // The consent copy names only what still uses AI (the Story), never the stored
 // focus, questions or categories (emci 2026-10-07).
 assert.doesNotMatch(consent, /writes your daily insight|written insights|personalize your insights/);

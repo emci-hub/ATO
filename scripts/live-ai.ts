@@ -97,6 +97,7 @@ export async function completeViaEdgeLive(
       temperature: request.temperature,
       maxOutputTokens: request.maxOutputTokens,
       responseFormat: request.responseFormat,
+      ...(typeof request.topP === 'number' ? { topP: request.topP } : {}),
     },
   });
   if (error) {

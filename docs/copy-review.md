@@ -2,7 +2,9 @@
 
 Everything below is static text in the app that is now marked as reviewed. AI-written
 text (insight, category cards, Story, AI questions, AI daily lines) is not here: it is
-written fresh each time and stays marked as draft.
+written fresh each time and stays marked as draft. The Story redesign (2026-10-13)
+and its v3 templates are in `docs/story-review.md` + `docs/story/`; both flags stay false and the
+app shows no draft badge on Story.
 
 Tell me any line to change and I fix it before publishing. The 340 daily lines are in
 docs/daily-line-review.md.
