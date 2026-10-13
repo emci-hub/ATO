@@ -52,12 +52,10 @@ import {
   HIDEOUT_IDLE_FACES,
   HIDEOUT_MARGIN_PT,
   HIDEOUT_NIGHT,
-  hideoutArtToScreen,
   hideoutFace,
   hideoutHeroArtPx,
   hideoutIntegerScale,
   hideoutPetBox,
-  hideoutPetWrapOrigin,
   hideoutStageOrigin,
   hideoutTargetPoint,
   planHideoutStep,
@@ -777,6 +775,19 @@ export function PetRoom({
       ],
     };
   });
+  // Street Hideout speech bubble: follows the pet's LIVE feet on the UI thread (the
+  // walk runs on shared values, so a render-time snapshot was left behind). Bottom of
+  // the bubble sits just above the pet's head; clamped inside the room horizontally.
+  // Fit the bubble to its line (11 pt pixel label ≈ 7 pt per char) so the tail stays over the pet.
+  const speechBubbleW = speech ? Math.min(200, Math.max(64, speech.text.length * 7 + 22)) : 200;
+  const speechRoomW = hideoutScale ? hideoutScale.canvasW : width;
+  const isoSpeechStyle = useAnimatedStyle(() => {
+    const cx = ox + artX.value * isoPt;
+    // The figure fills ~55 % of its 192 px cell (guide §2: ~106 px), so the head is ~0.6 box above the feet.
+    const headY = oy + artY.value * isoPt - box * 0.6 + hop.value + drift.value;
+    const left = Math.min(Math.max(cx - 24, ox + 4), ox + speechRoomW - speechBubbleW - 4);
+    return { transform: [{ translateX: left }, { translateY: headY - 6 }] };
+  });
   const bodyStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: (1 - squash.value) * box * 0.5 }, { scaleY: squash.value }],
   }));
@@ -1092,18 +1103,14 @@ export function PetRoom({
           scale={hideoutScale}
           still={motion.cosmeticsStill}
           gentle={motion.vestibularSafe}
-          petHit={(() => {
-            const wrap = hideoutPetWrapOrigin(artXRef.current, artYRef.current, origin, hideoutScale, box, footAt);
-            return { x: wrap.x, y: wrap.y, w: box, h: box };
-          })()}
+          // Buttons stay put on their furniture: no dodging the pet (it made them jump on every redraw).
+          petHit={null}
         />
       ) : null}
       {streetRoom && hideoutScale && speech ? (
-        <StreetSpeechBubble
-          text={speech.text}
-          left={Math.round(hideoutArtToScreen(artXRef.current, artYRef.current, origin, hideoutScale).x - 40)}
-          top={Math.round(hideoutArtToScreen(artXRef.current, artYRef.current, origin, hideoutScale).y - footAt * box - 36)}
-        />
+        <Animated.View pointerEvents="none" style={[styles.speechAnchor, isoSpeechStyle]}>
+          <StreetSpeechBubble text={speech.text} anchored width={speechBubbleW} />
+        </Animated.View>
       ) : null}
       {width > 0 && hideoutStage && hideoutScale ? (
         <HideoutStageControls
@@ -1165,6 +1172,7 @@ const styles = StyleSheet.create({
   room: { flex: 1, minHeight: 0, backgroundColor: '#2e222f' },
   metersSlot: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 8, paddingTop: 6, gap: 8 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
+  speechAnchor: { position: 'absolute', left: 0, top: 0, width: 0, height: 0 },
   coachSlot: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 8, paddingBottom: 6 },
   buffChip: { alignSelf: 'flex-end' },
   foodChip: { flexGrow: 0 },

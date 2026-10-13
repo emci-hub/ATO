@@ -763,9 +763,23 @@ export function StreetStatusStrip({
 }
 
 /** Paper speech bubble with a tail — coach tip or a spoken line. */
-export function StreetSpeechBubble({ text, left, top }: { text: string; left: number; top: number }) {
+/** Speech bubble. `anchored`: sits on its parent's bottom-left (the parent follows the pet). */
+export function StreetSpeechBubble({
+  text,
+  left = 0,
+  top = 0,
+  anchored = false,
+  width = 200,
+}: {
+  text: string;
+  left?: number;
+  top?: number;
+  anchored?: boolean;
+  /** Anchored bubbles need an explicit width (their parent is 0 wide). */
+  width?: number;
+}) {
   return (
-    <View pointerEvents="none" style={[styles.bubble, { left, top }]}>
+    <View pointerEvents="none" style={[styles.bubble, anchored ? { left: 0, bottom: 0, width } : { left, top }]}>
       <Text style={styles.bubbleText} maxFontSizeMultiplier={1.2}>
         {text}
       </Text>
