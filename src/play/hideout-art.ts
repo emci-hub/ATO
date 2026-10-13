@@ -75,7 +75,8 @@ export const ROOM_ART: Record<
   Partial<Record<RoomArtKey, ImageSourcePropType>> & { placeholder: boolean; map: unknown }
 > = {
   hideout: {
-    placeholder: HIDEOUT_ART_PLACEHOLDER,
+    // Real PixelLab art since 2026-10-12 (scripts/hideout-room-art.ts); Loft/Underground are still greybox.
+    placeholder: false,
     map: hideoutMap,
     back: png(ROOM.hideout.back),
     floor: png(ROOM.hideout.floor),

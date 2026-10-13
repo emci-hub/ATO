@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 474 live entries.
+Generated. 489 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -13,7 +13,7 @@ Viewer lists one card per set (not each clip/file).
 - **ui** (26: 11 in use / 15 unused) — UI
 - **icons** (88: 22 in use / 66 unused) — Icons
 - **rooms** (60: 38 in use / 22 unused) — Rooms
-- **props** (34: 0 in use / 34 unused) — Props
+- **props** (49: 0 in use / 49 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
 - **fx** (14: 1 in use / 13 unused) — FX
 - **backgrounds** (2: 2 in use / 0 unused) — Backgrounds
@@ -849,6 +849,26 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `room.underground.underground` | 256×320 | resource | — | — |
+
+## props · hideout · streetwear · unused
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `prop.hideout.streetwear.arcade` | 39×123 | resource | — | — |
+| `prop.hideout.streetwear.arcade-off` | 39×123 | resource | — | — |
+| `prop.hideout.streetwear.beanbag` | 52×54 | resource | — | — |
+| `prop.hideout.streetwear.bowl` | 26×16 | resource | — | — |
+| `prop.hideout.streetwear.couch` | 118×71 | resource | — | — |
+| `prop.hideout.streetwear.cushion` | 62×30 | resource | — | — |
+| `prop.hideout.streetwear.lamp` | 22×110 | resource | — | — |
+| `prop.hideout.streetwear.lamp-off` | 22×110 | resource | — | — |
+| `prop.hideout.streetwear.manhole` | 45×26 | resource | — | — |
+| `prop.hideout.streetwear.plant` | 36×72 | resource | — | — |
+| `prop.hideout.streetwear.rug` | 116×44 | resource | — | — |
+| `prop.hideout.streetwear.speaker` | 23×74 | resource | — | — |
+| `prop.hideout.streetwear.stereo` | 30×65 | resource | — | — |
+| `prop.hideout.streetwear.table` | 69×44 | resource | — | — |
+| `prop.hideout.streetwear.window` | 52×65 | resource | — | — |
 
 ## props · loft · default · unused
 

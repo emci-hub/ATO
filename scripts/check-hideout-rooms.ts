@@ -277,6 +277,21 @@ const HOUR = 60 * 60 * 1000;
 }
 
 {
+  // Occluder crops are cut from ONE combined layer, so two that overlap would paint a neighbour's
+  // pixels over the pet (Hideout PixelLab art, 2026-10-12).
+  const occ = parseIsoGeom(hideoutMap, { sleepOnBed: false }).props.filter((p) => p.occluder);
+  for (const [i, a] of occ.entries()) {
+    for (const b of occ.slice(i + 1)) {
+      const [ax, ay, aw, ah] = a.crop;
+      const [bx, by, bw, bh] = b.crop;
+      const hit = ax < bx + bw && bx < ax + aw && ay < by + bh && by < ay + ah;
+      assert.ok(!hit, `hideout occluder crops overlap: ${a.id} and ${b.id}`);
+    }
+  }
+  ok(`hideout: ${occ.length} occluder crops, none overlapping`);
+}
+
+{
   const boardedY = teaseLayout.boarded.pos[1];
   assert.ok(boardedY < 180, `boarded door is on the wall (y=${boardedY}), not the floor`);
   assert.ok(teaseLayout.scaffold.pos[0] > teaseLayout.boarded.pos[0], 'scaffold leans outside to the right');

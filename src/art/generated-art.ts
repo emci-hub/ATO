@@ -478,6 +478,21 @@ export type ArtId =
   | 'pet.shark-tide-knight.primal.south'
   | 'pet.shark-tide-knight.primal.south-east'
   | 'pet.shark-tide-knight.primal.south-west'
+  | 'prop.hideout.streetwear.arcade'
+  | 'prop.hideout.streetwear.arcade-off'
+  | 'prop.hideout.streetwear.beanbag'
+  | 'prop.hideout.streetwear.bowl'
+  | 'prop.hideout.streetwear.couch'
+  | 'prop.hideout.streetwear.cushion'
+  | 'prop.hideout.streetwear.lamp'
+  | 'prop.hideout.streetwear.lamp-off'
+  | 'prop.hideout.streetwear.manhole'
+  | 'prop.hideout.streetwear.plant'
+  | 'prop.hideout.streetwear.rug'
+  | 'prop.hideout.streetwear.speaker'
+  | 'prop.hideout.streetwear.stereo'
+  | 'prop.hideout.streetwear.table'
+  | 'prop.hideout.streetwear.window'
   | 'prop.loft.bed'
   | 'prop.loft.lamp'
   | 'prop.streetwear.barrel-fire'
@@ -1644,6 +1659,25 @@ export const ART = {
     },
   },
   prop: {
+    hideout: {
+      streetwear: {
+        arcade: 'prop.hideout.streetwear.arcade',
+        arcadeOff: 'prop.hideout.streetwear.arcade-off',
+        beanbag: 'prop.hideout.streetwear.beanbag',
+        bowl: 'prop.hideout.streetwear.bowl',
+        couch: 'prop.hideout.streetwear.couch',
+        cushion: 'prop.hideout.streetwear.cushion',
+        lamp: 'prop.hideout.streetwear.lamp',
+        lampOff: 'prop.hideout.streetwear.lamp-off',
+        manhole: 'prop.hideout.streetwear.manhole',
+        plant: 'prop.hideout.streetwear.plant',
+        rug: 'prop.hideout.streetwear.rug',
+        speaker: 'prop.hideout.streetwear.speaker',
+        stereo: 'prop.hideout.streetwear.stereo',
+        table: 'prop.hideout.streetwear.table',
+        window: 'prop.hideout.streetwear.window',
+      },
+    },
     loft: {
       bed: 'prop.loft.bed',
       lamp: 'prop.loft.lamp',
