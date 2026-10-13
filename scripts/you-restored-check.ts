@@ -50,6 +50,7 @@ ok('the two dead files (optional fill, old Explore panel) stay deleted');
   assert.match(store, /NAME_STYLES_FREE \|\| parsed\.skin === DEFAULT_LEGEND_SKIN \|\| unlocked\.includes\(parsed\.skin\)/, 'a picked style survives a reload without being "unlocked"');
   const card = read('src/components/identity-card.tsx');
   assert.equal((card.match(/const owned = NAME_STYLES_FREE \|\|/g) ?? []).length, 2, 'every style reads as owned, in the picker and in pickStyle');
+  assert.match(card, /dedupeTitles\(/, 'Name Style picker runs the deterministic title safety net');
   assert.match(card, /\{credits > 0 && !NAME_STYLES_FREE \? \(/, 'no "you already paid" line while free');
   assert.match(card, /payForStyleUnlock\(\)/, 'the paid path is kept for when the flag flips back');
   ok('every name style is pickable for free (one flag turns the 10-token, one-a-day unlock back on)');

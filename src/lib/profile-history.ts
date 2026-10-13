@@ -96,7 +96,7 @@ export function profileChanged(prev: ProfileSnapshot | null, next: ProfileSnapsh
   });
 }
 
-/** The card's name, e.g. "Hungry Warm Artist" (default name style). */
+/** The card's name, e.g. "Grinning Muralist, Hungry" (default name style). */
 export function cardName(code: string): string {
   const [core, modifier, third] = code.split('-');
   if (!core || !modifier) return 'Still forming';

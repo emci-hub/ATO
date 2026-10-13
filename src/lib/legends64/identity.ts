@@ -24,6 +24,8 @@ import {
   composeName,
   isLegendSkin,
   isThreeWordSkin,
+  joinFormingName,
+  legendaryName,
   type LegendSkin,
 } from '@/lib/legends64/archetypes';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
@@ -105,21 +107,20 @@ export function identityView(poles: LockedPoles): IdentityView {
 export const IDENTITY_FORMING_TITLE = 'Still forming';
 
 /**
- * "Warm Ringmaster" / "Hungry Warm Ringmaster" once every word is locked.
- * Until then each missing stretch shows as one "…", so the name visibly
- * fills in ("… Ringmaster", never "… … Ringmaster").
+ * "Grinning Pathfinder, Hungry" / "Paladin of the Tavern" once every word
+ * is locked. Legendary ★ replaces the all-High (all-Low for Mythic and
+ * Anime) combo. Until then each missing stretch shows as one "…", so the
+ * name visibly fills in ("Paladin of the …", never "… … Paladin").
  */
 export function identityTitle(view: IdentityView, skin: LegendSkin): string {
   if (!isLegendSkin(skin)) return IDENTITY_FORMING_TITLE;
+  const legendary = legendaryName(skin, view.coreCode, view.modifierCode, view.thirdCode);
+  if (legendary) return legendary;
   const role = view.coreCode ? CORE_ROLES[skin][view.coreCode] : null;
   const descriptor = view.modifierCode ? MODIFIER_DESCRIPTORS[skin][view.modifierCode] : null;
   const third = view.thirdCode ? (THIRD_WORDS[skin]?.[view.thirdCode] ?? null) : null;
   if (!role && !descriptor && !third) return IDENTITY_FORMING_TITLE;
-  // Each unsettled word shows as "…", so the name visibly fills in.
-  return composeName(skin, { third, descriptor, role })
-    .map((part) => part ?? '…')
-    .filter((part, i, all) => !(part === '…' && all[i - 1] === '…'))
-    .join(' ');
+  return joinFormingName(skin, composeName(skin, { third, descriptor, role }));
 }
 
 /** How many traits a style's name is made from: 9 for three words, 6 for two. */
