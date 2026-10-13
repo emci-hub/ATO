@@ -386,7 +386,7 @@ export function SageStoryFold({
         setStory(next);
         return;
       }
-      logAiReject('story-rewrite', parsed.reason ?? 'framework or jargon', pass);
+        logAiReject('story', parsed.reason ?? 'framework or jargon', pass);
     }
   }, [consentGranted, tracks, story, me.id, me.timezone, crisisToday]);
 
