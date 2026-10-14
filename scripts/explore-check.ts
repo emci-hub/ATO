@@ -339,14 +339,7 @@ const denied = await routeExplore({
 assert.equal(denied.kind, 'consent-denied');
 const pending = await routeExplore({ me: chipsOnly, history: [], aiConsent: null });
 assert.equal(pending.kind, 'consent-pending');
-const crisis = await routeExplore({
-  me: chipsOnly,
-  history: [],
-  aiConsent: true,
-  crisisToday: true,
-});
-assert.equal(crisis.kind, 'crisis');
-ok('consent and crisis are honest-empty, and consent precedes the completeness gate');
+ok('consent is honest-empty, and consent precedes the completeness gate (crisis removed 2026-10-14)');
 
 let jargonLogged = '';
 let phraseLogged = '';
@@ -495,21 +488,9 @@ const lockedOverCache = await routeExplore(
 assert.equal(lockedOverCache.kind, 'locked');
 ok('empty tracks lock Explore; omitted tracks leave the gate off for labs/tests');
 
-// Crisis must win over the gate: an unsettled profile in crisis is 'crisis',
-// never 'locked'.
-const crisisBeatsLock = await routeExplore(
-  {
-    me: { ...chipsOnly, extraversion: 0.8 },
-    history: [],
-    aiConsent: true,
-    crisisToday: true,
-    now: new Date('2026-08-29T15:00:00Z'),
-    tracks: [],
-  },
-  { useLocal: true },
-);
-assert.equal(crisisBeatsLock.kind, 'crisis');
-ok('crisis short-circuits before the completeness gate');
+// The crisis short-circuit was removed with the crisis system (2026-10-14).
+assert.doesNotMatch(read('src/lib/explore/route.ts'), /crisis/i);
+ok('no crisis branch before the completeness gate');
 
 const exploreUi = read('src/app/(tabs)/explore.tsx');
 // The observations fold that rendered the locked-copy branch is parked
@@ -544,17 +525,17 @@ assert.equal(cached.kind, 'cached');
 ok('cached pack is reused; no second generate the same day');
 
 const home = read('src/app/(tabs)/index.tsx');
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const exploreScreen = read('src/app/(tabs)/explore.tsx');
 const tabs = read('src/components/app-tabs.tsx');
 const navOrder = read('src/lib/nav/nav-order.ts');
 assert.doesNotMatch(home, /ExplorePanel/);
 assert.doesNotMatch(home, /HomeInnerTabs/);
-// §9 (2026-09-08): Story moved from Explore to Home, directly below the
-// daily check-in card, with a real locked state — Explore no longer
-// references it at all.
-assert.match(home, /SageStoryFold/);
-assert.doesNotMatch(exploreScreen, /SageStoryFold/);
+// §9 (2026-09-08): Story moved from Explore to Home; 2026-10-14 it moved on to
+// Insights as a template-only card. Neither Home nor Explore carries it.
+assert.match(sage, /<InsightsStoryCard/);
+assert.doesNotMatch(home, /SageStoryFold|InsightsStoryCard/);
+assert.doesNotMatch(exploreScreen, /SageStoryFold|InsightsStoryCard/);
 // Isolation Plan Card 5 (2026-09-15): Today's Read, intake settings, roll
 // history, insight spend, and the observations panel are parked pending
 // rebuild — inverted per the Card 2/3 "invert, don't delete" convention.
@@ -591,7 +572,7 @@ assert.match(navOrder, /explore: \{ label: 'Explore', href: '\/explore'/);
 assert.match(tabs, /NavEditOverlay/);
 assert.doesNotMatch(sage, /routeExplore|SageExploreObservations|ExplorePinnedCategories|SageStoryFold|SageTitleCard/);
 assert.doesNotMatch(sage, /EXPLORE_LEDE|EXPLORE_LABEL/);
-ok('Explore is its own tab; Sage stays clean chat; Home has no inner tabs; Story lives on Home (§9), not Explore');
+ok('Explore is its own tab; Insights stays clean; Home has no inner tabs; the Story lives on Insights');
 
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);

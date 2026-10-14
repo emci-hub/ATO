@@ -32,6 +32,11 @@ export const APP_GROUP = 'group.com.emgens.ato';
  * Since the stored bank (2026-10-07) `read` is the focus and `do` is its trait
  * tags — or the private "ready" copy when the focus is not for other eyes
  * (`lockScreenInsight`).
+ *
+ * Since Insights (2026-10-14) the widget leads with 🎯 Try this today, through
+ * the same three keys (`writeWidgetTryToday`). While a try line owns the widget
+ * for the day, the focus and the written line no longer overwrite it; with no
+ * try line (an unfinished profile) they fill it exactly as before.
  */
 export const WIDGET_KIND = 'AtoCard';
 export const TODAY_INSIGHT_KEY = 'ato.today-insight.v1';
@@ -88,9 +93,47 @@ export function lockScreenInsight(insight: Pick<CachedInsight, 'title' | 'theme'
   return { text: insight.title, tags: insight.theme };
 }
 
+/** The day a 🎯 line last wrote the widget (module state; one app session). */
+let tryTodayWidgetYmd: string | null = null;
+
+/** What the widget's second row says under a 🎯 line. */
+export const WIDGET_TRY_TODAY_FOLLOW_UP = 'Try this today · open Insights';
+
+/** True when a 🎯 line already owns the widget for `ymd`. Exported for the check. */
+export function tryTodayOwnsWidget(ymd: string | null | undefined): boolean {
+  return !!ymd && tryTodayWidgetYmd === ymd;
+}
+
+/**
+ * 🎯 Try this today on the widget, with the card-era keys (`read`, `do`,
+ * `hasCard`), so widgets already on home screens keep working. Stored copy,
+ * not AI-written, never about a private lean: the task only, never "Why you".
+ */
+export function writeWidgetTryToday(text: string, ymd: string) {
+  if (!text.trim()) return;
+  tryTodayWidgetYmd = ymd;
+  if (Platform.OS !== 'ios' || isPreviewing()) return;
+  try {
+    const storage = new ExtensionStorage(APP_GROUP);
+    storage.set('read', text);
+    storage.set('do', WIDGET_TRY_TODAY_FOLLOW_UP);
+    storage.set('hasCard', '1');
+    ExtensionStorage.reloadWidget(WIDGET_KIND);
+  } catch (err) {
+    console.log('[widget] native write skipped:', err);
+  }
+}
+
+/** Sign-out / Reset: the next account's widget starts from nothing. */
+export function forgetWidgetTryToday() {
+  tryTodayWidgetYmd = null;
+}
+
 function writeWidget(insight: CachedInsight | null) {
   // Preview as new user never touches the real home-screen widget.
   if (Platform.OS !== 'ios' || isPreviewing()) return;
+  // 🎯 owns the widget today: the focus stays in the app only.
+  if (insight && tryTodayOwnsWidget(insight.ymd)) return;
   try {
     const storage = new ExtensionStorage(APP_GROUP);
     if (insight && insight.title.trim().length > 0) {
@@ -117,8 +160,9 @@ export const WIDGET_LINE_FOLLOW_UP = 'Open ATO to go deeper.';
  * Same card-era keys as above. Not AI-written, so it does not depend on AI
  * consent; `saveCachedInsight` still owns the widget whenever an insight exists.
  */
-export function writeWidgetLine(line: string) {
+export function writeWidgetLine(line: string, ymd?: string) {
   if (Platform.OS !== 'ios' || isPreviewing()) return;
+  if (tryTodayOwnsWidget(ymd)) return;
   try {
     const storage = new ExtensionStorage(APP_GROUP);
     storage.set('read', line);

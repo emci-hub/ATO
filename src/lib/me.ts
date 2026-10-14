@@ -30,8 +30,7 @@ import {
   setTraitDirect,
   type MeRowJson,
 } from '@/lib/trait-checkpoint';
-import { withoutFactAt } from '@/lib/facts';
-import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
+import { FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
 import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
@@ -775,57 +774,8 @@ export async function forgetCelebratedMilestone(userId: string, id: string): Pro
   return data;
 }
 
-/**
- * Appends a fact the user told Sage. Depth-axis input; Stage 7's "Teach Sage
- * this" will call this. Idempotent by exact string.
+/*
+ * `addFact` / `removeFact` were removed with Sage (2026-10-14): nothing writes
+ * or shows `me.facts` any more ("Teach Sage" is gone; the list on You is
+ * hidden). The column and its rows stay until docs/sage-cleanup.md drops them.
  */
-export async function addFact(userId: string, fact: string): Promise<Me> {
-  const trimmed = fact.trim();
-  if (!trimmed) throw new Error('Fact cannot be empty');
-  if (containsFrameworkTerm(trimmed)) throw new Error(FACT_FRAMEWORK_MESSAGE);
-  // Typed text → the keyword crisis check (no model). A hit raises the static
-  // card on Home today. Loaded lazily so this module stays Node-safe for the
-  // check scripts.
-  void import('@/lib/crisis/local-flag').then((m) => m.noteCrisisText(trimmed)).catch(() => {});
-
-  const { data: current } = await supabase
-    .from('me')
-    .select('facts')
-    .eq('id', userId)
-    .single();
-  const facts = Array.isArray(current?.facts) ? (current.facts as string[]) : [];
-  if (!facts.includes(trimmed)) facts.push(trimmed);
-
-  const { data, error } = await supabase
-    .from('me')
-    .update({ facts })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Removes one stored fact by index. Same ME update as addFact — no new
- * write channel. Empty `facts` after the last delete is valid.
- */
-export async function removeFact(userId: string, index: number): Promise<Me> {
-  const { data: current } = await supabase
-    .from('me')
-    .select('facts')
-    .eq('id', userId)
-    .single();
-  const facts = withoutFactAt(current?.facts, index);
-
-  const { data, error } = await supabase
-    .from('me')
-    .update({ facts })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}

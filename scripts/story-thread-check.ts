@@ -7,7 +7,7 @@
  * receives and what the app accepts back.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { CATEGORY_DEFS, readCategory, type CategoryId } from '../src/lib/categories';
@@ -109,10 +109,10 @@ console.log('Story v2 — thread picker');
 // 3. Single-category fallback, and locked when nothing is ready.
 {
   const one = tracksOf({ openness: 0.9, extraversion: 0.85 });
-  const thread = pickStoryThread({ tracks: one, last: null, crisisToday: false });
+  const thread = pickStoryThread({ tracks: one, last: null, noJoke: false });
   assert.ok(thread);
   assert.deepEqual(ids(thread.categories), ['cat_openness']);
-  assert.equal(pickStoryThread({ tracks: [], last: null, crisisToday: false }), null);
+  assert.equal(pickStoryThread({ tracks: [], last: null, noJoke: false }), null);
   ok('one ready category → a single-category story; none ready → no thread');
 }
 
@@ -139,7 +139,7 @@ const rich = tracksOf({
   const scored = scoreReadyCategories(rich);
   assert.ok(scored.length >= 4);
   for (let i = 1; i < scored.length; i += 1) assert.ok(scored[i - 1]!.score >= scored[i]!.score);
-  const thread = pickStoryThread({ tracks: rich, last: null, crisisToday: false })!;
+  const thread = pickStoryThread({ tracks: rich, last: null, noJoke: false })!;
   assert.equal(thread.categories[0]!.reading.def.id, scored[0]!.reading.def.id, 'A is the best score');
   assert.ok(thread.categories.length <= 2);
   if (thread.categories.length === 2) {
@@ -153,13 +153,13 @@ const rich = tracksOf({
   assert.equal(new Set(keys).size, keys.length, 'combos are distinct');
   let last = threadRecord(thread);
   for (let i = 0; i < 6; i += 1) {
-    const next = pickStoryThread({ tracks: rich, last, crisisToday: false })!;
+    const next = pickStoryThread({ tracks: rich, last, noJoke: false })!;
     const nextKey = threadRecord(next).categories.slice().sort().join('+');
     assert.notEqual(nextKey, last.categories.slice().sort().join('+'), 'a new load never repeats the last combo');
     last = threadRecord(next);
   }
   const single = tracksOf({ openness: 0.9, extraversion: 0.85 });
-  const only = pickStoryThread({ tracks: single, last: { categories: ['cat_openness'], jokeAxis: null }, crisisToday: false })!;
+  const only = pickStoryThread({ tracks: single, last: { categories: ['cat_openness'], jokeAxis: null }, noJoke: false })!;
   assert.deepEqual(ids(only.categories), ['cat_openness'], 'with one combo, it is reused');
   ok('A is the top category, B passes the rules, and "Load a new story" rotates without repeating');
 }
@@ -172,7 +172,7 @@ const rich = tracksOf({
   assert.ok(love, 'Love is ready in this fixture');
   assert.equal(pickJokeTarget(rich, [love], false), null, 'no joke about attachment axes, ever');
   for (const thread of [
-    pickStoryThread({ tracks: rich, last: null, crisisToday: false })!,
+    pickStoryThread({ tracks: rich, last: null, noJoke: false })!,
     ...rankStoryCombos(scored).map((categories) => ({ categories, joke: pickJokeTarget(rich, categories, false) })),
   ]) {
     if (thread.joke) assert.ok(isShareableLean(thread.joke.axis, thread.joke.lean));
@@ -182,8 +182,8 @@ const rich = tracksOf({
   const steady = scoreReadyCategories(shaky).find((row) => row.reading.def.id === 'cat_steadiness')!;
   const target = pickJokeTarget(shaky, [steady], false);
   assert.ok(target && target.axis !== 'steadiness');
-  assert.equal(pickJokeTarget(shaky, [steady], true), null, 'crisis: no joke');
-  assert.equal(pickStoryThread({ tracks: rich, last: null, crisisToday: true })!.joke, null);
+  assert.equal(pickJokeTarget(shaky, [steady], true), null, 'noJoke: no joke');
+  assert.equal(pickStoryThread({ tracks: rich, last: null, noJoke: true })!.joke, null);
   ok('the joke targets the strongest shareable lean; never a private one; none on a crisis day');
 }
 
@@ -191,7 +191,7 @@ const rich = tracksOf({
 {
   const userId = 'u-check';
   const ymd = '2026-10-08';
-  const thread = pickStoryThread({ tracks: rich, last: null, crisisToday: false })!;
+  const thread = pickStoryThread({ tracks: rich, last: null, noJoke: false })!;
   const prompt = buildStoryPrompt({ tracks: rich, divergenceNote: null, thread, userId, ymd });
   const chosen = new Set(ids(thread.categories));
   for (const row of scoreReadyCategories(rich)) {
@@ -212,7 +212,7 @@ const rich = tracksOf({
   const noJoke = buildStoryPrompt({
     tracks: rich,
     divergenceNote: null,
-    thread: pickStoryThread({ tracks: rich, last: null, crisisToday: true }),
+    thread: pickStoryThread({ tracks: rich, last: null, noJoke: true }),
   });
   assert.match(noJoke, /JOKE: none this time/);
   assert.ok(!noJoke.includes(STORY_JOKE_RULES));
@@ -277,13 +277,12 @@ const rich = tracksOf({
   const old = parseSageStory({ body: 'A day.', fingerprint: 'f', generatedOn: '2026-10-08' })!;
   assert.equal(old.thread, undefined, 'stories saved before v2 still read');
 
-  const fold = read('src/components/sage-story-fold.tsx');
-  assert.match(fold, /pickStoryThread\(\{ tracks, last: story\?\.thread \?\? null, crisisToday \}\)/);
+  const fold = read('src/components/insights/insights-story-card.tsx');
+  assert.match(fold, /pickStoryThread\(\{ tracks, last: story\?\.thread \?\? null, noJoke: false \}\)/);
   assert.match(fold, /thread: threadRecord\(thread\)/);
-  assert.match(fold, /divergenceAxis, thread, userId: me\.id, ymd/);
   const thread = read('src/lib/story-thread.ts');
   assert.doesNotMatch(thread, /generateText|supabase|fetch\(/, 'the picker is pure');
-  ok('the thread is saved with the story, old stories still read, and the fold passes tracks, last thread and crisis');
+  ok('the thread is saved with the story, old stories still read, and the card passes tracks and the last thread');
 }
 
 // Story v4 (emci, 2026-10-13): six beats, nickname titles, punchline craft.
@@ -364,14 +363,14 @@ const rich = tracksOf({
     means: 'You tend to bring calm to a messy plan more than they say.',
   });
   assert.ok(v1 && !isStoryV2(v1), 'v1 saved cards still parse');
-  const t2 = pickStoryThread({ tracks: rich, last: null, crisisToday: false })!;
+  const t2 = pickStoryThread({ tracks: rich, last: null, noJoke: false })!;
   const p1 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: t2, userId: 'u1', ymd: '2026-10-13' });
   assert.ok(p1.startsWith(STORY_CARD_PROMPT_STATIC), 'fixed instructions first (cache-friendly)');
-  const foldSrc = read('src/components/sage-story-fold.tsx');
-  assert.match(foldSrc, /StoryV2View/, 'a v2 card renders as swipe beats');
-  assert.match(foldSrc, /StoryCardView/, 'a v1 card still has the labelled path');
+  const foldSrc = read('src/components/insights/insights-story-card.tsx');
+  assert.match(foldSrc, /StoryV2View/, 'a v2/v3 card renders as swipe beats');
+  // v1 (AI) cards are not shown on Insights (template-only, 2026-10-14).
+  assert.match(foldSrc, /isTemplateStory/, 'only template / bank cards are shown');
   assert.match(read('src/components/story-v2-view.tsx'), /Built from:/, 'the categories behind it sit behind an info tap');
-  assert.match(foldSrc, /logAiReject\('story'/, 'a rejection is logged with its reason only');
   const deep = parseStoryCardAnswer(
     bad({
       otherWay: 'Had you panicked, the delivery app would have won and the bread basket would have stayed in the corner.',
@@ -402,9 +401,10 @@ const rich = tracksOf({
   );
   assert.equal(picked, good.punchline, 'the rerank keeps the callback punchline');
   assert.equal(STORY_OUTPUT_TOKENS, 800);
-  assert.match(read('src/lib/explore/generate.ts'), /STORY_OUTPUT_TOKENS, meta, 0\.95/);
-  assert.match(foldSrc, /for \(let pass = 1; pass <= 2/, 'one retry on a rejected story');
-  assert.match(foldSrc, /onOpen=\{\(\) => \{ void rewriteOldStory\(\); \}\}/, 'old cards rewrite on open, not on mount');
+  // The app-side AI Story writer and the rewrite-on-open path were removed
+  // with Sage (2026-10-14); the server library keeps its own prompt.
+  assert.ok(!existsSync(resolve(root, 'src/lib/explore/generate.ts')), 'no app-side AI Story writer');
+  assert.doesNotMatch(foldSrc, /rewriteOldStory|onOpen=/, 'nothing rewrites a story on open');
   const view = read('src/components/story-v2-view.tsx');
   assert.match(view, /reduceMotion\s*\?[\s\S]*FadeIn\.duration\(180\)/, 'Reduce Motion is a cross-fade, never static');
   assert.match(view, /FadeInDown[\s\S]*springify/, 'Motion Full is a bigger fade and rise');
@@ -426,13 +426,9 @@ const rich = tracksOf({
     'an over-long hook is rejected',
   );
   assert.equal(punchlineCraftViolation('The buffer looks like luck to everyone else tonight.'), 'banned cliché');
-  const rewriteFn = foldSrc.slice(
-    foldSrc.indexOf('const rewriteOldStory'),
-    foldSrc.indexOf('Crisis still suppresses'),
-  );
-  assert.doesNotMatch(rewriteFn, /claimStoryGenerate/, 'a lazy rewrite never spends the Story token claim');
-  assert.match(rewriteFn, /markStoryRewriteTried/, 'a failed rewrite is remembered so remounts do not mass-call');
-  assert.match(foldSrc, /withTimeout\(pending, AI_TAP_TIMEOUT_MS/, 'AI timeout falls through to the bank');
+  // Insights (2026-10-14): the card never calls a model, so there is no
+  // token claim, no rewrite and no AI timeout to fall through from.
+  assert.doesNotMatch(foldSrc, /claimStoryGenerate|AI_TAP_TIMEOUT_MS|withTimeout/, 'no model path on the Story card');
   assert.match(read('scripts/live-ai.ts'), /request\.topP/, 'live Story checks pass topP 0.95');
   ok('Story v4: six beats, nickname titles, numbers and one quote allowed, v1 still reads, Plot B optional');
 }

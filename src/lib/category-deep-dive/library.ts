@@ -22,7 +22,7 @@ export function diveLibraryKey(categoryId: string, leans: readonly DiveLean[]): 
 
 export type LibraryDiveOutcome =
   | { ok: true; served: LibraryServed<CategoryDive> }
-  | { ok: false; reason: 'empty' | 'daily' | 'crisis' | 'tokens' | 'quota' | 'consent' | 'missing' | 'failed' };
+  | { ok: false; reason: 'empty' | 'daily' | 'tokens' | 'quota' | 'consent' | 'missing' | 'failed' };
 
 export async function openLibraryDive(categoryId: string, leans: readonly DiveLean[]): Promise<LibraryDiveOutcome> {
   if (leans.length === 0) return { ok: false, reason: 'failed' };

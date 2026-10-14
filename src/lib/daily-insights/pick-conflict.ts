@@ -25,9 +25,23 @@ export function conflictStyleFor(assertiveness: number, cooperativeness: number)
   return 'quiet_exit';
 }
 
+/**
+ * The two conflict sub-scores, read-only. A thin view over the same
+ * `reportStableValue` the categories use: it changes no category math.
+ * Null when either track is not stable yet.
+ */
+export function conflictSubScores(
+  tracks: readonly TraitTrack[],
+  now: Date = new Date(),
+): { assertiveness: number; cooperativeness: number } | null {
+  const assertiveness = reportStableValue(tracks, 'conflict_assertiveness', now);
+  const cooperativeness = reportStableValue(tracks, 'conflict_cooperativeness', now);
+  if (assertiveness == null || cooperativeness == null) return null;
+  return { assertiveness, cooperativeness };
+}
+
 export function pickConflict(tracks: readonly TraitTrack[], now: Date = new Date()): ConflictLine | null {
-  const a = reportStableValue(tracks, 'conflict_assertiveness', now);
-  const c = reportStableValue(tracks, 'conflict_cooperativeness', now);
-  if (a == null || c == null) return null;
-  return conflictLineFor(conflictStyleFor(a, c));
+  const scores = conflictSubScores(tracks, now);
+  if (!scores) return null;
+  return conflictLineFor(conflictStyleFor(scores.assertiveness, scores.cooperativeness));
 }

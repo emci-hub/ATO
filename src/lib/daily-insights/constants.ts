@@ -1,7 +1,7 @@
 import { STORY_MAP_CATEGORY_LEAN_TODO } from '@/lib/story-v3/lean-phrases';
 
 /** Bump when a bank line or card shape changes. (LIBRARY_VERSION is the AI library's; not ours.) */
-export const DAILY_INSIGHTS_BANK_VERSION = 1;
+export const DAILY_INSIGHTS_BANK_VERSION = 2;
 
 /**
  * Love, Independence and Structure leans are provisional until emci signs off;

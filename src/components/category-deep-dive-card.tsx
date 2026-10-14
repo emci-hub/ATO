@@ -54,7 +54,7 @@ import type { TraitTrack } from '@/lib/trait-stability';
 import { withTimeout } from '@/lib/timeout';
 
 export const DEEP_DIVE_KICKER = 'Deep dive';
-export const DEEP_DIVE_LEDE = 'How far you lean in each part of you. Tap one and Sage writes a deep dive about it.';
+export const DEEP_DIVE_LEDE = 'How far you lean in each part of you. Tap one and ATO writes a deep dive about it.';
 export const DEEP_DIVE_LEGEND =
   'One number for each part of you: how strongly you lean overall, counting your surest answers most (strongest first). Tap for each trait. The small letters are the traits behind it.';
 export const DEEP_DIVE_ROW_LOCKED = 'Answer more questions to open this one.';
@@ -67,12 +67,12 @@ export const DEEP_DIVE_EMPTY =
   'You’ve read every deep dive for leanings like yours. A new one is being written for you, free: check back in about an hour. Or write one now.';
 export const DEEP_DIVE_DAILY = 'That’s today’s free deep dives. A brand-new one is still open, or come back tomorrow.';
 export const DEEP_DIVE_USED = 'That’s the most deep dives for today. Come back tomorrow.';
-export const DEEP_DIVE_FAILED = 'Sage couldn’t write this one just now. Try again tomorrow.';
+export const DEEP_DIVE_FAILED = 'ATO couldn’t write this one just now. Try again tomorrow.';
 export const DEEP_DIVE_UNAVAILABLE = 'Deep dives aren’t switched on yet. Your leanings show either way.';
 export const DEEP_DIVE_SLOW = 'Taking a little longer than usual. It will appear here when it’s ready.';
 export const DEEP_DIVE_AI_OFF = 'Turn on AI on You to get the written deep dive. Your leanings show either way.';
 export const DEEP_DIVE_STALE = 'Written before your answers moved. A fresh one is ready to write.';
-export const DEEP_DIVE_REWRITE = 'Sage writes these more clearly now. A fresh one is ready to write.';
+export const DEEP_DIVE_REWRITE = 'ATO writes these more clearly now. A fresh one is ready to write.';
 export const DEEP_DIVE_OPENS_TOMORROW = 'Already written with today’s deep dive. It opens here tomorrow, free.';
 export const DEEP_DIVE_READY_TOMORROW = 'deep dive ready tomorrow';
 export const DEEP_DIVE_PCT_NOTE = '50% is the middle; 100% is all the way to that side.';

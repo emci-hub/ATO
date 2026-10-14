@@ -82,7 +82,7 @@ export const AXIS_EDITOR_COPY: Record<TraitAxis, { label: string; hint: string }
   },
   attachment_anxiety: {
     label: 'How you handle getting close to people',
-    hint: "Everyone's a little different here — this just helps Sage read the room right.",
+    hint: "Everyone's a little different here — this just helps ATO read the room right.",
   },
   attachment_avoidance: {
     label: "How much space you like, even with people you're close to",
@@ -313,7 +313,7 @@ function knockLead(chip: string): string {
 function signalLead(signal: NudgeSignal): string {
   if (signal.kind === 'skip-pattern') return 'A few skips this week';
   if (signal.kind === 'knock') return knockLead(signal.detail);
-  return 'Something you told Sage is still in play this week';
+  return 'Something you said is still in play this week';
 }
 
 export function composeSageKnowsLine(bankLine: string, signal: NudgeSignal | null): {

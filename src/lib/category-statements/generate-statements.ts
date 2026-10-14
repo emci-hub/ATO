@@ -22,7 +22,7 @@ import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 
-export const CATEGORY_STATEMENTS_COPY_REVIEWED = false;
+export { CATEGORY_STATEMENTS_COPY_REVIEWED } from './flags';
 export const CATEGORY_STATEMENT_MAX_CHARS = 600;
 
 export interface CategoryStatementDraft {
@@ -52,7 +52,7 @@ function groundingLine(reading: CategoryReading): string {
  */
 export function buildCategoryStatementsPrompt(readings: readonly CategoryReading[]): string {
   const lines = readings.map(groundingLine).join('\n');
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. These are category cards — one short personalized card per category, each read-only (no follow-up questions), shown on the Explore screen.
+  return `Write in the ATO app’s voice. Follow the voice reference. Not a doctor. These are category cards — one short personalized card per category, each read-only (no follow-up questions), shown on the Explore screen.
 
 VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}

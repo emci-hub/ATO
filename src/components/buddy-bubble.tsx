@@ -6,7 +6,6 @@ import { NAV_PIXEL_RIGHT, NAV_PIXEL_SLOT } from '@/components/nav-pixel';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { buddyNoteDone, useBuddy } from '@/lib/buddy/notes';
-import { isCrisisActive } from '@/lib/kenney/gesture-actions';
 import { useMeContext } from '@/lib/me-context';
 import { useAppearance } from '@/lib/theme/context';
 
@@ -21,8 +20,6 @@ import { useAppearance } from '@/lib/theme/context';
  * Lives outside nav-pixel.tsx on purpose: the bubble must not take touches
  * (`pointerEvents="none"`), and `check:floor` pins that NavPixel's own file
  * never contains that, so his tap can never be swallowed.
- *
- * Silent while the crisis card is up, same hard rule as his gestures.
  */
 export function BuddyBubble() {
   const insets = useSafeAreaInsets();
@@ -31,7 +28,7 @@ export function BuddyBubble() {
   const { reduceMotion } = useAppearance();
   const { showing, shownCount, waiting } = useBuddy();
 
-  if (!me || isCrisisActive()) return null;
+  if (!me) return null;
 
   const top = insets.top + Spacing.two;
   const right = Math.max(insets.right, NAV_PIXEL_RIGHT);

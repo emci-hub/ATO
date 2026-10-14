@@ -245,6 +245,8 @@ const insightPath = [
   'src/lib/insight/store.ts',
   'src/lib/insight/today-insight.ts',
   'src/app/(tabs)/index.tsx',
+  'src/components/insights/today-focus-card.tsx',
+  'src/app/(tabs)/insights.tsx',
 ];
 for (const rel of insightPath) {
   const src = read(rel);
@@ -252,10 +254,11 @@ for (const rel of insightPath) {
   // Type-only imports are erased; a value import would pull the generator in.
   assert.doesNotMatch(src, /^import (?!type)[^;]*from '@\/lib\/insight\/generate-insight'/m, `${rel}: no value import of the generator`);
 }
-const home = read('src/app/(tabs)/index.tsx');
-assert.match(home, /pickIdea\(/, 'Home picks from the bank');
-assert.match(home, /saveInsight\(/, 'Home saves through insert_daily_insight');
-assert.doesNotMatch(home, /if \(!consentGranted\) return;\s*const \{ todayDay/, 'the stored insight has no AI consent gate');
-ok('nothing on the insight path imports generateText or the generator; Home picks and saves without a consent gate');
+// Today's focus moved from Home to Insights (emci 2026-10-14).
+const home = read('src/components/insights/today-focus-card.tsx');
+assert.match(home, /pickIdea\(/, 'the focus card picks from the bank');
+assert.match(home, /saveInsight\(/, 'the focus card saves through insert_daily_insight');
+assert.doesNotMatch(home, /consentGranted/, 'the stored insight has no AI consent gate');
+ok('nothing on the insight path imports generateText or the generator; the focus card picks and saves without a consent gate');
 
 console.log(`\n${passed} insight-bank checks passed`);

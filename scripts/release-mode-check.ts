@@ -116,7 +116,7 @@ pin(
 for (const panel of [
   'DevInspector', 'JumpThisAccount', 'PreviewAsNewUser', 'ResetAccount', 'ResetAiConsent', 'LocalAccountData', 'ResetToFreshSignup',
   'BuildStrip', 'IntakeStatus', 'NextRoundPreview', 'TokensToday', 'MiniGuyPanel', 'MilestonesPanel',
-  'CrisisTools', 'DraftCopyList', 'PushStatus', 'AppReloadPanel', 'LabsList', 'QuestionBankPanel',
+  'DraftCopyList', 'PushStatus', 'AppReloadPanel', 'LabsList', 'QuestionBankPanel',
 ]) {
   pin(`${panel} renders only inside the testing groups`, testingBlock.includes(`<${panel}`) && !adminBlock.includes(`<${panel}`));
 }

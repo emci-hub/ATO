@@ -32,7 +32,7 @@ const WHAT_GOES = [
   'Every Check you have ever made',
   'Your Circle connections, on both sides',
   'Your chat threads and the messages in them',
-  'Everything you told Sage, including saved facts',
+  'Everything you saved in ATO, including saved facts',
 ];
 
 export function DeleteAccountSheet({

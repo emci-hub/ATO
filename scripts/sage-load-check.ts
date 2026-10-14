@@ -1,6 +1,10 @@
 /**
- * The Sage tab is an inert placeholder while Talk is rebuilt.
+ * Sage is gone (2026-10-14): Insights replaced the tab and Talk was deleted,
+ * not rebuilt. This check now pins that the old route only redirects, the
+ * Talk lane stays deleted, and mounting Insights costs nothing.
  * Run: npm run check:sage-load
+ *
+ * History below kept for context.
  *
  * Rewritten 2026-09-14. This file used to pin Talk's cold-open cost — no card
  * router on mount, history loaded lazily, the Talk router imported only on
@@ -29,13 +33,13 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 
-// The route must still exist and export a screen: pulling the tab would need a
-// native build, which is the whole reason this is a placeholder and not a
-// deletion.
-assert.match(sage, /export default function SageScreen/);
-ok('the Sage route is still registered and mountable');
+// The Sage tab is gone; /sage is kept only as a redirect to Insights.
+assert.ok(!existsSync(resolve(root, 'src/app/(tabs)/sage.tsx')), 'the Sage tab route is deleted');
+assert.match(read('src/app/sage.tsx'), /<Redirect href="\/insights" \/>/);
+assert.match(sage, /export default function InsightsScreen/);
+ok('the Sage tab is gone; /sage redirects to the Insights screen');
 
 // The deleted lane must stay deleted. Each of these is a real file that no
 // longer exists; an import of any of them would not compile, but asserting it
@@ -67,13 +71,13 @@ const sageCode = sage
 // Asserted against all non-comment code, not just lines starting with
 // `import` — a multi-line import statement would slip past that filter.
 assert.doesNotMatch(sageCode, /voice\/talk|voice\/providers|select-provider/);
-ok('the placeholder imports nothing from the deleted lane');
+ok('Insights imports nothing from the deleted lane');
 
 // Mounting must not spend money or hit the network.
 assert.doesNotMatch(sageCode, /generateText|claimAiCall|generateDailyInsight/);
 assert.doesNotMatch(sageCode, /fetchSageMessages|peekSageMessages|addSageMessage/);
 assert.doesNotMatch(sageCode, /supabase/);
-ok('mounting Sage claims no quota, calls no model, and reads no messages');
+ok('mounting Insights claims no quota, calls no model, and reads no messages');
 
 // The consent ask lives on Home -- the only surface that generates today.
 // (2026-09-15: ai_consent gates generation on the insight, the question
@@ -81,10 +85,10 @@ ok('mounting Sage claims no quota, calls no model, and reads no messages');
 // tab it joins that list; the inert placeholder asks nothing.)
 assert.doesNotMatch(sageCode, /AiConsentCard|setAiConsent/);
 assert.match(read('src/app/(tabs)/index.tsx'), /AiConsentCard/);
-ok('the AI-consent gate lives on Home, not on the inert Sage tab');
+ok('the AI-consent ask lives on Home (Legends + deep dives), not on Insights');
 
-// The placeholder has to say it is a placeholder. A blank tab reads as broken.
-assert.match(sage, /rebuil/i);
-ok('the placeholder states that Talk is being rebuilt');
+// Talk was deleted, not parked: no Talk copy is left to render.
+assert.doesNotMatch(read('src/lib/sage-copy.ts'), /TALK_LEDE|TALK_EMPTY|TALK_COMPOSER_PLACEHOLDER/);
+ok('the Talk copy is deleted');
 
 console.log(`\n${passed} sage-load checks passed`);

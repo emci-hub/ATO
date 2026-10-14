@@ -22,7 +22,7 @@ import {
   homeSageLede,
   NUDGE_LABEL,
   SAGE_COACH_LABEL,
-  TALK_LEDE,
+  SAGE_NOT_A_PERSON,
 } from '@/lib/sage-copy';
 import type { AskPick } from '@/lib/ask';
 import type { RevealPick } from '@/lib/reveal';
@@ -137,7 +137,7 @@ export default function ThemeLabScreen() {
           <ScenarioCard forcePick={THEME_SCENARIO_LOCUS} />
           <ThemedText type="smallBold">Scenario · my way</ThemedText>
           <ScenarioCard forcePick={THEME_SCENARIO_AUTONOMY} />
-          <ThemedText type="smallBold">Ask sheet · sage_knows</ThemedText>
+          <ThemedText type="smallBold">Ask sheet · does ATO know you</ThemedText>
           <AskSheet pick={THEME_ASK_SAGE_KNOWS} />
           <ThemedText type="smallBold">Ask sheet · ranking</ThemedText>
           <AskSheet pick={THEME_ASK_RANKING} />
@@ -159,32 +159,15 @@ export default function ThemeLabScreen() {
 
           <AppearancePicker />
 
+          {/* Talk was deleted with Sage (2026-10-14): Insights has no chat. */}
           <View style={styles.header}>
             <ThemedText type="subtitle">{SAGE_COACH_LABEL}</ThemedText>
-            <ThemedText themeColor="textSecondary">{TALK_LEDE}</ThemedText>
-          </View>
-          <ThemedView type="backgroundElement" style={styles.todayCard}>
-            <ThemedText>
-              First one logged. No pressure — just seeing what&apos;s actually true day to day.
-            </ThemedText>
-          </ThemedView>
-          <View style={[styles.userBubble, { backgroundColor: theme.accentFill }]}>
-            <ThemedText style={{ color: theme.onAccent }}>logged it. coffee before phone.</ThemedText>
-          </View>
-          <View style={styles.inputRow}>
-            <View style={[styles.inputFake, { backgroundColor: theme.backgroundSelected }]}>
-              <ThemedText themeColor="textSecondary">Ask Sage…</ThemedText>
-            </View>
-            <View style={[styles.sendFake, { backgroundColor: theme.accentFill }]}>
-              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                Send
-              </ThemedText>
-            </View>
+            <ThemedText themeColor="textSecondary">{SAGE_NOT_A_PERSON}</ThemedText>
           </View>
         </ScrollView>
       </SafeAreaView>
       <ThemedTabBar pointerEvents="none">
-        {(['Home', 'Sage', 'Around', 'You'] as const).map((label, i) => (
+        {(['Home', 'Insights', 'Questions', 'Explore'] as const).map((label, i) => (
           <ThemedView
             key={label}
             type={i === 0 ? 'backgroundSelected' : 'background'}

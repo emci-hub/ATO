@@ -155,8 +155,6 @@ export function isTopicalRepeat(
 export interface FilterContext {
   /** Cards already shown (previous checks + the prior bank day), to drop repeats. */
   shownCards: Array<{ read: string; do: string }>;
-  /** No cut may be shown after a crisis. */
-  crisisToday: boolean;
   /** The last shown card was a cut — no two cuts in a row. */
   previousHadCut: boolean;
 }
@@ -167,7 +165,6 @@ export function filterCard(card: VoiceCard, ctx: FilterContext): DropReason | nu
   if (isTopicalRepeat(card, ctx.shownCards)) return 'topic-repeat';
   if (isVagueDo(card.do)) return 'vague-do';
   if (isCruelCut(card.read)) return 'cruel-cut';
-  if (ctx.crisisToday && hasCut(card.read)) return 'cut-after-crisis';
   if (ctx.previousHadCut && hasCut(card.read)) return 'cut-streak';
   if (containsFrameworkTerm(card.read) || containsFrameworkTerm(card.do) || containsFrameworkTerm(card.nudge)) {
     return 'framework-echo';

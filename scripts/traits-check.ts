@@ -327,14 +327,14 @@ async function main() {
   assert.equal(
     filterCard(
       { read: 'Your INFJ side is showing.', do: 'After you make coffee, write one line.' },
-      { shownCards: [], crisisToday: false, previousHadCut: false },
+      { shownCards: [], previousHadCut: false },
     ),
     'framework-echo',
   );
   assert.equal(
     filterCard(
       { read: 'Day four is even.', do: 'After you make coffee, write one line about the week.' },
-      { shownCards: [], crisisToday: false, previousHadCut: false },
+      { shownCards: [], previousHadCut: false },
     ),
     null,
   );
@@ -368,7 +368,9 @@ async function main() {
   ok('Teach Sage facts that name a type never become Nudge copy');
 
   const addFact = read('src/lib/me.ts');
-  assert.match(addFact, /containsFrameworkTerm/);
+  // Teach Sage was removed with the Sage tab: no fact is persisted any more,
+  // so the fence has no write path left to guard in me.ts.
+  assert.doesNotMatch(addFact, /export async function addFact/);
   assert.match(addFact, /FACT_FRAMEWORK_MESSAGE/);
   assert.match(addFact, /export async function confirmTraits\(userId: string, axes: readonly TraitAxis\[\]\)/);
   assert.doesNotMatch(
@@ -378,7 +380,7 @@ async function main() {
     ),
     /incoming|number/,
   );
-  ok('addFact rejects a leaked phrase before it is persisted');
+  ok('addFact is gone, so no free-text fact is persisted');
   ok('confirmTraits persists source+timestamp only — no numeric incoming');
 
   // Talk's backend was deleted 2026-09-14 and the Sage tab is an inert

@@ -74,17 +74,22 @@ assert.match(parts, /accessible=\{false\}/);
 assert.match(parts, /splitSentences/);
 ok('script style: emoji context line (decorative), one sentence per line, bold mini-labels');
 
+// emci 2026-10-14: the three cards moved from Explore to the Insights tab.
+const insights = read('src/app/(tabs)/insights.tsx');
+assert.match(insights, /shouldShowTryToday\(/);
+assert.match(insights, /dailyInsightsVisible\(/);
+assert.match(insights, /<TryTodayCard/);
+assert.match(insights, /<SuperpowerCard/);
+assert.match(insights, /<ConflictStyleCard/);
+assert.match(insights, /const unlocked = ownTracks && isFullProfileDone\(tracks, tracksReady\);/);
+assert.match(insights, /const cardsVisible = unlocked && /);
+assert.match(insights, /unlocked && shouldShowTryToday\(/);
 const explore = read('src/app/(tabs)/explore.tsx');
-assert.match(explore, /shouldShowTryToday\(/);
-assert.match(explore, /dailyInsightsVisible\(/);
-assert.match(explore, /<TryTodayCard/);
-assert.match(explore, /<SuperpowerCard/);
-assert.match(explore, /<ConflictStyleCard/);
-assert.match(explore, /const unlocked = tracksOwner === userId && isFullProfileDone\(tracks, tracksReady\);/);
-assert.match(explore, /const insightsVisible = unlocked && /);
-assert.match(explore, /unlocked && shouldShowTryToday\(/);
 const home = read('src/app/(tabs)/index.tsx');
-assert.ok(!home.includes('TryTodayCard'), 'Home keeps the insight try line only (emci 2026-10-13)');
-ok('all three cards on Explore behind the full-profile unlock + crisis gate; none on Home');
+for (const tag of ['<TryTodayCard', '<SuperpowerCard', '<ConflictStyleCard']) {
+  assert.ok(!explore.includes(tag), `${tag} left Explore`);
+  assert.ok(!home.includes(tag), `${tag} is not on Home`);
+}
+ok('all three cards on Insights behind the full-profile unlock; none on Explore or Home');
 
 console.log(`\n${passed} daily-insights-ui checks passed`);

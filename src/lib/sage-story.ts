@@ -242,7 +242,7 @@ export function buildStoryPrompt(input: {
   tracks: readonly TraitTrack[];
   divergenceNote: string | null;
   divergenceAxis?: TraitAxis | null;
-  /** The picked thread. Omitted: pick the best one now, with no joke (a caller that does not know the crisis state). */
+  /** The picked thread. Omitted: pick the best one now, with no joke. */
   thread?: StoryThread | null;
   userId?: string;
   ymd?: string;
@@ -250,7 +250,7 @@ export function buildStoryPrompt(input: {
   const thread =
     input.thread !== undefined
       ? input.thread
-      : pickStoryThread({ tracks: input.tracks, last: null, crisisToday: true });
+      : pickStoryThread({ tracks: input.tracks, last: null, noJoke: true });
   const ymd = input.ymd ?? localYmd(new Date(), 'UTC');
   const userId = input.userId ?? '';
 

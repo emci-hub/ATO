@@ -116,8 +116,8 @@ const explore = codeOnly(read('src/app/(tabs)/explore.tsx'));
 assert.match(explore, /isFullProfileDone/, 'Explore must gate Load categories on the shared signal');
 const fold = codeOnly(read('src/components/questions-fold.tsx'));
 assert.match(fold, /isFullProfileDone/, 'Questions must gate the round on the shared signal');
-const story = codeOnly(read('src/components/sage-story-fold.tsx'));
-assert.match(story, /unlocked: boolean/, 'the Story fold must take the shared gate as a prop');
+const story = codeOnly(read('src/components/insights/insights-story-card.tsx'));
+assert.match(story, /unlocked: boolean/, 'the Story card must take the shared gate as a prop');
 
 /**
  * `routeQuestions` used to be the one gate that was not a visible button, and

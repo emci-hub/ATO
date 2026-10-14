@@ -144,21 +144,6 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     meta: EXPLORE_OBSERVATIONS_META,
   },
   {
-    feature: 'Sage title',
-    location: 'src/components/sage-title-card.tsx',
-    meta: SAGE_TITLE_META,
-  },
-  {
-    feature: 'Sage story',
-    location: 'src/components/sage-story-fold.tsx',
-    meta: SAGE_STORY_META,
-  },
-  {
-    feature: 'Sage insight spend',
-    location: 'src/lib/sage-insight.ts',
-    meta: SAGE_INSIGHT_META,
-  },
-  {
     feature: 'Roll generation',
     location: 'src/lib/rolls/generate.ts → generateRollItemText()',
     meta: ROLL_META,
@@ -182,10 +167,5 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Category statements',
     location: 'src/lib/category-statements/generate-statements.ts → generateCategoryStatements()',
     meta: CATEGORY_STATEMENTS_META,
-  },
-  {
-    feature: 'Daily insight',
-    location: 'src/lib/insight/generate-insight.ts → generateDailyInsight()',
-    meta: DAILY_INSIGHT_META,
   },
 ];

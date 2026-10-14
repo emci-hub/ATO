@@ -91,7 +91,9 @@ ok('My account: inspector, intake set, next-round preview, tokens today, raw tra
 assert.equal((testing!.match(/<[A-Z][A-Za-z]+ \/>/g) ?? []).join(' '), '<PreviewAsNewUser /> <JumpThisAccount /> <QuestionBankPanel />');
 ok('Testing: Preview as new user, jump this account, fill question sets — nothing else');
 
-for (const p of ['<MiniGuyPanel />', '<MilestonesPanel />', '<CrisisTools />', '<DraftCopyList />']) assert.ok(content!.includes(p), `${p} under Content`);
+for (const p of ['<MiniGuyPanel />', '<MilestonesPanel />', '<DraftCopyList />']) assert.ok(content!.includes(p), `${p} under Content`);
+// The crisis tools left with the crisis system (2026-10-14).
+assert.ok(!content!.includes('<CrisisTools />'), 'no crisis tools under Content');
 assert.match(content!, /<DailyLineDev userId=/);
 assert.match(content!, /canSeeHubSection\('fence', gate\) \? <HubTool id="fence"><FenceTester \/><\/HubTool>/);
 for (const p of ['<PushStatus />', '<AppReloadPanel />']) assert.ok(phone!.includes(p), `${p} under This phone`);
@@ -196,15 +198,13 @@ assert.match(fnBody('ResetToFreshSignup'), /if \(busy \|\| confirm !== DEV_TEST_
 assert.match(fnBody('ResetAccount'), /if \(busy \|\| confirm !== RESET_ACCOUNT_CONFIRM_WORD\) return;/, 'Reset account needs RESET typed');
 ok('every write takes two taps (jump, AI consent, local wipe, grants, pause, unpause, approve, deny); Reset needs RESET typed, deletes need the handle typed');
 
-assert.match(hub, /function CrisisCardPreview/);
-assert.match(hub, /<CrisisCard onDismiss=/);
-const previewFn = fnBody('CrisisCardPreview');
-assert.doesNotMatch(previewFn, /detectCrisis|logCrisisFlag|crisis_flags|from '@\/lib\/crisis\/detect'|from '@\/lib\/crisis\/log'/);
-const sage = read('src/app/(tabs)/sage.tsx');
+// The crisis card and its dev preview were removed (2026-10-14).
+assert.doesNotMatch(hub, /CrisisCardPreview|CrisisCard|CrisisTools|crisis\/local-flag/);
+const insights = read('src/app/(tabs)/insights.tsx');
 const home = read('src/app/(tabs)/index.tsx');
-assert.doesNotMatch(home, /CrisisCardPreview|Preview crisis card/);
-assert.doesNotMatch(sage, /CrisisCardPreview|Preview crisis card/);
-ok('the crisis-card preview is fenced to /dev-lab and absent from Home and Sage');
+assert.doesNotMatch(home, /CrisisCard|Preview crisis card/);
+assert.doesNotMatch(insights, /CrisisCard|Preview crisis card/);
+ok('no crisis card or crisis preview anywhere in the Hub, Home or Insights');
 
 // Entry: the dev PIN, the session unlock, root or a grant — and never in a
 // release build (hubAccess; pinned in full by check:release-mode).

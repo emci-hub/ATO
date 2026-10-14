@@ -34,7 +34,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ExtensionStorage } from '@bacons/apple-targets';
 import { Platform } from 'react-native';
 
-import { APP_GROUP, WIDGET_KIND } from '@/lib/insight/today-insight';
+import { APP_GROUP, forgetWidgetTryToday, WIDGET_KIND } from '@/lib/insight/today-insight';
 import { resetAnsweredOptionCache } from '@/lib/questions/answered-option-storage';
 import { resetCategoryPagePositionCache } from '@/lib/questions/category-page-position';
 import { resetFullProfileUnlockCache } from '@/lib/full-profile-unlock';
@@ -44,8 +44,8 @@ export const ATO_KEY_NAMESPACE = 'ato.';
 
 /**
  * Device-level preferences that survive an account deletion, because they
- * describe the PHONE and not the person: how the app looks, which crisis region
- * it resolved, whether the OS push prompt has been shown, and the dev-only
+ * describe the PHONE and not the person: how the app looks, whether the OS
+ * push prompt has been shown, and the dev-only
  * provider override. None of them is derived from account content, and none of
  * them can leak one account's data into another.
  *
@@ -55,8 +55,6 @@ export const ATO_KEY_NAMESPACE = 'ato.';
  */
 export const DEVICE_LEVEL_KEYS: readonly string[] = [
   'ato.appearance.mode',
-  'ato.crisis.region.auto',
-  'ato.crisis.region.override',
   'ato.push.prefs.v1',
   'ato.push.asked',
   'ato.ai.provider.override.v1',
@@ -87,6 +85,7 @@ export function isAccountScopedKey(key: string): boolean {
  * binary already on a home screen cannot be updated over OTA.
  */
 function clearWidget(): void {
+  forgetWidgetTryToday();
   if (Platform.OS !== 'ios') return;
   try {
     const storage = new ExtensionStorage(APP_GROUP);

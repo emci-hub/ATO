@@ -300,18 +300,21 @@ ok('wave38 widens trait_history.source CHECK to self_scenario without dropping a
 // its thin-profile honesty and divergence-note assertions have nothing to run
 // against. The same thin-profile gate on the surviving surface is still
 // asserted, and Talk should re-earn these when it is rebuilt.
-assert.match(read('src/lib/sage-insight.ts'), /isThinProfile/);
-assert.doesNotMatch(read('src/lib/sage-insight.ts'), /settled < 6/);
-ok('the surviving insight surface keeps the thin-profile gate');
+// src/lib/sage-insight.ts was deleted with the Sage tab (Insights replaced it);
+// the thin-profile gate now lives in trait-stability.
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/lib/sage-insight.ts')), 'sage-insight.ts must stay deleted');
+assert.match(read('src/lib/trait-stability.ts'), /isThinProfile/);
+assert.doesNotMatch(read('src/lib/trait-stability.ts'), /settled < 6/);
+ok('the thin-profile gate survives in trait-stability');
 
 const home = read('src/app/(tabs)/index.tsx');
-const crisis = read('src/components/crisis-card.tsx');
+// The crisis card was removed (static helpline row on You replaced it).
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/components/crisis-card.tsx')), 'crisis-card.tsx must stay deleted');
 const widget = read('targets/widget/widgets.swift');
 // `IntakeSweep` ("A faster pass") was removed entirely 2026-09-15, not just
 // unmounted here — this file no longer references it anywhere, so those
 // alternatives were dropped from the patterns below.
 assert.doesNotMatch(home, /trait_history|spendTokens|TOKEN_PRICE/);
-assert.doesNotMatch(crisis, /token|trait_history/);
 assert.doesNotMatch(widget, /token|trait_history/);
 assert.match(read('src/app/(tabs)/explore.tsx'), /settledAxisLabel/);
 // SageInsightSpend's Explore call site is parked (Isolation Plan Card 5,

@@ -49,7 +49,6 @@ import {
   QuestionBankPanel,
   TokensToday,
 } from '@/components/dev-hub-panels';
-import { CrisisCard } from '@/components/crisis-card';
 import { TraitBandDetail } from '@/components/trait-bands-fold';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
@@ -63,7 +62,6 @@ import {
 } from '@/lib/local-account-data';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
-import { clearCrisisLocalFlag, noteCrisisText } from '@/lib/crisis/local-flag';
 import {
   approveAccessRequest,
   denyAccessRequest,
@@ -125,7 +123,7 @@ import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 const SOURCE_NOTE: Record<TraitSource, string> = {
   self_slider: 'direct — inferred cannot overwrite (historical, no longer written)',
   self_tap: 'direct — tap-form',
-  self_confirm: 'direct — Does Sage know you? confirm',
+  self_confirm: 'direct — Does ATO know you? confirm',
   self_settings: 'direct — Settings edit',
   self_scenario: 'direct — optional-intake 2-axis scenario tap',
   self_grid: 'inferred — 16-grid (historical, no longer written)',
@@ -221,7 +219,6 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
                 <HubTool id="mini-guy"><MiniGuyPanel /></HubTool>
                 <HubTool id="milestones"><MilestonesPanel /></HubTool>
                 {me ? <HubTool id="legend-museum"><LegendFiguresDev userId={me.id} /></HubTool> : null}
-                <HubTool id="crisis"><CrisisTools /></HubTool>
                 {canSeeHubSection('fence', gate) ? <HubTool id="fence"><FenceTester /></HubTool> : null}
                 <HubTool id="draft-copy"><DraftCopyList /></HubTool>
               </HubSection>
@@ -825,7 +822,7 @@ function LocalAccountData() {
       <ThemedText type="small" themeColor="textSecondary">
         Every `ato.*` key on this device that belongs to the ACCOUNT rather than
         the phone. These are what a deleted-then-recreated account used to
-        inherit. Device preferences (theme, crisis region, push prefs, auth) are
+        inherit. Device preferences (theme, push prefs, auth) are
         excluded by design and are not listed here. Wiping touches this device
         only — it deletes nothing on the server.
       </ThemedText>
@@ -843,65 +840,6 @@ function LocalAccountData() {
         selected={false}
         onPress={() => void wipe()}
       />
-    </View>
-  );
-}
-
-/** Dev test for the on-device crisis signal: flag today / clear, then open Home. */
-function CrisisLocalFlagTest() {
-  const [note, setNote] = useState<string | null>(null);
-  return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold">Crisis card on Home (local signal)</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Runs a test phrase through the same keyword check typed text goes through, and marks
-        today on this phone only. Open Home to see the static card. Clear to remove it.
-      </ThemedText>
-      <Chip
-        label="Flag today (test phrase)"
-        selected={false}
-        onPress={() => {
-          void noteCrisisText('I want to kill myself').then((hit) =>
-            setNote(hit ? 'Flagged for today. Open Home.' : 'The keyword check did not match.'),
-          );
-        }}
-      />
-      <Chip
-        label="Clear the local flag"
-        selected={false}
-        onPress={() => {
-          void clearCrisisLocalFlag().then(() => setNote('Cleared. Reopen Home.'));
-        }}
-      />
-      {note ? <ThemedText type="small">{note}</ThemedText> : null}
-    </View>
-  );
-}
-
-/** The crisis card, both ways of testing it: preview it here, or flag today and open Home. */
-function CrisisTools() {
-  return (
-    <>
-      <CrisisCardPreview />
-      <CrisisLocalFlagTest />
-    </>
-  );
-}
-
-function CrisisCardPreview() {
-  const [open, setOpen] = useState(false);
-  return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold">Preview crisis card</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Renders CrisisCard inline. Does not run detection and does not write a flag.
-      </ThemedText>
-      <Chip
-        label="Preview crisis card."
-        selected={open}
-        onPress={() => setOpen(true)}
-      />
-      {open ? <CrisisCard onDismiss={() => setOpen(false)} /> : null}
     </View>
   );
 }
@@ -988,7 +926,7 @@ function QuotaDashboard() {
           />
           {snap.byType.sage != null || snap.byType.explore != null ? (
             <ThemedText type="small" themeColor="textSecondary">
-              Surfaces today: Sage {snap.byType.sage ?? 0}, Explore {snap.byType.explore ?? 0},
+              Surfaces today: AI (sage tag) {snap.byType.sage ?? 0}, Explore {snap.byType.explore ?? 0},
               questions {snap.questionsDaily}
             </ThemedText>
           ) : null}

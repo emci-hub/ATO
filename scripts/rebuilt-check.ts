@@ -34,7 +34,7 @@ function read(rel: string): string {
 /**
  * Scoped to real code, not comments: a parked screen's docstring names the
  * modules it was disconnected from on purpose, explaining what was removed and
- * why. `sage.tsx` names `generateText` in exactly that way.
+ * why.
  */
 function codeOnly(source: string): string {
   return source
@@ -51,7 +51,8 @@ const NOTICE = 'src/components/rebuilt-notice.tsx';
  * its screen here: Around (Card 2), Legends + Roll (Card 3), Week (Card 4).
  */
 const PARKED_SCREENS: { rel: string; label: string }[] = [
-  { rel: 'src/app/(tabs)/sage.tsx', label: 'Sage' },
+  // Sage left this list 2026-10-14: the tab was replaced by Insights and the
+  // placeholder deleted; /sage is a redirect (check:tab-rename).
   { rel: 'src/app/(tabs)/around.tsx', label: 'Around' },
   // Legends was rebuilt 2026-10-08 as the museum of legends (src/lib/legend-figures):
   // its gates are pinned in legend-roster-check.ts, no-auto-ai-check.ts and
@@ -176,13 +177,15 @@ const youCode = codeOnly(read(YOU));
 // half look broken. The App Store controls below are still pinned.
 assert.doesNotMatch(youCode, /<RebuiltNotice/, 'You no longer shows a Rebuilt notice');
 assert.ok(youCode.includes('<AtoTokenCard me={me} />'), 'the token balance is visible on You');
-assert.ok(youCode.includes('<SageFactsCard me={me} onUpdated={refresh} />'), 'saved facts can be seen and deleted on You');
+// 2026-10-14: the saved-facts list ("Teach Sage") is hidden; the data stays
+// until docs/sage-cleanup.md drops it.
+assert.ok(!youCode.includes('SageFactsCard'), 'the saved-facts list is hidden on You');
 assert.match(youCode, /<DeleteAccountSheet/, 'delete account must stay reachable on You (App Store 5.1.1(v))');
 assert.match(youCode, /Delete account/, 'the delete-account control must be labelled');
 assert.match(youCode, /supabase\.auth\.signOut\(\)/, 'sign out must stay reachable on You');
 assert.match(youCode, /clearLocalAccountData\(\)/, "signing out must still clear this account's local keys");
 assert.match(youCode, /setAiConsent\(/, 'AI consent must stay changeable on You (Apple 5.1.2)');
 assert.match(youCode, /\{AI_USE_DISCLOSURE\}/, 'the AI-use disclosure must RENDER beside the consent control, not just be imported');
-ok('You keeps delete account, sign out and AI consent, and shows tokens + saved facts');
+ok('You keeps delete account, sign out and AI consent, and shows tokens; saved facts are hidden');
 
 console.log(`\n${passed} rebuilt checks passed`);

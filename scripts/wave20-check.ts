@@ -185,7 +185,7 @@ assert.match(meSrc.slice(confirmStart, persistStart), /confirmTraitSources\(axes
 assert.match(checkpointSql, /if p_mode = 'confirm' then\s+if v_cur is null then\s+return;\s+end if;\s+update public\.me\s+set trait_sources/);
 ok('confirm-upgrade still does not touch tracks or the number');
 
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const exploreScreen = read('src/app/(tabs)/explore.tsx');
 assert.match(exploreScreen, /settledAxisLabel/);
 // Talk's backend was deleted 2026-09-14 and the Sage tab is an inert
@@ -208,7 +208,8 @@ assert.match(read('src/components/depth-dive.tsx'), /depthReady/);
 ok('Full Profile shows poles, undo cap, and depth cooldown');
 
 const home = read('src/app/(tabs)/index.tsx');
-const crisis = read('src/components/crisis-card.tsx');
+// The crisis card was removed 2026-10-14; the static helpline row replaced it.
+const crisis = read('src/components/helpline-row.tsx');
 const widget = read('targets/widget/widgets.swift');
 for (const [name, source] of [
   ['home', home],
@@ -223,6 +224,6 @@ for (const [name, source] of [
   }
   assert.doesNotMatch(source, /of \d+ settled/, `${name} must not show settled completeness`);
 }
-ok('Home, crisis card, and widget stay untouched');
+ok('Home, helpline row, and widget stay untouched');
 
 console.log(`\n${passed} wave20 checks passed`);

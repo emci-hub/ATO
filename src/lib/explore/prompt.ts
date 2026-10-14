@@ -160,7 +160,7 @@ export function buildExplorePrompt(input: {
 8. 2–4 sentences. Deeper than a daily Read. Plain text.`
     : '7. 2–4 sentences. Deeper than a daily Read. Plain text.';
 
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is Explore — a deeper observation, not a daily Read/Do.
+  return `Write in the ATO app’s voice. Follow the voice reference. Not a doctor. This is Explore — a deeper observation, not a daily Read/Do.
 
 VOICE REFERENCE (write in this register — do NOT reuse these lines verbatim):
 ${VOICE_REFERENCE}
@@ -192,7 +192,7 @@ RULES
 3. Reflect patterns as maybes, not facts. No "you are." No framework names (MBTI, Big Five, attachment, and the rest). Never name the axis or the category. Notice, don't correct.
 4. Hedge lives inside the sentence. No bolted-on closing after a dash or period.
 5. Completeness is not an input. Do not mention leftover axes, a fuller profile, or that more answers would help.
-6. FRAMING NOTES are concepts, not copy. Restate in Sage's own words. Never paste a note.
+6. FRAMING NOTES are concepts, not copy. Restate in your own words. Never paste a note.
 ${lengthRule}
 
 Respond with JSON only, no prose, in this shape:

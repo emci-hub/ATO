@@ -221,7 +221,7 @@ assert.equal(
 const card = read('src/components/ranking-card.tsx');
 const meSrc = read('src/lib/me.ts');
 const homeTab = read('src/app/(tabs)/index.tsx');
-const sageTab = read('src/app/(tabs)/sage.tsx');
+const sageTab = read('src/app/(tabs)/insights.tsx');
 const youTab = read('src/app/(tabs)/you.tsx');
 const themeLab = read('src/app/theme-lab.tsx');
 

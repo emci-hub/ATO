@@ -18,7 +18,6 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppDevFab } from '@/components/app-dev-fab';
 import { PushRuntime } from '@/components/push-runtime';
 import { useTheme } from '@/hooks/use-theme';
-import { CrisisRegionProvider } from '@/lib/crisis/region-context';
 import { AppearanceProvider, useAppearance } from '@/lib/theme/context';
 import { navigationTheme } from '@/lib/theme/navigation';
 import { MeProvider, useMeContext } from '@/lib/me-context';
@@ -45,10 +44,8 @@ function RootThemeBridge() {
   return (
     <ThemeProvider value={navigationTheme(theme)}>
       <MeProvider>
-        <CrisisRegionProvider>
-          <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-          <RootNavigator />
-        </CrisisRegionProvider>
+        <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
+        <RootNavigator />
       </MeProvider>
     </ThemeProvider>
   );
@@ -103,6 +100,8 @@ function RootNavigator() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="week" />
               <Stack.Screen name="chat" />
+              {/* Old /sage links → /insights (Sage replaced 2026-10-14). */}
+              <Stack.Screen name="sage" />
               <Stack.Screen name="dev-lab" />
               <Stack.Screen name="ai-lab" />
             </Stack.Protected>
@@ -111,7 +110,6 @@ function RootNavigator() {
               <Stack.Screen name="theme-lab" />
               <Stack.Screen name="around-lab" />
               <Stack.Screen name="pixel-lab" />
-              <Stack.Screen name="crisis-lab" />
               <Stack.Screen name="profile-card-lab" />
               {/* Play (Grove) is an in-progress module, not a dev lab: it rides
                   the same PRE_LAUNCH_DEV gate so it can never reach a public

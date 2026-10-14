@@ -1,13 +1,13 @@
 /**
- * Sage UI copy. Floor requirement: labeled "coach" in the UI itself, never
- * implied to be a person. The Home insight card is stored copy since
- * 2026-10-07 (not Sage, not AI), so its kicker is SAGE_NPC_LABEL, which now
- * reads "Focus · try · watch" in every appearance.
- * Talk, Dawn, consent, crisis, morning push, and widget stay SAGE_COACH_LABEL.
- * Widget Swift duplicates SAGE_COACH_LABEL (native surface).
+ * Shared UI copy. The module keeps its old `sage-copy` name until the module
+ * rename PR (2026-10-14: Sage was replaced by Insights); every string a user
+ * can see says Insights or ATO, never Sage (`check:no-sage-copy`).
+ * Talk and Dawn copy were deleted with Sage. The installed widget's own native
+ * header is a separate binary and changes only with a native build.
  */
 
-export const SAGE_COACH_LABEL = 'Sage · coach';
+/** The Insights screen's kicker. (Was 'Sage · coach'.) */
+export const SAGE_COACH_LABEL = 'Insights';
 
 /**
  * The Home insight card's kicker (emci, 2026-10-07; was 'Sage · npc'). The
@@ -15,13 +15,14 @@ export const SAGE_COACH_LABEL = 'Sage · coach';
  */
 export const SAGE_NPC_LABEL = 'Focus · try · watch';
 
-export const SAGE_NOT_A_PERSON = 'Sage is a coach, not a person.';
+/** Under the Insights title: where everything on that screen comes from. */
+export const SAGE_NOT_A_PERSON = 'Picked from your answers. No AI writes anything here.';
 
 /**
- * The small line under Home's title (2026-10-07). The Story on Home is still
- * Sage, so the coach disclosure stays. (Was "Today's Read and Do from Sage…".)
+ * The small line under Home's title. Home no longer carries the Story, so the
+ * coach disclosure went with it (2026-10-14).
  */
-export const HOME_SAGE_LEDE = 'Sage is a coach, not a person.';
+export const HOME_SAGE_LEDE = 'Today at a glance.';
 
 /** Same line in Quest mode; kept as its own name so the theme lab still reads it. */
 export const HOME_SAGE_LEDE_QUEST = HOME_SAGE_LEDE;
@@ -38,25 +39,8 @@ export function homeSageLede(appearanceId: string): string {
   return appearanceId === 'quest' ? HOME_SAGE_LEDE_QUEST : HOME_SAGE_LEDE;
 }
 
-export const DAWN_SAGE_LEDE =
-  'Sage is a coach, not a person. Today\u2019s Read and Do, before the day gets loud.';
-
-export const TALK_LEDE =
-  'Sage is a coach in the app, not a person. Talk it out \u2014 Sage replies in your style.';
-
-export const TALK_EMPTY =
-  'Say hi, or tap a chip to get started. Sage is a coach, not someone in the chat.';
-
-export const TALK_COMPOSER_PLACEHOLDER = 'Talk it out\u2026';
-
-export const TALK_WRITING = 'Drafting a reply\u2026';
-
-export const TALK_TRY_AGAIN = 'Sage couldn\u2019t reply. Try again.';
-
-export const CONSENT_COACH_LINE = 'Sage is a coach in the app, not a person.';
-
-/** Recurring trait check-in. Own surface — never a Talk reply. */
-export const SAGE_KNOWS_LABEL = 'Does Sage know you?';
+/** Recurring trait check-in. Own surface. */
+export const SAGE_KNOWS_LABEL = 'Does ATO know you?';
 
 /** Home-only daily tap-to-open. Never Circle, widget, or morning push. */
 export const REVEAL_LABEL = 'Note';
@@ -78,5 +62,5 @@ export const SCENARIO_LABEL = 'Gut call';
 
 export const SCENARIO_LEDE = 'Swipe or tap. One pick.';
 
-/** Home inner tab — periodic Sage observations. Not a daily card. */
+/** Home inner tab — periodic observations. Not a daily card. */
 export { EXPLORE_LABEL, TODAY_LABEL } from '@/lib/explore/copy';

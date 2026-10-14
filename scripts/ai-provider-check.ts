@@ -150,7 +150,9 @@ for (const [id, model] of Object.entries(DEFAULT_MODELS)) {
 }
 ok('client DEFAULT_MODELS mirrors the Edge Function defaults');
 
-assert.match(read('src/lib/explore/generate.ts'), /generateText/);
+// The app-side Story writer (src/lib/explore/generate.ts) was deleted with
+// Sage (2026-10-14): the Story on Insights is template-only.
+assert.ok(!existsSync(resolve(root, 'src/lib/explore/generate.ts')), 'the app-side Story writer stays deleted');
 // Questions come from the fixed bank (wave85, emci 2026-10-06): no model call
 // writes a question any more, so the old generator and its helpers stay gone.
 for (const gone of [
@@ -182,11 +184,9 @@ ok('call sites use generateText; prompt builders are untouched; the deleted swee
 // this is what forces a new AI feature to declare its sharing model up front.
 const METADATA_CALL_FILES = new Set([
   'src/lib/ai/generate.ts', // the dispatcher itself (definition, no self-calls)
-  'src/lib/explore/generate.ts',
   'src/lib/rolls/generate.ts',
   'src/lib/legends64/generate-story.ts',
   'src/lib/category-statements/generate-statements.ts',
-  'src/lib/insight/generate-insight.ts',
   'src/lib/legend-figures/generate.ts',
   'src/lib/category-deep-dive/generate.ts',
 ]);
@@ -228,7 +228,8 @@ const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
   'bucketShareable',
   'latencySensitive',
 ];
-assert.equal(AI_CALL_SITES.length, 11, 'one catalog entry per AI call site');
+// 11 → 7 (2026-10-14): Sage title, Sage story, Sage insight spend and the AI daily insight were removed.
+assert.equal(AI_CALL_SITES.length, 7, 'one catalog entry per AI call site');
 const features = new Set<string>();
 for (const site of AI_CALL_SITES) {
   assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);

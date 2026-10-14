@@ -23,11 +23,11 @@ export interface LibraryServed<T> {
 
 export type ServeResult<T> =
   | { ok: true; served: LibraryServed<T> }
-  | { ok: false; reason: 'empty' | 'daily' | 'crisis' | 'missing' | 'failed' };
+  | { ok: false; reason: 'empty' | 'daily' | 'missing' | 'failed' };
 
 export type WriteResult<T> =
   | { ok: true; served: LibraryServed<T> | null; written: number }
-  | { ok: false; reason: 'tokens' | 'quota' | 'consent' | 'crisis' | 'bucket' | 'missing' | 'failed' };
+  | { ok: false; reason: 'tokens' | 'quota' | 'consent' | 'bucket' | 'missing' | 'failed' };
 
 const MISSING_RE = /PGRST202|Could not find the function|404|not found/i;
 
@@ -60,7 +60,7 @@ export async function serveLibraryCard<T>(
     const row = data as { ok?: unknown; reason?: unknown } | null;
     if (row?.ok !== true) {
       const reason = row?.reason;
-      return { ok: false, reason: reason === 'daily' || reason === 'crisis' || reason === 'empty' ? reason : 'failed' };
+      return { ok: false, reason: reason === 'daily' || reason === 'empty' ? reason : 'failed' };
     }
     const served = readServed(data, readCard);
     // A card shape this app doesn't know counts as a miss, never a crash.
@@ -92,7 +92,7 @@ export async function writeLibraryCard<T>(
     const row = body as { ok?: unknown; reason?: unknown; served?: unknown; written?: unknown } | null;
     if (row?.ok !== true) {
       const r = row?.reason;
-      const known = ['tokens', 'quota', 'consent', 'crisis', 'bucket'] as const;
+      const known = ['tokens', 'quota', 'consent', 'bucket'] as const;
       return { ok: false, reason: (known as readonly unknown[]).includes(r) ? (r as (typeof known)[number]) : 'failed' };
     }
     return {

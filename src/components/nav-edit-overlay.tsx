@@ -4,7 +4,6 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Sortable from 'react-native-sortables';
 import { useState } from 'react';
 
-import { SageTabIcon } from '@/components/sage-tab-icon';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -24,7 +23,7 @@ import { controlBorderColor } from '@/lib/theme/chrome';
 /**
  * Full-screen "Edit navigation" overlay. Long-press a tab (or More) to enter.
  *
- * Slots 1–4 are one draggable list — Home and Sage can move within it but can
+ * The bar is one draggable list — Home and Insights can move within it but can
  * never leave. Below, the pool lists every tab: in-bar pool tabs show "On bar"
  * (tap to remove), out-of-bar pool tabs show "Add" (up to POOL_SLOTS). Locked
  * tabs sit under "Not unlocked yet". Done commits the layout atomically.
@@ -42,7 +41,7 @@ export function NavEditOverlay({
 
   const lockedSet = new Set(lockedTabs);
   const draftPool = draftSlots.filter(
-    (id): id is ReorderableTabId => id !== 'home' && id !== 'sage',
+    (id): id is ReorderableTabId => id !== 'home' && id !== 'insights',
   );
 
   function addToBar(id: ReorderableTabId) {
@@ -86,13 +85,13 @@ export function NavEditOverlay({
 
           <ScrollView contentContainerStyle={styles.body}>
             <ThemedText type="small" themeColor="textSecondary">
-              Home always stays on the bar — drag to move it. Pick {POOL_SLOTS} more from below.
+              Home and Insights always stay on the bar — drag to move them. Pick {POOL_SLOTS} more from below.
             </ThemedText>
 
             <ThemedText type="smallBold">Your bar</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               {SLOT_COUNT - PARKED_PINNED_IDS.length} slots · drag to reorder. Tap a tab to remove
-              it back to the pool (Home stays).
+              it back to the pool (Home and Insights stay).
             </ThemedText>
 
             {barFullNote ? (
@@ -107,13 +106,13 @@ export function NavEditOverlay({
               flexWrap="nowrap"
               onDragEnd={({ indexToKey }) => {
                 const next = indexToKey.filter(
-                  (key): key is BarSlotId => key === 'home' || key === 'sage' || key in NAV_TABS,
+                  (key): key is BarSlotId => key === 'home' || key === 'insights' || key in NAV_TABS,
                 );
                 // `indexToKey` only knows about the rows actually rendered, and
                 // parked slots are filtered out of those. Without re-adding
                 // them, any drag would commit a layout with the parked ids
-                // dropped — `normalizeNavLayout` would then re-insert Sage at
-                // its own default position, silently moving a slot the user
+                // dropped — `normalizeNavLayout` would then re-insert a pinned
+                // tab at its own default position, silently moving a slot the user
                 // never touched (found in review).
                 const parked = draftSlots.filter((id) => isTabParked(id));
                 setDraftSlots([...next, ...parked]);
@@ -123,8 +122,7 @@ export function NavEditOverlay({
                 are not shown here either: they can still occupy a slot in a
                 saved layout — nothing rewrites `me.nav_layout` — but the bar
                 renders no button for them, so listing one in the editor would
-                describe a tab the user cannot see. `sage` and `legends` were
-                un-parked 2026-09-15 and render normally again.
+                describe a tab the user cannot see.
               */}
               {draftSlots.filter((id) => !isTabParked(id)).map((id) => (
                 <View key={id} style={[styles.sortRow, { borderColor: controlBorderColor(theme) }]}>
@@ -141,11 +139,11 @@ export function NavEditOverlay({
                         Pinned
                       </ThemedText>
                     </>
-                  ) : id === 'sage' ? (
+                  ) : id === 'insights' ? (
                     <>
-                      <SageTabIcon />
+                      <MaterialCommunityIcons name="lightbulb-on-outline" size={22} color={theme.text} />
                       <ThemedText type="small" style={styles.rowLabel}>
-                        Sage
+                        Insights
                       </ThemedText>
                       <ThemedText type="small" themeColor="textSecondary">
                         Pinned
@@ -175,7 +173,7 @@ export function NavEditOverlay({
 
             <ThemedText type="smallBold">Add to the bar</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              Pick {POOL_SLOTS} tabs total, alongside Home.
+              Pick {POOL_SLOTS} tabs total, alongside Home and Insights.
             </ThemedText>
 
             <View style={styles.poolList}>

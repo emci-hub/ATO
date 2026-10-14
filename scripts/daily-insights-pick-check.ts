@@ -217,15 +217,19 @@ function bar(id: CategoryId, value: number): CategoryReading {
   assert.equal(out?.kryptonite?.categoryId, 'cat_social');
   const lowTie = pickSuperpower([bar('cat_steadiness', 0.8), bar('cat_drive', 0.3), bar('cat_social', 0.3)]);
   assert.equal(lowTie?.kryptonite?.categoryId, 'cat_drive');
-  assert.equal(pickSuperpower([bar('cat_steadiness', 0.9), bar('cat_drive', 0.1)]), null, 'needs 3 bars');
-  assert.equal(
-    pickSuperpower([bar('cat_steadiness', 0.55), bar('cat_drive', 0.5), bar('cat_social', 0.46)]),
-    null,
-    'spread < 0.10',
-  );
+  // emci 2026-10-14: each half only when its score is really on that side of 0.5.
+  const two = pickSuperpower([bar('cat_steadiness', 0.9), bar('cat_drive', 0.1)]);
+  assert.equal(two?.superpower?.categoryId, 'cat_steadiness', 'two bars are enough');
+  assert.equal(two?.kryptonite?.categoryId, 'cat_drive');
+  const close = pickSuperpower([bar('cat_steadiness', 0.55), bar('cat_drive', 0.5), bar('cat_social', 0.46)]);
+  assert.equal(close?.superpower?.categoryId, 'cat_steadiness', '0.55 is above 0.5');
+  assert.equal(close?.kryptonite?.categoryId, 'cat_social', '0.46 is below 0.5');
   const exact = pickSuperpower([bar('cat_steadiness', 0.6), bar('cat_drive', 0.55), bar('cat_social', 0.5)]);
-  assert.ok(exact, 'spread exactly 0.10 shows');
-  assert.equal(exact!.kryptonite, null, '0.5 is high: no kryptonite');
+  assert.ok(exact?.superpower, 'top above 0.5 shows');
+  assert.equal(exact!.kryptonite, null, 'exactly 0.5 is on neither side: no kryptonite');
+  assert.equal(pickSuperpower([bar('cat_steadiness', 0.5), bar('cat_drive', 0.5)]), null, 'all at 0.5: no card');
+  const one = pickSuperpower([bar('cat_steadiness', 0.8)]);
+  assert.ok(one?.superpower && !one.kryptonite, 'one bar is never both halves');
   const allHigh = pickSuperpower([bar('cat_steadiness', 0.9), bar('cat_drive', 0.7), bar('cat_social', 0.6)]);
   assert.ok(allHigh?.superpower && !allHigh.kryptonite);
   const allLow = pickSuperpower([bar('cat_steadiness', 0.4), bar('cat_drive', 0.2), bar('cat_social', 0.1)]);
@@ -235,7 +239,7 @@ function bar(id: CategoryId, value: number): CategoryReading {
   for (const half of [both?.superpower, both?.kryptonite]) {
     if (half) assert.equal(CATEGORY_DEFS.find((d) => d.id === half.categoryId)?.shape, 'bar');
   }
-  ok('superpower: tie → catalog order, min 3 bars, 0.10 spread, halves gated by lean, bars only');
+  ok('superpower: tie → catalog order, each half only strictly past 0.5, never both from one bar, bars only');
 }
 
 // --- Conflict style ----------------------------------------------------------
@@ -264,14 +268,13 @@ function bar(id: CategoryId, value: number): CategoryReading {
 }
 
 // --- visibility ----------------------------------------------------------------
-assert.equal(shouldShowTryToday({ insightTryTodayShown: false, slotKind: 'none', crisisToday: false }), true);
-assert.equal(shouldShowTryToday({ insightTryTodayShown: true, slotKind: 'none', crisisToday: false }), false);
-assert.equal(shouldShowTryToday({ insightTryTodayShown: false, slotKind: 'crisis', crisisToday: false }), false);
-assert.equal(shouldShowTryToday({ insightTryTodayShown: false, slotKind: 'missed_check', crisisToday: false }), false);
-assert.equal(shouldShowTryToday({ insightTryTodayShown: false, slotKind: 'note', crisisToday: true }), false);
-assert.equal(dailyInsightsVisible({ slotKind: 'week', crisisToday: false }), true);
-assert.equal(dailyInsightsVisible({ slotKind: 'none', crisisToday: true }), false);
-ok('visibility: hidden on crisis / missed_check / insight try shown; shown otherwise');
+assert.equal(shouldShowTryToday({ insightTryTodayShown: false, slotKind: 'none' }), true);
+assert.equal(shouldShowTryToday({ insightTryTodayShown: true, slotKind: 'none' }), false);
+assert.equal(shouldShowTryToday({ insightTryTodayShown: false, slotKind: 'missed_check' }), false);
+assert.equal(shouldShowTryToday({ insightTryTodayShown: false, slotKind: 'note' }), true);
+assert.equal(dailyInsightsVisible({ slotKind: 'week' }), true);
+assert.equal(dailyInsightsVisible({ slotKind: 'missed_check' }), false);
+ok('visibility: hidden on a missed-check day or when another try is shown; shown otherwise (crisis removed)');
 
 // Map fixture sanity: a not-ready map never yields a provisional lean.
 assert.equal(readCategory(CATEGORY_DEFS.find((d) => d.id === 'cat_love')!, [], now).ready, false);

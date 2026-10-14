@@ -1,29 +1,33 @@
 /**
  * When the daily-insights cards may show. Pure.
- * Crisis and missed-check days stay alone (`canShowCategoryTeaser`), and Home
- * never carries two "try today" actions on one day.
+ * A missed-check day stays alone (`canShowCategoryTeaser`), and Insights never
+ * carries two "try today" actions on one day.
  */
 import { canShowCategoryTeaser, type TodaySlot } from '@/lib/today-slot';
 
-export function dailyInsightsVisible(input: {
-  slotKind: TodaySlot['kind'] | string;
-  crisisToday: boolean;
-}): boolean {
-  return !input.crisisToday && canShowCategoryTeaser(input.slotKind);
+export function dailyInsightsVisible(input: { slotKind: TodaySlot['kind'] | string }): boolean {
+  return canShowCategoryTeaser(input.slotKind);
 }
 
 /**
- * 🎯 Try this today. Hidden when the daily insight's own "try today" is on
- * screen alongside it. (emci 2026-10-13: the card lives on Explore, so that
- * flag is false there; Home keeps the insight's line only.)
+ * 🎯 Try this today. Hidden when another "try today" action is on screen
+ * alongside it. (Insights, 2026-10-14: Today's focus drops its own "try today"
+ * line instead, so on Insights this flag is false.)
  */
 export function shouldShowTryToday(input: {
   insightTryTodayShown: boolean;
   slotKind: TodaySlot['kind'] | string;
-  crisisToday: boolean;
 }): boolean {
   if (input.insightTryTodayShown) return false;
   return dailyInsightsVisible(input);
+}
+
+/**
+ * Today's focus shows its own "try today" line only where 🎯 Try this today is
+ * NOT on screen. Insights always offers 🎯, so the focus card never repeats it.
+ */
+export function focusShowsTryToday(input: { tryTodayCardShown: boolean }): boolean {
+  return !input.tryTodayCardShown;
 }
 
 /**

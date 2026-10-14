@@ -572,7 +572,7 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Category read (rolls)', reviewed: CATEGORY_READ_COPY_REVIEWED },
   { name: 'Story', reviewed: STORY_COPY_REVIEWED },
   { name: 'Story bank (66 hand-written six-beat cards)', reviewed: STORY_BANK_COPY_REVIEWED },
-  { name: 'Sage title', reviewed: TITLE_COPY_REVIEWED },
+  { name: 'Title (AI, unused)', reviewed: TITLE_COPY_REVIEWED },
   { name: 'Daily lines', reviewed: DAILY_LINE_COPY_REVIEWED },
   { name: 'Today’s Pick (64 daily questions)', reviewed: DAILY_PICK_COPY_REVIEWED },
   { name: 'Mini guy idle lines', reviewed: BUDDY_COPY_REVIEWED },
@@ -678,7 +678,6 @@ export function PushStatus() {
 
 const LABS: readonly { label: string; href: Href; note: string }[] = [
   { label: 'AI lab', href: '/ai-lab', note: 'switch the AI provider' },
-  { label: 'Crisis lab', href: '/crisis-lab', note: 'the static crisis card' },
   { label: 'Theme lab', href: '/theme-lab', note: 'appearance modes' },
   { label: 'Pixel lab', href: '/pixel-lab', note: 'sprites' },
   { label: 'Profile cards lab', href: '/profile-card-lab', note: 'Change answers + card binder, sample data' },

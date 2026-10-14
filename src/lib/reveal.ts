@@ -3,7 +3,6 @@
  * fact, or badge-proximity — priority-picked like Nudge (first real signal
  * wins). No model call, no chance, no worth-variance.
  */
-import { keywordDetect } from '@/lib/crisis/detect';
 import { checkWasCut, type BadgeCheck } from '@/lib/badges';
 import { addDaysYmd, localYmd } from '@/lib/local-date';
 import { REVEAL_EMPTY, REVEAL_LABEL } from '@/lib/sage-copy';
@@ -36,28 +35,17 @@ export interface ResolveRevealInput {
   factCount: number;
   timeZone: string;
   now?: Date;
-  crisisToday?: boolean;
-  crisisYesterday?: boolean;
-  crisisDetected?: boolean;
 }
 
 export { REVEAL_EMPTY, REVEAL_LABEL };
 
 export const REVEAL_SEALED_PROMPT = 'Open';
 
-function clipFact(fact: string): string {
-  return fact.length > 80 ? `${fact.slice(0, 77)}…` : fact;
-}
-
-function latestSafeFact(facts: string[]): string | null {
-  const trimmed = facts.map((fact) => fact.trim()).filter((fact) => fact.length > 0);
-  for (let i = trimmed.length - 1; i >= 0; i -= 1) {
-    const fact = trimmed[i]!;
-    if (keywordDetect(fact)) continue;
-    if (isCruelCut(fact)) continue;
-    if (containsFrameworkTerm(fact)) continue;
-    return clipFact(fact);
-  }
+/**
+ * Stored facts ("Teach Sage") are no longer read (2026-10-14): nothing a
+ * person typed feeds a line. Kept as a function so the reveal order is intact.
+ */
+function latestSafeFact(_facts: string[]): string | null {
   return null;
 }
 
@@ -184,7 +172,6 @@ export function findRevealSignal(input: ResolveRevealInput): RevealPick | null {
 }
 
 export function resolveReveal(input: ResolveRevealInput): RevealPick | null {
-  if (input.crisisDetected || input.crisisToday || input.crisisYesterday) return null;
   const pick = findRevealSignal(input);
   if (!pick) return null;
   const text = pick.text.trim();

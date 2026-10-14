@@ -153,8 +153,8 @@ const CHIP_COPY: Record<
     kicker: 'fact',
     value: unlocked ? factCount : '—',
     label: unlocked
-      ? 'First fact taught to Sage, unlocked.'
-      : 'First fact taught to Sage, locked.',
+      ? 'First fact saved, unlocked.'
+      : 'First fact saved, locked.',
   }),
   'week-no-cut': ({ unlocked }) => ({
     kicker: 'week',

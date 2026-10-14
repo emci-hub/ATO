@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 
+import { legacyRedirect } from '@/lib/nav/legacy-routes';
 import { pathFromNotificationData } from '@/lib/push-copy';
 
 /**
@@ -15,6 +16,8 @@ export function redirectSystemPath({ path }: { path: string; initial: boolean })
     // Native module missing (web / Expo Go).
   }
   if (path === 'home' || path === '/home') return '/';
+  const moved = legacyRedirect(path);
+  if (moved) return moved;
   if (/(?:^|\/)(?:theme|around|talk|pixel|crisis|voice|ai)-lab\/?$/.test(path)) return '/';
   return path;
 }
