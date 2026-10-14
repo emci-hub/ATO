@@ -1,11 +1,14 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoriesFold } from '@/components/categories-fold';
 import { CategoryDeepDiveCard } from '@/components/category-deep-dive-card';
 import { ChangeCard } from '@/components/change-card';
+import { ConflictStyleCard } from '@/components/daily-insights/conflict-style-card';
+import { SuperpowerCard } from '@/components/daily-insights/superpower-card';
+import { TryTodayCard } from '@/components/daily-insights/try-today-card';
 import { FullProfileFold } from '@/components/full-profile-fold';
 import { Appear, SkeletonCard } from '@/components/motion';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
@@ -16,6 +19,9 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
+import { useTryToday } from '@/hooks/use-try-today';
+import { readyCategories } from '@/lib/categories';
+import { dailyInsightsVisible, pickConflict, pickSuperpower, shouldShowTryToday } from '@/lib/daily-insights';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { useMeContext } from '@/lib/me-context';
@@ -40,6 +46,7 @@ export default function ExploreScreen() {
   const { me, refresh: refreshMe } = useMeContext();
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
+  const [tracksOwner, setTracksOwner] = useState<string | null>(null);
   /** A crisis noted today hides every AI offer (the deep dive), as on Home. */
   const [crisisToday, setCrisisToday] = useState(false);
   const dataEpoch = useAccountDataEpoch();
@@ -67,6 +74,7 @@ export default function ExploreScreen() {
       ]);
       if (requestId !== requestIdRef.current) return;
       setTracks(rows);
+      setTracksOwner(userId);
       setCrisisToday(crisisLocal || crisisServer);
     } catch (err) {
       console.log('[explore] tracks error:', err);
@@ -81,6 +89,7 @@ export default function ExploreScreen() {
     // A new account starts from nothing.
     requestIdRef.current += 1;
     setTracks([]);
+    setTracksOwner(null);
     setTracksReady(false);
   }, [userId]);
 
@@ -89,6 +98,31 @@ export default function ExploreScreen() {
       void reloadTracks();
     }, [reloadTracks]),
   );
+
+  /**
+   * Daily insights (static bank, no model call). Explore has no Today slot,
+   * so the slot is 'none' here; crisis hides all three. 🎯 lives here, not on
+   * Home, so Home keeps the insight's own "try today" only (emci 2026-10-13).
+   */
+  // Same unlock as the Categories tiles: no category reading before all 48.
+  const unlocked = tracksOwner === userId && isFullProfileDone(tracks, tracksReady);
+  const insightsVisible = unlocked && dailyInsightsVisible({ slotKind: 'none', crisisToday });
+  const tryTodayVisible =
+    unlocked && shouldShowTryToday({ insightTryTodayShown: false, slotKind: 'none', crisisToday });
+  const tryToday = useTryToday({
+    userId: userId ?? '',
+    timeZone: me?.timezone,
+    tracks,
+    // Only tracks fetched for THIS account (a straight A→B switch keeps A's for a render).
+    tracksReady: tracksReady && tracksOwner === userId,
+    touched: me?.trait_touched_at,
+    enabled: !!userId && tryTodayVisible,
+  });
+  const superpower = useMemo(
+    () => (tracksReady ? pickSuperpower(readyCategories(tracks)) : null),
+    [tracks, tracksReady],
+  );
+  const conflict = useMemo(() => (tracksReady ? pickConflict(tracks) : null), [tracks, tracksReady]);
 
   return (
     <ThemedView style={styles.container}>
@@ -121,6 +155,16 @@ export default function ExploreScreen() {
               ) : (
                 <SkeletonCard lines={4} />
               )}
+              {tryTodayVisible && tryToday.pick ? (
+                <Appear>
+                  <TryTodayCard
+                    pick={tryToday.pick}
+                    streak={tryToday.streak}
+                    done={tryToday.done}
+                    onDone={tryToday.markDone}
+                  />
+                </Appear>
+              ) : null}
               {/* Categories stay open as tiles: the full fixed list is the point
                   of this tab (release pass, emci 2026-09-16). */}
               <CategoriesFold
@@ -129,6 +173,10 @@ export default function ExploreScreen() {
                 onUpdated={() => refreshMe()}
                 unlocked={isFullProfileDone(tracks, tracksReady)}
               />
+              {/* ⚡/🪫 beside the categories: 3+ ready bars and a 0.10 spread, else nothing. */}
+              {insightsVisible && superpower ? <SuperpowerCard pick={superpower} /> : null}
+              {/* 🗣️ next to Communication's deep dive: both conflict tracks stable. */}
+              {insightsVisible && conflict ? <ConflictStyleCard line={conflict} /> : null}
               {/* Category deep dive (moved from Home, emci 2026-10-09): one AI card
                   a day, only on its button. After Questions are finished; hidden on
                   a crisis day. */}
