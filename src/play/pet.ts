@@ -353,8 +353,12 @@ export type PetState = {
   prepaid: boolean;
   /** v30 — holo / reverse holo. None on a save from before finishes. */
   finish_kind: FinishKind;
-  /** Named colour from finishes.json. Null when the kind is none. */
+  /** Prism / rim colour from finishes.json. Null when the kind is none. */
   finish_color: string | null;
+  /** Shine sweep colour id (finishes.json `sweep`). */
+  finish_sweep: string;
+  /** Glint colour id (finishes.json `glint`). */
+  finish_glint: string;
   /** v32 — worn auras, each with its own colour. Empty on an older save that had none. */
   auras: AuraWear[];
 };
@@ -424,6 +428,8 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     prepaid: false,
     finish_kind: 'none',
     finish_color: null,
+    finish_sweep: 'white',
+    finish_glint: 'white',
     auras: [],
   };
 }

@@ -43,6 +43,7 @@ import {
 } from './art-dirs';
 import type { AtlasJson, ArtFormat, ArtTrim } from '../src/art/registry.types';
 import { charArtRel } from './art-categories';
+import { groundInset, groundRow } from '../src/play/ground-point';
 
 /**
  * Word → role guesses, checked in order. These only ever PROPOSE a role: the
@@ -343,9 +344,19 @@ function main() {
   const all = process.argv.includes('--all');
   const family = arg('family');
   const skin = arg('skin');
+  if (process.argv.includes('--auras-only')) {
+    packAurasOnly(repo);
+    writeRegistry(repo);
+    return;
+  }
+  if (process.argv.includes('--registry-only')) {
+    // Rebuild generated-play-sheets.ts + legacy-play-sheets.json from the sheets.json files on disk.
+    writeRegistry(repo);
+    return;
+  }
   if (!one && !all && !family && !skin && !id) {
     throw new Error(
-      'Usage: npx tsx scripts/art-pack.ts (--id <id> | --hero <id> | --all | --family <name> | --skin streetwear [--ui-only | --heroes-only]) [--preview]',
+      'Usage: npx tsx scripts/art-pack.ts (--id <id> | --hero <id> | --all | --family <name> | --skin streetwear [--ui-only | --heroes-only] | --auras-only | --registry-only) [--preview]',
     );
   }
   if (id) {
@@ -561,6 +572,9 @@ function charArtDir(repo: string, theme: string, group: string, slug: string): s
 type SwCharMeta = {
   /** Feet line of the east rotation, fraction of the frame height from the top. */
   footAt: number;
+  /** Ground point row (feet line minus the footprint inset, src/play/ground-point.ts),
+   * fraction of the frame height from the top. Auras and floor rings centre here. */
+  groundAt: number;
   /** Visible body height / frame height (east rotation) — sizes the box so a
    * Streetwear figure matches the cast figure it replaces on screen. */
   bodyRatio: number;
@@ -625,6 +639,7 @@ function packSwCharacter(repo: string, group: string, slug: string): SwCharMeta 
   if (!box) throw new Error(`${group}/${slug}: empty east rotation`);
   const meta: SwCharMeta = {
     footAt: Number(((box.y1 + 1) / east.height).toFixed(4)),
+    groundAt: Number(((groundRow(box.y1 + 1, box.y1 - box.y0 + 1)) / east.height).toFixed(4)),
     bodyRatio: Number(((box.y1 - box.y0 + 1) / east.height).toFixed(4)),
     clips,
     ...(walkOrder && walkOrder.length > 0 ? { walkOrder } : {}),
@@ -726,14 +741,57 @@ function packSwEffects(repo: string): { manifest: Record<string, SheetEntry>; me
   return { manifest, meta };
 }
 
+/**
+ * One manifest (and so one small indexed atlas) per aura style: a style only
+ * loads its own pixels, not every style's. Clears the old shared
+ * `auras/atlas.png` + `auras/sheets.json`.
+ */
+function writeAuraManifests(repo: string, manifest: Record<string, SheetEntry>): void {
+  const auraDir = path.join(repo, 'assets/play', SW_SHEETS, 'auras');
+  fs.mkdirSync(auraDir, { recursive: true });
+  for (const f of fs.readdirSync(auraDir)) {
+    const full = path.join(auraDir, f);
+    if (fs.statSync(full).isFile()) fs.rmSync(full);
+  }
+  const byStyle = new Map<string, Record<string, SheetEntry>>();
+  for (const [key, entry] of Object.entries(manifest)) {
+    const style = key.split('/').slice(-2, -1)[0];
+    byStyle.set(style, { ...(byStyle.get(style) ?? {}), [key]: entry });
+  }
+  for (const [style, part] of byStyle) {
+    fs.mkdirSync(path.join(auraDir, style), { recursive: true });
+    fs.writeFileSync(path.join(auraDir, style, 'sheets.json'), `${JSON.stringify(part, null, 2)}\n`);
+  }
+}
+
+/** `--auras-only`: repack just the aura strips + atlases and swap `auras` in meta.json. */
+function packAurasOnly(repo: string): void {
+  const auras = packSwAuras(repo);
+  writeAuraManifests(repo, auras.manifest);
+  const auraDir = path.join(repo, 'assets/play', SW_SHEETS, 'auras');
+  let files = 0;
+  for (const manifest of walk(auraDir).filter((f) => f.endsWith('sheets.json'))) {
+    files += atlasSheetsDir(repo, path.dirname(manifest));
+  }
+  const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
+  const raw = fs.readFileSync(metaPath, 'utf8');
+  const crlf = raw.includes('\r\n');
+  const meta = JSON.parse(raw) as Record<string, unknown>;
+  meta.auras = auras.meta;
+  const text = `${JSON.stringify(meta, null, 2)}\n`;
+  fs.writeFileSync(metaPath, crlf ? text.replace(/\n/g, '\r\n') : text);
+  console.log(`packed ${Object.keys(auras.meta).length} aura styles into ${files} atlases`);
+}
+
 /** Pet auras → a behind strip and a front strip sharing one square cell, both
  * anchored at the pet's feet. Greyscale: the app palette-maps them at runtime. */
 function packSwAuras(repo: string): { manifest: Record<string, SheetEntry>; meta: Record<string, SwFxMeta & { refBodyPx: number }> } {
   const manifest: Record<string, SheetEntry> = {};
   const meta: Record<string, SwFxMeta & { refBodyPx: number }> = {};
   const root = path.join(swRoot(repo), 'fx/auras');
-  // Authored around the 64px Village Girl creep (visible body 49px tall).
-  const REF_BODY_PX = 49;
+  // Authored around Kael (visible body 106 px, feet line = lowest row + 1). The
+  // anchor is the GROUND point (feet line minus the footprint inset), not the toe edge.
+  const REF_BODY_PX = 106;
   for (const style of fs.readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory())) {
     const metaFile = path.join(root, style.name, 'manifest.json');
     const back = vfxExportFrames(path.join(root, style.name, 'behind.png'), metaFile, 'behind');
@@ -764,7 +822,7 @@ function packSwAuras(repo: string): { manifest: Record<string, SheetEntry>; meta
       loop: true,
       cell,
       anchorX: Number((ox / cell).toFixed(4)),
-      anchorY: Number((oy / cell).toFixed(4)),
+      anchorY: Number(((oy - groundInset(REF_BODY_PX)) / cell).toFixed(4)),
       refBodyPx: REF_BODY_PX,
     };
   }
@@ -1205,8 +1263,7 @@ function packStreetwear(repo: string) {
   const auras = packSwAuras(repo);
   const fxDir = path.join(repo, 'assets/play', SW_SHEETS, 'fx');
   fs.writeFileSync(path.join(fxDir, 'sheets.json'), `${JSON.stringify(fx.manifest, null, 2)}\n`);
-  const auraDir = path.join(repo, 'assets/play', SW_SHEETS, 'auras');
-  fs.writeFileSync(path.join(auraDir, 'sheets.json'), `${JSON.stringify(auras.manifest, null, 2)}\n`);
+  writeAuraManifests(repo, auras.manifest);
   const swords = bakeSwSwords(repo);
   const hideoutFx = packHideoutAuraStrips(repo);
   const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');

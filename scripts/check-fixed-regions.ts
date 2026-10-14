@@ -95,6 +95,21 @@ const ok = (msg: string) => {
 }
 
 {
+  // Aura + holo are their own layers that follow the pet and are clipped: the pet's stage reserves room
+  // for the biggest aura + glint halo and clips there, and the screen's viewport region clips again, so a
+  // big aura never draws over a bar, a button or an overlay (aura/holo rework 2026-10-14).
+  const figure = read('src/play/pet-figure.tsx');
+  assert.match(figure, /export const STAGE_RESERVE = /, 'pet figure reserves room for the aura + glints');
+  assert.match(figure, /stage: \{ position: 'absolute', overflow: 'hidden' \}/, 'the pet stage clips its aura and holo');
+  assert.ok(!/overflow: 'visible'/.test(figure), 'no overflow: visible escape on the pet');
+  const room = read('src/play/pet-room.tsx');
+  assert.match(room, /stage: \{ flex: 1, minHeight: 0, overflow: 'hidden' \}/, 'the room viewport region clips the pet layers');
+  const card = read('src/play/pet-card.tsx');
+  assert.match(card, /art: \{[^}]*overflow: 'hidden'/, "the card's art area clips the pet layers");
+  ok('aura + holo: the pet stage and the room / card viewport regions clip them (no overflow escape)');
+}
+
+{
   const gotchas = read('docs/GOTCHAS.md');
   assert.match(gotchas, /Game screens use fixed regions/, 'GOTCHAS carries the rule');
   ok('rule documented in docs/GOTCHAS.md');

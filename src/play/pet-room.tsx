@@ -31,8 +31,6 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 
 import type { PetCoachTip } from '@/play/coach';
-import { quietFoilOpacity } from '@/play/auras';
-import { FinishPlate, cardFoilOpacity, useFinishLease, windowFoilOpacity } from '@/play/finish-foil';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
 import { ELEMENT_COLOR, type Element } from '@/play/kits';
@@ -95,7 +93,7 @@ import {
   usePixelFonts,
 } from '@/play/pixel-ui';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
-import { roleFootAt } from '@/play/skin';
+import { roleFootAt, roleGroundAt } from '@/play/skin';
 import {
   StreetRoomArt,
   StreetRoomAuraClip,
@@ -474,7 +472,6 @@ export function PetRoom({
     if (!fxAnimate) return;
     playHit.current();
   }, [fxAnimate, juiceKey]);
-  useFinishLease((pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') && pet.finish_color != null);
   const [real, setReal] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
     setReal({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
@@ -517,6 +514,8 @@ export function PetRoom({
         ? PET_ROOM_BOX.egg
         : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, pr);
   const footAt = egg ? 1 : roleFootAt(art.role);
+  // Floor effects (ring, glimmer, shiny ring) centre on the ground point, not the toe edge.
+  const groundAt = egg ? 1 : roleGroundAt(art.role);
   const origin = streetRoom && hideoutScale
     ? hideoutOrigin(Math.max(width, 1), Math.max(height - barReserve, 1), hideoutScale)
     : roomOrigin(Math.max(width, 1), Math.max(height, 1));
@@ -958,7 +957,7 @@ export function PetRoom({
               styles.ring,
               {
                 left: box * 0.2,
-                top: footAt * box - 8,
+                top: groundAt * box - 8,
                 width: box * 0.6,
                 borderColor: ringColor,
                 borderWidth: look.ring === 'thick' ? 4 : 2,
@@ -970,29 +969,6 @@ export function PetRoom({
           {pet.stage === 'god' && aura && !streetRoom ? <GodAura element={aura} size={box * 1.4} reduceMotion={motion.cosmeticsStill} /> : null}
           {maxedAura ? <MaxedAura size={box} animate={fxAnimate} /> : null}
           <GradeAura grade={grade} size={box} animate={fxAnimate} trail={act.face === 'e' || act.face === 'w' ? act.face : null} />
-          {pet.finish_color && (pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') ? (
-            <View
-              pointerEvents="none"
-              style={[
-                styles.foilMat,
-                pet.finish_kind === 'reverse'
-                  ? { left: -box * 0.22, top: box * 0.46, width: box * 1.44, height: box * 0.46, borderRadius: box * 0.23 }
-                  : { left: -box * 0.06, top: box * 0.1, width: box * 1.12, height: box * 0.86, borderRadius: 22 },
-              ]}>
-              <FinishPlate
-                colorId={pet.finish_color}
-                motion="sweep"
-                reduceMotion={motion.cosmeticsStill}
-                opacity={
-                  pet.auras.length > 0
-                    ? quietFoilOpacity()
-                    : pet.finish_kind === 'reverse'
-                      ? cardFoilOpacity()
-                      : windowFoilOpacity()
-                }
-              />
-            </View>
-          ) : null}
           <Pressable
             onPress={onTapPet}
             accessibilityRole="button"
@@ -1037,8 +1013,8 @@ export function PetRoom({
               style={{ position: 'absolute', left: box * 0.3, width: box * 0.4, top: footAt * box - box * 0.42, height: box * 0.42 }}
             />
           ) : null}
-          {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={fxAnimate} style={pet.shiny_style} /> : null}
-          {revealed && !pet.shiny && pet.glimmer ? <GlimmerGlow size={box} footAt={footAt} animate={fxAnimate} /> : null}
+          {revealed && pet.shiny ? <ShinyOverlay size={box} groundAt={groundAt} animate={fxAnimate} style={pet.shiny_style} /> : null}
+          {revealed && !pet.shiny && pet.glimmer ? <GlimmerGlow size={box} groundAt={groundAt} animate={fxAnimate} /> : null}
           {asleep ? <Text style={[styles.zzz, { left: box * 0.6, top: box * 0.25 }]}>💤</Text> : null}
           <Animated.View style={[styles.heart, { left: box / 2 - 16, top: box * 0.22 }, heartStyle]} pointerEvents="none">
             <AtlasSprite atlas="room" frame="heart" />
@@ -1207,7 +1183,6 @@ const styles = StyleSheet.create({
   moodPip: { width: ART_PT * 2, height: ART_PT * 2, backgroundColor: '#91DB69' },
   pressed: { opacity: 0.82 },
   petWrap: { position: 'absolute', left: 0 },
-  foilMat: { position: 'absolute', overflow: 'hidden' },
   ring: { position: 'absolute', height: 14, borderRadius: 999, opacity: 0.7 },
   zzz: { position: 'absolute', fontSize: 18 },
   heart: { position: 'absolute' },

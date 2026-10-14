@@ -186,6 +186,16 @@ Read before editing the area. Each one has bitten this repo at least once.
   wave) may re-lay out once, marked `fixed-regions: screen switch`. Applied to Dive, Turf
   War's coach line, the Hideout strip, pet games, the Locker tip and the sword notice.
 
+- **Floor effects and auras centre on the GROUND point, not the toe edge (emci 2026-10-14).** `src/play/ground-point.ts`:
+  ground = lowest opaque row − ≈ 4 % of the figure height (the footprint's middle in the ¾ low top-down camera). Packed per
+  character as `groundAt` next to `footAt` in `meta.json`; `roleGroundAt(role)` for code. `GlimmerGlow`, `ShinyOverlay`, the
+  room floor ring and every aura use it. Pinned by `check:auras` / `check:pet-holo`.
+- **Aura art is one indexed atlas per style in a grey + green code (2026-10-14).** Grey = main colour, green = second colour,
+  < 28 luma = outline. A colourway rewrites only the PLTE chunk (`aura-palette.ts`); never re-export a colourway as new art.
+  Frames are trimmed crops of a source cell: sprite pixels are always read in CELL coordinates (`sprite-pixels.ts`).
+- **Holo is its own layer ON the pet (`PetHolo`), never on the card face (2026-10-14).** The card keeps a quiet foil border only.
+  All colour sets live in `data/finishes.json`; old finish colours migrate through its `migrate` map.
+
 ## Copy
 
 - **Nine badge render sites are pinned in `check:copy-review-badges`'s `sites`

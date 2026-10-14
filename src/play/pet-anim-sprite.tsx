@@ -212,7 +212,7 @@ export function PetAnimSprite({
   /** v23 — shiny / dye recolour, and a shiny's locked colour. */
   recolor?: string | null;
   lockColour?: boolean;
-  finish?: { kind: FinishKind; color: string | null } | null;
+  finish?: { kind: FinishKind; color: string | null; sweep?: string; glint?: string } | null;
   foilMotion?: FinishMotion;
   reduceMotion?: boolean;
   reverseHost?: boolean;

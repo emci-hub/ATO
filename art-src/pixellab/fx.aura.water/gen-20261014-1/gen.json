@@ -1,0 +1,22 @@
+{
+  "tool": "pixellab",
+  "model": null,
+  "prompt": "PixelLab VFX workbench: water drops, rising and orbiting bubbles aura, greyscale main ramp + green second ramp (runtime recolour code), 8 frames",
+  "negative": null,
+  "seed": null,
+  "size": null,
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {},
+  "cost": null,
+  "createdAt": "2026-10-14T18:09:37.671Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": ""
+  },
+  "dirMap": {}
+}

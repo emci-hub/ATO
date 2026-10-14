@@ -1,12 +1,14 @@
 /**
- * Holo / reverse-holo paint (save v30). JS only: react-native-svg + Reanimated.
+ * The card's quiet foil border (save v30, reworked 2026-10-14). JS only:
+ * react-native-svg + Reanimated.
  *
- * Holo fills the art window behind the pet (diagonal bands, dark gaps, glitter,
- * a glare spot). Reverse holo fills the rounded card around that window. The
- * pet sprite is never tinted.
+ * The holo itself lives ON the pet (`PetHolo`). The card keeps only this
+ * border: diagonal bands, dark gaps, glitter and a glare, painted round the
+ * card by cutting the inside out (`hole`). Never over the art window or the face.
  *
  * Motion is the shared drift + tilt in `finish-motion`. Reduce Motion (Play or
- * the OS) and Low effects hold every layer still. Stops never animate.
+ * the OS) and Low effects hold the border still; the pet's own holo keeps its
+ * gentle loop. Stops never animate.
  */
 import { useEffect, useId, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
@@ -15,6 +17,7 @@ import Svg, { Circle, ClipPath, Defs, G, Path, RadialGradient, Rect, Stop } from
 
 import { foilDrift, foilTiltX, foilTiltY, leaseFinishSensor } from '@/play/finish-motion';
 import {
+  borderOpacity,
   finishColor,
   finishSweepRuns,
   foilAngle,
@@ -22,8 +25,6 @@ import {
   foilSparkles,
   foilStripes,
   glareOpacity,
-  reverseOpacity,
-  windowOpacity,
   type FinishMotion,
 } from '@/play/finishes';
 import { useFxQuality } from '@/play/fx-quality';
@@ -200,10 +201,7 @@ export function FinishPlate({
   );
 }
 
-export function windowFoilOpacity(): number {
-  return windowOpacity();
-}
-
-export function cardFoilOpacity(): number {
-  return reverseOpacity();
+/** Opacity of the card's foil border. */
+export function borderFoilOpacity(): number {
+  return borderOpacity();
 }
