@@ -71,18 +71,19 @@ const AnimatedG = Animated.createAnimatedComponent(G);
 /* ----------------------------------------------------------- caches ------- */
 
 const TEXTURE_CAP = 24;
-const textures = new Map<string, string>();
+const textures = new Map<string, unknown>();
 
-/** A texture's data URI, built once per key. */
-function cachedUri(key: string, build: () => Uint8Array): string {
-  const hit = textures.get(key);
+/** A texture (data URI + its numbers), built once per key — nothing is encoded on a cache hit. */
+function cachedTexture<T extends { png: Uint8Array }>(key: string, build: () => T): Omit<T, 'png'> & { uri: string } {
+  const hit = textures.get(key) as (Omit<T, 'png'> & { uri: string }) | undefined;
   if (hit) {
     remember(textures, key, hit, TEXTURE_CAP);
     return hit;
   }
-  const uri = pngDataUri(build());
-  remember(textures, key, uri, TEXTURE_CAP);
-  return uri;
+  const { png, ...rest } = build();
+  const made = { ...rest, uri: pngDataUri(png) } as Omit<T, 'png'> & { uri: string };
+  remember(textures, key, made, TEXTURE_CAP);
+  return made;
 }
 
 const SPOT_CAP = 16;
@@ -436,7 +437,7 @@ export function PetHolo({
   const frame = useFramePixels(drawable);
   const stillFrame = useFramePixels(still ?? drawable);
   const art = useMemo(() => maskArt(drawable), [drawable]);
-  const prism = rampOf(finish.color);
+  const prism = useMemo(() => rampOf(finish.color), [finish.color]);
   const sweepDef = finishSweep(finish.sweep);
   const glintDef = finishGlint(finish.glint);
   const paint = finishConfig().paint;
@@ -448,21 +449,16 @@ export function PetHolo({
 
   const prismTex = useMemo(() => {
     if (!prism || !isHolo || !w) return null;
-    const tex = bandTexture(prism, PRISM_BAND, w, h);
-    return { ...tex, uri: cachedUri(`prism|${finish.color}|${w}x${h}`, () => tex.png) };
+    return cachedTexture(`prism|${finish.color}|${w}x${h}`, () => bandTexture(prism, PRISM_BAND, w, h));
   }, [prism, isHolo, w, h, finish.color]);
 
   const rimTex = useMemo(() => {
     if (!prism || isHolo || !w) return null;
-    const lit = bandTexture(prism, RIM_BAND, w, h);
-    const shaded = bandTexture(prism.map((c) => mixRgb(c, RIM_SHADOW_MIX, 0.5)), RIM_BAND, w, h);
-    return {
-      w: lit.w,
-      h: lit.h,
-      period: lit.period,
-      lit: cachedUri(`rim|${finish.color}|${w}x${h}`, () => lit.png),
-      shade: cachedUri(`rimshade|${finish.color}|${w}x${h}`, () => shaded.png),
-    };
+    const lit = cachedTexture(`rim|${finish.color}|${w}x${h}`, () => bandTexture(prism, RIM_BAND, w, h));
+    const shade = cachedTexture(`rimshade|${finish.color}|${w}x${h}`, () =>
+      bandTexture(prism.map((c) => mixRgb(c, RIM_SHADOW_MIX, 0.5)), RIM_BAND, w, h),
+    );
+    return { w: lit.w, h: lit.h, period: lit.period, lit: lit.uri, shade: shade.uri };
   }, [prism, isHolo, w, h, finish.color]);
 
   const sweepTex = useMemo(() => {
@@ -475,17 +471,16 @@ export function PetHolo({
     } else if (sweepDef.core && sweepDef.mid && sweepDef.outer) {
       source = { kind: 'fixed', colours: { core: hexRgb(sweepDef.core), mid: hexRgb(sweepDef.mid), outer: hexRgb(sweepDef.outer) } };
     } else return null;
-    const tex = sweepTexture(source, h, { core: paint.sweep_core, mid: paint.sweep_mid, outer: paint.sweep_outer });
-    return { ...tex, uri: cachedUri(`sweep|${sweepDef.id}|${sweepDef.id === 'match' ? finish.color : ''}|${h}`, () => tex.png) };
+    return cachedTexture(`sweep|${sweepDef.id}|${sweepDef.id === 'match' ? finish.color : ''}|${h}`, () =>
+      sweepTexture(source, h, { core: paint.sweep_core, mid: paint.sweep_mid, outer: paint.sweep_outer }),
+    );
   }, [prism, sweepDef, h, finish.color, paint.sweep_core, paint.sweep_mid, paint.sweep_outer]);
 
   const glintTex = useMemo(() => {
     if (!prism || !glintDef) return null;
-    const tex = glintSheet(glintColours(glintDef, prism, hexRgb), gentle);
-    return {
-      ...tex,
-      uri: cachedUri(`glint|${glintDef.id}|${glintDef.id === 'match' ? finish.color : ''}|${gentle ? 'g' : 'f'}`, () => tex.png),
-    };
+    return cachedTexture(`glint|${glintDef.id}|${glintDef.id === 'match' ? finish.color : ''}|${gentle ? 'g' : 'f'}`, () =>
+      glintSheet(glintColours(glintDef, prism, hexRgb), gentle),
+    );
   }, [prism, glintDef, gentle, finish.color]);
 
   const spots = useMemo(() => {

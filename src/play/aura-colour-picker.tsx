@@ -4,6 +4,7 @@
  * tokens once per colour, 110 with a Tide Pass). `Match sword` follows the
  * equipped sword. The swatches are the real ramps the art is painted with.
  */
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
@@ -74,7 +75,10 @@ export function AuraColourPicker({
   onPick: (tint: AuraTint) => void;
 }) {
   const parts = auraTintParts(tint);
-  const two = parts.two;
+  // Browsing never spends: the tab only switches the list, a locked pair waits for an explicit Buy.
+  const [mode, setMode] = useState<'single' | 'two'>(parts.two ? 'two' : 'single');
+  const [pending, setPending] = useState<AuraTint | null>(null);
+  const two = mode === 'two';
   const list: readonly AuraColourway[] = two ? auraColourways() : auraSingleColourways();
   const owned = (id: AuraColourId) => free || mixes.includes(id);
   const price = auraMixPrice(pass);
@@ -83,16 +87,8 @@ export function AuraColourPicker({
     <View style={styles.wrap}>
       <View style={styles.row}>
         <NeonChip label="Match sword" selected={parts.colour === 'sword'} onPress={() => onPick('sword')} />
-        <NeonChip
-          label="Single colour"
-          selected={parts.colour !== 'sword' && !two}
-          onPress={() => onPick(parts.colour === 'sword' || parts.colour === 'natural' ? 'ember' : auraTintFor(parts.colour, false))}
-        />
-        <NeonChip
-          label="Two colours"
-          selected={two}
-          onPress={() => onPick(auraTintFor(parts.colour === 'sword' ? 'natural' : parts.colour, true))}
-        />
+        <NeonChip label="Single colour" selected={parts.colour !== 'sword' && !two} onPress={() => { setMode('single'); setPending(null); }} />
+        <NeonChip label="Two colours" selected={two} onPress={() => { setMode('two'); setPending(null); }} />
       </View>
       {parts.colour === 'sword' ? null : (
         <View style={styles.row}>
@@ -108,15 +104,30 @@ export function AuraColourPicker({
                   style={style}
                   tint={next}
                   sword={sword}
-                  on={parts.colour === item.id}
+                  on={parts.colour === item.id && parts.two === two}
                   label={label}
-                  onPress={() => onPick(next)}
+                  onPress={() => {
+                    if (two && !owned(item.id)) setPending(next);
+                    else {
+                      setPending(null);
+                      onPick(next);
+                    }
+                  }}
                 />
               </View>
             );
           })}
         </View>
       )}
+      {pending ? (
+        <NeonChip
+          label={`Buy ${auraTintLabel(pending)} · ${price} tokens`}
+          onPress={() => {
+            onPick(pending);
+            setPending(null);
+          }}
+        />
+      ) : null}
       <Text style={styles.note}>
         {parts.colour === 'sword'
           ? 'Follows your equipped sword.'
