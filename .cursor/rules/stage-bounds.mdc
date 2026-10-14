@@ -1,0 +1,28 @@
+---
+description: Every Divecore game screen is a <GameScreen> with a fixed stage (map/room/board) computed once from the window + safe area. Nothing but stage content inside the stage. Gate check:stage-bounds.
+globs: src/play/**,src/app/play.tsx
+alwaysApply: true
+---
+
+# Stage bounds (Divecore Phase 1, emci 2026-10-14)
+
+Kit: `src/play/stage-layout.tsx` (`GameScreen`, `useStageFrame`) + pure math `src/play/stage-frame.ts`
+(`computeStageFrame`, `REGIONS`). Spec: `docs/divecore-layout-spec.md`.
+
+1. **Every game screen uses `<GameScreen>`** with `frame={useStageFrame('<id>')}` and the fixed
+   region order: TopBar · NoticeLane · Stage · ActionDock · TabBar (or bottom pad), plus `float`
+   (tips, sheets, toasts, panels) and `modal` (confirms, reveals). A new screen adds a `REGIONS`
+   row and a row in `scripts/check-stage-bounds.ts`.
+2. **The stage size is fixed.** It comes from the frame (window size + safe area, read once,
+   before first paint). Never `flex: 1` leftover, never `onLayout` of content. Only a rotation or
+   a window-size change recomputes it. Pause, a notice, a tip or loading never do.
+3. **Nothing goes inside the stage except stage content** (the art, the pet, units, spots on the
+   art). Notices, banners, coach lines and hints go in the NoticeLane; sheets, panels and toasts
+   on the FloatLayer; confirms on the ModalLayer.
+4. Regions use the spacing scale 4 · 8 · 12 · 16 · 24 (`SPACE`), taps ≥ 44 pt (`TAP_MIN`),
+   primary buttons 48 pt in the ActionDock (bottom third). Reduce Motion = gentle, never still,
+   and never a size change.
+
+Gate: `npm run check:stage-bounds` (in `check:ota-gate`): GameScreen everywhere, no flex-leftover
+stage, nothing forbidden in a stage subtree, and a pure test that the frame is identical with or
+without a notice / tip / pause / loading at 430×932 and 375×667.

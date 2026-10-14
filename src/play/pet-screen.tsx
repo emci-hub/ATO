@@ -13,7 +13,7 @@
  *
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
@@ -78,6 +78,10 @@ import { PetFigure } from '@/play/pet-figure';
 import { petRecolor } from '@/play/pet-looks';
 import { PetReveal } from '@/play/pet-reveal';
 import { PetRoom, type RoomSpeech } from '@/play/pet-room';
+import { GameScreen, useStageFrame } from '@/play/stage-layout';
+import { StreetStatusStrip } from '@/play/street-room';
+import { HideoutStageControls } from '@/play/hideout-stage';
+import type { HideoutOrigin, HideoutScale } from '@/play/hideout-iso';
 import { loadSeenStage, saveSeenStage } from '@/play/pet-seen';
 import {
   BookTab,
@@ -141,6 +145,10 @@ const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'info', emoji: 'ℹ️', label: 'Info' },
 ];
 
+
+/** The room row sits under the room (stage layout): its "row" mode reads no room scale / origin. */
+const ROW_ONLY_SCALE: HideoutScale = { dpx: 1, pt: 1, canvasW: 0, canvasH: 0, contentW: 0, contentH: 0 };
+const ROW_ONLY_ORIGIN: HideoutOrigin = { left: 0, top: 0 };
 
 const SHEET_TITLE: Record<SheetId, string> = {
   feed: 'Feed',
@@ -305,6 +313,8 @@ export function PetScreen({
   onBanner,
   openGuide: openGuideReq = false,
   onGuideOpened,
+  shellTop = null,
+  shellTabs = null,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -331,8 +341,12 @@ export function PetScreen({
   onGuideOpened?: () => void;
   /** v26 — post a floating banner (NEW RECORD!, unlocks, buffs). */
   onBanner?: (b: { title: string; body: string }) => void;
+  /** Stage layout: the shell's resource bar (TopBar) and tab bar for this GameScreen. */
+  shellTop?: ReactNode;
+  shellTabs?: ReactNode;
 }) {
   const fontsReady = usePixelFonts();
+  const frame = useStageFrame('hideout');
   const devUnlocked = usePlayDevUnlocked();
   const dev = PRE_LAUNCH_DEV && devUnlocked;
   const pv = view.pet;
@@ -813,134 +827,202 @@ export function PetScreen({
   return (
     <View style={styles.screen}>
       <FinishMotionHost reduceMotion={reduceMotion} />
-      <View style={[styles.topBar, street && styles.streetGone]}>
-        <Pressable
-          onPress={onBack}
-          accessibilityRole="button"
-          accessibilityLabel="Back to Command Hub"
-          style={[styles.backHit, street && styles.streetGone]}>
+      {street ? null : (
+        <View style={[styles.topBar, street && styles.streetGone]}>
+          <Pressable
+            onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Back to Command Hub"
+            style={[styles.backHit, street && styles.streetGone]}>
+            <PixelLabel
+              color={PIXEL.cyan}
+              numberOfLines={1}
+              style={{ fontSize: headerTight ? 13 : 16, lineHeight: headerTight ? 16 : 20, maxWidth: backW }}>
+              ‹ Hub
+            </PixelLabel>
+          </Pressable>
           <PixelLabel
-            color={PIXEL.cyan}
             numberOfLines={1}
-            style={{ fontSize: headerTight ? 13 : 16, lineHeight: headerTight ? 16 : 20, maxWidth: backW }}>
-            ‹ Hub
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            style={[styles.title, { fontSize: titlePt, lineHeight: titlePt + 4 }, street && styles.streetTitle]}>
+            {title}
           </PixelLabel>
-        </Pressable>
-        <PixelLabel
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.7}
-          style={[styles.title, { fontSize: titlePt, lineHeight: titlePt + 4 }, street && styles.streetTitle]}>
-          {title}
-        </PixelLabel>
-        <View style={styles.topActions}>
-          <Pressable
-            onPress={() => setSheet('den')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={`${street ? 'The Stash' : 'The Den'}, ${pv.den.used} of ${pv.den.slots} slots`}
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
-            {street ? kitIcon('nav-tab-locker', 26) : <Text style={styles.topButtonText}>🏠</Text>}
-          </Pressable>
-          <Pressable
-            onPress={() => setSheet('menu')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Pet menu"
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
-            <Text style={[styles.topButtonText, street && styles.streetTopText]}>⋯</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setSettingsOpen(true)}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Divecore settings"
-            // Street: the resource bar's gear opens this same sheet (one gear, not two).
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetGone]}>
-            {street ? kitIcon('nav-settings', 26) : <Text style={styles.topButtonText}>⚙</Text>}
-          </Pressable>
+          <View style={styles.topActions}>
+            <Pressable
+              onPress={() => setSheet('den')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={`${street ? 'The Stash' : 'The Den'}, ${pv.den.used} of ${pv.den.slots} slots`}
+              style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
+              {street ? kitIcon('nav-tab-locker', 26) : <Text style={styles.topButtonText}>🏠</Text>}
+            </Pressable>
+            <Pressable
+              onPress={() => setSheet('menu')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Pet menu"
+              style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
+              <Text style={[styles.topButtonText, street && styles.streetTopText]}>⋯</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setSettingsOpen(true)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Divecore settings"
+              // Street: the resource bar's gear opens this same sheet (one gear, not two).
+              style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetGone]}>
+              {street ? kitIcon('nav-settings', 26) : <Text style={styles.topButtonText}>⚙</Text>}
+            </Pressable>
+          </View>
         </View>
-      </View>
-
-      <PetRoom
-        pet={pet}
-        wear={pv.wear}
-        aura={pv.aura ?? view.legendElement}
-        eggColor={eggColor}
-        status={status}
-        coach={coach}
-        night={night}
-        pantry={pv.pantryTotal}
-        stageLeftMs={pv.stageLeftMs}
-        speech={speech}
-        name={shownName}
-        tapKey={tapKey}
-        juiceKey={juiceKey}
+      )}
+      <GameScreen
+        frame={frame}
+        topBar={shellTop}
+        tabBar={shellTabs}
+        fadeKey="hideout"
         reduceMotion={reduceMotion}
-        sceneActive={game == null && wipe === 'off'}
-        auraElement={view.swords.equipped?.element ?? null}
-        onTapPet={tapPet}
-        onCoach={pressCoach}
-        recolor={recolor}
-        onBadge={() => setSheet('card')}
-        buffs={roomBuffs}
-        maxedAura={pv.pumped.maxed}
-        streetSpots={
-          street
-            ? {
-                onSpot: (id) => (id === 'den' ? setSheet('den') : openIcon(id)),
-                pulse: pulseIcon === 'info' ? null : pulseIcon,
-                notes: {
-                  dive: view.diveRun.active ? 'Ride in progress' : `${view.dive.current}/${DIVE_CHARGE_CAP}`,
-                  expedition: pv.away ? 'Away' : undefined,
-                  feed: pet.stage === 'egg' ? 'Hatches first' : undefined,
-                },
-              }
-            : undefined
+        background={NEON.ink}
+        notice={
+          street ? (
+            !view.hideout.state.coach_swipe_seen && pet.stage !== 'egg' ? (
+              <Pressable
+                onPress={() => commit((doc, now) => markHideoutCoach(doc, now))}
+                accessibilityRole="button"
+                accessibilityLabel="Swipe between rooms. The bar shows where your pet is. Tap to hide."
+                style={styles.laneHint}>
+                <Text style={styles.laneHintText} numberOfLines={2} maxFontSizeMultiplier={1.2}>
+                  Swipe for rooms. The bar marks where your pet is.
+                </Text>
+              </Pressable>
+            ) : (
+              <View style={styles.laneStrip}>
+                <StreetStatusStrip
+                  egg={pet.stage === 'egg'}
+                  picking={pet.stage === 'egg' && pet.egg == null}
+                  hunger={pet.hunger}
+                  mood={pet.mood}
+                  warmth={pet.warmth}
+                  stageLabel={PET_STAGE_LABEL[pet.stage]}
+                  name={shownName}
+                  grade={pet.hero != null && pet.stage !== 'egg' && pet.stage !== 'baby' ? pet.grade : null}
+                  shiny={pet.shiny}
+                  reduceMotion={playMotion.cosmeticsStill}
+                />
+              </View>
+            )
+          ) : null
         }
-        onPickEgg={(e) => {
-          setFocusEgg(e);
-          setSheet('eggs');
-        }}
-        tide={pv.tide.active}
-        hideoutStage={
-          street
-            ? {
-                hideout: view.hideout.state,
-                progress: view.hideout.progress,
-                presence,
-                viewed: view.hideout.viewed,
-                expeditionBackMs: pv.away ? pv.expeditionBackInMs : null,
-                onView: (id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id)),
-                onTease: () => setTeaseOpen(true),
-                onLamp: () => commit((doc, now) => toggleLoftLamp(doc, now)),
-                onCall: () => {
+        stage={
+          <PetRoom
+            stageSize={street ? { width: frame.stage.width, height: frame.stage.height } : undefined}
+            roomOutside={street}
+            pet={pet}
+            wear={pv.wear}
+            aura={pv.aura ?? view.legendElement}
+            eggColor={eggColor}
+            status={status}
+            coach={coach}
+            night={night}
+            pantry={pv.pantryTotal}
+            stageLeftMs={pv.stageLeftMs}
+            speech={speech}
+            name={shownName}
+            tapKey={tapKey}
+            juiceKey={juiceKey}
+            reduceMotion={reduceMotion}
+            sceneActive={game == null && wipe === 'off'}
+            auraElement={view.swords.equipped?.element ?? null}
+            onTapPet={tapPet}
+            onCoach={pressCoach}
+            recolor={recolor}
+            onBadge={() => setSheet('card')}
+            buffs={roomBuffs}
+            maxedAura={pv.pumped.maxed}
+            streetSpots={
+              street
+                ? {
+                    onSpot: (id) => (id === 'den' ? setSheet('den') : openIcon(id)),
+                    pulse: pulseIcon === 'info' ? null : pulseIcon,
+                    notes: {
+                      dive: view.diveRun.active ? 'Ride in progress' : `${view.dive.current}/${DIVE_CHARGE_CAP}`,
+                      expedition: pv.away ? 'Away' : undefined,
+                      feed: pet.stage === 'egg' ? 'Hatches first' : undefined,
+                    },
+                  }
+                : undefined
+            }
+            onPickEgg={(e) => {
+              setFocusEgg(e);
+              setSheet('eggs');
+            }}
+            tide={pv.tide.active}
+            hideoutStage={
+              street
+                ? {
+                    hideout: view.hideout.state,
+                    progress: view.hideout.progress,
+                    presence,
+                    viewed: view.hideout.viewed,
+                    expeditionBackMs: pv.away ? pv.expeditionBackInMs : null,
+                    onView: (id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id)),
+                    onTease: () => setTeaseOpen(true),
+                    onLamp: () => commit((doc, now) => toggleLoftLamp(doc, now)),
+                    onCall: () => {
+                      if (pv.away) return;
+                      commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
+                    },
+                    onCoachSeen: () => commit((doc, now) => markHideoutCoach(doc, now)),
+                  }
+                : null
+            }
+          />
+        }
+        dock={
+          <>
+          {street ? (
+            <View style={styles.roomRow}>
+              <HideoutStageControls
+                hideout={view.hideout.state}
+                presence={presence}
+                viewed={view.hideout.viewed}
+                scale={ROW_ONLY_SCALE}
+                origin={ROW_ONLY_ORIGIN}
+                expeditionBackMs={pv.away ? pv.expeditionBackInMs : null}
+                onView={(id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id))}
+                onCall={() => {
                   if (pv.away) return;
                   commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
-                },
-                onCoachSeen: () => commit((doc, now) => markHideoutCoach(doc, now)),
-              }
-            : null
+                }}
+                coach={false}
+                onCoachSeen={() => undefined}
+                controlsMode="row"
+              />
+            </View>
+          ) : (
+            <View style={styles.roomRow} />
+          )}
+            <View style={styles.iconRow}>
+              {/* Streetwear: Play, Underground and Explore live in the room (tap spots); the dock keeps Feed + Info.
+                  While it is still an egg (picking hides the spots) the full dock stays. */}
+              {(street && pet.stage !== 'egg' ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
+                <RoomIcon
+                  key={icon.id}
+                  emoji={icon.emoji}
+                  label={icon.label}
+                  flexGrow={icon.id === 'expedition' ? 1.85 : 1}
+                  fontSize={street ? 14 : tabPt}
+                  pulse={pulseIcon === icon.id}
+                  badge={icon.id === 'dive' && view.diveRun.active}
+                  badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
+                  onPress={() => openIcon(icon.id)}
+                />
+              ))}
+            </View>
+          </>
         }
       />
-
-      <View style={styles.iconRow}>
-        {/* Streetwear: Play, Underground and Explore live in the room (tap spots); the dock keeps Feed + Info.
-            While it is still an egg (picking hides the spots) the full dock stays. */}
-        {(street && pet.stage !== 'egg' ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
-          <RoomIcon
-            key={icon.id}
-            emoji={icon.emoji}
-            label={icon.label}
-            flexGrow={icon.id === 'expedition' ? 1.85 : 1}
-            fontSize={street ? 14 : tabPt}
-            pulse={pulseIcon === icon.id}
-            badge={icon.id === 'dive' && view.diveRun.active}
-            badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
-            onPress={() => openIcon(icon.id)}
-          />
-        ))}
-      </View>
 
       <PlaySheet open={sheet === 'feed'} title={SHEET_TITLE.feed} onClose={closeSheet} reduceMotion={reduceMotion}>
         {pet.stage === 'egg' ? (
@@ -1209,6 +1291,12 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', flexShrink: 0, gap: 4 },
   topButton: { alignItems: 'center', justifyContent: 'center', borderWidth: ART_PT, borderColor: PIXEL.cyan },
   topButtonText: { fontSize: 16, color: PIXEL.cyan },
+  // Stage layout: Hideout / Loft / Call get their own row under the room (emci 2026-10-14).
+  roomRow: { height: 56, position: 'relative', backgroundColor: NEON.ink },
+  // NoticeLane: the pet strip when quiet; the swipe hint until it is seen.
+  laneStrip: { flex: 1, justifyContent: 'center', paddingHorizontal: 8 },
+  laneHint: { flex: 1, justifyContent: 'center', paddingHorizontal: 16, backgroundColor: 'rgba(8,9,15,0.72)' },
+  laneHintText: { color: STREET.paper, fontFamily: STREET_FONT.regular, fontSize: 14, lineHeight: 18, textAlign: 'center' },
   iconRow: {
     flexDirection: 'row',
     alignItems: 'center',
