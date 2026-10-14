@@ -2768,8 +2768,8 @@ export function DefendScreen({
                 // Click-to-move: one tap on the board walks the Avatar, unless the
                 // tap lands on a pad (that opens the tower UI instead). HUD and the
                 // tower panels sit outside this view, so their taps never land here.
-                // A drag still scrolls the page: ScrollView takes the responder
-                // back when it starts scrolling, which cancels this tap.
+                // The board is not in a ScrollView (Phase 1 stage), so a drag
+                // stays here and walks the Avatar.
                 onStartShouldSetResponder={() => true}
                 onResponderTerminationRequest={() => true}
                 onResponderGrant={(event) =>

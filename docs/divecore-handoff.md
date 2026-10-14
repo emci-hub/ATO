@@ -5,11 +5,13 @@ The full brief is emci's pasted task (Steps 0-3 + Deliverables + Rules). This fi
 does not redo the audit. **Do not merge. Do not publish an OTA.** Play-only (`.cursor/rules/play-isolation.mdc`,
 `.cursor/rules/fixed-regions.mdc`). No new native deps; package.json may only gain check scripts.
 
-## ▶ LATEST — read this first (session 2, cloud, 2026-10-14 night): Phase 1 step 4 built, steps 5–6 left
+## ▶ LATEST — read this first (session 3, local Windows, 2026-10-14): **Phase 1 DONE** → next is Phase 2
 
-**Why the session moved:** emci moved off the cloud session (it was spending the one-time "cloud session
-credit"); the rest of Phase 1 continues in a local Claude Code session on emci's Windows PC. Everything needed
-is in this file, the spec and the repo — nothing lives only in the cloud chat.
+Session 3 finished Phase 1: emci checked it on the real phone (Hideout camera + room taps, Turf War avatar drag,
+Setup sheet, pad / won / lost panels, pause, Dive, pet games, Large Text) — **"all good, nothing wrong"**. No fixes
+were needed; only a stale comment in `defend-screen.tsx` (board "still scrolls the page") was corrected.
+Gate re-run green on Windows. After shots in `docs/divecore/after/` are from session 2 and match this code (no
+layout change since). Start Phase 2 with the prompt at the end of this section.
 
 ### Where the code is
 - Branch **`claude/jolly-cerf-q0gsov`** (cloud session branch) = `feature/divecore-minimal` (session 1's WIP)
@@ -20,8 +22,8 @@ is in this file, the spec and the repo — nothing lives only in the cloud chat.
 - Locally: `git fetch origin && git checkout claude/jolly-cerf-q0gsov` (or the merged branch once folded).
 
 ### The brief (emci, 2026-10-14) — 5 phases, one session each; do only the current one
-1. **Placement audit + spacing spec + layout skeleton** ← current; steps 1–4 done, **5–6 left**
-2. One unified notification system in the reserved NoticeLane (`notify()`, replaces PlayBanner)
+1. **Placement audit + spacing spec + layout skeleton** ✔ done (emci phone-checked 2026-10-14)
+2. One unified notification system in the reserved NoticeLane (`notify()`, replaces PlayBanner) ← **next**
 3. Tabs / nav cleanup: one entry per place, one name per thing, Exit in ⚙, **remove the Block (a1)**
 4. One "?" help button + replace the 5-card tutorial with ≤ 4 short tips
 5. Word-limit checks + rewrite long text
@@ -91,19 +93,14 @@ Reduce Motion = gentle, never still. emci wants plain, short answers and to SEE 
 | Turf War Call wave | 650 / 870 pt down a scroll | always in the dock (bottom third) |
 | Dive picture | 468 / 276 | 444 / 252 (new 28 pt lane; dock still 258 until Phase 5) |
 
-### What is LEFT in Phase 1 (do these, then stop)
-1. **Look at it on a real phone** (Expo Go / dev client, both a tall phone and SE-size if possible). Check:
-   Hideout camera feel and that taps on room spots still land; Turf War drag-the-Avatar works now that the board is
-   not in a ScrollView; Setup ▲ sheet scrolls and closes (back gesture too); pad panel / won / lost panels sit
-   above the dock and are scrollable; immersive mode on SE (status bar hidden) leaves no gap problem; Dive and the
-   pet games; Large Text (Dynamic Type) doesn't clip fixed regions badly (Departure/Pixelify mostly cap scaling).
-2. Fix what that finds (small, in-scope only).
-3. Run `npm run typecheck`, `npm run lint`, `npm run check:ota-gate` — all green except `art-registry` if it is
-   still the pre-existing staleness (see gotchas).
-4. After shots at 430×932 + 375×667 (harness: `docs/divecore/tools/README.md`) → `docs/divecore/after/`; put
-   before/after in the PR (#35 or #33).
-5. Update this file (state, files, Lessons learned, a ready Phase 2 prompt in the same format), the PR body, and
-   `PROJECT_CONTEXT.md` (Play entry), then stop for emci.
+### Phase 1 wrap-up (session 3, done)
+1. ✔ Real phone (emci, dev build via `npm start`): Hideout camera + room taps, Turf War avatar drag, Setup sheet
+   open/close, pad / won / lost panels above the dock, pause, Dive, pet games, Large Text — all good.
+2. ✔ No fixes needed. Only change: the stale board-responder comment in `src/play/defend-screen.tsx`.
+3. ✔ `npm run check:ota-gate` (typecheck + lint + all offline checks) green on Windows.
+4. ✔ After shots: `docs/divecore/after/` (430×932 `max-*`, 375×667 `se-*`), before/after in PR #35's body.
+5. ✔ This file, PR #35 body, `PROJECT_CONTEXT.md` (Decisions log, DIVECORE MINIMAL line) updated.
+6. Asked emci once whether to merge #35 into `feature/divecore-minimal` (recommended). Never to master.
 
 ### Known trade-offs / risks to tell emci
 - SE Turf War board is **309** (was 351, but 146 of that was hidden in a wave and 28 under the tab bar in setup) —
@@ -124,7 +121,12 @@ Reduce Motion = gentle, never still. emci wants plain, short answers and to SEE 
   repo — don't poll it in a loop.
 - nngroup / uxmatters were unreachable from the cloud; session 1 verified the research links locally.
 
-### Lessons learned (Phase 1 so far)
+### Lessons learned (Phase 1)
+- **Phone check is emci's step; set it up so it's one scan**: run `npm start` in a visible terminal tab (dev build,
+  same Wi-Fi) and hand emci a short checklist. The web harness can't prove native gestures (drag, sheet swipe).
+- **Removing a ScrollView leaves stale assumptions**: grep the comments/responder code around anything that used
+  to scroll (the board's "drag still scrolls the page" note).
+- **Don't retake shots for a no-layout change**: session 2's after shots stayed valid; retake only when a region moves.
 - **Measure before trusting a review**: the two worst map bugs (SE board hidden, board jump on pause) were not on
   the review's list, and the suspected "grow-only shrink" did not fire in the measured states.
 - **One frame per screen, computed from the window, is simple and testable** — the pure `computeStageFrame` lets the
@@ -133,6 +135,45 @@ Reduce Motion = gentle, never still. emci wants plain, short answers and to SEE 
 - Splicing a 5.5k-line screen by marked line ranges (asserting each marker first) was safer than hand edits.
 - Shareable later: `stage-frame.ts`, `SPACE`/`TAP_*`, the GameScreen pattern. Play-only: REGIONS heights, the
   Hideout camera, the Turf War board sizing.
+
+### ▶ Phase 2 prompt (ready to paste into a fresh session)
+
+Model: Sonnet 5
+
+```text
+Repo emci-hub/ATO (C:\Users\lil_e\Desktop\ATO). PLAY-ONLY task: obey .cursor/rules/play-isolation.mdc,
+.cursor/rules/fixed-regions.mdc and .cursor/rules/stage-bounds.mdc.
+
+First: git fetch origin && git checkout feature/divecore-minimal && git pull && npm ci
+(If PR emci-hub/ATO#35 is not merged yet, check out claude/jolly-cerf-q0gsov instead.)
+Then read docs/divecore-handoff.md, section "LATEST" (history, emci's decisions, the 5-phase plan, Lessons
+learned), docs/divecore-layout-spec.md (NoticeLane rules) and docs/divecore-audit/notices.md (every notice today).
+
+We are in Divecore Phase 2: ONE unified notification system in the reserved NoticeLane.
+1. Finish notify() on the EXISTING pure queue src/play/notify/queue.ts (session 1 WIP: kinds celebrate /
+   notify / error, priority, de-dupe, max waiting, durations, word caps — keep these kinds unless I decide
+   otherwise) and wire the already-written scripts/check-notify.ts into package.json + check:ota-gate. Do NOT
+   build a second queue. Fold in src/play/play-banner-queue.ts and bannerEvents. One line (numberOfLines 1),
+   tap to dismiss / tap-through target. Renders in GameScreen's `notice` slot on every screen (Hideout, Turf
+   War, Dive, pet games, list screens) — never resizes a region, never pushes the stage. Reduce Motion =
+   gentle fade, never still. (Session 1's "Work in progress" list in the handoff describes these files.)
+2. Move every Play notice to it: PlayBanner (src/play/play-banner.tsx, bannerReducer in src/app/play.tsx, the
+   float at insets.top + 52), the Dive find/caption line, Turf War coach / paused lines, the Hideout pet strip
+   and swipe hint. Remove PlayBanner when nothing uses it.
+3. Gate: update check:play-banner (or replace it with check:notify) + pins in check:stage-bounds /
+   check:fixed-regions. Keep it pure-testable like computeStageFrame.
+4. Show me previews (real art, 430x932 + 375x667, docs/divecore/tools/README.md) of the lane with each notice
+   kind BEFORE I choose anything about its look; keep the existing style.
+5. Phone check: start `npm start` in a visible terminal tab and give me a short checklist; then npm run
+   typecheck, npm run lint, npm run check:ota-gate — all green. After shots into docs/divecore/after/.
+6. Update docs/divecore-handoff.md (state, files, Lessons learned, a ready Phase 3 prompt in this same format),
+   the PR body and PROJECT_CONTEXT.md (DIVECORE MINIMAL line). Draft PR into feature/divecore-minimal. Then stop.
+
+Do NOT start Phase 3-5. Rules: no merge to master, no OTA publish, no new native deps, no economy/odds/
+rewards/save changes, never print EXPO_TOKEN or any key/token. Keep the style (Departure Mono + Rajdhani,
+Pixelify on Street screens, cyan frames, solid buttons, fullscreen arenas, locked art rules, Reduce Motion =
+gentle, never still). Show me previews before any layout choice; keep answers short and plain.
+```
 
 ---
 
