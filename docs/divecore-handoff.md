@@ -5,6 +5,88 @@ The full brief is emci's pasted task (Steps 0-3 + Deliverables + Rules). This fi
 does not redo the audit. **Do not merge. Do not publish an OTA.** Play-only (`.cursor/rules/play-isolation.mdc`,
 `.cursor/rules/fixed-regions.mdc`). No new native deps; package.json may only gain check scripts.
 
+## ▶ Latest: session 2 (cloud, 2026-10-14 evening) — new 5-phase brief, Phase 1 paused at step 3
+
+emci re-issued the brief as **5 phases, one session each** (1 placement audit + spacing spec + layout skeleton ·
+2 one notification system in a reserved lane · 3 tabs/nav/names, Exit in ⚙ · 4 one "?" + ≤ 4 tips ·
+5 word limits + rewrites; then `docs/main-app-ui-plan.md`). The "Remaining plan" further down was written for the
+old one-shot brief: keep its facts, but **do only the current phase**.
+
+**Phase 1 state: steps 1–3 done, waiting for emci's OK. Steps 4–6 not started. Docs only, no code.**
+
+| Step | Status | Output |
+|---|---|---|
+| 1 Placement audit | done — **measured** at 430×932 and 375×667 on a running web build | `docs/divecore-audit/measured.md` (+ the static `nav.md`, `notices.md`, `layout.md` from session 1), before shots `docs/divecore/before/` |
+| 2 Research | done in session 1 (R1–R12, 37 links) — kept as is | `docs/divecore-ui-research.md` |
+| 3 Spacing spec + mockups + 2 questions | done | `docs/divecore-layout-spec.md`, `docs/divecore/mockups/*.png` (+ `draw-mockups.py`) |
+| 4 Skeleton · 5 Verify · 6 Handoff | **waiting for OK** | — |
+
+New findings from measuring (not in session 1's list):
+- **Turf War wave on SE hides 146 pt of the board under the HUD** (the setup scroll offset carries into the wave;
+  *Call wave* is 830–870 pt down, so every player scrolls). Pro Max lands at y 114.
+- **Pausing a wave moves the board +145 (Pro Max) / +290 (SE).**
+- Map share today: Hideout 66 % / 63 %, Dive 50 % / 41 %, Turf War board 44 % (Pro Max), 31 % visible on SE in a wave.
+- The tutorial is 124 body words (+12 title), and card 3 is stale (names five dock buttons; the Street dock has two).
+- The Block's *Underground* tile opens Dive, but Dive's back always lands in the Hideout.
+
+Spec headline (`docs/divecore-layout-spec.md`): TopBar 44 · NoticeLane 40 (28 on arenas — matches emci's ✔) ·
+Stage computed once · ActionDock 64 / 120 / 152 · TabBar 56 + inset. Stage ≥ 60 % everywhere (Hideout 68 / 65 %,
+wave 69 / 67 %, Dive 66 / 62 %). Hideout's status strip becomes the NoticeLane's idle content. Phase 1 keeps
+today's taller Dive / Turf docks as interim values (§2 table) so nothing is redesigned yet.
+
+Still waiting on emci (asked in session 1, re-asked with new mockups `question-a.png` / `question-b.png`):
+(a) remove the Block (Hideout home + Claim chip) vs keep a small Block tab; (b) Turf War fixed board + Setup sheet
+vs keep scrolling. Recommendation (a1) and (b1).
+
+Gotchas found this session (cloud container, Linux):
+- **`/play` renders on web without sign-in** — it is outside the auth guard (PRE_LAUNCH_DEV) and the save is local
+  (`localStorage['ato.play.store.v1']`). Start web with dummy values
+  `EXPO_PUBLIC_SUPABASE_URL=https://example.supabase.co EXPO_PUBLIC_SUPABASE_ANON_KEY=dummy CI=1 npx expo start --web`
+  (local process only), seed a save, drive with Playwright (`NODE_PATH=$(npm root -g)`; Chromium in `/opt/pw-browsers`).
+- Inject safe areas with a stylesheet rule: `body > div[style*="safe-area-inset"]{padding-top:59px!important;padding-bottom:34px!important}`.
+- **Web-only quirk in react-native-safe-area-context:** `SafeAreaView.web.js` treats an edge missing from `edges` as
+  additive (native: off) → the top inset doubles on web. Patch `getEdgeValue` locally (`case undefined:` before
+  `case 'off':`) for measuring; never commit; restart Metro with `--clear`.
+- Dive can't be opened on web (the manhole wipe never calls `onDone`) → measure it with `?shot=dive&inset=max|se&phase=pre|mid`.
+- nngroup / uxmatters / wikipedia are blocked from the cloud container; Apple HIG reads via
+  `https://developer.apple.com/tutorials/data/design/human-interface-guidelines/<page>.json`.
+- `npm ci` first (~2 min); the container starts without `node_modules`.
+
+Lessons (Phase 1 so far): measure before trusting a review — the two worst map bugs were not on the list, and the
+"map shrink" grow-only bug is real in code but didn't fire in the measured states. Reusable later (Play-only for
+now): the spacing scale, the region table, the `useStageFrame` math.
+
+### Next session prompt (Phase 1 steps 4–6, after emci's OK)
+
+```
+Repo emci-hub/ATO, branch feature/divecore-minimal (draft PR #33). PLAY-ONLY task: obey
+.cursor/rules/play-isolation.mdc and .cursor/rules/fixed-regions.mdc. Read docs/divecore-handoff.md first.
+
+Phase 1 steps 1-3 are done. emci answered: (a) = <a1|a2>, (b) = <b1|b2>, spec = <OK|changes>.
+Do Phase 1 steps 4-6 only (not phases 2-5):
+4. src/play/stage-layout.tsx: <GameScreen> (slots topBar / notice / stage / dock / tabBar + FloatLayer, ModalLayer)
+   and useStageFrame(screenId): a FIXED stage size computed once from window size + safe area before first paint;
+   only rotation / window-size change recomputes. Use the Phase 1 interim heights in docs/divecore-layout-spec.md §2.
+   Wrap Hideout, Dive, Turf War (setup + wave), pet games, Locker, Store, Block (if kept) WITHOUT redesigning
+   contents; move in-flow notices / hints / coach lines into the notice slot (same components for now). Fix the
+   two measured Turf War bugs in the wrap (SE wave hides 146 pt of board; pause moves the board).
+   Add .cursor/rules/stage-bounds.mdc (alwaysApply, globs src/play/**) and point fixed-regions.mdc to it.
+   Add check:stage-bounds to check:ota-gate: every game screen uses GameScreen; no flex-leftover stage; no
+   notice / banner / coach inside a stage subtree; pure test: frame identical with / without notice, tip, pause,
+   loading at 430x932 and 375x667.
+5. typecheck, lint, npm run check:ota-gate all green; before/after screenshots at 430x932 and 375x667 in the PR
+   (method: handoff gotchas).
+6. Update docs/divecore-handoff.md (state, decisions, files, gotchas, Lessons learned, ready-to-paste Phase 2
+   prompt), the PR body and PROJECT_CONTEXT.md, then stop.
+Rules: no merge, no OTA publish, no new native deps, no economy / odds / rewards / save changes, never print a
+token or key; keep Departure Mono + Rajdhani, cyan frames, solid buttons, fullscreen arenas, the locked art
+rules, Reduce Motion = gentle never still.
+```
+
+---
+
+## Session 1 (Windows / Cursor) — kept for its facts
+
 ## Done
 | Step | Output |
 |---|---|
