@@ -1,6 +1,6 @@
 {
  "app": "PixelLab VFX Creator",
- "name": "ATO app aura fire streams (grey+green code)",
+ "name": "ATO app aura fire streams hd (grey+green code)",
  "fps": 4,
  "frame_ms": 250,
  "frames": 8,
@@ -24,7 +24,7 @@
    "frames": 8,
    "frame": {
     "w": 160,
-    "h": 109
+    "h": 105
    },
    "sheets": [
     {
@@ -37,7 +37,7 @@
    ],
    "offset": {
     "x": -80,
-    "y": -94
+    "y": -90
    }
   },
   {
@@ -74,7 +74,7 @@
    "frames": 8,
    "frame": {
     "w": 160,
-    "h": 91
+    "h": 87
    },
    "sheets": [
     {
@@ -87,7 +87,7 @@
    ],
    "offset": {
     "x": -80,
-    "y": -94
+    "y": -90
    }
   },
   {
@@ -99,7 +99,7 @@
    "frames": 8,
    "frame": {
     "w": 148,
-    "h": 68
+    "h": 61
    },
    "sheets": [
     {
@@ -112,7 +112,7 @@
    ],
    "offset": {
     "x": -72,
-    "y": -53
+    "y": -46
    }
   }
  ]
