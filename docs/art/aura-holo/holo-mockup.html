@@ -1,0 +1,259 @@
+<title>Pet Holo Bling</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: controls bar, then five live canvases (three layers + two finished finishes), then palettes, timing, research. Night-street palette. */
+:root{
+  --bg:#f3f1f6; --panel:#ffffff; --fg:#1c1826; --muted:#5d566b; --line:#d9d3e3; --accent:#b0247a; --cyan:#0f7f93; --stage:#1b1726;
+  --display:"Silkscreen",ui-monospace,monospace; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#13111a;--panel:#1c1926;--fg:#ece8f4;--muted:#a69fb6;--line:#332d42;--accent:#ff5cb8;--cyan:#4fd6ea;--stage:#0d0b13;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13111a;--panel:#1c1926;--fg:#ece8f4;--muted:#a69fb6;--line:#332d42;--accent:#ff5cb8;--cyan:#4fd6ea;--stage:#0d0b13;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(22px,4vw,30px);margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:400;font-size:17px;margin:0}
+p{margin:0;max-width:68ch} .lede{color:var(--muted)}
+.label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:12px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+.ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.grp{flex-basis:100%;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+button{font:inherit;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:5px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.sw{display:inline-flex;height:10px;border-radius:2px;overflow:hidden}
+.sw i{width:6px;height:10px;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+figure.pick{border-color:var(--accent)}
+.stage{background:var(--stage);border-radius:4px;display:flex;align-items:center;justify-content:center;padding:6px}
+canvas{image-rendering:pixelated;width:200px;height:236px;max-width:100%}
+figcaption{font-size:13px;color:var(--muted)} figcaption b{color:var(--fg)}
+.tag{font-family:var(--mono);font-size:11px;color:var(--accent)}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:600px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.src{font-size:13px;color:var(--muted)}
+a{color:var(--cyan)}
+.zoom{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.zoom canvas{width:auto;height:auto}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <span class="label">ATO · Divecore · holo rework v2 · live on Kael's real pixels</span>
+    <h1>Holo that makes the pet shine</h1>
+    <p class="lede">Glints now ride the shine sweep: they fire where the light band crosses a bright spot, and can sparkle up to 5 px outside the pet. The foil rim has no glints. Pick colours for each layer below; every canvas updates live.</p>
+  </header>
+
+  <section>
+    <div class="controls" role="group" aria-label="Holo colours and motion">
+      <div class="ctl"><span class="label">Prism band colours</span><div class="chips" id="pPrism"></div></div>
+      <div class="ctl"><span class="label">Foil rim colours</span><div class="chips" id="pRim"></div></div>
+      <div class="ctl"><span class="label">Shine sweep colour</span><div class="chips" id="pSweep"></div></div>
+      <div class="ctl"><span class="label">Glint colour</span><div class="chips" id="pGlint"></div></div>
+      <div class="ctl"><span class="label">Motion</span><div class="chips"><button type="button" id="mFull" aria-pressed="true">Full</button><button type="button" id="mGentle" aria-pressed="false">Reduce Motion</button></div></div>
+    </div>
+    <div class="grid">
+      <figure><div class="stage"><canvas id="c1" width="100" height="118"></canvas></div><figcaption><b>Prism bands</b> · colour bands drift down-right with the key light, 1 px a step.</figcaption></figure>
+      <figure><div class="stage"><canvas id="c2" width="100" height="118"></canvas></div><figcaption><b>Shine sweep + glints</b> · a fast pass, then a rest; glints pop where it crosses.</figcaption></figure>
+      <figure><div class="stage"><canvas id="c3" width="100" height="118"></canvas></div><figcaption><b>Foil rim</b> · 1 px colour-shifting edge all round: bright on the lit top-left, a dimmer shadow rim bottom-right. No glints.</figcaption></figure>
+      <figure class="pick"><div class="stage"><canvas id="c4" width="100" height="118"></canvas></div><figcaption><span class="tag">HOLO</span><br><b>Prism + sweep + glints</b></figcaption></figure>
+      <figure class="pick"><div class="stage"><canvas id="c5" width="100" height="118"></canvas></div><figcaption><span class="tag">REVERSE HOLO</span><br><b>Rim + sweep + glints</b> · the body keeps its own colours.</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>The glint, frame by frame</h2>
+    <p class="lede">Seven frames at 12 fps: quick grow, a held peak with diagonal sparks, slow fade. White core, the chosen colour on the arms, the darker step on the tips so it reads on light and dark ground.</p>
+    <div class="zoom" id="glintStrip"></div>
+  </section>
+
+  <section>
+    <h2>Colour mixes</h2>
+    <p class="lede">Two kinds. <b>Single colour</b>: one colour dark → light → dark, so the bands shimmer instead of flipping; Opal, Chrome and Gold are neutral metals and the rest match the game's elements. <b>Mixes</b>: several colours played in order and back, for the loud rainbow-foil look.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Colour</th><th>Feels like</th><th>Best on</th></tr></thead>
+      <tbody>
+        <tr><td><b>Opal</b> <span class="tag">default</span></td><td>Milky pearl, faint lilac. Quietest.</td><td>Any pet, everyday holo</td></tr>
+        <tr><td><b>Chrome</b></td><td>Mirror steel to white.</td><td>Void, tide, dark pets</td></tr>
+        <tr><td><b>Gold · spark</b></td><td>Bronze to cream. Reads as rare.</td><td>Spark pets, legendary</td></tr>
+        <tr><td><b>Ember</b></td><td>Copper to peach.</td><td>Ember pets</td></tr>
+        <tr><td><b>Tide</b></td><td>Deep teal to ice.</td><td>Tide pets</td></tr>
+        <tr><td><b>Root</b></td><td>Moss to mint.</td><td>Root pets</td></tr>
+        <tr><td><b>Void</b></td><td>Indigo to lavender.</td><td>Void pets</td></tr>
+        <tr><td><b>Rose</b></td><td>Our magenta neon, plum to blush.</td><td>Streetwear rooms</td></tr>
+        <tr><td colspan="3" class="label" style="padding-top:12px">Mixes</td></tr>
+        <tr><td><b>Spectrum</b></td><td>Full rainbow holo. Loudest.</td><td>Legendary, show-off</td></tr>
+        <tr><td><b>Neon</b></td><td>Magenta → purple → cyan, our two room neons.</td><td>Streetwear rooms</td></tr>
+        <tr><td><b>Oil slick</b></td><td>Violet → teal → green → gold → magenta, the order real thin-film colour runs in.</td><td>Dark pets</td></tr>
+        <tr><td><b>Aurora</b></td><td>Green → teal → blue → violet, like northern lights.</td><td>Root, tide pets</td></tr>
+        <tr><td><b>Sunset</b></td><td>Pink → orange → gold.</td><td>Ember pets</td></tr>
+        <tr><td><b>Cotton candy</b></td><td>Pink → lilac → baby blue → mint. Soft pastel.</td><td>Dark pets</td></tr>
+        <tr><td><b>Galaxy</b></td><td>Indigo → violet → pink → sky.</td><td>Void pets</td></tr>
+        <tr><td><b>Fire opal</b></td><td>Red → orange → gold → pink.</td><td>Ember, legendary</td></tr>
+        <tr><td><b>Toxic</b></td><td>Lime → green → teal.</td><td>Root pets</td></tr>
+        <tr><td><b>Pearl</b></td><td>Blush → ice → mint → cream. The quietest mix.</td><td>Any pet</td></tr>
+      </tbody>
+    </table></div>
+    <p class="lede">Shine sweep: White by default; Gold, Ice and Rose tint it; Match band uses the prism's lightest colour; Iridescent shifts colour along the band; Neon edge has a white core with magenta and cyan edges. Glints: White by default (a glint reflects the light, not the foil); Match band follows the prism colour.</p>
+  </section>
+
+  <section>
+    <h2>Animation timing</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Layer</th><th>Full</th><th>Reduce Motion</th></tr></thead>
+      <tbody>
+        <tr><td>Prism bands</td><td class="n">1 px every 1/6 s</td><td class="n">1 px every 2/3 s</td></tr>
+        <tr><td>Shine sweep</td><td class="n">1 s pass (eased) + 2 s rest</td><td class="n">2 s pass + 6 s rest</td></tr>
+        <tr><td>Glints</td><td class="n">7 frames, fire on sweep, staggered</td><td class="n">fade only (dot → plus → dot), no pop</td></tr>
+        <tr><td>Foil rim</td><td class="n">1 px every 1/6 s</td><td class="n">1 px every 2/3 s</td></tr>
+      </tbody>
+    </table></div>
+    <p class="lede">Bands and rim travel down-right, away from the top-left key light, so the shine always comes from the same place the room's light does.</p>
+  </section>
+
+  <section class="src">
+    <h2>Research</h2>
+    <ul>
+            <li>Iridescent pastel mixes and keeping saturation to a few spots: <a href="https://www.media.io/color-palette/holographic-color-palette.html">media.io holographic palettes</a>, <a href="https://piktochart.com/tips/holographic-color-palette">Piktochart</a>.</li>
+      <li>Real foil families (cosmos dots, tinsel stripes, plain sheen, reverse = foil everywhere except the art): <a href="https://bulbapedia.bulbagarden.net/wiki/Cosmos_Holofoil_(TCG)">Bulbapedia, Cosmos Holofoil</a>, <a href="https://www.pokemonaaah.net/?p=5217">holo foil types guide</a>.</li>
+      <li>Pixel glint and sweep with a pause, masked to the sprite: <a href="https://godotshaders.com/shader/2d-highlight-improved-pixel-perfect/">2D Highlight (pixel perfect)</a>, <a href="https://godotshaders.com/shader/highlight-canvasitem-sprite-adaptation/">sprite-masked highlight</a>.</li>
+      <li>Foil shows most on light colours: <a href="https://help.thegamecrafter.com/article/501-designing-for-foil">The Game Crafter</a>.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function(){
+  const W=100,H=118,SX=46,SY=34,HALO=5;
+  const PRISM={
+    opal:{g:'Single colour',name:'Opal',c:[[214,208,240],[232,226,250],[244,240,255],[255,252,255]]},
+    chrome:{g:'Single colour',name:'Chrome',c:[[110,118,136],[170,180,198],[220,230,245],[255,255,255]]},
+    gold:{g:'Single colour',name:'Gold · spark',c:[[150,96,30],[210,148,40],[255,210,63],[255,242,176]]},
+    ember:{g:'Single colour',name:'Ember',c:[[140,48,24],[210,90,36],[255,150,70],[255,222,176]]},
+    tide:{g:'Single colour',name:'Tide',c:[[24,84,128],[34,150,200],[96,216,240],[208,246,255]]},
+    root:{g:'Single colour',name:'Root',c:[[34,92,58],[56,160,98],[120,224,156],[214,255,226]]},
+    void:{g:'Single colour',name:'Void',c:[[72,40,128],[120,72,200],[176,132,255],[230,216,255]]},
+    rose:{g:'Single colour',name:'Rose',c:[[128,36,92],[196,58,138],[255,108,190],[255,210,236]]},
+    spectrum:{g:'Mix',name:'Spectrum',c:[[255,92,184],[255,170,90],[250,230,110],[110,230,170],[79,214,234],[150,120,255]]},
+    neon:{g:'Mix',name:'Neon',c:[[255,62,165],[176,92,255],[63,208,230]]},
+    oil:{g:'Mix',name:'Oil slick',c:[[92,52,170],[38,124,170],[52,182,140],[222,170,70],[204,64,128]]},
+    aurora:{g:'Mix',name:'Aurora',c:[[60,220,150],[40,190,200],[90,120,230],[170,100,240]]},
+    sunset:{g:'Mix',name:'Sunset',c:[[255,90,140],[255,130,90],[255,190,80],[255,232,150]]},
+    candy:{g:'Mix',name:'Cotton candy',c:[[255,170,215],[226,180,255],[170,210,255],[190,250,240]]},
+    galaxy:{g:'Mix',name:'Galaxy',c:[[70,50,160],[140,70,220],[230,90,200],[90,200,255]]},
+    fireopal:{g:'Mix',name:'Fire opal',c:[[230,60,70],[255,130,60],[255,200,90],[255,150,190]]},
+    toxic:{g:'Mix',name:'Toxic',c:[[170,255,60],[80,230,110],[40,210,190]]},
+    pearl:{g:'Mix',name:'Pearl',c:[[255,225,235],[235,245,255],[230,255,240],[255,248,225]]}
+  };
+  const SWEEP={
+    white:{g:'Single colour',name:'White',core:[255,255,255],mid:[255,250,235],out:[235,240,255]},
+    gold:{g:'Single colour',name:'Gold',core:[255,248,210],mid:[255,214,90],out:[210,148,40]},
+    ice:{g:'Single colour',name:'Ice',core:[240,252,255],mid:[150,232,255],out:[60,170,220]},
+    rose:{g:'Single colour',name:'Rose',core:[255,240,248],mid:[255,150,206],out:[200,70,150]},
+    match:{g:'Single colour',name:'Match band'},
+    iris:{g:'Mix',name:'Iridescent'},
+    neon:{g:'Mix',name:'Neon edge'}
+  };
+  const GLINT={
+    white:{name:'White',arm:[255,246,220],tip:[200,190,160]},
+    match:{name:'Match band',arm:null,tip:null},
+    gold:{name:'Gold',arm:[255,214,90],tip:[190,130,30]},
+    ice:{name:'Ice',arm:[170,240,255],tip:[60,160,200]},
+    rose:{name:'Rose',arm:[255,170,214],tip:[200,70,140]}
+  };
+  // Single-colour ramps play dark → light → dark so a band never jumps from its lightest to its darkest step.
+  const PING=[0,1,2,3,3,2,1,0];
+  function seqFor(r){if(r.length===4)return PING;const s=[];for(let i=0;i<r.length;i++)s.push(i,i);for(let i=r.length-2;i>0;i--)s.push(i,i);return s}
+  const rampAt=(r,b)=>{const s=seqFor(r);return r[s[((b%s.length)+s.length)%s.length]]};
+  const st={prism:'opal',rim:'opal',sweep:'white',glint:'white',gentle:false};
+  try{st.gentle=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+  function chips(el,map,key,swatch){
+    el.innerHTML='';let last=null;
+    for(const id of Object.keys(map)){const m=map[id];
+      if(m.g&&m.g!==last){last=m.g;const t=document.createElement('span');t.className='grp';t.textContent=m.g;el.appendChild(t)}
+      const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',String(st[key]===id));
+      const s=document.createElement('span');s.className='sw';for(const c of swatch(m)){const i=document.createElement('i');i.style.background='rgb('+c.map(Math.round).join(',')+')';s.appendChild(i)}
+      b.appendChild(s);b.appendChild(document.createTextNode(m.name));
+      b.onclick=()=>{st[key]=id;el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');strip()};el.appendChild(b)}
+  }
+  chips(document.getElementById('pPrism'),PRISM,'prism',m=>m.c);
+  chips(document.getElementById('pRim'),PRISM,'rim',m=>m.c);
+  chips(document.getElementById('pSweep'),SWEEP,'sweep',m=>m.core?[m.core,m.mid,m.out]:m.name==='Match band'?[[255,255,255],PRISM.opal.c[3],PRISM.opal.c[1]]:m.name==='Iridescent'?PRISM.spectrum.c.slice(0,4):[[255,62,165],[255,255,255],[63,208,230]]);
+  chips(document.getElementById('pGlint'),GLINT,'glint',m=>m.arm?[[255,255,255],m.arm,m.tip]:[[255,255,255],PRISM.opal.c[3],PRISM.opal.c[1]]);
+  const bF=document.getElementById('mFull'),bG=document.getElementById('mGentle');
+  function setM(g){st.gentle=g;bF.setAttribute('aria-pressed',String(!g));bG.setAttribute('aria-pressed',String(g))}
+  setM(st.gentle);bF.onclick=()=>setM(false);bG.onclick=()=>setM(true);
+
+  const mix=(a,b,k)=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
+  // Glint shapes: list of [dx,dy,role] per frame. role 0 core, 1 arm, 2 tip.
+  function plus(r,diag){const p=[[0,0,0]];for(let s=1;s<=r;s++){const role=s===r&&r>1?2:1;p.push([s,0,role],[-s,0,role],[0,s,role],[0,-s,role])}
+    if(diag){for(let s=1;s<=diag;s++){const role=s===diag?2:1;p.push([s,s,role],[-s,-s,role],[s,-s,role],[-s,s,role])}}return p}
+  const FULL=[ [[0,0,1]], plus(1,0), plus(2,0), plus(3,1), plus(3,1), plus(2,0), plus(1,0), [[0,0,2]] ];
+  const GENTLE=[ [[0,0,2]], [[0,0,1]], plus(1,0), plus(1,0), [[0,0,1]], [[0,0,2]] ];
+  let glintHue=0;
+  function glintCols(seed){const g=GLINT[st.glint];if(g.arm)return [[255,255,255],g.arm,g.tip];const r=PRISM[st.prism].c;return [[255,255,255],r[r.length-1],r[Math.max(0,r.length-3)]]}
+
+  // Zoomed frame strip
+  function strip(){const host=document.getElementById('glintStrip');host.innerHTML='';const F=FULL;
+    F.forEach((shape,fi)=>{const c=document.createElement('canvas');c.width=9;c.height=9;c.style.width='54px';c.style.height='54px';c.style.background='var(--stage)';c.style.borderRadius='3px';
+      const g=c.getContext('2d');const cols=glintCols(1);for(const [dx,dy,r] of shape){g.fillStyle='rgb('+cols[r].map(Math.round).join(',')+')';g.fillRect(4+dx,4+dy,1,1)}
+      const w=document.createElement('div');w.style.display='flex';w.style.flexDirection='column';w.style.gap='4px';w.style.alignItems='center';
+      const l=document.createElement('span');l.className='label';l.textContent=(fi+1)+(fi===3||fi===4?' peak':'');w.appendChild(c);w.appendChild(l);host.appendChild(w)})}
+
+  const img=new Image();
+  img.onload=function(){
+    const t=document.createElement('canvas');t.width=W;t.height=H;const g=t.getContext('2d');g.drawImage(img,SX,SY,W,H,0,0,W,H);
+    const src=g.getImageData(0,0,W,H).data;
+    const A=(x,y)=>x<0||y<0||x>=W||y>=H?0:src[(y*W+x)*4+3];
+    const Lum=i=>(0.3*src[i]+0.59*src[i+1]+0.11*src[i+2])/255;
+    // distance to the silhouette for halo glints
+    const dist=new Float32Array(W*H).fill(99);
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(A(x,y)){dist[y*W+x]=0;continue}let best=99;for(let dy=-HALO;dy<=HALO;dy++)for(let dx=-HALO;dx<=HALO;dx++){if(A(x+dx,y+dy)){const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<best)best=d}}dist[y*W+x]=best}
+    // glint spots: bright pixels on the pet + points in the 2..5 px halo, spread out
+    let seed=7;const rnd=()=>(seed=(seed*1103515245+12345)&0x7fffffff)/0x7fffffff;
+    const cand=[];for(let y=3;y<H-3;y++)for(let x=3;x<W-3;x++){const i=(y*W+x)*4,d=dist[y*W+x];
+      if(d===0&&Lum(i)>0.42)cand.push([x,y,'on']);else if(d>=2&&d<=HALO)cand.push([x,y,'halo'])}
+    const spots=[];for(let n=0;n<400&&spots.length<8;n++){const c=cand[Math.floor(rnd()*cand.length)];if(!c)break;const want=spots.filter(s=>s[2]==='halo').length<4?'halo':'on';if(want&&c[2]!==want)continue;
+      if(spots.every(s=>Math.abs(s[0]-c[0])+Math.abs(s[1]-c[1])>12))spots.push(c)}
+    const ctxs=[1,2,3,4,5].map(i=>{const c=document.getElementById('c'+i).getContext('2d');return [c,c.createImageData(W,H)]});
+    let tick=0,prevPos=null;const live=[]; // active glints: [spotIdx,startTick,seed]
+    function sweepPos(){const travel=st.gentle?48:24,rest=st.gentle?144:48,period=travel+rest;const p=tick%period;if(p>=travel)return null;const u=p/travel;const e=u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;return e*(W+H*0.7+16)-8}
+    function bandIdx(x,y,rate){return Math.floor((x+y+Math.floor(tick/rate))/3)}
+    function sweepCols(x,y){const s=SWEEP[st.sweep];if(s.core)return [s.core,s.mid,s.out];
+      if(st.sweep==='match'){const r=PRISM[st.prism].c;return [[255,255,255],r[r.length-1],r[Math.max(0,r.length-3)]]}
+      if(st.sweep==='iris'){const r=PRISM.spectrum.c;const k=Math.floor((x-y*0.4)/5);const c2=r[((k%r.length)+r.length)%r.length];return [mix(c2,[255,255,255],0.7),c2,mix(c2,[30,20,40],0.2)]}
+      return [[255,255,255],[255,90,180],[63,208,230]]}
+    function render(){
+      tick++;const rate=st.gentle?16:4;const pos=sweepPos();
+      // fire glints where the band crosses
+      if(pos!==null&&prevPos!==null&&pos>prevPos){spots.forEach((s,k)=>{const v=s[0]+s[1]*0.7;if(v>prevPos&&v<=pos&&!live.some(l=>l[0]===k&&tick-l[1]<24)){live.push([k,tick,glintHue++]);window.__glints=(window.__glints||0)+1}})}prevPos=pos;
+      const P=PRISM[st.prism].c,R=PRISM[st.rim].c;
+      for(let n=0;n<5;n++){const [g2,im]=ctxs[n],d=im.data;const kind=n+1;
+        const usePrism=kind===1||kind===4,useSweep=kind===2||kind===4||kind===5,useRim=kind===3||kind===5;
+        for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4;let a=src[i+3];let c=[src[i],src[i+1],src[i+2]];
+          if(a){const l=Lum(i);
+            if(usePrism&&l>0.07){const b=bandIdx(x,y,rate);const k=(kind===4?0.26:0.42)*(0.4+0.6*Math.min(1,l*2.2));c=mix(c,rampAt(P,b),k)}
+            if(useSweep&&pos!==null&&l>0.07){const dd=Math.round(x+y*0.7-pos);const sc=sweepCols(x,y);if(dd===0)c=mix(c,sc[0],0.72);else if(Math.abs(dd)===1)c=mix(c,sc[1],0.5);else if(Math.abs(dd)===2)c=mix(c,sc[2],0.24)}
+          } else if(useRim){ // 1 px outside the pet: bright on the lit top-left, a dimmer shadow rim on the bottom-right
+            const lit=A(x+1,y)||A(x,y+1),shade=A(x-1,y)||A(x,y-1);
+            if(lit||shade){const b=Math.floor((x+y+Math.floor(tick/rate))/4);const rc=rampAt(R,b);
+              if(lit){c=rc;a=255}else{c=mix(rc,[24,18,36],0.5);a=150}}}
+          d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=a}
+        if(useSweep){const F=st.gentle?GENTLE:FULL;for(const [k,t0,sd] of live){const f=Math.floor((tick-t0)/2);if(f>=F.length)continue;const [sx,sy]=spots[k];const cols=glintCols(sd);
+          for(const [dx,dy,r] of F[f]){const px=sx+dx,py=sy+dy;if(px<0||py<0||px>=W||py>=H)continue;const j=(py*W+px)*4;const cc=cols[r];
+            if(d[j+3]){const m=mix([d[j],d[j+1],d[j+2]],cc,r===2?0.75:1);d[j]=m[0];d[j+1]=m[1];d[j+2]=m[2]}else{d[j]=cc[0];d[j+1]=cc[1];d[j+2]=cc[2];d[j+3]=r===2?190:255}}}}
+        g2.putImageData(im,0,0)}
+      for(let i=live.length-1;i>=0;i--)if(tick-live[i][1]>24)live.splice(i,1);
+    }
+    render();setInterval(render,42);
+  };
+  strip();
+  img.src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAk/klEQVR4Ae3BDXjV5X3w8e/v/p9wEkAlQQglJEJOAhwBAQ0SAhViWy3hxc1OvbrtWbmAipu2tcPNvumg2rq20tpVNhFhtrXtI5RuEgit2oVYCEFCAQEPITmB8lYCkkARwoHzv++Hm/ZvT0PCm9Rd15P788FxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHOfSCc7/MmVohygwWgvOn5Xg/K/wRIwWYXRJKanSs7oTqFpRjmW0Fpw/C8H5wIlSZuL0WVjNO3aSNXggbal+2bzz+q/IGjyQX7z4PH7SF5yrTuF8oEQpM3H6LC5m5uSbCNw57X5EKYNz1SmcD4wnYnL75XMpKrcdIlVal3REKYNzVSmcD4xvhBFjiqireoOLeX3e82QNHoh1aMsWSu74GMYYnKtL4XwgRCkzZNgIrDOJBIH0rO6055h4tJWXGwGUwblqFM4HpteAXKwRY4qoq3oDq2vvvjTv2ElHTh46QOupU1ybkUH+iCGIwrmKQjgfqJXLlmL5vjBo/G1YvzVJfht7m/Zcm5FB1fbNvL19M+MnT8G5ukI4H5iqFeUoJSyrWUrltkP82/R/QClh4lceY/Rjj5OqIbaFl0YUYX128b9TOrQ3fzHqXjxP8DXOVSI4f3ailJk4fRYVixZyy1/cz+51FSxa8W0Cnyi+h1ReKIyfTLCsZinWQ9OfwrumK3vW/YrPLv53np35IH7SF5z3LYTzgbj/gY+xavECLO87P+Wh6X+P9eziL7KsZint+czDy1FmF7lvlrPvo19AqTWUDu3Nv2mDc3WEcP6MlEEM7cl9s5zWB3/GQ9OfoiNy7RD6/vJlrBz2coDfMxrnKgnh/FmIUuYsJt1xJxWvvcriby1BGUOqjPl3c/2DdChj/t0E9pOL9fxzr4EYQIwH+MYIzhUL4Vx1Xsgzo4onYK189ReICMlrMtEiWH1ff5M4EPnLfmTMv5uLaX3wZ/Tu1ZUD/J6IMH7yFKyqFeXGaC04VySEc1V5Ic9M+sQ9WOVLl4AREM4xGjaXL8Aaxvdoff1NLoXXvI2N//08IARWly9nwpSpjJ88haoV5cZoLTiXzcO5aryQZ/oPGEzvD2Vj1W3fBgIiQsOmjWBg4vRZXCshNlU8T5+RZQS2fv8zHNxUQdPmCg6/tYrsEWX0yz3EtdedYN2L87lz2nTqN/2axrc2on3OEnbvrOOmESNIJjRHjx6ZgzFzcS5LCOeq0dpwHiMYDCKCKFi1eAETp89i/Id6UfWfD2GMwvMMD70wn1TPznyQzb5gTb33ryhfvAAM+L4BBEtEcN4fhXNVnUkk2LyuFmvqvfchCjCCMQajwRhFxaKFWBOnz8LzDMtqlvJfjz/Niq99jxVf+x7WQy/Mx/MMZTM+zcplS1FKOMcI54hh/OQpBIzGuQKCcxUpk5eXj5UWDjPk5mH8rrWV1eXLwQiIIXHiGFa4aw8mTJ2Ctbp8JcVjx2OlZ3WnYfcBwq0nmfzlz/DszAeJ767GGpA3BmMM1oQpU7k2I4Ptv96KFa+PAVpwLouHcxXJnGPHWri+dx+sw789xHW9sug/aBC7d9aBEZ78+jfZnJbGxGn38fI3v0v/QQPZvbOefnn9sUIZXejSeopj4lH1/Zf4+Je+RMWvG/iHqX8HBhCYMGUqVsPWHQRamt8BzFycy6Jwrgov5BlRIAriDXUEGjdv51TzuxSPvR1RgNGsevIJ4rsPgtFcyOlEK9ar//pNAsVjb8faG2sgEK+PYYlSxgt5BueSCc774okYLYJSwofLJmOdan6X9dWVGGPIy42QFg5j5UYLsFYvL+ccUUyYMonV5SvpN2wkBf37cm1GBmuraujTK4vtWzeDKM4xmuJxpRxuOkggXh8jUDyulF/XrsPykwn8pC84FyU4V0yUMpw16fHHCeh9TRw1h6le9DOKRhVTu6EGRBEpGISVGy2gcfN29uxp5BxRWMVjxxOob4hz5OAe3iOK4rHjsY4fa2H71s1YJRNK6HJtT35VsYI7p91PIHS8hfKlSzBaC84FKZwrIkoZzsrqnce6515E72tC72vC6iG9uGHsh6mtXUfJhBJKxhcTr49hnWp+l755NxDIy+1PXm5/atZWUbO2ipq1VRw5uIdIYZRzxCCisY4fayEjPR2rZEIJF6cMzgUpnCtiNIwuKaWwIMLxo4fYHnubVEOiNxLIDHenZEIJ8foYNWurSCZaGTJsBIhiz97dpIXDRAoGESkYRKRgEEOGjeA9RrjllmKSiVbe3r6Z2to3KR5XSpdre9Ll2p5YWhtS/a61ldElpYgCUcrgdEjhXDZRyhSPKyVwc9EYfrtxA22JCFZL4l2svLx8MJraDTVs3/YWVvHY8cQb6og31BGvjxGvj7F962Ya4zEm3XkH1q69B6itfRNjDBiN1S2RoFsiQdWKctr6VcUKrNElpTgXJjiXzBMxWgRrdEkpqTbUrMa6c9r9pFq1eAHGKEQ0RvN7Ypj8L//CirlPYhWPHU971ldXYoxi8r98hZVf/SqjS0pZX12JUoKltcFoKJs5i8D6FasoLIiQan11JUZrwTlPCOeSiFJmVEkp1vrqSjbUrGZU8QQCo4on8OvadbQn/tYKLC8zkwF5YxhdcjvvvP4rJv/LV1j51a9Ss7aKVCIaozlHlCaVUsLOTSsJFAwvI1W3LiHaUkrwNU47QjiXbcxtJXS5tidVK8rJ7ZdP37wbsHJzB1DxwgLKZs4i1Ss/f51/+ud5fHjKVKz0rO5Y77z+KyZOn0XFooVMmDKJVNdmZLB8ycsYLQSyBg/EX1uFNXDkJEYVTyDVqsULyI9ESc/qjlX96mtYo4onsL660hitBedPhHAuSpQyo0tKaSu3Xz579jRi9c27gXPEEFi1eAFGw+xHv40xwurl5YiCX1Ws4MNlk1lfXcnEwQPBaFaXL0dECCglgIcoTSoRTeSmyYCwoWY1yhiajghtVb/6GtbNRWNwOhbCuShlDNb1H/0wzatfRyfDrC5fyZChN2ENveNj1FW9gTVk6EgqFi2kbManMRqKx5WSSoUSrF+zjsbN20lVNuMBrFWLFzC6pJQvPPMgzz/3Gr948XlSGaP43H8+S+DZmQ+S3dOwavEC8iNRrOpXX8MaNnEaWT0NHx3UjX2/+x37t200RmvBeU8I55Ksr67klkQroXAGKpSgrV7ZfTjcdBBLRGOJokNp4TDGKNqTntWdZ776fdojovm36f+AUoLvCyAEemX34de16ygsHEx6QTFW0xHhwQcf59s//AjKGHycVArngryQZ0aPH8uY20rYuLGG9dWVrHujmkjBILZv3UzZzFmkqq/fgdW8YydGc44KJRj03NOoUALL9wVLRNORxJIFJJYswAuFSWU0zPncfTz+mXuZ+/A9eJ4hdLwF63DTQXJzB5BeUExg6BOfZvwdf8mzi7+I5YU8g/OeEM4FaW0IjLmtBKtpfwttHdjzG9LCYXJzB9AYj2GJgvXVlRijWHfTLRij8DwDCBeT+dBcQsdb8JMJLKWEwJzvvkxg/OQplC9dQkfqHniELzzzINayDcv4y1v/CuePQjgd8kQMxtBWenqY7Vs3I4p2GQ3rqysxRlE8djypkolWamvfpCNKCdbJQwdI5ftCxaKFlM2cRaqThw5gjAEjBI5uq6LH0PEE/vXh+QSUMWiljNFacAjhXJAWoWl/C9k5mQQy0tOxJk6fRSAtHCbVjUNGsH3bW1gqlOD0Cc1bWzdTVHwzGI1ljOIcUYSOt5C8JhPfF1JpbbA8z+D7wqrFCwgYYzjHCG2lHa4ja/BAmg/zJ0aNvZ0NNavxNc5ZIZwO+cYIYOL1Mc4k8umX34e6HfsoLIhwOXQyzJD/fJq3isaSGe5OQEQTWL7kpwRWl68Eo0EM4GH5vlBUdCuhcAaBZKIVq7Z2HRihPVmDB9K8YyeptDY4vxfC6ZAnYkaNvR2rZk0le/buBqM50rSPspmzCNRVvUFb27e9haVCCXQyTFvx+hiieE/x2PGkSiZasTZtWs85RtNWKJxBMtFKUdEYajfUkOpw00HSs7rTtXdfsgYPpHnHTgJKCRpljNZCJyc47fJCnsHXjBp7O4FkopVQOINAelZ39sYaSBWvjyEK8iNR4g11nGM0iOJPGM3U++5l5bKl+L5gFY8dT83aKs4xGlFgjAKjsYpGFRMKZ5AqmWjFqt1QQ6QwSkf27t2F1ad3Xz4RvYFnXqvEaC10ciGcdmltyMq+gVShcAYH9vyG/Qd2obUhPxKlPfmRKFbx2PHUrKkkVZdwF/xkgv4DopQvXcKNQ0YQuXEgBxr3ULO2iqKiW+mbn0fgnaZ9VK+uZup99/LzV5Zzc9EYUoXCGSQTrYjignJzB/Cx7mFGnUmwDVDGoJUyRmuhEwvhdKiwIEIga/BAmnfspG/eDfTNuwGrZk0lkcIoF1I8rpS26hviDLl5GPGGOjLS03mP0bSeOoV/9Chejx5Yp09oAqcTp2lPKJyBFa+PESmMkmr3rh0Mjg7nmusyGXX0INbQ/Qd5csQIvrRlC51dCOeisgYPpHnHTg43HSRVpDBKvD5GpDCKFa+PESmMcsmM5mK6dFOI4qLyI1Hi9TEC8foY1pBhI8hIT8fakBZm1JkEVu8zp1HG4NO5KZzziFJmdEkpbfXK7kOv7D40xmMEIoVRLqZmTSUd6dJN0dbuA4fwjx7lYmrWVNKeeH2MSGGUSGGUU6cSbNxYw/rqSmpD6WxIC/MeT9HZKZzzKGMIJBOttDW6pJR4w9vE62NcSDLRyvrqSspmzqJmTSUd8Y8epXZDDdb2rZsJ+EePkqpLuAuB9dWVTJ7zODVrqzh+rIVUkcIogXjD2+RHoowuKeXvW48x6kyCwKIJ4xClDJ1YCOc8WoRA7+HDad6xk7aKx95OzZpKLqR2Qw1lM2dhiaJd1VVrERFKJpRQvbqaolHF1G6oYftW3iOKjhnNwcPN9LimG6nOJBLs2dNIpPBGAgt79CGZaOXvW48RUErwNZ2WwvkTnogZXVJKQPXLpiN5efkE4g11RAqjBHbv2sENYz+MtWrxAkaXlNKekvFjGXNbCeeIwioaVUzRqGKKRhVTNKqY9owuKWXF3LlMnvM4Rw7uIRCvj2GlhcNECqMEkolWrN7Dh/MfGddhPXvsDJ2dwvkTWoRLcWDPb0gLh3mP0aTyk4Yh0RtZtXgBo0tKSXX86CF+19pK4PrsfuhkmFR98/Pom5/HhRSPvZ0Vc+cyec7jxOtjXEjL0WMkE60E/iPjOqyRI0fjhTxDJ6VwrkhaOExb8foYVrw+RtnMWfzixecZXVJKW9f06E1bKpTA6tJN0aWb4lIVj72dFXPnUjZzFhfTcvQYh7ZsIRTOYMq4G3BA4VyQ3tfExcTrYwTiDXUUjSpm1eIFjCqewMWcPqFJ1bS/hVRduikCfjJBe4YMHUnFoue4FK2nTpE1eCDla35DQGtDZxXCuWyHmw7SLlFECgaxcWMN+ZEoF3JtRgZWbe2bUPsmgXhDHfEGwGhEgTEKDOf4vtCeU6cSRApuJN5QB0bTGI+RH4nSnlOnEjh/FKIT8UQMZ2kRlDH4xghtKGO4kMNNB2mXKCIFg7DyI1Gsw00HOZNIYPXNu4ELKSq6lY5s3FhDew43HSSViAYBo3EuUYhORIswcfosrF+8+Dz4YjBJIZWnqFlbhYjGGEXZ4IEEDjcdpK0ziQSiwOikNMZjJj8SJVVaOIx1uOkggW5dQpwjiiFDbyIjPZ1AKJxBqmSilUCXcBcONx3kQpQSfCNcDmMMnZWikwkdb+H1l77PpE/cg4jGC3nGEzH8gZ/0xfMM4ydPwapYtJCaNZUcbjpIe/bsjWO0Fv6gMR4jXh8jXh/joowmIz0dq/uHetH9Q71Iz+pOelZ3euf0wgqFM7iQeH2MeH2MxngMYxR+0hfPMzTGY3TkN+vXU7uhhtraddRuqAFjhE4qRCd0c9EYrCn33Iu1ctlSPDD4Gt8Y0dpgTZgyia69+3Ly0AFWLy+nLVGAMUKK0SWlBGrWVBKIFEYJHDx0gJXLloIoLiSZaCUUzsBavuSnWPGGOs4xGqt4XCmBDTWr8ZPgJ30RpUy8oQ6MBlGcYzSBCVOnYK0uXw6GTitEJ7Ny2VImfeIerMzHHmXbYwu5c9r9yN5dVLz2KiJiaMeEqVM41fwugZq1/4PRRkihjCFV8bhSAjVrKjlHDCLCxOmzqFi0kNraNxHRGGPACG2JAqOhbOanqVi0kOKx4+mI1oaA0Vq8kJgPl03hQkQEYwydlaITMVqLn/Rl5bKlLF/yU4789BX6nGykcNxwjpw4Q9nH7qDsY3dgrS5fSdWKckLHW2iXEdryjZH11ZXUrP0f2ioeV0rxuFImTJlKqkjBIPIjUSIFN2JFCqNECqNYkcIo+ZEoovg9o+lIzZpKzuNr9sYaONX8Lu1ZXb6czi5EJ+QnffFCnln15BN4oTBHTpxh9Mx7WP/CUnrn9EIZg280xsDyJT9FRGM0fyQGUYLRnMcYQ6TgRmrWVIIYMIIoGF1SSsAYxaU4k0iQFg5jNISOt5CqZu3/AB4YDWIAoS3fGGmMx0y8PgZiOMcIfyQgdGohOik/6QtnaX3K1DfE4YWlWKN+/GNWLlvKhLLJpDrV/C41ayoZMmwEGenpbNxYgydisDyFn/RFlDJGc06kMEogXh9jfXUlRoMowEDFooVgNFZmj+toOXqMCylfugSrZm0VVpdwBqcTp4kURgns3rUDX3OeLunp5OYOwGqMx7jllmJC4QysDTWr8TWdlqKTM1rL0Xf2sr66kp7d0ng8LYT18OOf4uHHP8XwuyfS/eaR9M7phSjISE8n8K1vzmbSvfcx6RP3IEoZoyFSGOU8omjYUoEoaNhSAaIYMvQmIoVRsnMy6dJNkZ2TiZWdk0l2TiZWv/w+ZOdkEimMktsvH0QRf2sFIprYhp/heYZUWhtSeSImrUs6ubkDSE8Pk54exuo9fDhZgwfyhWce5KEX5uOFPEMnpXDwk74YreXnv3wNoyGn7wAuZNOm9UycPotfvr4N/+hRLKNp1+5dOxDRWLv2rMPyPMN1PbuSnZNJR4YMG0EgOycTS0Rj/debP2Vr4iQ9rs8lVX4kiihl+AMtQmHhYFIpJTh/FMJ5j5/0xQt5hrOef+41QsdbsBR/VFv7JnMfvpf1x+Hnv3wNrQ0X4vtC2Yz7iY66m6Lim7Fy+g7g9AlNl26K9hw7cpLAvsaDpIXD9M27gbRwmIEjJ9Hj+lysMQ9MY8XcJ4kUDCJgNH9ixt/dzo+XVFNb+yZDht5Equefe43Q8Ra0NnRWCuc8+w/somLRQpa/vITftbZilS9dgtEgorG2vfoa1mcX/zvGKLyQ0FZ2TiaBj/7tp1j3RjVN+1vol9+HLt0UHbmuZ1fe3r6Z2ppfkxYOY6lQgsCYB6Yx5oFpWCKa9PQw2TmZtKWUEBDRWF4ozMlDB3B+L4TzJ/ykL17IMxOmTOJU87usXl6OKDCac5QSrP0HdvHQC/P5jwf+kU9t3YD1k6KxxBvqwGiGDBtBdVUNXcJdCBgN6elh2tO0vwXEUL26GitSGCWQnZOJlZ2TCQxm1ZNPMPErj2FNnD6LikXPUTJ+LNk5mcQbDCLKGK2Fs/7pi9/B9wVQ9BqQy/Ztb7G6fCWpROi0FM55/KQvVSvKOdx0kOJxpYwuKaV4XCmI4fHP3Ev5mt/Qnk/WrsXzDIhiR2wL1h1f+GdUv2x+8eLzIIrrenalPWcSCfJyI1iRwiiB7JxMUmXnZNJ/wGBWfvWr6H1NnGOEwJChIwn4SV/8pC+eZ5h671+xunwlRUW3UlR0K0VFtzJk6E2IaIzWQicVwmmX0Vp279phdu/age8LxWPHgxGu6ZtDKHwIrQ3WNT16E/hJ0Vj+dnMtVkF0OE90686r//pNTidOI2IoGT+G9uxrPEhaOEy8PkaqeH2M7JwS2srOySTeYAiUzZxFxQsLKJlQwnU9u9KRqff+FT9/ZTlnTp/CaBAFRmuhExOcixKlDGcZY/j2N2ez5JVN1KytwvMMf7u5Fitr9iPMmDGcdw5v5ZXlGqt53tMURIfzRLfu+MkEvi+UjC8m0LS/hVTxhjpENMYoIgWDsM4kEvTL70NbTftbaIzHmDh9FlbFCwuwSiaUUF1VAyYppPBCntHaYDSIAqO14CA4l8wLeeZbT32eJa9swtpQs5rAZz8ygRkzhlP+VCXRhY9Rue0Q6idLsbIqXsN6olt3TidOY0UKBpEq3lAHJimcJUqZ/EgUK14fI1IYJTsnk7bWvVGNNXH6LKxVixcw5rYSqqtqENEYrQXnggTnknkiBk8R8JO+ICGD0YgCZQxbXv48X569gvwbcxn/tQep+vJ8muc9Tf13vsbE55cQmBNOw/eFSMEgrN27duAnfcESMZGCG0mVnZNJe9a9Uc3E6bMIrFq8AGMUkYJBxBvqwCQFp0OCc8W8kGf6DxhMvKGOSMEgrMZ4DGUM8b01/OuUv+effvB1nn3kWzTPe5qs2Y9gNc97msBLI4rwfcHzDH7SF84SpUx+JEogXh9jyLARXNezK2017W8h3vA2ZTMeILBq8QLyI1GseEMdmKTgtEtwrogoZfIjUax4Qx2RgkHE62OUzZyFVbHoOTDCUyOHc6h3Fs3zniZr9iN8btHX+e6ML2E1z3uaguhwrCe6dcdPJvB9AaOxIoVRAvGGtykZP5b2NO1vIV4fo2zmLAIVLywgUhglXh8DtOC0S3AumydifCNECqNY8foYiKJsxqcJrFq8AEspIbCsZik///STtP5wEVmzH8HqcWNvLPX0jwjMCafh+4KIJj8SJT09jHVdz6605/QJzVtbN3P61CnKZs4iULHoOTDC72nBOY+Hc/mUmlM8tpStmzfQ0vwOVtnM+wlUvLCASEGUzKxe9Mi8nh6Z19PcfJili5bSFOrKDx78C364/A0KK35B3rxn+c2RVt5q3M3+N6roN348Ex57nNsff4yqrz3B0aPv0NR0iGPHWujb70O0x+si9O33IUSnUbv6NQpvLsIqvLmInl2vZf++3WDMXJzzCM5l80TMqLG3Y2UNHkiqikULiRQMoiON8RhKCVobxtxWwo9fmof12dnfIfOxR1m11ScwcZhHQXQ41pxwGr4veJ7BGj1uDG2dPqE51HSIPXsaKZs5C6ti0UJENEZrwTmP4Fw2T8RoEUaXlJI1eCBWxaKFYDSRwihWdk4mgab9LaQ6k0iQFg7TGI9hNHgh4eTvWgh8M9yd7y35NdaDb85j/q2zmTjMoyA6HOuJbt3xkwksrQ1jbivBOn1C03L0GFa8oQ6MRhQYrQWnXYJzRbyQZ7Q2GM178vLySQuHyc7JpK2m/S2kOpNIYO3ZuxtMUryQZzjLC4V57MS7BJrLPob+5D2onyzlR9O+gfWZe2/G6vbtf2bLxL/hpRFFWFobrPxIlMZ4DKM5SwtOhwTnffFCnvF9IVIwiDOJBP3y+9CRpv0tWPH6GJHCKGcSCfbua8RoLfyBF/KM1gZjFJ/auoGC6HCs3DtL+em4Ut4cNJnAxGEeqTL+zwwWbt2C5fuC5xn8pC84HRKc90dCJlIwiHhDHXm5/emX34eONO1vId5QR6RgEIF4fQzQQhuilOEspYSTv2shVe4rO7H+5sVHCTTPe5qM/zOD1h8uoiA6HGtOOA2tDcoYAr4xgvMewbliXsgzWhvG3FbCvsaD9M7uzaGmQ/TL70Nb1aurQRSRgkEEjh4/wZGDewAttMMLeab/gMHs3rUDrQ3W3721kefzI1j3N8axsmY/QvO8pzn8zPP0evh+smY/QvO8pwkURIdjzQmnobVBKSGVn/SFTkpwrogX8szg6HCs63p2JdC0v4UziQRtXXPdtVinTiWwziQS7NnTCGihA17IM/0HDMY6k0iwZ08josBoEAWn3j1K4Ntjx7Pjh4vJmv0IzfOeJmv2I/xo2jewIn/Zj/h/7WPiMA+rIDqcVHPCaVhaGyyjtdBJCM6VkZCJFAwiOyeTVE37W0iVnZNJ4PQJTW3tm0QKBhFveBuMES5AlDL5kShWYzxGfiRKIN7wNuDh4WM9OWIE1j+ureK3zTE2H9xP7NNPsOOHi7GGr/oRe1/fRPO8p1m11SfV3rsGYv22OcaAvDEYrYVOQnCuiChl8iNRAtk5mQSa9rcQyM7JJLDujWryI1GsxngMo7VwAaKUyY9ECcQb3iZScCPt2d3wNud4CnzNyRPHeOnWMaTq+eITWEemPcZHfr6YtiL9S/CTvtCJCM4VEaWM0RApjBLIzsmkPU37W2grXh8DtHABopTJj0RJFa+PgSgiBYPoyO6Gt/GNIAqUMVjPD7mRVMc+NZG7P3kP1oC8MVhGa6GTEZwrJkoZzsqPRAlk52RiNe1v4ULiDW+DMcLFiJhIwY20FW+ow4oUDKKteH0MUWC0Fv5g0dAhhjbu3/42WgRjDBgjdEIK54oZrUUpId5Qx5lEgjOJBE37W2ja38JFGeFSiAjx+hhtRQoGMWToTaSK18eI18ewjNZCikNpXZixbbtw1oxt22X5sTP4xojRWjBG6KQE533zQp7xk4ZLJgaMES6DKGWMUWA0iOI9RnOOGDACYsAYoQNPjRxpvrhpk+CcE8J533xfEym8kQuJN9QhojFaC4bLZrQWUZj8gigdOZNIsGdPI2BwLo3gvC9eyDO+L4hojFGIaIyGSGGUwJlEgj17d4NJCu+DKGVy++VjpYXDWI3xGEoJWhsCxigwScG5qBDOFROlzM5NK9n7xjwCubfNxooMKyNSGMVKC4cR0RjD+5YWDpNKKWHnppV4mZnsfuUrBEo/80tjtBacC1I4V0wpoSOJk0eJN9QRr4/RGI9hjMILeYYr5IkYzorXx4jXx4jXx2iMx4jvrqat/nc9SUeeGjnS4LwnhHPlfI2Ve9ts9r4xj1Tp3Xtwy188QKrN5Qt4P26+6wHaGpA3hoYtFfgtLfS/60n8lhYu5IubNgnOe0I4V0XubbNJpYyhLd8X/hy8zEwCXmYmfksLRuNcghDO+1IwvIyGLRWcx1NsXfUi1rCJ03i/tAiptq56ESu3Xz63FN3Hgca3uCarD5afTCAKjMa5CMG5YqKUufmuBzh0+CS9e3XF2r2uguNHD/Hg+DE89PQ/YUVH3Y11OnEaTFK4AqKUUUrwQmGs2IafYb20+Pv820/WcfzoIYZNnEZgc/kCtDYYrQWnQx7OFRGlDGdlJE+Q1EdJHmggvXd/euQWcqhhM7f2z+XWO8Zife7RB3jxB6s4feoYRpu5XAERmVO/uYKH7r+Ph+6/j8BNI0eQkTzCr2rryC4cQVN8AydaDlBQPJWm+o0Y480BPRenXR7OFRGROTff9QDpvfvTPSuH9N79ObqtiuN7d3Ls2Dv88GfzCUz4yEyajxzETybBmLlcmTn/vaKG7/+4gml/U0aqm0aO4NXVW4itf538WycRKezLrj2tDO6XxW8P7EYpNcdoMxfnPB7OZROljFLC4cZttL5zgKP76uHYAXoMHc/J38bZ+MaPSPX9H1fw8j+P5Ie/jIMxc7kSInP+cfqdPHR7Vz7z6Mvcfd/HSfXJT3yE3LyelC95haO7d6Ou9blGFDn9+nNg326UUnOMNnNx/kQI57KIUmbeN/6Ruz7+UbzMTAK3lfwNhze+SiovM5Nbiu7j/35+MO+XiBD46swbmPrXX2L5j79Oqme+998se6yQqobr+dTshwn4LS1YA2+aaLQIRmvBOUfhXAZlGrZUcNfHP4rlt7QQeKP6R1g/eHQAf3v35wl06xJixvwGZsxv4P1atGwDM+Y3MGN+A9bWxEkCpZMe4gePDsBatGwDlt/Sgt/SQiC+twalBFHK4JwTwrk0IkaE8/gtLXiZmQwsKKVP774EvMxMBhaU0qd3XypXPos1cOQkfM0Vq1z5LIHoqLv5RPE9LKtZStWX5/ODRwdgfWlpKz94dAADC0ppy08m+OV3b8f6yOf+x/hJX+jkQjgX5YU888vv3o41cOQkLC8UJtWr88ZiffGZfTz1cD8GFpRiVa58lj+H2IafYQ0cOYmcvgO4a+oAUr06bywd+btv7ML5PcG5KFHK5PbL5wePDuBivvjMPvYnzlC58lkCkZsmIiIYrYX3wQt5hrO0NjRsqSDV1sRJvvHJLyM5PbHM/iMEJKcnltl/BOsnlS8yIG8MRmuhkxOcixKlzK496/hk6TQu5qWffYdAwfAyjDFgjHCViVLmLDxPsXPTSgJeZiZ+SwsX4mVmMiBvDEZroZMTnIvyREx8bw2p/JYW2uNlZvJu9csM/+vv4id94QPghTzDWd966vNYd338o3TklZ+/zuxHv41ltBY6OcG5KFHKcFbDlgq8zEwCfksLbQ0cOQnLT/rCB8wLeUZrQ1tKCQGtDUZrwTlHcC6ZJ2K0CEoJqbQ2BIzWguM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4juM4jvP/o/8H4ZiQlmsiRUgAAAAASUVORK5CYII=";
+})();
+</script>
