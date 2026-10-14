@@ -1,456 +1,262 @@
-/**
- * Aura paint (save v32). Each worn style is generated from the alpha of the
- * sprite frame on screen, then cached. Styles and colours share one distance
- * field per frame. The body sits behind the sprite. Blaze sparks sit in front,
- * off the sprite. Reduce Motion and Effects that are not Full hold frame 0.
+﻿/**
+ * Aura paint (save v34). Each style is one packed, indexed atlas (a behind
+ * strip and a front strip). A colourway rewrites only the PNG's palette
+ * (`aura-palette.ts`), so one drawing serves every colourway. The strip is
+ * shown by expo-image at a whole number of device pixels per art pixel and
+ * the frame index runs on the UI thread (Reanimated), so no frame ever
+ * re-renders React.
+ *
+ * Placement: the art's anchor is the GROUND point (src/play/ground-point.ts),
+ * not the toe edge, and the art's scale follows the figure's height against
+ * the figure the art was drawn around (`refBodyPx`).
+ *
+ * Motion Off and Effects that are not Full keep a gentle two-frame breathe
+ * instead of freezing: an aura is never fully still.
  */
-import { useEffect, useRef, useState } from 'react';
-import { Image, PixelRatio, StyleSheet, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { Image as ExpoImage } from 'expo-image';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { PixelRatio, StyleSheet, View } from 'react-native';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { decodePng, type Rgba } from '@/play/aura-png';
-import {
-  auraFps,
-  auraMaskFromAlpha,
-  paintAuraMask,
-  swordRamp,
-  type AuraFrame,
-  type AuraMask,
-  type AuraStyle,
-  type Rgb,
-} from '@/play/auras';
-import { usePlayMotion } from '@/play/play-motion';
-import { useFxQuality } from '@/play/fx-quality';
 import { SHEET } from '@/art/art';
+import { pngDataUri, recolourPng, type PaletteRamps } from '@/play/aura-palette';
+import { auraFps, auraStyleFps, type AuraStyle } from '@/play/auras';
 import { PLAY_SHEETS } from '@/play/generated-play-sheets';
-import { ClipImage, playSheetArt, sheetFrame } from '@/play/sheet-sprite';
+import { useFxQuality } from '@/play/fx-quality';
+import { pixelRenderStyle } from '@/play/pixel-theme';
+import { usePlayMotion } from '@/play/play-motion';
+import { ClipImage } from '@/play/sheet-sprite';
 import { STREETWEAR_META, type ClipDrawable } from '@/play/skin';
+import { bodyBoxOf, framePixelsOf, remember, sheetBytes, type BodyBox } from '@/play/sprite-pixels';
 
-const sheets = new Map<string, Promise<Rgba>>();
-/** One distance field per sprite frame. A few poses stay; older ones drop. */
-const MASK_CAP = 12;
-const masks = new Map<string, Promise<AuraMask>>();
-/** Painted pixels per frame, style and colour. Cheap next to the field. */
-const PAINT_CAP = 64;
-type AuraPack = { key: string; w: number; h: number; pad: number; frames: AuraFrame[] };
-const painted = new Map<string, AuraPack>();
+/** One recoloured atlas per style + colourway. A handful stay. */
+const URI_CAP = 12;
+const uris = new Map<string, Promise<string>>();
+const atlases = new Map<string, Promise<Uint8Array>>();
+/** Body boxes by sprite frame, so a pose change keeps the last box until the next is known. */
+const BODY_CAP = 48;
+const bodies = new Map<string, BodyBox | null>();
 
-function remember<V>(map: Map<string, V>, key: string, value: V, cap: number) {
-  map.delete(key);
-  map.set(key, value);
-  while (map.size > cap) {
-    const oldest = map.keys().next().value;
-    if (oldest === undefined || oldest === key) break;
-    map.delete(oldest);
-  }
+/** Seconds a gentle (Motion Off) breathe holds each of its two frames. */
+const GENTLE_HOLD_MS = 700;
+
+function rampKey(ramps: PaletteRamps): string {
+  return `${ramps.main.join(',')}|${ramps.second.join(',')}`;
 }
 
-function packKey(drawable: { sheetKey: string; frameKey: string }, style: AuraStyle, element: string): string {
-  return `${drawable.sheetKey}|${drawable.frameKey}|${style}|${element}`;
+function atlasKeyOf(style: AuraStyle): string {
+  return SHEET.aura[style].behind;
 }
 
-function sheetUri(source: unknown): string | undefined {
-  if (typeof Image.resolveAssetSource === 'function') {
-    const uri = Image.resolveAssetSource(source as number)?.uri;
-    if (uri) return uri;
-  }
-  if (typeof source === 'string') return source;
-  if (source && typeof source === 'object' && 'uri' in source && typeof (source as { uri?: unknown }).uri === 'string') {
-    return (source as { uri: string }).uri;
-  }
-  if (typeof source !== 'number') return undefined;
-  // Web's Image has no resolveAssetSource. The sheet was registered on this packager registry.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const registry = require('react-native/Libraries/Image/AssetRegistry') as {
-    getAssetByID?: (id: number) => {
-      httpServerLocation: string;
-      name: string;
-      type: string;
-      scales: number[];
-    };
-  };
-  const asset = registry.getAssetByID?.(source);
-  if (!asset?.scales?.length) return undefined;
-  const preferred = PixelRatio.get();
-  const scale = asset.scales.reduce((prev, curr) =>
-    Math.abs(curr - preferred) < Math.abs(prev - preferred) ? curr : prev,
-  );
-  const suffix = scale !== 1 ? `@${scale}x` : '';
-  return `${asset.httpServerLocation}/${asset.name}${suffix}.${asset.type}`;
-}
-
-async function sheetRgba(sheetKey: string): Promise<Rgba> {
-  // Cache by image file: Streetwear clips share one atlas per character.
-  const id = PLAY_SHEETS[sheetKey]?.sheet ?? sheetKey;
-  const hit = sheets.get(id);
-  if (hit) return hit;
-  const job = (async () => {
-    const source = playSheetArt(sheetKey);
-    const uri = sheetUri(source);
-    if (!uri) throw new Error('sheet');
-    const res = await fetch(uri);
-    if (!res.ok) throw new Error(`sheet ${res.status}`);
-    return decodePng(new Uint8Array(await res.arrayBuffer()));
-  })();
-  sheets.set(id, job);
-  try {
-    return await job;
-  } catch (err) {
-    sheets.delete(id);
-    throw err;
-  }
-}
-
-function cropAlpha(rgba: Rgba, x: number, y: number, w: number, h: number): Uint8Array {
-  const alpha = new Uint8Array(w * h);
-  for (let row = 0; row < h; row++) {
-    for (let col = 0; col < w; col++) {
-      const sx = x + col;
-      const sy = y + row;
-      if (sx < 0 || sy < 0 || sx >= rgba.w || sy >= rgba.h) continue;
-      alpha[row * w + col] = rgba.data[(sy * rgba.w + sx) * 4 + 3];
-    }
-  }
-  return alpha;
-}
-
-/** The heavy field for this sprite frame. In-flight builds are shared. */
-function maskFor(sheetKey: string, frameKey: string, rect: { x: number; y: number; w: number; h: number }): Promise<AuraMask> {
-  const key = `${sheetKey}|${frameKey}`;
-  const hit = masks.get(key);
+/** The recoloured atlas data URI for one style + colourway. In-flight builds are shared. */
+export function auraAtlasUri(style: AuraStyle, ramps: PaletteRamps): Promise<string> {
+  const key = `${style}|${rampKey(ramps)}`;
+  const hit = uris.get(key);
   if (hit) {
-    remember(masks, key, hit, MASK_CAP);
+    remember(uris, key, hit, URI_CAP);
     return hit;
   }
-  const job = (async () => {
-    const rgba = await sheetRgba(sheetKey);
-    // Let the sprite frame paint before the distance field runs.
-    await Promise.resolve();
-    const alpha = cropAlpha(rgba, rect.x, rect.y, rect.w, rect.h);
-    return auraMaskFromAlpha(alpha, rect.w, rect.h);
-  })();
-  remember(masks, key, job, MASK_CAP);
+  const sheetKey = atlasKeyOf(style);
+  const file = PLAY_SHEETS[sheetKey]?.sheet ?? sheetKey;
+  let bytes = atlases.get(file);
+  if (!bytes) {
+    bytes = sheetBytes(sheetKey);
+    atlases.set(file, bytes);
+    bytes.catch(() => atlases.delete(file));
+  }
+  const job = bytes.then((raw) => pngDataUri(recolourPng(raw, ramps)));
+  remember(uris, key, job, URI_CAP);
   job.catch(() => {
-    if (masks.get(key) === job) masks.delete(key);
+    if (uris.get(key) === job) uris.delete(key);
   });
   return job;
 }
 
-export async function loadAuraFrames(
-  drawable: ClipDrawable | undefined,
-  style: AuraStyle,
-  element: string,
-): Promise<AuraPack | null> {
-  if (!drawable || drawable.kind !== 'sheet') return null;
-  const key = packKey(drawable, style, element);
-  const hit = painted.get(key);
-  if (hit) {
-    remember(painted, key, hit, PAINT_CAP);
-    return hit;
-  }
-  const frame = sheetFrame(drawable.sheetKey, drawable.frameKey);
-  const rect = frame?.rect ?? PLAY_SHEETS[drawable.sheetKey]?.frames[drawable.frameKey];
-  if (!rect) return null;
-  const mask = await maskFor(drawable.sheetKey, drawable.frameKey, rect);
-  const again = painted.get(key);
-  if (again) {
-    remember(painted, key, again, PAINT_CAP);
-    return again;
-  }
-  const built = paintAuraMask(mask, style, element);
-  const packed = { key, w: rect.w, h: rect.h, pad: built.pad, frames: built.frames };
-  remember(painted, key, packed, PAINT_CAP);
-  return packed;
-}
-
-function peekPack(drawable: { sheetKey: string; frameKey: string }, style: AuraStyle, element: string): AuraPack | null {
-  const key = packKey(drawable, style, element);
-  const hit = painted.get(key);
-  if (!hit) return null;
-  remember(painted, key, hit, PAINT_CAP);
-  return hit;
-}
-
-function rgb(col: Rgb): string {
-  return `rgb(${Math.round(col[0])},${Math.round(col[1])},${Math.round(col[2])})`;
-}
-
-function pathsOf(pixels: { x: number; y: number; col?: Rgb }[], colorOf: (p: { col?: Rgb }) => string): { color: string; d: string }[] {
-  const groups = new Map<string, string>();
-  for (const p of pixels) {
-    const color = colorOf(p);
-    groups.set(color, `${groups.get(color) ?? ''}M${p.x} ${p.y}h1v1h-1`);
-  }
-  return [...groups.entries()].map(([color, d]) => ({ color, d }));
-}
-
-export function PetAura({
-  drawable,
-  styleId,
-  element,
-  box,
-  layer,
-}: {
-  drawable?: ClipDrawable;
-  styleId: AuraStyle;
-  element: string;
-  box: number;
-  /** `back` is the aura. `front` is the blaze sparks, outside the sprite. */
-  layer: 'back' | 'front';
-}) {
-  const motionFlags = usePlayMotion();
-  const fxQuality = useFxQuality();
-  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
-  const [pack, setPack] = useState<AuraPack | null>(null);
-  const [tick, setTick] = useState(0);
-  const frameKey =
-    drawable?.kind === 'sheet' ? `${drawable.sheetKey}|${drawable.frameKey}|${styleId}|${element}` : '';
-  const drawableRef = useRef(drawable);
-  drawableRef.current = drawable;
+/** Where the figure stands in its frame, kept while a new pose is measured. */
+function useBodyBox(drawable: ClipDrawable | undefined): BodyBox | null {
+  const key = drawable?.kind === 'sheet' ? `${drawable.sheetKey}|${drawable.frameKey}` : '';
+  const [body, setBody] = useState<BodyBox | null>(() => (key ? (bodies.get(key) ?? null) : null));
+  const last = useRef<BodyBox | null>(body);
   useEffect(() => {
-    const current = drawableRef.current;
-    const want =
-      current?.kind === 'sheet' ? `${current.sheetKey}|${current.frameKey}|${styleId}|${element}` : '';
-    if (!want) return;
+    if (!key) return;
+    const known = bodies.get(key);
+    if (known) {
+      last.current = known;
+      setBody(known);
+      return;
+    }
     let live = true;
-    // The build always finishes into the cache. A pose change only skips the
-    // setState, so a frame we already started is ready when we come back.
-    void loadAuraFrames(current, styleId, element)
-      .then((next) => {
-        if (live && next?.key === want) setPack(next);
+    void framePixelsOf(drawable)
+      .then((px) => {
+        const box = px ? bodyBoxOf(px) : null;
+        remember(bodies, key, box, BODY_CAP);
+        if (box) last.current = box;
+        if (live) setBody(box ?? last.current);
       })
       .catch(() => {
-        if (live) setPack(null);
+        if (live) setBody(last.current);
       });
     return () => {
       live = false;
     };
-  }, [frameKey, styleId, element]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return key ? (bodies.get(key) ?? body ?? last.current) : null;
+}
+
+/** Whole device pixels per art pixel (never fractional): 1/PixelRatio steps, at least one. */
+export function snapArtScale(scale: number, ratio = PixelRatio.get()): number {
+  return Math.max(1, Math.round(scale * ratio)) / ratio;
+}
+
+function snapPt(pt: number, ratio = PixelRatio.get()): number {
+  return Math.round(pt * ratio) / ratio;
+}
+
+/** Frame index on the UI thread: a linear loop, or the gentle two-frame breathe. */
+function useAuraClock(frames: number, fps: number, gentle: boolean) {
+  const t = useSharedValue(0);
   useEffect(() => {
-    if (frozen) return;
-    const id = setInterval(() => setTick((n) => n + 1), Math.round(1000 / auraFps()));
-    return () => clearInterval(id);
-  }, [frozen, styleId]);
-  const peeked = drawable?.kind === 'sheet' ? peekPack(drawable, styleId, element) : null;
-  const shown = peeked ?? (pack && pack.key === frameKey ? pack : null);
-  if (!shown) return null;
-  const frame = shown.frames[frozen ? 0 : tick % shown.frames.length];
-  if (!frame) return null;
-  const scale = box / shown.w;
-  const pad = shown.pad;
-  const left = -pad * scale;
-  const top = -pad * scale;
-  const width = (shown.w + pad * 2) * scale;
-  const height = (shown.h + pad * 2) * scale;
-  const paths =
-    layer === 'back'
-      ? pathsOf(frame.pixels, (p) => rgb(p.col ?? [255, 255, 255]))
-      : frame.sparks.length
-        ? [{ color: '#FFFFFF', d: frame.sparks.map((p) => `M${p.x} ${p.y}h1v1h-1`).join('') }]
-        : [];
-  if (!paths.length) return null;
-  return (
-    <View pointerEvents="none" style={[styles.layer, { left, top, width, height }]}>
-      <Svg width={width} height={height} viewBox={`${-pad} ${-pad} ${shown.w + pad * 2} ${shown.h + pad * 2}`}>
-        {paths.map((path) => (
-          <Path key={path.color} d={path.d} fill={path.color} />
-        ))}
-      </Svg>
-    </View>
-  );
-}
-
-/* ------------------------------------------------ Streetwear sprite aura ---- */
-/* With the Streetwear art style on, a worn aura is the packed PixelLab aura
- * (behind the pet + a few particles in front), drawn in greyscale and
- * palette-mapped here to the wearer's colour — so every tint (sword, named,
- * custom #hex) still works. It is scaled to the pet's visible body and stood on
- * its feet. Same fps, same Reduce Motion / Effects rules as the painted aura. */
-
-type SpritePack = { cell: number; frames: { color: string; d: string }[][] };
-const spritePacks = new Map<string, Promise<SpritePack>>();
-const SPRITE_PACK_CAP = 24;
-type BodyBox = { cx: number; feet: number; h: number; fw: number; fh: number };
-const bodies = new Map<string, Promise<BodyBox | null>>();
-
-function mix(a: Rgb, b: Rgb, t: number): Rgb {
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-}
-
-/** 5 stops dark → light from the wearer's colour (same source as the painted aura). */
-function auraRamp(element: string): string[] {
-  const r = swordRamp(element);
-  return [mix(r.tip, [0, 0, 0], 0.4), r.tip, r.mid, r.core, [255, 255, 255] as Rgb].map(rgb);
-}
-
-/** Recoloured pixel paths for every frame of one aura layer. */
-function spritePack(style: AuraStyle, layer: 'behind' | 'front', element: string): Promise<SpritePack> {
-  const key = `${style}|${layer}|${element}`;
-  const hit = spritePacks.get(key);
-  if (hit) {
-    remember(spritePacks, key, hit, SPRITE_PACK_CAP);
-    return hit;
-  }
-  const job = (async () => {
-    const sheetKey = SHEET.aura[style][layer];
-    const sheet = PLAY_SHEETS[sheetKey];
-    if (!sheet) throw new Error('aura sheet');
-    const rgba = await sheetRgba(sheetKey);
-    const ramp = auraRamp(element);
-    const frames: { color: string; d: string }[][] = [];
-    for (const rect of Object.values(sheet.frames)) {
-      const groups = new Map<string, string>();
-      for (let y = 0; y < rect.h; y++) {
-        for (let x = 0; x < rect.w; x++) {
-          const o = ((rect.y + y) * rgba.w + rect.x + x) * 4;
-          if (rgba.data[o + 3] < 128) continue;
-          const L = 0.299 * rgba.data[o] + 0.587 * rgba.data[o + 1] + 0.114 * rgba.data[o + 2];
-          const color = L < 28 ? 'rgb(12,10,14)' : ramp[Math.min(4, Math.round(((L - 28) / 227) * 4))];
-          groups.set(color, `${groups.get(color) ?? ''}M${x} ${y}h1v1h-1`);
-        }
-      }
-      frames.push([...groups.entries()].map(([color, d]) => ({ color, d })));
+    cancelAnimation(t);
+    t.value = 0;
+    if (gentle) {
+      t.value = withRepeat(withTiming(2, { duration: GENTLE_HOLD_MS * 2, easing: Easing.linear }), -1, false);
+    } else {
+      t.value = withRepeat(withTiming(frames, { duration: (frames * 1000) / fps, easing: Easing.linear }), -1, false);
     }
-    // The frame cell, not the sheet: auras share one atlas.
-    return { cell: Object.values(sheet.frames)[0]?.h ?? sheet.sheetH, frames };
-  })();
-  remember(spritePacks, key, job, SPRITE_PACK_CAP);
-  job.catch(() => {
-    if (spritePacks.get(key) === job) spritePacks.delete(key);
-  });
-  return job;
-}
-
-/** Where the pet's body sits inside its frame (feet line, centre, height). */
-function bodyBox(drawable: { sheetKey: string; frameKey: string }): Promise<BodyBox | null> {
-  const key = `${drawable.sheetKey}|${drawable.frameKey}`;
-  const hit = bodies.get(key);
-  if (hit) return hit;
-  const job = (async () => {
-    const rect = PLAY_SHEETS[drawable.sheetKey]?.frames[drawable.frameKey];
-    if (!rect) return null;
-    const alpha = cropAlpha(await sheetRgba(drawable.sheetKey), rect.x, rect.y, rect.w, rect.h);
-    let x0 = rect.w, x1 = -1, y0 = rect.h, y1 = -1;
-    for (let y = 0; y < rect.h; y++) {
-      for (let x = 0; x < rect.w; x++) {
-        if (alpha[y * rect.w + x] > 8) {
-          if (x < x0) x0 = x;
-          if (x > x1) x1 = x;
-          if (y < y0) y0 = y;
-          if (y > y1) y1 = y;
-        }
-      }
-    }
-    if (x1 < 0) return null;
-    return { cx: (x0 + x1 + 1) / 2, feet: y1 + 1, h: y1 - y0 + 1, fw: rect.w, fh: rect.h };
-  })();
-  remember(bodies, key, job, MASK_CAP * 4);
-  return job;
+    return () => cancelAnimation(t);
+  }, [t, frames, fps, gentle]);
+  return t;
 }
 
 export function PetAuraSprite({
   drawable,
   styleId,
-  element,
+  ramps,
   box,
   layer,
 }: {
   drawable?: ClipDrawable;
   styleId: AuraStyle;
-  element: string;
+  ramps: PaletteRamps;
   box: number;
+  /** `back` is behind the pet, `front` in front of it. */
   layer: 'back' | 'front';
 }) {
   const motionFlags = usePlayMotion();
   const fxQuality = useFxQuality();
-  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
+  const gentle = motionFlags.cosmeticsStill || fxQuality !== 'full';
   const meta = STREETWEAR_META.auras[styleId];
   const which = layer === 'back' ? 'behind' : 'front';
-  const [pack, setPack] = useState<SpritePack | null>(null);
-  const [body, setBody] = useState<BodyBox | null>(null);
-  const [tick, setTick] = useState(0);
-  const sheetKey = drawable?.kind === 'sheet' ? drawable.sheetKey : '';
-  const frameKey = drawable?.kind === 'sheet' ? drawable.frameKey : '';
+  const sheet = PLAY_SHEETS[SHEET.aura[styleId][which]];
+  const body = useBodyBox(drawable);
+  const key = `${styleId}|${rampKey(ramps)}`;
+  const [uri, setUri] = useState<{ key: string; uri: string } | null>(null);
   useEffect(() => {
-    if (!meta) return;
     let live = true;
-    void spritePack(styleId, which, element)
-      .then((next) => live && setPack(next))
-      .catch(() => live && setPack(null));
+    void auraAtlasUri(styleId, ramps)
+      .then((next) => live && setUri({ key, uri: next }))
+      .catch(() => live && setUri(null));
     return () => {
       live = false;
     };
-  }, [meta, styleId, which, element]);
-  useEffect(() => {
-    if (!sheetKey) return;
-    let live = true;
-    void bodyBox({ sheetKey, frameKey })
-      .then((next) => live && setBody(next))
-      .catch(() => live && setBody(null));
-    return () => {
-      live = false;
-    };
-  }, [sheetKey, frameKey]);
-  useEffect(() => {
-    if (frozen) return;
-    const id = setInterval(() => setTick((n) => n + 1), Math.round(1000 / auraFps()));
-    return () => clearInterval(id);
-  }, [frozen, styleId]);
-  if (!meta || !pack || !body || pack.frames.length === 0) return null;
-  const paths = pack.frames[frozen ? 0 : tick % pack.frames.length];
-  if (!paths?.length) return null;
-  const px = box / body.fw; // screen px per pet frame px
-  const scale = (body.h * px) / meta.refBodyPx; // aura art px → screen px
-  const size = pack.cell * scale;
-  const left = body.cx * px - meta.anchorX * size;
-  const top = body.feet * (box / body.fh) - meta.anchorY * size;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const frames = sheet ? Object.keys(sheet.frames).length : 0;
+  const clock = useAuraClock(Math.max(1, frames), auraStyleFps(styleId) || auraFps(), gentle);
+  const geometry = useMemo(() => {
+    if (!meta || !sheet || !body || frames === 0) return null;
+    const first = sheet.frames.frame_000;
+    const second = sheet.frames.frame_001;
+    if (!first) return null;
+    const px = box / body.fw;
+    const art = snapArtScale(px * (body.h / meta.refBodyPx));
+    const stride = second ? second.x - first.x : first.w;
+    const left = snapPt(body.cx * px - meta.anchorX * meta.cell * art);
+    const top = snapPt(body.ground * (box / body.fh) - meta.anchorY * meta.cell * art);
+    return { art, stride, left, top, cell: meta.cell, row: first, sheetW: sheet.sheetW, sheetH: sheet.sheetH };
+  }, [meta, sheet, body, box, frames]);
+  const step = geometry ? geometry.stride * geometry.art : 0;
+  const slide = useAnimatedStyle(() => {
+    const index = gentle ? Math.min(1, Math.floor(clock.value)) * Math.floor(frames / 2) : Math.min(frames - 1, Math.floor(clock.value));
+    return { transform: [{ translateX: -index * step }] };
+  }, [gentle, frames, step]);
+  if (!geometry || !uri || uri.key !== key) return null;
+  const size = geometry.cell * geometry.art;
   return (
-    <View pointerEvents="none" style={[styles.layer, { left, top, width: size, height: size }]}>
-      <Svg width={size} height={size} viewBox={`0 0 ${pack.cell} ${pack.cell}`}>
-        {paths.map((path) => (
-          <Path key={path.color} d={path.d} fill={path.color} />
-        ))}
-      </Svg>
+    <View pointerEvents="none" style={[styles.layer, { left: geometry.left, top: geometry.top, width: size, height: size }]}>
+      <View style={styles.clip}>
+        <Animated.View
+          style={[
+            styles.strip,
+            {
+              left: -geometry.row.x * geometry.art,
+              top: -geometry.row.y * geometry.art,
+              width: geometry.sheetW * geometry.art,
+              height: geometry.sheetH * geometry.art,
+            },
+            slide,
+          ]}>
+          <ExpoImage
+            source={{ uri: uri.uri }}
+            contentFit="fill"
+            transition={0}
+            cachePolicy="memory"
+            style={{ ...styles.fill, ...pixelRenderStyle }}
+          />
+        </Animated.View>
+      </View>
     </View>
   );
 }
 
-/** 84px blaze / outlined bubbles on the iso Hideout and Underground. */
+/** 84px blaze / outlined bubbles on the iso Hideout and Underground (their own small strips). */
 export function HideoutAuraStrip({
   styleId,
   layer,
   box,
 }: {
-  styleId: 'blaze' | 'bubbles';
+  styleId: 'fire' | 'water';
   layer: 'back' | 'front';
   box: number;
 }) {
   const motionFlags = usePlayMotion();
   const fxQuality = useFxQuality();
-  const frozen = motionFlags.cosmeticsStill || fxQuality !== 'full';
+  const gentle = motionFlags.cosmeticsStill || fxQuality !== 'full';
   const which = layer === 'back' ? 'behind' : 'front';
-  const sheetKey = SHEET.hideoutFx[styleId === 'blaze' ? 'blaze-84' : 'bubbles-outlined'][which];
-  const frames = Object.keys(PLAY_SHEETS[sheetKey]?.frames ?? {})
+  const sheetKey = SHEET.hideoutFx[styleId === 'fire' ? 'blaze-84' : 'bubbles-outlined'][which];
+  const names = Object.keys(PLAY_SHEETS[sheetKey]?.frames ?? {})
     .filter((k) => k.startsWith('frame_'))
     .sort();
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    if (frozen || frames.length === 0) return;
-    const id = setInterval(() => setTick((n) => n + 1), Math.round(1000 / auraFps()));
+    if (names.length === 0) return;
+    const ms = gentle ? GENTLE_HOLD_MS : Math.round(1000 / auraFps());
+    const id = setInterval(() => setTick((n) => n + 1), ms);
     return () => clearInterval(id);
-  }, [frozen, frames.length]);
-  if (frames.length === 0) return null;
-  const frameKey = frames[frozen ? 0 : tick % frames.length] ?? frames[0];
-  const size = Math.round(box * (styleId === 'blaze' ? 84 / 64 : 61 / 64));
+  }, [gentle, names.length]);
+  if (names.length === 0) return null;
+  const frameKey = gentle ? names[(tick % 2) * Math.floor(names.length / 2)] : names[tick % names.length];
+  const size = Math.round(box * (styleId === 'fire' ? 84 / 64 : 61 / 64));
   return (
     <View
       pointerEvents="none"
       style={[styles.layer, { left: (box - size) / 2, top: (box - size) / 2, width: size, height: size }]}>
-      <ClipImage drawable={{ kind: 'sheet', sheetKey, frameKey }} />
+      <ClipImage drawable={{ kind: 'sheet', sheetKey, frameKey: frameKey ?? names[0] }} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   layer: { position: 'absolute' },
+  clip: { width: '100%', height: '100%', overflow: 'hidden' },
+  strip: { position: 'absolute' },
+  fill: { width: '100%', height: '100%' },
 });

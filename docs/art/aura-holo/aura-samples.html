@@ -1,3 +1,4 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Divecore Aura &amp; Holo Samples</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -50,6 +51,108 @@ a{color:var(--cyan)}
     <h1>Aura &amp; holo samples</h1>
     <p class="lede">New pixel auras built in PixelLab's effects tool around Kael (128 px, shown 2×), and three holo options drawn on a pixel card. Pick a direction below and I build the full set.</p>
   </header>
+
+  <section>
+    <h2>Round 11: the other elements (first drafts, same idea as the burning silhouette)</h2>
+    <p class="lede">Each one starts from a stock part, then gets the same treatment as the fire: a rim light in the element colour on the pet's own outline, plus pieces that circle the pet in front and behind. These are first drafts, not polished. Shown 2x. What I would fix first is in each caption.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/el-water.gif" width="388" alt="Water"></div><figcaption><b>Water.</b> Blue rim on the outline, two rings of hollow bubbles circling (big and small), drips off the body, bubbles rising from the feet. Fix first: the bubbles are thin outlines and a bit faint; the rim could shimmer. · effect 0e8cb897-6214-4e75-bf4b-4f8102ffa186</figcaption></figure>
+      <figure><div class="stage"><img src="img/el-earth.gif" width="448" alt="Earth"></div><figcaption><b>Earth.</b> Green rim on the outline, brown rocks and pebbles circling, leaves drifting, vines growing up from the feet. Fix first: the vines are neon green and thin (they read more as electricity); they should be darker and thicker with leaves. · effect 4d2ce0e9-95d2-413b-8f29-3d7989712a2e</figcaption></figure>
+      <figure><div class="stage"><img src="img/el-thunder.gif" width="440" alt="Thunder"></div><figcaption><b>Thunder.</b> Flickering bolts strike beside and behind the pet one at a time, a crackle runs along the floor, sparks pop off the outline, the rim pulses. Fix first: between flashes it is quiet, so it needs smaller arcs crackling on the body all the time, and the bolts are huge and plain white. · effect da44c194-74f5-4a6d-a0c3-6113bffd714a</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 10: burning silhouette, colour options (floor ring removed)</h2>
+    <p class="lede">Your pick. The floor ring is gone. Only the colour ramp changes between versions, so these are one drawing with five colour sets. Shown 2x, 24 frames at 12 fps. Known limit: only the head and shoulders burn, because flames rise from the sprite's top edge.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/fire-ember.gif" width="500" alt="Fire ember"></div><figcaption><b>Ember</b> (default) · effect e1b72a32-9504-4199-911d-4ae71b4edae6</figcaption></figure>
+      <figure><div class="stage"><img src="img/fire-azure.gif" width="500" alt="Fire azure"></div><figcaption><b>Azure</b> · effect c41d10bf-bbcb-444b-80bf-0b0d92e60bc9</figcaption></figure>
+      <figure><div class="stage"><img src="img/fire-verdant.gif" width="500" alt="Fire verdant"></div><figcaption><b>Verdant</b> · effect ed066b06-58c3-4e76-af6a-bc6bead63ebf</figcaption></figure>
+      <figure><div class="stage"><img src="img/fire-violet.gif" width="500" alt="Fire violet"></div><figcaption><b>Violet</b> · effect efbcd703-e430-413b-bebe-3f4c10add88a</figcaption></figure>
+      <figure><div class="stage"><img src="img/fire-gold.gif" width="500" alt="Fire gold"></div><figcaption><b>Gold</b> · effect 2bffdef6-d94f-4065-8677-303a907f7b23</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 9: three new fire styles (not a ring, not a crown)</h2>
+    <p class="lede">Kept from the rune lessons: 3/4 angle, effects stand around the pet, separate layers, smooth 8-step colour. Changed: the style. Source for the styles is PixelLab's own craft guide (anime, cartoon, realistic fire; "on fire" on the sprite silhouette; helix streams). Shown 2x, ember colour, 24 frames at 12 fps.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/f2-blaze.gif" width="500" alt="Fire anime blaze"></div><figcaption><b>A. Anime blaze.</b> One big sharp, curling mass of flame behind and beside the pet, two short flames at the feet, streaking embers. The most "blazing". Weak point: a lot of flat bright yellow in the middle, so it needs shading detail; it also hides the pet's sides. · effect 9273f1fa-f65d-4d61-ab92-f4d5686a97ef</figcaption></figure>
+      <figure><div class="stage"><img src="img/f3-whirl.gif" width="500" alt="Fire whirl"></div><figcaption><b>B. Fire whirl.</b> Three flame ribbons spiral up around the pet, passing in front and behind, over a glowing floor. The most distinctive. Weak point: the ribbons read as glowing tubes, not flame, until they get a flame texture or flickering edge. · effect d9435f11-dc0f-4531-a130-304df6b39a6b</figcaption></figure>
+      <figure><div class="stage"><img src="img/f4-burn.gif" width="500" alt="Burning silhouette"></div><figcaption><b>C. Burning silhouette.</b> Flame tongues lick off the pet's own outline, with embers and a warm rim light, plus a small floor ring. Reads as "the pet is on fire". Weak point: only the head and shoulders burn, and it follows the sprite's pixels, so it must be rebuilt per pet and per animation frame. · effect 05385478-8403-433d-9977-a945febb92a8</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 8: fire rebuilt with the rune lessons</h2>
+    <p class="lede">What carried over from the rune circle: (1) the base is a flat ember ring on the floor at the 3/4 angle, centred on the ground point, with an inner ring and tick marks; (2) the fire stands AROUND the pet in eight separate tongues, tall behind (up to 104 px) and short in front (about 40 px), instead of one wall behind it; (3) every part is its own layer with its own colour ramp; (4) tongues grow up from the floor and shrink back on staggered timings, so some are up and some are low at any moment; (5) 8-step fire ramp and no dither, so the tongues stay smooth and solid. Embers rise as small dots. 24 frames at 12 fps, shown 2x. Compare with the old blaze (A2, A3) lower on the page.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/f1-fire.gif" width="500" alt="Fire rebuilt"></div><figcaption><b>F1. Fire ring (ember).</b> Judge: is the tongue shape right (some read as stubby balls when they are short), and are the embers visible enough? · effect 31a26f9b-74d8-4834-9a5c-42df951f5878</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 7: the crown of light (kept: 1f, plus a more detailed version)</h2>
+    <p class="lede">Frost only, shown 2x. The pillar, orbiting runes, pulse ring and converging motes samples were removed on request. Their layers are still in PixelLab My effects if we want them back.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/s1g-detail.gif" width="500" alt="Crown shimmer, more detail"></div><figcaption><b>1g. Crown shimmer, more detail (newest).</b> Same timing as 1f. Shafts now use an 8-step blue ramp (was 5) with less dither (0.1, was 0.3) and a softer edge, so the gradient is smooth and the speckle stays at the edges. A thin bright core runs inside each shaft. · effect d2c87042-be39-4955-9afe-b2d3535fe860</figcaption></figure>
+      <figure><div class="stage"><img src="img/s1f-shimmer.gif" width="500" alt="Crown shimmer"></div><figcaption><b>1f. Crown, 1-3 shafts at a time (your pick).</b> Each of the eight shafts fades in and out on its own timing, so one to three show at once and none pops. 24 frames at 12 fps (2 s). · effect 0a4b887a-d746-4a84-8148-31ad3c7554c8</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 6: circle + rising runes</h2>
+    <p class="lede">Round 5 with the floating dots swapped for small pixel runes (three shapes, 7 px wide) that lift off the circle, drift up past the head and vanish. Shown 2x, four colourways.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/r4-frost.gif" width="500" alt="Rising runes frost"></div><figcaption><b>Frost</b> · effect c5a95704-33b6-47fb-939c-dedcb63f5481</figcaption></figure>
+      <figure><div class="stage"><img src="img/r4-arcane.gif" width="500" alt="Rising runes arcane"></div><figcaption><b>Arcane</b> · effect 0ccddd53-64da-426e-93af-994c84faacd5</figcaption></figure>
+      <figure><div class="stage"><img src="img/r4-fire.gif" width="500" alt="Rising runes fire"></div><figcaption><b>Fire</b> · effect 272dde7b-11c7-4593-8f73-bc962511e9a2</figcaption></figure>
+      <figure><div class="stage"><img src="img/r4-nature.gif" width="500" alt="Rising runes nature"></div><figcaption><b>Nature</b> · effect 1ebb1dc6-f990-4fe9-b458-4c0ca8dd3bbb</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 5: hand-drawn circle with a big rune band</h2>
+    <p class="lede">Same circle as Round 4 with the rune band made much bigger: a wide band between two rings (radius 42 to 62), 16 letters at size 14 turning slowly, the hexagram pulled inside it. Shown 2x, four colourways.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/r3-frost.gif" width="500" alt="Big runes frost"></div><figcaption><b>Frost</b> · effect 768087c4-85b7-4c05-95ab-f4ef80cb77d4</figcaption></figure>
+      <figure><div class="stage"><img src="img/r3-arcane.gif" width="500" alt="Big runes arcane"></div><figcaption><b>Arcane</b> · effect 5dea9e15-dc33-46c3-9b51-26c7bbba05ab</figcaption></figure>
+      <figure><div class="stage"><img src="img/r3-fire.gif" width="500" alt="Big runes fire"></div><figcaption><b>Fire</b> · effect 81d65ed4-155d-44d9-8420-84232357b532</figcaption></figure>
+      <figure><div class="stage"><img src="img/r3-nature.gif" width="500" alt="Big runes nature"></div><figcaption><b>Nature</b> · effect 432bd182-7d58-4ae2-ae5d-062cf9e327a0</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 4: hand-drawn circle (no glow smear)</h2>
+    <p class="lede">Drawn layer by layer: thin crisp rings, a rune-glyph band between two rings, 48 tick marks, a slowly turning hexagram, two small inner rings, an 8-ray burst on the floor and rising orbs in front. Circle is about 2x the figure width, centred on the ground point. 8 frames at 8 fps, 250x196 canvas, shown 2x. Same drawing in four colourways, each a 5-step ramp.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/r2-frost.gif" width="500" alt="Hand-drawn frost"></div><figcaption><b>Frost</b> · effect d94ce1d3-40f4-411b-a1e7-9d2ae738da38</figcaption></figure>
+      <figure><div class="stage"><img src="img/r2-arcane.gif" width="500" alt="Hand-drawn arcane"></div><figcaption><b>Arcane</b> · effect 9aae1e5a-e474-419c-975d-960b5e4e5456</figcaption></figure>
+      <figure><div class="stage"><img src="img/r2-fire.gif" width="500" alt="Hand-drawn fire"></div><figcaption><b>Fire</b> · effect d48edb2c-3553-4753-8468-2e2655926895</figcaption></figure>
+      <figure><div class="stage"><img src="img/r2-nature.gif" width="500" alt="Hand-drawn nature"></div><figcaption><b>Nature</b> · effect b29936de-71cf-4606-99e0-27d4384fe34a</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 3: Ragnarok-style magic circle, with colours</h2>
+    <p class="lede">Built from your three references: a flat circle on the floor, the pet standing inside it, glow, turning rings and hexagram, floating orbs. Circle is about 2x the figure width, centred on the ground point (4 px above the lowest pixel), 24 frames at 12 fps (will be cut to 8 for the real art). Shown 2x. One source, recoloured by swapping a 4-step ramp, so colour options cost no extra art.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/circle-frost.gif" width="484" alt="Circle frost"></div><figcaption><b>Frost</b> · effect 75a460fe-44e8-4204-9ec0-bc0229695e5e</figcaption></figure>
+      <figure><div class="stage"><img src="img/circle-arcane.gif" width="484" alt="Circle arcane"></div><figcaption><b>Arcane</b> · effect 87aab31e-16a3-42e6-8c00-d16cda80b3ec</figcaption></figure>
+      <figure><div class="stage"><img src="img/circle-fire.gif" width="484" alt="Circle fire"></div><figcaption><b>Fire</b> · effect 59ca2b1a-636e-4a83-b129-0f07ecae99e1</figcaption></figure>
+      <figure><div class="stage"><img src="img/circle-nature.gif" width="484" alt="Circle nature"></div><figcaption><b>Nature</b> · effect 788c0b71-103a-4f05-9324-4bc20ddb8cec</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Round 2: blaze sized to the grown hero</h2>
+    <p class="lede">The new flame is 58 px wide x 124 px tall (1.17x the 106 px figure), ring on the ground point (4 px above the lowest pixel), canvas 192x156, 8 frames, shown 2x. PixelLab effect dfff9c4f-0fa9-4fdf-bf3d-0c9a373d99c2.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="img/blaze-a2.gif" width="384" alt="Blaze, new size"></div><figcaption><b>Blaze A2 (ember)</b> new size. Too big, too small, or right?</figcaption></figure>
+      <figure><div class="stage"><img src="img/blaze-a3.gif" width="384" alt="Blaze, three parts"></div><figcaption><b>Blaze A3, three parts</b>: (1) ground ring r36 on the ground point, (2) fire body 50 x 116, (3) rising sparks in front. PixelLab effect d1b32145-b660-4b80-900d-d12fe4eae0e5.</figcaption></figure>
+    </div>
+  </section>
 
   <section>
     <h2>Auras: one per style you already sell</h2>

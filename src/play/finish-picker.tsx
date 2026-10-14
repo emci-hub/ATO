@@ -1,7 +1,9 @@
 /**
- * Finish picker (save v30) — holo or reverse holo, plus a named colour.
- * Names are always written out (the swatch is only a hint). The preview is
- * the pet you are dressing, foil included, before you spend tokens.
+ * Finish picker (save v30, reworked 2026-10-14) — holo or reverse holo, plus a
+ * prism / rim colour, a shine sweep colour and a glint colour. Colours come in
+ * two groups: Single colour (free) and Mix (150 tokens once, 110 with a Tide
+ * Pass). Names are always written out (the swatch is only a hint). The preview
+ * is the pet you are dressing, holo on it, before you spend tokens.
  */
 import { useEffect, useState } from 'react';
 import { PixelRatio, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -10,7 +12,9 @@ import { Fonts } from '@/constants/theme';
 import { petRevealed } from '@/play/den';
 import {
   finishColors,
+  finishGlints,
   finishPrice,
+  finishSweeps,
   finishWornLabel,
   planFinishWear,
   type FinishKind,
@@ -29,8 +33,8 @@ import type { PlayTransition } from '@/play/use-play-store';
 
 const REFUSAL = {
   kind: 'Pick holo or reverse holo.',
-  color: 'Pick a named colour.',
-  pass: 'Starpearl is a Tide Pass colour.',
+  color: 'Pick a colour.',
+  pass: 'That needs a Tide Pass.',
   tokens: 'Not enough tokens yet.',
   missing: 'That pet is not here.',
   not_revealed: 'From Child up.',
@@ -44,6 +48,43 @@ function Swatch({ stops }: { stops: readonly string[] }) {
       ))}
     </View>
   );
+}
+
+/** Chips for one colour list, with its Single colour / Mix group labels. */
+function ColourChips<T extends { id: string; name: string; group?: string }>({
+  items,
+  selected,
+  onPick,
+  locked,
+}: {
+  items: readonly T[];
+  selected: string;
+  onPick: (id: string) => void;
+  locked?: (item: T) => boolean;
+}) {
+  const out: React.ReactNode[] = [];
+  let last: string | undefined;
+  for (const item of items) {
+    if (item.group && item.group !== last) {
+      last = item.group;
+      out.push(
+        <Text key={`group-${item.group}`} style={styles.group}>
+          {item.group}
+        </Text>,
+      );
+    }
+    const isLocked = locked?.(item) ?? false;
+    out.push(
+      <NeonChip
+        key={item.id}
+        label={isLocked ? `${item.name} · token` : item.name}
+        selected={selected === item.id}
+        accessibilityLabel={isLocked ? `${item.name}, costs tokens` : item.name}
+        onPress={() => onPick(item.id)}
+      />,
+    );
+  }
+  return <View style={styles.colors}>{out}</View>;
 }
 
 export function FinishPicker({
@@ -68,11 +109,15 @@ export function FinishPicker({
   const revealed = petRevealed(pet);
   const [kind, setKind] = useState<FinishKind>(pet.finish_kind);
   const [colorId, setColorId] = useState(pet.finish_color ?? finishColors()[0].id);
+  const [sweepId, setSweepId] = useState(pet.finish_sweep);
+  const [glintId, setGlintId] = useState(pet.finish_glint);
   const [note, setNote] = useState<string | null>(null);
   useEffect(() => {
     setKind(pet.finish_kind);
     setColorId(pet.finish_color ?? finishColors()[0].id);
-  }, [pet.uid, pet.finish_kind, pet.finish_color]);
+    setSweepId(pet.finish_sweep);
+    setGlintId(pet.finish_glint);
+  }, [pet.uid, pet.finish_kind, pet.finish_color, pet.finish_sweep, pet.finish_glint]);
 
   const wearing = finishWornLabel(pet.finish_kind, pet.finish_color);
   const quote = planFinishWear({
@@ -82,15 +127,18 @@ export function FinishPicker({
     free: access.free,
     kind,
     color: kind === 'none' ? null : colorId,
+    sweep: sweepId,
+    glint: glintId,
   });
   const previewKind = kind === 'none' ? null : kind;
   const color = finishColors().find((row) => row.id === colorId) ?? finishColors()[0];
+  const owned = (key: string) => access.free || access.wallet.colors.includes(key);
 
   const wear = () => {
     if (!revealed) return;
     let line = '';
     const ok = commit((doc, now) => {
-      const res = applyPetFinish(doc, now, pet.uid, kind, kind === 'none' ? null : colorId);
+      const res = applyPetFinish(doc, now, pet.uid, kind, kind === 'none' ? null : colorId, sweepId, glintId);
       if (!res.result.ok) {
         line = REFUSAL[res.result.reason];
         return null;
@@ -114,13 +162,22 @@ export function FinishPicker({
   else if (quote.cost > 0) button = `Wear · ${quote.cost} tokens`;
   else button = `Wear ${finishWornLabel(kind, colorId) ?? ''}`;
 
+  const pickKind = (id: FinishKind) => {
+    setKind(id);
+    setNote(null);
+  };
+  const touch = () => {
+    if (kind === 'none') setKind('holo');
+    setNote(null);
+  };
+
   return (
     <View style={styles.wrap}>
       <NeonLabel>Finish</NeonLabel>
       <Text style={styles.body}>
-        A look you pick. Holo foils the art window behind the pet. Reverse holo foils
-        the rest of the card, and the pet stays plain. Never rolled, so the egg odds stay the odds you see. Classic is
-        still the only shiny you earn.
+        Holo puts moving prism bands, a shine sweep and glints on your pet. Reverse holo wraps a foil rim round it and
+        keeps its own colours. The card keeps a quiet foil border. Never rolled, so the egg odds stay the odds you see.
+        Classic is still the only shiny you earn.
         {access.free ? ' Unlocked while everything is free.' : access.pass ? ' Tide Pass discount is on.' : ''}
       </Text>
       {wearing ? <Text style={styles.wearing}>Wearing {wearing}</Text> : null}
@@ -130,32 +187,40 @@ export function FinishPicker({
             key={id}
             label={id === 'none' ? 'None' : id === 'holo' ? 'Holo' : 'Reverse holo'}
             selected={kind === id}
-            onPress={() => {
-              setKind(id);
-              setNote(null);
-            }}
+            onPress={() => pickKind(id)}
           />
         ))}
       </View>
-      <View style={styles.colors}>
-        {finishColors().map((row) => {
-          const locked = row.pass_only && !access.pass && !access.free;
-          return (
-            <NeonChip
-              key={row.id}
-              label={locked ? `${row.name} · Tide Pass` : row.name}
-              selected={colorId === row.id}
-              accessibilityLabel={locked ? `${row.name}, Tide Pass colour` : row.name}
-              onPress={() => {
-                setColorId(row.id);
-                if (kind === 'none') setKind('holo');
-                setNote(null);
-              }}
-            />
-          );
-        })}
-      </View>
+      <Text style={styles.section}>{kind === 'reverse' ? 'Rim colour' : 'Prism colour'}</Text>
+      <ColourChips
+        items={finishColors()}
+        selected={colorId}
+        locked={(item) => item.group === 'Mix' && !owned(item.id)}
+        onPick={(id) => {
+          setColorId(id);
+          touch();
+        }}
+      />
       <Swatch stops={color.stops} />
+      <Text style={styles.section}>Shine sweep</Text>
+      <ColourChips
+        items={finishSweeps()}
+        selected={sweepId}
+        locked={(item) => item.group === 'Mix' && !owned(`sweep:${item.id}`)}
+        onPick={(id) => {
+          setSweepId(id);
+          touch();
+        }}
+      />
+      <Text style={styles.section}>Glint</Text>
+      <ColourChips
+        items={finishGlints()}
+        selected={glintId}
+        onPick={(id) => {
+          setGlintId(id);
+          touch();
+        }}
+      />
       <View style={styles.preview}>
         <PetCard
           live
@@ -186,7 +251,11 @@ export function FinishPicker({
               recolor={revealed ? petRecolor(pet.hero, pet.shiny, dyeOn, pet.shiny_style) : null}
               blend={blend}
               lockColour={pet.shiny}
-              finish={previewKind ? { kind: previewKind, color: colorId } : { kind: 'none', color: null }}
+              finish={
+                previewKind
+                  ? { kind: previewKind, color: colorId, sweep: sweepId, glint: glintId }
+                  : { kind: 'none', color: null }
+              }
               foilMotion="sweep"
               reduceMotion={reduceMotion}
               reverseHost
@@ -198,7 +267,7 @@ export function FinishPicker({
       <Text style={styles.body}>
         {access.free
           ? 'Tokens are not spent while everything is free.'
-          : `Holo or reverse holo is ${finishPrice('holo', access.pass)} tokens and includes one new colour. Each extra colour is ${finishPrice('extra_color', access.pass)}. You have ${view.tokens}.`}
+          : `Holo or reverse holo is ${finishPrice('holo', access.pass)} tokens. Single colours are free; each mix is ${finishPrice('extra_color', access.pass)} once. You have ${view.tokens}.`}
       </Text>
       <NeonButton label={button} disabled={!revealed || (kind !== 'none' && !quote.ok)} onPress={wear} />
       {note ? <Text style={styles.note}>{note}</Text> : null}
@@ -210,6 +279,8 @@ const styles = StyleSheet.create({
   wrap: { gap: 8 },
   body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
   wearing: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textPrimary },
+  section: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textPrimary, marginTop: 4 },
+  group: { fontFamily: Fonts.mono, fontSize: 11, color: NEON.textMuted, width: '100%' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   colors: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   swatch: { flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden' },

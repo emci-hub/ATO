@@ -2,6 +2,7 @@
   "chars": {
     "heroes/archangel": {
       "footAt": 0.8177,
+      "groundAt": 0.7969,
       "bodyRatio": 0.5625,
       "clips": {
         "Attack": 8,
@@ -20,6 +21,7 @@
     },
     "heroes/aurex": {
       "footAt": 0.7969,
+      "groundAt": 0.776,
       "bodyRatio": 0.5469,
       "clips": {
         "Attack": 8,
@@ -38,6 +40,7 @@
     },
     "heroes/corvus": {
       "footAt": 0.7969,
+      "groundAt": 0.776,
       "bodyRatio": 0.5521,
       "clips": {
         "Attack": 8,
@@ -56,6 +59,7 @@
     },
     "heroes/cyber-shinobi": {
       "footAt": 0.7865,
+      "groundAt": 0.7656,
       "bodyRatio": 0.5729,
       "clips": {
         "Attack": 8,
@@ -74,6 +78,7 @@
     },
     "heroes/elowen": {
       "footAt": 0.8177,
+      "groundAt": 0.7969,
       "bodyRatio": 0.5781,
       "clips": {
         "Attack": 8,
@@ -92,6 +97,7 @@
     },
     "heroes/frost-lich": {
       "footAt": 0.7917,
+      "groundAt": 0.7656,
       "bodyRatio": 0.5938,
       "clips": {
         "Attack": 8,
@@ -110,6 +116,7 @@
     },
     "heroes/kael": {
       "footAt": 0.7813,
+      "groundAt": 0.7604,
       "bodyRatio": 0.5625,
       "clips": {
         "Attack": 8,
@@ -128,6 +135,7 @@
     },
     "heroes/kitsune": {
       "footAt": 0.7917,
+      "groundAt": 0.7708,
       "bodyRatio": 0.5781,
       "clips": {
         "Attack": 8,
@@ -146,6 +154,7 @@
     },
     "heroes/maldrath": {
       "footAt": 0.7969,
+      "groundAt": 0.7708,
       "bodyRatio": 0.6042,
       "clips": {
         "Attack": 8,
@@ -164,6 +173,7 @@
     },
     "heroes/morwen": {
       "footAt": 0.7813,
+      "groundAt": 0.7604,
       "bodyRatio": 0.5521,
       "clips": {
         "Attack": 8,
@@ -182,6 +192,7 @@
     },
     "heroes/neon-viper": {
       "footAt": 0.7813,
+      "groundAt": 0.7604,
       "bodyRatio": 0.5521,
       "clips": {
         "Attack": 8,
@@ -200,6 +211,7 @@
     },
     "heroes/oni": {
       "footAt": 0.7969,
+      "groundAt": 0.776,
       "bodyRatio": 0.5469,
       "clips": {
         "Attack": 8,
@@ -218,6 +230,7 @@
     },
     "heroes/raven": {
       "footAt": 0.776,
+      "groundAt": 0.7552,
       "bodyRatio": 0.5417,
       "clips": {
         "Attack": 6,
@@ -236,6 +249,7 @@
     },
     "heroes/sak": {
       "footAt": 0.7969,
+      "groundAt": 0.776,
       "bodyRatio": 0.5833,
       "clips": {
         "Attack": 8,
@@ -254,6 +268,7 @@
     },
     "heroes/velkhar": {
       "footAt": 0.7969,
+      "groundAt": 0.7708,
       "bodyRatio": 0.5885,
       "clips": {
         "Attack": 8,
@@ -272,6 +287,7 @@
     },
     "heroes/void-raven": {
       "footAt": 0.7917,
+      "groundAt": 0.7708,
       "bodyRatio": 0.5625,
       "clips": {
         "Attack": 8,
@@ -290,6 +306,7 @@
     },
     "creeps/knight": {
       "footAt": 0.7292,
+      "groundAt": 0.7083,
       "bodyRatio": 0.4271,
       "clips": {
         "Death": 7,
@@ -299,6 +316,7 @@
     },
     "creeps/village-girl": {
       "footAt": 0.7708,
+      "groundAt": 0.75,
       "bodyRatio": 0.5104,
       "clips": {
         "Death": 7,
@@ -308,6 +326,7 @@
     },
     "creeps/wizard": {
       "footAt": 0.7396,
+      "groundAt": 0.7188,
       "bodyRatio": 0.4688,
       "clips": {
         "Death": 7,
@@ -317,6 +336,7 @@
     },
     "towers/ghost": {
       "footAt": 0.7667,
+      "groundAt": 0.7458,
       "bodyRatio": 0.5375,
       "clips": {
         "Attack": 8,
@@ -326,6 +346,7 @@
     },
     "towers/lux": {
       "footAt": 0.7664,
+      "groundAt": 0.7459,
       "bodyRatio": 0.5164,
       "clips": {
         "Attack": 8,
@@ -335,6 +356,7 @@
     },
     "towers/viper": {
       "footAt": 0.7542,
+      "groundAt": 0.7331,
       "bodyRatio": 0.5,
       "clips": {
         "Attack": 8,
@@ -344,6 +366,7 @@
     },
     "boss/oni": {
       "footAt": 0.8523,
+      "groundAt": 0.8258,
       "bodyRatio": 0.7008,
       "clips": {
         "Death": 8,
@@ -354,6 +377,7 @@
     },
     "boss/titan-x": {
       "footAt": 0.7787,
+      "groundAt": 0.7582,
       "bodyRatio": 0.5246,
       "clips": {}
     }
@@ -593,41 +617,50 @@
     }
   },
   "auras": {
-    "blaze": {
+    "earth": {
       "frames": 8,
-      "fps": 8,
+      "fps": 5,
       "loop": true,
-      "cell": 98,
-      "anchorX": 0.5,
-      "anchorY": 0.8776,
-      "refBodyPx": 49
+      "cell": 123,
+      "anchorX": 0.5285,
+      "anchorY": 0.9106,
+      "refBodyPx": 106
     },
-    "bubbles": {
-      "frames": 6,
-      "fps": 8,
+    "fire": {
+      "frames": 8,
+      "fps": 4,
       "loop": true,
-      "cell": 61,
-      "anchorX": 0.459,
-      "anchorY": 0.9016,
-      "refBodyPx": 49
+      "cell": 160,
+      "anchorX": 0.5,
+      "anchorY": 0.7063,
+      "refBodyPx": 106
     },
     "rune": {
-      "frames": 6,
-      "fps": 8,
+      "frames": 8,
+      "fps": 4,
       "loop": true,
-      "cell": 70,
-      "anchorX": 0.5,
-      "anchorY": 0.7286,
-      "refBodyPx": 49
+      "cell": 173,
+      "anchorX": 0.4971,
+      "anchorY": 0.7341,
+      "refBodyPx": 106
     },
-    "spiky": {
-      "frames": 6,
-      "fps": 8,
+    "thunder": {
+      "frames": 8,
+      "fps": 4,
       "loop": true,
-      "cell": 84,
-      "anchorX": 0.5119,
-      "anchorY": 0.7857,
-      "refBodyPx": 49
+      "cell": 130,
+      "anchorX": 0.5077,
+      "anchorY": 0.9,
+      "refBodyPx": 106
+    },
+    "water": {
+      "frames": 8,
+      "fps": 6,
+      "loop": true,
+      "cell": 91,
+      "anchorX": 0.4945,
+      "anchorY": 0.8462,
+      "refBodyPx": 106
     }
   },
   "ui": {

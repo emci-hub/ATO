@@ -1,0 +1,50 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Two-colour previews</title>
+<style>
+  :root{--bg:#f3f1f6;--panel:#fff;--fg:#1c1826;--muted:#5d566b;--line:#d9d3e3;--stage:#1b1726}
+  @media (prefers-color-scheme: dark){:root{--bg:#13111a;--panel:#1c1926;--fg:#ece8f4;--muted:#a69fb6;--line:#332d42;--stage:#0d0b13;color-scheme:dark}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 16px 64px;display:flex;flex-direction:column;gap:22px}
+  h1{font-size:clamp(22px,4vw,30px);margin:0;line-height:1.15}
+  h2{font-size:18px;margin:0 0 8px}
+  p{margin:0;max-width:70ch}.muted{color:var(--muted)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .stage{background:var(--stage);border-radius:6px;display:flex;align-items:center;justify-content:center;min-height:300px;padding:8px}
+  .stage img{image-rendering:pixelated;image-rendering:crisp-edges;max-width:100%;height:auto}
+  figcaption{font-size:13px;color:var(--muted)}
+  figcaption b{color:var(--fg)}
+</style>
+<div class="wrap">
+  <header>
+    <h1>Two-colour previews</h1>
+    <p class="muted">The same idea as earth: every colourway is a pair, a main colour and a different second colour for the smaller pieces. Three colourways each (ember, violet, neon) so you can judge before I do all of them. Shown 2x.</p>
+  </header>
+  <section>
+    <h2>Fire: flames + embers</h2>
+    <div class="row">
+      <figure><div class="stage"><img src="img/two/fire-ember.gif" width="500" alt="Fire ember pair"></div><figcaption><b>Ember.</b> Red-orange flames, gold embers. The embers are small, so the second colour is subtle here.</figcaption></figure>
+      <figure><div class="stage"><img src="img/two/fire-violet.gif" width="500" alt="Fire violet pair"></div><figcaption><b>Violet.</b> Violet flames, pink embers.</figcaption></figure>
+      <figure><div class="stage"><img src="img/two/fire-neon.gif" width="500" alt="Fire neon pair"></div><figcaption><b>Neon.</b> Magenta flames, cyan embers. The pair reads best.</figcaption></figure>
+    </div>
+  </section>
+  <section>
+    <h2>Water: drips and rising bubbles + orbiting bubbles</h2>
+    <div class="row">
+      <figure><div class="stage"><img src="img/two/water-ember.gif" width="388" alt="Water ember pair"></div><figcaption><b>Ember.</b> Orange drips and rising bubbles, gold orbiting bubbles.</figcaption></figure>
+      <figure><div class="stage"><img src="img/two/water-violet.gif" width="388" alt="Water violet pair"></div><figcaption><b>Violet.</b> Violet drips and rising bubbles, pink orbiting bubbles.</figcaption></figure>
+      <figure><div class="stage"><img src="img/two/water-neon.gif" width="388" alt="Water neon pair"></div><figcaption><b>Neon.</b> Magenta drips and rising bubbles, cyan orbiting bubbles.</figcaption></figure>
+    </div>
+  </section>
+  <section>
+    <h2>Thunder: big bolts + body arcs and sparks</h2>
+    <div class="row">
+      <figure><div class="stage"><img src="img/two/thunder-ember.gif" width="440" alt="Thunder ember pair"></div><figcaption><b>Ember.</b> Orange bolts, gold arcs and sparks.</figcaption></figure>
+      <figure><div class="stage"><img src="img/two/thunder-violet.gif" width="440" alt="Thunder violet pair"></div><figcaption><b>Violet.</b> Violet bolts, cyan arcs and sparks.</figcaption></figure>
+      <figure><div class="stage"><img src="img/two/thunder-neon.gif" width="440" alt="Thunder neon pair"></div><figcaption><b>Neon.</b> Magenta bolts, cyan arcs and sparks.</figcaption></figure>
+    </div>
+  </section>
+</div>

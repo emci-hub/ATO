@@ -194,10 +194,12 @@ import {
   type FinishWallet,
 } from '@/play/finishes';
 import {
-  canonAuraTint,
   isAuraTint,
+  parseAuraMixes,
   parseAuraOwned,
+  planAuraColour,
   planAuraWear,
+  type AuraColourId,
   type AuraRefusal,
   type AuraStyle,
   type AuraTint,
@@ -1027,6 +1029,8 @@ export type PlayStoreDoc = {
   finish_wallet: FinishWallet;
   /** v31 — aura styles this save has bought. The colour is the equipped sword. */
   aura_owned: AuraStyle[];
+  /** Two-colour aura sets this save has bought (one entry per colourway). Single colours are free. */
+  aura_mixes: AuraColourId[];
   /** v33 — multi-room Hideout. Unlocks survive rebirth; builds use counted time. */
   hideout: HideoutState;
 };
@@ -1264,8 +1268,15 @@ export type PetView = {
   streak: { next: number; last: number | null; ymd: string | null; claimedToday: boolean };
   /** v30 — finishes this save can wear. `free` is the pre-launch unlock. */
   finish: { wallet: FinishWallet; pass: boolean; free: boolean };
-  /** v32 — worn auras. `element` is the equipped sword, or null. Colours are free. */
-  auraSlot: { worn: readonly AuraWear[]; owned: readonly AuraStyle[]; element: string | null; pass: boolean; free: boolean };
+  /** v32 — worn auras. `element` is the equipped sword, or null. Single colours are free; `mixes` are the two-colour sets owned. */
+  auraSlot: {
+    worn: readonly AuraWear[];
+    owned: readonly AuraStyle[];
+    mixes: readonly AuraColourId[];
+    element: string | null;
+    pass: boolean;
+    free: boolean;
+  };
 };
 
 export type HideoutView = {
@@ -1419,6 +1430,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     sword_bag: emptySwordBag(),
     finish_wallet: emptyFinishWallet(),
     aura_owned: [],
+    aura_mixes: [],
     hideout: emptyHideout(),
   };
 }
@@ -1881,6 +1893,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     auraSlot: {
       worn: pet.auras,
       owned: doc.aura_owned,
+      mixes: doc.aura_mixes,
       element: swordPanel(doc.sword_bag).equipped?.element ?? null,
       pass: tideActive(doc.tide, today),
       free: PLAY_EVERYTHING_FREE,
@@ -2637,7 +2650,7 @@ export function applyPrismStone(
  * ------------------------------------------------------------------------- */
 
 export type FinishApplyResult =
-  | { ok: true; cost: number; left: number; kind: FinishKind; color: string | null }
+  | { ok: true; cost: number; left: number; kind: FinishKind; color: string | null; sweep: string; glint: string }
   | { ok: false; reason: FinishRefusal | 'missing' | 'not_revealed' };
 
 /** Wear a finish on a revealed pet, spending tokens for any unlock it needs. */
@@ -2647,6 +2660,8 @@ export function applyPetFinish(
   uid: number,
   kind: FinishKind,
   color: string | null,
+  sweep: string | null = null,
+  glint: string | null = null,
 ): { doc: PlayStoreDoc; result: FinishApplyResult } {
   const touched = touchPet(doc, now);
   const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
@@ -2660,13 +2675,29 @@ export function applyPetFinish(
     free: PLAY_EVERYTHING_FREE,
     kind,
     color,
+    sweep,
+    glint,
   });
   if (!plan.ok) return { doc: touched, result: plan };
-  const next = withPetByUid(touched, uid, (p) => ({ ...p, finish_kind: plan.kind, finish_color: plan.color }));
+  const next = withPetByUid(touched, uid, (p) => ({
+    ...p,
+    finish_kind: plan.kind,
+    finish_color: plan.color,
+    finish_sweep: plan.sweep,
+    finish_glint: plan.glint,
+  }));
   if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
   return {
     doc: { ...next, tokens: touched.tokens - plan.cost, finish_wallet: plan.wallet },
-    result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost, kind: plan.kind, color: plan.color },
+    result: {
+      ok: true,
+      cost: plan.cost,
+      left: touched.tokens - plan.cost,
+      kind: plan.kind,
+      color: plan.color,
+      sweep: plan.sweep,
+      glint: plan.glint,
+    },
   };
 }
 
@@ -2705,25 +2736,42 @@ export function applyPetAura(
   };
 }
 
-/** Colour is free, and only changes an aura the pet is already wearing. */
+export type AuraColourResult =
+  | { ok: true; cost: number; left: number }
+  | { ok: false; reason: 'missing' | 'style' | 'tokens' };
+
+/**
+ * Colour only changes an aura the pet is already wearing. Single colours are
+ * free; a two-colour set costs once per colourway (any style), like a finish mix.
+ */
 export function setPetAuraColor(
   doc: PlayStoreDoc,
   now: number,
   uid: number,
   style: AuraStyle,
   color: AuraTint,
-): { doc: PlayStoreDoc; result: { ok: true } | { ok: false; reason: 'missing' | 'style' } } {
+): { doc: PlayStoreDoc; result: AuraColourResult } {
   if (!isAuraTint(color)) return { doc, result: { ok: false, reason: 'style' } };
-  const picked = canonAuraTint(color);
   const touched = touchPet(doc, now);
   const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
   if (!pet || !pet.auras.some((wear) => wear.style === style)) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  const plan = planAuraColour({
+    tint: color,
+    mixes: touched.aura_mixes,
+    tokens: touched.tokens,
+    pass: tideActive(touched.tide, localYmd(new Date(now))),
+    free: PLAY_EVERYTHING_FREE,
+  });
+  if (!plan.ok) return { doc: touched, result: { ok: false, reason: plan.reason === 'tokens' ? 'tokens' : 'style' } };
   const next = withPetByUid(touched, uid, (p) => ({
     ...p,
-    auras: p.auras.map((wear) => (wear.style === style ? { style, color: picked } : wear)),
+    auras: p.auras.map((wear) => (wear.style === style ? { style, color: plan.tint } : wear)),
   }));
   if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
-  return { doc: next, result: { ok: true } };
+  return {
+    doc: { ...next, tokens: touched.tokens - plan.cost, aura_mixes: plan.mixes },
+    result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost },
+  };
 }
 
 /** Dev kit: toggle one aura, or clear them. Does not spend tokens or mint ownership. */
@@ -2743,12 +2791,16 @@ export function devSetPetFinish(
   uid: number,
   kind: FinishKind,
   color: string | null,
+  sweep: string | null = null,
+  glint: string | null = null,
 ): PlayStoreDoc | null {
   if (kind !== 'none' && (color == null || !isFinishColor(color))) return null;
   return withPetByUid(touchPet(doc, now), uid, (p) => ({
     ...p,
     finish_kind: kind === 'none' ? 'none' : kind,
     finish_color: kind === 'none' ? null : color,
+    finish_sweep: sweep ?? p.finish_sweep,
+    finish_glint: glint ?? p.finish_glint,
   }));
 }
 
@@ -5706,6 +5758,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       sword_bag: v29 ? parseSwordBag(data.sword_bag) : emptySwordBag(),
       finish_wallet: v30 ? parseFinishWallet(data.finish_wallet) : emptyFinishWallet(),
       aura_owned: v31 ? parseAuraOwned(data.aura_owned) : [],
+      aura_mixes: parseAuraMixes(data.aura_mixes),
       hideout: migrateHideout({
         version: typeof version === 'number' ? version : 0,
         raw: data.hideout,

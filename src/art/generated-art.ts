@@ -2131,21 +2131,25 @@ export const SHEET = {
     },
   },
   aura: {
-    blaze: {
-      behind: 'sheets/streetwear/auras/blaze/behind',
-      front: 'sheets/streetwear/auras/blaze/front',
+    earth: {
+      behind: 'sheets/streetwear/auras/earth/behind',
+      front: 'sheets/streetwear/auras/earth/front',
     },
-    bubbles: {
-      behind: 'sheets/streetwear/auras/bubbles/behind',
-      front: 'sheets/streetwear/auras/bubbles/front',
+    fire: {
+      behind: 'sheets/streetwear/auras/fire/behind',
+      front: 'sheets/streetwear/auras/fire/front',
     },
     rune: {
       behind: 'sheets/streetwear/auras/rune/behind',
       front: 'sheets/streetwear/auras/rune/front',
     },
-    spiky: {
-      behind: 'sheets/streetwear/auras/spiky/behind',
-      front: 'sheets/streetwear/auras/spiky/front',
+    thunder: {
+      behind: 'sheets/streetwear/auras/thunder/behind',
+      front: 'sheets/streetwear/auras/thunder/front',
+    },
+    water: {
+      behind: 'sheets/streetwear/auras/water/behind',
+      front: 'sheets/streetwear/auras/water/front',
     },
   },
   hideoutFx: {

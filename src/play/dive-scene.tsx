@@ -86,6 +86,7 @@ import { PetAnimSprite, usePetArt, type PetArt, type PetFace } from '@/play/pet-
 import type { Grade } from '@/play/pet-eggs';
 import { GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import type { PetWear } from '@/play/pet-cosmetics';
+import { GROUND_FRACTION } from '@/play/ground-point';
 import { roleFootAt } from '@/play/skin';
 
 const SLOT = 40;
@@ -261,7 +262,7 @@ function SwimmingPet({
           hideoutFx={hideoutFx}
         />
       </Animated.View>
-      {shiny ? <ShinyOverlay size={box} footAt={0.75} animate={turn} /> : null}
+      {shiny ? <ShinyOverlay size={box} groundAt={0.75 - GROUND_FRACTION * 0.75} animate={turn} /> : null}
     </>
   );
 }

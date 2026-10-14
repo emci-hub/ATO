@@ -80,8 +80,8 @@ import { ScoreBurst } from '@/play/score-burst';
 import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
 import { setHideoutShowLabels, useHideoutShowLabels } from '@/play/street-room';
 import { streetUiOn } from '@/play/street-ui';
-import { AURA_COLORS, AURA_HUES, AURA_VALUES, auraCustomParts, auraHueHex, auraPrice, auraStyles, auraTintLabel, type AuraTint } from '@/play/auras';
-import { swordElement } from '@/play/swords';
+import { AuraColourPicker } from '@/play/aura-colour-picker';
+import { auraPrice, auraStyles, auraTintLabel } from '@/play/auras';
 import {
   applyPetAura,
   setPetAuraColor,
@@ -706,13 +706,12 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
       <View style={styles.wardSlot}>
         <Text style={styles.logName}>Aura</Text>
         <Text style={styles.body}>
-          Wear any you own. Match the sword{pv.auraSlot.element ? ` (${pv.auraSlot.element})` : ''}, tap an element, or pick a hue. Colours are free.
+          Wear any you own. Match the sword{pv.auraSlot.element ? ` (${pv.auraSlot.element})` : ''} or pick a colour. Single colours are free; a two-colour set costs tokens once.
         </Text>
         {auraStyles().map((row) => {
           const wear = pv.auraSlot.worn.find((item) => item.style === row.id);
           const owned = pv.auraSlot.free || pv.auraSlot.owned.includes(row.id);
           const price = auraPrice(row.id, pv.auraSlot.pass);
-          const tints: AuraTint[] = ['sword', ...AURA_COLORS];
           return (
             <View key={row.id} style={styles.auraBlock}>
               <View style={styles.logRow}>
@@ -745,76 +744,31 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
                 )}
               </View>
               {wear ? (
-                <View style={styles.auraBlock}>
-                  <View style={styles.auraColors}>
-                    {tints.map((tint) => {
-                      const on = wear.color === tint;
-                      const hex = tint === 'sword' ? '#F4F7FF' : swordElement(tint)?.color ?? '#888';
-                      return (
-                        <Pressable
-                          key={tint}
-                          accessibilityRole="button"
-                          accessibilityLabel={`${row.name} colour ${auraTintLabel(tint)}`}
-                          accessibilityState={{ selected: on }}
-                          onPress={() => {
-                            if (on) return;
-                            commit((doc, now) => {
-                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, tint);
-                              return res.result.ok ? res.doc : null;
-                            });
-                          }}
-                          style={[styles.swatch, { backgroundColor: hex }, on && styles.swatchOn]}
-                        />
-                      );
-                    })}
-                  </View>
-                  <View style={styles.auraColors}>
-                    {AURA_HUES.map((hue) => {
-                      const parts = auraCustomParts(wear.color);
-                      const on = parts?.hue === hue;
-                      const hex = auraHueHex(hue, 1);
-                      return (
-                        <Pressable
-                          key={hue}
-                          accessibilityRole="button"
-                          accessibilityLabel={`${row.name} hue ${hue}`}
-                          accessibilityState={{ selected: on }}
-                          onPress={() => {
-                            const next = auraHueHex(hue, parts?.hue === hue ? parts.step : 1);
-                            commit((doc, now) => {
-                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, next);
-                              return res.result.ok ? res.doc : null;
-                            });
-                          }}
-                          style={[styles.swatch, { backgroundColor: hex }, on && styles.swatchOn]}
-                        />
-                      );
-                    })}
-                  </View>
-                  <View style={styles.auraColors}>
-                    {AURA_VALUES.map((_, step) => {
-                      const parts = auraCustomParts(wear.color);
-                      const hue = parts?.hue ?? 300;
-                      const hex = auraHueHex(hue, step);
-                      const on = parts?.step === step;
-                      return (
-                        <Pressable
-                          key={step}
-                          accessibilityRole="button"
-                          accessibilityLabel={`${row.name} tone ${step + 1}`}
-                          accessibilityState={{ selected: on }}
-                          onPress={() => {
-                            commit((doc, now) => {
-                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, hex);
-                              return res.result.ok ? res.doc : null;
-                            });
-                          }}
-                          style={[styles.tone, { backgroundColor: hex }, on && styles.swatchOn]}
-                        />
-                      );
-                    })}
-                  </View>
-                </View>
+                <AuraColourPicker
+                  style={row.id}
+                  name={row.name}
+                  tint={wear.color}
+                  sword={pv.auraSlot.element}
+                  mixes={pv.auraSlot.mixes}
+                  free={pv.auraSlot.free}
+                  pass={pv.auraSlot.pass}
+                  onPick={(tint) => {
+                    if (tint === wear.color) return;
+                    let msg = '';
+                    commit((doc, now) => {
+                      const res = setPetAuraColor(doc, now, pv.state.uid, row.id, tint);
+                      msg = res.result.ok
+                        ? res.result.cost > 0
+                          ? `${row.name} ${auraTintLabel(tint)} is on. ${res.result.cost} tokens spent.`
+                          : ''
+                        : res.result.reason === 'tokens'
+                          ? 'Not enough tokens yet.'
+                          : 'Couldn’t change that colour.';
+                      return res.result.ok ? res.doc : null;
+                    });
+                    setNote(msg || null);
+                  }}
+                />
               ) : null}
             </View>
           );

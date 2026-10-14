@@ -1,6 +1,7 @@
 /**
- * PNG alpha for aura dilation. No new image files: the packed sheet the pet
- * already uses is decoded here, then cached by the aura view.
+ * PNG decode for the aura and holo views (body box, silhouette, glint spots).
+ * No new image files: the packed sheet the pet already uses is decoded here,
+ * then cached by the sprite-pixels module.
  *
  * Inflate is in-process (zlib wrapper + raw deflate) so a native build does
  * not need a decoder dependency.
@@ -66,10 +67,17 @@ function decode(bits: Bits, tr: { count: Uint16Array; symbol: Uint16Array }): nu
   return 0;
 }
 
-/** Raw deflate (no zlib header). */
-export function inflateRaw(src: Uint8Array): Uint8Array {
+/** Raw deflate (no zlib header). `sizeHint` = the inflated length when known (PNG knows it). */
+export function inflateRaw(src: Uint8Array, sizeHint = 0): Uint8Array {
   const bits = new Bits(src);
-  const out: number[] = [];
+  let out = new Uint8Array(sizeHint > 0 ? sizeHint : Math.max(1024, src.length * 4));
+  let n = 0;
+  const room = (extra: number) => {
+    if (n + extra <= out.length) return;
+    const bigger = new Uint8Array(Math.max(out.length * 2, n + extra));
+    bigger.set(out.subarray(0, n));
+    out = bigger;
+  };
   let final = 0;
   while (!final) {
     final = bits.get(1);
@@ -79,7 +87,8 @@ export function inflateRaw(src: Uint8Array): Uint8Array {
       const len = bits.get(8) | (bits.get(8) << 8);
       bits.get(8);
       bits.get(8);
-      for (let i = 0; i < len; i++) out.push(bits.get(8));
+      room(len);
+      for (let i = 0; i < len; i++) out[n++] = bits.get(8);
       continue;
     }
     let lit: { count: Uint16Array; symbol: Uint16Array };
@@ -123,22 +132,28 @@ export function inflateRaw(src: Uint8Array): Uint8Array {
     }
     for (;;) {
       const sym = decode(bits, lit);
-      if (sym < 256) out.push(sym);
-      else if (sym === 256) break;
+      if (sym < 256) {
+        room(1);
+        out[n++] = sym;
+      } else if (sym === 256) break;
       else {
         const len = LEN_BASE[sym - 257] + bits.get(LEN_EXTRA[sym - 257]);
         const ds = decode(bits, dist);
         const distance = DIST_BASE[ds] + bits.get(DIST_EXTRA[ds]);
-        for (let k = 0; k < len; k++) out.push(out[out.length - distance]);
+        room(len);
+        for (let k = 0; k < len; k++) {
+          out[n] = out[n - distance];
+          n++;
+        }
       }
     }
   }
-  return Uint8Array.from(out);
+  return out.subarray(0, n);
 }
 
 /** Zlib wrapper (PNG IDAT). */
-export function inflateZlib(src: Uint8Array): Uint8Array {
-  return inflateRaw(src.subarray(2, src.length - 4));
+export function inflateZlib(src: Uint8Array, sizeHint = 0): Uint8Array {
+  return inflateRaw(src.subarray(2, src.length - 4), sizeHint);
 }
 
 function paeth(a: number, b: number, c: number): number {
@@ -160,7 +175,9 @@ export function decodePng(bytes: Uint8Array): Rgba {
   let h = 0;
   let depth = 8;
   let color = 6;
-  const idat: number[] = [];
+  let plte: Uint8Array | null = null;
+  let trns: Uint8Array | null = null;
+  const idatParts: Uint8Array[] = [];
   let o = 8;
   while (o + 8 <= bytes.length) {
     const len = u32(o);
@@ -171,17 +188,28 @@ export function decodePng(bytes: Uint8Array): Rgba {
       h = u32(o + 12);
       depth = bytes[o + 16];
       color = bytes[o + 17];
+    } else if (type === 'PLTE') {
+      plte = data;
+    } else if (type === 'tRNS') {
+      trns = data;
     } else if (type === 'IDAT') {
-      for (let i = 0; i < data.length; i++) idat.push(data[i]);
+      idatParts.push(data);
     } else if (type === 'IEND') break;
     o += 12 + len;
   }
-  if (!w || !h || depth !== 8 || (color !== 6 && color !== 2 && color !== 0 && color !== 4)) {
+  if (!w || !h || depth !== 8 || (color !== 6 && color !== 2 && color !== 0 && color !== 4 && color !== 3)) {
     throw new Error('png');
   }
+  if (color === 3 && !plte) throw new Error('png');
   const channels = color === 6 ? 4 : color === 2 ? 3 : color === 4 ? 2 : 1;
-  const raw = inflateZlib(Uint8Array.from(idat));
+  const idat = new Uint8Array(idatParts.reduce((sum, part) => sum + part.length, 0));
+  let at = 0;
+  for (const part of idatParts) {
+    idat.set(part, at);
+    at += part.length;
+  }
   const stride = w * channels;
+  const raw = inflateZlib(idat, h * (stride + 1));
   const bpp = channels;
   const data = new Uint8Array(w * h * 4);
   let prev = new Uint8Array(stride);
@@ -219,6 +247,12 @@ export function decodePng(bytes: Uint8Array): Rgba {
       } else if (channels === 2) {
         data[d] = data[d + 1] = data[d + 2] = cur[s];
         data[d + 3] = cur[s + 1];
+      } else if (color === 3 && plte) {
+        const index = cur[s];
+        data[d] = plte[index * 3];
+        data[d + 1] = plte[index * 3 + 1];
+        data[d + 2] = plte[index * 3 + 2];
+        data[d + 3] = trns && index < trns.length ? trns[index] : 255;
       } else {
         data[d] = data[d + 1] = data[d + 2] = cur[s];
         data[d + 3] = 255;
