@@ -30,29 +30,33 @@ const ok = (msg: string) => {
 }
 
 {
+  // Stage layout (Phase 1, 2026-10-14): every Street screen is a GameScreen whose regions come from
+  // one frame (src/play/stage-layout.tsx, check:stage-bounds). The shell no longer has a flex-leftover
+  // body or swappable bar slots; Turf War's setup → wave keeps the same stage (no screen-switch jump).
   const shell = read('src/app/play.tsx');
-  // Only Turf War swaps the shell bars, at setup → run — a documented screen switch. A
-  // grow-only shell region left a blank band on every tab after one run, so it is not used.
-  assert.match(shell, /only Turf War swaps these bars, at setup → run — a screen switch/, 'shell documents the screen switch');
-  ok('shell: bar swap is the documented Turf War screen switch (no grow-only band on other tabs)');
+  assert.match(shell, /useStageFrame\('list'\)/, 'list screens take the list frame');
+  assert.ok(!/streetBody|StreetDockOutlet|StreetHudOutlet/.test(shell), 'no flex-leftover shell body or bar slots');
+  ok('shell: Street screens are GameScreens (no flex-leftover body, no bar swap)');
 }
 
 {
   const scene = read('src/play/dive-scene.tsx');
   const screen = read('src/play/dive-screen.tsx');
-  assert.match(scene, /useGrowOnlyHeight\(\)/, 'Dive panel is grow-only');
+  assert.match(scene, /useStageFrame\('dive'\)/, 'Dive takes its frame (fixed dock + stage)');
+  assert.ok(!/useGrowOnlyHeight/.test(scene), 'Dive panel is fixed, not grow-only');
   assert.match(scene, /style=\{bustPct == null \? styles\.reserved : undefined\}/, 'Dive Heat row is reserved off a run');
-  assert.match(scene, /toast: \{ position: 'absolute'/, 'Dive find / caption toast floats');
+  assert.match(scene, /notice=\{<View style=\{styles\.lane\}>\{laneLine\}<\/View>\}/, 'Dive find / caption sits in the NoticeLane');
   assert.match(screen, /const DIVE_DOCK_ROWS = 2;/, 'Dive button area keeps 2 rows');
   assert.match(screen, /minHeight: pixelBodyLine\(PIXEL_CAPTION_PT\) \* 2/, 'Dive status note keeps 2 lines');
-  ok('Dive: grow-only panel, reserved Heat row, 2 button rows, 2-line note, floating toast');
+  ok('Dive: fixed frame, reserved Heat row, 2 button rows, 2-line note, find line in the NoticeLane');
 }
 
 {
   const defend = read('src/play/defend-screen.tsx');
-  assert.match(defend, /style=\{\[styles\.coachLine, paused && styles\.streetReserved\]\}/, 'Turf War coach line is one fixed box');
-  assert.match(defend, /coachLine: \{ minHeight: 58/, 'Turf War coach line reserves 3 lines');
-  ok('Turf War: in-run coach line is one fixed box (pause no longer shifts the board)');
+  assert.match(defend, /useStageFrame\('turf-setup'\)/, 'Turf War: one frame for setup and wave');
+  assert.match(defend, /computeStageFrame\('turf-wave', setupFrame\.window, setupFrame\.insets\)/, 'the wave frame shares the setup insets');
+  assert.match(defend, /coachLine: \{ flex: 1, justifyContent: 'center'/, 'coach / pause line fills the NoticeLane');
+  ok('Turf War: one stage for setup + wave; coach and pause lines live in the NoticeLane');
 }
 
 {

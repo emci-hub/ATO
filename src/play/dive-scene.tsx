@@ -32,7 +32,7 @@
  * parallax (then props, trail) — see `diveWorldCuts`.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { PixelRatio, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { PixelRatio, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,

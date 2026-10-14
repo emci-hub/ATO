@@ -1,4 +1,10 @@
-# Divecore layout spec (Phase 1, 2026-10-14) — DRAFT, waiting for emci's OK
+# Divecore layout spec (Phase 1, 2026-10-14) — APPROVED by emci (2026-10-14), being built
+
+> **emci's decisions (2026-10-14):** accept all recommendations — (a1) remove the Block (Phase 3 does the
+> nav), (b1) fixed Turf War board, spec heights OK. Plus, from review of the previews: Turf War keeps the
+> **TURF WAR header and the full lede** with the board **right under them**; the Hideout **room fills the
+> stage** (like the Underground) with **Hideout / Loft / Call on their own row**, and on small phones the
+> view **follows the pet**. Section 2a is what Phase 1 actually built.
 
 The one layout every Divecore game screen follows. Based on the measured audit (`docs/divecore-audit/measured.md`, which checks the static `layout.md`)
 and rules R1–R12 in `docs/divecore-ui-research.md`. It replaces the numbers in `layout.md` §8 where they
@@ -63,20 +69,29 @@ Notes per screen:
   "?") · Stage · ActionDock (Train: meter + TAP, 120) · pad.
 - **List screens** (Block if kept, Locker, Store) use the tabbed layout; their "Stage" is the scroll body.
 
-### Phase 1 interim values (skeleton only, no redesign)
+### 2a. What Phase 1 built (src/play/stage-frame.ts `REGIONS`)
 
-Phase 1 wraps today's contents without redesigning them, so where today's content is taller than the target
-the skeleton reserves today's height and the target lands with the content trims in Phases 2–5:
+Phase 1 wraps today's contents without redesigning them, so bars keep today's heights; targets land in Phases 2–5.
+TAB = 60 + max(bottom inset, 6).
 
-| Screen | Region | Phase 1 (pt) | Target |
-|---|---|---|---|
-| All tabbed | TopBar (resource bar today 52 + 4 margin) | 56 | 44 (Phase 3) |
-| Dive | TopBar (stop track panel) | 105 + 4 | 44 (Phase 5) |
-| Dive | ActionDock | 250 + 8 | 152 (Phase 5) |
-| Turf War wave | ActionDock | ≈148 / ≈122 (incl. pad, read off the screenshots) | 120 + pad |
-| Turf War setup | (scroll kept until question b is answered) | — | 120 dock |
+| Frame id | TopBar | NoticeLane | ActionDock | Bottom | Stage 430×932 | Stage 375×667 |
+|---|---|---|---|---|---|---|
+| `hideout` | 56 (resource bar) | 40 (pet strip / swipe hint) | 120 (room row 56 + Feed·Info 64) | TAB | **563** | **365** |
+| `turf-setup` | 56 (resource bar) | 40 (coach line) | 64 (Setup ▲ + Call wave) | TAB | **619** | **421** |
+| `turf-wave` | 56 (HUD) | 40 (coach / paused line) | 64 + TAB (Cast + Pounce·1×·2×·Leave) | — | **619** (same) | **421** (same) |
+| `dive` | 109 (stop-track panel) | 28 (find / caption line) | 258 | inset | 444 | 252 |
+| `pet-game` | 88 | 28 (empty for now) | 208 | inset | 515 | 323 |
+| `list` (Block, Locker, Store) | 56 | 40 (empty for now) | 0 | TAB | 683 | 485 |
 
-The Stage is still computed once from these numbers, so it can never shrink while the screen is up.
+- **Turf War:** one stage for setup and wave (the wave dock = setup dock + tab bar). Stage = header
+  (TURF WAR + full lede, 112) + the square board right under it: `boardSide = min(stageW − 24, stageH − 112)`
+  → **406** on Pro Max (top y 267), **309** on SE (top y 228). Identical in setup, wave and pause (measured).
+  Turf keeps a 40 pt lane in the wave too (not 28) so the board never moves.
+- **Hideout:** the room covers the stage (`hideoutCoverScale`) and a lazy camera (`hideoutCameraTop`) keeps
+  the pet's feet between 40 % and 88 % of the stage, floor first. Pro Max shows ~80 % of the room height,
+  SE ~60 % (Play / Stash scroll into view when the pet walks up).
+- **Dive** lost 24 pt of stage vs before (468 → 444 / 276 → 252) because the 28 pt lane is new and the dock is
+  still 258. Phase 5 trims the dock to the 152 target (→ ~615 / ~415).
 
 ## 3. Spacing, safe areas, taps
 
@@ -106,32 +121,16 @@ rotation or window-size change. Never from `onLayout` of content, never from a n
 
 ## 5. Turf War setup → wave
 
-With question (b) = fixed board: the board's top y is the same in setup and wave — **143 (Pro Max) / 104 (SE)**
-(= top inset + TopBar + 40). In the wave the lane is 28, so the Stage starts 12 pt higher and keeps a 12 pt
-top pad. The dock is 120 in both; only the TabBar leaves (screen switch). The board never moves or resizes.
+Built (b1 + emci's tweak): header + lede + board in the stage, top-anchored; Call wave + Setup ▲ in the
+dock; drops, maps, replays, effects, the wave card and "Why?" in the Setup sheet; tower pad panel and the
+won / lost cards float above the dock. The board's top y is **267 (Pro Max) / 228 (SE)** in setup, wave and pause.
 
-## 6. Open questions for emci (asked before, still unanswered — please answer before Phase 1 step 4)
+## 6. Decisions (answered 2026-10-14)
 
-### (a) Remove the Block, or keep a small Block tab?
-Mockup: `docs/divecore/mockups/question-a.png`
-
-- **(a1) Remove it — the Hideout is home.** The pet status strip sits in the NoticeLane with a **Claim**
-  chip (Basecore research) at its right end. Tabs: Turf War · Hideout · Locker (+ Store). One entry per place;
-  the Underground stays a spot in the room. Fewer screens, the map is the first thing you see.
-- **(a2) Keep a small Block tab.** A short list (pet, Turf War, Underground) with **Claim** as the dock action.
-  Keeps a "what's ready" overview, but it is a second way into every place.
-- Recommendation: **(a1)**. Both keep Claim one tap away; (a1) removes three duplicate entry points.
-
-### (b) Turf War setup: fixed board + one Setup sheet, or keep setup scrolling?
-Mockup: `docs/divecore/mockups/question-b.png`
-
-- **(b1) Fixed board + Setup sheet.** The board sits where it will be during the wave; the dock is the same
-  120 pt in setup and wave and holds **Call wave** plus a "Setup ▲" peek; map, drops, replays and effects
-  open in a sheet on the FloatLayer. No scrolling, Call wave always in reach, and the board never jumps at
-  the switch.
-- **(b2) Keep setup scrolling** (today): title, lede and board, then cards; Call wave is ~650 (Pro Max) /
-  ~870 (SE) pt down. Lowest effort, but it is the cause of the SE wave bug (146 pt of board hidden).
-- Recommendation: **(b1)**.
+- **(a) The Block:** (a1) remove it, Hideout is home with a Claim chip — **Phase 3** (nav). Phase 1 keeps the
+  Block as a list screen. Mockup `docs/divecore/mockups/question-a.png`.
+- **(b) Turf War setup:** (b1) fixed board + Setup sheet — **built in Phase 1**, with the header and full lede
+  kept above the board. Mockups `question-b.png`, previews in the PR.
 
 ## 7. What stays the same
 
