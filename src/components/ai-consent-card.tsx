@@ -6,7 +6,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
-export type ConsentContext = 'home' | 'talk';
+export type ConsentContext = 'home';
 
 /**
  * Apple 5.1.2 disclosure. Rendered UNCONDITIONALLY wherever the consent card
@@ -19,31 +19,23 @@ export type ConsentContext = 'home' | 'talk';
  * mounts this card owes the same line.
  */
 // wave93 (emci 2026-10-09): AI cards live in a shared library, so the disclosure says so.
+// 2026-10-14: Sage is gone and the Story is template-only, so the real AI uses
+// are Legends cards and category deep dives — exactly those two, no more.
 export const AI_USE_DISCLOSURE =
-  'Sage uses AI only to write your Story, your Legends cards and your category deep dives. These cards are shared between people with similar leanings and never include your name or your answers.';
+  'ATO uses AI only to write your Legends cards and your category deep dives. These cards are shared between people with similar leanings and never include your name or your answers.';
 
-// Bodies rewritten 2026-10-07 (emci), widened 2026-10-08: the daily focus, the
-// questions and the Explore category cards are stored copy, so ai_consent gates
-// the Story, the Legends cards' "you" part and the Explore category deep dive. The copy has to say exactly that, because this is the Apple
-// 5.1.2 consent surface: it may not claim AI where there is none, or leave
-// out where there is.
+// The Apple 5.1.2 consent surface: it may not claim AI where there is none, or
+// leave out where there is. Insights (Try this today, the focus, the Story,
+// Superpower, How you argue), questions and category cards are stored copy.
 const COPY: Record<ConsentContext, { title: string; body: string }> = {
   home: {
-    title: 'Can Sage use AI to write for you?',
+    title: 'Can ATO use AI to write for you?',
     body:
-      'Sage uses AI, based on your answers, to write your Story, the personal part of your ' +
-      'Legends cards and the category deep dives you ask for. Sage is a coach in the app, not a ' +
-      'person. You’ll only be asked once. Say no and those stay off (Legends uses the museum’s own ' +
-      'words). Your daily focus, your questions and your category cards don’t use AI, so they ' +
-      'keep working either way. AI cards are shared between people with similar leanings and never ' +
-      'include your name or your answers.',
-  },
-  talk: {
-    title: 'Can Sage use AI to talk with you?',
-    body:
-      'Sage replies to you using AI, in your talk style, based on what you’ve logged and ' +
-      'told us. Sage is a coach in the app, not a person. You’ll only be asked once. ' +
-      'Say no and Talk stays off, along with your Story.',
+      'ATO uses AI, based on your answers, to write the personal part of your Legends cards ' +
+      'and the category deep dives you ask for. You’ll only be asked once. Say no and those stay ' +
+      'off (Legends uses the museum’s own words). Insights, your questions and your category cards ' +
+      'don’t use AI, so they keep working either way. AI cards are shared between people with ' +
+      'similar leanings and never include your name or your answers.',
   },
 };
 

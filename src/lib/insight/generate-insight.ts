@@ -13,8 +13,6 @@
  * both describe the user to themselves. DAILY_INSIGHT_COPY_REVIEWED stays
  * false until emci reads it directly.
  */
-import { DAILY_INSIGHT_META } from '@/lib/ai/call-sites';
-import { generateText } from '@/lib/ai/generate';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
@@ -143,7 +141,7 @@ export function buildDailyInsightPrompt(grounding: InsightGrounding): string {
     ? `What they said they are working on right now: "${grounding.currentFocus}".`
     : 'They have not named anything they are working on right now.';
 
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is today's insight — the single personalized thing this person sees when they open the app.
+  return `Write in the ATO app’s voice. Follow the voice reference. Not a doctor. This is today's insight — the single personalized thing this person sees when they open the app.
 
 VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}
@@ -256,29 +254,9 @@ export function parseInsightLines(text: string, leans: readonly GroundedLean[]):
   }
 }
 
-/**
- * Returns null on any failure (no response, unparseable, or any field filtered
- * out) — never throws, matching every other generation call site's contract in
- * this repo, so the caller can degrade to a retry without a crash.
+/*
+ * `generateDailyInsight` / `generateDailyInsightAndLines` (the old AI writer)
+ * were removed on 2026-10-14: Today's focus is stored copy (`insight-bank`)
+ * and Insights makes no model call. The prompt, parser and types above stay
+ * for the dev inspector and the stored rows that still carry this shape.
  */
-export async function generateDailyInsight(
-  grounding: InsightGrounding,
-): Promise<DailyInsightDraft | null> {
-  return (await generateDailyInsightAndLines(grounding))?.draft ?? null;
-}
-
-/** The insight plus the personal daily lines that came back with it (possibly none). */
-export async function generateDailyInsightAndLines(
-  grounding: InsightGrounding,
-): Promise<{ draft: DailyInsightDraft; lines: InsightLine[] } | null> {
-  const text = await generateText({
-    prompt: buildDailyInsightPrompt(grounding),
-    temperature: 0.9,
-    maxOutputTokens: 1024,
-    responseFormat: 'json',
-  }, DAILY_INSIGHT_META);
-  if (!text) return null;
-  const draft = parseDailyInsight(text);
-  if (!draft) return null;
-  return { draft, lines: parseInsightLines(text, groundedLeans(grounding.tracks)) };
-}

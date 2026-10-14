@@ -19,7 +19,10 @@ import {
   WHY_LINE_MAX_WORDS,
   duplicateSentences,
   mixedApostrophes,
+  repeatedPhrases,
+  taskSafetyViolations,
   titleViolation,
+  tryTodayMode,
   validateInsightLine,
   whyLineFor,
 } from '../src/lib/daily-insights';
@@ -36,7 +39,8 @@ const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
 assert.equal(pkg.scripts['check:daily-insights-bank'], 'tsx ./scripts/daily-insights-bank-check.ts');
 ok('wired as check:daily-insights-bank');
 
-assert.equal(DAILY_INSIGHTS_BANK_VERSION, 1);
+// v2 (2026-10-14): 🎯 lines rewritten for the task-safety rule, ids kept.
+assert.equal(DAILY_INSIGHTS_BANK_VERSION, 2);
 assert.equal(DAILY_INSIGHTS_SHOW_PROVISIONAL, false);
 assert.equal(DAILY_INSIGHTS_PROVISIONAL_CATEGORIES, STORY_MAP_CATEGORY_LEAN_TODO);
 ok('bank version 1, provisional flag off, provisional list reused from story-v3');
@@ -83,6 +87,25 @@ for (const row of TRY_TODAY_BANK) {
   assert.equal(!!row.provisional, shouldBeProvisional, `${row.id} provisional flag`);
 }
 ok('every try-today line passes the copy rules; map-category lines are provisional');
+
+// Rule 10b (emci 2026-10-14): every task is free, solo, under 15 minutes and
+// fine to skip — no money, driving, alcohol, food, quitting a job, or an ex.
+for (const row of TRY_TODAY_BANK) {
+  assert.deepEqual(taskSafetyViolations(row.text), [], `${row.id}: ${row.text}`);
+}
+assert.ok(taskSafetyViolations('Buy a coffee for a friend.').length > 0, 'the rule catches money');
+assert.ok(taskSafetyViolations('Take a 20-minute walk.').length > 0, 'the rule catches 15+ minutes');
+assert.ok(taskSafetyViolations('Text your ex.').length > 0, 'the rule catches an ex');
+assert.ok(taskSafetyViolations('Cook dinner tonight.').length > 0, 'the rule catches food');
+ok('task safety: no money, driving, alcohol, food, job, ex; nothing 15+ minutes (and the rule bites)');
+
+// Low Resilience / low Steadiness only ever get a strength task, every weekday.
+for (let day = 11; day <= 17; day += 1) {
+  const ymd = `2026-10-${day}`;
+  assert.equal(tryTodayMode(ymd, 'cat_resilience', 'low'), 'strength', `${ymd} resilience low`);
+  assert.equal(tryTodayMode(ymd, 'cat_steadiness', 'low'), 'strength', `${ymd} steadiness low`);
+}
+ok('low Resilience and low Steadiness get strength tasks on all seven weekdays');
 
 const light = TRY_TODAY_BANK.filter((row) => row.tone === 'light').length;
 const dark = TRY_TODAY_BANK.filter((row) => row.tone === 'dark').length;
@@ -144,8 +167,11 @@ const banks: Record<string, string[]> = {
 for (const [name, texts] of Object.entries(banks)) {
   assert.deepEqual(duplicateSentences(texts), [], `${name} repeats a sentence`);
   assert.equal(mixedApostrophes(texts), false, `${name} mixes apostrophe styles`);
+  // emci 2026-10-14: no repeated phrases in a bank (any 3-word run, common words aside).
+  assert.deepEqual(repeatedPhrases(texts), [], `${name} repeats a phrase`);
 }
-ok('no 2+ word sentence repeats inside a bank; one apostrophe style per bank');
+assert.deepEqual(repeatedPhrases(['Make one person laugh.', 'Make one person smile.']), ['make one person']);
+ok('no repeated sentence or 3-word phrase inside a bank; one apostrophe style per bank');
 
 // --- zero runtime AI in the new folders --------------------------------------
 function walk(dir: string): string[] {

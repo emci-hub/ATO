@@ -2,7 +2,7 @@
  * Jargon guard — keyword list + fallback, no model. Run: npm run check:jargon
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -62,11 +62,10 @@ assert.equal(
   VOICE_PRESET_PREVIEWS.motivational_coach,
   "Three days down. You're building something real here.",
 );
-const picker = read('src/components/voice-preset-picker.tsx');
-assert.match(picker, /VOICE_PRESET_PREVIEWS/);
-assert.match(picker, /setVoicePreset/);
-assert.doesNotMatch(picker, /generate|claimAiCall|gemini/i);
-ok('voice_preset picker preview is static local copy, no model call');
+// The unmounted "Sage's voice" picker was deleted with Sage (2026-10-14);
+// the previews stay static local copy.
+assert.ok(!existsSync(resolve(root, 'src/components/voice-preset-picker.tsx')), 'the Sage voice picker is deleted');
+ok('voice_preset previews are static local copy; the Sage voice picker is gone');
 
 const sage = read('src/app/voice/sage.txt');
 assert.doesNotMatch(sage, /supportive coach/i);
@@ -84,8 +83,9 @@ ok('surviving prompt builders carry the preset and drop the coach role line');
 assert.match(read('src/lib/voice/quota-server.ts'), /log_jargon_guard/);
 ok('jargon fires log to ai_usage without incrementing quota in the client helper');
 
-const crisis = read('src/lib/crisis/copy.ts');
-assert.doesNotMatch(crisis, /JARGON_FALLBACK/);
-ok('crisis copy is untouched');
+// The crisis system was removed 2026-10-14; the static helpline row replaced it.
+assert.ok(!existsSync(resolve(root, 'src/lib/crisis/copy.ts')), 'crisis copy stays deleted');
+assert.doesNotMatch(read('src/components/helpline-row.tsx'), /JARGON_FALLBACK/);
+ok('the crisis copy is gone and the static helpline row carries no jargon fallback');
 
 console.log(`\nAll ${passed} jargon checks passed.`);

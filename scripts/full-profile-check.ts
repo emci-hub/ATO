@@ -79,7 +79,7 @@ assert.deepEqual(sourceProvenance('self_game'), {
 });
 assert.deepEqual(sourceProvenance('self_settings'), {
   kind: 'corrected',
-  line: 'You corrected this after Sage checked in.',
+  line: 'You corrected this after ATO checked in.',
 });
 assert.deepEqual(sourceProvenance('self_confirm'), {
   kind: 'confirmed',
@@ -148,7 +148,7 @@ ok('Full Profile sits on Explore after trait bands; fill-later lives on the Ques
 const poster = read('src/components/share-poster.tsx');
 const handlePage = read('src/app/[handle].tsx');
 const home = read('src/app/(tabs)/index.tsx');
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const widget = read('targets/widget/widgets.swift');
 const push = read('src/lib/push-copy.ts');
 for (const [name, source] of [

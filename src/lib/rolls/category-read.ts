@@ -45,7 +45,7 @@ export function buildCategoryReadPrompt(reading: CategoryReading): string {
     ? `Settled merge: ${bits}. Position is a mix of those two axes, not a coordinate — do not describe it as a graph or a point.`
     : `Settled merge: ${bits}. Lean ${leanComparative(reading.bar)}.`;
 
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is a category read — one personalized piece of prose about "${reading.def.name}" specifically, part of a larger roll (a legend match, 11 category reads, and a story, all generated together in one pass).
+  return `Write in the ATO app’s voice. Follow the voice reference. Not a doctor. This is a category read — one personalized piece of prose about "${reading.def.name}" specifically, part of a larger roll (a legend match, 11 category reads, and a story, all generated together in one pass).
 
 VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}
@@ -61,7 +61,7 @@ ${textureLine}
 RULES
 1. 2–4 sentences. Everyday language. Not a diagnosis, not a type, not a test result.
 2. Never Myers-Briggs, never a four-letter code, never "you are." Reflect as maybes, not facts.
-3. You MAY name "${reading.def.name}" naturally — this is the one difference from Sage's whole-profile Story, which never names a category. Only ever use the plain-language pole phrases given above (never a technical or internal-sounding trait label).
+3. You MAY name "${reading.def.name}" naturally — this is the one difference from the whole-profile Story, which never names a category. Only ever use the plain-language pole phrases given above (never a technical or internal-sounding trait label).
 4. Hedge lives inside the sentence. No bolted-on closing after a dash or period.
 5. Completeness is not an input. Do not mention leftover notes or a fuller profile.
 

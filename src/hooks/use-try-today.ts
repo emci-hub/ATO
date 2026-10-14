@@ -10,12 +10,17 @@ import {
 } from '@/lib/daily-insights';
 import { loadTryToday, markTryTodayDone } from '@/lib/daily-insights/store';
 import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
+import { writeWidgetTryToday } from '@/lib/insight/today-insight';
 import { localYmd } from '@/lib/local-date';
 import type { TraitTrack } from '@/lib/trait-stability';
 
 /**
- * 🎯 Try this today for one account on the app's day. The pick is stored for
- * the day, so a refresh or more answers mid-day never move it. Local only.
+ * 🎯 Try this today for one account on the app's day (the profile timezone,
+ * `localYmd`, never the device's own zone). The pick is stored for the day, so
+ * a refresh or more answers mid-day never move it. Local only.
+ *
+ * Home and Insights both run this, reading and writing the same stored day, so
+ * the widget gets today's 🎯 line whichever screen opens first.
  */
 export function useTryToday(input: {
   userId: string;
@@ -59,6 +64,7 @@ export function useTryToday(input: {
         if (cancelled) return;
         setDateKey(today);
         setPick(next);
+        if (next) writeWidgetTryToday(next.line.text, today);
         setStreak(currentStreak(store.streak, today));
         setDone(isDoneToday(store.streak, today));
       })

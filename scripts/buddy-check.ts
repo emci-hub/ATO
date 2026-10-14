@@ -101,13 +101,16 @@ assert.match(layout, /<NavPixel \/>[\s\S]*<BuddyBubble \/>/);
 const bubble = read('src/components/buddy-bubble.tsx');
 assert.match(bubble, /<MilestoneToast/);
 assert.match(bubble, /onDone=\{buddyNoteDone\}/);
-assert.match(bubble, /if \(!me \|\| isCrisisActive\(\)\) return null;/);
+// The crisis gate was removed with the crisis system (2026-10-14).
+assert.match(bubble, /if \(!me\) return null;/);
+assert.doesNotMatch(bubble, /isCrisisActive/);
 assert.match(bubble, /NAV_PIXEL_SLOT/);
-ok('his bubble is the pinned MilestoneToast at the tab shell, beside him, and silent while the crisis card is up');
+ok('his bubble is the pinned MilestoneToast at the tab shell, beside him');
 
 const pixel = read('src/components/nav-pixel.tsx');
-assert.match(pixel, /if \(isCrisisActive\(\)\) return;[\s\S]*tapBuddy\(nextIdleNote\(tapCountRef\.current\)\);/);
-ok('tapping him makes him speak, after the crisis guard');
+assert.match(pixel, /function onTap\(\) \{[\s\S]*tapBuddy\(nextIdleNote\(tapCountRef\.current\)\);/);
+assert.doesNotMatch(pixel, /isCrisisActive/);
+ok('tapping him makes him speak');
 
 const hook = read('src/hooks/use-buddy-milestones.ts');
 for (const metric of ["'bankTotalProgress'", "'profile_percent'", '`axisComplete:${axis}`', "'current_streak'"]) {

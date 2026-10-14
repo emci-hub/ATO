@@ -170,7 +170,9 @@ function sourceChecks(): void {
   assert.ok(sync.indexOf('if (isPreviewing()) return;') > 0 && sync.indexOf('if (isPreviewing()) return;') < sync.indexOf('cancelScheduledNotificationAsync'), 'the real push schedule is left alone');
   const widget = read('src/lib/insight/today-insight.ts');
   assert.match(widget, /function writeWidget\(insight: CachedInsight \| null\) \{[\s\S]{0,120}isPreviewing\(\)\) return;/);
-  assert.match(widget, /export function writeWidgetLine\(line: string\) \{\s*if \(Platform\.OS !== 'ios' \|\| isPreviewing\(\)\) return;/);
+  assert.match(widget, /export function writeWidgetLine\(line: string, ymd\?: string\) \{\s*if \(Platform\.OS !== 'ios' \|\| isPreviewing\(\)\) return;/);
+  // The 🎯 widget write (2026-10-14) is fenced the same way.
+  assert.match(widget, /export function writeWidgetTryToday\(text: string, ymd: string\) \{[\s\S]{0,120}if \(Platform\.OS !== 'ios' \|\| isPreviewing\(\)\) return;/);
   assert.match(read('src/app/_layout.tsx'), /<PreviewBanner \/>/, 'the red bar is mounted over every screen');
   assert.match(read('src/components/preview-banner.tsx'), /onPress=\{\(\) => void stopPreview\(\)\}/, 'one tap on the bar exits');
 

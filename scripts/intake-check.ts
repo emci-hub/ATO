@@ -164,7 +164,7 @@ async function main() {
   assert.equal(displayIntakeValue('show_up', sample), 'Push through it');
   assert.equal(displayIntakeValue('knocks_you_off', sample), 'Sleep, Workload');
   assert.deepEqual(selectedIntakeValues('knocks_you_off', sample), ['sleep', 'workload']);
-  assert.equal(INTAKE_SETTINGS_LABELS.talk_style, 'How Sage talks to you');
+  assert.equal(INTAKE_SETTINGS_LABELS.talk_style, 'How ATO talks to you');
   assert.equal(TALK_STYLE_PREVIEWS.quiet, 'Three days now. Not loud about it, just there.');
   assert.equal(
     TALK_STYLE_PREVIEWS.even,

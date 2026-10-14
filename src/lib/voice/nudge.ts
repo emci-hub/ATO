@@ -1,4 +1,3 @@
-import { keywordDetect } from '@/lib/crisis/detect';
 import { isCruelCut } from '@/lib/voice/filters';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import type { CheckHistory } from '@/lib/voice/types';
@@ -24,10 +23,6 @@ export interface ResolveNudgeInput {
   history: CheckHistory[];
   /** Today's Do must be on screen whenever a Nudge is shown. */
   hasDo: boolean;
-  crisisToday?: boolean;
-  crisisDetected?: boolean;
-  /** Previous local calendar day had a crisis flag. */
-  crisisYesterday?: boolean;
 }
 
 const KNOCK_ALIASES: Record<string, string[]> = {
@@ -57,7 +52,7 @@ function recentCorpus(history: CheckHistory[]): string {
 /**
  * First real, specific, recent signal — never talk_style.
  * Order: skip pattern (2+ skips in last 7), then a knock chip that actually
- * appeared in recent Read/Do text, then the latest safe stored fact.
+ * appeared in recent Read/Do text. (Stored facts are no longer read.)
  */
 export function findNudgeSignal(input: {
   knocksYouOff: string;
@@ -80,16 +75,9 @@ export function findNudgeSignal(input: {
     }
   }
 
-  const facts = input.facts.map((fact) => fact.trim()).filter((fact) => fact.length > 0);
-  for (let i = facts.length - 1; i >= 0; i -= 1) {
-    const fact = facts[i];
-    if (keywordDetect(fact)) continue;
-    if (isCruelCut(fact)) continue;
-    if (containsFrameworkTerm(fact)) continue;
-    const clipped = fact.length > 80 ? `${fact.slice(0, 77)}…` : fact;
-    return { kind: 'fact', detail: clipped };
-  }
-
+  // Stored facts ("Teach Sage") are no longer read (2026-10-14): nothing a
+  // person typed feeds a line any more. `facts` stays in the input shape until
+  // the column is dropped (docs/sage-cleanup.md).
   return null;
 }
 
@@ -119,7 +107,7 @@ export function composeNudge(signal: NudgeSignal): string {
     case 'knock':
       return knockLine(signal.detail);
     case 'fact':
-      return `You told Sage something that's still true: ${signal.detail} Today's Do is how you stay with that — no speech required.`;
+      return `Something you said still holds: ${signal.detail} Today's Do is how you stay with that — no speech required.`;
   }
 }
 
@@ -129,7 +117,6 @@ export function composeNudge(signal: NudgeSignal): string {
  */
 export function resolveNudge(input: ResolveNudgeInput): string | null {
   if (!input.hasDo) return null;
-  if (input.crisisDetected || input.crisisToday || input.crisisYesterday) return null;
   const last = input.history[input.history.length - 1];
   if (last?.nudge && last.nudge.trim().length > 0) return null;
   const signal = findNudgeSignal(input);

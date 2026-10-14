@@ -177,14 +177,13 @@ assert.match(store, /export async function fetchInsightHistory/);
 assert.match(store, /\.is\('superseded_at', null\)/);
 ok('store exposes fetchTodayInsight / saveInsight / fetchInsightHistory, reading the live row only');
 
-// --- call-site metadata ----------------------------------------------------
-// INVARIANT. check:ai fails when a generateText call site has no declared
-// metadata; this pins the declaration to the registry as well as the const.
-assert.match(callSites, /export const DAILY_INSIGHT_META: AiCallMetadata = \{/);
-assert.match(callSites, /feature: 'Daily insight',/);
-assert.match(callSites, /meta: DAILY_INSIGHT_META,/);
-assert.match(gen, /import \{ DAILY_INSIGHT_META \} from '@\/lib\/ai\/call-sites';/);
-assert.match(gen, /\}, DAILY_INSIGHT_META\);/);
-ok('DAILY_INSIGHT_META is declared, registered in AI_CALL_SITES, and passed to generateText');
+// --- no AI writer any more ------------------------------------------------
+// The AI daily-insight writer was removed on 2026-10-14 (Insights is
+// template-only). It is no longer a call site, so it is not registered and
+// nothing in the file calls a model.
+assert.doesNotMatch(callSites, /feature: 'Daily insight',/);
+assert.doesNotMatch(gen, /generateText|DAILY_INSIGHT_META/);
+assert.doesNotMatch(gen, /export async function generateDailyInsight/);
+ok('the AI daily-insight writer is gone: not a call site, no model call in the file');
 
 console.log(`\n${passed} insight checks passed`);

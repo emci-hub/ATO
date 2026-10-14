@@ -3,54 +3,39 @@ import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
-import { CrisisCard } from '@/components/crisis-card';
-import { Appear, SkeletonBar } from '@/components/motion';
+import { Appear } from '@/components/motion';
 import { ProgressRing, useRoundProgress } from '@/components/progress-ring';
 import { ShapeEmptyCard } from '@/components/shape-card';
-import { ThemedPressable } from '@/components/themed-pressable';
 import { TraitShape } from '@/components/trait-shape';
 import { TodayPickCard } from '@/components/today-pick-card';
 import { WeekStrip } from '@/components/week-strip';
 import { IdentityTitleChip } from '@/components/identity-title-chip';
-import { crisisNotedToday } from '@/lib/crisis/local-flag';
-import { SageStoryFold } from '@/components/sage-story-fold';
 import { DailyCheckinCard } from '@/components/daily-checkin-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useTheme } from '@/hooks/use-theme';
-import { useDailyInsight } from '@/hooks/use-daily-insight';
 import { useBuddyStreak } from '@/hooks/use-buddy-milestones';
+import { useTryToday } from '@/hooks/use-try-today';
 import { useTodayLine } from '@/hooks/use-today-line';
-import { clearLeans, lockScreenText } from '@/lib/daily-line/pick';
+import { lockScreenText } from '@/lib/daily-line/pick';
 import { pickForYmd } from '@/lib/daily-pick/bank';
 import { checkWindowFor } from '@/lib/check-window';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
-import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
-import { withTimeout } from '@/lib/timeout';
 import { useMeContext } from '@/lib/me-context';
-import { homeSageLabel, homeSageLede } from '@/lib/sage-copy';
+import { homeSageLede } from '@/lib/sage-copy';
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
-import { ideaForTitle, isBankInsightTitle, themeTags } from '@/lib/insight-bank';
-import { draftFromPick, pickIdea, type IdeaDay } from '@/lib/insight-bank/pick';
-import { TraitTagRow } from '@/components/trait-tag-row';
-import { fetchInsightHistory, fetchTodayInsight, saveInsight } from '@/lib/insight/store';
+import { dailyInsightsVisible } from '@/lib/daily-insights';
 import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
-import { cachedFromInsight, saveCachedInsight, writeWidgetLine } from '@/lib/insight/today-insight';
+import { writeWidgetLine } from '@/lib/insight/today-insight';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { ATO_TOKEN_EARN, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { hubAccess } from '@/lib/dev-access';
-import { DEV_TOOLS_AVAILABLE, PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
 import { recipeForAccount } from '@/lib/kenney/registry';
-import {
-  POLISH_COPY_REVIEWED,
-  ROUND_RING_TITLE,
-  roundRingLine,
-  SEALED_READ_KICKER,
-  SEALED_READ_LINE,
-} from '@/lib/polish-copy';
+import { ROUND_RING_TITLE, roundRingLine } from '@/lib/polish-copy';
 import { traitShapePoints } from '@/lib/trait-shape';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useSession } from '@/hooks/use-session';
@@ -60,17 +45,10 @@ import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 
 /** The tab's title, the same style as Explore and You. */
 export const HOME_TITLE = 'Home';
-export const INSIGHT_LOAD_LABEL = 'Load insight';
-/** The history read is a nice-to-have: it must never hold up the insight. */
-const INSIGHT_HISTORY_TIMEOUT_MS = 5000;
-/** How many past rows (superseded ones included) the picker reads to keep its no-repeat window. */
-const INSIGHT_HISTORY_ROWS = 90;
-/** Under the sealed card: where today's focus comes from. */
-export const INSIGHT_STORED_NOTE = 'Picked from your answers. Not written by AI.';
-export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const ANSWER_QUESTIONS_LABEL = 'Answer the questions';
-/** Shown on an insight that is not today's (it stays up until today's is loaded). */
-export const INSIGHT_EARLIER_DAY_COPY = 'From an earlier day. Load insight picks today’s.';
+/** Home's one way into Insights (emci 2026-10-14). */
+export const SEE_INSIGHTS_LABEL = 'See today’s Insights →';
+export const SEE_INSIGHTS_COPY = 'Try this today, your focus, the Story and more.';
 /** Home's one next step once the profile is done and there is nothing to load. */
 export const NEXT_ROUND_ROW_LABEL = nextRoundLabel(ONGOING_ROUND_SIZE);
 export const NEXT_ROUND_ROW_COPY = `Each finished round sharpens your profile and earns ${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens.`;
@@ -79,20 +57,17 @@ export const NEXT_ROUND_ROW_COPY = `Each finished round sharpens your profile an
  * Home — two states and nothing else (ISOLATION_PLAN §7 Card C, emci 2026-09-15).
  *
  * BEFORE the full profile is done: the AI-use disclosure, the consent ask, and
- * one button into Questions. That is the whole screen. A brand-new account
- * lands here straight from register with an empty profile, so anything that
- * needs trait data would only render an empty state it cannot fix from here.
+ * one button into Questions. That is the whole screen.
  *
- * AFTER it is done: the same disclosure and consent, plus the two things the
- * profile unlocks — "Load insight" and the Story fold. Both are taps. No model
- * call fires on mount anywhere on this screen (`check:no-auto-ai` enforces it).
+ * AFTER it is done (emci 2026-10-14): Today's Pick, the week, the daily
+ * check-in, the next round and one "See today's Insights →" link. Today's
+ * focus and the Story moved to Insights. No model call fires on mount anywhere
+ * on this screen (`check:no-auto-ai` enforces it).
  *
  * PARKED in this pass, per the clean-slate rebuild: the daily Check log/skip
- * row, the missed-Check card, Reveal, Ask, past Story reveals (RollHistoryFold),
- * the "This week" row and the Category teaser. `record_check` now has no client
- * caller at all — knowingly (§0 decision 1); the Check loop returns when it is
- * rebuilt. `CrisisCard` is NOT parked (§0 decision 3) and renders in both
- * states: it is a static safety surface with no model call behind it.
+ * row, the missed-Check card, Reveal, Ask and the Category teaser (its slot is
+ * kept: `today-slot.ts`). The crisis card was removed with the crisis system
+ * (2026-10-14); the helpline lives as a static row on You.
  */
 export default function HomeScreen() {
   const theme = useTheme();
@@ -100,14 +75,9 @@ export default function HomeScreen() {
   const userId = session?.user.id;
   const { me, refresh: refreshMe, devAccess } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
-  const { insight: cachedInsight, reload: reloadInsight } = useDailyInsight(userId);
-  // Old AI-written insights are hidden everywhere (emci, 2026-10-07): only a
-  // row whose focus is in the stored bank is shown. Nothing is deleted.
-  const insight = cachedInsight && isBankInsightTitle(cachedInsight.title) ? cachedInsight : null;
   const params = useLocalSearchParams<{ focus?: string }>();
   const [busy, setBusy] = useState<'consent' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [crisisToday, setCrisisToday] = useState(false);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   // Whose `tracks` these are. Tabs stay mounted, so for one render after an
   // account switch `tracks` still belongs to the previous account.
@@ -125,12 +95,11 @@ export default function HomeScreen() {
   const [bootstrapFailed, setBootstrapFailed] = useState(false);
 
   /**
-   * One round trip for trait tracks + crisis flags (wave35 `home_bootstrap`).
+   * One round trip for trait tracks (wave35 `home_bootstrap`).
    *
-   * NARROWED (§2.1): the RPC still returns `checks` and its shape is untouched,
-   * but Home no longer reads that field — the Check row it fed is parked. What
-   * is still consumed is `tracks` (the unlock gate, Insight, Story) and the
-   * crisis flag (CrisisCard).
+   * NARROWED (§2.1): the RPC still returns `checks` and `crisis_since` and its
+   * shape is untouched, but Home reads only `tracks` (the unlock gate and the
+   * 🎯 pick behind the widget).
    */
   const timeZone = me?.timezone || 'UTC';
   /**
@@ -157,19 +126,11 @@ export default function HomeScreen() {
       loadedOnceRef.current = true;
       setTracks(next.tracks);
       setTracksUserId(userId);
-      // Server flag OR the on-device one (crisis/local-flag.ts): the server table
-      // has no writer since Talk was removed, so the local signal is what can
-      // actually raise the card today.
-      const crisisLocal = await crisisNotedToday();
-      if (requestId !== requestIdRef.current) return;
-      setCrisisToday(next.crisisToday || crisisLocal);
       setBootstrapFailed(false);
     } catch (err) {
       console.log('[home] bootstrap error:', err);
       if (requestId !== requestIdRef.current) return;
       if (!loadedOnceRef.current) setBootstrapFailed(true);
-      // Safety does not wait for the network.
-      if (await crisisNotedToday()) setCrisisToday(true);
     } finally {
       if (requestId === requestIdRef.current) setBootstrapReady(true);
     }
@@ -210,10 +171,9 @@ export default function HomeScreen() {
   );
 
   /**
-   * `[]` for logged days, deliberately: only `todayYmd`/`todayDay` are used
-   * from here (the insight is keyed by both), and those come from the signup
-   * date and the timezone, not from any Check. The `open` slots this would
-   * otherwise compute belonged to the parked Check row.
+   * `[]` for logged days, deliberately: only `todayYmd` is used from here, and
+   * it comes from the profile timezone, not from any Check. The `open` slots
+   * this would otherwise compute belonged to the parked Check row.
    */
   const window = me ? checkWindowFor(me, []) : null;
 
@@ -249,12 +209,11 @@ export default function HomeScreen() {
   const todayLineLockScreen = todayPick?.prompt ?? (todayLine ? lockScreenText(todayLine.line) : null);
 
   /**
-   * AI consent gates GENERATION, not the screen. The daily insight is stored
-   * copy now (emci, 2026-10-07), so it does not depend on the answer; Story
-   * still does. Declined and not-yet-asked stay DIFFERENT states.
+   * AI consent gates GENERATION, not the screen. Nothing on Home or Insights
+   * is AI-written; the answer matters for Legends cards and category deep
+   * dives only. Declined and not-yet-asked stay DIFFERENT states.
    */
   const consent = me ? aiConsentFor(me) : 'pending';
-  const consentGranted = consent === 'granted';
 
   /**
    * TIMING, changed by emci 2026-09-15: the ask is now part of the FIRST thing
@@ -266,83 +225,27 @@ export default function HomeScreen() {
   const offerConsent = me != null && consent === 'pending';
 
   /**
-   * "Load insight" — a TAP, never an effect (§7 Card B). Since 2026-10-07 the
-   * insight is STORED copy (lib/insight-bank): the tap picks one Focus · try ·
-   * watch idea on the device from this account's clear leans and saves it
-   * through `insert_daily_insight`. No model call, no quota, no AI consent gate.
-   *
-   * The stored-first order is kept: today's row, if one exists and came from
-   * the bank, is shown without picking again, so a second device agrees.
+   * 🎯 Try this today, run here too (not shown) so the home-screen widget gets
+   * today's line even when Insights is never opened. Same stored day and keys
+   * as Insights (`lib/daily-insights/store.ts`), so both agree.
    */
-  const generatingForYmd = useRef<string | null>(null);
-  const [insightState, setInsightState] = useState<'idle' | 'loading' | 'unavailable'>('idle');
+  const tryToday = useTryToday({
+    userId: userId ?? '',
+    timeZone: me?.timezone,
+    tracks,
+    tracksReady: bootstrapReady && !bootstrapFailed && tracksUserId === userId,
+    touched: me?.trait_touched_at,
+    enabled: !!userId && fullProfileDone && dailyInsightsVisible({ slotKind: 'none' }),
+  });
 
-  const loadInsight = useCallback(async () => {
-    if (!me || !userId || !window) return;
-    const { todayDay, todayYmd } = window;
-    if (insight?.ymd === todayYmd) return;
-    // Re-entrancy: a double tap must not save two rows.
-    if (generatingForYmd.current === todayYmd) return;
-    generatingForYmd.current = todayYmd;
-    setInsightState('loading');
-
-    try {
-      const existing = await withTimeout(fetchTodayInsight(userId, todayYmd), AI_TAP_TIMEOUT_MS, 'insight-fetch');
-      // An old AI-written row for today is not shown; a fresh pick supersedes it.
-      if (existing && isBankInsightTitle(existing.title)) {
-        await saveCachedInsight(cachedFromInsight(existing, userId));
-        await reloadInsight();
-        setInsightState('idle');
-        return;
-      }
-
-      // Which ideas this account has already had. Best effort: without it the
-      // pick still works, it just cannot keep its no-repeat window. Titles that
-      // are not in the bank (old AI rows) are dropped here.
-      const history: IdeaDay[] = await withTimeout(
-        fetchInsightHistory(userId, INSIGHT_HISTORY_ROWS),
-        INSIGHT_HISTORY_TIMEOUT_MS,
-        'insight-history',
-      )
-        .then((rows) =>
-          rows.flatMap((row) => {
-            const match = ideaForTitle(row.title);
-            return match ? [{ ymd: row.ymd, ideaId: match.idea.id }] : [];
-          }),
-        )
-        .catch(() => [] as IdeaDay[]);
-
-      const draft = draftFromPick(pickIdea({ userId, ymd: todayYmd, leans: clearLeans(tracks), history }));
-      await saveInsight(draft, todayDay, todayYmd);
-      await saveCachedInsight({
-        userId,
-        day: todayDay,
-        ymd: todayYmd,
-        theme: draft.theme,
-        title: draft.title,
-        reflection: draft.reflection,
-        tryToday: draft.tryToday,
-        watchFor: draft.watchFor,
-      });
-      await reloadInsight();
-      setInsightState('idle');
-    } catch (err) {
-      console.log('[home] today insight error:', err);
-      setInsightState('unavailable');
-    } finally {
-      // Cleared either way so a later tap can retry; a success has already set
-      // `insight.ymd`, which short-circuits above.
-      if (generatingForYmd.current === todayYmd) generatingForYmd.current = null;
-    }
-  }, [me, userId, window, insight?.ymd, tracks, reloadInsight]);
-
-  // The widget shows today's insight once one is loaded; until then it shows
-  // the written line, so it is never blank on a day the app was opened.
+  // The widget leads with 🎯 Try this today (`useTryToday` writes it). Until a
+  // try line exists for today (an unfinished profile), it shows the written
+  // line, so it is never blank on a day the app was opened.
   useEffect(() => {
     if (!todayLineLockScreen || !todayYmd) return;
-    if (insight?.ymd === todayYmd) return;
-    writeWidgetLine(todayLineLockScreen);
-  }, [todayLineLockScreen, insight?.ymd, todayYmd]);
+    if (tryToday.pick?.dateKey === todayYmd) return;
+    writeWidgetLine(todayLineLockScreen, todayYmd);
+  }, [todayLineLockScreen, todayYmd, tryToday.pick?.dateKey]);
 
   async function saveConsent(value: boolean) {
     if (!userId || !me || busy) return;
@@ -395,17 +298,6 @@ export default function HomeScreen() {
         ) : null}
         {__DEV__ ? (
           <>
-            <Pressable
-              onPress={() => router.push('/crisis-lab')}
-              style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
-              <View style={styles.boxRowText}>
-                <ThemedText type="smallBold">Crisis card</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Dev: static, no model call
-                </ThemedText>
-              </View>
-              <ThemedText themeColor="textSecondary">›</ThemedText>
-            </Pressable>
             <Pressable
               onPress={() => router.push('/pixel-lab')}
               style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
@@ -479,9 +371,8 @@ export default function HomeScreen() {
           {...NO_PINCH_ZOOM}
           contentContainerStyle={styles.scrollContent}
           contentInsetAdjustmentBehavior="never">
-          {/* The "Home" title, like Explore and You (emci, 2026-10-07), with the
-              coach disclosure as one small line under it: the Story on Home is
-              Sage, so Home still says Sage is a coach. */}
+          {/* The "Home" title, like Explore and You (emci, 2026-10-07), with one
+              small line under it. */}
           <View style={styles.header}>
             <ThemedText type="subtitle">{HOME_TITLE}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
@@ -495,9 +386,6 @@ export default function HomeScreen() {
               <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} />
             </Appear>
           ) : null}
-
-          {/* Safety first, in both states, and never generated. */}
-          {crisisToday ? <CrisisCard /> : null}
 
           {/* The name you've earned — tap for the card and the styles on You. */}
           {me && tracksUserId === me.id ? <IdentityTitleChip userId={me.id} tracks={tracks} /> : null}
@@ -565,7 +453,7 @@ export default function HomeScreen() {
                   <ThemedText type="smallBold">{ANSWER_QUESTIONS_LABEL}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
                     {profileProgress.answered} of {profileProgress.total} done. Finish all{' '}
-                    {profileProgress.total} to unlock Load insight, Load story, the next{' '}
+                    {profileProgress.total} to unlock Insights, the next{' '}
                     {ONGOING_ROUND_SIZE} questions and Explore categories.
                   </ThemedText>
                 </View>
@@ -574,166 +462,59 @@ export default function HomeScreen() {
             </>
           ) : (
             /*
-             * STATE 2 — unlocked. emci's order (2026-10-05): Story, then the
-             * insight (or its sealed card), then Today's Pick and the week, then
-             * the next round. (The category deep dive moved to Explore, 2026-10-09.)
+             * STATE 2 — unlocked (emci 2026-10-14): the check-in, the way into
+             * Insights, Today's Pick, then the next round. Today's focus and the
+             * Story live on Insights now.
              */
             <>
               {/* Daily check-in (wave92): +5 ATO tokens a day, which pay for AI views. */}
               {me && todayYmd ? (
                 <DailyCheckinCard todayYmd={todayYmd} tokens={atoTokenBalanceOf(me)} onEarned={() => void refreshMe()} />
               ) : null}
-              {me ? (
-                <SageStoryFold
-                  me={me}
-                  tracks={tracks}
-                  tracksReady={bootstrapReady}
-                  crisisToday={crisisToday}
-                  unlocked={fullProfileDone}
-                  consentGranted={consentGranted}
-                />
-              ) : null}
-
-              {insight ? (
-                /*
-                 * One card, one hierarchy. The focus is the hero — the line a
-                 * person actually carries with them. Why sits under it as
-                 * context, then Try / Watch are the two quieter lines under a
-                 * hairline. Stored copy (lib/insight-bank), so no AI badge.
-                 *
-                 * The kicker, then ONE chip row built from the stored theme:
-                 * that row is the trait tag. Never a second tag or label.
-                 */
-                <ThemedView type="backgroundElement" style={styles.heroCard}>
-                  <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
-                    {homeSageLabel(theme.id)}
-                  </ThemedText>
-                  <TraitTagRow tags={themeTags(insight.theme)} />
-                  {/* An earlier day's insight stays up until today's is loaded, so Home is
-                      never an empty card — and says plainly that it is not today's. */}
-                  {insight.ymd !== window?.todayYmd ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {INSIGHT_EARLIER_DAY_COPY}
-                    </ThemedText>
-                  ) : null}
-                  <ThemedText style={styles.heroRead}>{insight.title}</ThemedText>
-                  <ThemedText themeColor="textSecondary" style={styles.reflectionText}>
-                    {insight.reflection}
-                  </ThemedText>
-
-                  <View
-                    style={[styles.heroDivider, { backgroundColor: controlBorderColor(theme) }]}
-                  />
-
-                  <View style={styles.doBlock}>
-                    <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-                      try today
-                    </ThemedText>
-                    <ThemedText style={styles.doText}>{insight.tryToday}</ThemedText>
-                  </View>
-
-                  <View style={styles.doBlock}>
-                    <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-                      watch for
-                    </ThemedText>
-                    <ThemedText style={styles.doText}>{insight.watchFor}</ThemedText>
-                  </View>
-                </ThemedView>
-              ) : null}
-
-              {/*
-                Shown when today's insight is not on screen yet. The tap picks
-                from the stored bank: no model call, so no consent needed.
-              */}
-              {insight?.ymd !== window?.todayYmd ? (
-                /*
-                 * Today's read, sealed (polish pass, 2026-10-05). While the
-                 * pick is saved, the card shows a skeleton.
-                 */
-                <ThemedView type="backgroundElement" style={styles.sealedCard}>
-                  <View
-                    pointerEvents="none"
-                    style={[styles.sealedCorner, { borderTopColor: theme.backgroundSelected }]}
-                  />
-                  <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-                    {SEALED_READ_KICKER}
-                  </ThemedText>
-                  {insightState === 'loading' ? (
-                    <View style={styles.sealedSkeleton} accessibilityLabel="Loading">
-                      <SkeletonBar width="90%" />
-                      <SkeletonBar width="70%" />
-                      <SkeletonBar width="45%" />
-                    </View>
-                  ) : (
-                    <ThemedText themeColor="textSecondary" style={styles.sealedLine}>
-                      {insightState === 'unavailable' ? INSIGHT_UNAVAILABLE_COPY : SEALED_READ_LINE}
-                    </ThemedText>
-                  )}
-                  <ThemedPressable
-                    filled
-                    accessibilityRole="button"
-                    accessibilityLabel={INSIGHT_LOAD_LABEL}
-                    disabled={insightState === 'loading'}
-                    onPress={() => {
-                      void loadInsight();
-                    }}
-                    style={[
-                      styles.sealedButton,
-                      { borderRadius: theme.cutCorners ? 0 : 999 },
-                      insightState === 'loading' && styles.pressed,
-                    ]}>
-                    <ThemedText type="smallBold" themeColor="onAccent">
-                      {insightState === 'loading'
-                        ? 'Loading…'
-                        : insightState === 'unavailable'
-                          ? 'Try again'
-                          : INSIGHT_LOAD_LABEL}
-                    </ThemedText>
-                  </ThemedPressable>
+              {/* One way into Insights (emci 2026-10-14): Try this today, the
+                  focus, the Story, Superpower / Kryptonite, How you argue. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={SEE_INSIGHTS_LABEL}
+                testID="home-see-insights"
+                onPress={() => router.push('/insights')}
+                style={({ pressed }) => [
+                  styles.answerQuestionsRow,
+                  { borderColor: controlBorderColor(theme) },
+                  pressed && styles.pressed,
+                ]}>
+                <View style={[styles.boxRowText, styles.flexText]}>
+                  <ThemedText type="smallBold">{SEE_INSIGHTS_LABEL}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    {INSIGHT_STORED_NOTE}
+                    {SEE_INSIGHTS_COPY}
                   </ThemedText>
-                  {!POLISH_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
-                    <ThemedText type="code" themeColor="textSecondary">
-                      Draft copy — waiting on emci review.
-                    </ThemedText>
-                  ) : null}
-                </ThemedView>
-              ) : null}
+                </View>
+              </Pressable>
 
               {pickBlock}
 
-              {/* The next step when there is nothing to load: the round ring. */}
-              {insight?.ymd === window?.todayYmd ? (
-                /*
-                   * ONE next step. When there is nothing to load (today's insight is
-                   * up, or AI is off), the step is the next round of questions —
-                   * never both rows at once. No model call: it only opens Questions.
-                   * The ring is how far into the current round of 16 (one read).
-                   */
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={NEXT_ROUND_ROW_LABEL}
-                    onPress={() => router.push('/intake-sweep')}
-                    style={({ pressed }) => [
-                      styles.answerQuestionsRow,
-                      { borderColor: controlBorderColor(theme) },
-                      pressed && styles.pressed,
-                    ]}>
-                    <ProgressRing value={roundAnswered ?? 0} total={ONGOING_ROUND_SIZE} />
-                    <View style={[styles.boxRowText, styles.flexText]}>
-                      <ThemedText type="smallBold">
-                        {roundAnswered ? ROUND_RING_TITLE : NEXT_ROUND_ROW_LABEL}
-                      </ThemedText>
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {roundAnswered
-                          ? roundRingLine(ONGOING_ROUND_SIZE - roundAnswered)
-                          : NEXT_ROUND_ROW_COPY}
-                      </ThemedText>
-                    </View>
-                    <ThemedText themeColor="textSecondary">›</ThemedText>
-                  </Pressable>
-              ) : null}
+              {/* The next step: the round ring. No model call: it only opens
+                  Questions. The ring is how far into the current round (one read). */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={NEXT_ROUND_ROW_LABEL}
+                onPress={() => router.push('/intake-sweep')}
+                style={({ pressed }) => [
+                  styles.answerQuestionsRow,
+                  { borderColor: controlBorderColor(theme) },
+                  pressed && styles.pressed,
+                ]}>
+                <ProgressRing value={roundAnswered ?? 0} total={ONGOING_ROUND_SIZE} />
+                <View style={[styles.boxRowText, styles.flexText]}>
+                  <ThemedText type="smallBold">
+                    {roundAnswered ? ROUND_RING_TITLE : NEXT_ROUND_ROW_LABEL}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {roundAnswered ? roundRingLine(ONGOING_ROUND_SIZE - roundAnswered) : NEXT_ROUND_ROW_COPY}
+                  </ThemedText>
+                </View>
+                <ThemedText themeColor="textSecondary">›</ThemedText>
+              </Pressable>
 
               {consentBlock}
             </>
@@ -772,37 +553,6 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.two,
   },
-  heroCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.two,
-  },
-  heroRead: {
-    fontSize: 22,
-    lineHeight: 32,
-    fontWeight: '500',
-  },
-  heroDivider: {
-    height: StyleSheet.hairlineWidth,
-    marginTop: Spacing.three,
-    opacity: 0.7,
-  },
-  doBlock: {
-    gap: Spacing.half,
-  },
-  doText: {
-    lineHeight: 24,
-  },
-  reflectionText: {
-    lineHeight: 24,
-    paddingTop: Spacing.one,
-  },
-  kicker: {
-    textTransform: 'uppercase',
-  },
-  sageKicker: {
-    textTransform: 'none',
-  },
   boxCard: {
     borderRadius: Spacing.four,
     padding: Spacing.three,
@@ -839,36 +589,6 @@ const styles = StyleSheet.create({
   flexText: {
     flex: 1,
     paddingRight: Spacing.two,
-  },
-  sealedCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.two,
-    overflow: 'hidden',
-  },
-  sealedCorner: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 0,
-    height: 0,
-    borderTopWidth: 36,
-    borderLeftWidth: 36,
-    borderLeftColor: 'transparent',
-  },
-  sealedLine: {
-    lineHeight: 24,
-    paddingRight: Spacing.five,
-  },
-  sealedSkeleton: {
-    gap: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
-  sealedButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: Spacing.two + Spacing.one,
-    paddingHorizontal: Spacing.four,
-    marginTop: Spacing.one,
   },
   pressed: {
     opacity: 0.7,

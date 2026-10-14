@@ -109,9 +109,14 @@ const line = reactionLine(pick, 0, '2026-10-05');
 assert.ok(line && line.source === 'authored', 'a reaction is an approved line');
 assert.equal(reactionLine(pick, 0, '2026-10-05')?.id, line?.id, 'same day, same answer, same reaction');
 const home = read('src/app/(tabs)/index.tsx').replace(/\r\n/g, '\n');
-assert.ok(home.indexOf('<SageStoryFold') < home.indexOf('styles.sealedCard'), 'Home: Story above the insight');
-assert.ok(home.indexOf('styles.sealedCard') < home.indexOf('{pickBlock}\n'), 'Home: the insight above Today\'s Pick');
-assert.ok(home.lastIndexOf('{pickBlock}') < home.indexOf('<ProgressRing value='), 'Home: Today\'s Pick above the round ring');
-ok('no model call; share carries the question only; answers go through the checkpoint; Home order Story → insight → pick → round');
+// emci 2026-10-14: the Story and the focus moved to Insights. Home is the
+// check-in, the Insights link, Today's Pick, then the round ring.
+const state2 = home.indexOf('STATE 2');
+assert.ok(state2 > 0);
+assert.ok(home.indexOf('<DailyCheckinCard', state2) < home.indexOf('testID="home-see-insights"', state2), 'Home: check-in above the Insights link');
+assert.ok(home.indexOf('testID="home-see-insights"', state2) < home.indexOf('{pickBlock}', state2), 'Home: the Insights link above Today\'s Pick');
+assert.ok(home.indexOf('{pickBlock}', state2) < home.indexOf('<ProgressRing value=', state2), 'Home: Today\'s Pick above the round ring');
+assert.doesNotMatch(home, /SageStoryFold|styles\.sealedCard/, 'no Story or focus card on Home');
+ok('no model call; share carries the question only; answers go through the checkpoint; Home order check-in → Insights → pick → round');
 
 console.log(`\ndaily-pick-check: ${passed} passed`);

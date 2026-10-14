@@ -97,7 +97,7 @@ export function CategoryTeaser({ me }: { me: Me }) {
         <View style={styles.peek}>
           <ThemedText type="small">{full}</ThemedText>
           <Pressable
-            onPress={() => router.push('/sage')}
+            onPress={() => router.push('/explore')}
             accessibilityRole="button"
             accessibilityLabel="Open Explore for more"
             style={({ pressed }) => [styles.link, pressed && styles.pressed]}>

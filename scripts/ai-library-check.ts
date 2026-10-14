@@ -254,14 +254,13 @@ async function main() {
   assert.match(card, /DEEP_DIVE_OPEN_LABEL = 'Open my deep dive · free'/);
   assert.match(card, /\{DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'a brand-new one shows its price');
   assert.match(card, /<LibraryCardFooter libraryId=\{entry\.libraryId\} others=\{entry\.others\} \/>/);
-  const fold = read('src/components/sage-story-fold.tsx');
-  assert.match(fold, /serveLibraryCard\('story', bucket/);
-  assert.match(fold, /tensionLine \?/, 'the told-vs-played line shows on this phone only');
-  assert.match(fold, /<LibraryCardFooter/);
+  // Insights (2026-10-14): the app no longer reads Story cards from the
+  // library (template-only). The server side of Story stays as it is.
+  const fold = read('src/components/insights/insights-story-card.tsx');
+  assert.doesNotMatch(fold, /serveLibraryCard|writeLibraryCard|wantLibraryCards/, 'the Story card never touches the AI library');
   const gen = read('src/lib/legend-figures/generate.ts');
   assert.match(gen, /input\.free \? 'free_legend' : 'paid'/, 'the free Legends reveal is never charged');
   assert.doesNotMatch(gen, /serveLibraryCard\('legend'/, 'Legends never use the free library serve');
-  assert.match(fold, /if \(mode === 'library'\) \{\s*emptyReasonRef\.current = 'empty';/, 'a free Story tap with no bucket never charges');
   assert.match(card, /leansKey: key \}, madeOn: today \}/, 'the old deep-dive path saves under the library key (no repeat charge)');
   assert.match(read('src/app/(tabs)/legends.tsx'), /revealLegendStory\(\{ \.\.\.input, consentGranted, free \}\)/);
   assert.match(read('src/components/legend-figure-card.tsx'), /<LibraryCardFooter/);
@@ -269,7 +268,7 @@ async function main() {
   assert.equal(sharedCardLine(11), 'You and 11 others got this card.');
   const consent = read('src/components/ai-consent-card.tsx');
   assert.match(consent, /shared between people with similar leanings and never include your name or your answers/);
-  ok('phone: kind + bucket only; free first, brand-new priced; footer on all three; consent says cards are shared');
+  ok('phone: kind + bucket only; free first, brand-new priced; footer on deep dives + Legends; consent says cards are shared');
 
   // --- wave95: Postgres regexes allow a repeat count of at most 255 --------------------
   // ('{3,300}' compiled fine in JS and in CREATE, then failed on the first live save.)
@@ -329,7 +328,8 @@ async function main() {
 
   // --- phone look-ahead ---------------------------------------------------------------
   const legendsScreen = read('src/app/(tabs)/legends.tsx');
-  assert.ok(fold.includes("wantLibraryCards('story', buckets)"), 'Story tells the server its next groups');
+  // The Story is template-only on Insights (2026-10-14): it asks the library for nothing.
+  assert.ok(!fold.includes('wantLibraryCards'), 'the Story card sends no look-ahead');
   assert.ok(legendsScreen.includes("wantLibraryCards('legend', buckets)"), 'Legends tells the server today’s frames');
   assert.ok(legendsScreen.includes('planLegendReveal({ legend, frameAngleId: angleId, userId: start.userId, counts, told, tracks })'), 'one planner for reveal and look-ahead');
   assert.ok(card.includes("wantLibraryCards('deep_dive', [diveBucketKey(def.id, leans)])"), 'a used-up deep-dive group is queued, free');

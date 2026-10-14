@@ -33,7 +33,7 @@ export function composeLocalExplore(me: ExploreMeSlice, focus: ExploreFocus): Ex
         ? 'A few skips this week sat next to that.'
         : signal.kind === 'knock'
           ? `${signal.detail} showed up in this week's Reads.`
-          : `You told Sage something that's still around.`
+          : `Something you said is still around.`
       : '';
     body = `${signalBit} ${a} ${b} Maybe those sit in the same week, not a type.`
       .replace(/\s+/g, ' ')
@@ -46,7 +46,7 @@ export function composeLocalExplore(me: ExploreMeSlice, focus: ExploreFocus): Ex
         ? 'A few skips this week sat next to that.'
         : signal.kind === 'knock'
           ? `${signal.detail} showed up in this week's Reads.`
-          : `You told Sage something that's still around.`
+          : `Something you said is still around.`
       : '';
     body = `${signalBit} ${a.replace(/^They /, 'You ')} ${b.replace(/^They /, 'And you ')} Maybe those two are in the same week, not a type.`.replace(
       /\s+/g,

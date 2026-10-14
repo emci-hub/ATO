@@ -114,11 +114,13 @@ for (const def of CATEGORY_DEFS) {
 }
 ok(`pickStoryTemplate covers ${CATEGORY_DEFS.length} categories × ${settings.length} settings × 2 leans`);
 
-const fold = readFileSync(resolve(root, 'src/components/sage-story-fold.tsx'), 'utf8');
+// Insights (2026-10-14): the Story card serves templates only and never reads
+// the polish flag, so no model can touch a story whatever the flag says.
+const fold = readFileSync(resolve(root, 'src/components/insights/insights-story-card.tsx'), 'utf8');
 assert.match(fold, /pickStoryTemplate\(/);
-assert.match(fold, /STORY_AI_POLISH/);
+assert.doesNotMatch(fold, /STORY_AI_POLISH/);
 assert.match(fold, /scriptToCard\(/);
-ok('the fold serves templates first; polish is behind the flag');
+ok('the Story card serves templates first and never reads the AI polish flag');
 
 const notice = readFileSync(resolve(root, 'docs/story/NOTICE-tracery.txt'), 'utf8');
 assert.match(notice, /Apache License, Version 2\.0/);

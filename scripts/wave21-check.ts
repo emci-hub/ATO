@@ -131,7 +131,8 @@ ok('confirm-upgrade cannot change category fingerprint: same numbers, same hash'
 assert.equal(allCategoriesReady(reportSocial), false);
 ok('full picture stays locked until all live categories are ready');
 
-assert.equal(canShowCategoryTeaser('crisis'), false);
+// The crisis slot was removed 2026-10-14; only a missed check keeps the page alone.
+assert.equal(canShowCategoryTeaser('crisis'), true);
 assert.equal(canShowCategoryTeaser('missed_check'), false);
 assert.equal(canShowCategoryTeaser('none'), true);
 const rollA = dailyTeaserRoll('user:2026-08-31:teaser');
@@ -140,7 +141,7 @@ assert.equal(rollA, rollB);
 const ready = readAllCategories(reportSocial).filter((row) => row.ready);
 const pick = pickTeaserCategory(ready, ['playfulness'], 0.1);
 assert.equal(pick, 'cat_social');
-ok('teaser roll is stable per seed; hidden on crisis and missed-check');
+ok('teaser roll is stable per seed; hidden on a missed-check day (the crisis slot is gone)');
 
 assert.equal(TITLE_COPY_REVIEWED, false);
 assert.equal(CATEGORY_COPY_REVIEWED, true); // emci approved 2026-10-02
@@ -181,7 +182,6 @@ assert.doesNotMatch(titleRpc, /calls = calls \+ 1/);
 ok('title/category gen still uses claim_title_generate — does not increment Talk calls');
 
 const home = read('src/app/(tabs)/index.tsx');
-const crisis = read('src/components/crisis-card.tsx');
 const widget = read('targets/widget/widgets.swift');
 const checkSwift = widget;
 // PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): the Category teaser is parked off Home.
@@ -190,9 +190,9 @@ const checkSwift = widget;
 assert.doesNotMatch(home, /CategoryTeaser/);
 assert.doesNotMatch(home, /canShowCategoryTeaser/);
 assert.doesNotMatch(home, /FullProfileFold/);
-assert.doesNotMatch(crisis, /CategoryTeaser|FullProfileFold|playfulness/);
+assert.ok(!existsSync(resolve(root, 'src/components/crisis-card.tsx')), 'the crisis card stays deleted');
 assert.doesNotMatch(checkSwift, /CategoryTeaser|FullProfileFold/);
-ok('Home teaser is gated; crisis card and widget stay untouched');
+ok('Home teaser is gated; the crisis card is gone and the widget stays untouched');
 
 const exploreTab = read('src/app/(tabs)/explore.tsx');
 // Categories is back inline on Explore, standalone route retired

@@ -3,7 +3,7 @@
  * Run: npm run check:ui-bundle
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -111,12 +111,10 @@ assert.doesNotMatch(formatSageUsage(0, 20, 'today'), banned);
 assert.doesNotMatch(QUOTA_EMPTY_MESSAGE, banned);
 ok('usage copy is "X of [limit]" with no AI/tokens words');
 
-const usageUi = read('src/components/sage-usage.tsx');
-assert.match(usageUi, /Sage today/);
-assert.match(usageUi, /formatSageUsage\(usage\.daily, usage\.dailyCap, 'today'\)/);
-assert.doesNotMatch(usageUi, banned);
+// The You-tab "Sage today" usage fold (src/components/sage-usage.tsx) was
+// deleted with the Sage tab; the read-only usage fetch survives for the Dev Hub.
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/components/sage-usage.tsx')), 'sage-usage.tsx must stay deleted');
 assert.match(read('src/components/settings-fold.tsx'), /defaultOpen = false/);
-assert.doesNotMatch(usageUi, /defaultOpen=\{true\}/);
 const quotaServer = read('src/lib/voice/quota-server.ts');
 assert.match(quotaServer, /Read-only usage[\s\S]*Does not increment/);
 assert.match(quotaServer, /export async function fetchSageUsage/);
@@ -141,13 +139,11 @@ assert.doesNotMatch(you, /<SharePoster/);
 assert.doesNotMatch(you, /SettingsFold title="How Sage sounds"/);
 ok('You is parked down to its account controls: no poster, no profile card, no name on screen');
 
-const picker = read('src/components/crisis-region-picker.tsx');
-assert.match(picker, /SettingsFold title="If you need someone now"/);
-assert.match(picker, /Passive Settings reference/);
-assert.doesNotMatch(picker, /CrisisCard/);
-const crisisCard = read('src/components/crisis-card.tsx');
-assert.match(crisisCard, /I'm okay, keep going/);
-assert.match(crisisCard, /setCrisisActive/);
-ok('Settings crisis line is a collapsible reference; Talk crisis card is untouched');
+// The crisis region picker and card were removed 2026-10-14; You carries the
+// static helpline row instead (pinned in full by check:helpline-row).
+assert.ok(!existsSync(resolve(root, 'src/components/crisis-region-picker.tsx')), 'crisis-region-picker.tsx stays deleted');
+assert.ok(!existsSync(resolve(root, 'src/components/crisis-card.tsx')), 'crisis-card.tsx stays deleted');
+assert.match(you, /<HelplineRow \/>/);
+ok('You shows the static helpline row; the crisis picker and card are gone');
 
 console.log(`\n${passed} checks passed`);

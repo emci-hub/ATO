@@ -133,7 +133,7 @@ assert.equal(storyReady(many), true);
 // Story v2 (2026-10-08): the prompt is one day built from the picked thread,
 // not a holistic rewrite of every category. The tension line now shows only
 // when its axis is inside the thread; story-thread-check pins the rest.
-const manyThread = pickStoryThread({ tracks: many, last: null, crisisToday: false });
+const manyThread = pickStoryThread({ tracks: many, last: null, noJoke: false });
 assert.ok(manyThread);
 const storyPrompt = buildStoryPrompt({
   tracks: many,
@@ -150,7 +150,7 @@ assert.ok(parseStoryBody('{"body":"A hard week can still leave a little room to 
 assert.notEqual(storyFingerprint(many, null), storyFingerprint(many, 'gap'));
 ok('Story prompt is one day from the picked thread; fingerprint moves on told-vs-played');
 
-const fold = read('src/components/sage-story-fold.tsx');
+const fold = read('src/components/insights/insights-story-card.tsx');
 /**
  * REPINNED (ISOLATION_PLAN §7 Card B, 2026-09-15): the fold is now tap-only.
  * The old shape — generate from a `useEffect`, `if (!story?.body) return null`
@@ -159,28 +159,27 @@ const fold = read('src/components/sage-story-fold.tsx');
  * and it never checked AI consent. The invariants those assertions protected
  * are re-pinned here against the new shape.
  */
-assert.match(fold, /shouldUseLocalAi/);
+// Insights (2026-10-14): the Story is a template-only card. No model, no
+// local-AI switch, no crisis gate (the crisis system was removed).
+assert.doesNotMatch(fold, /shouldUseLocalAi|generateText|claimStoryGenerate/);
 assert.doesNotMatch(fold, /fallbackBandFor|TITLE_EMPTY|composeLocal/);
 assert.match(fold, /formatStoryTensionNote/);
 assert.doesNotMatch(fold, /formatDivergenceNote/);
-// Crisis still hides Story entirely, and must do so before anything else.
-const crisisIdx = fold.indexOf('if (crisisToday) return null;');
-const lockedIdx = fold.indexOf('if (!unlocked) {');
-assert.ok(crisisIdx > -1, 'crisis must still hide Story outright');
-assert.ok(lockedIdx > crisisIdx, 'the locked state must come after the crisis guard, never instead of it');
-// The locked state is the SHARED gate now, not Story's own settledness.
+assert.doesNotMatch(fold, /crisis/i);
+// The locked state is the SHARED gate, not Story's own settledness.
+assert.match(fold, /!unlocked \? \(/);
 assert.match(fold, /FULL_PROFILE_LOCKED_COPY/);
 assert.doesNotMatch(fold, /PROFILE_LOCKED_CTA/);
-// Nothing generates without a press, and an unready profile costs nothing.
+// Nothing is picked without a press, and an unready profile says so.
 assert.doesNotMatch(fold, /void run\(\)/);
-assert.match(fold, /void loadStory\(needNew \? 'new' : 'library'\)/);
+assert.match(fold, /void loadStory\(\)/);
 assert.match(fold, /STORY_NOT_READY_COPY/);
-ok('Story is tap-only: crisis hides it, the shared gate locks it, and Load is the only thing that can spend a call');
+ok('Story is tap-only and template-only: the shared gate locks it, Load picks a template');
 
-// §9 (2026-09-08): Story moved from Explore to Home, directly below the
-// daily check-in card — the assertion below moved with it. Explore no
-// longer imports SageStoryFold.
-assert.match(read('src/app/(tabs)/index.tsx'), /SageStoryFold/);
+// §9 (2026-09-08): Story moved from Explore to Home; 2026-10-14 it moved on to
+// Insights as a template-only card. Home and Explore carry no Story.
+assert.match(read('src/app/(tabs)/insights.tsx'), /<InsightsStoryCard/);
+assert.doesNotMatch(read('src/app/(tabs)/index.tsx'), /SageStoryFold|InsightsStoryCard/);
 // Categories is back inline on Explore, standalone route retired
 // (2026-09-14, T-E1) — reverses the 2026-09-12 judgment-pass.md §4A split.
 assert.match(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
@@ -190,8 +189,8 @@ assert.ok(
   'the /categories route must stay deleted — Categories lives inline on Explore',
 );
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
-assert.doesNotMatch(read('src/app/(tabs)/sage.tsx'), /SageStoryFold|ExplorePinnedCategories/);
-ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph; Story now lives on Home (§9), not Explore');
+assert.ok(!existsSync('src/app/(tabs)/sage.tsx'), 'the Sage tab is gone');
+ok('no generic fallback paragraph; the Story lives on Insights, not Home or Explore');
 
 assert.equal(STORY_SAMPLES.every((row) => row.shape.includes('thin') || row.body.length > 0 || row.body === ''), true);
 ok('draft Story samples and tension lines exist for emci review and are not treated as reviewed');

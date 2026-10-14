@@ -466,7 +466,7 @@ ok('no legacy 15-axis question_items check survives; wave27 drops any stale copy
 
 const home = read('src/app/(tabs)/index.tsx');
 const you = read('src/app/(tabs)/you.tsx');
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const questionsScreen = read('src/app/(tabs)/intake-sweep.tsx');
 assert.doesNotMatch(home, /QuestionsFold/);
 assert.doesNotMatch(you, /QuestionsFold/);

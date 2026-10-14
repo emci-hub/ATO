@@ -247,10 +247,12 @@ assert.doesNotMatch(home, /<CategoryDeepDiveCard/, 'no longer on Home');
 const explore = read('src/app/(tabs)/explore.tsx');
 const cardAt = explore.indexOf('<CategoryDeepDiveCard');
 assert.ok(cardAt > explore.indexOf('<CategoriesFold') && cardAt < explore.indexOf('<ChangeCard'), 'between Categories and How you’ve changed');
-assert.match(explore, /isFullProfileDone\(tracks, tracksReady\) && !crisisToday \? \(\s*<CategoryDeepDiveCard/, 'after Questions are finished; hidden on a crisis day');
+// The crisis gate was removed with the crisis system (2026-10-14).
+assert.match(explore, /isFullProfileDone\(tracks, tracksReady\) \? \(\s*<CategoryDeepDiveCard/, 'after Questions are finished');
+assert.doesNotMatch(explore, /crisisToday/);
 assert.match(explore, /consentGranted=\{aiConsentFor\(me\) === 'granted'\}/, 'needs AI consent');
 assert.equal(explore.split('<CategoryDeepDiveCard').length - 1, 1);
-ok('one AI call, only on "Write my deep dive", after consent and the server claim; on Explore between Categories and How you’ve changed, after Questions, hidden on a crisis day');
+ok('one AI call, only on "Write my deep dive", after consent and the server claim; on Explore between Categories and How you’ve changed, after Questions, no crisis gate');
 
 const sql = read('supabase/migrations/wave90_category_deep_dive.sql');
 assert.match(sql, /create policy category_deep_dives_select_own on public\.category_deep_dives\s+for select using \(auth\.uid\(\) = user_id\);/);

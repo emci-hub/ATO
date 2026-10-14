@@ -148,13 +148,16 @@ export function rankStoryCombos(scored: readonly ScoredCategory[]): ScoredCatego
   return out;
 }
 
-/** The strongest clear, shareable lean inside the chosen categories. Never one when crisis is on. */
+/**
+ * The strongest clear, shareable lean inside the chosen categories. `noJoke`
+ * asks for none (a caller that wants a story without the funny part).
+ */
 export function pickJokeTarget(
   tracks: readonly TraitTrack[],
   categories: readonly ScoredCategory[],
-  crisisToday: boolean,
+  noJoke: boolean,
 ): RankedAxis | null {
-  if (crisisToday) return null;
+  if (noJoke) return null;
   const inThread = new Set<TraitAxis>(categories.flatMap((row) => row.reading.stableAxes));
   for (const row of rankStoryAxes(tracks)) {
     if (inThread.has(row.axis) && isShareableLean(row.axis, row.lean)) return row;
@@ -170,14 +173,15 @@ export function pickJokeTarget(
 export function pickStoryThread(input: {
   tracks: readonly TraitTrack[];
   last: StoryThreadRecord | null;
-  crisisToday: boolean;
+  /** True: no joke target (the story still has a thread). */
+  noJoke: boolean;
   now?: Date;
 }): StoryThread | null {
   const combos = rankStoryCombos(scoreReadyCategories(input.tracks, input.now));
   if (combos.length === 0) return null;
   const lastKey = input.last ? comboKey(input.last.categories) : null;
   const combo = combos.find((row) => comboKey(row.map((c) => c.reading.def.id)) !== lastKey) ?? combos[0]!;
-  return { categories: combo, joke: pickJokeTarget(input.tracks, combo, input.crisisToday) };
+  return { categories: combo, joke: pickJokeTarget(input.tracks, combo, input.noJoke) };
 }
 
 export function threadRecord(thread: StoryThread): StoryThreadRecord {

@@ -29,7 +29,7 @@ const BADGE = 'Draft copy — waiting on emci review.';
 // flags stay false for review only. Pinned at the bottom of this file.
 const sites = [
   'src/components/category-compare.tsx',
-  'src/components/sage-title-card.tsx',
+  // 'src/components/sage-title-card.tsx' removed 2026-10-14 with Sage (file deleted).
   'src/components/concept-hint.tsx',
   'src/components/full-profile-fold.tsx',
   'src/components/category-teaser.tsx',
@@ -63,7 +63,8 @@ for (const rel of sites) {
   ok(`${rel} gates the draft-copy badge behind PRE_LAUNCH_DEV`);
 }
 
-for (const rel of ['src/components/sage-story-fold.tsx', 'src/components/shape-card.tsx']) {
+// The Story now lives on Insights (insights-story-card.tsx, 2026-10-14).
+for (const rel of ['src/components/insights/insights-story-card.tsx', 'src/components/shape-card.tsx']) {
   assert.ok(!read(rel).includes('Draft copy'), `${rel} shows no draft line`);
   ok(`${rel} shows no draft line (emci 2026-10-08)`);
 }

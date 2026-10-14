@@ -19,7 +19,7 @@ export const CONFLICT_BANK: readonly ConflictLine[] = [
     text: 'You push for an answer that works for everyone.',
     strength: 'You turn fights into plans.',
     watchOut: 'Not every spat needs a full meeting.',
-    tryLine: 'Let one small thing go unsolved today.',
+    tryLine: 'Let one minor snag go unsolved today.',
   },
   {
     id: 'deal_maker',

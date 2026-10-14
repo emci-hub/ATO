@@ -56,39 +56,40 @@ assert.doesNotMatch(hook, /fetchTodayInsight|generateDailyInsight|supabase/);
 ok('useDailyInsight is a cache read and an event subscription, never a fetch or a generation');
 
 const home = read('src/app/(tabs)/index.tsx');
-assert.match(home, /useDailyInsight/);
-assert.match(home, /fetchTodayInsight/);
-assert.match(home, /pickIdea\(/);
-assert.doesNotMatch(home, /generateDailyInsight|generateText/);
+// Today's focus moved from Home to the Insights tab (emci 2026-10-14). The
+// promises below are unchanged; they now hold for the focus card.
+const focus = read('src/components/insights/today-focus-card.tsx');
+assert.match(focus, /useDailyInsight/);
+assert.match(focus, /fetchTodayInsight/);
+assert.match(focus, /pickIdea\(/);
+assert.doesNotMatch(focus, /generateDailyInsight|generateText/);
+assert.doesNotMatch(home, /useDailyInsight|fetchTodayInsight|pickIdea\(/, 'Home no longer loads the focus');
 // An existing insight is preferred over picking a new one, so a second device
 // shows the same day.
-const effectBody = home.slice(home.indexOf('if (!me || !userId || !window) return;'));
+const effectBody = focus.slice(focus.indexOf('const loadInsight = useCallback'));
 assert.ok(
   effectBody.indexOf('fetchTodayInsight') < effectBody.indexOf('pickIdea('),
-  'Home must read an existing insight before picking one',
+  'the focus card must read an existing insight before picking one',
 );
-assert.match(home, /if \(insight\?\.ymd === todayYmd\) return;/);
-// Keyed on the window's own today, not openLogDays' entry — the latter
-// disappears once the Check is logged, which would strand the rest of the day.
-assert.match(home, /const \{ todayDay, todayYmd \} = window;/);
-// One generation in flight per day, so a bootstrap reload cannot re-trigger a
-// second paid call for the same ymd.
-assert.match(home, /if \(generatingForYmd\.current === todayYmd\) return;/);
-ok('Home reads the stored insight first and only picks when the day has none');
+assert.match(focus, /if \(insight\?\.ymd === todayYmd\) return;/);
+// Keyed on the shared day window's own today (profile timezone), passed in.
+assert.match(focus, /todayYmd: string;\s*todayDay: number;/);
+assert.match(read('src/app/(tabs)/insights.tsx'), /todayYmd=\{window\.todayYmd\}\s*todayDay=\{window\.todayDay\}/);
+// One pick in flight per day, so a double tap cannot save two rows.
+assert.match(focus, /if \(generatingForYmd\.current === todayYmd\) return;/);
+ok('the focus card reads the stored insight first and only picks when the day has none');
 
 // --- 2. consent gates GENERATION, and only generation ---------------------
 // The daily insight stopped being a generation on 2026-10-07 (emci): it is
 // picked from the stored bank, so it must NOT sit behind the consent answer.
 // Declined and not-yet-asked stay different states for what is still AI.
-assert.match(home, /const consentGranted = consent === 'granted';/);
+assert.match(home, /const consent = me \? aiConsentFor\(me\) : 'pending';/);
 assert.doesNotMatch(home, /CONSENT_OFF_EMPTY_COPY|consentOffEmpty/, 'a declined account still gets its stored insight');
-const effectStart = home.indexOf('const existing = await withTimeout(fetchTodayInsight');
-assert.ok(effectStart > 0, 'the insight load must exist');
-const guardWindow = home.slice(home.indexOf('if (!me || !userId || !window) return;'), effectStart);
-assert.doesNotMatch(guardWindow, /consentGranted/, 'the stored insight has no AI consent gate');
-// Story is still a model call and keeps its consent input.
-assert.match(home, /consentGranted=\{consentGranted\}/);
-ok('the stored insight ignores the consent answer; Story still receives it');
+assert.ok(focus.indexOf('const existing = await withTimeout(fetchTodayInsight') > 0, 'the insight load must exist');
+assert.doesNotMatch(focus, /consentGranted|aiConsentFor/, 'the stored insight has no AI consent gate');
+// The Story is template-only on Insights now (2026-10-14): no consent input.
+assert.doesNotMatch(read('src/components/insights/insights-story-card.tsx'), /consentGranted/);
+ok('the stored insight and the template Story ignore the consent answer');
 
 // TIMING, CHANGED by emci 2026-09-15 (ISOLATION_PLAN §7 Card C): the ask is
 // now part of the FIRST thing on Home, not something held back until the

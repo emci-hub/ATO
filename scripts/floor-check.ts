@@ -126,49 +126,47 @@ ok('required-reason API codes match, including App Group UserDefaults C56D.1');
 assert.match(widgetPlist, /C56D\.1/);
 ok('widget PrivacyInfo declares App Group UserDefaults C56D.1');
 
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const home = read('src/app/(tabs)/index.tsx');
 const push = read('src/lib/push-copy.ts');
 const widget = read('targets/widget/widgets.swift');
 const copy = read('src/lib/sage-copy.ts');
 const consent = read('src/components/ai-consent-card.tsx');
-const crisis = read('src/lib/crisis/copy.ts');
-assert.match(copy, /Sage is a coach, not a person/);
-assert.match(copy, /SAGE_NPC_LABEL/);
+const focusCard = read('src/components/insights/today-focus-card.tsx');
+// Sage was replaced by Insights (2026-10-14). Nothing a user sees says Sage
+// (check:no-sage-copy); Insights says plainly that nothing there is AI-written.
+assert.doesNotMatch(copy, /Sage is a coach/);
+assert.match(copy, /SAGE_COACH_LABEL = 'Insights'/);
+assert.match(copy, /SAGE_NOT_A_PERSON = 'Picked from your answers\. No AI writes anything here\.'/);
 assert.match(copy, /SAGE_NPC_LABEL = 'Focus · try · watch'/);
-// Sage is an inert placeholder while Talk is rebuilt; only the coach label
-// survives on it. Its own contract is pinned by scripts/sage-load-check.ts.
 assert.match(sage, /SAGE_COACH_LABEL/);
+assert.match(sage, /SAGE_NOT_A_PERSON/);
 assert.doesNotMatch(sage, /from '@\/lib\/voice\/router'/);
 assert.doesNotMatch(sage, /routeVoiceCard/);
-assert.doesNotMatch(sage, /Ask Sage anything/);
-assert.doesNotMatch(sage, /Sage is writing/);
 assert.doesNotMatch(sage, /SAGE_NPC_LABEL|Focus · try · watch/);
 assert.match(home, /homeSageLede/);
-// PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): SAGE_COACH_LABEL reached Home only
-// through the parked Ask sheet's fixtures. The two live Sage strings on Home
-// (`homeSageLede`, `homeSageLabel`) are still pinned above and below.
 assert.doesNotMatch(home, /SAGE_COACH_LABEL/);
-assert.match(home, /homeSageLabel/);
+// The focus card (and its kicker) moved from Home to Insights.
+assert.match(focusCard, /homeSageLabel/);
+assert.doesNotMatch(home, /homeSageLabel/);
 assert.match(push, /MORNING_PUSH_TITLE = 'ATO'/);
+// The installed widget's native header is a separate binary: it changes only
+// with the next native build (docs/sage-cleanup.md).
 assert.match(widget, /SAGE · COACH/);
-assert.match(consent, /Sage is a coach in the app, not a person/);
-assert.match(crisis, /Sage is a coach, not emergency support/);
-assert.doesNotMatch(sage, /Sage listens/);
-assert.doesNotMatch(home, /Sage listens/);
+assert.doesNotMatch(consent, /'[^'\n]*\bSage\b[^'\n]*'/, 'no consent string says Sage');
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is a whole-screen park
 // (it was Circle's per-peer chat, and Circle is parked). The copy rule itself
 // is unchanged and still asserted against every live surface above; this line
 // asserts the parked screen carries none of it.
 assert.doesNotMatch(read('src/app/chat.tsx'), /Sage is a coach/);
-ok('Talk, Home, consent, crisis, push, widget, and Teach Sage label Sage as a coach; the Home insight kicker is Focus · try · watch');
+ok('no Sage on Insights, Home, consent or push; the focus kicker is Focus · try · watch (on Insights)');
 
 // The empty state is the sealed card with its one honest note (stored bank, 2026-10-07).
-assert.match(home, /\{INSIGHT_STORED_NOTE\}/);
-assert.match(home, /SEALED_READ_LINE/);
+assert.match(focusCard, /\{INSIGHT_STORED_NOTE\}/);
+assert.match(focusCard, /SEALED_READ_LINE/);
 assert.doesNotMatch(home, /fake poster|Fake Person|open box|fake card media|fake ·/i);
 assert.doesNotMatch(home, /<PixelFace/);
-ok('Home has an honest empty card state and no Stage 1 fake fixtures');
+ok('the focus card has an honest empty state; Home has no Stage 1 fake fixtures');
 
 const tabsLayout = read('src/app/(tabs)/_layout.tsx');
 const navPixel = read('src/components/nav-pixel.tsx');
@@ -189,9 +187,8 @@ assert.match(poster, /ecl="M"/);
 ok('nav companion is shell-mounted top-right; You poster keeps its own soft-dark palette and dark-on-light M QR');
 
 const chrome = read('src/lib/theme/chrome.ts');
-const crisisSrc = read('src/components/crisis-card.tsx');
 assert.match(chrome, /controlBorderColor/);
-assert.match(crisisSrc, /borderColor: theme\.accent/);
+assert.match(read('src/components/helpline-row.tsx'), /borderColor: controlBorderColor\(theme\)/);
 assert.match(sage, /NO_PINCH_ZOOM/);
 assert.match(read('src/components/app-tabs.tsx'), /backgroundColor: theme\.background/);
 assert.match(read('src/components/app-tabs.tsx'), /useSafeAreaInsets/);
@@ -200,7 +197,7 @@ assert.match(read('src/lib/theme/context.tsx'), /typeof Appearance\.setColorSche
 assert.match(read('src/lib/theme/context.tsx'), /ready: boolean/);
 assert.match(read('src/components/themed-tab-bar.tsx'), /backgroundColor: theme\.background/);
 assert.doesNotMatch(read('src/components/themed-tab-bar.tsx'), /backgroundElement/);
-ok('crisis dismiss uses accent border; outline controls share a visible hairline; Sage pinch-zoom is off; tab bar is opaque and appearance-themed');
+ok('the helpline row uses the shared hairline; Insights pinch-zoom is off; tab bar is opaque and appearance-themed');
 
 const sentryLib = read('src/lib/sentry.ts');
 assert.match(sentryLib, /enableNative:\s*Platform\.OS !== 'web'/);
@@ -237,11 +234,13 @@ assert.match(
   /\{offerConsent \?[\s\S]{0,300}<AiConsentCard[\s\S]{0,120}context="home"/,
 );
 assert.doesNotMatch(home, /needsConsentPrompt/);
-assert.match(home, /const consentGranted = consent === 'granted';/);
+assert.match(home, /const consent = me \? aiConsentFor\(me\) : 'pending';/);
 assert.match(home, /\{AI_USE_DISCLOSURE\}/);
+// 2026-10-14: the Story is template-only, so the real AI uses are Legends
+// cards and category deep dives — the disclosure names exactly those two.
 assert.match(
   consent,
-  /AI_USE_DISCLOSURE =\s*'Sage uses AI only to write your Story, your Legends cards and your category deep dives\. These cards are shared between people with similar leanings and never include your name or your answers\.'/,
+  /AI_USE_DISCLOSURE =\s*'ATO uses AI only to write your Legends cards and your category deep dives\. These cards are shared between people with similar leanings and never include your name or your answers\.'/,
 );
 // The AI mark (emci 2026-10-07): a small icon you tap to read what it means,
 // on every mounted surface that shows model output (today: the Story fold).
@@ -249,9 +248,10 @@ const aiBadge = read('src/components/ai-badge.tsx');
 assert.match(aiBadge, /<Pressable[\s\S]*accessibilityRole="button"[\s\S]*onPress=\{\(\) => setOpen\(\(v\) => !v\)\}/);
 assert.match(aiBadge, /MaterialCommunityIcons name="creation"/);
 assert.match(aiBadge, /\{open \? \([\s\S]*\{AI_BADGE_DESCRIPTION\}/);
-assert.match(read('src/components/sage-story-fold.tsx'), /source !== 'bank' && story\.card\.source !== 'template' \? <AiBadge \/>/, 'a model Story carries one AI badge; bank and template cards skip it');
-// The consent copy names only what still uses AI (the Story), never the stored
-// focus, questions or categories (emci 2026-10-07).
+// The Story on Insights is template-only, so it carries no AI badge at all.
+assert.doesNotMatch(read('src/components/insights/insights-story-card.tsx'), /AiBadge/);
+// The consent copy names only what still uses AI, never the stored focus,
+// questions, categories or the Story (emci 2026-10-07, 2026-10-14).
 assert.doesNotMatch(consent, /writes your daily insight|written insights|personalize your insights/);
 assert.match(home, /setAiConsent/);
 assert.doesNotMatch(sage, /setAiConsent/);
@@ -261,13 +261,13 @@ assert.doesNotMatch(sage, /setAiConsent/);
 // its own "Sage's AI" fold, and the three-state row collapsed to a toggle plus
 // the full consent card while the answer is still pending — so "Not set yet"
 // is no longer a label, the card itself is that state.
-assert.match(youTab, /Sage(&apos;|')s AI/);
+assert.match(youTab, /ATO(&apos;|')s AI/);
 assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
 assert.match(youTab, /<AiConsentCard/);
 assert.match(youTab, /setAiConsent/);
 // The Account fold is back (2026-10-04) but holds only the birthday row: AI
-// consent stays in its own "Sage's AI" fold, never inside Account.
+// consent stays in its own "ATO's AI" fold, never inside Account.
 {
   const at = youTab.indexOf('<SettingsFold title="Account">');
   const accountFold = youTab.slice(at, youTab.indexOf('</SettingsFold>', at));
@@ -275,28 +275,26 @@ assert.match(youTab, /setAiConsent/);
 }
 ok('AiConsentCard is inline on Home and still reachable on You; the AI-use disclosure is unconditional on both');
 
-// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): the crisis REGION picker is
-// off the parked You. This is not the crisis card itself — `CrisisCard` is
-// still Active on Home (§0 decision 3), still static, and still asserted
-// elsewhere in this file. What is parked is only the per-region setting, which
-// had no effect while the picker's own region list is being rebuilt.
-assert.ok(youTab.indexOf('<CrisisRegionPicker') === -1, 'the region picker is parked with the rest of You');
-ok('the crisis REGION picker is parked; the static crisis card on Home is untouched');
+// The crisis system was removed 2026-10-14 (it existed only because Sage read
+// what people typed). One static helpline row on You replaced it
+// (check:helpline-row pins it).
+assert.ok(youTab.indexOf('<CrisisRegionPicker') === -1, 'no region picker');
+assert.match(youTab, /<HelplineRow \/>/);
+ok('no crisis region picker; the static helpline row is on You');
 
-// Same no-flash promise, new source: the Check row no longer carries card
-// text, so Home paints from the cached insight and reconciles against
-// daily_insights behind it.
-assert.match(home, /useDailyInsight/);
-assert.match(home, /fetchTodayInsight/);
+// Same no-flash promise, new home (2026-10-14): the focus card on Insights
+// paints from the cached insight and reconciles against daily_insights.
+assert.match(focusCard, /useDailyInsight/);
+assert.match(focusCard, /fetchTodayInsight/);
 assert.match(read('src/lib/insight/today-insight.ts'), /export async function loadCachedInsight/);
-ok('Home paints today\'s insight from cache before any fetch or generation');
+ok('the focus card paints today\'s insight from cache before any fetch');
 
 // Talk's quota/crisis-ordering assertions went with its backend (2026-09-14).
 // The user-facing quota copy still exists and is still the only thing shown
 // when the cap is hit, so that stays pinned; the surfaces that actually claim
 // are asserted where they live.
 const quota = read('src/lib/voice/quota.ts');
-assert.match(quota, /Sage's out of things to say for today, back tomorrow/);
+assert.match(quota, /That's all for today, back tomorrow/);
 assert.match(read('src/lib/voice/quota-server.ts'), /claim_ai_call/);
 assert.match(
   read('supabase/migrations/stage8_ai_quota.sql'),

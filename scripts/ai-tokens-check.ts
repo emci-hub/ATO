@@ -77,12 +77,9 @@ assert.equal(AI_TOKEN_PRICE, 5);
 assert.ok(ATO_TOKEN_HOW_LINES.some((line) => line.includes('Check in on Home')), 'You says where tokens come from');
 assert.ok(ATO_TOKEN_HOW_LINES.some((line) => line.includes(`Spend: ${AI_TOKEN_PRICE}`)), 'and what they buy');
 assert.equal(atoTokenCopyClean(), true);
-const story = read('src/components/sage-story-fold.tsx');
-assert.match(story, /await refundAiTokens\('story'\);/, 'Story: refunded when no card comes back');
-assert.match(story, /claim\.reason === 'tokens'/, 'Story: too few tokens says so');
-assert.match(story, /needNew && tokens < AI_TOKEN_PRICE \? \(/, 'Story: no brand-new button without the tokens');
-// wave93: library stories are free; the brand-new one shows its price.
-assert.match(story, /STORY_NEW_LABEL\} · \$\{AI_PRICE_LABEL\}/, 'Story: the brand-new button shows its price');
+// Insights (2026-10-14): the Story is template-only, so it never costs tokens.
+const story = read('src/components/insights/insights-story-card.tsx');
+assert.doesNotMatch(story, /refundAiTokens|AI_TOKEN_PRICE|AI_PRICE_LABEL|claimStoryGenerate/, 'Story: free, no token path');
 const home = read('src/app/(tabs)/index.tsx');
 const state2 = home.indexOf('STATE 2');
 assert.ok(home.indexOf('<DailyCheckinCard') > state2, 'the check-in is on Home after Questions are finished');
@@ -94,6 +91,6 @@ const toolsStart = devLab.indexOf('{tools ? (');
 const devAt = devLab.indexOf('<AiLimitsDev');
 assert.ok(devAt > toolsStart && devAt < devLab.indexOf(') : null}', toolsStart), 'the dev reset sits inside the tools branch');
 assert.match(read('src/components/ai-limits-dev.tsx'), /if \(!armed\) \{/, 'two taps');
-ok('app: prices shown, how to earn said, refunds wired, check-in on Home, dev reset pre-launch only with two taps');
+ok('app: prices shown, how to earn said, Story free, check-in on Home, dev reset pre-launch only with two taps');
 
 console.log(`\ncheck:ai-tokens — ${passed} groups passed.`);

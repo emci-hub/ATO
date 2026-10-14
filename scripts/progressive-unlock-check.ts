@@ -225,7 +225,8 @@ ok('the count-only branch skips the value blend (wiring)');
   const openNow = INTAKE_UNLOCKED.join(' ');
   assert.doesNotMatch(openNow, /Story|Sage|Legend/, '"Open now" must not promise Story or the two placeholders');
   assert.match(NEXT_ROUND_UNLOCKS.join(' '), /Story/, 'Story belongs to the next round');
-  assert.match(COMING_LATER_LINE, /Sage and Legends/);
+  assert.match(COMING_LATER_LINE, /Legends/);
+  assert.doesNotMatch(COMING_LATER_LINE, /Sage/, 'Sage is gone (2026-10-14)');
   // No milestone may announce a placeholder as open.
   for (const def of MILESTONE_DEFS) {
     assert.doesNotMatch(`${def.title} ${def.body}`, /Sage (is ready|unlocked)|Legends? (are ready|unlocked)|both open/i, `${def.id} announces a placeholder`);

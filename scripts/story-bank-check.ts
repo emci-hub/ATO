@@ -118,13 +118,14 @@ assert.deepEqual(nextBankSeenIds(['a'], 'b').slice(-1), ['b']);
 assert.equal(bankIdsToSkip(['a', 'b'], 2).length, Math.min(BANK_SKIP_RECENT, 1));
 ok('picker is stable, skips seen ids, and recycles after the pool is exhausted');
 
-const fold = readFileSync(resolve(root, 'src/components/sage-story-fold.tsx'), 'utf8');
+// The Story moved to Insights (2026-10-14): template-only, the bank as
+// fallback, and no AI rewrite of old cards on open any more.
+const fold = readFileSync(resolve(root, 'src/components/insights/insights-story-card.tsx'), 'utf8');
 assert.match(fold, /pickStoryBankCard\(/);
 assert.match(fold, /StoryV2View/);
-assert.match(fold, /rewriteOldStory/);
+assert.doesNotMatch(fold, /rewriteOldStory|markStoryRewriteTried/);
 assert.match(fold, /loadStoryBankHistory/);
-assert.match(fold, /markStoryRewriteTried/);
-ok('the fold uses the bank as fallback, remembers seen cards, and rewrites old cards on open');
+ok('the Story card uses the bank as fallback and remembers seen cards; no AI rewrite on open');
 
 const review = readFileSync(resolve(root, 'docs/story-review.md'), 'utf8');
 assert.match(review, /STORY_COPY_REVIEWED = false/);

@@ -9,7 +9,7 @@
  */
 
 export const FACT_FRAMEWORK_MESSAGE =
-  "That line names a type or label Sage will not store. Try saying it in your own words.";
+  "That line names a type or label ATO will not store. Try saying it in your own words.";
 
 const TYPE_CODES = [
   'INTJ',

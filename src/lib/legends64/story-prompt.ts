@@ -33,7 +33,7 @@ function poleLine(axes: readonly (typeof CORE_AXES)[number][], code: string): st
  * the combined 'HHH-LHL' string back apart.
  */
 export function buildLegendStoryPrompt(coreCode: string, modifierCode: string): string {
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is a Legend story — one personalized piece of prose for the archetype this person's traits land on, generated fresh (never reused from a library).
+  return `Write in the ATO app’s voice. Follow the voice reference. Not a doctor. This is a Legend story — one personalized piece of prose for the archetype this person's traits land on, generated fresh (never reused from a library).
 
 VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}

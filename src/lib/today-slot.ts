@@ -4,7 +4,6 @@
  */
 
 export type TodaySlot =
-  | { kind: 'crisis' }
   | { kind: 'missed_check' }
   | { kind: 'note' }
   | { kind: 'ask' }
@@ -12,7 +11,6 @@ export type TodaySlot =
   | { kind: 'none' };
 
 export type TodaySlotInput = {
-  crisisActive: boolean;
   missedCheck: boolean;
   noteAvailable: boolean;
   noteOpenedToday: boolean;
@@ -21,7 +19,6 @@ export type TodaySlotInput = {
 };
 
 export function resolveTodaySlot(input: TodaySlotInput): TodaySlot {
-  if (input.crisisActive) return { kind: 'crisis' };
   if (input.missedCheck) return { kind: 'missed_check' };
   if (input.noteAvailable && !input.noteOpenedToday) return { kind: 'note' };
   if (input.askPending) return { kind: 'ask' };
@@ -31,8 +28,9 @@ export function resolveTodaySlot(input: TodaySlotInput): TodaySlot {
 
 /**
  * Category teaser may share the page with note / ask / week / none.
- * Crisis and missed-check stay alone — no teaser, no exceptions.
+ * A missed-check day stays alone — no teaser, no exceptions. (The crisis slot
+ * was removed with the crisis system, 2026-10-14.)
  */
 export function canShowCategoryTeaser(kind: TodaySlot['kind'] | string): boolean {
-  return kind !== 'crisis' && kind !== 'missed_check';
+  return kind !== 'missed_check';
 }

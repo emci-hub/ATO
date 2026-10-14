@@ -8,8 +8,8 @@ export type TalkStyle = 'quiet' | 'even' | 'loud';
 /** How today reads, in Sage's register: a win, a nothing-day, or a skipped habit. */
 export type Tone = 'lift' | 'even' | 'cut';
 
-/** Where a card's content came from. 'crisis' is the static crisis card. */
-export type VoiceSource = 'bank' | 'generated' | 'crisis';
+/** Where a card's content came from. */
+export type VoiceSource = 'bank' | 'generated';
 
 export type ProviderId = AiProviderId;
 
@@ -21,7 +21,6 @@ export type DropReason =
   | 'topic-repeat'
   | 'vague-do'
   | 'cruel-cut'
-  | 'cut-after-crisis'
   | 'cut-streak'
   | 'framework-echo';
 

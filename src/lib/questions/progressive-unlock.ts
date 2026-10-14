@@ -72,7 +72,7 @@ export const NEXT_ROUND_UNLOCKS: readonly string[] = [
 ];
 
 export const COMING_LATER_HEADING = 'Not open yet';
-export const COMING_LATER_LINE = 'Sage and Legends are being rebuilt. Nothing you do here unlocks them yet.';
+export const COMING_LATER_LINE = 'Legends is being rebuilt. Nothing you do here unlocks it yet.';
 
 export const INTAKE_TOKENS_PAID_LINE = `+${ATO_TOKEN_EARN.full_profile_complete} ATO tokens, in your balance on You`;
 

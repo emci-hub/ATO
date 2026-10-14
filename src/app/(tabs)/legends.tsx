@@ -20,7 +20,6 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
-import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
@@ -145,7 +144,6 @@ export default function LegendsScreen() {
   const [tokenNote, setTokenNote] = useState<string | null>(null);
   const [tracks, setTracks] = useState<readonly TraitTrack[]>([]);
   const [ready, setReady] = useState(false);
-  const [crisisToday, setCrisisToday] = useState(false);
   const [today, setToday] = useState<string | null>(null);
   const [local, setLocal] = useState<LegendLocalState | null>(null);
   const [hall, setHall] = useState<LegendHall | null>(null);
@@ -183,11 +181,10 @@ export default function LegendsScreen() {
     // a load that started before the wipe never writes.
     const epoch = dataEpoch;
     try {
-      const [boot, localState, server, crisisLocal, devDate] = await Promise.all([
+      const [boot, localState, server, devDate] = await Promise.all([
         fetchHomeBootstrap(timeZone),
         loadLocalState(userId),
         fetchServerMuseum(),
-        crisisNotedToday(),
         PRE_LAUNCH_DEV ? loadDevLegendDate() : Promise.resolve(null),
       ]);
       if (request !== requestRef.current || epoch !== epochRef.current) return;
@@ -208,7 +205,6 @@ export default function LegendsScreen() {
       }
       setTracks(boot.tracks);
       setToday(day);
-      setCrisisToday(boot.crisisToday || crisisLocal);
       // A story being written owns the state until it is saved.
       if (!meetingRef.current) persist(next);
     } catch (err) {
@@ -386,7 +382,7 @@ export default function LegendsScreen() {
   // reveal is then instant and from the library. Group keys only, never text.
   const frameKeysSig = frames.filter((key): key is string => key != null).join(',');
   useEffect(() => {
-    if (!consentGranted || !local || !frameKeysSig || crisisToday) return;
+    if (!consentGranted || !local || !frameKeysSig) return;
     let live = true;
     void (async () => {
       const buckets: string[] = [];
@@ -412,7 +408,7 @@ export default function LegendsScreen() {
     };
     // Once per set of frames: the reveal itself re-plans with fresh counts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frameKeysSig, consentGranted, crisisToday]);
+  }, [frameKeysSig, consentGranted]);
   const hallMet = hall ? legendsInHall(hall).filter((legend) => metIds.has(legend.id)) : [];
 
   const card =
@@ -502,7 +498,7 @@ export default function LegendsScreen() {
                     </ThemedText>
                   </View>
 
-                  {crisisToday ? null : (
+                  {(
                     <>
                       {showingChapters && framesLeft > 0 ? (
                         <ThemedText type="small" themeColor="textSecondary">

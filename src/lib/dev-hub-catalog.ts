@@ -166,14 +166,6 @@ export const HUB_TOOLS: readonly HubToolDef[] = [
     keywords: ['legends', 'museum', 'history', 'myth', 'figures'],
   },
   {
-    id: 'crisis',
-    section: 'content',
-    name: 'Crisis card',
-    summary: 'Preview the crisis card and test the on-phone signal.',
-    details: 'The crisis card is static: never a generated number. This shows it, and tests the keyword check that raises it on Home.',
-    keywords: ['safety', 'help', 'support'],
-  },
-  {
     id: 'fence',
     section: 'content',
     name: 'Banned words check',
@@ -244,7 +236,7 @@ export const HUB_TOOLS: readonly HubToolDef[] = [
     id: 'labs',
     section: 'labs',
     name: 'Labs',
-    summary: 'Links to theme, pixel, crisis, profile card and AI labs.',
+    summary: 'Links to theme, pixel, profile card and AI labs.',
     details: 'Screens that nothing else in the app links to.',
     keywords: ['theme', 'pixel', 'cards', 'lab'],
   },
@@ -287,7 +279,7 @@ export const HUB_TOOLS: readonly HubToolDef[] = [
     section: 'danger',
     name: 'Clear this phone’s saved state',
     summary: 'Erase what this account saved on this phone. Nothing on the server.',
-    details: 'Lists and removes every account key on this device. Theme, crisis region, push settings and sign-in stay. Two taps.',
+    details: 'Lists and removes every account key on this device. Theme, push settings and sign-in stay. Two taps.',
     keywords: ['phone', 'cache', 'storage', 'device'],
   },
   {

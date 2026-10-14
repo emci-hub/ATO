@@ -17,11 +17,11 @@ export const NEVER_GRANTABLE = ['profile-pause', 'profile-delete', 'access-revie
 export type RootOnlyAction = (typeof NEVER_GRANTABLE)[number];
 
 export const GRANTABLE_DESCRIPTIONS: Record<DevCapability, string> = {
-  card: 'Run the local Sage generator simulator (no real AI call, no cost)',
+  card: 'Run the local AI generator simulator (no real AI call, no cost)',
   traits: 'View your own trait/ME data in raw form',
   quota: 'View your own AI usage against caps',
   fence: 'Test text against the jargon/phrase guards manually',
-  trace: 'See real input/output from your own recent Sage/Explore generations',
+  trace: 'See real input/output from your own recent AI/Explore generations',
 };
 
 export const ROOT_ONLY_DESCRIPTIONS: Record<RootOnlyAction, string> = {

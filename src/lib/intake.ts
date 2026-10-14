@@ -246,7 +246,7 @@ export function chipLabel(chips: IntakeChip[], value: string | null | undefined)
 
 /** You-tab labels. Same 8 fields as onboarding, shorter than the prompt. */
 export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
-  talk_style: 'How Sage talks to you',
+  talk_style: 'How ATO talks to you',
   show_up: 'Show up',
   knocks_you_off: 'Disruption',
   morning_cue: 'Your morning anchor',

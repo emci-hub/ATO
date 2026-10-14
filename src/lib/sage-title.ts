@@ -26,7 +26,7 @@ import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 export const TITLE_COPY_REVIEWED = false;
 export const TITLE_EMPTY = 'Not enough settled yet to name a shape.';
 export const TITLE_PUSHBACK = "This doesn't feel right";
-export const TITLE_PUSHBACK_SAVED = 'Noted. Sage will not change it from this.';
+export const TITLE_PUSHBACK_SAVED = 'Noted. ATO will not change it from this.';
 
 export interface CategoryCopy {
   line: string;
@@ -190,7 +190,7 @@ export function buildTitlePrompt(tracks: readonly TraitTrack[], _today: string):
     }
   }
 
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor.
+  return `Write in the ATO app’s voice. Follow the voice reference. Not a doctor.
 
 VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}

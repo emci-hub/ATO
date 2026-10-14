@@ -85,9 +85,10 @@ const factPick = resolveReveal({
   timeZone: tz,
   now,
 });
-assert.equal(factPick?.kind, 'fact');
-assert.match(factPick?.text ?? '', /Still true: I finish work at four/);
-ok('one Check is not a week pattern; latest safe fact is next');
+// 2026-10-14: stored facts are no longer read, so the next real signal wins.
+assert.notEqual(factPick?.kind, 'fact');
+assert.doesNotMatch(factPick?.text ?? '', /I finish work at four/);
+ok('one Check is not a week pattern; a stored fact is never reflected back');
 
 const afterFactDeleted = resolveReveal({
   checks: oneCheck,
@@ -154,11 +155,10 @@ assert.equal(
     factCount: 1,
     timeZone: tz,
     now,
-    crisisToday: true,
-  }),
-  null,
+  })?.kind,
+  'week-pattern',
 );
-ok('crisis day yields empty, not a sealed object');
+ok('no crisis gate: a real week pattern still shows (crisis removed 2026-10-14)');
 
 assert.equal(
   findRevealSignal({
@@ -171,7 +171,7 @@ assert.equal(
   }),
   null,
 );
-ok('crisis-keyword facts are not reflected back');
+ok('no fact is reflected back');
 
 const skipWeek = [
   check({ day: 1, logged_on: '2026-08-24', status: 'skipped', read_text: 'Day skipped.' }),
@@ -244,7 +244,8 @@ const home = read('src/app/(tabs)/index.tsx');
 assert.doesNotMatch(home, /isRevealOpenedToday/);
 assert.doesNotMatch(home, /resolveTodaySlot/);
 assert.doesNotMatch(home, /RevealCard/);
-assert.doesNotMatch(home, /slotKind/);
+// Home only passes the inert `slotKind: 'none'` to dailyInsightsVisible.
+assert.doesNotMatch(home, /slotKind(?!: 'none')/);
 assert.doesNotMatch(read('src/app/(tabs)/circle.tsx'), /RevealCard|REVEAL_LABEL/);
 assert.doesNotMatch(read('targets/widget/widgets.swift'), /RevealCard|REVEAL_/);
 assert.doesNotMatch(read('src/lib/push-copy.ts'), /REVEAL_|RevealCard/);

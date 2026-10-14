@@ -8,7 +8,7 @@
  */
 import { readAllCategories, parseSpotlight, type CategoryReading } from '@/lib/categories';
 import { parseCategoryCard } from '@/lib/category-statements/card';
-import { CATEGORY_STATEMENTS_COPY_REVIEWED } from '@/lib/category-statements/generate-statements';
+import { CATEGORY_STATEMENTS_COPY_REVIEWED } from '@/lib/category-statements/flags';
 import { fetchCurrentStatements } from '@/lib/category-statements/store';
 import type { Me } from '@/lib/me';
 import { insightPush, type PushPayload } from '@/lib/push-copy';

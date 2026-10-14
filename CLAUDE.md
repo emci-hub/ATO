@@ -54,7 +54,12 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   testing groups, the DEV bubble or the AI lab (`DEV_TOOLS_AVAILABLE`, `hubAccess`).
   Root keeps the Hub's Admin group only. A new dev panel goes inside the `tools`
   branch of `dev-lab.tsx`, or `check:release-mode` fails.
-- **Crisis card is static** — never a generated number, never a guessed region.
+- **Helpline row is static (emci 2026-10-14; replaced the crisis system).** The Sage tab and every
+  crisis path (card, region picker, flags, message scanning) are gone. The You tab carries one fixed
+  `HelplineRow` (`src/components/helpline-row.tsx`): 988 for US/Canada, findahelpline.com elsewhere, a
+  local-emergency line. Never a generated number, never a guessed region, never triggered by or logging
+  anything a person typed. Pinned by `check:helpline-row`. Insights is template-only (no model call,
+  `check:insights-no-ai`); no user-facing "Sage" copy (`check:no-sage-copy`). Leftovers: `docs/sage-cleanup.md`.
 - **Dev testing uses the dev-test user** (`ato-dev@example.com` / `@atodev`). **Two
   things may act on the SIGNED-IN account's own data pre-launch (emci, 2026-10-01):**
   the "Jump this account" stages (`applyDevIntakeStagePreset`: first read 16, set 2 done
@@ -89,8 +94,9 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   5/day), refunded once a day per feature on failure (`refund_ai_tokens`). Earn: daily check-in +5 (every
   7th +10), first 48 +15, set of 16 +5. The client never decides a charge. Root can clear today's AI counters
   for any handle from the Dev Hub (`dev_reset_ai_limits`). Pinned by `check:ai-tokens`.
-- **The AI consent copy names every real AI use** (Story, Legends cards, category deep dives —
-  `AI_USE_DISCLOSURE`). A new AI surface updates it in the same change (Apple 5.1.2).
+- **The AI consent copy names every real AI use** (Legends cards and category deep dives only —
+  `AI_USE_DISCLOSURE`; Story and Sage are no longer AI surfaces, Insights is templates). A new AI
+  surface updates it in the same change (Apple 5.1.2).
 - **Questions come from the fixed bank (wave85, emci 2026-10-06).** 400 questions, 25 per trait,
   one file per trait in `src/lib/questions/bank/`; the server copy (`question_bank`) is generated
   by `scripts/gen-wave85-bank.ts` and pinned by `check:question-bank`. No AI writes a question and
