@@ -89,6 +89,7 @@
     "check:ai-library": "tsx ./scripts/ai-library-check.ts",
     "gen:ai-library": "tsx ./scripts/gen-ai-library-bundle.ts",
     "check:pet": "tsx ./scripts/check-pet.ts",
+    "check:pet-holo": "tsx ./scripts/check-pet-holo.ts",
     "check:pet-eggs": "tsx ./scripts/check-pet-eggs.ts",
     "check:play-settings": "tsx ./scripts/check-play-settings.ts",
     "check:expedition-ladder": "tsx ./scripts/check-expedition-ladder.ts",

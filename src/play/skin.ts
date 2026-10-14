@@ -16,6 +16,7 @@
  * 0..100 pad/enemy/avatar board units. `skinDrawBox()` turns a world point +
  * size into the top-left box the renderer needs, honouring `pivot`.
  */
+import { GROUND_FRACTION } from '@/play/ground-point';
 import type { ImageSourcePropType } from 'react-native';
 
 import rawCast from '@/assets/play/skins/cast/skin.json';
@@ -115,6 +116,12 @@ export type SkinRole = {
    * the 128px/188px bosses + towers whose padding differs (see cast skin.json).
    */
   footAt?: number;
+  /**
+   * Ground point: the row the figure's weight rests on (`footAt` minus the footprint
+   * inset, src/play/ground-point.ts), fraction of the box from the top. Auras and
+   * floor effects centre here, never on the toe edge.
+   */
+  groundAt?: number;
   /** Source tile size in px (informational — the board scales in units). */
   cellPx?: number;
   /** Drawn box edge in board units (0..100 space). */
@@ -164,6 +171,7 @@ type StreetwearMeta = {
     string,
     {
       footAt: number;
+      groundAt: number;
       bodyRatio: number;
       clips: Record<string, number>;
       /** Walk facing folders actually packed, in `skinWalkDirIndex` order. */
@@ -830,6 +838,7 @@ function streetwearHeroRole(heroId: string): SkinRole | undefined {
     dirs: 8,
     pivot: 'feet',
     footAt: meta.footAt,
+    groundAt: meta.groundAt,
     cellPx: ref?.cellPx ?? 120,
     units: Number((((ref?.units ?? 24) * refRatio) / meta.bodyRatio).toFixed(2)),
     walk: streetwearClip(char, 'Walk'),
@@ -926,6 +935,16 @@ export function resolveBoundHeroTowerKit(heroId: string): SkinRole {
 export function roleFootAt(role: SkinRole | undefined): number {
   const raw = role?.footAt;
   return typeof raw === 'number' && raw > 0 && raw <= 1 ? raw : 1;
+}
+
+/**
+ * Ground point for a role (fraction of the box from the top): the measured `groundAt`,
+ * else the feet line minus the standing inset for a typical figure (≈ 75 % of the box).
+ */
+export function roleGroundAt(role: SkinRole | undefined): number {
+  const raw = role?.groundAt;
+  if (typeof raw === 'number' && raw > 0 && raw <= 1) return raw;
+  return Math.max(0.01, roleFootAt(role) - GROUND_FRACTION * 0.75);
 }
 
 /** Static rotation art for a role object at a facing index. */

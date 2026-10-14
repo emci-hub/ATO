@@ -20,80 +20,64 @@
     "extra_color": 110
   },
   "paint": {
-    "window_opacity": 1,
-    "reverse_opacity": 0.9,
-    "sheen_opacity": 0.3,
-    "sheen_opacity_on_shiny": 0.3,
-    "sheen_wash_opacity": 0.16,
+    "border_opacity": 0.55,
     "glare_opacity": 0.55,
-    "sheen_blend": "overlay"
+    "prism_strength": 0.26,
+    "prism_strength_alone": 0.42,
+    "prism_overlay_opacity": 0.6,
+    "sweep_core": 0.72,
+    "sweep_mid": 0.5,
+    "sweep_outer": 0.24,
+    "blend": "overlay",
+    "wash_opacity": 0.16
   },
   "tilt": true,
   "tilt_max_deg": 15,
   "drift_ms": 12000,
-  "colors": [
-    {
-      "id": "moonpearl",
-      "name": "Moonpearl",
-      "stops": ["#F4FBFF", "#E4C2FF", "#8EDEFF", "#C8FFE8"],
-      "glare": "#FFFFFF",
-      "repeats": 2,
-      "hard": false,
-      "pass_only": false
-    },
-    {
-      "id": "reefglow",
-      "name": "Reefglow",
-      "stops": ["#FF4D6A", "#FF9A2E", "#FFE14A", "#2EF0C8"],
-      "glare": "#FFF4D2",
-      "repeats": 3,
-      "hard": false,
-      "pass_only": false
-    },
-    {
-      "id": "rosedusk",
-      "name": "Rosedusk",
-      "stops": ["#FF7A90", "#FF3D8A", "#C86BFF", "#FFC4A0"],
-      "glare": "#FFE8DC",
-      "repeats": 3,
-      "hard": false,
-      "pass_only": false
-    },
-    {
-      "id": "limewake",
-      "name": "Limewake",
-      "stops": ["#E6FF3A", "#3DFF62", "#12D6B0", "#F3FFC2"],
-      "glare": "#F6FFD4",
-      "repeats": 3,
-      "hard": false,
-      "pass_only": false
-    },
-    {
-      "id": "scarab",
-      "name": "Scarab",
-      "stops": ["#14E6A0", "#3C8CFF", "#B06BFF", "#FFD23A"],
-      "glare": "#FFFFFF",
-      "repeats": 3,
-      "hard": false,
-      "pass_only": false
-    },
-    {
-      "id": "quicksilver",
-      "name": "Quicksilver",
-      "stops": ["#FFFFFF", "#D5DEEA", "#8EA0B8", "#F5F8FC"],
-      "glare": "#FFFFFF",
-      "repeats": 5,
-      "hard": true,
-      "pass_only": false
-    },
-    {
-      "id": "starpearl",
-      "name": "Starpearl",
-      "stops": ["#B388FF", "#FF62D6", "#3AD8FF", "#FFE4F8"],
-      "glare": "#FFFFFF",
-      "repeats": 3,
-      "hard": false,
-      "pass_only": true
-    }
+  "defaults": { "prism": "opal", "sweep": "white", "glint": "white" },
+  "migrate": {
+    "moonpearl": "opal",
+    "reefglow": "tide",
+    "rosedusk": "rose",
+    "limewake": "root",
+    "scarab": "oil",
+    "quicksilver": "chrome",
+    "starpearl": "pearl"
+  },
+  "prism": [
+    { "id": "opal", "group": "Single colour", "name": "Opal", "stops": ["#d6d0f0", "#e8e2fa", "#f4f0ff", "#fffcff"] },
+    { "id": "chrome", "group": "Single colour", "name": "Chrome", "stops": ["#6e7688", "#aab4c6", "#dce6f5", "#ffffff"] },
+    { "id": "gold", "group": "Single colour", "name": "Gold", "stops": ["#96601e", "#d29428", "#ffd23f", "#fff2b0"] },
+    { "id": "ember", "group": "Single colour", "name": "Ember", "stops": ["#8c3018", "#d25a24", "#ff9646", "#ffdeb0"] },
+    { "id": "tide", "group": "Single colour", "name": "Tide", "stops": ["#185480", "#2296c8", "#60d8f0", "#d0f6ff"] },
+    { "id": "root", "group": "Single colour", "name": "Root", "stops": ["#225c3a", "#38a062", "#78e09c", "#d6ffe2"] },
+    { "id": "void", "group": "Single colour", "name": "Void", "stops": ["#482880", "#7848c8", "#b084ff", "#e6d8ff"] },
+    { "id": "rose", "group": "Single colour", "name": "Rose", "stops": ["#80245c", "#c43a8a", "#ff6cbe", "#ffd2ec"] },
+    { "id": "spectrum", "group": "Mix", "name": "Spectrum", "stops": ["#ff5cb8", "#ffaa5a", "#fae66e", "#6ee6aa", "#4fd6ea", "#9678ff"] },
+    { "id": "neon", "group": "Mix", "name": "Neon", "stops": ["#ff3ea5", "#b05cff", "#3fd0e6"] },
+    { "id": "oil", "group": "Mix", "name": "Oil slick", "stops": ["#5c34aa", "#267caa", "#34b68c", "#deaa46", "#cc4080"] },
+    { "id": "aurora", "group": "Mix", "name": "Aurora", "stops": ["#3cdc96", "#28bec8", "#5a78e6", "#aa64f0"] },
+    { "id": "sunset", "group": "Mix", "name": "Sunset", "stops": ["#ff5a8c", "#ff825a", "#ffbe50", "#ffe896"] },
+    { "id": "candy", "group": "Mix", "name": "Cotton candy", "stops": ["#ffaad7", "#e2b4ff", "#aad2ff", "#befaf0"] },
+    { "id": "galaxy", "group": "Mix", "name": "Galaxy", "stops": ["#4632a0", "#8c46dc", "#e65ac8", "#5ac8ff"] },
+    { "id": "fireopal", "group": "Mix", "name": "Fire opal", "stops": ["#e63c46", "#ff823c", "#ffc85a", "#ff96be"] },
+    { "id": "toxic", "group": "Mix", "name": "Toxic", "stops": ["#aaff3c", "#50e66e", "#28d2be"] },
+    { "id": "pearl", "group": "Mix", "name": "Pearl", "stops": ["#ffe1eb", "#ebf5ff", "#e6fff0", "#fff8e1"] }
+  ],
+  "sweep": [
+    { "id": "white", "group": "Single colour", "name": "White", "core": "#ffffff", "mid": "#fffaeb", "outer": "#ebf0ff" },
+    { "id": "gold", "group": "Single colour", "name": "Gold", "core": "#fff8d2", "mid": "#ffd65a", "outer": "#d29428" },
+    { "id": "ice", "group": "Single colour", "name": "Ice", "core": "#f0fcff", "mid": "#96e8ff", "outer": "#3caadc" },
+    { "id": "rose", "group": "Single colour", "name": "Rose", "core": "#fff0f8", "mid": "#ff96ce", "outer": "#c84696" },
+    { "id": "match", "group": "Single colour", "name": "Match band" },
+    { "id": "iris", "group": "Mix", "name": "Iridescent" },
+    { "id": "neon", "group": "Mix", "name": "Neon edge", "core": "#ffffff", "mid": "#ff5ab4", "outer": "#3fd0e6" }
+  ],
+  "glint": [
+    { "id": "white", "name": "White", "core": "#ffffff", "arm": "#fff6dc", "tip": "#c8bea0" },
+    { "id": "match", "name": "Match band" },
+    { "id": "gold", "name": "Gold", "core": "#ffffff", "arm": "#ffd65a", "tip": "#be821e" },
+    { "id": "ice", "name": "Ice", "core": "#ffffff", "arm": "#aaf0ff", "tip": "#3ca0c8" },
+    { "id": "rose", "name": "Rose", "core": "#ffffff", "arm": "#ffaad6", "tip": "#c8468c" }
   ]
 }

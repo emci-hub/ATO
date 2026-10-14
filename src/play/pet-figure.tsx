@@ -7,6 +7,11 @@
  * v22 cosmetics (existing art only): a worn tint replaces the branch wash, a
  * badge draws a Look's item art small on the shoulder, and an aura draws a
  * soft static glow in its element colour behind the pet.
+ *
+ * Layers (aura/holo rework): one stage that moves with the pet and reserves room
+ * for the biggest aura + glint halo, clipped to that room (the screen's viewport
+ * region clips it again, never a bar or a button):
+ *   aura behind · sprite (+ shiny / dye / tint) · holo (prism, rim, sweep, glints) · aura front
  */
 import { Image } from 'expo-image';
 import Animated, { useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
@@ -18,10 +23,10 @@ import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
-import { artSkin } from '@/play/art-skin';
-import { HideoutAuraStrip, PetAura, PetAuraSprite } from '@/play/aura-view';
-import { auraConfig, auraElementOf, auraPaintOrder } from '@/play/auras';
-import type { FinishKind, FinishMotion } from '@/play/finishes';
+import { HideoutAuraStrip, PetAuraSprite } from '@/play/aura-view';
+import { auraConfig, auraPaintOrder, auraRamps } from '@/play/auras';
+import { petFinishOf, type FinishKind, type FinishMotion } from '@/play/finishes';
+import { PetHolo } from '@/play/pet-holo';
 import { ClipImage } from '@/play/sheet-sprite';
 import {
   getSkinRole,
@@ -55,6 +60,9 @@ export function EggShape({ size, color }: { size: number; color: string }) {
     </Svg>
   );
 }
+
+/** Room a pet's stage reserves on every side, as a share of the box: the biggest aura + a glint halo. */
+export const STAGE_RESERVE = 0.6;
 
 /** Drawn box size for a stage at a given base box. */
 export function petBoxSize(pet: PetState, baseBox: number): number {
@@ -97,12 +105,12 @@ export function PetFigure({
   blend?: boolean;
   /** A shiny's colour is its own: no form wash or Wardrobe tint on top. */
   lockColour?: boolean;
-  /** v30 — overrides the pet's saved finish (the picker preview). */
-  finish?: { kind: FinishKind; color: string | null } | null;
-  /** `sweep` only on the opened card, Dress, the room and the egg reveal. */
+  /** v30 — the pet's finish (the picker previews its own). Drawn ON the pet by `PetHolo`. */
+  finish?: { kind: FinishKind; color: string | null; sweep?: string; glint?: string } | null;
+  /** Kept for callers: the holo on the pet runs its own loop (gentle under Reduce Motion). */
   foilMotion?: FinishMotion;
   reduceMotion?: boolean;
-  /** The card or the room draws reverse holo. The sprite itself stays plain. */
+  /** Kept for callers: the card draws only a quiet border now. */
   reverseHost?: boolean;
   /** Equipped sword element. The aura colour follows it. */
   auraElement?: string | null;
@@ -131,28 +139,35 @@ export function PetFigure({
   const tint = lockColour ? null : (look.tint ?? PET_BRANCH_TINT[pet.branch]);
   const badgeArt = look.badgeItemId ? itemArtSource(getItemDef(look.badgeItemId)?.core.art ?? '') : undefined;
   const badge = Math.max(14, Math.round(box * 0.3));
-  // Finishes paint the card, never the sprite. The props stay so callers can
-  // still say which finish the card is showing.
-  void finish;
   void foilMotion;
   void reduceMotion;
   const worn = auraPaintOrder(pet.auras);
   const sword = auraElement || auraConfig().fallback_element;
-  const blaze = worn.find((wear) => wear.style === 'blaze');
-  // Streetwear art style: the packed sprite auras (every style has a front layer).
-  const spriteAuras = artSkin() === 'streetwear';
-  const Aura = spriteAuras ? PetAuraSprite : PetAura;
+  const reserve = Math.ceil(box * STAGE_RESERVE);
+  const worn_finish =
+    finish && finish.kind !== 'none' && finish.color
+      ? {
+          kind: finish.kind,
+          color: finish.color,
+          sweep: finish.sweep ?? pet.finish_sweep,
+          glint: finish.glint ?? pet.finish_glint,
+        }
+      : finish === undefined || finish === null
+        ? petFinishOf(pet)
+        : null;
   return (
-    <View style={{ width: box, height: box, overflow: 'visible' }}>
+    <View style={{ width: box, height: box }}>
+     <View pointerEvents="none" style={[styles.stage, { left: -reserve, top: -reserve, width: box + reserve * 2, height: box + reserve * 2 }]}>
+      <View style={{ position: 'absolute', left: reserve, top: reserve, width: box, height: box }}>
       {worn.map((wear) =>
-        hideoutFx && (wear.style === 'blaze' || wear.style === 'bubbles') ? (
+        hideoutFx && (wear.style === 'fire' || wear.style === 'water') ? (
           <HideoutAuraStrip key={wear.style} styleId={wear.style} layer="back" box={box} />
         ) : (
-          <Aura
+          <PetAuraSprite
             key={wear.style}
             drawable={drawable}
             styleId={wear.style}
-            element={auraElementOf(wear.color, sword)}
+            ramps={auraRamps(wear.style, wear.color, sword)}
             box={box}
             layer="back"
           />
@@ -184,24 +199,21 @@ export function PetFigure({
         </View>
       ) : null}
       </View>
-      {spriteAuras
-        ? worn.map((wear) =>
-            hideoutFx && (wear.style === 'blaze' || wear.style === 'bubbles') ? (
-              <HideoutAuraStrip key={`front-${wear.style}`} styleId={wear.style} layer="front" box={box} />
-            ) : (
-            <PetAuraSprite
-              key={`front-${wear.style}`}
-              drawable={drawable}
-              styleId={wear.style}
-              element={auraElementOf(wear.color, sword)}
-              box={box}
-              layer="front"
-            />
-            ),
-          )
-        : blaze ? (
-            <PetAura drawable={drawable} styleId="blaze" element={auraElementOf(blaze.color, sword)} box={box} layer="front" />
-          ) : null}
+      {worn_finish ? <PetHolo finish={worn_finish} drawable={drawable} still={lookDrawable(petLookFor(pet.line, pet.stage))} box={box} /> : null}
+      {worn.map((wear) =>
+        hideoutFx && (wear.style === 'fire' || wear.style === 'water') ? (
+          <HideoutAuraStrip key={`front-${wear.style}`} styleId={wear.style} layer="front" box={box} />
+        ) : (
+          <PetAuraSprite
+            key={`front-${wear.style}`}
+            drawable={drawable}
+            styleId={wear.style}
+            ramps={auraRamps(wear.style, wear.color, sword)}
+            box={box}
+            layer="front"
+          />
+        ),
+      )}
       {badgeArt ? (
         <Image
           source={badgeArt}
@@ -210,11 +222,15 @@ export function PetFigure({
           accessibilityIgnoresInvertColors
         />
       ) : null}
+      </View>
+     </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  /** The reserve round the pet: clipped here so an aura never spills past it. */
+  stage: { position: 'absolute', overflow: 'hidden' },
   wash: { opacity: 0.35 },
   /** The shiny / dye recolour: a hue swap, or the wash fallback. */
   hue: { mixBlendMode: 'hue' },
