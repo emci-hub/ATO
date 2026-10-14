@@ -12,7 +12,8 @@
  *             assets/play/**), supabase/**, docs/**
  *   NEUTRAL — the allowlist (src/app/play.tsx shell, the LF-only library.md,
  *             PROJECT_CONTEXT.md / AGENTS.md / CLAUDE.md, .cursor/**,
- *             .gitattributes, package.json, scripts/ota-gate.ts, this script)
+ *             .gitattributes, package.json, scripts/ota-gate.ts, this script,
+ *             docs/divecore-* and docs/divecore/** (Play docs), docs/GOTCHAS.md)
  *             and anything not otherwise classified (root config, dotfiles).
  *
  * The changeset checked, in order:
@@ -56,6 +57,8 @@ const NEUTRAL: RegExp[] = [
   /^scripts\/ota-gate\.ts$/,
   /^scripts\/check-play-isolation\.ts$/, // itself
   /^\.gitignore$/,
+  /^docs\/divecore[-/]/,            // Divecore (Play) docs: research, spec, audit (play-isolation.mdc allows Play docs)
+  /^docs\/GOTCHAS\.md$/,            // shared traps list; Play rules live there too (fixed regions, stage bounds)
   /^\.expo\//,
   /^\.vscode\//,
   /^src\/art\//,                    // shared art library
