@@ -46,14 +46,30 @@ export const CHATTER_LABEL: Record<ChatterLevel, string> = {
 /** A daily window in minutes since local midnight; `from > to` crosses midnight. */
 export type DayWindow = { from: number; to: number };
 
+/** The first-time coach tips (docs/divecore-ui-spec.md §FTUE), each shown once. */
+export const COACH_TIPS = ['warm', 'feed', 'dive', 'turf'] as const;
+export type CoachTipId = (typeof COACH_TIPS)[number];
+
+/** In-game notices: everything, or only errors and celebrations. */
+export const NOTICE_MODES = ['all', 'important'] as const;
+export type NoticeMode = (typeof NOTICE_MODES)[number];
+
+function allTips(seen: boolean): Record<CoachTipId, boolean> {
+  return { warm: seen, feed: seen, dive: seen, turf: seen };
+}
+
 export type PlaySettings = {
   notif: Record<NotifKind, boolean>;
   quiet: DayWindow;
   bedtime: DayWindow;
   chatter: ChatterLevel;
   skipReveals: boolean;
-  /** Seen (or skipped) the first-time tutorial. */
+  /** Seen (or skipped) the first-time tutorial. Kept: a save with progress has it set. */
   tutorialSeen: boolean;
+  /** Each coach tip seen once. A save that had seen the tutorial counts as all seen. */
+  tipsSeen: Record<CoachTipId, boolean>;
+  /** "All" or "Important only" (errors + celebrations) in-game notices. */
+  notices: NoticeMode;
   /** Art style the game is drawn in. Paint only; Streetwear is the only look (Classic retired). */
   artSkin: ArtSkinId;
   /** Small vibrations on taps and big moments (Streetwear shell). */
@@ -71,9 +87,21 @@ export function defaultSettings(): PlaySettings {
     chatter: 'normal',
     skipReveals: false,
     tutorialSeen: false,
+    tipsSeen: allTips(false),
+    notices: 'all',
     artSkin: 'streetwear',
     haptics: true,
   };
+}
+
+/** Per-tip flags from a save: missing ones follow the old tutorial flag (seen = all seen). */
+function parseTipsSeen(raw: unknown, tutorialSeen: boolean): Record<CoachTipId, boolean> {
+  const base = allTips(tutorialSeen);
+  if (typeof raw !== 'object' || raw == null) return base;
+  const r = raw as Record<string, unknown>;
+  const out = { ...base };
+  for (const id of COACH_TIPS) if (typeof r[id] === 'boolean') out[id] = r[id] as boolean;
+  return out;
 }
 
 function minuteOf(v: unknown, fallback: number): number {
@@ -95,12 +123,18 @@ function parseWindow(raw: unknown, fallback: DayWindow): DayWindow {
 export function parseSettings(raw: unknown, legacy: { remind: boolean; hasProgress: boolean } | null): PlaySettings {
   const base = defaultSettings();
   if (legacy) {
-    return { ...base, notif: { ...base.notif, hunger: legacy.remind }, tutorialSeen: legacy.hasProgress };
+    return {
+      ...base,
+      notif: { ...base.notif, hunger: legacy.remind },
+      tutorialSeen: legacy.hasProgress,
+      tipsSeen: allTips(legacy.hasProgress),
+    };
   }
   if (typeof raw !== 'object' || raw == null) return base;
   const r = raw as Record<string, unknown>;
   const n = (typeof r.notif === 'object' && r.notif != null ? r.notif : {}) as Record<string, unknown>;
   const flag = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
+  const tutorialSeen = flag(r.tutorialSeen, false);
   return {
     notif: {
       hunger: flag(n.hunger, base.notif.hunger),
@@ -115,7 +149,9 @@ export function parseSettings(raw: unknown, legacy: { remind: boolean; hasProgre
     bedtime: parseWindow(r.bedtime, DEFAULT_WINDOW),
     chatter: (CHATTER_LEVELS as readonly string[]).includes(r.chatter as string) ? (r.chatter as ChatterLevel) : base.chatter,
     skipReveals: flag(r.skipReveals, false),
-    tutorialSeen: flag(r.tutorialSeen, false),
+    tutorialSeen,
+    tipsSeen: parseTipsSeen(r.tipsSeen, tutorialSeen),
+    notices: (NOTICE_MODES as readonly string[]).includes(r.notices as string) ? (r.notices as NoticeMode) : 'all',
     artSkin: (ART_SKINS as readonly unknown[]).includes(r.artSkin) ? (r.artSkin as ArtSkinId) : base.artSkin,
     haptics: flag(r.haptics, true),
   };
