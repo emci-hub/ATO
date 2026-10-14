@@ -22,6 +22,7 @@ import Animated, {
   Easing,
   ReduceMotion,
   cancelAnimation,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -54,6 +55,9 @@ import {
   HIDEOUT_HERO_FIGURE_PX,
   HIDEOUT_STAGE_SCALE,
   hideoutHeroArtPx,
+  hideoutCameraTop,
+  hideoutCoverRestTop,
+  hideoutCoverScale,
   hideoutIntegerScale,
   hideoutPetBox,
   hideoutStageOrigin,
@@ -400,6 +404,8 @@ export function PetRoom({
   auraElement = null,
   juiceKey = 0,
   hideoutStage = null,
+  stageSize,
+  roomOutside = false,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -452,6 +458,11 @@ export function PetRoom({
     onCall: () => void;
     onCoachSeen: () => void;
   } | null;
+  /** Stage layout: the fixed stage size from the GameScreen frame (no measuring, no resizing). */
+  stageSize?: { width: number; height: number };
+  /** Stage layout: the status strip and the Hideout / Loft / Call row live outside the room
+   * (NoticeLane + their own row); the room fills the whole stage and a camera follows the pet. */
+  roomOutside?: boolean;
 }) {
   // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
   const fontsReady = usePixelFonts();
@@ -472,9 +483,12 @@ export function PetRoom({
     if (!fxAnimate) return;
     playHit.current();
   }, [fxAnimate, juiceKey]);
-  const [real, setReal] = useState({ width: 0, height: 0 });
-  const onLayout = (e: LayoutChangeEvent) =>
-    setReal({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
+  const [measured, setMeasured] = useState({ width: 0, height: 0 });
+  const onLayout = (e: LayoutChangeEvent) => {
+    if (stageSize) return;
+    setMeasured({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
+  };
+  const real = stageSize ?? measured;
   const streetRoom = streetUiOn();
   const pr = PixelRatio.get();
   // Hideout room + Call buttons: a column in the right gutter when the room leaves one
@@ -491,9 +505,12 @@ export function PetRoom({
       : HIDEOUT_CEILING_ART_PX * fullFit.pt >= HIDEOUT_CONTROL_COMPACT_PT
         ? 'ceiling'
         : 'row';
-  const barReserve = hideoutStage && controlsMode === 'row' ? HIDEOUT_ROW_RESERVE_PT : 0;
+  const barReserve = hideoutStage && controlsMode === 'row' && !roomOutside ? HIDEOUT_ROW_RESERVE_PT : 0;
+  const cover = streetRoom && roomOutside;
   const hideoutScale =
-    streetRoom && real.width > 0 && real.height > 0
+    cover && real.width > 0 && real.height > 0
+      ? hideoutCoverScale({ availW: real.width, availH: real.height, pixelRatio: pr })
+      : streetRoom && real.width > 0 && real.height > 0
       ? hideoutIntegerScale({
           availW: real.width - HIDEOUT_MARGIN_PT * 2,
           availH: Math.max(1, real.height - barReserve),
@@ -516,7 +533,11 @@ export function PetRoom({
   const footAt = egg ? 1 : roleFootAt(art.role);
   // Floor effects (ring, glimmer, shiny ring) centre on the ground point, not the toe edge.
   const groundAt = egg ? 1 : roleGroundAt(art.role);
-  const origin = streetRoom && hideoutScale
+  // Cover: the room's own layer is as tall as the room; the camera slides it (roomTop ≤ 0).
+  const roomLayerH = cover && hideoutScale ? Math.max(height, hideoutScale.canvasH) : height;
+  const origin = cover && hideoutScale
+    ? { left: Math.round((width - hideoutScale.canvasW) / 2), top: hideoutScale.canvasH > height ? 0 : Math.round((height - hideoutScale.canvasH) / 2) }
+    : streetRoom && hideoutScale
     ? hideoutOrigin(Math.max(width, 1), Math.max(height - barReserve, 1), hideoutScale)
     : roomOrigin(Math.max(width, 1), Math.max(height, 1));
   const k = hideoutScale?.pt ?? ART_PT;
@@ -754,6 +775,31 @@ export function PetRoom({
   }, [tapKey, egg, asleep, art.kit, heart, hop, walkOn, motion.vestibularSafe, x, artX, artY]);
 
   const isoPt = hideoutScale?.pt ?? ART_PT;
+  // Stage layout camera (emci 2026-10-14): the room fills the stage and its layer slides so the
+  // pet stays in view — the floor first, lazily (no move while the pet is inside the band).
+  // Reduce Motion: the same glide, slower — gentle, never a jump.
+  const camRoomH = cover && hideoutScale ? hideoutScale.canvasH : 0;
+  const camTop = useSharedValue(cover && camRoomH > height ? hideoutCoverRestTop(height, camRoomH) : 0);
+  const camGentle = motion.vestibularSafe;
+  useAnimatedReaction(
+    () => (cover && camRoomH > height ? artY.value * isoPt : -1),
+    (feetY) => {
+      if (feetY < 0) {
+        camTop.value = 0;
+        return;
+      }
+      const next = hideoutCameraTop(height, camRoomH, feetY, camTop.value);
+      if (Math.abs(next - camTop.value) > 1) {
+        camTop.value = withTiming(next, {
+          duration: camGentle ? 900 : 600,
+          easing: Easing.inOut(Easing.quad),
+          reduceMotion: ReduceMotion.Never,
+        });
+      }
+    },
+    [cover, camRoomH, height, isoPt, camGentle],
+  );
+  const camStyle = useAnimatedStyle(() => ({ transform: [{ translateY: camTop.value }] }));
   const isoOn = !!(streetRoom && hideoutScale);
   const ox = origin.left;
   const oy = origin.top;
@@ -830,6 +876,7 @@ export function PetRoom({
     <View style={[styles.room, streetRoom && { backgroundColor: HIDEOUT_NIGHT }]}>
       {/* Meters, the scene, and the coach are three rows. None is positioned
           on top of another, so a short phone cannot stack them. */}
+      {roomOutside ? null : (
       <View style={styles.metersSlot} pointerEvents="box-none">
       {streetRoom ? (
         <StreetStatusStrip
@@ -893,9 +940,10 @@ export function PetRoom({
         ))
       )}
       </View>
+      )}
 
-      <View style={styles.stage} onLayout={onLayout}>
-      <View style={StyleSheet.absoluteFill}>
+      <View style={stageSize ? [styles.stageFixed, { width: stageSize.width, height: stageSize.height }] : styles.stage} onLayout={onLayout}>
+      <Animated.View style={cover ? [styles.roomLayer, { height: roomLayerH }, camStyle] : StyleSheet.absoluteFill}>
       {width > 0 ? (
         <RoomBackdrop
           width={width}
@@ -1070,7 +1118,7 @@ export function PetRoom({
         </Animated.View>
       ) : null}
       {streetRoom && hideoutScale ? (
-        <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} stageW={width} stageH={Math.max(1, height - barReserve)} />
+        <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} stageW={width} stageH={cover ? roomLayerH : Math.max(1, height - barReserve)} />
       ) : null}
       {streetRoom && hideoutScale && !hideoutStage ? (
         <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} feetX={feet.x} feetY={feet.y} night={night} gentle={motion.vestibularSafe} />
@@ -1092,7 +1140,7 @@ export function PetRoom({
           <StreetSpeechBubble text={speech.text} anchored width={speechBubbleW} />
         </Animated.View>
       ) : null}
-      {width > 0 && hideoutStage && hideoutScale ? (
+      {width > 0 && hideoutStage && hideoutScale && !roomOutside ? (
         <HideoutStageControls
           hideout={hideoutStage.hideout}
           presence={hideoutStage.presence}
@@ -1107,7 +1155,7 @@ export function PetRoom({
           controlsMode={controlsMode}
         />
       ) : null}
-      </View>
+      </Animated.View>
       </View>
 
       {streetRoom ? null : (
@@ -1152,6 +1200,9 @@ const styles = StyleSheet.create({
   room: { flex: 1, minHeight: 0, backgroundColor: '#2e222f' },
   metersSlot: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 8, paddingTop: 6, gap: 8 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
+  // Stage layout: the frame's fixed size (no flex leftover); the room layer slides inside it.
+  stageFixed: { overflow: 'hidden' },
+  roomLayer: { position: 'absolute', left: 0, right: 0, top: 0 },
   speechAnchor: { position: 'absolute', left: 0, top: 0, width: 0, height: 0 },
   coachSlot: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 8, paddingBottom: 6 },
   buffChip: { alignSelf: 'flex-end' },

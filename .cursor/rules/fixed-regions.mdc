@@ -6,6 +6,9 @@ alwaysApply: true
 
 # Fixed regions (emci 2026-10-13)
 
+> **Game screens now use the stage layout** — see `.cursor/rules/stage-bounds.mdc`
+> (`<GameScreen>`, a fixed stage from `useStageFrame`). The rules below still hold inside each region.
+
 Every game screen is a stack of REGIONS — top bar · viewport (the picture / board / room)
 · bottom panel — plus a floating OVERLAY layer. Content may change inside a region; it
 may NEVER change the region's size, or the viewport next to it rescales.

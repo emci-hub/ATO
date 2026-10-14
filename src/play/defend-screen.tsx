@@ -24,14 +24,13 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AppState, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, G, Image as SvgImage, Path, Rect, Text as SvgText } from 'react-native-svg';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -85,7 +84,9 @@ import { allHeroes, heroById, heroName } from '@/play/heroes-data';
 import { PlayFrame } from '@/play/play-frame';
 import { HeroOwnSheet } from '@/play/hero-own-sheet';
 import { NeonButton, NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
-import { StreetDockFill, StreetHudFill } from '@/play/street-shell';
+import { GameScreen, computeStageFrame, useStageFrame } from '@/play/stage-layout';
+import { PlaySheet } from '@/play/play-sheet';
+import { NEON } from '@/play/neon-viper';
 import { alertHaptic } from '@/play/street-feel';
 import { STREET, STREET_FONT, StreetBackdrop, StreetFrame, streetUiOn } from '@/play/street-ui';
 import {
@@ -217,6 +218,9 @@ import { StatusIconRow, WeaknessDiamond } from '@/play/status-icon-row';
 import { statusIconsFor } from '@/play/status-icons';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
+/** Stage layout: the TURF WAR title + the two-line lede above the board (pt). */
+const TURF_HEADER_PT = 112;
+
 const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
   swarm: '#22D3EE', // cyan
   runner: '#F472B6', // pink
@@ -689,6 +693,8 @@ export function DefendScreen({
   onLeak,
   registerBack,
   onBackToGrove,
+  shellTop = null,
+  shellTabs = null,
 }: {
   view: PlayView;
   /** Reduce-motion → floaters render static (no rise/fade). */
@@ -751,8 +757,16 @@ export function DefendScreen({
   /** Back one level (edge-back.ts): the Play shell asks Defend first. */
   registerBack?: (inner: InnerBack | null) => void;
   onBackToGrove: () => void;
+  /** Stage layout: the shell's resource bar and tab bar (setup); the wave swaps in its HUD + dock. */
+  shellTop?: ReactNode;
+  shellTabs?: ReactNode;
 }) {
   const theme = useTheme();
+  // Stage layout: ONE frame for setup and wave (the wave dock = setup dock + tab bar), read once.
+  const setupFrame = useStageFrame('turf-setup');
+  const waveFrame = useMemo(() => computeStageFrame('turf-wave', setupFrame.window, setupFrame.insets), [setupFrame]);
+  /** The Setup sheet (wave card, drops, maps, replays, effects) — the board never scrolls. */
+  const [setupOpen, setSetupOpen] = useState(false);
   /** Dev kit only: soft PIN gate (same session flag the hub uses). */
   const devUnlocked = usePlayDevUnlocked();
   const [phase, setPhase] = useState<DefendPhase>('setup');
@@ -1635,6 +1649,10 @@ export function DefendScreen({
     registerBack({
       edgeSwipe: defendEdgeSwipe(phase),
       back: () => {
+        if (setupOpen) {
+          setSetupOpen(false);
+          return true;
+        }
         const step = defendBackStep(phase, leaveConfirmOpen);
         if (step === 'close-confirm') cancelLeaveRun();
         else if (step === 'request-leave') requestLeaveRun();
@@ -1642,7 +1660,7 @@ export function DefendScreen({
       },
     });
     return () => registerBack(null);
-  }, [registerBack, phase, leaveConfirmOpen, cancelLeaveRun, requestLeaveRun]);
+  }, [registerBack, phase, leaveConfirmOpen, cancelLeaveRun, requestLeaveRun, setupOpen]);
 
   const confirmLeaveRun = useCallback(() => {
     resumeAfterLeaveCancelRef.current = false;
@@ -2645,1340 +2663,771 @@ export function DefendScreen({
     </ThemedView>
   );
 
+  const live = phase === 'running';
+  // The board: square, right under the header, the same size and spot in setup and wave.
+  const boardSide = Math.max(160, Math.min(setupFrame.stage.width - 24, setupFrame.stage.height - TURF_HEADER_PT));
+
   // The baked street board for this map (Streetwear only; play-art-pack packSwBoards).
   const streetBoardKey = street ? boardSheet(boardMap.id) : undefined;
   const streetBoard = streetBoardKey ? sheetFrame(streetBoardKey, 'img') : undefined;
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={street ? ['left', 'right'] : undefined}>
-        <View style={[styles.topRow, street && styles.streetHidden]}>
-          <Pressable
-            onPress={onBackToGrove}
-            hitSlop={12}
-            style={({ pressed }) => [pressed && styles.pressed]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                ‹ Divecore
-              </ThemedText>
-          </Pressable>
-          <Pressable
-            onPress={onOpenSwords}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Swords"
-            style={({ pressed }) => [pressed && styles.pressed]}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Swords
-            </ThemedText>
-          </Pressable>
-        </View>
-
-        <ThemedText type="subtitle" style={street ? styles.streetTitle : undefined}>
-          {street ? 'Turf War' : 'Defend'}
-        </ThemedText>
-        {/* fixed-regions: screen switch — setup → run collapses the setup header once so the board fills the screen. */}
-        <ThemedText themeColor="textSecondary" style={[styles.lede, street && phase === 'running' && styles.streetHidden]}>
-          Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
-        </ThemedText>
-
-        {/* Board */}
-        <PlayFrame style={[styles.card, styles.boardCard]}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.boardCardLabel}>
-            {boardMap.name}
-            {cycleNote ? ` · ${cycleNote}` : ''}
-            {fight.mode === 'replay' ? ' · replay (half tokens)' : ''}
-          </ThemedText>
-          <View
-            style={[styles.board, { backgroundColor: theme.backgroundSelected }]}
-            onLayout={(event) => {
-              const width = event.nativeEvent.layout.width || 100;
-              boardSizeRef.current = width;
-              boardSize.value = width;
-            }}
-            // Click-to-move: one tap on the board walks the Avatar, unless the
-            // tap lands on a pad (that opens the tower UI instead). HUD and the
-            // tower panels sit outside this view, so their taps never land here.
-            // A drag still scrolls the page: ScrollView takes the responder
-            // back when it starts scrolling, which cancels this tap.
-            onStartShouldSetResponder={() => true}
-            onResponderTerminationRequest={() => true}
-            onResponderGrant={(event) =>
-              aimAvatarPreview(event.nativeEvent.locationX, event.nativeEvent.locationY, true)
-            }
-            onResponderMove={(event) =>
-              aimAvatarPreview(event.nativeEvent.locationX, event.nativeEvent.locationY, false)
-            }
-            onResponderTerminate={() => setAvatarAim(null)}
-            onResponderRelease={(event) => {
-              setAvatarAim(null);
-              handleBoardTap(event.nativeEvent.locationX, event.nativeEvent.locationY);
-            }}>
-            {/* Terrain + prop garnish (§19 — active skin): grass floor, prop
-                garnish, and pad markers. Background only, behind every gameplay
-                layer (zIndex 0). `anchor: 'center'` tiles (pads, props) sit ON
-                the world point; grid tiles tile from their top-left.
-                pointerEvents none — taps fall through to the board's own tap
-                handler (click-to-move / pad select). */}
-            {/* Craftpix field tiles (grass + props + pad markers) are the
-                `grove-classic` board skin only. The default `neon` chrome paints
-                its own void/corridor/brackets in the gameplay SVG below, so the
-                field tiles are bypassed entirely. */}
-            {boardSkin === 'neon' ? null : (
-              <View
-                pointerEvents="none"
-                style={[StyleSheet.absoluteFill, styles.boardTiles]}>
-                {decor.map((tile, index) => {
-                  const source = skinArt(tile.role);
-                  if (!source) return null;
-                  const box = skinDrawBox(tile.role, tile.x, tile.y, tile.size);
-                  const left = tile.anchor === 'center' ? box.x : tile.x;
-                  const top = tile.anchor === 'center' ? tile.y - (tile.h ?? tile.size) / 2 : tile.y;
-                  return (
-                    <Image
-                      key={`tile-${index}`}
-                      source={source}
-                      contentFit="fill"
-                      style={{
-                        position: 'absolute',
-                        left: `${left}%`,
-                        top: `${top}%`,
-                        width: `${tile.size}%`,
-                        height: `${tile.h ?? tile.size}%`,
-                        transform: [{ rotate: `${tile.rotate}deg` }],
-                      }}
-                    />
-                  );
-                })}
+    <View style={styles.turfRoot}>
+      <GameScreen
+        // Stage layout (emci 2026-10-14): one stage for setup and wave — the board sits right
+        // under the TURF WAR header in both and never moves (no scroll, no jump on start or pause).
+        frame={live ? waveFrame : setupFrame}
+        topBar={
+          live && street ? (
+            <StreetFrame piece="resbar" style={styles.streetHud}>
+              <View style={styles.streetWave}>
+                <StreetBackdrop piece="chip-on" />
+                <Text style={styles.streetWaveText} numberOfLines={1}>
+                  {campaignPhaseLabel(labelPhase)} wave {displayedWave}
+                </Text>
               </View>
-            )}
-            {/* Gameplay layer — path, pads, towers, Bound Bosses, enemies.
-                Sits ABOVE the tiles (zIndex 1 > 0) so gameplay always reads on
-                top of the scroll art. pointerEvents none: gameplay is pure art
-                now, and every tap belongs to the board view underneath
-                (click-to-move / pad select). */}
-            <View style={styles.boardArt} pointerEvents="none">
-            <Svg width="100%" height="100%" viewBox="0 0 100 100">
-              {street && streetBoard ? (
-                /* Streetwear Turf War: the baked street board (asphalt roads,
-                 * sidewalks, manhole pads, props) as ONE sprite. Paint only —
-                 * the path, pads and taps still come from board-data. */
-                <SheetSprite frame={streetBoard} x={0} y={0} size={100} />
-              ) : boardSkin === 'neon' ? (
-                /* Neon chrome — void/wall, ATO ghost, glowing path corridor and
-                 * magenta pad brackets. Painted FIRST so every gameplay layer
-                 * (pad rings, towers, enemies, shots) sits on top of it, and the
-                 * ghost stays under the corridor. Pure code/SVG, no PNGs. */
-                <NeonBoardChrome map={boardMap} ghostColor={theme.accent} />
+              <Text style={styles.streetHudCaps} numberOfLines={1} accessibilityLabel={`${scrap} run caps`}>
+                {scrap} caps
+              </Text>
+              <Pressable
+                onPress={() => setPaused((value) => !value)}
+                accessibilityRole="button"
+                accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
+                hitSlop={8}
+                style={({ pressed }) => [styles.streetPause, pressed && styles.pressed]}>
+                {paused ? <Text style={styles.streetResume}>▶</Text> : <StreetBackdrop piece="pause" />}
+              </Pressable>
+            </StreetFrame>
+            
+          ) : (
+            shellTop
+          )
+        }
+        tabBar={live ? null : shellTabs}
+        background={NEON.ink}
+        notice={
+          <View style={styles.turfLane}>
+            {live ? (
+              paused ? (
+                <View style={styles.coachLine}>
+                              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                                Paused — the wave is frozen. Leave from the bar below.
+                              </ThemedText>
+                            </View>
               ) : (
-                <>
-                  {/* ATO ghost — the 16×16 logo mask baked from `ato-map.tmx`,
-                   * painted faint directly UNDER the road so the mark reads through
-                   * the board. Pure decor: this whole layer is pointerEvents none,
-                   * and the mask never touches the waypoint polyline the puffs walk.
-                   * Both campaign maps share the ATO board, so it renders on all. */}
-                  <Path d={ATO_GHOST_D} fill={theme.accent} fillOpacity={0.07} />
-                  {/* Road — a thin dark underlay bed stroked along the waypoint
-                   * polyline, then cobble STAMPS (straights + elbow corners + flared
-                   * ends) centred on the centreline. Waypoints stay the walk truth.
-                   * Drawn first so pads/towers/units sit on top. */}
-                  <G>
-                    <Path
-                      d={roadD}
-                      stroke={underlayTone}
-                      strokeWidth={underlayWidth}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                  </G>
-                  {roadStamps.map((stamp, index) => {
-                    const source = skinArt(stamp.role);
-                    if (!source) return null;
-                    const box = skinDrawBox(stamp.role, stamp.x, stamp.y, stamp.size);
-                    return (
-                      <SvgImage
-                        key={`road-${index}`}
-                        href={source}
-                        x={box.x}
-                        y={box.y}
-                        width={box.size}
-                        height={box.size}
-                      />
-                    );
-                  })}
-                </>
-              )}
-              {/* Pads draw NOTHING extra here — the neon chrome's magenta
-               * L-brackets + P-label are the whole read (no solid candy disc,
-               * no base ring). A selected pad is signalled by its dashed range
-               * ring below. */}
-              {selectedPad != null && boardMap.pads[selectedPad] ? (
-                <Circle
-                  cx={boardMap.pads[selectedPad].x}
-                  cy={boardMap.pads[selectedPad].y}
-                  r={
-                    selectedTower
-                      ? TOWER_DEFS[selectedTower.kind].range
-                      : selectedBoundBoss
-                        ? boundBossRange(selectedBoundBoss)
-                        : 18
-                  }
-                  fill={selectedRing.pull ? selectedRing.color : 'none'}
-                  fillOpacity={0.07}
-                  stroke={selectedRing.color}
-                  strokeOpacity={0.6}
-                  strokeWidth={1}
-                  strokeDasharray="2 2"
-                />
-              ) : null}
-              {/* Placement preview: press and hold a build option to see its
-               * ring on the pad before committing. */}
-              {placePreview && selectedPad != null && boardMap.pads[selectedPad] ? (
-                <Circle
-                  cx={boardMap.pads[selectedPad].x}
-                  cy={boardMap.pads[selectedPad].y}
-                  r={placePreview.range}
-                  fill={placePreview.color}
-                  fillOpacity={placePreview.pull ? 0.16 : 0.1}
-                  stroke={placePreview.color}
-                  strokeOpacity={0.9}
-                  strokeWidth={0.8}
-                  strokeDasharray="1.5 1.5"
-                />
-              ) : null}
-              {/* Avatar aim preview: its range ring under the finger. */}
-              {avatarAim ? (
-                <G>
-                  <Circle
-                    cx={avatarAim.x}
-                    cy={avatarAim.y}
-                    r={AVATAR_RANGE}
-                    fill={theme.accent}
-                    fillOpacity={0.08}
-                    stroke={theme.accent}
-                    strokeOpacity={0.8}
-                    strokeWidth={0.7}
-                    strokeDasharray="1.5 1.5"
-                  />
-                  <Circle cx={avatarAim.x} cy={avatarAim.y} r={1} fill={theme.accent} fillOpacity={0.9} />
-                </G>
-              ) : null}
-              {/* §19 tower sprites (skin roles). Visual level is SCALE ONLY
-               * (Lv1 0.70 · Lv2 0.85 · Lv3 1.0) — no number badges. Each tower
-               * is rotated toward its current target around its own centre —
-               * unless its clip kit is bundled, in which case it plays a sticky
-               * E/W idle loop + attack one-shot (K1) with no rotate. */}
-              {sim?.towers.map((tower) => {
-                const pad = boardMap.pads[tower.pad];
-                const role = TOWER_ROLE[tower.kind];
-                const kitRole = towerKitRole(tower.kind);
-                const dirs = skinDirs(role);
-                const deg = towerFacingRef.current[tower.id] ?? 0;
-                const heading = headingVectorFromDeg(deg);
-                const face = towerFaceRef.current[tower.id] ?? 'e';
-                const hasClips =
-                  castActorClipFrames('idle', kitRole) > 0 ||
-                  castActorClipFrames('attack', kitRole) > 0 ||
-                  castActorClipFrames('skill', kitRole) > 0;
-
-                let drawable: ClipDrawable | undefined;
-                let transform: string | undefined;
-                if (hasClips) {
-                  // Stationary humanoid: the breathing idle loop, or the attack
-                  // one-shot while firing. Side-profile art → sticky E/W face,
-                  // never rotated.
-                  const anim: CastActor =
-                    towerAnimRef.current[tower.id] ??
-                    castActorCreate('tower', castActorIdleSeed(tower.id, 'tower'));
-                  const frame = castActorFrame(anim, Date.now(), kitRole);
-                  drawable =
-                    castActorFrameDrawable(anim, face, frame, kitRole) ??
-                    roleArtDrawable(kitRole, roleFaceArtIndex(kitRole, face));
-                  transform = undefined;
-                } else {
-                  // No clip art yet — keep the static 8-dir rotation.
-                  const dirIndex = skinDirIndex(role, heading.dx, heading.dy);
-                  drawable = skinArtDrawable(role, dirIndex);
-                  transform = dirs > 1 ? undefined : `rotate(${deg} ${pad.x} ${pad.y})`;
-                }
-                if (!drawable) return null;
-                const size =
-                  skinUnits(role, TOWER_PAD_UNITS) * skinScale(role, tower.level) * TOWER_DRAW_SCALE;
-                const box = skinDrawBox(role, pad.x, pad.y, size);
-                return (
-                  <G key={`tower-art-${tower.id}`}>
-                    <G transform={transform}>
-                      <ClipSprite drawable={drawable} x={box.x} y={box.y} size={box.size} />
-                    </G>
-                    {/* Tiny Space Mono role letter at the sprite's top-right —
-                     * outside the rotate group so it never spins. Anchored to
-                     * the visible art corner, not the padded box corner. */}
-                    <SvgText
-                      x={box.x + box.size * TOWER_BADGE_X_FRAC}
-                      y={box.y + box.size * TOWER_BADGE_Y_FRAC}
-                      fontSize={TOWER_MARKER_SIZE}
-                      fontFamily="SpaceMono_700Bold"
-                      fill={TOWER_MARKER_COLOR}
-                      textAnchor="end"
-                      opacity={0.95}>
-                      {TOWER_LETTER[tower.kind]}
-                    </SvgText>
-                  </G>
-                );
-              })}
-              {/* §19 Bound Boss: a cycle boss with no hero art mapped keeps the
-               * heavy Final unit placeholder; a HERO bound as a tower AND a
-               * cycle boss mapped to a hero (Ember Sovereign → Archangel) draw
-               * that hero's idle/attack/skill clips through the same tower clip
-               * kit the towers use, on a sticky E/W side profile. */}
-              {sim?.boundBosses.map((bb) => {
-                const pad = boardMap.pads[bb.pad];
-                const heroId = boundBossHeroId(bb.bossId);
-                if (heroId) {
-                  const kitRole = resolveBoundHeroTowerKit(heroId);
-                  const face = towerFaceRef.current[bb.id] ?? 'e';
-                  const hasClips =
-                    castActorClipFrames('idle', kitRole) > 0 ||
-                    castActorClipFrames('attack', kitRole) > 0 ||
-                    castActorClipFrames('skill', kitRole) > 0;
-                  if (__DEV__ && !hasClips) {
-                    // A6 — a bound boss that resolved no clips draws a static
-                    // rotation. Fail loudly in dev so an un-bundled hero (or a
-                    // broken resolve) is never a silent freeze.
-                    console.warn(
-                      `[A6] bound boss "${bb.bossId}" (→ ${heroId}) resolved no idle/attack/skill clips — ` +
-                        `falling back to its static rotation. Is its hero art bundled?`,
-                    );
-                  }
-                  let drawable: ClipDrawable | undefined;
-                  if (hasClips) {
-                    const anim: CastActor =
-                      towerAnimRef.current[bb.id] ??
-                      castActorCreate('tower', castActorIdleSeed(bb.id, 'tower'));
-                    const frame = castActorFrame(anim, Date.now(), kitRole);
-                    drawable = castActorFrameDrawable(anim, face, frame, kitRole);
-                  }
-                  if (!drawable) {
-                    drawable = roleArtDrawable(kitRole, roleFaceArtIndex(kitRole, face));
-                  }
-                  if (!drawable) return null;
-                  // A6 — a bound boss is tower-sized, not hero-sized: cap the
-                  // hero's natural `units` so it reads on a pad next to towers.
-                  const size = Math.min(kitRole.units ?? TOWER_PAD_UNITS, 16) * TOWER_DRAW_SCALE;
-                  const footAt = roleFootAt(kitRole);
-                  const box = { x: pad.x - size / 2, y: pad.y - size * footAt, size };
-                  return (
-                    <ClipSprite
-                      key={`bb-hero-art-${bb.id}`}
-                      drawable={drawable}
-                      x={box.x}
-                      y={box.y}
-                      size={box.size}
-                    />
-                  );
-                }
-                const role: SkinRoleId = 'unit.final';
-                const drawable = skinArtDrawable(role);
-                if (!drawable) return null;
-                const box = skinDrawBox(role, pad.x, pad.y, 11);
-                return (
-                  <ClipSprite
-                    key={`bb-art-${bb.id}`}
-                    drawable={drawable}
-                    x={box.x}
-                    y={box.y}
-                    size={box.size}
-                  />
-                );
-              })}
-              {sim?.boundBosses.map((bb) => {
-                const pad = boardMap.pads[bb.pad];
-                return (
-                  <SvgText
-                    key={`bb-${bb.id}`}
-                    x={pad.x}
-                    y={pad.y + 1.4}
-                    fontSize={4.2}
-                    fontWeight="bold"
-                    fill="#FFFFFF"
-                    textAnchor="middle">
-                    {isHeroBoundTower(bb.bossId) ? heroName(bb.bossId) : '★' + bb.stars}
-                  </SvgText>
-                );
-              })}
-              {/* K2 death one-shots (display only) — the creeps killed this
-               * beat, drawn UNDER the living swarm. The engine removed them the
-               * tick they died, so the board replays their `death` clip from its
-               * own copy of the pose it last drew (same role / box / lane / side
-               * profile) and holds the last frame for a short beat. A role with
-               * no death art never becomes a corpse, so its kill still reads as
-               * the instant removal it was before K2. */}
-              {corpses.map((corpse) => {
-                const deathFrames = skinAnimFrames(corpse.role, 'death');
-                const drawable = skinAnimDrawable(
-                  corpse.role,
-                  'death',
-                  skinAnimFaceIndex(corpse.role, 'death', corpse.face),
-                  castActorPathFrame('death', Date.now(), corpse.bornAt, 0, deathFrames),
-                );
-                if (!drawable) return null;
-                const box = skinDrawBox(corpse.role, corpse.x, corpse.y, corpse.size);
-                return (
-                  <ClipSprite
-                    key={`corpse-${corpse.id}`}
-                    drawable={drawable}
-                    x={box.x}
-                    y={box.y}
-                    size={box.size}
-                  />
-                );
-              })}
-              {sim?.puffs.map((puff) => {
-                const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
-                // Status icons above the health bar (stun, DoT with stack
-                // count, slow, shred) — none when the creep is unaffected.
-                const statusIcons = statusIconsFor(puff);
-                // §19 board cast (skin roles): runners = fast unit, bosses =
-                // tanks/heavy by band, tanks = the heavy soak unit, normal
-                // puffs = the puff unit.
-                const creep = creepRole(puff);
-                const tintColor = CREEP_ROLE_COLOR[creep];
-                const drawScale = CREEP_DRAW_SCALE[creep];
-                const radius = 3.4 * puff.size * drawScale;
-                const spriteRole = puffUnitRole(puff, band?.kind);
-                // Lane offset is capped from the drawn WIDTH before the sprite
-                // exists: a creep's art is wider than its path point, so a wide
-                // unit (Knight / Archangel) rides the centreline instead of
-                // clipping the neon wall. Feet stay on the path either way —
-                // this is a lateral shift, never a change of route.
-                const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size * drawScale;
-                const pos = creepDrawPosition(puff, boardMap, creepLaneHalf(spriteSize));
-                const x = pos.x * 100;
-                const y = pos.y * 100;
-                const facingDeg = puffFacingRef.current[puff.id] ?? 0;
-                const heading = headingVectorFromDeg(facingDeg);
-                // Humanoid path walkers (creeps + Oni + Archangel) render as side
-                // profiles: the sticky east/west face is the ONLY facing they use,
-                // and it never rotates into the path tangent. Every other creep
-                // role keeps the 8-dir heading bucket (the semi's kenney
-                // `unit.tank_alt` has no side-profile art).
-                const pathWalker = isPathWalker(spriteRole);
-                const walkFace = puffWalkFaceRef.current[puff.id] ?? 'e';
-                const spriteDirs = skinDirs(spriteRole);
-                const sprite = skinArtDrawable(
-                  spriteRole,
-                  pathWalker
-                    ? skinFaceArtIndex(spriteRole, walkFace)
-                    : skinDirIndex(spriteRole, heading.dx, heading.dy),
-                );
-                // H1.5 creep walk clips: while the role authors one, play its
-                // directional frames. The frame comes from the walk tick's
-                // per-creep phase (ground-tracking, smooth at WALK_TICK_MS);
-                // otherwise keep the static rotation. Towers author no `walk`
-                // and stay as-is. A path walker always plays an east/west row
-                // (2-dir clip: its own side; 4-dir clip: the E/W rows only, N/S
-                // rows unused at runtime), so a vertical lane keeps the legs
-                // cycling instead of freezing on SKIN_WALK_NO_DIR.
-                const walkDirs = skinWalkDirs(spriteRole);
-                const walkFrames = skinWalkFrames(spriteRole);
-                const walkPhase =
-                  walkPhaseRef.current[puff.id]?.phase ??
-                  puff.dist * walkFramesPerPath(spriteRole);
-                const walkDirIndex = pathWalker
-                  ? skinWalkFaceIndex(spriteRole, walkFace)
-                  : skinWalkDirIndex(spriteRole, heading.dx, heading.dy);
-                const walkSprite =
-                  walkDirs > 0 && walkFrames > 1
-                    ? skinWalkDrawable(spriteRole, walkDirIndex, Math.floor(walkPhase))
-                    : undefined;
-                // K2 path-walker stance: the same stall window the walk tick
-                // just used decides the clip — moving ⇒ the walk cycle above,
-                // stopped for CREEP_STILL_MS ⇒ the role's breathing `idle` loop
-                // at its own wall-clock cadence (the walk cursor is deliberately
-                // frozen while stalled, so it cannot drive the loop). The stall
-                // is read from how long ago this creep last advanced, NOT from
-                // the tick's rate flag: a creep the tick has only just seeded has
-                // no measured rate yet, and reading that as "stopped" would make
-                // every spawn breathe before it walks. A role with no idle art
-                // keeps holding its walk frame, and a role with no walk art
-                // keeps the static rotation — both bosses author both slots
-                // now, so every path walker breathes when stalled.
-                const phaseEntry = walkPhaseRef.current[puff.id];
-                const creepMoving =
-                  phaseEntry == null || Date.now() - phaseEntry.at <= CREEP_STILL_MS;
-                const idleFrames = skinAnimFrames(spriteRole, 'idle');
-                const stance =
-                  pathWalker && walkDirs > 0
-                    ? creepClip({
-                        dead: false,
-                        rate: creepMoving ? 1 : 0,
-                        frames: { walk: walkFrames, idle: idleFrames },
-                      })
-                    : null;
-                const idleSprite =
-                  stance === 'idle'
-                    ? skinAnimDrawable(
-                        spriteRole,
-                        'idle',
-                        skinAnimFaceIndex(spriteRole, 'idle', walkFace),
-                        castActorPathFrame('idle', Date.now(), 0, puff.id, idleFrames),
-                      )
-                    : undefined;
-                const spriteDrawable = idleSprite ?? walkSprite ?? sprite;
-                // Feet-pivoted sprites rise above the path point, so the body
-                // chrome (ring / bar / badge) anchors to the draw box, not the
-                // path point.
-                const box = skinDrawBox(spriteRole, x, y, spriteSize);
-                const hasSprite = spriteDrawable != null;
-                const bodyCy = hasSprite ? box.y + spriteSize / 2 : y;
-                const barWidth = 8 * puff.size * drawScale;
-                // Up-facing single-sprite roles face along the road (path
-                // tangent), same convention as the towers; a degenerate heading
-                // keeps the last known facing. Path walkers are side-profile art
-                // with a sticky L/R face, so they stay at 0° — no SVG rotate.
-                // (`spriteDirs > 1` alone already gives them 0° today; the
-                // `pathWalker` guard makes "never rotate a cast walker" hold even
-                // if a walker role ever resolved to a single-sprite skin.)
-                const spriteTransform =
-                  pathWalker || spriteDirs > 1
-                    ? undefined
-                    : `rotate(${facingDeg} ${x} ${bodyCy})`;
-                // Boss band badge (display only): M = scout mini-boss, B = boss.
-                const bossBadge =
-                  puff.kind === 'boss' ? (band?.kind === 'scout_mini' ? 'M' : 'B') : null;
-                const barTop = hasSprite ? box.y - 2.8 : y - radius - 4;
-                // Icons shrink with the bar so a full row of 4 never outgrows it.
-                const ICON_SIZE = Math.min(2.4, barWidth / 4.6);
-                const iconRowY = barTop - ICON_SIZE / 2 - 0.5;
-                return (
-                  <G key={`puff-${puff.id}`}>
-                    <G transform={spriteTransform}>
-                      {spriteDrawable ? (
-                        <ClipSprite drawable={spriteDrawable} x={box.x} y={box.y} size={box.size} />
-                      ) : (
-                        <Circle cx={x} cy={y} r={radius} fill={tintColor} />
-                      )}
-                    </G>
-                    <Rect
-                      x={x - barWidth / 2}
-                      y={barTop}
-                      width={barWidth}
-                      height={1.6}
-                      fill="rgba(0,0,0,0.35)"
-                      rx={0.8}
-                    />
-                    <Rect
-                      x={x - barWidth / 2}
-                      y={barTop}
-                      width={barWidth * pct}
-                      height={1.6}
-                      fill="#4ADE80"
-                      rx={0.8}
-                    />
-                    {puff.tint ? (
-                      <WeaknessDiamond
-                        x={x - barWidth / 2 - 1.3}
-                        y={barTop + 0.8}
-                        size={1.9}
-                        color={TAG_COLOR[puff.tint]}
-                      />
-                    ) : null}
-                    <StatusIconRow icons={statusIcons} cx={x} cy={iconRowY} size={ICON_SIZE} />
-                    {bossBadge ? (
-                      <SvgText
-                        x={x}
-                        y={barTop - 2 - (statusIcons.length > 0 ? ICON_SIZE + 0.6 : 0)}
-                        fontSize={4.5}
-                        fontFamily="SpaceMono_700Bold"
-                        fill="#FFFFFF"
-                        textAnchor="middle"
-                        opacity={0.95}>
-                        {bossBadge}
-                      </SvgText>
-                    ) : null}
-                  </G>
-                );
-              })}
-              {/* §19 shot FX (display only) — one Kenney shot sprite per fired
-               * round, flying from the tower centre to its target's centre. */}
-              {shots.map((shot) => {
-                const role: SkinRoleId = 'fx.shot';
-                const drawable = skinArtDrawable(role);
-                if (!drawable) return null;
-                const box = skinDrawBox(role, shot.x, shot.y, skinUnits(role, 4.5) * SHOT_DRAW_SCALE);
-                // Point the round along its velocity (same up-facing convention).
-                const deg = facingDegrees(shot.vx, shot.vy);
-                return (
-                  <G key={`shot-${shot.id}`} transform={`rotate(${deg} ${shot.x} ${shot.y})`}>
-                    <ClipSprite drawable={drawable} x={box.x} y={box.y} size={box.size} />
-                  </G>
-                );
-              })}
-              {/* EFFECTS_PLAN step 5 — kit attack effects (Full / Minimal). */}
-              <FxLayer events={fxEvents} now={Date.now()} quality={fxQuality} />
-              {/* Dev kit only — synthetic FX stress (EFFECTS_PLAN step 1):
-                  tower/boss pads → live creeps, display only. */}
-              {stressFx > 0 ? (
-                <StressFxLayer
-                  count={stressFx}
-                  tick={stressTick}
-                  from={[
-                    ...(sim?.towers ?? []).map((t) => boardMap.pads[t.pad]),
-                    ...(sim?.boundBosses ?? []).map((b) => boardMap.pads[b.pad]),
-                  ].filter((p) => p != null)}
-                  to={(sim?.puffs ?? []).map((p) => creepDrawPosition(p, boardMap))}
-                />
-              ) : null}
-            </Svg>
-            </View>
-            {fpsMeterOn ? <FpsOverlay stats={fpsStats} fxCount={stressFx} /> : null}
-
-            {phase === 'running' && swordFx ? (
-              <Animated.View
-                pointerEvents="none"
-                style={[styles.swordAura, swordAuraStyle, { borderColor: swordFx.color, backgroundColor: swordFx.color }]}
-              />
-            ) : null}
-            {/* Walking Avatar overlay (§19 cast Corvus). The frame cycles
-                idle/walk and one-shots attack/skill/hurt/dash; the art is 2-dir
-                (sticky E/W), so no rotate is applied. pointerEvents none so
-                board taps pass through to the board's move handler. zIndex 10
-                keeps it above the tiles AND the gameplay SVG. */}
-            <Animated.View
-              style={[styles.avatar, avatarStyle]}
-              pointerEvents="none">
-              <View
-                style={styles.avatarArt}
-                pointerEvents="none">
-                {avatarDrawable ? (
-                  <ClipImage drawable={avatarDrawable} />
-                ) : (
-                  <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]} />
-                )}
-              </View>
-            </Animated.View>
-
-            {/* Floating damage numbers (display only, pooled) */}
-            {floaters.map((floater) => (
-              <HitFloater
-                key={floater.id}
-                floater={floater}
-                kill={floater.kill}
-                reduceMotion={reduceMotion}
-                onDone={() => dropFloater(floater.id)}
-              />
-            ))}
-
-            {/* §9m boss warn — a NON-BLOCKING Neon Viper banner raised a beat
-                before the boss steps in. pointerEvents none and no sim change,
-                so the fight keeps running underneath (towers keep firing).
-                Copy: "BOSS INCOMING" — never "BOUND BOSS" (that names the
-                player-owned Bound Boss tower). */}
-            {bossAlert ? (
-              <View pointerEvents="none" style={styles.bossAlertWrap}>
-                <View
-                  style={[
-                    styles.bossAlertPill,
-                    surfaceShadow(theme, reduceMotion),
-                    {
-                      backgroundColor: theme.backgroundElement,
-                      borderColor: theme.accentSecondary,
-                    },
-                  ]}>
-                  <ThemedText
-                    type="codeBold"
-                    style={[styles.bossWarnTitle, { color: theme.accentSecondary }]}>
-                    BOSS INCOMING
-                  </ThemedText>
-                  <ThemedText type="code" style={{ color: theme.accent }}>
-                    {bossAlert.label}
-                  </ThemedText>
-                  {bossAlert.name ? (
-                    <ThemedText type="code" themeColor="textSecondary">
-                      {bossAlert.name}
-                    </ThemedText>
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
-          </View>
-          {paused && phase === 'running' ? (
-            <View style={styles.pausedBox}>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-                Paused — the wave is frozen. Leave from the bar below.
-              </ThemedText>
-            </View>
-          ) : null}
-          {/* Effects Quality (EFFECTS_PLAN step 5): Full → Minimal → Off. Off
-              keeps the element-coloured damage numbers. */}
-          <Pressable
-            onPress={() => setFxQuality(nextFxQuality(fxQuality))}
-            accessibilityRole="button"
-            accessibilityLabel={`Effects: ${FX_QUALITY_LABEL[fxQuality]}. Tap to change.`}
-            style={({ pressed }) => [styles.fxQualityRow, pressed && styles.pressed]}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {`Effects: ${FX_QUALITY_LABEL[fxQuality]}`}
-            </ThemedText>
-          </Pressable>
-          {/* Dev kit only — the FX stress controls sit right under the board so
-              the FPS readout stays on screen while they're tapped (EFFECTS_PLAN
-              step 1). Same actions as the Board / Misc rows. */}
-          {PRE_LAUNCH_DEV && devUnlocked ? (
-            <View style={styles.devStrip}>
-              <View style={styles.devStripCell}>
-                <DevRow
-                  label={fpsMeterOn ? 'FPS: on' : 'FPS: off'}
-                  onPress={() => setFpsMeterOn((on) => !on)}
-                />
-              </View>
-              <View style={styles.devStripCell}>
-                <DevRow
-                  label={`FX: ${stressFx === 0 ? 'off' : stressFx}`}
-                  onPress={() => setStressFx((level) => nextStressFxLevel(level))}
-                />
-              </View>
-              <View style={styles.devStripCell}>
-                <DevRow
-                  label="+20 creeps"
-                  disabled={phase !== 'running' || !sim}
-                  onPress={devAddStressCreeps}
-                />
-              </View>
-            </View>
-          ) : null}
-          {PRE_LAUNCH_DEV && devUnlocked ? (
-            <View style={styles.devStripFull}>
-              <DevRow
-                label={
-                  bench.state.running
-                    ? 'FPS test running…'
-                    : phase === 'running'
-                      ? 'Run FPS test (30s)'
-                      : 'Run FPS test — start a wave first'
-                }
-                disabled={bench.state.running || phase !== 'running' || paused}
-                onPress={bench.start}
-              />
-              <BenchPanel
-                state={bench.state}
-                sendStatus={benchSend}
-                onCancel={bench.cancel}
-                onShare={() => {
-                  void Share.share({ message: benchReport(bench.state.results) });
-                }}
-                onClose={bench.clear}
-              />
-            </View>
-          ) : null}
-        </PlayFrame>
-
-        {/* Pad action panel */}
-        {selectedPad != null ? (
-          <ThemedView type="backgroundElement" style={styles.card}>
-            {selectedTower ? (
-              <>
-                <ThemedText type="smallBold">
-                  {TOWER_DEFS[selectedTower.kind].name} · level {selectedTower.level}/{TOWER_MAX_LEVEL}
-                </ThemedText>
-                {selectedTower.level < TOWER_MAX_LEVEL ? (
-                  <Pressable
-                    onPress={upgradeSelected}
-                    disabled={scrap < towerUpgradeCost(selectedTower)}
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      styles.primaryButton,
-                      {
-                        backgroundColor:
-                          scrap >= towerUpgradeCost(selectedTower)
-                            ? theme.accentFill
-                            : theme.backgroundSelected,
-                      },
-                      pressed && styles.pressed,
-                    ]}>
-                    <ThemedText
-                      type="smallBold"
-                      style={{
-                        color:
-                          scrap >= towerUpgradeCost(selectedTower)
-                            ? theme.onAccent
-                            : theme.textSecondary,
-                      }}>
-                      Upgrade · {towerUpgradeCost(selectedTower)} scrap
-                    </ThemedText>
-                  </Pressable>
-                ) : (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Fully upgraded.
-                  </ThemedText>
-                )}
-              </>
-            ) : selectedBoundBoss ? (
-              <>
-                <ThemedText type="smallBold">
-                  {isHeroBoundTower(selectedBoundBoss.bossId)
-                    ? heroName(selectedBoundBoss.bossId)
-                    : getBoundBossDef(selectedBoundBoss.bossId)?.name ?? 'Bound Boss'}
-                  {isHeroBoundTower(selectedBoundBoss.bossId) ? ' · bound hero' : ` · ★${selectedBoundBoss.stars}`}
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {isHeroBoundTower(selectedBoundBoss.bossId)
-                    ? 'Bound hero tower — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the hero bound.'
-                    : boundBossHeroId(selectedBoundBoss.bossId)
-                      ? `${heroName(boundBossHeroId(selectedBoundBoss.bossId)!)} kit — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the boss bound.`
-                      : `Bound Boss — fixed on the pad, stars only (no scrap upgrade). ${
-                          getBoundBossDef(selectedBoundBoss.bossId)?.skill.name
-                        }: ${getBoundBossDef(selectedBoundBoss.bossId)?.skill.description}`}
-                </ThemedText>
                 <Pressable
-                  onPress={removeSelectedBoundBoss}
-                  accessibilityRole="button"
-                  style={({ pressed }) => [styles.hudButton, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    Remove
-                  </ThemedText>
-                </Pressable>
-              </>
-            ) : (
-              <>
-                <ThemedText type="smallBold">
-                  Build a tower
-                  {atTowerCap ? ` · ${MAX_TOWERS}/${MAX_TOWERS} deployed` : ` · ${towerCountLabel}`}
-                </ThemedText>
-                {(Object.keys(TOWER_DEFS) as TowerKind[]).map((kind) => {
-                  const def = TOWER_DEFS[kind];
-                  const affordable = scrap >= def.placeCost && !atTowerCap;
-                  return (
-                    <Pressable
-                      key={kind}
-                      onPressIn={() => {
-                        const kit = TOWER_KITS[kind];
-                        setPlacePreview({
-                          range: def.range,
-                          color: kit.element ? ELEMENT_COLOR[kit.element] : theme.accent,
-                          pull: false,
-                        });
-                      }}
-                      onPressOut={() => setPlacePreview(null)}
-                      onPress={() => placeOnPad(kind)}
-                      disabled={!affordable}
-                      accessibilityRole="button"
-                      style={({ pressed }) => [
-                        styles.hudButton,
-                        { backgroundColor: affordable ? theme.backgroundSelected : theme.backgroundElement },
-                        pressed && affordable && styles.pressed,
-                      ]}>
-                      <ThemedText
-                        type="smallBold"
-                        themeColor={affordable ? undefined : 'textSecondary'}>
-                        {def.name} · {def.placeCost} scrap
-                        {atTowerCap ? ` · max ${MAX_TOWERS}` : ''}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                })}
-                {unlockedBoundBosses.length > 0 ? (
-                  <>
-                    <ThemedText type="smallBold" themeColor="textSecondary">
-                      Bound Boss
-                    </ThemedText>
-                    {unlockedBoundBosses.map((bb) => {
-                      const def = getBoundBossDef(bb.id);
-                      const hero = isHeroBoundTower(bb.id);
-                      const placeCost = hero ? HERO_TOWER_STATS.placeCost : def?.place_cost ?? 0;
-                      const affordable = scrap >= placeCost;
-                      const atCap = boundBossCount >= boundBossCapOnBoard();
-                      return (
-                        <Pressable
-                          key={bb.id}
-                          onPressIn={() => {
-                            const heroKit = heroById(bb.id)?.kit;
-                            setPlacePreview({
-                              range: heroKit
-                                ? kitRange(heroKit, Math.max(1, Math.min(3, bb.stars)))
-                                : (def?.range ?? 18),
-                              color: heroKit ? ELEMENT_COLOR[heroKit.element] : theme.accent,
-                              pull: heroKit?.behavior === 'pull',
-                            });
-                          }}
-                          onPressOut={() => setPlacePreview(null)}
-                          onPress={() => placeOnBoundBoss(bb.id, bb.stars)}
-                          disabled={!affordable || atCap}
-                          accessibilityRole="button"
-                          style={({ pressed }) => [
-                            styles.hudButton,
-                            {
-                              backgroundColor:
-                                affordable && !atCap
-                                  ? theme.backgroundSelected
-                                  : theme.backgroundElement,
-                            },
-                            pressed && affordable && !atCap && styles.pressed,
-                          ]}>
-                          <ThemedText
-                            type="smallBold"
-                            themeColor={affordable && !atCap ? undefined : 'textSecondary'}>
-                            {hero ? heroName(bb.id) : def?.name ?? bb.id}
-                            {hero ? ' · free' : ` ★${bb.stars} · ${placeCost} scrap`}
-                            {atCap ? ' · max 2' : ''}
-                          </ThemedText>
-                        </Pressable>
-                      );
-                    })}
-                  </>
-                ) : null}
-              </>
-            )}
-            <Pressable
-              onPress={() => setSelectedPad(null)}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.hudButton, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                Done
-              </ThemedText>
-            </Pressable>
-          </ThemedView>
-        ) : null}
-
-        {/* HUD */}
-        {/* fixed-regions: screen switch (setup → run). */}
-        <PlayFrame style={[styles.card, street && phase === 'running' && styles.streetHidden]}>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">
-              {campaignPhaseLabel(labelPhase)} wave {displayedWave}
-            </ThemedText>
-            <ThemedText type="subheading" themeColor="emphasis">
-              {defendDifficulty(displayedWave)}
-            </ThemedText>
-          </View>
-          <ThemedText type="small" themeColor="textSecondary">
-            {fight.mode === 'replay'
-              ? 'Replay of a cleared band — pays half tokens, your campaign seat stays put.'
-              : cycleNote
-                ? `Campaign climb — ${cycleNote}.`
-                : 'Campaign climb — Trial 1–5, then Main 1–20. Clear Main 20 to Conquer a cycle.'}
-          </ThemedText>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">Scrap</ThemedText>
-            <ThemedText type="subheading" themeColor="emphasis">
-              {scrap}
-            </ThemedText>
-          </View>
-          <ThemedText type="small" themeColor="textSecondary">
-            Run scrap — spend to place and upgrade towers, earn by defeating foes, resets each
-            run. You start with enough for about two towers.
-          </ThemedText>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">
-              {activeAvatarDef?.name ?? 'Avatar'} · Lv {view.avatarLevel}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              ×{levelBonus.toFixed(2)} power
-            </ThemedText>
-          </View>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">
-              Avatar ★{view.avatarStars}/{AVATAR_STAR_MAX}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              ×{avatarStarWavePower(view.avatarStars).toFixed(2)} power
-            </ThemedText>
-          </View>
-          {view.avatarStarTokens > 0 && view.avatarStars < AVATAR_STAR_MAX ? (
-            <Pressable
-              onPress={() => void onSpendStarToken()}
-              accessibilityRole="button"
-              accessibilityLabel="Spend Avatar star token"
-              style={({ pressed }) => [
-                styles.hudButton,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold">
-                Spend star token → ★{view.avatarStars + 1} (+
-                {Math.round(getTune().avatarStarWavePowerStep * 100)}% power)
-              </ThemedText>
-            </Pressable>
-          ) : null}
-          <View style={styles.statRow}>
-            <View style={styles.typeMatchRow}>
-              {stageElement ? (
-                <MaterialCommunityIcons
-                  name={TAG_ICON[stageElement]}
-                  size={14}
-                  color={TAG_COLOR[stageElement]}
-                />
-              ) : null}
-              <ThemedText type="smallBold">
-                Stage · {stageElement ? TAG_LABEL[stageElement] : 'Neutral'}
-              </ThemedText>
-            </View>
-            <Pressable
-              onPress={() => setChartOpen((open) => !open)}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Stage element matchup"
-              style={({ pressed }) => [pressed && styles.pressed]}>
-              <ThemedText
-                type="smallBold"
-                themeColor={
-                  stageMatchup.kind === 'favoured'
-                    ? 'emphasis'
-                    : 'textSecondary'
-                }>
-                {stageMatchupShort(stageMatchup)}
-              </ThemedText>
-            </Pressable>
-          </View>
-          {chartOpen ? (
-            <ThemedView type="backgroundElement" style={styles.chartCard}>
-              <ThemedText type="small" themeColor="textSecondary">
-                {stageMatchupDetail(stageMatchup)}
-              </ThemedText>
-            </ThemedView>
-          ) : null}
-          {phase !== 'running' ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {activeSkill.name}: {activeSkill.description} ({getTune().skillCooldownMs / 1000}s cooldown)
-            </ThemedText>
-          ) : null}
-        </PlayFrame>
-
-        {/* Coach — Defend setup, under the map with the wave card (emci 2026-10-13: map sits
-         * right under the lede), above the Start card so the tip is read first. Still dismissible. */}
-        {phase === 'setup' && !coachHidden ? (
-          <ThemedView type="backgroundElement" style={styles.coachCard}>
-            <View style={styles.coachHeader}>
-              <ThemedText type="smallBold" themeColor="emphasis">
-                Coach · {fightTitle(fight)}
-              </ThemedText>
+                            onPress={() => setRunCoachOpen((value) => !value)}
+                            disabled={coachHidden || paused}
+                            accessibilityRole="button"
+                            accessibilityLabel={runCoachOpen ? 'Hide coach tip' : 'Show coach tip'}
+                            accessibilityElementsHidden={paused}
+                            importantForAccessibility={paused ? 'no-hide-descendants' : 'auto'}
+                            style={styles.coachLine}>
+                            <ThemedText type="small" themeColor="textSecondary" style={styles.centerText} numberOfLines={2}>
+                              {swordFx
+                                ? `Aura: ${swordFx.name} — ${swordFx.auraLabel}.`
+                                : coachHidden
+                                  ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
+                                  : runCoachOpen
+                                    ? `Coach: ${coach.tip}`
+                                    : 'Coach tip ›'}
+                            </ThemedText>
+                          </Pressable>
+              )
+            ) : phase === 'setup' && !coachHidden ? (
               <Pressable
                 onPress={() => setCoachHidden(true)}
-                hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Hide coach"
-                style={({ pressed }) => [pressed && styles.pressed]}>
-                <ThemedText type="code" themeColor="textSecondary">
-                  Hide
+                accessibilityLabel={`Coach: ${coach.tip} Tap to hide.`}
+                style={styles.coachLine}>
+                <ThemedText type="small" themeColor="textSecondary" style={styles.centerText} numberOfLines={2}>
+                  {`Coach: ${coach.tip}`}
                 </ThemedText>
               </Pressable>
+            ) : null}
+          </View>
+        }
+        stage={
+          <View style={styles.turfStage}>
+            <View style={styles.turfHeader}>
+              <ThemedText type="subtitle" style={street ? styles.streetTitle : undefined}>
+                {street ? 'Turf War' : 'Defend'}
+              </ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.lede} numberOfLines={2}>
+                Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
+              </ThemedText>
             </View>
-            <ThemedText type="small" themeColor="textSecondary">
-              {coach.tip}
-            </ThemedText>
-            {coach.why ? (
-              <Pressable
-                onPress={() => setWhyOpen((open) => !open)}
-                accessibilityRole="button"
-                style={({ pressed }) => [pressed && styles.pressed]}>
-                <ThemedText type="code" themeColor="textSecondary">
-                  {whyOpen ? 'Why? (hide)' : 'Why?'}
-                </ThemedText>
-              </Pressable>
-            ) : null}
-            {whyOpen && coach.why ? (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.whyText}>
-                {coach.why}
-              </ThemedText>
-            ) : null}
-          </ThemedView>
-        ) : null}
+            <View style={{ width: boardSide, height: boardSide, alignSelf: 'center' }}>
+              <View
+                style={[styles.board, { backgroundColor: theme.backgroundSelected }]}
+                onLayout={(event) => {
+                  const width = event.nativeEvent.layout.width || 100;
+                  boardSizeRef.current = width;
+                  boardSize.value = width;
+                }}
+                // Click-to-move: one tap on the board walks the Avatar, unless the
+                // tap lands on a pad (that opens the tower UI instead). HUD and the
+                // tower panels sit outside this view, so their taps never land here.
+                // The board is not in a ScrollView (Phase 1 stage), so a drag
+                // stays here and walks the Avatar.
+                onStartShouldSetResponder={() => true}
+                onResponderTerminationRequest={() => true}
+                onResponderGrant={(event) =>
+                  aimAvatarPreview(event.nativeEvent.locationX, event.nativeEvent.locationY, true)
+                }
+                onResponderMove={(event) =>
+                  aimAvatarPreview(event.nativeEvent.locationX, event.nativeEvent.locationY, false)
+                }
+                onResponderTerminate={() => setAvatarAim(null)}
+                onResponderRelease={(event) => {
+                  setAvatarAim(null);
+                  handleBoardTap(event.nativeEvent.locationX, event.nativeEvent.locationY);
+                }}>
+                {/* Terrain + prop garnish (§19 — active skin): grass floor, prop
+                    garnish, and pad markers. Background only, behind every gameplay
+                    layer (zIndex 0). `anchor: 'center'` tiles (pads, props) sit ON
+                    the world point; grid tiles tile from their top-left.
+                    pointerEvents none — taps fall through to the board's own tap
+                    handler (click-to-move / pad select). */}
+                {/* Craftpix field tiles (grass + props + pad markers) are the
+                    `grove-classic` board skin only. The default `neon` chrome paints
+                    its own void/corridor/brackets in the gameplay SVG below, so the
+                    field tiles are bypassed entirely. */}
+                {boardSkin === 'neon' ? null : (
+                  <View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, styles.boardTiles]}>
+                    {decor.map((tile, index) => {
+                      const source = skinArt(tile.role);
+                      if (!source) return null;
+                      const box = skinDrawBox(tile.role, tile.x, tile.y, tile.size);
+                      const left = tile.anchor === 'center' ? box.x : tile.x;
+                      const top = tile.anchor === 'center' ? tile.y - (tile.h ?? tile.size) / 2 : tile.y;
+                      return (
+                        <Image
+                          key={`tile-${index}`}
+                          source={source}
+                          contentFit="fill"
+                          style={{
+                            position: 'absolute',
+                            left: `${left}%`,
+                            top: `${top}%`,
+                            width: `${tile.size}%`,
+                            height: `${tile.h ?? tile.size}%`,
+                            transform: [{ rotate: `${tile.rotate}deg` }],
+                          }}
+                        />
+                      );
+                    })}
+                  </View>
+                )}
+                {/* Gameplay layer — path, pads, towers, Bound Bosses, enemies.
+                    Sits ABOVE the tiles (zIndex 1 > 0) so gameplay always reads on
+                    top of the scroll art. pointerEvents none: gameplay is pure art
+                    now, and every tap belongs to the board view underneath
+                    (click-to-move / pad select). */}
+                <View style={styles.boardArt} pointerEvents="none">
+                <Svg width="100%" height="100%" viewBox="0 0 100 100">
+                  {street && streetBoard ? (
+                    /* Streetwear Turf War: the baked street board (asphalt roads,
+                     * sidewalks, manhole pads, props) as ONE sprite. Paint only —
+                     * the path, pads and taps still come from board-data. */
+                    <SheetSprite frame={streetBoard} x={0} y={0} size={100} />
+                  ) : boardSkin === 'neon' ? (
+                    /* Neon chrome — void/wall, ATO ghost, glowing path corridor and
+                     * magenta pad brackets. Painted FIRST so every gameplay layer
+                     * (pad rings, towers, enemies, shots) sits on top of it, and the
+                     * ghost stays under the corridor. Pure code/SVG, no PNGs. */
+                    <NeonBoardChrome map={boardMap} ghostColor={theme.accent} />
+                  ) : (
+                    <>
+                      {/* ATO ghost — the 16×16 logo mask baked from `ato-map.tmx`,
+                       * painted faint directly UNDER the road so the mark reads through
+                       * the board. Pure decor: this whole layer is pointerEvents none,
+                       * and the mask never touches the waypoint polyline the puffs walk.
+                       * Both campaign maps share the ATO board, so it renders on all. */}
+                      <Path d={ATO_GHOST_D} fill={theme.accent} fillOpacity={0.07} />
+                      {/* Road — a thin dark underlay bed stroked along the waypoint
+                       * polyline, then cobble STAMPS (straights + elbow corners + flared
+                       * ends) centred on the centreline. Waypoints stay the walk truth.
+                       * Drawn first so pads/towers/units sit on top. */}
+                      <G>
+                        <Path
+                          d={roadD}
+                          stroke={underlayTone}
+                          strokeWidth={underlayWidth}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </G>
+                      {roadStamps.map((stamp, index) => {
+                        const source = skinArt(stamp.role);
+                        if (!source) return null;
+                        const box = skinDrawBox(stamp.role, stamp.x, stamp.y, stamp.size);
+                        return (
+                          <SvgImage
+                            key={`road-${index}`}
+                            href={source}
+                            x={box.x}
+                            y={box.y}
+                            width={box.size}
+                            height={box.size}
+                          />
+                        );
+                      })}
+                    </>
+                  )}
+                  {/* Pads draw NOTHING extra here — the neon chrome's magenta
+                   * L-brackets + P-label are the whole read (no solid candy disc,
+                   * no base ring). A selected pad is signalled by its dashed range
+                   * ring below. */}
+                  {selectedPad != null && boardMap.pads[selectedPad] ? (
+                    <Circle
+                      cx={boardMap.pads[selectedPad].x}
+                      cy={boardMap.pads[selectedPad].y}
+                      r={
+                        selectedTower
+                          ? TOWER_DEFS[selectedTower.kind].range
+                          : selectedBoundBoss
+                            ? boundBossRange(selectedBoundBoss)
+                            : 18
+                      }
+                      fill={selectedRing.pull ? selectedRing.color : 'none'}
+                      fillOpacity={0.07}
+                      stroke={selectedRing.color}
+                      strokeOpacity={0.6}
+                      strokeWidth={1}
+                      strokeDasharray="2 2"
+                    />
+                  ) : null}
+                  {/* Placement preview: press and hold a build option to see its
+                   * ring on the pad before committing. */}
+                  {placePreview && selectedPad != null && boardMap.pads[selectedPad] ? (
+                    <Circle
+                      cx={boardMap.pads[selectedPad].x}
+                      cy={boardMap.pads[selectedPad].y}
+                      r={placePreview.range}
+                      fill={placePreview.color}
+                      fillOpacity={placePreview.pull ? 0.16 : 0.1}
+                      stroke={placePreview.color}
+                      strokeOpacity={0.9}
+                      strokeWidth={0.8}
+                      strokeDasharray="1.5 1.5"
+                    />
+                  ) : null}
+                  {/* Avatar aim preview: its range ring under the finger. */}
+                  {avatarAim ? (
+                    <G>
+                      <Circle
+                        cx={avatarAim.x}
+                        cy={avatarAim.y}
+                        r={AVATAR_RANGE}
+                        fill={theme.accent}
+                        fillOpacity={0.08}
+                        stroke={theme.accent}
+                        strokeOpacity={0.8}
+                        strokeWidth={0.7}
+                        strokeDasharray="1.5 1.5"
+                      />
+                      <Circle cx={avatarAim.x} cy={avatarAim.y} r={1} fill={theme.accent} fillOpacity={0.9} />
+                    </G>
+                  ) : null}
+                  {/* §19 tower sprites (skin roles). Visual level is SCALE ONLY
+                   * (Lv1 0.70 · Lv2 0.85 · Lv3 1.0) — no number badges. Each tower
+                   * is rotated toward its current target around its own centre —
+                   * unless its clip kit is bundled, in which case it plays a sticky
+                   * E/W idle loop + attack one-shot (K1) with no rotate. */}
+                  {sim?.towers.map((tower) => {
+                    const pad = boardMap.pads[tower.pad];
+                    const role = TOWER_ROLE[tower.kind];
+                    const kitRole = towerKitRole(tower.kind);
+                    const dirs = skinDirs(role);
+                    const deg = towerFacingRef.current[tower.id] ?? 0;
+                    const heading = headingVectorFromDeg(deg);
+                    const face = towerFaceRef.current[tower.id] ?? 'e';
+                    const hasClips =
+                      castActorClipFrames('idle', kitRole) > 0 ||
+                      castActorClipFrames('attack', kitRole) > 0 ||
+                      castActorClipFrames('skill', kitRole) > 0;
 
-        {/* Status / actions */}
-        {phase === 'setup' ? (
-          <>
-            {/* Fight card — campaign next or the chosen replay. */}
-            <ThemedView type="backgroundElement" style={styles.card}>
-              <View style={styles.statRow}>
-                <ThemedText type="smallBold">{fightTitle(fight)}</ThemedText>
-                <ThemedText type="subheading" themeColor="emphasis">
-                  {waveSpawnSummary(fight.phase, fight.wave)}
-                </ThemedText>
-              </View>
-              {band ? (
-                <View style={styles.bandRow}>
-                  <MaterialCommunityIcons
-                    name={TAG_ICON[view.cycleTint]}
-                    size={14}
-                    color={TAG_COLOR[view.cycleTint]}
-                  />
-                  <ThemedText type="smallBold">
-                    {band.label} — {band.boss.name}
-                  </ThemedText>
-                  <ThemedText type="code" themeColor="textSecondary">
-                    {TAG_LABEL[view.cycleTint]}
-                  </ThemedText>
-                </View>
-              ) : null}
-              <ThemedText type="small" themeColor="textSecondary">
-                {band?.story
-                  ? band.story
-                  : fight.mode === 'replay'
-                    ? 'Half-token replay — tap a cleared wave below, or head back to the campaign.'
-                    : cycleNote
-                      ? `The campaign climb — ${cycleNote}. Place towers, then call the wave.`
-                      : 'The campaign climb — Trial teaches the path, Main is the real deal. Place towers, then call the wave.'}
-              </ThemedText>
-              {fight.mode === 'replay' ? (
-                <Pressable
-                  onPress={() => buildSetup(campaignFight)}
-                  accessibilityRole="button"
-                  style={({ pressed }) => [styles.hudButton, { backgroundColor: theme.backgroundSelected }, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    Back to campaign
-                  </ThemedText>
-                </Pressable>
-              ) : null}
-              <View style={styles.callRow}>
-                <Pressable
-                  onPress={startWave}
-                  accessibilityRole="button"
-                  accessibilityLabel={fight.mode === 'replay' ? 'Call replay' : 'Call wave'}
-                  style={({ pressed }) => [
-                    styles.primaryButton,
-                    styles.callButton,
-                    {
-                      backgroundColor: theme.accentFill,
-                      borderColor: controlBorderColor(theme),
-                    },
-                    pressed && styles.pressed,
-                  ]}>
-                  <ThemedText
-                    type="smallBold"
-                    style={[styles.callLabel, { color: theme.onAccent }]}>
-                    {fight.mode === 'replay' ? 'CALL REPLAY' : 'CALL WAVE'}
-                  </ThemedText>
-                </Pressable>
-                <SpeedControl speed={speed} onChange={setSpeed} />
-              </View>
-            </ThemedView>
-
-            {/* Drops sits just above Maps (Main setup only, collapsed). */}
-            {fight.phase === 'main' ? dropsCard : null}
-
-            {/* Maps (§ — board picker, Main only): the locked ATO default vs the
-                parked Neon Maze prototype. Trial never shows this. */}
-            {fight.phase === 'main' ? (
-              <ThemedView type="backgroundElement" style={styles.card}>
-                <View style={styles.statRow}>
-                  <ThemedText type="smallBold">Maps</ThemedText>
-                  <ThemedText type="code" themeColor="textSecondary">
-                    {BOARD_MAPS[boardId].name}
-                  </ThemedText>
-                </View>
-                <ThemedText type="small" themeColor="textSecondary">
-                  ATO is the locked default. Neon Maze is the parked letter-maze
-                  prototype — pick it to playtest that board.
-                </ThemedText>
-                <View style={styles.mapList}>
-                  {BOARD_ORDER.map((id) => {
-                    const board = BOARD_MAPS[id];
-                    const active = boardId === id;
+                    let drawable: ClipDrawable | undefined;
+                    let transform: string | undefined;
+                    if (hasClips) {
+                      // Stationary humanoid: the breathing idle loop, or the attack
+                      // one-shot while firing. Side-profile art → sticky E/W face,
+                      // never rotated.
+                      const anim: CastActor =
+                        towerAnimRef.current[tower.id] ??
+                        castActorCreate('tower', castActorIdleSeed(tower.id, 'tower'));
+                      const frame = castActorFrame(anim, Date.now(), kitRole);
+                      drawable =
+                        castActorFrameDrawable(anim, face, frame, kitRole) ??
+                        roleArtDrawable(kitRole, roleFaceArtIndex(kitRole, face));
+                      transform = undefined;
+                    } else {
+                      // No clip art yet — keep the static 8-dir rotation.
+                      const dirIndex = skinDirIndex(role, heading.dx, heading.dy);
+                      drawable = skinArtDrawable(role, dirIndex);
+                      transform = dirs > 1 ? undefined : `rotate(${deg} ${pad.x} ${pad.y})`;
+                    }
+                    if (!drawable) return null;
+                    const size =
+                      skinUnits(role, TOWER_PAD_UNITS) * skinScale(role, tower.level) * TOWER_DRAW_SCALE;
+                    const box = skinDrawBox(role, pad.x, pad.y, size);
                     return (
-                      <Pressable
-                        key={id}
-                        onPress={() => selectBoard(id)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Select ${board.name}`}
-                        style={({ pressed }) => [
-                          styles.mapCard,
-                          { borderColor: active ? theme.accent : theme.border },
-                          active && { backgroundColor: theme.backgroundSelected },
-                          pressed && styles.pressed,
-                        ]}>
-                        <ThemedText type="smallBold" themeColor={active ? 'emphasis' : undefined}>
-                          {board.name}
-                        </ThemedText>
-                        <ThemedText type="code" themeColor="textSecondary">
-                          {id === 'ato' ? 'Locked path · default' : 'Letter maze · parked'}
-                        </ThemedText>
-                      </Pressable>
+                      <G key={`tower-art-${tower.id}`}>
+                        <G transform={transform}>
+                          <ClipSprite drawable={drawable} x={box.x} y={box.y} size={box.size} />
+                        </G>
+                        {/* Tiny Space Mono role letter at the sprite's top-right —
+                         * outside the rotate group so it never spins. Anchored to
+                         * the visible art corner, not the padded box corner. */}
+                        <SvgText
+                          x={box.x + box.size * TOWER_BADGE_X_FRAC}
+                          y={box.y + box.size * TOWER_BADGE_Y_FRAC}
+                          fontSize={TOWER_MARKER_SIZE}
+                          fontFamily="SpaceMono_700Bold"
+                          fill={TOWER_MARKER_COLOR}
+                          textAnchor="end"
+                          opacity={0.95}>
+                          {TOWER_LETTER[tower.kind]}
+                        </SvgText>
+                      </G>
                     );
                   })}
+                  {/* §19 Bound Boss: a cycle boss with no hero art mapped keeps the
+                   * heavy Final unit placeholder; a HERO bound as a tower AND a
+                   * cycle boss mapped to a hero (Ember Sovereign → Archangel) draw
+                   * that hero's idle/attack/skill clips through the same tower clip
+                   * kit the towers use, on a sticky E/W side profile. */}
+                  {sim?.boundBosses.map((bb) => {
+                    const pad = boardMap.pads[bb.pad];
+                    const heroId = boundBossHeroId(bb.bossId);
+                    if (heroId) {
+                      const kitRole = resolveBoundHeroTowerKit(heroId);
+                      const face = towerFaceRef.current[bb.id] ?? 'e';
+                      const hasClips =
+                        castActorClipFrames('idle', kitRole) > 0 ||
+                        castActorClipFrames('attack', kitRole) > 0 ||
+                        castActorClipFrames('skill', kitRole) > 0;
+                      if (__DEV__ && !hasClips) {
+                        // A6 — a bound boss that resolved no clips draws a static
+                        // rotation. Fail loudly in dev so an un-bundled hero (or a
+                        // broken resolve) is never a silent freeze.
+                        console.warn(
+                          `[A6] bound boss "${bb.bossId}" (→ ${heroId}) resolved no idle/attack/skill clips — ` +
+                            `falling back to its static rotation. Is its hero art bundled?`,
+                        );
+                      }
+                      let drawable: ClipDrawable | undefined;
+                      if (hasClips) {
+                        const anim: CastActor =
+                          towerAnimRef.current[bb.id] ??
+                          castActorCreate('tower', castActorIdleSeed(bb.id, 'tower'));
+                        const frame = castActorFrame(anim, Date.now(), kitRole);
+                        drawable = castActorFrameDrawable(anim, face, frame, kitRole);
+                      }
+                      if (!drawable) {
+                        drawable = roleArtDrawable(kitRole, roleFaceArtIndex(kitRole, face));
+                      }
+                      if (!drawable) return null;
+                      // A6 — a bound boss is tower-sized, not hero-sized: cap the
+                      // hero's natural `units` so it reads on a pad next to towers.
+                      const size = Math.min(kitRole.units ?? TOWER_PAD_UNITS, 16) * TOWER_DRAW_SCALE;
+                      const footAt = roleFootAt(kitRole);
+                      const box = { x: pad.x - size / 2, y: pad.y - size * footAt, size };
+                      return (
+                        <ClipSprite
+                          key={`bb-hero-art-${bb.id}`}
+                          drawable={drawable}
+                          x={box.x}
+                          y={box.y}
+                          size={box.size}
+                        />
+                      );
+                    }
+                    const role: SkinRoleId = 'unit.final';
+                    const drawable = skinArtDrawable(role);
+                    if (!drawable) return null;
+                    const box = skinDrawBox(role, pad.x, pad.y, 11);
+                    return (
+                      <ClipSprite
+                        key={`bb-art-${bb.id}`}
+                        drawable={drawable}
+                        x={box.x}
+                        y={box.y}
+                        size={box.size}
+                      />
+                    );
+                  })}
+                  {sim?.boundBosses.map((bb) => {
+                    const pad = boardMap.pads[bb.pad];
+                    return (
+                      <SvgText
+                        key={`bb-${bb.id}`}
+                        x={pad.x}
+                        y={pad.y + 1.4}
+                        fontSize={4.2}
+                        fontWeight="bold"
+                        fill="#FFFFFF"
+                        textAnchor="middle">
+                        {isHeroBoundTower(bb.bossId) ? heroName(bb.bossId) : '★' + bb.stars}
+                      </SvgText>
+                    );
+                  })}
+                  {/* K2 death one-shots (display only) — the creeps killed this
+                   * beat, drawn UNDER the living swarm. The engine removed them the
+                   * tick they died, so the board replays their `death` clip from its
+                   * own copy of the pose it last drew (same role / box / lane / side
+                   * profile) and holds the last frame for a short beat. A role with
+                   * no death art never becomes a corpse, so its kill still reads as
+                   * the instant removal it was before K2. */}
+                  {corpses.map((corpse) => {
+                    const deathFrames = skinAnimFrames(corpse.role, 'death');
+                    const drawable = skinAnimDrawable(
+                      corpse.role,
+                      'death',
+                      skinAnimFaceIndex(corpse.role, 'death', corpse.face),
+                      castActorPathFrame('death', Date.now(), corpse.bornAt, 0, deathFrames),
+                    );
+                    if (!drawable) return null;
+                    const box = skinDrawBox(corpse.role, corpse.x, corpse.y, corpse.size);
+                    return (
+                      <ClipSprite
+                        key={`corpse-${corpse.id}`}
+                        drawable={drawable}
+                        x={box.x}
+                        y={box.y}
+                        size={box.size}
+                      />
+                    );
+                  })}
+                  {sim?.puffs.map((puff) => {
+                    const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
+                    // Status icons above the health bar (stun, DoT with stack
+                    // count, slow, shred) — none when the creep is unaffected.
+                    const statusIcons = statusIconsFor(puff);
+                    // §19 board cast (skin roles): runners = fast unit, bosses =
+                    // tanks/heavy by band, tanks = the heavy soak unit, normal
+                    // puffs = the puff unit.
+                    const creep = creepRole(puff);
+                    const tintColor = CREEP_ROLE_COLOR[creep];
+                    const drawScale = CREEP_DRAW_SCALE[creep];
+                    const radius = 3.4 * puff.size * drawScale;
+                    const spriteRole = puffUnitRole(puff, band?.kind);
+                    // Lane offset is capped from the drawn WIDTH before the sprite
+                    // exists: a creep's art is wider than its path point, so a wide
+                    // unit (Knight / Archangel) rides the centreline instead of
+                    // clipping the neon wall. Feet stay on the path either way —
+                    // this is a lateral shift, never a change of route.
+                    const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size * drawScale;
+                    const pos = creepDrawPosition(puff, boardMap, creepLaneHalf(spriteSize));
+                    const x = pos.x * 100;
+                    const y = pos.y * 100;
+                    const facingDeg = puffFacingRef.current[puff.id] ?? 0;
+                    const heading = headingVectorFromDeg(facingDeg);
+                    // Humanoid path walkers (creeps + Oni + Archangel) render as side
+                    // profiles: the sticky east/west face is the ONLY facing they use,
+                    // and it never rotates into the path tangent. Every other creep
+                    // role keeps the 8-dir heading bucket (the semi's kenney
+                    // `unit.tank_alt` has no side-profile art).
+                    const pathWalker = isPathWalker(spriteRole);
+                    const walkFace = puffWalkFaceRef.current[puff.id] ?? 'e';
+                    const spriteDirs = skinDirs(spriteRole);
+                    const sprite = skinArtDrawable(
+                      spriteRole,
+                      pathWalker
+                        ? skinFaceArtIndex(spriteRole, walkFace)
+                        : skinDirIndex(spriteRole, heading.dx, heading.dy),
+                    );
+                    // H1.5 creep walk clips: while the role authors one, play its
+                    // directional frames. The frame comes from the walk tick's
+                    // per-creep phase (ground-tracking, smooth at WALK_TICK_MS);
+                    // otherwise keep the static rotation. Towers author no `walk`
+                    // and stay as-is. A path walker always plays an east/west row
+                    // (2-dir clip: its own side; 4-dir clip: the E/W rows only, N/S
+                    // rows unused at runtime), so a vertical lane keeps the legs
+                    // cycling instead of freezing on SKIN_WALK_NO_DIR.
+                    const walkDirs = skinWalkDirs(spriteRole);
+                    const walkFrames = skinWalkFrames(spriteRole);
+                    const walkPhase =
+                      walkPhaseRef.current[puff.id]?.phase ??
+                      puff.dist * walkFramesPerPath(spriteRole);
+                    const walkDirIndex = pathWalker
+                      ? skinWalkFaceIndex(spriteRole, walkFace)
+                      : skinWalkDirIndex(spriteRole, heading.dx, heading.dy);
+                    const walkSprite =
+                      walkDirs > 0 && walkFrames > 1
+                        ? skinWalkDrawable(spriteRole, walkDirIndex, Math.floor(walkPhase))
+                        : undefined;
+                    // K2 path-walker stance: the same stall window the walk tick
+                    // just used decides the clip — moving ⇒ the walk cycle above,
+                    // stopped for CREEP_STILL_MS ⇒ the role's breathing `idle` loop
+                    // at its own wall-clock cadence (the walk cursor is deliberately
+                    // frozen while stalled, so it cannot drive the loop). The stall
+                    // is read from how long ago this creep last advanced, NOT from
+                    // the tick's rate flag: a creep the tick has only just seeded has
+                    // no measured rate yet, and reading that as "stopped" would make
+                    // every spawn breathe before it walks. A role with no idle art
+                    // keeps holding its walk frame, and a role with no walk art
+                    // keeps the static rotation — both bosses author both slots
+                    // now, so every path walker breathes when stalled.
+                    const phaseEntry = walkPhaseRef.current[puff.id];
+                    const creepMoving =
+                      phaseEntry == null || Date.now() - phaseEntry.at <= CREEP_STILL_MS;
+                    const idleFrames = skinAnimFrames(spriteRole, 'idle');
+                    const stance =
+                      pathWalker && walkDirs > 0
+                        ? creepClip({
+                            dead: false,
+                            rate: creepMoving ? 1 : 0,
+                            frames: { walk: walkFrames, idle: idleFrames },
+                          })
+                        : null;
+                    const idleSprite =
+                      stance === 'idle'
+                        ? skinAnimDrawable(
+                            spriteRole,
+                            'idle',
+                            skinAnimFaceIndex(spriteRole, 'idle', walkFace),
+                            castActorPathFrame('idle', Date.now(), 0, puff.id, idleFrames),
+                          )
+                        : undefined;
+                    const spriteDrawable = idleSprite ?? walkSprite ?? sprite;
+                    // Feet-pivoted sprites rise above the path point, so the body
+                    // chrome (ring / bar / badge) anchors to the draw box, not the
+                    // path point.
+                    const box = skinDrawBox(spriteRole, x, y, spriteSize);
+                    const hasSprite = spriteDrawable != null;
+                    const bodyCy = hasSprite ? box.y + spriteSize / 2 : y;
+                    const barWidth = 8 * puff.size * drawScale;
+                    // Up-facing single-sprite roles face along the road (path
+                    // tangent), same convention as the towers; a degenerate heading
+                    // keeps the last known facing. Path walkers are side-profile art
+                    // with a sticky L/R face, so they stay at 0° — no SVG rotate.
+                    // (`spriteDirs > 1` alone already gives them 0° today; the
+                    // `pathWalker` guard makes "never rotate a cast walker" hold even
+                    // if a walker role ever resolved to a single-sprite skin.)
+                    const spriteTransform =
+                      pathWalker || spriteDirs > 1
+                        ? undefined
+                        : `rotate(${facingDeg} ${x} ${bodyCy})`;
+                    // Boss band badge (display only): M = scout mini-boss, B = boss.
+                    const bossBadge =
+                      puff.kind === 'boss' ? (band?.kind === 'scout_mini' ? 'M' : 'B') : null;
+                    const barTop = hasSprite ? box.y - 2.8 : y - radius - 4;
+                    // Icons shrink with the bar so a full row of 4 never outgrows it.
+                    const ICON_SIZE = Math.min(2.4, barWidth / 4.6);
+                    const iconRowY = barTop - ICON_SIZE / 2 - 0.5;
+                    return (
+                      <G key={`puff-${puff.id}`}>
+                        <G transform={spriteTransform}>
+                          {spriteDrawable ? (
+                            <ClipSprite drawable={spriteDrawable} x={box.x} y={box.y} size={box.size} />
+                          ) : (
+                            <Circle cx={x} cy={y} r={radius} fill={tintColor} />
+                          )}
+                        </G>
+                        <Rect
+                          x={x - barWidth / 2}
+                          y={barTop}
+                          width={barWidth}
+                          height={1.6}
+                          fill="rgba(0,0,0,0.35)"
+                          rx={0.8}
+                        />
+                        <Rect
+                          x={x - barWidth / 2}
+                          y={barTop}
+                          width={barWidth * pct}
+                          height={1.6}
+                          fill="#4ADE80"
+                          rx={0.8}
+                        />
+                        {puff.tint ? (
+                          <WeaknessDiamond
+                            x={x - barWidth / 2 - 1.3}
+                            y={barTop + 0.8}
+                            size={1.9}
+                            color={TAG_COLOR[puff.tint]}
+                          />
+                        ) : null}
+                        <StatusIconRow icons={statusIcons} cx={x} cy={iconRowY} size={ICON_SIZE} />
+                        {bossBadge ? (
+                          <SvgText
+                            x={x}
+                            y={barTop - 2 - (statusIcons.length > 0 ? ICON_SIZE + 0.6 : 0)}
+                            fontSize={4.5}
+                            fontFamily="SpaceMono_700Bold"
+                            fill="#FFFFFF"
+                            textAnchor="middle"
+                            opacity={0.95}>
+                            {bossBadge}
+                          </SvgText>
+                        ) : null}
+                      </G>
+                    );
+                  })}
+                  {/* §19 shot FX (display only) — one Kenney shot sprite per fired
+                   * round, flying from the tower centre to its target's centre. */}
+                  {shots.map((shot) => {
+                    const role: SkinRoleId = 'fx.shot';
+                    const drawable = skinArtDrawable(role);
+                    if (!drawable) return null;
+                    const box = skinDrawBox(role, shot.x, shot.y, skinUnits(role, 4.5) * SHOT_DRAW_SCALE);
+                    // Point the round along its velocity (same up-facing convention).
+                    const deg = facingDegrees(shot.vx, shot.vy);
+                    return (
+                      <G key={`shot-${shot.id}`} transform={`rotate(${deg} ${shot.x} ${shot.y})`}>
+                        <ClipSprite drawable={drawable} x={box.x} y={box.y} size={box.size} />
+                      </G>
+                    );
+                  })}
+                  {/* EFFECTS_PLAN step 5 — kit attack effects (Full / Minimal). */}
+                  <FxLayer events={fxEvents} now={Date.now()} quality={fxQuality} />
+                  {/* Dev kit only — synthetic FX stress (EFFECTS_PLAN step 1):
+                      tower/boss pads → live creeps, display only. */}
+                  {stressFx > 0 ? (
+                    <StressFxLayer
+                      count={stressFx}
+                      tick={stressTick}
+                      from={[
+                        ...(sim?.towers ?? []).map((t) => boardMap.pads[t.pad]),
+                        ...(sim?.boundBosses ?? []).map((b) => boardMap.pads[b.pad]),
+                      ].filter((p) => p != null)}
+                      to={(sim?.puffs ?? []).map((p) => creepDrawPosition(p, boardMap))}
+                    />
+                  ) : null}
+                </Svg>
                 </View>
-              </ThemedView>
-            ) : null}
+                {fpsMeterOn ? <FpsOverlay stats={fpsStats} fxCount={stressFx} /> : null}
 
-            {/* Gear score + Skip-to-even (§9j / §18 D) — campaign only. */}
-            {fight.mode === 'campaign' ? (
-              <ThemedView type="backgroundElement" style={styles.card}>
-                <View style={styles.statRow}>
-                  <ThemedText type="smallBold">Your GS</ThemedText>
-                  <ThemedText type="subheading" themeColor="emphasis">
-                    {gs}
-                  </ThemedText>
-                </View>
-                <View style={styles.statRow}>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Wave wants
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    ~{seatRec}
-                  </ThemedText>
-                </View>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Gear score reads your soft-capped equipped power, Avatar level, and stars.
-                  Type match is combat only — it never counts toward GS.
-                </ThemedText>
-                {skipPlan && skipPlan.steps.length > 0 && skipLast ? (
-                  <View style={[styles.skipBox, { backgroundColor: theme.backgroundSelected }]}>
-                    <ThemedText type="smallBold" themeColor="emphasis">
-                      Your GS {gs} — skip ahead?
-                    </ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      The next {skipPlan.steps.length}{' '}
-                      {skipPlan.steps.length === 1 ? 'normal wave' : 'normal waves'} — up to{' '}
-                      {campaignPhaseLabel(skipLast.phase)} wave {skipLast.wave_in_phase} — want ~
-                      {recommendedGs(skipLast.phase, skipLast.wave_in_phase, view.cyclePower)} or
-                      less. Skipping pays ~{Math.round(getTune().skipPayFraction * 100)}% tokens
-                      and XP plus one small commons-only crate — never uniques, boss drops, or
-                      Avatar stars. Skip stops at {skipStopName} (wants ~{skipStopRec}); farm bands
-                      stay open after.
-                    </ThemedText>
-                    <Pressable
-                      onPress={() => void onSkipToEven()}
-                      accessibilityRole="button"
-                      accessibilityLabel="Skip ahead"
-                      style={({ pressed }) => [
-                        styles.primaryButton,
-                        { backgroundColor: theme.accentFill },
-                        pressed && styles.pressed,
-                      ]}>
-                      <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                        Skip ahead · {skipPlan.steps.length}{' '}
-                        {skipPlan.steps.length === 1 ? 'wave' : 'waves'}
-                      </ThemedText>
-                    </Pressable>
-                  </View>
+                {phase === 'running' && swordFx ? (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[styles.swordAura, swordAuraStyle, { borderColor: swordFx.color, backgroundColor: swordFx.color }]}
+                  />
                 ) : null}
-              </ThemedView>
-            ) : null}
-
-            {/* Drops — Trial keeps its previous slot here (setup order
-                unchanged); Main renders the same collapsed card above Maps. */}
-            {fight.phase !== 'main' ? dropsCard : null}
-
-            {/* Band picker — replay any cleared band at half tokens (§9h). */}
-            <ThemedView type="backgroundElement" style={styles.card}>
-              <ThemedText type="smallBold">Cleared bands · replay at half tokens</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                Replays pay half tokens and never move your campaign seat or daily-clear cap.
-              </ThemedText>
-              {bands.map((band) => {
-                return (
-                  <View key={band.phase} style={styles.bandBlock}>
-                    <View style={styles.statRow}>
-                      <ThemedText type="smallBold">
-                        {campaignPhaseLabel(band.phase)} waves {band.firstWave}–{band.lastWave}
-                      </ThemedText>
-                      {band.unlocked ? (
-                        <ThemedText type="code" themeColor="emphasis">
-                          half
-                        </ThemedText>
-                      ) : (
-                        <ThemedText type="code" themeColor="textSecondary">
-                          locked
-                        </ThemedText>
-                      )}
-                    </View>
-                    {band.unlocked ? (
-                      <View style={styles.chipRow}>
-                        {Array.from({ length: band.clearedThrough }, (_, index) => index + 1).map(
-                          (wave) => {
-                            const active =
-                              replayPick != null &&
-                              replayPick.phase === band.phase &&
-                              replayPick.wave === wave;
-                            return (
-                              <Pressable
-                                key={`${band.phase}-${wave}`}
-                                onPress={() =>
-                                  buildSetup({ phase: band.phase, wave, mode: 'replay' })
-                                }
-                                accessibilityRole="button"
-                                accessibilityLabel={`Replay ${band.label} wave ${wave}`}
-                                style={({ pressed }) => [
-                                  styles.chip,
-                                  {
-                                    backgroundColor: active
-                                      ? theme.accentFill
-                                      : theme.backgroundSelected,
-                                  },
-                                  pressed && styles.pressed,
-                                ]}>
-                                <ThemedText
-                                  type="smallBold"
-                                  style={{ color: active ? theme.onAccent : theme.textSecondary }}>
-                                  {wave}
-                                </ThemedText>
-                              </Pressable>
-                            );
-                          },
-                        )}
-                      </View>
+                {/* Walking Avatar overlay (§19 cast Corvus). The frame cycles
+                    idle/walk and one-shots attack/skill/hurt/dash; the art is 2-dir
+                    (sticky E/W), so no rotate is applied. pointerEvents none so
+                    board taps pass through to the board's move handler. zIndex 10
+                    keeps it above the tiles AND the gameplay SVG. */}
+                <Animated.View
+                  style={[styles.avatar, avatarStyle]}
+                  pointerEvents="none">
+                  <View
+                    style={styles.avatarArt}
+                    pointerEvents="none">
+                    {avatarDrawable ? (
+                      <ClipImage drawable={avatarDrawable} />
                     ) : (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {band.phase === 'trial'
-                          ? 'Clear the Trial run to open its replays.'
-                          : 'Reach Main to open its replays.'}
-                      </ThemedText>
+                      <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]} />
                     )}
                   </View>
-                );
-              })}
-            </ThemedView>
-          </>
-        ) : null}
+                </Animated.View>
 
-        {phase === 'running' ? (
-          // Fixed regions: one 2-line box for the whole run (paused or not), so the coach
-          // line never pushes the board or the HUD around.
-          <Pressable
-            onPress={() => setRunCoachOpen((value) => !value)}
-            disabled={coachHidden || paused}
-            accessibilityRole="button"
-            accessibilityLabel={runCoachOpen ? 'Hide coach tip' : 'Show coach tip'}
-            accessibilityElementsHidden={paused}
-            importantForAccessibility={paused ? 'no-hide-descendants' : 'auto'}
-            style={[styles.coachLine, paused && styles.streetReserved]}>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.centerText} numberOfLines={3}>
-              {swordFx
-                ? `Aura: ${swordFx.name} — ${swordFx.auraLabel}.`
-                : coachHidden
-                  ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
-                  : runCoachOpen
-                    ? `Coach: ${coach.tip}`
-                    : 'Coach tip ›'}
-            </ThemedText>
-          </Pressable>
-        ) : null}
+                {/* Floating damage numbers (display only, pooled) */}
+                {floaters.map((floater) => (
+                  <HitFloater
+                    key={floater.id}
+                    floater={floater}
+                    kill={floater.kill}
+                    reduceMotion={reduceMotion}
+                    onDone={() => dropFloater(floater.id)}
+                  />
+                ))}
 
-        {/* §9m live bottom HUD — row 1: Skill (ONE button, full width; Bound
-         * Bosses stay auto). Row 2: Pause · Speed · Leave. Shown only while a
-         * run is live; setup never casts. */}
-        {phase === 'running' && street ? (
-          <>
-            <StreetHudFill>
-              <StreetFrame piece="resbar" style={styles.streetHud}>
-                <View style={styles.streetWave}>
-                  <StreetBackdrop piece="chip-on" />
-                  <Text style={styles.streetWaveText} numberOfLines={1}>
-                    {campaignPhaseLabel(labelPhase)} wave {displayedWave}
-                  </Text>
+                {/* §9m boss warn — a NON-BLOCKING Neon Viper banner raised a beat
+                    before the boss steps in. pointerEvents none and no sim change,
+                    so the fight keeps running underneath (towers keep firing).
+                    Copy: "BOSS INCOMING" — never "BOUND BOSS" (that names the
+                    player-owned Bound Boss tower). */}
+                {bossAlert ? (
+                  <View pointerEvents="none" style={styles.bossAlertWrap}>
+                    <View
+                      style={[
+                        styles.bossAlertPill,
+                        surfaceShadow(theme, reduceMotion),
+                        {
+                          backgroundColor: theme.backgroundElement,
+                          borderColor: theme.accentSecondary,
+                        },
+                      ]}>
+                      <ThemedText
+                        type="codeBold"
+                        style={[styles.bossWarnTitle, { color: theme.accentSecondary }]}>
+                        BOSS INCOMING
+                      </ThemedText>
+                      <ThemedText type="code" style={{ color: theme.accent }}>
+                        {bossAlert.label}
+                      </ThemedText>
+                      {bossAlert.name ? (
+                        <ThemedText type="code" themeColor="textSecondary">
+                          {bossAlert.name}
+                        </ThemedText>
+                      ) : null}
+                    </View>
+                  </View>
+                ) : null}
+              </View>
+            </View>
+            {/* Dev kit only — the FX stress controls sit right under the board so
+                the FPS readout stays on screen while they're tapped (EFFECTS_PLAN
+                step 1). Same actions as the Board / Misc rows. */}
+            {PRE_LAUNCH_DEV && devUnlocked ? (
+              <View style={styles.devStrip}>
+                <View style={styles.devStripCell}>
+                  <DevRow
+                    label={fpsMeterOn ? 'FPS: on' : 'FPS: off'}
+                    onPress={() => setFpsMeterOn((on) => !on)}
+                  />
                 </View>
-                <Text style={styles.streetHudCaps} numberOfLines={1} accessibilityLabel={`${scrap} run caps`}>
-                  {scrap} caps
-                </Text>
-                <Pressable
-                  onPress={() => setPaused((value) => !value)}
-                  accessibilityRole="button"
-                  accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
-                  hitSlop={8}
-                  style={({ pressed }) => [styles.streetPause, pressed && styles.pressed]}>
-                  {paused ? <Text style={styles.streetResume}>▶</Text> : <StreetBackdrop piece="pause" />}
-                </Pressable>
-              </StreetFrame>
-            </StreetHudFill>
-            <StreetDockFill>
+                <View style={styles.devStripCell}>
+                  <DevRow
+                    label={`FX: ${stressFx === 0 ? 'off' : stressFx}`}
+                    onPress={() => setStressFx((level) => nextStressFxLevel(level))}
+                  />
+                </View>
+                <View style={styles.devStripCell}>
+                  <DevRow
+                    label="+20 creeps"
+                    disabled={phase !== 'running' || !sim}
+                    onPress={devAddStressCreeps}
+                  />
+                </View>
+              </View>
+            ) : null}
+            {PRE_LAUNCH_DEV && devUnlocked ? (
+              <View style={styles.devStripFull}>
+                <DevRow
+                  label={
+                    bench.state.running
+                      ? 'FPS test running…'
+                      : phase === 'running'
+                        ? 'Run FPS test (30s)'
+                        : 'Run FPS test — start a wave first'
+                  }
+                  disabled={bench.state.running || phase !== 'running' || paused}
+                  onPress={bench.start}
+                />
+                <BenchPanel
+                  state={bench.state}
+                  sendStatus={benchSend}
+                  onCancel={bench.cancel}
+                  onShare={() => {
+                    void Share.share({ message: benchReport(bench.state.results) });
+                  }}
+                  onClose={bench.clear}
+                />
+              </View>
+            ) : null}
+          </View>
+        }
+        dock={
+          live ? (
+            <View style={[styles.turfDock, { paddingBottom: Math.max(setupFrame.insets.bottom, 8) }]}>
               <NeonButton
                 label={skillReady ? `Cast · ${activeSkill.name}` : `${activeSkill.name} · ${skillSeconds}s`}
                 variant="danger"
@@ -4011,583 +3460,1175 @@ export function DefendScreen({
                 ))}
                 <NeonButton label="Leave" variant="secondary" onPress={requestLeaveRun} style={styles.streetSpeed} />
               </View>
-            </StreetDockFill>
-          </>
-        ) : null}
-        {phase === 'running' && !street ? (
-          <ThemedView type="backgroundElement" style={styles.bottomHud}>
-            <Pressable
-              onPress={castSkill}
-              disabled={!skillReady}
-              accessibilityRole="button"
-              accessibilityLabel={
-                skillReady
-                  ? `Cast ${activeSkill.name}`
-                  : `Skill ${activeSkill.name} cooling, ${skillSeconds} seconds`
-              }
-              style={({ pressed }) => [
-                styles.hudButton,
-                styles.bottomHudSkill,
-                {
-                  backgroundColor: skillReady ? theme.accentFill : theme.backgroundSelected,
-                },
-                pressed && skillReady && styles.pressed,
-              ]}>
-              <ThemedText
-                type="smallBold"
-                numberOfLines={1}
-                style={{ color: skillReady ? theme.onAccent : theme.textSecondary }}>
-                {skillReady ? `Cast · ${activeSkill.name}` : `${activeSkill.name} · ${skillSeconds}s`}
-              </ThemedText>
-            </Pressable>
-            {pounceAvailable ? (
-              <Pressable
-                onPress={castPounce}
-                disabled={!pounceReady}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  pounceReady
-                    ? 'Pet pounce, once this wave, hits foes near your Avatar'
-                    : 'Pet pounce used this wave'
-                }
-                style={({ pressed }) => [
-                  styles.hudButton,
-                  styles.bottomHudPounce,
-                  { borderColor: theme.backgroundSelected, backgroundColor: theme.backgroundElement },
-                  // v26: an active Pumped (or its Maxed aura) glows gold.
-                  pumpedOn && styles.pounceGold,
-                  pressed && pounceReady && styles.pressed,
-                ]}>
-                <ThemedText
-                  type="smallBold"
-                  numberOfLines={1}
-                  themeColor={pounceReady ? undefined : 'textSecondary'}>
-                  {pounceReady ? 'Pet pounce · once this wave' : 'Pet pounce · used this wave'}
-                  {pumpedLabel}
-                </ThemedText>
-              </Pressable>
-            ) : null}
-            <View style={styles.bottomHudRow}>
-              <Pressable
-                onPress={() => setPaused((value) => !value)}
-                accessibilityRole="button"
-                accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
-                style={({ pressed }) => [
-                  styles.hudButton,
-                  styles.bottomHudPause,
-                  { backgroundColor: theme.backgroundSelected },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
-              </Pressable>
-              <SpeedControl speed={speed} onChange={setSpeed} />
-              <Pressable
-                onPress={requestLeaveRun}
-                accessibilityRole="button"
-                accessibilityLabel="Leave run"
-                style={({ pressed }) => [
-                  styles.hudButton,
-                  styles.leaveButton,
-                  {
-                    backgroundColor: theme.backgroundSelected,
-                    borderColor: controlBorderColor(theme),
-                  },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  Leave
-                </ThemedText>
-              </Pressable>
+            
             </View>
-          </ThemedView>
-        ) : null}
-
-        {phase === 'won' ? (
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="smallBold">
-              {lastWin?.conquered
-                ? `Cycle ${lastWin.conqueredCycles} conquered — Main cleared!`
-                : playedRef.current.mode === 'replay'
-                  ? `Cleared ${campaignPhaseLabel(playedRef.current.phase)} wave ${playedRef.current.wave} (replay)`
-                  : `Cleared ${fightTitle(playedRef.current)}`}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              Avatar Lv {view.avatarLevel} · {view.lifetimeWavesCleared} waves cleared lifetime
-            </ThemedText>
-            {lastWin ? (
-              <>
-                <ThemedText type="small" themeColor="textSecondary">
-                  +{lastWin.tokensGranted} tokens · +{lastWin.shellsGranted} shells · +{lastWin.xpGranted} XP
-                  {lastWin.swordDrop ? ` · ${lastWin.swordDrop}` : ''}
-                  {lastWin.milestoneLook
-                    ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!`
-                    : ''}
-                </ThemedText>
-                {lastWin.catchupXp ? (
-                  <View
-                    style={[
-                      styles.xpBadge,
-                      { backgroundColor: theme.backgroundSelected },
-                    ]}>
-                    <ThemedText type="code" themeColor="emphasis">
-                      ×2.5 EXP · Trial catch-up
-                    </ThemedText>
-                  </View>
-                ) : null}
-                {lastWin.dropItems.length > 0 ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {dropLabelFor(playedRef.current.phase, playedRef.current.wave)}{' '}
-                    {lastWin.dropItems
-                      .map((id) => {
-                        const name = getItemDef(id)?.core.name ?? id;
-                        const unique = isUniqueDrop(
-                          dropTableForWave(playedRef.current.phase, playedRef.current.wave),
-                          id,
-                        );
-                        return unique ? `${name} (Unique)` : name;
-                      })
-                      .join(', ')}
-                  </ThemedText>
-                ) : null}
-                {lastWin.starTokenGranted ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Final drop: Avatar star
-                  </ThemedText>
-                ) : null}
-                {lastWin.bossFragment ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {lastWin.bossFragment.starred
-                      ? `${lastWin.bossFragment.name} bound ★${lastWin.bossFragment.stars}!`
-                      : `Boss fragment · ${lastWin.bossFragment.frags}/${lastWin.bossFragment.nextCost ?? '—'}`}
-                  </ThemedText>
-                ) : null}
-                {lastWin.conquered ? (
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.conqueredNote}>
-                    Conquered! Enemies now scale ×{lastWin.cyclePower.toFixed(2)}. Next cycle
-                    starts at Main wave 1.
-                  </ThemedText>
-                ) : lastWin.replayHalf ? (
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
-                    Half-token replay — your campaign seat is exactly where you left it.
-                  </ThemedText>
-                ) : lastWin.halved ? (
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
-                    Half tokens today — come back tomorrow for full.
-                  </ThemedText>
-                ) : null}
-              </>
-            ) : (
-              <ThemedText type="small" themeColor="textSecondary">
-                {playedRef.current.mode === 'replay'
-                  ? `Half-token replay — +${Math.floor(getTune().tokenClearBase / 2)} tokens · +${Math.floor(
-                      xpForClear(sim?.wave ?? fight.wave) / 2,
-                    )} XP`
-                  : `+${getTune().tokenClearBase} tokens · +${xpForClear(sim?.wave ?? fight.wave)} XP`}
-              </ThemedText>
-            )}
-            {playedRef.current.mode === 'replay' ? (
-              <>
+          ) : (
+            <View style={[styles.turfSetupDock, phase !== 'setup' && styles.streetReserved]}>
+              <NeonButton
+                label="Setup ▲"
+                variant="secondary"
+                onPress={() => setSetupOpen(true)}
+                accessibilityLabel="Setup: wave, drops, replays and effects"
+                style={styles.turfSetupButton}
+              />
+              <View style={styles.turfCallSlot}>
                 <Pressable
-                  onPress={() => buildSetup(playedRef.current)}
+                  onPress={startWave}
                   accessibilityRole="button"
+                  accessibilityLabel={fight.mode === 'replay' ? 'Call replay' : 'Call wave'}
                   style={({ pressed }) => [
                     styles.primaryButton,
-                    { backgroundColor: theme.accentFill },
+                    styles.callButton,
+                    {
+                      backgroundColor: theme.accentFill,
+                      borderColor: controlBorderColor(theme),
+                    },
                     pressed && styles.pressed,
                   ]}>
-                  <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                    Farm again
+                  <ThemedText
+                    type="smallBold"
+                    style={[styles.callLabel, { color: theme.onAccent }]}>
+                    {fight.mode === 'replay' ? 'CALL REPLAY' : 'CALL WAVE'}
                   </ThemedText>
                 </Pressable>
-                <Pressable
-                  onPress={() => buildSetup(campaignFight)}
-                  accessibilityRole="button"
-                  style={({ pressed }) => [
-                    styles.hudButton,
-                    { backgroundColor: theme.backgroundSelected },
-                    pressed && styles.pressed,
-                  ]}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    Back to campaign
+              </View>
+            </View>
+          )
+        }
+        float={
+          selectedPad != null || phase === 'won' || phase === 'lost' ? (
+            <View
+              style={[
+                styles.turfFloatPanel,
+                { bottom: (live ? waveFrame : setupFrame).dock.height + 8, maxHeight: setupFrame.stage.height * 0.75 },
+              ]}>
+              <ScrollView contentContainerStyle={styles.turfFloatScroll}>
+                {selectedPad != null ? (
+                  <ThemedView type="backgroundElement" style={styles.card}>
+                    {selectedTower ? (
+                      <>
+                        <ThemedText type="smallBold">
+                          {TOWER_DEFS[selectedTower.kind].name} · level {selectedTower.level}/{TOWER_MAX_LEVEL}
+                        </ThemedText>
+                        {selectedTower.level < TOWER_MAX_LEVEL ? (
+                          <Pressable
+                            onPress={upgradeSelected}
+                            disabled={scrap < towerUpgradeCost(selectedTower)}
+                            accessibilityRole="button"
+                            style={({ pressed }) => [
+                              styles.primaryButton,
+                              {
+                                backgroundColor:
+                                  scrap >= towerUpgradeCost(selectedTower)
+                                    ? theme.accentFill
+                                    : theme.backgroundSelected,
+                              },
+                              pressed && styles.pressed,
+                            ]}>
+                            <ThemedText
+                              type="smallBold"
+                              style={{
+                                color:
+                                  scrap >= towerUpgradeCost(selectedTower)
+                                    ? theme.onAccent
+                                    : theme.textSecondary,
+                              }}>
+                              Upgrade · {towerUpgradeCost(selectedTower)} scrap
+                            </ThemedText>
+                          </Pressable>
+                        ) : (
+                          <ThemedText type="small" themeColor="textSecondary">
+                            Fully upgraded.
+                          </ThemedText>
+                        )}
+                      </>
+                    ) : selectedBoundBoss ? (
+                      <>
+                        <ThemedText type="smallBold">
+                          {isHeroBoundTower(selectedBoundBoss.bossId)
+                            ? heroName(selectedBoundBoss.bossId)
+                            : getBoundBossDef(selectedBoundBoss.bossId)?.name ?? 'Bound Boss'}
+                          {isHeroBoundTower(selectedBoundBoss.bossId) ? ' · bound hero' : ` · ★${selectedBoundBoss.stars}`}
+                        </ThemedText>
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {isHeroBoundTower(selectedBoundBoss.bossId)
+                            ? 'Bound hero tower — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the hero bound.'
+                            : boundBossHeroId(selectedBoundBoss.bossId)
+                              ? `${heroName(boundBossHeroId(selectedBoundBoss.bossId)!)} kit — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the boss bound.`
+                              : `Bound Boss — fixed on the pad, stars only (no scrap upgrade). ${
+                                  getBoundBossDef(selectedBoundBoss.bossId)?.skill.name
+                                }: ${getBoundBossDef(selectedBoundBoss.bossId)?.skill.description}`}
+                        </ThemedText>
+                        <Pressable
+                          onPress={removeSelectedBoundBoss}
+                          accessibilityRole="button"
+                          style={({ pressed }) => [styles.hudButton, pressed && styles.pressed]}>
+                          <ThemedText type="smallBold" themeColor="textSecondary">
+                            Remove
+                          </ThemedText>
+                        </Pressable>
+                      </>
+                    ) : (
+                      <>
+                        <ThemedText type="smallBold">
+                          Build a tower
+                          {atTowerCap ? ` · ${MAX_TOWERS}/${MAX_TOWERS} deployed` : ` · ${towerCountLabel}`}
+                        </ThemedText>
+                        {(Object.keys(TOWER_DEFS) as TowerKind[]).map((kind) => {
+                          const def = TOWER_DEFS[kind];
+                          const affordable = scrap >= def.placeCost && !atTowerCap;
+                          return (
+                            <Pressable
+                              key={kind}
+                              onPressIn={() => {
+                                const kit = TOWER_KITS[kind];
+                                setPlacePreview({
+                                  range: def.range,
+                                  color: kit.element ? ELEMENT_COLOR[kit.element] : theme.accent,
+                                  pull: false,
+                                });
+                              }}
+                              onPressOut={() => setPlacePreview(null)}
+                              onPress={() => placeOnPad(kind)}
+                              disabled={!affordable}
+                              accessibilityRole="button"
+                              style={({ pressed }) => [
+                                styles.hudButton,
+                                { backgroundColor: affordable ? theme.backgroundSelected : theme.backgroundElement },
+                                pressed && affordable && styles.pressed,
+                              ]}>
+                              <ThemedText
+                                type="smallBold"
+                                themeColor={affordable ? undefined : 'textSecondary'}>
+                                {def.name} · {def.placeCost} scrap
+                                {atTowerCap ? ` · max ${MAX_TOWERS}` : ''}
+                              </ThemedText>
+                            </Pressable>
+                          );
+                        })}
+                        {unlockedBoundBosses.length > 0 ? (
+                          <>
+                            <ThemedText type="smallBold" themeColor="textSecondary">
+                              Bound Boss
+                            </ThemedText>
+                            {unlockedBoundBosses.map((bb) => {
+                              const def = getBoundBossDef(bb.id);
+                              const hero = isHeroBoundTower(bb.id);
+                              const placeCost = hero ? HERO_TOWER_STATS.placeCost : def?.place_cost ?? 0;
+                              const affordable = scrap >= placeCost;
+                              const atCap = boundBossCount >= boundBossCapOnBoard();
+                              return (
+                                <Pressable
+                                  key={bb.id}
+                                  onPressIn={() => {
+                                    const heroKit = heroById(bb.id)?.kit;
+                                    setPlacePreview({
+                                      range: heroKit
+                                        ? kitRange(heroKit, Math.max(1, Math.min(3, bb.stars)))
+                                        : (def?.range ?? 18),
+                                      color: heroKit ? ELEMENT_COLOR[heroKit.element] : theme.accent,
+                                      pull: heroKit?.behavior === 'pull',
+                                    });
+                                  }}
+                                  onPressOut={() => setPlacePreview(null)}
+                                  onPress={() => placeOnBoundBoss(bb.id, bb.stars)}
+                                  disabled={!affordable || atCap}
+                                  accessibilityRole="button"
+                                  style={({ pressed }) => [
+                                    styles.hudButton,
+                                    {
+                                      backgroundColor:
+                                        affordable && !atCap
+                                          ? theme.backgroundSelected
+                                          : theme.backgroundElement,
+                                    },
+                                    pressed && affordable && !atCap && styles.pressed,
+                                  ]}>
+                                  <ThemedText
+                                    type="smallBold"
+                                    themeColor={affordable && !atCap ? undefined : 'textSecondary'}>
+                                    {hero ? heroName(bb.id) : def?.name ?? bb.id}
+                                    {hero ? ' · free' : ` ★${bb.stars} · ${placeCost} scrap`}
+                                    {atCap ? ' · max 2' : ''}
+                                  </ThemedText>
+                                </Pressable>
+                              );
+                            })}
+                          </>
+                        ) : null}
+                      </>
+                    )}
+                    <Pressable
+                      onPress={() => setSelectedPad(null)}
+                      accessibilityRole="button"
+                      style={({ pressed }) => [styles.hudButton, pressed && styles.pressed]}>
+                      <ThemedText type="smallBold" themeColor="textSecondary">
+                        Done
+                      </ThemedText>
+                    </Pressable>
+                  </ThemedView>
+                ) : null}
+                {phase === 'won' ? (
+                  <ThemedView type="backgroundElement" style={styles.card}>
+                    <ThemedText type="smallBold">
+                      {lastWin?.conquered
+                        ? `Cycle ${lastWin.conqueredCycles} conquered — Main cleared!`
+                        : playedRef.current.mode === 'replay'
+                          ? `Cleared ${campaignPhaseLabel(playedRef.current.phase)} wave ${playedRef.current.wave} (replay)`
+                          : `Cleared ${fightTitle(playedRef.current)}`}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Avatar Lv {view.avatarLevel} · {view.lifetimeWavesCleared} waves cleared lifetime
+                    </ThemedText>
+                    {lastWin ? (
+                      <>
+                        <ThemedText type="small" themeColor="textSecondary">
+                          +{lastWin.tokensGranted} tokens · +{lastWin.shellsGranted} shells · +{lastWin.xpGranted} XP
+                          {lastWin.swordDrop ? ` · ${lastWin.swordDrop}` : ''}
+                          {lastWin.milestoneLook
+                            ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!`
+                            : ''}
+                        </ThemedText>
+                        {lastWin.catchupXp ? (
+                          <View
+                            style={[
+                              styles.xpBadge,
+                              { backgroundColor: theme.backgroundSelected },
+                            ]}>
+                            <ThemedText type="code" themeColor="emphasis">
+                              ×2.5 EXP · Trial catch-up
+                            </ThemedText>
+                          </View>
+                        ) : null}
+                        {lastWin.dropItems.length > 0 ? (
+                          <ThemedText type="small" themeColor="textSecondary">
+                            {dropLabelFor(playedRef.current.phase, playedRef.current.wave)}{' '}
+                            {lastWin.dropItems
+                              .map((id) => {
+                                const name = getItemDef(id)?.core.name ?? id;
+                                const unique = isUniqueDrop(
+                                  dropTableForWave(playedRef.current.phase, playedRef.current.wave),
+                                  id,
+                                );
+                                return unique ? `${name} (Unique)` : name;
+                              })
+                              .join(', ')}
+                          </ThemedText>
+                        ) : null}
+                        {lastWin.starTokenGranted ? (
+                          <ThemedText type="small" themeColor="textSecondary">
+                            Final drop: Avatar star
+                          </ThemedText>
+                        ) : null}
+                        {lastWin.bossFragment ? (
+                          <ThemedText type="small" themeColor="textSecondary">
+                            {lastWin.bossFragment.starred
+                              ? `${lastWin.bossFragment.name} bound ★${lastWin.bossFragment.stars}!`
+                              : `Boss fragment · ${lastWin.bossFragment.frags}/${lastWin.bossFragment.nextCost ?? '—'}`}
+                          </ThemedText>
+                        ) : null}
+                        {lastWin.conquered ? (
+                          <ThemedText type="small" themeColor="textSecondary" style={styles.conqueredNote}>
+                            Conquered! Enemies now scale ×{lastWin.cyclePower.toFixed(2)}. Next cycle
+                            starts at Main wave 1.
+                          </ThemedText>
+                        ) : lastWin.replayHalf ? (
+                          <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
+                            Half-token replay — your campaign seat is exactly where you left it.
+                          </ThemedText>
+                        ) : lastWin.halved ? (
+                          <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
+                            Half tokens today — come back tomorrow for full.
+                          </ThemedText>
+                        ) : null}
+                      </>
+                    ) : (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {playedRef.current.mode === 'replay'
+                          ? `Half-token replay — +${Math.floor(getTune().tokenClearBase / 2)} tokens · +${Math.floor(
+                              xpForClear(sim?.wave ?? fight.wave) / 2,
+                            )} XP`
+                          : `+${getTune().tokenClearBase} tokens · +${xpForClear(sim?.wave ?? fight.wave)} XP`}
+                      </ThemedText>
+                    )}
+                    {playedRef.current.mode === 'replay' ? (
+                      <>
+                        <Pressable
+                          onPress={() => buildSetup(playedRef.current)}
+                          accessibilityRole="button"
+                          style={({ pressed }) => [
+                            styles.primaryButton,
+                            { backgroundColor: theme.accentFill },
+                            pressed && styles.pressed,
+                          ]}>
+                          <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                            Farm again
+                          </ThemedText>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => buildSetup(campaignFight)}
+                          accessibilityRole="button"
+                          style={({ pressed }) => [
+                            styles.hudButton,
+                            { backgroundColor: theme.backgroundSelected },
+                            pressed && styles.pressed,
+                          ]}>
+                          <ThemedText type="smallBold" themeColor="textSecondary">
+                            Back to campaign
+                          </ThemedText>
+                        </Pressable>
+                      </>
+                    ) : (
+                      <Pressable
+                        onPress={() => buildSetup(campaignFight)}
+                        accessibilityRole="button"
+                        style={({ pressed }) => [
+                          styles.primaryButton,
+                          { backgroundColor: theme.accentFill },
+                          pressed && styles.pressed,
+                        ]}>
+                        <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                          {lastWin?.conquered
+                            ? 'Next cycle · Main wave 1'
+                            : `Next · ${fightTitle(campaignFight)}`}
+                        </ThemedText>
+                      </Pressable>
+                    )}
+                    <Pressable
+                      onPress={() => void shareDefendClear(playedRef.current.wave, view.avatarLevel)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Share this clear"
+                      style={({ pressed }) => [
+                        styles.hudButton,
+                        { backgroundColor: theme.backgroundSelected },
+                        pressed && styles.pressed,
+                      ]}>
+                      <ThemedText type="smallBold">Share this clear</ThemedText>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => leaveResultsToSetup(true)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Leave to Defend setup"
+                      style={({ pressed }) => [
+                        styles.hudButton,
+                        { backgroundColor: theme.backgroundSelected },
+                        pressed && styles.pressed,
+                      ]}>
+                      <ThemedText type="smallBold">Leave — back to Call wave</ThemedText>
+                    </Pressable>
+                  </ThemedView>
+                ) : null}
+
+                    {phase === 'lost' ? (
+                      <ThemedView type="backgroundElement" style={styles.card}>
+                        <ThemedText type="smallBold">The path was breached.</ThemedText>
+                        <ThemedText type="small" themeColor="textSecondary">
+                          One puff reached the exit — {fightTitle(playedRef.current)} ends. Retry the same
+                          wave with your towers kept.
+                        </ThemedText>
+                        <Pressable
+                          onPress={() => {
+                            if (sim) {
+                              setSim(() => {
+                                const fresh = {
+                                  ...retryDefendLive(sim),
+                                  scrap: Math.max(runStartScrapRef.current, KEPT_BOARD_MIN_SCRAP),
+                                };
+                                bankRestage(fresh);
+                                return fresh;
+                              });
+                              winPaidRef.current = false;
+                              leakNotedRef.current = false;
+                              claimKeyRef.current = `defend:${playedRef.current.phase}:${playedRef.current.wave}:retry:${Date.now()}`;
+                              setPhase('running');
+                              setPaused(false);
+                              setSelectedPad(null);
+                              prevPuffsRef.current = [];
+                              setFloaters([]);
+                shotsRef.current = [];
+                puffFacingRef.current = {};
+                puffWalkFaceRef.current = {};
+                setCorpses([]);
+                setShots([]);
+                              setBossAlert(null);
+                            }
+                          }}
+                          accessibilityRole="button"
+                          style={({ pressed }) => [
+                            styles.primaryButton,
+                            { backgroundColor: theme.accentFill },
+                            pressed && styles.pressed,
+                          ]}>
+                          <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                            Retry
+                          </ThemedText>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => leaveResultsToSetup(false)}
+                          accessibilityRole="button"
+                          accessibilityLabel="Leave to Defend setup"
+                          style={({ pressed }) => [
+                            styles.hudButton,
+                            { backgroundColor: theme.backgroundSelected },
+                            pressed && styles.pressed,
+                          ]}>
+                          <ThemedText type="smallBold">Leave — back to Call wave</ThemedText>
+                        </Pressable>
+                      </ThemedView>
+                    ) : null}
+              </ScrollView>
+            </View>
+          ) : null
+        }
+        modal={
+          <PlaySheet open={setupOpen && !live} title="Setup" onClose={() => setSetupOpen(false)} reduceMotion={reduceMotion}>
+            <View style={styles.turfSheet}>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.boardCardLabel}>
+                          {boardMap.name}
+                          {cycleNote ? ` · ${cycleNote}` : ''}
+                          {fight.mode === 'replay' ? ' · replay (half tokens)' : ''}
+                        </ThemedText>
+              <PlayFrame style={styles.card}>
+                <View style={styles.statRow}>
+                  <ThemedText type="smallBold">
+                    {campaignPhaseLabel(labelPhase)} wave {displayedWave}
                   </ThemedText>
-                </Pressable>
-              </>
-            ) : (
+                  <ThemedText type="subheading" themeColor="emphasis">
+                    {defendDifficulty(displayedWave)}
+                  </ThemedText>
+                </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {fight.mode === 'replay'
+                    ? 'Replay of a cleared band — pays half tokens, your campaign seat stays put.'
+                    : cycleNote
+                      ? `Campaign climb — ${cycleNote}.`
+                      : 'Campaign climb — Trial 1–5, then Main 1–20. Clear Main 20 to Conquer a cycle.'}
+                </ThemedText>
+                <View style={styles.statRow}>
+                  <ThemedText type="smallBold">Scrap</ThemedText>
+                  <ThemedText type="subheading" themeColor="emphasis">
+                    {scrap}
+                  </ThemedText>
+                </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Run scrap — spend to place and upgrade towers, earn by defeating foes, resets each
+                  run. You start with enough for about two towers.
+                </ThemedText>
+                <View style={styles.statRow}>
+                  <ThemedText type="smallBold">
+                    {activeAvatarDef?.name ?? 'Avatar'} · Lv {view.avatarLevel}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    ×{levelBonus.toFixed(2)} power
+                  </ThemedText>
+                </View>
+                <View style={styles.statRow}>
+                  <ThemedText type="smallBold">
+                    Avatar ★{view.avatarStars}/{AVATAR_STAR_MAX}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    ×{avatarStarWavePower(view.avatarStars).toFixed(2)} power
+                  </ThemedText>
+                </View>
+                {view.avatarStarTokens > 0 && view.avatarStars < AVATAR_STAR_MAX ? (
+                  <Pressable
+                    onPress={() => void onSpendStarToken()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Spend Avatar star token"
+                    style={({ pressed }) => [
+                      styles.hudButton,
+                      { backgroundColor: theme.backgroundSelected },
+                      pressed && styles.pressed,
+                    ]}>
+                    <ThemedText type="smallBold">
+                      Spend star token → ★{view.avatarStars + 1} (+
+                      {Math.round(getTune().avatarStarWavePowerStep * 100)}% power)
+                    </ThemedText>
+                  </Pressable>
+                ) : null}
+                <View style={styles.statRow}>
+                  <View style={styles.typeMatchRow}>
+                    {stageElement ? (
+                      <MaterialCommunityIcons
+                        name={TAG_ICON[stageElement]}
+                        size={14}
+                        color={TAG_COLOR[stageElement]}
+                      />
+                    ) : null}
+                    <ThemedText type="smallBold">
+                      Stage · {stageElement ? TAG_LABEL[stageElement] : 'Neutral'}
+                    </ThemedText>
+                  </View>
+                  <Pressable
+                    onPress={() => setChartOpen((open) => !open)}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Stage element matchup"
+                    style={({ pressed }) => [pressed && styles.pressed]}>
+                    <ThemedText
+                      type="smallBold"
+                      themeColor={
+                        stageMatchup.kind === 'favoured'
+                          ? 'emphasis'
+                          : 'textSecondary'
+                      }>
+                      {stageMatchupShort(stageMatchup)}
+                    </ThemedText>
+                  </Pressable>
+                </View>
+                {chartOpen ? (
+                  <ThemedView type="backgroundElement" style={styles.chartCard}>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {stageMatchupDetail(stageMatchup)}
+                    </ThemedText>
+                  </ThemedView>
+                ) : null}
+                {phase !== 'running' ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {activeSkill.name}: {activeSkill.description} ({getTune().skillCooldownMs / 1000}s cooldown)
+                  </ThemedText>
+                ) : null}
+              </PlayFrame>
+              {phase === 'setup' && coach.why ? (
+                <ThemedView type="backgroundElement" style={styles.coachCard}>
+                  <View style={styles.coachHeader}>
+                    <ThemedText type="smallBold" themeColor="emphasis">
+                      Coach · {fightTitle(fight)}
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => setCoachHidden(true)}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Hide coach"
+                      style={({ pressed }) => [pressed && styles.pressed]}>
+                      <ThemedText type="code" themeColor="textSecondary">
+                        Hide
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {coach.tip}
+                  </ThemedText>
+                  {coach.why ? (
+                    <Pressable
+                      onPress={() => setWhyOpen((open) => !open)}
+                      accessibilityRole="button"
+                      style={({ pressed }) => [pressed && styles.pressed]}>
+                      <ThemedText type="code" themeColor="textSecondary">
+                        {whyOpen ? 'Why? (hide)' : 'Why?'}
+                      </ThemedText>
+                    </Pressable>
+                  ) : null}
+                  {whyOpen && coach.why ? (
+                    <ThemedText type="small" themeColor="textSecondary" style={styles.whyText}>
+                      {coach.why}
+                    </ThemedText>
+                  ) : null}
+                </ThemedView>
+              ) : null}
+              {phase === 'setup' ? (
+                <>
+                  {/* Fight card — campaign next or the chosen replay. */}
+                  <ThemedView type="backgroundElement" style={styles.card}>
+                    <View style={styles.statRow}>
+                      <ThemedText type="smallBold">{fightTitle(fight)}</ThemedText>
+                      <ThemedText type="subheading" themeColor="emphasis">
+                        {waveSpawnSummary(fight.phase, fight.wave)}
+                      </ThemedText>
+                    </View>
+                    {band ? (
+                      <View style={styles.bandRow}>
+                        <MaterialCommunityIcons
+                          name={TAG_ICON[view.cycleTint]}
+                          size={14}
+                          color={TAG_COLOR[view.cycleTint]}
+                        />
+                        <ThemedText type="smallBold">
+                          {band.label} — {band.boss.name}
+                        </ThemedText>
+                        <ThemedText type="code" themeColor="textSecondary">
+                          {TAG_LABEL[view.cycleTint]}
+                        </ThemedText>
+                      </View>
+                    ) : null}
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {band?.story
+                        ? band.story
+                        : fight.mode === 'replay'
+                          ? 'Half-token replay — tap a cleared wave below, or head back to the campaign.'
+                          : cycleNote
+                            ? `The campaign climb — ${cycleNote}. Place towers, then call the wave.`
+                            : 'The campaign climb — Trial teaches the path, Main is the real deal. Place towers, then call the wave.'}
+                    </ThemedText>
+                    {fight.mode === 'replay' ? (
+                      <Pressable
+                        onPress={() => buildSetup(campaignFight)}
+                        accessibilityRole="button"
+                        style={({ pressed }) => [styles.hudButton, { backgroundColor: theme.backgroundSelected }, pressed && styles.pressed]}>
+                        <ThemedText type="smallBold" themeColor="textSecondary">
+                          Back to campaign
+                        </ThemedText>
+                      </Pressable>
+                    ) : null}
+                    <SpeedControl speed={speed} onChange={setSpeed} />
+                  </ThemedView>
+
+                  {/* Drops sits just above Maps (Main setup only, collapsed). */}
+                  {fight.phase === 'main' ? dropsCard : null}
+
+                  {/* Maps (§ — board picker, Main only): the locked ATO default vs the
+                      parked Neon Maze prototype. Trial never shows this. */}
+                  {fight.phase === 'main' ? (
+                    <ThemedView type="backgroundElement" style={styles.card}>
+                      <View style={styles.statRow}>
+                        <ThemedText type="smallBold">Maps</ThemedText>
+                        <ThemedText type="code" themeColor="textSecondary">
+                          {BOARD_MAPS[boardId].name}
+                        </ThemedText>
+                      </View>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        ATO is the locked default. Neon Maze is the parked letter-maze
+                        prototype — pick it to playtest that board.
+                      </ThemedText>
+                      <View style={styles.mapList}>
+                        {BOARD_ORDER.map((id) => {
+                          const board = BOARD_MAPS[id];
+                          const active = boardId === id;
+                          return (
+                            <Pressable
+                              key={id}
+                              onPress={() => selectBoard(id)}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Select ${board.name}`}
+                              style={({ pressed }) => [
+                                styles.mapCard,
+                                { borderColor: active ? theme.accent : theme.border },
+                                active && { backgroundColor: theme.backgroundSelected },
+                                pressed && styles.pressed,
+                              ]}>
+                              <ThemedText type="smallBold" themeColor={active ? 'emphasis' : undefined}>
+                                {board.name}
+                              </ThemedText>
+                              <ThemedText type="code" themeColor="textSecondary">
+                                {id === 'ato' ? 'Locked path · default' : 'Letter maze · parked'}
+                              </ThemedText>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </ThemedView>
+                  ) : null}
+
+                  {/* Gear score + Skip-to-even (§9j / §18 D) — campaign only. */}
+                  {fight.mode === 'campaign' ? (
+                    <ThemedView type="backgroundElement" style={styles.card}>
+                      <View style={styles.statRow}>
+                        <ThemedText type="smallBold">Your GS</ThemedText>
+                        <ThemedText type="subheading" themeColor="emphasis">
+                          {gs}
+                        </ThemedText>
+                      </View>
+                      <View style={styles.statRow}>
+                        <ThemedText type="small" themeColor="textSecondary">
+                          Wave wants
+                        </ThemedText>
+                        <ThemedText type="small" themeColor="textSecondary">
+                          ~{seatRec}
+                        </ThemedText>
+                      </View>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        Gear score reads your soft-capped equipped power, Avatar level, and stars.
+                        Type match is combat only — it never counts toward GS.
+                      </ThemedText>
+                      {skipPlan && skipPlan.steps.length > 0 && skipLast ? (
+                        <View style={[styles.skipBox, { backgroundColor: theme.backgroundSelected }]}>
+                          <ThemedText type="smallBold" themeColor="emphasis">
+                            Your GS {gs} — skip ahead?
+                          </ThemedText>
+                          <ThemedText type="small" themeColor="textSecondary">
+                            The next {skipPlan.steps.length}{' '}
+                            {skipPlan.steps.length === 1 ? 'normal wave' : 'normal waves'} — up to{' '}
+                            {campaignPhaseLabel(skipLast.phase)} wave {skipLast.wave_in_phase} — want ~
+                            {recommendedGs(skipLast.phase, skipLast.wave_in_phase, view.cyclePower)} or
+                            less. Skipping pays ~{Math.round(getTune().skipPayFraction * 100)}% tokens
+                            and XP plus one small commons-only crate — never uniques, boss drops, or
+                            Avatar stars. Skip stops at {skipStopName} (wants ~{skipStopRec}); farm bands
+                            stay open after.
+                          </ThemedText>
+                          <Pressable
+                            onPress={() => void onSkipToEven()}
+                            accessibilityRole="button"
+                            accessibilityLabel="Skip ahead"
+                            style={({ pressed }) => [
+                              styles.primaryButton,
+                              { backgroundColor: theme.accentFill },
+                              pressed && styles.pressed,
+                            ]}>
+                            <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                              Skip ahead · {skipPlan.steps.length}{' '}
+                              {skipPlan.steps.length === 1 ? 'wave' : 'waves'}
+                            </ThemedText>
+                          </Pressable>
+                        </View>
+                      ) : null}
+                    </ThemedView>
+                  ) : null}
+
+                  {/* Drops — Trial keeps its previous slot here (setup order
+                      unchanged); Main renders the same collapsed card above Maps. */}
+                  {fight.phase !== 'main' ? dropsCard : null}
+
+                  {/* Band picker — replay any cleared band at half tokens (§9h). */}
+                  <ThemedView type="backgroundElement" style={styles.card}>
+                    <ThemedText type="smallBold">Cleared bands · replay at half tokens</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Replays pay half tokens and never move your campaign seat or daily-clear cap.
+                    </ThemedText>
+                    {bands.map((band) => {
+                      return (
+                        <View key={band.phase} style={styles.bandBlock}>
+                          <View style={styles.statRow}>
+                            <ThemedText type="smallBold">
+                              {campaignPhaseLabel(band.phase)} waves {band.firstWave}–{band.lastWave}
+                            </ThemedText>
+                            {band.unlocked ? (
+                              <ThemedText type="code" themeColor="emphasis">
+                                half
+                              </ThemedText>
+                            ) : (
+                              <ThemedText type="code" themeColor="textSecondary">
+                                locked
+                              </ThemedText>
+                            )}
+                          </View>
+                          {band.unlocked ? (
+                            <View style={styles.chipRow}>
+                              {Array.from({ length: band.clearedThrough }, (_, index) => index + 1).map(
+                                (wave) => {
+                                  const active =
+                                    replayPick != null &&
+                                    replayPick.phase === band.phase &&
+                                    replayPick.wave === wave;
+                                  return (
+                                    <Pressable
+                                      key={`${band.phase}-${wave}`}
+                                      onPress={() =>
+                                        buildSetup({ phase: band.phase, wave, mode: 'replay' })
+                                      }
+                                      accessibilityRole="button"
+                                      accessibilityLabel={`Replay ${band.label} wave ${wave}`}
+                                      style={({ pressed }) => [
+                                        styles.chip,
+                                        {
+                                          backgroundColor: active
+                                            ? theme.accentFill
+                                            : theme.backgroundSelected,
+                                        },
+                                        pressed && styles.pressed,
+                                      ]}>
+                                      <ThemedText
+                                        type="smallBold"
+                                        style={{ color: active ? theme.onAccent : theme.textSecondary }}>
+                                        {wave}
+                                      </ThemedText>
+                                    </Pressable>
+                                  );
+                                },
+                              )}
+                            </View>
+                          ) : (
+                            <ThemedText type="small" themeColor="textSecondary">
+                              {band.phase === 'trial'
+                                ? 'Clear the Trial run to open its replays.'
+                                : 'Reach Main to open its replays.'}
+                            </ThemedText>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </ThemedView>
+                </>
+              ) : null}
+
+              {/* Effects Quality (EFFECTS_PLAN step 5): Full → Minimal → Off. Off
+                  keeps the element-coloured damage numbers. */}
               <Pressable
-                onPress={() => buildSetup(campaignFight)}
+                onPress={() => setFxQuality(nextFxQuality(fxQuality))}
                 accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  { backgroundColor: theme.accentFill },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                  {lastWin?.conquered
-                    ? 'Next cycle · Main wave 1'
-                    : `Next · ${fightTitle(campaignFight)}`}
+                accessibilityLabel={`Effects: ${FX_QUALITY_LABEL[fxQuality]}. Tap to change.`}
+                style={({ pressed }) => [styles.fxQualityRow, pressed && styles.pressed]}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {`Effects: ${FX_QUALITY_LABEL[fxQuality]}`}
                 </ThemedText>
               </Pressable>
-            )}
-            <Pressable
-              onPress={() => void shareDefendClear(playedRef.current.wave, view.avatarLevel)}
-              accessibilityRole="button"
-              accessibilityLabel="Share this clear"
-              style={({ pressed }) => [
-                styles.hudButton,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold">Share this clear</ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => leaveResultsToSetup(true)}
-              accessibilityRole="button"
-              accessibilityLabel="Leave to Defend setup"
-              style={({ pressed }) => [
-                styles.hudButton,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold">Leave — back to Call wave</ThemedText>
-            </Pressable>
-          </ThemedView>
-        ) : null}
-
-        {phase === 'lost' ? (
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="smallBold">The path was breached.</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              One puff reached the exit — {fightTitle(playedRef.current)} ends. Retry the same
-              wave with your towers kept.
-            </ThemedText>
-            <Pressable
-              onPress={() => {
-                if (sim) {
-                  setSim(() => {
-                    const fresh = {
-                      ...retryDefendLive(sim),
-                      scrap: Math.max(runStartScrapRef.current, KEPT_BOARD_MIN_SCRAP),
-                    };
-                    bankRestage(fresh);
-                    return fresh;
-                  });
-                  winPaidRef.current = false;
-                  leakNotedRef.current = false;
-                  claimKeyRef.current = `defend:${playedRef.current.phase}:${playedRef.current.wave}:retry:${Date.now()}`;
-                  setPhase('running');
-                  setPaused(false);
-                  setSelectedPad(null);
-                  prevPuffsRef.current = [];
-                  setFloaters([]);
-    shotsRef.current = [];
-    puffFacingRef.current = {};
-    puffWalkFaceRef.current = {};
-    setCorpses([]);
-    setShots([]);
-                  setBossAlert(null);
-                }
-              }}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.primaryButton,
-                { backgroundColor: theme.accentFill },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                Retry
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => leaveResultsToSetup(false)}
-              accessibilityRole="button"
-              accessibilityLabel="Leave to Defend setup"
-              style={({ pressed }) => [
-                styles.hudButton,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold">Leave — back to Call wave</ThemedText>
-            </Pressable>
-          </ThemedView>
-        ) : null}
-
-        {/* The Defend dev kit is built here (it acts on the live board) but SHOWS in
-            the floating DEV kit — DevSlotFill hands it over and renders nothing. */}
-        {PRE_LAUNCH_DEV && devUnlocked ? (
-          <DevSlotFill>
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              Dev kit · defend only
-            </ThemedText>
-            {/* Four collapsible groups, ALL collapsed on entry (the kit is ~30
-                rows). Every row that was in the flat list is still here, in the
-                same form — only the grouping changed. */}
-            <DevSection
-              id="heroes"
-              title="Heroes"
-              open={devSections.heroes}
-              onToggle={toggleDevSection}>
-              {/* Whole-roster actions first, then ONE compact row per hero
-                  (Own · Avatar · Bind) instead of the same 16 heroes listed
-                  three times over in three separate blocks — the flat
-                  48-row version was unreadable while testing (emci,
-                  2026-09-22). The bind chip is disabled, not hidden, for the
-                  active Avatar, so its own refusal reads as "can't, because
-                  it's your Avatar" rather than the row just being absent. */}
-              <DevRow label="Own all heroes" onPress={() => void onDevOwnAllHeroes()} />
-              <DevRow label="Clear hero offer" onPress={() => void onDevClearHeroOffer()} />
-              <DevRow
-                label="Clear owned heroes (→ Corvus)"
-                onPress={() => void onDevClearOwnedHeroes()}
-              />
-              <DevRow
-                label="Place bound on next free pad"
-                onPress={devPlaceBoundOnNextFreePad}
-              />
-              {allHeroes().map((hero) => (
-                <HeroDevRow
-                  key={hero.id}
-                  name={hero.name}
-                  isActiveAvatar={hero.id === view.activeAvatarHeroId}
-                  onOwn={() => void onDevOwnHero(hero.id)}
-                  onSetAvatar={() => void onDevSetAvatarHero(hero.id)}
-                  onBind={() => {
-                    void onBindHeroAsTower(hero.id).then((reason) => {
-                      if (reason && __DEV__) {
-                        console.warn(`[dev] bind ${hero.id} refused: ${reason}`);
+              {phase === 'running' && !street ? (
+                <ThemedView type="backgroundElement" style={styles.bottomHud}>
+                  <Pressable
+                    onPress={castSkill}
+                    disabled={!skillReady}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      skillReady
+                        ? `Cast ${activeSkill.name}`
+                        : `Skill ${activeSkill.name} cooling, ${skillSeconds} seconds`
+                    }
+                    style={({ pressed }) => [
+                      styles.hudButton,
+                      styles.bottomHudSkill,
+                      {
+                        backgroundColor: skillReady ? theme.accentFill : theme.backgroundSelected,
+                      },
+                      pressed && skillReady && styles.pressed,
+                    ]}>
+                    <ThemedText
+                      type="smallBold"
+                      numberOfLines={1}
+                      style={{ color: skillReady ? theme.onAccent : theme.textSecondary }}>
+                      {skillReady ? `Cast · ${activeSkill.name}` : `${activeSkill.name} · ${skillSeconds}s`}
+                    </ThemedText>
+                  </Pressable>
+                  {pounceAvailable ? (
+                    <Pressable
+                      onPress={castPounce}
+                      disabled={!pounceReady}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        pounceReady
+                          ? 'Pet pounce, once this wave, hits foes near your Avatar'
+                          : 'Pet pounce used this wave'
                       }
-                    });
-                  }}
-                />
-              ))}
-            </DevSection>
-
-            <DevSection
-              id="campaign"
-              title="Campaign"
-              open={devSections.campaign}
-              onToggle={toggleDevSection}>
-              <DevRow label="Win wave" disabled={phase !== 'running'} onPress={() => winWave()} />
-              <DevRow
-                label="Force leak / fail"
-                disabled={phase !== 'running'}
-                onPress={() => {
-                  setPhase('lost');
-                  setPaused(false);
-                  setSelectedPad(null);
-                }}
-              />
-              <DevRow
-                label="Reset campaign to Trial wave 1"
-                onPress={() => {
-                  onResetCampaign();
-                  buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
-                }}
-              />
-              <DevRow
-                label="Jump to Main wave 9"
-                onPress={() => {
-                  onJumpMain9();
-                  buildSetup({ phase: 'main', wave: 9, mode: 'campaign' });
-                }}
-              />
-              <DevRow
-                label="Jump to Scout (Main wave 5)"
-                onPress={() => {
-                  onJumpScout();
-                  buildSetup({ phase: 'main', wave: 5, mode: 'campaign' });
-                }}
-              />
-              <DevRow
-                label="Jump to Final (Main wave 10)"
-                onPress={() => {
-                  onForceFinal();
-                  buildSetup({ phase: 'main', wave: 10, mode: 'campaign' });
-                }}
-              />
-              <DevRow label="Preview boss beat (Final)" disabled={!sim} onPress={previewBossBeat} />
-              <DevRow
-                label="Force Conquered +1"
-                onPress={() => {
-                  onForceConquered();
-                  buildSetup({ phase: 'main', wave: 1, mode: 'campaign' });
-                }}
-              />
-              <DevRow
-                label="Force skip offer (overgear → Trial 1)"
-                onPress={() => {
-                  onDevForceSkipOffer();
-                  buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
-                }}
-              />
-              <DevRow
-                label="Reset daily clear count"
-                disabled={!sim}
-                onPress={() => {
-                  onResetDailyClears();
-                  setLastWin(null);
-                }}
-              />
-              <DevRow
-                label="Set clears today to 5"
-                disabled={!sim}
-                onPress={() => {
-                  onSetClearsTodayFive();
-                  setLastWin(null);
-                }}
-              />
-              <DevRow
-                label="Grant wave-5 milestone"
-                disabled={!sim}
-                onPress={() => {
-                  void onGrantMilestoneWaveFive();
-                }}
-              />
-              <DevRow
-                label="Reset milestones"
-                disabled={!sim}
-                onPress={() => {
-                  onResetMilestones();
-                }}
-              />
-            </DevSection>
-
-            <DevSection
-              id="gear"
-              title="Gear / Stars"
-              open={devSections.gear}
-              onToggle={toggleDevSection}>
-              <DevRow
-                label="Set GS high (overgear)"
-                onPress={() => {
-                  onDevOvergear();
-                  setLastWin(null);
-                }}
-              />
-              <DevRow label="Grant star token" onPress={() => void onGrantStarToken()} />
-              <DevRow label="Spend star token" onPress={() => void onSpendStarToken()} />
-              <DevRow
-                label={`Cycle tint → next (${TAG_LABEL[view.cycleTint]})`}
-                onPress={() => {
-                  const idx = TYPE_MATCH_CYCLE.indexOf(view.cycleTint);
-                  const next = TYPE_MATCH_CYCLE[(idx + 1) % TYPE_MATCH_CYCLE.length];
-                  onSetCycleTint(next);
-                }}
-              />
-              <DevRow
-                label="Reset Avatar-star cycle"
-                onPress={() => {
-                  onResetAvatarStarCycle();
-                  setLastWin(null);
-                }}
-              />
-              <DevRow
-                label={gsDumpOpen ? 'Hide GS vs recommended' : 'Dump GS vs recommended'}
-                onPress={() => setGsDumpOpen((open) => !open)}
-              />
-              {gsDumpOpen ? (
-                <ThemedText type="code" themeColor="textSecondary">
-                  {gsDumpLines.join('\n')}
-                </ThemedText>
+                      style={({ pressed }) => [
+                        styles.hudButton,
+                        styles.bottomHudPounce,
+                        { borderColor: theme.backgroundSelected, backgroundColor: theme.backgroundElement },
+                        // v26: an active Pumped (or its Maxed aura) glows gold.
+                        pumpedOn && styles.pounceGold,
+                        pressed && pounceReady && styles.pressed,
+                      ]}>
+                      <ThemedText
+                        type="smallBold"
+                        numberOfLines={1}
+                        themeColor={pounceReady ? undefined : 'textSecondary'}>
+                        {pounceReady ? 'Pet pounce · once this wave' : 'Pet pounce · used this wave'}
+                        {pumpedLabel}
+                      </ThemedText>
+                    </Pressable>
+                  ) : null}
+                  <View style={styles.bottomHudRow}>
+                    <Pressable
+                      onPress={() => setPaused((value) => !value)}
+                      accessibilityRole="button"
+                      accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
+                      style={({ pressed }) => [
+                        styles.hudButton,
+                        styles.bottomHudPause,
+                        { backgroundColor: theme.backgroundSelected },
+                        pressed && styles.pressed,
+                      ]}>
+                      <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
+                    </Pressable>
+                    <SpeedControl speed={speed} onChange={setSpeed} />
+                    <Pressable
+                      onPress={requestLeaveRun}
+                      accessibilityRole="button"
+                      accessibilityLabel="Leave run"
+                      style={({ pressed }) => [
+                        styles.hudButton,
+                        styles.leaveButton,
+                        {
+                          backgroundColor: theme.backgroundSelected,
+                          borderColor: controlBorderColor(theme),
+                        },
+                        pressed && styles.pressed,
+                      ]}>
+                      <ThemedText type="smallBold" themeColor="textSecondary">
+                        Leave
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                </ThemedView>
               ) : null}
-              <DevRow
-                label={dumpDropsOpen ? 'Hide band drop table' : 'Dump drops for band'}
-                onPress={() => setDumpDropsOpen((open) => !open)}
-              />
-              {dumpDropsOpen ? (
-                <ThemedText type="code" themeColor="textSecondary">
-                  {dropTableId}: {dropRows.length} rows
-                  {dropRows.map((row) => `\n  ${row.id}${row.unique ? ' (unique)' : ''}`).join('')}
-                </ThemedText>
-              ) : null}
-            </DevSection>
 
-            <DevSection
-              id="board"
-              title="Board / Misc"
-              open={devSections.board}
-              onToggle={toggleDevSection}>
-              <DevRow
-                label="+40 scrap"
-                disabled={!sim}
-                onPress={() => setSim((prev) => (prev ? { ...prev, scrap: prev.scrap + 40 } : prev))}
-              />
-              <DevRow
-                label="Clear all towers"
-                disabled={!sim || sim.towers.length === 0}
-                onPress={() =>
-                  setSim((prev) => {
-                    const next = prev ? { ...prev, towers: [] } : prev;
-                    commitBoard(next);
-                    return next;
-                  })
-                }
-              />
-              <DevRow
-                label="Clear Bound Bosses"
-                disabled={!sim || sim.boundBosses.length === 0}
-                onPress={() =>
-                  setSim((prev) => {
-                    const next = prev ? { ...prev, boundBosses: [] } : prev;
-                    commitBoard(next);
-                    return next;
-                  })
-                }
-              />
-              <DevRow
-                label="Reset skill CD"
-                disabled={!sim}
-                onPress={() => setSim((prev) => (prev ? { ...prev, skillCooldownMs: 0 } : prev))}
-              />
-              <DevRow
-                label={godMode ? 'God mode (on)' : 'God mode'}
-                onPress={() => {
-                  setGodMode((value) => {
-                    const next = !value;
-                    setKnob('godMode', next); // tune doc — applies on re-entry too
-                    void saveTune();
-                    return next;
+            </View>
+          </PlaySheet>
+        }
+      />
+      {/* The Defend dev kit is built here (it acts on the live board) but SHOWS in
+          the floating DEV kit — DevSlotFill hands it over and renders nothing. */}
+      {PRE_LAUNCH_DEV && devUnlocked ? (
+        <DevSlotFill>
+        <ThemedView type="backgroundElement" style={styles.card}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            Dev kit · defend only
+          </ThemedText>
+          {/* Four collapsible groups, ALL collapsed on entry (the kit is ~30
+              rows). Every row that was in the flat list is still here, in the
+              same form — only the grouping changed. */}
+          <DevSection
+            id="heroes"
+            title="Heroes"
+            open={devSections.heroes}
+            onToggle={toggleDevSection}>
+            {/* Whole-roster actions first, then ONE compact row per hero
+                (Own · Avatar · Bind) instead of the same 16 heroes listed
+                three times over in three separate blocks — the flat
+                48-row version was unreadable while testing (emci,
+                2026-09-22). The bind chip is disabled, not hidden, for the
+                active Avatar, so its own refusal reads as "can't, because
+                it's your Avatar" rather than the row just being absent. */}
+            <DevRow label="Own all heroes" onPress={() => void onDevOwnAllHeroes()} />
+            <DevRow label="Clear hero offer" onPress={() => void onDevClearHeroOffer()} />
+            <DevRow
+              label="Clear owned heroes (→ Corvus)"
+              onPress={() => void onDevClearOwnedHeroes()}
+            />
+            <DevRow
+              label="Place bound on next free pad"
+              onPress={devPlaceBoundOnNextFreePad}
+            />
+            {allHeroes().map((hero) => (
+              <HeroDevRow
+                key={hero.id}
+                name={hero.name}
+                isActiveAvatar={hero.id === view.activeAvatarHeroId}
+                onOwn={() => void onDevOwnHero(hero.id)}
+                onSetAvatar={() => void onDevSetAvatarHero(hero.id)}
+                onBind={() => {
+                  void onBindHeroAsTower(hero.id).then((reason) => {
+                    if (reason && __DEV__) {
+                      console.warn(`[dev] bind ${hero.id} refused: ${reason}`);
+                    }
                   });
                 }}
               />
-              <DevRow
-                label={noCaps ? 'No caps (on)' : 'No caps: towers / bosses / heroes'}
-                onPress={() => {
-                  const next = !noCaps;
-                  setKnob('devNoCaps', next); // tune doc — survives restarts
+            ))}
+          </DevSection>
+
+          <DevSection
+            id="campaign"
+            title="Campaign"
+            open={devSections.campaign}
+            onToggle={toggleDevSection}>
+            <DevRow label="Win wave" disabled={phase !== 'running'} onPress={() => winWave()} />
+            <DevRow
+              label="Force leak / fail"
+              disabled={phase !== 'running'}
+              onPress={() => {
+                setPhase('lost');
+                setPaused(false);
+                setSelectedPad(null);
+              }}
+            />
+            <DevRow
+              label="Reset campaign to Trial wave 1"
+              onPress={() => {
+                onResetCampaign();
+                buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label="Jump to Main wave 9"
+              onPress={() => {
+                onJumpMain9();
+                buildSetup({ phase: 'main', wave: 9, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label="Jump to Scout (Main wave 5)"
+              onPress={() => {
+                onJumpScout();
+                buildSetup({ phase: 'main', wave: 5, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label="Jump to Final (Main wave 10)"
+              onPress={() => {
+                onForceFinal();
+                buildSetup({ phase: 'main', wave: 10, mode: 'campaign' });
+              }}
+            />
+            <DevRow label="Preview boss beat (Final)" disabled={!sim} onPress={previewBossBeat} />
+            <DevRow
+              label="Force Conquered +1"
+              onPress={() => {
+                onForceConquered();
+                buildSetup({ phase: 'main', wave: 1, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label="Force skip offer (overgear → Trial 1)"
+              onPress={() => {
+                onDevForceSkipOffer();
+                buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label="Reset daily clear count"
+              disabled={!sim}
+              onPress={() => {
+                onResetDailyClears();
+                setLastWin(null);
+              }}
+            />
+            <DevRow
+              label="Set clears today to 5"
+              disabled={!sim}
+              onPress={() => {
+                onSetClearsTodayFive();
+                setLastWin(null);
+              }}
+            />
+            <DevRow
+              label="Grant wave-5 milestone"
+              disabled={!sim}
+              onPress={() => {
+                void onGrantMilestoneWaveFive();
+              }}
+            />
+            <DevRow
+              label="Reset milestones"
+              disabled={!sim}
+              onPress={() => {
+                onResetMilestones();
+              }}
+            />
+          </DevSection>
+
+          <DevSection
+            id="gear"
+            title="Gear / Stars"
+            open={devSections.gear}
+            onToggle={toggleDevSection}>
+            <DevRow
+              label="Set GS high (overgear)"
+              onPress={() => {
+                onDevOvergear();
+                setLastWin(null);
+              }}
+            />
+            <DevRow label="Grant star token" onPress={() => void onGrantStarToken()} />
+            <DevRow label="Spend star token" onPress={() => void onSpendStarToken()} />
+            <DevRow
+              label={`Cycle tint → next (${TAG_LABEL[view.cycleTint]})`}
+              onPress={() => {
+                const idx = TYPE_MATCH_CYCLE.indexOf(view.cycleTint);
+                const next = TYPE_MATCH_CYCLE[(idx + 1) % TYPE_MATCH_CYCLE.length];
+                onSetCycleTint(next);
+              }}
+            />
+            <DevRow
+              label="Reset Avatar-star cycle"
+              onPress={() => {
+                onResetAvatarStarCycle();
+                setLastWin(null);
+              }}
+            />
+            <DevRow
+              label={gsDumpOpen ? 'Hide GS vs recommended' : 'Dump GS vs recommended'}
+              onPress={() => setGsDumpOpen((open) => !open)}
+            />
+            {gsDumpOpen ? (
+              <ThemedText type="code" themeColor="textSecondary">
+                {gsDumpLines.join('\n')}
+              </ThemedText>
+            ) : null}
+            <DevRow
+              label={dumpDropsOpen ? 'Hide band drop table' : 'Dump drops for band'}
+              onPress={() => setDumpDropsOpen((open) => !open)}
+            />
+            {dumpDropsOpen ? (
+              <ThemedText type="code" themeColor="textSecondary">
+                {dropTableId}: {dropRows.length} rows
+                {dropRows.map((row) => `\n  ${row.id}${row.unique ? ' (unique)' : ''}`).join('')}
+              </ThemedText>
+            ) : null}
+          </DevSection>
+
+          <DevSection
+            id="board"
+            title="Board / Misc"
+            open={devSections.board}
+            onToggle={toggleDevSection}>
+            <DevRow
+              label="+40 scrap"
+              disabled={!sim}
+              onPress={() => setSim((prev) => (prev ? { ...prev, scrap: prev.scrap + 40 } : prev))}
+            />
+            <DevRow
+              label="Clear all towers"
+              disabled={!sim || sim.towers.length === 0}
+              onPress={() =>
+                setSim((prev) => {
+                  const next = prev ? { ...prev, towers: [] } : prev;
+                  commitBoard(next);
+                  return next;
+                })
+              }
+            />
+            <DevRow
+              label="Clear Bound Bosses"
+              disabled={!sim || sim.boundBosses.length === 0}
+              onPress={() =>
+                setSim((prev) => {
+                  const next = prev ? { ...prev, boundBosses: [] } : prev;
+                  commitBoard(next);
+                  return next;
+                })
+              }
+            />
+            <DevRow
+              label="Reset skill CD"
+              disabled={!sim}
+              onPress={() => setSim((prev) => (prev ? { ...prev, skillCooldownMs: 0 } : prev))}
+            />
+            <DevRow
+              label={godMode ? 'God mode (on)' : 'God mode'}
+              onPress={() => {
+                setGodMode((value) => {
+                  const next = !value;
+                  setKnob('godMode', next); // tune doc — applies on re-entry too
                   void saveTune();
-                  setNoCaps(next);
-                }}
-              />
-              <DevRow
-                label={`Board skin: ${BOARD_SKIN_LABEL[boardSkin]} (tap to switch)`}
-                onPress={() =>
-                  setBoardSkin((skin) => (skin === 'neon' ? 'grove-classic' : 'neon'))
-                }
-              />
-              <DevRow
-                label={coachHidden ? 'Show coach' : 'Coach on'}
-                onPress={() => setCoachHidden((hidden) => !hidden)}
-              />
-              {/* EFFECTS_PLAN step 1 — measure before building any effect. */}
-              <DevRow
-                label={fpsMeterOn ? 'FPS meter (on)' : 'FPS meter'}
-                onPress={() => setFpsMeterOn((on) => !on)}
-              />
-              <DevRow
-                label={`Stress effects: ${stressFx === 0 ? 'off' : stressFx} (tap to cycle)`}
-                onPress={() => setStressFx((level) => nextStressFxLevel(level))}
-              />
-              <DevRow
-                label="Stress wave: +20 creeps now"
-                disabled={phase !== 'running' || !sim}
-                onPress={devAddStressCreeps}
-              />
-            </DevSection>
-          </ThemedView>
-          </DevSlotFill>
-        ) : null}
-      </SafeAreaView>
+                  return next;
+                });
+              }}
+            />
+            <DevRow
+              label={noCaps ? 'No caps (on)' : 'No caps: towers / bosses / heroes'}
+              onPress={() => {
+                const next = !noCaps;
+                setKnob('devNoCaps', next); // tune doc — survives restarts
+                void saveTune();
+                setNoCaps(next);
+              }}
+            />
+            <DevRow
+              label={`Board skin: ${BOARD_SKIN_LABEL[boardSkin]} (tap to switch)`}
+              onPress={() =>
+                setBoardSkin((skin) => (skin === 'neon' ? 'grove-classic' : 'neon'))
+              }
+            />
+            <DevRow
+              label={coachHidden ? 'Show coach' : 'Coach on'}
+              onPress={() => setCoachHidden((hidden) => !hidden)}
+            />
+            {/* EFFECTS_PLAN step 1 — measure before building any effect. */}
+            <DevRow
+              label={fpsMeterOn ? 'FPS meter (on)' : 'FPS meter'}
+              onPress={() => setFpsMeterOn((on) => !on)}
+            />
+            <DevRow
+              label={`Stress effects: ${stressFx === 0 ? 'off' : stressFx} (tap to cycle)`}
+              onPress={() => setStressFx((level) => nextStressFxLevel(level))}
+            />
+            <DevRow
+              label="Stress wave: +20 creeps now"
+              disabled={phase !== 'running' || !sim}
+              onPress={devAddStressCreeps}
+            />
+          </DevSection>
+        </ThemedView>
+        </DevSlotFill>
+      ) : null}
 
       {/* Mid-run leave confirm — a blocking Neon Viper overlay (same chrome as
           CALL WAVE / the 1x·2x control). Cancel resumes the exact pre-confirm
@@ -4667,7 +4708,7 @@ export function DefendScreen({
           onOpenDress={openDressFromSheet}
         />
       ) : null}
-    </ThemedView>
+    </View>
   );
 }
 
@@ -5096,7 +5137,20 @@ const styles = StyleSheet.create({
   streetHidden: { display: 'none' },
   // Fixed regions: hidden but still holding its space (the paused coach line).
   streetReserved: { opacity: 0, pointerEvents: 'none' },
-  coachLine: { minHeight: 58, justifyContent: 'center' },
+  // Stage layout: the coach / pause line lives in the NoticeLane (one fixed region).
+  coachLine: { flex: 1, justifyContent: 'center', paddingHorizontal: 16 },
+  turfRoot: { flex: 1, backgroundColor: NEON.ink },
+  turfLane: { flex: 1 },
+  // The stage: header + board, top-anchored so the board sits right under the text.
+  turfStage: { flex: 1, alignItems: 'stretch' },
+  turfHeader: { height: TURF_HEADER_PT, justifyContent: 'center', paddingHorizontal: 16, gap: 4 },
+  turfDock: { flex: 1, paddingHorizontal: 12, paddingTop: 8, gap: 8 },
+  turfSetupDock: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12 },
+  turfSetupButton: { minWidth: 112 },
+  turfCallSlot: { flex: 1 },
+  turfFloatPanel: { position: 'absolute', left: 8, right: 8 },
+  turfFloatScroll: { gap: 8 },
+  turfSheet: { gap: 16 },
   streetTitle: { fontFamily: STREET_FONT.bold, color: STREET.paper, textTransform: 'uppercase' },
   streetHud: {
     flexDirection: 'row',

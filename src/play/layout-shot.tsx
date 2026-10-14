@@ -86,8 +86,9 @@ export function LayoutShot({
   const view = playView(shotDoc(now, kind, phase), now);
   const pad = INSET[inset];
   const noop = async () => false;
+  // Pet, Dive and the games are GameScreens: they read the safe area themselves.
   return (
-    <View style={[styles.frame, { paddingTop: pad.top, paddingBottom: pad.bottom }]}>
+    <View style={[styles.frame, kind === 'play' ? { paddingTop: pad.top, paddingBottom: pad.bottom } : null]}>
       {kind === 'pet' ? (
         <PetScreen
           view={view}

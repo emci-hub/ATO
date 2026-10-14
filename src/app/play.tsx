@@ -1,8 +1,7 @@
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PlayDevFab } from '@/components/play-dev-fab';
@@ -21,18 +20,15 @@ import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
 import { CommandHub } from '@/play/command-hub';
 import {
   StreetBlock,
-  StreetDockOutlet,
-  StreetHudOutlet,
   StreetLockerTabs,
   StreetResourceBar,
   StreetTabBar,
-  useStreetDockFilled,
   type StreetTab,
 } from '@/play/street-shell';
-import { STREET_MOTION } from '@/play/street-feel';
 import { streetUiOn } from '@/play/street-ui';
 import { NEON, shopUnlocked, type HubDestination } from '@/play/neon-viper';
 import { PlayThemeProvider } from '@/play/play-theme';
+import { GameScreen, useStageFrame } from '@/play/stage-layout';
 import { PlayBanner } from '@/play/play-banner';
 import {
   EMPTY_BANNERS,
@@ -220,7 +216,8 @@ export default function PlayScreen() {
   useImmersiveMode(mode === 'defend');
   // Street shell (Streetwear art style): the bars own the top/bottom safe area.
   const insets = useSafeAreaInsets();
-  const streetDockFilled = useStreetDockFilled();
+  /** The list screens' fixed frame (Block, Locker, Store); game screens take their own. */
+  const listFrame = useStageFrame('list');
   // Pet (v20): keep the opt-in hunger reminder in step with the pet from
   // anywhere in Play (a TD win feeds it too), not only the Pet screen.
   usePlayNoticesSync(view ?? null);
@@ -773,7 +770,6 @@ export default function PlayScreen() {
   // wrap the screens; The Block replaces the hub's tile wall. Paint and layout
   // only — every tab calls the same setMode the Classic tiles use.
   const street = streetUiOn() && view != null && mode !== 'dive' && mode !== 'sheetlab' && mode !== 'swordlab';
-  const streetEdges = street ? (['left', 'right'] as const) : undefined;
   const streetTab: StreetTab | null =
     mode === 'grove'
       ? 'block'
@@ -842,24 +838,210 @@ export default function PlayScreen() {
     </>
   );
 
+  // Stage layout (Phase 1, emci 2026-10-14): every Street screen is a GameScreen with fixed
+  // regions — the shell hands each one its resource bar (TopBar) and tab bar, so no screen is
+  // sized by what a flex column leaves over. Bars never resize; only the middle fades on a switch.
+  const shellTop =
+    street && view ? (
+      <StreetResourceBar
+        caps={view.tokens}
+        tokens={view.dive.current}
+        tokensMax={DIVE_CHARGE_CAP}
+        shine={view.pet.stones.held}
+        prism={view.pet.stones.prism}
+        reduceMotion={reduceMotion}
+        onSettings={() => {
+          setMode('grove');
+          setHubSettingsOpen(true);
+        }}
+      />
+    ) : null;
+  const shellTabs =
+    street && view ? (
+      <StreetTabBar
+        active={streetTab}
+        showStore={shopUnlocked(devUnlocked)}
+        reduceMotion={reduceMotion}
+        bottomInset={insets.bottom}
+        onTab={goStreetTab}
+      />
+    ) : null;
+  /** A list screen (Block, Locker, Store, About): the stage is the scroll body. */
+  const listScreen = (content: ReactNode, edgeToEdge = false) => (
+    <GameScreen
+      frame={listFrame}
+      topBar={shellTop}
+      tabBar={shellTabs}
+      fadeKey={mode}
+      reduceMotion={reduceMotion}
+      background={NEON.ink}
+      stage={
+        <ScrollView
+          style={styles.listScroll}
+          contentContainerStyle={edgeToEdge ? styles.hubScroll : styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <View style={edgeToEdge ? undefined : styles.listColumn}>{content}</View>
+        </ScrollView>
+      }
+    />
+  );
+
+  const diveEl = view ? (
+    <DiveScreen
+      view={view}
+      skipDelays={skipDelays}
+      reduceMotion={reduceMotion}
+      onSpendCharge={handleSpendCharge}
+      onFreeDive={handleFreeDive}
+      commit={commit}
+      onSurface={handleSurface}
+      onDeeper={handleDeeper}
+      registerBack={registerBack}
+      onBack={leaveSubScreen}
+    />
+  ) : null;
+  const petEl = view ? (
+    <PetScreen
+      view={view}
+      commit={commit}
+      commitSaved={commitSaved}
+      registerBack={registerBack}
+      reduceMotion={reduceMotion}
+      talkEvent={petTalk}
+      onTalkConsumed={clearPetTalk}
+      onBack={() => setMode('grove')}
+      onGoDive={() => setMode('dive')}
+      onReplayTutorial={() => setTutorialReplay(true)}
+      openJournal={openJournal}
+      onJournalOpened={journalOpened}
+      openGuide={openGuide}
+      onGuideOpened={guideOpened}
+      onBanner={(b) => setToast({ kind: 'banner', banner: { ...b, target: null } })}
+      shellTop={shellTop}
+      shellTabs={shellTabs}
+    />
+  ) : null;
+  const defendEl = view ? (
+    <DefendScreen
+      view={view}
+      reduceMotion={reduceMotion}
+      onWin={handleRecordDefendWin}
+      onResetDailyClears={handleResetDailyClears}
+      onSetClearsTodayFive={handleSetClearsTodayFive}
+      onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
+      onResetMilestones={handleResetMilestones}
+      onResetCampaign={handleResetCampaign}
+      onJumpMain9={handleJumpMain9}
+      onJumpScout={handleJumpScout}
+      onForceConquered={handleForceConquered}
+      onSpendStarToken={handleSpendStarToken}
+      onGrantStarToken={handleGrantStarToken}
+      onSetCycleTint={handleSetCycleTint}
+      onForceFinal={handleForceFinal}
+      onResetAvatarStarCycle={handleResetAvatarStarCycle}
+      onSkipToEven={handleSkipToEven}
+      onDevOvergear={handleDevOvergear}
+      onDevForceSkipOffer={handleDevForceSkipOffer}
+      onSaveAvatarPark={handleSaveAvatarPark}
+      onSetAvatarHero={setAvatarHero}
+      onBindHeroAsTower={bindHeroAsTower}
+      onDismissHeroOffer={() => void dismissHeroOffer()}
+      onDevOwnHero={devOwnHero}
+      onDevOwnAllHeroes={devOwnAllHeroes}
+      onDevSetAvatarHero={devSetAvatarHero}
+      onDevClearHeroOffer={devClearHeroOffer}
+      onDevClearOwnedHeroes={devClearOwnedHeroes}
+      onOpenDress={() => setMode('dress')}
+      onOpenSwords={() => setMode('swords')}
+      onLeak={() => commit(noteDefendLeak)}
+      registerBack={registerBack}
+      onBackToGrove={() => setMode('grove')}
+      shellTop={shellTop}
+      shellTabs={shellTabs}
+    />
+  ) : null;
+  /** Locker, Store, About, the labs: plain scroll content. */
+  const listContent =
+    mode === 'dress' && view ? (
+      <DressScreen
+        view={view}
+        skipDelays={skipDelays}
+        reduceMotion={reduceMotion}
+        onEquip={handleEquip}
+        onSell={handleSell}
+        onUnequip={handleUnequip}
+        onMerge={handleMerge}
+        onActivateAvatar={handleActivateAvatar}
+        onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
+        onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
+        onBackToGrove={() => setMode('grove')}
+        commit={commit}
+      />
+    ) : mode === 'shop' && view && shopUnlocked(devUnlocked) ? (
+      <ShopScreen view={view} onBuyToken={handleBuyShopRow} onBackToDivecore={() => setMode('grove')} />
+    ) : mode === 'about' ? (
+      <AboutScreen onBackToDivecore={() => setMode('grove')} />
+    ) : mode === 'sheetlab' ? (
+      <SheetLabScreen onBack={() => setMode('grove')} />
+    ) : mode === 'swords' && view ? (
+      <SwordForgeScreen
+        swords={view.swords}
+        notice={swordNotice}
+        onAction={(action: SwordAction) => {
+          const ok = commit((doc) => applySwordAction(doc, action));
+          setSwordNotice(ok ? null : 'Could not do that. Unequip it, or bring more copies.');
+        }}
+        onBack={() => setMode('defend')}
+      />
+    ) : mode === 'swordlab' && PRE_LAUNCH_DEV && devUnlocked ? (
+      <SwordLabScreen
+        onBack={() => setMode('grove')}
+        onEquip={(element: string, tier: SwordTier) => {
+          commit((doc) => devEquipSword(doc, element, tier));
+        }}
+      />
+    ) : null;
+
+  const streetScreens = !street || !view ? null : mode === 'grove' ? (
+    listScreen(
+      <StreetBlock
+        pet={view.pet.state}
+        wave={view.campaign.wave_in_phase ?? 1}
+        diveActive={view.diveRun.active}
+        charges={view.dive.current}
+        chargesMax={DIVE_CHARGE_CAP}
+        reduceMotion={reduceMotion}
+        onHideout={() => setMode('pet')}
+        onTurf={() => setMode('defend')}
+        onUnderground={() => setMode('dive')}>
+        {hubExtras}
+      </StreetBlock>,
+      true,
+    )
+  ) : mode === 'pet' ? (
+    petEl
+  ) : mode === 'defend' ? (
+    defendEl
+  ) : (
+    listScreen(
+      <>
+        {mode === 'dress' || mode === 'swords' ? (
+          <StreetLockerTabs
+            active={mode === 'swords' ? 'blades' : 'fits'}
+            onFits={() => setMode('dress')}
+            onBlades={() => setMode('swords')}
+          />
+        ) : null}
+        {listContent}
+      </>,
+    )
+  );
+
+  // Loading (no save yet) and the full-screen modes (Dive, the labs): the old column.
   const screens = (
     mode === 'grove' ? (
-          <SafeAreaView style={styles.hubSafeArea} edges={streetEdges}>
+          <SafeAreaView style={styles.hubSafeArea}>
             <ScrollView contentContainerStyle={styles.hubScroll} showsVerticalScrollIndicator={false}>
-              {street && view ? (
-                <StreetBlock
-                  pet={view.pet.state}
-                  wave={view.campaign.wave_in_phase ?? 1}
-                  diveActive={view.diveRun.active}
-                  charges={view.dive.current}
-                  chargesMax={DIVE_CHARGE_CAP}
-                  reduceMotion={reduceMotion}
-                  onHideout={() => setMode('pet')}
-                  onTurf={() => setMode('defend')}
-                  onUnderground={() => setMode('dive')}>
-                  {hubExtras}
-                </StreetBlock>
-              ) : (
               <CommandHub
                 diveActive={view?.diveRun.active ?? false}
                 devUnlocked={devUnlocked}
@@ -871,139 +1053,21 @@ export default function PlayScreen() {
                 onSettings={() => setHubSettingsOpen(true)}>
                 {hubExtras}
               </CommandHub>
-              )}
             </ScrollView>
           </SafeAreaView>
         ) : (
           <View style={styles.edgeWrap} {...edgeSwipe.panHandlers}>
-            {(mode === 'dive' || mode === 'pet') && view ? (
-              // Pet room + Dive own the whole screen (overhaul, 2026-09-29):
-              // no scroll view; the banner floats over every mode (below).
-              <SafeAreaView style={styles.fullSafeArea} edges={streetEdges}>
-                {mode === 'dive' ? (
-                  <DiveScreen
-                    view={view}
-                    skipDelays={skipDelays}
-                    reduceMotion={reduceMotion}
-                    onSpendCharge={handleSpendCharge}
-                    onFreeDive={handleFreeDive}
-                    commit={commit}
-                    onSurface={handleSurface}
-                    onDeeper={handleDeeper}
-                    registerBack={registerBack}
-                    onBack={leaveSubScreen}
-                  />
-                ) : (
-                  <PetScreen
-                    view={view}
-                    commit={commit}
-                    commitSaved={commitSaved}
-                    registerBack={registerBack}
-                    reduceMotion={reduceMotion}
-                    talkEvent={petTalk}
-                    onTalkConsumed={clearPetTalk}
-                    onBack={() => setMode('grove')}
-                    onGoDive={() => setMode('dive')}
-                    onReplayTutorial={() => setTutorialReplay(true)}
-                    openJournal={openJournal}
-                    onJournalOpened={journalOpened}
-                    openGuide={openGuide}
-                    onGuideOpened={guideOpened}
-                    onBanner={(b) => setToast({ kind: 'banner', banner: { ...b, target: null } })}
-                  />
-                )}
-              </SafeAreaView>
+            {mode === 'dive' && view ? (
+              // Dive owns the whole screen: its GameScreen reads the safe area itself.
+              <View style={styles.fullSafeArea}>{diveEl}</View>
+            ) : mode === 'pet' && view ? (
+              <View style={styles.fullSafeArea}>{petEl}</View>
+            ) : mode === 'defend' && view ? (
+              <View style={styles.fullSafeArea}>{defendEl}</View>
             ) : (
             <ThemedView style={styles.container}>
-              <SafeAreaView style={styles.safeArea} edges={streetEdges}>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                  {street && (mode === 'dress' || mode === 'swords') ? (
-                    <StreetLockerTabs
-                      active={mode === 'swords' ? 'blades' : 'fits'}
-                      onFits={() => setMode('dress')}
-                      onBlades={() => setMode('swords')}
-                    />
-                  ) : null}
-                  {mode === 'dress' && view ? (
-                    <DressScreen
-                      view={view}
-                      skipDelays={skipDelays}
-                      reduceMotion={reduceMotion}
-                      onEquip={handleEquip}
-                      onSell={handleSell}
-                      onUnequip={handleUnequip}
-                      onMerge={handleMerge}
-                      onActivateAvatar={handleActivateAvatar}
-                      onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
-                      onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
-                      onBackToGrove={() => setMode('grove')}
-                      commit={commit}
-                    />
-                  ) : mode === 'defend' && view ? (
-                    <DefendScreen
-                      view={view}
-                      reduceMotion={reduceMotion}
-                      onWin={handleRecordDefendWin}
-                      onResetDailyClears={handleResetDailyClears}
-                      onSetClearsTodayFive={handleSetClearsTodayFive}
-                      onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
-                      onResetMilestones={handleResetMilestones}
-                      onResetCampaign={handleResetCampaign}
-                      onJumpMain9={handleJumpMain9}
-                      onJumpScout={handleJumpScout}
-                      onForceConquered={handleForceConquered}
-                      onSpendStarToken={handleSpendStarToken}
-                      onGrantStarToken={handleGrantStarToken}
-                      onSetCycleTint={handleSetCycleTint}
-                      onForceFinal={handleForceFinal}
-                      onResetAvatarStarCycle={handleResetAvatarStarCycle}
-                      onSkipToEven={handleSkipToEven}
-                      onDevOvergear={handleDevOvergear}
-                      onDevForceSkipOffer={handleDevForceSkipOffer}
-                      onSaveAvatarPark={handleSaveAvatarPark}
-                      onSetAvatarHero={setAvatarHero}
-                      onBindHeroAsTower={bindHeroAsTower}
-                      onDismissHeroOffer={() => void dismissHeroOffer()}
-                      onDevOwnHero={devOwnHero}
-                      onDevOwnAllHeroes={devOwnAllHeroes}
-                      onDevSetAvatarHero={devSetAvatarHero}
-                      onDevClearHeroOffer={devClearHeroOffer}
-                      onDevClearOwnedHeroes={devClearOwnedHeroes}
-                      onOpenDress={() => setMode('dress')}
-                      onOpenSwords={() => setMode('swords')}
-                      onLeak={() => commit(noteDefendLeak)}
-                      registerBack={registerBack}
-                      onBackToGrove={() => setMode('grove')}
-                    />
-                  ) : mode === 'shop' && view && shopUnlocked(devUnlocked) ? (
-                    <ShopScreen
-                      view={view}
-                      onBuyToken={handleBuyShopRow}
-                      onBackToDivecore={() => setMode('grove')}
-                    />
-                  ) : mode === 'about' ? (
-                    <AboutScreen onBackToDivecore={() => setMode('grove')} />
-                  ) : mode === 'sheetlab' ? (
-                    <SheetLabScreen onBack={() => setMode('grove')} />
-                  ) : mode === 'swords' && view ? (
-                    <SwordForgeScreen
-                      swords={view.swords}
-                      notice={swordNotice}
-                      onAction={(action: SwordAction) => {
-                        const ok = commit((doc) => applySwordAction(doc, action));
-                        setSwordNotice(ok ? null : 'Could not do that. Unequip it, or bring more copies.');
-                      }}
-                      onBack={() => setMode('defend')}
-                    />
-                  ) : mode === 'swordlab' && PRE_LAUNCH_DEV && devUnlocked ? (
-                    <SwordLabScreen
-                      onBack={() => setMode('grove')}
-                      onEquip={(element: string, tier: SwordTier) => {
-                        commit((doc) => devEquipSword(doc, element, tier));
-                      }}
-                    />
-                  ) : null}
-                </ScrollView>
+              <SafeAreaView style={styles.safeArea}>
+                <ScrollView contentContainerStyle={styles.scrollContent}>{listContent}</ScrollView>
               </SafeAreaView>
             </ThemedView>
             )}
@@ -1017,46 +1081,9 @@ export default function PlayScreen() {
       <StatusBar style="light" />
       {/* The phone's own swipe-back leaves Play — only from the hub. */}
       <Stack.Screen options={{ gestureEnabled: mode === 'grove' && !hubOverlayOpen }} />
-      {street && view ? (
-        <View style={[styles.streetColumn, { paddingTop: insets.top }]}>
-          {/* Fixed regions: only Turf War swaps these bars, at setup → run — a screen switch
-              (see src/play/fixed-region.tsx), so they are not reserved. */}
-          {streetDockFilled ? (
-            <StreetHudOutlet />
-          ) : (
-            <StreetResourceBar
-              caps={view.tokens}
-              tokens={view.dive.current}
-              tokensMax={DIVE_CHARGE_CAP}
-              shine={view.pet.stones.held}
-              prism={view.pet.stones.prism}
-              reduceMotion={reduceMotion}
-              onSettings={() => {
-                setMode('grove');
-                setHubSettingsOpen(true);
-              }}
-            />
-          )}
-          {/* Screen change: a 180ms fade (none under Reduce Motion). */}
-          <Animated.View
-            key={mode}
-            entering={reduceMotion ? undefined : FadeIn.duration(STREET_MOTION.tab)}
-            style={styles.streetBody}>
-            {screens}
-          </Animated.View>
-          {streetDockFilled ? (
-            <View style={[styles.streetDock, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-              <StreetDockOutlet />
-            </View>
-          ) : (
-            <StreetTabBar
-              active={streetTab}
-              showStore={shopUnlocked(devUnlocked)}
-              reduceMotion={reduceMotion}
-              bottomInset={insets.bottom}
-              onTab={goStreetTab}
-            />
-          )}
+      {streetScreens ? (
+        <View style={styles.streetRoot} {...(mode === 'grove' ? null : edgeSwipe.panHandlers)}>
+          {streetScreens}
         </View>
       ) : (
         screens
@@ -1616,21 +1643,14 @@ function shopRefusalCopy(reason: ShopRefusal): string {
 }
 
 const styles = StyleSheet.create({
-  /** Street shell column: bar · screen · tabs (Streetwear art style only). */
-  streetColumn: {
+  /** Street screens: each one is a GameScreen (src/play/stage-layout.tsx). */
+  streetRoot: {
     flex: 1,
     backgroundColor: NEON.ink,
   },
-  streetBody: {
-    flex: 1,
-    minHeight: 0,
-  },
-  streetDock: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    gap: 8,
-    backgroundColor: NEON.ink,
-  },
+  /** A list screen's stage: the scroll body fills the fixed stage region. */
+  listScroll: { flex: 1 },
+  listColumn: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', gap: Spacing.three },
   /** Pet room + Dive: the whole screen, ink behind the safe area. */
   fullSafeArea: {
     flex: 1,

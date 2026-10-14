@@ -1,9 +1,183 @@
-# Divecore minimal — handoff (paused 2026-10-14)
+# Divecore minimal — handoff (read the LATEST section first)
 
 Branch `feature/divecore-minimal` (off master `e121ef1c`) · draft PR https://github.com/emci-hub/ATO/pull/33 (Auto-fix on).
 The full brief is emci's pasted task (Steps 0-3 + Deliverables + Rules). This file is the state, so the next agent
 does not redo the audit. **Do not merge. Do not publish an OTA.** Play-only (`.cursor/rules/play-isolation.mdc`,
 `.cursor/rules/fixed-regions.mdc`). No new native deps; package.json may only gain check scripts.
+
+## ▶ LATEST — read this first (session 3, local Windows, 2026-10-14): **Phase 1 DONE** → next is Phase 2
+
+Session 3 finished Phase 1: emci checked it on the real phone (Hideout camera + room taps, Turf War avatar drag,
+Setup sheet, pad / won / lost panels, pause, Dive, pet games, Large Text) — **"all good, nothing wrong"**. No fixes
+were needed; only a stale comment in `defend-screen.tsx` (board "still scrolls the page") was corrected.
+Gate re-run green on Windows. After shots in `docs/divecore/after/` are from session 2 and match this code (no
+layout change since). Start Phase 2 with the prompt at the end of this section.
+
+### Where the code is
+- Branch **`claude/jolly-cerf-q0gsov`** (cloud session branch) = `feature/divecore-minimal` (session 1's WIP)
+  + this work. Draft PR **https://github.com/emci-hub/ATO/pull/35** merges it INTO `feature/divecore-minimal`;
+  PR **#33** (`feature/divecore-minimal` → `master`) stays the one PR to master. emci has not yet said whether to
+  fold #35 into #33 now — ask once, recommend: merge #35 into `feature/divecore-minimal` when Phase 1 is green,
+  then keep working on `feature/divecore-minimal`.
+- Locally: `git fetch origin && git checkout claude/jolly-cerf-q0gsov` (or the merged branch once folded).
+
+### The brief (emci, 2026-10-14) — 5 phases, one session each; do only the current one
+1. **Placement audit + spacing spec + layout skeleton** ✔ done (emci phone-checked 2026-10-14)
+2. One unified notification system in the reserved NoticeLane (`notify()`, replaces PlayBanner) ← **next**
+3. Tabs / nav cleanup: one entry per place, one name per thing, Exit in ⚙, **remove the Block (a1)**
+4. One "?" help button + replace the 5-card tutorial with ≤ 4 short tips
+5. Word-limit checks + rewrite long text
+After phase 5: `docs/main-app-ui-plan.md` (what worked, what to share via e.g. `src/ui/`, the same 5 phases for the
+main app, a ready main-app Phase 1 prompt), then stop for emci's OK. Every phase ends with a "Lessons learned"
+section here. Keep reusable pieces generic (GameScreen / stage-frame, notify(), word-limit checks, spacing scale)
+and note Play-only vs shareable — do NOT move anything outside `src/play` yet.
+
+Rules (every phase): Play-only (`.cursor/rules/play-isolation.mdc`: `src/play/**`, `assets/play/**`,
+`src/app/play.tsx`, `docs/**`, `scripts/check-*.ts`, package.json scripts, `.cursor/rules/**`); obey
+`fixed-regions.mdc` + `stage-bounds.mdc`. No merge, no OTA publish, no new native deps (must ship as OTA), no
+economy / odds / rewards / save changes, never print EXPO_TOKEN or any key/token. Keep the style: Departure Mono +
+Rajdhani (Street screens use Pixelify Sans), cyan frames, solid buttons, fullscreen arenas, the locked art rules,
+Reduce Motion = gentle, never still. emci wants plain, short answers and to SEE changes (previews) before choosing.
+
+### emci's decisions (all 2026-10-14)
+- Accepted every recommendation: **(a1)** remove the Block → Hideout is home + Claim chip (do it in Phase 3);
+  **(b1)** Turf War fixed board + one Setup sheet; spec heights + "stage ≥ 60 %" target OK.
+- From the previews: Turf War keeps the **TURF WAR header + the full lede** ("Protect the Basecore Path. Drag your
+  Avatar to the thick, and time Root Veil.") with the **board right under them** — "I just wanted the map moved".
+- Hideout: the **room fills the stage** like the Underground picture, **Hideout / Loft / Call on their own row**,
+  and on small phones the **view follows the pet** (accepted recommendation).
+- Earlier (session 1): thin 28 pt lane on arenas ✔; word limits enforced on what you see first ✔.
+
+### What Phase 1 has done
+- Step 1 audit: `docs/divecore-audit/measured.md` (real numbers, web build + Playwright) on top of session 1's
+  static `nav.md` / `notices.md` / `layout.md`. Before shots `docs/divecore/before/`.
+- Step 2 research: `docs/divecore-ui-research.md` (session 1, R1–R12).
+- Step 3 spec: `docs/divecore-layout-spec.md` (approved; §2a = what was built) + mockups `docs/divecore/mockups/`.
+- **Step 4 skeleton (this session):**
+  - `src/play/stage-frame.ts` — pure `computeStageFrame(id, window, insets)`, `REGIONS` (per-screen heights),
+    `layoutRegions`, `SPACE` (4/8/12/16/24), `TAP_MIN` 44 / `TAP_PRIMARY` 48, `tabBarHeight`.
+  - `src/play/stage-layout.tsx` — `<GameScreen frame topBar notice stage dock tabBar float modal fadeKey>` +
+    `useStageFrame(id)` (computed during render = before first paint; frozen until the window size changes).
+  - `src/app/play.tsx` — the Street shell no longer has a flex-leftover body or bar slots: it builds the resource
+    bar (`shellTop`) and tab bar (`shellTabs`) and hands them to each screen; list screens (Block, Locker, Store,
+    About) are `GameScreen('list')` with a scroll body; Dive renders without SafeAreaView (GameScreen does insets).
+  - Hideout (`pet-screen.tsx`, `pet-room.tsx`, `hideout-iso.ts`): `GameScreen('hideout')`; NoticeLane = pet strip
+    (or the "Swipe for rooms" hint until seen); stage = room at the frame size, **cover-fit**
+    (`hideoutCoverScale`) with a lazy **camera** (`hideoutCameraTop`, feet kept between 40–88 % of the stage, glide
+    600 ms / 900 ms under Reduce Motion); dock = room row (Hideout/Loft/Call, 56) + Feed/Info (64).
+  - Turf War (`defend-screen.tsx`): `GameScreen` with ONE frame for setup + wave (`turf-setup`; the wave frame =
+    `computeStageFrame('turf-wave', same window + insets)`). Stage = header (112) + square board
+    `min(stageW − 24, stageH − 112)` (406 Pro Max / 309 SE), not in a ScrollView. Lane = setup coach (tap hides) /
+    wave coach / "Paused…". Setup dock = **Setup ▲** + **Call wave**; wave dock = Cast + Pounce·1×·2×·Leave; wave
+    TopBar = HUD (wave · run caps · pause). Setup sheet (`PlaySheet`) = map label, wave/HUD card, Why?, fight card +
+    speed, drops, maps, replays, effects quality. Pad panel and won/lost cards float above the dock. Back closes the
+    sheet first. `StreetHudFill/StreetDockFill` are no longer used (exports still exist in `street-shell.tsx`).
+  - Dive (`dive-scene.tsx`): `GameScreen('dive')`; picture size from the frame; the find / caption toast is now one
+    line in the NoticeLane; dock fixed (no grow-only).
+  - Pet games (`pet-games.tsx` `GamePlate`): `GameScreen('pet-game')`, fullscreen over the Hideout.
+  - `layout-shot.tsx`: pet / dive / games no longer add insets (GameScreen does).
+  - Gate: new **`check:stage-bounds`** (`scripts/check-stage-bounds.ts`, in `check:ota-gate`): GameScreen on every
+    game screen, no flex-leftover stage, nothing forbidden in a `stage={…}`, pure frame tests at both sizes (incl.
+    Turf setup = wave, Hideout camera). Rule **`.cursor/rules/stage-bounds.mdc`**; `fixed-regions.mdc` points to
+    it; `check:fixed-regions` re-pinned to the new layout.
+  - Verified on web at both sizes: Turf War board top/size **identical in setup, wave and pause** (Pro Max 267/406,
+    SE 228/309) — the two measured bugs are fixed. After shots `docs/divecore/after/`.
+- **Gate result at hand-off: `npm run check:ota-gate` → typecheck + lint + all 158 offline checks passed**
+  (incl. the new `check:stage-bounds`; one old lint warning in dive-scene.tsx is not new).
+
+### Measured results (Phase 1)
+| | Before | After (Phase 1) |
+|---|---|---|
+| Hideout stage (Pro Max / SE) | 613 / 417 incl. the 64 pt room row; room 332 wide with side bands | 563 / 365 room only; room fills the width (430 / 375) |
+| Turf War board | 406 at y 319, jumps to 114 in a wave, +145 on pause; SE: 146 pt hidden, +290 on pause | 406 at y 267 / SE 309 at y 228 — never moves, never hidden |
+| Turf War Call wave | 650 / 870 pt down a scroll | always in the dock (bottom third) |
+| Dive picture | 468 / 276 | 444 / 252 (new 28 pt lane; dock still 258 until Phase 5) |
+
+### Phase 1 wrap-up (session 3, done)
+1. ✔ Real phone (emci, dev build via `npm start`): Hideout camera + room taps, Turf War avatar drag, Setup sheet
+   open/close, pad / won / lost panels above the dock, pause, Dive, pet games, Large Text — all good.
+2. ✔ No fixes needed. Only change: the stale board-responder comment in `src/play/defend-screen.tsx`.
+3. ✔ `npm run check:ota-gate` (typecheck + lint + all offline checks) green on Windows.
+4. ✔ After shots: `docs/divecore/after/` (430×932 `max-*`, 375×667 `se-*`), before/after in PR #35's body.
+5. ✔ This file, PR #35 body, `PROJECT_CONTEXT.md` (Decisions log, DIVECORE MINIMAL line) updated.
+6. Asked emci once whether to merge #35 into `feature/divecore-minimal` (recommended). Never to master.
+
+### Known trade-offs / risks to tell emci
+- SE Turf War board is **309** (was 351, but 146 of that was hidden in a wave and 28 under the tab bar in setup) —
+  the cost of keeping the full header above it. Pro Max unchanged at 406.
+- Dive picture is 24 pt smaller until Phase 5 shrinks its dock.
+- On SE the Hideout shows ~60 % of the room at a time; Play / Stash come into view when the pet walks up there.
+  No vertical drag-to-look yet (would fight the room swipe) — offer it in Phase 3/4 if emci wants.
+- Effects quality toggle moved into the Turf War Setup sheet (not reachable mid-wave).
+- List screens (Block, Locker, Store) and the pet games have an empty 40 / 28 pt NoticeLane until Phase 2.
+- PlayBanner still floats at `insets.top + 52` (Phase 2 replaces it with the lane).
+
+### Environment gotchas
+- `art-registry` (`check:art-registry --fresh`) was red once at the start of this session and green at hand-off
+  with no art changes; the pre-commit hook runs `art:sync` when staged files touch art. If it goes red again it is
+  not a Play-layout failure: run `npm run art:sync`, never hand-edit generated art files.
+- Measuring on web: see `docs/divecore/tools/README.md` (dummy Supabase env, local safe-area-context patch, Dive
+  only via `?shot=dive`). Session 1 (Windows) also saw Expo web crash with `EMFILE` when other tools scanned the
+  repo — don't poll it in a loop.
+- nngroup / uxmatters were unreachable from the cloud; session 1 verified the research links locally.
+
+### Lessons learned (Phase 1)
+- **Phone check is emci's step; set it up so it's one scan**: run `npm start` in a visible terminal tab (dev build,
+  same Wi-Fi) and hand emci a short checklist. The web harness can't prove native gestures (drag, sheet swipe).
+- **Removing a ScrollView leaves stale assumptions**: grep the comments/responder code around anything that used
+  to scroll (the board's "drag still scrolls the page" note).
+- **Don't retake shots for a no-layout change**: session 2's after shots stayed valid; retake only when a region moves.
+- **Measure before trusting a review**: the two worst map bugs (SE board hidden, board jump on pause) were not on
+  the review's list, and the suspected "grow-only shrink" did not fire in the measured states.
+- **One frame per screen, computed from the window, is simple and testable** — the pure `computeStageFrame` lets the
+  gate prove the stage can't change with notices/pause/loading. Reusable as-is for the main app (shareable).
+- **Show real-art previews before asking**: emci's feedback changed the plan twice (keep the header; room fills).
+- Splicing a 5.5k-line screen by marked line ranges (asserting each marker first) was safer than hand edits.
+- Shareable later: `stage-frame.ts`, `SPACE`/`TAP_*`, the GameScreen pattern. Play-only: REGIONS heights, the
+  Hideout camera, the Turf War board sizing.
+
+### ▶ Phase 2 prompt (ready to paste into a fresh session)
+
+Model: Sonnet 5
+
+```text
+Repo emci-hub/ATO (C:\Users\lil_e\Desktop\ATO). PLAY-ONLY task: obey .cursor/rules/play-isolation.mdc,
+.cursor/rules/fixed-regions.mdc and .cursor/rules/stage-bounds.mdc.
+
+First: git fetch origin && git checkout feature/divecore-minimal && git pull && npm ci
+(If PR emci-hub/ATO#35 is not merged yet, check out claude/jolly-cerf-q0gsov instead.)
+Then read docs/divecore-handoff.md, section "LATEST" (history, emci's decisions, the 5-phase plan, Lessons
+learned), docs/divecore-layout-spec.md (NoticeLane rules) and docs/divecore-audit/notices.md (every notice today).
+
+We are in Divecore Phase 2: ONE unified notification system in the reserved NoticeLane.
+1. Finish notify() on the EXISTING pure queue src/play/notify/queue.ts (session 1 WIP: kinds celebrate /
+   notify / error, priority, de-dupe, max waiting, durations, word caps — keep these kinds unless I decide
+   otherwise) and wire the already-written scripts/check-notify.ts into package.json + check:ota-gate. Do NOT
+   build a second queue. Fold in src/play/play-banner-queue.ts and bannerEvents. One line (numberOfLines 1),
+   tap to dismiss / tap-through target. Renders in GameScreen's `notice` slot on every screen (Hideout, Turf
+   War, Dive, pet games, list screens) — never resizes a region, never pushes the stage. Reduce Motion =
+   gentle fade, never still. (Session 1's "Work in progress" list in the handoff describes these files.)
+2. Move every Play notice to it: PlayBanner (src/play/play-banner.tsx, bannerReducer in src/app/play.tsx, the
+   float at insets.top + 52), the Dive find/caption line, Turf War coach / paused lines, the Hideout pet strip
+   and swipe hint. Remove PlayBanner when nothing uses it.
+3. Gate: update check:play-banner (or replace it with check:notify) + pins in check:stage-bounds /
+   check:fixed-regions. Keep it pure-testable like computeStageFrame.
+4. Show me previews (real art, 430x932 + 375x667, docs/divecore/tools/README.md) of the lane with each notice
+   kind BEFORE I choose anything about its look; keep the existing style.
+5. Phone check: start `npm start` in a visible terminal tab and give me a short checklist; then npm run
+   typecheck, npm run lint, npm run check:ota-gate — all green. After shots into docs/divecore/after/.
+6. Update docs/divecore-handoff.md (state, files, Lessons learned, a ready Phase 3 prompt in this same format),
+   the PR body and PROJECT_CONTEXT.md (DIVECORE MINIMAL line). Draft PR into feature/divecore-minimal. Then stop.
+
+Do NOT start Phase 3-5. Rules: no merge to master, no OTA publish, no new native deps, no economy/odds/
+rewards/save changes, never print EXPO_TOKEN or any key/token. Keep the style (Departure Mono + Rajdhani,
+Pixelify on Street screens, cyan frames, solid buttons, fullscreen arenas, locked art rules, Reduce Motion =
+gentle, never still). Show me previews before any layout choice; keep answers short and plain.
+```
+
+---
+
+## Session 1 (Windows / Cursor) — kept for its facts
 
 ## Done
 | Step | Output |
