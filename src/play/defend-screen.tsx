@@ -2681,150 +2681,6 @@ export function DefendScreen({
           Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
         </ThemedText>
 
-        {/* HUD */}
-        {/* fixed-regions: screen switch (setup → run). */}
-        <PlayFrame style={[styles.card, street && phase === 'running' && styles.streetHidden]}>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">
-              {campaignPhaseLabel(labelPhase)} wave {displayedWave}
-            </ThemedText>
-            <ThemedText type="subheading" themeColor="emphasis">
-              {defendDifficulty(displayedWave)}
-            </ThemedText>
-          </View>
-          <ThemedText type="small" themeColor="textSecondary">
-            {fight.mode === 'replay'
-              ? 'Replay of a cleared band — pays half tokens, your campaign seat stays put.'
-              : cycleNote
-                ? `Campaign climb — ${cycleNote}.`
-                : 'Campaign climb — Trial 1–5, then Main 1–20. Clear Main 20 to Conquer a cycle.'}
-          </ThemedText>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">Scrap</ThemedText>
-            <ThemedText type="subheading" themeColor="emphasis">
-              {scrap}
-            </ThemedText>
-          </View>
-          <ThemedText type="small" themeColor="textSecondary">
-            Run scrap — spend to place and upgrade towers, earn by defeating foes, resets each
-            run. You start with enough for about two towers.
-          </ThemedText>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">
-              {activeAvatarDef?.name ?? 'Avatar'} · Lv {view.avatarLevel}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              ×{levelBonus.toFixed(2)} power
-            </ThemedText>
-          </View>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">
-              Avatar ★{view.avatarStars}/{AVATAR_STAR_MAX}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              ×{avatarStarWavePower(view.avatarStars).toFixed(2)} power
-            </ThemedText>
-          </View>
-          {view.avatarStarTokens > 0 && view.avatarStars < AVATAR_STAR_MAX ? (
-            <Pressable
-              onPress={() => void onSpendStarToken()}
-              accessibilityRole="button"
-              accessibilityLabel="Spend Avatar star token"
-              style={({ pressed }) => [
-                styles.hudButton,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold">
-                Spend star token → ★{view.avatarStars + 1} (+
-                {Math.round(getTune().avatarStarWavePowerStep * 100)}% power)
-              </ThemedText>
-            </Pressable>
-          ) : null}
-          <View style={styles.statRow}>
-            <View style={styles.typeMatchRow}>
-              {stageElement ? (
-                <MaterialCommunityIcons
-                  name={TAG_ICON[stageElement]}
-                  size={14}
-                  color={TAG_COLOR[stageElement]}
-                />
-              ) : null}
-              <ThemedText type="smallBold">
-                Stage · {stageElement ? TAG_LABEL[stageElement] : 'Neutral'}
-              </ThemedText>
-            </View>
-            <Pressable
-              onPress={() => setChartOpen((open) => !open)}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Stage element matchup"
-              style={({ pressed }) => [pressed && styles.pressed]}>
-              <ThemedText
-                type="smallBold"
-                themeColor={
-                  stageMatchup.kind === 'favoured'
-                    ? 'emphasis'
-                    : 'textSecondary'
-                }>
-                {stageMatchupShort(stageMatchup)}
-              </ThemedText>
-            </Pressable>
-          </View>
-          {chartOpen ? (
-            <ThemedView type="backgroundElement" style={styles.chartCard}>
-              <ThemedText type="small" themeColor="textSecondary">
-                {stageMatchupDetail(stageMatchup)}
-              </ThemedText>
-            </ThemedView>
-          ) : null}
-          {phase !== 'running' ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {activeSkill.name}: {activeSkill.description} ({getTune().skillCooldownMs / 1000}s cooldown)
-            </ThemedText>
-          ) : null}
-        </PlayFrame>
-
-        {/* Coach — top of Defend setup, right under the wave-title block, so a
-         * newbie reads the tip before placing/starting. Still dismissible. */}
-        {phase === 'setup' && !coachHidden ? (
-          <ThemedView type="backgroundElement" style={styles.coachCard}>
-            <View style={styles.coachHeader}>
-              <ThemedText type="smallBold" themeColor="emphasis">
-                Coach · {fightTitle(fight)}
-              </ThemedText>
-              <Pressable
-                onPress={() => setCoachHidden(true)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel="Hide coach"
-                style={({ pressed }) => [pressed && styles.pressed]}>
-                <ThemedText type="code" themeColor="textSecondary">
-                  Hide
-                </ThemedText>
-              </Pressable>
-            </View>
-            <ThemedText type="small" themeColor="textSecondary">
-              {coach.tip}
-            </ThemedText>
-            {coach.why ? (
-              <Pressable
-                onPress={() => setWhyOpen((open) => !open)}
-                accessibilityRole="button"
-                style={({ pressed }) => [pressed && styles.pressed]}>
-                <ThemedText type="code" themeColor="textSecondary">
-                  {whyOpen ? 'Why? (hide)' : 'Why?'}
-                </ThemedText>
-              </Pressable>
-            ) : null}
-            {whyOpen && coach.why ? (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.whyText}>
-                {coach.why}
-              </ThemedText>
-            ) : null}
-          </ThemedView>
-        ) : null}
-
         {/* Board */}
         <PlayFrame style={[styles.card, styles.boardCard]}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.boardCardLabel}>
@@ -3680,6 +3536,150 @@ export function DefendScreen({
                 Done
               </ThemedText>
             </Pressable>
+          </ThemedView>
+        ) : null}
+
+        {/* HUD */}
+        {/* fixed-regions: screen switch (setup → run). */}
+        <PlayFrame style={[styles.card, street && phase === 'running' && styles.streetHidden]}>
+          <View style={styles.statRow}>
+            <ThemedText type="smallBold">
+              {campaignPhaseLabel(labelPhase)} wave {displayedWave}
+            </ThemedText>
+            <ThemedText type="subheading" themeColor="emphasis">
+              {defendDifficulty(displayedWave)}
+            </ThemedText>
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            {fight.mode === 'replay'
+              ? 'Replay of a cleared band — pays half tokens, your campaign seat stays put.'
+              : cycleNote
+                ? `Campaign climb — ${cycleNote}.`
+                : 'Campaign climb — Trial 1–5, then Main 1–20. Clear Main 20 to Conquer a cycle.'}
+          </ThemedText>
+          <View style={styles.statRow}>
+            <ThemedText type="smallBold">Scrap</ThemedText>
+            <ThemedText type="subheading" themeColor="emphasis">
+              {scrap}
+            </ThemedText>
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            Run scrap — spend to place and upgrade towers, earn by defeating foes, resets each
+            run. You start with enough for about two towers.
+          </ThemedText>
+          <View style={styles.statRow}>
+            <ThemedText type="smallBold">
+              {activeAvatarDef?.name ?? 'Avatar'} · Lv {view.avatarLevel}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              ×{levelBonus.toFixed(2)} power
+            </ThemedText>
+          </View>
+          <View style={styles.statRow}>
+            <ThemedText type="smallBold">
+              Avatar ★{view.avatarStars}/{AVATAR_STAR_MAX}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              ×{avatarStarWavePower(view.avatarStars).toFixed(2)} power
+            </ThemedText>
+          </View>
+          {view.avatarStarTokens > 0 && view.avatarStars < AVATAR_STAR_MAX ? (
+            <Pressable
+              onPress={() => void onSpendStarToken()}
+              accessibilityRole="button"
+              accessibilityLabel="Spend Avatar star token"
+              style={({ pressed }) => [
+                styles.hudButton,
+                { backgroundColor: theme.backgroundSelected },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold">
+                Spend star token → ★{view.avatarStars + 1} (+
+                {Math.round(getTune().avatarStarWavePowerStep * 100)}% power)
+              </ThemedText>
+            </Pressable>
+          ) : null}
+          <View style={styles.statRow}>
+            <View style={styles.typeMatchRow}>
+              {stageElement ? (
+                <MaterialCommunityIcons
+                  name={TAG_ICON[stageElement]}
+                  size={14}
+                  color={TAG_COLOR[stageElement]}
+                />
+              ) : null}
+              <ThemedText type="smallBold">
+                Stage · {stageElement ? TAG_LABEL[stageElement] : 'Neutral'}
+              </ThemedText>
+            </View>
+            <Pressable
+              onPress={() => setChartOpen((open) => !open)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Stage element matchup"
+              style={({ pressed }) => [pressed && styles.pressed]}>
+              <ThemedText
+                type="smallBold"
+                themeColor={
+                  stageMatchup.kind === 'favoured'
+                    ? 'emphasis'
+                    : 'textSecondary'
+                }>
+                {stageMatchupShort(stageMatchup)}
+              </ThemedText>
+            </Pressable>
+          </View>
+          {chartOpen ? (
+            <ThemedView type="backgroundElement" style={styles.chartCard}>
+              <ThemedText type="small" themeColor="textSecondary">
+                {stageMatchupDetail(stageMatchup)}
+              </ThemedText>
+            </ThemedView>
+          ) : null}
+          {phase !== 'running' ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {activeSkill.name}: {activeSkill.description} ({getTune().skillCooldownMs / 1000}s cooldown)
+            </ThemedText>
+          ) : null}
+        </PlayFrame>
+
+        {/* Coach — Defend setup, under the map with the wave card (emci 2026-10-13: map sits
+         * right under the lede), above the Start card so the tip is read first. Still dismissible. */}
+        {phase === 'setup' && !coachHidden ? (
+          <ThemedView type="backgroundElement" style={styles.coachCard}>
+            <View style={styles.coachHeader}>
+              <ThemedText type="smallBold" themeColor="emphasis">
+                Coach · {fightTitle(fight)}
+              </ThemedText>
+              <Pressable
+                onPress={() => setCoachHidden(true)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Hide coach"
+                style={({ pressed }) => [pressed && styles.pressed]}>
+                <ThemedText type="code" themeColor="textSecondary">
+                  Hide
+                </ThemedText>
+              </Pressable>
+            </View>
+            <ThemedText type="small" themeColor="textSecondary">
+              {coach.tip}
+            </ThemedText>
+            {coach.why ? (
+              <Pressable
+                onPress={() => setWhyOpen((open) => !open)}
+                accessibilityRole="button"
+                style={({ pressed }) => [pressed && styles.pressed]}>
+                <ThemedText type="code" themeColor="textSecondary">
+                  {whyOpen ? 'Why? (hide)' : 'Why?'}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+            {whyOpen && coach.why ? (
+              <ThemedText type="small" themeColor="textSecondary" style={styles.whyText}>
+                {coach.why}
+              </ThemedText>
+            ) : null}
           </ThemedView>
         ) : null}
 
