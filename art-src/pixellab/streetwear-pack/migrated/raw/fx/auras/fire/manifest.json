@@ -1,6 +1,6 @@
 {
  "app": "PixelLab VFX Creator",
- "name": "ATO app aura fire swirl v2 (grey+green code)",
+ "name": "ATO app aura fire streams (grey+green code)",
  "fps": 4,
  "frame_ms": 250,
  "frames": 8,
@@ -23,8 +23,8 @@
    "start_frame": 0,
    "frames": 8,
    "frame": {
-    "w": 158,
-    "h": 104
+    "w": 160,
+    "h": 109
    },
    "sheets": [
     {
@@ -36,8 +36,8 @@
     }
    ],
    "offset": {
-    "x": -79,
-    "y": -83
+    "x": -80,
+    "y": -94
    }
   },
   {
@@ -48,8 +48,8 @@
    "start_frame": 0,
    "frames": 8,
    "frame": {
-    "w": 158,
-    "h": 127
+    "w": 160,
+    "h": 121
    },
    "sheets": [
     {
@@ -61,7 +61,7 @@
     }
    ],
    "offset": {
-    "x": -79,
+    "x": -80,
     "y": -106
    }
   },
@@ -73,8 +73,8 @@
    "start_frame": 0,
    "frames": 8,
    "frame": {
-    "w": 158,
-    "h": 82
+    "w": 160,
+    "h": 91
    },
    "sheets": [
     {
@@ -86,8 +86,8 @@
     }
    ],
    "offset": {
-    "x": -79,
-    "y": -83
+    "x": -80,
+    "y": -94
    }
   },
   {
@@ -98,8 +98,8 @@
    "start_frame": 0,
    "frames": 8,
    "frame": {
-    "w": 158,
-    "h": 97
+    "w": 148,
+    "h": 68
    },
    "sheets": [
     {
@@ -111,8 +111,8 @@
     }
    ],
    "offset": {
-    "x": -79,
-    "y": -76
+    "x": -72,
+    "y": -53
    }
   }
  ]

@@ -630,9 +630,9 @@
       "frames": 8,
       "fps": 4,
       "loop": true,
-      "cell": 158,
+      "cell": 160,
       "anchorX": 0.5,
-      "anchorY": 0.6709,
+      "anchorY": 0.7188,
       "refBodyPx": 106
     },
     "rune": {
