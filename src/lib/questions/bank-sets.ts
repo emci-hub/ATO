@@ -16,7 +16,8 @@
 import { effectiveStability, MIXED_STABILITY_BELOW, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
-import { BANK_BY_TRAIT, BANK_PER_TRAIT, type BankQuestion } from './bank/index';
+import { QUESTIONS_BANK, withRewordAliases } from './bank';
+import { BANK_BY_TRAIT, BANK_PER_TRAIT, QUESTION_BANK, type BankQuestion } from './bank/index';
 
 /**
  * The 352 new bank questions and this screen's copy have not had emci's read
@@ -178,4 +179,47 @@ export function changeRecommendations(
     if (reason) out.push({ axis, reason });
   }
   return out.sort((a, b) => rank[a.reason] - rank[b.reason]);
+}
+
+// --- Previous answers (Change answers) ----------------------------------------
+
+export interface LoggedAnswerRow {
+  kind: string;
+  question_key: string;
+  option_index: number;
+}
+
+/**
+ * Intake wording -> the bank question it became (intake slot N of its trait):
+ * today's wording and its pre-wave84 one, the same list the server stores as
+ * question_bank.legacy_prompts (scripts/gen-wave85-bank.ts).
+ */
+const INTAKE_PROMPT_TO_BANK_ID: ReadonlyMap<string, string> = (() => {
+  const out = new Map<string, string>();
+  for (const row of QUESTION_BANK) {
+    if (!row.intakeSlot) continue;
+    const intake = QUESTIONS_BANK.filter((d) => d.axis === row.axis)[row.intakeSlot - 1];
+    if (!intake) continue;
+    for (const prompt of withRewordAliases([intake.prompt])) out.set(prompt, row.id);
+  }
+  return out;
+})();
+
+/**
+ * Each answered bank question's previous option, from the answer log. A bank
+ * row is keyed by the question id; an intake-era row by its prompt text, which
+ * maps to that trait's intake-slot question (same options, same order). A bank
+ * row wins over an intake row for the same question.
+ */
+export function priorAnswersFrom(rows: readonly LoggedAnswerRow[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const row of rows) {
+    if (row.kind !== 'intake') continue;
+    const id = INTAKE_PROMPT_TO_BANK_ID.get(row.question_key);
+    if (id != null) out.set(id, row.option_index);
+  }
+  for (const row of rows) {
+    if (row.kind === 'bank') out.set(row.question_key, row.option_index);
+  }
+  return out;
 }

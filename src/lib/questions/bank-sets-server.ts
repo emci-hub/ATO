@@ -7,7 +7,7 @@ import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 import { parseSnapshot, type ProfileSnapshot } from '@/lib/profile-history';
 
-import { bankProgressFrom, type BankProgress } from './bank-sets';
+import { bankProgressFrom, priorAnswersFrom, type BankProgress, type LoggedAnswerRow } from './bank-sets';
 
 export async function fetchBankProgress(): Promise<BankProgress> {
   const { data, error } = await supabase.rpc('bank_answered');
@@ -62,14 +62,20 @@ export async function fetchProfileSnapshots(): Promise<ProfileSnapshot[]> {
   });
 }
 
-/** This account's logged answers to bank questions: question id -> option index. */
+/**
+ * This account's previous answer to each bank question: question id -> option
+ * index. Reads bank rows and intake-era rows (keyed by prompt), so the 48
+ * intake questions show their answer too (priorAnswersFrom).
+ */
 export async function fetchMyBankAnswers(): Promise<Map<string, number>> {
   const { data, error } = await supabase
     .from('trait_answers')
-    .select('question_key, option_index')
-    .eq('kind', 'bank');
+    .select('kind, question_key, option_index')
+    .in('kind', ['bank', 'intake'])
+    // Oldest first, so the newest answer wins if a question has two rows.
+    .order('created_at', { ascending: true });
   if (error) throw error;
-  return new Map(((data ?? []) as { question_key: string; option_index: number }[]).map((r) => [r.question_key, r.option_index]));
+  return priorAnswersFrom((data ?? []) as LoggedAnswerRow[]);
 }
 
 /**
