@@ -72,19 +72,21 @@ ok('edge swipe: from the left edge, sideways, far enough (or flicked)');
 
 // The shell wires it.
 const shell = readFileSync('src/app/play.tsx', 'utf8');
-assert.match(shell, /gestureEnabled: mode === 'grove'/, 'native swipe-back only on the hub');
+assert.match(shell, /gestureEnabled: mode === 'pet'/, 'native swipe-back only from home (the Hideout)');
 assert.match(shell, /BackHandler\.addEventListener\('hardwareBackPress'/, 'Android back handled');
 assert.match(shell, /\{\.\.\.edgeSwipe\.panHandlers\}/, 'edge swipe attached to the sub-screens');
 assert.equal((shell.match(/registerBack=\{registerBack\}/g) ?? []).length, 3, 'Defend, Pet and Dive register their back');
-assert.match(shell, /modeRef\.current === 'dive' \? 'pet' : 'grove'/, 'Dive steps back to the Pet room');
+assert.match(shell, /backTarget\(modeRef\.current, diveFromRef\.current\)/, 'Dive steps back to the screen that opened it, everything else to the Hideout');
 ok('Play shell: native swipe on hub only, Android back + edge swipe on sub-screens, Defend/Pet/Dive registered');
 
 // v24: on the hub, the Settings sheet / tutorial close first (the phone's own
 // swipe is off while one is open); in the Pet room, Settings closes first.
 assert.match(shell, /if \(overlayRef\.current\) \{\s*overlayRef\.current\(\);\s*return true;/, 'hub: an open overlay closes first');
-assert.match(shell, /gestureEnabled: mode === 'grove' && !hubOverlayOpen/, 'hub: no native swipe while an overlay is open');
+assert.match(shell, /gestureEnabled: mode === 'pet' && !hubOverlayOpen/, 'home: no native swipe while an overlay is open');
 const petShell = readFileSync('src/play/pet-screen.tsx', 'utf8');
-assert.match(petShell, /if \(settingsOpen\) \{\s*setSettingsOpen\(false\);\s*return true;/, 'Pet room: Settings closes first');
-ok('hub and Pet room: Settings / the tutorial close first on back');
+assert.ok(!petShell.includes('DivecoreSettingsSheet'), 'one Settings sheet: the Play shell owns it, the Pet room has no second copy');
+assert.match(shell, /return innerBackRef\.current\?\.back\(\) === true;/, 'a sheet or mini-game in the Hideout closes before back leaves Play');
+assert.match(shell, /gestureEnabled: mode === 'pet' && !hubOverlayOpen && !petBusy/, 'no native swipe-back while a Hideout sheet or mini-game is open');
+ok('home: Settings / the tutorial close first on back (one Settings sheet, owned by the shell)');
 
 console.log(`\ncheck:edge-back — ${passed} groups passed.`);

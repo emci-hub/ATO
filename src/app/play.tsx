@@ -1,7 +1,7 @@
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PlayDevFab } from '@/components/play-dev-fab';
@@ -17,16 +17,16 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { AboutScreen } from '@/play/about-screen';
 import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
-import { CommandHub } from '@/play/command-hub';
 import {
-  StreetBlock,
   StreetLockerTabs,
   StreetResourceBar,
   StreetTabBar,
   type StreetTab,
 } from '@/play/street-shell';
 import { streetUiOn } from '@/play/street-ui';
-import { NEON, shopUnlocked, type HubDestination } from '@/play/neon-viper';
+import { NEON, shopUnlocked } from '@/play/neon-viper';
+import { NeonButton } from '@/play/neon-ui';
+import { backTarget, modeForTab, tabForMode, type PlayMode } from '@/play/play-nav';
 import { PlayThemeProvider } from '@/play/play-theme';
 import { GameScreen, useStageFrame } from '@/play/stage-layout';
 import { noticeEvents, type NoticeWatch } from '@/play/notify/events';
@@ -114,10 +114,8 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * pre-launch builds via PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab' | 'swords' | 'swordlab';
 
 export default function PlayScreen() {
-  const theme = useTheme();
   // Reduce motion (v24): follows the phone unless overridden in Divecore
   // Settings — Play only; the rest of the app keeps following the phone.
   const { reduceMotion: phoneReduceMotion } = useAppearance();
@@ -172,7 +170,7 @@ export default function PlayScreen() {
     buyShopRow,
   } = usePlayStore();
   const shotParams = useLocalSearchParams<{ shot?: string; inset?: string; phase?: string }>();
-  const [mode, setMode] = useState<PlayMode>('grove');
+  const [mode, setMode] = useState<PlayMode>('pet');
   // Fullscreen while on the Defend board (setup and waves): the status bar
   // hides and comes back on leaving Defend or exiting Play. Shared hook —
   // any screen opts in the same way.
@@ -196,10 +194,16 @@ export default function PlayScreen() {
   }, []);
   const modeRef = useRef(mode);
   modeRef.current = mode;
-  /** Dive only opens from the Pet room now (overhaul, 2026-09-29), so its
-   * back always returns to the room; every other sub-screen goes to the hub. */
+  /** Phase 3 (2026-10-14): Hideout is home (the Block is gone). Dive's back returns to the
+   * screen that opened it (the Hideout hatch; a notice can open it from elsewhere); every
+   * other sub-screen goes to the Hideout. */
+  const diveFromRef = useRef<PlayMode>('pet');
+  const openDive = useCallback(() => {
+    if (modeRef.current !== 'dive') diveFromRef.current = modeRef.current;
+    setMode('dive');
+  }, []);
   const leaveSubScreen = useCallback(() => {
-    setMode(modeRef.current === 'dive' ? 'pet' : 'grove');
+    setMode(backTarget(modeRef.current, diveFromRef.current));
   }, []);
   /** A dive / TD / find moment for the pet to talk about once (room overhaul). */
   const [petTalk, setPetTalk] = useState<PetTalkEvent>(null);
@@ -212,6 +216,8 @@ export default function PlayScreen() {
   }, []);
   /** v24: the hub's Settings sheet and the tutorial close first on back. */
   const [hubSettingsOpen, setHubSettingsOpen] = useState(false);
+  /** A Hideout sheet or mini-game is open: the phone's own swipe-back must not leave Play. */
+  const [petBusy, setPetBusy] = useState(false);
   const [tutorialReplay, setTutorialReplay] = useState(false);
   // Hold notices (except errors) while the tutorial or the hub Settings sheet covers the screen.
   useNoticePause(hubSettingsOpen || (view != null && (tutorialReplay || !view.settings.tutorialSeen)));
@@ -221,8 +227,11 @@ export default function PlayScreen() {
       overlayRef.current();
       return true;
     }
-    const decision = backDecision(modeRef.current === 'grove', innerBackRef.current, source);
-    if (decision === 'native') return false;
+    const decision = backDecision(modeRef.current === 'pet', innerBackRef.current, source);
+    if (decision === 'native') {
+      // Home is the Hideout: a mini-game or sheet there closes first, then back leaves Play.
+      return innerBackRef.current?.back() === true;
+    }
     if (decision === 'ignore') return true;
     if (innerBackRef.current?.back()) return true;
     leaveSubScreen();
@@ -238,7 +247,7 @@ export default function PlayScreen() {
         // Capture only a move that starts at the left edge and runs sideways —
         // taps, scrolls and board drags elsewhere are never claimed.
         onMoveShouldSetPanResponderCapture: (_e, g) =>
-          modeRef.current !== 'grove' &&
+          modeRef.current !== 'pet' &&
           innerBackRef.current?.edgeSwipe !== false &&
           isEdgeSwipeStart(g.x0, g.dx, g.dy),
         onPanResponderTerminationRequest: () => false,
@@ -255,13 +264,13 @@ export default function PlayScreen() {
   const [openJournal, setOpenJournal] = useState(false);
   const journalOpened = useCallback(() => setOpenJournal(false), []);
   const goNoticeTarget = useCallback((target: Exclude<NoticeTarget, null>) => {
-    if (target === 'dive') setMode('dive');
+    if (target === 'dive') openDive();
     else if (target === 'pet') setMode('pet');
     else {
       setMode('pet');
       setOpenJournal(true);
     }
-  }, []);
+  }, [openDive]);
   useNoticeTargets(goNoticeTarget);
   /** v26: open Pet → Info → Guide from the hub ⚙ or the tutorial. */
   const [openGuide, setOpenGuide] = useState(false);
@@ -640,14 +649,7 @@ export default function PlayScreen() {
     );
   }
 
-  const researchLine =
-    view == null
-      ? '…'
-      : researchReady
-        ? 'Research ready — Claim gathers your finds.'
-        : `Next find in ~${minutesUntilLabel(view.research.nextFindAt)}.`;
-  const claimLabel =
-    view == null ? '…' : researchReady ? 'Claim' : `~${minutesUntilLabel(view.research.nextFindAt)}`;
+  const claimLabel = view == null ? '…' : `~${minutesUntilLabel(view.research.nextFindAt)}`;
 
   // v24: the tutorial shows once (a save with progress counts as seen), and
   // whenever it is replayed from Settings.
@@ -658,7 +660,7 @@ export default function PlayScreen() {
         setTutorialReplay(false);
         commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
       }
-    : hubSettingsOpen && mode === 'grove'
+    : hubSettingsOpen
       ? () => setHubSettingsOpen(false)
       : null;
 
@@ -680,7 +682,9 @@ export default function PlayScreen() {
       onSetForceMerge={setForceMerge}
       onToggleTune={() => {
         afterNavigate?.();
-        setShowTune((open) => !open);
+        const next = !showTune;
+        setShowTune(next);
+        if (next) setHubSettingsOpen(true);
       }}
       onOpenSheetLab={() => {
         afterNavigate?.();
@@ -697,71 +701,17 @@ export default function PlayScreen() {
   // wrap the screens; The Block replaces the hub's tile wall. Paint and layout
   // only — every tab calls the same setMode the Classic tiles use.
   const street = streetUiOn() && view != null && mode !== 'dive' && mode !== 'sheetlab' && mode !== 'swordlab';
-  const streetTab: StreetTab | null =
-    mode === 'grove'
-      ? 'block'
-      : mode === 'defend'
-        ? 'turf'
-        : mode === 'pet'
-          ? 'hideout'
-          : mode === 'dress' || mode === 'swords'
-            ? 'locker'
-            : mode === 'shop'
-              ? 'store'
-              : null;
+  const streetTab: StreetTab | null = tabForMode(mode);
   const goStreetTab = (tab: StreetTab) => {
-    const to: PlayMode =
-      tab === 'block' ? 'grove' : tab === 'turf' ? 'defend' : tab === 'hideout' ? 'pet' : tab === 'locker' ? 'dress' : 'shop';
+    const to = modeForTab(tab);
     if (to === mode) return;
     if (to !== 'shop' || shopUnlocked(devUnlocked)) setMode(to);
   };
-  const hubExtras = (
+  /** Pre-launch tools, handed to the Settings sheet (the Block that carried them is gone). */
+  const settingsExtra = (
     <>
-              {/* Research / Claim — the token income the old Grove card carried,
-       * kept reachable now that the hub replaces that card. */}
-      <View style={styles.claimCard}>
-        <View style={styles.claimText}>
-          <ThemedText type="smallBold">Basecore</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {researchLine}
-          </ThemedText>
-        </View>
-        <Pressable
-          disabled={!researchReady}
-          onPress={handleClaim}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !researchReady }}
-          style={({ pressed }) => [
-            styles.claimButton,
-            {
-              backgroundColor: researchReady ? theme.accentFill : NEON.panel,
-              borderColor: NEON.cyanDim,
-            },
-            pressed && researchReady && styles.pressed,
-          ]}>
-          <ThemedText
-            type="smallBold"
-            style={{ color: researchReady ? theme.onAccent : theme.textSecondary }}>
-            {claimLabel}
-          </ThemedText>
-        </Pressable>
-      </View>
-
-      <Pressable
-        onPress={closePlay}
-        hitSlop={12}
-        accessibilityRole="button"
-        accessibilityLabel="Exit Play"
-        style={({ pressed }) => [styles.exitRow, pressed && styles.pressed]}>
-        <ThemedText type="small" themeColor="textSecondary">
-          ‹ Exit Play
-        </ThemedText>
-      </Pressable>
-
       {showTune ? <TunePanel onClose={() => setShowTune(false)} /> : null}
-
       {PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow /> : null}
-      {PRE_LAUNCH_DEV && devUnlocked ? groveDevKitPanel() : null}
     </>
   );
 
@@ -777,10 +727,8 @@ export default function PlayScreen() {
         shine={view.pet.stones.held}
         prism={view.pet.stones.prism}
         reduceMotion={reduceMotion}
-        onSettings={() => {
-          setMode('grove');
-          setHubSettingsOpen(true);
-        }}
+        claim={{ ready: researchReady, label: claimLabel, onPress: handleClaim }}
+        onSettings={() => setHubSettingsOpen(true)}
       />
     ) : null;
   const shellTabs =
@@ -794,7 +742,7 @@ export default function PlayScreen() {
       />
     ) : null;
   /** A list screen (Block, Locker, Store, About): the stage is the scroll body. */
-  const listScreen = (content: ReactNode, edgeToEdge = false) => (
+  const listScreen = (content: ReactNode) => (
     <GameScreen
       frame={listFrame}
       topBar={shellTop}
@@ -805,9 +753,9 @@ export default function PlayScreen() {
       stage={
         <ScrollView
           style={styles.listScroll}
-          contentContainerStyle={edgeToEdge ? styles.hubScroll : styles.scrollContent}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
-          <View style={edgeToEdge ? undefined : styles.listColumn}>{content}</View>
+          <View style={styles.listColumn}>{content}</View>
         </ScrollView>
       }
     />
@@ -836,9 +784,11 @@ export default function PlayScreen() {
       reduceMotion={reduceMotion}
       talkEvent={petTalk}
       onTalkConsumed={clearPetTalk}
-      onBack={() => setMode('grove')}
-      onGoDive={() => setMode('dive')}
-      onReplayTutorial={() => setTutorialReplay(true)}
+      onBack={closePlay}
+      onGoDive={openDive}
+      onOpenSettings={() => setHubSettingsOpen(true)}
+      settingsOpen={hubSettingsOpen}
+      onBusyChange={setPetBusy}
       openJournal={openJournal}
       onJournalOpened={journalOpened}
       openGuide={openGuide}
@@ -881,7 +831,7 @@ export default function PlayScreen() {
       onOpenSwords={() => setMode('swords')}
       onLeak={() => commit(noteDefendLeak)}
       registerBack={registerBack}
-      onBackToGrove={() => setMode('grove')}
+      onBackToGrove={() => setMode('pet')}
       shellTop={shellTop}
       shellTabs={shellTabs}
     />
@@ -900,15 +850,15 @@ export default function PlayScreen() {
         onActivateAvatar={handleActivateAvatar}
         onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
         onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
-        onBackToGrove={() => setMode('grove')}
+        onBackToGrove={() => setMode('pet')}
         commit={commit}
       />
     ) : mode === 'shop' && view && shopUnlocked(devUnlocked) ? (
-      <ShopScreen view={view} onBuyToken={handleBuyShopRow} onBackToDivecore={() => setMode('grove')} />
+      <ShopScreen view={view} onBuyToken={handleBuyShopRow} onBackToDivecore={() => setMode('pet')} />
     ) : mode === 'about' ? (
-      <AboutScreen onBackToDivecore={() => setMode('grove')} />
+      <AboutScreen onBackToDivecore={() => setMode('pet')} />
     ) : mode === 'sheetlab' ? (
-      <SheetLabScreen onBack={() => setMode('grove')} />
+      <SheetLabScreen onBack={() => setMode('pet')} />
     ) : mode === 'swords' && view ? (
       <SwordForgeScreen
         swords={view.swords}
@@ -917,34 +867,18 @@ export default function PlayScreen() {
           const ok = commit((doc) => applySwordAction(doc, action));
           setSwordNotice(ok ? null : 'Could not do that. Unequip it, or bring more copies.');
         }}
-        onBack={() => setMode('defend')}
+        onBack={() => setMode('pet')}
       />
     ) : mode === 'swordlab' && PRE_LAUNCH_DEV && devUnlocked ? (
       <SwordLabScreen
-        onBack={() => setMode('grove')}
+        onBack={() => setMode('pet')}
         onEquip={(element: string, tier: SwordTier) => {
           commit((doc) => devEquipSword(doc, element, tier));
         }}
       />
     ) : null;
 
-  const streetScreens = !street || !view ? null : mode === 'grove' ? (
-    listScreen(
-      <StreetBlock
-        pet={view.pet.state}
-        wave={view.campaign.wave_in_phase ?? 1}
-        diveActive={view.diveRun.active}
-        charges={view.dive.current}
-        chargesMax={DIVE_CHARGE_CAP}
-        reduceMotion={reduceMotion}
-        onHideout={() => setMode('pet')}
-        onTurf={() => setMode('defend')}
-        onUnderground={() => setMode('dive')}>
-        {hubExtras}
-      </StreetBlock>,
-      true,
-    )
-  ) : mode === 'pet' ? (
+  const streetScreens = !street || !view ? null : mode === 'pet' ? (
     petEl
   ) : mode === 'defend' ? (
     defendEl
@@ -964,57 +898,40 @@ export default function PlayScreen() {
   );
 
   // Loading (no save yet) and the full-screen modes (Dive, the labs): the old column.
-  const screens = (
-    mode === 'grove' ? (
-          <SafeAreaView style={styles.hubSafeArea}>
-            <ScrollView contentContainerStyle={styles.hubScroll} showsVerticalScrollIndicator={false}>
-              <CommandHub
-                diveActive={view?.diveRun.active ?? false}
-                devUnlocked={devUnlocked}
-                scrap={view?.tokens ?? null}
-                wave={view?.campaign.wave_in_phase ?? 1}
-                onTile={(to: HubDestination) => {
-                  if (to !== 'shop' || shopUnlocked(devUnlocked)) setMode(to);
-                }}
-                onSettings={() => setHubSettingsOpen(true)}>
-                {hubExtras}
-              </CommandHub>
-            </ScrollView>
+  const screens = !view ? (
+    <View style={styles.loading}>
+      <ActivityIndicator color={NEON.cyanDim} />
+      <NeonButton label="Exit Play" variant="secondary" onPress={closePlay} />
+    </View>
+  ) : (
+    <View style={styles.edgeWrap} {...edgeSwipe.panHandlers}>
+      {mode === 'dive' ? (
+        // Dive owns the whole screen: its GameScreen reads the safe area itself.
+        <View style={styles.fullSafeArea}>{diveEl}</View>
+      ) : (
+        <ThemedView style={styles.container}>
+          <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>{listContent}</ScrollView>
           </SafeAreaView>
-        ) : (
-          <View style={styles.edgeWrap} {...edgeSwipe.panHandlers}>
-            {mode === 'dive' && view ? (
-              // Dive owns the whole screen: its GameScreen reads the safe area itself.
-              <View style={styles.fullSafeArea}>{diveEl}</View>
-            ) : mode === 'pet' && view ? (
-              <View style={styles.fullSafeArea}>{petEl}</View>
-            ) : mode === 'defend' && view ? (
-              <View style={styles.fullSafeArea}>{defendEl}</View>
-            ) : (
-            <ThemedView style={styles.container}>
-              <SafeAreaView style={styles.safeArea}>
-                <ScrollView contentContainerStyle={styles.scrollContent}>{listContent}</ScrollView>
-              </SafeAreaView>
-            </ThemedView>
-            )}
-          </View>
-        )
+        </ThemedView>
+      )}
+    </View>
   );
 
   return (
     <PlayThemeProvider>
       {/* Forced ink chrome is dark regardless of the app-wide mode. */}
       <StatusBar style="light" />
-      {/* The phone's own swipe-back leaves Play — only from the hub. */}
-      <Stack.Screen options={{ gestureEnabled: mode === 'grove' && !hubOverlayOpen }} />
+      {/* The phone's own swipe-back leaves Play — only from home (the Hideout). */}
+      <Stack.Screen options={{ gestureEnabled: mode === 'pet' && !hubOverlayOpen && !petBusy }} />
       {streetScreens ? (
-        <View style={styles.streetRoot} {...(mode === 'grove' ? null : edgeSwipe.panHandlers)}>
+        <View style={styles.streetRoot} {...(mode === 'pet' ? null : edgeSwipe.panHandlers)}>
           {streetScreens}
         </View>
       ) : (
         screens
       )}
-      {view && mode === 'grove' ? (
+      {view ? (
         <DivecoreSettingsSheet
           open={hubSettingsOpen}
           onClose={() => setHubSettingsOpen(false)}
@@ -1026,6 +943,8 @@ export default function PlayScreen() {
             setMode('pet');
             setOpenGuide(true);
           }}
+          onExit={closePlay}
+          extra={settingsExtra}
         />
       ) : null}
       {showTutorial ? (
@@ -1090,7 +1009,6 @@ type GroveDevSectionId = 'dive' | 'bag' | 'tokens' | 'avatars' | 'campaign' | 'm
 
 /** What the floating DEV kit calls each mode. */
 const DEV_MODE_LABEL: Record<PlayMode, string> = {
-  grove: 'Hub',
   dive: 'Dive',
   pet: 'Pet',
   dress: 'Bag',
@@ -1584,39 +1502,14 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.three,
     paddingBottom: Spacing.six,
   },
-  /** Command Hub owns the full screen — no max width, no horizontal padding. */
-  hubSafeArea: {
+  /** Loading (no save yet): ink, nothing else. */
+  loading: {
     flex: 1,
     backgroundColor: NEON.ink,
-  },
-  hubScroll: {
-    flexGrow: 1,
-  },
-  exitRow: {
-    alignSelf: 'center',
-    paddingVertical: Spacing.three,
-  },
-  claimCard: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: Spacing.three,
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    backgroundColor: 'rgba(9, 15, 28, 0.92)',
-  },
-  claimText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  claimButton: {
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
+    justifyContent: 'center',
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.four,
   },
   devFabPanel: { gap: Spacing.two },
   devKitCard: {

@@ -45,9 +45,9 @@ export const NEON_ROW_LINE = 'rgba(0, 234, 255, 0.1)';
 /** Hub controls are near-square; the panel radius (8) comes from the tokens. */
 const RADIUS = 2;
 
-/** `‹ Command Hub` — mono cyan back link. */
+/** `‹ Hideout` — mono cyan back link (Hideout is home since Phase 3). */
 export function NeonBackLink({
-  label = 'Command Hub',
+  label = 'Hideout',
   onPress,
 }: {
   label?: string;
