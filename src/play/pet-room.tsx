@@ -34,6 +34,8 @@ import Svg, { Circle } from 'react-native-svg';
 import type { PetCoachTip } from '@/play/coach';
 import { VISITOR_CLEAR_PX, VISITOR_MIN_PET_STRIP_PX, VISITOR_SPOT } from '@/play/daily-visitors';
 import { DailyVisitorActor } from '@/play/daily-visitor-ui';
+import { DecorSpots, DecorSprites } from '@/play/decor-slots-ui';
+import { decorGeom, decorKey, decorLayer, placedDecor, type DecorLayer, type DecorSlotId, type DecorState } from '@/play/decor-slots';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
 import { ELEMENT_COLOR, type Element } from '@/play/kits';
@@ -404,6 +406,7 @@ export function PetRoom({
   stageSize,
   roomOutside = false,
   visitor = null,
+  decor = null,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -463,6 +466,8 @@ export function PetRoom({
   roomOutside?: boolean;
   /** Daily visitors (step 4): today's visitor, drawn in the Hideout room only (street layout). */
   visitor?: { heroId: string; greeted: boolean; onTap: () => void } | null;
+  /** Decor slots (step 5): what stands on the Hideout room's 3 spots, and the tap that opens the picker. */
+  decor?: { placed: DecorState; onTap: (slot: DecorSlotId) => void } | null;
 }) {
   // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
   const fontsReady = usePixelFonts();
@@ -529,6 +534,18 @@ export function PetRoom({
   const walkBoundsRef = useRef<ReturnType<typeof railWalkBounds> | undefined>(undefined);
   const railBounds = rails && hideoutScale ? railWalkBounds({ stageW: width, originLeft: origin.left, pt: hideoutScale.pt }) : undefined;
   walkBoundsRef.current = railBounds;
+  // Decor slots: a filled spot blocks the floor cells under it, so the pet walks around it (the room's
+  // other props already do). The walk loop reads the geometry from the ref; a change replans (see deps).
+  const decorSig = decor ? decorKey(decor.placed) : '';
+  const decorBlocks = !!(decor && streetRoom && hideoutPt > 0 && !(egg && pet.egg == null) && hideoutStage?.presence.room === 'hideout');
+  const decorWalkGeom = useMemo(
+    () => (decorBlocks && decor ? decorGeom(roomGeom('hideout'), decor.placed) : null),
+    // decorSig stands for decor.placed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [decorBlocks, decorSig],
+  );
+  const decorWalkGeomRef = useRef(decorWalkGeom);
+  decorWalkGeomRef.current = decorWalkGeom;
   const k = hideoutScale?.pt ?? ART_PT;
   const floorY = streetRoom && hideoutScale ? origin.top + 224 * k : origin.top + MOCKUP_ROOM.feet * ART_PT;
   const plateW = streetRoom && hideoutScale ? hideoutScale.canvasW : MOCKUP_PLATE.w * ART_PT;
@@ -602,8 +619,21 @@ export function PetRoom({
       if (iso) {
         // Live feet, not the previous dest — otherwise a skipped tween (OS RM)
         // or a restarted effect plans the next step from the wrong place.
-        const fromX = artX.value;
-        const fromY = artY.value;
+        let fromX = artX.value;
+        let fromY = artY.value;
+        // A prop that just landed under the pet: start from the nearest free floor, not the blocked cell.
+        const decorNow = decorWalkGeomRef.current;
+        if (decorNow) {
+          const c = isoClampToWalk(fromX, fromY, decorNow, pet.stage, walkBoundsRef.current);
+          if (Math.abs(c[0] - fromX) >= 0.5 || Math.abs(c[1] - fromY) >= 0.5) {
+            cancelAnimation(artX);
+            cancelAnimation(artY);
+            artX.value = c[0];
+            artY.value = c[1];
+            fromX = c[0];
+            fromY = c[1];
+          }
+        }
         const step = planHideoutStep({
           kit: art.kit,
           mood,
@@ -613,7 +643,7 @@ export function PetRoom({
           y: fromY,
           rng: Math.random,
           hungry: hungerRef.current <= 1,
-          geom: hideoutStage ? roomGeom(hideoutStage.presence.room) : undefined,
+          geom: hideoutStage ? (decorWalkGeomRef.current ?? roomGeom(hideoutStage.presence.room)) : undefined,
           bounds: walkBoundsRef.current,
         });
         const path = step.path.length >= 2 ? step.path : ([[fromX, fromY], [step.toX, step.toY]] as const);
@@ -708,7 +738,7 @@ export function PetRoom({
       for (const t of faceTimers.current) clearTimeout(t);
       faceTimers.current = [];
     };
-  }, [width, away, egg, art.kit, mood, pet.branch, pet.stage, walkOn, streetRoom, hideoutPt, artX, artY, x, hop, squash, hideoutStage]);
+  }, [width, away, egg, art.kit, mood, pet.branch, pet.stage, walkOn, streetRoom, hideoutPt, artX, artY, x, hop, squash, hideoutStage, decorWalkGeom]);
 
   // A pet that starts (or sits, with Motion Off) under a rail is moved clear of it (on walkable floor;
   // the Loft bed already sits clear of the rails, so a sleeping pet is left alone).
@@ -725,7 +755,7 @@ export function PetRoom({
   useEffect(() => {
     const b = walkBoundsRef.current;
     if (!b) return;
-    const geom = hideoutStage ? roomGeom(hideoutStage.presence.room) : undefined;
+    const geom = hideoutStage ? (decorWalkGeomRef.current ?? roomGeom(hideoutStage.presence.room)) : undefined;
     if (geom?.sleepOnBed) return;
     const nx = Math.min(Math.max(artX.value, b.minX), b.maxX);
     if (nx === artX.value) return;
@@ -738,6 +768,22 @@ export function PetRoom({
     artYRef.current = p[1];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, hideoutPt, hasRails, visitorBlocks]);
+
+  // A pet standing where a prop was just put is moved to the nearest free floor (a change in what is placed,
+  // Motion Off, or the room switching to this one). The loop above replans from here.
+  useEffect(() => {
+    const geom = decorWalkGeomRef.current;
+    if (!geom || egg) return;
+    const p = isoClampToWalk(artX.value, artY.value, geom, pet.stage, walkBoundsRef.current);
+    if (Math.abs(p[0] - artX.value) < 0.5 && Math.abs(p[1] - artY.value) < 0.5) return;
+    cancelAnimation(artX);
+    cancelAnimation(artY);
+    artX.value = p[0];
+    artY.value = p[1];
+    artXRef.current = p[0];
+    artYRef.current = p[1];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decorWalkGeom, hideoutPt, hasRails]);
 
   // Depth vs props follows the live feet, not only the step's destination.
   useEffect(() => {
@@ -922,6 +968,17 @@ export function PetRoom({
     ) : null;
   const visitorBehind = visitorFeet != null && visitorFeet[1] < feet.y;
 
+  // Decor slots: the placed props stand in the Hideout room, sorted against the pet by footprint bottom
+  // (feet above it = the pet is behind the prop). The tap spots sit over everything.
+  const decorOn = !!(decor && isoOn && hideoutStage?.viewed === 'hideout' && !picking && width > 0);
+  const decorItems = decorOn && decor ? placedDecor(decor.placed) : [];
+  // Draw order: A · visitor-behind · B · pet · C · visitor-front · D (see decorLayer).
+  const decorIn = (layer: DecorLayer) => decorItems.filter((p) => decorLayer(p.sortY, feet.y, visitorFeet ? visitorFeet[1] : null) === layer);
+  const decorA = decorIn('A');
+  const decorB = decorIn('B');
+  const decorC = decorIn('C');
+  const decorD = decorIn('D');
+
   if (!fontsReady) return <View style={styles.room} />;
 
   const meterLabel = { fontSize: 16, lineHeight: 20 } as const;
@@ -1050,7 +1107,11 @@ export function PetRoom({
         />
       ) : null}
 
+      <DecorSprites items={decorA} left={ox} top={oy} k={isoPt} />
       {visitorBehind ? visitorEl : null}
+      <DecorSprites items={decorB} left={ox} top={oy} k={isoPt} />
+      {/* The tap spots sit under the pet: a tap on the pet (even one standing by a spot) is still "say hi". */}
+      {decorOn && decor ? <DecorSpots decor={decor.placed} left={ox} top={oy} k={isoPt} onTap={decor.onTap} /> : null}
       {width > 0 && !away && !picking && (!hideoutStage || (hideoutStage.presence.room === hideoutStage.viewed && !hideoutStage.presence.away)) ? (
         <Animated.View pointerEvents={streetRoom ? 'box-none' : 'auto'} style={[styles.petWrap, { top: isoOn ? 0 : top, width: box, height: box }, petStyle]}>
           {streetRoom ? null : (
@@ -1172,7 +1233,9 @@ export function PetRoom({
           ) : null}
         </Animated.View>
       ) : null}
+      <DecorSprites items={decorC} left={ox} top={oy} k={isoPt} />
       {visitorBehind ? null : visitorEl}
+      <DecorSprites items={decorD} left={ox} top={oy} k={isoPt} />
       {streetRoom && hideoutScale ? (
         <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} stageW={width} stageH={cover ? roomLayerH : Math.max(1, height)} />
       ) : null}

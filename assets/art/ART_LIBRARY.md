@@ -13,7 +13,7 @@ Viewer lists one card per set (not each clip/file).
 - **ui** (26: 11 in use / 15 unused) — UI
 - **icons** (102: 49 in use / 53 unused) — Icons
 - **rooms** (60: 38 in use / 22 unused) — Rooms
-- **props** (49: 0 in use / 49 unused) — Props
+- **props** (49: 10 in use / 39 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
 - **fx** (14: 1 in use / 13 unused) — FX
 - **backgrounds** (2: 2 in use / 0 unused) — Backgrounds
@@ -869,24 +869,29 @@ Viewer lists one card per set (not each clip/file).
 |---|---|---|---|---|
 | `room.underground.underground` | 256×320 | resource | — | — |
 
+## props · hideout · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `prop.hideout.streetwear.beanbag` | 52×54 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.hideout.streetwear.lamp` | 22×110 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.hideout.streetwear.plant` | 36×72 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.hideout.streetwear.table` | 69×44 | resource | — | src/play/decor-slots-ui.tsx |
+
 ## props · hideout · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `prop.hideout.streetwear.arcade` | 39×123 | resource | — | — |
 | `prop.hideout.streetwear.arcade-off` | 39×123 | resource | — | — |
-| `prop.hideout.streetwear.beanbag` | 52×54 | resource | — | — |
 | `prop.hideout.streetwear.bowl` | 26×16 | resource | — | — |
 | `prop.hideout.streetwear.couch` | 118×71 | resource | — | — |
 | `prop.hideout.streetwear.cushion` | 62×30 | resource | — | — |
-| `prop.hideout.streetwear.lamp` | 22×110 | resource | — | — |
 | `prop.hideout.streetwear.lamp-off` | 22×110 | resource | — | — |
 | `prop.hideout.streetwear.manhole` | 45×26 | resource | — | — |
-| `prop.hideout.streetwear.plant` | 36×72 | resource | — | — |
 | `prop.hideout.streetwear.rug` | 116×44 | resource | — | — |
 | `prop.hideout.streetwear.speaker` | 23×74 | resource | — | — |
 | `prop.hideout.streetwear.stereo` | 30×65 | resource | — | — |
-| `prop.hideout.streetwear.table` | 69×44 | resource | — | — |
 | `prop.hideout.streetwear.window` | 52×65 | resource | — | — |
 
 ## props · loft · default · unused
@@ -896,15 +901,23 @@ Viewer lists one card per set (not each clip/file).
 | `prop.loft.bed` | 64×28 | resource | — | — |
 | `prop.loft.lamp` | 18×36 | resource | — | — |
 
+## props · streetwear · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `prop.streetwear.barrel-fire` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.boombox` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.crate` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.tire-stack` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.traffic-cone` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.trash-bags` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+
 ## props · streetwear · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `prop.streetwear.barrel-fire` | 64×64 | resource | — | — |
 | `prop.streetwear.bench-graffiti` | 64×64 | resource | — | — |
-| `prop.streetwear.boombox` | 64×64 | resource | — | — |
 | `prop.streetwear.boombox-crate` | 64×64 | resource | — | — |
-| `prop.streetwear.crate` | 64×64 | resource | — | — |
 | `prop.streetwear.crates-stacked` | 64×64 | resource | — | — |
 | `prop.streetwear.dumpster` | 64×64 | resource | — | — |
 | `prop.streetwear.dumpster-open` | 64×64 | resource | — | — |
@@ -927,10 +940,7 @@ Viewer lists one card per set (not each clip/file).
 | `prop.streetwear.spray-cans` | 64×64 | resource | — | — |
 | `prop.streetwear.streetlight` | 64×64 | resource | — | — |
 | `prop.streetwear.streetlight-broken` | 64×64 | resource | — | — |
-| `prop.streetwear.tire-stack` | 64×64 | resource | — | — |
-| `prop.streetwear.traffic-cone` | 64×64 | resource | — | — |
 | `prop.streetwear.traffic-cone-fallen` | 64×64 | resource | — | — |
-| `prop.streetwear.trash-bags` | 64×64 | resource | — | — |
 | `prop.streetwear.trash-bags-cup` | 64×64 | resource | — | — |
 
 ## tiles · streetwear · default · unused

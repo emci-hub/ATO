@@ -298,6 +298,7 @@ import {
   type FoodId,
 } from '@/play/dive-loot';
 import { greetVisitor, type TodayVisitor, type VisitorReward } from '@/play/daily-visitors';
+import { decorKey, setDecorSlot } from '@/play/decor-slots';
 import {
   COSMETIC_DUPE_SHELLS,
   NO_WEAR,
@@ -2909,6 +2910,14 @@ export function greetDailyVisitor(
   const pet_cosmetics =
     res.reward.kind === 'look' ? [...touched.pet_cosmetics, res.reward.cosmeticId] : touched.pet_cosmetics;
   return { doc: { ...touched, pet_cosmetics, hideout: { ...touched.hideout, visitors: res.book } }, reward: res.reward };
+}
+
+/** Decor slots (roadmap step 5): fill, swap or (item = null) empty one spot in the Hideout room. Free:
+ * nothing but `hideout.decor` changes (no touchPet, so not even passive income moves). Null = no change. */
+export function setHideoutDecor(doc: PlayStoreDoc, slot: string, item: string | null): PlayStoreDoc | null {
+  const next = setDecorSlot(doc.hideout.decor, slot, item);
+  if (next === doc.hideout.decor || decorKey(next) === decorKey(doc.hideout.decor)) return null;
+  return { ...doc, hideout: { ...doc.hideout, decor: next } };
 }
 
 /** Reset Divecore progress: a brand-new Play save that keeps the settings.
