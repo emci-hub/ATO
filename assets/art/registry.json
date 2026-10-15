@@ -10833,7 +10833,7 @@
     },
     {
       "id": "prop.hideout.streetwear.beanbag",
-      "path": "assets/art/props/unused/hideout/streetwear/beanbag.png",
+      "path": "assets/art/props/in-use/hideout/streetwear/beanbag.png",
       "category": "props",
       "type": "prop",
       "theme": "streetwear",
@@ -10849,11 +10849,13 @@
       "decodedBytes": 11232,
       "format": "png32",
       "notes": "md5:7980499d4e7ad9735bfcf866c3c30667",
-      "inUse": false,
+      "inUse": true,
       "set": "hideout",
       "variant": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "part": "beanbag"
     },
     {
@@ -10933,7 +10935,7 @@
     },
     {
       "id": "prop.hideout.streetwear.lamp",
-      "path": "assets/art/props/unused/hideout/streetwear/lamp.png",
+      "path": "assets/art/props/in-use/hideout/streetwear/lamp.png",
       "category": "props",
       "type": "prop",
       "theme": "streetwear",
@@ -10949,11 +10951,13 @@
       "decodedBytes": 9680,
       "format": "png32",
       "notes": "md5:dc9e17c9bc5bc7395f97e726117f5d5f",
-      "inUse": false,
+      "inUse": true,
       "set": "hideout",
       "variant": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "part": "lamp"
     },
     {
@@ -11008,7 +11012,7 @@
     },
     {
       "id": "prop.hideout.streetwear.plant",
-      "path": "assets/art/props/unused/hideout/streetwear/plant.png",
+      "path": "assets/art/props/in-use/hideout/streetwear/plant.png",
       "category": "props",
       "type": "prop",
       "theme": "streetwear",
@@ -11024,11 +11028,13 @@
       "decodedBytes": 10368,
       "format": "png32",
       "notes": "md5:11c1618fba95a5f165c20ca3591985b9",
-      "inUse": false,
+      "inUse": true,
       "set": "hideout",
       "variant": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "part": "plant"
     },
     {
@@ -11108,7 +11114,7 @@
     },
     {
       "id": "prop.hideout.streetwear.table",
-      "path": "assets/art/props/unused/hideout/streetwear/table.png",
+      "path": "assets/art/props/in-use/hideout/streetwear/table.png",
       "category": "props",
       "type": "prop",
       "theme": "streetwear",
@@ -11124,11 +11130,13 @@
       "decodedBytes": 12144,
       "format": "png32",
       "notes": "md5:af6cd66f6a9be1aef7488e0046a28285",
-      "inUse": false,
+      "inUse": true,
       "set": "hideout",
       "variant": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "part": "table"
     },
     {
@@ -12159,7 +12167,7 @@
     },
     {
       "id": "prop.streetwear.barrel-fire",
-      "path": "assets/art/props/unused/streetwear/barrel-fire.png",
+      "path": "assets/art/props/in-use/streetwear/barrel-fire.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -12175,9 +12183,11 @@
       "format": "png32",
       "notes": "md5:08d8e684a79e31000ca803e03b0a2fba",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "barrel-fire",
@@ -12215,7 +12225,7 @@
     },
     {
       "id": "prop.streetwear.boombox",
-      "path": "assets/art/props/unused/streetwear/boombox.png",
+      "path": "assets/art/props/in-use/streetwear/boombox.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -12231,9 +12241,11 @@
       "format": "png32",
       "notes": "md5:c7f91cb2e0f885ce160b687b941389e8",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "boombox",
@@ -12271,7 +12283,7 @@
     },
     {
       "id": "prop.streetwear.crate",
-      "path": "assets/art/props/unused/streetwear/crate.png",
+      "path": "assets/art/props/in-use/streetwear/crate.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -12287,9 +12299,11 @@
       "format": "png32",
       "notes": "md5:62a91371137984f17b389e4f965b8f6a",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "crate",
@@ -12915,7 +12929,7 @@
     },
     {
       "id": "prop.streetwear.tire-stack",
-      "path": "assets/art/props/unused/streetwear/tire-stack.png",
+      "path": "assets/art/props/in-use/streetwear/tire-stack.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -12931,9 +12945,11 @@
       "format": "png32",
       "notes": "md5:c08fe59802fca402a8cb48ebae081170",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "tire-stack",
@@ -12943,7 +12959,7 @@
     },
     {
       "id": "prop.streetwear.traffic-cone",
-      "path": "assets/art/props/unused/streetwear/traffic-cone.png",
+      "path": "assets/art/props/in-use/streetwear/traffic-cone.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -12959,9 +12975,11 @@
       "format": "png32",
       "notes": "md5:b89e8b466c80fe90d3bf715caa97e29d",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "traffic-cone",
@@ -12999,7 +13017,7 @@
     },
     {
       "id": "prop.streetwear.trash-bags",
-      "path": "assets/art/props/unused/streetwear/trash-bags.png",
+      "path": "assets/art/props/in-use/streetwear/trash-bags.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -13015,9 +13033,11 @@
       "format": "png32",
       "notes": "md5:858a260ccfcce0da8142c37f058bbe65",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "trash-bags",

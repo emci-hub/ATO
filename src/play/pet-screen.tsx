@@ -37,6 +37,8 @@ import { PET_BRANCH_LABEL, PET_STAGE_LABEL, petLookFor } from '@/play/pet';
 import { greetedToday, visitorFor } from '@/play/daily-visitors';
 import { VISITOR_UI } from '@/play/daily-visitors-bank';
 import { VisitorCard, type VisitorCardShow } from '@/play/daily-visitor-ui';
+import { DecorSheet } from '@/play/decor-slots-ui';
+import type { DecorItemId, DecorSlotId } from '@/play/decor-slots';
 import { askPetReminderPermission, syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
 import { petPose, sharpPetBox } from '@/play/pet-actor';
@@ -136,6 +138,7 @@ import {
   markBuildNotifAsked,
   stampHideoutPeekaboo,
   greetDailyVisitor,
+  setHideoutDecor,
   localYmd,
   setPlaySettings,
 } from '@/play/playStore';
@@ -705,7 +708,16 @@ export function PetScreen({
   const busy = sheet != null || game != null || awayShown;
   // The visitor card waits for the away card and hides under Settings, like it — and counts as busy too.
   const visitorShown = visitorCard != null && !awayShown && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
-  const overlayBusy = busy || visitorShown;
+  // The decor picker (roadmap step 5) waits for the same things, and is busy too.
+  const [decorSlot, setDecorSlot] = useState<DecorSlotId | null>(null);
+  const decorShown = decorSlot != null && !awayShown && !settingsOpen && !visitorShown && (pet.reveals[revealStep] ?? null) == null;
+  const pickDecor = (item: DecorItemId | null) => {
+    if (decorSlot == null) return;
+    const slot = decorSlot;
+    commit((doc) => setHideoutDecor(doc, slot, item));
+    setDecorSlot(null);
+  };
+  const overlayBusy = busy || visitorShown || decorShown;
 
   // The visitor's notice: once per day per app open (until you say hi), after the away card closes. A short wait
   // lets an away card that is still being worked out on open come first (it cancels this timer).
@@ -1002,6 +1014,14 @@ export function PetScreen({
             <AwayCard summary={away} top={layoutRegions(frame).notice.height + SPACE.s} onClose={onAwayClose} />
           ) : visitorShown && visitorCard ? (
             <VisitorCard show={visitorCard} top={layoutRegions(frame).notice.height + SPACE.s} onClose={() => setVisitorCard(null)} />
+          ) : decorShown && decorSlot ? (
+            <DecorSheet
+              slot={decorSlot}
+              placed={view.hideout.state.decor[decorSlot] ?? null}
+              top={layoutRegions(frame).notice.height + SPACE.s}
+              onPick={pickDecor}
+              onClose={() => setDecorSlot(null)}
+            />
           ) : null
         }
         onTipSeen={seeTip}
@@ -1039,6 +1059,7 @@ export function PetScreen({
           <PetRoom
             stageSize={street ? { width: frame.stage.width, height: frame.stage.height } : undefined}
             visitor={visitor ? { heroId: visitor.heroId, greeted: visitorGreeted, onTap: tapVisitor } : null}
+            decor={street ? { placed: view.hideout.state.decor, onTap: setDecorSlot } : null}
             roomOutside={street}
             pet={pet}
             wear={pv.wear}
