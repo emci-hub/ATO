@@ -21,6 +21,7 @@ import { AppState } from 'react-native';
 import { setArtSkin } from '@/play/art-skin';
 import { setStreetHaptics } from '@/play/street-feel';
 import type { ItemSlot } from '@/play/items';
+import { queueCloudSave, restoreFromCloud } from '@/play/cloud-save';
 import { bumpSaveEpoch, enqueuePlaySave, saveEpoch, saveIsCurrent, whenPlaySavesSettled } from '@/play/play-save';
 import {
   claimResearch,
@@ -116,6 +117,8 @@ export function usePlayStore() {
     setStreetHaptics(next.play_settings.haptics);
     docRef.current = next;
     if (paint) setDoc(next);
+    // Cloud save (wave96): the newest doc goes up shortly after; the phone's own save stays the source.
+    queueCloudSave(next);
     return enqueuePlaySave(() => savePlayStore(next));
   }, []);
 
@@ -125,6 +128,10 @@ export function usePlayStore() {
     const started = saveEpoch();
     await whenPlaySavesSettled();
     if (!saveIsCurrent(started)) return;
+    // A reinstall or a new phone (no Divecore save here yet): bring the account's save back first.
+    const restored = await restoreFromCloud();
+    if (!saveIsCurrent(started)) return;
+    if (restored) await savePlayStore(restored);
     const loaded = await loadPlayStore();
     if (!saveIsCurrent(started)) return;
     // Pet (v20): age the pet on every open and save the new clock high-water
@@ -138,6 +145,7 @@ export function usePlayStore() {
     setDoc(next);
     if (next !== loaded) {
       bumpSaveEpoch();
+      queueCloudSave(next);
       enqueuePlaySave(() => savePlayStore(next)).catch(() => {
         // Next open re-ages from the stored mark; nothing is lost.
       });
