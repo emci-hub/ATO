@@ -733,6 +733,8 @@ export function PetScreen({
   // Circle visits (roadmap step 6): the friend list (float card), a friend's Hideout (the stage shows
   // their room; the notice lane and the dock swap their contents, never their size) and gifts left for you.
   const [circleOpen, setCircleOpen] = useState(false);
+  const circleOpenRef = useRef(false);
+  circleOpenRef.current = circleOpen && view.hideout.viewed === 'hideout';
   const [circleList, setCircleList] = useState<CircleListState>({ kind: 'loading' });
   const [circleBusy, setCircleBusy] = useState<string | null>(null);
   const [circleNote, setCircleNote] = useState<string | null>(null);
@@ -780,6 +782,8 @@ export function PetScreen({
     setCircleNote(null);
     void fetchCircleRoom(f.peer).then((res) => {
       setCircleBusy(null);
+      // Closed the list (or left the Hideout room) while it loaded: no visit starts.
+      if (!circleOpenRef.current) return;
       if (res.kind !== 'ok') {
         setCircleNote(res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error);
         return;

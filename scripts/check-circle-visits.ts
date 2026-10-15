@@ -213,7 +213,9 @@ if (fs.existsSync(path.join(root, wave97))) {
   assert.match(shared, /create unique index circle_gifts_one_a_day on public\.circle_gifts \(user_id, peer_id, local_day\);/, 'one gift per pair per day');
   assert.match(shared, /on conflict \(user_id, peer_id, local_day\) do nothing/);
   assert.match(shared, /revoke all on public\.circle_gifts from public, anon, authenticated;/, 'gifts: functions only');
-  assert.match(shared, /revoke insert, update, delete on public\.circle_visit_share from public, anon, authenticated;/, 'switch: written only through the RPC');
+  assert.match(shared, /revoke all on public\.circle_visit_share from public, anon, authenticated;\s*grant select on public\.circle_visit_share to authenticated;/, 'switch: read own row, written only through the RPC');
+  assert.match(allowed, /s\.updated_at >= c\.created_at[\s\S]*s\.updated_at >= c\.created_at/, 'unfriend + scan back in = both switches off again');
+  assert.match(shared, /where y\.look is not null\s*order by y\.created_at\s*limit 20/, 'inbox filters before its limit (no stuck gifts)');
   for (const fn of ['circle_visit_friends()', 'set_circle_visit_share(uuid, boolean)', 'circle_visit_room(uuid)', 'circle_send_gift(uuid)', 'circle_gift_inbox()', 'circle_open_gift(uuid)', 'circle_visit_allowed(uuid)']) {
     assert.ok(shared.includes(`revoke all on function public.${fn} from public, anon;`), `${fn}: not for anon`);
   }
@@ -245,6 +247,7 @@ assert.match(screen, /onView: \(id: HideoutRoomId\) => \(circleVisit \? undefine
 assert.match(screen, /if \(circleVisitOn\) \{\s*leaveVisitRef\.current\(\);\s*return true;\s*\}/, 'back = home');
 assert.match(screen, /const circleGiftHere = circleGift != null && \(!visitor \|\| visitorGreeted\);/, 'a friend’s pet waits for today’s visitor’s hello');
 assert.match(screen, /commit\(\(doc\) => openCircleGift\(doc, gift\)\);/, 'opening saves through the store');
+assert.match(screen, /if \(!circleOpenRef\.current\) return;/, 'a visit that loads after the list closed never starts');
 const room = read('src/play/pet-room.tsx');
 assert.match(room, /\{decorOn && decor && !visiting \? <DecorSpots/, 'a friend’s decor has no tap spots');
 assert.match(room, /const decor = visiting && circle\?\.decor \? \{ placed: circle\.decor, onTap: noDecorTap \} : ownDecor;/);
