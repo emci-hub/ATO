@@ -23,7 +23,7 @@ import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
-import { HideoutAuraStrip, PetAuraSprite } from '@/play/aura-view';
+import { PetAuraSprite } from '@/play/aura-view';
 import { auraConfig, auraPaintOrder, auraRamps } from '@/play/auras';
 import { petFinishOf, type FinishKind, type FinishMotion } from '@/play/finishes';
 import { PetHolo } from '@/play/pet-holo';
@@ -88,7 +88,6 @@ export function PetFigure({
   reverseHost = false,
   auraElement = null,
   flash = null,
-  hideoutFx = false,
 }: {
   pet: PetState;
   baseBox: number;
@@ -116,8 +115,6 @@ export function PetFigure({
   auraElement?: string | null;
   /** 0–1 white copy of the sprite (feed / find). Null skips the extra image. */
   flash?: SharedValue<number> | null;
-  /** Hideout / Underground: 84px blaze + outlined bubbles. */
-  hideoutFx?: boolean;
 }) {
   const flashFallback = useSharedValue(0);
   const flashT = flash ?? flashFallback;
@@ -159,20 +156,16 @@ export function PetFigure({
     <View style={{ width: box, height: box }}>
      <View pointerEvents="none" style={[styles.stage, { left: -reserve, top: -reserve, width: box + reserve * 2, height: box + reserve * 2 }]}>
       <View style={{ position: 'absolute', left: reserve, top: reserve, width: box, height: box }}>
-      {worn.map((wear) =>
-        hideoutFx && (wear.style === 'fire' || wear.style === 'water') ? (
-          <HideoutAuraStrip key={wear.style} styleId={wear.style} layer="back" box={box} />
-        ) : (
-          <PetAuraSprite
-            key={wear.style}
-            drawable={drawable}
-            styleId={wear.style}
-            ramps={auraRamps(wear.style, wear.color, sword)}
-            box={box}
-            layer="back"
-          />
-        ),
-      )}
+      {worn.map((wear) => (
+        <PetAuraSprite
+          key={wear.style}
+          drawable={drawable}
+          styleId={wear.style}
+          ramps={auraRamps(wear.style, wear.color, sword)}
+          box={box}
+          layer="back"
+        />
+      ))}
       {look.aura ? (
         <Svg width={box * 1.5} height={box * 1.5} viewBox="0 0 100 100" style={[styles.aura, { left: -box * 0.25, top: -box * 0.25 }]} pointerEvents="none">
           <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
@@ -200,20 +193,16 @@ export function PetFigure({
       ) : null}
       </View>
       {worn_finish ? <PetHolo finish={worn_finish} drawable={drawable} still={lookDrawable(petLookFor(pet.line, pet.stage))} box={box} /> : null}
-      {worn.map((wear) =>
-        hideoutFx && (wear.style === 'fire' || wear.style === 'water') ? (
-          <HideoutAuraStrip key={`front-${wear.style}`} styleId={wear.style} layer="front" box={box} />
-        ) : (
-          <PetAuraSprite
-            key={`front-${wear.style}`}
-            drawable={drawable}
-            styleId={wear.style}
-            ramps={auraRamps(wear.style, wear.color, sword)}
-            box={box}
-            layer="front"
-          />
-        ),
-      )}
+      {worn.map((wear) => (
+        <PetAuraSprite
+          key={`front-${wear.style}`}
+          drawable={drawable}
+          styleId={wear.style}
+          ramps={auraRamps(wear.style, wear.color, sword)}
+          box={box}
+          layer="front"
+        />
+      ))}
       {badgeArt ? (
         <Image
           source={badgeArt}
