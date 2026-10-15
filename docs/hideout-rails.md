@@ -52,3 +52,18 @@ dedicated icons in PixelLab (guide §2: 32 px ladder) and swap them in `RAIL_ICO
   behaviour; not built.
 - "Up" = Rooftop is my reading of the map's `Up` on the Underground room's door; change `upRoom` if it means something else.
 - The Loft tease sign is still painted on the right wall under the rail (art unchanged).
+
+## Polish handoff (fix/hideout-polish, 2026-10-15)
+
+- **LF pins:** every `art:sync` output (`registry.json`, `ART_LIBRARY.md`, `_contact/library*.html`, `generated-art.ts`,
+  `tools/art-viewer/README.md`, `legacy-play-sheets.json`, `generated-play-sheets.ts`) is `text eol=lf` in `.gitattributes`.
+  A fresh `core.autocrlf=true` clone passes `check:art-registry` on the first run.
+- **Holo tip:** a fifth coach tip, `holo` ("Try a holo finish in Info", anchored on the Info dock button), shown once after
+  the pet is out of the egg. It defaults to unseen even on saves that finished the old tutorial, so existing players see it once.
+- **Retired aura sheets:** `hideout-fx` (blaze-84 / bubbles-outlined) moved to `art-src/archive/2026-10/hideout-fx-retired/`
+  (raw + packed). They were packed sheets, not registry entries, so there is no registry status to flip. The pack step,
+  the `hideoutFx` skeleton family and the meta key are gone.
+- **Sleep: NOT built.** It still opens the Stash. A daytime "put the pet to bed" needs a new saved field (nothing in
+  `HideoutState` says "asleep by choice": `asleep` is only derived from low mood or the bedtime window, and
+  `wake_until_age_ms` only suppresses it). Proposed: `sleep_until_age_ms` on `HideoutState`, set by Sleep, cleared by a
+  second tap / `tapWake` / morning, read by `resolvePresence`. Waiting on emci's ok.
