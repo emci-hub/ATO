@@ -224,7 +224,7 @@ export function ShopScreen({
   if (guide) {
     return (
       <>
-        <NeonBackLink onPress={() => setGuide(false)} />
+        <NeonBackLink label="Store" onPress={() => setGuide(false)} />
         <GuideView initial="tide" />
       </>
     );

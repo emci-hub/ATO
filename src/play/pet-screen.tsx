@@ -39,7 +39,6 @@ import { heroName } from '@/play/heroes-data';
 import { petPose, sharpPetBox } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt } from '@/play/pet-anim-sprite';
 import { PetCard, type PetCardInfo } from '@/play/pet-card';
-import { DivecoreSettingsSheet } from '@/play/divecore-settings';
 import { EggPickerBody, JournalTab, OddsPanel } from '@/play/pet-egg-sheets';
 import { PetMenuBody } from '@/play/pet-menu';
 import { DenSheetBody } from '@/play/den-sheet';
@@ -308,7 +307,9 @@ export function PetScreen({
   onGoDive,
   talkEvent = null,
   onTalkConsumed,
-  onReplayTutorial,
+  onOpenSettings,
+  settingsOpen = false,
+  onBusyChange,
   openJournal = false,
   onJournalOpened,
   openGuide: openGuideReq = false,
@@ -330,8 +331,12 @@ export function PetScreen({
   talkEvent?: PetTalkEvent;
   /** Called once the room has said the event, so it is never replayed. */
   onTalkConsumed?: () => void;
-  /** v24 — Settings → Replay the tutorial. */
-  onReplayTutorial?: () => void;
+  /** Opens the one Divecore Settings sheet (Play shell, Phase 3), over whatever is showing. */
+  onOpenSettings?: () => void;
+  /** The shell's Settings sheet is open over the Hideout (the pet counts it as being busy). */
+  settingsOpen?: boolean;
+  /** True while a sheet or mini-game is open: the shell keeps the phone's own swipe-back off then. */
+  onBusyChange?: (busy: boolean) => void;
   /** v25 — a "Milestone ready" banner was tapped: open Info → Journal once,
    * then `onJournalOpened` clears the request. */
   openJournal?: boolean;
@@ -367,7 +372,6 @@ export function PetScreen({
   const [game, setGame] = useState<GameRun | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [lastRound, setLastRound] = useState<{ key: string; score: number; strong: boolean } | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [teaseOpen, setTeaseOpen] = useState(false);
 
   // Dev-only room hooks (Info → Dev).
@@ -637,15 +641,16 @@ export function PetScreen({
     setSheet(null);
   };
 
+  const busy = sheet != null || game != null;
+  useEffect(() => {
+    onBusyChange?.(busy);
+    return () => onBusyChange?.(false);
+  }, [busy, onBusyChange]);
   useEffect(() => {
     if (!registerBack) return;
     registerBack({
       edgeSwipe: true,
       back: () => {
-        if (settingsOpen) {
-          setSettingsOpen(false);
-          return true;
-        }
         const step = petBackStep(sheet != null, game != null);
         if (step === 'hub') return false;
         if (step === 'close-game') {
@@ -656,7 +661,7 @@ export function PetScreen({
       },
     });
     return () => registerBack(null);
-  }, [registerBack, sheet, game, settingsOpen]);
+  }, [registerBack, sheet, game]);
 
   const roundClaim = useRef<{ run: GameRun | null; key: string }>({ run: null, key: '' });
   const finishRound = (run: GameRun) => (outcome: RoundOutcome, score: number) => {
@@ -830,13 +835,13 @@ export function PetScreen({
           <Pressable
             onPress={onBack}
             accessibilityRole="button"
-            accessibilityLabel="Back to Command Hub"
+            accessibilityLabel="Exit Play"
             style={[styles.backHit, street && styles.streetGone]}>
             <PixelLabel
               color={PIXEL.cyan}
               numberOfLines={1}
               style={{ fontSize: headerTight ? 13 : 16, lineHeight: headerTight ? 16 : 20, maxWidth: backW }}>
-              ‹ Hub
+              ‹ Exit
             </PixelLabel>
           </Pressable>
           <PixelLabel
@@ -864,7 +869,7 @@ export function PetScreen({
               <Text style={[styles.topButtonText, street && styles.streetTopText]}>⋯</Text>
             </Pressable>
             <Pressable
-              onPress={() => setSettingsOpen(true)}
+              onPress={() => onOpenSettings?.()}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Divecore settings"
@@ -1135,15 +1140,6 @@ export function PetScreen({
         <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} mode="prism" />
         <GuideLink section="tide" onOpen={openGuide} />
       </PlaySheet>
-      <DivecoreSettingsSheet
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        view={view}
-        commit={commit}
-        reduceMotion={reduceMotion}
-        onReplayTutorial={() => onReplayTutorial?.()}
-        onOpenGuide={() => openGuide('pet')}
-      />
       <PlaySheet
         open={sheet === 'info'}
         title={SHEET_TITLE.info}
@@ -1151,7 +1147,7 @@ export function PetScreen({
         reduceMotion={reduceMotion}
         header={<SheetTabs tabs={infoTabs(dev)} value={infoTab} onChange={setInfoTab} />}>
         {infoTab === 'status' ? (
-          <StatusTab view={view} onGuide={openGuide} onSettings={() => setSettingsOpen(true)} />
+          <StatusTab view={view} onGuide={openGuide} onSettings={() => onOpenSettings?.()} />
         ) : infoTab === 'journal' ? (
           <>
             <JournalTab view={view} commit={commit} />

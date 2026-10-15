@@ -5,7 +5,107 @@ The full brief is emci's pasted task (Steps 0-3 + Deliverables + Rules). This fi
 does not redo the audit. **Do not merge. Do not publish an OTA.** Play-only (`.cursor/rules/play-isolation.mdc`,
 `.cursor/rules/fixed-regions.mdc`). No new native deps; package.json may only gain check scripts.
 
-## ▶ LATEST — read this first (session 4, local Windows, 2026-10-14): **Phase 2 built** → phone check, then Phase 3
+## ▶ LATEST — read this first (session 5, local Windows, 2026-10-14): **Phase 3 built** → phone check, then Phase 4
+
+Phase 3 = nav cleanup. Branch **`claude/divecore-phase3-nav`** (stacked on Phase 2, `claude/divecore-phase2-notify`) → draft PR into
+`feature/divecore-minimal`. **Waiting on:** emci's phone check (below). Phase 2's notes stay below this section.
+emci's decisions this session: Claim chip in the **top bar** next to Caps (option A); tabs Hideout · Turf War · Locker
+(Fits / Blades) · Store; **no Underground tab** (it opens from the Hideout hatch); ⚙ stays top-right and opens in place.
+(His message was cut off after "back links renamed to Hideout"; I took Dive-back-to-origin and the Notices switch as the
+recommended plan he approved — say so if not.)
+
+### What Phase 3 did
+- **Block removed**: no `grove` mode, no `StreetBlock`, no Block tab; the Hideout is home and the first mode. While the save
+  loads the screen is an ink view with a spinner + **Exit Play** (was the Command Hub fallback).
+- **`src/play/play-nav.ts`** (new, pure): `PlayMode`, `PlayTab`, `PLAY_TABS`, `modeForTab`, `tabForMode`, `backTarget`.
+- **Claim chip**: `StreetResourceBar` takes `claim={{ ready, label, onPress }}` → mustard "CLAIM" when ready, else "~42m"
+  (greyed, not tappable). It calls the same `handleClaim`; the notice copy is unchanged.
+- **⚙ opens in place** (no more flip to the Block). ONE `DivecoreSettingsSheet`, owned by `play.tsx`; the Hideout's second copy is
+  gone (Info → Status → Settings calls `onOpenSettings`). New first row **Exit Play**, then **Notices: All / Important only**
+  (`play_settings.notices`, already read by `notify()`). The dev unlock row + Tune panel sit in the sheet's `extra` slot (before
+  Reset); the floating DEV button still holds the Dev kit. ⚙ is only on screens with the resource bar (not Dive, not a live wave).
+- **Back**: every sub-screen → Hideout (Blades no longer goes to Turf War). **Dive → the screen that opened it** (`diveFromRef`,
+  set by `openDive`; its label still reads "‹ Hideout" — only a notice can open it from elsewhere, and none does today).
+  At the Hideout, Android back / edge: a mini-game or sheet closes first, then back leaves Play. iOS native swipe-back is on
+  only at the Hideout with no overlay and **no Hideout sheet / mini-game open** (`onBusyChange` → `petBusy`).
+- **Names**: default back link "Hideout" (was "Command Hub"); Store's inner Guide back says "Store"; Hideout's dead header
+  says "Exit". `check:divecore-nav` fails on any player-facing "Command Hub" in `src/play` (except `command-hub.tsx`).
+- **Gate**: `check:divecore-nav` (new, in package.json → ota-gate); `check:edge-back` and `check:play-dev-hidden` re-pinned
+  (home = Hideout, one Settings sheet, floating Dev kit). `check:notify` / `check:stage-bounds` / `check:fixed-regions` needed
+  no change. Full `check:ota-gate`: typecheck + lint + 159 offline checks green (before the review fixes; typecheck + lint
+  re-run green after them).
+- **Review (Opus)** found: iOS swipe-back leaving Play with a Hideout sheet / mini-game open (fixed: `petBusy`), the pet not
+  counting Settings as "busy" (fixed: `settingsOpen` prop), Tune toggle opening Settings when turning off (fixed), a weak
+  edge-back pin (fixed), a bare loading view (fixed: spinner + Exit).
+
+### Open / not done
+- **About / Credits has no way in** (it was only the old Command Hub "More" tile; already unreachable before this change).
+  Credits may be required for asset licences — decide where it lives (a Settings row is the cheapest). Not built: new scope.
+- **`src/play/command-hub.tsx` and the `neon-viper.ts` hub tiles are dead code**; `check:shop-hidden` / `check:dive-fx` still
+  read them. Delete in a cleanup once those checks are re-pointed.
+- Tutorial copy still says "Open Pet" / "along the bottom" (Phase 4 replaces the tutorial).
+- Shots: I drove the static export in the built-in browser (Hideout home with the Claim chip, ⚙ sheet, Locker "Back to
+  Hideout") and checked the DOM; **no image files saved** (the built-in browser can't write them). Retake into
+  `docs/divecore/after/` with `shots.js` (needs `npm i -g playwright`) if you want files.
+- SE (375): the top bar now holds Caps · tokens · Shine · Prism · Claim · ⚙. Not measured; check on a small phone.
+
+### Phone check (emci, dev build: `npm start`, same Wi-Fi)
+1. Open Play: you land in the Hideout (no Block). Bottom tabs: Hideout · Turf War · Locker (+ Store only when dev-unlocked).
+2. Top bar: Caps, tokens, a small "~30m" (or mustard "CLAIM") chip, then ⚙. Tap CLAIM when ready: a one-line notice.
+3. Tap ⚙ on the Hideout, Turf War setup and Locker: the sheet opens over the same screen. First row "Exit Play" leaves Play.
+4. In the sheet: Notices → "Important only"; a plain notice (e.g. Claim) is hidden, errors still show. Set back to All.
+5. Locker → "‹ Hideout" goes to the Hideout. Blades → same. Android back in Locker → Hideout.
+6. Hideout: tap the manhole spot → Underground; its Back returns to the Hideout.
+7. Hideout: open Info, then swipe from the left edge: the sheet closes (it does not leave Play). Open a mini-game: same.
+8. On the Hideout with nothing open, swipe from the left edge (iOS) or Android back: leaves Play.
+
+### Lessons learned (Phase 3)
+- **Grep the checks before deleting a mode**: five `check:*` scripts pinned `'grove'`, the hub dev kit or the Pet's own Settings.
+  Update the pin to the new behaviour (not a comment) in the same change.
+- **A pure nav module is worth it** (`play-nav.ts`): tabs, tab ↔ mode and back targets are testable without React.
+- **Moving "home" changes who owns native back**: the iOS swipe-back is a system gesture, not our handler, so anything that
+  can be open on top of home (sheet, mini-game) must tell the shell, or one swipe loses the round.
+- **One sheet, owned by the shell, beats a copy per screen**; screens ask for it (`onOpenSettings`) and report "busy".
+- **Static dev export + the built-in browser** works for DOM checks when Playwright isn't installed; the first screenshot can
+  be the splash — take a second one.
+- Shareable later: the `play-nav.ts` pattern, the top-bar chip slot. Play-only: Hideout-as-home, Dive's origin ref.
+
+### ▶ Phase 4 prompt (ready to paste into a fresh session)
+
+Model: Sonnet 5
+
+```text
+Repo emci-hub/ATO (C:\Users\lil_e\Desktop\ATO). PLAY-ONLY task: obey .cursor/rules/play-isolation.mdc,
+.cursor/rules/fixed-regions.mdc and .cursor/rules/stage-bounds.mdc.
+
+First: git fetch origin, git checkout feature/divecore-minimal, git pull, npm ci.
+(If the Phase 3 PR into feature/divecore-minimal is not merged yet, check out claude/divecore-phase3-nav instead.)
+Then read docs/divecore-handoff.md, section "LATEST" (history, emci's decisions, the 5-phase plan, Lessons learned),
+docs/divecore-layout-spec.md and src/play/divecore-tutorial.tsx (+ the Guide in src/play/pet-sheets.tsx).
+
+We are in Divecore Phase 4: ONE "?" help button + replace the 5-card tutorial with at most 4 short tips.
+1. One "?" help button per game screen (where it sits is my call — show real-art previews at 430x932 + 375x667 first):
+   opens a small context sheet (<= 3 bullets, <= 10 words each) with a "Full guide" link to Hideout -> Info -> Guide.
+2. Replace DivecoreTutorial (blocking 5 cards) with 4 coach tips on the FloatLayer: warm the egg · Feed · Underground
+   (Hideout hatch) · Turf War tab. <= 6 words each, pulsing ring (slow breathe under Reduce Motion), one at a time, tap
+   anywhere, never blocks input, never resizes a region. Use play_settings.tipsSeen (already exists, migrated).
+   Settings "Replay the tutorial" -> "Replay tips". Fix the stale copy ("Open Pet", "along the bottom").
+3. Gate: check:divecore-ftue (pure where possible); update check:divecore-nav / check:stage-bounds /
+   check:fixed-regions pins if they mention the tutorial or the guide entry.
+4. Phone check: start `npm start` in a visible terminal tab with a short checklist; then npm run typecheck,
+   npm run lint, npm run check:ota-gate - all green. After shots into docs/divecore/after/.
+5. Update docs/divecore-handoff.md (state, files, Lessons learned, a ready Phase 5 prompt in this same format), the PR
+   body and PROJECT_CONTEXT.md (DIVECORE MINIMAL line). Draft PR into feature/divecore-minimal. Then stop.
+
+Do NOT start Phase 5. Rules: no merge to master, no OTA publish, no new native deps, no economy/odds/rewards/save
+changes, never print EXPO_TOKEN or any key/token. Keep the style (Departure Mono + Rajdhani, Pixelify on Street
+screens, cyan frames, solid buttons, fullscreen arenas, locked art rules, Reduce Motion = gentle, never still).
+Show me previews before any layout choice; keep answers short and plain.
+```
+
+---
+
+### Session 4 — Phase 2 (kept for its facts; was: Phase 2 built → phone check)
 
 Phase 2 = ONE notification system in the reserved NoticeLane. Built on the existing pure queue, PlayBanner
 removed, gate green. **Waiting on:** emci's look pick from the previews and the phone check (checklist below).
