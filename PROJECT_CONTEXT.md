@@ -1341,3 +1341,4 @@ There is a **complete, working unlock vocabulary already built** — and one of 
   opened by this change). `check:questions`/`wave19`/`badges`/
   `copy-review-badges`/`ai`/`no-auto-ai`/`full-profile`/`milestones` all green
   (targeted, not the full gate — see workflow-change entry above).
+- 2026-10-15: **Hideout rails + aura fix merged (#40, #41) and published as OTA `2bc10c53-031d-41cd-990e-eec6ea5bfe30`** (production, runtime 1.0.0). Left rail = room actions, right rail = rooms + Call; in-room spots, labels, teal press fill and cyan ellipses removed; dock 120 -> 64 so the Hideout stage grows to 619 / 421. Hideout and Underground fire/water use the reworked, recoloured aura (old `HideoutAuraStrip` deleted). Not device-verified. Details: `docs/hideout-rails.md`, `docs/NOW.md`.
