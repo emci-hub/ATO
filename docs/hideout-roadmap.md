@@ -15,8 +15,8 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
 | 3 | Pet that knows you | built, draft PR #46; bank approved by emci 2026-10-15 (`PET_KNOWS_YOU_COPY_REVIEWED = true`) — awaiting merge + OTA OK |
-| 4 | **Daily visitors** | **next** |
-| 5 | Decor slots | — |
+| 4 | Daily visitors | built, draft PR (branch `feature/daily-visitors`); copy unreviewed (`VISITORS_COPY_REVIEWED = false`) — awaiting emci's read + merge + OTA OK |
+| 5 | **Decor slots** | **next** |
 | 6 | Circle visits | — |
 
 ## Decisions (do not re-ask)
@@ -69,6 +69,35 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   never imports supabase; (3) web previews: `expo start --web` still dies with EMFILE on Windows — use the static
   export in `docs/divecore/tools/README.md`; a personal line needs a signed-in profile, so previews use a local-only
   demo override that is never committed.
+
+## Step 4 as built (daily visitors, plan approved by emci 2026-10-15)
+- Files: `src/play/daily-visitors-roster.ts` (12 rotate: kael, kitsune, corvus, neon-viper, archangel, oni, elowen,
+  maldrath, cyber-shinobi, raven, frost-lich, sak; stand-ins velkhar, void-raven; tint colours), `daily-visitors.ts`
+  (pure rules), `daily-visitors-bank.ts` (84 lines `dv_<hero>_0N`, forever), `daily-visitor-ui.tsx` (room actor, card,
+  sticker book). Wiring: `pet-room.tsx` (visitor prop), `pet-screen.tsx` (notice + card on the float layer),
+  `pet-sheets.tsx` (sticker book at the top of Info → Style; visitor tints say "From a visitor"),
+  `pet-cosmetics.ts` (14 `cos_tint_visit_*`, price null, `source: 'visitor'`), `hideout-progress.ts`
+  (`HideoutState.visitors`, tolerant parse, no version bump), `playStore.ts` (`greetDailyVisitor`).
+  `npm run check:daily-visitors`. Previews: `docs/divecore/daily-visitors/` (430×932 + 375×667). Copy review:
+  `docs/divecore/daily-visitors/review.md`.
+- Room-ready = idle AND walk clips packed (14 heroes; aurex and morwen are out). The check rebuilds every kit.
+- Rotation: day N = `VISITOR_ROTATION[(N − 2026-10-12) mod 12]`, local date only (offline). A visitor that is your pet's
+  own hero is swapped for a stand-in. None while the pet is an egg. Hideout room only, street layout only.
+- Rewards: greet 1 sticker, 2 a line, 3 the rare look (a tint you can't buy, never a Dive find), 4+ a visit. One greeting a
+  day; a re-tap later shows a line and saves nothing. No tokens / shells / stones / pet tokens move (check compares each
+  greeting against the same day without one).
+- Stickers: 128×128 die-cut from each hero's `rotations/south` frame (`npm run art:bake-stickers`, no PixelLab credit),
+  in the art library as `icon.stickers.streetwear.<hero>` (status `resource`; emci approves in the viewer).
+- Save: `hideout.visitors` rides the whole Play doc → wave96 cloud save.
+- Screen: visitor stands at art (236, 430), clamped clear of the rails; the pet's walk bounds stop 48 art px to its left
+  while it is in (no walking through it). Notice "Visitor · <Name> dropped by." once per day per app open until greeted,
+  after the away card. Card = the away card's shape, fixed boxes.
+- **Lessons:** (1) the Hideout is the landing screen, so its notice fires within ~250 ms of load — preview scripts must
+  poll the lane, not sleep; (2) art:sync's usage scan only sees the full `ART.icon.….x` chain — an alias
+  (`const S = ART.icon…`) leaves the art "unused" and moves it to `unused/`; (3) the notice body must fit one SE line
+  (≤ 26 chars with the longest name); (4) `touchPet` pays passive daily income, so an economy check has to compare
+  against a same-day control, not the start of the run; (5) the pet walks through anything that is not in its walk
+  bounds — narrow them for anything that stands in the room (decor in step 5 will need the same).
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
