@@ -871,3 +871,40 @@ export function assertRoomReachable(geom: IsoRoomGeom, stage: PetStage = 'adult'
   }
   return { ok: true };
 }
+
+/**
+ * Stage layout (emci 2026-10-14): the room canvas FILLS the stage (cover, like the Underground
+ * picture). On a phone the width decides the scale, so the room is taller than the stage and a
+ * camera picks which band shows (`hideoutCameraTop`). Pure; shares HideoutScale with the fit path.
+ */
+export function hideoutCoverScale(input: { availW: number; availH: number; pixelRatio: number }): HideoutScale {
+  const [cw, ch] = HIDEOUT_CANVAS;
+  const pr = input.pixelRatio > 0 ? input.pixelRatio : 1;
+  const fit = Math.max(Math.max(0, input.availW) / cw, Math.max(0, input.availH) / ch);
+  const pt = fit > 0 ? fit : 1;
+  return { dpx: pt * pr, pt, canvasW: cw * pt, canvasH: ch * pt, contentW: cw * pt, contentH: ch * pt };
+}
+
+/** Where the room's top edge starts for a stage: centred when it fits, else the floor at the bottom. */
+export function hideoutCoverRestTop(stageH: number, roomH: number): number {
+  'worklet';
+  return roomH > stageH ? stageH - roomH : (stageH - roomH) / 2;
+}
+
+/**
+ * Camera that follows the pet (emci 2026-10-14). `current` is the room's top offset (≤ 0); the
+ * result keeps the pet's feet between 40 % and 88 % of the stage height and never shows past the
+ * room's edges. Lazy: inside that band it does not move, so a walking pet doesn't shake the room.
+ */
+export function hideoutCameraTop(stageH: number, roomH: number, feetY: number, current: number): number {
+  'worklet';
+  if (roomH <= stageH) return (stageH - roomH) / 2;
+  const min = stageH - roomH;
+  const y = feetY + current;
+  const lo = stageH * 0.4;
+  const hi = stageH * 0.88;
+  let next = current;
+  if (y > hi) next = hi - feetY;
+  else if (y < lo) next = lo - feetY;
+  return Math.min(0, Math.max(min, next));
+}

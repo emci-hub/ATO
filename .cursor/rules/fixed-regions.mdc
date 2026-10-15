@@ -6,6 +6,9 @@ alwaysApply: true
 
 # Fixed regions (emci 2026-10-13)
 
+> **Game screens now use the stage layout** — see `.cursor/rules/stage-bounds.mdc`
+> (`<GameScreen>`, a fixed stage from `useStageFrame`). The rules below still hold inside each region.
+
 Every game screen is a stack of REGIONS — top bar · viewport (the picture / board / room)
 · bottom panel — plus a floating OVERLAY layer. Content may change inside a region; it
 may NEVER change the region's size, or the viewport next to it rescales.
@@ -16,9 +19,10 @@ may NEVER change the region's size, or the viewport next to it rescales.
    `opacity: 0, pointerEvents: 'none'` style (never `display: 'none'` / unmount keyed on
    the run phase); keep button areas at their max row count (invisible spacers); give
    status text a min height for the lines it may use.
-3. **Announcements float.** Found / busted / rare / toasts / coach hints / speech go on
-   the overlay (`position: 'absolute'`) or the `PlayBanner` queue — never an in-flow row
-   between regions.
+3. **Announcements go in the NoticeLane.** Found / busted / rare / results / errors are
+   `notify()` (`src/play/notify/`, Phase 2) — GameScreen's fixed NoticeLane shows them, one
+   line. Coach / pause lines and hints are the lane's idle content (`notice` prop); speech
+   and tips go on the overlay. Never an in-flow row between regions, never a floating banner.
 4. **Text in fixed boxes.** Set width + `numberOfLines`, padded inside frame art.
 5. **Loading keeps the final size.** Placeholders match the loaded height; flags that
    decide what shows are read before first paint (see `legendTipSeen` in dress-screen).

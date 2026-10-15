@@ -100,7 +100,15 @@ export function parseBuffs(raw: unknown): Buffs {
   return out;
 }
 
-/** One line per buff for banners and the Guide — built from the constants. */
+/** The four buffs as a notice body (≤ 10 words; the long sentence below stays in the guide). */
+export const BUFF_NOTICE: Record<BuffId, string> = {
+  hearty: `+1 find on your next ${BUFF_USES.hearty} dives.`,
+  snack: `−${SNACK_BUST_PP} bust points on your next dive.`,
+  pumped: `Pounce ×${PUMPED_MULT} for your next ${BUFF_USES.pumped} TD waves.`,
+  focused: `Next expedition ${Math.round((1 - FOCUSED_TRIP_MULT) * 100)}% shorter.`,
+};
+
+/** One line per buff for the Guide — built from the constants. */
 export const BUFF_HOW: Record<BuffId, string> = {
   hearty: `+1 find on each of your next ${BUFF_USES.hearty} charged-dive surfaces.`,
   snack: `−${SNACK_BUST_PP} bust points on every Deeper of your next dive.`,

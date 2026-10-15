@@ -44,7 +44,7 @@ function shotDoc(now: number, kind: LayoutShotKind, phase: LayoutPhase): PlaySto
   pet.forms = ['standard'];
   pet.reveals = [];
   doc.pet = pet;
-  doc.play_settings = { ...doc.play_settings, tutorialSeen: true, chatter: 'off' };
+  doc.play_settings = { ...doc.play_settings, tutorialSeen: true, chatter: 'off', tipsSeen: { warm: true, feed: true, dive: true, turf: true } };
   if (kind === 'dive' && phase === 'mid') {
     doc.dive_run = {
       deepers: 1,
@@ -86,8 +86,9 @@ export function LayoutShot({
   const view = playView(shotDoc(now, kind, phase), now);
   const pad = INSET[inset];
   const noop = async () => false;
+  // Pet, Dive and the games are GameScreens: they read the safe area themselves.
   return (
-    <View style={[styles.frame, { paddingTop: pad.top, paddingBottom: pad.bottom }]}>
+    <View style={[styles.frame, kind === 'play' ? { paddingTop: pad.top, paddingBottom: pad.bottom } : null]}>
       {kind === 'pet' ? (
         <PetScreen
           view={view}

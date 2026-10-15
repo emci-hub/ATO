@@ -32,7 +32,7 @@
  * parallax (then props, trail) — see `diveWorldCuts`.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { PixelRatio, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { PixelRatio, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -66,10 +66,11 @@ import {
   type FindGlow,
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
+import { notify, useNoticePause } from '@/play/notify/notify';
 import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
 import { FIND_CATEGORY_LABEL, FIND_CATEGORY_PHRASE, findCategory, findName } from '@/play/dive-loot';
 import { HaulReveal } from '@/play/dive-reveal';
-import { useGrowOnlyHeight } from '@/play/fixed-region';
+import { GameScreen, useStageFrame } from '@/play/stage-layout';
 import { StopAmbience, StreetUndergroundWorld, SubwayDoors } from '@/play/dive-street';
 import { streetFindName, streetStop } from '@/play/dive-street-names';
 import { hideoutIntegerScale, hideoutPetBox } from '@/play/hideout-iso';
@@ -289,7 +290,10 @@ export function DiveScene({
   recolor = null,
   atSurface = false,
   auraElement = null,
+  status = null,
 }: {
+  /** One-line live status (Powers, Lamp, Snack…) for the lane's idle slot; the dock has no room for it. */
+  status?: string | null;
   pet: PetState;
   wear: PetWear;
   eggColor: string;
@@ -327,10 +331,9 @@ export function DiveScene({
   playHit.current = hit.play;
   playPop.current = pop.play;
   const [popSlot, setPopSlot] = useState(-1);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const onLayout = (e: LayoutChangeEvent) =>
-    setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
-  const { width, height } = size;
+  // Stage layout: the picture's size comes from the frame (fixed before first paint), not onLayout.
+  const frame = useStageFrame('dive');
+  const { width, height } = frame.stage;
   const playMotion = usePlayMotion();
   const full = fxLevel === 'full' && !playMotion.vestibularSafe;
   const cuts = diveWorldCuts(fxLevel, playMotion.vestibularSafe, playMotion.cosmeticsStill);
@@ -664,32 +667,26 @@ export function DiveScene({
   // Mystery finds: names stay hidden while diving; the haul sheet reveals them on surfacing.
   const diving = haul.length > 0;
   const [revealedKey, setRevealedKey] = useState(event?.key ?? 0);
-  const dockGrow = useGrowOnlyHeight();
   const showHaulReveal =
     event?.kind === 'surface' && event.finds > 0 && event.ids.length > 0 && event.key !== revealedKey;
+  // The haul reveal covers the lane: hold notices (except errors) until it closes.
+  useNoticePause(showHaulReveal);
 
-  const caption = away
-    ? 'Your pet is away on an expedition — diving solo.'
-    : haul.length > 0
-      ? revealing
-        ? null
-        : `Found ${FIND_CATEGORY_PHRASE[findCategory(haul[haul.length - 1])]}`
-      : event?.kind === 'bust'
-        ? event.saved.length > 0
-          ? street
-            ? `Busted!\nYour pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
-            : `Bust — the haul sank. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
-          : street
-            ? 'Busted!\nThe bag dropped. Your pet is fine.'
-            : 'Bust — the haul sank. Your pet is fine.'
-        : event?.kind === 'surface' && shown && event.finds === 0 && event.ids.length > 0
-          ? `Back up! ${event.ids.length} ${event.ids.length === 1 ? 'sighting' : 'sightings'} for the Logbook${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
-        : event?.kind === 'surface' && shown
-          ? `Back up! ${shown.finds} ${shown.finds === 1 ? 'find' : 'finds'}${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
-          : null;
-  const lastId = haul.length > 0 ? haul[haul.length - 1] : null;
-  const rareFind =
-    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? `${FIND_CATEGORY_LABEL[findCategory(lastId)]} ?` : null;
+  // Phase 2: a find that lands is a notice (NoticeLane, via notify()); the surface / bust results
+  // are play.tsx's notices. The lane's idle line is the live status (Phase 5), plus "Pet away" while it is away.
+  const caption = away ? 'Your pet is away on an expedition — diving solo.' : null;
+  const announcedKey = useRef(landedKey);
+  useEffect(() => {
+    if (landedKey === announcedKey.current) return;
+    announcedKey.current = landedKey;
+    const id = haul[haul.length - 1];
+    if (!id) return;
+    if (isRareOrBetter(findGlow(id))) {
+      notify({ kind: 'celebrate', title: 'Rare find', body: `${FIND_CATEGORY_LABEL[findCategory(id)]} ?`, dedupeKey: 'dive-rare' });
+    } else {
+      notify({ kind: 'notify', title: 'Found', body: `${FIND_CATEGORY_PHRASE[findCategory(id)]}`, dedupeKey: 'dive-find' });
+    }
+  }, [haul, landedKey]);
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
 
@@ -697,30 +694,25 @@ export function DiveScene({
     return <View style={styles.scene} />;
   }
 
-  const toast = rareFind && lastId ? (
-    <View pointerEvents="none" style={styles.toast}>
-      <PixelFrame fill={PIXEL.ink} border={PIXEL.amber} padded={false} align="center">
-        <View style={styles.rareRow}>
-          <FindIcon id={lastId} size={14} bare mystery />
-          <PixelLabel color={PIXEL.amber}>Rare find</PixelLabel>
-          <PixelBody size="sm" color={PIXEL.text} numberOfLines={1}>{rareFind}</PixelBody>
-        </View>
-      </PixelFrame>
-    </View>
-  ) : caption ? (
-    <View pointerEvents="none" style={styles.toast}>
-      <PixelFrame streetPiece="panel" style={styles.captionFrame}>
-        <PixelBody numberOfLines={3} style={styles.captionText}>{caption}</PixelBody>
-      </PixelFrame>
-    </View>
+  // NoticeLane idle line (stage layout): one line above the picture, never on it.
+  // Away: keep the live status (Lamp, Powers, buffs) and add a short "Pet away" instead of replacing it.
+  const idleText = caption ? [status, 'Pet away'].filter(Boolean).join(' · ') : status;
+  const laneLine = idleText ? (
+    <PixelBody size="sm" numberOfLines={1} style={styles.laneText}>{idleText.replace(/\n/g, ' ')}</PixelBody>
   ) : null;
 
   return (
     <View
       style={[styles.scene, street && styles.streetScene]}
       accessibilityLabel={`${street ? streetStop(depth).name : diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
-      <View style={styles.topSlot}>{children}</View>
-      <Animated.View style={[styles.stage, shakeStyle]} onLayout={onLayout}>
+      <GameScreen
+        frame={frame}
+        help="dive"
+        background={street ? STREET_SCENE_BG : REEF_BG}
+        topBar={<View style={styles.topSlot}>{children}</View>}
+        notice={<View style={styles.lane}>{laneLine}</View>}
+        stage={
+      <Animated.View style={[styles.stageFill, shakeStyle]}>
       {width > 0 ? (
         <>
           {/* Approved reef plate. Fixed to the viewport; kelp, fish, bubbles and the ray shimmer sit on it. */}
@@ -841,19 +833,17 @@ export function DiveScene({
           ))}
         </>
       ) : null}
-      {/* Find / caption toast floats over the top of the scene, so it never pushes the
-          picture or the panel around (emci 2026-10-13). */}
-      {toast}
       </Animated.View>
-      {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
-      <View
-        // Fixed regions: the panel grows to its tallest state and never shrinks back
-        // (a shrinking panel made the scene picture jump bigger / smaller).
-        style={[styles.dock, { minHeight: dockGrow.minHeight }]}
-        onLayout={dockGrow.onLayout}>
+        }
+        dock={
+      // HAUL, RISK, and the controls share one framed panel under the scene, at the frame's
+      // fixed dock height (it no longer grows or shrinks with its state).
+      <View style={styles.dock}>
         <PixelFrame streetPiece="panel" align="stretch" padded={false} style={styles.dockFrame}>
           <View style={[styles.dockPad, street && styles.streetDockPad]}>
-            <View pointerEvents="none" style={styles.haulRow}>
+            {/* Phase 5: Bag + Heat share ONE 24 pt row (dock 152 = 24 + two 48 pt rows + gaps). */}
+            <View pointerEvents="none" style={styles.bagHeatRow}>
+            <View style={styles.haulRow}>
               <PixelLabel color={street ? STREET_DIM : PIXEL.cyan} style={street ? styles.streetLabel : undefined}>
                 {street ? 'Bag' : 'Haul'}
               </PixelLabel>
@@ -863,7 +853,7 @@ export function DiveScene({
                   <View
                     style={item.hidden ? styles.hidden : undefined}
                     accessibilityLabel={diving ? `${FIND_CATEGORY_LABEL[findCategory(item.id)]}, not revealed yet` : nameOf(item.id)}>
-                    <FindIcon id={item.id} size={11 * ART_PT} bare mystery={diving} />
+                    <FindIcon id={item.id} size={10 * ART_PT} bare mystery={diving} />
                   </View>
                 ) : null;
                 return (
@@ -874,47 +864,58 @@ export function DiveScene({
                     padded={false}
                     step={1}
                     border={item && diving ? GLOW_COLOR[findGlow(item.id)] : PIXEL.slot}
-                    style={{ width: 13 * ART_PT, height: 13 * ART_PT }}>
+                    style={{ width: 12 * ART_PT, height: 12 * ART_PT }}>
                     {i === popSlot && item && !item.hidden ? <Animated.View style={pop.style}>{icon}</Animated.View> : icon}
                   </PixelFrame>
                 );
               })}
             </View>
-            {/* Heat row always takes its space (hidden off a run) so the panel keeps one height. */}
-            <View
-              pointerEvents="none"
-              style={bustPct == null ? styles.reserved : undefined}
-              accessibilityElementsHidden={bustPct == null}
-              importantForAccessibility={bustPct == null ? 'no-hide-descendants' : 'auto'}>
-              <PixelRisk
-                pct={bustPct ?? 0}
-                label={street ? 'Heat' : undefined}
-                labelColor={street ? STREET_DIM : undefined}
-                labelStyle={street ? styles.streetLabel : undefined}
-              />
+            {/* Heat takes its space even off a run (hidden) so the panel keeps one height. */}
+            <View style={styles.heatGroup}>
+              <View
+                style={bustPct == null ? styles.reserved : undefined}
+                accessibilityElementsHidden={bustPct == null}
+                importantForAccessibility={bustPct == null ? 'no-hide-descendants' : 'auto'}>
+                <PixelRisk
+                  compact
+                  pct={bustPct ?? 0}
+                  label={street ? 'Heat' : undefined}
+                  labelColor={street ? STREET_DIM : undefined}
+                  labelStyle={street ? styles.streetLabel : undefined}
+                />
+              </View>
+            </View>
             </View>
             {dock}
           </View>
         </PixelFrame>
       </View>
-      {showHaulReveal && event ? (
-        <HaulReveal ids={event.ids} still={playMotion.cosmeticsStill} onDone={() => setRevealedKey(event.key)} />
-      ) : null}
+        }
+        modal={
+          showHaulReveal && event ? (
+            <HaulReveal ids={event.ids} still={playMotion.cosmeticsStill} onDone={() => setRevealedKey(event.key)} />
+          ) : null
+        }
+      />
     </View>
   );
 }
 
 /** Street label grey (Bag, Heat). */
 const STREET_DIM = '#9AA3AD';
+/** Scene backgrounds (also behind the bars). */
+const STREET_SCENE_BG = '#0b1020';
+const REEF_BG = '#0b5e65';
 
 const styles = StyleSheet.create({
   scene: { flex: 1, minHeight: 0, backgroundColor: '#0b5e65' },
   streetScene: { backgroundColor: '#0b1020' },
   gone: { display: 'none' },
   topSlot: { flexGrow: 0, flexShrink: 0, zIndex: 2 },
-  stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
-  // Top of the scene: the pet stands at the bottom, so the toast never covers it.
-  toast: { position: 'absolute', left: 0, right: 0, top: 10, paddingHorizontal: 12, alignItems: 'center' },
+  // Stage layout: the picture fills the frame's fixed stage region.
+  stageFill: { flex: 1, overflow: 'hidden' },
+  lane: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 12 },
+  laneText: { textAlign: 'center' },
   abs: { position: 'absolute' },
   reserved: { opacity: 0 },
   // The panel art fills the reserved height (e.g. while "Searching…" shows one short row).
@@ -930,11 +931,14 @@ const styles = StyleSheet.create({
     borderRadius: (ICON + 16) / 2,
     opacity: 0.35,
   },
-  dock: { flexGrow: 0, flexShrink: 0, width: '100%', paddingHorizontal: 8, paddingBottom: 8 },
-  dockPad: { width: '100%', padding: 12, gap: 8 },
+  // 152 = frame margins 4 + top pad 8 + Bag·Heat 24 + 8 + two 48 rows + 8 + bottom pad 4 (the 8 pt screen-edge pad is the frame's).
+  dock: { flex: 1, width: '100%', paddingHorizontal: 8 },
+  dockPad: { width: '100%', paddingTop: 8, paddingBottom: 4, paddingHorizontal: 4, gap: 8 },
+  bagHeatRow: { flexDirection: 'row', alignItems: 'center', height: 24, gap: 8 },
+  heatGroup: { flex: 1, minWidth: 0 },
   haulRow: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
   // Street: Bag / Heat are small quiet labels (the mockup), not 16pt headers.
-  streetLabel: { fontFamily: STREET_FONT.bold, fontSize: 14, lineHeight: 18, minWidth: 44 },
+  streetLabel: { fontFamily: STREET_FONT.bold, fontSize: 14, lineHeight: 18 },
   // Street: clear the panel's tape corners.
   streetDockPad: { paddingHorizontal: 18 },
   rareRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8 },

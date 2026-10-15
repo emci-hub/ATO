@@ -5,10 +5,9 @@
  * Paint and layout only: every action calls the same handlers the Classic
  * screens use, so no rule, odds or economy changes.
  *
- *  - StreetResourceBar: Caps · Subway Tokens · Shine/Prism stones · ⚙, pinned on top.
- *  - StreetTabBar: Block · Turf War · Hideout · Locker · Corner Store (Store only
- *    while the shop is unlocked), pinned at the bottom.
- *  - StreetBlock: the home screen (replaces the Command Hub tile wall; same props).
+ *  - StreetResourceBar: Caps · Subway Tokens · Shine/Prism stones · Claim · ⚙, pinned on top.
+ *  - StreetTabBar: Hideout · Turf War · Locker · Store (Store only while the shop is
+ *    unlocked), pinned at the bottom. Hideout is home (Phase 3 removed the Block).
  *  - StreetLockerTabs: Fits / Blades on top of Dress and the sword forge.
  *  - Dock + HUD slots: Turf War hands its live controls to the shell
  *    (`StreetDockFill` / `StreetHudFill`, the same pattern as dev-slot.tsx) so they
@@ -18,12 +17,11 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 
-import { PET_METER_MAX, type PetState } from '@/play/pet';
-import { PetFigure } from '@/play/pet-figure';
 import { uiDrawable, type UiPiece } from '@/art/art';
 import { ClipImage } from '@/play/sheet-sprite';
 import { STREET_MOTION, STREET_SIZE, tapHaptic } from '@/play/street-feel';
 import { NeonButton } from '@/play/neon-ui';
+import { tipAnchorRef } from '@/play/ftue/tip-anchors';
 import { STREET, STREET_FONT, StreetBackdrop, StreetFrame, useStreetFonts } from '@/play/street-ui';
 
 /* ------------------------------------------------------------- slots --- */
@@ -131,6 +129,7 @@ export function StreetResourceBar({
   shine,
   prism,
   reduceMotion,
+  claim,
   onSettings,
 }: {
   caps: number;
@@ -139,6 +138,8 @@ export function StreetResourceBar({
   shine: number;
   prism: number;
   reduceMotion: boolean;
+  /** Basecore research: "Claim" when ready, else the wait ("~42m"). Phase 3: lives here, not on a Block. */
+  claim?: { ready: boolean; label: string; onPress: () => void };
   onSettings: () => void;
 }) {
   useStreetFonts();
@@ -156,6 +157,23 @@ export function StreetResourceBar({
       />
       {shine > 0 ? <Resource icon="nav-cur-shine" label="" value={String(shine)} a11y={`${shine} Shine Stones`} /> : null}
       {prism > 0 ? <Resource icon="nav-cur-prism" label="" value={String(prism)} a11y={`${prism} Prism Stones`} /> : null}
+      {claim ? (
+        <Pressable
+          disabled={!claim.ready}
+          onPress={() => {
+            tapHaptic();
+            claim.onPress();
+          }}
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          accessibilityRole="button"
+          accessibilityLabel={claim.ready ? 'Claim Basecore research' : `Basecore research, next find in ${claim.label}`}
+          accessibilityState={{ disabled: !claim.ready }}
+          style={({ pressed }) => [styles.claim, claim.ready && styles.claimReady, pressed && claim.ready && styles.squash]}>
+          <Text style={[styles.claimText, claim.ready && styles.claimTextReady]} numberOfLines={1}>
+            {claim.ready ? 'CLAIM' : claim.label}
+          </Text>
+        </Pressable>
+      ) : null}
       <Pressable
         onPress={() => {
           tapHaptic();
@@ -173,12 +191,11 @@ export function StreetResourceBar({
 
 /* ----------------------------------------------------------- tab bar --- */
 
-export type StreetTab = 'block' | 'turf' | 'hideout' | 'locker' | 'store';
+export type StreetTab = 'hideout' | 'turf' | 'locker' | 'store';
 
 const TAB_DEF: Record<StreetTab, { label: string; icon: UiPiece }> = {
-  block: { label: 'Block', icon: 'nav-tab-block' },
-  turf: { label: 'Turf War', icon: 'nav-tab-turf' },
   hideout: { label: 'Hideout', icon: 'nav-tab-hideout' },
+  turf: { label: 'Turf War', icon: 'nav-tab-turf' },
   locker: { label: 'Locker', icon: 'nav-tab-locker' },
   store: { label: 'Store', icon: 'nav-tab-store' },
 };
@@ -210,6 +227,7 @@ function TabButton({
   const def = TAB_DEF[tab];
   return (
     <Pressable
+      ref={tab === 'turf' ? tipAnchorRef('turf') : undefined}
       onPress={() => {
         tapHaptic();
         onPress();
@@ -247,7 +265,7 @@ export function StreetTabBar({
   useStreetFonts();
   const { width } = useWindowDimensions();
   const compact = width < STREET_SIZE.compactWidth;
-  const tabs: StreetTab[] = showStore ? ['block', 'turf', 'hideout', 'locker', 'store'] : ['block', 'turf', 'hideout', 'locker'];
+  const tabs: StreetTab[] = showStore ? ['hideout', 'turf', 'locker', 'store'] : ['hideout', 'turf', 'locker'];
   return (
     <View style={[styles.tabWrap, { paddingBottom: Math.max(bottomInset, 6) }]} accessibilityRole="tablist">
       <StreetBackdrop piece="tabbar" />
@@ -280,134 +298,6 @@ export function StreetLockerTabs({ active, onFits, onBlades }: { active: 'fits' 
   );
 }
 
-/* ------------------------------------------------------------- block --- */
-
-function Meter({ label, value, max, tone }: { label: string; value: number; max: number; tone: 'mustard' | 'red' }) {
-  const pct = Math.max(0, Math.min(1, value / max));
-  return (
-    <View style={styles.meterRow} accessible accessibilityLabel={`${label} ${value} of ${max}`}>
-      <Text style={styles.meterLabel}>{label}</Text>
-      <View style={styles.meter}>
-        <View style={[styles.meterFill, { width: `${pct * 100}%`, backgroundColor: tone === 'red' ? STREET.red : STREET.mustard }]} />
-      </View>
-    </View>
-  );
-}
-
-/** Staggered rise-in for The Block's panels (40ms apart); still under Reduce Motion. */
-function Rise({ index, still, children }: { index: number; still: boolean; children: ReactNode }) {
-  const t = useSharedValue(still ? 1 : 0);
-  useEffect(() => {
-    if (still) {
-      t.value = 1;
-      return;
-    }
-    t.value = 0;
-    const id = setTimeout(() => {
-      t.value = withTiming(1, { duration: STREET_MOTION.push, easing: Easing.out(Easing.cubic) });
-    }, index * STREET_MOTION.stagger);
-    return () => clearTimeout(id);
-  }, [index, still, t]);
-  const style = useAnimatedStyle(() => ({ opacity: t.value, transform: [{ translateY: (1 - t.value) * 12 }] }));
-  return <Animated.View style={style}>{children}</Animated.View>;
-}
-
-export function StreetBlock({
-  pet,
-  wave,
-  diveActive,
-  charges,
-  chargesMax,
-  reduceMotion,
-  onHideout,
-  onTurf,
-  onUnderground,
-  children,
-}: {
-  pet: PetState | null;
-  wave: number | null;
-  diveActive: boolean;
-  charges: number;
-  chargesMax: number;
-  reduceMotion: boolean;
-  onHideout: () => void;
-  onTurf: () => void;
-  onUnderground: () => void;
-  children?: ReactNode;
-}) {
-  useStreetFonts();
-  const hungry = pet != null && pet.stage !== 'egg' && pet.hunger <= 1;
-  return (
-    <View style={styles.block}>
-      <Rise index={0} still={reduceMotion}>
-        <StreetFrame piece="header" style={styles.plate}>
-          <Text style={styles.eyebrow}>DIVECORE</Text>
-          <Text style={styles.title}>The Block</Text>
-        </StreetFrame>
-      </Rise>
-      {pet ? (
-        <Rise index={1} still={reduceMotion}>
-          <StreetFrame piece="panel" style={styles.petCard}>
-            <View style={styles.petFigure}>
-              <PetFigure pet={pet} baseBox={72} eggColor={STREET.mustard} reduceMotion={reduceMotion} />
-            </View>
-            <View style={styles.petInfo}>
-              <Text style={styles.cardTitle}>{pet.stage === 'egg' ? 'Your egg' : 'Your pet'}</Text>
-              {pet.stage === 'egg' ? null : (
-                <>
-                  <Meter label="Hunger" value={pet.hunger} max={PET_METER_MAX} tone={hungry ? 'red' : 'mustard'} />
-                  <Meter label="Mood" value={pet.mood} max={PET_METER_MAX} tone="mustard" />
-                </>
-              )}
-            </View>
-          </StreetFrame>
-        </Rise>
-      ) : null}
-      <Rise index={2} still={reduceMotion}>
-        <NeonButton label={hungry ? 'Feed in the Hideout' : 'Go to the Hideout'} onPress={onHideout} />
-      </Rise>
-      <Rise index={3} still={reduceMotion}>
-        <View style={styles.tiles}>
-          <Pressable
-            onPress={() => {
-              tapHaptic();
-              onTurf();
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={`Turf War, wave ${wave ?? 1} next`}
-            style={({ pressed }) => [styles.tileWrap, pressed && styles.squash]}>
-            <StreetFrame piece="panel" style={styles.tile}>
-              <KitIcon name="nav-tab-turf" size={40} />
-              <Text style={styles.tileTitle}>Turf War</Text>
-              <Text style={styles.tileSub}>Wave {wave ?? 1} next</Text>
-            </StreetFrame>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              tapHaptic();
-              onUnderground();
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={diveActive ? 'Underground, dive in progress' : `Underground, ${charges} of ${chargesMax} Subway Tokens`}
-            style={({ pressed }) => [styles.tileWrap, pressed && styles.squash]}>
-            <View style={styles.roomTile}>
-              {/* Cover-fit the portrait room art: full width, centred, top and bottom cropped. */}
-              <View style={styles.roomArt}>
-                <ClipImage drawable={uiDrawable('room-underground')} />
-              </View>
-              <View style={styles.roomShade}>
-                <Text style={styles.tileTitle}>Underground</Text>
-                <Text style={styles.tileSub}>{diveActive ? 'Dive in progress' : `${charges}/${chargesMax} tokens`}</Text>
-              </View>
-            </View>
-          </Pressable>
-        </View>
-      </Rise>
-      {children}
-    </View>
-  );
-}
-
 /* ----------------------------------------------------------- styles --- */
 
 const styles = StyleSheet.create({
@@ -425,7 +315,11 @@ const styles = StyleSheet.create({
   res: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   resText: { fontFamily: STREET_FONT.bold, fontSize: 15, color: STREET.paper, fontVariant: ['tabular-nums'] },
   resLabel: { fontFamily: STREET_FONT.regular, fontSize: 11, color: STREET.muted },
-  gear: { marginLeft: 'auto', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  gear: { marginLeft: 6, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  claim: { marginLeft: 'auto', paddingHorizontal: 8, height: 28, justifyContent: 'center', borderWidth: 2, borderColor: '#000', backgroundColor: '#2a2a33' },
+  claimReady: { backgroundColor: STREET.mustard },
+  claimText: { fontFamily: STREET_FONT.bold, fontSize: 12, color: STREET.muted, letterSpacing: 0.4 },
+  claimTextReady: { color: '#111' },
   tabWrap: {
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -440,32 +334,4 @@ const styles = StyleSheet.create({
   tabUnderOn: { backgroundColor: STREET.mustard },
   lockerTabs: { flexDirection: 'row', gap: 8, marginBottom: 4 },
   lockerTab: { flex: 1 },
-  block: { gap: 12 },
-  plate: { paddingHorizontal: 36, paddingVertical: 12, alignItems: 'center' },
-  eyebrow: { fontFamily: STREET_FONT.regular, fontSize: 11, letterSpacing: 1.8, color: STREET.mustard },
-  title: { fontFamily: STREET_FONT.bold, fontSize: STREET_SIZE.type.title, color: STREET.paper, textTransform: 'uppercase' },
-  petCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 22 },
-  petFigure: { width: 84, height: 84, alignItems: 'center', justifyContent: 'center' },
-  petInfo: { flex: 1, gap: 6, minWidth: 0 },
-  cardTitle: { fontFamily: STREET_FONT.bold, fontSize: STREET_SIZE.type.heading, color: STREET.paper },
-  meterRow: { gap: 2 },
-  meterLabel: { fontFamily: STREET_FONT.regular, fontSize: 11, color: STREET.muted, textTransform: 'uppercase', letterSpacing: 1 },
-  meter: { height: 10, backgroundColor: '#000', borderWidth: 2, borderColor: '#000' },
-  meterFill: { height: '100%' },
-  tiles: { flexDirection: 'row', gap: 10 },
-  tileWrap: { flex: 1 },
-  tile: { alignItems: 'center', gap: 4, padding: 20, minHeight: 132, justifyContent: 'center' },
-  tileTitle: { fontFamily: STREET_FONT.bold, fontSize: 15, color: STREET.paper, textTransform: 'uppercase' },
-  tileSub: { fontFamily: STREET_FONT.regular, fontSize: 12, color: STREET.muted },
-  roomTile: { height: 132, borderWidth: 3, borderColor: '#000', overflow: 'hidden', justifyContent: 'center' },
-  roomArt: { width: '100%', aspectRatio: 256 / 320 },
-  roomShade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingVertical: 8,
-    alignItems: 'center',
-    backgroundColor: 'rgba(12, 12, 14, 0.78)',
-  },
 });

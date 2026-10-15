@@ -692,7 +692,10 @@ export function PixelRisk({
   label = 'Risk',
   labelStyle,
   labelColor = PIXEL.amber,
+  compact = false,
 }: {
+  /** One 24 pt row: small % text, bar fills the rest (Dive dock, Phase 5). */
+  compact?: boolean;
   pct: number;
   label?: string;
   labelStyle?: StyleProp<TextStyle>;
@@ -701,7 +704,7 @@ export function PixelRisk({
   const clamped = Math.max(0, Math.min(100, Math.round(pct)));
   return (
     <View
-      style={{ flexDirection: 'row', alignItems: 'center', gap: ART_PT * 3 }}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: compact ? ART_PT * 2 : ART_PT * 3 }}
       accessibilityLabel={`${label} ${clamped} percent`}>
       <PixelLabel color={labelColor} style={labelStyle}>{label}</PixelLabel>
       <View style={{ flex: 1, height: ART_PT * 7, backgroundColor: PIXEL.cyanLo, padding: ART_PT }}>
@@ -711,7 +714,7 @@ export function PixelRisk({
           </View>
         </View>
       </View>
-      <PixelBody size="num" color={PIXEL.amber}>{`${clamped}%`}</PixelBody>
+      <PixelBody size={compact ? 'sm' : 'num'} color={PIXEL.amber}>{`${clamped}%`}</PixelBody>
     </View>
   );
 }

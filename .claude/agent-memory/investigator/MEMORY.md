@@ -1,0 +1,21 @@
+- [AI surfaces map](ai_surfaces_map.md) — which AI calls are live vs parked, edge fn quota facts, category/legend locations
+- [Unlock/intake facts](unlock_intake_facts.md) — one gate, dead milestones, settled-label math, token claim edge cases
+- [Nav/tokens/crisis facts](nav_tokens_crisis_facts.md) — pinned-slot nav engine, ATO token RPC behavior, crisis_flags has no writer
+- [Dev tooling facts](dev_tooling_facts.md) — Hub/bubble wiring, dead dev tools, intake preset vs reset RPC gaps
+- [Dev kit red-team facts](dev_kit_redteam_facts.md) — per-entry gates, RLS/ledger limits, local cache coverage, pinned check text
+- [Content inventory facts](content_inventory_facts.md) — post-intake content assets, share mechanics absent, edge fn has no per-kind limits
+- [Empty traits after 50](intake_empty_traits_facts.md) — pager row order puts conflict/attachment axes on last 2 pages; gate math
+- [48-intake plan facts](intake_48_plan_facts.md) — server 50-row token gate, stale-tab deps, silent track save
+- [Draft copy inventory](draft_copy_inventory.md) — COPY_REVIEWED flag readers, dead copy components, prompt voice blocks, pinning checks
+- [Trait writers map](trait_writers_map.md) — all client trait writers, guard-trigger patterns, server-side migration gotchas
+- [Question round facts](question_round_facts.md) — per-trait count sites, chunking, bank exclusion quirk, single-axis writes
+- [You tab restore facts](you_tab_restore_facts.md) — You now vs pre-fcf4585, deleted notif fold, checks pinning You
+- [Reset/gate map](reset_gate_map_facts.md) — live gate = 3/trait or old 50; start_over/reset_dev_test_user/count_user_rows table gaps; no single tracks seam
+- [Server question/scoring facts](server_question_scoring_facts.md) — wave79 validation keys, pool tables, token claims, reset gaps
+- [Shared AI library facts](shared_ai_library_facts.md) — 3 AI card surfaces: inputs, claims, saves, trust; wave74 owner-only precedent; next = wave93
+- [Legends feature facts](legends_feature_facts.md) — Legends = 64-archetype names, no figure match; ai-generate no kind whitelist; check naming
+- [Sage/crisis inventory](sage_crisis_inventory_facts.md) — sage tab parked, Talk placeholder, live rewriteOldStory AI path, nav_layout server-side
+- [Play UI map](play_ui_map_facts.md) — one-route mode switch, 3 chrome systems, Defend HUD is in-scroll, no haptics/lottie/skia, isolation classes
+- [Divecore notices facts](divecore_notices_facts.md) — PlayBanner wiring/geometry (52 vs real 56), 80-row notice inventory, 3 known bugs
+- [Divecore layout facts](divecore_layout_facts.md) — stage sizing per scene, Turf board is width-square in ScrollView, real shell heights, 1 grow-only caller
+- [Divecore nav facts](divecore_nav_facts.md) — Street shell always on, orphaned About, hidden Hideout header, back mismatches, settings migration site

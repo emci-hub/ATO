@@ -9,8 +9,8 @@
  *   2. Bars and panels reserve their TALLEST state: `ReservedRegion` grows to the
  *      tallest content it has shown and never shrinks back; `Reserve` keeps a hidden
  *      row's space (invisible, untouchable, hidden from VoiceOver).
- *   3. Announcements (found, busted, toasts, hints, speech) float: `position:
- *      'absolute'` on an overlay layer or the PlayBanner queue — never an in-flow row.
+ *   3. Announcements (found, busted, results, errors) are `notify()` notices in the fixed
+ *      NoticeLane (src/play/notify/); speech and tips float on the overlay — never an in-flow row.
  *   4. Text sits in a set-width box with `numberOfLines` (+ a min height for the lines
  *      it may use), padded inside frame art.
  *   5. Loading keeps the final size (a placeholder of the same height), never a

@@ -40,6 +40,7 @@ import { CausticWash, DitherPool, useHitJuice } from '@/play/pixel-fx';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import type { PetState } from '@/play/pet';
 import { petPose, petPoseMs, type PetPose } from '@/play/pet-actor';
+import { GameScreen, useStageFrame } from '@/play/stage-layout';
 import { PetAnimSprite, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
 import type { PetWear } from '@/play/pet-cosmetics';
 import {
@@ -412,6 +413,8 @@ function GamePlate({
   usePixelFonts();
   const { width: screenW } = useWindowDimensions();
   const [box, setBox] = useState({ width: 0, height: 0 });
+  // Stage layout: the playfield's region is fixed from the frame (fullscreen arena).
+  const frame = useStageFrame('pet-game');
   const labelPt = screenW < 400 ? 13 : 16;
   const label = { fontSize: labelPt, lineHeight: labelPt + 4 };
   const onLayout = (e: LayoutChangeEvent) => {
@@ -420,6 +423,11 @@ function GamePlate({
   };
   return (
     <Animated.View style={[styles.screen, style]}>
+      <GameScreen
+        frame={frame}
+        help="pet-game"
+        background={PIXEL.ink}
+        topBar={
       <View style={styles.top}>
         <PixelFrame streetPiece="panel" align="stretch" padded={false} enter>
           <View style={styles.topPad}>
@@ -449,6 +457,8 @@ function GamePlate({
           </View>
         </PixelFrame>
       </View>
+        }
+        stage={
       <View style={styles.stageWrap}>
         <PixelFrame align="stretch" padded={false} glow fill={kind === 'catch' ? ARENA : DOJO} border={PIXEL.cyan} grow>
           <View style={styles.stage} onLayout={onLayout}>
@@ -458,11 +468,15 @@ function GamePlate({
           </View>
         </PixelFrame>
       </View>
+        }
+        dock={
       <View style={styles.dock}>
         <PixelFrame streetPiece="panel" align="stretch" padded={false}>
           <View style={styles.dockPad}>{dock}</View>
         </PixelFrame>
       </View>
+        }
+      />
     </Animated.View>
   );
 }
@@ -828,7 +842,7 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
 
 const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, backgroundColor: PIXEL.ink },
-  top: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 8, paddingTop: 4 },
+  top: { flex: 1, paddingHorizontal: 8, paddingTop: 4 },
   topPad: { width: '100%', paddingHorizontal: 10, paddingVertical: 6, gap: 2 },
   topRow: { flexDirection: 'row', alignItems: 'center' },
   backHit: { width: 72, minHeight: 44, justifyContent: 'center' },
@@ -839,7 +853,7 @@ const styles = StyleSheet.create({
   stage: { flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' },
   ruinClip: { position: 'absolute', right: 4, top: 4, width: 72, height: 88, overflow: 'hidden', opacity: 0.55 },
   lampClip: { position: 'absolute', right: 4, top: 4, width: 88, height: 120, overflow: 'hidden', opacity: 0.7 },
-  dock: { flexGrow: 0, flexShrink: 0, width: '100%', paddingHorizontal: 8, paddingBottom: 8 },
+  dock: { flex: 1, width: '100%', paddingHorizontal: 8, paddingBottom: 8 },
   dockPad: { width: '100%', padding: 12, gap: 8 },
   playfield: { flex: 1, minHeight: 0, width: '100%', overflow: 'hidden', position: 'relative' },
   trainFloor: {

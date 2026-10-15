@@ -1,15 +1,16 @@
 /**
- * Divecore Settings (v24, 2026-09-30) — one sheet, opened from the ⚙ on the
- * Command Hub and in the Pet room.
+ * Divecore Settings (v24, 2026-09-30) — one sheet, opened in place from the ⚙ in
+ * the top bar on any screen that has one (Phase 3, 2026-10-14: no flip to a Block).
+ * First row = Exit Play.
  *
- *   Notifications (hunger, egg hatched / hero revealed, expedition back, dive
+ *   Exit Play, in-game Notices (All / Important only), Notifications (hunger, egg hatched / hero revealed, expedition back, dive
  *   charges full), quiet hours, pet bedtime (looks only), pet chatter,
  *   effects (Full / Low), skip reveal animations, reduce motion (follow the
- *   phone or override), when daily limits reset, replay the tutorial, and
+ *   phone or override), when daily limits reset, replay the tips, and
  *   Reset Divecore (a summary of exactly what goes, then a double confirm and
  *   typing RESET — the Play save only; settings and the main app are kept).
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
@@ -24,6 +25,7 @@ import { PLAY_MOTION_LABEL, PLAY_MOTION_MODES, setPlayMotionMode, usePlayMotionM
 import {
   CHATTER_LABEL,
   CHATTER_LEVELS,
+  NOTICE_MODES,
   NOTIF_KINDS,
   NOTIF_LABEL,
   nextDailyReset,
@@ -96,17 +98,23 @@ export function DivecoreSettingsSheet({
   view,
   commit,
   reduceMotion,
-  onReplayTutorial,
+  onReplayTips,
   onOpenGuide,
+  onExit,
+  extra,
 }: {
   open: boolean;
   onClose: () => void;
   view: PlayView;
   commit: Commit;
   reduceMotion: boolean;
-  onReplayTutorial: () => void;
+  onReplayTips: () => void;
   /** v26 — open the Guide (Pet → Info → Guide). */
   onOpenGuide?: () => void;
+  /** Leaves Play. First row of the sheet. */
+  onExit?: () => void;
+  /** Pre-launch tools handed in by the Play shell (never built here). */
+  extra?: ReactNode;
 }) {
   const settings = view.settings;
   const fx = useFxQuality();
@@ -155,6 +163,30 @@ export function DivecoreSettingsSheet({
 
   return (
     <PlaySheet open={open} title="Divecore settings" onClose={onClose} reduceMotion={reduceMotion}>
+      {onExit ? (
+        <NeonButton
+          label="Exit Play"
+          variant="secondary"
+          onPress={() => {
+            onClose();
+            onExit();
+          }}
+        />
+      ) : null}
+
+      <NeonLabel>Notices</NeonLabel>
+      <Text style={styles.body}>The one-line notices above the screen. Errors always show.</Text>
+      <View style={styles.chips}>
+        {NOTICE_MODES.map((m) => (
+          <NeonChip
+            key={m}
+            label={m === 'all' ? 'All' : 'Important only'}
+            selected={settings.notices === m}
+            onPress={() => commit((doc) => (doc.play_settings.notices === m ? null : setPlaySettings(doc, { notices: m })))}
+          />
+        ))}
+      </View>
+
       <NeonLabel>Notifications</NeonLabel>
       {NOTIF_KINDS.map((kind) => (
         <NeonChip
@@ -252,13 +284,15 @@ export function DivecoreSettingsSheet({
         />
       ) : null}
       <NeonButton
-        label="Replay the tutorial"
+        label="Replay tips"
         variant="secondary"
         onPress={() => {
           onClose();
-          onReplayTutorial();
+          onReplayTips();
         }}
       />
+
+      {extra}
 
       <NeonLabel>Reset Divecore</NeonLabel>
       {resetStep === 'idle' ? (

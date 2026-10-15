@@ -191,7 +191,7 @@ glyphs. Icons: one 48px create_1_direction_object batch (10 gen, object 4dda15c1
 `ui/kit/`: panel.png, button-grey.png, header.png, pieces.png (PixelLab ids in STATE.md batch 6, 80 generations). The game draws them as 9-slices from `sheets/streetwear/ui-kit/atlas.png` (`street-ui.tsx`) only while the Streetwear art style is on: panel, header plate, back button, chip on/off, toggle, and buttons primary (mustard) / secondary (concrete) / danger (red) with pressed states baked from the one grey button. Font: Pixelify Sans (OFL, `assets/play/fonts/`). Item stickers in the game: hoodie, shades, bandana, flame, marker, cap, bucket-hat, gem, coin-stack, sword, bat, shield (`STREET_ICON_BY_ART`, art.ts).
 
 ### Street shell kit (2026-10-11, batch 7)
-`ui/kit/` resbar, tabbar, sheet (+ handle cut at pack), toast, hud (pause, alert), portrait; `ui/nav/` 5 tab icons + Caps / Subway Token / Shine / Prism + settings (32px); `ui/rooms/` hideout, underground, locker (256×320). Ids in STATE.md batch 7 (188 gens). Drawn by `street-shell.tsx`, `play-sheet.tsx`, `play-banner.tsx`, `pet-room.tsx` only while Streetwear is on.
+`ui/kit/` resbar, tabbar, sheet (+ handle cut at pack), toast, hud (pause, alert), portrait; `ui/nav/` 5 tab icons + Caps / Subway Token / Shine / Prism + settings (32px); `ui/rooms/` hideout, underground, locker (256×320). Ids in STATE.md batch 7 (188 gens). Drawn by `street-shell.tsx`, `play-sheet.tsx`, `notify/notice-lane.tsx` (toast), `pet-room.tsx` only while Streetwear is on.
 
 ## Known issues (read before wiring)
 
