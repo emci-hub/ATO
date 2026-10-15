@@ -126,6 +126,19 @@ assert.match(devReset, /if auth\.uid\(\) is distinct from v_dev_id then/, 'the d
 assert.match(countRows, /grant execute on function public\.count_user_rows\(uuid\) to service_role;/);
 ok('the dev sign-up reset and the delete-account count cover the six newer tables');
 
+// --- wave96: the Divecore cloud save (kept on reset, counted and cleared everywhere else) -------
+{
+  const w96 = read('supabase/migrations/wave96_play_saves.sql');
+  const dev96 = w96.slice(w96.indexOf('create or replace function public.reset_dev_test_user()'), w96.indexOf('create or replace function public.count_user_rows'));
+  const count96 = w96.slice(w96.indexOf('create or replace function public.count_user_rows'));
+  assert.match(dev96, /delete from public\.play_saves where user_id = v_dev_id;/, 'the dev sign-up reset clears play_saves');
+  assert.match(count96, /from public\.play_saves where user_id = p_user_id/, 'delete-account counts play_saves');
+  for (const t of six) assert.match(count96, new RegExp(`from public\.${t} where user_id = p_user_id`), `wave96 count_user_rows still counts ${t}`);
+  assert.match(count96, /grant execute on function public\.count_user_rows\(uuid\) to service_role;/);
+  assert.doesNotMatch(w96, /create or replace function public\.reset_my_account/, 'reset_my_account is not restated: a reset keeps the Divecore save');
+  ok('wave96: play_saves is cleared by the dev reset, counted for delete-account, kept by Reset account');
+}
+
 // --- client -------------------------------------------------------------------------------
 const lib = read('src/lib/dev-test-user.ts');
 const fn = lib.slice(lib.indexOf('export async function resetMyAccount'));

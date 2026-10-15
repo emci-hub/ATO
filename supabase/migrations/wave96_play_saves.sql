@@ -4,7 +4,9 @@
 --   1. play_saves           one server copy of the Divecore (Play) save per account,
 --                           so a reinstall or a new phone keeps the pet. Own-select RLS,
 --                           written only through save_play_doc (copies the wave90 owner-
---                           table pattern). Older writes never replace newer ones.
+--                           table pattern). An older write (by the phone's clock, capped at
+--                           the server's) or an older app version never replaces a newer save;
+--                           one write per account per 2 s.
 --   2. play_counters_daily  ~6 anonymous daily counters (no user id stored), bumped only
 --                           through bump_play_counter with a fixed name list. RLS on, no
 --                           policies: nobody reads it from a phone (the wave93 pattern).
@@ -44,6 +46,8 @@ set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
+  at timestamptz;
+  prev public.play_saves%rowtype;
   kept timestamptz;
 begin
   if uid is null then
@@ -55,15 +59,24 @@ begin
   if p_version is null or p_version < 1 or p_version > 1000 or p_saved_at is null then
     return jsonb_build_object('ok', false, 'reason', 'bad_meta');
   end if;
-  -- A phone clock far in the future would pin the save forever.
-  if p_saved_at > now() + interval '1 day' then
-    return jsonb_build_object('ok', false, 'reason', 'future');
-  end if;
+  -- A phone clock set ahead must never pin the save: cap it at the server's clock.
+  at := least(p_saved_at, now());
 
   perform pg_advisory_xact_lock(hashtext(uid::text || ':play_save'));
 
+  select * into prev from public.play_saves where user_id = uid;
+  if found then
+    if prev.updated_at > now() - interval '2 seconds' then
+      return jsonb_build_object('ok', false, 'reason', 'throttled');
+    end if;
+    -- An older app (lower save version) never overwrites a save made by a newer one.
+    if p_version < prev.doc_version then
+      return jsonb_build_object('ok', false, 'reason', 'older_version');
+    end if;
+  end if;
+
   insert into public.play_saves (user_id, doc, doc_version, saved_at, updated_at)
-  values (uid, p_doc, p_version, p_saved_at, now())
+  values (uid, p_doc, p_version, at, now())
   on conflict (user_id) do update
     set doc = excluded.doc,
         doc_version = excluded.doc_version,
@@ -72,7 +85,7 @@ begin
     where public.play_saves.saved_at <= excluded.saved_at;
 
   select saved_at into kept from public.play_saves where user_id = uid;
-  return jsonb_build_object('ok', true, 'kept_saved_at', kept, 'stale', kept > p_saved_at);
+  return jsonb_build_object('ok', true, 'kept_saved_at', kept, 'stale', kept > at);
 end;
 $$;
 
@@ -80,7 +93,7 @@ revoke all on function public.save_play_doc(jsonb, int, timestamptz) from public
 grant execute on function public.save_play_doc(jsonb, int, timestamptz) to authenticated;
 
 comment on function public.save_play_doc(jsonb, int, timestamptz) is
-  'Upsert this account''s Divecore save. An older save (saved_at) never replaces a newer one.';
+  'Upsert this account''s Divecore save. An older save (saved_at, capped at now) or an older save version never replaces a newer one; one write per 2 s.';
 
 -- 2. Anonymous daily counters ------------------------------------------------------------
 
@@ -92,7 +105,7 @@ create table public.play_counters_daily (
 );
 
 comment on table public.play_counters_daily is
-  'Anonymous Divecore counters per UTC day (2026-10-15). No user id is stored. Bumped only by bump_play_counter; no phone reads it.';
+  'Anonymous Divecore counters per UTC day (2026-10-15). No user id is stored. Bumped only by bump_play_counter; no phone reads it. Counts are spoofable by a signed-in user (rough signal only).';
 
 alter table public.play_counters_daily enable row level security;
 
