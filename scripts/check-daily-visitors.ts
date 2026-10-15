@@ -332,7 +332,8 @@ const users = walk(path.join(root, 'src'))
   .filter((f) => /from '@\/play\/daily-visitor-ui'/.test(fs.readFileSync(f, 'utf8')))
   .map((f) => path.relative(root, f).split(path.sep).join('/'))
   .sort();
-assert.deepEqual(users, ['src/play/pet-room.tsx', 'src/play/pet-screen.tsx', 'src/play/pet-sheets.tsx'], 'only the Hideout uses the visitor UI');
+// circle-visits-ui.tsx (step 6) reuses the sticker art for a Circle gift.
+assert.deepEqual(users, ['src/play/circle-visits-ui.tsx', 'src/play/pet-room.tsx', 'src/play/pet-screen.tsx', 'src/play/pet-sheets.tsx'], 'only the Hideout uses the visitor UI');
 for (const f of ['src/play/daily-visitors.ts', 'src/play/daily-visitors-roster.ts', 'src/play/daily-visitors-bank.ts', 'src/play/daily-visitor-ui.tsx']) {
   const src = read(f);
   assert.ok(!/from '@\/app\/|from '@\/lib\/supabase|generateText|ai-generate/.test(src), `${f}: no app screen, no network, no model call`);

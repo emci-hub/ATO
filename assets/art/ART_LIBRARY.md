@@ -694,7 +694,7 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.shield` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
 | `icon.streetwear.sneaker` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.speech` | 32×32 | resource | — | src/play/hideout-art.ts |
-| `icon.streetwear.star` | 32×32 | resource | — | src/play/dive-hud.tsx |
+| `icon.streetwear.star` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/hideout-art.ts |
 | `icon.streetwear.subway-train` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.sword` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
 | `icon.streetwear.upgrade` | 32×32 | resource | — | src/play/hideout-art.ts |

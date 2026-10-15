@@ -37,10 +37,14 @@ export type RailSpot = 'play' | 'den' | 'dive' | 'expedition';
 export type RailAction =
   | { id: string; label: string; kind: 'spot'; spot: RailSpot; icon: RailIcon; dim: boolean }
   | { id: string; label: string; kind: 'lamp'; icon: RailIcon; dim: boolean }
-  | { id: string; label: string; kind: 'view'; room: HideoutRoomId; icon: RailIcon; dim: boolean };
+  | { id: string; label: string; kind: 'view'; room: HideoutRoomId; icon: RailIcon; dim: boolean }
+  | { id: string; label: string; kind: 'circle'; icon: RailIcon; dim: boolean };
+
+/** Circle visits (roadmap step 6): the Hideout room's 5th action, last on the rail. */
+export const CIRCLE_RAIL_LABEL = 'Circle';
 
 /** Library icons (assets/art/icons/in-use/streetwear). Sleep / Light / Back / Up reuse stand-ins: see the PR's art list. */
-export type RailIcon = 'headphones' | 'backpack' | 'subwayTrain' | 'sneaker' | 'heart' | 'bolt' | 'dpad' | 'upgrade';
+export type RailIcon = 'headphones' | 'backpack' | 'subwayTrain' | 'sneaker' | 'heart' | 'bolt' | 'dpad' | 'upgrade' | 'star';
 
 const HOME = parseIsoGeom(hideoutMap);
 const LOFT = parseIsoGeom(loftMap, { sleepOnBed: true });
@@ -83,8 +87,8 @@ function viewDim(target: HideoutRoomId | null, hideout: HideoutState): boolean {
   return target == null || roomStage(target, hideout) !== 'done';
 }
 
-/** The left rail for the room being viewed. */
-export function leftRailActions(room: HideoutRoomId, hideout: HideoutState): RailAction[] {
+/** The left rail for the room being viewed. `circle`: add Circle visits (Hideout room only, built rooms only). */
+export function leftRailActions(room: HideoutRoomId, hideout: HideoutState, opts: { circle?: boolean } = {}): RailAction[] {
   const geom = GEOM[room];
   if (!geom) return [];
   const spots = geom.hotspots as readonly { id: string; kind: string; action: string; coach: string }[];
@@ -110,6 +114,9 @@ export function leftRailActions(room: HideoutRoomId, hideout: HideoutState): Rai
     } else if (s.coach === 'play' || s.coach === 'den' || s.coach === 'dive' || s.coach === 'expedition') {
       out.push({ id, label, kind: 'spot', spot: s.coach, icon, dim: unbuilt });
     }
+  }
+  if (opts.circle && room === 'hideout' && out.length < RAIL_MAX_ITEMS) {
+    out.push({ id: 'hideout:circle', label: CIRCLE_RAIL_LABEL, kind: 'circle', icon: 'star', dim: unbuilt });
   }
   return out;
 }

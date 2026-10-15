@@ -299,6 +299,7 @@ import {
 } from '@/play/dive-loot';
 import { greetVisitor, type TodayVisitor, type VisitorReward } from '@/play/daily-visitors';
 import { decorKey, setDecorSlot } from '@/play/decor-slots';
+import { openCircleGiftBook, type CircleGift } from '@/play/circle-visits';
 import {
   COSMETIC_DUPE_SHELLS,
   NO_WEAR,
@@ -2910,6 +2911,14 @@ export function greetDailyVisitor(
   const pet_cosmetics =
     res.reward.kind === 'look' ? [...touched.pet_cosmetics, res.reward.cosmeticId] : touched.pet_cosmetics;
   return { doc: { ...touched, pet_cosmetics, hideout: { ...touched.hideout, visitors: res.book } }, reward: res.reward };
+}
+
+/** Circle visits (roadmap step 6): open one gift from a Circle friend into the sticker book. Free: nothing
+ * but `hideout.circle` changes (the pet's day is not touched, nothing is paid). Null = already opened here. */
+export function openCircleGift(doc: PlayStoreDoc, gift: CircleGift): PlayStoreDoc | null {
+  const circle = openCircleGiftBook(doc.hideout.circle, gift);
+  if (!circle) return null;
+  return { ...doc, hideout: { ...doc.hideout, circle } };
 }
 
 /** Decor slots (roadmap step 5): fill, swap or (item = null) empty one spot in the Hideout room. Free:

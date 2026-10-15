@@ -15,7 +15,8 @@ import { Image as ExpoImage } from 'expo-image';
 import Animated, { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
 
 import { ART, getArtSource } from '@/art/art';
-import { VISITOR_LOOK_AT, hasSticker, stickerCount, type VisitorBook, type VisitorReward } from '@/play/daily-visitors';
+import { CIRCLE_UI, type CircleBook } from '@/play/circle-visits';
+import { VISITOR_LOOK_AT, hasSticker, type VisitorBook, type VisitorReward } from '@/play/daily-visitors';
 import { VISITOR_LINES, VISITOR_UI } from '@/play/daily-visitors-bank';
 import { VISITOR_STICKER_HEROES, VISITOR_TINT_COLOR } from '@/play/daily-visitors-roster';
 import { heroName } from '@/play/heroes-data';
@@ -201,15 +202,22 @@ export function VisitorCard({ show, top, onClose }: { show: VisitorCardShow; top
 
 /* -------------------------------------------------------- sticker book --- */
 
-export function StickerBook({ book }: { book: VisitorBook }) {
-  const have = stickerCount(book);
+/** `circle` (roadmap step 6): stickers that came as gifts from Circle friends count too. */
+export function StickerBook({ book, circle }: { book: VisitorBook; circle?: CircleBook }) {
+  const fromCircle = (id: string) => (circle?.gifts[id] ?? 0) > 0;
+  const have = VISITOR_STICKER_HEROES.filter((id) => hasSticker(book, id) || fromCircle(id)).length;
+  const stampNote = circle ? CIRCLE_UI.bookNote(circle.stamps) : '';
   return (
     <View style={styles.book}>
       <Text style={styles.bookTitle}>{VISITOR_UI.bookTitle}</Text>
-      <Text style={styles.bookNote}>{VISITOR_UI.bookNote(have, VISITOR_STICKER_HEROES.length)}</Text>
+      <Text style={styles.bookNote}>
+        {VISITOR_UI.bookNote(have, VISITOR_STICKER_HEROES.length)}
+        {stampNote ? ` ${stampNote}` : ''}
+      </Text>
       <View style={styles.grid}>
         {VISITOR_STICKER_HEROES.map((id) => {
-          const got = hasSticker(book, id);
+          const circleOnly = !hasSticker(book, id) && fromCircle(id);
+          const got = hasSticker(book, id) || circleOnly;
           const n = book.greets[id] ?? 0;
           return (
             <View
@@ -218,7 +226,7 @@ export function StickerBook({ book }: { book: VisitorBook }) {
               accessible
               accessibilityLabel={
                 got
-                  ? `${heroName(id)} sticker${n >= VISITOR_LOOK_AT ? ', rare look found' : ''}`
+                  ? `${heroName(id)} sticker${circleOnly ? `, ${CIRCLE_UI.stickerSource}` : ''}${n >= VISITOR_LOOK_AT ? ', rare look found' : ''}`
                   : 'Sticker not found yet'
               }>
               <Sticker heroId={id} size={52} have={got} />
