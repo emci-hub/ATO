@@ -5,7 +5,7 @@
  * emci reads the bank (`docs/divecore/daily-visitors/review.md`) and flips the flag.
  */
 
-export const VISITORS_COPY_REVIEWED = false;
+export const VISITORS_COPY_REVIEWED = true;
 
 export type VisitorLine = { id: string; text: string };
 

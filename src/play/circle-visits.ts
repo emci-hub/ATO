@@ -18,7 +18,7 @@ import { heroById } from '@/play/heroes-data';
 import { petLookFor, type PetStage } from '@/play/pet';
 
 /** Copy ships unreviewed until emci reads `docs/divecore/circle-visits/review.md`. */
-export const CIRCLE_VISITS_COPY_REVIEWED = false;
+export const CIRCLE_VISITS_COPY_REVIEWED = true;
 
 /** Opened gift ids kept on the phone (so a gift whose "opened" call failed is never counted twice). */
 export const CIRCLE_OPENED_CAP = 60;

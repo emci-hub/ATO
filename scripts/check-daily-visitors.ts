@@ -234,7 +234,7 @@ assert.ok(!/require\(|['"`]icon\.stickers\.|assets\/art\//.test(uiSrc), 'no type
 
 /* 7 · copy ---------------------------------------------------------------- */
 
-assert.equal(VISITORS_COPY_REVIEWED, false, 'ships unreviewed until emci reads the bank');
+assert.equal(VISITORS_COPY_REVIEWED, true, 'emci read the bank (2026-10-15)');
 assert.ok(fs.existsSync(path.join(root, 'docs/divecore/daily-visitors/review.md')), 'review doc exists');
 const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
 const ids = new Set<string>();

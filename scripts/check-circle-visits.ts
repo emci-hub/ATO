@@ -268,7 +268,7 @@ ok('screen: cards float and wait their turn; a visit swaps notice + dock content
 
 /* 7 · copy ----------------------------------------------------------------- */
 
-assert.equal(CIRCLE_VISITS_COPY_REVIEWED, false, 'ships unreviewed until emci reads it');
+assert.equal(CIRCLE_VISITS_COPY_REVIEWED, true, 'emci read the copy (2026-10-15)');
 assert.ok(fs.existsSync(path.join(root, 'docs/divecore/circle-visits/review.md')), 'review doc exists');
 const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
 const strings: string[] = [];
@@ -288,6 +288,6 @@ assert.ok(CIRCLE_UI.railLabel.split(/\s+/).length === 1, 'rail label is one word
 assert.ok(CIRCLE_UI.visiting('ato_dev_longname_x').length <= 32, 'visiting title fits one SE line');
 const giftExample: CircleGift = sticker;
 assert.ok(CIRCLE_UI.giftTitle(giftExample.handle).length <= 28);
-ok(`copy: ${strings.length} strings, curly apostrophes, moment-voice bans, behind CIRCLE_VISITS_COPY_REVIEWED = false`);
+ok(`copy: ${strings.length} strings, curly apostrophes, moment-voice bans, CIRCLE_VISITS_COPY_REVIEWED = true`);
 
 console.log(`\ncheck:circle-visits ok — ${passed} groups`);
