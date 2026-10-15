@@ -16,8 +16,8 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
 | 3 | Pet that knows you | built, draft PR #46; bank approved by emci 2026-10-15 (`PET_KNOWS_YOU_COPY_REVIEWED = true`) — awaiting merge + OTA OK |
 | 4 | Daily visitors | built, draft PR #47 (gate green, 165 checks); copy unreviewed (`VISITORS_COPY_REVIEWED = false`) — awaiting emci's read + merge + OTA OK |
-| 5 | **Decor slots** | **next** |
-| 6 | Circle visits | — |
+| 5 | Decor slots | built, draft PR (stacked on #47, base `feature/daily-visitors`); gate green; no copy to review, no economy — awaiting emci's look + merge + OTA OK |
+| 6 | **Circle visits** | **next** |
 
 ## Decisions (do not re-ask)
 - Divecore stays on in every build; dev tools stay behind `PRE_LAUNCH_DEV`.
@@ -101,6 +101,47 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   that starts (room switch, Motion Off); (6) `check:away-card` pins pet-screen's `busy` line literally — add new
   overlays through a separate value (`overlayBusy`), never by editing that line; (7) anything "per day" must re-read
   the local day at the tap, not trust the last render (midnight).
+
+## Step 5 as built (decor slots, plan approved by emci 2026-10-15)
+- Files: `src/play/decor-slots.ts` (pure: 3 slots, 10 props, parse/set/placement/blocked-geometry), `decor-slots-ui.tsx`
+  (placed sprites, tap spots, picker sheet), wiring in `pet-room.tsx` (`decor` prop), `pet-screen.tsx` (picker state +
+  float branch), `playStore.ts` (`setHideoutDecor`), `hideout-progress.ts` (`HideoutState.decor`, tolerant parse, no
+  version bump). `npm run check:decor-slots`. Previews: `docs/divecore/decor-slots/` (430×932 + 375×667), scale sheet
+  `extras-scale.png`.
+- Room: only `hideout` has real art, so it is the one room with slots. Slots are 4×2 map cells (64×32 art px) on open
+  floor: d1 `[3,25]` (left, below the plant), d2 `[3,16]` (left, under the lamp), d3 `[15,29]` (lower right, below the
+  bed). Spot 2 first sat on the right by the stereo and the check proved it cut the boombox spot off for a baby pet, so
+  it lives on the left. Every "+" is clear of the rail strips at 375 and 430 (`RAIL_CLEAR_PT + 8`).
+- Shelf (free, ids `dc_*` forever): plant, beanbag, side table, floor lamp (the room's own per-prop sprites) + crate,
+  boombox, cone, fire barrel, tire stack, trash bags (street set, 64×64 files trimmed to 30–60 px; same size band as the
+  room's props, so they pass the scale check). The same prop may stand in several spots. **Nothing is bought, earned or
+  priced**; `setHideoutDecor` does not even call `touchPet` (check compares the whole doc minus `hideout.decor`).
+- Picker: tap a spot ("+" when empty, the prop when filled) → a card on the **float layer** (the away card's shape; fixed
+  boxes; two fixed rows of 56 pt cells; Take away is disabled, not hidden, when the spot is empty; tap a prop = place +
+  close; outside tap / Done / Android back close). It waits for the away card and the visitor card and hides under
+  Settings; it counts as busy through `overlayBusy` (the `busy` line the away-card check pins is untouched).
+- Walk: a filled slot blocks its 8 cells (`decorGeom`); the walk planner gets that geometry through a ref and the loop
+  restarts when what is placed changes; a pet standing where a prop lands is moved to the nearest free floor
+  (placed / room switch / Motion Off). The check walks a pet 400 steps at both widths with all 3 filled and proves it
+  never steps on a slot and every target / hotspot walk-to point is exactly as reachable as before, for every stage.
+- Depth: each prop stands on its footprint's bottom edge and sorts against the pet by it (feet above = pet behind),
+  drawn before or after the pet like the visitor.
+- Save: `hideout.decor` (slot → item) rides the whole Play doc → wave96 cloud save; unknown slots / items are dropped
+  on load; works offline.
+- **The split, honestly:** the Hideout's baked prop layer, the four occluder images and the neon pulses are **left as
+  they are** (the room is byte-identical). The per-prop sprites already existed in the art library
+  (`prop.hideout.streetwear.*`, trimmed to the map's rects); what they lack is the soft contact shadow the baked layer
+  paints under each prop (rebuilding the layer from sprites alone leaves ~1,000 shadow-edge pixels off by < 25 %). The
+  four room props on the shelf therefore have no shadow, and no neon pulse, when you place them. Rebuilding the room
+  layers from sprites + per-prop shadow pieces (so the baked copies of plant / beanbag / table / lamp can be swapped
+  out too) needs `scripts/hideout-room-art.ts` and a new import of the shadow pieces: not done, and not needed for slots.
+- **Lessons:** (1) a slot on the right strip cut the boombox's walk-to point off for a baby pet — the reachability test
+  per stage is what found it, keep it for any new blocker; (2) `art:sync`'s usage scan needs the full
+  `ART.prop.<set>.<part>` chain (no alias) — it moved the 10 sprites to `in-use/` once the UI named them; (3) `expo
+  export` wipes `<out>/play/`, so copy `play.html` to `play/index.html` after every export, not before; (4) the SE
+  stage is shorter than the room, so the camera scrolls — the spot "+" lives in the room layer and follows it; (5) the
+  check keeps pin regexes for the pet-room wiring (`decorWalkGeomRef`, `p.sortY <= feet.y`); an edit there needs the
+  regex updated, not deleted.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
