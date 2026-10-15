@@ -27,6 +27,8 @@ ATO ("the app," "we," "us") is made by AsTrollOGs. This policy explains what we 
 - Messages you send in Chat with people in your Circle
 - Referral relationships (who invited you, who you've invited) — used only to prevent abuse, never shown publicly, never shared
 - Email address if you request an invite from the public landing page (ato.emgens.com), stored until the request is reviewed
+- Your Divecore game save (your pet, its rooms, items and progress), stored with your account so it survives a new phone. Kept if you reset your profile; deleted when you delete your account
+- Anonymous daily counts of Divecore actions (for example, how many times the Hideout was opened today), with no account or device attached, so we can see which parts of the game get used
 
 **Device**
 - Push notification token, if you enable notifications
