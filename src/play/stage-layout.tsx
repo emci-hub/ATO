@@ -16,6 +16,7 @@ import { StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle }
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { NoticeLane } from '@/play/notify/notice-lane';
 import {
   computeStageFrame,
   layoutRegions,
@@ -67,7 +68,8 @@ function pickInsets(i: Insets): Insets {
 
 /**
  * A game screen: fixed regions from `frame`. Content changes inside a region; a region never
- * changes size. `float` sits over the stage + dock (tips, sheets, toasts); `modal` over everything.
+ * changes size. `notice` is the screen's idle line in the NoticeLane (a queued `notify()` notice
+ * replaces it for its few seconds). `float` sits over the stage + dock (tips, sheets); `modal` over everything.
  * Nothing but stage content goes in `stage` (check:stage-bounds).
  */
 export function GameScreen({
@@ -101,8 +103,9 @@ export function GameScreen({
   const r = layoutRegions(frame);
   const middle = (
     <>
-      <View style={[styles.region, { height: r.notice.height }]} accessibilityLiveRegion="polite">
-        {notice}
+      <View style={[styles.region, { height: r.notice.height }]}>
+        {/* Phase 2: the NoticeLane shows a queued notice, else this screen's idle line. */}
+        <NoticeLane height={r.notice.height} idle={notice} />
       </View>
       <View style={[styles.region, styles.stage, { width: r.stage.width, height: r.stage.height }, stageStyle]}>
         {stage}

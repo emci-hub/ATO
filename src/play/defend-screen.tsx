@@ -2724,12 +2724,13 @@ export function DefendScreen({
                             importantForAccessibility={paused ? 'no-hide-descendants' : 'auto'}
                             style={styles.coachLine}>
                             <ThemedText type="small" themeColor="textSecondary" style={styles.centerText} numberOfLines={2}>
-                              {swordFx
-                                ? `Aura: ${swordFx.name} — ${swordFx.auraLabel}.`
-                                : coachHidden
-                                  ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
-                                  : runCoachOpen
-                                    ? `Coach: ${coach.tip}`
+                              {/* The open tip wins over the sword aura line (audit F02: it was unreachable). */}
+                              {runCoachOpen && !coachHidden
+                                ? `Coach: ${coach.tip}`
+                                : swordFx
+                                  ? `Aura: ${swordFx.name} — ${swordFx.auraLabel}.`
+                                  : coachHidden
+                                    ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
                                     : 'Coach tip ›'}
                             </ThemedText>
                           </Pressable>

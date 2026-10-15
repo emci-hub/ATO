@@ -101,6 +101,21 @@ const FORBIDDEN_IN_STAGE = /<(PlayBanner|PlaySheet|\w*Notice\w*|\w*Toast\w*|\w*C
 }
 
 {
+  // Phase 2: notices live in the NoticeLane, which only GameScreen draws (in its fixed notice
+  // region) — no screen floats its own banner or draws a second lane.
+  const layout = read('src/play/stage-layout.tsx');
+  assert.match(layout, /<NoticeLane height=\{r\.notice\.height\} idle=\{notice\} \/>/, 'GameScreen draws the NoticeLane');
+  const offenders: string[] = [];
+  for (const { file } of SCREENS) {
+    const src = read(file);
+    if (/<NoticeLane\b/.test(src)) offenders.push(`${file}: draws a NoticeLane itself`);
+    if (/<PlayBanner\b|insets\.top \+ TOP_BAR_H/.test(src)) offenders.push(`${file}: a floating banner`);
+  }
+  assert.deepEqual(offenders, [], offenders.join(', '));
+  ok('notices: one NoticeLane per GameScreen, in the notice region (no floating banner)');
+}
+
+{
   const DEVICES: { name: string; window: { width: number; height: number }; insets: Insets }[] = [
     { name: '430x932', window: { width: 430, height: 932 }, insets: { top: 59, bottom: 34, left: 0, right: 0 } },
     { name: '375x667', window: { width: 375, height: 667 }, insets: { top: 20, bottom: 0, left: 0, right: 0 } },

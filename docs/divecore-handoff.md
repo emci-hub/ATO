@@ -5,7 +5,133 @@ The full brief is emci's pasted task (Steps 0-3 + Deliverables + Rules). This fi
 does not redo the audit. **Do not merge. Do not publish an OTA.** Play-only (`.cursor/rules/play-isolation.mdc`,
 `.cursor/rules/fixed-regions.mdc`). No new native deps; package.json may only gain check scripts.
 
-## ▶ LATEST — read this first (session 3, local Windows, 2026-10-14): **Phase 1 DONE** → next is Phase 2
+## ▶ LATEST — read this first (session 4, local Windows, 2026-10-14): **Phase 2 built** → phone check, then Phase 3
+
+Phase 2 = ONE notification system in the reserved NoticeLane. Built on the existing pure queue, PlayBanner
+removed, gate green. **Waiting on:** emci's look pick from the previews and the phone check (checklist below).
+Branch **`claude/divecore-phase2-notify`** → draft PR into `feature/divecore-minimal` (see PR list on GitHub;
+#33 stays the one PR to master). Phase 1 notes follow below this section.
+
+### What Phase 2 did
+- **`src/play/notify/queue.ts`** (session 1's pure queue, unchanged): kinds `celebrate` / `notify` / `error`,
+  priority, de-dupe → ×N, cap 4 waiting, pause = errors only, same-kind 1 s gap, 3.5 / 3 / 5 s (+1 s Reduce
+  Motion), "Important only", title ≤ 3 / body ≤ 10 words.
+- **`src/play/notify/notify.ts`** (new): the store. `notify({ kind, title, body?, target?, dedupeKey? })` from
+  anywhere; timers live here; `useNoticeOptions` (mode from `play_settings.notices` + Reduce Motion, set by
+  play.tsx), `useNoticeTargets` (tap → pet / journal / dive), `useNoticePause` (tutorial / hub Settings / Dive
+  haul reveal), lane stack: **only the top-most mounted lane shows a notice** (a pet game over the Hideout wins);
+  with no lane mounted notices wait. Dev only: `globalThis.__divecoreNotify` for the web preview harness.
+- **`src/play/notify/events.ts`** (new): `noticeEvents` = the old `bannerEvents` (hatched / revealed away from the
+  Hideout, milestone ready → Journal, Tide day), now NoticeInput with kinds.
+- **`src/play/notify/notice-lane.tsx`** (new): the lane. One line (`numberOfLines={1}`), Street toast sticker
+  (mustard tab), title in Pixelify bold caps (errors in tag red, `!`; celebrate `★`), body after it, `›` when it
+  has a target, ×N counter. Tap = target or close. VoiceOver: `announceForAccessibility` on show, live region,
+  hint. Enter = fade + 8 px drift 220 ms; **Reduce Motion = 200 ms fade + 2 px drift** (`ReduceMotion.Never`, so
+  it is gentle, never still). Idle = the screen's own line, faded back in.
+- **`GameScreen`** (`stage-layout.tsx`) draws `<NoticeLane height idle={notice}>` in its fixed notice region —
+  every game screen (Hideout, Turf War, Dive, pet games, Block / Locker / Store) has it; it is placed by layout
+  (no `insets.top + 52`), never resizes a region, never touches the stage.
+- **Moved** (`play.tsx`): every `setToast` (Claim, dev finds, junk sold, pet back, surfaced, bust, odds changed,
+  bag full, sold, clear milestone, wave-5, skipped ahead, avatar unlocked, shop buy / refusal) → `notify()` with
+  copy cut to the limits; `bannerReducer`, `toastBanner`, the `<PlayBanner>` float are gone. `pet-screen.tsx`'s 6
+  mini-game banners (`onBanner`) → `notify()` (emoji dropped from titles: VoiceOver read them). **Dive**: a find
+  that lands = `Found · {category}` (notify, ×N), rare = `★ Rare find` (celebrate); the bust / surface captions
+  were duplicates of play.tsx's notices and are gone; the "away" line stays as idle. **Turf War** coach / paused
+  lines and the **Hideout** pet strip / swipe hint stay the lanes' idle content (a notice replaces them for its
+  few seconds). Fixed in passing: the open coach tip was unreachable with a sword aura (audit F02).
+- **Deleted:** `src/play/play-banner.tsx`, `src/play/play-banner-queue.ts`, `scripts/check-play-banner.ts`.
+- **Gate:** `check:notify` (in package.json → ota-gate) replaces `check:play-banner`: pure queue + news tests,
+  every notice via `notify()`, word limits on all 25 literal calls, lane a11y / one line / Reduce Motion /
+  placed by layout / top lane only, old files gone. `check:stage-bounds` + `check:fixed-regions` re-pinned (one
+  NoticeLane per GameScreen, no floating banner; Dive finds via notify). Rules `stage-bounds.mdc`,
+  `fixed-regions.mdc`, `fixed-region.tsx` header updated.
+
+### Kind mapping (old banner → kind)
+error: Odds changed, Bag full, shop refusals · celebrate: hatched, grade revealed, clear / wave-5 milestone,
+avatar unlocked, new record, level unlocked, buff, daily best / egg / Shine Stone, rare find · notify: everything
+else (Claim, Found, Sold, Surfaced, Busted, Pet is back, Milestone ready, Tide day, Skipped ahead, shop buy).
+FEEDBACK results (Claim, Sold, shop buy) still use `notify` — moving them onto their buttons is later work; with
+"Important only" (no UI yet, Phase 3 ⚙) they would be hidden.
+
+### Previews (real art, web) — `docs/divecore/previews/phase2-lane-max.png`, `phase2-lane-se.png`
+Existing style kept: the Street toast sticker (paper + mustard tab) squeezed to one line, Pixelify title. Shown:
+Hideout idle strip · notify · celebrate with `›` · error ×2 · Turf setup with a long body (ends in "…") · Turf wave
+(board unmoved) · Dive thin 28 pt lane · pet game lane. Per-shot files: `docs/divecore/after/{max,se}-notice-*.png`.
+**emci's look call is open** (keep as shown is the recommendation). Not shot: SE Catch (capture flaky).
+
+### Phone check (emci, dev build: `npm start`, same Wi-Fi) — not done yet
+1. Locker → sell a Look: one line "SOLD · name · +n tokens" under the top bar; the list does not move.
+2. Sell two fast: one line with ×2.
+3. Hideout: tap Feed / play a Catch round to a new record → "★ NEW RECORD" in the game's top lane, not the Hideout's.
+4. Turf War: tap Call wave, then pause — the board never moves; a notice sits above the header, not on the board.
+5. Underground dive: each find = "FOUND · …" in the thin lane above the picture; rare = "★ RARE FIND".
+6. Tap a notice with › (e.g. Milestone ready) → it opens the Journal; a plain one just closes.
+7. Settings → Reduce Motion on: notices fade in softly (not instant, not sliding).
+8. VoiceOver on: a new notice is read once.
+
+### Gate (session 4)
+`npm run typecheck` ✔ · `npm run lint` ✔ (only the old dive-scene warning) · `check:notify` / `check:stage-bounds` /
+`check:fixed-regions` ✔ · full `check:ota-gate` ✔ (typecheck + lint + 158 offline checks). Reviewer: pass; fixed
+from it: a notice already up when a cover opens (Dive haul reveal, tutorial) goes back in line instead of playing out
+unseen; iOS is told via announce, Android via the live region (not both); idle lines are a live region again.
+**Open (reviewer, minor):** bodies built from values (Surfaced, Skipped ahead, shop buy, long shop names) can pass
+10 words — the lane ends them in "…" (Phase 5 word-limit work should cut them); a find whose reveal is interrupted by
+leaving Dive gets no notice; finds now notify while the pet is away (the old caption was hidden then).
+
+### Lessons learned (Phase 2)
+- **Build on the WIP that exists**: session 1's pure queue + check needed no logic change; the work was the store,
+  the renderer and the migration. Its check's "measured top" assertion was replaced by "placed by layout" (the
+  lane lives in GameScreen's region, so there is no top to measure).
+- **Put the shared slot in the layout kit, not in each screen**: GameScreen drawing `<NoticeLane idle={notice}>`
+  gave every screen (incl. list screens) the lane with zero per-screen work, and the gate only has to pin one line.
+- **Nested GameScreens need a rule**: the pet game sits over the Hideout, so two lanes are mounted — "top-most lane
+  shows it" (a mount stack in the store) keeps one notice on screen.
+- **A component that renders on every screen must load its own font** (`useStreetFonts`): the pet game showed a
+  serif fallback because nothing there had loaded Pixelify.
+- **Web harness on Windows**: `expo start --web` died twice (out of memory, then EMFILE). A static `expo export
+  --dev` served by `python -m http.server` was stable; the built-in browser's capture can lag seconds behind
+  during a live wave — capture right after raising, and check the DOM when a shot looks wrong.
+- Shareable later: `queue.ts` + `notify.ts` + the lane pattern (generic); Play-only: the toast art, kinds' copy.
+
+### ▶ Phase 3 prompt (ready to paste into a fresh session)
+
+Model: Sonnet 5
+
+```text
+Repo emci-hub/ATO (C:\Users\lil_e\Desktop\ATO). PLAY-ONLY task: obey .cursor/rules/play-isolation.mdc,
+.cursor/rules/fixed-regions.mdc and .cursor/rules/stage-bounds.mdc.
+
+First: git fetch origin, git checkout feature/divecore-minimal, git pull, npm ci.
+(If the Phase 2 PR into feature/divecore-minimal is not merged yet, check out claude/divecore-phase2-notify instead.)
+Then read docs/divecore-handoff.md, section "LATEST" (history, emci's decisions, the 5-phase plan, Lessons
+learned), docs/divecore-audit/nav.md (every entry point, back map, names) and docs/divecore-layout-spec.md.
+
+We are in Divecore Phase 3: tabs / nav cleanup.
+1. One entry per place, one name per thing (Hideout · Underground · Turf War · Locker (Fits / Blades) · Store ·
+   Caps — check the names list in the handoff's session-1 section and confirm any change with me first).
+2. Remove the Block (decision a1): Hideout is home; the Claim chip (Basecore research) moves to the Hideout
+   (TopBar or its NoticeLane idle strip — show me previews first). Underground opens from the Hideout as today.
+3. Exit Play lives in ⚙ (first row), ⚙ opens in place (no flip to the Block); add Notices: All / Important only
+   (play_settings.notices already exists, notify() already reads it). Back: sub-screens → Hideout; Dive → the
+   tab that opened it.
+4. Gate: a check:divecore-nav (pure where possible) + update check:stage-bounds / check:fixed-regions /
+   check:notify pins that mention the Block or the list frame.
+5. Show me previews (real art, 430x932 + 375x667, docs/divecore/tools/README.md — use the static export
+   route) BEFORE I choose anything about placement; keep the existing style.
+6. Phone check: start `npm start` in a visible terminal tab and give me a short checklist; then npm run
+   typecheck, npm run lint, npm run check:ota-gate — all green. After shots into docs/divecore/after/.
+7. Update docs/divecore-handoff.md (state, files, Lessons learned, a ready Phase 4 prompt in this same format),
+   the PR body and PROJECT_CONTEXT.md (DIVECORE MINIMAL line). Draft PR into feature/divecore-minimal. Then stop.
+
+Do NOT start Phase 4-5. Rules: no merge to master, no OTA publish, no new native deps, no economy/odds/
+rewards/save changes, never print EXPO_TOKEN or any key/token. Keep the style (Departure Mono + Rajdhani,
+Pixelify on Street screens, cyan frames, solid buttons, fullscreen arenas, locked art rules, Reduce Motion =
+gentle, never still). Show me previews before any layout choice; keep answers short and plain.
+```
+
+---
+
+## Session 3 — Phase 1 (kept for its facts)
 
 Session 3 finished Phase 1: emci checked it on the real phone (Hideout camera + room taps, Turf War avatar drag,
 Setup sheet, pad / won / lost panels, pause, Dive, pet games, Large Text) — **"all good, nothing wrong"**. No fixes
