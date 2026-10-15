@@ -15,7 +15,7 @@
  * Hideout map (2D floor wander). Classic is unchanged except the shared
  * motion flags.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   FadeInDown,
@@ -62,6 +62,7 @@ import {
   hideoutPetBox,
   hideoutStageOrigin,
   hideoutTargetPoint,
+  isoClampToWalk,
   planHideoutStep,
   type HideoutScale,
 } from '@/play/hideout-iso';
@@ -103,19 +104,12 @@ import {
   StreetRoomAuraClip,
   StreetRoomFront,
   StreetRoomLife,
-  StreetRoomSpots,
   StreetRoomYard,
   StreetSpeechBubble,
   StreetStatusStrip,
-  type StreetRoomSpotsProps,
 } from '@/play/street-room';
-import {
-  HIDEOUT_CEILING_ART_PX,
-  HIDEOUT_CONTROL_COMPACT_PT,
-  HIDEOUT_ROW_RESERVE_PT,
-  HIDEOUT_SIDE_COLUMN_PT,
-} from '@/play/hideout-bar';
-import { HideoutStageChrome, HideoutStageControls, roomGeom } from '@/play/hideout-stage';
+import { RAIL_CLEAR_PT, railWalkBounds } from '@/play/hideout-rails-model';
+import { HideoutStageChrome, roomGeom } from '@/play/hideout-stage';
 import type { HideoutProgressInput, HideoutRoomId, HideoutState } from '@/play/hideout-progress';
 import type { Presence } from '@/play/hideout-presence';
 import { STREET_MOTION } from '@/play/street-feel';
@@ -393,7 +387,7 @@ export function PetRoom({
   reduceMotion,
   sceneActive = true,
   onTapPet,
-  streetSpots,
+  rails = null,
   onCoach,
   recolor = null,
   onBadge,
@@ -426,8 +420,9 @@ export function PetRoom({
   /** False when the Hideout tab is not focused (pauses room loops). */
   sceneActive?: boolean;
   onTapPet: () => void;
-  /** Streetwear Hideout: tappable room spots (pet-screen wires the handlers). */
-  streetSpots?: StreetRoomSpotsProps;
+  /** Hideout rails (hideout-rails.tsx): the room's actions on the left, the room switcher on the right,
+   * floating over the stage edges. The room has no tap spots of its own. */
+  rails?: ReactNode;
   onCoach: () => void;
   /** v23 — shiny / 3★ dye recolour of the sprite. */
   recolor?: string | null;
@@ -455,7 +450,6 @@ export function PetRoom({
     expeditionBackMs: number | null;
     onView: (id: HideoutRoomId) => void;
     onTease: () => void;
-    onLamp: () => void;
     onCall: () => void;
     onCoachSeen: () => void;
   } | null;
@@ -492,21 +486,6 @@ export function PetRoom({
   const real = stageSize ?? measured;
   const streetRoom = streetUiOn();
   const pr = PixelRatio.get();
-  // Hideout room + Call buttons: a column in the right gutter when the room leaves one
-  // (the room then uses the full stage height), else a row under the room that the
-  // room is fitted above so the manhole and door stay clear.
-  const fullFit =
-    streetRoom && real.width > 0 && real.height > 0
-      ? hideoutIntegerScale({ availW: real.width - HIDEOUT_MARGIN_PT * 2, availH: real.height, pixelRatio: pr })
-      : null;
-  const controlsMode: 'side' | 'ceiling' | 'row' = !hideoutStage || !fullFit
-    ? 'row'
-    : (real.width - fullFit.canvasW) / 2 >= HIDEOUT_SIDE_COLUMN_PT
-      ? 'side'
-      : HIDEOUT_CEILING_ART_PX * fullFit.pt >= HIDEOUT_CONTROL_COMPACT_PT
-        ? 'ceiling'
-        : 'row';
-  const barReserve = hideoutStage && controlsMode === 'row' && !roomOutside ? HIDEOUT_ROW_RESERVE_PT : 0;
   const cover = streetRoom && roomOutside;
   const hideoutScale =
     cover && real.width > 0 && real.height > 0
@@ -514,7 +493,7 @@ export function PetRoom({
       : streetRoom && real.width > 0 && real.height > 0
       ? hideoutIntegerScale({
           availW: real.width - HIDEOUT_MARGIN_PT * 2,
-          availH: Math.max(1, real.height - barReserve),
+          availH: Math.max(1, real.height),
           pixelRatio: pr,
         })
       : null;
@@ -539,8 +518,11 @@ export function PetRoom({
   const origin = cover && hideoutScale
     ? { left: Math.round((width - hideoutScale.canvasW) / 2), top: hideoutScale.canvasH > height ? 0 : Math.round((height - hideoutScale.canvasH) / 2) }
     : streetRoom && hideoutScale
-    ? hideoutOrigin(Math.max(width, 1), Math.max(height - barReserve, 1), hideoutScale)
+    ? hideoutOrigin(Math.max(width, 1), Math.max(height, 1), hideoutScale)
     : roomOrigin(Math.max(width, 1), Math.max(height, 1));
+  // The pet's feet stay clear of both rails (rail width + 8 pt + half its body). Read inside the walk loop.
+  const walkBoundsRef = useRef<ReturnType<typeof railWalkBounds> | undefined>(undefined);
+  walkBoundsRef.current = rails && hideoutScale ? railWalkBounds({ stageW: width, originLeft: origin.left, pt: hideoutScale.pt }) : undefined;
   const k = hideoutScale?.pt ?? ART_PT;
   const floorY = streetRoom && hideoutScale ? origin.top + 224 * k : origin.top + MOCKUP_ROOM.feet * ART_PT;
   const plateW = streetRoom && hideoutScale ? hideoutScale.canvasW : MOCKUP_PLATE.w * ART_PT;
@@ -626,6 +608,7 @@ export function PetRoom({
           rng: Math.random,
           hungry: hungerRef.current <= 1,
           geom: hideoutStage ? roomGeom(hideoutStage.presence.room) : undefined,
+          bounds: walkBoundsRef.current,
         });
         const path = step.path.length >= 2 ? step.path : ([[fromX, fromY], [step.toX, step.toY]] as const);
         const dx0 = path[Math.min(1, path.length - 1)][0] - fromX;
@@ -720,6 +703,26 @@ export function PetRoom({
       faceTimers.current = [];
     };
   }, [width, away, egg, art.kit, mood, pet.branch, pet.stage, walkOn, streetRoom, hideoutPt, artX, artY, x, hop, squash, hideoutStage]);
+
+  // A pet that starts (or sits, with Motion Off) under a rail is moved clear of it (on walkable floor;
+  // the Loft bed already sits clear of the rails, so a sleeping pet is left alone).
+  const hasRails = rails != null;
+  useEffect(() => {
+    const b = walkBoundsRef.current;
+    if (!b) return;
+    const geom = hideoutStage ? roomGeom(hideoutStage.presence.room) : undefined;
+    if (geom?.sleepOnBed) return;
+    const nx = Math.min(Math.max(artX.value, b.minX), b.maxX);
+    if (nx === artX.value) return;
+    const p = geom ? isoClampToWalk(nx, artY.value, geom, pet.stage, b) : ([nx, artY.value] as const);
+    cancelAnimation(artX);
+    cancelAnimation(artY);
+    artX.value = p[0];
+    artY.value = p[1];
+    artXRef.current = p[0];
+    artYRef.current = p[1];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [width, hideoutPt, hasRails]);
 
   // Depth vs props follows the live feet, not only the step's destination.
   useEffect(() => {
@@ -835,7 +838,9 @@ export function PetRoom({
   const isoSpeechStyle = useAnimatedStyle(() => {
     const cx = ox + artX.value * isoPt;
     const headY = oy + artY.value * isoPt - figurePt + hop.value + drift.value;
-    const left = Math.min(Math.max(cx - 24, ox + 4), ox + speechRoomW - speechBubbleW - 4);
+    const minL = Math.max(ox + 4, rails ? RAIL_CLEAR_PT : 0);
+    const maxL = Math.max(minL, Math.min(ox + speechRoomW - 4, rails ? width - RAIL_CLEAR_PT : width) - speechBubbleW);
+    const left = Math.min(Math.max(cx - 24, minL), maxL);
     return { transform: [{ translateX: left }, { translateY: headY - 6 }] };
   });
   const bodyStyle = useAnimatedStyle(() => ({
@@ -957,7 +962,7 @@ export function PetRoom({
         />
       ) : null}
       {width > 0 && picking && onPickEgg ? (
-        <View style={[styles.eggRow, { top: floorY - 96 }]}>
+        <View style={[styles.eggRow, { top: floorY - 96 }, rails ? { paddingHorizontal: RAIL_CLEAR_PT } : null]}>
           {EGG_TYPES.map((e) => (
             <Pressable
               key={e}
@@ -993,7 +998,7 @@ export function PetRoom({
           expeditionBackMs={hideoutStage.expeditionBackMs}
           onView={hideoutStage.onView}
           onTease={hideoutStage.onTease}
-          onLamp={hideoutStage.onLamp}
+          walkBounds={walkBoundsRef.current}
         />
       ) : null}
 
@@ -1119,44 +1124,18 @@ export function PetRoom({
         </Animated.View>
       ) : null}
       {streetRoom && hideoutScale ? (
-        <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} stageW={width} stageH={cover ? roomLayerH : Math.max(1, height - barReserve)} />
+        <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} stageW={width} stageH={cover ? roomLayerH : Math.max(1, height)} />
       ) : null}
       {streetRoom && hideoutScale && !hideoutStage ? (
         <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} feetX={feet.x} feetY={feet.y} night={night} gentle={motion.vestibularSafe} />
-      ) : null}
-      {width > 0 && streetSpots && hideoutScale && !picking && (!hideoutStage || hideoutStage.viewed === 'hideout') ? (
-        <StreetRoomSpots
-          {...streetSpots}
-          left={origin.left}
-          top={origin.top}
-          scale={hideoutScale}
-          still={motion.cosmeticsStill}
-          gentle={motion.vestibularSafe}
-          // Buttons stay put on their furniture: no dodging the pet (it made them jump on every redraw).
-          petHit={null}
-        />
       ) : null}
       {streetRoom && hideoutScale && speech ? (
         <Animated.View pointerEvents="none" style={[styles.speechAnchor, isoSpeechStyle]}>
           <StreetSpeechBubble text={speech.text} anchored width={speechBubbleW} />
         </Animated.View>
       ) : null}
-      {width > 0 && hideoutStage && hideoutScale && !roomOutside ? (
-        <HideoutStageControls
-          hideout={hideoutStage.hideout}
-          presence={hideoutStage.presence}
-          viewed={hideoutStage.viewed}
-          scale={hideoutScale}
-          origin={origin}
-          expeditionBackMs={hideoutStage.expeditionBackMs}
-          onView={hideoutStage.onView}
-          onCall={hideoutStage.onCall}
-          coach={!hideoutStage.hideout.coach_swipe_seen}
-          onCoachSeen={hideoutStage.onCoachSeen}
-          controlsMode={controlsMode}
-        />
-      ) : null}
       </Animated.View>
+      {rails}
       </View>
 
       {streetRoom ? null : (

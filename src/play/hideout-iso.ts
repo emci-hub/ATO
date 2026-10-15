@@ -75,7 +75,6 @@ export function hideoutClearancePx(stage: PetStage): number {
   return Math.max(2, Math.round(figure * 0.15));
 }
 export const HIDEOUT_AURA_PAD_PX = 12;
-export const HIDEOUT_DOOR_LABEL_NUDGE: readonly [number, number] = [0, 0];
 export const HIDEOUT_MARGIN_PT = 0;
 export const HIDEOUT_PHONE_CAP_DPX = 8;
 export const HIDEOUT_IPAD_CAP_DPX = 10;
@@ -358,14 +357,6 @@ export const HIDEOUT_SPOTS: readonly HideoutSpot[] = HOME.hotspots.filter((h) =>
   (['door', 'chair', 'boombox', 'manhole'] as string[]).includes(h.id),
 ) as HideoutSpot[];
 
-export function hideoutLabelAnchor(id: HideoutSpotId): Pt {
-  const spot = HIDEOUT_SPOTS.find((s) => s.id === id);
-  if (!spot) return [0, 0];
-  const [cx, cy] = [spot.ellipse[0], spot.ellipse[1]];
-  if (id !== 'door') return [cx, cy - 12];
-  return [cx + HIDEOUT_DOOR_LABEL_NUDGE[0], cy + HIDEOUT_DOOR_LABEL_NUDGE[1] - 8];
-}
-
 /* ------------------------------------------------------- geometry --- */
 
 export function pointInPoly(x: number, y: number, polyPts: readonly Pt[]): boolean {
@@ -403,9 +394,26 @@ export function insetPoly(polyPts: readonly Pt[], pad: number): Pt[] {
 export const HIDEOUT_WALK: readonly Pt[] = HOME.walk;
 
 // Keyed on the room's own grid object (rooms can share any single row, so a
-// row is not an id), then on the clearance radius.
-const gridCache = new WeakMap<CollisionGrid, Map<number, CollisionGrid>>();
-export function hideoutGridFor(stage: PetStage, geom?: IsoRoomGeom): CollisionGrid {
+// row is not an id), then on the clearance radius (+ rail bounds).
+const gridCache = new WeakMap<CollisionGrid, Map<string, CollisionGrid>>();
+
+/** Feet may only stand between these x values (art px): keeps the pet clear of the Hideout rails. */
+export type WalkBounds = { minX: number; maxX: number };
+
+/** Block every column whose centre is outside the bounds. Pure. */
+export function withWalkBounds(grid: CollisionGrid, bounds: WalkBounds): CollisionGrid {
+  const rows = grid.walkable.map((row) => {
+    let s = '';
+    for (let col = 0; col < grid.cols; col += 1) {
+      const cx = (col + 0.5) * grid.tile;
+      s += cx < bounds.minX || cx > bounds.maxX ? '0' : (row[col] ?? '0');
+    }
+    return s;
+  });
+  return { tile: grid.tile, cols: grid.cols, rows: grid.rows, walkable: rows };
+}
+
+export function hideoutGridFor(stage: PetStage, geom?: IsoRoomGeom, bounds?: WalkBounds): CollisionGrid {
   const base = geom?.grid ?? HIDEOUT_GRID;
   const pad = hideoutClearancePx(stage);
   let byPad = gridCache.get(base);
@@ -413,10 +421,12 @@ export function hideoutGridFor(stage: PetStage, geom?: IsoRoomGeom): CollisionGr
     byPad = new Map();
     gridCache.set(base, byPad);
   }
-  const hit = byPad.get(pad);
+  const key = `${pad}|${bounds ? `${Math.round(bounds.minX)}:${Math.round(bounds.maxX)}` : ''}`;
+  const hit = byPad.get(key);
   if (hit) return hit;
-  const next = withClearance(base, pad);
-  byPad.set(pad, next);
+  const padded = withClearance(base, pad);
+  const next = bounds ? withWalkBounds(padded, bounds) : padded;
+  byPad.set(key, next);
   return next;
 }
 
@@ -432,8 +442,8 @@ export function clampToWalk(x: number, y: number, stage: PetStage = 'adult'): Pt
   return clampToGrid(hideoutGridFor(stage), x, y);
 }
 
-export function isoRandomWalkPoint(geom: IsoRoomGeom, rng: () => number, stage: PetStage = 'adult'): Pt {
-  return randomWalkable(hideoutGridFor(stage, geom), rng) ?? isoClampToWalk(geom.canvas[0] / 2, geom.canvas[1] / 2, geom, stage);
+export function isoRandomWalkPoint(geom: IsoRoomGeom, rng: () => number, stage: PetStage = 'adult', bounds?: WalkBounds): Pt {
+  return randomWalkable(hideoutGridFor(stage, geom, bounds), rng) ?? isoClampToWalk(geom.canvas[0] / 2, geom.canvas[1] / 2, geom, stage, bounds);
 }
 
 export function randomWalkPoint(rng: () => number, stage: PetStage = 'adult'): Pt {
@@ -466,8 +476,8 @@ export function isoOnWalkFloor(x: number, y: number, geom: IsoRoomGeom, stage: P
   return isWalkableArt(hideoutGridFor(stage, geom), x, y);
 }
 
-export function isoClampToWalk(x: number, y: number, geom: IsoRoomGeom, stage: PetStage = 'adult'): Pt {
-  return clampToGrid(hideoutGridFor(stage, geom), x, y);
+export function isoClampToWalk(x: number, y: number, geom: IsoRoomGeom, stage: PetStage = 'adult', bounds?: WalkBounds): Pt {
+  return clampToGrid(hideoutGridFor(stage, geom, bounds), x, y);
 }
 
 export function isoPetBehindAny(feetX: number, feetY: number, geom: IsoRoomGeom): boolean {
@@ -735,8 +745,8 @@ function sleepAllow(geom: IsoRoomGeom | undefined): Pt[] | undefined {
   return pts;
 }
 
-function planPath(geom: IsoRoomGeom | undefined, from: Pt, to: Pt, stage: PetStage, allow?: readonly Pt[]): Pt[] {
-  const grid = hideoutGridFor(stage, geom);
+function planPath(geom: IsoRoomGeom | undefined, from: Pt, to: Pt, stage: PetStage, allow?: readonly Pt[], bounds?: WalkBounds): Pt[] {
+  const grid = hideoutGridFor(stage, geom, bounds);
   const opts = allow && allow.length > 0 ? { allow } : undefined;
   const pulled = route(grid, from, to, opts);
   if (pulled && pulled.length >= 2 && pathClear(grid, pulled, 2, opts)) return pulled;
@@ -746,26 +756,31 @@ function planPath(geom: IsoRoomGeom | undefined, from: Pt, to: Pt, stage: PetSta
 }
 
 export function planHideoutStep(
-  input: PetPlanInput & { x: number; y: number; hungry?: boolean; geom?: IsoRoomGeom },
+  input: PetPlanInput & { x: number; y: number; hungry?: boolean; geom?: IsoRoomGeom; bounds?: WalkBounds },
 ): HideoutStep {
-  const { kit, mood, branch, rng, geom, stage } = input;
+  const { kit, mood, branch, rng, geom, stage, bounds } = input;
   const form = PET_FORM_MOTION[branch];
   const bedPt = geom ? isoSleepPoint(geom) : hideoutTargetPoint('cushion');
   const onBed = geom?.sleepOnBed === true && Math.hypot(input.x - bedPt[0], input.y - bedPt[1]) <= 16;
   const here = onBed
     ? ([input.x, input.y] as Pt)
     : geom
-      ? isoClampToWalk(input.x, input.y, geom, stage)
+      ? isoClampToWalk(input.x, input.y, geom, stage, bounds)
       : clampToWalk(input.x, input.y, stage);
   const still = { toX: here[0], toY: here[1], bounce: 0, loop: true, path: [here] as Pt[] };
   const target = (id: HideoutTargetId): Pt => {
     if (!geom) return hideoutTargetPoint(id);
-    if (id === 'cushion' || id === 'bed') return isoSleepPoint(geom);
+    if (id === 'cushion' || id === 'bed') {
+      const p = isoSleepPoint(geom);
+      // The Loft bed sits clear of the rails; the Hideout cushion is pulled in so the pet never rests under one.
+      if (!bounds || geom.sleepOnBed) return p;
+      return isoClampToWalk(Math.min(Math.max(p[0], bounds.minX), bounds.maxX), p[1], geom, stage, bounds);
+    }
     const t = geom.targets[id] ?? geom.targets.door ?? here;
-    return isoClampToWalk(t[0], t[1], geom, stage);
+    return isoClampToWalk(t[0], t[1], geom, stage, bounds);
   };
   const go = (dest: Pt, act: HideoutStep['act'], pose: PetPose | null, squash: boolean, allow?: readonly Pt[]): HideoutStep => {
-    const path = planPath(geom, here, dest, stage, allow);
+    const path = planPath(geom, here, dest, stage, allow, bounds);
     const end = path[path.length - 1] ?? dest;
     const speed = Math.max(0.2, form.speed * (mood === 'asleep' ? 1 : MOOD_MOTION[mood].speed));
     return {
@@ -815,7 +830,7 @@ export function planHideoutStep(
       dest = visit
         ? target(TARGET_IDS[Math.floor(rng() * TARGET_IDS.length)] ?? 'door')
         : geom
-          ? isoRandomWalkPoint(geom, rng, stage)
+          ? isoRandomWalkPoint(geom, rng, stage, bounds)
           : randomWalkPoint(rng, stage);
       if (Math.hypot(dest[0] - here[0], dest[1] - here[1]) >= 24) break;
     }

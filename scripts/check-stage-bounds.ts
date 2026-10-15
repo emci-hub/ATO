@@ -95,7 +95,8 @@ const FORBIDDEN_IN_STAGE = /<(PlayBanner|PlaySheet|\w*Notice\w*|\w*Toast\w*|\w*C
   }
   assert.deepEqual(offenders, [], `notice / banner / coach / toast / hint / sheet inside a stage: ${offenders.join(', ')}`);
   const room = read('src/play/pet-room.tsx');
-  assert.match(room, /hideoutStage && hideoutScale && !roomOutside \? \(\s*<HideoutStageControls/, 'the room row + swipe hint are not drawn in the stage');
+  assert.ok(!/HideoutStageControls/.test(room), 'the old room row + swipe hint are gone (rails float over the stage, hideout-rails.tsx)');
+  assert.match(room, /<\/Animated\.View>\s*\{rails\}/, 'the rails float over the stage, outside the room camera layer');
   assert.match(room, /\{roomOutside \? null : \(\s*<View style=\{styles\.metersSlot\}/, 'the status strip is not drawn in the stage');
   ok('nothing but stage content inside a stage (notices, coach, hints, sheets live elsewhere)');
 }
@@ -138,7 +139,7 @@ const FORBIDDEN_IN_STAGE = /<(PlayBanner|PlaySheet|\w*Notice\w*|\w*Toast\w*|\w*C
     assert.deepEqual(wave, setup, `Turf War @ ${d.name}: setup and wave share one stage`);
   }
   const max = computeStageFrame('hideout', DEVICES[0].window, DEVICES[0].insets).stage;
-  assert.equal(max.height, 563, 'Hideout stage on 430×932 is 563 pt (spec §2, Phase 1)');
+  assert.equal(max.height, 619, 'Hideout stage on 430×932 is 619 pt (Phase 1 563 + the 56 pt room row that became the rails)');
   ok('frame is identical with / without notice, tip, pause, loading at 430×932 + 375×667; Turf setup = wave');
 
   // Phase 5: the Underground dock is the spec's 152 (Bag·Heat row 24 + two 48 rows + gaps), so the picture gets the rest.
@@ -176,8 +177,8 @@ const FORBIDDEN_IN_STAGE = /<(PlayBanner|PlaySheet|\w*Notice\w*|\w*Toast\w*|\w*C
 {
   // The Hideout room fills the stage and the camera keeps the pet in view, inside the room.
   for (const [w, h] of [
-    [430, 563],
-    [375, 365],
+    [430, 619],
+    [375, 421],
   ] as const) {
     const sc = hideoutCoverScale({ availW: w, availH: h, pixelRatio: 3 });
     assert.ok(sc.canvasW >= w - 0.5 && sc.canvasH >= h - 0.5, `room covers the ${w}×${h} stage`);

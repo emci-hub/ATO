@@ -161,6 +161,17 @@ export const SPOT_ICON_ART: Partial<Record<string, ImageSourcePropType>> = {
   boombox: png(ART.icon.streetwear.headphones),
   manhole: png(ART.icon.streetwear.subwayTrain),
 };
+/** Rail icons by name (hideout-rails-model.ts). Sleep / Light / Back / Up are library stand-ins until dedicated icons exist. */
+export const RAIL_ICON_ART: Record<'headphones' | 'backpack' | 'subwayTrain' | 'sneaker' | 'heart' | 'bolt' | 'dpad' | 'upgrade', ImageSourcePropType> = {
+  headphones: png(ART.icon.streetwear.headphones),
+  backpack: png(ART.icon.streetwear.backpack),
+  subwayTrain: png(ART.icon.streetwear.subwayTrain),
+  sneaker: png(ART.icon.streetwear.sneaker),
+  heart: png(ART.icon.streetwear.heart),
+  bolt: png(ART.icon.streetwear.bolt),
+  dpad: png(ART.icon.streetwear.dpad),
+  upgrade: png(ART.icon.streetwear.upgrade),
+};
 export const CALL_ICON_ART: ImageSourcePropType = png(ART.icon.streetwear.speech);
 export const LOCK_ICON_ART: ImageSourcePropType = png(ART.icon.streetwear.padlock);
 

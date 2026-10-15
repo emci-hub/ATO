@@ -150,7 +150,7 @@ ok('coach tips: non-blocking, absolutely placed, breathe slowly under Reduce Mot
 assert.match(code(sheet), /BackHandler\.addEventListener\('hardwareBackPress'/, 'Android back closes the help card first');
 assert.match(sheet, /accessibilityLabel="Help"/, 'the "?" is labelled for VoiceOver');
 assert.match(code(read('src/play/notify/notice-lane.tsx')), /reserveRight/, 'the lane takes the reserved width');
-for (const f of ['pet-room', 'street-room', 'street-shell', 'pet-screen']) {
+for (const f of ['pet-room', 'hideout-rails', 'street-shell', 'pet-screen']) {
   assert.match(read(`src/play/${f}.tsx`), /tipAnchorRef\('(egg|hatch|turf|feed)'\)/, `${f}: registers a tip anchor`);
 }
 ok('help card closes on Android back; the "?" is labelled; the four tips each find their control');

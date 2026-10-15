@@ -55,7 +55,6 @@ import { isStrongResult } from '@/play/score-burst-model';
 import type { GuideSection } from '@/play/guide-content';
 import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
-import { resolvePresence, wokeUp } from '@/play/hideout-presence';
 import { HideoutTeaseSheetCopy } from '@/play/hideout-tease';
 import { canStartBuild, roomStage, type HideoutRoomId } from '@/play/hideout-progress';
 import { tripLabel } from '@/play/expedition-ladder';
@@ -80,8 +79,9 @@ import { PetReveal } from '@/play/pet-reveal';
 import { PetRoom, type RoomSpeech } from '@/play/pet-room';
 import { GameScreen, useStageFrame } from '@/play/stage-layout';
 import { StreetStatusStrip } from '@/play/street-room';
-import { HideoutStageControls } from '@/play/hideout-stage';
-import type { HideoutOrigin, HideoutScale } from '@/play/hideout-iso';
+import { HideoutRails } from '@/play/hideout-rails';
+import { expeditionCallCopy, resolvePresence, wokeUp } from '@/play/hideout-presence';
+import { roomDef } from '@/play/hideout-progress';
 import { loadSeenStage, saveSeenStage } from '@/play/pet-seen';
 import {
   BookTab,
@@ -149,10 +149,6 @@ const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'info', emoji: 'ℹ️', label: 'Info' },
 ];
 
-
-/** The room row sits under the room (stage layout): its "row" mode reads no room scale / origin. */
-const ROW_ONLY_SCALE: HideoutScale = { dpx: 1, pt: 1, canvasW: 0, canvasH: 0, contentW: 0, contentH: 0 };
-const ROW_ONLY_ORIGIN: HideoutOrigin = { left: 0, top: 0 };
 
 const SHEET_TITLE: Record<SheetId, string> = {
   feed: 'Feed',
@@ -934,10 +930,10 @@ export function PetScreen({
               <Pressable
                 onPress={() => commit((doc, now) => markHideoutCoach(doc, now))}
                 accessibilityRole="button"
-                accessibilityLabel="Swipe between rooms. The bar shows where your pet is. Tap to hide."
+                accessibilityLabel="Swipe between rooms. The marker on the right shows where your pet is. Tap to hide."
                 style={styles.laneHint}>
                 <Text style={styles.laneHintText} numberOfLines={2} maxFontSizeMultiplier={1.2}>
-                  Swipe for rooms. The bar marks where your pet is.
+                  Swipe for rooms. The marker shows where your pet is.
                 </Text>
               </Pressable>
             ) : (
@@ -984,18 +980,39 @@ export function PetScreen({
             onBadge={() => setSheet('card')}
             buffs={roomBuffs}
             maxedAura={pv.pumped.maxed}
-            streetSpots={
-              street
-                ? {
-                    onSpot: (id) => (id === 'den' ? setSheet('den') : openIcon(id)),
-                    pulse: pulseIcon === 'info' ? null : pulseIcon,
-                    notes: {
-                      dive: view.diveRun.active ? 'Ride in progress' : `${view.dive.current}/${DIVE_CHARGE_CAP}`,
-                      expedition: pv.away ? 'Away' : undefined,
-                      feed: pet.stage === 'egg' ? 'Hatches first' : undefined,
-                    },
+            rails={
+              street ? (
+                <HideoutRails
+                  hideout={view.hideout.state}
+                  viewed={view.hideout.viewed}
+                  petRoom={presence.room}
+                  stageH={frame.stage.height}
+                  onSpot={(spot) => (spot === 'den' ? setSheet('den') : openIcon(spot))}
+                  onLamp={() => commit((doc, now) => toggleLoftLamp(doc, now))}
+                  onView={(id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id))}
+                  onTease={() => setTeaseOpen(true)}
+                  onCall={() => {
+                    if (pv.away) return;
+                    commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
+                  }}
+                  away={pv.away}
+                  callA11y={
+                    pv.away
+                      ? pv.expeditionBackInMs != null
+                        ? expeditionCallCopy(pv.expeditionBackInMs)
+                        : 'Out on a trip'
+                      : `Call pet to ${roomDef(view.hideout.viewed).label}`
                   }
-                : undefined
+                  pulse={pulseIcon === 'play' || pulseIcon === 'dive' || pulseIcon === 'expedition' ? pulseIcon : null}
+                  notes={{
+                    dive: view.diveRun.active ? 'Ride in progress' : `${view.dive.current}/${DIVE_CHARGE_CAP}`,
+                    expedition: pv.away ? 'Away' : undefined,
+                  }}
+                  nightLamp={{ night, on: view.hideout.state.lamp_on }}
+                  still={playMotion.cosmeticsStill}
+                  gentle={playMotion.vestibularSafe}
+                />
+              ) : null
             }
             onPickEgg={(e) => {
               setFocusEgg(e);
@@ -1012,7 +1029,6 @@ export function PetScreen({
                     expeditionBackMs: pv.away ? pv.expeditionBackInMs : null,
                     onView: (id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id)),
                     onTease: () => setTeaseOpen(true),
-                    onLamp: () => commit((doc, now) => toggleLoftLamp(doc, now)),
                     onCall: () => {
                       if (pv.away) return;
                       commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
@@ -1025,32 +1041,9 @@ export function PetScreen({
         }
         dock={
           <>
-          {street ? (
-            <View style={styles.roomRow}>
-              <HideoutStageControls
-                hideout={view.hideout.state}
-                presence={presence}
-                viewed={view.hideout.viewed}
-                scale={ROW_ONLY_SCALE}
-                origin={ROW_ONLY_ORIGIN}
-                expeditionBackMs={pv.away ? pv.expeditionBackInMs : null}
-                onView={(id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id))}
-                onCall={() => {
-                  if (pv.away) return;
-                  commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
-                }}
-                coach={false}
-                onCoachSeen={() => undefined}
-                controlsMode="row"
-              />
-            </View>
-          ) : (
-            <View style={styles.roomRow} />
-          )}
             <View style={styles.iconRow}>
-              {/* Streetwear: Play, Underground and Explore live in the room (tap spots); the dock keeps Feed + Info.
-                  While it is still an egg (picking hides the spots) the full dock stays. */}
-              {(street && pet.stage !== 'egg' ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
+              {/* Streetwear: Play, Stash, Underground and Explore live on the left rail; the dock keeps Feed + Info. */}
+              {(street ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
                 <RoomIcon
                   key={icon.id}
                   emoji={icon.emoji}
@@ -1327,8 +1320,6 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', flexShrink: 0, gap: 4 },
   topButton: { alignItems: 'center', justifyContent: 'center', borderWidth: ART_PT, borderColor: PIXEL.cyan },
   topButtonText: { fontSize: 16, color: PIXEL.cyan },
-  // Stage layout: Hideout / Loft / Call get their own row under the room (emci 2026-10-14).
-  roomRow: { height: 56, position: 'relative', backgroundColor: NEON.ink },
   // NoticeLane: the pet strip when quiet; the swipe hint until it is seen.
   laneStrip: { flex: 1, justifyContent: 'center', paddingHorizontal: 8 },
   laneHint: { flex: 1, justifyContent: 'center', paddingHorizontal: 16, backgroundColor: 'rgba(8,9,15,0.72)' },
