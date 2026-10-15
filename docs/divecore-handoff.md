@@ -5,7 +5,60 @@ The full brief is emci's pasted task (Steps 0-3 + Deliverables + Rules). This fi
 does not redo the audit. **Do not merge. Do not publish an OTA.** Play-only (`.cursor/rules/play-isolation.mdc`,
 `.cursor/rules/fixed-regions.mdc`). No new native deps; package.json may only gain check scripts.
 
-## ▶ LATEST — read this first (session 6, local Windows, 2026-10-14): **Phase 4 built** → phone check, then Phase 5
+## ▶ LATEST — read this first (session 7, local Windows, 2026-10-14): **Phase 5 built (the last of the 5)** → phone check
+
+Phase 5 = content trims + word limits + tap targets. Branch **`claude/divecore-phase5-trims`** (off `feature/divecore-minimal`,
+which already holds Phases 1-4) → draft PR into `feature/divecore-minimal`. **Waiting on:** emci's phone check. After it the 5
+phases are done; nothing is merged to master, no OTA (the one PR to master is #33).
+
+### What Phase 5 did
+- **Underground dock 258 → 152 pt** (`REGIONS.dive.dock`): Bag + Heat in ONE 24 pt row (`bagHeatRow`; slots 24, `PixelRisk compact`),
+  then two 48 pt button rows, 8 pt gaps. Stage is **550 / 350** (was 444 / 252) on 430×932 / 375×667. Dive uses
+  `bottomPad: 'inset-min'` = max(home inset, 8) so the dock never touches the screen edge on the SE.
+- The "Powers 0/6 · Snack · Lamp …" line left the dock: `DiveScene` takes `status`, drawn one line in the lane's idle slot
+  (a notice still replaces it; the away caption wins). Nothing else about the content changed.
+- **The picture covers the stage** (emci chose cover, 2026-10-14; previews `docs/divecore/previews/phase5-dive-{max,se}-{cover,contain}.png`):
+  `StreetUndergroundWorld` scales the 256×320 plate by `max(w/256, h/320)` and crops the overflow. **OPEN ART NOTE (emci): the
+  Underground background plates need redrawing so they look better filled/cropped** (wider, or composed for a 0.78-1.05 stage
+  aspect; PixelLab guide `docs/art/PIXELLAB_GUIDE.md`). There is a `TODO(art)` in `dive-street.tsx`.
+- **Word limits** (`src/play/notify/copy.ts`, pure): `surfaceBody`, `skipBody`, `shopBuyBody` keep the parts that matter in priority order
+  and drop the rest (`joinParts`); `fitNotice` is a net inside `notify()` that cuts any title to 3 / body to 10 words (server-named shop
+  items, rescued lists). Buff notices use `BUFF_NOTICE` (short) instead of the guide sentence `BUFF_HOW`. 10 words can still be wider than
+  the lane (a very long item name): the lane stays ONE line and ends in "…".
+- **Taps**: Dive back / Gear / info use `TAP_SLOP` (12 above/below, 8 sides; links 16 apart) = 44 pt tall with no layout change;
+  `NeonBackLink` uses `BACK_SLOP`; the "?" keeps its 44×44 hit area (28 pt circle, hit slop in the 28 pt lane); Dive buttons 48 pt
+  (was 50). Settings' "Exit Play" is a `NeonButton`, not a text link, so it needed nothing.
+- **Gate**: `check:stage-bounds` pins dock 152, stage 550 / 350, `inset-min`, 24 pt Bag·Heat row, 48 pt buttons, TAP_SLOP, no Powers line in
+  the dock. `check:notify` runs the real builders at worst case through `noticeCopyProblem`, pins `fitNotice` in `notify()` and the
+  builders in `play.tsx`. `check:ota-gate` green (see PR).
+- Shots: `docs/divecore/after/phase5-{dive,dive-pre}-{max,se}.png`, `phase5-notice-surfaced-max.png`, `phase5-notice-shop-se.png`
+  (static web export + Playwright, installed Chrome; same harness as Phase 4).
+
+### Open / not done
+- The Dive top bar is still 109 pt (spec §2 assumed 44), so the Dive stage is 550 / 350, not the spec's 615 / 415. Shrinking it
+  (a one-row bar) is a separate change.
+- Plate redraw (art note above). Pet games / Turf War were not changed in Phase 5.
+- Small tap-target leftovers (not on the brief's list): `neon-ui.tsx` buttons with `minHeight` 28-40 (dress / sword-forge / sheets).
+- About / Credits entry and dead `command-hub.tsx` from Phase 3 are still open.
+
+### Phone check (emci, dev build: `npm start`, same Wi-Fi)
+1. Hideout → hatch → Underground: the picture fills from the notice line to the panel (no dark bands); the panel is shorter.
+2. Panel: Bag slots and the Heat bar on ONE row, then LOCAL / EXPRESS, then HEAD UP. Nothing under the gold corner tape.
+3. "Powers 0/6" shows centred in the thin line under the top bar; a find notice replaces it for a few seconds.
+4. Ride, go Deeper, Head up: Surfaced shows ≤ 3 + ≤ 10 words, one line. Same for a Skip ahead and a shop buy.
+5. Tap Back (< Hideout), Gear and info with a thumb a little off the text: each should hit; Gear and info don't mix up.
+6. Tap "?" in the thin line: it opens. SE (or a small phone): the panel has a gap under it, not on the screen edge.
+7. Reduce Motion on: the plate still breathes gently.
+
+### Lessons learned (Phase 5)
+- **Stale web server**: after `expo export --clear` the old `python -m http.server` kept serving the previous bundle (sizes differed).
+  Start a new server on a new port and check the served file contains your new style name.
+- Static export routes: copy `play.html` to `play/index.html` and open `/play/?shot=dive&inset=max` (else the `[handle]` route answers).
+- A dev switch is the cheapest way to preview two layout options from one export (`?fit=contain`); delete it once emci chooses.
+- Word counts guarantee words, not width: pin worst cases through `noticeCopyProblem` AND keep a runtime net (`fitNotice`).
+- Shareable later: `copy.ts` (`joinParts`/`fitNotice`), `inset-min` pad. Play-only: the builders' copy, the Dive dock geometry.
+
+### Phase 4 (kept for its facts; was: Phase 4 built → phone check)
 
 Phase 4 = ONE "?" per game screen + four coach tips instead of the blocking tutorial. Branch **`claude/divecore-phase4-help`**
 (stacked on `feature/divecore-minimal`, which already holds Phases 1-3) → draft PR into `feature/divecore-minimal`.

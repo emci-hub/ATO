@@ -48,7 +48,7 @@ import { FinishMotionHost } from '@/play/finish-motion';
 import { StoneSheetBody } from '@/play/stone-sheet';
 import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
 import { PetGameHost, type GamePet } from '@/play/pet-games';
-import { BUFF_HOW, BUFF_ICON, BUFF_LABEL } from '@/play/play-buffs';
+import { BUFF_ICON, BUFF_LABEL, BUFF_NOTICE } from '@/play/play-buffs';
 import { notify } from '@/play/notify/notify';
 import { useFxQuality } from '@/play/fx-quality';
 import { isStrongResult } from '@/play/score-burst-model';
@@ -730,7 +730,7 @@ export function PetScreen({
         tapPet();
       }
       if (r.unlocked) notify({ kind: 'celebrate', title: `${DIFFICULTY_LABEL[r.unlocked]} unlocked`, body: 'A harder level is open in Play.' });
-      if (r.buff) notify({ kind: 'celebrate', title: `${BUFF_LABEL[r.buff]}`, body: BUFF_HOW[r.buff] });
+      if (r.buff) notify({ kind: 'celebrate', title: `${BUFF_LABEL[r.buff]}`, body: BUFF_NOTICE[r.buff] });
       if (r.dailyBonusShells > 0) notify({ kind: 'celebrate', title: 'Daily best', body: `+${r.dailyBonusShells} shells. New pattern tomorrow.` });
       if (r.dailyEgg) notify({ kind: 'celebrate', title: 'Daily egg', body: 'Challenge passed: one more free egg today.' });
       if (r.dailyStone) notify({ kind: 'celebrate', title: 'Shine Stone', body: 'First daily Gold: a Shine Stone is yours.' });

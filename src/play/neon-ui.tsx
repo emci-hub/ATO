@@ -45,6 +45,9 @@ export const NEON_ROW_LINE = 'rgba(0, 234, 255, 0.1)';
 /** Hub controls are near-square; the panel radius (8) comes from the tokens. */
 const RADIUS = 2;
 
+/** Phase 5: ≥ 44 pt tall (a 16-20 pt line + 14 above and below) and wide, without changing the layout. */
+const BACK_SLOP = { top: 14, bottom: 14, left: 12, right: 12 } as const;
+
 /** `‹ Hideout` — mono cyan back link (Hideout is home since Phase 3). */
 export function NeonBackLink({
   label = 'Hideout',
@@ -59,7 +62,7 @@ export function NeonBackLink({
     return (
       <Pressable
         onPress={onPress}
-        hitSlop={12}
+        hitSlop={BACK_SLOP}
         accessibilityRole="button"
         accessibilityLabel={`Back to ${label}`}
         style={({ pressed }) => [styles.backRow, styles.streetBackRow, pressed && styles.pressed]}>
@@ -73,7 +76,7 @@ export function NeonBackLink({
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={12}
+      hitSlop={BACK_SLOP}
       accessibilityRole="button"
       accessibilityLabel={`Back to ${label}`}
       style={({ pressed }) => [styles.backRow, pressed && styles.pressed]}>

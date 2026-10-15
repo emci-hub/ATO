@@ -37,7 +37,7 @@ import { DiveTopBar } from '@/play/dive-hud';
 import { DiveScene, diveZone, type DiveReveal, type DiveSceneEvent } from '@/play/dive-scene';
 import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
-import { PIXEL, PIXEL_CAPTION_PT, pixelBodyLine } from '@/play/pixel-theme';
+import { PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
 import { ManholeTransit } from '@/play/dive-street';
 import { usePlayMotion } from '@/play/play-motion';
@@ -293,6 +293,7 @@ export function DiveScreen({
         recolor={revealed ? petRecolor(view.pet.state.hero, view.pet.state.shiny, view.pet.dyeOn, view.pet.state.shiny_style) : null}
         auraElement={view.swords.equipped?.element ?? null}
         atSurface={!run.active}
+        status={dockStatus(run, charges)}
         dock={
           showSplash ? (
             <View style={styles.splashRow}>
@@ -301,9 +302,6 @@ export function DiveScreen({
             </View>
           ) : (
             <View style={styles.dockButtons}>
-              <PixelBody size="sm" numberOfLines={2} style={styles.note}>
-                {dockStatus(run, charges)}
-              </PixelBody>
               <View
                 style={styles.actions}
                 onLayout={(e) => {
@@ -466,14 +464,16 @@ function diveButtonVariant(b: DiveButton): PixelButtonVariant {
   return 'cyan';
 }
 
-/** Live dock line. Rules stay in the Info sheet. */
+/** Live status line (one line in the NoticeLane's idle slot). The Lamp preview comes first on a run: it is
+ * shown nowhere else and the tail is what an ellipsis cuts. Rules stay in the Info sheet. */
 function dockStatus(run: PlayView['diveRun'], charges: number): string {
-  const bits = [`Powers ${run.powersToday}/${run.powersCap}`];
-  if (run.snack) bits.push(`Snack −${SNACK_BUST_PP}`);
-  if (run.hearty > 0 && !run.free) bits.push(run.hearty > 1 ? `+1 find ×${run.hearty}` : '+1 find');
+  const bits: string[] = [];
   if (run.active && run.preview) {
     bits.push(`Lamp ${findName(run.preview.safe)} · ${findName(run.preview.rich)}`);
   }
+  bits.push(`Powers ${run.powersToday}/${run.powersCap}`);
+  if (run.snack) bits.push(`Snack −${SNACK_BUST_PP}`);
+  if (run.hearty > 0 && !run.free) bits.push(run.hearty > 1 ? `+1 find ×${run.hearty}` : '+1 find');
   if (run.active && run.netOn && !run.free) bits.push('Net adds a find');
   if (run.active && run.free) bits.push(`Free dive · ${run.freeShellsNow ?? 0} shells up`);
   if (!run.active && charges < 1) bits.push('Free dive keeps shells and mood');
@@ -499,10 +499,8 @@ const styles = StyleSheet.create({
   // flexBasis is a percent, and minWidth is a real floor. flexBasis 0 with
   // minWidth 0 collapses this row to ~0 width on iOS (empty ink gap).
   buttonRow: { flexDirection: 'row', width: '100%', gap: 8, alignItems: 'stretch' },
-  button: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
-  buttonFixed: { minHeight: 50 },
-  // Always two lines tall, so a short status doesn't shrink the panel.
-  note: { textAlign: 'center', minHeight: pixelBodyLine(PIXEL_CAPTION_PT) * 2 },
+  button: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 48 },
+  buttonFixed: { minHeight: 48 },
   spacerRow: { opacity: 0 },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   buyButton: { flexGrow: 0 },

@@ -37,6 +37,8 @@ import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen, type DiveDeeperResult, type DiveSurfaceSummary } from '@/play/dive-screen';
 import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS, type DivePath } from '@/play/dive-loot';
 import { shownFindName } from '@/play/dive-street-names';
+import { fitWords, joinParts, shopBuyBody, skipBody, surfaceBody } from '@/play/notify/copy';
+import { NOTICE_BODY_MAX_WORDS } from '@/play/notify/queue';
 import { DressScreen } from '@/play/dress-screen';
 import {
   backDecision,
@@ -378,7 +380,22 @@ export default function PlayScreen() {
   const handleSurface = useCallback(async (): Promise<DiveSurfaceSummary | null> => {
     const surfaced = await surfaceRun();
     if (!surfaced) return null;
-    notify({ kind: 'notify', title: 'Surfaced', body: surfaceNoticeBody(surfaced) });
+    notify({
+      kind: 'notify',
+      title: 'Surfaced',
+      body: surfaceBody({
+        banked: surfaced.banked,
+        shellsGained: surfaced.shellsGained,
+        free: surfaced.free,
+        swordDrop: surfaced.swordDrop,
+        netFind: surfaced.netFind ? shownFindName(surfaced.netFind) : null,
+        heartyFind: surfaced.heartyFind ? shownFindName(surfaced.heartyFind) : null,
+        powersToday: surfaced.powersToday,
+        powersCap: DIVECORE_POWERS_PER_DAY,
+        powersConverted: surfaced.powersConverted,
+        overflowShells: POWER_OVERFLOW_SHELLS,
+      }),
+    });
     nudgePet(surfaced.banked.some((id) => findGlow(id) !== 'common') ? 'rare_find' : 'surfaced');
     return {
       finds: surfaced.free ? 0 : surfaced.banked.length,
@@ -541,19 +558,17 @@ export default function PlayScreen() {
   const handleSkipToEven = useCallback(async (): Promise<SkipRewardResult | null> => {
     const result = await skipToEven();
     if (result) {
-      const parts: string[] = [
-        `+${result.tokensGranted} tokens · +${result.xpGranted} XP over ${result.skippedWaves} ${
-          result.skippedWaves === 1 ? 'wave' : 'waves'
-        }`,
-      ];
-      if (result.crateItemIds.length > 0) {
-        const crateName = result.crateItemIds.map((id) => itemName(id) ?? id).join(', ');
-        parts.push(`skip crate: ${crateName}`);
-      }
-      for (const look of result.milestoneLooks) {
-        parts.push(`${look.wave}th-clear milestone — ${itemName(look.itemId) ?? look.itemId}`);
-      }
-      notify({ kind: 'notify', title: 'Skipped ahead', body: parts.join(' · ') });
+      notify({
+        kind: 'notify',
+        title: 'Skipped ahead',
+        body: skipBody({
+          tokens: result.tokensGranted,
+          xp: result.xpGranted,
+          waves: result.skippedWaves,
+          crate: result.crateItemIds.map((id) => itemName(id) ?? id),
+          milestones: result.milestoneLooks.map((look) => ({ wave: look.wave, name: itemName(look.itemId) ?? look.itemId })),
+        }),
+      });
     }
     return result;
   }, [skipToEven]);
@@ -602,17 +617,16 @@ export default function PlayScreen() {
     async (row: ShopTokenRow): Promise<ShopPurchaseResult | null> => {
       const result = await buyShopRow(row);
       if (result?.ok) {
-        const parts: string[] = [`−${result.tokensSpent} tokens`];
-        if (result.grantedItemId) {
-          parts.push(`found ${itemName(result.grantedItemId) ?? result.grantedItemId}`);
-        }
-        if (row.kind === 'dive_charge') {
-          parts.push(`dive charges ${result.diveChargeNow}/${DIVE_CHARGE_CAP}`);
-        }
-        if (result.shellsInstead > 0) {
-          parts.push(`${result.shellsInstead} shells (Powers for today were full)`);
-        }
-        notify({ kind: 'notify', title: `${row.name}`, body: parts.join(' · ') });
+        notify({
+          kind: 'notify',
+          title: `${row.name}`,
+          body: shopBuyBody({
+            tokensSpent: result.tokensSpent,
+            grantedName: result.grantedItemId ? (itemName(result.grantedItemId) ?? result.grantedItemId) : null,
+            diveCharges: row.kind === 'dive_charge' ? { now: result.diveChargeNow, cap: DIVE_CHARGE_CAP } : null,
+            shellsInstead: result.shellsInstead,
+          }),
+        });
       } else if (result) {
         notify({ kind: 'error', title: `${row.name}`, body: shopRefusalCopy(result.reason) });
       }
@@ -1403,35 +1417,19 @@ function finds(n: number): string {
 }
 
 function claimNoticeBody(result: ClaimResult): string {
-  const parts: string[] = [`+${result.tendTokens} tend`];
-  if (result.dailyBonusTokens > 0) parts.push(`+${result.dailyBonusTokens} daily`);
-  if (result.diveChargeGranted) parts.push('+1 charge');
-  parts.push(result.items.length === 0 ? 'no finds' : finds(result.items.length));
-  return parts.join(' · ');
-}
-
-function surfaceNoticeBody(s: {
-  banked: string[];
-  shellsGained: number;
-  free: boolean;
-  netFind: string | null;
-  heartyFind: string | null;
-  powersConverted: number;
-  powersToday: number;
-  swordDrop: string | null;
-}): string {
-  const parts: string[] = [s.free ? 'Free dive' : s.banked.length === 0 ? 'No finds' : finds(s.banked.length)];
-  if (s.shellsGained > 0) parts.push(`+${s.shellsGained} shells`);
-  if (s.swordDrop) parts.push(`Sword: ${s.swordDrop}`);
-  if (s.netFind) parts.push(`Net: ${shownFindName(s.netFind)}`);
-  if (s.heartyFind) parts.push(`Meal: ${shownFindName(s.heartyFind)}`);
-  if (!s.free) parts.push(`Powers ${s.powersToday}/${DIVECORE_POWERS_PER_DAY}`);
-  if (s.powersConverted > 0) parts.push(`${s.powersConverted * POWER_OVERFLOW_SHELLS} shells for extra Powers`);
-  return parts.join(' · ');
+  return joinParts([
+    `+${result.tendTokens} tend`,
+    ...(result.dailyBonusTokens > 0 ? [`+${result.dailyBonusTokens} daily`] : []),
+    ...(result.diveChargeGranted ? ['+1 charge'] : []),
+    result.items.length === 0 ? 'no finds' : finds(result.items.length),
+  ]);
 }
 
 function bustNoticeBody(rescued: readonly string[]): string {
-  return rescued.length > 0 ? `Pet saved ${summarizeNames(rescued)}. The rest sank.` : 'The haul sank. Your Basecore is safe.';
+  // "The rest sank." (3 words) always stays whole; the saved names get the other 7.
+  return rescued.length > 0
+    ? `${fitWords(`Pet saved ${summarizeNames(rescued)}`, NOTICE_BODY_MAX_WORDS - 3)}. The rest sank.`
+    : 'The haul sank. Your Basecore is safe.';
 }
 
 /** Honest copy for a token-shop refusal (why the buy didn't happen) — ≤ 10 words. */

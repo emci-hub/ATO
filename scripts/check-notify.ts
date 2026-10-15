@@ -29,6 +29,8 @@ import {
   type NoticeQueue,
 } from '../src/play/notify/queue';
 import { noticeEvents, type NoticeWatch } from '../src/play/notify/events';
+import { fitNotice, fitWords, shopBuyBody, skipBody, surfaceBody } from '../src/play/notify/copy';
+import { BUFF_IDS, BUFF_LABEL, BUFF_NOTICE } from '../src/play/play-buffs';
 
 const repo = path.resolve(__dirname, '..');
 const read = (rel: string) => fs.readFileSync(path.join(repo, rel), 'utf8');
@@ -140,6 +142,50 @@ ok('durations 3.5 / 3 / 5 s (+1 s Reduce Motion); "Important only" = ERROR + CEL
 ok('word limits: title ≤ 3, body ≤ 10');
 
 {
+  // Phase 5: notices built from values. Worst cases through the real builders must fit 3 / 10.
+  const fits = (label: string, title: string, body: string) => assert.equal(noticeCopyProblem({ title, body }), null, `${label}: "${title}" / "${body}"`);
+  const longName = 'Midnight Subway Conductor Collectors Edition';
+  fits(
+    'surface, everything at once',
+    'Surfaced',
+    surfaceBody({
+      banked: ['a', 'b', 'c', 'd'],
+      shellsGained: 120,
+      free: false,
+      swordDrop: longName,
+      netFind: longName,
+      heartyFind: longName,
+      powersToday: 6,
+      powersCap: 6,
+      powersConverted: 2,
+      overflowShells: 5,
+    }),
+  );
+  const plain = surfaceBody({ banked: ['a', 'b', 'c'], shellsGained: 12, free: false, swordDrop: null, netFind: null, heartyFind: null, powersToday: 2, powersCap: 6, powersConverted: 0, overflowShells: 5 });
+  assert.equal(plain, '3 finds · +12 shells · Powers 2/6', 'a plain surface keeps finds, shells, Powers');
+  const withSword = surfaceBody({ banked: ['a'], shellsGained: 3, free: false, swordDrop: 'Rusty Pipe', netFind: null, heartyFind: null, powersToday: 1, powersCap: 6, powersConverted: 0, overflowShells: 5 });
+  assert.match(withSword, /Sword: Rusty Pipe/, 'a sword drop outranks Powers');
+  fits(
+    'skip, crate + milestones',
+    'Skipped ahead',
+    skipBody({ tokens: 1200, xp: 340, waves: 12, crate: [longName, longName], milestones: [{ wave: 10, name: longName }, { wave: 20, name: longName }] }),
+  );
+  assert.match(skipBody({ tokens: 5, xp: 2, waves: 1, crate: [], milestones: [] }), /^\+5 tokens · \+2 XP · 1 wave$/, 'a skip keeps pay + waves');
+  fits('shop buy, everything', 'Dive charge', shopBuyBody({ tokensSpent: 250, grantedName: longName, diveCharges: { now: 9, cap: 10 }, shellsInstead: 40 }));
+  assert.equal(shopBuyBody({ tokensSpent: 30, grantedName: null, diveCharges: null, shellsInstead: 0 }), '−30 tokens', 'a plain buy is the price');
+  // The net under every other notify(): server-named items, rescued lists, long titles.
+  const net = fitNotice({ kind: 'notify' as const, title: 'The Extra Long Shop Item Name', body: 'one two three four five six seven eight nine ten eleven twelve' });
+  assert.equal(noticeCopyProblem(net), null, 'fitNotice trims title + body to the limits');
+  assert.equal(net.title, 'The Extra Long');
+  const same = { kind: 'notify' as const, title: 'Bag full', body: 'Sell a Look.' };
+  assert.equal(fitNotice(same), same, 'copy that fits is returned untouched');
+  assert.equal(fitWords('Pet saved Raven, Kelp, Net. The rest sank.', 4), 'Pet saved Raven, Kelp', 'cuts on a word, no trailing comma');
+  // Buff notices use the short line, not the guide sentence.
+  for (const b of BUFF_IDS) fits(`buff ${b}`, BUFF_LABEL[b], BUFF_NOTICE[b]);
+}
+ok('Phase 5: surface / skip / shop / buff copy fits 3 / 10 at its worst; fitNotice is the net');
+
+{
   const w = (stage: string, oddsOpen: boolean, milestonesReady = 0): NoticeWatch => ({ stage, oddsOpen, milestonesReady });
   assert.deepEqual(noticeEvents(null, w('baby', true, 3), false), [], 'first load: nothing');
   const hatched = noticeEvents(w('egg', true), w('baby', true), false);
@@ -209,6 +255,18 @@ ok('every notice in src/play goes through notify() (no setToast / onBanner / old
   assert.ok(count >= 10, `found ${count} notify() calls — the migration should have many`);
   assert.deepEqual(problems, [], `notice copy over the limits:\n  ${problems.join('\n  ')}`);
   ok(`word limits hold on all ${count} literal notify() calls`);
+}
+
+{
+  // The value-built notices go through the pure builders, and notify() trims whatever is left.
+  const play = read('src/app/play.tsx');
+  assert.match(play, /body: surfaceBody\(/, 'Surfaced uses surfaceBody');
+  assert.match(play, /body: skipBody\(/, 'Skipped ahead uses skipBody');
+  assert.match(play, /body: shopBuyBody\(/, 'a shop buy uses shopBuyBody');
+  assert.ok(!/parts\.join\(' · '\)/.test(play), 'no notice body is joined by hand in play.tsx');
+  assert.match(read('src/play/notify/notify.ts'), /enqueueNotice\(queue, fitNotice\(input\)/, 'notify() trims every notice to 3 / 10 words');
+  assert.match(read('src/play/pet-screen.tsx'), /body: BUFF_NOTICE\[r\.buff\]/, 'a buff notice uses the short line');
+  ok('play.tsx builds Surfaced / Skipped ahead / shop notices with the pure builders; notify() trims the rest');
 }
 
 {

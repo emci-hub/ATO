@@ -140,6 +140,37 @@ const FORBIDDEN_IN_STAGE = /<(PlayBanner|PlaySheet|\w*Notice\w*|\w*Toast\w*|\w*C
   const max = computeStageFrame('hideout', DEVICES[0].window, DEVICES[0].insets).stage;
   assert.equal(max.height, 563, 'Hideout stage on 430×932 is 563 pt (spec §2, Phase 1)');
   ok('frame is identical with / without notice, tip, pause, loading at 430×932 + 375×667; Turf setup = wave');
+
+  // Phase 5: the Underground dock is the spec's 152 (Bag·Heat row 24 + two 48 rows + gaps), so the picture gets the rest.
+  assert.equal(REGIONS.dive.dock, 152, 'Dive dock is 152 pt (was 258)');
+  assert.equal(computeStageFrame('dive', DEVICES[0].window, DEVICES[0].insets).stage.height, 932 - 59 - REGIONS.dive.topBar - 28 - 152 - 34, 'Dive stage on 430×932');
+  // SE has no home-indicator inset: the dock keeps an 8 pt pad off the screen edge (bottomPad 'inset-min').
+  assert.equal(computeStageFrame('dive', DEVICES[1].window, DEVICES[1].insets).stage.height, 667 - 20 - REGIONS.dive.topBar - 28 - 152 - 8, 'Dive stage on 375×667');
+  assert.equal(REGIONS.dive.bottomPad, 'inset-min', 'Dive keeps ≥ 8 pt under the dock');
+  assert.ok(computeStageFrame('dive', DEVICES[0].window, DEVICES[0].insets).stage.height >= 540, 'Dive stage ≥ 540 on 430×932 (was 444)');
+  assert.ok(computeStageFrame('dive', DEVICES[1].window, DEVICES[1].insets).stage.height >= 340, 'Dive stage ≥ 340 on 375×667 (was 252)');
+  ok('Underground dock 152 pt: stage 550 / 350 (was 444 / 252)');
+}
+
+{
+  // Phase 5 taps: 44 pt targets (visual + hitSlop), 48 pt buttons, a 24 pt Bag·Heat row, no Powers line in the dock.
+  const hud = read('src/play/dive-hud.tsx');
+  assert.ok(!/hitSlop=\{(8|10)\}/.test(hud), 'Dive back / Gear / info do not use the old 8-10 pt slop');
+  assert.equal((hud.match(/hitSlop=\{TAP_SLOP\}/g) ?? []).length, 3, 'Back, Gear and info share TAP_SLOP (≥ 44 pt tall)');
+  assert.match(hud, /const TAP_SLOP = \{ top: 12, bottom: 12, left: 8, right: 8 \}/, 'TAP_SLOP: 12 pt above and below a ≥ 20 pt label = 44');
+  const screen = read('src/play/dive-screen.tsx');
+  assert.match(screen, /button: \{[^}]*minHeight: 48 \}/, 'Dive buttons are 48 pt');
+  assert.match(screen, /buttonFixed: \{ minHeight: 48 \}/, 'Dive fixed-width buttons are 48 pt');
+  assert.ok(!/minHeight: 50/.test(screen), 'no 50 pt Dive buttons');
+  assert.ok(!/styles\.note\b/.test(screen), 'the Powers line is not in the dock');
+  const scene = read('src/play/dive-scene.tsx');
+  assert.match(scene, /bagHeatRow: \{[^}]*height: 24/, 'Bag + Heat share one 24 pt row');
+  assert.match(scene, /status=\{|status = null/, 'the live status line goes to the lane');
+  const neon = read('src/play/neon-ui.tsx');
+  assert.ok(!/hitSlop=\{12\}/.test(neon), 'NeonBackLink has a taller slop than 12');
+  const help = read('src/play/help/help-sheet.tsx');
+  assert.match(help, /hitSlop/, 'the "?" keeps its hit slop (44 pt tall in a 28 pt lane)');
+  ok('tap targets ≥ 44 (Dive back / Gear / info, Neon back link, "?"), Dive buttons 48, Bag·Heat row 24');
 }
 
 {

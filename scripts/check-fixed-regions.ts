@@ -49,8 +49,11 @@ const ok = (msg: string) => {
   assert.match(scene, /notify\(\{ kind: 'notify', title: 'Found'/, 'a Dive find is a notify() notice in the lane');
   assert.match(scene, /notify\(\{ kind: 'celebrate', title: 'Rare find'/, 'a rare find is a celebrate notice');
   assert.match(screen, /const DIVE_DOCK_ROWS = 2;/, 'Dive button area keeps 2 rows');
-  assert.match(screen, /minHeight: pixelBodyLine\(PIXEL_CAPTION_PT\) \* 2/, 'Dive status note keeps 2 lines');
-  ok('Dive: fixed frame, reserved Heat row, 2 button rows, 2-line note, finds via notify() in the NoticeLane');
+  // Phase 5: the status note left the 152 pt dock; it is one line in the lane's idle slot (never grows).
+  assert.ok(!/styles\.note\b/.test(screen), 'Dive dock has no status note any more');
+  assert.match(screen, /status=\{dockStatus\(run, charges\)\}/, 'the Dive status line goes to the NoticeLane');
+  assert.match(scene, /<PixelBody size="sm" numberOfLines=\{1\} style=\{styles\.laneText\}>\{idleText/, 'the status is one line in the lane');
+  ok('Dive: fixed frame, reserved Heat row, 2 button rows, one-line status in the NoticeLane, finds via notify()');
 }
 
 {
