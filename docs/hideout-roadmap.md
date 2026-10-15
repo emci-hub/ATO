@@ -14,7 +14,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0b | Polish batch (LF art pins, holo tip, archive hideout-fx; **Sleep pending**) | draft PR #44 |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
-| 3 | Pet that knows you | built, draft PR `feature/pet-knows-you` — **emci reads the line bank** (`PET_KNOWS_YOU_COPY_REVIEWED = false`), then merge + OTA |
+| 3 | Pet that knows you | built, draft PR #46; bank approved by emci 2026-10-15 (`PET_KNOWS_YOU_COPY_REVIEWED = true`) — awaiting merge + OTA OK |
 | 4 | **Daily visitors** | **next** |
 | 5 | Decor slots | — |
 | 6 | Circle visits | — |
