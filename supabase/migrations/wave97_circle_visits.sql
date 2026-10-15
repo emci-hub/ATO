@@ -295,7 +295,7 @@ begin
         join public.me m on m.id = g.user_id
         where g.peer_id = uid and g.opened_at is null and public.circle_visit_allowed(g.user_id)
       ) y
-      where y.look is not null
+      where y.look is not null and (y.look #>> '{pet,hero}') is not null
       order by y.created_at
       limit 20
     ) x

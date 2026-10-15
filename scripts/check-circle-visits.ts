@@ -215,7 +215,7 @@ if (fs.existsSync(path.join(root, wave97))) {
   assert.match(shared, /revoke all on public\.circle_gifts from public, anon, authenticated;/, 'gifts: functions only');
   assert.match(shared, /revoke all on public\.circle_visit_share from public, anon, authenticated;\s*grant select on public\.circle_visit_share to authenticated;/, 'switch: read own row, written only through the RPC');
   assert.match(allowed, /s\.updated_at >= c\.created_at[\s\S]*s\.updated_at >= c\.created_at/, 'unfriend + scan back in = both switches off again');
-  assert.match(shared, /where y\.look is not null\s*order by y\.created_at\s*limit 20/, 'inbox filters before its limit (no stuck gifts)');
+  assert.match(shared, /where y\.look is not null and \(y\.look #>> '\{pet,hero\}'\) is not null\s*order by y\.created_at\s*limit 20/, 'inbox filters (a save with a pet hero) before its limit (no stuck gifts)');
   for (const fn of ['circle_visit_friends()', 'set_circle_visit_share(uuid, boolean)', 'circle_visit_room(uuid)', 'circle_send_gift(uuid)', 'circle_gift_inbox()', 'circle_open_gift(uuid)', 'circle_visit_allowed(uuid)']) {
     assert.ok(shared.includes(`revoke all on function public.${fn} from public, anon;`), `${fn}: not for anon`);
   }
