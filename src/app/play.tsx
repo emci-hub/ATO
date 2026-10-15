@@ -127,6 +127,8 @@ export default function PlayScreen() {
   const reduceMotion = resolveReduceMotion(motionMode, phoneReduceMotion);
   const {
     view,
+    away,
+    dismissAway,
     claim,
     commit,
     commitSaved,
@@ -185,7 +187,9 @@ export default function PlayScreen() {
   }, []);
   useEffect(() => {
     if (mode === 'pet') countOnce('hideout_open');
-  }, [mode]);
+    // Leaving the Hideout closes the away card (it never comes back stale).
+    else dismissAway();
+  }, [mode, dismissAway]);
   // Street shell (Streetwear art style): the bars own the top/bottom safe area.
   const insets = useSafeAreaInsets();
   /** The list screens' fixed frame (Block, Locker, Store); game screens take their own. */
@@ -822,6 +826,8 @@ export default function PlayScreen() {
       onGuideOpened={guideOpened}
       shellTop={shellTop}
       shellTabs={shellTabs}
+      away={away}
+      onAwayClose={dismissAway}
     />
   ) : null;
   const defendEl = view ? (

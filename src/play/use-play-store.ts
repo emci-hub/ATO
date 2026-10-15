@@ -21,7 +21,9 @@ import { AppState } from 'react-native';
 import { setArtSkin } from '@/play/art-skin';
 import { setStreetHaptics } from '@/play/street-feel';
 import type { ItemSlot } from '@/play/items';
+import { AWAY_MIN_MS, awaySummary, type AwaySummary } from '@/play/away-summary';
 import { queueCloudSave, restoreFromCloud } from '@/play/cloud-save';
+import { lastPushFiredAt } from '@/play/pet-reminder';
 import { bumpSaveEpoch, enqueuePlaySave, saveEpoch, saveIsCurrent, whenPlaySavesSettled } from '@/play/play-save';
 import {
   claimResearch,
@@ -107,6 +109,9 @@ export type PlayTransition = (doc: PlayStoreDoc, now: number) => PlayStoreDoc | 
 export function usePlayStore() {
   const [doc, setDoc] = useState<PlayStoreDoc | null>(null);
   const docRef = useRef<PlayStoreDoc | null>(null);
+  /** "While you were away" (roadmap step 1): set on an open after an hour or more away. */
+  const [away, setAway] = useState<AwaySummary | null>(null);
+  const dismissAway = useCallback(() => setAway(null), []);
   const [, tick] = useReducer((n: number) => n + 1, 0);
 
   /** Publish `next` as the latest commit and queue its save. `paint` updates
@@ -136,7 +141,8 @@ export function usePlayStore() {
     if (!saveIsCurrent(started)) return;
     // Pet (v20): age the pet on every open and save the new clock high-water
     // mark, so time away is counted once (the view alone never saves it).
-    const next = touchPet(loaded, Date.now());
+    const now = Date.now();
+    const next = touchPet(loaded, now);
     if (!saveIsCurrent(started)) return;
     // Art style (paint only) is applied before anything draws this doc.
     setArtSkin(next.play_settings.artSkin);
@@ -149,6 +155,12 @@ export function usePlayStore() {
       enqueuePlaySave(() => savePlayStore(next)).catch(() => {
         // Next open re-ages from the stored mark; nothing is lost.
       });
+    }
+    // The away card: what changed between the save as loaded and after the catch-up. A push that
+    // already said it (hunger, full charges) is not repeated.
+    if (now - loaded.pet.seen_at >= AWAY_MIN_MS) {
+      const [hungerAt, chargesAt] = await Promise.all([lastPushFiredAt('hunger', now), lastPushFiredAt('charges', now)]);
+      setAway(awaySummary(loaded, next, now, { hungerAt, chargesAt }));
     }
   }, []);
 
@@ -810,6 +822,8 @@ export function usePlayStore() {
 
   return {
     view,
+    away,
+    dismissAway,
     claim,
     commit,
     commitSaved,
