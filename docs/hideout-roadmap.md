@@ -15,7 +15,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
 | 3 | Pet that knows you | built, draft PR #46; bank approved by emci 2026-10-15 (`PET_KNOWS_YOU_COPY_REVIEWED = true`) — awaiting merge + OTA OK |
-| 4 | Daily visitors | built, draft PR (branch `feature/daily-visitors`); copy unreviewed (`VISITORS_COPY_REVIEWED = false`) — awaiting emci's read + merge + OTA OK |
+| 4 | Daily visitors | built, draft PR #47 (gate green, 165 checks); copy unreviewed (`VISITORS_COPY_REVIEWED = false`) — awaiting emci's read + merge + OTA OK |
 | 5 | **Decor slots** | **next** |
 | 6 | Circle visits | — |
 
@@ -97,7 +97,10 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   (`const S = ART.icon…`) leaves the art "unused" and moves it to `unused/`; (3) the notice body must fit one SE line
   (≤ 26 chars with the longest name); (4) `touchPet` pays passive daily income, so an economy check has to compare
   against a same-day control, not the start of the run; (5) the pet walks through anything that is not in its walk
-  bounds — narrow them for anything that stands in the room (decor in step 5 will need the same).
+  bounds — narrow them for anything that stands in the room (decor in step 5 will need the same), and re-clamp when
+  that starts (room switch, Motion Off); (6) `check:away-card` pins pet-screen's `busy` line literally — add new
+  overlays through a separate value (`overlayBusy`), never by editing that line; (7) anything "per day" must re-read
+  the local day at the tap, not trust the last render (midnight).
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
