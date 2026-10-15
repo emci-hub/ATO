@@ -11,13 +11,19 @@
  * Region heights live in REGIONS below; Phase 1 uses today's bar heights ("interim"), the spec's
  * target heights land with the content trims of later phases.
  */
-import { useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CoachTipLayer } from '@/play/ftue/coach-tip-layer';
+import type { CoachTipDef } from '@/play/ftue/coach-tips';
+import { HELP_COLUMN, HelpButton, HelpSheet } from '@/play/help/help-sheet';
+import type { HelpId } from '@/play/help/help-content';
 import { NoticeLane } from '@/play/notify/notice-lane';
+import type { CoachTipId } from '@/play/play-settings';
 import {
+  SPACE,
   computeStageFrame,
   layoutRegions,
   type GameScreenId,
@@ -85,6 +91,9 @@ export function GameScreen({
   reduceMotion = false,
   background,
   stageStyle,
+  help,
+  tip,
+  onTipSeen,
 }: {
   frame: StageFrame;
   topBar?: ReactNode;
@@ -99,13 +108,26 @@ export function GameScreen({
   reduceMotion?: boolean;
   background?: string;
   stageStyle?: StyleProp<ViewStyle>;
+  /** Phase 4: the one "?" for this screen (right end of the NoticeLane) and its help entry. */
+  help?: HelpId;
+  /** Phase 4: the coach tip showing now (ring + words, never blocks input). Any touch calls `onTipSeen`. */
+  tip?: CoachTipDef | null;
+  onTipSeen?: (id: CoachTipId) => void;
 }) {
   const r = layoutRegions(frame);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const closeHelp = useCallback(() => setHelpOpen(false), []);
+  // A different help entry (Locker → Blades) starts closed.
+  useEffect(() => setHelpOpen(false), [help]);
+  const [tipShown, setTipShown] = useState(false);
   const middle = (
     <>
       <View style={[styles.region, { height: r.notice.height }]}>
         {/* Phase 2: the NoticeLane shows a queued notice, else this screen's idle line. */}
-        <NoticeLane height={r.notice.height} idle={notice} />
+        <NoticeLane height={r.notice.height} idle={notice} reserveRight={help ? HELP_COLUMN : 0} />
+        {help ? (
+          <HelpButton laneHeight={r.notice.height} open={helpOpen} onPress={() => setHelpOpen((v) => !v)} />
+        ) : null}
       </View>
       <View style={[styles.region, styles.stage, { width: r.stage.width, height: r.stage.height }, stageStyle]}>
         {stage}
@@ -114,7 +136,10 @@ export function GameScreen({
     </>
   );
   return (
-    <View style={[styles.screen, background ? { backgroundColor: background } : null]}>
+    <View
+      style={[styles.screen, background ? { backgroundColor: background } : null]}
+      // A coach tip is dismissed by any touch; the touch itself still reaches what was tapped.
+      onTouchStart={tip && tipShown && onTipSeen ?() => onTipSeen(tip.id) : undefined}>
       <View style={{ height: frame.insets.top }} />
       <View style={[styles.region, { height: r.topBar.height }]}>{topBar}</View>
       {fadeKey != null ? (
@@ -130,6 +155,12 @@ export function GameScreen({
           {float}
         </View>
       ) : null}
+      {help && helpOpen ? (
+        <View pointerEvents="box-none" style={[styles.float, { top: r.notice.y + r.notice.height, height: r.stage.height + r.dock.height }]}>
+          <HelpSheet id={help} top={SPACE.s} onClose={closeHelp} />
+        </View>
+      ) : null}
+      {tip ? <CoachTipLayer key={tip.id} tip={tip} onShown={setTipShown} /> : null}
       {modal != null ? (
         <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
           {modal}

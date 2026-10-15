@@ -227,7 +227,7 @@ ok('every notice in src/play goes through notify() (no setToast / onBanner / old
   const layout = read('src/play/stage-layout.tsx');
   assert.match(
     layout,
-    /<View style=\{\[styles\.region, \{ height: r\.notice\.height \}\]\}>[\s\S]{0,160}<NoticeLane height=\{r\.notice\.height\} idle=\{notice\} \/>/,
+    /<View style=\{\[styles\.region, \{ height: r\.notice\.height \}\]\}>[\s\S]{0,160}<NoticeLane height=\{r\.notice\.height\} idle=\{notice\}( reserveRight=\{help \? HELP_COLUMN : 0\})? \/>/,
     'GameScreen draws the NoticeLane in its fixed notice region, the screen line as idle content',
   );
   // One store, top-most lane only; nothing shows (or expires) with no lane mounted.

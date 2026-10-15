@@ -702,6 +702,7 @@ export function DiveScene({
       accessibilityLabel={`${street ? streetStop(depth).name : diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
       <GameScreen
         frame={frame}
+        help="dive"
         background={street ? STREET_SCENE_BG : REEF_BG}
         topBar={<View style={styles.topSlot}>{children}</View>}
         notice={<View style={styles.lane}>{laneLine}</View>}

@@ -104,7 +104,10 @@ const FORBIDDEN_IN_STAGE = /<(PlayBanner|PlaySheet|\w*Notice\w*|\w*Toast\w*|\w*C
   // Phase 2: notices live in the NoticeLane, which only GameScreen draws (in its fixed notice
   // region) — no screen floats its own banner or draws a second lane.
   const layout = read('src/play/stage-layout.tsx');
-  assert.match(layout, /<NoticeLane height=\{r\.notice\.height\} idle=\{notice\} \/>/, 'GameScreen draws the NoticeLane');
+  assert.match(layout, /<NoticeLane height=\{r\.notice\.height\} idle=\{notice\}( reserveRight=\{help \? HELP_COLUMN : 0\})? \/>/, 'GameScreen draws the NoticeLane (width reserved for the "?", never height)');
+  // Phase 4: the "?" and the coach tip are drawn by GameScreen outside every region (no region resizes).
+  assert.match(layout, /<HelpButton laneHeight=\{r\.notice\.height\}/, 'the "?" sits inside the notice region, sized by it');
+  assert.match(layout, /\{tip \? <CoachTipLayer/, 'the coach tip floats over the screen (absolutely placed)');
   const offenders: string[] = [];
   for (const { file } of SCREENS) {
     const src = read(file);

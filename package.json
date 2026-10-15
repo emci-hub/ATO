@@ -94,6 +94,7 @@
     "check:play-settings": "tsx ./scripts/check-play-settings.ts",
     "check:expedition-ladder": "tsx ./scripts/check-expedition-ladder.ts",
     "check:pet-games": "tsx ./scripts/check-pet-games.ts",
+    "check:divecore-ftue": "tsx ./scripts/check-divecore-ftue.ts",
     "check:divecore-nav": "tsx ./scripts/check-divecore-nav.ts",
     "check:notify": "tsx ./scripts/check-notify.ts",
     "check:play-dev-hidden": "tsx ./scripts/check-play-dev-hidden.ts",

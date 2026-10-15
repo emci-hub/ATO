@@ -2677,6 +2677,7 @@ export function DefendScreen({
         // Stage layout (emci 2026-10-14): one stage for setup and wave — the board sits right
         // under the TURF WAR header in both and never moves (no scroll, no jump on start or pause).
         frame={live ? waveFrame : setupFrame}
+        help={live ? 'turf-wave' : 'turf-setup'}
         topBar={
           live && street ? (
             <StreetFrame piece="resbar" style={styles.streetHud}>

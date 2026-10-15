@@ -5,7 +5,93 @@ The full brief is emci's pasted task (Steps 0-3 + Deliverables + Rules). This fi
 does not redo the audit. **Do not merge. Do not publish an OTA.** Play-only (`.cursor/rules/play-isolation.mdc`,
 `.cursor/rules/fixed-regions.mdc`). No new native deps; package.json may only gain check scripts.
 
-## ▶ LATEST — read this first (session 5, local Windows, 2026-10-14): **Phase 3 built** → phone check, then Phase 4
+## ▶ LATEST — read this first (session 6, local Windows, 2026-10-14): **Phase 4 built** → phone check, then Phase 5
+
+Phase 4 = ONE "?" per game screen + four coach tips instead of the blocking tutorial. Branch **`claude/divecore-phase4-help`**
+(stacked on `feature/divecore-minimal`, which already holds Phases 1-3) → draft PR into `feature/divecore-minimal`.
+**Waiting on:** emci's phone check (below). Phase 3 and Phase 2 notes stay underneath.
+
+### What Phase 4 did
+- **"?" help button** — `GameScreen` (`stage-layout.tsx`) takes `help?: HelpId` and draws exactly one `HelpButton` at the right
+  end of the NoticeLane (placement A of the previews `docs/divecore/previews/phase4-help-placement-{max,se}.png`; B top bar
+  squeezed the Claim chip, C floated over the art). The lane gives up **width** (`reserveRight`, 44 pt), never height; the stage
+  is untouched. Tap opens `HelpSheet` on the FloatLayer: title + ≤ 3 bullets of ≤ 10 words + **Full guide** (→ Hideout → Info →
+  Guide through `setGuideOpener`, registered by `play.tsx`). Outside tap, "?" again, or Android back closes it. In a live run
+  (Underground, a wave, a mini-game) leaving would end it, so the card only prints "Full guide: Hideout → Info → Guide".
+  Copy: `src/play/help/help-content.ts` (Hideout, Turf setup, Turf wave, Underground, Mini-game, Locker, Blades, Store).
+- **Four coach tips** replace `DivecoreTutorial` (file deleted): `src/play/ftue/coach-tips.ts` (pure: copy, `pickCoachTip`, order
+  warm egg → Feed → Underground → Turf War tab, ≤ 6 words, placement), `tip-anchors.ts` (callback refs on the egg, Feed, the hatch
+  chip, the Turf tab), `coach-tip-layer.tsx` (ring + words, `pointerEvents="none"`, absolutely placed). `GameScreen`'s root
+  `onTouchStart` marks the tip seen on ANY touch and the touch still reaches its target. One at a time, 700 ms after the
+  Hideout is idle (no sheet / game / Settings / wipe), stored in `play_settings.tipsSeen`. Ring breathes 1.4 s per half; with
+  Reduce Motion 2.4 s and smaller — never still. Tips never pause notices (the old tutorial did).
+- **Settings**: "Replay the tutorial" → **Replay tips** (goes to the Hideout, all four unseen again). Stale "Open Pet" / "along the
+  bottom" copy went with the tutorial.
+- **Gate**: `check:divecore-ftue` (new: copy limits, tip order and seen rules, `tipsSeen` migration, placement, static pins on
+  the wiring). Re-pinned: `check:stage-bounds`, `check:notify` (NoticeLane now takes `reserveRight`), `check:guide` and
+  `check:play-dev-hidden` (tutorial file → help sheet / tip layer). `check:fixed-regions` and `check:divecore-nav` needed none.
+- Shots: `docs/divecore/after/phase4-{tips,help}-{max,se}.png` (web export + Playwright with the installed Chrome; same harness
+  as before, seeds with `tipsSeen` all false).
+
+### Open / not done
+- Pet games get one generic "Mini-game" card (Catch + Train in one), not one per game.
+- The tip bubble can sit over the room row / dock for a moment (it is click-through); fine on both sizes, check on a phone.
+- The "?" button is 28 pt tall in a 28 pt lane (Underground, wave) — tap column is 44 wide but not 44 tall there.
+- iOS `onTouchStart` on a parent View is the dismiss; verified on web with touch only — **confirm on a real phone**.
+- About / Credits entry and dead `command-hub.tsx` from Phase 3 are still open.
+
+### Phone check (emci, dev build: `npm start`, same Wi-Fi)
+1. New save (or Settings → Replay tips): on the Hideout a ring + "Tap the egg to warm it" shows after a moment on the egg.
+2. Tap anywhere: the tip goes; the next one ("Feed keeps your pet happy") shows on Feed. Tap Feed itself: the sheet opens too.
+3. Then "Ride the hatch to Underground" on the hatch chip, then "Turf War: defend your street" on the tab. After four, none.
+4. Nothing moves while a tip shows (room, bars, dock). Open a sheet: the tip hides.
+5. Every game screen has a round "?" at the right of the line under the top bar. Tap: ≤ 3 short lines + Full guide.
+6. Full guide (Hideout, Turf setup, Locker) opens Info → Guide. In Underground / a wave / a mini-game it shows the path only.
+7. Android back closes the "?" card first. VoiceOver reads "Help".
+8. Settings → Reduce Motion: the ring still breathes, slower. Settings → "Replay tips" brings the tips back.
+
+### Lessons learned (Phase 4)
+- **Anchor with callback refs, not coordinates**: `tipAnchorRef('feed')` on an existing view + `measureInWindow` in the layer needs
+  no layout change and follows the room camera (re-measure every 400 ms). Pure placement keeps the text on screen.
+- **"Never blocks" = no overlay**: a pass-through dismiss (`onTouchStart` on the root, layer `pointerEvents="none"`) beat a
+  transparent catcher; a tap on a room spot both dismisses the tip and opens the spot (seen in a shot: SE tap hit "Stash").
+- **Reserve width, never height, for a new control in a fixed region** (`reserveRight`).
+- **Grep the checks that pin a file you delete** (`check:guide`, `check:play-dev-hidden` listed `divecore-tutorial.tsx`).
+- Playwright without a browser download: `npm i -g playwright`, launch with `channel: 'chrome'`; a static export plus
+  `hasTouch: true` and `touchscreen.tap` drives RN touch events. `setContent` can't load `file://` images — write an HTML file.
+- Shareable later: help-content + help sheet pattern, tip anchors. Play-only: the copy and the anchors.
+
+### ▶ Phase 5 prompt (ready to paste into a fresh session)
+
+Model: Sonnet 5
+
+```text
+Repo emci-hub/ATO (C:\Users\lil_e\Desktop\ATO). PLAY-ONLY task: obey .cursor/rules/play-isolation.mdc,
+.cursor/rules/fixed-regions.mdc and .cursor/rules/stage-bounds.mdc.
+
+First: git fetch origin, git checkout feature/divecore-minimal, git pull, npm ci.
+(If the Phase 4 PR into feature/divecore-minimal is not merged yet, check out claude/divecore-phase4-help instead.)
+Then read docs/divecore-handoff.md, section "LATEST" (history, emci's decisions, the 5-phase plan, Lessons learned) and
+docs/divecore-layout-spec.md (sections 2, 2a, 3).
+
+We are in Divecore Phase 5: content trims + word limits.
+1. Underground (Dive): trim the 258 pt dock to the spec's 152 target (Bag + Heat in one row, two button rows); the picture
+   fills the stage. Show real-art previews at 430x932 + 375x667 first.
+2. Word limits: notices built from values (Surfaced, Skipped ahead, shop buy, long shop names) must fit title <= 3 / body <= 10
+   words — cut them; one-line copy everywhere in the lanes.
+3. Tap targets >= 44 pt (Dive back, Gear info / How Dive works, "Exit Play" link); 48 pt primary buttons.
+4. Gate: extend check:stage-bounds / check:notify for the new heights and word limits; typecheck, lint, check:ota-gate green.
+5. Phone check in a visible terminal tab, shots into docs/divecore/after/, update docs/divecore-handoff.md, PR body and
+   PROJECT_CONTEXT.md. Draft PR into feature/divecore-minimal. Then stop (the 5 phases are done; no merge to master).
+
+Rules: no merge to master, no OTA publish, no new native deps, no economy/odds/rewards/save changes, never print EXPO_TOKEN or
+any key/token. Keep the style (Departure Mono + Rajdhani, Pixelify on Street screens, cyan frames, solid buttons, fullscreen
+arenas, locked art rules, Reduce Motion = gentle, never still). Show me previews before any layout choice; keep answers short.
+```
+
+---
+
+### Phase 3 (kept for its facts; was: Phase 3 built → phone check)
 
 Phase 3 = nav cleanup. Branch **`claude/divecore-phase3-nav`** (stacked on Phase 2, `claude/divecore-phase2-notify`) → draft PR into
 `feature/divecore-minimal`. **Waiting on:** emci's phone check (below). Phase 2's notes stay below this section.
@@ -43,7 +129,7 @@ recommended plan he approved — say so if not.)
   Credits may be required for asset licences — decide where it lives (a Settings row is the cheapest). Not built: new scope.
 - **`src/play/command-hub.tsx` and the `neon-viper.ts` hub tiles are dead code**; `check:shop-hidden` / `check:dive-fx` still
   read them. Delete in a cleanup once those checks are re-pointed.
-- Tutorial copy still says "Open Pet" / "along the bottom" (Phase 4 replaces the tutorial).
+- (Fixed in Phase 4: the tutorial and its stale "Open Pet" copy are gone.)
 - Shots: I drove the static export in the built-in browser (Hideout home with the Claim chip, ⚙ sheet, Locker "Back to
   Hideout") and checked the DOM; **no image files saved** (the built-in browser can't write them). Retake into
   `docs/divecore/after/` with `shots.js` (needs `npm i -g playwright`) if you want files.
