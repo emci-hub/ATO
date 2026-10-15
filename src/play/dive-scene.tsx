@@ -197,7 +197,6 @@ function SwimmingPet({
   tilt,
   auraElement = null,
   flash = null,
-  hideoutFx = false,
   faceFrom = null,
 }: {
   pet: PetState;
@@ -216,7 +215,6 @@ function SwimmingPet({
   tilt: SharedValue<number>;
   auraElement?: string | null;
   flash?: SharedValue<number> | null;
-  hideoutFx?: boolean;
   /** Face the way this x offset is moving (the Underground wander) instead of flipping on a timer. */
   faceFrom?: SharedValue<number> | null;
 }) {
@@ -260,7 +258,6 @@ function SwimmingPet({
           lockColour={shiny}
           auraElement={auraElement}
           flash={flash}
-          hideoutFx={hideoutFx}
         />
       </Animated.View>
       {shiny ? <ShinyOverlay size={box} groundAt={0.75 - GROUND_FRACTION * 0.75} animate={turn} /> : null}
@@ -753,7 +750,6 @@ export function DiveScene({
                 recolor={recolor}
                 auraElement={auraElement}
                 flash={hit.flash}
-                hideoutFx={street}
                 faceFrom={street && !playMotion.vestibularSafe ? sway : null}
               />
               {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}

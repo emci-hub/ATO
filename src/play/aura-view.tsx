@@ -32,7 +32,6 @@ import { PLAY_SHEETS } from '@/play/generated-play-sheets';
 import { useFxQuality } from '@/play/fx-quality';
 import { pixelRenderStyle } from '@/play/pixel-theme';
 import { usePlayMotion } from '@/play/play-motion';
-import { ClipImage } from '@/play/sheet-sprite';
 import { STREETWEAR_META, type ClipDrawable } from '@/play/skin';
 import { bodyBoxOf, framePixelsOf, remember, sheetBytes, type BodyBox } from '@/play/sprite-pixels';
 
@@ -213,43 +212,6 @@ export function PetAuraSprite({
           />
         </Animated.View>
       </View>
-    </View>
-  );
-}
-
-/** 84px blaze / outlined bubbles on the iso Hideout and Underground (their own small strips). */
-export function HideoutAuraStrip({
-  styleId,
-  layer,
-  box,
-}: {
-  styleId: 'fire' | 'water';
-  layer: 'back' | 'front';
-  box: number;
-}) {
-  const motionFlags = usePlayMotion();
-  const fxQuality = useFxQuality();
-  const gentle = motionFlags.cosmeticsStill || fxQuality !== 'full';
-  const which = layer === 'back' ? 'behind' : 'front';
-  const sheetKey = SHEET.hideoutFx[styleId === 'fire' ? 'blaze-84' : 'bubbles-outlined'][which];
-  const names = Object.keys(PLAY_SHEETS[sheetKey]?.frames ?? {})
-    .filter((k) => k.startsWith('frame_'))
-    .sort();
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    if (names.length === 0) return;
-    const ms = gentle ? GENTLE_HOLD_MS : Math.round(1000 / auraFps());
-    const id = setInterval(() => setTick((n) => n + 1), ms);
-    return () => clearInterval(id);
-  }, [gentle, names.length]);
-  if (names.length === 0) return null;
-  const frameKey = gentle ? names[(tick % 2) * Math.floor(names.length / 2)] : names[tick % names.length];
-  const size = Math.round(box * (styleId === 'fire' ? 84 / 64 : 61 / 64));
-  return (
-    <View
-      pointerEvents="none"
-      style={[styles.layer, { left: (box - size) / 2, top: (box - size) / 2, width: size, height: size }]}>
-      <ClipImage drawable={{ kind: 'sheet', sheetKey, frameKey: frameKey ?? names[0] }} />
     </View>
   );
 }

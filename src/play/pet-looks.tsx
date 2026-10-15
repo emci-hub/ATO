@@ -191,8 +191,9 @@ export function ShinyOverlay({
         <Ellipse
           cx={size / 2}
           cy={groundAt * size}
-          rx={size * 0.3}
-          ry={size * 0.07}
+          // Hugs the footprint (about the figure's width), not the whole sprite box: a wide ring read as a halo.
+          rx={size * 0.18}
+          ry={size * 0.045}
           fill="none"
           stroke="#FFD86B"
           strokeWidth={2}

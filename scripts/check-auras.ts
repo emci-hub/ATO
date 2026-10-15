@@ -389,7 +389,7 @@ ok('saves round-trip; old styles and colours are migrated; a v31 aura_style stil
   for (const needle of ['recolourPng', 'useAnimatedStyle', 'withRepeat', 'snapArtScale', 'body.ground', 'anchorY', 'ExpoImage']) {
     assert.ok(view.includes(needle), needle);
   }
-  assert.ok(!/setInterval\(\(\) => setTick/.test(view.split('HideoutAuraStrip')[0]), 'no setState per frame on the pet aura');
+  assert.ok(!/setInterval\(\(\) => setTick/.test(view), 'no setState per frame on the pet aura');
   assert.ok(!view.includes('<Path'), 'no per-pixel SVG paths');
   assert.ok(!view.includes('aura-png'), 'aura-view never decodes the atlas');
   assert.ok(view.includes('Math.floor(frames / 2)'), 'gentle two-frame breathe under Reduce Motion');
@@ -415,5 +415,17 @@ ok('saves round-trip; old styles and colours are migrated; a v31 aura_style stil
   );
 }
 ok('aura is an atlas + UI-thread frame index on the ground point; clipped stage; shop, dev kit and Defend wiring');
+
+{
+  // The Hideout and the Underground draw fire and water like every other screen: the reworked atlas,
+  // recoloured with the chosen colour. No second, uncoloured strip for the street rooms.
+  for (const f of ['pet-figure', 'aura-view', 'pet-anim-sprite', 'pet-room', 'dive-scene']) {
+    const src = readFileSync(path.join(repo, 'src/play', `${f}.tsx`), 'utf8');
+    assert.ok(!/hideoutFx|HideoutAuraStrip/.test(src), `${f}.tsx: no Hideout-only aura path`);
+  }
+  const figure = readFileSync(path.join(repo, 'src/play/pet-figure.tsx'), 'utf8');
+  assert.equal((figure.match(/auraRamps\(wear\.style, wear\.color, sword\)/g) ?? []).length, 2, 'back and front aura layers both take the chosen colour');
+}
+ok('the Hideout and Underground use the reworked, recoloured aura (no old blaze / bubbles strip)');
 
 console.log(`\ncheck:auras — ${passed} groups passed.`);
