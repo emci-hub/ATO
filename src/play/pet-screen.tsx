@@ -1054,7 +1054,7 @@ export function PetScreen({
                   badge={icon.id === 'dive' && view.diveRun.active}
                   badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
                   onPress={() => openIcon(icon.id)}
-                  anchorRef={icon.id === 'feed' ? tipAnchorRef('feed') : undefined}
+                  anchorRef={icon.id === 'feed' ? tipAnchorRef('feed') : icon.id === 'info' ? tipAnchorRef('info') : undefined}
                 />
               ))}
             </View>

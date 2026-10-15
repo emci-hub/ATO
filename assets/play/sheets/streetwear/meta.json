@@ -1299,11 +1299,5 @@
     "neon-maze": {
       "pads": 6
     }
-  },
-  "hideoutFx": [
-    "sheets/streetwear/hideout-fx/blaze-84-behind",
-    "sheets/streetwear/hideout-fx/bubbles-outlined-behind",
-    "sheets/streetwear/hideout-fx/blaze-84-front",
-    "sheets/streetwear/hideout-fx/bubbles-outlined-front"
-  ]
+  }
 }

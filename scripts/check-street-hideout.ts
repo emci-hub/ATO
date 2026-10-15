@@ -221,9 +221,6 @@ const read = (path: string) => readFileSync(path, 'utf8');
     'assets/art/rooms/hideout/hideout-td-occlude-night-b.png',
     'assets/art/rooms/hideout/hideout-td-neon-a.png',
     'assets/art/rooms/hideout/hideout-td-neon-b.png',
-    'art-src/pixellab/streetwear-pack/migrated/raw/fx/hideout/blaze-84-behind.png',
-    'art-src/pixellab/streetwear-pack/migrated/raw/fx/hideout/bubbles-outlined-behind.png',
-    'art-src/pixellab/streetwear-pack/migrated/raw/fx/hideout/sheets.json',
   ];
   for (const f of art) assert.ok(existsSync(f), f);
   assert.ok(HIDEOUT_AURA_PAD_PX >= 8);

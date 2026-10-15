@@ -47,7 +47,7 @@ export const CHATTER_LABEL: Record<ChatterLevel, string> = {
 export type DayWindow = { from: number; to: number };
 
 /** The first-time coach tips (docs/divecore-ui-spec.md §FTUE), each shown once. */
-export const COACH_TIPS = ['warm', 'feed', 'dive', 'turf'] as const;
+export const COACH_TIPS = ['warm', 'feed', 'dive', 'turf', 'holo'] as const;
 export type CoachTipId = (typeof COACH_TIPS)[number];
 
 /** In-game notices: everything, or only errors and celebrations. */
@@ -55,7 +55,8 @@ export const NOTICE_MODES = ['all', 'important'] as const;
 export type NoticeMode = (typeof NOTICE_MODES)[number];
 
 function allTips(seen: boolean): Record<CoachTipId, boolean> {
-  return { warm: seen, feed: seen, dive: seen, turf: seen };
+  // 'holo' (2026-10-15) is newer than the old tutorial: a save that already has progress still sees it once.
+  return { warm: seen, feed: seen, dive: seen, turf: seen, holo: false };
 }
 
 export type PlaySettings = {

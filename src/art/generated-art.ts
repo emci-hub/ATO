@@ -2156,16 +2156,6 @@ export const SHEET = {
       front: 'sheets/streetwear/auras/water/front',
     },
   },
-  hideoutFx: {
-    'blaze-84': {
-      behind: 'sheets/streetwear/hideout-fx/blaze-84-behind',
-      front: 'sheets/streetwear/hideout-fx/blaze-84-front',
-    },
-    'bubbles-outlined': {
-      behind: 'sheets/streetwear/hideout-fx/bubbles-outlined-behind',
-      front: 'sheets/streetwear/hideout-fx/bubbles-outlined-front',
-    },
-  },
   ui: {
     alert: 'sheets/streetwear/ui-kit/alert',
     'amb-drip': 'sheets/streetwear/ui-kit/amb-drip',
