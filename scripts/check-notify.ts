@@ -1,13 +1,14 @@
 /**
- * Divecore notices gate (docs/divecore-ui-spec.md §Notices). Run: npm run check:notify
- * (part of check:ota-gate). Replaces check:play-banner.
+ * Divecore notices gate (Phase 2, 2026-10-14; spec docs/divecore-layout-spec.md §1 NoticeLane).
+ * Run: npm run check:notify (part of check:ota-gate). Replaces check:play-banner.
  *
  *   Pure queue: kinds + priority, first in first out, dedupe → ×N counter, cap 4 (oldest
  *   low drops first), pause (only ERROR), same-kind 1 s gap, durations (+1 s Reduce Motion),
- *   "Important only".
+ *   "Important only". Pure news → notices (`noticeEvents`, was bannerEvents).
  *   Static: every notice in src/play goes through notify(); word limits on every notify()
  *   call; the lane announces to VoiceOver, is a live region, fades (never instant) under
- *   Reduce Motion, and sits under the MEASURED top bar (no hard-coded 52).
+ *   Reduce Motion, is one line, and sits in GameScreen's notice region BY LAYOUT (no
+ *   hard-coded or measured top bar height); PlayBanner is gone.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -27,6 +28,7 @@ import {
   tickNotices,
   type NoticeQueue,
 } from '../src/play/notify/queue';
+import { noticeEvents, type NoticeWatch } from '../src/play/notify/events';
 
 const repo = path.resolve(__dirname, '..');
 const read = (rel: string) => fs.readFileSync(path.join(repo, rel), 'utf8');
@@ -137,6 +139,29 @@ ok('durations 3.5 / 3 / 5 s (+1 s Reduce Motion); "Important only" = ERROR + CEL
 }
 ok('word limits: title ≤ 3, body ≤ 10');
 
+{
+  const w = (stage: string, oddsOpen: boolean, milestonesReady = 0): NoticeWatch => ({ stage, oddsOpen, milestonesReady });
+  assert.deepEqual(noticeEvents(null, w('baby', true, 3), false), [], 'first load: nothing');
+  const hatched = noticeEvents(w('egg', true), w('baby', true), false);
+  assert.equal(hatched.length, 1);
+  assert.equal(hatched[0].kind, 'celebrate');
+  assert.equal(hatched[0].target, 'pet', 'hatched taps to the pet');
+  assert.deepEqual(noticeEvents(w('egg', true), w('baby', true), true), [], 'in the Hideout the room shows it');
+  const revealed = noticeEvents(w('baby', true), w('child', false), false);
+  assert.equal(revealed.length, 1);
+  assert.equal(revealed[0].title, 'Grade revealed');
+  assert.deepEqual(noticeEvents(w('god', false), w('egg', true), false), [], 'a new egg is not news');
+  assert.deepEqual(noticeEvents(w('child', false, 1), w('child', false, 1), false), [], 'nothing new: nothing');
+  const ready = noticeEvents(w('child', false, 1), w('child', false, 2), true);
+  assert.equal(ready.length, 1, 'a milestone notifies even in the Hideout');
+  assert.equal(ready[0].target, 'journal');
+  assert.deepEqual(noticeEvents(w('child', false, 2), w('child', false, 1), false), [], 'claiming is not news');
+  const tide = noticeEvents({ ...w('child', false), streakYmd: '2026-10-13', streakDay: 3 }, { ...w('child', false), streakYmd: '2026-10-14', streakDay: 4 }, false);
+  assert.equal(tide.length, 1, 'a new Tide day notifies');
+  for (const n of [...hatched, ...revealed, ...ready, ...tide]) assert.equal(noticeCopyProblem(n), null, `"${n.title}" fits the word limits`);
+}
+ok('news: hatched / revealed only away from the Hideout; milestone → Journal; Tide day; copy fits');
+
 /* ---------------------------------------------------------------- static --- */
 
 function walk(dir: string, out: string[]) {
@@ -195,10 +220,30 @@ ok('every notice in src/play goes through notify() (no setToast / onBanner / old
   assert.ok(!/numberOfLines=\{[2-9]\}/.test(lane), 'no multi-line notice');
   assert.match(lane, /REDUCED_DRIFT_PX = 2/, 'Reduce Motion: a 2 px drift…');
   assert.match(lane, /REDUCED_FADE_MS = 200/, '…with a 200 ms fade (never instant)');
+  assert.match(lane, /reduceMotion: ReduceMotion\.Never/, 'the fade runs even with the phone on Reduce Motion (never still)');
   assert.ok(!/TOP_BAR_H\s*=\s*\d/.test(lane), 'no hard-coded top bar height');
-  assert.match(lane, /useNoticeLaneTop\(\)/, 'the lane sits under the measured top bar');
-  assert.ok(!fs.existsSync(path.join(repo, 'src/play/play-banner.tsx')), 'the old PlayBanner is gone');
-  ok('lane: VoiceOver announce + live region + hint, one line, Reduce Motion fade+drift, measured top');
+  assert.ok(!/position:\s*'absolute'[^}]*top:|insets\.top/.test(lane), 'not a floating overlay: the lane is placed by layout');
+  // The lane is drawn by GameScreen inside its fixed notice region (the region, not the lane, has the height).
+  const layout = read('src/play/stage-layout.tsx');
+  assert.match(
+    layout,
+    /<View style=\{\[styles\.region, \{ height: r\.notice\.height \}\]\}>[\s\S]{0,160}<NoticeLane height=\{r\.notice\.height\} idle=\{notice\} \/>/,
+    'GameScreen draws the NoticeLane in its fixed notice region, the screen line as idle content',
+  );
+  // One store, top-most lane only; nothing shows (or expires) with no lane mounted.
+  const store = read('src/play/notify/notify.ts');
+  assert.match(store, /if \(lanes\.length === 0\) return;/, 'no lane mounted: notices wait');
+  assert.match(
+    store,
+    /queue\.showing && queue\.showing\.kind !== 'error'\) \{\s*queue = \{ \.\.\.queue, showing: null, waiting: \[queue\.showing, \.\.\.queue\.waiting\] \}/,
+    'a cover (haul reveal, tutorial) puts the notice already up back in line, so it is not lost behind it',
+  );
+  assert.match(store, /topLane: lanes\.length > 0 \? lanes\[lanes\.length - 1\] : null/, 'only the top-most lane shows a notice');
+  assert.match(lane, /topLane === laneId \? queue\.showing : null/, 'a lane under another (Hideout under a pet game) shows only its idle line');
+  for (const gone of ['src/play/play-banner.tsx', 'src/play/play-banner-queue.ts', 'scripts/check-play-banner.ts']) {
+    assert.ok(!fs.existsSync(path.join(repo, gone)), `${gone} is gone`);
+  }
+  ok('lane: VoiceOver announce + live region + hint, one line, Reduce Motion fade+drift, placed by layout; PlayBanner gone');
 }
 
 console.log(`\ncheck:notify — ${passed} groups passed.`);

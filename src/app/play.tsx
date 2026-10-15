@@ -1,6 +1,6 @@
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,17 +29,8 @@ import { streetUiOn } from '@/play/street-ui';
 import { NEON, shopUnlocked, type HubDestination } from '@/play/neon-viper';
 import { PlayThemeProvider } from '@/play/play-theme';
 import { GameScreen, useStageFrame } from '@/play/stage-layout';
-import { PlayBanner } from '@/play/play-banner';
-import {
-  EMPTY_BANNERS,
-  bannerEvents,
-  currentBanner,
-  dismissBanner,
-  enqueueBanner,
-  type Banner,
-  type BannerQueue,
-  type BannerWatch,
-} from '@/play/play-banner-queue';
+import { noticeEvents, type NoticeWatch } from '@/play/notify/events';
+import { notify, useNoticeOptions, useNoticePause, useNoticeTargets, type NoticeTarget } from '@/play/notify/notify';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
@@ -124,34 +115,6 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  */
 
 type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab' | 'swords' | 'swordlab';
-
-type PlayToast =
-  | { kind: 'claim'; result: ClaimResult }
-  | { kind: 'find'; foundName: string }
-  | {
-      kind: 'surface';
-      itemIds: string[];
-      petMood: boolean;
-      shells: number;
-      free: boolean;
-      netFind: string | null;
-      /** v26 — the Hearty meal's find, Powers past today's ceiling, and the
-       * Powers-today count after this surface. */
-      heartyFind: string | null;
-      powersConverted: number;
-      powersToday: number;
-      swordDrop: string | null;
-    }
-  | { kind: 'bust'; rescued: string[]; petMood: boolean }
-  | { kind: 'message'; title: string; body: string };
-
-/** v25: every Play notice goes through one queued floating banner. */
-type BannerAction = PlayToast | { kind: 'banner'; banner: Omit<Banner, 'id'> } | { kind: 'dismiss'; id: number };
-
-function bannerReducer(q: BannerQueue, action: BannerAction): BannerQueue {
-  if (action.kind === 'dismiss') return dismissBanner(q, action.id);
-  return enqueueBanner(q, action.kind === 'banner' ? action.banner : toastBanner(action));
-}
 
 export default function PlayScreen() {
   const theme = useTheme();
@@ -250,6 +213,8 @@ export default function PlayScreen() {
   /** v24: the hub's Settings sheet and the tutorial close first on back. */
   const [hubSettingsOpen, setHubSettingsOpen] = useState(false);
   const [tutorialReplay, setTutorialReplay] = useState(false);
+  // Hold notices (except errors) while the tutorial or the hub Settings sheet covers the screen.
+  useNoticePause(hubSettingsOpen || (view != null && (tutorialReplay || !view.settings.tutorialSeen)));
   const overlayRef = useRef<(() => void) | null>(null);
   const goBackOneLevel = useCallback((source: BackSource): boolean => {
     if (overlayRef.current) {
@@ -283,12 +248,21 @@ export default function PlayScreen() {
       }),
     [goBackOneLevel],
   );
-  // v25: `setToast` queues a floating banner (a stable reducer dispatch).
-  const [banners, setToast] = useReducer(bannerReducer, EMPTY_BANNERS);
-  const banner = currentBanner(banners);
-  /** A banner tapped through to the Journal (Pet → Info → Journal), until used. */
+  // Phase 2 (2026-10-14): every Play notice goes through notify() → the NoticeLane of the
+  // screen on top. Play sets the mode (All / Important only), Reduce Motion and tap targets.
+  useNoticeOptions({ mode: view?.settings.notices ?? 'all', reduceMotion });
+  /** A notice tapped through to the Journal (Pet → Info → Journal), until used. */
   const [openJournal, setOpenJournal] = useState(false);
   const journalOpened = useCallback(() => setOpenJournal(false), []);
+  const goNoticeTarget = useCallback((target: Exclude<NoticeTarget, null>) => {
+    if (target === 'dive') setMode('dive');
+    else if (target === 'pet') setMode('pet');
+    else {
+      setMode('pet');
+      setOpenJournal(true);
+    }
+  }, []);
+  useNoticeTargets(goNoticeTarget);
   /** v26: open Pet → Info → Guide from the hub ⚙ or the tutorial. */
   const [openGuide, setOpenGuide] = useState(false);
   const guideOpened = useCallback(() => setOpenGuide(false), []);
@@ -316,39 +290,34 @@ export default function PlayScreen() {
 
   const handleClaim = useCallback(async () => {
     const result = await claim();
-    if (result) setToast({ kind: 'claim', result });
+    if (result) {
+      notify({ kind: 'notify', title: `Claimed +${result.tendTokens + result.dailyBonusTokens} tokens`, body: claimNoticeBody(result) });
+    }
   }, [claim]);
 
-  /** Dev kit row: roll one find into the bag and name it in the toast. */
+  /** Dev kit row: roll one find into the bag and name it in the notice. */
   const handleGrantRandomFind = useCallback(async () => {
     const id = await grantRandomFind();
-    if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
+    if (id) notify({ kind: 'notify', title: 'Found', body: itemName(id) ?? id });
   }, [grantRandomFind]);
 
-  /** Dev kit row: grant one Power into the bag, named in the toast. */
+  /** Dev kit row: grant one Power into the bag, named in the notice. */
   const handleGrantRandomPower = useCallback(async () => {
     const id = await grantRandomPower();
-    if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
+    if (id) notify({ kind: 'notify', title: 'Found', body: itemName(id) ?? id });
   }, [grantRandomPower]);
 
   /** Dev kit row: grant 3× Tide Blade as one stack (stacking test). */
   const handleGrantTideBlades = useCallback(async () => {
     const id = await grantTideBlades();
-    if (id) {
-      const name = itemName(id) ?? id;
-      setToast({ kind: 'find', foundName: `${name} ×3` });
-    }
+    if (id) notify({ kind: 'notify', title: 'Found', body: `${itemName(id) ?? id} ×3` });
   }, [grantTideBlades]);
 
   /** Dev kit row: sell every Look in the bag. */
   const handleSellAllJunk = useCallback(async () => {
     const result = await sellAllJunk();
     if (result && result.sold > 0) {
-      setToast({
-        kind: 'message',
-        title: 'Junk sold',
-        body: `${result.sold} Looks · +${result.gainedTokens} tokens`,
-      });
+      notify({ kind: 'notify', title: 'Junk sold', body: `${result.sold} Looks · +${result.gainedTokens} tokens` });
     }
   }, [sellAllJunk]);
 
@@ -364,20 +333,13 @@ export default function PlayScreen() {
   useEffect(() => {
     if (!expeditionNote || !expeditionNoteFresh) return;
     if (mode !== 'pet') {
-      setToast({
-        kind: 'banner',
-        banner: {
-          title: 'Your pet is back',
-          body: `It brought back ${shownFindName(expeditionNote)} — it’s waiting for you.`,
-          target: 'pet',
-        },
-      });
+      notify({ kind: 'notify', title: 'Pet is back', body: `Brought back ${shownFindName(expeditionNote)}. Tap to visit.`, target: 'pet', dedupeKey: 'expedition' });
     }
     commit((doc) => markExpeditionToasted(doc));
   }, [commit, expeditionNote, expeditionNoteFresh, mode]);
 
-  /** v25: hatch / reveal / milestone-ready news → banners (see bannerEvents). */
-  const watchRef = useRef<BannerWatch | null>(null);
+  /** v25: hatch / reveal / milestone-ready news → notices (see noticeEvents). */
+  const watchRef = useRef<NoticeWatch | null>(null);
   const watchStage = view?.pet.state.stage ?? null;
   const watchOdds = view?.pet.oddsOpen ?? false;
   const watchReady = view ? view.milestones.filter((m) => m.done && !m.claimed).length : 0;
@@ -385,14 +347,14 @@ export default function PlayScreen() {
   const watchStreakDay = view?.pet.streak.last ?? null;
   useEffect(() => {
     if (watchStage == null) return;
-    const next: BannerWatch = {
+    const next: NoticeWatch = {
       stage: watchStage,
       oddsOpen: watchOdds,
       milestonesReady: watchReady,
       streakYmd: watchStreakYmd,
       streakDay: watchStreakDay,
     };
-    for (const b of bannerEvents(watchRef.current, next, mode === 'pet')) setToast({ kind: 'banner', banner: b });
+    for (const n of noticeEvents(watchRef.current, next, mode === 'pet')) notify(n);
     watchRef.current = next;
   }, [mode, watchOdds, watchReady, watchStage, watchStreakDay, watchStreakYmd]);
 
@@ -400,18 +362,7 @@ export default function PlayScreen() {
   const handleSurface = useCallback(async (): Promise<DiveSurfaceSummary | null> => {
     const surfaced = await surfaceRun();
     if (!surfaced) return null;
-    setToast({
-      kind: 'surface',
-      itemIds: surfaced.banked,
-      petMood: surfaced.petCared,
-      shells: surfaced.shellsGained,
-      free: surfaced.free,
-      netFind: surfaced.netFind,
-      heartyFind: surfaced.heartyFind,
-      powersConverted: surfaced.powersConverted,
-      powersToday: surfaced.powersToday,
-      swordDrop: surfaced.swordDrop,
-    });
+    notify({ kind: 'notify', title: 'Surfaced', body: surfaceNoticeBody(surfaced) });
     nudgePet(surfaced.banked.some((id) => findGlow(id) !== 'common') ? 'rare_find' : 'surfaced');
     return {
       finds: surfaced.free ? 0 : surfaced.banked.length,
@@ -427,16 +378,12 @@ export default function PlayScreen() {
     async (path: DivePath, shownPct: number | null): Promise<DiveDeeperResult> => {
       const outcome = await pushDeeper(forceBustArmed, path, shownPct);
       if (outcome?.changed) {
-        setToast({
-          kind: 'message',
-          title: 'Odds updated',
-          body: `Your pet changed, so this path is now ${outcome.bustPct}%. Nothing was rolled — check it and tap again.`,
-        });
+        notify({ kind: 'error', title: 'Odds changed', body: `This path is now ${outcome.bustPct}%. Nothing rolled — tap again.` });
         return { outcome: 'changed', rescued: [] };
       }
       if (forceBustArmed) setForceBustArmed(false); // one-shot arm consumed
       if (outcome?.busted) {
-        setToast({ kind: 'bust', rescued: outcome.rescued, petMood: outcome.petCared });
+        notify({ kind: 'notify', title: 'Busted', body: bustNoticeBody(outcome.rescued) });
         nudgePet('busted');
       }
       if (outcome == null) return null;
@@ -450,11 +397,7 @@ export default function PlayScreen() {
     async (itemId: string, star: number) => {
       const outcome = await equip(itemId, star);
       if (!outcome.ok && outcome.reason === 'bag_full') {
-        setToast({
-          kind: 'message',
-          title: 'Bag full',
-          body: 'Your Basecore holds 80 finds — sell a Look to make room for a Power.',
-        });
+        notify({ kind: 'error', title: 'Bag full', body: 'Sell a Look to make room for a Power.' });
       }
     },
     [equip],
@@ -464,11 +407,7 @@ export default function PlayScreen() {
     async (itemId: string, star: number) => {
       const outcome = await sell(itemId, star);
       if (outcome.ok) {
-        setToast({
-          kind: 'message',
-          title: 'Sold',
-          body: `${outcome.name} · +${outcome.gainedTokens} tokens`,
-        });
+        notify({ kind: 'notify', title: 'Sold', body: `${outcome.name} · +${outcome.gainedTokens} tokens` });
       }
     },
     [sell],
@@ -504,11 +443,7 @@ export default function PlayScreen() {
       if (result?.milestoneLook) {
         const name =
           itemName(result.milestoneLook.itemId) ?? result.milestoneLook.itemId;
-        setToast({
-          kind: 'message',
-          title: 'Clear milestone',
-          body: `${result.milestoneLook.count} lifetime clears — found ${name}.`,
-        });
+        notify({ kind: 'celebrate', title: 'Clear milestone', body: `${result.milestoneLook.count} lifetime clears — found ${name}.` });
       }
       // Slice A2: a first-own also queues `hero_offer` in the save, which the
       // Defend screen renders as the hero sheet (owned + the two actions). No
@@ -522,11 +457,7 @@ export default function PlayScreen() {
   const handleGrantMilestoneWaveFive = useCallback(async () => {
     const id = await grantMilestoneWaveFive();
     if (id) {
-      setToast({
-        kind: 'message',
-        title: 'Wave 5 milestone',
-        body: `Found ${itemName(id) ?? id}.`,
-      });
+      notify({ kind: 'celebrate', title: 'Wave 5 milestone', body: `Found ${itemName(id) ?? id}.` });
     }
   }, [grantMilestoneWaveFive]);
 
@@ -606,7 +537,7 @@ export default function PlayScreen() {
       for (const look of result.milestoneLooks) {
         parts.push(`${look.wave}th-clear milestone — ${itemName(look.itemId) ?? look.itemId}`);
       }
-      setToast({ kind: 'message', title: 'Skipped ahead', body: parts.join(' · ') });
+      notify({ kind: 'notify', title: 'Skipped ahead', body: parts.join(' · ') });
     }
     return result;
   }, [skipToEven]);
@@ -643,11 +574,7 @@ export default function PlayScreen() {
       const gained = await unlockAvatarStub(id);
       if (gained) {
         const def = avatarDef(id);
-        setToast({
-          kind: 'message',
-          title: 'Avatar unlocked',
-          body: `${def?.name ?? id} joined your Basecore — tap Use to make them active.`,
-        });
+        notify({ kind: 'celebrate', title: 'Avatar unlocked', body: `${def?.name ?? id} joined your Basecore.` });
       }
     },
     [unlockAvatarStub],
@@ -669,9 +596,9 @@ export default function PlayScreen() {
         if (result.shellsInstead > 0) {
           parts.push(`${result.shellsInstead} shells (Powers for today were full)`);
         }
-        setToast({ kind: 'message', title: row.name, body: parts.join(' · ') });
+        notify({ kind: 'notify', title: `${row.name}`, body: parts.join(' · ') });
       } else if (result) {
-        setToast({ kind: 'message', title: row.name, body: shopRefusalCopy(result.reason) });
+        notify({ kind: 'error', title: `${row.name}`, body: shopRefusalCopy(result.reason) });
       }
       return result;
     },
@@ -916,7 +843,6 @@ export default function PlayScreen() {
       onJournalOpened={journalOpened}
       openGuide={openGuide}
       onGuideOpened={guideOpened}
-      onBanner={(b) => setToast({ kind: 'banner', banner: { ...b, target: null } })}
       shellTop={shellTop}
       shellTabs={shellTabs}
     />
@@ -1088,23 +1014,6 @@ export default function PlayScreen() {
       ) : (
         screens
       )}
-      {banner ? (
-        <PlayBanner
-          key={banner.id}
-          banner={banner}
-          reduceMotion={reduceMotion}
-          onDismiss={(id) => setToast({ kind: 'dismiss', id })}
-          onTap={(b) => {
-            setToast({ kind: 'dismiss', id: b.id });
-            if (b.target === 'dive') setMode('dive');
-            else if (b.target === 'pet') setMode('pet');
-            else if (b.target === 'journal') {
-              setMode('pet');
-              setOpenJournal(true);
-            }
-          }}
-        />
-      ) : null}
       {view && mode === 'grove' ? (
         <DivecoreSettingsSheet
           open={hubSettingsOpen}
@@ -1566,40 +1475,12 @@ function minutesUntilLabel(nextAt: number | null): string {
   return `${minutes}m`;
 }
 
-/** Names for a haul, capped at 3 so a long claim/bank stays readable. */
-/** A Play result / message → the floating banner (no tap target). */
-function toastBanner(toast: PlayToast): Omit<Banner, 'id'> {
-  return {
-    title:
-      toast.kind === 'claim'
-        ? `Claimed +${toast.result.tendTokens + toast.result.dailyBonusTokens} tokens`
-        : toast.kind === 'find'
-          ? 'Found'
-          : toast.kind === 'surface'
-            ? 'Surfaced'
-            : toast.kind === 'bust'
-              ? 'Bust'
-              : toast.title,
-    body:
-      toast.kind === 'claim'
-        ? claimToastBody(toast.result)
-        : toast.kind === 'find'
-          ? toast.foundName
-          : toast.kind === 'surface'
-            ? (toast.free
-                ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''}`
-                : `Brought up ${toast.itemIds.length === 0 ? 'nothing' : `${toast.itemIds.length} ${toast.itemIds.length === 1 ? 'find' : 'finds'} (see Your haul)`}.${toast.netFind ? ` The Net caught ${shownFindName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${shownFindName(toast.heartyFind)}.` : ''}${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
-              (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
-            : toast.kind === 'bust'
-              ? (toast.rescued.length > 0
-                  ? `Your pet saved ${summarizeNames(toast.rescued)} — the rest of the haul is lost.`
-                  : 'This haul is lost — the charge was already spent. Your Basecore is untouched.') +
-                (toast.petMood ? ' Your pet still had fun (+1 mood).' : '')
-              : toast.body,
-    target: null,
-  };
-}
+/*
+ * Notice bodies: one line in the NoticeLane, most important first (the line ends in "…" when it
+ * runs out of room). The full haul is in the Dive's haul reveal and the Locker.
+ */
 
+/** Names for a haul, capped at 3 so a long claim/bank stays readable. */
 function summarizeNames(itemIds: readonly string[]): string {
   const shown = Math.min(itemIds.length, 3);
   const names = itemIds
@@ -1610,35 +1491,59 @@ function summarizeNames(itemIds: readonly string[]): string {
   return hidden > 0 ? `${names} +${hidden} more` : names;
 }
 
-function foundSummary(itemIds: string[]): string {
-  return itemIds.length === 0 ? 'nothing found' : `Found ${summarizeNames(itemIds)}`;
+function finds(n: number): string {
+  return `${n} ${n === 1 ? 'find' : 'finds'}`;
 }
 
-function claimToastBody(result: ClaimResult): string {
+function claimNoticeBody(result: ClaimResult): string {
   const parts: string[] = [`+${result.tendTokens} tend`];
   if (result.dailyBonusTokens > 0) parts.push(`+${result.dailyBonusTokens} daily`);
-  if (result.diveChargeGranted) parts.push('+1 dive charge');
-  parts.push(foundSummary(result.items));
+  if (result.diveChargeGranted) parts.push('+1 charge');
+  parts.push(result.items.length === 0 ? 'no finds' : finds(result.items.length));
   return parts.join(' · ');
 }
 
-/** Honest copy for a token-shop refusal (why the buy didn't happen). */
+function surfaceNoticeBody(s: {
+  banked: string[];
+  shellsGained: number;
+  free: boolean;
+  netFind: string | null;
+  heartyFind: string | null;
+  powersConverted: number;
+  powersToday: number;
+  swordDrop: string | null;
+}): string {
+  const parts: string[] = [s.free ? 'Free dive' : s.banked.length === 0 ? 'No finds' : finds(s.banked.length)];
+  if (s.shellsGained > 0) parts.push(`+${s.shellsGained} shells`);
+  if (s.swordDrop) parts.push(`Sword: ${s.swordDrop}`);
+  if (s.netFind) parts.push(`Net: ${shownFindName(s.netFind)}`);
+  if (s.heartyFind) parts.push(`Meal: ${shownFindName(s.heartyFind)}`);
+  if (!s.free) parts.push(`Powers ${s.powersToday}/${DIVECORE_POWERS_PER_DAY}`);
+  if (s.powersConverted > 0) parts.push(`${s.powersConverted * POWER_OVERFLOW_SHELLS} shells for extra Powers`);
+  return parts.join(' · ');
+}
+
+function bustNoticeBody(rescued: readonly string[]): string {
+  return rescued.length > 0 ? `Pet saved ${summarizeNames(rescued)}. The rest sank.` : 'The haul sank. Your Basecore is safe.';
+}
+
+/** Honest copy for a token-shop refusal (why the buy didn't happen) — ≤ 10 words. */
 function shopRefusalCopy(reason: ShopRefusal): string {
   switch (reason) {
     case 'coming_soon':
-      return 'Not for sale yet — coming soon.';
+      return 'Not for sale yet.';
     case 'insufficient':
-      return 'Not enough tokens — Claim or clear a wave to earn more.';
+      return 'Not enough tokens. Claim or clear a wave.';
     case 'daily_cap':
-      return 'Daily limit reached — come back tomorrow.';
+      return 'Daily limit reached. Back tomorrow.';
     case 'weekly_cap':
-      return 'Weekly limit reached — come back next week.';
+      return 'Weekly limit reached. Back next week.';
     case 'tide_only':
       return 'Tide Pass only.';
     case 'pass_cap':
       return "That's the limit for this pass.";
     case 'dive_full':
-      return 'Dive charges are already full — nothing to add.';
+      return 'Dive charges are already full.';
   }
 }
 

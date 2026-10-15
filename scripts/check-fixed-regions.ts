@@ -45,10 +45,12 @@ const ok = (msg: string) => {
   assert.match(scene, /useStageFrame\('dive'\)/, 'Dive takes its frame (fixed dock + stage)');
   assert.ok(!/useGrowOnlyHeight/.test(scene), 'Dive panel is fixed, not grow-only');
   assert.match(scene, /style=\{bustPct == null \? styles\.reserved : undefined\}/, 'Dive Heat row is reserved off a run');
-  assert.match(scene, /notice=\{<View style=\{styles\.lane\}>\{laneLine\}<\/View>\}/, 'Dive find / caption sits in the NoticeLane');
+  assert.match(scene, /notice=\{<View style=\{styles\.lane\}>\{laneLine\}<\/View>\}/, 'Dive idle line (away) sits in the NoticeLane');
+  assert.match(scene, /notify\(\{ kind: 'notify', title: 'Found'/, 'a Dive find is a notify() notice in the lane');
+  assert.match(scene, /notify\(\{ kind: 'celebrate', title: 'Rare find'/, 'a rare find is a celebrate notice');
   assert.match(screen, /const DIVE_DOCK_ROWS = 2;/, 'Dive button area keeps 2 rows');
   assert.match(screen, /minHeight: pixelBodyLine\(PIXEL_CAPTION_PT\) \* 2/, 'Dive status note keeps 2 lines');
-  ok('Dive: fixed frame, reserved Heat row, 2 button rows, 2-line note, find line in the NoticeLane');
+  ok('Dive: fixed frame, reserved Heat row, 2 button rows, 2-line note, finds via notify() in the NoticeLane');
 }
 
 {

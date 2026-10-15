@@ -17,8 +17,10 @@ Kit: `src/play/stage-layout.tsx` (`GameScreen`, `useStageFrame`) + pure math `sr
    before first paint). Never `flex: 1` leftover, never `onLayout` of content. Only a rotation or
    a window-size change recomputes it. Pause, a notice, a tip or loading never do.
 3. **Nothing goes inside the stage except stage content** (the art, the pet, units, spots on the
-   art). Notices, banners, coach lines and hints go in the NoticeLane; sheets, panels and toasts
-   on the FloatLayer; confirms on the ModalLayer.
+   art). Notices go through `notify()` (`src/play/notify/notify.ts`, kinds celebrate / notify /
+   error) and show in the NoticeLane GameScreen draws; a screen's coach line or hint is the lane's
+   idle content (`notice` prop). Sheets and panels on the FloatLayer; confirms on the ModalLayer.
+   Never a floating banner, never a second lane (check:notify, check:stage-bounds).
 4. Regions use the spacing scale 4 · 8 · 12 · 16 · 24 (`SPACE`), taps ≥ 44 pt (`TAP_MIN`),
    primary buttons 48 pt in the ActionDock (bottom third). Reduce Motion = gentle, never still,
    and never a size change.

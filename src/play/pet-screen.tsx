@@ -50,6 +50,7 @@ import { StoneSheetBody } from '@/play/stone-sheet';
 import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
 import { PetGameHost, type GamePet } from '@/play/pet-games';
 import { BUFF_HOW, BUFF_ICON, BUFF_LABEL } from '@/play/play-buffs';
+import { notify } from '@/play/notify/notify';
 import { useFxQuality } from '@/play/fx-quality';
 import { isStrongResult } from '@/play/score-burst-model';
 import type { GuideSection } from '@/play/guide-content';
@@ -310,7 +311,6 @@ export function PetScreen({
   onReplayTutorial,
   openJournal = false,
   onJournalOpened,
-  onBanner,
   openGuide: openGuideReq = false,
   onGuideOpened,
   shellTop = null,
@@ -339,8 +339,6 @@ export function PetScreen({
   /** v26 — open Info → Guide (from the hub ⚙ or the tutorial). */
   openGuide?: boolean;
   onGuideOpened?: () => void;
-  /** v26 — post a floating banner (NEW RECORD!, unlocks, buffs). */
-  onBanner?: (b: { title: string; body: string }) => void;
   /** Stage layout: the shell's resource bar (TopBar) and tab bar for this GameScreen. */
   shellTop?: ReactNode;
   shellTabs?: ReactNode;
@@ -682,17 +680,17 @@ export function PetScreen({
         setLastResult(roundResultLine(kind, outcome, r));
         setLastRound({ key: roundClaim.current.key, score: r.score, strong: isStrongResult(r) });
       }
-      // v26: a new record / unlock / buff gets the floating banner, and the
+      // v26: a new record / unlock / buff gets a notice (NoticeLane), and the
       // pet cheers (the tap hop + heart).
       if (r.newRecord) {
-        onBanner?.({ title: 'NEW RECORD!', body: `${r.score} pts on ${DIFFICULTY_LABEL[r.level]} (was ${r.prevBest}).` });
+        notify({ kind: 'celebrate', title: 'New record', body: `${r.score} pts on ${DIFFICULTY_LABEL[r.level]} (was ${r.prevBest}).` });
         tapPet();
       }
-      if (r.unlocked) onBanner?.({ title: `${DIFFICULTY_LABEL[r.unlocked]} unlocked`, body: 'A harder level is open in Play.' });
-      if (r.buff) onBanner?.({ title: `${BUFF_ICON[r.buff]} ${BUFF_LABEL[r.buff]}`, body: BUFF_HOW[r.buff] });
-      if (r.dailyBonusShells > 0) onBanner?.({ title: 'Daily best!', body: `+${r.dailyBonusShells} shells — come back tomorrow for a new pattern.` });
-      if (r.dailyEgg) onBanner?.({ title: '🥚 Daily egg', body: 'Daily challenge passed — one more free egg today.' });
-      if (r.dailyStone) onBanner?.({ title: '💎 Shine Stone', body: 'Your first daily Gold today — a Shine Stone is yours.' });
+      if (r.unlocked) notify({ kind: 'celebrate', title: `${DIFFICULTY_LABEL[r.unlocked]} unlocked`, body: 'A harder level is open in Play.' });
+      if (r.buff) notify({ kind: 'celebrate', title: `${BUFF_LABEL[r.buff]}`, body: BUFF_HOW[r.buff] });
+      if (r.dailyBonusShells > 0) notify({ kind: 'celebrate', title: 'Daily best', body: `+${r.dailyBonusShells} shells. New pattern tomorrow.` });
+      if (r.dailyEgg) notify({ kind: 'celebrate', title: 'Daily egg', body: 'Challenge passed: one more free egg today.' });
+      if (r.dailyStone) notify({ kind: 'celebrate', title: 'Shine Stone', body: 'First daily Gold: a Shine Stone is yours.' });
       // v25: it reacts to a pass, a skilled pass, a fail, or a bomb-out.
       const talk = !outcome.pass
         ? (outcome.bombs ?? 0) >= 3

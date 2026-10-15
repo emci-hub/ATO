@@ -66,6 +66,7 @@ import {
   type FindGlow,
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
+import { notify, useNoticePause } from '@/play/notify/notify';
 import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
 import { FIND_CATEGORY_LABEL, FIND_CATEGORY_PHRASE, findCategory, findName } from '@/play/dive-loot';
 import { HaulReveal } from '@/play/dive-reveal';
@@ -665,29 +666,24 @@ export function DiveScene({
   const [revealedKey, setRevealedKey] = useState(event?.key ?? 0);
   const showHaulReveal =
     event?.kind === 'surface' && event.finds > 0 && event.ids.length > 0 && event.key !== revealedKey;
+  // The haul reveal covers the lane: hold notices (except errors) until it closes.
+  useNoticePause(showHaulReveal);
 
-  const caption = away
-    ? 'Your pet is away on an expedition — diving solo.'
-    : haul.length > 0
-      ? revealing
-        ? null
-        : `Found ${FIND_CATEGORY_PHRASE[findCategory(haul[haul.length - 1])]}`
-      : event?.kind === 'bust'
-        ? event.saved.length > 0
-          ? street
-            ? `Busted!\nYour pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
-            : `Bust — the haul sank. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
-          : street
-            ? 'Busted!\nThe bag dropped. Your pet is fine.'
-            : 'Bust — the haul sank. Your pet is fine.'
-        : event?.kind === 'surface' && shown && event.finds === 0 && event.ids.length > 0
-          ? `Back up! ${event.ids.length} ${event.ids.length === 1 ? 'sighting' : 'sightings'} for the Logbook${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
-        : event?.kind === 'surface' && shown
-          ? `Back up! ${shown.finds} ${shown.finds === 1 ? 'find' : 'finds'}${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
-          : null;
-  const lastId = haul.length > 0 ? haul[haul.length - 1] : null;
-  const rareFind =
-    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? `${FIND_CATEGORY_LABEL[findCategory(lastId)]} ?` : null;
+  // Phase 2: a find that lands is a notice (NoticeLane, via notify()); the surface / bust results
+  // are play.tsx's notices. The lane's idle line is only the ongoing "away" status.
+  const caption = away ? 'Your pet is away on an expedition — diving solo.' : null;
+  const announcedKey = useRef(landedKey);
+  useEffect(() => {
+    if (landedKey === announcedKey.current) return;
+    announcedKey.current = landedKey;
+    const id = haul[haul.length - 1];
+    if (!id) return;
+    if (isRareOrBetter(findGlow(id))) {
+      notify({ kind: 'celebrate', title: 'Rare find', body: `${FIND_CATEGORY_LABEL[findCategory(id)]} ?`, dedupeKey: 'dive-rare' });
+    } else {
+      notify({ kind: 'notify', title: 'Found', body: `${FIND_CATEGORY_PHRASE[findCategory(id)]}`, dedupeKey: 'dive-find' });
+    }
+  }, [haul, landedKey]);
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
 
@@ -695,14 +691,8 @@ export function DiveScene({
     return <View style={styles.scene} />;
   }
 
-  // NoticeLane (stage layout): the find / caption is one line above the picture, never on it.
-  const laneLine = rareFind && lastId ? (
-    <View style={styles.laneRow}>
-      <FindIcon id={lastId} size={12} bare mystery />
-      <PixelLabel color={PIXEL.amber} numberOfLines={1}>Rare find</PixelLabel>
-      <PixelBody size="sm" color={PIXEL.text} numberOfLines={1}>{rareFind}</PixelBody>
-    </View>
-  ) : caption ? (
+  // NoticeLane idle line (stage layout): one line above the picture, never on it.
+  const laneLine = caption ? (
     <PixelBody size="sm" numberOfLines={1} style={styles.laneText}>{caption.replace(/\n/g, ' ')}</PixelBody>
   ) : null;
 
@@ -914,7 +904,6 @@ const styles = StyleSheet.create({
   // Stage layout: the picture fills the frame's fixed stage region.
   stageFill: { flex: 1, overflow: 'hidden' },
   lane: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 12 },
-  laneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   laneText: { textAlign: 'center' },
   abs: { position: 'absolute' },
   reserved: { opacity: 0 },
