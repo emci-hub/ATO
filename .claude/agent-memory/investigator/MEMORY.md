@@ -18,5 +18,4 @@
 - [Play UI map](play_ui_map_facts.md) — one-route mode switch, 3 chrome systems, Defend HUD is in-scroll, no haptics/lottie/skia, isolation classes
 - [Divecore notices facts](divecore_notices_facts.md) — PlayBanner wiring/geometry (52 vs real 56), 80-row notice inventory, 3 known bugs
 - [Divecore layout facts](divecore_layout_facts.md) — stage sizing per scene, Turf board is width-square in ScrollView, real shell heights, 1 grow-only caller
-- [Hideout decor facts](hideout_decor_facts.md) — room layers/map JSON, per-prop PNGs exist, save v33, checks auto-registered
 - [Divecore nav facts](divecore_nav_facts.md) — Street shell always on, orphaned About, hidden Hideout header, back mismatches, settings migration site
