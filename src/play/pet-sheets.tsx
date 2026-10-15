@@ -54,6 +54,8 @@ import {
   type PetState,
 } from '@/play/pet';
 import { COSMETICS, COSMETIC_SLOTS, cosmeticById, type CosmeticSlot } from '@/play/pet-cosmetics';
+import { VISITOR_UI } from '@/play/daily-visitors-bank';
+import { StickerBook } from '@/play/daily-visitor-ui';
 import {
   DIFFICULTIES,
   DIFFICULTY_LABEL,
@@ -689,6 +691,7 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
   };
   return (
     <>
+      <StickerBook book={view.hideout.state.visitors} />
       <DyePanel view={view} commit={commit} />
       {pv.state.shiny ? (
         <Text style={styles.body}>✨ Your shiny keeps its own colour — tints don’t show on it.</Text>
@@ -793,7 +796,7 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
                 ) : c.price != null ? (
                   <NeonChip label={`Buy · ${c.price} tokens`} onPress={() => buy(c.id)} />
                 ) : (
-                  <Text style={styles.subtle}>Dive find</Text>
+                  <Text style={styles.subtle}>{c.source === 'visitor' ? VISITOR_UI.lookSource : 'Dive find'}</Text>
                 )}
               </View>
             );

@@ -15,7 +15,7 @@
  * Hideout map (2D floor wander). Classic is unchanged except the shared
  * motion flags.
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   FadeInDown,
@@ -32,6 +32,8 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 
 import type { PetCoachTip } from '@/play/coach';
+import { VISITOR_CLEAR_PX, VISITOR_MIN_PET_STRIP_PX, VISITOR_SPOT } from '@/play/daily-visitors';
+import { DailyVisitorActor } from '@/play/daily-visitor-ui';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
 import { ELEMENT_COLOR, type Element } from '@/play/kits';
@@ -401,6 +403,7 @@ export function PetRoom({
   hideoutStage = null,
   stageSize,
   roomOutside = false,
+  visitor = null,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -458,6 +461,8 @@ export function PetRoom({
   /** Stage layout: the status strip and the Hideout / Loft / Call row live outside the room
    * (NoticeLane + their own row); the room fills the whole stage and a camera follows the pet. */
   roomOutside?: boolean;
+  /** Daily visitors (step 4): today's visitor, drawn in the Hideout room only (street layout). */
+  visitor?: { heroId: string; greeted: boolean; onTap: () => void } | null;
 }) {
   // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
   const fontsReady = usePixelFonts();
@@ -522,7 +527,8 @@ export function PetRoom({
     : roomOrigin(Math.max(width, 1), Math.max(height, 1));
   // The pet's feet stay clear of both rails (rail width + 8 pt + half its body). Read inside the walk loop.
   const walkBoundsRef = useRef<ReturnType<typeof railWalkBounds> | undefined>(undefined);
-  walkBoundsRef.current = rails && hideoutScale ? railWalkBounds({ stageW: width, originLeft: origin.left, pt: hideoutScale.pt }) : undefined;
+  const railBounds = rails && hideoutScale ? railWalkBounds({ stageW: width, originLeft: origin.left, pt: hideoutScale.pt }) : undefined;
+  walkBoundsRef.current = railBounds;
   const k = hideoutScale?.pt ?? ART_PT;
   const floorY = streetRoom && hideoutScale ? origin.top + 224 * k : origin.top + MOCKUP_ROOM.feet * ART_PT;
   const plateW = streetRoom && hideoutScale ? hideoutScale.canvasW : MOCKUP_PLATE.w * ART_PT;
@@ -707,6 +713,7 @@ export function PetRoom({
   // A pet that starts (or sits, with Motion Off) under a rail is moved clear of it (on walkable floor;
   // the Loft bed already sits clear of the rails, so a sleeping pet is left alone).
   const hasRails = rails != null;
+  const hasVisitor = visitor != null;
   useEffect(() => {
     const b = walkBoundsRef.current;
     if (!b) return;
@@ -722,7 +729,7 @@ export function PetRoom({
     artXRef.current = p[0];
     artYRef.current = p[1];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, hideoutPt, hasRails]);
+  }, [width, hideoutPt, hasRails, hasVisitor]);
 
   // Depth vs props follows the live feet, not only the step's destination.
   useEffect(() => {
@@ -874,6 +881,39 @@ export function PetRoom({
     return { transform: [{ translateX: want - (center - box / 2) }] };
   });
 
+  // Daily visitor: stands at its spot in the Hideout room (clamped clear of the rails), sorted
+  // in front of / behind the pet by its feet. Same grown-hero size as an adult pet.
+  const visitorOn = !!(visitor && isoOn && hideoutScale && hideoutStage?.viewed === 'hideout' && !picking && width > 0);
+  const hasRailsNow = rails != null;
+  const visitorFeet = useMemo(
+    () => (visitorOn ? isoClampToWalk(VISITOR_SPOT[0], VISITOR_SPOT[1], roomGeom('hideout'), 'adult', railBounds) : null),
+    // railBounds follows width / scale / rails.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visitorOn, width, hideoutPt, hasRailsNow],
+  );
+  // The pet keeps to the left of the visitor (never walks through it) when the room is wide enough.
+  if (visitorFeet && hideoutStage?.presence.room === 'hideout') {
+    const minX = railBounds?.minX ?? 0;
+    const cap = visitorFeet[0] - VISITOR_CLEAR_PX;
+    if (cap - minX >= VISITOR_MIN_PET_STRIP_PX) {
+      walkBoundsRef.current = { minX, maxX: Math.min(railBounds?.maxX ?? cap, cap) };
+    }
+  }
+  const visitorEl =
+    visitor && visitorOn && visitorFeet && hideoutScale ? (
+      <DailyVisitorActor
+        heroId={visitor.heroId}
+        box={hideoutPetBox(hideoutHeroArtPx('adult'), hideoutScale, pr)}
+        feetX={ox + visitorFeet[0] * isoPt}
+        feetY={oy + visitorFeet[1] * isoPt}
+        figurePt={HIDEOUT_HERO_FIGURE_PX * HIDEOUT_STAGE_SCALE.adult * isoPt}
+        greeted={visitor.greeted}
+        animate={walkOn}
+        onTap={visitor.onTap}
+      />
+    ) : null;
+  const visitorBehind = visitorFeet != null && visitorFeet[1] < feet.y;
+
   if (!fontsReady) return <View style={styles.room} />;
 
   const meterLabel = { fontSize: 16, lineHeight: 20 } as const;
@@ -1002,6 +1042,7 @@ export function PetRoom({
         />
       ) : null}
 
+      {visitorBehind ? visitorEl : null}
       {width > 0 && !away && !picking && (!hideoutStage || (hideoutStage.presence.room === hideoutStage.viewed && !hideoutStage.presence.away)) ? (
         <Animated.View pointerEvents={streetRoom ? 'box-none' : 'auto'} style={[styles.petWrap, { top: isoOn ? 0 : top, width: box, height: box }, petStyle]}>
           {streetRoom ? null : (
@@ -1123,6 +1164,7 @@ export function PetRoom({
           ) : null}
         </Animated.View>
       ) : null}
+      {visitorBehind ? null : visitorEl}
       {streetRoom && hideoutScale ? (
         <StreetRoomAuraClip left={origin.left} top={origin.top} scale={hideoutScale} stageW={width} stageH={cover ? roomLayerH : Math.max(1, height)} />
       ) : null}

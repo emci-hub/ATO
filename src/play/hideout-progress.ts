@@ -9,6 +9,7 @@
  * and a build in progress carries over.
  */
 import roomsDoc from './data/hideout-rooms.json';
+import { parseVisitorBook, type VisitorBook } from '@/play/daily-visitors';
 import { PET_DEEP_MIN_DEPTH, PET_MAX_GAP_MS, PET_STAGES, petDayHolds, type PetHallEntry, type PetState } from '@/play/pet';
 
 export const HIDEOUT_ROOM_IDS = ['hideout', 'loft', 'garage', 'rooftop'] as const;
@@ -138,6 +139,8 @@ export type HideoutState = {
   log: HideoutEvent[];
   tokens_by_source: Record<string, number>;
   tokens_ymd: string | null;
+  /** Daily visitors (roadmap step 4): greetings per visitor + the day of the last one. Rides the cloud save. */
+  visitors: VisitorBook;
 };
 
 export function emptyHideout(): HideoutState {
@@ -160,6 +163,7 @@ export function emptyHideout(): HideoutState {
     log: [],
     tokens_by_source: {},
     tokens_ymd: null,
+    visitors: { greets: {}, greeted_ymd: null },
   };
 }
 
@@ -484,6 +488,7 @@ export function parseHideout(raw: unknown, now: number): HideoutState {
     log,
     tokens_by_source,
     tokens_ymd: typeof r.tokens_ymd === 'string' ? r.tokens_ymd : null,
+    visitors: parseVisitorBook(r.visitors),
   };
 }
 
