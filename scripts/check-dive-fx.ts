@@ -116,7 +116,7 @@ assert.match(screen, /bustPct: run\.bustPct,/, 'the buttons are built from run.b
   );
   // The button layout never uses a bare flex:1 (that could collapse the label).
   assert.ok(!screen.includes('button: { flex: 1'), 'no flex:1 button outside a row');
-  assert.ok(screen.includes('minHeight: 50'), 'buttons keep room for their text');
+  assert.ok(screen.includes('minHeight: 48'), 'buttons keep room for their text (48 pt, Phase 5 spec)');
   // iOS Yoga: flexBasis 0 + minWidth 0 collapses the face to ~0 width. The row
   // keeps its height, so the dock shows an empty ink gap and no DIVE / DEEPER / SURFACE.
   assert.ok(!/button:\s*\{[^}]*flexBasis:\s*0[,}]/.test(screen), 'buttons do not use flexBasis 0');

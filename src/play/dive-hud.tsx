@@ -156,6 +156,9 @@ export function DepthMeter({ depth, max }: { depth: number; max: number }) {
   );
 }
 
+/** Phase 5: a 20-22 pt label + 12 pt above and below = a 44 pt tall tap; 8 pt either side, links 16 pt apart. */
+const TAP_SLOP = { top: 12, bottom: 12, left: 8, right: 8 } as const;
+
 export function DiveTopBar({
   zone,
   depth,
@@ -188,7 +191,7 @@ export function DiveTopBar({
         <View style={[styles.stack, street && styles.streetStack]}>
           <View style={styles.row}>
             <View style={styles.side}>
-              <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
+              <Pressable onPress={onBack} hitSlop={TAP_SLOP} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
                 <PixelLabel color={street ? STREET.paper : PIXEL.cyan} numberOfLines={1} style={label}>
                   {street ? '< Hideout' : '< Pet'}
                 </PixelLabel>
@@ -210,10 +213,10 @@ export function DiveTopBar({
           <View style={styles.row}>
             <View style={styles.side}>
               <View style={styles.links}>
-                <Pressable onPress={onGear} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dive gear">
+                <Pressable onPress={onGear} hitSlop={TAP_SLOP} accessibilityRole="button" accessibilityLabel="Dive gear">
                   <PixelBody size="sm" color={PIXEL.dim}>Gear</PixelBody>
                 </Pressable>
-                <Pressable onPress={onInfo} hitSlop={8} accessibilityRole="button" accessibilityLabel="How Dive works">
+                <Pressable onPress={onInfo} hitSlop={TAP_SLOP} accessibilityRole="button" accessibilityLabel="How Dive works">
                   <PixelBody size="sm" color={PIXEL.dim}>info ›</PixelBody>
                 </Pressable>
               </View>
@@ -250,7 +253,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   side: { flex: 1, justifyContent: 'center' },
   sideEnd: { alignItems: 'flex-end' },
-  links: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
+  links: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   zone: { flexShrink: 1, minWidth: 0, textAlign: 'center' },
   shells: { flexDirection: 'row', alignItems: 'center', gap: ART_PT },
 });

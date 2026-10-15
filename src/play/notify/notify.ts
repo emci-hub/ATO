@@ -10,6 +10,7 @@
  */
 import { useEffect, useSyncExternalStore } from 'react';
 
+import { fitNotice } from '@/play/notify/copy';
 import {
   EMPTY_NOTICES,
   dismissNotice,
@@ -64,9 +65,9 @@ function pump() {
   if (wake != null) timer = setTimeout(pump, Math.max(16, wake));
 }
 
-/** Raise a notice (word limits: title ≤ 3, body ≤ 10 — check:notify). */
+/** Raise a notice (word limits: title ≤ 3, body ≤ 10 — check:notify; anything longer is cut to fit). */
 export function notify(input: NoticeInput): void {
-  const next = enqueueNotice(queue, input, Date.now(), mode);
+  const next = enqueueNotice(queue, fitNotice(input), Date.now(), mode);
   if (next === queue) return;
   queue = next;
   emit();

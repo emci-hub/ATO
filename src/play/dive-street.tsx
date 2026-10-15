@@ -8,7 +8,7 @@
  * Under vestibularSafe the doors / enter-exit become a crossfade.
  */
 import { useEffect, useRef } from 'react';
-import { PixelRatio, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -21,7 +21,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { DiveWorldCuts } from '@/play/dive-fx-model';
-import { hideoutIntegerScale } from '@/play/hideout-iso';
 import { KEEP_TRAVEL_PT } from '@/play/play-motion';
 import { streetStop } from '@/play/dive-street-names';
 import { uiDrawable, type UiPiece } from '@/art/art';
@@ -53,14 +52,10 @@ export function StreetUndergroundWorld({
   cuts: DiveWorldCuts;
 }) {
   const stop = streetStop(depth);
-  const scale = hideoutIntegerScale({
-    availW: width,
-    availH: height,
-    pixelRatio: PixelRatio.get(),
-    canvas: STOP_CANVAS,
-    content: [0, 0, STOP_CANVAS[0], STOP_CANVAS[1]],
-  });
-  const art = { w: scale.canvasW, h: scale.canvasH };
+  // Phase 5 (emci 2026-10-14): the plate COVERS the stage (crops its edges) so there are no ink bands.
+  // TODO(art): the stop plates are 256×320 and get cropped/upscaled; redraw them wider so the picture looks better.
+  const cover = Math.max(width / STOP_CANVAS[0], height / STOP_CANVAS[1]);
+  const art = { w: STOP_CANVAS[0] * cover, h: STOP_CANVAS[1] * cover };
   const shade = Math.min(0.45, depth * 0.08);
   const pulse = useSharedValue(1);
   useEffect(() => {

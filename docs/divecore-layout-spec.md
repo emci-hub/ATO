@@ -79,7 +79,7 @@ TAB = 60 + max(bottom inset, 6).
 | `hideout` | 56 (resource bar) | 40 (pet strip / swipe hint) | 120 (room row 56 + Feed·Info 64) | TAB | **563** | **365** |
 | `turf-setup` | 56 (resource bar) | 40 (coach line) | 64 (Setup ▲ + Call wave) | TAB | **619** | **421** |
 | `turf-wave` | 56 (HUD) | 40 (coach / paused line) | 64 + TAB (Cast + Pounce·1×·2×·Leave) | — | **619** (same) | **421** (same) |
-| `dive` | 109 (stop-track panel) | 28 (find / caption line) | 258 | inset | 444 | 252 |
+| `dive` | 109 (stop-track panel) | 28 (status / find / caption line) | **152** (Phase 5; was 258) | max(inset, 8) | **550** (was 444) | **350** (was 252) |
 | `pet-game` | 88 | 28 (empty for now) | 208 | inset | 515 | 323 |
 | `list` (Block, Locker, Store) | 56 | 40 (empty for now) | 0 | TAB | 683 | 485 |
 
@@ -90,8 +90,9 @@ TAB = 60 + max(bottom inset, 6).
 - **Hideout:** the room covers the stage (`hideoutCoverScale`) and a lazy camera (`hideoutCameraTop`) keeps
   the pet's feet between 40 % and 88 % of the stage, floor first. Pro Max shows ~80 % of the room height,
   SE ~60 % (Play / Stash scroll into view when the pet walks up).
-- **Dive** lost 24 pt of stage vs before (468 → 444 / 276 → 252) because the 28 pt lane is new and the dock is
-  still 258. Phase 5 trims the dock to the 152 target (→ ~615 / ~415).
+- **Dive** lost 24 pt of stage in Phase 1 (468 → 444 / 276 → 252). **Phase 5 trimmed the dock 258 → 152** (Bag·Heat one 24 pt row
+  + two 48 pt rows; `bottomPad: 'inset-min'`, ≥ 8 pt) → stage **550 / 350**. It is not the 615 / 415 above because the Dive top bar is
+  still 109 pt, not 44. The stop picture covers the stage (plate scaled `max(w/256, h/320)`, edges cropped).
 
 ## 3. Spacing, safe areas, taps
 

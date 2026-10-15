@@ -27,8 +27,11 @@ type RegionSpec = {
   /** true: a TabBar closes the screen (it carries the bottom inset). */
   tabBar: boolean;
   /** No tab bar: the bottom inset is a pad under the dock (0 when the dock carries it itself). */
-  bottomPad: 'inset' | 'none';
+  bottomPad: 'inset' | 'inset-min' | 'none';
 };
+
+/** `bottomPad: 'inset-min'` — the home-indicator inset, but never under 8 pt (a dock never touches the edge). */
+export const MIN_BOTTOM_PAD = 8;
 
 /**
  * Region heights per screen (pt). Interim Phase 1 values = today's bars, measured at 430×932 and
@@ -39,7 +42,7 @@ export const REGIONS: Record<GameScreenId, RegionSpec> = {
   hideout: { topBar: 56, notice: 40, dock: 120, tabBar: true, bottomPad: 'none' },
   'turf-setup': { topBar: 56, notice: 40, dock: 64, tabBar: true, bottomPad: 'none' },
   'turf-wave': { topBar: 56, notice: 40, dock: (b) => 64 + tabBarHeight(b), tabBar: false, bottomPad: 'none' },
-  dive: { topBar: 109, notice: 28, dock: 258, tabBar: false, bottomPad: 'inset' },
+  dive: { topBar: 109, notice: 28, dock: 152, tabBar: false, bottomPad: 'inset-min' },
   'pet-game': { topBar: 88, notice: 28, dock: 208, tabBar: false, bottomPad: 'inset' },
   list: { topBar: 56, notice: 40, dock: 0, tabBar: true, bottomPad: 'none' },
 };
@@ -68,7 +71,13 @@ export function computeStageFrame(
   const w = Math.max(0, window.width - insets.left - insets.right);
   const x = insets.left;
   const dockH = typeof spec.dock === 'function' ? spec.dock(insets.bottom) : spec.dock;
-  const bottomH = spec.tabBar ? tabBarHeight(insets.bottom) : spec.bottomPad === 'inset' ? insets.bottom : 0;
+  const bottomH = spec.tabBar
+    ? tabBarHeight(insets.bottom)
+    : spec.bottomPad === 'inset'
+      ? insets.bottom
+      : spec.bottomPad === 'inset-min'
+        ? Math.max(insets.bottom, MIN_BOTTOM_PAD)
+        : 0;
   const topBarY = insets.top;
   const noticeY = topBarY + spec.topBar;
   const stageY = noticeY + spec.notice;
