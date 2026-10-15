@@ -17,7 +17,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 3 | Pet that knows you | built, draft PR #46; bank approved by emci 2026-10-15 (`PET_KNOWS_YOU_COPY_REVIEWED = true`) — awaiting merge + OTA OK |
 | 4 | Daily visitors | built, draft PR #47 (gate green, 165 checks); copy unreviewed (`VISITORS_COPY_REVIEWED = false`) — awaiting emci's read + merge + OTA OK |
 | 5 | Decor slots | built, draft PR #48 into master (stacked on #47: it carries #47's commits until #47 merges); gate green (166 checks); no copy to review, no economy — awaiting emci's look + merge + OTA OK |
-| 6 | **Circle visits** | **next** |
+| 6 | Circle visits | built: server PR (wave97, **not applied**) + Play PR stacked on #48; copy unreviewed (`CIRCLE_VISITS_COPY_REVIEWED = false`) — awaiting emci's read, wave97 apply, merge + OTA OK |
 
 ## Decisions (do not re-ask)
 - Divecore stays on in every build; dev tools stay behind `PRE_LAUNCH_DEV`.
@@ -142,6 +142,40 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   stage is shorter than the room, so the camera scrolls — the spot "+" lives in the room layer and follows it; (5) the
   check keeps pin regexes for the pet-room wiring (`decorWalkGeomRef`, `p.sortY <= feet.y`); an edit there needs the
   regex updated, not deleted.
+
+## Step 6 as built (Circle visits, plan approved by emci 2026-10-15)
+- Two PRs (the play-isolation fence keeps `supabase/**` and `src/play/**` apart):
+  - **Server** `feature/circle-visits-server` → `supabase/migrations/wave97_circle_visits.sql` + `check:reset-account`.
+    Tables `circle_visit_share` (per-friend switch, default off, written only by `set_circle_visit_share`) and
+    `circle_gifts` (one row per giver → friend per giver's local day, unique index; functions only). `circle_visit_allowed`
+    = Circle row + no block either way + both switches. `_circle_visit_look` (the one new pattern, emci's OK) reads a
+    friend's `play_saves.doc` and returns only `pet{line, hero, stage, shiny}` + `decor{d1..d3: dc_*}`, each value
+    shape-checked; no role can call it directly. RPCs: `circle_visit_friends`, `set_circle_visit_share`,
+    `circle_visit_room`, `circle_send_gift`, `circle_gift_inbox` (only friends who still share both ways),
+    `circle_open_gift`. `reset_my_account` restated from wave90 + both tables wiped both ways; dev reset + count too.
+  - **Play** `feature/circle-visits` (stacked on #48): `src/play/circle-visits.ts` (pure: parsers that keep only the look,
+    gift book, copy), `circle-visits-store.ts` (the only server file: the 6 RPCs, ids only, never throws; PGRST202 →
+    "not switched on yet"), `circle-visits-ui.tsx` (list card, gift card, visiting strip). Wiring: `hideout-rails-model`
+    (`kind: 'circle'`, Hideout room only, 5th = the cap), `hideout-rails` (`onCircle`, `hidden`), `hideout-art`
+    (library `star` icon), `pet-room` (`circle` prop: a friend's pet at the visitor spot; with `decor` = their room,
+    no tap spots), `pet-screen` (state, float branches, notice strip, dock swap, back = home, `hideoutBusy`),
+    `hideout-progress` (`HideoutState.circle`, tolerant parse, no version bump), `playStore` (`openCircleGift`),
+    sticker book counts Circle stickers. `npm run check:circle-visits` (its wave97 pins run once both PRs are in one tree).
+- Gift: the visiting pet's hero sticker (the 14 sticker heroes) or a Circle stamp; counted once per gift id (phone keeps
+  the last 60 ids; the server marks it opened). A friend's pet with a gift waits until today's daily visitor got its hello.
+- Visiting: from the Hideout room's rail only; the stage shows the Hideout room with THEIR decor (your pet walks around
+  it) and their pet at the visitor spot; the rails draw nothing (still mounted, so walk bounds don't jump); the notice
+  lane says "@name's Hideout"; the dock's Feed + Info become Leave a gift / Back home; swipes stay put.
+- Names: the list shows the @handle your Circle tab already shows (from `me.handle` through the Circle row). Nothing in
+  the shared look carries a name.
+- **Before an OTA**: apply wave97 (Supabase SQL editor or `supabase db push`). Until then the phone says "Circle visits
+  aren't switched on yet" and everything else works as before.
+- **Lessons:** (1) step 5's checks pin source lines literally (`overlayBusy`, `rails={ street ? (`, the
+  `setHideoutDecor…resetDivecore` slice): add new values beside them (`hideoutBusy`, a `hidden` prop, a function placed
+  before `setHideoutDecor`) instead of editing the pinned line; (2) a server-side pin in a Play check must skip when the
+  migration lives on the other PR's branch (`existsSync`, like `check:play-cloud-save`) — test it once by copying the
+  migration in temporarily; (3) the reset check takes the NEWEST `reset_my_account` by wave number, so restating it means
+  carrying the previous body line for line (the check now compares it with wave90's).
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
