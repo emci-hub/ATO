@@ -376,6 +376,9 @@ function SpeechBubble({
 
 /* ---------------------------------------------------------------- room --- */
 
+/** A friend's decor is look-only. */
+const noDecorTap = () => {};
+
 export function PetRoom({
   pet,
   wear,
@@ -405,8 +408,9 @@ export function PetRoom({
   hideoutStage = null,
   stageSize,
   roomOutside = false,
-  visitor = null,
-  decor = null,
+  visitor: dailyVisitor = null,
+  decor: ownDecor = null,
+  circle = null,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -468,7 +472,13 @@ export function PetRoom({
   visitor?: { heroId: string; greeted: boolean; onTap: () => void } | null;
   /** Decor slots (step 5): what stands on the Hideout room's 3 spots, and the tap that opens the picker. */
   decor?: { placed: DecorState; onTap: (slot: DecorSlotId) => void } | null;
+  /** Circle visits (step 6): a friend's pet at the visitor's spot (it stands in for the daily visitor).
+   * With `decor` you are visiting THEIR Hideout: their 3 slots, read-only (no tap spots). */
+  circle?: { heroId: string; greeted: boolean; onTap: () => void; decor?: DecorState } | null;
 }) {
+  const visitor = circle ? { heroId: circle.heroId, greeted: circle.greeted, onTap: circle.onTap } : dailyVisitor;
+  const visiting = circle?.decor != null;
+  const decor = visiting && circle?.decor ? { placed: circle.decor, onTap: noDecorTap } : ownDecor;
   // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
   const fontsReady = usePixelFonts();
   const motion = usePlayMotion();
@@ -1111,7 +1121,7 @@ export function PetRoom({
       {visitorBehind ? visitorEl : null}
       <DecorSprites items={decorB} left={ox} top={oy} k={isoPt} />
       {/* The tap spots sit under the pet: a tap on the pet (even one standing by a spot) is still "say hi". */}
-      {decorOn && decor ? <DecorSpots decor={decor.placed} left={ox} top={oy} k={isoPt} onTap={decor.onTap} /> : null}
+      {decorOn && decor && !visiting ? <DecorSpots decor={decor.placed} left={ox} top={oy} k={isoPt} onTap={decor.onTap} /> : null}
       {width > 0 && !away && !picking && (!hideoutStage || (hideoutStage.presence.room === hideoutStage.viewed && !hideoutStage.presence.away)) ? (
         <Animated.View pointerEvents={streetRoom ? 'box-none' : 'auto'} style={[styles.petWrap, { top: isoOn ? 0 : top, width: box, height: box }, petStyle]}>
           {streetRoom ? null : (

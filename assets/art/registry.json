@@ -4617,7 +4617,8 @@
       "notes": "md5:f2abccd2d756c1dc10bd5add908364de",
       "tags": [],
       "usedBy": [
-        "src/play/dive-hud.tsx"
+        "src/play/dive-hud.tsx",
+        "src/play/hideout-art.ts"
       ],
       "category": "icons",
       "inUse": true,

@@ -159,15 +159,21 @@ export type HideoutRailsProps = {
   nightLamp: { night: boolean; on: boolean };
   still: boolean;
   gentle: boolean;
+  /** Circle visits (roadmap step 6): when set, the Hideout room's rail ends with Circle. */
+  onCircle?: () => void;
+  /** In a friend's Hideout (step 6): nothing on the rails (their rooms are not yours). The room keeps its rail
+   * clearance, so the pet's walk bounds never jump when a visit starts or ends. */
+  hidden?: boolean;
 };
 
 export function HideoutRails(props: HideoutRailsProps) {
-  const { hideout, viewed, petRoom, stageH, onSpot, onLamp, onView, onTease, onCall, away, callA11y, pulse, notes, nightLamp, still, gentle } = props;
-  const actions = leftRailActions(viewed, hideout);
+  const { hideout, viewed, petRoom, stageH, onSpot, onLamp, onView, onTease, onCall, away, callA11y, pulse, notes, nightLamp, still, gentle, onCircle } = props;
+  const actions = leftRailActions(viewed, hideout, { circle: onCircle != null });
   const rooms = railRooms(hideout, viewed, petRoom, (id) => roomDef(id).label);
   const scrolls = railScrolls(rooms.length);
   const maxH = railMaxHeight(stageH);
   const petLabel = `Pet is in ${roomDef(petRoom).label}`;
+  if (props.hidden) return null;
 
   const press = (a: RailAction) => {
     // A dimmed action never runs; a dimmed way out of a room (Up to a locked room) opens that room's build sheet.
@@ -178,6 +184,7 @@ export function HideoutRails(props: HideoutRailsProps) {
     countOnce('rail_action');
     if (a.kind === 'spot') onSpot(a.spot);
     else if (a.kind === 'lamp') onLamp();
+    else if (a.kind === 'circle') onCircle?.();
     else onView(a.room);
   };
   const actionLabel = (a: RailAction): string => {
@@ -186,6 +193,7 @@ export function HideoutRails(props: HideoutRailsProps) {
       return `${a.label}${note ? `, ${note}` : ''}`;
     }
     if (a.kind === 'lamp') return nightLamp.night ? (nightLamp.on ? 'Light, on, tap to dim' : 'Light, off, tap to light') : 'Light';
+    if (a.kind === 'circle') return 'Circle visits';
     return a.dim ? `${a.label}, locked` : a.label;
   };
 

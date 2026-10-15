@@ -691,7 +691,7 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
   };
   return (
     <>
-      <StickerBook book={view.hideout.state.visitors} />
+      <StickerBook book={view.hideout.state.visitors} circle={view.hideout.state.circle} />
       <DyePanel view={view} commit={commit} />
       {pv.state.shiny ? (
         <Text style={styles.body}>✨ Your shiny keeps its own colour — tints don’t show on it.</Text>

@@ -39,6 +39,16 @@ import { VISITOR_UI } from '@/play/daily-visitors-bank';
 import { VisitorCard, type VisitorCardShow } from '@/play/daily-visitor-ui';
 import { DecorSheet } from '@/play/decor-slots-ui';
 import type { DecorItemId, DecorSlotId } from '@/play/decor-slots';
+import { CIRCLE_UI, nextCircleGift, type CircleFriend, type CircleGift, type CircleLook } from '@/play/circle-visits';
+import { CircleGiftCard, CircleSheet, CircleVisitStrip, type CircleListState } from '@/play/circle-visits-ui';
+import {
+  fetchCircleFriends,
+  fetchCircleInbox,
+  fetchCircleRoom,
+  markCircleGiftOpened,
+  sendCircleGift,
+  setCircleShare,
+} from '@/play/circle-visits-store';
 import { askPetReminderPermission, syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
 import { petPose, sharpPetBox } from '@/play/pet-actor';
@@ -139,6 +149,7 @@ import {
   stampHideoutPeekaboo,
   greetDailyVisitor,
   setHideoutDecor,
+  openCircleGift,
   localYmd,
   setPlaySettings,
 } from '@/play/playStore';
@@ -314,6 +325,8 @@ function RoomIcon({
 
 /** The day the visitor's notice last showed in this app open (module scope: survives tab switches). */
 let visitorNoticeYmd: string | null = null;
+/** A friend's pet in their own Hideout just stands there (the gift is on the dock). */
+const noCircleTap = () => {};
 const VISITOR_NOTICE_DELAY_MS = 1200;
 
 export function PetScreen({
@@ -717,7 +730,108 @@ export function PetScreen({
     commit((doc) => setHideoutDecor(doc, slot, item));
     setDecorSlot(null);
   };
+  // Circle visits (roadmap step 6): the friend list (float card), a friend's Hideout (the stage shows
+  // their room; the notice lane and the dock swap their contents, never their size) and gifts left for you.
+  const [circleOpen, setCircleOpen] = useState(false);
+  const circleOpenRef = useRef(false);
+  circleOpenRef.current = circleOpen && view.hideout.viewed === 'hideout';
+  const [circleList, setCircleList] = useState<CircleListState>({ kind: 'loading' });
+  const [circleBusy, setCircleBusy] = useState<string | null>(null);
+  const [circleNote, setCircleNote] = useState<string | null>(null);
+  const [circleVisit, setCircleVisit] = useState<{
+    friend: CircleFriend;
+    look: CircleLook;
+    gift: 'idle' | 'sending' | 'sent';
+    note: string | null;
+  } | null>(null);
+  const [circleInbox, setCircleInbox] = useState<CircleGift[]>([]);
+  const [circleGiftCard, setCircleGiftCard] = useState<CircleGift | null>(null);
+  const loadCircleInbox = useCallback(() => {
+    void fetchCircleInbox().then((res) => {
+      if (res.kind === 'ok') setCircleInbox(res.value);
+    });
+  }, []);
+  const circleOn = streetUiOn();
+  useEffect(() => {
+    if (circleOn) loadCircleInbox();
+  }, [circleOn, loadCircleInbox]);
+  const openCircle = () => {
+    setCircleOpen(true);
+    setCircleNote(null);
+    setCircleList({ kind: 'loading' });
+    void fetchCircleFriends().then((res) => setCircleList(res.kind === 'ok' ? { kind: 'ok', friends: res.value } : { kind: res.kind }));
+  };
+  const toggleCircleShare = (f: CircleFriend, on: boolean) => {
+    setCircleBusy(f.peer);
+    setCircleNote(null);
+    void setCircleShare(f.peer, on).then((res) => {
+      setCircleBusy(null);
+      if (res.kind !== 'ok') {
+        setCircleNote(res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error);
+        return;
+      }
+      setCircleList((s) =>
+        s.kind === 'ok'
+          ? { kind: 'ok', friends: s.friends.map((x) => (x.peer === f.peer ? { ...x, mine: on, allowed: res.value.allowed } : x)) }
+          : s,
+      );
+    });
+  };
+  const visitCircleFriend = (f: CircleFriend) => {
+    setCircleBusy(f.peer);
+    setCircleNote(null);
+    void fetchCircleRoom(f.peer).then((res) => {
+      setCircleBusy(null);
+      // Closed the list (or left the Hideout room) while it loaded: no visit starts.
+      if (!circleOpenRef.current) return;
+      if (res.kind !== 'ok') {
+        setCircleNote(res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error);
+        return;
+      }
+      if (res.value.kind !== 'room') {
+        setCircleNote(res.value.kind === 'no_save' ? CIRCLE_UI.noSave : CIRCLE_UI.notAllowed);
+        return;
+      }
+      // Their room is the Hideout room: switch the view there first (only from the Hideout's own rail).
+      setCircleVisit({ friend: f, look: res.value.look, gift: f.giftedToday ? 'sent' : 'idle', note: null });
+      setCircleOpen(false);
+    });
+  };
+  const leaveCircleGift = () => {
+    if (!circleVisit || circleVisit.gift !== 'idle') return;
+    const peer = circleVisit.friend.peer;
+    setCircleVisit((v) => (v ? { ...v, gift: 'sending', note: null } : v));
+    void sendCircleGift(peer).then((res) => {
+      setCircleVisit((v) => {
+        if (!v || v.friend.peer !== peer) return v;
+        if (res.kind === 'ok' && res.value !== 'not_allowed') return { ...v, gift: 'sent', note: null };
+        if (res.kind === 'ok') return { ...v, gift: 'idle', note: CIRCLE_UI.giftNotAllowed };
+        return { ...v, gift: 'idle', note: res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error };
+      });
+    });
+  };
+  const leaveCircleVisit = () => {
+    setCircleVisit(null);
+    loadCircleInbox();
+  };
+  // A friend's pet with a gift stands where the daily visitor does, once today's visitor has had its hello.
+  const circleGift = circleOn && !circleVisit ? nextCircleGift(circleInbox, view.hideout.state.circle) : null;
+  const circleGiftHere = circleGift != null && (!visitor || visitorGreeted);
+  const tapCircleGift = () => {
+    if (!circleGift) return;
+    const gift = circleGift;
+    commit((doc) => openCircleGift(doc, gift));
+    setCircleGiftCard(gift);
+    void markCircleGiftOpened(gift.id);
+  };
+  const circleShown = circleOpen && !circleVisit && !awayShown && !settingsOpen && !visitorShown && !decorShown && (pet.reveals[revealStep] ?? null) == null;
+  const circleGiftShown = circleGiftCard != null && !awayShown && !settingsOpen && !visitorShown && !decorShown && (pet.reveals[revealStep] ?? null) == null;
   const overlayBusy = busy || visitorShown || decorShown;
+  // Circle cards and a visit are busy too (a separate value: the decor-slots pin on overlayBusy is untouched).
+  const hideoutBusy = overlayBusy || circleShown || circleGiftShown || circleVisit != null;
+  const circleVisitOn = circleVisit != null;
+  const leaveVisitRef = useRef(leaveCircleVisit);
+  leaveVisitRef.current = leaveCircleVisit;
 
   // The visitor's notice: once per day per app open (until you say hi), after the away card closes. A short wait
   // lets an away card that is still being worked out on open come first (it cancels this timer).
@@ -735,7 +849,7 @@ export function PetScreen({
   // Phase 4 coach tips: one at a time, on the Hideout only, when nothing is open over it. A short
   // delay keeps a tip from flashing on mount. Any touch marks it seen (GameScreen's onTipSeen).
   const tipCandidate = pickCoachTip(view.settings.tipsSeen, {
-    idle: streetUiOn() && !overlayBusy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
+    idle: streetUiOn() && !hideoutBusy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
     egg: pet.stage === 'egg',
     eggPicked: pet.egg != null,
   });
@@ -762,14 +876,19 @@ export function PetScreen({
   );
 
   useEffect(() => {
-    onBusyChange?.(overlayBusy);
+    onBusyChange?.(hideoutBusy);
     return () => onBusyChange?.(false);
-  }, [overlayBusy, onBusyChange]);
+  }, [hideoutBusy, onBusyChange]);
   useEffect(() => {
     if (!registerBack) return;
     registerBack({
       edgeSwipe: true,
       back: () => {
+        // In a friend's Hideout, back = home (the edge swipe too).
+        if (circleVisitOn) {
+          leaveVisitRef.current();
+          return true;
+        }
         const step = petBackStep(sheet != null, game != null);
         if (step === 'hub') return false;
         if (step === 'close-game') {
@@ -780,7 +899,7 @@ export function PetScreen({
       },
     });
     return () => registerBack(null);
-  }, [registerBack, sheet, game]);
+  }, [registerBack, sheet, game, circleVisitOn]);
 
   const roundClaim = useRef<{ run: GameRun | null; key: string }>({ run: null, key: '' });
   const finishRound = (run: GameRun) => (outcome: RoundOutcome, score: number) => {
@@ -1022,12 +1141,26 @@ export function PetScreen({
               onPick={pickDecor}
               onClose={() => setDecorSlot(null)}
             />
+          ) : circleGiftShown && circleGiftCard ? (
+            <CircleGiftCard gift={circleGiftCard} top={layoutRegions(frame).notice.height + SPACE.s} onClose={() => setCircleGiftCard(null)} />
+          ) : circleShown ? (
+            <CircleSheet
+              state={circleList}
+              busyPeer={circleBusy}
+              note={circleNote}
+              top={layoutRegions(frame).notice.height + SPACE.s}
+              onToggle={toggleCircleShare}
+              onVisit={visitCircleFriend}
+              onClose={() => setCircleOpen(false)}
+            />
           ) : null
         }
         onTipSeen={seeTip}
         notice={
           street ? (
-            !view.hideout.state.coach_swipe_seen && pet.stage !== 'egg' ? (
+            circleVisit ? (
+              <CircleVisitStrip handle={circleVisit.friend.handle} note={circleVisit.note} />
+            ) : !view.hideout.state.coach_swipe_seen && pet.stage !== 'egg' ? (
               <Pressable
                 onPress={() => commit((doc, now) => markHideoutCoach(doc, now))}
                 accessibilityRole="button"
@@ -1060,6 +1193,13 @@ export function PetScreen({
             stageSize={street ? { width: frame.stage.width, height: frame.stage.height } : undefined}
             visitor={visitor ? { heroId: visitor.heroId, greeted: visitorGreeted, onTap: tapVisitor } : null}
             decor={street ? { placed: view.hideout.state.decor, onTap: setDecorSlot } : null}
+            circle={
+              circleVisit
+                ? { heroId: circleVisit.look.heroId, greeted: true, onTap: noCircleTap, decor: circleVisit.look.decor }
+                : circleGiftHere && circleGift
+                  ? { heroId: circleGift.look.heroId, greeted: false, onTap: tapCircleGift }
+                  : null
+            }
             roomOutside={street}
             pet={pet}
             wear={pv.wear}
@@ -1086,6 +1226,8 @@ export function PetScreen({
             rails={
               street ? (
                 <HideoutRails
+                  onCircle={openCircle}
+                  hidden={circleVisit != null}
                   hideout={view.hideout.state}
                   viewed={view.hideout.viewed}
                   petRoom={presence.room}
@@ -1130,7 +1272,8 @@ export function PetScreen({
                     presence,
                     viewed: view.hideout.viewed,
                     expeditionBackMs: pv.away ? pv.expeditionBackInMs : null,
-                    onView: (id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id)),
+                    // While visiting a friend, a swipe stays in their room.
+                    onView: (id: HideoutRoomId) => (circleVisit ? undefined : commit((doc, now) => viewHideoutRoom(doc, now, id))),
                     onTease: () => setTeaseOpen(true),
                     onCall: () => {
                       if (pv.away) return;
@@ -1145,8 +1288,23 @@ export function PetScreen({
         dock={
           <>
             <View style={styles.iconRow}>
-              {/* Streetwear: Play, Stash, Underground and Explore live on the left rail; the dock keeps Feed + Info. */}
-              {(street ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
+              {/* Streetwear: Play, Stash, Underground and Explore live on the left rail; the dock keeps Feed + Info.
+                  In a friend's Hideout the same two slots are Leave a gift + Back home. */}
+              {circleVisit ? (
+                <>
+                  <RoomIcon
+                    emoji="🎁"
+                    label={circleVisit.gift === 'sent' ? CIRCLE_UI.giftSent : CIRCLE_UI.gift}
+                    flexGrow={1}
+                    fontSize={14}
+                    pulse={circleVisit.gift === 'idle'}
+                    badge={false}
+                    onPress={leaveCircleGift}
+                  />
+                  <RoomIcon emoji="🏠" label={CIRCLE_UI.home} flexGrow={1} fontSize={14} pulse={false} badge={false} onPress={leaveCircleVisit} />
+                </>
+              ) : null}
+              {(circleVisit ? [] : street ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
                 <RoomIcon
                   key={icon.id}
                   emoji={icon.emoji}
