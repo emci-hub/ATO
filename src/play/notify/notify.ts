@@ -123,7 +123,7 @@ export function useNoticeTargets(handler: (target: Exclude<NoticeTarget, null>) 
   }, [handler]);
 }
 
-/** While `active` (a modal over the lane: tutorial, haul reveal), only ERROR goes up. */
+/** While `active` (a modal over the lane: Settings, haul reveal), only ERROR goes up. */
 export function useNoticePause(active: boolean): void {
   useEffect(() => {
     if (!active) return;

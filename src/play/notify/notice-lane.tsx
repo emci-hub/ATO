@@ -55,7 +55,7 @@ const TITLE_COLOR: Record<NoticeKind, string> = {
 };
 const KIND_MARK: Record<NoticeKind, string> = { celebrate: '★ ', notify: '', error: '! ' };
 
-export function NoticeLane({ height, idle }: { height: number; idle?: ReactNode }) {
+export function NoticeLane({ height, idle, reserveRight = 0 }: { height: number; idle?: ReactNode; reserveRight?: number }) {
   const { queue, topLane } = useNotices();
   // Pixelify for the title on every screen (Dive and the pet games don't load it themselves).
   useStreetFonts();
@@ -82,7 +82,7 @@ export function NoticeLane({ height, idle }: { height: number; idle?: ReactNode 
   return (
     <View style={[styles.lane, { height }]}>
       {shown ? (
-        <Animated.View key={`n${shown.id}`} entering={enter(drift, ms)} exiting={leave(ms)} style={styles.fill}>
+        <Animated.View key={`n${shown.id}`} entering={enter(drift, ms)} exiting={leave(ms)} style={[styles.fill, { right: reserveRight }]}>
           <Pressable
             onPress={() => tapNotice(shown)}
             accessibilityRole="button"
@@ -107,7 +107,7 @@ export function NoticeLane({ height, idle }: { height: number; idle?: ReactNode 
           </Pressable>
         </Animated.View>
       ) : idle != null ? (
-        <Animated.View key="idle" entering={enter(0, ms)} style={styles.fill} accessibilityLiveRegion="polite">
+        <Animated.View key="idle" entering={enter(0, ms)} style={[styles.fill, { right: reserveRight }]} accessibilityLiveRegion="polite">
           {idle}
         </Animated.View>
       ) : null}

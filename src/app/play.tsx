@@ -47,7 +47,8 @@ import {
 } from '@/play/edge-back';
 import { findGlow } from '@/play/dive-fx-model';
 import { DivecoreSettingsSheet } from '@/play/divecore-settings';
-import { DivecoreTutorial } from '@/play/divecore-tutorial';
+import { replayTipsPatch } from '@/play/ftue/coach-tips';
+import { setGuideOpener } from '@/play/help/help-sheet';
 import { resolveReduceMotion, usePlayMotionMode } from '@/play/play-motion';
 import { LayoutShot, type LayoutInset, type LayoutShotKind } from '@/play/layout-shot';
 import { PetScreen, usePlayNoticesSync, type PetTalkEvent } from '@/play/pet-screen';
@@ -214,13 +215,12 @@ export default function PlayScreen() {
     petTalkSeq.current += 1;
     setPetTalk({ situation, key: petTalkSeq.current });
   }, []);
-  /** v24: the hub's Settings sheet and the tutorial close first on back. */
+  /** v24: the hub's Settings sheet closes first on back. */
   const [hubSettingsOpen, setHubSettingsOpen] = useState(false);
   /** A Hideout sheet or mini-game is open: the phone's own swipe-back must not leave Play. */
   const [petBusy, setPetBusy] = useState(false);
-  const [tutorialReplay, setTutorialReplay] = useState(false);
-  // Hold notices (except errors) while the tutorial or the hub Settings sheet covers the screen.
-  useNoticePause(hubSettingsOpen || (view != null && (tutorialReplay || !view.settings.tutorialSeen)));
+  // Hold notices (except errors) while the hub Settings sheet covers the screen. Coach tips never pause them.
+  useNoticePause(hubSettingsOpen);
   const overlayRef = useRef<(() => void) | null>(null);
   const goBackOneLevel = useCallback((source: BackSource): boolean => {
     if (overlayRef.current) {
@@ -272,9 +272,16 @@ export default function PlayScreen() {
     }
   }, [openDive]);
   useNoticeTargets(goNoticeTarget);
-  /** v26: open Pet → Info → Guide from the hub ⚙ or the tutorial. */
+  /** v26: open Hideout → Info → Guide from ⚙ or a "?" sheet's Full guide link. */
   const [openGuide, setOpenGuide] = useState(false);
   const guideOpened = useCallback(() => setOpenGuide(false), []);
+  useEffect(() => {
+    setGuideOpener(() => {
+      setMode('pet');
+      setOpenGuide(true);
+    });
+    return () => setGuideOpener(null);
+  }, []);
   /** Dev kit only: one-shot forced bust on the next Deeper press. */
   const [forceBustArmed, setForceBustArmed] = useState(false);
   /** Dev kit only: skip the Dive searching beat + cooldown for fast testing. */
@@ -651,18 +658,9 @@ export default function PlayScreen() {
 
   const claimLabel = view == null ? '…' : `~${minutesUntilLabel(view.research.nextFindAt)}`;
 
-  // v24: the tutorial shows once (a save with progress counts as seen), and
-  // whenever it is replayed from Settings.
-  const showTutorial = view != null && (tutorialReplay || !view.settings.tutorialSeen);
-  const hubOverlayOpen = hubSettingsOpen || showTutorial;
-  overlayRef.current = showTutorial
-    ? () => {
-        setTutorialReplay(false);
-        commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
-      }
-    : hubSettingsOpen
-      ? () => setHubSettingsOpen(false)
-      : null;
+  // Phase 4: the first-time tutorial is four coach tips on the Hideout (src/play/ftue); nothing here blocks.
+  const hubOverlayOpen = hubSettingsOpen;
+  overlayRef.current = hubSettingsOpen ? () => setHubSettingsOpen(false) : null;
 
   const groveDevKitPanel = (afterNavigate?: () => void, focus: readonly GroveDevSectionId[] = []) => (
     <GroveDevKit
@@ -745,6 +743,7 @@ export default function PlayScreen() {
   const listScreen = (content: ReactNode) => (
     <GameScreen
       frame={listFrame}
+      help={mode === 'dress' ? 'locker' : mode === 'swords' ? 'blades' : mode === 'shop' ? 'store' : undefined}
       topBar={shellTop}
       tabBar={shellTabs}
       fadeKey={mode}
@@ -938,27 +937,17 @@ export default function PlayScreen() {
           view={view}
           commit={commit}
           reduceMotion={reduceMotion}
-          onReplayTutorial={() => setTutorialReplay(true)}
+          onReplayTips={() => {
+            // The tips live on the Hideout: bring the player there and make all four unseen again.
+            setMode('pet');
+            commit((doc) => setPlaySettings(doc, replayTipsPatch()));
+          }}
           onOpenGuide={() => {
             setMode('pet');
             setOpenGuide(true);
           }}
           onExit={closePlay}
           extra={settingsExtra}
-        />
-      ) : null}
-      {showTutorial ? (
-        <DivecoreTutorial
-          onDone={() => {
-            setTutorialReplay(false);
-            commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
-          }}
-          onGuide={() => {
-            setTutorialReplay(false);
-            commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
-            setMode('pet');
-            setOpenGuide(true);
-          }}
         />
       ) : null}
       {showPlayDevFab ? (

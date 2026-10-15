@@ -67,11 +67,16 @@ assert.match(shell, /PRE_LAUNCH_DEV && !devUnlocked \? <DevUnlockRow/, 'Settings
 ok('known gates pinned: Pet Dev tab, floating Dev kit and the Settings unlock row');
 
 // The new player-facing surfaces carry no dev tooling at all.
-for (const file of ['src/play/divecore-settings.tsx', 'src/play/pet-menu.tsx', 'src/play/divecore-tutorial.tsx']) {
+for (const file of [
+  'src/play/divecore-settings.tsx',
+  'src/play/pet-menu.tsx',
+  'src/play/help/help-sheet.tsx',
+  'src/play/ftue/coach-tip-layer.tsx',
+]) {
   const src = fs.readFileSync(file, 'utf8');
   assert.ok(!DEV_UI.test(src) && !src.includes('devUnlocked'), `${file} has no dev tooling`);
 }
-ok('Settings, the Pet menu and the tutorial contain no dev tooling');
+ok('Settings, the Pet menu, the help sheet and the coach tips contain no dev tooling');
 
 // And release builds force the flag off.
 const mode = fs.readFileSync('src/lib/dev-mode.ts', 'utf8');

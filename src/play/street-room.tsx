@@ -42,6 +42,7 @@ import { PIXEL, PIXEL_FONT, pixelRenderStyle } from '@/play/pixel-theme';
 import { AmbientSprite, Drift, Twinkle } from '@/play/street-ambient';
 import { KEEP_TRAVEL_PT } from '@/play/play-motion';
 import { tapHaptic } from '@/play/street-feel';
+import { tipAnchorRef } from '@/play/ftue/tip-anchors';
 import { STREET, STREET_FONT, StreetFrame, streetButtonPiece, streetButtonText } from '@/play/street-ui';
 
 export type StreetSpotId = 'feed' | 'play' | 'expedition' | 'dive' | 'den';
@@ -635,6 +636,7 @@ export function StreetRoomSpots({
               ]}
             />
             <Pressable
+              ref={s.coach === 'dive' ? tipAnchorRef('hatch') : undefined}
               onPress={() => press(s)}
               accessibilityRole="button"
               accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}

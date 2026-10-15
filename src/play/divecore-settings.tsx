@@ -6,7 +6,7 @@
  *   Exit Play, in-game Notices (All / Important only), Notifications (hunger, egg hatched / hero revealed, expedition back, dive
  *   charges full), quiet hours, pet bedtime (looks only), pet chatter,
  *   effects (Full / Low), skip reveal animations, reduce motion (follow the
- *   phone or override), when daily limits reset, replay the tutorial, and
+ *   phone or override), when daily limits reset, replay the tips, and
  *   Reset Divecore (a summary of exactly what goes, then a double confirm and
  *   typing RESET — the Play save only; settings and the main app are kept).
  */
@@ -98,7 +98,7 @@ export function DivecoreSettingsSheet({
   view,
   commit,
   reduceMotion,
-  onReplayTutorial,
+  onReplayTips,
   onOpenGuide,
   onExit,
   extra,
@@ -108,7 +108,7 @@ export function DivecoreSettingsSheet({
   view: PlayView;
   commit: Commit;
   reduceMotion: boolean;
-  onReplayTutorial: () => void;
+  onReplayTips: () => void;
   /** v26 — open the Guide (Pet → Info → Guide). */
   onOpenGuide?: () => void;
   /** Leaves Play. First row of the sheet. */
@@ -284,11 +284,11 @@ export function DivecoreSettingsSheet({
         />
       ) : null}
       <NeonButton
-        label="Replay the tutorial"
+        label="Replay tips"
         variant="secondary"
         onPress={() => {
           onClose();
-          onReplayTutorial();
+          onReplayTips();
         }}
       />
 

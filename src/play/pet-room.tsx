@@ -119,6 +119,7 @@ import { HideoutStageChrome, HideoutStageControls, roomGeom } from '@/play/hideo
 import type { HideoutProgressInput, HideoutRoomId, HideoutState } from '@/play/hideout-progress';
 import type { Presence } from '@/play/hideout-presence';
 import { STREET_MOTION } from '@/play/street-feel';
+import { tipAnchorRef } from '@/play/ftue/tip-anchors';
 import { STREET_FONT, streetUiOn } from '@/play/street-ui';
 
 // The nameplate hangs BELOW the feet line. The floor ring runs from feet-8 to
@@ -1055,6 +1056,7 @@ export function PetRoom({
           </Pressable>
           {streetRoom ? (
             <Pressable
+              ref={tipAnchorRef('egg')}
               onPress={onTapPet}
               accessibilityRole="button"
               accessibilityLabel={`Your pet. ${label}. Tap to say hi.`}

@@ -172,7 +172,7 @@ ok('the Guide shows the live constants (stage cuts, bust table, Power ceiling, m
     'pet-sheets.tsx',
     'dive-screen.tsx',
     'divecore-settings.tsx',
-    'divecore-tutorial.tsx',
+    'help/help-sheet.tsx',
     'den-sheet.tsx',
     'stone-sheet.tsx',
     'shop-screen.tsx',
@@ -191,9 +191,9 @@ ok('the Guide shows the live constants (stage cuts, bust table, Power ceiling, m
   assert.ok(files[files.length - 1].includes('initial="tide"'), 'the Shop Tide shelf and pass card open the Tide section');
   const all3 = files.join('\n') + fs.readFileSync(path.join(ROOT, 'src/play/pet-egg-sheets.tsx'), 'utf8');
   assert.ok(!/How it works|how it works"|EggHelp/.test(all3), 'the old scattered "How it works" text is gone');
-  assert.ok(files[3].includes('Open the Guide') && files[4].includes('Open the Guide'), 'linked from ⚙ Settings and the tutorial');
+  assert.ok(files[3].includes('Open the Guide') && files[4].includes('openFullGuide'), 'linked from ⚙ Settings and the "?" help sheet (Full guide)');
 }
-ok('every section has text; every "?" opens a real section; Settings + tutorial link it; the old "How it works" text is gone');
+ok('every section has text; every "?" opens a real section; Settings + the help sheet link it; the old "How it works" text is gone');
 
 /* --------------------------------------------------------- 4. nameplate --- */
 

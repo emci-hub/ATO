@@ -129,7 +129,11 @@ import {
   markBuildNotifAsked,
   stampHideoutPeekaboo,
   localYmd,
+  setPlaySettings,
 } from '@/play/playStore';
+import { markTipSeen, pickCoachTip } from '@/play/ftue/coach-tips';
+import type { CoachTipId } from '@/play/play-settings';
+import { tipAnchorRef } from '@/play/ftue/tip-anchors';
 import type { PlayTransition } from '@/play/use-play-store';
 
 /** A pet-worthy moment the Play shell hands to the room (dive, TD, finds). */
@@ -244,6 +248,7 @@ function RoomIcon({
   flexGrow,
   fontSize,
   onPress,
+  anchorRef,
 }: {
   emoji: string;
   label: string;
@@ -253,10 +258,13 @@ function RoomIcon({
   flexGrow: number;
   fontSize: number;
   onPress: () => void;
+  /** Coach-tip anchor (Phase 4): lets the tip layer find this button. */
+  anchorRef?: (node: View | null) => void;
 }) {
   const street = streetUiOn();
   return (
     <Pressable
+      ref={anchorRef}
       onPress={() => {
         if (street) tapHaptic();
         onPress();
@@ -341,7 +349,7 @@ export function PetScreen({
    * then `onJournalOpened` clears the request. */
   openJournal?: boolean;
   onJournalOpened?: () => void;
-  /** v26 — open Info → Guide (from the hub ⚙ or the tutorial). */
+  /** v26 — open Info → Guide (from the hub ⚙ or a "?" sheet). */
   openGuide?: boolean;
   onGuideOpened?: () => void;
   /** Stage layout: the shell's resource bar (TopBar) and tab bar for this GameScreen. */
@@ -642,6 +650,36 @@ export function PetScreen({
   };
 
   const busy = sheet != null || game != null;
+
+  // Phase 4 coach tips: one at a time, on the Hideout only, when nothing is open over it. A short
+  // delay keeps a tip from flashing on mount. Any touch marks it seen (GameScreen's onTipSeen).
+  const tipCandidate = pickCoachTip(view.settings.tipsSeen, {
+    idle: streetUiOn() && !busy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
+    egg: pet.stage === 'egg',
+    eggPicked: pet.egg != null,
+  });
+  const [tipReadyId, setTipReadyId] = useState<string | null>(null);
+  const tipCandidateId = tipCandidate?.id ?? null;
+  useEffect(() => {
+    if (tipCandidateId == null) {
+      setTipReadyId(null);
+      return;
+    }
+    const t = setTimeout(() => setTipReadyId(tipCandidateId), 700);
+    return () => clearTimeout(t);
+  }, [tipCandidateId]);
+  const shownTip = tipCandidate && tipReadyId === tipCandidate.id ? tipCandidate : null;
+  const seeTip = useCallback(
+    (id: CoachTipId) => {
+      commit((doc) =>
+        doc.play_settings.tipsSeen[id]
+          ? null
+          : setPlaySettings(doc, { tipsSeen: markTipSeen(doc.play_settings.tipsSeen, id) }),
+      );
+    },
+    [commit],
+  );
+
   useEffect(() => {
     onBusyChange?.(busy);
     return () => onBusyChange?.(false);
@@ -887,6 +925,9 @@ export function PetScreen({
         fadeKey="hideout"
         reduceMotion={reduceMotion}
         background={NEON.ink}
+        help="hideout"
+        tip={shownTip}
+        onTipSeen={seeTip}
         notice={
           street ? (
             !view.hideout.state.coach_swipe_seen && pet.stage !== 'egg' ? (
@@ -1020,6 +1061,7 @@ export function PetScreen({
                   badge={icon.id === 'dive' && view.diveRun.active}
                   badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
                   onPress={() => openIcon(icon.id)}
+                  anchorRef={icon.id === 'feed' ? tipAnchorRef('feed') : undefined}
                 />
               ))}
             </View>

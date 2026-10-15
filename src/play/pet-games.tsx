@@ -425,6 +425,7 @@ function GamePlate({
     <Animated.View style={[styles.screen, style]}>
       <GameScreen
         frame={frame}
+        help="pet-game"
         background={PIXEL.ink}
         topBar={
       <View style={styles.top}>

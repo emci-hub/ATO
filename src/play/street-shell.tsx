@@ -21,6 +21,7 @@ import { uiDrawable, type UiPiece } from '@/art/art';
 import { ClipImage } from '@/play/sheet-sprite';
 import { STREET_MOTION, STREET_SIZE, tapHaptic } from '@/play/street-feel';
 import { NeonButton } from '@/play/neon-ui';
+import { tipAnchorRef } from '@/play/ftue/tip-anchors';
 import { STREET, STREET_FONT, StreetBackdrop, StreetFrame, useStreetFonts } from '@/play/street-ui';
 
 /* ------------------------------------------------------------- slots --- */
@@ -226,6 +227,7 @@ function TabButton({
   const def = TAB_DEF[tab];
   return (
     <Pressable
+      ref={tab === 'turf' ? tipAnchorRef('turf') : undefined}
       onPress={() => {
         tapHaptic();
         onPress();
