@@ -134,6 +134,8 @@ export type HideoutState = {
   coach_swipe_seen: boolean;
   call_until_age_ms: number | null;
   wake_until_age_ms: number | null;
+  /** Sleep rail action (Loft): the pet is in bed by choice until this pet age. Cleared by a wake tap / second Sleep tap. */
+  sleep_until_age_ms: number | null;
   peekaboo_ymd: string | null;
   lamp_on: boolean;
   build_notif_asked: boolean;
@@ -162,6 +164,7 @@ export function emptyHideout(): HideoutState {
     coach_swipe_seen: false,
     call_until_age_ms: null,
     wake_until_age_ms: null,
+    sleep_until_age_ms: null,
     peekaboo_ymd: null,
     lamp_on: false,
     build_notif_asked: false,
@@ -489,6 +492,7 @@ export function parseHideout(raw: unknown, now: number): HideoutState {
     coach_swipe_seen: flag(r.coach_swipe_seen),
     call_until_age_ms: typeof r.call_until_age_ms === 'number' && Number.isFinite(r.call_until_age_ms) ? r.call_until_age_ms : null,
     wake_until_age_ms: typeof r.wake_until_age_ms === 'number' && Number.isFinite(r.wake_until_age_ms) ? r.wake_until_age_ms : null,
+    sleep_until_age_ms: typeof r.sleep_until_age_ms === 'number' && Number.isFinite(r.sleep_until_age_ms) ? r.sleep_until_age_ms : null,
     peekaboo_ymd: typeof r.peekaboo_ymd === 'string' ? r.peekaboo_ymd : null,
     lamp_on: flag(r.lamp_on),
     build_notif_asked: flag(r.build_notif_asked),

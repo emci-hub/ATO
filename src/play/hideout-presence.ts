@@ -67,6 +67,11 @@ export function wokeUp(h: HideoutState, pet: PetState): boolean {
   return h.wake_until_age_ms != null && pet.total_age_ms < h.wake_until_age_ms;
 }
 
+/** In bed by choice (the Loft's Sleep action), until the pet age it set. */
+export function sleepChosen(h: HideoutState, pet: PetState): boolean {
+  return h.sleep_until_age_ms != null && pet.total_age_ms < h.sleep_until_age_ms;
+}
+
 export function callActive(h: HideoutState, pet: PetState): boolean {
   return h.call_until_age_ms != null && pet.total_age_ms < h.call_until_age_ms;
 }
@@ -123,6 +128,9 @@ export function resolvePresence(input: PresenceInput): Presence {
   if (tired) {
     return { ...home, room: 'loft', reason: 'tired', asleep: true };
   }
+  if (sleepChosen(h, pet) && unlocked(h, 'loft')) {
+    return { ...home, room: 'loft', reason: 'tired', asleep: true };
+  }
   if (callActive(h, pet)) {
     return { ...home, room: h.viewed_room, reason: 'call' };
   }
@@ -151,6 +159,16 @@ export function tapWake(h: HideoutState, pet: PetState): HideoutState {
   return {
     ...h,
     wake_until_age_ms: pet.total_age_ms + HIDEOUT_WAKE_MS,
+    sleep_until_age_ms: null,
+  };
+}
+
+/** Sleep rail action: put the pet to bed for the same stretch a wake tap keeps it up (HIDEOUT_WAKE_MS). Cosmetic only. */
+export function tapSleep(h: HideoutState, pet: PetState): HideoutState {
+  return {
+    ...h,
+    sleep_until_age_ms: pet.total_age_ms + HIDEOUT_WAKE_MS,
+    wake_until_age_ms: null,
   };
 }
 

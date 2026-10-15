@@ -259,7 +259,7 @@ import {
   type HideoutRoomId,
   type HideoutState,
 } from '@/play/hideout-progress';
-import { startCall, stampPeekaboo, tapWake } from '@/play/hideout-presence';
+import { sleepChosen, startCall, stampPeekaboo, tapSleep, tapWake } from '@/play/hideout-presence';
 import {
   TIDE_PASS_DAYS,
   emptyTide,
@@ -2878,6 +2878,15 @@ export function wakeHideoutPet(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   };
 }
 
+/** Loft rail "Sleep": puts the pet to bed; tapped again while it sleeps by choice, wakes it. Cosmetic, moves nothing. */
+export function sleepHideoutPet(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  if (sleepChosen(touched.hideout, touched.pet)) {
+    return { ...touched, hideout: pushHideoutEvent(tapWake(touched.hideout, touched.pet), { t: now, kind: 'pet_asleep_tap' }) };
+  }
+  return { ...touched, hideout: tapSleep(touched.hideout, touched.pet) };
+}
+
 export function toggleLoftLamp(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   const touched = touchPet(doc, now);
   return { ...touched, hideout: { ...touched.hideout, lamp_on: !touched.hideout.lamp_on } };
@@ -3122,7 +3131,7 @@ export function rebirthPetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | nu
     pet: next.pet,
     pet_hall: next.hall,
     pet_rebirths: next.rebirths,
-    hideout: { ...touched.hideout, call_until_age_ms: null, wake_until_age_ms: null },
+    hideout: { ...touched.hideout, call_until_age_ms: null, wake_until_age_ms: null, sleep_until_age_ms: null },
   };
 }
 

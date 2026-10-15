@@ -36,7 +36,7 @@ import {
   tickBuild,
   tickHideoutBuilds,
 } from '../src/play/hideout-progress';
-import { resolvePresence, startCall, tapWake } from '../src/play/hideout-presence';
+import { resolvePresence, startCall, tapSleep, tapWake } from '../src/play/hideout-presence';
 import { HIDEOUT_LOG_KINDS, hideoutLogLine } from '../src/play/hideout-log';
 import {
   HIDEOUT_HERO_RENDER_SCALE,
@@ -224,6 +224,18 @@ const HOUR = 60 * 60 * 1000;
   assert.equal(resolvePresence({ ...base, pet: { ...pet, stage: 'baby' } }).room, 'hideout');
   const woken = tapWake(h, pet);
   assert.ok(woken.wake_until_age_ms != null);
+  // Sleep rail action: in the Loft's bed by choice at noon, only if the Loft is built; a wake tap or the timer ends it.
+  const slept = tapSleep(lofted, pet);
+  const sleepP = resolvePresence({ ...base, hideout: slept });
+  assert.equal(sleepP.asleep, true);
+  assert.equal(sleepP.room, 'loft');
+  assert.equal(resolvePresence({ ...base, hideout: tapSleep(h, pet) }).asleep, false, 'no Loft, no bed');
+  assert.equal(resolvePresence({ ...base, hideout: slept, pet: { ...pet, hunger: 1 } }).reason, 'hungry', 'hunger still wins');
+  assert.equal(resolvePresence({ ...base, hideout: tapWake(slept, pet) }).asleep, false, 'wake tap ends it');
+  assert.equal(tapWake(slept, pet).sleep_until_age_ms, null);
+  assert.equal(resolvePresence({ ...base, hideout: slept, pet: { ...pet, total_age_ms: slept.sleep_until_age_ms! } }).asleep, false, 'timer ends it');
+  assert.equal(emptyHideout().sleep_until_age_ms, null);
+  ok('sleep action: Loft bed by choice, cleared by wake / timer, hunger wins, no Loft = no bed');
   ok('presence priority: interaction > expedition > needs > call > schedule; egg/baby stay home');
 }
 

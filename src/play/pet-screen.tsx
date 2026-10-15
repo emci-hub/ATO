@@ -143,6 +143,7 @@ import {
   viewHideoutRoom,
   callPetToRoom,
   wakeHideoutPet,
+  sleepHideoutPet,
   toggleLoftLamp,
   markHideoutCoach,
   markBuildNotifAsked,
@@ -1232,7 +1233,13 @@ export function PetScreen({
                   viewed={view.hideout.viewed}
                   petRoom={presence.room}
                   stageH={frame.stage.height}
-                  onSpot={(spot) => (spot === 'den' ? setSheet('den') : openIcon(spot))}
+                  onSpot={(spot) =>
+                    spot === 'den'
+                      ? view.hideout.viewed === 'loft'
+                        ? commit((doc, now) => sleepHideoutPet(doc, now))
+                        : setSheet('den')
+                      : openIcon(spot)
+                  }
                   onLamp={() => commit((doc, now) => toggleLoftLamp(doc, now))}
                   onView={(id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id))}
                   onTease={() => setTeaseOpen(true)}
