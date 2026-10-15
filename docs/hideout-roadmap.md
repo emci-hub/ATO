@@ -14,10 +14,14 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0b | Polish batch (LF art pins, holo tip, archive hideout-fx; **Sleep pending**) | draft PR #44 |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
-| 3 | Pet that knows you | built, draft PR #46; bank approved by emci 2026-10-15 (`PET_KNOWS_YOU_COPY_REVIEWED = true`) — awaiting merge + OTA OK |
-| 4 | Daily visitors | built, draft PR #47 (gate green, 165 checks); copy unreviewed (`VISITORS_COPY_REVIEWED = false`) — awaiting emci's read + merge + OTA OK |
-| 5 | Decor slots | built, draft PR #48 into master (stacked on #47: it carries #47's commits until #47 merges); gate green (166 checks); no copy to review, no economy — awaiting emci's look + merge + OTA OK |
-| 6 | Circle visits | built: server draft PR #49 (wave97, **not applied**) + Play draft PR #50 stacked on #48; gate green (167 checks); copy unreviewed (`CIRCLE_VISITS_COPY_REVIEWED = false`) — awaiting emci's read, wave97 apply, merge + OTA OK |
+| 3 | Pet that knows you | ✔ shipped, PR #46, OTA `01a141ef` (`PET_KNOWS_YOU_COPY_REVIEWED = true`) |
+| 4 | Daily visitors | ✔ shipped, PR #47, OTA `01a141ef` (`VISITORS_COPY_REVIEWED = true`, emci's edits in) |
+| 5 | Decor slots | ✔ shipped, PR #48, OTA `01a141ef` |
+| 6 | Circle visits | ✔ shipped, PRs #49 + #50, **wave97 applied** 2026-10-15, OTA `01a141ef` (`CIRCLE_VISITS_COPY_REVIEWED = true`). Phone check with two real accounts still to do |
+
+Steps 3–6 went out as ONE OTA: `production`, iOS, update `01a141ef`, group `ae95adf9`, gate green (167 checks).
+wave97 was applied with `supabase db query --linked -f supabase/migrations/wave97_circle_visits.sql` (`db push` skips our
+un-timestamped migration files). Reviewer fix before apply: `circle_gift_inbox` also requires a pet hero in the look.
 
 ## Decisions (do not re-ask)
 - Divecore stays on in every build; dev tools stay behind `PRE_LAUNCH_DEV`.
