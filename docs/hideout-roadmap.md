@@ -168,6 +168,13 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   lane says "@name's Hideout"; the dock's Feed + Info become Leave a gift / Back home; swipes stay put.
 - Names: the list shows the @handle your Circle tab already shows (from `me.handle` through the Circle row). Nothing in
   the shared look carries a name.
+- Previews: `docs/divecore/circle-visits/` (430×932 + 375×667: 1 gift pet, 2 list, 3 visiting, 4 gift left, 5 gift card),
+  made from the static web export with a fake session + mocked wave97 replies in the browser (no account, no network).
+- Review (one pass, PASS) fixed: a visit loading after the list closed; unfriend + scan back in now starts both switches
+  off (a switch counts only if set after the current Circle row); the inbox filters before its 20 limit; tighter grants.
+  Left as known: a friend's pet always draws as its grown hero (stage / shiny cross but are not drawn yet); the inbox
+  refreshes on Hideout mount and after a visit, not live; the gift stickers you already got stay after Reset account
+  (the Divecore save is kept, by design); `check:circle-visits`' wave97 pins only run once both PRs are in one tree.
 - **Before an OTA**: apply wave97 (Supabase SQL editor or `supabase db push`). Until then the phone says "Circle visits
   aren't switched on yet" and everything else works as before.
 - **Lessons:** (1) step 5's checks pin source lines literally (`overlayBusy`, `rails={ street ? (`, the
