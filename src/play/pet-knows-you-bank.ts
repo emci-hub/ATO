@@ -19,7 +19,7 @@
  */
 import type { TraitAxis } from '@/lib/traits';
 
-export const PET_KNOWS_YOU_COPY_REVIEWED = false;
+export const PET_KNOWS_YOU_COPY_REVIEWED = true; // emci read the bank 2026-10-15
 
 /** A line is at most this many words / characters (the bubble is the pet-talk bubble). */
 export const PKY_MAX_WORDS = 10;

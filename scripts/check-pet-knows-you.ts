@@ -70,7 +70,7 @@ const LABELS = /\b(extraversion|openness|conscientiousness|agreeableness|steadin
 const VOICE_BAN = /\b(you are|you['’]re|always|never)\b/i;
 const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
 
-assert.equal(PET_KNOWS_YOU_COPY_REVIEWED, false, 'the bank ships behind COPY_REVIEWED = false until emci has read it');
+assert.equal(PET_KNOWS_YOU_COPY_REVIEWED, true, 'emci read and approved the bank (2026-10-15); a new edit resets this to false until re-read');
 for (const axis of TRAIT_AXES) {
   const ends = PKY_TRAIT_LINES[axis];
   assert.ok(ends, `${axis}: no lines`);
