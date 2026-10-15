@@ -697,7 +697,8 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
         <Text style={styles.body}>✨ Your shiny keeps its own colour — tints don’t show on it.</Text>
       ) : null}
       <Text style={styles.body}>
-        Tokens: {view.tokens}. Wardrobe · {pv.cosmetics.length}/{COSMETICS.length}. Tints and badges are for
+        Tokens: {view.tokens}. Wardrobe · {pv.cosmetics.filter((id) => cosmeticById(id)?.source !== 'visitor').length}/
+        {COSMETICS.filter((c) => c.source !== 'visitor').length}. Tints and badges are for
         sale; rings come from the Trench and deeper, glows from the Abyss and deeper.
       </Text>
       <View style={styles.wardSlot}>
@@ -774,7 +775,8 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
       {COSMETIC_SLOTS.map((slot) => (
         <View key={slot} style={styles.wardSlot}>
           <Text style={styles.logName}>{SLOT_LABEL[slot]}</Text>
-          {COSMETICS.filter((c) => c.slot === slot).map((c) => {
+          {/* A visitor's rare look shows up here once it is yours (the sticker book shows what is still to find). */}
+          {COSMETICS.filter((c) => c.slot === slot && (c.source !== 'visitor' || pv.cosmetics.includes(c.id))).map((c) => {
             const owned = pv.cosmetics.includes(c.id);
             const worn = pv.wear[slot] === c.id;
             return (

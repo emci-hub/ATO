@@ -255,6 +255,25 @@ for (const id of VISITOR_STICKER_HEROES) {
 }
 assert.equal(ids.size, 14 * 6);
 assert.ok(VISITOR_UI.noticeTitle.split(/\s+/).length <= 3, 'notice title ≤ 3 words');
+const uiStrings = [
+  VISITOR_UI.noticeTitle,
+  VISITOR_UI.noticeBody('Kael-09'),
+  VISITOR_UI.cardTitle('Kael-09'),
+  VISITOR_UI.sticker('Kael-09'),
+  VISITOR_UI.look('Kael-09'),
+  VISITOR_UI.lookHint,
+  VISITOR_UI.stickerHint,
+  VISITOR_UI.keep,
+  VISITOR_UI.bye,
+  VISITOR_UI.bookTitle,
+  VISITOR_UI.bookNote(3, 14),
+  VISITOR_UI.lookSource,
+];
+for (const s of uiStrings) {
+  assert.ok(!/\byou are\b|\byou're\b|\byou’re\b|\balways\b/i.test(s), `UI copy "${s}": moment-voice bans`);
+  assert.ok(!s.includes("'"), `UI copy "${s}": curly apostrophes only`);
+  assert.ok(!banned.test(s), `UI copy "${s}": banned Play word`);
+}
 for (const id of VISITOR_STICKER_HEROES) {
   assert.ok(VISITOR_UI.noticeBody(heroName(id)).split(/\s+/).length <= 10, `${id}: notice body ≤ 10 words`);
   assert.ok(VISITOR_UI.noticeBody(heroName(id)).length <= 26, `${id}: notice body fits one SE line (≤ 26 chars)`);
@@ -290,6 +309,20 @@ for (const w of [430, 375]) {
   }
   assert.ok(moved > 20, `${w}: the pet still roams with a visitor in (${moved} moves)`);
 }
+// …and pet-room.tsx really does that (the test above mirrors it), re-clamping when the visitor starts to block.
+const roomSrc = read('src/play/pet-room.tsx');
+assert.ok(/const cap = visitorFeet\[0\] - VISITOR_CLEAR_PX;/.test(roomSrc), 'pet-room narrows the pet to the left of the visitor');
+assert.ok(/cap - minX >= VISITOR_MIN_PET_STRIP_PX/.test(roomSrc), 'pet-room keeps the minimum strip rule');
+assert.ok(/walkBoundsRef\.current = \{ minX, maxX: Math\.min\(/.test(roomSrc), 'the narrowed bounds feed the walk loop');
+assert.ok(/\[width, hideoutPt, hasRails, visitorBlocks\]/.test(roomSrc), 'the pet is re-clamped when the visitor starts blocking (room switch, Motion Off)');
+assert.ok(/hideoutStage\?\.viewed === 'hideout'/.test(roomSrc), 'the visitor shows in the Hideout room only');
+// pet-screen.tsx: street layout only, never while the pet is an egg, the day re-read at the tap, card waits for the away card.
+const screenSrc = read('src/play/pet-screen.tsx');
+assert.ok(/const visitor = streetUiOn\(\) && pet\.stage !== 'egg' \? visitorFor\(todayYmd, petHeroId\) : null;/.test(screenSrc), 'street only, no visitor for an egg');
+assert.ok(/const tapYmd = localYmd\(\);/.test(screenSrc), 'a tap re-reads the local day (midnight-safe)');
+assert.ok(/const visitorShown = visitorCard != null && !awayShown && !settingsOpen/.test(screenSrc), 'the card waits for the away card and hides under Settings');
+assert.ok(/visitorShown && visitorCard \? \(\s*<VisitorCard/.test(screenSrc), 'the card floats over the Hideout (GameScreen float)');
+assert.ok(/notify\(\{ kind: 'notify', title: VISITOR_UI\.noticeTitle/.test(screenSrc), 'the notice goes through notify() into the NoticeLane');
 const walk = (dir: string): string[] =>
   fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const full = path.join(dir, e.name);

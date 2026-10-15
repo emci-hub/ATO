@@ -713,7 +713,15 @@ export function PetRoom({
   // A pet that starts (or sits, with Motion Off) under a rail is moved clear of it (on walkable floor;
   // the Loft bed already sits clear of the rails, so a sleeping pet is left alone).
   const hasRails = rails != null;
-  const hasVisitor = visitor != null;
+  // The visitor narrows the pet's floor only while both stand in the Hideout room (see below); re-clamp when that flips.
+  const visitorBlocks = !!(
+    visitor &&
+    streetRoom &&
+    hideoutScale &&
+    !picking &&
+    hideoutStage?.viewed === 'hideout' &&
+    hideoutStage.presence.room === 'hideout'
+  );
   useEffect(() => {
     const b = walkBoundsRef.current;
     if (!b) return;
@@ -729,7 +737,7 @@ export function PetRoom({
     artXRef.current = p[0];
     artYRef.current = p[1];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, hideoutPt, hasRails, hasVisitor]);
+  }, [width, hideoutPt, hasRails, visitorBlocks]);
 
   // Depth vs props follows the live feet, not only the step's destination.
   useEffect(() => {
@@ -892,7 +900,7 @@ export function PetRoom({
     [visitorOn, width, hideoutPt, hasRailsNow],
   );
   // The pet keeps to the left of the visitor (never walks through it) when the room is wide enough.
-  if (visitorFeet && hideoutStage?.presence.room === 'hideout') {
+  if (visitorFeet && visitorBlocks) {
     const minX = railBounds?.minX ?? 0;
     const cap = visitorFeet[0] - VISITOR_CLEAR_PX;
     if (cap - minX >= VISITOR_MIN_PET_STRIP_PX) {

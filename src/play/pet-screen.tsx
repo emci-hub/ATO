@@ -311,6 +311,7 @@ function RoomIcon({
 
 /** The day the visitor's notice last showed in this app open (module scope: survives tab switches). */
 let visitorNoticeYmd: string | null = null;
+const VISITOR_NOTICE_DELAY_MS = 1200;
 
 export function PetScreen({
   view,
@@ -465,16 +466,19 @@ export function PetScreen({
   const [visitorCard, setVisitorCard] = useState<VisitorCardShow | null>(null);
   const tapVisitor = () => {
     if (!visitor) return;
-    if (visitorGreeted) {
+    // Re-read the day at the tap: past midnight it is already the next visitor's day (never a second greeting).
+    const tapYmd = localYmd();
+    const today = tapYmd === visitor.ymd ? visitor : visitorFor(tapYmd, petHeroId);
+    if (greetedToday(view.hideout.state.visitors, tapYmd)) {
       // Said hi already today: it just chats (no reward, nothing saved).
-      setVisitorCard({ reward: { kind: 'visit', heroId: visitor.heroId }, greetN: view.hideout.state.visitors.greets[visitor.heroId] ?? 0 });
+      setVisitorCard({ reward: { kind: 'visit', heroId: today.heroId }, greetN: view.hideout.state.visitors.greets[today.heroId] ?? 0 });
       return;
     }
     let shown: VisitorCardShow | null = null;
     commit((doc, now) => {
-      const res = greetDailyVisitor(doc, now, visitor);
+      const res = greetDailyVisitor(doc, now, today);
       if (!res) return null;
-      shown = { reward: res.reward, greetN: res.doc.hideout.visitors.greets[visitor.heroId] ?? 1 };
+      shown = { reward: res.reward, greetN: res.doc.hideout.visitors.greets[today.heroId] ?? 1 };
       return res.doc;
     });
     if (shown) setVisitorCard(shown);
@@ -698,23 +702,28 @@ export function PetScreen({
   // The away card shows when there is one, nothing covers it (Settings) and no reveal ceremony waits.
   const awayShown = away != null && onAwayClose != null && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
   // Busy (no coach tip, no iOS swipe-back): a sheet, a mini-game or the away card is up.
-  // The visitor card waits for the away card and hides under Settings, like it.
+  const busy = sheet != null || game != null || awayShown;
+  // The visitor card waits for the away card and hides under Settings, like it — and counts as busy too.
   const visitorShown = visitorCard != null && !awayShown && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
-  const busy = sheet != null || game != null || awayShown || visitorShown;
+  const overlayBusy = busy || visitorShown;
 
-  // The visitor's notice: once per day per app open (until you say hi), after the away card closes.
+  // The visitor's notice: once per day per app open (until you say hi), after the away card closes. A short wait
+  // lets an away card that is still being worked out on open come first (it cancels this timer).
   const visitorHeroId = visitor?.heroId ?? null;
   useEffect(() => {
     if (!visitorHeroId || visitorGreeted || awayShown) return;
     if (visitorNoticeYmd === todayYmd) return;
-    visitorNoticeYmd = todayYmd;
-    notify({ kind: 'notify', title: VISITOR_UI.noticeTitle, body: VISITOR_UI.noticeBody(heroName(visitorHeroId)), priority: 'low' });
+    const t = setTimeout(() => {
+      visitorNoticeYmd = todayYmd;
+      notify({ kind: 'notify', title: VISITOR_UI.noticeTitle, body: VISITOR_UI.noticeBody(heroName(visitorHeroId)), priority: 'low' });
+    }, VISITOR_NOTICE_DELAY_MS);
+    return () => clearTimeout(t);
   }, [visitorHeroId, visitorGreeted, awayShown, todayYmd]);
 
   // Phase 4 coach tips: one at a time, on the Hideout only, when nothing is open over it. A short
   // delay keeps a tip from flashing on mount. Any touch marks it seen (GameScreen's onTipSeen).
   const tipCandidate = pickCoachTip(view.settings.tipsSeen, {
-    idle: streetUiOn() && !busy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
+    idle: streetUiOn() && !overlayBusy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
     egg: pet.stage === 'egg',
     eggPicked: pet.egg != null,
   });
@@ -741,9 +750,9 @@ export function PetScreen({
   );
 
   useEffect(() => {
-    onBusyChange?.(busy);
+    onBusyChange?.(overlayBusy);
     return () => onBusyChange?.(false);
-  }, [busy, onBusyChange]);
+  }, [overlayBusy, onBusyChange]);
   useEffect(() => {
     if (!registerBack) return;
     registerBack({
