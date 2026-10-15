@@ -11,3 +11,5 @@ assets/art/_contact/library.html text eol=lf
 assets/art/_contact/library-portable.html text eol=lf
 src/art/generated-art.ts text eol=lf
 tools/art-viewer/README.md text eol=lf
+assets/art/legacy-play-sheets.json text eol=lf
+src/play/generated-play-sheets.ts text eol=lf
