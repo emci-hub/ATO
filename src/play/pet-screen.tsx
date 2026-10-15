@@ -78,6 +78,9 @@ import { petRecolor } from '@/play/pet-looks';
 import { PetReveal } from '@/play/pet-reveal';
 import { PetRoom, type RoomSpeech } from '@/play/pet-room';
 import { GameScreen, useStageFrame } from '@/play/stage-layout';
+import { SPACE, layoutRegions } from '@/play/stage-frame';
+import { AwayCard } from '@/play/away-card';
+import type { AwaySummary } from '@/play/away-summary';
 import { StreetStatusStrip } from '@/play/street-room';
 import { HideoutRails } from '@/play/hideout-rails';
 import { expeditionCallCopy, resolvePresence, wokeUp } from '@/play/hideout-presence';
@@ -320,6 +323,8 @@ export function PetScreen({
   onGuideOpened,
   shellTop = null,
   shellTabs = null,
+  away = null,
+  onAwayClose,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -351,6 +356,9 @@ export function PetScreen({
   /** Stage layout: the shell's resource bar (TopBar) and tab bar for this GameScreen. */
   shellTop?: ReactNode;
   shellTabs?: ReactNode;
+  /** "While you were away" for this open (null = nothing to say). */
+  away?: AwaySummary | null;
+  onAwayClose?: () => void;
 }) {
   const fontsReady = usePixelFonts();
   const frame = useStageFrame('hideout');
@@ -645,7 +653,10 @@ export function PetScreen({
     setSheet(null);
   };
 
-  const busy = sheet != null || game != null;
+  // The away card shows when there is one, nothing covers it (Settings) and no reveal ceremony waits.
+  const awayShown = away != null && onAwayClose != null && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
+  // Busy (no coach tip, no iOS swipe-back): a sheet, a mini-game or the away card is up.
+  const busy = sheet != null || game != null || awayShown;
 
   // Phase 4 coach tips: one at a time, on the Hideout only, when nothing is open over it. A short
   // delay keeps a tip from flashing on mount. Any touch marks it seen (GameScreen's onTipSeen).
@@ -923,6 +934,12 @@ export function PetScreen({
         background={NEON.ink}
         help="hideout"
         tip={shownTip}
+        float={
+          // Waits for a hatch / reveal ceremony to close and hides under Settings, so nothing stacks.
+          awayShown && away && onAwayClose ? (
+            <AwayCard summary={away} top={layoutRegions(frame).notice.height + SPACE.s} onClose={onAwayClose} />
+          ) : null
+        }
         onTipSeen={seeTip}
         notice={
           street ? (
