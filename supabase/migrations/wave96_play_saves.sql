@@ -46,7 +46,7 @@ set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
-  at timestamptz;
+  v_at timestamptz;
   prev public.play_saves%rowtype;
   kept timestamptz;
 begin
@@ -60,7 +60,7 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'bad_meta');
   end if;
   -- A phone clock set ahead must never pin the save: cap it at the server's clock.
-  at := least(p_saved_at, now());
+  v_at := least(p_saved_at, now());
 
   perform pg_advisory_xact_lock(hashtext(uid::text || ':play_save'));
 
@@ -76,7 +76,7 @@ begin
   end if;
 
   insert into public.play_saves (user_id, doc, doc_version, saved_at, updated_at)
-  values (uid, p_doc, p_version, at, now())
+  values (uid, p_doc, p_version, v_at, now())
   on conflict (user_id) do update
     set doc = excluded.doc,
         doc_version = excluded.doc_version,
@@ -85,7 +85,7 @@ begin
     where public.play_saves.saved_at <= excluded.saved_at;
 
   select saved_at into kept from public.play_saves where user_id = uid;
-  return jsonb_build_object('ok', true, 'kept_saved_at', kept, 'stale', kept > at);
+  return jsonb_build_object('ok', true, 'kept_saved_at', kept, 'stale', kept > v_at);
 end;
 $$;
 
