@@ -45,7 +45,8 @@ alter table public.circle_visit_share enable row level security;
 create policy circle_visit_share_select_own on public.circle_visit_share
   for select using (auth.uid() = user_id);
 
-revoke insert, update, delete on public.circle_visit_share from public, anon, authenticated;
+revoke all on public.circle_visit_share from public, anon, authenticated;
+grant select on public.circle_visit_share to authenticated;
 
 -- 2. The gifts ------------------------------------------------------------------------------
 
@@ -91,13 +92,16 @@ as $$
       where (b.blocked_by = auth.uid() and b.blocked_user = p_peer)
          or (b.blocked_by = p_peer and b.blocked_user = auth.uid())
     )
+    -- A switch counts only if it was set since this Circle row was made: unfriend + scan back in = off again.
     and exists (
-      select 1 from public.circle_visit_share s
+      select 1 from public.circle_visit_share s, public.connections c
       where s.user_id = auth.uid() and s.peer_id = p_peer and s.enabled
+        and c.user_id = auth.uid() and c.peer_id = p_peer and s.updated_at >= c.created_at
     )
     and exists (
-      select 1 from public.circle_visit_share s
+      select 1 from public.circle_visit_share s, public.connections c
       where s.user_id = p_peer and s.peer_id = auth.uid() and s.enabled
+        and c.user_id = p_peer and c.peer_id = auth.uid() and s.updated_at >= c.created_at
     );
 $$;
 
@@ -157,7 +161,7 @@ begin
     select jsonb_agg(jsonb_build_object(
       'peer', c.peer_id,
       'handle', m.handle,
-      'mine', coalesce(s.enabled, false),
+      'mine', coalesce(s.enabled and s.updated_at >= c.created_at, false),
       'allowed', public.circle_visit_allowed(c.peer_id),
       'gifted_today', exists (
         select 1 from public.circle_gifts g
@@ -284,14 +288,17 @@ begin
   return coalesce((
     select jsonb_agg(jsonb_build_object('id', x.id, 'handle', x.handle, 'look', x.look) order by x.created_at)
     from (
-      select g.id, g.created_at, m.handle, public._circle_visit_look(g.user_id) as look
-      from public.circle_gifts g
-      join public.me m on m.id = g.user_id
-      where g.peer_id = uid and g.opened_at is null and public.circle_visit_allowed(g.user_id)
-      order by g.created_at
+      select y.id, y.created_at, y.handle, y.look
+      from (
+        select g.id, g.created_at, m.handle, public._circle_visit_look(g.user_id) as look
+        from public.circle_gifts g
+        join public.me m on m.id = g.user_id
+        where g.peer_id = uid and g.opened_at is null and public.circle_visit_allowed(g.user_id)
+      ) y
+      where y.look is not null
+      order by y.created_at
       limit 20
     ) x
-    where x.look is not null
   ), '[]'::jsonb);
 end;
 $$;
