@@ -20,7 +20,7 @@ export const COACH_TIP_DEFS: Record<CoachTipId, CoachTipDef> = {
   dive: { id: 'dive', text: 'Ride the hatch to Underground', anchor: 'hatch' },
   turf: { id: 'turf', text: 'Turf War: defend your street', anchor: 'turf' },
   // A pet shows holo only once a finish is applied (Info > Style); nothing else says so.
-  holo: { id: 'holo', text: 'Try a holo finish in Info', anchor: 'info' },
+  holo: { id: 'holo', text: 'Holo finish: Info, then Style', anchor: 'info' },
 };
 
 /** What the Hideout knows when it asks for a tip. */

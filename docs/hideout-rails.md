@@ -58,7 +58,7 @@ dedicated icons in PixelLab (guide §2: 32 px ladder) and swap them in `RAIL_ICO
 - **LF pins:** every `art:sync` output (`registry.json`, `ART_LIBRARY.md`, `_contact/library*.html`, `generated-art.ts`,
   `tools/art-viewer/README.md`, `legacy-play-sheets.json`, `generated-play-sheets.ts`) is `text eol=lf` in `.gitattributes`.
   A fresh `core.autocrlf=true` clone passes `check:art-registry` on the first run.
-- **Holo tip:** a fifth coach tip, `holo` ("Try a holo finish in Info", anchored on the Info dock button), shown once after
+- **Holo tip:** a fifth coach tip, `holo` ("Holo finish: Info, then Style", anchored on the Info dock button), shown once after
   the pet is out of the egg. It defaults to unseen even on saves that finished the old tutorial, so existing players see it once.
 - **Retired aura sheets:** `hideout-fx` (blaze-84 / bubbles-outlined) moved to `art-src/archive/2026-10/hideout-fx-retired/`
   (raw + packed). They were packed sheets, not registry entries, so there is no registry status to flip. The pack step,
