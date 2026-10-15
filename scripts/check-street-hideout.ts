@@ -46,6 +46,7 @@ import {
   randomWalkPoint,
 } from '../src/play/hideout-iso';
 import { diveWorldCuts } from '../src/play/dive-fx-model';
+import { RAIL_BUTTON_PT, RAIL_GAP_PT } from '../src/play/hideout-rails-model';
 
 let passed = 0;
 const ok = (name: string) => {
@@ -197,9 +198,7 @@ const read = (path: string) => readFileSync(path, 'utf8');
   assert.match(street, /StreetRoomAuraClip/);
   assert.match(street, /StreetRoomYard/);
   assert.match(street, /hideoutBricks/);
-  assert.match(street, /HIDEOUT_SPOT_HIT_PT/);
-  assert.match(street, /PIXEL\.cyan/);
-  assert.match(street, /chipFaded/);
+  assert.doesNotMatch(street, /HIDEOUT_SPOT_HIT_PT|chipFaded|PIXEL\.cyan|PIXEL\.glow/, 'the room has no tap spots, faded chips or cyan highlights (rails instead)');
   assert.match(street, /fillRule="evenodd"/);
   const dive = read('src/play/dive-street.tsx');
   assert.match(dive, /ManholeTransit/);
@@ -294,11 +293,11 @@ const read = (path: string) => readFileSync(path, 'utf8');
 
 {
   const street = read('src/play/street-room.tsx');
-  assert.match(street, /minWidth: hit/);
-  assert.match(street, /minHeight: hit/);
-  assert.match(street, /HIDEOUT_SPOT_HIT_PT/);
+  // The in-room chips became rail buttons (hideout-rails.tsx): same ≥ 44 pt floor, no cyan frame.
+  assert.doesNotMatch(street, /minWidth: hit|minHeight: hit/);
   assert.equal(HIDEOUT_SPOT_HIT_PT, 48);
-  ok('hotspot chips are 48pt hit targets with a cyan frame');
+  assert.ok(RAIL_BUTTON_PT >= 44 && RAIL_GAP_PT === 8, 'rail buttons ≥ 44 pt with 8 pt gaps');
+  ok('rail buttons are ≥ 44pt targets (the room has no chips)');
 }
 
 console.log(`\ncheck:street-hideout — ${passed} groups passed.`);

@@ -9,7 +9,7 @@
  */
 import { useEffect, useMemo, useRef } from 'react';
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   ReduceMotion,
@@ -25,21 +25,16 @@ import {
   NEIGHBOR_BOARDED_ART,
   ROOM_ART,
 } from '@/play/hideout-art';
-import { HIDEOUT_CONTROL_PT, HideoutRoomBar } from '@/play/hideout-bar';
 import { HideoutTease } from '@/play/hideout-tease';
 import { HideoutTravelTag, HideoutZzz } from '@/play/hideout-zzz';
 import {
   HIDEOUT_DISSOLVE_MS,
-  HIDEOUT_ROOM_IDS,
   neighborRooms,
-  roomDef,
-  roomStage,
   type HideoutProgressInput,
   type HideoutRoomId,
   type HideoutState,
 } from '@/play/hideout-progress';
 import {
-  HIDEOUT_SPOT_HIT_PT,
   isoSleepPoint,
   parseIsoGeom,
   type HideoutOrigin,
@@ -50,7 +45,6 @@ import { expeditionCallCopy, type Presence } from '@/play/hideout-presence';
 import { pixelRenderStyle } from '@/play/pixel-theme';
 import { usePlayMotion } from '@/play/play-motion';
 import { EDGE_ZONE } from '@/play/edge-back';
-import { STREET, STREET_FONT } from '@/play/street-ui';
 import { StreetRoomArt, StreetRoomFront } from '@/play/street-room';
 
 function Place({
@@ -122,38 +116,16 @@ function LiveLoft({
   origin,
   night,
   lampOn,
-  onLamp,
 }: {
   scale: HideoutScale;
   origin: HideoutOrigin;
   night: boolean;
   lampOn: boolean;
-  onLamp: () => void;
 }) {
-  const geom = roomGeom('loft');
-  const k = scale.pt;
-  const lampHot = geom.hotspots.find((h) => h.id === 'lamp' || h.kind === 'lamp');
-  const fp = lampHot?.footprint ?? ([19, 10, 1, 2] as const);
-  const hit = HIDEOUT_SPOT_HIT_PT;
-  const fw = Math.max(hit, fp[2] * geom.tile * k);
-  const fh = Math.max(hit, fp[3] * geom.tile * k);
-  const lamp = {
-    left: origin.left + fp[0] * geom.tile * k + (fp[2] * geom.tile * k) / 2 - fw / 2,
-    top: origin.top + fp[1] * geom.tile * k + (fp[3] * geom.tile * k) / 2 - fh / 2,
-    width: fw,
-    height: fh,
-    minWidth: hit,
-    minHeight: hit,
-  };
+  // The lamp has no tap area of its own: Light is on the left rail (hideout-rails.tsx).
   return (
     <View style={{ position: 'absolute', left: origin.left, top: origin.top, width: scale.canvasW, height: scale.canvasH }}>
       <StreetRoomArt left={0} top={0} scale={scale} alive room="loft" night={night} lampOn={lampOn} />
-      <Pressable
-        onPress={onLamp}
-        accessibilityRole="button"
-        accessibilityLabel={night ? (lampOn ? 'Lamp on, tap to dim' : 'Lamp off, tap to light') : 'Lamp'}
-        style={{ position: 'absolute', ...lamp }}
-      />
     </View>
   );
 }
@@ -172,7 +144,7 @@ export function HideoutStageChrome({
   expeditionBackMs,
   onView,
   onTease,
-  onLamp,
+  walkBounds,
 }: {
   hideout: HideoutState;
   progress: HideoutProgressInput;
@@ -187,7 +159,8 @@ export function HideoutStageChrome({
   expeditionBackMs: number | null;
   onView: (id: HideoutRoomId) => void;
   onTease: () => void;
-  onLamp: () => void;
+  /** Rail walk bounds (art px): the sleeping Zzz sits where the clamped pet sleeps. */
+  walkBounds?: { minX: number; maxX: number };
 }) {
   const motion = usePlayMotion();
   const fade = useSharedValue(1);
@@ -286,7 +259,7 @@ export function HideoutStageChrome({
             gentle={motion.vestibularSafe}
           />
         ) : liveIsLoft ? (
-          <LiveLoft scale={scale} origin={origin} night={night} lampOn={hideout.lamp_on} onLamp={onLamp} />
+          <LiveLoft scale={scale} origin={origin} night={night} lampOn={hideout.lamp_on} />
         ) : (
           <SnapshotRoom id={viewed} scale={scale} origin={origin} night={night} />
         )}
@@ -322,10 +295,13 @@ export function HideoutStageChrome({
       ) : null}
 
       {petHere && presence.asleep ? (
-        <HideoutZzz
-          x={origin.left + isoSleepPoint(roomGeom(presence.room))[0] * k - 8}
-          y={origin.top + isoSleepPoint(roomGeom(presence.room))[1] * k - 36}
-        />
+        (() => {
+          const geom = roomGeom(presence.room);
+          const sp = isoSleepPoint(geom);
+          // Same clamp the planner applies to the Hideout cushion (the Loft bed sits clear of the rails).
+          const sx = walkBounds && !geom.sleepOnBed ? Math.min(Math.max(sp[0], walkBounds.minX), walkBounds.maxX) : sp[0];
+          return <HideoutZzz x={origin.left + sx * k - 8} y={origin.top + sp[1] * k - 36} />;
+        })()
       ) : null}
 
       {presence.away ? (
@@ -336,90 +312,6 @@ export function HideoutStageChrome({
         />
       ) : null}
 
-    </View>
-  );
-}
-
-/**
- * Room + Call buttons and the first-run swipe hint. Drawn by PetRoom ABOVE the aura
- * mask (StreetRoomAuraClip), so the side-gutter column and the hint are never painted over.
- */
-export function HideoutStageControls({
-  hideout,
-  presence,
-  viewed,
-  scale,
-  origin,
-  expeditionBackMs,
-  onView,
-  onCall,
-  coach,
-  onCoachSeen,
-  controlsMode,
-}: {
-  hideout: HideoutState;
-  presence: Presence;
-  viewed: HideoutRoomId;
-  scale: HideoutScale;
-  origin: HideoutOrigin;
-  expeditionBackMs: number | null;
-  onView: (id: HideoutRoomId) => void;
-  onCall: () => void;
-  coach: boolean;
-  onCoachSeen: () => void;
-  /** side: column in the right gutter · ceiling: compact row in the room's ceiling band · row: under the room. */
-  controlsMode: 'side' | 'ceiling' | 'row';
-}) {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      <View
-        style={
-          controlsMode === 'side'
-            ? {
-                position: 'absolute',
-                right: Math.max(4, (origin.left - HIDEOUT_CONTROL_PT) / 2),
-                // Lower half of the room, beside the floor; ends at the room's bottom edge at the latest.
-                top: Math.min(
-                  origin.top + scale.canvasH * 0.45,
-                  origin.top + scale.canvasH - (HIDEOUT_ROOM_IDS.filter((id) => roomStage(id, hideout) !== 'hidden').length + 1) * (HIDEOUT_CONTROL_PT + 10) - 6,
-                ),
-              }
-            : controlsMode === 'ceiling'
-              ? // The room's dark ceiling band above the back wall, left side (the right wall holds the Loft tease).
-                { position: 'absolute', left: origin.left + 8 * scale.pt, top: origin.top + 2 }
-              : { position: 'absolute', left: 0, right: 0, bottom: 0 }
-        }
-        pointerEvents="box-none">
-        <HideoutRoomBar
-          hideout={hideout}
-          petRoom={presence.room}
-          viewed={viewed}
-          onSelect={onView}
-          direction={controlsMode === 'side' ? 'column' : 'row'}
-          compact={controlsMode === 'ceiling'}
-          callLabel={presence.away ? 'Away' : 'Call'}
-          callA11y={
-            presence.away
-              ? expeditionBackMs != null
-                ? expeditionCallCopy(expeditionBackMs)
-                : 'Out on a trip'
-              : `Call pet to ${roomDef(viewed).label}`
-          }
-          onCall={onCall}
-        />
-      </View>
-
-      {coach ? (
-        <Pressable
-          onPress={onCoachSeen}
-          accessibilityRole="button"
-          accessibilityLabel="Swipe between rooms. The bar shows where your pet is."
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(8,9,15,0.72)', justifyContent: 'flex-end', padding: 24 }]}>
-          <Text style={{ color: STREET.paper, fontFamily: STREET_FONT.regular, fontSize: 16, textAlign: 'center' }}>
-            Swipe for rooms. The bar marks where your pet is.
-          </Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 }

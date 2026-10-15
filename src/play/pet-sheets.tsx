@@ -78,7 +78,6 @@ import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
 import { ScoreBurst } from '@/play/score-burst';
 import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
-import { setHideoutShowLabels, useHideoutShowLabels } from '@/play/street-room';
 import { streetUiOn } from '@/play/street-ui';
 import { AuraColourPicker } from '@/play/aura-colour-picker';
 import { auraPrice, auraStyles, auraTintLabel } from '@/play/auras';
@@ -494,15 +493,10 @@ export function infoTabs(dev: boolean): { id: InfoTab; label: string }[] {
 }
 
 function HideoutInfoExtras({ onSettings }: { onSettings?: () => void }) {
-  const show = useHideoutShowLabels();
+  if (!onSettings) return null;
   return (
     <View style={styles.chips}>
-      <NeonChip
-        label={show ? 'Show labels · On' : 'Show labels'}
-        selected={show}
-        onPress={() => setHideoutShowLabels(!show)}
-      />
-      {onSettings ? <NeonChip label="Settings" onPress={onSettings} /> : null}
+      <NeonChip label="Settings" onPress={onSettings} />
     </View>
   );
 }

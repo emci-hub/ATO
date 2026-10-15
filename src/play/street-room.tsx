@@ -2,15 +2,14 @@
  * Streetwear Hideout — 3/4 top-down room, map-driven spots, room life, slim strip.
  *
  * Art is the swappable greybox under assets/art/rooms/ (hideout-td-*). Spots /
- * walk / lights come from hideout-td.map.json. Spot labels are Departure Mono
- * mustard tags; each fades to 40% after its first tap. "Show labels" in Info
- * restores them.
+ * walk / lights come from hideout-td.map.json. The room has NO tap spots, labels or
+ * highlights: its actions live on the left rail and the rooms on the right rail
+ * (hideout-rails.tsx, feature/hideout-rails).
  */
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Defs, Ellipse, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { StyleSheet, Text, View } from 'react-native';
+import Svg, { Defs, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
   ReduceMotion,
   cancelAnimation,
@@ -23,71 +22,20 @@ import Animated, {
 
 import { PET_METER_MAX } from '@/play/pet';
 import { GRADE_LABEL, WARMTH_MAX, type Grade } from '@/play/pet-eggs';
-import { LOFT_WINDOW_POS, LOFT_WINDOW_SIZE, ROOM_ART, SPOT_ICON_ART } from '@/play/hideout-art';
+import { LOFT_WINDOW_POS, LOFT_WINDOW_SIZE, ROOM_ART } from '@/play/hideout-art';
 import {
   HIDEOUT_LIGHTS,
   HIDEOUT_NIGHT,
-  HIDEOUT_SPOTS,
-  HIDEOUT_SPOT_HIT_PT,
-  HIDEOUT_TILE,
-  hideoutLabelAnchor,
   occluderProps,
   parseIsoGeom,
   type HideoutProp,
   type HideoutScale,
-  type HideoutSpot,
 } from '@/play/hideout-iso';
 import type { HideoutRoomId } from '@/play/hideout-progress';
-import { PIXEL, PIXEL_FONT, pixelRenderStyle } from '@/play/pixel-theme';
+import { PIXEL_FONT, pixelRenderStyle } from '@/play/pixel-theme';
 import { AmbientSprite, Drift, Twinkle } from '@/play/street-ambient';
 import { KEEP_TRAVEL_PT } from '@/play/play-motion';
-import { tapHaptic } from '@/play/street-feel';
-import { tipAnchorRef } from '@/play/ftue/tip-anchors';
-import { STREET, STREET_FONT, StreetFrame, streetButtonPiece, streetButtonText } from '@/play/street-ui';
-
-export type StreetSpotId = 'feed' | 'play' | 'expedition' | 'dive' | 'den';
-
-const SEEN_KEY = 'ato.street.hideoutSpotsSeen.v2';
-const SHOW_KEY = 'ato.street.hideoutShowLabels';
-
-const listeners = new Set<() => void>();
-let showAllLabels = false;
-
-function emitLabels() {
-  for (const fn of listeners) fn();
-}
-
-export function setHideoutShowLabels(on: boolean): void {
-  showAllLabels = on;
-  emitLabels();
-  AsyncStorage.setItem(SHOW_KEY, on ? '1' : '0').catch(() => {});
-}
-
-export function useHideoutShowLabels(): boolean {
-  const [on, setOn] = useState(showAllLabels);
-  useEffect(() => {
-    const fn = () => setOn(showAllLabels);
-    listeners.add(fn);
-    AsyncStorage.getItem(SHOW_KEY)
-      .then((v) => {
-        if (v === '1') {
-          showAllLabels = true;
-          setOn(true);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      listeners.delete(fn);
-    };
-  }, []);
-  return on;
-}
-
-export type StreetRoomSpotsProps = {
-  onSpot: (id: StreetSpotId) => void;
-  pulse: StreetSpotId | null;
-  notes: Partial<Record<StreetSpotId, string>>;
-};
+import { STREET } from '@/play/street-ui';
 
 function Layer({
   source,
@@ -464,204 +412,6 @@ export function StreetRoomLife({
   );
 }
 
-function PulseRing({ still }: { still: boolean }) {
-  const t = useSharedValue(1);
-  useEffect(() => {
-    if (still) {
-      t.value = 1;
-      return;
-    }
-    t.value = withRepeat(
-      withSequence(
-        withTiming(0.35, { duration: 700, reduceMotion: ReduceMotion.Never }),
-        withTiming(1, { duration: 700, reduceMotion: ReduceMotion.Never }),
-      ),
-      -1,
-    );
-    return () => cancelAnimation(t);
-  }, [still, t]);
-  const style = useAnimatedStyle(() => ({ opacity: t.value }));
-  return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.pulse, style]} />;
-}
-
-/** Unvisited chip bob — KEEP loop; amplitude ≤1.04, smaller under vestibularSafe. */
-function ChipBob({ still, gentle, children }: { still: boolean; gentle: boolean; children: ReactNode }) {
-  const t = useSharedValue(1);
-  useEffect(() => {
-    cancelAnimation(t);
-    t.value = 1;
-    if (still) return;
-    const peak = gentle ? 1.015 : 1.03;
-    t.value = withRepeat(
-      withSequence(
-        withTiming(peak, { duration: 900, reduceMotion: ReduceMotion.Never }),
-        withTiming(1, { duration: 900, reduceMotion: ReduceMotion.Never }),
-      ),
-      -1,
-    );
-    return () => cancelAnimation(t);
-  }, [still, gentle, t]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: t.value }] }));
-  return <Animated.View style={style}>{children}</Animated.View>;
-}
-
-export function StreetRoomSpots({
-  left,
-  top,
-  scale,
-  onSpot,
-  pulse,
-  notes,
-  still,
-  gentle = false,
-  petHit,
-}: StreetRoomSpotsProps & {
-  left: number;
-  top: number;
-  scale: HideoutScale;
-  still: boolean;
-  /** OS RM / in-game Reduced — smaller idle bob. */
-  gentle?: boolean;
-  /** Pet hit box in screen pt — chip must not cover the figure. */
-  petHit: { x: number; y: number; w: number; h: number } | null;
-}) {
-  const k = scale.pt;
-  const showAll = useHideoutShowLabels();
-  const [seen, setSeen] = useState<Record<string, boolean>>({});
-  useEffect(() => {
-    let live = true;
-    AsyncStorage.getItem(SEEN_KEY)
-      .then((v) => {
-        if (!live || !v) return;
-        try {
-          const ids = JSON.parse(v) as string[];
-          const next: Record<string, boolean> = {};
-          for (const id of ids) next[id] = true;
-          setSeen(next);
-        } catch {
-          // ignore
-        }
-      })
-      .catch(() => {});
-    return () => {
-      live = false;
-    };
-  }, []);
-  const press = (spot: HideoutSpot) => {
-    tapHaptic();
-    if (!seen[spot.id]) {
-      const next = { ...seen, [spot.id]: true };
-      setSeen(next);
-      AsyncStorage.setItem(SEEN_KEY, JSON.stringify(Object.keys(next))).catch(() => {});
-    }
-    onSpot(spot.coach);
-  };
-  const hit = HIDEOUT_SPOT_HIT_PT;
-  return (
-    <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-      {HIDEOUT_SPOTS.map((s) => {
-        const note = notes[s.coach];
-        const faded = !showAll && seen[s.id] && pulse !== s.coach;
-        const unvisited = !seen[s.id];
-        const anchor = hideoutLabelAnchor(s.id);
-        const label = s.action;
-        const hot = pulse === s.coach;
-        const variant = hot ? 'primary' : 'secondary';
-        const chipW = Math.max(hit, s.id === 'manhole' ? 132 : 108);
-        const chipH = hit;
-        const [ecx, ecy, erx, ery] = s.ellipse;
-        const [fc, fr, fw, fh] = s.footprint;
-        const tile = HIDEOUT_TILE;
-        const footW = Math.max(hit, fw * tile * k);
-        const footH = Math.max(hit, fh * tile * k);
-        const footLeft = left + fc * tile * k + (fw * tile * k) / 2 - footW / 2;
-        const footTop = top + fr * tile * k + (fh * tile * k) / 2 - footH / 2;
-        const cx = left + anchor[0] * k;
-        const cy = top + anchor[1] * k;
-        let leftPt = Math.round(cx - chipW / 2);
-        let topPt = Math.round(cy - chipH / 2);
-        if (petHit) {
-          const overlap =
-            leftPt < petHit.x + petHit.w &&
-            leftPt + chipW > petHit.x &&
-            topPt < petHit.y + petHit.h &&
-            topPt + chipH > petHit.y;
-          if (overlap) topPt = Math.round(petHit.y - chipH - 6);
-        }
-        // The app's kit button (same family as FEED / INFO): slate, mustard when something is
-        // new there; icon + label. Pulse ring + press state live on the button, not the 48 pt
-        // hit area around it.
-        const face = (pressed: boolean) => (
-          <StreetFrame piece={streetButtonPiece(variant, pressed)} style={[styles.chip, faded && styles.chipFaded]}>
-            {hot ? <PulseRing still={still} /> : null}
-            {SPOT_ICON_ART[s.id] ? (
-              <Image source={SPOT_ICON_ART[s.id]} style={styles.chipIcon} contentFit="contain" transition={0} />
-            ) : null}
-            <Text style={[styles.chipText, { color: streetButtonText(variant) }]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
-              {label}
-            </Text>
-          </StreetFrame>
-        );
-        return (
-          <View key={s.id} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-            <Svg
-              pointerEvents="none"
-              style={{ position: 'absolute', left: left + (ecx - erx) * k, top: top + (ecy - ery) * k, width: erx * 2 * k, height: ery * 2 * k }}>
-              <Ellipse
-                cx={erx * k}
-                cy={ery * k}
-                rx={erx * k}
-                ry={ery * k}
-                fill="none"
-                stroke={PIXEL.cyan}
-                strokeWidth={1.5}
-                strokeOpacity={faded ? 0.28 : 0.7}
-              />
-            </Svg>
-            <Pressable
-              onPress={() => press(s)}
-              accessibilityRole="button"
-              accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
-              style={({ pressed }) => [
-                styles.spot,
-                {
-                  left: Math.round(footLeft),
-                  top: Math.round(footTop),
-                  width: Math.round(footW),
-                  height: Math.round(footH),
-                  minWidth: hit,
-                  minHeight: hit,
-                },
-                pressed && styles.chipPressed,
-              ]}
-            />
-            <Pressable
-              ref={s.coach === 'dive' ? tipAnchorRef('hatch') : undefined}
-              onPress={() => press(s)}
-              accessibilityRole="button"
-              accessibilityLabel={`${s.thing}, ${s.action}${note ? `, ${note}` : ''}`}
-              style={[
-                styles.spot,
-                styles.chipHit,
-                { left: leftPt, top: topPt, width: chipW, height: chipH, minWidth: hit, minHeight: hit },
-              ]}>
-              {({ pressed }) =>
-                unvisited && !still ? (
-                  <ChipBob still={still} gentle={gentle}>
-                    {face(pressed)}
-                  </ChipBob>
-                ) : (
-                  face(pressed)
-                )
-              }
-            </Pressable>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
 function Cells({
   label,
   value,
@@ -843,31 +593,6 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     textTransform: 'uppercase',
     includeFontPadding: false,
-  },
-  spot: { position: 'absolute', borderRadius: 4 },
-  chipHit: { alignItems: 'center', justifyContent: 'center' },
-  pulse: { borderWidth: 2, borderColor: PIXEL.cyan, borderStyle: 'dashed' },
-  // The visible kit button stays compact; the Pressable around it keeps the 48 pt tap area.
-  chip: {
-    height: 30,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingLeft: 8,
-    paddingRight: 11,
-  },
-  chipFaded: { opacity: 0.82 },
-  // Press flash on the prop's own tap area (footprint).
-  chipPressed: { backgroundColor: PIXEL.glow },
-  chipIcon: { width: 18, height: 18, ...pixelRenderStyle },
-  chipText: {
-    fontFamily: STREET_FONT.bold,
-    fontSize: 13,
-    lineHeight: 16,
-    includeFontPadding: false,
-    flexShrink: 1,
   },
   bubble: {
     position: 'absolute',

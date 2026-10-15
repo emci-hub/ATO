@@ -39,7 +39,7 @@ export const MIN_BOTTOM_PAD = 8;
  * dock takes the setup dock + tab bar height, so the board never moves at the screen switch.
  */
 export const REGIONS: Record<GameScreenId, RegionSpec> = {
-  hideout: { topBar: 56, notice: 40, dock: 120, tabBar: true, bottomPad: 'none' },
+  hideout: { topBar: 56, notice: 40, dock: 64, tabBar: true, bottomPad: 'none' },
   'turf-setup': { topBar: 56, notice: 40, dock: 64, tabBar: true, bottomPad: 'none' },
   'turf-wave': { topBar: 56, notice: 40, dock: (b) => 64 + tabBarHeight(b), tabBar: false, bottomPad: 'none' },
   dive: { topBar: 109, notice: 28, dock: 152, tabBar: false, bottomPad: 'inset-min' },
