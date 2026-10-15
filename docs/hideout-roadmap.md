@@ -14,8 +14,8 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0b | Polish batch (LF art pins, holo tip, archive hideout-fx; **Sleep pending**) | draft PR #44 |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
-| 3 | **Pet that knows you** | **next** |
-| 4 | Daily visitors | — |
+| 3 | Pet that knows you | built, draft PR `feature/pet-knows-you` — **emci reads the line bank** (`PET_KNOWS_YOU_COPY_REVIEWED = false`), then merge + OTA |
+| 4 | **Daily visitors** | **next** |
 | 5 | Decor slots | — |
 | 6 | Circle visits | — |
 
@@ -52,6 +52,23 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | playfulness | finds the joke, plays first | gets it done, jokes later |
 
 Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high attachment_anxiety → "Still here. Didn't go anywhere."
+
+## Step 3 as built (pet that knows you)
+- Files: `src/play/pet-knows-you-bank.ts` (119 hand-written lines: 16 traits × 2 ends × 3, 8 hedges, 15 streak lines;
+  ids `pky_*` forever), `pet-knows-you.ts` (pure rules), `pet-knows-you-store.ts` (adapter), `use-pet-knows-you.ts`
+  (hook), one call site in `pet-screen.tsx` (the idle timer). `npm run check:pet-knows-you`.
+- Reads app code only (`fetchTraitTracks` report track, `daily-insights` streak). Cache = each trait's end ("high"/"low")
+  only, one account, key `ato.play.petKnowsYou.v1` (wiped with the rest of `ato.*`). Preview as new user, signed out,
+  offline → hedge line, never silence, never a crash. Nothing in the cloud save, away card, Circle or any share.
+- Rare: one per visit, 25 min cooldown (lively ×0.7, calm ×1.3), 40% roll per idle tick (lively 50%, calm 30%), never
+  the same line twice in a row, never the same trait within 2, a trait needs 3+ report answers and a clear end
+  (<0.35 / ≥0.65). With a streak ≥ 1, ~30% of personal lines are streak lines; a broken streak says nothing.
+- Chatter Off = no personal lines (they ride the idle timer). A tap never says one.
+- **Lessons:** (1) the word "problem" and "you are" appear in everyday hedges — the check bans "you are/you're" literally,
+  so "my notes on you are short" had to be reworded; (2) keep the parse/state helpers in the pure module so the check
+  never imports supabase; (3) web previews: `expo start --web` still dies with EMFILE on Windows — use the static
+  export in `docs/divecore/tools/README.md`; a personal line needs a signed-in profile, so previews use a local-only
+  demo override that is never committed.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
