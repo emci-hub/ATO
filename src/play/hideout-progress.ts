@@ -9,6 +9,9 @@
  * and a build in progress carries over.
  */
 import roomsDoc from './data/hideout-rooms.json';
+import { parseDecor, type DecorState } from '@/play/decor-slots';
+import { parseVisitorBook, type VisitorBook } from '@/play/daily-visitors';
+import { parseCircleBook, type CircleBook } from '@/play/circle-visits';
 import { PET_DEEP_MIN_DEPTH, PET_MAX_GAP_MS, PET_STAGES, petDayHolds, type PetHallEntry, type PetState } from '@/play/pet';
 
 export const HIDEOUT_ROOM_IDS = ['hideout', 'loft', 'garage', 'rooftop'] as const;
@@ -138,6 +141,12 @@ export type HideoutState = {
   log: HideoutEvent[];
   tokens_by_source: Record<string, number>;
   tokens_ymd: string | null;
+  /** Daily visitors (roadmap step 4): greetings per visitor + the day of the last one. Rides the cloud save. */
+  visitors: VisitorBook;
+  /** Decor slots (roadmap step 5): slot → item in the Hideout room. Rides the cloud save. */
+  decor: DecorState;
+  /** Circle visits (roadmap step 6): gifts opened from Circle friends (stickers per hero, stamps, recent ids). */
+  circle: CircleBook;
 };
 
 export function emptyHideout(): HideoutState {
@@ -160,6 +169,9 @@ export function emptyHideout(): HideoutState {
     log: [],
     tokens_by_source: {},
     tokens_ymd: null,
+    visitors: { greets: {}, greeted_ymd: null },
+    decor: {},
+    circle: { gifts: {}, stamps: 0, opened: [] },
   };
 }
 
@@ -484,6 +496,9 @@ export function parseHideout(raw: unknown, now: number): HideoutState {
     log,
     tokens_by_source,
     tokens_ymd: typeof r.tokens_ymd === 'string' ? r.tokens_ymd : null,
+    visitors: parseVisitorBook(r.visitors),
+    decor: parseDecor(r.decor),
+    circle: parseCircleBook(r.circle),
   };
 }
 

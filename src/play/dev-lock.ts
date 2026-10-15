@@ -9,7 +9,7 @@ import { useSyncExternalStore } from 'react';
  * AsyncStorage/SecureStore), so a cold start starts locked again. Real
  * security is the app's server-side dev-unlock (`lib/dev-access-unlock.ts`);
  * this one just keeps stray taps away from debug rows, and App Store builds
- * strip the whole Play route via `PRE_LAUNCH_DEV = false` anyway.
+ * hide every dev surface via `PRE_LAUNCH_DEV = false` anyway (the Play route itself stays on).
  *
  * The PIN is stored as char codes so a plain source grep for the literal never
  * matches (still trivially recoverable — soft gate only, by design).

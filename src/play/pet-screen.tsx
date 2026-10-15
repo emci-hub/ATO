@@ -13,7 +13,7 @@
  *
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
@@ -33,7 +33,22 @@ import { usePetDevRoom } from '@/play/pet-dev-state';
 import { petBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { NEON } from '@/play/neon-viper';
-import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
+import { PET_BRANCH_LABEL, PET_STAGE_LABEL, petLookFor } from '@/play/pet';
+import { greetedToday, visitorFor } from '@/play/daily-visitors';
+import { VISITOR_UI } from '@/play/daily-visitors-bank';
+import { VisitorCard, type VisitorCardShow } from '@/play/daily-visitor-ui';
+import { DecorSheet } from '@/play/decor-slots-ui';
+import type { DecorItemId, DecorSlotId } from '@/play/decor-slots';
+import { CIRCLE_UI, nextCircleGift, type CircleFriend, type CircleGift, type CircleLook } from '@/play/circle-visits';
+import { CircleGiftCard, CircleSheet, CircleVisitStrip, type CircleListState } from '@/play/circle-visits-ui';
+import {
+  fetchCircleFriends,
+  fetchCircleInbox,
+  fetchCircleRoom,
+  markCircleGiftOpened,
+  sendCircleGift,
+  setCircleShare,
+} from '@/play/circle-visits-store';
 import { askPetReminderPermission, syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
 import { petPose, sharpPetBox } from '@/play/pet-actor';
@@ -55,6 +70,7 @@ import { isStrongResult } from '@/play/score-burst-model';
 import type { GuideSection } from '@/play/guide-content';
 import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
+import { usePetKnowsYou } from '@/play/use-pet-knows-you';
 import { HideoutTeaseSheetCopy } from '@/play/hideout-tease';
 import { canStartBuild, roomStage, type HideoutRoomId } from '@/play/hideout-progress';
 import { tripLabel } from '@/play/expedition-ladder';
@@ -78,6 +94,9 @@ import { petRecolor } from '@/play/pet-looks';
 import { PetReveal } from '@/play/pet-reveal';
 import { PetRoom, type RoomSpeech } from '@/play/pet-room';
 import { GameScreen, useStageFrame } from '@/play/stage-layout';
+import { SPACE, layoutRegions } from '@/play/stage-frame';
+import { AwayCard } from '@/play/away-card';
+import type { AwaySummary } from '@/play/away-summary';
 import { StreetStatusStrip } from '@/play/street-room';
 import { HideoutRails } from '@/play/hideout-rails';
 import { expeditionCallCopy, resolvePresence, wokeUp } from '@/play/hideout-presence';
@@ -128,6 +147,9 @@ import {
   markHideoutCoach,
   markBuildNotifAsked,
   stampHideoutPeekaboo,
+  greetDailyVisitor,
+  setHideoutDecor,
+  openCircleGift,
   localYmd,
   setPlaySettings,
 } from '@/play/playStore';
@@ -301,6 +323,12 @@ function RoomIcon({
   );
 }
 
+/** The day the visitor's notice last showed in this app open (module scope: survives tab switches). */
+let visitorNoticeYmd: string | null = null;
+/** A friend's pet in their own Hideout just stands there (the gift is on the dock). */
+const noCircleTap = () => {};
+const VISITOR_NOTICE_DELAY_MS = 1200;
+
 export function PetScreen({
   view,
   commit,
@@ -320,6 +348,8 @@ export function PetScreen({
   onGuideOpened,
   shellTop = null,
   shellTabs = null,
+  away = null,
+  onAwayClose,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -351,6 +381,9 @@ export function PetScreen({
   /** Stage layout: the shell's resource bar (TopBar) and tab bar for this GameScreen. */
   shellTop?: ReactNode;
   shellTabs?: ReactNode;
+  /** "While you were away" for this open (null = nothing to say). */
+  away?: AwaySummary | null;
+  onAwayClose?: () => void;
 }) {
   const fontsReady = usePixelFonts();
   const frame = useStageFrame('hideout');
@@ -436,6 +469,36 @@ export function PetScreen({
     if (!presence.peekaboo) return;
     commit((doc, now) => stampHideoutPeekaboo(doc, now));
   }, [presence.peekaboo, commit]);
+
+  // Daily visitors (roadmap step 4): today's visitor from the local date (offline), never your pet's
+  // own hero (a stand-in comes instead); none while the pet is still an egg. Street layout only.
+  const todayYmd = localYmd();
+  const petHeroId = useMemo(() => {
+    const look = petLookFor(pet.line, 'adult');
+    return look?.kind === 'hero' ? look.heroId : null;
+  }, [pet.line]);
+  const visitor = streetUiOn() && pet.stage !== 'egg' ? visitorFor(todayYmd, petHeroId) : null;
+  const visitorGreeted = greetedToday(view.hideout.state.visitors, todayYmd);
+  const [visitorCard, setVisitorCard] = useState<VisitorCardShow | null>(null);
+  const tapVisitor = () => {
+    if (!visitor) return;
+    // Re-read the day at the tap: past midnight it is already the next visitor's day (never a second greeting).
+    const tapYmd = localYmd();
+    const today = tapYmd === visitor.ymd ? visitor : visitorFor(tapYmd, petHeroId);
+    if (greetedToday(view.hideout.state.visitors, tapYmd)) {
+      // Said hi already today: it just chats (no reward, nothing saved).
+      setVisitorCard({ reward: { kind: 'visit', heroId: today.heroId }, greetN: view.hideout.state.visitors.greets[today.heroId] ?? 0 });
+      return;
+    }
+    let shown: VisitorCardShow | null = null;
+    commit((doc, now) => {
+      const res = greetDailyVisitor(doc, now, today);
+      if (!res) return null;
+      shown = { reward: res.reward, greetN: res.doc.hideout.visitors.greets[today.heroId] ?? 1 };
+      return res.doc;
+    });
+    if (shown) setVisitorCard(shown);
+  };
   const realStatus = petStatus({
     stage: pet.stage,
     hunger: pet.hunger,
@@ -551,6 +614,8 @@ export function PetScreen({
   // Now and then while idle: its mood, the time of day, or chatter — as
   // often as the Chatter setting says (Off: never on its own).
   const chatter = view.settings.chatter;
+  // Rarely, instead of the usual line: one that shows the pet knows the person (pet-knows-you.ts).
+  const { maybeLine: maybePersonalLine } = usePetKnowsYou();
   useEffect(() => {
     const range = idleTalkDelayMs(chatter, PET_IDLE_TALK_MIN_MS, PET_IDLE_TALK_MAX_MS);
     if (!range) return;
@@ -561,16 +626,21 @@ export function PetScreen({
         if (sheetRef.current == null && statusRef.current === 'chilly') {
           sayEgg('keep_warm');
         } else if (sheetRef.current == null && statusRef.current !== 'sleepy' && statusRef.current !== 'choose_egg') {
-          const roll = Math.random();
-          const tod = timeOfDaySituation(hourRef.current);
-          say(roll < 0.5 ? talkSituationForStatus(statusRef.current) : roll < 0.7 && tod ? tod : 'chatter');
+          const personal = maybePersonalLine(eggRef.current || awayRef.current);
+          if (personal) {
+            sayText(personal);
+          } else {
+            const roll = Math.random();
+            const tod = timeOfDaySituation(hourRef.current);
+            say(roll < 0.5 ? talkSituationForStatus(statusRef.current) : roll < 0.7 && tod ? tod : 'chatter');
+          }
         }
         schedule();
       }, wait);
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [say, sayEgg, chatter]);
+  }, [say, sayEgg, sayText, maybePersonalLine, chatter]);
 
   // Shards ready to trade up: say so once per visit.
   const tradeSaidRef = useRef(false);
@@ -645,12 +715,141 @@ export function PetScreen({
     setSheet(null);
   };
 
-  const busy = sheet != null || game != null;
+  // The away card shows when there is one, nothing covers it (Settings) and no reveal ceremony waits.
+  const awayShown = away != null && onAwayClose != null && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
+  // Busy (no coach tip, no iOS swipe-back): a sheet, a mini-game or the away card is up.
+  const busy = sheet != null || game != null || awayShown;
+  // The visitor card waits for the away card and hides under Settings, like it — and counts as busy too.
+  const visitorShown = visitorCard != null && !awayShown && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
+  // The decor picker (roadmap step 5) waits for the same things, and is busy too.
+  const [decorSlot, setDecorSlot] = useState<DecorSlotId | null>(null);
+  const decorShown = decorSlot != null && !awayShown && !settingsOpen && !visitorShown && (pet.reveals[revealStep] ?? null) == null;
+  const pickDecor = (item: DecorItemId | null) => {
+    if (decorSlot == null) return;
+    const slot = decorSlot;
+    commit((doc) => setHideoutDecor(doc, slot, item));
+    setDecorSlot(null);
+  };
+  // Circle visits (roadmap step 6): the friend list (float card), a friend's Hideout (the stage shows
+  // their room; the notice lane and the dock swap their contents, never their size) and gifts left for you.
+  const [circleOpen, setCircleOpen] = useState(false);
+  const circleOpenRef = useRef(false);
+  circleOpenRef.current = circleOpen && view.hideout.viewed === 'hideout';
+  const [circleList, setCircleList] = useState<CircleListState>({ kind: 'loading' });
+  const [circleBusy, setCircleBusy] = useState<string | null>(null);
+  const [circleNote, setCircleNote] = useState<string | null>(null);
+  const [circleVisit, setCircleVisit] = useState<{
+    friend: CircleFriend;
+    look: CircleLook;
+    gift: 'idle' | 'sending' | 'sent';
+    note: string | null;
+  } | null>(null);
+  const [circleInbox, setCircleInbox] = useState<CircleGift[]>([]);
+  const [circleGiftCard, setCircleGiftCard] = useState<CircleGift | null>(null);
+  const loadCircleInbox = useCallback(() => {
+    void fetchCircleInbox().then((res) => {
+      if (res.kind === 'ok') setCircleInbox(res.value);
+    });
+  }, []);
+  const circleOn = streetUiOn();
+  useEffect(() => {
+    if (circleOn) loadCircleInbox();
+  }, [circleOn, loadCircleInbox]);
+  const openCircle = () => {
+    setCircleOpen(true);
+    setCircleNote(null);
+    setCircleList({ kind: 'loading' });
+    void fetchCircleFriends().then((res) => setCircleList(res.kind === 'ok' ? { kind: 'ok', friends: res.value } : { kind: res.kind }));
+  };
+  const toggleCircleShare = (f: CircleFriend, on: boolean) => {
+    setCircleBusy(f.peer);
+    setCircleNote(null);
+    void setCircleShare(f.peer, on).then((res) => {
+      setCircleBusy(null);
+      if (res.kind !== 'ok') {
+        setCircleNote(res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error);
+        return;
+      }
+      setCircleList((s) =>
+        s.kind === 'ok'
+          ? { kind: 'ok', friends: s.friends.map((x) => (x.peer === f.peer ? { ...x, mine: on, allowed: res.value.allowed } : x)) }
+          : s,
+      );
+    });
+  };
+  const visitCircleFriend = (f: CircleFriend) => {
+    setCircleBusy(f.peer);
+    setCircleNote(null);
+    void fetchCircleRoom(f.peer).then((res) => {
+      setCircleBusy(null);
+      // Closed the list (or left the Hideout room) while it loaded: no visit starts.
+      if (!circleOpenRef.current) return;
+      if (res.kind !== 'ok') {
+        setCircleNote(res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error);
+        return;
+      }
+      if (res.value.kind !== 'room') {
+        setCircleNote(res.value.kind === 'no_save' ? CIRCLE_UI.noSave : CIRCLE_UI.notAllowed);
+        return;
+      }
+      // Their room is the Hideout room: switch the view there first (only from the Hideout's own rail).
+      setCircleVisit({ friend: f, look: res.value.look, gift: f.giftedToday ? 'sent' : 'idle', note: null });
+      setCircleOpen(false);
+    });
+  };
+  const leaveCircleGift = () => {
+    if (!circleVisit || circleVisit.gift !== 'idle') return;
+    const peer = circleVisit.friend.peer;
+    setCircleVisit((v) => (v ? { ...v, gift: 'sending', note: null } : v));
+    void sendCircleGift(peer).then((res) => {
+      setCircleVisit((v) => {
+        if (!v || v.friend.peer !== peer) return v;
+        if (res.kind === 'ok' && res.value !== 'not_allowed') return { ...v, gift: 'sent', note: null };
+        if (res.kind === 'ok') return { ...v, gift: 'idle', note: CIRCLE_UI.giftNotAllowed };
+        return { ...v, gift: 'idle', note: res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error };
+      });
+    });
+  };
+  const leaveCircleVisit = () => {
+    setCircleVisit(null);
+    loadCircleInbox();
+  };
+  // A friend's pet with a gift stands where the daily visitor does, once today's visitor has had its hello.
+  const circleGift = circleOn && !circleVisit ? nextCircleGift(circleInbox, view.hideout.state.circle) : null;
+  const circleGiftHere = circleGift != null && (!visitor || visitorGreeted);
+  const tapCircleGift = () => {
+    if (!circleGift) return;
+    const gift = circleGift;
+    commit((doc) => openCircleGift(doc, gift));
+    setCircleGiftCard(gift);
+    void markCircleGiftOpened(gift.id);
+  };
+  const circleShown = circleOpen && !circleVisit && !awayShown && !settingsOpen && !visitorShown && !decorShown && (pet.reveals[revealStep] ?? null) == null;
+  const circleGiftShown = circleGiftCard != null && !awayShown && !settingsOpen && !visitorShown && !decorShown && (pet.reveals[revealStep] ?? null) == null;
+  const overlayBusy = busy || visitorShown || decorShown;
+  // Circle cards and a visit are busy too (a separate value: the decor-slots pin on overlayBusy is untouched).
+  const hideoutBusy = overlayBusy || circleShown || circleGiftShown || circleVisit != null;
+  const circleVisitOn = circleVisit != null;
+  const leaveVisitRef = useRef(leaveCircleVisit);
+  leaveVisitRef.current = leaveCircleVisit;
+
+  // The visitor's notice: once per day per app open (until you say hi), after the away card closes. A short wait
+  // lets an away card that is still being worked out on open come first (it cancels this timer).
+  const visitorHeroId = visitor?.heroId ?? null;
+  useEffect(() => {
+    if (!visitorHeroId || visitorGreeted || awayShown) return;
+    if (visitorNoticeYmd === todayYmd) return;
+    const t = setTimeout(() => {
+      visitorNoticeYmd = todayYmd;
+      notify({ kind: 'notify', title: VISITOR_UI.noticeTitle, body: VISITOR_UI.noticeBody(heroName(visitorHeroId)), priority: 'low' });
+    }, VISITOR_NOTICE_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [visitorHeroId, visitorGreeted, awayShown, todayYmd]);
 
   // Phase 4 coach tips: one at a time, on the Hideout only, when nothing is open over it. A short
   // delay keeps a tip from flashing on mount. Any touch marks it seen (GameScreen's onTipSeen).
   const tipCandidate = pickCoachTip(view.settings.tipsSeen, {
-    idle: streetUiOn() && !busy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
+    idle: streetUiOn() && !hideoutBusy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
     egg: pet.stage === 'egg',
     eggPicked: pet.egg != null,
   });
@@ -677,14 +876,19 @@ export function PetScreen({
   );
 
   useEffect(() => {
-    onBusyChange?.(busy);
+    onBusyChange?.(hideoutBusy);
     return () => onBusyChange?.(false);
-  }, [busy, onBusyChange]);
+  }, [hideoutBusy, onBusyChange]);
   useEffect(() => {
     if (!registerBack) return;
     registerBack({
       edgeSwipe: true,
       back: () => {
+        // In a friend's Hideout, back = home (the edge swipe too).
+        if (circleVisitOn) {
+          leaveVisitRef.current();
+          return true;
+        }
         const step = petBackStep(sheet != null, game != null);
         if (step === 'hub') return false;
         if (step === 'close-game') {
@@ -695,7 +899,7 @@ export function PetScreen({
       },
     });
     return () => registerBack(null);
-  }, [registerBack, sheet, game]);
+  }, [registerBack, sheet, game, circleVisitOn]);
 
   const roundClaim = useRef<{ run: GameRun | null; key: string }>({ run: null, key: '' });
   const finishRound = (run: GameRun) => (outcome: RoundOutcome, score: number) => {
@@ -923,10 +1127,40 @@ export function PetScreen({
         background={NEON.ink}
         help="hideout"
         tip={shownTip}
+        float={
+          // Waits for a hatch / reveal ceremony to close and hides under Settings, so nothing stacks.
+          awayShown && away && onAwayClose ? (
+            <AwayCard summary={away} top={layoutRegions(frame).notice.height + SPACE.s} onClose={onAwayClose} />
+          ) : visitorShown && visitorCard ? (
+            <VisitorCard show={visitorCard} top={layoutRegions(frame).notice.height + SPACE.s} onClose={() => setVisitorCard(null)} />
+          ) : decorShown && decorSlot ? (
+            <DecorSheet
+              slot={decorSlot}
+              placed={view.hideout.state.decor[decorSlot] ?? null}
+              top={layoutRegions(frame).notice.height + SPACE.s}
+              onPick={pickDecor}
+              onClose={() => setDecorSlot(null)}
+            />
+          ) : circleGiftShown && circleGiftCard ? (
+            <CircleGiftCard gift={circleGiftCard} top={layoutRegions(frame).notice.height + SPACE.s} onClose={() => setCircleGiftCard(null)} />
+          ) : circleShown ? (
+            <CircleSheet
+              state={circleList}
+              busyPeer={circleBusy}
+              note={circleNote}
+              top={layoutRegions(frame).notice.height + SPACE.s}
+              onToggle={toggleCircleShare}
+              onVisit={visitCircleFriend}
+              onClose={() => setCircleOpen(false)}
+            />
+          ) : null
+        }
         onTipSeen={seeTip}
         notice={
           street ? (
-            !view.hideout.state.coach_swipe_seen && pet.stage !== 'egg' ? (
+            circleVisit ? (
+              <CircleVisitStrip handle={circleVisit.friend.handle} note={circleVisit.note} />
+            ) : !view.hideout.state.coach_swipe_seen && pet.stage !== 'egg' ? (
               <Pressable
                 onPress={() => commit((doc, now) => markHideoutCoach(doc, now))}
                 accessibilityRole="button"
@@ -957,6 +1191,15 @@ export function PetScreen({
         stage={
           <PetRoom
             stageSize={street ? { width: frame.stage.width, height: frame.stage.height } : undefined}
+            visitor={visitor ? { heroId: visitor.heroId, greeted: visitorGreeted, onTap: tapVisitor } : null}
+            decor={street ? { placed: view.hideout.state.decor, onTap: setDecorSlot } : null}
+            circle={
+              circleVisit
+                ? { heroId: circleVisit.look.heroId, greeted: true, onTap: noCircleTap, decor: circleVisit.look.decor }
+                : circleGiftHere && circleGift
+                  ? { heroId: circleGift.look.heroId, greeted: false, onTap: tapCircleGift }
+                  : null
+            }
             roomOutside={street}
             pet={pet}
             wear={pv.wear}
@@ -983,6 +1226,8 @@ export function PetScreen({
             rails={
               street ? (
                 <HideoutRails
+                  onCircle={openCircle}
+                  hidden={circleVisit != null}
                   hideout={view.hideout.state}
                   viewed={view.hideout.viewed}
                   petRoom={presence.room}
@@ -1027,7 +1272,8 @@ export function PetScreen({
                     presence,
                     viewed: view.hideout.viewed,
                     expeditionBackMs: pv.away ? pv.expeditionBackInMs : null,
-                    onView: (id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id)),
+                    // While visiting a friend, a swipe stays in their room.
+                    onView: (id: HideoutRoomId) => (circleVisit ? undefined : commit((doc, now) => viewHideoutRoom(doc, now, id))),
                     onTease: () => setTeaseOpen(true),
                     onCall: () => {
                       if (pv.away) return;
@@ -1042,8 +1288,23 @@ export function PetScreen({
         dock={
           <>
             <View style={styles.iconRow}>
-              {/* Streetwear: Play, Stash, Underground and Explore live on the left rail; the dock keeps Feed + Info. */}
-              {(street ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
+              {/* Streetwear: Play, Stash, Underground and Explore live on the left rail; the dock keeps Feed + Info.
+                  In a friend's Hideout the same two slots are Leave a gift + Back home. */}
+              {circleVisit ? (
+                <>
+                  <RoomIcon
+                    emoji="🎁"
+                    label={circleVisit.gift === 'sent' ? CIRCLE_UI.giftSent : CIRCLE_UI.gift}
+                    flexGrow={1}
+                    fontSize={14}
+                    pulse={circleVisit.gift === 'idle'}
+                    badge={false}
+                    onPress={leaveCircleGift}
+                  />
+                  <RoomIcon emoji="🏠" label={CIRCLE_UI.home} flexGrow={1} fontSize={14} pulse={false} badge={false} onPress={leaveCircleVisit} />
+                </>
+              ) : null}
+              {(circleVisit ? [] : street ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
                 <RoomIcon
                   key={icon.id}
                   emoji={icon.emoji}

@@ -116,6 +116,17 @@ export async function cancelPetReminder(): Promise<void> {
   await cancelPlayNotices();
 }
 
+/** When the hunger / charges push last fired (or would have), for the away card. Never throws. */
+export async function lastPushFiredAt(kind: 'hunger' | 'charges', now: number): Promise<number | null> {
+  try {
+    // With notifications off nothing was sent (the log still holds the planned time).
+    if (!(await petNoticesAllowed())) return null;
+    return petReminderLastFired(await readLog(kind), now);
+  } catch {
+    return null;
+  }
+}
+
 /** Re-plan and re-schedule every Divecore notice for this state. */
 export async function syncPlayNotices(input: Omit<NoticeInput, 'hungerLastFiredAt' | 'chargesLastFiredAt'>): Promise<void> {
   if (Platform.OS === 'web') return;

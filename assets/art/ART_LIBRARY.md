@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 489 live entries.
+Generated. 503 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -11,9 +11,9 @@ Viewer lists one card per set (not each clip/file).
 - **heroes** (198: 56 in use / 142 unused) — Heroes
 - **enemies-bosses** (18: 10 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
-- **icons** (88: 35 in use / 53 unused) — Icons
+- **icons** (102: 49 in use / 53 unused) — Icons
 - **rooms** (60: 38 in use / 22 unused) — Rooms
-- **props** (49: 0 in use / 49 unused) — Props
+- **props** (49: 10 in use / 39 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
 - **fx** (14: 1 in use / 13 unused) — FX
 - **backgrounds** (2: 2 in use / 0 unused) — Backgrounds
@@ -651,6 +651,25 @@ Viewer lists one card per set (not each clip/file).
 | `icon.shop.streetwear.shine-stone` | 48×48 | resource | — | src/play/generated-play-assets.ts |
 | `icon.shop.streetwear.star-pearl` | 48×48 | resource | — | src/play/generated-play-assets.ts |
 
+## icons · stickers · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.stickers.streetwear.archangel` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.corvus` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.cyber-shinobi` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.elowen` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.frost-lich` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.kael` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.kitsune` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.maldrath` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.neon-viper` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.oni` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.raven` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.sak` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.velkhar` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+| `icon.stickers.streetwear.void-raven` | 128×128 | resource | — | src/play/daily-visitor-ui.tsx |
+
 ## icons · streetwear · streetwear · in-use
 
 | id | size | status | score | usedBy |
@@ -675,7 +694,7 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.shield` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
 | `icon.streetwear.sneaker` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.speech` | 32×32 | resource | — | src/play/hideout-art.ts |
-| `icon.streetwear.star` | 32×32 | resource | — | src/play/dive-hud.tsx |
+| `icon.streetwear.star` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/hideout-art.ts |
 | `icon.streetwear.subway-train` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.sword` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
 | `icon.streetwear.upgrade` | 32×32 | resource | — | src/play/hideout-art.ts |
@@ -850,24 +869,29 @@ Viewer lists one card per set (not each clip/file).
 |---|---|---|---|---|
 | `room.underground.underground` | 256×320 | resource | — | — |
 
+## props · hideout · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `prop.hideout.streetwear.beanbag` | 52×54 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.hideout.streetwear.lamp` | 22×110 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.hideout.streetwear.plant` | 36×72 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.hideout.streetwear.table` | 69×44 | resource | — | src/play/decor-slots-ui.tsx |
+
 ## props · hideout · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `prop.hideout.streetwear.arcade` | 39×123 | resource | — | — |
 | `prop.hideout.streetwear.arcade-off` | 39×123 | resource | — | — |
-| `prop.hideout.streetwear.beanbag` | 52×54 | resource | — | — |
 | `prop.hideout.streetwear.bowl` | 26×16 | resource | — | — |
 | `prop.hideout.streetwear.couch` | 118×71 | resource | — | — |
 | `prop.hideout.streetwear.cushion` | 62×30 | resource | — | — |
-| `prop.hideout.streetwear.lamp` | 22×110 | resource | — | — |
 | `prop.hideout.streetwear.lamp-off` | 22×110 | resource | — | — |
 | `prop.hideout.streetwear.manhole` | 45×26 | resource | — | — |
-| `prop.hideout.streetwear.plant` | 36×72 | resource | — | — |
 | `prop.hideout.streetwear.rug` | 116×44 | resource | — | — |
 | `prop.hideout.streetwear.speaker` | 23×74 | resource | — | — |
 | `prop.hideout.streetwear.stereo` | 30×65 | resource | — | — |
-| `prop.hideout.streetwear.table` | 69×44 | resource | — | — |
 | `prop.hideout.streetwear.window` | 52×65 | resource | — | — |
 
 ## props · loft · default · unused
@@ -877,15 +901,23 @@ Viewer lists one card per set (not each clip/file).
 | `prop.loft.bed` | 64×28 | resource | — | — |
 | `prop.loft.lamp` | 18×36 | resource | — | — |
 
+## props · streetwear · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `prop.streetwear.barrel-fire` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.boombox` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.crate` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.tire-stack` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.traffic-cone` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.trash-bags` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+
 ## props · streetwear · streetwear · unused
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `prop.streetwear.barrel-fire` | 64×64 | resource | — | — |
 | `prop.streetwear.bench-graffiti` | 64×64 | resource | — | — |
-| `prop.streetwear.boombox` | 64×64 | resource | — | — |
 | `prop.streetwear.boombox-crate` | 64×64 | resource | — | — |
-| `prop.streetwear.crate` | 64×64 | resource | — | — |
 | `prop.streetwear.crates-stacked` | 64×64 | resource | — | — |
 | `prop.streetwear.dumpster` | 64×64 | resource | — | — |
 | `prop.streetwear.dumpster-open` | 64×64 | resource | — | — |
@@ -908,10 +940,7 @@ Viewer lists one card per set (not each clip/file).
 | `prop.streetwear.spray-cans` | 64×64 | resource | — | — |
 | `prop.streetwear.streetlight` | 64×64 | resource | — | — |
 | `prop.streetwear.streetlight-broken` | 64×64 | resource | — | — |
-| `prop.streetwear.tire-stack` | 64×64 | resource | — | — |
-| `prop.streetwear.traffic-cone` | 64×64 | resource | — | — |
 | `prop.streetwear.traffic-cone-fallen` | 64×64 | resource | — | — |
-| `prop.streetwear.trash-bags` | 64×64 | resource | — | — |
 | `prop.streetwear.trash-bags-cup` | 64×64 | resource | — | — |
 
 ## tiles · streetwear · default · unused

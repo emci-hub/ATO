@@ -4,6 +4,19 @@ ATO is an invite-only iOS app (Expo SDK 54 / expo-router / Supabase): one daily 
 (loaded on a tap; it replaced the old Read + Do card), a 16-axis trait profile that every AI surface reads from, and a small
 scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live status.
 
+## When to move to a new chat (emci 2026-10-15: saves credits)
+
+One chat = one step. Move to a new chat when ANY of these is true:
+- a plan step is done (merged / published / handed to emci for a phone check);
+- the next request is a different feature or a new roadmap step;
+- the chat has run through several tasks or a long back-and-forth (every reply re-sends the whole history).
+
+Before moving, end the chat with: (1) a 3–5 line **assessment** (built / verified / not verified / what went wrong),
+(2) **next** (the next step + anything emci must do first), (3) a **new-chat prompt**: a `Model:` line, then ONE
+code block to paste (repo, branch, files to read — PROJECT_CONTEXT.md + the plan doc, e.g. `docs/hideout-roadmap.md` —
+the task, done-criteria, rules, and "end this chat the same way"). Keep the plan's state in that repo doc, never only in
+chat. The new chat does its part and ends the same way — that is the loop.
+
 ## Commands
 
 | Task | Command |

@@ -1,4 +1,4 @@
-import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -100,6 +100,7 @@ import type { SwordTier } from '@/play/swords';
 import type { ShopTokenRow } from '@/play/shop';
 import { ShopScreen } from '@/play/shop-screen';
 import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
+import { countOnce, countPlayOpen } from '@/play/play-counters';
 
 /**
  * Play room — Grove + Dive + Dress (GAME_SPEC §3, §7, §9c, §11 screens 1–4).
@@ -113,8 +114,8 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * collection, sells Looks over the soft cap, and shows the equipped-stat
  * buckets. Defend (step 5a) is a board skeleton: one path with puff
  * placeholders, leak = fail, Retry replays, Pause freezes, next wave = highest
- * cleared + 1. No Supabase — local AsyncStorage only. Hidden outside
- * pre-launch builds via PRE_LAUNCH_DEV.
+ * cleared + 1. Local AsyncStorage first, with a cloud copy per account (wave96, cloud-save.ts).
+ * On in every build (emci 2026-10-15); only the dev tooling sits behind PRE_LAUNCH_DEV.
  */
 
 
@@ -126,6 +127,8 @@ export default function PlayScreen() {
   const reduceMotion = resolveReduceMotion(motionMode, phoneReduceMotion);
   const {
     view,
+    away,
+    dismissAway,
     claim,
     commit,
     commitSaved,
@@ -178,6 +181,15 @@ export default function PlayScreen() {
   // hides and comes back on leaving Defend or exiting Play. Shared hook —
   // any screen opts in the same way.
   useImmersiveMode(mode === 'defend');
+  // Anonymous daily counters (wave96): Play opened (and a next-day return), the Hideout seen.
+  useEffect(() => {
+    countPlayOpen();
+  }, []);
+  useEffect(() => {
+    if (mode === 'pet') countOnce('hideout_open');
+    // Leaving the Hideout closes the away card (it never comes back stale).
+    else dismissAway();
+  }, [mode, dismissAway]);
   // Street shell (Streetwear art style): the bars own the top/bottom safe area.
   const insets = useSafeAreaInsets();
   /** The list screens' fixed frame (Block, Locker, Store); game screens take their own. */
@@ -340,8 +352,16 @@ export default function PlayScreen() {
   }, [sellAllJunk]);
 
   /** Dive view handlers — commit through the shared store, toast on results. */
-  const handleSpendCharge = useCallback(async (): Promise<boolean> => beginDive(), [beginDive]);
-  const handleFreeDive = useCallback(async (): Promise<boolean> => beginFreeDive(), [beginFreeDive]);
+  const handleSpendCharge = useCallback(async (): Promise<boolean> => {
+    const ok = await beginDive();
+    if (ok) countOnce('dive_start');
+    return ok;
+  }, [beginDive]);
+  const handleFreeDive = useCallback(async (): Promise<boolean> => {
+    const ok = await beginFreeDive();
+    if (ok) countOnce('dive_start');
+    return ok;
+  }, [beginFreeDive]);
 
   /** Expedition return (v21): announce it once per return, wherever you are
    * in Play (the save remembers it was shown). On the Pet screen the note
@@ -644,18 +664,16 @@ export default function PlayScreen() {
     }
   }
 
-  if (!PRE_LAUNCH_DEV) {
-    return <Redirect href="/" />;
-  }
-
-  // Dev-only device frames for the pet room and Dive (layout shots). The
-  // query never changes a normal visit to /play.
+  // Divecore stays on in every build (emci 2026-10-15); only its dev tooling sits behind
+  // PRE_LAUNCH_DEV. Dev-only device frames for the pet room and Dive (layout shots): the
+  // query never changes a normal visit to /play, and does nothing outside pre-launch builds.
   if (
-    shotParams.shot === 'pet' ||
+    PRE_LAUNCH_DEV &&
+    (shotParams.shot === 'pet' ||
     shotParams.shot === 'dive' ||
     shotParams.shot === 'catch' ||
     shotParams.shot === 'train' ||
-    shotParams.shot === 'play'
+    shotParams.shot === 'play')
   ) {
     const inset: LayoutInset =
       shotParams.inset === 'se' || shotParams.inset === 'max' || shotParams.inset === 'and' || shotParams.inset === '15'
@@ -808,6 +826,8 @@ export default function PlayScreen() {
       onGuideOpened={guideOpened}
       shellTop={shellTop}
       shellTabs={shellTabs}
+      away={away}
+      onAwayClose={dismissAway}
     />
   ) : null;
   const defendEl = view ? (
@@ -992,8 +1012,8 @@ export default function PlayScreen() {
 /**
  * Standing test panel — extend per feature.
  *
- * The one debug surface for Play: PRE_LAUNCH_DEV-only (the route above already
- * redirects when the gate is off, so this can never render in production).
+ * The one debug surface for Play: PRE_LAUNCH_DEV-only (the shell renders it only
+ * when PRE_LAUNCH_DEV and the dev PIN are on, so players never see it).
  * Whenever a step adds a time/RNG-gated Play feature, add its fill/reset
  * transition to `playStore.ts` (dev*) and a row here in that same step — do
  * not start a second debug menu. All rows run pure transitions through

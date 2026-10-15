@@ -2889,6 +2889,384 @@
       ]
     },
     {
+      "id": "icon.stickers.streetwear.archangel",
+      "path": "assets/art/icons/in-use/stickers/streetwear/archangel.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 9100,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:71aa53ea04b1455e4798fa9b3c7389c7",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "archangel"
+    },
+    {
+      "id": "icon.stickers.streetwear.corvus",
+      "path": "assets/art/icons/in-use/stickers/streetwear/corvus.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 7202,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:5c71c2c9c9f54e4e698a0aa50bca0d7e",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "corvus"
+    },
+    {
+      "id": "icon.stickers.streetwear.cyber-shinobi",
+      "path": "assets/art/icons/in-use/stickers/streetwear/cyber-shinobi.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 5422,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:5355886943de8e75fed4fc3f1c196e04",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "cyber-shinobi"
+    },
+    {
+      "id": "icon.stickers.streetwear.elowen",
+      "path": "assets/art/icons/in-use/stickers/streetwear/elowen.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 7347,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:5b23b2316b2eea06fec5c453caf80f04",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "elowen"
+    },
+    {
+      "id": "icon.stickers.streetwear.frost-lich",
+      "path": "assets/art/icons/in-use/stickers/streetwear/frost-lich.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 8945,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:650e7e0d79c4379f5c2c6974bea7f70a",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "frost-lich"
+    },
+    {
+      "id": "icon.stickers.streetwear.kael",
+      "path": "assets/art/icons/in-use/stickers/streetwear/kael.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 5867,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:47b1e5571ffddd139105457af8f69b1b",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "kael"
+    },
+    {
+      "id": "icon.stickers.streetwear.kitsune",
+      "path": "assets/art/icons/in-use/stickers/streetwear/kitsune.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 10206,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:5a99f73317ce3f8985ba2aaa1f9be831",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "kitsune"
+    },
+    {
+      "id": "icon.stickers.streetwear.maldrath",
+      "path": "assets/art/icons/in-use/stickers/streetwear/maldrath.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 8555,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:f8b3abf2bc0597e9cb5f70f4511a7a17",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "maldrath"
+    },
+    {
+      "id": "icon.stickers.streetwear.neon-viper",
+      "path": "assets/art/icons/in-use/stickers/streetwear/neon-viper.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 5100,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:c95a0a7ee57bcffa48a8b7c0e887910e",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "neon-viper"
+    },
+    {
+      "id": "icon.stickers.streetwear.oni",
+      "path": "assets/art/icons/in-use/stickers/streetwear/oni.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 13882,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:391fc4e2c28cd5c4b61fe4a73c5b8292",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "oni"
+    },
+    {
+      "id": "icon.stickers.streetwear.raven",
+      "path": "assets/art/icons/in-use/stickers/streetwear/raven.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 6253,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:7d474270412e785782c1085473190e99",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "raven"
+    },
+    {
+      "id": "icon.stickers.streetwear.sak",
+      "path": "assets/art/icons/in-use/stickers/streetwear/sak.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 8191,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:a8dbd999e79805cb05ef876d58af008f",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "sak"
+    },
+    {
+      "id": "icon.stickers.streetwear.velkhar",
+      "path": "assets/art/icons/in-use/stickers/streetwear/velkhar.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 8882,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:59d0df80c66f0ec53ffd705a8bdc38f1",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "velkhar"
+    },
+    {
+      "id": "icon.stickers.streetwear.void-raven",
+      "path": "assets/art/icons/in-use/stickers/streetwear/void-raven.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 128,
+        "h": 128
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 8042,
+      "decodedBytes": 65536,
+      "format": "png32",
+      "notes": "md5:289c18020402d5fb896f0bac0aab7482",
+      "inUse": true,
+      "set": "stickers",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/daily-visitor-ui.tsx"
+      ],
+      "part": "void-raven"
+    },
+    {
       "id": "icon.streetwear.backpack",
       "path": "assets/art/icons/in-use/streetwear/backpack.png",
       "type": "icon",
@@ -4239,7 +4617,8 @@
       "notes": "md5:f2abccd2d756c1dc10bd5add908364de",
       "tags": [],
       "usedBy": [
-        "src/play/dive-hud.tsx"
+        "src/play/dive-hud.tsx",
+        "src/play/hideout-art.ts"
       ],
       "category": "icons",
       "inUse": true,
@@ -10455,7 +10834,7 @@
     },
     {
       "id": "prop.hideout.streetwear.beanbag",
-      "path": "assets/art/props/unused/hideout/streetwear/beanbag.png",
+      "path": "assets/art/props/in-use/hideout/streetwear/beanbag.png",
       "category": "props",
       "type": "prop",
       "theme": "streetwear",
@@ -10471,11 +10850,13 @@
       "decodedBytes": 11232,
       "format": "png32",
       "notes": "md5:7980499d4e7ad9735bfcf866c3c30667",
-      "inUse": false,
+      "inUse": true,
       "set": "hideout",
       "variant": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "part": "beanbag"
     },
     {
@@ -10555,7 +10936,7 @@
     },
     {
       "id": "prop.hideout.streetwear.lamp",
-      "path": "assets/art/props/unused/hideout/streetwear/lamp.png",
+      "path": "assets/art/props/in-use/hideout/streetwear/lamp.png",
       "category": "props",
       "type": "prop",
       "theme": "streetwear",
@@ -10571,11 +10952,13 @@
       "decodedBytes": 9680,
       "format": "png32",
       "notes": "md5:dc9e17c9bc5bc7395f97e726117f5d5f",
-      "inUse": false,
+      "inUse": true,
       "set": "hideout",
       "variant": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "part": "lamp"
     },
     {
@@ -10630,7 +11013,7 @@
     },
     {
       "id": "prop.hideout.streetwear.plant",
-      "path": "assets/art/props/unused/hideout/streetwear/plant.png",
+      "path": "assets/art/props/in-use/hideout/streetwear/plant.png",
       "category": "props",
       "type": "prop",
       "theme": "streetwear",
@@ -10646,11 +11029,13 @@
       "decodedBytes": 10368,
       "format": "png32",
       "notes": "md5:11c1618fba95a5f165c20ca3591985b9",
-      "inUse": false,
+      "inUse": true,
       "set": "hideout",
       "variant": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "part": "plant"
     },
     {
@@ -10730,7 +11115,7 @@
     },
     {
       "id": "prop.hideout.streetwear.table",
-      "path": "assets/art/props/unused/hideout/streetwear/table.png",
+      "path": "assets/art/props/in-use/hideout/streetwear/table.png",
       "category": "props",
       "type": "prop",
       "theme": "streetwear",
@@ -10746,11 +11131,13 @@
       "decodedBytes": 12144,
       "format": "png32",
       "notes": "md5:af6cd66f6a9be1aef7488e0046a28285",
-      "inUse": false,
+      "inUse": true,
       "set": "hideout",
       "variant": "streetwear",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "part": "table"
     },
     {
@@ -11781,7 +12168,7 @@
     },
     {
       "id": "prop.streetwear.barrel-fire",
-      "path": "assets/art/props/unused/streetwear/barrel-fire.png",
+      "path": "assets/art/props/in-use/streetwear/barrel-fire.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -11797,9 +12184,11 @@
       "format": "png32",
       "notes": "md5:08d8e684a79e31000ca803e03b0a2fba",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "barrel-fire",
@@ -11837,7 +12226,7 @@
     },
     {
       "id": "prop.streetwear.boombox",
-      "path": "assets/art/props/unused/streetwear/boombox.png",
+      "path": "assets/art/props/in-use/streetwear/boombox.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -11853,9 +12242,11 @@
       "format": "png32",
       "notes": "md5:c7f91cb2e0f885ce160b687b941389e8",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "boombox",
@@ -11893,7 +12284,7 @@
     },
     {
       "id": "prop.streetwear.crate",
-      "path": "assets/art/props/unused/streetwear/crate.png",
+      "path": "assets/art/props/in-use/streetwear/crate.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -11909,9 +12300,11 @@
       "format": "png32",
       "notes": "md5:62a91371137984f17b389e4f965b8f6a",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "crate",
@@ -12537,7 +12930,7 @@
     },
     {
       "id": "prop.streetwear.tire-stack",
-      "path": "assets/art/props/unused/streetwear/tire-stack.png",
+      "path": "assets/art/props/in-use/streetwear/tire-stack.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -12553,9 +12946,11 @@
       "format": "png32",
       "notes": "md5:c08fe59802fca402a8cb48ebae081170",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "tire-stack",
@@ -12565,7 +12960,7 @@
     },
     {
       "id": "prop.streetwear.traffic-cone",
-      "path": "assets/art/props/unused/streetwear/traffic-cone.png",
+      "path": "assets/art/props/in-use/streetwear/traffic-cone.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -12581,9 +12976,11 @@
       "format": "png32",
       "notes": "md5:b89e8b466c80fe90d3bf715caa97e29d",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "traffic-cone",
@@ -12621,7 +13018,7 @@
     },
     {
       "id": "prop.streetwear.trash-bags",
-      "path": "assets/art/props/unused/streetwear/trash-bags.png",
+      "path": "assets/art/props/in-use/streetwear/trash-bags.png",
       "type": "prop",
       "theme": "streetwear",
       "placement": "floor",
@@ -12637,9 +13034,11 @@
       "format": "png32",
       "notes": "md5:858a260ccfcce0da8142c37f058bbe65",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/decor-slots-ui.tsx"
+      ],
       "category": "props",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "trash-bags",

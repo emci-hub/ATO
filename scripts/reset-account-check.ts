@@ -84,6 +84,7 @@ const KEEP: Record<string, string> = {
   dev_trace_sessions: 'debug traces, expire on their own',
   dev_trace_events: 'debug traces, expire on their own',
   play_dev_logs: 'Divecore dev logs, not game data',
+  play_saves: 'the Divecore save: a reset keeps the game (the phone keeps ato.play.* too); deleted with the account',
   invite_codes: 'the account’s invites (other people may hold them)',
   access_requests: 'join requests, not game data',
   me: 'the account itself (its game columns are reset in place)',
@@ -124,6 +125,45 @@ for (const t of six) {
 assert.match(devReset, /if auth\.uid\(\) is distinct from v_dev_id then/, 'the dev reset is still the dev-test account only');
 assert.match(countRows, /grant execute on function public\.count_user_rows\(uuid\) to service_role;/);
 ok('the dev sign-up reset and the delete-account count cover the six newer tables');
+
+// --- wave96: the Divecore cloud save (kept on reset, counted and cleared everywhere else) -------
+{
+  const w96 = read('supabase/migrations/wave96_play_saves.sql');
+  const dev96 = w96.slice(w96.indexOf('create or replace function public.reset_dev_test_user()'), w96.indexOf('create or replace function public.count_user_rows'));
+  const count96 = w96.slice(w96.indexOf('create or replace function public.count_user_rows'));
+  assert.match(dev96, /delete from public\.play_saves where user_id = v_dev_id;/, 'the dev sign-up reset clears play_saves');
+  assert.match(count96, /from public\.play_saves where user_id = p_user_id/, 'delete-account counts play_saves');
+  for (const t of six) assert.match(count96, new RegExp(`from public\.${t} where user_id = p_user_id`), `wave96 count_user_rows still counts ${t}`);
+  assert.match(count96, /grant execute on function public\.count_user_rows\(uuid\) to service_role;/);
+  assert.doesNotMatch(w96, /create or replace function public\.reset_my_account/, 'reset_my_account is not restated: a reset keeps the Divecore save');
+  ok('wave96: play_saves is cleared by the dev reset, counted for delete-account, kept by Reset account');
+}
+
+// --- wave97: Divecore Circle visits (wiped by Reset both ways, counted and cleared everywhere else) ---
+{
+  const w97 = read('supabase/migrations/wave97_circle_visits.sql');
+  const reset97 = w97.slice(w97.indexOf('create or replace function public.reset_my_account()'), w97.indexOf('create or replace function public.reset_dev_test_user()'));
+  const dev97 = w97.slice(w97.indexOf('create or replace function public.reset_dev_test_user()'), w97.indexOf('create or replace function public.count_user_rows'));
+  const count97 = w97.slice(w97.indexOf('create or replace function public.count_user_rows'));
+  assert.equal(resetFiles[resetFiles.length - 1], 'wave97_circle_visits.sql', 'wave97 holds the newest reset_my_account');
+  for (const t of ['circle_gifts', 'circle_visit_share']) {
+    assert.match(reset97, new RegExp(`delete from public\\.${t} where user_id = uid or peer_id = uid;`), `Reset account wipes ${t} both ways (everything shared)`);
+    assert.match(dev97, new RegExp(`delete from public\\.${t} where user_id = v_dev_id or peer_id = v_dev_id;`), `the dev sign-up reset clears ${t}`);
+    assert.match(count97, new RegExp(`from public\\.${t} where user_id = p_user_id or peer_id = p_user_id`), `delete-account counts ${t}`);
+    assert.match(w97, new RegExp(`create table public\\.${t} \\([\\s\\S]*?user_id uuid not null references auth\\.users \\(id\\) on delete cascade,\\s*peer_id uuid not null references auth\\.users \\(id\\) on delete cascade`), `${t}: both sides cascade with the account`);
+    assert.ok(!(t in KEEP), `${t} is never on the KEEP list`);
+  }
+  assert.match(dev97, /delete from public\.play_saves where user_id = v_dev_id;/, 'wave97 dev reset still clears play_saves');
+  assert.match(count97, /from public\.play_saves where user_id = p_user_id/, 'wave97 count still counts play_saves');
+  assert.doesNotMatch(reset97, /delete from public\.play_saves/, 'Reset account still keeps the Divecore save');
+  for (const t of six) assert.match(count97, new RegExp(`from public\\.${t} where user_id = p_user_id`), `wave97 count_user_rows still counts ${t}`);
+  // The wave90 body is carried over line for line (only the two Circle lines are new).
+  const reset90 = read('supabase/migrations/wave90_category_deep_dive.sql');
+  const body90 = reset90.slice(reset90.indexOf('create or replace function public.reset_my_account()'), reset90.indexOf('$$;', reset90.indexOf('create or replace function public.reset_my_account()')));
+  const strip = (s: string) => s.split('\n').filter((l) => !/circle_|Divecore Circle visits|friends' switches/.test(l)).join('\n');
+  assert.equal(strip(resetFn), body90, 'reset_my_account = wave90 + the two Circle deletes, nothing else changed');
+  ok('wave97: circle_gifts + circle_visit_share wiped by Reset (both ways), cleared by the dev reset, counted for delete-account');
+}
 
 // --- client -------------------------------------------------------------------------------
 const lib = read('src/lib/dev-test-user.ts');
