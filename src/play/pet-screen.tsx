@@ -55,6 +55,7 @@ import { isStrongResult } from '@/play/score-burst-model';
 import type { GuideSection } from '@/play/guide-content';
 import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
+import { usePetKnowsYou } from '@/play/use-pet-knows-you';
 import { HideoutTeaseSheetCopy } from '@/play/hideout-tease';
 import { canStartBuild, roomStage, type HideoutRoomId } from '@/play/hideout-progress';
 import { tripLabel } from '@/play/expedition-ladder';
@@ -559,6 +560,8 @@ export function PetScreen({
   // Now and then while idle: its mood, the time of day, or chatter — as
   // often as the Chatter setting says (Off: never on its own).
   const chatter = view.settings.chatter;
+  // Rarely, instead of the usual line: one that shows the pet knows the person (pet-knows-you.ts).
+  const { maybeLine: maybePersonalLine } = usePetKnowsYou();
   useEffect(() => {
     const range = idleTalkDelayMs(chatter, PET_IDLE_TALK_MIN_MS, PET_IDLE_TALK_MAX_MS);
     if (!range) return;
@@ -569,16 +572,21 @@ export function PetScreen({
         if (sheetRef.current == null && statusRef.current === 'chilly') {
           sayEgg('keep_warm');
         } else if (sheetRef.current == null && statusRef.current !== 'sleepy' && statusRef.current !== 'choose_egg') {
-          const roll = Math.random();
-          const tod = timeOfDaySituation(hourRef.current);
-          say(roll < 0.5 ? talkSituationForStatus(statusRef.current) : roll < 0.7 && tod ? tod : 'chatter');
+          const personal = maybePersonalLine(eggRef.current || awayRef.current);
+          if (personal) {
+            sayText(personal);
+          } else {
+            const roll = Math.random();
+            const tod = timeOfDaySituation(hourRef.current);
+            say(roll < 0.5 ? talkSituationForStatus(statusRef.current) : roll < 0.7 && tod ? tod : 'chatter');
+          }
         }
         schedule();
       }, wait);
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [say, sayEgg, chatter]);
+  }, [say, sayEgg, sayText, maybePersonalLine, chatter]);
 
   // Shards ready to trade up: say so once per visit.
   const tradeSaidRef = useRef(false);

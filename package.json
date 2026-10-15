@@ -121,6 +121,7 @@
     "check:swords": "tsx ./scripts/check-swords.ts",
     "check:finishes": "tsx ./scripts/check-finishes.ts",
     "check:away-card": "tsx ./scripts/check-away-card.ts",
+    "check:pet-knows-you": "tsx ./scripts/check-pet-knows-you.ts",
     "check:auras": "tsx ./scripts/check-auras.ts",
     "check:streetwear-assets": "tsx ./scripts/check-streetwear-assets.ts",
     "check:streetwear-walk": "tsx ./scripts/check-streetwear-walk.ts",
