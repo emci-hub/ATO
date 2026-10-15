@@ -40,6 +40,7 @@ import { roomDef, type HideoutRoomId, type HideoutState } from '@/play/hideout-p
 import { PIXEL, pixelRenderStyle } from '@/play/pixel-theme';
 import { tapHaptic } from '@/play/street-feel';
 import { tipAnchorRef } from '@/play/ftue/tip-anchors';
+import { countOnce } from '@/play/play-counters';
 import { STREET_FONT, StreetFrame, streetButtonPiece, streetButtonText } from '@/play/street-ui';
 
 /** The coach pulse, on the button itself. */
@@ -174,6 +175,7 @@ export function HideoutRails(props: HideoutRailsProps) {
       if (a.kind === 'view') onTease();
       return;
     }
+    countOnce('rail_action');
     if (a.kind === 'spot') onSpot(a.spot);
     else if (a.kind === 'lamp') onLamp();
     else onView(a.room);

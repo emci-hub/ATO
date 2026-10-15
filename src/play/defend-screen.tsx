@@ -216,6 +216,7 @@ import { ELEMENT_COLOR, TOWER_KITS } from '@/play/kits';
 import { swordRuntime } from '@/play/swords';
 import { StatusIconRow, WeaknessDiamond } from '@/play/status-icon-row';
 import { statusIconsFor } from '@/play/status-icons';
+import { countOnce } from '@/play/play-counters';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
 /** Stage layout: the TURF WAR title + the two-line lede above the board (pt). */
@@ -1566,6 +1567,7 @@ export function DefendScreen({
   /** Start the wave on the current board — placed towers + spent scrap carry
    * into the fight (spec §9: setup place → start). */
   const startWave = useCallback(() => {
+    countOnce('turf_wave_start');
     playedRef.current = fightRef.current;
     winPaidRef.current = false;
     leakNotedRef.current = false;
