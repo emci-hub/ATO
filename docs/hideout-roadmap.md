@@ -16,7 +16,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
 | 3 | Pet that knows you | built, draft PR #46; bank approved by emci 2026-10-15 (`PET_KNOWS_YOU_COPY_REVIEWED = true`) — awaiting merge + OTA OK |
 | 4 | Daily visitors | built, draft PR #47 (gate green, 165 checks); copy unreviewed (`VISITORS_COPY_REVIEWED = false`) — awaiting emci's read + merge + OTA OK |
-| 5 | Decor slots | built, draft PR (stacked on #47, base `feature/daily-visitors`); gate green; no copy to review, no economy — awaiting emci's look + merge + OTA OK |
+| 5 | Decor slots | built, draft PR #48 into master (stacked on #47: it carries #47's commits until #47 merges); gate green (166 checks); no copy to review, no economy — awaiting emci's look + merge + OTA OK |
 | 6 | **Circle visits** | **next** |
 
 ## Decisions (do not re-ask)
