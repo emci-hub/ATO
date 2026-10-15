@@ -122,6 +122,8 @@
     "check:finishes": "tsx ./scripts/check-finishes.ts",
     "check:away-card": "tsx ./scripts/check-away-card.ts",
     "check:pet-knows-you": "tsx ./scripts/check-pet-knows-you.ts",
+    "check:daily-visitors": "tsx ./scripts/check-daily-visitors.ts",
+    "art:bake-stickers": "tsx ./scripts/art-bake-visitor-stickers.ts",
     "check:auras": "tsx ./scripts/check-auras.ts",
     "check:streetwear-assets": "tsx ./scripts/check-streetwear-assets.ts",
     "check:streetwear-walk": "tsx ./scripts/check-streetwear-walk.ts",

@@ -13,7 +13,7 @@
  *
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
@@ -33,7 +33,10 @@ import { usePetDevRoom } from '@/play/pet-dev-state';
 import { petBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { NEON } from '@/play/neon-viper';
-import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
+import { PET_BRANCH_LABEL, PET_STAGE_LABEL, petLookFor } from '@/play/pet';
+import { greetedToday, visitorFor } from '@/play/daily-visitors';
+import { VISITOR_UI } from '@/play/daily-visitors-bank';
+import { VisitorCard, type VisitorCardShow } from '@/play/daily-visitor-ui';
 import { askPetReminderPermission, syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
 import { petPose, sharpPetBox } from '@/play/pet-actor';
@@ -132,6 +135,7 @@ import {
   markHideoutCoach,
   markBuildNotifAsked,
   stampHideoutPeekaboo,
+  greetDailyVisitor,
   localYmd,
   setPlaySettings,
 } from '@/play/playStore';
@@ -305,6 +309,10 @@ function RoomIcon({
   );
 }
 
+/** The day the visitor's notice last showed in this app open (module scope: survives tab switches). */
+let visitorNoticeYmd: string | null = null;
+const VISITOR_NOTICE_DELAY_MS = 1200;
+
 export function PetScreen({
   view,
   commit,
@@ -445,6 +453,36 @@ export function PetScreen({
     if (!presence.peekaboo) return;
     commit((doc, now) => stampHideoutPeekaboo(doc, now));
   }, [presence.peekaboo, commit]);
+
+  // Daily visitors (roadmap step 4): today's visitor from the local date (offline), never your pet's
+  // own hero (a stand-in comes instead); none while the pet is still an egg. Street layout only.
+  const todayYmd = localYmd();
+  const petHeroId = useMemo(() => {
+    const look = petLookFor(pet.line, 'adult');
+    return look?.kind === 'hero' ? look.heroId : null;
+  }, [pet.line]);
+  const visitor = streetUiOn() && pet.stage !== 'egg' ? visitorFor(todayYmd, petHeroId) : null;
+  const visitorGreeted = greetedToday(view.hideout.state.visitors, todayYmd);
+  const [visitorCard, setVisitorCard] = useState<VisitorCardShow | null>(null);
+  const tapVisitor = () => {
+    if (!visitor) return;
+    // Re-read the day at the tap: past midnight it is already the next visitor's day (never a second greeting).
+    const tapYmd = localYmd();
+    const today = tapYmd === visitor.ymd ? visitor : visitorFor(tapYmd, petHeroId);
+    if (greetedToday(view.hideout.state.visitors, tapYmd)) {
+      // Said hi already today: it just chats (no reward, nothing saved).
+      setVisitorCard({ reward: { kind: 'visit', heroId: today.heroId }, greetN: view.hideout.state.visitors.greets[today.heroId] ?? 0 });
+      return;
+    }
+    let shown: VisitorCardShow | null = null;
+    commit((doc, now) => {
+      const res = greetDailyVisitor(doc, now, today);
+      if (!res) return null;
+      shown = { reward: res.reward, greetN: res.doc.hideout.visitors.greets[today.heroId] ?? 1 };
+      return res.doc;
+    });
+    if (shown) setVisitorCard(shown);
+  };
   const realStatus = petStatus({
     stage: pet.stage,
     hunger: pet.hunger,
@@ -665,11 +703,27 @@ export function PetScreen({
   const awayShown = away != null && onAwayClose != null && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
   // Busy (no coach tip, no iOS swipe-back): a sheet, a mini-game or the away card is up.
   const busy = sheet != null || game != null || awayShown;
+  // The visitor card waits for the away card and hides under Settings, like it — and counts as busy too.
+  const visitorShown = visitorCard != null && !awayShown && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
+  const overlayBusy = busy || visitorShown;
+
+  // The visitor's notice: once per day per app open (until you say hi), after the away card closes. A short wait
+  // lets an away card that is still being worked out on open come first (it cancels this timer).
+  const visitorHeroId = visitor?.heroId ?? null;
+  useEffect(() => {
+    if (!visitorHeroId || visitorGreeted || awayShown) return;
+    if (visitorNoticeYmd === todayYmd) return;
+    const t = setTimeout(() => {
+      visitorNoticeYmd = todayYmd;
+      notify({ kind: 'notify', title: VISITOR_UI.noticeTitle, body: VISITOR_UI.noticeBody(heroName(visitorHeroId)), priority: 'low' });
+    }, VISITOR_NOTICE_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [visitorHeroId, visitorGreeted, awayShown, todayYmd]);
 
   // Phase 4 coach tips: one at a time, on the Hideout only, when nothing is open over it. A short
   // delay keeps a tip from flashing on mount. Any touch marks it seen (GameScreen's onTipSeen).
   const tipCandidate = pickCoachTip(view.settings.tipsSeen, {
-    idle: streetUiOn() && !busy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
+    idle: streetUiOn() && !overlayBusy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
     egg: pet.stage === 'egg',
     eggPicked: pet.egg != null,
   });
@@ -696,9 +750,9 @@ export function PetScreen({
   );
 
   useEffect(() => {
-    onBusyChange?.(busy);
+    onBusyChange?.(overlayBusy);
     return () => onBusyChange?.(false);
-  }, [busy, onBusyChange]);
+  }, [overlayBusy, onBusyChange]);
   useEffect(() => {
     if (!registerBack) return;
     registerBack({
@@ -946,6 +1000,8 @@ export function PetScreen({
           // Waits for a hatch / reveal ceremony to close and hides under Settings, so nothing stacks.
           awayShown && away && onAwayClose ? (
             <AwayCard summary={away} top={layoutRegions(frame).notice.height + SPACE.s} onClose={onAwayClose} />
+          ) : visitorShown && visitorCard ? (
+            <VisitorCard show={visitorCard} top={layoutRegions(frame).notice.height + SPACE.s} onClose={() => setVisitorCard(null)} />
           ) : null
         }
         onTipSeen={seeTip}
@@ -982,6 +1038,7 @@ export function PetScreen({
         stage={
           <PetRoom
             stageSize={street ? { width: frame.stage.width, height: frame.stage.height } : undefined}
+            visitor={visitor ? { heroId: visitor.heroId, greeted: visitorGreeted, onTap: tapVisitor } : null}
             roomOutside={street}
             pet={pet}
             wear={pv.wear}

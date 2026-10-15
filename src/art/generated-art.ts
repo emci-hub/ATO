@@ -73,6 +73,20 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'icon.shop.streetwear.prism-stone': require('@/assets/art/icons/in-use/shop/streetwear/prism-stone.png'),
   'icon.shop.streetwear.shine-stone': require('@/assets/art/icons/in-use/shop/streetwear/shine-stone.png'),
   'icon.shop.streetwear.star-pearl': require('@/assets/art/icons/in-use/shop/streetwear/star-pearl.png'),
+  'icon.stickers.streetwear.archangel': require('@/assets/art/icons/in-use/stickers/streetwear/archangel.png'),
+  'icon.stickers.streetwear.corvus': require('@/assets/art/icons/in-use/stickers/streetwear/corvus.png'),
+  'icon.stickers.streetwear.cyber-shinobi': require('@/assets/art/icons/in-use/stickers/streetwear/cyber-shinobi.png'),
+  'icon.stickers.streetwear.elowen': require('@/assets/art/icons/in-use/stickers/streetwear/elowen.png'),
+  'icon.stickers.streetwear.frost-lich': require('@/assets/art/icons/in-use/stickers/streetwear/frost-lich.png'),
+  'icon.stickers.streetwear.kael': require('@/assets/art/icons/in-use/stickers/streetwear/kael.png'),
+  'icon.stickers.streetwear.kitsune': require('@/assets/art/icons/in-use/stickers/streetwear/kitsune.png'),
+  'icon.stickers.streetwear.maldrath': require('@/assets/art/icons/in-use/stickers/streetwear/maldrath.png'),
+  'icon.stickers.streetwear.neon-viper': require('@/assets/art/icons/in-use/stickers/streetwear/neon-viper.png'),
+  'icon.stickers.streetwear.oni': require('@/assets/art/icons/in-use/stickers/streetwear/oni.png'),
+  'icon.stickers.streetwear.raven': require('@/assets/art/icons/in-use/stickers/streetwear/raven.png'),
+  'icon.stickers.streetwear.sak': require('@/assets/art/icons/in-use/stickers/streetwear/sak.png'),
+  'icon.stickers.streetwear.velkhar': require('@/assets/art/icons/in-use/stickers/streetwear/velkhar.png'),
+  'icon.stickers.streetwear.void-raven': require('@/assets/art/icons/in-use/stickers/streetwear/void-raven.png'),
   'icon.streetwear.backpack': require('@/assets/art/icons/in-use/streetwear/backpack.png'),
   'icon.streetwear.bandana': require('@/assets/art/icons/in-use/streetwear/bandana.png'),
   'icon.streetwear.bat': require('@/assets/art/icons/in-use/streetwear/bat.png'),
@@ -259,6 +273,20 @@ export type ArtId =
   | 'icon.shop.streetwear.prism-stone'
   | 'icon.shop.streetwear.shine-stone'
   | 'icon.shop.streetwear.star-pearl'
+  | 'icon.stickers.streetwear.archangel'
+  | 'icon.stickers.streetwear.corvus'
+  | 'icon.stickers.streetwear.cyber-shinobi'
+  | 'icon.stickers.streetwear.elowen'
+  | 'icon.stickers.streetwear.frost-lich'
+  | 'icon.stickers.streetwear.kael'
+  | 'icon.stickers.streetwear.kitsune'
+  | 'icon.stickers.streetwear.maldrath'
+  | 'icon.stickers.streetwear.neon-viper'
+  | 'icon.stickers.streetwear.oni'
+  | 'icon.stickers.streetwear.raven'
+  | 'icon.stickers.streetwear.sak'
+  | 'icon.stickers.streetwear.velkhar'
+  | 'icon.stickers.streetwear.void-raven'
   | 'icon.streetwear.backpack'
   | 'icon.streetwear.bandana'
   | 'icon.streetwear.bat'
@@ -1340,6 +1368,24 @@ export const ART = {
         prismStone: 'icon.shop.streetwear.prism-stone',
         shineStone: 'icon.shop.streetwear.shine-stone',
         starPearl: 'icon.shop.streetwear.star-pearl',
+      },
+    },
+    stickers: {
+      streetwear: {
+        archangel: 'icon.stickers.streetwear.archangel',
+        corvus: 'icon.stickers.streetwear.corvus',
+        cyberShinobi: 'icon.stickers.streetwear.cyber-shinobi',
+        elowen: 'icon.stickers.streetwear.elowen',
+        frostLich: 'icon.stickers.streetwear.frost-lich',
+        kael: 'icon.stickers.streetwear.kael',
+        kitsune: 'icon.stickers.streetwear.kitsune',
+        maldrath: 'icon.stickers.streetwear.maldrath',
+        neonViper: 'icon.stickers.streetwear.neon-viper',
+        oni: 'icon.stickers.streetwear.oni',
+        raven: 'icon.stickers.streetwear.raven',
+        sak: 'icon.stickers.streetwear.sak',
+        velkhar: 'icon.stickers.streetwear.velkhar',
+        voidRaven: 'icon.stickers.streetwear.void-raven',
       },
     },
     streetwear: {

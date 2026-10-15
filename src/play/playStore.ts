@@ -297,6 +297,7 @@ import {
   type DivePath,
   type FoodId,
 } from '@/play/dive-loot';
+import { greetVisitor, type TodayVisitor, type VisitorReward } from '@/play/daily-visitors';
 import {
   COSMETIC_DUPE_SHELLS,
   NO_WEAR,
@@ -2893,6 +2894,21 @@ export function markBuildNotifAsked(doc: PlayStoreDoc, now: number): PlayStoreDo
 export function stampHideoutPeekaboo(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   const touched = touchPet(doc, now);
   return { ...touched, hideout: stampPeekaboo(touched.hideout, localYmd(new Date(now))) };
+}
+
+/** Daily visitors (roadmap step 4): say hi to today's visitor — once a day. A rare look joins the
+ * wardrobe (`pet_cosmetics`); nothing else moves (no tokens, shells or stones). Null = already greeted. */
+export function greetDailyVisitor(
+  doc: PlayStoreDoc,
+  now: number,
+  visitor: TodayVisitor,
+): { doc: PlayStoreDoc; reward: VisitorReward } | null {
+  const touched = touchPet(doc, now);
+  const res = greetVisitor(touched.hideout.visitors, visitor, touched.pet_cosmetics);
+  if (!res) return null;
+  const pet_cosmetics =
+    res.reward.kind === 'look' ? [...touched.pet_cosmetics, res.reward.cosmeticId] : touched.pet_cosmetics;
+  return { doc: { ...touched, pet_cosmetics, hideout: { ...touched.hideout, visitors: res.book } }, reward: res.reward };
 }
 
 /** Reset Divecore progress: a brand-new Play save that keeps the settings.

@@ -9,6 +9,8 @@
  * finds from the Trench down, auras from the Abyss down — Dive-only.
  * Pure data + rules, no React.
  */
+import { VISITOR_STICKER_HEROES, VISITOR_TINT_COLOR, visitorTintId } from '@/play/daily-visitors-roster';
+import { heroName } from '@/play/heroes-data';
 import type { Element } from '@/play/kits';
 
 export const COSMETIC_SLOTS = ['badge', 'tint', 'ring', 'aura'] as const;
@@ -30,6 +32,8 @@ export type CosmeticDef = {
   ring?: RingStyle;
   /** aura → element colour. */
   element?: Element;
+  /** 'visitor' = a daily visitor's rare look (step 4): never sold, never a Dive find, no dupes. */
+  source?: 'visitor';
 };
 
 /** Duplicate cosmetic finds turn into this many shells. */
@@ -53,6 +57,17 @@ export const COSMETICS: readonly CosmeticDef[] = [
   { id: 'cos_aura_spark', slot: 'aura', name: 'Spark aura', price: null, element: 'spark' },
   { id: 'cos_aura_root', slot: 'aura', name: 'Root aura', price: null, element: 'root' },
   { id: 'cos_aura_void', slot: 'aura', name: 'Void aura', price: null, element: 'void' },
+  // Daily visitors' rare looks (roadmap step 4): one tint per visitor hero, given on the 3rd greeting.
+  ...VISITOR_STICKER_HEROES.map(
+    (hero): CosmeticDef => ({
+      id: visitorTintId(hero),
+      slot: 'tint',
+      name: `${heroName(hero)} tint`,
+      price: null,
+      color: VISITOR_TINT_COLOR[hero],
+      source: 'visitor',
+    }),
+  ),
 ];
 
 const BY_ID = new Map(COSMETICS.map((c) => [c.id, c]));
