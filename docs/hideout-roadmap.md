@@ -14,7 +14,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0b | Polish batch (LF art pins, holo tip, archive hideout-fx, **Sleep action**) | ✔ merged, PR #44 (Sleep: Loft rail puts the pet to bed, `sleep_until_age_ms`; icon still the heart stand-in). OTA `01a1420f` |
 | 0c | Dedicated rail icons (Sleep, Light, Back, Up) | ✔ merged, PR #51 (squash `cb77cc37`). OTA `01a14292` |
 | 0d | Loft room art (PixelLab, same recipe as the Hideout) | ✔ merged, PR #52 (squash `30a6bbf1`). OTA `01a142bf` (production, iOS, group `96b03172`, commit `6d77ece5`, gate green 167). Not device-verified. **Next: Underground room art (0e)** |
-| 0e | Underground (garage) room art (PixelLab, same recipe) | ✔ merged, PR #53 (squash `1473f8b7`). OTA: see "Step 0e as built". Not device-verified. **Next: Rooftop art, or a live Garage (see Known)** |
+| 0e | Underground (garage) room art (PixelLab, same recipe) | ✔ merged, PR #53 (squash `1473f8b7`). **OTA `01a14302`** (production, iOS, group `c0b4c5d3`, commit `76a195fa`, gate green 167). Not device-verified. **Next: Rooftop art, or a live Garage (see Known)** |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
