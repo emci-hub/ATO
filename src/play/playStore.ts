@@ -1945,6 +1945,9 @@ export function touchPet(
     return {
       ...banked,
       pet_expedition: null,
+      // Step 0m: the pet comes home into the room being viewed (a normal call stay), so the
+      // viewed room is never left empty when presence falls back to the clock (loft / bedtime).
+      hideout: startCall(banked.hideout, pet, banked.hideout.viewed_room),
       // v26: a Power past today's ceiling came back as shells — say so.
       pet_expedition_note: bankedRes.powersConverted > 0 ? `shells_${POWER_OVERFLOW_SHELLS}` : find,
       pet_expedition_toasted: false,

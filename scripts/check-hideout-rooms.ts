@@ -54,6 +54,7 @@ import {
   rebirthPetDoc,
   recordDefendWin,
   startHideoutBuild,
+  touchPet,
   surfaceDive,
   startDive,
   deeperDive,
@@ -267,6 +268,37 @@ const HOUR = 60 * 60 * 1000;
   assert.equal(emptyHideout().sleep_until_age_ms, null);
   ok('sleep action: Loft bed by choice, cleared by wake / timer, hunger wins, no Loft = no bed');
   ok('presence priority: interaction > expedition > needs > call > schedule; egg/baby stay home');
+}
+
+// Step 0m: a finished expedition brings the pet home into the VIEWED room (not wherever the clock says).
+{
+  const bed = { from: 23 * 60, to: 7 * 60 };
+  const doc0 = defaultPlayStore(T0);
+  const fed = { ...newPet(T0), stage: 'teen' as const, hunger: 4, mood: 4, total_age_ms: 10 * HOUR };
+  const doc = {
+    ...doc0,
+    pet: fed,
+    hideout: { ...doc0.hideout, rooms_unlocked: { ...doc0.hideout.rooms_unlocked, loft: true }, viewed_room: 'hideout' as const },
+    pet_expedition: { left_age_ms: fed.total_age_ms - 5 * 60 * 1000, len_ms: 60 * 1000, step: 0, better: false },
+  };
+  const out = touchPet(doc, T0);
+  assert.equal(out.pet_expedition, null, 'trip collected');
+  const afternoon = new Date(2026, 9, 12, 15, 0, 0); // loft hours: the clock alone would send the pet upstairs
+  const input = {
+    pet: out.pet,
+    hideout: out.hideout,
+    interaction: false,
+    expeditionAway: false,
+    bedtime: bed,
+    now: afternoon,
+    todayYmd: '2026-10-12',
+  };
+  const p = resolvePresence(input);
+  assert.equal(p.reason, 'call', 'returns as a call into the viewed room');
+  assert.equal(p.room, 'hideout', 'the room being viewed is not left empty');
+  const hungry = resolvePresence({ ...input, pet: { ...out.pet, hunger: 1 } });
+  assert.equal(hungry.reason, 'hungry', 'needs still outrank the return call');
+  ok('expedition return: pet is in the viewed room (call), hungry still wins');
 }
 
 {
