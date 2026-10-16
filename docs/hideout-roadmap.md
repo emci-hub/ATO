@@ -15,6 +15,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0c | Dedicated rail icons (Sleep, Light, Back, Up) | ✔ merged, PR #51 (squash `cb77cc37`). OTA `01a14292` |
 | 0d | Loft room art (PixelLab, same recipe as the Hideout) | ✔ merged, PR #52 (squash `30a6bbf1`). OTA `01a142bf` (production, iOS, group `96b03172`, commit `6d77ece5`, gate green 167). Not device-verified. **Next: Underground room art (0e)** |
 | 0e | Underground (garage) room art (PixelLab, same recipe) | ✔ merged, PR #53 (squash `1473f8b7`). **OTA `01a14302`** (production, iOS, group `c0b4c5d3`, commit `76a195fa`, gate green 167). Not device-verified. **Next: Rooftop art, or a live Garage (see Known)** |
+| 0f | Rooftop room art (PixelLab, same recipe, new map) | ✔ merged, PR #54 (squash `75c062b8`). OTA: see "Step 0f as built". Not device-verified. **Next: a live Garage / Rooftop (or phone check of both)** |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -294,6 +295,33 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   is not a `ROOM_SLOTS` slot is reached through `ART.room.<set>.<name>`, not `ROOM.*`; (4) re-running the generator touches
   `loft-td.map.json` line endings only (CRLF): `git checkout --` it; (5) rails cover art x < ~71 and ≥ ~281 at 375 wide (76 pt
   clear each side) — keep props between them.
+
+## Step 0f as built (Rooftop room art, emci 2026-10-15 "merge everything and ota")
+- Same recipe, parts in `art-src/pixellab/room.rooftop.streetwear/gen-20261015-pixellab-1/` (`gen.json`; ~100 generations):
+  `create_building_kit` (weathered dark brick stairwell wall, pipe run, two magenta neon strips + dark tar-paper roof, same
+  52×111 frame), 16 floor variants (6 kept: f0 f3 f6 f9 f10 f12, `ROOFTOP_FLOOR_SKIP`), AC unit (**D**, 47×65, used twice),
+  lawn chair (**C**, 36×54), access hatch (**B**, 59×28, a flat). **Round 1 of ACs (56×57, 53×58) and chairs (28×34, 21×34) was
+  12–38 % short of the scale table, so they were regenerated on bigger canvases instead of stretched** (guide §2). Library check:
+  nothing rooftop-specific existed. Sheets, samples, composite with Kael + rail lines, previews: `docs/divecore/rooftop-room/`.
+- **New map** `assets/art/rooms/rooftop/rooftop-td.map.json` (the Rooftop had none; it borrowed the Loft's): same 352×576 shell;
+  one hotspot `hatch` (action `Hideout` = the rail's **Back**, no Up: the Rooftop is last), spawns / targets like the Underground;
+  ACs at cols 5–7 and 14–16 (occluders), chair at cols 15–16 rows 25–26, hatch flat at (176, 496). All between the rails at 375
+  and 430 (art x ~72–280). `tweakRooftop` sets the post-widen columns; walk cells come from the footprints.
+- Wiring: `ROOM_ART.rooftop` = Rooftop map + 9 layers + `snapshot` = `ART.room.rooftop.snapshot` (flattened
+  `rooftop-td-snapshot.png`); `RAIL_ROOM_GEOM.rooftop` + `ORDER.rooftop = ['Hideout']` give the Rooftop one Back button (lit even
+  while locked, like every room's way out); `art-registry-gen.ts` rows for the 9 layers; `art-categories.ts` `rooftop*` rule;
+  `check:hideout-rooms` now walks the Rooftop map (reachable at baby/adult/god), `check:hideout-rails` pins its rail. Hideout,
+  Loft and Underground outputs byte-identical. Like the Garage, the Rooftop is still a dimmed static snapshot (not live).
+- Egg picker: reads on the new room at 430 and 375 (eggs sit right above the ACs; labels overlap the AC tops; at 375 the labels run
+  together and clip under the rail, as on every room).
+- **Known:** (1) `check:hideout-rails`' "never walks into a rail" loop covers hideout + loft only, not Garage / Rooftop (reviewer
+  checked the Rooftop by hand: sprites x 81–128 / 225–272 / 238–274, all inside 71–281); (2) `neighbor-boarded-td.png` is now only the
+  `shell` fallback (still painted from the Underground greybox); (3) the floor shows the kit tile's small repeated mark; (4) a live
+  Garage / Rooftop (walking pet, presence) is still a separate step.
+- **Lessons:** (1) a brand-new room needs a map JSON, not just layers: the rails read `RAIL_ROOM_GEOM`, `roomGeom()` reads
+  `ROOM_ART[id].map`, and `check:hideout-rooms` lists the maps it walks; (2) `writeJson` in `gen-hideout-td.ts` now creates the room
+  folder; (3) every regen rewrites `underground-td.map.json` and `loft-td.map.json` with LF (CRLF noise): `git checkout --` both before
+  committing; (4) a fresh port is a fresh `localStorage`, so seed the store after the first load, then put it back.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
