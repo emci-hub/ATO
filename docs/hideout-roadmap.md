@@ -21,6 +21,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0i | Phone-check fixes: bubble only in the pet's room, Call says why it can't come, Light / Sleep notes, clamp on every room | ✔ merged, PR #57 (squash `91bde072`). **OTA `01a14590`** (production, iOS, group `a8cc0a68`, commit `5e4b1dfb`, gate green 167). **Device-verified** (emci, 2026-10-16: "all fine"). The Feed / food idea from that check became step 0j. |
 | 0j | Catch the food moves into the Feed sheet, under "? Your pet" | ✔ merged, PR #58 (squash `7e7addfc`). **OTA `01a1463a`** (production, iOS, group `be9a0803`, commit `4c6cabc1`, gate green 167). **Device-verified** (emci, 2026-10-16: Catch sits under "? Your pet" in Feed, a counted round returns to Feed with the result, Play shows only Tap to train). |
 | 0k | Copy: Catch the food named as "in Feed" (Today plan, hunger push, Guide pet section); Play-sheet link relabelled "Mini-game rules in the Guide" | ✔ merged, PR #59 (squash `322198f9`). Copy-only, gate green, reviewer PASS, no previews. **OTA `01a14647`** (production, iOS, group `74159ed9`, commit `2785ce31`, gate green). `devBuildAllRooms` untouched: no leftover build notice found in code (the push is re-planned by the notice sync on every build change); if one shows on a phone, report what it says. **Device-verified** (emci, 2026-10-16: "all fine"). |
+| 0l | UI polish: modern, sectioned Info (all sections collapsed, no sideways-scroll tabs) + one border / corner / spacing / shadow language + one type scale, fix text overflow, fix Catch card outside its border (Feed, Play, every other sheet) | ✔ merged, PR #60 (squash `ec34ac74`). Gate green (167), reviewer PASS. OTA publishing (id recorded below once out). Not device-verified. No economy or copy-meaning changes |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -407,6 +408,30 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
 - **Known:** (1) Guide / today-plan / notices say "play Catch the food" without naming the sheet (still true); (2) the Feed sheet is longer
   now and scrolls at 375x667 (fits, but the Catch card sits partly below the fold); (3) the old Play-sheet hint "Mini-games in the Guide" still
   links the Guide's games section.
+
+## Step 0l as built (UI polish, emci 2026-10-16: picked option A "section list")
+- **Root causes found (investigator):** (1) the Catch card's panel art border is ~28 pt thick but `PixelFrame` pads only 10 pt, so chips, title and
+  buttons drew over the border (Feed + Play); (2) the Info tab row was ~720 pt of tabs in a ~335 pt row with no cue, and at 375 wide the body overlapped it;
+  (3) "Pet stage & care" opened because the Dev tab passed `startOpen={['pet','eggs']}`; (4) two style kits (pixel + neon) with 3 radius systems and
+  headings at 11/13/16/20/22.
+- **Info:** a list of collapsed sections (Status, Journal, Book, Hall, Style, Guide, Dev when dev), one open at a time, nothing open on arrival.
+  `openGuide` / `openJournal` still open their section. `infoTab` is `InfoTab | null`. `SheetTabs` is gone. Each row has a one-line summary
+  (`INFO_SECTION_META` in `pet-sheets.tsx`: new labels only; the sections' content is unchanged). Dev groups and the floating DEV kit open collapsed.
+- **Shared kit `src/play/sheet-kit.tsx`:** border 2 pt near-black, corner 6 (4 for chips), spacing 4/8/12/16, one hard 2 pt shadow + 1 pt inner
+  highlight (`boxShadow`, no blur), type 22 title (PixelLabel, pinned) · 18 heading · 16 section · 14/20 body · 12/18 caption. `sheetCard` also
+  styles the away / visitor / decor / Circle cards. `SheetSection` is the accordion.
+- **Overflow fixes:** Catch card inner padding (16 x 12) so content sits inside the border; game title 20/24 (on the Departure Mono 2 pt grid); GameChip
+  tap height 44; `flex` styles got `minWidth: 0`; Journal stat label shrinks and its value caps at 60%; Hall meta 9 → 12 pt, 2 lines; grade row label
+  80 pt; dead styles removed; removed the 4-line / 3-line cuts on the Play intro and the Catch best line.
+- Previews `docs/divecore/0l/`: before + after of Info, Feed, Play at 430x932 and 375x667 (static web export; the web preview draws the icon font as
+  boxes, same as the old lock icon).
+- **Known:** (1) opening a section does not scroll it into view (a Guide link tapped from deep in Journal may open below the fold); (2) the Status
+  section is still one long block (it is now contained, not regrouped); (3) rails (10 pt labels), the Guide chips, NeonChip/NeonButton, Stash,
+  Stone and Settings sheets were not restyled (not audited in depth; the investigator's map is in `.claude/agent-memory/investigator/play_sheets_style_map.md`);
+  (4) section icons are vector glyphs (MaterialCommunityIcons), not PixelLab art; (5) the web preview never showed a real phone: check the near-black card edge on the room art.
+- **Lessons:** (1) `check:play-isolation` judges the working tree: a dirty `docs/hideout-roadmap.md` fails it, so set the doc aside (`git stash push <path>`)
+  before the gate, and never `stash pop` after switching branches with src edits in the stash; (2) the first click after a reload in the browser pane can
+  be swallowed, wait 2 s and click again; (3) the pre-commit art:sync runs on every commit here and stages nothing new.
 
 ## Open items (from emci's second phone check, 2026-10-16)
 - Verdict: **all fine** for steps 0g / 0h / 0i (live Garage + Rooftop, Call notes, bubble, Light / Sleep). Call rules unchanged on purpose

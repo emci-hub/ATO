@@ -20,6 +20,8 @@ Pointer only below this. Live status lives in the three tracked docs — keep th
 
 Expo SDK **54** in this repo (`CLAUDE.md` / `AGENTS.md` point at the v54 docs).
 
+**Hideout / Divecore plan (2026-10-16):** the plan's state, decisions and per-step "as built" notes live in `docs/hideout-roadmap.md`. Latest step: **0l** (sectioned Info + one sheet style language, `src/play/sheet-kit.tsx`, PR #60, squash `ec34ac74`; OTA id recorded in the roadmap table).
+
 Do not commit `.env.local` or API keys. Do not change dependencies, auth, env config, or secrets without asking emci first. **Schema (emci, 2026-10-02):** a database change that copies a path already tested in this repo is built without asking and named in the report; a new kind of pattern, or anything that alters or deletes existing data, still needs emci's ok.
 
 ## House conventions
