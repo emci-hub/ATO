@@ -12,6 +12,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 |---|---|---|
 | 0 | Hideout rails + aura fix | ✔ OTA `2bc10c53` (#40, #41) |
 | 0b | Polish batch (LF art pins, holo tip, archive hideout-fx, **Sleep action**) | ✔ merged, PR #44 (Sleep: Loft rail puts the pet to bed, `sleep_until_age_ms`; icon still the heart stand-in). OTA `01a1420f` |
+| 0c | Dedicated rail icons (Sleep, Light, Back, Up) | ✔ merged, PR #51 (squash `cb77cc37`). OTA: see "Step 0c as built" |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -202,6 +203,25 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   PR looks mixed: land a docs-only commit on top of master before `ota:publish`; (2) a branch holding an unpushed merge
   of master fails the check too: push it first; (3) the reviewer caught that `presence.asleep` alone only draws Zzz: the
   bed pose follows `night` in `pet-screen`.
+
+## Step 0c as built (rail icons, emci 2026-10-15)
+- PR #51, squash-merged (`cb77cc37`). Library check: no bed / moon / lamp / arrow icon existed. One PixelLab
+  `create_1_direction_object` pack (64 candidates at 32 px, 10 generations) with 5 rail icons as style refs; emci picked
+  Sleep = moon + Zz, Light = yellow table lamp, Back / Up = cyan arrows. Each got the set's 1 px warm-white sticker rim,
+  then one joint `reduce_colors` (workbench score 96–100; the old `upgrade` icon scores 83.7). Files:
+  `assets/art/icons/in-use/streetwear/{sleep,lamp,arrow-left,arrow-up}.png` → `ART.icon.streetwear.{sleep,lamp,arrowLeft,arrowUp}`
+  in `RAIL_ICON_ART` / `ICON_BY_ACTION`; `dpad` stays as the fallback for an unmapped map action. heart / bolt / upgrade
+  moved to `icons/unused/` (art:sync, nothing deleted). Raw + `gen.json`: `art-src/pixellab/icon.streetwear.rail/`.
+  Sheets + previews: `docs/divecore/rail-icons/`. Gate green (167 checks), reviewer run.
+- Known: the 4 registry entries are status `resource` (art:sync's default for icons, same as the rest of the set), no
+  22/28 critique yet; the Loft and Underground rooms behind the rails are still greybox art.
+- **Lessons:** (1) `check:play-isolation` counts every `docs/**` path as app except `docs/divecore*` and `docs/GOTCHAS.md`:
+  put Play sample sheets / previews in `docs/divecore/<step>/`, never `docs/art/` (reviewer caught it); squash-merge so
+  master gets one Play + neutral commit; (2) a flat icon needs no `art:import` / `art:pack`: drop the PNG in
+  `assets/art/icons/in-use/<set>/`, point the code at it, then `art:sync` (step 4's tested path); (3) never hand-type
+  base64 into a PixelLab call: `get_upload_url` + `curl -F` and pass `upload:<id>`; (4) `expo start --web` dies with
+  EMFILE while the gate runs in the same checkout: preview after the gate; on web a mouse drag doesn't swipe rooms, so
+  set `hideout.rooms_unlocked` / `viewed_room` in `localStorage['ato.play.store.v1']` and reload (put it back after).
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);

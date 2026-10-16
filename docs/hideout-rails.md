@@ -39,12 +39,12 @@ Drawn by `src/play/hideout-rails.tsx`. Gate: `npm run check:hideout-rails`.
 `StreetRoomSpots`, spot labels + "seen" fade, `chipPressed` (teal `PIXEL.glow` press fill), the cyan ellipses under
 objects, the Info "Show labels" switch, `hideout-bar.tsx`, `HideoutStageControls`, the dock's `roomRow`.
 
-## Art list (stand-ins used; nothing invented)
+## Art list
 
-Dedicated 32 px icons for **Sleep** (bed / moon), **Light** (lamp), **Back** (left arrow) and **Up** (up arrow) do not
-exist. The rails use library stand-ins: `icon.streetwear.heart` (Sleep), `bolt` (Light), `dpad` (Back), `upgrade` (Up);
-Play / Stash / Underground / Explore keep their old icons (headphones, backpack, subway-train, sneaker). Order the four
-dedicated icons in PixelLab (guide §2: 32 px ladder) and swap them in `RAIL_ICON_ART` / `ICON_BY_ACTION`.
+**Done (PR #51, 2026-10-15):** dedicated 32 px PixelLab icons: **Sleep** = `icon.streetwear.sleep` (moon + Zz),
+**Light** = `lamp`, **Back** = `arrow-left`, **Up** = `arrow-up`, in `RAIL_ICON_ART` / `ICON_BY_ACTION`. `dpad` is the
+fallback for an unmapped map action. Play / Stash / Underground / Explore keep headphones, backpack, subway-train,
+sneaker; Circle uses `star`. Sheets + previews: `docs/divecore/rail-icons/`.
 
 ## Open / decide
 
@@ -65,4 +65,4 @@ dedicated icons in PixelLab (guide §2: 32 px ladder) and swap them in `RAIL_ICO
   (raw + packed). They were packed sheets, not registry entries, so there is no registry status to flip. The pack step,
   the `hideoutFx` skeleton family and the meta key are gone.
 - **Sleep: built** (see "Open / decide"): `sleep_until_age_ms` on `HideoutState`, set by `tapSleep`, cleared by a second
-  tap / `tapWake` / the timer, read by `resolvePresence`. Rail icon is still the heart stand-in.
+  tap / `tapWake` / the timer, read by `resolvePresence`. Rail icon: `icon.streetwear.sleep` (PR #51).
