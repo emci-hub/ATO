@@ -245,7 +245,7 @@ assert.match(railsSrc, /if \(props\.hidden\) return null;/, 'hidden rails draw n
 assert.match(screen, /\(circleVisit \? \[\] : street \? ICONS\.filter/, 'the dock swaps Feed + Info for Gift + Home in the same row');
 assert.match(screen, /onView: \(id: HideoutRoomId\) => \(circleVisit \? undefined :/, 'a swipe stays in their room');
 assert.match(screen, /if \(circleVisitOn\) \{\s*leaveVisitRef\.current\(\);\s*return true;\s*\}/, 'back = home');
-assert.match(screen, /const circleGiftHere = circleGift != null && \(!visitor \|\| visitorGreeted\);/, 'a friend’s pet waits for today’s visitor’s hello');
+assert.match(screen, /const circleGiftHere = circleGift != null && \(!visitor \|\| !visitorOpen \|\| visitorGreeted\);/, 'a friend’s pet waits for today’s visitor’s hello (while the visitor is in; step 0o)');
 assert.match(screen, /commit\(\(doc\) => openCircleGift\(doc, gift\)\);/, 'opening saves through the store');
 assert.match(screen, /if \(!circleOpenRef\.current\) return;/, 'a visit that loads after the list closed never starts');
 const room = read('src/play/pet-room.tsx');

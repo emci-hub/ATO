@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, BackHandler, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import Animated, { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, ReduceMotion, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import { ART, getArtSource } from '@/art/art';
 import { CIRCLE_UI, type CircleBook } from '@/play/circle-visits';
@@ -25,7 +25,7 @@ import { NEON } from '@/play/neon-viper';
 import { sheetCard } from '@/play/sheet-kit';
 import { noticeReduceMotion } from '@/play/notify/notify';
 import { petFrameAt, petKitOfRole, petPose } from '@/play/pet-actor';
-import { poseDrawable, usePetClock } from '@/play/pet-anim-sprite';
+import { poseDrawable, usePetClock, type PetFace } from '@/play/pet-anim-sprite';
 import { pixelRenderStyle } from '@/play/pixel-theme';
 import { ClipImage } from '@/play/sheet-sprite';
 import { heroAvatarRole, roleFootAt } from '@/play/skin';
@@ -72,38 +72,54 @@ function Sticker({ heroId, size, have = true }: { heroId: string; size: number; 
 export function DailyVisitorActor({
   heroId,
   box,
-  feetX,
-  feetY,
+  artX,
+  artY,
+  originX,
+  originY,
+  pt,
   figurePt,
   greeted,
   animate,
+  walking,
+  face,
   onTap,
 }: {
   heroId: string;
   box: number;
-  feetX: number;
-  feetY: number;
+  /** Its feet in art px (shared values: the roaming loop moves them on the UI thread). */
+  artX: SharedValue<number>;
+  artY: SharedValue<number>;
+  /** Room origin on the stage (px) and art-px size (pt), so feet = origin + art * pt. */
+  originX: number;
+  originY: number;
+  pt: number;
   /** Drawn figure height (pt) above the feet — the "!" sits just over the head. */
   figurePt: number;
   greeted: boolean;
   animate: boolean;
+  /** Walk clip while it moves, idle clip while it stands. */
+  walking: boolean;
+  face: PetFace;
   onTap: () => void;
 }) {
   const role = useMemo(() => heroAvatarRole(heroId), [heroId]);
   const kit = useMemo(() => petKitOfRole(role, heroId), [role, heroId]);
-  const pose = petPose(kit, 'idle');
+  const pose = petPose(kit, walking ? 'walk' : 'idle') ?? petPose(kit, 'idle');
   const [startedAt] = useState(() => Date.now());
   const ticking = animate && pose != null && !pose.hold;
   const now = usePetClock(ticking);
   const frame = ticking ? petFrameAt(kit, pose, now - startedAt, true, 1) : 0;
-  // It stands on the right of the room and faces the middle (west).
-  const drawable = poseDrawable(role, pose, 'w', frame);
+  const drawable = poseDrawable(role, pose, face, frame);
   const footAt = roleFootAt(role);
-  const left = Math.round(feetX - box / 2);
-  const top = Math.round(feetY - footAt * box);
   const name = heroName(heroId);
+  const posStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: originX + artX.value * pt - box / 2 },
+      { translateY: originY + artY.value * pt - footAt * box },
+    ],
+  }));
   return (
-    <View pointerEvents="box-none" style={[styles.actor, { left, top, width: box, height: box }]}>
+    <Animated.View pointerEvents="box-none" style={[styles.actor, { left: 0, top: 0, width: box, height: box }, posStyle]}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <ClipImage drawable={drawable} />
       </View>
@@ -119,7 +135,7 @@ export function DailyVisitorActor({
         accessibilityLabel={greeted ? `${name}, visiting today. You said hi.` : `${name} dropped by. Tap to say hi.`}
         style={{ position: 'absolute', left: box * 0.3, width: box * 0.4, top: footAt * box - box * 0.42, height: box * 0.42 }}
       />
-    </View>
+    </Animated.View>
   );
 }
 
