@@ -153,9 +153,9 @@ ok('economy: a gift moves no tokens / shells / stones / pet tokens; the book rid
 /* 4 · rail ----------------------------------------------------------------- */
 
 const h = emptyHideout();
-assert.deepEqual(leftRailActions('hideout', h).map((a) => a.label), ['Play', 'Stash', 'Underground', 'Explore'], 'no Circle unless the screen asks');
+assert.deepEqual(leftRailActions('hideout', h).map((a) => a.label), ['Stash', 'Play', 'Underground', 'Explore'], 'no Circle unless the screen asks');
 const withCircle = leftRailActions('hideout', h, { circle: true });
-assert.deepEqual(withCircle.map((a) => a.label), ['Play', 'Stash', 'Underground', 'Explore', 'Circle']);
+assert.deepEqual(withCircle.map((a) => a.label), ['Stash', 'Play', 'Underground', 'Explore', 'Circle']);
 assert.equal(withCircle.length, RAIL_MAX_ITEMS, 'five on the rail, the cap');
 assert.equal(withCircle[4]!.kind, 'circle');
 for (const room of ['loft', 'garage', 'rooftop'] as const) {

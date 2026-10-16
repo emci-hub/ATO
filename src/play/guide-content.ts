@@ -224,7 +224,7 @@ function denSection(): string[] {
     `The Den keeps your pets: ${DEN_START_SLOTS} slots to start (the active pet counts as one). More slots cost shells — ${prices}; ${DEN_MAX_SLOTS} at most.`,
     `One pet is active: it lives in the room and gives the perks, the pounce and Pumped. The others rest, frozen — they don't grow, get hungry, lose mood or lose warmth, and an egg's care only counts while it is active.`,
     `Swap from the Den any time except during a dive, while your pet is away on an expedition, or while a mini-game is open. Buffs, the expedition ladder, tokens, the Power ceiling, records and pity are yours — a swap never changes them.`,
-    `A new egg needs a free slot; it becomes the active pet and the old one rests. From the Den you can also view a card, rename, favourite (★ sorts to the top), sort by grade or shiny, and release (a shard, as always). Resting pets count in the Collection.`,
+    `A new egg needs a free slot; it becomes the active pet and the old one rests. From the Den you can also rename, favourite (★ sorts to the top), sort by grade or shiny, and release (a shard, as always). Resting pets count in the Collection.`,
   ];
 }
 

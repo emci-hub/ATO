@@ -355,6 +355,7 @@ export function PetScreen({
   shellTabs = null,
   away = null,
   onAwayClose,
+  onOpenLocker,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -389,6 +390,8 @@ export function PetScreen({
   /** "While you were away" for this open (null = nothing to say). */
   away?: AwaySummary | null;
   onAwayClose?: () => void;
+  /** The Stash's "Open Locker" link (the shell switches to the Locker tab). */
+  onOpenLocker?: () => void;
 }) {
   const fontsReady = usePixelFonts();
   const frame = useStageFrame('hideout');
@@ -1503,17 +1506,19 @@ export function PetScreen({
           view={view}
           commit={commit}
           gameOpen={game != null}
-          reduceMotion={reduceMotion}
           onNewEgg={() => {
             setFocusEgg(null);
             setSheet('eggs');
           }}
-          onOpenStone={(uid) => openStone(uid)}
-          onOpenPrism={(uid) => {
-            setStoneUid(uid);
-            setSheet('prism');
-          }}
           onViewActiveCard={() => setSheet('card')}
+          onOpenLocker={
+            onOpenLocker
+              ? () => {
+                  closeSheet();
+                  onOpenLocker();
+                }
+              : undefined
+          }
         />
         <GuideLink section="den" onOpen={openGuide} />
       </PlaySheet>

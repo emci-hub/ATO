@@ -1001,7 +1001,7 @@ export type PlayStoreDoc = {
   /* ---- v27 (Part D): the Den, egg pacing, Legendary pity, Shine Stones ---- */
   /** Resting pets (frozen — nothing ages them). The active pet is `pet`. */
   pet_den: PetState[];
-  /** Den slots owned (the active pet counts as one; 6..12). */
+  /** Den slots owned (the active pet counts as one; 6..20). */
   den_slots: number;
   /** Next Den id to hand out (a pet's `uid`). */
   pet_uid_next: number;

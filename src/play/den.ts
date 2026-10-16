@@ -2,7 +2,8 @@
  * The Den (v27, Part D) — keep many pets, raise one at a time. Pure rules.
  *
  *   - Slots: 6 to start (the active pet counts as one), more for shells —
- *     7th 100, 8th 150, 9th 225, 10th 340, 11th 500, 12th 750; 12 at most.
+ *     7th 100, 8th 150, 9th 225, 10th 340, 11th 500, 12th 750, then 900 … 3500
+ *     for the 13th-20th; 20 at most.
  *   - One ACTIVE pet (the room, its perks, the pounce, Pumped). The others
  *     REST: they are frozen — no aging, no hunger or mood loss, no care
  *     mistakes, no egg warmth lost — because nothing ever ages a resting pet.
@@ -23,7 +24,8 @@ import { PET_STAGES, type PetState } from '@/play/pet';
 import { gradeRank } from '@/play/pet-eggs';
 
 export const DEN_START_SLOTS = 6;
-export const DEN_SLOT_PRICES: readonly number[] = [100, 150, 225, 340, 500, 750];
+// Slots 7-12 are the original prices; 13-20 added in step 0p (emci OK 2026-10-16).
+export const DEN_SLOT_PRICES: readonly number[] = [100, 150, 225, 340, 500, 750, 900, 1100, 1350, 1650, 2000, 2400, 2900, 3500];
 export const DEN_MAX_SLOTS = DEN_START_SLOTS + DEN_SLOT_PRICES.length;
 
 /** Shells for the next slot, or null when the Den is at its most. */
