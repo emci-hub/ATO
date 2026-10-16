@@ -16,9 +16,9 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0d | Loft room art (PixelLab, same recipe as the Hideout) | ✔ merged, PR #52 (squash `30a6bbf1`). OTA `01a142bf` (production, iOS, group `96b03172`, commit `6d77ece5`, gate green 167). Not device-verified. **Next: Underground room art (0e)** |
 | 0e | Underground (garage) room art (PixelLab, same recipe) | ✔ merged, PR #53 (squash `1473f8b7`). **OTA `01a14302`** (production, iOS, group `c0b4c5d3`, commit `76a195fa`, gate green 167). Not device-verified. **Next: Rooftop art, or a live Garage (see Known)** |
 | 0f | Rooftop room art (PixelLab, same recipe, new map) | ✔ merged, PR #54 (squash `75c062b8`). **OTA `01a14322`** (production, iOS, group `21b75ecb`, commit `713827ba`, gate green 167). Not device-verified. **Next: a live Garage / Rooftop (or phone check of both)** |
-| 0g | Live Garage + Rooftop (walking pet, Back / Up, rail bounds) | ✔ merged, PR #55 (squash `ab633ef0`). **OTA `01a1444d`** (production, iOS, group `6a7abde4`, commit `c0dd6722`, gate green 167). Not device-verified. **Next: phone check of Garage + Rooftop** |
-| 0h | Live-room gaps: Call dimmed in unbuilt rooms, Rooftop build reachable, pet re-clamp on room switch, dev "Build all Hideout rooms" | ✔ merged, PR #56 (squash `ae63a1e7`). **OTA `01a144fe`** (production, iOS, group `aabfd2b3`, commit `d8618055`, gate green 167). Not device-verified. **Next: phone check of Garage + Rooftop** (Play dev kit → Tokens / Research → Build all Hideout rooms, two taps) |
-| 0i | Phone-check fixes: bubble only in the pet's room, Call says why it can't come, Light / Sleep notes, clamp on every room | ✔ merged, PR #57 (squash `91bde072`). **OTA `01a14590`** (production, iOS, group `a8cc0a68`, commit `5e4b1dfb`, gate green 167). Not device-verified. **Next: second phone check** |
+| 0g | Live Garage + Rooftop (walking pet, Back / Up, rail bounds) | ✔ merged, PR #55 (squash `ab633ef0`). **OTA `01a1444d`** (production, iOS, group `6a7abde4`, commit `c0dd6722`, gate green 167). **Device-verified** (emci, 2026-10-16, second phone check). |
+| 0h | Live-room gaps: Call dimmed in unbuilt rooms, Rooftop build reachable, pet re-clamp on room switch, dev "Build all Hideout rooms" | ✔ merged, PR #56 (squash `ae63a1e7`). **OTA `01a144fe`** (production, iOS, group `aabfd2b3`, commit `d8618055`, gate green 167). **Device-verified** (emci, 2026-10-16; dev row: Play dev kit → Tokens / Research → Build all Hideout rooms, two taps). |
+| 0i | Phone-check fixes: bubble only in the pet's room, Call says why it can't come, Light / Sleep notes, clamp on every room | ✔ merged, PR #57 (squash `91bde072`). **OTA `01a14590`** (production, iOS, group `a8cc0a68`, commit `5e4b1dfb`, gate green 167). **Device-verified** (emci, 2026-10-16: "all fine"). **Open idea from that check: see "Open items" below (Feed tip / food wording)** |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -386,6 +386,16 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
 - **Lessons:** (1) in the browser pane, a `ref` click scrolls a hidden DIV sideways (looks like a half-width layout): reset `scrollLeft` before a
   screenshot; (2) screenshots right after a reload or state change can show the splash or a half-loaded frame — wait, then screenshot twice;
   (3) a clamp or planner gate must use the same signal the planner uses (`mood === 'asleep'`), not presence.
+
+## Open items (from emci's second phone check, 2026-10-16)
+- Verdict: **all fine** for steps 0g / 0h / 0i (live Garage + Rooftop, Call notes, bubble, Light / Sleep). Call rules unchanged on purpose
+  (emci: keep 10 min of counted time; hungry / tired / baby pets stay home with a note).
+- emci's note, verbatim (garbled in transit, **meaning not confirmed, do not guess**): "I think you should movecatch the food” to Feed or move".
+  Likely about the **"Feed keeps your pet happy" tip / the food wording near the Feed button** (the tip bubble sits just above Feed at the
+  bottom-left of the room, `onTipSeen` / `tipAnchorRef`; in the 430 and 375 previews it overlaps the floor of the room). **First action next
+  chat: ask emci once what exactly to move (the tip? the bowl / food hotspot? a word on the Feed button?) and where to.**
+- Still-minor Known from 0i: a hungry pet can't be called (design); UI reads the rendered pet vs `callPetToRoom` re-reading after `touchPet`
+  (rare); dev `devBuildAllRooms` may leave a scheduled build notice.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
