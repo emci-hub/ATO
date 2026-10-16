@@ -12,7 +12,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 |---|---|---|
 | 0 | Hideout rails + aura fix | ✔ OTA `2bc10c53` (#40, #41) |
 | 0b | Polish batch (LF art pins, holo tip, archive hideout-fx, **Sleep action**) | ✔ merged, PR #44 (Sleep: Loft rail puts the pet to bed, `sleep_until_age_ms`; icon still the heart stand-in). OTA `01a1420f` |
-| 0c | Dedicated rail icons (Sleep, Light, Back, Up) | ✔ merged, PR #51 (squash `cb77cc37`). OTA: see "Step 0c as built" |
+| 0c | Dedicated rail icons (Sleep, Light, Back, Up) | ✔ merged, PR #51 (squash `cb77cc37`). OTA `01a14292` |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -205,7 +205,8 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   bed pose follows `night` in `pet-screen`.
 
 ## Step 0c as built (rail icons, emci 2026-10-15)
-- PR #51, squash-merged (`cb77cc37`). Library check: no bed / moon / lamp / arrow icon existed. One PixelLab
+- PR #51, squash-merged (`cb77cc37`). **OTA `01a14292`** (production, iOS, group `89edf560`, commit `093def18`, gate
+  green 167). NOT device-verified. Library check: no bed / moon / lamp / arrow icon existed. One PixelLab
   `create_1_direction_object` pack (64 candidates at 32 px, 10 generations) with 5 rail icons as style refs; emci picked
   Sleep = moon + Zz, Light = yellow table lamp, Back / Up = cyan arrows. Each got the set's 1 px warm-white sticker rim,
   then one joint `reduce_colors` (workbench score 96–100; the old `upgrade` icon scores 83.7). Files:
