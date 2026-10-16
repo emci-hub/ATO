@@ -267,7 +267,7 @@ assert.equal(coach({ status: 'okay', diveCharges: 1 }).action, 'dive');
 assert.equal(coach({ status: 'away', backIn: '2h 5m' }).tip, 'Out exploring — back in 2h 5m.');
 // The button opens the right sheet (and that icon pulses).
 assert.equal(PET_COACH_ICON.feed, 'feed');
-assert.equal(PET_COACH_ICON.catch, 'play');
+assert.equal(PET_COACH_ICON.catch, 'feed', 'Catch the food lives in the Feed sheet (emci 2026-10-16), so the Feed icon pulses');
 assert.equal(PET_COACH_ICON.play, 'play');
 assert.equal(PET_COACH_ICON.dive, 'dive');
 assert.equal(PET_COACH_ICON.expedition, 'expedition');
@@ -344,9 +344,12 @@ ok('Hideout 2D roam: walk polygon, spread targets, every kit pose');
   const sheetsSrc = fs.readFileSync('src/play/pet-sheets.tsx', 'utf8');
   const feed = screenSrc.slice(screenSrc.indexOf("open={sheet === 'feed'}"), screenSrc.indexOf("open={sheet === 'play'}"));
   assert.ok(feed.indexOf('<GuideLink section="pet"') >= 0, 'the Feed sheet still ends with "? Your pet"');
-  assert.ok(feed.indexOf('<GameCard g="catch"') > feed.indexOf('<GuideLink section="pet"'), 'Catch the food comes right after the "? Your pet" chip');
-  assert.ok(/<GameCard g="catch" view=\{view\} onStart=\{startGame\} \/>/.test(feed), 'the Feed sheet card starts the round with startGame');
+  const catchAt = feed.search(/<GameCard\s+g="catch"/);
+  assert.ok(catchAt > feed.indexOf('<GuideLink section="pet"'), 'Catch the food comes right after the "? Your pet" chip');
+  assert.ok(/<GameCard\s+g="catch"\s+view=\{view\}\s+onStart=\{startGame\}/.test(feed), 'the Feed sheet card starts the round with startGame');
+  assert.ok(/lastKind === 'catch' \? lastResult : null/.test(feed), 'the Feed card shows the Catch result line and score burst');
   assert.ok(!/<GameCard g="catch"/.test(sheetsSrc), 'the Play sheet no longer shows Catch the food');
+  assert.match(screenSrc, /setSheet\(kind === 'catch' \? 'feed' : 'play'\)/, 'a counted Catch round returns to the Feed sheet, Train to Play');
   assert.ok(/<GameCard g="train"/.test(sheetsSrc), 'the Play sheet keeps Tap to train');
 }
 ok('Catch the food lives in the Feed sheet under "? Your pet"; the Play sheet keeps Tap to train');

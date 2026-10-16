@@ -3,7 +3,7 @@
  * stacked as cards, moved as-is into the sheets the room's icon row opens:
  *
  *   Feed        — the pantry and its Feed buttons.
- *   Play        — the mini-game hub (Catch / Train). A round itself is full screen.
+ *   Play        — Tap to train (Catch the food lives in the Feed sheet). A round itself is full screen.
  *   Expedition  — status, the returned find, Send on expedition.
  *   Info        — tabs: Status (form, timers, perks, Today, what hatches,
  *                 rebirth, reminder) · Book (Logbook + Collection) · Hall ·
@@ -294,7 +294,22 @@ export type GameRun = { kind: PetRoundKind; level: Difficulty; daily: boolean };
  * One mini-game card: levels, best, medals, Play / Daily. Catch the food sits in the Feed sheet (under "? Your pet",
  * emci 2026-10-16); Tap to train stays in the Play sheet. Each card keeps its own level pick and unlock hint.
  */
-export function GameCard({ g, view, onStart }: { g: Game; view: PlayView; onStart: (run: GameRun) => void }) {
+export function GameCard({
+  g,
+  view,
+  onStart,
+  lastResult = null,
+  lastRound = null,
+  still = false,
+}: {
+  g: Game;
+  view: PlayView;
+  onStart: (run: GameRun) => void;
+  /** The last counted round of THIS game: its result line and score burst show under the card. */
+  lastResult?: string | null;
+  lastRound?: { key: string; score: number; strong: boolean } | null;
+  still?: boolean;
+}) {
   const pv = view.pet;
   const [pick, setPick] = useState<Difficulty>('normal');
   const [hint, setHint] = useState<string | null>(null);
@@ -354,6 +369,8 @@ export function GameCard({ g, view, onStart }: { g: Game; view: PlayView; onStar
         </View>
       </PixelFrame>
       {hint ? <PixelBody color={PIXEL.cyan}>{hint}</PixelBody> : null}
+      {lastRound ? <ScoreBurst score={lastRound.score} strong={lastRound.strong} runKey={lastRound.key} animate={!still} /> : null}
+      {lastResult ? <PixelBody color={PIXEL.cyan}>{lastResult}</PixelBody> : null}
     </>
   );
 }
