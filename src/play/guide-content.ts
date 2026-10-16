@@ -191,7 +191,7 @@ function petSection(): string[] {
   return [
     `Stages (real time, even when the app is closed): ${timeline} → ${PET_STAGE_LABEL.god}. It never dies.`,
     `Forms (picked from Teen on, by what you did in the stage before): ${PET_BRANCHES.map((b) => PET_BRANCH_LABEL[b]).join(', ')}. Lots of care mistakes make it Scruffy, lots of TD waves Battle, lots of deep dive surfaces Deep, good care and training Bright; otherwise Standard.`,
-    `Needs: hunger drops a heart every ${span(PET_HUNGER_TICK_MS)} and mood every ${span(PET_MOOD_TICK_MS)} (each up to ${PET_METER_MAX} hearts). A meter left empty for ${span(PET_GRACE_MS)} is a care mistake. Feed it from the pantry or with Catch the food; cheer it up with Tap to train, dives and TD waves.`,
+    `Needs: hunger drops a heart every ${span(PET_HUNGER_TICK_MS)} and mood every ${span(PET_MOOD_TICK_MS)} (each up to ${PET_METER_MAX} hearts). A meter left empty for ${span(PET_GRACE_MS)} is a care mistake. Feed it from the pantry or with Catch the food (both in the Feed sheet); cheer it up with Tap to train, dives and TD waves.`,
     `Sleep: it sleeps from ${clock(DEFAULT_WINDOW.from)} to ${clock(DEFAULT_WINDOW.to)} by default (Settings → Bedtime). That is looks only — hunger still drops overnight.`,
     `Rebirth (God) or Release (Child and up) retires it to the Hall; each rebirth adds +${pct(PET_REBIRTH_STEP)} TD damage for good, up to +${pct(PET_REBIRTH_CAP)}.`,
   ];

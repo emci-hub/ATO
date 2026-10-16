@@ -59,7 +59,7 @@ export function planPlayNotices(input: NoticeInput): PlannedNotice[] {
         kind: 'hunger',
         at: quiet(at),
         title: `${name} is getting hungry`,
-        body: 'A cleared wave, the pantry or a round of Catch the food will fill it up.',
+        body: 'A cleared wave, the pantry or a round of Catch the food (in Feed) will fill it up.',
       });
     }
   }
