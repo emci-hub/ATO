@@ -19,4 +19,6 @@
 - [Divecore notices facts](divecore_notices_facts.md) — PlayBanner wiring/geometry (52 vs real 56), 80-row notice inventory, 3 known bugs
 - [Divecore layout facts](divecore_layout_facts.md) — stage sizing per scene, Turf board is width-square in ScrollView, real shell heights, 1 grow-only caller
 - [Divecore nav facts](divecore_nav_facts.md) — Street shell always on, orphaned About, hidden Hideout header, back mismatches, settings migration site
+- [Live rooms facts](live_rooms_garage_rooftop_facts.md) — liveIsLoft wiring, garage/rooftop go-live touchpoints, Call-only presence
 - [Art icon add path](art_icon_add_path.md) — flat icons: drop PNG in icons/in-use + art:sync; edit code first
+- [Play sheets style map](play_sheets_style_map.md) — Info/Feed sheet kits, GameCard border mismatch cause, dev panel default-open, gate pins

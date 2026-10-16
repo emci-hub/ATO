@@ -443,7 +443,7 @@ export function HallCards({ view, eggColor }: { view: PlayView; eggColor: string
                   ) : null
                 }
               />
-              <Text style={styles.hallMeta} numberOfLines={2}>
+              <Text style={styles.hallMeta} numberOfLines={2} maxFontSizeMultiplier={1.2}>
                 {pinned ? '📌 ' : ''}
                 {entry.released ? 'Released' : `Rebirth #${entry.rebirth}`} · {entry.days}d
               </Text>
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   flex: { flex: 1, minWidth: 0 },
   gradeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
-  rowLabel: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.caption, color: NEON.textPrimary, minWidth: 76, flexShrink: 1 },
+  rowLabel: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.caption, color: NEON.textPrimary, width: 80 },
   gradeChip: { borderWidth: SHEET.border, borderRadius: SHEET.radiusSmall, paddingHorizontal: 6, paddingVertical: 2 },
   gradeChipText: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.caption },
   eggPanel: {

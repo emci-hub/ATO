@@ -526,7 +526,7 @@ export const INFO_SECTION_META: Record<InfoTab, { summary: string; icon: Compone
   status: { summary: 'Stage, hunger, mood, odds', icon: 'heart-pulse' },
   journal: { summary: 'Stats, Tide, milestones', icon: 'notebook-outline' },
   book: { summary: 'Logbook and collection', icon: 'book-open-variant' },
-  hall: { summary: 'Pets you have kept', icon: 'trophy-outline' },
+  hall: { summary: 'Kept and released pets', icon: 'trophy-outline' },
   style: { summary: 'Look, dye, aura, wear', icon: 'palette-outline' },
   guide: { summary: 'How everything works', icon: 'help-circle-outline' },
   dev: { summary: 'Test tools', icon: 'wrench-outline' },
@@ -898,7 +898,8 @@ const styles = StyleSheet.create({
   meterRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   meterBlock: { gap: 4 },
   gameTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  gameTitle: { flexShrink: 1, fontSize: SHEET.type.heading, lineHeight: SHEET.type.heading + 4 },
+  // Departure Mono sits on a 2 pt-per-pixel grid: 20 (not 18) keeps it crisp.
+  gameTitle: { flexShrink: 1, fontSize: 20, lineHeight: 24 },
   gameChip: { flexGrow: 0, flexShrink: 0 },
   gameChipRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4 },
   gameChipLabel: { fontSize: 12, lineHeight: 16 },

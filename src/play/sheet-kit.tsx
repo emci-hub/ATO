@@ -92,6 +92,7 @@ export function SheetSection({
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         accessibilityLabel={`${open ? 'Collapse' : 'Expand'} ${title}`}
+        accessibilityHint={summary}
         style={({ pressed }) => [styles.head, pressed && styles.pressed]}>
         <View style={styles.icon}>
           <MaterialCommunityIcons name={icon} size={20} color={STREET.mustard} />
