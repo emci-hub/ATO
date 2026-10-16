@@ -12,6 +12,8 @@ import { Fonts } from '@/constants/theme';
 import { heroName } from '@/play/heroes-data';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { SHEET } from '@/play/sheet-kit';
+import { STREET } from '@/play/street-ui';
 import { newPet, type PetState } from '@/play/pet';
 import { STREAK_DAYS, streakRewardLabel } from '@/play/play-settings';
 import { PetCard } from '@/play/pet-card';
@@ -441,7 +443,7 @@ export function HallCards({ view, eggColor }: { view: PlayView; eggColor: string
                   ) : null
                 }
               />
-              <Text style={styles.hallMeta}>
+              <Text style={styles.hallMeta} numberOfLines={2} maxFontSizeMultiplier={1.2}>
                 {pinned ? '📌 ' : ''}
                 {entry.released ? 'Released' : `Rebirth #${entry.rebirth}`} · {entry.days}d
               </Text>
@@ -485,34 +487,50 @@ export function DyePanel({ view, commit }: { view: PlayView; commit: Commit }) {
 
 
 const styles = StyleSheet.create({
-  body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
-  result: { fontFamily: Fonts.monoBold, fontSize: 13 },
+  body: { fontFamily: Fonts.mono, fontSize: SHEET.type.caption, lineHeight: SHEET.type.captionLh, color: NEON.textMuted },
+  result: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.body },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   gradeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
-  rowLabel: { fontFamily: Fonts.monoBold, fontSize: 11, color: NEON.textPrimary, width: 76 },
-  gradeChip: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 },
-  gradeChipText: { fontFamily: Fonts.monoBold, fontSize: 10 },
+  rowLabel: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.caption, color: NEON.textPrimary, width: 80 },
+  gradeChip: { borderWidth: SHEET.border, borderRadius: SHEET.radiusSmall, paddingHorizontal: 6, paddingVertical: 2 },
+  gradeChipText: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.caption },
   eggPanel: {
     gap: 8,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    backgroundColor: 'rgba(5, 7, 13, 0.6)',
+    padding: SHEET.pad,
+    borderRadius: SHEET.radius,
+    borderWidth: SHEET.border,
+    borderColor: SHEET.edge,
+    backgroundColor: STREET.asphalt,
   },
   eggHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  eggTitle: { fontFamily: Fonts.displayBold, fontSize: 16, color: NEON.textPrimary, textTransform: 'uppercase' },
+  eggTitle: { fontFamily: Fonts.displayBold, fontSize: SHEET.type.section, color: NEON.textPrimary, textTransform: 'uppercase' },
   shardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  shardText: { fontFamily: Fonts.monoBold, fontSize: 13 },
+  shardText: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.body },
   heroBlock: { gap: 6, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: NEON.cyanDim },
   heroTitle: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },
   cardRow: { flexDirection: 'row', gap: 6 },
   hallGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   statRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  statValue: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary, flexShrink: 1, textAlign: 'right' },
-  hallMeta: { fontFamily: Fonts.mono, fontSize: 9, color: NEON.textMuted, textAlign: 'center', marginTop: 2, width: 96 },
-  eggsToday: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.cyan },
+  statLabel: { flexShrink: 1, minWidth: 0 },
+  statValue: {
+    fontFamily: Fonts.monoBold,
+    fontSize: SHEET.type.caption,
+    color: NEON.textPrimary,
+    flexShrink: 1,
+    maxWidth: '60%',
+    textAlign: 'right',
+  },
+  hallMeta: {
+    fontFamily: Fonts.mono,
+    fontSize: SHEET.type.caption,
+    lineHeight: 16,
+    color: NEON.textMuted,
+    textAlign: 'center',
+    marginTop: 2,
+    width: 96,
+  },
+  eggsToday: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.body, color: NEON.cyan },
   pity: { gap: 4 },
   pityText: { fontFamily: Fonts.monoBold, fontSize: 12, color: GRADE_COLOR.legendary },
   pityTrack: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
@@ -559,7 +577,7 @@ export function JournalTab({ view, commit }: { view: PlayView; commit: Commit })
       <Text style={styles.body}>Counted from this update on (TD waves and rebirths include everything before).</Text>
       {rows.map(([label, value]) => (
         <View key={label} style={styles.statRow}>
-          <Text style={styles.body}>{label}</Text>
+          <Text style={[styles.body, styles.statLabel]}>{label}</Text>
           <Text style={styles.statValue}>{value}</Text>
         </View>
       ))}
