@@ -338,4 +338,17 @@ ok('room screen uses the planner, status, coach and talk picker');
 }
 ok('Hideout 2D roam: walk polygon, spread targets, every kit pose');
 
+// Catch the food sits in the Feed sheet, directly under "? Your pet" (emci 2026-10-16); the Play sheet keeps only Tap to train.
+{
+  const screenSrc = fs.readFileSync('src/play/pet-screen.tsx', 'utf8');
+  const sheetsSrc = fs.readFileSync('src/play/pet-sheets.tsx', 'utf8');
+  const feed = screenSrc.slice(screenSrc.indexOf("open={sheet === 'feed'}"), screenSrc.indexOf("open={sheet === 'play'}"));
+  assert.ok(feed.indexOf('<GuideLink section="pet"') >= 0, 'the Feed sheet still ends with "? Your pet"');
+  assert.ok(feed.indexOf('<GameCard g="catch"') > feed.indexOf('<GuideLink section="pet"'), 'Catch the food comes right after the "? Your pet" chip');
+  assert.ok(/<GameCard g="catch" view=\{view\} onStart=\{startGame\} \/>/.test(feed), 'the Feed sheet card starts the round with startGame');
+  assert.ok(!/<GameCard g="catch"/.test(sheetsSrc), 'the Play sheet no longer shows Catch the food');
+  assert.ok(/<GameCard g="train"/.test(sheetsSrc), 'the Play sheet keeps Tap to train');
+}
+ok('Catch the food lives in the Feed sheet under "? Your pet"; the Play sheet keeps Tap to train');
+
 console.log(`\ncheck:pet-room — ${passed} groups passed.`);

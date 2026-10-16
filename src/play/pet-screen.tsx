@@ -106,6 +106,7 @@ import {
   BookTab,
   ExpeditionSheetBody,
   FeedSheetBody,
+  GameCard,
   HallTab,
   HelpTab,
   PlaySheetBody,
@@ -1370,6 +1371,13 @@ export function PetScreen({
           <FeedSheetBody view={view} commit={commit} onFed={() => setJuiceKey((n) => n + 1)} />
         )}
         <GuideLink section="pet" onOpen={openGuide} />
+        {/* Catch the food lives here, right under "? Your pet" (emci 2026-10-16): the round that fills the pantry. */}
+        {pet.stage === 'egg' ? null : (
+          <>
+            <PixelBody>Catch the food feeds it (+2 hunger) — only if you pass (50%+).</PixelBody>
+            <GameCard g="catch" view={view} onStart={startGame} />
+          </>
+        )}
       </PlaySheet>
       <PlaySheet open={sheet === 'play'} title={SHEET_TITLE.play} onClose={closeSheet} reduceMotion={reduceMotion}>
         <PlaySheetBody
