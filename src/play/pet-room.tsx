@@ -632,7 +632,13 @@ export function PetRoom({
         let fromX = artX.value;
         let fromY = artY.value;
         // A prop that just landed under the pet: start from the nearest free floor, not the blocked cell.
-        const decorNow = decorWalkGeomRef.current;
+        // Also the room the pet just walked into (call, Up / Back): its old x/y may sit on a prop here, so the
+        // first step plans from this room's floor, not one still step later. A sleeping pet stays on its bed.
+        const decorNow =
+          decorWalkGeomRef.current ??
+          (hideoutStage && !(hideoutStage.presence.asleep && roomGeom(hideoutStage.presence.room).sleepOnBed)
+            ? roomGeom(hideoutStage.presence.room)
+            : null);
         if (decorNow) {
           const c = isoClampToWalk(fromX, fromY, decorNow, pet.stage, walkBoundsRef.current);
           if (Math.abs(c[0] - fromX) >= 0.5 || Math.abs(c[1] - fromY) >= 0.5) {
@@ -781,10 +787,11 @@ export function PetRoom({
 
   // The pet arriving in another room (call, Up / Back) keeps its old art x/y until the first planned step; put it on this room's floor now.
   const stageRoom = hideoutStage?.presence.room;
+  const stageAsleep = hideoutStage?.presence.asleep === true;
   useEffect(() => {
-    if (!stageRoom || stageRoom === 'hideout' || egg) return;
-    const geom = roomGeom(stageRoom);
-    if (geom.sleepOnBed) return;
+    if (!stageRoom || egg) return;
+    const geom = decorWalkGeomRef.current ?? roomGeom(stageRoom);
+    if (stageAsleep && geom.sleepOnBed) return;
     const p = isoClampToWalk(artX.value, artY.value, geom, pet.stage, walkBoundsRef.current);
     if (Math.abs(p[0] - artX.value) < 0.5 && Math.abs(p[1] - artY.value) < 0.5) return;
     cancelAnimation(artX);
@@ -1009,6 +1016,9 @@ export function PetRoom({
   if (!fontsReady) return <View style={styles.room} />;
 
   const meterLabel = { fontSize: 16, lineHeight: 20 } as const;
+  // The pet (and its speech bubble) show only in the room it is in.
+  const petShown =
+    width > 0 && !away && !picking && (!hideoutStage || (hideoutStage.presence.room === hideoutStage.viewed && !hideoutStage.presence.away));
 
   return (
     <View style={[styles.room, streetRoom && { backgroundColor: HIDEOUT_NIGHT }]}>
@@ -1139,7 +1149,7 @@ export function PetRoom({
       <DecorSprites items={decorB} left={ox} top={oy} k={isoPt} />
       {/* The tap spots sit under the pet: a tap on the pet (even one standing by a spot) is still "say hi". */}
       {decorOn && decor && !visiting ? <DecorSpots decor={decor.placed} left={ox} top={oy} k={isoPt} onTap={decor.onTap} /> : null}
-      {width > 0 && !away && !picking && (!hideoutStage || (hideoutStage.presence.room === hideoutStage.viewed && !hideoutStage.presence.away)) ? (
+      {petShown ? (
         <Animated.View pointerEvents={streetRoom ? 'box-none' : 'auto'} style={[styles.petWrap, { top: isoOn ? 0 : top, width: box, height: box }, petStyle]}>
           {streetRoom ? null : (
           <View
@@ -1269,7 +1279,7 @@ export function PetRoom({
       {streetRoom && hideoutScale && !hideoutStage ? (
         <StreetRoomFront left={origin.left} top={origin.top} scale={hideoutScale} feetX={feet.x} feetY={feet.y} night={night} gentle={motion.vestibularSafe} />
       ) : null}
-      {streetRoom && hideoutScale && speech ? (
+      {streetRoom && hideoutScale && speech && petShown ? (
         <Animated.View pointerEvents="none" style={[styles.speechAnchor, isoSpeechStyle]}>
           <StreetSpeechBubble text={speech.text} anchored width={speechBubbleW} />
         </Animated.View>

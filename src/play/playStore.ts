@@ -259,7 +259,7 @@ import {
   type HideoutRoomId,
   type HideoutState,
 } from '@/play/hideout-progress';
-import { sleepChosen, startCall, stampPeekaboo, tapSleep, tapWake } from '@/play/hideout-presence';
+import { callBlocker, sleepChosen, startCall, stampPeekaboo, tapSleep, tapWake } from '@/play/hideout-presence';
 import {
   TIDE_PASS_DAYS,
   emptyTide,
@@ -2867,6 +2867,7 @@ export function callPetToRoom(doc: PlayStoreDoc, now: number, room: HideoutRoomI
   const touched = touchPet(doc, now);
   if (touched.pet_expedition) return null;
   if (!touched.hideout.rooms_unlocked[room]) return null;
+  if (callBlocker(touched.pet, touched.hideout)) return null;
   const h = startCall({ ...touched.hideout, viewed_room: room }, touched.pet, room);
   return { ...touched, hideout: pushHideoutEvent(h, { t: now, kind: 'call_used', room }) };
 }

@@ -150,6 +150,10 @@ export type HideoutRailsProps = {
   /** A locked room / action was tapped: open its build sheet (the only way to it once the rail covers the tease). */
   onTease: () => void;
   onCall: () => void;
+  /** Why Call would not bring the pet over right now (hungry, too young, asleep), or null. A tap shows it via `onNote`. */
+  callBlockNote?: string | null;
+  /** A short line on the notice strip (a dimmed Call, Light by day). */
+  onNote?: (text: string) => void;
   away: boolean;
   callA11y: string;
   /** Coach pulse: which action should breathe. */
@@ -167,7 +171,7 @@ export type HideoutRailsProps = {
 };
 
 export function HideoutRails(props: HideoutRailsProps) {
-  const { hideout, viewed, petRoom, stageH, onSpot, onLamp, onView, onTease, onCall, away, callA11y, pulse, notes, nightLamp, still, gentle, onCircle } = props;
+  const { hideout, viewed, petRoom, stageH, onSpot, onLamp, onView, onTease, onCall, callBlockNote, onNote, away, callA11y, pulse, notes, nightLamp, still, gentle, onCircle } = props;
   const actions = leftRailActions(viewed, hideout, { circle: onCircle != null });
   const rooms = railRooms(hideout, viewed, petRoom, (id) => roomDef(id).label);
   const scrolls = railScrolls(rooms.length);
@@ -185,7 +189,11 @@ export function HideoutRails(props: HideoutRailsProps) {
     }
     countOnce('rail_action');
     if (a.kind === 'spot') onSpot(a.spot);
-    else if (a.kind === 'lamp') onLamp();
+    else if (a.kind === 'lamp') {
+      onLamp();
+      // The light shows only after dark: by day the tap still flips the lamp, so say why nothing changes.
+      if (!nightLamp.night) onNote?.('The Loft light shows after dark.');
+    }
     else if (a.kind === 'circle') onCircle?.();
     else onView(a.room);
   };
@@ -223,9 +231,9 @@ export function HideoutRails(props: HideoutRailsProps) {
         still={still}
         gentle={gentle}
         role="button"
-        dim={!away && !callable}
-        a11yLabel={callA11y}
-        onPress={callable || away ? onCall : onTease}
+        dim={!away && (!callable || !!callBlockNote)}
+        a11yLabel={callBlockNote && !away ? `${callA11y}. ${callBlockNote}` : callA11y}
+        onPress={!callable && !away ? onTease : callBlockNote && !away ? () => onNote?.(callBlockNote) : onCall}
       />
     </>
   );

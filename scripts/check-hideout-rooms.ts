@@ -37,7 +37,7 @@ import {
   tickBuild,
   tickHideoutBuilds,
 } from '../src/play/hideout-progress';
-import { resolvePresence, startCall, tapSleep, tapWake } from '../src/play/hideout-presence';
+import { callBlocker, resolvePresence, startCall, tapSleep, tapWake } from '../src/play/hideout-presence';
 import { HIDEOUT_LOG_KINDS, hideoutLogLine } from '../src/play/hideout-log';
 import {
   HIDEOUT_HERO_RENDER_SCALE,
@@ -239,6 +239,19 @@ const HOUR = 60 * 60 * 1000;
     assert.equal(resolvePresence({ ...base, hideout: { ...built, viewed_room: room }, interaction: true }).room, room, `interaction in a built ${room}`);
     assert.equal(resolvePresence({ ...base, hideout: { ...h, viewed_room: room }, interaction: true }).room, 'hideout', `interaction in an unbuilt ${room}`);
   }
+  // Call blockers (the rules resolvePresence applies before the call): young, hungry, asleep — a blocked Call is refused, not logged.
+  assert.equal(callBlocker(pet, h), null, 'a fed teen can be called');
+  assert.equal(callBlocker({ ...pet, stage: 'baby' as const }, h), 'young');
+  assert.equal(callBlocker({ ...pet, hunger: 1 }, h), 'hungry');
+  assert.equal(callBlocker({ ...pet, mood: 1 }, h), null, 'tired only counts once the Loft is built');
+  assert.equal(callBlocker({ ...pet, mood: 1 }, lofted), 'sleeping');
+  assert.equal(callBlocker(pet, tapSleep(lofted, pet)), 'sleeping', 'in bed by choice');
+  const garageBuilt = { ...h, rooms_unlocked: { ...h.rooms_unlocked, garage: true } };
+  assert.equal(
+    resolvePresence({ ...base, pet: { ...pet, hunger: 1 }, hideout: startCall(garageBuilt, { ...pet, hunger: 1 }, 'garage') }).room,
+    'hideout',
+    'a hungry pet stays home even in a call (needs > call)',
+  );
   const woken = tapWake(h, pet);
   assert.ok(woken.wake_until_age_ms != null);
   // Sleep rail action: in the Loft's bed by choice at noon, only if the Loft is built; a wake tap or the timer ends it.

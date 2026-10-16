@@ -99,7 +99,7 @@ import { AwayCard } from '@/play/away-card';
 import type { AwaySummary } from '@/play/away-summary';
 import { StreetStatusStrip } from '@/play/street-room';
 import { HideoutRails } from '@/play/hideout-rails';
-import { expeditionCallCopy, resolvePresence, sleepChosen, wokeUp } from '@/play/hideout-presence';
+import { CALL_BLOCK_NOTE, callBlocker, expeditionCallCopy, resolvePresence, sleepChosen, wokeUp } from '@/play/hideout-presence';
 import { roomDef } from '@/play/hideout-progress';
 import { loadSeenStage, saveSeenStage } from '@/play/pet-seen';
 import {
@@ -468,6 +468,17 @@ export function PetScreen({
     devNight === 'auto'
       ? (clockNight && !wokeUp(view.hideout.state, pet)) || sleepByChoice
       : devNight === 'on';
+  // Why Call would not bring the pet over; a short note on the notice strip explains a dimmed Call / Light by day / Sleep.
+  const callBlock = callBlocker(pet, view.hideout.state);
+  const [railNote, setRailNote] = useState<string | null>(null);
+  useEffect(() => {
+    if (railNote == null) return;
+    const t = setTimeout(() => setRailNote(null), 3500);
+    return () => clearTimeout(t);
+  }, [railNote]);
+  // The pet talks (idle chatter, taps) only in the room it is in.
+  const petHereRef = useRef(true);
+  petHereRef.current = presence.room === view.hideout.viewed && !presence.away;
   useEffect(() => {
     if (!presence.peekaboo) return;
     commit((doc, now) => stampHideoutPeekaboo(doc, now));
@@ -543,7 +554,7 @@ export function PetScreen({
   awayRef.current = pv.away;
   const say = useCallback(
     (situation: PetTalkSituation) => {
-      if (awayRef.current) return;
+      if (awayRef.current || !petHereRef.current) return;
       if (eggRef.current) {
         sayText(pickEggLine(lastLineRef.current));
         return;
@@ -1163,6 +1174,17 @@ export function PetScreen({
           street ? (
             circleVisit ? (
               <CircleVisitStrip handle={circleVisit.friend.handle} note={circleVisit.note} />
+            ) : railNote ? (
+              <Pressable
+                onPress={() => setRailNote(null)}
+                accessibilityRole="button"
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={`${railNote} Tap to hide.`}
+                style={styles.laneHint}>
+                <Text style={styles.laneHintText} numberOfLines={2} maxFontSizeMultiplier={1.2}>
+                  {railNote}
+                </Text>
+              </Pressable>
             ) : !view.hideout.state.coach_swipe_seen && pet.stage !== 'egg' ? (
               <Pressable
                 onPress={() => commit((doc, now) => markHideoutCoach(doc, now))}
@@ -1238,7 +1260,11 @@ export function PetScreen({
                   onSpot={(spot) =>
                     spot === 'den'
                       ? view.hideout.viewed === 'loft'
-                        ? commit((doc, now) => sleepHideoutPet(doc, now))
+                        ? pv.away
+                          ? setRailNote('Out on a trip. It sleeps when it is back.')
+                          : callBlock === 'young' || callBlock === 'hungry'
+                            ? setRailNote(callBlock === 'young' ? 'Too young for the bed yet.' : 'Too hungry to sleep. Feed it first.')
+                            : commit((doc, now) => sleepHideoutPet(doc, now))
                         : setSheet('den')
                       : openIcon(spot)
                   }
@@ -1249,6 +1275,8 @@ export function PetScreen({
                     if (pv.away) return;
                     commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
                   }}
+                  callBlockNote={callBlock ? CALL_BLOCK_NOTE[callBlock] : null}
+                  onNote={setRailNote}
                   away={pv.away}
                   callA11y={
                     pv.away
