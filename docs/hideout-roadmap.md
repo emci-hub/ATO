@@ -16,6 +16,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0d | Loft room art (PixelLab, same recipe as the Hideout) | ✔ merged, PR #52 (squash `30a6bbf1`). OTA `01a142bf` (production, iOS, group `96b03172`, commit `6d77ece5`, gate green 167). Not device-verified. **Next: Underground room art (0e)** |
 | 0e | Underground (garage) room art (PixelLab, same recipe) | ✔ merged, PR #53 (squash `1473f8b7`). **OTA `01a14302`** (production, iOS, group `c0b4c5d3`, commit `76a195fa`, gate green 167). Not device-verified. **Next: Rooftop art, or a live Garage (see Known)** |
 | 0f | Rooftop room art (PixelLab, same recipe, new map) | ✔ merged, PR #54 (squash `75c062b8`). **OTA `01a14322`** (production, iOS, group `21b75ecb`, commit `713827ba`, gate green 167). Not device-verified. **Next: a live Garage / Rooftop (or phone check of both)** |
+| 0g | Live Garage + Rooftop (walking pet, Back / Up, rail bounds) | ✔ merged, PR #55 (squash `ab633ef0`). OTA: see "Step 0g as built". Not device-verified. **Next: phone check of Garage + Rooftop** |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -322,6 +323,23 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   `ROOM_ART[id].map`, and `check:hideout-rooms` lists the maps it walks; (2) `writeJson` in `gen-hideout-td.ts` now creates the room
   folder; (3) every regen rewrites `underground-td.map.json` and `loft-td.map.json` with LF (CRLF noise): `git checkout --` both before
   committing; (4) a fresh port is a fresh `localStorage`, so seed the store after the first load, then put it back.
+
+## Step 0g as built (live Garage + Rooftop, emci 2026-10-16: both rooms, pet visits only)
+- `hideout-stage.tsx`: `LiveLoft` → `LiveRoom` (`room` prop); `liveRoom = viewed !== 'hideout' && rooms_unlocked[viewed]`; one
+  `StreetRoomFront` for every live room. A room still being built stays the dimmed snapshot. Maps' `sleepOnBed` is only on for the Loft;
+  Garage / Rooftop have no window or glow art, so `lampOn` does nothing there.
+- `hideout-presence.ts`: `visitRoom` = `viewed_room` only if built (or the Hideout). Interaction, expedition and call use it, so the pet
+  never stands over an unbuilt room's snapshot (this also covers an unbuilt Loft). The pet does NOT roam, live or sleep in Garage /
+  Rooftop on its own (schedule, tired, Sleep stay Hideout / Loft) — decided by emci.
+- Rails needed nothing: Back / Up were already wired through `viewed_room` (Garage Up → Rooftop, Rooftop Back only).
+- Checks: `check:hideout-rails` walk loop now covers hideout, loft, garage, rooftop (150 steps each) + a stage pin (no `LiveLoft`,
+  `rooms_unlocked[viewed]`); `check:hideout-rooms` presence asserts for built / unbuilt garage and rooftop. Gate green (167), reviewer PASS.
+- Previews (430x932 and 375x667, pet clear of both rails): `docs/divecore/live-rooms/`.
+- **Known:** (1) Call is not dimmed in an unbuilt room: it starts the timer and logs `call_used` but the pet stays home (UX gap);
+  (2) `teaseRoom` (`pet-screen.tsx`) and `hideout-tease.tsx` go Loft → Garage only, so the Rooftop's build sheet may be unreachable
+  once the Garage is built; (3) when the viewed room changes the walker keeps the previous art x/y until the first planned step
+  clamps it (already true for the Loft) — check on a phone; (4) Garage at 375 and pet walking behind the speakers were not
+  looked at in the preview.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
