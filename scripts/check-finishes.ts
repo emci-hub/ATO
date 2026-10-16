@@ -392,7 +392,6 @@ ok('the card border stays quiet, tilt clamps to ±15°, and the border sweep pau
     .map((file) => file.replace(/\\/g, '/'))
     .sort();
   assert.deepEqual(sweeps, [
-    'src/play/den-sheet.tsx',
     'src/play/finish-picker.tsx',
     'src/play/pet-room.tsx',
     'src/play/pet-screen.tsx',

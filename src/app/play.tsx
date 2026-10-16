@@ -829,6 +829,7 @@ export default function PlayScreen() {
       shellTabs={shellTabs}
       away={away}
       onAwayClose={dismissAway}
+      onOpenLocker={() => setMode('dress')}
     />
   ) : null;
   const defendEl = view ? (

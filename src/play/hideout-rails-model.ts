@@ -58,7 +58,7 @@ const GEOM = RAIL_ROOM_GEOM;
 
 /** Rail order per room (by the map's hotspot `action`). Anything the map adds later follows these. */
 const ORDER: Record<HideoutRoomId, readonly string[]> = {
-  hideout: ['Play', 'Stash', 'Underground', 'Explore'],
+  hideout: ['Stash', 'Play', 'Underground', 'Explore'],
   loft: ['Sleep', 'Light', 'Hideout'],
   garage: ['Hideout', 'Up'],
   rooftop: ['Hideout'],

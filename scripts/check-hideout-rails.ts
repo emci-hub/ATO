@@ -36,7 +36,7 @@ function ok(label: string) {
 // --- the left rail: the map's actions, same ids -------------------------------------------------
 const h = emptyHideout();
 const labels = (room: HideoutRoomId) => leftRailActions(room, h).map((a) => a.label);
-assert.deepEqual(labels('hideout'), ['Play', 'Stash', 'Underground', 'Explore'], 'Hideout rail');
+assert.deepEqual(labels('hideout'), ['Stash', 'Play', 'Underground', 'Explore'], 'Hideout rail');
 assert.deepEqual(labels('loft'), ['Sleep', 'Light', 'Back'], 'Loft rail');
 assert.deepEqual(labels('garage'), ['Back', 'Up'], 'Underground room rail');
 assert.deepEqual(labels('rooftop'), ['Back'], 'Rooftop rail: one way out (Back to the Hideout), no Up');
@@ -45,7 +45,7 @@ for (const room of HIDEOUT_ROOM_IDS) {
 }
 const spotIds = leftRailActions('hideout', h).flatMap((a) => (a.kind === 'spot' ? [a.spot] : []));
 for (const s of HIDEOUT_SPOTS) assert.ok(spotIds.includes(s.coach), `the map's ${s.thing} (${s.action}) is on the rail`);
-ok('left rail: every map hotspot is a rail button (Play · Stash · Underground · Explore / Sleep · Light · Back / Back · Up), one word each');
+ok('left rail: every map hotspot is a rail button (Stash · Play · Underground · Explore / Sleep · Light · Back / Back · Up), one word each');
 
 const up = leftRailActions('garage', h).find((a) => a.label === 'Up');
 assert.ok(up && up.kind === 'view' && up.room === 'rooftop' && up.dim, 'Up leads to the Rooftop and is dimmed while it is locked');
