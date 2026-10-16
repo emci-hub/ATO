@@ -11,7 +11,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | # | Step | State |
 |---|---|---|
 | 0 | Hideout rails + aura fix | ✔ OTA `2bc10c53` (#40, #41) |
-| 0b | Polish batch (LF art pins, holo tip, archive hideout-fx, **Sleep action**) | ✔ merged, PR #44 (Sleep: Loft rail puts the pet to bed, `sleep_until_age_ms`; icon still the heart stand-in). OTA: see "Step 0b as built" |
+| 0b | Polish batch (LF art pins, holo tip, archive hideout-fx, **Sleep action**) | ✔ merged, PR #44 (Sleep: Loft rail puts the pet to bed, `sleep_until_age_ms`; icon still the heart stand-in). OTA `01a1420f` |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -190,7 +190,7 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   carrying the previous body line for line (the check now compares it with wave90's).
 
 ## Step 0b as built (polish + Sleep, emci 2026-10-15 "finish #44")
-- PR #44 merged. Sleep: in the Loft the rail's Sleep calls `sleepHideoutPet` (`playStore.ts`) → `tapSleep` /
+- PR #44 merged, **OTA `01a1420f`** (production, iOS, group `41ca15b6`, gate green). Sleep: in the Loft the rail's Sleep calls `sleepHideoutPet` (`playStore.ts`) → `tapSleep` /
   `sleepChosen` / `resolvePresence` (`hideout-presence.ts`), saved as `HideoutState.sleep_until_age_ms` (null default,
   tolerant parse, rides the cloud save, cleared by rebirth). Length = `HIDEOUT_WAKE_MS`. A second Sleep tap or a tap on
   the pet wakes it; hunger still pulls the pet to the Hideout. `pet-screen` counts it as `night` for the pose
