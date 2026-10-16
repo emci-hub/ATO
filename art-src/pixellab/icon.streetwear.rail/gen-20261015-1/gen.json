@@ -22,7 +22,7 @@
   "pickedBy": "emci 2026-10-15 (Sleep B, Light C, arrows A)",
   "critique": {
     "score": { "sleep": 100.0, "lamp": 97.5, "arrow-left": 96.0, "arrow-up": 96.0 },
-    "notes": "pixelart_workbench score after cleanup; existing icon.streetwear.upgrade scores 83.7. Samples: docs/art/rail-icons-samples.png, scale: docs/art/rail-icons-scale-sheet.png"
+    "notes": "pixelart_workbench score after cleanup; existing icon.streetwear.upgrade scores 83.7. Samples: docs/divecore/rail-icons/samples.png, scale: docs/divecore/rail-icons/scale-sheet.png"
   },
   "files": {
     "<name>.pixellab.png": "raw PixelLab candidate",
