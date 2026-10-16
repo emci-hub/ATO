@@ -1144,6 +1144,7 @@ function GroveDevKit({
       commit(devResetPlayStore);
       return;
     }
+    clearResetArm(); // one armed row at a time (also drops a pending Build-rooms arm and its timer)
     setResetArmed(true);
     disarmTimer.current = setTimeout(() => setResetArmed(false), 4000);
   }, [clearResetArm, commit, resetArmed]);

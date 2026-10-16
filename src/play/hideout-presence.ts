@@ -72,6 +72,23 @@ export function sleepChosen(h: HideoutState, pet: PetState): boolean {
   return h.sleep_until_age_ms != null && pet.total_age_ms < h.sleep_until_age_ms;
 }
 
+export type CallBlock = 'young' | 'hungry' | 'sleeping';
+
+/** Why a Call would not bring the pet over (the same rules resolvePresence applies before it looks at the call), or null. */
+export function callBlocker(pet: PetState, h: HideoutState): CallBlock | null {
+  if (skipSchedule(pet)) return 'young';
+  if (pet.hunger <= 1) return 'hungry';
+  if (unlocked(h, 'loft') && ((pet.mood <= 1 && !wokeUp(h, pet)) || sleepChosen(h, pet))) return 'sleeping';
+  return null;
+}
+
+/** One short line per reason (shown on the notice strip when Call is tapped). */
+export const CALL_BLOCK_NOTE: Record<CallBlock, string> = {
+  young: 'Too young to wander. It stays home for now.',
+  hungry: 'Too hungry to wander. Feed it first.',
+  sleeping: 'Fast asleep. Let it rest first.',
+};
+
 export function callActive(h: HideoutState, pet: PetState): boolean {
   return h.call_until_age_ms != null && pet.total_age_ms < h.call_until_age_ms;
 }
