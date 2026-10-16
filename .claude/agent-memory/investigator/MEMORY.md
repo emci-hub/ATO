@@ -21,4 +21,5 @@
 - [Divecore nav facts](divecore_nav_facts.md) — Street shell always on, orphaned About, hidden Hideout header, back mismatches, settings migration site
 - [Live rooms facts](live_rooms_garage_rooftop_facts.md) — liveIsLoft wiring, garage/rooftop go-live touchpoints, Call-only presence
 - [Art icon add path](art_icon_add_path.md) — flat icons: drop PNG in icons/in-use + art:sync; edit code first
+- [Expedition invisible facts](expedition_invisible_facts.md) — presence flips viewed room -> schedule room on return; touchPet seam
 - [Play sheets style map](play_sheets_style_map.md) — Info/Feed sheet kits, GameCard border mismatch cause, dev panel default-open, gate pins
