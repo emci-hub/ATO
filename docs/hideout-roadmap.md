@@ -13,6 +13,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0 | Hideout rails + aura fix | ✔ OTA `2bc10c53` (#40, #41) |
 | 0b | Polish batch (LF art pins, holo tip, archive hideout-fx, **Sleep action**) | ✔ merged, PR #44 (Sleep: Loft rail puts the pet to bed, `sleep_until_age_ms`; icon still the heart stand-in). OTA `01a1420f` |
 | 0c | Dedicated rail icons (Sleep, Light, Back, Up) | ✔ merged, PR #51 (squash `cb77cc37`). OTA `01a14292` |
+| 0d | Loft room art (PixelLab, same recipe as the Hideout) | ✔ merged, PR #52 (squash `30a6bbf1`). OTA id below. Not device-verified. **Next: Underground room art (0e)** |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -223,6 +224,43 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   base64 into a PixelLab call: `get_upload_url` + `curl -F` and pass `upload:<id>`; (4) `expo start --web` dies with
   EMFILE while the gate runs in the same checkout: preview after the gate; on web a mouse drag doesn't swipe rooms, so
   set `hideout.rooms_unlocked` / `viewed_room` in `localStorage['ato.play.store.v1']` and reload (put it back after).
+
+## Step 0d as built (Loft room art, emci 2026-10-15)
+- Same recipe as the Hideout. Parts in `art-src/pixellab/room.loft.streetwear/gen-20261015-pixellab-1/` (`gen.json` lists every
+  tool + id; ~70 generations): `create_building_kit` (dark plum plaster + dark plank floor, same 52×111 frame so the Hideout's
+  crops fit), 16 floor variants (`create_tiles_pro`, kit floor as style image), bed (6 tries, emci picked bed 1), nightstand
+  (2 tries, picked stand 1), night window + `create_object_state` day window, rug (2 tries; the first was noisy speckle).
+  Library check: `prop.loft.bed` / `prop.loft.lamp` are 64×28 / 18×36 iso-era `resource` leftovers (wrong camera and size) →
+  **new** art; the lamp is the Hideout's approved lamp + its `lamp-off` state (**reuse**, 22×110 vs the 24×113 table row).
+- Scale sheet + samples: `docs/divecore/loft-room/` (`scale-sheet.png`, `samples.png`, `room-states.png` = day / night /
+  night + Light on, Kael standing in the room). Bed 50×94 (height on the table's 94, width −18 %), nightstand 28×36 (on the box).
+  The map's bed footprint is 64×128 (greybox rule "64×146"), so the bed sprite is shorter than its blocked cells: the pet
+  stops ~34 px above the bed top. Not changed (emci asked to keep the map's walk cells and hotspots).
+- Map: `loft-td.map.json` keeps every hotspot, walk point, spawn, target, rug and walkable cell. The props'
+  sprite / crop rects changed to the real sprite boxes, `placeholder` → false, **the lamp is no longer an occluder**
+  (it stands on the back wall where the pet can never be behind it; its lit twin is drawn in the glow layer, above the props,
+  and an occluder copy would cover it), and **the lamp moved from col 13 to col 11** (pre-widen coords; its hotspot ellipse
+  and label anchor with it, walk point and Light action unchanged). At col 13 it stood under the right rail (rail starts at
+  art x ≈ 297) and was invisible; at col 11 about 2 art px of the shade still touch the rail edge. The lamp walk point
+  `[296,176]` now sits 8 px right of the lamp's centre (cosmetic).
+- Known: at 375×667 the camera scrolls with the pet and the bed (art x 23–73) can sit under the left rail's Light / Back
+  buttons; at 430×932 it is clear. The bed sprite (50×94) is shorter than its collision box (64×128), so ~34 px of floor above
+  the headboard is blocked but empty. Web previews (dev export) show an unrelated "Cannot read properties of undefined (reading
+  'top')" overlay after load, also on the Hideout; dismiss it.
+- Light toggle is real now: the props layer holds the dim lamp, `loft-td-glow.png` = warm pool + the lit lamp sprite, drawn
+  only at night with the lamp on (existing `street-room.tsx` rule, no code change). Window overlays `loft-td-window-day/night.png`
+  are the PixelLab window trimmed and centred on the map's 128×72 box (never stretched).
+- Painter: `scripts/hideout-room-art.ts` now takes a room name (`paintHideoutArt(input, 'loft')`, `hideoutArtAvailable('loft')`)
+  and optional Loft inputs (window sprites, lit lamp, rim colours, `floorMix` = 70 % base planks, variants within 18 % of the
+  base brightness); `gen-hideout-td.ts` has `LOFT_FILES` / `LOFT_FLATS`. Hideout and Underground output is byte-identical
+  (`git status` after a rerun shows only `assets/art/rooms/loft/**`).
+- Only `art-src/` raw + the 9 room layers + window/glow PNGs are bundled; the individual Loft prop sprites are not separate
+  library entries (they are baked into the layers, like the Hideout's room props before step 5). Make them library props if a
+  later step wants Loft decor slots.
+- **Lessons:** (1) `create_1_direction_object` / `create_map_object` take real base64 for style images, not `upload:<id>`
+  (`create_tiles_pro` and `reduce_colors` do take `upload:`), so style-matched props used `create_map_object` with the style card,
+  like the Hideout; (2) `create_map_object` drew the first bed side-on: "headboard with a pillow at the top, mattress stretching
+  toward the viewer" + `high top-down` fixed it; (3) a prop that must stay visible over the glow layer cannot also be an occluder.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
