@@ -419,8 +419,8 @@ export function PlaySheetBody({
       ) : null}
       {lastResult ? <PixelBody color={PIXEL.cyan}>{lastResult}</PixelBody> : null}
       {onGuide ? (
-        <Pressable onPress={onGuide} accessibilityRole="button" accessibilityLabel="Mini-games in the Guide">
-          <PixelBody size="sm" color={PIXEL.cyan}>Mini-games in the Guide</PixelBody>
+        <Pressable onPress={onGuide} accessibilityRole="button" accessibilityLabel="Mini-game rules in the Guide">
+          <PixelBody size="sm" color={PIXEL.cyan}>Mini-game rules in the Guide</PixelBody>
         </Pressable>
       ) : null}
     </View>
