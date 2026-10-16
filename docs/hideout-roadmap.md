@@ -11,7 +11,8 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | # | Step | State |
 |---|---|---|
 | 0 | Hideout rails + aura fix | ✔ OTA `2bc10c53` (#40, #41) |
-| 0b | Polish batch (LF art pins, holo tip, archive hideout-fx; **Sleep pending**) | draft PR #44 |
+| 0b | Polish batch (LF art pins, holo tip, archive hideout-fx, **Sleep action**) | ✔ merged, PR #44 (Sleep: Loft rail puts the pet to bed, `sleep_until_age_ms`; icon still the heart stand-in). OTA: see "Step 0b as built" |
+| 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
 | 3 | Pet that knows you | ✔ shipped, PR #46, OTA `01a141ef` (`PET_KNOWS_YOU_COPY_REVIEWED = true`) |
@@ -187,6 +188,20 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   migration lives on the other PR's branch (`existsSync`, like `check:play-cloud-save`) — test it once by copying the
   migration in temporarily; (3) the reset check takes the NEWEST `reset_my_account` by wave number, so restating it means
   carrying the previous body line for line (the check now compares it with wave90's).
+
+## Step 0b as built (polish + Sleep, emci 2026-10-15 "finish #44")
+- PR #44 merged. Sleep: in the Loft the rail's Sleep calls `sleepHideoutPet` (`playStore.ts`) → `tapSleep` /
+  `sleepChosen` / `resolvePresence` (`hideout-presence.ts`), saved as `HideoutState.sleep_until_age_ms` (null default,
+  tolerant parse, rides the cloud save, cleared by rebirth). Length = `HIDEOUT_WAKE_MS`. A second Sleep tap or a tap on
+  the pet wakes it; hunger still pulls the pet to the Hideout. `pet-screen` counts it as `night` for the pose
+  (`sleepByChoice`). Cosmetic: no tokens, no economy. Stash still reachable from the Hideout rail and the pet menu.
+  Pins: `check:hideout-rooms` (sleep group).
+- Known: opening a sheet (Info, Feed) shows the pet awake for as long as it is open (presence `interaction`); the first
+  Sleep tap logs no event, the wake does. Icons for Sleep / Light / Back / Up are still stand-ins (next: decor art pass).
+- **Lessons:** (1) `check:play-isolation` on a clean tree judges the latest commit, and a GitHub merge commit of a mixed
+  PR looks mixed: land a docs-only commit on top of master before `ota:publish`; (2) a branch holding an unpushed merge
+  of master fails the check too: push it first; (3) the reviewer caught that `presence.asleep` alone only draws Zzz: the
+  bed pose follows `night` in `pet-screen`.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
