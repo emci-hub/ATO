@@ -23,9 +23,9 @@
       352,
       576
     ],
-    "placeholder": true,
+    "placeholder": false,
     "sleepOnBed": true,
-    "source": "scripts/gen-hideout-td.ts — option A greybox until PixelLab room art lands"
+    "source": "scripts/gen-hideout-td.ts + hideout-room-art.ts — PixelLab art (art-src/pixellab/room.loft.streetwear)"
   },
   "layers": {
     "back": "loft-td-back.png",
@@ -53,7 +53,7 @@
       "0000000000000000000000",
       "0000000000000000000000",
       "0000000000000000000000",
-      "0111111111111111111000",
+      "0111111111111111100110",
       "0111111111111111111110",
       "0111111111111111111110",
       "0111111111111111111110",
@@ -95,16 +95,16 @@
         8
       ],
       "sprite": [
-        16,
-        206,
-        64,
-        146
+        23,
+        258,
+        50,
+        94
       ],
       "crop": [
-        16,
-        206,
-        64,
-        146
+        23,
+        258,
+        50,
+        94
       ],
       "sortY": 352,
       "baselineY": 352,
@@ -121,16 +121,16 @@
         1
       ],
       "sprite": [
-        128,
-        192,
-        32,
-        32
+        130,
+        188,
+        28,
+        36
       ],
       "crop": [
-        128,
-        192,
-        32,
-        32
+        130,
+        188,
+        28,
+        36
       ],
       "sortY": 224,
       "baselineY": 224,
@@ -141,26 +141,26 @@
       "facing": "back-wall",
       "rotated": false,
       "footprint": [
-        19,
+        17,
         8,
         2,
         1
       ],
       "sprite": [
-        304,
-        31,
-        32,
-        113
+        277,
+        34,
+        22,
+        110
       ],
       "crop": [
-        304,
-        31,
-        32,
-        113
+        277,
+        34,
+        22,
+        110
       ],
       "sortY": 144,
       "baselineY": 144,
-      "occluder": true
+      "occluder": false
     },
     {
       "id": "near-rim-l",
@@ -247,19 +247,19 @@
       "id": "lamp",
       "kind": "lamp",
       "ellipse": [
-        320,
+        288,
         136,
         12,
         6
       ],
       "footprint": [
-        19,
+        17,
         8,
         2,
         1
       ],
       "labelAnchor": [
-        320,
+        288,
         24
       ],
       "walk": [
