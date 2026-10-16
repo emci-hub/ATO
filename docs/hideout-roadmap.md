@@ -22,7 +22,8 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0j | Catch the food moves into the Feed sheet, under "? Your pet" | ✔ merged, PR #58 (squash `7e7addfc`). **OTA `01a1463a`** (production, iOS, group `be9a0803`, commit `4c6cabc1`, gate green 167). **Device-verified** (emci, 2026-10-16: Catch sits under "? Your pet" in Feed, a counted round returns to Feed with the result, Play shows only Tap to train). |
 | 0k | Copy: Catch the food named as "in Feed" (Today plan, hunger push, Guide pet section); Play-sheet link relabelled "Mini-game rules in the Guide" | ✔ merged, PR #59 (squash `322198f9`). Copy-only, gate green, reviewer PASS, no previews. **OTA `01a14647`** (production, iOS, group `74159ed9`, commit `2785ce31`, gate green). `devBuildAllRooms` untouched: no leftover build notice found in code (the push is re-planned by the notice sync on every build change); if one shows on a phone, report what it says. **Device-verified** (emci, 2026-10-16: "all fine"). |
 | 0l | UI polish: modern, sectioned Info (all sections collapsed, no sideways-scroll tabs) + one border / corner / spacing / shadow language + one type scale, fix text overflow, fix Catch card outside its border (Feed, Play, every other sheet) | ✔ merged, PR #60 (squash `ec34ac74`). Gate green (167), reviewer PASS. **OTA `01a146b2`** (production, iOS, group `3aae9e9a`, commit `751288cd`, gate green 167). **Device-verified** (emci, 2026-10-16: "looks great now, all fine"). The leftover polish (scroll-into-view, Status regroup, Stash / Stone / Settings / rails restyle) is optional, parked as 0n. No economy or copy-meaning changes |
-| 0m | BUG: pet invisible after an expedition finishes | ✔ merged, PR #61 (squash `b44c8214`). Gate green (167), reviewer PASS. **OTA `01a146d9`** (production, iOS, group `647d62d9`, commit `7b918300`, gate green 167). Awaiting emci's phone check |
+| 0m | BUG: pet invisible after an expedition finishes | ✔ merged, PR #61 (squash `b44c8214`). Gate green (167), reviewer PASS. **OTA `01a146d9`** (production, iOS, group `647d62d9`, commit `7b918300`, gate green 167). **Device-verified** (emci, 2026-10-16: "it looks good now") |
+| 0o | Roaming daily visitor: walks the floor, meets the pet / visits props, comes and goes 08:00–22:00 | ✔ merged, PR #62 (squash `7bc3a7e0`). Gate green (167), reviewer PASS. OTA: see "Step 0o as built". Not device-verified |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -447,10 +448,30 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   shows awake in the viewed room for the 10 min call, then the schedule sends it to the Loft; (3) after the call ends the schedule can move it to the Loft again
   (existing design, may look like the bug). If emci still sees it invisible, check `pet-room.tsx` artX/artY re-clamp after `away` ends (second hypothesis) and ask which room was open and the time of day.
 
+## Step 0o as built (2026-10-16, design approved by emci: roam + interact + 08:00–22:00)
+- **Before:** the visitor was a static idle actor at art (236, 430), always facing west, "in" all local day; the pet's bounds stopped 48 px left of it.
+- **Rules** (`src/play/visitor-walk.ts`, pure): in the room 08:00–22:00 local (`visitorOpenAtHour`); walks in through the door, out through it when the window
+  closes. Each step: rest 25 % · go to a prop (chair / boombox / cushion targets) and wait 3–5 s 25 % · walk beside the pet (40 px to the side) 20 % ·
+  wander. Never picks a rest spot within 48 px of the pet; speed 0.8× a grown pet. Uses `planPath` (now exported from `hideout-iso.ts`) with the rail bounds and
+  the decor-blocked geometry, so it stays on floor between the rails.
+- **Loop:** `src/play/use-visitor-roam.ts` (Reanimated tween like the pet's loop; shared values `vArtX/vArtY` passed in from `pet-room.tsx`; parked at −1000 while gone /
+  not drawn). `DailyVisitorActor` now takes shared values + `walking` / `face` (walk clip while moving, idle while standing, facing from the heading).
+- **Meeting:** on arrival beside the pet (still within 72 px) the pet turns to it, hops a little and stands still 3.2 s (`meetRef`, `tapUntilRef`). No text, no reward.
+  The pet's own planner turns a wander that would land within 36 px of the visitor into a short rest.
+- **Screen:** `pet-screen.tsx` `visitorOpen = visitorOpenAtHour(hour)` (the minute clock); the "dropped by" notice fires only while open; a waiting Circle gift no longer waits on a visitor that is out.
+- **Unchanged:** greeting (once a day, same rewards, card), rotation, economy, copy. A Circle friend's pet keeps the fixed `VISITOR_SPOT` + the 48 px pet cap (`roam = !!dailyVisitor && !circle`).
+- **Checks:** `check:daily-visitors` group 9 (window hours, floor / rails / 3 decor slots at 430 and 375 over 700 steps, spacing, meeting, door exit, wiring pins); circle pin updated.
+  Gate green (167); reviewer PASS, its warnings fixed (ghost spot in other rooms, away pet, meet timers, 80 ms re-render churn).
+- **Previews:** `docs/divecore/0o/` (430×932 visitor beside the pet; 375×667 clear of the rails). With the clock forced to 22:00 the visitor was gone; forced to 12:00 it was back.
+- **Known:** (1) Motion Off: the visitor stands where it is (it still leaves when the window closes); (2) a waiting Circle gift swaps in as the fixed-spot pet at 22:00 instead of the
+  visitor walking out; (3) the visitor walking out was seen as "gone", not frame by frame (the check proves it reaches the door); (4) leaving/arriving is tied to the phone clock only;
+  (5) window hours are placeholders emci picked (08:00 / 22:00): change `VISITOR_OPEN_HOUR` / `VISITOR_CLOSE_HOUR`.
+- **Lessons:** (1) pins in `check-decor-slots` / `check-daily-visitors` match `visitorFeet` and the draw-order strings literally, so the live position kept the name `visitorFeet` and the old fixed spot became `visitorSpot`;
+  (2) `useHour` in `pet-screen` already re-renders each minute: use it for any time-window rule; (3) rail bounds are a half grid cell (8 px) soft: tolerate ±8 in path checks.
+
 ## Open items (from emci's third phone check, 2026-10-16, after 0l)
-- **Bug (step 0m, fixed, awaiting phone check):** after sending the pet on an expedition, when it finishes the pet is **invisible**. See "Step 0m as built" below.
-- **Feature (step 0o):** the daily visitor (e.g. Archangel) stands in one spot; emci wants it to **roam** and **interact with the room's items and the pet**.
-  Today's rules (step 4): visitor fixed at art (236, 430), the pet's walk bounds stop 48 art px to its left while it is in.
+- **Bug (step 0m):** fixed and device-verified ("it looks good now"). See "Step 0m as built".
+- **Feature (step 0o):** built (PR #62) — the visitor roams, interacts and comes and goes. See "Step 0o as built". Awaiting phone check.
 - Optional polish parked as 0n: see "Known" in the step 0l section.
 
 ## Open items (from emci's second phone check, 2026-10-16)
