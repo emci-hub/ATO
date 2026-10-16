@@ -39,6 +39,7 @@ const labels = (room: HideoutRoomId) => leftRailActions(room, h).map((a) => a.la
 assert.deepEqual(labels('hideout'), ['Play', 'Stash', 'Underground', 'Explore'], 'Hideout rail');
 assert.deepEqual(labels('loft'), ['Sleep', 'Light', 'Back'], 'Loft rail');
 assert.deepEqual(labels('garage'), ['Back', 'Up'], 'Underground room rail');
+assert.deepEqual(labels('rooftop'), ['Back'], 'Rooftop rail: one way out (Back to the Hideout), no Up');
 for (const room of HIDEOUT_ROOM_IDS) {
   for (const a of leftRailActions(room, h)) assert.ok(/^\S+$/.test(a.label), `${room}/${a.label}: one word`);
 }

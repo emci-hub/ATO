@@ -14377,6 +14377,276 @@
       ]
     },
     {
+      "id": "room.rooftop.back",
+      "path": "assets/art/rooms/rooftop/rooftop-td-back.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "back-wall",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 33564,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:31b5302428430bd48c0efdc7a83b4de6",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-back"
+    },
+    {
+      "id": "room.rooftop.floor",
+      "path": "assets/art/rooms/rooftop/rooftop-td-floor.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 57572,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:279723fd725ff745665cbca7fe7887c5",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-floor"
+    },
+    {
+      "id": "room.rooftop.neon-a",
+      "path": "assets/art/rooms/rooftop/rooftop-td-neon-a.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "overlay",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 4994,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:f7a9492c3ae52c29e630976d60f6ee14",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-neon-a"
+    },
+    {
+      "id": "room.rooftop.neon-b",
+      "path": "assets/art/rooms/rooftop/rooftop-td-neon-b.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "overlay",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 4593,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:bb9e561e9202c77fba839689bb727852",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-neon-b"
+    },
+    {
+      "id": "room.rooftop.occluder-day-a",
+      "path": "assets/art/rooms/rooftop/rooftop-td-occlude-day-a.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "front-occluder",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 5788,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:33ebbef87a39b774696dea707994d7d5",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-occlude-day-a"
+    },
+    {
+      "id": "room.rooftop.occluder-day-b",
+      "path": "assets/art/rooms/rooftop/rooftop-td-occlude-day-b.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "front-occluder",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 5788,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:33ebbef87a39b774696dea707994d7d5",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-occlude-day-b"
+    },
+    {
+      "id": "room.rooftop.occluder-night-a",
+      "path": "assets/art/rooms/rooftop/rooftop-td-occlude-night-a.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "front-occluder",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 5788,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:33ebbef87a39b774696dea707994d7d5",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-occlude-night-a"
+    },
+    {
+      "id": "room.rooftop.occluder-night-b",
+      "path": "assets/art/rooms/rooftop/rooftop-td-occlude-night-b.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "front-occluder",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 5788,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:33ebbef87a39b774696dea707994d7d5",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-occlude-night-b"
+    },
+    {
+      "id": "room.rooftop.props",
+      "path": "assets/art/rooms/rooftop/rooftop-td-props.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 6832,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:b9b06b432c46a63a04d332e9e4d28fc2",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-props"
+    },
+    {
+      "id": "room.rooftop.snapshot",
+      "path": "assets/art/rooms/rooftop/rooftop-td-snapshot.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 99854,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:fa571e9c88b880aac816c742ddbcb1ca",
+      "inUse": true,
+      "set": "rooftop",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "rooftop-td-snapshot"
+    },
+    {
       "id": "room.stops.core",
       "path": "assets/art/rooms/unused/stops/core.png",
       "type": "room-layer",

@@ -263,6 +263,7 @@ function classifyUi(parts: string[], file: string): ClassifiedArt {
     if (nested === 'rooms') {
       let room = 'hideout';
       if (name.startsWith('loft')) room = 'loft';
+      else if (name.startsWith('rooftop')) room = 'rooftop';
       else if (name.startsWith('underground') || name === 'locker') room = name === 'locker' ? 'locker' : 'underground';
       return { dest: join(['rooms', room, file]), category: 'rooms', type: 'room-layer' };
     }

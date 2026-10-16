@@ -17,6 +17,7 @@ import type { ImageSourcePropType } from 'react-native';
 
 import hideoutMap from '@/assets/art/rooms/hideout/hideout-td.map.json';
 import loftMap from '@/assets/art/rooms/loft/loft-td.map.json';
+import rooftopMap from '@/assets/art/rooms/rooftop/rooftop-td.map.json';
 import undergroundMap from '@/assets/art/rooms/underground/underground-td.map.json';
 import teaseLayout from '@/assets/art/rooms/hideout/hideout-tease.json';
 import { ART, ROOM, getArtSource, type ArtId } from '@/art/art';
@@ -123,11 +124,21 @@ export const ROOM_ART: Record<
     shell: png(ART.room.hideout.neighborBoardedTd),
     snapshot: png(ART.room.underground.snapshot),
   },
+  // Real PixelLab art since 2026-10-15 (the Rooftop). Like the Garage it is not a live room yet: the stage draws `snapshot`.
   rooftop: {
-    placeholder: true,
-    map: loftMap,
+    placeholder: false,
+    map: rooftopMap,
+    back: png(ROOM.rooftop.back),
+    floor: png(ROOM.rooftop.floor),
+    props: png(ROOM.rooftop.props),
+    neonA: png(ROOM.rooftop.neonA),
+    neonB: png(ROOM.rooftop.neonB),
+    occludeDayA: png(ROOM.rooftop.occluderDayA),
+    occludeDayB: png(ROOM.rooftop.occluderDayB),
+    occludeNightA: png(ROOM.rooftop.occluderNightA),
+    occludeNightB: png(ROOM.rooftop.occluderNightB),
     shell: png(ART.room.hideout.neighborBoardedTd),
-    snapshot: png(ART.room.hideout.neighborBoardedTd),
+    snapshot: png(ART.room.rooftop.snapshot),
   },
 };
 

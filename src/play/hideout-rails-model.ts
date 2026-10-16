@@ -12,6 +12,7 @@
  * `src/play/hideout-rails.tsx` draws them (this file is the pure model); `check:hideout-rails` pins the rules.
  */
 import loftMap from '@/assets/art/rooms/loft/loft-td.map.json';
+import rooftopMap from '@/assets/art/rooms/rooftop/rooftop-td.map.json';
 import undergroundMap from '@/assets/art/rooms/underground/underground-td.map.json';
 import hideoutMap from '@/assets/art/rooms/hideout/hideout-td.map.json';
 
@@ -49,9 +50,10 @@ export type RailIcon = 'headphones' | 'backpack' | 'subwayTrain' | 'sneaker' | '
 const HOME = parseIsoGeom(hideoutMap);
 const LOFT = parseIsoGeom(loftMap, { sleepOnBed: true });
 const UNDER = parseIsoGeom(undergroundMap);
+const ROOF = parseIsoGeom(rooftopMap);
 
 /** Each room's geometry from its map.json (the rooms the rails read their actions from). */
-export const RAIL_ROOM_GEOM: Record<HideoutRoomId, IsoRoomGeom | null> = { hideout: HOME, loft: LOFT, garage: UNDER, rooftop: null };
+export const RAIL_ROOM_GEOM: Record<HideoutRoomId, IsoRoomGeom | null> = { hideout: HOME, loft: LOFT, garage: UNDER, rooftop: ROOF };
 const GEOM = RAIL_ROOM_GEOM;
 
 /** Rail order per room (by the map's hotspot `action`). Anything the map adds later follows these. */
@@ -59,7 +61,7 @@ const ORDER: Record<HideoutRoomId, readonly string[]> = {
   hideout: ['Play', 'Stash', 'Underground', 'Explore'],
   loft: ['Sleep', 'Light', 'Hideout'],
   garage: ['Hideout', 'Up'],
-  rooftop: [],
+  rooftop: ['Hideout'],
 };
 
 const ICON_BY_ACTION: Record<string, RailIcon> = {
