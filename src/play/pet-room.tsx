@@ -636,7 +636,7 @@ export function PetRoom({
         // first step plans from this room's floor, not one still step later. A sleeping pet stays on its bed.
         const decorNow =
           decorWalkGeomRef.current ??
-          (hideoutStage && !(hideoutStage.presence.asleep && roomGeom(hideoutStage.presence.room).sleepOnBed)
+          (hideoutStage && !(asleep && roomGeom(hideoutStage.presence.room).sleepOnBed)
             ? roomGeom(hideoutStage.presence.room)
             : null);
         if (decorNow) {
@@ -787,11 +787,11 @@ export function PetRoom({
 
   // The pet arriving in another room (call, Up / Back) keeps its old art x/y until the first planned step; put it on this room's floor now.
   const stageRoom = hideoutStage?.presence.room;
-  const stageAsleep = hideoutStage?.presence.asleep === true;
   useEffect(() => {
     if (!stageRoom || egg) return;
     const geom = decorWalkGeomRef.current ?? roomGeom(stageRoom);
-    if (stageAsleep && geom.sleepOnBed) return;
+    // The planner sleeps from the pet's pose (`asleep`), which can differ from presence.asleep (a call at night): follow the pose.
+    if (asleep && geom.sleepOnBed) return;
     const p = isoClampToWalk(artX.value, artY.value, geom, pet.stage, walkBoundsRef.current);
     if (Math.abs(p[0] - artX.value) < 0.5 && Math.abs(p[1] - artY.value) < 0.5) return;
     cancelAnimation(artX);

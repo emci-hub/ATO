@@ -470,12 +470,15 @@ export function PetScreen({
       : devNight === 'on';
   // Why Call would not bring the pet over; a short note on the notice strip explains a dimmed Call / Light by day / Sleep.
   const callBlock = callBlocker(pet, view.hideout.state);
-  const [railNote, setRailNote] = useState<string | null>(null);
+  const [railNoteState, setRailNoteState] = useState<{ text: string; n: number } | null>(null);
+  const railNote = railNoteState?.text ?? null;
+  // A nonce, so the same note tapped twice restarts its 3.5 s timer.
+  const setRailNote = useCallback((text: string | null) => setRailNoteState(text == null ? null : { text, n: Date.now() }), []);
   useEffect(() => {
-    if (railNote == null) return;
-    const t = setTimeout(() => setRailNote(null), 3500);
+    if (railNoteState == null) return;
+    const t = setTimeout(() => setRailNoteState(null), 3500);
     return () => clearTimeout(t);
-  }, [railNote]);
+  }, [railNoteState]);
   // The pet talks (idle chatter, taps) only in the room it is in.
   const petHereRef = useRef(true);
   petHereRef.current = presence.room === view.hideout.viewed && !presence.away;

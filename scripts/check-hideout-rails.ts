@@ -140,6 +140,11 @@ ok('no in-room spots, labels, tap rects, blue press fill, cyan ellipses or Show 
   assert.match(screenSrc, /petHereRef\.current = presence\.room === view\.hideout\.viewed/, 'the pet talks only in its own room');
   assert.match(screenSrc, /awayRef\.current \|\| !petHereRef\.current/, 'say() is silent when the pet is not here');
   assert.match(readFileSync('src/play/pet-room.tsx', 'utf8'), /speech && petShown/, 'the speech bubble follows the pet sprite');
+  // The room-entry clamp must follow the pose the planner sleeps from (`asleep`), never presence.asleep, or a night call to the
+  // Loft would snap the pet off the bed every step.
+  const petRoomSrc2 = readFileSync('src/play/pet-room.tsx', 'utf8');
+  assert.match(petRoomSrc2, /!\(asleep && roomGeom\(hideoutStage\.presence\.room\)\.sleepOnBed\)/, 'walk-loop clamp skips a pet asleep on the Loft bed');
+  assert.ok(!/stageAsleep|presence\.asleep && roomGeom/.test(petRoomSrc2), 'no clamp gate on presence.asleep');
   assert.match(readFileSync('src/play/playStore.ts', 'utf8'), /if \(!touched\.hideout\.rooms_unlocked\[room\]\) return null;/, 'callPetToRoom refuses an unbuilt room');
   const petRoomSrc = readFileSync('src/play/pet-room.tsx', 'utf8');
   assert.match(petRoomSrc, /\[stageRoom\]/, 'the pet is put on the new room floor when it changes rooms');
