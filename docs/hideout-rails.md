@@ -48,7 +48,21 @@ dedicated icons in PixelLab (guide §2: 32 px ladder) and swap them in `RAIL_ICO
 
 ## Open / decide
 
-- **Sleep opens the Stash** (the map gives the bed `coach: 'den'`). A real "put the pet to bed" action would be new
-  behaviour; not built.
+- **Sleep (built, emci 2026-10-15):** in the Loft the rail's Sleep puts the pet to bed (`sleep_until_age_ms`, same
+  length as a wake tap, `HIDEOUT_WAKE_MS`); a second tap, a tap on the pet at night, or the timer wakes it. Hunger still
+  pulls the pet to the Hideout. Cosmetic only. The Stash is still in the Hideout rail, the pet's menu and its sheet.
 - "Up" = Rooftop is my reading of the map's `Up` on the Underground room's door; change `upRoom` if it means something else.
 - The Loft tease sign is still painted on the right wall under the rail (art unchanged).
+
+## Polish handoff (fix/hideout-polish, 2026-10-15)
+
+- **LF pins:** every `art:sync` output (`registry.json`, `ART_LIBRARY.md`, `_contact/library*.html`, `generated-art.ts`,
+  `tools/art-viewer/README.md`, `legacy-play-sheets.json`, `generated-play-sheets.ts`) is `text eol=lf` in `.gitattributes`.
+  A fresh `core.autocrlf=true` clone passes `check:art-registry` on the first run.
+- **Holo tip:** a fifth coach tip, `holo` ("Holo finish: Info, then Style", anchored on the Info dock button), shown once after
+  the pet is out of the egg. It defaults to unseen even on saves that finished the old tutorial, so existing players see it once.
+- **Retired aura sheets:** `hideout-fx` (blaze-84 / bubbles-outlined) moved to `art-src/archive/2026-10/hideout-fx-retired/`
+  (raw + packed). They were packed sheets, not registry entries, so there is no registry status to flip. The pack step,
+  the `hideoutFx` skeleton family and the meta key are gone.
+- **Sleep: built** (see "Open / decide"): `sleep_until_age_ms` on `HideoutState`, set by `tapSleep`, cleared by a second
+  tap / `tapWake` / the timer, read by `resolvePresence`. Rail icon is still the heart stand-in.

@@ -380,11 +380,7 @@ function sheetSkeletons(): { grouped: Grouped; flat: Flat } {
     else if (group === 'towers' && b) put('tower', a, clip(b), key);
     else if (group === 'fx' && b) put('fx', a, b, key);
     else if (group === 'auras' && b) put('aura', a, b, key);
-    else if (group === 'hideout-fx' && a) {
-      const m = /^(.+)-(behind|front)$/.exec(a);
-      if (m) put('hideoutFx', m[1], m[2], key);
-      else problems.push(`${key}: hideout-fx sheets end in -behind or -front`);
-    } else if (group === 'ui-kit' && a) putFlat('ui', a, key);
+    else if (group === 'ui-kit' && a) putFlat('ui', a, key);
     else if (group === 'swords' && a) putFlat('sword', a, key);
     else if (group === 'board' && a) putFlat('board', a, key);
     else if (group !== 'meta.json') problems.push(`${key}: "${group}" has no skeleton — add a family to src/art/skeletons.ts`);

@@ -99,7 +99,7 @@ import { AwayCard } from '@/play/away-card';
 import type { AwaySummary } from '@/play/away-summary';
 import { StreetStatusStrip } from '@/play/street-room';
 import { HideoutRails } from '@/play/hideout-rails';
-import { expeditionCallCopy, resolvePresence, wokeUp } from '@/play/hideout-presence';
+import { expeditionCallCopy, resolvePresence, sleepChosen, wokeUp } from '@/play/hideout-presence';
 import { roomDef } from '@/play/hideout-progress';
 import { loadSeenStage, saveSeenStage } from '@/play/pet-seen';
 import {
@@ -143,6 +143,7 @@ import {
   viewHideoutRoom,
   callPetToRoom,
   wakeHideoutPet,
+  sleepHideoutPet,
   toggleLoftLamp,
   markHideoutCoach,
   markBuildNotifAsked,
@@ -452,10 +453,6 @@ export function PetScreen({
 
   const hour = useHour();
   const clockNight = isBedtime(new Date(), view.settings.bedtime);
-  const night =
-    devNight === 'auto'
-      ? clockNight && !wokeUp(view.hideout.state, pet)
-      : devNight === 'on';
   const presence = resolvePresence({
     pet,
     hideout: view.hideout.state,
@@ -465,6 +462,12 @@ export function PetScreen({
     now: new Date(),
     todayYmd: localYmd(),
   });
+  // The Loft's Sleep action: in bed by choice counts as night for the pet's pose, whatever the clock says.
+  const sleepByChoice = sleepChosen(view.hideout.state, pet) && presence.asleep && presence.room === 'loft';
+  const night =
+    devNight === 'auto'
+      ? (clockNight && !wokeUp(view.hideout.state, pet)) || sleepByChoice
+      : devNight === 'on';
   useEffect(() => {
     if (!presence.peekaboo) return;
     commit((doc, now) => stampHideoutPeekaboo(doc, now));
@@ -657,7 +660,7 @@ export function PetScreen({
   const tipNextRef = useRef(true);
   const tapPet = () => {
     setTapKey((k) => k + 1);
-    if (clockNight && !eggRef.current) {
+    if ((clockNight || sleepChosen(view.hideout.state, pet)) && !eggRef.current) {
       commit((doc, now) => wakeHideoutPet(doc, now));
     }
     if (eggRef.current) {
@@ -1232,7 +1235,13 @@ export function PetScreen({
                   viewed={view.hideout.viewed}
                   petRoom={presence.room}
                   stageH={frame.stage.height}
-                  onSpot={(spot) => (spot === 'den' ? setSheet('den') : openIcon(spot))}
+                  onSpot={(spot) =>
+                    spot === 'den'
+                      ? view.hideout.viewed === 'loft'
+                        ? commit((doc, now) => sleepHideoutPet(doc, now))
+                        : setSheet('den')
+                      : openIcon(spot)
+                  }
                   onLamp={() => commit((doc, now) => toggleLoftLamp(doc, now))}
                   onView={(id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id))}
                   onTease={() => setTeaseOpen(true)}
@@ -1315,7 +1324,7 @@ export function PetScreen({
                   badge={icon.id === 'dive' && view.diveRun.active}
                   badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
                   onPress={() => openIcon(icon.id)}
-                  anchorRef={icon.id === 'feed' ? tipAnchorRef('feed') : undefined}
+                  anchorRef={icon.id === 'feed' ? tipAnchorRef('feed') : icon.id === 'info' ? tipAnchorRef('info') : undefined}
                 />
               ))}
             </View>

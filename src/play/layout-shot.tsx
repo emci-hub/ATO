@@ -44,7 +44,7 @@ function shotDoc(now: number, kind: LayoutShotKind, phase: LayoutPhase): PlaySto
   pet.forms = ['standard'];
   pet.reveals = [];
   doc.pet = pet;
-  doc.play_settings = { ...doc.play_settings, tutorialSeen: true, chatter: 'off', tipsSeen: { warm: true, feed: true, dive: true, turf: true } };
+  doc.play_settings = { ...doc.play_settings, tutorialSeen: true, chatter: 'off', tipsSeen: { warm: true, feed: true, dive: true, turf: true, holo: true } };
   if (kind === 'dive' && phase === 'mid') {
     doc.dive_run = {
       deepers: 1,

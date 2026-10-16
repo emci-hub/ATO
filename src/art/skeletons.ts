@@ -97,7 +97,6 @@ export const SHEET_SKELETONS = {
   tower: TOWER_SLOTS,
   fx: FX_SLOTS,
   aura: AURA_SLOTS,
-  hideoutFx: AURA_SLOTS,
 } as const;
 
 /** Flat families: name → sheet. `board` is open (one per map id). */

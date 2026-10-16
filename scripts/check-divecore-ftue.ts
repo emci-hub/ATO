@@ -67,19 +67,20 @@ ok('Full guide is a link where leaving is safe, and just the path inside a live 
 
 /* --------------------------------------------------------------- the tips --- */
 
-assert.deepEqual([...COACH_TIPS], ['warm', 'feed', 'dive', 'turf'], 'four tips, in order: warm · Feed · Underground · Turf War');
-assert.ok(COACH_TIPS.length <= 4);
+assert.deepEqual([...COACH_TIPS], ['warm', 'feed', 'dive', 'turf', 'holo'], 'five tips, in order: warm · Feed · Underground · Turf War · holo finish');
+assert.ok(COACH_TIPS.length <= 5);
 for (const id of COACH_TIPS) {
   const t = COACH_TIP_DEFS[id];
   assert.ok(wordCount(t.text) <= TIP_MAX_WORDS, `${id}: "${t.text}" is ${wordCount(t.text)} words (max ${TIP_MAX_WORDS})`);
 }
 assert.deepEqual(
   COACH_TIPS.map((id) => COACH_TIP_DEFS[id].anchor),
-  ['egg', 'feed', 'hatch', 'turf'],
+  ['egg', 'feed', 'hatch', 'turf', 'info'],
 );
-ok(`four tips, ≤ ${TIP_MAX_WORDS} words each, anchored on the egg, Feed, the hatch and the Turf War tab`);
+assert.match(COACH_TIP_DEFS.holo.text, /holo/i, 'the last tip points at the holo finish');
+ok(`five tips, ≤ ${TIP_MAX_WORDS} words each, anchored on the egg, Feed, the hatch, the Turf War tab and Info`);
 
-const none: Record<CoachTipId, boolean> = { warm: false, feed: false, dive: false, turf: false };
+const none: Record<CoachTipId, boolean> = { warm: false, feed: false, dive: false, turf: false, holo: false };
 const idleEgg: TipContext = { idle: true, egg: true, eggPicked: true };
 const idleGrown: TipContext = { idle: true, egg: false, eggPicked: true };
 assert.equal(pickCoachTip(none, idleEgg)?.id, 'warm', 'a picked egg: warm it first');
@@ -94,19 +95,23 @@ assert.equal(pickCoachTip(seen, idleGrown)?.id, 'dive');
 seen = markTipSeen(seen, 'dive');
 assert.equal(pickCoachTip(seen, idleGrown)?.id, 'turf');
 seen = markTipSeen(seen, 'turf');
-assert.equal(pickCoachTip(seen, idleGrown), null, 'all four seen: no more tips');
+assert.equal(pickCoachTip(seen, idleGrown)?.id, 'holo', 'last: the holo finish tip, once the pet is out of the egg');
+assert.equal(pickCoachTip(seen, idleEgg), null, 'no holo tip while it is an egg');
+seen = markTipSeen(seen, 'holo');
+assert.equal(pickCoachTip(seen, idleGrown), null, 'all five seen: no more tips');
 assert.ok(allTipsSeen(seen) && !allTipsSeen(none));
 assert.equal(markTipSeen(seen, 'warm'), seen, 'marking a seen tip changes nothing');
 ok('one tip at a time, in order, only on an idle Hideout; each ends once seen');
 
 const replay = replayTipsPatch();
-assert.deepEqual(replay.tipsSeen, none, 'Replay tips makes all four unseen');
+assert.deepEqual(replay.tipsSeen, none, 'Replay tips makes all five unseen');
 assert.equal(replay.tutorialSeen, true, 'the old blocking tutorial flag stays set');
-// Saves: progress counts as all seen; a new save sees all four; a stored mix is kept.
-assert.ok(allTipsSeen(parseSettings(undefined, { remind: false, hasProgress: true }).tipsSeen), 'a save with progress: no tips');
-assert.deepEqual(parseSettings(undefined, { remind: false, hasProgress: false }).tipsSeen, none, 'a new save: all four tips');
+// Saves: progress counts as all seen; a new save sees all five; a stored mix is kept.
+const progress = parseSettings(undefined, { remind: false, hasProgress: true }).tipsSeen;
+assert.deepEqual(progress, { warm: true, feed: true, dive: true, turf: true, holo: false }, 'a save with progress: only the newer holo tip');
+assert.deepEqual(parseSettings(undefined, { remind: false, hasProgress: false }).tipsSeen, none, 'a new save: all five tips');
 assert.equal(parseSettings({ tutorialSeen: true, tipsSeen: { warm: false } }, null).tipsSeen.warm, false, 'a stored flag wins');
-ok('tipsSeen: new save sees all four, progress sees none, Replay tips resets them');
+ok('tipsSeen: new save sees all five, progress sees only holo, Replay tips resets them');
 
 const place = tipPlacement({ x: 10, y: 607, width: 100, height: 56 }, { width: 375, height: 667 }, 260, 40);
 assert.ok(place.left >= 8 && place.left + 260 <= 375 - 8, 'the words stay on screen horizontally');
@@ -151,9 +156,9 @@ assert.match(code(sheet), /BackHandler\.addEventListener\('hardwareBackPress'/, 
 assert.match(sheet, /accessibilityLabel="Help"/, 'the "?" is labelled for VoiceOver');
 assert.match(code(read('src/play/notify/notice-lane.tsx')), /reserveRight/, 'the lane takes the reserved width');
 for (const f of ['pet-room', 'hideout-rails', 'street-shell', 'pet-screen']) {
-  assert.match(read(`src/play/${f}.tsx`), /tipAnchorRef\('(egg|hatch|turf|feed)'\)/, `${f}: registers a tip anchor`);
+  assert.match(read(`src/play/${f}.tsx`), /tipAnchorRef\('(egg|hatch|turf|feed|info)'\)/, `${f}: registers a tip anchor`);
 }
-ok('help card closes on Android back; the "?" is labelled; the four tips each find their control');
+ok('help card closes on Android back; the "?" is labelled; the five tips each find their control');
 
 assert.ok(!/useNoticePause\([^)]*tip/i.test(code(shell)), 'coach tips never pause notices');
 ok('coach tips do not pause notices');

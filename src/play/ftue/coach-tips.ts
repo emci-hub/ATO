@@ -1,16 +1,16 @@
 /**
  * First-time coach tips (Divecore Phase 4, emci 2026-10-14) — pure.
  *
- * Replaces the blocking five-card tutorial. Four short tips, shown one at a time on the Hideout as
+ * Replaces the blocking five-card tutorial. Five short tips, shown one at a time on the Hideout as
  * a pulsing ring + a few words, in this order: warm the egg · Feed · Underground (the hatch spot) ·
- * the Turf War tab. A tip never blocks input and never resizes a region; any touch marks it seen
+ * the Turf War tab · holo finishes (Info). A tip never blocks input and never resizes a region; any touch marks it seen
  * (the touch still reaches whatever was tapped). Seen flags live in `play_settings.tipsSeen`.
  */
 import { COACH_TIPS, type CoachTipId } from '@/play/play-settings';
 
 export const TIP_MAX_WORDS = 6;
 
-export type TipAnchorId = 'egg' | 'feed' | 'hatch' | 'turf';
+export type TipAnchorId = 'egg' | 'feed' | 'hatch' | 'turf' | 'info';
 
 export type CoachTipDef = { id: CoachTipId; text: string; anchor: TipAnchorId };
 
@@ -19,6 +19,8 @@ export const COACH_TIP_DEFS: Record<CoachTipId, CoachTipDef> = {
   feed: { id: 'feed', text: 'Feed keeps your pet happy', anchor: 'feed' },
   dive: { id: 'dive', text: 'Ride the hatch to Underground', anchor: 'hatch' },
   turf: { id: 'turf', text: 'Turf War: defend your street', anchor: 'turf' },
+  // A pet shows holo only once a finish is applied (Info > Style); nothing else says so.
+  holo: { id: 'holo', text: 'Holo finish: Info, then Style', anchor: 'info' },
 };
 
 /** What the Hideout knows when it asks for a tip. */
@@ -52,7 +54,7 @@ export function markTipSeen(seen: Record<CoachTipId, boolean>, id: CoachTipId): 
 
 /** "Replay tips": every tip unseen again (the old tutorial flag stays true so nothing blocks). */
 export function replayTipsPatch(): { tutorialSeen: true; tipsSeen: Record<CoachTipId, boolean> } {
-  return { tutorialSeen: true, tipsSeen: { warm: false, feed: false, dive: false, turf: false } };
+  return { tutorialSeen: true, tipsSeen: { warm: false, feed: false, dive: false, turf: false, holo: false } };
 }
 
 export function allTipsSeen(seen: Record<CoachTipId, boolean>): boolean {
