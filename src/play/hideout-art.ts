@@ -107,8 +107,8 @@ export const ROOM_ART: Record<
     glow: png(ROOM.loft.glow),
     snapshot: png(ROOM.loft.back),
   },
-  // Real PixelLab art since 2026-10-15 (the Underground room). The Garage is not a live room yet: the stage draws the
-  // flattened `snapshot` (hideout-stage SnapshotRoom); the layers are here for when it goes live.
+  // Real PixelLab art since 2026-10-15 (the Underground room). The Garage is live once built (hideout-stage LiveRoom);
+  // `snapshot` is the dimmed preview shown while it is unbuilt and as the swipe neighbour.
   garage: {
     placeholder: false,
     map: undergroundMap,
@@ -124,7 +124,7 @@ export const ROOM_ART: Record<
     shell: png(ART.room.hideout.neighborBoardedTd),
     snapshot: png(ART.room.underground.snapshot),
   },
-  // Real PixelLab art since 2026-10-15 (the Rooftop). Like the Garage it is not a live room yet: the stage draws `snapshot`.
+  // Real PixelLab art since 2026-10-15 (the Rooftop). Like the Garage it is live once built; `snapshot` is the unbuilt / neighbour preview.
   rooftop: {
     placeholder: false,
     map: rooftopMap,
