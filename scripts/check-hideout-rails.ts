@@ -129,6 +129,18 @@ const stage = readFileSync('src/play/hideout-stage.tsx', 'utf8');
 assert.ok(!/HideoutStageControls|HideoutRoomBar/.test(stage), 'no room bar in the stage code');
 ok('no in-room spots, labels, tap rects, blue press fill, cyan ellipses or Show labels; old bar deleted');
 
+{
+  const railsSrc = readFileSync('src/play/hideout-rails.tsx', 'utf8');
+  assert.match(railsSrc, /callable = hideout\.rooms_unlocked\[viewed\] === true/, 'Call is only live in a built room');
+  assert.match(railsSrc, /dim=\{!away && !callable\}/, 'Call is dimmed in an unbuilt room');
+  assert.match(railsSrc, /callable \|\| away \? onCall : onTease/, 'a dimmed Call opens the build sheet, never starts a call');
+  assert.match(readFileSync('src/play/playStore.ts', 'utf8'), /if \(!touched\.hideout\.rooms_unlocked\[room\]\) return null;/, 'callPetToRoom refuses an unbuilt room');
+  const petRoomSrc = readFileSync('src/play/pet-room.tsx', 'utf8');
+  assert.match(petRoomSrc, /\[stageRoom\]/, 'the pet is put on the new room floor when it changes rooms');
+  assert.ok(!/roomStage\('loft'[^)]*\) === 'done' \? 'garage'/.test(readFileSync('src/play/pet-screen.tsx', 'utf8')), 'pet-screen: the build sheet targets nextBuildRoom, not Loft/Garage only');
+  ok('Call dimmed + refused in an unbuilt room; Rooftop build reachable; pet re-clamped on a room switch');
+}
+
 const screen = readFileSync('src/play/pet-screen.tsx', 'utf8');
 assert.ok(!/roomRow|HideoutStageControls|ROW_ONLY/.test(screen), 'pet-screen: no Hideout / Loft / Call row above Feed / Info');
 assert.match(screen, /rails=\{\s*street \? \(\s*<HideoutRails/, 'pet-screen hands the rails to the room');

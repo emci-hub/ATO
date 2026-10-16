@@ -779,6 +779,23 @@ export function PetRoom({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, hideoutPt, hasRails, visitorBlocks]);
 
+  // The pet arriving in another room (call, Up / Back) keeps its old art x/y until the first planned step; put it on this room's floor now.
+  const stageRoom = hideoutStage?.presence.room;
+  useEffect(() => {
+    if (!stageRoom || stageRoom === 'hideout' || egg) return;
+    const geom = roomGeom(stageRoom);
+    if (geom.sleepOnBed) return;
+    const p = isoClampToWalk(artX.value, artY.value, geom, pet.stage, walkBoundsRef.current);
+    if (Math.abs(p[0] - artX.value) < 0.5 && Math.abs(p[1] - artY.value) < 0.5) return;
+    cancelAnimation(artX);
+    cancelAnimation(artY);
+    artX.value = p[0];
+    artY.value = p[1];
+    artXRef.current = p[0];
+    artYRef.current = p[1];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageRoom]);
+
   // A pet standing where a prop was just put is moved to the nearest free floor (a change in what is placed,
   // Motion Off, or the room switching to this one). The loop above replans from here.
   useEffect(() => {

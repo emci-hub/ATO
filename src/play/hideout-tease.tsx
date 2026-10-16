@@ -13,6 +13,7 @@ import { HIDEOUT_TEASE, TEASE_ART } from '@/play/hideout-art';
 import {
   buildProgress01,
   roomGateParts,
+  nextBuildRoom,
   roomStage,
   roomTokenPrice,
   type HideoutProgressInput,
@@ -57,9 +58,8 @@ export function HideoutTease({
   origin: { left: number; top: number };
   onPress: () => void;
 }) {
-  const loft = roomStage('loft', hideout);
-  // After Loft is done the Garage tease uses the same wall until Phase 3 art.
-  const next: HideoutRoomId = loft === 'done' ? 'garage' : 'loft';
+  // Loft, then Garage, then Rooftop use the same boarded wall.
+  const next: HideoutRoomId = nextBuildRoom(hideout);
   const stage = roomStage(next, hideout);
   if (stage === 'hidden' || stage === 'done') return null;
   const k = scale.pt;
