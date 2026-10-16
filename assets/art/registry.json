@@ -3267,6 +3267,60 @@
       "part": "void-raven"
     },
     {
+      "id": "icon.streetwear.arrow-left",
+      "path": "assets/art/icons/in-use/streetwear/arrow-left.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 452,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:046f0c37154daa5de619567808217d8d",
+      "inUse": true,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "arrow-left"
+    },
+    {
+      "id": "icon.streetwear.arrow-up",
+      "path": "assets/art/icons/in-use/streetwear/arrow-up.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 433,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:cd8d952af9fbf251b4f2beae7bc02cf4",
+      "inUse": true,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "arrow-up"
+    },
+    {
       "id": "icon.streetwear.backpack",
       "path": "assets/art/icons/in-use/streetwear/backpack.png",
       "type": "icon",
@@ -3358,7 +3412,7 @@
     },
     {
       "id": "icon.streetwear.bolt",
-      "path": "assets/art/icons/in-use/streetwear/bolt.png",
+      "path": "assets/art/icons/unused/streetwear/bolt.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -3374,11 +3428,9 @@
       "format": "png32",
       "notes": "md5:0f3276d35e52e877942a7652f375f3a1",
       "tags": [],
-      "usedBy": [
-        "src/play/hideout-art.ts"
-      ],
+      "usedBy": [],
       "category": "icons",
-      "inUse": true,
+      "inUse": false,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "bolt",
@@ -4049,7 +4101,7 @@
     },
     {
       "id": "icon.streetwear.heart",
-      "path": "assets/art/icons/in-use/streetwear/heart.png",
+      "path": "assets/art/icons/unused/streetwear/heart.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4065,11 +4117,9 @@
       "format": "png32",
       "notes": "md5:90204220bba83a00e5a165f048e0c533",
       "tags": [],
-      "usedBy": [
-        "src/play/hideout-art.ts"
-      ],
+      "usedBy": [],
       "category": "icons",
-      "inUse": true,
+      "inUse": false,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "heart",
@@ -4134,6 +4184,33 @@
       "legacyKeys": [
         "ui.ui-streetwear-icons-key"
       ]
+    },
+    {
+      "id": "icon.streetwear.lamp",
+      "path": "assets/art/icons/in-use/streetwear/lamp.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 498,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:c688fff786057ff0499fda334625ecfb",
+      "inUse": true,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "lamp"
     },
     {
       "id": "icon.streetwear.leaf",
@@ -4511,6 +4588,33 @@
       ]
     },
     {
+      "id": "icon.streetwear.sleep",
+      "path": "assets/art/icons/in-use/streetwear/sleep.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 577,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:6c3a608a7a311feeea3948dd55b0f6e2",
+      "inUse": true,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "sleep"
+    },
+    {
       "id": "icon.streetwear.sneaker",
       "path": "assets/art/icons/in-use/streetwear/sneaker.png",
       "type": "icon",
@@ -4776,7 +4880,7 @@
     },
     {
       "id": "icon.streetwear.upgrade",
-      "path": "assets/art/icons/in-use/streetwear/upgrade.png",
+      "path": "assets/art/icons/unused/streetwear/upgrade.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4792,11 +4896,9 @@
       "format": "png32",
       "notes": "md5:328d64ca556bbfd7a840dc4698d7f799",
       "tags": [],
-      "usedBy": [
-        "src/play/hideout-art.ts"
-      ],
+      "usedBy": [],
       "category": "icons",
-      "inUse": true,
+      "inUse": false,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "upgrade",

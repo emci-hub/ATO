@@ -87,10 +87,11 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'icon.stickers.streetwear.sak': require('@/assets/art/icons/in-use/stickers/streetwear/sak.png'),
   'icon.stickers.streetwear.velkhar': require('@/assets/art/icons/in-use/stickers/streetwear/velkhar.png'),
   'icon.stickers.streetwear.void-raven': require('@/assets/art/icons/in-use/stickers/streetwear/void-raven.png'),
+  'icon.streetwear.arrow-left': require('@/assets/art/icons/in-use/streetwear/arrow-left.png'),
+  'icon.streetwear.arrow-up': require('@/assets/art/icons/in-use/streetwear/arrow-up.png'),
   'icon.streetwear.backpack': require('@/assets/art/icons/in-use/streetwear/backpack.png'),
   'icon.streetwear.bandana': require('@/assets/art/icons/in-use/streetwear/bandana.png'),
   'icon.streetwear.bat': require('@/assets/art/icons/in-use/streetwear/bat.png'),
-  'icon.streetwear.bolt': require('@/assets/art/icons/in-use/streetwear/bolt.png'),
   'icon.streetwear.bucket-hat': require('@/assets/art/icons/in-use/streetwear/bucket-hat.png'),
   'icon.streetwear.cap': require('@/assets/art/icons/in-use/streetwear/cap.png'),
   'icon.streetwear.coin-stack': require('@/assets/art/icons/in-use/streetwear/coin-stack.png'),
@@ -98,19 +99,19 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'icon.streetwear.flame': require('@/assets/art/icons/in-use/streetwear/flame.png'),
   'icon.streetwear.gem': require('@/assets/art/icons/in-use/streetwear/gem.png'),
   'icon.streetwear.headphones': require('@/assets/art/icons/in-use/streetwear/headphones.png'),
-  'icon.streetwear.heart': require('@/assets/art/icons/in-use/streetwear/heart.png'),
   'icon.streetwear.hoodie': require('@/assets/art/icons/in-use/streetwear/hoodie.png'),
+  'icon.streetwear.lamp': require('@/assets/art/icons/in-use/streetwear/lamp.png'),
   'icon.streetwear.marker': require('@/assets/art/icons/in-use/streetwear/marker.png'),
   'icon.streetwear.padlock': require('@/assets/art/icons/in-use/streetwear/padlock.png'),
   'icon.streetwear.potion': require('@/assets/art/icons/in-use/streetwear/potion.png'),
   'icon.streetwear.shades': require('@/assets/art/icons/in-use/streetwear/shades.png'),
   'icon.streetwear.shield': require('@/assets/art/icons/in-use/streetwear/shield.png'),
+  'icon.streetwear.sleep': require('@/assets/art/icons/in-use/streetwear/sleep.png'),
   'icon.streetwear.sneaker': require('@/assets/art/icons/in-use/streetwear/sneaker.png'),
   'icon.streetwear.speech': require('@/assets/art/icons/in-use/streetwear/speech.png'),
   'icon.streetwear.star': require('@/assets/art/icons/in-use/streetwear/star.png'),
   'icon.streetwear.subway-train': require('@/assets/art/icons/in-use/streetwear/subway-train.png'),
   'icon.streetwear.sword': require('@/assets/art/icons/in-use/streetwear/sword.png'),
-  'icon.streetwear.upgrade': require('@/assets/art/icons/in-use/streetwear/upgrade.png'),
   'icon.streetwear.void-eye': require('@/assets/art/icons/in-use/streetwear/void-eye.png'),
   'npc.abyssal-assassin.dungeon-legends.south': require('@/assets/art/heroes/in-use/abyssal-assassin/dungeon-legends/rotations/south.png'),
   'npc.arcane-engineer.dungeon-legends.south': require('@/assets/art/heroes/in-use/arcane-engineer/dungeon-legends/rotations/south.png'),
@@ -297,6 +298,8 @@ export type ArtId =
   | 'icon.stickers.streetwear.sak'
   | 'icon.stickers.streetwear.velkhar'
   | 'icon.stickers.streetwear.void-raven'
+  | 'icon.streetwear.arrow-left'
+  | 'icon.streetwear.arrow-up'
   | 'icon.streetwear.backpack'
   | 'icon.streetwear.bandana'
   | 'icon.streetwear.bat'
@@ -327,6 +330,7 @@ export type ArtId =
   | 'icon.streetwear.heart'
   | 'icon.streetwear.hoodie'
   | 'icon.streetwear.key'
+  | 'icon.streetwear.lamp'
   | 'icon.streetwear.leaf'
   | 'icon.streetwear.marker'
   | 'icon.streetwear.mic'
@@ -340,6 +344,7 @@ export type ArtId =
   | 'icon.streetwear.shield'
   | 'icon.streetwear.skateboard'
   | 'icon.streetwear.skull-mask'
+  | 'icon.streetwear.sleep'
   | 'icon.streetwear.sneaker'
   | 'icon.streetwear.speech'
   | 'icon.streetwear.spray-can'
@@ -1399,6 +1404,8 @@ export const ART = {
       },
     },
     streetwear: {
+      arrowLeft: 'icon.streetwear.arrow-left',
+      arrowUp: 'icon.streetwear.arrow-up',
       backpack: 'icon.streetwear.backpack',
       bandana: 'icon.streetwear.bandana',
       bat: 'icon.streetwear.bat',
@@ -1429,6 +1436,7 @@ export const ART = {
       heart: 'icon.streetwear.heart',
       hoodie: 'icon.streetwear.hoodie',
       key: 'icon.streetwear.key',
+      lamp: 'icon.streetwear.lamp',
       leaf: 'icon.streetwear.leaf',
       marker: 'icon.streetwear.marker',
       mic: 'icon.streetwear.mic',
@@ -1442,6 +1450,7 @@ export const ART = {
       shield: 'icon.streetwear.shield',
       skateboard: 'icon.streetwear.skateboard',
       skullMask: 'icon.streetwear.skull-mask',
+      sleep: 'icon.streetwear.sleep',
       sneaker: 'icon.streetwear.sneaker',
       speech: 'icon.streetwear.speech',
       sprayCan: 'icon.streetwear.spray-can',

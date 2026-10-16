@@ -161,17 +161,18 @@ export const SPOT_ICON_ART: Partial<Record<string, ImageSourcePropType>> = {
   boombox: png(ART.icon.streetwear.headphones),
   manhole: png(ART.icon.streetwear.subwayTrain),
 };
-/** Rail icons by name (hideout-rails-model.ts). Sleep / Light / Back / Up are library stand-ins until dedicated icons exist. */
-export const RAIL_ICON_ART: Record<'headphones' | 'backpack' | 'subwayTrain' | 'sneaker' | 'heart' | 'bolt' | 'dpad' | 'upgrade' | 'star', ImageSourcePropType> = {
+/** Rail icons by name (hideout-rails-model.ts). Sleep / Light / Back / Up are the dedicated PixelLab icons (2026-10-15); `dpad` is the fallback. */
+export const RAIL_ICON_ART: Record<'headphones' | 'backpack' | 'subwayTrain' | 'sneaker' | 'sleep' | 'lamp' | 'arrowLeft' | 'arrowUp' | 'dpad' | 'star', ImageSourcePropType> = {
   star: png(ART.icon.streetwear.star),
   headphones: png(ART.icon.streetwear.headphones),
   backpack: png(ART.icon.streetwear.backpack),
   subwayTrain: png(ART.icon.streetwear.subwayTrain),
   sneaker: png(ART.icon.streetwear.sneaker),
-  heart: png(ART.icon.streetwear.heart),
-  bolt: png(ART.icon.streetwear.bolt),
+  sleep: png(ART.icon.streetwear.sleep),
+  lamp: png(ART.icon.streetwear.lamp),
+  arrowLeft: png(ART.icon.streetwear.arrowLeft),
+  arrowUp: png(ART.icon.streetwear.arrowUp),
   dpad: png(ART.icon.streetwear.dpad),
-  upgrade: png(ART.icon.streetwear.upgrade),
 };
 export const CALL_ICON_ART: ImageSourcePropType = png(ART.icon.streetwear.speech);
 export const LOCK_ICON_ART: ImageSourcePropType = png(ART.icon.streetwear.padlock);
