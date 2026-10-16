@@ -43,8 +43,8 @@ export type RailAction =
 /** Circle visits (roadmap step 6): the Hideout room's 5th action, last on the rail. */
 export const CIRCLE_RAIL_LABEL = 'Circle';
 
-/** Library icons (assets/art/icons/in-use/streetwear). Sleep / Light / Back / Up reuse stand-ins: see the PR's art list. */
-export type RailIcon = 'headphones' | 'backpack' | 'subwayTrain' | 'sneaker' | 'heart' | 'bolt' | 'dpad' | 'upgrade' | 'star';
+/** Library icons (assets/art/icons/in-use/streetwear). `dpad` is the fallback for a map action with no icon yet. */
+export type RailIcon = 'headphones' | 'backpack' | 'subwayTrain' | 'sneaker' | 'sleep' | 'lamp' | 'arrowLeft' | 'arrowUp' | 'dpad' | 'star';
 
 const HOME = parseIsoGeom(hideoutMap);
 const LOFT = parseIsoGeom(loftMap, { sleepOnBed: true });
@@ -67,10 +67,10 @@ const ICON_BY_ACTION: Record<string, RailIcon> = {
   Stash: 'backpack',
   Underground: 'subwayTrain',
   Explore: 'sneaker',
-  Sleep: 'heart',
-  Light: 'bolt',
-  Hideout: 'dpad',
-  Up: 'upgrade',
+  Sleep: 'sleep',
+  Light: 'lamp',
+  Hideout: 'arrowLeft',
+  Up: 'arrowUp',
 };
 
 /** A map action's rail label: one word. "Hideout" (the way out of a room) reads "Back". */

@@ -1,0 +1,32 @@
+{
+  "tool": "pixellab",
+  "model": "create_1_direction_object (64-candidate review pack, 32x32)",
+  "prompt": "flat 32px game UI icon, streetwear neon style, thick 1px dark outline, simple bold shape, readable at small size, purely pictorial with zero writing",
+  "itemDescriptions": {
+    "sleep": "crescent moon with a small Z, sleep icon, flat UI icon (candidate 1)",
+    "lamp": "table lamp with round shade, warm light rays, flat UI icon (candidate 13)",
+    "arrow-left": "bold arrow pointing left, cyan, flat UI back button icon (candidate 16)",
+    "arrow-up": "bold arrow pointing up, cyan, flat UI icon (candidate 24)"
+  },
+  "pixellabObjectId": "6759756a-da91-4aad-9c83-43a70ec22f63",
+  "styleReferences": ["icon.streetwear.heart", "icon.streetwear.upgrade", "icon.streetwear.bolt", "icon.streetwear.dpad", "icon.streetwear.star"],
+  "seed": null,
+  "size": "32x32",
+  "view": "flat-ui",
+  "palette": "joint reduce_colors (auto) across the 12 shortlisted icons, job d9b39093-6031-416e-bee3-b2ce546243aa",
+  "cleanup": "rim.js: the icon set's 1px warm-white sticker rim (250,247,235), 8-neighbour, alpha >= 128 kept; then reduce_colors",
+  "cost": 10.1,
+  "createdAt": "2026-10-15",
+  "operator": "claude",
+  "picked": true,
+  "pickedBy": "emci 2026-10-15 (Sleep B, Light C, arrows A)",
+  "critique": {
+    "score": { "sleep": 100.0, "lamp": 97.5, "arrow-left": 96.0, "arrow-up": 96.0 },
+    "notes": "pixelart_workbench score after cleanup; existing icon.streetwear.upgrade scores 83.7. Samples: docs/art/rail-icons-samples.png, scale: docs/art/rail-icons-scale-sheet.png"
+  },
+  "files": {
+    "<name>.pixellab.png": "raw PixelLab candidate",
+    "<name>.rim.png": "after rim.js",
+    "<name>.final.png": "after reduce_colors = assets/art/icons/in-use/streetwear/<name>.png"
+  }
+}
