@@ -111,11 +111,13 @@ export function resolvePresence(input: PresenceInput): Presence {
     peekaboo: false,
     away: false,
   };
+  // The pet only visits a room that is built; a room still being built is a snapshot with nobody in it.
+  const visitRoom: HideoutRoomId = h.viewed_room === 'hideout' || unlocked(h, h.viewed_room) ? h.viewed_room : 'hideout';
   if (interaction) {
-    return { ...home, room: h.viewed_room, reason: 'interaction', asleep: false };
+    return { ...home, room: visitRoom, reason: 'interaction', asleep: false };
   }
   if (expeditionAway) {
-    return { ...home, room: h.viewed_room, reason: 'expedition', away: true };
+    return { ...home, room: visitRoom, reason: 'expedition', away: true };
   }
   if (skipSchedule(pet)) {
     return { ...home, reason: 'home' };
@@ -132,7 +134,7 @@ export function resolvePresence(input: PresenceInput): Presence {
     return { ...home, room: 'loft', reason: 'tired', asleep: true };
   }
   if (callActive(h, pet)) {
-    return { ...home, room: h.viewed_room, reason: 'call' };
+    return { ...home, room: visitRoom, reason: 'call' };
   }
   const peekDone = h.peekaboo_ymd === input.todayYmd;
   const night = isBedtime(input.now, input.bedtime) && !wokeUp(h, pet);

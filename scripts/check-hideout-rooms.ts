@@ -223,6 +223,14 @@ const HOUR = 60 * 60 * 1000;
   const called = startCall(h, pet, 'hideout');
   assert.equal(resolvePresence({ ...base, hideout: called }).reason, 'call');
   assert.equal(resolvePresence({ ...base, pet: { ...pet, stage: 'baby' } }).room, 'hideout');
+  // Garage / Rooftop are live: the pet visits a built room (call, interaction, expedition), never a room still being built.
+  for (const room of ['garage', 'rooftop'] as const) {
+    const built = { ...h, rooms_unlocked: { ...h.rooms_unlocked, [room]: true } };
+    assert.equal(resolvePresence({ ...base, hideout: startCall(built, pet, room) }).room, room, `call into a built ${room}`);
+    assert.equal(resolvePresence({ ...base, hideout: startCall(h, pet, room) }).room, 'hideout', `call into an unbuilt ${room} stays home`);
+    assert.equal(resolvePresence({ ...base, hideout: { ...built, viewed_room: room }, interaction: true }).room, room, `interaction in a built ${room}`);
+    assert.equal(resolvePresence({ ...base, hideout: { ...h, viewed_room: room }, interaction: true }).room, 'hideout', `interaction in an unbuilt ${room}`);
+  }
   const woken = tapWake(h, pet);
   assert.ok(woken.wake_until_age_ms != null);
   // Sleep rail action: in the Loft's bed by choice at noon, only if the Loft is built; a wake tap or the timer ends it.

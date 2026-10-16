@@ -88,7 +88,7 @@ const rng = () => {
   seed = (seed * 1664525 + 1013904223) >>> 0;
   return seed / 0x100000000;
 };
-for (const room of ['hideout', 'loft'] as const) {
+for (const room of ['hideout', 'loft', 'garage', 'rooftop'] as const) {
   const geom = RAIL_ROOM_GEOM[room]!;
   const bounds = railWalkBounds({ stageW: 430, originLeft: 0, pt: 430 / 352 });
   const grid = withWalkBounds(hideoutGridFor('adult', geom), bounds);
@@ -110,7 +110,13 @@ for (const room of ['hideout', 'loft'] as const) {
     y = step.toY;
   }
 }
-ok('the pet never walks into a rail (150 planned steps in the Hideout and the Loft)');
+ok('the pet never walks into a rail (150 planned steps in the Hideout, the Loft, the Garage and the Rooftop)');
+{
+  const stageSrc = readFileSync('src/play/hideout-stage.tsx', 'utf8');
+  assert.ok(!/liveIsLoft|LiveLoft|room="loft"/.test(stageSrc), 'hideout-stage: no Loft-only live room left');
+  assert.match(stageSrc, /rooms_unlocked\[viewed\]/, 'hideout-stage: any built room is live');
+  ok('the stage draws every built room live (Loft, Garage, Rooftop)');
+}
 
 // --- the room is bare: no spots, labels, blue fill, ellipses --------------------------------------
 const room = readFileSync('src/play/street-room.tsx', 'utf8');

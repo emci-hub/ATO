@@ -111,12 +111,14 @@ function SnapshotRoom({
   );
 }
 
-function LiveLoft({
+function LiveRoom({
+  room,
   scale,
   origin,
   night,
   lampOn,
 }: {
+  room: Exclude<HideoutRoomId, 'hideout'>;
   scale: HideoutScale;
   origin: HideoutOrigin;
   night: boolean;
@@ -125,7 +127,7 @@ function LiveLoft({
   // The lamp has no tap area of its own: Light is on the left rail (hideout-rails.tsx).
   return (
     <View style={{ position: 'absolute', left: origin.left, top: origin.top, width: scale.canvasW, height: scale.canvasH }}>
-      <StreetRoomArt left={0} top={0} scale={scale} alive room="loft" night={night} lampOn={lampOn} />
+      <StreetRoomArt left={0} top={0} scale={scale} alive room={room} night={night} lampOn={lampOn} />
     </View>
   );
 }
@@ -198,7 +200,8 @@ export function HideoutStageChrome({
   }));
 
   const liveIsHideout = viewed === 'hideout';
-  const liveIsLoft = viewed === 'loft' && hideout.rooms_unlocked.loft;
+  // Loft, Garage and Rooftop are live once built; a room still being built stays a dimmed snapshot.
+  const liveRoom = viewed !== 'hideout' && hideout.rooms_unlocked[viewed] ? viewed : null;
   const petHere = presence.room === viewed && !presence.away;
   const k = scale.pt;
 
@@ -258,8 +261,8 @@ export function HideoutStageChrome({
             night={night}
             gentle={motion.vestibularSafe}
           />
-        ) : liveIsLoft ? (
-          <LiveLoft scale={scale} origin={origin} night={night} lampOn={hideout.lamp_on} />
+        ) : liveRoom ? (
+          <LiveRoom room={liveRoom} scale={scale} origin={origin} night={night} lampOn={hideout.lamp_on} />
         ) : (
           <SnapshotRoom id={viewed} scale={scale} origin={origin} night={night} />
         )}
@@ -281,12 +284,12 @@ export function HideoutStageChrome({
           gentle={motion.vestibularSafe}
         />
       ) : null}
-      {liveIsLoft && petHere ? (
+      {liveRoom && petHere ? (
         <StreetRoomFront
           left={origin.left}
           top={origin.top}
           scale={scale}
-          room="loft"
+          room={liveRoom}
           night={night}
           feetX={feetX}
           feetY={feetY}
