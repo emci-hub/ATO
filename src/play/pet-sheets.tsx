@@ -3,7 +3,7 @@
  * stacked as cards, moved as-is into the sheets the room's icon row opens:
  *
  *   Feed        — the pantry and its Feed buttons.
- *   Play        — the mini-game hub (Catch / Train). A round itself is full screen.
+ *   Play        — Tap to train (Catch the food lives in the Feed sheet). A round itself is full screen.
  *   Expedition  — status, the returned find, Send on expedition.
  *   Info        — tabs: Status (form, timers, perks, Today, what hatches,
  *                 rebirth, reminder) · Book (Logbook + Collection) · Hall ·
@@ -290,6 +290,91 @@ function GameChip({
 /** v26 — a round being played: which game, at which level, daily or not. */
 export type GameRun = { kind: PetRoundKind; level: Difficulty; daily: boolean };
 
+/**
+ * One mini-game card: levels, best, medals, Play / Daily. Catch the food sits in the Feed sheet (under "? Your pet",
+ * emci 2026-10-16); Tap to train stays in the Play sheet. Each card keeps its own level pick and unlock hint.
+ */
+export function GameCard({
+  g,
+  view,
+  onStart,
+  lastResult = null,
+  lastRound = null,
+  still = false,
+}: {
+  g: Game;
+  view: PlayView;
+  onStart: (run: GameRun) => void;
+  /** The last counted round of THIS game: its result line and score burst show under the card. */
+  lastResult?: string | null;
+  lastRound?: { key: string; score: number; strong: boolean } | null;
+  still?: boolean;
+}) {
+  const pv = view.pet;
+  const [pick, setPick] = useState<Difficulty>('normal');
+  const [hint, setHint] = useState<string | null>(null);
+  // A level picked earlier may have closed again (Reset Divecore): fall back to Normal.
+  const lv = levelUnlocked(pv.records, g, pick) ? pick : 'normal';
+  const rec = pv.records[g][lv];
+  const [b, sv, gd] = MEDAL_SCORES[g][lv];
+  const silverBuff = buffForMedal(g, 'silver');
+  const goldBuff = buffForMedal(g, 'gold');
+  const daily = pv.daily[g];
+  return (
+    <>
+      <PixelFrame streetPiece="panel" align="stretch" glow={false}>
+        <View style={styles.gameCard}>
+          <View style={styles.gameTitleRow}>
+            <PixelLabel numberOfLines={1} style={styles.gameTitle}>{GAME_LABEL[g]}</PixelLabel>
+            <PixelBody size="sm" color={PIXEL.amber} numberOfLines={1}>{pv.ranks[g]}</PixelBody>
+          </View>
+          <View style={styles.chips}>
+            {DIFFICULTIES.map((d) => {
+              const open = levelUnlocked(pv.records, g, d);
+              const r = pv.records[g][d];
+              return (
+                <GameChip
+                  key={d}
+                  label={DIFFICULTY_LABEL[d]}
+                  locked={!open}
+                  medal={r.medal ? MEDAL_ICON[r.medal] : null}
+                  selected={open && lv === d}
+                  onPress={() => {
+                    if (open) {
+                      setPick(d);
+                      setHint(null);
+                    } else setHint(`${GAME_LABEL[g]} · ${DIFFICULTY_LABEL[d]}: ${unlockHint(d)}.`);
+                  }}
+                />
+              );
+            })}
+          </View>
+          <PixelBody size="sm" color={PIXEL.dim} numberOfLines={3}>
+            {`Best on ${DIFFICULTY_LABEL[lv]}: ${rec.best > 0 ? rec.best : '—'} · 🥉 ${b} · 🥈 ${sv} (${silverBuff ? BUFF_LABEL[silverBuff] : ''}) · 🥇 ${gd} (${goldBuff ? BUFF_LABEL[goldBuff] : ''})`}
+          </PixelBody>
+          <View style={styles.buttons}>
+            <PixelButton
+              label={`Play · ${DIFFICULTY_LABEL[lv]}`}
+              variant={g === 'catch' ? 'cyan' : 'amber'}
+              onPress={() => onStart({ kind: g, level: lv, daily: false })}
+              style={styles.shareButton}
+            />
+            <PixelButton
+              label={daily.best > 0 ? `Daily · best ${daily.best}` : 'Daily'}
+              variant="cyan"
+              onPress={() => onStart({ kind: g, level: 'normal', daily: true })}
+              style={styles.shareButton}
+            />
+          </View>
+        </View>
+      </PixelFrame>
+      {hint ? <PixelBody color={PIXEL.cyan}>{hint}</PixelBody> : null}
+      {lastRound ? <ScoreBurst score={lastRound.score} strong={lastRound.strong} runKey={lastRound.key} animate={!still} /> : null}
+      {lastResult ? <PixelBody color={PIXEL.cyan}>{lastResult}</PixelBody> : null}
+    </>
+  );
+}
+
 export function PlaySheetBody({
   view,
   onStart,
@@ -308,8 +393,6 @@ export function PlaySheetBody({
   onGuide?: () => void;
 }) {
   const pv = view.pet;
-  const [level, setLevel] = useState<Record<Game, Difficulty>>({ catch: 'normal', train: 'normal' });
-  const [hint, setHint] = useState<string | null>(null);
   if (pv.state.stage === 'egg') {
     return (
       <PixelBody>Games start once it hatches. For now, pick what it hatches into in Info.</PixelBody>
@@ -328,66 +411,9 @@ export function PlaySheetBody({
         </View>
       </View>
       <PixelBody numberOfLines={4}>
-        {`Catch the food feeds it (+2 hunger); Tap to train cheers it up (+2 mood) — only if you pass (50%+). +${PET_TOKENS_PER_ROUND} tokens a passed round · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
+        {`Tap to train cheers it up (+2 mood) — only if you pass (50%+). Catch the food now lives in Feed. +${PET_TOKENS_PER_ROUND} tokens a passed round · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
       </PixelBody>
-      {(['catch', 'train'] as const).map((g) => {
-        // A level picked earlier may have closed again (Reset Divecore): fall back to Normal.
-        const lv = levelUnlocked(pv.records, g, level[g]) ? level[g] : 'normal';
-        const rec = pv.records[g][lv];
-        const [b, sv, gd] = MEDAL_SCORES[g][lv];
-        const silverBuff = buffForMedal(g, 'silver');
-        const goldBuff = buffForMedal(g, 'gold');
-        const daily = pv.daily[g];
-        return (
-          <PixelFrame streetPiece="panel" key={g} align="stretch" glow={false}>
-            <View style={styles.gameCard}>
-              <View style={styles.gameTitleRow}>
-                <PixelLabel numberOfLines={1} style={styles.gameTitle}>{GAME_LABEL[g]}</PixelLabel>
-                <PixelBody size="sm" color={PIXEL.amber} numberOfLines={1}>{pv.ranks[g]}</PixelBody>
-              </View>
-              <View style={styles.chips}>
-                {DIFFICULTIES.map((d) => {
-                  const open = levelUnlocked(pv.records, g, d);
-                  const r = pv.records[g][d];
-                  return (
-                    <GameChip
-                      key={d}
-                      label={DIFFICULTY_LABEL[d]}
-                      locked={!open}
-                      medal={r.medal ? MEDAL_ICON[r.medal] : null}
-                      selected={open && lv === d}
-                      onPress={() => {
-                        if (open) {
-                          setLevel((prev) => ({ ...prev, [g]: d }));
-                          setHint(null);
-                        } else setHint(`${GAME_LABEL[g]} · ${DIFFICULTY_LABEL[d]}: ${unlockHint(d)}.`);
-                      }}
-                    />
-                  );
-                })}
-              </View>
-              <PixelBody size="sm" color={PIXEL.dim} numberOfLines={3}>
-                {`Best on ${DIFFICULTY_LABEL[lv]}: ${rec.best > 0 ? rec.best : '—'} · 🥉 ${b} · 🥈 ${sv} (${silverBuff ? BUFF_LABEL[silverBuff] : ''}) · 🥇 ${gd} (${goldBuff ? BUFF_LABEL[goldBuff] : ''})`}
-              </PixelBody>
-              <View style={styles.buttons}>
-                <PixelButton
-                  label={`Play · ${DIFFICULTY_LABEL[lv]}`}
-                  variant={g === 'catch' ? 'cyan' : 'amber'}
-                  onPress={() => onStart({ kind: g, level: lv, daily: false })}
-                  style={styles.shareButton}
-                />
-                <PixelButton
-                  label={daily.best > 0 ? `Daily · best ${daily.best}` : 'Daily'}
-                  variant="cyan"
-                  onPress={() => onStart({ kind: g, level: 'normal', daily: true })}
-                  style={styles.shareButton}
-                />
-              </View>
-            </View>
-          </PixelFrame>
-        );
-      })}
-      {hint ? <PixelBody color={PIXEL.cyan}>{hint}</PixelBody> : null}
+      <GameCard g="train" view={view} onStart={onStart} />
       {lastRound ? (
         <ScoreBurst score={lastRound.score} strong={lastRound.strong} runKey={lastRound.key} animate={!still} />
       ) : null}

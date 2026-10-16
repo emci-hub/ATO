@@ -106,6 +106,7 @@ import {
   BookTab,
   ExpeditionSheetBody,
   FeedSheetBody,
+  GameCard,
   HallTab,
   HelpTab,
   PlaySheetBody,
@@ -409,6 +410,7 @@ export function PetScreen({
   }, [openJournal, onJournalOpened]);
   const [game, setGame] = useState<GameRun | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [lastKind, setLastKind] = useState<PetRoundKind | null>(null);
   const [lastRound, setLastRound] = useState<{ key: string; score: number; strong: boolean } | null>(null);
   const [teaseOpen, setTeaseOpen] = useState(false);
 
@@ -936,7 +938,9 @@ export function PetScreen({
       // A replay of the same round (background retry) comes back uncounted
       // and must not wipe the line the real win already showed.
       if (r.counted) {
-        setSheet('play');
+        // Back to the sheet the game lives in: Catch the food is in Feed, Tap to train in Play.
+        setSheet(kind === 'catch' ? 'feed' : 'play');
+        setLastKind(kind);
         setLastResult(roundResultLine(kind, outcome, r));
         setLastRound({ key: roundClaim.current.key, score: r.score, strong: isStrongResult(r) });
       }
@@ -1370,13 +1374,27 @@ export function PetScreen({
           <FeedSheetBody view={view} commit={commit} onFed={() => setJuiceKey((n) => n + 1)} />
         )}
         <GuideLink section="pet" onOpen={openGuide} />
+        {/* Catch the food lives here, right under "? Your pet" (emci 2026-10-16): the round that fills the pantry. */}
+        {pet.stage === 'egg' ? null : (
+          <>
+            <PixelBody>Catch the food feeds it (+2 hunger) — only if you pass (50%+).</PixelBody>
+            <GameCard
+              g="catch"
+              view={view}
+              onStart={startGame}
+              lastResult={lastKind === 'catch' ? lastResult : null}
+              lastRound={lastKind === 'catch' ? lastRound : null}
+              still={reduceMotion || fxQuality !== 'full'}
+            />
+          </>
+        )}
       </PlaySheet>
       <PlaySheet open={sheet === 'play'} title={SHEET_TITLE.play} onClose={closeSheet} reduceMotion={reduceMotion}>
         <PlaySheetBody
           view={view}
           onStart={startGame}
-          lastResult={lastResult}
-          lastRound={lastRound}
+          lastResult={lastKind === 'catch' ? null : lastResult}
+          lastRound={lastKind === 'catch' ? null : lastRound}
           still={reduceMotion || fxQuality !== 'full'}
           onGuide={() => openGuide('games')}
         />
