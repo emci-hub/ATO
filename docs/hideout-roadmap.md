@@ -18,7 +18,8 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0f | Rooftop room art (PixelLab, same recipe, new map) | ✔ merged, PR #54 (squash `75c062b8`). **OTA `01a14322`** (production, iOS, group `21b75ecb`, commit `713827ba`, gate green 167). Not device-verified. **Next: a live Garage / Rooftop (or phone check of both)** |
 | 0g | Live Garage + Rooftop (walking pet, Back / Up, rail bounds) | ✔ merged, PR #55 (squash `ab633ef0`). **OTA `01a1444d`** (production, iOS, group `6a7abde4`, commit `c0dd6722`, gate green 167). **Device-verified** (emci, 2026-10-16, second phone check). |
 | 0h | Live-room gaps: Call dimmed in unbuilt rooms, Rooftop build reachable, pet re-clamp on room switch, dev "Build all Hideout rooms" | ✔ merged, PR #56 (squash `ae63a1e7`). **OTA `01a144fe`** (production, iOS, group `aabfd2b3`, commit `d8618055`, gate green 167). **Device-verified** (emci, 2026-10-16; dev row: Play dev kit → Tokens / Research → Build all Hideout rooms, two taps). |
-| 0i | Phone-check fixes: bubble only in the pet's room, Call says why it can't come, Light / Sleep notes, clamp on every room | ✔ merged, PR #57 (squash `91bde072`). **OTA `01a14590`** (production, iOS, group `a8cc0a68`, commit `5e4b1dfb`, gate green 167). **Device-verified** (emci, 2026-10-16: "all fine"). **Open idea from that check: see "Open items" below (Feed tip / food wording)** |
+| 0i | Phone-check fixes: bubble only in the pet's room, Call says why it can't come, Light / Sleep notes, clamp on every room | ✔ merged, PR #57 (squash `91bde072`). **OTA `01a14590`** (production, iOS, group `a8cc0a68`, commit `5e4b1dfb`, gate green 167). **Device-verified** (emci, 2026-10-16: "all fine"). The Feed / food idea from that check became step 0j. |
+| 0j | Catch the food moves into the Feed sheet, under "? Your pet" | ✔ merged, PR #58 (squash `7e7addfc`). OTA: see "Step 0j as built". Not device-verified. **Next: phone check of the Feed sheet** |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -387,13 +388,31 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   screenshot; (2) screenshots right after a reload or state change can show the splash or a half-loaded frame — wait, then screenshot twice;
   (3) a clamp or planner gate must use the same signal the planner uses (`mood === 'asleep'`), not presence.
 
+## Step 0j as built (Catch the food in the Feed sheet, emci 2026-10-16)
+- **What:** the whole Catch the food card (difficulty chips, best + medals, `Play · <level>`, `Daily`) moved from the Play sheet into the Feed
+  sheet, directly under the "? Your pet" chip (`pet-screen.tsx` Feed `PlaySheet`), with the one-line "Catch the food feeds it (+2 hunger) — only if
+  you pass (50%+)." above it. The Play sheet keeps only Tap to train (its intro line now says "Catch the food now lives in Feed.").
+  A baby / egg pet sees no Catch card in Feed (same as before in Play).
+- **How:** new exported `GameCard` in `pet-sheets.tsx` (the old inline `['catch','train'].map` body, with its own level pick + unlock hint, plus
+  optional `lastResult` / `lastRound` / `still` for the result line and `ScoreBurst`). `PlaySheetBody` renders `<GameCard g="train">`.
+- **Interpretation (emci OK'd by merging, but it was a guess from a garbled note):** "move" = removed from Play, not duplicated. If emci
+  wants it in both sheets, render `<GameCard g="catch">` in `PlaySheetBody` again.
+- **Reviewer catch (critical, fixed before merge):** `finishRound` always reopened the Play sheet, so a Catch round landed in a sheet without
+  Catch. Now `setSheet(kind === 'catch' ? 'feed' : 'play')` + `lastKind` state; the Feed card shows the Catch result / score burst, the Play sheet
+  only the Train one. The empty-pantry coach pulse (`PET_COACH_ICON.catch`) now points at the Feed icon (check pin updated on purpose).
+- Checks: `check:pet-room` pins the placement (after `<GuideLink section="pet">`), the `startGame` start, the result wiring, the sheet return and
+  the Feed coach icon. Gate green (167), reviewer PASS on the final commit. Previews `docs/divecore/catch-in-feed/` (`max-feed-sheet.jpg`,
+  `se-feed-sheet.jpg`). Not played end to end in the browser (a Catch round was not run).
+- **Known:** (1) Guide / today-plan / notices say "play Catch the food" without naming the sheet (still true); (2) the Feed sheet is longer
+  now and scrolls at 375x667 (fits, but the Catch card sits partly below the fold); (3) the old Play-sheet hint "Mini-games in the Guide" still
+  links the Guide's games section.
+
 ## Open items (from emci's second phone check, 2026-10-16)
 - Verdict: **all fine** for steps 0g / 0h / 0i (live Garage + Rooftop, Call notes, bubble, Light / Sleep). Call rules unchanged on purpose
   (emci: keep 10 min of counted time; hungry / tired / baby pets stay home with a note).
-- emci's note, verbatim (garbled in transit, **meaning not confirmed, do not guess**): "I think you should movecatch the food” to Feed or move".
-  Likely about the **"Feed keeps your pet happy" tip / the food wording near the Feed button** (the tip bubble sits just above Feed at the
-  bottom-left of the room, `onTipSeen` / `tipAnchorRef`; in the 430 and 375 previews it overlaps the floor of the room). **First action next
-  chat: ask emci once what exactly to move (the tip? the bowl / food hotspot? a word on the Feed button?) and where to.**
+- emci's note, verbatim (garbled in transit): "I think you should movecatch the food” to Feed or move". **Resolved in step 0j**: emci
+  clarified "Within feed put a button there for catch the food information, so just move the whole catch the food, just under '? Your pet'"
+  (`? Your pet` is the GuideLink chip at the bottom of the Feed sheet, not a header and not the top-right round "?").
 - Still-minor Known from 0i: a hungry pet can't be called (design); UI reads the rendered pet vs `callPetToRoom` re-reading after `touchPet`
   (rare); dev `devBuildAllRooms` may leave a scheduled build notice.
 
