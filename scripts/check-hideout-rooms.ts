@@ -59,6 +59,7 @@ import {
 } from '../src/play/playStore';
 import hideoutMap from '../assets/art/rooms/hideout/hideout-td.map.json';
 import loftMap from '../assets/art/rooms/loft/loft-td.map.json';
+import rooftopMap from '../assets/art/rooms/rooftop/rooftop-td.map.json';
 import undergroundMap from '../assets/art/rooms/underground/underground-td.map.json';
 import teaseLayout from '../assets/art/rooms/hideout/hideout-tease.json';
 
@@ -268,6 +269,7 @@ const HOUR = 60 * 60 * 1000;
     ['hideout', hideoutMap, false],
     ['loft', loftMap, true],
     ['underground', undergroundMap, false],
+    ['rooftop', rooftopMap, false],
   ] as const) {
     const geom = parseIsoGeom(raw, { sleepOnBed: sleep });
     assert.equal(geom.tile, 16, `${name} tile`);

@@ -160,6 +160,16 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'room.loft.props': require('@/assets/art/rooms/loft/loft-td-props.png'),
   'room.loft.window-day': require('@/assets/art/rooms/loft/loft-td-window-day.png'),
   'room.loft.window-night': require('@/assets/art/rooms/loft/loft-td-window-night.png'),
+  'room.rooftop.back': require('@/assets/art/rooms/rooftop/rooftop-td-back.png'),
+  'room.rooftop.floor': require('@/assets/art/rooms/rooftop/rooftop-td-floor.png'),
+  'room.rooftop.neon-a': require('@/assets/art/rooms/rooftop/rooftop-td-neon-a.png'),
+  'room.rooftop.neon-b': require('@/assets/art/rooms/rooftop/rooftop-td-neon-b.png'),
+  'room.rooftop.occluder-day-a': require('@/assets/art/rooms/rooftop/rooftop-td-occlude-day-a.png'),
+  'room.rooftop.occluder-day-b': require('@/assets/art/rooms/rooftop/rooftop-td-occlude-day-b.png'),
+  'room.rooftop.occluder-night-a': require('@/assets/art/rooms/rooftop/rooftop-td-occlude-night-a.png'),
+  'room.rooftop.occluder-night-b': require('@/assets/art/rooms/rooftop/rooftop-td-occlude-night-b.png'),
+  'room.rooftop.props': require('@/assets/art/rooms/rooftop/rooftop-td-props.png'),
+  'room.rooftop.snapshot': require('@/assets/art/rooms/rooftop/rooftop-td-snapshot.png'),
   'room.underground.back': require('@/assets/art/rooms/underground/underground-td-back.png'),
   'room.underground.floor': require('@/assets/art/rooms/underground/underground-td-floor.png'),
   'room.underground.neon-a': require('@/assets/art/rooms/underground/underground-td-neon-a.png'),
@@ -628,6 +638,16 @@ export type ArtId =
   | 'room.loft.window-day-2'
   | 'room.loft.window-night'
   | 'room.loft.window-night-2'
+  | 'room.rooftop.back'
+  | 'room.rooftop.floor'
+  | 'room.rooftop.neon-a'
+  | 'room.rooftop.neon-b'
+  | 'room.rooftop.occluder-day-a'
+  | 'room.rooftop.occluder-day-b'
+  | 'room.rooftop.occluder-night-a'
+  | 'room.rooftop.occluder-night-b'
+  | 'room.rooftop.props'
+  | 'room.rooftop.snapshot'
   | 'room.stops.core'
   | 'room.stops.ghost'
   | 'room.stops.platform'
@@ -1846,6 +1866,18 @@ export const ART = {
       windowNight: 'room.loft.window-night',
       windowNight2: 'room.loft.window-night-2',
     },
+    rooftop: {
+      back: 'room.rooftop.back',
+      floor: 'room.rooftop.floor',
+      neonA: 'room.rooftop.neon-a',
+      neonB: 'room.rooftop.neon-b',
+      occluderDayA: 'room.rooftop.occluder-day-a',
+      occluderDayB: 'room.rooftop.occluder-day-b',
+      occluderNightA: 'room.rooftop.occluder-night-a',
+      occluderNightB: 'room.rooftop.occluder-night-b',
+      props: 'room.rooftop.props',
+      snapshot: 'room.rooftop.snapshot',
+    },
     stops: {
       core: 'room.stops.core',
       ghost: 'room.stops.ghost',
@@ -2328,6 +2360,17 @@ export const ROOM = {
     windowDay: 'room.loft.window-day',
     windowNight: 'room.loft.window-night',
     glow: 'room.loft.glow',
+  },
+  rooftop: {
+    back: 'room.rooftop.back',
+    floor: 'room.rooftop.floor',
+    props: 'room.rooftop.props',
+    neonA: 'room.rooftop.neon-a',
+    neonB: 'room.rooftop.neon-b',
+    occluderDayA: 'room.rooftop.occluder-day-a',
+    occluderDayB: 'room.rooftop.occluder-day-b',
+    occluderNightA: 'room.rooftop.occluder-night-a',
+    occluderNightB: 'room.rooftop.occluder-night-b',
   },
   underground: {
     back: 'room.underground.back',

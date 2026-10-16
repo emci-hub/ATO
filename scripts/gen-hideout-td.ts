@@ -475,6 +475,50 @@ const UNDERGROUND: Layout = {
   rugs: [],
 };
 
+// Rooftop = PixelLab art (emci approved AC D / chair C / hatch B + the kit and floor mix, 2026-10-15): same recipe, parts in
+// art-src/pixellab/room.rooftop.streetwear. Two ACs against the back wall (occluders), a lawn chair, the access hatch is
+// the way back down (Back, to the Hideout) and a flat on the floor layer.
+const ROOFTOP_FILES: Record<string, string> = { acL: 'ac.png', acR: 'ac.png', chair: 'chair.png' };
+const ROOFTOP_FLATS = [{ file: 'hatch.png', cx: 128, cy: 496 }] as const;
+/** Variants left out: white-speckle scatter (f1, f5, f8, f14), noisy f15, big dark blobs (f2, f4, f7, f11, f13). */
+const ROOFTOP_FLOOR_SKIP = ['f1.png', 'f2.png', 'f4.png', 'f5.png', 'f7.png', 'f8.png', 'f11.png', 'f13.png', 'f14.png', 'f15.png'];
+
+// Pre-widen frame like the Underground; `tweakRooftop` sets the real columns after widen().
+const ROOFTOP: Layout = {
+  id: 'rooftop',
+  sleepOnBed: false,
+  window: null,
+  props: [
+    { id: 'acL', facing: 'down', rotated: false, footprint: [2, 14, 3, 2], occluder: true, rise: 49 },
+    { id: 'acR', facing: 'down', rotated: false, footprint: [13, 14, 3, 2], occluder: true, rise: 49 },
+    { id: 'chair', facing: 'down', rotated: false, footprint: [13, 25, 2, 2], occluder: true, rise: 22 },
+    { id: 'hatch', facing: 'down', rotated: false, footprint: [6, 30, 4, 2], occluder: false, rise: 0 },
+    { id: 'near-rim-l', facing: 'down', rotated: false, footprint: [1, 34, 5, 2], occluder: true, rise: 0 },
+    { id: 'near-rim-r', facing: 'down', rotated: false, footprint: [10, 34, 5, 2], occluder: true, rise: 0 },
+  ],
+  hotspots: [
+    {
+      id: 'hatch',
+      kind: 'hatch',
+      ellipse: [128, 496, 30, 15],
+      footprint: [6, 30, 4, 2],
+      labelAnchor: [128, 476],
+      walk: [128, 456],
+      thing: 'Hatch',
+      action: 'Hideout',
+      coach: 'dive',
+    },
+  ],
+  spawns: { default: [128, 360], hatch: [128, 456], door: [128, 520] },
+  targets: { bowl: [128, 400], bed: [128, 336], cushion: [128, 336], door: [128, 520], chair: [128, 360], boombox: [128, 400] },
+  lights: [
+    [80, 56],
+    [128, 48],
+    [176, 56],
+  ],
+  rugs: [],
+};
+
 const TEASE = {
   placeholder: true,
   _comment: 'PLACEHOLDER — Hideout right-wall tease (Loft side), on the side cap / back-right wall, not the floor.',
@@ -532,6 +576,11 @@ function tweakHideout(layout: Layout): Layout {
 function tweakUnderground(layout: Layout): Layout {
   const cols: Record<string, number> = { speakerL: 5, speakerR: 15 };
   return { ...layout, props: layout.props.map((p) => (cols[p.id] !== undefined ? { ...p, footprint: [cols[p.id]!, p.footprint[1], p.footprint[2], p.footprint[3]] as Foot } : p)) };
+}
+/** Rooftop: ACs at cols 5-7 / 14-16 (art x 80-128 / 224-272), the chair low on the right (cols 15-16), all clear of both rails. */
+function tweakRooftop(layout: Layout): Layout {
+  const feet: Record<string, Foot> = { acL: [5, 14, 3, 2], acR: [14, 14, 3, 2], chair: [15, 25, 2, 2] };
+  return { ...layout, props: layout.props.map((p) => (feet[p.id] ? { ...p, footprint: feet[p.id]! } : p)) };
 }
 /** Warm lamp pool centred on the Hideout lamp. */
 function lampGlow(layout: Layout): Pt {
@@ -797,6 +846,7 @@ function write(name: string, buf: Buffer) {
 
 function writeJson(name: string, value: unknown) {
   const path = join(ROOT, name);
+  mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
   console.log(`  ${name}`);
 }
@@ -805,7 +855,8 @@ function emitArt(layout: Layout) {
   const walkable = buildWalkable(layout);
   const loft = layout.id === 'loft';
   const ug = layout.id === 'underground';
-  const files = loft ? LOFT_FILES : ug ? UNDERGROUND_FILES : HIDEOUT_FILES;
+  const roof = layout.id === 'rooftop';
+  const files = loft ? LOFT_FILES : ug ? UNDERGROUND_FILES : roof ? ROOFTOP_FILES : HIDEOUT_FILES;
   const lampProp = layout.props.find((p) => p.id === 'lamp');
   const lampFoot = lampProp ? footPx(lampProp.footprint) : null;
   const art = paintHideoutArt(
@@ -823,9 +874,18 @@ function emitArt(layout: Layout) {
           const f = footPx(p.footprint);
           return { id: p.id, file: files[p.id]!, foot: { x: f.x, w: f.w, bottom: f.bottom }, occluder: p.occluder };
         }),
-      flats: (ug ? UNDERGROUND_FLATS : loft ? LOFT_FLATS : HIDEOUT_FLATS).map((f) => ({ ...f, cx: wx(f.cx) })),
-      lamp: ug ? null : lampGlow(layout),
-      screen: loft || ug ? null : [40, 110],
+      flats: (ug ? UNDERGROUND_FLATS : roof ? ROOFTOP_FLATS : loft ? LOFT_FLATS : HIDEOUT_FLATS).map((f) => ({ ...f, cx: wx(f.cx) })),
+      lamp: ug || roof ? null : lampGlow(layout),
+      screen: loft || ug || roof ? null : [40, 110],
+      ...(roof
+        ? {
+            rim: { body: [32, 28, 46, 255] as const, top: [74, 62, 96, 255] as const },
+            floorMix: { base: 0.6, maxLumaGap: 0.3 },
+            floorSkip: ROOFTOP_FLOOR_SKIP,
+            // Magenta light spilling from the wall strips onto the roof.
+            spills: [{ pos: [112, 150] as const, rgb: [255, 70, 190] as const }, { pos: [240, 150] as const, rgb: [255, 70, 190] as const }],
+          }
+        : {}),
       ...(ug
         ? {
             rim: { body: [30, 36, 52, 255] as const, top: [66, 82, 108, 255] as const },
@@ -866,7 +926,7 @@ function emitArt(layout: Layout) {
   if (art.windowNight) write(`${id}/${id}-td-window-night.png`, art.windowNight);
   if (art.glow) write(`${id}/${id}-td-glow.png`, art.glow);
   // The Garage is not a live room yet: the stage shows this flattened room (hideout-stage SnapshotRoom).
-  if (ug) write(`${id}/${id}-td-snapshot.png`, flatten([art.back, art.floor, art.neonA, art.props, art.occluder]));
+  if (ug || roof) write(`${id}/${id}-td-snapshot.png`, flatten([art.back, art.floor, art.neonA, art.props, art.occluder]));
 }
 
 /** Source-over flatten of the painter's PNG layers (pngjs: the painter's output uses PNG filters). */
@@ -887,7 +947,7 @@ function flatten(layers: Buffer[]): Buffer {
 }
 
 function emit(layout: Layout, night: boolean) {
-  if ((layout.id === 'hideout' || layout.id === 'loft' || layout.id === 'underground') && hideoutArtAvailable(layout.id)) return emitArt(layout);
+  if ((layout.id === 'hideout' || layout.id === 'loft' || layout.id === 'underground' || layout.id === 'rooftop') && hideoutArtAvailable(layout.id)) return emitArt(layout);
   const walkable = buildWalkable(layout);
   writeJson(`${layout.id}/${layout.id}-td.map.json`, mapJson(layout, walkable));
   const back = paintBack(layout, night);
@@ -918,6 +978,7 @@ function emit(layout: Layout, night: boolean) {
 emit(tweakHideout(widen(HIDEOUT)), false);
 emit(widen(LOFT), false);
 emit(tweakUnderground(widen(UNDERGROUND)), true);
+emit(tweakRooftop(widen(ROOFTOP)), true);
 if (!hideoutArtAvailable('loft')) {
   // Loft greybox fallback (no PixelLab parts in art-src): flat window + glow overlays.
   write('loft/loft-td-window-day.png', windowSprite(false));

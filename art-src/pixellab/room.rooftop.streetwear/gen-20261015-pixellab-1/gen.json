@@ -1,0 +1,24 @@
+{
+  "tool": "pixellab",
+  "room": "rooftop",
+  "approvedBy": "emci 2026-10-15 (AC D, chair C, hatch B, kit + floor mix as sampled; sheets in docs/divecore/rooftop-room/)",
+  "view": "low top-down",
+  "styleCard": { "outline": "selective outline", "shading": "medium shading", "detail": "medium detail" },
+  "scaleReference": "hero.kael.streetwear south, H=106 px, guide §2 table",
+  "parts": {
+    "kit": { "tool": "create_building_kit", "id": "a8f3cd3a-a804-4b1a-a8e7-28a6bbf8044e", "params": { "tile_type": "square_topdown", "tile_size": 32, "wall_tiles": 3, "layout": "materials" }, "wall": "weathered dark brick stairwell wall with a metal pipe run, a few cables and soot streaks, a faint magenta neon strip near the top, dim indigo night shadows, no writing", "floor": "dark tar-paper rooftop with fine gravel and faint seams, cool blue-grey, dim indigo shadows", "used": { "t0": "floor 32x24 (crop 10,79)", "t1": "back wall 32x81 (crop 10,7)", "t4": "side cap 12x24 (crop 10,7)" } },
+    "floor-variants": { "tool": "create_tiles_pro", "id": "0224adc1-984b-4849-85aa-b3cdc32d2fce", "style_images": ["kit t0 32x24 (upload)"], "prompt": "1). dark tar-paper rooftop with gravel 2). dark tar patch 3). small crack in tar paper 4). pale gravel scatter", "kept": "f0 f3 f6 f9 f10 f12 (+ the kit floor as base, 60 %)", "dropped": "f1 f5 f8 f14 white speckle, f15 noise, f2 f4 f7 f11 f13 big dark blobs" },
+    "props": {
+      "ac": { "tool": "create_map_object", "id": "48e364c4-7d36-4ae1-8159-858a33a2dabe", "canvas": [64, 84], "view": "low top-down", "tries": 4, "note": "picked D (47x65). Round 1 (68x68 canvas: 108105ed, 82a2c7bb) came out 56x57 / 53x58, 25 % short, so round 2 (tall canvas) gave C (9400ce2b, 44x68) and D. One sprite for both ACs" },
+      "chair": { "tool": "create_map_object", "id": "1b10c4ba-a064-4be0-a755-e0396dd5011c", "canvas": [44, 68], "box": [36, 55], "view": "low top-down", "tries": 4, "note": "picked C (36x54). Round 1 (40x60 canvas: a108a2a6, 88e630bd) was 28x34 / 21x34, 38 % short, regenerated rather than stretched; D = 049e1bf9 (38x47)" },
+      "hatch": { "tool": "create_map_object", "id": "fa6e9f9f-4496-46ed-82d3-8f5be0517455", "canvas": [72, 36], "box": [64, 32], "view": "low top-down", "tries": 2, "note": "picked B (59x28); A (42fb3165, 36x26) kept as hatch-a.png. Flat on the floor layer" }
+    },
+    "states": {}
+  },
+  "promptRules": "every prop: 'fills the whole canvas edge to edge, empty, no person, purely pictorial with zero writing'; canvas = guide target box + ~10%",
+  "cost": { "generations": 100, "note": "approx.: kit ~25, floor variants ~25 (16 tiles), 4 ACs, 4 chairs, 2 hatches" },
+  "createdAt": "2026-10-16T05:30:00Z",
+  "operator": "claude",
+  "picked": true,
+  "critique": { "score": null, "notes": "scale sheet: AC 47x65 (box 61x76, wide side on a slim condenser), chair 36x54 on target, hatch 59x28 vs 64x32; ACs and chair stand between the rails (art x ~72-280)" }
+}

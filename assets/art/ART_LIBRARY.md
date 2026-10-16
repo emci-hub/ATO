@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 508 live entries.
+Generated. 518 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -12,7 +12,7 @@ Viewer lists one card per set (not each clip/file).
 - **enemies-bosses** (18: 10 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
 - **icons** (106: 50 in use / 56 unused) — Icons
-- **rooms** (61: 39 in use / 22 unused) — Rooms
+- **rooms** (71: 49 in use / 22 unused) — Rooms
 - **props** (49: 10 in use / 39 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
 - **fx** (14: 1 in use / 13 unused) — FX
@@ -841,6 +841,21 @@ Viewer lists one card per set (not each clip/file).
 | `room.loft.iso-front` | 256×320 | resource | — | — |
 | `room.loft.window-day-2` | 48×40 | resource | — | — |
 | `room.loft.window-night-2` | 48×40 | resource | — | — |
+
+## rooms · rooftop · default · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `room.rooftop.back` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.floor` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.neon-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.neon-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.occluder-day-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.occluder-day-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.occluder-night-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.occluder-night-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.props` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.rooftop.snapshot` | 352×576 | candidate | — | src/play/hideout-art.ts |
 
 ## rooms · stops · default · unused
 

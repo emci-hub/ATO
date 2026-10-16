@@ -66,6 +66,15 @@ const ROOM_IDS: Record<string, { id: string; type: ArtType; placement: string }>
   'rooms/underground/underground-td-occlude-day-b.png': { id: 'room.underground.occluder-day-b', type: 'room-layer', placement: 'front-occluder' },
   'rooms/underground/underground-td-occlude-night-a.png': { id: 'room.underground.occluder-night-a', type: 'room-layer', placement: 'front-occluder' },
   'rooms/underground/underground-td-occlude-night-b.png': { id: 'room.underground.occluder-night-b', type: 'room-layer', placement: 'front-occluder' },
+  'rooms/rooftop/rooftop-td-back.png': { id: 'room.rooftop.back', type: 'room-layer', placement: 'back-wall' },
+  'rooms/rooftop/rooftop-td-floor.png': { id: 'room.rooftop.floor', type: 'room-layer', placement: 'floor' },
+  'rooms/rooftop/rooftop-td-props.png': { id: 'room.rooftop.props', type: 'room-layer', placement: 'floor' },
+  'rooms/rooftop/rooftop-td-neon-a.png': { id: 'room.rooftop.neon-a', type: 'room-layer', placement: 'overlay' },
+  'rooms/rooftop/rooftop-td-neon-b.png': { id: 'room.rooftop.neon-b', type: 'room-layer', placement: 'overlay' },
+  'rooms/rooftop/rooftop-td-occlude-day-a.png': { id: 'room.rooftop.occluder-day-a', type: 'room-layer', placement: 'front-occluder' },
+  'rooms/rooftop/rooftop-td-occlude-day-b.png': { id: 'room.rooftop.occluder-day-b', type: 'room-layer', placement: 'front-occluder' },
+  'rooms/rooftop/rooftop-td-occlude-night-a.png': { id: 'room.rooftop.occluder-night-a', type: 'room-layer', placement: 'front-occluder' },
+  'rooms/rooftop/rooftop-td-occlude-night-b.png': { id: 'room.rooftop.occluder-night-b', type: 'room-layer', placement: 'front-occluder' },
 };
 
 function relArt(file: string): string {
