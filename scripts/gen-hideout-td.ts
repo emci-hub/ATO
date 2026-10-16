@@ -370,7 +370,8 @@ const LOFT: Layout = {
     { id: 'nightstand', facing: 'down', rotated: false, footprint: [5, 13, 2, 1], occluder: false, rise: 16 },
     // Against the back wall the pet can never stand behind the lamp, so it is not an occluder (its lit twin
     // is drawn in the glow layer, above the props; an occluder copy would cover it).
-    { id: 'lamp', facing: 'back-wall', rotated: false, footprint: [13, 8, 2, 1], occluder: false, rise: 97 },
+    // Col 11 (was 13): at col 13 the lamp stood under the right rail (rail = x ≥ 297 art px) and could not be seen.
+    { id: 'lamp', facing: 'back-wall', rotated: false, footprint: [11, 8, 2, 1], occluder: false, rise: 97 },
     { id: 'near-rim-l', facing: 'down', rotated: false, footprint: [1, 34, 5, 2], occluder: true, rise: 0 },
     { id: 'near-rim-r', facing: 'down', rotated: false, footprint: [10, 34, 5, 2], occluder: true, rise: 0 },
   ],
@@ -389,9 +390,9 @@ const LOFT: Layout = {
     {
       id: 'lamp',
       kind: 'lamp',
-      ellipse: [224, 136, 12, 6],
-      footprint: [13, 8, 2, 1],
-      labelAnchor: [224, 24],
+      ellipse: [192, 136, 12, 6],
+      footprint: [11, 8, 2, 1],
+      labelAnchor: [192, 24],
       walk: [200, 176],
       thing: 'Lamp',
       action: 'Light',

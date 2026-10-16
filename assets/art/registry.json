@@ -13979,10 +13979,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 9511,
+      "diskBytes": 11088,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:b0d2aab0c434711ecffbf1783617c735",
+      "notes": "md5:960d7f41ea84ebe95200ee6b0dbba8a8",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14090,10 +14090,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 6913,
+      "diskBytes": 8698,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:5cd5a4e1412ef06d5d2b5f1be65d42e0",
+      "notes": "md5:0cde09bf8578e656a00abf664d5edda3",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14117,10 +14117,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 6428,
+      "diskBytes": 7366,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:8f25921b79696ea7188808dfdb1ce04b",
+      "notes": "md5:c80ad00dd5a231c701142bfe78e1e10b",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14252,10 +14252,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 8188,
+      "diskBytes": 8190,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:4853ee9168d0c72f144d31096c87404e",
+      "notes": "md5:f438d68d51a76eb5b53ae75ea1c80384",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
