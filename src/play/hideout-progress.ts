@@ -251,6 +251,13 @@ export function roomStage(id: HideoutRoomId, h: HideoutState): RoomStage {
   return 'tease';
 }
 
+/** The one room the boarded wall / build sheet offers: Loft, then Garage, then Rooftop (the last stays once all are built). */
+export function nextBuildRoom(h: HideoutState): HideoutRoomId {
+  if (roomStage('loft', h) !== 'done') return 'loft';
+  if (roomStage('garage', h) !== 'done') return 'garage';
+  return 'rooftop';
+}
+
 export function buildRemainingMs(b: RoomBuild): number {
   return Math.max(0, b.duration_ms - b.elapsed_ms - b.speedup_ms);
 }

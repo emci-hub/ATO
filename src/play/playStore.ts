@@ -2866,6 +2866,7 @@ export function viewHideoutRoom(doc: PlayStoreDoc, now: number, room: HideoutRoo
 export function callPetToRoom(doc: PlayStoreDoc, now: number, room: HideoutRoomId): PlayStoreDoc | null {
   const touched = touchPet(doc, now);
   if (touched.pet_expedition) return null;
+  if (!touched.hideout.rooms_unlocked[room]) return null;
   const h = startCall({ ...touched.hideout, viewed_room: room }, touched.pet, room);
   return { ...touched, hideout: pushHideoutEvent(h, { t: now, kind: 'call_used', room }) };
 }
@@ -5354,6 +5355,18 @@ export function devFillResearchFull(doc: PlayStoreDoc, now: number): PlayStoreDo
 /** +10 tokens (matches the kit row label). */
 export function devAddTokens(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, tokens: doc.tokens + 10 };
+}
+
+/** Dev kit (PRE_LAUNCH_DEV only): mark Loft, Garage and Rooftop built on this Play save, so the live rooms can be phone-checked. */
+export function devBuildAllRooms(doc: PlayStoreDoc): PlayStoreDoc {
+  return {
+    ...doc,
+    hideout: {
+      ...doc.hideout,
+      builds: {},
+      rooms_unlocked: { hideout: true, loft: true, garage: true, rooftop: true },
+    },
+  };
 }
 
 /** Dev kit: clear today's shop purchase counts (re-test daily caps). */

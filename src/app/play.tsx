@@ -68,6 +68,7 @@ import {
   canClaimResearch,
   devAddDiveCharge,
   devAddTokens,
+  devBuildAllRooms,
   devFillDiveCharges,
   devFillResearchFull,
   devFillResearchOne,
@@ -1092,6 +1093,7 @@ function GroveDevKit({
 }) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
+  const [roomsArmed, setRoomsArmed] = useState(false);
   const disarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Which Dev kit sections are expanded. ALL collapsed on entry — the kit is a
    * long list, so a tester opens just the group they need. */
@@ -1113,6 +1115,7 @@ function GroveDevKit({
       disarmTimer.current = null;
     }
     setResetArmed(false);
+    setRoomsArmed(false);
   }, []);
 
   const run = useCallback(
@@ -1122,6 +1125,18 @@ function GroveDevKit({
     },
     [clearResetArm, commit],
   );
+
+  // Two taps: the first arms for 4 s, the second marks every Hideout room built.
+  const pressBuildRooms = useCallback(() => {
+    if (roomsArmed) {
+      clearResetArm();
+      commit(devBuildAllRooms);
+      return;
+    }
+    clearResetArm();
+    setRoomsArmed(true);
+    disarmTimer.current = setTimeout(() => setRoomsArmed(false), 4000);
+  }, [clearResetArm, commit, roomsArmed]);
 
   const pressReset = useCallback(() => {
     if (resetArmed) {
@@ -1248,6 +1263,11 @@ function GroveDevKit({
           onPress: () => run(devFillResearchFull),
         },
         { key: 'tokens', label: '+10 tokens', onPress: () => run(devAddTokens) },
+        {
+          key: 'build-all-rooms',
+          label: roomsArmed ? 'Tap again: build Loft, Garage, Rooftop' : 'Build all Hideout rooms',
+          onPress: pressBuildRooms,
+        },
         {
           key: 'shop-reset-daily',
           label: 'Reset shop daily caps',

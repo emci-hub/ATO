@@ -72,7 +72,7 @@ import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
 import { usePetKnowsYou } from '@/play/use-pet-knows-you';
 import { HideoutTeaseSheetCopy } from '@/play/hideout-tease';
-import { canStartBuild, roomStage, type HideoutRoomId } from '@/play/hideout-progress';
+import { canStartBuild, nextBuildRoom, roomStage, type HideoutRoomId } from '@/play/hideout-progress';
 import { tripLabel } from '@/play/expedition-ladder';
 import {
   EGG_COLOR,
@@ -1053,7 +1053,7 @@ export function PetScreen({
 
   if (!fontsReady) return <View style={styles.screen} />;
   const street = streetUiOn();
-  const teaseRoom: HideoutRoomId = roomStage('loft', view.hideout.state) === 'done' ? 'garage' : 'loft';
+  const teaseRoom: HideoutRoomId = nextBuildRoom(view.hideout.state);
   const teaseStage = roomStage(teaseRoom, view.hideout.state);
   const teaseCopy = HideoutTeaseSheetCopy({
     room: teaseRoom,

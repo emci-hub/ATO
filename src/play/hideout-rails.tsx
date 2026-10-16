@@ -173,6 +173,8 @@ export function HideoutRails(props: HideoutRailsProps) {
   const scrolls = railScrolls(rooms.length);
   const maxH = railMaxHeight(stageH);
   const petLabel = `Pet is in ${roomDef(petRoom).label}`;
+  // The pet visits only a built room: Call is dimmed in one still being built (it opens that room's build sheet).
+  const callable = hideout.rooms_unlocked[viewed] === true;
   if (props.hidden) return null;
 
   const press = (a: RailAction) => {
@@ -221,8 +223,9 @@ export function HideoutRails(props: HideoutRailsProps) {
         still={still}
         gentle={gentle}
         role="button"
+        dim={!away && !callable}
         a11yLabel={callA11y}
-        onPress={onCall}
+        onPress={callable || away ? onCall : onTease}
       />
     </>
   );

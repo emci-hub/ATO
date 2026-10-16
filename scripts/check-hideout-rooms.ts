@@ -28,6 +28,7 @@ import {
   markEverChild,
   migrateHideout,
   parseHideout,
+  nextBuildRoom,
   roomGateMet,
   roomStage,
   roomTokenPrice,
@@ -191,6 +192,13 @@ const HOUR = 60 * 60 * 1000;
   assert.equal(h.loft_veteran_half, true);
   assert.equal(roomStage('loft', h), 'tease');
   assert.equal(roomStage('garage', h), 'hidden', 'Garage tease waits until Loft is done');
+  // The boarded wall / build sheet walks Loft → Garage → Rooftop (the Rooftop was unreachable before).
+  assert.equal(nextBuildRoom(h), 'loft');
+  const loftDone = { ...h, rooms_unlocked: { ...h.rooms_unlocked, loft: true } };
+  assert.equal(nextBuildRoom(loftDone), 'garage');
+  const garageDone = { ...loftDone, rooms_unlocked: { ...loftDone.rooms_unlocked, garage: true } };
+  assert.equal(nextBuildRoom(garageDone), 'rooftop');
+  assert.equal(roomStage('rooftop', garageDone), 'tease', 'Rooftop tease opens once the Garage is built');
   assert.equal(h.ever_child, true);
   assert.equal(h.lifetime_deep_surfaces, 4);
   const parsed = parsePlayStore(JSON.stringify({ ...raw, pet, version: 32 }), T0);
