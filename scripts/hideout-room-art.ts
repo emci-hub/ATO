@@ -18,7 +18,9 @@ import { join } from 'node:path';
 
 import { PNG } from 'pngjs';
 
-export const HIDEOUT_ART_SRC = join(__dirname, '..', 'art-src', 'pixellab', 'room.hideout.streetwear');
+/** Raw PixelLab parts of one room (the Loft follows the Hideout's recipe: kit, floor variants, props, states). */
+export const roomArtSrc = (room: string) => join(__dirname, '..', 'art-src', 'pixellab', `room.${room}.streetwear`);
+export const HIDEOUT_ART_SRC = roomArtSrc('hideout');
 
 type Img = { w: number; h: number; px: Buffer };
 
@@ -117,6 +119,14 @@ export type HideoutArtInput = {
   flats: readonly { file: string; cx: number; cy: number }[];
   lamp: readonly [number, number] | null;
   screen: readonly [number, number] | null;
+  /** Loft: window sprite files (day / night) written as 128×72 overlays; the back layer then paints no window. */
+  windowSprites?: { day: string; night: string; w: number; h: number };
+  /** Loft: the lit lamp sprite + warm pool, written as the glow layer (drawn only at night with the lamp on). */
+  litLamp?: { file: string; foot: { x: number; w: number; bottom: number }; pool: readonly [number, number] };
+  /** Loft: keep the floor calm — share of plain base planks and the largest brightness gap a variant may have from it. */
+  floorMix?: { base: number; maxLumaGap: number };
+  /** Wall plaster rim colours (the Hideout default is brick red). */
+  rim?: { body: readonly [number, number, number, number]; top: readonly [number, number, number, number] };
 };
 
 export type HideoutArtOut = {
@@ -127,35 +137,54 @@ export type HideoutArtOut = {
   neonA: Buffer;
   neonB: Buffer;
   sprites: PlacedSprite[];
+  glow?: Buffer;
+  windowDay?: Buffer;
+  windowNight?: Buffer;
 };
 
-function latestGen(): string | null {
-  if (!existsSync(HIDEOUT_ART_SRC)) return null;
-  const gens = readdirSync(HIDEOUT_ART_SRC).filter((g) => existsSync(join(HIDEOUT_ART_SRC, g, 'raw', 'kit', 't0.png')));
-  return gens.length ? join(HIDEOUT_ART_SRC, gens.sort().at(-1)!, 'raw') : null;
+function latestGen(room = 'hideout'): string | null {
+  const src = roomArtSrc(room);
+  if (!existsSync(src)) return null;
+  const gens = readdirSync(src).filter((g) => existsSync(join(src, g, 'raw', 'kit', 't0.png')));
+  return gens.length ? join(src, gens.sort().at(-1)!, 'raw') : null;
 }
 
-export function hideoutArtAvailable(): boolean {
-  return latestGen() !== null;
+export function hideoutArtAvailable(room = 'hideout'): boolean {
+  return latestGen(room) !== null;
 }
 
-export function paintHideoutArt(L: HideoutArtInput): HideoutArtOut {
-  const raw = latestGen();
-  if (!raw) throw new Error('no Hideout PixelLab art under art-src/pixellab/room.hideout.streetwear');
+export function paintHideoutArt(L: HideoutArtInput, room = 'hideout'): HideoutArtOut {
+  const raw = latestGen(room);
+  if (!raw) throw new Error(`no ${room} PixelLab art under art-src/pixellab/room.${room}.streetwear`);
+  const rimBody = L.rim?.body ?? ([58, 34, 34, 255] as const);
+  const rimTop = L.rim?.top ?? ([92, 52, 44, 255] as const);
   const kit = (n: string, x: number, y: number, w: number, h: number) => crop(load(join(raw, 'kit', n)), x, y, w, h);
   const plankBase = kit('t0.png', 10, 79, 32, 24);
   const wall = kit('t1.png', 10, 7, 32, 81);
   const side = kit('t4.png', 10, 7, 12, 24);
+  const luma = (img: Img) => {
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < img.w * img.h; i += 1) {
+      if (img.px[i * 4 + 3]! === 0) continue;
+      sum += 0.299 * img.px[i * 4]! + 0.587 * img.px[i * 4 + 1]! + 0.114 * img.px[i * 4 + 2]!;
+      n += 1;
+    }
+    return n ? sum / n : 0;
+  };
+  const baseLuma = luma(plankBase);
   const variants = readdirSync(join(raw, 'floor-variants'))
     .sort()
-    .map((f) => load(join(raw, 'floor-variants', f)));
+    .map((f) => load(join(raw, 'floor-variants', f)))
+    .filter((v) => !L.floorMix || Math.abs(luma(v) - baseLuma) / Math.max(1, baseLuma) <= L.floorMix.maxLumaGap);
+  const baseShare = L.floorMix?.base ?? 0.55;
   const sprite = (file: string) => trim(load(join(raw, 'props', file)));
 
   // ---- back: ceiling, brick wall, window, side + near rims, doorway
   const back = new Canvas(L.W, L.H);
   back.rect(0, 0, L.W, L.wallBottom, [27, 22, 38, 255]);
   for (let x = 0; x < L.W; x += wall.w) back.draw(wall, x, L.wallBottom - wall.h);
-  if (L.window) back.draw(sprite('window.png'), L.window.pos[0], L.window.pos[1]);
+  if (L.window && !L.windowSprites) back.draw(sprite('window.png'), L.window.pos[0], L.window.pos[1]);
   for (let y = L.wallBottom - 8; y < L.H; y += side.h) {
     back.draw(side, 2, y);
     back.draw(side, L.W - 14, y);
@@ -163,10 +192,10 @@ export function paintHideoutArt(L: HideoutArtInput): HideoutArtOut {
   back.rect(0, L.wallBottom - 8, 2, L.H, [20, 16, 28, 255]);
   back.rect(L.W - 2, L.wallBottom - 8, L.W, L.H, [20, 16, 28, 255]);
   const rim = (c: Canvas) => {
-    c.rect(0, L.floorBottom, L.door[0], L.H, [58, 34, 34, 255]);
-    c.rect(L.door[1], L.floorBottom, L.W, L.H, [58, 34, 34, 255]);
-    c.rect(0, L.floorBottom, L.door[0], L.floorBottom + 3, [92, 52, 44, 255]);
-    c.rect(L.door[1], L.floorBottom, L.W, L.floorBottom + 3, [92, 52, 44, 255]);
+    c.rect(0, L.floorBottom, L.door[0], L.H, rimBody);
+    c.rect(L.door[1], L.floorBottom, L.W, L.H, rimBody);
+    c.rect(0, L.floorBottom, L.door[0], L.floorBottom + 3, rimTop);
+    c.rect(L.door[1], L.floorBottom, L.W, L.floorBottom + 3, rimTop);
   };
   rim(back);
   back.rect(L.door[0], L.floorBottom, L.door[1], L.H, [14, 11, 20, 255]);
@@ -180,7 +209,7 @@ export function paintHideoutArt(L: HideoutArtInput): HideoutArtOut {
   };
   for (let r = 0, y = L.wallBottom; y < L.floorBottom; r += 1, y += plankBase.h) {
     for (let x = L.cap - (r % 2 ? 16 : 0); x < L.W - L.cap; x += plankBase.w) {
-      const tile = rand() < 0.55 ? plankBase : variants[Math.floor(rand() * variants.length)]!;
+      const tile = rand() < baseShare || !variants.length ? plankBase : variants[Math.floor(rand() * variants.length)]!;
       floor.draw(tile, x, y);
     }
   }
@@ -221,11 +250,42 @@ export function paintHideoutArt(L: HideoutArtInput): HideoutArtOut {
     const c = new Canvas(L.W, L.H);
     if (L.lamp) c.glow(L.lamp[0], L.lamp[1], 70, 44, [255, 180, 90], 70 * k);
     if (L.screen) c.glow(L.screen[0], L.screen[1], 46, 26, [80, 220, 255], 50 * k);
-    if (L.window) c.glow(L.window.pos[0] + 26, L.wallBottom + 14, 40, 14, [190, 150, 255], 36 * k);
+    if (L.window) c.glow(L.window.pos[0] + (L.windowSprites ? L.windowSprites.w / 2 : 26), L.wallBottom + 14, L.windowSprites ? 64 : 40, 14, [190, 150, 255], 36 * k);
     return c.png();
   };
 
+  // ---- Loft only: window overlays (trimmed, centred on the map's window box, never stretched)
+  let windowDay: Buffer | undefined;
+  let windowNight: Buffer | undefined;
+  if (L.windowSprites) {
+    const ws = L.windowSprites;
+    const overlay = (file: string) => {
+      const img = sprite(file);
+      if (img.w > ws.w || img.h > ws.h) throw new Error(`${file} is ${img.w}x${img.h}, bigger than the ${ws.w}x${ws.h} window box`);
+      const c = new Canvas(ws.w, ws.h);
+      c.draw(img, Math.floor((ws.w - img.w) / 2), Math.floor((ws.h - img.h) / 2));
+      return c.png();
+    };
+    windowDay = overlay(ws.day);
+    windowNight = overlay(ws.night);
+  }
+  // ---- Loft only: the lamp's "on" look = warm pool + the lit sprite, shown over the dim lamp in props
+  let glow: Buffer | undefined;
+  if (L.litLamp) {
+    const g = new Canvas(L.W, L.H);
+    const img = sprite(L.litLamp.file);
+    const x = Math.round(L.litLamp.foot.x + L.litLamp.foot.w / 2 - img.w / 2);
+    const y = L.litLamp.foot.bottom - img.h;
+    g.glow(L.litLamp.pool[0], L.litLamp.pool[1], 64, 46, [255, 176, 72], 90);
+    g.glow(x + img.w / 2, y + 12, 26, 26, [255, 190, 100], 80);
+    g.draw(img, x, y);
+    glow = g.png();
+  }
+
   return {
+    glow,
+    windowDay,
+    windowNight,
     back: back.png(),
     floor: floor.png(),
     props: props.png(),

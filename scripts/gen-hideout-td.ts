@@ -197,7 +197,7 @@ function mapJson(layout: Layout, walkable: string[], art?: Map<string, [number, 
       placeholder: !art,
       sleepOnBed: layout.sleepOnBed,
       source: art
-        ? 'scripts/gen-hideout-td.ts + hideout-room-art.ts — PixelLab art (art-src/pixellab/room.hideout.streetwear)'
+        ? `scripts/gen-hideout-td.ts + hideout-room-art.ts — PixelLab art (art-src/pixellab/room.${layout.id}.streetwear)`
         : 'scripts/gen-hideout-td.ts — option A greybox until PixelLab room art lands',
     },
     layers: {
@@ -353,6 +353,12 @@ const HIDEOUT_FLATS = [
   { file: 'cushion.png', cx: 184, cy: 410 },
 ] as const;
 
+// Loft = PixelLab art (emci picked bed 1 / stand 1 / the Hideout lamp, 2026-10-15): same recipe as the Hideout,
+// parts in art-src/pixellab/room.loft.streetwear. The lamp prop is the dim sprite; the lit one lives in the glow layer.
+const LOFT_FILES: Record<string, string> = { bed: 'bed.png', nightstand: 'nightstand.png', lamp: 'lamp-off.png' };
+/** Loft rug (walkable): centred on the map's rug ellipse. */
+const LOFT_FLATS = [{ file: 'rug.png', cx: 160, cy: 400 }] as const;
+
 const LOFT: Layout = {
   id: 'loft',
   sleepOnBed: true,
@@ -362,7 +368,9 @@ const LOFT: Layout = {
     { id: 'bed', facing: 'side-wall', rotated: true, footprint: [1, 14, 4, 8], occluder: false, rise: 18 },
     // Nightstand 0.5 m → 32 × 32 px box.
     { id: 'nightstand', facing: 'down', rotated: false, footprint: [5, 13, 2, 1], occluder: false, rise: 16 },
-    { id: 'lamp', facing: 'back-wall', rotated: false, footprint: [13, 8, 2, 1], occluder: true, rise: 97 },
+    // Against the back wall the pet can never stand behind the lamp, so it is not an occluder (its lit twin
+    // is drawn in the glow layer, above the props; an occluder copy would cover it).
+    { id: 'lamp', facing: 'back-wall', rotated: false, footprint: [13, 8, 2, 1], occluder: false, rise: 97 },
     { id: 'near-rim-l', facing: 'down', rotated: false, footprint: [1, 34, 5, 2], occluder: true, rise: 0 },
     { id: 'near-rim-r', facing: 'down', rotated: false, footprint: [10, 34, 5, 2], occluder: true, rise: 0 },
   ],
@@ -777,24 +785,39 @@ function writeJson(name: string, value: unknown) {
 
 function emitArt(layout: Layout) {
   const walkable = buildWalkable(layout);
-  const art = paintHideoutArt({
-    W,
-    H,
-    wallBottom: WALL_BOTTOM,
-    floorBottom: FLOOR_BOTTOM,
-    cap: CAP,
-    door: [DOOR_COL0 * T, DOOR_COL1 * T],
-    window: layout.window,
-    props: layout.props
-      .filter((p) => HIDEOUT_FILES[p.id])
-      .map((p) => {
-        const f = footPx(p.footprint);
-        return { id: p.id, file: HIDEOUT_FILES[p.id]!, foot: { x: f.x, w: f.w, bottom: f.bottom }, occluder: p.occluder };
-      }),
-    flats: HIDEOUT_FLATS.map((f) => ({ ...f, cx: wx(f.cx) })),
-    lamp: lampGlow(layout),
-    screen: [40, 110],
-  });
+  const loft = layout.id === 'loft';
+  const files = loft ? LOFT_FILES : HIDEOUT_FILES;
+  const lampProp = layout.props.find((p) => p.id === 'lamp');
+  const lampFoot = lampProp ? footPx(lampProp.footprint) : null;
+  const art = paintHideoutArt(
+    {
+      W,
+      H,
+      wallBottom: WALL_BOTTOM,
+      floorBottom: FLOOR_BOTTOM,
+      cap: CAP,
+      door: [DOOR_COL0 * T, DOOR_COL1 * T],
+      window: layout.window,
+      props: layout.props
+        .filter((p) => files[p.id])
+        .map((p) => {
+          const f = footPx(p.footprint);
+          return { id: p.id, file: files[p.id]!, foot: { x: f.x, w: f.w, bottom: f.bottom }, occluder: p.occluder };
+        }),
+      flats: (loft ? LOFT_FLATS : HIDEOUT_FLATS).map((f) => ({ ...f, cx: wx(f.cx) })),
+      lamp: lampGlow(layout),
+      screen: loft ? null : [40, 110],
+      ...(loft && layout.window && lampFoot
+        ? {
+            windowSprites: { day: 'window-day.png', night: 'window-night.png', w: layout.window.size[0], h: layout.window.size[1] },
+            litLamp: { file: 'lamp.png', foot: { x: lampFoot.x, w: lampFoot.w, bottom: lampFoot.bottom }, pool: [lampFoot.x + lampFoot.w / 2, 150] as const },
+            rim: { body: [44, 30, 52, 255] as const, top: [78, 56, 84, 255] as const },
+            floorMix: { base: 0.7, maxLumaGap: 0.18 },
+          }
+        : {}),
+    },
+    layout.id,
+  );
   const rects = new Map(art.sprites.map((s) => [s.id, s.rect]));
   // The near rim keeps its greybox crop (the art painter draws the rim into the occluder layer).
   for (const p of layout.props) if (!rects.has(p.id)) rects.set(p.id, spriteRect(p));
@@ -807,10 +830,13 @@ function emitArt(layout: Layout) {
   for (const k of ['day-a', 'day-b', 'night-a', 'night-b']) write(`${id}/${id}-td-occlude-${k}.png`, art.occluder);
   write(`${id}/${id}-td-neon-a.png`, art.neonA);
   write(`${id}/${id}-td-neon-b.png`, art.neonB);
+  if (art.windowDay) write(`${id}/${id}-td-window-day.png`, art.windowDay);
+  if (art.windowNight) write(`${id}/${id}-td-window-night.png`, art.windowNight);
+  if (art.glow) write(`${id}/${id}-td-glow.png`, art.glow);
 }
 
 function emit(layout: Layout, night: boolean) {
-  if (layout.id === 'hideout' && hideoutArtAvailable()) return emitArt(layout);
+  if ((layout.id === 'hideout' || layout.id === 'loft') && hideoutArtAvailable(layout.id)) return emitArt(layout);
   const walkable = buildWalkable(layout);
   writeJson(`${layout.id}/${layout.id}-td.map.json`, mapJson(layout, walkable));
   const back = paintBack(layout, night);
@@ -841,9 +867,12 @@ function emit(layout: Layout, night: boolean) {
 emit(tweakHideout(widen(HIDEOUT)), false);
 emit(widen(LOFT), false);
 emit(widen(UNDERGROUND), true);
-write('loft/loft-td-window-day.png', windowSprite(false));
-write('loft/loft-td-window-night.png', windowSprite(true));
-write('loft/loft-td-glow.png', glowOverlay());
+if (!hideoutArtAvailable('loft')) {
+  // Loft greybox fallback (no PixelLab parts in art-src): flat window + glow overlays.
+  write('loft/loft-td-window-day.png', windowSprite(false));
+  write('loft/loft-td-window-night.png', windowSprite(true));
+  write('loft/loft-td-glow.png', glowOverlay());
+}
 writeJson('hideout/hideout-tease.json', widenTease(TEASE));
 write('hideout/neighbor-boarded-td.png', paintBack({ ...widen(UNDERGROUND), window: null }, true));
 console.log('hideout 3/4 top-down greybox written (option A) — now run npm run art:sync');
