@@ -14,6 +14,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0b | Polish batch (LF art pins, holo tip, archive hideout-fx, **Sleep action**) | ✔ merged, PR #44 (Sleep: Loft rail puts the pet to bed, `sleep_until_age_ms`; icon still the heart stand-in). OTA `01a1420f` |
 | 0c | Dedicated rail icons (Sleep, Light, Back, Up) | ✔ merged, PR #51 (squash `cb77cc37`). OTA `01a14292` |
 | 0d | Loft room art (PixelLab, same recipe as the Hideout) | ✔ merged, PR #52 (squash `30a6bbf1`). OTA `01a142bf` (production, iOS, group `96b03172`, commit `6d77ece5`, gate green 167). Not device-verified. **Next: Underground room art (0e)** |
+| 0e | Underground (garage) room art (PixelLab, same recipe) | ✔ merged, PR #53 (squash `1473f8b7`). OTA: see "Step 0e as built". Not device-verified. **Next: Rooftop art, or a live Garage (see Known)** |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -261,6 +262,38 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   (`create_tiles_pro` and `reduce_colors` do take `upload:`), so style-matched props used `create_map_object` with the style card,
   like the Hideout; (2) `create_map_object` drew the first bed side-on: "headboard with a pillow at the top, mattress stretching
   toward the viewer" + `high top-down` fixed it; (3) a prop that must stay visible over the glow layer cannot also be an occluder.
+
+## Step 0e as built (Underground room art, emci 2026-10-15)
+- Same recipe. Parts in `art-src/pixellab/room.underground.streetwear/gen-20261015-pixellab-1/` (`gen.json`; ~85 generations):
+  `create_building_kit` (dark corrugated steel walls with two cyan neon strips + poured-concrete floor, same 52×111 frame),
+  16 concrete floor variants (`create_tiles_pro`, kit floor as style image; 10 dropped: yellow/red paint, white blotches,
+  checker noise, flat dark squares — `UNDERGROUND_FLOOR_SKIP`), 2 speakers + 2 hatches (`create_map_object`, low top-down).
+  emci picked **speaker B (25×73 vs the 18×71 target), hatch A (64×29 vs 64×32)**, one speaker sprite for both sides.
+  Library check: nothing garage-specific existed; the Hideout speaker (23×74, purple) is Hideout-set art, not reused.
+- Scale sheet + samples + previews: `docs/divecore/underground-room/` (`scale-sheet.png`, `samples.png`, `room-composite.png`
+  with Kael and the rail lines, `max-underground.jpg`, `se-underground.jpg`).
+- Map: hotspots (hatch/Back, door/Up), spawns, targets, lights and the hatch cell are unchanged. **The two speakers moved in**
+  from cols 1–2 / 19–20 to cols 5–6 / 15–16 (the outer columns sit under both rails at 375 and 430), and the walk notch in rows
+  15–16 moves with them because `buildWalkable` derives it from the footprints (`tweakUnderground`). Cols 1–2 / 19–20 are walkable
+  again but unreachable (rail bounds). `placeholder` → false. The hatch is a flat on the floor layer; the speakers are occluders;
+  a magenta spill under each speaker pulses with neon A/B (`spills` option in `hideout-room-art.ts`). No lamp, no screen glow.
+- **The Garage is not a live room.** `hideout-stage.tsx` draws `liveIsHideout` / `liveIsLoft` only; any other room shows a dimmed
+  (opacity 0.55) static `SnapshotRoom`. The old "greybox" was really `neighbor-boarded-td.png` (painted from the greybox back).
+  So `ROOM_ART.garage` now carries the Underground map + layers and `snapshot` = `ART.room.underground.snapshot`
+  (`underground-td-snapshot.png`, a flattened back + floor + neon + props + occluder written by `gen-hideout-td.ts`).
+  `neighbor-boarded-td.png` stays for the Rooftop. `UNDERGROUND_ART` in `hideout-art.ts` is dead code (nothing reads it).
+- Egg picker: reads on the new room at 430 and 375 (eggs sit above the speakers; the three labels touch the speaker tops, and at
+  375 the labels run together / clip under the rail — that was already so on the old shell).
+- **Known:** (1) a 1 px bright vertical line just inside both side walls of the snapshot (≈ x 15 and 337, side-cap crop edge),
+  muted by the 0.55 dim; (2) all four occluder PNGs are the same file (the painter writes one); (3) making the Garage a live room
+  (walking pet, Back / Up, hatch dive) is a separate step: needs a `LiveGarage` in `hideout-stage.tsx`, presence for `garage`,
+  and `roomGeom('garage')` is already the Underground map now.
+- **Lessons:** (1) check where a room is actually drawn before painting it (`hideout-stage.tsx`): the Garage was a snapshot of a
+  shell, not the Underground greybox; (2) `gen-hideout-td.ts`' old `composite()` decoder only reads PNG filter 0 — flatten the
+  painter's output with pngjs; (3) `art:sync`'s usage scan needs `ART.room.underground.snapshot` as a full chain, and a file that
+  is not a `ROOM_SLOTS` slot is reached through `ART.room.<set>.<name>`, not `ROOM.*`; (4) re-running the generator touches
+  `loft-td.map.json` line endings only (CRLF): `git checkout --` it; (5) rails cover art x < ~71 and ≥ ~281 at 375 wide (76 pt
+  clear each side) — keep props between them.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
