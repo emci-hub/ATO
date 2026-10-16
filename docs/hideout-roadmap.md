@@ -18,6 +18,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0f | Rooftop room art (PixelLab, same recipe, new map) | ✔ merged, PR #54 (squash `75c062b8`). **OTA `01a14322`** (production, iOS, group `21b75ecb`, commit `713827ba`, gate green 167). Not device-verified. **Next: a live Garage / Rooftop (or phone check of both)** |
 | 0g | Live Garage + Rooftop (walking pet, Back / Up, rail bounds) | ✔ merged, PR #55 (squash `ab633ef0`). **OTA `01a1444d`** (production, iOS, group `6a7abde4`, commit `c0dd6722`, gate green 167). Not device-verified. **Next: phone check of Garage + Rooftop** |
 | 0h | Live-room gaps: Call dimmed in unbuilt rooms, Rooftop build reachable, pet re-clamp on room switch, dev "Build all Hideout rooms" | ✔ merged, PR #56 (squash `ae63a1e7`). **OTA `01a144fe`** (production, iOS, group `aabfd2b3`, commit `d8618055`, gate green 167). Not device-verified. **Next: phone check of Garage + Rooftop** (Play dev kit → Tokens / Research → Build all Hideout rooms, two taps) |
+| 0i | Phone-check fixes: bubble only in the pet's room, Call says why it can't come, Light / Sleep notes, clamp on every room | ✔ merged, PR #57 (squash `91bde072`). OTA: see "Step 0i as built". Not device-verified. **Next: second phone check** |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -358,6 +359,33 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
 - **Known (reviewer, all minor):** (1) on a room change the walk loop plans one step from the old x/y before the new effect snaps the pet
   (one still step); (2) the re-clamp skips the Hideout and the Loft (sleepOnBed), same as before; (3) `pressReset` arms without clearing
   the other arm (dev only); (4) `devBuildAllRooms` drops `builds` but a scheduled build notice may still fire (dev only).
+
+## Step 0i as built (first phone check, emci 2026-10-16)
+- emci saw: the speech bubble shows in a room the pet is not in; no way to call the pet to a room; Light and Sleep "sometimes don't work".
+  The room art itself was fine. emci also approved the three minor Known items from 0h.
+- **Bubble:** `pet-room.tsx` `petShown` (the pet-sprite condition) now gates the bubble too; `pet-screen` `petHereRef` silences `say()` when
+  `presence.room !== viewed`. Pinned in `check:hideout-rails`.
+- **Call:** it was never broken, but it loses to the pet's needs (`resolvePresence`: needs > call > schedule, pinned by `check:hideout-rooms`):
+  egg / baby (`skipSchedule`), hunger ≤ 1, tired (mood ≤ 1, Loft built, not woken) or in bed by choice. A blocked call silently did nothing
+  (and logged `call_used`). New `callBlocker(pet, hideout)` + `CALL_BLOCK_NOTE` in `hideout-presence.ts` mirror those rules exactly;
+  `callPetToRoom` refuses a blocked call; the rail dims Call and a tap shows the reason on the notice strip (`railNote`, 3.5 s,
+  restarts on a repeat tap). A call also lasts only 10 min of the pet's counted time (`callStayMs`); after that the schedule decides —
+  unchanged, and it leaves you looking at an empty room (emci: left as is).
+- **Light / Sleep:** Light only draws after dark and only in the Loft (Garage / Rooftop have no Light or glow art): by day a tap still flips
+  the lamp and now says "The Loft light shows after dark." Sleep in the Loft shows a note instead of committing when the pet is away, too
+  young or too hungry (it did nothing visible before).
+- **Minor items from 0h:** (1) the walk loop clamps the start of every planned step to the room floor (not only decor), so no still step on a
+  room change; (2) the room-change effect now covers Hideout and Loft too; (3) `pressReset` clears the other dev arm.
+- **Reviewer catch (critical, fixed before merge):** the room-entry clamp first gated on `presence.asleep`; a night call to the Loft has
+  `presence.asleep = false` but the pet pose asleep, so the clamp would snap the pet off the bed every step. Both clamps now gate on the pose
+  (`asleep` in `pet-room.tsx`) and `check:hideout-rails` pins it.
+- Previews `docs/divecore/live-rooms/` (`max-call-blocked-note.jpg`, `se-call-garage.jpg`). Gate green (167), reviewer PASS on the final commit.
+- **Known:** (1) a hungry or tired pet cannot be called at all (design: needs > call) — the note says so; (2) `callBlocker` in the UI reads the
+  rendered pet while `callPetToRoom` re-reads after `touchPet`, so if hunger ticks to 1 between render and tap, Call looks live and does
+  nothing (rare); (3) `devBuildAllRooms` drops `builds` but a scheduled build notice may still fire (dev only).
+- **Lessons:** (1) in the browser pane, a `ref` click scrolls a hidden DIV sideways (looks like a half-width layout): reset `scrollLeft` before a
+  screenshot; (2) screenshots right after a reload or state change can show the splash or a half-loaded frame — wait, then screenshot twice;
+  (3) a clamp or planner gate must use the same signal the planner uses (`mood === 'asleep'`), not presence.
 
 ## Facts a new chat needs
 - Pet lines today: `src/play/pet-talk.ts` (`PET_TALK_LINES` per branch, 15 situations, `pickPetLine`, random, no memory);
