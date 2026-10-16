@@ -21,7 +21,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0i | Phone-check fixes: bubble only in the pet's room, Call says why it can't come, Light / Sleep notes, clamp on every room | ✔ merged, PR #57 (squash `91bde072`). **OTA `01a14590`** (production, iOS, group `a8cc0a68`, commit `5e4b1dfb`, gate green 167). **Device-verified** (emci, 2026-10-16: "all fine"). The Feed / food idea from that check became step 0j. |
 | 0j | Catch the food moves into the Feed sheet, under "? Your pet" | ✔ merged, PR #58 (squash `7e7addfc`). **OTA `01a1463a`** (production, iOS, group `be9a0803`, commit `4c6cabc1`, gate green 167). **Device-verified** (emci, 2026-10-16: Catch sits under "? Your pet" in Feed, a counted round returns to Feed with the result, Play shows only Tap to train). |
 | 0k | Copy: Catch the food named as "in Feed" (Today plan, hunger push, Guide pet section); Play-sheet link relabelled "Mini-game rules in the Guide" | ✔ merged, PR #59 (squash `322198f9`). Copy-only, gate green, reviewer PASS, no previews. **OTA `01a14647`** (production, iOS, group `74159ed9`, commit `2785ce31`, gate green). `devBuildAllRooms` untouched: no leftover build notice found in code (the push is re-planned by the notice sync on every build change); if one shows on a phone, report what it says. **Device-verified** (emci, 2026-10-16: "all fine"). |
-| 0l | UI polish: modern, sectioned Info (all sections collapsed, no sideways-scroll tabs) + one border / corner / spacing / shadow language + one type scale, fix text overflow, fix Catch card outside its border (Feed, Play, every other sheet) | ✔ merged, PR #60 (squash `ec34ac74`). Gate green (167), reviewer PASS. **OTA `01a146b2`** (production, iOS, group `3aae9e9a`, commit `751288cd`, gate green 167). Not device-verified. No economy or copy-meaning changes |
+| 0l | UI polish: modern, sectioned Info (all sections collapsed, no sideways-scroll tabs) + one border / corner / spacing / shadow language + one type scale, fix text overflow, fix Catch card outside its border (Feed, Play, every other sheet) | ✔ merged, PR #60 (squash `ec34ac74`). Gate green (167), reviewer PASS. **OTA `01a146b2`** (production, iOS, group `3aae9e9a`, commit `751288cd`, gate green 167). **Device-verified** (emci, 2026-10-16: "looks great now, all fine"). The leftover polish (scroll-into-view, Status regroup, Stash / Stone / Settings / rails restyle) is optional, parked as 0n. No economy or copy-meaning changes |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -432,6 +432,12 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
 - **Lessons:** (1) `check:play-isolation` judges the working tree: a dirty `docs/hideout-roadmap.md` fails it, so set the doc aside (`git stash push <path>`)
   before the gate, and never `stash pop` after switching branches with src edits in the stash; (2) the first click after a reload in the browser pane can
   be swallowed, wait 2 s and click again; (3) the pre-commit art:sync runs on every commit here and stages nothing new.
+
+## Open items (from emci's third phone check, 2026-10-16, after 0l)
+- **Bug (next, step 0m):** after sending the pet on an expedition, when it finishes the pet is **invisible** (glitches out). Not investigated yet.
+- **Feature (step 0o):** the daily visitor (e.g. Archangel) stands in one spot; emci wants it to **roam** and **interact with the room's items and the pet**.
+  Today's rules (step 4): visitor fixed at art (236, 430), the pet's walk bounds stop 48 art px to its left while it is in.
+- Optional polish parked as 0n: see "Known" in the step 0l section.
 
 ## Open items (from emci's second phone check, 2026-10-16)
 - Verdict: **all fine** for steps 0g / 0h / 0i (live Garage + Rooftop, Call notes, bubble, Light / Sleep). Call rules unchanged on purpose
