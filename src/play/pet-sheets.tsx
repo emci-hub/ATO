@@ -15,7 +15,7 @@
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
@@ -35,6 +35,7 @@ import { ELEMENT_COLOR } from '@/play/kits';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
 import { PIXEL } from '@/play/pixel-theme';
 import { PixelBody, PixelButton, PixelFrame, PixelHearts, PixelLabel } from '@/play/pixel-ui';
+import { SHEET } from '@/play/sheet-kit';
 import { NEON } from '@/play/neon-viper';
 import {
   PET_BRANCH_LABEL,
@@ -274,7 +275,7 @@ function GameChip({
         glow={false}
         lined={!selected}
         padded={false}
-        minHeight={36}>
+        minHeight={SHEET.tap}>
         <View style={styles.gameChipRow}>
           {locked ? <MaterialCommunityIcons name="lock" size={12} color={PIXEL.dim} /> : null}
           <PixelLabel color={text} shadowColor={chipShadow(fill)} numberOfLines={1} style={styles.gameChipLabel}>
@@ -349,7 +350,7 @@ export function GameCard({
               );
             })}
           </View>
-          <PixelBody size="sm" color={PIXEL.dim} numberOfLines={3}>
+          <PixelBody size="sm" color={PIXEL.dim}>
             {`Best on ${DIFFICULTY_LABEL[lv]}: ${rec.best > 0 ? rec.best : '—'} · 🥉 ${b} · 🥈 ${sv} (${silverBuff ? BUFF_LABEL[silverBuff] : ''}) · 🥇 ${gd} (${goldBuff ? BUFF_LABEL[goldBuff] : ''})`}
           </PixelBody>
           <View style={styles.buttons}>
@@ -410,7 +411,7 @@ export function PlaySheetBody({
           <PixelHearts value={pv.state.mood} max={PET_METER_MAX} />
         </View>
       </View>
-      <PixelBody numberOfLines={4}>
+      <PixelBody>
         {`Tap to train cheers it up (+2 mood) — only if you pass (50%+). Catch the food now lives in Feed. +${PET_TOKENS_PER_ROUND} tokens a passed round · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
       </PixelBody>
       <GameCard g="train" view={view} onStart={onStart} />
@@ -519,6 +520,17 @@ export function infoTabs(dev: boolean): { id: InfoTab; label: string }[] {
   ];
   return dev ? [...tabs, { id: 'dev', label: 'Dev' }] : tabs;
 }
+
+/** One-line label + glyph for each Info section row (step 0l; the sections themselves are unchanged). */
+export const INFO_SECTION_META: Record<InfoTab, { summary: string; icon: ComponentProps<typeof MaterialCommunityIcons>['name'] }> = {
+  status: { summary: 'Stage, hunger, mood, odds', icon: 'heart-pulse' },
+  journal: { summary: 'Stats, Tide, milestones', icon: 'notebook-outline' },
+  book: { summary: 'Logbook and collection', icon: 'book-open-variant' },
+  hall: { summary: 'Pets you have kept', icon: 'trophy-outline' },
+  style: { summary: 'Look, dye, aura, wear', icon: 'palette-outline' },
+  guide: { summary: 'How everything works', icon: 'help-circle-outline' },
+  dev: { summary: 'Test tools', icon: 'wrench-outline' },
+};
 
 function HideoutInfoExtras({ onSettings }: { onSettings?: () => void }) {
   if (!onSettings) return null;
@@ -863,34 +875,30 @@ const styles = StyleSheet.create({
   swatch: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
   tone: { width: 36, height: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
   swatchOn: { borderWidth: 2, borderColor: NEON.cyan },
-  collRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  collLabel: { width: 72, textAlign: 'left' },
-  collForms: { flexDirection: 'row', flex: 1, justifyContent: 'space-between' },
-  collCell: { alignItems: 'center', width: 44 },
-  collName: { fontFamily: Fonts.mono, fontSize: 8, color: NEON.textMuted },
   logName: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },
   stageTitle: {
     fontFamily: Fonts.displayBold,
-    fontSize: 20,
+    fontSize: SHEET.type.heading,
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: NEON.textPrimary,
   },
-  timer: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.cyan },
+  timer: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.body, color: NEON.cyan },
   subtle: { fontFamily: Fonts.mono, fontSize: 12, color: NEON.textMuted, textAlign: 'center' },
   subtleLeft: { fontFamily: Fonts.mono, fontSize: 12, color: NEON.textMuted },
   body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
   result: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.cyan },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  gameCard: { width: '100%', gap: 8 },
+  // The panel art's border is ~28 pt thick; the frame itself only pads 10, so the content gets the rest here.
+  gameCard: { width: '100%', gap: SHEET.gap, paddingHorizontal: 16, paddingVertical: SHEET.pad },
   buttons: { flexDirection: 'row', width: '100%', gap: 8 },
   shareButton: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   playSheet: { width: '100%', gap: 10 },
   meterRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   meterBlock: { gap: 4 },
   gameTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  gameTitle: { flexShrink: 1 },
+  gameTitle: { flexShrink: 1, fontSize: SHEET.type.heading, lineHeight: SHEET.type.heading + 4 },
   gameChip: { flexGrow: 0, flexShrink: 0 },
   gameChipRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4 },
   gameChipLabel: { fontSize: 12, lineHeight: 16 },

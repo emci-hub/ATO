@@ -22,6 +22,7 @@ import { VISITOR_STICKER_HEROES, VISITOR_TINT_COLOR } from '@/play/daily-visitor
 import { heroName } from '@/play/heroes-data';
 import { NeonButton } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { sheetCard } from '@/play/sheet-kit';
 import { noticeReduceMotion } from '@/play/notify/notify';
 import { petFrameAt, petKitOfRole, petPose } from '@/play/pet-actor';
 import { poseDrawable, usePetClock } from '@/play/pet-anim-sprite';
@@ -260,10 +261,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 8,
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: NEON.cyanBorder,
-    backgroundColor: NEON.panel,
+    ...sheetCard,
   },
   title: { fontFamily: STREET_FONT.bold, fontSize: 16, color: NEON.cyan, textTransform: 'uppercase', letterSpacing: 1 },
   arrive: { fontFamily: STREET_FONT.regular, fontSize: 13, lineHeight: 18, height: 36, color: NEON.textMuted },

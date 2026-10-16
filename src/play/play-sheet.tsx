@@ -109,42 +109,6 @@ export function PlaySheet({
   );
 }
 
-/** A row of tabs for a sheet header. */
-export function SheetTabs<T extends string>({
-  tabs,
-  value,
-  onChange,
-}: {
-  tabs: readonly { id: T; label: string }[];
-  value: T;
-  onChange: (id: T) => void;
-}) {
-  const street = streetUiOn();
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-      {tabs.map((tab) => {
-        const on = tab.id === value;
-        return (
-          <Pressable
-            key={tab.id}
-            onPress={() => onChange(tab.id)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: on }}
-            style={[styles.tab, on && styles.tabOn, street && styles.streetTab]}>
-            {street ? <StreetBackdrop piece={on ? 'chip-on' : 'chip-off'} /> : null}
-            <PixelLabel
-              color={street ? (on ? STREET.ink : STREET.paper) : on ? PIXEL.ink : PIXEL.cyan}
-              numberOfLines={1}
-              style={street ? styles.streetTabText : undefined}>
-              {tab.label}
-            </PixelLabel>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-}
-
 const styles = StyleSheet.create({
   backdrop: { backgroundColor: '#000000' },
   // Streetwear art style.
@@ -152,8 +116,6 @@ const styles = StyleSheet.create({
   streetHandleZone: { paddingTop: 14, paddingHorizontal: 18 },
   streetHandle: { alignSelf: 'center', marginBottom: 6 },
   streetTitle: { fontFamily: STREET_FONT.bold, color: STREET.paper, textTransform: 'uppercase' },
-  streetTab: { borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 22 },
-  streetTabText: { fontFamily: STREET_FONT.bold, textTransform: 'uppercase' },
   panel: {
     position: 'absolute',
     left: 0,
@@ -176,14 +138,4 @@ const styles = StyleSheet.create({
   title: { flex: 1 },
   closeHit: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: 12, paddingBottom: 16, gap: 10 },
-  tabs: { paddingHorizontal: 12, gap: 8, paddingBottom: 10 },
-  tab: {
-    minHeight: 48,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    borderWidth: ART_PT,
-    borderColor: PIXEL.cyan,
-    backgroundColor: PIXEL.ink,
-  },
-  tabOn: { backgroundColor: PIXEL.cyan, borderColor: PIXEL.cyan },
 });

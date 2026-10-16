@@ -109,6 +109,7 @@ import {
   GameCard,
   HallTab,
   HelpTab,
+  INFO_SECTION_META,
   PlaySheetBody,
   type GameRun,
   StatusTab,
@@ -131,7 +132,8 @@ import {
   type PetEggTalk,
   type PetTalkSituation,
 } from '@/play/pet-talk';
-import { PlaySheet, SheetTabs } from '@/play/play-sheet';
+import { PlaySheet } from '@/play/play-sheet';
+import { SheetSection } from '@/play/sheet-kit';
 import {
   ackPetRevealsDoc,
   warmEggDoc,
@@ -400,7 +402,7 @@ export function PetScreen({
     setStoneUid(uid);
     setSheet('stone');
   };
-  const [infoTab, setInfoTab] = useState<InfoTab>('status');
+  const [infoTab, setInfoTab] = useState<InfoTab | null>(null);
   useEffect(() => {
     if (!openJournal) return;
     setGame(null);
@@ -452,6 +454,32 @@ export function PetScreen({
     setSheet('info');
     onGuideOpened?.();
   }, [openGuideReq, onGuideOpened]);
+  // Info is a list of sections, all collapsed until tapped (step 0l). Each section's body renders only while open.
+  const infoSectionBody = (id: InfoTab) =>
+    id === 'status' ? (
+      <StatusTab view={view} onGuide={openGuide} onSettings={() => onOpenSettings?.()} />
+    ) : id === 'journal' ? (
+      <>
+        <JournalTab view={view} commit={commit} />
+        <GuideLink section="collection" onOpen={openGuide} />
+      </>
+    ) : id === 'book' ? (
+      <>
+        <BookTab view={view} commit={commit} eggColor={eggColor} />
+        <GuideLink section="collection" onOpen={openGuide} />
+      </>
+    ) : id === 'hall' ? (
+      <>
+        <HallTab view={view} eggColor={eggColor} />
+        <GuideLink section="collection" onOpen={openGuide} />
+      </>
+    ) : id === 'style' ? (
+      <StyleTab view={view} commit={commit} />
+    ) : id === 'guide' ? (
+      <HelpTab key={guideNonce} section={guideSection} />
+    ) : dev ? (
+      <PetDevPanel pet={pet} commit={commit} startOpen={[]} />
+    ) : null;
 
   const hour = useHour();
   const clockNight = isBedtime(new Date(), view.settings.bedtime);
@@ -704,7 +732,7 @@ export function PetScreen({
       setWipe('cover');
       return;
     }
-    if (id === 'info') setInfoTab('status');
+    if (id === 'info') setInfoTab(null);
     setSheet(id);
   };
   const startGame = (run: GameRun) => {
@@ -1498,32 +1526,22 @@ export function PetScreen({
         open={sheet === 'info'}
         title={SHEET_TITLE.info}
         onClose={closeSheet}
-        reduceMotion={reduceMotion}
-        header={<SheetTabs tabs={infoTabs(dev)} value={infoTab} onChange={setInfoTab} />}>
-        {infoTab === 'status' ? (
-          <StatusTab view={view} onGuide={openGuide} onSettings={() => onOpenSettings?.()} />
-        ) : infoTab === 'journal' ? (
-          <>
-            <JournalTab view={view} commit={commit} />
-            <GuideLink section="collection" onOpen={openGuide} />
-          </>
-        ) : infoTab === 'book' ? (
-          <>
-            <BookTab view={view} commit={commit} eggColor={eggColor} />
-            <GuideLink section="collection" onOpen={openGuide} />
-          </>
-        ) : infoTab === 'hall' ? (
-          <>
-            <HallTab view={view} eggColor={eggColor} />
-            <GuideLink section="collection" onOpen={openGuide} />
-          </>
-        ) : infoTab === 'style' ? (
-          <StyleTab view={view} commit={commit} />
-        ) : infoTab === 'guide' ? (
-          <HelpTab key={guideNonce} section={guideSection} />
-        ) : dev ? (
-          <PetDevPanel pet={pet} commit={commit} startOpen={['pet', 'eggs']} />
-        ) : null}
+        reduceMotion={reduceMotion}>
+        {infoTabs(dev).map((tab) => {
+          const meta = INFO_SECTION_META[tab.id];
+          const open = infoTab === tab.id;
+          return (
+            <SheetSection
+              key={tab.id}
+              title={tab.label}
+              summary={meta.summary}
+              icon={meta.icon}
+              open={open}
+              onToggle={() => setInfoTab(open ? null : tab.id)}>
+              {open ? infoSectionBody(tab.id) : null}
+            </SheetSection>
+          );
+        })}
       </PlaySheet>
       {pendingReveal ? (
         <PetReveal

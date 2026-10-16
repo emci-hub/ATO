@@ -22,6 +22,8 @@ import { auraStyles } from '@/play/auras';
 import { finishColors } from '@/play/finishes';
 import { NeonChip } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { SHEET } from '@/play/sheet-kit';
+import { STREET } from '@/play/street-ui';
 import type { PetState } from '@/play/pet';
 import {
   cycleDevNight,
@@ -76,7 +78,7 @@ export type PetDevGroupId = (typeof PET_DEV_GROUPS)[number]['id'];
 export function PetDevPanel({
   pet,
   commit,
-  startOpen = ['pet'],
+  startOpen = [],
 }: {
   pet: PetState;
   commit: (transition: PlayTransition) => boolean;
@@ -186,19 +188,21 @@ export function PetDevPanel({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 6 },
+  wrap: { gap: SHEET.gap },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    borderWidth: SHEET.border,
+    borderColor: SHEET.edge,
+    borderRadius: SHEET.radiusSmall,
+    backgroundColor: STREET.asphalt,
+    minHeight: SHEET.tap,
+    paddingVertical: SHEET.gap,
+    paddingHorizontal: SHEET.pad,
   },
-  headerText: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.cyan },
-  chevron: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textPrimary },
+  headerText: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.body, color: NEON.cyan, flexShrink: 1 },
+  chevron: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.body, color: NEON.textPrimary },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 8, paddingBottom: 4 },
   pressed: { opacity: 0.75 },
 });

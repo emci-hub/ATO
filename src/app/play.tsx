@@ -997,7 +997,7 @@ export default function PlayScreen() {
                 {DEV_MODE_LABEL[mode]} tools
               </ThemedText>
               {mode === 'pet' && view ? (
-                <PetDevPanel pet={view.pet.state} commit={commit} startOpen={['pet', 'eggs', 'room']} />
+                <PetDevPanel pet={view.pet.state} commit={commit} startOpen={[]} />
               ) : null}
               {/* A screen that owns live state (Defend) hands its buttons over here. */}
               <DevSlotOutlet />

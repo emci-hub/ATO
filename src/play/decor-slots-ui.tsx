@@ -29,6 +29,7 @@ import {
 } from '@/play/decor-slots';
 import { NeonButton } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { sheetCard } from '@/play/sheet-kit';
 import { noticeReduceMotion } from '@/play/notify/notify';
 import { pixelRenderStyle } from '@/play/pixel-theme';
 import { STREET, STREET_FONT, useStreetFonts } from '@/play/street-ui';
@@ -230,10 +231,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 8,
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: NEON.cyanBorder,
-    backgroundColor: NEON.panel,
+    ...sheetCard,
   },
   title: { fontFamily: STREET_FONT.bold, fontSize: 16, color: NEON.cyan, textTransform: 'uppercase', letterSpacing: 1 },
   hint: { fontFamily: STREET_FONT.regular, fontSize: 13, lineHeight: 18, color: NEON.textMuted },

@@ -11,6 +11,7 @@ import Animated, { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated
 import { awayLabel, type AwaySummary } from '@/play/away-summary';
 import { NeonButton } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { sheetCard } from '@/play/sheet-kit';
 import { noticeReduceMotion } from '@/play/notify/notify';
 import { STREET, STREET_FONT, useStreetFonts } from '@/play/street-ui';
 
@@ -70,10 +71,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: 8,
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: NEON.cyanBorder,
-    backgroundColor: NEON.panel,
+    ...sheetCard,
   },
   head: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
   title: { fontFamily: STREET_FONT.bold, fontSize: 16, color: NEON.cyan, textTransform: 'uppercase', letterSpacing: 1 },
