@@ -14557,10 +14557,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 3259,
+      "diskBytes": 17516,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:edcdc134c085e26f473830388a3541c7",
+      "notes": "md5:7c1b872507c863795e393b69445cd3cb",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14584,10 +14584,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 4665,
+      "diskBytes": 132988,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:9891215ca38a0b1e7ebf08433b97ae23",
+      "notes": "md5:47e4d15c4793233117212b8c2719f255",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14611,10 +14611,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1094,
+      "diskBytes": 4985,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:50a886e16f5b7ae4b40e80c58aec4871",
+      "notes": "md5:d343638c97dc69c38e298810ecc3b891",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14638,10 +14638,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1094,
+      "diskBytes": 4581,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:7ee78f31728b24d0689952e33d374113",
+      "notes": "md5:0b38273c7f049007c0fa3b5e77c98c3b",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14665,10 +14665,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1361,
+      "diskBytes": 5319,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:9683a483130fd07b5a78516e8d640a67",
+      "notes": "md5:54d1b046993ed4bc295f81ba3eacd054",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14692,10 +14692,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1362,
+      "diskBytes": 5319,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:34b7be62ac829b2c1c33356f208b9690",
+      "notes": "md5:54d1b046993ed4bc295f81ba3eacd054",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14719,10 +14719,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1359,
+      "diskBytes": 5319,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:7854b645bc90c25355df9322d740ff17",
+      "notes": "md5:54d1b046993ed4bc295f81ba3eacd054",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14746,10 +14746,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1362,
+      "diskBytes": 5319,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:cb47d3d2b10894912a7982c8647a3fdb",
+      "notes": "md5:54d1b046993ed4bc295f81ba3eacd054",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14773,10 +14773,10 @@
       },
       "status": "candidate",
       "source": "pixellab",
-      "diskBytes": 1074,
+      "diskBytes": 5776,
       "decodedBytes": 811008,
       "format": "png32",
-      "notes": "md5:7d9f9d9f9ed860425fb5051e3a87b5d8",
+      "notes": "md5:c2c4bc08baf1c978f96ba8cfc9ff3a6c",
       "tags": [],
       "usedBy": [
         "src/play/hideout-art.ts"
@@ -14786,6 +14786,33 @@
       "set": "underground",
       "variant": "default",
       "part": "underground-td-props"
+    },
+    {
+      "id": "room.underground.snapshot",
+      "path": "assets/art/rooms/underground/underground-td-snapshot.png",
+      "category": "rooms",
+      "type": "room-layer",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 352,
+        "h": 576
+      },
+      "status": "candidate",
+      "source": "pixellab",
+      "diskBytes": 150172,
+      "decodedBytes": 811008,
+      "format": "png32",
+      "notes": "md5:28a960c9a26c87ba733debba8777d807",
+      "inUse": true,
+      "set": "underground",
+      "variant": "default",
+      "tags": [],
+      "usedBy": [
+        "src/play/hideout-art.ts"
+      ],
+      "part": "underground-td-snapshot"
     },
     {
       "id": "room.underground.underground",

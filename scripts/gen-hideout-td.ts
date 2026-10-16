@@ -14,6 +14,8 @@ import { deflateSync, inflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+import { PNG } from 'pngjs';
+
 import { hideoutArtAvailable, paintHideoutArt } from './hideout-room-art';
 
 /** Room art lives in the art library: assets/art/rooms/<room>/. */
@@ -359,6 +361,13 @@ const LOFT_FILES: Record<string, string> = { bed: 'bed.png', nightstand: 'nights
 /** Loft rug (walkable): centred on the map's rug ellipse. */
 const LOFT_FLATS = [{ file: 'rug.png', cx: 160, cy: 400 }] as const;
 
+// Underground = PixelLab art (emci approved speaker B / hatch A / kit + floor mix, 2026-10-15): same recipe, parts in
+// art-src/pixellab/room.underground.streetwear. Speakers are occluders; the hatch is a flat on the floor layer.
+const UNDERGROUND_FILES: Record<string, string> = { speakerL: 'speaker.png', speakerR: 'speaker.png' };
+const UNDERGROUND_FLATS = [{ file: 'hatch.png', cx: 128, cy: 496 }] as const;
+/** Concrete variants left out: yellow paint (f2, f9), red (f14), white blotches (f5, f10), checker noise (f0, f13, f15), flat dark squares (f6, f11). */
+const UNDERGROUND_FLOOR_SKIP = ['f0.png', 'f2.png', 'f5.png', 'f6.png', 'f9.png', 'f10.png', 'f11.png', 'f13.png', 'f14.png', 'f15.png'];
+
 const LOFT: Layout = {
   id: 'loft',
   sleepOnBed: true,
@@ -515,6 +524,14 @@ function widen(layout: Layout): Layout {
 /** Hideout after widening: the lamp goes back beside the couch (the widen split moved the couch 3 cols). */
 function tweakHideout(layout: Layout): Layout {
   return { ...layout, props: layout.props.map((p) => (p.id === 'lamp' ? { ...p, footprint: [4, 13, 2, 1] as Foot } : p)) };
+}
+/**
+ * Underground: the greybox speakers stood in the outer columns (1-2 / 19-20), which the rails cover. They move in to
+ * cols 5-6 / 15-16 (clear of both rails at 375 and 430 wide); the walk notch is built from the footprints, so it moves too.
+ */
+function tweakUnderground(layout: Layout): Layout {
+  const cols: Record<string, number> = { speakerL: 5, speakerR: 15 };
+  return { ...layout, props: layout.props.map((p) => (cols[p.id] !== undefined ? { ...p, footprint: [cols[p.id]!, p.footprint[1], p.footprint[2], p.footprint[3]] as Foot } : p)) };
 }
 /** Warm lamp pool centred on the Hideout lamp. */
 function lampGlow(layout: Layout): Pt {
@@ -787,7 +804,8 @@ function writeJson(name: string, value: unknown) {
 function emitArt(layout: Layout) {
   const walkable = buildWalkable(layout);
   const loft = layout.id === 'loft';
-  const files = loft ? LOFT_FILES : HIDEOUT_FILES;
+  const ug = layout.id === 'underground';
+  const files = loft ? LOFT_FILES : ug ? UNDERGROUND_FILES : HIDEOUT_FILES;
   const lampProp = layout.props.find((p) => p.id === 'lamp');
   const lampFoot = lampProp ? footPx(lampProp.footprint) : null;
   const art = paintHideoutArt(
@@ -805,9 +823,22 @@ function emitArt(layout: Layout) {
           const f = footPx(p.footprint);
           return { id: p.id, file: files[p.id]!, foot: { x: f.x, w: f.w, bottom: f.bottom }, occluder: p.occluder };
         }),
-      flats: (loft ? LOFT_FLATS : HIDEOUT_FLATS).map((f) => ({ ...f, cx: wx(f.cx) })),
-      lamp: lampGlow(layout),
-      screen: loft ? null : [40, 110],
+      flats: (ug ? UNDERGROUND_FLATS : loft ? LOFT_FLATS : HIDEOUT_FLATS).map((f) => ({ ...f, cx: wx(f.cx) })),
+      lamp: ug ? null : lampGlow(layout),
+      screen: loft || ug ? null : [40, 110],
+      ...(ug
+        ? {
+            rim: { body: [30, 36, 52, 255] as const, top: [66, 82, 108, 255] as const },
+            floorMix: { base: 0.6, maxLumaGap: 0.3 },
+            floorSkip: UNDERGROUND_FLOOR_SKIP,
+            spills: layout.props
+              .filter((p) => files[p.id])
+              .map((p) => {
+                const f = footPx(p.footprint);
+                return { pos: [f.x + f.w / 2, f.bottom - 8] as const, rgb: [255, 70, 190] as const };
+              }),
+          }
+        : {}),
       ...(loft && layout.window && lampFoot
         ? {
             windowSprites: { day: 'window-day.png', night: 'window-night.png', w: layout.window.size[0], h: layout.window.size[1] },
@@ -834,10 +865,29 @@ function emitArt(layout: Layout) {
   if (art.windowDay) write(`${id}/${id}-td-window-day.png`, art.windowDay);
   if (art.windowNight) write(`${id}/${id}-td-window-night.png`, art.windowNight);
   if (art.glow) write(`${id}/${id}-td-glow.png`, art.glow);
+  // The Garage is not a live room yet: the stage shows this flattened room (hideout-stage SnapshotRoom).
+  if (ug) write(`${id}/${id}-td-snapshot.png`, flatten([art.back, art.floor, art.neonA, art.props, art.occluder]));
+}
+
+/** Source-over flatten of the painter's PNG layers (pngjs: the painter's output uses PNG filters). */
+function flatten(layers: Buffer[]): Buffer {
+  const imgs = layers.map((l) => PNG.sync.read(l));
+  const out = new PNG({ width: imgs[0]!.width, height: imgs[0]!.height });
+  for (const im of imgs) {
+    for (let i = 0; i < out.data.length; i += 4) {
+      const sa = im.data[i + 3]! / 255;
+      if (sa <= 0) continue;
+      const da = out.data[i + 3]! / 255;
+      const oa = sa + da * (1 - sa);
+      for (let k = 0; k < 3; k += 1) out.data[i + k] = Math.round((im.data[i + k]! * sa + out.data[i + k]! * da * (1 - sa)) / oa);
+      out.data[i + 3] = Math.round(oa * 255);
+    }
+  }
+  return PNG.sync.write(out);
 }
 
 function emit(layout: Layout, night: boolean) {
-  if ((layout.id === 'hideout' || layout.id === 'loft') && hideoutArtAvailable(layout.id)) return emitArt(layout);
+  if ((layout.id === 'hideout' || layout.id === 'loft' || layout.id === 'underground') && hideoutArtAvailable(layout.id)) return emitArt(layout);
   const walkable = buildWalkable(layout);
   writeJson(`${layout.id}/${layout.id}-td.map.json`, mapJson(layout, walkable));
   const back = paintBack(layout, night);
@@ -867,7 +917,7 @@ function emit(layout: Layout, night: boolean) {
 
 emit(tweakHideout(widen(HIDEOUT)), false);
 emit(widen(LOFT), false);
-emit(widen(UNDERGROUND), true);
+emit(tweakUnderground(widen(UNDERGROUND)), true);
 if (!hideoutArtAvailable('loft')) {
   // Loft greybox fallback (no PixelLab parts in art-src): flat window + glow overlays.
   write('loft/loft-td-window-day.png', windowSprite(false));
