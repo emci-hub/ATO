@@ -16,6 +16,10 @@
  *   7. Copy: moment-voice bans, curly apostrophes, ids forever-shaped, notice ≤ 3 / ≤ 10 words,
  *      ships behind VISITORS_COPY_REVIEWED = false with a review doc.
  *   8. Room: the visitor's spot is on the Hideout walk floor; one call site (the Hideout screen).
+ *   9. Roaming (step 0o): in from 08:00 to 22:00 local time, out through the door; walks only on
+ *      floor between the rails (bare room and all 3 decor slots), never rests on the pet, can meet
+ *      it, always reaches the door when the window closes; economy / network / model untouched.
+ *      (The old fixed spot + 48 px cap still serve a Circle friend's pet, pinned in group 8.)
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -41,6 +45,16 @@ import {
   type VisitorBook,
 } from '../src/play/daily-visitors';
 import { VISITOR_LINES, VISITOR_UI, VISITORS_COPY_REVIEWED } from '../src/play/daily-visitors-bank';
+import { decorGeom } from '../src/play/decor-slots';
+import {
+  VISITOR_DOOR_DONE_PX,
+  VISITOR_MEET_RANGE_PX,
+  VISITOR_PET_SPACE_PX,
+  planVisitorStep,
+  visitorDoorPoint,
+  visitorInWindow,
+  visitorOpenAtHour,
+} from '../src/play/visitor-walk';
 import {
   VISITOR_ROTATION,
   VISITOR_STAND_INS,
@@ -338,6 +352,80 @@ for (const f of ['src/play/daily-visitors.ts', 'src/play/daily-visitors-roster.t
   const src = read(f);
   assert.ok(!/from '@\/app\/|from '@\/lib\/supabase|generateText|ai-generate/.test(src), `${f}: no app screen, no network, no model call`);
 }
+
+/* 9 · roaming (step 0o, emci 2026-10-16) --------------------------------- */
+
+assert.deepEqual(
+  [7, 8, 12, 21, 22, 23, 0].map(visitorOpenAtHour),
+  [false, true, true, true, false, false, false],
+  'the visitor is in from 08:00 to 22:00 local time',
+);
+assert.ok(visitorInWindow(new Date(2026, 9, 16, 21, 59)) && !visitorInWindow(new Date(2026, 9, 16, 22, 0)), '22:00 sharp it is out');
+const decorFull = decorGeom(homeGeom as never, { d1: 'dc_plant', d2: 'dc_crate', d3: 'dc_boombox' });
+for (const w of [430, 375]) {
+  const rails = railWalkBounds({ stageW: w, originLeft: 0, pt: w / 352 });
+  for (const [label, g] of [['bare room', homeGeom], ['all 3 decor slots filled', decorFull]] as const) {
+    const door = visitorDoorPoint(g, rails);
+    assert.ok(isoOnWalkFloor(door[0], door[1], g, 'adult'), `${w} ${label}: the door point is on the floor`);
+    let x = door[0];
+    let y = door[1];
+    let pet: [number, number] = [homeGeom.spawns.default?.[0] ?? 176, homeGeom.spawns.default?.[1] ?? 360];
+    const kinds = new Set<string>();
+    let walked = 0;
+    for (let n = 0; n < 700; n += 1) {
+      // The pet wanders too, so meetings and spacing are tested against a moving target.
+      if (n % 3 === 0) pet = isoClampToWalk(40 + rng() * 270, 200 + rng() * 330, g, 'adult', rails) as [number, number];
+      const s = planVisitorStep({ x, y, pet, geom: g, bounds: rails, rng, leaving: false });
+      kinds.add(s.kind);
+      for (const p of s.path) {
+        assert.ok(p[0] >= rails.minX - 8 && p[0] <= rails.maxX + 8, `${w} ${label}: the visitor stays between the rails (x ${Math.round(p[0])}, rails ${rails.minX.toFixed(1)}..${rails.maxX.toFixed(1)}, kind ${s.kind})`);
+        assert.ok(isoOnWalkFloor(p[0], p[1], g, 'adult'), `${w} ${label}: every path point is on the floor, clear of props / decor`);
+      }
+      const end: [number, number] = [s.toX, s.toY];
+      const dPet = Math.hypot(end[0] - pet[0], end[1] - pet[1]);
+      if (s.kind === 'wander' || s.kind === 'prop') {
+        assert.ok(dPet >= VISITOR_PET_SPACE_PX, `${w} ${label}: it never picks a spot on top of the pet (${Math.round(dPet)} px)`);
+      }
+      if (s.kind === 'pet') {
+        assert.ok(dPet >= 24 && dPet <= VISITOR_MEET_RANGE_PX, `${w} ${label}: it stops beside the pet to meet it (${Math.round(dPet)} px)`);
+        assert.ok(s.faceTo != null, 'a meeting faces the pet');
+      }
+      if (s.walkMs > 0) walked += 1;
+      x = s.toX;
+      y = s.toY;
+    }
+    for (const k of ['rest', 'wander', 'prop', 'pet'] as const) assert.ok(kinds.has(k), `${w} ${label}: the visitor sometimes does "${k}"`);
+    assert.ok(walked > 100, `${w} ${label}: the visitor really walks (${walked} walks)`);
+    // Leaving: from anywhere on the floor it reaches the door in a few legs.
+    for (let t = 0; t < 12; t += 1) {
+      let [lx, ly] = isoClampToWalk(40 + rng() * 270, 200 + rng() * 330, g, 'adult', rails);
+      let legs = 0;
+      for (; legs < 6; legs += 1) {
+        const s = planVisitorStep({ x: lx, y: ly, pet: null, geom: g, bounds: rails, rng, leaving: true });
+        assert.equal(s.kind, 'leave');
+        if (s.walkMs === 0) break;
+        lx = s.toX;
+        ly = s.toY;
+      }
+      assert.ok(Math.hypot(lx - door[0], ly - door[1]) <= VISITOR_DOOR_DONE_PX, `${w} ${label}: a closing window sends it out the door`);
+    }
+  }
+}
+// The step is shared plumbing, not economy: nothing in the roaming files can move a balance, the network or a model.
+for (const f of ['src/play/visitor-walk.ts', 'src/play/use-visitor-roam.ts']) {
+  const src = read(f);
+  assert.ok(!/from '@\/app\/|from '@\/lib\/|playStore|generateText|ai-generate/.test(src), `${f}: no app screen, no network, no model, no store`);
+}
+// Wiring pins (pet-room.tsx / pet-screen.tsx).
+assert.ok(/const roam = !!dailyVisitor && !circle;/.test(roomSrc), 'only the daily visitor roams (a Circle friend’s pet keeps the fixed spot)');
+assert.ok(/useVisitorRoam\(\{/.test(roomSrc) && /open: visitor\?\.open !== false/.test(roomSrc), 'pet-room runs the roaming loop with the window');
+assert.ok(/geom: visitorGeom/.test(roomSrc) && /decorGeom\(roomGeom\('hideout'\), decor\.placed\)/.test(roomSrc), 'the visitor walks the decor-blocked floor');
+assert.ok(/bounds: railBounds/.test(roomSrc), 'the visitor keeps clear of both rails');
+assert.ok(/VISITOR_PET_SPACE_PX - 12/.test(roomSrc) && /vArtX\.value/.test(roomSrc), 'the pet keeps off the spot the visitor stands on');
+assert.ok(/meetRef\.current = \(v\) =>/.test(roomSrc) && /tapUntilRef\.current = Date\.now\(\) \+ VISITOR_MEET_MS/.test(roomSrc), 'the pet turns to the visitor and stops for the meeting');
+assert.ok(/const visitorOpen = visitorOpenAtHour\(hour\);/.test(screenSrc), 'pet-screen reads the window from the minute clock');
+assert.ok(/!visitorOpen\) return;/.test(screenSrc), 'the “dropped by” notice fires only while the visitor is in');
+assert.ok(/open: visitorOpen/.test(screenSrc), 'pet-screen hands the window to the room');
 
 console.log(
   `check:daily-visitors ok — 12 rotate + 2 stand-ins (all room-ready), 60-day run: 12 stickers, 12 looks, economy unchanged, ${ids.size} lines`,

@@ -36,6 +36,7 @@ import { NEON } from '@/play/neon-viper';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL, petLookFor } from '@/play/pet';
 import { greetedToday, visitorFor } from '@/play/daily-visitors';
 import { VISITOR_UI } from '@/play/daily-visitors-bank';
+import { visitorOpenAtHour } from '@/play/visitor-walk';
 import { VisitorCard, type VisitorCardShow } from '@/play/daily-visitor-ui';
 import { DecorSheet } from '@/play/decor-slots-ui';
 import type { DecorItemId, DecorSlotId } from '@/play/decor-slots';
@@ -525,6 +526,8 @@ export function PetScreen({
     return look?.kind === 'hero' ? look.heroId : null;
   }, [pet.line]);
   const visitor = streetUiOn() && pet.stage !== 'egg' ? visitorFor(todayYmd, petHeroId) : null;
+  // Step 0o: it is in the Hideout 08:00–22:00 local time (walks in and out through the door); re-read each render (the store ticks).
+  const visitorOpen = visitorOpenAtHour(hour);
   const visitorGreeted = greetedToday(view.hideout.state.visitors, todayYmd);
   const [visitorCard, setVisitorCard] = useState<VisitorCardShow | null>(null);
   const tapVisitor = () => {
@@ -863,7 +866,7 @@ export function PetScreen({
   };
   // A friend's pet with a gift stands where the daily visitor does, once today's visitor has had its hello.
   const circleGift = circleOn && !circleVisit ? nextCircleGift(circleInbox, view.hideout.state.circle) : null;
-  const circleGiftHere = circleGift != null && (!visitor || visitorGreeted);
+  const circleGiftHere = circleGift != null && (!visitor || !visitorOpen || visitorGreeted);
   const tapCircleGift = () => {
     if (!circleGift) return;
     const gift = circleGift;
@@ -884,14 +887,14 @@ export function PetScreen({
   // lets an away card that is still being worked out on open come first (it cancels this timer).
   const visitorHeroId = visitor?.heroId ?? null;
   useEffect(() => {
-    if (!visitorHeroId || visitorGreeted || awayShown) return;
+    if (!visitorHeroId || visitorGreeted || awayShown || !visitorOpen) return;
     if (visitorNoticeYmd === todayYmd) return;
     const t = setTimeout(() => {
       visitorNoticeYmd = todayYmd;
       notify({ kind: 'notify', title: VISITOR_UI.noticeTitle, body: VISITOR_UI.noticeBody(heroName(visitorHeroId)), priority: 'low' });
     }, VISITOR_NOTICE_DELAY_MS);
     return () => clearTimeout(t);
-  }, [visitorHeroId, visitorGreeted, awayShown, todayYmd]);
+  }, [visitorHeroId, visitorGreeted, awayShown, todayYmd, visitorOpen]);
 
   // Phase 4 coach tips: one at a time, on the Hideout only, when nothing is open over it. A short
   // delay keeps a tip from flashing on mount. Any touch marks it seen (GameScreen's onTipSeen).
@@ -1251,7 +1254,7 @@ export function PetScreen({
         stage={
           <PetRoom
             stageSize={street ? { width: frame.stage.width, height: frame.stage.height } : undefined}
-            visitor={visitor ? { heroId: visitor.heroId, greeted: visitorGreeted, onTap: tapVisitor } : null}
+            visitor={visitor ? { heroId: visitor.heroId, greeted: visitorGreeted, onTap: tapVisitor, open: visitorOpen } : null}
             decor={street ? { placed: view.hideout.state.decor, onTap: setDecorSlot } : null}
             circle={
               circleVisit

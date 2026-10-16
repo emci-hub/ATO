@@ -34,6 +34,8 @@ import Svg, { Circle } from 'react-native-svg';
 import type { PetCoachTip } from '@/play/coach';
 import { VISITOR_CLEAR_PX, VISITOR_MIN_PET_STRIP_PX, VISITOR_SPOT } from '@/play/daily-visitors';
 import { DailyVisitorActor } from '@/play/daily-visitor-ui';
+import { VISITOR_PARKED, useVisitorRoam } from '@/play/use-visitor-roam';
+import { VISITOR_MEET_MS, VISITOR_PET_SPACE_PX } from '@/play/visitor-walk';
 import { DecorSpots, DecorSprites } from '@/play/decor-slots-ui';
 import { decorGeom, decorKey, decorLayer, placedDecor, type DecorLayer, type DecorSlotId, type DecorState } from '@/play/decor-slots';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
@@ -56,6 +58,7 @@ import {
   HIDEOUT_MARGIN_PT,
   HIDEOUT_NIGHT,
   hideoutFace,
+  hideoutIdleFace,
   HIDEOUT_HERO_FIGURE_PX,
   HIDEOUT_STAGE_SCALE,
   hideoutHeroArtPx,
@@ -69,6 +72,7 @@ import {
   isoClampToWalk,
   planHideoutStep,
   type HideoutScale,
+  type Pt,
 } from '@/play/hideout-iso';
 import { usePlayLoopAlive } from '@/play/play-loop';
 import { usePlayMotion } from '@/play/play-motion';
@@ -469,7 +473,7 @@ export function PetRoom({
    * (NoticeLane + their own row); the room fills the whole stage and a camera follows the pet. */
   roomOutside?: boolean;
   /** Daily visitors (step 4): today's visitor, drawn in the Hideout room only (street layout). */
-  visitor?: { heroId: string; greeted: boolean; onTap: () => void } | null;
+  visitor?: { heroId: string; greeted: boolean; onTap: () => void; open?: boolean } | null;
   /** Decor slots (step 5): what stands on the Hideout room's 3 spots, and the tap that opens the picker. */
   decor?: { placed: DecorState; onTap: (slot: DecorSlotId) => void } | null;
   /** Circle visits (step 6): a friend's pet at the visitor's spot (it stands in for the daily visitor).
@@ -477,6 +481,8 @@ export function PetRoom({
   circle?: { heroId: string; greeted: boolean; onTap: () => void; decor?: DecorState } | null;
 }) {
   const visitor = circle ? { heroId: circle.heroId, greeted: circle.greeted, onTap: circle.onTap } : dailyVisitor;
+  // Step 0o: the daily visitor roams (08:00–22:00); a Circle friend's pet still stands at the visitor spot.
+  const roam = !!dailyVisitor && !circle;
   const visiting = circle?.decor != null;
   const decor = visiting && circle?.decor ? { placed: circle.decor, onTap: noDecorTap } : ownDecor;
   // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
@@ -589,6 +595,10 @@ export function PetRoom({
   const faceRef = useRef<PetFace>('e');
   const faceTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const tapUntilRef = useRef(0);
+  // The roaming visitor's feet (art px; parked far off while it is not in the room). The pet's loop reads them
+  // to stay clear; the hook below moves them.
+  const vArtX = useSharedValue(VISITOR_PARKED);
+  const vArtY = useSharedValue(VISITOR_PARKED);
 
   // The behaviour loop. Street Hideout: 2D roam on the walk polygon (every
   // kit / stage / skin). Classic: the 0..1 rug. Walk unless Motion is Off.
@@ -650,7 +660,7 @@ export function PetRoom({
             fromY = c[1];
           }
         }
-        const step = planHideoutStep({
+        let step = planHideoutStep({
           kit: art.kit,
           mood,
           branch: pet.branch,
@@ -662,6 +672,23 @@ export function PetRoom({
           geom: hideoutStage ? (decorWalkGeomRef.current ?? roomGeom(hideoutStage.presence.room)) : undefined,
           bounds: walkBoundsRef.current,
         });
+        // The roaming visitor (step 0o): the pet never wanders to a spot right on top of it; it stays put a moment instead.
+        if (
+          step.act === 'wander' &&
+          Math.hypot(step.toX - vArtX.value, step.toY - vArtY.value) < VISITOR_PET_SPACE_PX - 12
+        ) {
+          step = {
+            act: 'idle',
+            pose: petPose(art.kit, 'idle'),
+            ms: 1500,
+            toX: fromX,
+            toY: fromY,
+            bounce: 0,
+            squash: false,
+            loop: true,
+            path: [[fromX, fromY]],
+          };
+        }
         const path = step.path.length >= 2 ? step.path : ([[fromX, fromY], [step.toX, step.toY]] as const);
         const dx0 = path[Math.min(1, path.length - 1)][0] - fromX;
         const dy0 = path[Math.min(1, path.length - 1)][1] - fromY;
@@ -762,6 +789,7 @@ export function PetRoom({
   // The visitor narrows the pet's floor only while both stand in the Hideout room (see below); re-clamp when that flips.
   const visitorBlocks = !!(
     visitor &&
+    !roam &&
     streetRoom &&
     hideoutScale &&
     !picking &&
@@ -973,12 +1001,67 @@ export function PetRoom({
   // in front of / behind the pet by its feet. Same grown-hero size as an adult pet.
   const visitorOn = !!(visitor && isoOn && hideoutScale && hideoutStage?.viewed === 'hideout' && !picking && width > 0);
   const hasRailsNow = rails != null;
-  const visitorFeet = useMemo(
+  const visitorSpot = useMemo(
     () => (visitorOn ? isoClampToWalk(VISITOR_SPOT[0], VISITOR_SPOT[1], roomGeom('hideout'), 'adult', railBounds) : null),
     // railBounds follows width / scale / rails.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [visitorOn, width, hideoutPt, hasRailsNow],
   );
+  // Step 0o: a daily visitor roams the same floor as the pet (its decor blocks included). A Circle friend's pet
+  // (and a room that is not drawn yet) keeps the old fixed spot.
+  const visitorGeom = useMemo(
+    () => (visitorOn && roam ? (decor ? decorGeom(roomGeom('hideout'), decor.placed) : roomGeom('hideout')) : null),
+    // decorSig stands for decor.placed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visitorOn, roam, decorSig],
+  );
+  const petHereRef = useRef(false);
+  petHereRef.current = !!(hideoutStage?.presence.room === 'hideout' && !hideoutStage.presence.away && !egg && !away);
+  const meetBackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const meetRef = useRef<(v: Pt) => void>(() => {});
+  meetRef.current = (v) => {
+    // Visitor stopped beside the pet: the pet turns to it and both stand still for a beat (no text, no reward).
+    if (egg || asleep || !walkOn) return;
+    tapUntilRef.current = Date.now() + VISITOR_MEET_MS;
+    cancelAnimation(artX);
+    cancelAnimation(artY);
+    for (const t of faceTimers.current) clearTimeout(t);
+    faceTimers.current = [];
+    artXRef.current = artX.value;
+    artYRef.current = artY.value;
+    setAct((prev) => ({
+      ...prev,
+      pose: petPose(art.kit, 'idle'),
+      loop: true,
+      startedAt: Date.now(),
+      face: hideoutIdleFace(v[0] - artX.value, v[1] - artY.value, 's'),
+    }));
+    if (meetBackRef.current) clearTimeout(meetBackRef.current);
+    meetBackRef.current = setTimeout(() => setAct((prev) => ({ ...prev, face: faceRef.current })), VISITOR_MEET_MS);
+    cancelAnimation(hop);
+    hop.value = withSequence(
+      withTiming(motion.vestibularSafe ? -6 : -12, { duration: 170, easing: Easing.out(Easing.quad) }),
+      withTiming(0, { duration: 280, easing: Easing.bounce }),
+    );
+  };
+  const roamVisitor = useVisitorRoam({
+    on: visitorOn && roam && visitorGeom != null,
+    open: visitor?.open !== false,
+    walkOn,
+    geom: visitorGeom,
+    bounds: railBounds,
+    fixed: roam ? null : visitorSpot,
+    petHere: petHereRef,
+    pet: { x: artX, y: artY },
+    x: vArtX,
+    y: vArtY,
+    onMeet: meetRef,
+  });
+  const visitorFeet: Pt | null = roam
+    ? roamVisitor.feet && !roamVisitor.gone && visitorOn
+      ? [roamVisitor.feet.x, roamVisitor.feet.y]
+      : null
+    : visitorSpot;
   // The pet keeps to the left of the visitor (never walks through it) when the room is wide enough.
   if (visitorFeet && visitorBlocks) {
     const minX = railBounds?.minX ?? 0;
@@ -992,11 +1075,16 @@ export function PetRoom({
       <DailyVisitorActor
         heroId={visitor.heroId}
         box={hideoutPetBox(hideoutHeroArtPx('adult'), hideoutScale, pr)}
-        feetX={ox + visitorFeet[0] * isoPt}
-        feetY={oy + visitorFeet[1] * isoPt}
+        artX={vArtX}
+        artY={vArtY}
+        originX={ox}
+        originY={oy}
+        pt={isoPt}
         figurePt={HIDEOUT_HERO_FIGURE_PX * HIDEOUT_STAGE_SCALE.adult * isoPt}
         greeted={visitor.greeted}
         animate={walkOn}
+        walking={roamVisitor.act.walking}
+        face={roamVisitor.act.face}
         onTap={visitor.onTap}
       />
     ) : null;

@@ -745,7 +745,7 @@ function sleepAllow(geom: IsoRoomGeom | undefined): Pt[] | undefined {
   return pts;
 }
 
-function planPath(geom: IsoRoomGeom | undefined, from: Pt, to: Pt, stage: PetStage, allow?: readonly Pt[], bounds?: WalkBounds): Pt[] {
+export function planPath(geom: IsoRoomGeom | undefined, from: Pt, to: Pt, stage: PetStage, allow?: readonly Pt[], bounds?: WalkBounds): Pt[] {
   const grid = hideoutGridFor(stage, geom, bounds);
   const opts = allow && allow.length > 0 ? { allow } : undefined;
   const pulled = route(grid, from, to, opts);
