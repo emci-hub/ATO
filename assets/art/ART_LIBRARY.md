@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 507 live entries.
+Generated. 508 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -12,7 +12,7 @@ Viewer lists one card per set (not each clip/file).
 - **enemies-bosses** (18: 10 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
 - **icons** (106: 50 in use / 56 unused) — Icons
-- **rooms** (60: 38 in use / 22 unused) — Rooms
+- **rooms** (61: 39 in use / 22 unused) — Rooms
 - **props** (49: 10 in use / 39 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
 - **fx** (14: 1 in use / 13 unused) — FX
@@ -866,6 +866,7 @@ Viewer lists one card per set (not each clip/file).
 | `room.underground.occluder-night-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
 | `room.underground.occluder-night-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
 | `room.underground.props` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.underground.snapshot` | 352×576 | candidate | — | src/play/hideout-art.ts |
 
 ## rooms · underground · default · unused
 

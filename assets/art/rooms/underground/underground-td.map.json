@@ -23,9 +23,9 @@
       352,
       576
     ],
-    "placeholder": true,
+    "placeholder": false,
     "sleepOnBed": false,
-    "source": "scripts/gen-hideout-td.ts — option A greybox until PixelLab room art lands"
+    "source": "scripts/gen-hideout-td.ts + hideout-room-art.ts — PixelLab art (art-src/pixellab/room.underground.streetwear)"
   },
   "layers": {
     "back": "underground-td-back.png",
@@ -60,8 +60,8 @@
       "0111111111111111111110",
       "0111111111111111111110",
       "0111111111111111111110",
-      "0001111111111111111000",
-      "0001111111111111111000",
+      "0111100111111110011110",
+      "0111100111111110011110",
       "0111111111111111111110",
       "0111111111111111111110",
       "0111111111111111111110",
@@ -89,22 +89,22 @@
       "facing": "down",
       "rotated": false,
       "footprint": [
-        1,
+        5,
         15,
         2,
         2
       ],
       "sprite": [
-        16,
-        201,
-        32,
-        71
+        84,
+        199,
+        25,
+        73
       ],
       "crop": [
-        16,
-        201,
-        32,
-        71
+        84,
+        199,
+        25,
+        73
       ],
       "sortY": 272,
       "baselineY": 272,
@@ -115,22 +115,22 @@
       "facing": "down",
       "rotated": false,
       "footprint": [
-        19,
+        15,
         15,
         2,
         2
       ],
       "sprite": [
-        304,
-        201,
-        32,
-        71
+        244,
+        199,
+        25,
+        73
       ],
       "crop": [
-        304,
-        201,
-        32,
-        71
+        244,
+        199,
+        25,
+        73
       ],
       "sortY": 272,
       "baselineY": 272,

@@ -169,6 +169,7 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'room.underground.occluder-night-a': require('@/assets/art/rooms/underground/underground-td-occlude-night-a.png'),
   'room.underground.occluder-night-b': require('@/assets/art/rooms/underground/underground-td-occlude-night-b.png'),
   'room.underground.props': require('@/assets/art/rooms/underground/underground-td-props.png'),
+  'room.underground.snapshot': require('@/assets/art/rooms/underground/underground-td-snapshot.png'),
   'tower.ghost.cast.atlas': require('@/assets/art/enemies-bosses/in-use/ghost/cast/atlas.png'),
   'tower.lux.cast.atlas': require('@/assets/art/enemies-bosses/in-use/lux/cast/atlas.png'),
   'tower.viper.cast.atlas': require('@/assets/art/enemies-bosses/in-use/viper/cast/atlas.png'),
@@ -642,6 +643,7 @@ export type ArtId =
   | 'room.underground.occluder-night-a'
   | 'room.underground.occluder-night-b'
   | 'room.underground.props'
+  | 'room.underground.snapshot'
   | 'room.underground.underground'
   | 'tile.streetwear.asphalt-sidewalk'
   | 'tile.streetwear.brick-graffiti-sidescroller'
@@ -1862,6 +1864,7 @@ export const ART = {
       occluderNightA: 'room.underground.occluder-night-a',
       occluderNightB: 'room.underground.occluder-night-b',
       props: 'room.underground.props',
+      snapshot: 'room.underground.snapshot',
       underground: 'room.underground.underground',
     },
   },

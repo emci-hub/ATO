@@ -125,6 +125,10 @@ export type HideoutArtInput = {
   litLamp?: { file: string; foot: { x: number; w: number; bottom: number }; pool: readonly [number, number] };
   /** Loft: keep the floor calm — share of plain base planks and the largest brightness gap a variant may have from it. */
   floorMix?: { base: number; maxLumaGap: number };
+  /** Floor variant files left out of the mix (Underground: no yellow / red / white blotches, no checker noise). */
+  floorSkip?: readonly string[];
+  /** Underground: neon spill under a prop (speaker strip), pulsed with neon A/B. */
+  spills?: readonly { pos: readonly [number, number]; rgb: readonly [number, number, number] }[];
   /** Wall plaster rim colours (the Hideout default is brick red). */
   rim?: { body: readonly [number, number, number, number]; top: readonly [number, number, number, number] };
 };
@@ -175,6 +179,7 @@ export function paintHideoutArt(L: HideoutArtInput, room = 'hideout'): HideoutAr
   const baseLuma = luma(plankBase);
   const variants = readdirSync(join(raw, 'floor-variants'))
     .sort()
+    .filter((f) => !L.floorSkip?.includes(f))
     .map((f) => load(join(raw, 'floor-variants', f)))
     .filter((v) => !L.floorMix || Math.abs(luma(v) - baseLuma) / Math.max(1, baseLuma) <= L.floorMix.maxLumaGap);
   const baseShare = L.floorMix?.base ?? 0.55;
@@ -250,6 +255,7 @@ export function paintHideoutArt(L: HideoutArtInput, room = 'hideout'): HideoutAr
     const c = new Canvas(L.W, L.H);
     if (L.lamp) c.glow(L.lamp[0], L.lamp[1], 70, 44, [255, 180, 90], 70 * k);
     if (L.screen) c.glow(L.screen[0], L.screen[1], 46, 26, [80, 220, 255], 50 * k);
+    for (const s of L.spills ?? []) c.glow(s.pos[0], s.pos[1], 34, 22, s.rgb, 60 * k);
     if (L.window) c.glow(L.window.pos[0] + (L.windowSprites ? L.windowSprites.w / 2 : 26), L.wallBottom + 14, L.windowSprites ? 64 : 40, 14, [190, 150, 255], 36 * k);
     return c.png();
   };

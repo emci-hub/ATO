@@ -75,7 +75,7 @@ export const ROOM_ART: Record<
   Partial<Record<RoomArtKey, ImageSourcePropType>> & { placeholder: boolean; map: unknown }
 > = {
   hideout: {
-    // Real PixelLab art since 2026-10-12 (scripts/hideout-room-art.ts); the Loft followed on 2026-10-15; Underground is still greybox.
+    // Real PixelLab art since 2026-10-12 (scripts/hideout-room-art.ts); the Loft and the Underground (garage) followed on 2026-10-15.
     placeholder: false,
     map: hideoutMap,
     back: png(ROOM.hideout.back),
@@ -106,11 +106,22 @@ export const ROOM_ART: Record<
     glow: png(ROOM.loft.glow),
     snapshot: png(ROOM.loft.back),
   },
+  // Real PixelLab art since 2026-10-15 (the Underground room). The Garage is not a live room yet: the stage draws the
+  // flattened `snapshot` (hideout-stage SnapshotRoom); the layers are here for when it goes live.
   garage: {
-    placeholder: true,
-    map: loftMap,
+    placeholder: false,
+    map: undergroundMap,
+    back: png(ROOM.underground.back),
+    floor: png(ROOM.underground.floor),
+    props: png(ROOM.underground.props),
+    neonA: png(ROOM.underground.neonA),
+    neonB: png(ROOM.underground.neonB),
+    occludeDayA: png(ROOM.underground.occluderDayA),
+    occludeDayB: png(ROOM.underground.occluderDayB),
+    occludeNightA: png(ROOM.underground.occluderNightA),
+    occludeNightB: png(ROOM.underground.occluderNightB),
     shell: png(ART.room.hideout.neighborBoardedTd),
-    snapshot: png(ART.room.hideout.neighborBoardedTd),
+    snapshot: png(ART.room.underground.snapshot),
   },
   rooftop: {
     placeholder: true,
