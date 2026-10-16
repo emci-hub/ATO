@@ -22,6 +22,7 @@ OK → merge → `npm run ota:publish`. Play-only rules: `.cursor/rules/play-iso
 | 0j | Catch the food moves into the Feed sheet, under "? Your pet" | ✔ merged, PR #58 (squash `7e7addfc`). **OTA `01a1463a`** (production, iOS, group `be9a0803`, commit `4c6cabc1`, gate green 167). **Device-verified** (emci, 2026-10-16: Catch sits under "? Your pet" in Feed, a counted round returns to Feed with the result, Play shows only Tap to train). |
 | 0k | Copy: Catch the food named as "in Feed" (Today plan, hunger push, Guide pet section); Play-sheet link relabelled "Mini-game rules in the Guide" | ✔ merged, PR #59 (squash `322198f9`). Copy-only, gate green, reviewer PASS, no previews. **OTA `01a14647`** (production, iOS, group `74159ed9`, commit `2785ce31`, gate green). `devBuildAllRooms` untouched: no leftover build notice found in code (the push is re-planned by the notice sync on every build change); if one shows on a phone, report what it says. **Device-verified** (emci, 2026-10-16: "all fine"). |
 | 0l | UI polish: modern, sectioned Info (all sections collapsed, no sideways-scroll tabs) + one border / corner / spacing / shadow language + one type scale, fix text overflow, fix Catch card outside its border (Feed, Play, every other sheet) | ✔ merged, PR #60 (squash `ec34ac74`). Gate green (167), reviewer PASS. **OTA `01a146b2`** (production, iOS, group `3aae9e9a`, commit `751288cd`, gate green 167). **Device-verified** (emci, 2026-10-16: "looks great now, all fine"). The leftover polish (scroll-into-view, Status regroup, Stash / Stone / Settings / rails restyle) is optional, parked as 0n. No economy or copy-meaning changes |
+| 0m | BUG: pet invisible after an expedition finishes | ✔ merged, PR #61 (squash `b44c8214`). Gate green (167), reviewer PASS. OTA: see "as built 0m". Awaiting emci's phone check |
 | 6b | Phone check of Circle visits (two real accounts) | ✔ passed (emci, 2026-10-15) |
 | 1 | Foundations: Divecore on in every build, cloud save (wave96), 6 anonymous counters | ✔ OTA `44ebd8b6` (#42, #43) |
 | 2 | While you were away card | ✔ OTA `9a94d37f` (#45) |
@@ -433,8 +434,21 @@ Sample lines: low steadiness → "Busy-brain day? I'll sit right here." · high 
   before the gate, and never `stash pop` after switching branches with src edits in the stash; (2) the first click after a reload in the browser pane can
   be swallowed, wait 2 s and click again; (3) the pre-commit art:sync runs on every commit here and stages nothing new.
 
+## Step 0m as built (2026-10-16): pet invisible after an expedition
+- **Root cause** (static trace, medium confidence, not reproduced on a phone): `touchPet` collected a finished trip (cleared `pet_expedition`) but left
+  `hideout` alone. While away, `resolvePresence` put the pet in the VIEWED room; once collected it fell back to hungry / tired / `scheduleRoom`
+  (Loft 14-17 h and in the bedtime window), so the pet was drawn only in another room and the viewed room looked empty (`petShown` needs `presence.room === viewed`).
+  Same on app reopen (`hydrate` runs `touchPet`).
+- **Fix:** `touchPet` completion branch (`playStore.ts`) adds `hideout: startCall(banked.hideout, pet, banked.hideout.viewed_room)`: the pet comes home into the
+  viewed room for a normal call stay. Hungry / tired / chosen sleep still outrank a call; egg / baby unchanged; unbuilt viewed room falls back to Hideout.
+  No economy or copy change. Pinned in `check:hideout-rooms` ("expedition return"): fails without the fix.
+- **Previews** (`docs/divecore/0m/`): finished trip seeded in `ato.play.store.v1`, reopened: pet visible on the floor at 430x932 and 375x667.
+- **Known:** (1) with the app OPEN the trip is collected on the next 30 s tick (`TICK_MS`), so up to 30 s of the old gap remains; (2) a pet returning at bedtime
+  shows awake in the viewed room for the 10 min call, then the schedule sends it to the Loft; (3) after the call ends the schedule can move it to the Loft again
+  (existing design, may look like the bug). If emci still sees it invisible, check `pet-room.tsx` artX/artY re-clamp after `away` ends (second hypothesis) and ask which room was open and the time of day.
+
 ## Open items (from emci's third phone check, 2026-10-16, after 0l)
-- **Bug (next, step 0m):** after sending the pet on an expedition, when it finishes the pet is **invisible** (glitches out). Not investigated yet.
+- **Bug (step 0m, fixed, awaiting phone check):** after sending the pet on an expedition, when it finishes the pet is **invisible**. See "Step 0m as built" below.
 - **Feature (step 0o):** the daily visitor (e.g. Archangel) stands in one spot; emci wants it to **roam** and **interact with the room's items and the pet**.
   Today's rules (step 4): visitor fixed at art (236, 430), the pet's walk bounds stop 48 art px to its left while it is in.
 - Optional polish parked as 0n: see "Known" in the step 0l section.
