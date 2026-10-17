@@ -34,6 +34,23 @@ import {
   nextChip,
   showHealthBar,
 } from '../src/play/turf-combat-fx-rules';
+import {
+  BOSS_ABILITIES,
+  BOSS_DEATH_MS,
+  BOSS_EFFECT_DURATIONS,
+  BOSS_FX,
+  BOSS_SUMMON_MS,
+  BOSS_TELEGRAPHS,
+  ENRAGE_WINDUP_MS,
+  TELEGRAPH_MIN_MS,
+  WAVE_CHIP_BOX,
+  bossBar,
+  bossFxFlags,
+  enrageWarning,
+  telegraphStart,
+} from '../src/play/turf-boss-fx-rules';
+import { allBoundBossDefs } from '../src/play/engine/bound-boss';
+import { allBossBands } from '../src/play/engine/bands';
 
 const repo = path.resolve(__dirname, '..');
 const read = (rel: string) => fs.readFileSync(path.join(repo, rel), 'utf8');
@@ -316,6 +333,99 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(src, /const MAX_FLOATERS = 8;/, 'number cap stays 8');
   assert.match(src, /skin: archer \? TOWER_FX\.archer/, 'the plain Archer draws its own dart + star (no Kenney shot in Streetwear)');
   ok('combat effects: every tower has a projectile + impact, timings inside the table, Off / Reduce Motion = no flash / shake / hit stop, layer outside the sim SVG');
+}
+
+{
+  // T6: boss effects — entrance in the NoticeLane + a sigil at the spawn (no in-stage banner), a telegraph ≥ 600 ms for
+  // every boss ability, the boss bar inside the top bar's wave chip box (stage frame unchanged), death blast + shake +
+  // hit stop only when allowed, Off / calm motion = no flash / shake / hit stop.
+  const meta = JSON.parse(read('assets/play/sheets/streetwear/meta.json')) as { fx: Record<string, { frames: number; fps: number; loop: boolean }> };
+  const lengthMs = (key: string) => (meta.fx[key]!.frames / meta.fx[key]!.fps) * 1000;
+  for (const [name, key] of Object.entries(BOSS_FX)) {
+    const fx = meta.fx[key];
+    assert.ok(fx && !fx.loop, `${name}: ${key} is packed and plays once (only "shot" loops)`);
+  }
+  assert.ok(Math.abs(lengthMs(BOSS_FX.summon) - BOSS_SUMMON_MS) <= 50, 'entrance sigil timing matches its sheet');
+  assert.ok(Math.abs(lengthMs(BOSS_FX.death) - BOSS_DEATH_MS) <= 50, 'boss death timing matches its sheet');
+  assert.ok(Math.abs(lengthMs(BOSS_FX.enrage) - ENRAGE_WINDUP_MS) <= 50, 'enrage sigil timing matches its sheet');
+  for (const [name, d] of Object.entries(BOSS_EFFECT_DURATIONS)) {
+    assert.ok(d.ms >= d.min && d.ms <= d.max, `${name}: ${d.ms} ms inside [${d.min}, ${d.max}]`);
+  }
+
+  // Every boss ability has a telegraph with a wind-up ≥ 600 ms: the enemy enrage + the Bound Boss echo skills (closed set).
+  assert.deepEqual([...BOSS_ABILITIES].sort(), ['burst', 'enrage', 'focus_beam', 'slow_pulse'], 'abilities = enrage + the closed echo-skill set');
+  assert.equal(new Set(Object.values(BOSS_TELEGRAPHS).map((t) => t.look)).size, BOSS_ABILITIES.length, 'a different look per ability');
+  for (const def of allBoundBossDefs()) assert.ok(BOSS_TELEGRAPHS[def.skill.skill_id], `${def.boss_id}: its ${def.skill.skill_id} skill has a telegraph`);
+  for (const band of allBossBands()) {
+    if (band.boss.burst) assert.ok(BOSS_TELEGRAPHS.enrage, `${band.label}: its enrage has a telegraph`);
+  }
+  assert.ok(ENRAGE_WINDUP_MS >= TELEGRAPH_MIN_MS && TELEGRAPH_MIN_MS >= 600, 'enrage wind-up ≥ 600 ms');
+  // Skill telegraphs: walk a cooldown down tick by tick at 1x and 2x from every phase; the wind-up the player sees is ≥ 600 ms.
+  const TICK = 100;
+  for (const speed of [1, 2]) {
+    for (const cooldown of [6_750, 9_000]) {
+      for (let phase = 0; phase < TICK * speed; phase += 7) {
+        let showing = false;
+        let seen: number | null = null;
+        for (let cd = cooldown - phase; cd > -TICK * speed; cd -= TICK * speed) {
+          const start = telegraphStart(showing, Math.max(0, cd), TICK, speed);
+          if (start != null && seen == null) {
+            seen = start;
+            showing = true;
+          }
+        }
+        assert.ok(seen != null && seen >= TELEGRAPH_MIN_MS, `speed ${speed}, cooldown ${cooldown}, phase ${phase}: wind-up ${seen} ms ≥ ${TELEGRAPH_MIN_MS}`);
+      }
+    }
+  }
+  assert.equal(telegraphStart(true, 0, TICK, 1), null, 'one telegraph at a time per ability');
+  assert.equal(enrageWarning(60, 100, 0.5, false), true, 'enrage warning near the line (≤ 65 % for a 50 % line)');
+  assert.equal(enrageWarning(90, 100, 0.5, false), false, 'no warning far above the line');
+  assert.equal(enrageWarning(40, 100, 0.5, true), false, 'no warning once the enrage fired');
+  const fx = read('src/play/turf-combat-fx.tsx');
+  assert.match(fx, /Math\.max\(0, TELEGRAPH_MIN_MS - \(Date\.now\(\) - bornAt\)\)/, 'a telegraph never ends before TELEGRAPH_MIN_MS');
+
+  // Boss bar: inside the top bar, in the wave chip's own fixed box; the stage frame never depends on it.
+  const src = read('src/play/defend-screen.tsx');
+  const topStart = src.indexOf('topBar={');
+  const topEnd = src.indexOf('tabBar={', topStart);
+  const top = src.slice(topStart, topEnd);
+  assert.ok(topStart > 0 && topEnd > topStart, 'top bar prop found');
+  assert.match(top, /liveBoss \? \(\s*<View\s+style=\{\[styles\.streetWave, styles\.bossBarBox\]\}/, 'the boss bar is drawn in the wave chip box inside the top bar');
+  assert.match(src, /streetWave: \{ width: WAVE_CHIP_BOX\.width, height: WAVE_CHIP_BOX\.height,/, 'the wave chip and the boss bar share one fixed box');
+  assert.equal((src.match(/styles\.bossBarBox/g) ?? []).length, 1, 'the boss bar renders in one place only');
+  for (const d of DEVICES) {
+    const f = computeStageFrame('turf-wave', d.window, d.insets);
+    assert.ok(WAVE_CHIP_BOX.height + 8 <= f.topBar.height, `${d.name}: the boss bar box fits the ${f.topBar.height} pt top bar`);
+    assert.ok(WAVE_CHIP_BOX.width <= f.topBar.width * 0.4, `${d.name}: the boss bar box leaves room for caps + pause`);
+  }
+  const frameProp = /frame=\{([^}]*)\}/.exec(src.slice(src.indexOf('<GameScreen'), topStart));
+  assert.ok(frameProp && !/liveBoss|boss/i.test(frameProp[1]!), 'the stage frame does not depend on a boss (identical with and without one)');
+  const bar = bossBar([{ id: 4, kind: 'boss', hp: 30, maxHp: 120, burstHpPct: 0.5 }, { id: 5, kind: 'puff', hp: 9, maxHp: 9 }], 'Ember Sovereign');
+  assert.deepEqual(bar, { id: 4, name: 'Ember Sovereign', pct: 0.25, enrageAt: 0.5 }, 'boss bar reads the live boss');
+  assert.equal(bossBar([{ id: 5, kind: 'puff', hp: 9, maxHp: 9 }], 'x'), null, 'no boss: the wave chip shows');
+
+  // No in-stage banner: the warn is a NoticeLane notice with the same words.
+  assert.ok(!/bossAlert|BOSS_WARN_MS/.test(src), 'no in-stage boss pill');
+  assert.match(src, /notify\(\{ kind: 'notify', title: 'BOSS INCOMING'/, '"BOSS INCOMING" goes through notify() into the NoticeLane');
+  assert.equal((src.match(/BOSS INCOMING/g) ?? []).length, 2, '"BOSS INCOMING" only in the notify call (+ its comment)');
+
+  // What plays, per Effects Quality and Motion.
+  const calmFlags = [
+    bossFxFlags('off', { vestibularSafe: false, cosmeticsStill: false }),
+    bossFxFlags('full', { vestibularSafe: true, cosmeticsStill: false }),
+    bossFxFlags('full', { vestibularSafe: false, cosmeticsStill: true }),
+    bossFxFlags('minimal', { vestibularSafe: true, cosmeticsStill: true }),
+  ];
+  for (const f of calmFlags) assert.ok(!f.flash && !f.shake && !f.hitStop, 'Effects Off / Reduce Motion / Motion Off: no boss flash, shake or hit stop');
+  assert.deepEqual(bossFxFlags('off', { vestibularSafe: false, cosmeticsStill: false }), { summon: null, telegraph: 'still', death: null, flash: false, shake: false, hitStop: false }, 'Off = no boss effect (telegraphs stay as still shapes)');
+  assert.deepEqual(bossFxFlags('minimal', { vestibularSafe: false, cosmeticsStill: false }), { summon: 'anim', telegraph: 'anim', death: 'full', flash: true, shake: false, hitStop: false }, 'Minimal = no shake, no hit stop');
+  assert.deepEqual(bossFxFlags('full', { vestibularSafe: false, cosmeticsStill: false }), { summon: 'anim', telegraph: 'anim', death: 'full', flash: true, shake: true, hitStop: true }, 'Full = all');
+  assert.match(src, /const bossFlags = bossFxFlags\(fxQuality, playMotion\)/, 'boss flags come from Effects Quality + Motion');
+  assert.match(src, /if \(bossFlagsNow\.shake\) shakeBoard\('bossDeath'\);/, 'boss death shake only when allowed');
+  assert.match(src, /if \(bossFlagsNow\.hitStop\) setHitStop\(true\);/, 'boss death hit stop only when allowed (the same ≤ 60 ms timer)');
+  assert.match(src, /if \(old\.kind === 'boss' && !step\.leak\)/, 'the boss blast plays on a kill, never on a leak');
+  ok('boss effects: notice-lane warn (no in-stage banner), every ability telegraphed ≥ 600 ms at 1x / 2x, boss bar in the top bar box, Off / Reduce Motion = no flash / shake / hit stop');
 }
 
 console.log(`\ncheck:turf-war-layout — ${passed} groups passed.`);

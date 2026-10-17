@@ -1,0 +1,391 @@
+{
+ "frames": [
+  {
+   "filename": "ato-t6-boss-death-blast 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 1.png",
+   "frame": {
+    "x": 136,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 2.png",
+   "frame": {
+    "x": 272,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 3.png",
+   "frame": {
+    "x": 408,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 4.png",
+   "frame": {
+    "x": 0,
+    "y": 66,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 5.png",
+   "frame": {
+    "x": 136,
+    "y": 66,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 6.png",
+   "frame": {
+    "x": 272,
+    "y": 66,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 7.png",
+   "frame": {
+    "x": 408,
+    "y": 66,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 8.png",
+   "frame": {
+    "x": 0,
+    "y": 132,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 9.png",
+   "frame": {
+    "x": 136,
+    "y": 132,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 10.png",
+   "frame": {
+    "x": 272,
+    "y": 132,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 11.png",
+   "frame": {
+    "x": 408,
+    "y": 132,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 12.png",
+   "frame": {
+    "x": 0,
+    "y": 198,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-death-blast 13.png",
+   "frame": {
+    "x": 136,
+    "y": 198,
+    "w": 136,
+    "h": 66
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 136,
+    "h": 66
+   },
+   "sourceSize": {
+    "w": 136,
+    "h": 66
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5454545454545454
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "ato-t6-boss-death-blast.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 544,
+   "h": 264
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 68,
+   "y": 36
+  },
+  "frameTags": [
+   {
+    "name": "ato-t6-boss-death-blast",
+    "from": 0,
+    "to": 13,
+    "direction": "forward"
+   }
+  ]
+ }
+}
