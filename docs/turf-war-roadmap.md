@@ -22,7 +22,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T3 | Map art: new baked board from PixelLab parts (tiles, pads, props), same path and pads | ✔ merged (PR #66, 2026-10-17); OTA see "Step T3 as built" |
 | T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | ✔ merged (PR #67, 2026-10-17); OTA see "Step T4 as built" |
 | T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | ✔ merged (PR #68, 2026-10-17); OTA see "Step T5 as built" |
-| T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | not started |
+| T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | ✔ merged (PR #69, 2026-10-17); OTA see "Step T6 as built" |
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | not started |
 | T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); how a player gets a theme (picker / daily / unlock) is a feature decision to make first | not started, after T7 |
 
@@ -169,6 +169,29 @@ and no new in-stage text nodes besides the pinned ones.
 - **Preview gotcha:** since T4 the web preview hides creeps and towers (absolutely positioned board layers paint over the in-flow units `<svg>` in a browser; native is fine).
   The shot script injects `svg[viewBox="0 0 100 100"]{position:relative}`. The dev "Force leak" row ends the run without `step.leak`, so it shows no ring — let a creep leak instead.
 - Not done / for later: archer darts share the FX cap with elemental effects; flash/pop use the creep box from the previous render (tiny offset); not device-verified.
+
+#### Step T6 as built (2026-10-17, PR #69 squash `ef8a58ce`, OTA: see below; awaiting emci's phone check; emci answered the T5 phone check "passed")
+- **Stop 1 picks (emci, all recommended):** Entrance B = new magenta sigil + light column (`summon/burst` 74×85 ×10 @ 12 fps), Enrage B = new red sigil +
+  charge (`enrage/burst` 74×56 ×12 = 1.0 s) **with no rule change**, Death B = new plum blast + ring + sparks (`bossko/burst` 136×66 ×14 = 1.17 s), Boss bar A =
+  name over a thin bar. All `vfx_workbench` (0 PixelLab generations; ~240 left of the T3–T6 budget). Raw + `gen-t6.json` in `art-src/.../fx/elements/`.
+- **Found at stop 1:** the enemy boss's only ability is the enrage (below `burst.hp_pct` it fires at once and queues runners at the spawn). A fixed 0.6 s lead needs a
+  rule change, so emci picked: the warning starts at `hp_pct + 0.15` (`ENRAGE_WARN_BAND`), and the lead depends on tower damage. "Every boss ability" = enrage + the
+  Bound Boss echo-skill closed set (`burst` live as Sovereign Nova; `slow_pulse` / `focus_beam` have looks ready, no content).
+- **Code:** rules + timings in `src/play/turf-boss-fx-rules.ts` (`BOSS_FX`, `BOSS_TELEGRAPHS`, `telegraphStart` = lead `(600 + tick) × speed` sim ms so the real
+  wind-up is ≥ 600 ms at 1x / 2x, `bossFxFlags`, `bossBar`, `WAVE_CHIP_BOX` 132 × 32). The T5 layer `turf-combat-fx.tsx` gained a generic `Strip` (the pop uses it too), `summon`,
+  `bossDeath`, `telegraph` / `endTelegraph` (ends by item id, never before `TELEGRAPH_MIN_MS`) and the boss flash (110 ms, opacity 1); `useBoardShake('bossDeath')` = 220 ms / 5 pt.
+  `defend-screen.tsx`: `notify({kind:'notify', title:'BOSS INCOMING', body:'<band> — <boss>'})` replaces the pill (`bossAlert` state + styles gone); the enrage glow is a
+  static `<Ellipse>` in the sim SVG; the boss bar replaces the wave chip in the top bar (both in one fixed box); a boss kill = blast + hit stop + shake (Full);
+  `resultHold` keeps the won card off for `BOSS_DEATH_MS` when the boss was the last kill (it covered the blast; the win is paid on the same tick).
+- **Quality / motion:** Off = no sigil, blast, flash, shake or hit stop (telegraphs = still shapes; the bar + notice stay; the boss leaves its corpse as before); Minimal = no shake / hit stop;
+  Reduce Motion / Motion Off = still sigil, soft death (skips the white frames), no flash / shake / hit stop.
+- **Checks:** `check:turf-war-layout` = 10 groups (T6: sheets packed + one-shot + timings, every ability telegraphed ≥ 600 ms simulated at 1x / 2x, a look per ability, boss
+  bar in the top-bar box + the frame never depends on a boss, no in-stage pill, notify words, flags per quality / motion).
+- **Previews + frame time:** `docs/divecore/turf-war-t6/` (`NOTES.md`): boss fight ≈ 8.4 ms avg (430) / 7.7 (SE), Off 6.8.
+- **Preview gotchas:** the export writes `play.html`; copy it to `play/index.html` or `/play/` is a 404. "Preview boss beat (Final)" + a seed with
+  `bound_bosses:[{id:'ember_sovereign',stars:1,...}]` and Main wave 10 reaches the Final boss with the Nova tower; dismiss the "Welcome back" card first.
+- **Open / for later:** players on "Important only" notices don't see "BOSS INCOMING" (`notify` kind is hidden there; the old pill always showed); a Bound Boss placed mid-wave
+  with a creep in range casts with no wind-up; a 1x → 2x switch mid wind-up shortens it; a boss drawn with a rotated single sprite gets no blast (fails safe). Not device-verified.
 
 ### T2 — HUD + UI kit
 - **Scope:** `src/play/turf-ui.tsx` built on `sheet-kit` tokens: top bar (wave chip with a next-wave preview popover — creep icons + count
