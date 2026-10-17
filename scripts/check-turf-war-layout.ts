@@ -114,4 +114,57 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   ok('dock buttons ≥ 44 × 44 and ≥ 8 pt apart; pause menu buttons 48');
 }
 
+{
+  // T2: the real build card (fixed width per phone, fixed height per mode) fits every pad, never covers it.
+  const card = read('src/play/turf-build-card.tsx');
+  const width = Number(/BUILD_CARD_WIDTH = (\d+)/.exec(card)?.[1]);
+  const heights = /BUILD_CARD_HEIGHT = \{ build: (\d+), tower: (\d+), boss: (\d+) \}/.exec(card);
+  assert.ok(width > 0 && heights, 'build card width + heights are literal constants');
+  const modes = { build: Number(heights![1]), tower: Number(heights![2]), boss: Number(heights![3]) };
+  for (const [mode, h] of Object.entries(modes)) assert.ok(h <= BUILD_CARD_MAX_H, `${mode} card ${h} pt ≤ ${BUILD_CARD_MAX_H}`);
+  for (const d of DEVICES) {
+    const stage = computeStageFrame('turf-setup', d.window, d.insets).stage;
+    const w = Math.min(width, stage.width - 16);
+    const board = turfBoardRect(stage);
+    const r = padTapRadiusPt(board.size);
+    for (const [mode, h] of Object.entries(modes)) {
+      ATO_PADS.forEach((pad, i) => {
+        const p = buildCardPlacement(stage, pad, { width: w, height: h });
+        assert.ok(p.x >= 0 && p.y >= 0 && p.x + w <= stage.width && p.y + h <= stage.height, `${d.name}: ${mode} card for pad ${i} inside the stage`);
+        const cy = board.y + (pad.y / 100) * board.size;
+        assert.ok(!(p.y < cy + r && p.y + h > cy - r), `${d.name}: ${mode} card for pad ${i} does not cover its pad`);
+      });
+    }
+  }
+  // Taps ≥ 44: choice tiles, the close ✕ (32 + hitSlop 6 each side), Remove, Upgrade (TurfButton min 48).
+  assert.match(card, /tile: \{\s*width: 100,\s*height: 60,/, 'choice tiles are 100 × 60');
+  assert.match(card, /close: \{\s*width: 32,\s*height: 32,/, 'close ✕ is 32 pt …');
+  assert.match(card, /hitSlop=\{6\}/, '… plus 6 pt slop each side = 44');
+  assert.match(card, /remove: \{ minHeight: SHEET\.tap, minWidth: 96 \}/, 'Remove ≥ 44 high');
+  const ui = read('src/play/turf-ui.tsx');
+  assert.match(ui, /minHeight: SHEET\.tap \+ 4,/, 'TurfButton is ≥ 48 high');
+  assert.match(card, /armed === choice\.key[\s\S]{0,400}choice\.onBuy\(\)/, 'two taps to buy: the second tap on the armed choice buys');
+  ok(`build card (${width} wide; ${heights![1]} / ${heights![2]} / ${heights![3]} pt) fits all 15 pads at both phones, taps ≥ 44, two-tap buy`);
+}
+
+{
+  // T2: Turf cards are on sheet-kit, not the old styles.card; the bottom panel only carries results.
+  const src = read('src/play/defend-screen.tsx');
+  const from = src.indexOf('const padCard = (() => {');
+  const to = src.indexOf('\n  return (', from);
+  assert.ok(from > 0 && to > from, 'padCard / resultCard / floatCards block found');
+  const block = src.slice(from, to);
+  assert.ok(!/styles\.card\b|ThemedView/.test(block), 'no styles.card / ThemedView in the Turf float cards');
+  assert.ok(!/styles\.hudButton|styles\.primaryButton/.test(block), 'no old hud / primary buttons in the Turf float cards');
+  assert.match(block, /<TurfBuildCard/, 'the build card is used');
+  assert.match(block, /<TurfResultCard/, 'result cards use the kit');
+  assert.ok(!/TOWER_LETTER/.test(src), 'no tower letter badge (level pips instead)');
+  assert.match(src, /TOWER_PIP_R/, 'level pips on the board');
+  const ui = read('src/play/turf-ui.tsx');
+  assert.match(ui, /from '@\/play\/sheet-kit'/, 'turf-ui is built on sheet-kit');
+  // Prices, stats and rules are not touched here: the card only reads TOWER_DEFS / towerUpgradeCost.
+  assert.ok(!/placeCost\s*[:=]\s*\d/.test(read('src/play/turf-build-card.tsx') + ui), 'no prices in the UI files');
+  ok('Turf float cards are on sheet-kit (no styles.card), result cards on TurfResultCard, level pips on the board');
+}
+
 console.log(`\ncheck:turf-war-layout — ${passed} groups passed.`);
