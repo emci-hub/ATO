@@ -19,11 +19,12 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T0 | Investigate, research, plan (this doc) | ✔ docs on master. Waiting for emci's approval |
 | T1 | Layout guidelines doc + `check:turf-war-layout` + the layout moves (board fills the stage, Leave → pause menu, title out of the stage) | ✔ merged (PR #64, 2026-10-16); OTA see "Step T1 as built" |
 | T2 | HUD + UI kit: top bar, dock buttons (cost / afford / cooldown), build card at the pad, won / lost cards on `sheet-kit` | ✔ merged (PR #65, 2026-10-17), except the next-wave popover + top-bar restyle (not done) |
-| T3 | Map art: new baked board from PixelLab parts (tiles, pads, props), same path and pads | not started |
+| T3 | Map art: new baked board from PixelLab parts (tiles, pads, props), same path and pads | ✔ merged (PR #66, 2026-10-17); OTA see "Step T3 as built" |
 | T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | not started |
 | T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | not started |
 | T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | not started |
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | not started |
+| T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); how a player gets a theme (picker / daily / unlock) is a feature decision to make first | not started, after T7 |
 
 Every step ships on its own OTA. T1 and T2 change code layout only (no art). T3 and T4 need emci to pick art from samples
 first (two stops inside the step: samples → pick → build). T5 and T6 need effect samples (GIF strips) the same way.
@@ -119,6 +120,20 @@ and no new in-stage text nodes besides the pinned ones.
   library frames/icons (icons are `MaterialCommunityIcons`, as in `sheet-kit`). In the web preview those icons show as empty boxes (font not loaded) — check on the phone.
 - Previews: `docs/divecore/turf-war-t2/` (setup, wave, build card top / middle / bottom, armed, upgrade, won, lost; both phones).
 
+#### Step T3 as built (2026-10-17, PR #66; OTA see PROJECT_CONTEXT; awaiting emci's phone check; emci answered the T2 phone check "passed" and Q5 budget "yes")
+- emci picked **option D** at stop 1 after a first round (reuse / standard / pro tilesets) looked "too straight, too harsh": alley asphalt with a rounded,
+  slightly wavy kerb (`create_topdown_tileset` pro, roundness 1, boundary_amplitude 0.15), faint worn centre dashes (35 % alpha), road marks, neon light pools. Cobblestone (E) was the other option.
+- `scripts/turf-board-art.ts` paints the `ato` board from `art-src/pixellab/board.streetwear/gen-20261017-pixellab-1/` (raw + `gen.json` with every tool id, prompt, score, rejects)
+  and a separate **glow** layer, packed as `SHEET.board['ato-glow']` (cleared over pads; **not drawn yet — T4 draws it**; the barrel-fire has its own glow blob there).
+  `art-pack.ts` `packSwBoards` uses it for `ato` (`neon-maze` keeps the old paint); `npm run art:pack -- --skin streetwear --boards-only` repacks just the boards.
+- Parts: tileset + 11 usable road variants + 16 walk variants + crack decal + 3 props (barrel-fire, tire-stack, traffic-cone), all palette-locked (`reduce_colors`).
+  Pads = library `pad-manhole-ring` at native 54 px. Props: low only (cap 0.8 × the 62 px board-scale hero), off road cells, ≥ 6 px beyond every pad hit circle, ≥ 4 cells apart, max 8, all on the board edge.
+  Rejected under the 90 workbench bar: hydrant, drain, puddle, trash bags (first try 25 % too low, second 88). Road variants r03 / r05 / r08 / r11 / r13 skipped (the lock turned stains into teal blocks).
+- Scores: workbench tileset 95.4, variants 96–99.6, props 92.3–98.5; critique 24/28 (no zero). 77 PixelLab generations used (budget T3–T6 ≈ 250–350 → ~270 left).
+- `check:streetwear-assets` group 7: road ≥ 30 luma darker than the kerb (now 30 vs 93) and every pad centre on pad art. Known limit: the road texture still shows a soft scallop repeat, a few cyan speckles from the lock, props sit inside the 24 px edge vignette (darker).
+- Previews + stop-1 samples + scale sheet: `docs/divecore/turf-war-t3/`. Frame time in the web preview ≈ 4.8 ms (430) / 5.0 ms (SE), unchanged.
+- Preview gotcha (again): two `http.server`s were listening on one port (an old one from another session); check `netstat` and compare the served bundle size AND the board atlas hash with the export.
+
 ### T2 — HUD + UI kit
 - **Scope:** `src/play/turf-ui.tsx` built on `sheet-kit` tokens: top bar (wave chip with a next-wave preview popover — creep icons + count
   from `director.ts`, no new data), caps counter, pause; dock buttons with icon + label + state (cooldown radial sweep, not-affordable dim +
@@ -182,6 +197,15 @@ and no new in-stage text nodes besides the pinned ones.
   existing reward lines), lose beat (the leak replay), perf pass (memo the board, stop re-rendering static layers each tick), Reduce Motion /
   Motion Off audit, emci's phone check list in `docs/ATO_DEVICE_TESTS.md` (docs commit).
 - **Done:** emci's phone check passes, gate green, reviewer PASS, OTA.
+
+### T8 — More map themes (added 2026-10-17, emci: "add more map themes")
+- **Scope:** a theme = a different painting of the SAME board (16×16 grid, `ATO_PATH`, 15 pads, tower cap 6), so no play or balance change.
+  Make `turf-board-art.ts` theme-driven (one data block per theme: tileset id, variants, pad style, props, light pools), then add themes:
+  rooftop (tar roof, vents, AC units, fairy lights), subway underpass (tiled floor, rails, pillars, flicker tubes), court / park, docks.
+  The default stays the alley (D). ≈ 30–40 PixelLab generations per theme.
+- **Decide first (feature, not art):** how a player gets a theme — picker in Setup, daily rotation, or unlocks — and whether a theme changes rewards (it must not unless emci says so).
+- **Checks:** the T3 pixel test runs per theme; `check:streetwear-assets` pad count per board.
+- **Done:** emci picked themes from samples, gate green, reviewer PASS, OTA.
 
 ## Questions for emci (answer once with the approval)
 1. **Order** T1 → T7 as listed? (Recommended: layout first so the art in T3 is drawn for the final board size.)
