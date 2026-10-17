@@ -2199,6 +2199,9 @@ export const SHEET = {
     bossko: {
       burst: 'sheets/streetwear/fx/bossko/burst',
     },
+    cheer: {
+      burst: 'sheets/streetwear/fx/cheer/burst',
+    },
     ember: {
       shot: 'sheets/streetwear/fx/ember/shot',
       hit: 'sheets/streetwear/fx/ember/hit',
@@ -2208,6 +2211,9 @@ export const SHEET = {
     },
     enrage: {
       burst: 'sheets/streetwear/fx/enrage/burst',
+    },
+    gate: {
+      burst: 'sheets/streetwear/fx/gate/burst',
     },
     plain: {
       shot: 'sheets/streetwear/fx/plain/shot',
