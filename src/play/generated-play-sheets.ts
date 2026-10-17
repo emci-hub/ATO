@@ -253,6 +253,7 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/auras/water/behind': _s31,
   'sheets/streetwear/auras/water/front': _s31,
   'sheets/streetwear/board/ato': _s32,
+  'sheets/streetwear/board/ato-glow': _s32,
   'sheets/streetwear/board/neon-maze': _s32,
   'sheets/streetwear/boss/oni/Death': _s33,
   'sheets/streetwear/boss/oni/Idle': _s33,
