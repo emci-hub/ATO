@@ -88,7 +88,7 @@ and no new in-stage text nodes besides the pinned ones.
   375×667, instead of one ~100 pt band under it), Leave only in the pause menu,
   gate green, reviewer PASS, OTA.
 
-#### Step T1 as built (2026-10-16, PR #64)
+#### Step T1 as built (2026-10-16, PR #64, OTA iOS `01a14762-7ead-70b7-8fac-cac9c5ab4fee`, group `b937a993`; awaiting emci's phone check)
 - Board = stage width − 16 capped by the stage height: **414 pt on 430×932, 359 pt on 375×667**, centred both ways (`src/play/turf-layout.ts`:
   `turfBoardSide`, `turfBoardRect`). Title + lede left the stage; the lede is the first line of the Setup sheet.
 - Leave only in the **pause menu** (Resume · Leave, FloatLayer card shown while `paused` and no confirm is open). Top-bar pause opens it;
