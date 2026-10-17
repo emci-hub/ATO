@@ -5,14 +5,27 @@
   "approvedBy": "emci 2026-10-17 picked option D at stop 1 (samples: docs/divecore/turf-war-t3/samples/stop1-round2-*.png)",
   "view": "low top-down",
   "palette": "docs/art/palette-streetwear-night.png (reduce_colors on every part)",
-  "styleCard": { "outline": "selective outline", "shading": "medium shading", "detail": "medium detail" },
+  "styleCard": {
+    "outline": "selective outline",
+    "shading": "medium shading",
+    "detail": "medium detail"
+  },
   "scaleReference": "hero.kael.streetwear as the board draws it: unit.avatar 21.01 units of a 192 px canvas -> figure ~62 art px (guide section 2, board scale)",
   "painter": "scripts/turf-board-art.ts (called by art-pack.ts packSwBoards; npm run art:pack -- --skin streetwear --boards-only)",
   "parts": {
     "tileset": {
       "tool": "create_topdown_tileset",
       "id": "8ddbd10f-90bd-4695-9621-ee0dc439f819",
-      "params": { "mode": "pro", "tile_size": 32, "transition_size": 0.25, "roundness": 1, "boundary_amplitude": 0.15, "boundary_seed": 3, "raggedness": 0.3, "palette": "streetwear night (28 colours)" },
+      "params": {
+        "mode": "pro",
+        "tile_size": 32,
+        "transition_size": 0.25,
+        "roundness": 1,
+        "boundary_amplitude": 0.15,
+        "boundary_seed": 3,
+        "raggedness": 0.3,
+        "palette": "streetwear night (28 colours)"
+      },
       "lower": "worn dark back-alley asphalt at night, patched repairs, hairline cracks, damp patches, subtle texture, purely pictorial with zero writing",
       "upper": "old uneven grey concrete sidewalk slabs at night, mossy seams, small chips",
       "transition": "rounded worn concrete kerb with a dark gutter",
@@ -22,28 +35,102 @@
       "tool": "create_tiles_pro",
       "id": "625c6dbd-b3fe-47fb-b1c6-9c769f9596e8",
       "seed": 11,
-      "style_images": ["tileset all-lower tile (32x32)"],
+      "style_images": [
+        "tileset all-lower tile (32x32)"
+      ],
       "prompt": "1). plain dark asphalt 2). thin hairline crack 3). small darker tar patch 4). faint damp stain 5). loose pebbles 6). slightly lighter 7). tiny oil spot 8). plain",
-      "skipped": { "r03, r08, r11": "damp stains became flat teal blocks after the palette lock", "r05, r13": "too light, went brown-pink after the lock" },
+      "skipped": {
+        "r03, r08, r11": "damp stains became flat teal blocks after the palette lock",
+        "r05, r13": "too light, went brown-pink after the lock"
+      },
       "score": "99.6 (r01), 99.2 (r07)"
     },
     "walk-variants": {
       "tool": "create_tiles_pro",
       "id": "bd0dc0fa-695e-45e4-b85e-d2ddec4ad34b",
       "seed": 12,
-      "style_images": ["tileset all-upper tile (32x32)"],
+      "style_images": [
+        "tileset all-upper tile (32x32)"
+      ],
       "prompt": "1). plain slab 2). small chip 3). thin moss seam 4). faint stain 5). hairline crack 6). slightly darker 7). tiny gum spot 8). plain",
       "score": "96.0 (w04)"
     },
     "decals": {
-      "crack": { "tool": "create_map_object", "id": "3ce4df7e-e654-454b-96f2-87c7e3541805", "canvas": [48, 32], "view": "high top-down", "score": 100 }
+      "crack": {
+        "tool": "create_map_object",
+        "id": "3ce4df7e-e654-454b-96f2-87c7e3541805",
+        "canvas": [
+          48,
+          32
+        ],
+        "view": "high top-down",
+        "score": 100
+      }
     },
     "props": {
-      "barrel-fire": { "tool": "create_map_object", "id": "fc4e2cb5-7164-42cc-a6ed-6afde00b54a4", "canvas": [32, 48], "target": "0.9 m drum -> ~42 px incl. half depth", "score": 96.1 },
-      "tire-stack": { "tool": "create_map_object", "id": "952977c7-cb28-4779-a90f-5cfc58eb075d", "canvas": [32, 44], "target": "0.8 m -> ~40 px", "score": 92.3 },
-      "traffic-cone": { "tool": "create_map_object", "id": "dedbab78-91b9-457a-bab9-9992685c6d43", "canvas": [32, 36], "box": [19, 33], "target": "0.7 m -> ~32 px high", "score": 98.5, "lock": "reduce_colors a94570db-b845-4ce7-81a1-b8ca8687c6e0", "tries": 2 }
+      "barrel-fire": {
+        "tool": "create_map_object",
+        "id": "fc4e2cb5-7164-42cc-a6ed-6afde00b54a4",
+        "canvas": [
+          32,
+          48
+        ],
+        "target": "0.9 m drum -> ~42 px incl. half depth",
+        "score": 96.1
+      },
+      "tire-stack": {
+        "tool": "create_map_object",
+        "id": "952977c7-cb28-4779-a90f-5cfc58eb075d",
+        "canvas": [
+          32,
+          44
+        ],
+        "target": "0.8 m -> ~40 px",
+        "score": 92.3
+      },
+      "traffic-cone": {
+        "tool": "create_map_object",
+        "id": "dedbab78-91b9-457a-bab9-9992685c6d43",
+        "canvas": [
+          32,
+          36
+        ],
+        "box": [
+          19,
+          33
+        ],
+        "target": "0.7 m -> ~32 px high",
+        "score": 98.5,
+        "lock": "reduce_colors a94570db-b845-4ce7-81a1-b8ca8687c6e0",
+        "tries": 2
+      },
+      "barrel": {
+        "tool": "create_map_object",
+        "id": "98c5b05a-2cc5-40ac-acf6-72f1c53e5fbc",
+        "canvas": [
+          32,
+          48
+        ],
+        "view": "low top-down",
+        "note": "T4: flameless open drum (replaces barrel-fire on the board; the flame is animated). Width 26 px vs the old 22 (+18 %): accepted, drum is a 0.9 m class prop.",
+        "lock": "local nearest-palette snap to docs/art/palette-streetwear-night.png (same result as reduce_colors)",
+        "replaces": "barrel-fire"
+      },
+      "vent-grate": {
+        "tool": "create_map_object",
+        "id": "39e9041a-11d8-44cf-9b50-2aedfedd7985",
+        "canvas": [
+          32,
+          32
+        ],
+        "view": "high top-down",
+        "note": "T4: flat vent grate baked into the sidewalk; steam rises from it",
+        "lock": "local palette snap"
+      }
     },
-    "pad": { "reuse": "prop.streetwear.pad-manhole-ring (library, art-src/pixellab/streetwear-pack/migrated/raw/props), native 54 px" }
+    "pad": {
+      "reuse": "prop.streetwear.pad-manhole-ring (library, art-src/pixellab/streetwear-pack/migrated/raw/props), native 54 px"
+    }
   },
   "rejected": {
     "trash-bags": "create_map_object 7ce9aa84 (93.1 but 24 px high, 25 % under the 32 px target) and 066b3dea (right size, workbench 88.0 after repair); first kept in rejected/ as history",
@@ -53,7 +140,14 @@
     "puddle": "create_map_object 21897cda-deee-46d9-b671-5f6ed561f3ad, workbench 85.5 (< 90), too saturated",
     "stop-1 samples": "tilesets c9c45b0d (standard), eee17410 (pro, option C), a929d506 (cobblestone, option E); pad 4e19b8f6; first decals 78c3928a, 5750873f, 84530898"
   },
-  "lock": { "tool": "reduce_colors", "jobs": ["5cfeb421-16c3-4b34-8957-e98000278466", "ee8897fc-a649-4be9-a53d-542a0491008a", "12049279-69f5-47b4-b304-dcc6636d8130"] },
+  "lock": {
+    "tool": "reduce_colors",
+    "jobs": [
+      "5cfeb421-16c3-4b34-8957-e98000278466",
+      "ee8897fc-a649-4be9-a53d-542a0491008a",
+      "12049279-69f5-47b4-b304-dcc6636d8130"
+    ]
+  },
   "createdAt": "2026-10-17T04:17:54.753Z",
   "operator": "agent",
   "picked": true,
@@ -62,5 +156,47 @@
     "of": 28,
     "notes": "14 items x 0-2, no zero. 2: readability (road 31 vs kerb 93 luma), silhouette of path, camera (low top-down on every part), palette lock, outline style, scale (barrel +7 %, tyres -10 %, cone height ok), no text, pads read at a glance, props off path and pads, light pools on their own layer, cohesion with Hideout streetwear. 1: road texture still shows a soft repeat of the tileset's scallop blobs; a few cyan speckles on the road (lock artefact); props' light comes from slightly different sides. Workbench: tileset 95.4, variants 96-99.6, props 92.3-98.5, crack 100."
   },
-  "dirMap": {}
+  "dirMap": {},
+  "ambient": {
+    "step": "T4 map animation (2026-10-17, emci picked all five loops)",
+    "flame": {
+      "tool": "vfx_workbench torch_flame size 0.9",
+      "effect": "4d31bd2f-005d-4c4f-b232-78f3f0b3263d",
+      "frames": 8,
+      "canvas": [
+        17,
+        28
+      ]
+    },
+    "smoke": {
+      "tool": "vfx_workbench smoke_column size 0.3",
+      "effect": "14109e16-b328-4cd4-8ed7-3bd8d2c5c6a4",
+      "frames": 16,
+      "canvas": [
+        16,
+        29
+      ]
+    },
+    "steam": {
+      "tool": "vfx_workbench steam_vent size 0.55",
+      "effect": "9183501e-b837-4701-80b8-e50ba43ba55b",
+      "frames": 12,
+      "canvas": [
+        16,
+        36
+      ]
+    },
+    "pigeon": {
+      "tool": "create_1_direction_object size 16 (64 candidates, 10 generations), picked frame 0",
+      "id": "b626d096-645a-45ee-99bd-2c2fcf8fd819",
+      "object": "15edfb36-4427-4085-b2f7-678a1fcbc410",
+      "canvas": [
+        16,
+        16
+      ],
+      "note": "library pigeon (32 px) is ~2.5x too big for the 62 px board hero; flap and peck are code motion"
+    },
+    "code": "neon pool flicker (glow layer crops), firelight (fire layer crops), cone lamp blink: no art, drawn in src/play/turf-ambient.tsx",
+    "generations": "about 32 (pigeon 10, grate ~1, barrel ~1, vfx workbench free)"
+  }
 }

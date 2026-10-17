@@ -28,7 +28,7 @@ import {
   walkFiles,
   writePackedPng,
 } from './art-png';
-import { paintTurfBoard, turfBoardArtAvailable } from './turf-board-art';
+import { paintTurfBoard, turfAmbientSrc, turfBoardArtAvailable } from './turf-board-art';
 import {
   HASH_SUFFIX,
   SW_DIRS,
@@ -716,6 +716,24 @@ function writeSquareStrip(
   return { sheet: `${key}.png`, sheetW, sheetH: cell, frames };
 }
 
+/** One horizontal strip of same-size frames, keyed `frame_NNN` (ambient clips keep their own aspect). */
+function writeFrameStrip(repo: string, key: string, frames: PNG[]): SheetEntry {
+  const w = frames[0].width;
+  const h = frames[0].height;
+  const n = frames.length;
+  const sheetW = n * w + (n - 1) * GUTTER;
+  if (sheetW > MAX_SHEET_PX) throw new Error(`${key}: strip ${sheetW}px over the cap`);
+  const sheet = new PNG({ width: sheetW, height: h, fill: true });
+  const rects: Record<string, FrameRect> = {};
+  frames.forEach((f, i) => {
+    const x = i * (w + GUTTER);
+    PNG.bitblt(f, sheet, 0, 0, w, h, x, 0);
+    rects[`frame_${String(i).padStart(3, '0')}`] = { x, y: 0, w, h };
+  });
+  writePackedPng(path.join(repo, 'assets/play', `${key}.png`), sheet);
+  return { sheet: `${key}.png`, sheetW, sheetH: h, frames: rects };
+}
+
 /** Element effects → square-cell strips (the board's sprite drawer is square). */
 function packSwEffects(repo: string): { manifest: Record<string, SheetEntry>; meta: Record<string, SwFxMeta> } {
   const manifest: Record<string, SheetEntry> = {};
@@ -1028,7 +1046,7 @@ function overBlend(src: PNG, dst: PNG, dx: number, dy: number) {
  *   props   — street props on open sidewalk away from road and pads
  *   ends    — a paint splat at the spawn, a graffiti tag at the exit
  */
-function packSwBoards(repo: string): Record<string, { pads: number }> {
+function packSwBoards(repo: string): Record<string, { pads: number; ambient?: unknown }> {
   const CELL_PX = 32;
   const N = 16;
   const SIZE = CELL_PX * N;
@@ -1054,16 +1072,31 @@ function packSwBoards(repo: string): Record<string, { pads: number }> {
   fs.rmSync(outDir, { recursive: true, force: true });
   fs.mkdirSync(outDir, { recursive: true });
   const manifest: Record<string, SheetEntry> = {};
-  const meta: Record<string, { pads: number }> = {};
+  const meta: Record<string, { pads: number; ambient?: unknown }> = {};
   for (const map of Object.values(BOARD_MAPS)) {
     // T3 (2026-10-17): the default board is painted from PixelLab parts (turf-board-art.ts) + a glow layer for T4.
     if (map.id === 'ato' && turfBoardArtAvailable()) {
       const art = paintTurfBoard(map);
-      for (const [key, png] of [[`${SW_SHEETS}/board/ato`, art.board], [`${SW_SHEETS}/board/ato-glow`, art.glow]] as const) {
+      for (const [key, png] of [[`${SW_SHEETS}/board/ato`, art.board], [`${SW_SHEETS}/board/ato-glow`, art.glow], [`${SW_SHEETS}/board/ato-fire`, art.fire]] as const) {
         writePackedPng(path.join(repo, 'assets/play', `${key}.png`), png);
         manifest[key] = { sheet: `${key}.png`, sheetW: SIZE, sheetH: SIZE, frames: { img: { x: 0, y: 0, w: SIZE, h: SIZE } } };
       }
-      meta[map.id] = { pads: art.pads };
+      // T4: the ambient clips (flame / smoke / steam from PixelLab vfx exports, the pigeon still) as strips on the board family.
+      const clips: Record<string, { frames: number; fps: number; w: number; h: number; ax: number; ay: number }> = {};
+      const ambientDir = turfAmbientSrc();
+      if (ambientDir) {
+        for (const name of ['flame', 'smoke', 'steam']) {
+          const fx = vfxExportFrames(path.join(ambientDir, `${name}.png`), path.join(ambientDir, `${name}.json`));
+          const key = `${SW_SHEETS}/board/ato-${name}`;
+          manifest[key] = writeFrameStrip(repo, key, fx.frames);
+          clips[name] = { frames: fx.frames.length, fps: fx.fps, w: fx.frames[0].width, h: fx.frames[0].height, ax: Math.round(fx.anchor.x), ay: Math.round(fx.anchor.y) };
+        }
+        const pigeon = readPng(path.join(ambientDir, 'pigeon.png'));
+        const pkey = `${SW_SHEETS}/board/ato-pigeon`;
+        manifest[pkey] = writeFrameStrip(repo, pkey, [pigeon]);
+        clips.pigeon = { frames: 1, fps: 1, w: pigeon.width, h: pigeon.height, ax: 8, ay: 14 };
+      }
+      meta[map.id] = { pads: art.pads, ambient: { ...art.ambient, clips } };
       continue;
     }
     const board = new PNG({ width: SIZE, height: SIZE, fill: true });
