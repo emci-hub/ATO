@@ -18,7 +18,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 |---|---|---|
 | T0 | Investigate, research, plan (this doc) | ✔ docs on master. Waiting for emci's approval |
 | T1 | Layout guidelines doc + `check:turf-war-layout` + the layout moves (board fills the stage, Leave → pause menu, title out of the stage) | ✔ merged (PR #64, 2026-10-16); OTA see "Step T1 as built" |
-| T2 | HUD + UI kit: top bar, dock buttons (cost / afford / cooldown), build card at the pad, won / lost cards on `sheet-kit` | not started |
+| T2 | HUD + UI kit: top bar, dock buttons (cost / afford / cooldown), build card at the pad, won / lost cards on `sheet-kit` | ✔ merged (PR #65, 2026-10-17), except the next-wave popover + top-bar restyle (not done) |
 | T3 | Map art: new baked board from PixelLab parts (tiles, pads, props), same path and pads | not started |
 | T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | not started |
 | T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | not started |
@@ -101,6 +101,23 @@ and no new in-stage text nodes besides the pinned ones.
 - Previews (before = `turf-war-before/`, after = `turf-war-t1/`): setup, setup sheet, wave, pause menu at both phones. No before shot of the pause state.
 - Preview gotcha: an old `python -m http.server` from an earlier session kept answering on the same port with the OLD bundle. Use a fresh port
   and check the served bundle size matches the export.
+
+#### Step T2 as built (2026-10-17, PR #65; emci answered Q3 yes, Q3b keep running)
+- `src/play/turf-ui.tsx`: `TurfButton` (ready / cooling sweep / unaffordable red cost / used / selected, ≥ 48 high), `TurfCard`, `TurfPips`,
+  `TurfResultCard` (title, lines, quiet buttons, ONE primary button last). `src/play/turf-build-card.tsx`: `TurfBuildCard` (build / tower / boss
+  modes), 344 wide, heights 116 / 104 / 120 pt **including border + padding** (≤ `BUILD_CARD_MAX_H`), placed with `buildCardPlacement`.
+- Two-tap buy: first tap on a tower/bound-boss tile arms it (range ring via `placePreview`), second buys; upgrade is two taps ("Tap again to
+  upgrade"). Closes on ✕, an empty-board tap in setup (does not also walk the Avatar), or a tap in the strips above/below the board.
+  `placePreview` is cleared whenever `selectedPad` changes (reviewer bug).
+- Won / lost cards: same copy and actions, built as `lines` in `defend-screen.tsx` (`resultCard`), still on the bottom float panel
+  (`turfFloatPanel`, now results only). Lost Retry = `retryLostRun` (same logic as before).
+- Dock Cast / Pounce / speeds = `TurfButton` (Cast: icon · label · Ready or seconds, sweep from `getTune().skillCooldownMs`).
+- Board: tower level pips (SVG circles, one per level) replace the letter badge (`TOWER_LETTER` gone).
+- Small copy moves: tower title shows pips instead of "· level n/3"; bound-hero title lost "· bound hero"; at the tower cap tiles say "max 6" without the price.
+- `check:turf-war-layout` now 7 groups (card fits all 15 pads × 3 modes × 2 phones, taps ≥ 44, two-tap buy, no `styles.card` / `ThemedView` in the Turf float cards).
+- **Not done (carry to a later step if wanted):** next-wave preview popover on the wave chip; top-bar restyle (it still uses `StreetFrame` resbar);
+  library frames/icons (icons are `MaterialCommunityIcons`, as in `sheet-kit`). In the web preview those icons show as empty boxes (font not loaded) — check on the phone.
+- Previews: `docs/divecore/turf-war-t2/` (setup, wave, build card top / middle / bottom, armed, upgrade, won, lost; both phones).
 
 ### T2 — HUD + UI kit
 - **Scope:** `src/play/turf-ui.tsx` built on `sheet-kit` tokens: top bar (wave chip with a next-wave preview popover — creep icons + count
