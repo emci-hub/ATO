@@ -152,7 +152,7 @@ and no new in-stage text nodes besides the pinned ones.
 - Not done / for later: a real neon **sign** sprite (the pools stand in for it); the pigeon has no wing frames (flap = squash in code); not device-verified.
 - Gotcha: `npx tsx scripts/…` that paints the board takes ~1–2 min; write its output to a file in the background.
 
-#### Step T5 as built (2026-10-17, PR #68 squash `8d584db4`; awaiting emci's phone check; emci answered the T4 phone check "passed")
+#### Step T5 as built (2026-10-17, PR #68 squash `8d584db4`, OTA iOS `01a14a39-ce92-76d0-97e9-d3c35c03ea0f`, group `8961f577`; awaiting emci's phone check; emci answered the T4 phone check "passed")
 - **Stop 1 picks (emci):** Archer = new magenta dart + star (`archer/shot` 29×16 ×4 loop, `archer/hit` 45×43 ×6), Vine = library `root/*`, Crystal = library
   `spark/*`, Death = new plum smoke pop (`pop/burst` 36×30 ×13 @ 12 fps = 1.1 s, brightened after the pick). All from `vfx_workbench` (0 PixelLab generations;
   ~240 left of the T3–T6 budget). Raw + `gen-t5.json` (effect ids, rejects) in `art-src/pixellab/streetwear-pack/migrated/raw/fx/elements/{archer,pop}/`.
