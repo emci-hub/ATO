@@ -217,11 +217,9 @@ import { swordRuntime } from '@/play/swords';
 import { StatusIconRow, WeaknessDiamond } from '@/play/status-icon-row';
 import { statusIconsFor } from '@/play/status-icons';
 import { countOnce } from '@/play/play-counters';
+import { padTapRadiusUnits, turfBoardSide } from '@/play/turf-layout';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
-/** Stage layout: the TURF WAR title + the two-line lede above the board (pt). */
-const TURF_HEADER_PT = 112;
-
 const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
   swarm: '#22D3EE', // cyan
   runner: '#F472B6', // pink
@@ -2485,9 +2483,10 @@ export function DefendScreen({
       const by = (locationY / size) * 100;
       let hit: number | null = null;
       let bestDist = Infinity;
+      const padRadius = padTapRadiusUnits(size);
       boardMap.pads.forEach((pad, index) => {
         const d = Math.hypot(pad.x - bx, pad.y - by);
-        if (d <= PAD_TAP_RADIUS && d < bestDist) {
+        if (d <= padRadius && d < bestDist) {
           bestDist = d;
           hit = index;
         }
@@ -2531,7 +2530,8 @@ export function DefendScreen({
       const bx = Math.max(0, Math.min(100, (locationX / size) * 100));
       const by = Math.max(0, Math.min(100, (locationY / size) * 100));
       if (phaseRef.current === 'setup') {
-        const onPad = boardMap.pads.some((pad) => Math.hypot(pad.x - bx, pad.y - by) <= PAD_TAP_RADIUS);
+        const padRadius = padTapRadiusUnits(size);
+        const onPad = boardMap.pads.some((pad) => Math.hypot(pad.x - bx, pad.y - by) <= padRadius);
         if (onPad) {
           setAvatarAim(null);
           return;
@@ -2666,8 +2666,10 @@ export function DefendScreen({
   );
 
   const live = phase === 'running';
-  // The board: square, right under the header, the same size and spot in setup and wave.
-  const boardSide = Math.max(160, Math.min(setupFrame.stage.width - 24, setupFrame.stage.height - TURF_HEADER_PT));
+  // The board: square, fills the stage width, centred; same size and spot in setup and wave (turf-layout.ts).
+  const boardSide = turfBoardSide(setupFrame.stage);
+  // Pause menu (Resume · Leave): open while the wave is paused, hidden under the Leave confirm.
+  const pauseMenuOpen = live && paused && !leaveConfirmOpen;
 
   // The baked street board for this map (Streetwear only; play-art-pack packSwBoards).
   const streetBoardKey = street ? boardSheet(boardMap.id) : undefined;
@@ -2677,7 +2679,7 @@ export function DefendScreen({
     <View style={styles.turfRoot}>
       <GameScreen
         // Stage layout (emci 2026-10-14): one stage for setup and wave — the board sits right
-        // under the TURF WAR header in both and never moves (no scroll, no jump on start or pause).
+        // centred in the stage in both and never moves (no scroll, no jump on start or pause).
         frame={live ? waveFrame : setupFrame}
         help={live ? 'turf-wave' : 'turf-setup'}
         topBar={
@@ -2714,7 +2716,7 @@ export function DefendScreen({
               paused ? (
                 <View style={styles.coachLine}>
                               <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-                                Paused — the wave is frozen. Leave from the bar below.
+                                Paused — the wave is frozen.
                               </ThemedText>
                             </View>
               ) : (
@@ -2753,14 +2755,6 @@ export function DefendScreen({
         }
         stage={
           <View style={styles.turfStage}>
-            <View style={styles.turfHeader}>
-              <ThemedText type="subtitle" style={street ? styles.streetTitle : undefined}>
-                {street ? 'Turf War' : 'Defend'}
-              </ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.lede} numberOfLines={2}>
-                Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
-              </ThemedText>
-            </View>
             <View style={{ width: boardSide, height: boardSide, alignSelf: 'center' }}>
               <View
                 style={[styles.board, { backgroundColor: theme.backgroundSelected }]}
@@ -3462,9 +3456,7 @@ export function DefendScreen({
                     style={styles.streetSpeed}
                   />
                 ))}
-                <NeonButton label="Leave" variant="secondary" onPress={requestLeaveRun} style={styles.streetSpeed} />
               </View>
-            
             </View>
           ) : (
             <View style={[styles.turfSetupDock, phase !== 'setup' && styles.streetReserved]}>
@@ -3500,7 +3492,17 @@ export function DefendScreen({
           )
         }
         float={
-          selectedPad != null || phase === 'won' || phase === 'lost' ? (
+          pauseMenuOpen ? (
+            <View style={[styles.turfPauseWrap, { height: waveFrame.stage.height + waveFrame.notice.height }]} pointerEvents="box-none">
+              <View
+                style={[styles.turfPauseCard, { backgroundColor: theme.backgroundElement, borderColor: controlBorderColor(theme) }]}
+                accessibilityViewIsModal>
+                <ThemedText type="subheading">Paused</ThemedText>
+                <NeonButton label="Resume" variant="primary" onPress={() => setPaused(false)} accessibilityLabel="Resume wave" style={styles.turfPauseButton} />
+                <NeonButton label="Leave" variant="secondary" onPress={requestLeaveRun} accessibilityLabel="Leave run" style={styles.turfPauseButton} />
+              </View>
+            </View>
+          ) : selectedPad != null || phase === 'won' || phase === 'lost' ? (
             <View
               style={[
                 styles.turfFloatPanel,
@@ -3887,6 +3889,9 @@ export function DefendScreen({
         modal={
           <PlaySheet open={setupOpen && !live} title="Setup" onClose={() => setSetupOpen(false)} reduceMotion={reduceMotion}>
             <View style={styles.turfSheet}>
+              <ThemedText themeColor="textSecondary">
+                Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
+              </ThemedText>
               <ThemedText type="small" themeColor="textSecondary" style={styles.boardCardLabel}>
                           {boardMap.name}
                           {cycleNote ? ` · ${cycleNote}` : ''}
@@ -4332,23 +4337,6 @@ export function DefendScreen({
                       <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
                     </Pressable>
                     <SpeedControl speed={speed} onChange={setSpeed} />
-                    <Pressable
-                      onPress={requestLeaveRun}
-                      accessibilityRole="button"
-                      accessibilityLabel="Leave run"
-                      style={({ pressed }) => [
-                        styles.hudButton,
-                        styles.leaveButton,
-                        {
-                          backgroundColor: theme.backgroundSelected,
-                          borderColor: controlBorderColor(theme),
-                        },
-                        pressed && styles.pressed,
-                      ]}>
-                      <ThemedText type="smallBold" themeColor="textSecondary">
-                        Leave
-                      </ThemedText>
-                    </Pressable>
                   </View>
                 </ThemedView>
               ) : null}
@@ -4951,8 +4939,6 @@ function castActorFrameDrawable(
 const AVATAR_WALK_UNITS_PER_SEC = 42;
 /** Walk loop cadence (ms) — 30fps. */
 const MOVE_TICK_MS = 33;
-/** Board units within a pad that count as "tapped the pad" (select, not move). */
-const PAD_TAP_RADIUS = 6.5;
 
 /* ---------------------------------------------------- entity presenter v0 --- */
 
@@ -5145,9 +5131,11 @@ const styles = StyleSheet.create({
   coachLine: { flex: 1, justifyContent: 'center', paddingHorizontal: 16 },
   turfRoot: { flex: 1, backgroundColor: NEON.ink },
   turfLane: { flex: 1 },
-  // The stage: header + board, top-anchored so the board sits right under the text.
-  turfStage: { flex: 1, alignItems: 'stretch' },
-  turfHeader: { height: TURF_HEADER_PT, justifyContent: 'center', paddingHorizontal: 16, gap: 4 },
+  // The stage: the board only, centred in it (turf-layout.ts).
+  turfStage: { flex: 1, alignItems: 'stretch', justifyContent: 'center' },
+  turfPauseWrap: { position: 'absolute', left: 0, right: 0, top: 0, alignItems: 'center', justifyContent: 'center' },
+  turfPauseCard: { width: 280, borderRadius: 6, borderWidth: 2, padding: 16, gap: 12, alignItems: 'stretch' },
+  turfPauseButton: { minHeight: 48 },
   turfDock: { flex: 1, paddingHorizontal: 12, paddingTop: 8, gap: 8 },
   turfSetupDock: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12 },
   turfSetupButton: { minWidth: 112 },
@@ -5155,7 +5143,6 @@ const styles = StyleSheet.create({
   turfFloatPanel: { position: 'absolute', left: 8, right: 8 },
   turfFloatScroll: { gap: 8 },
   turfSheet: { gap: 16 },
-  streetTitle: { fontFamily: STREET_FONT.bold, color: STREET.paper, textTransform: 'uppercase' },
   streetHud: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -5172,7 +5159,7 @@ const styles = StyleSheet.create({
   streetPause: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   streetResume: { fontFamily: STREET_FONT.bold, fontSize: 20, color: STREET.mustard },
   streetSkill: { minHeight: 52 },
-  streetDockRow: { flexDirection: 'row', gap: 6, alignItems: 'stretch' },
+  streetDockRow: { flexDirection: 'row', gap: 8, alignItems: 'stretch' },
   streetGrow: { flex: 1 },
   streetSpeed: { minWidth: 52, minHeight: 48 },
   container: {
@@ -5193,9 +5180,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  lede: {
-    marginTop: -Spacing.one,
   },
   card: {
     borderRadius: Spacing.four,
@@ -5481,11 +5465,6 @@ const styles = StyleSheet.create({
   bossWarnTitle: {
     fontSize: 13,
     letterSpacing: 2,
-  },
-  /** Live HUD Leave pill (mirrors the CALL WAVE chrome). */
-  leaveButton: {
-    borderWidth: 1,
-    paddingHorizontal: Spacing.four,
   },
   /** Mid-run leave confirm — blocking overlay above everything (board + HUD). */
   leaveConfirmWrap: {

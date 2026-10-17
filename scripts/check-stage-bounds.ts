@@ -80,7 +80,9 @@ const FORBIDDEN_IN_STAGE = /<(PlayBanner|PlaySheet|\w*Notice\w*|\w*Toast\w*|\w*C
   assert.match(dive, /const \{ width, height \} = frame\.stage;/, 'Dive picture size = frame stage');
   assert.ok(!/setSize\(\{ width: e\.nativeEvent/.test(dive), 'Dive no longer measures its stage');
   const defend = read('src/play/defend-screen.tsx');
-  assert.match(defend, /const boardSide = Math\.max\(160, Math\.min\(setupFrame\.stage\.width - 24, setupFrame\.stage\.height - TURF_HEADER_PT\)\);/, 'the Turf War board is sized from the frame');
+  // T1 (2026-10-16): the board fills the stage width (minus an 8 pt gutter) and is centred; the title + lede left the stage.
+  assert.match(defend, /const boardSide = turfBoardSide\(setupFrame\.stage\);/, 'the Turf War board is sized from the frame (turf-layout.ts)');
+  assert.ok(!/TURF_HEADER_PT/.test(defend), 'no in-stage Turf War header');
   assert.ok(!/<ScrollView[^>]*>\s*\{?\/?\*?\s*Board/.test(defend), 'the board is not in a scroll view');
   ok('no flex-leftover stage: sizes come from the frame (Hideout, Dive, Turf War board)');
 }

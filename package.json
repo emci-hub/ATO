@@ -104,6 +104,7 @@
     "check:pet-talk": "tsx ./scripts/check-pet-talk.ts",
     "check:fixed-regions": "tsx ./scripts/check-fixed-regions.ts",
     "check:stage-bounds": "tsx ./scripts/check-stage-bounds.ts",
+    "check:turf-war-layout": "tsx ./scripts/check-turf-war-layout.ts",
     "check:dive-fx": "tsx ./scripts/check-dive-fx.ts",
     "check:street-hideout": "tsx ./scripts/check-street-hideout.ts",
     "check:hideout-rooms": "tsx ./scripts/check-hideout-rooms.ts",
