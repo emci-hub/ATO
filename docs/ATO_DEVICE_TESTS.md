@@ -322,6 +322,20 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] You → ATO tokens: "Check in on Home…", "Answer a set of 16…", "Spend: 5 for each AI view…"; history shows "Daily check-in" and "AI view".
 - [ ] Dev Hub → Account → AI limits: leave the handle empty, tap twice. Confirm "AI limits cleared for this account". Type @atodev, tap twice: cleared for that handle.
 
+## Box 33 — Turf War polish (T7, 2026-10-17)
+
+Play → Turf War, Effects Quality Full, Motion Full, Notices All (Divecore Settings) unless a line says otherwise.
+
+- [ ] Tap Call wave. The line under the top bar says "WAVE n · <Main / Trial> · N puffs on the road", and a cyan swirling ring opens on the road start (bottom left) as the first creep steps out, then closes (~1 s).
+- [ ] Win a wave. On the last kill: a cyan ring closes at the exit (top right), gold + cyan sparks pop over each tower one after another, then the win card (~1.5–2 s later). The card's reward lines are the same as before.
+- [ ] Lose a wave (place no towers). A see-through red copy of the creep walks the last bit of road into the exit, leaving red dots, then the red ring; then the lost card. Retry works as before.
+- [ ] Settings → Motion Reduced (or phone Reduce Motion): start / win / lose again. Each beat is a still picture that fades in and out (no swirl, no walking ghost: the whole red trail shows at once, the ghost stands still), never a flash or a shake.
+- [ ] Effects Quality Off: no ring, no sparks, no red ghost; the cards show straight away; damage numbers still show.
+- [ ] Effects Quality Minimal: sparks on every other tower only.
+- [ ] Notices → Important only: start the Final boss wave. "BOSS INCOMING" still shows in the line under the top bar (the "WAVE n" line does not).
+- [ ] A busy wave (2x speed, many creeps) still feels smooth; nothing new covers the top bar, the dock or the notice line.
+- [ ] Screenshot: the win sparks and the lose ghost.
+
 ---
 
 **All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–28).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`; Box 28 specifically needs OTA `0ff16d9d` or later), not per box.

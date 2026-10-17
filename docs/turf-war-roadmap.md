@@ -23,7 +23,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | ✔ merged (PR #67, 2026-10-17); OTA see "Step T4 as built" |
 | T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | ✔ merged (PR #68, 2026-10-17); OTA see "Step T5 as built" |
 | T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | ✔ merged (PR #69, 2026-10-17); OTA see "Step T6 as built" |
-| T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | not started |
+| T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | ✔ merged (PR #70, 2026-10-17); OTA see "Step T7 as built"; awaiting emci's phone check (Box 33) |
 | T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); how a player gets a theme (picker / daily / unlock) is a feature decision to make first | not started, after T7 |
 
 Every step ships on its own OTA. T1 and T2 change code layout only (no art). T3 and T4 need emci to pick art from samples
@@ -170,7 +170,7 @@ and no new in-stage text nodes besides the pinned ones.
   The shot script injects `svg[viewBox="0 0 100 100"]{position:relative}`. The dev "Force leak" row ends the run without `step.leak`, so it shows no ring — let a creep leak instead.
 - Not done / for later: archer darts share the FX cap with elemental effects; flash/pop use the creep box from the previous render (tiny offset); not device-verified.
 
-#### Step T6 as built (2026-10-17, PR #69 squash `ef8a58ce`, OTA iOS `01a14a82-3b8b-78a1-9c9a-8ceb87af656e`, group `c6c981e7`; awaiting emci's phone check; emci answered the T5 phone check "passed")
+#### Step T6 as built (2026-10-17, PR #69 squash `ef8a58ce`, OTA iOS `01a14a82-3b8b-78a1-9c9a-8ceb87af656e`, group `c6c981e7`; emci's phone check **passed** (answered in the T7 chat); emci answered the T5 phone check "passed")
 - **Stop 1 picks (emci, all recommended):** Entrance B = new magenta sigil + light column (`summon/burst` 74×85 ×10 @ 12 fps), Enrage B = new red sigil +
   charge (`enrage/burst` 74×56 ×12 = 1.0 s) **with no rule change**, Death B = new plum blast + ring + sparks (`bossko/burst` 136×66 ×14 = 1.17 s), Boss bar A =
   name over a thin bar. All `vfx_workbench` (0 PixelLab generations; ~240 left of the T3–T6 budget). Raw + `gen-t6.json` in `art-src/.../fx/elements/`.
@@ -192,6 +192,30 @@ and no new in-stage text nodes besides the pinned ones.
   `bound_bosses:[{id:'ember_sovereign',stars:1,...}]` and Main wave 10 reaches the Final boss with the Nova tower; dismiss the "Welcome back" card first.
 - **Open / for later:** players on "Important only" notices don't see "BOSS INCOMING" (`notify` kind is hidden there; the old pill always showed); a Bound Boss placed mid-wave
   with a creep in range casts with no wind-up; a 1x → 2x switch mid wind-up shortens it; a boss drawn with a rotated single sprite gets no blast (fails safe). Not device-verified.
+
+#### Step T7 as built (2026-10-17, PR #70 squash `35c1040c`, OTA: see below; awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 33; emci answered the T6 phone check "passed")
+- **emci before T7:** T6 phone check passed; "BOSS INCOMING" should also show on "Important only" → `NoticeInput.important` (only that one NOTIFY;
+  `noticeAllowed(kind, mode, important)`, pinned by `check:notify`); no other change wanted.
+- **Stop 1 picks (all recommended):** wave start = new cyan street portal (`gate/burst` 80×56 ×14 @ 12 fps = 1.17 s, own vfx layers, flat ground ellipse; cyan
+  so it never reads as the magenta boss sigil) + a lane line `waveStartNotice` ("WAVE n" · "<phase> · N puffs on the road", NOTIFY); wave clear = the same
+  portal's frames 7..13 at the exit (0.58 s, no new art); win = new gold + cyan sparks (`cheer/burst` 68×64 ×10 = 0.83 s) over every tower / Bound Boss,
+  170 ms apart; lose = red ghost of the leaker re-walks the last 3 cells (1.2 s) with a red trail, then the exit ring. 0 PixelLab generations
+  (vfx_workbench). Workbench score 86 / 85.5 (swirl gaps and one-pixel sparks, by design; repaired copies only in the PixelLab gallery). Raw + `gen-t7.json`.
+- **Code:** rules + timings `src/play/turf-beat-fx-rules.ts` (`BEAT_FX`, `beatFxFlags`, `portalPoint`, `sparkPoint`, `leakReplayPath`, `winBeatMs`, `LOSE_BEAT_MS`);
+  views `src/play/turf-beat-fx.tsx` (`PortalBeat`, `SparksBeat`, `LeakReplay`), drawn by the T5/T6 layer (`portal`, `sparks`, `leakReplay` on the handle).
+  `Strip` moved to `src/play/turf-fx-strip.tsx` (+ `stillFrame`). `defend-screen.tsx`: `resultHold` is now `resultHoldMs` + `holdResult(ms)` (max of the boss
+  blast, the clear + sparks, the replay); the card waits, `winWave()` / `setPhase('lost')` stay on the same tick.
+- **Quality / motion:** Off = no beat; Minimal = sparks on every other tower; Reduce Motion / Motion Off = still frames (portal open frame, sparks frame,
+  whole trail + ghost one cell short of the exit + a fade-only ring). No beat flashes, shakes or stops the sim. Motion audit T4–T7 table: `docs/divecore/turf-war-t7/NOTES.md`.
+- **Perf pass:** `src/play/turf-board-base.tsx` = `TurfBoardBase` (baked board image), `BoardDecorTiles`, `StaticRoad` as memo layers with stable props.
+  Busy wave (Main 9, 12 towers + 20 creeps): 9.0 → 8.5 ms avg (430×932), 8.7 → 8.2 (375×667), JS busy 78 → 76 %. Small: the units `<Svg>` (creeps, towers,
+  bars) is the real per-tick cost; a bigger win needs the creeps off React state (not planned).
+- **Checks:** `check:turf-war-layout` = 11 groups (T7: sheets + timings, every beat's opaque pixels inside the board on both maps, Off / calm flags, T4–T7
+  motion audit, lane line within the notice limits, BOSS INCOMING important, static layers memoised, win still on the same tick). Reviewer PASS.
+- **Previews:** `docs/divecore/turf-war-t7/` (start / win / lose on both phones, `-rm` = Motion Reduced, `max-lose-off`, stop-1 samples `t7-*`).
+- **Known limits (cosmetic):** the ghost glides (last drawn frame, no walk); two leaks on one tick show one ghost; the old T5 ring fallback is unreachable
+  (the replay draws the ring). Preview gotchas: on SE the closed dev-kit sheet catches clicks (press Call wave by keyboard); the browser's own reduced-motion
+  flag freezes the Expo web splash (seed `ato.play.reduceMotion.v1 = reduced` instead).
 
 ### T2 — HUD + UI kit
 - **Scope:** `src/play/turf-ui.tsx` built on `sheet-kit` tokens: top bar (wave chip with a next-wave preview popover — creep icons + count
