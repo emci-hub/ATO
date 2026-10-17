@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { ATO_PADS } from '../src/play/board-data';
+import { ATO_PADS, BOARD_MAPS, TILE } from '../src/play/board-data';
 import { computeStageFrame, TAP_MIN, type Insets } from '../src/play/stage-frame';
 import {
   BUILD_CARD_FLIP_BELOW,
@@ -18,6 +18,7 @@ import {
   turfBoardRect,
   turfBoardSide,
 } from '../src/play/turf-layout';
+import { TURF_ART_PX, ambientShare, ambientSpriteBoxes, pigeonScared, turfAmbientMeta } from '../src/play/turf-ambient-layout';
 
 const repo = path.resolve(__dirname, '..');
 const read = (rel: string) => fs.readFileSync(path.join(repo, rel), 'utf8');
@@ -165,6 +166,72 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   // Prices, stats and rules are not touched here: the card only reads TOWER_DEFS / towerUpgradeCost.
   assert.ok(!/placeCost\s*[:=]\s*\d/.test(read('src/play/turf-build-card.tsx') + ui), 'no prices in the UI files');
   ok('Turf float cards are on sheet-kit (no styles.card), result cards on TurfResultCard, level pips on the board');
+}
+
+{
+  // T4: the ambient layer — placement is clear of pads and road; it lives outside the sim SVG, under the units;
+  // it honours fx-quality and Reduce Motion; it never re-renders per tick and never changes a size.
+  const meta = JSON.parse(read('assets/play/sheets/streetwear/meta.json')) as { boards?: unknown };
+  const amb = turfAmbientMeta(meta.boards, 'ato');
+  assert.ok(amb, 'meta.boards.ato.ambient is packed (npm run art:pack -- --skin streetwear --boards-only)');
+  assert.ok(amb.barrels.length >= 1 && amb.cones.length >= 1 && amb.pigeons.length >= 1 && amb.vent, 'all five loops have a site: barrel fire, cone lamp, pigeons, vent steam, neon pools');
+  assert.ok(amb.pools.length >= 1 && amb.fires.length === amb.barrels.length, 'neon pools + one firelight per barrel');
+  const map = BOARD_MAPS.ato;
+  const isRoad = (cx: number, cy: number) => {
+    const v = map.grid[cy]?.[cx];
+    return v === TILE.PATH || v === TILE.START;
+  };
+  const padR = Math.max(...DEVICES.map((d) => {
+    const size = turfBoardRect(computeStageFrame('turf-setup', d.window, d.insets).stage).size;
+    return padTapRadiusPt(size) / size;
+  })) * TURF_ART_PX;
+  const TOL = 8; // a wisp may clip the board edge by a few px; it never leaves a sprite hanging over the road
+  for (const b of ambientSpriteBoxes(amb)) {
+    const tag = `${b.kind} at ${Math.round(b.x)},${Math.round(b.y)}`;
+    assert.ok(b.x >= -TOL && b.y >= -TOL && b.x + b.w <= TURF_ART_PX + TOL && b.y + b.h <= TURF_ART_PX + TOL, `${tag} inside the board`);
+    for (const p of ATO_PADS) {
+      const px = (p.x / 100) * TURF_ART_PX;
+      const py = (p.y / 100) * TURF_ART_PX;
+      const nx = Math.max(b.x, Math.min(px, b.x + b.w));
+      const ny = Math.max(b.y, Math.min(py, b.y + b.h));
+      assert.ok(Math.hypot(px - nx, py - ny) > padR, `${tag} is clear of the pad hit circle at ${p.x},${p.y}`);
+    }
+    if (b.kind !== 'lamp') {
+      for (let cy = Math.floor(Math.max(0, b.y) / 32); cy <= Math.floor(Math.min(TURF_ART_PX - 1, b.y + b.h) / 32); cy += 1) {
+        for (let cx = Math.floor(Math.max(0, b.x) / 32); cx <= Math.floor(Math.min(TURF_ART_PX - 1, b.x + b.w) / 32); cx += 1) {
+          assert.ok(!isRoad(cx, cy), `${tag} is off the road (cell ${cx},${cy})`);
+        }
+      }
+    }
+  }
+  // pure rules
+  assert.equal(pigeonScared(amb.pigeons[0]!, []), false, 'no creep, no scare');
+  const p0 = { x: (amb.pigeons[0]!.x / TURF_ART_PX) * 100, y: (amb.pigeons[0]!.y / TURF_ART_PX) * 100 };
+  assert.equal(pigeonScared(amb.pigeons[0]!, [{ x: p0.x + 5, y: p0.y }]), true, 'a creep near a pigeon scares it');
+  assert.equal(pigeonScared(amb.pigeons[0]!, [{ x: p0.x + 40, y: p0.y }]), false, 'a far creep does not');
+  assert.deepEqual(ambientShare('off'), { animate: false, everyOther: false, smokeSteam: false }, 'Off = still frame');
+  assert.deepEqual(ambientShare('minimal'), { animate: true, everyOther: true, smokeSteam: false }, 'Minimal = half');
+  assert.deepEqual(ambientShare('full'), { animate: true, everyOther: false, smokeSteam: true }, 'Full = all');
+
+  const ui = read('src/play/turf-ambient.tsx');
+  assert.ok(!/react-native-svg/.test(ui), 'the ambient layer is not an SVG (nothing inside the sim <Svg>)');
+  assert.match(ui, /useFxQuality\(\)/, 'honours fx-quality');
+  assert.match(ui, /usePlayMotion\(\)/, 'honours Reduce Motion / Motion Off');
+  assert.match(ui, /motion\.cosmeticsStill/, 'Motion Off = still frame');
+  assert.match(ui, /motion\.vestibularSafe \? 0\.5 : 1/, 'Reduce Motion = half speed');
+  assert.match(ui, /useSharedValue/, 'loops run on the UI thread');
+  assert.ok(!/useState/.test(ui), 'no React state in the ambient layer (nothing re-renders per tick)');
+  assert.match(ui, /pointerEvents="none" style=\{styles\.fill\}/, 'the layer never takes a touch');
+  assert.match(ui, /export const TurfAmbient = memo\(/, 'the layer is memoised (the sim ticks every 100 ms, the layer does not)');
+  assert.match(ui, /t\.value = 0;\s+t\.value = withDelay/, 'an animated loop starts at frame 0 (withRepeat restarts from the start value)');
+  const src = read('src/play/defend-screen.tsx');
+  const board = src.indexOf("<ClipImage drawable={{ kind: 'sheet', sheetKey: streetBoardKey, frameKey: 'img' }} />");
+  const ambient = src.indexOf('<TurfAmbient ');
+  const units = src.indexOf('<Svg width="100%" height="100%" viewBox="0 0 100 100">');
+  assert.ok(board > 0 && ambient > board && units > ambient, 'order: baked board, ambient layer, then the units SVG');
+  assert.match(src, /const ambientCreeps = useCallback\(/, 'a stable creep reader keeps the memoised layer from re-rendering');
+  assert.equal((src.match(/<TurfAmbient /g) ?? []).length, 1, 'one mount');
+  ok(`ambient layer: ${ambientSpriteBoxes(amb).length} sprites clear of pads and road, outside the sim SVG, fx-quality Off / Minimal / Full, Reduce Motion half speed, pigeon scare rule`);
 }
 
 console.log(`\ncheck:turf-war-layout — ${passed} groups passed.`);

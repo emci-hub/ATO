@@ -69,6 +69,7 @@ import {
   retryDefendLive,
   stepDefendLive,
   puffHeading,
+  puffPosition,
   towerTarget,
   towerUpgradeCost,
   upgradeTower,
@@ -130,7 +131,8 @@ import {
   type SkinWalkFace,
 } from '@/play/skin';
 import { boardSheet } from '@/art/art';
-import { ClipImage, ClipSprite, SheetSprite, sheetFrame } from '@/play/sheet-sprite';
+import { ClipImage, ClipSprite, sheetFrame } from '@/play/sheet-sprite';
+import { TurfAmbient } from '@/play/turf-ambient';
 import {
   CREEP_STILL_MS,
   creepClip,
@@ -1068,6 +1070,16 @@ export function DefendScreen({
   const boardMap = BOARD_MAPS[sim?.boardId ?? 'ato'];
   /** Ground dressing (grass + props + pad markers). Pure + memoized. */
   const decor = useMemo(() => boardDecor(boardMap), [boardMap]);
+  /** Creep positions (board units 0-100) for the ambient pigeons: read on demand from the sim ref, never held in state.
+   * Stable per board, so the memoised ambient layer does not re-render on every sim tick. */
+  const ambientCreeps = useCallback(
+    () =>
+      (simRef.current?.puffs ?? []).map((puff) => {
+        const pos = puffPosition(puff.dist, boardMap);
+        return { x: pos.x * 100, y: pos.y * 100 };
+      }),
+    [boardMap],
+  );
   /** Cobble road stamps hugging the waypoint polyline (Craftpix Road5). */
   const roadStamps = useMemo(() => roadDecor(boardMap), [boardMap]);
   /** Thin dark underlay bed the stamps sit on, for edge contrast. */
@@ -2684,6 +2696,7 @@ export function DefendScreen({
   );
 
   const live = phase === 'running';
+
   // The board: square, fills the stage width, centred; same size and spot in setup and wave (turf-layout.ts).
   const boardSide = turfBoardSide(setupFrame.stage);
   // Pause menu (Resume · Leave): open while the wave is paused, hidden under the Leave confirm.
@@ -3112,13 +3125,19 @@ export function DefendScreen({
                     now, and every tap belongs to the board view underneath
                     (click-to-move / pad select). */}
                 <View style={styles.boardArt} pointerEvents="none">
+                {street && streetBoard && streetBoardKey ? (
+                  <>
+                    {/* Streetwear Turf War: the baked street board (asphalt roads, sidewalks, manhole pads,
+                     * props) as ONE image UNDER the ambient layer, which sits under the units' <Svg> (T4).
+                     * Paint only — the path, pads and taps still come from board-data. */}
+                    <View style={StyleSheet.absoluteFill}>
+                      <ClipImage drawable={{ kind: 'sheet', sheetKey: streetBoardKey, frameKey: 'img' }} />
+                    </View>
+                    <TurfAmbient mapId={boardMap.id} boardSide={boardSide} getCreeps={ambientCreeps} running={live && !paused} />
+                  </>
+                ) : null}
                 <Svg width="100%" height="100%" viewBox="0 0 100 100">
-                  {street && streetBoard ? (
-                    /* Streetwear Turf War: the baked street board (asphalt roads,
-                     * sidewalks, manhole pads, props) as ONE sprite. Paint only —
-                     * the path, pads and taps still come from board-data. */
-                    <SheetSprite frame={streetBoard} x={0} y={0} size={100} />
-                  ) : boardSkin === 'neon' ? (
+                  {street && streetBoard ? null : boardSkin === 'neon' ? (
                     /* Neon chrome — void/wall, ATO ghost, glowing path corridor and
                      * magenta pad brackets. Painted FIRST so every gameplay layer
                      * (pad rings, towers, enemies, shots) sits on top of it, and the
