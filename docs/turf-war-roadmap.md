@@ -120,7 +120,7 @@ and no new in-stage text nodes besides the pinned ones.
   library frames/icons (icons are `MaterialCommunityIcons`, as in `sheet-kit`). In the web preview those icons show as empty boxes (font not loaded) — check on the phone.
 - Previews: `docs/divecore/turf-war-t2/` (setup, wave, build card top / middle / bottom, armed, upgrade, won, lost; both phones).
 
-#### Step T3 as built (2026-10-17, PR #66; OTA see PROJECT_CONTEXT; awaiting emci's phone check; emci answered the T2 phone check "passed" and Q5 budget "yes")
+#### Step T3 as built (2026-10-17, PR #66, OTA iOS `01a14830-2114-7ba8-a01b-511bfc649a0f`, group `2d3a97cd`; awaiting emci's phone check; emci answered the T2 phone check "passed" and Q5 budget "yes")
 - emci picked **option D** at stop 1 after a first round (reuse / standard / pro tilesets) looked "too straight, too harsh": alley asphalt with a rounded,
   slightly wavy kerb (`create_topdown_tileset` pro, roundness 1, boundary_amplitude 0.15), faint worn centre dashes (35 % alpha), road marks, neon light pools. Cobblestone (E) was the other option.
 - `scripts/turf-board-art.ts` paints the `ato` board from `art-src/pixellab/board.streetwear/gen-20261017-pixellab-1/` (raw + `gen.json` with every tool id, prompt, score, rejects)
