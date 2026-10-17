@@ -134,7 +134,7 @@ and no new in-stage text nodes besides the pinned ones.
 - Previews + stop-1 samples + scale sheet: `docs/divecore/turf-war-t3/`. Frame time in the web preview ≈ 4.8 ms (430) / 5.0 ms (SE), unchanged.
 - Preview gotcha (again): two `http.server`s were listening on one port (an old one from another session); check `netstat` and compare the served bundle size AND the board atlas hash with the export.
 
-#### Step T4 as built (2026-10-17, PR #67; emci answered the T3 phone check "passed" and picked ALL FIVE loops at stop 1)
+#### Step T4 as built (2026-10-17, PR #67, OTA iOS `01a14862-98c3-73dc-89ee-51de036cb5be`, group `04dde97f`; awaiting emci's phone check; emci answered the T3 phone check "passed" and picked ALL FIVE loops at stop 1)
 - **Layer:** `src/play/turf-ambient.tsx` (+ pure `turf-ambient-layout.ts`): Reanimated UI-thread loops on their own clocks, **outside the sim `<Svg>`**, `pointerEvents none`, `memo`ised
   (stable `getCreeps` = `ambientCreeps` useCallback), one mount in `defend-screen.tsx`. The baked board is now a `ClipImage` (expo-image) **under** the ambient layer, then the units `<Svg>`
   (order pinned by `check:turf-war-layout`). Previously the board was a `SheetSprite` inside the SVG — pixel smoothing may differ slightly (check on the phone).
