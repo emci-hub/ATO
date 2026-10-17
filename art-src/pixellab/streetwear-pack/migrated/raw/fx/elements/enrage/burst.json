@@ -1,0 +1,339 @@
+{
+ "frames": [
+  {
+   "filename": "ato-t6-boss-enrage-sigil 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 1.png",
+   "frame": {
+    "x": 74,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 2.png",
+   "frame": {
+    "x": 148,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 3.png",
+   "frame": {
+    "x": 222,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 4.png",
+   "frame": {
+    "x": 0,
+    "y": 56,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 5.png",
+   "frame": {
+    "x": 74,
+    "y": 56,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 6.png",
+   "frame": {
+    "x": 148,
+    "y": 56,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 7.png",
+   "frame": {
+    "x": 222,
+    "y": 56,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 8.png",
+   "frame": {
+    "x": 0,
+    "y": 112,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 9.png",
+   "frame": {
+    "x": 74,
+    "y": 112,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 10.png",
+   "frame": {
+    "x": 148,
+    "y": 112,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t6-boss-enrage-sigil 11.png",
+   "frame": {
+    "x": 222,
+    "y": 112,
+    "w": 74,
+    "h": 56
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 74,
+    "h": 56
+   },
+   "sourceSize": {
+    "w": 74,
+    "h": 56
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "ato-t6-boss-enrage-sigil.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 296,
+   "h": 168
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 37,
+   "y": 28
+  },
+  "frameTags": [
+   {
+    "name": "ato-t6-boss-enrage-sigil",
+    "from": 0,
+    "to": 11,
+    "direction": "forward"
+   }
+  ]
+ }
+}

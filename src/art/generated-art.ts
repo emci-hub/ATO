@@ -2196,12 +2196,18 @@ export const SHEET = {
       shot: 'sheets/streetwear/fx/archer/shot',
       hit: 'sheets/streetwear/fx/archer/hit',
     },
+    bossko: {
+      burst: 'sheets/streetwear/fx/bossko/burst',
+    },
     ember: {
       shot: 'sheets/streetwear/fx/ember/shot',
       hit: 'sheets/streetwear/fx/ember/hit',
       burst: 'sheets/streetwear/fx/ember/burst',
       slash: 'sheets/streetwear/fx/ember/slash',
       status: 'sheets/streetwear/fx/ember/status',
+    },
+    enrage: {
+      burst: 'sheets/streetwear/fx/enrage/burst',
     },
     plain: {
       shot: 'sheets/streetwear/fx/plain/shot',
@@ -2225,6 +2231,9 @@ export const SHEET = {
       burst: 'sheets/streetwear/fx/spark/burst',
       slash: 'sheets/streetwear/fx/spark/slash',
       status: 'sheets/streetwear/fx/spark/status',
+    },
+    summon: {
+      burst: 'sheets/streetwear/fx/summon/burst',
     },
     tide: {
       shot: 'sheets/streetwear/fx/tide/shot',

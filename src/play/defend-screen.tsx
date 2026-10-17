@@ -30,7 +30,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, G, Image as SvgImage, Path, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Image as SvgImage, Path, Rect, Text as SvgText } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -148,6 +148,17 @@ import {
   showHealthBar,
   type HpChip,
 } from '@/play/turf-combat-fx-rules';
+import {
+  BOSS_DEATH_MS,
+  BOSS_TELEGRAPHS,
+  ENRAGE_WINDUP_MS,
+  WAVE_CHIP_BOX,
+  bossBar,
+  bossFxFlags,
+  enrageWarning,
+  telegraphStart,
+} from '@/play/turf-boss-fx-rules';
+import { notify } from '@/play/notify/notify';
 import { usePlayMotion } from '@/play/play-motion';
 import {
   CREEP_STILL_MS,
@@ -374,11 +385,11 @@ function SpeedControl({
 }
 
 /* -------------------------------------------------------------- boss warn --- */
-/** Boss warn banner (§9m). `LEAD_MS` = how far before the boss steps in the
- * warn is raised; `MS` = how long it stays up. Display only — the sim keeps
- * running underneath, so towers keep firing through the banner. */
+/** Boss warn (§9m). `LEAD_MS` = how far before the boss steps in the warn is
+ * raised. T6: it is a `notify()` in the NoticeLane (no in-stage banner), so the
+ * lane's own timers decide how long it shows. Display only — the sim keeps
+ * running underneath, so towers keep firing through it. */
 const BOSS_WARN_LEAD_MS = 1500;
-const BOSS_WARN_MS = 2000;
 
 /* ---- floating hit numbers (display only) -------------------------------- */
 /** On-screen floater cap — more than this and oldest are dropped (pooled). */
@@ -929,6 +940,12 @@ export function DefendScreen({
   const combatFlags = combatFxFlags(fxQuality, playMotion);
   const combatFlagsRef = useRef(combatFlags);
   combatFlagsRef.current = combatFlags;
+  /** T6 boss effects: entrance sigil, telegraphs, death blast, boss flash / shake / hit stop (Effects Quality + Motion). */
+  const bossFlags = bossFxFlags(fxQuality, playMotion);
+  const bossFlagsRef = useRef(bossFlags);
+  bossFlagsRef.current = bossFlags;
+  /** Telegraph keys showing now (Bound Boss skills `skill-<id>`, enemy enrage `enrage-<id>`). */
+  const telegraphsRef = useRef(new Set<string>());
   const combatFxRef = useRef<TurfCombatFxHandle>(null);
   const boardShake = useBoardShake();
   const shakeBoard = boardShake.shake;
@@ -940,6 +957,13 @@ export function DefendScreen({
   const flashAtRef = useRef(new Map<number, number>());
   /** Hit stop (≤ HIT_STOP_MS) after a kill by an ultimate: the sim interval pauses, nothing else does. */
   const [hitStop, setHitStop] = useState(false);
+  /** T6: the won card waits BOSS_DEATH_MS when the boss was the last kill, so its blast is seen (display only). */
+  const [resultHold, setResultHold] = useState(false);
+  useEffect(() => {
+    if (!resultHold) return;
+    const timer = setTimeout(() => setResultHold(false), BOSS_DEATH_MS);
+    return () => clearTimeout(timer);
+  }, [resultHold]);
   /** Saved board layouts (per map): loaded flag, the Bound Bosses a layout may
    * put back (id → stars, refreshed every render), the scrap a running wave
    * started with (restored on Leave / a lost Retry), and a one-shot restore
@@ -1000,8 +1024,6 @@ export function DefendScreen({
    * has already removed their puff. Pruned by the walk tick (and by every run
    * reset), never sent back into the sim. */
   const [corpses, setCorpses] = useState<CreepCorpse[]>([]);
-  /** §9m boss warn banner — band label + boss name, raised as the boss nears. */
-  const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
   // Streetwear art style: Turf War — pinned HUD + dock in the street shell (paint/layout only).
   const street = streetUiOn();
   // Read inside the game tick / hit callbacks without restarting them.
@@ -1568,7 +1590,8 @@ export function DefendScreen({
     puffWalkFaceRef.current = {};
     setCorpses([]);
     setShots([]);
-      setBossAlert(null);
+      combatFxRef.current?.clear();
+      telegraphsRef.current.clear();
     },
     [view.cyclePower, view.cycleTint, ensureParked, withSavedLayout],
   );
@@ -1596,7 +1619,8 @@ export function DefendScreen({
     ensureParked(fight.phase);
     setSelectedPad(null);
     setWhyOpen(false);
-    setBossAlert(null);
+    combatFxRef.current?.clear();
+    telegraphsRef.current.clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fightKey, view.cyclePower, view.cycleTint]);
 
@@ -1647,7 +1671,8 @@ export function DefendScreen({
     puffWalkFaceRef.current = {};
     setCorpses([]);
     setShots([]);
-    setBossAlert(null);
+    combatFxRef.current?.clear();
+    telegraphsRef.current.clear();
     bossWarnedRef.current = false; // re-arm the warn for this run
   }, [view.cyclePower, view.cycleTint, boardId]);
 
@@ -1678,7 +1703,8 @@ export function DefendScreen({
     puffWalkFaceRef.current = {};
     setCorpses([]);
     setShots([]);
-    setBossAlert(null);
+    combatFxRef.current?.clear();
+    telegraphsRef.current.clear();
     setLeaveConfirmOpen(false);
   }, [bankRestage]);
 
@@ -1773,8 +1799,8 @@ export function DefendScreen({
     puffWalkFaceRef.current = {};
     setCorpses([]);
     setShots([]);
-    setBossAlert(null);
     combatFxRef.current?.clear();
+    telegraphsRef.current.clear();
     hpChipRef.current.clear();
     flashAtRef.current.clear();
     creepDrawRef.current.clear();
@@ -2163,10 +2189,13 @@ export function DefendScreen({
       if (fxQualityRef.current !== 'off') {
         for (const hit of step.hits) spawnHitFx(hit, drawnPos);
       }
-      // §9m boss warn: peek the remaining schedule and raise the banner ONCE, a
+      // §9m boss warn: peek the remaining schedule and raise the warn ONCE, a
       // beat before the boss steps in (or the tick it lands, if the lead was
       // skipped by a big dt). Display only — the sim keeps running under it, so
-      // towers still fire through the warning.
+      // towers still fire through the warning. T6: the words go to the
+      // NoticeLane (same words as the old in-stage pill; no banner in the stage).
+      // Copy: "BOSS INCOMING" — never "BOUND BOSS" (that names the player-owned
+      // Bound Boss tower).
       const bandNow = step.state.band;
       if (bandNow && !bossWarnedRef.current) {
         const nextBoss = step.state.schedule.find((event) => event.role === 'boss');
@@ -2174,9 +2203,56 @@ export function DefendScreen({
           nextBoss != null && nextBoss.tMs - step.state.elapsedMs <= BOSS_WARN_LEAD_MS;
         if (imminent || step.bossSpawned) {
           bossWarnedRef.current = true;
-          setBossAlert({ label: bandNow.label, name: bandNow.boss.name });
+          notify({ kind: 'notify', title: 'BOSS INCOMING', body: `${bandNow.label} — ${bandNow.boss.name}`, dedupeKey: 'turf-boss-incoming', priority: 'high' });
           if (streetRef.current) alertHaptic();
         }
+      }
+      // T6 boss effects (display only). The spawn point = the path start, kept a cell inside the board edge.
+      const bossLayer = streetRef.current ? combatFxRef.current : null;
+      const bossFlagsNow = bossFlagsRef.current;
+      const start = mapNow.path[0];
+      const edgeHalf = 100 / 32;
+      const spawnX = Math.min(100 - edgeHalf, Math.max(2 * edgeHalf, (start?.x ?? 0) * 100));
+      const spawnY = Math.min(100 - 2 * edgeHalf, Math.max(edgeHalf, (start?.y ?? 0) * 100));
+      // Entrance: the sigil + light column at the spawn as the boss steps in.
+      if (step.bossSpawned && bossLayer && bossFlagsNow.summon) bossLayer.summon(spawnX, spawnY, bossFlagsNow.summon);
+      // Enemy enrage telegraph: the red sigil charges at the spawn (the runners come out there) once the boss nears
+      // its enrage line; it fades after the enrage fires or the boss is gone (never before its wind-up showed).
+      const telegraphMode = bossFlagsNow.telegraph;
+      const liveEnrage = new Set<string>();
+      for (const p of step.state.puffs) {
+        if (p.kind !== 'boss') continue;
+        const key = `enrage-${p.id}`;
+        if (enrageWarning(p.hp, p.maxHp, p.burstHpPct, p.burstFired)) {
+          liveEnrage.add(key);
+          if (!telegraphsRef.current.has(key) && bossLayer) {
+            telegraphsRef.current.add(key);
+            bossLayer.telegraph(key, 'enrage', spawnX, spawnY, 0, ENRAGE_WINDUP_MS, telegraphMode);
+          }
+        }
+      }
+      // Bound Boss echo skills (cycle-boss defs; a HERO bound as a tower fights with its kit, T5): the telegraph
+      // starts so its wind-up is ≥ 600 ms at 1x and 2x, and ends the tick the skill fires (its cooldown resets).
+      const liveSkill = new Set<string>();
+      for (const bb of step.state.boundBosses) {
+        const def = isHeroBoundTower(bb.bossId) ? undefined : getBoundBossDef(bb.bossId);
+        const pad = mapNow.pads[bb.pad];
+        if (!def || !pad) continue;
+        const key = `skill-${bb.id}`;
+        const before = current.boundBosses.find((b) => b.id === bb.id);
+        const cast = before != null && bb.skillCooldownMs > before.skillCooldownMs + 1;
+        if (cast) continue;
+        liveSkill.add(key);
+        const windUp = telegraphStart(telegraphsRef.current.has(key), bb.skillCooldownMs, DEFEND_TICK_MS, speedRef.current);
+        if (windUp != null && bossLayer) {
+          telegraphsRef.current.add(key);
+          bossLayer.telegraph(key, def.skill.skill_id, pad.x, pad.y, def.skill.radius, windUp, telegraphMode);
+        }
+      }
+      for (const key of [...telegraphsRef.current]) {
+        if (liveEnrage.has(key) || liveSkill.has(key)) continue;
+        telegraphsRef.current.delete(key);
+        combatFxRef.current?.endTelegraph(key);
       }
       // Display-only floaters: any puff that lost HP this tick, or vanished
       // (killed), gets a short damage number near it. No engine changes.
@@ -2210,20 +2286,38 @@ export function DefendScreen({
         const lastFlash = flashAtRef.current.get(p.id) ?? -Infinity;
         if (flags.flash && fxLayer && drawn && now - lastFlash >= FLASH_COOLDOWN_MS) {
           flashAtRef.current.set(p.id, now);
-          fxLayer.flash(drawn.drawable, drawn.box);
+          // T6: a boss flashes brighter and longer (BOSS_FLASH_MS); same allow rule and cooldown.
+          fxLayer.flash(drawn.drawable, drawn.box, p.kind === 'boss');
         }
       }
       for (const id of [...hpChipRef.current.keys()]) if (!aliveIds.has(id)) hpChipRef.current.delete(id);
       for (const id of [...flashAtRef.current.keys()]) if (!aliveIds.has(id)) flashAtRef.current.delete(id);
       const popped = new Set<number>();
-      if (flags.pop && fxLayer) {
-        for (const old of prevPuffsRef.current) {
-          if (aliveIds.has(old.id)) continue;
-          const drawn = creepDrawRef.current.get(old.id);
-          if (!drawn) continue;
-          fxLayer.pop(drawn.box.x + drawn.box.size / 2, drawn.box.y + drawn.box.size * 0.55);
+      let bossDied = false;
+      for (const old of prevPuffsRef.current) {
+        if (aliveIds.has(old.id)) continue;
+        const drawn = creepDrawRef.current.get(old.id);
+        if (!drawn) continue;
+        const bodyX = drawn.box.x + drawn.box.size / 2;
+        const bodyY = drawn.box.y + drawn.box.size * 0.55;
+        // T6: a boss that died (not leaked) gets the boss blast instead of the pop (Off: its corpse, as before).
+        if (old.kind === 'boss' && !step.leak) {
+          bossDied = true;
+          if (bossFlagsNow.death && fxLayer) {
+            fxLayer.bossDeath(bodyX, bodyY, bossFlagsNow.death);
+            popped.add(old.id);
+          }
+          continue;
+        }
+        if (flags.pop && fxLayer) {
+          fxLayer.pop(bodyX, bodyY);
           popped.add(old.id);
         }
+      }
+      // T6 boss death: a small board shake (stage content only) + the 60 ms hit stop, when allowed.
+      if (bossDied && streetRef.current) {
+        if (bossFlagsNow.shake) shakeBoard('bossDeath');
+        if (bossFlagsNow.hitStop) setHitStop(true);
       }
       for (const id of [...creepDrawRef.current.keys()]) if (!aliveIds.has(id)) creepDrawRef.current.delete(id);
       if (flags.hitStop && !step.leak) {
@@ -2267,11 +2361,15 @@ export function DefendScreen({
         setPhase('lost');
         setPaused(false);
         setSelectedPad(null);
-        setBossAlert(null);
+        for (const key of telegraphsRef.current) combatFxRef.current?.endTelegraph(key);
+        telegraphsRef.current.clear();
         return;
       }
       if (step.done) {
-        setBossAlert(null);
+        for (const key of telegraphsRef.current) combatFxRef.current?.endTelegraph(key);
+        telegraphsRef.current.clear();
+        // T6: the boss was the last one down — the won card waits for its blast (display only; the win is paid now).
+        if (bossDied && bossFlagsNow.death && fxLayer) setResultHold(true);
         winWave();
       }
     }, DEFEND_TICK_MS);
@@ -2283,13 +2381,6 @@ export function DefendScreen({
   useEffect(() => {
     if (phase === 'lost') startAvatarOnce('hurt');
   }, [phase, startAvatarOnce]);
-
-  // The warn is a banner — auto-dismiss after a short beat (spec 1.5–2.5s).
-  useEffect(() => {
-    if (!bossAlert) return;
-    const timer = setTimeout(() => setBossAlert(null), BOSS_WARN_MS);
-    return () => clearTimeout(timer);
-  }, [bossAlert]);
 
   // Background → freeze the wave.
   useEffect(() => {
@@ -2488,7 +2579,8 @@ export function DefendScreen({
     puffWalkFaceRef.current = {};
     setCorpses([]);
     setShots([]);
-    setBossAlert(null);
+    combatFxRef.current?.clear();
+    telegraphsRef.current.clear();
     bossWarnedRef.current = false; // re-arm the warn for this preview run
   };
 
@@ -2841,7 +2933,8 @@ export function DefendScreen({
     puffWalkFaceRef.current = {};
     setCorpses([]);
     setShots([]);
-    setBossAlert(null);
+    combatFxRef.current?.clear();
+    telegraphsRef.current.clear();
   };
 
   const closePadCard = () => {
@@ -3074,7 +3167,7 @@ export function DefendScreen({
             {padCard}
           </>
         ) : null}
-        {resultCard ? (
+        {resultCard && !resultHold ? (
           <View
             style={[
               styles.turfFloatPanel,
@@ -3089,6 +3182,9 @@ export function DefendScreen({
   // The baked street board for this map (Streetwear only; play-art-pack packSwBoards).
   const streetBoardKey = street ? boardSheet(boardMap.id) : undefined;
   const streetBoard = streetBoardKey ? sheetFrame(streetBoardKey, 'img') : undefined;
+  // T6 boss bar: while a boss is alive the wave chip's box shows its name over a thin bar (same box, same size).
+  const liveBoss = live && street ? bossBar(sim?.puffs ?? [], sim?.band?.boss.name) : null;
+  const liveBossChip = liveBoss ? chipValue(hpChipRef.current.get(liveBoss.id), liveBoss.pct, Date.now()) : 0;
 
   return (
     <View style={styles.turfRoot}>
@@ -3100,12 +3196,28 @@ export function DefendScreen({
         topBar={
           live && street ? (
             <StreetFrame piece="resbar" style={styles.streetHud}>
-              <View style={styles.streetWave}>
-                <StreetBackdrop piece="chip-on" />
-                <Text style={styles.streetWaveText} numberOfLines={1}>
-                  {campaignPhaseLabel(labelPhase)} wave {displayedWave}
-                </Text>
-              </View>
+              {liveBoss ? (
+                <View
+                  style={[styles.streetWave, styles.bossBarBox]}
+                  accessible
+                  accessibilityLabel={`${liveBoss.name}, ${Math.round(liveBoss.pct * 100)} percent health`}>
+                  <Text style={styles.bossBarName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+                    {liveBoss.name}
+                  </Text>
+                  <View style={styles.bossBarTrack}>
+                    {liveBossChip > liveBoss.pct ? <View style={[styles.bossBarChip, { width: `${liveBossChip * 100}%` }]} /> : null}
+                    <View style={[styles.bossBarFill, { width: `${liveBoss.pct * 100}%` }]} />
+                    {liveBoss.enrageAt != null ? <View style={[styles.bossBarTick, { left: `${liveBoss.enrageAt * 100}%` }]} /> : null}
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.streetWave}>
+                  <StreetBackdrop piece="chip-on" />
+                  <Text style={styles.streetWaveText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+                    {campaignPhaseLabel(labelPhase)} wave {displayedWave}
+                  </Text>
+                </View>
+              )}
               <Text style={styles.streetHudCaps} numberOfLines={1} accessibilityLabel={`${scrap} run caps`}>
                 {scrap} caps
               </Text>
@@ -3648,6 +3760,11 @@ export function DefendScreen({
                     const iconRowY = barTop - ICON_SIZE / 2 - 0.5;
                     return (
                       <G key={`puff-${puff.id}`}>
+                        {/* T6 enrage telegraph (part 2): a still red glow under a boss nearing its enrage line. A static
+                         * shape, redrawn with the board like the health bar — no animation inside this SVG. */}
+                        {street && puff.kind === 'boss' && enrageWarning(puff.hp, puff.maxHp, puff.burstHpPct, puff.burstFired) ? (
+                          <Ellipse cx={x} cy={y} rx={spriteSize * 0.34} ry={spriteSize * 0.12} fill={BOSS_TELEGRAPHS.enrage.color} opacity={0.4} />
+                        ) : null}
                         <G transform={spriteTransform}>
                           {spriteDrawable ? (
                             <ClipSprite drawable={spriteDrawable} x={box.x} y={box.y} size={box.size} />
@@ -3781,39 +3898,6 @@ export function DefendScreen({
                     onDone={() => dropFloater(floater.id)}
                   />
                 ))}
-
-                {/* §9m boss warn — a NON-BLOCKING Neon Viper banner raised a beat
-                    before the boss steps in. pointerEvents none and no sim change,
-                    so the fight keeps running underneath (towers keep firing).
-                    Copy: "BOSS INCOMING" — never "BOUND BOSS" (that names the
-                    player-owned Bound Boss tower). */}
-                {bossAlert ? (
-                  <View pointerEvents="none" style={styles.bossAlertWrap}>
-                    <View
-                      style={[
-                        styles.bossAlertPill,
-                        surfaceShadow(theme, reduceMotion),
-                        {
-                          backgroundColor: theme.backgroundElement,
-                          borderColor: theme.accentSecondary,
-                        },
-                      ]}>
-                      <ThemedText
-                        type="codeBold"
-                        style={[styles.bossWarnTitle, { color: theme.accentSecondary }]}>
-                        BOSS INCOMING
-                      </ThemedText>
-                      <ThemedText type="code" style={{ color: theme.accent }}>
-                        {bossAlert.label}
-                      </ThemedText>
-                      {bossAlert.name ? (
-                        <ThemedText type="code" themeColor="textSecondary">
-                          {bossAlert.name}
-                        </ThemedText>
-                      ) : null}
-                    </View>
-                  </View>
-                ) : null}
               </View>
             </Animated.View>
             {/* Dev kit only — the FX stress controls sit right under the board so
@@ -5221,7 +5305,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     marginTop: 4,
   },
-  streetWave: { paddingHorizontal: 18, paddingVertical: 6, justifyContent: 'center' },
+  // T6: one fixed box for the wave chip AND the boss bar (WAVE_CHIP_BOX), so the top bar never re-lays out.
+  streetWave: { width: WAVE_CHIP_BOX.width, height: WAVE_CHIP_BOX.height, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' },
+  bossBarBox: { alignItems: 'stretch', gap: 3, backgroundColor: '#181228', borderColor: STREET.mustard, borderWidth: 2, borderRadius: 4, paddingHorizontal: 8 },
+  bossBarName: { fontFamily: STREET_FONT.bold, fontSize: 12, color: '#FFD6FB', textTransform: 'uppercase' },
+  bossBarTrack: { height: 6, backgroundColor: '#3C2846', overflow: 'hidden' },
+  bossBarChip: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: '#FFD6FB' },
+  bossBarFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: '#EF4444' },
+  bossBarTick: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, backgroundColor: '#FFFFFF' },
   streetWaveText: { fontFamily: STREET_FONT.bold, fontSize: 13, color: STREET.ink, textTransform: 'uppercase' },
   streetHudCaps: { fontFamily: STREET_FONT.bold, fontSize: 15, color: STREET.mustard, marginLeft: 'auto' },
   streetPause: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
@@ -5497,22 +5588,6 @@ const styles = StyleSheet.create({
     shadowColor: '#FFD700',
     shadowOpacity: 0.8,
     shadowRadius: 10,
-  },
-  /** §9m boss alert banner — centered over the board while the boss steps in.
-   * Top overlay layer (above tiles, gameplay art, and the Avatar). */
-  bossAlertWrap: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 20,
-  },
-  bossAlertPill: {
-    alignItems: 'center',
-    gap: Spacing.half,
-    borderRadius: Spacing.three,
-    borderWidth: 1,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.four,
   },
   /** Pink Space Mono eyebrow on the boss warn banner. */
   bossWarnTitle: {
