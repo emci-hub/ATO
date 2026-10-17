@@ -102,7 +102,7 @@ and no new in-stage text nodes besides the pinned ones.
 - Preview gotcha: an old `python -m http.server` from an earlier session kept answering on the same port with the OLD bundle. Use a fresh port
   and check the served bundle size matches the export.
 
-#### Step T2 as built (2026-10-17, PR #65; emci answered Q3 yes, Q3b keep running)
+#### Step T2 as built (2026-10-17, PR #65, OTA iOS `01a147cc-a8d7-7a31-96d2-c5fc628fa997`, group `ea5f6c41`; awaiting emci's phone check; emci answered Q3 yes, Q3b keep running)
 - `src/play/turf-ui.tsx`: `TurfButton` (ready / cooling sweep / unaffordable red cost / used / selected, ≥ 48 high), `TurfCard`, `TurfPips`,
   `TurfResultCard` (title, lines, quiet buttons, ONE primary button last). `src/play/turf-build-card.tsx`: `TurfBuildCard` (build / tower / boss
   modes), 344 wide, heights 116 / 104 / 120 pt **including border + padding** (≤ `BUILD_CARD_MAX_H`), placed with `buildCardPlacement`.
