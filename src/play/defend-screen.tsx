@@ -22,7 +22,6 @@
  * rewards, and meta persist through the shared store.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -30,7 +29,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Ellipse, G, Image as SvgImage, Path, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Rect, Text as SvgText } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -106,7 +105,6 @@ import {
   skinAnimDrawable,
   skinAnimFaceIndex,
   skinAnimFrames,
-  skinArt,
   skinArtDrawable,
   skinDirIndex,
   skinDirs,
@@ -133,6 +131,18 @@ import {
 import { boardSheet } from '@/art/art';
 import { ClipImage, ClipSprite, sheetFrame } from '@/play/sheet-sprite';
 import { TurfAmbient } from '@/play/turf-ambient';
+import { BoardDecorTiles, StaticRoad, TurfBoardBase } from '@/play/turf-board-base';
+import {
+  LOSE_BEAT_MS,
+  WAVE_CLEAR_MS,
+  WIN_SPARK_MAX,
+  beatFxFlags,
+  leakReplayPath,
+  portalPoint,
+  sparkPoint,
+  waveStartNotice,
+  winBeatMs,
+} from '@/play/turf-beat-fx-rules';
 import { TurfCombatFx, useBoardShake, type TurfCombatFxHandle } from '@/play/turf-combat-fx';
 import {
   FLOATER_JITTER_X,
@@ -174,7 +184,7 @@ import {
   type CastActor,
   type CastActorClip,
 } from '@/play/cast-actor';
-import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
+import { boardDecor, roadDecor } from '@/play/board-decor';
 import { BOARD_MAPS, BOARD_ORDER, boardPathD, type BoardId } from '@/play/board-data';
 import { NeonBoardChrome } from '@/play/neon-chrome';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, type DropPreviewRow, type TypeTag } from '@/play/engine';
@@ -944,6 +954,13 @@ export function DefendScreen({
   const bossFlags = bossFxFlags(fxQuality, playMotion);
   const bossFlagsRef = useRef(bossFlags);
   bossFlagsRef.current = bossFlags;
+  /** T7 polish beats: wave-start portal, wave-clear close, win sparks, leak replay (Effects Quality + Motion). */
+  const beatFlags = beatFxFlags(fxQuality, playMotion);
+  const beatFlagsRef = useRef(beatFlags);
+  beatFlagsRef.current = beatFlags;
+  /** Reduce Motion / Motion Off: the T5 exit ring shows at full size and only fades (T7 motion audit). */
+  const calmRef = useRef(false);
+  calmRef.current = playMotion.vestibularSafe || playMotion.cosmeticsStill;
   /** Telegraph keys showing now (Bound Boss skills `skill-<id>`, enemy enrage `enrage-<id>`). */
   const telegraphsRef = useRef(new Set<string>());
   const combatFxRef = useRef<TurfCombatFxHandle>(null);
@@ -957,13 +974,16 @@ export function DefendScreen({
   const flashAtRef = useRef(new Map<number, number>());
   /** Hit stop (≤ HIT_STOP_MS) after a kill by an ultimate: the sim interval pauses, nothing else does. */
   const [hitStop, setHitStop] = useState(false);
-  /** T6: the won card waits BOSS_DEATH_MS when the boss was the last kill, so its blast is seen (display only). */
-  const [resultHold, setResultHold] = useState(false);
+  /** T6/T7: the won / lost card waits for its beat (the boss blast, the clear + sparks, the leak replay) so it is seen.
+   * Display only: the win and the loss are decided and paid on the same tick as before. */
+  const [resultHoldMs, setResultHoldMs] = useState(0);
+  const resultHold = resultHoldMs > 0;
+  const holdResult = useCallback((ms: number) => setResultHoldMs((prev) => Math.max(prev, ms)), []);
   useEffect(() => {
-    if (!resultHold) return;
-    const timer = setTimeout(() => setResultHold(false), BOSS_DEATH_MS);
+    if (!resultHoldMs) return;
+    const timer = setTimeout(() => setResultHoldMs(0), resultHoldMs);
     return () => clearTimeout(timer);
-  }, [resultHold]);
+  }, [resultHoldMs]);
   /** Saved board layouts (per map): loaded flag, the Bound Bosses a layout may
    * put back (id → stars, refreshed every render), the scrap a running wave
    * started with (restored on Leave / a lost Retry), and a one-shot restore
@@ -1674,6 +1694,19 @@ export function DefendScreen({
     combatFxRef.current?.clear();
     telegraphsRef.current.clear();
     bossWarnedRef.current = false; // re-arm the warn for this run
+    setResultHoldMs(0);
+    // T7 wave start (display only): the lane line + the cyan portal opening at the path start.
+    if (streetRef.current) {
+      const run = fightRef.current;
+      const puffs = starting?.schedule.length ?? 0;
+      if (puffs > 0) notify({ kind: 'notify', ...waveStartNotice(run.wave, campaignPhaseLabel(run.phase), puffs), dedupeKey: 'turf-wave-start' });
+      const portalMode = beatFlagsRef.current.portal;
+      const startPt = (BOARD_MAPS[starting?.boardId ?? 'ato'] ?? BOARD_MAPS.ato).path[0];
+      if (portalMode && startPt) {
+        const at = portalPoint(startPt);
+        combatFxRef.current?.portal(at.x, at.y, portalMode, false);
+      }
+    }
   }, [view.cyclePower, view.cycleTint, boardId]);
 
   /** Abandon a live run back to setup — no win rewards. The tower layout is
@@ -2203,7 +2236,7 @@ export function DefendScreen({
           nextBoss != null && nextBoss.tMs - step.state.elapsedMs <= BOSS_WARN_LEAD_MS;
         if (imminent || step.bossSpawned) {
           bossWarnedRef.current = true;
-          notify({ kind: 'notify', title: 'BOSS INCOMING', body: `${bandNow.label} — ${bandNow.boss.name}`, dedupeKey: 'turf-boss-incoming', priority: 'high' });
+          notify({ kind: 'notify', title: 'BOSS INCOMING', body: `${bandNow.label} — ${bandNow.boss.name}`, dedupeKey: 'turf-boss-incoming', priority: 'high', important: true });
           if (streetRef.current) alertHaptic();
         }
       }
@@ -2319,6 +2352,14 @@ export function DefendScreen({
         if (bossFlagsNow.shake) shakeBoard('bossDeath');
         if (bossFlagsNow.hitStop) setHitStop(true);
       }
+      // T7: the leaker (the creep furthest along the road on a leak tick — the engine may keep it in the list) keeps
+      // its last drawn sprite for the replay.
+      let leakDraw: { drawable: ClipDrawable; box: { x: number; y: number; size: number } } | undefined;
+      if (step.leak) {
+        let leaker: Puff | undefined;
+        for (const old of [...prevPuffsRef.current, ...step.state.puffs]) if (!leaker || old.dist > leaker.dist) leaker = old;
+        leakDraw = leaker ? creepDrawRef.current.get(leaker.id) : undefined;
+      }
       for (const id of [...creepDrawRef.current.keys()]) if (!aliveIds.has(id)) creepDrawRef.current.delete(id);
       if (flags.hitStop && !step.leak) {
         const ultimateKill = step.hits.some((hit) => hit.ultimate && hit.puffIds.some((pid) => before.has(pid) && !aliveIds.has(pid)));
@@ -2349,9 +2390,14 @@ export function DefendScreen({
         // T5 leak hit: a red ring at the path end + a small board shake (stage content only). The run ends exactly as before.
         const exit = mapNow.path[mapNow.path.length - 1];
         // Centred in the exit cell (the path ends on the board edge; a ring there would be half clipped).
-        if (exit && fxLayer && flags.leakPulse) {
+        // T7 lose beat: the leaker's ghost walks its last cells again, then the same ring (the replay draws it).
+        const replayMode = beatFlagsRef.current.replay;
+        if (fxLayer && replayMode) {
+          fxLayer.leakReplay(leakReplayPath(mapNow.path), leakDraw?.drawable ?? null, leakDraw?.box.size ?? 8, replayMode);
+          holdResult(LOSE_BEAT_MS);
+        } else if (exit && fxLayer && flags.leakPulse) {
           const half = 100 / 32;
-          fxLayer.leak(Math.min(100 - half, Math.max(half, exit.x * 100)), Math.min(100 - half, Math.max(half, exit.y * 100)));
+          fxLayer.leak(Math.min(100 - half, Math.max(half, exit.x * 100)), Math.min(100 - half, Math.max(half, exit.y * 100)), calmRef.current);
         }
         if (flags.shake && streetRef.current) shakeBoard();
         if (!leakNotedRef.current) {
@@ -2369,12 +2415,33 @@ export function DefendScreen({
         for (const key of telegraphsRef.current) combatFxRef.current?.endTelegraph(key);
         telegraphsRef.current.clear();
         // T6: the boss was the last one down — the won card waits for its blast (display only; the win is paid now).
-        if (bossDied && bossFlagsNow.death && fxLayer) setResultHold(true);
+        if (bossDied && bossFlagsNow.death && fxLayer) holdResult(BOSS_DEATH_MS);
+        // T7 wave clear + win: the portal closes at the exit, sparks pop over every tower; the card waits for them.
+        const beats = beatFlagsRef.current;
+        if (fxLayer && beats.clear) {
+          const exitPt = mapNow.path[mapNow.path.length - 1];
+          if (exitPt) {
+            const at = portalPoint(exitPt);
+            fxLayer.portal(at.x, at.y, beats.clear, true);
+            holdResult(WAVE_CLEAR_MS);
+          }
+        }
+        if (fxLayer && beats.sparks) {
+          const over = [...step.state.towers.map((t) => mapNow.pads[t.pad]), ...step.state.boundBosses.map((b) => mapNow.pads[b.pad])]
+            .filter((pad): pad is NonNullable<typeof pad> => pad != null)
+            .filter((_, i) => i % beats.sparkEvery === 0)
+            .slice(0, WIN_SPARK_MAX)
+            .map(sparkPoint);
+          if (over.length > 0) {
+            fxLayer.sparks(over, beats.sparks);
+            holdResult(winBeatMs(over.length));
+          }
+        }
         winWave();
       }
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
-  }, [phase, paused, hitStop, winWave, spawnFloaters, spawnHitFx, spawnShot, startAvatarOnce, startTowerOnce, shakeBoard]);
+  }, [phase, paused, hitStop, winWave, spawnFloaters, spawnHitFx, spawnShot, startAvatarOnce, startTowerOnce, shakeBoard, holdResult]);
 
   // Run fail → play the Avatar's HURT clip once (art only; the lost overlay is
   // already showing). Catches the leak path and the dev "force leak" button.
@@ -3319,34 +3386,8 @@ export function DefendScreen({
                     `grove-classic` board skin only. The default `neon` chrome paints
                     its own void/corridor/brackets in the gameplay SVG below, so the
                     field tiles are bypassed entirely. */}
-                {boardSkin === 'neon' ? null : (
-                  <View
-                    pointerEvents="none"
-                    style={[StyleSheet.absoluteFill, styles.boardTiles]}>
-                    {decor.map((tile, index) => {
-                      const source = skinArt(tile.role);
-                      if (!source) return null;
-                      const box = skinDrawBox(tile.role, tile.x, tile.y, tile.size);
-                      const left = tile.anchor === 'center' ? box.x : tile.x;
-                      const top = tile.anchor === 'center' ? tile.y - (tile.h ?? tile.size) / 2 : tile.y;
-                      return (
-                        <Image
-                          key={`tile-${index}`}
-                          source={source}
-                          contentFit="fill"
-                          style={{
-                            position: 'absolute',
-                            left: `${left}%`,
-                            top: `${top}%`,
-                            width: `${tile.size}%`,
-                            height: `${tile.h ?? tile.size}%`,
-                            transform: [{ rotate: `${tile.rotate}deg` }],
-                          }}
-                        />
-                      );
-                    })}
-                  </View>
-                )}
+                {/* T7 perf: a memo layer (static during a wave — never re-renders on the 100 ms tick). */}
+                {boardSkin === 'neon' ? null : <BoardDecorTiles decor={decor} skin={`${boardSkin}:${street}`} />}
                 {/* Gameplay layer — path, pads, towers, Bound Bosses, enemies.
                     Sits ABOVE the tiles (zIndex 1 > 0) so gameplay always reads on
                     top of the scroll art. pointerEvents none: gameplay is pure art
@@ -3358,9 +3399,8 @@ export function DefendScreen({
                     {/* Streetwear Turf War: the baked street board (asphalt roads, sidewalks, manhole pads,
                      * props) as ONE image UNDER the ambient layer, which sits under the units' <Svg> (T4).
                      * Paint only — the path, pads and taps still come from board-data. */}
-                    <View style={StyleSheet.absoluteFill}>
-                      <ClipImage drawable={{ kind: 'sheet', sheetKey: streetBoardKey, frameKey: 'img' }} />
-                    </View>
+                    {/* T7 perf: a memo layer (the board image never re-renders on the 100 ms tick). */}
+                    <TurfBoardBase sheetKey={streetBoardKey} />
                     <TurfAmbient mapId={boardMap.id} boardSide={boardSide} getCreeps={ambientCreeps} running={live && !paused} />
                   </>
                 ) : null}
@@ -3372,43 +3412,8 @@ export function DefendScreen({
                      * ghost stays under the corridor. Pure code/SVG, no PNGs. */
                     <NeonBoardChrome map={boardMap} ghostColor={theme.accent} />
                   ) : (
-                    <>
-                      {/* ATO ghost — the 16×16 logo mask baked from `ato-map.tmx`,
-                       * painted faint directly UNDER the road so the mark reads through
-                       * the board. Pure decor: this whole layer is pointerEvents none,
-                       * and the mask never touches the waypoint polyline the puffs walk.
-                       * Both campaign maps share the ATO board, so it renders on all. */}
-                      <Path d={ATO_GHOST_D} fill={theme.accent} fillOpacity={0.07} />
-                      {/* Road — a thin dark underlay bed stroked along the waypoint
-                       * polyline, then cobble STAMPS (straights + elbow corners + flared
-                       * ends) centred on the centreline. Waypoints stay the walk truth.
-                       * Drawn first so pads/towers/units sit on top. */}
-                      <G>
-                        <Path
-                          d={roadD}
-                          stroke={underlayTone}
-                          strokeWidth={underlayWidth}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          fill="none"
-                        />
-                      </G>
-                      {roadStamps.map((stamp, index) => {
-                        const source = skinArt(stamp.role);
-                        if (!source) return null;
-                        const box = skinDrawBox(stamp.role, stamp.x, stamp.y, stamp.size);
-                        return (
-                          <SvgImage
-                            key={`road-${index}`}
-                            href={source}
-                            x={box.x}
-                            y={box.y}
-                            width={box.size}
-                            height={box.size}
-                          />
-                        );
-                      })}
-                    </>
+                    /* ATO ghost + road underlay + cobble stamps (T7 perf: a memo layer, static during a wave). */
+                    <StaticRoad roadD={roadD} stamps={roadStamps} tone={underlayTone} width={underlayWidth} ghostColor={theme.accent} skin={`${boardSkin}:${street}`} />
                   )}
                   {/* Pads draw NOTHING extra here — the neon chrome's magenta
                    * L-brackets + P-label are the whole read (no solid candy disc,

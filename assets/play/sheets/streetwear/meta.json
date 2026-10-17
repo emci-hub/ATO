@@ -407,6 +407,14 @@
       "anchorX": 0.5,
       "anchorY": 0.5221
     },
+    "cheer/burst": {
+      "frames": 10,
+      "fps": 12,
+      "loop": false,
+      "cell": 68,
+      "anchorX": 0.5,
+      "anchorY": 0.5147
+    },
     "ember/shot": {
       "frames": 8,
       "fps": 12,
@@ -454,6 +462,14 @@
       "cell": 74,
       "anchorX": 0.5,
       "anchorY": 0.5
+    },
+    "gate/burst": {
+      "frames": 14,
+      "fps": 12,
+      "loop": false,
+      "cell": 80,
+      "anchorX": 0.5,
+      "anchorY": 0.575
     },
     "plain/shot": {
       "frames": 4,

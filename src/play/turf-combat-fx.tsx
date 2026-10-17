@@ -8,17 +8,17 @@
  * T6 (2026-10-17) adds the boss effects to the same layer: the entrance sigil at the spawn, the ability telegraphs
  * (one-shot wind-ups that then hold still until the ability goes off), the boss death blast and the bigger boss
  * flash. Rules + timings: `turf-boss-fx-rules.ts` (`bossFxFlags` decides what plays).
+ *
+ * T7 (2026-10-17) adds the polish beats to the same layer: the wave-start portal, the wave-clear close at the exit, the
+ * win sparks over the towers and the leak replay (views in `turf-beat-fx.tsx`, rules in `turf-beat-fx-rules.ts`,
+ * `beatFxFlags` decides what plays). The exit ring has a still version for Reduce Motion / Motion Off (fade only).
  */
-import { Image as ExpoImage } from 'expo-image';
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
-import { SHEET } from '@/art/art';
-import { PLAY_SHEETS } from '@/play/generated-play-sheets';
-import { pixelRenderStyle } from '@/play/pixel-theme';
-import { ClipImage, playSheetArt } from '@/play/sheet-sprite';
-import { STREETWEAR_META, type ClipDrawable } from '@/play/skin';
+import { ClipImage } from '@/play/sheet-sprite';
+import { type ClipDrawable } from '@/play/skin';
 import {
   BOSS_DEATH_MS,
   BOSS_DEATH_SHAKE_MS,
@@ -44,6 +44,9 @@ import {
   LEAK_SHAKE_PT,
   MAX_FLASHES,
 } from '@/play/turf-combat-fx-rules';
+import { LeakReplay, PortalBeat, SparksBeat, BEAT_STILL_FADE_MS } from '@/play/turf-beat-fx';
+import { LOSE_BEAT_MS, PORTAL_MS, WAVE_CLEAR_MS, WIN_SPARK_MS, WIN_SPARK_STAGGER_MS } from '@/play/turf-beat-fx-rules';
+import { Strip } from '@/play/turf-fx-strip';
 
 /** Board units (0..100) box: top-left + square edge, the same box the creep sprite was drawn in. */
 export type FxBox = { x: number; y: number; size: number };
@@ -53,8 +56,8 @@ export type TurfCombatFxHandle = {
   flash: (drawable: ClipDrawable, box: FxBox, boss?: boolean) => void;
   /** The death pop centred on a creep's body (board units). */
   pop: (x: number, y: number) => void;
-  /** Red ring at the path end (board units). */
-  leak: (x: number, y: number) => void;
+  /** Red ring at the path end (board units). `still` (Reduce Motion / Motion Off): full size, fade only. */
+  leak: (x: number, y: number, still?: boolean) => void;
   /** T6: the entrance sigil at the spawn (board units, the sigil's ground point). */
   summon: (x: number, y: number, mode: 'anim' | 'still') => void;
   /** T6: the boss death blast centred on the boss's body (board units). */
@@ -63,6 +66,12 @@ export type TurfCombatFxHandle = {
   telegraph: (key: string, ability: BossAbility, x: number, y: number, radiusUnits: number, windUpMs: number, mode: 'anim' | 'still') => void;
   /** T6: the ability went off (or can't any more): fade the telegraph — never before it showed TELEGRAPH_MIN_MS. */
   endTelegraph: (key: string) => void;
+  /** T7: the wave-start portal at the path start (`close` false) or the wave-clear close at the exit (`close` true). */
+  portal: (x: number, y: number, mode: 'anim' | 'still', close: boolean) => void;
+  /** T7: win sparks over each point (board units), one after another (WIN_SPARK_STAGGER_MS apart). */
+  sparks: (points: readonly { x: number; y: number }[], mode: 'anim' | 'still') => void;
+  /** T7: the leak replay — the leaker's ghost walks `points` (board units, ending at the exit), then the exit ring. */
+  leakReplay: (points: readonly { x: number; y: number }[], drawable: ClipDrawable | null, size: number, mode: 'anim' | 'still') => void;
   /** Drop everything (restage / leave). */
   clear: () => void;
 };
@@ -70,7 +79,10 @@ export type TurfCombatFxHandle = {
 type Item =
   | { kind: 'flash'; id: number; drawable: ClipDrawable; box: FxBox; boss: boolean }
   | { kind: 'pop'; id: number; x: number; y: number }
-  | { kind: 'leak'; id: number; x: number; y: number }
+  | { kind: 'leak'; id: number; x: number; y: number; still: boolean }
+  | { kind: 'portal'; id: number; x: number; y: number; still: boolean; close: boolean }
+  | { kind: 'sparks'; id: number; x: number; y: number; still: boolean }
+  | { kind: 'replay'; id: number; points: readonly { x: number; y: number }[]; drawable: ClipDrawable | null; size: number; still: boolean }
   | { kind: 'summon'; id: number; x: number; y: number; still: boolean }
   | { kind: 'bossDeath'; id: number; x: number; y: number; soft: boolean }
   | {
@@ -94,18 +106,15 @@ const LIFE: Record<Exclude<Item['kind'], 'telegraph'>, number> = {
   leak: LEAK_PULSE_MS,
   summon: BOSS_SUMMON_MS + BOSS_SUMMON_FADE_MS,
   bossDeath: BOSS_DEATH_MS,
+  portal: PORTAL_MS + BEAT_STILL_FADE_MS,
+  sparks: WIN_SPARK_MS + BEAT_STILL_FADE_MS,
+  replay: LOSE_BEAT_MS,
 };
 /** The pop is drawn at 1.4× its native pixels (picked at stop 1); the board is 512 art px across. */
 const POP_SCALE = 1.4;
 /** The T6 boss sheets are drawn 1:1 on the 512 art px board (as in the stop-1 samples). */
 const BOSS_SCALE = 1;
-const TURF_BOARD_ART_PX = 512;
 const LEAK_RED = '#EF4444';
-
-function fxSheetKey(fx: string): string | undefined {
-  const [el, beat] = fx.split('/');
-  return (SHEET.fx as Record<string, Record<string, string> | undefined>)[el]?.[beat];
-}
 
 function Flash({ item, unit }: { item: Extract<Item, { kind: 'flash' }>; unit: number }) {
   const o = useSharedValue(item.boss ? BOSS_FLASH_OPACITY : 0.85);
@@ -121,91 +130,17 @@ function Flash({ item, unit }: { item: Extract<Item, { kind: 'flash' }>; unit: n
   );
 }
 
-/**
- * One fx strip on the board: whole frames only, frame rects read from the packed atlas. Plays `from`..last over
- * `ms`, then (with `holdMs`) keeps the last frame for that long, or (with `holdOpen`) until `ending`, then fades.
- * `still` shows only the last frame, fading in and out (the Reduce Motion version: no motion, no flash).
- */
-function Strip({
-  fx,
-  x,
-  y,
-  unit,
-  scale,
-  ms,
-  from = 0,
-  holdMs = 0,
-  fadeMs = 0,
-  holdOpen = false,
-  ending = false,
-  still = false,
-}: {
-  fx: string;
-  x: number;
-  y: number;
-  unit: number;
-  scale: number;
-  ms: number;
-  from?: number;
-  holdMs?: number;
-  fadeMs?: number;
-  holdOpen?: boolean;
-  ending?: boolean;
-  still?: boolean;
-}) {
-  const sheetKey = fxSheetKey(fx);
-  const meta = STREETWEAR_META.fx[fx];
-  const sheet = sheetKey ? PLAY_SHEETS[sheetKey] : undefined;
-  const source = sheetKey ? playSheetArt(sheetKey) : undefined;
-  const n = meta?.frames ?? 0;
-  const first = still ? Math.max(0, n - 1) : Math.min(from, Math.max(0, n - 1));
-  const t = useSharedValue(first);
-  const o = useSharedValue(still ? 0 : 1);
-  useEffect(() => {
-    if (n === 0) return;
-    if (still) {
-      // Fade in, hold, fade out (a held telegraph fades out on `ending` below).
-      o.value = holdOpen ? withTiming(1, { duration: 150 }) : withSequence(withTiming(1, { duration: 150 }), withDelay(Math.max(0, ms + holdMs - 150), withTiming(0, { duration: fadeMs })));
-      return;
-    }
-    t.value = withTiming(n, { duration: ms * ((n - first) / n), easing: Easing.linear });
-    if (!holdOpen && fadeMs > 0) o.value = withDelay(ms + holdMs, withTiming(0, { duration: fadeMs }));
-  }, [t, o, n, first, ms, holdMs, fadeMs, holdOpen, still]);
-  useEffect(() => {
-    if (ending) o.value = withTiming(0, { duration: TELEGRAPH_FADE_MS });
-  }, [ending, o]);
-  const rects = sheet ? Array.from({ length: n }, (_, i) => sheet.frames[`frame_${String(i).padStart(3, '0')}`]) : [];
-  const xs = rects.map((r) => r?.x ?? 0);
-  const ys = rects.map((r) => r?.y ?? 0);
-  const cell = rects[0]?.w ?? 1;
-  // Native art pixels × the board scale (512 art px across the board) × scale, as in the stop-1 samples.
-  const edge = (meta?.cell ?? cell) * scale * ((unit * 100) / TURF_BOARD_ART_PX);
-  const k = edge / cell;
-  const slide = useAnimatedStyle(() => {
-    const i = Math.min(n - 1, Math.max(0, Math.floor(t.value)));
-    return { transform: [{ translateX: -(xs[i] ?? 0) * k }, { translateY: -(ys[i] ?? 0) * k }] };
-  });
-  const fade = useAnimatedStyle(() => ({ opacity: o.value }));
-  if (!sheet || !source || !meta || n === 0) return null;
-  const left = x * unit - meta.anchorX * edge;
-  const top = y * unit - meta.anchorY * edge;
-  return (
-    <Animated.View pointerEvents="none" style={[styles.abs, { left, top, width: edge, height: edge, overflow: 'hidden' }, fade]}>
-      <Animated.View style={[styles.abs, { left: 0, top: 0, width: sheet.sheetW * k, height: sheet.sheetH * k }, slide]}>
-        <ExpoImage source={source} contentFit="fill" transition={0} style={{ ...pixelRenderStyle, width: '100%', height: '100%' }} />
-      </Animated.View>
-    </Animated.View>
-  );
-}
-
 /** A flat red ring (an ellipse on the ground) growing out of the exit and fading. Never full-screen. */
 function Leak({ item, unit }: { item: Extract<Item, { kind: 'leak' }>; unit: number }) {
-  const p = useSharedValue(0);
+  // Still (T7 motion audit): the ring shows at full size and only fades.
+  const p = useSharedValue(item.still ? 1 : 0);
+  const fade = useSharedValue(1);
   useEffect(() => {
-    p.value = withTiming(1, { duration: LEAK_PULSE_MS, easing: Easing.out(Easing.quad) });
-  }, [p]);
+    if (item.still) fade.value = withTiming(0, { duration: LEAK_PULSE_MS, easing: Easing.in(Easing.quad) });
+    else p.value = withTiming(1, { duration: LEAK_PULSE_MS, easing: Easing.out(Easing.quad) });
+  }, [p, fade, item.still]);
   const r = 12 * unit;
-  const style = useAnimatedStyle(() => ({ opacity: 1 - p.value * p.value, transform: [{ scaleX: 0.3 + 0.7 * p.value }, { scaleY: (0.3 + 0.7 * p.value) * 0.6 }] }));
+  const style = useAnimatedStyle(() => ({ opacity: item.still ? fade.value : 1 - p.value * p.value, transform: [{ scaleX: 0.3 + 0.7 * p.value }, { scaleY: (0.3 + 0.7 * p.value) * 0.6 }] }));
   return (
     <Animated.View pointerEvents="none" style={[styles.abs, { left: item.x * unit - r, top: item.y * unit - r, width: 2 * r, height: 2 * r, borderRadius: r, borderWidth: 4, borderColor: LEAK_RED, backgroundColor: 'rgba(239,68,68,0.22)' }, style]} />
   );
@@ -294,6 +229,12 @@ function ItemView({ item, unit }: { item: Item; unit: number }) {
       return <Strip fx={BOSS_FX.death} x={item.x} y={item.y} unit={unit} scale={BOSS_SCALE} ms={BOSS_DEATH_MS} from={item.soft ? BOSS_DEATH_SOFT_FROM : 0} />;
     case 'telegraph':
       return <Telegraph item={item} unit={unit} />;
+    case 'portal':
+      return <PortalBeat x={item.x} y={item.y} unit={unit} close={item.close} still={item.still} />;
+    case 'sparks':
+      return <SparksBeat x={item.x} y={item.y} unit={unit} still={item.still} />;
+    case 'replay':
+      return <LeakReplay points={item.points} drawable={item.drawable} size={item.size} unit={unit} still={item.still} />;
   }
 }
 
@@ -323,7 +264,8 @@ export const TurfCombatFx = memo(
           return next.filter((i) => !drop.has(i.id));
         });
         if (item.kind === 'telegraph') return;
-        const life = item.kind === 'flash' && item.boss ? BOSS_FLASH_MS : LIFE[item.kind];
+        const life =
+          item.kind === 'flash' && item.boss ? BOSS_FLASH_MS : item.kind === 'portal' && item.close ? WAVE_CLEAR_MS + BEAT_STILL_FADE_MS : LIFE[item.kind];
         later(life + 40, () => setItems((prev) => prev.filter((i) => i.id !== item.id)));
       },
       [later],
@@ -333,7 +275,7 @@ export const TurfCombatFx = memo(
       () => ({
         flash: (drawable, box, boss = false) => add({ kind: 'flash', id: ++seq.current, drawable, box, boss }),
         pop: (x, y) => add({ kind: 'pop', id: ++seq.current, x, y }),
-        leak: (x, y) => add({ kind: 'leak', id: ++seq.current, x, y }),
+        leak: (x, y, still = false) => add({ kind: 'leak', id: ++seq.current, x, y, still }),
         summon: (x, y, mode) => add({ kind: 'summon', id: ++seq.current, x, y, still: mode === 'still' }),
         bossDeath: (x, y, mode) => add({ kind: 'bossDeath', id: ++seq.current, x, y, soft: mode === 'soft' }),
         telegraph: (key, ability, x, y, radiusUnits, windUpMs, mode) => {
@@ -355,6 +297,11 @@ export const TurfCombatFx = memo(
             later(TELEGRAPH_FADE_MS + 40, () => setItems((prev) => prev.filter((i) => i.id !== id)));
           });
         },
+        portal: (x, y, mode, close) => add({ kind: 'portal', id: ++seq.current, x, y, still: mode === 'still', close }),
+        sparks: (points, mode) =>
+          points.forEach((pt, i) => later(i * WIN_SPARK_STAGGER_MS, () => add({ kind: 'sparks', id: ++seq.current, x: pt.x, y: pt.y, still: mode === 'still' }))),
+        leakReplay: (points, drawable, size, mode) =>
+          add({ kind: 'replay', id: ++seq.current, points, drawable, size, still: mode === 'still' }),
         clear: () => {
           for (const t of timers.current) clearTimeout(t);
           timers.current.clear();

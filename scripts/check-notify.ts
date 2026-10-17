@@ -128,6 +128,8 @@ ok('pause (modal / tip / wave-critical): only ERROR goes up');
   assert.equal(enqueueNotice(EMPTY_NOTICES, { kind: 'notify', title: 'Back' }, 0, 'important'), EMPTY_NOTICES, 'Important only drops NOTIFY');
   assert.notEqual(enqueueNotice(EMPTY_NOTICES, { kind: 'error', title: 'No' }, 0, 'important'), EMPTY_NOTICES);
   assert.notEqual(enqueueNotice(EMPTY_NOTICES, { kind: 'celebrate', title: 'Yes' }, 0, 'important'), EMPTY_NOTICES);
+  // A game-critical NOTIFY (Turf War "BOSS INCOMING", emci 2026-10-17) still shows on Important only.
+  assert.notEqual(enqueueNotice(EMPTY_NOTICES, { kind: 'notify', title: 'BOSS INCOMING', important: true }, 0, 'important'), EMPTY_NOTICES, 'Important only keeps an important NOTIFY');
 }
 ok('durations 3.5 / 3 / 5 s (+1 s Reduce Motion); "Important only" = ERROR + CELEBRATE');
 

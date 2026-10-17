@@ -26,6 +26,8 @@ export type NoticeInput = {
   /** Repeats with the same key merge into one notice with a ×N counter. */
   dedupeKey?: string;
   priority?: NoticePriority;
+  /** A game-critical NOTIFY that still shows on "Important only" (Turf War "BOSS INCOMING", emci 2026-10-17). */
+  important?: boolean;
 };
 
 export type Notice = {
@@ -105,9 +107,9 @@ export function noticeDuration(kind: NoticeKind, reduceMotion: boolean): number 
   return NOTICE_MS[kind] + (reduceMotion ? NOTICE_REDUCE_MOTION_EXTRA_MS : 0);
 }
 
-/** "Important only" shows ERROR and CELEBRATE; "All" shows everything. */
-export function noticeAllowed(kind: NoticeKind, mode: NoticeMode): boolean {
-  return mode === 'all' || kind !== 'notify';
+/** "Important only" shows ERROR, CELEBRATE and a NOTIFY marked `important`; "All" shows everything. */
+export function noticeAllowed(kind: NoticeKind, mode: NoticeMode, important = false): boolean {
+  return mode === 'all' || kind !== 'notify' || important;
 }
 
 /** The text a screen reader hears when it shows. */
@@ -142,7 +144,7 @@ function capWaiting(waiting: Notice[]): Notice[] {
  * total count. Over the cap, the oldest low-priority waiting notice drops.
  */
 export function enqueueNotice(q: NoticeQueue, input: NoticeInput, now: number, mode: NoticeMode = 'all'): NoticeQueue {
-  if (!noticeAllowed(input.kind, mode)) return q;
+  if (!noticeAllowed(input.kind, mode, input.important)) return q;
   const key = keyOf(input);
   if (q.showing && q.showing.key === key && now - q.showing.at < NOTICE_DEDUPE_MS) {
     // Same notice is up: bump the counter and restart its timer so the ×N can be read.

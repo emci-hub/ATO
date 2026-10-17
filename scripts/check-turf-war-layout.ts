@@ -49,6 +49,26 @@ import {
   enrageWarning,
   telegraphStart,
 } from '../src/play/turf-boss-fx-rules';
+import {
+  BEAT_DURATIONS,
+  BEAT_FX,
+  CELL_UNITS,
+  LEAK_REPLAY_CELLS,
+  LOSE_BEAT_MS,
+  PORTAL_CLOSE_FROM,
+  PORTAL_MS,
+  WAVE_CLEAR_MS,
+  WIN_SPARK_MAX,
+  WIN_SPARK_MS,
+  beatFxFlags,
+  leakReplayPath,
+  portalPoint,
+  sparkPoint,
+  waveStartNotice,
+  winBeatMs,
+} from '../src/play/turf-beat-fx-rules';
+import { noticeAllowed, noticeCopyProblem } from '../src/play/notify/queue';
+import { PNG } from 'pngjs';
 import { allBoundBossDefs } from '../src/play/engine/bound-boss';
 import { allBossBands } from '../src/play/engine/bands';
 
@@ -257,7 +277,8 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(ui, /export const TurfAmbient = memo\(/, 'the layer is memoised (the sim ticks every 100 ms, the layer does not)');
   assert.match(ui, /t\.value = 0;\s+t\.value = withDelay/, 'an animated loop starts at frame 0 (withRepeat restarts from the start value)');
   const src = read('src/play/defend-screen.tsx');
-  const board = src.indexOf("<ClipImage drawable={{ kind: 'sheet', sheetKey: streetBoardKey, frameKey: 'img' }} />");
+  // T7: the baked board image is the memoised `TurfBoardBase` layer (same image, same place in the stack).
+  const board = src.indexOf('<TurfBoardBase sheetKey={streetBoardKey} />');
   const ambient = src.indexOf('<TurfAmbient ');
   const units = src.indexOf('<Svg width="100%" height="100%" viewBox="0 0 100 100">');
   assert.ok(board > 0 && ambient > board && units > ambient, 'order: baked board, ambient layer, then the units SVG');
@@ -426,6 +447,131 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(src, /if \(bossFlagsNow\.hitStop\) setHitStop\(true\);/, 'boss death hit stop only when allowed (the same ≤ 60 ms timer)');
   assert.match(src, /if \(old\.kind === 'boss' && !step\.leak\)/, 'the boss blast plays on a kill, never on a leak');
   ok('boss effects: notice-lane warn (no in-stage banner), every ability telegraphed ≥ 600 ms at 1x / 2x, boss bar in the top bar box, Off / Reduce Motion = no flash / shake / hit stop');
+}
+
+{
+  // T7: polish beats — wave start (lane line + portal), wave clear (portal closes at the exit), win sparks, leak replay.
+  // Sheets packed as one-shots with the timings in the table, every beat drawn inside the board, Off / calm motion =
+  // no beat motion and never a flash / shake / hit stop, the lane line fits the notice limits, BOSS INCOMING shows on
+  // "Important only", and the static board layers are memoised (the perf pass).
+  const meta = JSON.parse(read('assets/play/sheets/streetwear/meta.json')) as { fx: Record<string, { frames: number; fps: number; loop: boolean }> };
+  const lengthMs = (key: string, from = 0) => ((meta.fx[key]!.frames - from) / meta.fx[key]!.fps) * 1000;
+  for (const [name, key] of Object.entries(BEAT_FX)) {
+    const fx = meta.fx[key];
+    assert.ok(fx && !fx.loop, `${name}: ${key} is packed and plays once (only "shot" loops)`);
+  }
+  assert.ok(Math.abs(lengthMs(BEAT_FX.portal) - PORTAL_MS) <= 50, 'portal timing matches its sheet');
+  assert.ok(Math.abs(lengthMs(BEAT_FX.portal, PORTAL_CLOSE_FROM) - WAVE_CLEAR_MS) <= 50, 'wave-clear close timing matches the portal frames it plays');
+  assert.ok(Math.abs(lengthMs(BEAT_FX.sparks) - WIN_SPARK_MS) <= 50, 'win spark timing matches its sheet');
+  for (const [name, d] of Object.entries(BEAT_DURATIONS)) assert.ok(d.ms >= d.min && d.ms <= d.max, `${name}: ${d.ms} ms inside [${d.min}, ${d.max}]`);
+  assert.equal(winBeatMs(0), WAVE_CLEAR_MS, 'no tower: the card waits only for the clear');
+  assert.ok(winBeatMs(99) === winBeatMs(WIN_SPARK_MAX), 'the spark wait is capped');
+
+  // Every beat is drawn inside the board: the opaque pixels of every frame, around each sheet's anchor, at the real points.
+  const ART = 512 / 100; // art px per board unit
+  const reach = (el: string) => {
+    const dir = path.join(repo, 'art-src/pixellab/streetwear-pack/migrated/raw/fx/elements', el);
+    const png = PNG.sync.read(fs.readFileSync(path.join(dir, 'burst.png')));
+    const j = JSON.parse(fs.readFileSync(path.join(dir, 'burst.json'), 'utf8')) as { frames: { frame: { x: number; y: number; w: number; h: number } }[]; meta: { anchor: { x: number; y: number } } };
+    let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+    for (const { frame } of j.frames) {
+      for (let y = 0; y < frame.h; y += 1) for (let x = 0; x < frame.w; x += 1) {
+        if (png.data[((frame.y + y) * png.width + frame.x + x) * 4 + 3]! < 16) continue;
+        l = Math.min(l, x); r = Math.max(r, x + 1); t = Math.min(t, y); b = Math.max(b, y + 1);
+      }
+    }
+    const { x: ax, y: ay } = j.meta.anchor;
+    return { left: (ax - l) / ART, right: (r - ax) / ART, up: (ay - t) / ART, down: (b - ay) / ART };
+  };
+  const inside = (name: string, p: { x: number; y: number }, k: ReturnType<typeof reach>) => {
+    assert.ok(p.x - k.left >= 0 && p.x + k.right <= 100 && p.y - k.up >= 0 && p.y + k.down <= 100, `${name} at (${p.x.toFixed(1)}, ${p.y.toFixed(1)}) stays inside the board`);
+  };
+  const gate = reach('gate');
+  const cheer = reach('cheer');
+  for (const map of Object.values(BOARD_MAPS)) {
+    inside(`${map.id}: wave-start portal`, portalPoint(map.path[0]!), gate);
+    inside(`${map.id}: wave-clear portal`, portalPoint(map.path[map.path.length - 1]!), gate);
+    for (const pad of map.pads) inside(`${map.id}: win sparks over pad (${pad.x}, ${pad.y})`, sparkPoint(pad), cheer);
+    const replay = leakReplayPath(map.path);
+    const end = map.path[map.path.length - 1]!;
+    const last = replay[replay.length - 1]!;
+    assert.ok(Math.hypot(last.x - end.x * 100, last.y - end.y * 100) < 1e-6, `${map.id}: the replay ends at the exit`);
+    let len = 0;
+    for (let i = 1; i < replay.length; i += 1) len += Math.hypot(replay[i]!.x - replay[i - 1]!.x, replay[i]!.y - replay[i - 1]!.y);
+    assert.ok(Math.abs(len - LEAK_REPLAY_CELLS * CELL_UNITS) <= 0.5, `${map.id}: the replay walks the last ${LEAK_REPLAY_CELLS} cells (${len.toFixed(2)} units)`);
+    for (const pt of replay) assert.ok(pt.x >= 0 && pt.x <= 100 && pt.y >= 0 && pt.y <= 100, `${map.id}: replay point inside the board`);
+  }
+
+  // What plays, per Effects Quality and Motion: Off = no beat; Reduce Motion / Motion Off = still frames only.
+  const still = { vestibularSafe: true, cosmeticsStill: false };
+  const motionOff = { vestibularSafe: true, cosmeticsStill: true };
+  const fullMotion = { vestibularSafe: false, cosmeticsStill: false };
+  assert.deepEqual(beatFxFlags('off', fullMotion), { portal: null, clear: null, sparks: null, sparkEvery: 1, replay: null }, 'Off = no beat');
+  assert.deepEqual(beatFxFlags('minimal', fullMotion), { portal: 'anim', clear: 'anim', sparks: 'anim', sparkEvery: 2, replay: 'anim' }, 'Minimal = every beat, sparks on every other tower');
+  assert.deepEqual(beatFxFlags('full', fullMotion), { portal: 'anim', clear: 'anim', sparks: 'anim', sparkEvery: 1, replay: 'anim' }, 'Full = every beat');
+  for (const m of [still, motionOff]) {
+    for (const q of ['full', 'minimal'] as const) {
+      const f = beatFxFlags(q, m);
+      assert.ok(f.portal === 'still' && f.clear === 'still' && f.sparks === 'still' && f.replay === 'still', `${q} + calm motion: every beat is a still frame`);
+    }
+  }
+  const beatsUi = read('src/play/turf-beat-fx.tsx');
+  assert.ok(!/react-native-svg/.test(beatsUi), 'the beats are not an SVG (nothing new inside the sim <Svg>)');
+  assert.ok(!/withRepeat/.test(beatsUi), 'no looping animation in the beats (one-shots only)');
+  assert.ok(!/shakeBoard|useBoardShake|setHitStop|tintColor="#FFFFFF"/.test(beatsUi), 'no beat shakes, stops the sim or flashes white');
+
+  // Motion audit across T4–T7 (one table): under Reduce Motion / Motion Off nothing flashes, shakes or stops the sim.
+  for (const m of [still, motionOff]) {
+    for (const q of ['full', 'minimal', 'off'] as const) {
+      const c = combatFxFlags(q, m);
+      const b = bossFxFlags(q, m);
+      assert.ok(!c.flash && !c.shake && !c.hitStop && !b.flash && !b.shake && !b.hitStop, `${q} + calm motion: no flash / shake / hit stop (T5 / T6)`);
+      assert.ok(b.summon !== 'anim' && b.telegraph === 'still' && b.death !== 'full', `${q} + calm motion: boss effects still / soft (T6)`);
+    }
+  }
+
+  const src = read('src/play/defend-screen.tsx');
+  assert.match(src, /const beatFlags = beatFxFlags\(fxQuality, playMotion\)/, 'beat flags come from Effects Quality + Motion');
+  assert.match(src, /calmRef\.current = playMotion\.vestibularSafe \|\| playMotion\.cosmeticsStill;/, 'calm motion is read for the exit ring');
+  assert.match(src, /fxLayer\.leak\([^;]*calmRef\.current\)/, 'the T5 exit ring is fade-only under calm motion');
+  assert.match(src, /fxLayer\.leakReplay\(leakReplayPath\(mapNow\.path\)/, 'a leak plays the replay along the real path');
+  assert.match(src, /holdResult\(LOSE_BEAT_MS\)/, 'the lost card waits for the replay (display only)');
+  assert.match(src, /holdResult\(winBeatMs\(over\.length\)\)/, 'the won card waits for the sparks (display only)');
+  assert.match(src, /fxLayer\.portal\(at\.x, at\.y, beats\.clear, true\)/, 'the wave clear closes the portal at the exit');
+  assert.match(src, /combatFxRef\.current\?\.portal\(at\.x, at\.y, portalMode, false\)/, 'the wave start opens the portal at the spawn');
+  {
+    // The win is still paid on the same tick: inside the `step.done` branch the beats start, then `winWave()` runs
+    // straight after — no timer, no early return in between (only the result CARD waits).
+    const doneAt = src.indexOf('if (step.done) {');
+    const holdAt = src.indexOf('holdResult(winBeatMs', doneAt);
+    const winAt = src.indexOf('winWave();', holdAt);
+    const between = src.slice(doneAt, winAt);
+    assert.ok(doneAt > 0 && holdAt > doneAt && winAt > holdAt, 'step.done → beats → winWave() in that order');
+    assert.ok(!/setTimeout|later\(|return;/.test(between), 'nothing delays or skips winWave() in the step.done branch');
+  }
+  assert.match(src, /notify\(\{ kind: 'notify', \.\.\.waveStartNotice\(/, 'the wave-start line goes through notify() into the NoticeLane');
+  assert.ok(!/LEAK_PULSE_MS|resultHold\s*\?/.test(src.slice(src.indexOf('frame={'), src.indexOf('topBar={'))), 'no beat changes the stage frame');
+  for (const wave of [1, 9, 20]) {
+    for (const n of [1, 14, 120]) {
+      const line = waveStartNotice(wave, 'Main', n);
+      assert.equal(noticeCopyProblem(line), null, `wave-start line fits the notice limits ("${line.title} · ${line.body}")`);
+    }
+  }
+  // BOSS INCOMING on "Important only" (emci 2026-10-17): the notice is marked important, which the queue lets through.
+  assert.match(src, /title: 'BOSS INCOMING', .*priority: 'high', important: true \}\);/, 'BOSS INCOMING is marked important');
+  assert.ok(noticeAllowed('notify', 'important', true) && !noticeAllowed('notify', 'important'), 'Important only shows an important NOTIFY, still drops the rest');
+
+  // Perf pass: the static board layers are memoised and stable per board (the sim re-renders every 100 ms).
+  const base = read('src/play/turf-board-base.tsx');
+  for (const name of ['TurfBoardBase', 'BoardDecorTiles', 'StaticRoad']) {
+    assert.match(base, new RegExp(`export const ${name} = memo\\(`), `${name} is memoised`);
+    assert.equal((src.match(new RegExp(`<${name} `, 'g')) ?? []).length, 1, `${name}: one mount`);
+  }
+  assert.ok(!/sheetKey: streetBoardKey, frameKey: 'img'/.test(src), 'the board image is no longer drawn inline (it re-rendered every tick)');
+  assert.match(src, /const decor = useMemo\(/, 'decor is memoised (stable memo props)');
+  assert.match(src, /const roadStamps = useMemo\(/, 'road stamps are memoised (stable memo props)');
+  assert.match(src, /const roadD = useMemo\(/, 'road path is memoised (stable memo props)');
+  ok('polish beats: sheets + timings, every beat inside the board, Off / calm = no beat motion, no flash / shake / hit stop (T4–T7 audit), lane line limits, BOSS INCOMING on Important only, static layers memoised');
 }
 
 console.log(`\ncheck:turf-war-layout — ${passed} groups passed.`);
