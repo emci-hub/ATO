@@ -193,7 +193,7 @@ and no new in-stage text nodes besides the pinned ones.
 - **Open / for later:** players on "Important only" notices don't see "BOSS INCOMING" (`notify` kind is hidden there; the old pill always showed); a Bound Boss placed mid-wave
   with a creep in range casts with no wind-up; a 1x → 2x switch mid wind-up shortens it; a boss drawn with a rotated single sprite gets no blast (fails safe). Not device-verified.
 
-#### Step T7 as built (2026-10-17, PR #70 squash `35c1040c`, OTA: see below; awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 33; emci answered the T6 phone check "passed")
+#### Step T7 as built (2026-10-17, PR #70 squash `35c1040c`, OTA iOS `01a14b42-c130-7b40-8343-2eb7908aa382`, group `7e9eb190` (commit `9423cb30`); awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 33; emci answered the T6 phone check "passed")
 - **emci before T7:** T6 phone check passed; "BOSS INCOMING" should also show on "Important only" → `NoticeInput.important` (only that one NOTIFY;
   `noticeAllowed(kind, mode, important)`, pinned by `check:notify`); no other change wanted.
 - **Stop 1 picks (all recommended):** wave start = new cyan street portal (`gate/burst` 80×56 ×14 @ 12 fps = 1.17 s, own vfx layers, flat ground ellipse; cyan
