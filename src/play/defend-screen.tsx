@@ -217,7 +217,9 @@ import { swordRuntime } from '@/play/swords';
 import { StatusIconRow, WeaknessDiamond } from '@/play/status-icon-row';
 import { statusIconsFor } from '@/play/status-icons';
 import { countOnce } from '@/play/play-counters';
-import { padTapRadiusUnits, turfBoardSide } from '@/play/turf-layout';
+import { TurfBuildCard, type TurfChoice } from '@/play/turf-build-card';
+import { padTapRadiusUnits, turfBoardRect, turfBoardSide } from '@/play/turf-layout';
+import { TurfButton, TurfResultCard } from '@/play/turf-ui';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
 const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
@@ -788,6 +790,9 @@ export function DefendScreen({
     }),
   );
   const [selectedPad, setSelectedPad] = useState<number | null>(null);
+  /** Mirrors `selectedPad` for the board tap handler (an empty-board tap closes an open build card). */
+  const selectedPadRef = useRef<number | null>(null);
+  selectedPadRef.current = selectedPad;
   /** God mode — starts from the §9c tune doc (BrokenOP turns it on). */
   const [godMode, setGodMode] = useState(() => getTune().godMode);
   /** Dev kit only: mirrors the tune doc's `devNoCaps` so the row re-renders. */
@@ -910,10 +915,14 @@ export function DefendScreen({
   const allowedBossesRef = useRef<ReadonlyMap<string, number>>(new Map());
   const runStartScrapRef = useRef(0);
   const initialRestoreDoneRef = useRef(false);
-  /** Placement preview (press and hold a build option): the ring the choice
+  /** Placement preview (the first tap on a build choice arms it): the ring the choice
    * would have on the selected pad. Avatar aim: the Avatar's range ring under
    * the finger before release. Display only. */
   const [placePreview, setPlacePreview] = useState<{ range: number; color: string; pull: boolean } | null>(null);
+  // The armed range ring belongs to one open card: a different pad or a closed card drops it.
+  useEffect(() => {
+    setPlacePreview(null);
+  }, [selectedPad]);
   const [avatarAim, setAvatarAim] = useState<{ x: number; y: number } | null>(null);
   const avatarAimAtRef = useRef(0);
   /** Per-tower aim rotation (deg), keyed by tower id; kept between shots. */
@@ -2249,7 +2258,10 @@ export function DefendScreen({
     const prev = simRef.current;
     if (!prev) return;
     const next = placeBoundBoss(prev, selectedPad, bossId, stars);
-    if (!next) return;
+    if (!next) {
+      setPlacePreview(null);
+      return;
+    }
     setPlacePreview(null);
     commitBoard(next);
     // A6 — seed the bound boss's clip player the moment it lands so its idle
@@ -2498,6 +2510,12 @@ export function DefendScreen({
         setSelectedPad((prev) => (prev === hit ? null : hit));
         return;
       }
+      // An open build card closes on an empty-board tap (and that tap does not also walk the Avatar).
+      if (selectedPadRef.current != null && phaseRef.current === 'setup') {
+        setPlacePreview(null);
+        setSelectedPad(null);
+        return;
+      }
       const target = {
         x: Math.max(0, Math.min(100, bx)),
         y: Math.max(0, Math.min(100, by)),
@@ -2670,6 +2688,275 @@ export function DefendScreen({
   const boardSide = turfBoardSide(setupFrame.stage);
   // Pause menu (Resume · Leave): open while the wave is paused, hidden under the Leave confirm.
   const pauseMenuOpen = live && paused && !leaveConfirmOpen;
+
+  /** Lost → Retry: the same wave, towers kept (unchanged logic, moved out of the JSX). */
+  const retryLostRun = () => {
+    if (!sim) return;
+    setSim(() => {
+      const fresh = {
+        ...retryDefendLive(sim),
+        scrap: Math.max(runStartScrapRef.current, KEPT_BOARD_MIN_SCRAP),
+      };
+      bankRestage(fresh);
+      return fresh;
+    });
+    winPaidRef.current = false;
+    leakNotedRef.current = false;
+    claimKeyRef.current = `defend:${playedRef.current.phase}:${playedRef.current.wave}:retry:${Date.now()}`;
+    setPhase('running');
+    setPaused(false);
+    setSelectedPad(null);
+    prevPuffsRef.current = [];
+    setFloaters([]);
+    shotsRef.current = [];
+    puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
+    setCorpses([]);
+    setShots([]);
+    setBossAlert(null);
+  };
+
+  const closePadCard = () => {
+    setPlacePreview(null);
+    setSelectedPad(null);
+  };
+
+  /** The build card at the tapped pad (T2): build choices, the tower's upgrade, or the bound tower's Remove. */
+  const padCard = (() => {
+    if (selectedPad == null || !boardMap.pads[selectedPad]) return null;
+    const pad = boardMap.pads[selectedPad];
+    const common = {
+      stage: { width: setupFrame.stage.width, height: setupFrame.stage.height, x: setupFrame.stage.x },
+      stageTop: setupFrame.notice.height,
+      pad,
+      onClose: closePadCard,
+      onPreviewEnd: () => setPlacePreview(null),
+    };
+    if (selectedTower) {
+      const cost = selectedTower.level < TOWER_MAX_LEVEL ? towerUpgradeCost(selectedTower) : null;
+      return (
+        <TurfBuildCard
+          key={`tower-${selectedPad}-${selectedTower.level}`}
+          {...common}
+          mode="tower"
+          title={TOWER_DEFS[selectedTower.kind].name}
+          level={selectedTower.level}
+          maxLevel={TOWER_MAX_LEVEL}
+          upgradeCost={cost}
+          affordable={cost != null && scrap >= cost}
+          onUpgrade={upgradeSelected}
+        />
+      );
+    }
+    if (selectedBoundBoss) {
+      const hero = isHeroBoundTower(selectedBoundBoss.bossId);
+      const bossDef = getBoundBossDef(selectedBoundBoss.bossId);
+      const info = hero
+        ? 'Bound hero tower — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the hero bound.'
+        : boundBossHeroId(selectedBoundBoss.bossId)
+          ? `${heroName(boundBossHeroId(selectedBoundBoss.bossId)!)} kit — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the boss bound.`
+          : `Bound Boss — fixed on the pad, stars only (no scrap upgrade). ${bossDef?.skill.name}: ${bossDef?.skill.description}`;
+      return (
+        <TurfBuildCard
+          key={`boss-${selectedPad}`}
+          {...common}
+          mode="boss"
+          title={hero ? heroName(selectedBoundBoss.bossId) : `${bossDef?.name ?? 'Bound Boss'} ★${selectedBoundBoss.stars}`}
+          info={info}
+          onRemove={removeSelectedBoundBoss}
+        />
+      );
+    }
+    const choices: TurfChoice[] = (Object.keys(TOWER_DEFS) as TowerKind[]).map((kind) => {
+      const def = TOWER_DEFS[kind];
+      return {
+        key: kind,
+        name: def.name,
+        detail: atTowerCap ? `max ${MAX_TOWERS}` : `${def.placeCost} scrap`,
+        affordable: scrap >= def.placeCost && !atTowerCap,
+        onArm: () => {
+          const kit = TOWER_KITS[kind];
+          setPlacePreview({
+            range: def.range,
+            color: kit.element ? ELEMENT_COLOR[kit.element] : theme.accent,
+            pull: false,
+          });
+        },
+        onBuy: () => placeOnPad(kind),
+      };
+    });
+    for (const bb of unlockedBoundBosses) {
+      const def = getBoundBossDef(bb.id);
+      const hero = isHeroBoundTower(bb.id);
+      const placeCost = hero ? HERO_TOWER_STATS.placeCost : def?.place_cost ?? 0;
+      const atCap = boundBossCount >= boundBossCapOnBoard();
+      choices.push({
+        key: `boss-${bb.id}`,
+        name: hero ? heroName(bb.id) : def?.name ?? bb.id,
+        detail: `${hero ? 'free' : `★${bb.stars} · ${placeCost} scrap`}${atCap ? ' · max 2' : ''}`,
+        affordable: scrap >= placeCost && !atCap,
+        onArm: () => {
+          const heroKit = heroById(bb.id)?.kit;
+          setPlacePreview({
+            range: heroKit ? kitRange(heroKit, Math.max(1, Math.min(3, bb.stars))) : (def?.range ?? 18),
+            color: heroKit ? ELEMENT_COLOR[heroKit.element] : theme.accent,
+            pull: heroKit?.behavior === 'pull',
+          });
+        },
+        onBuy: () => placeOnBoundBoss(bb.id, bb.stars),
+      });
+    }
+    return (
+      <TurfBuildCard
+        key={`build-${selectedPad}`}
+        {...common}
+        mode="build"
+        title={`Build a tower${atTowerCap ? ` · ${MAX_TOWERS}/${MAX_TOWERS} deployed` : ` · ${towerCountLabel}`}`}
+        choices={choices}
+      />
+    );
+  })();
+
+  /** Won / lost result cards (copy and buttons as before; one primary button low on the card). */
+  const resultCard = (() => {
+    if (phase === 'won') {
+      const played = playedRef.current;
+      const lines = [`Avatar Lv ${view.avatarLevel} · ${view.lifetimeWavesCleared} waves cleared lifetime`];
+      let badge: string | undefined;
+      if (lastWin) {
+        lines.push(
+          `+${lastWin.tokensGranted} tokens · +${lastWin.shellsGranted} shells · +${lastWin.xpGranted} XP${
+            lastWin.swordDrop ? ` · ${lastWin.swordDrop}` : ''
+          }${lastWin.milestoneLook ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!` : ''}`,
+        );
+        if (lastWin.catchupXp) badge = '×2.5 EXP · Trial catch-up';
+        if (lastWin.dropItems.length > 0) {
+          lines.push(
+            `${dropLabelFor(played.phase, played.wave)} ${lastWin.dropItems
+              .map((id) => {
+                const name = getItemDef(id)?.core.name ?? id;
+                const unique = isUniqueDrop(dropTableForWave(played.phase, played.wave), id);
+                return unique ? `${name} (Unique)` : name;
+              })
+              .join(', ')}`,
+          );
+        }
+        if (lastWin.starTokenGranted) lines.push('Final drop: Avatar star');
+        if (lastWin.bossFragment) {
+          lines.push(
+            lastWin.bossFragment.starred
+              ? `${lastWin.bossFragment.name} bound ★${lastWin.bossFragment.stars}!`
+              : `Boss fragment · ${lastWin.bossFragment.frags}/${lastWin.bossFragment.nextCost ?? '—'}`,
+          );
+        }
+        if (lastWin.conquered) {
+          lines.push(`Conquered! Enemies now scale ×${lastWin.cyclePower.toFixed(2)}. Next cycle starts at Main wave 1.`);
+        } else if (lastWin.replayHalf) {
+          lines.push('Half-token replay — your campaign seat is exactly where you left it.');
+        } else if (lastWin.halved) {
+          lines.push('Half tokens today — come back tomorrow for full.');
+        }
+      } else {
+        lines.push(
+          played.mode === 'replay'
+            ? `Half-token replay — +${Math.floor(getTune().tokenClearBase / 2)} tokens · +${Math.floor(
+                xpForClear(sim?.wave ?? fight.wave) / 2,
+              )} XP`
+            : `+${getTune().tokenClearBase} tokens · +${xpForClear(sim?.wave ?? fight.wave)} XP`,
+        );
+      }
+      const replay = played.mode === 'replay';
+      return (
+        <TurfResultCard
+          title={
+            lastWin?.conquered
+              ? `Cycle ${lastWin.conqueredCycles} conquered — Main cleared!`
+              : replay
+                ? `Cleared ${campaignPhaseLabel(played.phase)} wave ${played.wave} (replay)`
+                : `Cleared ${fightTitle(played)}`
+          }
+          lines={lines}
+          badge={badge}
+          actions={[
+            ...(replay ? [{ label: 'Back to campaign', onPress: () => buildSetup(campaignFight) }] : []),
+            {
+              label: 'Share this clear',
+              onPress: () => void shareDefendClear(played.wave, view.avatarLevel),
+              accessibilityLabel: 'Share this clear',
+            },
+            {
+              label: 'Leave — back to Call wave',
+              onPress: () => leaveResultsToSetup(true),
+              accessibilityLabel: 'Leave to Defend setup',
+            },
+          ]}
+          primary={
+            replay
+              ? { label: 'Farm again', onPress: () => buildSetup(played) }
+              : {
+                  label: lastWin?.conquered ? 'Next cycle · Main wave 1' : `Next · ${fightTitle(campaignFight)}`,
+                  onPress: () => buildSetup(campaignFight),
+                }
+          }
+        />
+      );
+    }
+    if (phase === 'lost') {
+      return (
+        <TurfResultCard
+          title="The path was breached."
+          lines={[`One puff reached the exit — ${fightTitle(playedRef.current)} ends. Retry the same wave with your towers kept.`]}
+          actions={[
+            {
+              label: 'Leave — back to Call wave',
+              onPress: () => leaveResultsToSetup(false),
+              accessibilityLabel: 'Leave to Defend setup',
+            },
+          ]}
+          primary={{ label: 'Retry', onPress: retryLostRun }}
+        />
+      );
+    }
+    return null;
+  })();
+
+  const floatCards =
+    padCard || resultCard ? (
+      <>
+        {padCard ? (
+          <>
+            {/* Outside tap: the stage strips above and below the board close the card (the board's own empty tap does too). */}
+            {[0, 1].map((i) => {
+              const band = turfBoardRect(setupFrame.stage).y;
+              return (
+                <Pressable
+                  key={`band-${i}`}
+                  onPress={closePadCard}
+                  accessible={false}
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    height: band,
+                    top: setupFrame.notice.height + (i === 0 ? 0 : setupFrame.stage.height - band),
+                  }}
+                />
+              );
+            })}
+            {padCard}
+          </>
+        ) : null}
+        {resultCard ? (
+          <View
+            style={[
+              styles.turfFloatPanel,
+              { bottom: (live ? waveFrame : setupFrame).dock.height + 8, maxHeight: setupFrame.stage.height * 0.75 },
+            ]}>
+            <ScrollView contentContainerStyle={styles.turfFloatScroll}>{resultCard}</ScrollView>
+          </View>
+        ) : null}
+      </>
+    ) : null;
 
   // The baked street board for this map (Streetwear only; play-art-pack packSwBoards).
   const streetBoardKey = street ? boardSheet(boardMap.id) : undefined;
@@ -2899,8 +3186,8 @@ export function DefendScreen({
                       strokeDasharray="2 2"
                     />
                   ) : null}
-                  {/* Placement preview: press and hold a build option to see its
-                   * ring on the pad before committing. */}
+                  {/* Placement preview: tap a build option once to see its
+                   * ring on the pad; tap again to build. */}
                   {placePreview && selectedPad != null && boardMap.pads[selectedPad] ? (
                     <Circle
                       cx={boardMap.pads[selectedPad].x}
@@ -2978,19 +3265,20 @@ export function DefendScreen({
                         <G transform={transform}>
                           <ClipSprite drawable={drawable} x={box.x} y={box.y} size={box.size} />
                         </G>
-                        {/* Tiny Space Mono role letter at the sprite's top-right —
-                         * outside the rotate group so it never spins. Anchored to
-                         * the visible art corner, not the padded box corner. */}
-                        <SvgText
-                          x={box.x + box.size * TOWER_BADGE_X_FRAC}
-                          y={box.y + box.size * TOWER_BADGE_Y_FRAC}
-                          fontSize={TOWER_MARKER_SIZE}
-                          fontFamily="SpaceMono_700Bold"
-                          fill={TOWER_MARKER_COLOR}
-                          textAnchor="end"
-                          opacity={0.95}>
-                          {TOWER_LETTER[tower.kind]}
-                        </SvgText>
+                        {/* Level pips (T2, replaces the role letter): one dot per level at the
+                         * sprite's top-right — outside the rotate group so they never spin.
+                         * Anchored to the visible art corner, not the padded box corner. */}
+                        {Array.from({ length: tower.level }, (_, pip) => (
+                          <Circle
+                            key={`pip-${tower.id}-${pip}`}
+                            cx={box.x + box.size * TOWER_BADGE_X_FRAC - pip * TOWER_PIP_STEP}
+                            cy={box.y + box.size * TOWER_BADGE_Y_FRAC}
+                            r={TOWER_PIP_R}
+                            fill={TOWER_MARKER_COLOR}
+                            stroke="#0D0D0F"
+                            strokeWidth={0.4}
+                          />
+                        ))}
                       </G>
                     );
                   })}
@@ -3426,10 +3714,13 @@ export function DefendScreen({
         dock={
           live ? (
             <View style={[styles.turfDock, { paddingBottom: Math.max(setupFrame.insets.bottom, 8) }]}>
-              <NeonButton
-                label={skillReady ? `Cast · ${activeSkill.name}` : `${activeSkill.name} · ${skillSeconds}s`}
-                variant="danger"
-                disabled={!skillReady}
+              <TurfButton
+                label={`Cast · ${activeSkill.name}`}
+                icon="flash"
+                detail={skillReady ? 'Ready' : `${skillSeconds}s`}
+                state={skillReady ? 'ready' : 'cooling'}
+                progress={(sim?.skillCooldownMs ?? 0) / Math.max(1, getTune().skillCooldownMs)}
+                primary={skillReady}
                 onPress={castSkill}
                 accessibilityLabel={
                   skillReady ? `Cast ${activeSkill.name}` : `Skill ${activeSkill.name} cooling, ${skillSeconds} seconds`
@@ -3438,19 +3729,23 @@ export function DefendScreen({
               />
               <View style={styles.streetDockRow}>
                 {pounceAvailable ? (
-                  <NeonButton
-                    label={`${pounceReady ? 'Pounce' : 'Pounce used'}${pumpedLabel ?? ''}`}
-                    variant={pumpedOn ? 'primary' : 'secondary'}
-                    disabled={!pounceReady}
+                  <TurfButton
+                    label={`Pounce${pumpedLabel ?? ''}`}
+                    icon="paw"
+                    detail={pounceReady ? 'Ready' : 'Used'}
+                    state={pounceReady ? (pumpedOn ? 'selected' : 'ready') : 'used'}
                     onPress={castPounce}
+                    accessibilityLabel={pounceReady ? 'Pet pounce' : 'Pet pounce used'}
                     style={styles.streetGrow}
                   />
                 ) : null}
                 {GAME_SPEEDS.map((value) => (
-                  <NeonButton
+                  <TurfButton
                     key={value}
                     label={`${value}×`}
-                    variant={speed === value ? 'primary' : 'secondary'}
+                    icon={value === 1 ? 'play' : 'fast-forward'}
+                    state={speed === value ? 'selected' : 'ready'}
+                    primary={speed === value}
                     onPress={() => setSpeed(value)}
                     accessibilityLabel={`Speed ${value} times`}
                     style={styles.streetSpeed}
@@ -3502,389 +3797,9 @@ export function DefendScreen({
                 <NeonButton label="Leave" variant="secondary" onPress={requestLeaveRun} accessibilityLabel="Leave run" style={styles.turfPauseButton} />
               </View>
             </View>
-          ) : selectedPad != null || phase === 'won' || phase === 'lost' ? (
-            <View
-              style={[
-                styles.turfFloatPanel,
-                { bottom: (live ? waveFrame : setupFrame).dock.height + 8, maxHeight: setupFrame.stage.height * 0.75 },
-              ]}>
-              <ScrollView contentContainerStyle={styles.turfFloatScroll}>
-                {selectedPad != null ? (
-                  <ThemedView type="backgroundElement" style={styles.card}>
-                    {selectedTower ? (
-                      <>
-                        <ThemedText type="smallBold">
-                          {TOWER_DEFS[selectedTower.kind].name} · level {selectedTower.level}/{TOWER_MAX_LEVEL}
-                        </ThemedText>
-                        {selectedTower.level < TOWER_MAX_LEVEL ? (
-                          <Pressable
-                            onPress={upgradeSelected}
-                            disabled={scrap < towerUpgradeCost(selectedTower)}
-                            accessibilityRole="button"
-                            style={({ pressed }) => [
-                              styles.primaryButton,
-                              {
-                                backgroundColor:
-                                  scrap >= towerUpgradeCost(selectedTower)
-                                    ? theme.accentFill
-                                    : theme.backgroundSelected,
-                              },
-                              pressed && styles.pressed,
-                            ]}>
-                            <ThemedText
-                              type="smallBold"
-                              style={{
-                                color:
-                                  scrap >= towerUpgradeCost(selectedTower)
-                                    ? theme.onAccent
-                                    : theme.textSecondary,
-                              }}>
-                              Upgrade · {towerUpgradeCost(selectedTower)} scrap
-                            </ThemedText>
-                          </Pressable>
-                        ) : (
-                          <ThemedText type="small" themeColor="textSecondary">
-                            Fully upgraded.
-                          </ThemedText>
-                        )}
-                      </>
-                    ) : selectedBoundBoss ? (
-                      <>
-                        <ThemedText type="smallBold">
-                          {isHeroBoundTower(selectedBoundBoss.bossId)
-                            ? heroName(selectedBoundBoss.bossId)
-                            : getBoundBossDef(selectedBoundBoss.bossId)?.name ?? 'Bound Boss'}
-                          {isHeroBoundTower(selectedBoundBoss.bossId) ? ' · bound hero' : ` · ★${selectedBoundBoss.stars}`}
-                        </ThemedText>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {isHeroBoundTower(selectedBoundBoss.bossId)
-                            ? 'Bound hero tower — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the hero bound.'
-                            : boundBossHeroId(selectedBoundBoss.bossId)
-                              ? `${heroName(boundBossHeroId(selectedBoundBoss.bossId)!)} kit — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the boss bound.`
-                              : `Bound Boss — fixed on the pad, stars only (no scrap upgrade). ${
-                                  getBoundBossDef(selectedBoundBoss.bossId)?.skill.name
-                                }: ${getBoundBossDef(selectedBoundBoss.bossId)?.skill.description}`}
-                        </ThemedText>
-                        <Pressable
-                          onPress={removeSelectedBoundBoss}
-                          accessibilityRole="button"
-                          style={({ pressed }) => [styles.hudButton, pressed && styles.pressed]}>
-                          <ThemedText type="smallBold" themeColor="textSecondary">
-                            Remove
-                          </ThemedText>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <>
-                        <ThemedText type="smallBold">
-                          Build a tower
-                          {atTowerCap ? ` · ${MAX_TOWERS}/${MAX_TOWERS} deployed` : ` · ${towerCountLabel}`}
-                        </ThemedText>
-                        {(Object.keys(TOWER_DEFS) as TowerKind[]).map((kind) => {
-                          const def = TOWER_DEFS[kind];
-                          const affordable = scrap >= def.placeCost && !atTowerCap;
-                          return (
-                            <Pressable
-                              key={kind}
-                              onPressIn={() => {
-                                const kit = TOWER_KITS[kind];
-                                setPlacePreview({
-                                  range: def.range,
-                                  color: kit.element ? ELEMENT_COLOR[kit.element] : theme.accent,
-                                  pull: false,
-                                });
-                              }}
-                              onPressOut={() => setPlacePreview(null)}
-                              onPress={() => placeOnPad(kind)}
-                              disabled={!affordable}
-                              accessibilityRole="button"
-                              style={({ pressed }) => [
-                                styles.hudButton,
-                                { backgroundColor: affordable ? theme.backgroundSelected : theme.backgroundElement },
-                                pressed && affordable && styles.pressed,
-                              ]}>
-                              <ThemedText
-                                type="smallBold"
-                                themeColor={affordable ? undefined : 'textSecondary'}>
-                                {def.name} · {def.placeCost} scrap
-                                {atTowerCap ? ` · max ${MAX_TOWERS}` : ''}
-                              </ThemedText>
-                            </Pressable>
-                          );
-                        })}
-                        {unlockedBoundBosses.length > 0 ? (
-                          <>
-                            <ThemedText type="smallBold" themeColor="textSecondary">
-                              Bound Boss
-                            </ThemedText>
-                            {unlockedBoundBosses.map((bb) => {
-                              const def = getBoundBossDef(bb.id);
-                              const hero = isHeroBoundTower(bb.id);
-                              const placeCost = hero ? HERO_TOWER_STATS.placeCost : def?.place_cost ?? 0;
-                              const affordable = scrap >= placeCost;
-                              const atCap = boundBossCount >= boundBossCapOnBoard();
-                              return (
-                                <Pressable
-                                  key={bb.id}
-                                  onPressIn={() => {
-                                    const heroKit = heroById(bb.id)?.kit;
-                                    setPlacePreview({
-                                      range: heroKit
-                                        ? kitRange(heroKit, Math.max(1, Math.min(3, bb.stars)))
-                                        : (def?.range ?? 18),
-                                      color: heroKit ? ELEMENT_COLOR[heroKit.element] : theme.accent,
-                                      pull: heroKit?.behavior === 'pull',
-                                    });
-                                  }}
-                                  onPressOut={() => setPlacePreview(null)}
-                                  onPress={() => placeOnBoundBoss(bb.id, bb.stars)}
-                                  disabled={!affordable || atCap}
-                                  accessibilityRole="button"
-                                  style={({ pressed }) => [
-                                    styles.hudButton,
-                                    {
-                                      backgroundColor:
-                                        affordable && !atCap
-                                          ? theme.backgroundSelected
-                                          : theme.backgroundElement,
-                                    },
-                                    pressed && affordable && !atCap && styles.pressed,
-                                  ]}>
-                                  <ThemedText
-                                    type="smallBold"
-                                    themeColor={affordable && !atCap ? undefined : 'textSecondary'}>
-                                    {hero ? heroName(bb.id) : def?.name ?? bb.id}
-                                    {hero ? ' · free' : ` ★${bb.stars} · ${placeCost} scrap`}
-                                    {atCap ? ' · max 2' : ''}
-                                  </ThemedText>
-                                </Pressable>
-                              );
-                            })}
-                          </>
-                        ) : null}
-                      </>
-                    )}
-                    <Pressable
-                      onPress={() => setSelectedPad(null)}
-                      accessibilityRole="button"
-                      style={({ pressed }) => [styles.hudButton, pressed && styles.pressed]}>
-                      <ThemedText type="smallBold" themeColor="textSecondary">
-                        Done
-                      </ThemedText>
-                    </Pressable>
-                  </ThemedView>
-                ) : null}
-                {phase === 'won' ? (
-                  <ThemedView type="backgroundElement" style={styles.card}>
-                    <ThemedText type="smallBold">
-                      {lastWin?.conquered
-                        ? `Cycle ${lastWin.conqueredCycles} conquered — Main cleared!`
-                        : playedRef.current.mode === 'replay'
-                          ? `Cleared ${campaignPhaseLabel(playedRef.current.phase)} wave ${playedRef.current.wave} (replay)`
-                          : `Cleared ${fightTitle(playedRef.current)}`}
-                    </ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      Avatar Lv {view.avatarLevel} · {view.lifetimeWavesCleared} waves cleared lifetime
-                    </ThemedText>
-                    {lastWin ? (
-                      <>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          +{lastWin.tokensGranted} tokens · +{lastWin.shellsGranted} shells · +{lastWin.xpGranted} XP
-                          {lastWin.swordDrop ? ` · ${lastWin.swordDrop}` : ''}
-                          {lastWin.milestoneLook
-                            ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!`
-                            : ''}
-                        </ThemedText>
-                        {lastWin.catchupXp ? (
-                          <View
-                            style={[
-                              styles.xpBadge,
-                              { backgroundColor: theme.backgroundSelected },
-                            ]}>
-                            <ThemedText type="code" themeColor="emphasis">
-                              ×2.5 EXP · Trial catch-up
-                            </ThemedText>
-                          </View>
-                        ) : null}
-                        {lastWin.dropItems.length > 0 ? (
-                          <ThemedText type="small" themeColor="textSecondary">
-                            {dropLabelFor(playedRef.current.phase, playedRef.current.wave)}{' '}
-                            {lastWin.dropItems
-                              .map((id) => {
-                                const name = getItemDef(id)?.core.name ?? id;
-                                const unique = isUniqueDrop(
-                                  dropTableForWave(playedRef.current.phase, playedRef.current.wave),
-                                  id,
-                                );
-                                return unique ? `${name} (Unique)` : name;
-                              })
-                              .join(', ')}
-                          </ThemedText>
-                        ) : null}
-                        {lastWin.starTokenGranted ? (
-                          <ThemedText type="small" themeColor="textSecondary">
-                            Final drop: Avatar star
-                          </ThemedText>
-                        ) : null}
-                        {lastWin.bossFragment ? (
-                          <ThemedText type="small" themeColor="textSecondary">
-                            {lastWin.bossFragment.starred
-                              ? `${lastWin.bossFragment.name} bound ★${lastWin.bossFragment.stars}!`
-                              : `Boss fragment · ${lastWin.bossFragment.frags}/${lastWin.bossFragment.nextCost ?? '—'}`}
-                          </ThemedText>
-                        ) : null}
-                        {lastWin.conquered ? (
-                          <ThemedText type="small" themeColor="textSecondary" style={styles.conqueredNote}>
-                            Conquered! Enemies now scale ×{lastWin.cyclePower.toFixed(2)}. Next cycle
-                            starts at Main wave 1.
-                          </ThemedText>
-                        ) : lastWin.replayHalf ? (
-                          <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
-                            Half-token replay — your campaign seat is exactly where you left it.
-                          </ThemedText>
-                        ) : lastWin.halved ? (
-                          <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
-                            Half tokens today — come back tomorrow for full.
-                          </ThemedText>
-                        ) : null}
-                      </>
-                    ) : (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {playedRef.current.mode === 'replay'
-                          ? `Half-token replay — +${Math.floor(getTune().tokenClearBase / 2)} tokens · +${Math.floor(
-                              xpForClear(sim?.wave ?? fight.wave) / 2,
-                            )} XP`
-                          : `+${getTune().tokenClearBase} tokens · +${xpForClear(sim?.wave ?? fight.wave)} XP`}
-                      </ThemedText>
-                    )}
-                    {playedRef.current.mode === 'replay' ? (
-                      <>
-                        <Pressable
-                          onPress={() => buildSetup(playedRef.current)}
-                          accessibilityRole="button"
-                          style={({ pressed }) => [
-                            styles.primaryButton,
-                            { backgroundColor: theme.accentFill },
-                            pressed && styles.pressed,
-                          ]}>
-                          <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                            Farm again
-                          </ThemedText>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => buildSetup(campaignFight)}
-                          accessibilityRole="button"
-                          style={({ pressed }) => [
-                            styles.hudButton,
-                            { backgroundColor: theme.backgroundSelected },
-                            pressed && styles.pressed,
-                          ]}>
-                          <ThemedText type="smallBold" themeColor="textSecondary">
-                            Back to campaign
-                          </ThemedText>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <Pressable
-                        onPress={() => buildSetup(campaignFight)}
-                        accessibilityRole="button"
-                        style={({ pressed }) => [
-                          styles.primaryButton,
-                          { backgroundColor: theme.accentFill },
-                          pressed && styles.pressed,
-                        ]}>
-                        <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                          {lastWin?.conquered
-                            ? 'Next cycle · Main wave 1'
-                            : `Next · ${fightTitle(campaignFight)}`}
-                        </ThemedText>
-                      </Pressable>
-                    )}
-                    <Pressable
-                      onPress={() => void shareDefendClear(playedRef.current.wave, view.avatarLevel)}
-                      accessibilityRole="button"
-                      accessibilityLabel="Share this clear"
-                      style={({ pressed }) => [
-                        styles.hudButton,
-                        { backgroundColor: theme.backgroundSelected },
-                        pressed && styles.pressed,
-                      ]}>
-                      <ThemedText type="smallBold">Share this clear</ThemedText>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => leaveResultsToSetup(true)}
-                      accessibilityRole="button"
-                      accessibilityLabel="Leave to Defend setup"
-                      style={({ pressed }) => [
-                        styles.hudButton,
-                        { backgroundColor: theme.backgroundSelected },
-                        pressed && styles.pressed,
-                      ]}>
-                      <ThemedText type="smallBold">Leave — back to Call wave</ThemedText>
-                    </Pressable>
-                  </ThemedView>
-                ) : null}
-
-                    {phase === 'lost' ? (
-                      <ThemedView type="backgroundElement" style={styles.card}>
-                        <ThemedText type="smallBold">The path was breached.</ThemedText>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          One puff reached the exit — {fightTitle(playedRef.current)} ends. Retry the same
-                          wave with your towers kept.
-                        </ThemedText>
-                        <Pressable
-                          onPress={() => {
-                            if (sim) {
-                              setSim(() => {
-                                const fresh = {
-                                  ...retryDefendLive(sim),
-                                  scrap: Math.max(runStartScrapRef.current, KEPT_BOARD_MIN_SCRAP),
-                                };
-                                bankRestage(fresh);
-                                return fresh;
-                              });
-                              winPaidRef.current = false;
-                              leakNotedRef.current = false;
-                              claimKeyRef.current = `defend:${playedRef.current.phase}:${playedRef.current.wave}:retry:${Date.now()}`;
-                              setPhase('running');
-                              setPaused(false);
-                              setSelectedPad(null);
-                              prevPuffsRef.current = [];
-                              setFloaters([]);
-                shotsRef.current = [];
-                puffFacingRef.current = {};
-                puffWalkFaceRef.current = {};
-                setCorpses([]);
-                setShots([]);
-                              setBossAlert(null);
-                            }
-                          }}
-                          accessibilityRole="button"
-                          style={({ pressed }) => [
-                            styles.primaryButton,
-                            { backgroundColor: theme.accentFill },
-                            pressed && styles.pressed,
-                          ]}>
-                          <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                            Retry
-                          </ThemedText>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => leaveResultsToSetup(false)}
-                          accessibilityRole="button"
-                          accessibilityLabel="Leave to Defend setup"
-                          style={({ pressed }) => [
-                            styles.hudButton,
-                            { backgroundColor: theme.backgroundSelected },
-                            pressed && styles.pressed,
-                          ]}>
-                          <ThemedText type="smallBold">Leave — back to Call wave</ThemedText>
-                        </Pressable>
-                      </ThemedView>
-                    ) : null}
-              </ScrollView>
-            </View>
-          ) : null
+          ) : (
+            floatCards
+          )
         }
         modal={
           <PlaySheet open={setupOpen && !live} title="Setup" onClose={() => setSetupOpen(false)} reduceMotion={reduceMotion}>
@@ -5016,19 +4931,15 @@ function puffUnitRole(puff: Puff, bandKind: string | undefined): SkinRoleId {
   return 'unit.puff';
 }
 
-/** Tiny Space Mono role marker drawn at the tower's top-right (replaces the old
- * solid pad disc). Neon cyan matches the board chrome's pad labels. */
-const TOWER_LETTER: Record<TowerKind, string> = {
-  archer: 'A',
-  vine: 'V',
-  crystal: 'C',
-};
+/** Level pips drawn at the tower's top-right. Neon cyan matches the board chrome's pad labels. */
 const TOWER_MARKER_COLOR = '#00EAFF';
-const TOWER_MARKER_SIZE = 4;
+/** Level pip: radius and centre-to-centre step (board units; 1 unit ≈ 4 pt). */
+const TOWER_PIP_R = 1;
+const TOWER_PIP_STEP = 2.8;
 /** Cast tower art fills the middle ~50% of its square canvas (same padding the
  * `footAt` field compensates for), so the VISIBLE sprite's top-right corner sits
  * at 0.75 across / 0.25 down the drawn box. Anchor the badge there — the padded
- * box corner would leave the letter floating right of the art. */
+ * box corner would leave the pips floating right of the art. */
 const TOWER_BADGE_X_FRAC = 0.75;
 const TOWER_BADGE_Y_FRAC = 0.25;
 
@@ -5200,21 +5111,6 @@ const styles = StyleSheet.create({
   },
   whyText: {
     marginTop: Spacing.one,
-  },
-  halvedNote: {
-    color: undefined,
-    fontStyle: 'italic',
-  },
-  conqueredNote: {
-    color: undefined,
-    fontStyle: 'italic',
-  },
-  /** ×2.5 EXP badge on the results XP line while Trial catch-up applied. */
-  xpBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 1,
   },
   statRow: {
     flexDirection: 'row',
