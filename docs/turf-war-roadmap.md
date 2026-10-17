@@ -170,7 +170,7 @@ and no new in-stage text nodes besides the pinned ones.
   The shot script injects `svg[viewBox="0 0 100 100"]{position:relative}`. The dev "Force leak" row ends the run without `step.leak`, so it shows no ring — let a creep leak instead.
 - Not done / for later: archer darts share the FX cap with elemental effects; flash/pop use the creep box from the previous render (tiny offset); not device-verified.
 
-#### Step T6 as built (2026-10-17, PR #69 squash `ef8a58ce`, OTA: see below; awaiting emci's phone check; emci answered the T5 phone check "passed")
+#### Step T6 as built (2026-10-17, PR #69 squash `ef8a58ce`, OTA iOS `01a14a82-3b8b-78a1-9c9a-8ceb87af656e`, group `c6c981e7`; awaiting emci's phone check; emci answered the T5 phone check "passed")
 - **Stop 1 picks (emci, all recommended):** Entrance B = new magenta sigil + light column (`summon/burst` 74×85 ×10 @ 12 fps), Enrage B = new red sigil +
   charge (`enrage/burst` 74×56 ×12 = 1.0 s) **with no rule change**, Death B = new plum blast + ring + sparks (`bossko/burst` 136×66 ×14 = 1.17 s), Boss bar A =
   name over a thin bar. All `vfx_workbench` (0 PixelLab generations; ~240 left of the T3–T6 budget). Raw + `gen-t6.json` in `art-src/.../fx/elements/`.
