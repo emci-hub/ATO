@@ -133,6 +133,22 @@ import {
 import { boardSheet } from '@/art/art';
 import { ClipImage, ClipSprite, sheetFrame } from '@/play/sheet-sprite';
 import { TurfAmbient } from '@/play/turf-ambient';
+import { TurfCombatFx, useBoardShake, type TurfCombatFxHandle } from '@/play/turf-combat-fx';
+import {
+  FLOATER_JITTER_X,
+  FLOATER_JITTER_Y,
+  FLASH_COOLDOWN_MS,
+  FLOATER_MERGE_MS,
+  HIT_STOP_TIMER_MS,
+  TOWER_FX,
+  chipValue,
+  nextChip,
+  combatFxFlags,
+  jitter,
+  showHealthBar,
+  type HpChip,
+} from '@/play/turf-combat-fx-rules';
+import { usePlayMotion } from '@/play/play-motion';
 import {
   CREEP_STILL_MS,
   creepClip,
@@ -385,10 +401,16 @@ type Floater = {
   /** Attacking element's colour (EFFECTS_PLAN: numbers stay readable, and are
    * the only feedback when Effects Quality is Off). Undefined = neutral. */
   color?: string;
+  /** T5: the creep it belongs to, when it appeared and its running total — a
+   * second hit on the same creep within FLOATER_MERGE_MS adds to this number. */
+  puffId: number;
+  bornAt: number;
+  damage: number;
 };
 
 /** A per-tick hit the screen derived from puff HP deltas (never sent back). */
 type HitEvent = {
+  puffId: number;
   x: number; // board units 0..1
   y: number;
   damage: number;
@@ -416,11 +438,11 @@ function diffPuffEvents(
     if (!now) {
       // Killed — the last visible chunk of its HP is the killing blow.
       const pos = creepDrawPosition(old, map, creepLaneHalfFor(old));
-      events.push({ x: pos.x, y: pos.y, damage: Math.round(old.hp), kill: true, color: colorById?.get(old.id) });
+      events.push({ puffId: old.id, x: pos.x, y: pos.y, damage: Math.round(old.hp), kill: true, color: colorById?.get(old.id) });
     } else if (now.hp < old.hp) {
       const damage = old.hp - now.hp;
       const pos = creepDrawPosition(now, map, creepLaneHalfFor(now));
-      events.push({ x: pos.x, y: pos.y, damage: Math.round(damage), kill: false, color: colorById?.get(now.id) });
+      events.push({ puffId: now.id, x: pos.x, y: pos.y, damage: Math.round(damage), kill: false, color: colorById?.get(now.id) });
     }
   }
   return events;
@@ -902,6 +924,22 @@ export function DefendScreen({
   const fxQuality = useFxQuality();
   const fxQualityRef = useRef(fxQuality);
   fxQualityRef.current = fxQuality;
+  /** T5 combat effects: which of flash / shake / hit stop / pop / leak pulse play (Effects Quality + Motion). */
+  const playMotion = usePlayMotion();
+  const combatFlags = combatFxFlags(fxQuality, playMotion);
+  const combatFlagsRef = useRef(combatFlags);
+  combatFlagsRef.current = combatFlags;
+  const combatFxRef = useRef<TurfCombatFxHandle>(null);
+  const boardShake = useBoardShake();
+  const shakeBoard = boardShake.shake;
+  /** The sprite + box each creep was last drawn with (written by the board render; the hit flash copies it). */
+  const creepDrawRef = useRef(new Map<number, { drawable: ClipDrawable; box: { x: number; y: number; size: number } }>());
+  /** Health-bar chip trail per creep (the pale segment draining to the new HP). */
+  const hpChipRef = useRef(new Map<number, HpChip>());
+  /** When each creep last flashed (FLASH_COOLDOWN_MS: a DoT must not strobe it). */
+  const flashAtRef = useRef(new Map<number, number>());
+  /** Hit stop (≤ HIT_STOP_MS) after a kill by an ultimate: the sim interval pauses, nothing else does. */
+  const [hitStop, setHitStop] = useState(false);
   /** Saved board layouts (per map): loaded flag, the Bound Bosses a layout may
    * put back (id → stars, refreshed every render), the scrap a running wave
    * started with (restored on Leave / a lost Retry), and a one-shot restore
@@ -1736,23 +1774,44 @@ export function DefendScreen({
     setCorpses([]);
     setShots([]);
     setBossAlert(null);
+    combatFxRef.current?.clear();
+    hpChipRef.current.clear();
+    flashAtRef.current.clear();
+    creepDrawRef.current.clear();
   }, [bankRestage]);
 
   /** Push hit/kill floaters (capped + oldest dropped = pooled, no unbounded
-   * growth under heavy fire). Board units → px via the measured board size. */
+   * growth under heavy fire). Board units → px via the measured board size.
+   * T5: a hit on a creep whose number appeared < FLOATER_MERGE_MS ago adds to
+   * that number (a kill turns it gold) instead of stacking a new one; a new
+   * number gets a small fixed nudge from its id so neighbours don't overlap. */
   const spawnFloaters = useCallback((events: readonly HitEvent[]) => {
     const size = boardSizeRef.current || 100;
-    const created: Floater[] = events.map((event) => ({
-      id: ++floaterSeq.current,
-      left: event.x * size - FLOATER_OFFSET_X,
-      top: event.y * size - FLOATER_OFFSET_Y,
-      label: formatHit(event.damage),
-      kill: event.kill,
-      color: event.color,
-    }));
+    const now = Date.now();
     setFloaters((prev) => {
-      const merged = [...prev, ...created];
-      return merged.length > MAX_FLOATERS ? merged.slice(merged.length - MAX_FLOATERS) : merged;
+      const next = [...prev];
+      for (const event of events) {
+        const at = next.findIndex((f) => f.puffId === event.puffId && now - f.bornAt < FLOATER_MERGE_MS);
+        if (at >= 0) {
+          const f = next[at]!;
+          const damage = f.damage + event.damage;
+          next[at] = { ...f, damage, label: formatHit(damage), kill: f.kill || event.kill, color: event.color ?? f.color };
+          continue;
+        }
+        const id = ++floaterSeq.current;
+        next.push({
+          id,
+          left: event.x * size - FLOATER_OFFSET_X + jitter(id, 1, FLOATER_JITTER_X),
+          top: event.y * size - FLOATER_OFFSET_Y + jitter(id, 2, FLOATER_JITTER_Y),
+          label: formatHit(event.damage),
+          kill: event.kill,
+          color: event.color,
+          puffId: event.puffId,
+          bornAt: now,
+          damage: event.damage,
+        });
+      }
+      return next.length > MAX_FLOATERS ? next.slice(next.length - MAX_FLOATERS) : next;
     });
   }, []);
 
@@ -1793,7 +1852,9 @@ export function DefendScreen({
       if (!primary) return;
       // Streetwear: the Avatar's weapon hits always become an effect (a slash), even plain ones.
       const melee = streetRef.current && hit.source === 'avatar';
-      if (hit.element == null && !hit.ultimate && !melee) {
+      // T5: in Streetwear the plain Archer tower fires its own dart + star (`archer/*`) instead of the Kenney shot.
+      const archer = streetRef.current && hit.source === 'tower' && hit.element == null && !hit.ultimate && !melee;
+      if (hit.element == null && !hit.ultimate && !melee && !archer) {
         spawnShot(hit.from.x, hit.from.y, primary.x, primary.y);
         return;
       }
@@ -1817,6 +1878,7 @@ export function DefendScreen({
         center: hit.centredOnSource ? hit.from : primary,
         centredOnSource: hit.centredOnSource,
         melee,
+        skin: archer ? TOWER_FX.archer.shot.split('/')[0] : undefined,
       };
       const cap = FX_CAP[fxQualityRef.current];
       const merged = [...fxRef.current, fx];
@@ -1962,9 +2024,17 @@ export function DefendScreen({
     });
   }, [onWin]);
 
-  // Sim ticker: running + not paused.
+  // T5 hit stop: the sim ticker below is off while `hitStop` is set, then resumes on its own clock. Display only —
+  // the engine still steps the same dt per tick, so no rule, timer or reward changes.
   useEffect(() => {
-    if (phase !== 'running' || paused) return;
+    if (!hitStop) return;
+    const timer = setTimeout(() => setHitStop(false), HIT_STOP_TIMER_MS);
+    return () => clearTimeout(timer);
+  }, [hitStop]);
+
+  // Sim ticker: running + not paused (+ not in a hit stop).
+  useEffect(() => {
+    if (phase !== 'running' || paused || hitStop) return;
     const id = setInterval(() => {
       const current = simRef.current;
       if (!current) return;
@@ -2123,10 +2193,47 @@ export function DefendScreen({
         hitColor,
       );
       if (events.length > 0) spawnFloaters(events);
+      const now = Date.now();
+      // T5 combat effects (display only): a hit flash + a health-bar chip on every creep that lost HP, a death pop
+      // for every creep that vanished (instead of its corpse, same 1.1 s), a hit stop when an ultimate killed one.
+      const flags = combatFlagsRef.current;
+      const fxLayer = streetRef.current ? combatFxRef.current : null;
+      const before = new Map(prevPuffsRef.current.map((p) => [p.id, p]));
+      const aliveIds = new Set(step.state.puffs.map((p) => p.id));
+      for (const p of step.state.puffs) {
+        const old = before.get(p.id);
+        if (!old || p.hp >= old.hp) continue;
+        const oldPct = Math.max(0, Math.min(1, old.hp / old.maxHp));
+        const prevChip = hpChipRef.current.get(p.id);
+        hpChipRef.current.set(p.id, nextChip(prevChip, chipValue(prevChip, oldPct, now), Math.max(0, Math.min(1, p.hp / p.maxHp)), now));
+        const drawn = creepDrawRef.current.get(p.id);
+        const lastFlash = flashAtRef.current.get(p.id) ?? -Infinity;
+        if (flags.flash && fxLayer && drawn && now - lastFlash >= FLASH_COOLDOWN_MS) {
+          flashAtRef.current.set(p.id, now);
+          fxLayer.flash(drawn.drawable, drawn.box);
+        }
+      }
+      for (const id of [...hpChipRef.current.keys()]) if (!aliveIds.has(id)) hpChipRef.current.delete(id);
+      for (const id of [...flashAtRef.current.keys()]) if (!aliveIds.has(id)) flashAtRef.current.delete(id);
+      const popped = new Set<number>();
+      if (flags.pop && fxLayer) {
+        for (const old of prevPuffsRef.current) {
+          if (aliveIds.has(old.id)) continue;
+          const drawn = creepDrawRef.current.get(old.id);
+          if (!drawn) continue;
+          fxLayer.pop(drawn.box.x + drawn.box.size / 2, drawn.box.y + drawn.box.size * 0.55);
+          popped.add(old.id);
+        }
+      }
+      for (const id of [...creepDrawRef.current.keys()]) if (!aliveIds.has(id)) creepDrawRef.current.delete(id);
+      if (flags.hitStop && !step.leak) {
+        const ultimateKill = step.hits.some((hit) => hit.ultimate && hit.puffIds.some((pid) => before.has(pid) && !aliveIds.has(pid)));
+        if (ultimateKill) setHitStop(true);
+      }
       // K2 death one-shots: the same vanished puffs, kept as corpses by the
       // board for a beat (the engine has already dropped them). Roles with no
-      // death art leave nothing, so their removal stays the only tell.
-      const now = Date.now();
+      // death art leave nothing, so their removal stays the only tell. A creep
+      // that got the T5 death pop leaves no corpse.
       const deadCreeps = newCreepCorpses(
         prevPuffsRef.current,
         step.state.puffs,
@@ -2134,7 +2241,7 @@ export function DefendScreen({
         step.state.band?.kind,
         puffWalkFaceRef.current,
         now,
-      );
+      ).filter((corpse) => !popped.has(corpse.id));
       if (deadCreeps.length > 0) {
         setCorpses((prev) => [
           ...prev.filter((corpse) => now - corpse.bornAt < CREEP_CORPSE_MS),
@@ -2145,6 +2252,14 @@ export function DefendScreen({
       simRef.current = step.state;
       setSim(step.state);
       if (step.leak && !godModeRef.current) {
+        // T5 leak hit: a red ring at the path end + a small board shake (stage content only). The run ends exactly as before.
+        const exit = mapNow.path[mapNow.path.length - 1];
+        // Centred in the exit cell (the path ends on the board edge; a ring there would be half clipped).
+        if (exit && fxLayer && flags.leakPulse) {
+          const half = 100 / 32;
+          fxLayer.leak(Math.min(100 - half, Math.max(half, exit.x * 100)), Math.min(100 - half, Math.max(half, exit.y * 100)));
+        }
+        if (flags.shake && streetRef.current) shakeBoard();
         if (!leakNotedRef.current) {
           leakNotedRef.current = true;
           onLeakRef.current();
@@ -2161,7 +2276,7 @@ export function DefendScreen({
       }
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
-  }, [phase, paused, winWave, spawnFloaters, spawnHitFx, spawnShot, startAvatarOnce, startTowerOnce]);
+  }, [phase, paused, hitStop, winWave, spawnFloaters, spawnHitFx, spawnShot, startAvatarOnce, startTowerOnce, shakeBoard]);
 
   // Run fail → play the Avatar's HURT clip once (art only; the lost overlay is
   // already showing). Catches the leak path and the dev "force leak" button.
@@ -3055,7 +3170,8 @@ export function DefendScreen({
         }
         stage={
           <View style={styles.turfStage}>
-            <View style={{ width: boardSide, height: boardSide, alignSelf: 'center' }}>
+            {/* T5: the leak shake moves this board box (stage content) only — never a region. */}
+            <Animated.View style={[{ width: boardSide, height: boardSide, alignSelf: 'center' }, boardShake.style]}>
               <View
                 style={[styles.board, { backgroundColor: theme.backgroundSelected }]}
                 onLayout={(event) => {
@@ -3522,6 +3638,11 @@ export function DefendScreen({
                     const bossBadge =
                       puff.kind === 'boss' ? (band?.kind === 'scout_mini' ? 'M' : 'B') : null;
                     const barTop = hasSprite ? box.y - 2.8 : y - radius - 4;
+                    // T5: the hit flash copies this exact sprite + box (unrotated art only).
+                    if (spriteDrawable && !spriteTransform) creepDrawRef.current.set(puff.id, { drawable: spriteDrawable, box });
+                    // T5 (Streetwear): the bar shows only once hurt, with a pale chip draining to the new HP.
+                    const barShown = !street || showHealthBar(puff.hp, puff.maxHp);
+                    const chip = street ? chipValue(hpChipRef.current.get(puff.id), pct, Date.now()) : pct;
                     // Icons shrink with the bar so a full row of 4 never outgrows it.
                     const ICON_SIZE = Math.min(2.4, barWidth / 4.6);
                     const iconRowY = barTop - ICON_SIZE / 2 - 0.5;
@@ -3534,22 +3655,36 @@ export function DefendScreen({
                             <Circle cx={x} cy={y} r={radius} fill={tintColor} />
                           )}
                         </G>
-                        <Rect
-                          x={x - barWidth / 2}
-                          y={barTop}
-                          width={barWidth}
-                          height={1.6}
-                          fill="rgba(0,0,0,0.35)"
-                          rx={0.8}
-                        />
-                        <Rect
-                          x={x - barWidth / 2}
-                          y={barTop}
-                          width={barWidth * pct}
-                          height={1.6}
-                          fill="#4ADE80"
-                          rx={0.8}
-                        />
+                        {barShown ? (
+                          <>
+                            <Rect
+                              x={x - barWidth / 2}
+                              y={barTop}
+                              width={barWidth}
+                              height={1.6}
+                              fill="rgba(0,0,0,0.35)"
+                              rx={0.8}
+                            />
+                            {chip > pct ? (
+                              <Rect
+                                x={x - barWidth / 2}
+                                y={barTop}
+                                width={barWidth * chip}
+                                height={1.6}
+                                fill="#FFEBD6"
+                                rx={0.8}
+                              />
+                            ) : null}
+                            <Rect
+                              x={x - barWidth / 2}
+                              y={barTop}
+                              width={barWidth * pct}
+                              height={1.6}
+                              fill="#4ADE80"
+                              rx={0.8}
+                            />
+                          </>
+                        ) : null}
                         {puff.tint ? (
                           <WeaknessDiamond
                             x={x - barWidth / 2 - 1.3}
@@ -3605,6 +3740,9 @@ export function DefendScreen({
                     />
                   ) : null}
                 </Svg>
+                {/* T5 combat effects (hit flash, death pop, leak ring): ABOVE the units <Svg>, not in it — each effect
+                 * runs once on its own Reanimated clock and only this layer re-renders for it. */}
+                {street ? <TurfCombatFx ref={combatFxRef} boardSide={boardSide} /> : null}
                 </View>
                 {fpsMeterOn ? <FpsOverlay stats={fpsStats} fxCount={stressFx} /> : null}
 
@@ -3677,7 +3815,7 @@ export function DefendScreen({
                   </View>
                 ) : null}
               </View>
-            </View>
+            </Animated.View>
             {/* Dev kit only — the FX stress controls sit right under the board so
                 the FPS readout stays on screen while they're tapped (EFFECTS_PLAN
                 step 1). Same actions as the Board / Misc rows. */}

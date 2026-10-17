@@ -1,0 +1,365 @@
+{
+ "frames": [
+  {
+   "filename": "ato-t5-death-pop-b 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 1.png",
+   "frame": {
+    "x": 36,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 2.png",
+   "frame": {
+    "x": 72,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 3.png",
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 4.png",
+   "frame": {
+    "x": 0,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 5.png",
+   "frame": {
+    "x": 36,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 6.png",
+   "frame": {
+    "x": 72,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 7.png",
+   "frame": {
+    "x": 108,
+    "y": 30,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 8.png",
+   "frame": {
+    "x": 0,
+    "y": 60,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 9.png",
+   "frame": {
+    "x": 36,
+    "y": 60,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 10.png",
+   "frame": {
+    "x": 72,
+    "y": 60,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 11.png",
+   "frame": {
+    "x": 108,
+    "y": 60,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-death-pop-b 12.png",
+   "frame": {
+    "x": 0,
+    "y": 90,
+    "w": 36,
+    "h": 30
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 36,
+    "h": 30
+   },
+   "sourceSize": {
+    "w": 36,
+    "h": 30
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5333333333333333
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "ato-t5-death-pop-b.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 144,
+   "h": 120
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 18,
+   "y": 16
+  },
+  "frameTags": [
+   {
+    "name": "ato-t5-death-pop-b",
+    "from": 0,
+    "to": 12,
+    "direction": "forward"
+   }
+  ]
+ }
+}

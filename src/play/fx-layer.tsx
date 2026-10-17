@@ -54,6 +54,8 @@ export type FxEvent = {
   /** The Avatar's own weapon hit (sword / melee). Streetwear draws its element
    * slash at the target instead of a travelling shot. Optional: towers omit it. */
   melee?: boolean;
+  /** Streetwear sprite set to draw instead of the element's (Turf War T5: the plain Archer's `archer/*`). */
+  skin?: string;
 };
 
 export const FX_LIFE_MS = 280;
@@ -281,7 +283,8 @@ const SW_BURST_PER_RADIUS = 2.4;
 /** The weapon slash cell (96px art) on a melee hit, in board units. */
 const SW_SLASH_UNITS = 16;
 
-function swKey(element: Element | null, kind: string): string | null {
+function swKey(element: Element | null, kind: string, skin?: string): string | null {
+  if (skin && STREETWEAR_META.fx[`${skin}/${kind}`]) return `${skin}/${kind}`;
   const el = element ?? 'plain';
   if (STREETWEAR_META.fx[`${el}/${kind}`]) return `${el}/${kind}`;
   return STREETWEAR_META.fx[`plain/${kind}`] ? `plain/${kind}` : null;
@@ -323,7 +326,7 @@ function renderSprite(fx: FxEvent, now: number) {
       </G>
     );
   }
-  const shot = swKey(fx.element, 'shot');
+  const shot = swKey(fx.element, 'shot', fx.skin);
   const target = fx.radius > 0 ? fx.center : (fx.points[0] ?? fx.center);
   const travelEnd = fx.radius > 0 ? 0.3 : 0.35;
   const parts: ReactNode[] = [];
@@ -338,7 +341,7 @@ function renderSprite(fx: FxEvent, now: number) {
       if (!burst) return null;
       parts.push(swSprite(burst, t, target, fx.radius * SW_BURST_PER_RADIUS, null, 'burst'));
     } else {
-      const hit = swKey(fx.element, 'hit');
+      const hit = swKey(fx.element, 'hit', fx.skin);
       if (!hit) return null;
       parts.push(swSprite(hit, t, target, fx.ultimate ? SW_HIT_ULT_UNITS : SW_HIT_UNITS, null, 'hit'));
     }

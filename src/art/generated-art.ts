@@ -2192,6 +2192,10 @@ export const SHEET = {
     },
   },
   fx: {
+    archer: {
+      shot: 'sheets/streetwear/fx/archer/shot',
+      hit: 'sheets/streetwear/fx/archer/hit',
+    },
     ember: {
       shot: 'sheets/streetwear/fx/ember/shot',
       hit: 'sheets/streetwear/fx/ember/hit',
@@ -2204,6 +2208,9 @@ export const SHEET = {
       hit: 'sheets/streetwear/fx/plain/hit',
       burst: 'sheets/streetwear/fx/plain/burst',
       slash: 'sheets/streetwear/fx/plain/slash',
+    },
+    pop: {
+      burst: 'sheets/streetwear/fx/pop/burst',
     },
     root: {
       shot: 'sheets/streetwear/fx/root/shot',

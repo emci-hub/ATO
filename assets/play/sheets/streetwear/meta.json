@@ -383,6 +383,22 @@
     }
   },
   "fx": {
+    "archer/shot": {
+      "frames": 4,
+      "fps": 12,
+      "loop": true,
+      "cell": 29,
+      "anchorX": 0.7586,
+      "anchorY": 0.4138
+    },
+    "archer/hit": {
+      "frames": 6,
+      "fps": 16,
+      "loop": false,
+      "cell": 45,
+      "anchorX": 0.4667,
+      "anchorY": 0.5111
+    },
     "ember/shot": {
       "frames": 8,
       "fps": 12,
@@ -454,6 +470,14 @@
       "cell": 96,
       "anchorX": 0.5,
       "anchorY": 0.5
+    },
+    "pop/burst": {
+      "frames": 13,
+      "fps": 12,
+      "loop": false,
+      "cell": 36,
+      "anchorX": 0.5,
+      "anchorY": 0.5278
     },
     "root/shot": {
       "frames": 8,

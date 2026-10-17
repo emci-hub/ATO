@@ -357,7 +357,7 @@ function main() {
   }
   if (!one && !all && !family && !skin && !id) {
     throw new Error(
-      'Usage: npx tsx scripts/art-pack.ts (--id <id> | --hero <id> | --all | --family <name> | --skin streetwear [--ui-only | --heroes-only | --boards-only] | --auras-only | --registry-only) [--preview]',
+      'Usage: npx tsx scripts/art-pack.ts (--id <id> | --hero <id> | --all | --family <name> | --skin streetwear [--ui-only | --heroes-only | --boards-only | --fx-only] | --auras-only | --registry-only) [--preview]',
     );
   }
   if (id) {
@@ -387,6 +387,11 @@ function main() {
     }
     if (process.argv.includes('--boards-only')) {
       packStreetwearBoardsOnly(repo);
+      writeRegistry(repo);
+      return;
+    }
+    if (process.argv.includes('--fx-only')) {
+      packStreetwearFxOnly(repo);
       writeRegistry(repo);
       return;
     }
@@ -1250,6 +1255,18 @@ function packStreetwearBoardsOnly(repo: string) {
   fs.writeFileSync(metaPath, `${JSON.stringify({ ...prev, boards }, null, 2)}\n`);
   atlasSheetsDir(repo, path.join(repo, 'assets/play', SW_SHEETS, 'board'));
   console.log(`packed streetwear boards: ${Object.keys(boards).join(', ')}`);
+}
+
+/** Rebuild the element FX atlas (and meta.fx) without re-packing anything else (Turf War T5). */
+function packStreetwearFxOnly(repo: string) {
+  const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
+  const prev = JSON.parse(fs.readFileSync(metaPath, 'utf8')) as Record<string, unknown>;
+  const fx = packSwEffects(repo);
+  const fxDir = path.join(repo, 'assets/play', SW_SHEETS, 'fx');
+  fs.writeFileSync(path.join(fxDir, 'sheets.json'), `${JSON.stringify(fx.manifest, null, 2)}\n`);
+  fs.writeFileSync(metaPath, `${JSON.stringify({ ...prev, fx: fx.meta }, null, 2)}\n`);
+  atlasSheetsDir(repo, fxDir);
+  console.log(`packed streetwear fx: ${Object.keys(fx.meta).length} effects`);
 }
 
 /** Re-pack every Streetwear hero (Walk N/E/S/W + other clips E/W) without
