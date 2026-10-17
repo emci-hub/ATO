@@ -17,7 +17,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | # | Step | State |
 |---|---|---|
 | T0 | Investigate, research, plan (this doc) | ✔ docs on master. Waiting for emci's approval |
-| T1 | Layout guidelines doc + `check:turf-war-layout` + the layout moves (board fills the stage, Leave → pause menu, title out of the stage) | not started |
+| T1 | Layout guidelines doc + `check:turf-war-layout` + the layout moves (board fills the stage, Leave → pause menu, title out of the stage) | ✔ merged (PR #64, 2026-10-16); OTA see "Step T1 as built" |
 | T2 | HUD + UI kit: top bar, dock buttons (cost / afford / cooldown), build card at the pad, won / lost cards on `sheet-kit` | not started |
 | T3 | Map art: new baked board from PixelLab parts (tiles, pads, props), same path and pads | not started |
 | T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | not started |
@@ -87,6 +87,20 @@ and no new in-stage text nodes besides the pinned ones.
 - **Done:** board ≈ 414 pt wide on 430 and ≈ 359 pt on 375 (was 406 / 309), centred (≈ 102 pt above + below on 430×932, ≈ 31 pt on
   375×667, instead of one ~100 pt band under it), Leave only in the pause menu,
   gate green, reviewer PASS, OTA.
+
+#### Step T1 as built (2026-10-16, PR #64)
+- Board = stage width − 16 capped by the stage height: **414 pt on 430×932, 359 pt on 375×667**, centred both ways (`src/play/turf-layout.ts`:
+  `turfBoardSide`, `turfBoardRect`). Title + lede left the stage; the lede is the first line of the Setup sheet.
+- Leave only in the **pause menu** (Resume · Leave, FloatLayer card shown while `paused` and no confirm is open). Top-bar pause opens it;
+  Cancel on the confirm returns to it; back-swipe path unchanged. Both old Leave buttons removed (the classic HUD one was already unreachable).
+  Pause line = "Paused — the wave is frozen." (Q2b proposal, used as written).
+- Pad hit radius **6.25 units** (was 6.5: neighbours at 12.5 units overlapped) → ≥ 44 pt diameter and never overlapping (`padTapRadiusUnits`).
+  Dock row gap 6 → 8.
+- `buildCardPlacement` + `BUILD_CARD_MAX_H = 120` exist for T2 (above the pad, below for the top 30 %, flips if no room, clamped). Card must stay ≤ 120 pt tall.
+- `check:turf-war-layout` (5 groups, in the gate); `check:stage-bounds` boardSide pin updated. Layout doc: `docs/turf-war-layout.md`.
+- Previews (before = `turf-war-before/`, after = `turf-war-t1/`): setup, setup sheet, wave, pause menu at both phones. No before shot of the pause state.
+- Preview gotcha: an old `python -m http.server` from an earlier session kept answering on the same port with the OLD bundle. Use a fresh port
+  and check the served bundle size matches the export.
 
 ### T2 — HUD + UI kit
 - **Scope:** `src/play/turf-ui.tsx` built on `sheet-kit` tokens: top bar (wave chip with a next-wave preview popover — creep icons + count

@@ -22,6 +22,8 @@ Expo SDK **54** in this repo (`CLAUDE.md` / `AGENTS.md` point at the v54 docs).
 
 **Hideout / Divecore plan (2026-10-16):** the plan's state, decisions and per-step "as built" notes live in `docs/hideout-roadmap.md`. Latest step: **0p** (plain Stash: static 20-slot grid "Collected x/20", Play/Stash swapped on the rail, Open Locker link; slots 13-20 cost 900–3500 shells; PR #63, squash `e0d8a607`; not device-verified; next: Locker modes + Style group + Blades). Before it: 0o (the daily visitor roams the Hideout, meets the pet, comes and goes 08:00–22:00; PR #62, squash `7bc3a7e0`; awaiting phone check). Before it: 0m (pet invisible after an expedition, device-verified). Before it: 0l (sectioned Info + `src/play/sheet-kit.tsx`, PR #60, OTA in the roadmap table).
 
+**Turf War plan (2026-10-16):** state, decisions and per-step "as built" notes live in `docs/turf-war-roadmap.md` (layout rules: `docs/turf-war-layout.md`, check `check:turf-war-layout`). Latest step: **T1** (board 414/359 pt centred, title + lede out of the stage, Leave only in a Resume · Leave pause menu, pad hit circles ≥ 44 pt; PR #64). Next: T2 (HUD + UI kit, build card at the pad). Same loop as the Hideout plan: one chat per step.
+
 Do not commit `.env.local` or API keys. Do not change dependencies, auth, env config, or secrets without asking emci first. **Schema (emci, 2026-10-02):** a database change that copies a path already tested in this repo is built without asking and named in the report; a new kind of pattern, or anything that alters or deletes existing data, still needs emci's ok.
 
 ## House conventions
