@@ -21,7 +21,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T2 | HUD + UI kit: top bar, dock buttons (cost / afford / cooldown), build card at the pad, won / lost cards on `sheet-kit` | ✔ merged (PR #65, 2026-10-17), except the next-wave popover + top-bar restyle (not done) |
 | T3 | Map art: new baked board from PixelLab parts (tiles, pads, props), same path and pads | ✔ merged (PR #66, 2026-10-17); OTA see "Step T3 as built" |
 | T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | ✔ merged (PR #67, 2026-10-17); OTA see "Step T4 as built" |
-| T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | not started |
+| T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | ✔ merged (PR #68, 2026-10-17); OTA see "Step T5 as built" |
 | T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | not started |
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | not started |
 | T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); how a player gets a theme (picker / daily / unlock) is a feature decision to make first | not started, after T7 |
@@ -151,6 +151,24 @@ and no new in-stage text nodes besides the pinned ones.
 - **Frame time (web preview, headless):** ≈ 4.2 ms setup / 5.0 ms wave with the layer on, the same with quality Off (no measurable cost). Loop GIFs + stills: `docs/divecore/turf-war-t4/` (stop-1 samples `t4-*.png`, final `*-loop.gif`).
 - Not done / for later: a real neon **sign** sprite (the pools stand in for it); the pigeon has no wing frames (flap = squash in code); not device-verified.
 - Gotcha: `npx tsx scripts/…` that paints the board takes ~1–2 min; write its output to a file in the background.
+
+#### Step T5 as built (2026-10-17, PR #68 squash `8d584db4`; awaiting emci's phone check; emci answered the T4 phone check "passed")
+- **Stop 1 picks (emci):** Archer = new magenta dart + star (`archer/shot` 29×16 ×4 loop, `archer/hit` 45×43 ×6), Vine = library `root/*`, Crystal = library
+  `spark/*`, Death = new plum smoke pop (`pop/burst` 36×30 ×13 @ 12 fps = 1.1 s, brightened after the pick). All from `vfx_workbench` (0 PixelLab generations;
+  ~240 left of the T3–T6 budget). Raw + `gen-t5.json` (effect ids, rejects) in `art-src/pixellab/streetwear-pack/migrated/raw/fx/elements/{archer,pop}/`.
+- **Pipeline:** the element fx path (`packSwEffects`), new **`npm run art:pack -- --skin streetwear --fx-only`** (a full streetwear repack moved ~40 unrelated
+  sheets — don't use it for fx). Only `shot` loops; a one-shot must use another kind name (`hit`, `burst`). Then `art:sync` (slots `SHEET.fx.archer.*`, `SHEET.fx.pop.burst`).
+- **Code:** `src/play/turf-combat-fx.tsx` = hit flash (white-tinted `ClipImage` copy of the creep's last drawn frame, 70 ms, 250 ms cooldown per creep so a DoT
+  never strobes), death pop (replaces the corpse only when it fired), leak ring (exit cell, 520 ms) — one-shots on Reanimated, mounted **after** the units `<Svg>`;
+  `useBoardShake` (180 ms, 4 pt) moves the board box only. Pure rules + timing table in `turf-combat-fx-rules.ts`. `defend-screen.tsx`: Streetwear plain Archer
+  hits become an `FxEvent` with `skin: 'archer'` (no Kenney shot; the cycle-boss shot keeps it); health bar only once hurt + pale chip (`nextChip` keeps a draining chip);
+  numbers merge per creep within 150 ms (+ a fixed ±6/±4 pt nudge); hit stop = the sim interval off for 45 ms on an ultimate kill (≤ 60 ms incl. commit, same dt per tick).
+- **Quality / motion (`combatFxFlags`):** Off = none (numbers + corpses as before); Minimal = flash, pop, ring; Full = + shake + hit stop; Reduce Motion / Motion Off = no flash, shake or hit stop.
+- **Checks:** `check:turf-war-layout` = 9 groups (every tower kit has a packed looping shot + one-shot hit, durations in the table, Off / calm = no flash / shake / hit stop, layer not an SVG and not looping, mounted after the units SVG, merge window, cap 8).
+- **Previews + frame time:** `docs/divecore/turf-war-t5/` (`NOTES.md`): wave with 4 towers + ~20 creeps ≈ 9.0 ms avg (430) / 8.8 (SE), Off 8.2; natural leak GIF.
+- **Preview gotcha:** since T4 the web preview hides creeps and towers (absolutely positioned board layers paint over the in-flow units `<svg>` in a browser; native is fine).
+  The shot script injects `svg[viewBox="0 0 100 100"]{position:relative}`. The dev "Force leak" row ends the run without `step.leak`, so it shows no ring — let a creep leak instead.
+- Not done / for later: archer darts share the FX cap with elemental effects; flash/pop use the creep box from the previous render (tiny offset); not device-verified.
 
 ### T2 — HUD + UI kit
 - **Scope:** `src/play/turf-ui.tsx` built on `sheet-kit` tokens: top bar (wave chip with a next-wave preview popover — creep icons + count
