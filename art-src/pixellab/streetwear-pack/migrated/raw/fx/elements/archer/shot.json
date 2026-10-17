@@ -1,0 +1,131 @@
+{
+ "frames": [
+  {
+   "filename": "ato-t5-archer-shot-b 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 29,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 29,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 29,
+    "h": 16
+   },
+   "pivot": {
+    "x": 0.7586206896551724,
+    "y": 0.375
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-archer-shot-b 1.png",
+   "frame": {
+    "x": 29,
+    "y": 0,
+    "w": 29,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 29,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 29,
+    "h": 16
+   },
+   "pivot": {
+    "x": 0.7586206896551724,
+    "y": 0.375
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-archer-shot-b 2.png",
+   "frame": {
+    "x": 0,
+    "y": 16,
+    "w": 29,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 29,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 29,
+    "h": 16
+   },
+   "pivot": {
+    "x": 0.7586206896551724,
+    "y": 0.375
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-t5-archer-shot-b 3.png",
+   "frame": {
+    "x": 29,
+    "y": 16,
+    "w": 29,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 29,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 29,
+    "h": 16
+   },
+   "pivot": {
+    "x": 0.7586206896551724,
+    "y": 0.375
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "ato-t5-archer-shot-b.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 58,
+   "h": 32
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 22,
+   "y": 6
+  },
+  "frameTags": [
+   {
+    "name": "ato-t5-archer-shot-b",
+    "from": 0,
+    "to": 3,
+    "direction": "forward"
+   }
+  ]
+ }
+}

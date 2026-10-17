@@ -19,6 +19,21 @@ import {
   turfBoardSide,
 } from '../src/play/turf-layout';
 import { TURF_ART_PX, ambientShare, ambientSpriteBoxes, pigeonScared, turfAmbientMeta } from '../src/play/turf-ambient-layout';
+import {
+  DEATH_POP_FX,
+  DEATH_POP_MS,
+  EFFECT_DURATIONS,
+  FLASH_COOLDOWN_MS,
+  HIT_STOP_MS,
+  HIT_STOP_TIMER_MS,
+  IMPACT_FRAMES,
+  TOWER_FX,
+  chipValue,
+  combatFxFlags,
+  jitter,
+  nextChip,
+  showHealthBar,
+} from '../src/play/turf-combat-fx-rules';
 
 const repo = path.resolve(__dirname, '..');
 const read = (rel: string) => fs.readFileSync(path.join(repo, rel), 'utf8');
@@ -232,6 +247,75 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(src, /const ambientCreeps = useCallback\(/, 'a stable creep reader keeps the memoised layer from re-rendering');
   assert.equal((src.match(/<TurfAmbient /g) ?? []).length, 1, 'one mount');
   ok(`ambient layer: ${ambientSpriteBoxes(amb).length} sprites clear of pads and road, outside the sim SVG, fx-quality Off / Minimal / Full, Reduce Motion half speed, pigeon scare rule`);
+}
+
+{
+  // T5: combat effects — every tower has a projectile + an impact, timings inside the table, Off / calm motion
+  // = no flash / shake / hit stop, the effects layer is outside the sim SVG, numbers merge per creep.
+  const meta = JSON.parse(read('assets/play/sheets/streetwear/meta.json')) as { fx: Record<string, { frames: number; loop: boolean }> };
+  for (const [kind, keys] of Object.entries(TOWER_FX)) {
+    const shot = meta.fx[keys.shot];
+    const hit = meta.fx[keys.hit];
+    assert.ok(shot && shot.loop, `${kind}: projectile ${keys.shot} is packed and loops`);
+    assert.ok(hit && !hit.loop, `${kind}: impact ${keys.hit} is packed and plays once`);
+    assert.ok(hit.frames >= IMPACT_FRAMES.min, `${kind}: impact has ≥ ${IMPACT_FRAMES.min} frames`);
+  }
+  // New T5 art is 3–6 frames; vine / crystal keep the library root / spark hits emci picked (8 frames, same life window).
+  assert.ok(meta.fx['archer/hit']!.frames <= IMPACT_FRAMES.max, 'the new archer impact is ≤ 6 frames');
+  const pop = meta.fx[DEATH_POP_FX];
+  assert.ok(pop && !pop.loop && Math.abs((pop.frames / 12) * 1000 - DEATH_POP_MS) <= 100, 'death pop is packed, one-shot, ~1.1 s');
+  for (const [name, d] of Object.entries(EFFECT_DURATIONS)) {
+    assert.ok(d.ms >= d.min && d.ms <= d.max, `${name}: ${d.ms} ms inside [${d.min}, ${d.max}]`);
+  }
+  const src = read('src/play/defend-screen.tsx');
+  const corpse = /const CREEP_CORPSE_MS = ([\d_]+);/.exec(src);
+  assert.ok(corpse && Number(corpse[1]!.replace(/_/g, '')) === DEATH_POP_MS, 'the death pop keeps the corpse timing');
+  const calm = [
+    combatFxFlags('off', { vestibularSafe: false, cosmeticsStill: false }),
+    combatFxFlags('full', { vestibularSafe: true, cosmeticsStill: false }),
+    combatFxFlags('full', { vestibularSafe: true, cosmeticsStill: true }),
+    combatFxFlags('minimal', { vestibularSafe: true, cosmeticsStill: false }),
+  ];
+  for (const f of calm) assert.ok(!f.flash && !f.shake && !f.hitStop, 'Effects Off / Reduce Motion / Motion Off: no flash, no shake, no hit stop');
+  assert.deepEqual(combatFxFlags('off', { vestibularSafe: false, cosmeticsStill: false }), { flash: false, shake: false, hitStop: false, pop: false, leakPulse: false }, 'Off = no effect at all');
+  assert.deepEqual(combatFxFlags('minimal', { vestibularSafe: false, cosmeticsStill: false }), { flash: true, shake: false, hitStop: false, pop: true, leakPulse: true }, 'Minimal = core only');
+  assert.deepEqual(combatFxFlags('full', { vestibularSafe: false, cosmeticsStill: false }), { flash: true, shake: true, hitStop: true, pop: true, leakPulse: true }, 'Full = all');
+  assert.equal(showHealthBar(10, 10), false, 'full HP: no bar');
+  assert.equal(showHealthBar(9, 10), true, 'hurt: bar');
+  assert.equal(chipValue({ from: 1, to: 0.5, at: 0 }, 0.5, 40), 1, 'chip holds first');
+  assert.ok(chipValue({ from: 1, to: 0.5, at: 0 }, 0.5, 190) < 1 && chipValue({ from: 1, to: 0.5, at: 0 }, 0.5, 190) > 0.5, 'then drains');
+  assert.equal(chipValue({ from: 1, to: 0.5, at: 0 }, 0.5, 400), 0.5, 'and is gone');
+  assert.ok(Math.abs(jitter(7, 1, 6)) <= 6 && jitter(7, 1, 6) === jitter(7, 1, 6), 'number nudge is small and stable');
+
+  const fx = read('src/play/turf-combat-fx.tsx');
+  assert.ok(!/react-native-svg/.test(fx), 'the combat-effects layer is not an SVG (nothing new inside the sim <Svg>)');
+  assert.ok(!/withRepeat/.test(fx), 'no looping animation in the combat-effects layer (one-shots only)');
+  assert.match(fx, /useSharedValue/, 'effects run on the UI thread');
+  assert.match(fx, /pointerEvents="none" style=\{styles\.fill\}/, 'the layer never takes a touch');
+  assert.match(fx, /export const TurfCombatFx = memo\(/, 'the layer is memoised (the sim ticks every 100 ms, the layer does not)');
+  const units = src.indexOf('<Svg width="100%" height="100%" viewBox="0 0 100 100">');
+  const unitsEnd = src.indexOf('</Svg>', units);
+  const layer = src.indexOf('<TurfCombatFx ');
+  assert.ok(layer > unitsEnd && unitsEnd > units, 'the combat-effects layer mounts after (above) the units SVG, not inside it');
+  assert.equal((src.match(/<TurfCombatFx /g) ?? []).length, 1, 'one mount');
+  assert.match(src, /const combatFlags = combatFxFlags\(fxQuality, playMotion\)/, 'flags come from Effects Quality + Motion');
+  assert.match(src, /if \(flags\.flash && fxLayer && drawn && now - lastFlash >= FLASH_COOLDOWN_MS\)/, 'flash only when allowed, at most once per cooldown (a DoT never strobes)');
+  assert.ok(FLASH_COOLDOWN_MS >= 200, 'flash cooldown ≥ 200 ms (≤ 5 flashes a second)');
+  assert.ok(HIT_STOP_TIMER_MS + 15 <= HIT_STOP_MS, 'hit-stop timer + a commit stays ≤ 60 ms');
+  assert.match(src, /setTimeout\(\(\) => setHitStop\(false\), HIT_STOP_TIMER_MS\)/, 'hit stop uses the short timer');
+  const c1 = nextChip(undefined, 1, 0.9, 0);
+  const c2 = nextChip(c1, 1, 0.8, 100);
+  assert.ok(c2.from === 1 && c2.at === 0 && c2.to === 0.8, 'steady damage keeps the draining chip (no held pile-up)');
+  assert.equal(nextChip(c2, 0.8, 0.7, 1000).at, 1000, 'a hit after the chip drained starts a new one');
+  assert.match(src, /if \(flags\.shake && streetRef\.current\) shakeBoard\(\)/, 'shake only when allowed');
+  assert.match(src, /if \(flags\.hitStop && !step\.leak\)/, 'hit stop only when allowed');
+  assert.match(src, /hit\.ultimate && hit\.puffIds\.some/, 'hit stop only on a kill by an ultimate');
+  assert.match(src, /if \(phase !== 'running' \|\| paused \|\| hitStop\) return;/, 'hit stop pauses the sim ticker only');
+  assert.match(src, /boardShake\.style\]\}>/, 'the shake moves the board box (stage content), not a region');
+  assert.match(src, /now - f\.bornAt < FLOATER_MERGE_MS/, 'damage numbers merge per creep within the window');
+  assert.match(src, /const MAX_FLOATERS = 8;/, 'number cap stays 8');
+  assert.match(src, /skin: archer \? TOWER_FX\.archer/, 'the plain Archer draws its own dart + star (no Kenney shot in Streetwear)');
+  ok('combat effects: every tower has a projectile + impact, timings inside the table, Off / Reduce Motion = no flash / shake / hit stop, layer outside the sim SVG');
 }
 
 console.log(`\ncheck:turf-war-layout — ${passed} groups passed.`);

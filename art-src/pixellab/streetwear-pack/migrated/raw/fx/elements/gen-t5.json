@@ -1,0 +1,18 @@
+{
+  "step": "Turf War T5 combat effects",
+  "date": "2026-10-17",
+  "tool": "vfx_workbench (free, 0 generations)",
+  "picked_by": "emci at stop 1: Archer B (new), Vine A (library root/*), Crystal A (library spark/*), Death B (new pop, brightened)",
+  "samples": "docs/divecore/turf-war-t5/t5-*.png|gif",
+  "palette_note": "archer = magenta neon #ff3df2 ramp; pop = plum/lavender ramp + magenta sparks (streetwear night)",
+  "assets": [
+    { "file": "archer/shot.png", "effect_id": "e38b01a4-1e35-435e-8d57-89364096abdd", "parts": ["blaster_bolt x0.6"], "size": "29x16", "frames": 4, "fps": 12, "loop": true },
+    { "file": "archer/hit.png", "effect_id": "296cf414-ef26-469b-be33-a0cbdd8ea7c9", "parts": ["hit_star"], "size": "45x43", "frames": 6, "fps": 16, "loop": false },
+    { "file": "pop/burst.png", "effect_id": "f36f42b1-1b1b-41b0-9383-7e2080f221ca", "parts": ["smoke_poof x0.55 (0..1)", "spark_burst x0.5 (0..0.42)"], "size": "36x30", "frames": 13, "fps": 12, "loop": false }
+  ],
+  "rejected": [
+    { "name": "vine B (seed + vine_growth)", "effect_ids": ["a4f6a21d-ca58-4876-a252-590cfe2c4fd5", "e2403f4c-b9a0-42e0-8a38-da88ee1a5c15"], "why": "library root ring reads clearer at phone size" },
+    { "name": "crystal B (bolt + flash/ice_shatter)", "effect_ids": ["0b2d19dd-5dcb-45a9-8569-c75a70f7e273", "0337fd0b-1f2d-4e30-9437-2964268364f4"], "why": "crackle busy at 1x; library spark ring cleaner" },
+    { "name": "crystal comet_trail shot", "why": "travels across its canvas, not an in-place loop" }
+  ]
+}
