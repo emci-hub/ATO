@@ -11,7 +11,8 @@
  *   4. a skin.json role, a hero/tower clip or an effect points at a sheet or
  *      frame that is not packed (it would draw nothing);
  *   5. Streetwear is not the only art style (Classic retired 2026-10-12);
- *   6. app.json filters the OTA's assets (`updates.assetPatternsToBeBundled`).
+ *   6. app.json filters the OTA's assets (`updates.assetPatternsToBeBundled`);
+ *   7. the painted Turf War board loses its road/kerb contrast or a pad centre misses the pad art (T3).
  *
  * Run: npm run check:streetwear-assets
  */
@@ -177,6 +178,76 @@ for (const map of Object.values(BOARD_MAPS)) {
   assert.equal(boardsMeta[map.id]?.pads, map.pads.length, `board ${map.id}: baked pads differ from board-data`);
 }
 ok(`${Object.keys(BOARD_MAPS).length} Turf War boards baked, pads match board-data`);
+
+// Turf War T3 pixel test on the painted default board: the road reads darker than the kerb, and every pad centre
+// lands on the pad art (a pad tap always hits a drawn cover).
+{
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { PNG } = require('pngjs') as typeof import('pngjs');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { TILE } = require('../src/play/board-data') as typeof import('../src/play/board-data');
+  const ato = BOARD_MAPS.ato;
+  const entry = sheets['sheets/streetwear/board/ato'] as unknown as { sheet: string; frames: { img: { x: number; y: number } } };
+  const atlas = PNG.sync.read(fs.readFileSync(path.join(repo, 'assets/play', entry.sheet)));
+  const { x: ox, y: oy } = entry.frames.img;
+  const px = (x: number, y: number) => {
+    const i = ((oy + y) * atlas.width + ox + x) * 4;
+    return [atlas.data[i]!, atlas.data[i + 1]!, atlas.data[i + 2]!] as const;
+  };
+  const luma = ([r, g, b]: readonly [number, number, number]) => 0.299 * r + 0.587 * g + 0.114 * b;
+  const N = ato.grid.length;
+  const road = (c: number, r: number) => r >= 0 && c >= 0 && r < N && c < N && (ato.grid[r]![c] === TILE.PATH || ato.grid[r]![c] === TILE.START);
+  const cellLuma = (c: number, r: number) => {
+    let s = 0;
+    for (let y = r * 32 + 8; y < r * 32 + 24; y += 1) for (let x = c * 32 + 8; x < c * 32 + 24; x += 1) s += luma(px(x, y));
+    return s / 256;
+  };
+  const roadL: number[] = [];
+  const kerbL: number[] = [];
+  for (let r = 0; r < N; r += 1) {
+    for (let c = 0; c < N; c += 1) {
+      if (road(c, r)) roadL.push(cellLuma(c, r));
+      else if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => road(c + dx!, r + dy!))) kerbL.push(cellLuma(c, r));
+    }
+  }
+  const mean = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length;
+  const CONTRAST_FLOOR = 30;
+  assert.ok(mean(kerbL) - mean(roadL) >= CONTRAST_FLOOR, `ato board: road (${mean(roadL).toFixed(1)}) is not ${CONTRAST_FLOOR} luma darker than the kerb (${mean(kerbL).toFixed(1)})`);
+  const lightRoad = roadL.filter((l) => l >= mean(kerbL) - 10).length;
+  assert.equal(lightRoad, 0, `ato board: ${lightRoad} road cell(s) are nearly as light as the kerb`);
+  // Pad centres: the 17×17 px around each centre matches the pad cover (art-src raw, trimmed) within a small tolerance.
+  const padArt = PNG.sync.read(fs.readFileSync(path.join(repo, 'art-src/pixellab/streetwear-pack/migrated/raw/props/pad-manhole-ring.png')));
+  let bx0 = padArt.width;
+  let by0 = padArt.height;
+  let bx1 = 0;
+  let by1 = 0;
+  for (let y = 0; y < padArt.height; y += 1) {
+    for (let x = 0; x < padArt.width; x += 1) {
+      if (padArt.data[(y * padArt.width + x) * 4 + 3]! > 8) [bx0, by0, bx1, by1] = [Math.min(bx0, x), Math.min(by0, y), Math.max(bx1, x), Math.max(by1, y)];
+    }
+  }
+  const pw = bx1 - bx0 + 1;
+  const ph = by1 - by0 + 1;
+  for (const pad of ato.pads) {
+    const left = Math.round(pad.x * 5.12 - pw / 2);
+    const top = Math.round(pad.y * 5.12 - ph / 2);
+    let hit = 0;
+    let n = 0;
+    for (let dy = -8; dy <= 8; dy += 1) {
+      for (let dx = -8; dx <= 8; dx += 1) {
+        const bx = Math.round(pad.x * 5.12) + dx;
+        const by = Math.round(pad.y * 5.12) + dy;
+        const ai = ((by - top + by0) * padArt.width + (bx - left + bx0)) * 4;
+        if (padArt.data[ai + 3]! < 250) continue;
+        const b = px(bx, by);
+        n += 1;
+        if (Math.abs(b[0] - padArt.data[ai]!) + Math.abs(b[1] - padArt.data[ai + 1]!) + Math.abs(b[2] - padArt.data[ai + 2]!) <= 30) hit += 1;
+      }
+    }
+    assert.ok(n > 200 && hit / n >= 0.9, `ato board: pad (${pad.x}, ${pad.y}) centre is not on the pad art (${hit}/${n} px match)`);
+  }
+  ok(`ato board pixels: road ${mean(roadL).toFixed(0)} vs kerb ${mean(kerbL).toFixed(0)} luma (floor ${CONTRAST_FLOOR}), all ${ato.pads.length} pad centres on pad art`);
+}
 
 // 5. Classic retired (emci 2026-10-12): Streetwear is the only look, in every build.
 const settings = fs.readFileSync(path.join(repo, 'src/play/play-settings.ts'), 'utf8');

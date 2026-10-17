@@ -2324,6 +2324,7 @@ export const SHEET = {
   },
   board: {
     ato: 'sheets/streetwear/board/ato',
+    'ato-glow': 'sheets/streetwear/board/ato-glow',
     'neon-maze': 'sheets/streetwear/board/neon-maze',
   },
 } as const;

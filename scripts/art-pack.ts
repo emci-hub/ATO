@@ -28,6 +28,7 @@ import {
   walkFiles,
   writePackedPng,
 } from './art-png';
+import { paintTurfBoard, turfBoardArtAvailable } from './turf-board-art';
 import {
   HASH_SUFFIX,
   SW_DIRS,
@@ -356,7 +357,7 @@ function main() {
   }
   if (!one && !all && !family && !skin && !id) {
     throw new Error(
-      'Usage: npx tsx scripts/art-pack.ts (--id <id> | --hero <id> | --all | --family <name> | --skin streetwear [--ui-only | --heroes-only] | --auras-only | --registry-only) [--preview]',
+      'Usage: npx tsx scripts/art-pack.ts (--id <id> | --hero <id> | --all | --family <name> | --skin streetwear [--ui-only | --heroes-only | --boards-only] | --auras-only | --registry-only) [--preview]',
     );
   }
   if (id) {
@@ -381,6 +382,11 @@ function main() {
     }
     if (process.argv.includes('--heroes-only')) {
       packStreetwearHeroes(repo);
+      writeRegistry(repo);
+      return;
+    }
+    if (process.argv.includes('--boards-only')) {
+      packStreetwearBoardsOnly(repo);
       writeRegistry(repo);
       return;
     }
@@ -1050,6 +1056,16 @@ function packSwBoards(repo: string): Record<string, { pads: number }> {
   const manifest: Record<string, SheetEntry> = {};
   const meta: Record<string, { pads: number }> = {};
   for (const map of Object.values(BOARD_MAPS)) {
+    // T3 (2026-10-17): the default board is painted from PixelLab parts (turf-board-art.ts) + a glow layer for T4.
+    if (map.id === 'ato' && turfBoardArtAvailable()) {
+      const art = paintTurfBoard(map);
+      for (const [key, png] of [[`${SW_SHEETS}/board/ato`, art.board], [`${SW_SHEETS}/board/ato-glow`, art.glow]] as const) {
+        writePackedPng(path.join(repo, 'assets/play', `${key}.png`), png);
+        manifest[key] = { sheet: `${key}.png`, sheetW: SIZE, sheetH: SIZE, frames: { img: { x: 0, y: 0, w: SIZE, h: SIZE } } };
+      }
+      meta[map.id] = { pads: art.pads };
+      continue;
+    }
     const board = new PNG({ width: SIZE, height: SIZE, fill: true });
     const road = (cx: number, cy: number) => {
       const x = Math.max(0, Math.min(N - 1, cx));
@@ -1191,6 +1207,16 @@ function packStreetwearUiOnly(repo: string) {
   fs.writeFileSync(metaPath, `${JSON.stringify({ ...prev, ui }, null, 2)}\n`);
   atlasSheetsDir(repo, path.join(repo, 'assets/play', SW_SHEETS, 'ui-kit'));
   console.log('packed streetwear ui-kit');
+}
+
+/** Rebuild the Turf War board atlas (and meta.boards) without re-packing anything else. */
+function packStreetwearBoardsOnly(repo: string) {
+  const metaPath = path.join(repo, 'assets/play', SW_SHEETS, 'meta.json');
+  const prev = JSON.parse(fs.readFileSync(metaPath, 'utf8')) as Record<string, unknown>;
+  const boards = packSwBoards(repo);
+  fs.writeFileSync(metaPath, `${JSON.stringify({ ...prev, boards }, null, 2)}\n`);
+  atlasSheetsDir(repo, path.join(repo, 'assets/play', SW_SHEETS, 'board'));
+  console.log(`packed streetwear boards: ${Object.keys(boards).join(', ')}`);
 }
 
 /** Re-pack every Streetwear hero (Walk N/E/S/W + other clips E/W) without
