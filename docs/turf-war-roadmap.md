@@ -20,7 +20,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T1 | Layout guidelines doc + `check:turf-war-layout` + the layout moves (board fills the stage, Leave → pause menu, title out of the stage) | ✔ merged (PR #64, 2026-10-16); OTA see "Step T1 as built" |
 | T2 | HUD + UI kit: top bar, dock buttons (cost / afford / cooldown), build card at the pad, won / lost cards on `sheet-kit` | ✔ merged (PR #65, 2026-10-17), except the next-wave popover + top-bar restyle (not done) |
 | T3 | Map art: new baked board from PixelLab parts (tiles, pads, props), same path and pads | ✔ merged (PR #66, 2026-10-17); OTA see "Step T3 as built" |
-| T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | not started |
+| T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | ✔ merged (PR #67, 2026-10-17); OTA see "Step T4 as built" |
 | T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | not started |
 | T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | not started |
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | not started |
@@ -133,6 +133,24 @@ and no new in-stage text nodes besides the pinned ones.
 - `check:streetwear-assets` group 7: road ≥ 30 luma darker than the kerb (now 30 vs 93) and every pad centre on pad art. Known limit: the road texture still shows a soft scallop repeat, a few cyan speckles from the lock, props sit inside the 24 px edge vignette (darker).
 - Previews + stop-1 samples + scale sheet: `docs/divecore/turf-war-t3/`. Frame time in the web preview ≈ 4.8 ms (430) / 5.0 ms (SE), unchanged.
 - Preview gotcha (again): two `http.server`s were listening on one port (an old one from another session); check `netstat` and compare the served bundle size AND the board atlas hash with the export.
+
+#### Step T4 as built (2026-10-17, PR #67; emci answered the T3 phone check "passed" and picked ALL FIVE loops at stop 1)
+- **Layer:** `src/play/turf-ambient.tsx` (+ pure `turf-ambient-layout.ts`): Reanimated UI-thread loops on their own clocks, **outside the sim `<Svg>`**, `pointerEvents none`, `memo`ised
+  (stable `getCreeps` = `ambientCreeps` useCallback), one mount in `defend-screen.tsx`. The baked board is now a `ClipImage` (expo-image) **under** the ambient layer, then the units `<Svg>`
+  (order pinned by `check:turf-war-layout`). Previously the board was a `SheetSprite` inside the SVG — pixel smoothing may differ slightly (check on the phone).
+- **Loops:** A neon pool flicker (the `ato-glow` layer cropped per pool, each with its own key sequence) · B barrel fire = flame (vfx_workbench `torch_flame` 17×28 ×8) + smoke (16×29 ×16, skipped on a barrel whose wisp would
+  rise over a pad hit circle: `barrels[i].smoke === false`) + firelight (`ato-fire` layer, new) · C cone lamp blink (code only: amber core + halo) · D pigeons (new 16 px sprite; bob, peck, flap off when a creep is within 11 board
+  units ≈ 45 pt; fade in again after 7 s; Reduce Motion = fade only) · E vent steam (16×36 ×12) from a new baked vent grate.
+- **Quality / motion:** Full = all; Minimal = every other site animates, the rest hold a still frame (the barrel art has no baked flame, so never hidden), no smoke / steam; Off or Motion Off = still frame;
+  Reduce Motion = half speed. A loop always starts at frame 0 (`withRepeat` restarts from the start value — reviewer bug), desync = `withDelay`.
+- **Art:** board painter now uses a flameless barrel (`raw/props/barrel.png`, replaces `barrel-fire`; 26 px wide vs the old 22: accepted) and `raw/props/vent-grate.png`; `raw/ambient/{flame,smoke,steam}.png+json` + `pigeon.png`
+  (palette-locked by a local nearest-colour snap, same result as `reduce_colors`). `art-pack.ts` `packSwBoards` writes sheets `ato-fire / ato-flame / ato-smoke / ato-steam / ato-pigeon` (`writeFrameStrip`) and
+  `meta.boards.ato.ambient` (sites in 512 art px: barrels, cones, vent, pigeons, pools, fires, clips). `npm run art:pack -- --skin streetwear --boards-only` then `art:sync`. The board atlas is now `atlas-0..2.png`. `gen.json` has the ids.
+  PixelLab generations ≈ 32 (pigeon 10); ~240 left of the T3–T6 budget.
+- **Checks:** `check:turf-war-layout` = 8 groups; ambient group asserts 12 sprites clear of pad hit circles and road cells, layer not an SVG, fx-quality / Reduce Motion rules, pigeon scare rule, memo, frame-0 start, order board → ambient → units.
+- **Frame time (web preview, headless):** ≈ 4.2 ms setup / 5.0 ms wave with the layer on, the same with quality Off (no measurable cost). Loop GIFs + stills: `docs/divecore/turf-war-t4/` (stop-1 samples `t4-*.png`, final `*-loop.gif`).
+- Not done / for later: a real neon **sign** sprite (the pools stand in for it); the pigeon has no wing frames (flap = squash in code); not device-verified.
+- Gotcha: `npx tsx scripts/…` that paints the board takes ~1–2 min; write its output to a file in the background.
 
 ### T2 — HUD + UI kit
 - **Scope:** `src/play/turf-ui.tsx` built on `sheet-kit` tokens: top bar (wave chip with a next-wave preview popover — creep icons + count
