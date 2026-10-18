@@ -237,6 +237,9 @@ import { FxLayer, FX_LIFE_MS, FX_ULTIMATE_LIFE_MS, type FxEvent, type FxPoint } 
 import { defendBackStep, defendEdgeSwipe, type InnerBack } from '@/play/edge-back';
 import { DevSlotFill } from '@/play/dev-slot';
 import { FX_CAP, FX_QUALITY_LABEL, nextFxQuality, setFxQuality, useFxQuality } from '@/play/fx-quality';
+import { TurfThemePicker } from '@/play/turf-theme-picker';
+import { boardHasThemes, turfBoardArtId } from '@/play/turf-theme';
+import { useTurfTheme } from '@/play/turf-theme-store';
 import { kitRange, type KitHit } from '@/play/kit-combat';
 import {
   KEPT_BOARD_MIN_SCRAP,
@@ -824,6 +827,8 @@ export function DefendScreen({
   /** Board geometry for Main only (`ato` default | `neon-maze` parked). Trial
    * always runs `ato`; the Maps UI switches this on Main. */
   const [boardId, setBoardId] = useState<BoardId>('ato');
+  /** T8 map theme (device-local pick in the Setup sheet): paint only, never rules or rewards. */
+  const turfTheme = useTurfTheme();
   /** The live board. Always present so towers can be placed during SETUP
    * (spawns wait until Start); transitions rebuild it at the right times. */
   const [sim, setSim] = useState<DefendLive | null>(() =>
@@ -3247,7 +3252,10 @@ export function DefendScreen({
     ) : null;
 
   // The baked street board for this map (Streetwear only; play-art-pack packSwBoards).
-  const streetBoardKey = street ? boardSheet(boardMap.id) : undefined;
+  // T8: the picked map theme paints the same board (falls back to the plain board if a theme is not packed).
+  const themedArtId = turfBoardArtId(boardMap.id, turfTheme);
+  const boardArtId = boardSheet(themedArtId) ? themedArtId : boardMap.id;
+  const streetBoardKey = street ? boardSheet(boardArtId) : undefined;
   const streetBoard = streetBoardKey ? sheetFrame(streetBoardKey, 'img') : undefined;
   // T6 boss bar: while a boss is alive the wave chip's box shows its name over a thin bar (same box, same size).
   const liveBoss = live && street ? bossBar(sim?.puffs ?? [], sim?.band?.boss.name) : null;
@@ -3401,7 +3409,7 @@ export function DefendScreen({
                      * Paint only — the path, pads and taps still come from board-data. */}
                     {/* T7 perf: a memo layer (the board image never re-renders on the 100 ms tick). */}
                     <TurfBoardBase sheetKey={streetBoardKey} />
-                    <TurfAmbient mapId={boardMap.id} boardSide={boardSide} getCreeps={ambientCreeps} running={live && !paused} />
+                    <TurfAmbient mapId={boardArtId} boardSide={boardSide} getCreeps={ambientCreeps} running={live && !paused} />
                   </>
                 ) : null}
                 <Svg width="100%" height="100%" viewBox="0 0 100 100">
@@ -4286,8 +4294,15 @@ export function DefendScreen({
                           );
                         })}
                       </View>
+                      {/* T8: map themes paint the ATO board only (Neon Maze keeps its own look). */}
+                      {boardHasThemes(boardId) ? <TurfThemePicker /> : null}
                     </ThemedView>
-                  ) : null}
+                  ) : (
+                    // T8: Trial has no board picker, so the theme row gets its own card.
+                    <ThemedView type="backgroundElement" style={styles.card}>
+                      <TurfThemePicker />
+                    </ThemedView>
+                  )}
 
                   {/* Gear score + Skip-to-even (§9j / §18 D) — campaign only. */}
                   {fight.mode === 'campaign' ? (

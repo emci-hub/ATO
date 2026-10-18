@@ -58,9 +58,9 @@ const _s28 = require('@/assets/play/sheets/streetwear/auras/fire/atlas.png');
 const _s29 = require('@/assets/play/sheets/streetwear/auras/rune/atlas.png');
 const _s30 = require('@/assets/play/sheets/streetwear/auras/thunder/atlas.png');
 const _s31 = require('@/assets/play/sheets/streetwear/auras/water/atlas.png');
-const _s32 = require('@/assets/play/sheets/streetwear/board/atlas-2.png');
+const _s32 = require('@/assets/play/sheets/streetwear/board/atlas-1.png');
 const _s33 = require('@/assets/play/sheets/streetwear/board/atlas-0.png');
-const _s34 = require('@/assets/play/sheets/streetwear/board/atlas-1.png');
+const _s34 = require('@/assets/play/sheets/streetwear/board/atlas-2.png');
 const _s35 = require('@/assets/play/sheets/streetwear/boss/oni/atlas.png');
 const _s36 = require('@/assets/play/sheets/streetwear/boss/titan-x/atlas.png');
 const _s37 = require('@/assets/play/sheets/streetwear/creeps/knight/atlas.png');
@@ -255,12 +255,24 @@ export const PLAY_SHEET_ART: Record<string, ImageSourcePropType> = {
   'sheets/streetwear/auras/water/behind': _s31,
   'sheets/streetwear/auras/water/front': _s31,
   'sheets/streetwear/board/ato': _s32,
-  'sheets/streetwear/board/ato-fire': _s33,
+  'sheets/streetwear/board/ato-court': _s32,
+  'sheets/streetwear/board/ato-court-fire': _s33,
+  'sheets/streetwear/board/ato-court-glow': _s33,
+  'sheets/streetwear/board/ato-docks': _s32,
+  'sheets/streetwear/board/ato-docks-fire': _s33,
+  'sheets/streetwear/board/ato-docks-glow': _s33,
+  'sheets/streetwear/board/ato-fire': _s34,
   'sheets/streetwear/board/ato-flame': _s33,
-  'sheets/streetwear/board/ato-glow': _s34,
-  'sheets/streetwear/board/ato-pigeon': _s33,
+  'sheets/streetwear/board/ato-glow': _s33,
+  'sheets/streetwear/board/ato-pigeon': _s34,
+  'sheets/streetwear/board/ato-rooftop': _s32,
+  'sheets/streetwear/board/ato-rooftop-fire': _s33,
+  'sheets/streetwear/board/ato-rooftop-glow': _s33,
   'sheets/streetwear/board/ato-smoke': _s33,
   'sheets/streetwear/board/ato-steam': _s33,
+  'sheets/streetwear/board/ato-underpass': _s32,
+  'sheets/streetwear/board/ato-underpass-fire': _s33,
+  'sheets/streetwear/board/ato-underpass-glow': _s33,
   'sheets/streetwear/board/neon-maze': _s32,
   'sheets/streetwear/boss/oni/Death': _s35,
   'sheets/streetwear/boss/oni/Idle': _s35,

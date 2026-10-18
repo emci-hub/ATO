@@ -28,7 +28,8 @@ import {
   walkFiles,
   writePackedPng,
 } from './art-png';
-import { paintTurfBoard, turfAmbientSrc, turfBoardArtAvailable } from './turf-board-art';
+import { paintTurfBoard, turfAmbientSrc, turfBoardArtAvailable, type TurfBoardArt } from './turf-board-art';
+import { TURF_THEME_IDS, turfBoardArtId } from '../src/play/turf-theme';
 import {
   HASH_SUFFIX,
   SW_DIRS,
@@ -1086,6 +1087,18 @@ function packSwBoards(repo: string): Record<string, { pads: number; ambient?: un
         writePackedPng(path.join(repo, 'assets/play', `${key}.png`), png);
         manifest[key] = { sheet: `${key}.png`, sheetW: SIZE, sheetH: SIZE, frames: { img: { x: 0, y: 0, w: SIZE, h: SIZE } } };
       }
+      // T8: every other theme = its own board + glow + fire (`ato-<theme>`); the ambient clips below are shared.
+      const themed: Record<string, { pads: number; ambient: TurfBoardArt['ambient'] }> = {};
+      for (const theme of TURF_THEME_IDS) {
+        const id = turfBoardArtId(map.id, theme);
+        if (id === map.id || !turfBoardArtAvailable(theme)) continue;
+        const t = paintTurfBoard(map, theme);
+        for (const [key, png] of [[`${SW_SHEETS}/board/${id}`, t.board], [`${SW_SHEETS}/board/${id}-glow`, t.glow], [`${SW_SHEETS}/board/${id}-fire`, t.fire]] as const) {
+          writePackedPng(path.join(repo, 'assets/play', `${key}.png`), png);
+          manifest[key] = { sheet: `${key}.png`, sheetW: SIZE, sheetH: SIZE, frames: { img: { x: 0, y: 0, w: SIZE, h: SIZE } } };
+        }
+        themed[id] = { pads: t.pads, ambient: t.ambient };
+      }
       // T4: the ambient clips (flame / smoke / steam from PixelLab vfx exports, the pigeon still) as strips on the board family.
       const clips: Record<string, { frames: number; fps: number; w: number; h: number; ax: number; ay: number }> = {};
       const ambientDir = turfAmbientSrc();
@@ -1102,6 +1115,7 @@ function packSwBoards(repo: string): Record<string, { pads: number; ambient?: un
         clips.pigeon = { frames: 1, fps: 1, w: pigeon.width, h: pigeon.height, ax: 8, ay: 14 };
       }
       meta[map.id] = { pads: art.pads, ambient: { ...art.ambient, clips } };
+      for (const [id, t] of Object.entries(themed)) meta[id] = { pads: t.pads, ambient: { ...t.ambient, clips } };
       continue;
     }
     const board = new PNG({ width: SIZE, height: SIZE, fill: true });

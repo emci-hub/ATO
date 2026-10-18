@@ -19,6 +19,7 @@ import {
   turfBoardSide,
 } from '../src/play/turf-layout';
 import { TURF_ART_PX, ambientShare, ambientSpriteBoxes, pigeonScared, turfAmbientMeta } from '../src/play/turf-ambient-layout';
+import { DEFAULT_TURF_THEME, TURF_THEME_IDS, themedBoardArtIds, turfBoardArtId } from '../src/play/turf-theme';
 import {
   DEATH_POP_FX,
   DEATH_POP_MS,
@@ -238,8 +239,15 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
     return padTapRadiusPt(size) / size;
   })) * TURF_ART_PX;
   const TOL = 8; // a wisp may clip the board edge by a few px; it never leaves a sprite hanging over the road
-  for (const b of ambientSpriteBoxes(amb)) {
-    const tag = `${b.kind} at ${Math.round(b.x)},${Math.round(b.y)}`;
+  // T8: the same placement rules hold on every map theme's painting of the board.
+  const themed = themedBoardArtIds('ato').map((id) => {
+    const m = turfAmbientMeta(meta.boards, id);
+    assert.ok(m, `meta.boards.${id}.ambient is packed`);
+    assert.equal(m.fires.length, m.barrels.length, `${id}: one firelight per barrel`);
+    return { id, m };
+  });
+  for (const { id, m } of themed) for (const b of ambientSpriteBoxes(m)) {
+    const tag = `${id}: ${b.kind} at ${Math.round(b.x)},${Math.round(b.y)}`;
     assert.ok(b.x >= -TOL && b.y >= -TOL && b.x + b.w <= TURF_ART_PX + TOL && b.y + b.h <= TURF_ART_PX + TOL, `${tag} inside the board`);
     for (const p of ATO_PADS) {
       const px = (p.x / 100) * TURF_ART_PX;
@@ -284,7 +292,33 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.ok(board > 0 && ambient > board && units > ambient, 'order: baked board, ambient layer, then the units SVG');
   assert.match(src, /const ambientCreeps = useCallback\(/, 'a stable creep reader keeps the memoised layer from re-rendering');
   assert.equal((src.match(/<TurfAmbient /g) ?? []).length, 1, 'one mount');
-  ok(`ambient layer: ${ambientSpriteBoxes(amb).length} sprites clear of pads and road, outside the sim SVG, fx-quality Off / Minimal / Full, Reduce Motion half speed, pigeon scare rule`);
+  ok(`ambient layer: ${themed.map(({ id, m }) => `${id} ${ambientSpriteBoxes(m).length}`).join(', ')} sprites clear of pads and road, outside the sim SVG, fx-quality Off / Minimal / Full, Reduce Motion half speed, pigeon scare rule`);
+}
+
+{
+  // T8: map themes — paint only. The pick lives in the Setup sheet (no new region, nothing floats), is device-local,
+  // defaults to the alley, swaps the board image + its light layers together, and never reaches rules or rewards.
+  assert.deepEqual([...TURF_THEME_IDS], ['alley', 'rooftop', 'underpass', 'court', 'docks'], 'five themes, alley first');
+  assert.equal(DEFAULT_TURF_THEME, 'alley', 'the alley stays the default');
+  assert.equal(turfBoardArtId('ato', 'alley'), 'ato', 'alley paints the T3 board');
+  assert.equal(turfBoardArtId('ato', 'docks'), 'ato-docks', 'a theme paints its own board');
+  assert.equal(turfBoardArtId('neon-maze', 'docks'), 'neon-maze', 'Neon Maze has no themes');
+  const store = read('src/play/turf-theme-store.ts');
+  assert.match(store, /TURF_THEME_KEY = 'ato\.play\.boardTheme\.v1'/, 'the pick is the device-local ato.play.boardTheme.v1');
+  assert.ok(!/supabase|cloud/i.test(store.replace(/\/\*\*[\s\S]*?\*\//, '')), 'no server or cloud save for the theme');
+  const src = read('src/play/defend-screen.tsx');
+  assert.match(src, /const boardArtId = boardSheet\(themedArtId\) \? themedArtId : boardMap\.id;/, 'unpacked theme falls back to the plain board');
+  assert.match(src, /const streetBoardKey = street \? boardSheet\(boardArtId\) : undefined;/, 'the board image follows the theme');
+  assert.match(src, /<TurfAmbient mapId=\{boardArtId\} /, 'the ambient layer follows the same theme');
+  assert.equal((src.match(/<TurfThemePicker \/>/g) ?? []).length, 2, 'the picker sits in the Setup sheet: Maps card (Main) and its own card (Trial)');
+  const picker = read('src/play/turf-theme-picker.tsx');
+  assert.ok(!/FloatLayer|position: 'absolute'/.test(picker), 'the picker never floats over a region');
+  assert.match(picker, /minHeight: SHEET\.tap/, 'theme chips are ≥ 44 pt taps');
+  // Rules, economy and rewards never read the theme.
+  for (const f of ['src/play/defend.ts', 'src/play/playStore.ts', 'src/play/board-data.ts', 'src/play/board-layouts.ts']) {
+    assert.ok(!/turf-theme/.test(read(f)), `${f} does not read the map theme`);
+  }
+  ok(`map themes: ${TURF_THEME_IDS.length} paintings of one board, device-local pick in the Setup sheet, rules and rewards untouched`);
 }
 
 {
