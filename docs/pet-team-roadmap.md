@@ -32,7 +32,10 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   holds frame 5 (hand fix). 108 gens used (16 × 6 + 2 re-rolls), 3,668 left. Code: `HERO.<slug>.faint` slot
   (`skeletons.ts`, art only, played from P5); `art-pack` packs a clip from a later generation folder. Faint lives in
   each combat atlas (+~25% on disk with oxipng, which emci okayed installing). Victory clip **skipped** (3 of 16
-  needed a fix; not "smooth"). Gate green, reviewer pass.
+  needed a fix; not "smooth"). Gate green, reviewer pass. **OTA published 2026-10-18**: iOS
+  `01a14ea9-1dbe-74fc-921d-6319dcbe447f`, Android `01a14ea9-1dbe-78cf-9325-b5c082056a01`, group
+  `0259d81a-13df-443a-b4f1-58ac328c70f9` (message `pet-team-p3-faint`, commit `9260912c`; 16 new assets). Phone
+  check: Box 45 (art regression only; faint is not played yet).
   **Next: P4 (leader = active pet).**
 
 ## The idea in one line
