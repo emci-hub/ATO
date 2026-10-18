@@ -2,101 +2,101 @@
   "sheets/streetwear/heroes/velkhar/Attack": {
     "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
     "sheetW": 1023,
-    "sheetH": 1007,
+    "sheetH": 1263,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 522,
+        "y": 778,
         "w": 108,
         "h": 121
       },
       "east/frame_001": {
         "x": 109,
-        "y": 522,
+        "y": 778,
         "w": 108,
         "h": 121
       },
       "east/frame_002": {
         "x": 218,
-        "y": 522,
+        "y": 778,
         "w": 108,
         "h": 121
       },
       "east/frame_003": {
         "x": 327,
-        "y": 522,
+        "y": 778,
         "w": 108,
         "h": 121
       },
       "east/frame_004": {
         "x": 436,
-        "y": 522,
+        "y": 778,
         "w": 108,
         "h": 121
       },
       "east/frame_005": {
         "x": 545,
-        "y": 522,
+        "y": 778,
         "w": 108,
         "h": 121
       },
       "east/frame_006": {
         "x": 654,
-        "y": 522,
+        "y": 778,
         "w": 108,
         "h": 121
       },
       "east/frame_007": {
         "x": 763,
-        "y": 522,
+        "y": 778,
         "w": 108,
         "h": 121
       },
       "west/frame_000": {
         "x": 0,
-        "y": 644,
+        "y": 900,
         "w": 108,
         "h": 121
       },
       "west/frame_001": {
         "x": 109,
-        "y": 644,
+        "y": 900,
         "w": 108,
         "h": 121
       },
       "west/frame_002": {
         "x": 218,
-        "y": 644,
+        "y": 900,
         "w": 108,
         "h": 121
       },
       "west/frame_003": {
         "x": 327,
-        "y": 644,
+        "y": 900,
         "w": 108,
         "h": 121
       },
       "west/frame_004": {
         "x": 436,
-        "y": 644,
+        "y": 900,
         "w": 108,
         "h": 121
       },
       "west/frame_005": {
         "x": 545,
-        "y": 644,
+        "y": 900,
         "w": 108,
         "h": 121
       },
       "west/frame_006": {
         "x": 654,
-        "y": 644,
+        "y": 900,
         "w": 108,
         "h": 121
       },
       "west/frame_007": {
         "x": 763,
-        "y": 644,
+        "y": 900,
         "w": 108,
         "h": 121
       }
@@ -115,101 +115,101 @@
   "sheets/streetwear/heroes/velkhar/Dash": {
     "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
     "sheetW": 1023,
-    "sheetH": 1007,
+    "sheetH": 1263,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 766,
+        "y": 1022,
         "w": 108,
         "h": 120
       },
       "east/frame_001": {
         "x": 109,
-        "y": 766,
+        "y": 1022,
         "w": 108,
         "h": 120
       },
       "east/frame_002": {
         "x": 218,
-        "y": 766,
+        "y": 1022,
         "w": 108,
         "h": 120
       },
       "east/frame_003": {
         "x": 327,
-        "y": 766,
+        "y": 1022,
         "w": 108,
         "h": 120
       },
       "east/frame_004": {
         "x": 436,
-        "y": 766,
+        "y": 1022,
         "w": 108,
         "h": 120
       },
       "east/frame_005": {
         "x": 545,
-        "y": 766,
+        "y": 1022,
         "w": 108,
         "h": 120
       },
       "east/frame_006": {
         "x": 654,
-        "y": 766,
+        "y": 1022,
         "w": 108,
         "h": 120
       },
       "east/frame_007": {
         "x": 763,
-        "y": 766,
+        "y": 1022,
         "w": 108,
         "h": 120
       },
       "west/frame_000": {
         "x": 0,
-        "y": 887,
+        "y": 1143,
         "w": 108,
         "h": 120
       },
       "west/frame_001": {
         "x": 109,
-        "y": 887,
+        "y": 1143,
         "w": 108,
         "h": 120
       },
       "west/frame_002": {
         "x": 218,
-        "y": 887,
+        "y": 1143,
         "w": 108,
         "h": 120
       },
       "west/frame_003": {
         "x": 327,
-        "y": 887,
+        "y": 1143,
         "w": 108,
         "h": 120
       },
       "west/frame_004": {
         "x": 436,
-        "y": 887,
+        "y": 1143,
         "w": 108,
         "h": 120
       },
       "west/frame_005": {
         "x": 545,
-        "y": 887,
+        "y": 1143,
         "w": 108,
         "h": 120
       },
       "west/frame_006": {
         "x": 654,
-        "y": 887,
+        "y": 1143,
         "w": 108,
         "h": 120
       },
       "west/frame_007": {
         "x": 763,
-        "y": 887,
+        "y": 1143,
         "w": 108,
         "h": 120
       }
@@ -228,7 +228,7 @@
   "sheets/streetwear/heroes/velkhar/Hurt": {
     "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
     "sheetW": 1023,
-    "sheetH": 1007,
+    "sheetH": 1263,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -382,7 +382,7 @@
   "sheets/streetwear/heroes/velkhar/Skill": {
     "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
     "sheetW": 1023,
-    "sheetH": 1007,
+    "sheetH": 1263,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/velkhar/Faint": {
+    "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.combat.png",
+    "sheetW": 1023,
+    "sheetH": 1263,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 522,
+        "w": 130,
+        "h": 127
+      },
+      "east/frame_001": {
+        "x": 131,
+        "y": 522,
+        "w": 130,
+        "h": 127
+      },
+      "east/frame_002": {
+        "x": 262,
+        "y": 522,
+        "w": 130,
+        "h": 127
+      },
+      "east/frame_003": {
+        "x": 393,
+        "y": 522,
+        "w": 130,
+        "h": 127
+      },
+      "east/frame_004": {
+        "x": 524,
+        "y": 522,
+        "w": 130,
+        "h": 127
+      },
+      "east/frame_005": {
+        "x": 655,
+        "y": 522,
+        "w": 130,
+        "h": 127
+      },
+      "east/frame_006": {
+        "x": 786,
+        "y": 522,
+        "w": 130,
+        "h": 127
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 650,
+        "w": 130,
+        "h": 127
+      },
+      "west/frame_001": {
+        "x": 131,
+        "y": 650,
+        "w": 130,
+        "h": 127
+      },
+      "west/frame_002": {
+        "x": 262,
+        "y": 650,
+        "w": 130,
+        "h": 127
+      },
+      "west/frame_003": {
+        "x": 393,
+        "y": 650,
+        "w": 130,
+        "h": 127
+      },
+      "west/frame_004": {
+        "x": 524,
+        "y": 650,
+        "w": 130,
+        "h": 127
+      },
+      "west/frame_005": {
+        "x": 655,
+        "y": 650,
+        "w": 130,
+        "h": 127
+      },
+      "west/frame_006": {
+        "x": 786,
+        "y": 650,
+        "w": 130,
+        "h": 127
+      }
+    },
+    "offsetX": 26,
+    "offsetY": 27,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/velkhar/rotations": {
     "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.core.png",

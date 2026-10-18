@@ -1,0 +1,43 @@
+{
+  "tool": "pixellab",
+  "model": "skeleton-v3",
+  "prompt": "falling-back-death template, skeleton-v3, east+west; padded to 192 (head on idle head, lowest pixel on idle feet line)",
+  "negative": null,
+  "seed": null,
+  "size": "128",
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {
+    "tool": "animate_character",
+    "mode": "skeleton-v3",
+    "template_animation_id": "falling-back-death",
+    "directions": [
+      "east",
+      "west"
+    ],
+    "character_id": "535363cd-6b15-4daf-b8de-6f206b6a3747",
+    "animation_ids": {
+      "east": "eab6a1e8-b8f0-4968-9cf0-78d01bba4837",
+      "west": "4de53f1a-9073-401d-85aa-17a524f5e07a"
+    },
+    "frames": 7,
+    "post": "padded to 192 cell: head centred on idle head, each frame lowest pixel on idle feet line; colours snapped to the hero combat atlas; alpha 0/255"
+  },
+  "cost": 6,
+  "createdAt": "2026-10-18T10:37:30.068Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": 23,
+    "max": 28,
+    "zeros": 0,
+    "notes": "faint 23/28."
+  },
+  "dirMap": {
+    "animations\\Faint": "faint",
+    "animations\\Faint\\east": "e",
+    "animations\\Faint\\west": "w"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "tool": "pixellab",
+  "model": "skeleton-v3",
+  "prompt": "falling-back-death template, skeleton-v3, east+west; padded to 192 (head on idle head, lowest pixel on idle feet line)",
+  "negative": null,
+  "seed": null,
+  "size": "128",
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {
+    "tool": "animate_character",
+    "mode": "skeleton-v3",
+    "template_animation_id": "falling-back-death",
+    "directions": [
+      "east",
+      "west"
+    ],
+    "character_id": "2c90d0a1-0ef7-405e-bd97-4a2ddaa13a34",
+    "animation_ids": {
+      "east": "63ebc828-b0ba-4b72-bd93-ea9bf3b5b313",
+      "west": "130733d1-5fb9-4c50-923e-5fd7acd36686"
+    },
+    "frames": 7,
+    "post": "padded to 192 cell: head centred on idle head, each frame lowest pixel on idle feet line; colours snapped to the hero combat atlas; alpha 0/255"
+  },
+  "cost": 6,
+  "createdAt": "2026-10-18T10:40:24.247Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": 23,
+    "max": 28,
+    "zeros": 0,
+    "notes": "faint 23/28. first roll rejected (both ends snapped back to standing, east smear); re-roll clean"
+  },
+  "dirMap": {
+    "animations\\Faint": "faint",
+    "animations\\Faint\\east": "e",
+    "animations\\Faint\\west": "w"
+  }
+}

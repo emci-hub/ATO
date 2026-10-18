@@ -2,101 +2,101 @@
   "sheets/streetwear/heroes/elowen/Attack": {
     "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
     "sheetW": 1047,
-    "sheetH": 947,
+    "sheetH": 1197,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 250,
+        "y": 500,
         "w": 127,
         "h": 123
       },
       "east/frame_001": {
         "x": 128,
-        "y": 250,
+        "y": 500,
         "w": 127,
         "h": 123
       },
       "east/frame_002": {
         "x": 256,
-        "y": 250,
+        "y": 500,
         "w": 127,
         "h": 123
       },
       "east/frame_003": {
         "x": 384,
-        "y": 250,
+        "y": 500,
         "w": 127,
         "h": 123
       },
       "east/frame_004": {
         "x": 512,
-        "y": 250,
+        "y": 500,
         "w": 127,
         "h": 123
       },
       "east/frame_005": {
         "x": 640,
-        "y": 250,
+        "y": 500,
         "w": 127,
         "h": 123
       },
       "east/frame_006": {
         "x": 768,
-        "y": 250,
+        "y": 500,
         "w": 127,
         "h": 123
       },
       "east/frame_007": {
         "x": 896,
-        "y": 250,
+        "y": 500,
         "w": 127,
         "h": 123
       },
       "west/frame_000": {
         "x": 0,
-        "y": 374,
+        "y": 624,
         "w": 127,
         "h": 123
       },
       "west/frame_001": {
         "x": 128,
-        "y": 374,
+        "y": 624,
         "w": 127,
         "h": 123
       },
       "west/frame_002": {
         "x": 256,
-        "y": 374,
+        "y": 624,
         "w": 127,
         "h": 123
       },
       "west/frame_003": {
         "x": 384,
-        "y": 374,
+        "y": 624,
         "w": 127,
         "h": 123
       },
       "west/frame_004": {
         "x": 512,
-        "y": 374,
+        "y": 624,
         "w": 127,
         "h": 123
       },
       "west/frame_005": {
         "x": 640,
-        "y": 374,
+        "y": 624,
         "w": 127,
         "h": 123
       },
       "west/frame_006": {
         "x": 768,
-        "y": 374,
+        "y": 624,
         "w": 127,
         "h": 123
       },
       "west/frame_007": {
         "x": 896,
-        "y": 374,
+        "y": 624,
         "w": 127,
         "h": 123
       }
@@ -115,101 +115,101 @@
   "sheets/streetwear/heroes/elowen/Dash": {
     "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
     "sheetW": 1047,
-    "sheetH": 947,
+    "sheetH": 1197,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 724,
+        "y": 974,
         "w": 128,
         "h": 111
       },
       "east/frame_001": {
         "x": 129,
-        "y": 724,
+        "y": 974,
         "w": 128,
         "h": 111
       },
       "east/frame_002": {
         "x": 258,
-        "y": 724,
+        "y": 974,
         "w": 128,
         "h": 111
       },
       "east/frame_003": {
         "x": 387,
-        "y": 724,
+        "y": 974,
         "w": 128,
         "h": 111
       },
       "east/frame_004": {
         "x": 516,
-        "y": 724,
+        "y": 974,
         "w": 128,
         "h": 111
       },
       "east/frame_005": {
         "x": 645,
-        "y": 724,
+        "y": 974,
         "w": 128,
         "h": 111
       },
       "east/frame_006": {
         "x": 774,
-        "y": 724,
+        "y": 974,
         "w": 128,
         "h": 111
       },
       "east/frame_007": {
         "x": 903,
-        "y": 724,
+        "y": 974,
         "w": 128,
         "h": 111
       },
       "west/frame_000": {
         "x": 0,
-        "y": 836,
+        "y": 1086,
         "w": 128,
         "h": 111
       },
       "west/frame_001": {
         "x": 129,
-        "y": 836,
+        "y": 1086,
         "w": 128,
         "h": 111
       },
       "west/frame_002": {
         "x": 258,
-        "y": 836,
+        "y": 1086,
         "w": 128,
         "h": 111
       },
       "west/frame_003": {
         "x": 387,
-        "y": 836,
+        "y": 1086,
         "w": 128,
         "h": 111
       },
       "west/frame_004": {
         "x": 516,
-        "y": 836,
+        "y": 1086,
         "w": 128,
         "h": 111
       },
       "west/frame_005": {
         "x": 645,
-        "y": 836,
+        "y": 1086,
         "w": 128,
         "h": 111
       },
       "west/frame_006": {
         "x": 774,
-        "y": 836,
+        "y": 1086,
         "w": 128,
         "h": 111
       },
       "west/frame_007": {
         "x": 903,
-        "y": 836,
+        "y": 1086,
         "w": 128,
         "h": 111
       }
@@ -228,77 +228,77 @@
   "sheets/streetwear/heroes/elowen/Hurt": {
     "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
     "sheetW": 1047,
-    "sheetH": 947,
+    "sheetH": 1197,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 498,
+        "y": 748,
         "w": 98,
         "h": 112
       },
       "east/frame_001": {
         "x": 99,
-        "y": 498,
+        "y": 748,
         "w": 98,
         "h": 112
       },
       "east/frame_002": {
         "x": 198,
-        "y": 498,
+        "y": 748,
         "w": 98,
         "h": 112
       },
       "east/frame_003": {
         "x": 297,
-        "y": 498,
+        "y": 748,
         "w": 98,
         "h": 112
       },
       "east/frame_004": {
         "x": 396,
-        "y": 498,
+        "y": 748,
         "w": 98,
         "h": 112
       },
       "east/frame_005": {
         "x": 495,
-        "y": 498,
+        "y": 748,
         "w": 98,
         "h": 112
       },
       "west/frame_000": {
         "x": 0,
-        "y": 611,
+        "y": 861,
         "w": 98,
         "h": 112
       },
       "west/frame_001": {
         "x": 99,
-        "y": 611,
+        "y": 861,
         "w": 98,
         "h": 112
       },
       "west/frame_002": {
         "x": 198,
-        "y": 611,
+        "y": 861,
         "w": 98,
         "h": 112
       },
       "west/frame_003": {
         "x": 297,
-        "y": 611,
+        "y": 861,
         "w": 98,
         "h": 112
       },
       "west/frame_004": {
         "x": 396,
-        "y": 611,
+        "y": 861,
         "w": 98,
         "h": 112
       },
       "west/frame_005": {
         "x": 495,
-        "y": 611,
+        "y": 861,
         "w": 98,
         "h": 112
       }
@@ -382,101 +382,101 @@
   "sheets/streetwear/heroes/elowen/Skill": {
     "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
     "sheetW": 1047,
-    "sheetH": 947,
+    "sheetH": 1197,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 250,
         "w": 130,
         "h": 124
       },
       "east/frame_001": {
         "x": 131,
-        "y": 0,
+        "y": 250,
         "w": 130,
         "h": 124
       },
       "east/frame_002": {
         "x": 262,
-        "y": 0,
+        "y": 250,
         "w": 130,
         "h": 124
       },
       "east/frame_003": {
         "x": 393,
-        "y": 0,
+        "y": 250,
         "w": 130,
         "h": 124
       },
       "east/frame_004": {
         "x": 524,
-        "y": 0,
+        "y": 250,
         "w": 130,
         "h": 124
       },
       "east/frame_005": {
         "x": 655,
-        "y": 0,
+        "y": 250,
         "w": 130,
         "h": 124
       },
       "east/frame_006": {
         "x": 786,
-        "y": 0,
+        "y": 250,
         "w": 130,
         "h": 124
       },
       "east/frame_007": {
         "x": 917,
-        "y": 0,
+        "y": 250,
         "w": 130,
         "h": 124
       },
       "west/frame_000": {
         "x": 0,
-        "y": 125,
+        "y": 375,
         "w": 130,
         "h": 124
       },
       "west/frame_001": {
         "x": 131,
-        "y": 125,
+        "y": 375,
         "w": 130,
         "h": 124
       },
       "west/frame_002": {
         "x": 262,
-        "y": 125,
+        "y": 375,
         "w": 130,
         "h": 124
       },
       "west/frame_003": {
         "x": 393,
-        "y": 125,
+        "y": 375,
         "w": 130,
         "h": 124
       },
       "west/frame_004": {
         "x": 524,
-        "y": 125,
+        "y": 375,
         "w": 130,
         "h": 124
       },
       "west/frame_005": {
         "x": 655,
-        "y": 125,
+        "y": 375,
         "w": 130,
         "h": 124
       },
       "west/frame_006": {
         "x": 786,
-        "y": 125,
+        "y": 375,
         "w": 130,
         "h": 124
       },
       "west/frame_007": {
         "x": 917,
-        "y": 125,
+        "y": 375,
         "w": 130,
         "h": 124
       }
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/elowen/Faint": {
+    "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.combat.png",
+    "sheetW": 1047,
+    "sheetH": 1197,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_001": {
+        "x": 131,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_002": {
+        "x": 262,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_003": {
+        "x": 393,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_004": {
+        "x": 524,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_005": {
+        "x": 655,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "east/frame_006": {
+        "x": 786,
+        "y": 0,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_001": {
+        "x": 131,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_002": {
+        "x": 262,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_003": {
+        "x": 393,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_004": {
+        "x": 524,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_005": {
+        "x": 655,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      },
+      "west/frame_006": {
+        "x": 786,
+        "y": 125,
+        "w": 130,
+        "h": 124
+      }
+    },
+    "offsetX": 39,
+    "offsetY": 34,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/elowen/rotations": {
     "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.core.png",

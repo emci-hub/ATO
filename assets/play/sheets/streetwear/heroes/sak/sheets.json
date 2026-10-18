@@ -1,102 +1,102 @@
 {
   "sheets/streetwear/heroes/sak/Attack": {
     "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
-    "sheetW": 1031,
-    "sheetH": 939,
+    "sheetW": 1119,
+    "sheetH": 1185,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 480,
+        "y": 726,
         "w": 127,
         "h": 114
       },
       "east/frame_001": {
         "x": 128,
-        "y": 480,
+        "y": 726,
         "w": 127,
         "h": 114
       },
       "east/frame_002": {
         "x": 256,
-        "y": 480,
+        "y": 726,
         "w": 127,
         "h": 114
       },
       "east/frame_003": {
         "x": 384,
-        "y": 480,
+        "y": 726,
         "w": 127,
         "h": 114
       },
       "east/frame_004": {
         "x": 512,
-        "y": 480,
+        "y": 726,
         "w": 127,
         "h": 114
       },
       "east/frame_005": {
         "x": 640,
-        "y": 480,
+        "y": 726,
         "w": 127,
         "h": 114
       },
       "east/frame_006": {
         "x": 768,
-        "y": 480,
+        "y": 726,
         "w": 127,
         "h": 114
       },
       "east/frame_007": {
         "x": 896,
-        "y": 480,
+        "y": 726,
         "w": 127,
         "h": 114
       },
       "west/frame_000": {
         "x": 0,
-        "y": 595,
+        "y": 841,
         "w": 127,
         "h": 114
       },
       "west/frame_001": {
         "x": 128,
-        "y": 595,
+        "y": 841,
         "w": 127,
         "h": 114
       },
       "west/frame_002": {
         "x": 256,
-        "y": 595,
+        "y": 841,
         "w": 127,
         "h": 114
       },
       "west/frame_003": {
         "x": 384,
-        "y": 595,
+        "y": 841,
         "w": 127,
         "h": 114
       },
       "west/frame_004": {
         "x": 512,
-        "y": 595,
+        "y": 841,
         "w": 127,
         "h": 114
       },
       "west/frame_005": {
         "x": 640,
-        "y": 595,
+        "y": 841,
         "w": 127,
         "h": 114
       },
       "west/frame_006": {
         "x": 768,
-        "y": 595,
+        "y": 841,
         "w": 127,
         "h": 114
       },
       "west/frame_007": {
         "x": 896,
-        "y": 595,
+        "y": 841,
         "w": 127,
         "h": 114
       }
@@ -114,8 +114,8 @@
   },
   "sheets/streetwear/heroes/sak/Dash": {
     "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
-    "sheetW": 1031,
-    "sheetH": 939,
+    "sheetW": 1119,
+    "sheetH": 1185,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -227,78 +227,78 @@
   },
   "sheets/streetwear/heroes/sak/Hurt": {
     "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
-    "sheetW": 1031,
-    "sheetH": 939,
+    "sheetW": 1119,
+    "sheetH": 1185,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 246,
+        "y": 492,
         "w": 130,
         "h": 116
       },
       "east/frame_001": {
         "x": 131,
-        "y": 246,
+        "y": 492,
         "w": 130,
         "h": 116
       },
       "east/frame_002": {
         "x": 262,
-        "y": 246,
+        "y": 492,
         "w": 130,
         "h": 116
       },
       "east/frame_003": {
         "x": 393,
-        "y": 246,
+        "y": 492,
         "w": 130,
         "h": 116
       },
       "east/frame_004": {
         "x": 524,
-        "y": 246,
+        "y": 492,
         "w": 130,
         "h": 116
       },
       "east/frame_005": {
         "x": 655,
-        "y": 246,
+        "y": 492,
         "w": 130,
         "h": 116
       },
       "west/frame_000": {
         "x": 0,
-        "y": 363,
+        "y": 609,
         "w": 130,
         "h": 116
       },
       "west/frame_001": {
         "x": 131,
-        "y": 363,
+        "y": 609,
         "w": 130,
         "h": 116
       },
       "west/frame_002": {
         "x": 262,
-        "y": 363,
+        "y": 609,
         "w": 130,
         "h": 116
       },
       "west/frame_003": {
         "x": 393,
-        "y": 363,
+        "y": 609,
         "w": 130,
         "h": 116
       },
       "west/frame_004": {
         "x": 524,
-        "y": 363,
+        "y": 609,
         "w": 130,
         "h": 116
       },
       "west/frame_005": {
         "x": 655,
-        "y": 363,
+        "y": 609,
         "w": 130,
         "h": 116
       }
@@ -381,102 +381,102 @@
   },
   "sheets/streetwear/heroes/sak/Skill": {
     "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
-    "sheetW": 1031,
-    "sheetH": 939,
+    "sheetW": 1119,
+    "sheetH": 1185,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 710,
+        "y": 956,
         "w": 128,
         "h": 114
       },
       "east/frame_001": {
         "x": 129,
-        "y": 710,
+        "y": 956,
         "w": 128,
         "h": 114
       },
       "east/frame_002": {
         "x": 258,
-        "y": 710,
+        "y": 956,
         "w": 128,
         "h": 114
       },
       "east/frame_003": {
         "x": 387,
-        "y": 710,
+        "y": 956,
         "w": 128,
         "h": 114
       },
       "east/frame_004": {
         "x": 516,
-        "y": 710,
+        "y": 956,
         "w": 128,
         "h": 114
       },
       "east/frame_005": {
         "x": 645,
-        "y": 710,
+        "y": 956,
         "w": 128,
         "h": 114
       },
       "east/frame_006": {
         "x": 774,
-        "y": 710,
+        "y": 956,
         "w": 128,
         "h": 114
       },
       "east/frame_007": {
         "x": 903,
-        "y": 710,
+        "y": 956,
         "w": 128,
         "h": 114
       },
       "west/frame_000": {
         "x": 0,
-        "y": 825,
+        "y": 1071,
         "w": 128,
         "h": 114
       },
       "west/frame_001": {
         "x": 129,
-        "y": 825,
+        "y": 1071,
         "w": 128,
         "h": 114
       },
       "west/frame_002": {
         "x": 258,
-        "y": 825,
+        "y": 1071,
         "w": 128,
         "h": 114
       },
       "west/frame_003": {
         "x": 387,
-        "y": 825,
+        "y": 1071,
         "w": 128,
         "h": 114
       },
       "west/frame_004": {
         "x": 516,
-        "y": 825,
+        "y": 1071,
         "w": 128,
         "h": 114
       },
       "west/frame_005": {
         "x": 645,
-        "y": 825,
+        "y": 1071,
         "w": 128,
         "h": 114
       },
       "west/frame_006": {
         "x": 774,
-        "y": 825,
+        "y": 1071,
         "w": 128,
         "h": 114
       },
       "west/frame_007": {
         "x": 903,
-        "y": 825,
+        "y": 1071,
         "w": 128,
         "h": 114
       }
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/sak/Faint": {
+    "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.combat.png",
+    "sheetW": 1119,
+    "sheetH": 1185,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 246,
+        "w": 159,
+        "h": 122
+      },
+      "east/frame_001": {
+        "x": 160,
+        "y": 246,
+        "w": 159,
+        "h": 122
+      },
+      "east/frame_002": {
+        "x": 320,
+        "y": 246,
+        "w": 159,
+        "h": 122
+      },
+      "east/frame_003": {
+        "x": 480,
+        "y": 246,
+        "w": 159,
+        "h": 122
+      },
+      "east/frame_004": {
+        "x": 640,
+        "y": 246,
+        "w": 159,
+        "h": 122
+      },
+      "east/frame_005": {
+        "x": 800,
+        "y": 246,
+        "w": 159,
+        "h": 122
+      },
+      "east/frame_006": {
+        "x": 960,
+        "y": 246,
+        "w": 159,
+        "h": 122
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 369,
+        "w": 159,
+        "h": 122
+      },
+      "west/frame_001": {
+        "x": 160,
+        "y": 369,
+        "w": 159,
+        "h": 122
+      },
+      "west/frame_002": {
+        "x": 320,
+        "y": 369,
+        "w": 159,
+        "h": 122
+      },
+      "west/frame_003": {
+        "x": 480,
+        "y": 369,
+        "w": 159,
+        "h": 122
+      },
+      "west/frame_004": {
+        "x": 640,
+        "y": 369,
+        "w": 159,
+        "h": 122
+      },
+      "west/frame_005": {
+        "x": 800,
+        "y": 369,
+        "w": 159,
+        "h": 122
+      },
+      "west/frame_006": {
+        "x": 960,
+        "y": 369,
+        "w": 159,
+        "h": 122
+      }
+    },
+    "offsetX": 16,
+    "offsetY": 32,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/sak/rotations": {
     "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.core.png",

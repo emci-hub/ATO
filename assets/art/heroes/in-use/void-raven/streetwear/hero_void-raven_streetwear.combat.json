@@ -739,7 +739,7 @@
     "hurt/e/000": {
       "frame": {
         "x": 0,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
@@ -762,7 +762,7 @@
     "hurt/e/001": {
       "frame": {
         "x": 99,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
@@ -785,7 +785,7 @@
     "hurt/e/002": {
       "frame": {
         "x": 198,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
@@ -808,7 +808,7 @@
     "hurt/e/003": {
       "frame": {
         "x": 297,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
@@ -831,7 +831,7 @@
     "hurt/e/004": {
       "frame": {
         "x": 396,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
@@ -854,7 +854,7 @@
     "hurt/e/005": {
       "frame": {
         "x": 495,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
@@ -877,7 +877,7 @@
     "hurt/w/000": {
       "frame": {
         "x": 0,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
@@ -900,7 +900,7 @@
     "hurt/w/001": {
       "frame": {
         "x": 99,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
@@ -923,7 +923,7 @@
     "hurt/w/002": {
       "frame": {
         "x": 198,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
@@ -946,7 +946,7 @@
     "hurt/w/003": {
       "frame": {
         "x": 297,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
@@ -969,7 +969,7 @@
     "hurt/w/004": {
       "frame": {
         "x": 396,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
@@ -992,7 +992,7 @@
     "hurt/w/005": {
       "frame": {
         "x": 495,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
@@ -1015,7 +1015,7 @@
     "skill/e/000": {
       "frame": {
         "x": 0,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
@@ -1038,7 +1038,7 @@
     "skill/e/001": {
       "frame": {
         "x": 123,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
@@ -1061,7 +1061,7 @@
     "skill/e/002": {
       "frame": {
         "x": 246,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
@@ -1084,7 +1084,7 @@
     "skill/e/003": {
       "frame": {
         "x": 369,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
@@ -1107,7 +1107,7 @@
     "skill/e/004": {
       "frame": {
         "x": 492,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
@@ -1130,7 +1130,7 @@
     "skill/e/005": {
       "frame": {
         "x": 615,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
@@ -1153,7 +1153,7 @@
     "skill/e/006": {
       "frame": {
         "x": 738,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
@@ -1176,7 +1176,7 @@
     "skill/e/007": {
       "frame": {
         "x": 861,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
@@ -1199,7 +1199,7 @@
     "skill/w/000": {
       "frame": {
         "x": 0,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
@@ -1222,7 +1222,7 @@
     "skill/w/001": {
       "frame": {
         "x": 123,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
@@ -1245,7 +1245,7 @@
     "skill/w/002": {
       "frame": {
         "x": 246,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
@@ -1268,7 +1268,7 @@
     "skill/w/003": {
       "frame": {
         "x": 369,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
@@ -1291,7 +1291,7 @@
     "skill/w/004": {
       "frame": {
         "x": 492,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
@@ -1314,7 +1314,7 @@
     "skill/w/005": {
       "frame": {
         "x": 615,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
@@ -1337,7 +1337,7 @@
     "skill/w/006": {
       "frame": {
         "x": 738,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
@@ -1360,7 +1360,7 @@
     "skill/w/007": {
       "frame": {
         "x": 861,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
@@ -1379,6 +1379,328 @@
       "duration": 100,
       "dir": "west",
       "clip": "Skill"
+    },
+    "faint/e/000": {
+      "frame": {
+        "x": 0,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Faint"
+    },
+    "faint/e/001": {
+      "frame": {
+        "x": 159,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Faint"
+    },
+    "faint/e/002": {
+      "frame": {
+        "x": 318,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Faint"
+    },
+    "faint/e/003": {
+      "frame": {
+        "x": 477,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Faint"
+    },
+    "faint/e/004": {
+      "frame": {
+        "x": 636,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Faint"
+    },
+    "faint/e/005": {
+      "frame": {
+        "x": 795,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Faint"
+    },
+    "faint/e/006": {
+      "frame": {
+        "x": 954,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Faint"
+    },
+    "faint/w/000": {
+      "frame": {
+        "x": 0,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Faint"
+    },
+    "faint/w/001": {
+      "frame": {
+        "x": 159,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Faint"
+    },
+    "faint/w/002": {
+      "frame": {
+        "x": 318,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Faint"
+    },
+    "faint/w/003": {
+      "frame": {
+        "x": 477,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Faint"
+    },
+    "faint/w/004": {
+      "frame": {
+        "x": 636,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Faint"
+    },
+    "faint/w/005": {
+      "frame": {
+        "x": 795,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Faint"
+    },
+    "faint/w/006": {
+      "frame": {
+        "x": 954,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": 39,
+        "w": 158,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Faint"
     }
   },
   "meta": {
@@ -1387,8 +1709,8 @@
     "image": "hero_void-raven_streetwear.combat.png",
     "format": "png32",
     "size": {
-      "w": 983,
-      "h": 945
+      "w": 1112,
+      "h": 1175
     },
     "scale": "1",
     "frameTags": [
@@ -1415,10 +1737,16 @@
         "from": 44,
         "to": 59,
         "direction": "forward"
+      },
+      {
+        "name": "faint",
+        "from": 60,
+        "to": 73,
+        "direction": "forward"
       }
     ],
-    "decodedBytes": 3715740,
-    "diskBytes": 141278,
+    "decodedBytes": 5226400,
+    "diskBytes": 182810,
     "tier": "combat"
   }
 }

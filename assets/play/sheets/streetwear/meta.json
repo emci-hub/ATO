@@ -10,7 +10,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -29,7 +30,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -48,7 +50,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -67,7 +70,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -86,7 +90,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -105,7 +110,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -124,7 +130,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -143,7 +150,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -162,7 +170,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -181,7 +190,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -200,7 +210,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -219,7 +230,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -238,7 +250,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -257,7 +270,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -276,7 +290,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",
@@ -295,7 +310,8 @@
         "Hurt": 6,
         "Idle": 4,
         "Skill": 8,
-        "Walk": 8
+        "Walk": 8,
+        "Faint": 7
       },
       "walkOrder": [
         "north",

@@ -1,0 +1,43 @@
+{
+  "tool": "pixellab",
+  "model": "skeleton-v3",
+  "prompt": "falling-back-death template, skeleton-v3, east+west; padded to 192 (head on idle head, lowest pixel on idle feet line)",
+  "negative": null,
+  "seed": null,
+  "size": "128",
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {
+    "tool": "animate_character",
+    "mode": "skeleton-v3",
+    "template_animation_id": "falling-back-death",
+    "directions": [
+      "east",
+      "west"
+    ],
+    "character_id": "358cfbd9-31c7-49e3-ac71-2c19ed9b1bd8",
+    "animation_ids": {
+      "east": "7ba10cb3-c9f5-4528-a0ea-62b1d8ab9a05",
+      "west": "9c68a018-63f3-467e-a424-6d008ed15355"
+    },
+    "frames": 7,
+    "post": "padded to 192 cell: head centred on idle head, each frame lowest pixel on idle feet line; colours snapped to the hero combat atlas; alpha 0/255"
+  },
+  "cost": 6,
+  "createdAt": "2026-10-18T10:37:45.036Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": 22,
+    "max": 28,
+    "zeros": 0,
+    "notes": "faint 22/28. first roll rejected (smeared end frames); re-roll keeps grey ghost-smoke puffs on the last frames, reads as his aura settling"
+  },
+  "dirMap": {
+    "animations\\Faint": "faint",
+    "animations\\Faint\\east": "e",
+    "animations\\Faint\\west": "w"
+  }
+}

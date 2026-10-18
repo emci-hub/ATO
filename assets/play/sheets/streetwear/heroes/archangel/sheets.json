@@ -2,101 +2,101 @@
   "sheets/streetwear/heroes/archangel/Attack": {
     "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
     "sheetW": 1263,
-    "sheetH": 955,
+    "sheetH": 1217,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 262,
         "w": 132,
         "h": 122
       },
       "east/frame_001": {
         "x": 133,
-        "y": 0,
+        "y": 262,
         "w": 132,
         "h": 122
       },
       "east/frame_002": {
         "x": 266,
-        "y": 0,
+        "y": 262,
         "w": 132,
         "h": 122
       },
       "east/frame_003": {
         "x": 399,
-        "y": 0,
+        "y": 262,
         "w": 132,
         "h": 122
       },
       "east/frame_004": {
         "x": 532,
-        "y": 0,
+        "y": 262,
         "w": 132,
         "h": 122
       },
       "east/frame_005": {
         "x": 665,
-        "y": 0,
+        "y": 262,
         "w": 132,
         "h": 122
       },
       "east/frame_006": {
         "x": 798,
-        "y": 0,
+        "y": 262,
         "w": 132,
         "h": 122
       },
       "east/frame_007": {
         "x": 931,
-        "y": 0,
+        "y": 262,
         "w": 132,
         "h": 122
       },
       "west/frame_000": {
         "x": 0,
-        "y": 123,
+        "y": 385,
         "w": 132,
         "h": 122
       },
       "west/frame_001": {
         "x": 133,
-        "y": 123,
+        "y": 385,
         "w": 132,
         "h": 122
       },
       "west/frame_002": {
         "x": 266,
-        "y": 123,
+        "y": 385,
         "w": 132,
         "h": 122
       },
       "west/frame_003": {
         "x": 399,
-        "y": 123,
+        "y": 385,
         "w": 132,
         "h": 122
       },
       "west/frame_004": {
         "x": 532,
-        "y": 123,
+        "y": 385,
         "w": 132,
         "h": 122
       },
       "west/frame_005": {
         "x": 665,
-        "y": 123,
+        "y": 385,
         "w": 132,
         "h": 122
       },
       "west/frame_006": {
         "x": 798,
-        "y": 123,
+        "y": 385,
         "w": 132,
         "h": 122
       },
       "west/frame_007": {
         "x": 931,
-        "y": 123,
+        "y": 385,
         "w": 132,
         "h": 122
       }
@@ -115,101 +115,101 @@
   "sheets/streetwear/heroes/archangel/Dash": {
     "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
     "sheetW": 1263,
-    "sheetH": 955,
+    "sheetH": 1217,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 492,
+        "y": 754,
         "w": 157,
         "h": 119
       },
       "east/frame_001": {
         "x": 158,
-        "y": 492,
+        "y": 754,
         "w": 157,
         "h": 119
       },
       "east/frame_002": {
         "x": 316,
-        "y": 492,
+        "y": 754,
         "w": 157,
         "h": 119
       },
       "east/frame_003": {
         "x": 474,
-        "y": 492,
+        "y": 754,
         "w": 157,
         "h": 119
       },
       "east/frame_004": {
         "x": 632,
-        "y": 492,
+        "y": 754,
         "w": 157,
         "h": 119
       },
       "east/frame_005": {
         "x": 790,
-        "y": 492,
+        "y": 754,
         "w": 157,
         "h": 119
       },
       "east/frame_006": {
         "x": 948,
-        "y": 492,
+        "y": 754,
         "w": 157,
         "h": 119
       },
       "east/frame_007": {
         "x": 1106,
-        "y": 492,
+        "y": 754,
         "w": 157,
         "h": 119
       },
       "west/frame_000": {
         "x": 0,
-        "y": 612,
+        "y": 874,
         "w": 157,
         "h": 119
       },
       "west/frame_001": {
         "x": 158,
-        "y": 612,
+        "y": 874,
         "w": 157,
         "h": 119
       },
       "west/frame_002": {
         "x": 316,
-        "y": 612,
+        "y": 874,
         "w": 157,
         "h": 119
       },
       "west/frame_003": {
         "x": 474,
-        "y": 612,
+        "y": 874,
         "w": 157,
         "h": 119
       },
       "west/frame_004": {
         "x": 632,
-        "y": 612,
+        "y": 874,
         "w": 157,
         "h": 119
       },
       "west/frame_005": {
         "x": 790,
-        "y": 612,
+        "y": 874,
         "w": 157,
         "h": 119
       },
       "west/frame_006": {
         "x": 948,
-        "y": 612,
+        "y": 874,
         "w": 157,
         "h": 119
       },
       "west/frame_007": {
         "x": 1106,
-        "y": 612,
+        "y": 874,
         "w": 157,
         "h": 119
       }
@@ -228,77 +228,77 @@
   "sheets/streetwear/heroes/archangel/Hurt": {
     "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
     "sheetW": 1263,
-    "sheetH": 955,
+    "sheetH": 1217,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 732,
+        "y": 994,
         "w": 124,
         "h": 111
       },
       "east/frame_001": {
         "x": 125,
-        "y": 732,
+        "y": 994,
         "w": 124,
         "h": 111
       },
       "east/frame_002": {
         "x": 250,
-        "y": 732,
+        "y": 994,
         "w": 124,
         "h": 111
       },
       "east/frame_003": {
         "x": 375,
-        "y": 732,
+        "y": 994,
         "w": 124,
         "h": 111
       },
       "east/frame_004": {
         "x": 500,
-        "y": 732,
+        "y": 994,
         "w": 124,
         "h": 111
       },
       "east/frame_005": {
         "x": 625,
-        "y": 732,
+        "y": 994,
         "w": 124,
         "h": 111
       },
       "west/frame_000": {
         "x": 0,
-        "y": 844,
+        "y": 1106,
         "w": 124,
         "h": 111
       },
       "west/frame_001": {
         "x": 125,
-        "y": 844,
+        "y": 1106,
         "w": 124,
         "h": 111
       },
       "west/frame_002": {
         "x": 250,
-        "y": 844,
+        "y": 1106,
         "w": 124,
         "h": 111
       },
       "west/frame_003": {
         "x": 375,
-        "y": 844,
+        "y": 1106,
         "w": 124,
         "h": 111
       },
       "west/frame_004": {
         "x": 500,
-        "y": 844,
+        "y": 1106,
         "w": 124,
         "h": 111
       },
       "west/frame_005": {
         "x": 625,
-        "y": 844,
+        "y": 1106,
         "w": 124,
         "h": 111
       }
@@ -382,101 +382,101 @@
   "sheets/streetwear/heroes/archangel/Skill": {
     "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
     "sheetW": 1263,
-    "sheetH": 955,
+    "sheetH": 1217,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 246,
+        "y": 508,
         "w": 127,
         "h": 122
       },
       "east/frame_001": {
         "x": 128,
-        "y": 246,
+        "y": 508,
         "w": 127,
         "h": 122
       },
       "east/frame_002": {
         "x": 256,
-        "y": 246,
+        "y": 508,
         "w": 127,
         "h": 122
       },
       "east/frame_003": {
         "x": 384,
-        "y": 246,
+        "y": 508,
         "w": 127,
         "h": 122
       },
       "east/frame_004": {
         "x": 512,
-        "y": 246,
+        "y": 508,
         "w": 127,
         "h": 122
       },
       "east/frame_005": {
         "x": 640,
-        "y": 246,
+        "y": 508,
         "w": 127,
         "h": 122
       },
       "east/frame_006": {
         "x": 768,
-        "y": 246,
+        "y": 508,
         "w": 127,
         "h": 122
       },
       "east/frame_007": {
         "x": 896,
-        "y": 246,
+        "y": 508,
         "w": 127,
         "h": 122
       },
       "west/frame_000": {
         "x": 0,
-        "y": 369,
+        "y": 631,
         "w": 127,
         "h": 122
       },
       "west/frame_001": {
         "x": 128,
-        "y": 369,
+        "y": 631,
         "w": 127,
         "h": 122
       },
       "west/frame_002": {
         "x": 256,
-        "y": 369,
+        "y": 631,
         "w": 127,
         "h": 122
       },
       "west/frame_003": {
         "x": 384,
-        "y": 369,
+        "y": 631,
         "w": 127,
         "h": 122
       },
       "west/frame_004": {
         "x": 512,
-        "y": 369,
+        "y": 631,
         "w": 127,
         "h": 122
       },
       "west/frame_005": {
         "x": 640,
-        "y": 369,
+        "y": 631,
         "w": 127,
         "h": 122
       },
       "west/frame_006": {
         "x": 768,
-        "y": 369,
+        "y": 631,
         "w": 127,
         "h": 122
       },
       "west/frame_007": {
         "x": 896,
-        "y": 369,
+        "y": 631,
         "w": 127,
         "h": 122
       }
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/archangel/Faint": {
+    "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png",
+    "sheetW": 1263,
+    "sheetH": 1217,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 141,
+        "h": 130
+      },
+      "east/frame_001": {
+        "x": 142,
+        "y": 0,
+        "w": 141,
+        "h": 130
+      },
+      "east/frame_002": {
+        "x": 284,
+        "y": 0,
+        "w": 141,
+        "h": 130
+      },
+      "east/frame_003": {
+        "x": 426,
+        "y": 0,
+        "w": 141,
+        "h": 130
+      },
+      "east/frame_004": {
+        "x": 568,
+        "y": 0,
+        "w": 141,
+        "h": 130
+      },
+      "east/frame_005": {
+        "x": 710,
+        "y": 0,
+        "w": 141,
+        "h": 130
+      },
+      "east/frame_006": {
+        "x": 852,
+        "y": 0,
+        "w": 141,
+        "h": 130
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 131,
+        "w": 141,
+        "h": 130
+      },
+      "west/frame_001": {
+        "x": 142,
+        "y": 131,
+        "w": 141,
+        "h": 130
+      },
+      "west/frame_002": {
+        "x": 284,
+        "y": 131,
+        "w": 141,
+        "h": 130
+      },
+      "west/frame_003": {
+        "x": 426,
+        "y": 131,
+        "w": 141,
+        "h": 130
+      },
+      "west/frame_004": {
+        "x": 568,
+        "y": 131,
+        "w": 141,
+        "h": 130
+      },
+      "west/frame_005": {
+        "x": 710,
+        "y": 131,
+        "w": 141,
+        "h": 130
+      },
+      "west/frame_006": {
+        "x": 852,
+        "y": 131,
+        "w": 141,
+        "h": 130
+      }
+    },
+    "offsetX": 19,
+    "offsetY": 28,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/archangel/rotations": {
     "sheet": "art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.core.png",

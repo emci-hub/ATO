@@ -2,7 +2,7 @@
   "sheets/streetwear/heroes/neon-viper/Attack": {
     "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.combat.png",
     "sheetW": 967,
-    "sheetH": 885,
+    "sheetH": 1093,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -115,7 +115,7 @@
   "sheets/streetwear/heroes/neon-viper/Dash": {
     "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.combat.png",
     "sheetW": 967,
-    "sheetH": 885,
+    "sheetH": 1093,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -228,7 +228,7 @@
   "sheets/streetwear/heroes/neon-viper/Hurt": {
     "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.combat.png",
     "sheetW": 967,
-    "sheetH": 885,
+    "sheetH": 1093,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -382,7 +382,7 @@
   "sheets/streetwear/heroes/neon-viper/Skill": {
     "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.combat.png",
     "sheetW": 967,
-    "sheetH": 885,
+    "sheetH": 1093,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/neon-viper/Faint": {
+    "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.combat.png",
+    "sheetW": 967,
+    "sheetH": 1093,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 886,
+        "w": 111,
+        "h": 103
+      },
+      "east/frame_001": {
+        "x": 112,
+        "y": 886,
+        "w": 111,
+        "h": 103
+      },
+      "east/frame_002": {
+        "x": 224,
+        "y": 886,
+        "w": 111,
+        "h": 103
+      },
+      "east/frame_003": {
+        "x": 336,
+        "y": 886,
+        "w": 111,
+        "h": 103
+      },
+      "east/frame_004": {
+        "x": 448,
+        "y": 886,
+        "w": 111,
+        "h": 103
+      },
+      "east/frame_005": {
+        "x": 560,
+        "y": 886,
+        "w": 111,
+        "h": 103
+      },
+      "east/frame_006": {
+        "x": 672,
+        "y": 886,
+        "w": 111,
+        "h": 103
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 990,
+        "w": 111,
+        "h": 103
+      },
+      "west/frame_001": {
+        "x": 112,
+        "y": 990,
+        "w": 111,
+        "h": 103
+      },
+      "west/frame_002": {
+        "x": 224,
+        "y": 990,
+        "w": 111,
+        "h": 103
+      },
+      "west/frame_003": {
+        "x": 336,
+        "y": 990,
+        "w": 111,
+        "h": 103
+      },
+      "west/frame_004": {
+        "x": 448,
+        "y": 990,
+        "w": 111,
+        "h": 103
+      },
+      "west/frame_005": {
+        "x": 560,
+        "y": 990,
+        "w": 111,
+        "h": 103
+      },
+      "west/frame_006": {
+        "x": 672,
+        "y": 990,
+        "w": 111,
+        "h": 103
+      }
+    },
+    "offsetX": 38,
+    "offsetY": 48,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/neon-viper/rotations": {
     "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.core.png",

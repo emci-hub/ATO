@@ -642,6 +642,32 @@ function packSwCharacter(repo: string, group: string, slug: string): SwCharMeta 
       if (p.action === 'Walk') walkOrder = p.dirs;
     }
   }
+  // A clip added later in its own generation folder (e.g. Faint, pet team P3:
+  // art-src/pixellab/hero.<slug>.streetwear/<gen>/raw/animations/Faint) packs
+  // next to the main raw set, so the whole set never has to be copied. The main
+  // set wins a name clash; two extra folders with the same clip stop the pack
+  // (archive the old one) rather than silently keeping either.
+  const base = path.join(repo, 'art-src/pixellab', `${charKind(group)}.${slug}.streetwear`);
+  if (fs.existsSync(base)) {
+    const extraFrom: Record<string, string> = {};
+    for (const gen of fs.readdirSync(base, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort()) {
+      const raw = path.join(base, gen, 'raw');
+      const extraRoot = path.join(raw, 'animations');
+      if (path.resolve(raw) === path.resolve(dir) || !fs.existsSync(extraRoot)) continue;
+      for (const clip of fs.readdirSync(extraRoot, { withFileTypes: true }).filter((d) => d.isDirectory())) {
+        const name = clip.name.replace(HASH_SUFFIX, '');
+        if (extraFrom[name]) {
+          throw new Error(`${group}/${slug}/${name}: in both ${extraFrom[name]} and ${gen} — archive the old generation`);
+        }
+        extraFrom[name] = gen;
+        if (clips[name] != null) continue;
+        const p = packClip(raw, clip.name, outDir, keyBase, SW_DIRS);
+        for (const w of p.warnings) throw new Error(`${group}/${slug}/${clip.name}: ${w}`);
+        packed.push(p);
+        clips[p.action] = p.frameCount;
+      }
+    }
+  }
   const rotations = packRotations(dir, outDir, keyBase);
   if (!rotations) throw new Error(`${group}/${slug}: no rotations`);
   packed.push(rotations);

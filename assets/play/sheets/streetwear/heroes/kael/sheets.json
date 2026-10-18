@@ -2,7 +2,7 @@
   "sheets/streetwear/heroes/kael/Attack": {
     "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
     "sheetW": 1087,
-    "sheetH": 877,
+    "sheetH": 1089,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -115,7 +115,7 @@
   "sheets/streetwear/heroes/kael/Dash": {
     "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
     "sheetW": 1087,
-    "sheetH": 877,
+    "sheetH": 1089,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -228,7 +228,7 @@
   "sheets/streetwear/heroes/kael/Hurt": {
     "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
     "sheetW": 1087,
-    "sheetH": 877,
+    "sheetH": 1089,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -382,7 +382,7 @@
   "sheets/streetwear/heroes/kael/Skill": {
     "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
     "sheetW": 1087,
-    "sheetH": 877,
+    "sheetH": 1089,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/kael/Faint": {
+    "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.combat.png",
+    "sheetW": 1087,
+    "sheetH": 1089,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 878,
+        "w": 127,
+        "h": 105
+      },
+      "east/frame_001": {
+        "x": 128,
+        "y": 878,
+        "w": 127,
+        "h": 105
+      },
+      "east/frame_002": {
+        "x": 256,
+        "y": 878,
+        "w": 127,
+        "h": 105
+      },
+      "east/frame_003": {
+        "x": 384,
+        "y": 878,
+        "w": 127,
+        "h": 105
+      },
+      "east/frame_004": {
+        "x": 512,
+        "y": 878,
+        "w": 127,
+        "h": 105
+      },
+      "east/frame_005": {
+        "x": 640,
+        "y": 878,
+        "w": 127,
+        "h": 105
+      },
+      "east/frame_006": {
+        "x": 768,
+        "y": 878,
+        "w": 127,
+        "h": 105
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 984,
+        "w": 127,
+        "h": 105
+      },
+      "west/frame_001": {
+        "x": 128,
+        "y": 984,
+        "w": 127,
+        "h": 105
+      },
+      "west/frame_002": {
+        "x": 256,
+        "y": 984,
+        "w": 127,
+        "h": 105
+      },
+      "west/frame_003": {
+        "x": 384,
+        "y": 984,
+        "w": 127,
+        "h": 105
+      },
+      "west/frame_004": {
+        "x": 512,
+        "y": 984,
+        "w": 127,
+        "h": 105
+      },
+      "west/frame_005": {
+        "x": 640,
+        "y": 984,
+        "w": 127,
+        "h": 105
+      },
+      "west/frame_006": {
+        "x": 768,
+        "y": 984,
+        "w": 127,
+        "h": 105
+      }
+    },
+    "offsetX": 36,
+    "offsetY": 46,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/kael/rotations": {
     "sheet": "art/heroes/in-use/kael/streetwear/hero_kael_streetwear.core.png",

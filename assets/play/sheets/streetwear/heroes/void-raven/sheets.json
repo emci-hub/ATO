@@ -1,8 +1,8 @@
 {
   "sheets/streetwear/heroes/void-raven/Attack": {
     "sheet": "art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.combat.png",
-    "sheetW": 983,
-    "sheetH": 945,
+    "sheetW": 1112,
+    "sheetH": 1175,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -114,8 +114,8 @@
   },
   "sheets/streetwear/heroes/void-raven/Dash": {
     "sheet": "art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.combat.png",
-    "sheetW": 983,
-    "sheetH": 945,
+    "sheetW": 1112,
+    "sheetH": 1175,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -227,78 +227,78 @@
   },
   "sheets/streetwear/heroes/void-raven/Hurt": {
     "sheet": "art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.combat.png",
-    "sheetW": 983,
-    "sheetH": 945,
+    "sheetW": 1112,
+    "sheetH": 1175,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
       "east/frame_001": {
         "x": 99,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
       "east/frame_002": {
         "x": 198,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
       "east/frame_003": {
         "x": 297,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
       "east/frame_004": {
         "x": 396,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
       "east/frame_005": {
         "x": 495,
-        "y": 498,
+        "y": 728,
         "w": 98,
         "h": 112
       },
       "west/frame_000": {
         "x": 0,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
       "west/frame_001": {
         "x": 99,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
       "west/frame_002": {
         "x": 198,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
       "west/frame_003": {
         "x": 297,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
       "west/frame_004": {
         "x": 396,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       },
       "west/frame_005": {
         "x": 495,
-        "y": 611,
+        "y": 841,
         "w": 98,
         "h": 112
       }
@@ -381,102 +381,102 @@
   },
   "sheets/streetwear/heroes/void-raven/Skill": {
     "sheet": "art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.combat.png",
-    "sheetW": 983,
-    "sheetH": 945,
+    "sheetW": 1112,
+    "sheetH": 1175,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
       "east/frame_001": {
         "x": 123,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
       "east/frame_002": {
         "x": 246,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
       "east/frame_003": {
         "x": 369,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
       "east/frame_004": {
         "x": 492,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
       "east/frame_005": {
         "x": 615,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
       "east/frame_006": {
         "x": 738,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
       "east/frame_007": {
         "x": 861,
-        "y": 724,
+        "y": 954,
         "w": 122,
         "h": 110
       },
       "west/frame_000": {
         "x": 0,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
       "west/frame_001": {
         "x": 123,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
       "west/frame_002": {
         "x": 246,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
       "west/frame_003": {
         "x": 369,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
       "west/frame_004": {
         "x": 492,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
       "west/frame_005": {
         "x": 615,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
       "west/frame_006": {
         "x": 738,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       },
       "west/frame_007": {
         "x": 861,
-        "y": 835,
+        "y": 1065,
         "w": 122,
         "h": 110
       }
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/void-raven/Faint": {
+    "sheet": "art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.combat.png",
+    "sheetW": 1112,
+    "sheetH": 1175,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "east/frame_001": {
+        "x": 159,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "east/frame_002": {
+        "x": 318,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "east/frame_003": {
+        "x": 477,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "east/frame_004": {
+        "x": 636,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "east/frame_005": {
+        "x": 795,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "east/frame_006": {
+        "x": 954,
+        "y": 498,
+        "w": 158,
+        "h": 114
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "west/frame_001": {
+        "x": 159,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "west/frame_002": {
+        "x": 318,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "west/frame_003": {
+        "x": 477,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "west/frame_004": {
+        "x": 636,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "west/frame_005": {
+        "x": 795,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      },
+      "west/frame_006": {
+        "x": 954,
+        "y": 613,
+        "w": 158,
+        "h": 114
+      }
+    },
+    "offsetX": 13,
+    "offsetY": 39,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/void-raven/rotations": {
     "sheet": "art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.core.png",

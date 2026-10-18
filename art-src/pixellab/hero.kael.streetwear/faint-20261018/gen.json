@@ -1,0 +1,43 @@
+{
+  "tool": "pixellab",
+  "model": "skeleton-v3",
+  "prompt": "falling-back-death template, skeleton-v3, east+west; padded to 192 (head on idle head, lowest pixel on idle feet line)",
+  "negative": null,
+  "seed": null,
+  "size": "128",
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {
+    "tool": "animate_character",
+    "mode": "skeleton-v3",
+    "template_animation_id": "falling-back-death",
+    "directions": [
+      "east",
+      "west"
+    ],
+    "character_id": "dc37a135-5822-46d1-b3a8-022ccc7c2b12",
+    "animation_ids": {
+      "east": "cc7f28d3-d914-4d96-95c8-35dea8334f4c",
+      "west": "b7c8535e-82db-4bb9-b826-9ef07fa4e98b"
+    },
+    "frames": 7,
+    "post": "padded to 192 cell: head centred on idle head, each frame lowest pixel on idle feet line; colours snapped to the hero combat atlas; alpha 0/255"
+  },
+  "cost": 6,
+  "createdAt": "2026-10-18T10:37:21.724Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": 23,
+    "max": 28,
+    "zeros": 0,
+    "notes": "faint 23/28. sample hero, approved by emci 2026-10-18; workbench score 75.7 (approved Kael hurt frame scores 75.6)"
+  },
+  "dirMap": {
+    "animations\\Faint": "faint",
+    "animations\\Faint\\east": "e",
+    "animations\\Faint\\west": "w"
+  }
+}

@@ -2,7 +2,7 @@
   "sheets/streetwear/heroes/morwen/Attack": {
     "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
     "sheetW": 991,
-    "sheetH": 887,
+    "sheetH": 1101,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -115,7 +115,7 @@
   "sheets/streetwear/heroes/morwen/Dash": {
     "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
     "sheetW": 991,
-    "sheetH": 887,
+    "sheetH": 1101,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -228,7 +228,7 @@
   "sheets/streetwear/heroes/morwen/Hurt": {
     "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
     "sheetW": 991,
-    "sheetH": 887,
+    "sheetH": 1101,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -382,7 +382,7 @@
   "sheets/streetwear/heroes/morwen/Skill": {
     "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
     "sheetW": 991,
-    "sheetH": 887,
+    "sheetH": 1101,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/morwen/Faint": {
+    "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.combat.png",
+    "sheetW": 991,
+    "sheetH": 1101,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 888,
+        "w": 128,
+        "h": 106
+      },
+      "east/frame_001": {
+        "x": 129,
+        "y": 888,
+        "w": 128,
+        "h": 106
+      },
+      "east/frame_002": {
+        "x": 258,
+        "y": 888,
+        "w": 128,
+        "h": 106
+      },
+      "east/frame_003": {
+        "x": 387,
+        "y": 888,
+        "w": 128,
+        "h": 106
+      },
+      "east/frame_004": {
+        "x": 516,
+        "y": 888,
+        "w": 128,
+        "h": 106
+      },
+      "east/frame_005": {
+        "x": 645,
+        "y": 888,
+        "w": 128,
+        "h": 106
+      },
+      "east/frame_006": {
+        "x": 774,
+        "y": 888,
+        "w": 128,
+        "h": 106
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 995,
+        "w": 128,
+        "h": 106
+      },
+      "west/frame_001": {
+        "x": 129,
+        "y": 995,
+        "w": 128,
+        "h": 106
+      },
+      "west/frame_002": {
+        "x": 258,
+        "y": 995,
+        "w": 128,
+        "h": 106
+      },
+      "west/frame_003": {
+        "x": 387,
+        "y": 995,
+        "w": 128,
+        "h": 106
+      },
+      "west/frame_004": {
+        "x": 516,
+        "y": 995,
+        "w": 128,
+        "h": 106
+      },
+      "west/frame_005": {
+        "x": 645,
+        "y": 995,
+        "w": 128,
+        "h": 106
+      },
+      "west/frame_006": {
+        "x": 774,
+        "y": 995,
+        "w": 128,
+        "h": 106
+      }
+    },
+    "offsetX": 32,
+    "offsetY": 45,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/morwen/rotations": {
     "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.core.png",

@@ -1,8 +1,8 @@
 {
   "sheets/streetwear/heroes/cyber-shinobi/Attack": {
     "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
-    "sheetW": 919,
-    "sheetH": 921,
+    "sheetW": 930,
+    "sheetH": 1143,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -114,8 +114,8 @@
   },
   "sheets/streetwear/heroes/cyber-shinobi/Dash": {
     "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
-    "sheetW": 919,
-    "sheetH": 921,
+    "sheetW": 930,
+    "sheetH": 1143,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -227,8 +227,8 @@
   },
   "sheets/streetwear/heroes/cyber-shinobi/Hurt": {
     "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
-    "sheetW": 919,
-    "sheetH": 921,
+    "sheetW": 930,
+    "sheetH": 1143,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -381,8 +381,8 @@
   },
   "sheets/streetwear/heroes/cyber-shinobi/Skill": {
     "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
-    "sheetW": 919,
-    "sheetH": 921,
+    "sheetW": 930,
+    "sheetH": 1143,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/cyber-shinobi/Faint": {
+    "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.combat.png",
+    "sheetW": 930,
+    "sheetH": 1143,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 922,
+        "w": 132,
+        "h": 110
+      },
+      "east/frame_001": {
+        "x": 133,
+        "y": 922,
+        "w": 132,
+        "h": 110
+      },
+      "east/frame_002": {
+        "x": 266,
+        "y": 922,
+        "w": 132,
+        "h": 110
+      },
+      "east/frame_003": {
+        "x": 399,
+        "y": 922,
+        "w": 132,
+        "h": 110
+      },
+      "east/frame_004": {
+        "x": 532,
+        "y": 922,
+        "w": 132,
+        "h": 110
+      },
+      "east/frame_005": {
+        "x": 665,
+        "y": 922,
+        "w": 132,
+        "h": 110
+      },
+      "east/frame_006": {
+        "x": 798,
+        "y": 922,
+        "w": 132,
+        "h": 110
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 1033,
+        "w": 132,
+        "h": 110
+      },
+      "west/frame_001": {
+        "x": 133,
+        "y": 1033,
+        "w": 132,
+        "h": 110
+      },
+      "west/frame_002": {
+        "x": 266,
+        "y": 1033,
+        "w": 132,
+        "h": 110
+      },
+      "west/frame_003": {
+        "x": 399,
+        "y": 1033,
+        "w": 132,
+        "h": 110
+      },
+      "west/frame_004": {
+        "x": 532,
+        "y": 1033,
+        "w": 132,
+        "h": 110
+      },
+      "west/frame_005": {
+        "x": 665,
+        "y": 1033,
+        "w": 132,
+        "h": 110
+      },
+      "west/frame_006": {
+        "x": 798,
+        "y": 1033,
+        "w": 132,
+        "h": 110
+      }
+    },
+    "offsetX": 37,
+    "offsetY": 43,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/cyber-shinobi/rotations": {
     "sheet": "art/heroes/in-use/cyber-shinobi/streetwear/hero_cyber-shinobi_streetwear.core.png",

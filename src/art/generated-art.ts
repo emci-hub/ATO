@@ -2004,6 +2004,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/archangel/Attack',
       skill: 'sheets/streetwear/heroes/archangel/Skill',
       hurt: 'sheets/streetwear/heroes/archangel/Hurt',
+      faint: 'sheets/streetwear/heroes/archangel/Faint',
     },
     aurex: {
       rotations: 'sheets/streetwear/heroes/aurex/rotations',
@@ -2013,6 +2014,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/aurex/Attack',
       skill: 'sheets/streetwear/heroes/aurex/Skill',
       hurt: 'sheets/streetwear/heroes/aurex/Hurt',
+      faint: 'sheets/streetwear/heroes/aurex/Faint',
     },
     corvus: {
       rotations: 'sheets/streetwear/heroes/corvus/rotations',
@@ -2022,6 +2024,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/corvus/Attack',
       skill: 'sheets/streetwear/heroes/corvus/Skill',
       hurt: 'sheets/streetwear/heroes/corvus/Hurt',
+      faint: 'sheets/streetwear/heroes/corvus/Faint',
     },
     'cyber-shinobi': {
       rotations: 'sheets/streetwear/heroes/cyber-shinobi/rotations',
@@ -2031,6 +2034,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/cyber-shinobi/Attack',
       skill: 'sheets/streetwear/heroes/cyber-shinobi/Skill',
       hurt: 'sheets/streetwear/heroes/cyber-shinobi/Hurt',
+      faint: 'sheets/streetwear/heroes/cyber-shinobi/Faint',
     },
     elowen: {
       rotations: 'sheets/streetwear/heroes/elowen/rotations',
@@ -2040,6 +2044,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/elowen/Attack',
       skill: 'sheets/streetwear/heroes/elowen/Skill',
       hurt: 'sheets/streetwear/heroes/elowen/Hurt',
+      faint: 'sheets/streetwear/heroes/elowen/Faint',
     },
     'frost-lich': {
       rotations: 'sheets/streetwear/heroes/frost-lich/rotations',
@@ -2049,6 +2054,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/frost-lich/Attack',
       skill: 'sheets/streetwear/heroes/frost-lich/Skill',
       hurt: 'sheets/streetwear/heroes/frost-lich/Hurt',
+      faint: 'sheets/streetwear/heroes/frost-lich/Faint',
     },
     kael: {
       rotations: 'sheets/streetwear/heroes/kael/rotations',
@@ -2058,6 +2064,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/kael/Attack',
       skill: 'sheets/streetwear/heroes/kael/Skill',
       hurt: 'sheets/streetwear/heroes/kael/Hurt',
+      faint: 'sheets/streetwear/heroes/kael/Faint',
     },
     kitsune: {
       rotations: 'sheets/streetwear/heroes/kitsune/rotations',
@@ -2067,6 +2074,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/kitsune/Attack',
       skill: 'sheets/streetwear/heroes/kitsune/Skill',
       hurt: 'sheets/streetwear/heroes/kitsune/Hurt',
+      faint: 'sheets/streetwear/heroes/kitsune/Faint',
     },
     maldrath: {
       rotations: 'sheets/streetwear/heroes/maldrath/rotations',
@@ -2076,6 +2084,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/maldrath/Attack',
       skill: 'sheets/streetwear/heroes/maldrath/Skill',
       hurt: 'sheets/streetwear/heroes/maldrath/Hurt',
+      faint: 'sheets/streetwear/heroes/maldrath/Faint',
     },
     morwen: {
       rotations: 'sheets/streetwear/heroes/morwen/rotations',
@@ -2085,6 +2094,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/morwen/Attack',
       skill: 'sheets/streetwear/heroes/morwen/Skill',
       hurt: 'sheets/streetwear/heroes/morwen/Hurt',
+      faint: 'sheets/streetwear/heroes/morwen/Faint',
     },
     'neon-viper': {
       rotations: 'sheets/streetwear/heroes/neon-viper/rotations',
@@ -2094,6 +2104,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/neon-viper/Attack',
       skill: 'sheets/streetwear/heroes/neon-viper/Skill',
       hurt: 'sheets/streetwear/heroes/neon-viper/Hurt',
+      faint: 'sheets/streetwear/heroes/neon-viper/Faint',
     },
     oni: {
       rotations: 'sheets/streetwear/heroes/oni/rotations',
@@ -2103,6 +2114,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/oni/Attack',
       skill: 'sheets/streetwear/heroes/oni/Skill',
       hurt: 'sheets/streetwear/heroes/oni/Hurt',
+      faint: 'sheets/streetwear/heroes/oni/Faint',
     },
     raven: {
       rotations: 'sheets/streetwear/heroes/raven/rotations',
@@ -2112,6 +2124,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/raven/Attack',
       skill: 'sheets/streetwear/heroes/raven/Skill',
       hurt: 'sheets/streetwear/heroes/raven/Hurt',
+      faint: 'sheets/streetwear/heroes/raven/Faint',
     },
     sak: {
       rotations: 'sheets/streetwear/heroes/sak/rotations',
@@ -2121,6 +2134,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/sak/Attack',
       skill: 'sheets/streetwear/heroes/sak/Skill',
       hurt: 'sheets/streetwear/heroes/sak/Hurt',
+      faint: 'sheets/streetwear/heroes/sak/Faint',
     },
     velkhar: {
       rotations: 'sheets/streetwear/heroes/velkhar/rotations',
@@ -2130,6 +2144,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/velkhar/Attack',
       skill: 'sheets/streetwear/heroes/velkhar/Skill',
       hurt: 'sheets/streetwear/heroes/velkhar/Hurt',
+      faint: 'sheets/streetwear/heroes/velkhar/Faint',
     },
     'void-raven': {
       rotations: 'sheets/streetwear/heroes/void-raven/rotations',
@@ -2139,6 +2154,7 @@ export const SHEET = {
       attack: 'sheets/streetwear/heroes/void-raven/Attack',
       skill: 'sheets/streetwear/heroes/void-raven/Skill',
       hurt: 'sheets/streetwear/heroes/void-raven/Hurt',
+      faint: 'sheets/streetwear/heroes/void-raven/Faint',
     },
   },
   enemy: {

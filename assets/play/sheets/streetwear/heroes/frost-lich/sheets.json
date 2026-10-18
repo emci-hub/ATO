@@ -2,101 +2,101 @@
   "sheets/streetwear/heroes/frost-lich/Attack": {
     "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
     "sheetW": 1231,
-    "sheetH": 971,
+    "sheetH": 1223,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 738,
+        "y": 990,
         "w": 131,
         "h": 116
       },
       "east/frame_001": {
         "x": 132,
-        "y": 738,
+        "y": 990,
         "w": 131,
         "h": 116
       },
       "east/frame_002": {
         "x": 264,
-        "y": 738,
+        "y": 990,
         "w": 131,
         "h": 116
       },
       "east/frame_003": {
         "x": 396,
-        "y": 738,
+        "y": 990,
         "w": 131,
         "h": 116
       },
       "east/frame_004": {
         "x": 528,
-        "y": 738,
+        "y": 990,
         "w": 131,
         "h": 116
       },
       "east/frame_005": {
         "x": 660,
-        "y": 738,
+        "y": 990,
         "w": 131,
         "h": 116
       },
       "east/frame_006": {
         "x": 792,
-        "y": 738,
+        "y": 990,
         "w": 131,
         "h": 116
       },
       "east/frame_007": {
         "x": 924,
-        "y": 738,
+        "y": 990,
         "w": 131,
         "h": 116
       },
       "west/frame_000": {
         "x": 0,
-        "y": 855,
+        "y": 1107,
         "w": 131,
         "h": 116
       },
       "west/frame_001": {
         "x": 132,
-        "y": 855,
+        "y": 1107,
         "w": 131,
         "h": 116
       },
       "west/frame_002": {
         "x": 264,
-        "y": 855,
+        "y": 1107,
         "w": 131,
         "h": 116
       },
       "west/frame_003": {
         "x": 396,
-        "y": 855,
+        "y": 1107,
         "w": 131,
         "h": 116
       },
       "west/frame_004": {
         "x": 528,
-        "y": 855,
+        "y": 1107,
         "w": 131,
         "h": 116
       },
       "west/frame_005": {
         "x": 660,
-        "y": 855,
+        "y": 1107,
         "w": 131,
         "h": 116
       },
       "west/frame_006": {
         "x": 792,
-        "y": 855,
+        "y": 1107,
         "w": 131,
         "h": 116
       },
       "west/frame_007": {
         "x": 924,
-        "y": 855,
+        "y": 1107,
         "w": 131,
         "h": 116
       }
@@ -115,101 +115,101 @@
   "sheets/streetwear/heroes/frost-lich/Dash": {
     "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
     "sheetW": 1231,
-    "sheetH": 971,
+    "sheetH": 1223,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 266,
+        "y": 518,
         "w": 153,
         "h": 117
       },
       "east/frame_001": {
         "x": 154,
-        "y": 266,
+        "y": 518,
         "w": 153,
         "h": 117
       },
       "east/frame_002": {
         "x": 308,
-        "y": 266,
+        "y": 518,
         "w": 153,
         "h": 117
       },
       "east/frame_003": {
         "x": 462,
-        "y": 266,
+        "y": 518,
         "w": 153,
         "h": 117
       },
       "east/frame_004": {
         "x": 616,
-        "y": 266,
+        "y": 518,
         "w": 153,
         "h": 117
       },
       "east/frame_005": {
         "x": 770,
-        "y": 266,
+        "y": 518,
         "w": 153,
         "h": 117
       },
       "east/frame_006": {
         "x": 924,
-        "y": 266,
+        "y": 518,
         "w": 153,
         "h": 117
       },
       "east/frame_007": {
         "x": 1078,
-        "y": 266,
+        "y": 518,
         "w": 153,
         "h": 117
       },
       "west/frame_000": {
         "x": 0,
-        "y": 384,
+        "y": 636,
         "w": 153,
         "h": 117
       },
       "west/frame_001": {
         "x": 154,
-        "y": 384,
+        "y": 636,
         "w": 153,
         "h": 117
       },
       "west/frame_002": {
         "x": 308,
-        "y": 384,
+        "y": 636,
         "w": 153,
         "h": 117
       },
       "west/frame_003": {
         "x": 462,
-        "y": 384,
+        "y": 636,
         "w": 153,
         "h": 117
       },
       "west/frame_004": {
         "x": 616,
-        "y": 384,
+        "y": 636,
         "w": 153,
         "h": 117
       },
       "west/frame_005": {
         "x": 770,
-        "y": 384,
+        "y": 636,
         "w": 153,
         "h": 117
       },
       "west/frame_006": {
         "x": 924,
-        "y": 384,
+        "y": 636,
         "w": 153,
         "h": 117
       },
       "west/frame_007": {
         "x": 1078,
-        "y": 384,
+        "y": 636,
         "w": 153,
         "h": 117
       }
@@ -228,77 +228,77 @@
   "sheets/streetwear/heroes/frost-lich/Hurt": {
     "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
     "sheetW": 1231,
-    "sheetH": 971,
+    "sheetH": 1223,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 502,
+        "y": 754,
         "w": 96,
         "h": 117
       },
       "east/frame_001": {
         "x": 97,
-        "y": 502,
+        "y": 754,
         "w": 96,
         "h": 117
       },
       "east/frame_002": {
         "x": 194,
-        "y": 502,
+        "y": 754,
         "w": 96,
         "h": 117
       },
       "east/frame_003": {
         "x": 291,
-        "y": 502,
+        "y": 754,
         "w": 96,
         "h": 117
       },
       "east/frame_004": {
         "x": 388,
-        "y": 502,
+        "y": 754,
         "w": 96,
         "h": 117
       },
       "east/frame_005": {
         "x": 485,
-        "y": 502,
+        "y": 754,
         "w": 96,
         "h": 117
       },
       "west/frame_000": {
         "x": 0,
-        "y": 620,
+        "y": 872,
         "w": 96,
         "h": 117
       },
       "west/frame_001": {
         "x": 97,
-        "y": 620,
+        "y": 872,
         "w": 96,
         "h": 117
       },
       "west/frame_002": {
         "x": 194,
-        "y": 620,
+        "y": 872,
         "w": 96,
         "h": 117
       },
       "west/frame_003": {
         "x": 291,
-        "y": 620,
+        "y": 872,
         "w": 96,
         "h": 117
       },
       "west/frame_004": {
         "x": 388,
-        "y": 620,
+        "y": 872,
         "w": 96,
         "h": 117
       },
       "west/frame_005": {
         "x": 485,
-        "y": 620,
+        "y": 872,
         "w": 96,
         "h": 117
       }
@@ -382,7 +382,7 @@
   "sheets/streetwear/heroes/frost-lich/Skill": {
     "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
     "sheetW": 1231,
-    "sheetH": 971,
+    "sheetH": 1223,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/frost-lich/Faint": {
+    "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.combat.png",
+    "sheetW": 1231,
+    "sheetH": 1223,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 266,
+        "w": 144,
+        "h": 125
+      },
+      "east/frame_001": {
+        "x": 145,
+        "y": 266,
+        "w": 144,
+        "h": 125
+      },
+      "east/frame_002": {
+        "x": 290,
+        "y": 266,
+        "w": 144,
+        "h": 125
+      },
+      "east/frame_003": {
+        "x": 435,
+        "y": 266,
+        "w": 144,
+        "h": 125
+      },
+      "east/frame_004": {
+        "x": 580,
+        "y": 266,
+        "w": 144,
+        "h": 125
+      },
+      "east/frame_005": {
+        "x": 725,
+        "y": 266,
+        "w": 144,
+        "h": 125
+      },
+      "east/frame_006": {
+        "x": 870,
+        "y": 266,
+        "w": 144,
+        "h": 125
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 392,
+        "w": 144,
+        "h": 125
+      },
+      "west/frame_001": {
+        "x": 145,
+        "y": 392,
+        "w": 144,
+        "h": 125
+      },
+      "west/frame_002": {
+        "x": 290,
+        "y": 392,
+        "w": 144,
+        "h": 125
+      },
+      "west/frame_003": {
+        "x": 435,
+        "y": 392,
+        "w": 144,
+        "h": 125
+      },
+      "west/frame_004": {
+        "x": 580,
+        "y": 392,
+        "w": 144,
+        "h": 125
+      },
+      "west/frame_005": {
+        "x": 725,
+        "y": 392,
+        "w": 144,
+        "h": 125
+      },
+      "west/frame_006": {
+        "x": 870,
+        "y": 392,
+        "w": 144,
+        "h": 125
+      }
+    },
+    "offsetX": 25,
+    "offsetY": 28,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/frost-lich/rotations": {
     "sheet": "art/heroes/in-use/frost-lich/streetwear/hero_frost-lich_streetwear.core.png",

@@ -12,8 +12,10 @@
  */
 import { HERO_CLIPS } from '@/play/heroes-data';
 
-/** Characters: one packed sheet per action (+ the 8-way still `rotations`). */
-export const HERO_SLOTS = ['rotations', ...HERO_CLIPS] as const;
+/** Characters: one packed sheet per action (+ the 8-way still `rotations`).
+ * `faint` (pet team P3, 2026-10-18) is art-only for now: the Streetwear heroes
+ * author it, the Turf team (P5) plays it; it is not a `HERO_CLIPS` slot yet. */
+export const HERO_SLOTS = ['rotations', ...HERO_CLIPS, 'faint'] as const;
 export const ENEMY_SLOTS = ['rotations', 'idle', 'walk', 'run', 'death'] as const;
 export const TOWER_SLOTS = ['rotations', 'idle', 'attack', 'skill'] as const;
 

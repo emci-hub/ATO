@@ -2,7 +2,7 @@
   "sheets/streetwear/heroes/corvus/Attack": {
     "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.combat.png",
     "sheetW": 1015,
-    "sheetH": 971,
+    "sheetH": 1193,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -115,7 +115,7 @@
   "sheets/streetwear/heroes/corvus/Dash": {
     "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.combat.png",
     "sheetW": 1015,
-    "sheetH": 971,
+    "sheetH": 1193,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -228,7 +228,7 @@
   "sheets/streetwear/heroes/corvus/Hurt": {
     "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.combat.png",
     "sheetW": 1015,
-    "sheetH": 971,
+    "sheetH": 1193,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -382,7 +382,7 @@
   "sheets/streetwear/heroes/corvus/Skill": {
     "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.combat.png",
     "sheetW": 1015,
-    "sheetH": 971,
+    "sheetH": 1193,
     "frames": {
       "east/frame_000": {
         "x": 0,
@@ -702,6 +702,107 @@
       "west"
     ],
     "tier": "core"
+  },
+  "sheets/streetwear/heroes/corvus/Faint": {
+    "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.combat.png",
+    "sheetW": 1015,
+    "sheetH": 1193,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 972,
+        "w": 133,
+        "h": 110
+      },
+      "east/frame_001": {
+        "x": 134,
+        "y": 972,
+        "w": 133,
+        "h": 110
+      },
+      "east/frame_002": {
+        "x": 268,
+        "y": 972,
+        "w": 133,
+        "h": 110
+      },
+      "east/frame_003": {
+        "x": 402,
+        "y": 972,
+        "w": 133,
+        "h": 110
+      },
+      "east/frame_004": {
+        "x": 536,
+        "y": 972,
+        "w": 133,
+        "h": 110
+      },
+      "east/frame_005": {
+        "x": 670,
+        "y": 972,
+        "w": 133,
+        "h": 110
+      },
+      "east/frame_006": {
+        "x": 804,
+        "y": 972,
+        "w": 133,
+        "h": 110
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 1083,
+        "w": 133,
+        "h": 110
+      },
+      "west/frame_001": {
+        "x": 134,
+        "y": 1083,
+        "w": 133,
+        "h": 110
+      },
+      "west/frame_002": {
+        "x": 268,
+        "y": 1083,
+        "w": 133,
+        "h": 110
+      },
+      "west/frame_003": {
+        "x": 402,
+        "y": 1083,
+        "w": 133,
+        "h": 110
+      },
+      "west/frame_004": {
+        "x": 536,
+        "y": 1083,
+        "w": 133,
+        "h": 110
+      },
+      "west/frame_005": {
+        "x": 670,
+        "y": 1083,
+        "w": 133,
+        "h": 110
+      },
+      "west/frame_006": {
+        "x": 804,
+        "y": 1083,
+        "w": 133,
+        "h": 110
+      }
+    },
+    "offsetX": 34,
+    "offsetY": 45,
+    "sourceW": 192,
+    "sourceH": 192,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/heroes/corvus/rotations": {
     "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.core.png",
