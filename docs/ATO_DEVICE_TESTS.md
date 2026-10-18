@@ -431,3 +431,12 @@ First: iPhone Settings → Accessibility → Display & Text Size → Larger Text
 - [ ] The card is the same size as before and still closes on a tap.
 - [ ] The card's title line may be larger than before; that is expected. The chip words stay the normal size; that is expected too.
 - [ ] Put the text size back to your usual setting afterwards.
+
+## Box 43 — Egg duplicates join up: one pet per hero (pet team P1, 2026-10-18)
+
+First: close and reopen the app so the update loads. Play → Hideout → Stash (the Den).
+
+- [ ] If your Den used to have the same hero more than once, it now shows that hero once. The grown one stayed, with the best grade it had (and shiny if either one was).
+- [ ] The hero's stars in the Collection are the same as before. Nothing went missing (shards, finishes, auras).
+- [ ] Hatch an egg until its Child reveal plays (dev kit "reveal now" is fine). If it is a hero you already keep, about 3 seconds after the reveal line the pet says "<Name> joined up! ★ → ★★" (plus "Now Epic!" or similar if the grade went up). The grown pet is now the one in the room, and the Den did not get a second copy.
+- [ ] A new hero still hatches as a new pet, as before.

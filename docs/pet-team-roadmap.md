@@ -8,7 +8,10 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
 - **P1 built 2026-10-18** (commit `03412ad9`): `src/play/pet-merge.ts`, `foldDuplicatePets` + reveal-ack hook +
   parse fold in `playStore.ts`, "joined up" line in `pet-screen.tsx`, `check:pet-merge`. Deviation from the plan
   text: the save version stays **33** (no v34). The fold reads and writes v33 fields only, so a phone on an older
-  bundle can still open the save. Not device-verified yet: Box 43.
+  bundle can still open the save. **OTA published 2026-10-18**: iOS `01a14e59-30dc-7103-b021-1f2b22114068`,
+  Android `01a14e59-30dc-7cf2-81eb-2ca4b2fb2b8b`, group `5ce4fbf7-6c69-43b0-8522-f6cc5ce7d21f` (message
+  `pet-team-p1-merge`, commit `16080d2a`). Gate green, reviewer pass (shiny double count fixed). Phone check:
+  `docs/ATO_DEVICE_TESTS.md` Box 43 (not done yet). **Next: P2.**
 
 ## The idea in one line
 
