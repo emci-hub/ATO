@@ -86,15 +86,27 @@ import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/b
 import { defaultTowerSkin, towerSkillCooldownMs } from '@/play/tower-skins-data';
 import type { Grade } from '@/play/pet-eggs';
 import {
-  BOSS_KO_RADIUS,
+  BOSS_SWING_MS,
+  BOSS_SWING_RADIUS,
   HELPER_BASE_ATTACK,
+  HELPER_DAZE_MS,
+  HELPER_DAZE_PROOF_MS,
+  HELPER_GET_UP_MS,
+  HELPER_MOVE_SPEED,
   HELPER_RANGE,
+  HELPER_RETURN_SPEED,
   HELPER_SKILL_COOLDOWN_MS,
+  HELPER_SKILL_FIRST_MS,
   LEGENDARY_SPLASH_PCT,
   LEGENDARY_SPLASH_RADIUS,
+  TURF_HELPER_SLOTS,
   gradeRangeMult,
   gradeSplashes,
+  helperFollowSpot,
+  helperGoal,
+  pickHelperChase,
   starPowerMult,
+  stepHelperToward,
   teamPounceSpare,
 } from '@/play/turf-team';
 
@@ -494,13 +506,14 @@ export type DefendLive = {
   petPounceSpareMax: number;
   /** Divine sword pulse already fired this wave. */
   swordSuperUsed: boolean;
-  /** Turf team helpers (P5) — up to 2 pets standing off the road. */
+  /** Turf team helper (P5b) — one AI pet that follows the leader. */
   helpers: TurfHelperUnit[];
 };
 
-/** A helper pet on the board (pet team P5). Stands still where it was dropped (always off the road
- * and pads, `turf-team.ts`), auto-attacks with its hero kit, and is knocked out for the rest of the
- * wave when a boss passes within `BOSS_KO_RADIUS`. Ids are negative so they never meet a tower's. */
+/** The AI helper pet on the board (pet team P5b). Follows the leader, chases its own target inside the
+ * leash (boss first), auto-attacks with its hero kit and casts its own hero skill. It never dies: a
+ * boss swing dazes it (`dazedMs`), it gets up (`getUpMs`), runs back to the leader (`returning`) and is
+ * daze-proof for a while (`dazeProofMs`). Ids are negative so they never meet a tower's. */
 export type TurfHelperUnit = {
   id: number;
   slot: number;
@@ -511,8 +524,36 @@ export type TurfHelperUnit = {
   grade: Grade;
   cooldownMs: number;
   skillCooldownMs: number;
-  knockedOut: boolean;
+  /** Lying down (sim ms left). */
+  dazedMs: number;
+  /** Getting up (sim ms left) — the faint clip reversed. */
+  getUpMs: number;
+  /** A boss swing can't daze it while this runs (sim ms left). */
+  dazeProofMs: number;
+  /** Next boss swing lands when this reaches 0 (counts only while a boss is within reach). */
+  swingMs: number;
+  /** Running back to the leader after a daze. */
+  returning: boolean;
+  /** Walked this tick (the board plays its walk clip). */
+  moving: boolean;
+  /** Sticky E/W side the helper last walked toward. */
+  face: 'e' | 'w';
 };
+
+/** A fresh, standing helper state (wave start / retry). */
+function freshHelper<T extends TurfHelperUnit>(h: T): T {
+  return {
+    ...h,
+    cooldownMs: 0,
+    skillCooldownMs: HELPER_SKILL_FIRST_MS,
+    dazedMs: 0,
+    getUpMs: 0,
+    dazeProofMs: 0,
+    swingMs: BOSS_SWING_MS,
+    returning: false,
+    moving: false,
+  };
+}
 
 /** A helper's id from its slot (0 → -10, 1 → -11). */
 export function helperUnitId(slot: number): number {
@@ -525,8 +566,12 @@ export type DefendStep = {
   leak: boolean;
   /** Wave finished cleanly (all spawned dead, none leaked) → win. */
   done: boolean;
-  /** Helper ids a boss knocked out this tick (the screen plays their faint clip). */
-  knockedOut: number[];
+  /** Helper ids a boss swing dazed this tick (the screen plays their faint clip). */
+  dazed: number[];
+  /** Helper ids that started getting up this tick (the screen plays the faint in reverse). */
+  gotUp: number[];
+  /** Helper ids that cast their hero skill this tick (the screen plays the skill clip). */
+  helperCasts: number[];
   /** A boss spawned this tick (the screen banners the alert). */
   bossSpawned: boolean;
   /** Every kit attack this tick (towers + hero towers), for effects and the
@@ -628,7 +673,7 @@ export function retryDefendLive(state: DefendLive): DefendLive {
       skillCooldownMs: heroById(bb.bossId) ? 0 : BOUND_BOSS_PLACE_SKILL_CD_MS,
     })),
     // A retry is a fresh wave: the team stands back up and the rare pounce is back.
-    helpers: state.helpers.map((h) => ({ ...h, cooldownMs: 0, skillCooldownMs: HELPER_SKILL_COOLDOWN_MS, knockedOut: false })),
+    helpers: state.helpers.map((h) => freshHelper(h)),
     petPounceSpare: state.petPounceSpareMax,
     petPounceSpareMax: state.petPounceSpareMax,
   };
@@ -638,8 +683,9 @@ export function retryDefendLive(state: DefendLive): DefendLive {
 export type TurfHelperSpec = { slot: number; heroId: string; x: number; y: number; stars: number; grade: Grade };
 
 /**
- * Put the Turf team on a board (P5): the helpers (fresh, standing) and the rare pounce spare from the
- * whole team's grades (`leaderGrade` + the helpers'). An unknown hero is dropped, never thrown on.
+ * Put the Turf team on a board (P5b): the one helper (fresh, standing where the screen had it) and the
+ * rare pounce spare from the whole team's grades (`leaderGrade` + the helper's). An unknown hero is
+ * dropped, never thrown on.
  */
 export function placeTurfTeam(
   state: DefendLive,
@@ -648,20 +694,28 @@ export function placeTurfTeam(
 ): DefendLive {
   const units: TurfHelperUnit[] = helpers
     .filter((h) => heroById(h.heroId) != null)
-    .slice(0, 2)
-    .map((h) => ({
-      id: helperUnitId(h.slot),
-      slot: h.slot,
-      heroId: h.heroId,
-      x: h.x,
-      y: h.y,
-      stars: h.stars,
-      grade: h.grade,
-      cooldownMs: 0,
-      // The ultimate waits its first 16 s (no opening burst from the whole team at once).
-      skillCooldownMs: HELPER_SKILL_COOLDOWN_MS,
-      knockedOut: false,
-    }));
+    .slice(0, TURF_HELPER_SLOTS)
+    .map((h) =>
+      freshHelper({
+        id: helperUnitId(h.slot),
+        slot: h.slot,
+        heroId: h.heroId,
+        x: h.x,
+        y: h.y,
+        stars: h.stars,
+        grade: h.grade,
+        cooldownMs: 0,
+        // The skill waits its first 6 s (no opening burst with the leader's).
+        skillCooldownMs: HELPER_SKILL_FIRST_MS,
+        dazedMs: 0,
+        getUpMs: 0,
+        dazeProofMs: 0,
+        swingMs: BOSS_SWING_MS,
+        returning: false,
+        moving: false,
+        face: 'e',
+      }),
+    );
   const spare = teamPounceSpare([leaderGrade, ...units.map((u) => u.grade)]);
   return { ...state, helpers: units, petPounceSpare: spare, petPounceSpareMax: spare };
 }
@@ -1286,31 +1340,93 @@ export function stepDefendLive(
     firedBoundBosses.push({ ...bb, cooldownMs, skillCooldownMs });
   }
 
-  // Turf team helpers (pet team P5): a boss walking past knocks a standing helper out for the rest of
-  // the wave; otherwise the helper fires its hero kit like a hero tower, from its own spot, at
-  // `HELPER_BASE_ATTACK` × star power, and (when its art has a skill clip) its ultimate every 16 s.
+  // Turf team helper (pet team P5b): one AI pet. It never dies — a boss within reach swings every 5 s
+  // and a hit dazes it (down 4 s, then it gets up, runs back to the leader and is daze-proof for 6 s).
+  // Standing, it follows the leader and inside the leash steps toward its own target (boss first),
+  // fires its hero kit at `HELPER_BASE_ATTACK` × star power and casts its own hero skill on a cooldown.
   // Epic reaches 10% further; a legendary helper's hit splashes 30% onto foes close to its target.
-  const knockedOut: number[] = [];
+  const dazed: number[] = [];
+  const gotUp: number[] = [];
+  const helperCasts: number[] = [];
   const firedHelpers: TurfHelperUnit[] = [];
   for (const helper of state.helpers) {
     const hero = heroById(helper.heroId);
-    if (helper.knockedOut || !hero) {
+    if (!hero) {
       firedHelpers.push(helper);
       continue;
     }
+    // Down: lie still, then get up. A helper that is down or getting up takes no swing.
+    if (helper.dazedMs > 0) {
+      const dazedMs = Math.max(0, helper.dazedMs - dtMs);
+      if (dazedMs === 0) gotUp.push(helper.id);
+      firedHelpers.push({ ...helper, dazedMs, getUpMs: dazedMs === 0 ? HELPER_GET_UP_MS : 0, moving: false });
+      continue;
+    }
+    if (helper.getUpMs > 0) {
+      const getUpMs = Math.max(0, helper.getUpMs - dtMs);
+      const up = getUpMs === 0;
+      firedHelpers.push({
+        ...helper,
+        getUpMs,
+        dazeProofMs: up ? HELPER_DAZE_PROOF_MS : helper.dazeProofMs,
+        returning: up ? true : helper.returning,
+        swingMs: BOSS_SWING_MS,
+        moving: false,
+      });
+      continue;
+    }
+    const dazeProofMs = Math.max(0, helper.dazeProofMs - dtMs);
+    let swingMs = helper.swingMs;
     const bossNear = puffs.some((p) => {
       if (p.kind !== 'boss') return false;
       const pos = posOf(p);
-      return Math.hypot(pos.x - helper.x, pos.y - helper.y) <= BOSS_KO_RADIUS;
+      return Math.hypot(pos.x - helper.x, pos.y - helper.y) <= BOSS_SWING_RADIUS;
     });
     if (bossNear) {
-      knockedOut.push(helper.id);
-      firedHelpers.push({ ...helper, knockedOut: true, cooldownMs: 0, skillCooldownMs: 0 });
-      continue;
+      swingMs -= dtMs;
+      if (swingMs <= 0) {
+        swingMs = BOSS_SWING_MS;
+        if (dazeProofMs <= 0) {
+          dazed.push(helper.id);
+          firedHelpers.push({
+            ...helper,
+            dazedMs: HELPER_DAZE_MS,
+            getUpMs: 0,
+            dazeProofMs: 0,
+            swingMs,
+            returning: false,
+            moving: false,
+            cooldownMs: 0,
+          });
+          continue;
+        }
+      }
+    } else {
+      swingMs = BOSS_SWING_MS;
     }
-    const from = { x: helper.x, y: helper.y };
-    const level = Math.max(1, Math.min(3, helper.stars));
     const range = HELPER_RANGE * gradeRangeMult(helper.grade);
+    // Move: run back to the leader after a daze; otherwise follow / chase inside the leash.
+    let returning = helper.returning;
+    let goal: { x: number; y: number };
+    let speed = HELPER_MOVE_SPEED;
+    if (returning) {
+      goal = helperFollowSpot(map, avatar);
+      speed = HELPER_RETURN_SPEED;
+    } else {
+      const foes = puffs.map((p) => {
+        const pos = posOf(p);
+        return { id: p.id, x: pos.x, y: pos.y, boss: p.kind === 'boss' };
+      });
+      const chase = pickHelperChase(avatar, { x: helper.x, y: helper.y }, foes, range);
+      goal = helperGoal(map, avatar, { x: helper.x, y: helper.y }, chase, range);
+    }
+    const walked = stepHelperToward({ x: helper.x, y: helper.y }, goal, speed, dtMs);
+    if (returning && walked.x === goal.x && walked.y === goal.y) returning = false;
+    const moving = walked.moved > 0.05;
+    const dx = walked.x - helper.x;
+    const face: TurfHelperUnit['face'] = dx > 0.05 ? 'e' : dx < -0.05 ? 'w' : helper.face;
+    const from = { x: walked.x, y: walked.y };
+    const level = Math.max(1, Math.min(3, helper.stars));
     const heroKit: Kit = { behavior: hero.kit.behavior, element: buckets.legendElement ?? hero.kit.element };
     const power = boardMult * heroAffinityMult(hero.kit.element, buckets.legendElement) * starPowerMult(helper.stars);
     const splash = (primaryId: number, dealt: number) => {
@@ -1346,36 +1462,35 @@ export function stepDefendLive(
         cooldownMs = 0;
       }
     }
-    if (hero.clips.skill == null) {
-      skillCooldownMs = 0;
-    } else if (skillCooldownMs <= 0) {
-      const fired = fireKit(
-        puffs,
-        {
-          kit: heroKit,
-          level: 3,
-          damage: HELPER_BASE_ATTACK * power,
-          heroShare: true,
-          burst: HERO_BURST_TARGETING,
-          source: 'hero',
-          sourceId: helper.id,
-          from,
-          ultimate: { radius: TOWER_SKILL_RADIUS },
-          ...legendMods,
-        },
-        range,
-        { posOf },
-      );
-      if (fired.hit) {
-        puffs = fired.creeps;
-        hits.push(fired.hit);
+    // Its own hero skill (the veil it casts as leader, `heroCastSkill`), from where it stands, only when
+    // a foe is inside the veil; star power scales the veil's damage. A wasted cooldown waits, unspent.
+    if (skillCooldownMs <= 0) {
+      const skill = heroCastSkill(helper.heroId);
+      const inVeil = puffs.some((p) => {
+        const pos = posOf(p);
+        return Math.hypot(pos.x - from.x, pos.y - from.y) <= skill.radius;
+      });
+      if (inVeil) {
+        puffs = veilPuffs(puffs, map, from, skill, starPowerMult(helper.stars));
         removeDead();
+        helperCasts.push(helper.id);
         skillCooldownMs = HELPER_SKILL_COOLDOWN_MS;
       } else {
         skillCooldownMs = 0;
       }
     }
-    firedHelpers.push({ ...helper, cooldownMs, skillCooldownMs });
+    firedHelpers.push({
+      ...helper,
+      x: walked.x,
+      y: walked.y,
+      cooldownMs,
+      skillCooldownMs,
+      dazeProofMs,
+      swingMs,
+      returning,
+      moving,
+      face,
+    });
   }
 
   // Boss enrage (§18 C): a boss that first drops below its HP threshold fires
@@ -1438,11 +1553,29 @@ export function stepDefendLive(
     },
     leak,
     done: schedule.length === 0 && puffs.length === 0,
-    knockedOut,
+    dazed,
+    gotUp,
+    helperCasts,
     bossSpawned,
     hits,
     dotHits,
   };
+}
+
+/** A hero veil's effect on the creeps around `at` (slow + `damageMult` × its damage) — no cooldown, no
+ * scrap. Shared by the leader's cast (`castSlowPulse`) and the P5b helper's own skill. */
+function veilPuffs(puffs: Puff[], map: DefendMap, at: { x: number; y: number }, skill: CastSkill | undefined, damageMult: number): Puff[] {
+  const radius = skill?.radius ?? SKILL_RADIUS;
+  const slowMs = skill?.slowMs ?? SKILL_SLOW_MS;
+  const slowFactor = 1 - (skill?.slowPct ?? getTune().skillSlowPct);
+  const damage = (skill?.damage ?? 0) * damageMult;
+  return puffs.map((puff) => {
+    const pos = puffPosition(puff.dist, map);
+    const dist = Math.hypot(pos.x * 100 - at.x, pos.y * 100 - at.y);
+    if (dist > radius) return puff;
+    // Same stacking rule as every other slow: strongest wins, longest lasts.
+    return applySlow({ ...puff, hp: puff.hp - damage }, slowFactor, slowMs);
+  });
 }
 
 /** Cast the Avatar skill (a hero veil): slow AND soft-damage everything within
@@ -1457,17 +1590,7 @@ export function castSlowPulse(
 ): DefendLive | null {
   if (state.skillCooldownMs > 0) return null;
   const map = BOARD_MAPS[state.boardId] ?? BOARD_MAPS.ato;
-  const radius = skill?.radius ?? SKILL_RADIUS;
-  const slowMs = skill?.slowMs ?? SKILL_SLOW_MS;
-  const slowFactor = 1 - (skill?.slowPct ?? getTune().skillSlowPct);
-  const damage = skill?.damage ?? 0;
-  let puffs = state.puffs.map((puff) => {
-    const pos = puffPosition(puff.dist, map);
-    const dist = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
-    if (dist > radius) return puff;
-    // Same stacking rule as every other slow: strongest wins, longest lasts.
-    return applySlow({ ...puff, hp: puff.hp - damage }, slowFactor, slowMs);
-  });
+  let puffs = veilPuffs(state.puffs, map, avatar, skill, 1);
   let scrap = state.scrap;
   const killed = puffs.filter((puff) => puff.hp <= 0).length;
   if (killed > 0) {
@@ -1647,10 +1770,10 @@ export function heroTowerTarget(bb: BoundBossTower, puffs: Puff[], map: DefendMa
   return kitTarget(hero.kit, level, HERO_BURST_TARGETING, inRange, map);
 }
 
-/** The foe a standing helper (P5) would hit now — the screen turns the helper toward it. */
+/** The foe the helper (P5b) would hit now — the screen turns the helper toward it. */
 export function helperTarget(helper: TurfHelperUnit, puffs: Puff[], map: DefendMap): Puff | null {
   const hero = heroById(helper.heroId);
-  if (!hero || helper.knockedOut) return null;
+  if (!hero || helper.dazedMs > 0 || helper.getUpMs > 0) return null;
   const range = HELPER_RANGE * gradeRangeMult(helper.grade);
   const inRange = puffs.filter((puff) => {
     const pos = puffPosition(puff.dist, map);

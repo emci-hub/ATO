@@ -1,16 +1,18 @@
 /**
- * Turf team check (pet team roadmap P5, 2026-10-18). Pins, offline against the real code:
- *   - the approved balance numbers (helper 13 / range 15 / skill 16 s, +6% per star, epic +10% range,
- *     legendary 30% splash in 4, rare +1 pounce, boss knock-out at 8);
- *   - who may help (Child+, not the leader's hero, not a bound tower hero, one per hero) and the
- *     tolerant save read (max 2, distinct, finite);
- *   - lanes: every snapped spot is off the road and every pad, from anywhere on the board;
- *   - the sim: helpers hit with their kit, stars / grade change the numbers, a boss knocks a helper out
- *     for the wave (and only that helper), a retry or a new wave stands it back up, the rare spare;
- *   - the leader's star power and epic reach;
- *   - a full wave with 3 heroes clears, and one sim step stays far inside a 60 fps frame;
- *   - the screen wiring (picker in the Setup sheet with the status badge, team placed at Call wave,
- *     faint clip on a knock-out).
+ * Turf team check (pet team roadmap P5 → P5b "one AI helper", 2026-10-18). Pins, offline against the
+ * real code:
+ *   - the approved P5b numbers (1 slot, attack 20, range 15, leash 15, follow gap 6, walk 40 / run back
+ *     50, skill first 6 s then every 14 s, boss swing every 5 s within 8, daze 4 s, get-up 0.6 s,
+ *     daze-proof 6 s) and the kept star / grade perks;
+ *   - who may help and the tolerant save read (one pick; an old 2-pick P5 save reads as its first);
+ *   - lanes: every snapped / follow spot is legal (off road and pads), the follow spot is inside the leash;
+ *   - movement: follows the leader, chases boss first inside the leash, only steps onto the road for a boss;
+ *   - the sim: kit hits, stars / grade, its own hero skill cadence, legendary splash, the daze cycle
+ *     (never removed, normal creeps never daze it, daze-proof after getting up), rare spare, leader perks;
+ *   - a full wave with leader + helper clears, the helper fights and casts, never out for the wave, and
+ *     one sim step stays far inside a 60 fps frame;
+ *   - the screen wiring (picker in the Setup sheet, one slot, no Move / tap-to-place, movement on shared
+ *     values with no new interval, walk / faint / get-up clips, save stays v33).
  *
  * Run: npm run check:turf-team  (part of check:ota-gate)
  */
@@ -22,6 +24,7 @@ import { BOARD_MAPS } from '../src/play/board-data';
 import {
   castPetPounce,
   createDefendLive,
+  heroCastSkill,
   helperUnitId,
   placeTurfTeam,
   puffPosition,
@@ -34,24 +37,38 @@ import {
 import { allHeroes } from '../src/play/heroes-data';
 import { newPet, type PetState } from '../src/play/pet';
 import {
-  BOSS_KO_RADIUS,
+  BOSS_SWING_MS,
+  BOSS_SWING_RADIUS,
   EPIC_RANGE_MULT,
   HELPER_BASE_ATTACK,
-  HELPER_RANGE,
-  HELPER_ROAD_CLEARANCE,
+  HELPER_BOSS_CLOSE,
+  HELPER_DAZE_MS,
+  HELPER_DAZE_PROOF_MS,
+  HELPER_FOLLOW_GAP,
+  HELPER_GET_UP_MS,
+  HELPER_LEASH,
+  HELPER_MOVE_SPEED,
   HELPER_PAD_CLEARANCE,
+  HELPER_RANGE,
+  HELPER_RETURN_SPEED,
+  HELPER_ROAD_CLEARANCE,
   HELPER_SKILL_COOLDOWN_MS,
+  HELPER_SKILL_FIRST_MS,
   LEGENDARY_SPLASH_PCT,
   LEGENDARY_SPLASH_RADIUS,
   RARE_POUNCE_SPARE,
   STAR_POWER_STEP,
   TURF_HELPER_SLOTS,
-  defaultHelperSpot,
+  helperFollowSpot,
+  helperGoal,
+  helperOffRoad,
   helperSpotOk,
   livePicks,
   parseTurfHelpers,
+  pickHelperChase,
   snapHelperSpot,
   starPowerMult,
+  stepHelperToward,
   teamPounceSpare,
   turfCandidates,
 } from '../src/play/turf-team';
@@ -67,20 +84,30 @@ const ok = (msg: string) => {
 const map = BOARD_MAPS.ato;
 const T0 = Date.UTC(2026, 9, 18);
 const buckets = { wavePower: 1, towerSpeed: 1, avatarLevel: 1, legendElement: null, avatarStars: 0 };
-const far = { x: -500, y: -500 };
+const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
 
 /* ------------------------------------------------------------- balance --- */
 {
-  assert.equal(TURF_HELPER_SLOTS, 2);
-  assert.equal(HELPER_BASE_ATTACK, 13, 'helper attack 13 (60% of a hero tower)');
+  assert.equal(TURF_HELPER_SLOTS, 1, 'one AI helper');
+  assert.equal(HELPER_BASE_ATTACK, 20);
   assert.equal(HELPER_RANGE, 15, 'helper range = the leader');
-  assert.equal(HELPER_SKILL_COOLDOWN_MS, 16_000);
+  assert.equal(HELPER_LEASH, 15);
+  assert.equal(HELPER_FOLLOW_GAP, 6);
+  assert.equal(HELPER_MOVE_SPEED, 40);
+  assert.equal(HELPER_RETURN_SPEED, 50);
+  assert.equal(HELPER_SKILL_FIRST_MS, 6_000);
+  assert.equal(HELPER_SKILL_COOLDOWN_MS, 14_000);
+  assert.equal(BOSS_SWING_MS, 5_000);
+  assert.equal(BOSS_SWING_RADIUS, 8);
+  assert.equal(HELPER_DAZE_MS, 4_000);
+  assert.equal(HELPER_GET_UP_MS, 600);
+  assert.equal(HELPER_DAZE_PROOF_MS, 6_000);
+  assert.ok(HELPER_BOSS_CLOSE < BOSS_SWING_RADIUS, 'chasing a boss puts the helper inside its swing (the risk)');
   assert.equal(STAR_POWER_STEP, 0.06);
   assert.equal(EPIC_RANGE_MULT, 1.1);
   assert.equal(LEGENDARY_SPLASH_PCT, 0.3);
   assert.equal(LEGENDARY_SPLASH_RADIUS, 4);
   assert.equal(RARE_POUNCE_SPARE, 1);
-  assert.equal(BOSS_KO_RADIUS, 8);
   assert.equal(starPowerMult(0), 1);
   assert.equal(starPowerMult(1), 1);
   assert.ok(Math.abs(starPowerMult(3) - 1.12) < 1e-9);
@@ -88,7 +115,7 @@ const far = { x: -500, y: -500 };
   assert.ok(Math.abs(starPowerMult(9) - 1.24) < 1e-9, 'capped at 5★');
   assert.equal(teamPounceSpare(['common', 'epic', 'legendary']), 0);
   assert.equal(teamPounceSpare(['rare', 'rare', null]), 1, 'one rare is enough, two give no more');
-  ok('balance numbers pinned (13 / 15 / 16 s, +6%/★, epic ×1.1, legendary 30% in 4, rare +1, KO 8)');
+  ok('P5b numbers pinned (1 slot, 20 / 15, leash 15, 40 & 50 u/s, skill 6 s then 14 s, swing 5 s in 8, daze 4 s, proof 6 s)');
 }
 
 /* --------------------------------------------------------- who may help --- */
@@ -112,20 +139,19 @@ function pet(hero: string | null, stage: PetState['stage'], grade: PetState['gra
   const list = turfCandidates(pets, { leaderHeroId: a, boundHeroIds: [heroIds[4]], copiesOf: (h) => (h === d ? 4 : 1) });
   assert.deepEqual(list.map((x) => x.heroId), [d, heroIds[5]], 'Child+ only, no leader, no bound hero, one per hero');
   assert.equal(list[0].stars, 4, 'stars come from the hero book copies');
-  assert.equal(list[0].grade, 'rare');
-  const picks = parseTurfHelpers([
-    { uid: list[0].uid, x: 30, y: 200 },
-    { uid: list[0].uid, x: 1, y: 1 },
+  // An old P5 save with 2 picks reads as its first valid pick; a missing / bad spot is tolerated.
+  const old = parseTurfHelpers([
     { uid: 'x', x: 1, y: 1 },
-    { uid: list[1].uid, x: NaN, y: 1 },
+    { uid: list[0].uid, x: 30, y: 200 },
     { uid: list[1].uid, x: 70, y: 20 },
-    { uid: 999, x: 5, y: 5 },
   ]);
-  assert.deepEqual(picks, [{ uid: list[0].uid, x: 30, y: 100 }, { uid: list[1].uid, x: 70, y: 20 }], 'tolerant read: distinct, finite, clamped, max 2');
+  assert.deepEqual(old, [{ uid: list[0].uid, x: 30, y: 100 }], 'old 2-pick save → its first valid pick');
+  assert.deepEqual(parseTurfHelpers([{ uid: list[1].uid }]), [{ uid: list[1].uid, x: 50, y: 50 }], 'a pick without a spot still reads');
+  assert.deepEqual(parseTurfHelpers([{ uid: list[1].uid, x: NaN, y: 1 }]), [{ uid: list[1].uid, x: 50, y: 1 }]);
   assert.deepEqual(parseTurfHelpers(undefined), []);
   assert.deepEqual(parseTurfHelpers({}), []);
-  assert.deepEqual(livePicks([{ uid: 999, x: 1, y: 1 }, picks[1]], list), [picks[1]], 'a pick whose pet left is dropped');
-  ok('candidates: Child+, not the leader, not a bound tower, one per hero; save read is tolerant');
+  assert.deepEqual(livePicks([{ uid: 999, x: 1, y: 1 }], list), [], 'a pick whose pet left is dropped');
+  ok('candidates: Child+, not the leader, not a bound tower, one per hero; save read keeps one pick');
 }
 
 /* ---------------------------------------------------------------- lanes --- */
@@ -134,34 +160,93 @@ function pet(hero: string | null, stage: PetState['stage'], grade: PetState['gra
   for (let x = 0; x <= 100; x += 2.5) {
     for (let y = 0; y <= 100; y += 2.5) {
       const s = snapHelperSpot(map, x, y);
-      assert.ok(helperSpotOk(map, s.x, s.y), `snap (${x}, ${y}) → (${s.x.toFixed(1)}, ${s.y.toFixed(1)}) is legal`);
+      assert.ok(helperSpotOk(map, s.x, s.y), `snap (${x}, ${y}) is legal`);
       checked += 1;
     }
   }
   for (const p of map.path) {
     const s = snapHelperSpot(map, p.x * 100, p.y * 100);
-    assert.ok(helperSpotOk(map, s.x, s.y), 'a drop on the road snaps off it');
+    assert.ok(helperSpotOk(map, s.x, s.y), 'a spot on the road snaps off it');
   }
   for (const pad of map.pads) {
     const s = snapHelperSpot(map, pad.x, pad.y);
-    assert.ok(Math.hypot(s.x - pad.x, s.y - pad.y) >= HELPER_PAD_CLEARANCE - 1e-6, 'a drop on a pad snaps off it');
-    assert.ok(Math.hypot(s.x - pad.x, s.y - pad.y) < 25, 'and stays near where it was dropped');
+    assert.ok(dist(s, pad) >= HELPER_PAD_CLEARANCE - 1e-6, 'a spot on a pad snaps off it');
+    assert.ok(dist(s, pad) < 25, 'and stays near it');
   }
   const legal = snapHelperSpot(map, 50, 50);
   assert.deepEqual(snapHelperSpot(map, legal.x, legal.y), legal, 'a legal spot is kept as is');
-  for (const slot of [0, 1]) {
-    const s = defaultHelperSpot(map, { x: 50, y: 50 }, slot);
-    assert.ok(helperSpotOk(map, s.x, s.y), 'the default spot beside the leader is legal');
-  }
+  let follows = 0;
+  let legalFollows = 0;
+  let pastLeash = 0;
+  let worstKnot = 0;
   for (const id of Object.keys(BOARD_MAPS) as (keyof typeof BOARD_MAPS)[]) {
     const m = BOARD_MAPS[id];
-    for (let x = 5; x <= 95; x += 10) {
-      const s = snapHelperSpot(m, x, 50);
-      assert.ok(helperSpotOk(m, s.x, s.y), `board ${id}: snap is legal`);
+    for (let x = 2.5; x <= 97.5; x += 2.5) {
+      for (let y = 2.5; y <= 97.5; y += 2.5) {
+        const leader = { x, y };
+        const f = helperFollowSpot(m, leader);
+        // Always off the road. Inside the leash unless the leader stands in a road knot with no off-road
+        // point within 15 — then the nearest legal spot, a little past it (lanes win).
+        assert.ok(helperOffRoad(m, f.x, f.y), `board ${id}: follow spot for (${x}, ${y}) off the road`);
+        const d = dist(f, leader);
+        if (d > HELPER_LEASH + 1e-6) {
+          assert.ok(helperSpotOk(m, f.x, f.y) && d < 2 * HELPER_LEASH, `board ${id}: a knot spot for (${x}, ${y}) is legal and near (${d.toFixed(1)})`);
+          pastLeash += 1;
+          worstKnot = Math.max(worstKnot, d);
+        }
+        if (helperSpotOk(m, f.x, f.y)) legalFollows += 1;
+        else if (id === 'ato') assert.fail(`ato: follow spot for (${x}, ${y}) off road and pads`);
+        if (id === 'ato') assert.ok(d <= HELPER_LEASH + 1e-6, `ato: follow spot for (${x}, ${y}) inside the leash`);
+        assert.deepEqual(helperFollowSpot(m, leader), f, 'deterministic');
+        follows += 1;
+      }
     }
   }
   assert.ok(HELPER_ROAD_CLEARANCE > 5.5, 'clearance is wider than the road');
-  ok(`lanes: ${checked} drops + every path point and pad snap to a legal spot (off road ≥ ${HELPER_ROAD_CLEARANCE}, off pads)`);
+  assert.ok(legalFollows / follows > 0.95, 'almost every follow spot is off the pads too');
+  assert.ok(pastLeash / follows < 0.05, 'road knots are rare');
+  ok(`lanes: ${checked} snaps legal; ${follows} follow spots off the road (${legalFollows} off pads too, ${pastLeash} road-knot spots past the leash, worst ${worstKnot.toFixed(1)})`);
+}
+
+/* ------------------------------------------------------ movement (pure) --- */
+const at = (d: number) => {
+  const p = puffPosition(d, map);
+  return { x: p.x * 100, y: p.y * 100 };
+};
+{
+  const leader = { x: 50, y: 50 };
+  const self = helperFollowSpot(map, leader);
+  const creep = { id: 1, ...at(0.4), boss: false };
+  const boss = { id: 2, ...at(0.45), boss: true };
+  const farFoe = { id: 3, x: leader.x + HELPER_LEASH + HELPER_RANGE + 2, y: leader.y, boss: true };
+  assert.equal(pickHelperChase(leader, self, [creep, boss], HELPER_RANGE)?.id ?? null, dist(boss, leader) <= HELPER_LEASH + HELPER_RANGE ? 2 : creep.id);
+  assert.equal(pickHelperChase(leader, self, [farFoe], HELPER_RANGE), null, 'a foe it could not reach inside the leash is ignored');
+  assert.deepEqual(helperGoal(map, leader, self, null, HELPER_RANGE), self, 'nothing to chase → its follow spot');
+  // Over a grid of leaders and foes on the road: a goal never leaves the leash; only a boss chase may use the road.
+  let goals = 0;
+  for (let lx = 10; lx <= 90; lx += 10) {
+    for (let ly = 10; ly <= 90; ly += 10) {
+      const L = { x: lx, y: ly };
+      const S = helperFollowSpot(map, L);
+      for (let d = 0.05; d < 1; d += 0.1) {
+        const p = at(d);
+        const g = helperGoal(map, L, S, { id: 9, ...p, boss: false }, HELPER_RANGE);
+        assert.ok(dist(g, L) <= HELPER_LEASH + 1e-6, 'a creep chase stays inside the leash');
+        assert.ok(helperSpotOk(map, g.x, g.y), 'a creep chase stays off the road');
+        const gb = helperGoal(map, L, S, { id: 9, ...p, boss: true }, HELPER_RANGE);
+        assert.ok(dist(gb, L) <= HELPER_LEASH + 1e-6, 'a boss chase stays inside the leash');
+        goals += 2;
+      }
+    }
+  }
+  // A boss chase closes to HELPER_BOSS_CLOSE when the leash allows (here: the boss beside the leader).
+  const bossNear = { id: 5, x: 60, y: 50, boss: true };
+  const gb = helperGoal(map, { x: 55, y: 50 }, { x: 40, y: 50 }, bossNear, HELPER_RANGE);
+  assert.ok(Math.abs(dist(gb, bossNear) - HELPER_BOSS_CLOSE) < 1e-6, 'a boss chase closes in to 6');
+  const s1 = stepHelperToward({ x: 0, y: 0 }, { x: 100, y: 0 }, HELPER_MOVE_SPEED, 100);
+  assert.ok(Math.abs(s1.x - 4) < 1e-9 && Math.abs(s1.moved - 4) < 1e-9, '40 u/s = 4 units a 100 ms tick');
+  assert.deepEqual(stepHelperToward({ x: 0, y: 0 }, { x: 1, y: 0 }, HELPER_MOVE_SPEED, 100), { x: 1, y: 0, moved: 1 }, 'lands on the goal');
+  ok(`movement: boss first inside leash + range; ${goals} goals inside the leash, off road unless a boss; 40 u/s`);
 }
 
 /* ------------------------------------------------------------------ sim --- */
@@ -169,70 +254,115 @@ const burstHero = allHeroes().find((h) => h.kit.behavior === 'burst')!;
 assert.ok(burstHero, 'a burst hero exists');
 
 /** A live board with one creep (spawned by the director), frozen at `dist` with huge HP. */
-function boardWith(dist: number, opts: { kind?: Puff['kind']; second?: number } = {}): DefendLive {
+function boardWith(d: number, opts: { kind?: Puff['kind']; second?: number } = {}): DefendLive {
   let s = createDefendLive(1, { mapId: 'trial', boardId: 'ato' });
-  for (let i = 0; i < 400 && s.puffs.length === 0; i += 1) s = stepDefendLive(s, 100, buckets, far).state;
+  for (let i = 0; i < 400 && s.puffs.length === 0; i += 1) s = stepDefendLive(s, 100, buckets, { x: 50, y: 50 }).state;
   const base = s.puffs[0];
-  const puffs: Puff[] = [{ ...base, dist, hp: 1e9, maxHp: 1e9, kind: opts.kind ?? 'puff', slowMs: 0, slowFactor: 1 }];
+  const puffs: Puff[] = [{ ...base, dist: d, hp: 1e9, maxHp: 1e9, kind: opts.kind ?? 'puff', slowMs: 0, slowFactor: 1 }];
   if (opts.second != null) puffs.push({ ...base, id: base.id + 1000, dist: opts.second, hp: 1e6, maxHp: 1e6, kind: 'puff', slowMs: 0, slowFactor: 1 });
-  return { ...s, puffs, schedule: [] };
+  return { ...s, puffs, schedule: [], helpers: [] };
 }
-const at = (dist: number) => {
-  const p = puffPosition(dist, map);
-  return { x: p.x * 100, y: p.y * 100 };
-};
+/** Keep the board's creeps frozen in place with full HP (so a test isolates the helper). */
+const freeze = (s: DefendLive, d: number) => ({ ...s, puffs: s.puffs.map((x) => ({ ...x, dist: d, hp: x.maxHp, slowMs: 0, slowFactor: 1 })) });
 function spec(over: Partial<TurfHelperSpec> & { x: number; y: number }): TurfHelperSpec {
   return { slot: 0, heroId: burstHero.id, stars: 1, grade: 'common', ...over };
 }
-/** One tick with the helper's first shot (its auto-attack: the ultimate starts on its 16 s cooldown);
- * the helper's damage on the primary. */
-function helperHit(state: DefendLive): number {
-  assert.ok(state.helpers.every((h) => h.skillCooldownMs === HELPER_SKILL_COOLDOWN_MS), 'the ultimate starts on cooldown');
-  const step = stepDefendLive(state, 100, buckets, far);
+/** One 1 ms tick (the helper barely moves: 0.04 units) — its first auto-attack on the primary. */
+function helperHit(state: DefendLive, leader: { x: number; y: number }): number {
+  const step = stepDefendLive(state, 1, buckets, leader);
   const hits = step.hits.filter((h) => h.sourceId === helperUnitId(0));
-  assert.ok(hits.every((h) => !h.ultimate), 'no ultimate on the first tick');
   return hits[0] ? hits[0].damage[0] : 0;
 }
 
 {
+  // Kit hit numbers (the leader stands on the helper, so it stays inside the leash).
   const p = at(0.3);
   const near = { x: p.x + 10, y: p.y };
-  const one = helperHit(placeTurfTeam(boardWith(0.3), [spec({ ...near, stars: 1 })], null));
-  const five = helperHit(placeTurfTeam(boardWith(0.3), [spec({ ...near, stars: 5 })], null));
+  const one = helperHit(placeTurfTeam(boardWith(0.3), [spec({ ...near, stars: 1 })], null), near);
+  const five = helperHit(placeTurfTeam(boardWith(0.3), [spec({ ...near, stars: 5 })], null), near);
   assert.ok(one > 0, 'a helper in range hits with its kit');
   assert.ok(Math.abs(five / one - 1.24) < 0.01, `5★ hits 24% harder (${(five / one).toFixed(3)})`);
   const out = { x: p.x + 16, y: p.y };
-  assert.equal(helperHit(placeTurfTeam(boardWith(0.3), [spec({ ...out, grade: 'common' })], null)), 0, 'out of reach at 16');
-  assert.ok(helperHit(placeTurfTeam(boardWith(0.3), [spec({ ...out, grade: 'epic' })], null)) > 0, 'epic reaches 16.5');
+  assert.equal(helperHit(placeTurfTeam(boardWith(0.3), [spec({ ...out, grade: 'common' })], null), out), 0, 'out of reach at 16');
+  assert.ok(helperHit(placeTurfTeam(boardWith(0.3), [spec({ ...out, grade: 'epic' })], null), out) > 0, 'epic reaches 16.5');
   ok('helper: kit hit in range, +24% at 5★, epic reaches 10% further');
 }
 
 {
-  // Ultimate: never before 16 s, then every 16 s — and only for a hero whose art has a skill clip.
-  const p = at(0.3);
-  const near = { x: p.x + 10, y: p.y };
-  const ultTimes = (heroId: string) => {
-    let s = placeTurfTeam(boardWith(0.3), [spec({ ...near, heroId })], null);
-    const times: number[] = [];
-    for (let t = 100; t <= 40_000; t += 100) {
-      const step = stepDefendLive(s, 100, buckets, far);
-      if (step.hits.some((h) => h.sourceId === helperUnitId(0) && h.ultimate)) times.push(t);
-      s = { ...step.state, puffs: step.state.puffs.map((x) => ({ ...x, dist: 0.3, hp: 1e9 })) };
-    }
-    return times;
-  };
-  const skilled = allHeroes().find((h) => h.clips.skill != null)!;
-  const times = ultTimes(skilled.id);
-  assert.ok(times.length >= 2, 'a skill hero casts its ultimate');
-  assert.ok(times[0] >= HELPER_SKILL_COOLDOWN_MS, `first ultimate at ${times[0]} ms, not before 16 s`);
-  assert.ok(Math.abs(times[1] - times[0] - HELPER_SKILL_COOLDOWN_MS) <= 200, 'then every 16 s');
-  const plain = allHeroes().find((h) => h.clips.skill == null);
-  if (plain) assert.deepEqual(ultTimes(plain.id), [], 'no skill clip → no ultimate');
-  ok(`ultimate: first at ${times[0] / 1000} s, then every 16 s${plain ? '; none without a skill clip' : ''}`);
+  // Follow: the leader walks off 30 units; the helper walks after it at 40 u/s and ends at its follow
+  // spot, inside the leash, with the walk flag on while it moves.
+  const L0 = { x: 30, y: 30 };
+  const L1 = { x: 60, y: 30 };
+  const start = helperFollowSpot(map, L0);
+  let s = placeTurfTeam({ ...boardWith(0.3), puffs: [] }, [spec({ ...start })], null);
+  let movedTicks = 0;
+  for (let t = 0; t < 30; t += 1) {
+    const before = s.helpers[0];
+    s = stepDefendLive(s, 100, buckets, L1).state;
+    const h = s.helpers[0];
+    const step = dist(before, h);
+    assert.ok(step <= 4 + 1e-6, 'never faster than 40 u/s');
+    if (h.moving) movedTicks += 1;
+  }
+  const end = helperFollowSpot(map, L1);
+  assert.ok(dist(s.helpers[0], end) < 1e-6, 'it ends at its follow spot beside the leader');
+  assert.ok(dist(s.helpers[0], L1) <= HELPER_LEASH, 'inside the leash');
+  assert.equal(s.helpers[0].moving, false, 'standing still at the end');
+  assert.ok(movedTicks >= 6, 'the walk flag was on while it walked');
+  ok(`follow: walks after the leader at 40 u/s (${movedTicks} walking ticks), ends at its follow spot`);
 }
 
 {
-  // Legendary splash: the second foe 1 path-step away (within 4 units) takes 30% of the hit.
+  // Chase: a creep in the window → it closes to ~80% of its range, never leaving the leash or using the
+  // road; a boss → it closes in to 6 (onto the road if need be) and is soon inside the swing.
+  const p = at(0.3);
+  const leader = { x: p.x, y: p.y - 14 };
+  let s = placeTurfTeam(boardWith(0.3), [spec(helperFollowSpot(map, leader))], null);
+  for (let t = 0; t < 30; t += 1) {
+    s = freeze(stepDefendLive(s, 100, buckets, leader).state, 0.3);
+    const h = s.helpers[0];
+    assert.ok(dist(h, leader) <= HELPER_LEASH + 1e-6, 'chasing a creep stays inside the leash');
+    assert.ok(helperSpotOk(map, h.x, h.y), 'chasing a creep keeps it off the road');
+  }
+  assert.ok(dist(s.helpers[0], p) <= HELPER_RANGE, 'it brought the creep into its range');
+  let b = placeTurfTeam(boardWith(0.3, { kind: 'boss' }), [spec(helperFollowSpot(map, leader))], null);
+  let closest = Infinity;
+  for (let t = 0; t < 30; t += 1) {
+    b = freeze(stepDefendLive(b, 100, buckets, leader).state, 0.3);
+    const h = b.helpers[0];
+    if (h.dazedMs > 0) break;
+    assert.ok(dist(h, leader) <= HELPER_LEASH + 1e-6, 'chasing a boss stays inside the leash');
+    closest = Math.min(closest, dist(h, p));
+  }
+  assert.ok(closest <= BOSS_SWING_RADIUS, `a boss chase closes in to ${closest.toFixed(1)} (inside its swing)`);
+  ok(`chase: creep in range off the road; boss chased to ${closest.toFixed(1)} — all inside the leash`);
+}
+
+{
+  // Its own hero skill: never before 6 s, then every 14 s, only with a foe inside the veil.
+  const p = at(0.3);
+  const leader = { x: p.x + 10, y: p.y };
+  const hero = allHeroes().find((h) => heroCastSkill(h.id).radius >= HELPER_RANGE) ?? burstHero;
+  const casts = (puffs: boolean) => {
+    let s = placeTurfTeam(puffs ? boardWith(0.3) : { ...boardWith(0.3), puffs: [] }, [spec({ ...leader, heroId: hero.id })], null);
+    const times: number[] = [];
+    for (let t = 100; t <= 40_000; t += 100) {
+      const step = stepDefendLive(s, 100, buckets, leader);
+      if (step.helperCasts.includes(helperUnitId(0))) times.push(t);
+      s = puffs ? freeze(step.state, 0.3) : step.state;
+    }
+    return times;
+  };
+  const times = casts(true);
+  assert.ok(times.length >= 2, `${hero.id} casts its own skill`);
+  assert.ok(times[0] >= HELPER_SKILL_FIRST_MS && times[0] <= HELPER_SKILL_FIRST_MS + 200, `first cast at ${times[0]} ms (6 s)`);
+  assert.ok(Math.abs(times[1] - times[0] - HELPER_SKILL_COOLDOWN_MS) <= 200, 'then every 14 s');
+  assert.deepEqual(casts(false), [], 'no foe in the veil → no cast (the skill waits)');
+  ok(`skill: ${heroCastSkill(hero.id).name} first at ${times[0] / 1000} s, then every 14 s; none with no foe near`);
+}
+
+{
+  // Legendary splash: the second foe 2 units further along the road takes 30% of the hit.
   const p = at(0.3);
   const near = { x: p.x + 8, y: p.y };
   const lenUnits = (() => {
@@ -240,9 +370,9 @@ function helperHit(state: DefendLive): number {
     for (let i = 0; i < map.path.length - 1; i += 1) total += Math.hypot(map.path[i + 1].x - map.path[i].x, map.path[i + 1].y - map.path[i].y);
     return total * 100;
   })();
-  const second = 0.3 + 2 / lenUnits; // 2 board units further along the road
+  const second = 0.3 + 2 / lenUnits;
   const run = (grade: TurfHelperSpec['grade']) => {
-    const step = stepDefendLive(placeTurfTeam(boardWith(0.3, { second }), [spec({ ...near, grade })], null), 100, buckets, far);
+    const step = stepDefendLive(placeTurfTeam(boardWith(0.3, { second }), [spec({ ...near, grade })], null), 1, buckets, near);
     const hit = step.hits.find((h) => h.sourceId === helperUnitId(0))!;
     const other = step.state.puffs.find((x) => x.maxHp === 1e6)!;
     return { dealt: hit.damage[0], otherLost: 1e6 - other.hp };
@@ -250,36 +380,54 @@ function helperHit(state: DefendLive): number {
   const common = run('common');
   const legend = run('legendary');
   const extra = legend.otherLost - common.otherLost;
-  assert.ok(Math.abs(extra - legend.dealt * 0.3) < 1e-6, `legendary splash = 30% of the hit (${extra.toFixed(2)} vs ${(legend.dealt * 0.3).toFixed(2)})`);
+  assert.ok(Math.abs(extra - legend.dealt * 0.3) < 1e-6, `legendary splash = 30% of the hit (${extra.toFixed(2)})`);
   ok('legendary helper: its hit splashes 30% onto a foe within 4');
 }
 
 {
-  // Knock-out: a boss within 8 → that helper is out for the wave; the other keeps fighting.
+  // The daze cycle, with a boss parked right beside the helper and the leader beside both:
+  // 5 s of swings-in-reach → dazed (down 4 s, no hits, no walking) → gets up (0.6 s) → runs back →
+  // 6 s daze-proof from getting up → the next swing dazes it again. It is never removed.
   const p = at(0.3);
-  const close = { x: p.x + 7, y: p.y };
-  const safe = { x: p.x + 12, y: p.y };
-  let s = placeTurfTeam(boardWith(0.3, { kind: 'boss' }), [spec({ ...close, slot: 0 }), spec({ ...safe, slot: 1 })], null);
-  const step = stepDefendLive(s, 100, buckets, far);
-  assert.deepEqual(step.knockedOut, [helperUnitId(0)], 'the close helper is knocked out, the far one is not');
-  assert.equal(step.state.helpers[0].knockedOut, true);
-  assert.equal(step.state.helpers[1].knockedOut, false);
-  assert.ok(!step.hits.some((h) => h.sourceId === helperUnitId(0)), 'a knocked-out helper does not hit');
-  assert.ok(step.hits.some((h) => h.sourceId === helperUnitId(1)), 'its partner still hits');
-  s = step.state;
-  for (let i = 0; i < 20; i += 1) {
-    const next = stepDefendLive(s, 100, buckets, far);
-    assert.ok(!next.hits.some((h) => h.sourceId === helperUnitId(0)), 'stays out for the wave');
-    // (The walking boss may reach the partner later — that is its own knock-out.)
-    assert.ok(!next.knockedOut.includes(helperUnitId(0)), 'knocked out once');
-    s = next.state;
+  const spot = { x: p.x + 5, y: p.y };
+  let s = placeTurfTeam(boardWith(0.3, { kind: 'boss' }), [spec(spot)], null);
+  const events: { t: number; kind: string }[] = [];
+  let downTicks = 0;
+  for (let t = 100; t <= 40_000; t += 100) {
+    const before = s.helpers[0];
+    const step = stepDefendLive(s, 100, buckets, spot);
+    if (step.dazed.includes(helperUnitId(0))) events.push({ t, kind: 'dazed' });
+    if (step.gotUp.includes(helperUnitId(0))) events.push({ t, kind: 'up' });
+    const h = step.state.helpers[0];
+    assert.equal(step.state.helpers.length, 1, 'the helper is never removed');
+    if (before.dazedMs > 0 || before.getUpMs > 0) {
+      downTicks += 1;
+      assert.ok(!step.hits.some((x) => x.sourceId === helperUnitId(0)), 'a dazed helper does not hit');
+      assert.ok(dist(before, h) < 1e-9, 'a dazed helper does not walk');
+    }
+    s = freeze(step.state, 0.3);
   }
-  assert.ok(retryDefendLive(s).helpers.every((h) => !h.knockedOut), 'a retry stands the team back up');
-  const nextWave = placeTurfTeam(createDefendLive(2, { mapId: 'trial', boardId: 'ato' }), [spec({ ...close })], null);
-  assert.equal(nextWave.helpers[0].knockedOut, false, 'the next wave builds a fresh team');
-  const noBoss = stepDefendLive(placeTurfTeam(boardWith(0.3), [spec({ ...close })], null), 100, buckets, far);
-  assert.deepEqual(noBoss.knockedOut, [], 'a normal creep never knocks a helper out');
-  ok('knock-out: a boss within 8 drops that helper for the wave only; retry / next wave bring it back');
+  const dazes = events.filter((e) => e.kind === 'dazed').map((e) => e.t);
+  const ups = events.filter((e) => e.kind === 'up').map((e) => e.t);
+  assert.ok(dazes.length >= 2, `dazed more than once (${dazes.join(', ')})`);
+  assert.ok(Math.abs(dazes[0] - BOSS_SWING_MS) <= 100, `first daze after one 5 s swing (${dazes[0]})`);
+  assert.ok(Math.abs(ups[0] - dazes[0] - HELPER_DAZE_MS) <= 100, `down 4 s (${ups[0] - dazes[0]} ms)`);
+  const standAt = ups[0] + HELPER_GET_UP_MS;
+  assert.ok(dazes[1] - standAt >= HELPER_DAZE_PROOF_MS - 100, `daze-proof 6 s after getting up (next daze ${dazes[1] - standAt} ms later)`);
+  assert.ok(downTicks < 400 * 0.6, 'down well under the whole run');
+  // A normal creep never dazes it; a retry and a new wave stand it up fresh.
+  let c = placeTurfTeam(boardWith(0.3), [spec(spot)], null);
+  for (let t = 0; t < 200; t += 1) {
+    const step = stepDefendLive(c, 100, buckets, spot);
+    assert.deepEqual(step.dazed, [], 'a normal creep never dazes the helper');
+    c = freeze(step.state, 0.3);
+  }
+  const downNow = { ...s, helpers: s.helpers.map((h) => ({ ...h, dazedMs: 2_000 })) };
+  assert.ok(retryDefendLive(downNow).helpers.every((h) => h.dazedMs === 0 && h.getUpMs === 0), 'a retry stands it up');
+  const fresh = placeTurfTeam(createDefendLive(2, { mapId: 'trial', boardId: 'ato' }), [spec(spot)], null);
+  assert.equal(fresh.helpers[0].dazedMs, 0, 'a new wave builds it fresh');
+  assert.equal(fresh.helpers[0].skillCooldownMs, HELPER_SKILL_FIRST_MS);
+  ok(`daze: first at ${dazes[0] / 1000} s, down 4 s, up 0.6 s, proof 6 s, again at ${dazes[1] / 1000} s; never removed; creeps never daze`);
 }
 
 {
@@ -293,12 +441,13 @@ function helperHit(state: DefendLive): number {
   assert.ok(second, 'a rare on the team: a second pounce');
   assert.equal(castPetPounce(second.state, p, 40, null), null, 'and no third');
   assert.equal(retryDefendLive(second.state).petPounceSpare, 1, 'a retry gives the spare back');
-  const leaderRare = placeTurfTeam(boardWith(0.3), [], 'rare');
-  assert.equal(leaderRare.petPounceSpare, 1, 'a rare leader counts too');
+  assert.equal(placeTurfTeam(boardWith(0.3), [], 'rare').petPounceSpare, 1, 'a rare leader counts too');
   const plain = placeTurfTeam(boardWith(0.3), [spec({ x: p.x + 10, y: p.y, grade: 'epic' })], 'common');
   const once = castPetPounce(plain, p, 40, null)!;
   assert.equal(castPetPounce(once.state, p, 40, null), null, 'no rare: once per wave as before');
-  ok('rare: +1 pounce per fight (leader or helper), restored on retry; none without a rare');
+  const two = placeTurfTeam(boardWith(0.3), [spec({ x: 1, y: 1 }), spec({ x: 2, y: 2, slot: 1 })], null);
+  assert.equal(two.helpers.length, 1, 'only one helper goes on the board');
+  ok('rare: +1 pounce per fight (leader or helper), restored on retry; one helper on the board');
 }
 
 {
@@ -306,8 +455,7 @@ function helperHit(state: DefendLive): number {
   const p = at(0.3);
   const leaderAt = { x: p.x + 10, y: p.y };
   const lost = (extra: object, where = leaderAt) => {
-    const s = boardWith(0.3);
-    const step = stepDefendLive(s, 100, { ...buckets, ...extra }, where);
+    const step = stepDefendLive(boardWith(0.3), 100, { ...buckets, ...extra }, where);
     return 1e9 - step.state.puffs[0].hp;
   };
   const one = lost({ leaderStars: 1 });
@@ -322,40 +470,44 @@ function helperHit(state: DefendLive): number {
 }
 
 {
-  // A full wave with 3 heroes: leader + 2 helpers beside the road, no towers; it clears, every helper
-  // fires, and one sim step costs a tiny slice of a 60 fps frame (16.7 ms).
+  // A full wave: leader + the helper, no towers. It clears, the helper fights and casts, it is never
+  // out for the whole wave, and one sim step costs a tiny slice of a 60 fps frame (16.7 ms).
   const strong = { ...buckets, wavePower: 3 };
-  const p = at(0.8); // the leader guards the end; the helpers stand by the first half of the road
-  const spots = [0.25, 0.5].map((d, slot) => defaultHelperSpot(map, at(d), slot));
-  const heroes = allHeroes().filter((h) => h.id !== burstHero.id);
+  const leader = at(0.6);
+  const start = helperFollowSpot(map, leader);
   let s = placeTurfTeam(
     createDefendLive(3, { mapId: 'trial', boardId: 'ato' }),
-    [
-      { slot: 0, heroId: burstHero.id, x: spots[0].x, y: spots[0].y, stars: 3, grade: 'epic' },
-      { slot: 1, heroId: heroes[0].id, x: spots[1].x, y: spots[1].y, stars: 1, grade: 'legendary' },
-    ],
+    [{ slot: 0, heroId: burstHero.id, x: start.x, y: start.y, stars: 3, grade: 'legendary' }],
     'rare',
   );
-  const fired = new Set<number>();
+  let fired = false;
+  let cast = false;
   let ticks = 0;
+  let down = 0;
   let worst = 0;
   const started = process.hrtime.bigint();
   let result: ReturnType<typeof stepDefendLive> | null = null;
   while (ticks < 3000) {
     const t0 = process.hrtime.bigint();
-    result = stepDefendLive(s, 100, strong, p);
+    result = stepDefendLive(s, 100, strong, leader);
     const ms = Number(process.hrtime.bigint() - t0) / 1e6;
     if (ticks > 20) worst = Math.max(worst, ms);
-    for (const h of result.hits) if (h.sourceId < 0) fired.add(h.sourceId);
+    if (result.hits.some((h) => h.sourceId === helperUnitId(0))) fired = true;
+    if (result.helperCasts.length > 0) cast = true;
+    const h = result.state.helpers[0];
+    if (h.dazedMs > 0 || h.getUpMs > 0) down += 1;
+    assert.ok(dist(h, leader) <= HELPER_LEASH + 1e-6, 'the helper never leaves the leash');
     s = result.state;
     ticks += 1;
     if (result.done || result.leak) break;
   }
   const avg = Number(process.hrtime.bigint() - started) / 1e6 / ticks;
-  assert.ok(result?.done && !result.leak, 'the 3-hero wave clears');
-  assert.ok(fired.has(helperUnitId(0)) && fired.has(helperUnitId(1)), 'both helpers fought');
+  assert.ok(result?.done && !result.leak, 'the wave clears');
+  assert.ok(fired, 'the helper fought');
+  assert.ok(cast, 'the helper cast its own skill');
+  assert.ok(down < ticks, 'the helper was never out for the whole wave');
   assert.ok(avg < 2, `a sim step averages ${avg.toFixed(3)} ms (budget: well under one 16.7 ms frame)`);
-  ok(`3-hero wave clears in ${ticks} ticks; both helpers fire; step avg ${avg.toFixed(3)} ms, worst ${worst.toFixed(2)} ms`);
+  ok(`wave clears in ${ticks} ticks; helper fights + casts, down ${down} ticks; step avg ${avg.toFixed(3)} ms, worst ${worst.toFixed(2)} ms`);
 }
 
 /* --------------------------------------------------------------- screen --- */
@@ -367,16 +519,23 @@ function helperHit(state: DefendLive): number {
   assert.ok(sheetAt > 0 && cardAt > sheetAt, 'the picker sits inside the Setup sheet body');
   assert.match(card, /<PetStatusBadge status=\{[a-zA-Z]+\} variant="strip" \/>/, 'the picker reuses PetStatusBadge');
   assert.ok(!/height: \d/.test(card.replace(/minHeight: \d+/g, '')), 'the picker has no fixed heights (Larger Text grows the scroll)');
-  assert.match(screen, /placeTurfTeam\(base, helperSpecsFor\(/, 'Call wave puts the team on the board');
-  assert.match(screen, /castActorFaintFrame\(now, koAt, role\)/, 'a knocked-out helper plays its faint clip');
-  assert.match(screen, /snapHelperSpot\(boardMap, bx, by\)/, 'a board drop snaps the helper off the road and pads');
+  assert.ok(!/onMove|Helper 2|TURF_HELPER_SLOTS/.test(card), 'one slot, no Move');
+  assert.ok(!/movingHelperSlot|HELPER_TAP_RADIUS|snapHelperSpot\(boardMap, bx, by\)/.test(screen), 'no tap-to-place helper spots');
+  assert.match(screen, /placeTurfTeam\(base, helperSpecsFor\(/, 'Call wave puts the helper on the board');
+  assert.match(screen, /helperX\.value = withTiming\(after\.x \/ 100, glide\)/, 'a wave glides the helper on the UI thread');
+  assert.match(screen, /easing: Easing\.linear/, 'the glide is linear over one tick');
+  assert.equal((screen.match(/setInterval\(/g) ?? []).length, 8, 'no new interval (the helper rides the move loop + sim tick + clip tick)');
+  assert.match(screen, /castActorFaintFrame\(now, koAt\[h\.id\]/, 'a dazed helper plays its faint clip');
+  assert.match(screen, /castActorGetUpFrame\(/, 'getting up plays the faint in reverse');
+  assert.match(screen, /castActorWalkFrame\(now, at, role\)/, 'a moving helper plays its walk clip');
+  assert.match(screen, /is dazed`/, 'the daze notice');
   assert.match(screen, /!sim\.petPounceUsed \|\| sim\.petPounceSpare > 0/, 'the pounce button counts the rare spare');
   const skin = read('src/play/skin.ts');
-  assert.match(skin, /export function resolveTurfHelperKit/, 'helpers draw from the hero kit + faint');
+  assert.match(skin, /walk: hero\.walk/, 'the helper keeps its hero walk clip');
   const store = read('src/play/playStore.ts');
-  assert.match(store, /turf_helpers: parseTurfHelpers\(data\.turf_helpers\)/, 'the save field is an additive v33 read');
+  assert.match(store, /turf_helpers: parseTurfHelpers\(data\.turf_helpers\)/, 'the save field is the same additive v33 read');
   assert.match(store, /version: 33/, 'save stays v33');
-  ok('screen: picker in the Setup sheet with the badge, team placed at Call wave, faint on KO, save stays v33');
+  ok('screen: one-slot picker in Setup, no tap-to-place, shared-value glide, no new interval, walk / faint / get-up, v33');
 }
 
 console.log(`\ncheck:turf-team — ${passed} groups passed.`);

@@ -186,14 +186,34 @@ export function castActorFrame(actor: CastActor, now: number, role: SkinRole): n
 }
 
 /**
- * P5 — a Turf helper's knock-out: the `faint` clip from `koAt`, holding its last frame (lying down)
- * for the rest of the wave. Not in any mode's clip mask: the board starts it from the sim's knock-out
- * event, never through the priority ladder. 0 when the role has no faint art.
+ * P5b — a Turf helper's daze: the `faint` clip from `koAt`, holding its last frame (lying down) until it
+ * gets up. Not in any mode's clip mask: the board starts it from the sim's daze event, never through
+ * the priority ladder. 0 when the role has no faint art.
  */
 export function castActorFaintFrame(now: number, koAt: number, role: SkinRole): number {
   const frames = castActorClipFrames('faint', role);
   if (frames <= 1) return 0;
   return frameIndex(now, koAt, castActorFrameMs('tower', 'faint'), 0, frames, true);
+}
+
+/**
+ * P5b — getting up: the `faint` clip played in reverse from `upAt`, spread over `durationMs` (the sim's
+ * get-up time), ending on frame 0 (standing). No new art. 0 when the role has no faint art.
+ */
+export function castActorGetUpFrame(now: number, upAt: number, durationMs: number, role: SkinRole): number {
+  const frames = castActorClipFrames('faint', role);
+  if (frames <= 1) return 0;
+  const per = Math.max(1, durationMs / frames);
+  const forward = Math.min(frames - 1, Math.max(0, Math.floor((now - upAt) / per)));
+  return frames - 1 - forward;
+}
+
+/** P5b — a walking helper's `walk` loop from `walkAt` at the avatar's walk cadence (a tower-mode actor
+ * never asks for walk; the board plays it while the sim says the helper is moving). */
+export function castActorWalkFrame(now: number, walkAt: number, role: SkinRole): number {
+  const frames = castActorClipFrames('walk', role);
+  if (frames <= 1) return 0;
+  return frameIndex(now, walkAt, castActorFrameMs('avatar', 'walk'), 0, frames, false);
 }
 
 /**

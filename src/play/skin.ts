@@ -937,12 +937,13 @@ export function resolveBoundHeroTowerKit(heroId: string): SkinRole {
   return { ...role, walk: undefined, anims };
 }
 
-/** P5 — a Turf helper draws like a hero tower (idle / attack / skill, never walks) plus its `faint`
- * knock-out clip when the art has one (Streetwear heroes, P3). */
+/** P5b — the Turf helper draws like a hero tower (idle / attack / skill) plus the hero's own `walk`
+ * clip (it follows the leader) and its `faint` daze clip when the art has one (Streetwear heroes, P3). */
 export function resolveTurfHelperKit(heroId: string): SkinRole {
   const kit = resolveBoundHeroTowerKit(heroId);
-  const faint = heroAvatarRole(heroId).anims?.faint;
-  return faint ? { ...kit, anims: { ...kit.anims, faint } } : kit;
+  const hero = heroAvatarRole(heroId);
+  const faint = hero.anims?.faint;
+  return { ...kit, walk: hero.walk, anims: faint ? { ...kit.anims, faint } : kit.anims };
 }
 
 /** Feet anchor for a role object (same clamp as `skinFootAt`). */
