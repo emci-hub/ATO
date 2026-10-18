@@ -579,7 +579,8 @@ export function retryDefendLive(state: DefendLive): DefendLive {
     boundBosses: state.boundBosses.map((bb) => ({
       ...bb,
       cooldownMs: 0,
-      skillCooldownMs: 0,
+      // Same as placement: a cycle boss winds up again, a hero tower casts at once.
+      skillCooldownMs: heroById(bb.bossId) ? 0 : BOUND_BOSS_PLACE_SKILL_CD_MS,
     })),
   };
 }
