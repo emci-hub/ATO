@@ -415,10 +415,19 @@ Play → Turf War on the smallest phone you have (SE / 375 pt wide if possible),
 - [ ] The card is the same size as before and still closes on a tap; the help (?) button at the right is still free.
 - [ ] Any other wave's card (one or two kinds) also shows whole words.
 
-## Box 41 — Bolt neon sign readable at the top edge (T14, 2026-10-18)
+## Box 41 — Bolt neon sign readable at the top edge (T14, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 Play → Turf War, the default Alley map (other map themes have no sign; that is expected).
 
 - [ ] Look at the top-right corner of the board, next to the tire stack: the cyan bolt sign is clearly visible even at the dim moments of its flicker (before it was nearly black between flickers).
 - [ ] It still flickers with the cyan light around it, in the same spot and at the same size.
 - [ ] The magenta heart sign at the bottom-left looks the same as before.
+
+## Box 42 — Next-wave card keeps whole role words with iOS Larger Text (T15, 2026-10-18)
+
+First: iPhone Settings → Accessibility → Display & Text Size → Larger Text → turn on Larger Accessibility Sizes off, and drag the slider about 2–3 steps above the default (or use Control Center's Text Size). Then Play → Turf War, Main phase.
+
+- [ ] Play until Main wave 8, then tap the wave chip. The three chips ("6× swarm", "3× runner", "2× tank") show every word whole (no "…"), nothing spilling out of the card.
+- [ ] The card is the same size as before and still closes on a tap.
+- [ ] The card's title line may be larger than before; that is expected. The chip words stay the normal size; that is expected too.
+- [ ] Put the text size back to your usual setting afterwards.
