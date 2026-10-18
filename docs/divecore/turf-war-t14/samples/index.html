@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turf War bolt sign</title>
+<style>
+  :root { --bg: #14121c; --card: #1f1b2b; --ink: #ece8f4; --muted: #a49cb8; --pick: #ffb84d; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 22px; margin: 8px 0 4px; }
+  p { color: var(--muted); margin: 4px 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border-radius: 10px; padding: 10px; border: 2px solid transparent; }
+  .card.rec { border-color: var(--pick); }
+  .card h2 { font-size: 16px; margin: 0 0 4px; }
+  .tag { color: var(--pick); font-size: 12px; font-weight: 700; }
+  img { width: 100%; image-rendering: pixelated; display: block; border-radius: 6px; margin: 6px 0; }
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .row figure { margin: 0; } figcaption { font-size: 11px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <h1>T14: the bolt sign is dim</h1>
+  <p>Why it's dim: the bolt sits flush with the board's top edge (y = 0). The edge darkening (×0.55–1) stacks on the unlit bake (×0.45), so it shows at about 25% between flickers. Painted with the real board script. Crops are 3× (128 art px around the bolt); close-ups are 8×. "Dim" = the glow at its lowest flicker point, "lit" = its highest.</p>
+
+  <div class="grid">
+    <div class="card"><h2>Now</h2><p>Top-right corner, in the edge darkening.</p>
+      <img src="now-dim-crop.png" alt="">
+      <div class="row">
+        <figure><img src="now-unlit-bolt.png" alt=""><figcaption>unlit</figcaption></figure>
+        <figure><img src="now-dim-bolt.png" alt=""><figcaption>dim</figcaption></figure>
+        <figure><img src="now-lit-bolt.png" alt=""><figcaption>lit</figcaption></figure>
+      </div></div>
+
+    <div class="card"><h2>A · move it</h2><p>Nearest free sidewalk spot ≥ 24 px from every edge. It lands between two tower pads, outside the cyan light; towers built there will crowd it.</p>
+      <img src="A-move-dim-crop.png" alt="">
+      <div class="row">
+        <figure><img src="A-move-unlit-bolt.png" alt=""><figcaption>unlit</figcaption></figure>
+        <figure><img src="A-move-dim-bolt.png" alt=""><figcaption>dim</figcaption></figure>
+        <figure><img src="A-move-lit-bolt.png" alt=""><figcaption>lit</figcaption></figure>
+      </div></div>
+
+    <div class="card rec"><span class="tag">RECOMMENDED</span><h2>B · brighter unlit bake</h2><p>Same spot you picked. Bolt's unlit tubes ×0.45 → ×0.8 (heart unchanged). Clearly brighter, and it still flickers.</p>
+      <img src="B-brighter-dim-crop.png" alt="">
+      <div class="row">
+        <figure><img src="B-brighter-unlit-bolt.png" alt=""><figcaption>unlit</figcaption></figure>
+        <figure><img src="B-brighter-dim-bolt.png" alt=""><figcaption>dim</figcaption></figure>
+        <figure><img src="B-brighter-lit-bolt.png" alt=""><figcaption>lit</figcaption></figure>
+      </div></div>
+
+    <div class="card"><h2>C · no edge darkening on the sign</h2><p>Same spot. The edge darkening skips the sign's own pixels. A smaller gain than B.</p>
+      <img src="C-no-vignette-dim-crop.png" alt="">
+      <div class="row">
+        <figure><img src="C-no-vignette-unlit-bolt.png" alt=""><figcaption>unlit</figcaption></figure>
+        <figure><img src="C-no-vignette-dim-bolt.png" alt=""><figcaption>dim</figcaption></figure>
+        <figure><img src="C-no-vignette-lit-bolt.png" alt=""><figcaption>lit</figcaption></figure>
+      </div></div>
+  </div>
+
+  <h1>Scale</h1>
+  <p>Size is unchanged in every option: 20 × 20 art px on the 24 px canvas (middle bolt), next to the grown hero and the pigeon.</p>
+  <div class="card"><img src="scale-sheet.png" alt=""></div>
+
+  <h1>Whole board (dim moment)</h1>
+  <div class="grid">
+    <div class="card"><h2>Now</h2><img src="now-board-dim.png" alt=""></div>
+    <div class="card"><h2>A</h2><img src="A-move-board-dim.png" alt=""></div>
+    <div class="card rec"><h2>B</h2><img src="B-brighter-board-dim.png" alt=""></div>
+    <div class="card"><h2>C</h2><img src="C-no-vignette-board-dim.png" alt=""></div>
+  </div>
+</main>
+</body>
+</html>

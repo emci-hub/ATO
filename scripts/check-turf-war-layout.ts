@@ -292,6 +292,39 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
     }
   }
   for (const { id, m } of themed) if (id !== 'ato') assert.equal(m.signs?.length ?? 0, 0, `${id}: no neon sign (alley only)`);
+  // T14 (emci picked B, 2026-10-18): the bolt (cyan pool) sits deep in the top-edge vignette, so its unlit tubes bake
+  // brighter and read >= half its lit copy between flickers (~0.33 with the plain 0.45 bake). The heart keeps 0.45.
+  {
+    const boardDir = path.join(__dirname, '..', 'assets', 'play', 'sheets', 'streetwear', 'board');
+    const manifest = JSON.parse(fs.readFileSync(path.join(boardDir, 'sheets.json'), 'utf8')) as Record<string, { sheet: string; frames: { img: { x: number; y: number } } }>;
+    const layer = (key: string) => {
+      const e = manifest[`sheets/streetwear/board/${key}`]!;
+      return { png: PNG.sync.read(fs.readFileSync(path.join(boardDir, path.basename(e.sheet)))), at: e.frames.img };
+    };
+    const board = layer('ato');
+    const glow = layer('ato-glow');
+    const lum = (l: typeof board, x: number, y: number) => {
+      const i = ((l.at.y + y) * l.png.width + l.at.x + x) * 4;
+      return 0.2126 * l.png.data[i]! + 0.7152 * l.png.data[i + 1]! + 0.0722 * l.png.data[i + 2]!;
+    };
+    const bolt = signs.find((s) => s.pool === 1);
+    assert.ok(bolt, 'the bolt sign is by the cyan pool');
+    for (const s of [bolt]) {
+      assert.ok(Math.min(s.x, s.y, TURF_ART_PX - s.x - s.w, TURF_ART_PX - s.y - s.h) < 24, `the bolt at ${s.x},${s.y} is in the edge vignette (else drop this pin)`);
+      let on = 0;
+      let lit = 0;
+      for (let y = s.y; y < s.y + s.h; y += 1) {
+        for (let x = s.x; x < s.x + s.w; x += 1) {
+          const gi = ((glow.at.y + y) * glow.png.width + glow.at.x + x) * 4;
+          if (glow.png.data[gi + 3]! < 200 || lum(glow, x, y) < 120) continue; // the tubes only
+          on += lum(board, x, y);
+          lit += lum(glow, x, y);
+        }
+      }
+      assert.ok(lit > 0, `neon sign at ${s.x},${s.y} has lit tubes on the glow layer`);
+      assert.ok(on / lit >= 0.5, `neon sign at ${s.x},${s.y} (bolt, edge vignette): its unlit tubes read ${(on / lit).toFixed(2)} of lit (>= 0.5)`);
+    }
+  }
   // The pigeon flaps real wings: frame 0 = perched, frames 1.. only while it flies off (never under Reduce Motion: fly stays 0).
   assert.ok(amb.clips.pigeon.frames >= 3, 'the pigeon sheet has a perch frame + wing frames');
   // turf-ambient.tsx slides the strip by (frame_001.x − frame_000.x): every frame must sit on one row at that stride.
