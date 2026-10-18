@@ -26,7 +26,8 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | ✔ merged (PR #70, 2026-10-17); OTA see "Step T7 as built"; emci's phone check (Box 33) **passed** |
 | T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); picker in Setup (emci, option A) | ✔ merged (PR #71, 2026-10-17); OTA see "Step T8 as built"; emci's phone check (Box 34) **passed** (answered in the T2b chat) |
 | T2b | T2 leftover (emci 2026-10-18, option B): next-wave preview card under the wave chip + top bar on sheet-kit pieces | ✔ merged (PR #72 squash `4afb7443`, 2026-10-18); OTA iOS `01a14d16-d6c7-79a3-93d2-65ed9ec70d56`, group `e971779c` (message `turf-war-t2b-hud`, see "Step T2b as built"); emci's phone check (Box 35) **passed**, no changes; T8 phone check (Box 34) **passed** |
-| T9 | Notices polish (emci 2026-10-18): pause the notice lane while the next-wave card is open (`useNoticePause(wavePeekShown)`), strike the stale "BOSS INCOMING hidden on Important only" bullet (already fixed in T7) | built; PR / OTA ids in "Step T9 as built"; emci's phone check = Box 36 |
+| T9 | Notices polish (emci 2026-10-18): pause the notice lane while the next-wave card is open (`useNoticePause(wavePeekShown)`), strike the stale "BOSS INCOMING hidden on Important only" bullet (already fixed in T7) | ✔ merged (PR #73); OTA ids in "Step T9 as built"; emci's phone check (Box 36) **passed** |
+| T10 | Bound Boss first wind-up (emci 2026-10-18): a newly placed cycle boss starts its skill on 1,400 ms instead of 0 | ✔ merged (PR #74 squash `7394c787`); OTA iOS `01a14dae-7707-7b41-961b-7e097d16fd8e`, group `f8438ce9` (message `turf-war-t10-boss-windup`); emci's phone check = Box 37 |
 
 Every step ships on its own OTA. T1 and T2 change code layout only (no art). T3 and T4 need emci to pick art from samples
 first (two stops inside the step: samples → pick → build). T5 and T6 need effect samples (GIF strips) the same way.
@@ -221,12 +222,19 @@ and no new in-stage text nodes besides the pinned ones.
 - **Not in T9 (decide separately):** a Bound Boss placed mid-wave with a target in range can cast with ~0 wind-up (`telegraphStart` in `turf-boss-fx-rules.ts`); cosmetic only, needs a rules-file edit + pin, newly placed boss's initial cooldown not verified. Art loose ends (neon sign, pigeon wings, card icons) = a later art step with samples first.
 - **Done:** gate green, reviewer PASS, OTA, emci's phone check (open the card, trigger a notice, close the card, notice appears).
 
+#### Step T10 as built (2026-10-18; PR #74 squash `7394c787`, OTA iOS `01a14dae-7707-7b41-961b-7e097d16fd8e`, group `f8438ce9-141e-44cb-bf0e-db20d0224dfc` (message `turf-war-t10-boss-windup`); phone check = `docs/ATO_DEVICE_TESTS.md` Box 37)
+- **Root cause:** `placeBoundBoss` set `skillCooldownMs: 0`, so a cycle boss cast on the first tick a creep was in range; `telegraphStart` can only show "full at once" there. It was an engine timing issue, not a `turf-boss-fx-rules.ts` one (that file is unchanged). emci picked the fix (a short starting cooldown).
+- **Change:** `BOUND_BOSS_PLACE_SKILL_CD_MS = 1_400` (= `telegraphLeadSimMs(100, 2)`) in `src/play/defend.ts`; applied to cycle bosses only, hero towers still start at 0 (they do not telegraph; `check:heroes` caught the first draft delaying them). Wind-up seen: 700 ms at 1x and 2x. A cycle boss restored by the board-restore path also starts at 1,400 (fresh board, harmless).
+- **Pin:** `check-turf-war-layout.ts` walks the cooldown down from placement at 1x / 2x (≥ 600 ms), asserts the constant equals the 2x lead, and calls `placeBoundBoss` for a cycle boss (1,400) and a hero (0).
+- **Checks:** `check:ota-gate` green, `typecheck`, `check:turf-war-layout` (13), reviewer PASS. Not device-verified.
+- **Still open:** `retryDefendLive` (`defend.ts` ~579) resets the boss skill cooldown to 0 on Retry (harmless: enemies restart at spawn); art loose ends (neon sign, pigeon wings, card icons) = a later art step with samples first.
+
 #### Step T9 as built (2026-10-18; PR #73 squash `90db5efc`, OTA iOS `01a14d9b-8378-739b-afdc-d8a09ec7acab`, group `8a7415b2` (message `turf-war-t9-notices`, `npm run ota:publish -- --branch production --message "turf-war-t9-notices" --non-interactive`); phone check = `docs/ATO_DEVICE_TESTS.md` Box 36)
 - **Change:** `useNoticePause(wavePeekShown)` once in `DefendScreen` right after `wavePeekShown` (`src/play/defend-screen.tsx`), unconditional, no early return above it. While the next-wave card is open only `error` notices pass; a showing notice returns to the queue front and re-shows when the card closes. No layout, economy, copy or setting change.
 - **Pin:** `check-turf-war-layout.ts` asserts `useNoticePause(wavePeekShown)`; the `{floatCards}{wavePeekCard}` and `wavePeekHidden` pins are unchanged.
 - **Docs:** the stale "BOSS INCOMING hidden on Important only" bullet in "Step T6 as built" is struck (fixed in T7), and so is the T2b "card covers notices" note.
 - **Checks:** `check:notify` (12 groups), `check:turf-war-layout` (13), `check:fixed-regions` (8), `typecheck` all pass. Not device-verified.
-- **Not in T9 (ask emci):** the Bound Boss near-zero wind-up cosmetic bug; the art loose ends (neon sign, pigeon wings, card icons).
+- **Not in T9:** the Bound Boss near-zero wind-up bug (done in T10); the art loose ends (neon sign, pigeon wings, card icons). Phone check Box 36 **passed** (emci, 2026-10-18).
 
 #### Step T8 as built (2026-10-17, PR #71 squash `d8ab19e6`, OTA iOS `01a14c79-ab4e-7a29-8157-17e0ec353c8a`, group `628316f3` (commit `80344b23`); awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 34; emci answered the T7 phone check "passed", no changes)
 - **Stop 0 (emci): option A**, a picker in the Setup sheet: a row of theme chips (≥ 44 pt) inside the Maps card on Main (hidden while Neon

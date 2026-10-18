@@ -371,11 +371,19 @@ Play → Turf War → Call wave (a campaign run, not a replay).
 - [ ] Chip, caps and pause are easy to hit with a thumb (pause especially); SE: nothing is cut off, and a 3-kind wave (Main 9) still reads in the card.
 - [ ] Screenshot: the card open on a boss next wave.
 
-## Box 36 — Turf War notices wait behind the next-wave card (T9, 2026-10-18)
+## Box 36 — Turf War notices wait behind the next-wave card (T9, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 Play → Turf War → Call wave (a campaign run, not a replay).
 
-- [ ] Tap the wave chip to open the next-wave card.
-- [ ] While it is open, trigger a notice (e.g. build or sell a tower, or let a wave line appear). Nothing shows under the card.
-- [ ] Close the card (tap it, or the strip beside it). The notice appears in the lane, and stays its full time.
-- [ ] Open the card just before a boss wave's boss arrives: BOSS INCOMING waits, then shows when the boss steps in (the boss bar replaces the chip and the card closes).
+- [x] Tap the wave chip to open the next-wave card.
+- [x] While it is open, trigger a notice (e.g. build or sell a tower, or let a wave line appear). Nothing shows under the card.
+- [x] Close the card (tap it, or the strip beside it). The notice appears in the lane, and stays its full time.
+- [x] Open the card just before a boss wave's boss arrives: BOSS INCOMING waits, then shows when the boss steps in (the boss bar replaces the chip and the card closes).
+
+## Box 37 — Bound Boss shows a wind-up on its first cast (T10, 2026-10-18)
+
+Play → Turf War, a run with a Bound Boss (the cycle boss, not a hero) bound.
+
+- [ ] Place the Bound Boss on a pad while creeps are already in range. About a second later its skill ring appears and closes in (~0.7 s) before the skill fires. It no longer fires the instant it is placed.
+- [ ] Repeat at 2x speed. The ring is still visible before the skill goes off.
+- [ ] A hero tower placed the same way still casts its skill right away (unchanged).
