@@ -1,0 +1,95 @@
+{
+  "tool": "pixellab",
+  "model": "pixellab mcp",
+  "step": "Turf War T8 stop 1 (candidate, not picked yet)",
+  "view": "low top-down",
+  "palette": "docs/art/palette-streetwear-night.png (pro tilesets drawn with it; standard tileset-b and props snapped locally, nearest colour = reduce_colors with the palette image)",
+  "styleCard": {
+    "outline": "selective outline",
+    "shading": "medium shading",
+    "detail": "medium detail"
+  },
+  "scaleReference": "board hero 62 art px = 1.75 m (1 m = 35 px); scale sheet docs/divecore/turf-war-t8/samples/scale-sheet.png",
+  "painter": "scripts/turf-board-art.ts TURF_THEMES.<theme>",
+  "pro": {
+    "mode": "pro",
+    "tile_size": 32,
+    "transition_size": 0.25,
+    "roundness": 1
+  },
+  "standard": {
+    "mode": "standard",
+    "tile_size": 32,
+    "transition_size": 0.25
+  },
+  "createdAt": "2026-10-17T23:53:33.028Z",
+  "operator": "agent",
+  "picked": false,
+  "board": "ato · theme underpass (T8)",
+  "parts": {
+    "tileset": {
+      "id": "42793b29-35f5-4280-82be-f9dae6f59718",
+      "params": {
+        "boundary_amplitude": 0.1,
+        "boundary_seed": 5,
+        "raggedness": 0.2
+      },
+      "lower": "dark damp concrete subway underpass floor, oily stains, hairline cracks",
+      "upper": "worn pale grey-blue square ceramic floor tiles with grimy grout lines",
+      "transition": "yellow tactile safety strip edge with small bumps",
+      "score": 96.5
+    },
+    "tileset-b": {
+      "id": "be8f33c9-8fc0-4a09-9267-c66fc6726c92",
+      "params": {
+        "shape_style": "square"
+      },
+      "lower": "dark steel grated maintenance walkway",
+      "upper": "grimy pale white square subway tiles with dark grout lines",
+      "transition": "yellow painted safety edge"
+    },
+    "props": {
+      "bin": {
+        "id": "e35ab702-c0f2-4ac8-9299-ea7cb5f375d5",
+        "canvas": [
+          32,
+          48
+        ],
+        "box": [
+          28,
+          46
+        ],
+        "target": [
+          21,
+          42
+        ],
+        "score": 65.6,
+        "tries": 2,
+        "rejected": [
+          "4ca906a4 (23x33, short)"
+        ]
+      },
+      "boxes": {
+        "id": "df0eade3-15fc-49bc-93e0-7fb922bd3e1d",
+        "canvas": [
+          36,
+          32
+        ],
+        "box": [
+          29,
+          16
+        ],
+        "target": [
+          28,
+          19
+        ],
+        "score": 80.3
+      },
+      "traffic-cone": {
+        "reuse": "alley board.streetwear raw/props/traffic-cone.png",
+        "role": "lamp"
+      }
+    }
+  },
+  "pads": "library pads (streetwear-pack): see TURF_THEMES / samples A-C"
+}

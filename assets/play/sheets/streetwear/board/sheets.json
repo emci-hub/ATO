@@ -1,20 +1,33 @@
 {
   "sheets/streetwear/board/ato": {
-    "sheet": "sheets/streetwear/board/atlas-2.png",
-    "sheetW": 512,
-    "sheetH": 1025,
+    "sheet": "sheets/streetwear/board/atlas-1.png",
+    "sheetW": 1025,
+    "sheetH": 1538,
     "frames": {
       "img": {
         "x": 0,
-        "y": 0,
+        "y": 1026,
         "w": 512,
         "h": 512
       }
     }
   },
   "sheets/streetwear/board/ato-glow": {
-    "sheet": "sheets/streetwear/board/atlas-1.png",
-    "sheetW": 512,
+    "sheet": "sheets/streetwear/board/atlas-0.png",
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 513,
+        "y": 513,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-fire": {
+    "sheet": "sheets/streetwear/board/atlas-2.png",
+    "sheetW": 529,
     "sheetH": 512,
     "frames": {
       "img": {
@@ -25,10 +38,88 @@
       }
     }
   },
-  "sheets/streetwear/board/ato-fire": {
+  "sheets/streetwear/board/ato-rooftop": {
+    "sheet": "sheets/streetwear/board/atlas-1.png",
+    "sheetW": 1025,
+    "sheetH": 1538,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 513,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-rooftop-glow": {
     "sheet": "sheets/streetwear/board/atlas-0.png",
-    "sheetW": 512,
-    "sheetH": 578,
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 1026,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-rooftop-fire": {
+    "sheet": "sheets/streetwear/board/atlas-0.png",
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 1026,
+        "y": 513,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-underpass": {
+    "sheet": "sheets/streetwear/board/atlas-1.png",
+    "sheetW": 1025,
+    "sheetH": 1538,
+    "frames": {
+      "img": {
+        "x": 513,
+        "y": 513,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-underpass-glow": {
+    "sheet": "sheets/streetwear/board/atlas-0.png",
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 1026,
+        "y": 1026,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-underpass-fire": {
+    "sheet": "sheets/streetwear/board/atlas-0.png",
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 513,
+        "y": 1026,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-court": {
+    "sheet": "sheets/streetwear/board/atlas-1.png",
+    "sheetW": 1025,
+    "sheetH": 1538,
     "frames": {
       "img": {
         "x": 0,
@@ -38,56 +129,121 @@
       }
     }
   },
+  "sheets/streetwear/board/ato-court-glow": {
+    "sheet": "sheets/streetwear/board/atlas-0.png",
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 513,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-court-fire": {
+    "sheet": "sheets/streetwear/board/atlas-0.png",
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-docks": {
+    "sheet": "sheets/streetwear/board/atlas-1.png",
+    "sheetW": 1025,
+    "sheetH": 1538,
+    "frames": {
+      "img": {
+        "x": 513,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-docks-glow": {
+    "sheet": "sheets/streetwear/board/atlas-0.png",
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 513,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/ato-docks-fire": {
+    "sheet": "sheets/streetwear/board/atlas-0.png",
+    "sheetW": 1538,
+    "sheetH": 1575,
+    "frames": {
+      "img": {
+        "x": 1026,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
   "sheets/streetwear/board/ato-flame": {
     "sheet": "sheets/streetwear/board/atlas-0.png",
-    "sheetW": 512,
-    "sheetH": 578,
+    "sheetW": 1538,
+    "sheetH": 1575,
     "frames": {
       "frame_000": {
-        "x": 0,
-        "y": 550,
+        "x": 476,
+        "y": 1539,
         "w": 17,
         "h": 28
       },
       "frame_001": {
-        "x": 18,
-        "y": 550,
+        "x": 494,
+        "y": 1539,
         "w": 17,
         "h": 28
       },
       "frame_002": {
-        "x": 36,
-        "y": 550,
+        "x": 512,
+        "y": 1539,
         "w": 17,
         "h": 28
       },
       "frame_003": {
-        "x": 54,
-        "y": 550,
+        "x": 530,
+        "y": 1539,
         "w": 17,
         "h": 28
       },
       "frame_004": {
-        "x": 72,
-        "y": 550,
+        "x": 548,
+        "y": 1539,
         "w": 17,
         "h": 28
       },
       "frame_005": {
-        "x": 90,
-        "y": 550,
+        "x": 566,
+        "y": 1539,
         "w": 17,
         "h": 28
       },
       "frame_006": {
-        "x": 108,
-        "y": 550,
+        "x": 584,
+        "y": 1539,
         "w": 17,
         "h": 28
       },
       "frame_007": {
-        "x": 126,
-        "y": 550,
+        "x": 602,
+        "y": 1539,
         "w": 17,
         "h": 28
       }
@@ -95,102 +251,102 @@
   },
   "sheets/streetwear/board/ato-smoke": {
     "sheet": "sheets/streetwear/board/atlas-0.png",
-    "sheetW": 512,
-    "sheetH": 578,
+    "sheetW": 1538,
+    "sheetH": 1575,
     "frames": {
       "frame_000": {
         "x": 204,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_001": {
         "x": 221,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_002": {
         "x": 238,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_003": {
         "x": 255,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_004": {
         "x": 272,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_005": {
         "x": 289,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_006": {
         "x": 306,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_007": {
         "x": 323,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_008": {
         "x": 340,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_009": {
         "x": 357,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_010": {
         "x": 374,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_011": {
         "x": 391,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_012": {
         "x": 408,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_013": {
         "x": 425,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_014": {
         "x": 442,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       },
       "frame_015": {
         "x": 459,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 29
       }
@@ -198,104 +354,104 @@
   },
   "sheets/streetwear/board/ato-steam": {
     "sheet": "sheets/streetwear/board/atlas-0.png",
-    "sheetW": 512,
-    "sheetH": 578,
+    "sheetW": 1538,
+    "sheetH": 1575,
     "frames": {
       "frame_000": {
         "x": 0,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_001": {
         "x": 17,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_002": {
         "x": 34,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_003": {
         "x": 51,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_004": {
         "x": 68,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_005": {
         "x": 85,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_006": {
         "x": 102,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_007": {
         "x": 119,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_008": {
         "x": 136,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_009": {
         "x": 153,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_010": {
         "x": 170,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       },
       "frame_011": {
         "x": 187,
-        "y": 513,
+        "y": 1539,
         "w": 16,
         "h": 36
       }
     }
   },
   "sheets/streetwear/board/ato-pigeon": {
-    "sheet": "sheets/streetwear/board/atlas-0.png",
-    "sheetW": 512,
-    "sheetH": 578,
+    "sheet": "sheets/streetwear/board/atlas-2.png",
+    "sheetW": 529,
+    "sheetH": 512,
     "frames": {
       "frame_000": {
-        "x": 144,
-        "y": 550,
+        "x": 513,
+        "y": 0,
         "w": 16,
         "h": 16
       }
     }
   },
   "sheets/streetwear/board/neon-maze": {
-    "sheet": "sheets/streetwear/board/atlas-2.png",
-    "sheetW": 512,
-    "sheetH": 1025,
+    "sheet": "sheets/streetwear/board/atlas-1.png",
+    "sheetW": 1025,
+    "sheetH": 1538,
     "frames": {
       "img": {
-        "x": 0,
-        "y": 513,
+        "x": 513,
+        "y": 1026,
         "w": 512,
         "h": 512
       }

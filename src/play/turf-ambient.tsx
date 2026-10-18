@@ -245,6 +245,7 @@ const FIRE_KEYS: number[][] = [
 ];
 
 export type TurfAmbientProps = {
+  /** The packed board id (`ato`, or a theme's `ato-<theme>`, turf-theme.ts `turfBoardArtId`). */
   mapId: string;
   /** Board side in pt (the layer fills the board). */
   boardSide: number;
@@ -269,8 +270,9 @@ export const TurfAmbient = memo(function TurfAmbient({ mapId, boardSide, getCree
   const env: Env = { k, animate, speed, sheet };
   /** Minimal: every other site animates; the others hold a still frame (a flameless barrel must keep its flame). */
   const envAt = (i: number): Env => (share.everyOther && i % 2 === 1 ? { ...env, animate: false } : env);
-  const glowKey = sheet('ato-glow');
-  const fireKey = sheet('ato-fire');
+  // T8: each theme has its own light layers (`ato-glow`, `ato-rooftop-glow`, …); the clips below are shared.
+  const glowKey = sheet(`${mapId}-glow`);
+  const fireKey = sheet(`${mapId}-fire`);
   const flameKey = sheet('ato-flame');
   const smokeKey = sheet('ato-smoke');
   const steamKey = sheet('ato-steam');

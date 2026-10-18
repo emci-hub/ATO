@@ -21,6 +21,9 @@
  * T4 (2026-10-17): the barrel prop is now FLAMELESS (open drum, embers) — the flame, smoke, cone lamp, vent steam and
  * pigeons are animated on the ambient layer (src/play/turf-ambient.tsx). A vent grate is baked into the sidewalk.
  * `ambient` returns where every loop sits (art px) — art-pack.ts writes it to meta.boards.ato.ambient.
+ * T8 (2026-10-17): theme-driven. A theme = one `TurfThemeSpec` block (art source, variant skips, pad, props + their
+ * ambient roles, centre dashes, light pools, vent, pigeons) painted onto the SAME grid / path / pads. `alley` is the
+ * T3/T4 board, byte for byte.
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -30,9 +33,12 @@ import { PNG } from 'pngjs';
 import { TILE, type BoardMap } from '../src/play/board-data';
 import { padTapRadiusUnits } from '../src/play/turf-layout';
 import { SMOKE_CLIP, SMOKE_LIFT } from '../src/play/turf-ambient-layout';
+import { TURF_THEME_IDS, type TurfThemeId } from '../src/play/turf-theme';
 
-export const TURF_BOARD_ART_SRC = join(__dirname, '..', 'art-src', 'pixellab', 'board.streetwear');
-const PAD_ART = join(__dirname, '..', 'art-src', 'pixellab', 'streetwear-pack', 'migrated', 'raw', 'props', 'pad-manhole-ring.png');
+const PIXELLAB = join(__dirname, '..', 'art-src', 'pixellab');
+export const TURF_BOARD_ART_SRC = join(PIXELLAB, 'board.streetwear');
+/** Library pads (streetwear-pack), drawn at native size. */
+const LIBRARY_PADS = join(PIXELLAB, 'streetwear-pack', 'migrated', 'raw', 'props');
 
 const N = 16;
 const CELL = 32;
@@ -44,22 +50,175 @@ const BOARD_PT = [414, 359] as const;
 export const BOARD_HERO_PX = 62;
 /** Props taller than this would hide a creep standing behind them; none may be placed. */
 const PROP_MAX_H = Math.round(BOARD_HERO_PX * 0.8);
-/** Props are drawn at their native PixelLab size (made at the real-size box, guide §2: real m ÷ 1.75 × hero). */
-const PROP_ORDER = ['barrel', 'tire-stack', 'traffic-cone'];
-/** At most this many props, ≥ 4 cells apart, and this many px beyond a pad hit circle (none reads as a tower spot). */
-const PROP_MAX = 8;
+/** Props stay this many px beyond a pad hit circle (none reads as a tower spot). */
 const PAD_GAP = 6;
 /** Pigeons: at most this many, at least this far apart (art px). */
 const PIGEON_MAX = 4;
 const PIGEON_APART = 120;
-/** Row of the barrel's open top (ellipse centre) inside the trimmed barrel sprite: the flame base. */
-const BARREL_OPENING_Y = 7;
 /** Variant mix: share of plain base tiles; variants further than this luma gap from the base are skipped. */
 const BASE_SHARE = 0.55;
 const MAX_LUMA_GAP = 0.22;
-/** Road variants left out: the palette lock turned the damp stains into flat teal blocks (r03, r08, r11) and the
- * lighter tiles brown-pink (r05, r13). */
-const ROAD_SKIP = ['r03.png', 'r05.png', 'r08.png', 'r11.png', 'r13.png'];
+
+type Rgb = readonly [number, number, number];
+/** Neon light pool [cx, cy, r, rgb, alpha] in art px. */
+type Pool = readonly [number, number, number, Rgb, number];
+
+/** A prop the painter places on the sidewalk, by file name in the theme's raw/props/. */
+type ThemeProp = {
+  id: string;
+  /** `fire` = flame + smoke + firelight on the ambient layer, `opening` = the flame base row in the trimmed sprite;
+   * `lamp` = the blinking lamp at its top. */
+  role?: { kind: 'fire'; opening: number } | { kind: 'lamp' };
+};
+
+export { TURF_THEME_IDS, type TurfThemeId };
+
+export type TurfThemeSpec = {
+  id: TurfThemeId;
+  /** Raw PixelLab folder under art-src/pixellab/ (its latest gen with raw/tileset/tileset.png is painted). */
+  src: string;
+  /** Pins the gen folder (samples paint a candidate); default = the latest. */
+  gen?: string;
+  /** Tileset folder inside raw/ (default `tileset`; samples paint a `tileset-b` candidate). */
+  tileset?: string;
+  /** Seed of the board's random layout (variant mix, decal spots, pigeon spots). */
+  seed: number;
+  /** Variant tiles left out (lock artefacts). */
+  roadSkip: readonly string[];
+  walkSkip: readonly string[];
+  /** Pad sprite: a library pad name (streetwear-pack) or `theme:<file>` in the theme's raw/props/. */
+  pad: string;
+  /** Placed round-robin, low only, ≥ 4 cells apart, at most `propMax`. */
+  props: readonly ThemeProp[];
+  propMax: number;
+  /** When the next prop does not fit a spot, try the others there (off for the alley, which keeps its T3 layout). */
+  propFallback?: boolean;
+  /** Faint centre dashes along the walk line (null = none). */
+  dashes: { rgb: Rgb; alpha: number } | null;
+  /** Flat road marks per decal file (raw/decals/). */
+  decalsEach: number;
+  pools: readonly Pool[];
+  /** Flat grate in raw/props/ the steam rises from (null = no steam). */
+  vent: string | null;
+  pigeons: boolean;
+};
+
+/** Every theme. `alley` = T3 option D + T4 (the default; unchanged). T8 (emci picked 2026-10-17): rooftop = sample C,
+ * underpass = A, court = C, docks = A (samples: docs/divecore/turf-war-t8/samples/). */
+export const TURF_THEMES: Record<TurfThemeId, TurfThemeSpec> = {
+  alley: {
+    id: 'alley',
+    src: 'board.streetwear',
+    seed: 20261017,
+    // Road variants left out: the palette lock turned the damp stains into flat teal blocks (r03, r08, r11) and the
+    // lighter tiles brown-pink (r05, r13).
+    roadSkip: ['r03.png', 'r05.png', 'r08.png', 'r11.png', 'r13.png'],
+    walkSkip: [],
+    pad: 'pad-manhole-ring',
+    // Barrel's open top (ellipse centre) is row 7 of the trimmed sprite: the flame base.
+    props: [{ id: 'barrel', role: { kind: 'fire', opening: 7 } }, { id: 'tire-stack' }, { id: 'traffic-cone', role: { kind: 'lamp' } }],
+    propMax: 8,
+    dashes: { rgb: [210, 170, 90], alpha: 89 },
+    decalsEach: 7,
+    pools: [
+      [40, 470, 60, [255, 60, 200], 40],
+      [470, 40, 60, [40, 220, 255], 40],
+      [250, 250, 70, [255, 170, 80], 26],
+      [480, 300, 50, [40, 220, 255], 30],
+      [130, 130, 50, [255, 60, 200], 30],
+    ],
+    vent: 'vent-grate',
+    pigeons: true,
+  },
+  rooftop: {
+    id: 'rooftop',
+    src: 'board.streetwear.rooftop',
+    propFallback: true,
+    seed: 20261018,
+    roadSkip: [],
+    walkSkip: [],
+    pad: 'pad-manhole-ring',
+    props: [{ id: 'ac-unit' }, { id: 'roof-vent' }, { id: 'roof-lamp', role: { kind: 'lamp' } }],
+    propMax: 7,
+    dashes: null,
+    decalsEach: 6,
+    // Sample C (emci 2026-10-17): manhole pads, warmer lights.
+    pools: [
+      [60, 60, 70, [255, 170, 80], 36],
+      [450, 460, 70, [255, 170, 80], 34],
+      [250, 250, 70, [255, 60, 200], 20],
+      [470, 140, 50, [255, 170, 80], 30],
+    ],
+    vent: 'vent-grate',
+    pigeons: true,
+  },
+  underpass: {
+    id: 'underpass',
+    src: 'board.streetwear.underpass',
+    propFallback: true,
+    seed: 20261019,
+    roadSkip: [],
+    walkSkip: [],
+    pad: 'pad-manhole-splat',
+    // Cone first: the tall bin rarely fits a sidewalk cell, and the boxes would otherwise take every spot.
+    props: [{ id: 'traffic-cone', role: { kind: 'lamp' } }, { id: 'bin' }, { id: 'boxes' }],
+    propMax: 6,
+    dashes: { rgb: [230, 200, 80], alpha: 70 },
+    decalsEach: 6,
+    pools: [
+      [40, 470, 60, [40, 220, 255], 44],
+      [470, 40, 60, [40, 220, 255], 44],
+      [250, 250, 80, [40, 220, 255], 22],
+      [130, 130, 50, [255, 60, 200], 30],
+      [480, 300, 50, [255, 60, 200], 30],
+    ],
+    vent: 'vent-grate',
+    pigeons: false,
+  },
+  court: {
+    id: 'court',
+    src: 'board.streetwear.court',
+    propFallback: true,
+    seed: 20261020,
+    roadSkip: [],
+    walkSkip: [],
+    pad: 'pad-manhole-ring',
+    props: [{ id: 'bench' }, { id: 'bin' }, { id: 'ball-rack' }],
+    propMax: 7,
+    dashes: null,
+    decalsEach: 5,
+    // Sample C (emci 2026-10-17): manhole pads, cooler lights.
+    pools: [
+      [60, 60, 70, [40, 220, 255], 28],
+      [450, 450, 70, [40, 220, 255], 28],
+      [250, 250, 70, [255, 60, 200], 22],
+      [470, 120, 50, [255, 170, 80], 26],
+    ],
+    vent: null,
+    pigeons: true,
+  },
+  docks: {
+    id: 'docks',
+    src: 'board.streetwear.docks',
+    propFallback: true,
+    seed: 20261021,
+    roadSkip: [],
+    walkSkip: [],
+    pad: 'pad-manhole-ring',
+    props: [{ id: 'bollard' }, { id: 'crate' }, { id: 'barrel', role: { kind: 'fire', opening: 7 } }],
+    propMax: 8,
+    dashes: { rgb: [230, 200, 80], alpha: 60 },
+    decalsEach: 6,
+    pools: [
+      [40, 470, 60, [40, 220, 255], 36],
+      [470, 40, 60, [255, 170, 80], 36],
+      [250, 250, 70, [40, 220, 255], 22],
+      [130, 130, 50, [255, 170, 80], 28],
+    ],
+    vent: null,
+    pigeons: true,
+  },
+};
 
 type Img = PNG;
 
@@ -138,30 +297,24 @@ class Canvas {
   }
 }
 
-function latestGen(): string | null {
-  if (!existsSync(TURF_BOARD_ART_SRC)) return null;
-  const gens = readdirSync(TURF_BOARD_ART_SRC).filter((g) => existsSync(join(TURF_BOARD_ART_SRC, g, 'raw', 'tileset', 'tileset.png')));
-  return gens.length ? join(TURF_BOARD_ART_SRC, gens.sort().at(-1)!, 'raw') : null;
+function latestGen(theme: TurfThemeSpec = TURF_THEMES.alley): string | null {
+  const dir = join(PIXELLAB, theme.src);
+  if (!existsSync(dir)) return null;
+  const gens = readdirSync(dir).filter((g) => existsSync(join(dir, g, 'raw', 'tileset', 'tileset.png')));
+  const gen = theme.gen ?? gens.sort().at(-1);
+  return gen && gens.includes(gen) ? join(dir, gen, 'raw') : null;
 }
 
-export function turfBoardArtAvailable(): boolean {
-  return latestGen() !== null;
+export function turfBoardArtAvailable(theme: TurfThemeId = 'alley'): boolean {
+  return latestGen(TURF_THEMES[theme]) !== null;
 }
 
-/** Raw ambient clips (PixelLab vfx exports + the pigeon still), palette-locked: flame / smoke / steam .png + .json, pigeon.png. */
+/** Raw ambient clips (PixelLab vfx exports + the pigeon still), palette-locked: flame / smoke / steam .png + .json, pigeon.png.
+ * Shared by every theme (the alley's). */
 export function turfAmbientSrc(): string | null {
   const raw = latestGen();
   return raw && existsSync(join(raw, 'ambient')) ? join(raw, 'ambient') : null;
 }
-
-/** Neon light pools [cx, cy, r, rgb, alpha] in art px. On the board they sit under the pads; the glow layer is cleared over pads. */
-const POOLS: readonly (readonly [number, number, number, readonly [number, number, number], number])[] = [
-  [40, 470, 60, [255, 60, 200], 40],
-  [470, 40, 60, [40, 220, 255], 40],
-  [250, 250, 70, [255, 170, 80], 26],
-  [480, 300, 50, [40, 220, 255], 30],
-  [130, 130, 50, [255, 60, 200], 30],
-];
 
 /** Where each ambient loop sits, art px (512 board). Sprites are placed by their own anchors in turf-ambient.tsx. */
 export type TurfAmbientSites = {
@@ -189,22 +342,32 @@ export type TurfBoardArt = {
   props: { id: string; rect: [number, number, number, number] }[];
 };
 
-export function paintTurfBoard(map: BoardMap): TurfBoardArt {
-  const raw = latestGen();
-  if (!raw) throw new Error('no Turf War board art under art-src/pixellab/board.streetwear');
+/** Neon light pools sit under the pads on the board; the glow layer is cleared over pads. */
+export function paintTurfBoard(map: BoardMap, themeOrId: TurfThemeId | TurfThemeSpec = 'alley'): TurfBoardArt {
+  const theme = typeof themeOrId === 'string' ? TURF_THEMES[themeOrId] : themeOrId;
+  const raw = latestGen(theme);
+  if (!raw) throw new Error(`no Turf War board art under art-src/pixellab/${theme.src}`);
   const isRoad = (cx: number, cy: number) => {
     const v = map.grid[Math.max(0, Math.min(N - 1, cy))]![Math.max(0, Math.min(N - 1, cx))];
     return v === TILE.PATH || v === TILE.START;
   };
-  let seed = 20261017;
+  /** A theme may reuse an alley prop (the cone, the barrel, the grate): its own raw/props/ first, then the alley's. */
+  const propFile = (name: string) =>
+    [raw, latestGen()]
+      .filter((r): r is string => !!r)
+      .map((r) => join(r, 'props', `${name}.png`))
+      .find((f) => existsSync(f));
+  for (const p of theme.props) if (!propFile(p.id)) throw new Error(`theme ${theme.id}: no prop ${p.id}.png`);
+  let seed = theme.seed;
   const rand = () => {
     seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
     return seed / 0x7fffffff;
   };
 
   // ---- ground: Wang tiles on a dual grid; all-road / all-walk corners take a variant mix
-  const sheet = load(join(raw, 'tileset', 'tileset.png'));
-  const meta = JSON.parse(readFileSync(join(raw, 'tileset', 'tileset.json'), 'utf8')) as {
+  const tilesetDir = join(raw, theme.tileset ?? 'tileset');
+  const sheet = load(join(tilesetDir, 'tileset.png'));
+  const meta = JSON.parse(readFileSync(join(tilesetDir, 'tileset.json'), 'utf8')) as {
     tileset_data: { tiles: { corners: Record<'NE' | 'NW' | 'SE' | 'SW', 'lower' | 'upper'>; bounding_box: { x: number; y: number; width: number; height: number } }[] };
   };
   const tileFor = new Map<string, Img>();
@@ -223,8 +386,9 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
   };
   const roadBase = tileFor.get('lowerlowerlowerlower')!;
   const walkBase = tileFor.get('upperupperupperupper')!;
-  const roadVar = variants('road-variants', roadBase, ROAD_SKIP);
-  const walkVar = variants('walk-variants', walkBase);
+  const optionalVariants = (dir: string, base: Img, skip: readonly string[]) => (existsSync(join(raw, dir)) ? variants(dir, base, skip) : []);
+  const roadVar = optionalVariants('road-variants', roadBase, theme.roadSkip);
+  const walkVar = optionalVariants('walk-variants', walkBase, theme.walkSkip);
   const pick = (base: Img, vars: Img[]) => (rand() < BASE_SHARE || !vars.length ? base : vars[Math.floor(rand() * vars.length)]!);
 
   const board = new Canvas(true);
@@ -240,7 +404,8 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
   // ---- faint worn centre dashes (2 px, 10 on / 16 off, 35 %) along the walk polyline
   const pts = map.path.map((p) => ({ x: p.x * SIZE, y: p.y * SIZE }));
   let run = 0;
-  for (let i = 1; i < pts.length; i += 1) {
+  const dash = theme.dashes;
+  for (let i = 1; dash && i < pts.length; i += 1) {
     const a = pts[i - 1]!;
     const b = pts[i]!;
     const len = Math.hypot(b.x - a.x, b.y - a.y);
@@ -248,7 +413,7 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
       if (run % 26 >= 10) continue;
       const x = Math.round(a.x + ((b.x - a.x) * d) / len);
       const y = Math.round(a.y + ((b.y - a.y) * d) / len);
-      for (let oy = -1; oy < 1; oy += 1) for (let ox = -1; ox < 1; ox += 1) board.blend(x + ox, y + oy, 210, 170, 90, 89);
+      for (let oy = -1; oy < 1; oy += 1) for (let ox = -1; ox < 1; ox += 1) board.blend(x + ox, y + oy, dash.rgb[0], dash.rgb[1], dash.rgb[2], dash.alpha);
     }
   }
 
@@ -256,9 +421,9 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
   const roadCells: [number, number][] = [];
   for (let r = 0; r < N; r += 1) for (let c = 0; c < N; c += 1) if (isRoad(c, r)) roadCells.push([c, r]);
   const used: [number, number][] = [];
-  for (const file of readdirSync(join(raw, 'decals')).sort()) {
+  for (const file of existsSync(join(raw, 'decals')) ? readdirSync(join(raw, 'decals')).sort() : []) {
     const img = trim(load(join(raw, 'decals', file)));
-    for (let n = 0, tries = 0; n < 7 && tries < 400; tries += 1) {
+    for (let n = 0, tries = 0; n < theme.decalsEach && tries < 400; tries += 1) {
       const [c, r] = roadCells[Math.floor(rand() * roadCells.length)]!;
       if (used.some(([uc, ur]) => Math.abs(uc - c) + Math.abs(ur - r) < 4)) continue;
       used.push([c, r]);
@@ -271,7 +436,7 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
   const glow = new Canvas(false);
   const fire = new Canvas(false);
   const pools: TurfAmbientSites['pools'] = [];
-  for (const [cx, cy, r, rgb, a] of POOLS) {
+  for (const [cx, cy, r, rgb, a] of theme.pools) {
     board.glow(cx, cy, r, r * 0.6, rgb, a);
     glow.glow(cx, cy, r, r * 0.6, rgb, a * 2);
     const x0 = Math.max(0, Math.floor(cx - r));
@@ -280,7 +445,7 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
   }
 
   // ---- pads: library manhole cover at its native size (54 px) + contact shadow (down-right)
-  const pad = trim(load(PAD_ART));
+  const pad = trim(load(theme.pad.startsWith('theme:') ? join(raw, 'props', `${theme.pad.slice(6)}.png`) : join(LIBRARY_PADS, `${theme.pad}.png`)));
   for (const p of map.pads) {
     board.glow(p.x * UNIT + 3, p.y * UNIT + 4, pad.width / 2 + 2, pad.height / 2.6, [8, 4, 16], 120);
     board.draw(pad, Math.round(p.x * UNIT - pad.width / 2), Math.round(p.y * UNIT - pad.height / 2));
@@ -302,35 +467,42 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
   let ventBox: [number, number, number, number] | null = null;
   for (let cy = 0, n = 0; cy < N; cy += 1) {
     for (let cx = 0; cx < N; cx += 1) {
-      const id = PROP_ORDER[n % PROP_ORDER.length]!;
       if (isRoad(cx, cy)) continue;
-      if (n >= PROP_MAX || taken.some(([tx, ty]) => Math.abs(tx - cx) <= 3 && Math.abs(ty - cy) <= 3)) continue;
-      const img = trim(load(join(raw, 'props', `${id}.png`)));
-      if (img.height > PROP_MAX_H) throw new Error(`${id} is ${img.height} px tall — over ${PROP_MAX_H} it hides a creep`);
-      const x = Math.round(cx * CELL + CELL / 2 - img.width / 2);
-      const y = cy * CELL + CELL - 4 - img.height;
-      let onRoad = false;
-      for (let ry = Math.floor((y - 2) / CELL); ry <= Math.floor((y + img.height + 1) / CELL); ry += 1) {
-        for (let rx = Math.floor((x - 2) / CELL); rx <= Math.floor((x + img.width + 1) / CELL); rx += 1) {
-          if (rx >= 0 && ry >= 0 && rx < N && ry < N && isRoad(rx, ry)) onRoad = true;
-        }
-      }
-      if (onRoad) continue;
-      const clear = map.pads.every((p) => {
-        const px = p.x * UNIT;
-        const py = p.y * UNIT;
-        const nx = Math.max(x, Math.min(px, x + img.width));
-        const ny = Math.max(y, Math.min(py, y + img.height));
-        return Math.hypot(px - nx, py - ny) > padR + PAD_GAP;
-      });
-      if (!clear || x < 0 || y < 0 || x + img.width > SIZE || y + img.height > SIZE) continue;
+      if (n >= theme.propMax || taken.some(([tx, ty]) => Math.abs(tx - cx) <= 3 && Math.abs(ty - cy) <= 3)) continue;
+      // The next prop in the round-robin; with `propFallback` the others are tried here too when it does not fit.
+      const order = theme.propFallback ? theme.props.map((_, k) => theme.props[(n + k) % theme.props.length]!) : [theme.props[n % theme.props.length]!];
+      const fit = order
+        .map((spec) => {
+          const img = trim(load(propFile(spec.id)!));
+          if (img.height > PROP_MAX_H) throw new Error(`${spec.id} is ${img.height} px tall — over ${PROP_MAX_H} it hides a creep`);
+          const x = Math.round(cx * CELL + CELL / 2 - img.width / 2);
+          const y = cy * CELL + CELL - 4 - img.height;
+          for (let ry = Math.floor((y - 2) / CELL); ry <= Math.floor((y + img.height + 1) / CELL); ry += 1) {
+            for (let rx = Math.floor((x - 2) / CELL); rx <= Math.floor((x + img.width + 1) / CELL); rx += 1) {
+              if (rx >= 0 && ry >= 0 && rx < N && ry < N && isRoad(rx, ry)) return null;
+            }
+          }
+          const clear = map.pads.every((p) => {
+            const px = p.x * UNIT;
+            const py = p.y * UNIT;
+            const nx = Math.max(x, Math.min(px, x + img.width));
+            const ny = Math.max(y, Math.min(py, y + img.height));
+            return Math.hypot(px - nx, py - ny) > padR + PAD_GAP;
+          });
+          if (!clear || x < 0 || y < 0 || x + img.width > SIZE || y + img.height > SIZE) return null;
+          return { spec, img, x, y };
+        })
+        .find((f) => f !== null);
+      if (!fit) continue;
+      const { spec, img, x, y } = fit;
+      const id = spec.id;
       taken.push([cx, cy]);
       board.glow(x + img.width / 2 + 2, y + img.height - 1, img.width / 2 + 2, 3.5, [8, 4, 16], 150);
       board.draw(img, x, y);
-      if (id === 'barrel') {
+      if (spec.role?.kind === 'fire') {
         fire.glow(x + img.width / 2, y + 8, 30, 22, [255, 170, 70], 110);
         const bx = Math.round(x + img.width / 2);
-        const by = y + BARREL_OPENING_Y;
+        const by = y + spec.role.opening;
         // The wisp rises ~29 px: leave it off when it would pass over a pad hit circle (or off the top of the board).
         const sx = bx - SMOKE_CLIP.ax;
         const sy = by - SMOKE_LIFT - SMOKE_CLIP.ay;
@@ -340,7 +512,7 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
         const fy0 = Math.max(0, y + 8 - 22);
         fires.push({ x: fx0, y: fy0, w: Math.min(SIZE, fx0 + 60) - fx0, h: Math.min(SIZE, fy0 + 44) - fy0 });
       }
-      if (id === 'traffic-cone') cones.push({ x: Math.round(x + img.width / 2), y: y + 2 });
+      if (spec.role?.kind === 'lamp') cones.push({ x: Math.round(x + img.width / 2), y: y + 2 });
       props.push({ id, rect: [x, y, img.width, img.height] });
       n += 1;
     }
@@ -358,10 +530,11 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
       return Math.hypot(px - nx, py - ny) > padR + gap;
     }) &&
     props.every((q) => x + w + gap < q.rect[0] || x - gap > q.rect[0] + q.rect[2] || y + h + gap < q.rect[1] || y - gap > q.rect[1] + q.rect[3]);
-  const grate = trim(load(join(raw, 'props', 'vent-grate.png')));
+  const grateFile = theme.vent ? propFile(theme.vent) : undefined;
+  const grate = grateFile ? trim(load(grateFile)) : null;
   let vent: TurfAmbientSites['vent'] = null;
   let bestClear = -1;
-  for (let cy = 2; cy < N; cy += 1) {
+  for (let cy = 2; grate && cy < N; cy += 1) {
     for (let cx = 0; cx < N; cx += 1) {
       if (!sidewalk3(cx, cy)) continue;
       const gx = cx * CELL + CELL / 2 - Math.floor(grate.width / 2);
@@ -375,7 +548,7 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
       }
     }
   }
-  if (vent && ventBox) {
+  if (grate && vent && ventBox) {
     board.glow(ventBox[0] + ventBox[2] / 2 + 2, ventBox[1] + ventBox[3] / 2 + 3, ventBox[2] / 2 + 2, ventBox[3] / 2.4, [8, 4, 16], 110);
     board.draw(grate, ventBox[0], ventBox[1]);
   }
@@ -387,7 +560,7 @@ export function paintTurfBoard(map: BoardMap): TurfBoardArt {
   }
   const pigeons: TurfAmbientSites['pigeons'] = [];
   for (const [cx, cy] of spots) {
-    if (pigeons.length >= PIGEON_MAX) break;
+    if (!theme.pigeons || pigeons.length >= PIGEON_MAX) break;
     const x = cx * CELL + CELL / 2;
     const y = cy * CELL + CELL - 6;
     if (!boxClear(x - 8, y - 14, 16, 16, 6)) continue;

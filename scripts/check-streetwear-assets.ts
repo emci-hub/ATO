@@ -12,7 +12,8 @@
  *      frame that is not packed (it would draw nothing);
  *   5. Streetwear is not the only art style (Classic retired 2026-10-12);
  *   6. app.json filters the OTA's assets (`updates.assetPatternsToBeBundled`);
- *   7. the painted Turf War board loses its road/kerb contrast or a pad centre misses the pad art (T3).
+ *   7. the painted Turf War board loses its road/kerb contrast or a pad centre misses the pad art (T3) — on every map
+ *      theme, each baked at 512 with all 15 pads (T8).
  *
  * Run: npm run check:streetwear-assets
  */
@@ -179,15 +180,30 @@ for (const map of Object.values(BOARD_MAPS)) {
 }
 ok(`${Object.keys(BOARD_MAPS).length} Turf War boards baked, pads match board-data`);
 
-// Turf War T3 pixel test on the painted default board: the road reads darker than the kerb, and every pad centre
-// lands on the pad art (a pad tap always hits a drawn cover).
-{
+// T8 map themes: every theme is its own baked 512×512 painting of the ato board, with the same 15 pads.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { TURF_THEME_IDS, turfBoardArtId } = require('../src/play/turf-theme') as typeof import('../src/play/turf-theme');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { TURF_THEMES } = require('./turf-board-art') as typeof import('./turf-board-art');
+for (const theme of TURF_THEME_IDS) {
+  const id = turfBoardArtId('ato', theme);
+  const frame = sheets[`sheets/streetwear/board/${id}`]?.frames.img as { w: number; h: number } | undefined;
+  assert.ok(frame && frame.w === 512 && frame.h === 512, `theme ${theme}: board ${id} is not baked at 512×512`);
+  assert.equal(boardsMeta[id]?.pads, BOARD_MAPS.ato.pads.length, `theme ${theme}: board ${id} baked pads differ from board-data`);
+}
+ok(`${TURF_THEME_IDS.length} Turf War themes baked, ${BOARD_MAPS.ato.pads.length} pads each`);
+
+// Turf War T3 pixel test, on every theme (T8): the road reads darker than the kerb, and every pad centre lands on that
+// theme's pad art (a pad tap always hits a drawn cover).
+for (const theme of TURF_THEME_IDS) {
+  const id = turfBoardArtId('ato', theme);
+  const padName = TURF_THEMES[theme].pad;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { PNG } = require('pngjs') as typeof import('pngjs');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { TILE } = require('../src/play/board-data') as typeof import('../src/play/board-data');
   const ato = BOARD_MAPS.ato;
-  const entry = sheets['sheets/streetwear/board/ato'] as unknown as { sheet: string; frames: { img: { x: number; y: number } } };
+  const entry = sheets[`sheets/streetwear/board/${id}`] as unknown as { sheet: string; frames: { img: { x: number; y: number } } };
   const atlas = PNG.sync.read(fs.readFileSync(path.join(repo, 'assets/play', entry.sheet)));
   const { x: ox, y: oy } = entry.frames.img;
   const px = (x: number, y: number) => {
@@ -212,11 +228,12 @@ ok(`${Object.keys(BOARD_MAPS).length} Turf War boards baked, pads match board-da
   }
   const mean = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length;
   const CONTRAST_FLOOR = 30;
-  assert.ok(mean(kerbL) - mean(roadL) >= CONTRAST_FLOOR, `ato board: road (${mean(roadL).toFixed(1)}) is not ${CONTRAST_FLOOR} luma darker than the kerb (${mean(kerbL).toFixed(1)})`);
+  assert.ok(mean(kerbL) - mean(roadL) >= CONTRAST_FLOOR, `${id} board: road (${mean(roadL).toFixed(1)}) is not ${CONTRAST_FLOOR} luma darker than the kerb (${mean(kerbL).toFixed(1)})`);
   const lightRoad = roadL.filter((l) => l >= mean(kerbL) - 10).length;
-  assert.equal(lightRoad, 0, `ato board: ${lightRoad} road cell(s) are nearly as light as the kerb`);
+  assert.equal(lightRoad, 0, `${id} board: ${lightRoad} road cell(s) are nearly as light as the kerb`);
   // Pad centres: the 17×17 px around each centre matches the pad cover (art-src raw, trimmed) within a small tolerance.
-  const padArt = PNG.sync.read(fs.readFileSync(path.join(repo, 'art-src/pixellab/streetwear-pack/migrated/raw/props/pad-manhole-ring.png')));
+  assert.ok(!padName.startsWith('theme:'), `${id}: pixel test expects a library pad`);
+  const padArt = PNG.sync.read(fs.readFileSync(path.join(repo, `art-src/pixellab/streetwear-pack/migrated/raw/props/${padName}.png`)));
   let bx0 = padArt.width;
   let by0 = padArt.height;
   let bx1 = 0;
@@ -244,9 +261,9 @@ ok(`${Object.keys(BOARD_MAPS).length} Turf War boards baked, pads match board-da
         if (Math.abs(b[0] - padArt.data[ai]!) + Math.abs(b[1] - padArt.data[ai + 1]!) + Math.abs(b[2] - padArt.data[ai + 2]!) <= 30) hit += 1;
       }
     }
-    assert.ok(n > 200 && hit / n >= 0.9, `ato board: pad (${pad.x}, ${pad.y}) centre is not on the pad art (${hit}/${n} px match)`);
+    assert.ok(n > 200 && hit / n >= 0.9, `${id} board: pad (${pad.x}, ${pad.y}) centre is not on the pad art (${hit}/${n} px match)`);
   }
-  ok(`ato board pixels: road ${mean(roadL).toFixed(0)} vs kerb ${mean(kerbL).toFixed(0)} luma (floor ${CONTRAST_FLOOR}), all ${ato.pads.length} pad centres on pad art`);
+  ok(`${id} board pixels: road ${mean(roadL).toFixed(0)} vs kerb ${mean(kerbL).toFixed(0)} luma (floor ${CONTRAST_FLOOR}), all ${ato.pads.length} pad centres on pad art`);
 }
 
 // 5. Classic retired (emci 2026-10-12): Streetwear is the only look, in every build.

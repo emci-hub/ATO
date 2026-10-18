@@ -1,0 +1,114 @@
+{
+  "tool": "pixellab",
+  "model": "pixellab mcp",
+  "step": "Turf War T8 stop 1 (candidate, not picked yet)",
+  "view": "low top-down",
+  "palette": "docs/art/palette-streetwear-night.png (pro tilesets drawn with it; standard tileset-b and props snapped locally, nearest colour = reduce_colors with the palette image)",
+  "styleCard": {
+    "outline": "selective outline",
+    "shading": "medium shading",
+    "detail": "medium detail"
+  },
+  "scaleReference": "board hero 62 art px = 1.75 m (1 m = 35 px); scale sheet docs/divecore/turf-war-t8/samples/scale-sheet.png",
+  "painter": "scripts/turf-board-art.ts TURF_THEMES.<theme>",
+  "pro": {
+    "mode": "pro",
+    "tile_size": 32,
+    "transition_size": 0.25,
+    "roundness": 1
+  },
+  "standard": {
+    "mode": "standard",
+    "tile_size": 32,
+    "transition_size": 0.25
+  },
+  "createdAt": "2026-10-17T23:53:33.028Z",
+  "operator": "agent",
+  "picked": false,
+  "board": "ato · theme rooftop (T8)",
+  "parts": {
+    "tileset": {
+      "id": "60720da4-2ac4-400c-8dad-d87072a2db3d",
+      "params": {
+        "boundary_amplitude": 0.15,
+        "boundary_seed": 3,
+        "raggedness": 0.3
+      },
+      "lower": "dark weathered black tar roof membrane walkway at night, bitumen seams, patched squares",
+      "upper": "pale grey rooftop gravel ballast with small pebbles",
+      "transition": "low raised metal roof flashing strip with a dark edge",
+      "score": 90.5
+    },
+    "tileset-b": {
+      "id": "1f58962e-196f-4492-9ae0-7cffd28ab374",
+      "params": {
+        "shape_style": "round",
+        "boundary_amplitude": 0.12
+      },
+      "lower": "dark black tar roof walkway",
+      "upper": "pale weathered grey wooden rooftop deck boards",
+      "transition": "thin metal edge trim"
+    },
+    "props": {
+      "ac-unit": {
+        "id": "24357d04-c30e-4ade-bca5-fdfb10535ca6",
+        "canvas": [
+          32,
+          48
+        ],
+        "box": [
+          24,
+          30
+        ],
+        "target": [
+          28,
+          39
+        ],
+        "score": 85,
+        "tries": 3,
+        "rejected": [
+          "76d3b0a7 (29x29, too small)",
+          "14445f43 (34 px wide: fits no 1-cell sidewalk)"
+        ]
+      },
+      "roof-vent": {
+        "id": "2ad61c35-dcf0-40da-bc37-a21cc1f1d7fe",
+        "canvas": [
+          32,
+          36
+        ],
+        "box": [
+          28,
+          29
+        ],
+        "target": [
+          18,
+          30
+        ],
+        "score": 66.9,
+        "tries": 2,
+        "rejected": [
+          "db898b48 (drew a red mushroom)"
+        ]
+      },
+      "roof-lamp": {
+        "id": "cd30e68f-9ca2-4e8f-ad34-7e6c526a3c01",
+        "canvas": [
+          32,
+          40
+        ],
+        "box": [
+          15,
+          35
+        ],
+        "target": [
+          11,
+          35
+        ],
+        "score": 94.9,
+        "role": "lamp"
+      }
+    }
+  },
+  "pads": "library pads (streetwear-pack): see TURF_THEMES / samples A-C"
+}
