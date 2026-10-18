@@ -1,0 +1,9 @@
+{
+  "frames": 5,
+  "w": 20,
+  "h": 26,
+  "ax": 12,
+  "ay": 25,
+  "frame0": "pigeon.png (perch, unchanged)",
+  "note": "frames 1-4 = PixelLab animate_image a54de7ac, brightness-mapped onto the perch greys"
+}

@@ -16,6 +16,8 @@ export type TurfAmbientMeta = {
   pigeons: AmbientPoint[];
   pools: AmbientRect[];
   fires: AmbientRect[];
+  /** Wall neon signs, baked into the board (unlit) + the glow layer (lit): they flicker with pool `pool`. */
+  signs?: (AmbientRect & { pool: number })[];
   clips: { flame: AmbientClip; smoke: AmbientClip; steam: AmbientClip; pigeon: AmbientClip };
 };
 
@@ -29,6 +31,8 @@ export const LAMP_HALO = 14;
 export const PIGEON_SCARE_UNITS = 11;
 /** Perched again after this long (ms). */
 export const PIGEON_RETURN_MS = 7000;
+/** The flap-off arc + fade (ms); the wing frames loop through it. */
+export const PIGEON_FLY_MS = 750;
 
 /** Pick the ambient block out of the packed meta (undefined for boards with no ambient art). */
 export function turfAmbientMeta(boards: unknown, mapId: string): TurfAmbientMeta | null {

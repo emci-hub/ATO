@@ -198,5 +198,29 @@
     },
     "code": "neon pool flicker (glow layer crops), firelight (fire layer crops), cone lamp blink: no art, drawn in src/play/turf-ambient.tsx",
     "generations": "about 32 (pigeon 10, grate ~1, barrel ~1, vfx workbench free)"
+  },
+  "artLooseEnds": {
+    "step": "Turf War art loose ends (2026-10-18). emci picked: sign size A (24 px) bolt + heart, pigeon A, card icons A",
+    "samples": "docs/divecore/turf-war-art/samples/index.html",
+    "signs": {
+      "tool": "create_1_direction_object size 24 (64 candidates, 10 generations), view top-down",
+      "object": "c9020419-fb60-4835-a22c-64d468772017",
+      "picked": { "sign-bolt.png": 0, "sign-heart.png": 1 },
+      "rejectedSize": "object bad18035-2b7b-4461-a0ea-bb6138d54fc0 (size 32, 26x30 = ~40 % over the 0.6 m target of 21 px at the 62 px board hero)",
+      "lock": "nearest-colour snap to docs/art/palette-streetwear-night.png, then pixelart_workbench repair",
+      "score": { "sign-bolt": "85.7 -> 88.2 after repair (lint 0 errors; the gap is 1-2 px specks of the faded frame)", "sign-heart": "87.6 -> 97.7 after repair" },
+      "box": [20, 20],
+      "painter": "baked: unlit (x0.45) into the board, lit into the glow layer inside its pool's crop, so it flickers with the pool (alley only)"
+    },
+    "pigeonFlap": {
+      "tool": "animate_image on the 16 px pigeon padded to 32 (1 generation), 4 frames",
+      "job": "a54de7ac-e296-494c-bf67-8797f421ad8e",
+      "otherTry": "d449b878-b7d1-4750-82cf-4edc611151a0 (flap B, not picked); bfcd1ee6-6c29-499b-a957-44108ed90eb5 (take-off, did not lift)",
+      "lock": "brightness-mapped onto the perch's own colours (feet / beak keep their RGB snap)",
+      "files": "pigeon-flap.png = [perch, wing 1..4] at 20x26 + pigeon-flap.json (anchor = perch feet)",
+      "code": "src/play/turf-ambient.tsx plays frames 1..4 at 12 fps while it flies off; Reduce Motion = fade only, perched = frame 0"
+    },
+    "cardIcons": "no new art: the next-wave card crops each role's own board sprite (south) at runtime, src/play/turf-ui.tsx PeekCreepIcon",
+    "generations": "23 (signs 20, pigeon 3)"
   }
 }
