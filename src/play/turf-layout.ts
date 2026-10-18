@@ -74,3 +74,21 @@ export function buildCardPlacement(stage: Size, pad: { x: number; y: number }, c
     y: clamp(rawY, 0, Math.max(0, stage.height - card.height)),
   };
 }
+
+/**
+ * Next-wave preview card (T2b): a FloatLayer card that hangs under the wave chip. It lives in the NoticeLane
+ * box + the empty stage strip above the board, so it never covers the board or another region. Float
+ * coordinates start at the NoticeLane's top edge.
+ */
+export const WAVE_PEEK = { width: 344, height: 64, left: 8, top: 2 } as const;
+
+/** The card's rect in float coordinates (origin = NoticeLane top-left). */
+export function wavePeekRect(stage: Size): { x: number; y: number; width: number; height: number } {
+  return {
+    x: WAVE_PEEK.left,
+    y: WAVE_PEEK.top,
+    // Leaves a TAP_MIN strip at the right for the lane's help (?) button, so the card never covers it.
+    width: Math.min(WAVE_PEEK.width, stage.width - WAVE_PEEK.left * 2 - TAP_MIN),
+    height: WAVE_PEEK.height,
+  };
+}

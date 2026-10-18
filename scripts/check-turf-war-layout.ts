@@ -9,7 +9,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { ATO_PADS, BOARD_MAPS, TILE } from '../src/play/board-data';
-import { computeStageFrame, TAP_MIN, type Insets } from '../src/play/stage-frame';
+import { computeStageFrame, REGIONS, TAP_MIN, type Insets } from '../src/play/stage-frame';
+import { waveDefFor } from '../src/play/director';
+import { nextWavePeek, nextWaveSeat } from '../src/play/turf-wave-peek';
 import {
   BUILD_CARD_FLIP_BELOW,
   BUILD_CARD_MAX_H,
@@ -17,6 +19,8 @@ import {
   padTapRadiusPt,
   turfBoardRect,
   turfBoardSide,
+  WAVE_PEEK,
+  wavePeekRect,
 } from '../src/play/turf-layout';
 import { TURF_ART_PX, ambientShare, ambientSpriteBoxes, pigeonScared, turfAmbientMeta } from '../src/play/turf-ambient-layout';
 import { DEFAULT_TURF_THEME, TURF_THEME_IDS, themedBoardArtIds, turfBoardArtId } from '../src/play/turf-theme';
@@ -152,9 +156,11 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.ok(!/styles\.leaveButton/.test(src), 'no classic HUD Leave pill');
   assert.match(src, /defendBackStep\(phase, leaveConfirmOpen\)/, 'back-swipe still opens the Leave confirm');
   assert.ok(!/Leave from the bar below/.test(src), 'the pause line no longer points at a bar');
-  // Pause is in the top bar with a ≥ 44 pt hit area (40 + hitSlop 8 each side).
-  assert.match(src, /accessibilityLabel=\{paused \? 'Resume wave' : 'Pause wave'\}\s*hitSlop=\{8\}/, 'pause sits in the top bar with hitSlop');
-  assert.match(src, /streetPause: \{ width: 40, height: 40/, 'pause is 40 pt + 8 slop = 56');
+  // Pause is in the top bar (T2b: the kit's TurfPauseButton, 44 pt + hitSlop 6 each side = 56 pt target).
+  const kit = read('src/play/turf-ui.tsx');
+  assert.match(src, /<TurfPauseButton paused=\{paused\} onPress=\{\(\) => setPaused\(\(value\) => !value\)\} \/>/, 'pause sits in the top bar');
+  assert.match(kit, /accessibilityLabel=\{paused \? 'Resume wave' : 'Pause wave'\}\s*hitSlop=\{6\}/, 'pause has hitSlop 6');
+  assert.match(kit, /pause: \{\s*width: SHEET\.tap,\s*height: SHEET\.tap,/, 'pause is 44 pt + 6 slop = 56');
   ok('Leave only in the pause menu; pause in the top bar; back-swipe confirm kept; title + lede out of the stage');
 }
 
@@ -606,6 +612,71 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(src, /const roadStamps = useMemo\(/, 'road stamps are memoised (stable memo props)');
   assert.match(src, /const roadD = useMemo\(/, 'road path is memoised (stable memo props)');
   ok('polish beats: sheets + timings, every beat inside the board, Off / calm = no beat motion, no flash / shake / hit stop (T4–T7 audit), lane line limits, BOSS INCOMING on Important only, static layers memoised');
+}
+
+// ---------------------------------------------------------------- T2b: top bar + next-wave preview
+{
+  const src = read('src/play/defend-screen.tsx');
+  const kit = read('src/play/turf-ui.tsx');
+  // Top bar: still 56 pt in both phones, REGIONS unchanged; built from kit pieces on sheet-kit tokens (no StreetFrame resbar).
+  for (const d of DEVICES) {
+    for (const id of ['turf-setup', 'turf-wave'] as const) {
+      const f = computeStageFrame(id, d.window, d.insets);
+      assert.equal(f.topBar.height, 56, `${d.name} ${id}: top bar stays 56 pt`);
+      assert.equal(f.notice.height, 40, `${d.name} ${id}: NoticeLane stays 40 pt`);
+    }
+  }
+  assert.deepEqual(REGIONS['turf-wave'].topBar, 56, 'REGIONS turf-wave top bar = 56');
+  assert.deepEqual(REGIONS['turf-setup'].topBar, 56, 'REGIONS turf-setup top bar = 56');
+  assert.match(src, /streetHud: \{[^}]*height: 56,/, 'the HUD row is the 56 pt top bar');
+  assert.ok(!/StreetFrame|StreetBackdrop/.test(src), 'the Turf top bar no longer draws the resbar art frame');
+  assert.match(kit, /SHEET\.tap/, 'top bar pieces use the sheet-kit tap size');
+  assert.match(kit, /chipTap: \{ height: SHEET\.tap,/, 'the wave chip tap target is 44 pt');
+  assert.match(kit, /caps: \{[^}]*height: SHEET\.tap,/, 'the caps pill is 44 pt');
+  // The boss bar still replaces the chip inside the chip's own fixed box.
+  assert.match(src, /<TurfWaveChip[\s\S]{0,260}width=\{WAVE_CHIP_BOX\.width\}\s*height=\{WAVE_CHIP_BOX\.height\}/, 'the wave chip uses WAVE_CHIP_BOX (same box as the boss bar)');
+  assert.ok(WAVE_CHIP_BOX.height <= TAP_MIN, 'the chip box fits inside its 44 pt tap target');
+
+  // The preview card: inside the lane + the empty strip above the board, never over the board, taps ≥ 44.
+  for (const d of DEVICES) {
+    const f = computeStageFrame('turf-wave', d.window, d.insets);
+    const stage = { width: f.stage.width, height: f.stage.height };
+    const rect = wavePeekRect(stage);
+    const board = turfBoardRect(stage);
+    const free = f.notice.height + board.y; // float coordinates start at the lane's top edge
+    assert.ok(rect.x >= 0 && rect.x + rect.width <= f.stage.width, `${d.name}: peek card inside the stage width`);
+    assert.ok(rect.y >= 0 && rect.y + rect.height <= free, `${d.name}: peek card (${rect.y}+${rect.height}) stays above the board (${free} pt free)`);
+    assert.ok(rect.height >= TAP_MIN, `${d.name}: peek card is a ≥ 44 pt tap (it closes on tap)`);
+    assert.ok(f.stage.width - (rect.x + rect.width) >= TAP_MIN, `${d.name}: ≥ 44 pt stays free at the right for the help (?) button`);
+  }
+  assert.equal(WAVE_PEEK.height, 64, 'peek card is 64 pt');
+  // Data: counts come from the director table (no new data); order Trial → Main → Main 1.
+  const counts = { trial: 5, main: 10 };
+  assert.deepEqual(nextWaveSeat('trial', 5, counts), { phase: 'main', wave: 1 }, 'after Trial 5 comes Main 1');
+  assert.deepEqual(nextWaveSeat('main', 10, counts), { phase: 'main', wave: 1 }, 'after Main 10 the cycle restarts at Main 1');
+  assert.deepEqual(nextWaveSeat('main', 4, counts), { phase: 'main', wave: 5 }, 'Main 4 → Main 5');
+  for (const phase of ['trial', 'main'] as const) {
+    for (let w = 1; w <= counts[phase]; w += 1) {
+      const peek = nextWavePeek(phase, w, counts);
+      assert.ok(peek && peek.rows.length > 0, `${phase} ${w}: the next wave has a preview`);
+      const def = waveDefFor(peek!.phase, peek!.wave)!;
+      assert.equal(peek!.total, def.groups.reduce((n, g) => n + g.count, 0), `${phase} ${w}: total = the director's creep count`);
+      assert.ok(peek!.rows.length <= 4, 'at most four role chips');
+    }
+  }
+  const boss = nextWavePeek('main', 4, counts)!;
+  assert.deepEqual(boss.rows, [{ role: 'swarm', count: 5 }, { role: 'boss', count: 1 }], 'Main 5 previews 5 swarm + 1 boss');
+  assert.equal(boss.element, 'root', 'the preview carries the stage element');
+  // Wiring: only the wave chip opens it; boss bar / pause hide it; the card is on the FloatLayer.
+  assert.match(src, /const wavePeek = live && street && !liveBoss && fight\.mode !== 'replay' \? nextWavePeek\(/, 'the preview is only for a live street campaign wave with no boss bar');
+  assert.match(src, /const wavePeekShown = wavePeekOpen && wavePeek != null && !paused;/, 'pause hides the preview');
+  assert.match(src, /\{floatCards\}\s*\{wavePeekCard\}/, 'the preview card is a FloatLayer child');
+  assert.match(src, /if \(!live\) setWavePeekOpen\(false\);/, 'the preview closes when the run ends');
+  assert.match(src, /right: HELP_COLUMN, top: 0, height: setupFrame\.notice\.height \+ turfBoardRect\(setupFrame\.stage\)\.y/, 'the outside-tap strip never reaches the board or the help (?) column');
+  assert.match(src, /!liveBoss && fight\.mode !== 'replay' \? nextWavePeek\(/, 'no preview in a replay (the seat does not advance) or under the boss bar');
+  assert.match(src, /const wavePeekHidden = liveBoss != null \|\| paused;\s*useEffect\(\(\) => \{\s*if \(wavePeekHidden\) setWavePeekOpen\(false\);/, 'a boss bar or a pause closes the card (it never pops back open)');
+  assert.ok(!/styles\.card|ThemedView/.test(kit.slice(kit.indexOf('export function TurfWavePeekCard'), kit.indexOf('const styles'))), 'the preview card is a sheetCard, not styles.card');
+  ok('T2b top bar: 56 pt, REGIONS unchanged, kit pieces ≥ 44; next-wave preview inside lane + board margin on both phones, director data, boss bar still in the chip box');
 }
 
 console.log(`\ncheck:turf-war-layout — ${passed} groups passed.`);
