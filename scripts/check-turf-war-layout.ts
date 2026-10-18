@@ -39,6 +39,7 @@ import {
   nextChip,
   showHealthBar,
 } from '../src/play/turf-combat-fx-rules';
+import { BOUND_BOSS_PLACE_SKILL_CD_MS, DEFEND_TICK_MS, createDefendLive, placeBoundBoss } from '../src/play/defend';
 import {
   BOSS_ABILITIES,
   BOSS_DEATH_MS,
@@ -52,6 +53,7 @@ import {
   bossBar,
   bossFxFlags,
   enrageWarning,
+  telegraphLeadSimMs,
   telegraphStart,
 } from '../src/play/turf-boss-fx-rules';
 import {
@@ -440,6 +442,24 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
     }
   }
   assert.equal(telegraphStart(true, 0, TICK, 1), null, 'one telegraph at a time per ability');
+  // A newly placed Bound Boss starts on a cooldown, so even its first cast shows a full wind-up at 1x and 2x.
+  assert.equal(TICK, DEFEND_TICK_MS, 'check tick = defend tick');
+  for (const speed of [1, 2]) {
+    let first: number | null = null;
+    for (let cd = BOUND_BOSS_PLACE_SKILL_CD_MS; first == null && cd >= 0; cd -= DEFEND_TICK_MS * speed) {
+      first = telegraphStart(false, cd, DEFEND_TICK_MS, speed);
+    }
+    assert.ok(first != null && first >= TELEGRAPH_MIN_MS, `placed boss, speed ${speed}: first wind-up ${first} ms ≥ ${TELEGRAPH_MIN_MS}`);
+  }
+  assert.equal(BOUND_BOSS_PLACE_SKILL_CD_MS, telegraphLeadSimMs(DEFEND_TICK_MS, 2), 'placement cooldown = the 2x telegraph lead');
+  {
+    const cycle = allBoundBossDefs()[0];
+    const board = createDefendLive(1, { boardId: 'ato', scrap: 100_000 });
+    const placed = placeBoundBoss(board, 0, cycle.boss_id, 1);
+    assert.equal(placed?.boundBosses[0]?.skillCooldownMs, BOUND_BOSS_PLACE_SKILL_CD_MS, 'placeBoundBoss: a cycle boss starts on the placement cooldown');
+    const hero = placeBoundBoss(board, 0, 'archangel', 1);
+    assert.equal(hero?.boundBosses[0]?.skillCooldownMs, 0, 'placeBoundBoss: a hero tower still starts at 0');
+  }
   assert.equal(enrageWarning(60, 100, 0.5, false), true, 'enrage warning near the line (≤ 65 % for a 50 % line)');
   assert.equal(enrageWarning(90, 100, 0.5, false), false, 'no warning far above the line');
   assert.equal(enrageWarning(40, 100, 0.5, true), false, 'no warning once the enrage fired');

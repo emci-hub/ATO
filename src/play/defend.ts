@@ -706,6 +706,11 @@ export function towerUpgradeCost(tower: Tower): number {
   return TOWER_DEFS[tower.kind].levelCostScrap[tower.level] ?? 0;
 }
 
+/** A newly placed Bound Boss starts its skill on this cooldown (sim ms), not 0, so its telegraph has a real wind-up
+ * (≥ 600 ms real at 1x and 2x) instead of casting the first tick a creep is in range. Equals
+ * `telegraphLeadSimMs(DEFEND_TICK_MS, 2)` (pinned by check:turf-war-layout). */
+export const BOUND_BOSS_PLACE_SKILL_CD_MS = 1_400;
+
 /** Place a Bound Boss on an empty pad (§9k / A6), deducting its place cost.
  * Accepts the cycle boss (a `bound_bosses.json` def, scrap `place_cost`) or a
  * HERO bound as a tower (A6 — `HERO_TOWER_STATS`, FREE place). Blocked when the
@@ -740,7 +745,8 @@ export function placeBoundBoss(
         bossId,
         stars: Math.max(1, Math.min(5, Math.floor(stars))),
         cooldownMs: 0,
-        skillCooldownMs: 0,
+        // Only the cycle boss telegraphs its skill; a hero tower keeps casting at once.
+        skillCooldownMs: hero ? 0 : BOUND_BOSS_PLACE_SKILL_CD_MS,
       },
     ],
     nextId: state.nextId + 1,
