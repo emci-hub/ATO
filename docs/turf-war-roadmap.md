@@ -26,6 +26,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | ✔ merged (PR #70, 2026-10-17); OTA see "Step T7 as built"; emci's phone check (Box 33) **passed** |
 | T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); picker in Setup (emci, option A) | ✔ merged (PR #71, 2026-10-17); OTA see "Step T8 as built"; emci's phone check (Box 34) **passed** (answered in the T2b chat) |
 | T2b | T2 leftover (emci 2026-10-18, option B): next-wave preview card under the wave chip + top bar on sheet-kit pieces | ✔ merged (PR #72 squash `4afb7443`, 2026-10-18); OTA iOS `01a14d16-d6c7-79a3-93d2-65ed9ec70d56`, group `e971779c` (message `turf-war-t2b-hud`, see "Step T2b as built"); emci's phone check (Box 35) **passed**, no changes; T8 phone check (Box 34) **passed** |
+| T9 | Notices polish (emci 2026-10-18): pause the notice lane while the next-wave card is open (`useNoticePause(wavePeekShown)`), strike the stale "BOSS INCOMING hidden on Important only" bullet (already fixed in T7) | planned, not built; see "Step T9 plan" |
 
 Every step ships on its own OTA. T1 and T2 change code layout only (no art). T3 and T4 need emci to pick art from samples
 first (two stops inside the step: samples → pick → build). T5 and T6 need effect samples (GIF strips) the same way.
@@ -211,6 +212,14 @@ and no new in-stage text nodes besides the pinned ones.
 - **Not shot:** a boss next wave and a 3-role wave (no save at that seat in the preview); the data + geometry are pinned in the check, the chips shrink + ellipsize at 315 pt (SE) — check on the phone.
 - **Preview gotcha (cloud container):** the web export needs `EXPO_PUBLIC_SUPABASE_URL` / `_ANON_KEY` set (dummy values on the command line are enough; nothing committed) and `--clear` after a failed export.
 - **Open / for later:** the card covers the lane's notices while open (a notice arriving mid-card is hidden until it closes; a boss bar closes it); icons are role-tint swatches, not art.
+
+#### Step T9 plan (2026-10-18, emci picked "Notices polish"; investigated, not built)
+- **BOSS INCOMING on "Important only":** already fixed in T7 (`defend-screen.tsx` emits it with `important: true`; `noticeAllowed` in `src/play/notify/queue.ts`; pinned by `check-turf-war-layout.ts` and `check-notify.ts`). Only the "Open / for later" bullet in "Step T6 as built" is stale: strike it.
+- **Notices lost behind the next-wave card:** the card draws over the lane (FloatLayer child) and the queue keeps running, so a notice's 3 s timer expires while covered. Fix = call `useNoticePause(wavePeekShown)` once in `DefendScreen`, next to `wavePeekShown`, unconditionally above any early return (hook: `src/play/notify/notify.ts`, already used in `play.tsx` and `dive-scene.tsx`). While the card is open only `error` notices pass; a showing notice goes back to the queue front and re-shows when the card closes. A boss bar already closes the card, so BOSS INCOMING surfaces right after. No layout change.
+- **Pin:** add `assert.match(src, /useNoticePause\(wavePeekShown\)/)` in `check-turf-war-layout.ts` near the peek pins; keep the `{floatCards}{wavePeekCard}` and `wavePeekHidden` pins intact.
+- **Gate:** `check:notify`, `check:turf-war-layout`, `check:fixed-regions`, `typecheck`, then `check:ota-gate` once. No new saved setting, no economy / copy change.
+- **Not in T9 (decide separately):** a Bound Boss placed mid-wave with a target in range can cast with ~0 wind-up (`telegraphStart` in `turf-boss-fx-rules.ts`); cosmetic only, needs a rules-file edit + pin, newly placed boss's initial cooldown not verified. Art loose ends (neon sign, pigeon wings, card icons) = a later art step with samples first.
+- **Done:** gate green, reviewer PASS, OTA, emci's phone check (open the card, trigger a notice, close the card, notice appears).
 
 #### Step T8 as built (2026-10-17, PR #71 squash `d8ab19e6`, OTA iOS `01a14c79-ab4e-7a29-8157-17e0ec353c8a`, group `628316f3` (commit `80344b23`); awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 34; emci answered the T7 phone check "passed", no changes)
 - **Stop 0 (emci): option A**, a picker in the Setup sheet: a row of theme chips (≥ 44 pt) inside the Maps card on Main (hidden while Neon
