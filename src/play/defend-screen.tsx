@@ -168,7 +168,7 @@ import {
   enrageWarning,
   telegraphStart,
 } from '@/play/turf-boss-fx-rules';
-import { notify } from '@/play/notify/notify';
+import { notify, useNoticePause } from '@/play/notify/notify';
 import { usePlayMotion } from '@/play/play-motion';
 import {
   CREEP_STILL_MS,
@@ -3272,6 +3272,8 @@ export function DefendScreen({
   // Replays do not advance the campaign seat, so the preview is for campaign runs only.
   const wavePeek = live && street && !liveBoss && fight.mode !== 'replay' ? nextWavePeek(labelPhase, displayedWave, { trial: TRIAL_WAVE_COUNT, main: MAIN_WAVE_COUNT }) : null;
   const wavePeekShown = wavePeekOpen && wavePeek != null && !paused;
+  // T9: notices wait while the next-wave card is open (they were drawing under it).
+  useNoticePause(wavePeekShown);
   // A boss bar or a pause hides the card; closing it too keeps it from popping back open on its own.
   const wavePeekHidden = liveBoss != null || paused;
   useEffect(() => {
