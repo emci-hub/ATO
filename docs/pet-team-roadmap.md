@@ -116,6 +116,28 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   ~10 s after it stands (6 s proof + the 5 s swing timer restarting); the boss chase closing to 6 is what makes
   dazes happen at all (8 is the swing reach).
   **Next: P6.**
+- **P6 built 2026-10-18** (commit `1c02adb1`). emci approved the plan ("go and accept all recommendations") and
+  asked that the helper can wear gear too. **Gear is per hero:** the scout found gear sat on the 5 elemental Legend
+  records (`AvatarRecord.equipped`), not on heroes or pets, so "the matching hero" had to be defined. New additive v33
+  fields `hero_gear` (4 slots per hero), `gear_moved`, `locker_hero_id` (no version bump). One-time move on load
+  (`foldGearIntoHeroes`, waits for P4's leader fold): the active Legend's worn gear → the Turf leader's hero; every
+  other Legend's gear → the bag (a Legend has no hero, no guessed mapping); a taken slot keeps the hero's item and
+  bags the older one; Legend records end empty; total owned unchanged. Equip / unequip / merge / dev overgear act on
+  the **dressed hero** (`lockerHeroIdOf`: saved pick if owned or still wearing gear, else the leader); all four
+  owned/worn counters include `hero_gear`. View: `statSums` = dressed hero, `leaderStatSums` feeds the Turf board
+  buckets (the leader's gear boosts the whole board as before), `helperStatSums` → `gearPower` scales only the
+  helper's hits and skill (×1 floor, on top of the board multiplier and stars; no nerf for an ungeared helper);
+  Gear Score and dive luck read the leader's gear. Locker: a **Dress which hero?** chip row (leader and helper first,
+  `worn/4` each). Hideout: a **GEAR n/4** chip in the name-tag row (fixed 18 px inside the one 36 px row, shrinks
+  before the star badge). Balance table: `docs/locker-per-hero-balance.md`. P5b notes looked at and left as is
+  (Neon Maze road-knot follow spots, boss re-daze ~10 s). `check:locker-per-hero` (6 groups). Gate green (173),
+  reviewer PASS (fixed after review: the move now waits for the leader fold, gear on a no-longer-owned hero can be
+  taken off, chip yields width to the badge, two missing tests added). Web preview stops at sign-in, so the screen is
+  not seen yet. **OTA published 2026-10-18**: iOS `01a150e7-cd04-779d-9a0c-4e5f87da71c5`, Android
+  `01a150e7-cd04-7368-953b-c5c12c57fe26`, group `8e7b7015-1e84-4d52-8985-c3bf7638000e` (message
+  `pet-team-p6-per-hero-locker`). Phone check: **Box 49** (not done). **Known risk (accepted):** a phone still on an
+  older bundle that re-saves a migrated save drops `hero_gear` and those worn items would vanish; every phone gets the
+  update on reopen. **Plan complete after P6** (P1-P6 + P5b built); what is left is the phone checks (Boxes 44-49).
 
 ## The idea in one line
 

@@ -498,3 +498,16 @@ First: close and reopen the app so the update loads (OTA group `7362dc82`). You 
 - [ ] **Smoothness:** on a busy wave, at 1× and 2×, the helper's walking looks as smooth as the leader's (no 10-steps-a-second jumping), and the board feels as smooth as before. With the dev FPS overlay it stays near 60.
 - [ ] Pause mid-wave while the helper walks or is dazed: it freezes; resume continues where it was.
 - [ ] Settings → Larger Text (phone accessibility text size up): open Setup again. The Team card text grows and wraps inside the sheet (scrolls); nothing is cut off and the board and bars keep their size.
+
+## Box 49 — Per-hero Locker (pet team P6, 2026-10-18)
+
+First: close and reopen the app so the update loads (OTA group `8e7b7015`). Use a save that had gear worn before this update if you can.
+
+- [ ] **No gear lost:** open the Locker. The gear your active Legend was wearing is now worn by your **leader**. Gear that other Legends wore is back in the **bag**. Bag count + worn count is the same as before the update (check the "held" number next to Bag).
+- [ ] The Locker has a **Dress which hero?** row at the top of the gear section: a chip per hero with `worn/4`, your leader first (tagged "leader"), your Turf helper next (tagged "helper"). The panel titles read "Worn · <hero>" and "Equipped bonuses · <hero>".
+- [ ] Tap your helper's chip, then equip an item from the bag: it goes on the helper, the leader keeps what it wore. Tap the leader's chip: its own gear shows. A worn item leaves the bag (one wearer at a time); unequipping puts it back.
+- [ ] The Legend cards no longer show "n/4 worn". Level, stars, element and swords work as before.
+- [ ] Hideout: once a hero wears gear, the name tag shows a small **GEAR n/4** chip. The tag stays one row, the same height; the star badge is still fully visible, also on a small phone and with Larger Text.
+- [ ] Turf War: the leader's gear still makes the whole board hit harder as before (towers too). Dress the **helper** in strong gear: its hits and its skill visibly hit harder than before; with no gear on it, it fights like it did in Box 48.
+- [ ] **Smoothness:** a busy wave at 1× and 2× feels the same as Box 48 (gear adds no per-frame cost).
+- [ ] Settings → Larger Text: the Locker's hero chips scroll sideways, the Worn rows wrap, nothing is cut off.
