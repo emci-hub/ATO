@@ -453,3 +453,13 @@ First: close and reopen the app so the update loads. Play → Hideout.
 - [ ] The badge on the Hideout strip, the Stash tile and the card show the same stars and grade for the same pet.
 - [ ] A hero with 3+ stars still lets you wear its dye, as before.
 - [ ] With the phone's text size set larger, the Stash tiles and the strip still show everything. Put it back afterwards.
+
+## Box 45 — Hero art repacked with a new faint clip (pet team P3, 2026-10-18)
+
+The faint clip itself is not played anywhere yet (Turf team, P5, uses it). This box only checks nothing broke when
+every hero's fight sheet was rebuilt. First: close and reopen the app so the update loads.
+
+- [ ] Play → Hideout: your pet idles and walks around as before, no blank or flickering frames, feet on the floor.
+- [ ] Play a Turf War wave with your Avatar: it walks, dashes, attacks, uses its skill and flinches when hit, all looking as before (no missing frames, no wrong hero).
+- [ ] Swap to a different hero (Avatar or a pet you hatched) and repeat one wave or a Hideout walk. Same result.
+- [ ] Optional look at the new art: the faint frames are in the art library viewer (hero cards → combat → Faint).

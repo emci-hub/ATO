@@ -21,7 +21,19 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   reviewer pass. **OTA published 2026-10-18**: iOS `01a14e69-01ce-729d-b914-e014f7e437f8`, Android
   `01a14e69-01ce-702f-89c2-8af3aab11326`, group `f5093f5e-f020-4825-8e28-e88a41e6d0cd` (message
   `pet-team-p2-status-badge`). Phone check: Box 44 (not done; watch the Hideout strip width on a Legendary shiny).
-  **Next: P3 (animation fill, PixelLab; samples to emci first).**
+- **P3 built 2026-10-18** (art commit `231b80c2`). The "7 holes" were **Cast-skin only**: Streetwear (the one
+  live skin) already had idle/walk/dash/attack/skill/hurt for all 16 heroes, so they were reuse (0 gens). New: a
+  7-frame **Faint** (east/west) for all 16 Streetwear heroes, PixelLab skeleton-v3 `falling-back-death`, padded to
+  the 192 cell (head on the idle head, lowest pixel on the idle feet line), colours snapped to each combat atlas.
+  emci approved the Kael sample + scale sheet first (`docs/art/faint-sample-kael.png`,
+  `docs/art/scale-sheet-faint-kael.png`). Raw + gen.json: `art-src/pixellab/hero.<slug>.streetwear/faint-20261018/`.
+  Critique 23/28 (Velkhar, Archangel 22; no zero). Workbench score 75.7, the same as the approved hurt clips (75.6),
+  so the guide's 90 is not met by any hero clip. Velkhar + Oni were re-rolled once; Archangel's last east frame
+  holds frame 5 (hand fix). 108 gens used (16 × 6 + 2 re-rolls), 3,668 left. Code: `HERO.<slug>.faint` slot
+  (`skeletons.ts`, art only, played from P5); `art-pack` packs a clip from a later generation folder. Faint lives in
+  each combat atlas (+~25% on disk with oxipng, which emci okayed installing). Victory clip **skipped** (3 of 16
+  needed a fix; not "smooth"). Gate green, reviewer pass.
+  **Next: P4 (leader = active pet).**
 
 ## The idea in one line
 
