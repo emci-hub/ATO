@@ -47,6 +47,9 @@ import type { AtlasJson, ArtFormat, ArtTrim } from '../src/art/registry.types';
 import { charArtRel } from './art-categories';
 import { groundInset, groundRow } from '../src/play/ground-point';
 
+/** Turf War pigeon wing flap: frames 1..4 of `ato-pigeon` at this rate (≈ 80 ms a frame). */
+const PIGEON_FLAP_FPS = 12;
+
 /**
  * Word → role guesses, checked in order. These only ever PROPOSE a role: the
  * catalog keeps every action under its authored name, and an action that
@@ -1109,10 +1112,24 @@ function packSwBoards(repo: string): Record<string, { pads: number; ambient?: un
           manifest[key] = writeFrameStrip(repo, key, fx.frames);
           clips[name] = { frames: fx.frames.length, fps: fx.fps, w: fx.frames[0].width, h: fx.frames[0].height, ax: Math.round(fx.anchor.x), ay: Math.round(fx.anchor.y) };
         }
-        const pigeon = readPng(path.join(ambientDir, 'pigeon.png'));
         const pkey = `${SW_SHEETS}/board/ato-pigeon`;
-        manifest[pkey] = writeFrameStrip(repo, pkey, [pigeon]);
-        clips.pigeon = { frames: 1, fps: 1, w: pigeon.width, h: pigeon.height, ax: 8, ay: 14 };
+        const flapFile = path.join(ambientDir, 'pigeon-flap.json');
+        if (fs.existsSync(flapFile)) {
+          // Art loose ends (emci 2026-10-18, pigeon A): frame 0 = the perch, 1..4 = the wing flap played on a scare.
+          const flap = JSON.parse(fs.readFileSync(flapFile, 'utf8')) as { frames: number; w: number; h: number; ax: number; ay: number };
+          const strip = readPng(path.join(ambientDir, 'pigeon-flap.png'));
+          const frames = Array.from({ length: flap.frames }, (_, i) => {
+            const f = new PNG({ width: flap.w, height: flap.h });
+            PNG.bitblt(strip, f, i * flap.w, 0, flap.w, flap.h, 0, 0);
+            return f;
+          });
+          manifest[pkey] = writeFrameStrip(repo, pkey, frames);
+          clips.pigeon = { frames: flap.frames, fps: PIGEON_FLAP_FPS, w: flap.w, h: flap.h, ax: flap.ax, ay: flap.ay };
+        } else {
+          const pigeon = readPng(path.join(ambientDir, 'pigeon.png'));
+          manifest[pkey] = writeFrameStrip(repo, pkey, [pigeon]);
+          clips.pigeon = { frames: 1, fps: 1, w: pigeon.width, h: pigeon.height, ax: 8, ay: 14 };
+        }
       }
       meta[map.id] = { pads: art.pads, ambient: { ...art.ambient, clips } };
       for (const [id, t] of Object.entries(themed)) meta[id] = { pads: t.pads, ambient: { ...t.ambient, clips } };

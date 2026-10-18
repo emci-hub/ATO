@@ -32,6 +32,7 @@ import { STREETWEAR_META } from '@/play/skin';
 import {
   LAMP_CORE,
   LAMP_HALO,
+  PIGEON_FLY_MS,
   PIGEON_RETURN_MS,
   SMOKE_LIFT,
   TURF_ART_PX,
@@ -142,7 +143,7 @@ function ConeLamp({ at, env, delay }: { at: AmbientPoint; env: Env; delay: numbe
   );
 }
 
-/** A perched pigeon: bobs and pecks; flaps off (a short arc + fade) when a creep is near, returns later. */
+/** A perched pigeon: bobs and pecks; flaps off (wing frames on a short arc + fade) when a creep is near, returns later. */
 function Pigeon({ site, clip, env, index, creepsRef, running, reduced }: { site: AmbientPoint; clip: AmbientClip; env: Env; index: number; creepsRef: { current: () => AmbientPoint[] }; running: boolean; reduced: boolean }) {
   const { k } = env;
   const sheetKey = env.sheet('ato-pigeon');
@@ -171,7 +172,7 @@ function Pigeon({ site, clip, env, index, creepsRef, running, reduced }: { site:
     const id = setInterval(() => {
       if (away.current || !pigeonScared(site, creepsRef.current())) return;
       away.current = true;
-      fly.value = reduced ? 0 : withTiming(1, { duration: 750, easing: Easing.out(Easing.quad) });
+      fly.value = reduced ? 0 : withTiming(1, { duration: PIGEON_FLY_MS, easing: Easing.out(Easing.quad) });
       vis.value = withTiming(0, { duration: reduced ? 500 : 750 });
       timer.current = setTimeout(() => {
         fly.value = 0;
@@ -205,27 +206,29 @@ function Pigeon({ site, clip, env, index, creepsRef, running, reduced }: { site:
 
   const style = useAnimatedStyle(() => {
     const f = fly.value;
-    const flap = 1 - 0.3 * Math.abs(Math.sin(f * Math.PI * 6));
     return {
       opacity: vis.value,
-      transform: [
-        { translateX: toward * f * 36 * k },
-        { translateY: peck.value * 2 * k - f * 30 * k },
-        { scaleX: toward < 0 ? -1 : 1 },
-        { scaleY: f > 0 ? flap : 1 },
-      ],
+      transform: [{ translateX: toward * f * 36 * k }, { translateY: peck.value * 2 * k - f * 30 * k }, { scaleX: toward < 0 ? -1 : 1 }],
     };
   });
+  // Wing flap: frame 0 = perched; while it flies off (never under Reduce Motion, where `fly` stays 0) frames 1..n-1 loop.
+  const wingFrames = clip.frames - 1;
+  const frameMs = 1000 / clip.fps;
+  const first = sheetKey ? PLAY_SHEETS[sheetKey]?.frames.frame_000 : undefined;
+  const second = sheetKey ? PLAY_SHEETS[sheetKey]?.frames.frame_001 : undefined;
+  const stride = first && second ? second.x - first.x : 0;
+  const wings = useAnimatedStyle(() => {
+    const f = fly.value;
+    const idx = f > 0 && wingFrames > 0 ? 1 + (Math.floor((f * PIGEON_FLY_MS) / frameMs) % wingFrames) : 0;
+    return { transform: [{ translateX: -idx * stride * k }] };
+  }, [wingFrames, frameMs, stride, k]);
   const frame = sheetKey ? frameBox(sheetKey, 'frame_000') : null;
   if (!frame) return null;
   return (
     <Animated.View pointerEvents="none" style={[styles.abs, { left: (site.x - clip.ax) * k, top: (site.y - clip.ay) * k, width: clip.w * k, height: clip.h * k, overflow: 'hidden' }, style]}>
-      <ExpoImage
-        source={frame.source}
-        contentFit="fill"
-        transition={0}
-        style={{ ...pixelRenderStyle, position: 'absolute', left: -frame.rect.x * k, top: -frame.rect.y * k, width: frame.sheet.sheetW * k, height: frame.sheet.sheetH * k }}
-      />
+      <Animated.View style={[styles.abs, { left: -frame.rect.x * k, top: -frame.rect.y * k, width: frame.sheet.sheetW * k, height: frame.sheet.sheetH * k }, wings]}>
+        <ExpoImage source={frame.source} contentFit="fill" transition={0} style={{ ...pixelRenderStyle, width: '100%', height: '100%' }} />
+      </Animated.View>
     </Animated.View>
   );
 }

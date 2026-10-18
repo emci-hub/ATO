@@ -12,6 +12,21 @@ export const WAVE_PEEK_ROLE_ORDER: readonly SpawnRole[] = ['swarm', 'runner', 't
 
 export type WavePeekRow = { role: SpawnRole; count: number };
 
+/** A figure's box in its square south frame, as fractions of the frame: centre x, top, height. */
+export type PeekFigure = { cx: number; top: number; h: number };
+export type WavePeekUnit = 'unit.puff' | 'unit.runner' | 'unit.tank' | 'unit.boss_scout' | 'unit.final';
+
+/** Card icons (art loose ends, emci 2026-10-18): where each creep's figure sits in its packed Streetwear south frame,
+ * measured from the atlas and pinned against it by check:turf-war-layout. A unit not listed (the semi's kenney art)
+ * keeps the swatch. */
+export const WAVE_PEEK_FIGURE: Record<WavePeekUnit, PeekFigure> = {
+  'unit.puff': { cx: 0.583, top: 0.333, h: 0.469 },
+  'unit.runner': { cx: 0.516, top: 0.26, h: 0.469 },
+  'unit.tank': { cx: 0.5, top: 0.313, h: 0.417 },
+  'unit.boss_scout': { cx: 0.5, top: 0.155, h: 0.689 },
+  'unit.final': { cx: 0.526, top: 0.266, h: 0.547 },
+};
+
 export type WavePeek = {
   phase: WavePeekPhase;
   wave: number;

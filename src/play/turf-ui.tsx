@@ -15,6 +15,9 @@ import type { ComponentProps, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { SHEET, sheetCard, sheetCardOn, sheetText } from '@/play/sheet-kit';
+import { ClipImage, drawableFrame } from '@/play/sheet-sprite';
+import type { ClipDrawable } from '@/play/skin';
+import type { PeekFigure } from '@/play/turf-wave-peek';
 import { WAVE_PEEK } from '@/play/turf-layout';
 import { STREET, STREET_FONT } from '@/play/street-ui';
 
@@ -224,10 +227,37 @@ export function TurfPauseButton({ paused, onPress }: { paused: boolean; onPress:
   );
 }
 
-export type TurfWavePeekRowView = { key: string; count: number; name: string; color: string; shape: 'dot' | 'slim' | 'block' | 'gem'; boss?: boolean };
+export type TurfWavePeekRowView = {
+  key: string;
+  count: number;
+  name: string;
+  color: string;
+  shape: 'dot' | 'slim' | 'block' | 'gem';
+  boss?: boolean;
+  /** The role's own board sprite (south) + where its figure sits in the frame; drawn as a head-and-shoulders icon.
+   * Unpacked art keeps the swatch. */
+  art?: ClipDrawable;
+  figure?: PeekFigure;
+};
+
+/** Card icon edge (pt) and the share of the figure's height that is head + shoulders. */
+const PEEK_ICON = 18;
+const PEEK_BUST_SHARE = 0.5;
+
+/** Head-and-shoulders of a creep's board sprite (the top half of its figure, centred) with a role-colour underline. */
+function PeekCreepIcon({ art, figure, color }: { art: ClipDrawable; figure: PeekFigure; color: string }) {
+  const box = PEEK_ICON / (figure.h * PEEK_BUST_SHARE);
+  return (
+    <View style={[styles.peekIcon, { borderBottomColor: color }]}>
+      <View style={{ position: 'absolute', width: box, height: box, left: PEEK_ICON / 2 - figure.cx * box, top: -figure.top * box }}>
+        <ClipImage drawable={art} />
+      </View>
+    </View>
+  );
+}
 
 /**
- * Next-wave preview (FloatLayer card): title + stage tag, then one chip per creep role (swatch · count × · name).
+ * Next-wave preview (FloatLayer card): title + stage tag, then one chip per creep role (creep icon, or a swatch · count × · name).
  * Tapping the card closes it. Copy comes in as strings (role names are the director's own words).
  */
 export function TurfWavePeekCard({
@@ -266,15 +296,19 @@ export function TurfWavePeekCard({
       <View style={styles.peekRow}>
         {rows.map((row) => (
           <View key={row.key} style={[styles.peekChip, row.boss && styles.peekChipBoss]}>
-            <View
-              style={[
-                styles.swatch,
-                { backgroundColor: row.color },
-                row.shape === 'dot' && styles.swatchDot,
-                row.shape === 'slim' && styles.swatchSlim,
-                row.shape === 'gem' && styles.swatchGem,
-              ]}
-            />
+            {row.art && row.figure && drawableFrame(row.art) ? (
+              <PeekCreepIcon art={row.art} figure={row.figure} color={row.color} />
+            ) : (
+              <View
+                style={[
+                  styles.swatch,
+                  { backgroundColor: row.color },
+                  row.shape === 'dot' && styles.swatchDot,
+                  row.shape === 'slim' && styles.swatchSlim,
+                  row.shape === 'gem' && styles.swatchGem,
+                ]}
+              />
+            )}
             <Text style={styles.peekCount} maxFontSizeMultiplier={1.2}>
               {row.count}×
             </Text>
@@ -365,6 +399,7 @@ const styles = StyleSheet.create({
     borderRadius: SHEET.radiusSmall,
   },
   peekChipBoss: { borderColor: STREET.red },
+  peekIcon: { width: PEEK_ICON, height: PEEK_ICON + 2, overflow: 'hidden', borderBottomWidth: 2 },
   swatch: { width: 12, height: 12, borderRadius: 2 },
   swatchDot: { borderRadius: 6 },
   swatchSlim: { width: 8, height: 12, borderRadius: 4 },

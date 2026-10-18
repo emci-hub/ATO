@@ -11,7 +11,7 @@ import path from 'node:path';
 import { ATO_PADS, BOARD_MAPS, TILE } from '../src/play/board-data';
 import { computeStageFrame, REGIONS, TAP_MIN, type Insets } from '../src/play/stage-frame';
 import { waveDefFor } from '../src/play/director';
-import { nextWavePeek, nextWaveSeat } from '../src/play/turf-wave-peek';
+import { nextWavePeek, nextWaveSeat, WAVE_PEEK_FIGURE } from '../src/play/turf-wave-peek';
 import {
   BUILD_CARD_FLIP_BELOW,
   BUILD_CARD_MAX_H,
@@ -272,6 +272,36 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
       }
     }
   }
+  // Art loose ends (emci 2026-10-18): the alley's two wall neon signs are baked off the road and clear of every pad,
+  // inside their pool's flicker crop (so they flicker with it); no other theme paints one.
+  const signs = amb.signs ?? [];
+  assert.equal(signs.length, 2, 'the alley board has its two neon signs (bolt by the cyan pool, heart by the magenta pool)');
+  for (const s of signs) {
+    const tag = `neon sign at ${s.x},${s.y}`;
+    const crop: { x: number; y: number; w: number; h: number } | undefined = amb.pools[s.pool];
+    assert.ok(crop && s.x >= crop.x && s.y >= crop.y && s.x + s.w <= crop.x + crop.w && s.y + s.h <= crop.y + crop.h, `${tag} is inside pool ${s.pool}'s flicker crop`);
+    assert.ok(s.x >= 0 && s.y >= 0 && s.x + s.w <= TURF_ART_PX && s.y + s.h <= TURF_ART_PX, `${tag} inside the board`);
+    assert.ok(s.w <= 24 && s.h <= 24, `${tag} stays on the 24 px canvas (0.6 m at the 62 px board hero)`);
+    for (const p of ATO_PADS) {
+      const px = (p.x / 100) * TURF_ART_PX;
+      const py = (p.y / 100) * TURF_ART_PX;
+      assert.ok(Math.hypot(px - Math.max(s.x, Math.min(px, s.x + s.w)), py - Math.max(s.y, Math.min(py, s.y + s.h))) > padR, `${tag} is clear of the pad at ${p.x},${p.y}`);
+    }
+    for (let cy = Math.floor(s.y / 32); cy <= Math.floor((s.y + s.h - 1) / 32); cy += 1) {
+      for (let cx = Math.floor(s.x / 32); cx <= Math.floor((s.x + s.w - 1) / 32); cx += 1) assert.ok(!isRoad(cx, cy), `${tag} is off the road (cell ${cx},${cy})`);
+    }
+  }
+  for (const { id, m } of themed) if (id !== 'ato') assert.equal(m.signs?.length ?? 0, 0, `${id}: no neon sign (alley only)`);
+  // The pigeon flaps real wings: frame 0 = perched, frames 1.. only while it flies off (never under Reduce Motion: fly stays 0).
+  assert.ok(amb.clips.pigeon.frames >= 3, 'the pigeon sheet has a perch frame + wing frames');
+  // turf-ambient.tsx slides the strip by (frame_001.x − frame_000.x): every frame must sit on one row at that stride.
+  const pigeonSheet = (JSON.parse(read('assets/art/legacy-play-sheets.json')) as Record<string, { frames: Record<string, { x: number; y: number }> }>)['sheets/streetwear/board/ato-pigeon'];
+  assert.ok(pigeonSheet, 'sheets/streetwear/board/ato-pigeon is packed');
+  const pf = Array.from({ length: amb.clips.pigeon.frames }, (_, i) => pigeonSheet.frames[`frame_${String(i).padStart(3, '0')}`]);
+  assert.ok(pf.every((f) => f), 'every pigeon frame is packed');
+  const stride = pf[1]!.x - pf[0]!.x;
+  pf.forEach((f, i) => assert.ok(f!.y === pf[0]!.y && f!.x === pf[0]!.x + i * stride, `pigeon frame ${i} is on the strip's row at the shared stride`));
+
   // pure rules
   assert.equal(pigeonScared(amb.pigeons[0]!, []), false, 'no creep, no scare');
   const p0 = { x: (amb.pigeons[0]!.x / TURF_ART_PX) * 100, y: (amb.pigeons[0]!.y / TURF_ART_PX) * 100 };
@@ -292,6 +322,9 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(ui, /pointerEvents="none" style=\{styles\.fill\}/, 'the layer never takes a touch');
   assert.match(ui, /export const TurfAmbient = memo\(/, 'the layer is memoised (the sim ticks every 100 ms, the layer does not)');
   assert.match(ui, /t\.value = 0;\s+t\.value = withDelay/, 'an animated loop starts at frame 0 (withRepeat restarts from the start value)');
+  assert.match(ui, /f > 0 && wingFrames > 0 \? 1 \+/, 'pigeon wing frames play only while it flies off (perched = frame 0)');
+  assert.match(ui, /fly\.value = reduced \? 0 :/, 'Reduce Motion: the pigeon only fades (no arc, no wing frames)');
+  assert.ok(!/scaleY/.test(ui), 'no squash-for-a-flap left in the ambient layer');
   const src = read('src/play/defend-screen.tsx');
   // T7: the baked board image is the memoised `TurfBoardBase` layer (same image, same place in the stack).
   const board = src.indexOf('<TurfBoardBase sheetKey={streetBoardKey} />');
@@ -697,7 +730,41 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(src, /const wavePeekHidden = liveBoss != null \|\| paused;\s*useEffect\(\(\) => \{\s*if \(wavePeekHidden\) setWavePeekOpen\(false\);/, 'a boss bar or a pause closes the card (it never pops back open)');
   assert.match(src, /useNoticePause\(wavePeekShown\)/, 'notices wait while the next-wave card is open (T9)');
   assert.ok(!/styles\.card|ThemedView/.test(kit.slice(kit.indexOf('export function TurfWavePeekCard'), kit.indexOf('const styles'))), 'the preview card is a sheetCard, not styles.card');
-  ok('T2b top bar: 56 pt, REGIONS unchanged, kit pieces ≥ 44; next-wave preview inside lane + board margin on both phones, director data, boss bar still in the chip box');
+  // Art loose ends (emci 2026-10-18, icons A): each chip shows the role's own board creep (head + shoulders, role-colour
+  // underline); unpacked art keeps the swatch; the role word stays (colour is never the only clue); the icon fits the chip.
+  const peekCard = kit.slice(kit.indexOf('export function TurfWavePeekCard'), kit.indexOf('const styles'));
+  assert.match(peekCard, /row\.art && row\.figure && drawableFrame\(row\.art\) \? \(\s*<PeekCreepIcon/, 'chips draw the creep icon when its frame is packed');
+  assert.match(peekCard, /styles\.swatch,/, 'the swatch stays as the fallback');
+  assert.match(peekCard, /\{row\.name\}/, 'the role word is still written in every chip');
+  assert.match(src, /\.\.\.wavePeekArt\(row\.role, wavePeek\.phase, wavePeek\.wave\)/, 'rows carry the board sprite (boss = that seat\'s band)');
+  // The figure table matches the packed Streetwear south frames (a repack that moves a figure fails here, not on the phone).
+  const swSkin = JSON.parse(read('assets/play/skins/streetwear/skin.json')) as { roles: Record<string, { keys: string[] }> };
+  const swSheets = JSON.parse(read('assets/art/legacy-play-sheets.json')) as Record<string, { sheet: string; frames: Record<string, { x: number; y: number; w: number; h: number }>; sourceW?: number; sourceH?: number; offsetX?: number; offsetY?: number }>;
+  for (const [unit, fig] of Object.entries(WAVE_PEEK_FIGURE)) {
+    const key = (swSkin.roles[unit]?.keys ?? []).find((k) => k.endsWith('/rotations/south'));
+    const m = key && /^skins\/streetwear\/(.+)\/rotations\/south$/.exec(key);
+    assert.ok(m, `${unit}: the Streetwear skin has a packed south frame`);
+    const sheet = swSheets[`sheets/streetwear/${m[1]}/rotations`];
+    const r = sheet?.frames.south;
+    assert.ok(sheet && r, `${unit}: sheets/streetwear/${m[1]}/rotations has a south frame`);
+    const file = [path.join(repo, 'assets/play', sheet.sheet), path.join(repo, 'assets', sheet.sheet)].find((f) => fs.existsSync(f));
+    assert.ok(file, `${unit}: atlas ${sheet.sheet} exists`);
+    const png = PNG.sync.read(fs.readFileSync(file));
+    let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1;
+    for (let y = 0; y < r.h; y += 1) for (let x = 0; x < r.w; x += 1) {
+      if (png.data[((r.y + y) * png.width + r.x + x) * 4 + 3]! > 20) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    }
+    const W = sheet.sourceW ?? r.w;
+    const H = sheet.sourceH ?? r.h;
+    const got = { cx: ((sheet.offsetX ?? 0) + (x0 + x1 + 1) / 2) / W, top: ((sheet.offsetY ?? 0) + y0) / H, h: (y1 - y0 + 1) / H };
+    for (const k of ['cx', 'top', 'h'] as const) assert.ok(Math.abs(got[k] - fig[k]) <= 0.02, `${unit}: figure ${k} ${fig[k]} matches the atlas (${got[k].toFixed(3)})`);
+  }
+  const peekIcon = Number(/const PEEK_ICON = (\d+);/.exec(kit)?.[1]);
+  const chipH = Number(/peekChip: \{\s*height: (\d+),/.exec(kit)?.[1]);
+  const sheetBorder = Number(/^\s*border: (\d+),/m.exec(read('src/play/sheet-kit.tsx'))?.[1]);
+  assert.ok(sheetBorder > 0, 'SHEET.border read from sheet-kit');
+  assert.ok(peekIcon + 2 <= chipH - 2 * sheetBorder, `the ${peekIcon} pt icon + 2 pt underline fits inside the ${chipH} pt chip's borders`);
+  ok('T2b top bar: 56 pt, REGIONS unchanged, kit pieces ≥ 44; next-wave preview inside lane + board margin on both phones, director data, boss bar still in the chip box, creep icons');
 }
 
 console.log(`\ncheck:turf-war-layout — ${passed} groups passed.`);

@@ -55,6 +55,10 @@ const PAD_GAP = 6;
 /** Pigeons: at most this many, at least this far apart (art px). */
 const PIGEON_MAX = 4;
 const PIGEON_APART = 120;
+/** A neon sign's tubes on the board when the glow layer is dark (its lit copy lives on the glow layer). */
+const SIGN_UNLIT = 0.45;
+/** A sign sits within this many pool radii of its pool's centre (the alley's magenta corner is road + pad + barrel). */
+const SIGN_REACH = 1.75;
 /** Variant mix: share of plain base tiles; variants further than this luma gap from the base are skipped. */
 const BASE_SHARE = 0.55;
 const MAX_LUMA_GAP = 0.22;
@@ -101,6 +105,9 @@ export type TurfThemeSpec = {
   /** Flat grate in raw/props/ the steam rises from (null = no steam). */
   vent: string | null;
   pigeons: boolean;
+  /** Wall neon signs (art loose ends, emci 2026-10-18): a file in the alley's raw/ambient/, lit by pool `pool`. Placed
+   * on the free sidewalk spot nearest that pool; unlit on the board, lit on the glow layer, so it flickers with the pool. */
+  signs?: readonly { file: string; pool: number }[];
 };
 
 /** Every theme. `alley` = T3 option D + T4 (the default; unchanged). T8 (emci picked 2026-10-17): rooftop = sample C,
@@ -129,6 +136,11 @@ export const TURF_THEMES: Record<TurfThemeId, TurfThemeSpec> = {
     ],
     vent: 'vent-grate',
     pigeons: true,
+    // emci picked sign size A (24 px): bolt by the cyan pool, heart by the magenta pool.
+    signs: [
+      { file: 'sign-bolt', pool: 1 },
+      { file: 'sign-heart', pool: 0 },
+    ],
   },
   rooftop: {
     id: 'rooftop',
@@ -330,6 +342,8 @@ export type TurfAmbientSites = {
   pools: { x: number; y: number; w: number; h: number }[];
   /** Barrel firelight: crop rects of the fire layer. */
   fires: { x: number; y: number; w: number; h: number }[];
+  /** Wall neon signs baked into the board + glow layer; `pool` = the pool crop that flickers them (check:turf-war-layout). */
+  signs: { x: number; y: number; w: number; h: number; pool: number }[];
 };
 
 export type TurfBoardArt = {
@@ -521,6 +535,8 @@ export function paintTurfBoard(map: BoardMap, themeOrId: TurfThemeId | TurfTheme
   // ---- vent grate (flat, baked into the sidewalk) + pigeon spots: free sidewalk cells, off pads / props / each other
   /** The cell is sidewalk (a 16 px bird or a 24 px grate centred in it keeps ≥ 4 px off the kerb). */
   const sidewalk3 = (cx: number, cy: number) => !isRoad(cx, cy);
+  const signBoxes: [number, number, number, number][] = [];
+  const signs: TurfAmbientSites['signs'] = [];
   const boxClear = (x: number, y: number, w: number, h: number, gap: number) =>
     map.pads.every((p) => {
       const px = p.x * UNIT;
@@ -529,7 +545,45 @@ export function paintTurfBoard(map: BoardMap, themeOrId: TurfThemeId | TurfTheme
       const ny = Math.max(y, Math.min(py, y + h));
       return Math.hypot(px - nx, py - ny) > padR + gap;
     }) &&
-    props.every((q) => x + w + gap < q.rect[0] || x - gap > q.rect[0] + q.rect[2] || y + h + gap < q.rect[1] || y - gap > q.rect[1] + q.rect[3]);
+    [...props.map((q) => q.rect), ...signBoxes].every((q) => x + w + gap < q[0] || x - gap > q[0] + q[2] || y + h + gap < q[1] || y - gap > q[1] + q[3]);
+
+  // ---- wall neon signs: the free sidewalk spot nearest the pool (no road cell within 2 px, off pads and props; no rand)
+  for (const s of theme.signs ?? []) {
+    const ambientDir = turfAmbientSrc();
+    if (!ambientDir) throw new Error('no raw/ambient for the neon signs');
+    const img = trim(load(join(ambientDir, `${s.file}.png`)));
+    const [pcx, pcy, pr] = theme.pools[s.pool]!;
+    const touchesRoad = (x: number, y: number) => {
+      for (let ry = Math.floor((y - 2) / CELL); ry <= Math.floor((y + img.height + 1) / CELL); ry += 1) {
+        for (let rx = Math.floor((x - 2) / CELL); rx <= Math.floor((x + img.width + 1) / CELL); rx += 1) {
+          if (rx >= 0 && ry >= 0 && rx < N && ry < N && isRoad(rx, ry)) return true;
+        }
+      }
+      return false;
+    };
+    let best: { x: number; y: number; d: number } | null = null;
+    for (let y = 0; y + img.height <= SIZE; y += 1) {
+      for (let x = 0; x + img.width <= SIZE; x += 1) {
+        const d = Math.hypot(x + img.width / 2 - pcx, y + img.height / 2 - pcy);
+        if (d > pr * SIGN_REACH || (best && d >= best.d)) continue;
+        if (touchesRoad(x, y) || !boxClear(x, y, img.width, img.height, 2)) continue;
+        best = { x, y, d };
+      }
+    }
+    if (!best) throw new Error(`theme ${theme.id}: no free spot for ${s.file} near pool ${s.pool}`);
+    const unlit = new PNG({ width: img.width, height: img.height });
+    img.data.copy(unlit.data);
+    for (let i = 0; i < unlit.data.length; i += 4) for (let c = 0; c < 3; c += 1) unlit.data[i + c] = Math.round(unlit.data[i + c]! * SIGN_UNLIT);
+    board.draw(unlit, best.x, best.y);
+    glow.draw(img, best.x, best.y);
+    signBoxes.push([best.x, best.y, img.width, img.height]);
+    signs.push({ x: best.x, y: best.y, w: img.width, h: img.height, pool: s.pool });
+    // the pool's flicker crop covers the sign too
+    const p = pools[s.pool]!;
+    const x0 = Math.min(p.x, best.x);
+    const y0 = Math.min(p.y, best.y);
+    pools[s.pool] = { x: x0, y: y0, w: Math.max(p.x + p.w, best.x + img.width) - x0, h: Math.max(p.y + p.h, best.y + img.height) - y0 };
+  }
   const grateFile = theme.vent ? propFile(theme.vent) : undefined;
   const grate = grateFile ? trim(load(grateFile)) : null;
   let vent: TurfAmbientSites['vent'] = null;
@@ -594,5 +648,5 @@ export function paintTurfBoard(map: BoardMap, themeOrId: TurfThemeId | TurfTheme
     }
   }
 
-  return { board: board.png, glow: glow.png, fire: fire.png, ambient: { barrels, cones, vent, pigeons, pools, fires }, pads: map.pads.length, props };
+  return { board: board.png, glow: glow.png, fire: fire.png, ambient: { barrels, cones, vent, pigeons, pools, fires, signs }, pads: map.pads.length, props };
 }

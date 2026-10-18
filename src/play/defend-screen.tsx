@@ -263,7 +263,7 @@ import { countOnce } from '@/play/play-counters';
 import { TurfBuildCard, type TurfChoice } from '@/play/turf-build-card';
 import { padTapRadiusUnits, turfBoardRect, turfBoardSide, wavePeekRect } from '@/play/turf-layout';
 import { TurfButton, TurfCapsPill, TurfPauseButton, TurfResultCard, TurfWaveChip, TurfWavePeekCard, type TurfWavePeekRowView } from '@/play/turf-ui';
-import { nextWavePeek } from '@/play/turf-wave-peek';
+import { nextWavePeek, WAVE_PEEK_FIGURE, type PeekFigure } from '@/play/turf-wave-peek';
 import { HELP_COLUMN } from '@/play/help/help-sheet';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
@@ -3290,6 +3290,7 @@ export function DefendScreen({
       color: CREEP_ROLE_COLOR[row.role],
       shape: row.role === 'swarm' ? 'dot' : row.role === 'runner' ? 'slim' : row.role === 'boss' ? 'gem' : 'block',
       boss: row.role === 'boss',
+      ...wavePeekArt(row.role, wavePeek.phase, wavePeek.wave),
     }));
     return (
       <>
@@ -5232,6 +5233,14 @@ function creepLaneHalfFor(puff: Puff): number {
  * Oni `unit.boss_scout`, final = the Archangel `unit.final`); the three creeps
  * map one-to-one.
  */
+/** Next-wave card icon: the role's own board sprite facing south (the boss = that seat's boss band). */
+function wavePeekArt(role: CreepRole, phase: CampaignPhase, wave: number): { art?: ClipDrawable; figure?: PeekFigure } {
+  const unit: SkinRoleId =
+    role === 'boss' ? bandUnitRole(bossBandFor(phase, wave)?.kind ?? '') : role === 'runner' ? 'unit.runner' : role === 'tank' ? 'unit.tank' : 'unit.puff';
+  const figure: PeekFigure | undefined = (WAVE_PEEK_FIGURE as Partial<Record<string, PeekFigure>>)[unit];
+  return figure ? { art: skinArtDrawable(unit, skinDirIndex(unit, 0, 1)), figure } : {};
+}
+
 function puffUnitRole(puff: Puff, bandKind: string | undefined): SkinRoleId {
   if (puff.kind === 'boss') return bandUnitRole(bandKind ?? '');
   if (puff.kind === 'runner') return 'unit.runner';
