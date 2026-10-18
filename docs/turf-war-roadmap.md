@@ -221,7 +221,7 @@ and no new in-stage text nodes besides the pinned ones.
 - **Not in T9 (decide separately):** a Bound Boss placed mid-wave with a target in range can cast with ~0 wind-up (`telegraphStart` in `turf-boss-fx-rules.ts`); cosmetic only, needs a rules-file edit + pin, newly placed boss's initial cooldown not verified. Art loose ends (neon sign, pigeon wings, card icons) = a later art step with samples first.
 - **Done:** gate green, reviewer PASS, OTA, emci's phone check (open the card, trigger a notice, close the card, notice appears).
 
-#### Step T9 as built (2026-10-18; PR / OTA ids: PENDING; phone check = `docs/ATO_DEVICE_TESTS.md` Box 36)
+#### Step T9 as built (2026-10-18; PR #73 squash `90db5efc`, OTA iOS `01a14d9b-8378-739b-afdc-d8a09ec7acab`, group `8a7415b2` (message `turf-war-t9-notices`, `npm run ota:publish -- --branch production --message "turf-war-t9-notices" --non-interactive`); phone check = `docs/ATO_DEVICE_TESTS.md` Box 36)
 - **Change:** `useNoticePause(wavePeekShown)` once in `DefendScreen` right after `wavePeekShown` (`src/play/defend-screen.tsx`), unconditional, no early return above it. While the next-wave card is open only `error` notices pass; a showing notice returns to the queue front and re-shows when the card closes. No layout, economy, copy or setting change.
 - **Pin:** `check-turf-war-layout.ts` asserts `useNoticePause(wavePeekShown)`; the `{floatCards}{wavePeekCard}` and `wavePeekHidden` pins are unchanged.
 - **Docs:** the stale "BOSS INCOMING hidden on Important only" bullet in "Step T6 as built" is struck (fixed in T7), and so is the T2b "card covers notices" note.
