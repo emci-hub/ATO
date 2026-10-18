@@ -90,6 +90,32 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   again. Normal creeps never daze it. (Softer fallback if emci prefers: a boss hit only pushes it back, attack ≈ 17.)
   Removed from P5: the 2nd slot and the tap-to-place helper spots. Save stays v33 (`turf_helpers` keeps 1 pick).
   60 fps: the helper's movement must ride an existing ticker (no new setState interval).
+- **P5b built 2026-10-18** (commit `bb21c3c7`). emci approved the plan + numbers first. **One helper**
+  (`TURF_HELPER_SLOTS = 1`); the 2nd slot, tap-to-place spots and Move are gone. Numbers (`turf-team.ts`): leash 15,
+  follow spot 6 beside the leader (off road and pads; `helperFollowSpot`), walk 40 u/s, run back 50; chase
+  `pickHelperChase` = foes within leash + range of the leader, boss first, then nearest; `helperGoal` closes to 6 on
+  a boss (the only time it may use the road), to 80% of range on anything else, never past the leash. Attack 20,
+  range 15. Its own hero skill (`heroCastSkill`, via a shared `veilPuffs` with the leader's `castSlowPulse`) first at
+  6 s, then every 14 s, only with a foe in the veil, star power scales its damage; this replaced P5's 16 s fireKit
+  ultimate. **Never dies:** a boss within 8 swings every 5 s (`swingMs`, counts only while a boss is near); a hit
+  dazes it (`dazedMs` 4 s, faint clip), then `getUpMs` 0.6 s (faint reversed, `castActorGetUpFrame`, no new art),
+  then it runs back to the leader and is daze-proof 6 s. Creeps never daze it. Stars / grade perks unchanged.
+  **60 fps:** still 8 intervals in the screen (pinned). Setup: the existing 33 ms move loop walks it after the
+  leader. Wave: the sim owns its position and every sim tick glides shared values linearly over 100 ms on the UI
+  thread. Walk / faint / get-up frames ride the existing 50 ms clip tick (frame-key only). The helper is now an
+  Animated overlay like the leader (no longer in the board SVG); `resolveTurfHelperKit` keeps the hero walk clip.
+  **Save stays v33** (`turf_helpers` 1 pick; an old 2-pick save reads as its first; the stored x/y are unused).
+  Lanes note: on Neon Maze a few leader spots sit in a "road knot" with no off-road point within 15; there the
+  follow spot is the nearest legal spot, up to 25 away (lanes win over the leash; 24 of 3042 grid spots, none on ato).
+  `check:turf-team` rewritten (14 groups). Gate green (172), reviewer PASS (fixed after review: follow spot was on
+  the road in rare spots, get-up timing at 2×, restored dropped asserts). Web preview stops at sign-in, so the screen
+  is not seen yet. **OTA published 2026-10-18**: iOS `01a150b9-e81c-74e0-96f4-f8f6799321ea`, Android
+  `01a150b9-e81c-70bd-9ba6-337d87e1b3c6`, group `7362dc82-7b50-43c0-a1b4-93978603bd94` (message
+  `pet-team-p5b-one-ai-helper`). Phone check: **Box 48** (replaces Box 47's helper lines; incl. 60 fps and Larger
+  Text, not done). **Notes for emci (tune in P6 if wanted):** with a boss parked beside it, the next daze comes
+  ~10 s after it stands (6 s proof + the 5 s swing timer restarting); the boss chase closing to 6 is what makes
+  dazes happen at all (8 is the swing reach).
+  **Next: P6.**
 
 ## The idea in one line
 
