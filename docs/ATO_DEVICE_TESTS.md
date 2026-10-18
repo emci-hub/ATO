@@ -397,3 +397,12 @@ Play → Turf War, the default Alley map (other map themes have no sign; that is
 - [ ] With Reduce Motion on (phone setting): the pigeon only fades away, with no wings and no arc.
 - [ ] Tap the wave chip: each kind in the next-wave card shows that creep's face (swarm = Village Girl, runner = Wizard, tank = Knight, boss = its boss) with a coloured line under it, then the count and the name.
 - [ ] SE / small phone: a wave with three or four kinds still reads (names may shorten with "…"); nothing spills out of the card.
+
+## Box 39 — Boss wind-up after Retry, steady pigeon flap (T12, 2026-10-18)
+
+Play → Turf War, the default Alley map, a run with a Bound Boss (the cycle boss, not a hero) bound.
+
+- [ ] Place the Bound Boss, lose the wave and tap Retry. After Retry, when creeps come in range the boss's skill ring still appears and closes in (~0.7 s) before the skill fires. It does not fire the instant the wave starts.
+- [ ] A hero tower on the board still casts its skill right away after Retry (unchanged).
+- [ ] Let creeps walk past a pigeon: its wings flap at one even pace the whole way as it flies off (no slowing at the end), then it comes back.
+- [ ] With Reduce Motion on: the pigeon still only fades (no wings, no arc).
