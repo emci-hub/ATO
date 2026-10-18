@@ -358,6 +358,8 @@ Play → Turf War, in Setup (before Call wave).
 
 ## Box 35 — Turf War next-wave card + top bar (T2b, 2026-10-18)
 
+**Result: passed, no changes (emci, 2026-10-18).**
+
 Play → Turf War → Call wave (a campaign run, not a replay).
 
 - [ ] The top bar is three separate dark pieces: the wave chip ("Trial wave n" + a small arrow), the caps pill (a gold dot + "N caps"), and a square pause button. Same height as before; the board does not move.

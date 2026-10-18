@@ -25,7 +25,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | ✔ merged (PR #69, 2026-10-17); OTA see "Step T6 as built" |
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | ✔ merged (PR #70, 2026-10-17); OTA see "Step T7 as built"; emci's phone check (Box 33) **passed** |
 | T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); picker in Setup (emci, option A) | ✔ merged (PR #71, 2026-10-17); OTA see "Step T8 as built"; emci's phone check (Box 34) **passed** (answered in the T2b chat) |
-| T2b | T2 leftover (emci 2026-10-18, option B): next-wave preview card under the wave chip + top bar on sheet-kit pieces | ✔ merged (PR #72 squash `4afb7443`, 2026-10-18); OTA see "Step T2b as built"; awaiting emci's phone check (Box 35); T8 phone check (Box 34) **passed** |
+| T2b | T2 leftover (emci 2026-10-18, option B): next-wave preview card under the wave chip + top bar on sheet-kit pieces | ✔ merged (PR #72 squash `4afb7443`, 2026-10-18); OTA published by emci on `production` (message `turf-war-t2b-hud`; update id not recorded, emci unsure, see "Step T2b as built"); emci's phone check (Box 35) **passed**, no changes; T8 phone check (Box 34) **passed** |
 
 Every step ships on its own OTA. T1 and T2 change code layout only (no art). T3 and T4 need emci to pick art from samples
 first (two stops inside the step: samples → pick → build). T5 and T6 need effect samples (GIF strips) the same way.
@@ -194,7 +194,7 @@ and no new in-stage text nodes besides the pinned ones.
 - **Open / for later:** players on "Important only" notices don't see "BOSS INCOMING" (`notify` kind is hidden there; the old pill always showed); a Bound Boss placed mid-wave
   with a creep in range casts with no wind-up; a 1x → 2x switch mid wind-up shortens it; a boss drawn with a rotated single sprite gets no blast (fails safe). Not device-verified.
 
-#### Step T2b as built (2026-10-18, PR #72 squash `4afb7443`, OTA see "OTA" line below; awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 35; emci answered the T8 phone check "passed", no changes)
+#### Step T2b as built (2026-10-18, PR #72 squash `4afb7443`, OTA published by emci from their machine (`npm run ota:publish -- --branch production --message "turf-war-t2b-hud" --non-interactive`); iOS update id / group id NOT recorded (emci unsure 2026-10-18, find it with `eas update:list --branch production`); emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 35 **passed**, no changes (answered 2026-10-18); emci answered the T8 phone check "passed", no changes)
 - **Stop 1 (emci): option B** of three (`docs/divecore/turf-war-t2b/samples/`): separate sheet-kit pieces in the top bar + a card hanging under the wave chip.
 - **Top bar:** `TurfWaveChip` (132 × 32 visual box inside a 44 pt tap target, chevron, mustard edge while open), `TurfCapsPill` (44 pt), `TurfPauseButton`
   (44 pt + hitSlop 6 = 56 pt target) in `src/play/turf-ui.tsx`; the `resbar` art frame and `chip-on` / `pause` backdrops are no longer used by Turf War. Bar still 56 pt,
