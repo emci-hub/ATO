@@ -57,6 +57,29 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   hold only as pets can now be bound as Bound Boss towers (they count as owned); (3) a player who had Oni as
   Avatar and never owned an Oni pet now has Oni as a 1★ Child pet.
   **Next: P5 (Turf team of 3).**
+- **P5 built 2026-10-18** (commit `47c6ccdb`). emci approved the plan + balance numbers first. Team = leader + 2
+  helpers. Picker: a **Team** card inside the Turf War Setup sheet body (`src/play/turf-team-card.tsx`,
+  `PetStatusBadge` 'strip'); slots fill in order; no bar or the board changes size (new pin in `check:fixed-regions`).
+  Eligible: Child+ revealed pets, not the leader's hero, not a hero bound as a tower (`turfCandidates`). Lanes:
+  helpers stand still off the road (≥ 7.5 from its centre line) and off pads (≥ 6); a drop snaps (`snapHelperSpot`);
+  a new pick stands 10.5 off the road beside the leader (in reach, outside a boss's 8). Tap a helper on the board,
+  then tap where it goes (or "Move" in the card). Sim (`defend.ts`): `DefendLive.helpers`, `placeTurfTeam` at Call
+  wave, helper loop inside `stepDefendLive` (hero kit via `fireKit`, base 13, range 15, kit cooldown; ultimate
+  every 16 s, first at 16 s, only for skill-clip heroes). Stars +6% per star above 1 (leader too, `leaderStars`
+  bucket); rare = +1 pounce per fight (`petPounceSpare`, any rare on the team, back on Retry); epic +10% range
+  (leader too); legendary helper hits splash 30% within 4. A boss within 8 knocks a helper out for the wave
+  (`HERO.<slug>.faint` plays and holds, dimmed, "… is down · Back next wave" notice); Retry / next wave stand it up.
+  **Save stays v33**: one additive field `turf_helpers` ({uid,x,y}[], `parseTurfHelpers`). 60 fps: no new interval;
+  helpers ride the one sim step + the existing clip tick (headless step avg ~0.02 ms). `check:turf-team` (11 groups).
+  Gate green (172), reviewer PASS (3 small fixes applied: setup draw snapped per board, slots fill in order, ultimate
+  timing pinned). Web preview stops at sign-in, so the screen is not seen yet. **OTA published 2026-10-18**: iOS
+  `01a15019-56c6-7495-9a1a-d51c15ebc067`, Android `01a15019-56c6-79c5-98fc-44b8059560ca`, group
+  `701796e5-5697-4e79-b2e0-76649bca88f2` (message `pet-team-p5-turf-team`). Phone check: Box 47 (incl. 60 fps and
+  Larger Text, not done). **Notes for emci (tune in P6 if wanted):** a helper dropped right beside the road
+  (7.5–8) is always knocked out by a passing boss — that is the risk/reward; the default spot (10.5) is safe.
+  Legendary splash is the normal hit only (not the ultimate) and shows no extra numbers. Pet pounce is still the
+  pet's button (rule 6 "becomes the leader's skill" is unchanged in play: the leader IS the active pet now).
+  **Next: P6 (per-hero Locker).**
 
 ## The idea in one line
 

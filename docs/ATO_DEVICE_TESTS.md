@@ -475,3 +475,19 @@ First: close and reopen the app so the update loads. Note which pet is active in
 - [ ] Play → Dress → heroes: tapping a hero shows "Your active pet leads…" instead of a "Fight as this hero" button (while a revealed pet is active).
 - [ ] Clear a hero band for the first time (Main wave 5 gives Oni, wave 10 gives Archangel): you get the "owned" sheet, the hero gains a ★ copy in the Collection, and the sheet has no "Set as Avatar" button.
 - [ ] A hero bound as a tower never leads: bind one (Bind as tower), then make its pet active. You keep fighting as the previous leader, no crash.
+
+## Box 47 — Turf team of 3 (pet team P5, 2026-10-18)
+
+First: close and reopen the app so the update loads. You need at least one resting pet at Child stage or older.
+
+- [ ] Turf War → Setup ▲: a **Team** card at the top shows your leader and two helper slots. Your leader's stars + grade badge shows when a pet leads.
+- [ ] Tap "Helper 1 · empty": the list shows only pets from Child up (no eggs or babies, not your leader's hero, not a hero bound as a tower), each with its stars + grade badge. Pick one. Do the same for Helper 2.
+- [ ] Close the sheet: both helpers stand beside the road, breathing idle. No bar, button row or the board changed size when you picked them.
+- [ ] Tap a helper on the board (a dashed ring shows), then tap the middle of the road: it lands just beside the road, never on it or on a tower pad. "Move" in the Team card does the same.
+- [ ] Leave Turf War and come back: the same two helpers stand in the same spots.
+- [ ] Call wave: the helpers attack foes in reach on their own (attack clip, hits and numbers), the leader still moves when you tap.
+- [ ] **Smoothness:** with both helpers and a few towers on a busy wave (2× speed too), the board feels as smooth as before (no stutter). If you use the dev FPS overlay, it should stay near 60.
+- [ ] A boss wave (Main 5 or 10): a helper standing close to the road when the boss walks past falls over (faint clip), stays down and dimmed, and "… is down · Back next wave" shows in the notice line. A helper further back keeps fighting.
+- [ ] Next wave (or Retry after a loss): the knocked-out helper is standing again.
+- [ ] A **rare** pet on the team (leader or helper): the Pounce button works twice in one wave. Without a rare: once, as before.
+- [ ] Settings → Larger Text (phone accessibility text size up): open Setup again. The Team card text grows and wraps inside the sheet (scrolls); nothing is cut off and the board and bars keep their size.
