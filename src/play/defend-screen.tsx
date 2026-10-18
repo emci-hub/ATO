@@ -4918,6 +4918,7 @@ export function DefendScreen({
           key={heroSheetOffer.hero_id}
           offer={heroSheetOffer}
           isActiveAvatar={view.activeAvatarHeroId === heroSheetOffer.hero_id}
+          leaderFromPet={view.leaderFromPet}
           onSetAvatar={() => onSetAvatarHero(heroSheetOffer.hero_id)}
           onBind={() => onBindHeroAsTower(heroSheetOffer.hero_id)}
           onDismiss={closeHeroSheet}

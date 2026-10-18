@@ -128,12 +128,15 @@ function HeroDetail({
   status,
   armed,
   legendElement,
+  leaderFromPet,
   onSet,
 }: {
   hero: HeroDef;
   status: HeroStatus;
   armed: boolean;
   legendElement: Element;
+  /** P4: the active pet leads, so there is nothing to pick here. */
+  leaderFromPet: boolean;
   onSet: () => void;
 }) {
   const locked = status === 'locked';
@@ -161,7 +164,12 @@ function HeroDetail({
           You are fighting as this hero.
         </ThemedText>
       ) : null}
-      {locked || status === 'active' ? null : (
+      {!locked && status !== 'active' && leaderFromPet ? (
+        <ThemedText type="code" themeColor="textSecondary">
+          Your active pet leads in Turf War. Make this hero’s pet active in the Stash to fight as it.
+        </ThemedText>
+      ) : null}
+      {locked || status === 'active' || leaderFromPet ? null : (
         <NeonButton
           label={
             armed
@@ -190,11 +198,14 @@ export function HeroGrid({
   ownedHeroIds,
   boundHeroIds,
   legendElement,
+  leaderFromPet = false,
   onSetAvatarHero,
 }: {
   activeHeroId: string;
   ownedHeroIds: readonly string[];
   boundHeroIds: readonly string[];
+  /** P4: the active pet is the leader (no manual Avatar pick). */
+  leaderFromPet?: boolean;
   /** The active Legend's element — what every hero's attack carries. */
   legendElement: Element;
   onSetAvatarHero: (heroId: string) => void;
@@ -266,6 +277,7 @@ export function HeroGrid({
                 status={statusOf(open.id)}
                 armed={armedId === open.id}
                 legendElement={legendElement}
+                leaderFromPet={leaderFromPet}
                 onSet={() => set(open)}
               />
             ) : null}

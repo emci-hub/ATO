@@ -168,6 +168,8 @@ import {
   dyeApplies,
   emptyGradeCounts,
   gradeOdds,
+  bestGrade,
+  heroEgg,
   heroOfLine,
   heroStars,
   newEggSeed,
@@ -931,6 +933,12 @@ export type PlayStoreDoc = {
    * this hero's own sprite set (A3, `heroAvatarRole`), so this id names the art
    * AND the skill kit in play. */
   active_avatar_hero_id: string;
+  /** P4 (pet team, 2026-10-18): the Avatar hero has been folded into the pet book.
+   * Since then the Turf leader is the ACTIVE PET's hero (`normalizedAvatarHeroId`);
+   * `active_avatar_hero_id` is only the fallback while the active pet is an egg or
+   * baby. A save without this flag runs the one-time fold (`foldAvatarIntoPets`).
+   * An additive v33 field, so a phone on an older bundle still opens the save. */
+  leader_folded: boolean;
   /** One-shot "you own a hero" offer awaiting the player's decision (v18,
    * Slice A2). Set when a hero is first owned; the hero sheet shows it once and
    * every action (Avatar / bind / dismiss) clears it, so it can never re-fire
@@ -1153,6 +1161,8 @@ export type PlayView = {
   /** The hero the player has set as their Avatar (Slice A2). Falls back to the
    * starter hero when the stored id is unknown/corrupt. */
   activeAvatarHeroId: string;
+  /** P4: that hero is the ACTIVE PET's (the Avatar is not picked any more). */
+  leaderFromPet: boolean;
   /** Hero ids currently bound as towers (Slice A2) — the hero subset of
    * `boundBosses`, which is what the cap and the exclusivity rule read. */
   boundHeroIds: readonly string[];
@@ -1388,6 +1398,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     // the active Avatar hero (what `unit.avatar` already draws).
     owned_hero_ids: [DEFAULT_AVATAR_HERO_ID],
     active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID,
+    leader_folded: true,
     hero_offer: null,
     pet: newPet(now),
     pet_hall: [],
@@ -1527,8 +1538,9 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     shopWeekCounts: shopWeekCountsOf(doc, now),
     shopPassCounts: shopPassCountsOf(doc),
     avatarPark: active.park,
-    ownedHeroIds: doc.owned_hero_ids,
+    ownedHeroIds: ownedHeroIdsOf(doc),
     activeAvatarHeroId: normalizedAvatarHeroId(doc),
+    leaderFromPet: leaderFromPetOf(doc),
     boundHeroIds: boundHeroIdsOf(doc),
     heroOffer: doc.hero_offer,
     pet: petViewOf(doc, now),
@@ -3662,6 +3674,7 @@ export function recordDefendWin(
   let ownedHeroIds = doc.owned_hero_ids;
   let heroOffer = doc.hero_offer;
   let heroOwned: DefendWinResult['heroOwned'] = null;
+  let petHeroes = doc.pet_heroes;
   if (!isReplay && band) {
     const heroId = HERO_BY_BAND_KIND[band.kind as keyof typeof HERO_BY_BAND_KIND];
     const granted = heroId ? ownHero(doc, heroId) : null;
@@ -3669,6 +3682,12 @@ export function recordDefendWin(
       ownedHeroIds = granted.doc.owned_hero_ids;
       heroOffer = granted.doc.hero_offer;
       heroOwned = { heroId, label: heroName(heroId) };
+    }
+    // P4 (pet team): the clear also gives an egg copy of that hero (a star toward
+    // it, kept even if you already hold it). The Avatar choice is gone: the
+    // active pet leads, so a hero leads once its pet is yours (egg or hatch).
+    if (heroId && heroEgg(heroId)) {
+      petHeroes = addToBook(petHeroes, { hero: heroId, grade: 'common', shiny: false, forms: [], style: null });
     }
   }
 
@@ -3712,6 +3731,7 @@ export function recordDefendWin(
       bound_bosses,
       owned_hero_ids: ownedHeroIds,
       hero_offer: heroOffer,
+      pet_heroes: petHeroes,
       sword_bag: sworded.bag,
       // Pet (v20): every cleared wave (campaign or replay) feeds the pet a
       // heart, counts toward its Battle form and tallies the Legend element
@@ -4022,14 +4042,103 @@ export function boundHeroIdsOf(doc: PlayStoreDoc): string[] {
 
 /** True when the save owns `heroId`. */
 export function heroOwned(doc: PlayStoreDoc, heroId: string): boolean {
-  return doc.owned_hero_ids.includes(heroId);
+  // P4: a hero you hold in the pet book (a pet or a copy) is owned too.
+  return doc.owned_hero_ids.includes(heroId) || (heroBookOf(doc)[heroId]?.copies ?? 0) > 0;
+}
+
+/** Owned hero ids for the hero roster: the old list plus every hero in the pet book. */
+export function ownedHeroIdsOf(doc: PlayStoreDoc): string[] {
+  const ids = new Set(doc.owned_hero_ids);
+  for (const [hero, rec] of Object.entries(heroBookOf(doc))) if (rec.copies > 0 && heroById(hero)) ids.add(hero);
+  return [...ids];
+}
+
+/** True when the Turf leader is the active pet's hero (not the stored fallback). */
+export function leaderFromPetOf(doc: PlayStoreDoc): boolean {
+  return petRevealed(doc.pet) && doc.pet.hero != null && normalizedAvatarHeroId(doc) === doc.pet.hero;
 }
 
 /** The active Avatar hero, falling back to the starter when the stored id is
  * unknown/corrupt (mirrors `avatarRecordOf`'s tolerant read). */
-export function normalizedAvatarHeroId(doc: PlayStoreDoc): string {
+export function storedAvatarHeroId(doc: PlayStoreDoc): string {
   const id = doc.active_avatar_hero_id;
   return heroOwned(doc, id) && heroById(id) ? id : DEFAULT_AVATAR_HERO_ID;
+}
+
+/**
+ * The Turf leader (pet team P4, emci 2026-10-18): the ACTIVE PET's hero. While
+ * the active pet is still an egg or baby (no hero yet) the stored Avatar hero
+ * leads, as before. A hero bound as a tower never leads (the exclusivity lock
+ * stays): the stored Avatar leads instead until it is unbound.
+ */
+export function normalizedAvatarHeroId(doc: PlayStoreDoc): string {
+  const stored = storedAvatarHeroId(doc);
+  const fallback = boundHeroIdsOf(doc).includes(stored) ? DEFAULT_AVATAR_HERO_ID : stored;
+  const pet = doc.pet;
+  if (!petRevealed(pet) || !pet.hero || !heroById(pet.hero)) return fallback;
+  return boundHeroIdsOf(doc).includes(pet.hero) ? fallback : pet.hero;
+}
+
+/**
+ * P4 one-time fold of the old Avatar choice into the pet book. A save from
+ * before P4 has no `leader_folded`. If its Avatar hero is a real choice (not
+ * the starter, and one of the 16 egg heroes) that hero becomes a pet, hatched at
+ * Child if the book only has a copy or nothing, and the active pet. Nothing is
+ * lost: the old active pet rests in the Den (slots grow to fit), and the hero
+ * keeps every copy, grade and shiny it had. Waits (no flag set, tries again on
+ * the next load) while mid-dive, away, or a reveal is still to play. With an
+ * egg or baby on the stage the hero is still added to the Den but the stage is
+ * left alone (the new pet leads once it hatches). Once folded, the stored
+ * Avatar goes back to the starter, so an older bundle that drops the flag and
+ * folds again finds nothing to do. Idempotent.
+ */
+export function foldAvatarIntoPets(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  if (doc.leader_folded) return doc;
+  const hero = storedAvatarHeroId(doc);
+  const done = (d: PlayStoreDoc): PlayStoreDoc => ({ ...d, leader_folded: true });
+  if (hero === DEFAULT_AVATAR_HERO_ID || !heroEgg(hero)) return done(doc);
+  if (petRevealed(doc.pet) && doc.pet.hero === hero) return done({ ...doc, active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID });
+  // A hero bound as a tower is not a leader; leave the choice to the player.
+  if (boundHeroIdsOf(doc).includes(hero)) return done(doc);
+  // Wait for a quiet moment (retry next load).
+  if (doc.dive_run != null || doc.pet_expedition != null) return doc;
+  if (doc.pet.reveals.length > 0) return doc;
+
+  let next = doc;
+  let target = next.pet_den.find((p) => petRevealed(p) && p.hero === hero) ?? null;
+  if (target && target.reveals.length > 0) return doc;
+  if (!target) {
+    // The Den is at its most: nothing to hatch into. The revealed active pet leads; the old choice stays as the fallback.
+    if (denUsed(next.pet_den) + 1 > DEN_MAX_SLOTS) return done(doc);
+    const entry = next.pet_heroes[hero];
+    const uid = Math.max(1, next.pet_uid_next);
+    target = {
+      ...newPet(now, `solo_${hero}`),
+      stage: 'child',
+      egg: heroEgg(hero),
+      hero,
+      grade: bestGrade(entry) ?? 'common',
+      band: 'good',
+      uid,
+    };
+    // The new pet takes over one of the hero's copies (no double count).
+    const pet_heroes = entry && entry.copies > 0
+      ? { ...next.pet_heroes, [hero]: { ...entry, copies: entry.copies - 1 } }
+      : next.pet_heroes;
+    next = {
+      ...next,
+      pet_den: [...next.pet_den, target],
+      pet_heroes,
+      pet_uid_next: uid + 1,
+      den_slots: Math.max(next.den_slots, Math.min(DEN_MAX_SLOTS, denUsed(next.pet_den) + 1)),
+    };
+  }
+  const reset = (d: PlayStoreDoc): PlayStoreDoc => done({ ...d, active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID });
+  // An egg or baby on the stage stays put; the hero waits in the Den.
+  if (!petRevealed(next.pet)) return reset(next);
+  // The same swap the Stash's "Make active" does (ages the outgoing pet first).
+  const swapped = activateDenPet(next, now, target.uid);
+  return swapped.result.ok ? reset(swapped.doc) : doc;
 }
 
 /**
@@ -4046,7 +4155,8 @@ export function ownHero(
   doc: PlayStoreDoc,
   heroId: string,
 ): { doc: PlayStoreDoc; gained: boolean } {
-  if (!heroById(heroId) || heroOwned(doc, heroId)) {
+  // The list itself decides (a hero held only as a pet still gets listed, so older bundles see it too).
+  if (!heroById(heroId) || doc.owned_hero_ids.includes(heroId)) {
     return { doc, gained: false };
   }
   return {
@@ -4075,13 +4185,15 @@ export function setAvatarHero(
   if (!heroById(heroId)) return { doc, ok: false, reason: 'unknown_hero' };
   if (!heroOwned(doc, heroId)) return { doc, ok: false, reason: 'not_owned' };
   const bound = doc.bound_bosses.some((record) => record.id === heroId);
-  if (normalizedAvatarHeroId(doc) === heroId && !bound) {
+  if (storedAvatarHeroId(doc) === heroId && !bound) {
     return { doc: clearHeroOffer(doc), ok: true, reason: null };
   }
   return {
     doc: {
       ...doc,
       active_avatar_hero_id: heroId,
+      // A hero held only as a pet is listed too, or the next load would reset the choice to Corvus.
+      owned_hero_ids: doc.owned_hero_ids.includes(heroId) ? doc.owned_hero_ids : [...doc.owned_hero_ids, heroId],
       // Exclusivity: an Avatar cannot also be a bound tower.
       bound_bosses: bound
         ? doc.bound_bosses.filter((record) => record.id !== heroId)
@@ -5817,6 +5929,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       shop_daily: shopDaily,
       owned_hero_ids: ownedHeroIds,
       active_avatar_hero_id: activeAvatarHeroId,
+      leader_folded: data.leader_folded === true,
       hero_offer: heroOffer,
       pet: den.pet,
       pet_hall: hall,
@@ -5917,7 +6030,8 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     };
     // P1 (2026-10-18): a save that still keeps a hero twice folds into one
     // pet per hero (copies kept, nothing lost). Idempotent, so every load.
-    return foldDuplicatePets(parsed, now).doc;
+    // P4: then the old Avatar hero joins the pet book once (and leads).
+    return foldAvatarIntoPets(foldDuplicatePets(parsed, now).doc, now);
   } catch {
     return null;
   }

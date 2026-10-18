@@ -253,6 +253,7 @@ export function DressScreen({
       <HeroGrid
         activeHeroId={view.activeAvatarHeroId}
         ownedHeroIds={view.ownedHeroIds}
+        leaderFromPet={view.leaderFromPet}
         boundHeroIds={view.boundHeroIds}
         legendElement={view.legendElement}
         onSetAvatarHero={onSetAvatarHero}

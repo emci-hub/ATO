@@ -108,7 +108,7 @@ ok('the joined-up line');
 
 // --- wired -----------------------------------------------------------------------------------------------
 const store = read('src/play/playStore.ts');
-assert.match(store, /return foldDuplicatePets\(parsed, now\)\.doc;/, 'parse folds');
+assert.match(store, /foldAvatarIntoPets\(foldDuplicatePets\(parsed, now\)\.doc, now\)/, 'parse folds duplicates first (then the P4 Avatar fold)');
 assert.match(store, /foldDuplicatePets\(\{ \.\.\.touched, pet: ackPetReveals\(touched\.pet\) \}, now\)/, 'the reveal ack folds');
 const screen = read('src/play/pet-screen.tsx');
 assert.match(screen, /mergeLine\(mergeNote, heroName\(mergeNote\.hero\)\)/);
