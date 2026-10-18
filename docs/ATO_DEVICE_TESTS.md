@@ -440,3 +440,16 @@ First: close and reopen the app so the update loads. Play → Hideout → Stash 
 - [ ] The hero's stars in the Collection are the same as before. Nothing went missing (shards, finishes, auras).
 - [ ] Hatch an egg until its Child reveal plays (dev kit "reveal now" is fine). If it is a hero you already keep, about 3 seconds after the reveal line the pet says "<Name> joined up! ★ → ★★" (plus "Now Epic!" or similar if the grade went up). The grown pet is now the one in the room, and the Den did not get a second copy.
 - [ ] A new hero still hatches as a new pet, as before.
+
+## Box 44 — One status badge everywhere (pet team P2, 2026-10-18)
+
+First: close and reopen the app so the update loads. Play → Hideout.
+
+- [ ] The strip at the top of the Hideout shows a small framed badge on the right: five stars (filled = how many copies of that hero you have), the grade word (Common / Rare / Epic / Legendary) and ✨ if shiny. The frame and stars are the grade's colour.
+- [ ] **Width check (the one to look at):** on a Legendary shiny pet the badge is not cut off at the right edge. If it is tight, the grade word may shorten with "…"; the stars always stay whole. Tell me if the name disappears or the badge is clipped.
+- [ ] The strip is still one row, same height as before, with an egg, a baby and a grown pet (an egg or baby shows no badge).
+- [ ] Open the Stash (Den). Each pet tile has a small star row under its name, in its grade colour. Tiles for an egg or unrevealed pet have the same height, nothing jumps.
+- [ ] Tap a pet in the Stash. The detail card shows the same badge beside the pet's name, and the line under it no longer repeats the grade. The buttons below are not cut off.
+- [ ] The badge on the Hideout strip, the Stash tile and the card show the same stars and grade for the same pet.
+- [ ] A hero with 3+ stars still lets you wear its dye, as before.
+- [ ] With the phone's text size set larger, the Stash tiles and the strip still show everything. Put it back afterwards.

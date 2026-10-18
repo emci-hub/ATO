@@ -11,7 +11,17 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   bundle can still open the save. **OTA published 2026-10-18**: iOS `01a14e59-30dc-7103-b021-1f2b22114068`,
   Android `01a14e59-30dc-7cf2-81eb-2ca4b2fb2b8b`, group `5ce4fbf7-6c69-43b0-8522-f6cc5ce7d21f` (message
   `pet-team-p1-merge`, commit `16080d2a`). Gate green, reviewer pass (shiny double count fixed). Phone check:
-  `docs/ATO_DEVICE_TESTS.md` Box 43 (not done yet). **Next: P2.**
+  `docs/ATO_DEVICE_TESTS.md` Box 43 (not done yet).
+- **P2 built 2026-10-18** (commit `988966b9`): one badge, `src/play/pet-status-badge.tsx` (data from
+  `src/play/pet-status-view.ts`; `pet-status.ts` is the care status, a different thing). Five star slots (filled =
+  hero copies) + grade-colour frame + grade word + ✨. Used on the Den tile (stars only), the Den card (full) and the
+  Hideout name tag (`StreetStatusStrip`, full). 3★ dye rule untouched. Fixed regions unchanged (strip stays one
+  36 px row; the grade word is what shrinks on a narrow phone). Not touched: the legacy non-street nameplate in
+  `pet-room.tsx`; the Turf picker (P5 will use `PetStatusBadge` there). `check:pet-status-badge`. Gate green,
+  reviewer pass. **OTA published 2026-10-18**: iOS `01a14e69-01ce-729d-b914-e014f7e437f8`, Android
+  `01a14e69-01ce-702f-89c2-8af3aab11326`, group `f5093f5e-f020-4825-8e28-e88a41e6d0cd` (message
+  `pet-team-p2-status-badge`). Phone check: Box 44 (not done; watch the Hideout strip width on a Legendary shiny).
+  **Next: P3 (animation fill, PixelLab; samples to emci first).**
 
 ## The idea in one line
 
