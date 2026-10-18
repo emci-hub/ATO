@@ -79,7 +79,17 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   (7.5–8) is always knocked out by a passing boss — that is the risk/reward; the default spot (10.5) is safe.
   Legendary splash is the normal hit only (not the ultimate) and shows no extra numbers. Pet pounce is still the
   pet's button (rule 6 "becomes the leader's skill" is unchanged in play: the leader IS the active pet now).
-  **Next: P6 (per-hero Locker).**
+  **Next: P5b (one AI helper), then P6.**
+- **P5b agreed 2026-10-18** (emci: "I agree with all", plus "I don't want the helper to die"). Replaces the P5 helper
+  rules; build in its own chat, show the plan + numbers before building. **One helper** (not 2). It **follows the
+  leader** (stays within a short leash, ~15 units) and inside that leash **steps toward its own target, boss first**
+  (only onto the road while chasing a boss). It **casts its own hero skill** on a cooldown (`heroCastSkill`, the same
+  skill that hero has as leader). Attack ≈ 20 (was 13 for two helpers). Stars + grade perks unchanged. **It never
+  dies — dazed instead**: a boss swings about every 5 s at units within 8; a dazed helper plays the faint clip, stays
+  down 4 s, gets up (faint played in reverse, no new art), runs back to the leader, then 6 s where it can't be dazed
+  again. Normal creeps never daze it. (Softer fallback if emci prefers: a boss hit only pushes it back, attack ≈ 17.)
+  Removed from P5: the 2nd slot and the tap-to-place helper spots. Save stays v33 (`turf_helpers` keeps 1 pick).
+  60 fps: the helper's movement must ride an existing ticker (no new setState interval).
 
 ## The idea in one line
 
@@ -145,6 +155,7 @@ in the Locker.
 | P3 | **Animation fill (PixelLab).** Fill the 7 holes, then one faint clip per hero (16, east/west, skeleton-v3, 192 canvas). Victory clip optional, only if faint goes well. Samples + scale sheet to emci before any batch. | All 16 heroes have idle/walk/attack/hurt/faint; registry + `art:sync` committed; critique ≥22/28; emci approved the samples. |
 | P4 | **Leader = active pet.** Avatar list folds into the pet book; hero clears grant a copy; Turf leader drawn from the active pet. | Old saves keep their chosen Avatar as a pet (hatched if missing); `check:play-cloud-save` + new pins green. |
 | P5 | **Turf team of 3.** Setup picker (2 helper slots inside the setup body, no bar resized, new fixed-regions pin); helpers on board with kits, stars/grade bonuses, faint on boss hit. | A wave with 3 heroes plays at 60 fps on the board; helpers respect lanes; `check:fixed-regions` + `check:turf-team` green; Larger Text pass. |
+| P5b | **One AI helper.** 1 helper follows the leader, chases its target (boss first) inside a leash, casts its own hero skill; never dies (4 s daze from a boss swing, 6 s daze-proof after). | Helper follows + chases + casts on the board at 60 fps; never lost for a wave; `check:turf-team` updated; fixed-regions + Larger Text pass. |
 | P6 | **Per-hero Locker.** Gear moves from Avatar records to each hero; Locker opens on a hero; gear stats apply in Turf; gear badge in Hideout. Balance table tuned. | Old equipped gear lands on the matching hero (none lost); `check:locker-per-hero`; balance doc written. |
 
 ## Needs emci's yes (the one approval)
