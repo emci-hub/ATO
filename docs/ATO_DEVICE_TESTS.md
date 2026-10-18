@@ -387,3 +387,13 @@ Play → Turf War, a run with a Bound Boss (the cycle boss, not a hero) bound.
 - [ ] Place the Bound Boss on a pad while creeps are already in range. About a second later its skill ring appears and closes in (~0.7 s) before the skill fires. It no longer fires the instant it is placed.
 - [ ] Repeat at 2x speed. The ring is still visible before the skill goes off.
 - [ ] A hero tower placed the same way still casts its skill right away (unchanged).
+
+## Box 38 — Turf War neon signs, pigeon wings, creep icons on the next-wave card (art loose ends, 2026-10-18)
+
+Play → Turf War, the default Alley map (other map themes have no sign; that is expected).
+
+- [ ] Top-right corner: a small cyan lightning-bolt sign on the sidewalk by the cyan glow; bottom-left: a heart sign on the bottom sidewalk near the pink glow. Both flicker with their glow and show no letters.
+- [ ] Call wave and let creeps walk past a pigeon: it flaps real wings as it flies off (no squash), then comes back after a few seconds.
+- [ ] With Reduce Motion on (phone setting): the pigeon only fades away, with no wings and no arc.
+- [ ] Tap the wave chip: each kind in the next-wave card shows that creep's face (swarm = Village Girl, runner = Wizard, tank = Knight, boss = its boss) with a coloured line under it, then the count and the name.
+- [ ] SE / small phone: a wave with three or four kinds still reads (names may shorten with "…"); nothing spills out of the card.
