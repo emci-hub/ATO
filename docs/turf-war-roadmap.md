@@ -26,7 +26,7 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | ✔ merged (PR #70, 2026-10-17); OTA see "Step T7 as built"; emci's phone check (Box 33) **passed** |
 | T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); picker in Setup (emci, option A) | ✔ merged (PR #71, 2026-10-17); OTA see "Step T8 as built"; emci's phone check (Box 34) **passed** (answered in the T2b chat) |
 | T2b | T2 leftover (emci 2026-10-18, option B): next-wave preview card under the wave chip + top bar on sheet-kit pieces | ✔ merged (PR #72 squash `4afb7443`, 2026-10-18); OTA iOS `01a14d16-d6c7-79a3-93d2-65ed9ec70d56`, group `e971779c` (message `turf-war-t2b-hud`, see "Step T2b as built"); emci's phone check (Box 35) **passed**, no changes; T8 phone check (Box 34) **passed** |
-| T9 | Notices polish (emci 2026-10-18): pause the notice lane while the next-wave card is open (`useNoticePause(wavePeekShown)`), strike the stale "BOSS INCOMING hidden on Important only" bullet (already fixed in T7) | planned, not built; see "Step T9 plan" |
+| T9 | Notices polish (emci 2026-10-18): pause the notice lane while the next-wave card is open (`useNoticePause(wavePeekShown)`), strike the stale "BOSS INCOMING hidden on Important only" bullet (already fixed in T7) | built; PR / OTA ids in "Step T9 as built"; emci's phone check = Box 36 |
 
 Every step ships on its own OTA. T1 and T2 change code layout only (no art). T3 and T4 need emci to pick art from samples
 first (two stops inside the step: samples → pick → build). T5 and T6 need effect samples (GIF strips) the same way.
@@ -192,7 +192,7 @@ and no new in-stage text nodes besides the pinned ones.
 - **Previews + frame time:** `docs/divecore/turf-war-t6/` (`NOTES.md`): boss fight ≈ 8.4 ms avg (430) / 7.7 (SE), Off 6.8.
 - **Preview gotchas:** the export writes `play.html`; copy it to `play/index.html` or `/play/` is a 404. "Preview boss beat (Final)" + a seed with
   `bound_bosses:[{id:'ember_sovereign',stars:1,...}]` and Main wave 10 reaches the Final boss with the Nova tower; dismiss the "Welcome back" card first.
-- **Open / for later:** players on "Important only" notices don't see "BOSS INCOMING" (`notify` kind is hidden there; the old pill always showed); a Bound Boss placed mid-wave
+- **Open / for later:** ~~players on "Important only" notices don't see "BOSS INCOMING"~~ (fixed in T7, `important: true`); a Bound Boss placed mid-wave
   with a creep in range casts with no wind-up; a 1x → 2x switch mid wind-up shortens it; a boss drawn with a rotated single sprite gets no blast (fails safe). Not device-verified.
 
 #### Step T2b as built (2026-10-18, PR #72 squash `4afb7443`, OTA iOS `01a14d16-d6c7-79a3-93d2-65ed9ec70d56`, group `e971779c` (published by emci: `npm run ota:publish -- --branch production --message "turf-war-t2b-hud" --non-interactive`; ids read from `eas update:list` 2026-10-18); emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 35 **passed**, no changes (answered 2026-10-18); emci answered the T8 phone check "passed", no changes)
@@ -211,7 +211,7 @@ and no new in-stage text nodes besides the pinned ones.
 - **Previews:** `docs/divecore/turf-war-t2b/` (both phones: setup, wave, card open, closed). Shot before the three reviewer fixes. Frame time 16.7 ms = the headless 60 Hz cap. Not device-verified.
 - **Not shot:** a boss next wave and a 3-role wave (no save at that seat in the preview); the data + geometry are pinned in the check, the chips shrink + ellipsize at 315 pt (SE) — check on the phone.
 - **Preview gotcha (cloud container):** the web export needs `EXPO_PUBLIC_SUPABASE_URL` / `_ANON_KEY` set (dummy values on the command line are enough; nothing committed) and `--clear` after a failed export.
-- **Open / for later:** the card covers the lane's notices while open (a notice arriving mid-card is hidden until it closes; a boss bar closes it); icons are role-tint swatches, not art.
+- **Open / for later:** ~~the card covers the lane's notices while open~~ (fixed in T9: notices wait until it closes; a boss bar closes it); icons are role-tint swatches, not art.
 
 #### Step T9 plan (2026-10-18, emci picked "Notices polish"; investigated, not built)
 - **BOSS INCOMING on "Important only":** already fixed in T7 (`defend-screen.tsx` emits it with `important: true`; `noticeAllowed` in `src/play/notify/queue.ts`; pinned by `check-turf-war-layout.ts` and `check-notify.ts`). Only the "Open / for later" bullet in "Step T6 as built" is stale: strike it.
@@ -220,6 +220,13 @@ and no new in-stage text nodes besides the pinned ones.
 - **Gate:** `check:notify`, `check:turf-war-layout`, `check:fixed-regions`, `typecheck`, then `check:ota-gate` once. No new saved setting, no economy / copy change.
 - **Not in T9 (decide separately):** a Bound Boss placed mid-wave with a target in range can cast with ~0 wind-up (`telegraphStart` in `turf-boss-fx-rules.ts`); cosmetic only, needs a rules-file edit + pin, newly placed boss's initial cooldown not verified. Art loose ends (neon sign, pigeon wings, card icons) = a later art step with samples first.
 - **Done:** gate green, reviewer PASS, OTA, emci's phone check (open the card, trigger a notice, close the card, notice appears).
+
+#### Step T9 as built (2026-10-18; PR / OTA ids: PENDING; phone check = `docs/ATO_DEVICE_TESTS.md` Box 36)
+- **Change:** `useNoticePause(wavePeekShown)` once in `DefendScreen` right after `wavePeekShown` (`src/play/defend-screen.tsx`), unconditional, no early return above it. While the next-wave card is open only `error` notices pass; a showing notice returns to the queue front and re-shows when the card closes. No layout, economy, copy or setting change.
+- **Pin:** `check-turf-war-layout.ts` asserts `useNoticePause(wavePeekShown)`; the `{floatCards}{wavePeekCard}` and `wavePeekHidden` pins are unchanged.
+- **Docs:** the stale "BOSS INCOMING hidden on Important only" bullet in "Step T6 as built" is struck (fixed in T7), and so is the T2b "card covers notices" note.
+- **Checks:** `check:notify` (12 groups), `check:turf-war-layout` (13), `check:fixed-regions` (8), `typecheck` all pass. Not device-verified.
+- **Not in T9 (ask emci):** the Bound Boss near-zero wind-up cosmetic bug; the art loose ends (neon sign, pigeon wings, card icons).
 
 #### Step T8 as built (2026-10-17, PR #71 squash `d8ab19e6`, OTA iOS `01a14c79-ab4e-7a29-8157-17e0ec353c8a`, group `628316f3` (commit `80344b23`); awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 34; emci answered the T7 phone check "passed", no changes)
 - **Stop 0 (emci): option A**, a picker in the Setup sheet: a row of theme chips (≥ 44 pt) inside the Maps card on Main (hidden while Neon

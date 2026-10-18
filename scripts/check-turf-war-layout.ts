@@ -675,6 +675,7 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(src, /right: HELP_COLUMN, top: 0, height: setupFrame\.notice\.height \+ turfBoardRect\(setupFrame\.stage\)\.y/, 'the outside-tap strip never reaches the board or the help (?) column');
   assert.match(src, /!liveBoss && fight\.mode !== 'replay' \? nextWavePeek\(/, 'no preview in a replay (the seat does not advance) or under the boss bar');
   assert.match(src, /const wavePeekHidden = liveBoss != null \|\| paused;\s*useEffect\(\(\) => \{\s*if \(wavePeekHidden\) setWavePeekOpen\(false\);/, 'a boss bar or a pause closes the card (it never pops back open)');
+  assert.match(src, /useNoticePause\(wavePeekShown\)/, 'notices wait while the next-wave card is open (T9)');
   assert.ok(!/styles\.card|ThemedView/.test(kit.slice(kit.indexOf('export function TurfWavePeekCard'), kit.indexOf('const styles'))), 'the preview card is a sheetCard, not styles.card');
   ok('T2b top bar: 56 pt, REGIONS unchanged, kit pieces ≥ 44; next-wave preview inside lane + board margin on both phones, director data, boss bar still in the chip box');
 }
