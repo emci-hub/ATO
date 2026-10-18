@@ -148,6 +148,8 @@ function Pigeon({ site, clip, env, index, creepsRef, running, reduced }: { site:
   const { k } = env;
   const sheetKey = env.sheet('ato-pigeon');
   const fly = useSharedValue(0);
+  // Linear twin of `fly`: the wing frames follow clock time, not the eased arc, so the flap keeps one pace.
+  const flap = useSharedValue(0);
   const vis = useSharedValue(1);
   const peck = useSharedValue(0);
   const away = useRef(false);
@@ -173,16 +175,18 @@ function Pigeon({ site, clip, env, index, creepsRef, running, reduced }: { site:
       if (away.current || !pigeonScared(site, creepsRef.current())) return;
       away.current = true;
       fly.value = reduced ? 0 : withTiming(1, { duration: PIGEON_FLY_MS, easing: Easing.out(Easing.quad) });
+      flap.value = reduced ? 0 : withTiming(1, { duration: PIGEON_FLY_MS, easing: Easing.linear });
       vis.value = withTiming(0, { duration: reduced ? 500 : 750 });
       timer.current = setTimeout(() => {
         fly.value = 0;
+        flap.value = 0;
         vis.value = withTiming(1, { duration: 600 });
         away.current = false;
         timer.current = null;
       }, PIGEON_RETURN_MS);
     }, 150);
     return () => clearInterval(id);
-  }, [running, env.animate, site, creepsRef, fly, vis, reduced]);
+  }, [running, env.animate, site, creepsRef, fly, flap, vis, reduced]);
   // Quality Off / Motion Off: a perched bird, never mid-flight. On unmount: stop the timer and the animations.
   useEffect(() => {
     if (!env.animate) {
@@ -190,18 +194,21 @@ function Pigeon({ site, clip, env, index, creepsRef, running, reduced }: { site:
       timer.current = null;
       away.current = false;
       cancelAnimation(fly);
+      cancelAnimation(flap);
       cancelAnimation(vis);
       fly.value = 0;
+      flap.value = 0;
       vis.value = 1;
     }
-  }, [env.animate, fly, vis]);
+  }, [env.animate, fly, flap, vis]);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
       cancelAnimation(fly);
+      cancelAnimation(flap);
       cancelAnimation(vis);
     },
-    [fly, vis],
+    [fly, flap, vis],
   );
 
   const style = useAnimatedStyle(() => {
@@ -211,15 +218,15 @@ function Pigeon({ site, clip, env, index, creepsRef, running, reduced }: { site:
       transform: [{ translateX: toward * f * 36 * k }, { translateY: peck.value * 2 * k - f * 30 * k }, { scaleX: toward < 0 ? -1 : 1 }],
     };
   });
-  // Wing flap: frame 0 = perched; while it flies off (never under Reduce Motion, where `fly` stays 0) frames 1..n-1 loop.
+  // Wing flap: frame 0 = perched; while it flies off (never under Reduce Motion, where `flap` stays 0) frames 1..n-1 loop at the clip's fps.
   const wingFrames = clip.frames - 1;
   const frameMs = 1000 / clip.fps;
   const first = sheetKey ? PLAY_SHEETS[sheetKey]?.frames.frame_000 : undefined;
   const second = sheetKey ? PLAY_SHEETS[sheetKey]?.frames.frame_001 : undefined;
   const stride = first && second ? second.x - first.x : 0;
   const wings = useAnimatedStyle(() => {
-    const f = fly.value;
-    const idx = f > 0 && wingFrames > 0 ? 1 + (Math.floor((f * PIGEON_FLY_MS) / frameMs) % wingFrames) : 0;
+    const t = flap.value;
+    const idx = t > 0 && wingFrames > 0 ? 1 + (Math.floor((t * PIGEON_FLY_MS) / frameMs) % wingFrames) : 0;
     return { transform: [{ translateX: -idx * stride * k }] };
   }, [wingFrames, frameMs, stride, k]);
   const frame = sheetKey ? frameBox(sheetKey, 'frame_000') : null;

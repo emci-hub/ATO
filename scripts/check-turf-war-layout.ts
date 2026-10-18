@@ -39,7 +39,7 @@ import {
   nextChip,
   showHealthBar,
 } from '../src/play/turf-combat-fx-rules';
-import { BOUND_BOSS_PLACE_SKILL_CD_MS, DEFEND_TICK_MS, createDefendLive, placeBoundBoss } from '../src/play/defend';
+import { BOUND_BOSS_PLACE_SKILL_CD_MS, DEFEND_TICK_MS, createDefendLive, placeBoundBoss, retryDefendLive } from '../src/play/defend';
 import {
   BOSS_ABILITIES,
   BOSS_DEATH_MS,
@@ -322,7 +322,9 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(ui, /pointerEvents="none" style=\{styles\.fill\}/, 'the layer never takes a touch');
   assert.match(ui, /export const TurfAmbient = memo\(/, 'the layer is memoised (the sim ticks every 100 ms, the layer does not)');
   assert.match(ui, /t\.value = 0;\s+t\.value = withDelay/, 'an animated loop starts at frame 0 (withRepeat restarts from the start value)');
-  assert.match(ui, /f > 0 && wingFrames > 0 \? 1 \+/, 'pigeon wing frames play only while it flies off (perched = frame 0)');
+  assert.match(ui, /t > 0 && wingFrames > 0 \? 1 \+/, 'pigeon wing frames play only while it flies off (perched = frame 0)');
+  assert.match(ui, /const t = flap\.value;/, 'wing frames follow the linear flap clock, not the eased arc (steady flap)');
+  assert.match(ui, /flap\.value = reduced \? 0 : withTiming\(1, \{ duration: PIGEON_FLY_MS, easing: Easing\.linear \}\)/, 'the flap clock is linear over the flight');
   assert.match(ui, /fly\.value = reduced \? 0 :/, 'Reduce Motion: the pigeon only fades (no arc, no wing frames)');
   assert.ok(!/scaleY/.test(ui), 'no squash-for-a-flap left in the ambient layer');
   const src = read('src/play/defend-screen.tsx');
@@ -492,6 +494,12 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
     assert.equal(placed?.boundBosses[0]?.skillCooldownMs, BOUND_BOSS_PLACE_SKILL_CD_MS, 'placeBoundBoss: a cycle boss starts on the placement cooldown');
     const hero = placeBoundBoss(board, 0, 'archangel', 1);
     assert.equal(hero?.boundBosses[0]?.skillCooldownMs, 0, 'placeBoundBoss: a hero tower still starts at 0');
+    // Retry restarts the wave, so the cycle boss winds up again (not 0); a hero tower still starts at 0.
+    const both = placeBoundBoss(placed!, 1, 'archangel', 1)!;
+    const spent = { ...both, boundBosses: both.boundBosses.map((bb) => ({ ...bb, skillCooldownMs: 0 })) };
+    const retried = retryDefendLive(spent);
+    assert.equal(retried.boundBosses.find((bb) => bb.bossId === cycle.boss_id)?.skillCooldownMs, BOUND_BOSS_PLACE_SKILL_CD_MS, 'retryDefendLive: a cycle boss winds up again');
+    assert.equal(retried.boundBosses.find((bb) => bb.bossId === 'archangel')?.skillCooldownMs, 0, 'retryDefendLive: a hero tower still starts at 0');
   }
   assert.equal(enrageWarning(60, 100, 0.5, false), true, 'enrage warning near the line (≤ 65 % for a 50 % line)');
   assert.equal(enrageWarning(90, 100, 0.5, false), false, 'no warning far above the line');
