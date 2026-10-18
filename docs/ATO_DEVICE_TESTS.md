@@ -463,3 +463,15 @@ every hero's fight sheet was rebuilt. First: close and reopen the app so the upd
 - [ ] Play a Turf War wave with your Avatar: it walks, dashes, attacks, uses its skill and flinches when hit, all looking as before (no missing frames, no wrong hero).
 - [ ] Swap to a different hero (Avatar or a pet you hatched) and repeat one wave or a Hideout walk. Same result.
 - [ ] Optional look at the new art: the faint frames are in the art library viewer (hero cards → combat → Faint).
+
+## Box 46 — The active pet leads in Turf War (pet team P4, 2026-10-18)
+
+First: close and reopen the app so the update loads. Note which pet is active in the Hideout before you start.
+
+- [ ] Play a Turf War wave. The hero you fight as is your **active pet's** hero (same look and skill), not a separate Avatar. If your active pet is still an egg or baby, you fight as Corvus.
+- [ ] Stash (Den) → Make a different revealed pet active → start a Turf wave: the leader is now that pet's hero.
+- [ ] If you had picked an Avatar before (for example Oni or Archangel) and your update just loaded: that hero is now a pet in your Stash and is the active one. Your old pet is resting in the Stash, still there, with its stars. If an egg or baby was on the stage instead, the hero is waiting in the Stash and nothing was moved.
+- [ ] The Collection stars did not drop for any hero (a hero you had as an Avatar is 1★ if you had no pet of it).
+- [ ] Play → Dress → heroes: tapping a hero shows "Your active pet leads…" instead of a "Fight as this hero" button (while a revealed pet is active).
+- [ ] Clear a hero band for the first time (Main wave 5 gives Oni, wave 10 gives Archangel): you get the "owned" sheet, the hero gains a ★ copy in the Collection, and the sheet has no "Set as Avatar" button.
+- [ ] A hero bound as a tower never leads: bind one (Bind as tower), then make its pet active. You keep fighting as the previous leader, no crash.

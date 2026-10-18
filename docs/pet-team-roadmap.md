@@ -36,7 +36,27 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   `01a14ea9-1dbe-74fc-921d-6319dcbe447f`, Android `01a14ea9-1dbe-78cf-9325-b5c082056a01`, group
   `0259d81a-13df-443a-b4f1-58ac328c70f9` (message `pet-team-p3-faint`, commit `9260912c`; 16 new assets). Phone
   check: Box 45 (art regression only; faint is not played yet).
-  **Next: P4 (leader = active pet).**
+- **P4 built 2026-10-18** (commit `f420f208`). Leader = the active pet. `normalizedAvatarHeroId` now returns the
+  revealed active pet's hero (egg/baby: the stored Avatar, corvus by default; a hero bound as a tower never
+  leads), so Turf (`defend-screen.tsx`) and the view pick it up with no screen change. **Save stays v33.** One
+  additive field `leader_folded` (a save without it = not folded yet). `foldAvatarIntoPets` runs once in
+  `parsePlayStore` after the P1 fold: a chosen Avatar (not corvus, one of the 16 egg heroes) is found in the Den,
+  taken from a Collection copy, or hatched at Child (grade = its best, takes over one copy so stars don't double),
+  then made active via the same `activateDenPet` swap; the old active pet rests (Den slots grow). With an egg or
+  baby on the stage the hero is added to the Den but the stage is left alone; waits (retries next load) mid-dive,
+  away or while a reveal is to play. Afterwards the stored Avatar goes back to corvus, so an older bundle that
+  drops the flag cannot swap again. Campaign band clears (Oni w5, Archangel w10) now also add an egg copy (a star)
+  via `addToBook`. `heroOwned` / `ownedHeroIdsOf` count pet-book heroes, `setAvatarHero` / `ownHero` list the hero
+  in `owned_hero_ids` (older bundles keep working). Dress and the hero sheet drop the manual Avatar pick while a
+  pet leads (`view.leaderFromPet`). `check:pet-leader` (10 groups); `check:pet-merge` parse pin updated to the new
+  line. Gate green, reviewer pass (one persistence bug fixed). **OTA published 2026-10-18**: iOS
+  `01a14ff4-ec73-78f3-9afd-e6f87c881b0a`, Android `01a14ff4-ec73-7399-a5e7-cc83def6bce5`, group
+  `a7b286d0-6b98-4a7a-bbe9-c0fc4fe5a462` (message `pet-team-p4-leader`). Phone check: Box 46 (not done).
+  **Open for emci's call:** (1) every campaign band clear adds a copy, including later cycles, so Oni / Archangel
+  can reach 5★ by clearing (rule 5 says "instead of" the Avatar grant; this is the plain reading); (2) heroes you
+  hold only as pets can now be bound as Bound Boss towers (they count as owned); (3) a player who had Oni as
+  Avatar and never owned an Oni pet now has Oni as a 1★ Child pet.
+  **Next: P5 (Turf team of 3).**
 
 ## The idea in one line
 
