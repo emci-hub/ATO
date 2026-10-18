@@ -137,7 +137,10 @@ PixelLab spend for P3, one OTA per step"). Don't re-ask. One chat per step; this
   `01a150e7-cd04-7368-953b-c5c12c57fe26`, group `8e7b7015-1e84-4d52-8985-c3bf7638000e` (message
   `pet-team-p6-per-hero-locker`). Phone check: **Box 49** (not done). **Known risk (accepted):** a phone still on an
   older bundle that re-saves a migrated save drops `hero_gear` and those worn items would vanish; every phone gets the
-  update on reopen. **Plan complete after P6** (P1-P6 + P5b built); what is left is the phone checks (Boxes 44-49).
+  update on reopen. **Plan complete after P6** (P1-P6 + P5b built).
+- **Phone checks 2026-10-18:** emci reported "all passed" for Boxes 44-49 (status badge, faint art, leader = pet,
+  Turf team, one AI helper incl. 60 fps + Larger Text, per-hero Locker). Nothing failed; no fixes needed. The pet
+  team plan is **done**. Box 43 (P1, egg duplicates) was not part of that report.
 
 ## The idea in one line
 

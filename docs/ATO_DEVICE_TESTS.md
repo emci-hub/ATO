@@ -441,7 +441,7 @@ First: close and reopen the app so the update loads. Play → Hideout → Stash 
 - [ ] Hatch an egg until its Child reveal plays (dev kit "reveal now" is fine). If it is a hero you already keep, about 3 seconds after the reveal line the pet says "<Name> joined up! ★ → ★★" (plus "Now Epic!" or similar if the grade went up). The grown pet is now the one in the room, and the Den did not get a second copy.
 - [ ] A new hero still hatches as a new pet, as before.
 
-## Box 44 — One status badge everywhere (pet team P2, 2026-10-18)
+## Box 44 — One status badge everywhere (pet team P2, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 First: close and reopen the app so the update loads. Play → Hideout.
 
@@ -454,7 +454,7 @@ First: close and reopen the app so the update loads. Play → Hideout.
 - [ ] A hero with 3+ stars still lets you wear its dye, as before.
 - [ ] With the phone's text size set larger, the Stash tiles and the strip still show everything. Put it back afterwards.
 
-## Box 45 — Hero art repacked with a new faint clip (pet team P3, 2026-10-18)
+## Box 45 — Hero art repacked with a new faint clip (pet team P3, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 The faint clip itself is not played anywhere yet (Turf team, P5, uses it). This box only checks nothing broke when
 every hero's fight sheet was rebuilt. First: close and reopen the app so the update loads.
@@ -464,7 +464,7 @@ every hero's fight sheet was rebuilt. First: close and reopen the app so the upd
 - [ ] Swap to a different hero (Avatar or a pet you hatched) and repeat one wave or a Hideout walk. Same result.
 - [ ] Optional look at the new art: the faint frames are in the art library viewer (hero cards → combat → Faint).
 
-## Box 46 — The active pet leads in Turf War (pet team P4, 2026-10-18)
+## Box 46 — The active pet leads in Turf War (pet team P4, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 First: close and reopen the app so the update loads. Note which pet is active in the Hideout before you start.
 
@@ -476,14 +476,14 @@ First: close and reopen the app so the update loads. Note which pet is active in
 - [ ] Clear a hero band for the first time (Main wave 5 gives Oni, wave 10 gives Archangel): you get the "owned" sheet, the hero gains a ★ copy in the Collection, and the sheet has no "Set as Avatar" button.
 - [ ] A hero bound as a tower never leads: bind one (Bind as tower), then make its pet active. You keep fighting as the previous leader, no crash.
 
-## Box 47 — Turf team of 3 (pet team P5, 2026-10-18) — helper lines REPLACED by Box 48 (P5b)
+## Box 47 — Turf team of 3 (pet team P5, 2026-10-18) — PASSED (emci, 2026-10-18); helper lines REPLACED by Box 48 (P5b)
 
 The P5 helper lines (two slots, tap-to-place, Move, knocked out for the wave) no longer apply: P5b replaced
 them with one AI helper. Test the helper with Box 48. Still valid from here:
 
 - [ ] A **rare** pet on the team (leader or helper): the Pounce button works twice in one wave. Without a rare: once, as before.
 
-## Box 48 — One AI helper (pet team P5b, 2026-10-18)
+## Box 48 — One AI helper (pet team P5b, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 First: close and reopen the app so the update loads (OTA group `7362dc82`). You need at least one resting pet at Child stage or older.
 
@@ -499,7 +499,7 @@ First: close and reopen the app so the update loads (OTA group `7362dc82`). You 
 - [ ] Pause mid-wave while the helper walks or is dazed: it freezes; resume continues where it was.
 - [ ] Settings → Larger Text (phone accessibility text size up): open Setup again. The Team card text grows and wraps inside the sheet (scrolls); nothing is cut off and the board and bars keep their size.
 
-## Box 49 — Per-hero Locker (pet team P6, 2026-10-18)
+## Box 49 — Per-hero Locker (pet team P6, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 First: close and reopen the app so the update loads (OTA group `8e7b7015`). Use a save that had gear worn before this update if you can.
 
