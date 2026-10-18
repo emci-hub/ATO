@@ -336,6 +336,22 @@ Play → Turf War, Effects Quality Full, Motion Full, Notices All (Divecore Sett
 - [ ] A busy wave (2x speed, many creeps) still feels smooth; nothing new covers the top bar, the dock or the notice line.
 - [ ] Screenshot: the win sparks and the lose ghost.
 
+## Box 34 — Turf War map themes (T8, 2026-10-17)
+
+Play → Turf War, in Setup (before Call wave).
+
+- [ ] Open Setup. Trial: a "Theme" card with five buttons: Alley · Rooftop · Underpass · Court · Docks. Alley is lit the first time.
+- [ ] Tap each theme. The map behind the sheet changes to that street; the road, the 15 round pads and your towers stay in the same spots.
+- [ ] Rooftop: dark tar road, pale gravel, AC units, little vents and two blinking lamps; pigeons; steam from a grate.
+- [ ] Underpass: dark concrete road with a yellow edge, pale tiles, boxes + a bin, steam from a grate; blue lights flicker.
+- [ ] Court: dark path, teal court, benches, bins, a ball rack; pigeons.
+- [ ] Docks: wooden pier road, pale concrete quay, bollards and crates; pigeons.
+- [ ] Every theme: the road is clearly darker than the ground beside it, every pad is easy to see and tap, nothing covers a pad.
+- [ ] Pick Docks, call a wave, win or lose: the rewards are the same as on the Alley. The map stays Docks for the whole wave.
+- [ ] Close the app fully and open Turf War again: still Docks.
+- [ ] Main (after Trial): the Maps card shows the Theme row under ATO / Neon Maze; picking Neon Maze hides the Theme row.
+- [ ] Screenshot: each theme in a wave.
+
 ---
 
 **All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–28).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`; Box 28 specifically needs OTA `0ff16d9d` or later), not per box.

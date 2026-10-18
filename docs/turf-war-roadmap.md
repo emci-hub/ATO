@@ -23,8 +23,8 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 | T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | ✔ merged (PR #67, 2026-10-17); OTA see "Step T4 as built" |
 | T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | ✔ merged (PR #68, 2026-10-17); OTA see "Step T5 as built" |
 | T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | ✔ merged (PR #69, 2026-10-17); OTA see "Step T6 as built" |
-| T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | ✔ merged (PR #70, 2026-10-17); OTA see "Step T7 as built"; awaiting emci's phone check (Box 33) |
-| T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); how a player gets a theme (picker / daily / unlock) is a feature decision to make first | not started, after T7 |
+| T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | ✔ merged (PR #70, 2026-10-17); OTA see "Step T7 as built"; emci's phone check (Box 33) **passed** |
+| T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); picker in Setup (emci, option A) | ✔ merged (PR #71, 2026-10-17); OTA see "Step T8 as built"; awaiting emci's phone check (Box 34) |
 
 Every step ships on its own OTA. T1 and T2 change code layout only (no art). T3 and T4 need emci to pick art from samples
 first (two stops inside the step: samples → pick → build). T5 and T6 need effect samples (GIF strips) the same way.
@@ -193,7 +193,32 @@ and no new in-stage text nodes besides the pinned ones.
 - **Open / for later:** players on "Important only" notices don't see "BOSS INCOMING" (`notify` kind is hidden there; the old pill always showed); a Bound Boss placed mid-wave
   with a creep in range casts with no wind-up; a 1x → 2x switch mid wind-up shortens it; a boss drawn with a rotated single sprite gets no blast (fails safe). Not device-verified.
 
-#### Step T7 as built (2026-10-17, PR #70 squash `35c1040c`, OTA iOS `01a14b42-c130-7b40-8343-2eb7908aa382`, group `7e9eb190` (commit `9423cb30`); awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 33; emci answered the T6 phone check "passed")
+#### Step T8 as built (2026-10-17, PR #71 squash `d8ab19e6`, OTA: recorded in the next docs commit; awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 34; emci answered the T7 phone check "passed", no changes)
+- **Stop 0 (emci): option A**, a picker in the Setup sheet: a row of theme chips (≥ 44 pt) inside the Maps card on Main (hidden while Neon
+  Maze is picked) and its own small card on Trial. Nothing new on screen outside the sheet. Saved device-local `ato.play.boardTheme.v1`
+  (emci OK'd the new setting; same pattern as `fx-quality.ts`; no server / cloud save). A theme never changes rewards. A theme is NOT a new
+  `boardId`: saved tower layouts (`phase:boardId`) stay shared.
+- **Stop 1 picks (emci):** Rooftop **C** (tar walkway + gravel, manhole pads, warm lights), Underpass **A** (damp concrete + pale tiles, yellow
+  safety edge, splat pads, dashes), Court **C** (asphalt path + teal hardcourt, manhole pads, cool lights), Docks **A** (dark pier planks +
+  concrete quay, manhole pads, dashes). Samples + scale sheet: `docs/divecore/turf-war-t8/samples/`.
+- **Painter:** `scripts/turf-board-art.ts` is theme-driven: `TURF_THEMES` (art folder, tileset, skips, pad, props + ambient roles, dashes,
+  pools, vent, pigeons, `propFallback`). The alley paints byte-identical to T3/T4 (md5 + the reviewer's atlas compare). `art-pack.ts` packs
+  `ato-<theme>` + `-glow` + `-fire` and `meta.boards.ato-<theme>` (ambient clips shared). Runtime: `src/play/turf-theme.ts`
+  (`turfBoardArtId`), `turf-theme-store.ts`, `turf-theme-picker.tsx`; `defend-screen.tsx` swaps the board image + ambient layer together
+  (falls back to the plain board if a theme is not packed). Streetwear art 7.8 / 10 MB.
+- **Art:** 4 pro tilesets (workbench 90.5–99.2) + props per theme, palette-locked + stray-pixel cleanup (95.7–100; roof vent 90.7 before
+  cleanup). Off-scale props regenerated; known misses AC −12 % h, bench −14 % h. 86 PixelLab generations (≈ 21 / theme). Raw + `gen.json`
+  per theme: `art-src/pixellab/board.streetwear.<theme>/`.
+- **Checks:** `check:streetwear-assets` — every theme baked 512 with 15 pads + the T3 pixel test per theme (road / kerb luma: alley 30/93,
+  rooftop 26/110, underpass 29/100, court 37/75, docks 44/95; all pad centres on pad art). `check:turf-war-layout` = 12 groups: ambient
+  sprites clear of pads and road on every theme + a T8 group (key, default, fallback, picker placement + tap size, rules / reward files never
+  read the theme). Gate green; reviewer PASS (fixed: mis-encoded characters from a PowerShell re-save, underpass prop order).
+- **Previews:** `docs/divecore/turf-war-t8/` (each theme setup + wave at 430×932 + 375×667, `picker-*` = Theme row + tap Court → saved +
+  board switches). Wave frame time 4.5–4.9 ms (T7 alley ≈ 4.8: unchanged).
+- **Known limits:** underpass places no cone lamp and the docks no fire barrel (no clear spot on this board), so those themes animate only
+  pools + vent / pigeons; four empty `-fire` layers ship (harmless). The theme store has the same tiny load-vs-tap race as `fx-quality.ts`.
+
+#### Step T7 as built (2026-10-17, PR #70 squash `35c1040c`, OTA iOS `01a14b42-c130-7b40-8343-2eb7908aa382`, group `7e9eb190` (commit `9423cb30`); emci's phone check (Box 33) **passed** (answered in the T8 chat); emci answered the T6 phone check "passed")
 - **emci before T7:** T6 phone check passed; "BOSS INCOMING" should also show on "Important only" → `NoticeInput.important` (only that one NOTIFY;
   `noticeAllowed(kind, mode, important)`, pinned by `check:notify`); no other change wanted.
 - **Stop 1 picks (all recommended):** wave start = new cyan street portal (`gate/burst` 80×56 ×14 @ 12 fps = 1.17 s, own vfx layers, flat ground ellipse; cyan
