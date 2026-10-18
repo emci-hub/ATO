@@ -69,6 +69,7 @@ import {
   legendNextLine,
 } from '@/play/legend-copy';
 import { HeroGrid } from '@/play/hero-grid';
+import { heroById, heroName } from '@/play/heroes-data';
 import {
   NEON_ROW_LINE,
   NeonBackLink,
@@ -96,6 +97,7 @@ import {
   INVENTORY_SOFT_CAP,
   LOOK_SELL_TOKENS,
   mergeSuccessPct,
+  setLockerHero,
   type ItemRef,
   type ItemStack,
   type MergeOutcome,
@@ -222,6 +224,16 @@ export function DressScreen({
   const activeBonuses = STAT_ORDER.filter((stat) => view.statSums[stat] > 0);
   const anyBonuses = activeBonuses.length > 0;
   const stacks = visibleStacks(view.inventory, filter);
+  // Leader first, then the helper, then every other owned hero (and any hero already wearing gear).
+  const lockerHeroes = [
+    ...new Set([
+      view.activeAvatarHeroId,
+      ...(view.turfHelperHeroId ? [view.turfHelperHeroId] : []),
+      view.lockerHeroId,
+      ...view.ownedHeroIds,
+      ...Object.keys(view.heroWorn),
+    ]),
+  ].filter((id) => heroById(id) != null);
 
   const toggleRow = (key: string) =>
     setExpandedKey((current) => (current === key ? null : key));
@@ -267,8 +279,33 @@ export function DressScreen({
         onUnlockAvatar={onUnlockAvatar}
       />
 
+      {/* P6: gear is per hero. Pick whose four slots you are dressing (the leader and the Turf helper
+       * first); the bag below is shared, a worn copy sits on one hero at a time. */}
       <NeonPanel>
-        <NeonLabel>Worn</NeonLabel>
+        <NeonLabel>Dress which hero?</NeonLabel>
+        <View style={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
+            {lockerHeroes.map((id) => (
+              <NeonChip
+                key={id}
+                label={`${heroName(id)} · ${view.heroWorn[id] ?? 0}/4${id === view.activeAvatarHeroId ? ' · leader' : id === view.turfHelperHeroId ? ' · helper' : ''}`}
+                selected={id === view.lockerHeroId}
+                onPress={() => commit((doc) => {
+                  const next = setLockerHero(doc, id);
+                  return next === doc ? null : next;
+                })}
+                accessibilityLabel={`Dress ${heroName(id)}, ${view.heroWorn[id] ?? 0} of 4 slots worn`}
+              />
+            ))}
+          </ScrollView>
+        </View>
+        <ThemedText type="small" themeColor="textSecondary">
+          Gear on your leader boosts the whole board. Gear on your helper boosts only its own hits.
+        </ThemedText>
+      </NeonPanel>
+
+      <NeonPanel>
+        <NeonLabel>{`Worn · ${heroName(view.lockerHeroId)}`}</NeonLabel>
         {SLOT_ORDER.map((slot) => {
           const ref = view.equipped[slot] ?? null;
           const key = wornRowKey(slot, ref?.id ?? null);
@@ -292,7 +329,7 @@ export function DressScreen({
       </NeonPanel>
 
       <NeonPanel>
-        <NeonLabel>Equipped bonuses</NeonLabel>
+        <NeonLabel>{`Equipped bonuses · ${heroName(view.lockerHeroId)}`}</NeonLabel>
         {!anyBonuses ? (
           <ThemedText type="small" themeColor="textSecondary">
             No bonuses yet — find and equip a Power item.
@@ -888,7 +925,7 @@ function AvatarPicker({
                     <>
                       <ThemedText type="code">{legendLevelLine(record.level)}</ThemedText>
                       <ThemedText type="code" themeColor="textSecondary">
-                        {`${legendNextLine(record.level)} · ★${record.stars}/${AVATAR_STAR_MAX} · ${record.worn}/4 worn`}
+                        {`${legendNextLine(record.level)} · ★${record.stars}/${AVATAR_STAR_MAX}`}
                       </ThemedText>
                     </>
                   ) : null}

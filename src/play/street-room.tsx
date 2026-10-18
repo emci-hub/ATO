@@ -462,6 +462,7 @@ export function StreetStatusStrip({
   grade,
   shiny,
   copies = 0,
+  gearWorn = null,
   reduceMotion,
 }: {
   egg: boolean;
@@ -475,6 +476,8 @@ export function StreetStatusStrip({
   shiny?: boolean;
   /** The hero's copies: the star row (see `pet-status-view.ts`). */
   copies?: number;
+  /** P6: this hero's worn gear slots (0..4); the chip shows from 1 up, never on an egg / baby (null). */
+  gearWorn?: number | null;
   reduceMotion: boolean;
 }) {
   const low = (v: number) => (v <= 1 ? STREET.red : STREET.mustard);
@@ -510,6 +513,13 @@ export function StreetStatusStrip({
           </>
         )}
       </View>
+      {gearWorn != null && gearWorn > 0 ? (
+        <View style={styles.gearChip} accessible accessibilityLabel={`Gear: ${gearWorn} of 4 slots worn`}>
+          <Text style={styles.gearChipText} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+            {`GEAR ${gearWorn}/4`}
+          </Text>
+        </View>
+      ) : null}
       {status ? <PetStatusBadge status={status} variant="strip" wordFont={PIXEL_FONT.label} /> : null}
     </View>
   );
@@ -560,6 +570,9 @@ const styles = StyleSheet.create({
     borderColor: '#000',
   },
   stripMain: { flexGrow: 1, flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  // P6 gear chip: a fixed-height tag inside the one strip row; it only takes width, never a second row.
+  gearChip: { flexShrink: 1, minWidth: 0, overflow: 'hidden', justifyContent: 'center', paddingHorizontal: 5, height: 18, borderWidth: 1, borderColor: STREET.muted },
+  gearChipText: { fontFamily: PIXEL_FONT.label, fontSize: 11, color: STREET.paper, includeFontPadding: false },
   stripText: { fontFamily: PIXEL_FONT.label, fontSize: 12, color: STREET.paper, includeFontPadding: false },
   name: {
     fontFamily: PIXEL_FONT.label,

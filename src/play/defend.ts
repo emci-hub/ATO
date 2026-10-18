@@ -538,6 +538,8 @@ export type TurfHelperUnit = {
   moving: boolean;
   /** Sticky E/W side the helper last walked toward. */
   face: 'e' | 'w';
+  /** P6: the helper's own gear power (×1 with none) — scales its hits and skill, never the board. */
+  gearPower: number;
 };
 
 /** A fresh, standing helper state (wave start / retry). */
@@ -680,7 +682,16 @@ export function retryDefendLive(state: DefendLive): DefendLive {
 }
 
 /** One helper the screen puts on the board at Call wave. */
-export type TurfHelperSpec = { slot: number; heroId: string; x: number; y: number; stars: number; grade: Grade };
+export type TurfHelperSpec = {
+  slot: number;
+  heroId: string;
+  x: number;
+  y: number;
+  stars: number;
+  grade: Grade;
+  /** P6: the helper's own gear as a wave_power multiplier (≥ 1, soft-capped); default ×1. */
+  gearPower?: number;
+};
 
 /**
  * Put the Turf team on a board (P5b): the one helper (fresh, standing where the screen had it) and the
@@ -714,6 +725,7 @@ export function placeTurfTeam(
         returning: false,
         moving: false,
         face: 'e',
+        gearPower: Number.isFinite(h.gearPower) && (h.gearPower ?? 1) >= 1 ? (h.gearPower as number) : 1,
       }),
     );
   const spare = teamPounceSpare([leaderGrade, ...units.map((u) => u.grade)]);
@@ -1428,7 +1440,8 @@ export function stepDefendLive(
     const from = { x: walked.x, y: walked.y };
     const level = Math.max(1, Math.min(3, helper.stars));
     const heroKit: Kit = { behavior: hero.kit.behavior, element: buckets.legendElement ?? hero.kit.element };
-    const power = boardMult * heroAffinityMult(hero.kit.element, buckets.legendElement) * starPowerMult(helper.stars);
+    const power =
+      boardMult * heroAffinityMult(hero.kit.element, buckets.legendElement) * starPowerMult(helper.stars) * helper.gearPower;
     const splash = (primaryId: number, dealt: number) => {
       if (!gradeSplashes(helper.grade)) return;
       const primary = puffs.find((p) => p.id === primaryId);
@@ -1471,7 +1484,7 @@ export function stepDefendLive(
         return Math.hypot(pos.x - from.x, pos.y - from.y) <= skill.radius;
       });
       if (inVeil) {
-        puffs = veilPuffs(puffs, map, from, skill, starPowerMult(helper.stars));
+        puffs = veilPuffs(puffs, map, from, skill, starPowerMult(helper.stars) * helper.gearPower);
         removeDead();
         helperCasts.push(helper.id);
         skillCooldownMs = HELPER_SKILL_COOLDOWN_MS;

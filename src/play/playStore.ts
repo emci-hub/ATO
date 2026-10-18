@@ -765,11 +765,69 @@ export function patchActiveAvatar(
   return replaceAvatarRecord(doc, active.id, { ...active, ...patch });
 }
 
-/** Worn copies held by EVERY Avatar (the bag is shared, so "held" counts the
- * bag plus every Avatar's four slots — not just the active one's). */
+/** P6 — one hero's (or Legend's) worn gear by slot. */
+export type Loadout = Partial<Record<ItemSlot, ItemRef>>;
+const NO_LOADOUT: Readonly<Loadout> = Object.freeze({});
+
+/** A hero's worn gear (empty when it wears none). */
+export function heroLoadoutOf(doc: PlayStoreDoc, heroId: string): Readonly<Loadout> {
+  return doc.hero_gear[heroId] ?? NO_LOADOUT;
+}
+
+/** The Turf leader's worn gear — it boosts the whole board, as it always did. */
+export function leaderLoadoutOf(doc: PlayStoreDoc): Readonly<Loadout> {
+  return heroLoadoutOf(doc, normalizedAvatarHeroId(doc));
+}
+
+/** The hero the Locker is dressing: the saved pick when it is still owned, else the leader. */
+export function lockerHeroIdOf(doc: PlayStoreDoc): string {
+  const id = doc.locker_hero_id;
+  return id && lockerCanDress(doc, id) ? id : normalizedAvatarHeroId(doc);
+}
+
+/** A hero the Locker may dress: an owned one, or one that still wears gear (so gear on a hero the save no
+ * longer owns can always be taken off). */
+function lockerCanDress(doc: PlayStoreDoc, heroId: string): boolean {
+  return heroById(heroId) != null && (heroOwned(doc, heroId) || wornItemCount(heroLoadoutOf(doc, heroId)) > 0);
+}
+
+/** Pick the hero the Locker dresses. Unknown / unowned ids are ignored; unchanged → same doc. */
+export function setLockerHero(doc: PlayStoreDoc, heroId: string): PlayStoreDoc {
+  if (!lockerCanDress(doc, heroId) || doc.locker_hero_id === heroId) return doc;
+  return { ...doc, locker_hero_id: heroId };
+}
+
+/** Replace one hero's worn gear (an empty loadout drops the key, so the save stays small). */
+function patchHeroLoadout(doc: PlayStoreDoc, heroId: string, equipped: Loadout): PlayStoreDoc {
+  const hero_gear = { ...doc.hero_gear };
+  if (wornItemCount(equipped) === 0) delete hero_gear[heroId];
+  else hero_gear[heroId] = equipped;
+  return { ...doc, hero_gear };
+}
+
+/** The gear of the hero the Locker is dressing. */
+function dressedLoadoutOf(doc: PlayStoreDoc): Readonly<Loadout> {
+  return heroLoadoutOf(doc, lockerHeroIdOf(doc));
+}
+
+/** Write the gear of the hero the Locker is dressing. */
+function patchDressedLoadout(doc: PlayStoreDoc, equipped: Loadout): PlayStoreDoc {
+  return patchHeroLoadout(doc, lockerHeroIdOf(doc), equipped);
+}
+
+/** The Turf helper's hero id, or null with no helper picked. */
+export function helperHeroIdOf(doc: PlayStoreDoc): string | null {
+  const team = turfTeamOf(doc);
+  const pick = team.picks[0];
+  return pick ? team.candidates.find((c) => c.uid === pick.uid)?.heroId ?? null : null;
+}
+
+/** Worn copies held by EVERY hero and every Legend record (the bag is shared, so "held" counts the
+ * bag plus every loadout — not just the dressed one). */
 export function wornCountAcrossAvatars(doc: PlayStoreDoc): number {
   let worn = 0;
   for (const avatar of doc.avatars) worn += wornItemCount(avatar.equipped);
+  for (const gear of Object.values(doc.hero_gear)) worn += wornItemCount(gear);
   return worn;
 }
 
@@ -786,8 +844,8 @@ export function ownedCountsAcross(doc: PlayStoreDoc): Record<string, number> {
   for (const stack of doc.inventory) {
     counts[stack.id] = (counts[stack.id] ?? 0) + stack.count;
   }
-  for (const avatar of doc.avatars) {
-    for (const ref of Object.values(avatar.equipped)) {
+  for (const loadout of [...doc.avatars.map((a) => a.equipped), ...Object.values(doc.hero_gear)]) {
+    for (const ref of Object.values(loadout)) {
       if (ref) counts[ref.id] = (counts[ref.id] ?? 0) + 1;
     }
   }
@@ -801,8 +859,8 @@ export function ownedBestStarsAcross(doc: PlayStoreDoc): Record<string, number> 
   for (const stack of doc.inventory) {
     stars[stack.id] = Math.max(stars[stack.id] ?? 0, stack.star);
   }
-  for (const avatar of doc.avatars) {
-    for (const ref of Object.values(avatar.equipped)) {
+  for (const loadout of [...doc.avatars.map((a) => a.equipped), ...Object.values(doc.hero_gear)]) {
+    for (const ref of Object.values(loadout)) {
       if (ref) stars[ref.id] = Math.max(stars[ref.id] ?? 0, ref.star);
     }
   }
@@ -951,6 +1009,14 @@ export type PlayStoreDoc = {
    * stands (board units). Read through `parseTurfHelpers` (tolerant); a pick whose pet can no longer
    * help is ignored by the view. An additive v33 field, like `leader_folded`. */
   turf_helpers: TurfHelperPick[];
+  /** P6 (pet team, 2026-10-18): the Locker is per hero. Worn gear by hero id (4 slots each, same items and
+   * refs as before; the bag stays shared and a worn copy is not in the bag). Additive v33 field. Legend
+   * records keep level, stars, element and park; their old `equipped` is emptied by the one-time move. */
+  hero_gear: Record<string, Partial<Record<ItemSlot, ItemRef>>>;
+  /** P6: the one-time move of the old per-Legend loadouts into `hero_gear` has run (`foldGearIntoHeroes`). */
+  gear_moved: boolean;
+  /** P6: the hero the Locker is dressing ('' or unowned = the leader). */
+  locker_hero_id: string;
   /** One-shot "you own a hero" offer awaiting the player's decision (v18,
    * Slice A2). Set when a hero is first owned; the hero sheet shows it once and
    * every action (Avatar / bind / dismiss) clears it, so it can never re-fire
@@ -1114,11 +1180,21 @@ export type PlayView = {
   /** Total owned items — bag + EVERY Avatar's worn copies (the bag is
    * shared, so an inactive Avatar's gear still counts toward the cap). */
   totalOwned: number;
-  /** The ACTIVE Avatar's worn refs by slot; Dress renders it. */
+  /** P6: the DRESSED hero's worn refs by slot (the Locker's hero, default the leader); Dress renders it. */
   equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>;
-  /** Raw additive mult sums from the ACTIVE Avatar's equipped items (§9c
+  /** Raw additive mult sums from the dressed hero's equipped items (§9c
    * same-stat adds, scaled +10% per worn star so a merged ★2 beats a ★1). */
   statSums: StatSums;
+  /** P6: the same sums for the Turf LEADER's gear (feeds the board-wide wave_power / tower_speed buckets). */
+  leaderStatSums: StatSums;
+  /** P6: and for the Turf HELPER's gear (zero with no helper); scales the helper's own hits only. */
+  helperStatSums: StatSums;
+  /** P6: the hero the Locker is dressing right now. */
+  lockerHeroId: string;
+  /** P6: the Turf helper's hero id (null with no helper picked). */
+  turfHelperHeroId: string | null;
+  /** P6: worn slots (0..4) per hero, for the Hideout gear badge (heroes wearing nothing are absent). */
+  heroWorn: Readonly<Record<string, number>>;
   /** The active Legend's element — every Avatar + hero attack uses it, and a
    * worn Power of the same element gets its stats raised (2026-09-28). */
   legendElement: Element;
@@ -1419,6 +1495,9 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID,
     leader_folded: true,
     turf_helpers: [],
+    hero_gear: {},
+    gear_moved: true,
+    locker_hero_id: '',
     hero_offer: null,
     pet: newPet(now),
     pet_hall: [],
@@ -1527,8 +1606,19 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     tendBonusAvailable: doc.last_tend_bonus_ymd !== localYmd(new Date(now)),
     inventory: doc.inventory,
     totalOwned: totalOwnedAcrossAvatars(doc),
-    equipped: active.equipped,
-    statSums: equippedStatSums(active.equipped, legendElementOf(active.id)),
+    equipped: dressedLoadoutOf(doc),
+    statSums: equippedStatSums(dressedLoadoutOf(doc), legendElementOf(active.id)),
+    leaderStatSums: equippedStatSums(leaderLoadoutOf(doc), legendElementOf(active.id)),
+    helperStatSums: equippedStatSums(
+      (() => {
+        const helper = helperHeroIdOf(doc);
+        return helper ? heroLoadoutOf(doc, helper) : NO_LOADOUT;
+      })(),
+      legendElementOf(active.id),
+    ),
+    lockerHeroId: lockerHeroIdOf(doc),
+    turfHelperHeroId: helperHeroIdOf(doc),
+    heroWorn: Object.fromEntries(Object.entries(doc.hero_gear).map(([hero, gear]) => [hero, wornItemCount(gear)])),
     legendElement: legendElementOf(active.id),
     avatars: doc.avatars.map((avatar) => ({
       id: avatar.id,
@@ -1669,7 +1759,7 @@ function nextDeeperBustPct(
   // v26: a Snack buff rides the whole dive; the half-table floor still holds.
   return effectiveBustPct(
     pathBaseBust(diveBustChanceAt(run.deepers), path),
-    active.equipped,
+    leaderLoadoutOf(doc),
     legendElementOf(active.id),
     petBustCutPp(pet, away) + (run.snack ? SNACK_BUST_PP : 0),
   );
@@ -4190,6 +4280,38 @@ export function foldAvatarIntoPets(doc: PlayStoreDoc, now: number): PlayStoreDoc
 }
 
 /**
+ * P6 one-time move of the old per-Legend loadouts onto heroes. The ACTIVE Legend's worn gear goes to the
+ * Turf leader's hero (a slot the hero already wears keeps its item and the older one goes to the bag);
+ * every other Legend's worn gear goes back to the bag (a Legend has no hero, so any mapping would be a
+ * guess; the player re-dresses). A move, never a copy: worn items are not in the bag, so each one lands in
+ * exactly one place and the total owned count does not change. The Legend records' `equipped` end empty.
+ * Idempotent (`gear_moved`).
+ */
+export function foldGearIntoHeroes(doc: PlayStoreDoc): PlayStoreDoc {
+  if (doc.gear_moved) return doc;
+  // Wait for P4's leader fold (it may still be waiting on a dive / away trip): the leader can change once
+  // it runs, and the gear should land on the hero that really leads. Until then the gear stays on the
+  // Legend records (still counted, nothing lost) and the move retries on the next load.
+  if (!doc.leader_folded) return doc;
+  if (doc.avatars.every((a) => wornItemCount(a.equipped) === 0)) return { ...doc, gear_moved: true };
+  const leader = normalizedAvatarHeroId(doc);
+  const activeId = activeAvatarOf(doc).id;
+  const mine: Loadout = { ...(doc.hero_gear[leader] ?? {}) };
+  let inventory = doc.inventory;
+  const avatars = doc.avatars.map((avatar) => {
+    for (const ref of Object.values(avatar.equipped)) {
+      if (!ref) continue;
+      const slot = getItemDef(ref.id)?.core.slot;
+      if (avatar.id === activeId && slot && !mine[slot]) mine[slot] = ref;
+      else if (getItemDef(ref.id)) inventory = addCopiesToBag(inventory, ref.id, ref.star, 1);
+    }
+    return { ...avatar, equipped: {} };
+  });
+  const moved: PlayStoreDoc = { ...doc, avatars, inventory, gear_moved: true };
+  return patchHeroLoadout(moved, leader, mine);
+}
+
+/**
  * Own a hero. No-op when the id is unknown, already owned, or the starter.
  * Otherwise adds it to `owned_hero_ids` AND queues the one-shot offer the hero
  * sheet shows ("Archangel owned" → Set as Avatar / Bind as tower).
@@ -4419,7 +4541,7 @@ export function gearScoreOf(doc: PlayStoreDoc): number {
   const active = activeAvatarOf(doc);
   const wavePowerBucket = bucketMultiplier(
     'wave_power',
-    equippedStatSums(active.equipped, legendElementOf(active.id)),
+    equippedStatSums(leaderLoadoutOf(doc), legendElementOf(active.id)),
   );
   return gearScore(wavePowerBucket, active.level, active.stars);
 }
@@ -4639,18 +4761,19 @@ export function devResetAvatarStarCycle(doc: PlayStoreDoc): PlayStoreDoc {
  * are fabricated directly (dev-only); nothing in a game path calls this.
  */
 export function devOvergear(doc: PlayStoreDoc): PlayStoreDoc {
-  const active = activeAvatarOf(doc);
-  const equipped: Partial<Record<ItemSlot, ItemRef>> = { ...active.equipped };
+  const equipped: Loadout = { ...dressedLoadoutOf(doc) };
   for (const id of OVERGEAR_POWER_IDS) {
     const def = getItemDef(id);
     if (!def) continue;
     equipped[def.core.slot] = { id, star: MERGE_MAX_STAR };
   }
-  return patchActiveAvatar(doc, {
-    level: DEV_OVERGEAR_LEVEL,
-    stars: AVATAR_STAR_MAX,
+  return patchDressedLoadout(
+    patchActiveAvatar(doc, {
+      level: DEV_OVERGEAR_LEVEL,
+      stars: AVATAR_STAR_MAX,
+    }),
     equipped,
-  });
+  );
 }
 
 /** Dev kit only: overgear AND reset the campaign to Trial wave 1, so the Skip
@@ -5192,8 +5315,8 @@ export function equipItem(
     return { doc, outcome: { ok: false, reason: 'not_owned' } };
   }
   const slot = def.core.slot;
-  const active = activeAvatarOf(doc);
-  const occupied = active.equipped[slot];
+  const dressed = dressedLoadoutOf(doc);
+  const occupied = dressed[slot];
   if (occupied && occupied.id === itemId && occupied.star === star) {
     return { doc, outcome: { ok: false, reason: 'already_equipped' } };
   }
@@ -5205,30 +5328,30 @@ export function equipItem(
   // its own (id, star) stack.
   let inventory = takeOneFromBag(doc.inventory, itemId, star);
   if (occupied) inventory = addCopiesToBag(inventory, occupied.id, occupied.star, 1);
-  const equipped = { ...active.equipped, [slot]: { id: itemId, star } };
+  const equipped = { ...dressed, [slot]: { id: itemId, star } };
   return {
-    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+    doc: patchDressedLoadout({ ...doc, inventory }, equipped),
     outcome: { ok: true },
   };
 }
 
-/** Take an item off the ACTIVE Avatar's slot and return exactly one copy to
+/** Take an item off the dressed hero's slot and return exactly one copy to
  * its bag stack (the matching (id, star) tier). */
 export function unequipItem(
   doc: PlayStoreDoc,
   slot: ItemSlot,
 ): { doc: PlayStoreDoc } {
-  const active = activeAvatarOf(doc);
-  const ref = active.equipped[slot];
+  const dressed = dressedLoadoutOf(doc);
+  const ref = dressed[slot];
   if (!ref) return { doc };
-  const equipped = { ...active.equipped };
+  const equipped = { ...dressed };
   delete equipped[slot];
   // Only return known items; a corrupt id is dropped rather than bagged.
   const inventory = getItemDef(ref.id)
     ? addCopiesToBag(doc.inventory, ref.id, ref.star, 1)
     : doc.inventory;
   return {
-    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+    doc: patchDressedLoadout({ ...doc, inventory }, equipped),
   };
 }
 
@@ -5299,7 +5422,7 @@ export function canMergeWorn(
   doc: PlayStoreDoc,
   slot: ItemSlot,
 ): boolean {
-  const ref = activeAvatarOf(doc).equipped[slot];
+  const ref = dressedLoadoutOf(doc)[slot];
   if (!ref) return false;
   const def = getItemDef(ref.id);
   if (!def || def.core.kind !== 'power') return false;
@@ -5337,9 +5460,9 @@ export function mergeItem(
 
   // Validate the main (the ACTIVE Avatar's worn copy or a bagged copy) and
   // that enough fuel of the same tier exists.
-  const active = activeAvatarOf(doc);
+  const dressed = dressedLoadoutOf(doc);
   if (target.main === 'worn') {
-    const worn = active.equipped[slot];
+    const worn = dressed[slot];
     if (!worn || worn.id !== target.id || worn.star !== target.star) return null;
     const fuel = doc.inventory.find((stack) => sameTier(stack, target.id, target.star));
     if (!fuel || fuel.count < 1) return null;
@@ -5353,7 +5476,7 @@ export function mergeItem(
 
   // Fuel always goes first.
   let inventory = takeOneFromBag(doc.inventory, target.id, target.star);
-  let equipped = active.equipped;
+  let equipped: Loadout = { ...dressed };
 
   if (success) {
     if (target.main === 'worn') {
@@ -5366,14 +5489,14 @@ export function mergeItem(
       inventory = addCopiesToBag(inventory, target.id, target.star + 1, 1);
     }
     return {
-      doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+      doc: patchDressedLoadout({ ...doc, inventory }, equipped),
       outcome: { success: true, pct, fromStar: target.star, toStar: target.star + 1 },
     };
   }
 
   // Fail: main untouched (bag main = the remaining copy of its stack), fuel gone.
   return {
-    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+    doc: patchDressedLoadout({ ...doc, inventory }, equipped),
     outcome: { success: false, pct, fromStar: target.star },
   };
 }
@@ -5693,9 +5816,9 @@ export function devSellAllJunk(
   };
 }
 
-/** Dev kit: take every slot off the ACTIVE Avatar (items stay in the bag). */
+/** Dev kit: take every slot off the dressed hero (items stay in the bag). */
 export function devClearEquipped(doc: PlayStoreDoc): PlayStoreDoc {
-  return patchActiveAvatar(doc, { equipped: {} });
+  return patchDressedLoadout(doc, {});
 }
 
 /** Dev kit: fill junk Looks until total owned (bag + every Avatar's worn) is
@@ -5979,6 +6102,9 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       active_avatar_hero_id: activeAvatarHeroId,
       leader_folded: data.leader_folded === true,
       turf_helpers: parseTurfHelpers(data.turf_helpers),
+      hero_gear: parseHeroGear(data.hero_gear),
+      gear_moved: data.gear_moved === true,
+      locker_hero_id: typeof data.locker_hero_id === 'string' ? data.locker_hero_id : '',
       hero_offer: heroOffer,
       pet: den.pet,
       pet_hall: hall,
@@ -6080,7 +6206,8 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     // P1 (2026-10-18): a save that still keeps a hero twice folds into one
     // pet per hero (copies kept, nothing lost). Idempotent, so every load.
     // P4: then the old Avatar hero joins the pet book once (and leads).
-    return foldAvatarIntoPets(foldDuplicatePets(parsed, now).doc, now);
+    // P6: then the old per-Legend gear moves onto heroes once (the active Legend's loadout → the leader).
+    return foldGearIntoHeroes(foldAvatarIntoPets(foldDuplicatePets(parsed, now).doc, now));
   } catch {
     return null;
   }
@@ -6386,6 +6513,18 @@ function parseEquipped(raw: unknown): Partial<Record<ItemSlot, ItemRef>> {
     }
   }
   return equipped;
+}
+
+/** P6: loose read of `hero_gear` — known hero ids only, each loadout through `parseEquipped`, empty ones dropped. */
+function parseHeroGear(raw: unknown): Record<string, Partial<Record<ItemSlot, ItemRef>>> {
+  const out: Record<string, Partial<Record<ItemSlot, ItemRef>>> = {};
+  if (!isRecord(raw)) return out;
+  for (const [hero, value] of Object.entries(raw)) {
+    if (!heroById(hero)) continue;
+    const gear = parseEquipped(value);
+    if (wornItemCount(gear) > 0) out[hero] = gear;
+  }
+  return out;
 }
 
 /** Loose-shape read of the persisted run; anything malformed → no run. v21

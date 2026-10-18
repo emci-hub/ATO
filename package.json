@@ -126,6 +126,7 @@
     "check:pet-status-badge": "tsx ./scripts/check-pet-status-badge.ts",
     "check:pet-leader": "tsx ./scripts/check-pet-leader.ts",
     "check:turf-team": "tsx ./scripts/check-turf-team.ts",
+    "check:locker-per-hero": "tsx ./scripts/check-locker-per-hero.ts",
     "check:pet-knows-you": "tsx ./scripts/check-pet-knows-you.ts",
     "check:daily-visitors": "tsx ./scripts/check-daily-visitors.ts",
     "check:decor-slots": "tsx ./scripts/check-decor-slots.ts",

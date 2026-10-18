@@ -406,6 +406,7 @@ export function PetRoom({
   tide = false,
   name = null,
   copies = 0,
+  gearWorn = null,
   buffs = [],
   maxedAura = false,
   auraElement = null,
@@ -451,6 +452,8 @@ export function PetRoom({
   name?: string | null;
   /** The hero's copies: the star row on the name tag (pet-status-view.ts). */
   copies?: number;
+  /** P6: the hero's worn gear slots for the name tag's gear chip (null = none shown). */
+  gearWorn?: number | null;
   /** v26 — active medal buffs for the corner (icon + uses / "Maxed aura"). */
   buffs?: readonly { key: string; text: string; a11y: string }[];
   /** v26 — Pumped is a "Maxed aura": a gold glow behind the pet. */
@@ -1129,6 +1132,7 @@ export function PetRoom({
           grade={grade}
           shiny={pet.shiny}
           copies={copies}
+          gearWorn={gearWorn}
           reduceMotion={motion.cosmeticsStill}
         />
       ) : (

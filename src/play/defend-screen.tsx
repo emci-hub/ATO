@@ -1520,13 +1520,14 @@ export function DefendScreen({
   }, [onSaveAvatarPark]);
 
   // Equipped mult buckets, board-wide for towers + Avatar (gear matching the
-  // active Legend is already raised inside statSums). Avatar stars (§9h) fold
-  // into the same damage pass; the Legend's element rides every Avatar and
-  // hero attack.
+  // active Legend is already raised inside the sums). P6: the sums are the
+  // LEADER hero's gear (`leaderStatSums`), not whichever hero the Locker is
+  // dressing. Avatar stars (§9h) fold into the same damage pass; the Legend's
+  // element rides every Avatar and hero attack.
   const buckets = useMemo(
     () => ({
-      wavePower: bucketMultiplier('wave_power', view.statSums),
-      towerSpeed: bucketMultiplier('tower_speed', view.statSums),
+      wavePower: bucketMultiplier('wave_power', view.leaderStatSums),
+      towerSpeed: bucketMultiplier('tower_speed', view.leaderStatSums),
       avatarLevel: view.avatarLevel,
       legendElement: view.legendElement,
       avatarStars: view.avatarStars,
@@ -1537,7 +1538,7 @@ export function DefendScreen({
       leaderStars: view.turfTeam.leaderStars,
       leaderGrade: view.turfTeam.leaderGrade,
     }),
-    [view.statSums, view.avatarLevel, view.avatarStars, view.legendElement, view.petRebirthBonus, view.swords.equipped, view.turfTeam.leaderStars, view.turfTeam.leaderGrade],
+    [view.leaderStatSums, view.avatarLevel, view.avatarStars, view.legendElement, view.petRebirthBonus, view.swords.equipped, view.turfTeam.leaderStars, view.turfTeam.leaderGrade],
   );
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
@@ -1545,6 +1546,9 @@ export function DefendScreen({
   // P5b Turf team: the saved helper pick (the view drops a pet that can no longer help) and the
   // helper's display clocks — daze start, get-up start, walk-loop start (display only).
   const helperPicks = view.turfTeam.picks;
+  /** P6: the helper's own gear, as the same soft-capped wave_power bucket the leader's gear uses; it
+   * scales the helper's hits and skill only (×1 with no gear). */
+  const helperGearPower = bucketMultiplier('wave_power', view.helperStatSums);
   const helperPicksRef = useRef(helperPicks);
   helperPicksRef.current = helperPicks;
   const helperKoAtRef = useRef<Record<number, number>>({});
@@ -1558,9 +1562,9 @@ export function DefendScreen({
         const pet = view.turfTeam.candidates.find((c) => c.uid === pick.uid);
         if (!pet) return [];
         const spot = helperFollowSpot(map, avatarPosRef.current);
-        return [{ slot, heroId: pet.heroId, x: spot.x, y: spot.y, stars: pet.stars, grade: pet.grade }];
+        return [{ slot, heroId: pet.heroId, x: spot.x, y: spot.y, stars: pet.stars, grade: pet.grade, gearPower: helperGearPower }];
       }),
-    [view.turfTeam.candidates],
+    [view.turfTeam.candidates, helperGearPower],
   );
   /** Drop the helper's display clocks (a new fight / retry stands it up fresh). */
   const resetHelperClocks = useCallback(() => {
