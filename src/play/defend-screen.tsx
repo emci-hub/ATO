@@ -88,7 +88,7 @@ import { GameScreen, computeStageFrame, useStageFrame } from '@/play/stage-layou
 import { PlaySheet } from '@/play/play-sheet';
 import { NEON } from '@/play/neon-viper';
 import { alertHaptic } from '@/play/street-feel';
-import { STREET, STREET_FONT, StreetBackdrop, StreetFrame, streetUiOn } from '@/play/street-ui';
+import { STREET, STREET_FONT, streetUiOn } from '@/play/street-ui';
 import {
   BOARD_SKIN,
   BOARD_SKIN_LABEL,
@@ -193,6 +193,7 @@ import {
   AVATAR_STAR_MAX,
   DEFAULT_AVATAR_PARK,
   MAIN_WAVE_COUNT,
+  TRIAL_WAVE_COUNT,
   avatarLevelWavePower,
   avatarParkFor,
   avatarStarWavePower,
@@ -260,8 +261,10 @@ import { StatusIconRow, WeaknessDiamond } from '@/play/status-icon-row';
 import { statusIconsFor } from '@/play/status-icons';
 import { countOnce } from '@/play/play-counters';
 import { TurfBuildCard, type TurfChoice } from '@/play/turf-build-card';
-import { padTapRadiusUnits, turfBoardRect, turfBoardSide } from '@/play/turf-layout';
-import { TurfButton, TurfResultCard } from '@/play/turf-ui';
+import { padTapRadiusUnits, turfBoardRect, turfBoardSide, wavePeekRect } from '@/play/turf-layout';
+import { TurfButton, TurfCapsPill, TurfPauseButton, TurfResultCard, TurfWaveChip, TurfWavePeekCard, type TurfWavePeekRowView } from '@/play/turf-ui';
+import { nextWavePeek } from '@/play/turf-wave-peek';
+import { HELP_COLUMN } from '@/play/help/help-sheet';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
 const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
@@ -820,6 +823,8 @@ export function DefendScreen({
   const devUnlocked = usePlayDevUnlocked();
   const [phase, setPhase] = useState<DefendPhase>('setup');
   const [paused, setPaused] = useState(false);
+  /** T2b: the next-wave preview card under the wave chip. */
+  const [wavePeekOpen, setWavePeekOpen] = useState(false);
   /** Sim-clock multiplier (1x / 2x) — scales the whole wave clock together. */
   const [speed, setSpeed] = useState<GameSpeed>(1);
   /** A cleared-band wave picked for replay, or null → fight the campaign seat. */
@@ -2975,6 +2980,9 @@ export function DefendScreen({
   );
 
   const live = phase === 'running';
+  useEffect(() => {
+    if (!live) setWavePeekOpen(false);
+  }, [live]);
 
   // The board: square, fills the stage width, centred; same size and spot in setup and wave (turf-layout.ts).
   const boardSide = turfBoardSide(setupFrame.stage);
@@ -3260,6 +3268,47 @@ export function DefendScreen({
   // T6 boss bar: while a boss is alive the wave chip's box shows its name over a thin bar (same box, same size).
   const liveBoss = live && street ? bossBar(sim?.puffs ?? [], sim?.band?.boss.name) : null;
   const liveBossChip = liveBoss ? chipValue(hpChipRef.current.get(liveBoss.id), liveBoss.pct, Date.now()) : 0;
+  // T2b next-wave preview: creep counts from the wave director (no new data), shown only while the wave chip is.
+  // Replays do not advance the campaign seat, so the preview is for campaign runs only.
+  const wavePeek = live && street && !liveBoss && fight.mode !== 'replay' ? nextWavePeek(labelPhase, displayedWave, { trial: TRIAL_WAVE_COUNT, main: MAIN_WAVE_COUNT }) : null;
+  const wavePeekShown = wavePeekOpen && wavePeek != null && !paused;
+  // A boss bar or a pause hides the card; closing it too keeps it from popping back open on its own.
+  const wavePeekHidden = liveBoss != null || paused;
+  useEffect(() => {
+    if (wavePeekHidden) setWavePeekOpen(false);
+  }, [wavePeekHidden]);
+
+  const wavePeekCard = (() => {
+    if (!wavePeekShown || !wavePeek) return null;
+    const rect = wavePeekRect(setupFrame.stage);
+    const rows: TurfWavePeekRowView[] = wavePeek.rows.map((row) => ({
+      key: row.role,
+      count: row.count,
+      name: row.role,
+      color: CREEP_ROLE_COLOR[row.role],
+      shape: row.role === 'swarm' ? 'dot' : row.role === 'runner' ? 'slim' : row.role === 'boss' ? 'gem' : 'block',
+      boss: row.role === 'boss',
+    }));
+    return (
+      <>
+        {/* Outside tap: the strip the card sits in (NoticeLane + the empty stage margin above the board) closes it; the board stays live. */}
+        <Pressable
+          onPress={() => setWavePeekOpen(false)}
+          accessible={false}
+          style={{ position: 'absolute', left: 0, right: HELP_COLUMN, top: 0, height: setupFrame.notice.height + turfBoardRect(setupFrame.stage).y }}
+        />
+        <TurfWavePeekCard
+          title={`Next · ${wavePeek.phaseChanged ? `${campaignPhaseLabel(wavePeek.phase)} ` : ''}wave ${wavePeek.wave}`}
+          tag={wavePeek.element ? `Stage · ${TAG_LABEL[wavePeek.element as TypeTag]}` : undefined}
+          rows={rows}
+          width={rect.width}
+          top={rect.y}
+          left={rect.x}
+          onClose={() => setWavePeekOpen(false)}
+        />
+      </>
+    );
+  })();
 
   return (
     <View style={styles.turfRoot}>
@@ -3270,7 +3319,7 @@ export function DefendScreen({
         help={live ? 'turf-wave' : 'turf-setup'}
         topBar={
           live && street ? (
-            <StreetFrame piece="resbar" style={styles.streetHud}>
+            <View style={styles.streetHud}>
               {liveBoss ? (
                 <View
                   style={[styles.streetWave, styles.bossBarBox]}
@@ -3286,25 +3335,18 @@ export function DefendScreen({
                   </View>
                 </View>
               ) : (
-                <View style={styles.streetWave}>
-                  <StreetBackdrop piece="chip-on" />
-                  <Text style={styles.streetWaveText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
-                    {campaignPhaseLabel(labelPhase)} wave {displayedWave}
-                  </Text>
-                </View>
+                <TurfWaveChip
+                  label={`${campaignPhaseLabel(labelPhase)} wave ${displayedWave}`}
+                  open={wavePeekShown}
+                  disabled={wavePeek == null}
+                  width={WAVE_CHIP_BOX.width}
+                  height={WAVE_CHIP_BOX.height}
+                  onPress={() => setWavePeekOpen((value) => !value)}
+                />
               )}
-              <Text style={styles.streetHudCaps} numberOfLines={1} accessibilityLabel={`${scrap} run caps`}>
-                {scrap} caps
-              </Text>
-              <Pressable
-                onPress={() => setPaused((value) => !value)}
-                accessibilityRole="button"
-                accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
-                hitSlop={8}
-                style={({ pressed }) => [styles.streetPause, pressed && styles.pressed]}>
-                {paused ? <Text style={styles.streetResume}>▶</Text> : <StreetBackdrop piece="pause" />}
-              </Pressable>
-            </StreetFrame>
+              <TurfCapsPill scrap={scrap} />
+              <TurfPauseButton paused={paused} onPress={() => setPaused((value) => !value)} />
+            </View>
             
           ) : (
             shellTop
@@ -4052,7 +4094,10 @@ export function DefendScreen({
               </View>
             </View>
           ) : (
-            floatCards
+            <>
+              {floatCards}
+              {wavePeekCard}
+            </>
           )
         }
         modal={
@@ -5318,12 +5363,9 @@ const styles = StyleSheet.create({
   streetHud: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    minHeight: 48,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    marginHorizontal: 8,
-    marginTop: 4,
+    gap: 8,
+    height: 56,
+    paddingHorizontal: 8,
   },
   // T6: one fixed box for the wave chip AND the boss bar (WAVE_CHIP_BOX), so the top bar never re-lays out.
   streetWave: { width: WAVE_CHIP_BOX.width, height: WAVE_CHIP_BOX.height, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' },
@@ -5333,10 +5375,6 @@ const styles = StyleSheet.create({
   bossBarChip: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: '#FFD6FB' },
   bossBarFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: '#EF4444' },
   bossBarTick: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, backgroundColor: '#FFFFFF' },
-  streetWaveText: { fontFamily: STREET_FONT.bold, fontSize: 13, color: STREET.ink, textTransform: 'uppercase' },
-  streetHudCaps: { fontFamily: STREET_FONT.bold, fontSize: 15, color: STREET.mustard, marginLeft: 'auto' },
-  streetPause: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  streetResume: { fontFamily: STREET_FONT.bold, fontSize: 20, color: STREET.mustard },
   streetSkill: { minHeight: 52 },
   streetDockRow: { flexDirection: 'row', gap: 8, alignItems: 'stretch' },
   streetGrow: { flex: 1 },

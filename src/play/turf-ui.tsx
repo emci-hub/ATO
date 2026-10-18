@@ -7,12 +7,15 @@
  *   TurfCard        the card surface (sheetCard) every Turf float card uses
  *   TurfResultCard  won / lost: title, lines, ONE primary button low on the card, quiet secondary buttons
  *   TurfPips        tower level pips (HTML side — the board draws its own SVG pips)
+ *   TurfWaveChip / TurfCapsPill / TurfPauseButton   the top bar pieces (T2b), 44 pt targets on sheet-kit tokens
+ *   TurfWavePeekCard   the next-wave preview card (creep swatches + counts) that hangs under the wave chip
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { SHEET, sheetCard, sheetText } from '@/play/sheet-kit';
+import { SHEET, sheetCard, sheetCardOn, sheetText } from '@/play/sheet-kit';
+import { WAVE_PEEK } from '@/play/turf-layout';
 import { STREET, STREET_FONT } from '@/play/street-ui';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -152,7 +155,223 @@ export function TurfResultCard({
   );
 }
 
+/** The wave chip: a sheet chip (asphalt, 2 pt edge, 4 radius) with a chevron; the edge goes mustard while the preview is open. */
+export function TurfWaveChip({
+  label,
+  open,
+  width,
+  height,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  open: boolean;
+  /** No preview to show (a replay run): the chip is plain info. */
+  disabled?: boolean;
+  /** The chip's visual box (the boss bar uses the same one); the tap target is `SHEET.tap` high around it. */
+  width: number;
+  height: number;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole={disabled ? 'text' : 'button'}
+      accessibilityState={disabled ? undefined : { expanded: open }}
+      accessibilityLabel={disabled ? label : `${label}, ${open ? 'hide' : 'show'} next wave`}
+      style={({ pressed }) => [styles.chipTap, { width }, pressed && styles.pressed]}>
+      <View style={[styles.chip, { width, height }, open && styles.chipOpen]}>
+        <Text style={styles.chipText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85} maxFontSizeMultiplier={1.2}>
+          {label}
+        </Text>
+        <View style={[styles.chevron, open && styles.chevronOpen]} />
+      </View>
+    </Pressable>
+  );
+}
+
+/** Run caps counter: a coin dot and the number, in a fixed-height pill. */
+export function TurfCapsPill({ scrap }: { scrap: number }) {
+  return (
+    <View style={styles.caps} accessible accessibilityLabel={`${scrap} run caps`}>
+      <View style={styles.coin} />
+      <Text style={styles.capsText} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+        {scrap} caps
+      </Text>
+    </View>
+  );
+}
+
+/** Pause / resume: 44 pt square on the kit chip surface, hit slop 6 on every side → 56 pt target. */
+export function TurfPauseButton({ paused, onPress }: { paused: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
+      hitSlop={6}
+      style={({ pressed }) => [styles.pause, pressed && styles.pressed]}>
+      {paused ? (
+        <Text style={styles.resume}>▶</Text>
+      ) : (
+        <View style={styles.pauseBars}>
+          <View style={styles.pauseBar} />
+          <View style={styles.pauseBar} />
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+export type TurfWavePeekRowView = { key: string; count: number; name: string; color: string; shape: 'dot' | 'slim' | 'block' | 'gem'; boss?: boolean };
+
+/**
+ * Next-wave preview (FloatLayer card): title + stage tag, then one chip per creep role (swatch · count × · name).
+ * Tapping the card closes it. Copy comes in as strings (role names are the director's own words).
+ */
+export function TurfWavePeekCard({
+  title,
+  tag,
+  rows,
+  width,
+  top,
+  left,
+  onClose,
+}: {
+  title: string;
+  tag?: string;
+  rows: TurfWavePeekRowView[];
+  width: number;
+  top: number;
+  left: number;
+  onClose: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onClose}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}: ${rows.map((r) => `${r.count} ${r.name}`).join(', ')}. Tap to close.`}
+      style={[sheetCard, sheetCardOn, styles.peek, { position: 'absolute', top, left, width, height: WAVE_PEEK.height }]}>
+      <View style={styles.peekHead}>
+        <Text style={[styles.peekTitle]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+          {title}
+        </Text>
+        {tag ? (
+          <Text style={sheetText.caption} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+            {tag}
+          </Text>
+        ) : null}
+      </View>
+      <View style={styles.peekRow}>
+        {rows.map((row) => (
+          <View key={row.key} style={[styles.peekChip, row.boss && styles.peekChipBoss]}>
+            <View
+              style={[
+                styles.swatch,
+                { backgroundColor: row.color },
+                row.shape === 'dot' && styles.swatchDot,
+                row.shape === 'slim' && styles.swatchSlim,
+                row.shape === 'gem' && styles.swatchGem,
+              ]}
+            />
+            <Text style={styles.peekCount} maxFontSizeMultiplier={1.2}>
+              {row.count}×
+            </Text>
+            <Text style={[styles.peekName, row.boss && styles.peekNameBoss]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+              {row.name}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  chipTap: { height: SHEET.tap, justifyContent: 'center' },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: SHEET.gap,
+    backgroundColor: STREET.asphalt,
+    borderWidth: SHEET.border,
+    borderColor: SHEET.edge,
+    borderRadius: SHEET.radiusSmall,
+  },
+  chipOpen: { borderColor: STREET.mustard },
+  chipText: { flexShrink: 1, fontFamily: STREET_FONT.bold, fontSize: 13, color: STREET.paper, textTransform: 'uppercase' },
+  chevron: {
+    width: 8,
+    height: 8,
+    marginTop: -3,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: STREET.muted,
+    transform: [{ rotate: '45deg' }],
+  },
+  chevronOpen: { borderColor: STREET.mustard, marginTop: 3, transform: [{ rotate: '225deg' }] },
+  caps: {
+    marginLeft: 'auto',
+    height: SHEET.tap,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: SHEET.pad,
+    backgroundColor: STREET.asphalt,
+    borderWidth: SHEET.border,
+    borderColor: SHEET.edge,
+    borderRadius: SHEET.radiusSmall,
+  },
+  coin: { width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: SHEET.edge, backgroundColor: STREET.mustard },
+  capsText: { fontFamily: STREET_FONT.bold, fontSize: 15, color: STREET.mustard },
+  pause: {
+    width: SHEET.tap,
+    height: SHEET.tap,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: STREET.asphalt,
+    borderWidth: SHEET.border,
+    borderColor: SHEET.edge,
+    borderRadius: SHEET.radiusSmall,
+  },
+  pauseBars: { flexDirection: 'row', gap: 4 },
+  pauseBar: { width: 5, height: 16, backgroundColor: STREET.paper },
+  resume: { fontFamily: STREET_FONT.bold, fontSize: 20, color: STREET.mustard },
+  peek: { paddingHorizontal: SHEET.pad, paddingVertical: 6, justifyContent: 'space-between' },
+  peekHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: SHEET.gap },
+  peekTitle: {
+    flexShrink: 1,
+    fontFamily: STREET_FONT.bold,
+    fontSize: SHEET.type.caption,
+    lineHeight: SHEET.type.captionLh,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: STREET.paper,
+  },
+  peekRow: { flexDirection: 'row', gap: SHEET.gap, alignItems: 'center' },
+  peekChip: {
+    height: 24,
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    backgroundColor: STREET.asphalt,
+    borderWidth: SHEET.border,
+    borderColor: SHEET.edge,
+    borderRadius: SHEET.radiusSmall,
+  },
+  peekChipBoss: { borderColor: STREET.red },
+  swatch: { width: 12, height: 12, borderRadius: 2 },
+  swatchDot: { borderRadius: 6 },
+  swatchSlim: { width: 8, height: 12, borderRadius: 4 },
+  swatchGem: { width: 10, height: 10, borderRadius: 1, transform: [{ rotate: '45deg' }] },
+  peekCount: { fontFamily: STREET_FONT.bold, fontSize: SHEET.type.caption, color: STREET.mustard },
+  peekName: { flexShrink: 1, fontFamily: STREET_FONT.bold, fontSize: SHEET.type.caption, color: STREET.paper },
+  peekNameBoss: { color: '#FFD6FB' },
   button: {
     minHeight: SHEET.tap + 4,
     borderRadius: SHEET.radiusSmall,
