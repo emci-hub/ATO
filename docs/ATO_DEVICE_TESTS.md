@@ -370,3 +370,12 @@ Play → Turf War → Call wave (a campaign run, not a replay).
 - [ ] A replay (Setup → replay a cleared wave): tapping the wave chip does nothing.
 - [ ] Chip, caps and pause are easy to hit with a thumb (pause especially); SE: nothing is cut off, and a 3-kind wave (Main 9) still reads in the card.
 - [ ] Screenshot: the card open on a boss next wave.
+
+## Box 36 — Turf War notices wait behind the next-wave card (T9, 2026-10-18)
+
+Play → Turf War → Call wave (a campaign run, not a replay).
+
+- [ ] Tap the wave chip to open the next-wave card.
+- [ ] While it is open, trigger a notice (e.g. build or sell a tower, or let a wave line appear). Nothing shows under the card.
+- [ ] Close the card (tap it, or the strip beside it). The notice appears in the lane, and stays its full time.
+- [ ] Open the card during a boss entrance: the card closes and BOSS INCOMING shows right after.
