@@ -1268,6 +1268,7 @@ export function PetScreen({
                   name={shownName}
                   grade={pet.hero != null && pet.stage !== 'egg' && pet.stage !== 'baby' ? pet.grade : null}
                   shiny={pet.shiny}
+                  copies={pet.hero ? pv.heroes[pet.hero]?.copies ?? 0 : 0}
                   reduceMotion={playMotion.cosmeticsStill}
                 />
               </View>
@@ -1298,6 +1299,7 @@ export function PetScreen({
             stageLeftMs={pv.stageLeftMs}
             speech={speech}
             name={shownName}
+            copies={pet.hero ? pv.heroes[pet.hero]?.copies ?? 0 : 0}
             tapKey={tapKey}
             juiceKey={juiceKey}
             reduceMotion={reduceMotion}

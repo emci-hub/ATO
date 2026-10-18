@@ -21,7 +21,9 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { PET_METER_MAX } from '@/play/pet';
-import { GRADE_LABEL, WARMTH_MAX, type Grade } from '@/play/pet-eggs';
+import { WARMTH_MAX, type Grade } from '@/play/pet-eggs';
+import { petStatusView } from '@/play/pet-status-view';
+import { PetStatusBadge } from '@/play/pet-status-badge';
 import { LOFT_WINDOW_POS, LOFT_WINDOW_SIZE, ROOM_ART } from '@/play/hideout-art';
 import {
   HIDEOUT_LIGHTS,
@@ -459,6 +461,7 @@ export function StreetStatusStrip({
   name,
   grade,
   shiny,
+  copies = 0,
   reduceMotion,
 }: {
   egg: boolean;
@@ -470,9 +473,12 @@ export function StreetStatusStrip({
   name?: string | null;
   grade?: Grade | null;
   shiny?: boolean;
+  /** The hero's copies: the star row (see `pet-status-view.ts`). */
+  copies?: number;
   reduceMotion: boolean;
 }) {
   const low = (v: number) => (v <= 1 ? STREET.red : STREET.mustard);
+  const status = petStatusView({ grade: grade ?? null, copies, shiny: !!shiny });
   return (
     <View style={styles.strip}>
       {name ? (
@@ -504,12 +510,7 @@ export function StreetStatusStrip({
           </>
         )}
       </View>
-      {grade ? (
-        <Text style={styles.grade} numberOfLines={1} maxFontSizeMultiplier={1.2}>
-          {GRADE_LABEL[grade]}
-          {shiny ? ' ★' : ''}
-        </Text>
-      ) : null}
+      {status ? <PetStatusBadge status={status} variant="strip" wordFont={PIXEL_FONT.label} /> : null}
     </View>
   );
 }
@@ -583,16 +584,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     includeFontPadding: false,
     overflow: 'hidden',
-  },
-  grade: {
-    fontFamily: PIXEL_FONT.label,
-    fontSize: 10,
-    color: STREET.ink,
-    backgroundColor: STREET.paper,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    textTransform: 'uppercase',
-    includeFontPadding: false,
   },
   bubble: {
     position: 'absolute',

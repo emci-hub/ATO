@@ -20,6 +20,8 @@ import { NEON } from '@/play/neon-viper';
 import { PET_STAGE_LABEL, type PetState } from '@/play/pet';
 import { EGG_COLOR, EGG_LABEL, GRADE_COLOR, GRADE_LABEL, gradeTag, petShownName } from '@/play/pet-eggs';
 import { PetFigure } from '@/play/pet-figure';
+import { petStatusView } from '@/play/pet-status-view';
+import { PetStatusBadge } from '@/play/pet-status-badge';
 import { petRecolor } from '@/play/pet-looks';
 import { useArm } from '@/play/pet-menu';
 import { PET_NAME_MAX, checkPetName } from '@/play/play-settings';
@@ -64,10 +66,12 @@ function plainPet(pet: PetState): PetState {
   return { ...pet, finish_kind: 'none', finish_color: null, auras: [] };
 }
 
-function stageLine(pet: PetState): string {
+/** `withGrade` false: the status badge beside it already says the grade, stars and shiny. */
+function stageLine(pet: PetState, withGrade = true): string {
   if (isBlankSlot(pet)) return 'Choosing an egg';
   if (pet.stage === 'egg') return `${pet.egg ? EGG_LABEL[pet.egg] : ''} egg`.trim();
   if (!petRevealed(pet)) return `${PET_STAGE_LABEL[pet.stage]}${pet.egg ? ` · ${EGG_LABEL[pet.egg]}` : ''}`;
+  if (!withGrade) return `${PET_STAGE_LABEL[pet.stage]}${pet.glimmer && !pet.shiny ? ' · glimmer' : ''}`;
   return `${pet.grade ? gradeTag(pet.grade) : ''} · ${PET_STAGE_LABEL[pet.stage]}${pet.shiny ? ' · ✨' : ''}${pet.glimmer && !pet.shiny ? ' · glimmer' : ''}`;
 }
 
@@ -76,6 +80,7 @@ function PetTile({
   active,
   selected,
   dyeOn,
+  copies,
   fallbackColor,
   onPress,
 }: {
@@ -83,18 +88,21 @@ function PetTile({
   active: boolean;
   selected: boolean;
   dyeOn: boolean;
+  /** Copies of this pet's hero (the star row). */
+  copies: number;
   fallbackColor: string;
   onPress: () => void;
 }) {
   const revealed = petRevealed(pet);
   const blank = isBlankSlot(pet);
   const name = blank ? 'New egg' : petShownName(pet);
+  const status = revealed ? petStatusView({ grade: pet.grade, copies, shiny: pet.shiny }) : null;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={`${name}, ${stageLine(pet)}${active ? ', active' : ', resting'}${pet.fav ? ', favourite' : ''}`}
+      accessibilityLabel={`${name}, ${stageLine(pet)}${status ? `, ${status.label}` : ''}${active ? ', active' : ', resting'}${pet.fav ? ', favourite' : ''}`}
       style={({ pressed }) => [styles.tile, active && styles.tileActive, selected && styles.tileSelected, pressed && styles.pressed]}>
       <View style={styles.figure}>
         {blank ? (
@@ -113,6 +121,8 @@ function PetTile({
         {pet.fav ? '★ ' : ''}
         {name}
       </Text>
+      {/* The star row always reserves its line, so a tile never shifts when a pet is revealed. */}
+      {status ? <PetStatusBadge status={status} variant="mini" /> : <View style={styles.miniSpacer} />}
     </Pressable>
   );
 }
@@ -236,6 +246,9 @@ export function DenSheetBody({
     if (ok) setPicked(null);
   };
 
+  const copiesOf = (p: PetState) => (p.hero ? pv.heroes[p.hero]?.copies ?? 0 : 0);
+  const selectedStatus =
+    selected && petRevealed(selected) ? petStatusView({ grade: selected.grade, copies: copiesOf(selected), shiny: selected.shiny }) : null;
   const full = den.used >= den.slots;
   const pets: { pet: PetState; active: boolean }[] = [
     { pet: active, active: true },
@@ -248,6 +261,7 @@ export function DenSheetBody({
       active={isActive}
       selected={selected?.uid === pet.uid && selected.uid > 0}
       dyeOn={isActive ? pv.dyeOn : den.dyeOn[pet.uid] ?? false}
+      copies={copiesOf(pet)}
       fallbackColor={fallback}
       onPress={() => (pet.uid > 0 ? pick(pet.uid) : undefined)}
     />
@@ -276,9 +290,14 @@ export function DenSheetBody({
       <View style={styles.detail}>
         {selected ? (
           <>
-            <NeonLabel>{petShownName(selected)}</NeonLabel>
+            <View style={styles.labelRow}>
+              <View style={styles.labelText}>
+                <NeonLabel>{petShownName(selected)}</NeonLabel>
+              </View>
+              {selectedStatus ? <PetStatusBadge status={selectedStatus} variant="detail" wordFont={Fonts.monoBold} /> : null}
+            </View>
             <Text style={styles.body} numberOfLines={1}>
-              {stageLine(selected)}
+              {stageLine(selected, !selectedStatus)}
               {finishWornLabel(selected.finish_kind, selected.finish_color) ? ` · ${finishWornLabel(selected.finish_kind, selected.finish_color)}` : ''}
             </Text>
             <View style={styles.chips}>
@@ -401,6 +420,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  labelText: { flex: 1, minWidth: 0 },
+  miniSpacer: { height: 11 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   tile: {
     width: '23%',

@@ -405,6 +405,7 @@ export function PetRoom({
   onPickEgg,
   tide = false,
   name = null,
+  copies = 0,
   buffs = [],
   maxedAura = false,
   auraElement = null,
@@ -448,6 +449,8 @@ export function PetRoom({
   tide?: boolean;
   /** v24 — the name it goes by (status and speech bubbles). */
   name?: string | null;
+  /** The hero's copies: the star row on the name tag (pet-status-view.ts). */
+  copies?: number;
   /** v26 — active medal buffs for the corner (icon + uses / "Maxed aura"). */
   buffs?: readonly { key: string; text: string; a11y: string }[];
   /** v26 — Pumped is a "Maxed aura": a gold glow behind the pet. */
@@ -1125,6 +1128,7 @@ export function PetRoom({
           name={name}
           grade={grade}
           shiny={pet.shiny}
+          copies={copies}
           reduceMotion={motion.cosmeticsStill}
         />
       ) : (
