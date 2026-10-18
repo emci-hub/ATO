@@ -423,7 +423,7 @@ Play → Turf War, the default Alley map (other map themes have no sign; that is
 - [ ] It still flickers with the cyan light around it, in the same spot and at the same size.
 - [ ] The magenta heart sign at the bottom-left looks the same as before.
 
-## Box 42 — Next-wave card keeps whole role words with iOS Larger Text (T15, 2026-10-18)
+## Box 42 — Next-wave card keeps whole role words with iOS Larger Text (T15, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 First: iPhone Settings → Accessibility → Display & Text Size → Larger Text → turn on Larger Accessibility Sizes off, and drag the slider about 2–3 steps above the default (or use Control Center's Text Size). Then Play → Turf War, Main phase.
 
