@@ -52,6 +52,7 @@ import {
 } from '@/play/circle-visits-store';
 import { askPetReminderPermission, syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
+import { mergeLine } from '@/play/pet-merge';
 import { petPose, sharpPetBox } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt } from '@/play/pet-anim-sprite';
 import { PetCard, type PetCardInfo } from '@/play/pet-card';
@@ -124,6 +125,7 @@ import { justEvolved, petStatus } from '@/play/pet-status';
 import {
   PET_IDLE_TALK_MAX_MS,
   PET_IDLE_TALK_MIN_MS,
+  PET_TALK_HOLD_MS,
   pickEggLine,
   pickEggTalk,
   pickPetLine,
@@ -137,6 +139,7 @@ import { PlaySheet } from '@/play/play-sheet';
 import { SheetSection } from '@/play/sheet-kit';
 import {
   ackPetRevealsDoc,
+  clearMergeNote,
   warmEggDoc,
   finishPetRound,
   type PetRoundKind,
@@ -663,6 +666,23 @@ export function PetScreen({
     saidNoteRef.current = note;
     say('expedition_back');
   }, [pv.expeditionNote, say]);
+
+  // P1: an egg's duplicate joined the hero you keep. Said once, after the
+  // reveal's own line has had its time, then cleared.
+  // Refs, so a re-render never restarts the wait.
+  const mergeNote = pv.mergeNote;
+  const sayTextRef = useRef(sayText);
+  sayTextRef.current = sayText;
+  const commitRef = useRef(commit);
+  commitRef.current = commit;
+  useEffect(() => {
+    if (!mergeNote) return;
+    const t = setTimeout(() => {
+      sayTextRef.current(mergeLine(mergeNote, heroName(mergeNote.hero)));
+      commitRef.current((doc) => clearMergeNote(doc));
+    }, PET_TALK_HOLD_MS + 600);
+    return () => clearTimeout(t);
+  }, [mergeNote]);
 
   // Now and then while idle: its mood, the time of day, or chatter — as
   // often as the Chatter setting says (Off: never on its own).

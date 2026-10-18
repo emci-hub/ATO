@@ -217,6 +217,7 @@ import {
   wakePet,
   type DenSwapBlock,
 } from '@/play/den';
+import { parseMergeNote, planMerges, type PetMergeNote } from '@/play/pet-merge';
 import {
   MILESTONES,
   STREAK_DAYS,
@@ -956,6 +957,9 @@ export type PlayStoreDoc = {
   pet_expedition_note: string | null;
   /** The Play shell has already announced that return (once per return). */
   pet_expedition_toasted: boolean;
+  /** P1 (2026-10-18) — an egg's duplicate just joined the hero you keep;
+   * the pet says it once, then it is cleared. */
+  pet_merge_note: PetMergeNote | null;
   /** Every find the pet's dives / expeditions made (v21, kept through rebirth). */
   pet_logbook: PetLogbook;
   /** v22 — Dive-gear currency (TD waves, dives, free dives). */
@@ -1209,6 +1213,8 @@ export type PetView = {
   expeditionNote: string | null;
   /** That return still needs its one-time "Your pet is back" message. */
   expeditionNoteFresh: boolean;
+  /** P1 — "Kael ★★ → ★★★": a duplicate just joined up (until said). */
+  mergeNote: PetMergeNote | null;
   logbook: PetLogbook;
   /** v22 — food in the pantry, and its total (max PANTRY_MAX). */
   pantry: Partial<Record<FoodId, number>>;
@@ -1394,6 +1400,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     pet_expedition_steps: 0,
     pet_expedition_note: null,
     pet_expedition_toasted: true,
+    pet_merge_note: null,
     pet_logbook: {},
     shells: 0,
     dive_gear: { ...NO_DIVE_GEAR },
@@ -1835,6 +1842,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     tripsToday: stepsToday,
     expeditionNote: doc.pet_expedition_note,
     expeditionNoteFresh: doc.pet_expedition_note != null && !doc.pet_expedition_toasted,
+    mergeNote: doc.pet_merge_note,
     logbook: doc.pet_logbook,
     pantry: doc.pet_pantry,
     pantryTotal: pantryTotal(doc.pet_pantry),
@@ -2260,7 +2268,9 @@ export function warmEggDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null 
 export function ackPetRevealsDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
   const touched = touchPet(doc, now);
   if (touched.pet.reveals.length === 0) return touched === doc ? null : touched;
-  return { ...touched, pet: ackPetReveals(touched.pet) };
+  // P1: once the Child reveal has played, a hero you already keep joins up.
+  const folded = foldDuplicatePets({ ...touched, pet: ackPetReveals(touched.pet) }, now);
+  return folded.note ? { ...folded.doc, pet_merge_note: folded.note } : folded.doc;
 }
 
 /** A pet leaving (release / rebirth): into the Collection, and a shard of
@@ -2540,6 +2550,70 @@ export function releaseDenPet(doc: PlayStoreDoc, now: number, uid: number): Play
     pet_hall: left.hall,
     play_stats: { ...touched.play_stats, releases: touched.play_stats.releases + 1 },
   };
+}
+
+/** P1 (emci 2026-10-18): one pet per hero. Every revealed duplicate, active
+ * or resting, joins the hero you keep (rules in `pet-merge.ts`); its copy goes
+ * into the Collection, so stars are unchanged. A hero whose merge involves the
+ * active pet waits while its reveal is still to play, and a merge that would
+ * swap the active pet waits mid-dive or while it is away. `note` is set when
+ * the active pet's hero merged (for the one-time "joined up" line). */
+export function foldDuplicatePets(doc: PlayStoreDoc, now: number): { doc: PlayStoreDoc; note: PetMergeNote | null } {
+  const active = doc.pet;
+  const before = [active, ...doc.pet_den];
+  const plans = planMerges(before, active.uid);
+  if (plans.length === 0) return { doc, note: null };
+  let next = doc;
+  let noteHero: { hero: string; was: PetState; kept: PetState } | null = null;
+  for (const plan of plans) {
+    const activeIn = plan.kept.uid === active.uid || plan.dropped.some((p) => p.uid === active.uid);
+    // Any pet of the group with a reveal still to play waits for it.
+    if ([plan.kept, ...plan.dropped].some((p) => p.reveals.length > 0)) continue;
+    const swap = activeIn && plan.kept.uid !== active.uid;
+    if (swap && (next.dive_run != null || next.pet_expedition != null)) continue;
+    const gone = new Set(plan.dropped.map((p) => p.uid));
+    const keptWas = before.find((p) => p.uid === plan.kept.uid) ?? plan.kept;
+    let heroes = next.pet_heroes;
+    // A shiny the kept pet took over is counted through the kept pet only.
+    let shinyMoved = keptWas.shiny;
+    for (const p of plan.dropped) {
+      const entry = bookEntryOf(p);
+      if (!entry) continue;
+      const moves = !shinyMoved && entry.shiny;
+      if (moves) shinyMoved = true;
+      heroes = addToBook(heroes, moves ? { ...entry, shiny: false, style: null } : entry);
+    }
+    let pet = next.pet;
+    let den = next.pet_den.filter((p) => !gone.has(p.uid));
+    if (plan.kept.uid === active.uid) {
+      pet = plan.kept;
+    } else if (swap) {
+      den = den.filter((p) => p.uid !== plan.kept.uid);
+      pet = wakePet(plan.kept, now, next.eggs_since_legendary, tidePityStep(next.tide, localYmd(new Date(now))));
+    } else {
+      den = den.map((p) => (p.uid === plan.kept.uid ? plan.kept : p));
+    }
+    next = { ...next, pet, pet_den: den, pet_heroes: heroes };
+    if (activeIn && plan.kept.hero) noteHero = { hero: plan.kept.hero, was: keptWas, kept: plan.kept };
+  }
+  if (!noteHero) return { doc: next, note: null };
+  const copies = heroBookOf(next)[noteHero.hero]?.copies ?? 0;
+  const { was, kept } = noteHero;
+  return {
+    doc: next,
+    note: {
+      hero: noteHero.hero,
+      stars_from: heroStars(copies - 1),
+      stars_to: heroStars(copies),
+      grade_up: kept.grade != null && kept.grade !== was.grade ? kept.grade : null,
+      shiny_up: kept.shiny && !was.shiny,
+    },
+  };
+}
+
+/** The pet has said its "joined up" line. */
+export function clearMergeNote(doc: PlayStoreDoc): PlayStoreDoc | null {
+  return doc.pet_merge_note == null ? null : { ...doc, pet_merge_note: null };
 }
 
 export type DenSlotResult = { ok: true } | { ok: false; reason: 'max' | 'shells' };
@@ -3228,12 +3302,17 @@ export function devSetStreakDay(doc: PlayStoreDoc, now: number, day: number): Pl
 export function devFillDen(doc: PlayStoreDoc, now: number, rng: () => number = Math.random): PlayStoreDoc {
   const den = [...doc.pet_den];
   let uid = doc.pet_uid_next;
-  while (denUsed(den) < doc.den_slots) {
+  // P1: one pet per hero — only heroes not kept yet (a repeat would just fold).
+  const kept = new Set([doc.pet, ...den].filter(petRevealed).map((p) => p.hero));
+  for (let tries = 0; denUsed(den) < doc.den_slots && tries < 64; tries += 1) {
     const egg = EGG_TYPES[Math.min(EGG_TYPES.length - 1, Math.floor(rng() * EGG_TYPES.length))];
     const picked = chooseEgg(newPet(now), egg, newEggSeed(rng), null, now);
     if (!picked) break;
     const baby: PetState = { ...picked, stage: 'baby', stage_age_ms: PET_STAGE_MS.baby - 1, seen_at: now - 1, uid };
-    den.push(advancePet(baby, now));
+    const grown = advancePet(baby, now);
+    if (petRevealed(grown) && kept.has(grown.hero)) continue;
+    if (petRevealed(grown)) kept.add(grown.hero);
+    den.push(grown);
     uid += 1;
   }
   return { ...doc, pet_den: den, pet_uid_next: uid };
@@ -5706,7 +5785,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const shineStones =
       (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
       retroShineStones(typeof version === 'number' ? version : 28, milestones);
-    return {
+    const parsed: PlayStoreDoc = {
       version: 33,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
@@ -5758,6 +5837,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       pet_expedition_note: v21 && typeof data.pet_expedition_note === 'string' ? data.pet_expedition_note : null,
       // Missing = already announced (never re-toast an old note).
       pet_expedition_toasted: !(v21 && data.pet_expedition_toasted === false),
+      pet_merge_note: parseMergeNote(data.pet_merge_note, (h) => heroById(h) != null),
       pet_logbook: v21 ? parsePetLogbook(data.pet_logbook) : {},
       shells: v22 ? Math.max(0, Math.floor(finiteNumber(data.shells) ?? 0)) : 0,
       dive_gear: v22 ? parseDiveGear(data.dive_gear) : { ...NO_DIVE_GEAR },
@@ -5835,6 +5915,9 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
         now,
       }),
     };
+    // P1 (2026-10-18): a save that still keeps a hero twice folds into one
+    // pet per hero (copies kept, nothing lost). Idempotent, so every load.
+    return foldDuplicatePets(parsed, now).doc;
   } catch {
     return null;
   }

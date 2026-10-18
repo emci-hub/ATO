@@ -122,6 +122,7 @@
     "check:swords": "tsx ./scripts/check-swords.ts",
     "check:finishes": "tsx ./scripts/check-finishes.ts",
     "check:away-card": "tsx ./scripts/check-away-card.ts",
+    "check:pet-merge": "tsx ./scripts/check-pet-merge.ts",
     "check:pet-knows-you": "tsx ./scripts/check-pet-knows-you.ts",
     "check:daily-visitors": "tsx ./scripts/check-daily-visitors.ts",
     "check:decor-slots": "tsx ./scripts/check-decor-slots.ts",
