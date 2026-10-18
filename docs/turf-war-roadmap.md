@@ -193,7 +193,7 @@ and no new in-stage text nodes besides the pinned ones.
 - **Open / for later:** players on "Important only" notices don't see "BOSS INCOMING" (`notify` kind is hidden there; the old pill always showed); a Bound Boss placed mid-wave
   with a creep in range casts with no wind-up; a 1x → 2x switch mid wind-up shortens it; a boss drawn with a rotated single sprite gets no blast (fails safe). Not device-verified.
 
-#### Step T8 as built (2026-10-17, PR #71 squash `d8ab19e6`, OTA: recorded in the next docs commit; awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 34; emci answered the T7 phone check "passed", no changes)
+#### Step T8 as built (2026-10-17, PR #71 squash `d8ab19e6`, OTA iOS `01a14c79-ab4e-7a29-8157-17e0ec353c8a`, group `628316f3` (commit `80344b23`); awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 34; emci answered the T7 phone check "passed", no changes)
 - **Stop 0 (emci): option A**, a picker in the Setup sheet: a row of theme chips (≥ 44 pt) inside the Maps card on Main (hidden while Neon
   Maze is picked) and its own small card on Trial. Nothing new on screen outside the sheet. Saved device-local `ato.play.boardTheme.v1`
   (emci OK'd the new setting; same pattern as `fx-quality.ts`; no server / cloud save). A theme never changes rewards. A theme is NOT a new
