@@ -61,7 +61,10 @@ import {
   boundBossHeroId,
   heroCastSkill,
   heroTowerTarget,
+  helperTarget,
+  helperUnitId,
   isHeroBoundTower,
+  placeTurfTeam,
   placeBoundBoss,
   placeTower,
   removeBoundBoss,
@@ -77,7 +80,10 @@ import {
   type DefendLive,
   type Puff,
   type TowerKind,
+  type TurfHelperSpec,
 } from '@/play/defend';
+import { TurfTeamCard } from '@/play/turf-team-card';
+import { defaultHelperSpot, gradeRangeMult, snapHelperSpot, type TurfHelperPick } from '@/play/turf-team';
 import { waveDefFor } from '@/play/director';
 import { avatarDef } from '@/play/avatars';
 import { allHeroes, heroById, heroName } from '@/play/heroes-data';
@@ -120,6 +126,7 @@ import {
   skinWalkFaceIndex,
   skinWalkFrames,
   resolveBoundHeroTowerKit,
+  resolveTurfHelperKit,
   towerSkinRole,
   type ArtSkinId,
   type ClipDrawable,
@@ -177,6 +184,7 @@ import {
 import {
   castActorClipFrames,
   castActorCreate,
+  castActorFaintFrame,
   castActorFrame,
   castActorIdleSeed,
   castActorPathFrame,
@@ -732,6 +740,7 @@ export function DefendScreen({
   onDevOvergear,
   onDevForceSkipOffer,
   onSaveAvatarPark,
+  onSaveTurfHelpers,
   onSetAvatarHero,
   onBindHeroAsTower,
   onDismissHeroOffer,
@@ -783,6 +792,8 @@ export function DefendScreen({
   onDevForceSkipOffer: () => void;
   /** Avatar drag ended → persist the park for this Defend map (v15). */
   onSaveAvatarPark: (mapId: AvatarParkMapId, x: number, y: number) => void;
+  /** P5 — save the Turf helper picks (pet + spot) after a pick, remove or move. */
+  onSaveTurfHelpers: (picks: TurfHelperPick[]) => void;
   /** Slice A2 — set an owned Hero as the Avatar (auto-unbinds it if bound).
    * Null = it worked; otherwise the refusal the sheet shows. */
   onSetAvatarHero: (heroId: string) => Promise<HeroSetReason | null>;
@@ -1215,6 +1226,9 @@ export function DefendScreen({
    * combat/cooldowns never touch it. Seeded with a live timestamp so a fresh
    * mount breathes idle from frame 0. */
   const avatarAnimRef = useRef<CastActor>(castActorCreate('avatar'));
+  /** P5 — the Turf helpers the board draws now (the picks in setup, the sim's units in a wave); read by
+   * the clip tick below. Their clip players live in `towerAnimRef` under their negative ids. */
+  const helperDrawRef = useRef<{ id: number; slot: number; heroId: string; x: number; y: number; knockedOut: boolean }[]>([]);
   /** Bumped by the avatar anim tick purely to force the re-render that advances
    * the Avatar frame. The value is never read. */
   const [, setAvatarAnimTick] = useState(0);
@@ -1295,6 +1309,15 @@ export function DefendScreen({
       const now = Date.now();
       if (pausedRef.current) {
         const dt = now - lastTickAt;
+        // P5 helpers: one-shots and a running faint slide with real time too.
+        for (const h of helperDrawRef.current) {
+          const s = towerAnimRef.current[h.id];
+          if (s) {
+            s.clipStartAt += dt;
+            if (s.onceEndAt > 0) s.onceEndAt += dt;
+          }
+          if (helperKoAtRef.current[h.id] != null) helperKoAtRef.current[h.id] += dt;
+        }
         for (const tower of current?.towers ?? []) {
           const s = towerAnimRef.current[tower.id];
           if (s) {
@@ -1313,8 +1336,34 @@ export function DefendScreen({
         return; // no bump → the frame renders frozen, matching the sim
       }
       lastTickAt = now;
-      if (!current || (current.towers.length === 0 && current.boundBosses.length === 0)) return;
+      const helpers = helperDrawRef.current;
+      if (!current || (current.towers.length === 0 && current.boundBosses.length === 0 && helpers.length === 0)) return;
       let changed = false;
+      for (const h of helpers) {
+        const role = turfHelperRole(h.heroId);
+        if (h.knockedOut) {
+          // The faint plays from its knock-out time and holds its last frame.
+          const koAt = helperKoAtRef.current[h.id];
+          const key = `faint:${koAt != null ? castActorFaintFrame(now, koAt, role) : -1}`;
+          if (lastFrameKey.get(h.id) !== key) {
+            lastFrameKey.set(h.id, key);
+            changed = true;
+          }
+          continue;
+        }
+        const state: CastActor = towerAnimRef.current[h.id] ?? castActorCreate('tower', castActorIdleSeed(-h.id, 'tower'));
+        if (state.onceEndAt > 0 && now >= state.onceEndAt) {
+          state.clip = 'idle';
+          state.clipStartAt = now;
+          state.onceEndAt = 0;
+        }
+        towerAnimRef.current[h.id] = state;
+        const key = `${state.clip}:${castActorFrame(state, now, role)}`;
+        if (lastFrameKey.get(h.id) !== key) {
+          lastFrameKey.set(h.id, key);
+          changed = true;
+        }
+      }
       for (const tower of current.towers) {
         const role = towerKitRole(tower.kind);
         const hasClips =
@@ -1472,11 +1521,36 @@ export function DefendScreen({
       sword: view.swords.equipped
         ? swordRuntime(view.swords.equipped.element, view.swords.equipped.tier)
         : null,
+      leaderStars: view.turfTeam.leaderStars,
+      leaderGrade: view.turfTeam.leaderGrade,
     }),
-    [view.statSums, view.avatarLevel, view.avatarStars, view.legendElement, view.petRebirthBonus, view.swords.equipped],
+    [view.statSums, view.avatarLevel, view.avatarStars, view.legendElement, view.petRebirthBonus, view.swords.equipped, view.turfTeam.leaderStars, view.turfTeam.leaderGrade],
   );
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
+
+  // P5 Turf team: the saved helper picks (the view drops any pet that can no longer help), the slot
+  // waiting for a board tap to move, and each knocked-out helper's faint start (display only).
+  const helperPicks = view.turfTeam.picks;
+  const helperPicksRef = useRef(helperPicks);
+  helperPicksRef.current = helperPicks;
+  const onSaveTurfHelpersRef = useRef(onSaveTurfHelpers);
+  onSaveTurfHelpersRef.current = onSaveTurfHelpers;
+  const [movingHelperSlot, setMovingHelperSlot] = useState<number | null>(null);
+  const movingHelperSlotRef = useRef(movingHelperSlot);
+  movingHelperSlotRef.current = movingHelperSlot;
+  const helperKoAtRef = useRef<Record<number, number>>({});
+  /** The team going into a fight: picks → specs, each spot snapped on THIS board's road and pads. */
+  const helperSpecsFor = useCallback(
+    (map: DefendMap): TurfHelperSpec[] =>
+      helperPicksRef.current.flatMap((pick, slot) => {
+        const pet = view.turfTeam.candidates.find((c) => c.uid === pick.uid);
+        if (!pet) return [];
+        const spot = snapHelperSpot(map, pick.x, pick.y);
+        return [{ slot, heroId: pet.heroId, x: spot.x, y: spot.y, stars: pet.stars, grade: pet.grade }];
+      }),
+    [view.turfTeam.candidates],
+  );
 
   // Gear Score (§9j / §18 lock): soft-capped wave_power bucket × Avatar level
   // × Avatar stars. Type match is combat only and never enters GS.
@@ -1685,12 +1759,18 @@ export function DefendScreen({
     claimKeyRef.current = `defend:${fightRef.current.phase}:${fightRef.current.wave}:${Date.now()}`;
     const starting = simRef.current;
     if (starting) takeBankScrap(layoutKey(starting.mapId, starting.boardId));
-    setSim((prev) => prev ?? createDefendLive(fightRef.current.wave, {
-      mapId: fightRef.current.phase,
-      boardId: fightRef.current.phase === 'main' ? boardId : 'ato',
-      cyclePower: view.cyclePower,
-      tint: view.cycleTint,
-    }));
+    // P5: the team goes on the board fresh for every fight (a knocked-out helper is back).
+    helperKoAtRef.current = {};
+    setMovingHelperSlot(null);
+    setSim((prev) => {
+      const base = prev ?? createDefendLive(fightRef.current.wave, {
+        mapId: fightRef.current.phase,
+        boardId: fightRef.current.phase === 'main' ? boardId : 'ato',
+        cyclePower: view.cyclePower,
+        tint: view.cycleTint,
+      });
+      return placeTurfTeam(base, helperSpecsFor(BOARD_MAPS[base.boardId] ?? BOARD_MAPS.ato), view.turfTeam.leaderGrade);
+    });
     setPhase('running');
     setPaused(false);
     setSelectedPad(null);
@@ -1717,7 +1797,7 @@ export function DefendScreen({
         combatFxRef.current?.portal(at.x, at.y, portalMode, false);
       }
     }
-  }, [view.cyclePower, view.cycleTint, boardId]);
+  }, [view.cyclePower, view.cycleTint, view.turfTeam.leaderGrade, boardId, helperSpecsFor]);
 
   /** Abandon a live run back to setup — no win rewards. The tower layout is
    * kept (same feel as Retry after a fail), so Start wave is instantly
@@ -2220,6 +2300,25 @@ export function DefendScreen({
           startTowerOnce('skill', bb.id, kitRole);
         }
       }
+      // P5 Turf helpers: same presenter as a hero tower (face the target, attack / skill one-shots on
+      // the tick the engine fired), plus the knock-out: the faint clip starts the tick a boss got close.
+      for (const h of current.helpers) {
+        const after = step.state.helpers.find((u) => u.id === h.id);
+        if (after?.knockedOut && !h.knockedOut) {
+          helperKoAtRef.current[h.id] = Date.now();
+          notify({ kind: 'notify', title: `${heroName(h.heroId)} is down`, body: 'Back next wave', dedupeKey: `turf-ko-${h.id}` });
+          continue;
+        }
+        if (h.knockedOut || !after) continue;
+        const kitRole = turfHelperRole(h.heroId);
+        const target = helperTarget(h, current.puffs, mapNow);
+        if (!target) continue;
+        const tpos = creepDrawPosition(target, mapNow, creepLaneHalfFor(target));
+        const dx = tpos.x * 100 - h.x;
+        towerFaceRef.current[h.id] = skinWalkFace(dx / Math.max(1, Math.abs(dx)), towerFaceRef.current[h.id] ?? 'e');
+        if (after.cooldownMs > h.cooldownMs + 1) startTowerOnce('attack', h.id, kitRole);
+        if (after.skillCooldownMs > h.skillCooldownMs + 1) startTowerOnce('skill', h.id, kitRole);
+      }
       // EFFECTS_PLAN step 5 — draw every kit hit the engine reported, from the
       // same lane-clamped positions the creeps are drawn at (a creep killed
       // this tick is only in the pre-step list). Effects Quality Off draws no
@@ -2631,15 +2730,20 @@ export function DefendScreen({
       (event) => ({ ...event, tMs: 0 }),
     );
     const current = simRef.current;
-    const preview: DefendLive = {
-      ...base,
-      towers: current?.towers ?? [],
-      boundBosses: current?.boundBosses ?? [],
-      scrap: current?.scrap ?? base.scrap,
-      schedule: bossEvents,
-      elapsedMs: 0,
-      puffs: [],
-    };
+    helperKoAtRef.current = {};
+    const preview: DefendLive = placeTurfTeam(
+      {
+        ...base,
+        towers: current?.towers ?? [],
+        boundBosses: current?.boundBosses ?? [],
+        scrap: current?.scrap ?? base.scrap,
+        schedule: bossEvents,
+        elapsedMs: 0,
+        puffs: [],
+      },
+      helperSpecsFor(BOARD_MAPS.ato),
+      view.turfTeam.leaderGrade,
+    );
     simRef.current = preview;
     setSim(preview);
     ensureParked('main');
@@ -2717,7 +2821,27 @@ export function DefendScreen({
     : view.pet.pumped.maxed
       ? ' · ✨ Maxed aura'
       : ` · 💪 Pumped ×${view.pet.buffs.pumped}`;
-  const pounceReady = pounceAvailable && sim != null && !sim.petPounceUsed;
+  // P5: a rare on the team adds a spare pounce for the fight.
+  const pounceReady = pounceAvailable && sim != null && (!sim.petPounceUsed || sim.petPounceSpare > 0);
+
+  /** P5 — put a pet in a helper slot (it stands beside the leader until moved) or empty the slot. */
+  const pickHelper = (slot: number, uid: number | null) => {
+    const picks = [...helperPicksRef.current];
+    if (uid == null) {
+      picks.splice(slot, 1);
+      setMovingHelperSlot(null);
+    } else {
+      const spot = picks[slot] ?? defaultHelperSpot(boardMap, avatarPosRef.current, slot);
+      const at = Math.min(slot, picks.length);
+      picks[at] = { uid, x: spot.x, y: spot.y };
+    }
+    onSaveTurfHelpers(picks);
+  };
+  /** P5 — the next setup board tap places this slot's helper (snapped off the road and pads). */
+  const startMoveHelper = (slot: number) => {
+    setMovingHelperSlot(slot);
+    setSetupOpen(false);
+  };
 
   const skillReady = (sim?.skillCooldownMs ?? 0) <= 0;
   const skillSeconds = Math.ceil((sim?.skillCooldownMs ?? 0) / 1000);
@@ -2789,6 +2913,28 @@ export function DefendScreen({
       const size = boardSizeRef.current || 100;
       const bx = (locationX / size) * 100;
       const by = (locationY / size) * 100;
+      // P5 Turf helpers (setup only): a tap on a helper picks it up; the next tap sets it down,
+      // snapped off the road and the pads (lanes). Helpers win over pads and the leader's walk.
+      if (phaseRef.current === 'setup') {
+        const moving = movingHelperSlotRef.current;
+        const picks = helperPicksRef.current;
+        if (moving != null && picks[moving]) {
+          const spot = snapHelperSpot(boardMap, bx, by);
+          onSaveTurfHelpersRef.current(picks.map((p, i) => (i === moving ? { ...p, x: spot.x, y: spot.y } : p)));
+          setMovingHelperSlot(null);
+          return;
+        }
+        // The sprite stands above its feet point: hit-test the body.
+        const grabbed = picks.findIndex((p) => {
+          const s = snapHelperSpot(boardMap, p.x, p.y);
+          return Math.hypot(s.x - bx, s.y - HELPER_BODY_LIFT - by) <= HELPER_TAP_RADIUS;
+        });
+        if (grabbed >= 0) {
+          setSelectedPad(null);
+          setMovingHelperSlot(grabbed);
+          return;
+        }
+      }
       let hit: number | null = null;
       let bestDist = Infinity;
       const padRadius = padTapRadiusUnits(size);
@@ -2901,6 +3047,18 @@ export function DefendScreen({
   // from the shared CastActor (`castActorFrame` — same math the anim tick
   // uses); the face is the sticky side profile. Fails back to the static
   // rotation when a clip frame (or the whole clip) isn't authored.
+  // P5: who the board draws as helpers right now — the saved picks in setup, the sim's units in a wave.
+  const helperDraw =
+    phase === 'setup'
+      ? helperPicks.flatMap((pick, slot) => {
+          const pet = view.turfTeam.candidates.find((c) => c.uid === pick.uid);
+          // Snapped on THIS board, exactly where Call wave will put it (the saved spot is shared by boards).
+          const spot = snapHelperSpot(boardMap, pick.x, pick.y);
+          return pet ? [{ id: helperUnitId(slot), slot, heroId: pet.heroId, x: spot.x, y: spot.y, knockedOut: false }] : [];
+        })
+      : (sim?.helpers ?? []).map((h) => ({ id: h.id, slot: h.slot, heroId: h.heroId, x: h.x, y: h.y, knockedOut: h.knockedOut }));
+  helperDrawRef.current = helperDraw;
+
   const avatarAnim = avatarAnimRef.current;
   const avatarFrame = castActorFrame(avatarAnim, Date.now(), avatarRole);
   const avatarFace = avatarFaceRef.current;
@@ -3002,6 +3160,7 @@ export function DefendScreen({
     });
     winPaidRef.current = false;
     leakNotedRef.current = false;
+    helperKoAtRef.current = {}; // the retry stands the team back up (retryDefendLive)
     claimKeyRef.current = `defend:${playedRef.current.phase}:${playedRef.current.wave}:retry:${Date.now()}`;
     setPhase('running');
     setPaused(false);
@@ -3512,7 +3671,7 @@ export function DefendScreen({
                       <Circle
                         cx={avatarAim.x}
                         cy={avatarAim.y}
-                        r={AVATAR_RANGE}
+                        r={AVATAR_RANGE * gradeRangeMult(view.turfTeam.leaderGrade)}
                         fill={theme.accent}
                         fillOpacity={0.08}
                         stroke={theme.accent}
@@ -3665,6 +3824,47 @@ export function DefendScreen({
                         textAnchor="middle">
                         {isHeroBoundTower(bb.bossId) ? heroName(bb.bossId) : '★' + bb.stars}
                       </SvgText>
+                    );
+                  })}
+                  {/* P5 Turf helpers: drawn like a hero tower (idle / attack / skill, sticky E/W) at their
+                   * own spot off the road; knocked out → the faint clip, held lying down and dimmed.
+                   * The slot being moved gets a dashed ring at its feet. */}
+                  {helperDraw.map((h) => {
+                    const role = turfHelperRole(h.heroId);
+                    const face = towerFaceRef.current[h.id] ?? 'e';
+                    const now = Date.now();
+                    let drawable: ClipDrawable | undefined;
+                    if (h.knockedOut) {
+                      const koAt = helperKoAtRef.current[h.id] ?? now - 10_000;
+                      drawable = directionalClipDrawable(
+                        role.anims?.faint,
+                        roleAnimFaceIndex(role, 'faint', face),
+                        castActorFaintFrame(now, koAt, role),
+                      );
+                    } else {
+                      const anim: CastActor =
+                        towerAnimRef.current[h.id] ?? castActorCreate('tower', castActorIdleSeed(-h.id, 'tower'));
+                      drawable = castActorFrameDrawable(anim, face, castActorFrame(anim, now, role), role);
+                    }
+                    drawable = drawable ?? roleArtDrawable(role, roleFaceArtIndex(role, face));
+                    if (!drawable) return null;
+                    const size = Math.min(role.units ?? HELPER_DRAW_UNITS, HELPER_DRAW_UNITS) * TOWER_DRAW_SCALE;
+                    const footAt = roleFootAt(role);
+                    return (
+                      <G key={`helper-${h.id}`} opacity={h.knockedOut ? 0.55 : 1}>
+                        {movingHelperSlot === h.slot && phase === 'setup' ? (
+                          <Circle
+                            cx={h.x}
+                            cy={h.y}
+                            r={HELPER_TAP_RADIUS}
+                            fill="none"
+                            stroke={theme.accent}
+                            strokeWidth={0.7}
+                            strokeDasharray="1.5 1.5"
+                          />
+                        ) : null}
+                        <ClipSprite drawable={drawable} x={h.x - size / 2} y={h.y - size * footAt} size={size} />
+                      </G>
                     );
                   })}
                   {/* K2 death one-shots (display only) — the creeps killed this
@@ -4114,6 +4314,20 @@ export function DefendScreen({
                           {cycleNote ? ` · ${cycleNote}` : ''}
                           {fight.mode === 'replay' ? ' · replay (half tokens)' : ''}
                         </ThemedText>
+              {phase === 'setup' ? (
+                <TurfTeamCard
+                  leaderHeroId={view.activeAvatarHeroId}
+                  leaderFromPet={view.leaderFromPet}
+                  leaderGrade={view.turfTeam.leaderGrade}
+                  leaderCopies={view.pet.heroes[view.activeAvatarHeroId]?.copies ?? 0}
+                  leaderShiny={view.leaderFromPet && view.pet.state.shiny}
+                  candidates={view.turfTeam.candidates}
+                  picks={helperPicks}
+                  movingSlot={movingHelperSlot}
+                  onPick={pickHelper}
+                  onMove={startMoveHelper}
+                />
+              ) : null}
               <PlayFrame style={styles.card}>
                 <View style={styles.statRow}>
                   <ThemedText type="smallBold">
@@ -5144,6 +5358,24 @@ const AVATAR_ANIM_TICK_MS = 50;
  * legacy per-frame PNG (see `directionalClipDrawable`). `walk` reads the
  * role's locomotion clip; the rest read `anims`. Undefined when the clip
  * isn't authored at all — callers fall back to the static rotation art. */
+/** P5 — a helper's body sits this far above its feet point (board units), and a tap this close grabs it. */
+const HELPER_BODY_LIFT = 4;
+const HELPER_TAP_RADIUS = 6;
+/** P5 — helpers draw a touch smaller than a hero tower so the leader stays the biggest hero. */
+const HELPER_DRAW_UNITS = 14;
+
+/** P5 — one draw role per Turf helper hero, built once per art skin (the board reads it every frame). */
+const TURF_HELPER_ROLES = new Map<string, SkinRole>();
+function turfHelperRole(heroId: string): SkinRole {
+  const key = `${artSkin()}:${heroId}`;
+  let role = TURF_HELPER_ROLES.get(key);
+  if (!role) {
+    role = resolveTurfHelperKit(heroId);
+    TURF_HELPER_ROLES.set(key, role);
+  }
+  return role;
+}
+
 function castActorFrameDrawable(
   actor: CastActor,
   face: SkinWalkFace,

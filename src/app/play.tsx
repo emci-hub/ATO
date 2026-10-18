@@ -85,6 +85,7 @@ import {
   devEquipSword,
   markExpeditionToasted,
   noteDefendLeak,
+  setTurfHelpers,
   setPlaySettings,
   unlockAvatar,
   type ClaimResult,
@@ -854,6 +855,12 @@ export default function PlayScreen() {
       onDevOvergear={handleDevOvergear}
       onDevForceSkipOffer={handleDevForceSkipOffer}
       onSaveAvatarPark={handleSaveAvatarPark}
+      onSaveTurfHelpers={(picks) =>
+        commit((doc) => {
+          const next = setTurfHelpers(doc, picks);
+          return next === doc ? null : next;
+        })
+      }
       onSetAvatarHero={setAvatarHero}
       onBindHeroAsTower={bindHeroAsTower}
       onDismissHeroOffer={() => void dismissHeroOffer()}

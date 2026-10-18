@@ -35,7 +35,8 @@ export type CastActorClip =
   | 'attack'
   | 'skill'
   | 'hurt'
-  | 'death';
+  | 'death'
+  | 'faint';
 
 /** The slots each mode may play. `avatar` is the full hero kit; `path` drops the
  * dash/attack/skill/hurt one-shots; `tower` drops walk/dash/hurt/death. */
@@ -54,7 +55,7 @@ export const CAST_ACTOR_FRAME_MS: Record<
 > = {
   avatar: { idle: 120, walk: 100, dash: 50, attack: 65, skill: 70, hurt: 140 },
   path: { idle: 200, death: 70 },
-  tower: { idle: 120, attack: 65, skill: 70 },
+  tower: { idle: 120, attack: 65, skill: 70, faint: 110 },
 };
 
 /** Clip priority per mode. A request only preempts a LOCKED one-shot
@@ -182,6 +183,17 @@ export function castActorFrame(actor: CastActor, now: number, role: SkinRole): n
     frames,
     actor.onceEndAt > 0,
   );
+}
+
+/**
+ * P5 — a Turf helper's knock-out: the `faint` clip from `koAt`, holding its last frame (lying down)
+ * for the rest of the wave. Not in any mode's clip mask: the board starts it from the sim's knock-out
+ * event, never through the priority ladder. 0 when the role has no faint art.
+ */
+export function castActorFaintFrame(now: number, koAt: number, role: SkinRole): number {
+  const frames = castActorClipFrames('faint', role);
+  if (frames <= 1) return 0;
+  return frameIndex(now, koAt, castActorFrameMs('tower', 'faint'), 0, frames, true);
 }
 
 /**

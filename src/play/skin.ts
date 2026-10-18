@@ -75,8 +75,9 @@ export type SkinClips = { idle?: number; walk?: number; attack?: number };
 
 /** Named multi-dir clips beyond the legacy `walk` field (the Avatar's cast set:
  * idle loop, attack/skill/hurt one-shots, dash — plus `death`, the path
- * walkers' K2 one-shot, which the Avatar never plays). */
-export type SkinAnimClipName = 'idle' | 'attack' | 'skill' | 'hurt' | 'dash' | 'death';
+ * walkers' K2 one-shot, which the Avatar never plays — and `faint`, the Turf
+ * helper's knock-out (pet team P5, Streetwear heroes only)). */
+export type SkinAnimClipName = 'idle' | 'attack' | 'skill' | 'hurt' | 'dash' | 'death' | 'faint';
 
 /**
  * A multi-frame directional walk clip (creep legs while moving). Towers and
@@ -821,7 +822,7 @@ function streetwearHeroRole(heroId: string): SkinRole | undefined {
   const char = `heroes/${heroId}`;
   const meta = STREETWEAR_META.chars[char];
   // The hero skeleton (generated from the packed sheets): one sheet key per slot.
-  const sheets = (HERO as Record<string, Partial<Record<HeroClip | 'rotations', string>>>)[heroId];
+  const sheets = (HERO as Record<string, Partial<Record<HeroClip | 'rotations' | 'faint', string>>>)[heroId];
   if (!meta || !sheets?.rotations || !PLAY_SHEETS[sheets.rotations]) return undefined;
   const ref = (rawStreetwear as unknown as SkinFile).roles['unit.avatar'];
   const refRatio = STREETWEAR_META.chars['heroes/corvus']?.bodyRatio ?? meta.bodyRatio;
@@ -832,6 +833,11 @@ function streetwearHeroRole(heroId: string): SkinRole | undefined {
     if (slot === 'walk' || !key) continue;
     const clip = streetwearClip(char, key.slice(key.lastIndexOf('/') + 1));
     if (clip) anims[slot] = clip;
+  }
+  // P5: the knock-out clip (HERO.<slug>.faint, P3 art) — only the Turf helper plays it.
+  if (sheets.faint) {
+    const faint = streetwearClip(char, sheets.faint.slice(sheets.faint.lastIndexOf('/') + 1));
+    if (faint) anims.faint = faint;
   }
   return {
     keys: CAST_ROTATION_DIRS.map((dir) => `${base}/rotations/${dir}`),
@@ -929,6 +935,14 @@ export function resolveBoundHeroTowerKit(heroId: string): SkinRole {
   }
   // A tower never walks — drop the hero's locomotion clip.
   return { ...role, walk: undefined, anims };
+}
+
+/** P5 — a Turf helper draws like a hero tower (idle / attack / skill, never walks) plus its `faint`
+ * knock-out clip when the art has one (Streetwear heroes, P3). */
+export function resolveTurfHelperKit(heroId: string): SkinRole {
+  const kit = resolveBoundHeroTowerKit(heroId);
+  const faint = heroAvatarRole(heroId).anims?.faint;
+  return faint ? { ...kit, anims: { ...kit.anims, faint } } : kit;
 }
 
 /** Feet anchor for a role object (same clamp as `skinFootAt`). */

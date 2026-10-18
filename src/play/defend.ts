@@ -84,6 +84,19 @@ import { DEFAULT_SKILL_ID, skillById } from '@/play/skills-data';
 import { devNoCaps, getTune } from '@/play/tune';
 import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
 import { defaultTowerSkin, towerSkillCooldownMs } from '@/play/tower-skins-data';
+import type { Grade } from '@/play/pet-eggs';
+import {
+  BOSS_KO_RADIUS,
+  HELPER_BASE_ATTACK,
+  HELPER_RANGE,
+  HELPER_SKILL_COOLDOWN_MS,
+  LEGENDARY_SPLASH_PCT,
+  LEGENDARY_SPLASH_RADIUS,
+  gradeRangeMult,
+  gradeSplashes,
+  starPowerMult,
+  teamPounceSpare,
+} from '@/play/turf-team';
 
 export type { BoardId, BoardMap } from '@/play/board-data';
 
@@ -475,9 +488,36 @@ export type DefendLive = {
   skillCooldownMs: number;
   /** The pet's pounce is spent for this wave (once per wave, v20). */
   petPounceUsed: boolean;
+  /** Extra pounces left this fight (P5: a rare on the team gives one). */
+  petPounceSpare: number;
+  /** The spare this fight started with (a Retry gives it back). */
+  petPounceSpareMax: number;
   /** Divine sword pulse already fired this wave. */
   swordSuperUsed: boolean;
+  /** Turf team helpers (P5) — up to 2 pets standing off the road. */
+  helpers: TurfHelperUnit[];
 };
+
+/** A helper pet on the board (pet team P5). Stands still where it was dropped (always off the road
+ * and pads, `turf-team.ts`), auto-attacks with its hero kit, and is knocked out for the rest of the
+ * wave when a boss passes within `BOSS_KO_RADIUS`. Ids are negative so they never meet a tower's. */
+export type TurfHelperUnit = {
+  id: number;
+  slot: number;
+  heroId: string;
+  x: number;
+  y: number;
+  stars: number;
+  grade: Grade;
+  cooldownMs: number;
+  skillCooldownMs: number;
+  knockedOut: boolean;
+};
+
+/** A helper's id from its slot (0 → -10, 1 → -11). */
+export function helperUnitId(slot: number): number {
+  return -10 - slot;
+}
 
 export type DefendStep = {
   state: DefendLive;
@@ -485,6 +525,8 @@ export type DefendStep = {
   leak: boolean;
   /** Wave finished cleanly (all spawned dead, none leaked) → win. */
   done: boolean;
+  /** Helper ids a boss knocked out this tick (the screen plays their faint clip). */
+  knockedOut: number[];
   /** A boss spawned this tick (the screen banners the alert). */
   bossSpawned: boolean;
   /** Every kit attack this tick (towers + hero towers), for effects and the
@@ -542,7 +584,10 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
     avatarCooldownMs: 0,
     skillCooldownMs: 0,
     petPounceUsed: false,
+    petPounceSpare: 0,
+    petPounceSpareMax: 0,
     swordSuperUsed: false,
+    helpers: [],
   };
 }
 
@@ -582,7 +627,43 @@ export function retryDefendLive(state: DefendLive): DefendLive {
       // Same as placement: a cycle boss winds up again, a hero tower casts at once.
       skillCooldownMs: heroById(bb.bossId) ? 0 : BOUND_BOSS_PLACE_SKILL_CD_MS,
     })),
+    // A retry is a fresh wave: the team stands back up and the rare pounce is back.
+    helpers: state.helpers.map((h) => ({ ...h, cooldownMs: 0, skillCooldownMs: HELPER_SKILL_COOLDOWN_MS, knockedOut: false })),
+    petPounceSpare: state.petPounceSpareMax,
+    petPounceSpareMax: state.petPounceSpareMax,
   };
+}
+
+/** One helper the screen puts on the board at Call wave. */
+export type TurfHelperSpec = { slot: number; heroId: string; x: number; y: number; stars: number; grade: Grade };
+
+/**
+ * Put the Turf team on a board (P5): the helpers (fresh, standing) and the rare pounce spare from the
+ * whole team's grades (`leaderGrade` + the helpers'). An unknown hero is dropped, never thrown on.
+ */
+export function placeTurfTeam(
+  state: DefendLive,
+  helpers: readonly TurfHelperSpec[],
+  leaderGrade: Grade | null,
+): DefendLive {
+  const units: TurfHelperUnit[] = helpers
+    .filter((h) => heroById(h.heroId) != null)
+    .slice(0, 2)
+    .map((h) => ({
+      id: helperUnitId(h.slot),
+      slot: h.slot,
+      heroId: h.heroId,
+      x: h.x,
+      y: h.y,
+      stars: h.stars,
+      grade: h.grade,
+      cooldownMs: 0,
+      // The ultimate waits its first 16 s (no opening burst from the whole team at once).
+      skillCooldownMs: HELPER_SKILL_COOLDOWN_MS,
+      knockedOut: false,
+    }));
+  const spare = teamPounceSpare([leaderGrade, ...units.map((u) => u.grade)]);
+  return { ...state, helpers: units, petPounceSpare: spare, petPounceSpareMax: spare };
 }
 
 /* ---------------------------------------------------------------- combat --- */
@@ -600,6 +681,10 @@ type DefendBuckets = {
   rebirthBonus?: number;
   /** Equipped element sword. Absent = the Avatar attacks as before. */
   sword?: SwordRuntime | null;
+  /** P5: the leader hero's stars (+6% each above 1 on the leader's own hit). Absent = ×1. */
+  leaderStars?: number;
+  /** P5: the leader pet's grade (epic = +10% reach). Absent = no perk. */
+  leaderGrade?: Grade | null;
 };
 
 /** Place a tower on an empty pad, deducting scrap. Null when blocked. */
@@ -1002,13 +1087,14 @@ export function stepDefendLive(
   let avatarCooldownMs = state.avatarCooldownMs - dtMs;
   let swordSuperUsed = state.swordSuperUsed;
   if (avatarCooldownMs <= 0) {
-    const target = acquireAvatarTarget(avatar, puffs, map);
+    const target = acquireAvatarTarget(avatar, puffs, map, AVATAR_RANGE * gradeRangeMult(buckets.leaderGrade));
     if (target) {
       const tuned = floorCooldown(getTune().avatarCooldownMs * (sword?.cooldownMult ?? 1));
       const damage =
         AVATAR_BASE_ATTACK *
         boardMult *
         avatarLevelWavePower(buckets.avatarLevel) *
+        starPowerMult(buckets.leaderStars ?? 1) *
         tuned.damageMult *
         (sword?.strikeMult ?? 1) *
         (sword && target.kind === 'boss' ? sword.bossMult : 1);
@@ -1200,6 +1286,98 @@ export function stepDefendLive(
     firedBoundBosses.push({ ...bb, cooldownMs, skillCooldownMs });
   }
 
+  // Turf team helpers (pet team P5): a boss walking past knocks a standing helper out for the rest of
+  // the wave; otherwise the helper fires its hero kit like a hero tower, from its own spot, at
+  // `HELPER_BASE_ATTACK` × star power, and (when its art has a skill clip) its ultimate every 16 s.
+  // Epic reaches 10% further; a legendary helper's hit splashes 30% onto foes close to its target.
+  const knockedOut: number[] = [];
+  const firedHelpers: TurfHelperUnit[] = [];
+  for (const helper of state.helpers) {
+    const hero = heroById(helper.heroId);
+    if (helper.knockedOut || !hero) {
+      firedHelpers.push(helper);
+      continue;
+    }
+    const bossNear = puffs.some((p) => {
+      if (p.kind !== 'boss') return false;
+      const pos = posOf(p);
+      return Math.hypot(pos.x - helper.x, pos.y - helper.y) <= BOSS_KO_RADIUS;
+    });
+    if (bossNear) {
+      knockedOut.push(helper.id);
+      firedHelpers.push({ ...helper, knockedOut: true, cooldownMs: 0, skillCooldownMs: 0 });
+      continue;
+    }
+    const from = { x: helper.x, y: helper.y };
+    const level = Math.max(1, Math.min(3, helper.stars));
+    const range = HELPER_RANGE * gradeRangeMult(helper.grade);
+    const heroKit: Kit = { behavior: hero.kit.behavior, element: buckets.legendElement ?? hero.kit.element };
+    const power = boardMult * heroAffinityMult(hero.kit.element, buckets.legendElement) * starPowerMult(helper.stars);
+    const splash = (primaryId: number, dealt: number) => {
+      if (!gradeSplashes(helper.grade)) return;
+      const primary = puffs.find((p) => p.id === primaryId);
+      if (!primary) return;
+      const at = posOf(primary);
+      const share = dealt * LEGENDARY_SPLASH_PCT;
+      puffs = puffs.map((p) => {
+        if (p.id === primaryId) return p;
+        const pos = posOf(p);
+        return Math.hypot(pos.x - at.x, pos.y - at.y) <= LEGENDARY_SPLASH_RADIUS ? { ...p, hp: p.hp - share } : p;
+      });
+    };
+    let cooldownMs = helper.cooldownMs - dtMs;
+    let skillCooldownMs = Math.max(0, helper.skillCooldownMs - dtMs);
+    if (cooldownMs <= 0) {
+      const floored = floorCooldown(KIT_TUNING.heroCooldownMs[hero.kit.behavior]);
+      const damage = HELPER_BASE_ATTACK * power * floored.damageMult;
+      const fired = fireKit(
+        puffs,
+        { kit: heroKit, level, damage, heroShare: true, burst: HERO_BURST_TARGETING, source: 'hero', sourceId: helper.id, from, ...legendMods },
+        range,
+        { posOf },
+      );
+      if (fired.hit) {
+        puffs = fired.creeps;
+        splash(fired.hit.primaryId, fired.hit.damage[0] ?? damage);
+        hits.push(fired.hit);
+        removeDead();
+        cooldownMs = floored.cooldownMs;
+      } else {
+        cooldownMs = 0;
+      }
+    }
+    if (hero.clips.skill == null) {
+      skillCooldownMs = 0;
+    } else if (skillCooldownMs <= 0) {
+      const fired = fireKit(
+        puffs,
+        {
+          kit: heroKit,
+          level: 3,
+          damage: HELPER_BASE_ATTACK * power,
+          heroShare: true,
+          burst: HERO_BURST_TARGETING,
+          source: 'hero',
+          sourceId: helper.id,
+          from,
+          ultimate: { radius: TOWER_SKILL_RADIUS },
+          ...legendMods,
+        },
+        range,
+        { posOf },
+      );
+      if (fired.hit) {
+        puffs = fired.creeps;
+        hits.push(fired.hit);
+        removeDead();
+        skillCooldownMs = HELPER_SKILL_COOLDOWN_MS;
+      } else {
+        skillCooldownMs = 0;
+      }
+    }
+    firedHelpers.push({ ...helper, cooldownMs, skillCooldownMs });
+  }
+
   // Boss enrage (§18 C): a boss that first drops below its HP threshold fires
   // once and spawns a burst of extra runners (`burst` primitive's threat spike
   // in v0 — enemies can't damage towers/hero, so leak-only fail makes a
@@ -1253,10 +1431,14 @@ export function stepDefendLive(
       avatarCooldownMs,
       skillCooldownMs,
       petPounceUsed: state.petPounceUsed,
+      petPounceSpare: state.petPounceSpare,
+      petPounceSpareMax: state.petPounceSpareMax,
       swordSuperUsed,
+      helpers: firedHelpers,
     },
     leak,
     done: schedule.length === 0 && puffs.length === 0,
+    knockedOut,
     bossSpawned,
     hits,
     dotHits,
@@ -1309,7 +1491,9 @@ export function castPetPounce(
   base: number,
   element: Element | null,
 ): { state: DefendLive; hit: KitHit } | null {
-  if (state.petPounceUsed || !(base > 0)) return null;
+  // P5: after the wave's pounce, a rare on the team gives one spare this fight.
+  const useSpare = state.petPounceUsed;
+  if ((useSpare && state.petPounceSpare <= 0) || !(base > 0)) return null;
   const map = BOARD_MAPS[state.boardId] ?? BOARD_MAPS.ato;
   const damage = base * waveHpMult(state.wave) * state.cyclePower;
   const ids: number[] = [];
@@ -1330,7 +1514,13 @@ export function castPetPounce(
     puffs = puffs.filter((puff) => puff.hp > 0);
   }
   return {
-    state: { ...state, puffs, scrap, petPounceUsed: true },
+    state: {
+      ...state,
+      puffs,
+      scrap,
+      petPounceUsed: true,
+      petPounceSpare: useSpare ? state.petPounceSpare - 1 : state.petPounceSpare,
+    },
     hit: {
       source: 'avatar',
       sourceId: -2,
@@ -1356,13 +1546,14 @@ function acquireAvatarTarget(
   avatar: { x: number; y: number },
   puffs: Puff[],
   map: DefendMap,
+  range: number = AVATAR_RANGE,
 ): Puff | null {
   let best: Puff | null = null;
   let bestDist = Infinity;
   for (const puff of puffs) {
     const pos = puffPosition(puff.dist, map);
     const d = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
-    if (d <= AVATAR_RANGE && d < bestDist) {
+    if (d <= range && d < bestDist) {
       best = puff;
       bestDist = d;
     }
@@ -1454,6 +1645,18 @@ export function heroTowerTarget(bb: BoundBossTower, puffs: Puff[], map: DefendMa
   const range = kitRange(hero.kit, level);
   const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist, map) <= range);
   return kitTarget(hero.kit, level, HERO_BURST_TARGETING, inRange, map);
+}
+
+/** The foe a standing helper (P5) would hit now — the screen turns the helper toward it. */
+export function helperTarget(helper: TurfHelperUnit, puffs: Puff[], map: DefendMap): Puff | null {
+  const hero = heroById(helper.heroId);
+  if (!hero || helper.knockedOut) return null;
+  const range = HELPER_RANGE * gradeRangeMult(helper.grade);
+  const inRange = puffs.filter((puff) => {
+    const pos = puffPosition(puff.dist, map);
+    return Math.hypot(pos.x * 100 - helper.x, pos.y * 100 - helper.y) <= range;
+  });
+  return kitTarget(hero.kit, Math.max(1, Math.min(3, helper.stars)), HERO_BURST_TARGETING, inRange, map);
 }
 
 /**

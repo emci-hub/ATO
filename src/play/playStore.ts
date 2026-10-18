@@ -219,6 +219,14 @@ import {
   wakePet,
   type DenSwapBlock,
 } from '@/play/den';
+import {
+  livePicks,
+  parseTurfHelpers,
+  turfCandidates,
+  TURF_HELPER_SLOTS,
+  type TurfCandidate,
+  type TurfHelperPick,
+} from '@/play/turf-team';
 import { parseMergeNote, planMerges, type PetMergeNote } from '@/play/pet-merge';
 import {
   MILESTONES,
@@ -939,6 +947,10 @@ export type PlayStoreDoc = {
    * baby. A save without this flag runs the one-time fold (`foldAvatarIntoPets`).
    * An additive v33 field, so a phone on an older bundle still opens the save. */
   leader_folded: boolean;
+  /** P5 (pet team, 2026-10-18): the two Turf War helpers picked at setup — Den id + where each
+   * stands (board units). Read through `parseTurfHelpers` (tolerant); a pick whose pet can no longer
+   * help is ignored by the view. An additive v33 field, like `leader_folded`. */
+  turf_helpers: TurfHelperPick[];
   /** One-shot "you own a hero" offer awaiting the player's decision (v18,
    * Slice A2). Set when a hero is first owned; the hero sheet shows it once and
    * every action (Avatar / bind / dismiss) clears it, so it can never re-fire
@@ -1163,6 +1175,13 @@ export type PlayView = {
   activeAvatarHeroId: string;
   /** P4: that hero is the ACTIVE PET's (the Avatar is not picked any more). */
   leaderFromPet: boolean;
+  /** P5 Turf team: pets that may help, the saved picks still valid, and the leader's stars/grade. */
+  turfTeam: {
+    candidates: readonly TurfCandidate[];
+    picks: readonly TurfHelperPick[];
+    leaderStars: number;
+    leaderGrade: Grade | null;
+  };
   /** Hero ids currently bound as towers (Slice A2) — the hero subset of
    * `boundBosses`, which is what the cap and the exclusivity rule read. */
   boundHeroIds: readonly string[];
@@ -1399,6 +1418,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     owned_hero_ids: [DEFAULT_AVATAR_HERO_ID],
     active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID,
     leader_folded: true,
+    turf_helpers: [],
     hero_offer: null,
     pet: newPet(now),
     pet_hall: [],
@@ -1541,6 +1561,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     ownedHeroIds: ownedHeroIdsOf(doc),
     activeAvatarHeroId: normalizedAvatarHeroId(doc),
     leaderFromPet: leaderFromPetOf(doc),
+    turfTeam: turfTeamOf(doc),
     boundHeroIds: boundHeroIdsOf(doc),
     heroOffer: doc.hero_offer,
     pet: petViewOf(doc, now),
@@ -4058,6 +4079,33 @@ export function leaderFromPetOf(doc: PlayStoreDoc): boolean {
   return petRevealed(doc.pet) && doc.pet.hero != null && normalizedAvatarHeroId(doc) === doc.pet.hero;
 }
 
+/** P5 Turf team for the view: who may help (Child+, not the leader's hero, not a bound tower hero), the
+ * saved picks still valid, and the leader's stars + grade (a pet leader only; the egg/baby fallback
+ * leader fights at ×1 with no grade perk). */
+export function turfTeamOf(doc: PlayStoreDoc): PlayView['turfTeam'] {
+  const book = heroBookOf(doc);
+  const leaderHeroId = normalizedAvatarHeroId(doc);
+  const candidates = turfCandidates([doc.pet, ...doc.pet_den], {
+    leaderHeroId,
+    boundHeroIds: boundHeroIdsOf(doc),
+    copiesOf: (hero) => book[hero]?.copies ?? 0,
+  });
+  const fromPet = leaderFromPetOf(doc);
+  return {
+    candidates,
+    picks: livePicks(doc.turf_helpers, candidates),
+    leaderStars: fromPet ? heroStars(book[leaderHeroId]?.copies ?? 0) : 1,
+    leaderGrade: fromPet ? doc.pet.grade : null,
+  };
+}
+
+/** Save the Turf helper picks (P5). Tolerant: up to 2, distinct, spots clamped. Unchanged → same doc. */
+export function setTurfHelpers(doc: PlayStoreDoc, picks: readonly TurfHelperPick[]): PlayStoreDoc {
+  const next = parseTurfHelpers(picks.slice(0, TURF_HELPER_SLOTS));
+  if (JSON.stringify(next) === JSON.stringify(doc.turf_helpers)) return doc;
+  return { ...doc, turf_helpers: next };
+}
+
 /** The active Avatar hero, falling back to the starter when the stored id is
  * unknown/corrupt (mirrors `avatarRecordOf`'s tolerant read). */
 export function storedAvatarHeroId(doc: PlayStoreDoc): string {
@@ -5930,6 +5978,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       owned_hero_ids: ownedHeroIds,
       active_avatar_hero_id: activeAvatarHeroId,
       leader_folded: data.leader_folded === true,
+      turf_helpers: parseTurfHelpers(data.turf_helpers),
       hero_offer: heroOffer,
       pet: den.pet,
       pet_hall: hall,

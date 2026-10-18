@@ -65,6 +65,20 @@ const ok = (msg: string) => {
 }
 
 {
+  // P5 (pet team, 2026-10-18): the Turf team picker lives INSIDE the Setup sheet body (a scrolling
+  // PlaySheet) — never in the dock, the HUD or over the board — so picking helpers resizes no region.
+  const defend = read('src/play/defend-screen.tsx');
+  const sheet = defend.indexOf('<PlaySheet open={setupOpen && !live} title="Setup"');
+  const sheetEnd = defend.indexOf('</PlaySheet>', sheet);
+  const picker = defend.indexOf('<TurfTeamCard');
+  assert.ok(sheet > 0 && picker > sheet && picker < sheetEnd, 'the team picker sits inside the Setup sheet body');
+  assert.equal(defend.split('<TurfTeamCard').length - 1, 1, 'one picker, nowhere else');
+  const card = read('src/play/turf-team-card.tsx');
+  assert.ok(!/\bheight: \d/.test(card), 'the picker sets no fixed height (it grows the sheet scroll)');
+  ok('Turf team picker: inside the Setup sheet body only, no fixed heights');
+}
+
+{
   const room = read('src/play/street-room.tsx');
   assert.match(room, /flexWrap: 'nowrap',\s*height: 36,/, 'Hideout status strip is one fixed row');
   const games = read('src/play/pet-games.tsx');
