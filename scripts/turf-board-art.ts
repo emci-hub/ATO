@@ -57,6 +57,8 @@ const PIGEON_MAX = 4;
 const PIGEON_APART = 120;
 /** A neon sign's tubes on the board when the glow layer is dark (its lit copy lives on the glow layer). */
 const SIGN_UNLIT = 0.45;
+/** A sign the edge vignette darkens bakes its unlit tubes brighter (T14, emci picked B 2026-10-18: the bolt). */
+export const SIGN_UNLIT_EDGE = 0.8;
 /** A sign sits within this many pool radii of its pool's centre (the alley's magenta corner is road + pad + barrel). */
 const SIGN_REACH = 1.75;
 /** Variant mix: share of plain base tiles; variants further than this luma gap from the base are skipped. */
@@ -107,7 +109,7 @@ export type TurfThemeSpec = {
   pigeons: boolean;
   /** Wall neon signs (art loose ends, emci 2026-10-18): a file in the alley's raw/ambient/, lit by pool `pool`. Placed
    * on the free sidewalk spot nearest that pool; unlit on the board, lit on the glow layer, so it flickers with the pool. */
-  signs?: readonly { file: string; pool: number }[];
+  signs?: readonly { file: string; pool: number; unlit?: number }[];
 };
 
 /** Every theme. `alley` = T3 option D + T4 (the default; unchanged). T8 (emci picked 2026-10-17): rooftop = sample C,
@@ -137,8 +139,9 @@ export const TURF_THEMES: Record<TurfThemeId, TurfThemeSpec> = {
     vent: 'vent-grate',
     pigeons: true,
     // emci picked sign size A (24 px): bolt by the cyan pool, heart by the magenta pool.
+    // T14 (emci picked B, 2026-10-18): the bolt sits in the top-edge vignette, so its unlit tubes bake brighter.
     signs: [
-      { file: 'sign-bolt', pool: 1 },
+      { file: 'sign-bolt', pool: 1, unlit: SIGN_UNLIT_EDGE },
       { file: 'sign-heart', pool: 0 },
     ],
   },
@@ -573,7 +576,7 @@ export function paintTurfBoard(map: BoardMap, themeOrId: TurfThemeId | TurfTheme
     if (!best) throw new Error(`theme ${theme.id}: no free spot for ${s.file} near pool ${s.pool}`);
     const unlit = new PNG({ width: img.width, height: img.height });
     img.data.copy(unlit.data);
-    for (let i = 0; i < unlit.data.length; i += 4) for (let c = 0; c < 3; c += 1) unlit.data[i + c] = Math.round(unlit.data[i + c]! * SIGN_UNLIT);
+    for (let i = 0; i < unlit.data.length; i += 4) for (let c = 0; c < 3; c += 1) unlit.data[i + c] = Math.round(unlit.data[i + c]! * (s.unlit ?? SIGN_UNLIT));
     board.draw(unlit, best.x, best.y);
     glow.draw(img, best.x, best.y);
     signBoxes.push([best.x, best.y, img.width, img.height]);
