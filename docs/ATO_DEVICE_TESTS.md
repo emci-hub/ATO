@@ -398,7 +398,7 @@ Play → Turf War, the default Alley map (other map themes have no sign; that is
 - [ ] Tap the wave chip: each kind in the next-wave card shows that creep's face (swarm = Village Girl, runner = Wizard, tank = Knight, boss = its boss) with a coloured line under it, then the count and the name.
 - [ ] SE / small phone: a wave with three or four kinds still reads (names may shorten with "…"); nothing spills out of the card.
 
-## Box 39 — Boss wind-up after Retry, steady pigeon flap (T12, 2026-10-18)
+## Box 39 — Boss wind-up after Retry, steady pigeon flap (T12, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 Play → Turf War, the default Alley map, a run with a Bound Boss (the cycle boss, not a hero) bound.
 
@@ -406,3 +406,11 @@ Play → Turf War, the default Alley map, a run with a Bound Boss (the cycle bos
 - [ ] A hero tower on the board still casts its skill right away after Retry (unchanged).
 - [ ] Let creeps walk past a pigeon: its wings flap at one even pace the whole way as it flies off (no slowing at the end), then it comes back.
 - [ ] With Reduce Motion on: the pigeon still only fades (no wings, no arc).
+
+## Box 40 — Next-wave card keeps whole role words on a small phone (T13, 2026-10-18)
+
+Play → Turf War on the smallest phone you have (SE / 375 pt wide if possible), Main phase.
+
+- [ ] Play until Main wave 8, then tap the wave chip. The card shows three chips: "6× swarm", "3× runner", "2× tank", every word whole (no "…"), nothing spilling out of the card.
+- [ ] The card is the same size as before and still closes on a tap; the help (?) button at the right is still free.
+- [ ] Any other wave's card (one or two kinds) also shows whole words.
