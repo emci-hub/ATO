@@ -819,19 +819,32 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(kit, /peek: \{ paddingHorizontal: SHEET\.pad,/, 'the card pads its row with SHEET.pad');
   assert.match(src, /name: row\.role,/, 'the chip word is the role id (the measured words)');
   const [chipGap, chipPad] = [Number(chipGapPad![1]), Number(chipGapPad![2])];
+  // T15 (emci 2026-10-18): iOS Larger Text. The chip words scale by their maxFontSizeMultiplier (icon + padding do not); at
+  // ×1.2 the fullest card needs ~308 pt against 287, so the chip texts are capped at ×1 and the pin reads that cap from source.
+  const chipFontMax = Number(/const PEEK_CHIP_FONT_MAX = ([\d.]+);/.exec(kit)?.[1]);
+  assert.ok(chipFontMax >= 1, 'PEEK_CHIP_FONT_MAX read from source');
+  assert.match(peekCard, /<Text style=\{styles\.peekCount\} maxFontSizeMultiplier=\{PEEK_CHIP_FONT_MAX\}>/, 'the chip count uses the cap');
+  assert.match(peekCard, /<Text style=\{\[styles\.peekName[^\]]*\]\} numberOfLines=\{1\} maxFontSizeMultiplier=\{PEEK_CHIP_FONT_MAX\}>/, 'the chip role word uses the cap');
+  assert.ok(!/styles\.peek(Count|Name)[^>]*maxFontSizeMultiplier=\{?1\.[1-9]/.test(peekCard), 'no chip text keeps the page-wide 1.2');
+  const LARGER_TEXT = 1.2; // iOS Larger Text cap used by the rest of the Play UI
+  let uncappedOverflow = false;
   for (const d of DEVICES) {
     const f = computeStageFrame('turf-wave', d.window, d.insets);
     const inner = wavePeekRect({ width: f.stage.width, height: f.stage.height }).width - 2 * sheetBorder - 2 * sheetPad;
     for (const phase of ['trial', 'main'] as const) {
       for (let w = 1; w <= counts[phase]; w += 1) {
         const rows = nextWavePeek(phase, w, counts)!.rows;
-        const need = rows.reduce((n, r) => n + 2 * sheetBorder + 2 * chipPad + peekIcon + 2 * chipGap + textPt(`${r.count}×`) + textPt(r.role), 0) + rowGap * (rows.length - 1);
+        const needAt = (scale: number) =>
+          rows.reduce((n, r) => n + 2 * sheetBorder + 2 * chipPad + peekIcon + 2 * chipGap + scale * (textPt(`${r.count}×`) + textPt(r.role)), 0) + rowGap * (rows.length - 1);
+        const need = needAt(Math.min(chipFontMax, LARGER_TEXT));
+        if (needAt(LARGER_TEXT) + 4 > inner) uncappedOverflow = true;
         // 4 pt spare for iOS text rendering. A 4th role (none today) does not fit; it needs a compact chip first.
         assert.ok(need + 4 <= inner, `${d.name}: card after ${phase} ${w} needs ${need.toFixed(1)} pt + 4 spare for ${rows.map((r) => r.role).join(' + ')}, row has ${inner} pt (role words would be cut)`);
       }
     }
   }
-  ok('T2b top bar: 56 pt, REGIONS unchanged, kit pieces ≥ 44; next-wave preview inside lane + board margin on both phones, director data, boss bar still in the chip box, creep icons');
+  assert.ok(uncappedOverflow, 'sanity: at ×1.2 uncapped, some real card overflows a phone (why the cap exists)');
+  ok('T2b top bar: 56 pt, REGIONS unchanged, kit pieces ≥ 44; next-wave preview inside lane + board margin on both phones, director data, boss bar still in the chip box, creep icons, chip text capped at ×1 for Larger Text');
 }
 
 console.log(`\ncheck:turf-war-layout — ${passed} groups passed.`);

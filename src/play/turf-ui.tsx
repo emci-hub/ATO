@@ -243,6 +243,8 @@ export type TurfWavePeekRowView = {
 /** Card icon edge (pt) and the share of the figure's height that is head + shoulders. */
 const PEEK_ICON = 18;
 const PEEK_BUST_SHARE = 0.5;
+/** T15: the chips are fixed 24 pt boxes sized for the 12 pt role words, so their text ignores Larger Text (the card's accessibilityLabel still reads it all). */
+const PEEK_CHIP_FONT_MAX = 1;
 
 /** Head-and-shoulders of a creep's board sprite (the top half of its figure, centred) with a role-colour underline. */
 function PeekCreepIcon({ art, figure, color }: { art: ClipDrawable; figure: PeekFigure; color: string }) {
@@ -309,10 +311,10 @@ export function TurfWavePeekCard({
                 ]}
               />
             )}
-            <Text style={styles.peekCount} maxFontSizeMultiplier={1.2}>
+            <Text style={styles.peekCount} maxFontSizeMultiplier={PEEK_CHIP_FONT_MAX}>
               {row.count}×
             </Text>
-            <Text style={[styles.peekName, row.boss && styles.peekNameBoss]} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+            <Text style={[styles.peekName, row.boss && styles.peekNameBoss]} numberOfLines={1} maxFontSizeMultiplier={PEEK_CHIP_FONT_MAX}>
               {row.name}
             </Text>
           </View>
