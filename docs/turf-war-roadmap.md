@@ -18,13 +18,14 @@ Inputs: `docs/divecore/turf-war-before/FINDINGS.md` (code map, file:line) + befo
 |---|---|---|
 | T0 | Investigate, research, plan (this doc) | ✔ docs on master. Waiting for emci's approval |
 | T1 | Layout guidelines doc + `check:turf-war-layout` + the layout moves (board fills the stage, Leave → pause menu, title out of the stage) | ✔ merged (PR #64, 2026-10-16); OTA see "Step T1 as built" |
-| T2 | HUD + UI kit: top bar, dock buttons (cost / afford / cooldown), build card at the pad, won / lost cards on `sheet-kit` | ✔ merged (PR #65, 2026-10-17), except the next-wave popover + top-bar restyle (not done) |
+| T2 | HUD + UI kit: top bar, dock buttons (cost / afford / cooldown), build card at the pad, won / lost cards on `sheet-kit` | ✔ merged (PR #65, 2026-10-17); the leftover (next-wave popover + top-bar restyle) = T2b, merged (PR #72, 2026-10-18), see "Step T2b as built" |
 | T3 | Map art: new baked board from PixelLab parts (tiles, pads, props), same path and pads | ✔ merged (PR #66, 2026-10-17); OTA see "Step T3 as built" |
 | T4 | Map animation: ambient layer (neon flicker, steam, fire barrel, blinking light, pigeons), outside the sim SVG | ✔ merged (PR #67, 2026-10-17); OTA see "Step T4 as built" |
 | T5 | Combat effects: hit flash, per-tower projectiles + impacts (PixelLab VFX), death pop, health-bar chip trail, damage numbers, leak hit | ✔ merged (PR #68, 2026-10-17); OTA see "Step T5 as built" |
 | T6 | Boss effects: entrance (NoticeLane + ground mark), telegraphs, boss bar in the top region, boss death | ✔ merged (PR #69, 2026-10-17); OTA see "Step T6 as built" |
 | T7 | Polish + phone check: wave start / clear beats, win / lose celebration, spawn portal, perf pass, Reduce Motion audit | ✔ merged (PR #70, 2026-10-17); OTA see "Step T7 as built"; emci's phone check (Box 33) **passed** |
-| T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); picker in Setup (emci, option A) | ✔ merged (PR #71, 2026-10-17); OTA see "Step T8 as built"; awaiting emci's phone check (Box 34) |
+| T8 | More map themes (emci 2026-10-17): same path / pads / grid, a new painting per theme (rooftop, subway underpass, court / park, docks); picker in Setup (emci, option A) | ✔ merged (PR #71, 2026-10-17); OTA see "Step T8 as built"; emci's phone check (Box 34) **passed** (answered in the T2b chat) |
+| T2b | T2 leftover (emci 2026-10-18, option B): next-wave preview card under the wave chip + top bar on sheet-kit pieces | ✔ merged (PR #72 squash `4afb7443`, 2026-10-18); OTA see "Step T2b as built"; awaiting emci's phone check (Box 35); T8 phone check (Box 34) **passed** |
 
 Every step ships on its own OTA. T1 and T2 change code layout only (no art). T3 and T4 need emci to pick art from samples
 first (two stops inside the step: samples → pick → build). T5 and T6 need effect samples (GIF strips) the same way.
@@ -116,8 +117,8 @@ and no new in-stage text nodes besides the pinned ones.
 - Board: tower level pips (SVG circles, one per level) replace the letter badge (`TOWER_LETTER` gone).
 - Small copy moves: tower title shows pips instead of "· level n/3"; bound-hero title lost "· bound hero"; at the tower cap tiles say "max 6" without the price.
 - `check:turf-war-layout` now 7 groups (card fits all 15 pads × 3 modes × 2 phones, taps ≥ 44, two-tap buy, no `styles.card` / `ThemedView` in the Turf float cards).
-- **Not done (carry to a later step if wanted):** next-wave preview popover on the wave chip; top-bar restyle (it still uses `StreetFrame` resbar);
-  library frames/icons (icons are `MaterialCommunityIcons`, as in `sheet-kit`). In the web preview those icons show as empty boxes (font not loaded) — check on the phone.
+- **Not done in T2 (both done in T2b, see below):** next-wave preview popover on the wave chip; top-bar restyle (it used `StreetFrame` resbar).
+  Still not done: library frames/icons (icons are `MaterialCommunityIcons`, as in `sheet-kit`). In the web preview those icons show as empty boxes (font not loaded) — check on the phone.
 - Previews: `docs/divecore/turf-war-t2/` (setup, wave, build card top / middle / bottom, armed, upgrade, won, lost; both phones).
 
 #### Step T3 as built (2026-10-17, PR #66, OTA iOS `01a14830-2114-7ba8-a01b-511bfc649a0f`, group `2d3a97cd`; awaiting emci's phone check; emci answered the T2 phone check "passed" and Q5 budget "yes")
@@ -192,6 +193,24 @@ and no new in-stage text nodes besides the pinned ones.
   `bound_bosses:[{id:'ember_sovereign',stars:1,...}]` and Main wave 10 reaches the Final boss with the Nova tower; dismiss the "Welcome back" card first.
 - **Open / for later:** players on "Important only" notices don't see "BOSS INCOMING" (`notify` kind is hidden there; the old pill always showed); a Bound Boss placed mid-wave
   with a creep in range casts with no wind-up; a 1x → 2x switch mid wind-up shortens it; a boss drawn with a rotated single sprite gets no blast (fails safe). Not device-verified.
+
+#### Step T2b as built (2026-10-18, PR #72 squash `4afb7443`, OTA see "OTA" line below; awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 35; emci answered the T8 phone check "passed", no changes)
+- **Stop 1 (emci): option B** of three (`docs/divecore/turf-war-t2b/samples/`): separate sheet-kit pieces in the top bar + a card hanging under the wave chip.
+- **Top bar:** `TurfWaveChip` (132 × 32 visual box inside a 44 pt tap target, chevron, mustard edge while open), `TurfCapsPill` (44 pt), `TurfPauseButton`
+  (44 pt + hitSlop 6 = 56 pt target) in `src/play/turf-ui.tsx`; the `resbar` art frame and `chip-on` / `pause` backdrops are no longer used by Turf War. Bar still 56 pt,
+  `REGIONS` unchanged; the boss bar still replaces the chip in the same `WAVE_CHIP_BOX`. Setup keeps the app shell's top bar (the chip, caps and pause only exist in a wave).
+- **Next-wave card:** `TurfWavePeekCard` on the FloatLayer, 64 pt tall, up to 344 wide, at the lane's top edge: it fills the NoticeLane box + the empty stage margin above the board
+  (71 pt free on SE, 142 on 430), leaves 44 pt free at the right for the lane's help (?) button, never reaches the board. Content: "Next · [Main ]wave N", "Stage · <element>" when the
+  wave has one, one chip per role (swatch in the board's placeholder creep colour · count × · role name), counts from `director.ts` via `turf-wave-peek.ts` (`nextWaveSeat`: Trial 5 → Main 1,
+  Main 10 → Main 1). Closes on a card tap, a tap in the strip it sits in (outside the (?) column), pause, or the boss bar (state reset, never pops back open), and when the run ends.
+  Not shown in replays (a replay does not advance the seat; the chip is then plain info).
+- **Checks:** `check:turf-war-layout` = 13 groups (+ T2b: top bar 56 pt / REGIONS, kit targets ≥ 44, card inside lane + board margin on both phones, ≥ 44 pt right of it, director counts,
+  seat order, wiring pins). Two T1 pause pins moved from `defend-screen.tsx` to the kit (pause = 44 + hitSlop 6). Gate green (168 checks); reviewer found 3 real bugs (strip covered the (?), card
+  re-opened after a boss / pause, wrong seat in replays), all fixed before the PR.
+- **Previews:** `docs/divecore/turf-war-t2b/` (both phones: setup, wave, card open, closed). Shot before the three reviewer fixes. Frame time 16.7 ms = the headless 60 Hz cap. Not device-verified.
+- **Not shot:** a boss next wave and a 3-role wave (no save at that seat in the preview); the data + geometry are pinned in the check, the chips shrink + ellipsize at 315 pt (SE) — check on the phone.
+- **Preview gotcha (cloud container):** the web export needs `EXPO_PUBLIC_SUPABASE_URL` / `_ANON_KEY` set (dummy values on the command line are enough; nothing committed) and `--clear` after a failed export.
+- **Open / for later:** the card covers the lane's notices while open (a notice arriving mid-card is hidden until it closes; a boss bar closes it); icons are role-tint swatches, not art.
 
 #### Step T8 as built (2026-10-17, PR #71 squash `d8ab19e6`, OTA iOS `01a14c79-ab4e-7a29-8157-17e0ec353c8a`, group `628316f3` (commit `80344b23`); awaiting emci's phone check = `docs/ATO_DEVICE_TESTS.md` Box 34; emci answered the T7 phone check "passed", no changes)
 - **Stop 0 (emci): option A**, a picker in the Setup sheet: a row of theme chips (≥ 44 pt) inside the Maps card on Main (hidden while Neon

@@ -9,7 +9,7 @@ middle OK, top corners hard.
 
 | Region | 430×932 | 375×667 | What lives there |
 |---|---|---|---|
-| Top bar | 56 | 56 | wave chip, caps, **pause** (top right) — info + rare actions only |
+| Top bar | 56 | 56 | wave chip (tap = next-wave card), caps pill, **pause** (top right) — info + rare actions only; sheet-kit pieces, every target ≥ 44 |
 | NoticeLane | 40 | 40 | coach line, notices, "Boss incoming" — one line |
 | **Stage** | 430 × 619 | 375 × 421 | **the board only** |
 | ActionDock | 64 (setup) / 158 (wave) | 64 / 130 | Cast, Pounce, speed 1× / 2×, Setup, Call wave |
@@ -38,9 +38,17 @@ middle OK, top corners hard.
   has no room it takes the other. Never covers its own pad, clamped inside the stage, closes on outside tap.
 - Gap card ↔ hit circle: 8 pt.
 
+## Next-wave card (T2b)
+
+- Tapping the wave chip opens a FloatLayer card **under the chip**: 64 pt tall, ≤ 344 wide, at the NoticeLane's top edge. It lives in the lane box + the empty stage margin above the board
+  (71 pt free on 375×667), never reaches the board, and keeps **44 pt free at the right** for the lane's help (?) button.
+- Content = the wave director's counts for the next wave (Trial 5 → Main 1, Main 10 → Main 1) + the stage element; no new data.
+- Closes on a card tap, an outside tap in the strip it sits in, pause, the boss bar, or the end of the run. **No preview in a replay** (the seat does not advance).
+- The boss bar still replaces the chip in the chip's own 132 × 32 box; the top bar stays 56 pt.
+
 ## Pause menu and Leave
 
-- Pause is in the **top bar**, 40 pt + 8 pt hit slop = 56 pt target.
+- Pause is in the **top bar**, 44 pt + 6 pt hit slop = 56 pt target (T2b: the kit's `TurfPauseButton`).
 - Pausing opens the **pause menu** (FloatLayer card): **Resume** · **Leave**, both 48 pt high. The lane says
   "Paused — the wave is frozen."
 - **Leave exists only here.** Not in the dock, not in the classic HUD. It still opens the same "LEAVE RUN?" confirm

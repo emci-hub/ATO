@@ -355,3 +355,16 @@ Play → Turf War, in Setup (before Call wave).
 ---
 
 **All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–28).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`; Box 28 specifically needs OTA `0ff16d9d` or later), not per box.
+
+## Box 35 — Turf War next-wave card + top bar (T2b, 2026-10-18)
+
+Play → Turf War → Call wave (a campaign run, not a replay).
+
+- [ ] The top bar is three separate dark pieces: the wave chip ("Trial wave n" + a small arrow), the caps pill (a gold dot + "N caps"), and a square pause button. Same height as before; the board does not move.
+- [ ] Tap the wave chip. A card opens right under it: "Next · wave n+1", and one chip per creep kind with a count (e.g. "5× swarm  2× runner"). The arrow flips. The board is not covered, and the "?" at the right of the line under the bar still shows.
+- [ ] Tap the card, or tap the empty strip beside it: it closes. Tap the chip again to reopen, then tap pause: the card closes and does not come back on its own after Resume.
+- [ ] The last Trial wave (5) previews "Next · Main wave 1". A boss wave next (e.g. Main 4 → 5) shows a red-edged "1× boss" chip.
+- [ ] Open the card, let a boss step in: the chip becomes the boss bar and the card goes away; after the boss dies it does not pop back open.
+- [ ] A replay (Setup → replay a cleared wave): tapping the wave chip does nothing.
+- [ ] Chip, caps and pause are easy to hit with a thumb (pause especially); SE: nothing is cut off, and a 3-kind wave (Main 9) still reads in the card.
+- [ ] Screenshot: the card open on a boss next wave.
