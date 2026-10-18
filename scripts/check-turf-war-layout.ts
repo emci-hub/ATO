@@ -772,6 +772,32 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   const sheetBorder = Number(/^\s*border: (\d+),/m.exec(read('src/play/sheet-kit.tsx'))?.[1]);
   assert.ok(sheetBorder > 0, 'SHEET.border read from sheet-kit');
   assert.ok(peekIcon + 2 <= chipH - 2 * sheetBorder, `the ${peekIcon} pt icon + 2 pt underline fits inside the ${chipH} pt chip's borders`);
+  // T13 (emci 2026-10-18): every real next-wave card keeps whole role words on one row, on both phones (Main 9's three
+  // roles were cut by 4–5 pt on 375 pt). Pixelify Sans Bold 12 pt advances, measured with canvas.measureText (2026-10-18).
+  const PEEK_TEXT_PT: Record<string, number> = {
+    swarm: 40.63, runner: 42.82, tank: 30.12, boss: 28.46, '×': 7.2, '1': 5.11,
+    ...Object.fromEntries(['0', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => [d, 7.24])),
+  };
+  const textPt = (s: string) => PEEK_TEXT_PT[s] ?? [...s].reduce((n, ch) => n + PEEK_TEXT_PT[ch]!, 0);
+  const rowGap = Number(/peekRow: \{ flexDirection: 'row', gap: (\d+),/.exec(kit)?.[1]);
+  const chipGapPad = /peekChip: \{[^}]*?gap: (\d+),\s*paddingHorizontal: (\d+),/.exec(kit);
+  const sheetPad = Number(/radiusSmall: \d+,\s*gap: \d+,\s*pad: (\d+),/.exec(read('src/play/sheet-kit.tsx'))?.[1]);
+  assert.ok(rowGap > 0 && chipGapPad && sheetPad > 0, 'peek row gap, chip gap + padding and SHEET.pad read from source');
+  assert.match(kit, /peek: \{ paddingHorizontal: SHEET\.pad,/, 'the card pads its row with SHEET.pad');
+  assert.match(src, /name: row\.role,/, 'the chip word is the role id (the measured words)');
+  const [chipGap, chipPad] = [Number(chipGapPad![1]), Number(chipGapPad![2])];
+  for (const d of DEVICES) {
+    const f = computeStageFrame('turf-wave', d.window, d.insets);
+    const inner = wavePeekRect({ width: f.stage.width, height: f.stage.height }).width - 2 * sheetBorder - 2 * sheetPad;
+    for (const phase of ['trial', 'main'] as const) {
+      for (let w = 1; w <= counts[phase]; w += 1) {
+        const rows = nextWavePeek(phase, w, counts)!.rows;
+        const need = rows.reduce((n, r) => n + 2 * sheetBorder + 2 * chipPad + peekIcon + 2 * chipGap + textPt(`${r.count}×`) + textPt(r.role), 0) + rowGap * (rows.length - 1);
+        // 4 pt spare for iOS text rendering. A 4th role (none today) does not fit; it needs a compact chip first.
+        assert.ok(need + 4 <= inner, `${d.name}: card after ${phase} ${w} needs ${need.toFixed(1)} pt + 4 spare for ${rows.map((r) => r.role).join(' + ')}, row has ${inner} pt (role words would be cut)`);
+      }
+    }
+  }
   ok('T2b top bar: 56 pt, REGIONS unchanged, kit pieces ≥ 44; next-wave preview inside lane + board margin on both phones, director data, boss bar still in the chip box, creep icons');
 }
 

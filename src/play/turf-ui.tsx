@@ -385,14 +385,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: STREET.paper,
   },
-  peekRow: { flexDirection: 'row', gap: SHEET.gap, alignItems: 'center' },
+  // T13: tight spacing so the fullest real card (3 roles) keeps whole role words on the 375 pt phone; pinned by check:turf-war-layout.
+  peekRow: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   peekChip: {
     height: 24,
     flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 6,
+    gap: 3,
+    paddingHorizontal: 4,
     backgroundColor: STREET.asphalt,
     borderWidth: SHEET.border,
     borderColor: SHEET.edge,
