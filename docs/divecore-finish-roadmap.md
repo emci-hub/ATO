@@ -672,6 +672,8 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   `325c79ca-8597-40e2-90a4-cb5b7a549662` (message `divecore-finish-step3-economy`). Phone check: **Box 52** (not done).
   **Notes:** the Big crate buy toast names only the last Power; buying at the daily Power ceiling still costs tokens
   and pays shells (same as the small crate). **Next: step 4 (Today chip); the proposed Minigames M1 goes after step 3.**
+- **Phone checks 2026-10-18:** emci replied "Verified" after Boxes 50, 51 and 52 (steps 1-3). Marked PASSED. Nothing
+  failed; no fixes needed. (Box 43, the old egg-duplicates check, was not named in the reply: still open.)
 
 ## Web research (read as data)
 

@@ -512,7 +512,7 @@ First: close and reopen the app so the update loads (OTA group `8e7b7015`). Use 
 - [ ] **Smoothness:** a busy wave at 1× and 2× feels the same as Box 48 (gear adds no per-frame cost).
 - [ ] Settings → Larger Text: the Locker's hero chips scroll sideways, the Worn rows wrap, nothing is cut off.
 
-## Box 50 — Divecore finish step 1: helper daze, hidden Neon Maze, kinder copy, splash colour (2026-10-18)
+## Box 50 — Divecore finish step 1: helper daze, hidden Neon Maze, kinder copy, splash colour (2026-10-18) — PASSED (emci, 2026-10-18)
 
 First: close and reopen the app so the update loads. Also run the old **Box 43** (egg duplicates) while you have the phone: it was never marked.
 
@@ -524,7 +524,7 @@ First: close and reopen the app so the update loads. Also run the old **Box 43**
 - [ ] **Legendary helper splash:** put a **legendary** pet as the helper and fight a wave with foes bunched together. When its hit lands, the foes next to the target show a coloured ring in the helper's element and their damage numbers are the element colour (not plain white). No freeze or slow-down, and no second shot. Effects Quality Off: no ring, numbers still coloured.
 - [ ] **Smoothness:** a busy wave at 1× and 2× feels the same as Box 49.
 
-## Box 51 — Locker, honest and sorted (Divecore finish step 2, 2026-10-18)
+## Box 51 — Locker, honest and sorted (Divecore finish step 2, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 First: close and reopen the app so the update loads. Open the Locker (Play → Locker).
 
@@ -539,7 +539,7 @@ First: close and reopen the app so the update loads. Open the Locker (Play → L
 - [ ] **Larger Text:** the new "Works in" lines and the two headings wrap; nothing is cut off; the filter chips still scroll sideways.
 - [ ] (Replaced by Box 52: step 3 opens the Store to players, Token shop only.)
 
-## Box 52 — The Store opens, 5★ duplicates pay shards, the half-pay cap holds (Divecore finish step 3, 2026-10-18)
+## Box 52 — The Store opens, 5★ duplicates pay shards, the half-pay cap holds (Divecore finish step 3, 2026-10-18) — PASSED (emci, 2026-10-18)
 
 First: close and reopen the app so the update loads.
 
