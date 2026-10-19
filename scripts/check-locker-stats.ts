@@ -37,7 +37,6 @@ import {
   recordDefendWin,
   researchYieldMultOf,
   scaleTokens,
-  skipCampaignToEven,
   tokenEarnMultOf,
   type ItemRef,
   type PlayStoreDoc,
@@ -109,21 +108,21 @@ const zeroSums = (over: Partial<StatSums> = {}): StatSums => ({
     src.indexOf('tokensGranted = scaleTokens(tokensGranted, tokenEarnMultOf(doc))') < src.indexOf('tokensGranted += CYCLE_CLEAR_BONUS_TOKENS'),
     'the scaling comes before the flat cycle bonus',
   );
-  const round = src.slice(src.indexOf('const pay = petTokensForRound('), src.indexOf('const pay = petTokensForRound(') + 600);
-  assert.ok(!/tokenEarn|scaleTokens/.test(round), 'mini-game rounds are not scaled');
-  assert.ok(!/ato_token|ai_token|record_check/.test(src), 'never ATO tokens');
+  const roundAt = src.indexOf('const pay = petTokensForRound(');
+  const roundBody = src.slice(roundAt, src.indexOf('\n}\n', roundAt));
+  assert.ok(roundAt > 0 && /pay\.tokens/.test(roundBody), 'found the mini-game round payout');
+  assert.ok(!/tokenEarn|scaleTokens/.test(roundBody), 'mini-game rounds are not scaled');
+  assert.ok(!/ato_token|ai_token|record_check/.test(src), 'never ATO tokens (the Play store has no ATO token write)');
   ok('wins and skips scale; the flat cycle bonus and the 5-token mini-game rounds do not; no ATO tokens');
 
-  // A skip uses the same multiplier.
-  const camp = { ...keeper, campaign: { phase: 'trial' as const, wave_in_phase: 1 }, highest_wave_cleared: 0 };
-  const skipPlain = skipCampaignToEven({ ...base, campaign: camp.campaign }, () => 0.99);
-  const skipGear = skipCampaignToEven(camp, () => 0.99);
-  if (skipPlain && skipGear) {
-    assert.ok(skipGear.result.tokensGranted >= skipPlain.result.tokensGranted, 'a skip pays at least the plain amount with the gear');
-    ok('skip: pays the scaled tokens too');
-  } else {
-    ok('skip: not offered at this seat (the call site is pinned above)');
-  }
+  // A skip uses the same multiplier: pin the call site INSIDE skipCampaignToEven (a skip is rarely offered at a
+  // fresh seat, so the source is the honest proof), once, after the per-wave loop.
+  const skipFrom = src.indexOf('export function skipCampaignToEven(');
+  const skipBody = src.slice(skipFrom, src.indexOf('\n}\n', skipFrom));
+  assert.ok(skipFrom > 0 && skipBody.length > 200, 'found the skip function body');
+  assert.equal((skipBody.match(/tokensGranted = scaleTokens\(tokensGranted, tokenEarnMultOf\(doc\)\)/g) ?? []).length, 1, 'the skip scales its tokens once');
+  assert.ok(skipBody.indexOf('for (const step of plan.steps)') < skipBody.indexOf('scaleTokens('), 'scaled after the per-wave pay is summed');
+  ok('skip: scales its summed pay once (call site pinned inside skipCampaignToEven)');
 }
 
 // --- research yield -----------------------------------------------------------------------------------
