@@ -734,6 +734,31 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   **Open (not tuned, report flags it):** the hero-tower kit spread is 1.59× (Archangel 1.13× … Morwen 1.80×) with
   paid hero towers; and the board most players field (Mixed + helper + hero towers) is not its own sim column.
   **Next: step 7 (Locker icons through PixelLab); Minigames M1 still waits for emci's yes.**
+- **Step 7 built + published 2026-10-19** (Play commits `80d9f9e4`, `f5854622`; docs `f573040a`). **13 own Streetwear
+  icons**, one per item (was 13 items on 10 shared stand-ins: one shield for Bark Aegis and Ember Ward, a hoodie, a
+  gem, a coin stack). Library first: it had nothing matching, so all new. PixelLab `create_1_direction_object` 32×32,
+  one 64-candidate pack per item (10 gens each, 130 + 0.1 palette lock in total); the three-candidate shortlists were
+  shown as samples + a scale sheet, emci said "OK, batch it" and "use art 32 pt in the 34 pt frame", then **asked to
+  keep the other looks in the library with no player switch** and left the final picks to the agent. Palette: one joint
+  `reduce_colors` over all 39 frames, then the icon set's 1 px warm-white sticker rim. Live files
+  `assets/art/icons/in-use/items/streetwear/<item>.png` → `ART.icon.items.streetwear.<name>`; the **26 alternates** sit
+  unused in `icons/unused/items/alt` (`ART.icon.items.<name>B/C`, registry status `resource`, not approved). Code:
+  `itemArtSource` (`src/play/art.ts`) reads the map through `getArtSource`; the shared sticker map and the Kenney item
+  fallback are gone (Kenney cursor icons stay only for shop rows; they are not in the art registry, so there was
+  nothing to mark `needs-restyle`; the 12 old stickers are still bundled but unused). Locker icon art **22 → 32 pt**
+  in the same 34 pt frame (1 pt per source pixel: exact on 2×/3× phones), drawn crisp (`pixelRenderStyle`, no fade).
+  New `check:locker-icons` (5 groups); `check:streetwear-assets` no longer pins the old stickers. **Critique (honest):**
+  `pixelart_workbench score` 77.8–97.5 on the live set (3 of 13 ≥ 90; the library's own `upgrade` icon is 83.7;
+  `repair` changed nothing: the penalty is texture pixels, not strays); the 14-item rubric was **eyeballed by the agent**
+  (no scripted rubric exists): 22–26 /28, none zero, **Ember Mantle is the weakest (22, workbench 77.8)** and Moss
+  Habit 23. Raw frames, scores and `gen.json`: `art-src/pixellab/icon.items.streetwear/`; proof sheets
+  `docs/divecore/locker-icons/`. Save stays **v33**. Gate green (178), reviewer PASS with warnings (fixed: crisp
+  render, check label; a commit message wrongly said "candidate" status). **OTA published**: iOS
+  `01a1552b-95c8-7c06-b294-e14f8afb291c`, Android `01a1552b-95c8-71bd-8db2-deb6f3d17925`, group
+  `33b020eb-85c4-4a05-b057-c848c384cece` (message `divecore-finish-step7-locker-icons`). Not rendered in the app
+  (proof sheets are mockups from the real frame sizes). Phone check: **Box 56** (not done).
+  **Next: step 9 (assessment of the rest of ATO; step 8 only if emci adds it). Minigames M1 still waits for emci's yes.
+  Open for emci: approve the icons (only emci sets `approved`), swap any pick from the library, Boxes 50-56.**
 
 ## Web research (read as data)
 
