@@ -569,7 +569,24 @@ new-chat prompt (Model: line + one code block) for step 1 of that roadmap.
 
 - **2026-10-18:** plan written (this doc, commit `7350e283`). emci chose **must + should-fix (steps 1-7, 9)**,
   **daze-proof 11 000 ms**, **hide Neon Maze from players** (no knot fix needed). P4's open calls stay as built
-  (defaults in "Needs emci's yes" #4). **Next: step 1.**
+  (defaults in "Needs emci's yes" #4).
+- **Step 1 built + published 2026-10-18** (Play commit `c6a78ff5`, Box 50 docs `6b8545b2`). Helper daze-proof
+  **11 000 ms** (test: first daze 5 s, stands 9.6 s, next daze 24.6 s, i.e. two swings absorbed); Neon Maze picker
+  only with dev tools unlocked (players get the theme-picker card, 2 `<TurfThemePicker />` kept); "Main 1–10" copy +
+  5 comments; kinder copy (Scruffy hungry/sad lines, status "Very hungry" (id `starving` unchanged), Tide push "Your
+  days wait for you.", trip-back lines "Good trip. Glad you're here." / "I'm home! Hi again!" instead of the
+  roadmap's "You're back!", which would be odd from a pet that just returned). Legendary splash: emci chose to build
+  it; the generic white hit flash already fired for splash victims, so the new display-only `DefendStep.splashHits`
+  adds the **element-coloured ring + coloured numbers** (ring centred on the target, `centredOnSource`, not in `hits`:
+  no second shot, no hit stop; reviewer caught a bolt-from-helper bug, fixed). `check:turf-team` pinned. Gate green,
+  reviewer run (one fix). Save stays **v33**. **OTA published**: iOS `01a151f0-4e7a-74c7-9a9e-c4498e18383a`, Android
+  `01a151f0-4e7a-7228-8dd3-fc479edb014f`, group `fc32e86a-044f-4fc4-867a-931182de056f` (message
+  `divecore-finish-step1-leftovers-copy`). Phone check: **Box 50** + the old **Box 43** (not done).
+  **Open for emci (raised in step 1, not decided):** the element-graphics audit found Turf hits/shots already use
+  element sprites, but the fire/water/earth/lightning **auras are pet-only** (Hideout and Dive, never Turf), chain
+  bolts are plain vectors, the creep burn/chill/root overlays exist as art but are unwired, and the creep hit flash is
+  not element-coloured. Candidate new step "Element look in Turf War" (should-fix, M-L, 60 fps + fixed-regions risk).
+  **Next: step 2.**
 
 ## Web research (read as data)
 
