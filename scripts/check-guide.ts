@@ -1,208 +1,219 @@
 /**
- * The newbie guide (Divecore finish step 5, emci 2026-10-19).
- * Run: npm run check:guide
+ * Guide check (v26, Part C · T-C7; v27 Part D · T-D6: eggs/pity/Den/Stones).
  *
- * - One step at a time, in the approved order: egg → feed → dive → research → Trial 1 → Power → Loft → trip.
- * - A step shows only when the player can act on it; a veteran is never nagged (the furthest step done counts).
- * - "Got it" hides a step; the Settings switch turns the guide off; the bubble shows only on the screens that
- *   belong to the step (the Hideout always; the Locker for the Power step; Turf setup for the Trial step).
- * - Hidden while anything is open over the screen, and never together with a coach tip.
- * - Calm copy: no "!", no urgency, no streak, no countdown; short and plain.
- * - The flag lives on the phone (ato.play.guide.v1), the save stays v33, and nothing is written to the save.
+ *   1. No hand-typed numbers: every string / template text in
+ *      `src/play/guide-content.ts` is scanned (code inside `${…}` is skipped);
+ *      a digit there fails — every number must come from a code constant.
+ *   2. The rendered Guide shows the live constants (spot values: stage cuts,
+ *      the bust table, the Power ceiling, medal bars, buffs, the pounce cap).
+ *   3. Every section exists and has text; every "?" link in the app points at
+ *      a real section; the old scattered "How it works" text is gone.
+ *   4. The room nameplate: stars AND the word for every grade (never colour
+ *      alone), shiny or not.
+ *
+ * Run: npm run check:guide
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import fs from 'node:fs';
+import path from 'node:path';
 
+import { DEN_MAX_SLOTS, DEN_SLOT_PRICES, DEN_START_SLOTS } from '../src/play/den';
+import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS } from '../src/play/dive-loot';
+import { EXPEDITION_STONE_CHANCE } from '../src/play/expedition-ladder';
+import { MEDAL_SCORES } from '../src/play/game-records';
+import { GUIDE_SECTIONS, guideSections } from '../src/play/guide-content';
+import { PET_BUST_CUT_PP, PET_POUNCE_BASE } from '../src/play/pet';
 import {
-  allGuideLines,
-  GUIDE_STEPS,
-  guideStep,
-  parseGuideStore,
-  serializeGuideStore,
-  type GuideInput,
-  type GuideScreen,
-  type GuideStore,
-} from '../src/play/guide';
-import { guideInputOf } from '../src/play/guide-input';
-import { HIDEOUT_SAVE_VERSION } from '../src/play/hideout-progress';
-import { getItemDef } from '../src/play/items';
-import { defaultPlayStore, normalizedAvatarHeroId, playView, type PlayStoreDoc } from '../src/play/playStore';
+  COLLECT_TIMELINES,
+  DAILY_EGG_BONUS,
+  EGGS_PER_DAY_MAX,
+  EXTRA_EGG_PRICES,
+  FREE_EGGS_PER_DAY,
+  GLIMMER_PITY,
+  GRADES,
+  GRADE_LABEL,
+  GRADE_STARS,
+  PITY_HARD,
+  PITY_SOFT_FROM,
+  PRISM_STYLES,
+  PRISM_STYLE_COST,
+  SHINY_STYLE_LABEL,
+  STONE_EVERY_DAYS,
+  STONE_ODDS,
+  nameplateText,
+} from '../src/play/pet-eggs';
+import { BUFF_USES, PET_POUNCE_CAP } from '../src/play/play-buffs';
+import { DIVE_BUST_TABLE } from '../src/play/playStore';
 
 let passed = 0;
 function ok(label: string) {
   passed += 1;
   console.log(`  ✓ ${label}`);
 }
-const root = resolve(__dirname, '..');
-const read = (rel: string) => readFileSync(resolve(root, rel), 'utf8').replace(/\r\n/g, '\n');
+const ROOT = path.join(__dirname, '..');
 
-const T = Date.UTC(2026, 9, 19, 9, 0, 0);
-const on: GuideStore = { off: false, dismissed: [] };
-const none: GuideInput = {
-  eggPicked: false, hatched: false, petOut: false, fed: false, dived: false, claimed: false, researchReady: false,
-  wonTrial: false, powerWorn: false, hasPower: false, loftBuilt: false, loftBuildable: false, tripped: false, tripReady: false,
-};
-const id = (over: Partial<GuideInput>, screen: GuideScreen = 'hideout', store: GuideStore = on) =>
-  guideStep(screen, { ...none, ...over }, store)?.id ?? null;
-const out = { hatched: true, petOut: true };
+/* ---------------------------------------------- 1. no hand-typed numbers --- */
 
-// --- order ---------------------------------------------------------------------------------------------
-{
-  assert.deepEqual([...GUIDE_STEPS], ['egg', 'feed', 'dive', 'research', 'turf', 'power', 'loft', 'trip']);
-  assert.equal(id({}), 'egg');
-  assert.equal(guideStep('hideout', none, on)?.text, 'Pick an egg. It hatches into your first pet.');
-  assert.equal(guideStep('hideout', { ...none, eggPicked: true }, on)?.text, 'Tap your egg to keep it warm until it hatches.');
-  assert.equal(id({ ...out }), 'feed');
-  assert.equal(id({ ...out, fed: true }), 'dive');
-  assert.equal(id({ ...out, fed: true, dived: true }), 'turf', 'a claim that is not ready is skipped, not nagged');
-  assert.equal(id({ ...out, fed: true, dived: true, researchReady: true }), 'research', 'a ready claim comes before Trial 1');
-  assert.equal(id({ ...out, fed: true, dived: true, claimed: true, researchReady: true }), 'turf', 'a claim already made is done');
-  assert.equal(id({ ...out, fed: true, dived: true, claimed: true, wonTrial: true, hasPower: true }), 'power');
-  assert.equal(id({ ...out, fed: true, dived: true, claimed: true, wonTrial: true, powerWorn: true, loftBuildable: true }), 'loft');
-  assert.equal(id({ ...out, fed: true, dived: true, claimed: true, wonTrial: true, powerWorn: true, loftBuilt: true, tripReady: true }), 'trip');
-  assert.equal(id({ ...out, fed: true, dived: true, claimed: true, wonTrial: true, powerWorn: true, loftBuilt: true, tripped: true, tripReady: true }), null, 'then quiet for good');
-  ok('one step at a time, in the approved order; a not-ready claim is skipped; quiet at the end');
-}
-
-// --- only what can be acted on ---------------------------------------------------------------------------
-{
-  const base = { ...out, fed: true, dived: true, claimed: true, wonTrial: true };
-  assert.equal(id({ ...base }), null, 'no Power in the bag, Loft not buildable, no trip ready: nothing to say');
-  assert.equal(id({ ...base, hasPower: true }), 'power');
-  assert.equal(id({ ...base, loftBuildable: true }), 'loft');
-  assert.equal(id({ ...base, tripReady: true }), 'trip');
-  assert.equal(id({ hatched: false, petOut: false }), 'egg', 'before it hatches, only the egg step');
-  assert.equal(id({ hatched: true, petOut: false, fed: false }), 'turf', 'a hatched player whose pet is an egg again is not told to Feed');
-  ok('Power, Loft and trip steps show only when they can be done now; Feed / Dive need the pet out of its egg');
-}
-
-// --- veterans are never nagged ---------------------------------------------------------------------------
-{
-  assert.equal(id({ hatched: true, petOut: true, wonTrial: true }), null, 'a Trial 1 win means egg / feed / dive / research are all behind them');
-  assert.equal(id({ hatched: true, petOut: true, wonTrial: true, hasPower: true }), 'power', 'but a Power in the bag still gets its nudge');
-  assert.equal(id({ hatched: true, petOut: true, loftBuilt: true }), null);
-  assert.equal(id({ hatched: true, petOut: true, loftBuilt: true, tripReady: true }), 'trip');
-  assert.equal(id({ hatched: true, petOut: true, tripped: true, researchReady: true }), null, 'a first trip sent: nothing earlier comes back');
-  ok('the furthest step already done counts: earlier steps never come back for a veteran');
-}
-
-// --- got it / off ----------------------------------------------------------------------------------------
-{
-  const s = { ...out, fed: true, dived: true, researchReady: true };
-  assert.equal(id(s), 'research');
-  assert.equal(id(s, 'hideout', { off: false, dismissed: ['research'] }), 'turf', 'Got it hides that step; the next one comes up');
-  assert.equal(id(s, 'hideout', { off: true, dismissed: [] }), null, 'the Settings switch turns the whole guide off');
-  assert.equal(id({}, 'hideout', { off: true, dismissed: [] }), null);
-  ok('"Got it" hides a step for good; Off hides the guide');
-}
-
-// --- which screen shows what -------------------------------------------------------------------------------
-{
-  const power = { ...out, fed: true, dived: true, claimed: true, wonTrial: true, hasPower: true };
-  assert.equal(id(power, 'hideout'), 'power');
-  assert.equal(id(power, 'locker'), 'power');
-  assert.equal(guideStep('locker', { ...none, ...power }, on)?.text, 'Put a Power on: pick one in the bag and tap Equip.');
-  assert.equal(id(power, 'turf'), null, 'the Power step does not show on Turf setup');
-  const trial = { ...out, fed: true, dived: true, claimed: true };
-  assert.equal(id(trial, 'turf'), 'turf');
-  assert.equal(guideStep('turf', { ...none, ...trial }, on)?.text, 'Clear Trial 1: place towers on the pads, then call the wave.');
-  assert.equal(id(trial, 'locker'), null);
-  const feed = { ...out };
-  assert.equal(id(feed, 'locker'), null, 'Feed shows on the Hideout only');
-  assert.equal(id(feed, 'turf'), null, 'and never jumps ahead to a later step on another screen');
-  assert.equal(id(feed, 'hideout'), 'feed');
-  ok('the Hideout shows every step; the Locker only the Power step; Turf setup only the Trial step; no skipping ahead');
-}
-
-// --- calm copy ---------------------------------------------------------------------------------------------
-{
-  const lines = allGuideLines();
-  assert.ok(lines.length >= 10);
-  for (const line of lines) {
-    assert.ok(line.split(/\s+/).length <= 12, `short: "${line}"`);
-    assert.ok(/[.]$/.test(line), `ends with a full stop: "${line}"`);
-    assert.ok(!/[!]/.test(line), `no exclamation mark: "${line}"`);
-    assert.ok(!/urgent|hurry|last chance|don.t miss|streak|expires?|running out|starving|only \d|\d+\s?(s|m|h|min|sec|hours?|minutes?)\b/i.test(line), `no pressure or countdown: "${line}"`);
+/** The literal text of every string / template in a TS source (code in
+ * `${…}` replaced by a space). Comments are skipped. */
+function stringTexts(src: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  const n = src.length;
+  while (i < n) {
+    const c = src[i];
+    if (c === '/' && src[i + 1] === '/') {
+      while (i < n && src[i] !== '\n') i += 1;
+    } else if (c === '/' && src[i + 1] === '*') {
+      i = src.indexOf('*/', i + 2) + 2;
+    } else if (c === "'" || c === '"') {
+      let j = i + 1;
+      let text = '';
+      while (j < n && src[j] !== c) {
+        if (src[j] === '\\') j += 1;
+        text += src[j];
+        j += 1;
+      }
+      out.push(text);
+      i = j + 1;
+    } else if (c === '`') {
+      let j = i + 1;
+      let text = '';
+      while (j < n && src[j] !== '`') {
+        if (src[j] === '\\') {
+          text += src[j + 1];
+          j += 2;
+          continue;
+        }
+        if (src[j] === '$' && src[j + 1] === '{') {
+          // skip the expression (balanced braces; nested templates are rare here)
+          let depth = 1;
+          j += 2;
+          while (j < n && depth > 0) {
+            if (src[j] === '{') depth += 1;
+            else if (src[j] === '}') depth -= 1;
+            j += 1;
+          }
+          text += ' ';
+          continue;
+        }
+        text += src[j];
+        j += 1;
+      }
+      out.push(text);
+      i = j + 1;
+    } else i += 1;
   }
-  const all = lines.join(' ');
-  for (const word of ['Underground', 'CLAIM', 'Explore', 'Rooms', 'Locker', 'Equip', 'Turf War', 'Feed']) assert.ok(all.includes(word), `names ${word}`);
-  ok(`calm copy: ${lines.length} lines, short, plain, no "!", no pressure, no countdown`);
+  return out;
 }
 
-// --- the stored shape --------------------------------------------------------------------------------------
 {
-  assert.deepEqual(parseGuideStore(null), { off: false, dismissed: [] });
-  assert.deepEqual(parseGuideStore('not json'), { off: false, dismissed: [] });
-  assert.deepEqual(parseGuideStore(JSON.stringify({ v: 1, off: true, dismissed: ['feed', 'feed', 'bogus', 7] })), { off: true, dismissed: ['feed'] });
-  const round = { off: false, dismissed: ['egg', 'dive'] };
-  assert.deepEqual(parseGuideStore(serializeGuideStore(round)), round);
-  const store = read('src/play/guide-store.ts');
-  assert.ok(store.includes("'ato.play.guide.v1'"), 'the device-only key');
-  assert.ok(/set\(\{ off: true, dismissed: \[\], loaded: true \}\)/.test(store), 'an unreadable store stays quiet');
-  ok('the stored shape is tolerant and round-trips; an unreadable store keeps the guide quiet');
+  const src = fs.readFileSync(path.join(ROOT, 'src/play/guide-content.ts'), 'utf8');
+  const texts = stringTexts(src);
+  // Module paths and padding helpers are code, not prose.
+  const prose = texts.filter((t) => !t.startsWith('@/') && t !== '0');
+  const bad = prose.filter((t) => /\d/.test(t));
+  assert.deepEqual(bad, [], `hand-typed numbers in the Guide: ${JSON.stringify(bad)}`);
+  assert.ok(prose.length > 40, 'the scan found the Guide text');
+  // And the scanner itself catches one.
+  assert.deepEqual(stringTexts('const a = `Lamp costs 60 ${x} shells`; const b = "5 min";').filter((t) => /\d/.test(t)).length, 2);
 }
+ok('no hand-typed numbers: every number in the Guide comes from a code constant');
 
-// --- signals from the real view ------------------------------------------------------------------------------
+/* -------------------------------------------- 2. live constants shown --- */
+
 {
-  const base = defaultPlayStore(T);
-  const leader = normalizedAvatarHeroId(base);
-  const view = (doc: PlayStoreDoc) => guideInputOf(playView(doc, T));
-  const fresh = view(base);
-  assert.equal(fresh.hatched, false);
-  assert.equal(fresh.petOut, false);
-  assert.equal(fresh.wonTrial, false);
-  assert.equal(fresh.powerWorn, false);
-  assert.equal(fresh.hasPower, false);
-  assert.equal(fresh.loftBuilt, false);
-  assert.equal(fresh.loftBuildable, false);
-  assert.equal(view({ ...base, lifetime_waves_cleared: 1 }).wonTrial, true);
-  assert.equal(view({ ...base, play_stats: { ...base.play_stats, dives: 1 } }).dived, true);
-  assert.equal(view({ ...base, play_stats: { ...base.play_stats, expeditions: 1 } }).tripped, true);
-  assert.equal(view({ ...base, hideout: { ...base.hideout, tend_days: 1 } }).claimed, true);
-  assert.equal(view({ ...base, pet_rebirths: 1 }).hatched, true, 'a rebirth proves an earlier hatch');
-  const LOOK = 'item_leaf_cape_01';
-  const POWER = 'item_tide_blade_01';
-  assert.ok(getItemDef(LOOK)?.core.kind === 'look' && getItemDef(POWER)?.core.kind === 'power');
-  const wearing = (itemId: string, slot: 'cloak' | 'weapon') => ({ ...base, hero_gear: { [leader]: { [slot]: { id: itemId, star: 0 } } } });
-  assert.equal(view(wearing(LOOK, 'cloak')).powerWorn, false, 'a worn Look is not a Power');
-  assert.equal(view(wearing(POWER, 'weapon')).powerWorn, true);
-  assert.equal(view({ ...base, inventory: [{ id: LOOK, star: 0, count: 2 }] }).hasPower, false);
-  assert.equal(view({ ...base, inventory: [{ id: POWER, star: 0, count: 1 }] }).hasPower, true);
-  const rich = { ...base, tokens: 5000, hideout: { ...base.hideout, ever_child: true, tend_days: 5 } };
-  assert.equal(view(rich).loftBuildable, true, 'Loft: gate met and the tokens are there');
-  assert.equal(view({ ...rich, tokens: 0 }).loftBuildable, false, 'no tokens: not buildable');
-  assert.equal(view({ ...rich, hideout: { ...rich.hideout, rooms_unlocked: { ...rich.hideout.rooms_unlocked, loft: true } } }).loftBuilt, true);
-  ok('the signals come from state the game already saves: Trial win, dive, trip, claim, rebirth, worn Power vs Look, Loft');
+  const all = guideSections();
+  const text = (id: string) => all.find((s) => s.id === id)!.lines.join('\n');
+  const dive = text('dive');
+  for (const st of ['child', 'teen', 'adult', 'god'] as const) assert.ok(dive.includes(`−${PET_BUST_CUT_PP[st]}`), `dive: stage cut ${st}`);
+  assert.ok(dive.includes(DIVE_BUST_TABLE.map((x) => `${Math.round(x * 100)}%`).join(', ')), 'dive: the bust table');
+  assert.ok(dive.includes(`at most ${DIVECORE_POWERS_PER_DAY} Powers a day`) && dive.includes(`${POWER_OVERFLOW_SHELLS} shells`), 'dive: the Power ceiling');
+  assert.ok(dive.includes('Powers today'), 'dive: names the "Powers today" line');
+  const games = text('games');
+  assert.ok(games.includes(MEDAL_SCORES.catch.insane.join('/')) && games.includes(MEDAL_SCORES.train.hard.join('/')), 'games: medal bars');
+  assert.ok(games.includes('Get Silver on Normal to unlock') && games.includes('Get Gold on Hard to unlock'), 'games: unlock rules');
+  const buffs = text('buffs');
+  assert.ok(buffs.includes('Maxed aura') && buffs.includes(String(PET_POUNCE_CAP)) && buffs.includes(String(BUFF_USES.pumped)), 'buffs: Maxed aura');
+  const td = text('td');
+  assert.ok(td.includes(String(PET_POUNCE_BASE.god)) && td.includes('3%') && td.includes('8%'), 'td: pounce + the band');
+  assert.ok(td.includes(`at most ${DIVECORE_POWERS_PER_DAY} a day`), 'td: the Power ceiling');
+  // v27 (Part D): egg pacing, pity, the Den, Stones, styles, timelines.
+  const eggs = text('eggs');
+  assert.ok(eggs.includes(`first ${FREE_EGGS_PER_DAY} are free`) && eggs.includes(`${EXTRA_EGG_PRICES.join(', ')} shells`), 'eggs: free eggs + prices');
+  assert.ok(eggs.includes(`${EGGS_PER_DAY_MAX} at most`) && eggs.includes(`adds ${DAILY_EGG_BONUS} free egg`), 'eggs: the most a day + the daily egg');
+  assert.ok(eggs.includes(`From egg ${PITY_SOFT_FROM}`) && eggs.includes(`egg ${PITY_HARD} is always Legendary`), 'eggs: soft + hard pity');
+  assert.ok(eggs.includes(`within ${COLLECT_TIMELINES.legendaryCertainDays} days`) && /about (a|two|three|four|five) weeks?/.test(eggs), 'eggs: plain-word timelines');
+  const den = text('den');
+  assert.ok(den.includes(`${DEN_START_SLOTS} slots to start`) && den.includes(`${DEN_MAX_SLOTS} at most`), 'den: slots');
+  for (const p of DEN_SLOT_PRICES) assert.ok(den.includes(` ${p}`), `den: slot price ${p}`);
+  assert.ok(den.includes('frozen') && den.includes('during a dive') && den.includes('expedition') && den.includes('mini-game'), 'den: freeze + swap blocks');
+  const stones = text('stones');
+  assert.ok(stones.includes(`${Math.round(STONE_ODDS * 100)}% chance`) && stones.includes(`With ${GLIMMER_PITY} glimmers`), 'stones: odds + glimmer pity');
+  assert.ok(stones.includes('never sold') && stones.includes('Tide Pass & Shop'), 'stones: Classic is never sold; Prism points at Tide');
+  assert.ok(!stones.includes('24%'), 'stones: no random Prism odds');
+  const tide = text('tide');
+  assert.ok(tide.includes('Tide Pass') && tide.includes('not for sale yet'), 'tide: what it is, and not for sale');
+  for (const s of PRISM_STYLES) assert.ok(tide.includes(`${SHINY_STYLE_LABEL[s]} ${PRISM_STYLE_COST[s]}`), `tide: ${s} cost`);
+  assert.ok(eggs.includes('Tide Pass & Shop'), 'eggs: one line points at Tide');
+  assert.ok(stones.includes(`${Math.round(EXPEDITION_STONE_CHANCE * 100)}%`) && stones.includes(`every ${STONE_EVERY_DAYS}th day`), 'stones: sources');
+  assert.ok(stones.includes('Abyss 2%') && stones.includes('Hadal 5%'), 'stones: Abyss/Hadal shares from the loot table');
 }
+ok('the Guide shows the live constants (stage cuts, bust table, Power ceiling, medals, unlocks, Maxed aura, the TD band, Part D eggs/pity/Den/Stones)');
 
-// --- wired -------------------------------------------------------------------------------------------------
+/* -------------------------------------- 3. sections + "?" + old text gone --- */
+
 {
-  const pet = read('src/play/pet-screen.tsx');
-  assert.ok(pet.includes('<GuideHost') && pet.includes('screen="hideout"') && pet.includes('active={guideIdle}'), 'Hideout hosts the guide');
-  const idle = pet.slice(pet.indexOf('const guideIdle ='), pet.indexOf('const guideIdle =') + 520);
-  for (const part of ['!hideoutBusy', '!settingsOpen', '!teaseOpen', "wipe === 'off'", '!pv.away', '!presence.peekaboo', 'tipCandidate == null', 'pet.reveals[revealStep]']) {
-    assert.ok(idle.includes(part), `the Hideout guide waits for: ${part}`);
+  const all = guideSections();
+  assert.deepEqual(all.map((s) => s.id), [...GUIDE_SECTIONS]);
+  for (const s of all) assert.ok(s.lines.length >= 3 && s.lines.every((l) => l.length > 20), `${s.id}: has real text`);
+  const files = [
+    'pet-screen.tsx',
+    'pet-sheets.tsx',
+    'dive-screen.tsx',
+    'divecore-settings.tsx',
+    'help/help-sheet.tsx',
+    'den-sheet.tsx',
+    'stone-sheet.tsx',
+    'shop-screen.tsx',
+  ].map((f) => fs.readFileSync(path.join(ROOT, 'src/play', f), 'utf8'));
+  const linked = new Set<string>();
+  for (const src of files) {
+    for (const m of src.matchAll(/section="([a-z]+)"|openGuide\('([a-z]+)'\)|initial="([a-z]+)"/g)) linked.add(m[1] ?? m[2] ?? m[3]);
   }
-  const defend = read('src/play/defend-screen.tsx');
-  assert.ok(/<GuideHost\s+screen="turf"[\s\S]{0,260}active=\{phase === 'setup' && !setupOpen && !live\}/.test(defend), 'Turf setup hosts the guide only on the setup board');
-  const play = read('src/app/play.tsx');
-  assert.ok(play.includes('screen="locker"') && play.includes("mode === 'dress' && view"), 'the Locker hosts the guide');
-  assert.ok(play.includes('void resetGuide();'), 'Replay tips restarts the guide');
-  const settings = read('src/play/divecore-settings.tsx');
-  assert.ok(settings.includes('Guide bubble · ') && settings.includes('setGuideOff(!guide.off)'), 'Settings has the Guide bubble switch');
-  assert.ok(settings.includes('void resetGuide();'), 'Reset Divecore restarts the guide');
-  const bubble = read('src/play/guide-bubble.tsx');
-  assert.ok(bubble.includes('GUIDE_BUBBLE_HEIGHT = 76') && bubble.includes('pointerEvents="box-none"'), 'a fixed 76 pt box in a box-none wrapper');
-  assert.ok(/width: 48, height: 48/.test(bubble), 'the Got it button is at least 44 pt');
-  assert.ok(bubble.includes('numberOfLines={3}') && bubble.includes('maxFontSizeMultiplier={1.2}'), 'text capped at x1.2 in a fixed box');
-  assert.ok(!/setInterval|setTimeout|withRepeat/.test(bubble), 'no timer and no loop: it never pulses');
-  assert.ok(bubble.includes('motion.cosmeticsStill') && bubble.includes('motion.vestibularSafe'), 'Reduce Motion: shorter fade; motion Off: none');
-  assert.ok(bubble.includes('announceForAccessibility'), 'VoiceOver hears each new step');
-  assert.ok(!/setPlaySettings|commit\(/.test(bubble + read('src/play/guide-store.ts') + read('src/play/guide.ts')), 'nothing is written to the Divecore save');
-  assert.equal(HIDEOUT_SAVE_VERSION, 33);
-  assert.equal(defaultPlayStore(T).version, 33);
-  ok('wired: Hideout (with every wait), Turf setup, Locker, the Settings switch, Replay tips and Reset; save stays v33');
+  for (const id of linked) assert.ok((GUIDE_SECTIONS as readonly string[]).includes(id), `"?" link to a real section: ${id}`);
+  for (const want of ['pet', 'eggs', 'den', 'stones', 'tide', 'dive', 'expeditions', 'games', 'buffs', 'collection']) assert.ok(linked.has(want), `a "?" opens ${want}`);
+  // v27: the "?" sits on the Den, the egg picker and the Stone sheet themselves.
+  const screen = files[0];
+  for (const [sheet, section] of [['den', 'den'], ['stone', 'stones'], ['eggs', 'eggs'], ['prism', 'tide']] as const) {
+    assert.ok(new RegExp(`sheet === '${sheet}'[\\s\\S]{0,1200}?section="${section}"`).test(screen), `the ${sheet} sheet has a "?" to ${section}`);
+  }
+  assert.ok(files[files.length - 1].includes('initial="tide"'), 'the Shop Tide shelf and pass card open the Tide section');
+  const all3 = files.join('\n') + fs.readFileSync(path.join(ROOT, 'src/play/pet-egg-sheets.tsx'), 'utf8');
+  assert.ok(!/How it works|how it works"|EggHelp/.test(all3), 'the old scattered "How it works" text is gone');
+  assert.ok(files[3].includes('Open the Guide') && files[4].includes('openFullGuide'), 'linked from ⚙ Settings and the "?" help sheet (Full guide)');
 }
+ok('every section has text; every "?" opens a real section; Settings + the help sheet link it; the old "How it works" text is gone');
+
+/* --------------------------------------------------------- 4. nameplate --- */
+
+{
+  for (const g of GRADES) {
+    for (const shiny of [false, true]) {
+      const t = nameplateText(g, shiny);
+      assert.ok(t.includes('★'.repeat(GRADE_STARS[g])) && t.includes(GRADE_LABEL[g]), `${g}${shiny ? ' shiny' : ''}: stars + word`);
+    }
+  }
+  const room = fs.readFileSync(path.join(ROOT, 'src/play/pet-room.tsx'), 'utf8');
+  assert.ok(room.includes('nameplateText(grade, pet.shiny)'), 'the room draws the nameplate text');
+  assert.ok(!/bubbleRow[\s\S]{0,400}gradeTag\(grade\)/.test(room), 'the grade is no longer in the bubble row');
+  // The plate hangs BELOW the feet (the floor ring ends at feet+6): a plate at
+  // feet-4 covered the sprite's feet (Crimson Oni, Child).
+  const below = /const PLATE_BELOW_FEET = (\d+);/.exec(room);
+  assert.ok(below && Number(below[1]) >= 6, 'PLATE_BELOW_FEET clears the floor ring (feet+6)');
+  assert.ok(room.includes('top: footAt * box + PLATE_BELOW_FEET'), 'the plate is positioned below the feet line');
+  assert.ok(!room.includes('top: footAt * box - 4'), 'the plate no longer straddles the feet');
+}
+ok('nameplate: stars AND the word for every grade (never colour alone); the bubble keeps only name + mood');
 
 console.log(`\ncheck:guide — ${passed} groups passed.`);
