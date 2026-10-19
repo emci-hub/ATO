@@ -41,9 +41,32 @@ Read before editing the area. Each one has bitten this repo at least once.
   box and native-crash probe are `__DEV__`. `check:release-mode` blocks a production
   *build*; it does not block an OTA.
 - **Edge Functions must verify the JWT in code** (`auth.getUser()`); gateway
-  `verify_jwt` is not committed anywhere (no `supabase/config.toml`). `dev-unlock` and
-  `password-login` are the deliberate exceptions — both run pre-login or pre-unlock,
-  so there is no JWT to check yet; do not "fix" that.
+  `verify_jwt` is not committed anywhere (no `supabase/config.toml`; live values are listed in
+  `docs/ato-finish-roadmap.md` "Step 1 status"). `password-login` is the deliberate exception (it IS the
+  pre-login path; deploy it with `--no-verify-jwt`), plus the two cron functions `ai-library-fill` and
+  `refresh-around`. `dev-unlock` DOES require a JWT (this line used to say otherwise).
+- **Rate limits (wave98).** `rate_limit_hits` + `_rate_limit_check` count fixed windows; RPCs use
+  `_rate_limit_caller(bucket, max, seconds)`, Edge Functions use `rate_limit_hit` through
+  `supabase/functions/_shared/rate-limit.ts` (service role only; it fails OPEN on a limiter error so a broken
+  counter never blocks sign-in). A SQL function that RAISES rolls its own counter back, so a limit inside
+  `assert_invite_usable` / `complete_signup` can never count failures: do not add one there, add a status-returning
+  function instead. Anon callers are keyed by `cf-connecting-ip` / `x-forwarded-for`; no header = a shared
+  `noip` bucket with 20x room.
+- **`ai-generate` is closed (wave98).** It is a 410 stub with no vendor key. The only model path is `ai-library`
+  (and `ai-library-fill`). Do not put a vendor call, a secret or a caller-supplied prompt back; `check:ai-provider`
+  pins it. The function is deleted in step 9.
+- **`me.timezone` is guarded (wave98).** A signed-in client can only store a real zone name (bad value = old value
+  kept), and `claim_daily_checkin` clamps the check-in day to UTC ±1.
+- **Supabase default privileges give `anon` + `authenticated` EXECUTE on every new function** even after
+  `revoke … from public`. Always `revoke … from public, anon` explicitly, then `grant … to authenticated` (this is how
+  `handle_taken` ended up anon-callable). Run `supabase db advisors --linked --type security` after any migration.
+- **Sentry events are scrubbed** (`src/lib/sentry-scrub.ts`: no user, no request body, no console or input
+  breadcrumbs, emails / tokens / uuids / @handles / filter values redacted, strings capped). A new `extra` / tag
+  that holds free text is dropped by key name (`text`, `answer`, `prompt`, `message`, `note`, `name`, …).
+- **Deploy Edge Functions with `--use-api`** (`supabase functions deploy <name> --use-api`): without Docker the plain
+  command can leave the live function unchanged. Always confirm with `supabase functions list` (version and hash move).
+- **No Docker on this machine**, so `supabase db dump` / `pg_dump` do not run. Read the live schema and apply SQL with
+  `supabase db query --linked -f <file>` (the Management API). `supabase db push` skips our untimestamped migrations.
 - **`login_email_for_identifier` is service_role-only (wave36).** It used to be
   `anon`+`authenticated`-callable and returned the plain email for any handle — anyone
   signed out could enumerate handle→email pairs. Password login now goes through the
@@ -69,9 +92,10 @@ Read before editing the area. Each one has bitten this repo at least once.
   not superuser/owner) — wave42 superseded it with this table. Set the actual value with
   a plain `update public.app_secrets set qa_override_invite_code = '...' where id = 1;`
   from the Supabase SQL editor — never commit the value to git or reference it under
-  `src/`. It's also `anon`-probeable (the RPC that checks it is anon-callable), so use a
-  long, high-entropy value, and know that override signups leave `referred_by = null`
-  with no `invite_codes` audit trail.
+  `src/`. It's also `anon`-probeable (the RPC that checks it is anon-callable and cannot
+  count failed guesses, see the rate-limit note above), so use a long, high-entropy value
+  or set it to `null` once signup is public, and know that override signups leave
+  `referred_by = null` with no `invite_codes` audit trail.
 
 ## AI
 

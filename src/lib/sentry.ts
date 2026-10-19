@@ -1,6 +1,8 @@
 import * as Sentry from '@sentry/react-native';
 import { Platform } from 'react-native';
 
+import { scrubBreadcrumb, scrubEvent } from '@/lib/sentry-scrub';
+
 /** Public DSN (ingest-only). Keep the auth token out of the client bundle. */
 export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
 
@@ -16,6 +18,10 @@ export function initSentry(): void {
     tracesSampleRate: 0,
     enableAutoPerformanceTracing: false,
     attachStacktrace: true,
+    maxBreadcrumbs: 30,
+    // Crash reports carry no email, handle, id-in-URL, token or free text (wave98, S2).
+    beforeSend: (event) => scrubEvent(event),
+    beforeBreadcrumb: (crumb) => scrubBreadcrumb(crumb),
   });
 }
 

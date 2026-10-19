@@ -655,5 +655,18 @@ Walk every screen and check: words fit their boxes (no cut-off, no overlap), but
 - [ ] **Turf War**: no heavy flashes, shakes or hit-stop on hits, boss and win / loss beats; the game is still playable and readable.
 - [ ] **Dive** and **mini-games**: no flashing; results still show clearly.
 
+## Box 59 — Server hardening still lets real people in (ATO finish step 1, 2026-10-19)
+
+Run this AFTER the wave98 SQL, the three function deploys and your three rotations are done (the exact commands are in `docs/ato-finish-roadmap.md` "Step 1 status"), and after the OTA that carries the Sentry scrubber if it has been published. Use your own phone; nothing here needs a second account. Nothing in this box wipes anything.
+- [ ] **Password sign-in still works:** sign out, then sign in with a handle (or e-mail) and your password. It signs you in. (Use the NEW dev-test password only on the dev-test account; never type a real account's password into a test.) **Then type a wrong password 11 times in a row** on a throw-away identifier: the 11th reply is still just "couldn't sign you in" (no crash, no hint it is a limit). Wait 15 minutes, a correct sign-in works again.
+- [ ] **E-mail code sign-in still works:** sign out, ask for a code, enter it, you are in. This is the main way in, so it must be untouched.
+- [ ] **Sign-up form handle check:** on a fresh sign-up screen (or the dev "re-run sign-up"), typing a free handle shows it is free and a taken one shows "already taken". If you tap through 31 different handles within 10 minutes the check says "Couldn't check that handle. Try again." (fine), and works again after the window.
+- [ ] **A share link page still opens:** open someone's `/@handle` poster link (yours is fine) while signed out or signed in. The poster shows. A made-up handle shows the "no ATO for that" state, not a crash.
+- [ ] **Daily check-in still pays once:** on Home, check in. It pays once; a second tap the same day says already done. Change your phone's time zone to another city and open the app: the check-in does NOT pay a second time for the same day, and the app does not error.
+- [ ] **Deep dive and Legends still write:** open one Explore deep dive and one Legends card. If one says it could not write it, tell me (it uses the AI library only; the old route is now closed on purpose).
+- [ ] **Dev unlock gate:** (only if you use it) tap the version number 7 times and type the NEW unlock password: it opens. A wrong password 6 times in 15 minutes stops answering for a while; that is the limit working.
+- [ ] **Nothing looks different:** no new screens, no new text, no new permission prompt.
+Report any "something I used to do now fails".
+
 ### When you are done
 Tell me which parts passed, plus anything that looked wrong with the screen name. If everything passed and you accept this as the shorter pass, Boxes 43, 53, 54, 55, 56 and 58 can all be marked PASSED, and I will also note whether the Locker icons are approved (or which ones you want swapped).
