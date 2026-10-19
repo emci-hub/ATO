@@ -520,7 +520,7 @@ const neutralLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat('
 // since step 6 (2026-10-19): with hero towers at 40 scrap, "Mixed + 2 hero
 // towers" spends the whole 80 start scrap on the two heroes and no longer is the
 // board a player fields. Target: about 3-8% less damage needed — helps, never mandatory.
-const mixedHeroes = STRATEGIES.find((st) => st.id === 'mixed+helper') as Strategy;
+const petBoard = STRATEGIES.find((st) => st.id === 'mixed+helper') as Strategy;
 const perWaveGain = (base: Strategy, boosted: Strategy, waves: typeof WAVES) => {
   const ratios: number[] = [];
   for (const w of waves) {
@@ -536,7 +536,7 @@ const petRows = [
   { label: 'god (battle)', base: PET_POUNCE_BASE.god * PET_BRANCH_POUNCE.battle },
 ].map((row) => ({
   ...row,
-  gain: perWaveGain(mixedHeroes, { ...mixedHeroes, id: `pet:${row.label}`, petBase: row.base }, WAVES) - 1,
+  gain: perWaveGain(petBoard, { ...petBoard, id: `pet:${row.label}`, petBase: row.base }, WAVES) - 1,
 }));
 // v26 Pumped (Train Gold): pounce ×1.25, capped at PET_POUNCE_CAP — the pet's
 // in-run TD help (pounce + buff) must stay inside the 3-8% band. A capped-out
@@ -548,7 +548,7 @@ const pumpedRows = petRows.map((row) => {
     base: Number(pumped.pounce.toFixed(2)),
     gain: pumped.pounce === row.base
       ? row.gain
-      : perWaveGain(mixedHeroes, { ...mixedHeroes, id: `pump:${row.label}`, petBase: pumped.pounce }, WAVES) - 1,
+      : perWaveGain(petBoard, { ...petBoard, id: `pump:${row.label}`, petBase: pumped.pounce }, WAVES) - 1,
   };
 });
 
@@ -709,8 +709,9 @@ const freshAvg = (id: string) => {
 findings.push(
   `- **Hero towers (${HERO_TOWER_STATS.placeCost} scrap each):** Mixed + 2 hero towers needs ${freshAvg('mixed+heroes').toFixed(2)}× on a fresh board / ${keptAvg('mixed+heroes').toFixed(2)}× kept, ` +
     `Mixed alone ${freshAvg('mixed').toFixed(2)}× / ${keptAvg('mixed').toFixed(2)}×, Mixed + helper ${freshAvg('mixed+helper').toFixed(2)}× / ${keptAvg('mixed+helper').toFixed(2)}× — ` +
-    `hero towers are ×${(keptAvg('mixed') / keptAvg('mixed+heroes')).toFixed(2)} stronger than plain towers on a kept board` +
-    (freshAvg('mixed+heroes') > freshAvg('mixed+helper') ? ', no longer the cheapest answer on a fresh board.' : '.'),
+    `hero towers are no longer free and are ×${(keptAvg('mixed') / keptAvg('mixed+heroes')).toFixed(2)} stronger than plain towers on a kept board ` +
+    `(×${(freshAvg('mixed') / freshAvg('mixed+heroes')).toFixed(2)} fresh, was ×2.55 while free): still the best buy per scrap, no longer the dominant one. ` +
+    'The free helper stacks with either.',
 );
 const bossRows = keptHelper.rows.filter((r) => waveDefFor(r.w.phase, r.w.wave)?.groups.some((g) => g.role === 'boss'));
 findings.push(
@@ -789,6 +790,8 @@ lines.push('');
 lines.push('## Legends (cycle 0, Mixed + 2 Archangel)');
 lines.push('');
 lines.push('Damage needed on each elemental stage with each Legend at Lv1. Lower = better; the best Legend for a stage is the one its element is weak to.');
+lines.push('');
+lines.push(`Note (step 6): this section, affinity and the stacked-boost table still use the "Mixed + 2 hero towers" board. With hero towers at ${HERO_TOWER_STATS.placeCost} scrap a fresh board spends the 80 start scrap on the two heroes and builds no plain towers until kills pay, so these numbers rose against the 2026-09-30 report partly from that thinner board, not from any Legend change.`);
 lines.push('');
 lines.push(`| Stage | Element | ${LEGEND_ELEMENTS.map((e) => e).join(' | ')} |`);
 lines.push(`|---|---|${LEGEND_ELEMENTS.map(() => '---').join('|')}|`);

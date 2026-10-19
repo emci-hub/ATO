@@ -729,10 +729,11 @@ assert.equal(boundBossHeroId('nobody'), null, 'an unmapped id has no hero art');
 ok('boundBossHeroId maps the Final cycle boss → Archangel and resolves hero towers');
 
 // Place: a hero tower lands on an empty pad for 40 scrap, and blocks on short scrap / occupied / cap.
-const live = createDefendLive(1, { boardId: 'ato', scrap: 100 });
+// 200 scrap: enough for a third place, so the cap (not the price) is what refuses it below.
+const live = createDefendLive(1, { boardId: 'ato', scrap: 200 });
 const placedHero = placeBoundBoss(live, 0, 'archangel', 1);
 assert.ok(placedHero, 'a hero bound as a tower places on an empty pad');
-assert.equal(placedHero.scrap, 60, 'and costs 40 scrap');
+assert.equal(placedHero.scrap, 160, 'and costs 40 scrap');
 assert.equal(placeBoundBoss({ ...live, scrap: 39 }, 0, 'archangel', 1), null, 'short of 40 scrap is refused');
 assert.equal(placedHero.boundBosses[0]?.bossId, 'archangel');
 assert.equal(placeBoundBoss(placedHero, 0, 'oni', 1), null, 'an occupied pad is refused');
