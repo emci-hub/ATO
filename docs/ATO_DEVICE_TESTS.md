@@ -606,3 +606,16 @@ First: close and reopen the app so the update loads. Play on your **normal** sav
 - [ ] **Main 9 and Main 10:** with your kept board and a helper they clear (Main 10 can still need a retry or two; that is fine for the finale).
 - [ ] **Helper vs the boss:** on Trial 5 / Main 5 the helper gets dazed about once per boss; on Main 10 about twice. It is up and fighting most of the wave.
 - [ ] **Nothing else moved:** tower prices (40), upgrades (40 / 90), start scrap (80) and rewards are the same as before. Your save loads as usual.
+
+## Box 56 — Locker icons (Divecore finish step 7, 2026-10-19)
+
+First: close and reopen the app so the update loads. You need some gear in the bag (a few Powers and Looks) to see most icons. Dev tools can give you gear.
+
+- [ ] **Every item has its own picture:** open the Locker. Each of the 13 items shows its own colourful icon with a thin white outline (no more grey and gold stand-ins, no two items sharing a shield).
+- [ ] **They match the item:** Leaf Cape = green leaf cape, Glowveil = glowing red-orange cloak, Bud Staff = wooden staff with a green bud, Saltcrest Helm = pale blue helmet with a wave plume, Moss Habit = mossy green hooded robe, Deep Pearl = blue pearl pendant, Tide Blade = teal wave-shaped sword, Bark Aegis = round bark shield with a leaf, Copper Keeper = copper purse with a spark, Curator's Cloak = purple hooded cloak with a lens, Ember Edge = flame sword, Ember Ward = dark shield with a flame, Ember Mantle = orange collar mantle.
+- [ ] **Easy to tell apart:** the three ember cloaks (Glowveil, Curator's Cloak, Ember Mantle) are different shapes and colours at a glance. Note any pair that still looks too alike.
+- [ ] **Sharp, not fuzzy:** the icons are crisp pixel art in their square frame, not blurry or squashed. They fill the frame (a little bigger than before) and nothing is cut off at the edges. Check on your phone at normal size and with Larger Text on.
+- [ ] **Rows did not move:** the Locker rows, tabs and the bag list are the same height as before; nothing jumps when you open or close a row.
+- [ ] **Same icon everywhere:** the same item shows the same icon in the Dive bag / finds and on the pet's badge, if you have a Look worn as a badge.
+- [ ] **Which one do you like less?** Tell me any icon you would like swapped. Two other looks for every item are saved in the library (not shown in the game, no switch), so a swap needs no new generation.
+- [ ] **Nothing else changed:** gear still equips, bonuses and "Works in" tags are the same, and your save loads as usual.
