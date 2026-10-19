@@ -599,7 +599,8 @@ First: close and reopen the app so the update loads. Play on your **normal** sav
 
 - [ ] **Hero tower price:** in Turf setup, tap an empty pad. A bound hero row now says **"40 scrap"** (not "free"). With under 40 scrap it is greyed out; placing one takes 40 scrap from the counter.
 - [ ] **A kept hero tower stays free:** a hero tower already on your board from an earlier wave is still there on the next wave, and no scrap was taken for it.
-- [ ] **Trial 4 is not a wall:** Trial 4's runners now come in a short line (two of them), not a tight pack. It should feel no harder than Trial 5 (the boss wave), which now has a longer line of minions before the boss.
+- [ ] **Removing one does not refund:** Remove on a placed hero tower frees the pad but does not give the 40 scrap back (same as the cycle boss). Placing it again costs 40 again. Note if that feels unfair.
+- [ ] **Trial 4 is not a wall:** Trial 4 has one more minion (4) and its runners now come in a short line (two of them), not a tight pack. It should feel no harder than Trial 5 (the boss wave), which now has a longer line of minions before the boss.
 - [ ] **Main 4 and Main 7:** the runners come one after another instead of in one clump. Both should be winnable with your kept board and a helper, without extra gear.
 - [ ] **Main 3 and Main 6:** a few more minions than before (Main 3: one more, tanks a little earlier; Main 6: one more). They should feel like a small step up from the wave before, not a dip.
 - [ ] **Main 9 and Main 10:** with your kept board and a helper they clear (Main 10 can still need a retry or two; that is fine for the finale).
