@@ -622,7 +622,7 @@ First: close and reopen the app so the update loads. You need some gear in the b
 
 ## Box 58 — Divecore done pass: one full run + Larger Text + Reduce Motion (Divecore finish step 9, 2026-10-19)
 
-This is the last Divecore box. It covers what Boxes 43 and 53-56 test, so running it (and saying so) is enough to close them.
+This is the last Divecore box. It walks the same ground as Boxes 43 and 53-56 but shorter (it leaves out per-row detail like the Today sheet's screen-reader label, "a kept hero tower stays free / no refund" and each icon's match). Run those boxes as written, or tell me you accept this shorter pass in their place.
 First: close and reopen the app so the latest update loads. **Part A wipes your Divecore progress** (Settings → Reset Divecore). Do it on a spare phone or account if you want to keep your real game, or do Part B first and Part A last.
 
 ### Part A — a brand-new player (Settings → Reset Divecore, or a fresh install)
@@ -631,7 +631,7 @@ First: close and reopen the app so the latest update loads. **Part A wipes your 
 - [ ] **Copy is kind and plain:** nothing says "Main 20", "Basecore", "Starving" or tells you off for being away. Look at: the Turf setup sheet ("Protect your street…"), the dive bust line ("Your Hideout is safe"), the Avatar-unlocked notice ("joined your crew"), the pet's hungry / sad lines, the Tide Pass guide.
 - [ ] **Locker (Box 56 + Box 51):** every item has its own icon (13 different), "Works in" tags on Powers, Looks say "Style only", sorted into Powers and Looks. Same icon for the same item everywhere.
 - [ ] **Today button (Box 53):** the dock has **Today**; the count matches what is ready; at 0 it says "All caught up"; nothing red, no timers.
-- [ ] **Store:** you see only the Token shop with priced rows (Dive refresh, Merge crate, Big crate, Shine Stone). No paid tab, no pass, no "Coming soon", no dev button anywhere.
+- [ ] **Store:** you see only the Token shop with priced rows (Dive refresh, Merge-fuel crate, Big merge crate, Shine Stone). No paid tab, no pass, no "Coming soon", no dev button anywhere.
 - [ ] **Turf War balance (Box 55):** Trial 1-5 and Main 1-4 feel like a gentle climb (Trial 4 not harder than the Trial 5 boss). The hero tower row says **40 scrap**. Your helper is up and fighting most of each boss wave.
 - [ ] **Nothing dev-only is reachable:** Settings has no dev unlock row you can use, no floating DEV button, no testing groups. (If you are on your own invite-only test build these may still appear; note it. They must be gone in the public build.)
 
@@ -646,7 +646,7 @@ Walk every screen and check: words fit their boxes (no cut-off, no overlap), but
 - [ ] **Hideout** (name tag, rails, dock with Feed · Today · Info, the guide bubble), **Today sheet**, **Feed**, **Info** tabs and the Guide, **Away card**, **visitor card**
 - [ ] **Pet** / **Den** / **Eggs** / **Dress** and the Locker (rows, tabs, icons in their frame)
 - [ ] **Underground** (Dive) and the **find / bust** notices
-- [ ] **Turf War**: top bar, next-wave card, **Setup sheet** (helper picker, hero tower "40 scrap"), the wave screen, **result** card
+- [ ] **Turf War**: top bar, next-wave card, **Setup sheet** (helper picker), the pad build card (hero tower "40 scrap"), the wave screen, **result** card
 - [ ] **Store**, **Circle**, **Settings** and Help, mini-games
 
 ### Part D — Reduce Motion (Settings → Accessibility → Motion → Reduce Motion)
@@ -656,4 +656,4 @@ Walk every screen and check: words fit their boxes (no cut-off, no overlap), but
 - [ ] **Dive** and **mini-games**: no flashing; results still show clearly.
 
 ### When you are done
-Tell me which parts passed, plus anything that looked wrong with the screen name. If everything passed, Boxes 43, 53, 54, 55, 56 and 58 can all be marked PASSED, and I will also note that the Locker icons are approved (or which ones you want swapped).
+Tell me which parts passed, plus anything that looked wrong with the screen name. If everything passed and you accept this as the shorter pass, Boxes 43, 53, 54, 55, 56 and 58 can all be marked PASSED, and I will also note whether the Locker icons are approved (or which ones you want swapped).

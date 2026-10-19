@@ -223,7 +223,8 @@ still open (listed under "Open items" below).
       (its label is "Very hungry", pinned).
 - [x] The helper's daze rhythm, the Neon Maze choice and the splash display are settled and phone-checked. Evidence:
       `HELPER_DAZE_PROOF_MS = 11_000` (`src/play/turf-team.ts:53`), Neon Maze hidden from players
-      (`defend-screen.tsx:4625`/`4630`, `check:turf-team`), splash ring built; **Box 50 PASSED**.
+      (picker kept for dev tools only: `defend-screen.tsx:4586`, `fight.phase === 'main' && PRE_LAUNCH_DEV &&
+      devUnlocked`; `check:turf-team`), splash ring built; **Box 50 PASSED**.
 - [~] Box 43 and every new box in this plan say PASSED. **Passed:** Boxes 44-52. **Open:** Box 43 (egg
       duplicates), Boxes 53 (Today), 54 (guide), 55 (balance), 56 (Locker icons), and the new Box 58.
 - [~] A newcomer gets a clear "what next" from the guide through the first loop, and can turn it off. Evidence:
@@ -232,11 +233,14 @@ still open (listed under "Open items" below).
 - [x] The Today chip, the clock guard (back jumps; forward jumps accepted as a risk, emci), the 5★ shards, the
       refreshed balance report and the new Locker icons are shipped. Evidence: OTA groups `3202a990` (Today),
       `325c79ca` (guard, shards), `2f5b8fca` (balance, `games/grove/BALANCE_REPORT.md`), `33b020eb` (icons).
-- [x] No player sees a price label, a pass-only item or a dev tool. Evidence: `check:shop-hidden` (4 groups, players see
-      only the Token shop with priced rows), `check:play-dev-hidden` (5 groups, 91 files), and
-      `RELEASE_MODE=1 npm run check:release-mode` **passes with `PRE_LAUNCH_DEV = false`** (43 dev-surface gates, 44
-      checks). With the flag `true` (today, invite-only) that check fails on purpose: **flipping it is on the
-      launch checklist, not a Divecore gap** (see Open items).
+- [~] No player sees a price label, a pass-only item or a dev tool. **True for the Divecore code, and true for every
+      player only once `PRE_LAUNCH_DEV` is `false`** (today it is `true`: this invite-only build still has the dev PIN, so
+      testers can open dev tools; `DEV_TOOLS_AVAILABLE` follows the flag). Evidence: `check:shop-hidden` (4 groups,
+      players see only the Token shop with priced rows); `check:play-dev-hidden` (5 groups) scans 91 Play files and fails
+      if any file that renders dev tooling lacks the `PRE_LAUNCH_DEV` gate (the `dev*` store functions have no runtime
+      guard of their own: they are gated at the screens); and `RELEASE_MODE=1 npm run check:release-mode` **passes with
+      `PRE_LAUNCH_DEV = false`** (43 dev-surface gates, 44 checks; tested with a temporary local edit, reverted). With the
+      flag `true` that check fails on purpose: **flipping it is on the launch checklist, not a Divecore gap** (Open items 6).
 - [~] The save is still **v33** (`HIDEOUT_SAVE_VERSION` `hideout-progress.ts:20`, `playStore.ts:957`, pinned in
       `check:locker-stats`, `check:locker-icons`, `check:turf-team`); `check:ota-gate` is green (178 offline checks
       before step 9's copy edits; re-run at the end of step 9). Larger Text and Reduce Motion: each step's box tested its
@@ -248,8 +252,9 @@ still open (listed under "Open items" below).
 
 Nothing below blocks the next job; emci runs or accepts each.
 
-1. **Phone boxes open:** 43, 53, 54, 55, 56, 58. Box 58 is one full pass and covers what 53-56 test; running 58 and
-   saying so is enough to close them if emci wants.
+1. **Phone boxes open:** 43, 53, 54, 55, 56, 58. Box 58 is one full pass over the same ground but shorter than 53-56
+   (it leaves out per-row detail such as Box 53's screen-reader label, Box 55's "kept tower stays free / no refund" and
+   Box 56's per-icon match); emci can run 53-56 as written, or accept Box 58 as the shorter pass that closes them.
 2. **Locker icons not approved:** only emci sets `approved` (they are `resource` in the registry). The other two looks per
    item sit unused in the library for a swap (Box 56).
 3. **Minigames makeover M1-M3 (section 7):** still waiting for emci's yes; not part of "done".
@@ -814,7 +819,12 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   `RELEASE_MODE=1 check:release-mode` **passes with `PRE_LAUNCH_DEV` set to false** (tested with a temporary local edit,
   reverted, not committed; 43 dev-surface gates, 44 checks). It fails on purpose while the flag is `true`
   (invite-only): flipping it is on the launch checklist, see "Open items" 6. **Box 58** written (new player, old save,
-  Larger Text, Reduce Motion over every screen). Save stays **v33**. OTA: see the step 9 line in `docs/NOW.md`.
+  Larger Text, Reduce Motion over every screen). Save stays **v33**. Gate green (178), reviewer PASS with warnings (fixed here: a wrong
+  line citation, Box 58's overclaims and store names, the dev-tool tick now `[~]`, the missing OTA record). **OTA
+  published**: iOS `01a15574-d836-7a9c-8fde-c44d71bf3f74`, Android `01a15574-d836-7085-a314-4324e148a9eb`, group
+  `0bc86f41-573b-48dc-a622-23aafe5b1b38` (message `divecore-finish-step9-copy`, commit `9aee9084`). Phone check: **Box
+  58** (not done). Not covered by the stale-words scan: copy outside `src/play` and `src/app/play.tsx` (a repo-wide grep
+  found none).
 
 ## Web research (read as data)
 
