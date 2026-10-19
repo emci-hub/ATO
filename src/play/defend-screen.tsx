@@ -98,6 +98,7 @@ import { allHeroes, heroById, heroName } from '@/play/heroes-data';
 import { PlayFrame } from '@/play/play-frame';
 import { HeroOwnSheet } from '@/play/hero-own-sheet';
 import { NeonButton, NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
+import { GuideHost } from '@/play/guide-bubble';
 import { GameScreen, computeStageFrame, useStageFrame } from '@/play/stage-layout';
 import { PlaySheet } from '@/play/play-sheet';
 import { NEON } from '@/play/neon-viper';
@@ -4354,6 +4355,15 @@ export function DefendScreen({
             </View>
           ) : (
             <>
+              {/* Newbie guide (finish step 5): only on the setup board, never during a run, a result or an open Setup sheet.
+                  Drawn first so a build card or the wave peek sits on top of it. */}
+              <GuideHost
+                screen="turf"
+                view={view}
+                active={phase === 'setup' && !setupOpen && !live}
+                bottom={setupFrame.dock.height + 8}
+                sideInset={12}
+              />
               {floatCards}
               {wavePeekCard}
             </>

@@ -137,6 +137,8 @@ import {
 } from '@/play/pet-talk';
 import { PlaySheet } from '@/play/play-sheet';
 import { SheetSection } from '@/play/sheet-kit';
+import { GuideHost } from '@/play/guide-bubble';
+import { RAIL_BUTTON_PT, RAIL_EDGE_PT } from '@/play/hideout-rails-model';
 import { freeEggsWaiting, todayItems, TODAY_TITLE, type TodayAction } from '@/play/today';
 import { TodaySheetBody } from '@/play/today-sheet';
 import {
@@ -947,6 +949,18 @@ export function PetScreen({
     return () => clearTimeout(t);
   }, [tipCandidateId]);
   const shownTip = tipCandidate && tipReadyId === tipCandidate.id ? tipCandidate : null;
+  // Newbie guide (finish step 5): the same "nothing is open over the Hideout" test the coach tips use, plus no
+  // reveal ceremony and no tip waiting — the guide never shows together with a coach tip.
+  const guideIdle =
+    streetUiOn() &&
+    !hideoutBusy &&
+    !settingsOpen &&
+    !teaseOpen &&
+    wipe === 'off' &&
+    !pv.away &&
+    !presence.peekaboo &&
+    tipCandidate == null &&
+    (pet.reveals[revealStep] ?? null) == null;
   const seeTip = useCallback(
     (id: CoachTipId) => {
       commit((doc) =>
@@ -1267,7 +1281,15 @@ export function PetScreen({
               onVisit={visitCircleFriend}
               onClose={() => setCircleOpen(false)}
             />
-          ) : null
+          ) : (
+            <GuideHost
+              screen="hideout"
+              view={view}
+              active={guideIdle}
+              bottom={layoutRegions(frame).dock.height + SPACE.s}
+              sideInset={RAIL_EDGE_PT + RAIL_BUTTON_PT + SPACE.s}
+            />
+          )
         }
         onTipSeen={seeTip}
         notice={

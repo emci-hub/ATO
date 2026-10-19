@@ -28,6 +28,8 @@ import { NEON, shopUnlocked, storeOpen } from '@/play/neon-viper';
 import { NeonButton } from '@/play/neon-ui';
 import { backTarget, modeForTab, tabForMode, type PlayMode } from '@/play/play-nav';
 import { PlayThemeProvider } from '@/play/play-theme';
+import { GuideHost } from '@/play/guide-bubble';
+import { resetGuide } from '@/play/guide-store';
 import { GameScreen, useStageFrame } from '@/play/stage-layout';
 import { noticeEvents, type NoticeWatch } from '@/play/notify/events';
 import { notify, useNoticeOptions, useNoticePause, useNoticeTargets, type NoticeTarget } from '@/play/notify/notify';
@@ -783,6 +785,12 @@ export default function PlayScreen() {
       fadeKey={mode}
       reduceMotion={reduceMotion}
       background={NEON.ink}
+      // Newbie guide (finish step 5): on the Locker only, for "put a Power on". Hidden while Settings is open.
+      float={
+        mode === 'dress' && view ? (
+          <GuideHost screen="locker" view={view} active={!hubSettingsOpen} bottom={8} sideInset={12} />
+        ) : undefined
+      }
       stage={
         <ScrollView
           style={styles.listScroll}
@@ -990,6 +998,8 @@ export default function PlayScreen() {
             // The tips live on the Hideout: bring the player there and make all four unseen again.
             setMode('pet');
             commit((doc) => setPlaySettings(doc, replayTipsPatch()));
+            // The newbie guide starts over too (on, nothing dismissed).
+            void resetGuide();
           }}
           onOpenGuide={() => {
             setMode('pet');

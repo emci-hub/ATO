@@ -108,6 +108,18 @@ const ok = (msg: string) => {
 }
 
 {
+  // Divecore finish step 5: the newbie guide is a fixed 76 pt bubble in a GameScreen's float layer (box-none), never
+  // in flow, on the Hideout, the Locker and Turf setup; it adds no region and no timer.
+  const bubble = read('src/play/guide-bubble.tsx');
+  assert.ok(bubble.includes('GUIDE_BUBBLE_HEIGHT = 76') && bubble.includes("position: 'absolute'") && bubble.includes('pointerEvents="box-none"'), 'a fixed absolute bubble in a box-none wrapper');
+  assert.ok(!/setInterval|setTimeout|withRepeat/.test(bubble), 'the guide adds no timer and never pulses');
+  const hosts = ['src/play/pet-screen.tsx', 'src/play/defend-screen.tsx', 'src/app/play.tsx'].map((f) => (read(f).match(/<GuideHost\b/g) ?? []).length);
+  assert.deepEqual(hosts, [1, 1, 1], 'one host per screen: Hideout, Turf setup, Locker');
+  assert.ok(/float=\{[\s\S]{0,200}<GuideHost screen="locker"/.test(read('src/app/play.tsx')), 'the Locker guide rides the float layer, not the scroll body');
+  ok('Guide: a fixed float bubble on three screens; no region, no timer');
+}
+
+{
   // General ban: no game screen collapses a row (display:none style or inline) keyed on the
   // run phase — unless the line above marks a deliberate `fixed-regions: screen switch`.
   const offenders: string[] = [];

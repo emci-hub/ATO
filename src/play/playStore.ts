@@ -832,6 +832,21 @@ export function wornCountAcrossAvatars(doc: PlayStoreDoc): number {
   return worn;
 }
 
+/** Worn POWERS (not Looks) across every hero and Legend — the newbie guide's "put a Power on" signal. */
+export function wornPowerCountOf(doc: PlayStoreDoc): number {
+  const powers = (equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>) =>
+    Object.values(equipped).filter((ref): ref is ItemRef => ref != null && getItemDef(ref.id)?.core.kind === 'power').length;
+  let worn = 0;
+  for (const avatar of doc.avatars) worn += powers(avatar.equipped);
+  for (const gear of Object.values(doc.hero_gear)) worn += powers(gear);
+  return worn;
+}
+
+/** Power copies in the bag (Looks do not count). */
+export function bagPowerCountOf(inventory: readonly ItemStack[]): number {
+  return inventory.reduce((n, stack) => (getItemDef(stack.id)?.core.kind === 'power' ? n + stack.count : n), 0);
+}
+
 /** Total owned items — bag stacks + every Avatar's worn copies. */
 export function totalOwnedAcrossAvatars(doc: PlayStoreDoc): number {
   return bagItemCount(doc.inventory) + wornCountAcrossAvatars(doc);
@@ -1196,6 +1211,9 @@ export type PlayView = {
   turfHelperHeroId: string | null;
   /** P6: worn slots (0..4) per hero, for the Hideout gear badge (heroes wearing nothing are absent). */
   heroWorn: Readonly<Record<string, number>>;
+  /** Worn Powers across every hero (Looks excluded) and Powers in the bag — the guide's signals. */
+  wornPowers: number;
+  bagPowers: number;
   /** The active Legend's element — every Avatar + hero attack uses it, and a
    * worn Power of the same element gets its stats raised (2026-09-28). */
   legendElement: Element;
@@ -1622,6 +1640,8 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     lockerHeroId: lockerHeroIdOf(doc),
     turfHelperHeroId: helperHeroIdOf(doc),
     heroWorn: Object.fromEntries(Object.entries(doc.hero_gear).map(([hero, gear]) => [hero, wornItemCount(gear)])),
+    wornPowers: wornPowerCountOf(doc),
+    bagPowers: bagPowerCountOf(doc.inventory),
     legendElement: legendElementOf(active.id),
     avatars: doc.avatars.map((avatar) => ({
       id: avatar.id,

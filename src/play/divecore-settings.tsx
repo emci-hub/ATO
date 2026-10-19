@@ -20,6 +20,7 @@ import { streetUiOn } from '@/play/street-ui';
 import { NEON } from '@/play/neon-viper';
 import { GRADES, heroStars } from '@/play/pet-eggs';
 import { askPetReminderPermission, cancelPlayNotices, petNoticesAllowed } from '@/play/pet-reminder';
+import { resetGuide, setGuideOff, useGuideStore } from '@/play/guide-store';
 import { saveSeenStageReset } from '@/play/pet-seen';
 import { PLAY_MOTION_LABEL, PLAY_MOTION_MODES, setPlayMotionMode, usePlayMotionMode } from '@/play/play-motion';
 import {
@@ -138,6 +139,7 @@ export function DivecoreSettingsSheet({
     };
   }, [open]);
   const anyOn = NOTIF_KINDS.some((k) => settings.notif[k]);
+  const guide = useGuideStore();
 
   const toggle = async (kind: NotifKind) => {
     const on = !settings.notif[kind];
@@ -154,6 +156,7 @@ export function DivecoreSettingsSheet({
     commit((doc, now) => resetDivecore(doc, now));
     void cancelPlayNotices();
     void saveSeenStageReset();
+    void resetGuide();
     setResetStep('idle');
     setTyped('');
     onClose();
@@ -290,6 +293,13 @@ export function DivecoreSettingsSheet({
           onClose();
           onReplayTips();
         }}
+      />
+      {/* The newbie guide bubble (finish step 5): a device-only switch, not part of the save. */}
+      <NeonChip
+        label={`Guide bubble · ${guide.off ? 'Off' : 'On'}`}
+        selected={!guide.off}
+        onPress={() => setGuideOff(!guide.off)}
+        accessibilityLabel={`Guide bubble, ${guide.off ? 'off' : 'on'}. Tap to turn it ${guide.off ? 'on' : 'off'}`}
       />
 
       {extra}
