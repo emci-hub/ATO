@@ -658,7 +658,20 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   `floor(5 × 0.1) = 0`, so it never pays (`hideout-progress.ts:377-382`); left alone. (3) Leftover: the Turf result
   card's fallback line (no recorded win) shows the unscaled token amount (`defend-screen.tsx:3404-3410`); display only.
   **New proposal from emci's request:** section 7, Minigames makeover (M1-M3), waiting for his yes.
-  **Next: step 3.**
+- **Step 3 built + published 2026-10-18** (Play commits `a5d93937`, `a7a745a2`; docs `9dbeaa91`). The 5-clears
+  half-pay cap now holds when the clock is set back (`petDayHolds`). **Forward clock jumps: accepted risk** (emci's
+  call, recorded above and pinned in `check:economy-guard`). A duplicate joining a hero already at 5★ pays **2 shards
+  of its grade** (Legendary → Epic); the "joined up" line says it (`PetMergeNote.shards`, `shard_grade`: two optional
+  fields, older notes read as none). **The Store is open to players, Token shop tab only** (no Tide shelf, Paid tab,
+  price labels or "Coming soon" rows; the full shop stays dev-only): Dive refresh 40 tokens **3 a day**, Merge-fuel
+  crate 30 (3 a day), Shine Stone 120 (1 a week), new **Big merge crate** 300 tokens (3 Powers, 1 a week, on the
+  merge-crate path so the daily Power ceiling applies). Tab bar shows Store for everyone (4 tabs: check at 375 pt). Save
+  stays **v33**. New `check:economy-guard` (6 groups); `check:shop-hidden`, `check:pet-merge`, `check:locker-stats`
+  updated. Gate green, reviewer PASS (two small follow-ups fixed). **OTA published**: iOS
+  `01a15275-3c7a-7c5a-bfd1-e73ed5522335`, Android `01a15275-3c7a-7f24-89c1-e67b58a779f6`, group
+  `325c79ca-8597-40e2-90a4-cb5b7a549662` (message `divecore-finish-step3-economy`). Phone check: **Box 52** (not done).
+  **Notes:** the Big crate buy toast names only the last Power; buying at the daily Power ceiling still costs tokens
+  and pays shells (same as the small crate). **Next: step 4 (Today chip); the proposed Minigames M1 goes after step 3.**
 
 ## Web research (read as data)
 
