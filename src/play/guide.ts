@@ -72,7 +72,7 @@ function textOf(id: GuideStepId, screen: GuideScreen, input: GuideInput): string
     case 'egg':
       return input.eggPicked ? 'Tap your egg to keep it warm until it hatches.' : 'Pick an egg. It hatches into your first pet.';
     case 'feed':
-      return 'Open Feed and catch the food. That keeps your pet happy.';
+      return 'Tap Feed in the bottom row, then catch the food.';
     case 'dive':
       return 'Try a dive: tap Underground on the left rail.';
     case 'research':

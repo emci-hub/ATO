@@ -139,7 +139,9 @@ const out = { hatched: true, petOut: true };
   assert.deepEqual(parseGuideStore(serializeGuideStore(round)), round);
   const store = read('src/play/guide-store.ts');
   assert.ok(store.includes("'ato.play.guide.v1'"), 'the device-only key');
-  assert.ok(/set\(\{ off: true, dismissed: \[\], loaded: true \}\)/.test(store), 'an unreadable store stays quiet');
+  assert.ok(/next = \{ off: true, dismissed: \[\], loaded: true \}/.test(store), 'an unreadable store stays quiet');
+  assert.ok(/await load\(\);/.test(store) && /if \(!state\.loaded\) set\(next\)/.test(store), 'Got it / Off wait for the stored value; a reset during the load wins');
+  assert.ok(/const snapshot = \(\): State => state;/.test(store) && /useSyncExternalStore\(subscribe, snapshot, snapshot\)/.test(store), 'one stable subscribe and snapshot');
   ok('the stored shape is tolerant and round-trips; an unreadable store keeps the guide quiet');
 }
 

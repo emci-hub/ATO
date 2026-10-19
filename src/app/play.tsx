@@ -1552,7 +1552,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.three,
     paddingTop: Spacing.three,
-    paddingBottom: Spacing.six,
+    // The newbie guide bubble (76 pt + 8 pt) can float over the Locker's bottom: leave room so the last row scrolls clear.
+    paddingBottom: Spacing.six + 24,
   },
   /** Loading (no save yet): ink, nothing else. */
   loading: {
