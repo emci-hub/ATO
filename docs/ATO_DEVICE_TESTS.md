@@ -592,3 +592,16 @@ First: close and reopen the app so the update loads. Best checked on a **fresh**
 - [ ] **Reduce Motion / Motion Off:** under Reduce Motion it fades in quickly; with Motion Off it just appears. It never pulses or slides.
 - [ ] **Screen reader:** each new step is read out once.
 - [ ] **Smoothness:** the Hideout, Locker and Turf board feel as smooth as before.
+
+## Box 55 — Turf War balance refresh (Divecore finish step 6, 2026-10-19)
+
+First: close and reopen the app so the update loads. Play on your **normal** save with a helper picked in the Setup sheet. Numbers come from `games/grove/BALANCE_REPORT.md`; this box checks how it feels.
+
+- [ ] **Hero tower price:** in Turf setup, tap an empty pad. A bound hero row now says **"40 scrap"** (not "free"). With under 40 scrap it is greyed out; placing one takes 40 scrap from the counter.
+- [ ] **A kept hero tower stays free:** a hero tower already on your board from an earlier wave is still there on the next wave, and no scrap was taken for it.
+- [ ] **Trial 4 is not a wall:** Trial 4's runners now come in a short line (two of them), not a tight pack. It should feel no harder than Trial 5 (the boss wave), which now has a longer line of minions before the boss.
+- [ ] **Main 4 and Main 7:** the runners come one after another instead of in one clump. Both should be winnable with your kept board and a helper, without extra gear.
+- [ ] **Main 3 and Main 6:** a few more minions than before (Main 3: one more, tanks a little earlier; Main 6: one more). They should feel like a small step up from the wave before, not a dip.
+- [ ] **Main 9 and Main 10:** with your kept board and a helper they clear (Main 10 can still need a retry or two; that is fine for the finale).
+- [ ] **Helper vs the boss:** on Trial 5 / Main 5 the helper gets dazed about once per boss; on Main 10 about twice. It is up and fighting most of the wave.
+- [ ] **Nothing else moved:** tower prices (40), upgrades (40 / 90), start scrap (80) and rewards are the same as before. Your save loads as usual.
