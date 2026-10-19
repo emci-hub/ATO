@@ -21,7 +21,7 @@ Do not paint a room or scene as one big image. Build it from parts, in this orde
 | 5 | `create_object_state` + `animate_object` (mode `v3`) | interaction states (lamp on/off, arcade playing) and idle loops |
 | 6 | `vfx_workbench` (free) | neon glow/flicker, dust, sparkles, emote bubbles |
 | 7 | `pixelart_workbench` (free) | `score`, `lint`, `repair`, `selout` on every asset |
-| 8 | `reduce_colors` + `palette_image` (0.1 gen) | lock everything to the game palette — all frames together |
+| 8 | `reduce_colors` + `palette_image` (0.1 gen) | lock everything to the game palette — all frames together. **Updated 2026-10-19:** PixelLab tools now accept `target_palette` at creation (see §4), so art can be born in palette; keep this step as the final check |
 | 9 | style references (`create_image_pro` reference_images, `create_tiles_pro` style_images) | keep new assets matching approved ones |
 
 Characters/pets: `create_character` (+ `create_character_state`, `animate_character`,
@@ -97,6 +97,17 @@ In 3/4 low top-down you see the front AND half the top, so a sprite's box is
   the palette (`palette2`: purples, woods, greys) before locking.
 - `reduce_colors` needs same-size frames (pad to one canvas) and ≤512×512 px total per call.
 - Wait for jobs with `wait_for_jobs` (≤280 s); Tier 2 = 10 concurrent jobs.
+- **New 2026-10-19 — `target_palette`** (almost every creation/animation/tileset/UI tool):
+  `{"colors": ["#…", …], "name": "…", "max_colors": N}`. With `colors`, every pixel of the result is one
+  of them; `max_colors` (2–64) only caps the count. On tilesets it works in `mode: "pro"` only. Pass the
+  streetwear-night palette (`docs/art/palette-streetwear-night.png`) when generating, then still run
+  `reduce_colors` + `score` as the final check. Same warning as above: a palette missing a mid tone
+  shifts colours, so extend it first. Not yet tried on ATO art — test on one asset and show emci before relying on it.
+- **New 2026-10-19 — tileset edge controls** (`create_topdown_tileset` / tilesets endpoint):
+  `boundary_amplitude` 0–0.3 (wavy border between two terrains, 0 = straight; `boundary_seed` picks the
+  meander), `roundness` 0 square → 1 round → 2 corners cut at 45° (above 1 needs pro), `step_slope` 0 cliff →
+  2 gentle slope (pro, raised 16-tile set only), `connect_diagonals` (pro only). Most need `mode: "pro"`.
+  Good for a worn path or rug edge instead of a ruler-straight border. Check the 32 px tile size still holds.
 
 ## 5. Gate before anything ships
 - Pixel-art critique rubric, 14 items × 0–2: ship ≥ 22/28 with no zero. Also `pixelart_workbench
@@ -189,6 +200,14 @@ Run these steps for any request, whether it's "make a new hero", "edit the couch
   glows. Every effect needs a Reduce Motion version (gentle, no flashing).
 - Animating a still image (sign buzz, screen loop): Animate with text (new) — 64 px: 4/8/16 frames =
   1/2/3 gens; 128 px: 3/5/9 gens; frame count must be even; first frame is kept.
+- **New 2026-10-19 — PixelLab's own effects artist, `POST /vfx` (paid).** Describe the effect in words
+  (optionally with a sprite ≤512 px, ≤32 frames; never rescale). `lite` = 1 gen for most effects, `pro` =
+  6 gens (8 with a sprite), a change to an existing effect costs 1 (lite) / 4 (pro); a prompt over 400
+  characters costs pro 1.25×. Saved to My effects with a spritesheet + json (anchor/pivot). It is NOT a
+  replacement: `vfx_workbench` (free) stays the first choice; use `/vfx` only if the workbench can't
+  make the effect, and tell emci the cost first.
+- **Available, not used — `POST /normal-map`** (0.5 gen): makes a normal map so an engine can light a sprite
+  dynamically. ATO has no dynamic lights (light lives on its own painted layer), so skip unless that changes.
 
 ### Rooms, floors, walls
 - §1 order: building kit → tilesets (chain `lower_base_tile_id`/`upper_base_tile_id` so terrains
