@@ -63,6 +63,8 @@ Read before editing the area. Each one has bitten this repo at least once.
 - **Sentry events are scrubbed** (`src/lib/sentry-scrub.ts`: no user, no request body, no console or input
   breadcrumbs, emails / tokens / uuids / @handles / filter values redacted, strings capped). A new `extra` / tag
   that holds free text is dropped by key name (`text`, `answer`, `prompt`, `message`, `note`, `name`, …).
+- **Deploy Edge Functions with `--use-api`** (`supabase functions deploy <name> --use-api`): without Docker the plain
+  command can leave the live function unchanged. Always confirm with `supabase functions list` (version and hash move).
 - **No Docker on this machine**, so `supabase db dump` / `pg_dump` do not run. Read the live schema and apply SQL with
   `supabase db query --linked -f <file>` (the Management API). `supabase db push` skips our untimestamped migrations.
 - **`login_email_for_identifier` is service_role-only (wave36).** It used to be

@@ -646,6 +646,10 @@ refused by the sandbox; whoever applies wave98 can run it before and after. Box 
 4. (Optional) leaked-password protection, see above.
 Then tell me "rotated" and I (or the next chat) run `check:auth-password`, `check:invite`, `check:quota` once with the dev-test user.
 
+**UPDATE 2026-10-19 (later): wave98 IS APPLIED to the live project** (emci ran `supabase db query --linked -f supabase/migrations/wave98_server_hardening.sql`, no error). Read-only check afterwards: `rate_limit_hits` exists, trigger `me_timezone_guard` exists, `public_profile` / `handle_taken` / `claim_daily_checkin` are volatile, the `play_dev_logs_select` policy is gone, `handle_taken` is executable by authenticated + service_role only. Still open: item 1 below is done; items 2-4 remain (function deploys, rotations + live checks, advisors re-run), plus the client-IP proof (`ip:` not `noip`) and the timezone reproduction.
+
+**UPDATE 2026-10-19 (later still): the three function deploys are LIVE** (emci ran them with `--use-api`, because there is no Docker on this machine; without that flag the first attempt silently changed nothing). Confirmed from `supabase functions list`: `ai-generate` v12 to v13 (the open proxy is closed), `dev-unlock` v2 to v3, `password-login` v3 to v4 with `verify_jwt` still `false`. Use `--use-api` for every deploy from this machine. **Still open:** the three rotations, the live checks (`invite`, `quota`, `auth-password`), the client-IP proof (`ip:` not `noip`), the timezone reproduction, and the advisors re-run.
+
 **What still has to be done by hand for step 1 to close** (all need a live write, which the sandbox refused; each one is a single command):
 1. `supabase db query --linked -f supabase/migrations/wave98_server_hardening.sql`
 2. Three deploys, one command each: `supabase functions deploy ai-generate`, `supabase functions deploy dev-unlock`, and
