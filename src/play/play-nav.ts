@@ -11,7 +11,7 @@
 export type PlayMode = 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab' | 'swords' | 'swordlab';
 export type PlayTab = 'hideout' | 'turf' | 'locker' | 'store';
 
-/** Tab bar order. Store only shows while the shop is unlocked. */
+/** Tab bar order. The Store is open to everyone (players see its Token shop only; `shopUnlocked` = the full dev shop). */
 export const PLAY_TABS: readonly PlayTab[] = ['hideout', 'turf', 'locker', 'store'];
 
 /** The mode a tab opens (Locker always lands on Fits). */

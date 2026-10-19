@@ -2731,8 +2731,10 @@ export function foldDuplicatePets(doc: PlayStoreDoc, now: number): { doc: PlaySt
         if (first + i < STAR_MAX) return;
         const grade = dupShardGrade(p.grade);
         next = { ...next, pet_shards: { ...next.pet_shards, [grade]: next.pet_shards[grade] + DUP_SHARDS } };
-        shards += DUP_SHARDS;
+        // The line names the first grade paid and only the shards of that grade (a fold with several grades
+        // pays each grade in full; the line stays true instead of summing different grades).
         shardGrade ??= grade;
+        if (grade === shardGrade) shards += DUP_SHARDS;
       });
     }
     if (activeIn && plan.kept.hero) noteHero = { hero: plan.kept.hero, was: keptWas, kept: plan.kept, shards, shardGrade };
