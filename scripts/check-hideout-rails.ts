@@ -155,12 +155,12 @@ ok('no in-room spots, labels, tap rects, blue press fill, cyan ellipses or Show 
 const screen = readFileSync('src/play/pet-screen.tsx', 'utf8');
 assert.ok(!/roomRow|HideoutStageControls|ROW_ONLY/.test(screen), 'pet-screen: no Hideout / Loft / Call row above Feed / Info');
 assert.match(screen, /rails=\{\s*street \? \(\s*<HideoutRails/, 'pet-screen hands the rails to the room');
-assert.equal(REGIONS.hideout.dock, 64, 'the dock is one row (Feed · Info); the room fills down to the cyan line');
+assert.equal(REGIONS.hideout.dock, 64, 'the dock is one row (Feed · Today · Info); the room fills down to the cyan line');
 const petRoom = readFileSync('src/play/pet-room.tsx', 'utf8');
 assert.match(petRoom, /<\/Animated\.View>\s*\{rails\}/, 'the rails float over the stage, outside the camera layer');
 assert.match(petRoom, /bounds: walkBoundsRef\.current/, 'the walk planner gets the rail bounds');
 assert.match(petRoom, /RAIL_CLEAR_PT/, 'the speech bubble is clamped clear of the rails');
-ok('Hideout screen: row removed, dock = Feed · Info (64), rails float over the stage, walk + speech clear of both rails');
+ok('Hideout screen: row removed, dock = Feed · Today · Info (64), rails float over the stage, walk + speech clear of both rails');
 
 const railsSrc = readFileSync('src/play/hideout-rails.tsx', 'utf8');
 assert.match(railsSrc, /if \(a\.dim\) \{\s*if \(a\.kind === 'view'\) onTease\(\);\s*return;\s*\}/, 'a dimmed action never runs (a locked way out opens the build sheet)');

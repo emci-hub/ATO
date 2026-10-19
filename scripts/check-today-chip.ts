@@ -58,7 +58,8 @@ const ids = (over: Partial<TodayInput>) => todayItems({ ...calm, ...over }).map(
   assert.deepEqual(ids({ expedition: 'away' }), [], 'out on a trip: nothing to do');
   assert.deepEqual(ids({ expedition: 'done_today' }), []);
   assert.deepEqual(ids({ expedition: 'locked' }), []);
-  assert.deepEqual(ids({ tripBack: true, expedition: 'ready' }), ['trip_back'], 'a trip that came back wins over "send again"');
+  assert.deepEqual(ids({ tripBack: true }), ['trip_back']);
+  assert.deepEqual(ids({ tripBack: true, expedition: 'ready' }), ['trip_back', 'trip_ready'], 'a fresh return and "send again" are both listed');
   assert.deepEqual(ids({ visitorHere: true }), ['visitor']);
   ok('each row shows only in its own state; away / done / too young show nothing');
 }
@@ -101,7 +102,11 @@ const ids = (over: Partial<TodayInput>) => todayItems({ ...calm, ...over }).map(
   assert.ok(!/urgent|hurry|last chance|don.t miss|streak|expires?|running out|starving|dying|lonely|abandon|neglect|only \d/i.test(words.replace(TODAY_FOOT, '')), 'no pressure or guilt words');
   assert.ok(/nothing here is urgent/i.test(TODAY_FOOT), 'the footer says nothing is urgent');
   const src = read('src/play/today.ts') + read('src/play/today-sheet.tsx');
-  assert.ok(!/store|shop|check-?in|tide|build/i.test(every.map((i) => i.id).join(' ')), 'no Store / check-in / Tide / build row');
+  assert.ok(!/store|shop|check-?in|tide|build/i.test(every.map((i) => `${i.text} ${i.button}`).join(' ')), 'no Store / check-in / Tide / build row text');
+  assert.ok(
+    read('src/play/pet-screen.tsx').includes('tripBack: pv.expeditionNote != null && pv.expeditionNoteFresh'),
+    'an old, never-dismissed trip note must not keep the count lit (only a fresh return counts)',
+  );
   assert.ok(!/#e5484d|STREET\.red|NEON\.pink|danger/i.test(read('src/play/today-sheet.tsx')), 'the sheet uses no red');
   assert.ok(!/setInterval|setTimeout|useEffect|Animated|withTiming|withRepeat/.test(src), 'no timer, effect or animation');
   ok('calm copy: no "!", no countdown, no pressure words, no red, no Store / check-in / Tide / build row, no timer');

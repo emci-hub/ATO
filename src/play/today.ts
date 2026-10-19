@@ -38,7 +38,8 @@ export type TodayInput = {
   freeEggs: number;
   /** The trip state: can go now, out, done for today, or too young. */
   expedition: 'ready' | 'away' | 'done_today' | 'locked';
-  /** A trip came back with something not yet looked at. */
+  /** A trip just came back with something and its one-time "back" message is still fresh (an old note that
+   * was never dismissed must not keep the count lit forever). */
   tripBack: boolean;
   /** Today's visitor is in the Hideout and has not been greeted. */
   visitorHere: boolean;
@@ -66,7 +67,8 @@ export function todayItems(input: TodayInput): TodayItem[] {
   }
   if (input.tripBack) {
     items.push({ id: 'trip_back', text: `${input.name} is back with something`, button: 'Look', action: 'expedition' });
-  } else if (input.expedition === 'ready') {
+  }
+  if (input.expedition === 'ready') {
     items.push({ id: 'trip_ready', text: `Send ${input.name} exploring`, button: 'Go', action: 'expedition' });
   }
   if (input.visitorHere) {

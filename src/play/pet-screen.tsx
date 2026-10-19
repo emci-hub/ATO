@@ -1051,7 +1051,7 @@ export function PetScreen({
     status,
     freeEggs: freeEggsWaiting(pet.stage, pet.egg, pv.eggDay.nextPrice, pv.eggDay.free, pv.eggDay.used),
     expedition: pv.expedition,
-    tripBack: pv.expeditionNote != null,
+    tripBack: pv.expeditionNote != null && pv.expeditionNoteFresh,
     visitorHere: visitor != null && visitorOpen && !visitorGreeted,
     diveFull: view.dive.full,
     diveActive: view.diveRun.active,
@@ -1429,7 +1429,7 @@ export function PetScreen({
         dock={
           <>
             <View style={styles.iconRow}>
-              {/* Streetwear: Play, Stash, Underground and Explore live on the left rail; the dock keeps Feed + Info.
+              {/* Streetwear: Play, Stash, Underground and Explore live on the left rail; the dock keeps Feed + Today + Info.
                   In a friend's Hideout the same two slots are Leave a gift + Back home. */}
               {circleVisit ? (
                 <>
