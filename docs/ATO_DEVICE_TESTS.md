@@ -552,3 +552,23 @@ First: close and reopen the app so the update loads.
 - [ ] **5★ duplicate shards:** hatch an egg to a hero you already hold at 5★ (or use a 6th copy via the dev kit). When the pet's reveal plays, its line reads "<Name> joined up! +2 <Grade> shards" and the Collection shards go up by 2 (a Legendary duplicate gives 2 Epic shards). A duplicate that still adds a star pays nothing and reads as before.
 - [ ] **Half-pay cap:** after your 5th Turf win of the day the next win pays half. Set the phone clock back one day and win again: it is still half pay (it did not reset). Set the clock back to the right time afterwards.
 - [ ] **Larger Text:** the Store rows and notes wrap; nothing is cut off.
+
+## Box 53 — The Today button (Divecore finish step 4, 2026-10-19)
+
+First: close and reopen the app so the update loads. Open the Hideout (a pet at Child stage or older shows the most rows).
+
+- [ ] **Dock:** the bottom row of the Hideout now reads **Feed · Today · Info**. All three fit on a small phone (375 pt) and with Larger Text; the row keeps its height and nothing else moved. The top bar has no new chip.
+- [ ] **Count:** Today shows a small mustard number (never red, no dot, never pulsing) when something is ready, and no number when nothing is.
+- [ ] **Open it (tap Today):** a sheet titled "Today" lists plain sentences with one button each. Check the rows you can make appear:
+  - research banked → "Research: N finds ready" · **Claim** (it claims, the row goes, the count drops, the sheet stays open);
+  - pet at 1 heart of food → "<Name> would like a snack" · **Feed** (opens Feed); at 1 heart of mood → "… would like some play time" · **Play**;
+  - an egg not yet chosen with free eggs → "A free egg is waiting" / "Free eggs: N waiting" · **Eggs**;
+  - a trip can start → "Send <Name> exploring" · **Go**; a trip came back → "<Name> is back with something" · **Look** (both open Expedition);
+  - between 08:00 and 22:00 with today's visitor un-greeted → "Today's visitor is here" · **Say hi** (greets, shows the visitor card);
+  - dive charges at 10/10 → "Dive charges are full" · **Dive** (opens Dive). At 9/10 there is **no** Dive row.
+- [ ] **Nothing ready:** the sheet reads "All caught up" in grey, with "Nothing here is urgent. Come back any time."; the dock shows no number.
+- [ ] **Calm:** no red anywhere, no "!", no timers or countdowns, no streak words, no Store / daily check-in rows.
+- [ ] **Back:** the swipe-back or the close button closes the sheet, then the Hideout; no stuck state.
+- [ ] **Larger Text:** the rows wrap and the buttons stay tappable; the sheet scrolls if needed.
+- [ ] **Screen reader:** the dock button reads "Today, N things ready".
+- [ ] **Smoothness:** the Hideout feels as smooth as before (the button adds no animation or timer).
