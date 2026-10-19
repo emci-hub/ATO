@@ -1,7 +1,7 @@
 # Divecore finish roadmap (finish the game, then move on to the rest of ATO)
 
-Status: **DRAFT, written 2026-10-18; waiting for emci's scope choice** (must-fix only, or must + should-fix) and
-his ok on two numbers (see "Needs emci's yes"). One chat per step, one OTA per step, one phone box per step. This
+Status: **APPROVED by emci 2026-10-18**: "Must + should-fix (steps 1-7, 9). Daze-proof 11 s ok. Hide Neon Maze."
+Don't re-ask. Step 8 (nice-to-have) is out unless emci adds it. OTAs per step are approved. One chat per step, one OTA per step, one phone box per step. This
 doc holds the plan's state, so a new chat never needs an old chat's history.
 
 Sources: six read-only scouts (Hideout, Turf War, economy, Locker, tips/FTUE, leftovers) on master `b18fbc19`, plus
@@ -567,7 +567,9 @@ new-chat prompt (Model: line + one code block) for step 1 of that roadmap.
 
 ## Progress
 
-- **2026-10-18:** plan written (this doc). Waiting for emci's scope choice and the two number answers.
+- **2026-10-18:** plan written (this doc, commit `7350e283`). emci chose **must + should-fix (steps 1-7, 9)**,
+  **daze-proof 11 000 ms**, **hide Neon Maze from players** (no knot fix needed). P4's open calls stay as built
+  (defaults in "Needs emci's yes" #4). **Next: step 1.**
 
 ## Web research (read as data)
 
