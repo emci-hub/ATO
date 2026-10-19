@@ -579,6 +579,10 @@ export type DefendStep = {
   /** Every kit attack this tick (towers + hero towers), for effects and the
    * damage numbers' element colour. Display only. */
   hits: KitHit[];
+  /** A legendary helper's splash this tick (one entry per splashed hit, victims only in `puffIds`), for the
+   * element-coloured splash effect and damage numbers. Display only: the damage is already in `puffs`, and
+   * these are NOT in `hits` (no hit-stop, no second shot). Empty when the helper has no element. */
+  splashHits: KitHit[];
   /** Damage-over-time dealt this tick, per creep, with its element. */
   dotHits: { puffId: number; damage: number; element: KitHit['element'] }[];
 };
@@ -1353,13 +1357,14 @@ export function stepDefendLive(
   }
 
   // Turf team helper (pet team P5b): one AI pet. It never dies — a boss within reach swings every 5 s
-  // and a hit dazes it (down 4 s, then it gets up, runs back to the leader and is daze-proof for 6 s).
+  // and a hit dazes it (down 4 s, then it gets up, runs back to the leader and is daze-proof for 11 s).
   // Standing, it follows the leader and inside the leash steps toward its own target (boss first),
   // fires its hero kit at `HELPER_BASE_ATTACK` × star power and casts its own hero skill on a cooldown.
   // Epic reaches 10% further; a legendary helper's hit splashes 30% onto foes close to its target.
   const dazed: number[] = [];
   const gotUp: number[] = [];
   const helperCasts: number[] = [];
+  const splashHits: KitHit[] = [];
   const firedHelpers: TurfHelperUnit[] = [];
   for (const helper of state.helpers) {
     const hero = heroById(helper.heroId);
@@ -1448,11 +1453,33 @@ export function stepDefendLive(
       if (!primary) return;
       const at = posOf(primary);
       const share = dealt * LEGENDARY_SPLASH_PCT;
+      const victims: number[] = [];
       puffs = puffs.map((p) => {
         if (p.id === primaryId) return p;
         const pos = posOf(p);
-        return Math.hypot(pos.x - at.x, pos.y - at.y) <= LEGENDARY_SPLASH_RADIUS ? { ...p, hp: p.hp - share } : p;
+        if (Math.hypot(pos.x - at.x, pos.y - at.y) > LEGENDARY_SPLASH_RADIUS) return p;
+        victims.push(p.id);
+        return { ...p, hp: p.hp - share };
       });
+      // Display only: the splash ring + its damage numbers in the helper's element colour. The ring is centred
+      // on the primary foe (`from` = its spot, `centredOnSource`), so no bolt is drawn from the helper.
+      if (victims.length > 0 && heroKit.element) {
+        splashHits.push({
+          source: 'hero',
+          sourceId: helper.id,
+          from: { x: at.x, y: at.y },
+          behavior: 'splash',
+          element: heroKit.element,
+          primaryId,
+          puffIds: victims,
+          damage: victims.map(() => share),
+          radius: LEGENDARY_SPLASH_RADIUS,
+          centredOnSource: true,
+          ultimate: false,
+          secondary: null,
+          arcId: null,
+        });
+      }
     };
     let cooldownMs = helper.cooldownMs - dtMs;
     let skillCooldownMs = Math.max(0, helper.skillCooldownMs - dtMs);
@@ -1571,6 +1598,7 @@ export function stepDefendLive(
     helperCasts,
     bossSpawned,
     hits,
+    splashHits,
     dotHits,
   };
 }

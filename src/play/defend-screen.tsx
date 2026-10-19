@@ -3,9 +3,9 @@
  * Phase B campaign; GAME_SPEC §9, §9b, §9d, §9e, §9h, §11 screen 5).
  *
  * Campaign (Phase B): the fight is either the campaign's next wave (Trial
- * 1–5 on the Grove Path map, then Main 1–20 on the Divecore Main map — full
+ * 1–5 on the Grove Path map, then Main 1–10 on the Divecore Main map — full
  * tokens, advances the seat) or a replay of a cleared band (half tokens,
- * seat untouched). Clearing Main wave 20 conquers the cycle: `cycle_power`
+ * seat untouched). Clearing Main wave 10 conquers the cycle: `cycle_power`
  * rises and the seat resets to Main wave 1. Every run carries its map + cycle
  * power, so puffs get fatter/faster-with-power on later cycles.
  *
@@ -789,7 +789,7 @@ export function DefendScreen({
   onGrantStarToken: () => Promise<void>;
   /** Dev kit only: set the cycle boss tint. */
   onSetCycleTint: (tint: TypeTag) => void;
-  /** Dev kit only: park the seat at the Final band (Main wave 20). */
+  /** Dev kit only: park the seat at the Final band (Main wave 10). */
   onForceFinal: () => void;
   /** Dev kit only: reset Avatar-star cycle flags. */
   onResetAvatarStarCycle: () => void;
@@ -2360,6 +2360,8 @@ export function DefendScreen({
       }
       if (fxQualityRef.current !== 'off') {
         for (const hit of step.hits) spawnHitFx(hit, drawnPos);
+        // A legendary helper's splash: its own element-coloured ring (display only, no hit stop).
+        for (const hit of step.splashHits) spawnHitFx(hit, drawnPos);
       }
       // §9m boss warn: peek the remaining schedule and raise the warn ONCE, a
       // beat before the boss steps in (or the tick it lands, if the lead was
@@ -2430,6 +2432,11 @@ export function DefendScreen({
       // (killed), gets a short damage number near it. No engine changes.
       const hitColor = new Map<number, string>();
       for (const d of step.dotHits) if (d.element) hitColor.set(d.puffId, ELEMENT_COLOR[d.element]);
+      // A legendary helper's splash victims take its element colour first; a real hit on the same creep wins.
+      for (const hit of step.splashHits) {
+        if (!hit.element) continue;
+        for (const pid of hit.puffIds) hitColor.set(pid, ELEMENT_COLOR[hit.element]);
+      }
       for (const hit of step.hits) {
         if (!hit.element) continue;
         for (const pid of hit.puffIds) hitColor.set(pid, ELEMENT_COLOR[hit.element]);
@@ -4389,7 +4396,7 @@ export function DefendScreen({
                     ? 'Replay of a cleared band — pays half tokens, your campaign seat stays put.'
                     : cycleNote
                       ? `Campaign climb — ${cycleNote}.`
-                      : 'Campaign climb — Trial 1–5, then Main 1–20. Clear Main 20 to Conquer a cycle.'}
+                      : 'Campaign climb — Trial 1–5, then Main 1–10. Clear Main 10 to Conquer a cycle.'}
                 </ThemedText>
                 <View style={styles.statRow}>
                   <ThemedText type="smallBold">Scrap</ThemedText>
@@ -4564,8 +4571,9 @@ export function DefendScreen({
                   {fight.phase === 'main' ? dropsCard : null}
 
                   {/* Maps (§ — board picker, Main only): the locked ATO default vs the
-                      parked Neon Maze prototype. Trial never shows this. */}
-                  {fight.phase === 'main' ? (
+                      parked Neon Maze prototype. Trial never shows this, and players never see it:
+                      the picker is a dev tool (Divecore finish step 1, emci 2026-10-18). */}
+                  {fight.phase === 'main' && PRE_LAUNCH_DEV && devUnlocked ? (
                     <ThemedView type="backgroundElement" style={styles.card}>
                       <View style={styles.statRow}>
                         <ThemedText type="smallBold">Maps</ThemedText>

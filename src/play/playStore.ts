@@ -3718,7 +3718,7 @@ export function recordDefendWin(
 
   // Campaign seat advance + Conquered. A campaign-mode win only advances when
   // it matches the seat — a stale/duplicate win after the seat already moved
-  // (e.g. Main 20 conquered) grants rewards but never double-advances.
+  // (e.g. Main 10 conquered) grants rewards but never double-advances.
   let campaign = doc.campaign;
   let conquered = false;
   let conqueredCycles = doc.conquered_cycles;
@@ -4518,13 +4518,13 @@ export type SkipPlan = {
   fromSeat: CampaignState;
   /** Seat after skipping (== fromSeat when nothing was skippable). */
   toSeat: CampaignState;
-  /** Why the walk stopped at `toSeat` ('end' is a guard — Main 20 is a boss
+  /** Why the walk stopped at `toSeat` ('end' is a guard — Main 10 is a boss
    * band and always stops as 'boss' first). */
   stopReason: SkipStopReason;
 };
 
 /** Advance the campaign seat one display wave (Trial 5 → Main 1). Null when
- * there is no normal wave left to fast-forward past (Main 20 is a boss band). */
+ * there is no normal wave left to fast-forward past (Main 10 is a boss band). */
 export function campaignNextSeat(seat: CampaignState): CampaignState | null {
   if (seat.phase === 'trial') {
     return seat.wave_in_phase >= TRIAL_WAVE_COUNT

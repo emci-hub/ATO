@@ -576,7 +576,7 @@ export function usePlayStore() {
     [commit],
   );
 
-  /** Dev kit only: park the seat at the Final band (Main wave 20). */
+  /** Dev kit only: park the seat at the Final band (Main wave 10). */
   const forceFinal = useCallback(async (): Promise<boolean> => {
     let ok = false;
     commit((current) => {

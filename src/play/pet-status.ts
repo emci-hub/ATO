@@ -47,7 +47,7 @@ export const PET_STATUS_WORD: Record<PetStatus, string> = {
   choose_egg: 'Pick an egg',
   chilly: 'Chilly',
   egg: 'Egg',
-  starving: 'Starving',
+  starving: 'Very hungry',
   very_sad: 'Very sad',
   hungry: 'Hungry',
   sad: 'Sad',

@@ -114,7 +114,7 @@ export function planPlayNotices(input: NoticeInput): PlannedNotice[] {
       kind: 'tide',
       at: quiet(now + NUDGE_MS),
       title: 'Tide Pass: last day',
-      body: 'Legendary progress ×2 ends after today. Days you skip are not used.',
+      body: 'Legendary progress ×2 ends after today. Your days wait for you.',
     });
   }
   if (settings.notif.eggs_ready && input.freeEggsReady) {

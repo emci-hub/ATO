@@ -3,7 +3,7 @@
  * real code:
  *   - the approved P5b numbers (1 slot, attack 20, range 15, leash 15, follow gap 6, walk 40 / run back
  *     50, skill first 6 s then every 14 s, boss swing every 5 s within 8, daze 4 s, get-up 0.6 s,
- *     daze-proof 6 s) and the kept star / grade perks;
+ *     daze-proof 11 s) and the kept star / grade perks;
  *   - who may help and the tolerant save read (one pick; an old 2-pick P5 save reads as its first);
  *   - lanes: every snapped / follow spot is legal (off road and pads), the follow spot is inside the leash;
  *   - movement: follows the leader, chases boss first inside the leash, only steps onto the road for a boss;
@@ -101,7 +101,7 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.
   assert.equal(BOSS_SWING_RADIUS, 8);
   assert.equal(HELPER_DAZE_MS, 4_000);
   assert.equal(HELPER_GET_UP_MS, 600);
-  assert.equal(HELPER_DAZE_PROOF_MS, 6_000);
+  assert.equal(HELPER_DAZE_PROOF_MS, 11_000);
   assert.ok(HELPER_BOSS_CLOSE < BOSS_SWING_RADIUS, 'chasing a boss puts the helper inside its swing (the risk)');
   assert.equal(STAR_POWER_STEP, 0.06);
   assert.equal(EPIC_RANGE_MULT, 1.1);
@@ -115,7 +115,7 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.
   assert.ok(Math.abs(starPowerMult(9) - 1.24) < 1e-9, 'capped at 5★');
   assert.equal(teamPounceSpare(['common', 'epic', 'legendary']), 0);
   assert.equal(teamPounceSpare(['rare', 'rare', null]), 1, 'one rare is enough, two give no more');
-  ok('P5b numbers pinned (1 slot, 20 / 15, leash 15, 40 & 50 u/s, skill 6 s then 14 s, swing 5 s in 8, daze 4 s, proof 6 s)');
+  ok('P5b numbers pinned (1 slot, 20 / 15, leash 15, 40 & 50 u/s, skill 6 s then 14 s, swing 5 s in 8, daze 4 s, proof 11 s)');
 }
 
 /* --------------------------------------------------------- who may help --- */
@@ -375,10 +375,26 @@ function helperHit(state: DefendLive, leader: { x: number; y: number }): number 
     const step = stepDefendLive(placeTurfTeam(boardWith(0.3, { second }), [spec({ ...near, grade })], null), 1, buckets, near);
     const hit = step.hits.find((h) => h.sourceId === helperUnitId(0))!;
     const other = step.state.puffs.find((x) => x.maxHp === 1e6)!;
-    return { dealt: hit.damage[0], otherLost: 1e6 - other.hp };
+    return { dealt: hit.damage[0], otherLost: 1e6 - other.hp, step, otherId: other.id };
   };
   const common = run('common');
   const legend = run('legendary');
+  // Display only: the splash comes with its own element-coloured entry (not in `hits`: no second shot / hit stop).
+  assert.deepEqual(common.step.splashHits, [], 'a common helper has no splash entry');
+  if (burstHero.kit.element) {
+    assert.equal(legend.step.splashHits.length, 1, 'a legendary splash reports one entry');
+    const sp = legend.step.splashHits[0];
+    assert.deepEqual(sp.puffIds, [legend.otherId], 'only the splashed foe is a victim');
+    assert.equal(sp.behavior, 'splash');
+    assert.equal(sp.element, burstHero.kit.element, "in the helper's element colour");
+    assert.equal(sp.radius, LEGENDARY_SPLASH_RADIUS);
+    assert.equal(sp.ultimate, false, 'no ultimate → no hit stop');
+    assert.equal(sp.centredOnSource, true, 'the ring is centred on the target, so no bolt travels from the helper');
+    assert.ok(Math.hypot(sp.from.x - near.x, sp.from.y - near.y) > 1, 'the ring sits on the target, not on the helper');
+    assert.equal(legend.step.hits.filter((h) => h.sourceId === helperUnitId(0)).length, 1, 'the splash is not a second hit');
+  } else {
+    assert.deepEqual(legend.step.splashHits, [], 'an element-less helper draws no splash effect');
+  }
   const extra = legend.otherLost - common.otherLost;
   assert.ok(Math.abs(extra - legend.dealt * 0.3) < 1e-6, `legendary splash = 30% of the hit (${extra.toFixed(2)})`);
   ok('legendary helper: its hit splashes 30% onto a foe within 4');
@@ -387,7 +403,7 @@ function helperHit(state: DefendLive, leader: { x: number; y: number }): number 
 {
   // The daze cycle, with a boss parked right beside the helper and the leader beside both:
   // 5 s of swings-in-reach → dazed (down 4 s, no hits, no walking) → gets up (0.6 s) → runs back →
-  // 6 s daze-proof from getting up → the next swing dazes it again. It is never removed.
+  // 11 s daze-proof from getting up (two swings absorbed at +5 s and +10 s) → the +15 s swing dazes it again. It is never removed.
   const p = at(0.3);
   const spot = { x: p.x + 5, y: p.y };
   let s = placeTurfTeam(boardWith(0.3, { kind: 'boss' }), [spec(spot)], null);
@@ -413,7 +429,8 @@ function helperHit(state: DefendLive, leader: { x: number; y: number }): number 
   assert.ok(Math.abs(dazes[0] - BOSS_SWING_MS) <= 100, `first daze after one 5 s swing (${dazes[0]})`);
   assert.ok(Math.abs(ups[0] - dazes[0] - HELPER_DAZE_MS) <= 100, `down 4 s (${ups[0] - dazes[0]} ms)`);
   const standAt = ups[0] + HELPER_GET_UP_MS;
-  assert.ok(dazes[1] - standAt >= HELPER_DAZE_PROOF_MS - 100, `daze-proof 6 s after getting up (next daze ${dazes[1] - standAt} ms later)`);
+  assert.ok(dazes[1] - standAt >= HELPER_DAZE_PROOF_MS - 100, `daze-proof 11 s after getting up (next daze ${dazes[1] - standAt} ms later)`);
+  assert.ok(dazes[1] - standAt >= 2 * BOSS_SWING_MS, 'two boss swings are absorbed before the next daze');
   assert.ok(downTicks < 400 * 0.6, 'down well under the whole run');
   // A normal creep never dazes it; a retry and a new wave stand it up fresh.
   let c = placeTurfTeam(boardWith(0.3), [spec(spot)], null);
@@ -427,7 +444,7 @@ function helperHit(state: DefendLive, leader: { x: number; y: number }): number 
   const fresh = placeTurfTeam(createDefendLive(2, { mapId: 'trial', boardId: 'ato' }), [spec(spot)], null);
   assert.equal(fresh.helpers[0].dazedMs, 0, 'a new wave builds it fresh');
   assert.equal(fresh.helpers[0].skillCooldownMs, HELPER_SKILL_FIRST_MS);
-  ok(`daze: first at ${dazes[0] / 1000} s, down 4 s, up 0.6 s, proof 6 s, again at ${dazes[1] / 1000} s; never removed; creeps never daze`);
+  ok(`daze: first at ${dazes[0] / 1000} s, down 4 s, up 0.6 s, proof 11 s, again at ${dazes[1] / 1000} s; never removed; creeps never daze`);
 }
 
 {

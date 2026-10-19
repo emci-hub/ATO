@@ -564,7 +564,7 @@ export default function PlayScreen() {
     [setCycleTint],
   );
 
-  /** Dev kit: park the seat at the Final band (Main wave 20). */
+  /** Dev kit: park the seat at the Final band (Main wave 10). */
   const handleForceFinal = useCallback(() => {
     void forceFinal();
   }, [forceFinal]);

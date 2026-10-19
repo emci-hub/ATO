@@ -13,7 +13,7 @@
  *   - grade: rare = +1 pounce per fight, epic = +10% range for that unit, legendary = that helper's hits
  *     also deal 30% to foes within 4 units; shiny is looks only;
  *   - it NEVER dies: a boss swings every 5 s at a helper within 8; a hit dazes it (faint clip, down 4 s),
- *     it gets up (the faint reversed), runs back to the leader, and can't be dazed for 6 s after getting
+ *     it gets up (the faint reversed), runs back to the leader, and can't be dazed for 11 s after getting
  *     up. Normal creeps never daze it.
  * Lanes: unless it is chasing a boss, the helper's spot stays off the road and off tower pads.
  */
@@ -50,7 +50,7 @@ export const HELPER_DAZE_MS = 4_000;
 /** Getting up: the faint clip played in reverse, this long. */
 export const HELPER_GET_UP_MS = 600;
 /** After getting up: this long when a boss swing can't daze it again. */
-export const HELPER_DAZE_PROOF_MS = 6_000;
+export const HELPER_DAZE_PROOF_MS = 11_000;
 /** Power per star above 1. */
 export const STAR_POWER_STEP = 0.06;
 /** Epic: range ×1.10 for that unit. */
