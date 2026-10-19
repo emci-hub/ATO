@@ -650,6 +650,15 @@ Then tell me "rotated" and I (or the next chat) run `check:auth-password`, `chec
 
 **UPDATE 2026-10-19 (later still): the three function deploys are LIVE** (emci ran them with `--use-api`, because there is no Docker on this machine; without that flag the first attempt silently changed nothing). Confirmed from `supabase functions list`: `ai-generate` v12 to v13 (the open proxy is closed), `dev-unlock` v2 to v3, `password-login` v3 to v4 with `verify_jwt` still `false`. Use `--use-api` for every deploy from this machine. **Still open:** the three rotations, the live checks (`invite`, `quota`, `auth-password`), the client-IP proof (`ip:` not `noip`), the timezone reproduction, and the advisors re-run.
 
+**PROOFS 2026-10-19 (after the rotations, all run against the live project):**
+- `check:invite` 7/7 and `check:quota` 6/6 pass (signed-out probes, public key only; the invite check still sees `invite_only`).
+- `password-login` throttle: 12 wrong tries on a throw-away identifier gave `401` x10, then `429` on the 11th and 12th; a wrong password on the dev-test handle gives the normal generic `invalid_credentials`, no email in the body.
+- Client address: the `public_profile` bucket recorded an `ip:` key (not `noip`), so PostgREST does pass `cf-connecting-ip`; `password-login` keys on a real address too. Signed-out `handle_taken` now answers `401`; signed-out `public_profile` still answers `200`.
+- Timezone: inside a rolled-back transaction as the dev-test user, five zones (Denver, Kiritimati, Pago_Pago, `XXX-100`, `XXX-200`) claimed only two days (2026-10-19 and 2026-10-20 with the UTC day 2026-10-19). The two fake zones were refused and added nothing. Nothing was saved. (The "before" run was not possible: the SQL was already applied.)
+- Advisors re-run (security, WARN and up): `anon_security_definer_function_executable` **9 to 2** (`assert_invite_usable`, `public_profile`, both accepted above); authenticated-executable 124 to 122; 7 mutable search_path and the leaked-password toggle unchanged (accepted / emci). No new findings.
+- **Not run:** the good dev-test password sign-in (`ATO_LIVE_PASSWORD` was not found in `.env.local` by name, so the proof script skipped it; emci to check where the new value lives), and `check:auth-password` as written (see next line).
+- **Found:** `scripts/auth-password-check.ts` is stale and cannot run: line 62 still asserts a `PasswordSettingsFold` on the You screen that no longer exists, and its live half signs in as the review account `@riley` (`ATO_REVIEW_PASSWORD`), not the dev-test user. Not changed in step 1; fix it (and point it at the dev-test user) before relying on it.
+
 **What still has to be done by hand for step 1 to close** (all need a live write, which the sandbox refused; each one is a single command):
 1. `supabase db query --linked -f supabase/migrations/wave98_server_hardening.sql`
 2. Three deploys, one command each: `supabase functions deploy ai-generate`, `supabase functions deploy dev-unlock`, and
