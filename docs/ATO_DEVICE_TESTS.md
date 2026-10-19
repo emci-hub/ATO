@@ -563,12 +563,12 @@ First: close and reopen the app so the update loads. Open the Hideout (a pet at 
   - research banked → "Research: N finds ready" · **Claim** (it claims, the row goes, the count drops, the sheet stays open);
   - pet at 1 heart of food → "<Name> would like a snack" · **Feed** (opens Feed); at 1 heart of mood → "… would like some play time" · **Play**;
   - an egg not yet chosen with free eggs → "A free egg is waiting" / "Free eggs: N waiting" · **Eggs**;
-  - a trip can start → "Send <Name> exploring" · **Go**; a trip came back → "<Name> is back with something" · **Look** (both open Expedition);
+  - a trip can start → "Send <Name> exploring" · **Go**; a trip just came back (its "back" message is still new) → "<Name> is back with something" · **Look** (both open Expedition; an old, never-dismissed "brought back" note does NOT keep the count lit);
   - between 08:00 and 22:00 with today's visitor un-greeted → "Today's visitor is here" · **Say hi** (greets, shows the visitor card);
   - dive charges at 10/10 → "Dive charges are full" · **Dive** (opens Dive). At 9/10 there is **no** Dive row.
 - [ ] **Nothing ready:** the sheet reads "All caught up" in grey, with "Nothing here is urgent. Come back any time."; the dock shows no number.
 - [ ] **Calm:** no red anywhere, no "!", no timers or countdowns, no streak words, no Store / daily check-in rows.
 - [ ] **Back:** the swipe-back or the close button closes the sheet, then the Hideout; no stuck state.
 - [ ] **Larger Text:** the rows wrap and the buttons stay tappable; the sheet scrolls if needed.
-- [ ] **Screen reader:** the dock button reads "Today, N things ready".
+- [ ] **Screen reader:** the dock button reads "Today, N things ready" (with its small icon first, like the other dock buttons).
 - [ ] **Smoothness:** the Hideout feels as smooth as before (the button adds no animation or timer).
