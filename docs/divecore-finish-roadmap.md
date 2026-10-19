@@ -565,6 +565,54 @@ new-chat prompt (Model: line + one code block) for step 1 of that roadmap.
 
 ---
 
+## 7. Minigames makeover (NEW, proposed 2026-10-18; emci asked for it during step 2; needs his yes)
+
+emci: "fix our mini games graphically and how it works … what are we missing … some graphic enhancement for our pet
+and background". A read-only audit (Catch the food + Train the pet) found:
+
+**What works:** the pet in the game is the player's real pet (hero, art, shiny / dye, grade glow;
+`pet-screen.tsx:1027-1034`); the fixed-regions screen and the 2-line hint are pinned
+(`check-fixed-regions.ts:85`); Reduce Motion drops shake and hops (`pet-games.tsx:95`).
+
+**Weak or missing (file:line):**
+- **Thin choices.** Catch = tap order and dodge bombs, a fixed ramp (25 s round, spawn gap 450→250 ms, speed ×1.8,
+  bombs 15% after 3 s, golden 5%, combo ×2/×3/×5; `pet-game-rules.ts:75-150`). Train = 15 identical taps. No
+  power-ups, waves or mid-round decisions. **Easy farms the daily cap**: 6 Easy passes pay the full 30 tokens
+  (`playStore.ts:3269`, `pet.ts:818`).
+- **Placeholder art.** Food is a vector circle + leaf (`pet-games.tsx:518-527`), the bomb is the 💣 emoji (`:666`),
+  the Train dummy is an off-style `scribble-dungeons/crate` (`:683`). The Catch background is the Dive reef plate under
+  a 42% scrim (it does not match the Hideout); the "glow" is a flat tinted square, not the pet's real aura (`:905-912`).
+- **No result screen** (the game closes at once and a text line shows in the sheet, `pet-sheets.tsx:157-175`), no
+  countdown, no practice mode, no sound or haptics in Play, no floating "+n", no catch pop / squash, no near-miss
+  feedback, no combo progress strip, no mood faces.
+- **Accessibility:** golden / normal / bomb differ by colour and emoji only (no shape cue); only the title shrinks
+  with Larger Text, the status line and hint use fixed line counts (`:445, :454, :644`).
+- **Smoothness:** a 40 ms `setInterval` calls `setItems` and re-renders the whole field (`:562-582`); Train does the
+  same for its marker (`:722`). An 80 ms bomb-flash timeout is not cleared on unmount (`:607`).
+
+**What other games do (web, thin sources, treat as hints):** juice works as a seasoning: short, easing screen shake
+(~50-300 ms), cheap particles, a 50-100 ms hit stop on big hits, squash-and-stretch on catches
+([itch.io juice guide](https://itch.io/blog/1059831/making-a-game-feel-juicy-with-simple-effects),
+[Game Feel in Pygame](https://slicker.me/python/game_feel_pygame.htm)); falling-object games ramp slowly, add
+short power-ups (slow-mo, magnet) and tiered combos, and players ask for **shapes in addition to colours**
+([Color Drop](https://riwaldy.itch.io/color-drop)); small virtual pets pay mini-game points that unlock things, with
+no penalty for stopping ([Promise Pets](https://appgoblin.info/apps/982359486),
+[Pixel Paws](https://astam.itch.io/pixel-paws)). No source covered near-miss feedback or reward-vs-grind pacing, so
+those two points are my own judgment.
+
+**Proposed steps (not yet in the step table; place them as shown):**
+
+| # | Step | Tag | Content | Save | Phone box |
+|---|---|---|---|---|---|
+| M1 | **Feel + clarity** (after step 3) | should | floating "+n" and combo strip; near-miss wobble; **shape cue** (golden = star, bomb = a distinct shape with an X) next to the colour; a 3-2-1 start and a **result card** (tokens, care, medal, record) in the overlay layer before the sheet; catch pop / bomb shake that also works without a hurt clip; haptics via the `street-feel.ts` pattern (off with Reduce Motion / effects Off); clear the bomb timeout; move the fall and marker positions onto shared values (60 fps); status line gets a min height for Larger Text. **Number change for emci to OK:** Easy pays 2 tokens a round instead of 5 (medals and care stay), so Easy cannot fill the daily cap. | none | next free |
+| M2 | **Look: pet + background** (with step 7, the art step) | should | Streetwear food, bomb and dummy sprites (art library first, PixelLab only for gaps; samples + scale sheet first); a Hideout-style Catch background; the pet shows its real aura / finish instead of the flat glow; happy / "oof" faces from existing clips; `art:sync` | none | next free |
+| M3 | **Depth** (optional, later) | nice | Catch waves with short power-ups (magnet, slow, shield); Train with a moving or two-part zone; a no-timer practice mode; maybe a third game | any new field must stay inside the existing `game_records` shape: **ask emci first** | next free |
+
+**Fixed regions:** everything stays inside the existing `pet-game` GameScreen. The result card and countdown live in
+the `modal` / float layer; the hint stays 2 lines; no region resizes. **Reduce Motion:** the existing `still` mode
+also drops the countdown animation, the squash and the shake. **PixelLab spend:** M2 asks emci for the spend first.
+**Save:** M1 and M2 add no field; the save stays v33.
+
 ## Progress
 
 - **2026-10-18:** plan written (this doc, commit `7350e283`). emci chose **must + should-fix (steps 1-7, 9)**,

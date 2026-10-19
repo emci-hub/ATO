@@ -523,3 +523,18 @@ First: close and reopen the app so the update loads. Also run the old **Box 43**
 - [ ] **Tide Pass push** (last day, if you have a pass): reads "Legendary progress ×2 ends after today. Your days wait for you."
 - [ ] **Legendary helper splash:** put a **legendary** pet as the helper and fight a wave with foes bunched together. When its hit lands, the foes next to the target show a coloured ring in the helper's element and their damage numbers are the element colour (not plain white). No freeze or slow-down, and no second shot. Effects Quality Off: no ring, numbers still coloured.
 - [ ] **Smoothness:** a busy wave at 1× and 2× feels the same as Box 49.
+
+## Box 51 — Locker, honest and sorted (Divecore finish step 2, 2026-10-18)
+
+First: close and reopen the app so the update loads. Open the Locker (Play → Locker).
+
+- [ ] **Header:** the line under "Locker · Fits" reads "Powers change how the games play. Looks are just for style." (no "Basecore").
+- [ ] **Worn rows:** each worn Power has a coloured line "Works in: Turf War" / "Works in: Turf War · Dive" / "Works in: Hideout". A worn Look says "Style only".
+- [ ] **Equipped bonuses** are grouped under **Turf War**, **Dive** and **Hideout** (wave power / tower speed / token gain; dive luck; research finds). A group with nothing says "none yet".
+- [ ] **Bag:** with "All", the list shows a small heading "Powers · change the games" and then "Looks · style only, sell for tokens". The last filter chip reads **Looks** (not "Junk") and shows only Looks, with no headings. An empty tab reads "No Looks in the bag."
+- [ ] **Every Power in the bag** shows its "Works in" line; a Look shows "Style only". Open a Look: "Looks are for the eye. They change no game numbers."
+- [ ] **Help (?)** on the Locker: 3 short lines about Powers vs Looks, where a Power works, and equip / sell / merge.
+- [ ] **Token gain really works:** wear **Copper Keeper** (trinket) on your leader. Win a Turf wave with full pay: the result reads about 5% more tokens than before (50 → **53**; a half-pay or replay win 25 → 26). Take it off: back to 50. Mini-game rounds still pay 5.
+- [ ] **Research finds really work:** wear **Curator's Cloak** (cloak) or Ember Mantle on your leader. Claim a full research bag (about 10 h): you get about 1 extra find on top of the cycles (sometimes 2; a small bag has a small chance of +1). Without it, exactly one find per cycle.
+- [ ] **Larger Text:** the new "Works in" lines and the two headings wrap; nothing is cut off; the filter chips still scroll sideways.
+- [ ] No Shop or Corner Store tile anywhere for you (it stays hidden, so no price tags or "Soon" rows show).
