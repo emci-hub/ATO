@@ -511,3 +511,15 @@ First: close and reopen the app so the update loads (OTA group `8e7b7015`). Use 
 - [ ] Turf War: the leader's gear still makes the whole board hit harder as before (towers too). Dress the **helper** in strong gear: its hits and its skill visibly hit harder than before; with no gear on it, it fights like it did in Box 48.
 - [ ] **Smoothness:** a busy wave at 1× and 2× feels the same as Box 48 (gear adds no per-frame cost).
 - [ ] Settings → Larger Text: the Locker's hero chips scroll sideways, the Worn rows wrap, nothing is cut off.
+
+## Box 50 — Divecore finish step 1: helper daze, hidden Neon Maze, kinder copy, splash colour (2026-10-18)
+
+First: close and reopen the app so the update loads. Also run the old **Box 43** (egg duplicates) while you have the phone: it was never marked.
+
+- [ ] **Helper stays up longer:** boss wave (Main 5 or 10), a boss parked next to the helper. After it gets up it takes **two** boss swings without falling (about 11 s), and is knocked down again only on the third (about 15 s after it stood). It still always gets up and is never gone for the wave. (Box 48's "about 6 s" line is replaced by this.)
+- [ ] **Neon Maze is gone for players:** Turf War → Setup on Main shows no "Maps" card with Neon Maze. The theme picker (Rooftop / Underpass / Court / Docks / Alley) still shows in its own card, the same as on Trial. The board is still the normal ATO board.
+- [ ] **Main 1–10:** the Setup line reads "Campaign climb — Trial 1–5, then Main 1–10. Clear Main 10 to Conquer a cycle." and fits its box (also with Larger Text).
+- [ ] **Kinder pet lines:** let the pet get hungry or sad (a Scruffy pet shows the changed lines): "Snack time?", "Is it snack o'clock?", "My bowl could use a refill.", "Up for a game?", "Bit bored over here.", "Play with me?". None blames you. When a meter is empty the status word reads **Very hungry** (not "Starving") and fits its chip, also with Larger Text. After an expedition the pet says "Glad you're here." / "Hi again!" instead of "Missed you".
+- [ ] **Tide Pass push** (last day, if you have a pass): reads "Legendary progress ×2 ends after today. Your days wait for you."
+- [ ] **Legendary helper splash:** put a **legendary** pet as the helper and fight a wave with foes bunched together. When its hit lands, the foes next to the target show a coloured ring in the helper's element and their damage numbers are the element colour (not plain white). No freeze or slow-down, and no second shot. Effects Quality Off: no ring, numbers still coloured.
+- [ ] **Smoothness:** a busy wave at 1× and 2× feels the same as Box 49.
