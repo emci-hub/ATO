@@ -689,6 +689,27 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   `3202a990-5949-402b-bd50-c93452910b4f` (message `divecore-finish-step4-today`). Not rendered in the app (no web
   render was run); layout was shown as a mockup from the real region sizes. Phone check: **Box 53** (not done).
   **Next: step 5 (newbie guide helper), which reuses `todayItems` and the coach-tip layer; Minigames M1 is queued.**
+- **Step 5 built + published 2026-10-19** (Play commits `d28ab667`, `cceb18c9`, `4f91032c`; docs `2f86476d`,
+  `039cae29`). emci said "add Turf setup", so the bubble shows on **three screens**. One small bubble, one next step,
+  from real state: egg → Feed (Catch) → first dive → claim research (only when a claim is ready) → Trial 1 → put a
+  Power on (only with one in the bag) → build the Loft (only when buildable) → first trip (only when one can start),
+  then quiet. A veteran is never nagged (the furthest step already done counts). Hideout: every step; Locker: the
+  Power step; Turf setup: the Trial step (only on the setup board: not with the Setup sheet open, not in a wave).
+  Hidden for sheets, ceremonies, runs, Settings, a friend's Hideout and any pending coach tip. Fixed 76 pt bubble in
+  the GameScreen float layer (`GuideHost` / `GuideBubble`), 48 pt **Got it**, text capped at ×1.2 / 3 lines, short
+  fade (none with motion Off), no pulse. Pure picker `src/play/guide.ts`; phone-only flag `ato.play.guide.v1`
+  (`guide-store.ts`; on/off + dismissed steps; **not** the save, which stays v33); signals read from saved state
+  (`guide-input.ts`, new `PlayView.wornPowers` / `bagPowers`). Settings → Help has a **Guide bubble · On/Off** chip;
+  Replay tips and Reset Divecore restart it. New `check:newbie-guide` (9 groups) + a Guide pin in
+  `check:fixed-regions`. **A slip I caught and fixed:** my first commit overwrote the existing `scripts/check-guide.ts`
+  (the Info → Guide content check); restored byte for byte, and the new check is `check:newbie-guide`. Reviewer PASS
+  with warnings (fixed: Box 54 wording, the Locker's last row now scrolls clear of the bubble, the store waits for its
+  load so Got it can't wipe saved state, Feed wording). Gate green. **OTA published**: iOS
+  `01a1549f-fad3-776f-8601-8cf050b32279`, Android `01a1549f-fad3-7a47-8448-b67f58314baa`, group
+  `4b6bd920-324c-4e43-9331-08e920d5cc45` (message `divecore-finish-step5-guide`). Not rendered in the app (layout
+  shown as a mockup). Phone check: **Box 54** (not done). **Known/accepted:** the guide state is in memory per app
+  session (another account on the same phone in one session would see the first one's dismissed steps).
+  **Next: step 6 (balance refresh); Minigames M1 is still queued, waiting for emci's yes.**
 
 ## Web research (read as data)
 
