@@ -148,6 +148,7 @@ import {
 import {
   CARE_ACT,
   SHARDS_PER_TICKET,
+  STAR_MAX,
   DYE_STARS,
   DAILY_EGG_BONUS,
   EGGS_PER_DAY_MAX,
@@ -2689,7 +2690,7 @@ export function foldDuplicatePets(doc: PlayStoreDoc, now: number): { doc: PlaySt
   const plans = planMerges(before, active.uid);
   if (plans.length === 0) return { doc, note: null };
   let next = doc;
-  let noteHero: { hero: string; was: PetState; kept: PetState } | null = null;
+  let noteHero: { hero: string; was: PetState; kept: PetState; shards: number; shardGrade: Grade | null } | null = null;
   for (const plan of plans) {
     const activeIn = plan.kept.uid === active.uid || plan.dropped.some((p) => p.uid === active.uid);
     // Any pet of the group with a reveal still to play waits for it.
@@ -2719,7 +2720,22 @@ export function foldDuplicatePets(doc: PlayStoreDoc, now: number): { doc: PlaySt
       den = den.map((p) => (p.uid === plan.kept.uid ? plan.kept : p));
     }
     next = { ...next, pet, pet_den: den, pet_heroes: heroes };
-    if (activeIn && plan.kept.hero) noteHero = { hero: plan.kept.hero, was: keptWas, kept: plan.kept };
+    // A duplicate that joins a hero already at 5★ adds nothing to its stars: it pays shards instead (the live
+    // pet moved into the Collection, so the book total is unchanged and the join order is last-to-first).
+    let shards = 0;
+    let shardGrade: Grade | null = null;
+    if (plan.kept.hero) {
+      const total = heroBookOf(next)[plan.kept.hero]?.copies ?? 0;
+      const first = total - plan.dropped.length;
+      plan.dropped.forEach((p, i) => {
+        if (first + i < STAR_MAX) return;
+        const grade = dupShardGrade(p.grade);
+        next = { ...next, pet_shards: { ...next.pet_shards, [grade]: next.pet_shards[grade] + DUP_SHARDS } };
+        shards += DUP_SHARDS;
+        shardGrade ??= grade;
+      });
+    }
+    if (activeIn && plan.kept.hero) noteHero = { hero: plan.kept.hero, was: keptWas, kept: plan.kept, shards, shardGrade };
   }
   if (!noteHero) return { doc: next, note: null };
   const copies = heroBookOf(next)[noteHero.hero]?.copies ?? 0;
@@ -2732,8 +2748,19 @@ export function foldDuplicatePets(doc: PlayStoreDoc, now: number): { doc: PlaySt
       stars_to: heroStars(copies),
       grade_up: kept.grade != null && kept.grade !== was.grade ? kept.grade : null,
       shiny_up: kept.shiny && !was.shiny,
+      shards: noteHero.shards,
+      shard_grade: noteHero.shardGrade,
     },
   };
+}
+
+/** Shards a duplicate pays when its hero is already 5★ (existing currency: 5 shards = a ticket). */
+export const DUP_SHARDS = 2;
+
+/** The grade a 5★ duplicate's shards come in: its own, except Legendary (Legendary shards trade up to nothing) → Epic. */
+export function dupShardGrade(grade: Grade | null): Grade {
+  if (grade == null) return 'common';
+  return grade === 'legendary' ? 'epic' : grade;
 }
 
 /** The pet has said its "joined up" line. */
@@ -3706,11 +3733,14 @@ export function recordDefendWin(
     tokensGranted = Math.floor(tokensGranted / 2);
     xpGranted = Math.floor(xpGranted / 2);
   } else {
-    const priorClears = doc.clears_ymd === todayYmd ? doc.clears_today : 0;
+    // The daily half-pay count holds when the clock is set back a little (`petDayHolds`, like every pet-day cap):
+    // the stored day stays, so it cannot be reset early by moving the phone clock back.
+    const held = petDayHolds(todayYmd, doc.clears_ymd);
+    const priorClears = held ? doc.clears_today : 0;
     halved = priorClears >= tune.dailyClearHalfAfter;
     if (halved) tokensGranted = Math.floor(tokensGranted / 2);
     clearsToday = priorClears + 1;
-    clearsYmd = todayYmd;
+    clearsYmd = held ? doc.clears_ymd : todayYmd;
     // Lifetime clear count (never resets on a Conquered) + milestones.
     lifetimeAfter = doc.lifetime_waves_cleared + 1;
     milestone = (MILESTONE_WAVES as readonly number[]).includes(lifetimeAfter)

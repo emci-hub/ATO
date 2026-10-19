@@ -200,10 +200,11 @@ const zeroSums = (over: Partial<StatSums> = {}): StatSums => ({
   assert.equal(shopUnlocked(true, false), false, 'dev unlock alone opens nothing once the pre-launch flag is off');
   assert.equal(shopUnlocked(false, true), false, 'the pre-launch flag alone opens nothing without the dev unlock');
   assert.equal(shopUnlocked(true, true), true);
-  assert.ok(!hubTilesFor(true, false).some((t) => t.to === 'shop') && !hubTilesFor(false, true).some((t) => t.to === 'shop'), 'no Store tile for a player');
+  // Step 3 opened the Store to players, but only its Token shop tab: the paid / pass / stub rows stay dev-only.
+  assert.ok(hubTilesFor(false, false).some((t) => t.to === 'shop'), 'the Store tile is open (step 3)');
   const play = read('src/app/play.tsx');
-  assert.ok(play.includes("mode === 'shop' && view && shopUnlocked(devUnlocked)"), 'the shop screen renders only when unlocked');
-  ok('shop: paid / pass / stub rows are unreachable for a player (dev-only, gone with the pre-launch flag)');
+  assert.ok(play.includes('full={shopUnlocked(devUnlocked)}'), 'only the dev unlock hands the screen the full shop');
+  ok('shop: the paid / pass / stub rows stay dev-only (the Store itself is open to players since step 3)');
 }
 
 // --- save ---------------------------------------------------------------------------------------------

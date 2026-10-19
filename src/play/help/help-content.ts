@@ -87,7 +87,7 @@ export const HELP: Record<HelpId, HelpEntry> = {
     bullets: [
       'Spend tokens on the shelf.',
       'Daily and weekly limits apply.',
-      'Paid rows are not for sale yet.',
+      'Crates hold random Powers.',
     ],
   },
 };

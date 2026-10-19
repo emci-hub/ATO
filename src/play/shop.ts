@@ -95,6 +95,20 @@ export function paidShopRows(): readonly ShopPaidRow[] {
   return PAID_ROWS;
 }
 
+/** The Store's tabs. A player sees the Token shop only (Divecore finish step 3, emci 2026-10-18); the Tide shelf and
+ * the Paid shop (price labels, nothing for sale) are dev-only previews. */
+export type StoreTab = 'token' | 'tide' | 'paid';
+
+export function storeTabsFor(full: boolean): readonly StoreTab[] {
+  return full ? ['token', 'tide', 'paid'] : ['token'];
+}
+
+/** The Token shop rows a viewer sees: everything for a dev, only priced real rows (no "Coming soon" stubs) for a player. */
+export function storeTokenRows(full: boolean): readonly ShopTokenRow[] {
+  const rows = tokenShopRows();
+  return full ? rows : rows.filter((row) => row.kind !== 'stub' && row.price != null);
+}
+
 /** One token row by id, or undefined when unknown. */
 export function getTokenShopRow(id: string): ShopTokenRow | undefined {
   return TOKEN_ROWS.find((row) => row.id === id);

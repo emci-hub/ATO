@@ -24,7 +24,7 @@ import {
   type StreetTab,
 } from '@/play/street-shell';
 import { streetUiOn } from '@/play/street-ui';
-import { NEON, shopUnlocked } from '@/play/neon-viper';
+import { NEON, shopUnlocked, storeOpen } from '@/play/neon-viper';
 import { NeonButton } from '@/play/neon-ui';
 import { backTarget, modeForTab, tabForMode, type PlayMode } from '@/play/play-nav';
 import { PlayThemeProvider } from '@/play/play-theme';
@@ -737,7 +737,7 @@ export default function PlayScreen() {
   const goStreetTab = (tab: StreetTab) => {
     const to = modeForTab(tab);
     if (to === mode) return;
-    if (to !== 'shop' || shopUnlocked(devUnlocked)) setMode(to);
+    setMode(to);
   };
   /** Pre-launch tools, handed to the Settings sheet (the Block that carried them is gone). */
   const settingsExtra = (
@@ -767,7 +767,7 @@ export default function PlayScreen() {
     street && view ? (
       <StreetTabBar
         active={streetTab}
-        showStore={shopUnlocked(devUnlocked)}
+        showStore={storeOpen()}
         reduceMotion={reduceMotion}
         bottomInset={insets.bottom}
         onTab={goStreetTab}
@@ -895,8 +895,13 @@ export default function PlayScreen() {
         onBackToGrove={() => setMode('pet')}
         commit={commit}
       />
-    ) : mode === 'shop' && view && shopUnlocked(devUnlocked) ? (
-      <ShopScreen view={view} onBuyToken={handleBuyShopRow} onBackToDivecore={() => setMode('pet')} />
+    ) : mode === 'shop' && view ? (
+      <ShopScreen
+        view={view}
+        full={shopUnlocked(devUnlocked)}
+        onBuyToken={handleBuyShopRow}
+        onBackToDivecore={() => setMode('pet')}
+      />
     ) : mode === 'about' ? (
       <AboutScreen onBackToDivecore={() => setMode('pet')} />
     ) : mode === 'sheetlab' ? (

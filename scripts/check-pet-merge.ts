@@ -73,7 +73,7 @@ assert.equal(copies(acked!, 'kael'), before, 'stars count every copy, exactly as
 assert.equal(heroBookOf(acked!).kael?.shinies, heroBookOf(atReveal).kael?.shinies, 'a shiny taken over is counted once');
 assert.deepEqual(heroBookOf(acked!).kael?.styles, heroBookOf(atReveal).kael?.styles, 'shiny styles unchanged');
 assert.equal(acked!.pet_heroes.kael?.copies, 1, 'the joined copy is in the Collection');
-assert.deepEqual(acked!.pet_merge_note, { hero: 'kael', stars_from: 1, stars_to: 2, grade_up: 'epic', shiny_up: true });
+assert.deepEqual(acked!.pet_merge_note, { hero: 'kael', stars_from: 1, stars_to: 2, grade_up: 'epic', shiny_up: true, shards: 0, shard_grade: null });
 assert.equal(acked!.play_stats.releases, atReveal.play_stats.releases, 'not a release');
 assert.equal(acked!.pet_hall.length, atReveal.pet_hall.length, 'no Hall entry');
 assert.deepEqual(acked!.pet_shards, atReveal.pet_shards, 'no shard');
@@ -102,8 +102,8 @@ assert.deepEqual(parsePlayStore(JSON.stringify(loaded), T), loaded, 'folding aga
 ok('old save folds on load, nothing lost, idempotent');
 
 // --- the line ------------------------------------------------------------------------------------------
-assert.equal(mergeLine({ hero: 'kael', stars_from: 2, stars_to: 3, grade_up: null, shiny_up: false }, 'Kael'), 'Kael joined up! ★★ → ★★★');
-assert.equal(mergeLine({ hero: 'kael', stars_from: 5, stars_to: 5, grade_up: 'legendary', shiny_up: false }, 'Kael'), 'Kael joined up! Now Legendary!');
+assert.equal(mergeLine({ hero: 'kael', stars_from: 2, stars_to: 3, grade_up: null, shiny_up: false, shards: 0, shard_grade: null }, 'Kael'), 'Kael joined up! ★★ → ★★★');
+assert.equal(mergeLine({ hero: 'kael', stars_from: 5, stars_to: 5, grade_up: 'legendary', shiny_up: false, shards: 0, shard_grade: null }, 'Kael'), 'Kael joined up! Now Legendary!');
 ok('the joined-up line');
 
 // --- wired -----------------------------------------------------------------------------------------------

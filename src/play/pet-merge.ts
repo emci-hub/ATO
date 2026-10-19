@@ -4,7 +4,8 @@
  *   - A revealed pet (Child and up) whose hero you already keep merges into
  *     it: the copy goes into the Collection (so stars count it, exactly as
  *     before), and the kept pet takes the better grade and a shiny if either
- *     was shiny. No Hall entry, no shard — nothing left, it joined up.
+ *     was shiny. No Hall entry — it joined up. (Step 3: a duplicate joining a hero already at 5★ pays 2 shards
+ *     of its grade, Legendary → Epic, since it can add no star.)
  *   - Kept = the highest stage; tie → the active pet; tie → the higher grade;
  *     tie → the older (lower uid). So a new Child never replaces a grown pet.
  *   - The merged-away pet's looks are not lost: a finish moves over if the
@@ -26,6 +27,10 @@ export type PetMergeNote = {
   grade_up: Grade | null;
   /** The kept pet became shiny through the merge. */
   shiny_up: boolean;
+  /** Divecore finish step 3: shards a duplicate paid because the hero was already 5★ (0 = none). */
+  shards: number;
+  /** The grade those shards came in. */
+  shard_grade: Grade | null;
 };
 
 /** Which of two same-hero pets is kept. `activeUid` = the active pet's uid. */
@@ -109,6 +114,7 @@ export function mergeLine(note: PetMergeNote, name: string): string {
   if (note.grade_up && note.shiny_up) line += ` Now ${GRADE_WORD[note.grade_up]} and shiny!`;
   else if (note.grade_up) line += ` Now ${GRADE_WORD[note.grade_up]}!`;
   else if (note.shiny_up) line += ' Now shiny!';
+  if (note.shards > 0 && note.shard_grade) line += ` +${note.shards} ${GRADE_WORD[note.shard_grade]} shards`;
   return line;
 }
 
@@ -121,5 +127,16 @@ export function parseMergeNote(raw: unknown, validHero: (id: string) => boolean)
   const to = star(r.stars_to);
   if (typeof r.hero !== 'string' || !validHero(r.hero) || from == null || to == null) return null;
   const grade = (GRADES as readonly unknown[]).includes(r.grade_up) ? (r.grade_up as Grade) : null;
-  return { hero: r.hero, stars_from: from, stars_to: to, grade_up: grade, shiny_up: r.shiny_up === true };
+  // Notes saved before step 3 have no shards: they read as none.
+  const shards = typeof r.shards === 'number' && Number.isFinite(r.shards) ? Math.max(0, Math.min(99, Math.floor(r.shards))) : 0;
+  const shardGrade = (GRADES as readonly unknown[]).includes(r.shard_grade) ? (r.shard_grade as Grade) : null;
+  return {
+    hero: r.hero,
+    stars_from: from,
+    stars_to: to,
+    grade_up: grade,
+    shiny_up: r.shiny_up === true,
+    shards: shardGrade ? shards : 0,
+    shard_grade: shards > 0 ? shardGrade : null,
+  };
 }
