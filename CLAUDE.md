@@ -36,19 +36,21 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 
 ## Hard invariants
 
-- **No vendor key in the bundle.** Every model call goes `generateText` → `ai-generate`
-  Edge Function; keys are Supabase secrets. `check:ai-provider` fails on any
-  `EXPO_PUBLIC_*_API_KEY` reference under `src/`.
+- **No vendor key in the bundle.** Every model call runs on the server in `ai-library` /
+  `ai-library-fill`; keys are Supabase secrets. `ai-generate` (the old generic prompt proxy)
+  is CLOSED to a 410 stub since wave98 and is deleted in launch-flip step 9: never put a vendor
+  call or a caller-supplied prompt back (`check:ai-provider`). `check:ai-provider` also fails on
+  any `EXPO_PUBLIC_*_API_KEY` reference under `src/`.
 - **Shared AI library (wave93, emci 2026-10-09).** Deep dives, Story and Legends cards are
   library first: a free unseen card from the reader's bucket (`library_serve`; Legends
   through `claim_library_write`), else the `ai-library` Edge Function writes one. That
-  function is the second server-side model path: the phone sends only `{kind, bucket,
+  function is the only server-side model path (with its cron sibling `ai-library-fill`): the phone sends only `{kind, bucket,
   mode}`, never text; the server rebuilds the prompt and runs the app's checks from
   `supabase/functions/_shared/ai-library.bundle.js`. Any edit under the prompts/checks it
   bundles needs `npm run gen:ai-library` + `supabase functions deploy ai-library`
   (`check:ai-library` fails on a stale bundle). Bump `LIBRARY_VERSION` when a prompt or
   card shape changes. Nothing personal (user id, told-vs-played) may enter a shared prompt.
-- **Quota is claimed server-side** (`claim_ai_call` inside `ai-generate`), output tokens
+- **Quota is claimed server-side** (`claim_library_write` / `claim_ai_call` inside `ai-library`), output tokens
   capped at 1024. The client never decides whether a paid call happens.
 - **Root is `me.is_root`**, never a handle string. `is_root()` / `require_root()` read it;
   a trigger refuses client writes to the column.
@@ -154,7 +156,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 | **Making or editing any game art (PixelLab)** — tools order, size ladder, gates | `docs/art/PIXELLAB_GUIDE.md` (read first) · `npm run pixellab:watch` = has PixelLab changed? |
 | Old plan (reference only, not rules) | `docs/archive/OLD_PLAN.md` |
 | Schema + RLS + RPCs | `supabase/migrations/*.sql` (chronological: stage* → wave*) |
-| Edge Functions (Deno) | `supabase/functions/{ai-generate,apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` |
+| Edge Functions (Deno) | `supabase/functions/{ai-library,ai-library-fill,ai-generate (closed stub),apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` · rate limits: `_shared/rate-limit.ts` + wave98 · live schema snapshot: `supabase/baseline/` |
 
 Expo docs for this repo: https://docs.expo.dev/versions/v54.0.0/ (SDK 54 — check
 `package.json` before trusting any other version).

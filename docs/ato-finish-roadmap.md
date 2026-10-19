@@ -555,7 +555,104 @@ End this chat with: a 3-5 line assessment, then "ATO is ready to submit" or the 
 
 ## Progress
 
-- 2026-10-19: assessment written (this doc). Scope and three decisions recorded above. Steps 1-10 not started.
+- 2026-10-19: assessment written (this doc). Scope and three decisions recorded above.
+- 2026-10-19: **Step 1 (server hardening) built on `feature/ato-server-hardening`, draft PR into master. NOT applied to the live
+  project: the live SQL apply, the three function deploys and the live checks are waiting for emci** (the sandbox refused
+  every write to the live database, even the approved migration; see "Step 1 status" below). No OTA, no merge.
+  Steps 2-10 not started.
+
+### Step 1 status (M1-M4, S1, S2)
+
+| Item | State | Evidence |
+|---|---|---|
+| M1 close `ai-generate` | **Code done, deploy pending.** `supabase/functions/ai-generate/index.ts` is a 410 stub (no vendor key, no prompt field). Live function still the old proxy until `supabase functions deploy ai-generate`. | `check:ai-provider` rewritten to pin the stub; nothing real depends on it (`ai-library` is the only model path; deep dive and Legends reach `ai-generate` only as an old-bundle fallback when `ai-library` answers "missing") |
+| M2 rate limits | **SQL written, not applied.** `wave98_server_hardening.sql`: `rate_limit_hits` + `_rate_limit_check` (advisory lock, fixed window) used by `public_profile` (60 / 10 min per user or IP) and `handle_taken` (30 / 10 min). `password-login` (30 / 15 min per IP, 10 / 15 min per hashed identifier) and `dev-unlock` (5 / 15 min per account) call `rate_limit_hit` (service role). | `check:server-hardening`. **Accepted limits: see "Rate limits that cannot be counted" below** |
+| M3 rotations, `play_dev_logs` | **emci to rotate** (steps below). `play_dev_logs` select policy + grants dropped in wave98 (not applied yet). | `check:server-hardening`; nothing reads the table in code |
+| M4 advisors | **Run.** Findings below. | `supabase db advisors --linked --type all` |
+| M4 `verify_jwt` / `getUser()` | **Done.** Table below. | `supabase functions list`; code read |
+| M4 anon key | **Done.** `landing/index.html:110` decodes to role `anon` (the public key, fine to ship). `scripts/apple-endpoint-probe.ts:50` has no `role` claim and no project ref: not a Supabase key. | local decode, claims only |
+| M4 baseline schema | **Done (reference).** `supabase/baseline/me_connections_public_profile.sql`, read from the live database 2026-10-19. Not a `pg_dump` (no Docker on this machine) and not a migration. | file + README |
+| S1 timezone farming | **SQL written, not applied.** Reproduction test was refused by the sandbox; reasoning below. | wave98 |
+| S2 Sentry scrubber | **Done.** `src/lib/sentry-scrub.ts`, wired as `beforeSend` / `beforeBreadcrumb`, 30 breadcrumbs. Ships with the next OTA. | `check:server-hardening` |
+
+**Edge Functions (live, `supabase functions list`, 2026-10-19):**
+
+| Function | gateway `verify_jwt` | In-code auth | Note |
+|---|---|---|---|
+| ai-generate | true | none needed (410 stub after deploy) | delete in step 9 |
+| ai-library | true | `getUser()` | |
+| ai-library-fill | false | `library_fill_token_ok` (Vault token) | by design (cron) |
+| apple-link | true | `getUser()` | |
+| delete-account | true | `getUser()` | |
+| dev-unlock | true | `getUser()` | GOTCHAS line saying it has no JWT was stale, fixed |
+| review-access | true | `getUser()` + `is_root` | |
+| refresh-around | false | bearer secret compare | by design (cron) |
+| password-login | false | none (pre-login) | throttled in wave98 |
+| **mint-session-once** | true | **no source in the repo** | deployed v11, not in `supabase/functions/`. emci: what is it? Download or delete. |
+| **apple-secrets-check** | true | **no source in the repo** | deployed v9, same question |
+
+**Advisors (security + performance, 224 findings, nothing at ERROR level):**
+- *Security WARN, `anon_security_definer_function_executable` x9:* `assert_invite_usable` (accepted until step 9: it returns true in public
+  mode; invite codes are 40 random bits, so guessing is not practical; the QA override code gets rotated), `public_profile` (public by
+  design for `/@handle`, now throttled), `handle_taken` (wave98 revokes anon), and `peer_profile`, `get_or_create_thread`,
+  `delete_message_for_me`, `is_message_party`, `mirror_connection`, `unmirror_connection` (wave98 revokes anon; they already returned
+  nothing without a user, this removes the surface).
+- *Security WARN, `authenticated_security_definer_function_executable` x124:* **accepted.** The app talks to Postgres through RPCs, so
+  signed-in users must reach them. Each function's own `auth.uid()` check was not re-audited here; step 3 re-checks the Circle ones.
+- *Security WARN, `function_search_path_mutable` x7* (`recipe_from_account_id`, `trait_is_direct_source`, `_bank_premium_price`,
+  `trait_ewma_step`, `daily_pick_position`, `_profile_code`, `_profile_changed`): **accepted for now.** Pure helpers, not `SECURITY DEFINER`.
+  Fix is `alter function … set search_path = public`; left for step 6 because the trait functions are pinned by parity checks.
+- *Security WARN, `auth_leaked_password_protection`:* **emci**: Supabase dashboard, Authentication, Password security, turn on "Prevent use of
+  leaked passwords" if the plan allows it. Passwords are the secondary sign-in (the emailed code is primary).
+- *Security INFO, `rls_enabled_no_policy` x17:* **accepted, deny-all on purpose** (RPC / service-role only): account_deletions, ai_library_cards,
+  ai_library_fill_days, ai_library_fill_fails, ai_library_reports, ai_library_seen, ai_library_wanted, app_secrets, apple_credentials,
+  circle_gifts, dev_access_grants, dev_trace_events, dev_trace_sessions, intake_questions, play_counters_daily, question_bank, trait_answer_changes.
+- *Performance WARN, `auth_rls_initplan` x59:* **deferred (not security).** Policies call `auth.uid()` per row instead of `(select auth.uid())`.
+  With 9 accounts it costs nothing; do it as one mechanical migration before real traffic (own step; alters existing policies, so ask).
+- *Performance INFO:* 19 unindexed foreign keys, 6 unused indexes: deferred, same reason.
+
+**New findings (not fixed in step 1; owner in brackets):**
+- `public_profile` ignores `me.visible` although `src/lib/me.ts:675` and the wave64 comment say it is "visibility-filtered": a hidden account is still
+  returned by handle to anyone, signed out. [step 3]
+- `me_update_own` has no `with check`; the guard triggers cover `is_root`, tokens, invite, born_on, trait columns, but a signed-in user can update
+  any other column of their own row directly (e.g. `is_founder`, `referred_by` are covered by `me_invite_guard`; `visible`, `recipe`, `facts` are not meant to be protected). [step 3 / wave80]
+- `connections_insert_own` lets any signed-in user insert (self, anyone) and a trigger mirrors it: the consentless connect (M5). [step 3]
+- `handle_taken` was anon-callable although wave64 says authenticated only (Supabase default privileges). Fixed in wave98.
+
+**Rate limits that cannot be counted (accepted).** A Postgres function that raises an error rolls back its own counter row, so a throttle
+inside `assert_invite_usable` or `complete_signup` would only ever count *successful* calls. Counting failed guesses there needs a status-returning
+replacement, which old app bundles cannot read. Instead: the QA override code gets rotated to a long random value (below), invite codes are 40 random
+bits, and step 9 sets `signup_mode = 'public'`, after which `assert_invite_usable` returns true before it reads anything. Sign-up e-mail / OTP floods are
+limited by Supabase Auth itself (per-IP and per-address caps, 60 s resend wait): **emci: read the live numbers in the dashboard, Authentication,
+Rate limits, and write them next to this line.**
+
+**Client IP.** `_client_key()` reads `cf-connecting-ip`, then the first `x-forwarded-for` value from PostgREST's `request.headers`. Not yet proven on this
+project (the probe was refused). If no address arrives, signed-out callers share one `noip` bucket with 20x the room, so a missing header can never lock
+everyone out. Proof step after the apply: call `public_profile` with the anon key and read the `key` column of `rate_limit_hits` (should show `ip:…`, not `noip`).
+
+**Timezone farming (S1), reasoning.** The check-in day comes from `me.timezone`, which a client could write freely (no guard, no validation against real zone names;
+`me_update_own` allows it). A fake POSIX zone such as `XXX-100` puts "today" days ahead, so each flip claims a new future date: unbounded. Real zones span
+UTC-12..+14, so a flip-and-claim gains at most about two days of lead. wave98 (a) stores only real zone names (an invalid value keeps the old one, no error), and (b) clamps
+the check-in day to UTC +-1 inside `claim_daily_checkin`: claims by any moment are then at most "days elapsed + 2". A rolled-back reproduction (switch the dev-test user to `XXX-100` and claim, inside a transaction that is rolled back) was
+refused by the sandbox; whoever applies wave98 can run it before and after. Box 59 only proves a normal check-in still pays once
+(the app writes `timezone` just at onboarding and device sync, so the phone cannot show the old hole).
+
+**Rotations emci must do (M3).** Values are never written in chat or in the repo.
+1. QA invite code. Supabase dashboard, SQL editor. Either make it a long random value, or turn it off (recommended once signup is public):
+   `update public.app_secrets set qa_override_invite_code = null where id = 1;`
+2. Dev-test password. Dashboard, Authentication, Users, `ato-dev@example.com`, set a new long password; put the same value in `.env.local` as `ATO_LIVE_PASSWORD`
+   (and `ATO_LIVE_EMAIL` stays `ato-dev@example.com`). The old one stays in git history, which is why it must change.
+3. `DEV_UNLOCK_PASSWORD`. In a terminal: `supabase secrets set DEV_UNLOCK_PASSWORD=<new long value>` (no redeploy needed).
+4. (Optional) leaked-password protection, see above.
+Then tell me "rotated" and I (or the next chat) run `check:auth-password`, `check:invite`, `check:quota` once with the dev-test user.
+
+**What still has to be done by hand for step 1 to close** (all need a live write, which the sandbox refused; each one is a single command):
+1. `supabase db query --linked -f supabase/migrations/wave98_server_hardening.sql`
+2. Three deploys, one command each: `supabase functions deploy ai-generate`, `supabase functions deploy dev-unlock`, and
+   `supabase functions deploy password-login --no-verify-jwt` (its gateway setting is `false` live because it runs before login; deploying it
+   without the flag would turn the check on and break password sign-in).
+3. The rotations above, then the live checks `check:invite`, `check:quota`, `check:auth-password` (dev-test user only).
+4. Re-run `supabase db advisors --linked --type security --level warn` and paste the delta here.
 
 ## Research sources
 

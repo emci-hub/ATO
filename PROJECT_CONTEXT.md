@@ -579,7 +579,8 @@ re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
     deliberately guessable** — as of Sep 13, 2026 it is a short dictionary word, chosen
     by emci over a generated high-entropy value ("i dont care who can guess it i can
     switch this later"). **This is the single gate keeping signup closed**, and
-    `assert_invite_usable` is **anon-callable with no rate limiting in the schema**, so
+    `assert_invite_usable` is **anon-callable and cannot count failed guesses** (a raising
+    function rolls its counter back; see the 2026-10-19 note below), so
     right now anyone who guesses it can create an account. Acceptable only because the
     app is invite-only with no live users and everyone is reset before launch.
     **ROTATE TO A LONG, HIGH-ENTROPY VALUE BEFORE `signup_mode` GOES PUBLIC** —
@@ -591,10 +592,10 @@ re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
 13. **Play free loop (`PLAY_EVERYTHING_FREE` in `src/lib/dev-mode.ts`)** — every hero
     owned on Play load (no Premium). Mirrors `PRE_LAUNCH_DEV`, so it flips off at the
     same re-gate; a public build must not hand out the whole hero roster for free.
-14. **`public.play_dev_logs` (wave73)** — non-personal Play dev test results, anon-readable
-    so a dev machine can pull them with the public key. Drop the table (or at least the
-    anon select + authenticated insert) before `signup_mode` goes public. NOT covered by
-    the `PRE_LAUNCH_DEV` flip — this one is a database change.
+14. **`public.play_dev_logs` (wave73)** — non-personal Play dev test results. The anon /
+    authenticated read is dropped in `wave98_server_hardening.sql` (written 2026-10-19, apply
+    pending); insert stays, read it with `supabase db query --linked` or the dashboard.
+    Drop the table itself before launch. NOT covered by the `PRE_LAUNCH_DEV` flip.
 15. **Cloud save for ALL Play progress (heroes, Legends, gear, pet) — MUST-DO, separate task
     (emci, 2026-09-29).** The whole Play save (`ato.play.store.v1`: tokens, bag, Legends,
     owned heroes, worn gear, campaign, the pet + Hall of pets) lives ONLY on the phone and is
@@ -605,6 +606,7 @@ re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
 One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`. **`npm run check:release-mode` (wired as the EAS `eas-build-post-install` hook) refuses a production build while it is `true`.**
 
 ## Decisions log
+- 2026-10-19 (ATO FINISH ROADMAP STEP 1, server hardening; branch `feature/ato-server-hardening`, draft PR into master, not merged, no OTA, **live SQL + function deploys NOT done**): emci approved the plan ("ai-generate 410 stub now and delete it in step 9, the wave98 SQL, the three function deploys, read-only advisors and schema dump; I'll do the rotations"). Built: `ai-generate` is a 410 stub in the repo; `wave98_server_hardening.sql` (rate-limit table + helpers, `public_profile` / `handle_taken` throttled, `handle_taken` and six chat / connection functions lose anon, `play_dev_logs` read dropped, `me.timezone` guard + `claim_daily_checkin` UTC ±1 clamp); `password-login` and `dev-unlock` throttled through `_shared/rate-limit.ts`; Sentry `beforeSend` scrubber; `supabase/baseline/` live snapshot of `me` / `connections` / `public_profile`; `check:server-hardening`. Advisors run (no ERROR; 9 anon-executable definers, 124 authenticated, 7 mutable search_path, leaked-password toggle off, 59 initplan warnings deferred). The sandbox refused every write to the live database (the approved migration, a rolled-back farming test and a header probe), so those are for emci / the next chat to run. Raised for emci: two deployed functions with no source in the repo (`mint-session-once`, `apple-secrets-check`). Findings, rotations and the hand-run list: `docs/ato-finish-roadmap.md` "Step 1 status". Phone Box 59.
 - 2026-10-18 (PET TEAM phone checks): emci ran Boxes 44-49 on the phone and reported "all passed" (status badge, faint art, leader = active pet, Turf team, one AI helper incl. 60 fps + Larger Text, per-hero Locker). No fixes needed, no new OTA. The pet team plan (P1-P6 + P5b) is finished. Box 43 (P1) was not in that report.
 - 2026-10-18 (PET TEAM P6): emci approved the per-hero Locker plan ("go and accept all recommendations") and asked that the helper can wear gear too. Gear moved from the 5 Legend records to heroes (`hero_gear`, `gear_moved`, `locker_hero_id`, additive v33, no bump): the active Legend's gear → the leader's hero, other Legends' gear → the bag, once on load (waits for the P4 leader fold); equip/unequip/merge act on the dressed hero; leader gear stays board-wide, the helper's own gear scales only its hits and skill (`gearPower`, ×1 floor); no backup copy of old loadouts (an older bundle that re-saves would drop `hero_gear`, accepted). Locker "Dress which hero?" row, Hideout "GEAR n/4" chip. OTA group `8e7b7015`, iOS `01a150e7-cd04-779d-9a0c-4e5f87da71c5`, commit `1c02adb1`. Phone check Box 49. Plan P1-P6 + P5b all built; phone checks 44-49 open.
 - 2026-10-18 (PET TEAM P5b): emci approved the one-AI-helper plan + numbers ("ok, build P5b with those numbers"): 1 helper slot (2nd slot, tap-to-place and Move removed); it follows the leader (leash 15, follow spot 6 beside, off road/pads), chases boss first inside the leash (closes to 6, road only for a boss), walk 40 / run back 50; attack 20, range 15; its own hero skill (`heroCastSkill`) first at 6 s then every 14 s (replaces the 16 s ultimate); never dies: a boss within 8 swings every 5 s → dazed 4 s (faint), get-up 0.6 s (faint reversed), runs back, 6 s daze-proof; creeps never daze it. 60 fps on existing tickers (shared-value glide, still 8 intervals). Save stays v33 (`turf_helpers` 1 pick). OTA group `7362dc82`, iOS `01a150b9-e81c-74e0-96f4-f8f6799321ea`, commit `bb21c3c7`. Phone check Box 48 (replaces Box 47's helper lines). Next: P6 (per-hero Locker).
