@@ -629,7 +629,7 @@ export default function PlayScreen() {
       const gained = await unlockAvatarStub(id);
       if (gained) {
         const def = avatarDef(id);
-        notify({ kind: 'celebrate', title: 'Avatar unlocked', body: `${def?.name ?? id} joined your Basecore.` });
+        notify({ kind: 'celebrate', title: 'Avatar unlocked', body: `${def?.name ?? id} joined your crew.` });
       }
     },
     [unlockAvatarStub],
@@ -1494,7 +1494,7 @@ function bustNoticeBody(rescued: readonly string[]): string {
   // "The rest sank." (3 words) always stays whole; the saved names get the other 7.
   return rescued.length > 0
     ? `${fitWords(`Pet saved ${summarizeNames(rescued)}`, NOTICE_BODY_MAX_WORDS - 3)}. The rest sank.`
-    : 'The haul sank. Your Basecore is safe.';
+    : 'The haul sank. Your Hideout is safe.';
 }
 
 /** Honest copy for a token-shop refusal (why the buy didn't happen) — ≤ 10 words. */

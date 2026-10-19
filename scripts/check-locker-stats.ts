@@ -13,7 +13,7 @@
  * - The save stays v33 (no new field).
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { HIDEOUT_SAVE_VERSION } from '../src/play/hideout-progress';
@@ -205,6 +205,31 @@ const zeroSums = (over: Partial<StatSums> = {}): StatSums => ({
   const play = read('src/app/play.tsx');
   assert.ok(play.includes('full={shopUnlocked(devUnlocked)}'), 'only the dev unlock hands the screen the full shop');
   ok('shop: the paid / pass / stub rows stay dev-only (the Store itself is open to players since step 3)');
+}
+
+// --- the stale / guilt words stay out of player copy (Divecore finish step 9) -----------------------------
+{
+  const files: string[] = ['src/app/play.tsx'];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(resolve(root, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(rel);
+      else if (/\.(tsx?|json)$/.test(entry.name) && !entry.name.startsWith('generated-')) files.push(rel);
+    }
+  };
+  walk('src/play');
+  const stale = /Basecore|Main 20|Main 1[–-]20|Missed you|Nobody plays|days you skip/i;
+  for (const rel of files) {
+    read(rel)
+      .split('\n')
+      .forEach((line, i) => {
+        const code = line.trim();
+        if (code.startsWith('//') || code.startsWith('*') || code.startsWith('/*')) return; // comments are not player copy
+        assert.ok(!stale.test(line), `${rel}:${i + 1} still says a stale or guilt word: ${code.slice(0, 90)}`);
+      });
+  }
+  assert.match(read('src/play/pet-status.ts'), /starving: 'Very hungry'/, 'the hungriest status reads "Very hungry"');
+  ok(`no "Basecore", "Main 20", "Missed you", "Nobody plays" or "days you skip" in ${files.length} Play files; hungriest status = "Very hungry"`);
 }
 
 // --- save ---------------------------------------------------------------------------------------------

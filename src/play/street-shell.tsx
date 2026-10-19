@@ -138,7 +138,7 @@ export function StreetResourceBar({
   shine: number;
   prism: number;
   reduceMotion: boolean;
-  /** Basecore research: "Claim" when ready, else the wait ("~42m"). Phase 3: lives here, not on a Block. */
+  /** Research: "Claim" when ready, else the wait ("~42m"). Phase 3: lives here, not on a Block. */
   claim?: { ready: boolean; label: string; onPress: () => void };
   onSettings: () => void;
 }) {
@@ -166,7 +166,7 @@ export function StreetResourceBar({
           }}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           accessibilityRole="button"
-          accessibilityLabel={claim.ready ? 'Claim Basecore research' : `Basecore research, next find in ${claim.label}`}
+          accessibilityLabel={claim.ready ? 'Claim research' : `Research, next find in ${claim.label}`}
           accessibilityState={{ disabled: !claim.ready }}
           style={({ pressed }) => [styles.claim, claim.ready && styles.claimReady, pressed && claim.ready && styles.squash]}>
           <Text style={[styles.claimText, claim.ready && styles.claimTextReady]} numberOfLines={1}>

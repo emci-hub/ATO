@@ -4373,7 +4373,7 @@ export function DefendScreen({
           <PlaySheet open={setupOpen && !live} title="Setup" onClose={() => setSetupOpen(false)} reduceMotion={reduceMotion}>
             <View style={styles.turfSheet}>
               <ThemedText themeColor="textSecondary">
-                Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
+                Protect your street. Drag your Avatar to the thick, and time Root Veil.
               </ThemedText>
               <ThemedText type="small" themeColor="textSecondary" style={styles.boardCardLabel}>
                           {boardMap.name}

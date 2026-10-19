@@ -253,7 +253,7 @@ function tideSection(): string[] {
   const day1 = STREAK_REWARDS[1];
   const shells = day1?.kind === 'shells' ? day1.amount : STREAK_SHELLS;
   return [
-    `The Tide Pass lasts ${TIDE_PASS_DAYS} days you play. A day counts the first time you open Divecore that day, and days you skip don't count. Hold up to ${TIDE_PASS_MAX_DAYS} days.`,
+    `The Tide Pass lasts ${TIDE_PASS_DAYS} days you play. A day counts the first time you open Divecore that day; the days you're away just wait for you. Hold up to ${TIDE_PASS_MAX_DAYS} days.`,
     `Legendary progress ×${TIDE_PITY_STEP}: every egg revealed with the pass counts ${TIDE_PITY_STEP} toward the guarantee. From zero, egg ${tideEggs} is always Legendary, rising from egg ${tideSoft}. The odds table doesn't change; the bar fills faster. An egg counts double if it was picked or woken while the pass was on. An egg still incubating keeps that count if the pass ends; one woken after the pass ends counts as one.`,
     `Prism styles are pass only. Each pass brings ${TIDE_PRISM_GIFT} Prism Stone. Pick a style: ${styles}. Classic shinies are never sold. They come from play (one in ${Math.round(1 / SHINY_ODDS)}, and Shine Stones).`,
     `Tide shelf (soft tokens, while a pass is on): ${shelf}. A Star Pearl adds ${STAR_PEARL_PITY} Legendary progress, and it never skips the guarantee.`,
