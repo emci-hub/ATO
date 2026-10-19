@@ -1,6 +1,7 @@
 # Divecore finish roadmap (finish the game, then move on to the rest of ATO)
 
-Status: **APPROVED by emci 2026-10-18**: "Must + should-fix (steps 1-7, 9). Daze-proof 11 s ok. Hide Neon Maze."
+Status: **DONE (built and published) 2026-10-19; phone boxes still open (see "Open items" in section 3).** Approved by emci
+2026-10-18: "Must + should-fix (steps 1-7, 9). Daze-proof 11 s ok. Hide Neon Maze."
 Don't re-ask. Step 8 (nice-to-have) is out unless emci adds it. OTAs per step are approved. One chat per step, one OTA per step, one phone box per step. This
 doc holds the plan's state, so a new chat never needs an old chat's history.
 
@@ -208,19 +209,60 @@ claim, so Copper Keeper and Curator's Cloak / Ember Mantle never stack on one pa
 
 ## 3. DIVECORE IS DONE WHEN
 
-- [ ] Every Locker stat does what its label says, and every Power says where it works (Turf War / Dive / Hideout).
-- [ ] No copy says "Main 20", "Basecore", "Starving", or blames the player for being away.
-- [ ] The helper's daze rhythm, the Neon Maze choice and the splash display are settled and phone-checked.
-- [ ] Box 43 and every new box in this plan say PASSED.
-- [ ] A newcomer gets a clear "what next" from the guide through the first loop (egg → feed → dive → research →
-      first Turf win → first Power on → first room), and can turn it off.
-- [ ] (if should-fix is in scope) The Today chip, the clock guard, the 5★ shards, the refreshed balance report and
-      the new Locker icons are shipped.
-- [ ] No player sees a price label, a pass-only item or a dev tool.
-- [ ] The save is still **v33**; `check:ota-gate` is green; Larger Text and Reduce Motion pass on every touched
-      screen.
-- [ ] `docs/NOW.md` and `PROJECT_CONTEXT.md` say "Divecore: done", and the outside-Divecore assessment chat has its
-      prompt.
+Ticked 2026-10-19 (step 9). `[x]` = built and checked with evidence; `[~]` = built and checked offline, a phone box is
+still open (listed under "Open items" below).
+
+- [x] Every Locker stat does what its label says, and every Power says where it works (Turf War / Dive / Hideout).
+      Evidence: `STAT_WORKS_IN` (`src/play/items.ts:155`), `check:locker-stats` (10 groups), **Box 51 PASSED** (emci,
+      2026-10-18).
+- [x] No copy says "Main 20", "Basecore", "Starving", or blames the player for being away. Evidence: Box 50 PASSED
+      covered Main 1-10, "Very hungry" and the kinder lines; **step 9 found and fixed what was left** ("Basecore" in the
+      Turf setup sheet, the Avatar-unlocked notice, the dive-bust line, a screen-reader label, the Token shop stub blurb
+      and the dead grove lede; "days you skip don't count" in the Tide Pass guide), and a new group in
+      `check:locker-stats` scans 241 Play files so none can come back. The status id `starving` stays an internal id
+      (its label is "Very hungry", pinned).
+- [x] The helper's daze rhythm, the Neon Maze choice and the splash display are settled and phone-checked. Evidence:
+      `HELPER_DAZE_PROOF_MS = 11_000` (`src/play/turf-team.ts:53`), Neon Maze hidden from players
+      (`defend-screen.tsx:4625`/`4630`, `check:turf-team`), splash ring built; **Box 50 PASSED**.
+- [~] Box 43 and every new box in this plan say PASSED. **Passed:** Boxes 44-52. **Open:** Box 43 (egg
+      duplicates), Boxes 53 (Today), 54 (guide), 55 (balance), 56 (Locker icons), and the new Box 58.
+- [~] A newcomer gets a clear "what next" from the guide through the first loop, and can turn it off. Evidence:
+      `check:newbie-guide` (9 groups), `src/play/guide.ts`, Settings → Help "Guide bubble" chip; phone check = Box 54
+      (open) and the first half of Box 58.
+- [x] The Today chip, the clock guard (back jumps; forward jumps accepted as a risk, emci), the 5★ shards, the
+      refreshed balance report and the new Locker icons are shipped. Evidence: OTA groups `3202a990` (Today),
+      `325c79ca` (guard, shards), `2f5b8fca` (balance, `games/grove/BALANCE_REPORT.md`), `33b020eb` (icons).
+- [x] No player sees a price label, a pass-only item or a dev tool. Evidence: `check:shop-hidden` (4 groups, players see
+      only the Token shop with priced rows), `check:play-dev-hidden` (5 groups, 91 files), and
+      `RELEASE_MODE=1 npm run check:release-mode` **passes with `PRE_LAUNCH_DEV = false`** (43 dev-surface gates, 44
+      checks). With the flag `true` (today, invite-only) that check fails on purpose: **flipping it is on the
+      launch checklist, not a Divecore gap** (see Open items).
+- [~] The save is still **v33** (`HIDEOUT_SAVE_VERSION` `hideout-progress.ts:20`, `playStore.ts:957`, pinned in
+      `check:locker-stats`, `check:locker-icons`, `check:turf-team`); `check:ota-gate` is green (178 offline checks
+      before step 9's copy edits; re-run at the end of step 9). Larger Text and Reduce Motion: each step's box tested its
+      own screens; the full pass over every screen is **Box 58** (open).
+- [x] `docs/NOW.md` and `PROJECT_CONTEXT.md` say "Divecore: done" (step 9), and the outside-Divecore assessment chat has
+      its prompt (below, "The outside-Divecore assessment prompt that step 9 hands over").
+
+### Open items (built, not yet signed off on a phone, or carried forward)
+
+Nothing below blocks the next job; emci runs or accepts each.
+
+1. **Phone boxes open:** 43, 53, 54, 55, 56, 58. Box 58 is one full pass and covers what 53-56 test; running 58 and
+   saying so is enough to close them if emci wants.
+2. **Locker icons not approved:** only emci sets `approved` (they are `resource` in the registry). The other two looks per
+   item sit unused in the library for a swap (Box 56).
+3. **Minigames makeover M1-M3 (section 7):** still waiting for emci's yes; not part of "done".
+4. **Balance leftovers (step 6):** hero-tower kit spread is 1.59× (Archangel 1.13× … Morwen 1.80×); the Legends /
+   affinity / stacked-boost sections of the sim still use the 2-hero-tower board; "Main 10" needs 2.13× on a fresh board
+   (0.85× kept + helper).
+5. **Element look in Turf War** (auras are pet-only, chain bolts plain, burn/chill overlays unwired): raised in step 1,
+   not decided, not built.
+6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
+   `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
+   being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12
+   old item stickers and the Kenney cursor icons are still bundled (shop rows only); a phone on the old P5b bundle can
+   drop `hero_gear` on a re-save (accepted, step P6).
 
 ---
 
@@ -757,8 +799,22 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   `01a1552b-95c8-7c06-b294-e14f8afb291c`, Android `01a1552b-95c8-71bd-8db2-deb6f3d17925`, group
   `33b020eb-85c4-4a05-b057-c848c384cece` (message `divecore-finish-step7-locker-icons`). Not rendered in the app
   (proof sheets are mockups from the real frame sizes). Phone check: **Box 56** (not done).
-  **Next: step 9 (assessment of the rest of ATO; step 8 only if emci adds it). Minigames M1 still waits for emci's yes.
-  Open for emci: approve the icons (only emci sets `approved`), swap any pick from the library, Boxes 50-56.**
+  **Next: step 9 (the done pass). Minigames M1 still waits for emci's yes. Open for emci: approve the icons (only emci
+  sets `approved`), swap any pick from the library, Boxes 53-56.**
+- **Step 9 (done pass) built 2026-10-19.** Every "DONE WHEN" line is ticked or listed under "Open items" (section 3).
+  **Real gaps found and fixed (copy only, no logic):** "Basecore" still showed in the Turf setup sheet
+  (`defend-screen.tsx:4376`), the Avatar-unlocked notice and the dive-bust line (`src/app/play.tsx:632`, `:1497`), the
+  research button's screen-reader label (`street-shell.tsx:169`), the Token shop stub blurb and the dead grove lede;
+  the Tide Pass guide said "days you skip don't count" (`guide-content.ts:256`, now "the days you're away just wait for
+  you"). New pin: a group in `check:locker-stats` scans 241 Play files for those words (10 groups now). **Dev kit:**
+  the `dev*` store functions are plain exports; they are reached only from the dev kit in `src/app/play.tsx`, 
+  `pet-dev-panel.tsx` and the dev paths of `use-play-store.ts`, and `check:play-dev-hidden` fails if any of the 91 Play
+  files that call one does not carry the `PRE_LAUNCH_DEV` gate (it also pins the Pet Dev tab, the floating Dev kit and the
+  Settings unlock row); that check and `check:shop-hidden` pass, and
+  `RELEASE_MODE=1 check:release-mode` **passes with `PRE_LAUNCH_DEV` set to false** (tested with a temporary local edit,
+  reverted, not committed; 43 dev-surface gates, 44 checks). It fails on purpose while the flag is `true`
+  (invite-only): flipping it is on the launch checklist, see "Open items" 6. **Box 58** written (new player, old save,
+  Larger Text, Reduce Motion over every screen). Save stays **v33**. OTA: see the step 9 line in `docs/NOW.md`.
 
 ## Web research (read as data)
 
