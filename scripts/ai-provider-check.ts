@@ -70,53 +70,25 @@ const keyLeaks = walk(resolve(root, 'src')).filter((file) =>
 assert.deepEqual(keyLeaks, []);
 ok('no EXPO_PUBLIC_*_API_KEY reference anywhere in src');
 
+// ai-generate is CLOSED (wave98, M1): it must stay a 410 stub with no vendor key, no
+// vendor URL, no prompt field and no call into the shared vendor code. The only
+// model path is ai-library, which rebuilds its prompt on the server.
 const edge = read('supabase/functions/ai-generate/index.ts');
-for (const secret of [
-  'GEMINI_API_KEY',
-  'NVIDIA_API_KEY',
-  'PERPLEXITY_API_KEY',
-  'ANTHROPIC_API_KEY',
-  'XAI_API_KEY',
-  'DEEPSEEK_API_KEY',
-]) {
-  assert.match(edge, new RegExp(secret));
+const edgeCode = edge.replace(/\/\*[\s\S]*?\*\//g, '');
+assert.match(edgeCode, /status: 410/);
+assert.doesNotMatch(edgeCode, /_API_KEY|Deno\.env|createClient|ai-vendors|claim_ai_call|\bprompt\b|fetch\(/);
+assert.doesNotMatch(
+  edgeCode,
+  /googleapis|nvidia\.com|perplexity|anthropic\.com|x\.ai|deepseek\.com/,
+);
+assert.ok(existsSync(resolve(root, 'supabase/functions/_shared/ai-vendors.ts')));
+for (const file of ['supabase/functions/ai-library/index.ts', 'supabase/functions/ai-library-fill/index.ts']) {
+  const code = read(file).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  assert.doesNotMatch(code, /ai-generate/, `${file} must not depend on ai-generate`);
 }
-assert.doesNotMatch(edge, /process\.env\.EXPO_PUBLIC_/);
-assert.match(edge, /PROVIDERS as readonly string\[\]\)\.includes\(provider\)/);
-assert.match(edge, /generativelanguage\.googleapis\.com/);
-assert.match(edge, /thinkingConfig/);
-assert.match(edge, /integrate\.api\.nvidia\.com/);
-assert.match(edge, /disable_search: true/);
-assert.match(edge, /api\.anthropic\.com\/v1\/messages/);
-assert.match(edge, /api\.x\.ai\/v1\/chat\/completions/);
-assert.match(edge, /api\.deepseek\.com\/chat\/completions/);
-assert.match(edge, /auth\.getUser\(\)/);
-assert.match(edge, /claim_ai_call/);
-assert.match(edge, /MAX_OUTPUT_TOKENS = 1024/);
 assert.equal(PROVIDER_LIMITS.deepseek.rpm, null);
 assert.ok(AI_PROVIDER_IDS.includes('deepseek'));
-ok('Edge Function holds every vendor key, verifies the JWT, claims quota, caps tokens');
-
-// ping used to reach a real vendor with no quota claim at all (a free paid
-// call outside the quota system). It must now return before both `complete(`
-// and `claim_ai_call` — key-presence only, never the vendor.
-const pingBranch = edge.slice(edge.indexOf('if (payload.ping === true)'), edge.indexOf('const prompt ='));
-assert.notEqual(pingBranch, '');
-assert.match(pingBranch, /keyFor\(provider as ProviderId\)/);
-assert.match(pingBranch, /text: 'ready'/);
-assert.doesNotMatch(pingBranch, /complete\(/);
-assert.doesNotMatch(pingBranch, /claim_ai_call/);
-const afterPing = edge.slice(edge.indexOf('const prompt ='));
-assert.doesNotMatch(afterPing, /if \(!ping\)/);
-ok('ping never reaches a vendor or claims quota; every remaining path always claims before completing');
-
-// A real call's prompt length and temperature are both bounded server-side —
-// output tokens were already clamped, but neither of these was.
-assert.match(edge, /const MAX_PROMPT_CHARS = 24_000/);
-assert.match(edge, /prompt\.length > MAX_PROMPT_CHARS \? prompt\.slice\(0, MAX_PROMPT_CHARS\) : prompt/);
-assert.match(edge, /const MAX_TEMPERATURE = 1/);
-assert.match(edge, /Math\.min\(MAX_TEMPERATURE, Math\.max\(0, requestedTemperature\)\)/);
-ok('prompt length and temperature are clamped server-side, not just output tokens');
+ok('ai-generate is a closed 410 stub: no vendor key, vendor URL or prompt field (open proxy closed)');
 
 const srcFiles = walk(resolve(root, 'src'));
 // No client-side vendor transport survives: the script-only Gemini adapter
@@ -142,13 +114,12 @@ assert.doesNotMatch(aiConfigSrc, /geminiModel|geminiApiKey|GEMINI_API_KEY|GEMINI
 assert.deepEqual(Object.keys(buildAiConfig({ AI_PROVIDER: 'grok' })), ['provider']);
 ok('no EXPO_PUBLIC_*_MODEL reference in src; client config is provider-only');
 
-// DEFAULT_MODELS is a documented mirror of the Edge Function's table; the
-// two must agree or the reference copy lies.
-const edgeModels = /const DEFAULT_MODELS: Record<ProviderId, string> = \{([\s\S]*?)\};/.exec(edge)?.[1] ?? '';
-for (const [id, model] of Object.entries(DEFAULT_MODELS)) {
-  assert.match(edgeModels, new RegExp(`${id}: '${model.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}'`), `edge default for ${id}`);
-}
-ok('client DEFAULT_MODELS mirrors the Edge Function defaults');
+// DEFAULT_MODELS used to mirror ai-generate's table. That function is closed now; the
+// live model table is _shared/ai-vendors.ts (ai-library). The client copy goes with the
+// dead client path in step 6.
+const vendorsSrc = read('supabase/functions/_shared/ai-vendors.ts');
+assert.match(vendorsSrc, new RegExp(DEFAULT_MODELS.gemini.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')));
+ok('the live Gemini default model is the one in _shared/ai-vendors.ts');
 
 // The app-side Story writer (src/lib/explore/generate.ts) was deleted with
 // Sage (2026-10-14): the Story on Insights is template-only.

@@ -17,6 +17,8 @@
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+import { allowRate, clientIp, sha256Hex } from '../_shared/rate-limit.ts';
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -46,6 +48,14 @@ Deno.serve(async (request) => {
   const identifier = typeof payload.identifier === 'string' ? payload.identifier.trim() : '';
   const password = typeof payload.password === 'string' ? payload.password : '';
   if (!identifier || !password) return json(GENERIC_FAILURE, 401);
+
+  // Throttle guessing (wave98): per client address, and per identifier (hashed, never
+  // stored in clear). A locked identifier can still sign in with the emailed code.
+  const [okIp, okId] = await Promise.all([
+    allowRate('pwlogin_ip', clientIp(request), 30, 900),
+    allowRate('pwlogin_id', await sha256Hex(identifier.replace(/^@/, '').toLowerCase()), 10, 900),
+  ]);
+  if (!okIp || !okId) return json({ error: 'rate_limited' }, 429);
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;

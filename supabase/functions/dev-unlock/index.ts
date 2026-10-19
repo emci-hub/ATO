@@ -14,6 +14,8 @@
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
+import { allowRate } from '../_shared/rate-limit.ts';
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -57,6 +59,9 @@ Deno.serve(async (request) => {
     error: userError,
   } = await caller.auth.getUser();
   if (userError || !user) return json({ error: 'not_authenticated' }, 401);
+
+  // 5 tries per 15 minutes per account (wave98): the secret cannot be guessed blind.
+  if (!(await allowRate('dev_unlock', user.id, 5, 900))) return json({ error: 'rate_limited' }, 429);
 
   let payload: { password?: unknown };
   try {
