@@ -674,6 +674,21 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   and pays shells (same as the small crate). **Next: step 4 (Today chip); the proposed Minigames M1 goes after step 3.**
 - **Phone checks 2026-10-18:** emci replied "Verified" after Boxes 50, 51 and 52 (steps 1-3). Marked PASSED. Nothing
   failed; no fixes needed. (Box 43, the old egg-duplicates check, was not named in the reply: still open.)
+- **Step 4 built + published 2026-10-19** (Play commits `6a1582a2`, `46c0f5f4`; docs `92e81fd5`, `ab8eacc2`). **Deviation
+  from the plan text, agreed in the step 4 plan:** the Today button is in the **Hideout dock** (Feed · Today · Info),
+  not the top bar. The 56 pt resource bar is already about 40 pt too wide on a 375 pt phone with both stones, and
+  the NoticeLane's idle slot is the name tag; the dock has room and reuses the Info button's count badge (mustard,
+  never red, no pulse) and the existing `PlaySheet`. New pure `todayItems()` (`src/play/today.ts`) + sheet body
+  (`src/play/today-sheet.tsx`): research finds to **Claim** (the same claim as the top bar, new `onClaimResearch`
+  prop), a snack / play-time wish, free eggs (the reminder's rule), a trip to send or a fresh return, today's
+  visitor, and **Dive only at full charges**. Left out on purpose: the Store, the daily check-in, the Tide calendar,
+  room builds. "All caught up" at 0; footer "Nothing here is urgent. Come back any time." Nothing is saved (v33).
+  New `check:today-chip` (6 groups) + a Today pin in `check:fixed-regions`. Reviewer found one real issue (an old,
+  never-dismissed trip note would keep the badge lit forever): fixed (only a fresh return counts). Gate green.
+  **OTA published**: iOS `01a152eb-97b5-7e5e-963b-f747fefec2a2`, Android `01a152eb-97b5-7b4f-a346-dbc9a9687653`, group
+  `3202a990-5949-402b-bd50-c93452910b4f` (message `divecore-finish-step4-today`). Not rendered in the app (no web
+  render was run); layout was shown as a mockup from the real region sizes. Phone check: **Box 53** (not done).
+  **Next: step 5 (newbie guide helper), which reuses `todayItems` and the coach-tip layer; Minigames M1 is queued.**
 
 ## Web research (read as data)
 
