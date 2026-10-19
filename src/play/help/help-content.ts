@@ -69,9 +69,9 @@ export const HELP: Record<HelpId, HelpEntry> = {
   locker: {
     title: 'Locker',
     bullets: [
-      'Equip a Fit to wear it.',
-      'Sell extras for tokens.',
-      'Merge copies, but merging is risky.',
+      'Powers change the games. Looks are only style.',
+      'Each Power says where it works.',
+      'Equip to wear. Sell extras. Merge copies (can miss).',
     ],
   },
   blades: {

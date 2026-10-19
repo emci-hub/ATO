@@ -1444,8 +1444,10 @@ export type DiveRunView = {
 export type ClaimResult = {
   /** Whole cycles dumped from the bag (= number of item finds granted). */
   cyclesClaimed: number;
-  /** Granted item ids (one roll per claimed cycle), appended to `inventory`. */
+  /** Granted item ids (one roll per claimed cycle, plus any research-yield bonus finds), appended to `inventory`. */
   items: string[];
+  /** Extra finds from worn research yield (Curator's Cloak, Ember Mantle); already counted in `items`. */
+  bonusFinds: number;
   tendTokens: number;
   dailyBonusTokens: number;
   diveChargeGranted: boolean;
@@ -3716,6 +3718,9 @@ export function recordDefendWin(
       : null;
   }
 
+  // Gear: token gain scales the win's token payout (after the replay / daily halving, before the flat cycle bonus).
+  tokensGranted = scaleTokens(tokensGranted, tokenEarnMultOf(doc));
+
   // Campaign seat advance + Conquered. A campaign-mode win only advances when
   // it matches the seat — a stale/duplicate win after the seat already moved
   // (e.g. Main 10 conquered) grants rewards but never double-advances.
@@ -4546,6 +4551,27 @@ export function gearScoreOf(doc: PlayStoreDoc): number {
   return gearScore(wavePowerBucket, active.level, active.stars);
 }
 
+/** Raw gear sums of the Turf LEADER's hero: the one source Gear Score, dive luck and the economy stats read. */
+export function leaderStatSumsOf(doc: PlayStoreDoc): StatSums {
+  return equippedStatSums(leaderLoadoutOf(doc), legendElementOf(activeAvatarOf(doc).id));
+}
+
+/** Token gain (Copper Keeper): the soft-capped multiplier on Divecore tokens from Turf wins (and Skip). Never ATO
+ * tokens, never the flat cycle bonus, never mini-game rounds (a 5-token round would round the bonus away). */
+export function tokenEarnMultOf(doc: PlayStoreDoc): number {
+  return bucketMultiplier('token_earn', leaderStatSumsOf(doc));
+}
+
+/** Research yield (Curator's Cloak, Ember Mantle): the soft-capped multiplier on a research claim's FINDS. */
+export function researchYieldMultOf(doc: PlayStoreDoc): number {
+  return bucketMultiplier('research_yield', leaderStatSumsOf(doc));
+}
+
+/** Scale a token payout by a gear multiplier, to the nearest whole token (never below 0). */
+export function scaleTokens(base: number, mult: number): number {
+  return base <= 0 ? 0 : Math.max(0, Math.round(base * mult));
+}
+
 /**
  * Walk the campaign forward from the seat across normal waves that GS
  * overkills by the skip threshold; stop at the first boss band (Trial 5,
@@ -4630,6 +4656,8 @@ export function skipCampaignToEven(
     xpGranted += Math.floor(xpForClear(step.wave_in_phase) * payFraction);
     highestWave = Math.max(highestWave, step.wave_in_phase);
   }
+  // Gear: token gain scales the (reduced) skip pay the same way it scales a win.
+  tokensGranted = scaleTokens(tokensGranted, tokenEarnMultOf(doc));
 
   // Lifetime clear count + milestones crossing 5/10/25 (§18 lock).
   const lifetimeAfter = doc.lifetime_waves_cleared + plan.steps.length;
@@ -4958,6 +4986,17 @@ export function claimResearch(
   // keeps the raw rolls so the UI can name them.
   const items = Array.from({ length: research.readyFinds }, () => rollResearchFind(rng));
 
+  // Gear: research yield (Curator's Cloak, Ember Mantle) adds finds. Expected extra = cycles × bonus: the whole
+  // part always, the fraction by one dice roll. Nothing worn = no roll, so the draws stay exactly as before.
+  const yieldBonus = researchYieldMultOf(doc) - 1;
+  let bonusFinds = 0;
+  if (yieldBonus > 0) {
+    const extra = research.readyFinds * yieldBonus;
+    const whole = Math.floor(extra);
+    bonusFinds = whole + (rng() < extra - whole ? 1 : 0);
+    for (let i = 0; i < bonusFinds; i += 1) items.push(rollResearchFind(rng));
+  }
+
   let hideout = countTendDay(doc.hideout, todayYmd);
   hideout = noteTokens(hideout, todayYmd, 'tend', tendTokens);
   if (dailyBonusTokens) hideout = noteTokens(hideout, todayYmd, 'tend_bonus', dailyBonusTokens);
@@ -4980,6 +5019,7 @@ export function claimResearch(
     result: {
       cyclesClaimed: research.readyFinds,
       items,
+      bonusFinds,
       tendTokens,
       dailyBonusTokens,
       diveChargeGranted,

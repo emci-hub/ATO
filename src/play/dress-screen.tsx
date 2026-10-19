@@ -25,7 +25,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ComponentProps, ReactNode } from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, Fragment, useContext, useEffect, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -86,11 +86,15 @@ import { streetUiOn } from '@/play/street-ui';
 import {
   formatItemStats,
   formatMult,
+  formatWorksIn,
   getItemDef,
   rarityRank,
+  STAT_PLACES,
+  STAT_WORKS_IN,
   type ItemDef,
   type ItemSlot,
   type ItemStat,
+  type StatPlace,
 } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
@@ -148,15 +152,15 @@ const STAT_ORDER: ItemStat[] = [
   'research_yield',
 ];
 
-/** §9c grouping for the Equipped bonuses card (display only — no math). */
+/** Grouping for the Equipped bonuses card: by WHERE each stat works (Turf War / Dive / Hideout), so a newcomer
+ * sees what a Power does and in which game (display only — no math). */
 const BONUS_CATEGORIES: {
-  title: 'Combat' | 'Economy' | 'Dive';
+  title: StatPlace;
   stats: ItemStat[];
-}[] = [
-  { title: 'Combat', stats: ['wave_power', 'tower_speed'] },
-  { title: 'Economy', stats: ['token_earn', 'research_yield'] },
-  { title: 'Dive', stats: ['dive_luck'] },
-];
+}[] = STAT_PLACES.map((place) => ({
+  title: place,
+  stats: STAT_ORDER.filter((stat) => STAT_WORKS_IN[stat] === place),
+}));
 
 /** One small icon per stat so a category never feels like a wall of text. */
 const BONUS_ICONS: Record<ItemStat, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
@@ -167,8 +171,8 @@ const BONUS_ICONS: Record<ItemStat, ComponentProps<typeof MaterialCommunityIcons
   dive_luck: 'waves',
 };
 
-/** Bag filter tabs: a slot, "all", or "junk" (= every Look, any slot). */
-type BagFilter = 'all' | ItemSlot | 'junk';
+/** Bag filter tabs: a slot, "all", or "look" (= every Look, any slot). */
+type BagFilter = 'all' | ItemSlot | 'look';
 
 const FILTER_TABS: { key: BagFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -176,7 +180,7 @@ const FILTER_TABS: { key: BagFilter; label: string }[] = [
   { key: 'armor', label: 'Armor' },
   { key: 'cloak', label: 'Cloak' },
   { key: 'trinket', label: 'Trinket' },
-  { key: 'junk', label: 'Junk' },
+  { key: 'look', label: 'Looks' },
 ];
 
 export function DressScreen({
@@ -224,6 +228,8 @@ export function DressScreen({
   const activeBonuses = STAT_ORDER.filter((stat) => view.statSums[stat] > 0);
   const anyBonuses = activeBonuses.length > 0;
   const stacks = visibleStacks(view.inventory, filter);
+  // Powers first, then Looks (each keeps the best-rarity-first order); unknown rows ride with the Powers.
+  const ordered = [...stacks.filter((s) => !isLookStack(s)), ...stacks.filter(isLookStack)];
   // Leader first, then the helper, then every other owned hero (and any hero already wearing gear).
   const lockerHeroes = [
     ...new Set([
@@ -244,7 +250,7 @@ export function DressScreen({
 
       <NeonHeader
         title={streetUiOn() ? 'Locker · Fits' : 'Dress'}
-        lede="Four slots. Equip Powers to shape your Basecore — Looks are for the eye."
+        lede="Powers change how the games play. Looks are just for style."
       />
 
       <LegendFirstTip />
@@ -398,27 +404,37 @@ export function DressScreen({
             {emptyCopy(filter)}
           </ThemedText>
         ) : (
-          stacks.map((stack) => {
+          ordered.map((stack, index) => {
             const def = getItemDef(stack.id);
             const wornRef = def ? view.equipped[def.core.slot] : undefined;
             const sameTierWorn =
               wornRef != null && wornRef.id === stack.id && wornRef.star === stack.star;
             const key = bagRowKey(stack.id, stack.star);
+            // Two sections (Powers, then Looks): a small heading where the kind changes. The Looks tab is one list.
+            const isLook = isLookStack(stack);
+            const startsSection =
+              filter !== 'look' && (index === 0 || isLookStack(ordered[index - 1]) !== isLook);
             return (
-              <StackRow
-                key={key}
-                stack={stack}
-                sameTierWorn={sameTierWorn}
-                expanded={expandedKey === key}
-                onToggle={() => toggleRow(key)}
-                mergeState={merge.buttonState(key)}
-                mergeLocked={merge.busy}
-                feedback={merge.feedbackFor(key)}
-                reduceMotion={reduceMotion}
-                onEquip={onEquip}
-                onSell={onSell}
-                onMerge={(target) => merge.press(key, target)}
-              />
+              <Fragment key={key}>
+                {startsSection ? (
+                  <ThemedText type="code" themeColor="textSecondary">
+                    {isLook ? 'Looks · style only, sell for tokens' : 'Powers · change the games'}
+                  </ThemedText>
+                ) : null}
+                <StackRow
+                  stack={stack}
+                  sameTierWorn={sameTierWorn}
+                  expanded={expandedKey === key}
+                  onToggle={() => toggleRow(key)}
+                  mergeState={merge.buttonState(key)}
+                  mergeLocked={merge.busy}
+                  feedback={merge.feedbackFor(key)}
+                  reduceMotion={reduceMotion}
+                  onEquip={onEquip}
+                  onSell={onSell}
+                  onMerge={(target) => merge.press(key, target)}
+                />
+              </Fragment>
             );
           })
         )}
@@ -498,12 +514,17 @@ function hasFuel(view: PlayView, ref: ItemRef): boolean {
   );
 }
 
+/** A bag stack of a Look (style only). */
+function isLookStack(stack: ItemStack): boolean {
+  return getItemDef(stack.id)?.core.kind === 'look';
+}
+
 /** Bag rows for the active filter, sorted best-rarity-first then by name. */
 function visibleStacks(inventory: readonly ItemStack[], filter: BagFilter): ItemStack[] {
   const rows = inventory.filter((stack) => {
     const def = getItemDef(stack.id);
     if (!def) return filter === 'all'; // dangling rows only under All
-    if (filter === 'junk') return def.core.kind === 'look';
+    if (filter === 'look') return def.core.kind === 'look';
     if (filter === 'all') return true;
     return def.core.slot === filter;
   });
@@ -521,7 +542,7 @@ function visibleStacks(inventory: readonly ItemStack[], filter: BagFilter): Item
 
 function emptyCopy(filter: BagFilter): string {
   if (filter === 'all') return 'Nothing in the bag yet. Claim or Dive to find items.';
-  const label = filter === 'junk' ? 'junk Looks' : `${SLOT_LABELS[filter]}s`;
+  const label = filter === 'look' ? 'Looks' : `${SLOT_LABELS[filter]}s`;
   return `No ${label} in the bag.`;
 }
 
@@ -599,6 +620,11 @@ function SlotRow({
             {def && ref ? (
               <ThemedText type="code" themeColor="textSecondary">
                 {describeItem(def, ref.star)}
+              </ThemedText>
+            ) : null}
+            {def && ref ? (
+              <ThemedText type="code" themeColor="emphasis">
+                {formatWorksIn(def)}
               </ThemedText>
             ) : null}
           </View>
@@ -698,6 +724,9 @@ function StackRow({
             </View>
             <ThemedText type="code" themeColor="textSecondary">
               {describeItem(def, stack.star)}
+            </ThemedText>
+            <ThemedText type="code" themeColor="emphasis">
+              {formatWorksIn(def)}
             </ThemedText>
           </View>
           <RowChevron expanded={expanded} />
@@ -823,7 +852,7 @@ function ItemDetails({
       </ThemedText>
       {def.core.kind === 'look' ? (
         <ThemedText type="small" themeColor="textSecondary">
-          Looks are for the eye — no bonuses.
+          Looks are for the eye. They change no game numbers.
         </ThemedText>
       ) : (
         <>
