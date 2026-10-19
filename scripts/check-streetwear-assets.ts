@@ -158,12 +158,10 @@ for (const piece of [
   assert.ok(uiMeta[piece]?.inset.length === 4 && uiMeta[piece].scale > 0, `ui kit piece ${piece} has no meta`);
   assert.ok(sheets[`sheets/streetwear/ui-kit/${piece}`]?.frames.img, `ui kit piece ${piece} not packed`);
 }
-// Every item sticker the art map names is bundled.
+// Item icons come from the art library since Divecore finish step 7 (`check:locker-icons` pins them),
+// so art.ts no longer names the old shared stickers.
 const artSrc = fs.readFileSync(path.join(repo, 'src/play/art.ts'), 'utf8');
-const stickerBlock = artSrc.slice(artSrc.indexOf('STREET_ICON_BY_ART'), artSrc.indexOf('};', artSrc.indexOf('STREET_ICON_BY_ART')));
-for (const [, sticker] of stickerBlock.matchAll(/:\s*'([a-z-]+)'/g)) {
-  assert.ok(swKeys.includes(`skins/streetwear/ui/icons/${sticker}`), `sticker ${sticker} is mapped but not bundled`);
-}
+assert.ok(!artSrc.includes('STREET_ICON_BY_ART') && !artSrc.includes('skins/streetwear/ui/icons/'), 'art.ts no longer maps item stand-in stickers');
 for (const font of ['PixelifySans-Regular.ttf', 'PixelifySans-Bold.ttf', 'OFL-PixelifySans.txt']) {
   assert.ok(fs.existsSync(path.join(repo, 'assets/play/fonts', font)), `font file ${font} missing`);
 }

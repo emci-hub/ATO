@@ -7,11 +7,13 @@
  * Board ENTITIES (terrain, towers, units, FX) do NOT live here — they are
  * addressed through the skin contract in `src/play/skin.ts` (role → art key),
  * so screens never reference a raw tile id. This module keeps only the
- * non-entity art: item/shop icons.
+ * non-entity art: item icons (through the art library) and the Kenney cursor icons the shop
+ * rows still fall back to.
  */
 import type { ImageSourcePropType } from 'react-native';
 
-import { artSkin } from '@/play/art-skin';
+import { ART, getArtSource } from '@/art/art';
+import type { ArtId } from '@/art/generated-art';
 import { PLAY_ART } from '@/play/generated-play-assets';
 
 /** An 8-way facing (matches the rotation folders the packs ship). */
@@ -48,52 +50,32 @@ function art(key: string): ImageSourcePropType | undefined {
 
 /* ------------------------------------------------------------------ icons --- */
 
-/** `items.json` `core.art` id → Kenney Cursor Pack icon. Missing = no icon. */
-const ITEM_ICON_BY_ART: Record<string, string> = {
-  cape_leaf_01: 'tool_torch',
-  cape_glow_01: 'tool_wand',
-  cloak_curator_01: 'tool_torch',
-  cloak_ember_01: 'tool_wand',
-  staff_bud_01: 'tool_bow',
-  helm_salt_01: 'gauntlet_default',
-  robe_moss_01: 'gauntlet_open',
-  trinket_pearl_01: 'target_round_a',
-  trinket_copper_01: 'dot_large',
-  blade_tide_01: 'tool_sword_a',
-  blade_ember_01: 'tool_sword_b',
-  shield_bark_01: 'gauntlet_default',
-  shield_ember_01: 'gauntlet_open',
-};
-
 /**
- * Streetwear sticker for the same items (art style switch, 2026-10-11). Only
- * these stickers are bundled (`STREETWEAR_ICONS` in play-art-prep.ts).
+ * One Streetwear 32 px icon per item (Divecore finish step 7, 2026-10-19), named through the
+ * art library (`icons/items/streetwear/`), keyed by `items.json` `core.art`. Replaces the shared
+ * stand-in stickers and the Kenney item fallback. The two other looks per item sit unused in
+ * the library (`ART.icon.items.<name>B` / `C`); there is no player switch.
  */
-export const STREET_ICON_BY_ART: Record<string, string> = {
-  cape_leaf_01: 'hoodie',
-  cape_glow_01: 'shades',
-  cloak_curator_01: 'bandana',
-  cloak_ember_01: 'flame',
-  staff_bud_01: 'marker',
-  helm_salt_01: 'cap',
-  robe_moss_01: 'bucket-hat',
-  trinket_pearl_01: 'gem',
-  trinket_copper_01: 'coin-stack',
-  blade_tide_01: 'sword',
-  blade_ember_01: 'bat',
-  shield_bark_01: 'shield',
-  shield_ember_01: 'shield',
+const ITEM_ICON_ID_BY_ART: Record<string, ArtId> = {
+  cape_leaf_01: ART.icon.items.streetwear.leafCape,
+  cape_glow_01: ART.icon.items.streetwear.glowveil,
+  cloak_curator_01: ART.icon.items.streetwear.curatorCloak,
+  cloak_ember_01: ART.icon.items.streetwear.emberMantle,
+  staff_bud_01: ART.icon.items.streetwear.budStaff,
+  helm_salt_01: ART.icon.items.streetwear.saltcrestHelm,
+  robe_moss_01: ART.icon.items.streetwear.mossHabit,
+  trinket_pearl_01: ART.icon.items.streetwear.deepPearl,
+  trinket_copper_01: ART.icon.items.streetwear.copperKeeper,
+  blade_tide_01: ART.icon.items.streetwear.tideBlade,
+  blade_ember_01: ART.icon.items.streetwear.emberEdge,
+  shield_bark_01: ART.icon.items.streetwear.barkAegis,
+  shield_ember_01: ART.icon.items.streetwear.emberWard,
 };
 
 /** Item art source for a `core.art` value, or undefined (render a placeholder). */
 export function itemArtSource(itemArt: string): ImageSourcePropType | undefined {
-  if (artSkin() === 'streetwear') {
-    const sticker = STREET_ICON_BY_ART[itemArt];
-    const source = sticker ? art(`skins/streetwear/ui/icons/${sticker}`) : undefined;
-    if (source) return source;
-  }
-  const file = ITEM_ICON_BY_ART[itemArt];
-  return file ? art(`kenney-icons/${file}`) : undefined;
+  const id = ITEM_ICON_ID_BY_ART[itemArt];
+  return id ? getArtSource(id) : undefined;
 }
 
 /** A raw Kenney Cursor Pack icon by file id (shop rows, misc UI). */

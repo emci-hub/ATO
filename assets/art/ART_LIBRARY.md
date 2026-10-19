@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 518 live entries.
+Generated. 557 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -11,7 +11,7 @@ Viewer lists one card per set (not each clip/file).
 - **heroes** (198: 56 in use / 142 unused) — Heroes
 - **enemies-bosses** (18: 10 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
-- **icons** (106: 50 in use / 56 unused) — Icons
+- **icons** (145: 63 in use / 82 unused) — Icons
 - **rooms** (71: 49 in use / 22 unused) — Rooms
 - **props** (49: 10 in use / 39 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
@@ -630,6 +630,55 @@ Viewer lists one card per set (not each clip/file).
 | `icon.currency.streetwear.cur-prism` | 32×32 | resource | — | — |
 | `icon.currency.streetwear.cur-shine` | 32×32 | resource | — | — |
 | `icon.currency.streetwear.cur-token` | 32×32 | resource | — | — |
+
+## icons · items · default · unused
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.items.bark-aegis-b` | 32×32 | resource | — | — |
+| `icon.items.bark-aegis-c` | 32×32 | resource | — | — |
+| `icon.items.bud-staff-b` | 32×32 | resource | — | — |
+| `icon.items.bud-staff-c` | 32×32 | resource | — | — |
+| `icon.items.copper-keeper-b` | 32×32 | resource | — | — |
+| `icon.items.copper-keeper-c` | 32×32 | resource | — | — |
+| `icon.items.curator-cloak-b` | 32×32 | resource | — | — |
+| `icon.items.curator-cloak-c` | 32×32 | resource | — | — |
+| `icon.items.deep-pearl-b` | 32×32 | resource | — | — |
+| `icon.items.deep-pearl-c` | 32×32 | resource | — | — |
+| `icon.items.ember-edge-b` | 32×32 | resource | — | — |
+| `icon.items.ember-edge-c` | 32×32 | resource | — | — |
+| `icon.items.ember-mantle-b` | 32×32 | resource | — | — |
+| `icon.items.ember-mantle-c` | 32×32 | resource | — | — |
+| `icon.items.ember-ward-b` | 32×32 | resource | — | — |
+| `icon.items.ember-ward-c` | 32×32 | resource | — | — |
+| `icon.items.glowveil-b` | 32×32 | resource | — | — |
+| `icon.items.glowveil-c` | 32×32 | resource | — | — |
+| `icon.items.leaf-cape-b` | 32×32 | resource | — | — |
+| `icon.items.leaf-cape-c` | 32×32 | resource | — | — |
+| `icon.items.moss-habit-b` | 32×32 | resource | — | — |
+| `icon.items.moss-habit-c` | 32×32 | resource | — | — |
+| `icon.items.saltcrest-helm-b` | 32×32 | resource | — | — |
+| `icon.items.saltcrest-helm-c` | 32×32 | resource | — | — |
+| `icon.items.tide-blade-b` | 32×32 | resource | — | — |
+| `icon.items.tide-blade-c` | 32×32 | resource | — | — |
+
+## icons · items · streetwear · in-use
+
+| id | size | status | score | usedBy |
+|---|---|---|---|---|
+| `icon.items.streetwear.bark-aegis` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.bud-staff` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.copper-keeper` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.curator-cloak` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.deep-pearl` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.ember-edge` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.ember-mantle` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.ember-ward` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.glowveil` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.leaf-cape` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.moss-habit` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.saltcrest-helm` | 32×32 | resource | — | src/play/art.ts |
+| `icon.items.streetwear.tide-blade` | 32×32 | resource | — | src/play/art.ts |
 
 ## icons · rarity · streetwear · in-use
 

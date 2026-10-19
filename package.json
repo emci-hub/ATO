@@ -127,6 +127,7 @@
     "check:pet-leader": "tsx ./scripts/check-pet-leader.ts",
     "check:turf-team": "tsx ./scripts/check-turf-team.ts",
     "check:locker-per-hero": "tsx ./scripts/check-locker-per-hero.ts",
+    "check:locker-icons": "tsx ./scripts/check-locker-icons.ts",
     "check:locker-stats": "tsx ./scripts/check-locker-stats.ts",
     "check:economy-guard": "tsx ./scripts/check-economy-guard.ts",
     "check:today-chip": "tsx ./scripts/check-today-chip.ts",

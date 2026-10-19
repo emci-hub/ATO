@@ -63,6 +63,19 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'hero.void-raven.cast.atlas': require('@/assets/art/heroes/in-use/void-raven/cast/atlas.png'),
   'hero.void-raven.streetwear.combat': require('@/assets/art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.combat.png'),
   'hero.void-raven.streetwear.core': require('@/assets/art/heroes/in-use/void-raven/streetwear/hero_void-raven_streetwear.core.png'),
+  'icon.items.streetwear.bark-aegis': require('@/assets/art/icons/in-use/items/streetwear/bark-aegis.png'),
+  'icon.items.streetwear.bud-staff': require('@/assets/art/icons/in-use/items/streetwear/bud-staff.png'),
+  'icon.items.streetwear.copper-keeper': require('@/assets/art/icons/in-use/items/streetwear/copper-keeper.png'),
+  'icon.items.streetwear.curator-cloak': require('@/assets/art/icons/in-use/items/streetwear/curator-cloak.png'),
+  'icon.items.streetwear.deep-pearl': require('@/assets/art/icons/in-use/items/streetwear/deep-pearl.png'),
+  'icon.items.streetwear.ember-edge': require('@/assets/art/icons/in-use/items/streetwear/ember-edge.png'),
+  'icon.items.streetwear.ember-mantle': require('@/assets/art/icons/in-use/items/streetwear/ember-mantle.png'),
+  'icon.items.streetwear.ember-ward': require('@/assets/art/icons/in-use/items/streetwear/ember-ward.png'),
+  'icon.items.streetwear.glowveil': require('@/assets/art/icons/in-use/items/streetwear/glowveil.png'),
+  'icon.items.streetwear.leaf-cape': require('@/assets/art/icons/in-use/items/streetwear/leaf-cape.png'),
+  'icon.items.streetwear.moss-habit': require('@/assets/art/icons/in-use/items/streetwear/moss-habit.png'),
+  'icon.items.streetwear.saltcrest-helm': require('@/assets/art/icons/in-use/items/streetwear/saltcrest-helm.png'),
+  'icon.items.streetwear.tide-blade': require('@/assets/art/icons/in-use/items/streetwear/tide-blade.png'),
   'icon.rarity.streetwear.gem-common': require('@/assets/art/icons/in-use/rarity/streetwear/gem-common.png'),
   'icon.rarity.streetwear.gem-divine': require('@/assets/art/icons/in-use/rarity/streetwear/gem-divine.png'),
   'icon.rarity.streetwear.gem-epic': require('@/assets/art/icons/in-use/rarity/streetwear/gem-epic.png'),
@@ -285,6 +298,45 @@ export type ArtId =
   | 'icon.currency.streetwear.cur-prism'
   | 'icon.currency.streetwear.cur-shine'
   | 'icon.currency.streetwear.cur-token'
+  | 'icon.items.bark-aegis-b'
+  | 'icon.items.bark-aegis-c'
+  | 'icon.items.bud-staff-b'
+  | 'icon.items.bud-staff-c'
+  | 'icon.items.copper-keeper-b'
+  | 'icon.items.copper-keeper-c'
+  | 'icon.items.curator-cloak-b'
+  | 'icon.items.curator-cloak-c'
+  | 'icon.items.deep-pearl-b'
+  | 'icon.items.deep-pearl-c'
+  | 'icon.items.ember-edge-b'
+  | 'icon.items.ember-edge-c'
+  | 'icon.items.ember-mantle-b'
+  | 'icon.items.ember-mantle-c'
+  | 'icon.items.ember-ward-b'
+  | 'icon.items.ember-ward-c'
+  | 'icon.items.glowveil-b'
+  | 'icon.items.glowveil-c'
+  | 'icon.items.leaf-cape-b'
+  | 'icon.items.leaf-cape-c'
+  | 'icon.items.moss-habit-b'
+  | 'icon.items.moss-habit-c'
+  | 'icon.items.saltcrest-helm-b'
+  | 'icon.items.saltcrest-helm-c'
+  | 'icon.items.streetwear.bark-aegis'
+  | 'icon.items.streetwear.bud-staff'
+  | 'icon.items.streetwear.copper-keeper'
+  | 'icon.items.streetwear.curator-cloak'
+  | 'icon.items.streetwear.deep-pearl'
+  | 'icon.items.streetwear.ember-edge'
+  | 'icon.items.streetwear.ember-mantle'
+  | 'icon.items.streetwear.ember-ward'
+  | 'icon.items.streetwear.glowveil'
+  | 'icon.items.streetwear.leaf-cape'
+  | 'icon.items.streetwear.moss-habit'
+  | 'icon.items.streetwear.saltcrest-helm'
+  | 'icon.items.streetwear.tide-blade'
+  | 'icon.items.tide-blade-b'
+  | 'icon.items.tide-blade-c'
   | 'icon.rarity.streetwear.gem-common'
   | 'icon.rarity.streetwear.gem-divine'
   | 'icon.rarity.streetwear.gem-epic'
@@ -1388,6 +1440,49 @@ export const ART = {
         curShine: 'icon.currency.streetwear.cur-shine',
         curToken: 'icon.currency.streetwear.cur-token',
       },
+    },
+    items: {
+      barkAegisB: 'icon.items.bark-aegis-b',
+      barkAegisC: 'icon.items.bark-aegis-c',
+      budStaffB: 'icon.items.bud-staff-b',
+      budStaffC: 'icon.items.bud-staff-c',
+      copperKeeperB: 'icon.items.copper-keeper-b',
+      copperKeeperC: 'icon.items.copper-keeper-c',
+      curatorCloakB: 'icon.items.curator-cloak-b',
+      curatorCloakC: 'icon.items.curator-cloak-c',
+      deepPearlB: 'icon.items.deep-pearl-b',
+      deepPearlC: 'icon.items.deep-pearl-c',
+      emberEdgeB: 'icon.items.ember-edge-b',
+      emberEdgeC: 'icon.items.ember-edge-c',
+      emberMantleB: 'icon.items.ember-mantle-b',
+      emberMantleC: 'icon.items.ember-mantle-c',
+      emberWardB: 'icon.items.ember-ward-b',
+      emberWardC: 'icon.items.ember-ward-c',
+      glowveilB: 'icon.items.glowveil-b',
+      glowveilC: 'icon.items.glowveil-c',
+      leafCapeB: 'icon.items.leaf-cape-b',
+      leafCapeC: 'icon.items.leaf-cape-c',
+      mossHabitB: 'icon.items.moss-habit-b',
+      mossHabitC: 'icon.items.moss-habit-c',
+      saltcrestHelmB: 'icon.items.saltcrest-helm-b',
+      saltcrestHelmC: 'icon.items.saltcrest-helm-c',
+      streetwear: {
+        barkAegis: 'icon.items.streetwear.bark-aegis',
+        budStaff: 'icon.items.streetwear.bud-staff',
+        copperKeeper: 'icon.items.streetwear.copper-keeper',
+        curatorCloak: 'icon.items.streetwear.curator-cloak',
+        deepPearl: 'icon.items.streetwear.deep-pearl',
+        emberEdge: 'icon.items.streetwear.ember-edge',
+        emberMantle: 'icon.items.streetwear.ember-mantle',
+        emberWard: 'icon.items.streetwear.ember-ward',
+        glowveil: 'icon.items.streetwear.glowveil',
+        leafCape: 'icon.items.streetwear.leaf-cape',
+        mossHabit: 'icon.items.streetwear.moss-habit',
+        saltcrestHelm: 'icon.items.streetwear.saltcrest-helm',
+        tideBlade: 'icon.items.streetwear.tide-blade',
+      },
+      tideBladeB: 'icon.items.tide-blade-b',
+      tideBladeC: 'icon.items.tide-blade-c',
     },
     rarity: {
       streetwear: {

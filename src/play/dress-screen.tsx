@@ -123,7 +123,7 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   trinket: 'star-four-points',
 };
 
-/** Item art from the Kenney pack, falling back to a slot glyph (§19). */
+/** The item's own Streetwear icon (32 px art library), falling back to a slot glyph. */
 function ItemIcon({
   art,
   slot,
@@ -1034,9 +1034,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.one,
   },
+  /** 32 pt = one point per source pixel (1:1 on 1x, exact 2x / 3x on phones), inside the 34 pt frame. */
   itemIconArt: {
-    width: 22,
-    height: 22,
+    width: 32,
+    height: 32,
   },
   /** Expanded details sit under the text, indented past the 34px icon. */
   details: {
