@@ -831,6 +831,7 @@ export default function PlayScreen() {
       away={away}
       onAwayClose={dismissAway}
       onOpenLocker={() => setMode('dress')}
+      onClaimResearch={handleClaim}
     />
   ) : null;
   const defendEl = view ? (

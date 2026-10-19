@@ -13,7 +13,7 @@
  *
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
@@ -137,6 +137,8 @@ import {
 } from '@/play/pet-talk';
 import { PlaySheet } from '@/play/play-sheet';
 import { SheetSection } from '@/play/sheet-kit';
+import { freeEggsWaiting, todayItems, TODAY_TITLE, type TodayAction } from '@/play/today';
+import { TodaySheetBody } from '@/play/today-sheet';
 import {
   ackPetRevealsDoc,
   clearMergeNote,
@@ -158,6 +160,7 @@ import {
   greetDailyVisitor,
   setHideoutDecor,
   openCircleGift,
+  canClaimResearch,
   localYmd,
   setPlaySettings,
 } from '@/play/playStore';
@@ -169,7 +172,7 @@ import type { PlayTransition } from '@/play/use-play-store';
 /** A pet-worthy moment the Play shell hands to the room (dive, TD, finds). */
 export type PetTalkEvent = { situation: PetTalkSituation; key: number } | null;
 
-type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu' | 'den' | 'stone' | 'prism';
+type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu' | 'den' | 'stone' | 'prism' | 'today';
 
 const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'feed', emoji: '🍖', label: 'Feed' },
@@ -191,6 +194,7 @@ const SHEET_TITLE: Record<SheetId, string> = {
   den: 'The Den',
   stone: 'Shine Stone',
   prism: 'Prism Stone',
+  today: TODAY_TITLE,
 };
 
 /** Keep every Divecore notice (hunger, egg, expedition, charges) in step with
@@ -271,6 +275,7 @@ function RoomIcon({
   pulse,
   badge,
   badgeCount,
+  badgeNoun = 'buffs',
   flexGrow,
   fontSize,
   onPress,
@@ -281,6 +286,8 @@ function RoomIcon({
   pulse: boolean;
   badge: boolean;
   badgeCount?: number;
+  /** What the count is, for the screen reader ("3 buffs", "3 things ready"). */
+  badgeNoun?: string;
   flexGrow: number;
   fontSize: number;
   onPress: () => void;
@@ -296,7 +303,7 @@ function RoomIcon({
         onPress();
       }}
       accessibilityRole="button"
-      accessibilityLabel={`${emoji} ${label}${badgeCount ? `, ${badgeCount} buffs` : badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
+      accessibilityLabel={`${emoji} ${label}${badgeCount ? `, ${badgeCount} ${badgeNoun}` : badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
       style={({ pressed }) => [styles.icon, { flexGrow }, pressed && (street ? styles.streetSquash : styles.pressed)]}>
       <PixelFrame
         fill={pulse ? PIXEL.cyan : PIXEL.ink}
@@ -359,6 +366,7 @@ export function PetScreen({
   away = null,
   onAwayClose,
   onOpenLocker,
+  onClaimResearch,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -395,6 +403,8 @@ export function PetScreen({
   onAwayClose?: () => void;
   /** The Stash's "Open Locker" link (the shell switches to the Locker tab). */
   onOpenLocker?: () => void;
+  /** Today's "Claim" row: the same claim the CLAIM button in the top bar makes. */
+  onClaimResearch?: () => void | Promise<void>;
 }) {
   const fontsReady = usePixelFonts();
   const frame = useStageFrame('hideout');
@@ -1033,6 +1043,35 @@ export function PetScreen({
     glow: revealed && pet.grade ? GRADE_COLOR[pet.grade] : ELEMENT_COLOR[view.legendElement],
   };
   const shownName = petShownName(pet);
+  // Today (Divecore finish step 4): what is ready right now, derived from the live view (no save, no timer: it
+  // re-reads on the store's own ticks). Counted on the dock button; listed in the Today sheet.
+  const todayList = todayItems({
+    name: shownName,
+    researchFinds: canClaimResearch(view) ? view.research.readyFinds : 0,
+    status,
+    freeEggs: freeEggsWaiting(pet.stage, pet.egg, pv.eggDay.nextPrice, pv.eggDay.free, pv.eggDay.used),
+    expedition: pv.expedition,
+    tripBack: pv.expeditionNote != null,
+    visitorHere: visitor != null && visitorOpen && !visitorGreeted,
+    diveFull: view.dive.full,
+    diveActive: view.diveRun.active,
+  });
+  const onTodayAction = (action: TodayAction) => {
+    if (action === 'claim') {
+      void onClaimResearch?.();
+      return;
+    }
+    if (action === 'visitor') {
+      setSheet(null);
+      tapVisitor();
+      return;
+    }
+    if (action === 'dive') {
+      openIcon('dive');
+      return;
+    }
+    setSheet(action === 'feed' ? 'feed' : action === 'play' ? 'play' : action === 'eggs' ? 'eggs' : 'expedition');
+  };
   const heroLabel = revealed && pet.hero ? gradedName(pet.grade, pet.name ?? heroName(pet.hero)) : null;
   const title =
     pet.stage === 'egg'
@@ -1407,18 +1446,36 @@ export function PetScreen({
                 </>
               ) : null}
               {(circleVisit ? [] : street ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
-                <RoomIcon
-                  key={icon.id}
-                  emoji={icon.emoji}
-                  label={icon.label}
-                  flexGrow={icon.id === 'expedition' ? 1.85 : 1}
-                  fontSize={street ? 14 : tabPt}
-                  pulse={pulseIcon === icon.id}
-                  badge={icon.id === 'dive' && view.diveRun.active}
-                  badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
-                  onPress={() => openIcon(icon.id)}
-                  anchorRef={icon.id === 'feed' ? tipAnchorRef('feed') : icon.id === 'info' ? tipAnchorRef('info') : undefined}
-                />
+                <Fragment key={icon.id}>
+                  {/* Today (finish step 4): what is ready now. A count in the badge, never red, never pulsing. */}
+                  {street && icon.id === 'info' ? (
+                    <RoomIcon
+                      emoji="📋"
+                      label="Today"
+                      flexGrow={1}
+                      fontSize={14}
+                      pulse={false}
+                      badge={false}
+                      badgeCount={todayList.length}
+                      badgeNoun={todayList.length === 1 ? 'thing ready' : 'things ready'}
+                      onPress={() => {
+                        setGame(null);
+                        setSheet('today');
+                      }}
+                    />
+                  ) : null}
+                  <RoomIcon
+                    emoji={icon.emoji}
+                    label={icon.label}
+                    flexGrow={icon.id === 'expedition' ? 1.85 : 1}
+                    fontSize={street ? 14 : tabPt}
+                    pulse={pulseIcon === icon.id}
+                    badge={icon.id === 'dive' && view.diveRun.active}
+                    badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
+                    onPress={() => openIcon(icon.id)}
+                    anchorRef={icon.id === 'feed' ? tipAnchorRef('feed') : icon.id === 'info' ? tipAnchorRef('info') : undefined}
+                  />
+                </Fragment>
               ))}
             </View>
           </>
@@ -1446,6 +1503,9 @@ export function PetScreen({
             />
           </>
         )}
+      </PlaySheet>
+      <PlaySheet open={sheet === 'today'} title={SHEET_TITLE.today} onClose={closeSheet} reduceMotion={reduceMotion}>
+        <TodaySheetBody items={todayList} onAction={onTodayAction} />
       </PlaySheet>
       <PlaySheet open={sheet === 'play'} title={SHEET_TITLE.play} onClose={closeSheet} reduceMotion={reduceMotion}>
         <PlaySheetBody

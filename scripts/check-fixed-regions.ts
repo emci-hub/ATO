@@ -92,6 +92,22 @@ const ok = (msg: string) => {
 }
 
 {
+  // Divecore finish step 4: the Today button lives in the Hideout DOCK (a fixed 64 pt region), opens the existing
+  // PlaySheet, and the 56 pt top bar (already full on a 375 pt phone) is untouched. The badge never pulses.
+  const pet = read('src/play/pet-screen.tsx');
+  const dockAt = pet.indexOf('dock={');
+  const todayAt = pet.indexOf('label="Today"');
+  assert.ok(dockAt > 0 && todayAt > dockAt, 'the Today button is in the Hideout dock');
+  assert.ok(pet.includes("<PlaySheet open={sheet === 'today'}"), 'the list is the existing PlaySheet (no new modal)');
+  const btn = pet.slice(todayAt - 60, todayAt + 420);
+  assert.ok(btn.includes('pulse={false}') && btn.includes('badge={false}') && btn.includes('badgeCount={todayList.length}'), 'a count badge, no dot, no pulse');
+  assert.match(pet, /iconRow: \{[^}]*height: 64,/s, 'the dock row keeps its 64 pt height');
+  assert.ok(!/Today/.test(read('src/play/street-shell.tsx')), 'the top bar gets no Today chip');
+  assert.ok(!/setInterval|setTimeout|useEffect/.test(read('src/play/today-sheet.tsx') + read('src/play/today.ts')), 'Today adds no timer or effect of its own');
+  ok('Today: a dock button + the existing sheet; the top bar and the dock height are untouched; no timer');
+}
+
+{
   // General ban: no game screen collapses a row (display:none style or inline) keyed on the
   // run phase — unless the line above marks a deliberate `fixed-regions: screen switch`.
   const offenders: string[] = [];

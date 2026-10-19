@@ -129,6 +129,7 @@
     "check:locker-per-hero": "tsx ./scripts/check-locker-per-hero.ts",
     "check:locker-stats": "tsx ./scripts/check-locker-stats.ts",
     "check:economy-guard": "tsx ./scripts/check-economy-guard.ts",
+    "check:today-chip": "tsx ./scripts/check-today-chip.ts",
     "check:pet-knows-you": "tsx ./scripts/check-pet-knows-you.ts",
     "check:daily-visitors": "tsx ./scripts/check-daily-visitors.ts",
     "check:decor-slots": "tsx ./scripts/check-decor-slots.ts",
