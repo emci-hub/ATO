@@ -572,3 +572,21 @@ First: close and reopen the app so the update loads. Open the Hideout (a pet at 
 - [ ] **Larger Text:** the rows wrap and the buttons stay tappable; the sheet scrolls if needed.
 - [ ] **Screen reader:** the dock button reads "Today, N things ready" (with its small icon first, like the other dock buttons).
 - [ ] **Smoothness:** the Hideout feels as smooth as before (the button adds no animation or timer).
+
+## Box 54 — The newbie guide bubble (Divecore finish step 5, 2026-10-19)
+
+First: close and reopen the app so the update loads. Best checked on a **fresh** save (Settings → Reset Divecore, which also restarts the guide) and then on your **normal** save.
+
+- [ ] **First bubble:** on a fresh Hideout (after any coach-tip ring has passed) a small boxed bubble sits low on the stage, centred between the two side rails and just above the dock: "Pick an egg. It hatches into your first pet." with a **Got it** button. It never touches the rails or the dock and the room does not move.
+- [ ] **Never with a coach tip:** while a pulsing coach ring is showing, the bubble is not there; it appears after.
+- [ ] **Got it:** tap it: that step is gone for good (also after closing the app). Pick an egg and the next line follows: "Tap your egg to keep it warm until it hatches."
+- [ ] **The steps, one at a time** (each appears only when you can do it): Feed → Dive → "Your research bag fills while you're away. Tap CLAIM at the top." (only once a claim is ready) → "Defend your street: open Turf War and clear Trial 1." → "Put a Power on…" (only with a Power in the bag) → "You can build the Loft now…" (only when the Loft can be built) → "Send your pet exploring…" (only when a trip can start). After the last one, nothing.
+- [ ] **Turf setup:** while Trial 1 is not won, the bubble shows on the Turf board with "Clear Trial 1: place towers on the pads, then call the wave." It is hidden while the Setup sheet is open, during a wave and on the result card, and a build card sits on top of it.
+- [ ] **Locker:** with a Power in the bag and none worn, the Locker shows "Put a Power on: pick one in the bag and tap Equip." at the bottom; equipping a Power removes it. A worn **Look** does not count as a Power.
+- [ ] **Quiet when busy:** no bubble during a mini-game, a dive, a sheet, a hatch / evolve ceremony, the away card, Settings, or a friend's Hideout.
+- [ ] **Your normal save is not nagged:** if you already won Trial 1 / built the Loft / sent a trip, you do not see the early steps (at most a Power, Loft or trip step you can do right now).
+- [ ] **Settings → Help:** a **Guide bubble · On/Off** chip. Off: no bubble anywhere. **Replay tips** turns it back on and brings every step back. **Reset Divecore** also restarts it.
+- [ ] **Larger Text:** the words fit the box (up to 3 lines); the **Got it** button is easy to hit.
+- [ ] **Reduce Motion / Motion Off:** under Reduce Motion it fades in quickly; with Motion Off it just appears. It never pulses or slides.
+- [ ] **Screen reader:** each new step is read out once.
+- [ ] **Smoothness:** the Hideout, Locker and Turf board feel as smooth as before.
