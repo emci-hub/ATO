@@ -710,6 +710,30 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   shown as a mockup). Phone check: **Box 54** (not done). **Known/accepted:** the guide state is in memory per app
   session (another account on the same phone in one session would see the first one's dismissed steps).
   **Next: step 6 (balance refresh); Minigames M1 is still queued, waiting for emci's yes.**
+- **Step 6 built + published 2026-10-19** (Play commits `1b489578`, `510b1b7e`; docs `29824063`, `13db4307`). emci
+  approved the numbers from a before/after table. `sim:balance` now runs the helper through the real engine
+  (`placeTurfTeam` at the follow spot; 20 dmg, range 15, leash 15, skill 6 s / 14 s, boss daze with the 11 s proof)
+  and leader + helper gear (four average Powers each, ×1.248). The **average helper** = the median of all 16 heroes
+  as helper: **Kitsune**, common, 2★ (spread Archangel 0.96× … Morwen 1.19×). **Data changes:** Trial 4 = 4 swarm + 2
+  runners in a stream (was 3 + a 3-runner cluster); Trial 5 = 7 swarm before the boss (was 4); Main 3 = 6 swarm,
+  tanks at 4 s; Main 4 = 3 runners in a stream (was a 4-cluster); Main 6 = 8 swarm; Main 7 = 5 runners in a stream;
+  **hero towers cost 40 scrap** (were free; a kept board still restores them free; Remove gives no refund, same as
+  the cycle boss; setup row says "40 scrap"). **Result (`games/grove/BALANCE_REPORT.md`):** the curve with the
+  average helper climbs smoothly (no dip > 0.1×); Trial 4 0.72× ≤ Trial 5 0.81× fresh, 0.41× vs 0.39× kept (inside
+  the 0.02 search step); Main 4/7/9/10 kept + helper 0.47/0.60/0.61/0.85×, all within ×2.0 (Main 10 fresh is still
+  2.13×, fine for the finale); hero towers ×1.38 over plain towers (was ×2.55 while free): still the best buy per
+  scrap, no longer dominant; helper dazed once on Trial 5 / Main 5, twice on Main 10 (down ~15% of the wave).
+  **Measurement change:** the pet-pounce table now uses the Mixed + helper board (on the 2-hero-tower board the
+  pounce read 7.4–9.9% only because that board got thinner); on it: Child 3.0% → Battle God 5.7%, inside 3–8%.
+  The Legends / affinity / stacked-boost sections still use the 2-hero board, so their numbers rose (noted in the
+  report). Pins: new balance group in `check:turf-team` (six wave edits, hero cost, live Trial 4 ≤ Trial 5 replay);
+  `check-heroes` hero tower 40. Save stays **v33**. Gate green (177), reviewer PASS with warnings (fixed: the hero cap
+  test, the hero-tower finding wording, the Legends-board note, Box 55 wording). **OTA published**: iOS
+  `01a154cc-e1b9-730d-a536-b8757bfad0dd`, Android `01a154cc-e1b9-748e-a58f-d74b70d33d69`, group
+  `2f5b8fca-cf7c-437d-9475-eb382a0a66f2` (message `divecore-finish-step6-balance`). Phone check: **Box 55** (not done).
+  **Open (not tuned, report flags it):** the hero-tower kit spread is 1.59× (Archangel 1.13× … Morwen 1.80×) with
+  paid hero towers; and the board most players field (Mixed + helper + hero towers) is not its own sim column.
+  **Next: step 7 (Locker icons through PixelLab); Minigames M1 still waits for emci's yes.**
 
 ## Web research (read as data)
 
