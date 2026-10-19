@@ -634,7 +634,26 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   element sprites, but the fire/water/earth/lightning **auras are pet-only** (Hideout and Dive, never Turf), chain
   bolts are plain vectors, the creep burn/chill/root overlays exist as art but are unwired, and the creep hit flash is
   not element-coloured. Candidate new step "Element look in Turf War" (should-fix, M-L, 60 fps + fixed-regions risk).
-  **Next: step 2.**
+- **Step 2 built + published 2026-10-18** (Play commits `60ed3295`, `8c090dd0`; docs `ac67d1f0`). `token_earn`
+  (Copper Keeper) now scales Divecore tokens from a Turf win and a Skip (leader's gear, existing soft cap, nearest
+  token; not the flat +150 cycle bonus, not mini-game rounds, never ATO tokens): 50 → 53 with a plain Keeper.
+  `research_yield` (Curator's Cloak, Ember Mantle) now adds **finds** to a research claim (expected cycles × bonus:
+  whole part + one dice roll; no gear = no roll). Both differ from the roadmap's first wording (mini-games out, finds
+  not tokens) and were approved in the step 2 plan. Locker: Powers / Looks sections, "Junk" tab → "Looks", "Works in:
+  Turf War / Dive / Hideout" on every Power ("Style only" on Looks) from `STAT_WORKS_IN`, bonuses grouped by place,
+  new lede (no "Basecore"), clearer help card; label "research yield" → "research finds". New `check:locker-stats`
+  (9 groups). Shop check: the whole Corner Store is dev-only (`shopUnlocked = PRE_LAUNCH_DEV && devUnlocked`), so no
+  player sees paid / pass / stub rows; nothing to hide. Save stays **v33**. Gate green, reviewer PASS (skip pin
+  strengthened). **OTA published**: iOS `01a15206-a4aa-72d9-b8cf-9bcd91a8e4b3`, Android
+  `01a15206-a4aa-7ac4-8fa0-8127982d9167`, group `cfa74784-5c81-4984-bd40-4708c6ed5e6c` (message
+  `divecore-finish-step2-locker`). Phone check: **Box 51** (not done).
+  **Notes for step 3:** (1) players have **no shop at all** today (dive refresh, merge crate, Shine Stone are
+  dev-only), so step 3's "weekly Tide crate" sink would be invisible: emci must decide whether the free token shelf
+  opens at launch (paid / pass / stub rows stay hidden). (2) The Loft's token bonus on mini-games is
+  `floor(5 × 0.1) = 0`, so it never pays (`hideout-progress.ts:377-382`); left alone. (3) Leftover: the Turf result
+  card's fallback line (no recorded win) shows the unscaled token amount (`defend-screen.tsx:3404-3410`); display only.
+  **New proposal from emci's request:** section 7, Minigames makeover (M1-M3), waiting for his yes.
+  **Next: step 3.**
 
 ## Web research (read as data)
 
