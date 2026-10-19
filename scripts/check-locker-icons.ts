@@ -88,10 +88,11 @@ for (const m of mapBlock.matchAll(/(\w+): ART\.icon\.items\.streetwear\.(\w+)/g)
     assert.match(a.path, /^assets\/art\/icons\/unused\/items\/alt\//, `${a.id} sits in unused/items/alt`);
     assert.ok(a.status !== 'approved', `${a.id} is not approved (only emci approves)`);
   }
-  const src = read('src/play/art.ts');
-  assert.ok(!/\.(\w+)(B|C)\b/.test(mapBlock), 'no live code reads an alternate');
-  assert.ok(!/itemIconStyle|iconLook|icon_look/i.test(src + read('src/play/dress-screen.tsx')), 'no player switch in code');
-  ok('26 alternates kept in icons/unused/items/alt, unused, not approved, no player switch');
+  // `inUse` above is computed from real usage (art:registry), so an alternate that code reads would flip it.
+  assert.ok(!/\.(\w+)(B|C)\b/.test(mapBlock), 'the item map names no alternate');
+  assert.ok(!/itemIconStyle|iconLook|icon_look/i.test(artSrc + read('src/play/dress-screen.tsx')), 'no player switch in code');
+  assert.match(read('src/play/dress-screen.tsx'), /<Image source=\{source\} contentFit="contain" transition=\{0\} style=\{\{ \.\.\.styles\.itemIconArt, \.\.\.pixelRenderStyle \}\}/, 'the Locker icon draws crisp (pixelRenderStyle, no fade)');
+  ok('26 alternates kept in icons/unused/items/alt, unused, not approved, no player switch; Locker icon renders crisp');
 }
 
 // 4. the old stand-ins and Kenney item fallback are gone; the Locker draws at 32 pt in the 34 pt frame.

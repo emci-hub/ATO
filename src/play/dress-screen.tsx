@@ -39,6 +39,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { itemArtSource } from '@/play/art';
+import { pixelRenderStyle } from '@/play/pixel-theme';
 import { FinishPicker } from '@/play/finish-picker';
 import type { PlayTransition } from '@/play/use-play-store';
 import {
@@ -137,7 +138,7 @@ function ItemIcon({
   return (
     <NeonIconFrame size={34} style={style}>
       {source ? (
-        <Image source={source} contentFit="contain" style={styles.itemIconArt} />
+        <Image source={source} contentFit="contain" transition={0} style={{ ...styles.itemIconArt, ...pixelRenderStyle }} accessibilityIgnoresInvertColors />
       ) : (
         <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={NEON.cyan} />
       )}
