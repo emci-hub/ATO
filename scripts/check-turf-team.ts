@@ -12,7 +12,9 @@
  *   - a full wave with leader + helper clears, the helper fights and casts, never out for the wave, and
  *     one sim step stays far inside a 60 fps frame;
  *   - the screen wiring (picker in the Setup sheet, one slot, no Move / tap-to-place, movement on shared
- *     values with no new interval, walk / faint / get-up clips, save stays v33).
+ *     values with no new interval, walk / faint / get-up clips, save stays v33);
+ *   - balance (Divecore finish step 6): the six wave-table edits, hero towers at 40 scrap, and Trial 4
+ *     needing no more than Trial 5 with the average helper (see games/grove/BALANCE_REPORT.md).
  *
  * Run: npm run check:turf-team  (part of check:ota-gate)
  */
@@ -21,11 +23,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { BOARD_MAPS } from '../src/play/board-data';
+import { waveDefFor } from '../src/play/director';
 import {
+  AVATAR_RANGE,
+  HERO_TOWER_STATS,
+  TOWER_DEFS,
   castPetPounce,
   createDefendLive,
   heroCastSkill,
   helperUnitId,
+  placeTower,
   placeTurfTeam,
   puffPosition,
   retryDefendLive,
@@ -525,6 +532,67 @@ function helperHit(state: DefendLive, leader: { x: number; y: number }): number 
   assert.ok(down < ticks, 'the helper was never out for the whole wave');
   assert.ok(avg < 2, `a sim step averages ${avg.toFixed(3)} ms (budget: well under one 16.7 ms frame)`);
   ok(`wave clears in ${ticks} ticks; helper fights + casts, down ${down} ticks; step avg ${avg.toFixed(3)} ms, worst ${worst.toFixed(2)} ms`);
+}
+
+/* ------------------------------------------------------ balance (step 6) --- */
+// Divecore finish step 6 (emci, 2026-10-19): `npm run sim:balance` with the helper + gear. Pins the six
+// wave-table edits and the hero-tower price it approved, and replays the headline target in the real
+// engine: on a fresh board (80 scrap → the sim's first two Mixed towers on the best pads) with the average
+// helper (Kitsune, common, 2★), Trial 4 needs no more damage than Trial 5.
+{
+  const groups = (phase: 'trial' | 'main', wave: number) =>
+    waveDefFor(phase, wave)!.groups.map((g) => `${g.role}:${g.count}@${g.gapSec}/${g.delaySec}${g.pattern === 'cluster' ? 'c' : ''}`).join(' ');
+  assert.equal(groups('trial', 4), 'swarm:4@0.8/0 runner:2@0.7/4', 'Trial 4: 4 swarm + 2 runners in a stream (was a 3-runner cluster)');
+  assert.equal(groups('trial', 5), 'swarm:7@0.7/0 boss:1@1/8', 'Trial 5: 7 swarm before the boss (was 4)');
+  assert.equal(groups('main', 3), 'swarm:6@0.8/0 tank:2@1.5/4', 'Main 3: 6 swarm, tanks at 4 s');
+  assert.equal(groups('main', 4), 'swarm:4@0.8/0 runner:3@0.7/3', 'Main 4: 3 runners in a stream (was a 4-runner cluster)');
+  assert.equal(groups('main', 6), 'swarm:8@0.75/0 tank:2@1.4/5', 'Main 6: 8 swarm');
+  assert.equal(groups('main', 7), 'swarm:4@0.75/0 runner:5@0.7/3', 'Main 7: 5 runners in a stream (was a cluster)');
+  assert.equal(HERO_TOWER_STATS.placeCost, 40, 'a hero tower costs 40 scrap to place');
+  assert.match(read('src/play/defend-screen.tsx'), /hero \? `\$\{placeCost\} scrap`/, 'the setup row shows the hero tower price, not "free"');
+
+  const map = BOARD_MAPS.ato;
+  const samples = Array.from({ length: 240 }, (_, i) => {
+    const p = puffPosition(i / 239, map);
+    return { x: p.x * 100, y: p.y * 100 };
+  });
+  const cover = (p: { x: number; y: number }, r: number) => samples.filter((q) => Math.hypot(q.x - p.x, q.y - p.y) <= r).length;
+  const leader = samples.reduce((b, p) => (cover(p, AVATAR_RANGE) > cover(b, AVATAR_RANGE) ? p : b), samples[0]);
+  const spot = helperFollowSpot(map, leader);
+  const clears = (wave: number, mult: number) => {
+    let s = createDefendLive(wave, { mapId: 'trial', boardId: 'ato' });
+    for (const kind of ['archer', 'vine'] as const) {
+      const taken = new Set(s.towers.map((t) => t.pad));
+      const pad = map.pads
+        .map((p, i) => ({ i, c: cover(p, TOWER_DEFS[kind].range) }))
+        .sort((a, b) => b.c - a.c || a.i - b.i)
+        .find((p) => !taken.has(p.i))!.i;
+      s = placeTower(s, pad, kind)!;
+    }
+    s = placeTurfTeam(s, [{ slot: 0, heroId: 'kitsune', x: spot.x, y: spot.y, stars: 2, grade: 'common' }], null);
+    const buckets = { wavePower: mult, towerSpeed: 1, avatarLevel: 1, legendElement: null, avatarStars: 0, rebirthBonus: 0 };
+    for (let t = 0; t < 600_000; t += 100) {
+      const step = stepDefendLive(s, 100, buckets, leader);
+      if (step.leak) return false;
+      s = step.state;
+      if (s.schedule.length === 0 && s.puffs.length === 0) return true;
+    }
+    return false;
+  };
+  const need = (wave: number) => {
+    let lo = 0.05;
+    let hi = 4;
+    while (hi - lo > 0.02) {
+      const mid = (lo + hi) / 2;
+      if (clears(wave, mid)) hi = mid;
+      else lo = mid;
+    }
+    return hi;
+  };
+  const t4 = need(4);
+  const t5 = need(5);
+  assert.ok(t4 <= t5 + 0.02, `Trial 4 (${t4.toFixed(2)}×) needs no more than Trial 5 (${t5.toFixed(2)}×) with the average helper`);
+  ok(`balance (step 6): six wave edits + hero tower 40 scrap pinned; Trial 4 ${t4.toFixed(2)}× ≤ Trial 5 ${t5.toFixed(2)}× (fresh, average helper)`);
 }
 
 /* --------------------------------------------------------------- screen --- */

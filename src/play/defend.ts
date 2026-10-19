@@ -423,16 +423,16 @@ export function boundBossCapOnBoard(): number {
  * numbers) plus the hero's own sprite clips for idle/attack/skill. */
 
 /** Hero-tower stats — one block for every bound hero. Crystal-like: a chunky
- * auto-attack that picks the highest-HP creep in range. FREE place for v1: the
- * hero is already owned + bound, so no scrap is charged while the hero-tower
- * economy is still undecided (GAME_SPEC §9k's `place_cost` is for the cycle
- * boss's fragment farm, not a hero bind). No star ladder — a bound hero is ★1
+ * auto-attack that picks the highest-HP creep in range. Placing one costs the
+ * same 40 scrap as a normal tower (Divecore finish step 6, emci 2026-10-19: it
+ * was free and two of them were the dominant answer, `sim:balance`); a kept
+ * board still puts it back for free. No scrap upgrade — a bound hero is ★1
  * until a hero star path lands. */
 export const HERO_TOWER_STATS = {
   baseAttack: 22,
   cooldownMs: 1300,
   range: 20,
-  placeCost: 0,
+  placeCost: 40,
 } as const;
 
 /** Hero-tower auto-skill cooldown (A6). Mirrors the archer tower's K1b default;
@@ -869,7 +869,7 @@ export const BOUND_BOSS_PLACE_SKILL_CD_MS = 1_400;
 
 /** Place a Bound Boss on an empty pad (§9k / A6), deducting its place cost.
  * Accepts the cycle boss (a `bound_bosses.json` def, scrap `place_cost`) or a
- * HERO bound as a tower (A6 — `HERO_TOWER_STATS`, FREE place). Blocked when the
+ * HERO bound as a tower (A6 — `HERO_TOWER_STATS`, 40 scrap). Blocked when the
  * boss isn't ≥ ★1, the pad is occupied, scrap is short, or the board already
  * holds `BOUND_BOSS_MAX_ON_BOARD` Bound Bosses. */
 export function placeBoundBoss(

@@ -2651,7 +2651,7 @@ export function DefendScreen({
   };
   /** Unlocked Bound Bosses (stars ≥ 1) the player can place — the cycle boss
    * (a `bound_bosses.json` def) AND any HERO bound as a tower (A6, `heroById`
-   * resolves). A hero tower places FREE and draws its own idle/attack/skill
+   * resolves). A hero tower costs 40 scrap (step 6) and draws its own idle/attack/skill
    * clips via `resolveBoundHeroTowerKit`. */
   const unlockedBoundBosses = view.boundBosses.filter(
     (bb) => bb.unlocked && (getBoundBossDef(bb.id) != null || isHeroBoundTower(bb.id)),
@@ -3338,7 +3338,7 @@ export function DefendScreen({
       choices.push({
         key: `boss-${bb.id}`,
         name: hero ? heroName(bb.id) : def?.name ?? bb.id,
-        detail: `${hero ? 'free' : `★${bb.stars} · ${placeCost} scrap`}${atCap ? ' · max 2' : ''}`,
+        detail: `${hero ? `${placeCost} scrap` : `★${bb.stars} · ${placeCost} scrap`}${atCap ? ' · max 2' : ''}`,
         affordable: scrap >= placeCost && !atCap,
         onArm: () => {
           const heroKit = heroById(bb.id)?.kit;
