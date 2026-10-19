@@ -86,6 +86,11 @@ web research (listed at the end). File:line refs are as of that commit.
     one needs a trusted time (the server's `saved_at` cap, or a stored "latest time seen"), which may mean one new
     additive save field. This only hurts the player's own game today (no ATO tokens), but it would matter the day
     Divecore feeds ATO tokens.
+    **Decision (emci, 2026-10-18, step 3): Forward clock jumps are an accepted risk.** A jump forward looks exactly
+    like being away and cannot be told apart offline; what bounds it is pinned in `check:economy-guard` (research
+    banks one 10 h bag, charges refill to 10, a claim empties the bag, a clock moved back pays nothing). Revisit the
+    day Divecore feeds ATO tokens or leaderboards (then a server-side check is needed). Back-jumps of the daily
+    half-pay cap are fixed (`petDayHolds`).
   - **Client-trusted save:** `play_saves` checks only size, version, clock cap and throttle. Fine for a solo game;
     noted for later.
   - **Replay farming has no daily cap** (25 tokens, 1 shell, 1 drop roll per replay win). This is acceptable solo.

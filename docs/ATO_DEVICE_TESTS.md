@@ -537,4 +537,18 @@ First: close and reopen the app so the update loads. Open the Locker (Play → L
 - [ ] **Token gain really works:** wear **Copper Keeper** (trinket) on your leader. Win a Turf wave with full pay: the result reads about 5% more tokens than before (50 → **53**; a half-pay or replay win 25 → 26). Take it off: back to 50. Mini-game rounds still pay 5.
 - [ ] **Research finds really work:** wear **Curator's Cloak** (cloak) or Ember Mantle on your leader. Claim a full research bag (about 10 h): you get about 1 extra find on top of the cycles (sometimes 2; a small bag has a small chance of +1). Without it, exactly one find per cycle.
 - [ ] **Larger Text:** the new "Works in" lines and the two headings wrap; nothing is cut off; the filter chips still scroll sideways.
-- [ ] No Shop or Corner Store tile anywhere for you (it stays hidden, so no price tags or "Soon" rows show).
+- [ ] (Replaced by Box 52: step 3 opens the Store to players, Token shop only.)
+
+## Box 52 — The Store opens, 5★ duplicates pay shards, the half-pay cap holds (Divecore finish step 3, 2026-10-18)
+
+First: close and reopen the app so the update loads.
+
+- [ ] **A fourth tab:** the bottom bar now shows **Store** next to Hideout, Turf and Locker. All four labels fit on a small phone (375 pt) and with Larger Text; the bar keeps its height.
+- [ ] **Open the Store:** header "Corner Store" with the line "Spend tokens on a small boost." Your token count shows. There are **no tab chips** (no Tide shelf, no Paid shop), **no price in dollars**, and **no "Coming soon" rows**.
+- [ ] **Rows:** Dive refresh (40 tokens, "x/3 today" under it), Merge-fuel crate (30, 3 a day), **Big merge crate** (300 tokens, "Three random Powers…", "0/1 bought this week"), Shine Stone (120, 1 a week). The Big crate note does NOT say "held".
+- [ ] **Dive refresh limit:** with the charges below full, buy it 3 times: each gives a charge and the note counts up; the 4th shows "Daily limit reached". With full charges it shows "Charges full".
+- [ ] **Big crate:** buy it with 300+ tokens: you get 3 Powers in the Locker bag (or shells for any past your daily Power limit, with a notice) and the button then reads "Weekly limit reached".
+- [ ] **Help (?)** on the Store: 3 lines, the last one "Crates hold random Powers." (nothing about paid rows).
+- [ ] **5★ duplicate shards:** hatch an egg to a hero you already hold at 5★ (or use a 6th copy via the dev kit). When the pet's reveal plays, its line reads "<Name> joined up! +2 <Grade> shards" and the Collection shards go up by 2 (a Legendary duplicate gives 2 Epic shards). A duplicate that still adds a star pays nothing and reads as before.
+- [ ] **Half-pay cap:** after your 5th Turf win of the day the next win pays half. Set the phone clock back one day and win again: it is still half pay (it did not reset). Set the clock back to the right time afterwards.
+- [ ] **Larger Text:** the Store rows and notes wrap; nothing is cut off.
