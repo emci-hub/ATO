@@ -9,7 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import type { Me } from '@/lib/me';
 import { currentProfileCard, type ProfileSnapshot } from '@/lib/profile-history';
-import { BANK_BY_TRAIT } from '@/lib/questions/bank/index';
+import { BANK_ROWS_BY_TRAIT } from '@/lib/questions/bank/index';
 import {
   BANK_SET_COUNT,
   BANK_SET_SIZE,
@@ -211,7 +211,9 @@ export function BankFinishFold({
       {ordered.map((axis) => {
         const track = trackFor(tracks, axis, 'report');
         const reason = pickReason.get(axis);
-        const answered = BANK_BY_TRAIT[axis].filter((q) => progress.answeredIds.has(q.id));
+        // Retired questions they answered stay in the list with their original
+        // words (wave100), read-only: the server no longer changes them.
+        const answered = BANK_ROWS_BY_TRAIT[axis].filter((q) => progress.answeredIds.has(q.id));
         return (
           <View key={axis} style={[styles.row, border]}>
             <ThemedText type="smallBold">{AXIS_SHORT_NAME[axis]}</ThemedText>
@@ -227,10 +229,15 @@ export function BankFinishFold({
               <View style={styles.list}>
                 {answered.map((q) => {
                   const prior = answers.get(q.id);
+                  const isRetired = q.retired != null;
                   return (
                     <View key={q.id} style={styles.question}>
                       <ThemedText type="small">{q.prompt}</ThemedText>
-                      {prior == null ? (
+                      {isRetired ? (
+                        <ThemedText type="code" themeColor="textSecondary">
+                          We retired this question. Your answer stays as you gave it.
+                        </ThemedText>
+                      ) : prior == null ? (
                         <ThemedText type="code" themeColor="textSecondary">
                           Answered before answers were kept. Pick one to set it.
                         </ThemedText>
@@ -241,7 +248,7 @@ export function BankFinishFold({
                         return (
                           <ThemedPressable
                             key={opt.text}
-                            disabled={busy || isPrior}
+                            disabled={busy || isPrior || isRetired}
                             onPress={() => void pickOption(q.id, i)}
                             accessibilityState={{ selected: isPrior }}
                             style={[styles.option, border, isPrior && styles.prior]}>

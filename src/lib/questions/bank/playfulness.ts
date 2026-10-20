@@ -1,4 +1,4 @@
-import { intake, q, traitBank } from './define';
+import { intake, q, retired, traitBank } from './define';
 
 /** Playfulness: "Let's just get it done" (low) to "Okay, but make it fun" (high). */
 export const PLAYFULNESS_BANK = traitBank('playfulness', [
@@ -11,11 +11,11 @@ export const PLAYFULNESS_BANK = traitBank('playfulness', [
   q('playfulness_04', 'work', 'high', 'A boring team meeting, and you have a funny thought.',
     ['I say it out loud', 0.8], ['I message a coworker', 0.5], ['I keep a straight face', 0.2]),
   q('playfulness_05', 'work', 'low', 'Your boss asks for ideas for the office party.',
-    ['Can we skip it this year', 0.2], ['A nice dinner out', 0.5], ['Costumes and a game show', 0.8]),
+    ['Can we skip it this year?', 0.2], ['A nice dinner out', 0.5], ['Costumes and a game show', 0.8]),
   q('playfulness_06', 'friends', 'neither', 'Friends start a prank war in the group chat.',
     ['I join in a little', 0.5], ['I plan the best one', 0.8], ['I stay out of it', 0.2]),
   q('playfulness_07', 'friends', 'high', 'A friend is having a bad day and texts you.',
-    ['I send memes until they laugh', 0.8], ['A joke, then I listen', 0.5], ['I listen and keep it real', 0.2]),
+    ['I send memes until they laugh', 0.8], ['A joke, then I listen', 0.5], ['I listen, no jokes', 0.2]),
   q('playfulness_08', 'dating', 'neither', 'Your first date is at a quiet coffee shop.',
     ['We just talk', 0.2], ['A few jokes, mostly chat', 0.5], ['I make up stories about strangers', 0.8]),
   q('playfulness_09', 'dating', 'low', 'Your partner starts a silly voice while you cook dinner.',
@@ -42,8 +42,8 @@ export const PLAYFULNESS_BANK = traitBank('playfulness', [
     ['Airport adventure time', 0.8], ['I make the best of it', 0.5], ['I just want to sleep', 0.2]),
   q('playfulness_20', 'friends', 'low', 'Game night, and someone picks a silly party game.',
     ["I'd rather play cards", 0.2], ['I play, half in', 0.5], ['I go all in', 0.8]),
-  q('playfulness_21', 'dating', 'high', 'Your partner is upset and wants to talk seriously.',
-    ['I listen, then lighten it', 0.5], ['I try to make them laugh first', 0.8], ['I stay serious with them', 0.2]),
+  retired('playfulness_26', q('playfulness_21', 'dating', 'high', 'Your partner is upset and wants to talk seriously.',
+    ['I listen, then lighten it', 0.5], ['I try to make them laugh first', 0.8], ['I stay serious with them', 0.2])),
   q('playfulness_22', 'family', 'low', 'Your little nephew wants to play pretend in the living room.',
     ['I become a dragon', 0.8], ['I play for a bit', 0.5], ['I suggest a movie', 0.2]),
   q('playfulness_23', 'solo', 'neither', 'You get to the gym and the playlist is terrible.',
@@ -52,4 +52,7 @@ export const PLAYFULNESS_BANK = traitBank('playfulness', [
     ['I laugh and react', 0.5], ['I send back an even sillier one', 0.8], ['A thumbs up', 0.2]),
   q('playfulness_25', 'money', 'neither', 'A friend suggests a bet on who finishes the show first.',
     ['Loser buys pizza, deal', 0.8], ['A small bet, sure', 0.5], ['No bets, just watch', 0.2]),
+  // wave100 (emci 2026-10-20): new scene for retired _21.
+  q('playfulness_26', 'dating', 'high', 'Your partner comes home grumpy about a small thing at work.',
+    ['I listen, then lighten it', 0.5], ['I try to make them laugh first', 0.8], ['I stay serious with them', 0.2]),
 ]);

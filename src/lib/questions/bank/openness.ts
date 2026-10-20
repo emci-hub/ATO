@@ -14,7 +14,7 @@ export const OPENNESS_BANK = traitBank('openness', [
     ["Whatever's quickest to finish", 0.2], ['Something close to what I know', 0.5], ['Something I know nothing about', 0.8]),
   q('openness_06', 'dating', 'neither', 'A date suggests a pottery class instead of drinks.',
     ["Sure, if they're into it", 0.5], ['Wait, that sounds fun', 0.8], ['Drinks felt safer', 0.2]),
-  q('openness_07', 'dating', 'neither', 'Your situationship wants to do the exact same thing every weekend.',
+  q('openness_07', 'dating', 'neither', 'Your partner wants to do the exact same thing every weekend.',
     ['Easy is nice, honestly', 0.2], ['I start pitching new plans', 0.8]),
   q('openness_08', 'family', 'low', "Someone brings a dish to family dinner from a cuisine you've never had.",
     ["I'll stick to the usual plates", 0.2], ['One small bite', 0.5], ["I'm trying a bit of everything", 0.8]),
@@ -49,7 +49,7 @@ export const OPENNESS_BANK = traitBank('openness', [
   q('openness_23', 'solo', 'neither', 'A free Sunday, no plans, and the weather is good.',
     ['I go to my favorite spot', 0.2], ["I wander somewhere I've never been", 0.8]),
   q('openness_24', 'family', 'high', 'On a family trip, someone wants to ditch the plan and just explore.',
-    ["I'll go if the others do", 0.5], ["I'm the one suggesting it", 0.8], ['Can we stick to the plan', 0.2]),
+    ["I'll go if the others do", 0.5], ["I'm the one suggesting it", 0.8], ['Can we stick to the plan?', 0.2]),
   q('openness_25', 'money', 'high', 'Friends want to book a trip somewhere none of you know, tonight, on a whim.',
     ['Book it before we change our minds', 0.8], ['Send me the price first', 0.5], ["I'd rather go somewhere I know", 0.2]),
 ]);

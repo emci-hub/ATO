@@ -1,4 +1,4 @@
-import { intake, q, traitBank } from './define';
+import { intake, q, retired, traitBank } from './define';
 
 /** Composure: "I'm still thinking about this morning" (low) to "Oh, that? I forgot about it" (high). */
 export const STEADINESS_BANK = traitBank('steadiness', [
@@ -8,7 +8,7 @@ export const STEADINESS_BANK = traitBank('steadiness', [
     ['Fine, I roll with it', 0.8], ['Mild whiplash, then fine', 0.5], ['It throws off the whole evening', 0.2])),
   intake(3, q('steadiness_03', 'online', 'low', 'A one-word reply lands and it could be read two ways.',
     ['I read it plain and move on', 0.8], ['I reread it once, then let it go', 0.5], ['I reread it a few times', 0.2])),
-  q('steadiness_04', 'work', 'low', 'Your boss sends "can we talk tomorrow?" with no context.',
+  q('steadiness_04', 'work', 'low', 'Your boss sends "Can we talk tomorrow?" with no context.',
     ['Probably nothing, I sleep fine', 0.8], ['I wonder about it tonight', 0.5], ['I replay every email I sent', 0.2]),
   q('steadiness_05', 'work', 'neither', 'You trip over a word in the middle of a presentation.',
     ['I think about it all week', 0.2], ['I recover, but feel it', 0.5], ['I laugh and keep going', 0.8]),
@@ -18,14 +18,14 @@ export const STEADINESS_BANK = traitBank('steadiness', [
     ['I laugh too and forget it', 0.8], ['It stings for a minute', 0.5], ['I think about it for days', 0.2]),
   q('steadiness_08', 'dating', 'low', 'A first date goes well, then they take a day to text back.',
     ['My whole day is off', 0.2], ['I check my phone a bit more', 0.5], ['I barely notice', 0.8]),
-  q('steadiness_09', 'dating', 'high', "Your partner is upset about something, and you think it's small.",
-    ['I take it seriously for them', 0.5], ["I stay calm, it'll pass", 0.8], ['I get upset too', 0.2]),
+  retired('steadiness_26', q('steadiness_09', 'dating', 'high', "Your partner is upset about something, and you think it's small.",
+    ['I take it seriously for them', 0.5], ["I stay calm, it'll pass", 0.8], ['I get upset too', 0.2])),
   q('steadiness_10', 'family', 'low', 'A family group chat turns into a fight about politics.',
     ['I mute it and carry on', 0.8], ['It bugs me for the evening', 0.5], ['It ruins my night', 0.2]),
   q('steadiness_11', 'family', 'neither', 'Your mom calls twice in a row and you missed both.',
     ['I assume the worst', 0.2], ['I call back a bit fast', 0.5], ['She probably wants a recipe', 0.8]),
   q('steadiness_12', 'solo', 'low', 'You lie in bed and remember an awkward thing you said in 2019.',
-    ['A quick cringe, then sleep', 0.5], ['That never happens to me', 0.8], ['There goes another hour', 0.2]),
+    ['A quick cringe, then sleep', 0.5], ['I shrug and fall asleep', 0.8], ['There goes another hour', 0.2]),
   q('steadiness_13', 'solo', 'neither', 'You spill coffee on your shirt right before work.',
     ['Swap the shirt, move on', 0.8], ['A sigh, then fine', 0.5], ['The day is off to a bad start', 0.2]),
   q('steadiness_14', 'online', 'high', 'A post of yours gets a rude comment from a stranger.',
@@ -52,4 +52,7 @@ export const STEADINESS_BANK = traitBank('steadiness', [
     ['I worry for a few days', 0.5], ['I adjust and move on', 0.8], ['I lose sleep over it', 0.2]),
   q('steadiness_25', 'work', 'neither', 'You get feedback at work that was harsher than you expected.',
     ['I take the note, move on', 0.8], ['It stings for a day', 0.5], ['I replay it for a week', 0.2]),
+  // wave100 (emci 2026-10-20): new scene for retired _09.
+  q('steadiness_26', 'dating', 'high', 'Your partner comes home upset about something small.',
+    ['I feel a bit of it too', 0.5], ['I stay calm and listen', 0.8], ['I get upset too', 0.2]),
 ]);

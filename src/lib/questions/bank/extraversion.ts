@@ -1,4 +1,4 @@
-import { intake, q, traitBank } from './define';
+import { intake, q, retired, traitBank } from './define';
 
 /** Sociability: "I need a night in" (low) to "Who's around tonight?" (high). */
 export const EXTRAVERSION_BANK = traitBank('extraversion', [
@@ -20,28 +20,28 @@ export const EXTRAVERSION_BANK = traitBank('extraversion', [
     ['Quiet weekend sounds great', 0.2], ['I try to talk them into it', 0.5], ['I go, they can stay in', 0.8]),
   q('extraversion_09', 'family', 'neither', 'A big family birthday with cousins you barely know.',
     ['I stick near my people', 0.5], ['I end up chatting with everyone', 0.8], ['I find the dog and hide', 0.2]),
-  q('extraversion_10', 'family', 'low', 'Your mom puts you on speaker with the whole family at dinner.',
+  q('extraversion_10', 'family', 'low', 'Your mom calls during family dinner and puts you on speaker.',
     ['I love it, hi everyone', 0.8], ['I say hi, then fade out', 0.5], ['I suddenly have to go', 0.2]),
   q('extraversion_11', 'solo', 'neither', 'You have the apartment to yourself all weekend.',
     ["Heaven. Don't disturb", 0.2], ['A day alone, then I text someone', 0.5], ['By Saturday night I make plans', 0.8]),
   q('extraversion_12', 'solo', 'low', 'A friend calls instead of texting.',
     ['I pick up if I have a minute', 0.5], ['I pick up right away', 0.8], ['I let it ring and text back', 0.2]),
-  q('extraversion_13', 'online', 'high', 'Your story from last night got a lot of replies.',
-    ['I answer every single one', 0.8], ['I reply to a few', 0.5], ['I post rarely, so no', 0.2]),
+  retired('extraversion_26', q('extraversion_13', 'online', 'high', 'Your story from last night got a lot of replies.',
+    ['I answer every single one', 0.8], ['I reply to a few', 0.5], ['I post rarely, so no', 0.2])),
   q('extraversion_14', 'online', 'neither', 'A group voice chat starts in the app while you scroll.',
     ['I stay offline', 0.2], ['I listen for a bit first', 0.5], ['I jump in right away', 0.8]),
   q('extraversion_15', 'online', 'neither', 'The group chat has 87 new messages since this morning.',
     ['I scroll up and catch up', 0.5], ['Probably half of them are mine', 0.8], ['I mark it read', 0.2]),
   q('extraversion_16', 'money', 'neither', 'An extra $100 lands in your bank app this month.',
     ['Concert tickets for the group', 0.8], ['A dinner out with one friend', 0.5], ['Something nice for home', 0.2]),
-  q('extraversion_17', 'money', 'high', 'Your bank app shows how much went on going out this month.',
+  q('extraversion_17', 'money', 'high', 'Your bank app shows how much you spent going out this month.',
     ['Barely anything there', 0.2], ['A bit much, but fine', 0.5], ['Worth it, every night', 0.8]),
   q('extraversion_18', 'stress', 'neither', 'A rough day at work, and you get home at 7.',
     ['I text one person', 0.5], ['I call someone to vent', 0.8], ['Phone down, nobody', 0.2]),
   q('extraversion_19', 'stress', 'low', 'A friend asks you to come out tonight after a long week.',
-    ["Yes, that's my reset", 0.8], ['Maybe for an hour', 0.5], ['I cancel on myself', 0.2]),
+    ["Yes, that's my reset", 0.8], ['Maybe for an hour', 0.5], ["I'd rather stay in", 0.2]),
   q('extraversion_20', 'friends', 'high', "Someone you just met at a party says they're going to a second spot.",
-    ['I head home', 0.2], ["Depends who's going", 0.5], ["I'm coming, who else", 0.8]),
+    ['I head home', 0.2], ["Depends who's going", 0.5], ["I'm coming, who else?", 0.8]),
   q('extraversion_21', 'friends', 'low', 'Plans got canceled an hour before.',
     ['Bit sad, bit relieved', 0.5], ['I find another plan fast', 0.8], ['Secretly thrilled', 0.2]),
   q('extraversion_22', 'dating', 'neither', 'On a first date, the bartender starts chatting with you both.',
@@ -52,4 +52,7 @@ export const EXTRAVERSION_BANK = traitBank('extraversion', [
     ['A quick catch-up', 0.5], ['I could talk for an hour', 0.8], ['I wave and keep walking', 0.2]),
   q('extraversion_25', 'stress', 'neither', 'Your phone is buzzing with plans after a draining week.',
     ['More people, more energy', 0.8], ['One small plan, max', 0.5], ['Phone on silent until Monday', 0.2]),
+  // wave100 (emci 2026-10-20): new scene for retired _13.
+  q('extraversion_26', 'online', 'high', 'Your post from the party gets a pile of replies.',
+    ['I answer every single one', 0.8], ['I reply to a few', 0.5], ['I just heart a few', 0.2]),
 ]);

@@ -24,9 +24,9 @@ export const INTAKE_SET_PAYOFF_TITLES: readonly string[] = [
   'Full profile',
 ];
 export const INTAKE_SET_PAYOFF_LINES: readonly string[] = [
-  'Sixteen down — quicker than you answer most texts. Every trait has a first lean now.',
-  'Thirty-two. More answers than your last group-chat poll got. One more set.',
-  'All 48. You finished something without leaving it in a tab. Your full profile is open.',
+  'Sixteen down. Every trait has a first lean now.',
+  'Thirty-two down. Every trait has two answers. One more set.',
+  'All 48. Every trait has three answers, and your full profile is open.',
 ];
 
 /** A trait with three or more answers that pulled different ways. */
@@ -41,7 +41,7 @@ export function nextRoundLabel(size: number): string {
 /** A round finished past the daily payout cap (wave81, emci "cap 2"). */
 export function roundCapLine(perDay: number): string {
   const words = ['zero', 'one', 'two', 'three', 'four', 'five'];
-  return `No tokens for this one — you've earned today's ${words[perDay] ?? perDay}.`;
+  return `No tokens this time. You already earned tokens from ${words[perDay] ?? perDay} ${perDay === 1 ? 'round' : 'rounds'} today.`;
 }
 
 /** The after-intake reveal's title. */
@@ -51,13 +51,13 @@ export function intakeRevealTitle(total: number): string {
 
 /**
  * For an account that finished the old 50 and still has restored third
- * questions to answer. Optional: nothing it opened goes anywhere. `count` is
+ * questions to answer. Optional: skipping it changes nothing. `count` is
  * how many traits are still waiting on theirs (some may have had a third
  * answer from a round already).
  */
 export function legacyNewQuestionsLine(count: number): string {
   const traits = count === 1 ? 'One trait has' : `${count} traits have`;
-  return `${traits} a new third question. Optional — nothing you've opened goes anywhere.`;
+  return `${traits} a new third question. Optional, and skipping it changes nothing.`;
 }
 
 /** A closed category names the trait it is waiting on instead of reading blank. */
