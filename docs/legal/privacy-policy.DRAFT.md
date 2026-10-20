@@ -17,7 +17,7 @@ ATO ("the app," "we," "us") is made by AsTrollOGs. This policy explains what we 
 **Account & profile**
 - Name, @handle, timezone (read from your device, not asked)
 - City for Around (you type it at setup or in Settings — we do not use GPS)
-- Date of birth (self-reported at sign-up). We store the date, not a frozen age, so we can confirm you're 16 or older to use the app and 18 or older before you can be marked "going" on an 18+ night
+- Date of birth (self-reported at sign-up). We store the date, not a frozen age, so we can confirm you're 18 or older to use the app and 18 or older before you can be marked "going" on an 18+ night
 - Onboarding answers and the answers you give to ATO's questions, which build your trait profile
 - Your color and pixel appearance (derived from the above — not personal data on its own)
 
@@ -71,7 +71,7 @@ If you were invited to ATO, we keep a record of who invited you. This is used on
 
 ## Age requirement
 
-ATO is intended for people 16 and older. Marking yourself as "going" to an 18+ night requires you to be 18 or older. These are self-reported; we do not currently verify age beyond what you tell us at sign-up.
+ATO is intended for people 18 and older. Marking yourself as "going" to an 18+ night requires you to be 18 or older. These are self-reported; we do not currently verify age beyond what you tell us at sign-up.
 
 ## Your controls
 

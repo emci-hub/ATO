@@ -297,7 +297,7 @@ export async function createMe(row: MeInsert): Promise<Me> {
 }
 
 /**
- * Post-onboarding write of `born_on`. Re-runs the same parse + 16+ check
+ * Post-onboarding write of `born_on`. Re-runs the same parse + 18+ check
  * onboarding uses. The Around 18+ gate still reads the stored date.
  */
 export async function setBornOn(userId: string, bornOn: string): Promise<Me> {

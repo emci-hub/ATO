@@ -35,6 +35,16 @@ Read before editing the area. Each one has bitten this repo at least once.
   password", in Settings. That is correct, not a bug — the has-password check
   (`auth_has_password()` RPC) is reading real state. If you need to test the
   no-password → "Set Password" path, use an OTP-only account, not `@atodev`.
+- **Under-18 accounts are blocked, never deleted (emci 2026-10-20, `docs/under18-access.md`).** The root
+  layout's age gate routes an existing under-18 tester to `under-18.tsx` and an account with no usable
+  `born_on` (null, empty, malformed, future) to `confirm-age.tsx`; it is computed from `born_on` at render
+  (no flag), so they get back in on their 18th birthday with no action. `hasMe` now means "the app shell
+  may open" (me row AND gate open); use `meRow` for "has a me row". A missing birthday no longer opens the
+  app: it must be confirmed once (dev-test and root accounts too; there is no dev bypass, `PRE_LAUNCH_DEV`
+  does not skip it). Preview the screens with the dev `age-gate-lab` (synthetic fixtures), never with a
+  real account. `DeleteAccountSheet`'s `preview` prop is for that lab only. The client date is local; the server's
+  `is_at_least_age` uses `current_date` (UTC), so the two can disagree for a few hours on the birthday.
+  The server gate (`wave101_under18_server_gate.sql`, NOT applied) must ship after the app update.
 - **Root is `me.is_root`.** Never gate on a handle string again — `emci` was claimable.
   The column is trigger-protected; set it from the SQL editor / service role only.
 - **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the Home dev
@@ -222,6 +232,9 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 ## Copy
 
+- **Copy review = clarity, accuracy, honesty; not sanitizing** (emci 2026-10-19). Rules: `docs/copy-review-rules.md`.
+  No keyword bans on ordinary words, no softening a true line into a euphemism, no forced upside, facts checked against a
+  source. Older "reframe in sensation words" notes (hideout-roadmap, memory) are superseded by it.
 - **Nine badge render sites are pinned in `check:copy-review-badges`'s `sites`
   array — one (`profile-fill-fold.tsx`) is reviewed, eight remain
   `*_COPY_REVIEWED = false`.** Story/Levity are diagnosis-adjacent; do not flip

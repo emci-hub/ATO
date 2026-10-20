@@ -98,11 +98,11 @@ Read-only discovery of the ATO repo (not docs). Status is **exists**, **partial*
 **Status:** exists
 
 **Paths:**
-- `src/app/onboarding.tsx` — field label `"When were you born?"` (YYYY / MM / DD), hint 16+
-- `src/lib/age.ts` — `MIN_APP_AGE_YEARS = 16`, `AGE_REQUIRED_MESSAGE`, `signupAgeMessage`
+- `src/app/onboarding.tsx` — field label `"When were you born?"` (YYYY / MM / DD), hint 18+
+- `src/lib/age.ts` — `MIN_APP_AGE_YEARS = 18`, `AGE_REQUIRED_MESSAGE`, `signupAgeMessage`
 - `src/lib/me.ts` — `born_on` required on `createMe` / `complete_signup`
 
-**Assessment:** Onboarding asks for a calendar birthday (not a yes/no age chip) and blocks signup under 16.
+**Assessment:** Onboarding asks for a calendar birthday (not a yes/no age chip) and blocks signup under 18.
 
 ## 9. "Coach" labeling for Sage in the UI
 

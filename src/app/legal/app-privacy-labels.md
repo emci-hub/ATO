@@ -12,7 +12,7 @@ Copy these answers into App Store Connect → App Privacy. They must match `Priv
 |---|---|---|---|---|---|
 | Email Address | Yes | Linked | No | App Functionality | Supabase Auth email (OTP via Resend), Apple Hide My Email relay address, and landing-page access-request email |
 | Name | Yes | Linked | No | App Functionality, Product Personalization | `me.name` |
-| Date of Birth | Yes | Linked | No | App Functionality | `me.born_on` (self-reported at onboarding). Age is computed from the date — 16+ to create an account, 18+ later for Wave 2 "going". Not a frozen age or boolean. |
+| Date of Birth | Yes | Linked | No | App Functionality | `me.born_on` (self-reported at onboarding). Age is computed from the date — 18+ to create an account, 18+ later for Wave 2 "going". Not a frozen age or boolean. |
 | User ID | Yes | Linked | No | App Functionality | Auth UUID, `@handle`, Apple `sub`, invite `referred_by` (abuse prevention only; never shown publicly) |
 | Other User Content | Yes | Linked | No | App Functionality, Product Personalization | Chat messages; Sage messages; ME free text (`show_up`, `knocks_you_off`, `morning_cue`, `talk_style`, `evening_wind_down`, `energy_pattern`, `support_style`, `current_focus`, `facts`, typed `city` for Around, IANA `timezone`); pixel `recipe`; Check read/do text. The Sage provider (Google Gemini by default; DeepSeek as the automatic fallback when Gemini's usage or rate limit blocks a request) receives ME + recent checks +, for Talk, a short window of recent Sage turns — not the full thread. |
 | Customer Support | Yes | Linked | No | App Functionality | `reports` (reason + target) on Chat and Sage |

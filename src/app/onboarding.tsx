@@ -19,7 +19,7 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   bornOnFromParts,
   signupAgeMessage,
-  UNDER_16_MESSAGE,
+  UNDER_18_MESSAGE,
 } from '@/lib/age';
 import { createMe, errorMessageForHandle, checkHandleAvailable, handleFormatError, normalizeHandle } from '@/lib/me';
 import { slugifyCity } from '@/lib/around/slug';
@@ -202,7 +202,7 @@ export default function OnboardingScreen() {
       const message = errorMessageForHandle(err);
       if (message.startsWith('That handle')) {
         setHandleError(message);
-      } else if (message === UNDER_16_MESSAGE || message.startsWith('When were you born') || message.includes('real date')) {
+      } else if (message === UNDER_18_MESSAGE || message.startsWith('When were you born') || message.includes('real date')) {
         setAgeError(message);
       } else {
         setFormError(message);
@@ -377,7 +377,7 @@ function AccountStep({
         label="When were you born?"
         required
         error={ageError}
-        hint="Day, month, and year. ATO is for people 16 and older.">
+        hint="Day, month, and year. ATO is for people 18 and older.">
         <BornOnFields
           year={birthYear}
           month={birthMonth}
