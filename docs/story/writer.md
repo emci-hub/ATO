@@ -77,7 +77,7 @@ Next: ___.                            <- next (small footer line on the reveal c
 ### Two-joke rule (testable)
 Every story contains **one LIGHT joke** (silly, warm, goofy image) and **one DARK joke** (deadpan doom, an object with a grudge, petty villainy, mock-funeral energy).
 - The dark joke usually sits at the **twist turn** or as the **final sting**.
-- Never use real death, self-harm, trauma, illness, or cruelty to the user. "Dead/funeral" is only ever metaphorical and about objects or moments.
+- Humor is 18+ (emci, 2026-10-19): dark, absurd and uncomfortable topics are allowed, death and drinking included. Judge the joke, keep its edge. The boundaries are contextual, not topic bans: never encourage a dangerous act (self-harm, suicide, drunk driving, real harm), never punch at the reader or their disclosed pain, no invented claims about real people as fact, no slurs or demeaning a group, nothing sexually explicit. Full rule: `docs/copy-review-rules.md` "Humor".
 
 ```ts
 interface StoryScript {
@@ -92,7 +92,7 @@ interface StoryScript {
 type Line = { kind: 'narrator'; text: string } | { kind: 'dialogue'; speaker: string; text: string };
 type BeatKey = 'hook'|'twist'|'move'|'punchline';
 ```
-CI checks: 2-3 dialogue lines, each <=12 words; jokeLight != jokeDark; both indexes exist; the dark line contains no banned-topic words; the reveal is <=15 words; <=120 words in total.
+CI checks: 2-3 dialogue lines, each <=12 words; jokeLight != jokeDark; both indexes exist; no line trips the harm filter (encouraging harm, slurs, sexually explicit; `JOKE_HARM_FILTER`); the reveal is <=15 words; <=120 words in total.
 
 ## 3b. Card 6: "Why this is you" (v7, approved by emci)
 Placement: after card 5 (next + reveal), before the optional other-way tap. It is a plain, warm explainer that ties the story to the user's real result.

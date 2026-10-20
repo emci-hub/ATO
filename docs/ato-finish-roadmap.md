@@ -95,11 +95,11 @@ Items marked GUESS were not proven from code; the step that touches them verifie
   (`peer_checks.sql:24-26`); `public_profile` and `handle_taken` enumerate handles with no rate limit.
 - **Base tables (`me`, `connections`, `public_profile`) are not in the repo** (red-team S18): none of this is provable
   without the live schema. Deletion: all Circle tables cascade from `auth.users`; a deleted reported user erases the report.
-- Age: 16+ at signup from a self-declared birthday (`age.ts:76-77`).
+- Age: 18+ at signup (was 16+; emci 2026-10-19, server migration wave99b_min_age_18.sql written, not applied) from a self-declared birthday (`age.ts:76-77`).
 - NOW.md lines 66/74 still describe Circle compare as live (stale).
 
 ### 5. You tab, sign-up, onboarding, notifications, widget
-- **First run:** blank until session/me/fonts, then auth → onboarding (one form: code if invite-only, birthday 16+, name,
+- **First run:** blank until session/me/fonts, then auth → onboarding (one form: code if invite-only, birthday 18+, name,
   handle, city) → Home (`_layout.tsx:73-107`, `onboarding.tsx`). Apple sign-up without a code passes `auth/index.tsx:59-63`
   and is rejected later at `complete_signup` (moot once signup is public).
 - **BUG (verified):** `src/app/_layout.tsx:109-118` puts the `play` route inside `Stack.Protected guard={PRE_LAUNCH_DEV}`;
@@ -559,7 +559,39 @@ End this chat with: a 3-5 line assessment, then "ATO is ready to submit" or the 
 - 2026-10-19: **Step 1 (server hardening) built on `feature/ato-server-hardening`, draft PR into master. NOT applied to the live
   project: the live SQL apply, the three function deploys and the live checks are waiting for emci** (the sandbox refused
   every write to the live database, even the approved migration; see "Step 1 status" below). No OTA, no merge.
-  Steps 2-10 not started.
+  Steps 3-10 not started.
+- 2026-10-19: **Step 2 (copy reading) in progress on `feature/ato-copy-review`, nothing merged, no flag flipped yet.** Nine agent
+  reviews (`docs/copy-review-agent/`) feed a phone reading helper (`npm run gen:copy-reading`; 353 cards, 23 marked as
+  possibly softening a real limitation). emci added the **honest-weaknesses rule** (CLAUDE.md): real limitations may be
+  stated plainly, Strengths/Weaknesses labels stay, "you may…" for a possible drawback, a clear lean before a weakness is
+  shown, no shame/diagnosis/jargon. Done in code: profile card Weakness + Try from the insight bank; deep-dive prompt v3
+  (`deep_dive` library `l2`), Story prompt gets the same both-poles rule (`story` `l4`); pet check no longer bans ordinary
+  words. **Waiting on:** emci's reading export, then flag flips, question-wording migration (ask), and ONE
+  `gen:ai-library` + `supabase functions deploy ai-library --use-api` (ask). `check:ota-gate` is green except
+  `check:ai-library` (stale bundle) until that regen. **Release order:** deploy `ai-library` and `ai-library-fill` right
+  BEFORE the OTA that asks for `l2`/`l4`, never after (old function writes `l1`/`l3`, the new app would offer rewrites).
+- 2026-10-19 (later): emci refocused the review on clarity, accuracy and honesty (`docs/copy-review-rules.md`), made the
+  app **18+** and allowed **dark humor** (topic bans replaced by `JOKE_HARM_FILTER`). Agents applied every set
+  (logs `docs/copy-review-agent/applied-*.md`): questions 61, insight bank 43, category bank 13, small sets 23, Story + deep
+  dive 35, Legends 31 facts corrected against sources and 39 tags dropped. Not applied yet: `wave99_question_wording.sql`,
+  `wave99b_min_age_18.sql`; `legend` library bumped to `l2`. Gate: green except `check:ai-library` (stale bundle). Open:
+  emci's decision list in the chat (Legends tags, reused question ids, 16-17 testers, Daily Pick migration, swearing,
+  team endings, Story samples, deploy).
+- 2026-10-20: emci's follow-ups built (no deploy): everyday feeling words allowed everywhere, one shared diagnosis/label
+  list (`src/lib/voice/clinical.ts`); 🎯 tasks judged by action and risk (free, solo, <15 min, safe); Legends re-audited
+  (229 guessed tags removed, coverage quota became a warning, 3 trait sides empty); questions: 46 wording fixes, 15 scene
+  changes HELD at their original text until emci approves a retire mechanism (attachment_avoidance_09, location sharing,
+  is still live); Daily Pick p25 retired for new p65 (`wave99c`). New unapplied migrations: `wave99`, `wave99b`,
+  `wave99c`, `wave99d` (library backstop vocabulary). Gate: green except `check:ai-library` (stale bundle).
+- 2026-10-20 (PAUSED by emci, credits): nothing applied, deployed or committed. Built and parked on this branch:
+  core content policy (`docs/copy-review-rules.md`, replaces earlier writing rules); under-18 block + Confirm-your-age
+  + Delete option (`docs/under18-access.md`, previewed on synthetic fixtures); server 18+ gate `wave101` (110 guarded
+  functions, `docs/under18-server.md`); question retire marker `wave100`/`wave100b` (19 questions retired);
+  `wave99`/`99b`/`99c`/`99d`. NOT done: the policy audit of old prompts/checks (agent stopped at the usage limit; report is
+  partial in `docs/copy-review-agent/policy-audit-2026-10-20.md` if written), the full gate re-run, the reviewer pass on the
+  last round, `gen:ai-library` + deploy, any migration apply. emci's new asks (next chats, one per step): profile
+  character set-up, scrub Sage and crisis leftovers, 18+ nights gate for missing/blank birthdays. Gate state is UNVERIFIED
+  until re-run after all agents finish; treat every failure as unresolved.
 
 ### Step 1 status (M1-M4, S1, S2)
 

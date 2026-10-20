@@ -7,7 +7,7 @@
  * `lineRuleViolation`; nothing here touches them.
  *
  * `tipRuleViolation` is the mechanical half of these rules. The check scripts
- * run it over every stored string; the rest (kind to both poles, no
+ * run it over every stored string; the rest (honest and kind about both poles, no
  * metaphors, a reason on every try) is on the writer.
  */
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -22,7 +22,7 @@ export const CLEAR_VOICE_RULES: readonly string[] = [
   'Strength and watch-out: plain behaviour; the watch-out is the strength\'s flip side ("Sometimes…", "Because you…").',
   'No metaphors, idioms, clever twists, punchlines, inside jokes or fragments.',
   'Hedge: tend to, usually, sometimes, can, might. Never "always". No labels ("you are…", "you\'re a…"); a situational "you\'re" is fine.',
-  'Kind to both poles; the low side is not the bad side.',
+  'Honest about both poles (emci 2026-10-19): a real limitation is stated plainly (when it shows up, what it costs) next to what the trait gives. Respect means no shame, no label, no diagnosis; it does not mean hiding true information. Never swap a limitation for "the other end". Say a limitation only when the answers support it.',
   'Modern casual: everyday words, contractions, settings people know (texts, work, friends, partner). No slang, emoji, hashtags or "!".',
   'Not a therapist or a horoscope; no type codes, psych jargon or internal trait ids.',
   'Self-check every line: would someone reading this cold know who, what, and why it matters? If not, rewrite it.',

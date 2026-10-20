@@ -5,8 +5,8 @@
  * A team is built from the reader's sides in that category: each trait gives
  * one short everyday phrase and one mini icon (the same phrase and icon for
  * that side in EVERY category, so "same icons, same team" is easy to spot),
- * and each category has its own ending (Club, Era, Energy…).
- *   Your Social Battery, Reserved + Frank + Playful → "Night-In Hot-Take Chaos Club"
+ * and each category has its own ending (Club, Camp, Spirit…).
+ *   Your Social Battery, Reserved + Frank + Playful → "Night-In Straight-Talk Chaos Club"
  *
  * Rules: everyday modern phrases, not slang (the moment voice); a quieter side
  * gets an image with an upside, never a flaw; no pole or test words. No team
@@ -49,17 +49,17 @@ export const TEAM_SIDES: Partial<Record<TraitAxis, Sides>> = {
   },
   extraversion: {
     h: { phrase: 'Plus-One', icon: 'account-multiple-plus' },
-    m: { phrase: 'Maybe-Later', icon: 'clock-outline' },
+    m: { phrase: 'Pick-Your-Nights', icon: 'clock-outline' },
     l: { phrase: 'Night-In', icon: 'sofa-outline' },
   },
   agreeableness: {
     h: { phrase: 'Whatever-Works', icon: 'thumb-up-outline' },
     m: { phrase: 'It-Depends', icon: 'scale-balance' },
-    l: { phrase: 'Hot-Take', icon: 'fire' },
+    l: { phrase: 'Straight-Talk', icon: 'fire' },
   },
   steadiness: {
-    h: { phrase: 'Unbothered', icon: 'shield-check-outline' },
-    m: { phrase: 'Mostly-Chill', icon: 'weather-partly-cloudy' },
+    h: { phrase: 'Level-Headed', icon: 'shield-check-outline' },
+    m: { phrase: 'Mostly-Calm', icon: 'weather-partly-cloudy' },
     l: { phrase: 'Feels-It-All', icon: 'water-outline' },
   },
   conflict_assertiveness: {
@@ -94,7 +94,7 @@ export const TEAM_SIDES: Partial<Record<TraitAxis, Sides>> = {
   },
   locus_of_control: {
     h: { phrase: 'My-Call', icon: 'ship-wheel' },
-    m: { phrase: 'Steer-Some', icon: 'sail-boat' },
+    m: { phrase: 'Shared-Wheel', icon: 'sail-boat' },
     l: { phrase: 'Go-With-the-Flow', icon: 'waves' },
   },
   self_efficacy: {
@@ -104,14 +104,14 @@ export const TEAM_SIDES: Partial<Record<TraitAxis, Sides>> = {
   },
   playfulness: {
     h: { phrase: 'Chaos', icon: 'party-popper' },
-    m: { phrase: 'Low-Key', icon: 'headphones' },
+    m: { phrase: 'Laid-Back', icon: 'headphones' },
     l: { phrase: 'Deadpan', icon: 'emoticon-neutral-outline' },
   },
 };
 
 /** Each category's own ending. "How You Love" has none: no team there. */
 export const TEAM_ENDINGS: Readonly<Record<string, string>> = {
-  cat_steadiness: 'Energy',
+  cat_steadiness: 'Spirit',
   cat_openness: 'Squad',
   cat_drive: 'Crew',
   cat_agency: 'Society',
@@ -119,7 +119,7 @@ export const TEAM_ENDINGS: Readonly<Record<string, string>> = {
   cat_communication: 'Collective',
   cat_independence: 'Alliance',
   cat_levity: 'Department',
-  cat_structure: 'Era',
+  cat_structure: 'Camp',
   cat_resilience: 'League',
 };
 
@@ -173,7 +173,7 @@ export function teamForBucket(bucket: string): Team | null {
   };
 }
 
-/** "You moved from Night-In Hot-Take Chaos Club to Plus-One Hot-Take Chaos Club." */
+/** "You moved from Night-In Straight-Talk Chaos Club to Plus-One Straight-Talk Chaos Club." */
 export function teamMovedLine(from: Team | null, to: Team | null): string | null {
   if (!from || !to || from.name === to.name) return null;
   return `You moved from ${from.name} to ${to.name}.`;

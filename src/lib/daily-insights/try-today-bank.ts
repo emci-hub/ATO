@@ -2,9 +2,11 @@
  * 🎯 Try this today — 44 hand-written lines, one per category × lean × mode.
  * Stored copy, picked on the phone, never a model call. Ids are forever.
  *
- * Every task is free, solo, under 15 minutes and fine to skip, with no money,
- * driving, alcohol, food, quitting a job or an ex (emci 2026-10-14; rule 10b,
- * `taskSafetyViolations`). Lines that broke it were rewritten in place, ids kept.
+ * Every task is small, practical, under 15 minutes, safe and fine to skip (emci
+ * 2026-10-14; rule 10b, `taskSafetyViolations`, judged by the action, its cost,
+ * consent and risk since 2026-10-19, not by topic words: a small treat for
+ * yourself, an ordinary errand or a light, consenting contact are fine). Lines
+ * that broke it were rewritten in place, ids kept.
  *
  * Lean meaning follows STORY_LEAN_PHRASES (Love high = lean in close,
  * Independence high = own way, Structure high = planner). The three map

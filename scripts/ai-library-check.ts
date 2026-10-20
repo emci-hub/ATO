@@ -133,7 +133,7 @@ async function main() {
   const sp = planLibraryCall('story', storyKey, {});
   assert.ok(sp.ok);
   if (!sp.ok) return;
-  assert.equal(LIBRARY_VERSION.story, 'l3', 'story prompt/shape bump: old library cards stay on l2');
+  assert.equal(LIBRARY_VERSION.story, 'l4', 'story prompt/shape bump (honest-weaknesses rule in the prompt): old library cards stay on l3');
   assert.equal(sp.maxOutputTokens, 800);
   assert.match(sp.prompt, /Never invent a plot/);
   assert.match(sp.prompt, /your date/);
@@ -199,6 +199,81 @@ async function main() {
   assert.match(fn('library_add_cards'), /bad := public\._library_card_ok\(p_kind, item->'card'\);\s*if bad is not null then\s*continue;/, 'every card passes the backstop guard');
   const guard = fn('_library_card_ok');
   for (const re of [/https\?:\/\//, /fuck/, /'\[0-9\]'/, /anxious/]) assert.match(guard, re);
+  // wave99d (emci 2026-10-19, round 3: context, not blanket bans): the backstop allows swearing
+  // ("fuck" included), refuses slurs and explicit terms, and refuses labels only in their clear
+  // verdict forms about the reader. The patterns are run here as JS (\m / \M → \b) on pass/fail pairs.
+  {
+    const sql99d = read('supabase/migrations/wave99d_library_card_vocab.sql').replace(/--[^\n]*/g, '');
+    const start = sql99d.indexOf('create or replace function public._library_card_ok(');
+    assert.ok(start >= 0, 'wave99d redefines _library_card_ok');
+    const g = sql99d.slice(start, sql99d.indexOf('$$;', start));
+    const lines = g.split('\n');
+    const literal = (line: string) => {
+      const open = line.indexOf("~* '") + 4;
+      let i = open;
+      while (i < line.length && !(line[i] === "'" && line[i + 1] !== "'")) i += line[i] === "'" ? 2 : 1;
+      return line.slice(open, i).replace(/''/g, "'");
+    };
+    const toJs = (pg: string) => new RegExp(pg.replace(/\\m|\\M/g, '\\b'), 'i');
+    const slurLine = lines.find((l) => l.includes("then return 'slur'"));
+    const explicitLine = lines.find((l) => l.includes("then return 'explicit'"));
+    assert.ok(slurLine && explicitLine, 'wave99d has a slur line and an explicit line');
+    assert.ok(!lines.some((l) => l.includes("then return 'swear'")), 'no swear refusal: swearing is allowed');
+    const clinicalLines = lines.filter((l) => /^\s*(?:and \(|or )body ~\* '/.test(l));
+    assert.ok(clinicalLines.length >= 5, 'the clinical backstop is a set of reader-directed verdict forms');
+    const slur = toJs(literal(slurLine!));
+    const explicit = toJs(literal(explicitLine!));
+    const clinical = clinicalLines.map((l) => toJs(literal(l)));
+    const serverRefuses = (text: string) => slur.test(text) || explicit.test(text) || clinical.some((re) => re.test(text));
+    for (const text of [
+      'Fuck, the group chat went quiet again and you laughed it off anyway.',
+      'Shit, the plan fell apart and nobody cared, so you ordered fries.',
+      'The group chat needs therapy more than you do, honestly.',
+      'You feel anxious and insecure before a big call, then nail it.',
+      'That toxic workplace finally lost its grip on your evenings.',
+      'Your clingy cat sat on the laptop all morning like a manager.',
+      'Trauma-bonded by a bad haircut, you both laughed it off.',
+      'Bipolar weather again, so you packed two jackets and a snack.',
+      'You are avoidant of small talk and fine with that, apparently.',
+      'Your attachment to old photos is a whole archive at this point.',
+      'You were so done with the meeting you started a cocktail list in your head.',
+    ]) {
+      assert.ok(!serverRefuses(text), `wave99d lets context through: "${text}"`);
+    }
+    for (const text of [
+      "You're so toxic about the group chat and nobody minds.",
+      'You are clearly bipolar about weekend plans with friends.',
+      'You come across as a bit clingy when the chat goes quiet.',
+      'Your avoidant attachment explains the quiet weekend plans.',
+      'Your attachment style is showing again at the dinner table.',
+      'Your trauma explains why the group chat went quiet.',
+      'You have ADHD and the open tabs prove it every single day.',
+      "You've got an anxiety disorder, the calendar says so.",
+      'That was so bipolar of you on a quiet weekend with friends.',
+      'A classic narcissist move at the dinner table tonight.',
+      'People like you are needy when the chat goes quiet.',
+      'This could be a diagnosis waiting to happen on a quiet weekend.',
+      'The group chat called him a faggot and the plan died.',
+      'Your inbox is full of retards again this morning.',
+      'The date ended in porn on the hotel TV and nobody spoke.',
+      'The neighbour is a cunt about the bins every single week.',
+    ]) {
+      assert.ok(serverRefuses(text), `wave99d refuses: "${text}"`);
+    }
+    assert.ok(!g.includes('\\b'), 'Postgres regex: \\b is a backspace, use \\m / \\M');
+    const shape = (s: string) =>
+      s
+        .split('\n')
+        .filter(
+          (l) =>
+            !/then return '(?:swear|slur|explicit)'/.test(l) &&
+            !/^\s*(?:and \(?|or )body ~\* '/.test(l),
+        )
+        .join('\n')
+        .replace(/\s+/g, ' ');
+    assert.equal(shape(g), shape(guard), 'wave99d is wave93 verbatim apart from the word patterns');
+    assert.match(sql99d, /revoke all on function public\._library_card_ok\(text, jsonb\) from public, anon, authenticated;/);
+  }
   assert.ok(guard.includes('\\.com\\M'), 'the .com rule ends on a Postgres word boundary');
   assert.ok(!guard.includes('\\b'), 'Postgres regex: \\b is a backspace, use \\m / \\M');
   assert.match(guard, /'\^a\[1-6\]\$'/, 'Legends ids (a1, m1) are checked by pattern, not the 3-character text minimum');
@@ -357,7 +432,7 @@ async function main() {
     }
   }
   assert.equal(teams, 198, '207 groups minus the 9 of How You Love');
-  assert.equal(teamForBucket('dd|cat_social|extraversion:l,agreeableness:l,playfulness:h')!.name, 'Night-In Hot-Take Chaos Club', 'names are stable');
+  assert.equal(teamForBucket('dd|cat_social|extraversion:l,agreeableness:l,playfulness:h')!.name, 'Night-In Straight-Talk Chaos Club', 'names are stable');
   const poleWords = new Set(TRAIT_AXES.flatMap((a) => [AXIS_POLE_NAME[a].high, AXIS_POLE_NAME[a].low].map((w) => w.toLowerCase())));
   for (const sides of Object.values(TEAM_SIDES)) {
     for (const side of Object.values(sides!)) {

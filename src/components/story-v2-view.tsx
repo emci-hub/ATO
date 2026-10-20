@@ -86,7 +86,7 @@ function Card6Block({
   card: NonNullable<StoryCard['card6']>;
   score?: number | null;
 }) {
-  const scoreLine = card.scoreLine ?? (typeof score === 'number' ? `You scored ${score}.` : null);
+  const scoreLine = card.scoreLine ?? (typeof score === 'number' ? `How strongly you lean here: ${score}%.` : null);
   return (
     <View style={styles.script} accessibilityRole="summary">
       <ThemedText type="smallBold">Why this is you</ThemedText>

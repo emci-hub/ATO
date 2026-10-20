@@ -12,22 +12,22 @@ category adds its own ending. "How You Love" has no team on purpose.
 |---|---|---|---|
 | Adventurous / Familiar | Side-Quest `compass-outline` | Try-Once `directions-fork` | Usual-Order `home-heart` |
 | Structured / Flexible | Color-Coded `calendar-check` | Loose-Plan `pencil-ruler` | Wing-It `run-fast` |
-| Outgoing / Reserved | Plus-One `account-multiple-plus` | Maybe-Later `clock-outline` | Night-In `sofa-outline` |
-| Easygoing / Frank | Whatever-Works `thumb-up-outline` | It-Depends `scale-balance` | Hot-Take `fire` |
-| Steady / Sensitive | Unbothered `shield-check-outline` | Mostly-Chill `weather-partly-cloudy` | Feels-It-All `water-outline` |
+| Outgoing / Reserved | Plus-One `account-multiple-plus` | Pick-Your-Nights `clock-outline` | Night-In `sofa-outline` |
+| Easygoing / Frank | Whatever-Works `thumb-up-outline` | It-Depends `scale-balance` | Straight-Talk `fire` |
+| Steady / Sensitive | Level-Headed `shield-check-outline` | Mostly-Calm `weather-partly-cloudy` | Feels-It-All `water-outline` |
 | Direct / Quiet | Says-It `bullhorn-outline` | Picks-Battles `message-text-outline` | Soft-Spoken `feather` |
 | Giving / Steadfast | Meet-Halfway `handshake-outline` | Give-and-Take `account-switch-outline` | Holds-Ground `pillar` |
 | Self-directed / Guided | Own-Lane `steering` | Co-Pilot `map-marker-path` | Group-Plan `account-group` |
 | Assured / Cautious | Got-This `trophy-outline` | Figuring-It-Out `magnify` | Double-Check `binoculars` |
 | Connected / Self-contained | Group-Chat `account-heart-outline` | Inner-Circle `account-group-outline` | Solo-Mode `island` |
 | Learning / Settled | Level-Up `sprout-outline` | Learn-As-I-Go `seed-outline` | Tried-and-True `bookshelf` |
-| Accountable / Accepting | My-Call `ship-wheel` | Steer-Some `sail-boat` | Go-With-the-Flow `waves` |
+| Accountable / Accepting | My-Call `ship-wheel` | Shared-Wheel `sail-boat` | Go-With-the-Flow `waves` |
 | Bold / Hesitant | Go-For-It `rocket-launch-outline` | Test-Run `airplane-takeoff` | Small-Steps `shoe-print` |
-| Playful / Serious | Chaos `party-popper` | Low-Key `headphones` | Deadpan `emoticon-neutral-outline` |
+| Playful / Serious | Chaos `party-popper` | Laid-Back `headphones` | Deadpan `emoticon-neutral-outline` |
 
 ## Endings
 
-- Your Calm Core: Energy
+- Your Calm Core: Spirit
 - Your Sense of Adventure: Squad
 - What Fuels You: Crew
 - Taking the Wheel: Society
@@ -36,52 +36,52 @@ category adds its own ending. "How You Love" has no team on purpose.
 - How You Love: (no team)
 - Space vs. Together: Alliance
 - Your Sense of Humor: Department
-- Planner or Free Spirit: Era
+- Planner or Free Spirit: Camp
 - When Things Get Hard: League
 
 ## Every team
 
 ### Your Calm Core
 
-- Color-Coded Whatever-Works Unbothered Energy — Structured, Easygoing, Steady
-- Color-Coded Whatever-Works Feels-It-All Energy — Structured, Easygoing, Sensitive
-- Color-Coded Whatever-Works Mostly-Chill Energy — Structured, Easygoing, middle
-- Color-Coded Hot-Take Unbothered Energy — Structured, Frank, Steady
-- Color-Coded Hot-Take Feels-It-All Energy — Structured, Frank, Sensitive
-- Color-Coded Hot-Take Mostly-Chill Energy — Structured, Frank, middle
-- Color-Coded It-Depends Unbothered Energy — Structured, middle, Steady
-- Color-Coded It-Depends Feels-It-All Energy — Structured, middle, Sensitive
-- Color-Coded It-Depends Mostly-Chill Energy — Structured, middle, middle
-- Wing-It Whatever-Works Unbothered Energy — Flexible, Easygoing, Steady
-- Wing-It Whatever-Works Feels-It-All Energy — Flexible, Easygoing, Sensitive
-- Wing-It Whatever-Works Mostly-Chill Energy — Flexible, Easygoing, middle
-- Wing-It Hot-Take Unbothered Energy — Flexible, Frank, Steady
-- Wing-It Hot-Take Feels-It-All Energy — Flexible, Frank, Sensitive
-- Wing-It Hot-Take Mostly-Chill Energy — Flexible, Frank, middle
-- Wing-It It-Depends Unbothered Energy — Flexible, middle, Steady
-- Wing-It It-Depends Feels-It-All Energy — Flexible, middle, Sensitive
-- Wing-It It-Depends Mostly-Chill Energy — Flexible, middle, middle
-- Loose-Plan Whatever-Works Unbothered Energy — middle, Easygoing, Steady
-- Loose-Plan Whatever-Works Feels-It-All Energy — middle, Easygoing, Sensitive
-- Loose-Plan Whatever-Works Mostly-Chill Energy — middle, Easygoing, middle
-- Loose-Plan Hot-Take Unbothered Energy — middle, Frank, Steady
-- Loose-Plan Hot-Take Feels-It-All Energy — middle, Frank, Sensitive
-- Loose-Plan Hot-Take Mostly-Chill Energy — middle, Frank, middle
-- Loose-Plan It-Depends Unbothered Energy — middle, middle, Steady
-- Loose-Plan It-Depends Feels-It-All Energy — middle, middle, Sensitive
-- Loose-Plan It-Depends Mostly-Chill Energy — middle, middle, middle
+- Color-Coded Whatever-Works Level-Headed Spirit — Structured, Easygoing, Steady
+- Color-Coded Whatever-Works Feels-It-All Spirit — Structured, Easygoing, Sensitive
+- Color-Coded Whatever-Works Mostly-Calm Spirit — Structured, Easygoing, middle
+- Color-Coded Straight-Talk Level-Headed Spirit — Structured, Frank, Steady
+- Color-Coded Straight-Talk Feels-It-All Spirit — Structured, Frank, Sensitive
+- Color-Coded Straight-Talk Mostly-Calm Spirit — Structured, Frank, middle
+- Color-Coded It-Depends Level-Headed Spirit — Structured, middle, Steady
+- Color-Coded It-Depends Feels-It-All Spirit — Structured, middle, Sensitive
+- Color-Coded It-Depends Mostly-Calm Spirit — Structured, middle, middle
+- Wing-It Whatever-Works Level-Headed Spirit — Flexible, Easygoing, Steady
+- Wing-It Whatever-Works Feels-It-All Spirit — Flexible, Easygoing, Sensitive
+- Wing-It Whatever-Works Mostly-Calm Spirit — Flexible, Easygoing, middle
+- Wing-It Straight-Talk Level-Headed Spirit — Flexible, Frank, Steady
+- Wing-It Straight-Talk Feels-It-All Spirit — Flexible, Frank, Sensitive
+- Wing-It Straight-Talk Mostly-Calm Spirit — Flexible, Frank, middle
+- Wing-It It-Depends Level-Headed Spirit — Flexible, middle, Steady
+- Wing-It It-Depends Feels-It-All Spirit — Flexible, middle, Sensitive
+- Wing-It It-Depends Mostly-Calm Spirit — Flexible, middle, middle
+- Loose-Plan Whatever-Works Level-Headed Spirit — middle, Easygoing, Steady
+- Loose-Plan Whatever-Works Feels-It-All Spirit — middle, Easygoing, Sensitive
+- Loose-Plan Whatever-Works Mostly-Calm Spirit — middle, Easygoing, middle
+- Loose-Plan Straight-Talk Level-Headed Spirit — middle, Frank, Steady
+- Loose-Plan Straight-Talk Feels-It-All Spirit — middle, Frank, Sensitive
+- Loose-Plan Straight-Talk Mostly-Calm Spirit — middle, Frank, middle
+- Loose-Plan It-Depends Level-Headed Spirit — middle, middle, Steady
+- Loose-Plan It-Depends Feels-It-All Spirit — middle, middle, Sensitive
+- Loose-Plan It-Depends Mostly-Calm Spirit — middle, middle, middle
 
 ### Your Sense of Adventure
 
 - Side-Quest Plus-One Squad — Adventurous, Outgoing
 - Side-Quest Night-In Squad — Adventurous, Reserved
-- Side-Quest Maybe-Later Squad — Adventurous, middle
+- Side-Quest Pick-Your-Nights Squad — Adventurous, middle
 - Usual-Order Plus-One Squad — Familiar, Outgoing
 - Usual-Order Night-In Squad — Familiar, Reserved
-- Usual-Order Maybe-Later Squad — Familiar, middle
+- Usual-Order Pick-Your-Nights Squad — Familiar, middle
 - Try-Once Plus-One Squad — middle, Outgoing
 - Try-Once Night-In Squad — middle, Reserved
-- Try-Once Maybe-Later Squad — middle, middle
+- Try-Once Pick-Your-Nights Squad — middle, middle
 
 ### What Fuels You
 
@@ -121,57 +121,57 @@ category adds its own ending. "How You Love" has no team on purpose.
 - Level-Up Go-With-the-Flow Go-For-It Society — Learning, Accepting, Bold
 - Level-Up Go-With-the-Flow Small-Steps Society — Learning, Accepting, Hesitant
 - Level-Up Go-With-the-Flow Test-Run Society — Learning, Accepting, middle
-- Level-Up Steer-Some Go-For-It Society — Learning, middle, Bold
-- Level-Up Steer-Some Small-Steps Society — Learning, middle, Hesitant
-- Level-Up Steer-Some Test-Run Society — Learning, middle, middle
+- Level-Up Shared-Wheel Go-For-It Society — Learning, middle, Bold
+- Level-Up Shared-Wheel Small-Steps Society — Learning, middle, Hesitant
+- Level-Up Shared-Wheel Test-Run Society — Learning, middle, middle
 - Tried-and-True My-Call Go-For-It Society — Settled, Accountable, Bold
 - Tried-and-True My-Call Small-Steps Society — Settled, Accountable, Hesitant
 - Tried-and-True My-Call Test-Run Society — Settled, Accountable, middle
 - Tried-and-True Go-With-the-Flow Go-For-It Society — Settled, Accepting, Bold
 - Tried-and-True Go-With-the-Flow Small-Steps Society — Settled, Accepting, Hesitant
 - Tried-and-True Go-With-the-Flow Test-Run Society — Settled, Accepting, middle
-- Tried-and-True Steer-Some Go-For-It Society — Settled, middle, Bold
-- Tried-and-True Steer-Some Small-Steps Society — Settled, middle, Hesitant
-- Tried-and-True Steer-Some Test-Run Society — Settled, middle, middle
+- Tried-and-True Shared-Wheel Go-For-It Society — Settled, middle, Bold
+- Tried-and-True Shared-Wheel Small-Steps Society — Settled, middle, Hesitant
+- Tried-and-True Shared-Wheel Test-Run Society — Settled, middle, middle
 - Learn-As-I-Go My-Call Go-For-It Society — middle, Accountable, Bold
 - Learn-As-I-Go My-Call Small-Steps Society — middle, Accountable, Hesitant
 - Learn-As-I-Go My-Call Test-Run Society — middle, Accountable, middle
 - Learn-As-I-Go Go-With-the-Flow Go-For-It Society — middle, Accepting, Bold
 - Learn-As-I-Go Go-With-the-Flow Small-Steps Society — middle, Accepting, Hesitant
 - Learn-As-I-Go Go-With-the-Flow Test-Run Society — middle, Accepting, middle
-- Learn-As-I-Go Steer-Some Go-For-It Society — middle, middle, Bold
-- Learn-As-I-Go Steer-Some Small-Steps Society — middle, middle, Hesitant
-- Learn-As-I-Go Steer-Some Test-Run Society — middle, middle, middle
+- Learn-As-I-Go Shared-Wheel Go-For-It Society — middle, middle, Bold
+- Learn-As-I-Go Shared-Wheel Small-Steps Society — middle, middle, Hesitant
+- Learn-As-I-Go Shared-Wheel Test-Run Society — middle, middle, middle
 
 ### Your Social Battery
 
 - Plus-One Whatever-Works Chaos Club — Outgoing, Easygoing, Playful
 - Plus-One Whatever-Works Deadpan Club — Outgoing, Easygoing, Serious
-- Plus-One Whatever-Works Low-Key Club — Outgoing, Easygoing, middle
-- Plus-One Hot-Take Chaos Club — Outgoing, Frank, Playful
-- Plus-One Hot-Take Deadpan Club — Outgoing, Frank, Serious
-- Plus-One Hot-Take Low-Key Club — Outgoing, Frank, middle
+- Plus-One Whatever-Works Laid-Back Club — Outgoing, Easygoing, middle
+- Plus-One Straight-Talk Chaos Club — Outgoing, Frank, Playful
+- Plus-One Straight-Talk Deadpan Club — Outgoing, Frank, Serious
+- Plus-One Straight-Talk Laid-Back Club — Outgoing, Frank, middle
 - Plus-One It-Depends Chaos Club — Outgoing, middle, Playful
 - Plus-One It-Depends Deadpan Club — Outgoing, middle, Serious
-- Plus-One It-Depends Low-Key Club — Outgoing, middle, middle
+- Plus-One It-Depends Laid-Back Club — Outgoing, middle, middle
 - Night-In Whatever-Works Chaos Club — Reserved, Easygoing, Playful
 - Night-In Whatever-Works Deadpan Club — Reserved, Easygoing, Serious
-- Night-In Whatever-Works Low-Key Club — Reserved, Easygoing, middle
-- Night-In Hot-Take Chaos Club — Reserved, Frank, Playful
-- Night-In Hot-Take Deadpan Club — Reserved, Frank, Serious
-- Night-In Hot-Take Low-Key Club — Reserved, Frank, middle
+- Night-In Whatever-Works Laid-Back Club — Reserved, Easygoing, middle
+- Night-In Straight-Talk Chaos Club — Reserved, Frank, Playful
+- Night-In Straight-Talk Deadpan Club — Reserved, Frank, Serious
+- Night-In Straight-Talk Laid-Back Club — Reserved, Frank, middle
 - Night-In It-Depends Chaos Club — Reserved, middle, Playful
 - Night-In It-Depends Deadpan Club — Reserved, middle, Serious
-- Night-In It-Depends Low-Key Club — Reserved, middle, middle
-- Maybe-Later Whatever-Works Chaos Club — middle, Easygoing, Playful
-- Maybe-Later Whatever-Works Deadpan Club — middle, Easygoing, Serious
-- Maybe-Later Whatever-Works Low-Key Club — middle, Easygoing, middle
-- Maybe-Later Hot-Take Chaos Club — middle, Frank, Playful
-- Maybe-Later Hot-Take Deadpan Club — middle, Frank, Serious
-- Maybe-Later Hot-Take Low-Key Club — middle, Frank, middle
-- Maybe-Later It-Depends Chaos Club — middle, middle, Playful
-- Maybe-Later It-Depends Deadpan Club — middle, middle, Serious
-- Maybe-Later It-Depends Low-Key Club — middle, middle, middle
+- Night-In It-Depends Laid-Back Club — Reserved, middle, middle
+- Pick-Your-Nights Whatever-Works Chaos Club — middle, Easygoing, Playful
+- Pick-Your-Nights Whatever-Works Deadpan Club — middle, Easygoing, Serious
+- Pick-Your-Nights Whatever-Works Laid-Back Club — middle, Easygoing, middle
+- Pick-Your-Nights Straight-Talk Chaos Club — middle, Frank, Playful
+- Pick-Your-Nights Straight-Talk Deadpan Club — middle, Frank, Serious
+- Pick-Your-Nights Straight-Talk Laid-Back Club — middle, Frank, middle
+- Pick-Your-Nights It-Depends Chaos Club — middle, middle, Playful
+- Pick-Your-Nights It-Depends Deadpan Club — middle, middle, Serious
+- Pick-Your-Nights It-Depends Laid-Back Club — middle, middle, middle
 
 ### How You Speak Up
 
@@ -201,55 +201,55 @@ category adds its own ending. "How You Love" has no team on purpose.
 
 - Chaos Says-It Meet-Halfway Department — Playful, Direct, Giving
 - Deadpan Says-It Meet-Halfway Department — Serious, Direct, Giving
-- Low-Key Says-It Meet-Halfway Department — middle, Direct, Giving
+- Laid-Back Says-It Meet-Halfway Department — middle, Direct, Giving
 - Chaos Says-It Holds-Ground Department — Playful, Direct, Steadfast
 - Deadpan Says-It Holds-Ground Department — Serious, Direct, Steadfast
-- Low-Key Says-It Holds-Ground Department — middle, Direct, Steadfast
+- Laid-Back Says-It Holds-Ground Department — middle, Direct, Steadfast
 - Chaos Says-It Give-and-Take Department — Playful, Direct, middle
 - Deadpan Says-It Give-and-Take Department — Serious, Direct, middle
-- Low-Key Says-It Give-and-Take Department — middle, Direct, middle
+- Laid-Back Says-It Give-and-Take Department — middle, Direct, middle
 - Chaos Soft-Spoken Meet-Halfway Department — Playful, Quiet, Giving
 - Deadpan Soft-Spoken Meet-Halfway Department — Serious, Quiet, Giving
-- Low-Key Soft-Spoken Meet-Halfway Department — middle, Quiet, Giving
+- Laid-Back Soft-Spoken Meet-Halfway Department — middle, Quiet, Giving
 - Chaos Soft-Spoken Holds-Ground Department — Playful, Quiet, Steadfast
 - Deadpan Soft-Spoken Holds-Ground Department — Serious, Quiet, Steadfast
-- Low-Key Soft-Spoken Holds-Ground Department — middle, Quiet, Steadfast
+- Laid-Back Soft-Spoken Holds-Ground Department — middle, Quiet, Steadfast
 - Chaos Soft-Spoken Give-and-Take Department — Playful, Quiet, middle
 - Deadpan Soft-Spoken Give-and-Take Department — Serious, Quiet, middle
-- Low-Key Soft-Spoken Give-and-Take Department — middle, Quiet, middle
+- Laid-Back Soft-Spoken Give-and-Take Department — middle, Quiet, middle
 - Chaos Picks-Battles Meet-Halfway Department — Playful, middle, Giving
 - Deadpan Picks-Battles Meet-Halfway Department — Serious, middle, Giving
-- Low-Key Picks-Battles Meet-Halfway Department — middle, middle, Giving
+- Laid-Back Picks-Battles Meet-Halfway Department — middle, middle, Giving
 - Chaos Picks-Battles Holds-Ground Department — Playful, middle, Steadfast
 - Deadpan Picks-Battles Holds-Ground Department — Serious, middle, Steadfast
-- Low-Key Picks-Battles Holds-Ground Department — middle, middle, Steadfast
+- Laid-Back Picks-Battles Holds-Ground Department — middle, middle, Steadfast
 - Chaos Picks-Battles Give-and-Take Department — Playful, middle, middle
 - Deadpan Picks-Battles Give-and-Take Department — Serious, middle, middle
-- Low-Key Picks-Battles Give-and-Take Department — middle, middle, middle
+- Laid-Back Picks-Battles Give-and-Take Department — middle, middle, middle
 
 ### Planner or Free Spirit
 
-- Side-Quest Color-Coded Era — Adventurous, Structured
-- Side-Quest Wing-It Era — Adventurous, Flexible
-- Side-Quest Loose-Plan Era — Adventurous, middle
-- Usual-Order Color-Coded Era — Familiar, Structured
-- Usual-Order Wing-It Era — Familiar, Flexible
-- Usual-Order Loose-Plan Era — Familiar, middle
-- Try-Once Color-Coded Era — middle, Structured
-- Try-Once Wing-It Era — middle, Flexible
-- Try-Once Loose-Plan Era — middle, middle
+- Side-Quest Color-Coded Camp — Adventurous, Structured
+- Side-Quest Wing-It Camp — Adventurous, Flexible
+- Side-Quest Loose-Plan Camp — Adventurous, middle
+- Usual-Order Color-Coded Camp — Familiar, Structured
+- Usual-Order Wing-It Camp — Familiar, Flexible
+- Usual-Order Loose-Plan Camp — Familiar, middle
+- Try-Once Color-Coded Camp — middle, Structured
+- Try-Once Wing-It Camp — middle, Flexible
+- Try-Once Loose-Plan Camp — middle, middle
 
 ### When Things Get Hard
 
-- Got-This Level-Up Unbothered League — Assured, Learning, Steady
-- Got-This Tried-and-True Unbothered League — Assured, Settled, Steady
-- Got-This Learn-As-I-Go Unbothered League — Assured, middle, Steady
-- Double-Check Level-Up Unbothered League — Cautious, Learning, Steady
-- Double-Check Tried-and-True Unbothered League — Cautious, Settled, Steady
-- Double-Check Learn-As-I-Go Unbothered League — Cautious, middle, Steady
-- Figuring-It-Out Level-Up Unbothered League — middle, Learning, Steady
-- Figuring-It-Out Tried-and-True Unbothered League — middle, Settled, Steady
-- Figuring-It-Out Learn-As-I-Go Unbothered League — middle, middle, Steady
+- Got-This Level-Up Level-Headed League — Assured, Learning, Steady
+- Got-This Tried-and-True Level-Headed League — Assured, Settled, Steady
+- Got-This Learn-As-I-Go Level-Headed League — Assured, middle, Steady
+- Double-Check Level-Up Level-Headed League — Cautious, Learning, Steady
+- Double-Check Tried-and-True Level-Headed League — Cautious, Settled, Steady
+- Double-Check Learn-As-I-Go Level-Headed League — Cautious, middle, Steady
+- Figuring-It-Out Level-Up Level-Headed League — middle, Learning, Steady
+- Figuring-It-Out Tried-and-True Level-Headed League — middle, Settled, Steady
+- Figuring-It-Out Learn-As-I-Go Level-Headed League — middle, middle, Steady
 - Got-This Level-Up Feels-It-All League — Assured, Learning, Sensitive
 - Got-This Tried-and-True Feels-It-All League — Assured, Settled, Sensitive
 - Got-This Learn-As-I-Go Feels-It-All League — Assured, middle, Sensitive
@@ -259,12 +259,12 @@ category adds its own ending. "How You Love" has no team on purpose.
 - Figuring-It-Out Level-Up Feels-It-All League — middle, Learning, Sensitive
 - Figuring-It-Out Tried-and-True Feels-It-All League — middle, Settled, Sensitive
 - Figuring-It-Out Learn-As-I-Go Feels-It-All League — middle, middle, Sensitive
-- Got-This Level-Up Mostly-Chill League — Assured, Learning, middle
-- Got-This Tried-and-True Mostly-Chill League — Assured, Settled, middle
-- Got-This Learn-As-I-Go Mostly-Chill League — Assured, middle, middle
-- Double-Check Level-Up Mostly-Chill League — Cautious, Learning, middle
-- Double-Check Tried-and-True Mostly-Chill League — Cautious, Settled, middle
-- Double-Check Learn-As-I-Go Mostly-Chill League — Cautious, middle, middle
-- Figuring-It-Out Level-Up Mostly-Chill League — middle, Learning, middle
-- Figuring-It-Out Tried-and-True Mostly-Chill League — middle, Settled, middle
-- Figuring-It-Out Learn-As-I-Go Mostly-Chill League — middle, middle, middle
+- Got-This Level-Up Mostly-Calm League — Assured, Learning, middle
+- Got-This Tried-and-True Mostly-Calm League — Assured, Settled, middle
+- Got-This Learn-As-I-Go Mostly-Calm League — Assured, middle, middle
+- Double-Check Level-Up Mostly-Calm League — Cautious, Learning, middle
+- Double-Check Tried-and-True Mostly-Calm League — Cautious, Settled, middle
+- Double-Check Learn-As-I-Go Mostly-Calm League — Cautious, middle, middle
+- Figuring-It-Out Level-Up Mostly-Calm League — middle, Learning, middle
+- Figuring-It-Out Tried-and-True Mostly-Calm League — middle, Settled, middle
+- Figuring-It-Out Learn-As-I-Go Mostly-Calm League — middle, middle, middle

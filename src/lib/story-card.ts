@@ -23,11 +23,12 @@ import type { StoryThread } from '@/lib/story-thread';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 import {
-  jokeHasBannedTopic,
+  jokeCrossesBoundary,
   pickBestPunchline,
   punchlineCraftViolation,
   storyClicheViolation,
 } from '@/lib/voice/card-joke';
+import { CLINICAL_ADVICE, hasClinicalLabel } from '@/lib/voice/clinical';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
@@ -107,8 +108,18 @@ const LABEL_WORDS: readonly string[] = [
   ...TRAIT_AXES.flatMap((axis) => [AXIS_POLE_NAME[axis].high, AXIS_POLE_NAME[axis].low, AXIS_SHORT_NAME[axis]]),
 ];
 
-const CLINICAL =
-  /\b(anxious|anxiety|insecure|insecurity|avoidant|attachment|disorder|trauma|toxic|needy|clingy|codependent|diagnos|therapy|therapist|symptom|red flag)\b/i;
+/**
+ * Labels applied to the reader, not vocabulary (emci 2026-10-19, round 3:
+ * src/lib/voice/clinical.ts). Everyday and contextual words pass ("a toxic
+ * group chat", "trauma-bonded by a bad haircut", "the group chat needs therapy").
+ * Refused: a label or diagnosis pinned on the reader ("Your avoidant attachment
+ * kicks in", "That is so bipolar of you"), any diagnosis claim, and clinical
+ * advice (get therapy, stop your meds). The theory name "attachment style" is a
+ * framework term (framework-fence).
+ */
+const CLINICAL = {
+  test: (text: string): boolean => hasClinicalLabel(text) || CLINICAL_ADVICE.test(text),
+};
 
 const GENERIC_CAPS = new Set([
   'Mom',
@@ -172,7 +183,7 @@ export function quotedLineCount(text: string): number {
 
 /** One story line: safety + voice, with numbers, one quote, and unnamed side characters allowed. */
 export function storyCardLineViolation(text: string, opts: { allowYouAre?: boolean } = {}): string | null {
-  if (jokeHasBannedTopic(text)) return 'banned topic';
+  if (jokeCrossesBoundary(text)) return 'crosses a boundary';
   if (/\b(voice ?notes?|voice ?memos?|voicemails?|typing bubbles?|grey bubbles?|gray bubbles?|read receipts?)\b/i.test(text)) {
     return 'niche phone detail';
   }
@@ -294,7 +305,7 @@ Exaggerated numbers are fine when funny ("the fourth any minute now", "all 212 o
 Vary sentence length. No "!", no emoji, no advice, no "should", no "always".
 Show the trait through action. Only "reveal" may name what it shows, in plain words, never a trait or category label.
 
-NEVER: real names, brands, places, diagnosis, cruelty, trait/category words, hedges ("you might", "on a day like this"),
+NEVER: real names, brands, places, a diagnosis or label applied to the reader (everyday and contextual use of a word is fine), cruelty, trait/category words, hedges ("you might", "on a day like this"),
 niche phone details (voice notes, typing bubbles, read receipts), or these clichés: ${BANNED_CLICHE_PROMPT}.
 Stay in ONE setting. Never leave square or angle brackets in the answer.
 

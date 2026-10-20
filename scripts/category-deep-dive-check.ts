@@ -107,8 +107,9 @@ assert.doesNotMatch(prompt, /\(GENTLE\)/);
 assert.match(buildDivePrompt(openDef, leans.slice(0, 1)), /MIX: no/, 'one leaning → no mix asked');
 assert.match(prompt, /CLEAR FIRST, MOMENT SECOND/, 'plain insight first, one realistic example second');
 assert.match(prompt, /No counting and no exaggeration/);
-assert.match(prompt, /A low or "quiet" side is a style with an upside/);
-assert.ok(leansKey(leans).startsWith('v2|'), 'cards from the old prompt offer a rewrite');
+assert.match(prompt, /Be honest about both sides/);
+assert.doesNotMatch(prompt, /never a weakness/, 'a real limitation is stated plainly (emci 2026-10-19)');
+assert.ok(leansKey(leans).startsWith('v3|'), 'cards from the old prompt offer a rewrite');
 ok('prompt: moment voice + clear-first style, category + sides only, no numbers or counting, gentle block for Love / closeness');
 
 /* ------------------------------------------------------------ validator --- */
@@ -132,7 +133,7 @@ const rejects: [string, string][] = [
   ['digit', bad({ whatItMeansForYou: 'You try 3 new places a month and go to them alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
   ['count word', bad({ whatItMeansForYou: 'You open twelve tabs about a trip and still visit one place alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
   ['name not allowed', bad({ whatItMeansForYou: 'You queue up Netflix documentaries about places and visit one alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
-  ['clinical word', bad({ whatItMeansForYou: 'You get a little anxious at big parties and visit new places alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
+  ['clinical word', bad({ whatItMeansForYou: 'Your avoidant attachment shows at big parties, so you visit new places alone on a Sunday. That quiet kind of exploring says you trust your own taste.' })],
   ['advice', bad({ whatItMeansForYou: 'You keep a list of places to try and visit them alone on a Sunday. You should share that list with someone, it is a good one.' })],
   ['you are', bad({ whatItMeansForYou: 'You are curious but solo, so new places arrive on a quiet Sunday walk. That quiet kind of exploring says you trust your own taste.' })],
   ['always', bad({ whatItMeansForYou: 'Your curiosity always travels solo, so new places arrive on a quiet Sunday walk. That quiet kind of exploring says you trust your own taste.' })],
@@ -156,6 +157,54 @@ for (const [label, raw] of rejects) {
   assert.ok(diveLineViolation(means, 'Openness to life Adventurous Curiosity Reserved Sociability'), `${label}: rejected by the line rules themselves`);
 }
 assert.equal(diveLineViolation('You are calm.', 'x'), 'you are');
+// Round 3 (emci 2026-10-19): labels on the reader, not vocabulary. Shared rule
+// (src/lib/voice/clinical.ts): a condition placed IN the reader ("depression in how you plan"),
+// "you have X", "you are X" and "so X of you" are refused; the words as topics pass.
+for (const word of ['depression', 'clinical depression', 'narcissistic', 'ADHD', 'OCD', 'PTSD', 'bipolar', 'codependency', 'a panic attack', 'anxious-attachment', 'anxious attachment', 'secure-attachment', 'securely-attached', 'anxiously-attached', 'a diagnosis', 'a borderline personality', 'a mental illness']) {
+  assert.equal(diveLineViolation(`You may notice ${word} in how you plan a quiet weekend with friends.`, 'x'), 'clinical word', `rejects: ${word}`);
+}
+for (const line of [
+  'You are clearly depressed about how you plan a quiet weekend with friends.',
+  "You're so depressed when you plan a quiet weekend with friends.",
+  'That is so bipolar of you when you plan a quiet weekend with friends.',
+  'Very narcissistic of you to plan a quiet weekend with friends.',
+]) {
+  assert.equal(diveLineViolation(line, 'x'), 'clinical word', `rejects: ${line}`);
+}
+for (const word of ['worry', 'fear', 'stress', 'lonely', 'a depressing Monday', 'avoids', 'a disorderly desk', 'therapy', 'a therapist', 'something therapeutic', 'mental health days']) {
+  assert.notEqual(diveLineViolation(`You may notice ${word} in how you plan a quiet weekend with friends.`, 'x'), 'clinical word', `allows: ${word}`);
+}
+// emci 2026-10-19: allow everyday words like anxious and insecure; restrict unsupported diagnoses, not vocabulary.
+for (const line of [
+  'You get anxious before a big call, then handle it better than you expected.',
+  'You feel insecure when a plan changes late, so you check the group chat twice.',
+  'That late-night anxiety before a big week shows up, and you plan your way through it.',
+  'You get worried, nervous or a bit lonely when friends go quiet for a while.',
+  'When the week gets stressed and overwhelming, you feel scared, sad or low, and you say so.',
+  'Your attachment to your old hoodie is a whole personality, and you secure it first.',
+  // Round 3 (emci 2026-10-19): a feeling or a contextual word is not a label on the reader.
+  'You may feel needy or clingy when friends go quiet on a long weekend.',
+  'An anxiety attack can hit when a plan changes late on a quiet weekend.',
+  'A toxic group chat loses you fast, and you mute it without a speech.',
+  'You stay avoidant of small talk at parties and head for the snacks instead.',
+  'Your clingy cat gets the best seat while you plan a quiet weekend with friends.',
+]) {
+  assert.equal(diveLineViolation(line, 'x'), null, `everyday feeling words pass: "${line}"`);
+}
+assert.ok(parseDive(bad({ whatItMeansForYou: 'You get a little anxious at big parties and visit new places alone on a Sunday. That quiet kind of exploring says you trust your own taste.' }), openDef, leans), 'a card with an everyday feeling word is accepted');
+for (const line of [
+  'Your anxiety disorder shows when a plan changes late on a quiet weekend.',
+  'Your avoidant attachment shows when a friend texts twice on a quiet weekend.',
+  'You are codependent in how you plan a quiet weekend with friends.',
+  'You may notice codependent habits in how you plan a quiet weekend with friends.',
+  'Your attachment style shows when a friend texts twice on a quiet weekend.',
+  'You come across as needy or clingy when friends go quiet on a long weekend.',
+  'You have panic attacks when a plan changes late on a quiet weekend.',
+  'Your clingy side shows when a friend texts twice on a quiet weekend.',
+  'People like you are toxic when a friend texts twice on a quiet weekend.',
+]) {
+  assert.ok(diveLineViolation(line, 'x'), `diagnosis or label still fails: "${line}"`);
+}
 // Optional parts are DROPPED when they fail (never shown, never a second paid call).
 assert.equal(parseDive(bad({ mix: undefined }), openDef, leans)?.mix, null, 'a missing mix drops only the mix');
 assert.equal(parseDive(bad({ othersNotice: 'You like small plans.' }), openDef, leans)?.othersNotice, null, 'a too-short notice is dropped');
@@ -187,11 +236,33 @@ assert.deepEqual(firstBad.dives, [], 'the tapped card must pass, or the answer i
 assert.match(firstBad.reason ?? '', /^title:/, 'with its reason (logged, never the text)');
 const extraBad = parseDiveBundle(JSON.stringify({ cards: [good, { ...socialCard, whatItMeansForYou: 'Short.' }] }), [specA, specB]);
 assert.ok(extraBad.dives[0] && !extraBad.dives[1], 'a failed extra card is simply left out');
+// Humor is 18+ (emci, 2026-10-19): a dark joke passes; one that crosses a boundary is dropped.
 assert.equal(
   parseDiveBundle(JSON.stringify({ cards: [{ ...good, funny: 'Your plants have died of politeness twice this month, honestly.' }] }), [specA]).dives[0]?.joke,
-  undefined,
-  'a banned joke topic is dropped',
+  'Your plants have died of politeness twice this month, honestly.',
+  'a dark joke (death) is kept',
 );
+for (const harmful of [
+  'One more reschedule and honestly just kill yourself, the calendar wins anyway.',
+  'Your saved recipes folder could make a fag blush at the stove.',
+  'Two glasses in, you drink and drive to the new taco place.',
+  'Your saved recipes folder reads like a whore with a label maker.',
+]) {
+  assert.equal(
+    parseDiveBundle(JSON.stringify({ cards: [{ ...good, funny: harmful }] }), [specA]).dives[0]?.joke,
+    undefined,
+    `a joke that crosses a boundary is dropped: ${harmful}`,
+  );
+}
+// Strong swearing (emci 2026-10-19, round 3): "fuck" in an adult joke is kept.
+assert.equal(
+  parseDiveBundle(JSON.stringify({ cards: [{ ...good, funny: 'Your saved recipes folder is a fucking travel blog that never left the kitchen.' }] }), [specA]).dives[0]?.joke,
+  'Your saved recipes folder is a fucking travel blog that never left the kitchen.',
+  'a joke with strong swearing is kept',
+);
+assert.match(DIVE_PROMPT_STATIC, /strong swearing included/, 'the joke rules tell the model strong swearing is allowed when it earns its place');
+assert.match(DIVE_PROMPT_STATIC, /Never apply a\s+diagnosis or a label to the reader/, 'the GENTLE rule bans labels on the reader, not words');
+assert.doesNotMatch(DIVE_PROMPT_STATIC, /no needy or clingy/, 'no blanket word ban in the prompt');
 assert.equal(diveOutputTokens(1), 600, 'one card: a trimmed answer budget');
 assert.ok(diveOutputTokens(2) <= 1024, 'two cards stay under the server’s 1024 output cap');
 assert.equal(DIVE_CARDS_PER_CALL, 2);
@@ -239,6 +310,8 @@ assert.match(read('src/lib/category-deep-dive/store.ts'), /PGRST202/, 'before wa
 // wave92: tokens decide how often (the server keeps a safety ceiling); the button shows the price.
 assert.match(card, /const affordable = tokens >= AI_TOKEN_PRICE;/, 'one deep dive needs one AI view of tokens');
 assert.match(card, /\{DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'the brand-new button shows its price');
+assert.match(card, /Or write one now for \$\{AI_PRICE_LABEL\}\.`/, 'the "read them all" note names the price too');
+assert.match(card, /DEEP_DIVE_AI_OFF = 'Turn on AI in the You tab/, 'the AI-off note says where the switch is');
 assert.match(card, /outcome\.reason === 'tokens'\s*\? AI_TOKENS_NEEDED/, 'too few tokens says how to earn more');
 assert.match(card, /outcome = await pending;/, 'a slow answer is waited for, never thrown away (the claim is spent)');
 // Moved from Home to Explore (emci, 2026-10-09): between Categories and "How you've changed".

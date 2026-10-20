@@ -25,9 +25,9 @@ export function isLibraryKind(value: unknown): value is LibraryKind {
  * prompt, and a newer card never reaches an older app).
  */
 export const LIBRARY_VERSION: Readonly<Record<LibraryKind, string>> = {
-  deep_dive: 'l1',
-  story: 'l3',
-  legend: 'l1',
+  deep_dive: 'l2', // honest-weaknesses prompt, 2026-10-19
+  story: 'l4', // honest-weaknesses rule joins the prompt, 2026-10-19
+  legend: 'l2', // humor is 18+: joke rules are contextual boundaries, not topic bans, 2026-10-19
 };
 
 /** Free library cards a day per kind (server: `app_config.library_free_daily_cap`). */

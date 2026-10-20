@@ -10,6 +10,7 @@ import { dialogue, narrator } from './lines';
 import { referenceFor, STORY_REFERENCES } from './references';
 import {
   KEYED_EVIDENCE,
+  KEYED_OTHER_WAY,
   keyedTip,
   OBJECT_REVOLT_CATEGORIES,
   OBJECT_REVOLT_GRAMMAR,
@@ -26,7 +27,7 @@ import type { StoryLine, StoryScript } from './types';
 export function scriptToCard(script: StoryScript, traitScore?: number | null): StoryCard {
   const card6 = {
     ...script.card6,
-    ...(typeof traitScore === 'number' ? { scoreLine: `You scored ${traitScore}.` } : script.card6.scoreLine ? {} : {}),
+    ...(typeof traitScore === 'number' ? { scoreLine: `How strongly you lean here: ${traitScore}%.` } : script.card6.scoreLine ? {} : {}),
   };
   if (typeof traitScore !== 'number') delete (card6 as { scoreLine?: string }).scoreLine;
   const join = (lines: readonly StoryLine[]) =>
@@ -100,7 +101,9 @@ export function renderObjectRevolt(opts: {
     punchline: parseDialogueBlock(part('PUNCH')),
     next: part('NEXT').replace(/^Next:\s*/, ''),
     reveal: part('REVEAL'),
-    otherWay: opts.lean === 'high' ? 'The other way, you would have given it two taps and a bow.' : 'The other way, you would have opened the binder and followed page four.',
+    otherWay:
+      KEYED_OTHER_WAY[`${opts.categoryId}|${opts.lean}`] ??
+      (opts.lean === 'high' ? 'The other way, you would have given it two taps and a bow.' : 'The other way, you would have opened the binder and followed page four.'),
     card6: {
       categoryName: categoryCatalogName(opts.categoryId),
       leanPhrase: leanPhraseFor(opts.categoryId, opts.lean),

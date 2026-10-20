@@ -76,15 +76,15 @@ export const OBJECT_REVOLT_GRAMMAR: StoryGrammar = {
   reveal__cat_structure__high: 'Your systems aren\'t fussy. They\'re armour.',
   reveal__cat_structure__low: 'No system, yet somehow everything works. That\'s your system.',
   reveal__cat_resilience__high: 'You don\'t win first. You win last.',
-  reveal__cat_resilience__low: 'You pick your battles, yet you never lose the match.',
+  reveal__cat_resilience__low: 'You pick your battles and let this one go.',
   reveal__cat_agency__high: 'You treat the outcome as yours to shape.',
   reveal__cat_agency__low: 'You roll with what the day deals.',
   title__cat_structure__high: 'Chief of House Rules',
   title__cat_structure__low: 'Captain Two Taps',
   title__cat_resilience__high: 'Saint of Round Four',
-  title__cat_resilience__low: 'Professor Tea Towel',
+  title__cat_resilience__low: 'Captain Tea Towel',
   title__cat_agency__high: 'Captain Of The Fix',
-  title__cat_agency__low: 'Professor Side Door',
+  title__cat_agency__low: 'Captain Side Door',
 };
 
 export const OBJECT_REVOLT_CATEGORIES: readonly CategoryId[] = [
@@ -103,28 +103,38 @@ export const KEYED_EVIDENCE: Record<string, string> = {
 };
 
 export const KEYED_TIPS: Record<string, string> = {
-  'cat_steadiness|high': 'Tip: keep one small ritual when the day wobbles.',
+  'cat_steadiness|high': 'Watch out: staying calm can look like not caring. Say out loud that it matters.',
   'cat_steadiness|low': 'Watch out: riding the wobble still needs a landing.',
-  'cat_openness|high': 'Tip: one new path is enough. Write the rest later.',
-  'cat_openness|low': 'Watch out: the known path still needs a first step.',
-  'cat_drive|high': 'Tip: hand out jobs before you speed up.',
+  'cat_openness|high': 'Watch out: a new path every time can tire people who liked the old one.',
+  'cat_openness|low': 'Watch out: sticking with the known way can mean missing a better one.',
+  'cat_drive|high': 'Watch out: speeding up alone can leave others behind. Hand out jobs first.',
   'cat_drive|low': 'Watch out: a closet fix works once. Empty it later.',
-  'cat_agency|high': 'Tip: pick the part you can still shape.',
-  'cat_agency|low': 'Watch out: rolling with the day is not the same as disappearing.',
-  'cat_social|high': 'Tip: leave one quiet person a turn to talk.',
-  'cat_social|low': 'Watch out: a smaller room is fine. A disappearing act is not.',
-  'cat_communication|high': 'Tip: the kind version of the hard thing is still the thing.',
+  'cat_agency|high': 'Watch out: treating everything as yours to fix can wear you out.',
+  'cat_agency|low': 'Watch out: rolling with the day can leave the choices to someone else.',
+  'cat_social|high': 'Watch out: a lot of energy can fill the room. Leave a quiet person a turn.',
+  'cat_social|low': 'Watch out: slipping away quietly can leave friends wondering where you went. A quick text helps.',
+  'cat_communication|high': 'Watch out: saying it straight can land harder than you meant. Keep the kind version.',
   'cat_communication|low': 'Watch out: stepping back still needs one clear line.',
-  'cat_love|high': 'Tip: close is good. A little air is also love.',
-  'cat_love|low': 'Watch out: room is kind. Silence can look like leaving.',
-  'cat_independence|high': 'Tip: your way works. Tell people the plan out loud.',
-  'cat_independence|low': 'Watch out: sharing a path is not the same as losing yours.',
-  'cat_levity|high': 'Tip: one joke is a gift. Explaining it is a tax.',
-  'cat_levity|low': 'Watch out: a straight face still needs one kind word.',
-  'cat_structure|high': 'Tip: a plan is armour. Leave one box blank.',
+  'cat_love|high': 'Watch out: checking in a lot can feel like pressure to someone who needs space.',
+  'cat_love|low': 'Watch out: needing room is fine, but a long quiet can read as pulling away. One line helps.',
+  'cat_independence|high': 'Watch out: doing it your way can leave people out. Tell them the plan.',
+  'cat_independence|low': 'Watch out: waiting for company can mean missing things you would enjoy alone.',
+  'cat_levity|high': 'Watch out: a joke at the wrong moment can make someone feel unheard.',
+  'cat_levity|low': 'Watch out: a straight face can read as cold. One kind word helps.',
+  'cat_structure|high': 'Watch out: a tight plan can leave no room for fun. Leave one box blank.',
   'cat_structure|low': 'Watch out: loose plans still need a time.',
-  'cat_resilience|high': 'Tip: try again, then take the snack break.',
-  'cat_resilience|low': 'Watch out: picking your battles is not quitting the match.',
+  'cat_resilience|high': 'Watch out: going again and again can skip the rest you need. Take the break.',
+  'cat_resilience|low': 'Watch out: letting one go is fine. Letting every one go can mean giving up on things you want.',
+};
+
+/** The revolt story's other way: the opposite lean's move in the same category. */
+export const KEYED_OTHER_WAY: Record<string, string> = {
+  'cat_structure|high': 'The other way, you would have given it two taps and a bow.',
+  'cat_structure|low': 'The other way, you would have opened the binder and followed page four.',
+  'cat_resilience|high': 'The other way, you would have let it win and draped a tea towel over it.',
+  'cat_resilience|low': 'The other way, you would have tried again, then a third time.',
+  'cat_agency|high': 'The other way, you would have let it have the round and set out cups anyway.',
+  'cat_agency|low': 'The other way, you would have tried one careful fix, then a silly one.',
 };
 
 export function keyedTip(categoryId: CategoryId, lean: TraitLean): string {

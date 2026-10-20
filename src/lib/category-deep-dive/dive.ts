@@ -24,6 +24,7 @@ import { legendLineViolation, titleViolation } from '@/lib/legend-figures/story'
 import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 import { CARD_JOKE_RULES, cardJokeViolation, type CardJokeStyle } from '@/lib/voice/card-joke';
+import { CLINICAL_ADVICE, hasClinicalLabel } from '@/lib/voice/clinical';
 import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 
 export interface DiveLean {
@@ -73,9 +74,16 @@ export const DIVE_MEANS_MAX_WORDS = 60;
 /** At most this many leanings get their own "shows up" moment. */
 export const DIVE_TOP_LEANS = 3;
 
-/** Words that turn a description into a diagnosis — never in a deep dive (the
- * Love / closeness category included, emci 2026-10-08: gentle wording). */
-const CLINICAL = /\b(anxious|anxiety|insecure|insecurity|avoidant|attachment|disorder|trauma|toxic|needy|clingy|codependent|diagnos|therapy|therapist|symptom|red flag)/i;
+/** A diagnosis or label pinned on the reader — never in a deep dive (the Love /
+ * closeness category included, emci 2026-10-08: gentle wording). Context, not
+ * blanket bans (emci 2026-10-19, round 3; src/lib/voice/clinical.ts): everyday
+ * and contextual words pass ("a toxic group chat", "avoidant of small talk",
+ * "you may feel needy when the chat goes quiet"); refused are verdicts about the
+ * reader ("You're clingy", "Your avoidant attachment shows", "You have ADHD",
+ * "depression in how you plan"), any diagnosis claim, and clinical advice. */
+const CLINICAL = {
+  test: (text: string): boolean => hasClinicalLabel(text) || CLINICAL_ADVICE.test(text),
+};
 
 /** "Adventurous 78%": the side and how far toward it, never a score. */
 export function leanPct(value: number): number {
@@ -127,7 +135,7 @@ export function categoryScore(leans: readonly DiveLean[]): number | null {
 }
 
 /** Bumped when the prompt changes enough that old cards should offer a rewrite. */
-export const DIVE_PROMPT_VERSION = 'v2';
+export const DIVE_PROMPT_VERSION = 'v3';
 
 /** A new card only when a side flips or a leaning moves by about ten points. */
 export function leansKey(leans: readonly DiveLean[]): string {
@@ -181,16 +189,18 @@ The CARD sections at the end give, for each card, the category and the reader's 
 ${MOMENT_VOICE_BLOCK}
 
 RULES
-- Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice, no "should".
+- Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no "should", no lecturing (the one small step in STYLE is the only advice allowed).
 - Use no quotation marks, and name no people, apps or brands.
   (Everyday things still work: "the group chat", "a tab you keep open", "a playlist".)
 - No counting and no exaggeration: never a number or a number word above two ("three towns", "twelve
   checklists", "eleven ways" all read as made up). Say "a few", "a couple" or nothing. Never repeat a percentage.
 - Name the reader's sides only with the words given in that card's LEANINGS. No test, score or framework words.
 - Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
-- Kind, specific, modern, warm, a little delighted. Never a diagnosis, never a flaw.
-- A card marked GENTLE is about closeness: describe habits with close people warmly and plainly. Never diagnose, never
-  use words like anxious, insecure, avoidant, attachment, needy or clingy, never suggest anything is wrong.
+- Kind, specific, modern, warm, a little delighted. Never a diagnosis or label applied to the reader, never shaming.
+- A card marked GENTLE is about closeness: describe habits with close people warmly and plainly. Never apply a
+  diagnosis or a label to the reader (no "you are needy", no attachment-style verdict about them); everyday and
+  contextual use of a word is fine, and feeling words such as anxious, insecure, worried or lonely are fine when they
+  describe a moment. If a habit has a real cost, name it plainly and kindly, never as something wrong with the reader.
 - Never leave square or angle brackets in the answer.
 - A leaning marked "in the middle" is a balance: describe how it depends on the moment, and never say which side
   the reader is on.
@@ -201,7 +211,14 @@ counts in the register examples there — "eleven ways", "47 tabs" — are exact
 - Every part opens with a plain, true sentence about the reader that a friend would nod at.
   Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
   not a strange one-off scene). Nobody should have to reread it to get the point.
-- A low or "quiet" side is a style with an upside, never a weakness: say what it gives the reader.
+- Be honest about both sides (emci, 2026-10-19). When a leaning has a real cost, say it in plain, direct words and name
+  what it costs the reader in daily life; also say what the leaning gives them. Do not turn a limitation into a neutral
+  trait and do not force an upside. Honest, never harsh; encouraging, never hiding the problem. Ordinary words like
+  weakness, fear or stress are fine. Never apply a diagnosis or label to the reader (everyday and contextual use of a
+  word is fine), no shame, and say nothing the leaning does not support.
+  A strong leaning alone does not prove a drawback: write a possible cost with "you may" or "can", and state it flatly
+  only when the leaning itself shows it.
+- Where it fits, add one small, doable step the reader could try (a single sentence, no "should").
 - Modern and natural, like a smart friend texting you an observation. No riddles, no stacked details.
 
 FOR EACH CARD:
@@ -215,8 +232,9 @@ FOR EACH CARD:
 "whatItMeansForYou" — ${DIVE_MEANS_MIN_WORDS}–${DIVE_MEANS_MAX_WORDS} words, 2 or 3 sentences, in this order:
   1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
   2. One realistic everyday moment that shows it.
-  3. A short, kind closing line on what that quietly says about the reader. No advice.
-  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What that quietly says about you]."
+  3. A short, honest closing line: what that says about the reader, including the real cost if there is one, and where
+     it fits one small step they could try.
+  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What it says about you, and its cost]."
   Reread it once: if a friend would ask "wait, what?", rewrite it.
 ${CARD_JOKE_RULES}
 

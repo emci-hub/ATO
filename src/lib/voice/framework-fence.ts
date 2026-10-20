@@ -36,9 +36,15 @@ const PHRASES = [
   'myers briggs',
   'thomas-kilmann',
   'thomas kilmann',
-  'fearful-avoidant',
-  'fearful avoidant',
+  // The theory's NAME stays a framework term (no test or framework words). The
+  // labels built from it (avoidant, anxious / secure attachment, fearful-avoidant,
+  // neurotic) moved to src/lib/voice/clinical.ts in round 3 (emci 2026-10-19:
+  // "block unsupported labels applied to users, not legitimate discussion"): they
+  // fail only when pinned on the reader, so "avoidant of small talk" passes here.
   'attachment style',
+  'attachment theory',
+  'anxious-preoccupied',
+  'anxious preoccupied',
   'big five',
   'growth mindset',
   'fixed mindset',
@@ -53,13 +59,9 @@ const WORDS = [
   'mbti',
   'ocean',
   'neuroticism',
-  'neurotic',
   'tipi',
   'ecr',
   'tki',
-  'secure',
-  'anxious',
-  'avoidant',
   'collaborative',
   'compromising',
   'competitive',

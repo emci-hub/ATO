@@ -244,8 +244,44 @@ const rich = tracksOf({
   assert.equal(parseStoryBody(JSON.stringify({ body: 'You are the planner of the group.' })), null, '"you are"');
   assert.equal(parseStoryBody(JSON.stringify({ body: 'You always reply first.' })), null, '"always"');
   assert.equal(parseStoryBody(JSON.stringify({ body: 'The calendar wins again!' })), null, '"!"');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'Your inbox could kill a lesser phone.' })), null, 'banned topic');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'That therapy app pinged again.' })), null, 'banned topic');
+  // Humor is 18+ (emci, 2026-10-19): dark topics pass, only the harm filter refuses.
+  assert.ok(parseStoryBody(JSON.stringify({ body: 'Your inbox could kill a lesser phone.' })), '"kill" as a figure of speech passes');
+  assert.ok(parseStoryBody(JSON.stringify({ body: 'That therapy app pinged again.' })), 'therapy as a topic passes');
+  assert.ok(parseStoryBody(JSON.stringify({ body: 'The hangover RSVPd before you did, and the group chat is already dead.' })), 'drinking and death pass');
+  assert.equal(parseStoryBody(JSON.stringify({ body: 'The group chat went quiet, so just hurt yourself and save everyone time.' })), null, 'encouraging self-harm');
+  assert.equal(parseStoryBody(JSON.stringify({ body: 'Your inbox is full of retards again.' })), null, 'a slur');
+  assert.equal(parseStoryBody(JSON.stringify({ body: 'Three drinks deep, then drive home to beat the traffic.' })), null, 'drunk driving as an instruction');
+  assert.equal(punchlineCraftViolation('Somebody tell the toaster to go die already.'), 'crosses a boundary');
+  assert.equal(punchlineCraftViolation('The meeting died twice. Nobody sent flowers.'), null, 'a dark punchline passes');
+  assert.equal(punchlineCraftViolation('Hungover, still drunk on spite, the spreadsheet wins. Damn.'), null, 'drunk, hangover and mild swearing pass');
+  // Strong swearing (emci 2026-10-19, round 3): allowed when it earns its place.
+  assert.equal(punchlineCraftViolation('The spreadsheet wins again. Fuck the spreadsheet.'), null, 'strong swearing passes');
+  assert.ok(parseStoryBody(JSON.stringify({ body: 'What the fuck, the group chat planned a picnic in the rain.' })), 'strong swearing in a story body passes');
+  assert.equal(punchlineCraftViolation('They fucked in the car before the toast.'), 'crosses a boundary', 'sexually explicit "fuck" is still refused');
+  assert.match(STORY_JOKE_RULES, /strong swearing included/, 'the prompt says strong swearing is allowed');
+  assert.equal(punchlineCraftViolation('Rough week. Kill yourself, the calendar already did.'), 'crosses a boundary', 'encouraging suicide');
+  assert.equal(punchlineCraftViolation('The group chat called him a faggot, and the plan died.'), 'crosses a boundary', 'a slur');
+  assert.equal(punchlineCraftViolation('Two beers in, you drink and drive to the afterparty.'), 'crosses a boundary', 'drunk driving');
+  assert.equal(punchlineCraftViolation('The date ended in porn on the hotel TV.'), 'crosses a boundary', 'sexually explicit');
+  // Invented claims about real people: keywords cannot judge truth. It is a prompt rule
+  // (STORY_JOKE_BANS) backed by the card's proper-name check on every story line.
+  assert.match(STORY_JOKE_RULES, /invented claims about real people stated as fact/);
+  assert.match(
+    parseStoryCardAnswer(
+      JSON.stringify({
+        title: 'The Bread Basket Diplomat',
+        hook: 'Friday, 8:40. Your table has been staring at the kitchen door like it owes them money.',
+        twist: 'The server arrives empty-handed. Apparently Beyoncé once waited three hours here and sued the chef.',
+        move: 'You slide the bread basket to the middle like a peace treaty, order whatever is fastest plus fries for the hostages, and start a ranking of everyone\'s worst-ever restaurant disaster.',
+        punchline: 'By the time the food lands, nobody wants it. They want round two of the rankings. And more bread.',
+        reveal: 'When plans break, you quietly turn the delay into the good part.',
+        next: 'Next time: you\'re first at the cinema. Your friends are not.',
+      }),
+      { allowExampleHooks: true },
+    ).reason ?? '',
+    /twist: proper name/,
+    'a named real person in a story line is refused (the claim about them can only be judged by the prompt rule)',
+  );
   assert.equal(parseStoryBody(JSON.stringify({ body: 'Resilience under pressure looks like this.' })), null, 'names a category');
   assert.ok(parseStoryBody(JSON.stringify({ body: 'The deadline moved and you were deadpan about it.' })), 'deadline/deadpan are fine');
 
@@ -258,7 +294,7 @@ const rich = tracksOf({
   assert.equal(missing.joke, null, '…and drops the joke field');
   const labelled = parseStoryAnswer(JSON.stringify({ thread: 'Their Drive against Levity.', body: good }))!;
   assert.equal(labelled.thread, null, 'a plan line naming a category is dropped');
-  ok('the parser rejects length, paragraphs, "you are", "always", "!", banned topics and category names');
+  ok('the parser rejects length, paragraphs, "you are", "always", "!", harm-boundary jokes and category names; dark topics pass');
 }
 
 // 8. The saved record and the fold.
@@ -323,6 +359,42 @@ const rich = tracksOf({
     parseStoryCardAnswer(bad({ title: 'The Anxious Planner' }), { allowExampleHooks: true }).reason ?? '',
     /title: tone/,
   );
+  // emci 2026-10-19: everyday feeling words pass; diagnoses and labels still fail.
+  assert.ok(
+    parseStoryCardAnswer(bad({ hook: 'You get anxious before the big call, then the kitchen door finally swings open with your order.' }), {
+      allowExampleHooks: true,
+    }).card,
+    '"anxious" in a story line passes',
+  );
+  assert.ok(
+    parseStoryCardAnswer(bad({ hook: 'You feel insecure when the table goes quiet, so you start a ranking of the worst menus ever.' }), {
+      allowExampleHooks: true,
+    }).card,
+    '"insecure" in a story line passes',
+  );
+  for (const hook of [
+    'A disorderly kitchen door swings open while the table goes quiet and everyone checks their phone.',
+    'Your therapist would have notes while the kitchen door stays shut and the table goes quiet.',
+    'A bit depressed about Monday, the table goes quiet while the kitchen door stays shut for ages.',
+    // Round 3 (emci 2026-10-19): context, not blanket bans — a label on the table is not a label on the reader.
+    'Your friends turn codependent while the kitchen door stays shut and nobody moves at all.',
+    'The group chat turns toxic while the kitchen door stays shut and the table goes quiet.',
+    'Trauma-bonded by the bread basket, the table goes quiet while the kitchen door stays shut.',
+  ]) {
+    assert.ok(parseStoryCardAnswer(bad({ hook }), { allowExampleHooks: true }).card, `everyday words pass: ${hook}`);
+  }
+  for (const hook of [
+    'Your anxiety disorder kicks in while the kitchen door stays shut and the table goes quiet.',
+    'Your avoidant attachment kicks in while the kitchen door stays shut and the table goes quiet.',
+    'Your toxic side kicks in while the kitchen door stays shut and the table goes quiet.',
+    'That is so bipolar of you while the kitchen door stays shut and the table goes quiet.',
+    'Very narcissistic of you while the kitchen door stays shut and the table goes quiet.',
+    'You are clearly depressed while the kitchen door stays shut and the table goes quiet.',
+    'Your anxious-attachment kicks in while the kitchen door stays shut and the table goes quiet.',
+    'Your securely-attached side kicks in while the kitchen door stays shut and the table goes quiet.',
+  ]) {
+    assert.match(parseStoryCardAnswer(bad({ hook }), { allowExampleHooks: true }).reason ?? '', /clinical word|framework term|you are/, `still fails: ${hook}`);
+  }
   assert.equal(storyLabelLeak('You pull into the driveway as the chat buzzes.'), null, 'everyday words stay allowed');
   assert.equal(storyLabelLeak('Then How You Love shows up again.'), 'names a category');
   assert.equal(storyLabelLeak('It is how you love the people around you, plainly.'), null, 'the same words in lowercase are an everyday phrase');
