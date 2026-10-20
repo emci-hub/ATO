@@ -44,8 +44,8 @@ Legend: [x] done · ▶ next · [ ] not started · [P] parked (built, waiting on
 
 | # | Step | Model | Status |
 |---|---|---|---|
-| 0 | Save the work: group the uncommitted tree into logical commits on this branch (I say "commit") | Sonnet 5 | ▶ |
-| 1 | Profile character after the first group of questions | Sonnet 5 (Opus only if the design is contested) | [ ] |
+| 0 | Save the work: group the uncommitted tree into logical commits on this branch (I say "commit") | Sonnet 5 | [x] 2026-10-20: 5 commits (9fdc1e92 18+, ab9ee5f7 questions, 8f786578 policy/rules, c16812f7 content fixes, 6f923c7d tooling+reports), nothing pushed |
+| 1 | Profile character after the first group of questions | Sonnet 5 (Opus only if the design is contested) | ▶ |
 | 2 | 18+ nights gate for missing/blank/invalid birthdays (client + server) | Sonnet 5 | [ ] |
 | 3 | Scrub Sage and crisis everywhere + update Terms of Service and the other legal text | Sonnet 5 | [ ] |
 | 4 | Finish the content review: policy audit (rest), flags, Box 60 | Sonnet 5 + one Opus reviewer | [P] |
@@ -61,8 +61,8 @@ Legend: [x] done · ▶ next · [ ] not started · [P] parked (built, waiting on
 
 ### Step checklists (done-criteria)
 
-**0.** [ ] commits grouped (content/questions, age+under-18 client, server migration FILES, rules/voice, tooling+docs; Play files
-separate) [ ] nothing pushed unless I say so.
+**0.** [x] commits grouped (content/questions, age+under-18 client, server migration FILES, rules/voice, tooling+docs; Play files
+separate: none changed) [x] nothing pushed. Left uncommitted on purpose: `.claude/agent-memory/**`.
 **1.** [ ] investigation: what the old character was, what exists, what is missing [ ] plan approved by me (sample render) [ ]
 character appears after the first read (confirm which set), shows current stats at honest confidence, a unique character from
 answers, and what it could evolve into from the direction of answers [ ] no invented stats; weaknesses per the policy [ ]
