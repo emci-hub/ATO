@@ -238,7 +238,7 @@ ${moments}
 
 THE ANGLE for this card: "${angle.name}" — ${angle.teaser}
 
-THE READER (only these trait sides, never any label, score or framework word):
+THE READER (only these trait sides, in plain words; never a score, and never a diagnosis or label pinned on the reader; a framework name only if relevant, accurate and explained, never as a validated assessment):
 ${traits}
 
 ${differLine ? `DIFFERENCE (for "differ"):\n${differLine}` : 'DIFFERENCE: none — leave out "differ".'}

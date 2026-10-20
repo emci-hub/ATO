@@ -39,8 +39,8 @@ line has drifted.
 
 ## 3. Today's card (Dawn / Home)
 
-1. Home mounts: checks (`(tabs)/index.tsx:109`), trait tracks (`:116`), crisis flags
-   (`:131`), dev overrides (`:181`), reveal-opened (`:194`).
+1. Home mounts (crisis flags removed since this was written; line numbers are stale): checks (`(tabs)/index.tsx:109`), trait tracks (`:116`), crisis flags
+   (`:131`, gone), dev overrides (`:181`), reveal-opened (`:194`).
 2. Day window: `src/lib/check-window.ts:90` `checkWindowFor()` → today + up to 2 missed days.
 3. Card routing effect `(tabs)/index.tsx:262-287` → `routeVoiceCard()`
    (`src/lib/voice/router.ts:172`): bank copy for days 1–3, generated after; consent,
@@ -84,7 +84,11 @@ line has drifted.
 4. Dev-only exception: `applyDevArchetypePreset()` (`src/lib/dev-test-user.ts:159`)
    writes columns directly for the dev user (refuses any other account).
 
-## 6. Sage Talk
+## 6. Sage Talk (REMOVED 2026-10-14; history only)
+
+> Sage Talk and the crisis keyword gate no longer exist. Nothing a person types is scanned,
+> flagged or logged; the You tab carries one static `HelplineRow`. AI runs only for Legends
+> cards and category deep dives, server-side in `ai-library`. The flow below is the old design.
 
 `(tabs)/sage.tsx` → `routeTalkReply()` (`src/lib/voice/talk.ts:96`): consent gate →
 crisis keyword gate (`src/lib/crisis/detect.ts`, static card, zero model calls on a hit) →

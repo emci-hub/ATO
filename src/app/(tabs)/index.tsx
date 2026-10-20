@@ -97,8 +97,8 @@ export default function HomeScreen() {
   /**
    * One round trip for trait tracks (wave35 `home_bootstrap`).
    *
-   * NARROWED (§2.1): the RPC still returns `checks` and `crisis_since` and its
-   * shape is untouched, but Home reads only `tracks` (the unlock gate and the
+   * NARROWED (§2.1): the RPC still returns `checks` (and, until wave103, an
+   * ignored leftover field), but Home reads only `tracks` (the unlock gate and the
    * 🎯 pick behind the widget).
    */
   const timeZone = me?.timezone || 'UTC';

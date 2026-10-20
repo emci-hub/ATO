@@ -42,7 +42,7 @@ struct AtoCardView: View {
   var body: some View {
     if entry.hasCard {
       VStack(alignment: .leading, spacing: 8) {
-        Text("SAGE · COACH")
+        Text("ATO")
           .font(.caption)
           .fontWeight(.semibold)
           .foregroundStyle(.secondary)

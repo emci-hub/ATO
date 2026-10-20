@@ -10,6 +10,7 @@ import {
   JARGON_FALLBACK_DO,
   JARGON_FALLBACK_TALK,
   applyJargonFallback,
+  jargonReviewTerms,
   matchingJargonTerm,
 } from '../src/lib/voice/jargon';
 import {
@@ -32,12 +33,43 @@ function read(rel: string): string {
 assert.equal(matchingJargonTerm('Logged. Quiet hold.'), null);
 assert.equal(matchingJargonTerm('You are an introvert at heart.'), 'introvert');
 assert.equal(matchingJargonTerm("That's who you are."), "that's who you are");
-ok('keyword list flags jargon and leaves clean copy');
+ok('jargon verdicts are flagged and clean copy is left');
+
+// Context, not keywords (emci 2026-10-20). Each pair uses the same term: once as discussion, reported speech,
+// a figure or a description (passes), once as a verdict about the reader or a real person (fails). Class numbers
+// are the five in clinical.ts `labelVerdictHit`.
+const JARGON_PAIRS: [pass: string, fail: string, term: string][] = [
+  ['Introverts need quiet after a party.', 'You are an introvert.', 'introvert'],
+  ['Even extroverts hide in the bathroom at weddings.', "You're so extroverted at dinner parties.", 'extrovert'],
+  ['An ambivert is somebody who changes with the room.', 'As an ambivert, you switch rooms fast.', 'ambivert'],
+  ['Narcissism is a word people overuse.', 'Your boss is a narcissist.', 'narcissist'],
+  ['She called him a narcissist and left the party.', 'He is clearly a narcissist.', 'narcissist'],
+  ['My cat is a narcissist about the good chair.', 'My ex is a narcissist.', 'narcissist'],
+  ['Gaslit by the thermostat again, it said 21 and felt like 15.', 'You gaslight people into splitting the bill.', 'gaslight'],
+  ['Love languages are a pop idea about how people show care.', 'Your love language is gifts.', 'love language'],
+  ['Coping mechanisms are a whole aisle in the bookstore.', 'Your coping mechanism is memes.', 'coping mechanism'],
+  ['The inner child chapter was the funniest in the book.', "That's your inner child talking.", 'inner child'],
+  ['This is not a diagnosis, just a Tuesday.', 'You were diagnosed years ago.', 'diagnosed'],
+  ['You are an early riser and it shows.', "That's who you are.", "that's who you are"],
+  ['He talks about himself nonstop at dinner.', 'People like you are narcissistic about dinners.', 'narcissist'],
+];
+for (const [pass, fail] of JARGON_PAIRS) {
+  assert.equal(matchingJargonTerm(pass), null, `contextual use passes: "${pass}" (hit: ${matchingJargonTerm(pass)})`);
+  assert.ok(matchingJargonTerm(fail), `a verdict fails: "${fail}"`);
+}
+// The returned term still names what matched.
+assert.equal(matchingJargonTerm('Your love language is gifts.'), 'love language');
+assert.equal(matchingJargonTerm('You are an introvert.'), 'introvert');
+// Stored / hand-written copy: mentions without a verdict are listed for a human, not failed.
+assert.deepEqual(jargonReviewTerms('Introverts need quiet after a party.'), ['introvert']);
+assert.deepEqual(jargonReviewTerms('You are an introvert.'), [], 'a verdict is already a failure, not a review item');
+assert.deepEqual(jargonReviewTerms('Logged. Quiet hold.'), []);
+ok(`jargon in context: ${JARGON_PAIRS.length} pass/fail pairs (discussion / reported speech / figure vs verdict)`);
 
 const swapped = applyJargonFallback({
   read: 'You are an introvert.',
   do: 'After you make coffee, text one person.',
-  nudge: 'Your attachment style showed up.',
+  nudge: 'Your introverted side showed up.',
 });
 assert.equal(swapped.read, JARGON_FALLBACK_READ);
 assert.equal(swapped.do, 'After you make coffee, text one person.');
@@ -67,12 +99,15 @@ assert.equal(
 assert.ok(!existsSync(resolve(root, 'src/components/voice-preset-picker.tsx')), 'the Sage voice picker is deleted');
 ok('voice_preset previews are static local copy; the Sage voice picker is gone');
 
-const sage = read('src/app/voice/sage.txt');
-assert.doesNotMatch(sage, /supportive coach/i);
-assert.doesNotMatch(sage, /You are Sage/i);
-assert.match(sage, /Twice now you've gone with the option that actually interests you/);
-assert.match(sage, /After you make coffee, text the one person you've been meaning to/);
-ok('sage.txt is behavior + few-shots, not a role noun');
+assert.ok(!existsSync(resolve(root, 'src/app/voice/sage.txt')), 'sage.txt stays deleted');
+const voiceRef = read('src/app/voice/voice-reference.txt');
+assert.doesNotMatch(voiceRef, /supportive coach/i);
+assert.doesNotMatch(voiceRef, /You are Sage/i);
+assert.doesNotMatch(voiceRef, /\bSage\b/, 'voice reference never names Sage');
+assert.doesNotMatch(voiceRef, /Crisis card/i, 'voice reference never names the removed crisis card');
+assert.match(voiceRef, /Twice now you've gone with the option that actually interests you/);
+assert.match(voiceRef, /After you make coffee, text the one person you've been meaning to/);
+ok('voice-reference.txt is behavior + few-shots, not a role noun');
 
 // The card/Talk prompt builders went with the voice provider lane (2026-09-14).
 // The surviving prompt builders carry the same preset guide.

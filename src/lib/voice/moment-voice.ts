@@ -36,7 +36,7 @@ export const MOMENT_VOICE_RULES: readonly string[] = [
   'Describe the moment and stop. No advice, no "try", no lesson, no question to reflect on.',
   'Tease kindly. Self-aware and a little funny, never cruel, never shaming. Honest is fine, even when it stings a little.',
   'Specific beats general: "They said \'k.\' You read it eleven ways." beats "you overthink messages."',
-  'Short. Never "you are" or "you\'re". Never "always". No personality-type or test names. Never apply a diagnosis or a label to the reader (toxic, clingy, avoidant, a disorder); everyday and contextual use of those words is fine.',
+  'Short. Never "you are" or "you\'re". Never "always". No personality-type codes or test names presented as the reader\'s result (a framework name is allowed only when relevant, accurate and explained, which a short line rarely has room for). Never apply a diagnosis or a label to the reader (toxic, clingy, avoidant, a disorder); everyday and contextual use of those words is fine.',
 ];
 
 /** Approved examples of the register. For prompts: match these, never reuse them. */

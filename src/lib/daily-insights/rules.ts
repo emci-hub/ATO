@@ -133,7 +133,8 @@ const TASK_ACTION_RULES: readonly { reason: string; hit: (text: string) => strin
     reason: 'large or irreversible money move',
     hit: rx(
       instruction(
-        String.raw`(?:donate|subscribe to|venmo|invest|co-?sign|max out|pay off|take out a loan|borrow money|lend\b)` +
+        // "Donate your old jacket" costs no money; "donate" with money, or with nothing named, stays refused.
+        String.raw`(?:donate(?!\s+(?:your |an? |some |the |any |those |these |that |one )?(?:\w+ ){0,2}(?:clothes|clothing|jacket|coat|shoes|books?|toys|items?|stuff|things|furniture|blood|plasma|food|cans?|sweaters?|shirts?|hoodies?|mugs?|plates?)\b)|subscribe to|venmo|invest|co-?sign|max out|pay off|take out a loan|borrow money|lend\b)` +
           String.raw`|(?:buy|trade|sell) (?:some )?(?:stocks?|shares|crypto|bitcoin|an? nft|nfts)\b` +
           String.raw`|apply for (?:a |an )?(?:loan|credit card|mortgage)\b` +
           String.raw`|book (?:a|an|the|yourself|tickets?|flights?|tables?|trips?|classes?|sessions?|appointments?|massages?|hotels?|holidays?)\b` +
@@ -212,7 +213,8 @@ const TASK_ACTION_RULES: readonly { reason: string; hit: (text: string) => strin
           String.raw`|(?:hold your breath|take an? (?:ice bath|cold plunge)|jump (?:off|from)|climb (?:(?:up|onto|on|over) )?(?:a |the |your )?(?:roof|fence|cliff|wall|tower|tree|ladder|crane))\b` +
           String.raw`|(?:walk|go out|wander) alone at night\b|hitchhike\b|get (?:a |an )?(?:tattoo|piercing)\b` +
           String.raw`|meet (?:up with )?(?:a |some )?strangers?\b|meet (?:up with )?(?:someone|somebody|a person|people|a match) (?:from (?:the internet|online|an app|a dating app)|you met (?:online|on an app|on the internet))\b` +
-          String.raw`|(?:run|keep going|push (?:yourself|on)|lift) (?:\w+ )?until (?:it hurts|you (?:drop|puke|pass out|collapse))\b` +
+          String.raw`|meet (?:up with )?(?:your |a |an |the )?(?:online|internet|dating[- ]app|app) (?:match|date|friend|stranger|crush)\b` +
+          String.raw`|(?:(?:go for an? )?run|keep going|push (?:yourself|on)|lift) (?:\w+ )?until (?:it hurts|you (?:drop|puke|pass out|collapse))\b` +
           String.raw`|(?:run a red|text (?:and|while) (?:you )?driv)`,
       ),
     ),

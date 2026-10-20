@@ -61,7 +61,8 @@ ok('morning push is the Read, no urgency');
 assert.doesNotMatch(morning.title, /npc|Nudge/i);
 assert.doesNotMatch(morning.body, /Nudge/);
 const widgetSwift = readFileSync(resolve(__dirname, '../targets/widget/widgets.swift'), 'utf8');
-assert.match(widgetSwift, /SAGE · COACH/);
+assert.doesNotMatch(widgetSwift, /SAGE · COACH/);
+assert.match(widgetSwift, /Text\("ATO"\)/);
 assert.doesNotMatch(widgetSwift, /[Nn]udge|npc/);
 ok('morning push is titled ATO and never names the retired Read; the installed widget header is unchanged; no Nudge');
 

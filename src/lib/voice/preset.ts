@@ -1,6 +1,6 @@
 /**
- * Sage voice preset. One parameter on ME, same job as talk_style: fed into
- * the single generate call. All presets inherit sage.txt. A livelier preset
+ * Voice preset. One parameter on ME, same job as talk_style: fed into
+ * the single generate call. All presets inherit voice-reference.txt. A livelier preset
  * adds energy/warmth; it does not drop fact-vs-inference or the hedge rules.
  * motivational_coach is the only preset allowed a closing encouragement line.
  */

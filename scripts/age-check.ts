@@ -395,6 +395,60 @@ function under18AccessBlock(under15BornOn: string) {
   assert.match(gate, /function public\.is_adult\(p_uid uuid\)/);
   assert.match(gate, /is_at_least_age\(m\.born_on, 18\)/);
   ok('wave101 server gate: still NOT APPLIED, is_adult uses the same 18 (details: under18-server-check)');
+
+  // Step 2 (master plan, 2026-10-20): the 18+ nights gate fails closed. Paired refuse/allow cases.
+  const now = new Date();
+  const exact18 = shiftYears(18, now).iso;
+  const t364 = new Date(now.getFullYear() - 18, now.getMonth(), now.getDate() + 1); // 17y364d old
+  const isoOf = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const refused: [string, string | null | undefined][] = [
+    ['null', null],
+    ['undefined', undefined],
+    ['blank', ''],
+    ['spaces', '   '],
+    ['text', 'abc'],
+    ['month 13', '2000-13-45'],
+    ['30 Feb', '2000-02-30'],
+    ['wrong shape', '2000/01/01'],
+    ['future', `${now.getFullYear() + 1}-01-01`],
+    ['17y364d', isoOf(t364)],
+  ];
+  for (const [label, value] of refused) {
+    assert.equal(isAtLeastAge(value, NIGHT_GOING_AGE_YEARS), false, `isAtLeastAge refuses ${label}`);
+    assert.notEqual(signupAgeMessage(value), null, `signupAgeMessage refuses ${label}`);
+  }
+  assert.equal(signupAgeMessage(isoOf(t364)), UNDER_18_MESSAGE);
+  assert.equal(signupAgeMessage('abc'), AGE_INVALID_MESSAGE);
+  assert.equal(signupAgeMessage(''), AGE_REQUIRED_MESSAGE);
+  assert.equal(isAtLeastAge(exact18, NIGHT_GOING_AGE_YEARS), true, 'exactly 18 is allowed');
+  assert.equal(signupAgeMessage(exact18), null);
+  ok('nights gate (client): null / blank / malformed / future / 17y364d refused; exactly 18 allowed');
+
+  const around = read('src/app/around-lab.tsx');
+  assert.doesNotMatch(around, /me\?\.born_on \?\s*isAtLeastAge/, 'no truthiness shortcut around the birthday');
+  assert.match(around, /isAtLeastAge\(me\?\.born_on, NIGHT_GOING_AGE_YEARS\)/);
+  assert.match(around, /CONFIRM_AGE_MESSAGE/);
+  ok('around-lab: a missing birthday is not old enough and gets the confirm-your-age message');
+
+  // Server half: wave102 re-creates set_going so p_ages cannot skip the age test.
+  const w102 = read('supabase/migrations/wave102_nights_18_gate.sql');
+  const w102Fn = w102.slice(w102.indexOf('function public.set_going'));
+  assert.match(w102, /NOT APPLIED/);
+  assert.match(w102Fn, /perform public\.require_adult\(\)/);
+  assert.match(w102Fn, /if not public\.is_at_least_age\(v_born, 18\) then/);
+  assert.match(w102Fn, /'going_under_18'/);
+  const w102Body = w102Fn.slice(w102Fn.indexOf('as $$')).replace(/--.*$/gm, '');
+  assert.doesNotMatch(w102Body, /show_requires_18|p_ages/, 'the body never reads p_ages or show_requires_18');
+  assert.match(w102Fn, /revoke all on function public\.set_going\(text,boolean,text\) from public, anon;/);
+  assert.match(w102Fn, /grant execute on function public\.set_going\(text,boolean,text\) to authenticated;/);
+  assert.doesNotMatch(w102Fn, /is_at_least_age\([^)]*, (1[0-79]|[0-9]|2\d)\)/, 'only 18');
+  assert.doesNotMatch(w102Fn.replace(/--.*$/gm, ''), /\bupdate public\.|\bdelete from public\.me\b/);
+  // The helper it relies on: null is never adult, exactly 18 (born_on <= today - 18y) is.
+  const helper = read('supabase/migrations/stage2_me_born_on.sql');
+  assert.match(helper, /select p_born_on is not null/);
+  assert.match(helper, /p_born_on <= \(current_date - make_interval\(years => p_years\)\)/);
+  ok('wave102: set_going needs an 18+ birthday always (null/blank/under-18 raise), p_ages not trusted, NOT APPLIED');
 }
 
 function read(rel: string): string {

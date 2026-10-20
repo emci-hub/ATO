@@ -45,12 +45,12 @@ Legend: [x] done · ▶ next · [ ] not started · [P] parked (built, waiting on
 | # | Step | Model | Status |
 |---|---|---|---|
 | 0 | Save the work: group the uncommitted tree into logical commits on this branch (I say "commit") | Sonnet 5 | [x] 2026-10-20: 5 commits (9fdc1e92 18+, ab9ee5f7 questions, 8f786578 policy/rules, c16812f7 content fixes, 6f923c7d tooling+reports), nothing pushed |
-| 1 | Profile character after the first group of questions | Sonnet 5 (Opus only if the design is contested) | ▶ |
-| 2 | 18+ nights gate for missing/blank/invalid birthdays (client + server) | Sonnet 5 | [ ] |
-| 3 | Scrub Sage and crisis everywhere + update Terms of Service and the other legal text | Sonnet 5 | [ ] |
-| 4 | Finish the content review: policy audit (rest), flags, Box 60 | Sonnet 5 + one Opus reviewer | [P] |
-| 5 | Full gate, fix every failure with evidence, reviewer pass | Sonnet 5 + Opus reviewer | [ ] |
-| 6 | RELEASE A (needs my approvals, in order): OTA → migrations → bundle regen + deploy → phone check | Sonnet 5 | [ ] |
+| 1 | Profile character after the first group of questions | Sonnet 5 (Opus only if the design is contested) | [x] 2026-10-20: built, UNCOMMITTED (see checklist); phone/browser render not verified |
+| 2 | 18+ nights gate for missing/blank/invalid birthdays (client + server) | Sonnet 5 | [x] 2026-10-20: built, UNCOMMITTED (see checklist); wave102 NOT applied |
+| 3 | Scrub Sage and crisis everywhere + update Terms of Service and the other legal text | Sonnet 5 | [x] 2026-10-20: built, UNCOMMITTED (see checklist); wave103 NOT applied |
+| 4 | Finish the content review: policy audit (rest), flags, Box 60 | Sonnet 5 + one Opus reviewer | [x] 2026-10-20: built, UNCOMMITTED (see checklist); bundle + wave99d NOT applied; flags unchanged |
+| 5 | Full gate, fix every failure with evidence, reviewer pass | Sonnet 5 + Opus reviewer | [x] 2026-10-20: gate = only the 2 expected failures; reviewer PASS (Step 2); D8 checked; nothing changed in code |
+| 6 | RELEASE A (needs my approvals, in order): OTA → migrations → bundle regen + deploy → phone check | Sonnet 5 | ▶ (first: commit split incl. Play files on their own, then `gen:ai-library`; rotate the Gemini key) |
 | 7 | Roadmap step 3: Circle safety (accept, block/report, filters) | Opus 5 | [ ] |
 | 8 | Roadmap step 4: notifications + accessibility (+ the web date-row overflow fix) | Sonnet 5 | [ ] |
 | 9 | Roadmap steps 5 + 6: insight/Home polish, AI cleanup (retire `_library_crisis`, dead callers) | Sonnet 5 | [ ] |
@@ -63,26 +63,91 @@ Legend: [x] done · ▶ next · [ ] not started · [P] parked (built, waiting on
 
 **0.** [x] commits grouped (content/questions, age+under-18 client, server migration FILES, rules/voice, tooling+docs; Play files
 separate: none changed) [x] nothing pushed. Left uncommitted on purpose: `.claude/agent-memory/**`.
-**1.** [ ] investigation: what the old character was, what exists, what is missing [ ] plan approved by me (sample render) [ ]
-character appears after the first read (confirm which set), shows current stats at honest confidence, a unique character from
-answers, and what it could evolve into from the direction of answers [ ] no invented stats; weaknesses per the policy [ ]
-public snippets skip struggle-side lines [ ] synthetic-user preview in the browser pane [ ] checks + one reviewer pass [ ]
-`PROFILE_CARD_COPY_REVIEWED` decision recorded.
-**2.** [ ] read-only finding: what a null/blank `born_on` does today (client + SQL) [ ] every 18+ gate listed [ ] blank/
-malformed/under-18 cannot go to 18+ nights or see gated details; prompt to confirm age [ ] server fix = NEW unapplied migration
-(tested path) [ ] paired tests (blank, malformed, 17y364d refused; exactly 18 allowed) [ ] fits the wave101 order.
-**3.** [ ] inventory + counts shown, plan approved [ ] user-visible Sage/crisis copy removed; dead code deleted (sage.tsx,
-sage.txt, content.generated.ts, crisis_flags reads) [ ] static HelplineRow kept (it is NOT crisis detection) [ ] tests rewritten,
-none weakened [ ] `_library_crisis` rename = unapplied migration only [ ] Terms of Service, Privacy Policy, privacy labels,
-landing pages, legal drafts match the app today (no Sage/crisis logging, 18+, real AI uses, Divecore save) [ ] list of
-questions only I/a lawyer can answer; say it is not legal advice.
-**4.** [ ] finish the policy audit that stopped at the usage limit (prompts, reviewer instructions, checks, word lists,
-server filters, docs) with paired tests [ ] resolved: the framework-fence question [ ] short list of what I must actually
-read (only what a launch surface shows) [ ] flags flipped only for sets I approve; the rest hidden behind their flag [ ] Box 60.
-**5.** [ ] `check:ota-gate` once, every failure traced to a cause [ ] reviewer pass [ ] the stale-bundle failure is the only
-expected one.
+**1.** [x] investigation (no standalone old character; the collectible ProfileCard with 8 shared Divecore heroes, shown only after
+set 25) [x] plan approved by me (after the 48 = sets 1–3; 8 shared heroes + per-user name/accents; text-only evolve) [x] shows
+after the 48, 16 stats at honest confidence (<3 answers = empty bar, "Still early"), name from answers ("Still forming" until all 9
+type axes are settled), "could grow into" only from near-line type axes (±0.08) worded "If … tips" — closeness to the line, NOT a
+trend (tracks hold no history) [x] no invented stats; weakness via `cardStrengthWeakness` ("You may…", lean ≥0.15) [x] public
+line = `characterPublicLine` (strength only, skips private leans; the in-app card still shows weakness) [~] synthetic previews are in
+`/profile-card-lab` (3 users) but the web render is NOT verified: Metro crashed twice with EMFILE (Windows file-handle limit) —
+look at it on the phone/lab [x] `check:profile-history` (9 pass), typecheck, eslint, Opus reviewer = PASS (4 warnings fixed)
+[x] `PROFILE_CARD_COPY_REVIEWED` stays false until emci reads the render. Files: `src/lib/profile-character.ts`,
+`src/components/profile-character.tsx`, `questions-fold.tsx`, `profile-card.tsx` (HERO_ART exported), `profile-card-lab.tsx`,
+`scripts/profile-history-check.ts`. Not committed (waiting for "commit").
+**2.** [x] read-only finding: null/blank/malformed `born_on` was already fail-closed in SQL (`is_at_least_age(null)` = false; the
+column is a `date`) and in `ageGateFor`/around-lab; the real holes were (a) `set_going` only tested age when the caller-supplied
+`p_ages` looked like "18+", so null/''/"All Ages" skipped it (open in the DB today), and (b) client `isAtLeastAge` /
+`signupAgeMessage` didn't validate the date (`signupAgeMessage('2000-13-45')` returned null = allowed) [x] every 18+ gate listed in
+`docs/under18-server.md` "Nights (18+) gate" [x] blank/malformed/future/17y364d refused, exactly 18 allowed; around-lab shows
+"Confirm your age first" for a missing birthday [x] server fix = NEW unapplied `wave102_nights_18_gate.sql` (`set_going`, copy of
+wave101's + an age test that ignores `p_ages`; applies AFTER wave101) [x] paired tests in `scripts/age-check.ts` (31 pass) [x] fits
+the wave101 order (item 7) [x] `check:under18-server` (6 pass; wave102 added to `NOT_LIVE` there), typecheck. Files:
+`src/lib/age.ts`, `src/app/around-lab.tsx`, `scripts/age-check.ts`, `scripts/under18-server-check.ts`, `docs/under18-server.md`,
+`supabase/migrations/wave102_nights_18_gate.sql`. [ ] full gate + Opus reviewer run in Step 5 (not run here).
+Not verified: wave102 against a real database (no SQL run; apply is step 6, my OK).
+**3.** [x] inventory + counts shown, plan approved [x] user-visible Sage/crisis copy removed (widget header now "ATO", credits line,
+`EXPLORE_EMPTY_PAUSED`); dead code deleted: `sage.txt` (content moved to `voice-reference.txt`, generator + `content.generated.ts`
+regenerated without `SAGE_VOICE`), `gen-sage-icon.ts`, `sage-mask.png`, every client `crisis_flags`/`crisis_since` read. KEPT on
+purpose: `src/app/sage.tsx` (1-line redirect to /insights for old links, pinned by `check:tab-rename`; drop at the launch flip) and
+the internal `sage-*` module names (~40 importers, invisible; deferred to Step 9) [x] static HelplineRow untouched [x] tests
+rewritten, none weakened (floor/push/preview-mode/jargon/reset-account/no-sage-copy tightened; new `check:no-crisis-reads`)
+[x] `wave103_drop_crisis_plumbing.sql` = UNAPPLIED (one transaction; renames `_library_crisis` → `_library_paused`, drops
+`crisis_since`, drops table `crisis_flags` = deletes tester rows; apply after wave102; in `NOT_LIVE`; not run against Postgres)
+[x] Terms, Privacy Policy, privacy labels, `landing/*.html` rewritten from the DRAFTs (no Sage/crisis logging, 18+, real AI uses,
+Divecore save, delete scope read from `delete-account`); "Reset account" deliberately NOT promised (root-only, pre-launch) [x]
+`docs/legal/OPEN-QUESTIONS.md` = 18 items only I/a lawyer can answer, opens "This is not legal advice"; 47 `[CONFIRM]` tags remain
+in the legal text (AI vendor + no-training terms, retention, entity, governing law, email form, Sentry/Resend, launch wording) [x]
+Opus reviewer: FAIL on one legal-accuracy item (Reset account) → fixed, plus 3 warnings fixed; open warning: `ai-library-check`
+still names `_library_crisis` in wave93/94 (describes past state, passes). Not verified: wave103 SQL on a real DB; widget text needs
+a native build; `check:ota-gate` was run by the builder (2 expected failures: stale ai-library bundle; `play-isolation` because
+`src/play/credits.ts` must be its own commit). Re-run the gate in Step 5. Play file for its own commit: `src/play/credits.ts`.
+Also decide (OPEN-QUESTIONS 10): `OtherUsageData` in PrivacyInfo/app.json/labels was justified by `crisis_flags`.
+**4.** [x] policy audit finished: ~35 rules/lists audited (22 KEEP, 8 CONFLICT, 5 UNCLEAR) and every conflict fixed with PAIRED
+tests; kept filters were verified with real pass/fail examples, not trusted by name (`check:filter-behavior`: found + fixed 3
+real bugs: drunk-driving mentions blocked/encouragement missed, "Donate your old jacket" refused, two risky tasks missed)
+[x] D6 settled (emci, B): framework names allowed when relevant, accurate, explained; never a diagnosis, never an implied
+validated assessment, never a type code as ATO's own result; trademark handled narrowly. New checks: `framework-fence`,
+`label-context`, `filter-behavior`, `style-rules`. Label classes (discussion / quotation / figurative / behavior / verdict):
+the code tells discussion, behavior and common verdict phrasings apart; known gaps: a bare name as subject ("Dave is a
+narcissist"), "sounds like ADHD", a claim split across two sentences, "She called you a narcissist" (untested), a speaker verb
+inside a joke [x] style bans ("boundar*", "you are", "should", "maybe", "try to", CRUEL_PHRASES, phone-detail ban, pet "bet")
+replaced by contextual rules; honest uncertainty allowed in observations, vague filler refused only in Do tasks [x] live
+instruction docs updated (CLAUDE.md, DATA_AI_MAP, GOTCHAS, deep-dive review; the deep-dive "gentle block" is removed);
+historical docs untouched [x] read list: `docs/copy-review-agent/step4-read-list.md` [x] flags: NONE flipped, no new gating
+code (false still shows the surface; hiding it would be a new pattern) [x] Box 60 drafted at the end of `docs/ATO_DEVICE_TESTS.md`
+[x] Opus reviewer FAIL on 1 critical (drunk-driving filter passed encouragement) + 4 weakened filters → all fixed with pairs;
+open known gaps listed above. [x] full gate run once: exactly 2 failures — `ai-library` (stale bundle, expected) and
+`play-isolation` (Play + app files in one tree: commit `src/play/**`, `scripts/check-pet-talk` + circle-visits, daily-visitors,
+pet-knows-you, dive-fx, and `src/play/credits.ts` on their own). Nothing committed/applied/deployed.
+LIVE-SERVER GAP (unchanged until Step 6): the deployed `ai-library` bundle still has the OLD fence (drops "anxious", "secure",
+"avoidant") and the DB backstop is still the wave93 keyword filter (drops "anxious", "therapy", any swearing, "insecure"). Local
+fixes do NOT protect or relax the live server. Needs: `gen:ai-library` (+ bump LIBRARY_VERSION: dive, story-card, legend
+story, directive-advice, moment-voice, fence/jargon/clinical changed) + deploy `ai-library` and `ai-library-fill`, and `wave99d`.
+Untouched on purpose: `sage-title.ts` (live components import it; its prompt line 214 says "No framework names. No clinical
+words." and `explore/prompt.ts:192` says "No framework names" — both still say the OLD rule: update in Step 9) and
+`docs/daily-insights/README.md:29`.
+**5.** [x] `check:ota-gate` once (log kept only in scratchpad): exactly 2 failures, both traced: `ai-library` = stale bundle
+(fixed by `gen:ai-library` + deploy, Step 6); `play-isolation` = `src/play/credits.ts` + `src/play/pet-talk.ts` mixed with app
+files (fixed by committing Play files on their own; asked-before-commit rule still holds) [x] lint 0 errors / 35 warnings (not
+touched), typecheck clean [x] reviewer pass (Opus, Step 2 only; see Review ledger): PASS, no criticals. Warnings, none fixed:
+(a) `age-check.ts:401` `exact18` via `shiftYears` breaks only on 29 Feb (test wrong that day, not the gate); (b) live check
+`around-going-live-check.ts` needs a seeded account with an 18+ birthday once wave102 is applied; (c) server UTC date vs phone
+local date differs for a few hours on an 18th birthday (server fails closed, documented); (d) wave102 has no begin/commit (harmless)
+[x] D8: `.env.local` gitignored and untracked; no `EXPO_PUBLIC_*` secret read in `src/`/app config (only Supabase URL + anon key,
+provider flags, site URL, Sentry DSN); harness blocked reading `.env.local`, so its key NAMES are unverified — and git history
+shows a client Gemini key path before `c9bb71f2`, so builds/OTAs older than that may have carried it → rotate it (emci).
 **6.** [ ] I approve each of: OTA; each migration in the order below; `gen:ai-library` + deploy [ ] pre-apply read-only SQL run
 (stale-copy md5, counts, root/dev/review accounts have an 18+ birthday) [ ] post-apply SQL + security advisors [ ] phone check.
+
+## Review ledger (a reviewer skips anything listed here unless those files changed afterward)
+
+| Step | Scope | Verdict | Open warnings |
+|---|---|---|---|
+| 1 | profile character files (`profile-character.ts/.tsx`, `questions-fold.tsx`, `profile-card.tsx`, lab, `profile-history-check.ts`) | PASS (Opus) | 4 fixed |
+| 2 | `age.ts`, `around-lab.tsx`, `age-check.ts`, `under18-server-check.ts`, `wave102` | PASS (Opus, Step 5) | Feb-29 test, live-check seed, UTC vs local, no begin/commit (see Step 5) |
+| 3 | Sage/crisis scrub, legal text, `wave103` | FAIL → fixed (Opus) | `ai-library-check` still names `_library_crisis` in wave93/94 (describes past state) |
+| 4 | content-policy audit, filters, new checks | FAIL → fixed (Opus) | known label gaps listed in Step 4 |
+| 5 | no code changes | n/a | none |
 
 ## Ledger A: settled decisions (never re-ask)
 
@@ -96,6 +161,10 @@ expected one.
 - Team endings "Spirit"/"Camp" fine. Approved Story samples stay unless a concrete clarity/accuracy problem.
 - Profile weaknesses: Strengths/Weaknesses labels stay; "you may…" and only for a clear lean; one practical step.
 - No Sage in the app; crisis system gone (static helpline row stays).
+- Framework fence (D6): names of psychology frameworks/theories are allowed when relevant, accurate and explained; never a
+  diagnosis, never an implied validated assessment, never a type code as ATO's own result. Labels are judged in context for
+  everyone (discussion, quotation, figurative, behavior vs a verdict on a real or addressed person). Style rules are contextual
+  guidance, not blanket word bans; honest uncertainty is allowed.
 - Public signup, no invite gate (launch flip). One chat per step. Plan + model per step.
 
 ## Ledger B: parked, built but NOT applied (nothing deployed)
@@ -105,7 +174,8 @@ Migrations, apply order (full detail in `docs/under18-server.md` and `docs/copy-
 2. `wave99b_min_age_18` (sign-up and birthday guard 18) · 3. `wave99` (46 question wordings) · `wave99c` (Daily Pick p65) ·
 `wave99d` (library backstop vocabulary) · 4. `wave100` then `wave100b` (question retire marker + 19 retired/new) ·
 5. set an 18+ birthday on root, dev-test and review/Apple-demo accounts · 6. `wave101` (under-18 server gate, 110 guarded
-functions) after the OTA is on phones.
+functions) after the OTA is on phones · 7. `wave102_nights_18_gate` (set_going ignores `p_ages`) right after wave101 · 8. `wave103_drop_crisis_plumbing` (drops
+`crisis_flags` rows, `crisis_since`, renames `_library_crisis`) right after wave102 — needs my explicit OK (deletes tester rows).
 Bundle: `LIBRARY_VERSION` deep_dive l2, story l4, legend l2 → `gen:ai-library` + deploy `ai-library` and `ai-library-fill`
 BEFORE the OTA that asks for them. `check:ai-library` fails only on the stale bundle until then.
 Flags still false: INSIGHT_BANK, CATEGORY_BANK, DAILY_PICK, BANK (questions), STAGED_INTAKE, POLISH, PROFILE_CARD, TEAM,
@@ -120,9 +190,9 @@ CATEGORY_DEEP_DIVE, LEGEND_FIGURES, STORY, STORY_BANK (+ dead: TITLE, CATEGORY_R
 | D3 | wave101 leaves reads of the caller's own rows open (no cost, no other person's data). Accept? | accept |
 | D4 | Per-function gate (built) vs one central request hook (new pattern)? | keep the per-function gate |
 | D5 | Legends: three trait sides have no legend, many thin. Accept warnings, add sourced legends later? | accept, add later |
-| D6 | The type-code/Big Five/attachment-style fence on generated text: product choice or keyword ban? | step 4 asks one plain question |
+| D6 | SETTLED 2026-10-20 (emci: option B): framework names allowed when relevant, accurate, explained; no diagnosis, no implied validated assessment, no type code as ATO's result | moved to Ledger A |
 | D7 | Story sample reveal "you always beat the clock" (overclaims): fix? | leave unless you want it |
-| D8 | `.env.local` exports an `EXPO_PUBLIC_GEMINI_API_KEY`: anything `EXPO_PUBLIC_` can ship in the bundle. Check and rotate. | security check in step 5; I never print the value |
+| D8 | `.env.local` exports an `EXPO_PUBLIC_GEMINI_API_KEY`: anything `EXPO_PUBLIC_` can ship in the bundle. Check and rotate. | CHECKED in step 5: current code does not read it, file is gitignored. Still ROTATE it (old builds may have shipped it) and delete the line from `.env.local` (emci does both; I never touch secrets) |
 | D9 | Apple-demo/review accounts need an 18+ birthday before wave101 | set before step 6 |
 | D10 | Web date row overflows at 375 px (`born-on-fields.tsx`); native not run | fix in step 8 |
 

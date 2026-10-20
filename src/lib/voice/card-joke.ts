@@ -41,6 +41,9 @@ export const CARD_JOKE_MAX_CHARS = 140;
  * prompt rule here, backed by each surface's own proper-name / name-not-in-entry
  * checks. Shared with the Story (`storyHasBannedTopic`) and Story v3 templates.
  */
+const DRIVE_NEGATOR =
+  "(?:never|don['’]t|do not|dont|not|stop|avoid|shouldn['’]t|should not|won['’]t|can['’]t|cannot|illegal to|against)";
+
 export const JOKE_HARM_FILTER: readonly RegExp[] = [
   // Encouraging self-harm or suicide.
   /\bkill (?:your|my|him|her|them|our)sel(?:f|ves)\b/i,
@@ -52,9 +55,20 @@ export const JOKE_HARM_FILTER: readonly RegExp[] = [
   // Telling someone to die.
   /\b(?:you|they|he|she|people like (?:you|them)) (?:should|ought to|deserve to|need to) (?:just )?(?:die|drop dead|be dead)\b/i,
   /\bgo (?:die|drop dead)\b/i,
-  // Drunk driving as an instruction (or the punchline).
-  /\b(?:drink|drunk|buzzed|tipsy|wasted|hammered)(?:[- ]and)?[- ]driv/i,
-  /\b(?:drinks?|drunk|buzzed|tipsy|wasted|hammered)\b[^.?!]{0,40}\b(?:then|and) (?:drive|get behind the wheel)\b/i,
+  // Drunk driving as an instruction (or the punchline). A MENTION passes (emci 2026-10-20, found by
+  // scripts/filter-behavior-check.ts): "drunk driving cost him his licence", "the drunk driver in the film",
+  // "never drink and drive" are not encouragement. A negator earlier in the same clause also passes.
+  // Negation counts only when it DIRECTLY governs the verb phrase ("never drink and drive",
+  // "don't just drink and drive"); a negator elsewhere in the sentence ("Don't be a wimp, drink and drive")
+  // does not excuse it.
+  new RegExp(
+    `(?<!\\b${DRIVE_NEGATOR}\\s+(?:(?:ever|even|you|to|please|just|then)\\s+)*)(?:^|[.!?;,]\\s*|\\b(?:go|just|should|could|can|must|please|then|and|so|try to|feel free to|fine to|ok to|okay to|safe to)\\s+)(?:drink(?:ing)?[- ]and[- ]driv\\w*|drive (?:home |back |there |yourself |anyway )?(?:drunk|buzzed|tipsy|wasted|hammered|after (?:a |some |a few |several |two |three |four |five )?(?:drinks?|beers?|shots?|wines?|cocktails?|pints?)))`,
+    'i',
+  ),
+  new RegExp(
+    `(?<!\\b${DRIVE_NEGATOR}\\s+(?:(?:ever|even|you|to|please|just|then)\\s+)*)\\b(?:drinks?|drunk|buzzed|tipsy|wasted|hammered)\\b[^.?!]{0,40}\\b(?:then|and) (?:drive|get behind the wheel)\\b`,
+    'i',
+  ),
   // Slurs.
   /\bn[i1]gg(?:a|er|ers|as|uh|az)\b/i,
   /\bfag(?:s|got|gots|gy)?\b/i,

@@ -54,22 +54,24 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-const BANNED = [
-  'MBTI',
-  'Myers-Briggs',
-  '16Personalities',
-  'Big Five',
-  'OCEAN',
-  'neuroticism',
-  'INFJ',
-  'attachment style',
-  'TKI',
-  'Thomas-Kilmann',
-  'growth mindset',
-  'fixed mindset',
-  'locus of control',
-  'self-efficacy',
-  'self-determination',
+// Rule D6 (emci 2026-10-20): a framework may be NAMED and explained; a RESULT handed to the reader, an
+// "ATO measures it" claim or a trademark affiliation fails. Each framework has a failing and a passing form.
+const FRAMEWORK_PAIRS: [name: string, fail: string, pass: string][] = [
+  ['MBTI', 'Your MBTI type is INTJ.', 'MBTI is a popular sorting model; ATO does not use it.'],
+  ['Myers-Briggs', 'ATO is based on Myers-Briggs.', 'Myers-Briggs is a test some people take at work; this is a different thing.'],
+  ['16Personalities', 'Your 16Personalities result says you plan ahead.', '16Personalities is a free quiz some people compare notes on.'],
+  ['Big Five', 'Your Big Five score is high on openness.', 'The Big Five is a model psychologists use; ATO is not that test.'],
+  ['OCEAN', 'You scored high in the OCEAN traits.', 'We swam in the ocean, and ocean is also a Big Five acronym.'],
+  ['neuroticism', 'You scored high in neuroticism.', 'Neuroticism is one of the Big Five traits psychologists measure.'],
+  ['INFJ', 'You are an INFJ.', 'INFJ is one of the 16 MBTI types; it is a model, not a diagnosis.'],
+  ['attachment style', 'Your attachment style explains this.', 'Attachment style is a theory about how people bond; ATO does not measure it.'],
+  ['TKI', 'Your TKI score shows you compromise.', 'The Thomas-Kilmann conflict modes are a workplace model; ATO is not that test.'],
+  ['Thomas-Kilmann', 'ATO uses Thomas-Kilmann to score you.', 'Thomas-Kilmann describes five ways people handle conflict.'],
+  ['growth mindset', 'You have a growth mindset.', 'Growth mindset is the idea that skills can be trained.'],
+  ['fixed mindset', 'You have a fixed mindset.', 'Fixed mindset is the opposite idea, that skills are set.'],
+  ['locus of control', 'Your locus of control is external.', 'Locus of control is a theory about who you think steers events.'],
+  ['self-efficacy', 'You scored low in self-efficacy.', 'Self-efficacy is the belief that you can pull a task off.'],
+  ['self-determination', 'You have strong self-determination.', 'Self-determination theory covers autonomy, competence and relatedness.'],
 ];
 
 function meBase(over: Partial<VoiceMe> = {}): VoiceMe {
@@ -264,9 +266,12 @@ async function main() {
     read('src/lib/full-profile.ts'),
     read('src/components/full-profile-fold.tsx'),
   ].join('\n');
-  for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {
-    assert.equal(copyBlob.toLowerCase().includes(banned.toLowerCase()), false, `UI leaked "${banned}"`);
-  }
+  // D6 (2026-10-20): the intake UI may mention a framework to explain it, but never hands the reader a result
+  // or claims an official test. The old substring ban (which also caught the word "ocean") is replaced by the
+  // claim fence, with a pair so the check cannot go blind.
+  assert.deepEqual(matchingFrameworkTerms(copyBlob), [], `UI hands out a framework result or claims a test: ${matchingFrameworkTerms(copyBlob).join(', ')}`);
+  assert.ok(containsFrameworkTerm(`${copyBlob}\nYour Big Five score is shown here.`), 'the UI check still catches a result claim');
+  assert.ok(!containsFrameworkTerm(`${copyBlob}\nThe Big Five is a model; ATO is not that test.`), 'and still lets an explanation through');
   assert.doesNotMatch(read('src/app/(tabs)/you.tsx'), /openness|INFJ|attachment_anxiety|steadiness|autonomy|growth_mindset|self_efficacy/);
   ok('no framework labels in intake UI, poster, or You-tab identity');
 
@@ -313,8 +318,12 @@ async function main() {
   // check against the builder would fail on the very instruction that forbids
   // them. What matters is that generated output carrying one is dropped, which
   // parseDailyInsight does via containsFrameworkTerm on all five fields.
-  for (const banned of BANNED) {
-    assert.equal(containsFrameworkTerm(banned), true, `${banned} should be a banned term`);
+  for (const [name, fail, pass] of FRAMEWORK_PAIRS) {
+    assert.equal(containsFrameworkTerm(fail), true, `${name}: a result / measurement claim must fail: "${fail}"`);
+    assert.equal(containsFrameworkTerm(pass), false, `${name}: naming and explaining it must pass: "${pass}"`);
+  }
+  for (const ordinary of ['A competitive streak runs in the family.', 'Compromising photos leaked.', 'The ocean was cold.', 'Collaborative, accommodating and a little bit competitive.']) {
+    assert.equal(containsFrameworkTerm(ordinary), false, `ordinary words are not frameworks: ${ordinary}`);
   }
   const omitted = traitPromptLines({ extraversion: null, openness: null, autonomy: null, growth_mindset: null });
   assert.equal(omitted, '');
@@ -340,9 +349,12 @@ async function main() {
   );
   assert.deepEqual(matchingFrameworkTerms('Your INFJ side is showing.'), ['INFJ']);
   assert.equal(matchingFrameworkTerms('Day four is even.').length, 0);
-  assert.equal(containsFrameworkTerm('growth mindset'), true);
-  assert.equal(containsFrameworkTerm('locus of control'), true);
-  assert.equal(containsFrameworkTerm('self-efficacy'), true);
+  assert.equal(containsFrameworkTerm('You have a growth mindset.'), true);
+  assert.equal(containsFrameworkTerm('Growth mindset is a theory about effort.'), false);
+  assert.equal(containsFrameworkTerm('Your locus of control is external.'), true);
+  assert.equal(containsFrameworkTerm('Locus of control is a theory, not a score here.'), false);
+  assert.equal(containsFrameworkTerm('You scored low in self-efficacy.'), true);
+  assert.equal(containsFrameworkTerm('Self-efficacy is a belief about your own ability.'), false);
   assert.equal(containsFrameworkTerm('They picked their own way through it.'), false);
   ok('runtime fence drops generated Read/Do that names a type');
 

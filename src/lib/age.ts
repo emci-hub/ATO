@@ -9,6 +9,7 @@ export const NIGHT_GOING_AGE_YEARS = 18;
 
 export const UNDER_18_MESSAGE = 'ATO is for people 18 and older.';
 export const AGE_REQUIRED_MESSAGE = 'When were you born?';
+export const CONFIRM_AGE_MESSAGE = 'Confirm your age first: add your birthday to join a night.';
 export const AGE_INVALID_MESSAGE = "That doesn't look like a real date.";
 
 const DAYS_IN_MONTH = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -70,11 +71,16 @@ export function ageYearsOn(bornOn: string, today: Date = new Date()): number {
   return age;
 }
 
+/** Fails closed: a missing, blank, malformed or future birthday is never "old enough". */
 export function isAtLeastAge(
-  bornOn: string,
+  bornOn: string | null | undefined,
   years: number,
   today: Date = new Date(),
 ): boolean {
+  if (!isReadableBornOn(bornOn)) return false;
+  const [year, month, day] = bornOn.split('-').map(Number);
+  const [ty, tm, td] = todayParts(today);
+  if (year > ty || (year === ty && (month > tm || (month === tm && day > td)))) return false;
   return ageYearsOn(bornOn, today) >= years;
 }
 
@@ -198,8 +204,12 @@ export function formatDateForLocale(iso: string, locale?: string): string {
 }
 
 /** Inline onboarding error, or null if this date may create an account. */
-export function signupAgeMessage(bornOn: string, today: Date = new Date()): string | null {
-  if (ageYearsOn(bornOn, today) < MIN_APP_AGE_YEARS) return UNDER_18_MESSAGE;
+export function signupAgeMessage(
+  bornOn: string | null | undefined,
+  today: Date = new Date(),
+): string | null {
+  if (!isReadableBornOn(bornOn)) return bornOn ? AGE_INVALID_MESSAGE : AGE_REQUIRED_MESSAGE;
+  if (!isAtLeastAge(bornOn, MIN_APP_AGE_YEARS, today)) return UNDER_18_MESSAGE;
   return null;
 }
 

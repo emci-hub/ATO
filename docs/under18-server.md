@@ -333,7 +333,31 @@ Agents never write to an account; this is set up by the person or by emci:
    check fails ("copy differs" / "must cite its latest source"); reprint the copy with
    `npx tsx scripts/under18-server-check.ts --copy 'serve_bank_set()'` and paste it over the old one.
 5. Give root, dev-test and review accounts an 18+ birthday (section above). Run "Before applying".
-6. **`wave101_under18_server_gate.sql` last**, then "After applying" and the security advisors.
+6. **`wave101_under18_server_gate.sql`**, then "After applying" and the security advisors.
+7. **`wave102_nights_18_gate.sql` after wave101** (Step 2, 2026-10-20). It restates `set_going` on top of wave101's
+   copy (same `require_adult()` first line) so joining a night needs `is_at_least_age(born_on, 18)` **always**.
+   Before it, the age test ran only when the caller-supplied `p_ages` looked like "18+" (`show_requires_18(p_ages)`),
+   so `p_ages` null / `''` / "All Ages" skipped it (open in the database today, and for a lying caller even after
+   wave101 only if they were already an adult, so wave102 is defence in depth once wave101 is live). No show table
+   exists to look a show's ages up from, so the gate no longer reads `p_ages` at all. `check:under18-server` leaves
+   wave102 out of the state wave101 is copied from (`NOT_LIVE`); `check:age` pins wave102 itself.
+8. **`wave103` after wave102** (crisis cleanup, 2026-10-20): drops crisis plumbing, **UNAPPLIED**, and will drop
+   `crisis_flags` rows (a data deletion, so it needs emci's ok first; see `docs/sage-cleanup.md` section 1). Its file name
+   and exact contents are the code agent's; confirm them before applying.
+
+## Nights (18+) gate: what each case does
+
+| Birthday | Client (`isAtLeastAge`, `signupAgeMessage`, around-lab) | Server (`set_going`, wave102) |
+|---|---|---|
+| null / blank / spaces | refused ("Confirm your age first…"; sign-up: "When were you born?") | refused: `is_at_least_age(null)` = false → `going_under_18`; a blank string can't reach a `date` column |
+| malformed (`abc`, `2000-13-45`, `2000-02-30`) | refused ("That doesn't look like a real date.") | cannot be stored or passed (date cast fails) |
+| future date | refused | cannot pass sign-up / `me_born_on_guard` |
+| 17y364d | refused | refused (`P0008 going_under_18`; the whole app is `P0005` under wave101) |
+| exactly 18 | allowed | allowed (`born_on <= current_date - 18y`, UTC) |
+
+Leaving a night (`p_going = false`) is not age-gated. The Around tab is parked; the client gate is reachable from the
+dev lab only. Not changed: `show_requires_18` / `showRequires18` stay (parity of the "18+" text parser), they are no
+longer the age authority.
 
 Rollback: re-apply each function's source migration body (the cited file), `drop trigger me_adult_guard on
 public.me`, `drop trigger connections_adult_guard on public.connections`, drop the 11 `*_adult_*` policies.

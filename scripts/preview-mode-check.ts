@@ -88,8 +88,9 @@ for (const key of ['ato_tokens', 'tokens', 'milestones_celebrated', 'sage_story'
   assert.ok(key in PREVIEW_ME_OVERLAY, `${key} reads as new`);
 }
 assert.deepEqual(previewRpc('bank_answered', { ids: ['q1'], fresh_starts: 2 }), { ids: [], fresh_starts: 0 });
-const boot = previewRpc('home_bootstrap', { trait_tracks: [{}], checks: [{}], crisis_since: ['x'], other: 1 }) as Record<string, unknown>;
-assert.deepEqual([boot.trait_tracks, boot.checks, boot.crisis_since, boot.other], [[], [], [], 1]);
+const boot = previewRpc('home_bootstrap', { trait_tracks: [{}], checks: [{}], other: 1 }) as Record<string, unknown>;
+assert.deepEqual([boot.trait_tracks, boot.checks, boot.other], [[], [], 1]);
+assert.ok(!('crisis_since' in boot), 'preview bootstrap does not invent the removed crisis field');
 ok('reads look new: me without answers, tokens or milestones (handle and consent kept); bootstrap and bank progress empty');
 
 // --- the fetch wrapper -------------------------------------------------------------------

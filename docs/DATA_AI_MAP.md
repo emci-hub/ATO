@@ -1,5 +1,7 @@
 # DATA_AI_MAP
 
+> **Historical audit (Aug 29, 2026).** Sage, Talk, the crisis card, `sage_messages`, `crisis_flags`, "Teach Sage" facts and the 8-ball described below were removed or replaced (2026-10-14). Today AI is used only for Legends cards and category deep dives (server-side `ai-library`), and nothing a person types is scanned, flagged or logged. Do not use this file as a description of current behavior.
+
 Read-only inventory. Every piece of user data and every AI-generated output, traced from
 creation → storage → render. Built for a UI rearrangement decision. **No code was changed.**
 
@@ -53,8 +55,10 @@ live regeneration.
 
 - **G1 Maybe, not fact** — patterns reflected as hypotheses. No "you are X".
   (`sage.txt`: "Never a verdict. Never 'you are X'"; hedge inside the sentence, never bolted on.)
-- **G2 No framework names** — no MBTI / OCEAN / attachment / locus / mindset / SDT labels
-  surfaced. Enforced by `containsFrameworkTerm` (`src/lib/voice/framework-fence.ts`),
+- **G2 Framework names (decision D6, core content policy 2026-10-20)** — a framework or theory name
+  (OCEAN, attachment, locus, mindset, SDT …) is allowed when it is relevant, accurate and explained in plain
+  words; never as a diagnosis, never implying a validated assessment ATO is not, and a type code (MBTI) is
+  never presented as ATO's own result. Mechanical fence (judges the claim, not the word): `containsFrameworkTerm` (`src/lib/voice/framework-fence.ts`),
   word-level `matchingJargonTerm` (`jargon.ts`), phrase-level `matchingPhrasePattern`
   (`phrase-guard.ts`).
 - **G3 One trait at a time** — one axis per surface. Explore may combine 2–3 only on a

@@ -165,8 +165,8 @@ Read before editing the area. Each one has bitten this repo at least once.
 - **The Questions AI path is gated on profile completeness.** `routeQuestions` serves
   the static bank — and claims no quota — until every axis has one answer. The gate
   reads `input.tracks`, and **absent tracks read as incomplete**, so anything newly
-  calling `routeQuestions` must pass tracks or it silently loses the AI path. Sage
-  chat is a separate route and stays open.
+  calling `routeQuestions` must pass tracks or it silently loses the AI path. (Historical:
+  Sage chat and the AI question path are gone; questions come from the fixed bank.)
 - **`complete_signup` re-save must coalesce every field.** One overwrite slipped
   through once (`recovery_style`, fixed in wave24).
 - **Legends' 64-archetype system has no "no match" state.** `archetypeCode()`
@@ -241,8 +241,9 @@ Read before editing the area. Each one has bitten this repo at least once.
   those without emci's own read. **The `containsFrameworkTerm` fence
   (`profileFillCopyClean()` etc.) is not what makes a flag reviewed** — every
   other clean-copy module passes that same fence and still ships `false`; the
-  fence only rules out banned type/framework language, it says nothing about
-  tone or whether the copy is fit to ship. `PROFILE_FILL_COPY_REVIEWED` was
+  fence only rules out framework language that implies a diagnosis or a validated
+  assessment (decision D6: a framework name is allowed when relevant, accurate and
+  explained), it says nothing about tone or whether the copy is fit to ship. `PROFILE_FILL_COPY_REVIEWED` was
   flipped to `true` on emci's explicit, flag-specific delegation ("flip it to
   true if it reads correctly") for copy judged genuinely non-diagnostic — a
   filled/unfilled checklist describing data state, not the person. Add any new
@@ -254,9 +255,12 @@ Read before editing the area. Each one has bitten this repo at least once.
   ships either way, but the internal review-status badge is now dev-only.
   `check:copy-review-badges` asserts every site (new ones included) requires
   `PRE_LAUNCH_DEV` alongside its `!*_COPY_REVIEWED` check.
-- **Never say "AI" or "tokens" in user copy** (`voice/quota.ts` comment); Sage is a
-  "coach", Notes are "notes".
-- **MBTI four-letter codes were removed for trademark reasons** — do not reintroduce.
+- **(Outdated, see CLAUDE.md.)** The old rule "never say AI or tokens in user copy"
+  and "Sage is a coach" no longer apply: Sage is gone, AI surfaces are labelled
+  (small AI icon, consent copy `AI_USE_DISCLOSURE`) and ATO tokens are named as such.
+- **MBTI four-letter codes were removed for trademark reasons** — do not present a type code as ATO's own
+  result or branding (decision D6: a framework or test may be named narrowly, when relevant, accurate and
+  explained, never as a validated assessment ATO is not).
 - **The shared AI library bundle goes stale silently on the server** (wave93). The
   `ai-library` Edge Function runs `supabase/functions/_shared/ai-library.bundle.js`, a
   build of `src/lib/ai-library/server.ts` and everything it imports (deep-dive, Story and

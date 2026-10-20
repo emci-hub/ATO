@@ -1,5 +1,7 @@
 # Screen Map
 
+> **Stale for Sage and crisis (2026-10-20).** Sections on the Sage tab, Talk, the crisis card/region picker, "Teach Sage this" and the invite-code signup field describe surfaces that were removed (Sage/crisis 2026-10-14) or will go at the launch flip (invite gate). The You tab now has one static helpline row; nothing typed is scanned or logged.
+
 What data shows on each screen, in plain language, with the DB table/RPC/lib source. Built from `docs/field-inventory.md`'s coverage scan. Batches of 2-3 sections, confirmed with emci between batches.
 
 ---

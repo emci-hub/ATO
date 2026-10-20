@@ -398,14 +398,33 @@ const rich = tracksOf({
   assert.equal(storyLabelLeak('You pull into the driveway as the chat buzzes.'), null, 'everyday words stay allowed');
   assert.equal(storyLabelLeak('Then How You Love shows up again.'), 'names a category');
   assert.equal(storyLabelLeak('It is how you love the people around you, plainly.'), null, 'the same words in lowercase are an everyday phrase');
-  assert.match(
+  // Core content policy (2026-10-20): voice notes / read receipts / typing bubbles are preferred moments
+  // in moment-voice.ts, so they pass; the old "niche phone detail" ban is gone.
+  assert.ok(
     parseStoryCardAnswer(
       bad({ hook: 'A voice note arrives while you make tea in your kitchen, and the kettle begins to whistle loudly.' }),
       { allowExampleHooks: true },
-    ).reason ?? '',
-    /hook: niche phone detail/,
-    'no voice notes, typing bubbles or read receipts',
+    ).card,
+    'a voice note, typing bubble or read receipt is an allowed moment',
   );
+  // "should": an ordinary or joking "should" passes; an order aimed at the reader fails.
+  assert.ok(
+    parseStoryCardAnswer(
+      bad({ hook: 'The clock should have been faster while the kitchen door stays shut and the table goes quiet.' }),
+      { allowExampleHooks: true },
+    ).card,
+    'a joke "should" passes',
+  );
+  for (const hook of [
+    'You should wait while the kitchen door stays shut and the table goes quiet around you.',
+    'You need to wait while the kitchen door stays shut and the table goes quiet around you.',
+  ]) {
+    assert.match(
+      parseStoryCardAnswer(bad({ hook }), { allowExampleHooks: true }).reason ?? '',
+      /hook: advice/,
+      `advice aimed at the reader fails: ${hook}`,
+    );
+  }
   const repeat = parseStoryCardAnswer(
     bad({
       move: 'Friday, 8:40. Your table has been staring at the kitchen door like it owes them money and then some more.',
@@ -417,8 +436,9 @@ const rich = tracksOf({
   const flowPrompt = STORY_CARD_PROMPT_STATIC;
   assert.match(flowPrompt, /Plan silently first in "plan"/, 'plan first');
   assert.match(flowPrompt, /call back to the hook/);
-  assert.match(flowPrompt, /never voice notes, typing bubbles or read receipts/);
-  assert.match(flowPrompt, /this overrides the "how people live now" list/, 'the setting rule wins over the voice block');
+  assert.doesNotMatch(flowPrompt, /never voice notes, typing bubbles or read receipts/, 'no blanket phone-detail ban in the prompt');
+  assert.match(flowPrompt, /voice notes, typing bubbles and read receipts included/, 'phone details are welcome inside a scene');
+  assert.match(flowPrompt, /a story lives in one physical scene/, 'the setting rule keeps the story in one scene');
   assert.match(flowPrompt, /The Bread Basket Diplomat/);
   for (const shot of STORY_FEW_SHOTS) {
     const row = parseStoryCardAnswer(JSON.stringify(shot), { allowExampleHooks: true });

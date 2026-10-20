@@ -2,6 +2,8 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
+> **⚠ Sage and crisis boxes below are OBSOLETE (2026-10-20).** Sage, Talk, the Support tap, the crisis card, the keyword interrupt and the crisis region picker were removed (2026-10-14). Skip every box about them. What to check instead: the You tab shows one static helpline row (988 for US/Canada, findahelpline.com elsewhere, a local-emergency line); typing anything anywhere triggers no card, flag or log. The full rewrite is queued in `docs/sage-cleanup.md` section 6.
+
 > **⚠ Boxes 5–28 below are the HISTORICAL pass (Sep 1, 2026, OTA `0028d5f5`).** They were written before the Sep 4–13 work and their OTA reference is stale. The **current outstanding pass is the section immediately below** — start there.
 
 ---
@@ -670,3 +672,17 @@ Report any "something I used to do now fails".
 
 ### When you are done
 Tell me which parts passed, plus anything that looked wrong with the screen name. If everything passed and you accept this as the shorter pass, Boxes 43, 53, 54, 55, 56 and 58 can all be marked PASSED, and I will also note whether the Locker icons are approved (or which ones you want swapped).
+
+## Box 60 — The words you actually see (content review, master-plan Step 4, 2026-10-20) — DRAFT
+
+Run on your own phone AFTER the OTA and the `ai-library` bundle deploy (Release A). It is the short read-list: only copy a launch surface shows. Judge MEANING (docs/copy-review-rules.md): flag a specific confusing line, factual error, unsupported claim, verdict pinned on you, privacy exposure or harmful task, never a word or topic alone. Dark jokes, swearing and honest "you may…" weaknesses should be there. Full list with counts: `docs/copy-review-agent/step4-read-list.md`.
+- [ ] **Daily insight (Insights tab):** open it on 3 different days or accounts. Each reads clearly and tells you something true about the lean, not a diagnosis. A weakness line says "you may…", with one small step.
+- [ ] **Today's Pick:** read the 3 open prompts (p14, p25, p50) and say keep / fix each.
+- [ ] **Questions:** answer 5 across different traits; none scores a privacy, safety or money boundary as distance. Decide D1 (retired questions read-only) and D2 (houseguest question).
+- [ ] **Explore category cards:** open 4 categories; plain language, no verdict about you.
+- [ ] **Deep dive (Explore → Write my deep dive):** one for Love / closeness and one for another category. Closeness is treated like any category; no diagnosis, no label about you; a framework name (if any) is explained and never "your result".
+- [ ] **Legends (Daily / Legends card):** read U1–U4 from `applied-set8-legends.md`; facts look right, no invented tag.
+- [ ] **Story:** read the 3 open items from `applied-set9-10`; the "You scored …" fallback is acceptable or fixed.
+- [ ] **Profile card (after the 48):** strengths and weaknesses read honestly; "Still forming" is clear; nothing private appears on the shareable line.
+- [ ] **Helpline row (You tab):** 988 / findahelpline link / local-emergency line visible; nothing you type is checked.
+Report each as keep / fix + the screen name. Flags stay false until you approve a set.

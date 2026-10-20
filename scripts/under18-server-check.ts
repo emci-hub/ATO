@@ -22,7 +22,15 @@ const root = resolve(__dirname, '..');
 const MIG_DIR = resolve(root, 'supabase/migrations');
 export const MIGRATION = 'wave101_under18_server_gate.sql';
 /** Prepared, never applied (CLAUDE.md): its revokes are not live, so the gate must not rely on them. */
-const NOT_LIVE = new Set(['wave80_trait_lock.sql']);
+const NOT_LIVE = new Set([
+  'wave80_trait_lock.sql',
+  // Applied AFTER wave101 (docs/under18-server.md): it restates set_going on top of wave101's copy,
+  // so it is not part of the state wave101 is copied from. Pinned by scripts/age-check.ts.
+  'wave102_nights_18_gate.sql',
+  // Applied AFTER wave102 (needs emci's ok; drops crisis_flags). Restates the library functions,
+  // home_bootstrap and the reset/count RPCs on top of wave101's copies, minus the crisis plumbing.
+  'wave103_drop_crisis_plumbing.sql',
+]);
 
 /** Apply order of the migrations that existed when wave101 was written (git history order). */
 export const ORDER = [

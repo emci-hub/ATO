@@ -522,7 +522,9 @@ assert.equal(parseLegendStory(bad({ funny: 'Your drafts outlived three phones an
 assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is so big you should just kill yourself.' }), jokeCtx)?.joke, undefined, 'a joke encouraging self-harm is dropped');
 // Strong swearing (emci 2026-10-19, round 3): allowed when it earns its place.
 assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder has more fucking versions of one mountain than a postcard shop.' }), jokeCtx)?.joke, 'Your drafts folder has more fucking versions of one mountain than a postcard shop.', 'a joke with strong swearing is kept');
-assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is so clingy it should get its own attachment style.' }), jokeCtx)?.joke, undefined, 'a theory name in a joke is still a framework term');
+// Rule D6 (emci 2026-10-20): a theory may be NAMED in a joke; handing the reader a framework result is what fails.
+assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is so clingy it should get its own attachment style.' }), jokeCtx)?.joke, 'Your drafts folder is so clingy it should get its own attachment style.', 'naming a theory in a joke is fine');
+assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is so clingy that your attachment style is anxious.' }), jokeCtx)?.joke, undefined, 'a framework result handed to the reader is still dropped');
 assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is huge.' }), ctx)?.joke, undefined, 'no joke asked → none kept');
 assert.equal(cardJokeViolation('A short one. And another.'), 'more than one sentence');
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs, jokeStyle: 'deadpan' }), /JOKE STYLE \(for "funny"\): deadpan/);

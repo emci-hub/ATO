@@ -5,9 +5,8 @@
  * fetchTraitTracks. Those still exist and are still the right call from other
  * screens; this is only the Home fast path.
  *
- * The RPC still returns `crisis_since` (wave35). The app stopped reading it on
- * 2026-10-14, when the crisis system was removed; dropping it from the RPC is
- * listed in docs/sage-cleanup.md (no migration in that PR).
+ * Until wave103 is applied the RPC may still send an extra field from the
+ * removed crisis system; the app ignores any field it does not name here.
  */
 import type { Check } from '@/lib/checks';
 import { supabase } from '@/lib/supabase';

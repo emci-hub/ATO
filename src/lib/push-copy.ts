@@ -33,8 +33,8 @@ export function morningPush(read: string): PushPayload {
   return {
     kind: 'morning',
     // Was 'Sage · coach' / 'Your Read is ready.' — both named things the app no
-    // longer has (emci 2026-10-02). The installed widget's own header still says
-    // SAGE · COACH; that is native and needs a new build to change.
+    // longer has (emci 2026-10-02). The widget header now says ATO (installed
+    // widgets change with the next native build).
     title: MORNING_PUSH_TITLE,
     body: body.length > 0 ? body : MORNING_PUSH_FALLBACK,
     url: PUSH_PATHS.morning,

@@ -38,7 +38,12 @@ for (const label of ['anxious-attachment', 'anxiously-attached', 'secure-attachm
   assert.ok(hasClinicalLabel(`Your ${label} shows.`), `a label on the reader fails: ${label}`);
   assert.ok(!hasClinicalLabel(`The book on ${label} sat unread on the shelf.`), `the word as a topic passes: ${label}`);
 }
-assert.ok(containsFrameworkTerm('Your attachment style shows.'), 'the theory name is still a framework term');
+// Rule D6 (emci 2026-10-20): a framework may be NAMED and explained; what fails is handing the reader a
+// result, or claiming ATO measures it / is an official assessment. Pairs, same theory each time.
+assert.ok(containsFrameworkTerm('Your attachment style shows.'), 'a theory result handed to the reader fails');
+assert.ok(!containsFrameworkTerm('Attachment style is a psychology idea about how people bond; ATO does not measure it.'), 'naming and explaining the theory passes');
+assert.ok(containsFrameworkTerm('Your MBTI type is INTJ.'), 'a trademarked type as the reader\'s result fails');
+assert.ok(!containsFrameworkTerm('MBTI sorts people into 16 types such as INTJ; ATO is not that test.'), 'discussing the trademark passes');
 assert.ok(!containsFrameworkTerm('You are avoidant of small talk.'), '"avoidant" is no longer a framework word');
 assert.ok(!containsFrameworkTerm('You get anxious and feel secure about it.'), 'anxious / secure alone are everyday words');
 
@@ -145,7 +150,10 @@ const LABEL_PAIRS: [pass: string, fail: string][] = [
   ['Emotionally unavailable plants, the best kind.', "You're emotionally unavailable at dinner."],
   ['Symptoms of a Monday: three coffees.', 'Signs of depression in how you plan.'],
   ['The OCD joke landed badly at work.', "You're so OCD about the dishwasher."],
-  ['You get anxious before a big call.', "You've been diagnosed by the group chat."],
+  ['You get anxious before a big call.', 'You were diagnosed with anxiety years ago.'],
+  // Diagnosis: the CLAIM fails, a disclaimer or an idiom passes (clinical.ts, 2026-10-20).
+  ['This is not a diagnosis, just a Tuesday.', 'This could be a diagnosis.'],
+  ['Diagnosed with a bad case of Mondays, you took a nap.', 'You have been diagnosed with ADHD.'],
 ];
 for (const [pass, fail] of LABEL_PAIRS) {
   assert.equal(readerLabelHit(pass), null, `contextual use passes: "${pass}" (hit: ${readerLabelHit(pass)})`);

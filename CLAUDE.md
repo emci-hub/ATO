@@ -102,7 +102,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 - **Category deep dive on Explore (emci 2026-10-08; moved from Home 2026-10-09).** Between Categories and
   "How you've changed" (after Questions are finished, hidden on a crisis day): pick a category → leanings worked out on the phone ("Adventurous 78%") →
   "Write my deep dive" = one AI call (`src/lib/category-deep-dive/`: consent, then `claim_category_deep_dive`,
-  1/day, wave90), strict validator, no clinical words, gentle block for Love / closeness. It never touches
+  1/day, wave90), strict validator (plain language, a necessary technical term explained, no diagnosis or label pinned on the reader, no directive "you should"; Love / closeness is judged by meaning like any other category, no special block). It never touches
   insight-bank or category-bank. `CATEGORY_DEEP_DIVE_COPY_REVIEWED = false`, review doc
   `docs/category-deep-dive-review.md`, pinned by `check:category-deep-dive`.
 - **AI views cost ATO tokens (wave92, emci 2026-10-09).** Every AI view (new Story, Legends AI card,

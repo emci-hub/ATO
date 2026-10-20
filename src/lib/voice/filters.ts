@@ -1,10 +1,16 @@
 import { containsFrameworkTerm } from './framework-fence';
 import type { DropReason, VoiceCard } from './types';
 
+/**
+ * Generic self-help filler that names no concrete action. Applies to a TASK
+ * (the Do text) only, because its purpose is "a task must be concrete" — never
+ * to an observation, so "maybe it is just Monday" in a Read or an insight is
+ * honest uncertainty and passes (core content policy, emci 2026-10-20).
+ * Whole-phrase matches only.
+ */
 const VAGUE_DO_PHRASES = [
   'be productive',
   'do your best',
-  'try to',
   'try harder',
   'make sure you',
   'stay focused',
@@ -12,13 +18,27 @@ const VAGUE_DO_PHRASES = [
   'get things done',
   'just do it',
   'work hard',
-  'be more',
   'do something',
-  'maybe',
   'somehow',
   'be better',
   'stay motivated',
 ];
+
+/**
+ * Vague only in the shape that carries no action: an opener ("Maybe do
+ * something nice", "Be more present") or a "try to" followed by a state, not a
+ * deed ("Try to be calm"). "Try to text one friend back before lunch" and
+ * "Call your mom, maybe for five minutes" name a concrete action and pass.
+ */
+const VAGUE_DO_SHAPES: readonly RegExp[] = [
+  /(?:^|[.!?]\s+)(?:just\s+)?maybe\b/i,
+  /(?:^|[.!?]\s+)(?:just\s+)?be more\b/i,
+  /\btry to\s+(?:just\s+)?(?:be|stay|feel|think|relax|focus|remember|do better|get better|improve)\b/i,
+];
+
+function phraseIn(lower: string, phrase: string): boolean {
+  return new RegExp(`\\b${phrase.replace(/\s+/g, '\\s+')}\\b`).test(lower);
+}
 
 const ACTION_VERBS = [
   'write', 'say', 'start', 'open', 'pick', 'knock', 'sit', 'go', 'move',
@@ -33,53 +53,48 @@ export function isVagueDo(doText: string): boolean {
   const lower = text.toLowerCase();
   const words = text.split(/\s+/).filter(Boolean);
   if (words.length < 5) return true;
-  if (VAGUE_DO_PHRASES.some((phrase) => lower.includes(phrase))) return true;
+  if (VAGUE_DO_PHRASES.some((phrase) => phraseIn(lower, phrase))) return true;
+  if (VAGUE_DO_SHAPES.some((re) => re.test(text))) return true;
   return !ACTION_VERBS.some((verb) => lower.includes(verb));
 }
 
-/** Phrases that attack the person rather than the habit — always dropped. */
-const CRUEL_PHRASES = [
-  'you are lazy',
-  "you're lazy",
-  'lazy person',
-  'you are a failure',
-  'you failed',
-  'worthless',
-  'hopeless',
-  'a loser',
-  'you suck',
-  'pathetic',
-  'useless',
-  "you can't do anything",
-  'you never do anything',
-  'give up',
-  'no point trying',
-  'you always fail',
-  'you always quit',
-  "you're a",
-  'you are a',
-  'disappointment',
-  'embarrassment',
-  'what is wrong with you',
-];
-
-/** Catches intensified attacks like "you're SO lazy" that substring checks miss. */
+/**
+ * A degrading verdict aimed at the reader (core content policy, emci
+ * 2026-10-20: targeted degradation is the problem, not the word). The old list
+ * matched substrings with no target ("give up", "useless", "a loser",
+ * "you're a"), which rejected "give up the third tab", "a useless umbrella" and
+ * "a loser of a wifi signal". The target now has to be the reader.
+ * Diagnosis-style labels are clinical.ts's job (`readerLabelHit`), not repeated here.
+ */
+const DEGRADING =
+  '(?:a |an )?(?:lazy(?: person| human)?|worthless|hopeless|useless|pathetic|stupid|dumb|idiot|moron|failure|loser|disappointment|embarrassment|joke|burden|waste of (?:space|time|oxygen))';
+const INSULT_NOUN = '(?:idiot|moron|loser|failure|disappointment|embarrassment|waste of (?:space|time|oxygen))';
 const CRUEL_PATTERNS: RegExp[] = [
-  /you'?re\s+(?:so|really|just|too|that)\s+lazy/i,
-  /you\s+are\s+(?:so|really|just|too|that)\s+lazy/i,
-  /you'?re\s+(?:so|really|just|too)\s+(?:a\s+)?(?:failure|loser|disappointment|embarrassment|joke)/i,
-  /you\s+are\s+(?:so|really|just|too)\s+(?:a\s+)?(?:failure|loser|disappointment|embarrassment|joke)/i,
+  // "What a loser you are." / "Such an idiot you are." (insult first, reader last).
+  new RegExp(`\\b(?:what|such)\\s+(?:a|an)\\s+${INSULT_NOUN}\\s+you(?:['’]re| are| were)\\b`, 'i'),
+  // "you are a loser", "you're SO lazy", "you're a total embarrassment", "people like you are useless".
+  new RegExp(
+    `\\b(?:you(?:['’]re| are| were|['’]ve been| have been)|people like you (?:are|get))\\s+(?:(?:so|really|just|too|that|such|utterly|completely|totally|a total|clearly|honestly|actually|still)\\s+){0,2}${DEGRADING}(?![-\\w])`,
+    'i',
+  ),
+  /\byou suck\b/i,
+  /\bwhat is wrong with you\b/i,
+  /\byou(?:['’]ve)? failed (?:at everything|everyone|again(?: and again)?|as a (?:person|friend|partner|human))\b/i,
+  /\byou (?:can['’]?t|cannot) do anything\b|\byou never do anything\b|\byou always (?:fail|quit)\b/i,
+  // Telling the reader to give up on themselves; "give up the third tab" is a different sentence.
+  /\bgive up on (?:yourself|you)\b|\b(?:just|might as well|time to|you should|better) give up\b(?!\s+(?:the|a|an|your|on the|on a|on your)\b)/i,
+  /\byou give up\s+(?:easily|too (?:soon|easily)|every time|always)\b/i,
+  /\bno point (?:in )?(?:you )?trying(?:\s+(?:again|anymore|any more|at this|at all))?\s*(?:[.,;!?]|$)/i,
 ];
 
 /** A cut that names a skip is fine; a cut that calls the person worthless is not. */
 export function isCruelCut(readText: string): boolean {
-  const lower = readText.toLowerCase();
-  return CRUEL_PHRASES.some((phrase) => lower.includes(phrase)) || CRUEL_PATTERNS.some((re) => re.test(lower));
+  return CRUEL_PATTERNS.some((re) => re.test(readText));
 }
 
 /**
  * Signals that a read is a cut — i.e. it calls out the USER's skipped habit.
- * Deliberately not bare "skip"/"skips": sage.txt's even×even line ("some did,
+ * Deliberately not bare "skip"/"skips": the old voice file's even×even line ("some did,
  * some skip") describes a normal week and is not a cut.
  */
 const CUT_SIGNALS = [

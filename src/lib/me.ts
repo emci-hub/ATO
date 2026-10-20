@@ -339,7 +339,7 @@ export async function setCity(userId: string, city: string | null): Promise<Me> 
   return withVisible(data as Me);
 }
 
-/** Sage voice. close_friend is the default. Does not bypass sage.txt rules. */
+/** Voice preset. close_friend is the default. Does not bypass voice-reference.txt rules. */
 export async function setVoicePreset(userId: string, voicePreset: VoicePreset): Promise<Me> {
   const { data, error } = await supabase
     .from('me')

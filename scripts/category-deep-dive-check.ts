@@ -4,7 +4,7 @@
  *
  * Pins: the leanings math ("Adventurous 78%"), the fingerprint that decides
  * when a fresh card is due, the prompt (moment voice, no numbers repeated, the
- * gentle Love / closeness block), the validator (grounded answers pass; digits,
+ * Love / closeness judged like any category), the validator (grounded answers pass; digits,
  * names, clinical words, advice, brackets and bad titles are rejected), the
  * wiring (one AI call, only on its button, after consent and the server
  * claim; placed on Home after the insight, hidden on a crisis day), wave90's
@@ -101,8 +101,10 @@ const loveLeans: DiveLean[] = [
   { axis: 'attachment_avoidance', lean: 'low', pct: 74 },
   { axis: 'attachment_anxiety', lean: 'high', pct: 66 },
 ];
-assert.match(buildDivePrompt(loveDef, loveLeans), /THE CATEGORY: Love \/ closeness \(GENTLE\)/, 'Love / closeness is marked GENTLE');
-assert.match(DIVE_PROMPT_STATIC, /A card marked GENTLE is about closeness/, 'and the gentle rules are in every prompt');
+const lovePrompt = buildDivePrompt(loveDef, loveLeans);
+assert.match(lovePrompt, /THE CATEGORY: Love \/ closeness/, 'Love / closeness is a normal category in the prompt');
+assert.doesNotMatch(lovePrompt, /GENTLE/, 'no special gentle block: closeness is judged by meaning like any other category (emci 2026-10-20)');
+assert.doesNotMatch(DIVE_PROMPT_STATIC, /GENTLE/, 'no gentle rules block in the shared prompt');
 assert.doesNotMatch(prompt, /\(GENTLE\)/);
 assert.match(buildDivePrompt(openDef, leans.slice(0, 1)), /MIX: no/, 'one leaning → no mix asked');
 assert.match(prompt, /CLEAR FIRST, MOMENT SECOND/, 'plain insight first, one realistic example second');
@@ -110,7 +112,7 @@ assert.match(prompt, /No counting and no exaggeration/);
 assert.match(prompt, /Be honest about both sides/);
 assert.doesNotMatch(prompt, /never a weakness/, 'a real limitation is stated plainly (emci 2026-10-19)');
 assert.ok(leansKey(leans).startsWith('v3|'), 'cards from the old prompt offer a rewrite');
-ok('prompt: moment voice + clear-first style, category + sides only, no numbers or counting, gentle block for Love / closeness');
+ok('prompt: moment voice + clear-first style, category + sides only, no numbers or counting, Love / closeness judged like any category (no gentle block)');
 
 /* ------------------------------------------------------------ validator --- */
 
@@ -261,7 +263,7 @@ assert.equal(
   'a joke with strong swearing is kept',
 );
 assert.match(DIVE_PROMPT_STATIC, /strong swearing included/, 'the joke rules tell the model strong swearing is allowed when it earns its place');
-assert.match(DIVE_PROMPT_STATIC, /Never apply a\s+diagnosis or a label to the reader/, 'the GENTLE rule bans labels on the reader, not words');
+assert.match(DIVE_PROMPT_STATIC, /Never apply a\s+diagnosis or a label to the reader/, 'the prompt bans labels on the reader, not words');
 assert.doesNotMatch(DIVE_PROMPT_STATIC, /no needy or clingy/, 'no blanket word ban in the prompt');
 assert.equal(diveOutputTokens(1), 600, 'one card: a trimmed answer budget');
 assert.ok(diveOutputTokens(2) <= 1024, 'two cards stay under the server’s 1024 output cap');
@@ -349,7 +351,8 @@ assert.match(consent, /category deep dives you ask for/, 'so does the consent as
 assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, false, 'ships unreviewed until emci reads the review doc');
 assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY_REVIEWED/, 'listed on the dev hub copy list');
 assert.ok(existsSync(resolve(root, 'docs/category-deep-dive-review.md')), 'review doc exists');
-assert.ok(read('docs/category-deep-dive-review.md').includes('(GENTLE)'), 'the review doc shows the Love / closeness prompt');
+assert.ok(read('docs/category-deep-dive-review.md').includes('THE CATEGORY: Love / closeness'), 'the review doc shows the Love / closeness prompt');
+assert.ok(!read('docs/category-deep-dive-review.md').includes('(GENTLE)'), 'the review doc no longer shows a gentle block');
 ok('consent copy names deep dives; flag off; review doc with both sample prompts');
 
 // Friendly names + the two-letter legend (emci, 2026-10-08), shared by Home and Explore.

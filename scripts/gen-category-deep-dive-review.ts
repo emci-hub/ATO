@@ -1,7 +1,7 @@
 /**
  * Writes docs/category-deep-dive-review.md: what the Home deep dive shows,
  * the rules every AI line passes, and the exact prompt for two sample readers
- * (one ordinary category, and Love / closeness with its gentle block).
+ * (one ordinary category, and Love / closeness, which has no special block).
  *
  *   npx tsx scripts/gen-category-deep-dive-review.ts
  */
@@ -31,9 +31,9 @@ const lines = [
   '',
   '**The AI writes:** your title here (“the calm planner”), where it shows up (one moment per top leaning, up to three), how they mix (when there are two or more), what others might notice, and what it means for you. Every part carries the small AI badge.',
   '',
-  '**Every AI line is rejected (one retry, then no card) if it has:** any digit, a capitalised name or word that is not a category/side word, a quote, “you are”, “always”, “should”, “!”, emoji, brackets, a framework word, or a diagnosis or label (a disorder name, avoidant or "attachment style", needy, clingy, codependent, trauma, toxic …). Everyday feeling words like anxious, insecure, worried or lonely are fine (emci 2026-10-19). Titles also ban worry/doubt/struggle words, since they can be shared.',
+  '**Every AI line is rejected (one retry, then no card) if it has:** any digit, a capitalised name or word that is not a category/side word, a quote, “you are”, “always”, directive advice aimed at the reader (“you should…”, “you need to…”; an ordinary or joking “should” passes), “!”, emoji, brackets, a framework claim (a framework name passes when relevant, accurate and explained; a result handed to the reader, or a claim that ATO measures one, fails), or a diagnosis or label pinned on the reader (“you are needy”, “your avoidant attachment”, a diagnosis claim, clinical advice). Everyday and contextual words (a toxic group chat, anxious, insecure, worried, lonely) are fine (core content policy, emci 2026-10-20). Titles also ban worry/doubt/struggle words, since they can be shared.',
   '',
-  '**Love / closeness is included (your call, 2026-10-08)** with an extra gentle block in the prompt (below). Worth reading your first few of these closely.',
+  '**Love / closeness is included (your call, 2026-10-08)** and is judged by meaning like any other category: it is not a blocked topic and has no special block in the prompt (core content policy, 2026-10-20). Worth reading your first few of these closely.',
   '',
   '**No AI = no card:** with AI off, before wave90 is applied, or when today’s deep dive is used, the leanings still show and a plain line says why.',
   '',

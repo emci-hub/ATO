@@ -25,6 +25,7 @@ import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stabi
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 import { CARD_JOKE_RULES, cardJokeViolation, type CardJokeStyle } from '@/lib/voice/card-joke';
 import { CLINICAL_ADVICE, hasClinicalLabel } from '@/lib/voice/clinical';
+import { directiveAdviceViolation } from '@/lib/voice/directive-advice';
 import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 
 export interface DiveLean {
@@ -74,8 +75,9 @@ export const DIVE_MEANS_MAX_WORDS = 60;
 /** At most this many leanings get their own "shows up" moment. */
 export const DIVE_TOP_LEANS = 3;
 
-/** A diagnosis or label pinned on the reader — never in a deep dive (the Love /
- * closeness category included, emci 2026-10-08: gentle wording). Context, not
+/** A diagnosis or label pinned on the reader — never in a deep dive. Love /
+ * closeness is not a blocked topic (core content policy, emci 2026-10-20): it is
+ * judged by meaning like any other category. Context, not
  * blanket bans (emci 2026-10-19, round 3; src/lib/voice/clinical.ts): everyday
  * and contextual words pass ("a toxic group chat", "avoidant of small talk",
  * "you may feel needy when the chat goes quiet"); refused are verdicts about the
@@ -189,18 +191,24 @@ The CARD sections at the end give, for each card, the category and the reader's 
 ${MOMENT_VOICE_BLOCK}
 
 RULES
-- Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no "should", no lecturing (the one small step in STYLE is the only advice allowed).
+- Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no lecturing: never tell the reader
+  "you should" or "you need to" (the one small step in STYLE is the only advice allowed, and it is phrased as something
+  they could try). An ordinary "should" in a joke or an observation ("the group chat should come with a warning") is fine.
 - Use no quotation marks, and name no people, apps or brands.
   (Everyday things still work: "the group chat", "a tab you keep open", "a playlist".)
 - No counting and no exaggeration: never a number or a number word above two ("three towns", "twelve
   checklists", "eleven ways" all read as made up). Say "a few", "a couple" or nothing. Never repeat a percentage.
-- Name the reader's sides only with the words given in that card's LEANINGS. No test, score or framework words.
+- Name the reader's sides with the words given in that card's LEANINGS, in plain language; explain any technical term
+  you need in a few plain words. Never show a score or percentage. A framework or theory name is allowed only when it is
+  relevant, accurate and explained, and never as a diagnosis or as a validated assessment ATO is not; never present a
+  type code (MBTI and similar) as the reader's own result.
 - Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
 - Kind, specific, modern, warm, a little delighted. Never a diagnosis or label applied to the reader, never shaming.
-- A card marked GENTLE is about closeness: describe habits with close people warmly and plainly. Never apply a
+- Closeness (love, partners, family, friends) is an ordinary topic, judged by meaning like any other: describe habits
+  with close people plainly and specifically. Never apply a
   diagnosis or a label to the reader (no "you are needy", no attachment-style verdict about them); everyday and
   contextual use of a word is fine, and feeling words such as anxious, insecure, worried or lonely are fine when they
-  describe a moment. If a habit has a real cost, name it plainly and kindly, never as something wrong with the reader.
+  describe a moment. If a habit has a real cost, name it plainly, never as something wrong with the reader.
 - Never leave square or angle brackets in the answer.
 - A leaning marked "in the middle" is a balance: describe how it depends on the moment, and never say which side
   the reader is on.
@@ -218,7 +226,7 @@ counts in the register examples there — "eleven ways", "47 tabs" — are exact
   word is fine), no shame, and say nothing the leaning does not support.
   A strong leaning alone does not prove a drawback: write a possible cost with "you may" or "can", and state it flatly
   only when the leaning itself shows it.
-- Where it fits, add one small, doable step the reader could try (a single sentence, no "should").
+- Where it fits, add one small, doable step the reader could try (a single sentence, phrased as something they could try, not "you should").
 - Modern and natural, like a smart friend texting you an observation. No riddles, no stacked details.
 
 FOR EACH CARD:
@@ -258,7 +266,7 @@ function cardBlock(spec: DiveSpec, index: number): string {
         : `- axis "${row.axis}": leans ${AXIS_POLE_NAME[row.axis][row.lean]} (${row.pct >= 75 ? 'strongly' : row.pct >= 60 ? 'clearly' : 'slightly'}; sounds like: ${AXIS_POLES[row.axis][row.lean]})`,
     )
     .join('\n');
-  return `CARD ${index + 1} — THE CATEGORY: ${spec.def.name}${spec.def.id === 'cat_love' ? ' (GENTLE)' : ''}
+  return `CARD ${index + 1} — THE CATEGORY: ${spec.def.name}
 LEANINGS (strongest first):
 ${rows}
 SHOWS UP: ${top.map((row) => row.axis).join(', ')}
@@ -288,7 +296,8 @@ export function diveLineViolation(text: string, allowed: string): string | null 
   if (/\d/.test(text)) return 'digit';
   if (COUNT_WORDS.test(text)) return 'count word';
   if (CLINICAL.test(text)) return 'clinical word';
-  if (/\bshould\b/i.test(text)) return 'advice';
+  const advice = directiveAdviceViolation(text);
+  if (advice) return 'advice';
   return legendLineViolation(text, allowed, false);
 }
 

@@ -150,9 +150,9 @@ assert.doesNotMatch(home, /SAGE_COACH_LABEL/);
 assert.match(focusCard, /homeSageLabel/);
 assert.doesNotMatch(home, /homeSageLabel/);
 assert.match(push, /MORNING_PUSH_TITLE = 'ATO'/);
-// The installed widget's native header is a separate binary: it changes only
-// with the next native build (docs/sage-cleanup.md).
-assert.match(widget, /SAGE · COACH/);
+// The widget's native header (next native build) no longer says Sage.
+assert.doesNotMatch(widget, /SAGE · COACH/);
+assert.match(widget, /Text\("ATO"\)/);
 assert.doesNotMatch(consent, /'[^'\n]*\bSage\b[^'\n]*'/, 'no consent string says Sage');
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is a whole-screen park
 // (it was Circle's per-peer chat, and Circle is parked). The copy rule itself

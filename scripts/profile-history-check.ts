@@ -30,7 +30,9 @@ import {
   type ProfileSnapshot,
   type ProfileValues,
 } from '../src/lib/profile-history';
+import { AXIS_TINT, characterFromTracks, characterPublicLine, MAX_TIPS, TIP_BAND } from '../src/lib/profile-character';
 import { PREMIUM_BANK_PRICE } from '../src/lib/questions/premium-gate';
+import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES } from '../src/lib/traits';
 
 let passed = 0;
@@ -212,5 +214,79 @@ assert.equal(rows.find((r) => r.axis === 'autonomy')!.arrow, 'down');
 assert.equal(rows.find((r) => r.axis === 'playfulness')!.arrow, 'same', 'small moves draw no arrow');
 assert.match(read('src/components/profile-binder.tsx'), /\[\.\.\.prev, id\]\.slice\(-2\)/, 'two cards at a time');
 ok('the card: 8 real Divecore heroes by type, Departure Mono, 16 bars, strength/weakness, compare arrows, Reduce Motion respected');
+
+// ---- the profile character (master-plan step 1) ----
+{
+  const mk = (vals: Record<string, number>, count = 3): TraitTrack[] =>
+    TRAIT_AXES.map((axis) => ({
+      axis,
+      track: 'report' as const,
+      value: vals[axis] ?? 0.5,
+      stability: 0.8,
+      answerCount: axis in vals ? count : 0,
+      lastTouched: '2026-10-20T00:00:00Z',
+      lastDepthAt: null,
+    }));
+  const all = Object.fromEntries(TRAIT_AXES.map((a, i) => [a, i % 2 ? 0.8 : 0.2]));
+  const now = new Date('2026-10-20T00:00:00Z');
+
+  // honest: under 3 answers never becomes a claim, never a stat value
+  const early = characterFromTracks(mk({ openness: 0.9 }, 2), now);
+  assert.equal(early.settledCount, 0, '2 answers per trait settles nothing');
+  assert.ok(early.stats.every((s) => s.value == null && s.confidence === 'early'), 'under 3 answers = empty bar, "Still early"');
+  assert.equal(early.strength, null, 'no strength is stated from unsettled traits');
+  assert.equal(early.tips.length, 0, 'no "could grow into" from unsettled traits');
+  const three = characterFromTracks(mk({ openness: 0.9 }, 3), now);
+  assert.equal(three.settledCount, 1, 'exactly 3 answers settles a trait');
+  assert.ok(three.strength?.startsWith('Adventurous'), 'strength comes only from settled traits');
+
+  // unique from answers: name, hero, accents follow the answers; same answers = same character
+  const a = characterFromTracks(mk(all), now);
+  const b = characterFromTracks(mk({ ...all, openness: 0.1, extraversion: 0.9 }), now);
+  assert.deepEqual(characterFromTracks(mk(all), now), a, 'deterministic: same answers, same character');
+  assert.ok(a.name !== b.name || a.hero !== b.hero, 'different answers give a different character');
+  assert.equal(a.stats.length, 16, 'all 16 stats listed');
+  for (const hex of Object.values(AXIS_TINT)) assert.match(hex, /^#[0-9a-f]{6}$/, 'accent is a hex colour');
+  assert.equal(new Set(Object.values(AXIS_TINT)).size, 16, 'each trait has its own accent');
+  assert.equal(Object.keys(AXIS_TINT).length, 16);
+
+  // could grow into: only near-the-line code axes with real answers, as a possibility
+  const near = characterFromTracks(mk({ ...all, extraversion: 0.52 }), now);
+  assert.ok(near.tips.some((t) => t.axis === 'extraversion'), 'a code axis within the band can tip');
+  assert.ok(near.tips.length <= MAX_TIPS, 'at most two tips');
+  assert.ok(near.evolveName && near.evolveLine.startsWith('If '), 'worded as a possibility ("If … tips")');
+  assert.notEqual(near.evolveName, near.name, 'tipping changes the type');
+  const inside = characterFromTracks(mk({ ...all, extraversion: 0.5 + TIP_BAND - 0.02 }), now);
+  assert.ok(inside.tips.some((t) => t.axis === 'extraversion'), 'just inside the band can tip');
+  const outside = characterFromTracks(mk({ ...all, extraversion: 0.5 + TIP_BAND + 0.02 }), now);
+  assert.ok(!outside.tips.some((t) => t.axis === 'extraversion'), 'just outside the band is not near');
+  const far = characterFromTracks(mk(all), now);
+  assert.equal(far.evolveName, null, 'nothing near the line = no invented evolution');
+  assert.ok(far.evolveLine.includes('Nothing is close'), 'and says so');
+  assert.ok(!near.tips.some((t) => !['conscientiousness', 'extraversion', 'openness', 'agreeableness', 'conflict_assertiveness', 'relatedness', 'growth_mindset', 'steadiness', 'playfulness'].includes(t.axis)), 'tips only use the 9 code axes');
+
+  // weakness per policy: possibility wording, only for a clear lean
+  const faint = characterFromTracks(mk({ ...Object.fromEntries(TRAIT_AXES.map((x) => [x, 0.5])), openness: 0.58 }), now);
+  assert.equal(faint.weakness, null, 'a faint lean names no drawback');
+  const strong = characterFromTracks(mk({ ...Object.fromEntries(TRAIT_AXES.map((x) => [x, 0.5])), openness: 0.95 }), now);
+  assert.ok(strong.weakness?.startsWith('You may'), 'a clear lean: the drawback is a possibility');
+
+  // public line: strength only, never a private lean, never weakness/step
+  const priv = { ...Object.fromEntries(TRAIT_AXES.map((x) => [x, 0.5])), attachment_anxiety: 0.98, steadiness: 0.05, openness: 0.7 };
+  const pub = characterPublicLine(priv);
+  assert.ok(pub && pub.startsWith('Adventurous'), 'private leans (attachment, low steadiness) are skipped for the next shareable one');
+  assert.equal(characterPublicLine(Object.fromEntries(TRAIT_AXES.map((x) => [x, 0.5]))), null, 'a flat profile has no public line');
+  assert.equal(characterPublicLine({ attachment_avoidance: 0.1 }), null, 'only a private lean = nothing public');
+  assert.ok(!/cuts both ways|TRY/.test(pub ?? ''), 'a public line never carries the weakness or step');
+
+  // wiring: shown after the 48 (not before), and not on top of the finished binder
+  const fold = read('src/components/questions-fold.tsx');
+  assert.match(fold, /fullProfileLocked && !loading && progress && progress\.stage !== 'complete' \? <ProfileCharacter/, 'character shows after the 48, before set 25');
+  const comp = read('src/components/profile-character.tsx');
+  assert.ok(!/import[^;]*characterPublicLine/.test(comp), 'the in-app component never uses the public line; a share surface must call characterPublicLine itself');
+  assert.equal(early.name, 'Still forming', 'with any code axis unsettled the name is "Still forming", not a default-low type');  assert.match(comp, /<PixelFrame enter=\{!reduceMotion\}/, 'entrance skipped under Reduce Motion');
+  assert.ok(!/fetch|supabase|rpc\(/i.test(read('src/lib/profile-character.ts')), 'pure: no network, no AI');
+  ok('profile character: honest at 3+ answers, deterministic and unique by answers, near-line "could grow into" as a possibility, public line skips private leans and weakness');
+}
 
 console.log(`\n${passed} profile-history checks passed`);
