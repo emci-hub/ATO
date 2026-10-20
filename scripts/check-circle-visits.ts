@@ -45,7 +45,7 @@ import { cloudSavePayload } from '../src/play/cloud-save-model';
 import { allHeroes } from '../src/play/heroes-data';
 import { emptyHideout, parseHideout } from '../src/play/hideout-progress';
 import { RAIL_BUTTON_PT, RAIL_GAP_PT, RAIL_MAX_ITEMS, leftRailActions, railMaxHeight } from '../src/play/hideout-rails-model';
-import { PET_BANNED_WORDS } from '../src/play/pet-talk';
+import { petMoneyRiskViolation } from '../src/play/pet-talk';
 import { defaultPlayStore, openCircleGift, parsePlayStore } from '../src/play/playStore';
 import { computeStageFrame } from '../src/play/stage-frame';
 import { TRAIT_AXES } from '../src/lib/traits';
@@ -270,7 +270,7 @@ ok('screen: cards float and wait their turn; a visit swaps notice + dock content
 
 assert.equal(CIRCLE_VISITS_COPY_REVIEWED, true, 'emci read the copy (2026-10-15)');
 assert.ok(fs.existsSync(path.join(root, 'docs/divecore/circle-visits/review.md')), 'review doc exists');
-const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
+const banned = { test: (text: string): boolean => petMoneyRiskViolation(text) !== null };
 const strings: string[] = [];
 const collect = (v: unknown) => {
   if (typeof v === 'string') strings.push(v);

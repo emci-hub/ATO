@@ -92,4 +92,4 @@ export const PLAY_CREDITS: readonly PlayCredit[] = [
 ];
 
 export const PLAY_OPTIONAL_LINE =
-  'Play is optional — Home, Check and Sage are never gated behind it.';
+  'Play is optional — Home, Check and Insights are never gated behind it.';

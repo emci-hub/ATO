@@ -69,7 +69,7 @@ import { RAIL_ROOM_GEOM, railWalkBounds } from '../src/play/hideout-rails-model'
 import { emptyHideout, parseHideout } from '../src/play/hideout-progress';
 import { kitHas, petKitOfRole, type PetKitSource } from '../src/play/pet-actor';
 import { COSMETICS, cosmeticById } from '../src/play/pet-cosmetics';
-import { PET_BANNED_WORDS } from '../src/play/pet-talk';
+import { petMoneyRiskViolation } from '../src/play/pet-talk';
 import { buyCosmetic, defaultPlayStore, greetDailyVisitor, markHideoutCoach, parsePlayStore } from '../src/play/playStore';
 
 const root = path.resolve(__dirname, '..');
@@ -250,7 +250,7 @@ assert.ok(!/require\(|['"`]icon\.stickers\.|assets\/art\//.test(uiSrc), 'no type
 
 assert.equal(VISITORS_COPY_REVIEWED, true, 'emci read the bank (2026-10-15)');
 assert.ok(fs.existsSync(path.join(root, 'docs/divecore/daily-visitors/review.md')), 'review doc exists');
-const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
+const banned = { test: (text: string): boolean => petMoneyRiskViolation(text) !== null };
 const ids = new Set<string>();
 for (const id of VISITOR_STICKER_HEROES) {
   const set = VISITOR_LINES[id];

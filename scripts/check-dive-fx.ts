@@ -46,6 +46,7 @@ import { diveButtons } from '../src/play/dive-buttons';
 import { STREET_STOPS, streetDiveLabel, streetFindName } from '../src/play/dive-street-names';
 import { diveCollectibleIds, findName } from '../src/play/dive-loot';
 import { COSMETICS } from '../src/play/pet-cosmetics';
+import { petMoneyRiskViolation } from '../src/play/pet-talk';
 import { HUB_TILES } from '../src/play/neon-viper';
 
 let passed = 0;
@@ -163,7 +164,6 @@ if (tint) assert.equal(findGlow(tint.id), 'rare');
 assert.ok(GLOW_COLOR.common && GLOW_COLOR.rare && GLOW_COLOR.epic);
 ok('looks: tension reads the shown %, heartbeat over 40%, neon zones, rarity glow');
 
-const banned = /\b(gamble|gambling|casino|jackpot|bet|bets|betting)\b/i;
 for (const file of [
   ...UI_FILES,
   'src/play/pet-screen.tsx',
@@ -173,14 +173,18 @@ for (const file of [
   'src/play/coach.ts',
 ]) {
   // Strings only: comments may name the rule itself.
-  // The banned-word list itself (pet-talk.ts) is the one allowed mention.
-  const source = read(file).replace(/export const PET_BANNED_WORDS[^;]*;/, '');
+  // Core content policy 2026-10-20: the rule is "do not encourage gambling or a
+  // risky money move", not the words. The rule's own patterns (pet-talk.ts) are
+  // regexes, not copy, so they are skipped here.
+  const source = read(file).replace(/const PET_MONEY_RISK_PATTERNS[\s\S]*?\n\];/, '');
   const strings = source.match(/(['"`])(?:\\.|(?!\1).)*\1/g) ?? [];
-  for (const s of strings) assert.ok(!banned.test(s), `${file}: banned word in ${s}`);
+  for (const s of strings) assert.equal(petMoneyRiskViolation(s), null, `${file}: encourages gambling in ${s}`);
 }
 const jsxText = screen.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-assert.ok(!banned.test(jsxText), 'dive-screen copy has no banned words');
-ok('wording: no gamble / casino / jackpot / bet in Dive or Pet copy');
+assert.equal(petMoneyRiskViolation(jsxText), null, 'dive-screen copy does not encourage gambling');
+assert.equal(petMoneyRiskViolation('I bet the box is full.'), null, 'ordinary "bet" passes');
+assert.notEqual(petMoneyRiskViolation('Place a bet on the box.'), null, 'encouraging a bet fails');
+ok('wording: Dive and Pet copy never encourages gambling or a risky money move');
 
 assert.ok(!HUB_TILES.some((t) => t.to === 'dive'), 'no Dive tile on the hub');
 assert.ok(HUB_TILES.some((t) => t.to === 'pet'), 'the Pet tile stays');

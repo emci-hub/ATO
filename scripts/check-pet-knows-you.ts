@@ -51,7 +51,7 @@ import {
   THIN_PROFILE,
   type PetKnowsProfile,
 } from '../src/play/pet-knows-you';
-import { PET_BANNED_WORDS } from '../src/play/pet-talk';
+import { petMoneyRiskViolation } from '../src/play/pet-talk';
 import { CLINICAL_ADVICE, hasClinicalLabel } from '../src/lib/voice/clinical';
 
 let passed = 0;
@@ -82,7 +82,7 @@ for (const [line, bad] of [
   assert.equal(CLINICAL.test(line), bad, `pet clinical rule: "${line}"`);
 }
 const VOICE_BAN = /\b(you are|you['’]re|always|never)\b/i;
-const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
+const banned = { test: (text: string): boolean => petMoneyRiskViolation(text) !== null };
 
 assert.equal(PET_KNOWS_YOU_COPY_REVIEWED, true, 'emci read and approved the bank (2026-10-15); a new edit resets this to false until re-read');
 for (const axis of TRAIT_AXES) {
