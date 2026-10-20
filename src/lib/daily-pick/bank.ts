@@ -79,7 +79,10 @@ export const DAILY_PICKS: readonly DailyPick[] = [
   pick(23, 'attachment_anxiety', 'The typing bubble appears, disappears, appears again.', ['Watching it closely', H], ['Phone down', L]),
   pick(24, 'attachment_anxiety', 'Your friends posted a hangout you weren’t at.', ['Glad they had fun', L], ['Wait, when was this', H]),
   // Personal space (Private / Close)
-  pick(25, 'attachment_avoidance', 'Someone you just met wants to share locations.', ['Maybe later', H], ['Sure, send it', L]),
+  // p65 replaced p25 at this position (emci 2026-10-19): declining to share a location is a
+  // boundary, not distance. p25 keeps its original text in RETIRED_DAILY_PICKS for old answers.
+  // Options measure how much effort goes into answering a bid for connection (a joke is not scored as distance).
+  pick(65, 'attachment_avoidance', 'A friend texts “I miss you” out of nowhere.', ['Call them tonight', L], ['Send a heart, back to it', H]),
   pick(26, 'attachment_avoidance', 'A friend asks, “how are you, really?”', ['Okay, so…', L], ['Fine, haha', H]),
   pick(27, 'attachment_avoidance', 'Your phone lights up: “can we talk tonight?”', ['Need a minute first', H], ['Call me now', L]),
   pick(28, 'attachment_avoidance', 'Movie night: one couch, five people.', ['Pile on', L], ['Claim the armrest', H]),
@@ -152,6 +155,30 @@ export function pickForYmd(ymd: string): DailyPick {
   return DAILY_PICKS[pickIndexForYmd(ymd)]!;
 }
 
+/**
+ * Picks taken out of rotation when their scene changed. Ids are forever: an old
+ * answer still points at its original question, so the original text stays here
+ * (and on the server, parked at a position the rotation never reaches).
+ * `position` is where the pick sat in wave82; `replacedBy` is the pick there now.
+ */
+export const RETIRED_DAILY_PICKS: readonly { pick: DailyPick; position: number; replacedBy: string }[] = [
+  {
+    pick: pick(25, 'attachment_avoidance', 'Someone you just met wants to share locations.', ['Maybe later', H], ['Sure, send it', L]),
+    position: 24,
+    replacedBy: 'p65',
+  },
+];
+
+/** Server position for a retired pick: past the 64-day rotation, so it is never served. */
+export const RETIRED_PICK_POSITION_BASE = 1000;
+
+/** The pool exactly as wave82 created it (retired picks back in their old places). */
+export function picksAtWave82(): DailyPick[] {
+  const list = [...DAILY_PICKS];
+  for (const r of RETIRED_DAILY_PICKS) list[r.position] = r.pick;
+  return list;
+}
+
 export function dailyPickById(id: string): DailyPick | null {
-  return DAILY_PICKS.find((p) => p.id === id) ?? null;
+  return DAILY_PICKS.find((p) => p.id === id) ?? RETIRED_DAILY_PICKS.find((r) => r.pick.id === id)?.pick ?? null;
 }

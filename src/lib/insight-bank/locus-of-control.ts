@@ -63,7 +63,7 @@ export const LOCUS_OF_CONTROL_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice when someone else’s part gets left out.',
-      'Notice how fair your view of blame is.',
+      'Notice how you split up blame when you look back on a problem.',
     ],
   }),
   idea('ftw_locus_of_control_h_05', ['locus_of_control:high'], {
@@ -136,7 +136,7 @@ export const LOCUS_OF_CONTROL_IDEAS: readonly InsightIdea[] = [
       'You usually let things play out before you step in.',
       'When a problem comes up, you tend to give it time to sort itself out.',
     ],
-    why: 'Patience can help, but some problems get bigger if you wait too long.',
+    why: 'Patience can help, but some problems can get bigger if you wait too long.',
     try: [
       'Pick one problem you’ve been waiting on and take one small step today, so it starts moving.',
       'Set a date to act if nothing changes, so waiting has an end.',
@@ -191,7 +191,7 @@ export const LOCUS_OF_CONTROL_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice when accepting something means missing a chance to change it.',
-      'Notice how calm you stay compared to others.',
+      'Notice how calm you stay when plans change.',
     ],
   }),
 ];

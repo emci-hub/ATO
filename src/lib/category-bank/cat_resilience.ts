@@ -65,7 +65,7 @@ export const CAT_RESILIENCE: BarCard = {
         'Sometimes your doubt after a mistake lasts longer than the mistake does.',
       ],
       tryThis: [
-        'Write down one hard thing you got through before, so you remember you can do it.',
+        'Write down one rough week you got through before, so you have proof you can get through another.',
         'Take three slow breaths before your next stressful task, so you start calmer.',
         'Tell a friend about a setback this week, so you don’t carry it alone.',
       ],

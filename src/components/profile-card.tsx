@@ -109,10 +109,18 @@ export function ProfileCard({
             <Text style={styles.lineKey}>STRENGTH </Text>
             {lines.strength}
           </Text>
-          <Text style={styles.line}>
-            <Text style={styles.lineKey}>WEAKNESS </Text>
-            {lines.weakness}
-          </Text>
+          {lines.weakness ? (
+            <Text style={styles.line}>
+              <Text style={styles.lineKey}>WEAKNESS </Text>
+              {lines.weakness}
+            </Text>
+          ) : null}
+          {lines.step ? (
+            <Text style={styles.line}>
+              <Text style={styles.lineKey}>TRY </Text>
+              {lines.step}
+            </Text>
+          ) : null}
         </View>
       ) : null}
       {!PROFILE_CARD_COPY_REVIEWED && PRE_LAUNCH_DEV ? <Text style={styles.draft}>Draft copy — waiting on emci review.</Text> : null}

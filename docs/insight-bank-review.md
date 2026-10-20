@@ -3,6 +3,8 @@
 The daily insight on Home, written by hand in the clear voice (`src/lib/voice/clear-voice.ts`). No AI.
 Each idea shows one of its three focus wordings, its why, one of two tries and one of two watches; the tag row is the line in *italics*.
 
+**Review rules:** `docs/copy-review-rules.md` (fix unclear wording and meaning problems; keep honest lines plain; no keyword flags).
+
 **How to review:** change `- [ ]` to `- [x]` on every idea you approve. Edit wording right here if you like and tell me; I copy it into `src/lib/insight-bank/<trait>.ts`.
 When every idea is ticked, `INSIGHT_BANK_COPY_REVIEWED` flips to `true` (`src/lib/insight-bank/index.ts`).
 This flag is for this review only: the app shows these ideas to everyone and never shows a draft badge for them (emci, 2026-10-07).

@@ -52,7 +52,7 @@ export const CAT_AGENCY: BarCard = {
       summary: [
         'You tend to accept things as they come and don’t push hard to change them.',
         'When something goes wrong, you usually see it as luck or timing more than your doing.',
-        'You tend to feel unsure about taking on hard things, and you’re happy with what you know.',
+        'You tend to feel unsure about taking on hard things, and you’re content with what you already know.',
       ],
       strength: [
         'You usually stay calm when things are out of your hands.',

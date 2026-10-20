@@ -39,11 +39,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'the fast captain', 'What legend grows around someone who keeps arriving too fast?', 'Being known for one thing can turn into a story bigger than you.'),
     ],
     tags: [
-      tag('openness', 'low', 'the same route, forever', 'It sails the same seas and never changes course.'),
-      tag('growth_mindset', 'low', 'never changes course', 'The ghost ship keeps doing the same thing forever.'),
       tag('conflict_cooperativeness', 'low', 'won’t bend for anyone', 'In the legend it never gives in to the sea.'),
-      tag('relatedness', 'low', 'sails alone', 'It roams the oceans with no port and no company.'),
-      tag('competence', 'low', 'never reaches port', 'The ship can never make port.'),
     ],
     vetting: 'Sailors’ ghost legend; no real person named as the captain in the entry; no harm to children.',
   },
@@ -76,10 +72,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'knowing your worth', 'When is it time to walk away?', 'Leaving when you’re taken for granted is allowed.'),
     ],
     tags: [
-      tag('conflict_assertiveness', 'low', 'works without a word', 'It helps silently while the house sleeps.'),
       tag('attachment_avoidance', 'high', 'helps from a distance', 'It never shows itself to the family it helps.'),
-      tag('extraversion', 'low', 'only comes out at night', 'It works only when everyone else is asleep.'),
-      tag('openness', 'low', 'one house, one routine', 'It stays with one household, doing the same chores.'),
       tag('relatedness', 'low', 'happy on its own', 'It keeps to itself and needs no company.'),
     ],
     vetting: 'Folklore household spirit; no religious figure; no harm to children.',
@@ -118,8 +111,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('playfulness', 'high', 'changes shape for fun', 'Tellings say tanuki change form just because they like it.'),
-      tag('conscientiousness', 'low', 'makes it up as it goes', 'It improvises one disguise after another.'),
-      tag('extraversion', 'high', 'loves an audience', 'It plays tricks to get a reaction from people.'),
+      tag('conscientiousness', 'low', 'jolly but absent-minded', 'Folklore makes the tanuki jolly but somewhat absent-minded.'),
       tag('openness', 'high', 'tries every shape', 'It has more disguises than the fox.'),
     ],
     hidden: {
@@ -160,10 +152,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('playfulness', 'high', 'scary, then silly', 'The story ends with a thrown pumpkin.'),
-      tag('conscientiousness', 'high', 'rides every night', 'The Horseman roams the same roads again and again.'),
       tag('relatedness', 'low', 'rides alone', 'He is a solitary rider in the dark.'),
-      tag('attachment_anxiety', 'high', 'forever searching', 'In some tellings he searches for what he lost.'),
-      tag('growth_mindset', 'low', 'rides the same roads', 'He roams the same roads again and again.'),
     ],
     vetting: 'Folklore and fiction ghost; no religious figure; no harm to children.',
   },
@@ -183,7 +172,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
     facts: [
       fact('f1', 'Her name means “woman of the fairy mound” or “fairy woman”.', src(wiki('Banshee'), 'woman of the fairy mound')),
       fact('f2', 'In folklore she announces a loss in a family by wailing or keening.', src(wiki('Banshee'), 'heralds the death of a family member')),
-      fact('f3', 'She wears a grey cloak over a green dress.', src(wiki('Banshee'), 'grey cloak over a green dress')),
+      fact('f3', 'In some tellings she wears a grey cloak over a green dress.', src(wiki('Banshee'), 'grey cloak over a green dress')),
     ],
     moments: [
       moment('m1', 'She is sometimes seen combing her long hair, and in some legends can only keen while combing it.', src(wiki('Banshee'), 'combing her hair')),
@@ -196,11 +185,9 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'the fairy mound', 'Why do old places hold old stories?', 'The places around you can carry long memories.'),
     ],
     tags: [
-      tag('steadiness', 'low', 'feels and wails', 'She expresses grief loudly.'),
+      tag('locus_of_control', 'low', 'can warn, never prevent', 'She announces a coming loss but cannot stop it.'),
       tag('attachment_avoidance', 'low', 'tied to her family', 'She is linked to particular families.'),
-      tag('attachment_anxiety', 'high', 'keeps watch over them', 'She is said to sense coming loss.'),
       tag('playfulness', 'low', 'solemn and serious', 'Her role is solemn.'),
-      tag('growth_mindset', 'low', 'the same old warning', 'She has warned families the same way for centuries.'),
     ],
     vetting: 'Folklore spirit; not sacred in a living religion; described gently, no harm to children.',
   },
@@ -223,7 +210,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
       fact('f3', 'Scientists explain sightings as hoaxes, wishful thinking or misidentified animals and objects.', src(wiki('Loch_Ness_Monster'), 'hoaxes, wishful thinking')),
     ],
     moments: [
-      moment('m1', 'The 1934 “surgeon’s photograph” is perhaps the most famous alleged photo of the creature.', src(wiki('Loch_Ness_Monster'), "surgeon's photograph")),
+      moment('m1', 'The famous 1934 “surgeon’s photograph” is now widely agreed to be a hoax, exposed in 1994.', src(wiki('Loch_Ness_Monster'), "surgeon's photograph", 'Since 1994, most agree that the photo was an elaborate hoax')),
       moment('m2', 'Evidence for it is anecdotal, with disputed photos and sonar readings.', src(wiki('Loch_Ness_Monster'), 'Evidence of its existence is anecdotal')),
     ],
     angles: [
@@ -234,10 +221,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('extraversion', 'low', 'hides in the depths', 'It is rarely, if ever, seen.'),
-      tag('attachment_avoidance', 'high', 'keeps out of sight', 'It avoids being proven.'),
       tag('openness', 'low', 'never leaves the loch', 'It stays in the same loch.'),
-      tag('playfulness', 'high', 'the world’s favourite mystery', 'Nessie is a beloved, playful mystery.'),
-      tag('competence', 'low', 'too careful to be caught', 'It has never been proven to exist.'),
     ],
     vetting: 'Modern folklore creature; no religious figure; no harm to children.',
   },
@@ -271,10 +255,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('relatedness', 'low', 'lives alone in the snow', 'It is a solitary mountain creature.'),
-      tag('attachment_avoidance', 'high', 'avoids every camera', 'It is never reliably seen.'),
       tag('extraversion', 'low', 'stays out of sight', 'It is known by traces, not appearances.'),
-      tag('autonomy', 'high', 'lives by its own rules', 'It lives far from people.'),
-      tag('competence', 'low', 'careful to stay hidden', 'It is known only by traces like footprints.'),
     ],
     vetting: 'Folklore creature; not a worshipped figure; no harm to children.',
   },
@@ -308,9 +289,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('playfulness', 'high', 'teases travellers', 'It may lead people astray for fun.'),
-      tag('conscientiousness', 'low', 'never stays still', 'It flickers and wanders.'),
       tag('agreeableness', 'low', 'not reliably helpful', 'It might lead you off the path.'),
-      tag('extraversion', 'high', 'wants to be noticed', 'It glows to catch your eye.'),
     ],
     vetting: 'Folklore light; no religious figure; no harm to children.',
   },
@@ -343,11 +322,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'the birthday', 'What would you be like on your hundredth?', 'Every year adds something.'),
     ],
     tags: [
-      tag('steadiness', 'high', 'a hundred patient years', 'They wait a century to awaken.'),
-      tag('openness', 'low', 'the same tool for ages', 'They stay the same object for a hundred years.'),
-      tag('playfulness', 'high', 'objects with personality', 'They come to life with their own character.'),
-      tag('growth_mindset', 'high', 'grows a spirit with time', 'Time turns them into something new.'),
-      tag('self_efficacy', 'low', 'waits a century to wake', 'They wait a hundred years before they awaken.'),
+      tag('attachment_anxiety', 'high', 'afraid of being thrown away', 'In the old scrolls, tools thrown away just before their hundredth year turn into yōkai.'),
     ],
     vetting: 'Folklore spirits of objects; not worshipped figures; no harm to children.',
   },
@@ -370,7 +345,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
       fact('f3', 'A 19th-century poem calls him the Fairy Shoemaker.', src(wiki('Leprechaun'), 'Fairy Shoemaker')),
     ],
     moments: [
-      moment('m1', 'In one old tale, a man captures his captors, who grant him three wishes for their release.', src(wiki('Leprechaun'), 'three wishes in exchange for release')),
+      moment('m1', 'In the oldest known tale, sprites drag a sleeping king toward the sea; he wakes, catches three of them, and they grant him three wishes to go free.', src(wiki('Leprechaun'), 'Fergus mac Léti, King of Ulster', 'three wishes in exchange for release')),
       moment('m2', 'His main occupation is said to be making and mending shoes.', src(wiki('Leprechaun'), 'making and cobb')),
     ],
     angles: [
@@ -381,10 +356,7 @@ export const GHOST_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('relatedness', 'low', 'works alone', 'He is a solitary fairy.'),
-      tag('playfulness', 'high', 'full of mischief', 'Leprechauns partake in mischief.'),
       tag('conscientiousness', 'high', 'mends every shoe', 'His occupation is making and mending shoes.'),
-      tag('attachment_avoidance', 'high', 'guards his gold', 'He hides his pot of gold.'),
-      tag('competence', 'low', 'guards his gold carefully', 'He keeps his pot of gold hidden.'),
     ],
     vetting: 'Folklore fairy; no religious figure; entry avoids stereotypes; no harm to children.',
   },

@@ -11,12 +11,12 @@ export const CAT_COMMUNICATION: BarCard = {
         'You tend to handle hard talks directly and fairly.',
       ],
       strength: [
-        'When you disagree with someone, you usually focus on fixing the problem together.',
+        'When you and a friend disagree, you usually keep the talk about the problem, not the person.',
         'You tend to say what you need while also asking what the other person needs.',
         'You usually make hard talks feel fair.',
       ],
       watchOut: [
-        'Sometimes you jump to fixing it before the other person has had their say.',
+        'Sometimes you offer a solution while the other person is still explaining how they feel.',
         'Because you want to settle things, you might push to talk before others are ready.',
         'Sometimes you work so hard at being fair that it wears you out.',
       ],

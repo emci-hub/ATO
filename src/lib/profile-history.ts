@@ -8,14 +8,17 @@
  * saved (`_profile_changed`); `profileChanged` here is the same rule, pinned.
  */
 import { AXIS_POLE_NAME, AXIS_POLES, AXIS_SHORT_NAME } from '@/lib/axis-poles';
+import { lineKey } from '@/lib/daily-line/bank';
+import { TRAIT_IDEAS } from '@/lib/insight-bank';
 import { archetypeName, DEFAULT_LEGEND_SKIN } from '@/lib/legends64/archetypes';
 import { CORE_AXES, MODIFIER_AXES, POLE_COMBOS, THIRD_AXES, midpointHighLow } from '@/lib/legends64/classify';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 /**
- * The Strength / Weakness lines are TEMPORARY: built from the existing trait
- * ends (axis-poles.ts) because no stored strength/weakness bank exists yet.
- * Not AI. Flip once emci has read them or a real bank replaces them.
+ * The Strength line is the trait end's own words (axis-poles.ts); the Weakness
+ * and Step lines come from the insight bank, so they are only as reviewed as
+ * INSIGHT_BANK_COPY_REVIEWED (still false until emci's reading is applied).
+ * Not AI. Flip this flag once emci has read the card layout.
  */
 export const PROFILE_CARD_COPY_REVIEWED = false;
 
@@ -136,10 +139,16 @@ export function cardBars(values: ProfileValues): CardBar[] {
 }
 
 /**
- * Strength: the strongest lean, in that end's own words. Weakness: the end it
- * leaves out. Temporary copy from axis-poles.ts (see PROFILE_CARD_COPY_REVIEWED).
+ * Strength: the strongest lean, in that end's own words. Weakness (emci
+ * 2026-10-19): the real cost of that same lean, plainly, and one practical step.
+ * Both come from the insight bank's idea for that axis and side (`why` = what it
+ * costs, `try` = the step), so they are supported by the same lean and already
+ * in the clear voice. No idea for the side = no weakness line (nothing invented).
+ * In-app only (the binder); a share surface must filter with `ideaShareable`.
  */
-export function cardStrengthWeakness(values: ProfileValues): { strength: string; weakness: string } | null {
+export function cardStrengthWeakness(
+  values: ProfileValues,
+): { strength: string; weakness: string | null; step: string | null } | null {
   let best: { axis: TraitAxis; lean: number } | null = null;
   for (const axis of TRAIT_AXES) {
     const v = values[axis];
@@ -149,12 +158,24 @@ export function cardStrengthWeakness(values: ProfileValues): { strength: string;
   }
   if (!best || Math.abs(best.lean) < 0.05) return null;
   const end = best.lean >= 0 ? 'high' : 'low';
-  const other = end === 'high' ? 'low' : 'high';
+  const key = lineKey(best.axis, end);
+  // The first idea for this side whose `why` actually names a cost ("X helps, but Y"):
+  // some `why` lines are upside only and would show a Weakness with no weakness in it.
+  const idea = TRAIT_IDEAS.find((i) => i.keys.length === 1 && i.keys[0] === key && /\bbut\b/i.test(i.why));
+  // A strong lean alone does not prove its drawback (emci 2026-10-19): the cost is
+  // offered as a possibility ("You may…") and only for a clear lean.
+  const supported = Math.abs(best.lean) >= WEAKNESS_MIN_LEAN && idea;
   return {
     strength: `${AXIS_POLE_NAME[best.axis][end]}: “${AXIS_POLES[best.axis][end]}”`,
-    weakness: `Less natural: ${AXIS_POLE_NAME[best.axis][other]}`,
+    weakness: supported ? `${WEAKNESS_LEAD} ${idea.why}` : null,
+    step: supported ? idea.try[0] : null,
   };
 }
+
+/** How far from the middle a lean must be before the card names a possible drawback. */
+export const WEAKNESS_MIN_LEAN = 0.15;
+/** The weakness line is always a possibility, never a verdict. */
+export const WEAKNESS_LEAD = 'You may find it cuts both ways.';
 
 export type CompareArrow = 'up' | 'down' | 'same';
 

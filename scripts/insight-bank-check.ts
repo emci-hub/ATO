@@ -30,6 +30,7 @@ import {
   ideaTags,
   ideaTheme,
   isBankInsightTitle,
+  RETIRED_FOCUS_TEXT,
   themeTags,
 } from '../src/lib/insight-bank';
 import { draftFromPick, pickIdea, repeatWindowDays, type IdeaDay } from '../src/lib/insight-bank/pick';
@@ -140,6 +141,11 @@ for (const entry of ALL_IDEAS) {
 }
 assert.equal(isBankInsightTitle('Your shower is your thinking room.'), false, 'an AI-era title is not in the bank');
 assert.equal(ideaForTitle(null), null);
+for (const [oldText, currentText] of Object.entries(RETIRED_FOCUS_TEXT)) {
+  const now = ideaForTitle(currentText);
+  assert.ok(now, `a retired focus text points at a current one: ${currentText}`);
+  assert.deepEqual(ideaForTitle(oldText), now, 'a row saved with an old focus wording still maps to its idea and variant');
+}
 ok('every title maps back to {idea, variant, keys}; unknown (AI-era) titles map to nothing');
 
 // --- picker -----------------------------------------------------------------------

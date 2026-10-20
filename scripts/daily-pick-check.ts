@@ -20,6 +20,9 @@ import {
   DAILY_PICK_COPY_REVIEWED,
   DAILY_PICKS,
   pickForYmd,
+  dailyPickById,
+  RETIRED_DAILY_PICKS,
+  RETIRED_PICK_POSITION_BASE,
   pickIndexForYmd,
 } from '../src/lib/daily-pick/bank';
 import { reactionLine } from '../src/lib/daily-pick/reaction';
@@ -76,7 +79,28 @@ const rows = execFileSync('npx', ['tsx', 'scripts/gen-wave82-picks.ts'], {
   encoding: 'utf8',
   shell: process.platform === 'win32',
 }).trim();
-assert.ok(sql.replace(/\r\n/g, '\n').includes(rows.replace(/\r\n/g, '\n')), 'the migration pool rows match the app list (regenerate with scripts/gen-wave82-picks.ts)');
+assert.ok(sql.replace(/\r\n/g, '\n').includes(rows.replace(/\r\n/g, '\n')), 'the migration pool rows match the app list as wave82 created it (regenerate with scripts/gen-wave82-picks.ts)');
+// A pick whose scene changed is retired, never reworded in place (emci 2026-10-19): old answers keep
+// pointing at the original text, and a new id takes its place in the rotation (wave99c).
+const retireSql = execFileSync('npx', ['tsx', 'scripts/gen-wave82-picks.ts', '--retire'], {
+  cwd: root,
+  encoding: 'utf8',
+  shell: process.platform === 'win32',
+}).trim();
+assert.ok(
+  read('supabase/migrations/wave99c_daily_pick_p65.sql').replace(/\r\n/g, '\n').includes(retireSql.replace(/\r\n/g, '\n')),
+  'wave99c parks every retired pick and inserts its replacement (regenerate with gen-wave82-picks.ts --retire)',
+);
+for (const r of RETIRED_DAILY_PICKS) {
+  assert.equal(DAILY_PICKS[r.position]!.id, r.replacedBy, `${r.pick.id}: its replacement holds its old position`);
+  assert.ok(!DAILY_PICKS.some((p) => p.id === r.pick.id), `${r.pick.id}: a retired id is never served again`);
+  assert.equal(dailyPickById(r.pick.id)?.prompt, r.pick.prompt, `${r.pick.id}: old answers still find the original question`);
+  assert.ok(RETIRED_PICK_POSITION_BASE + r.position >= 64, 'a parked position is outside the 64-day rotation');
+}
+assert.ok(
+  !DAILY_PICKS.some((p) => /\blocations?\b/i.test(p.prompt) && p.axis.startsWith('attachment_')),
+  'declining to share a location is a boundary, never scored as closeness or distance',
+);
 // The server's date rule is the app's: (n % 16) * 4 + n / 16 over n = day % 64.
 assert.match(sql, /select \(\(\(\(p_ymd - date '2026-01-01'\) % 64\) \+ 64\) % 64 % 16\) \* 4\s*\+ \(\(\(\(p_ymd - date '2026-01-01'\) % 64\) \+ 64\) % 64 \/ 16\);/);
 assert.match(sql, /v_mode := case when v_count >= 3 then 'answer' else 'direct' end;/, 'counts only after the trait\'s intake');

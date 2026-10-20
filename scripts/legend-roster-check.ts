@@ -8,9 +8,9 @@
  *   animals died 2005 or earlier; myths labelled; no office-holders), roles
  *   (Leonardo as an artist / as an inventor), a source URL + check phrases on
  *   every fact, moment and birthday, sizes (3–5 facts, 2–3 moments, 4–6 angles,
- *   3–5 tags), voice, and coverage: 12 halls of at least 10, every one of the 32
- *   trait sides on at least 8 visible legends in the full roster, every hall
- *   spread over many sides (low ones too);
+ *   1–5 documented tags), voice, and coverage: 12 halls of at least 10, none
+ *   with an empty first frame; trait-side coverage is reported (thin sides
+ *   print a warning, the empty ones are pinned) instead of forced by quota;
  * - the hall walk: locked on a flat profile, three "???" frames per hall,
  *   stable per person and day, refilled in place, no repeats, hidden legends
  *   only when unlocked, On this day first, chapters once a hall is met, one
@@ -68,7 +68,7 @@ import {
   shownMoments,
   type LegendPair,
 } from '../src/lib/legend-figures/story';
-import { LEGEND_HALLS, LEGEND_REGIONS, type LegendFigure } from '../src/lib/legend-figures/types';
+import { LEGEND_HALLS, LEGEND_REGIONS } from '../src/lib/legend-figures/types';
 import { rankStoryAxes } from '../src/lib/story-thread';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
@@ -144,7 +144,9 @@ for (const l of LEGEND_ROSTER) {
   assert.ok(l.facts.length >= 3 && l.facts.length <= 5, `${at}: 3–5 facts`);
   assert.ok(l.moments.length >= 2 && l.moments.length <= 3, `${at}: 2–3 moments`);
   assert.ok(l.angles.length >= 4 && l.angles.length <= 6, `${at}: 4–6 angles`);
-  assert.ok(l.tags.length >= 3 && l.tags.length <= 5, `${at}: 3–5 trait tags`);
+  // 1–5 tags: a tag stays only if the behaviour is documented (emci 2026-10-19:
+  // "don't fill quotas with guesses"), so some legends honestly carry one.
+  assert.ok(l.tags.length >= 1 && l.tags.length <= 5, `${at}: 1–5 trait tags`);
   l.facts.forEach((f, i) => assert.equal(f.id, `f${i + 1}`, `${at}: fact ids f1…`));
   l.moments.forEach((m, i) => assert.equal(m.id, `m${i + 1}`, `${at}: moment ids m1…`));
   l.angles.forEach((a, i) => assert.equal(a.id, `a${i + 1}`, `${at}: angle ids a1…`));
@@ -188,27 +190,51 @@ ok('every legend: people and animals ≤ 2005, no office-holders, myths labelled
 
 /* ------------------------------------------------------------ coverage --- */
 
-const minPerPole = grown ? 8 : 1;
+/*
+ * Trait coverage is REPORTED, not forced (emci 2026-10-19: "Remove unsupported
+ * historical trait inferences — don't fill quotas with guesses"). The old hard
+ * quota (every side ≥ 8 legends, every hall ≥ 15 sides / ≥ 4 low sides) could
+ * only be met by inventing tags. What the app actually guarantees is checked
+ * below instead: every legend has a tag, no hall shows an empty frame, every
+ * side the roster does carry is reachable through some hall's frames, and a
+ * person whose side no legend carries still gets full frames and a story.
+ *
+ * TRAIT_SIDE_TARGET is the aim for new legends; sides under it print as a
+ * warning. TRAIT_SIDES_EMPTY pins the sides no visible legend carries today:
+ * the gate fails if another side empties (a lost tag that wasn't decided) or
+ * one of these gains a tag (then remove it from the list).
+ */
+const TRAIT_SIDE_TARGET = grown ? 8 : 1;
+const TRAIT_SIDES_EMPTY = ['conflict_assertiveness:low', 'competence:low', 'growth_mindset:low'];
 const visible = LEGEND_ROSTER.filter((l) => !l.hidden);
-const thin: string[] = [];
+const sideCount = new Map<string, number>();
 for (const axis of TRAIT_AXES) {
   for (const lean of ['high', 'low'] as const) {
-    const n = visible.filter((l) => l.tags.some((t) => t.axis === axis && t.lean === lean)).length;
-    if (n < minPerPole) thin.push(`${axis}:${lean} (${AXIS_POLE_NAME[axis][lean]}) has ${n}`);
+    sideCount.set(`${axis}:${lean}`, visible.filter((l) => l.tags.some((t) => t.axis === axis && t.lean === lean)).length);
   }
 }
-assert.deepEqual(thin, [], `every trait side needs ≥ ${minPerPole} visible legends: ${thin.join('; ')}`);
+const emptySides = [...sideCount].filter(([, n]) => n === 0).map(([s]) => s);
+assert.deepEqual(emptySides.sort(), [...TRAIT_SIDES_EMPTY].sort(), `trait sides with no visible legend changed: now ${emptySides.join(', ')} — update TRAIT_SIDES_EMPTY only for a documented decision`);
+const thinSides = [...sideCount].filter(([, n]) => n > 0 && n < TRAIT_SIDE_TARGET);
+const sideLabel = (s: string) => {
+  const [axis, lean] = s.split(':') as [TraitAxis, 'high' | 'low'];
+  return `${s} (${AXIS_POLE_NAME[axis][lean]})`;
+};
+if (thinSides.length || emptySides.length) {
+  console.log(`  ! thin trait sides (under ${TRAIT_SIDE_TARGET} visible legends, documented tags only):`);
+  for (const [s, n] of thinSides) console.log(`      ${sideLabel(s)}: ${n}`);
+  for (const s of emptySides) console.log(`      ${sideLabel(s)}: 0`);
+}
 const MIN_HALL = grown ? 10 : 3;
-const MIN_HALL_SIDES = 15;
-const MIN_HALL_LOW_SIDES = 4;
 for (const hall of LEGEND_HALLS) {
   const inHall = LEGEND_ROSTER.filter((l) => l.hall === hall);
   assert.ok(inHall.length >= MIN_HALL, `${hall}: at least ${MIN_HALL} legends (${inHall.length})`);
+  // No empty frames on a first visit: every hall has enough open (non-hidden) legends to fill them.
+  assert.ok(inHall.filter((l) => !l.hidden).length >= LEGEND_FRAMES, `${hall}: at least ${LEGEND_FRAMES} open legends, so no frame starts empty`);
   if (grown) {
     const sides = new Set(inHall.flatMap((l) => l.tags.map((tg) => `${tg.axis}:${tg.lean}`)));
     const lows = [...sides].filter((s) => s.endsWith(':low')).length;
-    assert.ok(sides.size >= MIN_HALL_SIDES, `${hall}: legends spread over ≥ ${MIN_HALL_SIDES} trait sides (${sides.size})`);
-    assert.ok(lows >= MIN_HALL_LOW_SIDES, `${hall}: ≥ ${MIN_HALL_LOW_SIDES} low trait sides, so low-pole people match too (${lows})`);
+    console.log(`  · ${hall}: ${sides.size} trait sides, ${lows} low`);
   }
 }
 const real = LEGEND_ROSTER.filter((l) => l.kind === 'real');
@@ -223,7 +249,7 @@ if (full) {
 }
 const topRegion = Math.max(...regionCounts.values()) / LEGEND_ROSTER.length;
 if (grown) assert.ok(topRegion <= 0.45, `no region holds more than 45% of the museum (${(topRegion * 100).toFixed(0)}%)`);
-ok(`coverage (${LEGEND_ROSTER_STAGE}): all 32 trait sides ≥ ${minPerPole}; ${LEGEND_HALLS.length} halls ≥ ${MIN_HALL}; women ${(women * 100).toFixed(0)}% of real legends; ${regionCounts.size} regions, largest ${(topRegion * 100).toFixed(0)}%`);
+ok(`coverage (${LEGEND_ROSTER_STAGE}): ${32 - emptySides.length}/32 trait sides carried (${thinSides.length} thin, ${emptySides.length} empty, pinned); ${LEGEND_HALLS.length} halls ≥ ${MIN_HALL}, none with an empty first frame; women ${(women * 100).toFixed(0)}% of real legends; ${regionCounts.size} regions, largest ${(topRegion * 100).toFixed(0)}%`);
 
 /* ----------------------------------------------------------- hall walk --- */
 
@@ -291,26 +317,36 @@ for (let u = 0; u < 60; u += 1) {
 }
 assert.ok(topHits >= 45, `the first frame usually matches better than the last (${topHits}/60)`);
 
-// Every trait side finds a legend tagged with it, in some hall's frames.
+// Every trait side the roster carries finds a legend tagged with it, in some
+// hall's frames. A side no legend carries still gets full frames in every hall
+// and a story with a pair (the contrast pair), never an empty frame or card.
 const misses: string[] = [];
 for (const axis of TRAIT_AXES) {
   for (const lean of ['high', 'low'] as const) {
     const other = TRAIT_AXES.find((a) => a !== axis)!;
     const tracks = profile({ [axis]: lean === 'high' ? 0.95 : 0.05, [other]: 0.62 });
     const ranked = rankStoryAxes(tracks);
+    const frames = LEGEND_HALLS.map((hall) => {
+      const o = hallOrder({ tracks, userId: `pole-${axis}-${lean}`, ymd: YMD, hall, met: none, now: NOW })!;
+      return hallFrames(o, none, `pole|${hall}`);
+    });
+    for (const [i, f] of frames.entries()) {
+      if (f.some((k) => k == null)) misses.push(`${axis}:${lean} (empty frame in ${LEGEND_HALLS[i]})`);
+    }
+    const shown = frames.flat().filter((k): k is string => k != null);
+    for (const id of shown) {
+      if (legendPairs(legendById(id)!, ranked).length === 0) misses.push(`${axis}:${lean} (no pair for ${id})`);
+    }
+    if ((sideCount.get(`${axis}:${lean}`) ?? 0) === 0) continue;
     const best = [...visible]
       .map((l) => ({ l, ...scoreLegend(l, ranked, new Set()) }))
       .sort((a, b) => b.score - a.score)[0]!;
     if (!best.l.tags.some((tg) => tg.axis === axis && tg.lean === lean)) misses.push(`${axis}:${lean}`);
-    const shown = LEGEND_HALLS.flatMap((hall) => {
-      const o = hallOrder({ tracks, userId: `pole-${axis}-${lean}`, ymd: YMD, hall, met: none, now: NOW })!;
-      return hallFrames(o, none, `pole|${hall}`).filter((k): k is string => k != null);
-    });
     if (!shown.some((id) => legendById(id)!.tags.some((tg) => tg.axis === axis && tg.lean === lean))) misses.push(`${axis}:${lean} (frames)`);
   }
 }
-assert.deepEqual(misses, [], `a strong lean on each of the 32 sides is matched: ${misses.join(', ')}`);
-ok(`best matches come first (${topHits}/60); all 32 trait sides (high AND low) appear behind some hall’s frames`);
+assert.deepEqual(misses, [], `a strong lean on each side is matched and framed: ${misses.join(', ')}`);
+ok(`best matches come first (${topHits}/60); every carried trait side (${32 - emptySides.length}) appears behind some hall’s frames; empty sides still get full frames and a story pair`);
 
 // Hidden legends: never behind a frame until unlocked.
 const hiddenOnes = LEGEND_ROSTER.filter((l) => l.hidden);
@@ -475,14 +511,18 @@ const shortScene = parseLegendStory(bad({ metScene: 'You draw a mountain with hi
 assert.ok(shortScene && shortScene.metScene === undefined, 'a too-short scene is dropped');
 assert.equal(parseLegendStoryResult('nope', ctx).reason, 'not json', 'a rejection carries its reason (logged, never the text)');
 assert.match(parseLegendStoryResult(bad({ title: 'the anxious redrawer' }), ctx).reason ?? '', /^title:/);
-// The funny part: one joke line in the app-picked style, same hard bans as the Story joke.
+// The funny part: one joke line in the app-picked style; humor is 18+, only the harm filter refuses (emci, 2026-10-19).
 const jokeCtx = { ...ctx, jokeStyle: cardJokeStyle('u1|lf_hokusai|0') };
 assert.ok(CARD_JOKE_STYLES.includes(jokeCtx.jokeStyle), 'the style is one of the five, picked by the app');
 assert.equal(cardJokeStyle('u1|lf_hokusai|0'), cardJokeStyle('u1|lf_hokusai|0'), 'same card → same style');
 assert.ok(new Set(Array.from({ length: 30 }, (_, i) => cardJokeStyle(`u${i}|lf_hokusai|0`))).size >= 4, 'styles vary across cards');
 const withJoke = parseLegendStory(bad({ funny: 'Your drafts folder has more versions of one mountain than a postcard shop.' }), jokeCtx);
 assert.equal(withJoke?.joke, 'Your drafts folder has more versions of one mountain than a postcard shop.');
-assert.equal(parseLegendStory(bad({ funny: 'Your drafts outlived three phones and one houseplant that died of neglect.' }), jokeCtx)?.joke, undefined, 'a banned topic (death) is dropped');
+assert.equal(parseLegendStory(bad({ funny: 'Your drafts outlived three phones and one houseplant that died of neglect.' }), jokeCtx)?.joke, 'Your drafts outlived three phones and one houseplant that died of neglect.', 'a dark joke (death) is kept');
+assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is so big you should just kill yourself.' }), jokeCtx)?.joke, undefined, 'a joke encouraging self-harm is dropped');
+// Strong swearing (emci 2026-10-19, round 3): allowed when it earns its place.
+assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder has more fucking versions of one mountain than a postcard shop.' }), jokeCtx)?.joke, 'Your drafts folder has more fucking versions of one mountain than a postcard shop.', 'a joke with strong swearing is kept');
+assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is so clingy it should get its own attachment style.' }), jokeCtx)?.joke, undefined, 'a theory name in a joke is still a framework term');
 assert.equal(parseLegendStory(bad({ funny: 'Your drafts folder is huge.' }), ctx)?.joke, undefined, 'no joke asked → none kept');
 assert.equal(cardJokeViolation('A short one. And another.'), 'more than one sentence');
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs, jokeStyle: 'deadpan' }), /JOKE STYLE \(for "funny"\): deadpan/);

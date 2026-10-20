@@ -8,10 +8,10 @@ export const CAT_STEADINESS: BarCard = {
       summary: [
         'You tend to stay calm, keep your plans and get along with people, even when the week gets busy.',
         'When things get stressful at work or at home, you usually stay even and keep going.',
-        'You tend to be the steady one your friends and coworkers can count on day to day.',
+        'Your friends and coworkers can usually count on you to stay steady from day to day.',
       ],
       strength: [
-        'When plans get messy, you usually keep your cool and get things back on track.',
+        'When plans get messy, you usually stay calm and sort out what needs to happen next.',
         'You tend to follow through on what you said and stay pleasant while you do it.',
         'People can usually count on you to show up calm and ready.',
       ],
@@ -43,7 +43,7 @@ export const CAT_STEADINESS: BarCard = {
         'Sometimes you lose track of plans when stress shows up.',
       ],
       tryThis: [
-        'Pick one small routine to keep this week no matter what, so busy days have an anchor.',
+        'Pick one small routine to keep this week no matter what, so busy days still have one steady part.',
         'Write down what usually throws you off, so you can see it coming next time.',
         'Plan a quiet hour after your busiest day this week, so you have time to reset.',
       ],
@@ -57,7 +57,7 @@ export const CAT_STEADINESS: BarCard = {
       strength: [
         'You usually react honestly, so people know where they stand with you.',
         'When something matters, you feel it and you show it, which makes you easy to read.',
-        'You can switch plans quickly when your gut tells you something’s off.',
+        'You can switch plans quickly when something feels off to you.',
       ],
       watchOut: [
         'Sometimes a strong feeling can push your plans or a talk off course.',

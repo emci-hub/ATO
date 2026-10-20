@@ -192,6 +192,15 @@ assert.match(card, /<PixelFrame\n      enter=\{!reduceMotion\}/, 'the entrance i
 assert.equal(cardBars(v0).length, 16, '16 condensed bars');
 assert.ok(cardName('HHH-HHH-HHH').length > 0 && cardName('HHH-HHH-HHH') !== 'Still forming', 'the type has a name');
 assert.ok(cardStrengthWeakness({ ...v0, openness: 0.95 })?.strength.startsWith('Adventurous'), 'strength from the strongest lean');
+{
+  const sw = cardStrengthWeakness({ ...v0, openness: 0.95 });
+  assert.ok(sw?.weakness && sw.step, 'a supported lean shows its real cost and one step (insight bank), not the opposite pole');
+  assert.ok(!/less natural/i.test(sw!.weakness!), 'weakness is never the "other end"');
+  assert.ok(sw!.weakness!.startsWith('You may'), 'a drawback is a possibility ("You may…"), never a verdict');
+  const faint = cardStrengthWeakness({ ...Object.fromEntries(TRAIT_AXES.map((a) => [a, 0.5])), openness: 0.58 });
+  assert.equal(faint?.weakness ?? null, null, 'a faint lean names no drawback (a strong trait alone does not prove it)');
+  assert.equal(faint?.step ?? null, null, 'and offers no step');
+}
 assert.equal(cardStrengthWeakness(Object.fromEntries(TRAIT_AXES.map((a) => [a, 0.5]))), null, 'a flat profile claims no strength');
 const older = { ...base(v0), id: 'a', createdAt: '2026-08-01T00:00:00Z' };
 const newer = { ...base({ ...v0, openness: 0.9, autonomy: 0.5, playfulness: 0.72 }), id: 'b', createdAt: '2026-09-01T00:00:00Z' };

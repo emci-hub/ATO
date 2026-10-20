@@ -37,7 +37,7 @@ export const STEADINESS_IDEAS: readonly InsightIdea[] = [
   idea('ftw_steadiness_h_03', ['steadiness:high'], {
     focus: [
       'When a friend is upset about something small, you tend to tell them it’s not a big deal.',
-      'You usually see problems as smaller than others do, which can feel like you’re not taking them seriously.',
+      'You usually see problems as smaller than others do, so people may feel you’re not taking them seriously.',
       'When someone is worried, you tend to want to calm them down before you hear the full story.',
     ],
     why: 'Your steady view can help, but people often need to feel heard before they can calm down.',
@@ -54,25 +54,25 @@ export const STEADINESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When you get bad news, you tend to deal with it and carry on with your day.',
       'You usually handle bad news without it taking over your whole day.',
-      'When something goes wrong, you tend to sleep fine and feel better by morning.',
+      'When something goes wrong, you tend to feel more settled by the next day.',
     ],
     why: 'Bouncing back quickly is a real strength, but some things might deserve more of your attention than they get.',
     try: [
       'Take five minutes tonight to think about one hard thing from this week, so it gets the attention it needs.',
-      'Write down how you actually felt about a recent setback, so you know it’s been dealt with.',
+      'Write down how you actually felt about a recent setback, so you can see if it’s really settled.',
     ],
     watch: [
-      'Notice when moving on quickly means skipping something you should look at.',
+      'Notice when moving on quickly means skipping something worth a closer look.',
       'Notice what does bother you, even a little.',
     ],
   }),
   idea('ftw_steadiness_h_05', ['steadiness:high'], {
     focus: [
       'When friends or family are stressed, they tend to come to you because you stay calm.',
-      'You’re usually the person people call when something goes wrong.',
+      'People tend to call you first when something goes wrong.',
       'When there’s a crisis in your family or friend group, you tend to be the one who handles it.',
     ],
-    why: 'Being the calm one is a gift to people you care about, but you might need someone to lean on too.',
+    why: 'Being the calm one helps the people you care about, but you might need someone to lean on too.',
     try: [
       'Ask a friend how they’re doing and then share something of your own, so support goes both ways.',
       'Tell someone close one thing that’s been on your mind, so you get a turn to be listened to.',
@@ -152,7 +152,7 @@ export const STEADINESS_IDEAS: readonly InsightIdea[] = [
       'You usually feel nervous for days before a hard conversation or an important plan.',
       'When something important is coming up, you tend to picture all the ways it could go badly.',
     ],
-    why: 'Thinking ahead helps you prepare, but the worry can feel worse than the event usually turns out to be for you.',
+    why: 'Thinking ahead helps you prepare, but the worry can end up bigger than the event itself.',
     try: [
       'Write down your top worry and one thing you can do about it, so the worry turns into a plan.',
       'Plan something calming the night before your next big day, so you have something to look forward to.',
@@ -190,7 +190,7 @@ export const STEADINESS_IDEAS: readonly InsightIdea[] = [
       'Put your phone away for half an hour after sending a message, so you’re not waiting on the reply.',
     ],
     watch: [
-      'Notice when you start guessing what a short reply means.',
+      'Notice what you assume when a reply is shorter than usual.',
       'Notice how often the reason turns out to have nothing to do with you.',
     ],
   }),

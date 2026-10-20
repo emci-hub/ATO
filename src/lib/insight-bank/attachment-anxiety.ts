@@ -24,7 +24,7 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
       'You usually feel better once a partner or friend tells you things are fine.',
       'When a relationship feels uncertain, you tend to look for signs that it’s still good.',
     ],
-    why: 'Wanting reassurance is normal, but asking often can leave you feeling less sure instead of more.',
+    why: 'Wanting reassurance is normal, but the relief from asking can fade fast, so it helps you to have other ways to feel steady.',
     try: [
       'Before you ask if things are okay, write down three recent signs that they are, so you can see them.',
       'Tell your partner or a close friend one thing you need when you’re unsure, so they can help.',
@@ -40,7 +40,7 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
       'You usually take a cancelled plan a little personally, even when the reason is simple.',
       'When someone backs out of plans, you tend to look for what you might have done.',
     ],
-    why: 'Caring about the friendship makes you look for reasons, but most cancellations are about the other person’s day.',
+    why: 'Caring about the friendship makes you look for reasons, but a cancellation is often just about the other person’s day.',
     try: [
       'Text your friend a new date when they cancel, so you focus on the next plan.',
       'Write down the reason they gave and leave it at that, so you don’t fill in a different one.',
@@ -74,7 +74,7 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Putting in effort shows you care, but sometimes the other person just needs time, not more from you.',
     try: [
-      'Wait a day before sending your next message to someone who feels distant, so you can see how you feel.',
+      'Wait a few hours before sending your next message to someone who feels distant, so you can see how you feel.',
       'Spend an evening on something you enjoy, so your mood isn’t tied to one friendship.',
     ],
     watch: [
@@ -168,7 +168,7 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
       'You usually believe people mean what they say, even early on.',
       'When a new friend makes a promise, you tend to believe they’ll keep it.',
     ],
-    why: 'Trusting people helps relationships grow fast, but it helps you to see how someone acts over time too.',
+    why: 'Trusting people helps relationships grow fast, but it can also help you to see how someone acts over time.',
     try: [
       'Pay attention to whether a new friend follows through on one small plan, so trust has something to build on.',
       'Give a new friendship a few weeks before sharing your most private things, so trust can grow both ways.',

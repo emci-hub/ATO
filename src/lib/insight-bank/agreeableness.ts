@@ -75,7 +75,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
     why: 'You care about people’s feelings, but clear feedback can help them more than a gentle message they misread.',
     try: [
       'Next time you give feedback, say the main point in one plain sentence first, so it’s clear.',
-      'Ask the person to repeat back what they heard, so you know your point landed.',
+      'Ask the person what they took from your feedback, so you know your point landed.',
     ],
     watch: [
       'Notice when someone keeps making the same mistake after your feedback.',
@@ -139,7 +139,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
     why: 'Saying no protects your time, but a quick no without a reason can feel cold to the person asking.',
     try: [
       'Next time you say no, add one short reason, so the other person doesn’t take it personally.',
-      'Offer a different time or option when you turn something down, so the door stays open.',
+      'Offer a different time or option when you turn something down, so they know you’re still interested.',
     ],
     watch: [
       'Notice how people respond after you turn them down.',

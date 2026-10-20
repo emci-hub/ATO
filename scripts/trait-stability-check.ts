@@ -320,7 +320,7 @@ ok('contradictedAxesFrom (T-04) correctly wires hasContradictedAnswers to real t
   ok('settledAxisLabel counts settled axes: 6 of 16 after the 50, 16 of 16 once every axis has three agreeing answers');
 
   const two = answered('openness', [0.8, 0.8]);
-  assert.match(settlingLine(two, now) ?? '', /2 of 3 answers\. 1 more/);
+  assert.match(settlingLine(two, now) ?? '', /2 of 3 answers so far\. 1 more/);
   // Past the answer floor with no agreement built up (below the 8-answer override).
   const clashing: TraitTrack = { ...two, answerCount: 4, stability: 0 };
   assert.match(settlingLine(clashing, now) ?? '', /point different ways/, 'past the floor, only disagreement holds an axis unsettled — and the line says so');

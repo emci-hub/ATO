@@ -40,7 +40,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
       'You tend to fill quiet moments with your phone or a show.',
       'When you have a break, you usually look for something to fill it.',
     ],
-    why: 'Filling every quiet moment can leave you tired, because your mind never gets a real break.',
+    why: 'Filling every quiet moment can leave you tired, since your mind rarely gets a real break.',
     try: [
       'Take a ten-minute walk without your phone today, so your mind gets a real break.',
       'Sit for five minutes with nothing to do, so you see how it feels.',
@@ -59,7 +59,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
     why: 'A quick yes is generous, but it can fill your week with things you didn’t choose.',
     try: [
       'Wait an hour before saying yes to the next request, so you can check your plans.',
-      'Look at your week and cancel one thing you don’t need to do, so you have room.',
+      'Look at your week and pick one thing you can move or drop, so you have room.',
     ],
     watch: [
       'Notice which plans you’re looking forward to and which you’re not.',
@@ -88,7 +88,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
       'You tend to push bedtime back to get a little more time for yourself.',
       'When the house goes quiet at night, you usually want to stay up a bit longer.',
     ],
-    why: 'Late nights can feel like the only time that’s yours, but you pay for them the next day.',
+    why: 'Late nights can feel like the only time that’s yours, but less sleep can make the next day harder.',
     try: [
       'Set an alarm thirty minutes before bed, so you start winding down on time.',
       'Plan a small break for yourself during the day, so you don’t need to stay up for it.',
@@ -190,7 +190,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
       'Set a time limit for being stuck, so you know when to ask.',
     ],
     watch: [
-      'Notice how long you stay stuck before asking.',
+      'Notice what stops you from asking when you’re stuck.',
       'Notice how people react when you ask for help.',
     ],
   }),
@@ -251,7 +251,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
     why: 'Being hard on yourself can feel like it helps, but kindness usually helps you recover faster.',
     try: [
       'Next time you make a mistake, say to yourself what you’d tell a friend, so you stay kind.',
-      'Write down one thing you did well today, so you end the day fairly.',
+      'Write down one thing you did well today, so you end the day with a fair view of yourself.',
     ],
     watch: [
       'Notice how you talk to yourself after a mistake.',
