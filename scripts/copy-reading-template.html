@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copy Reading</title>
+<style>
+:root {
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --text: #1d1b19;
+  --muted: #5f5952;
+  --border: #d9d2c8;
+  --accent: #1f4fc4;
+  --accent-text: #ffffff;
+  --good: #17683d;
+  --good-bg: #e4f2e9;
+  --warn: #8f4a00;
+  --warn-bg: #fbeedb;
+  --bad: #a3231b;
+  --bad-bg: #fbe6e3;
+  --orig-bg: #f2eee8;
+  --sug-bg: #e8f1fb;
+  --focus: #1f4fc4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151412;
+    --surface: #211f1c;
+    --text: #f1ede7;
+    --muted: #b3aca2;
+    --border: #3b3732;
+    --accent: #8fb0ff;
+    --accent-text: #10151f;
+    --good: #7fd6a3;
+    --good-bg: #17301f;
+    --warn: #f0b66b;
+    --warn-bg: #36270f;
+    --bad: #ff9f96;
+    --bad-bg: #3a1a17;
+    --orig-bg: #2a2723;
+    --sug-bg: #1b2738;
+    --focus: #8fb0ff;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151412;
+  --surface: #211f1c;
+  --text: #f1ede7;
+  --muted: #b3aca2;
+  --border: #3b3732;
+  --accent: #8fb0ff;
+  --accent-text: #10151f;
+  --good: #7fd6a3;
+  --good-bg: #17301f;
+  --warn: #f0b66b;
+  --warn-bg: #36270f;
+  --bad: #ff9f96;
+  --bad-bg: #3a1a17;
+  --orig-bg: #2a2723;
+  --sug-bg: #1b2738;
+  --focus: #8fb0ff;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-wrap: anywhere;
+}
+h1, h2, h3, p { margin: 0; }
+button, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.wrap { padding: 0 16px; max-width: 720px; margin: 0 auto; }
+.top {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0 8px;
+}
+.top h1 { font-size: 18px; }
+.bar { height: 10px; border-radius: 5px; background: var(--border); overflow: hidden; margin: 8px 0 6px; }
+.bar > div { height: 100%; width: 0; background: var(--good); transition: width .2s; }
+.statline { font-size: 14px; color: var(--muted); }
+.statline strong { color: var(--text); }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.btn {
+  min-height: 44px; padding: 8px 14px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface);
+}
+.btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+.btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.intro { padding: 14px 0 6px; color: var(--muted); font-size: 15px; }
+.intro p + p { margin-top: 6px; }
+
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; margin: 12px 0;
+}
+.panel h2 { font-size: 16px; margin-bottom: 6px; }
+.panel textarea { width: 100%; min-height: 150px; margin: 8px 0; }
+.panel .msg { font-size: 14px; color: var(--muted); margin-top: 6px; }
+textarea {
+  display: block; width: 100%;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px; min-height: 96px; resize: vertical;
+}
+
+details.set { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin: 12px 0; }
+details.set > summary {
+  list-style: none; cursor: pointer; min-height: 44px;
+  padding: 12px; display: block; border-radius: 12px;
+}
+details.set > summary::-webkit-details-marker { display: none; }
+.set-title { font-weight: 700; font-size: 17px; }
+.set-title::before { content: "\25B8  "; color: var(--muted); }
+details.set[open] > summary .set-title::before { content: "\25BE  "; }
+.set-sub { font-size: 14px; color: var(--muted); margin-top: 2px; }
+.set-body { padding: 0 12px 12px; }
+
+.grp-head { margin: 14px 0 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: space-between; }
+.grp-head h3 { font-size: 15px; }
+.grp-note { font-size: 13px; color: var(--muted); width: 100%; }
+details.grp-spot { margin-top: 14px; }
+details.grp-spot > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; font-size: 15px; }
+.confirm {
+  width: 100%; background: var(--warn-bg); border: 1px solid var(--warn);
+  border-radius: 10px; padding: 10px; font-size: 15px;
+}
+.confirm .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+body.decide-only .grp-polish,
+body.decide-only .grp-spot { display: none; }
+
+.card {
+  border: 1px solid var(--border); border-left-width: 6px;
+  border-radius: 10px; padding: 10px 12px; margin: 10px 0;
+  background: var(--bg);
+}
+.card.s-use { border-left-color: var(--good); }
+.card.s-keep { border-left-color: var(--muted); }
+.card.s-edit { border-left-color: var(--accent); }
+.card.s-remove { border-left-color: var(--bad); }
+.card.s-none { border-left-color: var(--warn); }
+.c-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.c-id { font-weight: 700; font-size: 15px; }
+.c-field { font-size: 14px; color: var(--muted); }
+.chip {
+  font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--muted); white-space: nowrap;
+}
+.chip.v-REMOVE, .chip.v-WRONG { color: var(--bad); border-color: var(--bad); }
+.chip.v-UNSURE, .chip.v-NOTE { color: var(--warn); border-color: var(--warn); }
+.lbl { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 10px 0 3px; }
+.txt { padding: 8px 10px; border-radius: 8px; white-space: pre-wrap; font-size: 16px; }
+.txt.orig { background: var(--orig-bg); }
+.txt.sug { background: var(--sug-bg); }
+.reason { font-size: 14px; color: var(--muted); margin-top: 8px; }
+.state { margin-top: 10px; font-size: 14px; font-weight: 600; }
+.state.s-use { color: var(--good); }
+.state.s-keep { color: var(--muted); }
+.state.s-edit { color: var(--accent); }
+.state.s-remove { color: var(--bad); }
+.state.s-none { color: var(--warn); }
+.state .mine { display: block; font-weight: 400; color: var(--text); white-space: pre-wrap; margin-top: 2px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.acts .btn { flex: 1 1 calc(50% - 8px); min-width: 130px; text-align: center; }
+.acts .btn.on { outline: 3px solid var(--accent); outline-offset: -1px; font-weight: 700; }
+.hn { font-size: 13px; font-weight: 700; margin-top: 8px; }
+.hn.conflict { color: var(--warn); }
+.hn.resolved { color: var(--good); }
+.acts .btn.recommended { border-color: var(--good); }
+.rec-tag { display: block; font-size: 11px; font-weight: 700; color: var(--good); letter-spacing: .04em; text-transform: uppercase; }
+.link { background: none; border: 0; color: var(--accent); text-decoration: underline; min-height: 44px; padding: 0 4px; }
+.edit-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.empty { color: var(--muted); padding: 20px 0; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Copy Reading</h1>
+    <div class="bar" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar"><div id="barfill"></div></div>
+    <p class="statline" id="statline"></p>
+    <div class="tools">
+      <button class="btn" id="btnDecide" type="button" aria-pressed="false">Decide only</button>
+      <button class="btn primary" id="btnExport" type="button">Export</button>
+      <button class="btn" id="btnImport" type="button">Import</button>
+      <button class="btn" id="btnTheme" type="button">Theme: auto</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="intro">
+    <p>Go through the cards one by one and tap a button on each. Your choices save on this phone as you go.</p>
+    <p>"Must decide" cards need your eyes. "Quick polish" cards are small wording fixes you can accept in bulk. When you are done, tap Export and paste the text back into the chat.</p>
+  </div>
+
+  <section class="panel" id="exportPanel" hidden>
+    <h2>Your choices</h2>
+    <p class="msg" id="exportHint">Tap Copy, then paste this into the chat.</p>
+    <textarea id="exportText" readonly aria-label="Export text"></textarea>
+    <div class="edit-row">
+      <button class="btn primary" id="btnCopy" type="button">Copy</button>
+      <button class="btn" id="btnCloseExport" type="button">Close</button>
+    </div>
+    <p class="msg" id="exportMsg" role="status"></p>
+  </section>
+
+  <section class="panel" id="importPanel" hidden>
+    <h2>Restore earlier choices</h2>
+    <p class="msg">Paste a text you exported before, then tap Restore. This adds to what is on the page now.</p>
+    <textarea id="importText" aria-label="Paste export here"></textarea>
+    <div class="edit-row">
+      <button class="btn primary" id="btnRestore" type="button">Restore</button>
+      <button class="btn" id="btnCloseImport" type="button">Close</button>
+    </div>
+    <p class="msg" id="importMsg" role="status"></p>
+  </section>
+
+  <div id="app"></div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var DATA = __DATA__;
+  var SETS = __SETS__;
+  var LS_KEY = 'copyReading.v1';
+  var THEME_KEY = 'copyReading.theme';
+
+  var state = {};
+  var editing = {};
+  var bulkAsk = {};
+  var cardEls = {};
+  var setRefs = {};
+  var byKey = {};
+  var i;
+
+  for (i = 0; i < DATA.length; i++) byKey[DATA[i].key] = DATA[i];
+
+  function lsGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* page works without storage */ } }
+
+  try { var raw = lsGet(LS_KEY); if (raw) { var p = JSON.parse(raw); if (p && typeof p === 'object') state = p; } } catch (e) { state = {}; }
+  function save() { lsSet(LS_KEY, JSON.stringify(state)); }
+
+  function h(tag, cls, text) {
+    var el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text !== undefined && text !== null) el.textContent = text;
+    return el;
+  }
+  function btn(label, cls, onclick) {
+    var b = h('button', 'btn' + (cls ? ' ' + cls : ''), label);
+    b.type = 'button';
+    b.addEventListener('click', onclick);
+    return b;
+  }
+
+  var VERDICT_LABEL = { FIX: 'Fix', REMOVE: 'Remove', UNSURE: 'Unsure', WRONG: 'Wrong fact', NOTE: 'Note', OK: 'OK' };
+
+  // ---------- counts ----------
+  function counts(setN) {
+    var c = { total: 0, done: 0, dTotal: 0, dDone: 0, pTotal: 0, pDone: 0 };
+    for (var k = 0; k < DATA.length; k++) {
+      var it = DATA[k];
+      if (it.tier === 'spot') continue;
+      if (setN && it.set !== setN) continue;
+      var dn = !!state[it.key];
+      c.total++; if (dn) c.done++;
+      if (it.tier === 'decide') { c.dTotal++; if (dn) c.dDone++; }
+      else { c.pTotal++; if (dn) c.pDone++; }
+    }
+    return c;
+  }
+
+  function updateStats() {
+    var c = counts(0);
+    var pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+    document.getElementById('barfill').style.width = pct + '%';
+    document.getElementById('bar').setAttribute('aria-valuenow', String(pct));
+    var left = c.dTotal - c.dDone;
+    var sl = document.getElementById('statline');
+    sl.textContent = '';
+    var s1 = h('strong', '', c.done + ' of ' + c.total);
+    sl.appendChild(s1);
+    sl.appendChild(document.createTextNode(' decided. Must-decide left: '));
+    sl.appendChild(h('strong', '', String(left)));
+    sl.appendChild(document.createTextNode(' of ' + c.dTotal + '.'));
+    for (var n = 0; n < SETS.length; n++) {
+      var ref = setRefs[SETS[n].n];
+      if (!ref) continue;
+      var sc = counts(SETS[n].n);
+      ref.sub.textContent = sc.done + ' of ' + sc.total + ' decided' + (sc.dTotal - sc.dDone > 0 ? ', ' + (sc.dTotal - sc.dDone) + ' must-decide left' : ', no must-decide left');
+      refreshBulk(SETS[n].n);
+    }
+  }
+
+  // ---------- decisions ----------
+  function setDecision(key, d, t) {
+    state[key] = { d: d, t: t || '' };
+    delete editing[key];
+    save();
+    redrawCard(key);
+    updateStats();
+  }
+  function clearDecision(key) {
+    delete state[key];
+    delete editing[key];
+    save();
+    redrawCard(key);
+    updateStats();
+  }
+  function redrawCard(key) {
+    var old = cardEls[key];
+    if (!old) return;
+    var fresh = buildCard(byKey[key]);
+    old.parentNode.replaceChild(fresh, old);
+    cardEls[key] = fresh;
+  }
+
+  // ---------- card ----------
+  function stateInfo(it, st) {
+    if (!st) return { cls: 's-none', text: it.tier === 'spot' ? 'Not checked yet' : 'Not decided yet' };
+    if (st.d === 'USE') return { cls: 's-use', text: it.verdict === 'REMOVE' ? 'You chose: remove it' : 'You chose: use the suggestion' };
+    if (st.d === 'KEEP') return { cls: 's-keep', text: it.tier === 'spot' ? 'You chose: OK as it is' : 'You chose: keep the original' };
+    if (st.d === 'EDIT') return { cls: 's-edit', text: 'You chose: your own wording' };
+    return { cls: 's-remove', text: 'You chose: remove it' };
+  }
+
+  function buildCard(it) {
+    var st = state[it.key];
+    var info = stateInfo(it, st);
+    var card = h('div', 'card ' + info.cls);
+    card.setAttribute('data-key', it.key);
+
+    var head = h('div', 'c-head');
+    head.appendChild(h('span', 'c-id', it.id));
+    if (it.field) head.appendChild(h('span', 'c-field', it.field));
+    head.appendChild(h('span', 'chip', it.flag));
+    head.appendChild(h('span', 'chip v-' + it.verdict, VERDICT_LABEL[it.verdict] || it.verdict));
+    card.appendChild(head);
+
+    if (it.original) {
+      card.appendChild(h('div', 'lbl', it.tier === 'spot' ? 'Reviewer note (looks fine)' : 'Original'));
+      card.appendChild(h('div', 'txt orig', it.original));
+    }
+    if (it.suggested) {
+      card.appendChild(h('div', 'lbl', 'Suggested'));
+      card.appendChild(h('div', 'txt sug', it.suggested));
+    }
+    if (it.reason) card.appendChild(h('p', 'reason', 'Why: ' + it.reason));
+    if (it.honesty === 'conflict') {
+      card.appendChild(h('div', 'hn conflict', 'Suggested by reviewer, but it may soften a real limitation'));
+      if (it.honestyNote) card.appendChild(h('p', 'reason', it.honestyNote));
+    } else if (it.honesty === 'resolved') {
+      card.appendChild(h('div', 'hn resolved', 'Already handled'));
+      if (it.honestyNote) card.appendChild(h('p', 'reason', it.honestyNote));
+    }
+
+    var stEl = h('div', 'state ' + info.cls, info.text);
+    if (st && st.d === 'EDIT' && st.t) stEl.appendChild(h('span', 'mine', st.t));
+    card.appendChild(stEl);
+
+    if (editing[it.key]) {
+      var ta = h('textarea');
+      ta.value = (st && st.d === 'EDIT' && st.t) ? st.t : (it.suggested || it.original || '');
+      ta.setAttribute('aria-label', 'Your own wording');
+      card.appendChild(ta);
+      var row = h('div', 'edit-row');
+      row.appendChild(btn('Save my wording', 'primary', function () {
+        var v = ta.value.replace(/\s+$/, '');
+        if (!v) { setDecision(it.key, 'REMOVE', ''); return; }
+        setDecision(it.key, 'EDIT', v);
+      }));
+      row.appendChild(btn('Cancel', '', function () { delete editing[it.key]; redrawCard(it.key); }));
+      card.appendChild(row);
+      return card;
+    }
+
+    var acts = h('div', 'acts');
+    var cur = st ? st.d : '';
+    function mk(label, d, fn) {
+      var b = btn(label, cur === d ? 'on' : '', fn);
+      if (cur === d) b.setAttribute('aria-pressed', 'true');
+      return b;
+    }
+    if (it.tier === 'spot') {
+      acts.appendChild(mk('✓ OK', 'KEEP', function () { setDecision(it.key, 'KEEP', ''); }));
+      acts.appendChild(mk('✎ Edit', 'EDIT', function () { editing[it.key] = true; redrawCard(it.key); }));
+      acts.appendChild(mk('✕ Remove', 'REMOVE', function () { setDecision(it.key, 'REMOVE', ''); }));
+    } else if (it.verdict === 'REMOVE') {
+      acts.appendChild(mk('✓ Remove (agree)', 'REMOVE', function () { setDecision(it.key, 'REMOVE', ''); }));
+      acts.appendChild(mk('Keep original', 'KEEP', function () { setDecision(it.key, 'KEEP', ''); }));
+      acts.appendChild(mk('✎ Edit', 'EDIT', function () { editing[it.key] = true; redrawCard(it.key); }));
+    } else {
+      if (it.suggested) acts.appendChild(mk('✓ Use suggestion', 'USE', function () { setDecision(it.key, 'USE', ''); }));
+      var kb = mk('Keep original', 'KEEP', function () { setDecision(it.key, 'KEEP', ''); });
+      if (it.honesty === 'conflict') {
+        kb.classList.add('recommended');
+        kb.appendChild(h('span', 'rec-tag', 'Recommended'));
+      }
+      acts.appendChild(kb);
+      acts.appendChild(mk('✎ Edit', 'EDIT', function () { editing[it.key] = true; redrawCard(it.key); }));
+      acts.appendChild(mk('✕ Remove', 'REMOVE', function () { setDecision(it.key, 'REMOVE', ''); }));
+    }
+    card.appendChild(acts);
+    if (st) {
+      var clr = h('button', 'link', 'Clear my choice');
+      clr.type = 'button';
+      clr.addEventListener('click', function () { clearDecision(it.key); });
+      card.appendChild(clr);
+    }
+    return card;
+  }
+
+  // ---------- sets ----------
+  function pendingPolish(setN) {
+    var out = [];
+    for (var k = 0; k < DATA.length; k++) {
+      var it = DATA[k];
+      if (it.set === setN && it.tier === 'polish' && !state[it.key] && it.suggested) out.push(it.key);
+    }
+    return out;
+  }
+
+  function refreshBulk(setN) {
+    var ref = setRefs[setN];
+    if (!ref || !ref.bulk) return;
+    var box = ref.bulk;
+    box.textContent = '';
+    var pend = pendingPolish(setN);
+    if (!pend.length) { bulkAsk[setN] = false; box.appendChild(h('p', 'grp-note', 'No polish suggestions waiting in this set.')); return; }
+    if (bulkAsk[setN]) {
+      var c = h('div', 'confirm');
+      c.appendChild(h('p', '', 'Use the suggested wording on ' + pend.length + ' polish items you have not decided yet? You can still change any of them one by one.'));
+      var row = h('div', 'row');
+      row.appendChild(btn('Yes, accept ' + pend.length, 'primary', function () {
+        var p2 = pendingPolish(setN);
+        for (var q = 0; q < p2.length; q++) state[p2[q]] = { d: 'USE', t: '' };
+        bulkAsk[setN] = false;
+        save();
+        for (var r = 0; r < p2.length; r++) redrawCard(p2[r]);
+        updateStats();
+      }));
+      row.appendChild(btn('Cancel', '', function () { bulkAsk[setN] = false; refreshBulk(setN); }));
+      c.appendChild(row);
+      box.appendChild(c);
+    } else {
+      box.appendChild(btn('Accept all remaining polish suggestions (' + pend.length + ')', '', function () { bulkAsk[setN] = true; refreshBulk(setN); }));
+    }
+  }
+
+  function buildSet(s) {
+    var inSet = DATA.filter(function (x) { return x.set === s.n; });
+    var det = h('details', 'set');
+    var sum = h('summary');
+    sum.appendChild(h('div', 'set-title', s.n + '. ' + s.label));
+    var sub = h('div', 'set-sub', '');
+    sum.appendChild(sub);
+    det.appendChild(sum);
+    var body = h('div', 'set-body');
+    det.appendChild(body);
+    setRefs[s.n] = { sub: sub, bulk: null };
+
+    var dec = inSet.filter(function (x) { return x.tier === 'decide'; });
+    var pol = inSet.filter(function (x) { return x.tier === 'polish'; });
+    var spo = inSet.filter(function (x) { return x.tier === 'spot'; });
+    var j;
+
+    if (dec.length) {
+      var g1 = h('div', 'grp-decide');
+      var hd = h('div', 'grp-head');
+      hd.appendChild(h('h3', '', 'Must decide (' + dec.length + ')'));
+      hd.appendChild(h('p', 'grp-note', 'Sensitive, facts, or changes that could shift what a question measures.'));
+      g1.appendChild(hd);
+      for (j = 0; j < dec.length; j++) { var c1 = buildCard(dec[j]); cardEls[dec[j].key] = c1; g1.appendChild(c1); }
+      body.appendChild(g1);
+    }
+    if (pol.length) {
+      var g2 = h('div', 'grp-polish');
+      var hd2 = h('div', 'grp-head');
+      hd2.appendChild(h('h3', '', 'Quick polish (' + pol.length + ')'));
+      hd2.appendChild(h('p', 'grp-note', 'Small wording fixes. Safe to accept in bulk, or go one by one.'));
+      var bulk = h('div', '');
+      bulk.style.width = '100%';
+      hd2.appendChild(bulk);
+      setRefs[s.n].bulk = bulk;
+      g2.appendChild(hd2);
+      for (j = 0; j < pol.length; j++) { var c2 = buildCard(pol[j]); cardEls[pol[j].key] = c2; g2.appendChild(c2); }
+      body.appendChild(g2);
+    }
+    if (spo.length) {
+      var g3 = h('details', 'grp-spot');
+      g3.appendChild(h('summary', '', 'Spot-check (' + spo.length + ') - lines the reviewer says are fine'));
+      for (j = 0; j < spo.length; j++) { var c3 = buildCard(spo[j]); cardEls[spo[j].key] = c3; g3.appendChild(c3); }
+      body.appendChild(g3);
+    }
+    if (!dec.length && !pol.length && !spo.length) body.appendChild(h('p', 'empty', 'Nothing in this set.'));
+    return det;
+  }
+
+  var app = document.getElementById('app');
+  for (i = 0; i < SETS.length; i++) {
+    var sd = buildSet(SETS[i]);
+    if (i === 0) sd.open = true;
+    app.appendChild(sd);
+  }
+  updateStats();
+
+  // ---------- export / import ----------
+  function buildExport() {
+    var c = counts(0);
+    var n = { USE: 0, KEEP: 0, EDIT: 0, REMOVE: 0 };
+    var undec = [];
+    var k, it, st;
+    for (k = 0; k < DATA.length; k++) {
+      it = DATA[k];
+      st = state[it.key];
+      if (it.tier !== 'spot' && st && n[st.d] !== undefined) n[st.d]++;
+      if (it.tier === 'decide' && !st) undec.push(it.key);
+    }
+    var out = [];
+    out.push('COPY READING | decided ' + c.done + ' of ' + c.total + ' | USE ' + n.USE + ' | KEEP ' + n.KEEP + ' | EDIT ' + n.EDIT + ' | REMOVE ' + n.REMOVE + ' | must-decide undecided ' + undec.length);
+    out.push('Line format: KEY | USE/KEEP/EDIT/REMOVE | your wording (EDIT only). Items not listed are undecided.');
+    if (undec.length) {
+      out.push('');
+      out.push('# STILL UNDECIDED (must-decide)');
+      for (k = 0; k < undec.length; k++) out.push('? ' + undec[k]);
+    }
+    for (var s = 0; s < SETS.length; s++) {
+      var lines = [];
+      for (k = 0; k < DATA.length; k++) {
+        it = DATA[k];
+        if (it.set !== SETS[s].n) continue;
+        st = state[it.key];
+        if (!st) continue;
+        if (it.tier === 'spot' && st.d === 'KEEP') continue; // "OK" on a spot-check is the default
+        if (st.d === 'EDIT') lines.push(it.key + ' | EDIT | ' + String(st.t).replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n'));
+        else lines.push(it.key + ' | ' + st.d);
+      }
+      if (lines.length) {
+        out.push('');
+        out.push('# Set ' + SETS[s].n + ': ' + SETS[s].label);
+        out = out.concat(lines);
+      }
+    }
+    return out.join('\n');
+  }
+
+  function unescapeText(t) {
+    var r = '';
+    for (var x = 0; x < t.length; x++) {
+      var ch = t.charAt(x);
+      if (ch === '\\' && x + 1 < t.length) {
+        var nx = t.charAt(x + 1);
+        if (nx === 'n') { r += '\n'; x++; continue; }
+        if (nx === '\\') { r += '\\'; x++; continue; }
+      }
+      r += ch;
+    }
+    return r;
+  }
+
+  function doImport(text) {
+    var lines = text.split(/\r?\n/);
+    var ok = 0, skipped = 0, bad = 0;
+    for (var a = 0; a < lines.length; a++) {
+      var line = lines[a];
+      if (!line.trim() || line.charAt(0) === '#' || line.charAt(0) === '?' || line.indexOf('COPY READING') === 0 || line.indexOf('Line format') === 0) continue;
+      var p1 = line.indexOf(' | ');
+      if (p1 < 0) { bad++; continue; }
+      var key = line.slice(0, p1).trim();
+      var rest = line.slice(p1 + 3);
+      var p2 = rest.indexOf(' | ');
+      var verb = (p2 < 0 ? rest : rest.slice(0, p2)).trim();
+      var txt = p2 < 0 ? '' : unescapeText(rest.slice(p2 + 3));
+      if (!byKey[key]) { skipped++; continue; }
+      if (verb !== 'USE' && verb !== 'KEEP' && verb !== 'EDIT' && verb !== 'REMOVE') { bad++; continue; }
+      state[key] = { d: verb, t: verb === 'EDIT' ? txt : '' };
+      ok++;
+    }
+    save();
+    for (var key2 in cardEls) { if (cardEls.hasOwnProperty(key2)) redrawCard(key2); }
+    updateStats();
+    return 'Restored ' + ok + ' choices.' + (skipped ? ' ' + skipped + ' unknown keys skipped.' : '') + (bad ? ' ' + bad + ' lines could not be read.' : '');
+  }
+
+  var exportPanel = document.getElementById('exportPanel');
+  var importPanel = document.getElementById('importPanel');
+  var exportText = document.getElementById('exportText');
+  var exportMsg = document.getElementById('exportMsg');
+
+  document.getElementById('btnExport').addEventListener('click', function () {
+    exportText.value = buildExport();
+    exportMsg.textContent = '';
+    importPanel.hidden = true;
+    exportPanel.hidden = false;
+    exportPanel.scrollIntoView({ block: 'start' });
+  });
+  document.getElementById('btnCopy').addEventListener('click', function () {
+    var txt = exportText.value;
+    function fallback() {
+      exportText.focus();
+      exportText.select();
+      try { exportText.setSelectionRange(0, txt.length); } catch (e) { /* ignore */ }
+      exportMsg.textContent = 'Could not copy by itself. The text is selected above: press and hold, then choose Copy.';
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(function () {
+          exportMsg.textContent = 'Copied. Paste it into the chat.';
+        }, fallback);
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+  });
+  document.getElementById('btnCloseExport').addEventListener('click', function () { exportPanel.hidden = true; });
+
+  document.getElementById('btnImport').addEventListener('click', function () {
+    exportPanel.hidden = true;
+    importPanel.hidden = false;
+    document.getElementById('importMsg').textContent = '';
+    importPanel.scrollIntoView({ block: 'start' });
+  });
+  document.getElementById('btnRestore').addEventListener('click', function () {
+    var t = document.getElementById('importText').value;
+    document.getElementById('importMsg').textContent = t.trim() ? doImport(t) : 'Paste an export first.';
+  });
+  document.getElementById('btnCloseImport').addEventListener('click', function () { importPanel.hidden = true; });
+
+  // ---------- filter + theme ----------
+  var bd = document.getElementById('btnDecide');
+  bd.addEventListener('click', function () {
+    var on = document.body.classList.toggle('decide-only');
+    bd.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+
+  var themes = ['auto', 'light', 'dark'];
+  var bt = document.getElementById('btnTheme');
+  function applyTheme(t) {
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    else document.documentElement.removeAttribute('data-theme');
+    bt.textContent = 'Theme: ' + (t === 'light' || t === 'dark' ? t : 'auto');
+  }
+  var curTheme = lsGet(THEME_KEY) || 'auto';
+  applyTheme(curTheme);
+  bt.addEventListener('click', function () {
+    curTheme = themes[(themes.indexOf(curTheme) + 1) % themes.length];
+    lsSet(THEME_KEY, curTheme);
+    applyTheme(curTheme);
+  });
+})();
+</script>
+</body>
+</html>
