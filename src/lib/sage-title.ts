@@ -211,7 +211,7 @@ RULES
 3. One-line description: one sentence, same tone as the notes.
 4. Categories: for each ready id, a "line" (≤12 words) and a "full" (1–2 sentences, same voice). Maps describe the position in plain language, not coordinates. Bars describe the lean, not a number. Love-map conflict style is texture, never a second score.
 5. If there is not enough settled to name a shape, return the empty title exactly: "${TITLE_EMPTY}"
-6. No framework names. No clinical words.
+6. Framework names (for example MBTI, Big Five, attachment styles) are allowed only when relevant, accurate and explained in plain words. Never a diagnosis, never imply a validated assessment, never present a type code as ATO's own result for the reader, and never use a clinical word as a label on the reader.
 
 Respond with JSON only:
 {"title":"<2-5 words or the empty line>","lede":"<one sentence>","categories":{"<id>":{"line":"<≤12 words>","full":"<1-2 sentences>"}}}`;

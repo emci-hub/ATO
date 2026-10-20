@@ -11,6 +11,7 @@ import { CityPicker } from '@/components/city-picker';
 import { NotificationPrefsFold } from '@/components/notification-prefs-fold';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { HelplineRow } from '@/components/helpline-row';
+import { LegalLinks } from '@/components/legal-links';
 import { AtoTokenCard } from '@/components/ato-token-card';
 import { IdentityCard } from '@/components/identity-card';
 import { YourWeekCard } from '@/components/your-week-card';
@@ -238,6 +239,8 @@ Update: ${Updates.updateId ?? 'original build'}`);
               {feedbackNote}
             </ThemedText>
           ) : null}
+
+          <LegalLinks />
 
           <Pressable
             onPress={handleSignOut}

@@ -152,6 +152,7 @@ export default function LoginScreen() {
                 setError(null);
               }}
               placeholder="Email or @handle"
+              accessibilityLabel="Email or handle"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -176,6 +177,7 @@ export default function LoginScreen() {
                 setError(null);
               }}
               placeholder="Password"
+              accessibilityLabel="Password"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -198,6 +200,8 @@ export default function LoginScreen() {
             <Pressable
               onPress={handlePasswordSignIn}
               disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel="Log in with password"
               style={({ pressed }) => [
                 authStyles.button,
                 { backgroundColor: theme.accentFill },
@@ -212,6 +216,8 @@ export default function LoginScreen() {
             <Pressable
               onPress={sendCode}
               disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel="Email me a code instead"
               style={({ pressed }) => [authStyles.passwordLink, pressed && authStyles.pressed]}>
               <ThemedText type="link">
                 {busy ? 'Sending…' : 'Email me a code instead'}
@@ -220,7 +226,10 @@ export default function LoginScreen() {
           </ThemedView>
 
           <Link href="/auth" asChild>
-            <Pressable style={authStyles.switchRow}>
+            <Pressable
+              style={authStyles.switchRow}
+              accessibilityRole="link"
+              accessibilityLabel="New here? Sign up">
               <ThemedText type="small" themeColor="textSecondary">
                 New here?
               </ThemedText>

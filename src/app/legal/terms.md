@@ -21,22 +21,23 @@ ATO's insights, trait profile and AI-generated cards are for reflection and ente
 ## 4. Acceptable use
 
 Don't use ATO to:
-- Harass, threaten, or abuse other users
-- Impersonate another person or organization
-- Post or send illegal content
+- Harass, threaten, or abuse other users, including by sending repeated friend requests
+- Impersonate another person or organization, or pick a name or @handle that pretends to be ATO staff
+- Use a slur or other abusive name or @handle
+- Do anything illegal
 - Attempt to access another user's account or data
-- Circumvent the block, mute, or report features, or retaliate against someone who reports you
+- Get around a block, or retaliate against someone who reports or blocks you
 - Scrape, reverse-engineer, or build a competing service from ATO's data or content
 
 We can suspend or remove accounts that violate these terms, including retroactively.
 
 ## 5. Reporting, blocking, and moderation
 
-If someone violates these terms or makes you feel unsafe, use the in-app Report, Block, or Mute tools. We review reports and may take action including warnings, feature restrictions, or account termination. We don't promise a specific response time or outcome on any individual report.
+Friends in your Circle are added only when a request is accepted. If someone violates these terms or makes you feel unsafe, use Block or Report from the ⋯ menu next to them in your Circle. A block is silent and ends the friendship, visits and compare between you. A report picks one of six fixed reasons and is kept even if either account is deleted. We review reports and may take action including warnings, feature restrictions, or account termination. We don't promise a specific response time or outcome on any individual report. [CONFIRM: whether to state a report-review time.]
 
-## 6. Content you send
+## 6. Your content
 
-You keep ownership of what you write in Chat. By using ATO, you give us the limited right to store and process that content in order to run the app (for example, so your chat history persists). Your answers to ATO's questions are stored to build your profile. We don't sell your content. We don't send what you type to an AI model, and we don't use your content to train models. [CONFIRM: that the AI provider's terms for the account ATO uses also bar training on requests — see docs/legal/OPEN-QUESTIONS.md.]
+ATO has no direct messages between people. What you give ATO is your answers, your name and @handle, your choices in the app and your Divecore game. You give us the limited right to store and process them in order to run the app (for example, to build your profile and keep your game save). We don't sell your content. We don't send what you type to an AI model, and we don't use your content to train models. Your name, @handle, two sign-up answers and pixel appearance can be seen by anyone who has your @handle; what friends can see is described in the Privacy Policy. [CONFIRM: that the AI providers' terms for the account ATO uses also bar training on requests — see docs/legal/OPEN-QUESTIONS.md.]
 
 ## 7. Sign-up, referrals and invites
 
@@ -44,7 +45,7 @@ You keep ownership of what you write in Chat. By using ATO, you give us the limi
 
 ## 8. Third-party services
 
-ATO relies on services including Supabase, [CONFIRM: AI provider(s) the server actually calls — the code can call Google Gemini and DeepSeek; name only the live one(s)], Resend, Sentry [CONFIRM: Sentry is the crash-report service — confirm], and Apple to function. Availability of ATO depends in part on these providers; we're not responsible for outages or issues caused by a third-party service being unavailable.
+ATO relies on services including Supabase (database and sign-in), Google's Gemini API with DeepSeek as a fallback (the AI-written cards), Resend (sign-in emails), Sentry (crash reports), and Apple to function. Availability of ATO depends in part on these providers; we're not responsible for outages or issues caused by a third-party service being unavailable.
 
 ## 9. No warranty
 
@@ -56,7 +57,7 @@ To the extent permitted by law, [CONFIRM: legal entity name] is not liable for i
 
 ## 11. Termination
 
-You can delete your account at any time in-app (Settings), and the option is always available. Deleting your account is permanent. It removes your account and the data stored under it, including your profile, answers, Checks, saved profiles, Circle and chat data, and your Divecore game save, and it revokes your Sign in with Apple token. A short record that an account was deleted (an ID and whether the Apple token was revoked, with no profile content) is kept. [CONFIRM: retention of that deletion record, and of database backups and provider logs.] We can suspend or terminate your access if you violate these terms.
+You can delete your account at any time in-app (at the bottom of the You tab), and the option is always available. Deleting your account is permanent. It removes your account and the data stored under it, including your profile, answers, Checks, saved profiles, Circle links, requests and switches, and your Divecore game save, and it revokes your Sign in with Apple token. A short record that an account was deleted (an ID and whether the Apple token was revoked, with no profile content) is kept, and reports filed by or about you are kept without your account ID. [CONFIRM: retention of that deletion record, and of database backups and provider logs.] We can suspend or terminate your access if you violate these terms.
 
 ## 12. Intellectual property
 

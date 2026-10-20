@@ -39,6 +39,7 @@ export function AuthOtpCodeCard({
         <TextInput
           value={code}
           onChangeText={(text) => onChangeCode(text.replace(/[^0-9]/g, '').slice(0, 10))}
+          accessibilityLabel="Sign-in code"
           placeholder="Code"
           placeholderTextColor={theme.textSecondary}
           keyboardType="number-pad"
@@ -61,6 +62,8 @@ export function AuthOtpCodeCard({
         <Pressable
           onPress={onVerify}
           disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel="Verify code"
           style={({ pressed }) => [
             authStyles.button,
             { backgroundColor: theme.accentFill },
@@ -73,10 +76,10 @@ export function AuthOtpCodeCard({
         </Pressable>
 
         <View style={authStyles.codeLinks}>
-          <Pressable onPress={onResend} disabled={busy}>
+          <Pressable onPress={onResend} disabled={busy} accessibilityRole="button" accessibilityLabel="Resend code">
             <ThemedText type="link">Resend code</ThemedText>
           </Pressable>
-          <Pressable onPress={onBack} disabled={busy}>
+          <Pressable onPress={onBack} disabled={busy} accessibilityRole="button" accessibilityLabel={backLabel}>
             <ThemedText type="link">{backLabel}</ThemedText>
           </Pressable>
         </View>

@@ -114,25 +114,34 @@ export async function confirmAddPeer(
     return { ok: false, reason: 'self', message: "That's your own ATO." };
   }
 
-  const { data: existing } = await supabase
-    .from('connections')
-    .select('peer_id')
-    .eq('user_id', user.id)
-    .eq('peer_id', peer.id)
-    .maybeSingle();
-  if (existing) {
-    return { ok: false, reason: 'already', message: `${peer.name} is already in your circle.` };
+  // wave104: no direct insert. The server checks blocks, the cap and the rate limit, and either
+  // sends a request or (if they had already asked) accepts it.
+  const { data, error } = await supabase.rpc('circle_request', { p_handle: peer.handle });
+  if (error) return { ok: false, reason: 'error', message: error.message };
+  const r = data as { ok?: boolean; state?: string; reason?: string } | null;
+  if (r?.ok === true) return { ok: true, peer };
+  switch (r?.reason) {
+    case 'self':
+      return { ok: false, reason: 'self', message: "That's your own ATO." };
+    case 'already':
+    case 'pending':
+      return { ok: false, reason: 'already', message: `${peer.name} is already in your circle or waiting.` };
+    case 'not_found':
+      return { ok: false, reason: 'not-found', message: `No ATO for @${peer.handle} yet.` };
+    case 'cap':
+      return { ok: false, reason: 'error', message: 'Circle is full.' };
+    case 'rate_limited':
+      return { ok: false, reason: 'error', message: 'Too many tries. Try again later.' };
+    default:
+      return { ok: false, reason: 'error', message: "Can't send that one." };
   }
-
-  const { error: insertError } = await supabase
-    .from('connections')
-    .insert({ user_id: user.id, peer_id: peer.id });
-  if (insertError) return { ok: false, reason: 'error', message: insertError.message };
-
-  return { ok: true, peer };
 }
 
-/** Fetches a peer's poster + peer_checks. Requires an existing connection. */
+/**
+ * Fetches a peer's poster + peer_checks. Requires an existing connection.
+ * Note (wave104): the server now returns nothing for `peer_profile` / `peer_checks`, so this
+ * resolves to null; the Play Circle sheet is the live Circle UI.
+ */
 export async function fetchPeerState(peerId: string): Promise<PeerState | null> {
   try {
     const { data, error } = await supabase.rpc('peer_profile', { p_user_id: peerId });
@@ -150,15 +159,11 @@ export async function fetchPeerState(peerId: string): Promise<PeerState | null> 
 }
 
 /**
- * Unfriend: deletes the caller's edge to the peer. The DB's mirror-delete
- * trigger removes the reverse edge too, so neither side is left with a
- * one-way orphan row. Only the connection is removed — nothing else.
+ * Unfriend through the server (wave104 `circle_remove`): it drops both edges; old sharing
+ * switches stop counting (they must be set again after a new friendship). `_userId` is kept so existing callers compile; the server uses the signed-in account.
  */
-export async function removePeer(userId: string, peerId: string): Promise<void> {
-  const { error } = await supabase
-    .from('connections')
-    .delete()
-    .eq('user_id', userId)
-    .eq('peer_id', peerId);
+export async function removePeer(_userId: string, peerId: string): Promise<void> {
+  const { data, error } = await supabase.rpc('circle_remove', { p_peer: peerId });
   if (error) throw error;
+  if ((data as { ok?: boolean } | null)?.ok !== true) throw new Error('Could not remove that person.');
 }

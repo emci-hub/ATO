@@ -22,6 +22,7 @@ import {
   UNDER_18_MESSAGE,
 } from '@/lib/age';
 import { createMe, errorMessageForHandle, checkHandleAvailable, handleFormatError, normalizeHandle } from '@/lib/me';
+import { NAME_NOT_ALLOWED_MESSAGE, nameNotAllowed } from '@/lib/name-filter';
 import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
@@ -94,6 +95,10 @@ export default function OnboardingScreen() {
 
     if (!trimmedName) {
       setFormError('Tell us what to call you.');
+      return false;
+    }
+    if (nameNotAllowed(trimmedName, 'name')) {
+      setFormError(NAME_NOT_ALLOWED_MESSAGE);
       return false;
     }
     const handleMsg = handleFormatError(handle);
@@ -240,6 +245,8 @@ export default function OnboardingScreen() {
             <Pressable
               onPress={() => void handleSignOut()}
               disabled={signingOut || busy}
+              accessibilityRole="button"
+              accessibilityLabel="Wrong account? Sign out"
               style={({ pressed }) => [
                 styles.signOutLink,
                 pressed && styles.pressed,
@@ -361,6 +368,7 @@ function AccountStep({
             value={inviteCode}
             onChangeText={setInviteCode}
             placeholder="Invite code"
+            accessibilityLabel="Invite code"
             placeholderTextColor={theme.textSecondary}
             autoCapitalize="characters"
             autoCorrect={false}
@@ -403,6 +411,7 @@ function AccountStep({
           value={name}
           onChangeText={setName}
           placeholder="Your name"
+          accessibilityLabel="Your name"
           placeholderTextColor={theme.textSecondary}
           editable={!busy}
           style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundSelected }]}
@@ -420,6 +429,7 @@ function AccountStep({
             onChangeText={setHandle}
             onBlur={onHandleBlur}
             placeholder="yourhandle"
+            accessibilityLabel="Unique handle"
             placeholderTextColor={theme.textSecondary}
             autoCapitalize="none"
             autoCorrect={false}
@@ -450,6 +460,8 @@ function AccountStep({
       <Pressable
         onPress={onContinue}
         disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="Create my account"
         style={({ pressed }) => [
           styles.submitButton,
           { backgroundColor: '#3c87f7' },

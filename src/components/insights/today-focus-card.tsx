@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { SkeletonBar } from '@/components/motion';
+import { NotificationAskSheet } from '@/components/notification-ask-sheet';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -16,6 +17,7 @@ import { fetchInsightHistory, fetchTodayInsight, saveInsight } from '@/lib/insig
 import { cachedFromInsight, saveCachedInsight } from '@/lib/insight/today-insight';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { POLISH_COPY_REVIEWED, SEALED_READ_KICKER, SEALED_READ_LINE } from '@/lib/polish-copy';
+import { acceptNotificationAsk, declineNotificationAsk, shouldShowNotificationAsk } from '@/lib/push';
 import { homeSageLabel } from '@/lib/sage-copy';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { withTimeout } from '@/lib/timeout';
@@ -23,7 +25,7 @@ import type { TraitTrack } from '@/lib/trait-stability';
 
 export const INSIGHT_LOAD_LABEL = 'Load insight';
 /** How long the tap waits on today's stored row (a plain read, no model). */
-const INSIGHT_FETCH_TIMEOUT_MS = 45_000;
+const INSIGHT_FETCH_TIMEOUT_MS = 10_000;
 /** The history read is a nice-to-have: it must never hold up the insight. */
 const INSIGHT_HISTORY_TIMEOUT_MS = 5000;
 /** How many past rows (superseded ones included) the picker reads to keep its no-repeat window. */
@@ -31,6 +33,8 @@ const INSIGHT_HISTORY_ROWS = 90;
 /** Under the sealed card: where today's focus comes from. */
 export const INSIGHT_STORED_NOTE = 'Picked from your answers. Not written by AI.';
 export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
+/** The pick worked but writing it down did not. */
+export const INSIGHT_SAVE_FAILED_COPY = 'Picked it, but couldn’t save it. Tap to try again.';
 /** Shown on an insight that is not today's (it stays up until today's is loaded). */
 export const INSIGHT_EARLIER_DAY_COPY = 'From an earlier day. Load insight picks today’s.';
 
@@ -63,7 +67,17 @@ export function TodayFocusCard({
   // row whose focus is in the stored bank is shown. Nothing is deleted.
   const insight = cachedInsight && isBankInsightTitle(cachedInsight.title) ? cachedInsight : null;
   const generatingForYmd = useRef<string | null>(null);
-  const [state, setState] = useState<'idle' | 'loading' | 'unavailable'>('idle');
+  const [state, setState] = useState<'idle' | 'loading' | 'unavailable' | 'save-failed'>('idle');
+  const [askVisible, setAskVisible] = useState(false);
+
+  // First insight just loaded: offer the one-time notification ask (never on web, never twice).
+  const offerNotificationAsk = useCallback(async () => {
+    try {
+      if (await shouldShowNotificationAsk(1)) setAskVisible(true);
+    } catch {
+      // The ask is a nicety; never let it break the insight.
+    }
+  }, []);
 
   const loadInsight = useCallback(async () => {
     if (insight?.ymd === todayYmd) return;
@@ -71,6 +85,7 @@ export function TodayFocusCard({
     if (generatingForYmd.current === todayYmd) return;
     generatingForYmd.current = todayYmd;
     setState('loading');
+    let stage: 'read' | 'save' = 'read';
     try {
       const existing = await withTimeout(fetchTodayInsight(userId, todayYmd), INSIGHT_FETCH_TIMEOUT_MS, 'insight-fetch');
       // An old AI-written row for today is not shown; a fresh pick supersedes it.
@@ -78,6 +93,7 @@ export function TodayFocusCard({
         await saveCachedInsight(cachedFromInsight(existing, userId));
         await reloadInsight();
         setState('idle');
+        void offerNotificationAsk();
         return;
       }
       // Which ideas this account has already had. Best effort.
@@ -94,6 +110,7 @@ export function TodayFocusCard({
         )
         .catch(() => [] as IdeaDay[]);
       const draft = draftFromPick(pickIdea({ userId, ymd: todayYmd, leans: clearLeans(tracks), history }));
+      stage = 'save';
       await saveInsight(draft, todayDay, todayYmd);
       await saveCachedInsight({
         userId,
@@ -107,13 +124,14 @@ export function TodayFocusCard({
       });
       await reloadInsight();
       setState('idle');
+      void offerNotificationAsk();
     } catch (err) {
-      console.log('[insights] today focus error:', err);
-      setState('unavailable');
+      console.log('[insights] today focus error:', stage, err);
+      setState(stage === 'save' ? 'save-failed' : 'unavailable');
     } finally {
       if (generatingForYmd.current === todayYmd) generatingForYmd.current = null;
     }
-  }, [userId, todayYmd, todayDay, insight?.ymd, tracks, reloadInsight]);
+  }, [userId, todayYmd, todayDay, insight?.ymd, tracks, reloadInsight, offerNotificationAsk]);
 
   return (
     <>
@@ -164,7 +182,11 @@ export function TodayFocusCard({
             </View>
           ) : (
             <ThemedText themeColor="textSecondary" style={styles.sealedLine}>
-              {state === 'unavailable' ? INSIGHT_UNAVAILABLE_COPY : SEALED_READ_LINE}
+              {state === 'unavailable'
+                ? INSIGHT_UNAVAILABLE_COPY
+                : state === 'save-failed'
+                  ? INSIGHT_SAVE_FAILED_COPY
+                  : SEALED_READ_LINE}
             </ThemedText>
           )}
           <ThemedPressable
@@ -181,7 +203,7 @@ export function TodayFocusCard({
               state === 'loading' && styles.pressed,
             ]}>
             <ThemedText type="smallBold" themeColor="onAccent">
-              {state === 'loading' ? 'Loading…' : state === 'unavailable' ? 'Try again' : INSIGHT_LOAD_LABEL}
+              {state === 'loading' ? 'Loading…' : state === 'unavailable' || state === 'save-failed' ? 'Try again' : INSIGHT_LOAD_LABEL}
             </ThemedText>
           </ThemedPressable>
           <ThemedText type="small" themeColor="textSecondary">
@@ -194,6 +216,18 @@ export function TodayFocusCard({
           ) : null}
         </ThemedView>
       ) : null}
+
+      <NotificationAskSheet
+        visible={askVisible}
+        onTurnOn={() => {
+          setAskVisible(false);
+          void acceptNotificationAsk();
+        }}
+        onNotNow={() => {
+          setAskVisible(false);
+          void declineNotificationAsk();
+        }}
+      />
     </>
   );
 }

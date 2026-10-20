@@ -1,16 +1,23 @@
 /**
- * Notification permission is asked exactly once, and only after the first
- * real Check exists (check_count >= 1). Not at onboarding. Not before the
- * first card has been logged. A "no" is final from the app's side — we never
- * prompt again and never degrade the rest of the app.
+ * Notification permission is asked exactly once, and only after the person has
+ * loaded their first insight (insightCount >= 1), through a small sheet that
+ * explains why. Not at onboarding. Not silently. A "no" is final from the
+ * app's side — we never prompt again and never degrade the rest of the app.
  */
 export function shouldAskNotificationPermission(input: {
-  checkCount: number;
+  insightCount: number;
   alreadyAsked: boolean;
 }): boolean {
   if (input.alreadyAsked) return false;
-  return input.checkCount >= 1;
+  return input.insightCount >= 1;
 }
+
+/** Copy for the ask sheet. No urgency, no guilt. */
+export const NOTIFICATION_ASK_TITLE = 'Want a nudge now and then?';
+export const NOTIFICATION_ASK_BODY =
+  'ATO can send a short note when your insight is ready. You can change this any time.';
+export const NOTIFICATION_ASK_YES = 'Turn on';
+export const NOTIFICATION_ASK_NO = 'Not now';
 
 export interface PushWindow {
   morningHour: number;

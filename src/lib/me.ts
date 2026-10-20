@@ -1,5 +1,6 @@
 import { bornOnFromParts, errorMessageForAge, signupAgeMessage } from '@/lib/age';
 import { slugifyCity } from '@/lib/around/slug';
+import { NAME_NOT_ALLOWED_MESSAGE, nameNotAllowed } from '@/lib/name-filter';
 import type {
   CurrentFocus,
   EnergyPattern,
@@ -665,6 +666,7 @@ export function handleFormatError(raw: string): string | null {
   if ((RESERVED_HANDLES as readonly string[]).includes(handle)) {
     return 'That handle is reserved.';
   }
+  if (nameNotAllowed(handle, 'handle')) return NAME_NOT_ALLOWED_MESSAGE;
   return null;
 }
 
@@ -695,6 +697,7 @@ export function errorMessageForHandle(error: unknown): string {
   const ageMessage = errorMessageForAge(error);
   if (ageMessage) return ageMessage;
   const code = (error as { code?: string })?.code;
+  if ((error as { message?: string })?.message?.includes('name_not_allowed')) return NAME_NOT_ALLOWED_MESSAGE;
   if (code === '23505') return 'That handle is already taken';
   if (code === '23514') return 'That handle is reserved';
   return 'Something went wrong saving your profile. Try again.';
