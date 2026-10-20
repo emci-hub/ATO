@@ -30,6 +30,16 @@ const NOT_LIVE = new Set([
   // Applied AFTER wave102 (needs emci's ok; drops crisis_flags). Restates the library functions,
   // home_bootstrap and the reset/count RPCs on top of wave101's copies, minus the crisis plumbing.
   'wave103_drop_crisis_plumbing.sql',
+  // Applied AFTER wave103 (master plan Step 7, Circle safety). Its new app functions each start with
+  // require_adult(); that is pinned by scripts/circle-safety-check.ts, not replayed here.
+  'wave104_circle_safety.sql',
+  'wave104b_circle_safety_fixes.sql',
+  // Applied AFTER wave104b (master plan Step 7b, Circle compare). Additive; its app functions start with
+  // require_adult(), pinned by scripts/circle-compare-check.ts.
+  'wave105_circle_compare.sql',
+  // Applied AFTER wave105 (master plan Step 10, deletion proof). Restates count_user_rows (service_role only)
+  // and makes dev_access_grants.granted_by ON DELETE SET NULL; no app function. Pinned by check:delete-proof.
+  'wave106_delete_proof.sql',
 ]);
 
 /** Apply order of the migrations that existed when wave101 was written (git history order). */

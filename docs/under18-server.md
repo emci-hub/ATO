@@ -6,7 +6,7 @@ and access comes back by itself on the 18th birthday (worked out from `born_on` 
 stored). This file is the server half; the app half (block screen, age confirmation for a missing birthday)
 is `docs/under18-access.md` (client agent).
 
-File: `supabase/migrations/wave101_under18_server_gate.sql` — **NOT APPLIED**. Pinned by
+File: `supabase/migrations/wave101_under18_server_gate.sql` — **APPLIED 2026-10-20** (with wave99b, 99, 99c, 99d, 100, 100b before it and wave102, 103 after; verified: 110 guarded functions, 2 triggers, 21 unguarded as expected). Pinned by
 `npm run check:under18-server` (`scripts/under18-server-check.ts`, part of `check:ota-gate`: the gate runs
 every `check:*` script that is not on its live-only list).
 

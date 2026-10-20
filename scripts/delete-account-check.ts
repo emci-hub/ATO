@@ -22,6 +22,10 @@
  *     '{}'::jsonb, '', '', '', '');
  *   -- plus a matching auth.identities row (provider 'email').
  *
+ * Run it after wave105 + wave106 are applied (Release B): wave106 is the count_user_rows that sees every
+ * per-account table (pinned offline by check:delete-proof). Uses the dev-test handle @atodev only as the
+ * target of one pending friend request, which the delete removes.
+ *
  * This proves the flow end to end. It does NOT prove Apple revocation against a
  * real Apple token, which needs Apple credentials and a device sign-in — see
  * apple-revoke-check.ts.
@@ -113,6 +117,14 @@ async function main() {
   });
   if (checkInsertError) throw new Error(`check insert failed: ${checkInsertError.message}`);
   await authed.from('checks').insert({ user_id: userId, role: 'user', text: 'hi' });
+
+  // A Circle row (Step 10): a pending friend request to the dev-test account. It must be gone after the
+  // delete (count_user_rows counts circle_requests both ways; wave106 also counts the compare switch and
+  // the AI library rows). The dev-test account only ever sees a pending request that then disappears.
+  const { data: reqData, error: reqError } = await authed.rpc('circle_request', { p_handle: 'atodev' });
+  if (reqError) throw new Error(`circle_request failed: ${reqError.message}`);
+  assert.equal((reqData as { ok?: boolean } | null)?.ok, true, `circle_request wrote no row: ${JSON.stringify(reqData)}`);
+  ok('pending Circle request to @atodev exists before delete', reqData);
 
   const { count: meCountBefore } = await authed
     .from('me')

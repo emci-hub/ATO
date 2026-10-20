@@ -686,3 +686,56 @@ Run on your own phone AFTER the OTA and the `ai-library` bundle deploy (Release 
 - [ ] **Profile card (after the 48):** strengths and weaknesses read honestly; "Still forming" is clear; nothing private appears on the shareable line.
 - [ ] **Helpline row (You tab):** 988 / findahelpline link / local-emergency line visible; nothing you type is checked.
 Report each as keep / fix + the screen name. Flags stay false until you approve a set.
+
+## Box 61 — Circle safety (master-plan Step 7, wave104, 2026-10-20)
+
+Run AFTER wave104 is applied and Release B is on the phone. Two phones or two accounts: your own + `atodev2` (never a real tester's account). Open Divecore → Hideout → Circle (star button).
+- [ ] **Add by handle:** send a request to the other account. The other side sees it under Requests; nothing is shared until Accept. Accept → both see each other in the list.
+- [ ] **Wrong handle / yourself / twice:** each shows one short line ("No one with that handle.", etc.); nothing crashes.
+- [ ] **Read the new Circle lines** (requests, report reasons, block/remove, errors, support line): keep / fix each. They are in `CIRCLE_UI`, `src/play/circle-visits.ts`.
+- [ ] **⋯ → Report:** reached in two taps from the friend row; pick a reason → "Thanks. We read every report." The report shows in the triage query (`docs/circle-safety.md`).
+- [ ] **⋯ → Block:** first tap arms "Tap again to block @…", second blocks. The friend disappears on both phones; the blocked side cannot find you by handle; visits and gifts stop. Blocked (1) → Unblock (two taps) works.
+- [ ] **Remove:** two taps; the friend disappears on both sides.
+- [ ] **Sheet size:** the card never grows or jumps as Requests / Blocked appear; at 375×667 the keyboard does not cover the Add field's Send button; the report panel fits.
+- [ ] **Support line:** tapping it opens a mail draft to support@asstrollogs.com.
+- [ ] **Name filter:** at sign-up (a throwaway test account) a staff-style handle like `atosupport` is refused with "That one isn't available. Pick another."; a swear-word handle is allowed.
+
+## Box 62 — Compare strengths (master-plan Step 7b, wave105, 2026-10-20)
+
+Run AFTER wave105 is applied and Release B is on the phone. Two accounts that are already in each other's Circle: your own + `atodev2`, both with some answered questions. Circle sheet → ⋯ next to a friend → **Compare strengths**.
+- [ ] **Read the consent text** at the top: it must say exactly what a friend sees (up to 3 strengths + the ones you share, no scores or numbers, off any time). Keep / fix. Strings are in `COMPARE_UI`, `src/play/circle-compare.ts` (`CIRCLE_COMPARE_COPY_REVIEWED` stays false until you read them).
+- [ ] **"What @friend would see of you"** lists at most 3 plain phrases (no numbers, nothing about closeness/worry, nothing that reads as a weakness). Read each phrase: keep / fix.
+- [ ] **One side on:** switch it on; the row says "Waiting for @friend to switch it on too." No card yet.
+- [ ] **Both on:** the other phone switches on too; reopen Compare. "What you two share" and "@friend tends to…" show short phrases only. Nothing about attachment, no "more/less than", no numbers.
+- [ ] **Switch off** on either phone: the card disappears on both on the next open (immediately, no wait).
+- [ ] **Remove the friend and add them again:** Compare is off on both sides until switched on again.
+- [ ] **Block:** after a block the friend is gone and no compare card can be opened.
+- [ ] **Panel size:** the Compare panel fits inside the Circle card at 375×667, scrolls instead of growing, and Back returns to the ⋯ menu.
+
+## Box 63 — Insight, notification ask, check-in line (master-plan Step 8+9, 2026-10-20)
+
+Run on Release B. Use a fresh or reset account that has never been asked for notifications (iOS: delete the app first, or Settings → ATO → Notifications is "not determined").
+- [ ] **Load insight:** Insights → Load insight shows the Focus · try · watch card. Airplane mode, tap again: "Couldn't load it just now — tap to try again." Back online, tap: it loads.
+- [ ] **Slow network:** with a very slow connection the skeleton gives up in about 10 seconds with a retry, not 45.
+- [ ] **Ask comes after the insight, never at launch:** cold start shows NO system dialog. After the FIRST insight loads, a small sheet appears: "Want a nudge now and then?" with **Turn on** and **Not now**. Read the two lines: keep / fix.
+- [ ] **Not now:** closes the sheet, NO iOS dialog, and it never comes back (reload another insight, restart the app).
+- [ ] **Turn on (second fresh account):** the iOS permission dialog opens; Allow → no sheet again. Settings → ATO → Notifications is on.
+- [ ] **Earlier-day label, widget try line / private line, the 7th-day +10:** as before (Box list in docs/ato-finish-roadmap.md step 5).
+- [ ] **Check-in line** reads "N of 7 check-ins toward your next bonus · the 7th pays +N." and never "0 of 7" (after the 7th check-in it says "Next check-in is 1 of 7").
+
+## Box 64 — Accessibility and the birthday row (master-plan Step 8+9, 2026-10-20)
+
+Run on Release B, iPhone, small phone if you have one (375 pt wide).
+- [ ] **VoiceOver on, sign-in:** swiping reads "Sign in with Apple", an email field, a password field, the buttons by name, and the sign-in code screen: "Sign-in code", "Verify code", "Resend code".
+- [ ] **VoiceOver on, onboarding:** every field is named (birthday year / month / day, name, handle, city) and Continue is a button.
+- [ ] **Larger Text at the biggest size (Settings → Accessibility → Display & Text Size → Larger Text):** You, sign-in, onboarding, Explore, Insights: nothing cut off or hidden behind another element (scroll is fine).
+- [ ] **Reduce Motion on:** the same screens have no motion that blocks anything.
+- [ ] **Birthday row at 375 pt:** the three birth fields sit on one line inside the card and do not run off the right edge (on the phone and, if you check, the web build at 375 px).
+
+## Box 65 — Privacy links and account deletion (master-plan Step 10, 2026-10-20)
+
+Run on Release B, iPhone. The landing pages at ato.emgens.com must be redeployed with the new text first (OPEN-QUESTIONS 15).
+- [ ] **Sign-up screen:** under "Already have an account? Log in" there are two links, "Privacy Policy · Terms of Service". Each opens the browser at ato.emgens.com/privacy.html or /terms.html. Both pages show the new text, which mentions Circle, block/report and "no direct messages between people", and says nothing about mute.
+- [ ] **You tab:** the same two links sit under "Send feedback". They open the same pages. With VoiceOver on, each one is read as a link.
+- [ ] **Delete account, throwaway account only** (never root or a real tester): make a throwaway account, send one friend request to @atodev, then You → Delete account → type the phrase → confirm. The app returns to sign-in, and signing in again with that email starts a fresh sign-up. On @atodev, the pending request has disappeared.
+- [ ] **Delete proof (emci, SQL, after wave105 + wave106 are applied):** run `npm run check:delete-account` once with the seeded `ato-delete-check@example.com` (SQL in the script header). The last line says "All N delete-account checks passed" and `rows_remaining` is 0.

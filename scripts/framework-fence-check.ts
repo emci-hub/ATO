@@ -128,4 +128,18 @@ assert.equal(tokenCopyClean(), true);
 assert.equal(atoTokenCopyClean(), true);
 ok('stored copy lists (poles, bands, categories, tokens) still pass their own fence');
 
+// 11. Prompt rule (D6): the old blanket "no framework names / no clinical words" text is gone from the
+// prompts that carried it; the settled rule text is present. Fail form = old text, pass form = new text.
+for (const file of ['src/lib/sage-title.ts', 'src/lib/explore/prompt.ts']) {
+  const src = readFileSync(resolve(root, file), 'utf8');
+  assert.doesNotMatch(src, /No framework names\. No clinical words\./, `${file}: old blanket ban must be gone`);
+  assert.doesNotMatch(src, /No "you are\."\s+No framework names \(MBTI/, `${file}: old blanket ban must be gone`);
+  assert.match(src, /Framework names \(/, `${file}: carries the framework-name rule`);
+  assert.match(src, /relevant, accurate and explained/, `${file}: allowed only when relevant, accurate and explained`);
+  assert.match(src, /never imply a validated assessment/i, `${file}: never implies a validated assessment`);
+  assert.match(src, /type code as ATO's own result/, `${file}: never a type code as ATO's own result`);
+  assert.match(src, /clinical word/, `${file}: no clinical word as a label on the reader`);
+}
+ok('sage-title and explore prompts carry the D6 framework rule, not the old blanket ban');
+
 console.log(`\n${passed} framework-fence checks passed`);

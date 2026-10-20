@@ -240,9 +240,14 @@ function sourceFiles(dir: string): string[] {
   }
   return out;
 }
+// The Dev Hub's flag list (dev-hub-panels.tsx, behind the dev lock) is the one allowed reader.
+const FLAG_LIST_FILE = 'src/components/dev-hub-panels.tsx';
 for (const rel of [...sourceFiles('src/app'), ...sourceFiles('src/components')]) {
+  if (rel === FLAG_LIST_FILE) continue;
   assert.doesNotMatch(read(rel), /INSIGHT_BANK_COPY_REVIEWED/, `${rel}: the bank's review flag never renders`);
 }
+assert.match(read(FLAG_LIST_FILE), /name: 'Daily insight \(stored\)', reviewed: INSIGHT_BANK_COPY_REVIEWED/, 'the dev flag list reads the real flag');
+assert.doesNotMatch(read(FLAG_LIST_FILE), /DAILY_INSIGHT_COPY_REVIEWED/, 'the dev flag list no longer reads the stale flag');
 ok('INSIGHT_BANK_COPY_REVIEWED is false, has its review doc, and no screen renders it');
 
 // --- the insight path cannot reach a model call --------------------------------------

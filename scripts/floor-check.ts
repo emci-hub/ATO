@@ -97,14 +97,95 @@ ok('collected data types match across PrivacyInfo.xcprivacy, app.json, and nutri
 
 assert.match(policy, /Supabase/);
 assert.match(policy, /Gemini/);
+assert.match(policy, /DeepSeek/);
 assert.match(policy, /Resend/);
-assert.match(policy, /not end-to-end encrypted/i);
 assert.match(labels, /Supabase/);
 assert.match(labels, /Gemini/);
+assert.match(labels, /DeepSeek/);
 assert.match(labels, /Resend/);
 assert.match(labels, /Apple/);
 assert.match(labels, /Sentry/);
-ok('privacy.md and nutrition labels name the third parties');
+ok('privacy.md and nutrition labels name the third parties (Gemini first, DeepSeek fallback: ai-vendors.ts)');
+
+// Step 10 (2026-10-20): the policy describes what is built. Chat is parked (no messages between people),
+// so the old "not end-to-end encrypted" chat paragraph and "mute" are gone; Circle as built is described.
+// If chat ships (Step 14), this rule changes with it.
+export function policyRuleProblems(text: string): string[] {
+  const out: string[] = [];
+  if (!/no direct messages between people/i.test(text)) out.push('must say there are no direct messages');
+  if (/\bmute\b/i.test(text)) out.push('mentions mute (not built)');
+  // Every sentence that names a push token must deny collecting one (local notifications only).
+  for (const s of text.split(/(?<=[.!?])\s+|\n/)) {
+    if (/push (notification )?token/i.test(s) && !/\b(?:does not|doesn't|do not|never|no)\b/i.test(s)) {
+      out.push('claims a push token');
+      break;
+    }
+  }
+  for (const [need, why] of [
+    [/friend request|accept their request/i, 'friend requests with accept'],
+    [/\bBlock\b[\s\S]{0,200}silent/i, 'silent block'],
+    [/Report[\s\S]{0,200}six fixed reasons/i, 'report with fixed reasons'],
+    [/(?:keep|kept)[\s\S]{0,120}(?:if either account is later deleted|without your account ID)/i, 'reports survive deletion'],
+    [/Compare strengths[\s\S]{0,200}both/i, 'compare needs both switches'],
+    [/visits? (?:are )?switched on|visits and compare/i, 'per-friend visits switch'],
+    [/slurs/i, 'name / handle filter'],
+    [/Divecore game save/i, 'Divecore save'],
+    [/Legends cards and category deep dives/i, 'the two AI uses'],
+    [/asks once, after your first insight/i, 'the notification ask'],
+  ] as const) {
+    if (!need.test(text)) out.push(`missing: ${why}`);
+  }
+  return out;
+}
+assert.deepEqual(policyRuleProblems(policy), [], `privacy.md: ${policyRuleProblems(policy).join('; ')}`);
+for (const f of ['landing/privacy.html']) {
+  const html = read(f).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&');
+  assert.deepEqual(policyRuleProblems(html), [], `${f}: ${policyRuleProblems(html).join('; ')}`);
+}
+for (const f of ['src/app/legal/terms.md', 'landing/terms.html']) {
+  const t = read(f);
+  assert.doesNotMatch(t, /\bmute\b/i, `${f} mentions mute`);
+  assert.doesNotMatch(t, /\bin Chat\b|chat history/i, `${f} describes Chat as live`);
+}
+// pass/fail pairs
+assert.ok(policyRuleProblems('Block, mute, report on any Chat conversation.').length > 0, 'fail: the old chat line');
+assert.ok(policyRuleProblems(policy.replace(/six fixed reasons/g, 'a reason')).includes('missing: report with fixed reasons'), 'fail: report reasons dropped');
+assert.ok(policyRuleProblems(policy + '\nPush notification token, if you enable notifications.').includes('claims a push token'), 'fail: a stray claim next to the denial is still caught');
+assert.ok(!policyRuleProblems(policy).includes('claims a push token'), 'pass: the denial sentence alone');
+assert.ok(policyRuleProblems('ATO has no direct messages between people. We collect your push token.').includes('claims a push token'), 'fail: a push-token claim without the denial');
+ok('privacy policy (app + landing) describes Circle, AI, Divecore and notifications as built; no chat, no mute; pass/fail pairs');
+
+// The Linked column of the label table matches app.json for every type.
+export function labelLinked(doc: string, type: string): boolean | null {
+  const row = doc.split('\n').find((l) => l.startsWith(`| ${type} |`));
+  if (!row) return null;
+  const cells = row.split('|').map((c) => c.trim());
+  return cells[3] === 'Linked' ? true : cells[3] === 'Not linked' ? false : null;
+}
+const APPLE_NAME: Record<string, string> = {
+  EmailAddress: 'Email Address', Name: 'Name', DateOfBirth: 'Date of Birth', UserID: 'User ID',
+  OtherUserContent: 'Other User Content', CustomerSupport: 'Customer Support', ProductInteraction: 'Product Interaction',
+  OtherUsageData: 'Other Usage Data', CrashData: 'Crash Data', OtherDiagnosticData: 'Other Diagnostic Data', DeviceID: 'Device ID',
+};
+for (const t of manifests.NSPrivacyCollectedDataTypes) {
+  const name = APPLE_NAME[t.NSPrivacyCollectedDataType.replace('NSPrivacyCollectedDataType', '')]!;
+  assert.equal(labelLinked(labels, name), t.NSPrivacyCollectedDataTypeLinked, `labels table Linked column for ${name}`);
+}
+assert.equal(labelLinked('| Crash Data | Yes | Linked | No |', 'Crash Data'), true, 'pair: Linked');
+assert.equal(labelLinked('| Crash Data | Yes | Not linked | No |', 'Crash Data'), false, 'pair: Not linked');
+assert.equal(labelLinked('| Crash Data | Yes |', 'Device ID'), null, 'pair: missing row');
+ok('label table Linked column matches app.json for all 11 types');
+
+// M8 (Step 10): Privacy + Terms links on sign-up and on You, opening the landing pages.
+{
+  const links = read('src/components/legal-links.tsx');
+  assert.match(links, /PRIVACY_URL = 'https:\/\/ato\.emgens\.com\/privacy\.html'/);
+  assert.match(links, /TERMS_URL = 'https:\/\/ato\.emgens\.com\/terms\.html'/);
+  assert.equal((links.match(/accessibilityRole="link"/g) ?? []).length, 2, 'both links are labelled links');
+  assert.match(read('src/app/auth/index.tsx'), /<LegalLinks \/>/, 'sign-up shows the links');
+  assert.match(read('src/app/(tabs)/you.tsx'), /<LegalLinks \/>/, 'You shows the links');
+  ok('Privacy + Terms links on sign-up and You open ato.emgens.com/{privacy,terms}.html');
+}
 
 assert.equal(
   manifests.NSPrivacyCollectedDataTypes.every((t) => t.NSPrivacyCollectedDataTypeTracking === false),

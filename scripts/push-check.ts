@@ -1,7 +1,7 @@
 /**
  * Push + widget checks. Run: npx tsx scripts/push-check.ts
  *
- * Verifies: permission is asked only after the first Check, copy has no fake
+ * Verifies: permission is asked only after the first insight loads (via a sheet), copy has no fake
  * urgency, Sunday N is the week's check count, deep-link paths land on Home
  * vs the weekly recap, and an empty widget payload is honest.
  *
@@ -23,7 +23,14 @@ import {
   recapFromReads,
   sundayPush,
 } from '../src/lib/push-copy';
-import { shouldAskNotificationPermission, pushWindowForEnergy } from '../src/lib/push-policy';
+import {
+  NOTIFICATION_ASK_BODY,
+  NOTIFICATION_ASK_NO,
+  NOTIFICATION_ASK_TITLE,
+  NOTIFICATION_ASK_YES,
+  shouldAskNotificationPermission,
+  pushWindowForEnergy,
+} from '../src/lib/push-policy';
 import { addDaysYmd, localYmd, weekdayInZone } from '../src/lib/local-date';
 import { checksInRecapWeek, recapWeekRange } from '../src/lib/week-window';
 
@@ -33,12 +40,46 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-assert.equal(shouldAskNotificationPermission({ checkCount: 0, alreadyAsked: false }), false);
-assert.equal(shouldAskNotificationPermission({ checkCount: 0, alreadyAsked: true }), false);
-assert.equal(shouldAskNotificationPermission({ checkCount: 1, alreadyAsked: false }), true);
-assert.equal(shouldAskNotificationPermission({ checkCount: 8, alreadyAsked: false }), true);
-assert.equal(shouldAskNotificationPermission({ checkCount: 8, alreadyAsked: true }), false);
-ok('permission asked only after first check, and only once');
+assert.equal(shouldAskNotificationPermission({ insightCount: 0, alreadyAsked: false }), false);
+assert.equal(shouldAskNotificationPermission({ insightCount: 0, alreadyAsked: true }), false);
+assert.equal(shouldAskNotificationPermission({ insightCount: 1, alreadyAsked: false }), true);
+assert.equal(shouldAskNotificationPermission({ insightCount: 8, alreadyAsked: false }), true);
+assert.equal(shouldAskNotificationPermission({ insightCount: 1, alreadyAsked: true }), false);
+assert.equal(shouldAskNotificationPermission({ insightCount: 8, alreadyAsked: true }), false);
+ok('permission asked only after the first insight loads, and only once');
+
+assert.equal(NOTIFICATION_ASK_TITLE, 'Want a nudge now and then?');
+assert.equal(
+  NOTIFICATION_ASK_BODY,
+  'ATO can send a short note when your insight is ready. You can change this any time.',
+);
+assert.equal(NOTIFICATION_ASK_YES, 'Turn on');
+assert.equal(NOTIFICATION_ASK_NO, 'Not now');
+for (const line of [NOTIFICATION_ASK_TITLE, NOTIFICATION_ASK_BODY, NOTIFICATION_ASK_YES, NOTIFICATION_ASK_NO]) {
+  assert.equal(copyHasFakeUrgency(line), false, line);
+}
+// pass/fail pair: the urgency detector does catch pressure copy
+assert.equal(copyHasFakeUrgency("Don't miss out, turn on notifications now!"), true);
+ok('ask sheet copy is exact and carries no urgency');
+
+const runtimeSrc = readFileSync(resolve(__dirname, '../src/components/push-runtime.tsx'), 'utf8');
+const askPushSrc = readFileSync(resolve(__dirname, '../src/lib/push.ts'), 'utf8');
+const focusSrc = readFileSync(resolve(__dirname, '../src/components/insights/today-focus-card.tsx'), 'utf8');
+// fail side: the old silent ask is gone from the runtime
+assert.doesNotMatch(runtimeSrc, /maybeAskNotificationPermission|requestPermissionsAsync/);
+assert.doesNotMatch(askPushSrc, /export async function maybeAskNotificationPermission/);
+// pass side: the ask goes through the sheet, and "Not now" never calls the system
+assert.match(focusSrc, /shouldShowNotificationAsk\(1\)/);
+assert.match(focusSrc, /<NotificationAskSheet/);
+const declineBody = askPushSrc.slice(
+  askPushSrc.indexOf('export async function declineNotificationAsk'),
+  askPushSrc.indexOf('export async function acceptNotificationAsk'),
+);
+assert.match(declineBody, /markAsked\(\)/);
+assert.doesNotMatch(declineBody, /requestPermissionsAsync/);
+const acceptBody = askPushSrc.slice(askPushSrc.indexOf('export async function acceptNotificationAsk'));
+assert.match(acceptBody, /getPermissionsAsync[\s\S]*requestPermissionsAsync[\s\S]*markAsked\(\)/);
+ok('no silent ask: the system dialog opens only from "Turn on"; "Not now" only records the answer');
 
 assert.deepEqual(pushWindowForEnergy(null), { morningHour: 7, eveningHour: 20 });
 assert.deepEqual(pushWindowForEnergy(undefined), { morningHour: 7, eveningHour: 20 });

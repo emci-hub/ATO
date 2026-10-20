@@ -1,3 +1,7 @@
+> **SUPERSEDED (master plan Step 10, 2026-10-20): historical only.** The current text is
+> `src/app/legal/terms.md` (mirrored in `landing/terms.html`). Open items: `docs/legal/OPEN-QUESTIONS.md`.
+> Do not edit or copy from this file.
+>
 > **NEEDS EMCI REVIEW — do not ship.**
 > Draft for the post-Sage / post-crisis app. Derived from `src/app/legal/terms.md`.
 > Not legal advice; a lawyer still reads it before public launch. Do not copy into
