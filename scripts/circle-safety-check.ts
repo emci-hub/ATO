@@ -123,17 +123,22 @@ for (const [s, k] of allow) assert.equal(nameNotAllowed(s, k), false, `allows ${
 ok(`name filter: phone and server lists match; ${refuse.length} refused / ${allow.length} allowed pairs (swearing allowed)`);
 
 /* 6 · the Circle sheet: 2 taps, silent block, support contact ------------- */
-const ui = read('src/play/circle-visits-ui.tsx');
+// The tools live in the Circle tab (emci 2026-10-21); the Divecore sheet keeps visits and gifts only.
+const ui = read('src/app/(tabs)/circle.tsx') + read('src/components/circle-panels.tsx');
 const copy = read('src/play/circle-visits.ts');
 assert.match(copy, /more: \(handle: string\) => `More options for @\$\{handle\}`/, 'the ⋯ button has a spoken label');
 assert.match(ui, /accessibilityLabel=\{CIRCLE_UI\.more\(handle\)\}/, 'friend row has the labelled ⋯ button');
 for (const f of ['blockCirclePeer', 'reportCirclePeer', 'sendCircleRequest', 'respondCircleRequest', 'fetchCircleBlocked', 'unblockCirclePeer']) {
-  assert.match(ui, new RegExp(`\\b${f}\\(`), `sheet calls ${f}`);
+  assert.match(ui, new RegExp(`\\b${f}\\(`), `Circle tab calls ${f}`);
+  assert.doesNotMatch(read('src/play/circle-visits-ui.tsx'), new RegExp(`\\b${f}\\(`), `Divecore sheet no longer calls ${f}`);
 }
+assert.match(ui, /twoTap\.confirm\(`block:/, 'Block takes two taps');
+assert.match(ui, /twoTap\.confirm\(`remove:/, 'Remove takes two taps');
+assert.match(ui, /CIRCLE_REPORT_REASON_IDS\.map/, 'Report lists the six fixed reasons');
 assert.match(copy, /export const CIRCLE_SUPPORT_EMAIL = '([^']+)'/);
 const supportEmail = copy.match(/export const CIRCLE_SUPPORT_EMAIL = '([^']+)'/)![1];
 assert.match(read('src/app/(tabs)/you.tsx'), new RegExp(`'${supportEmail!.replace('.', '\\.')}'`), 'same address as You → Send feedback');
 assert.ok(!/from\('connections'\)\s*\.insert/.test(read('src/lib/circle.ts')), 'circle.ts never inserts a connection');
-ok('sheet: ⋯ on every friend row → Report / Block (2 taps); support email matches You');
+ok('Circle tab: ⋯ on every friend row → Report / Block (2 taps); support email matches You');
 
 console.log(`\ncheck:circle-safety ok — ${groups} groups`);

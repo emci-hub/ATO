@@ -199,8 +199,19 @@ const circleCode = codeOnly(read('src/app/(tabs)/circle.tsx'));
 assert.doesNotMatch(circleCode, /<RebuiltNotice/, 'Circle is a real screen now, not a Rebuilt notice');
 assert.match(circleCode, /fetchCircleFriends\(\)/, 'Circle lists friends from the server list the Divecore sheet uses');
 assert.match(circleCode, /pathname:\s*'\/chat'/, 'Circle opens the standalone chat route');
-assert.doesNotMatch(circleCode, /@\/play\/(?!circle-visits(-store)?['"])/, 'Circle imports no Divecore UI (only the friend list store and types)');
+const circlePanelsCode = codeOnly(read('src/components/circle-panels.tsx'));
+assert.doesNotMatch(circleCode, /@\/play\/(?!circle-(visits|compare)(-store)?['"])/, 'Circle imports no Divecore UI (only the circle stores, copy and types)');
+assert.doesNotMatch(circlePanelsCode, /@\/play\/(?!circle-(visits|compare)(-store)?['"])/, 'Circle panels import no Divecore UI');
+// Safety tools live in the Circle tab (emci 2026-10-21); visits and gifts stay in Divecore.
+for (const f of ['sendCircleRequest', 'respondCircleRequest', 'cancelCircleRequest', 'blockCirclePeer', 'removeCirclePeer', 'reportCirclePeer', 'unblockCirclePeer', 'fetchCircleBlocked', 'fetchCircleRequests']) {
+  assert.match(circleCode, new RegExp(`\\b${f}\\(`), `Circle tab calls ${f}`);
+}
+assert.match(circleCode, /twoTap\.confirm\(`block:/, 'Block takes two taps in the Circle tab');
+assert.match(circleCode, /mailto:\$\{CIRCLE_SUPPORT_EMAIL\}/, 'Circle tab carries the support line');
+assert.match(circlePanelsCode, /CIRCLE_REPORT_REASON_IDS\.map/, 'Report lists the fixed reasons');
+const divecoreSheet = codeOnly(read('src/play/circle-visits-ui.tsx'));
+assert.doesNotMatch(divecoreSheet, /blockCirclePeer|reportCirclePeer|sendCircleRequest|respondCircleRequest|unblockCirclePeer|TextInput|circle-compare/, 'the Divecore sheet no longer carries the safety tools');
 assert.ok(!isTabParked('circle'), 'Circle is offered in the bar and More');
-ok('Circle is a real tab: friend list + Message, no Divecore UI');
+ok('Circle is a real tab: friends, Message, requests, ⋯ menu (Report/Block), Blocked, support line; no Divecore UI');
 
 console.log(`\n${passed} rebuilt checks passed`);

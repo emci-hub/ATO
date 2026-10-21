@@ -368,7 +368,6 @@ export function PetScreen({
   away = null,
   onAwayClose,
   onOpenLocker,
-  onOpenChat,
   onClaimResearch,
 }: {
   view: PlayView;
@@ -406,8 +405,6 @@ export function PetScreen({
   onAwayClose?: () => void;
   /** The Stash's "Open Locker" link (the shell switches to the Locker tab). */
   onOpenLocker?: () => void;
-  /** Circle ⋯ → Message: the shell opens the encrypted chat route (Step 14). */
-  onOpenChat?: (peer: string, handle: string) => void;
   /** Today's "Claim" row: the same claim the CLAIM button in the top bar makes. */
   onClaimResearch?: () => void | Promise<void>;
 }) {
@@ -1282,7 +1279,6 @@ export function PetScreen({
               top={layoutRegions(frame).notice.height + SPACE.s}
               onToggle={toggleCircleShare}
               onVisit={visitCircleFriend}
-              onChat={onOpenChat}
               onClose={() => setCircleOpen(false)}
             />
           ) : (

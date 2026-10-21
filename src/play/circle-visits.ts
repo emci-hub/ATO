@@ -223,6 +223,7 @@ export const CIRCLE_UI = {
   railLabel: 'Circle',
   sheetTitle: 'Circle visits',
   sheetNote: 'Pets visit when you both switch sharing on. Only your pet and room go.',
+  sheetTools: 'Add friends, Message, Report and Block are in the Circle tab.',
   status: {
     sharing: 'Sharing',
     waiting: 'Waiting on them',
