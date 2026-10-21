@@ -26,6 +26,7 @@ import { allHeroes } from '../src/play/heroes-data';
 import { PET_BRANCHES, PET_STAGES, PET_STAGE_MS, petLines, petLookFor, type PetStage } from '../src/play/pet';
 import {
   PET_CLIPS,
+  PET_FRAME_MS,
   PET_ROOM_BOX,
   kitHas,
   petFrameAt,
@@ -353,5 +354,29 @@ ok('Hideout 2D roam: walk polygon, spread targets, every kit pose');
   assert.ok(/<GameCard g="train"/.test(sheetsSrc), 'the Play sheet keeps Tap to train');
 }
 ok('Catch the food lives in the Feed sheet under "? Your pet"; the Play sheet keeps Tap to train');
+
+// Pet frames come off the shared timer tick (pet-anim-sprite.tsx). A 100 ms tick skipped frames of 60/80/85 ms clips
+// (a dash showed 0,1,3,5,6,8…); the 20 ms tick must show every frame in order, each at least frame-length − 1 tick.
+{
+  const TICK = 20;
+  const src = fs.readFileSync('src/play/pet-anim-sprite.tsx', 'utf8');
+  assert.match(src, /const TICK_MS = 20;/, 'the shared timer ticks every 20 ms');
+  const seen = (clip: (typeof PET_CLIPS)[number], tick: number) => {
+    const out: number[] = [];
+    for (let t = 0; t < PET_FRAME_MS[clip] * 8 * 3; t += tick) {
+      const f = petFrameAt({ [clip]: 8 }, { clip, hold: false }, t, true);
+      if (out[out.length - 1] !== f) out.push(f);
+    }
+    return out;
+  };
+  for (const clip of PET_CLIPS) {
+    const frames = seen(clip, TICK);
+    for (let i = 1; i < frames.length; i += 1) {
+      assert.equal(frames[i], (frames[i - 1] + 1) % 8, `${clip}: at ${TICK} ms ticks no frame is skipped (${frames.slice(0, 10)})`);
+    }
+  }
+  assert.notDeepEqual(seen('dash', 100).slice(0, 4), [0, 1, 2, 3], 'sanity: the old 100 ms tick did skip dash frames');
+}
+ok('pet frames: the 20 ms shared tick shows every frame in order (the 100 ms tick skipped dash/attack frames)');
 
 console.log(`\ncheck:pet-room — ${passed} groups passed.`);
