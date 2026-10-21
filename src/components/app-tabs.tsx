@@ -29,7 +29,7 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * Custom JS bottom tab bar: 5 slots. Slot 5 is always "More" (fixed, not
  * draggable). The other slots render Home + Insights (each once) interleaved
  * with the pool tabs chosen in edit mode, in the user's saved order. Locked pool
- * tabs (e.g. Circle until a friend is scanned) are skipped visually but stay
+ * tabs (any tab with an `isUnlocked` gate; none right now) are skipped visually but stay
  * registered as routes via hidden triggers inside TabList.
  *
  * Replaces NativeTabs with one headless expo-router/ui navigator so order and
