@@ -612,6 +612,13 @@ One flag controls all of these: `PRE_LAUNCH_DEV` in `src/lib/dev-mode.ts`. **`np
 
 ## Decisions log
 
+- 2026-10-21 Step 14 (Circle chat, committed on `feature/circle-chat`, not pushed; nothing applied or built; 1.0 = tag `v1.0.0`): end-to-end encrypted 1:1 chat built. libsodium
+  1.7.0 (native, so a 1.1 store build, runtime 1.1.0; `ITSAppUsesNonExemptEncryption` now true), `wave108_circle_chat.sql`
+  (ciphertext only, friends + not blocked + 18+, 30-day cron, reports with the reporter's decrypted message + 5 before,
+  warn → chat off → ban), `src/app/chat.tsx` + `src/lib/chat/*`, Circle ⋯ → Message, `check:circle-chat`. Disclosures updated
+  (pack §9, labels + manifests add Emails or Text Messages, privacy/terms "app 1.1 and later"). Opus reviewer FAIL → fixed.
+  D17 settled: build 1.0 from tag `v1.0.0`, merge chat after. Open: D18, D19. Next: Release C (master plan row 15).
+
 - 2026-10-21 Step 13 (store prep): gates green (release-mode 47, ota-gate exit 0); `docs/app-store-pack.md` + Box 68 written; widget
   header already "ATO", haptics already shipped in code (no diff). Found: unused `expo-camera` plugin in `app.json` (D16, needs OK).
   Open for emci: D12 + lawyer read, demo account, EAS production build, TestFlight, Box 68. Next: Step 14 (Circle option C).

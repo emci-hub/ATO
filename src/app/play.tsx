@@ -839,6 +839,7 @@ export default function PlayScreen() {
       away={away}
       onAwayClose={dismissAway}
       onOpenLocker={() => setMode('dress')}
+      onOpenChat={(peer, handle) => router.push({ pathname: '/chat', params: { peer, handle } })}
       onClaimResearch={handleClaim}
     />
   ) : null;

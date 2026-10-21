@@ -37,7 +37,7 @@ Friends in your Circle are added only when a request is accepted. If someone vio
 
 ## 6. Your content
 
-ATO has no direct messages between people. What you give ATO is your answers, your name and @handle, your choices in the app and your Divecore game. You give us the limited right to store and process them in order to run the app (for example, to build your profile and keep your game save). We don't sell your content. We don't send what you type to an AI model, and we don't use your content to train models. Your name, @handle, two sign-up answers and pixel appearance can be seen by anyone who has your @handle; what friends can see is described in the Privacy Policy. [CONFIRM: that the AI providers' terms for the account ATO uses also bar training on requests — see docs/legal/OPEN-QUESTIONS.md.]
+From app version 1.1, friends in your Circle can message each other one to one. You are responsible for what you send; the conduct rules in these terms apply to messages, and we can turn chat off for, or close, an account that breaks them. What you give ATO is your answers, your name and @handle, your choices in the app and your Divecore game. You give us the limited right to store and process them in order to run the app (for example, to build your profile and keep your game save). We don't sell your content. We don't send what you type to an AI model, and we don't use your content to train models. Your name, @handle, two sign-up answers and pixel appearance can be seen by anyone who has your @handle; what friends can see is described in the Privacy Policy. [CONFIRM: that the AI providers' terms for the account ATO uses also bar training on requests — see docs/legal/OPEN-QUESTIONS.md.]
 
 ## 7. Sign-up, referrals and invites
 

@@ -65,7 +65,8 @@ one phone pass; 8 + 9 run as one chat. Rows are in run order; numbers kept so ol
 | 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60-65) | Sonnet 5 | [x] 2026-10-20: Box 66 written (pre-step + Parts A-G + results table); phone pass run by emci 2026-10-20: A-G all pass, no fixes |
 | 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | [x] 2026-10-21: half (a) built, reviewed, pushed (5b6abd8b app, c690636c Play) and OTA PUBLISHED: production group `6307ece1-85fc-4e59-bc1f-7bb651356744` (iOS `01a15c5e-2147-7f25-8a2a-a256206dc68e`, Android `01a15c5e-2147-7300-818b-f3285e680f5d`), runtime 1.0.0, git c690636c. Half (b) by emci: rotations, wave80 + wave107 APPLIED, leaked-password switch, Box 67 passed; SQL verified read-only 2026-10-21 (see checklist) |
 | 13 | Roadmap step 10: production build + store submission | Sonnet 5 | [x] 2026-10-21: prep done (checklist, gates, ASC pack, reviewer, Box 68); NOT yet done by emci: D12, demo account, EAS build, TestFlight, Box 68 (see Step 13 checklist) |
-| 14 ▶ | Circle option C (LAST, emci 2026-10-20): end-to-end encrypted 1:1 chat (Signal-style: libsodium keys per phone, reporter's phone sends reported messages, on-phone filter, block reuses step 7). Needs: new native dependency OK, a new store build (not OTA), encryption export answer, emci owns daily report triage. Brief: `docs/circle-design.md` | Opus 5 | [ ] |
+| 14 | Circle option C (LAST, emci 2026-10-20): end-to-end encrypted 1:1 chat (Signal-style: libsodium keys per phone, reporter's phone sends reported messages, on-phone filter, block reuses step 7). Needs: new native dependency OK, a new store build (not OTA), encryption export answer, emci owns daily report triage. Brief: `docs/circle-design.md` | Opus 5 | [x] 2026-10-21: built, committed on `feature/circle-chat` (d0bcd6c2 Play + app commit), NOT pushed; 1.0 tagged `v1.0.0` = 6af79d2f; `wave108` NOT applied; no build; reviewer FAIL → fixed (see checklist) |
+| 15 ▶ | RELEASE C (after 1.0 is submitted from tag `v1.0.0`): push + merge `feature/circle-chat`, apply `wave108`, EAS 1.1 build → TestFlight → Box 69 → submit 1.1 with `app-store-pack.md` §9 | Sonnet 5 | [ ] |
 
 ### Step checklists (done-criteria)
 
@@ -311,6 +312,25 @@ but nothing in `src` uses the camera and friends are added by @handle. I correct
 why the app asks for camera access (it never prompts). (b) Support URL is the landing page; no /support page.
 **Blockers still open for submission:** D12 (legal answers + lawyer read) and the confirmations above. D8: recorded rotated.
 
+**14.** [x] plan approved by me (libsodium; chat in a 1.1 build after 1.0; triage: emci daily, 24 h, warn → chat off → ban,
+reported message + last 5, 30-day ciphertext) [x] `react-native-libsodium` 1.7.0 pinned + `allowScripts` (its postinstall
+unpacks the native lib; npm blocked it), config plugin; `app.json` 1.1.0 / runtime 1.1.0 / `ITSAppUsesNonExemptEncryption
+true` [x] `wave108_circle_chat.sql` (NOT applied): `chat_keys`, `chat_messages` (ciphertext + nonce + both public keys,
+participants-only select for Realtime, no client write), `chat_restrictions`, `reports.context` + restrictive insert policy
+(only `chat_report` writes context), RPCs `chat_set_key/peer_key/send/thread/report/my_status/ack_warning`,
+`admin_chat_restrict` (root), `_chat_allowed` = friends + not blocked, 18+, rate limits (send 200/h, report 10/day, key 10/day),
+daily cron deletes ciphertext > 30 days, `count_user_rows` restated + 3 tables [x] phone: `src/lib/chat/*` (crypto, filter,
+rules, store), `src/app/chat.tsx` thread screen (long-press report, two-tap block, blur + second-tap filter, warning banner,
+chat-off), Circle ⋯ → Message (`circle-visits-ui.tsx`, `pet-screen.tsx` `onOpenChat`, `play.tsx` push) [x] disclosure:
+`app-store-pack.md` §9 (1.1 answers; §1-8 = the 1.0 commit), labels + manifest + `PrivacyInfo.xcprivacy` gain Emails or Text
+Messages, `privacy.md`/`terms.md` + landing copies say "app version 1.1 and later", triage SQL in `docs/circle-safety.md`,
+Box 69, system map [x] checks: new `check:circle-chat` (7, filter pass/fail pairs), `floor`, `delete-proof`, `reset-account`,
+`under18-server`, `rebuilt` moved to the new rule; typecheck + lint clean; `check:ota-gate` once = only `play-isolation`
+(needs the Play/app commit split) after the two rule fixes [x] Opus reviewer FAIL → fixed: forged chat reports via the old
+stage7 insert policy (restrictive `context is null` policy), plus 9 warnings fixed (re-runnable publication add, null text key,
+token refresh reloading, key-pair race, Load older jump, block disarm, peer key late, Keychain error copy, privacy wording).
+Not verified: wave108 on a real database, any device run (needs the 1.1 build), web render.
+
 ## Review ledger (a reviewer skips anything listed here unless those files changed afterward)
 
 | Step | Scope | Verdict | Open warnings |
@@ -332,6 +352,8 @@ why the app asks for camera access (it never prompts). (b) Support URL is the la
 | 12 | `_layout.tsx`, `dev-mode.ts`, `sage.tsx` (deleted), `playStore.ts` (`launchCleanSlate`, `launch_reset`, TODO(A5) comments), `release-mode-check.ts`, `check-launch-clean-slate.ts`, `tab-rename-check.ts`, `sage-load-check.ts`, `age-check.ts`, `check-auras.ts`, `preview-mode-check.ts`, `wave107_signup_public.sql`, Box 67 | PASS (Opus) | reset reaches the cloud on the next change (restore re-runs it); an old-bundle phone re-grants free heroes until it takes the OTA; gear left on unowned heroes (Locker can still remove it); preview wrapper blocking untested while the flag is off |
 
 | 13 | `docs/app-store-pack.md`, `app-privacy-labels.md` (one line), Box 68 | FAIL → fixed (Opus) | pack wording corrected; open: `expo-camera` plugin unused (needs emci's ok), demo account fresh-save Circle path untested |
+
+| 14 | `wave108_circle_chat.sql`, `src/lib/chat/*`, `src/app/chat.tsx`, `circle-visits(-ui)`, `pet-screen.tsx`, `play.tsx`, `package.json`, `app.json`, `PrivacyInfo.xcprivacy`, legal md + landing html, `app-store-pack.md` §9, `circle-safety.md`, Box 69, `circle-chat-check`, `floor-check`, `delete-proof-check`, `reset-account-check`, `under18-server-check`, `rebuilt-check`, system map | FAIL → fixed (Opus) | open: ciphertext rows stay readable to the two people by direct API for ≤30 days after a block (encrypted, own messages); old `blocks` two-sided read (D18); release order (D17) |
 
 ## Ledger A: settled decisions (never re-ask)
 
@@ -359,6 +381,12 @@ why the app asks for camera access (it never prompts). (b) Support URL is the la
 - Public signup, no invite gate (launch flip). One chat per step. Plan + model per step.
 - Legal (Step 10, emci 2026-10-20): Privacy/Terms links open `https://ato.emgens.com/{privacy,terms}.html`; the legal text names
   Gemini + DeepSeek fallback; `dev_access_grants.granted_by` ON DELETE SET NULL (wave106). Legal text stays a lawyer draft.
+- Release order (D17, emci 2026-10-21): 1.0 is built from tag `v1.0.0` (6af79d2f, local, not pushed); Step 14 lives on
+  `feature/circle-chat` (two commits, not pushed) and merges only after 1.0 is submitted.
+- Circle chat (Step 14, emci 2026-10-21): libsodium (`react-native-libsodium`), one key pair per account per phone; ships in
+  a 1.1 store build AFTER 1.0 (runtime 1.1.0, never by OTA); `ITSAppUsesNonExemptEncryption = true`, standard algorithms /
+  mass-market; emci owns report triage daily, 24 h target; ladder warn → chat off → ban; a report sends the reported
+  message + the 5 before it; ciphertext deleted after 30 days.
 - Applied 2026-10-20 outside Release B: `wave104`, `wave104b` (Step 7), `wave105`, `wave106` (Step 10). Release B had NO migration left
   from steps 7-10; it was the OTA only, published 2026-10-20 (group `b9c891db`). Landing pages redeployed first (emci confirmed).
 
@@ -397,6 +425,8 @@ CATEGORY_DEEP_DIVE, LEGEND_FIGURES, STORY, STORY_BANK (+ dead: TITLE, CATEGORY_R
 | D14 | Delete the `ai-generate` stub: needs `src/lib/ai/edge.ts` + `generateText` callers removed first | one small step after launch, or keep the 410 stub |
 | D15 | wave101's `*_adult_insert/_update` write policies on `trait_tracks`/`trait_history` outlived wave80 (inert: no client grant). Drop them? | yes, fold into the D13 cleanup migration after launch |
 | D16 | Remove the unused `expo-camera` plugin (camera permission text) from `app.json` and the dependency before the production build? Native/dependency change. | yes if you want a clean permission list; safe either way (no code calls the camera). Decide before the EAS build. |
+| D18 | Chat no longer reads `blocks` through RLS (it uses `_circle_blocked`), so the two-sided `blocks` read noted in Step 7 could become blocker-only (hides that a block exists). Policy change on a live table. | yes, one small migration with Release C |
+| D19 | A Dev Hub (root) button for the chat ladder (`admin_chat_restrict` is ready); today it is SQL in `circle-safety.md`. | later, if triage gets busy |
 | D11 | Rename the internal `sage-copy` / `sage-knows` / `sage-title` files (~40 importers, ~20 checks read them by path)? Invisible to users. | skip, or one codemod step after launch |
 
 ## Original roadmap steps still ahead

@@ -35,6 +35,37 @@ update public.reports set status = 'actioned', handled_at = now(), admin_note = 
 Actions available today: pause the profile (Dev Hub → Admin, root), delete it (`root_delete_profile`), or dismiss
 (`status = 'dismissed'`). Reports stay after either account is deleted (ids go null, handle + reason stay).
 
+## Chat reports (Step 14, wave108, app 1.1+): emci owns this, daily, 24 h target
+
+Chat reports land in the same `reports` table with `context->>'kind' = 'chat'`. The same daily query shows them; to read
+what was reported (decrypted by the reporter's phone, the reported message + up to 5 before it, oldest first):
+
+```sql
+select id, at, reason, reported_handle,
+       jsonb_path_query_array(context, '$.messages[*].text') as lines,
+       context->>'reported_message_id' as reported_message
+from public.reports where status = 'open' and context->>'kind' = 'chat' order by at;
+```
+
+The text comes from the reporter's phone; the server only checks that the message ids are real messages between the two.
+Judge it by meaning (content policy): swearing and dark jokes between friends are fine; harassment, hate, unwanted sexual
+content, spam and impersonation are not. Ladder (emci, 2026-10-21): **warn → chat off → ban**. In the SQL editor (levels:
+`warned`, `chat_off`, `banned`):
+
+```sql
+insert into public.chat_restrictions (user_id, level)
+select id, 'warned' from public.me where handle = '<handle>'
+on conflict (user_id) do update set level = excluded.level, seen_at = null, updated_at = now();
+```
+
+To lift it: `delete from public.chat_restrictions where user_id = (select id from public.me where handle = '<handle>');`
+(`admin_chat_restrict(handle, level)` does the same for a signed-in root, ready for a future Dev Hub button; the SQL editor
+has no signed-in user, so it refuses there.)
+
+`warned` shows the person a one-time banner in chat; `chat_off` and `banned` stop sending. For `banned`, also ban the
+account in Supabase → Authentication → Users → the user → Ban (so they can't sign in). Then mark the report actioned
+(query above). Ciphertext deletes itself after 30 days; reports stay.
+
 ## Before applying wave104: names that the new filter would refuse (read-only)
 
 Existing rows are NOT changed or blocked; this only shows who would be refused if they edited their name/handle.

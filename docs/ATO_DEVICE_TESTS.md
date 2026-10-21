@@ -981,3 +981,41 @@ binary with `PRE_LAUNCH_DEV = false` baked in, the "ATO" widget header and hapti
 | D Widget + notifications | | |
 | E Legal + deletion | | |
 | F Larger Text + Reduce Motion | | |
+
+## Box 69 — Circle chat, 1.1 build (master-plan Step 14, 2026-10-21)
+
+About 20 min, on the **1.1 TestFlight build** (chat needs the new native module; an OTA can't add it), with TWO phones (or
+one phone + one simulator on the 1.1 dev build), two accounts that are Circle friends. Before: `wave108` applied.
+
+**Report back in ONE message:** a line per part (A-E): `pass`, or `fix` + the screen + what you saw.
+
+### Part A — Open and send
+- [ ] **A1** Phone 1: Divecore → Hideout → Circle → ⋯ on the friend → Message. → The chat opens with "@handle", the privacy line (30 days, report sends the message + 5 before), and "hasn't opened chat yet" if phone 2 never opened it.
+- [ ] **A2** Phone 2 opens the same chat once, then phone 1 sends "hi". → Phone 2 sees it within a few seconds without leaving the screen; both see it on the right side for the sender.
+- [ ] **A3** Supabase → Table editor → `chat_messages`. → `ciphertext` is unreadable; no plain "hi" anywhere.
+
+### Part B — Filter
+- [ ] **B1** Phone 1 types a slur-test word from `check:circle-chat` (e.g. "send nudes"), taps Send. → "This might land badly…", button says "Tap again to send"; the second tap sends.
+- [ ] **B2** Phone 2. → That message shows "Hidden: might be offensive. Tap to show."; a tap shows it. Normal swearing ("what the fuck") shows plainly.
+
+### Part C — Report
+- [ ] **C1** Phone 2: long-press that message → pick a reason. → "Thanks. We read every report within a day."
+- [ ] **C2** SQL editor: run the chat-report query in `docs/circle-safety.md`. → The row has the reported text + up to 5 lines before it.
+- [ ] **C3** Insert `warned` for phone 1's handle (circle-safety.md), reopen chat on phone 1. → One-time warning banner; "Got it" hides it. Set `chat_off`. → Sending is off with "Chat is off…". Then delete the row.
+
+### Part D — Block and unfriend
+- [ ] **D1** Phone 2: tap Block twice in the chat header. → "Blocked. They won't be told."; phone 1 reopens the chat → "You can only message people in your Circle.", no old messages, and the friend is gone from its Circle list.
+
+### Part E — Edge cases
+- [ ] **E1** On a 1.0 build (if one is still installed), there is no Message row in the ⋯ menu. On 1.1 with Airplane mode, sending shows "Something went wrong" and keeps the draft.
+- [ ] **E2** Larger Text at a big size. → Chat header, bubbles and the input row still fit; nothing overlaps.
+
+### Results (fill in)
+
+| Part | pass / fix | Screen + what you saw |
+|---|---|---|
+| A Open + send | | |
+| B Filter | | |
+| C Report + ladder | | |
+| D Block | | |
+| E Edge cases | | |

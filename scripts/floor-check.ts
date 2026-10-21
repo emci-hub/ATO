@@ -78,6 +78,7 @@ const EXPECTED_TYPES = [
   'NSPrivacyCollectedDataTypeDateOfBirth',
   'NSPrivacyCollectedDataTypeUserID',
   'NSPrivacyCollectedDataTypeOtherUserContent',
+  'NSPrivacyCollectedDataTypeEmailsOrTextMessages',
   'NSPrivacyCollectedDataTypeCustomerSupport',
   'NSPrivacyCollectedDataTypeProductInteraction',
   'NSPrivacyCollectedDataTypeOtherUsageData',
@@ -107,12 +108,15 @@ assert.match(labels, /Apple/);
 assert.match(labels, /Sentry/);
 ok('privacy.md and nutrition labels name the third parties (Gemini first, DeepSeek fallback: ai-vendors.ts)');
 
-// Step 10 (2026-10-20): the policy describes what is built. Chat is parked (no messages between people),
-// so the old "not end-to-end encrypted" chat paragraph and "mute" are gone; Circle as built is described.
-// If chat ships (Step 14), this rule changes with it.
+// Step 10 (2026-10-20): the policy describes what is built; "mute" is not built. Step 14 (2026-10-21):
+// chat is built (app 1.1+, wave108), so the policy must describe it as built: end-to-end encrypted,
+// 30-day retention, reports send the message + up to 5 before; the old "no direct messages" line is stale.
 export function policyRuleProblems(text: string): string[] {
   const out: string[] = [];
-  if (!/no direct messages between people/i.test(text)) out.push('must say there are no direct messages');
+  if (/no direct messages between people/i.test(text)) out.push('still says there are no direct messages (chat is built)');
+  if (!/end-to-end encrypted[\s\S]{0,200}ATO cannot read them/i.test(text)) out.push('missing: chat is end-to-end encrypted');
+  if (!/for 30 days, then deletes it/i.test(text)) out.push('missing: 30-day chat retention');
+  if (!/that message and up to 5 before it/i.test(text)) out.push('missing: what a chat report sends');
   if (/\bmute\b/i.test(text)) out.push('mentions mute (not built)');
   // Every sentence that names a push token must deny collecting one (local notifications only).
   for (const s of text.split(/(?<=[.!?])\s+|\n/)) {
@@ -152,8 +156,11 @@ assert.ok(policyRuleProblems('Block, mute, report on any Chat conversation.').le
 assert.ok(policyRuleProblems(policy.replace(/six fixed reasons/g, 'a reason')).includes('missing: report with fixed reasons'), 'fail: report reasons dropped');
 assert.ok(policyRuleProblems(policy + '\nPush notification token, if you enable notifications.').includes('claims a push token'), 'fail: a stray claim next to the denial is still caught');
 assert.ok(!policyRuleProblems(policy).includes('claims a push token'), 'pass: the denial sentence alone');
-assert.ok(policyRuleProblems('ATO has no direct messages between people. We collect your push token.').includes('claims a push token'), 'fail: a push-token claim without the denial');
-ok('privacy policy (app + landing) describes Circle, AI, Divecore and notifications as built; no chat, no mute; pass/fail pairs');
+assert.ok(policyRuleProblems('We collect your push token.').includes('claims a push token'), 'fail: a push-token claim without the denial');
+assert.ok(policyRuleProblems(policy + '\nATO has no direct messages between people.').some((p) => p.startsWith('still says')), 'fail: the stale no-chat line');
+assert.ok(policyRuleProblems(policy.replace(/for 30 days, then deletes it/g, 'for a while')).includes('missing: 30-day chat retention'), 'fail: retention dropped');
+assert.ok(policyRuleProblems(policy.replace(/up to 5 before it/g, 'some context')).includes('missing: what a chat report sends'), 'fail: report scope dropped');
+ok('privacy policy (app + landing) describes Circle, chat (E2E, 30 days, reports), AI, Divecore and notifications as built; no mute; pass/fail pairs');
 
 // The Linked column of the label table matches app.json for every type.
 export function labelLinked(doc: string, type: string): boolean | null {
@@ -164,7 +171,7 @@ export function labelLinked(doc: string, type: string): boolean | null {
 }
 const APPLE_NAME: Record<string, string> = {
   EmailAddress: 'Email Address', Name: 'Name', DateOfBirth: 'Date of Birth', UserID: 'User ID',
-  OtherUserContent: 'Other User Content', CustomerSupport: 'Customer Support', ProductInteraction: 'Product Interaction',
+  OtherUserContent: 'Other User Content', EmailsOrTextMessages: 'Emails or Text Messages', CustomerSupport: 'Customer Support', ProductInteraction: 'Product Interaction',
   OtherUsageData: 'Other Usage Data', CrashData: 'Crash Data', OtherDiagnosticData: 'Other Diagnostic Data', DeviceID: 'Device ID',
 };
 for (const t of manifests.NSPrivacyCollectedDataTypes) {
@@ -174,7 +181,7 @@ for (const t of manifests.NSPrivacyCollectedDataTypes) {
 assert.equal(labelLinked('| Crash Data | Yes | Linked | No |', 'Crash Data'), true, 'pair: Linked');
 assert.equal(labelLinked('| Crash Data | Yes | Not linked | No |', 'Crash Data'), false, 'pair: Not linked');
 assert.equal(labelLinked('| Crash Data | Yes |', 'Device ID'), null, 'pair: missing row');
-ok('label table Linked column matches app.json for all 11 types');
+ok('label table Linked column matches app.json for all 12 types');
 
 // M8 (Step 10): Privacy + Terms links on sign-up and on You, opening the landing pages.
 {

@@ -124,3 +124,38 @@ No screenshots exist in the repo. Capture these 6, light mode, no personal data,
 | DEMO | Apple demo account created with an 18+ birthday | emci | open |
 | D8 | Gemini key rotation | emci | recorded as rotated (master plan line 166, 2026-10-20/21); confirm and delete the line in `.env.local` |
 | D13 | Drop `play_dev_logs` (small migration) | emci OK needed | open, not a blocker if you accept it |
+
+## 9. Version 1.1 (Circle chat, master plan Step 14): what changes on the day 1.1 is submitted
+
+Sections 1-8 describe **the 1.0 commit** (build 1.0 from that commit or its tag: after Step 14 is merged, `app.json` on the
+branch says 1.1.0, `ITSAppUsesNonExemptEncryption = true` and 12 privacy types, so §3 line "already matches" and §4 hold only
+for the 1.0 commit). Change these in ASC only when you submit the 1.1 build (it is a new store build:
+`runtimeVersion` 1.1.0, new native module `react-native-libsodium`; an OTA can never deliver it to 1.0 phones).
+
+| Where in ASC | 1.0 answer | 1.1 answer |
+|---|---|---|
+| Age rating: User-generated content | Yes (names, handles, requests, reports) | Yes, plus 1:1 chat between accepted friends |
+| Messaging / chat between users | No | Yes |
+| Export compliance | `ITSAppUsesNonExemptEncryption = false` | `ITSAppUsesNonExemptEncryption = true` (set in `app.json`) |
+| App Privacy | 11 types | add **Emails or Text Messages** (Linked, App Functionality); copy from `src/app/legal/app-privacy-labels.md` |
+| Version / What's New | 1.0.0 / "First release." | 1.1.0 / "Message friends in your Circle. End-to-end encrypted." |
+| Screenshot 4 | Circle ⋯ menu | Circle ⋯ menu showing Message, or a chat thread (demo text only) |
+
+**Export compliance (1.1).** ATO now encrypts chat itself with libsodium (X25519 + XSalsa20-Poly1305, standard published
+algorithms). When ASC asks after upload: "Does your app use encryption?" Yes. "Does it qualify for an exemption?" Choose the
+answer for **standard encryption algorithms** (not proprietary, not Apple-OS-only); this is the mass-market case, so no
+documents are uploaded. [CONFIRM with the lawyer (D12): whether a France encryption declaration is needed if ATO is
+offered in France, and whether a US annual self-classification report applies. Not legal advice.]
+
+**UGC safeguards to add to the 1.1 review notes:**
+- Chat is only between accepted friends who have not blocked each other (checked on the server for every read and send).
+- Report on any received message (long-press, six fixed reasons): the reporter's phone sends that message + up to 5 before it.
+- Block from the chat header (silent). On-phone filter hides slurs and explicit sexual words behind "Tap to show" and asks
+  for a second tap before sending one.
+- Moderation: reports are read daily by the developer (24 h target); ladder warn → chat off → ban (`admin_chat_restrict`,
+  root only; a ban also uses the Supabase Auth ban). Messages auto-delete after 30 days.
+
+Review-notes line to replace for 1.1: "There is no chat or messaging between people." → "Friends can message each other
+one to one (⋯ → Message). Chat is end-to-end encrypted; long-press a received message to report it."
+Demo account (1.1): the demo friend must open chat once (it publishes their key) and send one message, so the reviewer
+sees a thread.

@@ -41,6 +41,7 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-libsodium": "1.7.0",
     "react-native-qrcode-svg": "^6.3.21",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
@@ -214,7 +215,7 @@
     "check:you-restored": "tsx ./scripts/you-restored-check.ts",
     "check:wave78": "tsx ./scripts/wave78-check.ts",
     "check:wave49": "tsx ./scripts/wave49-check.ts",
-  "check:wave50": "tsx ./scripts/wave50-check.ts",
+    "check:wave50": "tsx ./scripts/wave50-check.ts",
     "check:wave51": "tsx ./scripts/wave51-check.ts",
     "check:wave52": "tsx ./scripts/wave52-check.ts",
     "check:ato-tokens": "tsx ./scripts/ato-tokens-check.ts",
@@ -275,6 +276,7 @@
     "check:no-sage-copy": "tsx ./scripts/no-sage-copy-check.ts",
     "check:insights-no-ai": "tsx ./scripts/insights-no-ai-check.ts",
     "check:helpline-row": "tsx ./scripts/helpline-row-check.ts",
+    "check:circle-chat": "tsx ./scripts/circle-chat-check.ts",
     "check:style-rules": "tsx ./scripts/style-rules-check.ts",
     "check:no-crisis-reads": "tsx ./scripts/no-crisis-reads-check.ts",
     "check:tab-rename": "tsx ./scripts/tab-rename-check.ts",
@@ -299,5 +301,8 @@
     "pixellab:watch": "tsx ./scripts/pixellab-watch.ts",
     "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts"
   },
-  "private": true
+  "private": true,
+  "allowScripts": {
+    "react-native-libsodium@1.7.0": true
+  }
 }

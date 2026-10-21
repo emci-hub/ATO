@@ -40,6 +40,11 @@ const NOT_LIVE = new Set([
   // Applied AFTER wave105 (master plan Step 10, deletion proof). Restates count_user_rows (service_role only)
   // and makes dev_access_grants.granted_by ON DELETE SET NULL; no app function. Pinned by check:delete-proof.
   'wave106_delete_proof.sql',
+  // Applied AFTER wave107 (master plan Step 14, Circle chat). Additive; its friend-facing functions
+  // (chat_set_key, chat_peer_key, chat_send, chat_thread, chat_report) start with require_adult(), pinned
+  // by scripts/circle-chat-check.ts. chat_my_status / chat_ack_warning only touch the caller's own row;
+  // admin_chat_restrict is root only.
+  'wave108_circle_chat.sql',
 ]);
 
 /** Apply order of the migrations that existed when wave101 was written (git history order). */
