@@ -1,0 +1,13 @@
+{
+  "tool": "pixellab",
+  "operator": "claude (Task B test animation)",
+  "createdAt": "2026-10-21",
+  "source": "art-src/pixellab/hero.kael.streetwear/migrated/raw/rotations/{south,east,north,west}.png (192x192)",
+  "character_id": "8106b2fd-8c60-45a3-b487-4ab328a9c275",
+  "import": {"tool": "create_character", "mode": "v3", "n_directions": 4, "direction_images": "east,north,west", "generations": 0.25},
+  "animation": {"tool": "animate_character", "mode": "template", "template_animation_id": "breathing-idle", "directions": ["south","east","north","west"], "frames": 4, "canvas": "192x192", "generations": 4, "group": "2e6b7930-37a6-43be-a9c1-8c22781cbe8d"},
+  "reduce_colors": {"palette_image": "docs/art/palette-streetwear-night.png", "calls": 4, "frames_per_call": 4, "generations": 0.4, "result": "reduced-streetwear-night/"},
+  "seed": null,
+  "picked": false,
+  "critique": {"score": null, "notes": "test clip, awaiting emci ok. Raw output matches Kael's colours; palette reduction shifts them (cool charcoal -> brown, red -> orange) because the current Kael Idle has 0 pixels in the palette."}
+}
