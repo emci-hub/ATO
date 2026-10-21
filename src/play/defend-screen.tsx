@@ -277,7 +277,7 @@ import {
 import { ELEMENT_COLOR, TOWER_KITS } from '@/play/kits';
 import { swordRuntime } from '@/play/swords';
 import { StatusIconRow, WeaknessDiamond } from '@/play/status-icon-row';
-import { statusIconsFor } from '@/play/status-icons';
+import { statusGlowColor, statusIconsFor } from '@/play/status-icons';
 import { countOnce } from '@/play/play-counters';
 import { TurfBuildCard, type TurfChoice } from '@/play/turf-build-card';
 import { padTapRadiusUnits, turfBoardRect, turfBoardSide, wavePeekRect } from '@/play/turf-layout';
@@ -3943,6 +3943,7 @@ export function DefendScreen({
                     // Status icons above the health bar (stun, DoT with stack
                     // count, slow, shred) — none when the creep is unaffected.
                     const statusIcons = statusIconsFor(puff);
+                    const statusGlow = statusGlowColor(statusIcons);
                     // §19 board cast (skin roles): runners = fast unit, bosses =
                     // tanks/heavy by band, tanks = the heavy soak unit, normal
                     // puffs = the puff unit.
@@ -4066,6 +4067,10 @@ export function DefendScreen({
                          * shape, redrawn with the board like the health bar — no animation inside this SVG. */}
                         {street && puff.kind === 'boss' && enrageWarning(puff.hp, puff.maxHp, puff.burstHpPct, puff.burstFired) ? (
                           <Ellipse cx={x} cy={y} rx={spriteSize * 0.34} ry={spriteSize * 0.12} fill={BOSS_TELEGRAPHS.enrage.color} opacity={0.4} />
+                        ) : null}
+                        {/* Element look: a still glow in the status colour under a burning / chilled / stunned creep (display only, redrawn with the board). */}
+                        {street && statusGlow ? (
+                          <Ellipse cx={x} cy={y} rx={spriteSize * 0.3} ry={spriteSize * 0.1} fill={statusGlow} opacity={0.45} />
                         ) : null}
                         <G transform={spriteTransform}>
                           {spriteDrawable ? (

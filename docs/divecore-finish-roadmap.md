@@ -252,7 +252,7 @@ still open (listed under "Open items" below).
 
 Nothing below blocks the next job; emci runs or accepts each.
 
-1. **Phone boxes open:** 43, 53, 54, 55, 56, 58. Box 58 is one full pass over the same ground but shorter than 53-56
+1. **Phone boxes: Box 58 PASSED (emci, 2026-10-21), closing 43, 53, 54, 55, 56.** (Original note:) Box 58 is one full pass over the same ground but shorter than 53-56
    (it leaves out per-row detail such as Box 53's screen-reader label, Box 55's "kept tower stays free / no refund" and
    Box 56's per-icon match); emci can run 53-56 as written, or accept Box 58 as the shorter pass that closes them.
 2. **Locker icons not approved:** only emci sets `approved` (they are `resource` in the registry). The other two looks per
@@ -261,8 +261,10 @@ Nothing below blocks the next job; emci runs or accepts each.
 4. **Balance leftovers (step 6):** hero-tower kit spread is 1.59× (Archangel 1.13× … Morwen 1.80×); the Legends /
    affinity / stacked-boost sections of the sim still use the 2-hero-tower board; "Main 10" needs 2.13× on a fresh board
    (0.85× kept + helper).
-5. **Element look in Turf War** (auras are pet-only, chain bolts plain, burn/chill overlays unwired): raised in step 1,
-   not decided, not built.
+5. **Element look in Turf War** (emci chose code-only, 2026-10-21): **built** a still ground glow under stunned / burning /
+   chilled creeps (`statusGlowColor`, `src/play/status-icons.ts`; drawn in `defend-screen.tsx`, Streetwear only, display
+   only; pinned in `check:kits`); phone check pending. Chain bolts were already element-tinted. **Not built:** an
+   element-coloured hit flash and a Turf-scale tower/hero aura (pet auras don't fit; needs new PixelLab art).
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
    being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12
