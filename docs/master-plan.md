@@ -61,8 +61,8 @@ one phone pass; 8 + 9 run as one chat. Rows are in run order; numbers kept so ol
 | 7b | Circle option B: per-friend opt-in compare, shareable strengths only, consent copy names what friends see. No OTA (Release B) | Sonnet 5 (Opus reviewer) | [x] 2026-10-20: built; `wave105` APPLIED by emci 2026-10-20 (in Step 10, before wave106); UNCOMMITTED (see checklist) |
 | 8+9 | ONE chat: roadmap 4 (notification ask + accessibility + D10 date-row fix) and roadmap 5+6 (insight/Home polish, AI cleanup, dead callers, `sage-*` renames, the old "No framework names" prompt lines in `sage-title.ts:214` + `explore/prompt.ts:192`). No OTA (Release B) | Sonnet 5 | [x] 2026-10-20: built, UNCOMMITTED (see checklist) |
 | 10 | Roadmap step 7: privacy policy, labels, deletion proof; describes Circle A+B as built. No OTA (Release B) | Opus 5 | [x] 2026-10-20: built; `wave105` + `wave106` APPLIED by emci; UNCOMMITTED (see checklist) |
-| RB | RELEASE B: pull, gate, ONE OTA for 7–10 + their migrations + one `gen:ai-library`/deploy if prompts changed (each needs my OK) | Sonnet 5 | ▶ |
-| 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60, 61, …) | Sonnet 5 | [ ] |
+| RB | RELEASE B: pull, gate, ONE OTA for 7–10 + their migrations + one `gen:ai-library`/deploy if prompts changed (each needs my OK) | Sonnet 5 | [x] 2026-10-20: 4 commits pushed (9f1fc02c Play, 2ea66d4f migrations, 39a6de47 app, e02916b5 docs/checks/legal); gate fully green (189 checks); no bundle regen needed; OTA published, production group `b9c891db-5587-46c0-bef4-2b1ddadd5d06` (iOS `01a15bd8-13f4-7714-9027-8504894d9915`, Android `01a15bd8-13f4-757c-9a5e-7f6b299c6349`), git e02916b5. Phone not checked |
+| 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60-65) | Sonnet 5 | ▶ |
 | 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | [ ] |
 | 13 | Roadmap step 10: production build + store submission | Sonnet 5 | [ ] |
 | 14 | Circle option C (LAST, emci 2026-10-20): end-to-end encrypted 1:1 chat (Signal-style: libsodium keys per phone, reporter's phone sends reported messages, on-phone filter, block reuses step 7). Needs: new native dependency OK, a new store build (not OTA), encryption export answer, emci owns daily report triage. Brief: `docs/circle-design.md` | Opus 5 | [ ] |
@@ -281,8 +281,8 @@ pages are not redeployed yet (OPEN-QUESTIONS 15). No OTA, nothing committed. A l
 - Public signup, no invite gate (launch flip). One chat per step. Plan + model per step.
 - Legal (Step 10, emci 2026-10-20): Privacy/Terms links open `https://ato.emgens.com/{privacy,terms}.html`; the legal text names
   Gemini + DeepSeek fallback; `dev_access_grants.granted_by` ON DELETE SET NULL (wave106). Legal text stays a lawyer draft.
-- Applied 2026-10-20 outside Release B: `wave104`, `wave104b` (Step 7), `wave105`, `wave106` (Step 10). Release B has NO migration left
-  from steps 7-10; it is the OTA (+ redeploy the landing pages first, OPEN-QUESTIONS 15).
+- Applied 2026-10-20 outside Release B: `wave104`, `wave104b` (Step 7), `wave105`, `wave106` (Step 10). Release B had NO migration left
+  from steps 7-10; it was the OTA only, published 2026-10-20 (group `b9c891db`). Landing pages redeployed first (emci confirmed).
 
 ## Ledger B: APPLIED 2026-10-20 (Step 6). Every migration below is now live; the bundle is deployed; the OTA is published.
 
