@@ -1031,6 +1031,9 @@ export type PlayStoreDoc = {
   hero_gear: Record<string, Partial<Record<ItemSlot, ItemRef>>>;
   /** P6: the one-time move of the old per-Legend loadouts into `hero_gear` has run (`foldGearIntoHeroes`). */
   gear_moved: boolean;
+  /** Launch flip (2026-10-20): the one-time clean slate has run (`launchCleanSlate`): owned heroes, auras and
+   * finishes from the free pre-launch build are gone. A fresh save starts true. Additive v33 field. */
+  launch_reset: boolean;
   /** P6: the hero the Locker is dressing ('' or unowned = the leader). */
   locker_hero_id: string;
   /** One-shot "you own a hero" offer awaiting the player's decision (v18,
@@ -1518,6 +1521,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     turf_helpers: [],
     hero_gear: {},
     gear_moved: true,
+    launch_reset: true,
     locker_hero_id: '',
     hero_offer: null,
     pet: newPet(now),
@@ -3837,8 +3841,8 @@ export function recordDefendWin(
   // hero — Main w5 (Scout) → Oni, Main w10 (Final) → Archangel — and queues the
   // one-shot "owned" offer. Replays never grant (the farm lane must not re-own
   // or re-offer), and `ownHero` is idempotent, so a re-clear of an owned band
-  // stays silent. Product lock: the Final band is fightable free; the Premium
-  // gate on USING it as Avatar/Bound Boss is TODO(A5) inside `ownHero`.
+  // stays silent. Product lock: the Final band is fightable free; at launch
+  // there is no Premium gate (see `ownHero`).
   let ownedHeroIds = doc.owned_hero_ids;
   let heroOffer = doc.hero_offer;
   let heroOwned: DefendWinResult['heroOwned'] = null;
@@ -4374,9 +4378,9 @@ export function foldGearIntoHeroes(doc: PlayStoreDoc): PlayStoreDoc {
  * sheet shows ("Archangel owned" → Set as Avatar / Bind as tower).
  *
  * Economy assumption (locked product call): the Final band grants Archangel and
- * the Scout band grants Oni for FREE on a campaign clear. TODO(A5): the Premium
- * gate — owning Final as Avatar/Bound Boss is gated per the existing economy —
- * belongs here, so when the paywall lands this becomes the one place to check.
+ * the Scout band grants Oni for FREE on a campaign clear. Launch (emci
+ * 2026-10-20): no purchase path; heroes come only from eggs and band clears.
+ * If a paywall ever lands, this is the one place to check it.
  */
 export function ownHero(
   doc: PlayStoreDoc,
@@ -6196,6 +6200,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       turf_helpers: parseTurfHelpers(data.turf_helpers),
       hero_gear: parseHeroGear(data.hero_gear),
       gear_moved: data.gear_moved === true,
+      launch_reset: data.launch_reset === true,
       locker_hero_id: typeof data.locker_hero_id === 'string' ? data.locker_hero_id : '',
       hero_offer: heroOffer,
       pet: den.pet,
@@ -6722,6 +6727,32 @@ function airportFree(doc: PlayStoreDoc): PlayStoreDoc {
 }
 
 /**
+ * Launch flip clean slate (emci, clean-slate policy: no grandfathering). Once per save, the first
+ * time it loads with `PLAY_EVERYTHING_FREE` off: owned heroes back to the starter (pets hatched
+ * from eggs keep their heroes, `heroOwned` reads the pet book), hero bindings to unowned heroes
+ * dropped, the Avatar hero falls back to the starter if it is no longer owned, and every aura and
+ * finish (owned, mixes, and what pets wear) is cleared. Tokens and everything else stay.
+ * Idempotent through `launch_reset`; an old save restored from the cloud runs it on load too.
+ */
+export function launchCleanSlate(doc: PlayStoreDoc): PlayStoreDoc {
+  if (PLAY_EVERYTHING_FREE || doc.launch_reset) return doc;
+  const bare = (pet: PetState): PetState => ({ ...pet, finish_kind: 'none', finish_color: null, auras: [] });
+  const heroes = { ...doc, owned_hero_ids: [DEFAULT_AVATAR_HERO_ID] };
+  return {
+    ...heroes,
+    active_avatar_hero_id: heroOwned(heroes, doc.active_avatar_hero_id) ? doc.active_avatar_hero_id : DEFAULT_AVATAR_HERO_ID,
+    bound_bosses: doc.bound_bosses.filter((record) => heroById(record.id) == null || heroOwned(heroes, record.id)),
+    hero_offer: null,
+    aura_owned: [],
+    aura_mixes: [],
+    finish_wallet: emptyFinishWallet(),
+    pet: bare(doc.pet),
+    pet_den: doc.pet_den.map(bare),
+    launch_reset: true,
+  };
+}
+
+/**
  * Load the persisted doc, falling back to (and persisting) a fresh default so
  * offline timers are anchored even on a first open before any Claim.
  */
@@ -6730,7 +6761,11 @@ export async function loadPlayStore(now: number = Date.now()): Promise<PlayStore
     const raw = await AsyncStorage.getItem(PLAY_STORE_KEY);
     if (raw) {
       const parsed = parsePlayStore(raw, now);
-      if (parsed) return airportFree(parsed);
+      if (parsed) {
+        const reset = launchCleanSlate(parsed);
+        if (reset !== parsed) savePlayStore(reset).catch(() => {});
+        return airportFree(reset);
+      }
     }
   } catch {
     // Fall through to a fresh default below.
