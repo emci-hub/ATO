@@ -612,6 +612,10 @@ One flag controls all of these: `PRE_LAUNCH_DEV` in `src/lib/dev-mode.ts`. **`np
 
 ## Decisions log
 
+- 2026-10-21 Release C DONE (row 15 ticked): 1.1 build on TestFlight, Box 69 A-E all pass (emci). Left for emci: ASC changes from
+  `app-store-pack.md` §9 (chat/messaging Yes, export compliance yes + standard algorithms, add Emails or Text Messages, What's New,
+  screenshot 4, review-notes line, demo friend sends one message) and submit 1.1; D12 lawyer read on encryption export. D19 later.
+
 - 2026-10-21 Release C (row 15) in progress: PR #81 merged to master (f2fd6b0f, tag `v1.0.0` pushed); `wave108_circle_chat.sql` +
   `wave109_blocks_blocker_only.sql` (D18) applied by emci and verified read-only with `docs/release-c-verify.sql` (8/8 true, incl.
   the `chat-retention-30d` cron). Left: EAS 1.1 production build (emci), TestFlight, Box 69, ASC changes from `app-store-pack.md` §9,

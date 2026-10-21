@@ -1014,8 +1014,8 @@ one phone + one simulator on the 1.1 dev build), two accounts that are Circle fr
 
 | Part | pass / fix | Screen + what you saw |
 |---|---|---|
-| A Open + send | | |
-| B Filter | | |
-| C Report + ladder | | |
-| D Block | | |
-| E Edge cases | | |
+| A Open + send | pass | emci 2026-10-21, 1.1 TestFlight |
+| B Filter | pass | |
+| C Report + ladder | pass | |
+| D Block | pass | |
+| E Edge cases | pass | |
