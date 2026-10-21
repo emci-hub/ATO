@@ -35,11 +35,11 @@ function read(rel: string): string {
 
 const sage = read('src/app/(tabs)/insights.tsx');
 
-// The Sage tab is gone; /sage is kept only as a redirect to Insights.
+// The Sage tab and the /sage route are gone (old links: check:tab-rename).
 assert.ok(!existsSync(resolve(root, 'src/app/(tabs)/sage.tsx')), 'the Sage tab route is deleted');
-assert.match(read('src/app/sage.tsx'), /<Redirect href="\/insights" \/>/);
+assert.ok(!existsSync(resolve(root, 'src/app/sage.tsx')), 'the /sage redirect route is deleted (launch flip)');
 assert.match(sage, /export default function InsightsScreen/);
-ok('the Sage tab is gone; /sage redirects to the Insights screen');
+ok('the Sage tab and /sage route are gone; Insights is the screen');
 
 // The deleted lane must stay deleted. Each of these is a real file that no
 // longer exists; an import of any of them would not compile, but asserting it

@@ -18,6 +18,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { PRE_LAUNCH_DEV } from '../src/lib/dev-mode';
 import {
   PREVIEW_BLOCKED_CODE,
   PREVIEW_EMPTY_TABLES,
@@ -108,6 +109,14 @@ async function runFetch(): Promise<void> {
   assert.equal(calls.length, 1, 'preview off: the request goes out untouched');
 
   setPreviewState(true, 'u1');
+  if (!PRE_LAUNCH_DEV) {
+    // Release build (launch flip, 2026-10-20): turning preview on does nothing.
+    assert.equal(isPreviewing(), false, 'release build: preview can never be on');
+    await wrapped(`${BASE}/rest/v1/rpc/insert_daily_insight`, { method: 'POST' });
+    assert.equal(calls.length, 2, 'release build: the wrapper never intercepts');
+    setPreviewState(false, null);
+    return;
+  }
   assert.equal(isPreviewing(), true, 'pre-launch build: preview can be on');
   const blocked = await wrapped(`${BASE}/rest/v1/rpc/insert_daily_insight`, { method: 'POST' });
   assert.equal(calls.length, 1, 'preview on: the write never leaves the phone');

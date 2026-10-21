@@ -894,3 +894,39 @@ If it stops at `complete_signup` with an invite error, tell me (signup needs an 
 | G Delete | | |
 
 Boxes 60-65 are marked PASSED when Parts A-G pass; each "fix" becomes a new step in `docs/master-plan.md`.
+
+**Box 66 result (emci, 2026-10-20): Parts A-G all pass. Boxes 60-65 PASSED.**
+
+## Box 67 — Launch flip (master-plan Step 12, 2026-10-20)
+
+About 15 min, after the launch-flip OTA. Force-quit and reopen the app twice first (an OTA applies on the second open).
+
+**Report back in ONE message:** a line per part (A-C): `pass`, or `fix` + the screen + what you saw.
+
+### Part A — No dev tools (your own account)
+
+- [ ] **A1** Look at every tab. → No DEV bubble anywhere, no dev links on Home, no test-persona strip on Legends.
+- [ ] **A2** You → tap the Build line 5 times. → Nothing opens (no AI lab).
+- [ ] **A3** Open the Dev Hub the way you usually do. → Only the Admin group shows (you are root); no testing groups, no Jump this account, no Reset account.
+
+### Part B — Divecore, real economy
+
+- [ ] **B1** Open Divecore (Hideout). → It opens (it is no longer behind the dev switch).
+- [ ] **B2** Hero list. → Only Corvus is owned, plus any hero you hatched as a pet from an egg. The rest show as locked.
+- [ ] **B3** Auras and finishes on your pet. → None worn and none owned; each shows its token price instead of free.
+- [ ] **B4** Tokens. → Same count as before the update.
+- [ ] **B5** Force-quit and reopen Divecore. → Still only Corvus (the reset ran once and stays; it does not re-run on later opens).
+
+### Part C — After emci runs the wave80 + public-signup SQL
+
+- [ ] **C1** Answer 2 questions on Explore. → Both save; Insights and the profile still update.
+- [ ] **C2** Sign out. Start a new sign-up with a throwaway email. → No invite-code field; sign-up goes through (birthday 18+).
+- [ ] **C3** On that new account open Divecore. → Only Corvus; no dev tools anywhere. Then delete the account (You → Delete account).
+
+### Results (fill in)
+
+| Part | pass / fix | Screen + what you saw |
+|---|---|---|
+| A No dev tools | | |
+| B Divecore economy | | |
+| C After the SQL | | |

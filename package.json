@@ -141,6 +141,7 @@
     "check:circle-compare": "tsx ./scripts/circle-compare-check.ts",
     "art:bake-stickers": "tsx ./scripts/art-bake-visitor-stickers.ts",
     "check:auras": "tsx ./scripts/check-auras.ts",
+    "check:launch-clean-slate": "tsx ./scripts/check-launch-clean-slate.ts",
     "check:streetwear-assets": "tsx ./scripts/check-streetwear-assets.ts",
     "check:streetwear-walk": "tsx ./scripts/check-streetwear-walk.ts",
     "check:play-save": "tsx ./scripts/check-play-save.ts",

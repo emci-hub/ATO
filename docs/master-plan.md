@@ -62,8 +62,8 @@ one phone pass; 8 + 9 run as one chat. Rows are in run order; numbers kept so ol
 | 8+9 | ONE chat: roadmap 4 (notification ask + accessibility + D10 date-row fix) and roadmap 5+6 (insight/Home polish, AI cleanup, dead callers, `sage-*` renames, the old "No framework names" prompt lines in `sage-title.ts:214` + `explore/prompt.ts:192`). No OTA (Release B) | Sonnet 5 | [x] 2026-10-20: built, UNCOMMITTED (see checklist) |
 | 10 | Roadmap step 7: privacy policy, labels, deletion proof; describes Circle A+B as built. No OTA (Release B) | Opus 5 | [x] 2026-10-20: built; `wave105` + `wave106` APPLIED by emci; UNCOMMITTED (see checklist) |
 | RB | RELEASE B: pull, gate, ONE OTA for 7–10 + their migrations + one `gen:ai-library`/deploy if prompts changed (each needs my OK) | Sonnet 5 | [x] 2026-10-20: 4 commits pushed (9f1fc02c Play, 2ea66d4f migrations, 39a6de47 app, e02916b5 docs/checks/legal); gate fully green (189 checks); no bundle regen needed; OTA published, production group `b9c891db-5587-46c0-bef4-2b1ddadd5d06` (iOS `01a15bd8-13f4-7714-9027-8504894d9915`, Android `01a15bd8-13f4-757c-9a5e-7f6b299c6349`), git e02916b5. Phone not checked |
-| 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60-65) | Sonnet 5 | [x] 2026-10-20: Box 66 written (pre-step + Parts A-G + results table); the phone pass itself is NOT run yet (emci) |
-| 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | ▶ (start only after emci reports Box 66 results; any "fix" becomes its own step first) |
+| 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60-65) | Sonnet 5 | [x] 2026-10-20: Box 66 written (pre-step + Parts A-G + results table); phone pass run by emci 2026-10-20: A-G all pass, no fixes |
+| 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | ▶ [~] 2026-10-20: half (a) BUILT + reviewed, UNCOMMITTED. Waiting on emci, in order: commit + push → OTA → phones on it → SQL (wave80, wave107) → Box 67 (see checklist) |
 | 13 | Roadmap step 10: production build + store submission | Sonnet 5 | [ ] |
 | 14 | Circle option C (LAST, emci 2026-10-20): end-to-end encrypted 1:1 chat (Signal-style: libsodium keys per phone, reporter's phone sends reported messages, on-phone filter, block reuses step 7). Needs: new native dependency OK, a new store build (not OTA), encryption export answer, emci owns daily report triage. Brief: `docs/circle-design.md` | Opus 5 | [ ] |
 
@@ -253,6 +253,30 @@ see, accessibility, delete a throwaway last), each tap with an expected result, 
 (Boxes 60-65 kept as detail, not deleted) [x] every item of Boxes 60-65 is in Box 66 (self-check; the unchanged "earlier-day label / widget /
 7th-day +10" line is marked optional, B9) [x] docs only: no code, no gate, no reviewer. NOT done: the phone pass and the delete-check run
 (emci). Note: the delete check needs `ATO_INVITE_CODE` in `.env.local` if signup is invite-only (agent never edits env).
+Phone pass: emci 2026-10-20, Parts A-G all pass, no fixes.
+
+**12.** [x] Box 66 all pass (no fix steps) [x] plan approved by me (approvals A-E; still ask before commit, OTA, SQL) [x] `play` route
+out of the `PRE_LAUNCH_DEV` guard, under the age guard only (`_layout.tsx`), pinned by 3 new `check:release-mode` pins [x]
+`PRE_LAUNCH_DEV = false` (`dev-mode.ts`); `RELEASE_MODE=1 npm run check:release-mode` = 47 pass [x] hero clean slate ON THE PHONE,
+no server change: `launchCleanSlate` + additive v33 `launch_reset` in `src/play/playStore.ts`, once per save on load: owned heroes →
+Corvus (pets hatched from eggs keep theirs via `heroOwned`), Avatar hero → Corvus unless still owned, hero bindings to unowned heroes
+dropped, no offer, every aura/finish owned + worn cleared; tokens kept; fresh saves start true; an old cloud save resets when it loads;
+new `check:launch-clean-slate` (7 pass) [x] Premium TODO(A5) closed: no purchase path at launch, heroes from eggs + band clears (no
+screen text mentions buying, so no copy change) [x] `src/app/sage.tsx` deleted (cold-start `/sage` still → /insights via
+`legacyRedirect`); `check:tab-rename` + `check:sage-load` pin it gone [ ] `ai-generate` delete DEFERRED: `src/lib/ai/edge.ts:24` still
+invokes it and `check:ai-provider` pins the 410 stub; deleting needs the client path removed first (its own small step, or never) [x]
+old PROJECT_CONTEXT pre-launch checklist: items 2-4, 6-9, 11, 13 are covered by the flag or already gone (Dawn trace, draft badge, crisis
+preview no longer exist); left for emci: 12 (rotate QA invite code, dev-test password, `DEV_UNLOCK_PASSWORD`), 14 (drop
+`play_dev_logs`, deletes rows, needs OK) [x] checks rewritten to the flag-off rule, none weakened: `age` (layout regex), `auras`
+(fixture tokens 1000→2000, prices unchanged), `preview-mode` (flag off = preview can never be on, wrapper untouched) [x] wave80 safe:
+no client code writes trait tables or calls `answer_question_item`; wave80 runs after wave101 so its revoke wins [x]
+`wave107_signup_public.sql` written (one config row; NOT applied) [x] gate run once: only `play-isolation` (expected: commit
+`src/play/playStore.ts` + `scripts/check-auras.ts` alone); typecheck clean, lint 0 errors [x] Opus reviewer PASS, no criticals
+[x] Box 67 written. One comment edit in `scripts/prod-you-check.ts` (stale "invert before launch" note) was blocked by the harness;
+the check itself is correct as is (You loads no probe). Not verified: on a device. Open after OTA: SQL below, Box 67.
+**Half (b) SQL (emci, SQL editor, AFTER the OTA is on phones, in order):** 1. the whole of `supabase/migrations/wave80_trait_lock.sql`
+· 2. `supabase/migrations/wave107_signup_public.sql`. Dashboard (emci): Auth → "Leaked password protection" ON. Before step 2: rotate
+the QA override invite code, the dev-test password and `DEV_UNLOCK_PASSWORD`.
 
 ## Review ledger (a reviewer skips anything listed here unless those files changed afterward)
 
@@ -270,11 +294,16 @@ see, accessibility, delete a throwaway last), each tap with an expected result, 
 
 | 10 | `src/app/legal/*` (privacy, terms, labels), `landing/privacy.html` + `terms.html`, `docs/legal/OPEN-QUESTIONS.md`, `wave106_delete_proof.sql`, `delete-proof-check.ts`, `floor-check.ts`, `delete-account-check.ts`, `under18-server-check.ts` (NOT_LIVE), `legal-links.tsx`, `auth/index.tsx` + `you.tsx` (links only), Box 65 | PASS (Opus) | 5 fixed; open: live delete check not run, landing not redeployed, lawyer read |
 
-| 11 | `docs/ATO_DEVICE_TESTS.md` (Box 66 + pointer only) | n/a (docs only, self-checked against Boxes 60-65) | seed SQL unrun; phone pass pending |
+| 11 | `docs/ATO_DEVICE_TESTS.md` (Box 66 + pointer only) | n/a (docs only, self-checked against Boxes 60-65) | none: phone pass A-G passed 2026-10-20 |
+
+| 12 | `_layout.tsx`, `dev-mode.ts`, `sage.tsx` (deleted), `playStore.ts` (`launchCleanSlate`, `launch_reset`, TODO(A5) comments), `release-mode-check.ts`, `check-launch-clean-slate.ts`, `tab-rename-check.ts`, `sage-load-check.ts`, `age-check.ts`, `check-auras.ts`, `preview-mode-check.ts`, `wave107_signup_public.sql`, Box 67 | PASS (Opus) | reset reaches the cloud on the next change (restore re-runs it); an old-bundle phone re-grants free heroes until it takes the OTA; gear left on unowned heroes (Locker can still remove it); preview wrapper blocking untested while the flag is off |
 
 ## Ledger A: settled decisions (never re-ask)
 
-- Release B is live but NOT phone-checked until Box 66 is reported (emci runs it; Step 12 waits for the result).
+- Release B is live and phone-checked: Box 66 Parts A-G all pass (emci, 2026-10-20), no fix steps.
+- Launch flip (Step 12, emci 2026-10-20): one OTA with the flag off + route fix + clean slate, then wave80 + public signup by SQL;
+  no minimum-app-version gate (risk accepted: ~9 accounts, OTA on second open); no hero purchase path at launch; clean slate runs on
+  the phone (no server rewrite of `play_saves`); `ai-generate` stays a 410 stub for now.
 
 - Content policy: `docs/copy-review-rules.md` (clarity, accuracy, honesty, adult humor; judge meaning not keywords; supported
   weaknesses allowed; strong swearing allowed; labels only blocked when pinned on the reader; tasks by action/consent/cost/
@@ -327,6 +356,8 @@ CATEGORY_DEEP_DIVE, LEGEND_FIGURES, STORY, STORY_BANK (+ dead: TITLE, CATEGORY_R
 | D9 | Apple-demo/review accounts need an 18+ birthday before wave101 | set before step 6 |
 | D10 | Web date row overflows at 375 px (`born-on-fields.tsx`); native not run | FIXED in step 8 (style only, `minWidth: 0`); check on a device in Box 64 |
 | D12 | Legal facts only you/a lawyer can answer (entity, AI vendor training/retention + DeepSeek, retention periods, kept reports, law, age rating, label categories, landing form, Kenney/PixelLab, public card with no hide switch): `docs/legal/OPEN-QUESTIONS.md` items 1-16 | answer before Step 13 (store submission); lawyer reads policy + terms |
+| D13 | Drop `public.play_dev_logs` (wave73 dev test results; deletes rows) before launch? | yes, one small migration after Step 12 |
+| D14 | Delete the `ai-generate` stub: needs `src/lib/ai/edge.ts` + `generateText` callers removed first | one small step after launch, or keep the 410 stub |
 | D11 | Rename the internal `sage-copy` / `sage-knows` / `sage-title` files (~40 importers, ~20 checks read them by path)? Invisible to users. | skip, or one codemod step after launch |
 
 ## Original roadmap steps still ahead

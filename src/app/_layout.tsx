@@ -125,14 +125,14 @@ function RootNavigator() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="week" />
               <Stack.Screen name="chat" />
-              {/* Old /sage links → /insights (Sage replaced 2026-10-14). */}
-              <Stack.Screen name="sage" />
               <Stack.Screen name="dev-lab" />
               <Stack.Screen name="ai-lab" />
             </Stack.Protected>
 
-            {/* Outer guard: PRE_LAUNCH_DEV never opens labs or Play (Divecore) to an age-gated account. */}
+            {/* Outer guard: labs and Play (Divecore) never open to an age-gated account. */}
             <Stack.Protected guard={!ageGated}>
+              {/* Play (Divecore) is on in every build (launch flip, emci 2026-10-20); pinned by check:release-mode. */}
+              <Stack.Screen name="play" />
               <Stack.Protected guard={PRE_LAUNCH_DEV}>
                 {/* Dev age-gate preview: synthetic fixtures only, no account read or write. */}
                 <Stack.Screen name="age-gate-lab" />
@@ -140,10 +140,6 @@ function RootNavigator() {
                 <Stack.Screen name="around-lab" />
                 <Stack.Screen name="pixel-lab" />
                 <Stack.Screen name="profile-card-lab" />
-                {/* Play (Grove) is an in-progress module, not a dev lab: it rides
-                    the same PRE_LAUNCH_DEV gate so it can never reach a public
-                    build until the module is finished and the gate is lifted. */}
-                <Stack.Screen name="play" />
               </Stack.Protected>
             </Stack.Protected>
           </Stack>

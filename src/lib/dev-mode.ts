@@ -8,11 +8,10 @@
  * (`DEV_TOOLS_AVAILABLE` below, `hubAccess` in lib/dev-access.ts). The only
  * thing left is the root-only Admin group, which the server enforces anyway.
  *
- * TODO(pre-launch): before `signup_mode` flips to `public`, set this to
- * `__DEV__` (or delete each feature). See PROJECT_CONTEXT.md "Pre-launch
- * re-gating checklist" for the full list of what this controls.
+ * Launch flip (master-plan Step 12, emci 2026-10-20): off. Local dev builds
+ * still get the dev tools through `__DEV__` in DEV_TOOLS_AVAILABLE.
  */
-export const PRE_LAUNCH_DEV = true;
+export const PRE_LAUNCH_DEV = false;
 
 /**
  * Whether dev tools exist in this build at all. False in a release build
@@ -23,9 +22,8 @@ export const PRE_LAUNCH_DEV = true;
 export const DEV_TOOLS_AVAILABLE = PRE_LAUNCH_DEV || (typeof __DEV__ !== 'undefined' && __DEV__);
 
 /**
- * Airport build — the Play loop ships with every hero FREE (owned on Play load,
- * no Premium gate) while the app is invite-only. Mirrors `PRE_LAUNCH_DEV`, so
- * it flips off at the same public-launch re-gate; a public build should never
- * hand out the whole hero roster for free.
+ * Airport build — the Play loop shipped with every hero FREE (owned on Play load)
+ * while the app was invite-only. Mirrors `PRE_LAUNCH_DEV`, so it is off since the
+ * launch flip; `launchCleanSlate` (playStore.ts) takes the free roster back once.
  */
 export const PLAY_EVERYTHING_FREE = PRE_LAUNCH_DEV;

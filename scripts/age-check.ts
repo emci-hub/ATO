@@ -344,7 +344,11 @@ function under18AccessBlock(under15BornOn: string) {
   assert.match(layout, /<Stack\.Protected guard=\{ageConfirm\}>\s*<Stack\.Screen name="confirm-age" \/>\s*<\/Stack\.Protected>/);
   assert.match(layout, /<Stack\.Protected guard=\{ageBlocked\}>\s*<Stack\.Screen name="under-18" \/>\s*<\/Stack\.Protected>/);
   assert.match(layout, /<Stack\.Protected guard=\{isAuthed && hasMe\}>\s*<Stack\.Screen name="\(tabs\)" \/>/);
-  assert.match(layout, /<Stack\.Protected guard=\{!ageGated\}>\s*<Stack\.Protected guard=\{PRE_LAUNCH_DEV\}>[\s\S]*name="age-gate-lab"[\s\S]*name="play"/);
+  // Launch flip (2026-10-20): Play sits under the age guard only; the labs stay under PRE_LAUNCH_DEV inside it.
+  assert.match(
+    layout,
+    /<Stack\.Protected guard=\{!ageGated\}>\s*(?:\{\/\*[^}]*\*\/\}\s*)?<Stack\.Screen name="play" \/>\s*<Stack\.Protected guard=\{PRE_LAUNCH_DEV\}>[\s\S]*?name="age-gate-lab"/,
+  );
   assert.match(layout, /\{isAuthed && hasMe \? <PushRuntime \/> : null\}/);
   assert.match(layout, /\{ageGated \? null : <AppDevFab \/>\}/);
   ok('layout: auth / onboarding unchanged, confirm-age and under-18 only when gated, tabs + labs + push + DEV closed');

@@ -68,18 +68,18 @@ assert.deepEqual(normalizeNavLayout({ slots: ['toString', 'constructor', 'sage']
 assert.deepEqual(normalizeNavLayout(null).slots, DEFAULT_NAV_LAYOUT.slots);
 ok('saved "sage" layouts migrate to "insights" on read and write, in place, once');
 
-// Old /sage links redirect.
+// Old /sage links redirect through the cold-start helper; the /sage route file
+// itself was dropped at the launch flip (2026-10-20).
 assert.ok(!existsSync(resolve(root, 'src/app/(tabs)/sage.tsx')), 'the Sage tab route is gone');
-const redirect = read('src/app/sage.tsx');
-assert.match(redirect, /<Redirect href="\/insights" \/>/);
-assert.match(read('src/app/_layout.tsx'), /<Stack\.Screen name="sage" \/>/);
+assert.ok(!existsSync(resolve(root, 'src/app/sage.tsx')), 'the /sage redirect route is gone (launch flip)');
+assert.doesNotMatch(read('src/app/_layout.tsx'), /<Stack\.Screen name="sage" \/>/);
 for (const path of ['sage', '/sage', '/sage/']) {
   assert.equal(legacyRedirect(path), '/insights', `${path} → /insights`);
 }
 assert.equal(legacyRedirect('/explore'), null);
 assert.equal(legacyRedirect('/sage-lab'), null);
 assert.ok(read('src/app/+native-intent.ts').includes('const moved = legacyRedirect(path);'), 'cold-start links use the helper');
-ok('/sage (route + cold-start deep link) redirects to /insights');
+ok('/sage (cold-start deep link) redirects to /insights; the route file is gone');
 
 // The bar draws Insights with a normal icon; no Sage icon, no Sage row in More.
 const tabs = read('src/components/app-tabs.tsx');
