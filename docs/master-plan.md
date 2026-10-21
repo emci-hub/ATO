@@ -63,8 +63,8 @@ one phone pass; 8 + 9 run as one chat. Rows are in run order; numbers kept so ol
 | 10 | Roadmap step 7: privacy policy, labels, deletion proof; describes Circle A+B as built. No OTA (Release B) | Opus 5 | [x] 2026-10-20: built; `wave105` + `wave106` APPLIED by emci; UNCOMMITTED (see checklist) |
 | RB | RELEASE B: pull, gate, ONE OTA for 7–10 + their migrations + one `gen:ai-library`/deploy if prompts changed (each needs my OK) | Sonnet 5 | [x] 2026-10-20: 4 commits pushed (9f1fc02c Play, 2ea66d4f migrations, 39a6de47 app, e02916b5 docs/checks/legal); gate fully green (189 checks); no bundle regen needed; OTA published, production group `b9c891db-5587-46c0-bef4-2b1ddadd5d06` (iOS `01a15bd8-13f4-7714-9027-8504894d9915`, Android `01a15bd8-13f4-757c-9a5e-7f6b299c6349`), git e02916b5. Phone not checked |
 | 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60-65) | Sonnet 5 | [x] 2026-10-20: Box 66 written (pre-step + Parts A-G + results table); phone pass run by emci 2026-10-20: A-G all pass, no fixes |
-| 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | ▶ [~] 2026-10-20: half (a) built, reviewed, pushed (5b6abd8b app, c690636c Play) and OTA PUBLISHED: production group `6307ece1-85fc-4e59-bc1f-7bb651356744` (iOS `01a15c5e-2147-7f25-8a2a-a256206dc68e`, Android `01a15c5e-2147-7300-818b-f3285e680f5d`), runtime 1.0.0, git c690636c. Left (emci): phones on it → rotations → SQL wave80 then wave107 → leaked-password switch → Box 67 |
-| 13 | Roadmap step 10: production build + store submission | Sonnet 5 | [ ] |
+| 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | [x] 2026-10-21: half (a) built, reviewed, pushed (5b6abd8b app, c690636c Play) and OTA PUBLISHED: production group `6307ece1-85fc-4e59-bc1f-7bb651356744` (iOS `01a15c5e-2147-7f25-8a2a-a256206dc68e`, Android `01a15c5e-2147-7300-818b-f3285e680f5d`), runtime 1.0.0, git c690636c. Half (b) by emci: rotations, wave80 + wave107 APPLIED, leaked-password switch, Box 67 passed; SQL verified read-only 2026-10-21 (see checklist) |
+| 13 | Roadmap step 10: production build + store submission | Sonnet 5 | ▶ [ ] |
 | 14 | Circle option C (LAST, emci 2026-10-20): end-to-end encrypted 1:1 chat (Signal-style: libsodium keys per phone, reporter's phone sends reported messages, on-phone filter, block reuses step 7). Needs: new native dependency OK, a new store build (not OTA), encryption export answer, emci owns daily report triage. Brief: `docs/circle-design.md` | Opus 5 | [ ] |
 
 ### Step checklists (done-criteria)
@@ -277,6 +277,12 @@ the check itself is correct as is (You loads no probe). Not verified: on a devic
 **Half (b) SQL (emci, SQL editor, AFTER the OTA is on phones, in order):** 1. the whole of `supabase/migrations/wave80_trait_lock.sql`
 · 2. `supabase/migrations/wave107_signup_public.sql`. Dashboard (emci): Auth → "Leaked password protection" ON. Before step 2: rotate
 the QA override invite code, the dev-test password and `DEV_UNLOCK_PASSWORD`.
+[x] half (b), emci 2026-10-21: rotations done, wave80 then wave107 applied, leaked-password protection ON, Box 67 A-C passed
+(emci: "Passed") [x] verified read-only on the live project 2026-10-21: `app_config.signup_mode = 'public'`; no anon/authenticated
+INSERT/UPDATE/DELETE grant on `trait_tracks` or `trait_history`; `answer_question_item` not executable by authenticated. (A
+first check the same day found neither file applied; emci re-ran both in the SQL editor.) Leftover, harmless: wave101's
+`trait_tracks_adult_insert/_update` + `trait_history_adult_insert` policies still exist but grant nothing without the table grant
+(D15).
 
 ## Review ledger (a reviewer skips anything listed here unless those files changed afterward)
 
@@ -304,6 +310,8 @@ the QA override invite code, the dev-test password and `DEV_UNLOCK_PASSWORD`.
 - Launch flip (Step 12, emci 2026-10-20): one OTA with the flag off + route fix + clean slate, then wave80 + public signup by SQL;
   no minimum-app-version gate (risk accepted: ~9 accounts, OTA on second open); no hero purchase path at launch; clean slate runs on
   the phone (no server rewrite of `play_saves`); `ai-generate` stays a 410 stub for now.
+- Launch flip is LIVE (2026-10-21): OTA `6307ece1`, wave80 trait lock + wave107 public sign-up applied and verified, Box 67 passed.
+  Dev reset RPCs that check `signup_mode` now refuse (on purpose).
 
 - Content policy: `docs/copy-review-rules.md` (clarity, accuracy, honesty, adult humor; judge meaning not keywords; supported
   weaknesses allowed; strong swearing allowed; labels only blocked when pinned on the reader; tasks by action/consent/cost/
@@ -358,6 +366,7 @@ CATEGORY_DEEP_DIVE, LEGEND_FIGURES, STORY, STORY_BANK (+ dead: TITLE, CATEGORY_R
 | D12 | Legal facts only you/a lawyer can answer (entity, AI vendor training/retention + DeepSeek, retention periods, kept reports, law, age rating, label categories, landing form, Kenney/PixelLab, public card with no hide switch): `docs/legal/OPEN-QUESTIONS.md` items 1-16 | answer before Step 13 (store submission); lawyer reads policy + terms |
 | D13 | Drop `public.play_dev_logs` (wave73 dev test results; deletes rows) before launch? | yes, one small migration after Step 12 |
 | D14 | Delete the `ai-generate` stub: needs `src/lib/ai/edge.ts` + `generateText` callers removed first | one small step after launch, or keep the 410 stub |
+| D15 | wave101's `*_adult_insert/_update` write policies on `trait_tracks`/`trait_history` outlived wave80 (inert: no client grant). Drop them? | yes, fold into the D13 cleanup migration after launch |
 | D11 | Rename the internal `sage-copy` / `sage-knows` / `sage-title` files (~40 importers, ~20 checks read them by path)? Invisible to users. | skip, or one codemod step after launch |
 
 ## Original roadmap steps still ahead
