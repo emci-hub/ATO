@@ -673,6 +673,8 @@ Report any "something I used to do now fails".
 ### When you are done
 Tell me which parts passed, plus anything that looked wrong with the screen name. If everything passed and you accept this as the shorter pass, Boxes 43, 53, 54, 55, 56 and 58 can all be marked PASSED, and I will also note whether the Locker icons are approved (or which ones you want swapped).
 
+> **Boxes 60-65 are covered by ONE pass: Box 66 (bottom of this file). Do Box 66; use 60-65 below only as detail/history.**
+
 ## Box 60 — The words you actually see (content review, master-plan Step 4, 2026-10-20) — DRAFT
 
 Run on your own phone AFTER the OTA and the `ai-library` bundle deploy (Release A). It is the short read-list: only copy a launch surface shows. Judge MEANING (docs/copy-review-rules.md): flag a specific confusing line, factual error, unsupported claim, verdict pinned on you, privacy exposure or harmful task, never a word or topic alone. Dark jokes, swearing and honest "you may…" weaknesses should be there. Full list with counts: `docs/copy-review-agent/step4-read-list.md`.
@@ -739,3 +741,156 @@ Run on Release B, iPhone. The landing pages at ato.emgens.com must be redeployed
 - [ ] **You tab:** the same two links sit under "Send feedback". They open the same pages. With VoiceOver on, each one is read as a link.
 - [ ] **Delete account, throwaway account only** (never root or a real tester): make a throwaway account, send one friend request to @atodev, then You → Delete account → type the phrase → confirm. The app returns to sign-in, and signing in again with that email starts a fresh sign-up. On @atodev, the pending request has disappeared.
 - [ ] **Delete proof (emci, SQL, after wave105 + wave106 are applied):** run `npm run check:delete-account` once with the seeded `ato-delete-check@example.com` (SQL in the script header). The last line says "All N delete-account checks passed" and `rows_remaining` is 0.
+
+## Box 66 — Release B, ONE phone pass (master-plan Step 11, 2026-10-20)
+
+Covers Boxes 60-65 in one sitting (about 45 min). Release B is live: OTA group `b9c891db-5587-46c0-bef4-2b1ddadd5d06`, git `e02916b5`. Everything is applied; nothing is pending. Judge words by MEANING (`docs/copy-review-rules.md`): say "fix" only for a specific confusing line, factual error, unsupported claim, a verdict pinned on you, or a privacy exposure. Dark jokes and honest "you may…" lines should be there.
+
+**Report back in ONE message:** a line per part (A-G): `pass`, or `fix` + the screen name + what you saw.
+
+### Before you start (laptop, about 5 min)
+
+**Pre-step 1: the live delete check** (proves the server delete leaves 0 rows, including the new Circle and AI-library tables).
+1. Open the Supabase SQL editor for the ATO project and paste this seed (it creates one throwaway login, `ato-delete-check@example.com`; safe to run twice):
+
+```sql
+begin;
+delete from auth.users
+where email = 'ato-delete-check@example.com'
+  and id <> 'a70d3e0e-4c00-4a1e-8c0d-0000000de1c4';
+
+insert into auth.users
+  (instance_id, id, aud, role, email, encrypted_password,
+   email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+   created_at, updated_at,
+   confirmation_token, recovery_token, email_change_token_new, email_change,
+   email_change_token_current, phone_change, phone_change_token,
+   reauthentication_token, email_change_confirm_status)
+values
+  ('00000000-0000-0000-0000-000000000000',
+   'a70d3e0e-4c00-4a1e-8c0d-0000000de1c4',
+   'authenticated', 'authenticated',
+   'ato-delete-check@example.com',
+   extensions.crypt('DeleteCheck-123!', extensions.gen_salt('bf')),
+   now(), '{"provider":"email","providers":["email"]}', '{}',
+   now(), now(),
+   '', '', '', '', '', '', '', '', 0)
+on conflict (id) do update
+  set encrypted_password = excluded.encrypted_password,
+      email_confirmed_at = coalesce(auth.users.email_confirmed_at, now()),
+      updated_at = now();
+
+insert into auth.identities
+  (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+select id::text, id,
+       jsonb_build_object('sub', id::text, 'email', 'ato-delete-check@example.com'),
+       'email', now(), now(), now()
+from auth.users
+where id = 'a70d3e0e-4c00-4a1e-8c0d-0000000de1c4'
+on conflict (provider, provider_id) do update
+  set identity_data = excluded.identity_data,
+      updated_at = now();
+commit;
+```
+
+Expected: "Success. No rows returned." If the SQL editor complains about `extensions.crypt`, change it to `crypt(` and `gen_salt(` (the wave31 seed does that).
+
+2. In a terminal in the repo, run:
+
+```bash
+npm run check:delete-account
+```
+
+Expected: a list of ticks ending with "All N delete-account checks passed", and the delete line shows `rows_remaining: 0`.
+If it stops at `complete_signup` with an invite error, tell me (signup needs an invite code in `.env.local` as `ATO_INVITE_CODE`; I never edit that file). Anything else: paste the failing line to me. Don't retry in a loop.
+
+**Pre-step 2: accounts and phone.**
+- Phone on the Release B update: force-quit the app, reopen, wait 10 s, force-quit and reopen once more (an OTA applies on the second open).
+- Your own account (A) signed in on the phone. A second account `atodev2` (B) on a second phone, or sign out/in on the same phone when a step says "switch to B". Never a real tester's account.
+- One throwaway account (C) for Part G (made in Part A).
+- A fresh install for the notification ask (Part B): delete the app and reinstall, or use Settings → ATO → Notifications = "not determined". If you can't, skip B4-B5 and say so.
+
+### Part A — Sign-up, links, name filter, date row (sign out first)
+
+- [ ] **A1** On the sign-up screen (small phone if you have one), find "Privacy Policy · Terms of Service" under "Already have an account? Log in". → Two links, on one line, not cut off.
+- [ ] **A2** Tap Privacy Policy. → Browser opens `ato.emgens.com/privacy.html`; it mentions Circle, block/report and "no direct messages between people", and says nothing about mute. Go back.
+- [ ] **A3** Tap Terms of Service. → Opens `ato.emgens.com/terms.html`, new text. Go back.
+- [ ] **A4** Look at the birthday row (year / month / day). → All three sit on one line inside the card; nothing runs off the right edge.
+- [ ] **A5** Start a throwaway sign-up (account C). Type the handle `atosupport`. → "That one isn't available. Pick another." Then a swear-word handle is allowed. Finish the sign-up with a normal handle (use birthday 18+).
+- [ ] **A6** Answer the first few onboarding fields. → Fields have no overlap; Continue works.
+
+### Part B — Insight, notification ask, check-in line (use account C, then A)
+
+- [ ] **B1** Insights tab → **Load insight**. → The Focus · try · watch card appears. A weakness line says "you may…" with one small step, and tells you something true, not a diagnosis. Keep / fix.
+- [ ] **B2** Cold-start check: before the first insight, no system notification dialog appeared at launch. → None.
+- [ ] **B3** Right after the FIRST insight loads, a small sheet appears: "Want a nudge now and then?" with **Turn on** and **Not now**. → Read the two lines: keep / fix.
+- [ ] **B4** On account C tap **Not now**. → Sheet closes, no iOS dialog. Load another insight and restart the app. → The sheet never comes back.
+- [ ] **B5** On a second fresh account/install tap **Turn on**. → The iOS permission dialog opens; Allow. No sheet again. Settings → ATO → Notifications is on.
+- [ ] **B6** Airplane mode on, tap Load insight again. → "Couldn't load it just now — tap to try again." Airplane mode off, tap. → It loads. (On a very slow connection the skeleton gives up in about 10 s with a retry.)
+- [ ] **B7** Read the check-in line. → "N of 7 check-ins toward your next bonus · the 7th pays +N." Never "0 of 7".
+- [ ] **B9** (only if you have time, it is unchanged since before Release B) Earlier-day label, the widget try line / private line, and the 7th-day +10 payout: as in `docs/ato-finish-roadmap.md` step 5. Skip and say "skipped" if not.
+- [ ] **B8** On account A, open the insight on 3 different days (or 3 accounts). → Each reads clearly. Keep / fix.
+
+### Part C — Circle: requests, block, report (A and B; Divecore → Hideout → Circle, star button)
+
+- [ ] **C1** On A, Add by handle: type `atodev2`, send. → Request sent. On B, Circle → Requests shows A. Nothing shared yet.
+- [ ] **C2** On B, **Accept**. → Both see each other in the friend list.
+- [ ] **C3** On A, add a handle that doesn't exist, then add yourself, then add `atodev2` again. → One short line each ("No one with that handle." etc.); no crash.
+- [ ] **C4** Read the Circle lines (requests, report reasons, block/remove, errors, support line). → Keep / fix each (`CIRCLE_UI`, `src/play/circle-visits.ts`).
+- [ ] **C5** On A, ⋯ next to B → **Report**. → Reached in two taps; pick a reason; "Thanks. We read every report."
+- [ ] **C6** On A, ⋯ → **Block**. First tap says "Tap again to block @…"; second tap blocks. → B disappears from A's list. On B, A is gone too, B cannot find A by handle, and visits and gifts stop.
+- [ ] **C7** On A, Blocked (1) → **Unblock** (two taps). → Works. Re-add B and accept again.
+- [ ] **C8** ⋯ → **Remove** (two taps). → The friend disappears on both sides. Re-add and accept again for Part D.
+- [ ] **C9** Watch the Circle card while Requests / Blocked appear. → It never grows or jumps; at 375×667 the keyboard doesn't cover the Add field's Send button; the report panel fits.
+- [ ] **C10** Tap the support line. → A mail draft to `support@asstrollogs.com`.
+
+### Part D — Compare strengths (A and B, friends, both with answered questions)
+
+- [ ] **D1** On A, ⋯ next to B → **Compare strengths**. Read the consent text. → It says exactly what a friend sees (up to 3 strengths plus the ones you share, no scores or numbers, off any time). Keep / fix.
+- [ ] **D2** Read "What @friend would see of you". → At most 3 plain phrases; no numbers, nothing about closeness or worry, nothing that reads as a weakness. Keep / fix each.
+- [ ] **D3** Switch it on (A only). → "Waiting for @friend to switch it on too." No card.
+- [ ] **D4** On B switch it on too, reopen Compare on A. → "What you two share" and "@friend tends to…" show short phrases only: no attachment, no "more/less than", no numbers.
+- [ ] **D5** Switch it off on A, reopen on B. → The card is gone on both.
+- [ ] **D6** Remove B and add them again. → Compare is off on both sides until switched on again.
+- [ ] **D7** Block B. → B is gone and no compare card can be opened.
+- [ ] **D8** At 375×667 the Compare panel fits inside the Circle card, scrolls instead of growing, and Back returns to the ⋯ menu.
+
+### Part E — The words you see (account A, keep / fix each, one line)
+
+- [ ] **E1** **Today's Pick**: read the 3 open prompts (p14, p25, p50). → keep / fix each.
+- [ ] **E2** **Questions**: answer 5 across different traits. → None scores a privacy, safety or money boundary as distance. Also say yes/no to D1 (retired questions read-only) and D2 (keep the houseguest question).
+- [ ] **E3** **Explore**: open 4 categories. → Plain language, no verdict about you.
+- [ ] **E4** **Deep dive** (Explore → Write my deep dive): one for Love / closeness and one for another category. → Closeness is treated like any category; no diagnosis or label about you; a framework name (if any) is explained and is never "your result".
+- [ ] **E5** **Legends** card: read the card. → Facts look right, no invented tag.
+- [ ] **E6** **Story**: read one. → The "You scored …" fallback is acceptable or tell me which line to fix.
+- [ ] **E7** **Profile card** (after the 48): strengths and weaknesses read honestly; "Still forming" is clear; nothing private on the shareable line.
+- [ ] **E8** **You tab → Helpline row**: 988 / findahelpline link / local-emergency line visible. → Nothing you type is checked. Under "Send feedback", the same Privacy / Terms links open the same two pages; with VoiceOver on, each is read as a link.
+
+### Part F — Accessibility (iPhone, small phone if you have one)
+
+- [ ] **F1** VoiceOver on, sign-in. → Swiping reads "Sign in with Apple", the email field, the password field, the buttons by name; on the code screen: "Sign-in code", "Verify code", "Resend code".
+- [ ] **F2** VoiceOver on, onboarding. → Birthday year / month / day, name, handle, city are each named; Continue is a button.
+- [ ] **F3** Settings → Accessibility → Display & Text Size → Larger Text at the biggest size. Open You, sign-in, onboarding, Explore, Insights. → Nothing cut off or hidden behind another element (scrolling is fine). Set it back after.
+- [ ] **F4** Reduce Motion on. → The same screens have no motion that blocks anything. Set it back after.
+
+### Part G — Delete the throwaway account (account C only, LAST)
+
+- [ ] **G1** On C (before deleting) send one friend request to `atodev`. → "Request sent."
+- [ ] **G2** You → **Delete account** → type the phrase → confirm. → The app returns to sign-in.
+- [ ] **G3** Sign in again with C's email. → It starts a fresh sign-up (the account is gone).
+- [ ] **G4** Sign in as `atodev` (dev-test) and open Circle → Requests. → C's pending request has disappeared.
+
+### Results (fill in)
+
+| Part | pass / fix | Screen + what you saw |
+|---|---|---|
+| Pre-step 1 (delete check) | | |
+| A Sign-up / links / date row | | |
+| B Insight / ask / check-in | | |
+| C Circle | | |
+| D Compare | | |
+| E Words | | |
+| F Accessibility | | |
+| G Delete | | |
+
+Boxes 60-65 are marked PASSED when Parts A-G pass; each "fix" becomes a new step in `docs/master-plan.md`.

@@ -62,8 +62,8 @@ one phone pass; 8 + 9 run as one chat. Rows are in run order; numbers kept so ol
 | 8+9 | ONE chat: roadmap 4 (notification ask + accessibility + D10 date-row fix) and roadmap 5+6 (insight/Home polish, AI cleanup, dead callers, `sage-*` renames, the old "No framework names" prompt lines in `sage-title.ts:214` + `explore/prompt.ts:192`). No OTA (Release B) | Sonnet 5 | [x] 2026-10-20: built, UNCOMMITTED (see checklist) |
 | 10 | Roadmap step 7: privacy policy, labels, deletion proof; describes Circle A+B as built. No OTA (Release B) | Opus 5 | [x] 2026-10-20: built; `wave105` + `wave106` APPLIED by emci; UNCOMMITTED (see checklist) |
 | RB | RELEASE B: pull, gate, ONE OTA for 7–10 + their migrations + one `gen:ai-library`/deploy if prompts changed (each needs my OK) | Sonnet 5 | [x] 2026-10-20: 4 commits pushed (9f1fc02c Play, 2ea66d4f migrations, 39a6de47 app, e02916b5 docs/checks/legal); gate fully green (189 checks); no bundle regen needed; OTA published, production group `b9c891db-5587-46c0-bef4-2b1ddadd5d06` (iOS `01a15bd8-13f4-7714-9027-8504894d9915`, Android `01a15bd8-13f4-757c-9a5e-7f6b299c6349`), git e02916b5. Phone not checked |
-| 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60-65) | Sonnet 5 | ▶ |
-| 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | [ ] |
+| 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60-65) | Sonnet 5 | [x] 2026-10-20: Box 66 written (pre-step + Parts A-G + results table); the phone pass itself is NOT run yet (emci) |
+| 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | ▶ (start only after emci reports Box 66 results; any "fix" becomes its own step first) |
 | 13 | Roadmap step 10: production build + store submission | Sonnet 5 | [ ] |
 | 14 | Circle option C (LAST, emci 2026-10-20): end-to-end encrypted 1:1 chat (Signal-style: libsodium keys per phone, reporter's phone sends reported messages, on-phone filter, block reuses step 7). Needs: new native dependency OK, a new store build (not OTA), encryption export answer, emci owns daily report triage. Brief: `docs/circle-design.md` | Opus 5 | [ ] |
 
@@ -246,6 +246,14 @@ check asserts `ok`, Check text disclosed, two cross-refs, push-token and alter-t
 live (needs the seeded `ato-delete-check@example.com`, SQL in its header; Box 65). Not verified: the links on a device; the landing
 pages are not redeployed yet (OPEN-QUESTIONS 15). No OTA, nothing committed. A lawyer must read the policy + terms before submission.
 
+**11.** [x] plan approved by me [x] `docs/ATO_DEVICE_TESTS.md`: new **Box 66** (bottom) = pre-step 1 (live `check:delete-account` with the full
+seed SQL for `ato-delete-check@example.com`, copied from the tested wave31 user + identity insert, never run by the agent), pre-step 2
+(accounts/phone), Parts A-G in run order (sign-up/links/date row, insight + notification ask + check-in line, Circle, Compare, the words you
+see, accessibility, delete a throwaway last), each tap with an expected result, plus a results table; a pointer above Box 60 says use Box 66
+(Boxes 60-65 kept as detail, not deleted) [x] every item of Boxes 60-65 is in Box 66 (self-check; the unchanged "earlier-day label / widget /
+7th-day +10" line is marked optional, B9) [x] docs only: no code, no gate, no reviewer. NOT done: the phone pass and the delete-check run
+(emci). Note: the delete check needs `ATO_INVITE_CODE` in `.env.local` if signup is invite-only (agent never edits env).
+
 ## Review ledger (a reviewer skips anything listed here unless those files changed afterward)
 
 | Step | Scope | Verdict | Open warnings |
@@ -262,7 +270,11 @@ pages are not redeployed yet (OPEN-QUESTIONS 15). No OTA, nothing committed. A l
 
 | 10 | `src/app/legal/*` (privacy, terms, labels), `landing/privacy.html` + `terms.html`, `docs/legal/OPEN-QUESTIONS.md`, `wave106_delete_proof.sql`, `delete-proof-check.ts`, `floor-check.ts`, `delete-account-check.ts`, `under18-server-check.ts` (NOT_LIVE), `legal-links.tsx`, `auth/index.tsx` + `you.tsx` (links only), Box 65 | PASS (Opus) | 5 fixed; open: live delete check not run, landing not redeployed, lawyer read |
 
+| 11 | `docs/ATO_DEVICE_TESTS.md` (Box 66 + pointer only) | n/a (docs only, self-checked against Boxes 60-65) | seed SQL unrun; phone pass pending |
+
 ## Ledger A: settled decisions (never re-ask)
+
+- Release B is live but NOT phone-checked until Box 66 is reported (emci runs it; Step 12 waits for the result).
 
 - Content policy: `docs/copy-review-rules.md` (clarity, accuracy, honesty, adult humor; judge meaning not keywords; supported
   weaknesses allowed; strong swearing allowed; labels only blocked when pinned on the reader; tasks by action/consent/cost/
