@@ -11,7 +11,7 @@ Generated from `assets/art/legacy-play-sheets.json`, `assets/play/sheets/streetw
 4. **Flat timing.** Streetwear character clips carry one uniform value per mode (`CAST_ACTOR_FRAME_MS`: idle 120, walk 100, dash 50, attack 65, skill 70, hurt 140; pets 140/110/60/80/85/140). No per-frame holds anywhere in the data format.
 5. **Pet clock mismatch (lead, real code issue).** `pet-anim-sprite.tsx` ticks a shared clock every **100 ms** but `PET_FRAME_MS` asks for 60/80/85/110/140 ms frames. `petFrameAt` samples wall-clock on those ticks, so a 60 ms dash advances ~1.7 frames per tick → **skipped frames**, and 110/140 ms frames show uneven holds.
 6. **No loop flag for characters.** Loop vs one-shot is decided in code by clip name/mode; only FX/auras/ambient carry `loop` in `meta.json`.
-7. **`reduceMotion` coverage is patchy** (see §6): looping Reanimated components with *no* reduce-motion path: `pixel-fx`, `turf-ambient`, `pixel-ambient`, `street-ambient`, `aura-view`, `dive-street`, `dive-world`.
+7. ~~`reduceMotion` coverage is patchy~~ **Corrected in Phase 2:** my grep only looked for the words `reduceMotion`/`reducedMotion`. The repo's policy (`play-motion.ts`: `vestibularSafe` / `cosmeticsStill`) is plumbed through props (`alive`, `still`, `animate`, `mode`) from each parent screen, so `pixel-fx`, `pixel-ambient`, `turf-ambient`, `street-ambient`, `dive-street`, `dive-world`, `turf-combat-fx`, `turf-beat-fx`, `score-burst` and `pet-games` are all covered. Not a defect.
 8. **`titan-x` boss and `towers` have rotations only / no walk** — titan-x has zero animation clips.
 9. **Pixel-crisp rendering is web-only (lead).** `pixelRenderStyle = { imageRendering: 'pixelated' }` is a CSS property; on native iOS `expo-image` / `react-native-svg <Image>` ignore it. `SheetSprite` also scales by `size / rect.w` (non-integer). Phase 1 must check what actually renders on device.
 10. **Parallel work to coordinate:** remote branches `origin/art/aura-holo-impl` and `origin/art/aura-holo-pixellab` are not in master — they likely touch auras / `pet-holo`. I will not edit those areas without checking them first.
@@ -427,21 +427,21 @@ Missing for the Phase 3 standard set: blink, hop, happy/react, eat, level-up/evo
 
 | File | What moves | withTiming | rep | tmr | clr | rm |
 |---|---|---|---|---|---|---|
-| `src/play/pixel-fx.tsx` | FX bursts, shake, flash | 14 | 4 | 1 | — | **no** |
-| `src/play/pixel-ambient.tsx` | ambient sin loops | 10 | 8 | 0 | — | **no** |
-| `src/play/turf-ambient.tsx` | fires/smoke/pigeons/steam ticker | 9 | 6 | 3 | 1 | **no** |
-| `src/play/street-ambient.tsx` | street ambient | 3 | 3 | 0 | — | **no** |
+| `src/play/pixel-fx.tsx` | FX bursts, shake, flash | 14 | 4 | 1 | — | gated by parent (see correction §0.7) |
+| `src/play/pixel-ambient.tsx` | ambient sin loops | 10 | 8 | 0 | — | gated by parent (see correction §0.7) |
+| `src/play/turf-ambient.tsx` | fires/smoke/pigeons/steam ticker | 9 | 6 | 3 | 1 | gated by parent (see correction §0.7) |
+| `src/play/street-ambient.tsx` | street ambient | 3 | 3 | 0 | — | gated by parent (see correction §0.7) |
 | `src/play/aura-view.tsx` | aura frame stepping | 3 | 3 | 0 | — | via GENTLE path |
-| `src/play/dive-street.tsx` / `dive-world.tsx` | street/world scroll & loops | 12 / 2 | 4 / 2 | 1 / 0 | — | **no** |
+| `src/play/dive-street.tsx` / `dive-world.tsx` | street/world scroll & loops | 12 / 2 | 4 / 2 | 1 / 0 | — | gated by parent (see correction §0.7) |
 | `src/play/pet-room.tsx` | pet roam, hop, bowl, zzz | 24 | 4 | 15 | 4 | yes (23) |
 | `src/play/dive-scene.tsx` | dive scene | 31 | 6 | 9 | 2 | yes (15) |
 | `src/play/hideout-zzz.tsx` | sleep Zs | 11 | 4 | 0 | — | yes |
 | `src/play/hideout-rails.tsx`, `street-room.tsx` | rails, room | 3 / 4 | 2 / 3 | 0 | — | yes |
-| `src/play/turf-combat-fx.tsx`, `turf-beat-fx.tsx` | hit flashes, beats | 9 / 8 | 0 | 2 / 0 | — | **no** |
-| `src/play/score-burst.tsx` | score pop (rAF ×2) | 2 | 0 | 0 | — | **no** |
+| `src/play/turf-combat-fx.tsx`, `turf-beat-fx.tsx` | hit flashes, beats | 9 / 8 | 0 | 2 / 0 | — | gated by parent (see correction §0.7) |
+| `src/play/score-burst.tsx` | score pop (rAF ×2) | 2 | 0 | 0 | — | gated by parent (see correction §0.7) |
 | `src/play/finish-motion.tsx` | foil/finish shimmer | 2 | 2 | 1 | — | yes |
 | `src/play/pet-reveal.tsx`, `merge-row.tsx`, `pet-card.tsx` | reveal, merge, card | 7 / 8 / 3 | 0 / 2 / 3 | 2 / 4 / 0 | — | yes |
-| `src/play/pet-games.tsx` | mini-games | 5 | 0 | 6 | 2 | **no** |
+| `src/play/pet-games.tsx` | mini-games | 5 | 0 | 6 | 2 | gated by parent (see correction §0.7) |
 | `src/play/pixel-ui.tsx` | pixel buttons/frames | 6 | 2 | 0 | — | yes |
 | `src/components/motion.tsx`, `milestone-toast.tsx`, `set-done-moment.tsx`, `check-milestone-badge.tsx`, `week-strip.tsx`, `sage-eight-ball.tsx`, `themed-pressable.tsx` | app (non-game) UI motion | — | — | — | — | yes |
 | `src/play/play-motion.ts` | shared reduce-motion helpers (9 refs) | — | — | — | — | helper |

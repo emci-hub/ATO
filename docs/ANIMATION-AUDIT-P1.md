@@ -46,9 +46,9 @@ GIF file names are `worst10/NN_<skin>_<char>_<clip>_<dir>_{1x,3x}.gif` + `_sheet
 | # | Finding | Evidence | Severity |
 |---|---|---|---|
 | C1 | **Pet frames are skipped.** The shared clock ticks every 100 ms (`pet-anim-sprite.tsx:43`) but `PET_FRAME_MS` is 60/80/85/110/140 ms (`pet-actor.ts:86`). Simulated: dash (60 ms) shows frames 0,1,3,5,6,8… (skips 2,4,7); attack (80 ms) skips 4; hurt (140 ms) holds 2,1,1,… unevenly. | arithmetic on `petFrameAt` | **broken** for dash/attack |
-| C2 | Pet stage size = `Math.round(baseBox × PET_STAGE_SCALE)` (`pet-figure.tsx:69`), scales 0.55/0.75/0.9/1.15/1.45 → not integer multiples of the art. `sharpPetBox` fixes this only at 2 call sites (`finish-picker`, `pet-screen`). | `PET_STAGE_SCALE` comment: "Soft (smooth) enlarging" | ugly |
+| C2 | ~~Pet stage size~~ **Withdrawn (Phase 2):** `petBoxSize`/`PET_STAGE_SCALE` only sizes static thumbnails (collection grid, card previews), which are downscaled from 128 px so no integer scale exists. Every animated pet (room, Dive, game cards) already uses a snapped box. Original note: pet stage size = `Math.round(baseBox × PET_STAGE_SCALE)` (`pet-figure.tsx:69`), scales 0.55/0.75/0.9/1.15/1.45 → not integer multiples of the art. `sharpPetBox` fixes this only at 2 call sites (`finish-picker`, `pet-screen`). | `PET_STAGE_SCALE` comment: "Soft (smooth) enlarging" | ugly |
 | C3 | `imageRendering: pixelated` is web-only; native relies on integer sizes (`pixel-theme.ts` says so). `SheetSprite` scales by `size / rect.w` in SVG units — non-integer unless the caller passes a multiple. Needs a device check. | `sheet-sprite.tsx:118` | lead |
-| C4 | Reduce-motion missing in the looping components listed in the Phase 0 audit §6. | grep | ugly |
+| C4 | **Withdrawn (Phase 2):** policy is plumbed through props from parents (`alive`/`still`/`animate`/`mode`, driven by `usePlayMotion`); my grep was too narrow. Original note: reduce-motion missing in the looping components listed in the Phase 0 audit §6. | grep | ugly |
 | C5 | `pet-anim-sprite` clock is cleared when the last listener leaves ✔ (no leak). `turf-ambient` and `pet-games` pair `setInterval`/`clearInterval` ✔. **Not verified:** whether each Reanimated loop is cancelled when its screen is covered. | read | lead |
 | C6 | Avatar mode in `cast-actor.ts` has no death/faint slot, though all 16 heroes ship a Faint clip — shipped art is unreachable by the Avatar. | `CAST_ACTOR_CLIPS` | missing feature |
 
@@ -95,3 +95,16 @@ Cost/risk: touches `art:sync`, `skeletons.ts` and the art checks (`check:art-reg
 5. Retime idles with per-frame holds once the library carries `ms[]`; regenerate only the clips that cannot be retimed (the near-static idles, via PixelLab).
 
 Nothing in `src/` or `assets/` has been changed so far.
+
+## 7. Phase 2 result (2026-10-21)
+
+| Item | Outcome |
+|---|---|
+| C1 pet frame skipping | **Fixed.** `usePetFrame` + 20 ms shared tick in `pet-anim-sprite.tsx`; `daily-visitor-ui.tsx` moved to it; `check:pet-room` pins "no frame skipped" (fails on the old code, passes now). A sprite re-renders once per frame, not per tick. |
+| C2 / C3 pet size, native crispness | **No defect found** (see §4, withdrawn). Native crispness still wants one look on a device. |
+| C4 reduce-motion | **No defect found** (withdrawn). |
+| C5 off-screen pausing | Not verified; still a device/profile check. |
+| C6 Faint unreachable in Avatar mode | **Flagged, not changed:** `CAST_ACTOR_CLIPS.avatar` has no faint/death slot; adding one is game logic (`defend-screen`), so it needs your decision. |
+| Idle retime (per-frame `ms`) | Waits on the library (`ms[]`) — next step. |
+
+Lesson recorded: grep for the repo's own flag names (`cosmeticsStill`, `vestibularSafe`, `usePlayMotion`) before calling something unguarded.
