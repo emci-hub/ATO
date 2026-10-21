@@ -612,6 +612,7 @@ One flag controls all of these: `PRE_LAUNCH_DEV` in `src/lib/dev-mode.ts`. **`np
 
 ## Decisions log
 
+- 2026-10-21 CIRCLE RESULTS (emci): phone check of the live OTA `3d169cfc` PASSED; the 1.1 ASC review notes are updated to say "Circle tab" (open item closed). Decision: Circle STAYS under More, the default bar stays Home / Insights / Questions / Explore (don't re-ask).
 - 2026-10-21 CIRCLE TOOLS MOVED TO THE TAB (emci): Add by @handle, Requests, Blocked, the ⋯ menu (Message · Compare strengths ·
   Report · Block · Remove, two taps for Block/Remove, six fixed report reasons) and the support line now live in the Circle tab
   (`src/app/(tabs)/circle.tsx`, `src/components/circle-panels.tsx`). Same server functions and copy, no schema change. The Divecore
