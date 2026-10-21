@@ -20,6 +20,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { isTabParked } from '../src/lib/nav/nav-order';
+
 let passed = 0;
 function ok(label: string) {
   passed += 1;
@@ -65,7 +67,7 @@ const PARKED_SCREENS: { rel: string; label: string }[] = [
   // Its kept-controls contract is pinned at the bottom of THIS file instead
   // (`delete-account-check.ts` is a live check and is excluded from the gate,
   // so it cannot carry an App Store invariant).
-  { rel: 'src/app/(tabs)/circle.tsx', label: 'Circle' },
+  // Circle was rebuilt 2026-10-21 as a plain friend list with Message; pinned at the bottom of this file.
   { rel: 'src/app/week.tsx', label: 'This week' },
   // Chat was rebuilt 2026-10-21 (master plan Step 14) as the end-to-end encrypted Circle chat; its
   // rules are pinned in circle-chat-check.ts instead.
@@ -188,5 +190,17 @@ assert.match(youCode, /clearLocalAccountData\(\)/, "signing out must still clear
 assert.match(youCode, /setAiConsent\(/, 'AI consent must stay changeable on You (Apple 5.1.2)');
 assert.match(youCode, /\{AI_USE_DISCLOSURE\}/, 'the AI-use disclosure must RENDER beside the consent control, not just be imported');
 ok('You keeps delete account, sign out and AI consent, and shows tokens; saved facts are hidden');
+
+// ---------------------------------------------------------------------------
+// Circle is a real tab again: a friend list that opens chat, with no Divecore UI.
+// ---------------------------------------------------------------------------
+
+const circleCode = codeOnly(read('src/app/(tabs)/circle.tsx'));
+assert.doesNotMatch(circleCode, /<RebuiltNotice/, 'Circle is a real screen now, not a Rebuilt notice');
+assert.match(circleCode, /fetchCircleFriends\(\)/, 'Circle lists friends from the server list the Divecore sheet uses');
+assert.match(circleCode, /pathname:\s*'\/chat'/, 'Circle opens the standalone chat route');
+assert.doesNotMatch(circleCode, /@\/play\/(?!circle-visits(-store)?['"])/, 'Circle imports no Divecore UI (only the friend list store and types)');
+assert.ok(!isTabParked('circle'), 'Circle is offered in the bar and More');
+ok('Circle is a real tab: friend list + Message, no Divecore UI');
 
 console.log(`\n${passed} rebuilt checks passed`);

@@ -87,10 +87,10 @@ export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
  *
  * **`sage` and `legends` were UN-PARKED 2026-09-15** (emci: restore both tabs
  * with their original icons/labels; each still opens only its RebuiltNotice —
- * no backend or AI code revived, only visibility changed). `around` and
- * `circle` stay parked and hidden.
+ * no backend or AI code revived, only visibility changed). `around` stays
+ * parked and hidden. `circle` was un-parked 2026-10-21 (plain friend list + Message).
  */
-export const PARKED_TAB_IDS: readonly ReorderableTabId[] = ['around', 'circle'];
+export const PARKED_TAB_IDS: readonly ReorderableTabId[] = ['around'];
 
 /**
  * Parked pinned tabs. Same rule, different slot type. Empty since 2026-10-14:

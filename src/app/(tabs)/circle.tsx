@@ -1,27 +1,42 @@
-import { ScrollView, StyleSheet } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { RebuiltNotice } from '@/components/rebuilt-notice';
+import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
+import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
-import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+import { useTheme } from '@/hooks/use-theme';
+import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+import { fetchCircleFriends } from '@/play/circle-visits-store';
+import type { CircleFriend } from '@/play/circle-visits';
+
+type Load = { kind: 'loading' } | { kind: 'ok'; friends: CircleFriend[] } | { kind: 'error' };
 
 /**
- * Circle — placeholder pending rebuild (docs/ISOLATION_PLAN.md §7 Card F,
- * 2026-09-15).
+ * Circle — a plain friend list with Message (chat 1.1, emci 2026-10-21).
  *
- * The scanned-in Circle is disconnected: peer resolve/confirm, the realtime
- * peer subscription, the shared circle context reads and the per-peer chat
- * entry points are all gone from this screen. `lib/circle*` is untouched —
- * only the call sites, per "delete the call site, not the callee".
- *
- * Kept as a registered route rendering a visible "rebuild" state rather than
- * removed: pulling a route would mean a native build, and the whole point of
- * the placeholder is that it ships over OTA. Every link that used to lead here
- * now lands on this notice.
+ * Reads the same server list the Divecore Circle sheet reads (`circle_visit_friends`) and opens the
+ * standalone `/chat` route. Visits and gifts stay in Divecore; nothing here imports game UI.
  */
 export default function CircleScreen() {
+  const theme = useTheme();
+  const [load, setLoad] = useState<Load>({ kind: 'loading' });
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void fetchCircleFriends().then((res) => {
+        if (cancelled) return;
+        setLoad(res.kind === 'ok' ? { kind: 'ok', friends: res.value } : { kind: 'error' });
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []),
+  );
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -29,7 +44,33 @@ export default function CircleScreen() {
           {...NO_PINCH_ZOOM}
           contentContainerStyle={styles.scroll}
           contentInsetAdjustmentBehavior="never">
-          <RebuiltNotice title="Circle" />
+          <ThemedText type="subtitle">Circle</ThemedText>
+          {load.kind === 'loading' ? (
+            <ActivityIndicator />
+          ) : load.kind === 'error' ? (
+            <ThemedText themeColor="textSecondary">Could not load your Circle. Leave this tab and come back to try again.</ThemedText>
+          ) : load.friends.length === 0 ? (
+            <ThemedText themeColor="textSecondary">Scan a friend to add them to your Circle.</ThemedText>
+          ) : (
+            load.friends.map((f) => (
+              <ThemedView
+                key={f.peer}
+                type="backgroundElement"
+                style={[styles.row, { borderColor: controlBorderColor(theme) }]}>
+                <ThemedText style={styles.handle}>{`@${f.handle}`}</ThemedText>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Message @${f.handle}`}
+                  onPress={() => router.push({ pathname: '/chat', params: { peer: f.peer, handle: f.handle } })}
+                  style={[styles.button, { borderColor: controlBorderColor(theme) }]}>
+                  <ThemedText>Message</ThemedText>
+                </Pressable>
+              </ThemedView>
+            ))
+          )}
+          <View style={styles.note}>
+            <ThemedText themeColor="textSecondary">Visits and gifts are in Divecore.</ThemedText>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -51,5 +92,26 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingTop: NAV_PIXEL_HEADER_INSET,
     paddingBottom: BottomTabInset + Spacing.four,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  handle: {
+    flexShrink: 1,
+  },
+  button: {
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  note: {
+    paddingTop: Spacing.two,
   },
 });

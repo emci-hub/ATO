@@ -155,6 +155,18 @@ export default function AppTabs() {
             />
           ))}
 
+          {lockedTabs
+            .filter((id) => !isTabParked(id))
+            .map((id) => (
+              <TabTrigger
+                key={`hidden-locked-${id}`}
+                name={id}
+                href={NAV_TABS[id].href}
+                style={styles.hidden}
+                accessible={false}
+              />
+            ))}
+
           {parkedTriggers.map((route) => (
             <TabTrigger
               key={`hidden-parked-${route.name}`}
