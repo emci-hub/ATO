@@ -256,6 +256,7 @@ export const CIRCLE_UI = {
   more: (handle: string) => `More options for @${handle}`,
   moreGlyph: '⋯',
   menuTitle: (handle: string) => `@${handle}`,
+  message: 'Message',
   report: 'Report',
   block: 'Block',
   blockArmed: (handle: string) => `Tap again to block @${handle}`,

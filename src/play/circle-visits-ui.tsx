@@ -240,6 +240,7 @@ export function CircleSheet({
   top,
   onToggle,
   onVisit,
+  onChat,
   onClose,
 }: {
   state: CircleListState;
@@ -250,6 +251,8 @@ export function CircleSheet({
   top: number;
   onToggle: (f: CircleFriend, on: boolean) => void;
   onVisit: (f: CircleFriend) => void;
+  /** ⋯ → Message: the app shell opens the encrypted chat (Step 14). Absent = no Message row. */
+  onChat?: (peer: string, handle: string) => void;
   onClose: () => void;
 }) {
   useStreetFonts();
@@ -629,6 +632,17 @@ export function CircleSheet({
             </Text>
             {panel.kind === 'menu' ? (
               <>
+                {panel.canRemove && onChat ? (
+                  <SmallButton
+                    label={CIRCLE_UI.message}
+                    accessibilityLabel={`${CIRCLE_UI.message} @${panel.handle}`}
+                    onPress={() => {
+                      const { peer, handle } = panel;
+                      closePanel();
+                      onChat(peer, handle);
+                    }}
+                  />
+                ) : null}
                 {panel.canRemove ? (
                   <SmallButton label={COMPARE_UI.menu} accessibilityLabel={`${COMPARE_UI.menu} @${panel.handle}`} onPress={() => openCompare(panel.peer, panel.handle, panel.canRemove)} />
                 ) : null}
