@@ -64,8 +64,8 @@ one phone pass; 8 + 9 run as one chat. Rows are in run order; numbers kept so ol
 | RB | RELEASE B: pull, gate, ONE OTA for 7–10 + their migrations + one `gen:ai-library`/deploy if prompts changed (each needs my OK) | Sonnet 5 | [x] 2026-10-20: 4 commits pushed (9f1fc02c Play, 2ea66d4f migrations, 39a6de47 app, e02916b5 docs/checks/legal); gate fully green (189 checks); no bundle regen needed; OTA published, production group `b9c891db-5587-46c0-bef4-2b1ddadd5d06` (iOS `01a15bd8-13f4-7714-9027-8504894d9915`, Android `01a15bd8-13f4-757c-9a5e-7f6b299c6349`), git e02916b5. Phone not checked |
 | 11 | Roadmap step 8: device boxes rewrite + one full phone pass (Box 66) covering Release B (Boxes 60-65) | Sonnet 5 | [x] 2026-10-20: Box 66 written (pre-step + Parts A-G + results table); phone pass run by emci 2026-10-20: A-G all pass, no fixes |
 | 12 | Roadmap step 9: launch flip (PRE_LAUNCH_DEV=false, hero clean-slate, wave80, public signup) + Supabase Auth "Leaked password protection" switch (emci, dashboard) | Opus 5 | [x] 2026-10-21: half (a) built, reviewed, pushed (5b6abd8b app, c690636c Play) and OTA PUBLISHED: production group `6307ece1-85fc-4e59-bc1f-7bb651356744` (iOS `01a15c5e-2147-7f25-8a2a-a256206dc68e`, Android `01a15c5e-2147-7300-818b-f3285e680f5d`), runtime 1.0.0, git c690636c. Half (b) by emci: rotations, wave80 + wave107 APPLIED, leaked-password switch, Box 67 passed; SQL verified read-only 2026-10-21 (see checklist) |
-| 13 | Roadmap step 10: production build + store submission | Sonnet 5 | ▶ [ ] |
-| 14 | Circle option C (LAST, emci 2026-10-20): end-to-end encrypted 1:1 chat (Signal-style: libsodium keys per phone, reporter's phone sends reported messages, on-phone filter, block reuses step 7). Needs: new native dependency OK, a new store build (not OTA), encryption export answer, emci owns daily report triage. Brief: `docs/circle-design.md` | Opus 5 | [ ] |
+| 13 | Roadmap step 10: production build + store submission | Sonnet 5 | [x] 2026-10-21: prep done (checklist, gates, ASC pack, reviewer, Box 68); NOT yet done by emci: D12, demo account, EAS build, TestFlight, Box 68 (see Step 13 checklist) |
+| 14 ▶ | Circle option C (LAST, emci 2026-10-20): end-to-end encrypted 1:1 chat (Signal-style: libsodium keys per phone, reporter's phone sends reported messages, on-phone filter, block reuses step 7). Needs: new native dependency OK, a new store build (not OTA), encryption export answer, emci owns daily report triage. Brief: `docs/circle-design.md` | Opus 5 | [ ] |
 
 ### Step checklists (done-criteria)
 
@@ -284,6 +284,33 @@ first check the same day found neither file applied; emci re-ran both in the SQL
 `trait_tracks_adult_insert/_update` + `trait_history_adult_insert` policies still exist but grant nothing without the table grant
 (D15).
 
+**13.** [x] plan approved by me [x] "ATO IS LAUNCH-READY WHEN" checked line by line (table below) [x] widget header already "ATO"
+(`targets/widget/widgets.swift:45,68`, Step 3): no widget or `app.json` diff needed [x] haptics already in code (`street-feel.ts`,
+`try-today-card.tsx`) and `expo-haptics` already a dependency: they ship with the next native build, no diff [x]
+`RELEASE_MODE=1 npm run check:release-mode` = 47 pass; `check:ota-gate` exit 0 (green) on HEAD fc854296 + docs-only edits [x]
+`docs/app-store-pack.md` written (URLs, age rating with UGC, labels, export compliance, review notes, demo-account steps,
+6 screenshots, blockers) [x] Opus reviewer: FAIL on the pack's wording (QR scan, camera, Circle tab, tab names) → all fixed;
+cartoon violence now "Infrequent/Mild"; `check:floor` re-run green [x] Box 68 written (`docs/ATO_DEVICE_TESTS.md`).
+Launch-ready table (evidence):
+ 1. `ai-generate` closed + rate limits: DONE (410 stub wave98; Step 1). 2. advisors: DONE (Step 6 run, 0 errors; leaked-password ON, line 280).
+ 3. guessable codes: DONE (rotations 2026-10-21, line 280; Gemini rotated, line 166); `play_dev_logs` still open = D13, not blocking.
+ 4. Circle safety: DONE in code (Step 7, Box 66 pass); Block/Report live in Divecore → Hideout → Circle (the Circle tab is parked).
+ 5. Privacy/terms/labels/manifests: manifests + labels DONE (`check:floor`); **OPEN-YOURS: D12 + lawyer read, 46 `[CONFIRM]` tags
+    (23 in `src/app/legal`, 23 in `landing`), landing redeploy, support inbox confirmed monitored.**
+ 6. Live `delete-account` check: **OPEN-YOURS** (never run live; Box 68 E2 covers the in-app path).
+ 7. Copy reviewed / flags: **OPEN-YOURS / ACCEPT**: 16 `*_COPY_REVIEWED` flags are false on purpose; those surfaces ship hidden or unreviewed per
+    Ledger A. Say "accept" or read them.
+ 8. Divecore reachable, real economy: DONE (Step 12, Box 67). 9. public signup: DONE (wave107); brand-new-email on a clean phone = Box 68 A.
+ 10. wave80: DONE (verified read-only 2026-10-21). "Old bundles not in use": accepted risk (Ledger A).
+ 11. gates green: DONE (this step). TestFlight run: **OPEN-YOURS** (Box 68).
+ 12. Phone boxes: 59-67 passed; Larger Text + Reduce Motion pass = Box 68 F (**OPEN-YOURS**).
+ 13. App Store Connect: pack written; **OPEN-YOURS** to enter it + demo account + screenshots.
+**Found (bigger, not fixed):** (a) `app.json` still has the `expo-camera` plugin + camera permission text ("scan a friend's QR")
+but nothing in `src` uses the camera and friends are added by @handle. I corrected the label doc only. Removing the plugin
+(and `expo-camera` from `package.json`) is a native/dependency change = needs emci's ok; risk if left: a reviewer may ask
+why the app asks for camera access (it never prompts). (b) Support URL is the landing page; no /support page.
+**Blockers still open for submission:** D12 (legal answers + lawyer read) and the confirmations above. D8: recorded rotated.
+
 ## Review ledger (a reviewer skips anything listed here unless those files changed afterward)
 
 | Step | Scope | Verdict | Open warnings |
@@ -303,6 +330,8 @@ first check the same day found neither file applied; emci re-ran both in the SQL
 | 11 | `docs/ATO_DEVICE_TESTS.md` (Box 66 + pointer only) | n/a (docs only, self-checked against Boxes 60-65) | none: phone pass A-G passed 2026-10-20 |
 
 | 12 | `_layout.tsx`, `dev-mode.ts`, `sage.tsx` (deleted), `playStore.ts` (`launchCleanSlate`, `launch_reset`, TODO(A5) comments), `release-mode-check.ts`, `check-launch-clean-slate.ts`, `tab-rename-check.ts`, `sage-load-check.ts`, `age-check.ts`, `check-auras.ts`, `preview-mode-check.ts`, `wave107_signup_public.sql`, Box 67 | PASS (Opus) | reset reaches the cloud on the next change (restore re-runs it); an old-bundle phone re-grants free heroes until it takes the OTA; gear left on unowned heroes (Locker can still remove it); preview wrapper blocking untested while the flag is off |
+
+| 13 | `docs/app-store-pack.md`, `app-privacy-labels.md` (one line), Box 68 | FAIL → fixed (Opus) | pack wording corrected; open: `expo-camera` plugin unused (needs emci's ok), demo account fresh-save Circle path untested |
 
 ## Ledger A: settled decisions (never re-ask)
 
@@ -367,6 +396,7 @@ CATEGORY_DEEP_DIVE, LEGEND_FIGURES, STORY, STORY_BANK (+ dead: TITLE, CATEGORY_R
 | D13 | Drop `public.play_dev_logs` (wave73 dev test results; deletes rows) before launch? | yes, one small migration after Step 12 |
 | D14 | Delete the `ai-generate` stub: needs `src/lib/ai/edge.ts` + `generateText` callers removed first | one small step after launch, or keep the 410 stub |
 | D15 | wave101's `*_adult_insert/_update` write policies on `trait_tracks`/`trait_history` outlived wave80 (inert: no client grant). Drop them? | yes, fold into the D13 cleanup migration after launch |
+| D16 | Remove the unused `expo-camera` plugin (camera permission text) from `app.json` and the dependency before the production build? Native/dependency change. | yes if you want a clean permission list; safe either way (no code calls the camera). Decide before the EAS build. |
 | D11 | Rename the internal `sage-copy` / `sage-knows` / `sage-title` files (~40 importers, ~20 checks read them by path)? Invisible to users. | skip, or one codemod step after launch |
 
 ## Original roadmap steps still ahead

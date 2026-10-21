@@ -930,3 +930,54 @@ About 15 min, after the launch-flip OTA. Force-quit and reopen the app twice fir
 | A No dev tools | | |
 | B Divecore economy | | |
 | C After the SQL | | |
+
+## Box 68 — Production build on TestFlight (master-plan Step 13, 2026-10-21)
+
+About 30 min, on the TestFlight build (not the dev client), on a clean phone: delete any older ATO first. This is the first
+binary with `PRE_LAUNCH_DEV = false` baked in, the "ATO" widget header and haptics.
+
+**Report back in ONE message:** a line per part (A-F): `pass`, or `fix` + the screen + what you saw.
+
+### Part A — Clean install and sign-up
+
+- [ ] **A1** Install from TestFlight, open it. → Opens to sign-up; no invite-code field; Privacy and Terms links open ato.emgens.com pages.
+- [ ] **A2** Sign up with a brand-new email (birthday 18+). → The code arrives and sign-up completes.
+- [ ] **A3** Sign out, then "Sign in with Apple" and password login (@handle + password). → Both work.
+
+### Part B — Core loop
+
+- [ ] **B1** Home → tap the daily insight. → It loads and unfolds; one light haptic.
+- [ ] **B2** Answer 3 questions. → They save; Insights and the profile update.
+- [ ] **B3** Mark a Check did/skip. → Saves; the profile card renders.
+
+### Part C — Divecore and Circle
+
+- [ ] **C1** More → Divecore. → Opens; only Corvus owned; no dev tools anywhere (More, You, long-presses).
+- [ ] **C2** Hideout → Circle. Add a second account by @handle, accept it there, open the ⋯ menu. → Block and Report are there; Block hides the person.
+- [ ] **C3** Tap around Divecore with sound/haptics on, then off in settings. → Haptic ticks only when on.
+
+### Part D — Widget and notifications
+
+- [ ] **D1** Add the ATO widget (small and medium). → The header says "ATO"; no "SAGE · COACH" anywhere.
+- [ ] **D2** Notification ask. → Asked once, only after a tap; declining works.
+
+### Part E — Legal and deletion
+
+- [ ] **E1** More → You: legal links, helpline row, support email. → All present and open.
+- [ ] **E2** Delete the throwaway account (You → Delete account). → Signs out; signing in with it fails.
+
+### Part F — Larger Text and Reduce Motion
+
+- [ ] **F1** Settings → Larger Text to a big size; open Home, Questions, You. → Nothing cut off or overlapping.
+- [ ] **F2** Reduce Motion ON; open the daily insight. → It skips to the copy (no animation).
+
+### Results (fill in)
+
+| Part | pass / fix | Screen + what you saw |
+|---|---|---|
+| A Clean install + sign-up | | |
+| B Core loop | | |
+| C Divecore + Circle | | |
+| D Widget + notifications | | |
+| E Legal + deletion | | |
+| F Larger Text + Reduce Motion | | |
