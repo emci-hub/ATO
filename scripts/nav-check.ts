@@ -135,13 +135,12 @@ for (const id of NAV_TAB_IDS) {
 }
 ok('pool is the NAV_TABS registry — extensible, no hardcoded slot ids');
 
-assert.deepEqual(lockedTabIds({ hasCircle: false }), ['circle']);
+assert.deepEqual(lockedTabIds({ hasCircle: false }), []);
 assert.deepEqual(lockedTabIds({ hasCircle: true }), []);
 assert.equal(isTabUnlocked('explore', { hasCircle: false }), true);
-assert.equal(isTabUnlocked('circle', { hasCircle: false }), false);
+assert.equal(isTabUnlocked('circle', { hasCircle: false }), true);
 assert.equal(isTabUnlocked('circle', { hasCircle: true }), true);
-assert.equal(NAV_TABS.circle.unlockReason, 'Scan a friend to unlock Circle.');
-ok('Circle is a pool tab locked until hasCircle; unlockReason explains why');
+ok('Circle is never locked (Add by handle lives in the tab, so a friend gate would block the first friend)');
 
 // --- wiring ----------------------------------------------------------------
 

@@ -55,13 +55,8 @@ export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
   explore: { label: 'Explore', href: '/explore', icon: 'compass-outline' },
   around: { label: 'Around', href: '/around', icon: 'map-marker-radius-outline' },
   you: { label: 'You', href: '/you', icon: 'account' },
-  circle: {
-    label: 'Circle',
-    href: '/circle',
-    icon: 'account-group',
-    isUnlocked: (ctx) => ctx.hasCircle,
-    unlockReason: 'Scan a friend to unlock Circle.',
-  },
+  // Not gated on a friend: Add by handle lives inside this tab, so a gate would lock out the first friend.
+  circle: { label: 'Circle', href: '/circle', icon: 'account-group' },
   questions: { label: 'Questions', href: '/intake-sweep', icon: 'comment-question-outline' },
   legends: { label: 'Legends', href: '/legends', icon: 'book-open-page-variant-outline' },
 };
