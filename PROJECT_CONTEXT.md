@@ -612,6 +612,9 @@ One flag controls all of these: `PRE_LAUNCH_DEV` in `src/lib/dev-mode.ts`. **`np
 
 ## Decisions log
 
+- 2026-10-21 1.1 SUBMITTED (emci): `eas submit` submission `9cc1261b-6b4f-4d9a-b6fd-f78541e8e0f4`. Circle is a real tab again
+  (f6509628, in 1.1); `check:circle-safety` CRLF fix 0ac04681; gate green (191). Not pushed. Waiting on App Review. OTA only after
+  the 1.1 build shows in TestFlight and emci OKs. Open: D12 lawyer read on encryption export; D19 later.
 - 2026-10-21 Release C DONE (row 15 ticked): 1.1 build on TestFlight, Box 69 A-E all pass (emci). Left for emci: ASC changes from
   `app-store-pack.md` §9 (chat/messaging Yes, export compliance yes + standard algorithms, add Emails or Text Messages, What's New,
   screenshot 4, review-notes line, demo friend sends one message) and submit 1.1; D12 lawyer read on encryption export. D19 later.
