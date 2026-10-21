@@ -22,7 +22,7 @@ Scope: every multi-frame clip in `legacy-play-sheets.json` that has a real anima
 
 | # | Clip | Score | What I see | GIF |
 |---|---|---|---|---|
-| 1 | Cast `elowen/Forest_Idle` E | 2.0 | foot row drifts 5 px, feet slide 2.8 px (13 frames, off-palette skin) | `01…` is #9 below |
+| 1 | Cast `elowen/Forest_Idle` E | 2.0 | foot row drifts 5 px, feet slide 2.8 px (13 frames, off-palette skin) | #9 |
 | 2 | Cast `frost-lich/Hover_Idle` E | 2.0 | 4 px vertical drift (hover — possibly intentional), off-palette | #10 |
 | 3 | Streetwear `boss/oni/Idle` E | 2.5 | 4 frames, feet slide 2.9 px, flat 120 ms | #6 |
 | 4 | Streetwear `heroes/archangel/Idle` E | 2.5 | 4 frames; hover so drift expected | #4 |
@@ -33,7 +33,7 @@ Scope: every multi-frame clip in `legacy-play-sheets.json` that has a real anima
 | 9 | Streetwear `heroes/elowen/Idle` W | 2.5 | 2 px baseline drift | #7 |
 | 10 | Streetwear `creeps/knight/Death` E | 3.5 | baseline moves 9 px across the fall (probably fine for a collapse) | #8 |
 
-GIF file names are `worst10/NN_<skin>_<char>_<clip>_<dir>_{1x,3x}.gif` + `_sheet.png`; numbering follows the table in the last column.
+GIF file names are `worst10/NN_<skin>_<char>_<clip>_<dir>_{1x,3x}.gif` + `_sheet.png`; the number in the last column is the file prefix.
 
 ## 3. Timing audit
 
