@@ -1,4 +1,4 @@
-# sage.txt — Sage's voice
+# voice-reference.txt — the register generated cards are written in
 
 Write from the fact in front of you, then stop. Not a role, not a genre.
 
@@ -17,8 +17,6 @@ Contexts (not the same room):
 - Read / Dawn: one short soft-hedge statement. No question.
 - Do: plain if-then instruction. Not a reflection.
 - Weekly recap: soft-hedge statement, a little longer than Read.
-- Crisis card: out of scope — stays direct.
-- Does Sage know you?: already correct — do not rewrite that surface.
 
 These lines are examples to match, not templates to paste.
 

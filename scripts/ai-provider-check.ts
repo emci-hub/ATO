@@ -144,6 +144,17 @@ assert.ok(
   !existsSync(resolve(root, 'src/lib/questions/sweep.ts')),
   'src/lib/questions/sweep.ts must stay deleted',
 );
+// Dead client-side writers (no callers) stay deleted; none may creep back with a vendor call.
+for (const gone of [
+  'src/lib/rolls/run.ts',
+  'src/lib/rolls/generate.ts',
+  'src/lib/questions/reroll.ts',
+  'src/lib/legends64/generate-story.ts',
+]) {
+  assert.ok(!existsSync(resolve(root, gone)), `${gone} must stay deleted`);
+}
+assert.doesNotMatch(read('src/lib/category-statements/generate-statements.ts'), /generateText|generateCategoryStatements/);
+assert.doesNotMatch(read('src/lib/ai/call-sites.ts'), /ROLL_META|LEGEND_STORY_META|CATEGORY_STATEMENTS_META|DAILY_INSIGHT_META/);
 assert.doesNotMatch(read('src/lib/explore/prompt.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/sage-title.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/sage-story.ts'), /generateText/);
@@ -155,9 +166,6 @@ ok('call sites use generateText; prompt builders are untouched; the deleted swee
 // this is what forces a new AI feature to declare its sharing model up front.
 const METADATA_CALL_FILES = new Set([
   'src/lib/ai/generate.ts', // the dispatcher itself (definition, no self-calls)
-  'src/lib/rolls/generate.ts',
-  'src/lib/legends64/generate-story.ts',
-  'src/lib/category-statements/generate-statements.ts',
   'src/lib/legend-figures/generate.ts',
   'src/lib/category-deep-dive/generate.ts',
 ]);
@@ -200,7 +208,8 @@ const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
   'latencySensitive',
 ];
 // 11 → 7 (2026-10-14): Sage title, Sage story, Sage insight spend and the AI daily insight were removed.
-assert.equal(AI_CALL_SITES.length, 7, 'one catalog entry per AI call site');
+// 7 → 4 (2026-10-20): the dead Roll, Legend story and Category statements client writers were deleted.
+assert.equal(AI_CALL_SITES.length, 4, 'one catalog entry per AI call site');
 const features = new Set<string>();
 for (const site of AI_CALL_SITES) {
   assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);
@@ -213,7 +222,7 @@ for (const site of AI_CALL_SITES) {
     );
   }
 }
-ok('metadata catalog covers all 10 call sites with boolean flags');
+ok('metadata catalog covers all 4 call sites with boolean flags');
 
 // --- Gemini -> DeepSeek fallback ------------------------------------------
 // Any Gemini failure falls back (not only quota); isQuotaLimitError only

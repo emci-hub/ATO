@@ -168,6 +168,55 @@ export function friendStatus(f: CircleFriend): 'sharing' | 'waiting' | 'off' {
   return f.mine ? 'waiting' : 'off';
 }
 
+/* ---------------------------------------------------- safety (wave104) --- */
+
+/** Where a person writes about someone in their Circle (Apple 1.2). One string, used everywhere. */
+export const CIRCLE_SUPPORT_EMAIL = 'support@asstrollogs.com';
+
+/** A pending request, either direction: `id` answers it, `peer` is who, `handle` is what we show. */
+export type CircleRequest = { id: string; peer: string; handle: string };
+export type CircleRequests = { incoming: CircleRequest[]; outgoing: CircleRequest[] };
+export type CircleBlocked = { peer: string; handle: string };
+
+export const CIRCLE_REPORT_REASON_IDS = ['harassment', 'hate', 'sexual', 'spam', 'impersonation', 'other'] as const;
+export type CircleReportReason = (typeof CIRCLE_REPORT_REASON_IDS)[number];
+
+export type CircleRequestNo = 'not_found' | 'self' | 'already' | 'pending' | 'cap' | 'rate_limited' | 'name';
+export const CIRCLE_REQUEST_NO: readonly CircleRequestNo[] = ['not_found', 'self', 'already', 'pending', 'cap', 'rate_limited', 'name'];
+export type CircleReportNo = 'rate_limited' | 'bad_reason' | 'not_found';
+export const CIRCLE_REPORT_NO: readonly CircleReportNo[] = ['rate_limited', 'bad_reason', 'not_found'];
+export type CircleRespondNo = 'not_found' | 'cap';
+
+const parseRequestList = (raw: unknown): CircleRequest[] => {
+  if (!Array.isArray(raw)) return [];
+  const out: CircleRequest[] = [];
+  for (const row of raw.slice(0, CIRCLE_FRIENDS_CAP)) {
+    const r = obj(row);
+    const handle = cleanHandle(r?.handle);
+    if (!r || typeof r.id !== 'string' || !UUID.test(r.id) || typeof r.peer !== 'string' || !UUID.test(r.peer) || !handle) continue;
+    out.push({ id: r.id, peer: r.peer, handle });
+  }
+  return out;
+};
+
+export function parseCircleRequests(raw: unknown): CircleRequests | null {
+  const r = obj(raw);
+  if (!r) return null;
+  return { incoming: parseRequestList(r.incoming), outgoing: parseRequestList(r.outgoing) };
+}
+
+export function parseCircleBlocked(raw: unknown): CircleBlocked[] {
+  if (!Array.isArray(raw)) return [];
+  const out: CircleBlocked[] = [];
+  for (const row of raw.slice(0, CIRCLE_FRIENDS_CAP)) {
+    const r = obj(row);
+    const handle = cleanHandle(r?.handle);
+    if (!r || typeof r.peer !== 'string' || !UUID.test(r.peer) || !handle) continue;
+    out.push({ peer: r.peer, handle });
+  }
+  return out;
+}
+
 /* ------------------------------------------------------------------ copy --- */
 
 export const CIRCLE_UI = {
@@ -203,4 +252,67 @@ export const CIRCLE_UI = {
   keep: 'Keep it',
   bookNote: (stamps: number) => (stamps > 0 ? `Circle gifts: ${stamps}.` : ''),
   stickerSource: 'From a Circle friend',
+  /* Circle safety (wave104). */
+  more: (handle: string) => `More options for @${handle}`,
+  moreGlyph: '⋯',
+  menuTitle: (handle: string) => `@${handle}`,
+  message: 'Message',
+  report: 'Report',
+  block: 'Block',
+  blockArmed: (handle: string) => `Tap again to block @${handle}`,
+  blockQuiet: 'They won’t be told.',
+  blocked: 'Blocked. They won’t be told.',
+  remove: 'Remove from Circle',
+  removeArmed: (handle: string) => `Tap again to remove @${handle}`,
+  removed: 'Removed from your Circle.',
+  close: 'Close',
+  back: 'Back',
+  reportTitle: 'What happened?',
+  reportReasons: {
+    harassment: 'Harassing me',
+    hate: 'Hate or slurs',
+    sexual: 'Sexual stuff I didn’t want',
+    spam: 'Spam or scam',
+    impersonation: 'Pretending to be someone',
+    other: 'Something else',
+  },
+  reported: 'Thanks. We read every report.',
+  blockThemToo: 'Block them too',
+  reportNo: {
+    rate_limited: 'That’s a lot of reports today. Try again later.',
+    bad_reason: 'Pick one of the reasons.',
+    not_found: 'Can’t find them any more.',
+  },
+  addPlaceholder: 'Add by handle',
+  addLabel: 'Handle to add to your Circle',
+  send: 'Send',
+  addBadHandle: 'Handles use letters, numbers, _ and .',
+  addSent: 'Request sent.',
+  addAccepted: 'Added to your Circle.',
+  addNo: {
+    not_found: 'No one with that handle.',
+    self: 'That’s your own handle.',
+    already: 'Already in your Circle.',
+    pending: 'A request is already waiting.',
+    cap: 'Circle is full.',
+    rate_limited: 'Too many tries. Try again later.',
+    name: 'Can’t send that one.',
+  },
+  requests: 'Requests',
+  incomingStatus: 'Wants to join your Circle',
+  outgoingStatus: 'Request sent',
+  accept: 'Accept',
+  decline: 'Decline',
+  cancel: 'Cancel',
+  accepted: 'Added to your Circle.',
+  declined: 'Declined.',
+  canceled: 'Request canceled.',
+  respondNo: { not_found: 'That request is gone.', cap: 'Circle is full.' },
+  blockedRow: (n: number) => `Blocked (${n})`,
+  blockedTitle: 'Blocked',
+  unblock: 'Unblock',
+  unblockArmed: 'Tap again',
+  unblocked: (handle: string) => `@${handle} unblocked.`,
+  supportLead: 'Problem with someone?',
+  supportLabel: `Email ${CIRCLE_SUPPORT_EMAIL}`,
 } as const;

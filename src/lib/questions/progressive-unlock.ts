@@ -20,7 +20,6 @@ import { nextRoundLabel, roundCapLine, STAGED_INTAKE_COPY_REVIEWED } from './sta
 import { ONGOING_ROUND_SIZE } from './tiered-axis-plan';
 import { ATO_TOKEN_EARN, ROUND_PAYOUTS_PER_DAY } from '@/lib/ato-tokens';
 import { isProfileSettled, settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
-import { TRAIT_AXES } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
 /**
@@ -65,7 +64,7 @@ export const INTAKE_UNLOCKED: readonly string[] = [
 
 export const NEXT_ROUND_HEADING = `What your next ${ONGOING_ROUND_SIZE} are for`;
 export const NEXT_ROUND_UNLOCKS: readonly string[] = [
-  `Another look at the traits that are still settling or pulled two ways, out of your ${TRAIT_AXES.length}`,
+  `Another look at traits that are still settling or pulled two ways`,
   'Your Story on Home, as more traits settle',
   'More categories on Explore',
   `+${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens`,

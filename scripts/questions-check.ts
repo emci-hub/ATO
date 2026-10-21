@@ -161,6 +161,22 @@ const jargonOption: QuestionDraft = {
   ],
 };
 assert.equal(questionDraftGuardHit(jargonOption), 'introvert');
+// Context, not keywords (2026-10-20): the same word as a topic or an everyday word keeps the question.
+const topicOption: QuestionDraft = {
+  axis: 'openness',
+  prompt: 'A quiet night in recharges plenty of introverts, and the ocean helps too.',
+  options: [
+    { text: 'I get competitive about board games', value: 0.2 },
+    { text: 'My boss called her team narcissists once', value: 0.8 },
+  ],
+};
+assert.equal(questionDraftGuardHit(topicOption), null, 'a topic mention, an everyday word and reported speech keep the question');
+for (const verdict of ['Your boss is a narcissist.', 'Your result: you are an INFJ.', 'Your Big Five score is high.']) {
+  assert.ok(
+    questionDraftGuardHit({ axis: 'openness', prompt: verdict, options: [{ text: 'Mine', value: 0.2 }, { text: 'Theirs', value: 0.8 }] }),
+    `a verdict or a framework result drops the question: ${verdict}`,
+  );
+}
 const phraseOption: QuestionDraft = {
   axis: 'relatedness',
   prompt: 'A friend cancels same-day.',

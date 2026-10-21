@@ -20,8 +20,12 @@ import { STEADINESS_BANK } from './steadiness';
 
 export * from './define';
 
-/** Every trait's 25, keyed by trait. One file per trait; edit there. */
-export const BANK_BY_TRAIT: Readonly<Record<TraitAxis, readonly BankQuestion[]>> = {
+/**
+ * Every row a trait has ever had, retired ones included, in id order. One
+ * file per trait; edit there. Use this to look up or count what someone has
+ * ANSWERED (an answer to a retired question still counts for them).
+ */
+export const BANK_ROWS_BY_TRAIT: Readonly<Record<TraitAxis, readonly BankQuestion[]>> = {
   openness: OPENNESS_BANK,
   conscientiousness: CONSCIENTIOUSNESS_BANK,
   extraversion: EXTRAVERSION_BANK,
@@ -40,11 +44,25 @@ export const BANK_BY_TRAIT: Readonly<Record<TraitAxis, readonly BankQuestion[]>>
   playfulness: PLAYFULNESS_BANK,
 };
 
-/** All 400, trait order then id order. */
+/** Each trait's 25 ACTIVE questions: the ones that are served and counted. */
+export const BANK_BY_TRAIT: Readonly<Record<TraitAxis, readonly BankQuestion[]>> = (() => {
+  const out = {} as Record<TraitAxis, readonly BankQuestion[]>;
+  for (const axis of TRAIT_AXES) out[axis] = BANK_ROWS_BY_TRAIT[axis].filter((row) => !row.retired);
+  return out;
+})();
+
+/** Every row ever, retired included: trait order then id order. */
+export const QUESTION_BANK_ALL: readonly BankQuestion[] = TRAIT_AXES.flatMap((axis) => BANK_ROWS_BY_TRAIT[axis]);
+
+/** The 400 active questions, trait order then id order. */
 export const QUESTION_BANK: readonly BankQuestion[] = TRAIT_AXES.flatMap((axis) => BANK_BY_TRAIT[axis]);
 
-const BY_ID = new Map(QUESTION_BANK.map((row) => [row.id, row]));
+/** Retired rows (kept forever, never served). */
+export const RETIRED_BANK_QUESTIONS: readonly BankQuestion[] = QUESTION_BANK_ALL.filter((row) => row.retired);
 
+const BY_ID = new Map(QUESTION_BANK_ALL.map((row) => [row.id, row]));
+
+/** Any bank row by id, retired ones too: an old answer still shows the question it answered. */
 export function bankQuestionById(id: string): BankQuestion | undefined {
   return BY_ID.get(id);
 }

@@ -150,6 +150,19 @@ pin(
   'Preview as new user can never be on with the flag off',
   src('src/lib/preview-mode.ts').includes('return PRE_LAUNCH_DEV && DEV_TOOLS_AVAILABLE && previewing;'),
 );
+// Launch flip (2026-10-20): Divecore is a product screen, not a dev lab. The
+// `play` route sits under the age guard only, never under PRE_LAUNCH_DEV.
+const layout = src('src/app/_layout.tsx');
+const devGuardAt = layout.indexOf('<Stack.Protected guard={PRE_LAUNCH_DEV}>');
+const devGuardEnd = layout.indexOf('</Stack.Protected>', devGuardAt);
+const ageGuardAt = layout.indexOf('<Stack.Protected guard={!ageGated}>');
+const playAt = layout.indexOf('<Stack.Screen name="play" />');
+pin('the play route is declared exactly once', playAt > 0 && layout.indexOf('<Stack.Screen name="play" />', playAt + 1) === -1);
+pin('the play route sits inside the age guard', ageGuardAt > 0 && playAt > ageGuardAt);
+pin(
+  'the play route is not inside the PRE_LAUNCH_DEV guard',
+  devGuardAt > 0 && devGuardEnd > devGuardAt && !(playAt > devGuardAt && playAt < devGuardEnd),
+);
 console.log(`release-mode: ${surfaceChecks} dev-surface gates verified`);
 
 const profile = process.env.EAS_BUILD_PROFILE ?? '';

@@ -10,24 +10,37 @@ line has drifted.
    `auth.getUser()` proves the user still exists (a deleted account's stale JWT is
    cleared). No client-side auto sign-in of any kind.
 3. `src/lib/me-context.tsx:35` `MeProvider` — loads the `me` row + `my_dev_access`.
-4. `src/app/_layout.tsx:72-97` — `Stack.Protected`: `!isAuthed` → `auth`,
-   `isAuthed && !hasMe` → `onboarding`, else `(tabs)` + pushed screens. Labs behind
-   `PRE_LAUNCH_DEV` (`src/lib/dev-mode.ts:14`).
+4. `src/app/_layout.tsx` (`RootNavigator`) — `Stack.Protected`: `!isAuthed` → `auth`,
+   `isAuthed && !meRow` → `onboarding`, `ageConfirm` → `confirm-age`, `ageBlocked` →
+   `under-18`, else `(tabs)` + pushed screens (`isAuthed && hasMe`). Labs + Play (and the
+   dev `age-gate-lab`) behind `PRE_LAUNCH_DEV`, nested inside `!ageGated`
+   (`src/lib/dev-mode.ts:15`).
+5. Age gate (emci 2026-10-20, `docs/under18-access.md`): `ageGate =
+   resolveAgeGate(me.born_on, localAgeEntryFor(me.id)).state` (`src/lib/age.ts`), worked out
+   on the device's date at render, never stored: no usable birthday (null / empty /
+   malformed / future) → `confirm`, under 18 → `blocked`, 18+ → `open`. `hasMe = meRow &&
+   !ageGated`, so a gated account gets no tabs, no `PushRuntime`, no DEV bubble, no
+   labs/Play. `src/app/confirm-age.tsx` takes the birthday once (BornOnFields →
+   `setBornOn` → `refresh()`); an under-18 date is never sent, it is held in memory
+   (`setLocalAgeEntry`) and the layout shows `under-18`. `src/app/under-18.tsx` shows the
+   18th-birthday date, Email support, Sign out and the existing `DeleteAccountSheet`
+   (confirm-age has the same three), and cancels this phone's scheduled reminders. Server
+   side (NOT applied): `wave101_under18_server_gate.sql`.
 
 ## 2. Signup → `me` row
 
 1. `src/app/onboarding.tsx` collects identity, 8 chips, optional 8 scenarios.
 2. `src/lib/me.ts:233` `createMe()` → RPC `complete_signup`
-   (`supabase/migrations/founder_access_requests.sql:141`, latest definition) — consumes
-   the invite code, enforces 16+, coalesces re-saves.
+   (`supabase/migrations/wave42_qa_override_invite_code_storage.sql:83`, latest applied definition; `wave99b_min_age_18.sql` replaces it once applied) — consumes
+   the invite code, enforces 18+ (16+ until wave99b_min_age_18.sql is applied), coalesces re-saves.
 3. Handle rules: client `RESERVED_HANDLES` (`src/lib/me.ts:749`) mirror the DB
    `me_handle_check` constraint (`supabase/migrations/wave34_root_is_column.sql`).
 4. Optional scenarios → one `updateTraits()` call (`src/lib/me.ts:499`).
 
 ## 3. Today's card (Dawn / Home)
 
-1. Home mounts: checks (`(tabs)/index.tsx:109`), trait tracks (`:116`), crisis flags
-   (`:131`), dev overrides (`:181`), reveal-opened (`:194`).
+1. Home mounts (crisis flags removed since this was written; line numbers are stale): checks (`(tabs)/index.tsx:109`), trait tracks (`:116`), crisis flags
+   (`:131`, gone), dev overrides (`:181`), reveal-opened (`:194`).
 2. Day window: `src/lib/check-window.ts:90` `checkWindowFor()` → today + up to 2 missed days.
 3. Card routing effect `(tabs)/index.tsx:262-287` → `routeVoiceCard()`
    (`src/lib/voice/router.ts:172`): bank copy for days 1–3, generated after; consent,
@@ -71,7 +84,11 @@ line has drifted.
 4. Dev-only exception: `applyDevArchetypePreset()` (`src/lib/dev-test-user.ts:159`)
    writes columns directly for the dev user (refuses any other account).
 
-## 6. Sage Talk
+## 6. Sage Talk (REMOVED 2026-10-14; history only)
+
+> Sage Talk and the crisis keyword gate no longer exist. Nothing a person types is scanned,
+> flagged or logged; the You tab carries one static `HelplineRow`. AI runs only for Legends
+> cards and category deep dives, server-side in `ai-library`. The flow below is the old design.
 
 `(tabs)/sage.tsx` → `routeTalkReply()` (`src/lib/voice/talk.ts:96`): consent gate →
 crisis keyword gate (`src/lib/crisis/detect.ts`, static card, zero model calls on a hit) →

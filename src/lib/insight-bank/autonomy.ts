@@ -59,7 +59,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     why: 'Questioning rules helps you fix ones that don’t work, but some exist for reasons you might not see.',
     try: [
       'Ask someone why a rule exists before you work around it, so you know what it protects.',
-      'Pick one rule that bugs you and suggest a change, so you fix it the right way.',
+      'Pick one rule that bugs you and suggest a change, so the team can look at it with you.',
     ],
     watch: [
       'Notice when you skip a rule and something goes wrong.',

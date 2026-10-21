@@ -85,10 +85,6 @@ export const PROMPT_ONLY_FILES: readonly string[] = [
 export const SERVER_BUNDLE_PROMPTS: Readonly<Record<string, RegExp>> = {
   'src/lib/sage-story.ts': /^Write as Sage in the ATO app\. Not a doctor\. This is The Story/,
   'src/lib/story-card.ts': /^Write as Sage in the ATO app\. Not a doctor\. Write a 100-word micro-story/,
-  // Play is a fenced mini-app: app work may not edit src/play/**
-  // (check:play-isolation). This one credits line is renamed in its own Play
-  // change (docs/sage-cleanup.md); it is pinned here so nothing else hides.
-  'src/play/credits.ts': /^Play is optional — Home, Check and Sage are never gated behind it\.$/,
 };
 
 const hits: string[] = [];

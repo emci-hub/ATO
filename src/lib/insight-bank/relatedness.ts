@@ -72,7 +72,7 @@ export const RELATEDNESS_IDEAS: readonly InsightIdea[] = [
       'You usually care a lot about being included in group plans.',
       'When you see photos of friends out without you, you tend to feel it.',
     ],
-    why: 'Wanting to belong is human, and feeling left out usually says more about how much you care than about the friendship.',
+    why: 'Wanting to belong is human, and feeling left out can say more about how much you care than about the friendship.',
     try: [
       'Text the group to suggest the next plan, so you’re part of it from the start.',
       'Ask one friend if you can join next time, so they know you’d like to be included.',

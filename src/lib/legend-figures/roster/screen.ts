@@ -33,10 +33,8 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'inventing gags', 'How do you build a joke out of a moving train?', 'Big ideas often come from playing with what’s right in front of you.'),
     ],
     tags: [
-      tag('steadiness', 'high', 'calm in total chaos', 'His face stayed still while the world collapsed around him.'),
       tag('playfulness', 'high', 'built comedy from stunts', 'His films are full of inventive physical comedy.'),
       tag('self_efficacy', 'high', 'did his own stunts', 'He performed daring, inventive stunts himself.'),
-      tag('conflict_assertiveness', 'low', 'said it all with silence', 'His humour came from a quiet, deadpan face.'),
     ],
     vetting: 'Actor and filmmaker, died 1966; no office; broadly admired.',
   },
@@ -62,7 +60,7 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     ],
     moments: [
       moment('m1', 'Between 1988 and 1992 she worked in some of the poorest communities of Africa, South America and Asia.', src(wiki('Audrey_Hepburn'), 'Between 1988 and 1992, she worked in some of the poorest communities')),
-      moment('m2', 'By 1944, as a teenager, she was performing ballet to raise money for the resistance.', src(wiki('Audrey_Hepburn'), 'performing ballet to raise money to support the resistance')),
+      moment('m2', 'As a teenager in the war, she gave silent dance performances that reportedly raised money for the Dutch resistance.', src(wiki('Audrey_Hepburn'), 'silent dance performances that reportedly raised money for the Dutch resistance')),
     ],
     angles: [
       angle('a1', 'the second act', 'What does a film star who turned to charity work have in common with you?', 'What you do with your later chapters can mean the most.'),
@@ -72,9 +70,7 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('conflict_cooperativeness', 'high', 'gave her time to children', 'She worked for UNICEF in some of the poorest places.'),
-      tag('agreeableness', 'high', 'gentle and gracious', 'She was known for warmth as well as style.'),
-      tag('relatedness', 'high', 'drawn to people in need', 'Her later years centred on others.'),
-      tag('attachment_anxiety', 'low', 'steady and trusting', 'She worked calmly alongside strangers worldwide.'),
+      tag('self_efficacy', 'low', 'unsure of herself', 'She spoke openly of feelings of insecurity and inferiority.'),
     ],
     vetting: 'Actress and humanitarian, died 1993; no office; broadly beloved.',
   },
@@ -96,7 +92,7 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     facts: [
       fact('f1', 'He achieved worldwide fame as the creator of the Muppets.', src(wiki('Jim_Henson'), 'creator of the Muppets')),
       fact('f2', 'He created the Muppets for Sesame Street and created Fraggle Rock.', src(wiki('Jim_Henson'), 'Muppets for Sesame Street', 'Fraggle Rock')),
-      fact('f3', 'He directed The Dark Crystal and Labyrinth.', src(wiki('Jim_Henson'), 'The Dark Crystal', 'Labyrinth')),
+      fact('f3', 'He co-directed The Dark Crystal with Frank Oz, and directed Labyrinth.', src(wiki('Jim_Henson'), 'co-directed The Dark Crystal (1982) with Oz', 'Labyrinth')),
     ],
     moments: [
       moment('m1', 'He changed the way puppetry is captured and presented on screen.', src(wiki('Jim_Henson'), 'the way puppetry is captured and presented in video media')),
@@ -111,8 +107,6 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('playfulness', 'high', 'made the Muppets', 'He built a world of silly, lovable characters.'),
       tag('openness', 'high', 'reinvented puppetry', 'He changed how puppets are filmed.'),
-      tag('agreeableness', 'high', 'gentle and kind', 'His characters are known for warmth.'),
-      tag('relatedness', 'high', 'built with a team', 'His work grew from a company of puppeteers.'),
     ],
     vetting: 'Puppeteer and filmmaker, died 1990; no office; broadly beloved.',
   },
@@ -148,7 +142,6 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('autonomy', 'high', 'made his own martial art', 'He founded his own fighting philosophy.'),
-      tag('self_efficacy', 'high', 'trusted his own skill', 'He became one of the most influential martial artists.'),
       tag('conscientiousness', 'high', 'trained relentlessly', 'His art came from discipline and practice.'),
       tag('openness', 'high', 'mixed many traditions', 'Jeet Kune Do blended ideas from many sources.'),
     ],
@@ -166,7 +159,7 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     birthday: { md: '11-09', source: src(wiki('Hedy_Lamarr'), 'November 9, 1914') },
     gender: 'woman',
     field: 'Film and invention',
-    essence: 'A movie star whose invention helped lead to Wi-Fi.',
+    essence: 'A movie star who co-patented a radio idea now used in Bluetooth.',
     whoTheyWere: 'An Austrian and American actress and inventor, famous on screen while inventing on the side.',
     famousFor: 'Co-inventing frequency hopping, whose principles are used in Bluetooth and early Wi-Fi.',
     facts: [
@@ -176,7 +169,7 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     ],
     moments: [
       moment('m1', 'She was celebrated for her acting, while her invention went largely unnoticed for decades.', src(wiki('Hedy_Lamarr'), 'celebrated for her acting career')),
-      moment('m2', 'Her frequency-hopping idea became foundational to spread spectrum communications.', src(wiki('Hedy_Lamarr'), 'foundational to later spread spectrum communications')),
+      moment('m2', 'Their patent was an early example of frequency hopping, which later became part of spread spectrum radio.', src(wiki('Hedy_Lamarr'), 'later spread spectrum communications')),
     ],
     angles: [
       angle('a1', 'the hidden inventor', 'What does a film star with a secret inventor side have in common with you?', 'People may only see one side of you. The other side still counts.'),
@@ -186,9 +179,8 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('openness', 'high', 'acted and invented', 'She worked on inventions alongside her film career.'),
-      tag('autonomy', 'high', 'refused to be one thing', 'She pursued invention while famous for acting.'),
-      tag('competence', 'high', 'solved a real problem', 'Her idea became foundational to wireless tech.'),
-      tag('relatedness', 'low', 'tinkered on her own time', 'Much of her inventing happened privately.'),
+      tag('competence', 'high', 'solved a real problem', 'She co-patented a way to keep radio signals from being jammed.'),
+      tag('self_efficacy', 'low', 'an insecure newcomer', 'She later described herself at MGM as an insecure actress.'),
     ],
     vetting: 'Actress and inventor, died 2000; no office; broadly admired. Wartime purpose described neutrally.',
   },
@@ -224,7 +216,6 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('conscientiousness', 'high', 'controlled every step', 'He worked on every part of production himself.'),
       tag('autonomy', 'high', 'directed, wrote and edited', 'He kept control of his films.'),
-      tag('relatedness', 'high', 'worked with one actor for years', 'He made film after film with Toshiro Mifune.'),
       tag('growth_mindset', 'high', 'switched from painting', 'He moved from painting to film and mastered it.'),
     ],
     vetting: 'Director, died 1998; no office; broadly admired.',
@@ -263,7 +254,7 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
       tag('conscientiousness', 'high', 'weeks of rehearsal', 'He rehearsed each dance for weeks.'),
       tag('competence', 'high', 'made it look effortless', 'His dancing set a standard on film.'),
       tag('conflict_assertiveness', 'high', 'insisted on how to film', 'He insisted dances be shot in long, full takes.'),
-      tag('relatedness', 'high', 'shone with a partner', 'His partnership with Ginger Rogers is legendary.'),
+      tag('self_efficacy', 'low', 'worried about slipping', 'Even as a star he often feared his career was faltering.'),
     ],
     vetting: 'Dancer and actor, died 1987; no office; broadly admired.',
   },
@@ -299,9 +290,6 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('conflict_assertiveness', 'high', 'refused the stereotypes', 'She left Hollywood rather than keep playing narrow roles.'),
-      tag('autonomy', 'high', 'took her career abroad', 'She moved to Europe to find better work.'),
-      tag('self_efficacy', 'high', 'first of her kind', 'She became Hollywood’s first Chinese-American star.'),
-      tag('conflict_cooperativeness', 'low', 'wouldn’t accept less', 'She wouldn’t settle for the roles offered.'),
     ],
     vetting: 'Actress, died 1961; no office; broadly admired.',
   },
@@ -337,8 +325,6 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('playfulness', 'high', 'the queen of physical comedy', 'Her comedy made millions laugh.'),
-      tag('locus_of_control', 'high', 'took charge of the studio', 'She became the first woman to run a major TV studio.'),
-      tag('extraversion', 'high', 'loved an audience', 'She built her career in front of crowds.'),
       tag('self_efficacy', 'high', 'backed big new shows', 'Her studio produced bold new series.'),
     ],
     vetting: 'Comedian and executive, died 1989; no office; broadly beloved.',
@@ -376,7 +362,6 @@ export const SCREEN_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('openness', 'high', 'worked in many arts', 'He directed, wrote, drew and composed.'),
       tag('conscientiousness', 'high', 'designed every detail', 'He illustrated his books and created their publicity.'),
-      tag('extraversion', 'low', 'quiet storyteller', 'His films are known for quiet, careful storytelling.'),
       tag('competence', 'high', 'mastered film fast', 'His first film won eleven international prizes.'),
     ],
     vetting: 'Director, died 1992; no office; broadly admired.',

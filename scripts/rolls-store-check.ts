@@ -8,7 +8,7 @@
  * ai-provider-check.ts already uses for RN-touching files.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -90,39 +90,14 @@ const composeSrc = read('src/lib/rolls/compose.ts');
 assert.match(composeSrc, /export function rollItemPrice\(type: RollItemType\): number \{\s*\n\s*return type === 'legend' \? 5 : 1;/, 'rollItemPrice must mirror reveal_roll_item\'s own server-side pricing exactly (wave46/47 SQL: legend=5, else=1)');
 ok('compose.ts exposes rollItemPrice as a display-only mirror of the server\'s authoritative pricing');
 
-// --- generate.ts: dedicated call site with the right metadata, gated by its own quota ---
-const generateSrc = read('src/lib/rolls/generate.ts');
-assert.match(generateSrc, /import \{ ROLL_META \} from '@\/lib\/ai\/call-sites'/);
-assert.match(generateSrc, /generateText\(\{[\s\S]*?\}, ROLL_META\)/, 'must pass ROLL_META on the same line as the closing brace — matching the exact shape check:ai\'s regex requires (a prior attempt split this across lines with a trailing comma and failed the check)');
-const claimGenIdx = generateSrc.indexOf('claimRollGeneration()');
-const generateTextIdx = generateSrc.indexOf('generateText({');
-assert.ok(claimGenIdx > -1 && generateTextIdx > claimGenIdx, 'claimRollGeneration must be called BEFORE generateText — found in review: every generateText call goes through ai-generate\'s shared Sage/Explore quota regardless of feature, so rolls need their OWN bound claimed first, same pattern claim_questions_batch already uses for Infinite Questions');
-assert.match(generateSrc, /if \(!claim\.ok\) return null;/, 'a refused claim_roll_generation must degrade to null (treated as "not ready" for that item), never throw and fail the whole roll');
-// Found in review: claimRollGeneration (store.ts) throws on any RPC error
-// (network blip, or the RPC not yet applied) — generateRollItemText must
-// catch that itself, not just handle a clean {ok:false} refusal, or a
-// single transient failure would abort composeRoll's whole item loop.
-assert.match(generateSrc, /try \{[\s\S]*claimRollGeneration\(\)[\s\S]*\} catch \(err\) \{[\s\S]*return null;\s*\n\s*\}/, 'generateRollItemText must wrap the claim + generation in try/catch and return null on any error, matching its documented "never throws" contract');
-ok('generate.ts is a dedicated ROLL_META call site, formatted the way check:ai\'s static scan requires, gated by its own per-generation quota claimed first, and never throws');
-
-// --- run.ts: eligibility checked before quota is ever claimed -------------
-const runSrc = read('src/lib/rolls/run.ts');
-const eligibleIdx = runSrc.indexOf('if (!rollEligible(tracks, lastSnapshot))');
-const claimIdx = runSrc.indexOf('await claimRoll();'); // the real call — "claimRoll()" alone also matches the docstring's prose mention of it
-assert.ok(eligibleIdx > -1 && claimIdx > eligibleIdx, 'rollEligible must be checked BEFORE claimRoll in control flow — reduces unnecessary claims for an honest client');
-assert.match(runSrc, /if \(!rollEligible\(tracks, lastSnapshot\)\) \{\s*\n\s*return \{ kind: 'not_eligible' \};/);
-assert.match(runSrc, /Crypto\.randomUUID\(\)/, 'roll_id generation must use expo-crypto\'s randomUUID (the global crypto object is not reliably available in React Native), same pattern auth-apple.ts already uses');
-// Found in review: an earlier version let any unexpected throw (a network
-// blip, storeRoll rejecting a payload, etc.) propagate uncaught from
-// runRoll — a real problem since claimRoll may have already spent the
-// day's 1/day composition attempt by the time a later step fails.
-assert.match(runSrc, /try \{[\s\S]*fetchLastRollSnapshot[\s\S]*\} catch \(err\) \{[\s\S]*return \{ kind: 'error', message \};?\s*\n\s*\}/, 'runRoll must wrap its entire body in try/catch and return {kind:\'error\'} on any unexpected throw, not propagate it uncaught');
-// The docstring must NOT claim server-side enforcement it doesn't have —
-// found in review: an earlier version claimed §7's "gated server-side...
-// never trusted from the client" requirement was satisfied, when
-// rollEligible actually runs in this same client file.
-assert.match(runSrc, /NOT server-enforced/, 'run.ts must honestly document that eligibility is client-checked only, not silently claim server-side enforcement it doesn\'t have');
-assert.doesNotMatch(runSrc, /rolling itself[\s\S]{0,40}must be gated server-side, not just revealing\.\s*\*\//, 'the old false claim of satisfying §7\'s server-gating requirement must be gone');
-ok('run.ts checks RCI eligibility before claiming roll-composition quota, generates roll_id via expo-crypto, and its docstring honestly documents the client-side-only eligibility gap instead of claiming server enforcement it doesn\'t have');
+// --- run.ts / generate.ts: dead (no callers), deleted 2026-10-20 ---------------
+// No client code may run a roll or make a roll model call. Pass: the files are
+// gone, ROLL_META is gone, and the rolls store makes no model call.
+for (const gone of ['src/lib/rolls/run.ts', 'src/lib/rolls/generate.ts']) {
+  assert.ok(!existsSync(resolve(root, gone)), gone + ' must stay deleted');
+}
+assert.doesNotMatch(read('src/lib/ai/call-sites.ts'), /ROLL_META/, 'ROLL_META is gone with its only call site');
+assert.doesNotMatch(storeSrc, /import[^;]*@\/lib\/ai\/|generateText\(/,'store.ts makes no model call');
+ok('rolls run.ts and generate.ts stay deleted; no ROLL_META, no model call in the rolls store');
 
 console.log(`\n${passed} rolls-store checks passed`);

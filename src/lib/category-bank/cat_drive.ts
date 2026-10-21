@@ -28,8 +28,8 @@ export const CAT_DRIVE: BarCard = {
     },
     mid: {
       summary: [
-        'Your drive tends to come and go with the task: some things fire you up and others feel like a chore.',
-        'You usually push hard for things you care about and coast on things you don’t.',
+        'Your drive tends to come and go with the task: some things get you excited and others feel like a chore.',
+        'You usually push hard for things you care about and put in less effort on things you don’t.',
         'You can be very motivated, but it tends to depend on who you’re working with and what it’s for.',
       ],
       strength: [

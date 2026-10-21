@@ -35,6 +35,16 @@ Read before editing the area. Each one has bitten this repo at least once.
   password", in Settings. That is correct, not a bug — the has-password check
   (`auth_has_password()` RPC) is reading real state. If you need to test the
   no-password → "Set Password" path, use an OTP-only account, not `@atodev`.
+- **Under-18 accounts are blocked, never deleted (emci 2026-10-20, `docs/under18-access.md`).** The root
+  layout's age gate routes an existing under-18 tester to `under-18.tsx` and an account with no usable
+  `born_on` (null, empty, malformed, future) to `confirm-age.tsx`; it is computed from `born_on` at render
+  (no flag), so they get back in on their 18th birthday with no action. `hasMe` now means "the app shell
+  may open" (me row AND gate open); use `meRow` for "has a me row". A missing birthday no longer opens the
+  app: it must be confirmed once (dev-test and root accounts too; there is no dev bypass, `PRE_LAUNCH_DEV`
+  does not skip it). Preview the screens with the dev `age-gate-lab` (synthetic fixtures), never with a
+  real account. `DeleteAccountSheet`'s `preview` prop is for that lab only. The client date is local; the server's
+  `is_at_least_age` uses `current_date` (UTC), so the two can disagree for a few hours on the birthday.
+  The server gate (`wave101_under18_server_gate.sql`, NOT applied) must ship after the app update.
 - **Root is `me.is_root`.** Never gate on a handle string again — `emci` was claimable.
   The column is trigger-protected; set it from the SQL editor / service role only.
 - **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the Home dev
@@ -155,8 +165,8 @@ Read before editing the area. Each one has bitten this repo at least once.
 - **The Questions AI path is gated on profile completeness.** `routeQuestions` serves
   the static bank — and claims no quota — until every axis has one answer. The gate
   reads `input.tracks`, and **absent tracks read as incomplete**, so anything newly
-  calling `routeQuestions` must pass tracks or it silently loses the AI path. Sage
-  chat is a separate route and stays open.
+  calling `routeQuestions` must pass tracks or it silently loses the AI path. (Historical:
+  Sage chat and the AI question path are gone; questions come from the fixed bank.)
 - **`complete_signup` re-save must coalesce every field.** One overwrite slipped
   through once (`recovery_style`, fixed in wave24).
 - **Legends' 64-archetype system has no "no match" state.** `archetypeCode()`
@@ -222,14 +232,18 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 ## Copy
 
+- **Copy review = clarity, accuracy, honesty; not sanitizing** (emci 2026-10-19). Rules: `docs/copy-review-rules.md`.
+  No keyword bans on ordinary words, no softening a true line into a euphemism, no forced upside, facts checked against a
+  source. Older "reframe in sensation words" notes (hideout-roadmap, memory) are superseded by it.
 - **Nine badge render sites are pinned in `check:copy-review-badges`'s `sites`
   array — one (`profile-fill-fold.tsx`) is reviewed, eight remain
   `*_COPY_REVIEWED = false`.** Story/Levity are diagnosis-adjacent; do not flip
   those without emci's own read. **The `containsFrameworkTerm` fence
   (`profileFillCopyClean()` etc.) is not what makes a flag reviewed** — every
   other clean-copy module passes that same fence and still ships `false`; the
-  fence only rules out banned type/framework language, it says nothing about
-  tone or whether the copy is fit to ship. `PROFILE_FILL_COPY_REVIEWED` was
+  fence only rules out framework language that implies a diagnosis or a validated
+  assessment (decision D6: a framework name is allowed when relevant, accurate and
+  explained), it says nothing about tone or whether the copy is fit to ship. `PROFILE_FILL_COPY_REVIEWED` was
   flipped to `true` on emci's explicit, flag-specific delegation ("flip it to
   true if it reads correctly") for copy judged genuinely non-diagnostic — a
   filled/unfilled checklist describing data state, not the person. Add any new
@@ -241,9 +255,12 @@ Read before editing the area. Each one has bitten this repo at least once.
   ships either way, but the internal review-status badge is now dev-only.
   `check:copy-review-badges` asserts every site (new ones included) requires
   `PRE_LAUNCH_DEV` alongside its `!*_COPY_REVIEWED` check.
-- **Never say "AI" or "tokens" in user copy** (`voice/quota.ts` comment); Sage is a
-  "coach", Notes are "notes".
-- **MBTI four-letter codes were removed for trademark reasons** — do not reintroduce.
+- **(Outdated, see CLAUDE.md.)** The old rule "never say AI or tokens in user copy"
+  and "Sage is a coach" no longer apply: Sage is gone, AI surfaces are labelled
+  (small AI icon, consent copy `AI_USE_DISCLOSURE`) and ATO tokens are named as such.
+- **MBTI four-letter codes were removed for trademark reasons** — do not present a type code as ATO's own
+  result or branding (decision D6: a framework or test may be named narrowly, when relevant, accurate and
+  explained, never as a validated assessment ATO is not).
 - **The shared AI library bundle goes stale silently on the server** (wave93). The
   `ai-library` Edge Function runs `supabase/functions/_shared/ai-library.bundle.js`, a
   build of `src/lib/ai-library/server.ts` and everything it imports (deep-dive, Story and

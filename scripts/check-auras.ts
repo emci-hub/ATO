@@ -297,7 +297,8 @@ ok('every style has 8 frames, anchored on the ground point; every character has 
   const fresh = defaultPlayStore(T0);
   const grown = {
     ...fresh,
-    tokens: 1000,
+    // Enough for fire (900) + thunder (450) + one pair (150) now that nothing is free (launch flip).
+    tokens: 2000,
     pet: { ...fresh.pet, stage: 'adult' as const, hero: 'elowen', grade: 'rare' as const, uid: fresh.pet.uid || 1 },
   };
   const worn = applyPetAura(grown, T0, grown.pet.uid, 'fire', true);

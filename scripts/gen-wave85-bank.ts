@@ -6,9 +6,31 @@
  * Upsert on id: re-running after a wording edit updates that row's prompt and
  * options in place. Answers reference the id, so they are never touched.
  * `check:question-bank` regenerates this text and fails if the file drifted.
+ *
+ * Since wave99 (2026-10-19) wave85b is frozen as applied: a later wording edit
+ * goes in a new migration (wave99: `--wave99`, rows listed in WAVE99_IDS), and
+ * the check compares wave85b line by line, allowing only those rows to differ.
+ *
+ * Since wave100 (2026-10-20) a SCENARIO change retires the old row (text kept)
+ * and adds a new id: `--wave100` writes wave100b (insert the new rows, mark the
+ * old ones retired). wave85b still holds exactly ids 01-25 of every trait.
  */
 import { QUESTIONS_BANK, withRewordAliases } from '../src/lib/questions/bank';
-import { QUESTION_BANK, type BankQuestion } from '../src/lib/questions/bank/index';
+import { QUESTION_BANK_ALL, RETIRED_BANK_QUESTIONS, type BankQuestion } from '../src/lib/questions/bank/index';
+
+/** The number in `<trait>_<nn>`. */
+export function bankIdNumber(id: string): number {
+  return Number(id.slice(id.lastIndexOf('_') + 1));
+}
+
+/** The 400 rows wave85b seeded (ids 01-25 of every trait), in file order. Retired rows included, with their original text. */
+export const WAVE85B_ROWS: readonly BankQuestion[] = QUESTION_BANK_ALL.filter((row) => bankIdNumber(row.id) <= 25);
+
+/** Rows added after wave85b: the new scenes that replace retired rows (wave100). */
+export const WAVE100_NEW_ROWS: readonly BankQuestion[] = QUESTION_BANK_ALL.filter((row) => bankIdNumber(row.id) > 25);
+
+/** Rows wave100b marks retired. */
+export const WAVE100_RETIRED_ROWS: readonly BankQuestion[] = RETIRED_BANK_QUESTIONS.filter((row) => row.retired?.wave === 'wave100');
 
 function sqlText(text: string): string {
   return `'${text.replace(/'/g, "''")}'`;
@@ -25,7 +47,7 @@ export function legacyPromptsFor(row: BankQuestion): string[] {
   return intake ? withRewordAliases([intake.prompt]) : [];
 }
 
-function rowSql(row: BankQuestion): string {
+export function rowSql(row: BankQuestion): string {
   const options = JSON.stringify(row.options.map((o) => ({ text: o.text, value: o.value })));
   const legacy = legacyPromptsFor(row);
   const legacySql = legacy.length ? `array[${legacy.map(sqlText).join(', ')}]::text[]` : `'{}'::text[]`;
@@ -42,12 +64,12 @@ export function wave85SeedSql(): string {
 -- confirms they match. APPLIED 2026-10-06, right after wave85 (in four
 -- 100-row upserts; live rows verified identical to the code by fingerprint).
 --
--- ${QUESTION_BANK.length} rows. Upsert on id; answers reference id, so a wording change
+-- ${WAVE85B_ROWS.length} rows. Upsert on id; answers reference id, so a wording change
 -- here never touches anyone's answers.
 
 insert into public.question_bank (id, axis, setting, unflattering, intake_slot, prompt, options, legacy_prompts)
 values
-${QUESTION_BANK.map(rowSql).join(',\n')}
+${WAVE85B_ROWS.map(rowSql).join(',\n')}
 on conflict (id) do update
   set axis = excluded.axis,
       setting = excluded.setting,
@@ -60,6 +82,187 @@ on conflict (id) do update
 `;
 }
 
+/**
+ * wave99 (copy review, emci 2026-10-19): the bank rows whose wording changed
+ * after wave85b was applied. wave85b stays as applied (the record of what went
+ * live on 2026-10-06); wave99 upserts only these rows with today's text, the
+ * same way wave85b does. `check:question-bank` confirms that every other row in
+ * wave85b still matches the code and that exactly these ids differ, so no
+ * wording edit can slip through without a migration. Ids are forever: this
+ * list only rewords rows, it never adds, removes or renumbers one.
+ */
+export const WAVE99_IDS: readonly string[] = [
+  'agreeableness_11',
+  'agreeableness_18',
+  'attachment_anxiety_06',
+  'attachment_anxiety_09',
+  'attachment_anxiety_10',
+  'attachment_anxiety_11',
+  'attachment_anxiety_12',
+  'attachment_anxiety_13',
+  'attachment_anxiety_19',
+  'attachment_avoidance_06',
+  'attachment_avoidance_08',
+  'attachment_avoidance_17',
+  'attachment_avoidance_18',
+  'attachment_avoidance_21',
+  'autonomy_08',
+  'autonomy_17',
+  'competence_08',
+  'competence_15',
+  'competence_18',
+  'conflict_assertiveness_10',
+  'conflict_assertiveness_13',
+  'conflict_assertiveness_23',
+  'conflict_cooperativeness_06',
+  'conscientiousness_07',
+  'conscientiousness_08',
+  'conscientiousness_11',
+  'conscientiousness_14',
+  'conscientiousness_15',
+  'conscientiousness_24',
+  'extraversion_10',
+  'extraversion_17',
+  'extraversion_19',
+  'extraversion_20',
+  'growth_mindset_11',
+  'growth_mindset_12',
+  'locus_of_control_10',
+  'openness_07',
+  'openness_24',
+  'playfulness_05',
+  'playfulness_07',
+  'relatedness_08',
+  'relatedness_21',
+  'relatedness_23',
+  'relatedness_25',
+  'steadiness_04',
+  'steadiness_12',
+];
+
+/**
+ * SCENARIO changes from the same copy review (emci 2026-10-19: "Preserve the
+ * original question/version for existing answers when scenarios change"): a
+ * new situation or options that mean something different. They may NOT be
+ * written in place under the old id, because existing answers would then show
+ * against a question the person never saw. These ids keep their wave85b
+ * text word for word. Since wave100 (emci 2026-10-20, retire mechanism
+ * approved) every one of them is retired and its new scene is a new id
+ * (see each row's `retired.replacedBy`); check:question-bank pins both.
+ * attachment_avoidance_09 (share locations): emci, "Don't score
+ * location-sharing boundaries as distance."
+ */
+export const WAVE99_SCENARIO_HELD: readonly string[] = [
+  'attachment_anxiety_17',
+  'attachment_anxiety_21',
+  'attachment_anxiety_22',
+  'attachment_avoidance_09',
+  'conflict_assertiveness_05',
+  'conflict_assertiveness_07',
+  'conflict_assertiveness_24',
+  'conflict_cooperativeness_08',
+  'conflict_cooperativeness_23',
+  'extraversion_13',
+  'locus_of_control_24',
+  'playfulness_21',
+  'self_efficacy_04',
+  'self_efficacy_10',
+  'steadiness_09',
+];
+
+export function wave99WordingSql(): string {
+  const rows = QUESTION_BANK_ALL.filter((row) => WAVE99_IDS.includes(row.id));
+  return `-- wave99_question_wording.sql
+--
+-- GENERATED by scripts/gen-wave85-bank.ts (WAVE99_IDS) from src/lib/questions/bank/*.ts.
+-- Do not edit by hand: edit the trait file, add the id to WAVE99_IDS, regenerate
+-- (npx tsx ./scripts/gen-wave85-bank.ts --wave99 > supabase/migrations/wave99_question_wording.sql),
+-- and check:question-bank confirms they match. NOT APPLIED.
+--
+-- Copy review (emci 2026-10-19, docs/copy-review-agent/applied-set2-questions.md):
+-- ${rows.length} rows reworded (WORDING only: same scene, same choices). Same pattern as wave85b:
+-- upsert on id. Every row keeps its id, trait, setting, flags and option values, so no answer
+-- is touched and no answer reads as an answer to a different question. SCENARIO changes are
+-- held out (WAVE99_SCENARIO_HELD) until the bank can retire a question.
+
+insert into public.question_bank (id, axis, setting, unflattering, intake_slot, prompt, options, legacy_prompts)
+values
+${rows.map(rowSql).join(',\n')}
+on conflict (id) do update
+  set axis = excluded.axis,
+      setting = excluded.setting,
+      unflattering = excluded.unflattering,
+      intake_slot = excluded.intake_slot,
+      prompt = excluded.prompt,
+      options = excluded.options,
+      legacy_prompts = excluded.legacy_prompts,
+      updated_at = now();
+`;
+}
+
+/**
+ * wave100b (emci 2026-10-20, retire mechanism approved): inserts the new
+ * scenes as new ids and marks the rows they replace retired. The retired rows
+ * keep their text (wave85b, word for word); nothing is deleted or renumbered.
+ * Needs wave100_question_retire.sql (the column and the functions) first.
+ */
+export function wave100RowsSql(): string {
+  const pairs = WAVE100_RETIRED_ROWS.map((row) => `--   ${row.id} -> ${row.retired!.replacedBy}`).join('\n');
+  const retiredIds = WAVE100_RETIRED_ROWS.map((row) => sqlText(row.id)).join(', ');
+  return `-- wave100b_question_retire_rows.sql
+--
+-- GENERATED by scripts/gen-wave85-bank.ts (--wave100) from src/lib/questions/bank/*.ts.
+-- Do not edit by hand: mark the old row retired(newId, …) in its trait file, add the new
+-- scene as the next free id, regenerate
+-- (npx tsx ./scripts/gen-wave85-bank.ts --wave100 > supabase/migrations/wave100b_question_retire_rows.sql),
+-- and check:question-bank confirms they match. NOT APPLIED. Apply right after
+-- wave100_question_retire.sql (it needs the retired_at column and the new functions).
+--
+-- ${WAVE100_NEW_ROWS.length} new rows (new ids, same trait, setting, direction and value scheme as the row
+-- they replace) and ${WAVE100_RETIRED_ROWS.length} rows retired. A retired row keeps its id and its original
+-- text, so every answer already given still points at the question it answered. Old -> new:
+${pairs}
+
+insert into public.question_bank (id, axis, setting, unflattering, intake_slot, prompt, options, legacy_prompts)
+values
+${WAVE100_NEW_ROWS.map(rowSql).join(',\n')}
+on conflict (id) do update
+  set axis = excluded.axis,
+      setting = excluded.setting,
+      unflattering = excluded.unflattering,
+      intake_slot = excluded.intake_slot,
+      prompt = excluded.prompt,
+      options = excluded.options,
+      legacy_prompts = excluded.legacy_prompts,
+      updated_at = now();
+
+update public.question_bank
+   set retired_at = now(), updated_at = now()
+ where retired_at is null
+   and id in (${retiredIds});
+
+-- Every trait keeps exactly 25 active questions; anything else rolls the whole file back.
+do $check$
+declare
+  bad text;
+begin
+  select string_agg(axis || '=' || n, ', ') into bad
+    from (select axis, count(*) filter (where retired_at is null) as n
+            from public.question_bank group by axis) t
+   where n <> 25;
+  if bad is not null then
+    raise exception 'wave100b: each trait needs 25 active questions, got %', bad;
+  end if;
+end
+$check$;
+`;
+}
+
 if (require.main === module) {
-  process.stdout.write(wave85SeedSql());
+  const out = process.argv.includes('--wave100')
+    ? wave100RowsSql()
+    : process.argv.includes('--wave99')
+      ? wave99WordingSql()
+      : wave85SeedSql();
+  process.stdout.write(out);
 }

@@ -89,6 +89,29 @@ for (const entry of ALL_IDEAS) {
   entry.focus.forEach((text, variant) => BY_TITLE.set(text, { idea: entry, variant }));
 }
 
+/**
+ * Focus wordings changed by the 2026-10-19 copy review: old wording → current
+ * wording. Stored rows are matched by title, so the old text still maps to its
+ * idea and variant (today's saved insight and the no-repeat history keep
+ * working). Add a line here whenever a focus text is reworded.
+ */
+export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
+  'You usually keep every promise you make, even the ones you said yes to too fast.':
+    'You usually keep your promises, even the ones you said yes to too fast.',
+  'You adapt to new plans easily, but small tasks tend to stack up when there’s no deadline.':
+    'You handle changing plans well, but small tasks can pile up when there’s no deadline.',
+  'You usually see problems as smaller than others do, which can feel like you’re not taking them seriously.':
+    'You usually see problems as smaller than others do, so people may feel you’re not taking them seriously.',
+  'When something goes wrong, you tend to sleep fine and feel better by morning.':
+    'When something goes wrong, you tend to feel more settled by the next day.',
+  'You’re usually the person people call when something goes wrong.':
+    'People tend to call you first when something goes wrong.',
+};
+for (const [oldText, currentText] of Object.entries(RETIRED_FOCUS_TEXT)) {
+  const match = BY_TITLE.get(currentText);
+  if (match) BY_TITLE.set(oldText, match);
+}
+
 /** The idea a stored title came from, or null for an old AI-written row. */
 export function ideaForTitle(title: string | null | undefined): TitleMatch | null {
   if (!title) return null;

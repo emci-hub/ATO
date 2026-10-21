@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   Rajdhani_500Medium,
@@ -24,6 +25,7 @@ import { MeProvider, useMeContext } from '@/lib/me-context';
 import { initSentry, Sentry } from '@/lib/sentry';
 import { useSession } from '@/hooks/use-session';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { getLocalAgeEntry, localAgeEntryFor, resolveAgeGate, subscribeLocalAgeEntry } from '@/lib/age';
 
 initSentry();
 SplashScreen.preventAutoHideAsync();
@@ -67,8 +69,21 @@ function RootNavigator() {
     SpaceMono_700Bold,
   });
 
+  // This app session's under-18 entry from /confirm-age (memory only, never sent).
+  useSyncExternalStore(subscribeLocalAgeEntry, getLocalAgeEntry, getLocalAgeEntry);
+
   const isAuthed = !!session;
-  const hasMe = !!me;
+  const meRow = !!me;
+  // Age gate (emci 2026-10-20, docs/under18-access.md): worked out from born_on
+  // on the phone's date at every render, never stored. Unknown birthday →
+  // confirm-age; under 18 → under-18; 18+ → the app. PRE_LAUNCH_DEV does not
+  // bypass it. Nothing is deleted or written by the gate.
+  const ageGate = isAuthed && meRow ? resolveAgeGate(me?.born_on, localAgeEntryFor(me?.id)).state : 'open';
+  const ageConfirm = ageGate === 'confirm';
+  const ageBlocked = ageGate === 'blocked';
+  const ageGated = ageConfirm || ageBlocked;
+  // hasMe = "the app shell may open": a me row AND the age gate is open.
+  const hasMe = meRow && !ageGated;
   const fontsReady = fontsLoaded || !!fontError;
   const resolving =
     sessionLoading || (isAuthed && meLoading) || !appearanceReady || !fontsReady;
@@ -92,34 +107,45 @@ function RootNavigator() {
               <Stack.Screen name="auth" />
             </Stack.Protected>
 
-            <Stack.Protected guard={isAuthed && !hasMe}>
+            <Stack.Protected guard={isAuthed && !meRow}>
               <Stack.Screen name="onboarding" />
+            </Stack.Protected>
+
+            {/* No usable birthday: confirm it once. No tabs, AI, push, Circle, Divecore. */}
+            <Stack.Protected guard={ageConfirm}>
+              <Stack.Screen name="confirm-age" />
+            </Stack.Protected>
+
+            {/* Under 18 today: this screen only. No tabs, AI, push, Circle, Divecore. */}
+            <Stack.Protected guard={ageBlocked}>
+              <Stack.Screen name="under-18" />
             </Stack.Protected>
 
             <Stack.Protected guard={isAuthed && hasMe}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="week" />
               <Stack.Screen name="chat" />
-              {/* Old /sage links → /insights (Sage replaced 2026-10-14). */}
-              <Stack.Screen name="sage" />
               <Stack.Screen name="dev-lab" />
               <Stack.Screen name="ai-lab" />
             </Stack.Protected>
 
-            <Stack.Protected guard={PRE_LAUNCH_DEV}>
-              <Stack.Screen name="theme-lab" />
-              <Stack.Screen name="around-lab" />
-              <Stack.Screen name="pixel-lab" />
-              <Stack.Screen name="profile-card-lab" />
-              {/* Play (Grove) is an in-progress module, not a dev lab: it rides
-                  the same PRE_LAUNCH_DEV gate so it can never reach a public
-                  build until the module is finished and the gate is lifted. */}
+            {/* Outer guard: labs and Play (Divecore) never open to an age-gated account. */}
+            <Stack.Protected guard={!ageGated}>
+              {/* Play (Divecore) is on in every build (launch flip, emci 2026-10-20); pinned by check:release-mode. */}
               <Stack.Screen name="play" />
+              <Stack.Protected guard={PRE_LAUNCH_DEV}>
+                {/* Dev age-gate preview: synthetic fixtures only, no account read or write. */}
+                <Stack.Screen name="age-gate-lab" />
+                <Stack.Screen name="theme-lab" />
+                <Stack.Screen name="around-lab" />
+                <Stack.Screen name="pixel-lab" />
+                <Stack.Screen name="profile-card-lab" />
+              </Stack.Protected>
             </Stack.Protected>
           </Stack>
           {/* Floating dev button over every app screen; gated inside (the Hub's
-              rule) and hidden on /play, which has its own. */}
-          <AppDevFab />
+              rule) and hidden on /play, which has its own. Not while age-gated. */}
+          {ageGated ? null : <AppDevFab />}
           {/* Dev "Preview as new user": a red bar over every screen while it is on. */}
           <PreviewBanner />
           {/* A downloaded OTA update only runs after a restart: offer it with one tap. */}

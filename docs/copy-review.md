@@ -6,6 +6,9 @@ written fresh each time and stays marked as draft. The Story redesign (2026-10-1
 and its v3 templates are in `docs/story-review.md` + `docs/story/`; both flags stay false and the
 app shows no draft badge on Story.
 
+Reviewing rules for this and every other copy sheet: `docs/copy-review-rules.md` (clarity, accuracy, honesty; no
+sanitizing, no keyword flags; audience adults 18+).
+
 Tell me any line to change and I fix it before publishing. The 340 daily lines are in
 docs/daily-line-review.md.
 

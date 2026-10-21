@@ -90,7 +90,8 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   `dev-lab.tsx`), or a typed handle where it cannot be undone.
 - **New copy and new AI prompts use the moment voice (emci 2026-10-02).** One concrete,
   recognizable moment from how people live now (texts, group chats, read receipts, tabs),
-  teased kindly, no advice, no slang. Rules + approved examples: `src/lib/voice/moment-voice.ts`;
+  teased kindly, no advice (the deep dive's one small step and the core content policy below are the exceptions),
+  no slang. Rules + approved examples: `src/lib/voice/moment-voice.ts`;
   drop `MOMENT_VOICE_BLOCK` into any new generation prompt. Older surfaces (question
   prompts, categories, Story, the insight's five fields) are not converted yet.
 - **Stored tips (insight-bank, category-bank) use the clear voice (emci 2026-10-07), not the moment voice.**
@@ -101,7 +102,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 - **Category deep dive on Explore (emci 2026-10-08; moved from Home 2026-10-09).** Between Categories and
   "How you've changed" (after Questions are finished, hidden on a crisis day): pick a category → leanings worked out on the phone ("Adventurous 78%") →
   "Write my deep dive" = one AI call (`src/lib/category-deep-dive/`: consent, then `claim_category_deep_dive`,
-  1/day, wave90), strict validator, no clinical words, gentle block for Love / closeness. It never touches
+  1/day, wave90), strict validator (plain language, a necessary technical term explained, no diagnosis or label pinned on the reader, no directive "you should"; Love / closeness is judged by meaning like any other category, no special block). It never touches
   insight-bank or category-bank. `CATEGORY_DEEP_DIVE_COPY_REVIEWED = false`, review doc
   `docs/category-deep-dive-review.md`, pinned by `check:category-deep-dive`.
 - **AI views cost ATO tokens (wave92, emci 2026-10-09).** Every AI view (new Story, Legends AI card,
@@ -117,11 +118,31 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   by `scripts/gen-wave85-bank.ts` and pinned by `check:question-bank`. No AI writes a question and
   nothing a person typed reaches one. Never renumber or reuse a question id — answers point at it.
   wave85/85b/86 are applied (2026-10-06); a wording edit needs a new migration updating that row.
+  A SCENARIO change (new situation, or an option that now means something else) is never written in
+  place (emci 2026-10-20): wrap the old row in `retired(newId, …)` with its text untouched and add the
+  new scene as the next free id (`<trait>_26`…), same setting, direction and values; regenerate with
+  `--wave100`-style output. Retired rows (`question_bank.retired_at`, wave100/100b, NOT applied yet) are
+  never served or changed but still count for whoever answered them (answered = min(25, all answered)).
+  Exactly 25 ACTIVE per trait. No question may score a privacy, money or safety boundary as distance.
 - **Profile history (wave86, emci 2026-10-06).** Saved profiles live in `trait_profile_snapshots`
   (reasons `start_fresh`, `change_answers`, `monthly`) and render as cards (`profile-card.tsx`,
   Divecore sprites). History is never auto-deleted; the monthly pg_cron job saves only on a
   meaningful change (`_profile_changed` = `profileChanged`, pinned by `check:profile-history`).
   Retest is retired: after set 25 it is Change answers + Undo. No AI anywhere in cards/history.
+- **Weaknesses on the profile card (emci 2026-10-19):** the Strengths/Weaknesses labels stay. A possible drawback is
+  named only for a clear lean (`WEAKNESS_MIN_LEAN`), always as a possibility ("You may find it cuts both ways."), with
+  one practical step; shareable titles, push and widget lines keep struggle-side lines out (`isShareableLean`).
+- **Core content policy (emci 2026-10-20; replaces every conflicting earlier writing rule): `docs/copy-review-rules.md`.**
+  Clarity, natural language, accurate meaning, honest feedback, adult humor. Judge MEANING, not keywords: no word or
+  topic is a reason to reject by itself. Supported weaknesses and uncomfortable truths are allowed (never invented
+  certainty, never a meaningless softening, never a forced upside); dark/absurd adult jokes, strong swearing and
+  references to death, drinking and money are allowed; no unsupported diagnosis or label pinned on the reader; tasks are
+  judged by action, consent, cost, time and safety; questions never score reasonable privacy/safety/financial
+  boundaries as distance; facts about real people are sourced and never padded with invented tags. Change content only for
+  a specific problem (confusing wording, factual error, unsupported inference, misleading scoring, targeted degradation,
+  encouraging harm), with the smallest fix that keeps meaning and humor; a flag names the concrete problem and every rule
+  change adds pass/fail pairs. Age (18+), privacy (public snippets skip struggle-side lines), security and platform rules
+  are separate and unchanged. If a prompt, list, check or doc conflicts with the policy, fix that, don't add exceptions.
 - **Unreviewed copy ships behind `*_COPY_REVIEWED = false` flags.** Story / Levity are
   diagnosis-adjacent; not shippable as reviewed without emci's read.
 - **Game art follows `docs/art/PIXELLAB_GUIDE.md` (emci 2026-10-12).** Every art request: check the art

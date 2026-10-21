@@ -250,8 +250,35 @@ export const PET_TALK_LINES: Record<PetBranch, Lines> = {
 /** The egg can't talk yet — it wobbles and says one of these. */
 export const PET_EGG_LINES: readonly string[] = ['*wobble*', '*tap tap*', '*wiggle*', '…'];
 
-/** Words GAME_SPEC §7 bans from Play copy. */
-export const PET_BANNED_WORDS: readonly string[] = ['gamble', 'casino', 'jackpot', 'bet'];
+/**
+ * Core content policy (emci 2026-10-20; replaces the old word list gamble /
+ * casino / jackpot / bet). Play copy may not ENCOURAGE gambling or a risky
+ * money move; the words alone are fine ("I bet you can't catch me", "jackpot,
+ * a snack", "the casino was loud"). Returns why a line may not ship, or null.
+ */
+const PET_MONEY_RISK_PATTERNS: readonly [RegExp, string][] = [
+  [
+    /\b(?:let['’]?s|time to|go ahead and|you should|you could|you ought to|why not|come on,?|wanna|want to|try your luck and)\s+(?:\w+\s+){0,3}?(?:gambl\w*|bet|wager|roll the dice|hit the casino|go all[- ]in|slots?|slot machines?|the casino)\b/i,
+    'invites the reader to gamble',
+  ],
+  [
+    /\b(?:go to|head to|head over to|hit|visit|play)\s+(?:the |a )?(?:casino|slots?|slot machines?|roulette|blackjack|poker tables?)\b/i,
+    'sends the reader to gamble',
+  ],
+  [
+    /(?:^|[.!?]\s*)(?:bet|gamble|wager|put)\s+(?:it all|everything|all of it|all in|big|double|more|on (?:red|black|\w+))\b/i,
+    'tells the reader to bet big',
+  ],
+  [/(?:^|[.!?]\s*)(?:spin|roll|pull)\s+(?:again|once more|the lever|the dice)\b|\bjackpot (?:is|['’]s) (?:close|near|coming|next|yours)\b/i, 'urges another gamble'],
+  [/\b(?:place|put|make|lay)\s+(?:a|an|your|some|another)\s+(?:\w+\s+){0,2}?(?:bet|wager)\b/i, 'tells the reader to place a bet'],
+  [/\b(?:bet|gamble|wager|stake|risk)\s+(?:\w+\s+){0,3}?(?:rent|savings|paycheck|salary|life savings|everything you (?:have|own))\b/i, 'risks essential money'],
+  [/\b(?:gambling|casinos?)\s+(?:is|are)\s+(?:fun|smart|easy|worth it|a great idea|the best|great|awesome|amazing|so good)\b/i, 'praises gambling'],
+];
+
+export function petMoneyRiskViolation(text: string): string | null {
+  for (const [re, why] of PET_MONEY_RISK_PATTERNS) if (re.test(text)) return why;
+  return null;
+}
 
 /**
  * A line for `situation` in the form's voice that is never `last` (so the

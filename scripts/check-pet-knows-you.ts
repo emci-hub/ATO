@@ -51,7 +51,8 @@ import {
   THIN_PROFILE,
   type PetKnowsProfile,
 } from '../src/play/pet-knows-you';
-import { PET_BANNED_WORDS } from '../src/play/pet-talk';
+import { petMoneyRiskViolation } from '../src/play/pet-talk';
+import { CLINICAL_ADVICE, hasClinicalLabel } from '../src/lib/voice/clinical';
 
 let passed = 0;
 function ok(label: string) {
@@ -64,11 +65,24 @@ const words = (t: string) => t.trim().split(/\s+/).filter(Boolean).length;
 
 /* ------------------------------------------------------------------ bank --- */
 
-const CLINICAL =
-  /\b(anxious|anxiety|insecure|insecurity|avoidant|avoidance|attachment|disorder|trauma|toxic|needy|clingy|codependent|diagnos\w*|therapy|therapist|symptom\w*|red flag|neurotic|neuroticism|introvert\w*|extrovert\w*|depress\w*|narcis\w*|obsessive|compulsive|flaw\w*|weakness|defect\w*|broken|fear\w*|panic|stress\w*|mental|cope|coping)\b/i;
-const LABELS = /\b(extraversion|openness|conscientiousness|agreeableness|steadiness|autonomy|competence|relatedness|growth mindset|locus of control|self[- ]efficacy|playfulness|assertiveness|cooperativeness|trait|score|percent|%)\b/i;
+// emci 2026-10-19, round 3: labels on the reader, not vocabulary. The shared rule
+// (src/lib/voice/clinical.ts) refuses a diagnosis or label pinned on the reader and
+// clinical advice; "therapy", "toxic" or "panic" as plain words pass.
+const CLINICAL = { test: (text: string) => hasClinicalLabel(text) || CLINICAL_ADVICE.test(text) };
+// Trait, type and test names (a pet never names a trait or a type): introvert / extrovert moved here.
+const LABELS = /\b(extraversion|openness|conscientiousness|agreeableness|steadiness|autonomy|competence|relatedness|growth mindset|locus of control|self[- ]efficacy|playfulness|assertiveness|cooperativeness|neuroticism|introvert\w*|extrovert\w*|attachment styles?|trait|score|percent|%)\b/i;
+for (const [line, bad] of [
+  ['You’re so clingy tonight.', true],
+  ['Your avoidant side is showing.', true],
+  ['You need therapy, honestly.', true],
+  ['My clingy cat energy is back.', false],
+  ['The group chat needs therapy.', false],
+  ['That toxic tab is still open.', false],
+] as const) {
+  assert.equal(CLINICAL.test(line), bad, `pet clinical rule: "${line}"`);
+}
 const VOICE_BAN = /\b(you are|you['’]re|always|never)\b/i;
-const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
+const banned = { test: (text: string): boolean => petMoneyRiskViolation(text) !== null };
 
 assert.equal(PET_KNOWS_YOU_COPY_REVIEWED, true, 'emci read and approved the bank (2026-10-15); a new edit resets this to false until re-read');
 for (const axis of TRAIT_AXES) {

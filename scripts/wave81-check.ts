@@ -53,9 +53,9 @@ ok('app: a capped claim is recognised and passed to the round message');
 const capped = roundCompleteBody([], false, true);
 assert.ok(capped.startsWith(roundCapLine(ROUND_PAYOUTS_PER_DAY)));
 assert.doesNotMatch(capped, new RegExp(`\\+${ATO_TOKEN_EARN.ongoing_round_complete}`), 'a capped round never names the +21');
-assert.match(roundCapLine(2), /today's two\./);
+assert.match(roundCapLine(2), /two rounds today\./);
 assert.ok(!containsFrameworkTerm(roundCapLine(2)));
 assert.doesNotMatch(roundCompleteBody([], false, false), /No tokens/, 'an ordinary unpaid round stays silent about tokens');
-ok('a capped round says "No tokens for this one — you\'ve earned today\'s two." and never "+21"');
+ok('a capped round says "No tokens this time. You already earned tokens from two rounds today." and never "+21"');
 
 console.log(`\n${passed} wave81 checks passed`);

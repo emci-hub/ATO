@@ -16,7 +16,8 @@
  *
  * Two AI fields are advice BY DESIGN and each prompt exempts them from the
  * "no advice" rule: the insight's `tryToday` and the category card's
- * `try_this`. Where a moment stated as fact would clash with the older rule
+ * `try_this`. The deep dive (2026-10-19, honest weaknesses) also allows ONE
+ * small, doable step in its closing line, and names a real cost plainly. Where a moment stated as fact would clash with the older rule
  * "reflect as maybes", the prompts say the older rule wins: a likely moment,
  * never a claim that a specific event happened.
  *
@@ -33,9 +34,9 @@ export const MOMENT_VOICE_RULES: readonly string[] = [
   'One concrete, recognizable moment the person has probably lived. Past tense or plain present.',
   'Set it in how people live now: texts, group chats, read receipts, the typing bubble, voice notes, open tabs, unread counts, calendars, apps. Use the situation, never slang words, because slang dates in a year and reads as trying too hard.',
   'Describe the moment and stop. No advice, no "try", no lesson, no question to reflect on.',
-  'Tease kindly. Self-aware and a little funny, never cruel, never a diagnosis, nothing that would sting if someone read it over their shoulder.',
+  'Tease kindly. Self-aware and a little funny, never cruel, never shaming. Honest is fine, even when it stings a little.',
   'Specific beats general: "They said \'k.\' You read it eleven ways." beats "you overthink messages."',
-  'Short. Never "you are" or "you\'re". Never "always". No type names or psychology words.',
+  'Short. Never "you are" or "you\'re". Never "always". No personality-type codes or test names presented as the reader\'s result (a framework name is allowed only when relevant, accurate and explained, which a short line rarely has room for). Never apply a diagnosis or a label to the reader (toxic, clingy, avoidant, a disorder); everyday and contextual use of those words is fine.',
 ];
 
 /** Approved examples of the register. For prompts: match these, never reuse them. */
@@ -58,7 +59,7 @@ ${MOMENT_VOICE_EXAMPLES.map((line) => `- ${line}`).join('\n')}`;
 /**
  * Comedy craft for The Story's punchline (emci, 2026-10-13: funnier jokes).
  * The moment voice still says "tease kindly"; the punchline may be drier, as
- * long as it follows real joke construction and the hard bans. Mechanical
+ * long as it follows real joke construction and the contextual boundaries. Mechanical
  * half: `punchlineCraftViolation` / `pickBestPunchline` in card-joke.ts.
  */
 export const STORY_JOKE_STYLES: readonly string[] = [
@@ -70,13 +71,20 @@ export const STORY_JOKE_STYLES: readonly string[] = [
   'understatement (the situation is chaos; the line is calm)',
 ];
 
+/**
+ * Humor is 18+ (emci, 2026-10-19; docs/copy-review-rules.md "Humor"): no topic
+ * is off limits by itself. These are contextual boundaries — judge the joke.
+ */
+export const STORY_JOKE_ALLOWED =
+  'Dark, absurd and uncomfortable topics are allowed (death, drinking, hangovers, bad dates, money panic, family chaos). Adult swearing is allowed, strong swearing included ("fuck"), when it earns its place in the joke; never as filler. Judge the joke, keep its edge; never soften it into encouragement.';
+
 export const STORY_JOKE_BANS: readonly string[] = [
-  'death, self-harm, suicide, illness, mental health, trauma, abuse, addiction',
-  'bodies, looks, weight, age',
-  'identity: race, gender, sexuality, religion, nationality, class',
-  'money troubles; relationships ending; real people, brands or politics',
-  'swearing, slurs, sexual content',
-  'mocking the person rather than the situation',
+  'encouraging a dangerous act: self-harm, suicide, drunk driving, real harm to someone',
+  'a punchline at the expense of the person or their disclosed pain or trauma; joke about the situation, never the person',
+  'invented claims about real people stated as fact',
+  'slurs, or jokes that demean a group for who they are',
+  'a diagnosis or label pinned on the reader ("you are so toxic"); a contextual word ("the group chat needs therapy") is fine',
+  'anything sexually explicit',
   '"!", emoji, hashtags',
   'explaining the joke ("which is funny because", "the joke is", "get it")',
   'puns for their own sake, with no callback to the scene',
@@ -94,7 +102,8 @@ export const STORY_JOKE_RULES = `PUNCHLINE CRAFT (the funny beat is a constructe
 - Build it: ${STORY_JOKE_STYLES.join('; ')}.
 - Land the laugh in the last 6–8 words. The reader should not need the next sentence.
 - Write 2–3 candidate punchlines in "punchlines", then the JSON "punchline" is your best one.
-- Joke about the situation, never the person. Keep it kind enough to screenshot.
+- Joke about the situation, never the person. Sharp enough to screenshot.
+- ${STORY_JOKE_ALLOWED}
 - Never, whatever the style:
 ${STORY_JOKE_BANS.map((line) => `  - ${line}`).join('\n')}
 - Register (match the energy, do not reuse): ${STORY_JOKE_EXAMPLES.map((line) => `"${line}"`).join(' ')}`;

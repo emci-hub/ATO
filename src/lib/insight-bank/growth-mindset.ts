@@ -8,7 +8,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
       'You usually see a failure as a chance to learn something.',
       'When something goes wrong, you tend to look for the lesson in it.',
     ],
-    why: 'Learning from mistakes helps you improve, but sometimes a mistake of yours just needs to be let go.',
+    why: 'Learning from mistakes helps you improve, but not every mistake needs a lesson; some can just be let go.',
     try: [
       'Write down one lesson from a recent mistake, then close the note, so you move on.',
       'Let one small mistake go today without picking it apart, so you get a break.',

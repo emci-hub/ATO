@@ -3,8 +3,8 @@
  * Run: npm run check:story-templates
  *
  * Renders every compatible combo, pins the four approved references,
- * requires light+dark joke tags, and refuses banned topics, unpaid
- * setups and repeated nouns.
+ * requires light+dark joke tags, and refuses harm-boundary lines (humor is
+ * 18+: dark topics pass), unpaid setups and repeated nouns.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -94,7 +94,24 @@ for (const script of combos) {
   }
 }
 assert.equal(hard.length, 0, hard.slice(0, 12).join('\n'));
-ok(`${combos.length} compatible combos pass joke, banned, unpaid, repeat and script checks`);
+ok(`${combos.length} compatible combos pass joke, harm-boundary, unpaid, repeat and script checks`);
+
+// Humor is 18+ (emci, 2026-10-19): dark doom passes; only the harm filter refuses.
+{
+  const dark = { ...captain, otherWay: 'The other way, the date dies of boredom and the menu attends the funeral.' };
+  assert.deepEqual(checkBanned(dark).filter((row) => row.code === 'banned-topic'), [], 'death and funerals pass');
+  for (const harmful of [
+    'The other way, you tell Rory to kill himself over a chair.',
+    'The other way, you call Rory a retard and leave.',
+    'The other way, you drink and drive to a second café.',
+  ]) {
+    assert.ok(
+      checkBanned({ ...captain, otherWay: harmful }).some((row) => row.code === 'banned-topic'),
+      `refused: ${harmful}`,
+    );
+  }
+  ok('dark story lines pass; self-harm encouragement, slurs and drunk driving are refused');
+}
 
 const settings = Object.keys(STORY_ANGLES) as StoryAngle[];
 const leans: TraitLean[] = ['high', 'low'];

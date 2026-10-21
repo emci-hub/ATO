@@ -238,7 +238,7 @@ ${moments}
 
 THE ANGLE for this card: "${angle.name}" — ${angle.teaser}
 
-THE READER (only these trait sides, never any label, score or framework word):
+THE READER (only these trait sides, in plain words; never a score, and never a diagnosis or label pinned on the reader; a framework name only if relevant, accurate and explained, never as a validated assessment):
 ${traits}
 
 ${differLine ? `DIFFERENCE (for "differ"):\n${differLine}` : 'DIFFERENCE: none — leave out "differ".'}
@@ -278,7 +278,7 @@ RULES
   and one thing the legend would notice about the reader's shared side. Fun and specific; no new events, places, people or facts.
 
 "differ" — only when a DIFFERENCE is given at the end: "Where you differ", one sentence, ${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words, on that
-  difference. Make it sound interesting, never a flaw on either side. If the entry says nothing about that side of the legend,
+  difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry says nothing about that side of the legend,
   do NOT claim they lacked it; contrast the reader's side with what the legend is known for.
 
 ${CARD_JOKE_RULES}

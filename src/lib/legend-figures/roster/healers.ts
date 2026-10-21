@@ -38,8 +38,7 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
       tag('conscientiousness', 'high', 'kept the numbers', 'She collected data and turned it into clear charts.'),
       tag('locus_of_control', 'high', 'changed the system', 'She set out to fix how hospitals and nursing worked.'),
       tag('conflict_assertiveness', 'high', 'pushed for reform', 'She argued openly for changes to hospital care.'),
-      tag('playfulness', 'low', 'all business', 'Her work was serious, careful and practical.'),
-      tag('attachment_anxiety', 'high', 'checked every ward at night', 'She made ward rounds with a lamp at night.'),
+      tag('agreeableness', 'low', 'stubborn and forthright', 'She was opinionated and forthright, and used it to get things done.'),
     ],
     vetting: 'Reformer and statistician, died 1910; no political office; broadly admired.',
   },
@@ -60,7 +59,7 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     famousFor: 'Her nursing in the Crimean War and her autobiography.',
     facts: [
       fact('f1', 'She was famous for her nursing work during the Crimean War.', src(wiki('Mary_Seacole'), 'nursing work during the Crimean War')),
-      fact('f2', 'Her autobiography was the first written by a Black woman in Britain.', src(wiki('Mary_Seacole'), 'first autobiography written by a Black woman in Britain')),
+      fact('f2', 'Her 1857 autobiography is described as the first written by a Black woman in Britain.', src(wiki('Mary_Seacole'), 'first autobiography written by a Black woman in Britain')),
       fact('f3', 'In 2004 she was voted the greatest Black Briton.', src(wiki('Mary_Seacole'), 'greatest Black B')),
     ],
     moments: [
@@ -76,8 +75,6 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('self_efficacy', 'high', 'went on her own', 'She travelled to the Crimean War on her own initiative.'),
       tag('conflict_cooperativeness', 'high', 'cared for the sick', 'She set up a place for sick and recovering soldiers.'),
-      tag('autonomy', 'high', 'ran her own business', 'She was a businesswoman as well as a nurse.'),
-      tag('openness', 'high', 'went far from home to help', 'She travelled from Jamaica to the Crimean War.'),
     ],
     vetting: 'Nurse, died 1881; no office; broadly admired.',
   },
@@ -114,9 +111,7 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('openness', 'high', 'curious about the odd dish', 'He paid attention to an unexpected result.'),
       tag('conscientiousness', 'low', 'left plates on the bench', 'His messy bench led to the discovery.'),
-      tag('playfulness', 'high', 'experimented freely', 'His curiosity followed unexpected leads.'),
       tag('competence', 'high', 'knew what he was seeing', 'He recognised the importance of the mould.'),
-      tag('locus_of_control', 'low', 'found it by chance', 'He came back from holiday to find mould on a dish.'),
     ],
     vetting: 'Scientist, died 1955; no office; broadly admired.',
   },
@@ -132,7 +127,7 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     birthday: { md: '02-03', source: src(wiki('Elizabeth_Blackwell'), '3 February 1821') },
     gender: 'woman',
     field: 'Medicine',
-    essence: 'Admitted to medical school as a joke, then became America’s first woman doctor.',
+    essence: 'Admitted as a joke; became the first woman with a US medical degree.',
     whoTheyWere: 'An English-American physician, the first woman to earn a medical degree in the United States.',
     famousFor: 'Earning the first medical degree awarded to a woman in the United States.',
     facts: [
@@ -151,11 +146,9 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'the first', 'What changes after you’re the first?', 'Going first makes the next person’s path easier.'),
     ],
     tags: [
-      tag('steadiness', 'high', 'kept going through rejection', 'She kept applying after being turned down.'),
       tag('self_efficacy', 'high', 'took the joke seriously', 'She made the most of an admission meant as a joke.'),
       tag('locus_of_control', 'high', 'built her own infirmary', 'She founded a hospital for women and children.'),
       tag('conflict_assertiveness', 'high', 'pushed into medicine', 'She pursued medicine despite strong opposition.'),
-      tag('playfulness', 'low', 'took the joke seriously', 'She was admitted as a joke and treated it as no joke.'),
     ],
     vetting: 'Physician, died 1910; no office; broadly admired.',
   },
@@ -193,7 +186,6 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
       tag('conflict_cooperativeness', 'high', 'helped where needed', 'She came to the aid of an overwhelmed surgeon.'),
       tag('locus_of_control', 'high', 'founded the Red Cross', 'She built an organisation to help in disasters.'),
       tag('growth_mindset', 'high', 'taught herself nursing', 'She learned nursing without formal schooling.'),
-      tag('steadiness', 'high', 'steady under pressure', 'She worked calmly amid chaos.'),
     ],
     vetting: 'Nurse, died 1912; no office; broadly admired.',
   },
@@ -209,7 +201,7 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     birthday: { md: '06-07', source: src(wiki('Virginia_Apgar'), 'June 7, 1909') },
     gender: 'woman',
     field: 'Medicine',
-    essence: 'Invented a one-minute check that every newborn still gets.',
+    essence: 'Invented a one-minute newborn check that hospitals worldwide still use.',
     whoTheyWere: 'An American physician and medical researcher, a leader in anaesthesiology.',
     famousFor: 'The Apgar score, used to check a newborn’s health right after birth.',
     facts: [
@@ -229,9 +221,7 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('conscientiousness', 'high', 'made a clear checklist', 'She built a simple, structured test.'),
-      tag('competence', 'high', 'changed newborn care', 'Her score is used around the world.'),
       tag('conflict_assertiveness', 'high', 'spoke about hard topics', 'She brought birth defects into open discussion.'),
-      tag('relatedness', 'high', 'cared about every newborn', 'She built her work around the health of newborns.'),
     ],
     vetting: 'Physician, died 1974; no office; broadly admired.',
   },
@@ -268,9 +258,6 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('conscientiousness', 'high', 'perfected storage methods', 'He improved how blood is stored.'),
       tag('openness', 'high', 'invented the bloodmobile', 'He came up with mobile donation stations.'),
-      tag('locus_of_control', 'high', 'built blood banks', 'He led large-scale blood bank projects.'),
-      tag('competence', 'high', 'expert in transfusion', 'He was a leading researcher in his field.'),
-      tag('playfulness', 'low', 'careful, exacting work', 'He worked out how to store blood so it could save lives.'),
     ],
     vetting: 'Surgeon, died 1950; no office; broadly admired.',
   },
@@ -307,8 +294,6 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
       tag('openness', 'high', 'studied everything', 'He wrote on medicine, philosophy and science.'),
       tag('conscientiousness', 'high', 'organised all he knew', 'He compiled huge encyclopedias.'),
       tag('growth_mindset', 'high', 'learned from anyone', 'He learned arithmetic from a greengrocer.'),
-      tag('extraversion', 'low', 'lived in the libraries', 'He spent his youth in great libraries.'),
-      tag('playfulness', 'low', 'a lifetime of careful study', 'He wrote a medical encyclopedia used for six centuries.'),
     ],
     vetting: 'Physician and philosopher, died 1037; no religious or political office; broadly admired.',
   },
@@ -334,7 +319,7 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     ],
     moments: [
       moment('m1', 'She got her credentials through a “side door”: a loophole in admissions at the Society of Apothecaries.', src(wiki('Elizabeth_Garrett_Anderson'), 'side door', 'loophole')),
-      moment('m2', 'She privately obtained a certificate in anatomy and physiology before being admitted in 1862.', src(wiki('Elizabeth_Garrett_Anderson'), 'privately obtained a certificate in anatomy and physiology')),
+      moment('m2', 'She studied privately for a certificate in anatomy and physiology, and in 1865 passed the Society of Apothecaries’ exam.', src(wiki('Elizabeth_Garrett_Anderson'), 'privately obtained a certificate in anatomy and physiology', 'In 1865, Garrett finally took her exam')),
     ],
     angles: [
       angle('a1', 'the side door', 'What does a doctor who used a loophole to qualify have in common with you?', 'If the front door is locked, a side door still gets you in.'),
@@ -345,7 +330,6 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('self_efficacy', 'high', 'found a way in', 'She used a loophole to qualify as a doctor.'),
       tag('conscientiousness', 'high', 'studied privately', 'She earned certificates on her own.'),
-      tag('locus_of_control', 'high', 'made her own path', 'She found a route into a closed profession.'),
       tag('conflict_assertiveness', 'high', 'pushed into medicine', 'She pursued medicine despite opposition.'),
     ],
     vetting: 'Physician, died 1917; entry focuses on medicine; broadly admired.',
@@ -383,9 +367,6 @@ export const HEALER_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('conflict_assertiveness', 'high', 'lobbied lawmakers', 'She pressed state legislatures and Congress.'),
       tag('conflict_cooperativeness', 'high', 'spoke up for others', 'She advocated for poor people who were ill.'),
-      tag('conscientiousness', 'high', 'organised nurses', 'She was Superintendent of Army Nurses.'),
-      tag('steadiness', 'high', 'kept at it for years', 'Her program of lobbying was sustained over years.'),
-      tag('playfulness', 'low', 'serious about reform', 'She lobbied state after state for better care.'),
     ],
     vetting: 'Reformer, died 1887; no elected office; broadly admired.',
   },

@@ -19,49 +19,118 @@ var TYPE_CODES = [
   "ESTP",
   "ESFP"
 ];
-var PHRASES = [
-  "16personalities",
-  "myers-briggs",
-  "myers briggs",
-  "thomas-kilmann",
-  "thomas kilmann",
-  "fearful-avoidant",
-  "fearful avoidant",
-  "attachment style",
-  "big five",
-  "growth mindset",
-  "fixed mindset",
-  "locus of control",
-  "self-efficacy",
-  "self efficacy",
-  "self-determination",
-  "self determination"
+var TRADEMARK_SRC = String.raw`mbti|myers[- ]briggs|16 ?personalities`;
+var INSTRUMENT_SRC = TRADEMARK_SRC + String.raw`|big (?:five|5)|ocean (?:model|scores?|traits?|test)|ten[- ]item personality inventory|(?:tipi|ecr(?:-r)?|tki)(?= (?:scores?|results?|test|scale|questionnaire|inventory))|thomas[- ]kilmann`;
+var THEORY_SRC = String.raw`attachment (?:style|theory)|anxious[- ]preoccupied|growth mindset|fixed mindset|locus of control|self[- ]efficacy|self[- ]determination|neuroticism`;
+var MENTION_RE = new RegExp(`\\b(?:${INSTRUMENT_SRC}|${THEORY_SRC})\\b`, "gi");
+var CODE_ALT = TYPE_CODES.join("|");
+var BARE_CODE_RE = new RegExp(`\\b(${CODE_ALT})\\b`, "gi");
+var CODE_CONTEXT_RE = new RegExp(
+  String.raw`\b(?:${TRADEMARK_SRC}|personality (?:type|types|test|tests|model|framework|inventory|indicator)|(?:16|sixteen) (?:types|personalities)|four[- ]letter|type indicator|type code|type codes|psychologists?|a model|a framework|a theory)\b`,
+  "i"
+);
+var NEGATION_RE = /\b(?:not|never|no longer|without)\b|n['’]t\b|\bno\b/i;
+var CODE_CLAIM_RES = [
+  new RegExp(
+    String.raw`\b(?:you(?:['’]re| are| seem| sound| look| must be| might be| may be| come across as| came across as| scored| tested as)|your|i(?:['’]m| am)|we(?:['’]re| are)|he(?:['’]s| is)|she(?:['’]s| is)|they(?:['’]re| are)|as an?|being an?|such an?|typical|classic|textbook)\s+(?:(?:an?|the|clearly|probably|definitely|totally|obviously|very|so|kind of|sort of|pretty|rather|mostly|just|still|really|true|total|real|full|whole|own|old|usual|inner|classic|typical)\s+){0,3}(${CODE_ALT})\b`,
+    "gi"
+  ),
+  new RegExp(String.raw`\b(?:type|result|results|code|score|profile)\s*(?:is|are|was|:|=|-|says|shows|came back as|comes back as)\s*(?:an?\s+)?(${CODE_ALT})\b`, "gi"),
+  new RegExp(String.raw`\b(?:got|get|gets|tested as|test as|turned out to be|turns out to be|identify as|identifies as|are|is)\s+(?:an?\s+)?(${CODE_ALT})\b`, "gi")
 ];
-var WORDS = [
-  "mbti",
-  "ocean",
-  "neuroticism",
-  "neurotic",
-  "tipi",
-  "ecr",
-  "tki",
-  "secure",
-  "anxious",
-  "avoidant",
-  "collaborative",
-  "compromising",
-  "competitive",
-  "accommodating"
+var NO_NEG_GAP = String.raw`(?:(?!\bnot\b|\bnever\b|n['’]t\b|\bno longer\b|\bno\b)[^.!?;]){0,50}`;
+var READER = String.raw`\byou(?:['’]re|['’]ve| are| have| had| scored| score| got| show| showed| rate| rank| ranked| tested| test| seem to have| tend to have| appear to have| must have| clearly have| probably have)\b`;
+var CLAIM_RULES = [
+  // Ownership of an instrument: "your Big Five score", "your MBTI type", "your INFJ" handled above.
+  { label: "your instrument result", re: new RegExp(String.raw`\byour\s+(?:\w+\s+){0,2}(?:${INSTRUMENT_SRC})\b`, "i"), negatable: false },
+  // The theory result stated as theirs: "Your attachment style shows", "your locus of control is external".
+  {
+    label: "your framework result",
+    re: new RegExp(
+      String.raw`\byour\s+(?:\w+\s+){0,2}(?:${THEORY_SRC})\s+(?:is|are|was|shows?|showed|means|meant|explains?|says|said|suggests?|reveals?|tells|came|comes|got|gets|keeps|kicks|made|makes|has|had|did|does|will|would|can|could|might|may|must|looks?|seems?|sounds?)\b`,
+      "i"
+    ),
+    negatable: true
+  },
+  // A result said to the reader: "you scored high in neuroticism", "you have a growth mindset", "you're high in the Big Five".
+  {
+    label: "a result given to you",
+    re: new RegExp(`${READER}[^.!?;]{0,45}\\b(?:${INSTRUMENT_SRC}|${THEORY_SRC})\\b`, "i"),
+    negatable: true
+  },
+  // ATO is said to run, measure or be built on a framework.
+  {
+    label: "ATO measures a framework",
+    re: new RegExp(
+      String.raw`\b(?:ato|we|this app|the app|our (?:quiz|questions?|test|tests|profile|model|scores?|questionnaire)|these questions|the questions)\b${NO_NEG_GAP}\b(?:measure[sd]?|scores?|scored|tests? (?:for|your)|assess(?:es|ed)?|(?:is|are) (?:based|built|modell?ed|derived) (?:on|from|after)|based on|built on|uses?|using|runs?|follows?|reports?|calculates?|gives you|shows you|found|says)\b${NO_NEG_GAP}\b(?:${INSTRUMENT_SRC}|${THEORY_SRC})\b`,
+      "i"
+    ),
+    // Not negatable by a negation ELSEWHERE in the sentence ("ATO scores neuroticism, not a diagnosis" still
+    // claims it). A negator between the subject and the framework ("ATO does not measure the Big Five")
+    // is excluded inside the pattern itself (NO_NEG_GAP).
+    negatable: false
+  },
+  // A framework result handed over as a label: "Here is your attachment style: anxious." / "Attachment style: anxious."
+  {
+    label: "a framework result handed over",
+    re: new RegExp(
+      String.raw`\b(?:here(?:['’]s| is)|this is|that(?:['’]s| is)|meet)\s+your\s+(?:\w+\s+){0,2}(?:${INSTRUMENT_SRC}|${THEORY_SRC})\s*[:=—–-]|(?:^|[.!?]\s+|\n)\s*(?:${INSTRUMENT_SRC}|${THEORY_SRC})\s*[:=]\s*(?!an?\b|the\b|how\b|what\b|when\b|why\b|one\b|not\b|no\b)\w+`,
+      "i"
+    ),
+    negatable: false
+  },
+  // Validity / authority the app does not have.
+  {
+    label: "validity claim",
+    re: /\b(?:(?:clinically|scientifically|psychometrically|medically)[- ](?:validated|proven|tested|verified|reliable|accurate|backed)|(?:validated|certified|accredited|licen[cs]ed|standardi[sz]ed|diagnostic|clinical|psychometric)\s+(?:\w+\s+)?(?:assessments?|tests?|instruments?|questionnaires?|inventor(?:y|ies)|scales?|screening|evaluations?|tools?)\b(?!\s+(?:cent(?:er|re)|site|prep|drive|kitchen|track))|official\s+(?:\w+\s+){0,2}(?:test|assessment|result|results|score|scores|type|profile|report)\b)/i,
+    negatable: true
+  },
+  // Affiliation / endorsement of a trademark.
+  {
+    label: "trademark affiliation",
+    re: new RegExp(
+      String.raw`\b(?:officially|official|endorsed by|approved by|licen[cs]ed (?:by|from)|affiliated with|partnered with|in partnership with|certified by|sponsored by|powered by|authori[sz]ed by)\b[^.!?;]{0,30}\b(?:${TRADEMARK_SRC})\b|\b(?:${TRADEMARK_SRC})\b[^.!?;]{0,30}\b(?:official partner|officially|endorsed|approved|licen[cs]ed|affiliated|certified)\b`,
+      "i"
+    ),
+    negatable: true
+  }
 ];
-var PHRASE_RE = new RegExp(PHRASES.map(escapeRegExp).join("|"), "i");
-var WORD_RE = new RegExp(`\\b(?:${WORDS.join("|")})\\b`, "i");
-var TYPE_RE = new RegExp(`\\b(?:${TYPE_CODES.join("|")})\\b`, "i");
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+var DIAGNOSIS_WORD_RE = /\b(?:diagnos(?:is|es|ed|e|ing|tic)|disorder|clinical condition)\b/i;
+var READER_REF_RE = /\byou(?:r|['’]re|['’]ve)?\b/i;
+function sentencesOf(text) {
+  return text.split(/(?<=[.!?])\s+|\n+/).filter((part) => part.trim().length > 0);
+}
+function matchingFrameworkTerms(text) {
+  if (!text) return [];
+  const hits = [];
+  const push = (label) => {
+    if (!hits.includes(label)) hits.push(label);
+  };
+  const claimedCodes = /* @__PURE__ */ new Set();
+  for (const re of CODE_CLAIM_RES) {
+    for (const m of text.matchAll(re)) {
+      const code = (m[1] ?? "").toUpperCase();
+      if (code) claimedCodes.add(code);
+    }
+  }
+  for (const code of TYPE_CODES) if (claimedCodes.has(code)) push(code);
+  if (!CODE_CONTEXT_RE.test(text)) {
+    for (const m of text.matchAll(BARE_CODE_RE)) push((m[1] ?? "").toUpperCase());
+  }
+  for (const sentence of sentencesOf(text)) {
+    const negated = NEGATION_RE.test(sentence);
+    for (const rule of CLAIM_RULES) {
+      if (rule.negatable && negated) continue;
+      if (rule.re.test(sentence)) push(rule.label);
+    }
+    if (!negated && READER_REF_RE.test(sentence) && DIAGNOSIS_WORD_RE.test(sentence) && new RegExp(`\\b(?:${INSTRUMENT_SRC}|${THEORY_SRC})\\b`, "i").test(sentence)) {
+      push("diagnosis from a framework");
+    }
+  }
+  return hits;
 }
 function containsFrameworkTerm(text) {
-  if (!text) return false;
-  return PHRASE_RE.test(text) || WORD_RE.test(text) || TYPE_RE.test(text);
+  return matchingFrameworkTerms(text).length > 0;
 }
 
 // src/lib/traits.ts
@@ -1338,9 +1407,9 @@ var MOMENT_VOICE_RULES = [
   "One concrete, recognizable moment the person has probably lived. Past tense or plain present.",
   "Set it in how people live now: texts, group chats, read receipts, the typing bubble, voice notes, open tabs, unread counts, calendars, apps. Use the situation, never slang words, because slang dates in a year and reads as trying too hard.",
   'Describe the moment and stop. No advice, no "try", no lesson, no question to reflect on.',
-  "Tease kindly. Self-aware and a little funny, never cruel, never a diagnosis, nothing that would sting if someone read it over their shoulder.",
+  "Tease kindly. Self-aware and a little funny, never cruel, never shaming. Honest is fine, even when it stings a little.",
   `Specific beats general: "They said 'k.' You read it eleven ways." beats "you overthink messages."`,
-  `Short. Never "you are" or "you're". Never "always". No type names or psychology words.`
+  `Short. Never "you are" or "you're". Never "always". No personality-type codes or test names presented as the reader's result (a framework name is allowed only when relevant, accurate and explained, which a short line rarely has room for). Never apply a diagnosis or a label to the reader (toxic, clingy, avoidant, a disorder); everyday and contextual use of those words is fine.`
 ];
 var MOMENT_VOICE_EXAMPLES = [
   'They said "k." You read it eleven ways.',
@@ -1363,13 +1432,14 @@ var STORY_JOKE_STYLES = [
   "misdirection then a reversal",
   "understatement (the situation is chaos; the line is calm)"
 ];
+var STORY_JOKE_ALLOWED = 'Dark, absurd and uncomfortable topics are allowed (death, drinking, hangovers, bad dates, money panic, family chaos). Adult swearing is allowed, strong swearing included ("fuck"), when it earns its place in the joke; never as filler. Judge the joke, keep its edge; never soften it into encouragement.';
 var STORY_JOKE_BANS = [
-  "death, self-harm, suicide, illness, mental health, trauma, abuse, addiction",
-  "bodies, looks, weight, age",
-  "identity: race, gender, sexuality, religion, nationality, class",
-  "money troubles; relationships ending; real people, brands or politics",
-  "swearing, slurs, sexual content",
-  "mocking the person rather than the situation",
+  "encouraging a dangerous act: self-harm, suicide, drunk driving, real harm to someone",
+  "a punchline at the expense of the person or their disclosed pain or trauma; joke about the situation, never the person",
+  "invented claims about real people stated as fact",
+  "slurs, or jokes that demean a group for who they are",
+  'a diagnosis or label pinned on the reader ("you are so toxic"); a contextual word ("the group chat needs therapy") is fine',
+  "anything sexually explicit",
   '"!", emoji, hashtags',
   'explaining the joke ("which is funny because", "the joke is", "get it")',
   "puns for their own sake, with no callback to the scene",
@@ -1384,7 +1454,8 @@ var STORY_JOKE_RULES = `PUNCHLINE CRAFT (the funny beat is a constructed joke, n
 - Build it: ${STORY_JOKE_STYLES.join("; ")}.
 - Land the laugh in the last 6\u20138 words. The reader should not need the next sentence.
 - Write 2\u20133 candidate punchlines in "punchlines", then the JSON "punchline" is your best one.
-- Joke about the situation, never the person. Keep it kind enough to screenshot.
+- Joke about the situation, never the person. Sharp enough to screenshot.
+- ${STORY_JOKE_ALLOWED}
 - Never, whatever the style:
 ${STORY_JOKE_BANS.map((line) => `  - ${line}`).join("\n")}
 - Register (match the energy, do not reuse): ${STORY_JOKE_EXAMPLES.map((line) => `"${line}"`).join(" ")}`;
@@ -1395,23 +1466,49 @@ var CARD_JOKE_STYLES = [
   "deadpan",
   "absurd scenario (one everyday situation taken one step too far)",
   "self-aware (the reader catching themselves in the act)",
-  "mild gallows humour about everyday absurdity (never death, dying or real harm)"
+  "gallows humour about everyday absurdity (death and disaster are fair game; no real harm encouraged)"
 ];
 var CARD_JOKE_MAX_CHARS = 140;
-var JOKE_BANNED_TOPIC = [
-  /\b(die|dies|died|dying|dead|death|deaths)\b/i,
-  /\bkill(s|ed|ing)?\b/i,
-  /\bsuicid/i,
-  /\bself[- ]harm/i,
-  /\bdepress(ed|ion|ing)?\b/i,
-  /\banxiety\b/i,
-  /\btherap(y|ist|ists)\b/i,
-  /\bdrunk\b/i,
-  /\bsex(y|ual|ually)?\b/i,
-  /\b(fuck|shit|bitch|asshole)/i
+var DRIVE_NEGATOR = "(?:never|don['\u2019]t|do not|dont|not|stop|avoid|shouldn['\u2019]t|should not|won['\u2019]t|can['\u2019]t|cannot|illegal to|against)";
+var JOKE_HARM_FILTER = [
+  // Encouraging self-harm or suicide.
+  /\bkill (?:your|my|him|her|them|our)sel(?:f|ves)\b/i,
+  /\bkys\b/i,
+  // "Cut yourself some slack" / "try not to hurt yourself" are ordinary speech, not encouragement.
+  /\b(?:cut|harm|starve|hang|off) (?:your|him|her|them)sel(?:f|ves)\b(?! (?:some slack|a break|off\b))/i,
+  /(?:^|[.!?]\s*|\b(?:go|just|should|could) )hurt (?:your|him|her|them)sel(?:f|ves)\b/i,
+  /\b(?:commit|try|attempt(?:ing)?) suicide\b/i,
+  // Telling someone to die.
+  /\b(?:you|they|he|she|people like (?:you|them)) (?:should|ought to|deserve to|need to) (?:just )?(?:die|drop dead|be dead)\b/i,
+  /\bgo (?:die|drop dead)\b/i,
+  // Drunk driving as an instruction (or the punchline). A MENTION passes (emci 2026-10-20, found by
+  // scripts/filter-behavior-check.ts): "drunk driving cost him his licence", "the drunk driver in the film",
+  // "never drink and drive" are not encouragement. A negator earlier in the same clause also passes.
+  // Negation counts only when it DIRECTLY governs the verb phrase ("never drink and drive",
+  // "don't just drink and drive"); a negator elsewhere in the sentence ("Don't be a wimp, drink and drive")
+  // does not excuse it.
+  new RegExp(
+    `(?<!\\b${DRIVE_NEGATOR}\\s+(?:(?:ever|even|you|to|please|just|then)\\s+)*)(?:^|[.!?;,]\\s*|\\b(?:go|just|should|could|can|must|please|then|and|so|try to|feel free to|fine to|ok to|okay to|safe to)\\s+)(?:drink(?:ing)?[- ]and[- ]driv\\w*|drive (?:home |back |there |yourself |anyway )?(?:drunk|buzzed|tipsy|wasted|hammered|after (?:a |some |a few |several |two |three |four |five )?(?:drinks?|beers?|shots?|wines?|cocktails?|pints?)))`,
+    "i"
+  ),
+  new RegExp(
+    `(?<!\\b${DRIVE_NEGATOR}\\s+(?:(?:ever|even|you|to|please|just|then)\\s+)*)\\b(?:drinks?|drunk|buzzed|tipsy|wasted|hammered)\\b[^.?!]{0,40}\\b(?:then|and) (?:drive|get behind the wheel)\\b`,
+    "i"
+  ),
+  // Slurs.
+  /\bn[i1]gg(?:a|er|ers|as|uh|az)\b/i,
+  /\bfag(?:s|got|gots|gy)?\b/i,
+  /\bretard(?:s|ed)?\b/i,
+  /\btrann(?:y|ies)\b/i,
+  /\b(?:kikes?|spics?|wetbacks?|gooks?|dykes?|cunts?|sluts?|slutty|whores?)\b/i,
+  // Sexually explicit. "Fuck" as an expletive passes; "fuck" describing sex does not.
+  /\b(?:fuck(?:ed|ing|s)?|shag(?:ged|ging|s)?) (?:each other|(?:in|on) (?:the|a) (?:car|bed|couch|sofa|shower|bathroom|back ?seat|kitchen table))\b/i,
+  // "cum" only as its own word outside Latin honours ("summa / magna cum laude").
+  /\b(?:porn\w*|nudes|orgasm\w*|horny|blow ?jobs?|hand ?jobs?|masturbat\w*|dildos?|boners?|erections?|cumming|cumshots?|cocks?|puss(?:y|ies)|genitals?)\b/i,
+  /\bcum\b(?! laude)/i
 ];
-function jokeHasBannedTopic(text) {
-  return JOKE_BANNED_TOPIC.some((re) => re.test(text));
+function jokeCrossesBoundary(text) {
+  return JOKE_HARM_FILTER.some((re) => re.test(text));
 }
 var STORY_BANNED_CLICHES = [
   /\blike nothing happened\b/i,
@@ -1447,7 +1544,7 @@ var EXPLAINS_THE_JOKE = /\b(which is (?:why|funny|hilarious)|the joke is|that(?:
 function punchlineCraftViolation(text) {
   const line = text.trim();
   if (!line) return "empty";
-  if (jokeHasBannedTopic(line)) return "banned topic";
+  if (jokeCrossesBoundary(line)) return "crosses a boundary";
   if (/#/.test(line)) return "hashtag";
   if (EXPLAINS_THE_JOKE.test(line)) return "explains the joke";
   return storyClicheViolation(line);
@@ -1500,6 +1597,7 @@ var CARD_JOKE_RULES = `"funny" \u2014 THE ONE JOKE (a named exception to "tease 
   side lands them in. Joke about the situation, never the person. Specific concrete detail beats a general observation.
   Land the laugh in the last six to eight words. Never explain the joke. No puns for their own sake. No stock clich\xE9s
   (walk into a bar, plot twist, living the dream). Clearly funny on its own, not a riddle.
+  ${STORY_JOKE_ALLOWED}
   Never, whatever the style:
 ${STORY_JOKE_BANS.map((line) => `  - ${line}`).join("\n")}`;
 function cardJokeViolation(text) {
@@ -1507,7 +1605,7 @@ function cardJokeViolation(text) {
   if (!line) return "empty";
   if (line.length > CARD_JOKE_MAX_CHARS) return "too long";
   if ((line.match(/[.?]\s+\S/g) ?? []).length > 0) return "more than one sentence";
-  if (jokeHasBannedTopic(line)) return "banned topic";
+  if (jokeCrossesBoundary(line)) return "crosses a boundary";
   if (/#/.test(line)) return "hashtag";
   if (EXPLAINS_THE_JOKE.test(line)) return "explains the joke";
   return null;
@@ -1572,7 +1670,7 @@ ${moments}
 
 THE ANGLE for this card: "${angle2.name}" \u2014 ${angle2.teaser}
 
-THE READER (only these trait sides, never any label, score or framework word):
+THE READER (only these trait sides, in plain words; never a score, and never a diagnosis or label pinned on the reader; a framework name only if relevant, accurate and explained, never as a validated assessment):
 ${traits}
 
 ${differLine ? `DIFFERENCE (for "differ"):
@@ -1611,7 +1709,7 @@ RULES
   and one thing the legend would notice about the reader's shared side. Fun and specific; no new events, places, people or facts.
 
 "differ" \u2014 only when a DIFFERENCE is given at the end: "Where you differ", one sentence, ${DIFFER_MIN_WORDS}\u2013${DIFFER_MAX_WORDS} words, on that
-  difference. Make it sound interesting, never a flaw on either side. If the entry says nothing about that side of the legend,
+  difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry says nothing about that side of the legend,
   do NOT claim they lacked it; contrast the reader's side with what the legend is known for.
 
 ${CARD_JOKE_RULES}
@@ -1777,6 +1875,148 @@ function storedDiffer(raw) {
   return { differ: { axis: row.axis, lean: row.lean === "low" ? "low" : "high", line: row.line } };
 }
 
+// src/lib/voice/clinical.ts
+var LABEL = String.raw`(?:toxic|needy|clingy|co-?dependent|red[- ]flags?|avoidant(?! (?:of|about|around) )|(?:fearful|dismissive)[- ]avoidant|(?:anxious(?:ly)?|insecure(?:ly)?|secure(?:ly)?|disorgani[sz]ed)[- ]attached|emotionally unavailable|neurotic|narcissists?|narcissistic|psychopaths?|psychopathic|sociopaths?|sociopathic|gaslighters?|bipolar|adhd|ocd|ptsd|autistic|borderline personality|manic|psychotic|depressed|depressive|mentally ill|crazy|insane|traumati[sz]ed|damaged|defective|broken(?! (?:up|in|into|down)\b))`;
+var CONDITION = String.raw`(?:(?:clinical |major )?depression|bipolar(?: disorder)?|adhd|ocd|ptsd|autism|narcissism|narcissistic personality|borderline(?: personality)?|codependen(?:cy|ce)|trauma|attachment (?:styles?|issues|wounds?|disorder)|abandonment issues|(?:avoidant|anxious|insecure|secure|disorgani[sz]ed|fearful)[- ]attachment|social anxiety|(?:panic|anxiety) attacks?|mental illness(?:es)?|psychosis|neurosis|[a-z]+[- ]disorders?|disorders?)(?![-\w])`;
+var FILL = String.raw`(?:(?:so|clearly|really|totally|truly|a|an|the|bit|little|kind|kinda|sort|of|pretty|very|such|obviously|just|definitely|probably|basically|literally|completely|super|quite|being|actually|honestly|lowkey|textbook|classic|total|real|full-on|full-blown|most|more|too|deeply|seriously|severely|clinically|mildly|slightly|somewhat|getting|becoming|acting|still|always|also|kind-of|walking|raging|certified)\s+){0,4}`;
+var YOU_ARE = String.raw`\byou(?:['’]re|['’]ve been| are| were| seem to be| seem like| seemed like| seem| seemed| sound like| sounded like| sound| sounded| look like| looked like| look| looked| act like| acted like| come across as| came across as| act| acted| behave| become| became| turn into| turned into| can be| could be| might be| may be| must be| would be| will be| get called| deserve to be called)\s+`;
+var YOUR_TAIL = String.raw`(?:[- ](?:attachment|attached|style|styles|side|streak|energy|habits?|behaviou?rs?|tendenc(?:y|ies)|issues?|brain|self|traits?|personality|response|wounds?|patterns?|mode|thing|disorder|episode))*`;
+var YOUR_VERB = String.raw`(?=\s+(?:is|are|was|were|isn['’]t|shows?|showing|showed|shows up|showed up|showing up|explains?|explained|means|meant|kicks? in|kicked in|comes? out|came out|again|strikes|struck|wins|won|makes?|made|took|takes?|talking|acting|flares?|at work|in action|on display|says|said|did|does|has|had|just|really|would|will|can|could|might|may|must|got|gets|getting|tells?|told|needs?|needed|keeps?|kept|wants?|wanted|loves?|hates?|ran|runs|ruins?|ruined|took over|takes over|answered|picked|chose|decided)\b|\s*[.,;:!?…—–)]|\s*$)`;
+var NOT_BEFORE = String.raw`(?<!\b(?:not|never|no|without|isn['’]t|aren['’]t|wasn['’]t|doesn['’]t|don['’]t|not even|not really)\s)`;
+var FIGURATIVE_DIAGNOSER = String.raw`(?:the |a |my |your |our )?(?:group chat|internet|google|algorithm|horoscope|thermostat|inbox|calendar|wi-?fi|mirror|fridge|spreadsheet)`;
+var DIAGNOSIS_CLAIM = new RegExp(
+  [
+    // "a diagnosis", "your diagnosis", "this is a diagnosis" — unless negated ("not a diagnosis").
+    String.raw`${NOT_BEFORE}\b(?:a|an|your|his|her|their|this|that|the)\s+(?:\w+\s+){0,2}?diagnos(?:is|es)\b`,
+    // "you were diagnosed", "you've been diagnosed with ..." — unless the idiom / a figurative source.
+    String.raw`\byou(?:['’]ve|['’]re| have| are| were| got| get| had)?\s+(?:been |being )?(?:\w+\s+){0,2}?(?:un|self-?)?diagnosed\b(?!\s+(?:you )?(?:with (?:an? )?(?:\w+ )?case of|by ${FIGURATIVE_DIAGNOSER}))`,
+    // "diagnosed with ADHD" about anyone (a real person), not "with a bad case of Mondays".
+    String.raw`\bdiagnosed with\s+(?:an? |full-blown |severe |mild |clinical |major )*(?:adhd|ocd|ptsd|autism|bipolar|depression|anxiety|narcissistic|borderline|schizophrenia|psychosis|a personality disorder|[a-z]+ disorder)\b`,
+    // "I can diagnose you", "diagnosing yourself".
+    String.raw`\bdiagnos(?:e|es|ing)\s+(?:you|yourself|your)\b`,
+    String.raw`\b(?:i|we|ato|this app|the app)(?:['’]ll| will| can| could| would)?\s+diagnose\b`
+  ].join("|"),
+  "i"
+);
+var READER_LABEL_PATTERNS = [
+  // "You're so toxic", "You are clearly bipolar", "you come across as a bit needy", "you can be clingy".
+  { name: "you are <label>", re: new RegExp(`${YOU_ARE}${FILL}${LABEL}(?![-\\w])`, "i") },
+  // "people like you are needy".
+  { name: "people like you are <label>", re: new RegExp(String.raw`\bpeople like you (?:are|get|tend to be|can be|seem)\s+${FILL}${LABEL}(?![-\w])`, "i") },
+  // "Your avoidant attachment explains this", "Your trauma is showing", "your toxic side".
+  {
+    name: "your <label> (is|shows|means)",
+    re: new RegExp(String.raw`\byour (?:own |inner |classic |usual |old |little |whole |undiagnosed )?(?:${LABEL}|${CONDITION})${YOUR_TAIL}${YOUR_VERB}`, "i")
+  },
+  // "Your habit is toxic", "your texting is so needy": a verdict on the reader's own behaviour.
+  // ("Your group chat is toxic" passes: the chat is not the reader.)
+  {
+    name: "your <behaviour> is <label>",
+    re: new RegExp(
+      String.raw`\byour (?:\w+ )?(?:habits?|behaviou?rs?|attitude|personality|texting|texts|replies|reply|vibe|energy|side|self|ways?|style|love language|tendenc(?:y|ies)|patterns?|mindset|brain|mind|heart|needs?|responses?|reactions?|moves?|thing) (?:is|are|was|were|seems?|sounds?|looks?|feels?|gets?|got|reads? as|comes? across as)\s+${FILL}${LABEL}(?![-\w])`,
+      "i"
+    )
+  },
+  // "You have ADHD", "you've got trauma", "you probably have an anxiety disorder".
+  {
+    name: "you have <condition>",
+    re: new RegExp(
+      String.raw`\b(?:you (?:have|had|probably have|clearly have|definitely have|obviously have|might have|may have|must have|could have|seem to have|suffer from|are suffering from|live with)|you['’]ve (?:got|had|clearly got)|you(?:['’]re| are) (?:dealing|living) with|sounds like you have)\s+(?:(?:a|an|some|full-blown|textbook|classic|mild|severe|serious|real|undiagnosed|untreated|bit of|touch of|of|the)\s+){0,3}${CONDITION}`,
+      "i"
+    )
+  },
+  // "That is so bipolar of you", "Very narcissistic of you".
+  { name: "<label> of you", re: new RegExp(String.raw`(?<![-\w])${LABEL}\s+(?:(?:move|thing|behaviou?r)\s+)?of you\b`, "i") },
+  // "a classic narcissist", "Classic ADHD behaviour", "textbook avoidant".
+  {
+    name: "a classic <label>",
+    re: new RegExp(
+      String.raw`\b(?:classic|textbook|typical|certified|card-carrying|full-blown|full-on|raging|walking)\s+(?:narcissis\w*|psychopath\w*|sociopath\w*|adhd|ocd|ptsd|bipolar|avoidant|(?:anxious(?:ly)?|secure(?:ly)?|insecure(?:ly)?|disorgani[sz]ed|fearful)[- ]attach\w*|co-?dependen\w*|neurotic|borderline|depressive|autistic|trauma response|gaslighter)(?![-\w])`,
+      "i"
+    )
+  },
+  // A condition located in the reader: "depression in how you plan", "a narcissist in you".
+  {
+    name: "<condition> in you",
+    re: new RegExp(
+      String.raw`(?<![-\w])(?:${CONDITION}|${LABEL})(?:\s+(?:habits?|tendenc(?:y|ies)|streaks?|patterns?|behaviou?rs?|traits?|energy|side|vibes?))?\s+in (?:(?:how|the way|what|when|where) you\b|you\b(?!r))`,
+      "i"
+    )
+  },
+  // "signs of depression", "symptoms of ADHD" — a diagnostic claim.
+  { name: "signs of <condition>", re: new RegExp(String.raw`\b(?:signs?|symptoms?|traces?|hints?) of (?:a |an )?${CONDITION}`, "i") },
+  // A diagnosis CLAIM. Not the bare word: "This is not a diagnosis" and "diagnosed with a
+  // bad case of Mondays" pass (a disclaimer, an idiom); "a diagnosis" (not negated), "you were
+  // diagnosed", "your diagnosis", "diagnosed with ADHD" (any subject: a real person) and "I can
+  // diagnose you" fail. A joke that uses the claim form ("diagnosed by the group chat") is
+  // flagged on purpose: a regex cannot tell it from a claim, and the safe side is the claim.
+  { name: "diagnosis", re: DIAGNOSIS_CLAIM }
+];
+function readerLabelHit(text) {
+  for (const rule of READER_LABEL_PATTERNS) {
+    if (rule.re.test(text)) return rule.name;
+  }
+  return null;
+}
+var CLINICAL_ADVICE = /\b(?:(?:see|try|book|start|get|find|call|go to|you (?:might |may |could |probably )?need) (?:a |an |some |your )?(?:therapy|therapist|counsell?or|counsell?ing|psychiatrist|psychologist)|(?:take|stop|skip|start|change|up|lower|double) (?:your |the |some )?(?:medication|meds|pills|dose))\b/i;
+function hasClinicalLabel(text) {
+  return readerLabelHit(text) != null;
+}
+var VERDICT_PIECES = { FILL, YOU_ARE, YOUR_TAIL, YOUR_VERB };
+var PERSON = String.raw`(?:boss|manager|supervisor|ex|exes|mom|mum|mother|dad|father|brother|sister|sibling|siblings|friend|friends|coworker|co-worker|colleague|partner|girlfriend|boyfriend|husband|wife|roommate|flatmate|neighbou?r|teacher|professor|landlord|landlady|date|parent|parents|in-laws?|mother-in-law|father-in-law|cousin|aunt|uncle|grandma|grandpa|grandmother|grandfather|guy|girl|man|woman|kid|child|coach|therapist|doctor|dentist|president|senator|ceo|crush|situationship|stepmom|stepdad|colleague)`;
+var VERB3 = String.raw`(?:['’](?:s|re)|\s+(?:is|was|are|were|seems?(?: to be)?|seemed(?: to be)?|sounds? like|sounded like|acts? like|acted like|must be|might be|may be|has to be|turned out to be|turns out to be|is being|keeps being|really is|literally is|honestly is|definitely is|obviously is|clearly is))`;
+var CLINICAL_VERDICT_LABEL = String.raw`(?:narcissists?|narcissistic|psychopaths?|psychopathic|sociopaths?|sociopathic|gaslighters?|bipolar|adhd|ocd|ptsd|autistic|schizophrenic|psychotic|borderline personality|mentally ill|co-?dependent)`;
+var THIRD_CONDITION = String.raw`(?:adhd|ocd|ptsd|autism|bipolar(?: disorder)?|narcissistic personality(?: disorder)?|borderline personality(?: disorder)?|schizophrenia|psychosis|npd|bpd)(?![-\w])`;
+function thirdPartyVerdictRes(labelSource) {
+  const subject = String.raw`(?:(?:my|your|his|her|their|our|the|that|this|some|every|a|an)\s+(?:[a-z'’-]+\s+){0,2}${PERSON}s?|\bhe|\bshe|\bthey|\bthat\s+guy|\bthat\s+girl)`;
+  return [
+    new RegExp(String.raw`\b${subject}${VERB3}\s*${FILL}(?:${labelSource})(?![-\w])`, "i"),
+    // "so narcissistic of him", "very bipolar of them".
+    new RegExp(String.raw`(?<![-\w])(?:${labelSource})\s+(?:(?:move|thing|behaviou?r)\s+)?of\s+(?:him|her|them)\b`, "i")
+  ];
+}
+var THIRD_PARTY_RES = [
+  ...thirdPartyVerdictRes(CLINICAL_VERDICT_LABEL).map((re, i) => ({ name: i === 0 ? "someone is <label>" : "<label> of them", re })),
+  {
+    name: "someone has <condition>",
+    re: new RegExp(
+      String.raw`\b(?:(?:my|your|his|her|their|the|that|this)\s+(?:[a-z'’-]+\s+){0,2}${PERSON}s?|he|she|they)\s+(?:has|had|have|probably has|clearly has|definitely has|obviously has|must have|got|['’]s got)\s+(?:(?:a|an|some|full-blown|textbook|classic|mild|severe|real|undiagnosed|untreated)\s+){0,3}${THIRD_CONDITION}`,
+      "i"
+    )
+  }
+];
+function thirdPartyLabelHit(text) {
+  for (const rule of THIRD_PARTY_RES) {
+    if (rule.re.test(text)) return rule.name;
+  }
+  return null;
+}
+var ATTRIBUTION = /\b(?:said|says|saying|called|calls|calling|labell?ed|branded|accused|accuses|accusing|claims?|claimed|insists?|insisted|texted|wrote|tweeted|posted|replied|according to|allegedly|reportedly|rumou?red|swore|swears|thinks|thought|believes|believed|reckons|assumed|assumes|googled|told (?:me|us|him|her|them|you)|asked if|wondered if|wonders if|reads? (?:that|like))\b/i;
+var GENERIC_SPEAKER = /\b(?:people|everyone|everybody|anyone|nobody|others|folks|most people|the internet|online|society|the world|we all)\b/i;
+var READER_AIMED = new RegExp(String.raw`${YOU_ARE}|\b(?:called|calls|calling|labell?ed|branded|accused)\s+you\b|\bpeople like you\b`, "i");
+function isReportedSpeech(sentence) {
+  return ATTRIBUTION.test(sentence) && !GENERIC_SPEAKER.test(sentence) && !READER_AIMED.test(sentence);
+}
+function labelVerdictHit(text) {
+  for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
+    if (!sentence.trim() || isReportedSpeech(sentence)) continue;
+    const hit = readerLabelHit(sentence) ?? thirdPartyLabelHit(sentence);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+// src/lib/voice/directive-advice.ts
+var DIRECTIVE_AT_READER = [
+  /\byou\s+(?:really\s+|definitely\s+|absolutely\s+|probably\s+|just\s+)?(?:should|shouldn['’]?t|ought\s+to|need\s+to|needn['’]?t|must|have\s+to|had\s+better)\b/i,
+  /\byou['’](?:d\s+better|ll\s+want\s+to\s+make\s+sure)\b/i,
+  /\b(?:should|shouldn['’]?t)\s+you\b/i,
+  /\bwhy\s+(?:don['’]?t|not)\s+you\b/i
+];
+function directiveAdviceViolation(text) {
+  return DIRECTIVE_AT_READER.some((re) => re.test(text)) ? "advice aimed at the reader" : null;
+}
+
 // src/lib/category-deep-dive/dive.ts
 var SHOWS_MIN_WORDS = 10;
 var SHOWS_MAX_WORDS = 35;
@@ -1787,8 +2027,10 @@ var NOTICE_MAX_WORDS = 35;
 var DIVE_MEANS_MIN_WORDS = 20;
 var DIVE_MEANS_MAX_WORDS = 60;
 var DIVE_TOP_LEANS = 3;
-var CLINICAL = /\b(anxious|anxiety|insecure|insecurity|avoidant|attachment|disorder|trauma|toxic|needy|clingy|codependent|diagnos|therapy|therapist|symptom|red flag)/i;
-var DIVE_PROMPT_VERSION = "v2";
+var CLINICAL = {
+  test: (text) => hasClinicalLabel(text) || CLINICAL_ADVICE.test(text)
+};
+var DIVE_PROMPT_VERSION = "v3";
 function leansKey(leans) {
   return `${DIVE_PROMPT_VERSION}|` + [...leans].sort((a, b) => TRAIT_AXES.indexOf(a.axis) - TRAIT_AXES.indexOf(b.axis)).map((row) => `${row.axis}:${row.lean}:${Math.round(row.pct / 10)}`).join(",");
 }
@@ -1813,16 +2055,24 @@ The CARD sections at the end give, for each card, the category and the reader's 
 ${MOMENT_VOICE_BLOCK}
 
 RULES
-- Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice, no "should".
+- Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no lecturing: never tell the reader
+  "you should" or "you need to" (the one small step in STYLE is the only advice allowed, and it is phrased as something
+  they could try). An ordinary "should" in a joke or an observation ("the group chat should come with a warning") is fine.
 - Use no quotation marks, and name no people, apps or brands.
   (Everyday things still work: "the group chat", "a tab you keep open", "a playlist".)
 - No counting and no exaggeration: never a number or a number word above two ("three towns", "twelve
   checklists", "eleven ways" all read as made up). Say "a few", "a couple" or nothing. Never repeat a percentage.
-- Name the reader's sides only with the words given in that card's LEANINGS. No test, score or framework words.
+- Name the reader's sides with the words given in that card's LEANINGS, in plain language; explain any technical term
+  you need in a few plain words. Never show a score or percentage. A framework or theory name is allowed only when it is
+  relevant, accurate and explained, and never as a diagnosis or as a validated assessment ATO is not; never present a
+  type code (MBTI and similar) as the reader's own result.
 - Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
-- Kind, specific, modern, warm, a little delighted. Never a diagnosis, never a flaw.
-- A card marked GENTLE is about closeness: describe habits with close people warmly and plainly. Never diagnose, never
-  use words like anxious, insecure, avoidant, attachment, needy or clingy, never suggest anything is wrong.
+- Kind, specific, modern, warm, a little delighted. Never a diagnosis or label applied to the reader, never shaming.
+- Closeness (love, partners, family, friends) is an ordinary topic, judged by meaning like any other: describe habits
+  with close people plainly and specifically. Never apply a
+  diagnosis or a label to the reader (no "you are needy", no attachment-style verdict about them); everyday and
+  contextual use of a word is fine, and feeling words such as anxious, insecure, worried or lonely are fine when they
+  describe a moment. If a habit has a real cost, name it plainly, never as something wrong with the reader.
 - Never leave square or angle brackets in the answer.
 - A leaning marked "in the middle" is a balance: describe how it depends on the moment, and never say which side
   the reader is on.
@@ -1833,7 +2083,14 @@ counts in the register examples there \u2014 "eleven ways", "47 tabs" \u2014 are
 - Every part opens with a plain, true sentence about the reader that a friend would nod at.
   Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
   not a strange one-off scene). Nobody should have to reread it to get the point.
-- A low or "quiet" side is a style with an upside, never a weakness: say what it gives the reader.
+- Be honest about both sides (emci, 2026-10-19). When a leaning has a real cost, say it in plain, direct words and name
+  what it costs the reader in daily life; also say what the leaning gives them. Do not turn a limitation into a neutral
+  trait and do not force an upside. Honest, never harsh; encouraging, never hiding the problem. Ordinary words like
+  weakness, fear or stress are fine. Never apply a diagnosis or label to the reader (everyday and contextual use of a
+  word is fine), no shame, and say nothing the leaning does not support.
+  A strong leaning alone does not prove a drawback: write a possible cost with "you may" or "can", and state it flatly
+  only when the leaning itself shows it.
+- Where it fits, add one small, doable step the reader could try (a single sentence, phrased as something they could try, not "you should").
 - Modern and natural, like a smart friend texting you an observation. No riddles, no stacked details.
 
 FOR EACH CARD:
@@ -1847,8 +2104,9 @@ FOR EACH CARD:
 "whatItMeansForYou" \u2014 ${DIVE_MEANS_MIN_WORDS}\u2013${DIVE_MEANS_MAX_WORDS} words, 2 or 3 sentences, in this order:
   1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
   2. One realistic everyday moment that shows it.
-  3. A short, kind closing line on what that quietly says about the reader. No advice.
-  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What that quietly says about you]."
+  3. A short, honest closing line: what that says about the reader, including the real cost if there is one, and where
+     it fits one small step they could try.
+  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What it says about you, and its cost]."
   Reread it once: if a friend would ask "wait, what?", rewrite it.
 ${CARD_JOKE_RULES}
 
@@ -1867,7 +2125,7 @@ function cardBlock(spec, index) {
   const rows = spec.leans.map(
     (row) => row.middle ? `- axis "${row.axis}": in the middle, between ${AXIS_POLE_NAME[row.axis].high} and ${AXIS_POLE_NAME[row.axis].low} (sounds like: ${AXIS_POLES[row.axis].high} / ${AXIS_POLES[row.axis].low})` : `- axis "${row.axis}": leans ${AXIS_POLE_NAME[row.axis][row.lean]} (${row.pct >= 75 ? "strongly" : row.pct >= 60 ? "clearly" : "slightly"}; sounds like: ${AXIS_POLES[row.axis][row.lean]})`
   ).join("\n");
-  return `CARD ${index + 1} \u2014 THE CATEGORY: ${spec.def.name}${spec.def.id === "cat_love" ? " (GENTLE)" : ""}
+  return `CARD ${index + 1} \u2014 THE CATEGORY: ${spec.def.name}
 LEANINGS (strongest first):
 ${rows}
 SHOWS UP: ${top.map((row) => row.axis).join(", ")}
@@ -1888,7 +2146,8 @@ function diveLineViolation(text, allowed) {
   if (/\d/.test(text)) return "digit";
   if (COUNT_WORDS.test(text)) return "count word";
   if (CLINICAL.test(text)) return "clinical word";
-  if (/\bshould\b/i.test(text)) return "advice";
+  const advice = directiveAdviceViolation(text);
+  if (advice) return "advice";
   return legendLineViolation(text, allowed, false);
 }
 function optionalLine(text, min, max, allowed) {
@@ -1974,9 +2233,12 @@ function isLibraryKind(value) {
   return typeof value === "string" && LIBRARY_KINDS.includes(value);
 }
 var LIBRARY_VERSION = {
-  deep_dive: "l1",
-  story: "l3",
-  legend: "l1"
+  deep_dive: "l2",
+  // honest-weaknesses prompt, 2026-10-19
+  story: "l4",
+  // honest-weaknesses rule joins the prompt, 2026-10-19
+  legend: "l2"
+  // humor is 18+: joke rules are contextual boundaries, not topic bans, 2026-10-19
 };
 var BUCKET_KEY_RE = /^[a-z0-9_|:=+,.!-]{3,255}$/;
 
@@ -2113,11 +2375,7 @@ var ANIMAL_LEGENDS = [
       angle("a4", "remembered", "Why does a quiet dog get a statue?", "Quiet faithfulness moves people more than noise.")
     ],
     tags: [
-      tag("attachment_avoidance", "low", "devoted to one person", "He kept waiting for his owner for years."),
-      tag("conscientiousness", "high", "there every single day", "He went to the station almost every day."),
-      tag("steadiness", "high", "calm and patient waiting", "He waited patiently, year after year."),
-      tag("attachment_anxiety", "high", "waiting for his return", "He kept watching for the one person he loved."),
-      tag("openness", "low", "same place, same time", "He kept to the same station and the same routine.")
+      tag("attachment_avoidance", "low", "devoted to one person", "He kept waiting for his owner for years.")
     ],
     vetting: "Real dog, died 1935; a beloved story of loyalty; no harm shown."
   },
@@ -2151,10 +2409,7 @@ var ANIMAL_LEGENDS = [
       angle("a4", "the statue", "Why did one dog become the face of the run?", "Stories often need one face, but many hands made it happen.")
     ],
     tags: [
-      tag("extraversion", "high", "the famous face", "He became a celebrity with a vaudeville tour."),
-      tag("relatedness", "high", "part of a team", "He ran as part of a sled dog team."),
-      tag("self_efficacy", "high", "brought the medicine home", "He led the team on the final leg to Nome."),
-      tag("locus_of_control", "low", "sold and moved around", "He was sold and moved by others before Cleveland rescued him.")
+      tag("self_efficacy", "high", "brought the medicine home", "He led the team on the final leg to Nome.")
     ],
     vetting: "Real dog, died 1933; the run is admired; the hard part of his life is told gently."
   },
@@ -2174,7 +2429,7 @@ var ANIMAL_LEGENDS = [
     famousFor: "Covering far more distance than any other lead dog on the run.",
     facts: [
       fact("f1", "He covered a far greater distance than any other lead dog on the 1925 serum run.", src(wiki("Togo_(dog)"), "far greater distance than any other lead dogs")),
-      fact("f2", "His name, Cugu, means puppy in the Northern Sami language.", src(wiki("Togo_(dog)"), "means puppy in Northern Sami language")),
+      fact("f2", "He was named after the Japanese admiral T\u014Dg\u014D Heihachir\u014D.", src(wiki("Togo_(dog)"), "T\u014Dg\u014D Heihachir\u014D")),
       fact("f3", "At first he was seen as a troublemaker, before Seppala saw he was a leader.", src(wiki("Togo_(dog)"), "Deemed at first a troublemaker"))
     ],
     moments: [
@@ -2189,11 +2444,8 @@ var ANIMAL_LEGENDS = [
       angle("a4", "the sick puppy", "Who would have guessed the small, ill puppy would lead?", "A slow start says little about how far you go.")
     ],
     tags: [
-      tag("conflict_assertiveness", "high", "bold and rowdy", "He was bold and rowdy as a young dog."),
       tag("competence", "high", "led over the worst ice", "He led across the most dangerous parts of the trail."),
-      tag("autonomy", "high", "did things his own way", "He was first seen as a troublemaker."),
-      tag("extraversion", "low", "out of the spotlight", "His role was left out of the news at the time."),
-      tag("growth_mindset", "high", "from sick puppy to leader", "He grew from an ill puppy into a lead dog.")
+      tag("autonomy", "high", "broke out to follow the team", "As a young dog he kept breaking out to follow the team.")
     ],
     vetting: "Real dog, died 1929; widely admired; no harm shown."
   },
@@ -2217,7 +2469,7 @@ var ANIMAL_LEGENDS = [
       fact("f3", "The story is well known in Scotland, though its accuracy is disputed.", src(wiki("Greyfriars_Bobby"), "accuracy is disputed"))
     ],
     moments: [
-      moment("m1", "He spent the rest of his life sitting on his master\u2019s grave in Greyfriars Kirkyard.", src(wiki("Greyfriars_Bobby"), "sitting on his master's grave")),
+      moment("m1", "As the story goes, he spent the rest of his life by his master\u2019s grave in Greyfriars Kirkyard.", src(wiki("Greyfriars_Bobby"), "sitting on his master's grave")),
       moment("m2", "A year after he died, a drinking fountain topped with his statue was put up opposite the churchyard.", src(wiki("Greyfriars_Bobby"), "drinking fountain topped with Bobby's statue"))
     ],
     angles: [
@@ -2227,11 +2479,7 @@ var ANIMAL_LEGENDS = [
       angle("a4", "small and stubborn", "How does a small dog become a city\u2019s symbol?", "Staying put can be its own kind of strength.")
     ],
     tags: [
-      tag("attachment_avoidance", "low", "stayed by his person", "He stayed near his owner\u2019s grave."),
-      tag("steadiness", "high", "kept the same post", "He kept the same place for years."),
-      tag("relatedness", "high", "a whole city\u2019s dog", "Edinburgh looked after him."),
-      tag("openness", "low", "never left his spot", "He stayed at the same kirkyard."),
-      tag("growth_mindset", "low", "content in one spot", "He stayed at the same kirkyard for years.")
+      tag("attachment_avoidance", "low", "stayed by his person", "He stayed near his owner\u2019s grave.")
     ],
     vetting: "Real dog, died 1872; label says the story is disputed; no harm shown."
   },
@@ -2265,11 +2513,7 @@ var ANIMAL_LEGENDS = [
       angle("a4", "hope", "Why do people cheer so hard for an unlikely winner?", "Seeing someone come back gives everyone a lift.")
     ],
     tags: [
-      tag("growth_mindset", "high", "loser to champion", "He went from losing most races to beating the best."),
-      tag("playfulness", "high", "loved naps and snacks", "He was given to sleeping and eating."),
-      tag("conscientiousness", "low", "a lazy-looking start", "Early on he was known for sleeping and eating."),
-      tag("self_efficacy", "high", "beat the champion", "He beat the Triple Crown winner by four lengths."),
-      tag("extraversion", "high", "the crowd\u2019s favourite", "He became a national symbol of hope.")
+      tag("conscientiousness", "low", "a lazy-looking start", "Early on he was known for sleeping and eating.")
     ],
     vetting: "Real horse, died 1947; widely loved; no harm shown."
   },
@@ -2304,9 +2548,8 @@ var ANIMAL_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "rode trains everywhere", "He travelled across the country and the world."),
-      tag("extraversion", "high", "everyone\u2019s mascot", "He was a welcome addition in any post office."),
       tag("autonomy", "high", "went where he liked", "He would ride on trains wherever they were taken."),
-      tag("conflict_cooperativeness", "high", "everyone\u2019s good-luck charm", "Clerks everywhere welcomed him."),
+      tag("attachment_anxiety", "low", "at home with strangers", "He rode along with whichever clerks were on the train."),
       tag("conflict_assertiveness", "high", "guarded the mail", "He let nobody but mail clerks touch the bags.")
     ],
     vetting: "Real dog, died 1897; a beloved mascot; the label does not dwell on his death."
@@ -2342,10 +2585,7 @@ var ANIMAL_LEGENDS = [
     ],
     tags: [
       tag("agreeableness", "high", "gentle with everyone", "She was loved for her gentleness."),
-      tag("playfulness", "high", "loved for her play", "She was loved for her playfulness."),
-      tag("relatedness", "high", "a boy\u2019s best friend", "Christopher Robin visited her often."),
-      tag("conflict_assertiveness", "low", "never a fighter", "She was known for being gentle, not fierce."),
-      tag("attachment_anxiety", "low", "gentle with strangers", "She was loved by visitors for her gentleness.")
+      tag("playfulness", "high", "loved for her play", "She was loved for her playfulness.")
     ],
     vetting: "Real bear, died 1934; widely loved; nothing harmful shown."
   },
@@ -2379,11 +2619,7 @@ var ANIMAL_LEGENDS = [
       angle("a4", "the newspaper", "How do you spot treasure in plain wrapping?", "Valuable things often don\u2019t look valuable.")
     ],
     tags: [
-      tag("openness", "high", "sniffed out the unusual", "He noticed a parcel others passed."),
-      tag("playfulness", "high", "treasure on a walk", "He found it on an ordinary walk."),
-      tag("locus_of_control", "low", "luck on a walk", "He found the trophy by chance on a walk."),
-      tag("self_efficacy", "high", "solved the big case", "He found what the police were looking for."),
-      tag("attachment_anxiety", "low", "happy on any walk", "He found the trophy on an ordinary walk.")
+      tag("openness", "high", "sniffed out the unusual", "He noticed a parcel others passed.")
     ],
     vetting: "Real dog, died 1967; a cheerful story; the label does not dwell on his death."
   },
@@ -2418,10 +2654,7 @@ var ANIMAL_LEGENDS = [
     ],
     tags: [
       tag("competence", "high", "the greatest of all", "He is considered the greatest racehorse ever."),
-      tag("playfulness", "high", "a clown on the farm", "He was known as a clown who loved cutting up."),
-      tag("self_efficacy", "high", "won by thirty-one lengths", "He won the Belmont by a huge margin."),
-      tag("extraversion", "high", "the leader of the crowd", "He was the leader in the crowd."),
-      tag("conflict_assertiveness", "high", "raced to the front", "He took the lead and kept it.")
+      tag("playfulness", "high", "a clown on the farm", "He was known as a clown who loved cutting up.")
     ],
     vetting: "Real horse, died 1989; widely admired; no harm shown."
   },
@@ -2455,10 +2688,6 @@ var ANIMAL_LEGENDS = [
       angle("a4", "the lesson", "How does a horse end up in science books?", "Even a mistake can teach the world something.")
     ],
     tags: [
-      tag("agreeableness", "high", "tuned in to people", "He read his trainer\u2019s tiny cues."),
-      tag("conflict_cooperativeness", "high", "gave people what they hoped", "He responded to what his trainer expected."),
-      tag("locus_of_control", "low", "followed the cues", "His answers came from his trainer\u2019s signals."),
-      tag("competence", "low", "no maths after all", "He was not actually doing the arithmetic."),
       tag("autonomy", "low", "followed his trainer", "He responded to his trainer\u2019s body language.")
     ],
     vetting: "Real horse, died about 1916; a gentle science story; no harm shown."
@@ -2505,8 +2734,7 @@ var ART_LEGENDS = [
     tags: [
       tag("growth_mindset", "high", "still improving at seventy", "He believed his skill would keep growing into old age."),
       tag("openness", "high", "kept trying new styles", "He explored new styles and kept changing his artist name."),
-      tag("playfulness", "high", "filled sketchbooks for fun", "The Hokusai Manga are lively sketches of everyday life."),
-      tag("autonomy", "high", "renamed himself, often", "He chose his own names as his work changed.")
+      tag("playfulness", "high", "filled sketchbooks for fun", "The Hokusai Manga are lively sketches of everyday life.")
     ],
     vetting: "Artist, died 1849; no political office; broadly admired."
   },
@@ -2541,11 +2769,8 @@ var ART_LEGENDS = [
       angle("a4", "the blue house", "What can one home hold for a whole life?", "The place you come back to can shape your work more than any trip.")
     ],
     tags: [
-      tag("conflict_assertiveness", "high", "painted exactly what she felt", "Her self-portraits show pain and identity without softening them."),
       tag("autonomy", "high", "made her own way to art", "She turned to painting on her own terms during recovery."),
-      tag("steadiness", "low", "felt everything, painted it", "She turned lifelong pain into the subject of her work."),
-      tag("openness", "high", "mixed folk art and self-portrait", "She drew on Mexican folk art and culture in new ways."),
-      tag("agreeableness", "low", "painted herself honestly", "She painted herself because she was the subject she knew best.")
+      tag("openness", "high", "mixed folk art and self-portrait", "She drew on Mexican folk art and culture in new ways.")
     ],
     vetting: "Painter, died 1954; no office; widely admired (political views mentioned nowhere in the entry)."
   },
@@ -2584,8 +2809,7 @@ var ART_LEGENDS = [
     tags: [
       tag("openness", "high", "painted and studied everything", "He mixed painting with anatomy and science."),
       tag("conscientiousness", "low", "left many works unfinished", "Many of his works were never completed."),
-      tag("growth_mindset", "high", "kept studying to paint better", "His notebooks show constant study alongside his painting."),
-      tag("playfulness", "high", "followed his curiosity", "He jumped between subjects that interested him.")
+      tag("growth_mindset", "high", "kept studying to paint better", "His notebooks show constant study alongside his painting.")
     ],
     vetting: "Artist, died 1519; no office; broadly admired."
   },
@@ -2621,9 +2845,8 @@ var ART_LEGENDS = [
     ],
     tags: [
       tag("relatedness", "high", "wrote to his brother constantly", "His letters to Theo ran through his whole life."),
-      tag("steadiness", "low", "felt everything strongly", "His paintings carry strong feeling in bold colour."),
       tag("conscientiousness", "high", "painted almost every day", "He made about 2,100 artworks in just over a decade."),
-      tag("attachment_avoidance", "low", "leaned on Theo", "His brother supported him through his working life.")
+      tag("attachment_avoidance", "low", "confided in his brother", "He confided in Theo in more than 600 letters.")
     ],
     vetting: "Painter, died 1890; no office; broadly beloved. Entry avoids his illness and death."
   },
@@ -2660,8 +2883,7 @@ var ART_LEGENDS = [
     tags: [
       tag("openness", "high", "designed like nobody else", "His buildings have a style entirely their own."),
       tag("conscientiousness", "high", "cared about every detail", "He considered every detail of his creations."),
-      tag("autonomy", "high", "followed his own style", "His work stood apart from the styles of his time."),
-      tag("extraversion", "low", "lived for the work", "Most of his life went into his buildings.")
+      tag("autonomy", "high", "followed his own style", "His work stood apart from the styles of his time.")
     ],
     vetting: "Architect, died 1926; no office; broadly admired."
   },
@@ -2697,9 +2919,7 @@ var ART_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "chased changing light", "He painted the same scene at many times of day."),
-      tag("conscientiousness", "high", "painted series after series", "His series took years of steady work."),
-      tag("extraversion", "low", "happiest in his garden", "His later life centred on his garden at Giverny."),
-      tag("growth_mindset", "high", "kept painting the pond", "He painted water lilies for the last 20 years of his life.")
+      tag("conscientiousness", "high", "painted series after series", "His series took years of steady work.")
     ],
     vetting: "Painter, died 1926; no office; broadly admired."
   },
@@ -2735,10 +2955,7 @@ var ART_LEGENDS = [
     ],
     tags: [
       tag("autonomy", "high", "stayed outside every movement", "Her work remained independent of major art movements."),
-      tag("relatedness", "low", "at home in the desert", "She lived for decades in the New Mexico landscape."),
-      tag("openness", "high", "saw flowers differently", "She painted natural forms in a new, close-up way."),
-      tag("steadiness", "high", "seven decades of work", "Her career spanned seven decades."),
-      tag("growth_mindset", "low", "settled in New Mexico", "She lived for 40 years at her home in New Mexico.")
+      tag("openness", "high", "saw flowers differently", "She painted natural forms in a new, close-up way.")
     ],
     vetting: "Painter, died 1986; no office; broadly admired."
   },
@@ -2776,7 +2993,8 @@ var ART_LEGENDS = [
       tag("competence", "high", "mastered stone young", "He sculpted David before he was 30."),
       tag("self_efficacy", "low", "didn\u2019t see himself as a painter", "He doubted himself as a painter, then painted the ceiling."),
       tag("growth_mindset", "high", "adjusted mid-ceiling", "He changed the size of his figures after seeing the work."),
-      tag("conscientiousness", "high", "years on one ceiling", "The Sistine frescoes took sustained, careful work.")
+      tag("conscientiousness", "high", "years on one ceiling", "The Sistine frescoes took sustained, careful work."),
+      tag("extraversion", "low", "a solitary nature", "He was described as solitary by nature, often withdrawing from company.")
     ],
     vetting: "Artist, died 1564; no office; broadly admired."
   },
@@ -2811,10 +3029,7 @@ var ART_LEGENDS = [
       angle("a4", "a short, bright career", "How much can someone make in a short time?", "The size of your impact isn\u2019t measured in years.")
     ],
     tags: [
-      tag("openness", "high", "blended two art worlds", "She mixed Western and traditional Indian art."),
-      tag("self_efficacy", "high", "off to Paris at sixteen", "She went abroad young to train as a painter."),
-      tag("autonomy", "high", "her own modern style", "She is called a pioneer of modern Indian art."),
-      tag("conflict_assertiveness", "high", "painted boldly", "Her style was described as revolutionary.")
+      tag("openness", "high", "blended two art worlds", "She mixed Western and traditional Indian art.")
     ],
     vetting: "Painter, died 1941; no office; broadly admired."
   },
@@ -2840,7 +3055,7 @@ var ART_LEGENDS = [
     ],
     moments: [
       moment("m1", "Her family spent summers in a rented cottage on one of the islands of Pellinki.", src(wiki("Tove_Jansson"), "summers in a rented cottage on one of the islands of Pellinki")),
-      moment("m2", "Later she and her partner spent summers on the small island of Klovharu, filmed for hours of home footage.", src(wiki("Tove_Jansson"), "Klovharu island in Pellinki"))
+      moment("m2", "Later she and her partner spent their summers on the tiny island of Klovharu.", src(wiki("Tove_Jansson"), "Klovharu island in Pellinki"))
     ],
     angles: [
       angle("a1", "the island summer", "What does an artist who spent summers on a tiny island have in common with you?", "Getting away to a small quiet place can be where your ideas grow."),
@@ -2850,10 +3065,7 @@ var ART_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "invented the Moomins", "She created a whole playful world for children."),
-      tag("relatedness", "low", "loved island solitude", "She spent long summers on a small, remote island."),
-      tag("openness", "high", "worked in many forms", "She wrote, painted, illustrated and drew comics."),
-      tag("attachment_avoidance", "high", "kept a private island life", "Her summers away were quiet and private."),
-      tag("growth_mindset", "low", "the same island each summer", "She spent her summers on a small island in Pellinki.")
+      tag("openness", "high", "worked in many forms", "She wrote, painted, illustrated and drew comics.")
     ],
     vetting: "Author and artist, died 2001; no office; broadly beloved."
   }
@@ -2894,9 +3106,7 @@ var CHANGEMAKER_LEGENDS = [
     tags: [
       tag("self_efficacy", "high", "went back, again and again", "She returned on mission after mission."),
       tag("conflict_cooperativeness", "high", "risked everything for others", "She guided others to freedom at great personal risk."),
-      tag("steadiness", "high", "calm under pressure", "She never lost a passenger on dangerous night journeys."),
-      tag("competence", "high", "knew every route", "She led about 13 successful missions."),
-      tag("attachment_anxiety", "high", "went back for everyone", "She went back again and again for others.")
+      tag("competence", "high", "knew every route", "She led about 13 successful missions.")
     ],
     vetting: "Abolitionist, died 1913; no political office; broadly admired. Entry focuses on rescue, not war."
   },
@@ -2918,7 +3128,7 @@ var CHANGEMAKER_LEGENDS = [
     facts: [
       fact("f1", "In 1955 she refused to move from her seat on a bus in Montgomery, Alabama, defying segregation laws.", src(wiki("Rosa_Parks"), "refusal to move from her seat on a bus in Montgomery")),
       fact("f2", "Her refusal sparked the Montgomery bus boycott.", src(wiki("Rosa_Parks"), "sparked the Montgomery bus boycott")),
-      fact("f3", "From 1954 she worked as a seamstress.", src(wiki("Rosa_Parks"), "worked as a seamstress"))
+      fact("f3", "In 1955 she worked as a seamstress at the Montgomery Fair department store.", src(wiki("Rosa_Parks"), "Montgomery Fair, where she worked as a seamstress"))
     ],
     moments: [
       moment("m1", "On 1 December 1955 she left work, bought a few things at a drug store, and walked to Court Square to wait for her bus.", src(wiki("Rosa_Parks"), "December 1, 1955", "wait for her bus")),
@@ -2928,13 +3138,10 @@ var CHANGEMAKER_LEGENDS = [
       angle("a1", "staying put", "What does a seamstress who stayed in her seat have in common with you?", "Quietly refusing what\u2019s wrong can be louder than shouting."),
       angle("a2", "an ordinary evening", "How does an ordinary trip home change history?", "Big moments often arrive on normal days."),
       angle("a3", "the boycott", "What happens when one action inspires many?", "Your one brave choice can give other people courage."),
-      angle("a4", "after work", "What does it take to stand firm when you\u2019re tired?", "Holding your ground doesn\u2019t need a speech, just steadiness.")
+      angle("a4", "after work", "What does it take to keep your seat when everyone expects you to move?", "Holding your ground doesn\u2019t need a speech, just steadiness.")
     ],
     tags: [
-      tag("conflict_cooperativeness", "low", "wouldn\u2019t give up her seat", "She refused to move from her seat."),
-      tag("steadiness", "high", "calm and firm", "She stood firm quietly."),
-      tag("conflict_assertiveness", "low", "brave without a speech", "Her protest was a quiet refusal."),
-      tag("locus_of_control", "high", "changed things by acting", "Her action sparked a boycott.")
+      tag("conflict_cooperativeness", "low", "wouldn\u2019t give up her seat", "She refused to move from her seat.")
     ],
     vetting: "Activist, died October 2005 (within the \u22642005 rule); no office; broadly honoured."
   },
@@ -3005,11 +3212,9 @@ var CHANGEMAKER_LEGENDS = [
       angle("a4", "leaving with her baby", "What does it take to walk away with everything at stake?", "Courage often looks like one step at a time.")
     ],
     tags: [
-      tag("attachment_avoidance", "low", "fought for her son", "She went to court to get her son back."),
       tag("self_efficacy", "high", "won against the odds", "She won a case few believed possible."),
       tag("conflict_assertiveness", "high", "spoke at conventions", "She addressed public conventions."),
-      tag("autonomy", "high", "named herself", "She chose her own name in 1843."),
-      tag("attachment_anxiety", "high", "fought to get her son back", "She went to court to get her son back.")
+      tag("autonomy", "high", "named herself", "She chose her own name in 1843.")
     ],
     vetting: "Abolitionist, died 1883; no office; broadly honoured."
   },
@@ -3045,10 +3250,7 @@ var CHANGEMAKER_LEGENDS = [
     ],
     tags: [
       tag("relatedness", "high", "built a neighbourhood home", "She made Hull House a centre for families."),
-      tag("conflict_cooperativeness", "high", "worked for peace", "She advocated for world peace."),
-      tag("locus_of_control", "high", "founded a profession", "She shaped social work in the US."),
-      tag("agreeableness", "high", "welcomed everyone", "Hull House served families from many backgrounds."),
-      tag("attachment_anxiety", "low", "opened her door to all", "She opened a house where whole neighbourhoods came for help.")
+      tag("conflict_cooperativeness", "high", "worked for peace", "She advocated for world peace.")
     ],
     vetting: "Reformer, died 1935; no elected office; broadly admired."
   },
@@ -3086,7 +3288,7 @@ var CHANGEMAKER_LEGENDS = [
       tag("conflict_cooperativeness", "high", "helped thousands of strangers", "He issued visas to refugees at great risk."),
       tag("autonomy", "high", "followed his conscience", "He issued visas despite the risk to his career."),
       tag("conscientiousness", "high", "wrote visa after visa", "He kept writing visas to the last moment."),
-      tag("conflict_assertiveness", "low", "quiet, steady courage", "His bravery was quiet, done at a desk.")
+      tag("conflict_assertiveness", "high", "went against orders", "He kept issuing visas after his government said no.")
     ],
     vetting: "Diplomat (not a head of government or military), died 1986; honoured as Righteous Among the Nations."
   },
@@ -3122,10 +3324,8 @@ var CHANGEMAKER_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "invented a new way to read", "He created a whole reading system."),
-      tag("growth_mindset", "high", "turned loss into invention", "He built braille after losing his sight."),
-      tag("conflict_cooperativeness", "high", "made it for others", "His system helps blind readers worldwide."),
-      tag("conscientiousness", "high", "designed it carefully", "His system remains virtually unchanged."),
-      tag("locus_of_control", "low", "took what happened and built", "He lost his sight after an accident as a child.")
+      tag("growth_mindset", "high", "kept refining his code", "He simplified an army dot code, then spent years refining it."),
+      tag("conflict_cooperativeness", "high", "made it for others", "His system helps blind readers worldwide.")
     ],
     vetting: "Educator and inventor, died 1852; no office; broadly admired."
   },
@@ -3161,10 +3361,8 @@ var CHANGEMAKER_LEGENDS = [
     ],
     tags: [
       tag("conflict_assertiveness", "high", "reported what others hid", "She documented injustice openly."),
-      tag("attachment_avoidance", "low", "kept her siblings close", "She worked to keep her family together."),
       tag("conscientiousness", "high", "documented every case", "Her reporting was careful and investigative."),
-      tag("locus_of_control", "high", "built the NAACP", "She helped found a lasting organisation."),
-      tag("conflict_cooperativeness", "low", "wouldn\u2019t back down", "She would not stop telling the truth.")
+      tag("locus_of_control", "high", "helped found the NAACP", "She helped found a lasting organisation.")
     ],
     vetting: "Journalist and activist, died 1931; no office; broadly honoured. Violence named only in general terms."
   },
@@ -3200,9 +3398,7 @@ var CHANGEMAKER_LEGENDS = [
     ],
     tags: [
       tag("conflict_cooperativeness", "low", "refused the order", "He challenged the internment order."),
-      tag("steadiness", "high", "patient for forty years", "He kept his stand until his conviction was overturned."),
-      tag("conflict_assertiveness", "high", "challenged the government", "He took his case all the way to the Supreme Court."),
-      tag("locus_of_control", "low", "waited for the courts", "For decades his fate was in others\u2019 hands.")
+      tag("conflict_assertiveness", "high", "challenged the government", "He took his case all the way to the Supreme Court.")
     ],
     vetting: "Activist, died March 2005 (within the \u22642005 rule); no office; broadly honoured."
   },
@@ -3238,8 +3434,6 @@ var CHANGEMAKER_LEGENDS = [
     ],
     tags: [
       tag("locus_of_control", "high", "built a school from scratch", "She founded a school that became a university."),
-      tag("relatedness", "high", "brought women together", "She founded the National Council of Negro Women."),
-      tag("self_efficacy", "high", "the only one, and stayed", "She held a unique role at the UN\u2019s founding."),
       tag("conscientiousness", "high", "grew it step by step", "She built her school into a university.")
     ],
     vetting: "Educator, died 1955; held appointed roles but no elected office; broadly honoured."
@@ -3286,9 +3480,7 @@ var EXPLORER_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "kept going to the next city", "His sixteen-month trip became twenty-four years of travel."),
-      tag("extraversion", "high", "met the whole known world", "He travelled among people across three continents."),
-      tag("conscientiousness", "low", "let the plan stretch", "He kept changing course far beyond his original trip."),
-      tag("relatedness", "high", "told everyone the story", "He shared his travels in a book still read today.")
+      tag("conscientiousness", "low", "let the plan stretch", "He kept changing course far beyond his original trip.")
     ],
     vetting: "Traveller and writer, died c. 1369; no office; broadly admired."
   },
@@ -3304,7 +3496,7 @@ var EXPLORER_LEGENDS = [
     birthday: { md: "07-24", source: src(EARHART, "July 24, 1897") },
     gender: "woman",
     field: "Aviation",
-    essence: "Flew the Atlantic alone because nobody said she couldn\u2019t.",
+    essence: "Crossed the Atlantic as a passenger, then flew it alone.",
     whoTheyWere: "An American aviator who became one of the most celebrated figures of early flight.",
     famousFor: "The first woman to fly solo and nonstop across the Atlantic, in 1932.",
     facts: [
@@ -3313,7 +3505,7 @@ var EXPLORER_LEGENDS = [
       fact("f3", "In 1937 she disappeared over the Pacific while trying to fly around the world.", src(EARHART, "disappeared over the Pacific Ocean"))
     ],
     moments: [
-      moment("m1", "In 1928 she crossed the Atlantic as a passenger, the first woman to do so by plane.", src(EARHART, "first female passenger to cross the Atlantic")),
+      moment("m1", "In 1928 she crossed the Atlantic as a passenger, the first woman to do so by plane.", src(EARHART, "first successful transatlantic flight by a woman")),
       moment("m2", "She called her marriage a \u201Cpartnership\u201D with \u201Cdual control\u201D.", src(EARHART, "dual control"))
     ],
     angles: [
@@ -3326,7 +3518,7 @@ var EXPLORER_LEGENDS = [
       tag("self_efficacy", "high", "flew it herself", "After crossing as a passenger, she flew the Atlantic solo."),
       tag("openness", "high", "chased the next horizon", "She kept attempting bigger flights, up to a world flight."),
       tag("autonomy", "high", "kept her own controls", "She described her marriage as dual control."),
-      tag("attachment_avoidance", "high", "needed her own space", "She insisted on independence even within her marriage.")
+      tag("attachment_avoidance", "high", "needed her own space", "On her wedding day she wrote that she might need a place to be by herself.")
     ],
     vetting: "Aviator, died 1937; no office; broadly admired."
   },
@@ -3341,7 +3533,7 @@ var EXPLORER_LEGENDS = [
     died: 1986,
     gender: "man",
     field: "Mountaineering",
-    essence: "Climbed toward Everest for twenty years before standing on top.",
+    essence: "Climbed toward Everest for nearly twenty years before standing on top.",
     whoTheyWere: "A Nepalese-Indian Sherpa mountaineer who worked on British Everest expeditions from the 1930s.",
     famousFor: "With Edmund Hillary, the first people confirmed on the summit of Mount Everest, in 1953.",
     facts: [
@@ -3354,17 +3546,14 @@ var EXPLORER_LEGENDS = [
       moment("m2", "His mother lived to see him climb Everest.", src(TENZING, "She lived to see him climb Everest"))
     ],
     angles: [
-      angle("a1", "twenty years of climbing", "What does a man who carried loads up Everest for years have in common with you?", "Years of unseen work can be exactly what gets you to the top."),
+      angle("a1", "nearly twenty years of climbing", "What does a man who carried loads up Everest for years have in common with you?", "Years of unseen work can be exactly what gets you to the top."),
       angle("a2", "the rope team", "Who stands on top of the world as half of a pair?", "Reaching something big with a partner doesn\u2019t make it less yours."),
       angle("a3", "running toward the mountains", "Why would a teenager run away to where the expeditions start?", "Going where your thing happens is a first step anyone can take."),
       angle("a4", "seen by home", "What does it mean when the people who raised you get to see you make it?", "Sharing the big moment with the people from the start makes it land.")
     ],
     tags: [
       tag("conflict_cooperativeness", "high", "made it a two-person summit", "He reached the top as a partner, roped together with Hillary."),
-      tag("steadiness", "high", "calm at extreme altitude", "He worked high on the mountain through many expeditions."),
-      tag("conflict_assertiveness", "low", "did the work, quietly", "For years he carried loads on other people\u2019s expeditions."),
-      tag("attachment_anxiety", "low", "trusted the rope team", "Climbing roped together means trusting your partner with your life."),
-      tag("autonomy", "low", "worked within the team plan", "He climbed for years inside expeditions led by others.")
+      tag("conscientiousness", "high", "nearly twenty years of climbing", "He joined Everest expeditions for nearly two decades before the summit.")
     ],
     vetting: "Mountaineer, died 1986; no office; broadly admired."
   },
@@ -3390,20 +3579,17 @@ var EXPLORER_LEGENDS = [
     ],
     moments: [
       moment("m1", "He later said that he was the first of their party to reach the North Pole, on 6 April 1909.", src(wiki("Matthew_Henson"), "he was the first of their party to reach the North Pole")),
-      moment("m2", "He served as navigator and craftsman, and was known as the expedition\u2019s \u201Cfirst man\u201D.", src(wiki("Matthew_Henson"), "navigator and craftsman"))
+      moment("m2", "He served as navigator and craftsman, and was known as Peary\u2019s \u201Cfirst man\u201D.", src(wiki("Matthew_Henson"), "navigator and craftsman", `known as Peary's "first man"`))
     ],
     angles: [
-      angle("a1", "first to the pole", "What does an explorer who reached the pole first, and waited for credit, have in common with you?", "Doing the work first matters, even before anyone writes it down."),
+      angle("a1", "first to the pole", "What does an explorer who said he reached the pole first, and waited decades for credit, have in common with you?", "Doing the work first matters, even before anyone writes it down."),
       angle("a2", "learning from locals", "Why learn survival from the people who live there?", "The best teachers are often the people who already live it."),
       angle("a3", "the craftsman", "What makes the person who fixes everything so important?", "Being the one who keeps things running is a quiet kind of leadership."),
       angle("a4", "credit later", "What happens when recognition comes decades late?", "Your worth isn\u2019t decided by when people notice it.")
     ],
     tags: [
       tag("competence", "high", "navigator and fixer", "He was the expedition\u2019s navigator and craftsman."),
-      tag("steadiness", "high", "calm in the Arctic", "He spent years in harsh Arctic conditions."),
-      tag("conflict_assertiveness", "low", "did the work, quietly", "He got little credit for decades."),
-      tag("growth_mindset", "high", "learned Inuit skills", "He studied Inuit survival techniques."),
-      tag("autonomy", "low", "navigator on the team", "He served as navigator and craftsman on the expedition.")
+      tag("growth_mindset", "high", "learned Inuit skills", "He studied Inuit survival techniques.")
     ],
     vetting: "Explorer, died 1955; no office; broadly admired."
   },
@@ -3439,9 +3625,7 @@ var EXPLORER_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "went where nobody could", "He helped invent gear to explore under the sea."),
-      tag("self_efficacy", "high", "built his own way down", "He co-invented the Aqua-Lung."),
-      tag("relatedness", "high", "shared the sea with everyone", "He made films and books for the public."),
-      tag("extraversion", "high", "led a ship of adventurers", "His crew and family sailed with him on Calypso.")
+      tag("self_efficacy", "high", "built his own way down", "He co-invented the Aqua-Lung.")
     ],
     vetting: "Oceanographer, died 1997; served as a naval officer, never a commander in battle; broadly admired."
   },
@@ -3451,7 +3635,7 @@ var EXPLORER_LEGENDS = [
     kind: "real",
     hall: "explorers",
     region: "europe",
-    place: "Russia",
+    place: "Soviet Union (now Russia)",
     era: "1934\u20131968",
     died: 1968,
     birthday: { md: "03-09", source: src(wiki("Yuri_Gagarin"), "9 March 1934") },
@@ -3476,10 +3660,7 @@ var EXPLORER_LEGENDS = [
       angle("a4", "suddenly famous", "What do you do when the whole world knows your name?", "Staying yourself after a big moment is its own challenge.")
     ],
     tags: [
-      tag("self_efficacy", "high", "went first into space", "He became the first person to travel into space."),
-      tag("steadiness", "high", "calm on the launchpad", "He was chosen for readiness under pressure."),
-      tag("openness", "high", "went where no one had", "He travelled where no person had been."),
-      tag("autonomy", "low", "trained within the team", "He trained and flew as part of a programme.")
+      tag("self_efficacy", "high", "went first into space", "He became the first person to travel into space.")
     ],
     vetting: "Cosmonaut, died 1968; a pilot, not a commander in war; entry avoids Cold War politics."
   },
@@ -3592,9 +3773,7 @@ var EXPLORER_LEGENDS = [
     tags: [
       tag("self_efficacy", "high", "proved the editor wrong", "She went despite her editor\u2019s doubts."),
       tag("openness", "high", "raced around the world", "She turned a novel\u2019s idea into a real trip."),
-      tag("conflict_assertiveness", "high", "pitched the impossible", "She proposed the trip herself."),
-      tag("playfulness", "high", "made it a race", "She treated a fictional challenge as a real game."),
-      tag("conflict_cooperativeness", "low", "went anyway", "Her editor doubted her, and she went anyway.")
+      tag("conflict_assertiveness", "high", "pitched the impossible", "She proposed the trip herself.")
     ],
     vetting: "Journalist, died 1922; no office; broadly admired."
   },
@@ -3631,8 +3810,7 @@ var EXPLORER_LEGENDS = [
     tags: [
       tag("conscientiousness", "high", "planned every detail", "His careful preparation made the Pole possible."),
       tag("growth_mindset", "high", "learned from the Inuit", "He adopted Inuit survival skills."),
-      tag("openness", "high", "went to both poles", "He explored the Arctic and the Antarctic."),
-      tag("locus_of_control", "high", "led from the front", "He led the team that reached the South Pole.")
+      tag("openness", "high", "went to both poles", "He explored the Arctic and the Antarctic.")
     ],
     vetting: "Explorer, died 1928; no office; broadly admired."
   }
@@ -3676,11 +3854,7 @@ var GHOST_LEGENDS = [
       angle("a4", "the fast captain", "What legend grows around someone who keeps arriving too fast?", "Being known for one thing can turn into a story bigger than you.")
     ],
     tags: [
-      tag("openness", "low", "the same route, forever", "It sails the same seas and never changes course."),
-      tag("growth_mindset", "low", "never changes course", "The ghost ship keeps doing the same thing forever."),
-      tag("conflict_cooperativeness", "low", "won\u2019t bend for anyone", "In the legend it never gives in to the sea."),
-      tag("relatedness", "low", "sails alone", "It roams the oceans with no port and no company."),
-      tag("competence", "low", "never reaches port", "The ship can never make port.")
+      tag("conflict_cooperativeness", "low", "won\u2019t bend for anyone", "In the legend it never gives in to the sea.")
     ],
     vetting: "Sailors\u2019 ghost legend; no real person named as the captain in the entry; no harm to children."
   },
@@ -3713,10 +3887,7 @@ var GHOST_LEGENDS = [
       angle("a4", "knowing your worth", "When is it time to walk away?", "Leaving when you\u2019re taken for granted is allowed.")
     ],
     tags: [
-      tag("conflict_assertiveness", "low", "works without a word", "It helps silently while the house sleeps."),
       tag("attachment_avoidance", "high", "helps from a distance", "It never shows itself to the family it helps."),
-      tag("extraversion", "low", "only comes out at night", "It works only when everyone else is asleep."),
-      tag("openness", "low", "one house, one routine", "It stays with one household, doing the same chores."),
       tag("relatedness", "low", "happy on its own", "It keeps to itself and needs no company.")
     ],
     vetting: "Folklore household spirit; no religious figure; no harm to children."
@@ -3755,8 +3926,7 @@ var GHOST_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "changes shape for fun", "Tellings say tanuki change form just because they like it."),
-      tag("conscientiousness", "low", "makes it up as it goes", "It improvises one disguise after another."),
-      tag("extraversion", "high", "loves an audience", "It plays tricks to get a reaction from people."),
+      tag("conscientiousness", "low", "jolly but absent-minded", "Folklore makes the tanuki jolly but somewhat absent-minded."),
       tag("openness", "high", "tries every shape", "It has more disguises than the fox.")
     ],
     hidden: {
@@ -3797,10 +3967,7 @@ var GHOST_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "scary, then silly", "The story ends with a thrown pumpkin."),
-      tag("conscientiousness", "high", "rides every night", "The Horseman roams the same roads again and again."),
-      tag("relatedness", "low", "rides alone", "He is a solitary rider in the dark."),
-      tag("attachment_anxiety", "high", "forever searching", "In some tellings he searches for what he lost."),
-      tag("growth_mindset", "low", "rides the same roads", "He roams the same roads again and again.")
+      tag("relatedness", "low", "rides alone", "He is a solitary rider in the dark.")
     ],
     vetting: "Folklore and fiction ghost; no religious figure; no harm to children."
   },
@@ -3820,7 +3987,7 @@ var GHOST_LEGENDS = [
     facts: [
       fact("f1", "Her name means \u201Cwoman of the fairy mound\u201D or \u201Cfairy woman\u201D.", src(wiki("Banshee"), "woman of the fairy mound")),
       fact("f2", "In folklore she announces a loss in a family by wailing or keening.", src(wiki("Banshee"), "heralds the death of a family member")),
-      fact("f3", "She wears a grey cloak over a green dress.", src(wiki("Banshee"), "grey cloak over a green dress"))
+      fact("f3", "In some tellings she wears a grey cloak over a green dress.", src(wiki("Banshee"), "grey cloak over a green dress"))
     ],
     moments: [
       moment("m1", "She is sometimes seen combing her long hair, and in some legends can only keen while combing it.", src(wiki("Banshee"), "combing her hair")),
@@ -3833,11 +4000,9 @@ var GHOST_LEGENDS = [
       angle("a4", "the fairy mound", "Why do old places hold old stories?", "The places around you can carry long memories.")
     ],
     tags: [
-      tag("steadiness", "low", "feels and wails", "She expresses grief loudly."),
+      tag("locus_of_control", "low", "can warn, never prevent", "She announces a coming loss but cannot stop it."),
       tag("attachment_avoidance", "low", "tied to her family", "She is linked to particular families."),
-      tag("attachment_anxiety", "high", "keeps watch over them", "She is said to sense coming loss."),
-      tag("playfulness", "low", "solemn and serious", "Her role is solemn."),
-      tag("growth_mindset", "low", "the same old warning", "She has warned families the same way for centuries.")
+      tag("playfulness", "low", "solemn and serious", "Her role is solemn.")
     ],
     vetting: "Folklore spirit; not sacred in a living religion; described gently, no harm to children."
   },
@@ -3860,7 +4025,7 @@ var GHOST_LEGENDS = [
       fact("f3", "Scientists explain sightings as hoaxes, wishful thinking or misidentified animals and objects.", src(wiki("Loch_Ness_Monster"), "hoaxes, wishful thinking"))
     ],
     moments: [
-      moment("m1", "The 1934 \u201Csurgeon\u2019s photograph\u201D is perhaps the most famous alleged photo of the creature.", src(wiki("Loch_Ness_Monster"), "surgeon's photograph")),
+      moment("m1", "The famous 1934 \u201Csurgeon\u2019s photograph\u201D is now widely agreed to be a hoax, exposed in 1994.", src(wiki("Loch_Ness_Monster"), "surgeon's photograph", "Since 1994, most agree that the photo was an elaborate hoax")),
       moment("m2", "Evidence for it is anecdotal, with disputed photos and sonar readings.", src(wiki("Loch_Ness_Monster"), "Evidence of its existence is anecdotal"))
     ],
     angles: [
@@ -3871,10 +4036,7 @@ var GHOST_LEGENDS = [
     ],
     tags: [
       tag("extraversion", "low", "hides in the depths", "It is rarely, if ever, seen."),
-      tag("attachment_avoidance", "high", "keeps out of sight", "It avoids being proven."),
-      tag("openness", "low", "never leaves the loch", "It stays in the same loch."),
-      tag("playfulness", "high", "the world\u2019s favourite mystery", "Nessie is a beloved, playful mystery."),
-      tag("competence", "low", "too careful to be caught", "It has never been proven to exist.")
+      tag("openness", "low", "never leaves the loch", "It stays in the same loch.")
     ],
     vetting: "Modern folklore creature; no religious figure; no harm to children."
   },
@@ -3908,10 +4070,7 @@ var GHOST_LEGENDS = [
     ],
     tags: [
       tag("relatedness", "low", "lives alone in the snow", "It is a solitary mountain creature."),
-      tag("attachment_avoidance", "high", "avoids every camera", "It is never reliably seen."),
-      tag("extraversion", "low", "stays out of sight", "It is known by traces, not appearances."),
-      tag("autonomy", "high", "lives by its own rules", "It lives far from people."),
-      tag("competence", "low", "careful to stay hidden", "It is known only by traces like footprints.")
+      tag("extraversion", "low", "stays out of sight", "It is known by traces, not appearances.")
     ],
     vetting: "Folklore creature; not a worshipped figure; no harm to children."
   },
@@ -3945,9 +4104,7 @@ var GHOST_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "teases travellers", "It may lead people astray for fun."),
-      tag("conscientiousness", "low", "never stays still", "It flickers and wanders."),
-      tag("agreeableness", "low", "not reliably helpful", "It might lead you off the path."),
-      tag("extraversion", "high", "wants to be noticed", "It glows to catch your eye.")
+      tag("agreeableness", "low", "not reliably helpful", "It might lead you off the path.")
     ],
     vetting: "Folklore light; no religious figure; no harm to children."
   },
@@ -3980,11 +4137,7 @@ var GHOST_LEGENDS = [
       angle("a4", "the birthday", "What would you be like on your hundredth?", "Every year adds something.")
     ],
     tags: [
-      tag("steadiness", "high", "a hundred patient years", "They wait a century to awaken."),
-      tag("openness", "low", "the same tool for ages", "They stay the same object for a hundred years."),
-      tag("playfulness", "high", "objects with personality", "They come to life with their own character."),
-      tag("growth_mindset", "high", "grows a spirit with time", "Time turns them into something new."),
-      tag("self_efficacy", "low", "waits a century to wake", "They wait a hundred years before they awaken.")
+      tag("attachment_anxiety", "high", "afraid of being thrown away", "In the old scrolls, tools thrown away just before their hundredth year turn into y\u014Dkai.")
     ],
     vetting: "Folklore spirits of objects; not worshipped figures; no harm to children."
   },
@@ -4007,7 +4160,7 @@ var GHOST_LEGENDS = [
       fact("f3", "A 19th-century poem calls him the Fairy Shoemaker.", src(wiki("Leprechaun"), "Fairy Shoemaker"))
     ],
     moments: [
-      moment("m1", "In one old tale, a man captures his captors, who grant him three wishes for their release.", src(wiki("Leprechaun"), "three wishes in exchange for release")),
+      moment("m1", "In the oldest known tale, sprites drag a sleeping king toward the sea; he wakes, catches three of them, and they grant him three wishes to go free.", src(wiki("Leprechaun"), "Fergus mac L\xE9ti, King of Ulster", "three wishes in exchange for release")),
       moment("m2", "His main occupation is said to be making and mending shoes.", src(wiki("Leprechaun"), "making and cobb"))
     ],
     angles: [
@@ -4018,10 +4171,7 @@ var GHOST_LEGENDS = [
     ],
     tags: [
       tag("relatedness", "low", "works alone", "He is a solitary fairy."),
-      tag("playfulness", "high", "full of mischief", "Leprechauns partake in mischief."),
-      tag("conscientiousness", "high", "mends every shoe", "His occupation is making and mending shoes."),
-      tag("attachment_avoidance", "high", "guards his gold", "He hides his pot of gold."),
-      tag("competence", "low", "guards his gold carefully", "He keeps his pot of gold hidden.")
+      tag("conscientiousness", "high", "mends every shoe", "His occupation is making and mending shoes.")
     ],
     vetting: "Folklore fairy; no religious figure; entry avoids stereotypes; no harm to children."
   }
@@ -4064,8 +4214,7 @@ var HEALER_LEGENDS = [
       tag("conscientiousness", "high", "kept the numbers", "She collected data and turned it into clear charts."),
       tag("locus_of_control", "high", "changed the system", "She set out to fix how hospitals and nursing worked."),
       tag("conflict_assertiveness", "high", "pushed for reform", "She argued openly for changes to hospital care."),
-      tag("playfulness", "low", "all business", "Her work was serious, careful and practical."),
-      tag("attachment_anxiety", "high", "checked every ward at night", "She made ward rounds with a lamp at night.")
+      tag("agreeableness", "low", "stubborn and forthright", "She was opinionated and forthright, and used it to get things done.")
     ],
     vetting: "Reformer and statistician, died 1910; no political office; broadly admired."
   },
@@ -4086,7 +4235,7 @@ var HEALER_LEGENDS = [
     famousFor: "Her nursing in the Crimean War and her autobiography.",
     facts: [
       fact("f1", "She was famous for her nursing work during the Crimean War.", src(wiki("Mary_Seacole"), "nursing work during the Crimean War")),
-      fact("f2", "Her autobiography was the first written by a Black woman in Britain.", src(wiki("Mary_Seacole"), "first autobiography written by a Black woman in Britain")),
+      fact("f2", "Her 1857 autobiography is described as the first written by a Black woman in Britain.", src(wiki("Mary_Seacole"), "first autobiography written by a Black woman in Britain")),
       fact("f3", "In 2004 she was voted the greatest Black Briton.", src(wiki("Mary_Seacole"), "greatest Black B"))
     ],
     moments: [
@@ -4101,9 +4250,7 @@ var HEALER_LEGENDS = [
     ],
     tags: [
       tag("self_efficacy", "high", "went on her own", "She travelled to the Crimean War on her own initiative."),
-      tag("conflict_cooperativeness", "high", "cared for the sick", "She set up a place for sick and recovering soldiers."),
-      tag("autonomy", "high", "ran her own business", "She was a businesswoman as well as a nurse."),
-      tag("openness", "high", "went far from home to help", "She travelled from Jamaica to the Crimean War.")
+      tag("conflict_cooperativeness", "high", "cared for the sick", "She set up a place for sick and recovering soldiers.")
     ],
     vetting: "Nurse, died 1881; no office; broadly admired."
   },
@@ -4140,9 +4287,7 @@ var HEALER_LEGENDS = [
     tags: [
       tag("openness", "high", "curious about the odd dish", "He paid attention to an unexpected result."),
       tag("conscientiousness", "low", "left plates on the bench", "His messy bench led to the discovery."),
-      tag("playfulness", "high", "experimented freely", "His curiosity followed unexpected leads."),
-      tag("competence", "high", "knew what he was seeing", "He recognised the importance of the mould."),
-      tag("locus_of_control", "low", "found it by chance", "He came back from holiday to find mould on a dish.")
+      tag("competence", "high", "knew what he was seeing", "He recognised the importance of the mould.")
     ],
     vetting: "Scientist, died 1955; no office; broadly admired."
   },
@@ -4158,7 +4303,7 @@ var HEALER_LEGENDS = [
     birthday: { md: "02-03", source: src(wiki("Elizabeth_Blackwell"), "3 February 1821") },
     gender: "woman",
     field: "Medicine",
-    essence: "Admitted to medical school as a joke, then became America\u2019s first woman doctor.",
+    essence: "Admitted as a joke; became the first woman with a US medical degree.",
     whoTheyWere: "An English-American physician, the first woman to earn a medical degree in the United States.",
     famousFor: "Earning the first medical degree awarded to a woman in the United States.",
     facts: [
@@ -4177,11 +4322,9 @@ var HEALER_LEGENDS = [
       angle("a4", "the first", "What changes after you\u2019re the first?", "Going first makes the next person\u2019s path easier.")
     ],
     tags: [
-      tag("steadiness", "high", "kept going through rejection", "She kept applying after being turned down."),
       tag("self_efficacy", "high", "took the joke seriously", "She made the most of an admission meant as a joke."),
       tag("locus_of_control", "high", "built her own infirmary", "She founded a hospital for women and children."),
-      tag("conflict_assertiveness", "high", "pushed into medicine", "She pursued medicine despite strong opposition."),
-      tag("playfulness", "low", "took the joke seriously", "She was admitted as a joke and treated it as no joke.")
+      tag("conflict_assertiveness", "high", "pushed into medicine", "She pursued medicine despite strong opposition.")
     ],
     vetting: "Physician, died 1910; no office; broadly admired."
   },
@@ -4218,8 +4361,7 @@ var HEALER_LEGENDS = [
     tags: [
       tag("conflict_cooperativeness", "high", "helped where needed", "She came to the aid of an overwhelmed surgeon."),
       tag("locus_of_control", "high", "founded the Red Cross", "She built an organisation to help in disasters."),
-      tag("growth_mindset", "high", "taught herself nursing", "She learned nursing without formal schooling."),
-      tag("steadiness", "high", "steady under pressure", "She worked calmly amid chaos.")
+      tag("growth_mindset", "high", "taught herself nursing", "She learned nursing without formal schooling.")
     ],
     vetting: "Nurse, died 1912; no office; broadly admired."
   },
@@ -4235,7 +4377,7 @@ var HEALER_LEGENDS = [
     birthday: { md: "06-07", source: src(wiki("Virginia_Apgar"), "June 7, 1909") },
     gender: "woman",
     field: "Medicine",
-    essence: "Invented a one-minute check that every newborn still gets.",
+    essence: "Invented a one-minute newborn check that hospitals worldwide still use.",
     whoTheyWere: "An American physician and medical researcher, a leader in anaesthesiology.",
     famousFor: "The Apgar score, used to check a newborn\u2019s health right after birth.",
     facts: [
@@ -4255,9 +4397,7 @@ var HEALER_LEGENDS = [
     ],
     tags: [
       tag("conscientiousness", "high", "made a clear checklist", "She built a simple, structured test."),
-      tag("competence", "high", "changed newborn care", "Her score is used around the world."),
-      tag("conflict_assertiveness", "high", "spoke about hard topics", "She brought birth defects into open discussion."),
-      tag("relatedness", "high", "cared about every newborn", "She built her work around the health of newborns.")
+      tag("conflict_assertiveness", "high", "spoke about hard topics", "She brought birth defects into open discussion.")
     ],
     vetting: "Physician, died 1974; no office; broadly admired."
   },
@@ -4293,10 +4433,7 @@ var HEALER_LEGENDS = [
     ],
     tags: [
       tag("conscientiousness", "high", "perfected storage methods", "He improved how blood is stored."),
-      tag("openness", "high", "invented the bloodmobile", "He came up with mobile donation stations."),
-      tag("locus_of_control", "high", "built blood banks", "He led large-scale blood bank projects."),
-      tag("competence", "high", "expert in transfusion", "He was a leading researcher in his field."),
-      tag("playfulness", "low", "careful, exacting work", "He worked out how to store blood so it could save lives.")
+      tag("openness", "high", "invented the bloodmobile", "He came up with mobile donation stations.")
     ],
     vetting: "Surgeon, died 1950; no office; broadly admired."
   },
@@ -4332,9 +4469,7 @@ var HEALER_LEGENDS = [
     tags: [
       tag("openness", "high", "studied everything", "He wrote on medicine, philosophy and science."),
       tag("conscientiousness", "high", "organised all he knew", "He compiled huge encyclopedias."),
-      tag("growth_mindset", "high", "learned from anyone", "He learned arithmetic from a greengrocer."),
-      tag("extraversion", "low", "lived in the libraries", "He spent his youth in great libraries."),
-      tag("playfulness", "low", "a lifetime of careful study", "He wrote a medical encyclopedia used for six centuries.")
+      tag("growth_mindset", "high", "learned from anyone", "He learned arithmetic from a greengrocer.")
     ],
     vetting: "Physician and philosopher, died 1037; no religious or political office; broadly admired."
   },
@@ -4360,7 +4495,7 @@ var HEALER_LEGENDS = [
     ],
     moments: [
       moment("m1", "She got her credentials through a \u201Cside door\u201D: a loophole in admissions at the Society of Apothecaries.", src(wiki("Elizabeth_Garrett_Anderson"), "side door", "loophole")),
-      moment("m2", "She privately obtained a certificate in anatomy and physiology before being admitted in 1862.", src(wiki("Elizabeth_Garrett_Anderson"), "privately obtained a certificate in anatomy and physiology"))
+      moment("m2", "She studied privately for a certificate in anatomy and physiology, and in 1865 passed the Society of Apothecaries\u2019 exam.", src(wiki("Elizabeth_Garrett_Anderson"), "privately obtained a certificate in anatomy and physiology", "In 1865, Garrett finally took her exam"))
     ],
     angles: [
       angle("a1", "the side door", "What does a doctor who used a loophole to qualify have in common with you?", "If the front door is locked, a side door still gets you in."),
@@ -4371,7 +4506,6 @@ var HEALER_LEGENDS = [
     tags: [
       tag("self_efficacy", "high", "found a way in", "She used a loophole to qualify as a doctor."),
       tag("conscientiousness", "high", "studied privately", "She earned certificates on her own."),
-      tag("locus_of_control", "high", "made her own path", "She found a route into a closed profession."),
       tag("conflict_assertiveness", "high", "pushed into medicine", "She pursued medicine despite opposition.")
     ],
     vetting: "Physician, died 1917; entry focuses on medicine; broadly admired."
@@ -4408,10 +4542,7 @@ var HEALER_LEGENDS = [
     ],
     tags: [
       tag("conflict_assertiveness", "high", "lobbied lawmakers", "She pressed state legislatures and Congress."),
-      tag("conflict_cooperativeness", "high", "spoke up for others", "She advocated for poor people who were ill."),
-      tag("conscientiousness", "high", "organised nurses", "She was Superintendent of Army Nurses."),
-      tag("steadiness", "high", "kept at it for years", "Her program of lobbying was sustained over years."),
-      tag("playfulness", "low", "serious about reform", "She lobbied state after state for better care.")
+      tag("conflict_cooperativeness", "high", "spoke up for others", "She advocated for poor people who were ill.")
     ],
     vetting: "Reformer, died 1887; no elected office; broadly admired."
   }
@@ -4458,9 +4589,7 @@ var MUSIC_LEGENDS = [
     tags: [
       tag("agreeableness", "low", "refused to soften the Ninth", "He turned down the singers who asked for easier parts."),
       tag("steadiness", "low", "felt the loss deeply", "His hearing loss weighed on him for decades."),
-      tag("autonomy", "high", "wrote it his way", "He broke the usual symphony form by adding a choir."),
-      tag("attachment_avoidance", "high", "kept to himself", "As his hearing faded, much of his work happened alone."),
-      tag("conflict_cooperativeness", "low", "stood firm on the score", "He held to his own version even when performers objected.")
+      tag("autonomy", "high", "wrote it his way", "He broke the usual symphony form by adding a choir.")
     ],
     vetting: "Composer, died 1827; no office; broadly admired. Entry avoids his darkest letters on purpose."
   },
@@ -4471,7 +4600,7 @@ var MUSIC_LEGENDS = [
     hall: "music",
     region: "middle_east",
     place: "Egypt",
-    era: "1904\u20131975",
+    era: "c. 1904\u20131975",
     died: 1975,
     gender: "woman",
     field: "Singing",
@@ -4495,12 +4624,9 @@ var MUSIC_LEGENDS = [
     ],
     tags: [
       tag("conscientiousness", "high", "every first Thursday, forty years", "She kept a monthly concert schedule for four decades."),
-      tag("relatedness", "high", "sang to a whole region", "Her concerts connected millions of listeners."),
-      tag("competence", "high", "owned every stage", "She became the most distinguished singer of her era."),
-      tag("steadiness", "high", "steady for decades", "Her long monthly run needed steady nerves."),
-      tag("extraversion", "high", "lived on stage", "She performed publicly from childhood on.")
+      tag("competence", "high", "owned every stage", "She became the most distinguished singer of her era.")
     ],
-    vetting: "Singer, died 1975; no office; broadly beloved across the Arab world."
+    vetting: "Singer, died 1975; no office; broadly beloved across the Arab world. Birth year disputed (1904 most cited, some say 1898), so no On this day."
   },
   {
     id: "lf_rachmaninoff",
@@ -4533,9 +4659,7 @@ var MUSIC_LEGENDS = [
       angle("a4", "one bad review", "How much can one bad night really cost you?", "A harsh reaction can feel final. Your next piece still gets written.")
     ],
     tags: [
-      tag("competence", "low", "doubted his own skill", "After one bad premiere he couldn\u2019t compose for years."),
-      tag("steadiness", "low", "hit hard by criticism", "The failed premiere left him heavily depressed for a time."),
-      tag("attachment_anxiety", "high", "felt every reaction", "How people received his work affected him deeply."),
+      tag("steadiness", "low", "hit hard by criticism", "The failed premiere hit him hard, and for a while he couldn\u2019t write."),
       tag("growth_mindset", "high", "worked his way back", "He met with a doctor almost daily to return to composing."),
       tag("self_efficacy", "low", "unsure he could write", "For three years he composed very little.")
     ],
@@ -4573,10 +4697,7 @@ var MUSIC_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "joked with every crowd", "He was known for joking with the audience."),
-      tag("extraversion", "high", "lived for the stage", "His career was built on performing live."),
-      tag("openness", "high", "invented as he played", "He was a skilful improviser."),
-      tag("agreeableness", "high", "a joyful public face", "He kept a warm, joyful public image."),
-      tag("autonomy", "low", "followed his mentor", "He followed his mentor to Chicago to play in his band.")
+      tag("openness", "high", "invented as he played", "He was a skilful improviser.")
     ],
     vetting: "Musician, died 1971; no office; broadly beloved."
   },
@@ -4612,9 +4733,8 @@ var MUSIC_LEGENDS = [
     ],
     tags: [
       tag("autonomy", "high", "chose Vienna over his employer", "He stayed in Vienna after being dismissed."),
-      tag("playfulness", "high", "music full of play", "He wrote a huge range of lively works."),
+      tag("playfulness", "high", "wrote famously silly letters", "His letters to his cousin were famously silly."),
       tag("competence", "high", "mastered music at five", "He played and composed as a small child."),
-      tag("conscientiousness", "low", "followed his own rhythm", "He quarrelled with his employers over how to work."),
       tag("agreeableness", "low", "clashed with his bosses", "His quarrels with his Salzburg employers came to a head.")
     ],
     vetting: "Composer, died 1791; no office; broadly admired."
@@ -4655,9 +4775,8 @@ var MUSIC_LEGENDS = [
     ],
     tags: [
       tag("competence", "high", "perfect timing and tone", "She was noted for her pure tone and phrasing."),
-      tag("extraversion", "low", "nervous before the show", "She was intimidated on stage at her first Amateur Night."),
-      tag("openness", "high", "sang like an instrument", "Her scat singing was horn-like and improvised."),
-      tag("relatedness", "high", "grew with her band", "She found stability with the Chick Webb Orchestra.")
+      tag("extraversion", "low", "shy off stage", "She was famously shy away from the microphone."),
+      tag("openness", "high", "sang like an instrument", "Her scat singing was horn-like and improvised.")
     ],
     vetting: "Singer, died 1996; no office; broadly beloved."
   },
@@ -4694,7 +4813,6 @@ var MUSIC_LEGENDS = [
     tags: [
       tag("conscientiousness", "high", "a 61-year career", "She kept performing for 61 years."),
       tag("conflict_cooperativeness", "high", "premiered others\u2019 music", "She introduced works by her husband and Brahms."),
-      tag("steadiness", "high", "steady through a full life", "She balanced a long career with eight children."),
       tag("relatedness", "high", "encouraged young Brahms", "She and Robert encouraged Brahms and stayed close to him.")
     ],
     vetting: "Pianist and composer, died 1896; no office; broadly admired."
@@ -4730,9 +4848,7 @@ var MUSIC_LEGENDS = [
     ],
     tags: [
       tag("conscientiousness", "high", "a cantata cycle a year", "He set himself a new cycle of cantatas every year."),
-      tag("growth_mindset", "high", "walked to learn", "He travelled far on foot to hear a master play."),
-      tag("playfulness", "low", "serious about craft", "His work was careful and deeply structured."),
-      tag("steadiness", "high", "decades of steady work", "He held long posts and kept composing.")
+      tag("growth_mindset", "high", "walked to learn", "He travelled far on foot to hear a master play.")
     ],
     vetting: "Composer, died 1750; a church musician, not a religious leader; broadly admired."
   },
@@ -4767,11 +4883,8 @@ var MUSIC_LEGENDS = [
       angle("a4", "a new form", "How do you invent a kind of music that didn\u2019t exist?", "You can make the container your ideas need.")
     ],
     tags: [
-      tag("steadiness", "low", "played with deep feeling", "His playing was known for nuance and sensitivity."),
-      tag("extraversion", "low", "preferred small rooms", "His music was made for the intimate sound of solo piano."),
-      tag("openness", "high", "invented the ballade", "He created a new instrumental genre."),
-      tag("conscientiousness", "high", "polished every phrase", "His technique was described as without equal."),
-      tag("growth_mindset", "low", "stayed with the piano", "He wrote almost only for solo piano.")
+      tag("extraversion", "low", "preferred small rooms", "He gave only about thirty public concerts, preferring small salons."),
+      tag("openness", "high", "invented the ballade", "He created a new instrumental genre.")
     ],
     vetting: "Composer, died 1849; no office; broadly admired."
   },
@@ -4806,10 +4919,7 @@ var MUSIC_LEGENDS = [
       angle("a4", "twelve hundred songs", "How do you keep singing for a whole life?", "Showing up for your craft year after year is its own kind of greatness.")
     ],
     tags: [
-      tag("relatedness", "high", "sang hope to a country", "She was honoured for encouraging people after the war."),
-      tag("self_efficacy", "high", "recording at twelve", "She started her recording career as a child."),
-      tag("conscientiousness", "high", "twelve hundred songs", "She recorded 1,200 songs."),
-      tag("extraversion", "high", "a life on stage", "She was a singer and actress from childhood.")
+      tag("conscientiousness", "high", "twelve hundred songs", "She recorded 1,200 songs.")
     ],
     vetting: "Singer, died 1989; no office; broadly beloved in Japan."
   }
@@ -4855,7 +4965,6 @@ var MYTH_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "won by playing tricks", "He solves every task with a trick, not force."),
-      tag("openness", "high", "wanted every story", "He set out to own all the stories in the world."),
       tag("agreeableness", "low", "no rule-follower", "He bargains, bends rules and outwits everyone."),
       tag("conflict_cooperativeness", "low", "wanted them all for himself", "He wanted the stories that the sky god held.")
     ],
@@ -4896,11 +5005,7 @@ var MYTH_LEGENDS = [
       angle("a4", "twelve years unseen", "How do you do the job so well that nobody questions you?", "Doing the work well can speak louder than who people expect you to be.")
     ],
     tags: [
-      tag("self_efficacy", "high", "went to war for her family", "She takes her father\u2019s place in the army."),
-      tag("attachment_avoidance", "low", "did it for her father", "Her whole story starts from wanting to protect him."),
-      tag("relatedness", "high", "came home to her family", "She turns down office to go back to her family."),
-      tag("autonomy", "low", "answered the call-up", "She acts from duty to the summons her father received."),
-      tag("attachment_anxiety", "high", "worried for her father", "She took her father\u2019s place so he would not have to go.")
+      tag("self_efficacy", "high", "went to war for her family", "She takes her father\u2019s place in the army.")
     ],
     vetting: "Folk ballad heroine (legendary, not a real commander); widely loved; no harm to children."
   },
@@ -4938,9 +5043,8 @@ var MYTH_LEGENDS = [
     ],
     tags: [
       tag("conflict_cooperativeness", "high", "shared his dumplings", "He wins helpers by sharing his food."),
-      tag("attachment_anxiety", "low", "trusted strangers on the road", "He welcomes three animals he\u2019s only just met."),
       tag("self_efficacy", "high", "headed for Demon Island", "He sets out to face the oni himself."),
-      tag("relatedness", "high", "built a team", "His whole quest depends on the friends he makes.")
+      tag("conscientiousness", "low", "a sleepy start, in some tellings", "In some versions he was a lazy boy who slept all day.")
     ],
     vetting: "Folk hero tale; no religious figure; no harm to children."
   },
@@ -5009,7 +5113,6 @@ var MYTH_LEGENDS = [
       angle("a4", "Avalon", "Why does the story never quite end?", "Some hopes are worth keeping open.")
     ],
     tags: [
-      tag("agreeableness", "high", "sat everyone as equals", "His round table put his knights on equal footing."),
       tag("relatedness", "high", "led a fellowship", "His story centres on his knights and court."),
       tag("autonomy", "low", "listened to Merlin", "He relied on Merlin\u2019s guidance."),
       tag("locus_of_control", "high", "built Camelot", "He made a court that became a legend.")
@@ -5046,9 +5149,7 @@ var MYTH_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "tall tales and big laughs", "His stories are joyful exaggerations."),
-      tag("extraversion", "high", "larger than life", "He is a giant whose deeds everyone talks about."),
-      tag("conscientiousness", "high", "superhuman work ethic", "His tales revolve around his superhuman labours."),
-      tag("attachment_anxiety", "low", "easygoing giant", "He takes huge tasks in his stride.")
+      tag("conscientiousness", "high", "superhuman work ethic", "His tales revolve around his superhuman labours.")
     ],
     vetting: "Folk tall-tale character; no religious figure; no harm to children."
   },
@@ -5083,8 +5184,7 @@ var MYTH_LEGENDS = [
     tags: [
       tag("self_efficacy", "high", "faced it barehanded", "He fought Grendel without weapons."),
       tag("conflict_cooperativeness", "high", "came to a stranger\u2019s aid", "He travelled to help King Hrothgar."),
-      tag("steadiness", "high", "calm before monsters", "He faced every threat steadily."),
-      tag("extraversion", "high", "a hero of the mead hall", "He was celebrated in the hall after his victory.")
+      tag("steadiness", "high", "calm before monsters", "He faced every threat steadily.")
     ],
     vetting: "Epic-poem hero; no religious figure; entry keeps the violence mild."
   },
@@ -5119,8 +5219,7 @@ var MYTH_LEGENDS = [
     tags: [
       tag("openness", "high", "endless stories", "She told tale after interlinked tale."),
       tag("self_efficacy", "high", "volunteered to face the king", "She stepped forward to marry him."),
-      tag("conscientiousness", "high", "a thousand nights of stories", "She kept going night after night."),
-      tag("agreeableness", "high", "won him over gently", "Her stories changed the king without force.")
+      tag("conscientiousness", "high", "a thousand nights of stories", "She kept going night after night.")
     ],
     vetting: "Legendary narrator; not a religious figure; entry avoids the violence of the frame story."
   },
@@ -5155,7 +5254,6 @@ var MYTH_LEGENDS = [
     tags: [
       tag("playfulness", "high", "jokes with a point", "His stories are funny and teach something."),
       tag("agreeableness", "low", "teases everyone", "His tales gently mock people and customs."),
-      tag("conflict_assertiveness", "low", "dodges instead of fighting", "He uses wit to avoid direct conflict."),
       tag("openness", "high", "sees things sideways", "He looks at problems from odd angles.")
     ],
     vetting: "Folk character (not a religious leader); no harm to children."
@@ -5192,7 +5290,6 @@ var MYTH_LEGENDS = [
       tag("self_efficacy", "high", "took on the machine", "He raced a steam drill and won."),
       tag("conscientiousness", "high", "tireless worker", "He was a steel-driving man building tunnels."),
       tag("competence", "high", "the best with a hammer", "His skill outpaced a machine."),
-      tag("growth_mindset", "low", "did it the old way", "He stood by the old way of working."),
       tag("conflict_cooperativeness", "low", "wouldn\u2019t step aside", "He raced the steam drill rather than give way.")
     ],
     vetting: "Folk hero; no religious figure; his death in the tale is not described."
@@ -5247,9 +5344,7 @@ var SCIENCE_LEGENDS = [
     tags: [
       tag("openness", "high", "chased an unknown glow", "She studied a new kind of radiation that nobody understood yet."),
       tag("conscientiousness", "high", "measured everything, twice", "Her discoveries came from systematic, repeated measurement."),
-      tag("extraversion", "low", "at home in the lab", "Her life\u2019s work happened in the quiet of a laboratory."),
-      tag("growth_mindset", "high", "learned a new field", "She moved from physics into chemistry and won in both."),
-      tag("playfulness", "low", "serious about the work", "She treated research as work that mattered, not a game.")
+      tag("growth_mindset", "high", "learned a new field", "She moved from physics into chemistry and won in both.")
     ],
     vetting: "Scientist, died 1934; no political office; broadly admired worldwide."
   },
@@ -5278,7 +5373,7 @@ var SCIENCE_LEGENDS = [
         "The story goes that he pretended to be mad to escape a task for the caliph, and was kept under house arrest.",
         src(HAYTHAM, "feigned madness", "house arrest")
       ),
-      moment("m2", "During that time he wrote his Book of Optics.", src(HAYTHAM, "During this time, he wrote his influential Book of Optics"))
+      moment("m2", "Some accounts say he wrote much of his Book of Optics during that time.", src(HAYTHAM, "During this time, he wrote his influential Book of Optics"))
     ],
     angles: [
       angle("a1", "prove it", "What does a thinker who doubted the greatest astronomer have in common with you?", "Asking \u201Chow do we know?\u201D is not rude. It is how good ideas get better."),
@@ -5290,7 +5385,6 @@ var SCIENCE_LEGENDS = [
       tag("openness", "high", "questioned how sight works", "He studied light and vision when little was known about them."),
       tag("agreeableness", "low", "doubted the great Ptolemy", "He wrote a whole book questioning the most trusted astronomer."),
       tag("autonomy", "high", "followed his own method", "He set his own standard: ideas must survive experiments."),
-      tag("relatedness", "low", "worked alone in confinement", "His most famous book was written while he was kept apart."),
       tag("growth_mindset", "high", "tested, then revised", "He treated ideas as things to test, not to defend.")
     ],
     vetting: "Scholar, died c. 1040; no political or religious office; admired across cultures."
@@ -5374,8 +5468,8 @@ var SCIENCE_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "saw patterns everywhere", "He found something interesting in a number others called dull."),
-      tag("conscientiousness", "low", "skipped the usual steps", "He reached results by his own route, working in isolation."),
-      tag("extraversion", "low", "worked in isolation", "He first developed his research alone, before anyone saw it."),
+      tag("conscientiousness", "low", "results first, proofs later", "He often wrote down results without the formal proofs."),
+      tag("extraversion", "low", "shy and quiet", "He was described as shy and quiet, with pleasant manners."),
       tag("self_efficacy", "high", "wrote to a stranger", "He sent his results to a famous mathematician he had never met.")
     ],
     hidden: {
@@ -5400,9 +5494,9 @@ var SCIENCE_LEGENDS = [
     field: "Printing",
     essence: "Failed at selling mirrors, then changed how the world reads.",
     whoTheyWere: "A German inventor and craftsman whose printing press made printing far faster.",
-    famousFor: "The movable-type printing press and the Gutenberg Bible.",
+    famousFor: "Bringing movable-type printing to Europe, and the Gutenberg Bible.",
     facts: [
-      fact("f1", "He invented the movable-type printing press.", src(GUTENBERG, "invented the movable-type printing press")),
+      fact("f1", "He introduced movable-type printing to Europe; movable type was already in use in East Asia.", src(GUTENBERG, "movable-type printing press", "Though movable type was already in use in East Asia")),
       fact("f2", "In 1455 he completed the 42-line Bible, known as the Gutenberg Bible.", src(GUTENBERG, "42-line Bible")),
       fact("f3", "About 180 copies of that Bible were printed.", src(GUTENBERG, "About 180 copies were printed"))
     ],
@@ -5418,10 +5512,8 @@ var SCIENCE_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "imagined a faster way", "He built a press that printed much faster than before."),
-      tag("autonomy", "high", "ran his own workshop", "He built and ran his own printing enterprise."),
       tag("growth_mindset", "high", "tried again after a flop", "After the mirror business failed, he turned to printing."),
-      tag("conscientiousness", "high", "set every line by hand", "His Bible was a long, exact piece of work."),
-      tag("competence", "low", "a failed business first", "He was caught up in a failed mirror business before printing.")
+      tag("conscientiousness", "high", "set every line by hand", "His Bible was a long, exact piece of work.")
     ],
     vetting: "Inventor, died 1468; no office; broadly admired."
   },
@@ -5431,7 +5523,7 @@ var SCIENCE_LEGENDS = [
     kind: "real",
     hall: "science",
     region: "europe",
-    place: "Austro-Hungarian Empire and the United States",
+    place: "Austrian Empire (now Croatia) and the United States",
     era: "1856\u20131943",
     died: 1943,
     birthday: { md: "07-10", source: src(wiki("Nikola_Tesla"), "10 July 1856") },
@@ -5457,9 +5549,7 @@ var SCIENCE_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "imagined a new power system", "He worked on ideas for electricity that were new at the time."),
-      tag("self_efficacy", "high", "struck out on his own", "He left Edison\u2019s works to set up his own laboratories."),
-      tag("relatedness", "low", "happiest with his inventions", "He spent long stretches alone with his work."),
-      tag("attachment_avoidance", "high", "kept people at a distance", "He lived much of his later life alone in hotels.")
+      tag("self_efficacy", "high", "struck out on his own", "He left Edison\u2019s works to set up his own laboratories.")
     ],
     vetting: "Inventor, died 1943; no office; broadly admired."
   },
@@ -5496,9 +5586,7 @@ var SCIENCE_LEGENDS = [
     tags: [
       tag("openness", "high", "looked where nobody had", "He turned an improved telescope on the night sky."),
       tag("conflict_assertiveness", "high", "stood by what he saw", "He published observations that challenged accepted ideas."),
-      tag("autonomy", "high", "built his own tools", "He improved the telescope himself and made an early microscope."),
-      tag("growth_mindset", "high", "kept working under arrest", "He wrote a major book while confined at home."),
-      tag("agreeableness", "low", "said what he saw", "He reported what his own telescope showed.")
+      tag("autonomy", "high", "built his own tools", "He improved the telescope himself and made an early microscope.")
     ],
     vetting: "Scientist, died 1642; no office. Trial mentioned neutrally, no religious argument."
   },
@@ -5534,10 +5622,7 @@ var SCIENCE_LEGENDS = [
     ],
     tags: [
       tag("conscientiousness", "high", "searched the cliffs again and again", "Finding fossils meant patient, repeated searching."),
-      tag("competence", "high", "knew fossils better than experts", "Her finds shaped what scientists understood."),
-      tag("conflict_assertiveness", "low", "let the fossils speak", "She often did not receive full credit for her work."),
-      tag("steadiness", "high", "kept going through hard years", "She struggled financially but kept working."),
-      tag("openness", "low", "stayed by her home coast", "She kept selling fossils from her shop at home.")
+      tag("competence", "high", "knew fossils better than experts", "Her finds shaped what scientists understood.")
     ],
     vetting: "Fossil collector, died 1847; no office; broadly admired."
   },
@@ -5574,8 +5659,7 @@ var SCIENCE_LEGENDS = [
     tags: [
       tag("openness", "high", "from radio waves to plants", "He moved between physics, botany and science fiction."),
       tag("conflict_cooperativeness", "high", "shared his ideas freely", "He was critical of keeping knowledge locked in patents."),
-      tag("autonomy", "high", "built his own instruments", "He invented the crescograph for his own research."),
-      tag("playfulness", "high", "wrote science fiction too", "He is seen as the father of Bengali science fiction.")
+      tag("autonomy", "high", "built his own instruments", "He invented the crescograph for his own research.")
     ],
     vetting: "Scientist, died 1937; no office; broadly admired."
   },
@@ -5613,9 +5697,7 @@ var SCIENCE_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "curious about everything", "His notebooks jump from anatomy to astronomy to machines."),
-      tag("conscientiousness", "low", "followed the next idea", "He moved between subjects and left many projects unfinished."),
-      tag("autonomy", "high", "wrote his own way", "He wrote in mirror-image script all his life."),
-      tag("playfulness", "high", "dreamed up flying machines", "He designed machines far ahead of his time.")
+      tag("conscientiousness", "low", "followed the next idea", "He moved between subjects and left many projects unfinished.")
     ],
     vetting: "Polymath, died 1519; no office; broadly admired. Weapon designs left out of the entry."
   }
@@ -5654,10 +5736,8 @@ var SCREEN_LEGENDS = [
       angle("a4", "inventing gags", "How do you build a joke out of a moving train?", "Big ideas often come from playing with what\u2019s right in front of you.")
     ],
     tags: [
-      tag("steadiness", "high", "calm in total chaos", "His face stayed still while the world collapsed around him."),
       tag("playfulness", "high", "built comedy from stunts", "His films are full of inventive physical comedy."),
-      tag("self_efficacy", "high", "did his own stunts", "He performed daring, inventive stunts himself."),
-      tag("conflict_assertiveness", "low", "said it all with silence", "His humour came from a quiet, deadpan face.")
+      tag("self_efficacy", "high", "did his own stunts", "He performed daring, inventive stunts himself.")
     ],
     vetting: "Actor and filmmaker, died 1966; no office; broadly admired."
   },
@@ -5683,7 +5763,7 @@ var SCREEN_LEGENDS = [
     ],
     moments: [
       moment("m1", "Between 1988 and 1992 she worked in some of the poorest communities of Africa, South America and Asia.", src(wiki("Audrey_Hepburn"), "Between 1988 and 1992, she worked in some of the poorest communities")),
-      moment("m2", "By 1944, as a teenager, she was performing ballet to raise money for the resistance.", src(wiki("Audrey_Hepburn"), "performing ballet to raise money to support the resistance"))
+      moment("m2", "As a teenager in the war, she gave silent dance performances that reportedly raised money for the Dutch resistance.", src(wiki("Audrey_Hepburn"), "silent dance performances that reportedly raised money for the Dutch resistance"))
     ],
     angles: [
       angle("a1", "the second act", "What does a film star who turned to charity work have in common with you?", "What you do with your later chapters can mean the most."),
@@ -5693,9 +5773,7 @@ var SCREEN_LEGENDS = [
     ],
     tags: [
       tag("conflict_cooperativeness", "high", "gave her time to children", "She worked for UNICEF in some of the poorest places."),
-      tag("agreeableness", "high", "gentle and gracious", "She was known for warmth as well as style."),
-      tag("relatedness", "high", "drawn to people in need", "Her later years centred on others."),
-      tag("attachment_anxiety", "low", "steady and trusting", "She worked calmly alongside strangers worldwide.")
+      tag("self_efficacy", "low", "unsure of herself", "She spoke openly of feelings of insecurity and inferiority.")
     ],
     vetting: "Actress and humanitarian, died 1993; no office; broadly beloved."
   },
@@ -5717,7 +5795,7 @@ var SCREEN_LEGENDS = [
     facts: [
       fact("f1", "He achieved worldwide fame as the creator of the Muppets.", src(wiki("Jim_Henson"), "creator of the Muppets")),
       fact("f2", "He created the Muppets for Sesame Street and created Fraggle Rock.", src(wiki("Jim_Henson"), "Muppets for Sesame Street", "Fraggle Rock")),
-      fact("f3", "He directed The Dark Crystal and Labyrinth.", src(wiki("Jim_Henson"), "The Dark Crystal", "Labyrinth"))
+      fact("f3", "He co-directed The Dark Crystal with Frank Oz, and directed Labyrinth.", src(wiki("Jim_Henson"), "co-directed The Dark Crystal (1982) with Oz", "Labyrinth"))
     ],
     moments: [
       moment("m1", "He changed the way puppetry is captured and presented on screen.", src(wiki("Jim_Henson"), "the way puppetry is captured and presented in video media")),
@@ -5731,9 +5809,7 @@ var SCREEN_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "made the Muppets", "He built a world of silly, lovable characters."),
-      tag("openness", "high", "reinvented puppetry", "He changed how puppets are filmed."),
-      tag("agreeableness", "high", "gentle and kind", "His characters are known for warmth."),
-      tag("relatedness", "high", "built with a team", "His work grew from a company of puppeteers.")
+      tag("openness", "high", "reinvented puppetry", "He changed how puppets are filmed.")
     ],
     vetting: "Puppeteer and filmmaker, died 1990; no office; broadly beloved."
   },
@@ -5769,7 +5845,6 @@ var SCREEN_LEGENDS = [
     ],
     tags: [
       tag("autonomy", "high", "made his own martial art", "He founded his own fighting philosophy."),
-      tag("self_efficacy", "high", "trusted his own skill", "He became one of the most influential martial artists."),
       tag("conscientiousness", "high", "trained relentlessly", "His art came from discipline and practice."),
       tag("openness", "high", "mixed many traditions", "Jeet Kune Do blended ideas from many sources.")
     ],
@@ -5787,7 +5862,7 @@ var SCREEN_LEGENDS = [
     birthday: { md: "11-09", source: src(wiki("Hedy_Lamarr"), "November 9, 1914") },
     gender: "woman",
     field: "Film and invention",
-    essence: "A movie star whose invention helped lead to Wi-Fi.",
+    essence: "A movie star who co-patented a radio idea now used in Bluetooth.",
     whoTheyWere: "An Austrian and American actress and inventor, famous on screen while inventing on the side.",
     famousFor: "Co-inventing frequency hopping, whose principles are used in Bluetooth and early Wi-Fi.",
     facts: [
@@ -5797,7 +5872,7 @@ var SCREEN_LEGENDS = [
     ],
     moments: [
       moment("m1", "She was celebrated for her acting, while her invention went largely unnoticed for decades.", src(wiki("Hedy_Lamarr"), "celebrated for her acting career")),
-      moment("m2", "Her frequency-hopping idea became foundational to spread spectrum communications.", src(wiki("Hedy_Lamarr"), "foundational to later spread spectrum communications"))
+      moment("m2", "Their patent was an early example of frequency hopping, which later became part of spread spectrum radio.", src(wiki("Hedy_Lamarr"), "later spread spectrum communications"))
     ],
     angles: [
       angle("a1", "the hidden inventor", "What does a film star with a secret inventor side have in common with you?", "People may only see one side of you. The other side still counts."),
@@ -5807,9 +5882,8 @@ var SCREEN_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "acted and invented", "She worked on inventions alongside her film career."),
-      tag("autonomy", "high", "refused to be one thing", "She pursued invention while famous for acting."),
-      tag("competence", "high", "solved a real problem", "Her idea became foundational to wireless tech."),
-      tag("relatedness", "low", "tinkered on her own time", "Much of her inventing happened privately.")
+      tag("competence", "high", "solved a real problem", "She co-patented a way to keep radio signals from being jammed."),
+      tag("self_efficacy", "low", "an insecure newcomer", "She later described herself at MGM as an insecure actress.")
     ],
     vetting: "Actress and inventor, died 2000; no office; broadly admired. Wartime purpose described neutrally."
   },
@@ -5845,7 +5919,6 @@ var SCREEN_LEGENDS = [
     tags: [
       tag("conscientiousness", "high", "controlled every step", "He worked on every part of production himself."),
       tag("autonomy", "high", "directed, wrote and edited", "He kept control of his films."),
-      tag("relatedness", "high", "worked with one actor for years", "He made film after film with Toshiro Mifune."),
       tag("growth_mindset", "high", "switched from painting", "He moved from painting to film and mastered it.")
     ],
     vetting: "Director, died 1998; no office; broadly admired."
@@ -5884,7 +5957,7 @@ var SCREEN_LEGENDS = [
       tag("conscientiousness", "high", "weeks of rehearsal", "He rehearsed each dance for weeks."),
       tag("competence", "high", "made it look effortless", "His dancing set a standard on film."),
       tag("conflict_assertiveness", "high", "insisted on how to film", "He insisted dances be shot in long, full takes."),
-      tag("relatedness", "high", "shone with a partner", "His partnership with Ginger Rogers is legendary.")
+      tag("self_efficacy", "low", "worried about slipping", "Even as a star he often feared his career was faltering.")
     ],
     vetting: "Dancer and actor, died 1987; no office; broadly admired."
   },
@@ -5919,10 +5992,7 @@ var SCREEN_LEGENDS = [
       angle("a4", "the icon", "How do you make people see you on your own terms?", "How you carry yourself can say what words can\u2019t.")
     ],
     tags: [
-      tag("conflict_assertiveness", "high", "refused the stereotypes", "She left Hollywood rather than keep playing narrow roles."),
-      tag("autonomy", "high", "took her career abroad", "She moved to Europe to find better work."),
-      tag("self_efficacy", "high", "first of her kind", "She became Hollywood\u2019s first Chinese-American star."),
-      tag("conflict_cooperativeness", "low", "wouldn\u2019t accept less", "She wouldn\u2019t settle for the roles offered.")
+      tag("conflict_assertiveness", "high", "refused the stereotypes", "She left Hollywood rather than keep playing narrow roles.")
     ],
     vetting: "Actress, died 1961; no office; broadly admired."
   },
@@ -5958,8 +6028,6 @@ var SCREEN_LEGENDS = [
     ],
     tags: [
       tag("playfulness", "high", "the queen of physical comedy", "Her comedy made millions laugh."),
-      tag("locus_of_control", "high", "took charge of the studio", "She became the first woman to run a major TV studio."),
-      tag("extraversion", "high", "loved an audience", "She built her career in front of crowds."),
       tag("self_efficacy", "high", "backed big new shows", "Her studio produced bold new series.")
     ],
     vetting: "Comedian and executive, died 1989; no office; broadly beloved."
@@ -5997,7 +6065,6 @@ var SCREEN_LEGENDS = [
     tags: [
       tag("openness", "high", "worked in many arts", "He directed, wrote, drew and composed."),
       tag("conscientiousness", "high", "designed every detail", "He illustrated his books and created their publicity."),
-      tag("extraversion", "low", "quiet storyteller", "His films are known for quiet, careful storytelling."),
       tag("competence", "high", "mastered film fast", "His first film won eleven international prizes.")
     ],
     vetting: "Director, died 1992; no office; broadly admired."
@@ -6026,7 +6093,7 @@ var SPORT_LEGENDS = [
     famousFor: "Four gold medals at the 1936 Olympic Games.",
     facts: [
       fact("f1", "He won four gold medals at the 1936 Olympic Games.", src(OWENS, "1936 Olympic Games by winning four gold medals")),
-      fact("f2", "He set individual Olympic records in each of his events.", src(OWENS, "setting individual Olympic records")),
+      fact("f2", "His four golds came in the 100 m, the 200 m, the long jump and the 4 \xD7 100 m relay.", src(OWENS, "four gold medals: 100 meters, long jump, 200 meters")),
       fact("f3", "He is widely regarded as one of the greatest athletes in track and field.", src(OWENS, "one of the greatest athletes in track and field"))
     ],
     moments: [
@@ -6044,10 +6111,7 @@ var SPORT_LEGENDS = [
       angle("a4", "spare-time jobs", "Why would a future champion deliver groceries after school?", "The ordinary work around your dream is part of the dream.")
     ],
     tags: [
-      tag("steadiness", "high", "calm through four finals", "He won four events at the same Games."),
-      tag("competence", "high", "record after record", "He set Olympic records in each of his events."),
-      tag("agreeableness", "high", "raced a friend, stayed friends", "He beat his college friend by a tenth of a second."),
-      tag("relatedness", "high", "ran with his teammates", "His friends and teammates were part of his story.")
+      tag("competence", "high", "four events, four golds", "He won every event he entered at the 1936 Games.")
     ],
     vetting: "Athlete, died 1980; no office; broadly admired."
   },
@@ -6086,10 +6150,7 @@ var SPORT_LEGENDS = [
       angle("a4", "both lives", "Can you be a parent and the fastest person there?", "You don\u2019t have to shrink one part of your life to grow another.")
     ],
     tags: [
-      tag("self_efficacy", "low", "nearly didn\u2019t run", "Homesick and overwhelmed, she almost skipped the semi-final."),
-      tag("steadiness", "low", "felt it all before the race", "She broke down shortly before running."),
-      tag("attachment_avoidance", "low", "leaned on her husband", "A long talk with her husband got her to the start line."),
-      tag("locus_of_control", "high", "answered critics on the track", "Told she was too old, she won four golds.")
+      tag("steadiness", "low", "felt it all before the race", "She broke down shortly before running.")
     ],
     vetting: "Athlete, died 2004; no office; broadly admired."
   },
@@ -6128,10 +6189,7 @@ var SPORT_LEGENDS = [
       angle("a4", "build your own board", "Why build a surfboard out of whatever wood is nearby?", "Making do with what\u2019s around you can start something big.")
     ],
     tags: [
-      tag("playfulness", "high", "made the waves fun", "He spread surfing through exhibitions people loved."),
-      tag("agreeableness", "high", "lent out his boards", "He trained and loaned equipment to new surfers."),
-      tag("relatedness", "high", "brought surfing to new shores", "He shared surfing with people in other countries."),
-      tag("attachment_anxiety", "low", "trusted strangers on his board", "He shared his gear and skills freely with beginners.")
+      tag("conflict_cooperativeness", "high", "lent out his boards", "He trained new surfers and loaned them equipment.")
     ],
     vetting: "Athlete and lifeguard, died 1968; no office; broadly beloved."
   },
@@ -6155,7 +6213,7 @@ var SPORT_LEGENDS = [
       fact("f3", "He played professional football, baseball and basketball.", src(wiki("Jim_Thorpe"), "professional football, baseball, and basketball"))
     ],
     moments: [
-      moment("m1", "His Olympic titles were taken away over amateur rules, then restored by the IOC in 1983, 30 years after his death.", src(wiki("Jim_Thorpe"), "restored Thorpe's Olympic medals")),
+      moment("m1", "His Olympic titles were taken away over amateur rules. The IOC restored them in 1982, and in 2022 named him sole champion of both events.", src(wiki("Jim_Thorpe"), "IOC Executive Committee approved Thorpe's reinstatement", "restore him as the sole champion")),
       moment("m2", "He is considered one of the most versatile athletes of modern sports.", src(wiki("Jim_Thorpe"), "most versatile athletes of modern sports"))
     ],
     angles: [
@@ -6166,9 +6224,7 @@ var SPORT_LEGENDS = [
     ],
     tags: [
       tag("competence", "high", "great at every sport", "He excelled in track, football, baseball and basketball."),
-      tag("openness", "high", "tried every sport", "He moved between many sports professionally."),
-      tag("steadiness", "high", "kept going after the loss", "He kept playing after his titles were taken."),
-      tag("locus_of_control", "low", "the officials decided", "His medals were taken by officials, outside his control.")
+      tag("openness", "high", "tried every sport", "He moved between many sports professionally.")
     ],
     vetting: "Athlete, died 1953; no office; broadly admired. Birth date disputed, so no On this day."
   },
@@ -6204,9 +6260,7 @@ var SPORT_LEGENDS = [
     ],
     tags: [
       tag("self_efficacy", "high", "won in any sport", "She won at the Olympics and then in golf."),
-      tag("extraversion", "high", "loved the spotlight", "She thrived in front of crowds across many sports."),
-      tag("growth_mindset", "high", "learned a new sport", "She took up golf after track and mastered it."),
-      tag("locus_of_control", "high", "helped found the league", "She was a founding member of the LPGA.")
+      tag("growth_mindset", "high", "learned a new sport", "She took up golf after track and mastered it.")
     ],
     vetting: "Athlete, died 1956; no office; broadly admired."
   },
@@ -6241,10 +6295,7 @@ var SPORT_LEGENDS = [
       angle("a4", "three in one Games", "How do you win three times in a row?", "Confidence builds race by race.")
     ],
     tags: [
-      tag("growth_mindset", "high", "went from brace to gold", "She overcame childhood polio to become a champion."),
-      tag("self_efficacy", "high", "believed she could run", "She became the fastest woman in the world."),
-      tag("steadiness", "high", "calm in three finals", "She won three golds at one Games."),
-      tag("agreeableness", "high", "warm and gracious", "She became a beloved international icon.")
+      tag("conflict_assertiveness", "high", "refused a segregated welcome", "She would not attend her homecoming unless it was integrated.")
     ],
     vetting: "Athlete, died 1994; no office; broadly admired."
   },
@@ -6279,10 +6330,9 @@ var SPORT_LEGENDS = [
       angle("a4", "first five", "What does it take to be in the first group remembered?", "Doing something nobody had done sets the bar for everyone after.")
     ],
     tags: [
-      tag("extraversion", "high", "larger than life", "He became one of sport\u2019s biggest celebrities."),
-      tag("playfulness", "high", "played with joy", "He was known for his big, fun personality."),
-      tag("self_efficacy", "high", "swung for the fences", "He set home run records."),
-      tag("conscientiousness", "low", "played by feel", "He was known for his instinct more than his routine.")
+      tag("extraversion", "high", "larger than life", "After games, a crowd would gather in his hotel suite."),
+      tag("conscientiousness", "low", "loose with the rules", "Off the field he was known for carousing and excess."),
+      tag("agreeableness", "low", "clashed with officials", "He was suspended more than once after run-ins with umpires and officials.")
     ],
     vetting: "Athlete, died 1948; no office; broadly admired."
   },
@@ -6318,7 +6368,6 @@ var SPORT_LEGENDS = [
     ],
     tags: [
       tag("conflict_cooperativeness", "high", "gave his off-seasons away", "He did charity work across Latin America."),
-      tag("relatedness", "high", "stood by his people", "He was devoted to his community."),
       tag("conscientiousness", "high", "consistent for 18 seasons", "He reached 3,000 hits over 18 seasons."),
       tag("locus_of_control", "high", "went to help in person", "He chose to deliver aid himself.")
     ],
@@ -6352,13 +6401,11 @@ var SPORT_LEGENDS = [
       angle("a1", "first on the team", "What does the first Black player on the Davis Cup team have in common with you?", "Being first in a room can be lonely, and it changes the room."),
       angle("a2", "calm power", "How do you win with a big serve and a calm face?", "Quiet confidence can be the strongest kind."),
       angle("a3", "the season finale", "What does it take to win when everyone is at their best?", "Bringing your best when it counts is a skill you build."),
-      angle("a4", "three different courts", "Why win on grass, hard court and more?", "Adapting to new conditions keeps you winning.")
+      angle("a4", "three different Slams", "Why win at three different Grand Slams?", "Adapting to new places and crowds keeps you winning.")
     ],
     tags: [
       tag("steadiness", "high", "calm on court", "He was known for his composure."),
-      tag("competence", "high", "won on every surface", "He won singles at three different Grand Slams."),
-      tag("self_efficacy", "high", "first through the door", "He was the first Black player on the Davis Cup team."),
-      tag("agreeableness", "high", "gracious in sport", "He was admired for his dignity.")
+      tag("competence", "high", "won the big three", "He won singles titles at Wimbledon, the US Open and the Australian Open.")
     ],
     vetting: "Athlete, died 1993; no office; broadly admired."
   },
@@ -6394,9 +6441,7 @@ var SPORT_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "a new race, on a whim", "He ran his first marathon at the Olympics."),
-      tag("conscientiousness", "low", "decided at the last minute", "He entered the marathon at the last minute."),
-      tag("self_efficacy", "high", "believed he could do three", "He won three golds at one Games."),
-      tag("steadiness", "high", "kept a relentless pace", "He was nicknamed the Czech Locomotive.")
+      tag("conscientiousness", "high", "trained famously hard", "He was known for brutally tough training and helped make interval training popular.")
     ],
     vetting: "Athlete, died 2000; no office; entry avoids Cold War politics; broadly admired."
   }
@@ -6442,8 +6487,7 @@ var WORDS_LEGENDS = [
       tag("locus_of_control", "low", "let things go easily", "He met being robbed with calm acceptance."),
       tag("relatedness", "low", "content alone in his hut", "He lived much of his life by himself on a mountain."),
       tag("playfulness", "high", "played with the village kids", "He forgot to beg for food because he was playing with children."),
-      tag("conflict_cooperativeness", "high", "gave the thief his clothes", "He gave away what little he had to the man who robbed him."),
-      tag("self_efficacy", "low", "refused the title of poet", "He refused any position as a priest, or even the title of poet.")
+      tag("conflict_cooperativeness", "high", "gave the thief his clothes", "He gave away what little he had to the man who robbed him.")
     ],
     vetting: "Hermit poet, died 1831; refused every religious post (not a founder or leader); broadly loved."
   },
@@ -6478,11 +6522,9 @@ var WORDS_LEGENDS = [
       angle("a4", "from weaver to writer", "What do odd early jobs give a storyteller?", "Every job you\u2019ve had is material for something.")
     ],
     tags: [
-      tag("steadiness", "low", "felt like the odd one out", "His tales often follow characters who don\u2019t fit in."),
       tag("openness", "high", "imagined whole worlds", "He wrote 156 fairy tales full of invention."),
       tag("self_efficacy", "high", "moved to the city at fourteen", "He went to Copenhagen alone to chase the stage."),
-      tag("growth_mindset", "high", "changed course and grew", "When acting didn\u2019t work out, he found writing."),
-      tag("competence", "low", "the acting plan didn\u2019t work", "He hoped to act, but his voice changed.")
+      tag("growth_mindset", "high", "changed course and grew", "When acting didn\u2019t work out, he found writing.")
     ],
     vetting: "Writer, died 1875; no office; broadly beloved."
   },
@@ -6494,7 +6536,7 @@ var WORDS_LEGENDS = [
     region: "east_asia",
     place: "Japan",
     era: "c. 973\u2013c. 1014",
-    died: 1025,
+    died: 1014,
     gender: "woman",
     field: "Novels and poetry",
     essence: "Wrote one of the world\u2019s first novels a thousand years ago.",
@@ -6516,13 +6558,10 @@ var WORDS_LEGENDS = [
       angle("a4", "watching the court", "What can you write when you notice everything around you?", "Paying close attention to people is a kind of superpower.")
     ],
     tags: [
-      tag("extraversion", "low", "watched the court quietly", "Her writing came from close observation of court life."),
-      tag("openness", "high", "learned forbidden classics", "She studied Chinese classics women were kept from."),
-      tag("attachment_avoidance", "high", "kept her own name private", "Even her real name is unknown."),
-      tag("competence", "high", "wrote a masterpiece", "Her novel is still read a thousand years later."),
-      tag("autonomy", "low", "served at court", "She was a lady-in-waiting at the Imperial court.")
+      tag("extraversion", "low", "withdrawn at court", "She seems to have been withdrawn and somber at court."),
+      tag("openness", "high", "learned forbidden classics", "She studied Chinese classics women were kept from.")
     ],
-    vetting: "Writer, died c. 1014\u20131025; no office; broadly admired."
+    vetting: "Writer, died c. 1014 (most scholars; some suggest 1025 or 1031); no office; broadly admired."
   },
   {
     id: "lf_jane_austen",
@@ -6555,11 +6594,7 @@ var WORDS_LEGENDS = [
       angle("a4", "fame later", "Can your work matter long after you\u2019re gone?", "You can\u2019t see all of your impact from where you stand.")
     ],
     tags: [
-      tag("playfulness", "high", "wrote with sly humour", "Her novels comment on society with wit."),
-      tag("conflict_assertiveness", "low", "published without her name", "Her novels appeared anonymously."),
-      tag("steadiness", "high", "kept writing for years", "She wrote for over a decade before being published."),
-      tag("openness", "high", "saw society clearly", "Her novels critique the world around her."),
-      tag("self_efficacy", "low", "published as \u201CA Lady\u201D", "Her novels were published anonymously.")
+      tag("playfulness", "high", "wrote with sly humour", "Her novels comment on society with wit.")
     ],
     vetting: "Novelist, died 1817; no office; broadly beloved."
   },
@@ -6595,9 +6630,7 @@ var WORDS_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "poet, composer and painter", "He worked across many arts."),
-      tag("relatedness", "high", "wrote songs for whole nations", "His songs became national anthems."),
-      tag("steadiness", "low", "wrote with deep feeling", "His poetry was called profoundly sensitive."),
-      tag("locus_of_control", "high", "reshaped his culture", "He set out to renew Bengali literature and music.")
+      tag("self_efficacy", "low", "unsure of his painting", "He called painting the skill that came to him least easily.")
     ],
     vetting: "Poet, died 1941; no office; broadly admired."
   },
@@ -6618,7 +6651,7 @@ var WORDS_LEGENDS = [
     famousFor: "Pippi Longstocking, Emil of L\xF6nneberga and Ronia the Robber\u2019s Daughter.",
     facts: [
       fact("f1", "Her series include Pippi Longstocking, Emil of L\xF6nneberga and Karlsson-on-the-Roof.", src(wiki("Astrid_Lindgren"), "Pippi Longstocking", "Emil of L\xF6nneberga")),
-      fact("f2", "Pippi Longstocking has been translated into at least 100 languages.", src(wiki("Astrid_Lindgren"), "at least 100 languages")),
+      fact("f2", "By 2012 her books had been translated into 95 languages or variants.", src(wiki("Astrid_Lindgren"), "translated into 95 different languages or variants")),
       fact("f3", "She also wrote the fantasy novels Ronia the Robber\u2019s Daughter and The Brothers Lionheart.", src(wiki("Astrid_Lindgren"), "Ronia the Robber's Daughter", "The Brothers Lionheart"))
     ],
     moments: [
@@ -6628,13 +6661,11 @@ var WORDS_LEGENDS = [
     angles: [
       angle("a1", "the strongest girl", "What does the writer behind Pippi have in common with you?", "A little cheekiness toward the rules can be good for everyone."),
       angle("a2", "kids first", "Why write stories that take children\u2019s side?", "Taking young people seriously is a kind of respect."),
-      angle("a3", "one hundred languages", "How does one wild girl travel the whole world?", "Characters who are fully themselves are the ones people love."),
+      angle("a3", "around the world", "How does one wild girl travel the whole world?", "Characters who are fully themselves are the ones people love."),
       angle("a4", "the editor", "What changes when the writer also picks other people\u2019s books?", "Helping other people\u2019s work along is part of making your own.")
     ],
     tags: [
       tag("playfulness", "high", "made mischief into stories", "Her characters are cheeky and full of fun."),
-      tag("agreeableness", "low", "teased the grown-ups", "Her books were irreverent toward adult authority."),
-      tag("autonomy", "high", "wrote her own way", "Her stories broke with how children\u2019s books usually sounded."),
       tag("openness", "high", "from farm tales to fantasy", "She wrote realistic stories and fantasy novels.")
     ],
     vetting: "Writer, died 2002; no office; broadly beloved."
@@ -6670,9 +6701,7 @@ var WORDS_LEGENDS = [
     ],
     tags: [
       tag("extraversion", "low", "stepped back into a hut", "He moved toward a quieter, more reclusive life."),
-      tag("openness", "high", "walked to see the country", "He made long journeys to write about them."),
-      tag("relatedness", "low", "content in his hut", "He chose a rustic, solitary home."),
-      tag("conscientiousness", "high", "refined every word", "He perfected a very short, exact form.")
+      tag("openness", "high", "walked to see the country", "He made long journeys to write about them.")
     ],
     vetting: "Poet, died 1694; no office; broadly admired."
   },
@@ -6706,10 +6735,7 @@ var WORDS_LEGENDS = [
       angle("a4", "one good arm", "How do you keep going after an injury changes things?", "You can adapt and still do the thing you\u2019re meant to do.")
     ],
     tags: [
-      tag("steadiness", "high", "survived years of captivity", "He endured five years held for ransom."),
-      tag("playfulness", "high", "wrote a comic knight", "Don Quixote is full of humour."),
-      tag("locus_of_control", "low", "took fate as it came", "He lived through capture and hardship he could not control."),
-      tag("growth_mindset", "high", "turned hardship into art", "He wrote his masterpiece after years of struggle.")
+      tag("playfulness", "high", "wrote a comic knight", "Don Quixote is full of humour.")
     ],
     vetting: "Writer, died 1616; served as a soldier, never a commander; broadly admired."
   },
@@ -6745,10 +6771,7 @@ var WORDS_LEGENDS = [
     ],
     tags: [
       tag("openness", "high", "imagined trips to the moon", "His novels imagined journeys nobody had made."),
-      tag("extraversion", "low", "explored from his desk", "His adventures happened on the page."),
-      tag("conscientiousness", "high", "researched the science", "He built his stories on the science of his day."),
-      tag("playfulness", "high", "made science an adventure", "His books turned facts into thrilling stories."),
-      tag("self_efficacy", "low", "travelled from his desk", "He went around the world in his books, not in person.")
+      tag("conscientiousness", "high", "researched the science", "He built his stories on the science of his day.")
     ],
     vetting: "Novelist, died 1905; no office; broadly admired."
   },
@@ -6783,11 +6806,8 @@ var WORDS_LEGENDS = [
       angle("a4", "found later", "What happens to work that nobody sees yet?", "Being unseen now doesn\u2019t decide what your work means later.")
     ],
     tags: [
-      tag("attachment_avoidance", "high", "kept her poems private", "Almost none of her poems were published in her life."),
-      tag("extraversion", "low", "wrote quietly at home", "She spent most of her life in her family home."),
-      tag("openness", "low", "stayed close to home", "She lived nearly all her life in Amherst."),
-      tag("autonomy", "high", "broke the rules of verse", "Her style went against the conventions of her day."),
-      tag("self_efficacy", "low", "published only ten poems", "She wrote nearly 1,800 poems and published only ten.")
+      tag("extraversion", "low", "rarely left home", "She seldom left the family home and was rarely seen."),
+      tag("autonomy", "high", "broke the rules of verse", "Her style went against the conventions of her day.")
     ],
     vetting: "Poet, died 1886; no office; broadly admired."
   }
@@ -6887,8 +6907,8 @@ WHO YOU ARE
 You write tiny comic stories (~100 words, 6 beats) starring the user, in second person ("you"). Bright humor plus dark humor that stays absurd. The user is always the competent, lovable lead. Low lean is a different superpower, never a loser.
 
 HARD RULES
-Never cruel. Banned: self-harm, suicide, abuse, trauma, illness, death of people or pets, real tragedies, disasters, war, addiction, weight/appearance, politics, religion, real brands' failures, real people.
-Dark stays absurd. Stakes are tiny and treated as enormous.
+ATO is 18+: dark, absurd and uncomfortable topics are allowed; judge the joke, keep its edge. Never encourage a dangerous act, never punch at someone's disclosed pain, no invented claims about real people as fact, no slurs, nothing sexually explicit.
+Stakes are tiny and treated as enormous.
 2-3 short dialogue lines (\u226412 words), from side characters only. You never speak in quotes.
 One LIGHT joke and one DARK joke. \u2264120 words. Reveal \u226415 words. No therapy-speak.
 Romantic roles are never named or gendered: "your date", "your partner", "an ex", "Rory's date".
@@ -6984,7 +7004,7 @@ var CAT_AGENCY = {
       summary: [
         "You tend to accept things as they come and don\u2019t push hard to change them.",
         "When something goes wrong, you usually see it as luck or timing more than your doing.",
-        "You tend to feel unsure about taking on hard things, and you\u2019re happy with what you know."
+        "You tend to feel unsure about taking on hard things, and you\u2019re content with what you already know."
       ],
       strength: [
         "You usually stay calm when things are out of your hands.",
@@ -7016,12 +7036,12 @@ var CAT_COMMUNICATION = {
         "You tend to handle hard talks directly and fairly."
       ],
       strength: [
-        "When you disagree with someone, you usually focus on fixing the problem together.",
+        "When you and a friend disagree, you usually keep the talk about the problem, not the person.",
         "You tend to say what you need while also asking what the other person needs.",
         "You usually make hard talks feel fair."
       ],
       watchOut: [
-        "Sometimes you jump to fixing it before the other person has had their say.",
+        "Sometimes you offer a solution while the other person is still explaining how they feel.",
         "Because you want to settle things, you might push to talk before others are ready.",
         "Sometimes you work so hard at being fair that it wears you out."
       ],
@@ -7106,8 +7126,8 @@ var CAT_DRIVE = {
     },
     mid: {
       summary: [
-        "Your drive tends to come and go with the task: some things fire you up and others feel like a chore.",
-        "You usually push hard for things you care about and coast on things you don\u2019t.",
+        "Your drive tends to come and go with the task: some things get you excited and others feel like a chore.",
+        "You usually push hard for things you care about and put in less effort on things you don\u2019t.",
         "You can be very motivated, but it tends to depend on who you\u2019re working with and what it\u2019s for."
       ],
       strength: [
@@ -7193,7 +7213,7 @@ var CAT_INDEPENDENCE = {
       watchOut: [
         "Sometimes friends feel left out because you don\u2019t reach out much.",
         "Because you\u2019re fine alone, you might miss signs that someone wants more contact.",
-        "Sometimes you handle hard things alone when help was there for you."
+        "Sometimes you handle a hard thing alone even though someone nearby could help."
       ],
       tryThis: [
         "Text one friend this week just to check in, so they know you think of them.",
@@ -7232,7 +7252,7 @@ var CAT_INDEPENDENCE = {
         "You tend to be content with a simple routine and a small circle of friends."
       ],
       strength: [
-        "You tend to be low-drama and easy to work with.",
+        "You tend to keep things calm and easy to work with.",
         "You usually follow a plan well and do it quietly.",
         "You can be content without needing a lot from people."
       ],
@@ -7242,7 +7262,7 @@ var CAT_INDEPENDENCE = {
         "Sometimes your friendships fade because nobody reaches out."
       ],
       tryThis: [
-        "Set one small goal for yourself this week, so you choose the direction.",
+        "Choose one small thing to do on your own this week, so the plan is yours.",
         "Text one friend to say hi, so the friendship stays warm.",
         "Tell someone at work how you like to get instructions, so you get what you need."
       ]
@@ -7560,7 +7580,7 @@ var CAT_RESILIENCE = {
         "Sometimes your doubt after a mistake lasts longer than the mistake does."
       ],
       tryThis: [
-        "Write down one hard thing you got through before, so you remember you can do it.",
+        "Write down one rough week you got through before, so you have proof you can get through another.",
         "Take three slow breaths before your next stressful task, so you start calmer.",
         "Tell a friend about a setback this week, so you don\u2019t carry it alone."
       ]
@@ -7649,10 +7669,10 @@ var CAT_STEADINESS = {
       summary: [
         "You tend to stay calm, keep your plans and get along with people, even when the week gets busy.",
         "When things get stressful at work or at home, you usually stay even and keep going.",
-        "You tend to be the steady one your friends and coworkers can count on day to day."
+        "Your friends and coworkers can usually count on you to stay steady from day to day."
       ],
       strength: [
-        "When plans get messy, you usually keep your cool and get things back on track.",
+        "When plans get messy, you usually stay calm and sort out what needs to happen next.",
         "You tend to follow through on what you said and stay pleasant while you do it.",
         "People can usually count on you to show up calm and ready."
       ],
@@ -7684,7 +7704,7 @@ var CAT_STEADINESS = {
         "Sometimes you lose track of plans when stress shows up."
       ],
       tryThis: [
-        "Pick one small routine to keep this week no matter what, so busy days have an anchor.",
+        "Pick one small routine to keep this week no matter what, so busy days still have one steady part.",
         "Write down what usually throws you off, so you can see it coming next time.",
         "Plan a quiet hour after your busiest day this week, so you have time to reset."
       ]
@@ -7698,7 +7718,7 @@ var CAT_STEADINESS = {
       strength: [
         "You usually react honestly, so people know where they stand with you.",
         "When something matters, you feel it and you show it, which makes you easy to read.",
-        "You can switch plans quickly when your gut tells you something\u2019s off."
+        "You can switch plans quickly when something feels off to you."
       ],
       watchOut: [
         "Sometimes a strong feeling can push your plans or a talk off course.",
@@ -7830,6 +7850,27 @@ var CATEGORY_BANK = {
 function bankForCategory(id) {
   return Object.prototype.hasOwnProperty.call(CATEGORY_BANK, id) ? CATEGORY_BANK[id] : null;
 }
+
+// src/lib/voice/filters.ts
+var DEGRADING = "(?:a |an )?(?:lazy(?: person| human)?|worthless|hopeless|useless|pathetic|stupid|dumb|idiot|moron|failure|loser|disappointment|embarrassment|joke|burden|waste of (?:space|time|oxygen))";
+var INSULT_NOUN = "(?:idiot|moron|loser|failure|disappointment|embarrassment|waste of (?:space|time|oxygen))";
+var CRUEL_PATTERNS = [
+  // "What a loser you are." / "Such an idiot you are." (insult first, reader last).
+  new RegExp(`\\b(?:what|such)\\s+(?:a|an)\\s+${INSULT_NOUN}\\s+you(?:['\u2019]re| are| were)\\b`, "i"),
+  // "you are a loser", "you're SO lazy", "you're a total embarrassment", "people like you are useless".
+  new RegExp(
+    `\\b(?:you(?:['\u2019]re| are| were|['\u2019]ve been| have been)|people like you (?:are|get))\\s+(?:(?:so|really|just|too|that|such|utterly|completely|totally|a total|clearly|honestly|actually|still)\\s+){0,2}${DEGRADING}(?![-\\w])`,
+    "i"
+  ),
+  /\byou suck\b/i,
+  /\bwhat is wrong with you\b/i,
+  /\byou(?:['’]ve)? failed (?:at everything|everyone|again(?: and again)?|as a (?:person|friend|partner|human))\b/i,
+  /\byou (?:can['’]?t|cannot) do anything\b|\byou never do anything\b|\byou always (?:fail|quit)\b/i,
+  // Telling the reader to give up on themselves; "give up the third tab" is a different sentence.
+  /\bgive up on (?:yourself|you)\b|\b(?:just|might as well|time to|you should|better) give up\b(?!\s+(?:the|a|an|your|on the|on a|on your)\b)/i,
+  /\byou give up\s+(?:easily|too (?:soon|easily)|every time|always)\b/i,
+  /\bno point (?:in )?(?:you )?trying(?:\s+(?:again|anymore|any more|at this|at all))?\s*(?:[.,;!?]|$)/i
+];
 
 // src/lib/questions/bank-v1.ts
 var QUESTIONS_BANK_V1 = [
@@ -9275,6 +9316,30 @@ var LEGACY_INTAKE_TOTAL = Object.values(LEGACY_INTAKE_AXIS_COUNTS).reduce(
 );
 
 // src/lib/voice/clear-voice.ts
+var BOUNDARY_VERBS = "set|sets|setting|enforc\\w+|establish\\w*|hold\\w*|keep\\w*|protect\\w*|respect\\w*|honou?r\\w*|maintain\\w*|communicat\\w*";
+var BANNED = [
+  [/\bhonou?r(?:ing|s)?\s+(?:your|their|his|her|my|our)\s+(?:feelings?|needs?|truth|emotions?|process|boundar\w+|journey|inner\s+\w+)\b/i, 'therapy-speak ("honor your feelings")'],
+  [/\bhold(?:ing)?\s+space\s+for\b/i, 'therapy-speak ("hold space for")'],
+  [new RegExp(`\\b(?:${BOUNDARY_VERBS})\\s+(?:(?:your|their|his|her|some|a few|healthy|clear|firm|better|those|these|good|strong)\\s+)*boundar(?:y|ies)\\b`, "i"), 'therapy-speak ("set healthy boundaries")'],
+  [/\bhealthy\s+boundar(?:y|ies)\b/i, 'therapy-speak ("healthy boundaries")'],
+  [/\b(?:healing|growth|personal|emotional|inner|self-discovery|wellness)\s+journey\b|\bjourney\s+of\s+(?:self|growth|healing|discovery)\b|\byour\s+(?:own\s+)?journey\b(?!\s+(?:to|home|back|from|into|across|through))/i, 'therapy-speak ("your journey")'],
+  [/\bself-care\b(?!\s+(?:aisle|section|products?|brand|app|kit))/i, 'therapy-speak ("self-care")'],
+  [/\b(?:trust|ask|thank|listen to|believe in)\s+(?:the\s+)?universe\b|\bthe universe\s+(?:wants|sends?|knows|conspires|provides|has your back)\b/i, 'horoscope-speak ("the universe wants\u2026")'],
+  [/\bmanifest(?:ing|s)?\s+(?:your|my|our|their|good|abundance|success|love|dreams?|the life|what you|a better)\b/i, 'horoscope-speak ("manifest your\u2026")'],
+  [/\blean(?:ing|s)?\s+into\s+(?:it|that|this|your|their|the\s+(?:discomfort|feeling|fear|uncertainty|awkward\w*|moment|pain|process|change|chaos|silence)|being|what)\b/i, 'coach-speak ("lean into\u2026")'],
+  [/(?:^|[.?!]\s+)it['’]s\s+(?:totally\s+|perfectly\s+|completely\s+)?(?:okay|ok|fine)\s+to\b/i, `opens with reassurance ("It's okay to\u2026")`],
+  [
+    /(?:^|[.?!:]\s*)consider\s+(?:trying|asking|taking|setting|making|doing|talking|reaching|letting|whether|how|what|that)\b|\b(?:want|try|might)\s+to\s+consider\b/i,
+    'advice voice ("Consider trying\u2026")'
+  ],
+  [/(?:^|[.?!]\s+)remember\s+that\s+(?:you|your|it|it['’]s|this|they|everyone|not|nobody|no one|mistakes|feelings|silence|small)\b/i, 'lecture voice ("Remember that\u2026")']
+];
+var SITUATIONAL_AFTER_YOU_ARE = "late|early|busy|tired|close|far|ready|full|soon|long|hungry|new|many|much|few|bit|little|lot|couple|next|first|last|done|here|there|on|in|at|off|out|about|not|going|trying|doing|getting|running|waiting|looking";
+var YOU_ARE2 = "you(?:['\u2019]re| are)";
+var IDENTITY_LABEL = new RegExp(
+  `\\b${YOU_ARE2}\\s+(?:(?:such|really|actually)\\s+)?(?:a|an)\\s+(?!${SITUATIONAL_AFTER_YOU_ARE}\\b)\\w+|\\b${YOU_ARE2}\\s+the\\s+(?:kind|type|sort)\\s+of\\b|\\b${YOU_ARE2}\\s+the\\s+(?:one|person|friend)\\s+who\\b|\\b${YOU_ARE2}\\s+(?:so|such|too|very|really)\\s+(?!${SITUATIONAL_AFTER_YOU_ARE}\\b)\\w+`,
+  "i"
+);
 var TRY_VERBS = [
   "Add",
   "Answer",
@@ -9381,7 +9446,9 @@ var STORY_OUTPUT_TOKENS = 800;
 var LABEL_WORDS = [
   ...TRAIT_AXES.flatMap((axis) => [AXIS_POLE_NAME[axis].high, AXIS_POLE_NAME[axis].low, AXIS_SHORT_NAME[axis]])
 ];
-var CLINICAL2 = /\b(anxious|anxiety|insecure|insecurity|avoidant|attachment|disorder|trauma|toxic|needy|clingy|codependent|diagnos|therapy|therapist|symptom|red flag)\b/i;
+var CLINICAL2 = {
+  test: (text) => hasClinicalLabel(text) || CLINICAL_ADVICE.test(text)
+};
 var GENERIC_CAPS = /* @__PURE__ */ new Set([
   "Mom",
   "Dad",
@@ -9433,16 +9500,13 @@ function quotedLineCount(text) {
   return (text.match(/[“"]([^”"]+)[”"]/g) ?? []).length;
 }
 function storyCardLineViolation(text, opts = {}) {
-  if (jokeHasBannedTopic(text)) return "banned topic";
-  if (/\b(voice ?notes?|voice ?memos?|voicemails?|typing bubbles?|grey bubbles?|gray bubbles?|read receipts?)\b/i.test(text)) {
-    return "niche phone detail";
-  }
+  if (jokeCrossesBoundary(text)) return "crosses a boundary";
   if (/!/.test(text)) return "exclamation";
   if (/[[\]<>]/.test(text)) return "template left in";
   if (/\p{Extended_Pictographic}/u.test(text)) return "emoji";
   if (/\balways\b/i.test(text)) return "always";
   if (!opts.allowYouAre && /\byou(?:'|’)?re\b|\byou are\b/i.test(text)) return "you are";
-  if (/\bshould\b/i.test(text)) return "advice";
+  if (directiveAdviceViolation(text)) return "advice";
   if (CLINICAL2.test(text)) return "clinical word";
   if (/\byou might\b/i.test(text)) return "hedge";
   if (/\bon a day like this\b/i.test(text)) return "hedge";
@@ -9527,19 +9591,18 @@ SHAPE (cold open \u2192 twist \u2192 move \u2192 punchline \u2192 reveal \u2192 
 VOICE: punchy, warm, a little cheeky, like the funniest friend retelling your night. Specific beats general.
 Present tense, second person, plus ONE other voice: a friend, sibling, boss or server says one short line in quotes.
 Exaggerated numbers are fine when funny ("the fourth any minute now", "all 212 of them"). Unnamed side characters are fine ("the hat guy").
-Vary sentence length. No "!", no emoji, no advice, no "should", no "always".
+Vary sentence length. No "!", no emoji, no "always", no advice aimed at the reader ("you should\u2026", "you need to\u2026"); an ordinary "should" in a joke or an observation is fine.
 Show the trait through action. Only "reveal" may name what it shows, in plain words, never a trait or category label.
 
-NEVER: real names, brands, places, diagnosis, cruelty, trait/category words, hedges ("you might", "on a day like this"),
-niche phone details (voice notes, typing bubbles, read receipts), or these clich\xE9s: ${BANNED_CLICHE_PROMPT}.
+NEVER: real names, brands, places, a diagnosis or label applied to the reader (everyday and contextual use of a word is fine), cruelty, trait/category words, hedges ("you might", "on a day like this"), or these clich\xE9s: ${BANNED_CLICHE_PROMPT}.
 Stay in ONE setting. Never leave square or angle brackets in the answer.
 
 ${STORY_JOKE_RULES}
 
-SETTING (this overrides the "how people live now" list in any voice block \u2014 texts, voice notes, typing bubbles and
-read receipts are NOT the default setting here)
+SETTING (a story lives in one physical scene; the texting moments in the voice block are welcome as a detail inside it,
+but a whole story that is just a phone screen is not a scene)
 - Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
-  a shared chore, a busy commute. A phone can be a detail, never voice notes, typing bubbles or read receipts.
+  a shared chore, a busy commute. A phone can be a detail, voice notes, typing bubbles and read receipts included.
 - Unusual-but-plausible is good (a laminated dessert menu, a birthday balloon on the wrong table). If a detail needs a
   footnote, cut it.
 
@@ -9733,46 +9796,78 @@ function storyNamesACategory(body) {
 }
 
 // src/lib/voice/jargon.ts
-var JARGON_KEYWORDS = [
-  "introvert",
-  "extrovert",
-  "extravert",
-  "ambivert",
-  "personality type",
-  "your type",
-  "that's who you are",
-  "thats who you are",
-  "this is who you are",
-  "who you are as a person",
-  "you are the kind of",
-  "you're the kind of",
-  "coping mechanism",
-  "maladaptive",
-  "inner child",
-  "love language",
-  "narcissist",
-  "gaslight",
-  "diagnosed",
-  "a diagnosis",
-  "your diagnosis",
-  "attachment style",
-  "growth mindset",
-  "fixed mindset",
-  "locus of control",
-  "self-efficacy",
-  "self efficacy",
-  "you are an",
-  "you're an"
+var { FILL: FILL2, YOU_ARE: YOU_ARE3, YOUR_TAIL: YOUR_TAIL2, YOUR_VERB: YOUR_VERB2 } = VERDICT_PIECES;
+var LABEL_TERMS = [
+  // `third`: also a verdict on a real third person. "My friend is an introvert" is a description, not a diagnosis.
+  { term: "introvert", label: String.raw`introvert(?:ed|s)?`, third: false },
+  { term: "extrovert", label: String.raw`extrovert(?:ed|s)?`, third: false },
+  { term: "extravert", label: String.raw`extravert(?:ed|s)?`, third: false },
+  { term: "ambivert", label: String.raw`ambivert(?:ed|s)?`, third: false },
+  { term: "narcissist", label: String.raw`narcissists?|narcissistic`, third: true },
+  { term: "gaslight", label: String.raw`gaslighters?|gaslighting`, third: true },
+  { term: "maladaptive", label: String.raw`maladaptive`, third: false }
 ];
-var NORMALIZE = /[^a-z0-9]+/g;
-function normalizeJargon(text) {
-  return text.toLowerCase().replace(NORMALIZE, " ").trim();
+function labelForms(label, third) {
+  return [
+    // "you are an introvert", "you're so extroverted", "you come across as a bit of a narcissist".
+    new RegExp(`${YOU_ARE3}${FILL2}(?:${label})(?![-\\w])`, "i"),
+    // "people like you are introverts".
+    new RegExp(String.raw`\bpeople like you (?:are|get|tend to be|can be|seem)\s+${FILL2}(?:${label})(?![-\w])`, "i"),
+    // "your introverted side is showing", "your narcissist streak wins".
+    new RegExp(String.raw`\byour (?:own |inner |classic |usual |old |little |whole )?(?:${label})${YOUR_TAIL2}${YOUR_VERB2}`, "i"),
+    // "so narcissistic of you".
+    new RegExp(String.raw`(?<![-\w])(?:${label})\s+(?:(?:move|thing|behaviou?r)\s+)?of you\b`, "i"),
+    // "As an introvert, you ...": takes it for granted that the reader is one.
+    new RegExp(String.raw`\bas (?:an?|the) (?:${label})\b[^.!?]{0,40}\byou\b`, "i"),
+    // A real person who is not the reader: "your boss is a narcissist", "she's an introvert" (clinical labels only in clinical.ts; here the jargon labels).
+    ...third ? thirdPartyVerdictRes(label) : []
+  ];
 }
+var LABEL_TERM_FORMS = LABEL_TERMS.map((entry) => ({ term: entry.term, res: labelForms(entry.label, entry.third) }));
+var CONCEPT_TERMS = [
+  { term: "love language", word: String.raw`love languages?` },
+  { term: "coping mechanism", word: String.raw`coping mechanisms?` },
+  { term: "inner child", word: String.raw`inner child` }
+];
+var CONCEPT_FORMS = CONCEPT_TERMS.map((entry) => ({
+  term: entry.term,
+  res: [
+    new RegExp(String.raw`\byour (?:own |primary |main |go-to |usual |old |little |secret )?(?:${entry.word})${YOUR_VERB2}`, "i"),
+    new RegExp(String.raw`\byou(?:['’]ve| have| had| use| used| rely on| developed| built| are using|['’]re using)\s+(?:an? |some |the )?(?:\w+ ){0,2}(?:${entry.word})\b`, "i"),
+    new RegExp(String.raw`\b(?:that|this|it)(?:['’]s| is)(?: just| probably| clearly| basically)? (?:your |a |an |the )?(?:${entry.word})\b`, "i")
+  ]
+}));
+var GASLIGHT_YOU = /\byou (?:always |keep |just |sometimes |constantly |literally )?gaslight(?:s|ed)?\b/i;
+var IDENTITY_VERDICTS = [
+  { term: "that's who you are", re: /\bthat(?:'|’)?s who you are\b/i },
+  { term: "thats who you are", re: /\bthats who you are\b/i },
+  { term: "this is who you are", re: /\bthis is who you are\b/i },
+  { term: "who you are as a person", re: /\bwho you are as a person\b/i },
+  { term: "your personality type", re: /\byour personality type\b/i },
+  { term: "your type", re: /\byour type (?:is|are|means|says|explains|shows|tells)\b/i }
+];
 function matchingJargonTerm(text) {
   if (!text) return null;
-  const normalized = normalizeJargon(text);
-  for (const keyword of JARGON_KEYWORDS) {
-    if (normalized.includes(normalizeJargon(keyword))) return keyword;
+  const normalizedApostrophes = text.replace(/[‘’]/g, "'");
+  for (const sentence of normalizedApostrophes.split(/(?<=[.!?])\s+|\n+/)) {
+    if (!sentence.trim() || isReportedSpeech(sentence)) continue;
+    for (const { term, res } of LABEL_TERM_FORMS) {
+      if (res.some((re) => re.test(sentence))) return term;
+    }
+    for (const { term, res } of CONCEPT_FORMS) {
+      if (res.some((re) => re.test(sentence))) return term;
+    }
+    if (GASLIGHT_YOU.test(sentence)) return "gaslight";
+    for (const { term, re } of IDENTITY_VERDICTS) {
+      if (re.test(sentence)) return term;
+    }
+  }
+  const verdict = labelVerdictHit(normalizedApostrophes);
+  if (verdict) {
+    if (verdict !== "diagnosis") return verdict;
+    if (/\bdiagnosed\b/i.test(text)) return "diagnosed";
+    if (/\byour diagnosis\b/i.test(text)) return "your diagnosis";
+    return "a diagnosis";
   }
   return null;
 }

@@ -56,55 +56,6 @@ export const SAGE_INSIGHT_META: AiCallMetadata = {
   latencySensitive: true,
 };
 
-/** Roll generation (trait-system redesign §7) — the 11 category reads + the
- * story item within one roll. Same bucket-shareable shape as Sage Story
- * (pure function of trait-derived readings, no name/history baked into the
- * prompt); not latency-sensitive since a roll computes in the background
- * before any reveal, unlike a chat reply. */
-export const ROLL_META: AiCallMetadata = {
-  personalized: false,
-  cohortShareable: false,
-  bucketShareable: true,
-  latencySensitive: false,
-};
-
-/** Category statements (core loop redesign §3) — one call producing a
- * statement per ready category, grounded in this user's settled reading for
- * each (same shape as Roll's category-read, batched into one call). Not
- * latency-sensitive: triggered manually, no synchronous chat-reply pressure. */
-export const CATEGORY_STATEMENTS_META: AiCallMetadata = {
-  personalized: true,
-  cohortShareable: false,
-  bucketShareable: false,
-  latencySensitive: false,
-};
-
-/** Daily insight (Home/Explore/Insight restructure) — the five-field insight
- * that replaces the Read/Do card on Home. Prompt carries this user's settled
- * bands, their current focus, and recent check tone, so it is per-user and
- * never shareable. Latency-sensitive: it is the first thing Home renders. */
-export const DAILY_INSIGHT_META: AiCallMetadata = {
-  personalized: true,
-  cohortShareable: false,
-  bucketShareable: false,
-  latencySensitive: true,
-};
-
-/** Legends 64-archetype story (core loop redesign §4) — a flavor-text
- * generation for one classify.ts archetype code, but the plan calls for a
- * FRESH story per generation (manual trigger or paid reroll), not a
- * pre-authored library entry reused forever — so unlike the old
- * figure-catalog system this replaces, it's neither cohort- nor
- * bucket-shareable even though the archetype code alone is deterministic.
- * Manual-tap trigger, not latency-sensitive (no synchronous chat-reply
- * pressure). */
-export const LEGEND_STORY_META: AiCallMetadata = {
-  personalized: true,
-  cohortShareable: false,
-  bucketShareable: false,
-  latencySensitive: false,
-};
-
 export interface AiCallSite {
   feature: string;
   location: string;
@@ -144,16 +95,6 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     meta: EXPLORE_OBSERVATIONS_META,
   },
   {
-    feature: 'Roll generation',
-    location: 'src/lib/rolls/generate.ts → generateRollItemText()',
-    meta: ROLL_META,
-  },
-  {
-    feature: 'Legend story generation',
-    location: 'src/lib/legends64/generate-story.ts → generateLegendStory()',
-    meta: LEGEND_STORY_META,
-  },
-  {
     feature: 'Legend figure story',
     location: 'src/lib/legend-figures/generate.ts → writeLegendStory()',
     meta: LEGEND_FIGURE_META,
@@ -162,10 +103,5 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Category deep dive',
     location: 'src/lib/category-deep-dive/generate.ts → writeCategoryDeepDive()',
     meta: CATEGORY_DEEP_DIVE_META,
-  },
-  {
-    feature: 'Category statements',
-    location: 'src/lib/category-statements/generate-statements.ts → generateCategoryStatements()',
-    meta: CATEGORY_STATEMENTS_META,
   },
 ];

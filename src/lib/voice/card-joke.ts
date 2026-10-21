@@ -9,40 +9,85 @@
  */
 import { fnv1a } from '@/lib/daily-line/bank';
 
-import { STORY_JOKE_BANS } from './moment-voice';
+import { STORY_JOKE_ALLOWED, STORY_JOKE_BANS } from './moment-voice';
 
 export const CARD_JOKE_STYLES = [
   'dry',
   'deadpan',
   'absurd scenario (one everyday situation taken one step too far)',
   'self-aware (the reader catching themselves in the act)',
-  'mild gallows humour about everyday absurdity (never death, dying or real harm)',
+  'gallows humour about everyday absurdity (death and disaster are fair game; no real harm encouraged)',
 ] as const;
 export type CardJokeStyle = (typeof CARD_JOKE_STYLES)[number];
 
 export const CARD_JOKE_MAX_CHARS = 140;
 
 /**
- * The hard bans as keywords — a backstop for the prompt, not the whole rule.
- * Word-bounded so "deadline", "deadpan" and "skill" stay allowed. Shared with
- * the Story (`storyHasBannedTopic`).
+ * The harm filter (emci, 2026-10-19: ATO is 18+, judge the joke, not its
+ * topic). A narrow keyword backstop for the prompt's contextual boundaries
+ * (docs/copy-review-rules.md "Humor"). Death, dying, "this meeting is killing
+ * me", drunk, hangovers, therapy, anxiety, depressed and swearing all pass —
+ * mild (shit, damn, hell) and strong ("fuck" in every form: emci 2026-10-19,
+ * round 3, "Allow 'fuck' in adult jokes consistently across generation,
+ * reviewers, checks, and the server"). Only these are refused:
+ * - phrases that ENCOURAGE harm (self-harm, suicide, telling someone to die,
+ *   drunk driving) — a mention of death is not encouragement;
+ * - slurs (a short explicit list, the same list as the server backstop in
+ *   wave99d; "cunt", "slut" and "whore" count as slurs here, not as swearing;
+ *   demeaning a group otherwise is a prompt rule);
+ * - explicit sexual terms (App Store). "Fuck" as an expletive is swearing, not
+ *   a sexual term; a sexually explicit line is refused by the explicit list.
+ * Invented claims about real people cannot be caught by keywords: that is a
+ * prompt rule here, backed by each surface's own proper-name / name-not-in-entry
+ * checks. Shared with the Story (`storyHasBannedTopic`) and Story v3 templates.
  */
-export const JOKE_BANNED_TOPIC: readonly RegExp[] = [
-  /\b(die|dies|died|dying|dead|death|deaths)\b/i,
-  /\bkill(s|ed|ing)?\b/i,
-  /\bsuicid/i,
-  /\bself[- ]harm/i,
-  /\bdepress(ed|ion|ing)?\b/i,
-  /\banxiety\b/i,
-  /\btherap(y|ist|ists)\b/i,
-  /\bdrunk\b/i,
-  /\bsex(y|ual|ually)?\b/i,
-  /\b(fuck|shit|bitch|asshole)/i,
+const DRIVE_NEGATOR =
+  "(?:never|don['’]t|do not|dont|not|stop|avoid|shouldn['’]t|should not|won['’]t|can['’]t|cannot|illegal to|against)";
+
+export const JOKE_HARM_FILTER: readonly RegExp[] = [
+  // Encouraging self-harm or suicide.
+  /\bkill (?:your|my|him|her|them|our)sel(?:f|ves)\b/i,
+  /\bkys\b/i,
+  // "Cut yourself some slack" / "try not to hurt yourself" are ordinary speech, not encouragement.
+  /\b(?:cut|harm|starve|hang|off) (?:your|him|her|them)sel(?:f|ves)\b(?! (?:some slack|a break|off\b))/i,
+  /(?:^|[.!?]\s*|\b(?:go|just|should|could) )hurt (?:your|him|her|them)sel(?:f|ves)\b/i,
+  /\b(?:commit|try|attempt(?:ing)?) suicide\b/i,
+  // Telling someone to die.
+  /\b(?:you|they|he|she|people like (?:you|them)) (?:should|ought to|deserve to|need to) (?:just )?(?:die|drop dead|be dead)\b/i,
+  /\bgo (?:die|drop dead)\b/i,
+  // Drunk driving as an instruction (or the punchline). A MENTION passes (emci 2026-10-20, found by
+  // scripts/filter-behavior-check.ts): "drunk driving cost him his licence", "the drunk driver in the film",
+  // "never drink and drive" are not encouragement. A negator earlier in the same clause also passes.
+  // Negation counts only when it DIRECTLY governs the verb phrase ("never drink and drive",
+  // "don't just drink and drive"); a negator elsewhere in the sentence ("Don't be a wimp, drink and drive")
+  // does not excuse it.
+  new RegExp(
+    `(?<!\\b${DRIVE_NEGATOR}\\s+(?:(?:ever|even|you|to|please|just|then)\\s+)*)(?:^|[.!?;,]\\s*|\\b(?:go|just|should|could|can|must|please|then|and|so|try to|feel free to|fine to|ok to|okay to|safe to)\\s+)(?:drink(?:ing)?[- ]and[- ]driv\\w*|drive (?:home |back |there |yourself |anyway )?(?:drunk|buzzed|tipsy|wasted|hammered|after (?:a |some |a few |several |two |three |four |five )?(?:drinks?|beers?|shots?|wines?|cocktails?|pints?)))`,
+    'i',
+  ),
+  new RegExp(
+    `(?<!\\b${DRIVE_NEGATOR}\\s+(?:(?:ever|even|you|to|please|just|then)\\s+)*)\\b(?:drinks?|drunk|buzzed|tipsy|wasted|hammered)\\b[^.?!]{0,40}\\b(?:then|and) (?:drive|get behind the wheel)\\b`,
+    'i',
+  ),
+  // Slurs.
+  /\bn[i1]gg(?:a|er|ers|as|uh|az)\b/i,
+  /\bfag(?:s|got|gots|gy)?\b/i,
+  /\bretard(?:s|ed)?\b/i,
+  /\btrann(?:y|ies)\b/i,
+  /\b(?:kikes?|spics?|wetbacks?|gooks?|dykes?|cunts?|sluts?|slutty|whores?)\b/i,
+  // Sexually explicit. "Fuck" as an expletive passes; "fuck" describing sex does not.
+  /\b(?:fuck(?:ed|ing|s)?|shag(?:ged|ging|s)?) (?:each other|(?:in|on) (?:the|a) (?:car|bed|couch|sofa|shower|bathroom|back ?seat|kitchen table))\b/i,
+  // "cum" only as its own word outside Latin honours ("summa / magna cum laude").
+  /\b(?:porn\w*|nudes|orgasm\w*|horny|blow ?jobs?|hand ?jobs?|masturbat\w*|dildos?|boners?|erections?|cumming|cumshots?|cocks?|puss(?:y|ies)|genitals?)\b/i,
+  /\bcum\b(?! laude)/i,
 ];
 
-export function jokeHasBannedTopic(text: string): boolean {
-  return JOKE_BANNED_TOPIC.some((re) => re.test(text));
+export function jokeCrossesBoundary(text: string): boolean {
+  return JOKE_HARM_FILTER.some((re) => re.test(text));
 }
+
+/** Old name, kept so existing callers keep working. Same narrow harm filter. */
+export const jokeHasBannedTopic = jokeCrossesBoundary;
 
 /** Stock phrases that kill a joke. Story punchlines and the Story voice filter. */
 export const STORY_BANNED_CLICHES: readonly RegExp[] = [
@@ -84,7 +129,7 @@ const EXPLAINS_THE_JOKE =
 export function punchlineCraftViolation(text: string): string | null {
   const line = text.trim();
   if (!line) return 'empty';
-  if (jokeHasBannedTopic(line)) return 'banned topic';
+  if (jokeCrossesBoundary(line)) return 'crosses a boundary';
   if (/#/.test(line)) return 'hashtag';
   if (EXPLAINS_THE_JOKE.test(line)) return 'explains the joke';
   return storyClicheViolation(line);
@@ -157,6 +202,7 @@ export const CARD_JOKE_RULES = `"funny" — THE ONE JOKE (a named exception to "
   side lands them in. Joke about the situation, never the person. Specific concrete detail beats a general observation.
   Land the laugh in the last six to eight words. Never explain the joke. No puns for their own sake. No stock clichés
   (walk into a bar, plot twist, living the dream). Clearly funny on its own, not a riddle.
+  ${STORY_JOKE_ALLOWED}
   Never, whatever the style:
 ${STORY_JOKE_BANS.map((line) => `  - ${line}`).join('\n')}`;
 
@@ -166,7 +212,7 @@ export function cardJokeViolation(text: string): string | null {
   if (!line) return 'empty';
   if (line.length > CARD_JOKE_MAX_CHARS) return 'too long';
   if ((line.match(/[.?]\s+\S/g) ?? []).length > 0) return 'more than one sentence';
-  if (jokeHasBannedTopic(line)) return 'banned topic';
+  if (jokeCrossesBoundary(line)) return 'crosses a boundary';
   if (/#/.test(line)) return 'hashtag';
   if (EXPLAINS_THE_JOKE.test(line)) return 'explains the joke';
   return null;

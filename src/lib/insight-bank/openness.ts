@@ -75,7 +75,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
     why: 'Leaving room for surprises can make plans more fun for you, but people traveling with you might want to know what’s next.',
     try: [
       'Before your next outing with friends, plan just one fixed stop, so everyone has something to count on.',
-      'Ask whoever you’re going with how much they like to plan, so you can meet in the middle.',
+      'Ask whoever you’re going with how much they like to plan, so you can find a plan you both like.',
     ],
     watch: [
       'Notice when the people with you seem unsure about what’s happening next.',
@@ -127,7 +127,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice whether your doubt about a change is about the change itself or just the newness.',
-      'Notice the old habits you once had to learn too.',
+      'Notice how many things you rely on now were new to you once.',
     ],
   }),
   idea('ftw_openness_l_03', ['openness:low'], {

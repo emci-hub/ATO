@@ -22,4 +22,16 @@
 - [Live rooms facts](live_rooms_garage_rooftop_facts.md) — liveIsLoft wiring, garage/rooftop go-live touchpoints, Call-only presence
 - [Art icon add path](art_icon_add_path.md) — flat icons: drop PNG in icons/in-use + art:sync; edit code first
 - [Expedition invisible facts](expedition_invisible_facts.md) — presence flips viewed room -> schedule room on return; touchPet seam
+- [Turf War map](turf_war_map_facts.md) — defend-screen layout/renderer/checks, no base HP, web screenshot recipe w/ Playwright 1148 workaround
 - [Play sheets style map](play_sheets_style_map.md) — Info/Feed sheet kits, GameCard border mismatch cause, dev panel default-open, gate pins
+- [Sprite clip pack path](sprite_clip_pack_path_facts.md) — art-pack inputs are hardcoded dirs, FX/board skeleton slots, loop drawers, checks for new clips/board variants
+- [Turf units/clips](turf_war_units_clips_facts.md) — towers, hero-bound tower + Avatar already exist, pet only pounce button, clip inventory, sword meaning
+- [FTUE/Today facts](divecore_ftue_today_facts.md) — coach-tip system, ready selectors, device-flag precedent, a11y helpers
+- [Divecore economy](divecore_economy_facts.md) — currencies/faucets/shop/drops, clock-trust gaps, save v33 local+cloud, no ATO-token link
+- [Turf balance numbers](turf_balance_numbers_facts.md) — Main is 10 not 20 (stale copy), HP/scrap/reward numbers, daze/splash/leash seams
+- [Turf elements/fx](turf_elements_fx_facts.md) — 4 elements vs 5 aura styles; auras PetFigure-only; fx status slot unwired
+- [Newbie guide signals](newbie_guide_signals_facts.md) — per-step done signals, play_stats has no claim/feed counters, settings sheet + float wiring
+- [AI launch audit](ai_launch_audit_facts.md) — live vs dead AI paths, ai-generate open proxy, dead crisis gate, check-in tz farming
+- [Server hardening step 1](server_hardening_step1_facts.md) — ai-generate callers/checks, invite/handle grants, timezone farming, Sentry, edge fn auth
+- [Gear per hero (P6)](gear_per_hero_p6_facts.md) — gear lives on 5 Legend records not heroes; boardMult board-wide; v33 pins
+- [Copy flags surface map](copy_flags_surface_map.md) — 16 false COPY_REVIEWED flags: surfaces, counts, docs, checks, bundle scope

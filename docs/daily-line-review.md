@@ -4,6 +4,8 @@ New style: a concrete moment you recognize, sometimes with a small turn, never a
 Written around how people live now (texts, group chats, read receipts, tabs) but without slang words, because slang dates in a year.
 Every line sits under the trait lean it is for, so it only reaches people who match.
 
+**Review rules:** `docs/copy-review-rules.md` (clarity and meaning, not keyword flags; audience adults 18+).
+
 **How to pick:** change `- [ ]` to `- [x]` on every line you want. Then run
 `npm run load:daily-line` (or tell me and I run it). Only ticked lines go into the app.
 Each trait lean needs at least 4 ticked lines, or the loader refuses and says which are short.

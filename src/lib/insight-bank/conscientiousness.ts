@@ -58,7 +58,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
     ],
     why: 'Caring about details makes your work strong, but extra checking can take time you’d rather spend elsewhere.',
     try: [
-      'Set a timer for your next review and send it when the timer ends, so good enough gets out the door.',
+      'Set a timer for your next review and send it when the timer ends, so you send it once it’s good enough.',
       'Before you send your next message, read it once and then hit send, so you can see it go fine.',
     ],
     watch: [
@@ -69,7 +69,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
   idea('ftw_conscientiousness_h_05', ['conscientiousness:high'], {
     focus: [
       'When someone asks you for help, you tend to say yes because you know you’ll follow through.',
-      'You usually keep every promise you make, even the ones you said yes to too fast.',
+      'You usually keep your promises, even the ones you said yes to too fast.',
       'When a friend or coworker needs something done, you’re often the one they ask first.',
     ],
     why: 'People trust you because you deliver, and that trust can quietly fill your week with other people’s tasks.',
@@ -91,7 +91,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
     why: 'Caring a lot is part of why you finish things, but carrying that worry home can wear you down.',
     try: [
       'Write tomorrow’s first task down before bed, so your mind doesn’t have to hold it overnight.',
-      'Take a five-minute walk after your next big task, so the tension has somewhere to go.',
+      'Take a five-minute walk after your next big task, so you have a moment to unwind.',
     ],
     watch: [
       'Notice when you’re worrying about work that’s already on track.',
@@ -101,7 +101,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
   idea('ftw_conscientiousness_l_01', ['conscientiousness:low'], {
     focus: [
       'Plans changing doesn’t bother you much, but chores and errands tend to pile up without a set time.',
-      'You adapt to new plans easily, but small tasks tend to stack up when there’s no deadline.',
+      'You handle changing plans well, but small tasks can pile up when there’s no deadline.',
       'When nothing’s on the calendar, you tend to let small tasks wait until they become urgent.',
     ],
     why: 'Being flexible helps you handle surprises, but tasks without a deadline can end up waiting until they’re stressful.',
@@ -152,7 +152,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
       'You usually begin new routines with a lot of energy, but they tend to fade after a few weeks.',
       'When a new workout or habit gets repetitive, you tend to drift away from it.',
     ],
-    why: 'You’re driven by interest more than routine, so habits tend to stick when they stay a little fun for you.',
+    why: 'Interest tends to drive you more than routine, so habits can stick when they stay a little fun.',
     try: [
       'Make your habit smaller today, like five minutes instead of thirty, so it’s easy to keep going.',
       'Change one thing about a habit that’s fading, so it feels new enough to continue.',
@@ -190,7 +190,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
       'Pick the one unfinished project you’d be proudest to complete and work on it for ten minutes.',
     ],
     watch: [
-      'Notice when a new idea shows up right as the current one gets hard.',
+      'Notice what you were working on the last time a new idea pulled you away.',
       'Notice which unfinished things still matter to you.',
     ],
   }),

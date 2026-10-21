@@ -20,8 +20,14 @@ import { claimDailyCheckin, fetchCheckinStatus } from '@/lib/ato-tokens-server';
 export const CHECKIN_KICKER = 'Daily check-in';
 export const CHECKIN_BUTTON = `Check in · +${ATO_TOKEN_EARN.daily_checkin} tokens`;
 export const CHECKIN_DONE = 'Checked in today. A new check-in opens at midnight.';
+/**
+ * `count` is how many check-ins of the current 7 are done. 0 never reads as
+ * "0 of 7": it says the next one is the first.
+ */
 export const checkinWeekLine = (count: number) =>
-  `${count} of 7 this week · the 7th check-in pays +${ATO_TOKEN_EARN.checkin_week_bonus}.`;
+  count <= 0
+    ? `Next check-in is 1 of 7 · the 7th pays +${ATO_TOKEN_EARN.checkin_week_bonus}.`
+    : `${count} of 7 check-ins toward your next bonus · the 7th pays +${ATO_TOKEN_EARN.checkin_week_bonus}.`;
 export const checkinBalanceLine = (tokens: number) =>
   `You have ${tokens} tokens. Each AI view costs ${AI_TOKEN_PRICE}: a new Story, a Legends AI card, or a deep dive on Explore.`;
 

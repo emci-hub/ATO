@@ -25,7 +25,7 @@ export const EXPLORE_EMPTY_CONSENT =
 export const EXPLORE_EMPTY_DENIED =
   'AI stays off for this account.';
 
-export const EXPLORE_EMPTY_CRISIS = 'Not the moment for this.';
+export const EXPLORE_EMPTY_PAUSED = 'Not the moment for this.';
 
 export const EXPLORE_EMPTY_QUOTA =
   "That's all for today, back tomorrow";

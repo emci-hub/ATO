@@ -39,9 +39,10 @@ un-timestamped migration files). Reviewer fix before apply: `circle_gift_inbox` 
 
 ## Decisions (do not re-ask)
 - Divecore stays on in every build; dev tools stay behind `PRE_LAUNCH_DEV`.
-- Pet talk may reflect **all 16 traits, both ends**; its talk style may change with them. Lows are never dropped and
-  never framed as flaws: **cognitive reappraisal** — describe the moment / sensation in everyday words, as a state,
-  never a clinical label. Thin data → the pet hedges ("still figuring you out"), it does not go silent. No model calls
+- Pet talk may reflect **all 16 traits, both ends**; its talk style may change with them. Lows are never dropped.
+  **Updated 2026-10-19:** the old "reappraisal / sensation words" framing is superseded by CLAUDE.md "Honest weaknesses" and
+  `docs/copy-review-rules.md`: say a supported limitation plainly in everyday words (no shame, no clinical label, no
+  euphemism, no forced upside). Thin data → the pet hedges ("still figuring you out"), it does not go silent. No model calls
   (stored, hand-written lines). Moment voice (`src/lib/voice/moment-voice.ts`). emci reads the bank (COPY_REVIEWED flag).
 - Visitors: their own reward (sticker / rare look), never hero copies; 12 rotating weekly; only heroes with room-ready clips.
 - Decor: split the Hideout's baked prop art first, then 3 slots in one room.
@@ -49,6 +50,9 @@ un-timestamped migration files). Reviewer fix before apply: `circle_gift_inbox` 
 - "Up" in the Underground room = Rooftop. The 4 rail icons (Sleep, Light, Back, Up) are made with the decor art pass.
 
 ## Step 3 input: the reframe word list (emci reviews; edits become the bank)
+
+> 2026-10-19: these low-end phrases are a starting list, not a rule. Where one swaps a real limitation for a nicer word,
+> use the plain wording instead (`docs/copy-review-rules.md`, CLAUDE.md "Honest weaknesses").
 
 | Trait | High end | Low end |
 |---|---|---|

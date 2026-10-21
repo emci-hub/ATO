@@ -1,4 +1,4 @@
-import { SAGE_VOICE } from './content.generated';
+import { VOICE_REFERENCE_TEXT } from './content.generated';
 
-/** sage.txt — the register generated cards must be written in. */
-export const VOICE_REFERENCE: string = SAGE_VOICE;
+/** voice-reference.txt — the register generated cards must be written in. */
+export const VOICE_REFERENCE: string = VOICE_REFERENCE_TEXT;

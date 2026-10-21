@@ -143,7 +143,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice when you talk yourself out of trying.',
-      'Notice how often people who volunteer know less than you.',
+      'Notice how often someone who volunteers is learning as they go.',
     ],
   }),
   idea('ftw_competence_l_04', ['competence:low'], {
@@ -184,13 +184,13 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
       'You usually doubt yourself at first, but you keep working to get better.',
       'When something is hard for you, you tend to treat it as something to learn rather than a reason to quit.',
     ],
-    why: 'Your effort to improve is a real strength, and it means your doubts usually shrink with time.',
+    why: 'Your effort to improve is a real strength, and doubts tend to shrink as you get more practice.',
     try: [
       'Write down one skill you’ve already improved, so you see your effort working.',
       'Ask someone for one tip on what you’re learning, so you improve faster.',
     ],
     watch: [
-      'Notice how your confidence grows as you practice.',
+      'Notice whether your confidence shifts as you practice.',
       'Notice when you’re better at something than you were last month.',
     ],
   }),

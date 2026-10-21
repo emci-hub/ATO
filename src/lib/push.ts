@@ -119,14 +119,43 @@ async function ensureAndroidChannel(): Promise<void> {
 }
 
 /**
- * Ask the system once, only after the first Check exists. Never nags. A
- * decline leaves every other screen exactly as it was.
+ * True when the ask sheet should show now: not web, never asked before. The
+ * caller has just loaded an insight (insightCount is at least 1 by then).
  */
-export async function maybeAskNotificationPermission(checkCount: number): Promise<void> {
-  if (Platform.OS === 'web') return;
+export async function shouldShowNotificationAsk(insightCount: number): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
   const alreadyAsked = await getAskedForNotifications();
-  if (!shouldAskNotificationPermission({ checkCount, alreadyAsked })) return;
+  if (!shouldAskNotificationPermission({ insightCount, alreadyAsked })) return false;
+  // Already decided in the system (e.g. through Divecore's pet reminder): no sheet.
+  try {
+    const current = await Notifications.getPermissionsAsync();
+    if (current.status !== 'undetermined') {
+      await markAsked();
+      return false;
+    }
+  } catch {
+    return false;
+  }
+  return true;
+}
 
+/** "Not now": remember it was asked, never ask again, touch nothing else. */
+export async function declineNotificationAsk(): Promise<void> {
+  try {
+    await markAsked();
+  } catch (err) {
+    console.log('[push] could not remember the answer:', err);
+  }
+}
+
+/**
+ * "Turn on": ask the system (only when it has not been decided yet), remember
+ * it was asked (push-runtime rebuilds the schedules when the app returns to the
+ * foreground after the system dialog). Never nags. A system "no" leaves
+ * every other screen exactly as it was.
+ */
+export async function acceptNotificationAsk(): Promise<void> {
+  if (Platform.OS === 'web') return;
   try {
     const current = await Notifications.getPermissionsAsync();
     if (current.status === 'undetermined') {

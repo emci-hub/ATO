@@ -57,7 +57,7 @@ import { isProfileSettled, settledAxisLabel, type TraitTrack } from '@/lib/trait
  * showing first and hiding after would flash it at everyone who has seen it.
  */
 /** What the mini guy says once the reveal card is closed. */
-export const BUDDY_AFTER_50_BODY = `Insight, categories and your next ${ONGOING_ROUND_SIZE} are open.`;
+export const BUDDY_AFTER_50_BODY = `Insight, categories and your next ${ONGOING_ROUND_SIZE} questions are open.`;
 
 const REVEAL_DEF = MILESTONE_DEFS.find((def) => def.id === INTAKE_REVEAL_MILESTONE_ID);
 

@@ -56,7 +56,7 @@ import { CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
 import { CATEGORY_STATEMENTS_COPY_REVIEWED } from '@/lib/category-statements/generate-statements';
 import { CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { DAILY_LINE_COPY_REVIEWED } from '@/lib/daily-line/bank';
-import { DAILY_INSIGHT_COPY_REVIEWED } from '@/lib/insight/generate-insight';
+import { INSIGHT_BANK_COPY_REVIEWED } from '@/lib/insight-bank';
 import { LEGENDS64_COPY_REVIEWED, NAME_STYLES_V2_COPY_REVIEWED } from '@/lib/legends64/archetypes';
 import { LEGEND_FIGURES_COPY_REVIEWED } from '@/lib/legend-figures/flags';
 import { CATEGORY_DEEP_DIVE_COPY_REVIEWED } from '@/lib/category-deep-dive/flags';
@@ -567,7 +567,7 @@ export function QuestionBankPanel() {
 
 const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Staged intake (sets, round cap, mixed trait)', reviewed: STAGED_INTAKE_COPY_REVIEWED },
-  { name: 'Daily insight (AI)', reviewed: DAILY_INSIGHT_COPY_REVIEWED },
+  { name: 'Daily insight (stored)', reviewed: INSIGHT_BANK_COPY_REVIEWED },
   { name: 'Category statements (AI)', reviewed: CATEGORY_STATEMENTS_COPY_REVIEWED },
   { name: 'Category read (rolls)', reviewed: CATEGORY_READ_COPY_REVIEWED },
   { name: 'Story', reviewed: STORY_COPY_REVIEWED },

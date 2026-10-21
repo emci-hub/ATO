@@ -4,6 +4,8 @@ The card under each category on Explore, written by hand in the clear voice. No 
 Bars have three cells (low / mid / high). Maps have four, from their two traits in order: hh, hl, lh, ll (h = 0.5 or more).
 Each part has three wordings; a person sees one per week, turning every Monday.
 
+**Review rules:** `docs/copy-review-rules.md` (fix unclear wording and meaning problems; keep honest lines plain; no keyword flags).
+
 **How to review:** change `- [ ]` to `- [x]` on every cell you approve. Edit wording right here if you like and tell me; I copy it into `src/lib/category-bank/<id>.ts`.
 When every cell is ticked, `CATEGORY_BANK_COPY_REVIEWED` flips to `true` (`src/lib/category-bank/index.ts`).
 This flag is for this review only: the app shows these cards to everyone and never shows a draft badge for them (emci, 2026-10-07).

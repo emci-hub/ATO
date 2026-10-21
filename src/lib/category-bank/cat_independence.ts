@@ -42,7 +42,7 @@ export const CAT_INDEPENDENCE: MapCard = {
       watchOut: [
         'Sometimes friends feel left out because you don’t reach out much.',
         'Because you’re fine alone, you might miss signs that someone wants more contact.',
-        'Sometimes you handle hard things alone when help was there for you.',
+        'Sometimes you handle a hard thing alone even though someone nearby could help.',
       ],
       tryThis: [
         'Text one friend this week just to check in, so they know you think of them.',
@@ -81,7 +81,7 @@ export const CAT_INDEPENDENCE: MapCard = {
         'You tend to be content with a simple routine and a small circle of friends.',
       ],
       strength: [
-        'You tend to be low-drama and easy to work with.',
+        'You tend to keep things calm and easy to work with.',
         'You usually follow a plan well and do it quietly.',
         'You can be content without needing a lot from people.',
       ],
@@ -91,7 +91,7 @@ export const CAT_INDEPENDENCE: MapCard = {
         'Sometimes your friendships fade because nobody reaches out.',
       ],
       tryThis: [
-        'Set one small goal for yourself this week, so you choose the direction.',
+        'Choose one small thing to do on your own this week, so the plan is yours.',
         'Text one friend to say hi, so the friendship stays warm.',
         'Tell someone at work how you like to get instructions, so you get what you need.',
       ],

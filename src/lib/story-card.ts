@@ -23,11 +23,13 @@ import type { StoryThread } from '@/lib/story-thread';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 import {
-  jokeHasBannedTopic,
+  jokeCrossesBoundary,
   pickBestPunchline,
   punchlineCraftViolation,
   storyClicheViolation,
 } from '@/lib/voice/card-joke';
+import { CLINICAL_ADVICE, hasClinicalLabel } from '@/lib/voice/clinical';
+import { directiveAdviceViolation } from '@/lib/voice/directive-advice';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
@@ -107,8 +109,18 @@ const LABEL_WORDS: readonly string[] = [
   ...TRAIT_AXES.flatMap((axis) => [AXIS_POLE_NAME[axis].high, AXIS_POLE_NAME[axis].low, AXIS_SHORT_NAME[axis]]),
 ];
 
-const CLINICAL =
-  /\b(anxious|anxiety|insecure|insecurity|avoidant|attachment|disorder|trauma|toxic|needy|clingy|codependent|diagnos|therapy|therapist|symptom|red flag)\b/i;
+/**
+ * Labels applied to the reader, not vocabulary (emci 2026-10-19, round 3:
+ * src/lib/voice/clinical.ts). Everyday and contextual words pass ("a toxic
+ * group chat", "trauma-bonded by a bad haircut", "the group chat needs therapy").
+ * Refused: a label or diagnosis pinned on the reader ("Your avoidant attachment
+ * kicks in", "That is so bipolar of you"), any diagnosis claim, and clinical
+ * advice (get therapy, stop your meds). The theory name "attachment style" is a
+ * framework term (framework-fence).
+ */
+const CLINICAL = {
+  test: (text: string): boolean => hasClinicalLabel(text) || CLINICAL_ADVICE.test(text),
+};
 
 const GENERIC_CAPS = new Set([
   'Mom',
@@ -172,16 +184,15 @@ export function quotedLineCount(text: string): number {
 
 /** One story line: safety + voice, with numbers, one quote, and unnamed side characters allowed. */
 export function storyCardLineViolation(text: string, opts: { allowYouAre?: boolean } = {}): string | null {
-  if (jokeHasBannedTopic(text)) return 'banned topic';
-  if (/\b(voice ?notes?|voice ?memos?|voicemails?|typing bubbles?|grey bubbles?|gray bubbles?|read receipts?)\b/i.test(text)) {
-    return 'niche phone detail';
-  }
+  if (jokeCrossesBoundary(text)) return 'crosses a boundary';
+  // Core content policy (2026-10-20): voice notes, read receipts and typing bubbles are
+  // preferred moments in moment-voice.ts, so they are no longer rejected here.
   if (/!/.test(text)) return 'exclamation';
   if (/[[\]<>]/.test(text)) return 'template left in';
   if (/\p{Extended_Pictographic}/u.test(text)) return 'emoji';
   if (/\balways\b/i.test(text)) return 'always';
   if (!opts.allowYouAre && /\byou(?:'|’)?re\b|\byou are\b/i.test(text)) return 'you are';
-  if (/\bshould\b/i.test(text)) return 'advice';
+  if (directiveAdviceViolation(text)) return 'advice';
   if (CLINICAL.test(text)) return 'clinical word';
   if (/\byou might\b/i.test(text)) return 'hedge';
   if (/\bon a day like this\b/i.test(text)) return 'hedge';
@@ -291,19 +302,18 @@ SHAPE (cold open → twist → move → punchline → reveal → teaser):
 VOICE: punchy, warm, a little cheeky, like the funniest friend retelling your night. Specific beats general.
 Present tense, second person, plus ONE other voice: a friend, sibling, boss or server says one short line in quotes.
 Exaggerated numbers are fine when funny ("the fourth any minute now", "all 212 of them"). Unnamed side characters are fine ("the hat guy").
-Vary sentence length. No "!", no emoji, no advice, no "should", no "always".
+Vary sentence length. No "!", no emoji, no "always", no advice aimed at the reader ("you should…", "you need to…"); an ordinary "should" in a joke or an observation is fine.
 Show the trait through action. Only "reveal" may name what it shows, in plain words, never a trait or category label.
 
-NEVER: real names, brands, places, diagnosis, cruelty, trait/category words, hedges ("you might", "on a day like this"),
-niche phone details (voice notes, typing bubbles, read receipts), or these clichés: ${BANNED_CLICHE_PROMPT}.
+NEVER: real names, brands, places, a diagnosis or label applied to the reader (everyday and contextual use of a word is fine), cruelty, trait/category words, hedges ("you might", "on a day like this"), or these clichés: ${BANNED_CLICHE_PROMPT}.
 Stay in ONE setting. Never leave square or angle brackets in the answer.
 
 ${STORY_JOKE_RULES}
 
-SETTING (this overrides the "how people live now" list in any voice block — texts, voice notes, typing bubbles and
-read receipts are NOT the default setting here)
+SETTING (a story lives in one physical scene; the texting moments in the voice block are welcome as a detail inside it,
+but a whole story that is just a phone screen is not a scene)
 - Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
-  a shared chore, a busy commute. A phone can be a detail, never voice notes, typing bubbles or read receipts.
+  a shared chore, a busy commute. A phone can be a detail, voice notes, typing bubbles and read receipts included.
 - Unusual-but-plausible is good (a laminated dessert menu, a birthday balloon on the wrong table). If a detail needs a
   footnote, cut it.
 

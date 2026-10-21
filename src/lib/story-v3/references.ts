@@ -16,7 +16,7 @@ function card6(
   return {
     categoryName: categoryCatalogName(id),
     leanPhrase: leanPhraseFor(id, lean),
-    ...(score ? { scoreLine: 'You scored {traitScore}.' } : {}),
+    ...(score ? { scoreLine: 'How strongly you lean here: {traitScore}%.' } : {}),
     evidence,
     tip,
   };

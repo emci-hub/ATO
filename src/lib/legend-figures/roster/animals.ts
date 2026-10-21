@@ -33,10 +33,6 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('attachment_avoidance', 'low', 'devoted to one person', 'He kept waiting for his owner for years.'),
-      tag('conscientiousness', 'high', 'there every single day', 'He went to the station almost every day.'),
-      tag('steadiness', 'high', 'calm and patient waiting', 'He waited patiently, year after year.'),
-      tag('attachment_anxiety', 'high', 'waiting for his return', 'He kept watching for the one person he loved.'),
-      tag('openness', 'low', 'same place, same time', 'He kept to the same station and the same routine.'),
     ],
     vetting: 'Real dog, died 1935; a beloved story of loyalty; no harm shown.',
   },
@@ -70,10 +66,7 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'the statue', 'Why did one dog become the face of the run?', 'Stories often need one face, but many hands made it happen.'),
     ],
     tags: [
-      tag('extraversion', 'high', 'the famous face', 'He became a celebrity with a vaudeville tour.'),
-      tag('relatedness', 'high', 'part of a team', 'He ran as part of a sled dog team.'),
       tag('self_efficacy', 'high', 'brought the medicine home', 'He led the team on the final leg to Nome.'),
-      tag('locus_of_control', 'low', 'sold and moved around', 'He was sold and moved by others before Cleveland rescued him.'),
     ],
     vetting: 'Real dog, died 1933; the run is admired; the hard part of his life is told gently.',
   },
@@ -93,7 +86,7 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
     famousFor: 'Covering far more distance than any other lead dog on the run.',
     facts: [
       fact('f1', 'He covered a far greater distance than any other lead dog on the 1925 serum run.', src(wiki('Togo_(dog)'), 'far greater distance than any other lead dogs')),
-      fact('f2', 'His name, Cugu, means puppy in the Northern Sami language.', src(wiki('Togo_(dog)'), 'means puppy in Northern Sami language')),
+      fact('f2', 'He was named after the Japanese admiral Tōgō Heihachirō.', src(wiki('Togo_(dog)'), 'Tōgō Heihachirō')),
       fact('f3', 'At first he was seen as a troublemaker, before Seppala saw he was a leader.', src(wiki('Togo_(dog)'), 'Deemed at first a troublemaker')),
     ],
     moments: [
@@ -108,11 +101,8 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'the sick puppy', 'Who would have guessed the small, ill puppy would lead?', 'A slow start says little about how far you go.'),
     ],
     tags: [
-      tag('conflict_assertiveness', 'high', 'bold and rowdy', 'He was bold and rowdy as a young dog.'),
       tag('competence', 'high', 'led over the worst ice', 'He led across the most dangerous parts of the trail.'),
-      tag('autonomy', 'high', 'did things his own way', 'He was first seen as a troublemaker.'),
-      tag('extraversion', 'low', 'out of the spotlight', 'His role was left out of the news at the time.'),
-      tag('growth_mindset', 'high', 'from sick puppy to leader', 'He grew from an ill puppy into a lead dog.'),
+      tag('autonomy', 'high', 'broke out to follow the team', 'As a young dog he kept breaking out to follow the team.'),
     ],
     vetting: 'Real dog, died 1929; widely admired; no harm shown.',
   },
@@ -136,7 +126,7 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
       fact('f3', 'The story is well known in Scotland, though its accuracy is disputed.', src(wiki('Greyfriars_Bobby'), 'accuracy is disputed')),
     ],
     moments: [
-      moment('m1', 'He spent the rest of his life sitting on his master’s grave in Greyfriars Kirkyard.', src(wiki('Greyfriars_Bobby'), "sitting on his master's grave")),
+      moment('m1', 'As the story goes, he spent the rest of his life by his master’s grave in Greyfriars Kirkyard.', src(wiki('Greyfriars_Bobby'), "sitting on his master's grave")),
       moment('m2', 'A year after he died, a drinking fountain topped with his statue was put up opposite the churchyard.', src(wiki('Greyfriars_Bobby'), "drinking fountain topped with Bobby's statue")),
     ],
     angles: [
@@ -147,10 +137,6 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('attachment_avoidance', 'low', 'stayed by his person', 'He stayed near his owner’s grave.'),
-      tag('steadiness', 'high', 'kept the same post', 'He kept the same place for years.'),
-      tag('relatedness', 'high', 'a whole city’s dog', 'Edinburgh looked after him.'),
-      tag('openness', 'low', 'never left his spot', 'He stayed at the same kirkyard.'),
-      tag('growth_mindset', 'low', 'content in one spot', 'He stayed at the same kirkyard for years.'),
     ],
     vetting: 'Real dog, died 1872; label says the story is disputed; no harm shown.',
   },
@@ -184,11 +170,7 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'hope', 'Why do people cheer so hard for an unlikely winner?', 'Seeing someone come back gives everyone a lift.'),
     ],
     tags: [
-      tag('growth_mindset', 'high', 'loser to champion', 'He went from losing most races to beating the best.'),
-      tag('playfulness', 'high', 'loved naps and snacks', 'He was given to sleeping and eating.'),
       tag('conscientiousness', 'low', 'a lazy-looking start', 'Early on he was known for sleeping and eating.'),
-      tag('self_efficacy', 'high', 'beat the champion', 'He beat the Triple Crown winner by four lengths.'),
-      tag('extraversion', 'high', 'the crowd’s favourite', 'He became a national symbol of hope.'),
     ],
     vetting: 'Real horse, died 1947; widely loved; no harm shown.',
   },
@@ -223,9 +205,8 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('openness', 'high', 'rode trains everywhere', 'He travelled across the country and the world.'),
-      tag('extraversion', 'high', 'everyone’s mascot', 'He was a welcome addition in any post office.'),
       tag('autonomy', 'high', 'went where he liked', 'He would ride on trains wherever they were taken.'),
-      tag('conflict_cooperativeness', 'high', 'everyone’s good-luck charm', 'Clerks everywhere welcomed him.'),
+      tag('attachment_anxiety', 'low', 'at home with strangers', 'He rode along with whichever clerks were on the train.'),
       tag('conflict_assertiveness', 'high', 'guarded the mail', 'He let nobody but mail clerks touch the bags.'),
     ],
     vetting: 'Real dog, died 1897; a beloved mascot; the label does not dwell on his death.',
@@ -262,9 +243,6 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('agreeableness', 'high', 'gentle with everyone', 'She was loved for her gentleness.'),
       tag('playfulness', 'high', 'loved for her play', 'She was loved for her playfulness.'),
-      tag('relatedness', 'high', 'a boy’s best friend', 'Christopher Robin visited her often.'),
-      tag('conflict_assertiveness', 'low', 'never a fighter', 'She was known for being gentle, not fierce.'),
-      tag('attachment_anxiety', 'low', 'gentle with strangers', 'She was loved by visitors for her gentleness.'),
     ],
     vetting: 'Real bear, died 1934; widely loved; nothing harmful shown.',
   },
@@ -299,10 +277,6 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('openness', 'high', 'sniffed out the unusual', 'He noticed a parcel others passed.'),
-      tag('playfulness', 'high', 'treasure on a walk', 'He found it on an ordinary walk.'),
-      tag('locus_of_control', 'low', 'luck on a walk', 'He found the trophy by chance on a walk.'),
-      tag('self_efficacy', 'high', 'solved the big case', 'He found what the police were looking for.'),
-      tag('attachment_anxiety', 'low', 'happy on any walk', 'He found the trophy on an ordinary walk.'),
     ],
     vetting: 'Real dog, died 1967; a cheerful story; the label does not dwell on his death.',
   },
@@ -338,9 +312,6 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('competence', 'high', 'the greatest of all', 'He is considered the greatest racehorse ever.'),
       tag('playfulness', 'high', 'a clown on the farm', 'He was known as a clown who loved cutting up.'),
-      tag('self_efficacy', 'high', 'won by thirty-one lengths', 'He won the Belmont by a huge margin.'),
-      tag('extraversion', 'high', 'the leader of the crowd', 'He was the leader in the crowd.'),
-      tag('conflict_assertiveness', 'high', 'raced to the front', 'He took the lead and kept it.'),
     ],
     vetting: 'Real horse, died 1989; widely admired; no harm shown.',
   },
@@ -374,10 +345,6 @@ export const ANIMAL_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'the lesson', 'How does a horse end up in science books?', 'Even a mistake can teach the world something.'),
     ],
     tags: [
-      tag('agreeableness', 'high', 'tuned in to people', 'He read his trainer’s tiny cues.'),
-      tag('conflict_cooperativeness', 'high', 'gave people what they hoped', 'He responded to what his trainer expected.'),
-      tag('locus_of_control', 'low', 'followed the cues', 'His answers came from his trainer’s signals.'),
-      tag('competence', 'low', 'no maths after all', 'He was not actually doing the arithmetic.'),
       tag('autonomy', 'low', 'followed his trainer', 'He responded to his trainer’s body language.'),
     ],
     vetting: 'Real horse, died about 1916; a gentle science story; no harm shown.',

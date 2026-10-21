@@ -255,7 +255,7 @@ export function checkJokes(script: StoryScript): StoryFlag[] {
     flags.push({ code: 'joke-same', message: 'jokeLight and jokeDark are the same line' });
   }
   if (dark && STORY_BANNED_TOPICS.some((re) => re.test(lineText(dark)))) {
-    flags.push({ code: 'joke-dark-banned', message: `dark joke hits a banned topic: ${lineText(dark)}` });
+    flags.push({ code: 'joke-dark-banned', message: `dark joke crosses a boundary: ${lineText(dark)}` });
   }
   return flags;
 }
@@ -263,15 +263,9 @@ export function checkJokes(script: StoryScript): StoryFlag[] {
 export function checkBanned(script: StoryScript): StoryFlag[] {
   const flags: StoryFlag[] = [];
   const joined = `${flatten(script)}\n${script.next}\n${script.reveal}\n${script.otherWay ?? ''}`;
+  // Humor is 18+ (emci, 2026-10-19): death, drinking and dark doom pass; only the harm filter refuses.
   for (const re of STORY_BANNED_TOPICS) {
-    if (re.test(joined) && !/respect for the dead|files for early retirement|open grave|funeral for it|warning shot/i.test(joined)) {
-      // Metaphorical object-doom is allowed; real death language is not.
-      if (/\b(die|dies|died|dying|dead|death)\b/i.test(joined) && !/mute button|calendar|machine|heart|banner|carton|dignity/.test(joined)) {
-        flags.push({ code: 'banned-topic', message: `banned topic matched ${re}` });
-      } else if (!/\b(die|dies|died|dying|dead|death)\b/i.test(joined)) {
-        flags.push({ code: 'banned-topic', message: `banned topic matched ${re}` });
-      }
-    }
+    if (re.test(joined)) flags.push({ code: 'banned-topic', message: `crosses a boundary: ${re}` });
   }
   for (const re of STORY_BANNED_CLICHES) {
     if (re.test(joined)) flags.push({ code: 'cliche', message: `cliché: ${re}` });

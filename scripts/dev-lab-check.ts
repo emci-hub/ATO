@@ -96,13 +96,18 @@ assert.doesNotMatch(
 ok('TraitViewer shows only this account, and its signed-out fixture is unmistakable');
 
 assert.deepEqual(matchingFrameworkTerms('Your INFJ side is showing.'), ['INFJ']);
-assert.ok(containsFrameworkTerm('attachment style'));
-assert.ok(containsFrameworkTerm('growth mindset'));
+// Rule D6 (2026-10-20): naming a theory passes, handing the reader a result or claiming an official test fails.
+assert.ok(containsFrameworkTerm('Your attachment style is anxious.'));
+assert.ok(containsFrameworkTerm('You have a growth mindset.'));
+assert.ok(containsFrameworkTerm('ATO uses the Big Five.'));
+assert.equal(containsFrameworkTerm('Growth mindset is the idea that skills can be trained.'), false);
+assert.equal(containsFrameworkTerm('Attachment style is a theory; ATO does not test it.'), false);
 assert.equal(containsFrameworkTerm('autonomy'), false);
 assert.equal(containsFrameworkTerm('competence'), false);
 assert.equal(containsFrameworkTerm('relatedness'), false);
 assert.equal(matchingFrameworkTerms('After you make coffee, write one line.').length, 0);
-ok('fence tester reports the banned term that matched');
+assert.deepEqual(matchingFrameworkTerms('A competitive streak, compromising photos and the ocean.'), []);
+ok('fence tester reports the claim that matched (ordinary words no longer match)');
 
 assert.match(hub, /fetchSageUsage/);
 assert.match(hub, /matchingFrameworkTerms/);

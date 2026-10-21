@@ -21,7 +21,7 @@ import { usePlayReduceMotion } from '@/play/play-motion';
  * The Divecore heroes already in assets/play (dungeon-legends, south-facing
  * rotation, 252px). Reused as-is — no new art.
  */
-const HERO_ART: Readonly<Record<CardHero, number>> = {
+export const HERO_ART: Readonly<Record<CardHero, number>> = {
   arcane_engineer: require('@/assets/play/avatars/dungeon-legends/05_ARCANE_ENGINEER/rotations/south.png'),
   dragonblood_champion: require('@/assets/play/avatars/dungeon-legends/04_DRAGONBLOOD_CHAMPION/rotations/south.png'),
   dungeon_witch: require('@/assets/play/avatars/dungeon-legends/06_DUNGEON_WITCH/rotations/south.png'),
@@ -109,10 +109,18 @@ export function ProfileCard({
             <Text style={styles.lineKey}>STRENGTH </Text>
             {lines.strength}
           </Text>
-          <Text style={styles.line}>
-            <Text style={styles.lineKey}>WEAKNESS </Text>
-            {lines.weakness}
-          </Text>
+          {lines.weakness ? (
+            <Text style={styles.line}>
+              <Text style={styles.lineKey}>WEAKNESS </Text>
+              {lines.weakness}
+            </Text>
+          ) : null}
+          {lines.step ? (
+            <Text style={styles.line}>
+              <Text style={styles.lineKey}>TRY </Text>
+              {lines.step}
+            </Text>
+          ) : null}
         </View>
       ) : null}
       {!PROFILE_CARD_COPY_REVIEWED && PRE_LAUNCH_DEV ? <Text style={styles.draft}>Draft copy — waiting on emci review.</Text> : null}

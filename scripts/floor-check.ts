@@ -78,6 +78,7 @@ const EXPECTED_TYPES = [
   'NSPrivacyCollectedDataTypeDateOfBirth',
   'NSPrivacyCollectedDataTypeUserID',
   'NSPrivacyCollectedDataTypeOtherUserContent',
+  'NSPrivacyCollectedDataTypeEmailsOrTextMessages',
   'NSPrivacyCollectedDataTypeCustomerSupport',
   'NSPrivacyCollectedDataTypeProductInteraction',
   'NSPrivacyCollectedDataTypeOtherUsageData',
@@ -97,14 +98,101 @@ ok('collected data types match across PrivacyInfo.xcprivacy, app.json, and nutri
 
 assert.match(policy, /Supabase/);
 assert.match(policy, /Gemini/);
+assert.match(policy, /DeepSeek/);
 assert.match(policy, /Resend/);
-assert.match(policy, /not end-to-end encrypted/i);
 assert.match(labels, /Supabase/);
 assert.match(labels, /Gemini/);
+assert.match(labels, /DeepSeek/);
 assert.match(labels, /Resend/);
 assert.match(labels, /Apple/);
 assert.match(labels, /Sentry/);
-ok('privacy.md and nutrition labels name the third parties');
+ok('privacy.md and nutrition labels name the third parties (Gemini first, DeepSeek fallback: ai-vendors.ts)');
+
+// Step 10 (2026-10-20): the policy describes what is built; "mute" is not built. Step 14 (2026-10-21):
+// chat is built (app 1.1+, wave108), so the policy must describe it as built: end-to-end encrypted,
+// 30-day retention, reports send the message + up to 5 before; the old "no direct messages" line is stale.
+export function policyRuleProblems(text: string): string[] {
+  const out: string[] = [];
+  if (/no direct messages between people/i.test(text)) out.push('still says there are no direct messages (chat is built)');
+  if (!/end-to-end encrypted[\s\S]{0,200}ATO cannot read them/i.test(text)) out.push('missing: chat is end-to-end encrypted');
+  if (!/for 30 days, then deletes it/i.test(text)) out.push('missing: 30-day chat retention');
+  if (!/that message and up to 5 before it/i.test(text)) out.push('missing: what a chat report sends');
+  if (/\bmute\b/i.test(text)) out.push('mentions mute (not built)');
+  // Every sentence that names a push token must deny collecting one (local notifications only).
+  for (const s of text.split(/(?<=[.!?])\s+|\n/)) {
+    if (/push (notification )?token/i.test(s) && !/\b(?:does not|doesn't|do not|never|no)\b/i.test(s)) {
+      out.push('claims a push token');
+      break;
+    }
+  }
+  for (const [need, why] of [
+    [/friend request|accept their request/i, 'friend requests with accept'],
+    [/\bBlock\b[\s\S]{0,200}silent/i, 'silent block'],
+    [/Report[\s\S]{0,200}six fixed reasons/i, 'report with fixed reasons'],
+    [/(?:keep|kept)[\s\S]{0,120}(?:if either account is later deleted|without your account ID)/i, 'reports survive deletion'],
+    [/Compare strengths[\s\S]{0,200}both/i, 'compare needs both switches'],
+    [/visits? (?:are )?switched on|visits and compare/i, 'per-friend visits switch'],
+    [/slurs/i, 'name / handle filter'],
+    [/Divecore game save/i, 'Divecore save'],
+    [/Legends cards and category deep dives/i, 'the two AI uses'],
+    [/asks once, after your first insight/i, 'the notification ask'],
+  ] as const) {
+    if (!need.test(text)) out.push(`missing: ${why}`);
+  }
+  return out;
+}
+assert.deepEqual(policyRuleProblems(policy), [], `privacy.md: ${policyRuleProblems(policy).join('; ')}`);
+for (const f of ['landing/privacy.html']) {
+  const html = read(f).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&');
+  assert.deepEqual(policyRuleProblems(html), [], `${f}: ${policyRuleProblems(html).join('; ')}`);
+}
+for (const f of ['src/app/legal/terms.md', 'landing/terms.html']) {
+  const t = read(f);
+  assert.doesNotMatch(t, /\bmute\b/i, `${f} mentions mute`);
+  assert.doesNotMatch(t, /\bin Chat\b|chat history/i, `${f} describes Chat as live`);
+}
+// pass/fail pairs
+assert.ok(policyRuleProblems('Block, mute, report on any Chat conversation.').length > 0, 'fail: the old chat line');
+assert.ok(policyRuleProblems(policy.replace(/six fixed reasons/g, 'a reason')).includes('missing: report with fixed reasons'), 'fail: report reasons dropped');
+assert.ok(policyRuleProblems(policy + '\nPush notification token, if you enable notifications.').includes('claims a push token'), 'fail: a stray claim next to the denial is still caught');
+assert.ok(!policyRuleProblems(policy).includes('claims a push token'), 'pass: the denial sentence alone');
+assert.ok(policyRuleProblems('We collect your push token.').includes('claims a push token'), 'fail: a push-token claim without the denial');
+assert.ok(policyRuleProblems(policy + '\nATO has no direct messages between people.').some((p) => p.startsWith('still says')), 'fail: the stale no-chat line');
+assert.ok(policyRuleProblems(policy.replace(/for 30 days, then deletes it/g, 'for a while')).includes('missing: 30-day chat retention'), 'fail: retention dropped');
+assert.ok(policyRuleProblems(policy.replace(/up to 5 before it/g, 'some context')).includes('missing: what a chat report sends'), 'fail: report scope dropped');
+ok('privacy policy (app + landing) describes Circle, chat (E2E, 30 days, reports), AI, Divecore and notifications as built; no mute; pass/fail pairs');
+
+// The Linked column of the label table matches app.json for every type.
+export function labelLinked(doc: string, type: string): boolean | null {
+  const row = doc.split('\n').find((l) => l.startsWith(`| ${type} |`));
+  if (!row) return null;
+  const cells = row.split('|').map((c) => c.trim());
+  return cells[3] === 'Linked' ? true : cells[3] === 'Not linked' ? false : null;
+}
+const APPLE_NAME: Record<string, string> = {
+  EmailAddress: 'Email Address', Name: 'Name', DateOfBirth: 'Date of Birth', UserID: 'User ID',
+  OtherUserContent: 'Other User Content', EmailsOrTextMessages: 'Emails or Text Messages', CustomerSupport: 'Customer Support', ProductInteraction: 'Product Interaction',
+  OtherUsageData: 'Other Usage Data', CrashData: 'Crash Data', OtherDiagnosticData: 'Other Diagnostic Data', DeviceID: 'Device ID',
+};
+for (const t of manifests.NSPrivacyCollectedDataTypes) {
+  const name = APPLE_NAME[t.NSPrivacyCollectedDataType.replace('NSPrivacyCollectedDataType', '')]!;
+  assert.equal(labelLinked(labels, name), t.NSPrivacyCollectedDataTypeLinked, `labels table Linked column for ${name}`);
+}
+assert.equal(labelLinked('| Crash Data | Yes | Linked | No |', 'Crash Data'), true, 'pair: Linked');
+assert.equal(labelLinked('| Crash Data | Yes | Not linked | No |', 'Crash Data'), false, 'pair: Not linked');
+assert.equal(labelLinked('| Crash Data | Yes |', 'Device ID'), null, 'pair: missing row');
+ok('label table Linked column matches app.json for all 12 types');
+
+// M8 (Step 10): Privacy + Terms links on sign-up and on You, opening the landing pages.
+{
+  const links = read('src/components/legal-links.tsx');
+  assert.match(links, /PRIVACY_URL = 'https:\/\/ato\.emgens\.com\/privacy\.html'/);
+  assert.match(links, /TERMS_URL = 'https:\/\/ato\.emgens\.com\/terms\.html'/);
+  assert.equal((links.match(/accessibilityRole="link"/g) ?? []).length, 2, 'both links are labelled links');
+  assert.match(read('src/app/auth/index.tsx'), /<LegalLinks \/>/, 'sign-up shows the links');
+  assert.match(read('src/app/(tabs)/you.tsx'), /<LegalLinks \/>/, 'You shows the links');
+  ok('Privacy + Terms links on sign-up and You open ato.emgens.com/{privacy,terms}.html');
+}
 
 assert.equal(
   manifests.NSPrivacyCollectedDataTypes.every((t) => t.NSPrivacyCollectedDataTypeTracking === false),
@@ -150,9 +238,9 @@ assert.doesNotMatch(home, /SAGE_COACH_LABEL/);
 assert.match(focusCard, /homeSageLabel/);
 assert.doesNotMatch(home, /homeSageLabel/);
 assert.match(push, /MORNING_PUSH_TITLE = 'ATO'/);
-// The installed widget's native header is a separate binary: it changes only
-// with the next native build (docs/sage-cleanup.md).
-assert.match(widget, /SAGE · COACH/);
+// The widget's native header (next native build) no longer says Sage.
+assert.doesNotMatch(widget, /SAGE · COACH/);
+assert.match(widget, /Text\("ATO"\)/);
 assert.doesNotMatch(consent, /'[^'\n]*\bSage\b[^'\n]*'/, 'no consent string says Sage');
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is a whole-screen park
 // (it was Circle's per-peer chat, and Circle is parked). The copy rule itself

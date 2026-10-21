@@ -81,7 +81,6 @@ export const PREVIEW_EMPTY_TABLES: ReadonlySet<string> = new Set([
   'trait_rolls',
   'trait_roll_snapshots',
   'checks',
-  'crisis_flags',
   'explore_packs',
   'explore_entries',
   'explore_reactions',
@@ -200,7 +199,7 @@ export function previewMe(body: unknown): unknown {
 export function previewRpc(name: 'home_bootstrap' | 'bank_answered', body: unknown): unknown {
   if (name === 'bank_answered') return { ids: [], fresh_starts: 0 };
   const row = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
-  return { ...row, trait_tracks: [], checks: [], crisis_since: [] };
+  return { ...row, trait_tracks: [], checks: [] };
 }
 
 type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;

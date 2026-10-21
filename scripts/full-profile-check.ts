@@ -27,7 +27,7 @@ import {
   emptyTraitValues,
   mergeTraitWrite,
 } from '../src/lib/traits';
-import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
+import { containsFrameworkTerm, matchingFrameworkTerms } from '../src/lib/voice/framework-fence';
 
 let passed = 0;
 function ok(label: string) {
@@ -106,10 +106,16 @@ for (const axis of TRAIT_AXES) {
   assert.equal(containsFrameworkTerm(copy.hint), false, copy.hint);
 }
 const ui = [read('src/lib/full-profile.ts'), read('src/components/full-profile-fold.tsx')].join('\n');
-for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'INFJ', 'INFP']) {
-  assert.equal(ui.toLowerCase().includes(banned.toLowerCase()), false, `leaked "${banned}"`);
+// D6 (2026-10-20): a framework may be named and explained; the Full Profile never hands out a framework
+// result, a type code or an "official test" claim. Paired so the check can still fail.
+assert.deepEqual(matchingFrameworkTerms(ui), [], `Full Profile claims a framework result: ${matchingFrameworkTerms(ui).join(', ')}`);
+for (const claim of ['Your MBTI type is INFJ.', 'Your Big Five score is high.', 'You are an INFP.', 'Your attachment style is anxious.', 'ATO is a clinically validated test.']) {
+  assert.ok(containsFrameworkTerm(claim), `a result claim fails: ${claim}`);
 }
-ok('Full Profile copy names no framework, type code, or diagnosis');
+for (const fine of ['The Big Five is a model psychologists use; ATO is not that test.', 'MBTI sorts people into 16 types such as INFJ; this is different.', 'Neuroticism is a trait name some tests use.']) {
+  assert.ok(!containsFrameworkTerm(fine), `explaining a framework passes: ${fine}`);
+}
+ok('Full Profile copy hands out no framework result, type code or diagnosis; naming one to explain it is fine');
 
 const fold = read('src/components/full-profile-fold.tsx');
 assert.match(fold, /updateTraits/);

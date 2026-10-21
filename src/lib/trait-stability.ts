@@ -469,7 +469,7 @@ export function settlingLine(row: TraitTrack | null, now: Date = new Date()): st
   if (isAxisSettled(row, now)) return isAxisMixed(row) ? MIXED_TRAIT_LINE : null;
   if (row.answerCount < STABILITY_FLOOR_N) {
     const more = STABILITY_FLOOR_N - row.answerCount;
-    return `Still settling — ${row.answerCount} of ${STABILITY_FLOOR_N} answers. ${more} more and this read firms up.`;
+    return `Still settling: ${row.answerCount} of ${STABILITY_FLOOR_N} answers so far. ${more} more and this read firms up.`;
   }
   return 'Still settling — your answers here point different ways so far.';
 }

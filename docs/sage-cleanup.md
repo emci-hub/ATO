@@ -5,6 +5,10 @@ The Sage tab was replaced by template-only Insights, and the crisis system was r
 Everything below was left on purpose: each item is a migration, a deploy, a native build
 or a separate-scope change, and none of it is user-visible.
 
+## Step 3 status (2026-10-20)
+
+Legal text is promoted: `src/app/legal/{terms,privacy,app-privacy-labels}.md` and `landing/{terms,privacy,index}.html` now describe the post-Sage app (no Sage, no crisis scanning/logging, AI only for Legends cards and category deep dives, Divecore save, AI usage log), with `[CONFIRM: ...]` tags for facts only emci or a lawyer can supply (`docs/legal/OPEN-QUESTIONS.md`). Docs corrected: `MAP`, `FLOWS`, `GOTCHAS`, `NOW`, `ME`, `BUSINESS`, `DATA_AI_MAP`, `screen-map`, `dead-weight`, `ATO_DEVICE_TESTS`. Still open: the database drop (section 1; wave103 drops crisis plumbing and is UNAPPLIED, see `docs/under18-server.md`), the two "Write as Sage" prompts (section 2), the Play credits line (3), the widget header (4), module renames (5), and the `ATO_DEVICE_TESTS` rewrite (6). The privacy text says `sage_messages`, `crisis_flags` and `me.facts` retention is `[CONFIRM]`: until section 1 is applied those rows may still exist for old accounts.
+
 ## 1. Database (one migration, applied after emci's ok — it deletes data)
 
 | Item | Where it came from | Note |
@@ -57,7 +61,7 @@ Pure renames, no behaviour change; do after the items above so imports move once
 
 ## 6. Also pending
 
-- Public privacy/terms text: drafts in `docs/legal/`, **not shipped**. The live copies are
-  `src/app/legal/*.md` and `landing/privacy.html` / `landing/terms.html`.
+- Public privacy/terms text: promoted from the `docs/legal/*.DRAFT.md` files on 2026-10-20 into
+  `src/app/legal/*.md` and `landing/privacy.html` / `landing/terms.html` (not published; `[CONFIRM]` tags remain).
 - `docs/ATO_DEVICE_TESTS.md` still has Sage/crisis device-test boxes; rewrite for Insights
   and the helpline row after a device pass.

@@ -56,7 +56,7 @@ import { withTimeout } from '@/lib/timeout';
 export const DEEP_DIVE_KICKER = 'Deep dive';
 export const DEEP_DIVE_LEDE = 'How far you lean in each part of you. Tap one and ATO writes a deep dive about it.';
 export const DEEP_DIVE_LEGEND =
-  'One number for each part of you: how strongly you lean overall, counting your surest answers most (strongest first). Tap for each trait. The small letters are the traits behind it.';
+  'One number for each part of you: how strongly you lean overall, counting your surest answers most (strongest first). Tap a row to see each trait. The small letters next to a name are the traits behind it.';
 export const DEEP_DIVE_ROW_LOCKED = 'Answer more questions to open this one.';
 export const DEEP_DIVE_WRITE_LABEL = 'Write my deep dive';
 /** Shared library (wave93): a card from people with leanings like yours, free. */
@@ -64,13 +64,13 @@ export const DEEP_DIVE_OPEN_LABEL = 'Open my deep dive · free';
 export const DEEP_DIVE_ANOTHER_LABEL = 'Show me another angle · free';
 export const DEEP_DIVE_NEW_LABEL = 'Write me a brand-new one';
 export const DEEP_DIVE_EMPTY =
-  'You’ve read every deep dive for leanings like yours. A new one is being written for you, free: check back in about an hour. Or write one now.';
+  `You’ve read every deep dive for leanings like yours. A new one is being written for you, free: check back in about an hour. Or write one now for ${AI_PRICE_LABEL}.`;
 export const DEEP_DIVE_DAILY = 'That’s today’s free deep dives. A brand-new one is still open, or come back tomorrow.';
 export const DEEP_DIVE_USED = 'That’s the most deep dives for today. Come back tomorrow.';
 export const DEEP_DIVE_FAILED = 'ATO couldn’t write this one just now. Try again tomorrow.';
 export const DEEP_DIVE_UNAVAILABLE = 'Deep dives aren’t switched on yet. Your leanings show either way.';
 export const DEEP_DIVE_SLOW = 'Taking a little longer than usual. It will appear here when it’s ready.';
-export const DEEP_DIVE_AI_OFF = 'Turn on AI on You to get the written deep dive. Your leanings show either way.';
+export const DEEP_DIVE_AI_OFF = 'Turn on AI in the You tab to get the written deep dive. Your leanings show either way.';
 export const DEEP_DIVE_STALE = 'Written before your answers moved. A fresh one is ready to write.';
 export const DEEP_DIVE_REWRITE = 'ATO writes these more clearly now. A fresh one is ready to write.';
 export const DEEP_DIVE_OPENS_TOMORROW = 'Already written with today’s deep dive. It opens here tomorrow, free.';

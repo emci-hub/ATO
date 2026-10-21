@@ -104,7 +104,7 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
       'You usually keep your position in a disagreement instead of meeting halfway.',
       'When a plan doesn’t work for you, you tend to say no instead of finding a middle ground.',
     ],
-    why: 'Knowing what you need keeps you from being pushed around, but others might feel you won’t bend.',
+    why: 'Knowing what you need keeps people from overriding you, but they might feel you won’t bend.',
     try: [
       'Next time you disagree, name one part of the other person’s view you can accept, so they feel heard.',
       'Ask what matters most to the other person, so you can see if both needs fit.',

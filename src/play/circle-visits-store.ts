@@ -7,7 +7,18 @@
  */
 import { supabase } from '@/lib/supabase';
 import {
+  CIRCLE_REPORT_NO,
+  CIRCLE_REPORT_REASON_IDS,
+  CIRCLE_REQUEST_NO,
+  parseCircleBlocked,
   parseCircleFriends,
+  parseCircleRequests,
+  type CircleBlocked,
+  type CircleReportNo,
+  type CircleReportReason,
+  type CircleRequestNo,
+  type CircleRequests,
+  type CircleRespondNo,
   parseCircleInbox,
   parseCircleLook,
   type CircleFriend,
@@ -75,6 +86,74 @@ export function sendCircleGift(peer: string): Promise<CircleCall<CircleGiftSent>
 
 export function fetchCircleInbox(): Promise<CircleCall<CircleGift[]>> {
   return call('circle_gift_inbox', undefined, (d) => (Array.isArray(d) ? parseCircleInbox(d) : null));
+}
+
+/* ---------------------------------------------- safety (wave104, Apple 1.2) --- */
+
+type OkShape = { ok?: unknown; reason?: unknown; state?: unknown } | null;
+
+/** Add by handle. 'sent' = waiting on them, 'accepted' = they had already asked me. */
+export type CircleRequestResult = { kind: 'sent' } | { kind: 'accepted' } | { kind: 'no'; reason: CircleRequestNo };
+
+export function sendCircleRequest(handle: string): Promise<CircleCall<CircleRequestResult>> {
+  return call('circle_request', { p_handle: handle }, (d) => {
+    const r = d as OkShape;
+    if (!r) return null;
+    if (r.ok === true) return r.state === 'accepted' ? { kind: 'accepted' } : r.state === 'sent' ? { kind: 'sent' } : null;
+    const reason = CIRCLE_REQUEST_NO.find((x) => x === r.reason);
+    return reason ? { kind: 'no', reason } : null;
+  });
+}
+
+export function fetchCircleRequests(): Promise<CircleCall<CircleRequests>> {
+  return call('circle_requests', undefined, parseCircleRequests);
+}
+
+export function respondCircleRequest(id: string, accept: boolean): Promise<CircleCall<{ ok: true } | { ok: false; reason: CircleRespondNo }>> {
+  return call('circle_respond', { p_id: id, p_accept: accept }, (d) => {
+    const r = d as OkShape;
+    if (!r) return null;
+    if (r.ok === true) return { ok: true } as const;
+    return r.reason === 'cap' ? ({ ok: false, reason: 'cap' } as const) : r.reason === 'not_found' ? ({ ok: false, reason: 'not_found' } as const) : null;
+  });
+}
+
+const okFlag = (d: unknown): boolean | null => {
+  const r = d as OkShape;
+  return r && typeof r.ok === 'boolean' ? r.ok : null;
+};
+
+export function cancelCircleRequest(id: string): Promise<CircleCall<boolean>> {
+  return call('circle_cancel', { p_id: id }, okFlag);
+}
+
+/** Take someone out of my Circle (the server also drops both switches). */
+export function removeCirclePeer(peer: string): Promise<CircleCall<boolean>> {
+  return call('circle_remove', { p_peer: peer }, okFlag);
+}
+
+/** Block: removes the Circle link and any pending request. Silent to the other person. */
+export function blockCirclePeer(peer: string): Promise<CircleCall<boolean>> {
+  return call('circle_block', { p_peer: peer }, okFlag);
+}
+
+export function unblockCirclePeer(peer: string): Promise<CircleCall<boolean>> {
+  return call('circle_unblock', { p_peer: peer }, okFlag);
+}
+
+export function fetchCircleBlocked(): Promise<CircleCall<CircleBlocked[]>> {
+  return call('circle_blocked', undefined, (d) => (Array.isArray(d) ? parseCircleBlocked(d) : null));
+}
+
+export function reportCirclePeer(peer: string, reason: CircleReportReason): Promise<CircleCall<{ ok: true } | { ok: false; reason: CircleReportNo }>> {
+  if (!CIRCLE_REPORT_REASON_IDS.includes(reason)) return Promise.resolve({ kind: 'error' });
+  return call('circle_report', { p_peer: peer, p_reason: reason }, (d) => {
+    const r = d as OkShape;
+    if (!r) return null;
+    if (r.ok === true) return { ok: true } as const;
+    const why = CIRCLE_REPORT_NO.find((x) => x === r.reason);
+    return why ? ({ ok: false, reason: why } as const) : null;
+  });
 }
 
 /** Mark a gift opened on the server (best effort: the phone already remembers the id). */

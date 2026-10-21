@@ -68,12 +68,17 @@ const KEEP: Record<string, string> = {
   ai_provider_log: 'AI audit log, same reason',
   apple_credentials: 'sign-in link, part of the account',
   connections: 'Circle: other people are in these rows',
+  circle_requests: 'Circle friend requests (wave104): other people are in these rows; deleted with the account',
   messages: 'Circle',
   threads: 'Circle',
+  chat_keys: 'Circle chat (wave108): the phone’s public key; a reset keeps the Circle, so chat keeps working; deleted with the account',
+  chat_messages: 'Circle chat (wave108): encrypted, another person is in every row; 30-day retention; deleted with the account',
+  chat_restrictions: 'safety: a reset must never lift a chat warning, chat-off or ban',
   blocks: 'safety: other people are in these rows',
   mutes: 'safety',
   reports: 'safety',
   category_share: 'Circle sharing with other accounts',
+  circle_compare_share: 'Circle compare switch (wave105): like category_share it is a choice about a friend, who stays in the Circle; the strengths it shows come from trait_tracks, which Reset wipes; cascades with the account',
   going: 'Around plans with other accounts',
   question_bank_pool: 'shared content served to everyone (created_by is only the author)',
   ai_library_cards: 'shared AI library cards served to everyone (created_by is only the writer)',
@@ -145,7 +150,8 @@ ok('the dev sign-up reset and the delete-account count cover the six newer table
   const reset97 = w97.slice(w97.indexOf('create or replace function public.reset_my_account()'), w97.indexOf('create or replace function public.reset_dev_test_user()'));
   const dev97 = w97.slice(w97.indexOf('create or replace function public.reset_dev_test_user()'), w97.indexOf('create or replace function public.count_user_rows'));
   const count97 = w97.slice(w97.indexOf('create or replace function public.count_user_rows'));
-  assert.equal(resetFiles[resetFiles.length - 1], 'wave97_circle_visits.sql', 'wave97 holds the newest reset_my_account');
+  assert.deepEqual(resetFiles.slice(-2), ['wave97_circle_visits.sql', 'wave103_drop_crisis_plumbing.sql'], 'wave97 holds the reset_my_account that wave103 restates (wave103 is the newest, not applied)');
+  const reset97Full = reset97.slice(0, reset97.indexOf('$$;'));
   for (const t of ['circle_gifts', 'circle_visit_share']) {
     assert.match(reset97, new RegExp(`delete from public\\.${t} where user_id = uid or peer_id = uid;`), `Reset account wipes ${t} both ways (everything shared)`);
     assert.match(dev97, new RegExp(`delete from public\\.${t} where user_id = v_dev_id or peer_id = v_dev_id;`), `the dev sign-up reset clears ${t}`);
@@ -161,7 +167,12 @@ ok('the dev sign-up reset and the delete-account count cover the six newer table
   const reset90 = read('supabase/migrations/wave90_category_deep_dive.sql');
   const body90 = reset90.slice(reset90.indexOf('create or replace function public.reset_my_account()'), reset90.indexOf('$$;', reset90.indexOf('create or replace function public.reset_my_account()')));
   const strip = (s: string) => s.split('\n').filter((l) => !/circle_|Divecore Circle visits|friends' switches/.test(l)).join('\n');
-  assert.equal(strip(resetFn), body90, 'reset_my_account = wave90 + the two Circle deletes, nothing else changed');
+  assert.equal(strip(reset97Full), body90, 'reset_my_account = wave90 + the two Circle deletes, nothing else changed');
+  // wave103 (not applied) = wave97 minus the one crisis_flags delete, nothing else.
+  assert.match(reset97Full, /delete from public\.crisis_flags where user_id = uid;/, 'wave97 still deletes crisis_flags (the table is live until wave103)');
+  assert.doesNotMatch(resetFn, /crisis_flags/, 'wave103 reset_my_account no longer touches the dropped table');
+  const noCrisisLine = (s: string) => s.split('\n').filter((l) => !/crisis_flags/.test(l)).join('\n');
+  assert.equal(resetFn, noCrisisLine(reset97Full), 'wave103 reset_my_account = wave97 minus the crisis_flags line');
   ok('wave97: circle_gifts + circle_visit_share wiped by Reset (both ways), cleared by the dev reset, counted for delete-account');
 }
 

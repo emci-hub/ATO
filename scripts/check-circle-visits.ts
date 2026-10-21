@@ -45,7 +45,7 @@ import { cloudSavePayload } from '../src/play/cloud-save-model';
 import { allHeroes } from '../src/play/heroes-data';
 import { emptyHideout, parseHideout } from '../src/play/hideout-progress';
 import { RAIL_BUTTON_PT, RAIL_GAP_PT, RAIL_MAX_ITEMS, leftRailActions, railMaxHeight } from '../src/play/hideout-rails-model';
-import { PET_BANNED_WORDS } from '../src/play/pet-talk';
+import { petMoneyRiskViolation } from '../src/play/pet-talk';
 import { defaultPlayStore, openCircleGift, parsePlayStore } from '../src/play/playStore';
 import { computeStageFrame } from '../src/play/stage-frame';
 import { TRAIT_AXES } from '../src/lib/traits';
@@ -176,10 +176,16 @@ ok('rail: Circle is the Hideout room’s 5th button (library star icon) and fits
 
 const storeSrc = read('src/play/circle-visits-store.ts');
 const rpcs = [...storeSrc.matchAll(/call(?:<[^>]+>)?\('([a-z_]+)'/g)].map((m) => m[1]).sort();
-assert.deepEqual(rpcs, ['circle_gift_inbox', 'circle_open_gift', 'circle_send_gift', 'circle_visit_friends', 'circle_visit_room', 'set_circle_visit_share']);
+// wave104 (Circle safety, master plan Step 7): requests, block, report, remove.
+assert.deepEqual([...new Set(rpcs)].sort(), [
+  'circle_block', 'circle_blocked', 'circle_cancel', 'circle_gift_inbox', 'circle_open_gift', 'circle_remove',
+  'circle_report', 'circle_request', 'circle_requests', 'circle_respond', 'circle_send_gift', 'circle_unblock',
+  'circle_visit_friends', 'circle_visit_room', 'set_circle_visit_share',
+]);
 assert.ok(!/\.from\(/.test(storeSrc), 'the phone never reads a table: RPCs only');
 for (const m of storeSrc.matchAll(/\{ (p_[a-z_]+: [a-z]+(?:, p_[a-z_]+: [a-z]+)*) \}/g)) {
-  for (const arg of m[1]!.split(', ')) assert.ok(/^p_(peer|id|on): (peer|id|on)$/.test(arg), `sends only an id / the switch (${arg})`);
+  for (const arg of m[1]!.split(', '))
+    assert.ok(/^p_(peer|id|on|handle|accept|reason): (peer|id|on|handle|accept|reason)$/.test(arg), `sends only an id, a switch, a handle or a fixed reason (${arg})`);
 }
 const supabaseUsers = fs
   .readdirSync(path.join(root, 'src/play'))
@@ -227,7 +233,7 @@ if (fs.existsSync(path.join(root, wave97))) {
   assert.match(shared, /set_circle_visit_share[\s\S]*?not exists \(select 1 from public\.connections c where c\.user_id = uid and c\.peer_id = p_peer\)/, 'a switch only for someone in your Circle');
   serverNote = 'wave97 pinned';
 }
-ok(`server path: six RPCs, ids only, no table reads; ${serverNote}`);
+ok(`server path: visit + safety RPCs, ids only, no table reads; ${serverNote}`);
 
 /* 6 · screen --------------------------------------------------------------- */
 
@@ -270,7 +276,7 @@ ok('screen: cards float and wait their turn; a visit swaps notice + dock content
 
 assert.equal(CIRCLE_VISITS_COPY_REVIEWED, true, 'emci read the copy (2026-10-15)');
 assert.ok(fs.existsSync(path.join(root, 'docs/divecore/circle-visits/review.md')), 'review doc exists');
-const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
+const banned = { test: (text: string): boolean => petMoneyRiskViolation(text) !== null };
 const strings: string[] = [];
 const collect = (v: unknown) => {
   if (typeof v === 'string') strings.push(v);

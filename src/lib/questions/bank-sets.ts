@@ -16,7 +16,7 @@
 import { effectiveStability, MIXED_STABILITY_BELOW, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
-import { BANK_BY_TRAIT, BANK_PER_TRAIT, type BankQuestion } from './bank/index';
+import { BANK_BY_TRAIT, BANK_PER_TRAIT, BANK_ROWS_BY_TRAIT, type BankQuestion } from './bank/index';
 
 /**
  * The 352 new bank questions and this screen's copy have not had emci's read
@@ -50,14 +50,24 @@ export interface BankProgress {
   freshStarts: number;
 }
 
+/**
+ * Answered on one trait, as the server counts it (wave100 `_bank_trait_progress`):
+ * every answered row, retired ones included, capped at the trait's active count.
+ * Retiring a question therefore never moves anyone's progress.
+ */
+export function answeredOnTrait(axis: TraitAxis, answeredIds: ReadonlySet<string>): number {
+  const answered = BANK_ROWS_BY_TRAIT[axis].filter((q) => answeredIds.has(q.id)).length;
+  return Math.min(BANK_BY_TRAIT[axis].length, answered);
+}
+
 export function bankProgressFrom(ids: readonly string[], freshStarts = 0): BankProgress {
   const answeredIds = new Set(ids);
   const answeredByAxis = {} as Record<TraitAxis, number>;
   for (const axis of TRAIT_AXES) {
-    answeredByAxis[axis] = BANK_BY_TRAIT[axis].filter((q) => answeredIds.has(q.id)).length;
+    answeredByAxis[axis] = answeredOnTrait(axis, answeredIds);
   }
   const completedSets = Math.min(...TRAIT_AXES.map((axis) => answeredByAxis[axis]));
-  const remaining = TRAIT_AXES.some((axis) => answeredByAxis[axis] < BANK_PER_TRAIT);
+  const remaining = TRAIT_AXES.some((axis) => answeredByAxis[axis] < BANK_BY_TRAIT[axis].length);
   const currentSet = remaining ? Math.min(completedSets + 1, BANK_SET_COUNT) : null;
   return { answeredIds, answeredByAxis, completedSets, currentSet, stage: stageFor(completedSets, remaining), freshStarts };
 }
@@ -98,11 +108,13 @@ export function isProfileComplete(progress: BankProgress): boolean {
 
 /**
  * The server's pick, in TS (pure; `rng` is injectable for tests): one
- * unanswered question per trait that still has one, in random order.
+ * unanswered ACTIVE question per trait that is not yet full, in random order.
+ * A retired question is never picked; an answer to one still fills its trait.
  */
 export function pickBankSet(answeredIds: ReadonlySet<string>, rng: () => number = Math.random): BankQuestion[] {
   const picks: BankQuestion[] = [];
   for (const axis of TRAIT_AXES) {
+    if (answeredOnTrait(axis, answeredIds) >= BANK_BY_TRAIT[axis].length) continue;
     const open = BANK_BY_TRAIT[axis].filter((q) => !answeredIds.has(q.id));
     if (open.length === 0) continue;
     picks.push(open[Math.floor(rng() * open.length)]!);

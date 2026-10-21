@@ -30,6 +30,7 @@ import {
   ideaTags,
   ideaTheme,
   isBankInsightTitle,
+  RETIRED_FOCUS_TEXT,
   themeTags,
 } from '../src/lib/insight-bank';
 import { draftFromPick, pickIdea, repeatWindowDays, type IdeaDay } from '../src/lib/insight-bank/pick';
@@ -140,6 +141,11 @@ for (const entry of ALL_IDEAS) {
 }
 assert.equal(isBankInsightTitle('Your shower is your thinking room.'), false, 'an AI-era title is not in the bank');
 assert.equal(ideaForTitle(null), null);
+for (const [oldText, currentText] of Object.entries(RETIRED_FOCUS_TEXT)) {
+  const now = ideaForTitle(currentText);
+  assert.ok(now, `a retired focus text points at a current one: ${currentText}`);
+  assert.deepEqual(ideaForTitle(oldText), now, 'a row saved with an old focus wording still maps to its idea and variant');
+}
 ok('every title maps back to {idea, variant, keys}; unknown (AI-era) titles map to nothing');
 
 // --- picker -----------------------------------------------------------------------
@@ -234,9 +240,14 @@ function sourceFiles(dir: string): string[] {
   }
   return out;
 }
+// The Dev Hub's flag list (dev-hub-panels.tsx, behind the dev lock) is the one allowed reader.
+const FLAG_LIST_FILE = 'src/components/dev-hub-panels.tsx';
 for (const rel of [...sourceFiles('src/app'), ...sourceFiles('src/components')]) {
+  if (rel === FLAG_LIST_FILE) continue;
   assert.doesNotMatch(read(rel), /INSIGHT_BANK_COPY_REVIEWED/, `${rel}: the bank's review flag never renders`);
 }
+assert.match(read(FLAG_LIST_FILE), /name: 'Daily insight \(stored\)', reviewed: INSIGHT_BANK_COPY_REVIEWED/, 'the dev flag list reads the real flag');
+assert.doesNotMatch(read(FLAG_LIST_FILE), /DAILY_INSIGHT_COPY_REVIEWED/, 'the dev flag list no longer reads the stale flag');
 ok('INSIGHT_BANK_COPY_REVIEWED is false, has its review doc, and no screen renders it');
 
 // --- the insight path cannot reach a model call --------------------------------------

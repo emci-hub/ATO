@@ -39,11 +39,14 @@ export function DeleteAccountSheet({
   visible,
   onClose,
   hasAppleIdentity,
+  preview = false,
 }: {
   visible: boolean;
   onClose: () => void;
   /** Drives the revocation line in the copy so we only promise what we do. */
   hasAppleIdentity?: boolean;
+  /** Dev age-gate preview only (synthetic fixtures): the final button never calls deleteAccount. */
+  preview?: boolean;
 }) {
   const theme = useTheme();
   const [typed, setTyped] = useState('');
@@ -62,6 +65,10 @@ export function DeleteAccountSheet({
 
   async function handleDelete() {
     if (!confirmed || working) return;
+    if (preview) {
+      setError('Preview: nothing was deleted. This is a synthetic account.');
+      return;
+    }
     setWorking(true);
     setError(null);
     try {

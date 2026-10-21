@@ -31,7 +31,7 @@ import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stabil
 import { leanHighLow, type TraitAxis } from '@/lib/traits';
 import { CLEAR_VOICE_RULES } from '@/lib/voice/clear-voice';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
-import { jokeHasBannedTopic } from '@/lib/voice/card-joke';
+import { jokeCrossesBoundary } from '@/lib/voice/card-joke';
 import { parseStoredStoryCard, type StoryCard } from '@/lib/story-card';
 import { MOMENT_VOICE_BLOCK, STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
@@ -150,9 +150,9 @@ export const STORY_MAX_WORDS = 180;
 export const STORY_MAX_PARAGRAPHS = 3;
 export const STORY_JOKE_MAX_CHARS = 120;
 
-/** The hard joke bans as keywords (Story v2 §7), shared with the cards' joke line. */
+/** The narrow harm filter (humor is 18+, emci 2026-10-19), shared with the cards' joke line. */
 export function storyHasBannedTopic(text: string): boolean {
-  return jokeHasBannedTopic(text);
+  return jokeCrossesBoundary(text);
 }
 
 /** Labels the model's plan line must never echo: category names, axis labels and ids, short trait names. */
@@ -186,7 +186,7 @@ export function storyBodyViolation(body: string): string | null {
   if (/\byou are\b/i.test(body)) return 'says "you are"';
   if (/\balways\b/i.test(body)) return 'says "always"';
   if (body.includes('!')) return 'says "!"';
-  if (storyHasBannedTopic(body)) return 'banned topic';
+  if (storyHasBannedTopic(body)) return 'crosses a boundary';
   return null;
 }
 
@@ -280,7 +280,7 @@ export function buildStoryPrompt(input: {
     : 'JOKE: none this time. Write no joke, and return "joke" as an empty string.';
 
   const meaningRules = CLEAR_VOICE_RULES.filter((rule) =>
-    /^(Hedge:|Kind to both poles|Not a therapist)/.test(rule),
+    /^(Hedge:|Honest about both poles|Not a therapist)/.test(rule),
   );
 
   return `Write as Sage in the ATO app. Not a doctor. This is The Story: ONE ordinary day, ONE setting, the same people throughout. Not a list of moments.
@@ -300,7 +300,7 @@ SHAPE (90–160 words, at most 3 short paragraphs, second person)
 
 RULES
 1. A typical day, never a claimed event: "on a day like this", "you might". Reflect as maybes, not facts.
-2. Never "you are", never "always", never "!". No type codes, no psychology words.
+2. Never "you are", never "always", never "!". No type codes or test names. Never apply a diagnosis or label to the reader; everyday and contextual use of a word is fine.
 3. Do not name categories or traits, and never print the lean words above.
 4. Stay in the one setting. No second scene, no second place, no new set of people.
 

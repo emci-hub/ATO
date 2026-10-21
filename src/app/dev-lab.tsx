@@ -21,6 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AgeGatePreviewPanel } from '@/app/age-gate-lab';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { DevInspector } from '@/components/dev-inspector';
@@ -237,6 +238,8 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
 
               <HubSection id="labs">
                 <HubTool id="labs"><LabsList /></HubTool>
+                {/* Age gate preview: real block / confirm-age screens, synthetic fixtures, no writes. */}
+                <AgeGatePreviewPanel />
               </HubSection>
             </>
           ) : null}

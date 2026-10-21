@@ -23,7 +23,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
     famousFor: 'Four gold medals at the 1936 Olympic Games.',
     facts: [
       fact('f1', 'He won four gold medals at the 1936 Olympic Games.', src(OWENS, '1936 Olympic Games by winning four gold medals')),
-      fact('f2', 'He set individual Olympic records in each of his events.', src(OWENS, 'setting individual Olympic records')),
+      fact('f2', 'His four golds came in the 100 m, the 200 m, the long jump and the 4 × 100 m relay.', src(OWENS, 'four gold medals: 100 meters, long jump, 200 meters')),
       fact('f3', 'He is widely regarded as one of the greatest athletes in track and field.', src(OWENS, 'one of the greatest athletes in track and field')),
     ],
     moments: [
@@ -41,10 +41,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'spare-time jobs', 'Why would a future champion deliver groceries after school?', 'The ordinary work around your dream is part of the dream.'),
     ],
     tags: [
-      tag('steadiness', 'high', 'calm through four finals', 'He won four events at the same Games.'),
-      tag('competence', 'high', 'record after record', 'He set Olympic records in each of his events.'),
-      tag('agreeableness', 'high', 'raced a friend, stayed friends', 'He beat his college friend by a tenth of a second.'),
-      tag('relatedness', 'high', 'ran with his teammates', 'His friends and teammates were part of his story.'),
+      tag('competence', 'high', 'four events, four golds', 'He won every event he entered at the 1936 Games.'),
     ],
     vetting: 'Athlete, died 1980; no office; broadly admired.',
   },
@@ -83,10 +80,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'both lives', 'Can you be a parent and the fastest person there?', 'You don’t have to shrink one part of your life to grow another.'),
     ],
     tags: [
-      tag('self_efficacy', 'low', 'nearly didn’t run', 'Homesick and overwhelmed, she almost skipped the semi-final.'),
       tag('steadiness', 'low', 'felt it all before the race', 'She broke down shortly before running.'),
-      tag('attachment_avoidance', 'low', 'leaned on her husband', 'A long talk with her husband got her to the start line.'),
-      tag('locus_of_control', 'high', 'answered critics on the track', 'Told she was too old, she won four golds.'),
     ],
     vetting: 'Athlete, died 2004; no office; broadly admired.',
   },
@@ -125,10 +119,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'build your own board', 'Why build a surfboard out of whatever wood is nearby?', 'Making do with what’s around you can start something big.'),
     ],
     tags: [
-      tag('playfulness', 'high', 'made the waves fun', 'He spread surfing through exhibitions people loved.'),
-      tag('agreeableness', 'high', 'lent out his boards', 'He trained and loaned equipment to new surfers.'),
-      tag('relatedness', 'high', 'brought surfing to new shores', 'He shared surfing with people in other countries.'),
-      tag('attachment_anxiety', 'low', 'trusted strangers on his board', 'He shared his gear and skills freely with beginners.'),
+      tag('conflict_cooperativeness', 'high', 'lent out his boards', 'He trained new surfers and loaned them equipment.'),
     ],
     vetting: 'Athlete and lifeguard, died 1968; no office; broadly beloved.',
   },
@@ -152,7 +143,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
       fact('f3', 'He played professional football, baseball and basketball.', src(wiki('Jim_Thorpe'), 'professional football, baseball, and basketball')),
     ],
     moments: [
-      moment('m1', 'His Olympic titles were taken away over amateur rules, then restored by the IOC in 1983, 30 years after his death.', src(wiki('Jim_Thorpe'), "restored Thorpe's Olympic medals")),
+      moment('m1', 'His Olympic titles were taken away over amateur rules. The IOC restored them in 1982, and in 2022 named him sole champion of both events.', src(wiki('Jim_Thorpe'), 'IOC Executive Committee approved Thorpe\'s reinstatement', 'restore him as the sole champion')),
       moment('m2', 'He is considered one of the most versatile athletes of modern sports.', src(wiki('Jim_Thorpe'), 'most versatile athletes of modern sports')),
     ],
     angles: [
@@ -164,8 +155,6 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
     tags: [
       tag('competence', 'high', 'great at every sport', 'He excelled in track, football, baseball and basketball.'),
       tag('openness', 'high', 'tried every sport', 'He moved between many sports professionally.'),
-      tag('steadiness', 'high', 'kept going after the loss', 'He kept playing after his titles were taken.'),
-      tag('locus_of_control', 'low', 'the officials decided', 'His medals were taken by officials, outside his control.'),
     ],
     vetting: 'Athlete, died 1953; no office; broadly admired. Birth date disputed, so no On this day.',
   },
@@ -201,9 +190,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('self_efficacy', 'high', 'won in any sport', 'She won at the Olympics and then in golf.'),
-      tag('extraversion', 'high', 'loved the spotlight', 'She thrived in front of crowds across many sports.'),
       tag('growth_mindset', 'high', 'learned a new sport', 'She took up golf after track and mastered it.'),
-      tag('locus_of_control', 'high', 'helped found the league', 'She was a founding member of the LPGA.'),
     ],
     vetting: 'Athlete, died 1956; no office; broadly admired.',
   },
@@ -238,10 +225,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'three in one Games', 'How do you win three times in a row?', 'Confidence builds race by race.'),
     ],
     tags: [
-      tag('growth_mindset', 'high', 'went from brace to gold', 'She overcame childhood polio to become a champion.'),
-      tag('self_efficacy', 'high', 'believed she could run', 'She became the fastest woman in the world.'),
-      tag('steadiness', 'high', 'calm in three finals', 'She won three golds at one Games.'),
-      tag('agreeableness', 'high', 'warm and gracious', 'She became a beloved international icon.'),
+    tag('conflict_assertiveness', 'high', 'refused a segregated welcome', 'She would not attend her homecoming unless it was integrated.'),
     ],
     vetting: 'Athlete, died 1994; no office; broadly admired.',
   },
@@ -276,10 +260,9 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'first five', 'What does it take to be in the first group remembered?', 'Doing something nobody had done sets the bar for everyone after.'),
     ],
     tags: [
-      tag('extraversion', 'high', 'larger than life', 'He became one of sport’s biggest celebrities.'),
-      tag('playfulness', 'high', 'played with joy', 'He was known for his big, fun personality.'),
-      tag('self_efficacy', 'high', 'swung for the fences', 'He set home run records.'),
-      tag('conscientiousness', 'low', 'played by feel', 'He was known for his instinct more than his routine.'),
+      tag('extraversion', 'high', 'larger than life', 'After games, a crowd would gather in his hotel suite.'),
+      tag('conscientiousness', 'low', 'loose with the rules', 'Off the field he was known for carousing and excess.'),
+      tag('agreeableness', 'low', 'clashed with officials', 'He was suspended more than once after run-ins with umpires and officials.'),
     ],
     vetting: 'Athlete, died 1948; no office; broadly admired.',
   },
@@ -315,7 +298,6 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('conflict_cooperativeness', 'high', 'gave his off-seasons away', 'He did charity work across Latin America.'),
-      tag('relatedness', 'high', 'stood by his people', 'He was devoted to his community.'),
       tag('conscientiousness', 'high', 'consistent for 18 seasons', 'He reached 3,000 hits over 18 seasons.'),
       tag('locus_of_control', 'high', 'went to help in person', 'He chose to deliver aid himself.'),
     ],
@@ -349,13 +331,11 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
       angle('a1', 'first on the team', 'What does the first Black player on the Davis Cup team have in common with you?', 'Being first in a room can be lonely, and it changes the room.'),
       angle('a2', 'calm power', 'How do you win with a big serve and a calm face?', 'Quiet confidence can be the strongest kind.'),
       angle('a3', 'the season finale', 'What does it take to win when everyone is at their best?', 'Bringing your best when it counts is a skill you build.'),
-      angle('a4', 'three different courts', 'Why win on grass, hard court and more?', 'Adapting to new conditions keeps you winning.'),
+      angle('a4', 'three different Slams', 'Why win at three different Grand Slams?', 'Adapting to new places and crowds keeps you winning.'),
     ],
     tags: [
       tag('steadiness', 'high', 'calm on court', 'He was known for his composure.'),
-      tag('competence', 'high', 'won on every surface', 'He won singles at three different Grand Slams.'),
-      tag('self_efficacy', 'high', 'first through the door', 'He was the first Black player on the Davis Cup team.'),
-      tag('agreeableness', 'high', 'gracious in sport', 'He was admired for his dignity.'),
+      tag('competence', 'high', 'won the big three', 'He won singles titles at Wimbledon, the US Open and the Australian Open.'),
     ],
     vetting: 'Athlete, died 1993; no office; broadly admired.',
   },
@@ -391,9 +371,7 @@ export const SPORT_LEGENDS: readonly LegendFigure[] = [
     ],
     tags: [
       tag('openness', 'high', 'a new race, on a whim', 'He ran his first marathon at the Olympics.'),
-      tag('conscientiousness', 'low', 'decided at the last minute', 'He entered the marathon at the last minute.'),
-      tag('self_efficacy', 'high', 'believed he could do three', 'He won three golds at one Games.'),
-      tag('steadiness', 'high', 'kept a relentless pace', 'He was nicknamed the Czech Locomotive.'),
+      tag('conscientiousness', 'high', 'trained famously hard', 'He was known for brutally tough training and helped make interval training popular.'),
     ],
     vetting: 'Athlete, died 2000; no office; entry avoids Cold War politics; broadly admired.',
   },

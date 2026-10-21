@@ -1,4 +1,4 @@
-import { intake, q, traitBank } from './define';
+import { intake, q, retired, traitBank } from './define';
 
 /** Personal space: "Come over, let's talk" (low) to "I'm good, I just need some space" (high). */
 export const ATTACHMENT_AVOIDANCE_BANK = traitBank('attachment_avoidance', [
@@ -13,13 +13,14 @@ export const ATTACHMENT_AVOIDANCE_BANK = traitBank('attachment_avoidance', [
   q('attachment_avoidance_05', 'work', 'neither', 'Your team plans a weekend bonding retreat.',
     ["Fun, I'm in", 0.2], ['I go, but keep to myself', 0.5], ['I find a reason to skip', 0.8]),
   q('attachment_avoidance_06', 'friends', 'high', `A friend says "I feel like I don't really know you."`,
-    ['I share a little more', 0.5], ['I laugh it off', 0.8], ['Fair, I open up more', 0.2]),
+    ['I share one small thing', 0.5], ['I laugh it off', 0.8], ['Fair, I tell them more about me', 0.2]),
   q('attachment_avoidance_07', 'friends', 'low', 'A friend wants to FaceTime every night this week.',
     ["That's a lot for me", 0.8], ['A couple of nights is fine', 0.5], ['Yes, I love that', 0.2]),
-  q('attachment_avoidance_08', 'dating', 'high', 'Three months in, your date asks "so what are we?"',
+  q('attachment_avoidance_08', 'dating', 'high', 'Three months in, your date asks "So what are we?"',
     ['Glad they asked', 0.2], ['I need a minute to think', 0.5], ['I want to change the subject', 0.8]),
-  q('attachment_avoidance_09', 'dating', 'low', 'Your partner wants to share locations on your phones.',
-    ['Maybe for trips', 0.5], ["I'd rather not", 0.8], ['Sure, makes sense', 0.2]),
+  // Retired (emci 2026-10-19/20): declining location sharing is a privacy choice, not distance.
+  retired('attachment_avoidance_26', q('attachment_avoidance_09', 'dating', 'low', 'Your partner wants to share locations on your phones.',
+    ['Maybe for trips', 0.5], ["I'd rather not", 0.8], ['Sure, makes sense', 0.2])),
   q('attachment_avoidance_10', 'dating', 'high', 'Your partner leaves a toothbrush at your place.',
     ['Feels like a big step', 0.8], ['Fine, one toothbrush', 0.5], ['Cute, it can stay', 0.2]),
   q('attachment_avoidance_11', 'family', 'neither', 'Your mom asks how things are really going.',
@@ -32,24 +33,38 @@ export const ATTACHMENT_AVOIDANCE_BANK = traitBank('attachment_avoidance', [
     ['I send a long one back', 0.2], ['A short voice note back', 0.5], ['A text, keep it short', 0.8]),
   q('attachment_avoidance_15', 'online', 'neither', 'Your close friends make a private story for just the group.',
     ['I watch, post sometimes', 0.5], ['I mostly lurk', 0.8], ['I post there all the time', 0.2]),
-  q('attachment_avoidance_16', 'money', 'neither', 'Your partner suggests a joint account for shared bills.',
-    ['I keep my money separate', 0.8], ['Maybe for rent only', 0.5], ['Makes life easier', 0.2]),
+  // Retired (emci 2026-10-20): keeping money separate is a financial boundary, not distance.
+  retired('attachment_avoidance_27', q('attachment_avoidance_16', 'money', 'neither', 'Your partner suggests a joint account for shared bills.',
+    ['I keep my money separate', 0.8], ['Maybe for rent only', 0.5], ['Makes life easier', 0.2])),
   q('attachment_avoidance_17', 'money', 'high', 'A friend offers to pay for your dinner during a tight month.',
-    ['Thank you, I accept', 0.2], ['I accept, then pay them back', 0.5], ["I say no, I'm fine", 0.8]),
+    ['I say thanks and let them', 0.2], ['I accept, then pay them back', 0.5], ["I say no, I'm fine", 0.8]),
   q('attachment_avoidance_18', 'stress', 'high', 'Sick in bed, and a friend offers to bring soup.',
-    ['Leave it at the door', 0.5], ["No need, I'm fine", 0.8], ['Yes please', 0.2]),
+    ['Leave it at the door', 0.5], ["No need, I'm fine", 0.8], ['Yes, please', 0.2]),
   q('attachment_avoidance_19', 'stress', 'low', 'A friend going through a hard time texts you at midnight.',
     ['I reply in the morning', 0.8], ['I text back to check in', 0.5], ['I call them right away', 0.2]),
   q('attachment_avoidance_20', 'friends', 'neither', 'A friend you met recently invites you to meet their parents.',
     ['Sure, sounds fun', 0.2], ['A bit soon, but okay', 0.5], ['Too much too fast', 0.8]),
   q('attachment_avoidance_21', 'dating', 'neither', `Your date says "I think I'm falling for you" by text.`,
-    ['A heart emoji for now', 0.5], ['I need a day to reply', 0.8], ['I tell them me too', 0.2]),
+    ['A heart emoji for now', 0.5], ['I need a day to reply', 0.8], ["I'm glad, and I tell them how I feel", 0.2]),
   q('attachment_avoidance_22', 'family', 'low', 'Your dad wants a weekly call to catch up.',
     ['Weekly feels like a lot', 0.8], ['Every other week works', 0.5], ["I'd love that", 0.2]),
   q('attachment_avoidance_23', 'solo', 'high', 'A friend asks to crash at your place for a week.',
     ['Sure, stay as long as you need', 0.2], ['A few nights is fine', 0.5], ['I suggest a hotel', 0.8]),
-  q('attachment_avoidance_24', 'work', 'high', 'A coworker asks to grab a drink and get to know you.',
-    ['Maybe a coffee', 0.5], ['I keep work and friends apart', 0.8], ["Sure, let's go", 0.2]),
-  q('attachment_avoidance_25', 'online', 'neither', 'Someone you just started dating wants to follow all your accounts.',
-    ['I keep some private', 0.8], ['The main one is fine', 0.5], ['Go ahead', 0.2]),
+  // Retired (privacy audit, 2026-10-20): "I keep work and friends apart" is a stated personal boundary, not distance.
+  retired('attachment_avoidance_28', q('attachment_avoidance_24', 'work', 'high', 'A coworker asks to grab a drink and get to know you.',
+    ['Maybe a coffee', 0.5], ['I keep work and friends apart', 0.8], ["Sure, let's go", 0.2])),
+  // Retired (emci 2026-10-20): keeping some accounts private is a privacy choice, not distance.
+  retired('attachment_avoidance_29', q('attachment_avoidance_25', 'online', 'neither', 'Someone you just started dating wants to follow all your accounts.',
+    ['I keep some private', 0.8], ['The main one is fine', 0.5], ['Go ahead', 0.2])),
+  // wave100: new scenes for retired _09, _16, _24, _25. Each measures closeness, reliance or
+  // emotional openness (telling someone how you feel, letting them help, answering a bid for
+  // connection), never a privacy, money or safety boundary.
+  q('attachment_avoidance_26', 'dating', 'low', 'A rough email from your boss, and your partner is in the next room.',
+    ['I tell them over dinner', 0.5], ['I deal with it on my own', 0.8], ['I go tell them right away', 0.2]),
+  q('attachment_avoidance_27', 'money', 'neither', `Money stress all month, and your partner texts "What's wrong?"`,
+    ["Nothing, I'm fine", 0.8], ["I say it's money stuff", 0.5], ['I tell them how worried I am', 0.2]),
+  q('attachment_avoidance_28', 'work', 'high', 'After a rough meeting, a coworker you trust asks if you want to vent over coffee.',
+    ['Maybe for five minutes', 0.5], ["I say I'm fine, thanks", 0.8], ['Yes, I could use that', 0.2]),
+  q('attachment_avoidance_29', 'online', 'neither', 'Someone you just started dating sends a link to a song that made them think of you.',
+    ['I leave it for a few days', 0.8], ['A heart, then I listen later', 0.5], ['I send one back for them', 0.2]),
 ]);

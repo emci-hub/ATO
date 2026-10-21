@@ -143,7 +143,7 @@ export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice how you feel after doing something just for fun.',
-      'Notice when being useful turns into never resting.',
+      'Notice when being useful turns into skipping rest.',
     ],
   }),
   idea('ftw_playfulness_l_04', ['playfulness:low'], {
@@ -159,7 +159,7 @@ export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice when humor helps someone else feel better.',
-      'Notice how big small problems feel when you take every one seriously.',
+      'Notice how heavy small problems feel when you treat each one as serious.',
     ],
   }),
   idea('ftw_playfulness_l_05', ['playfulness:low'], {
@@ -168,7 +168,7 @@ export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
       'You usually look serious when you’re concentrating, and others might misread it.',
       'When coworkers are joking, you tend to stay quiet, and some read it as disapproval.',
     ],
-    why: 'Your serious side is just focus, but people who don’t know you might read it differently.',
+    why: 'Your serious look can just be focus, but people who don’t know you might read it differently.',
     try: [
       'Smile or say hi to a coworker today, so they see your friendly side.',
       'Tell a teammate that quiet means you’re focused, so they don’t misread it.',

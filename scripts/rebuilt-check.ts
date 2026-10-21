@@ -67,7 +67,8 @@ const PARKED_SCREENS: { rel: string; label: string }[] = [
   // so it cannot carry an App Store invariant).
   { rel: 'src/app/(tabs)/circle.tsx', label: 'Circle' },
   { rel: 'src/app/week.tsx', label: 'This week' },
-  { rel: 'src/app/chat.tsx', label: 'Chat' },
+  // Chat was rebuilt 2026-10-21 (master plan Step 14) as the end-to-end encrypted Circle chat; its
+  // rules are pinned in circle-chat-check.ts instead.
 ];
 
 /**

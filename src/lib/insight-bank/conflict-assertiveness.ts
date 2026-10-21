@@ -107,7 +107,7 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
     why: 'Keeping quiet avoids small fights, but the same thing can keep happening because the other person doesn’t know it bothers you.',
     try: [
       'Tell one person about one small thing that bugs you, so they get the chance to change it.',
-      'Write down what you’d say in one sentence, so it’s easier to say it out loud.',
+      'Practice saying what bothers you in one sentence, out loud and alone, so it feels familiar when you need it.',
     ],
     watch: [
       'Notice when the same small thing happens again.',
@@ -184,7 +184,7 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
       'When a friend wants something different, you usually go with their choice.',
       'You tend to put the other person’s wishes first when you both want different things.',
     ],
-    why: 'Giving in keeps things kind, but doing it every time can leave your own wishes out of the decision.',
+    why: 'Giving in keeps things kind, but doing it often can leave your own wishes out of the decision.',
     try: [
       'Next time you both want different things, say what you want first, so the other person knows.',
       'Pick one plan this week to choose yourself, so the choices get shared.',

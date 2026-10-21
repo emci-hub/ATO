@@ -18,6 +18,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { PRE_LAUNCH_DEV } from '../src/lib/dev-mode';
 import {
   PREVIEW_BLOCKED_CODE,
   PREVIEW_EMPTY_TABLES,
@@ -88,8 +89,9 @@ for (const key of ['ato_tokens', 'tokens', 'milestones_celebrated', 'sage_story'
   assert.ok(key in PREVIEW_ME_OVERLAY, `${key} reads as new`);
 }
 assert.deepEqual(previewRpc('bank_answered', { ids: ['q1'], fresh_starts: 2 }), { ids: [], fresh_starts: 0 });
-const boot = previewRpc('home_bootstrap', { trait_tracks: [{}], checks: [{}], crisis_since: ['x'], other: 1 }) as Record<string, unknown>;
-assert.deepEqual([boot.trait_tracks, boot.checks, boot.crisis_since, boot.other], [[], [], [], 1]);
+const boot = previewRpc('home_bootstrap', { trait_tracks: [{}], checks: [{}], other: 1 }) as Record<string, unknown>;
+assert.deepEqual([boot.trait_tracks, boot.checks, boot.other], [[], [], 1]);
+assert.ok(!('crisis_since' in boot), 'preview bootstrap does not invent the removed crisis field');
 ok('reads look new: me without answers, tokens or milestones (handle and consent kept); bootstrap and bank progress empty');
 
 // --- the fetch wrapper -------------------------------------------------------------------
@@ -107,6 +109,14 @@ async function runFetch(): Promise<void> {
   assert.equal(calls.length, 1, 'preview off: the request goes out untouched');
 
   setPreviewState(true, 'u1');
+  if (!PRE_LAUNCH_DEV) {
+    // Release build (launch flip, 2026-10-20): turning preview on does nothing.
+    assert.equal(isPreviewing(), false, 'release build: preview can never be on');
+    await wrapped(`${BASE}/rest/v1/rpc/insert_daily_insight`, { method: 'POST' });
+    assert.equal(calls.length, 2, 'release build: the wrapper never intercepts');
+    setPreviewState(false, null);
+    return;
+  }
   assert.equal(isPreviewing(), true, 'pre-launch build: preview can be on');
   const blocked = await wrapped(`${BASE}/rest/v1/rpc/insert_daily_insight`, { method: 'POST' });
   assert.equal(calls.length, 1, 'preview on: the write never leaves the phone');

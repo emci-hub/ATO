@@ -1,3 +1,7 @@
+> **SUPERSEDED (master plan Step 10, 2026-10-20): historical only.** The current text is
+> `src/app/legal/terms.md` (mirrored in `landing/terms.html`). Open items: `docs/legal/OPEN-QUESTIONS.md`.
+> Do not edit or copy from this file.
+>
 > **NEEDS EMCI REVIEW — do not ship.**
 > Draft for the post-Sage / post-crisis app. Derived from `src/app/legal/terms.md`.
 > Not legal advice; a lawyer still reads it before public launch. Do not copy into
@@ -14,7 +18,7 @@ These terms govern your use of ATO, made by AsTrollOGs. By using ATO you agree t
 
 ## 1. Who can use ATO
 
-You must be at least 16 years old to create an account. You must be 18 or older to mark yourself as "going" to an 18+ night. You're responsible for accurately representing your age — ATO relies on self-reporting and does not independently verify it.
+You must be at least 18 years old to create an account. You must be 18 or older to mark yourself as "going" to an 18+ night. You're responsible for accurately representing your age — ATO relies on self-reporting and does not independently verify it.
 
 ## 2. Your account
 

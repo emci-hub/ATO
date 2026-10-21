@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ATO - What's your ATO?</title>
-<meta name="description" content="A daily check-in, a coach who knows your style, and a small circle of people who get it. Not a feed. Not therapy. Not another horoscope app.">
+<meta name="description" content="A daily insight, a profile that learns your style, and a small circle of people who get it. Not a feed. Not therapy. Not another horoscope app.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,13 +17,13 @@
 
   <section class="hero">
     <div>
-      <button class="face" id="face" aria-label="Toggle between current-you and Sage's view of you"></button>
-      <div class="face-caption">hover — that's the glow<br>Sage sees</div>
+      <button class="face" id="face" aria-label="Toggle the glow on your pixel"></button>
+      <div class="face-caption">tap — that's the glow<br>your pixel</div>
     </div>
     <div>
       <h1>What's your ATO?</h1>
-      <p>A daily check-in, one honest line, one thing to actually try — and a coach that learns how you actually respond, not how a template thinks you should.</p>
-      <a class="cta" href="#request">Request an invite</a>
+      <p>A daily check-in, one honest line, one thing to actually try — and a profile that learns how you actually respond, not how a template thinks you should.</p>
+      <a class="cta" href="#request">[CONFIRM: launch CTA wording]</a>
     </div>
   </section>
 
@@ -56,15 +56,15 @@
     <h2>What ATO isn't</h2>
     <ul>
       <li>Not a feed you scroll</li>
-      <li>Not a therapist, and Sage says so itself</li>
+      <li>Not a therapist or a crisis service</li>
       <li>Not a dating app</li>
       <li>Not a personality quiz that ends at the results screen</li>
     </ul>
   </section>
 
   <section class="request" id="request">
-    <h2>Request an invite</h2>
-    <p>ATO is invite-only right now. Leave an email. If there's room, we'll send you a code.</p>
+    <h2>[CONFIRM: launch heading]</h2>
+    <p>[CONFIRM: launch wording. The "invite-only" line is removed; the email form below still posts to access_requests and needs a decision at the launch flip.]</p>
     <form id="access-form">
       <label class="sr-only" for="access-email">Email</label>
       <input id="access-email" name="email" type="email" required autocomplete="email" placeholder="you@email.com">
@@ -79,7 +79,7 @@
       <a href="/terms.html">Terms of Service</a>
       <a href="mailto:support@asstrollogs.com">Support</a>
     </div>
-    <div>ATO, made by AsTrollOGs. Pixel assets by <a href="https://kenney.nl" style="color:inherit">Kenney.nl</a> (CC0). © AsTrollOGs.</div>
+    <div>ATO, made by AsTrollOGs. Pixel assets by <a href="https://kenney.nl" style="color:inherit">Kenney.nl</a> (CC0) [CONFIRM: still used]. © AsTrollOGs.</div>
   </footer>
 </div>
 
@@ -131,7 +131,7 @@ form.addEventListener('submit', async (event) => {
       body: JSON.stringify({ email }),
     });
     if (res.ok || res.status === 201) {
-      statusEl.textContent = 'Got it. If there is room, we will email you a code.';
+      statusEl.textContent = 'Got it. [CONFIRM: launch wording]';
       form.reset();
     } else if (res.status === 409) {
       statusEl.textContent = 'That email is already on the list.';

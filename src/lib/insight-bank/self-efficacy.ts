@@ -136,7 +136,7 @@ export const SELF_EFFICACY_IDEAS: readonly InsightIdea[] = [
       'You usually want a second opinion before you trust your work.',
       'When you make a decision, you tend to ask others if it’s the right one.',
     ],
-    why: 'Checking with others is careful, but your own judgment is often better than you think.',
+    why: 'Checking with others is careful, but your own judgment might be better than you think.',
     try: [
       'Send one piece of work this week without asking first, so you practice trusting yourself.',
       'Write down your own answer before asking, so you can see if you were right.',
@@ -184,7 +184,7 @@ export const SELF_EFFICACY_IDEAS: readonly InsightIdea[] = [
       'You usually feel unsure you can do hard things, even when you’ve done them before.',
       'When work gets challenging, you tend to worry you’re not up to it.',
     ],
-    why: 'These doubts are common, and they usually shrink each time you try something and see how it goes.',
+    why: 'Doubts like these are common, and they tend to shrink as you try things and see how they go.',
     try: [
       'Write down three things you’ve done that once felt too hard, so you see your track record.',
       'Pick one small challenge this week and finish it, so you have a fresh win.',
