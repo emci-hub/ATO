@@ -295,7 +295,7 @@ cartoon violence now "Infrequent/Mild"; `check:floor` re-run green [x] Box 68 wr
 Launch-ready table (evidence):
  1. `ai-generate` closed + rate limits: DONE (410 stub wave98; Step 1). 2. advisors: DONE (Step 6 run, 0 errors; leaked-password ON, line 280).
  3. guessable codes: DONE (rotations 2026-10-21, line 280; Gemini rotated, line 166); `play_dev_logs` still open = D13, not blocking.
- 4. Circle safety: DONE in code (Step 7, Box 66 pass); Block/Report live in Divecore → Hideout → Circle (the Circle tab is parked).
+ 4. Circle safety: DONE in code (Step 7, Box 66 pass); Block/Report live in the Circle tab (moved from the Divecore Circle sheet 2026-10-21; visits and gifts stay in Divecore).
  5. Privacy/terms/labels/manifests: manifests + labels DONE (`check:floor`); **OPEN-YOURS: D12 + lawyer read, 46 `[CONFIRM]` tags
     (23 in `src/app/legal`, 23 in `landing`), landing redeploy, support inbox confirmed monitored.**
  6. Live `delete-account` check: **OPEN-YOURS** (never run live; Box 68 E2 covers the in-app path).
