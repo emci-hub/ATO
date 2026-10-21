@@ -612,6 +612,11 @@ One flag controls all of these: `PRE_LAUNCH_DEV` in `src/lib/dev-mode.ts`. **`np
 
 ## Decisions log
 
+- 2026-10-21 CIRCLE TOOLS MOVED TO THE TAB (emci): Add by @handle, Requests, Blocked, the ⋯ menu (Message · Compare strengths ·
+  Report · Block · Remove, two taps for Block/Remove, six fixed report reasons) and the support line now live in the Circle tab
+  (`src/app/(tabs)/circle.tsx`, `src/components/circle-panels.tsx`). Same server functions and copy, no schema change. The Divecore
+  Circle sheet keeps friends' share switch + Visit and gifts only (`onOpenChat` plumbing removed). Reviewer steps in
+  `docs/app-store-pack.md` now say "Circle tab". Device box 70 passed. Committed and pushed to master (b8f33a03, includes a fix that clears the hidden-friend list on each server load; app.json deduped, encryption false kept). Gate green. OTA published 2026-10-21 to branch production, runtime 1.1.0, iOS, update group f9237228-6a9b-49f9-9bcf-c1830c9c217e (update ID 01a16086-7cf6-7e88-827f-182d2cd6ded5). The 1.1 ASC review notes still name the old Block/Report path: update them in ASC.
 - 2026-10-21 1.1 COMPLETE (emci: "1.1 is complete"): Circle chat release is done. Open: D12 lawyer read on encryption export; daily chat-report
   triage by emci (SQL in `docs/circle-safety.md`); D19 later.
 - 2026-10-21 1.1 SUBMITTED (emci): `eas submit` submission `9cc1261b-6b4f-4d9a-b6fd-f78541e8e0f4`. Circle is a real tab again

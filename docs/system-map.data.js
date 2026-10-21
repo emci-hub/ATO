@@ -2316,7 +2316,7 @@ var SYSTEM_MAP = {
         ],
         [
           "Chat",
-          "Rebuilt as the encrypted Circle chat (Step 14, app 1.1+): opened from Divecore → Hideout → Circle → ⋯ → Message."
+          "Rebuilt as the encrypted Circle chat (Step 14, app 1.1+): opened from the Circle tab (Message button, or ⋯ → Message)."
         ]
       ],
       "files": [

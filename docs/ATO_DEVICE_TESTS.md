@@ -691,20 +691,20 @@ Report each as keep / fix + the screen name. Flags stay false until you approve 
 
 ## Box 61 — Circle safety (master-plan Step 7, wave104, 2026-10-20)
 
-Run AFTER wave104 is applied and Release B is on the phone. Two phones or two accounts: your own + `atodev2` (never a real tester's account). Open Divecore → Hideout → Circle (star button).
+Run AFTER wave104 is applied and Release B is on the phone. Two phones or two accounts: your own + `atodev2` (never a real tester's account). Open the Circle tab (these tools moved there from the Divecore Circle sheet).
 - [ ] **Add by handle:** send a request to the other account. The other side sees it under Requests; nothing is shared until Accept. Accept → both see each other in the list.
 - [ ] **Wrong handle / yourself / twice:** each shows one short line ("No one with that handle.", etc.); nothing crashes.
 - [ ] **Read the new Circle lines** (requests, report reasons, block/remove, errors, support line): keep / fix each. They are in `CIRCLE_UI`, `src/play/circle-visits.ts`.
 - [ ] **⋯ → Report:** reached in two taps from the friend row; pick a reason → "Thanks. We read every report." The report shows in the triage query (`docs/circle-safety.md`).
 - [ ] **⋯ → Block:** first tap arms "Tap again to block @…", second blocks. The friend disappears on both phones; the blocked side cannot find you by handle; visits and gifts stop. Blocked (1) → Unblock (two taps) works.
 - [ ] **Remove:** two taps; the friend disappears on both sides.
-- [ ] **Sheet size:** the card never grows or jumps as Requests / Blocked appear; at 375×667 the keyboard does not cover the Add field's Send button; the report panel fits.
+- [ ] **Screen layout:** the Circle tab scrolls cleanly as Requests / Blocked appear; at 375×667 the keyboard does not cover the Add field's Send button; the report panel fits.
 - [ ] **Support line:** tapping it opens a mail draft to support@asstrollogs.com.
 - [ ] **Name filter:** at sign-up (a throwaway test account) a staff-style handle like `atosupport` is refused with "That one isn't available. Pick another."; a swear-word handle is allowed.
 
 ## Box 62 — Compare strengths (master-plan Step 7b, wave105, 2026-10-20)
 
-Run AFTER wave105 is applied and Release B is on the phone. Two accounts that are already in each other's Circle: your own + `atodev2`, both with some answered questions. Circle sheet → ⋯ next to a friend → **Compare strengths**.
+Run AFTER wave105 is applied and Release B is on the phone. Two accounts that are already in each other's Circle: your own + `atodev2`, both with some answered questions. Circle tab → ⋯ next to a friend → **Compare strengths**.
 - [ ] **Read the consent text** at the top: it must say exactly what a friend sees (up to 3 strengths + the ones you share, no scores or numbers, off any time). Keep / fix. Strings are in `COMPARE_UI`, `src/play/circle-compare.ts` (`CIRCLE_COMPARE_COPY_REVIEWED` stays false until you read them).
 - [ ] **"What @friend would see of you"** lists at most 3 plain phrases (no numbers, nothing about closeness/worry, nothing that reads as a weakness). Read each phrase: keep / fix.
 - [ ] **One side on:** switch it on; the row says "Waiting for @friend to switch it on too." No card yet.
@@ -712,7 +712,7 @@ Run AFTER wave105 is applied and Release B is on the phone. Two accounts that ar
 - [ ] **Switch off** on either phone: the card disappears on both on the next open (immediately, no wait).
 - [ ] **Remove the friend and add them again:** Compare is off on both sides until switched on again.
 - [ ] **Block:** after a block the friend is gone and no compare card can be opened.
-- [ ] **Panel size:** the Compare panel fits inside the Circle card at 375×667, scrolls instead of growing, and Back returns to the ⋯ menu.
+- [ ] **Panel size:** the Compare panel fits the Circle tab at 375×667, scrolls instead of growing, and Back returns to the ⋯ menu.
 
 ## Box 63 — Insight, notification ask, check-in line (master-plan Step 8+9, 2026-10-20)
 
@@ -831,7 +831,7 @@ If it stops at `complete_signup` with an invite error, tell me (signup needs an 
 - [ ] **B9** (only if you have time, it is unchanged since before Release B) Earlier-day label, the widget try line / private line, and the 7th-day +10 payout: as in `docs/ato-finish-roadmap.md` step 5. Skip and say "skipped" if not.
 - [ ] **B8** On account A, open the insight on 3 different days (or 3 accounts). → Each reads clearly. Keep / fix.
 
-### Part C — Circle: requests, block, report (A and B; Divecore → Hideout → Circle, star button)
+### Part C — Circle: requests, block, report (A and B; Circle tab)
 
 - [ ] **C1** On A, Add by handle: type `atodev2`, send. → Request sent. On B, Circle → Requests shows A. Nothing shared yet.
 - [ ] **C2** On B, **Accept**. → Both see each other in the friend list.
@@ -953,7 +953,7 @@ binary with `PRE_LAUNCH_DEV = false` baked in, the "ATO" widget header and hapti
 ### Part C — Divecore and Circle
 
 - [ ] **C1** More → Divecore. → Opens; only Corvus owned; no dev tools anywhere (More, You, long-presses).
-- [ ] **C2** Hideout → Circle. Add a second account by @handle, accept it there, open the ⋯ menu. → Block and Report are there; Block hides the person.
+- [ ] **C2** Circle tab. Add a second account by @handle, accept it there, open the ⋯ menu. → Block and Report are there; Block hides the person.
 - [ ] **C3** Tap around Divecore with sound/haptics on, then off in settings. → Haptic ticks only when on.
 
 ### Part D — Widget and notifications
@@ -990,7 +990,7 @@ one phone + one simulator on the 1.1 dev build), two accounts that are Circle fr
 **Report back in ONE message:** a line per part (A-E): `pass`, or `fix` + the screen + what you saw.
 
 ### Part A — Open and send
-- [ ] **A1** Phone 1: Divecore → Hideout → Circle → ⋯ on the friend → Message. → The chat opens with "@handle", the privacy line (30 days, report sends the message + 5 before), and "hasn't opened chat yet" if phone 2 never opened it.
+- [ ] **A1** Phone 1: Circle tab → Message on the friend (or ⋯ → Message). → The chat opens with "@handle", the privacy line (30 days, report sends the message + 5 before), and "hasn't opened chat yet" if phone 2 never opened it.
 - [ ] **A2** Phone 2 opens the same chat once, then phone 1 sends "hi". → Phone 2 sees it within a few seconds without leaving the screen; both see it on the right side for the sender.
 - [ ] **A3** Supabase → Table editor → `chat_messages`. → `ciphertext` is unreadable; no plain "hi" anywhere.
 
@@ -1019,3 +1019,19 @@ one phone + one simulator on the 1.1 dev build), two accounts that are Circle fr
 | C Report + ladder | pass | |
 | D Block | pass | |
 | E Edge cases | pass | |
+
+## Box 70 — Circle tab tools (moved from the Divecore sheet, 2026-10-21)
+
+About 10 min. Two accounts that are Circle friends (your own + `atodev2`). Run on the build that has this change.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Circle tab. -> Add field + Send, friend rows with Message and a ⋯ button, a support line, and "Visits and gifts are in Divecore."
+- [ ] **2** Add `atodev2` by @handle. -> "Request sent."; on the other account, Requests shows it with Accept / Decline and a ⋯ button; Accept -> both see each other.
+- [ ] **3** ⋯ on a friend. -> Message, Compare strengths, Report, Block, Remove. Message opens the chat.
+- [ ] **4** Report. -> Six fixed reasons, no free text; pick one -> "Thanks. We read every report." and a "Block them too" button (two taps).
+- [ ] **5** Block (two taps), then Blocked (1) -> Unblock (two taps). -> Friend disappears and returns; the other side was never told.
+- [ ] **6** Compare strengths with both switches on. -> Consent text, preview, switch; Back returns to the ⋯ menu.
+- [ ] **7** Support line. -> Opens a mail draft to support@asstrollogs.com.
+- [ ] **8** More -> Divecore -> Hideout -> Circle. -> Only the friend list with share switch + Visit (no Add field, no ⋯), a line pointing to the Circle tab; Visit and gifts still work.
+- [ ] **9** Larger Text and a small phone (375x667) on the Circle tab. -> Nothing cut off; keyboard does not cover Send.

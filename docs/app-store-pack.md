@@ -35,7 +35,7 @@ ATO is 18+ by its own rule (sign-up and birthday guard), so choose the highest r
 | Age-restricted content/features gate | Yes: 18+ only | |
 
 UGC safeguards to state in the review notes (all built and pinned by checks):
-- Block and Report in the Circle sheet (Divecore → Hideout → Circle button → the ⋯ menu on a friend; six fixed report reasons); a blocked pair sees nothing of each other.
+- Block and Report in the Circle tab (Circle tab → the ⋯ menu on a friend; six fixed report reasons); a blocked pair sees nothing of each other.
 - Names and handles pass the name filter before they are saved.
 - Circle needs acceptance from both sides; reports survive account deletion.
 - Published contact: `support@asstrollogs.com` (You tab, legal pages).
@@ -79,8 +79,8 @@ can see Block and Report.
 What to look at (bottom bar: Home, Insights, Questions, Explore, More):
 - Home: one daily insight, loaded on a tap.
 - Questions: the multiple-choice profile questions; answers build the trait profile.
-- More → Divecore: the pixel-art pet game. Circle lives here: Hideout → Circle button. A person is added by @handle and
-  must accept. Every friend row has a ⋯ menu with Block and Report. There is no chat or messaging between people.
+- Circle tab (More → Circle if it is not in the bar): a person is added by @handle and must accept. Every friend row has
+  a ⋯ menu with Block and Report. More → Divecore is the pixel-art pet game; friends can visit each other's Hideout there. There is no chat or messaging between people.
 - More → You: account, legal links (Privacy, Terms), "Delete account" (works in-app, confirms by typing DELETE), and a
   fixed helpline row.
 
@@ -92,8 +92,8 @@ Age: the app is 18+ only and checks the birthday at sign-up.
 
 Demo account (emci does this; I never touch accounts):
 1. Create the account the normal way on a phone (or the dev-test route), with an 18+ birthday, then finish the first set.
-2. Befriend a second account by @handle (the second account accepts) so the Hideout Circle sheet shows a friend. Check a
-   fresh Divecore save (launch clean slate) can reach the Hideout Circle button before you submit.
+2. Befriend a second account by @handle (the second account accepts) so the Circle tab shows a friend. Check the Circle tab
+   opens and the friend's ⋯ menu shows Block and Report before you submit.
 3. Type the handle/password into ASC's "Sign-in required" fields. Never put them in this repo.
 
 ## 6. Screenshots (iPhone 6.9" and 6.5" are required; capture on a real phone from TestFlight)
@@ -103,7 +103,7 @@ No screenshots exist in the repo. Capture these 6, light mode, no personal data,
 1. Home: the daily insight card opened.
 2. Questions: one question with answers visible.
 3. Profile: the profile card with the character.
-4. Divecore → Hideout → Circle: a friend row with the ⋯ menu (Block / Report) open.
+4. Circle tab: a friend row with the ⋯ menu (Block / Report) open.
 5. Divecore: the pet in its room.
 6. More → You: legal links, "Delete account" and the helpline row.
 
@@ -136,7 +136,7 @@ for the 1.0 commit). Change these in ASC only when you submit the 1.1 build (it 
 |---|---|---|
 | Age rating: User-generated content | Yes (names, handles, requests, reports) | Yes, plus 1:1 chat between accepted friends |
 | Messaging / chat between users | No | Yes |
-| Export compliance | `ITSAppUsesNonExemptEncryption = false` | key left out of `app.json` (2026-10-21; `true` was rejected, see below); answer ASC's questions per build |
+| Export compliance | `ITSAppUsesNonExemptEncryption = false` | `ITSAppUsesNonExemptEncryption = false` (2026-10-21; `true` was rejected, see below) |
 | App Privacy | 11 types | add **Emails or Text Messages** (Linked, App Functionality); copy from `src/app/legal/app-privacy-labels.md` |
 | Version / What's New | 1.0.0 / "First release." | 1.1.0 / "Message friends in your Circle. End-to-end encrypted." |
 | Screenshot 4 | Circle ⋯ menu | Circle ⋯ menu showing Message, or a chat thread (demo text only) |
@@ -151,11 +151,11 @@ offered in France, and whether a US annual self-classification report applies. N
 Compliance Code". ASC had no encryption document on file. Apple's table
 (developer.apple.com/help/app-store-connect/reference/app-information/export-compliance-documentation-for-encryption/) lists no
 upload for standard algorithms when the app is not distributed in France; ATO is available in USA and Canada only (2 available,
-173 not). So the `ITSAppUsesNonExemptEncryption` key is now LEFT OUT of `app.json` (a common fix for 90592; it also avoids an
-exemption claim we cannot back) and 1.1 ships as build 18. Each build then shows "Missing Compliance" in TestFlight until you
-answer ASC's questions: uses encryption = Yes; standard algorithms; not distributed in France. Open: the legal read (D12) and
-whether XSalsa20-Poly1305 counts as a published standard (X25519 does). If Apple or the lawyer says a document is needed,
-upload it, take the code, and set `ITSAppUsesNonExemptEncryption` true with `ITSEncryptionExportComplianceCode`.
+173 not). We first removed the key, but `eas build` asked "iOS app only uses standard/exempt encryption?", emci answered yes
+and EAS wrote `ITSAppUsesNonExemptEncryption: false` back into `app.json`; 1.1 ships as build 18 with `false` (the one fix an
+Expo issue reports for 90592). This is an exemption claim we cannot fully back: open is the legal read (D12) and whether
+XSalsa20-Poly1305 counts as a published standard (X25519 does). If Apple or the lawyer says a document is needed, upload it,
+take the code, and set `ITSAppUsesNonExemptEncryption` true with `ITSEncryptionExportComplianceCode`.
 
 **UGC safeguards to add to the 1.1 review notes:**
 - Chat is only between accepted friends who have not blocked each other (checked on the server for every read and send).

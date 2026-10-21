@@ -124,10 +124,12 @@ ok('consent copy names what a friend sees (3 strengths + shared), says no number
 
 /* 8 · peer_profile / peer_checks stay closed; screens use the rules file ------------------------------------- */
 assert.ok(!/function public\.peer_(profile|checks)\(/.test(sql), 'wave105 does not reopen peer_profile / peer_checks');
-const ui = read('src/play/circle-visits-ui.tsx');
+const ui = read('src/components/circle-panels.tsx');
 assert.match(ui, /from '@\/play\/circle-compare'/);
 assert.match(ui, /COMPARE_UI\.consent/);
+assert.match(read('src/app/(tabs)/circle.tsx'), /<ComparePanel\b/, 'the Circle tab opens the compare panel');
+assert.ok(!/circle-compare/.test(read('src/play/circle-visits-ui.tsx')), 'the Divecore sheet no longer carries compare');
 assert.ok(!/\bpeer_profile\b|\bpeer_checks\b/.test(read('src/play/circle-compare-store.ts')), 'no peer_* call');
-ok('peer_profile / peer_checks stay closed; the sheet shows the consent text');
+ok('peer_profile / peer_checks stay closed; the Circle tab panel shows the consent text');
 
 console.log(`\ncheck:circle-compare ok — ${groups} groups`);

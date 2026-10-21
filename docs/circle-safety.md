@@ -4,14 +4,17 @@ wave104 APPLIED 2026-10-20 (emci, SQL editor; 9 functions present). wave104b = r
 
 Design and options: `docs/circle-design.md` (option A at launch). Pinned by `check:circle-safety`.
 
-## What a person can do (Divecore → Hideout → Circle sheet)
+## What a person can do (Circle tab)
+
+These tools moved from the Divecore Circle sheet into the Circle tab (emci 2026-10-21); same server functions, no schema
+change. The Divecore sheet keeps visits and gifts only. UI: `src/app/(tabs)/circle.tsx`, `src/components/circle-panels.tsx`.
 
 - **Add by handle** sends a request. Nothing is shared until the other person taps Accept. Asking someone who
   already asked you accepts. Cap: 20 friends, 20 pending requests, 20 requests an hour.
 - **⋯ on any friend row** (and on an incoming request) → **Report** (6 fixed reasons, no free text) or **Block**
   (confirm with a second tap). Both are reached in 2 taps (⋯, then Report / Block). Block is silent: it removes the friendship and pending requests; the other person is never told and
   their request to you looks like "No one with that handle." **Blocked (n)** at the bottom → Unblock.
-- **Support line** in the sheet: support@asstrollogs.com (same address as You → Send feedback).
+- **Support line** at the bottom of the Circle tab: support@asstrollogs.com (same address as You → Send feedback).
 - Names and handles with slurs or staff-impersonation ("atoteam", "…support") are refused at sign-up and on the
   server (`me_name_guard`). Swearing is allowed (content policy).
 
