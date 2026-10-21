@@ -45,10 +45,10 @@ ok('wired as check:circle-chat');
   assert.equal(app.expo.runtimeVersion, '1.1.0', 'new native module = new runtime: 1.0 phones never get chat code over OTA');
   assert.equal(app.expo.version, '1.1.0');
   assert.ok(app.expo.plugins.includes('react-native-libsodium'), 'config plugin listed');
-  // 2026-10-21: `true` with no compliance code was rejected by Apple (90592). The key is left OUT on purpose, so App Store
-  // Connect asks the export questions for each build (see app-store-pack §9 update); never set it to a claim we cannot back.
-  assert.equal(app.expo.ios.infoPlist?.ITSAppUsesNonExemptEncryption, undefined, 'encryption key omitted: ASC asks per build');
-  ok('1.1 build: libsodium 1.7.0 + allowed script, runtime 1.1.0, plugin, ITSAppUsesNonExemptEncryption omitted');
+  // 2026-10-21: `true` with no compliance code was rejected by Apple (90592). EAS's own prompt ("only standard/exempt
+  // encryption?", answered yes by emci) wrote `false`; US + Canada only, legal read still open (D12, app-store-pack §9).
+  assert.equal(app.expo.ios.infoPlist?.ITSAppUsesNonExemptEncryption, false, 'exempt-from-documentation answer (see app-store-pack §9 update)');
+  ok('1.1 build: libsodium 1.7.0 + allowed script, runtime 1.1.0, plugin, ITSAppUsesNonExemptEncryption = false');
 }
 
 // --- no plain text leaves the phone ----------------------------------------------------------------
@@ -154,7 +154,7 @@ ok('wired as check:circle-chat');
   assert.match(CHAT_UI.privacyLine, /30 days/);
   assert.match(CHAT_UI.privacyLine, /5 before/);
   const pack = read('docs/app-store-pack.md');
-  assert.match(pack, /\| Export compliance \| `ITSAppUsesNonExemptEncryption = false` \| key left out of `app.json`/);
+  assert.match(pack, /\| Export compliance \| `ITSAppUsesNonExemptEncryption = false` \| `ITSAppUsesNonExemptEncryption = false`/);
   assert.match(pack, /\| Messaging \/ chat between users \| No \| Yes \|/);
   assert.match(pack, /add \*\*Emails or Text Messages\*\*/);
   const labels = read('src/app/legal/app-privacy-labels.md');
