@@ -21,9 +21,6 @@
           "group.com.emgens.ato"
         ]
       },
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": true
-      },
       "privacyManifests": {
         "NSPrivacyTracking": false,
         "NSPrivacyTrackingDomains": [],

@@ -41,12 +41,14 @@ ok('wired as check:circle-chat');
 {
   assert.equal(pkg.dependencies['react-native-libsodium'], '1.7.0', 'libsodium pinned exactly');
   assert.equal(pkg.allowScripts?.['react-native-libsodium@1.7.0'], true, 'its unpack script is allowed (the native build needs it)');
-  const app = JSON.parse(read('app.json')) as { expo: { version: string; runtimeVersion: string; plugins: unknown[]; ios: { infoPlist: Record<string, unknown> } } };
+  const app = JSON.parse(read('app.json')) as { expo: { version: string; runtimeVersion: string; plugins: unknown[]; ios: { infoPlist?: Record<string, unknown> } } };
   assert.equal(app.expo.runtimeVersion, '1.1.0', 'new native module = new runtime: 1.0 phones never get chat code over OTA');
   assert.equal(app.expo.version, '1.1.0');
   assert.ok(app.expo.plugins.includes('react-native-libsodium'), 'config plugin listed');
-  assert.equal(app.expo.ios.infoPlist.ITSAppUsesNonExemptEncryption, true, 'app now uses its own encryption');
-  ok('1.1 build: libsodium 1.7.0 + allowed script, runtime 1.1.0, plugin, ITSAppUsesNonExemptEncryption = true');
+  // 2026-10-21: `true` with no compliance code was rejected by Apple (90592). The key is left OUT on purpose, so App Store
+  // Connect asks the export questions for each build (see app-store-pack §9 update); never set it to a claim we cannot back.
+  assert.equal(app.expo.ios.infoPlist?.ITSAppUsesNonExemptEncryption, undefined, 'encryption key omitted: ASC asks per build');
+  ok('1.1 build: libsodium 1.7.0 + allowed script, runtime 1.1.0, plugin, ITSAppUsesNonExemptEncryption omitted');
 }
 
 // --- no plain text leaves the phone ----------------------------------------------------------------
@@ -152,7 +154,7 @@ ok('wired as check:circle-chat');
   assert.match(CHAT_UI.privacyLine, /30 days/);
   assert.match(CHAT_UI.privacyLine, /5 before/);
   const pack = read('docs/app-store-pack.md');
-  assert.match(pack, /\| Export compliance \| `ITSAppUsesNonExemptEncryption = false` \| `ITSAppUsesNonExemptEncryption = true`/);
+  assert.match(pack, /\| Export compliance \| `ITSAppUsesNonExemptEncryption = false` \| key left out of `app.json`/);
   assert.match(pack, /\| Messaging \/ chat between users \| No \| Yes \|/);
   assert.match(pack, /add \*\*Emails or Text Messages\*\*/);
   const labels = read('src/app/legal/app-privacy-labels.md');

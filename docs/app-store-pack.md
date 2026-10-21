@@ -136,7 +136,7 @@ for the 1.0 commit). Change these in ASC only when you submit the 1.1 build (it 
 |---|---|---|
 | Age rating: User-generated content | Yes (names, handles, requests, reports) | Yes, plus 1:1 chat between accepted friends |
 | Messaging / chat between users | No | Yes |
-| Export compliance | `ITSAppUsesNonExemptEncryption = false` | `ITSAppUsesNonExemptEncryption = true` (set in `app.json`) |
+| Export compliance | `ITSAppUsesNonExemptEncryption = false` | key left out of `app.json` (2026-10-21; `true` was rejected, see below); answer ASC's questions per build |
 | App Privacy | 11 types | add **Emails or Text Messages** (Linked, App Functionality); copy from `src/app/legal/app-privacy-labels.md` |
 | Version / What's New | 1.0.0 / "First release." | 1.1.0 / "Message friends in your Circle. End-to-end encrypted." |
 | Screenshot 4 | Circle ⋯ menu | Circle ⋯ menu showing Message, or a chat thread (demo text only) |
@@ -146,6 +146,16 @@ algorithms). When ASC asks after upload: "Does your app use encryption?" Yes. "D
 answer for **standard encryption algorithms** (not proprietary, not Apple-OS-only); this is the mass-market case, so no
 documents are uploaded. [CONFIRM with the lawyer (D12): whether a France encryption declaration is needed if ATO is
 offered in France, and whether a US annual self-classification report applies. Not legal advice.]
+
+**Update 2026-10-21 (emci).** Build 17 (`true`, no compliance code) was rejected by Apple on upload: error 90592, "Invalid Export
+Compliance Code". ASC had no encryption document on file. Apple's table
+(developer.apple.com/help/app-store-connect/reference/app-information/export-compliance-documentation-for-encryption/) lists no
+upload for standard algorithms when the app is not distributed in France; ATO is available in USA and Canada only (2 available,
+173 not). So the `ITSAppUsesNonExemptEncryption` key is now LEFT OUT of `app.json` (a common fix for 90592; it also avoids an
+exemption claim we cannot back) and 1.1 ships as build 18. Each build then shows "Missing Compliance" in TestFlight until you
+answer ASC's questions: uses encryption = Yes; standard algorithms; not distributed in France. Open: the legal read (D12) and
+whether XSalsa20-Poly1305 counts as a published standard (X25519 does). If Apple or the lawyer says a document is needed,
+upload it, take the code, and set `ITSAppUsesNonExemptEncryption` true with `ITSEncryptionExportComplianceCode`.
 
 **UGC safeguards to add to the 1.1 review notes:**
 - Chat is only between accepted friends who have not blocked each other (checked on the server for every read and send).
