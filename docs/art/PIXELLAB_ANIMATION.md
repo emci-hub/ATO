@@ -63,3 +63,4 @@ victory → `emote-celebrate`. Pet blink/eat/sleep/happy: `eating-drinking`, `id
 
 ## 5. Change log
 - 2026-10-21 — first version. Balance at the time: 3,538 / 5,000 generations (Tier 2, resets 2026-11-11).
+- 2026-10-21 (Task B pre-flight) — kael's stored rotations (`art-src/pixellab/hero.kael.streetwear/migrated/raw/rotations/`) are **192×192**, not 128, and south faces the camera (import-valid). At a ~180 px canvas `breathing-idle` (4 frames) bills ~2 per direction (get_character receipt gives the exact ceiling), so 4 directions ≈ 8, not 4. Cloud sandbox: `api.pixellab.ai` is denied by the network policy (curl uploads fail with 403), and the MCP result downloads need the same host. Ask emci to allow it under the environment's Network access (Allowed domains), or run Task B from a machine that reaches it.
