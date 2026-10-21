@@ -74,7 +74,11 @@ export default function CircleScreen() {
 
   const reloadFriends = useCallback(async () => {
     const res = await fetchCircleFriends();
-    if (alive.current) setLoad(res.kind === 'ok' ? { kind: 'ok', friends: res.value } : { kind: 'error' });
+    if (!alive.current) return;
+    setLoad(res.kind === 'ok' ? { kind: 'ok', friends: res.value } : { kind: 'error' });
+    // The tab stays mounted: a fresh server list is the truth, so a friend who was removed or blocked and
+    // then came back (unblock, re-add, accepted again) must not stay hidden.
+    if (res.kind === 'ok') setGone([]);
   }, []);
   const reloadRequests = useCallback(async () => {
     const res = await fetchCircleRequests();
