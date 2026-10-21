@@ -151,6 +151,10 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   32 px ladder (option A: heroes 128 at 1:1); every new or edited asset passes the scale check against the
   grown hero (guide §2 table); show emci rendered samples + a scale sheet before any art choice; and the
   same change updates the library (import / `replaces` / archive via art-decisions, then `art:sync`).
+- **PixelLab pre-flight before ANY animation or art generation (emci 2026-10-21).** Every new chat relearns PixelLab
+  first: read `docs/art/PIXELLAB_GUIDE.md` + `docs/art/PIXELLAB_ANIMATION.md`, ask `search_help` about each tool you
+  will use, update those docs if the answers differ, then `get_balance`, estimate the cost, ONE test clip for emci's ok,
+  and log generations per asset. Never generate from memory. Over ~20 generations in a batch or any Pro call: ask first.
 - **Game screens use fixed regions (emci 2026-10-13).** Top bar · viewport · bottom panel + a floating
   overlay; content never resizes a region (bars reserve their tallest state, announcements float, text in
   fixed boxes, loading keeps final size; a deliberate screen switch like Turf War setup → wave may

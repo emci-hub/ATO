@@ -261,6 +261,9 @@ Same outline/shading/detail strings per type every time (the "style card"):
 | Heroes / pets | match the anchors (dark single-colour outline) | — | — | low top-down |
 
 ## 10. Staying current
+**Animation work has its own pre-flight: `docs/art/PIXELLAB_ANIMATION.md` §0** (learn/update what we know about
+PixelLab with `search_help`, then `get_balance`, then ONE test clip, then generate). Do it every new chat.
+
 `npm run pixellab:watch` downloads PixelLab's public docs, compares them with
 `docs/art/pixellab-snapshot.json`, and prints what changed (new/removed endpoints, changed
 parameters, changed doc sections). It never edits this guide. A weekly scheduled task runs it; when

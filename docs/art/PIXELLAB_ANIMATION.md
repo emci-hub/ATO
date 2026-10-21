@@ -1,0 +1,65 @@
+# PixelLab animation — what we know, and the pre-flight that keeps it current
+
+Written 2026-10-21 from PixelLab's own help agent (`search_help` on the `pixellab` MCP server) plus the live tool
+list. It is a **snapshot**: the tools move. Follow the pre-flight below before every animation job and update this
+file when the answers differ. Parent guide: `docs/art/PIXELLAB_GUIDE.md`.
+
+## 0. Pre-flight (every animation task, every new chat — do this BEFORE the first generation)
+1. Read `docs/art/PIXELLAB_GUIDE.md` and this file.
+2. Confirm the tools are there: the `pixellab` MCP tools must be in your tool list (`animate_character`,
+   `animate_image`, …). If you see a 401 "Missing Authorization header", the connector header
+   (`Authorization: Bearer <token>`, **No sign-in**) is wrong; tell emci, don't ask for the token.
+3. **Learn what changed.** Ask `search_help` about every tool you are about to use (inputs, size/frame limits, cost,
+   palette support). Compare with §1–§4 below. If anything differs, update this file in the same change and say so.
+   Run `npm run pixellab:watch` when the machine can reach `api.pixellab.ai` (the cloud sandbox cannot: host blocked
+   and `tsx` not installed there; use `search_help` instead).
+4. `get_balance` and report it. Estimate the cost of the job in generations; ask emci before a batch over ~20
+   generations or any Pro call.
+5. Do ONE test clip first, show it next to the current one (GIF at 1× and 3×), wait for emci's ok.
+6. Log generations per asset (`gen.json`, `docs/art/animation-generation-log.md`).
+
+## 1. Which tool for which job (search_help, 2026-10-21)
+| Situation | Tool | Notes |
+|---|---|---|
+| Character already stored in PixelLab | `animate_character` | `template_animation_id` = 1 generation **per direction**; custom `action_description` (mode `v3`) = `ceil(w×h×frames/65536)`, min 1, 4–16 even frames, defaults to south only |
+| Our existing PNG hero/pet (not in PixelLab) | **import first**, then `animate_character` | §2 |
+| Loose sprite, one-off motion | `animate_image` | 4–16 **even** frames, ≤256², `last_frame_url` pins the end (use it to make a loop: end pose = start pose). 128²: 6f=2, 8f=2, 16f=3 gens |
+| Loose sprite, long clip | `animate_image_pixminimax` | 4–40 frames in **multiples of 4** (no 6f), ≤256². 128²: 4–8f=1, 12–16f=2, 20–24f=3 |
+| Exact poses you control | `animate_with_skeleton_v3` | needs an 18-joint skeleton per frame + `first_frame_keypoints`; 3–15 frames; 3f=2, 8f=3, 15f=4 gens; slow (3–6 min). Skeleton ≠ image pose costs transparency and colour accuracy |
+| Effects (hit, aura, spark) | `vfx_workbench` (free) first | see guide §8 |
+| Cleanup | `pixelart_workbench` (free): `repair`, `clean-lines`, `reoutline`, `selout`, `cluster`, split/join frames | not a timing or baseline-alignment tool |
+
+## 2. Getting our existing sprites into PixelLab (import = 0.25 generations)
+`create_character(mode="v3", reference_image_url=<south.png>, n_directions=4|8, direction_images={east, north, west, …})`
+- The south image must face **straight at the camera** (a 3/4 turn offsets every direction label).
+- Every `direction_images` entry must match the reference canvas size and the direction in its key. Supply all of
+  them and nothing is generated: **0.25 generations**. Missing directions are generated at normal v3 cost.
+- Reference ≤ 256×256 (ours are 128). Returns a `character_id`; check `get_character` for its available animations.
+- Our streetwear heroes have 8 rotations (`art-src/pixellab/hero.<slug>.streetwear/`); use those raw frames, never
+  the packed sheets.
+
+## 3. `animate_character` humanoid template ids (current)
+`breathing-idle`, `walking-4-frames`, `walking-6-frames`, `walking-8-frames`, `running-4/6/8-frames`, `slashing`,
+`slashing-2`, `thrusting`, `shooting`, `casting`, `jumping`, `hurt`, `dying`, `blocking`, `dashing`, `rolling`,
+`backstep-dodge`, `spinning-attack`, `charging`, `hook-and-uppercut`, `two-hand-overhead-slash`,
+`staff-spin-attack`, `bow-draw-and-release`, `emote-celebrate`, `emote-thinking`, `waving`, `clapping`, `idle-long`,
+`crouching-idle/walk`, `eating-drinking`, `sitting`, `pick-up`, `flying-idle/moving`, `carrying-idle/walk`, and more.
+Quadrupeds use different names — read them from `get_character`.
+
+Standard-set mapping for ATO (our brief → template): breathing idle → `breathing-idle`; fight-stance idle → custom
+(`idle-long` or a custom v3 clip); walk → `walking-6-frames`; run → `running-8-frames`; attack →
+`hook-and-uppercut` (cross-punch) or `slashing`; special → `casting`/`shooting`; hit → `hurt`; death → `dying`;
+victory → `emote-celebrate`. Pet blink/eat/sleep/happy: `eating-drinking`, `idle-long`, `emote-celebrate`, else custom.
+
+## 4. Limits and traps
+- **No per-frame timing** parameter: timing lives in our library (`ms[]`).
+- **No baseline/foot lock:** keep the canvas fixed, then check every frame's foot row (`scripts/animation-audit/`).
+- **Palette:** the help agent says animation tools take `palette` / `palette_name` / `max_colors`; the older guide
+  note says `target_palette` on most tools. They disagree — test on one clip, then **always** finish with
+  `reduce_colors(image_urls=[all frames], palette_image_url=docs/art/palette-streetwear-night.png)`.
+- Templates move the stored character rather than redrawing it, so they keep identity but can look gentle.
+- Cost reality: one template × 4 directions = 4 generations. A full 8-clip hero set ≈ 32 generations + 0.25 import.
+- Source of truth for costs is `get_balance` before/after; fractions (0.05–0.25) are billed for small steps.
+
+## 5. Change log
+- 2026-10-21 — first version. Balance at the time: 3,538 / 5,000 generations (Tier 2, resets 2026-11-11).
