@@ -612,6 +612,11 @@ One flag controls all of these: `PRE_LAUNCH_DEV` in `src/lib/dev-mode.ts`. **`np
 
 ## Decisions log
 
+- 2026-10-21 Release C (row 15) in progress: PR #81 merged to master (f2fd6b0f, tag `v1.0.0` pushed); `wave108_circle_chat.sql` +
+  `wave109_blocks_blocker_only.sql` (D18) applied by emci and verified read-only with `docs/release-c-verify.sql` (8/8 true, incl.
+  the `chat-retention-30d` cron). Left: EAS 1.1 production build (emci), TestFlight, Box 69, ASC changes from `app-store-pack.md` §9,
+  then tick row 15. D18 settled (done); D19 still later.
+
 - 2026-10-21 Step 14 (Circle chat, committed on `feature/circle-chat`, not pushed; nothing applied or built; 1.0 = tag `v1.0.0`): end-to-end encrypted 1:1 chat built. libsodium
   1.7.0 (native, so a 1.1 store build, runtime 1.1.0; `ITSAppUsesNonExemptEncryption` now true), `wave108_circle_chat.sql`
   (ciphertext only, friends + not blocked + 18+, 30-day cron, reports with the reporter's decrypted message + 5 before,
