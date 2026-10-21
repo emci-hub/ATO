@@ -17,7 +17,7 @@ import {
 } from '../src/lib/name-filter';
 
 const root = path.resolve(__dirname, '..');
-const read = (p: string) => fs.readFileSync(path.join(root, p), 'utf8');
+const read = (p: string) => fs.readFileSync(path.join(root, p), 'utf8').replace(/\r\n/g, '\n');
 let groups = 0;
 const ok = (msg: string) => {
   groups += 1;
