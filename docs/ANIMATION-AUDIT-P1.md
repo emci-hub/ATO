@@ -108,3 +108,12 @@ Nothing in `src/` or `assets/` has been changed so far.
 | Idle retime (per-frame `ms`) | Waits on the library (`ms[]`) — next step. |
 
 Lesson recorded: grep for the repo's own flag names (`cosmeticsStill`, `vestibularSafe`, `usePlayMotion`) before calling something unguarded.
+
+## 8. Library step 1 result (2026-10-21)
+
+Read-only manifest generated from existing data; no `src/` behaviour change, `PLAY_SHEETS` stays the source.
+
+- `npm run anim:library` → `assets/art/animations/library.json` (generator `scripts/animation-library.ts`; 23 characters, 289 clips, plus `fx` / `auras` / `world`). Sorted character → category (idle / locomotion / combat / reaction) → clip → direction, per skin (`streetwear`, `cast`). Pets sit under the hero/creep their line draws (`pets.lines`, `pets.frameMs` = `PET_FRAME_MS`).
+- Each clip: `frames`, `ms[]` (flat per frame; `timing` names the source: `cast-actor:<mode>`, `ground-travel` for path walkers, `legacy-sheet`, `meta:*.fps`), `loop`, `dirs`, `anchor`, `cell`, `sheet`, `reducedMotion` (`hold-first` = freezes on Off, `play` = gameplay clip, `skip` = decorative one-shot), `legacyKey`.
+- `npm run check:animation-library` (in the ota-gate): fails on a legacy animated clip missing from the committed manifest, on a stale manifest, and on `ms[]` ≠ `frames`. Non-clips are excluded by rule (rotations, kenney-td, swords, single-frame stills).
+- Not decided here: `anchor` has only `footAt`/`groundAt` for streetwear characters (Cast has none in `meta.json`); `reducedMotion` is read off `play-motion.ts`, not signed off.
