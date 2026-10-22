@@ -259,6 +259,7 @@ export default function ChatScreen() {
     if (!alive.current) return;
     setBusy(false);
     setReporting(null);
+    setReportingLatest(false);
     setNote(
       res.kind !== 'ok' ? CHAT_UI.error : res.value.ok ? CHAT_UI.reported : res.value.reason === 'rate_limited' ? CHAT_UI.rateLimited : CHAT_UI.error,
     );
@@ -314,7 +315,8 @@ export default function ChatScreen() {
             <ThemedText type="subtitle" numberOfLines={1} accessibilityRole="header" style={styles.headerTitle}>
               {CHAT_UI.title(handle)}
             </ThemedText>
-            {gate === 'ready' ? (
+            {/* Hidden while Block is armed so the longer "tap again" text fits on a 375 pt phone. */}
+            {gate === 'ready' && !blockArmed ? (
               <Pressable
                 onPress={() => {
                   const latest = latestReportable(lines);
@@ -452,7 +454,13 @@ export default function ChatScreen() {
                       <ThemedText>{CHAT_UI.reportReasons[reason]}</ThemedText>
                     </Pressable>
                   ))}
-                  <Pressable onPress={() => setReporting(null)} accessibilityRole="button" style={styles.sheetRow}>
+                  <Pressable
+                    onPress={() => {
+                      setReporting(null);
+                      setReportingLatest(false);
+                    }}
+                    accessibilityRole="button"
+                    style={styles.sheetRow}>
                     <ThemedText type="smallBold">{CHAT_UI.cancel}</ThemedText>
                   </Pressable>
                 </View>
@@ -509,7 +517,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     minHeight: 48,
   },
-  headerBtn: { minWidth: 44, minHeight: 44, justifyContent: 'center' },
+  headerBtn: { minWidth: 44, minHeight: 44, flexShrink: 1, justifyContent: 'center' },
   headerTitle: { flex: 1, textAlign: 'center' },
   danger: { color: '#d9534f' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.four },

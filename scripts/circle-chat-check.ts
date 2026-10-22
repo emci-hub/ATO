@@ -159,6 +159,7 @@ ok('wired as check:circle-chat');
   assert.match(header, /accessibilityLabel=\{CHAT_UI\.reportLabel\(handle\)\}/, 'Report is labelled for VoiceOver');
   assert.ok(header.indexOf('CHAT_UI.report}') < header.indexOf('doBlock'), 'Report sits next to Block in the header');
   assert.match(chat, /onLongPress=\{/, 'long-press still reports an earlier message');
+  assert.match(header, /gate === 'ready' && !blockArmed \?/, 'Report hides while Block is armed (the armed text needs the room)');
   ok('chat header: visible Report (latest friend message) next to Block; long-press still works');
 }
 

@@ -35,6 +35,12 @@ export const ATO_TOKEN_EARN = {
 export const AI_TOKEN_PRICE = 5;
 export type AiTokenKind = 'story' | 'legend' | 'deep_dive';
 export const AI_PRICE_LABEL = `${AI_TOKEN_PRICE} tokens`;
+/**
+ * Free library deep dives a day (`app_config.library_free_daily_cap`, default 10, wave93). Only deep
+ * dives are served free (`library_serve`); a Legends AI card is charged even when it comes from the
+ * library (`claim_library_write` mode 'paid' charges first). check:ai-tokens pins this to the SQL.
+ */
+export const LIBRARY_FREE_DAILY_CAP = 10;
 /** What a screen says when the balance is below one AI view. */
 export const AI_TOKENS_NEEDED = `You need ${AI_TOKEN_PRICE} ATO tokens for this. Check in on Home or answer a set of 16 questions to earn more.`;
 
@@ -60,7 +66,7 @@ export const ATO_TOKEN_LEDE = 'Earned by checking in and answering questions. Sp
 export const ATO_TOKEN_HOW_LINES: readonly string[] = [
   `Check in on Home once a day: +${ATO_TOKEN_EARN.daily_checkin}. Every 7th check-in: +${ATO_TOKEN_EARN.checkin_week_bonus}. A missed day never resets your count. New check-in at midnight.`,
   `Answer a set of 16 questions: +${ATO_TOKEN_EARN.ongoing_round_complete} (up to ${ROUND_PAYOUTS_PER_DAY} sets a day). Finishing the first 48: +${ATO_TOKEN_EARN.full_profile_complete} once.`,
-  `Spend: ${AI_TOKEN_PRICE} for each AI view: a new Legends AI card, or a new deep dive on Explore (2 cards). Cards already in the shared library are free. If the AI fails, your tokens come back (once a day for each).`,
+  `Spend: ${AI_TOKEN_PRICE} for each AI view: a new Legends AI card, or a new deep dive on Explore (2 cards). A deep dive already in the shared library is free (up to ${LIBRARY_FREE_DAILY_CAP} a day). If the AI fails, your tokens come back (once a day for each).`,
 ];
 export const ATO_TOKEN_NEED_MORE = 'Not enough ATO tokens yet. Check in on Home or answer a set of 16 to earn more.';
 export const ATO_TOKEN_SPENT = 'Rerolled.';

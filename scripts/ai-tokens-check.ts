@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { AI_TOKEN_PRICE, ATO_TOKEN_EARN, ATO_TOKEN_HOW_LINES, atoTokenCopyClean } from '../src/lib/ato-tokens';
+import { AI_TOKEN_PRICE, ATO_TOKEN_EARN, ATO_TOKEN_HOW_LINES, LIBRARY_FREE_DAILY_CAP, atoTokenCopyClean } from '../src/lib/ato-tokens';
 
 let passed = 0;
 function ok(label: string) {
@@ -90,6 +90,7 @@ assert.equal(atoTokenCopyClean(), true);
     if (/AI view/i.test(line) && !(/Legends/.test(line) && /deep dive/i.test(line))) return 'an AI-view line must name Legends cards and deep dives';
     if (rerollsFrozen && /reroll/i.test(line)) return 'offers a reroll while rerolls are frozen';
     if (nameStylesFree && /name style/i.test(line) && /\d/.test(line)) return 'prices a name style while name styles are free';
+    if (/\bfree\b/i.test(line) && /(Legends|cards? already|library cards?)/i.test(line) && !/deep dive[^.]*free/i.test(line)) return 'calls Legends / library cards free (only deep dives are served free)';
     return null;
   };
   // Pairs: the old live lines fail, the new ones pass.
@@ -99,6 +100,9 @@ assert.equal(atoTokenCopyClean(), true);
   if (rerollsFrozen) assert.ok(tokenCopyProblem('Also: 1 to reroll a question, 10 to unlock a name style.'), 'fail: frozen reroll / free name style offered');
   assert.equal(tokenCopyProblem('Spend: 5 for each AI view: a new Legends AI card, or a new deep dive on Explore (2 cards).'), null, 'pass: Legends + deep dive');
   assert.equal(tokenCopyProblem('Check in on Home once a day: +5.'), null, 'pass: earn line');
+  assert.ok(tokenCopyProblem('Spend: 5 for each AI view: a Legends AI card, or a deep dive on Explore. Cards already in the shared library are free.'), 'fail: library Legends called free');
+  assert.equal(tokenCopyProblem('Spend: 5 for each AI view: a Legends AI card, or a deep dive on Explore. A deep dive already in the shared library is free (up to 10 a day).'), null, 'pass: only deep dives free');
+  assert.match(read('supabase/migrations/wave93_ai_library.sql'), new RegExp(`library_free_daily_cap int not null default ${LIBRARY_FREE_DAILY_CAP}\\b`), 'the free deep-dive cap in copy matches the SQL default');
   for (const line of ATO_TOKEN_HOW_LINES) assert.equal(tokenCopyProblem(line), null, `How-tokens line: ${line}`);
   const checkinSrc = read('src/components/daily-checkin-card.tsx');
   const balance = checkinSrc.match(/export const checkinBalanceLine = \(tokens: number\) =>\s*`([^`]*)`/);

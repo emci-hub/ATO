@@ -1131,8 +1131,9 @@ and (for item 5) a phone where you once tapped "Not now" on "Want a nudge now an
 **Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
 
 - [ ] **1** Home → the check-in card (account that finished the 48). -> The balance line reads "Each AI view costs 5: a Legends AI card or a deep dive on Explore." No "Story".
-- [ ] **2** More → You → the ATO tokens card → how it works. -> The spend line names a Legends AI card and a deep dive only, says cards already in the shared library are free, and there is NO "reroll" or "name style" price line.
+- [ ] **2** More → You → the ATO tokens card → how it works. -> The spend line names a Legends AI card and a deep dive only, says a deep dive already in the shared library is free (up to 10 a day), and there is NO "reroll" or "name style" price line.
 - [ ] **3** Open a chat with a friend who has sent you a message. -> The top bar shows Back · @friend · **Report** · Block. Tap Report -> the sheet says "Report their latest message" with the hint "To report an earlier message, press and hold it."; pick a reason -> "Thanks. We read every report within a day."
 - [ ] **4** Same chat, the friend has sent nothing yet (or only you wrote). -> Tap Report -> the note says "Nothing from them to report yet." Long-press on a received message still opens "Report this message".
 - [ ] **5** Divecore: start a room Build (phone from the setup line, notifications never allowed). -> NO iOS notification dialog appears. Divecore → Settings → switch a notice on -> the iOS dialog DOES appear (you asked).
+- [ ] **5b** Chat, tap Block once (armed). -> Report hides while "Tap again…" shows, the title and Block text fit on the screen; wait 4 s -> Block disarms and Report comes back.
 - [ ] **6** VoiceOver on, chat screen. -> The new button reads "Report a message from @friend, button".
