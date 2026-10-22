@@ -295,7 +295,7 @@ Nothing below blocks the next job; emci runs or accepts each.
    existing clips only. Pinned in `check:pet-games` (incl. an encoding pin). Train keeps the classic room plate. Library
    entries are `resource` status with no critique score yet. Save stays v33.
    **(f) Minigames M3: built + published 2026-10-22** (OTA group `34f63cfb`, commit `6d1366ba`; phone check = Box 75,
-   not done; emci OK'd the scope and a third game): Catch shield + magnet pickups (magnet food scores but counts as NOT
+   **PASSED by emci 2026-10-22**; emci OK'd the scope and a third game): Catch shield + magnet pickups (magnet food scores but counts as NOT
    caught, so it can't lift the pass share or farm tokens; shield blocks one bomb tap; slow was dropped), Train zone waves
    (drifts on Normal+ later taps, splits into two half-width zones on Hard / Insane; total lit width never grows; still under
    Reduce Motion), a Practice button on every game (no clock, no strikes, never reports a round: nothing counts), and
