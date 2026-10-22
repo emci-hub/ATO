@@ -1,5 +1,9 @@
 # Animation batch plan (2026-10-22)
 
+> **Superseded by the anchored-rig plan below (emci, 2026-10-22).** The ~84-generation skeleton-v3 batch is
+> replaced by Tier A (procedural, 0 generations) from `docs/art/animation-pipeline-research.md`. Kept for the
+> inventory and the audit facts.
+
 Source: `assets/art/animations/library.json` (23 characters, 289 clips) + `docs/animation-audit/scores.csv`
 (streetwear: 347 clip-directions scored, 299 ok, 48 "ugly"). Method: `PIXELLAB_ANIMATION.md` §4b.
 
@@ -47,3 +51,18 @@ limit, so it needs emci's ok. Tier 2 runs 10 jobs at once; jobs take ~3–15 min
 2. Maldrath: accept the east drift (then west, 3) or keep his current Idle.
 3. Free follow-up, no generation: per-frame `ms[]` timing for the other clips (the audit's "flat timing").
 4. Out of this batch unless asked: creeps / boss / tower Idles (7 characters) — same method, ~44 more with skeleton-v3.
+
+## Replan: animation track (anchored rig), one chat per step
+Play-scope work (`assets/play/**`, packs): never in the same commit as app/docs (`check:play-isolation`).
+Independent of the ATO finish roadmap (app work), so it can run between those steps without blocking them.
+
+| Step | What | PixelLab | Needs first | Ships |
+|---|---|---|---|---|
+| AN0 | emci reviews and merges PR 82 (this branch) so master has Kael + Morwen Idles, the docs, the research | 0 | emci | — |
+| AN1 | Rig format + recipe engine (`art-src/rigs/<hero>.json`, `breathing-idle` recipe, per-part masks, gates: foot row, height, silhouette overlap, palette, prop pixels, loop seam). Pilot Maldrath E+W incl. sword mask; GIF vs current vs skeleton-v3 | 0 | AN0 | test only |
+| AN2 | Rigs for all heroes (auto-guessed lines, hand-checked prop/cape masks), Idle for every hero, one contact sheet, emci marks approve/keep per hero, install approved, Idle `ms[]` holds | 0 | AN1 ok | 1 OTA + phone box |
+| AN3 | Timing pass for the other clips (per-frame holds; clears the audit's "flat timing"). Check first whether play code reads `ms[]` or still uses flat fps — if code must change, it is its own Play step | 0 | AN2 | 1 OTA + phone box |
+| AN4 | Optional: creeps / boss / tower Idles with the same rigs | 0 | AN2 | with AN3 or own OTA |
+| AN5 | Optional, credits: Tier B anchored AI (`animate_with_skeleton_v3`, pinned joints, fixed seed, lock pass) only for clips emci wants with real motion (cape sway, attacks) | ~3 / direction | emci picks clips; token-secret decision | per batch |
+
+Credits: AN1–AN4 spend 0 PixelLab generations (vs ~84 in the old plan). AN5 is the only paid step and is opt-in.
