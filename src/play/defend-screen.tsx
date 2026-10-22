@@ -147,6 +147,7 @@ import {
 import { boardSheet } from '@/art/art';
 import { ClipImage, ClipSprite, sheetFrame } from '@/play/sheet-sprite';
 import { TurfAmbient } from '@/play/turf-ambient';
+import { RING_HELPER_SCALE, RING_HERO_SCALE, RING_LEVEL_SCALE, TurfGroundRings, TurfRingFill, ringEdgePx, type TurfRingSpec } from '@/play/turf-ground-rings';
 import { BoardDecorTiles, StaticRoad, TurfBoardBase } from '@/play/turf-board-base';
 import {
   LOSE_BEAT_MS,
@@ -1182,6 +1183,25 @@ export function DefendScreen({
   const boardMap = BOARD_MAPS[sim?.boardId ?? 'ato'];
   /** Ground dressing (grass + props + pad markers). Pure + memoized. */
   const decor = useMemo(() => boardDecor(boardMap), [boardMap]);
+  /** Divecore step (c): an element ring under every element-tagged tower and hero tower (the Archer has none). Display
+   * only. Rebuilt only when the set of rings changes (build / sell / upgrade), never per sim tick. */
+  const ringSpecs: TurfRingSpec[] = [];
+  for (const tower of sim?.towers ?? []) {
+    const element = TOWER_KITS[tower.kind].element;
+    const pad = boardMap.pads[tower.pad];
+    if (!element || !pad) continue;
+    ringSpecs.push({ id: `tower-${tower.id}`, x: pad.x, y: pad.y, element, scale: RING_LEVEL_SCALE[Math.max(0, Math.min(2, tower.level - 1))] });
+  }
+  for (const bb of sim?.boundBosses ?? []) {
+    const element = heroById(bb.bossId)?.kit.element;
+    const pad = boardMap.pads[bb.pad];
+    if (!element || !pad) continue;
+    ringSpecs.push({ id: `hero-${bb.id}`, x: pad.x, y: pad.y, element, scale: RING_HERO_SCALE });
+  }
+  const ringsKey = ringSpecs.map((r) => `${r.id}:${r.element}:${r.x}:${r.y}:${r.scale}`).join('|');
+  const ringsCache = useRef<{ key: string; list: TurfRingSpec[] }>({ key: '', list: [] });
+  if (ringsCache.current.key !== ringsKey) ringsCache.current = { key: ringsKey, list: ringSpecs };
+  const groundRings = ringsCache.current.list;
   /** Creep positions (board units 0-100) for the ambient pigeons: read on demand from the sim ref, never held in state.
    * Stable per board, so the memoised ambient layer does not re-render on every sim tick. */
   const ambientCreeps = useCallback(
@@ -3144,6 +3164,13 @@ export function DefendScreen({
       top: helperY.value * size - box * helperFootAt,
     };
   }, [helperBoxUnits, helperFootAt]);
+  // Step (c): the helper's element ring, centred on its feet, on the same shared values (never per tick).
+  const helperRingElement = helperNow ? (heroById(helperNow.heroId)?.kit.element ?? null) : null;
+  const helperRingStyle = useAnimatedStyle(() => {
+    const size = boardSize.value || 100;
+    const edge = ringEdgePx(size, RING_HELPER_SCALE);
+    return { width: edge, height: edge, left: helperX.value * size - edge / 2, top: helperY.value * size - edge / 2 };
+  }, []);
 
   const avatarAnim = avatarAnimRef.current;
   const avatarFrame = castActorFrame(avatarAnim, Date.now(), avatarRole);
@@ -3700,6 +3727,8 @@ export function DefendScreen({
                     {/* T7 perf: a memo layer (the board image never re-renders on the 100 ms tick). */}
                     <TurfBoardBase sheetKey={streetBoardKey} />
                     <TurfAmbient mapId={boardArtId} boardSide={boardSide} getCreeps={ambientCreeps} running={live && !paused} />
+                    {/* Divecore step (c): element rings under towers + hero towers (under the units <Svg>, display only). */}
+                    <TurfGroundRings boardSide={boardSide} rings={groundRings} />
                   </>
                 ) : null}
                 <Svg width="100%" height="100%" viewBox="0 0 100 100">
@@ -4200,13 +4229,20 @@ export function DefendScreen({
                     never re-renders the screen. Idle / walk / attack / skill, dazed → faint held and
                     dimmed, getting up → the faint reversed. Below the leader. */}
                 {helperDrawable && helperNow ? (
-                  <Animated.View
-                    style={[styles.helper, helperStyle, helperNow.dazed || helperNow.gettingUp ? styles.helperDazed : null]}
-                    pointerEvents="none">
-                    <View style={styles.avatarArt} pointerEvents="none">
-                      <ClipImage drawable={helperDrawable} />
-                    </View>
-                  </Animated.View>
+                  <>
+                    {street && helperRingElement ? (
+                      <Animated.View style={[styles.helperRing, helperRingStyle]} pointerEvents="none">
+                        <TurfRingFill key={helperRingElement} element={helperRingElement} animate={fxQuality !== 'off' && !playMotion.cosmeticsStill} speed={playMotion.vestibularSafe ? 0.5 : 1} />
+                      </Animated.View>
+                    ) : null}
+                    <Animated.View
+                      style={[styles.helper, helperStyle, helperNow.dazed || helperNow.gettingUp ? styles.helperDazed : null]}
+                      pointerEvents="none">
+                      <View style={styles.avatarArt} pointerEvents="none">
+                        <ClipImage drawable={helperDrawable} />
+                      </View>
+                    </Animated.View>
+                  </>
                 ) : null}
 
                 {/* Floating damage numbers (display only, pooled) */}
@@ -5954,6 +5990,11 @@ const styles = StyleSheet.create({
   },
   helperDazed: {
     opacity: 0.55,
+  },
+  /** Step (c): the helper's element ring, one step under the helper. */
+  helperRing: {
+    position: 'absolute',
+    zIndex: 8,
   },
   avatarArt: {
     width: '100%',

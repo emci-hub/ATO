@@ -2,29 +2,29 @@
   "sheets/streetwear/fx/archer/shot": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 0,
-        "y": 1438,
+        "x": 1113,
+        "y": 1511,
         "w": 29,
         "h": 29
       },
       "frame_001": {
-        "x": 30,
-        "y": 1438,
+        "x": 1143,
+        "y": 1511,
         "w": 29,
         "h": 29
       },
       "frame_002": {
-        "x": 60,
-        "y": 1438,
+        "x": 1173,
+        "y": 1511,
         "w": 29,
         "h": 29
       },
       "frame_003": {
-        "x": 90,
-        "y": 1438,
+        "x": 1203,
+        "y": 1511,
         "w": 29,
         "h": 29
       }
@@ -33,41 +33,41 @@
   "sheets/streetwear/fx/archer/hit": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 1236,
-        "y": 1338,
+        "x": 576,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_001": {
-        "x": 1282,
-        "y": 1338,
+        "x": 622,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_002": {
-        "x": 1328,
-        "y": 1338,
+        "x": 668,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_003": {
-        "x": 1374,
-        "y": 1338,
+        "x": 714,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_004": {
-        "x": 1420,
-        "y": 1338,
+        "x": 760,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_005": {
-        "x": 1466,
-        "y": 1338,
+        "x": 806,
+        "y": 1463,
         "w": 45,
         "h": 45
       }
@@ -76,7 +76,7 @@
   "sheets/streetwear/fx/bossko/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -167,7 +167,7 @@
   "sheets/streetwear/fx/cheer/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -234,53 +234,53 @@
   "sheets/streetwear/fx/ember/shot": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 0,
-        "y": 1283,
+        "x": 780,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_001": {
-        "x": 55,
-        "y": 1283,
+        "x": 835,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_002": {
-        "x": 110,
-        "y": 1283,
+        "x": 890,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_003": {
-        "x": 165,
-        "y": 1283,
+        "x": 945,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_004": {
-        "x": 220,
-        "y": 1283,
+        "x": 1000,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_005": {
-        "x": 275,
-        "y": 1283,
+        "x": 1055,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_006": {
-        "x": 330,
-        "y": 1283,
+        "x": 1110,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_007": {
-        "x": 385,
-        "y": 1283,
+        "x": 1165,
+        "y": 1348,
         "w": 54,
         "h": 54
       }
@@ -289,7 +289,7 @@
   "sheets/streetwear/fx/ember/hit": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 544,
@@ -326,7 +326,7 @@
   "sheets/streetwear/fx/ember/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 679,
@@ -405,77 +405,77 @@
   "sheets/streetwear/fx/ember/status": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 660,
-        "y": 1338,
+        "x": 0,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_001": {
-        "x": 708,
-        "y": 1338,
+        "x": 48,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_002": {
-        "x": 756,
-        "y": 1338,
+        "x": 96,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_003": {
-        "x": 804,
-        "y": 1338,
+        "x": 144,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_004": {
-        "x": 852,
-        "y": 1338,
+        "x": 192,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_005": {
-        "x": 900,
-        "y": 1338,
+        "x": 240,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_006": {
-        "x": 948,
-        "y": 1338,
+        "x": 288,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_007": {
-        "x": 996,
-        "y": 1338,
+        "x": 336,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_008": {
-        "x": 1044,
-        "y": 1338,
+        "x": 384,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_009": {
-        "x": 1092,
-        "y": 1338,
+        "x": 432,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_010": {
-        "x": 1140,
-        "y": 1338,
+        "x": 480,
+        "y": 1463,
         "w": 47,
         "h": 47
       },
       "frame_011": {
-        "x": 1188,
-        "y": 1338,
+        "x": 528,
+        "y": 1463,
         "w": 47,
         "h": 47
       }
@@ -484,7 +484,7 @@
   "sheets/streetwear/fx/ember/slash": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 904,
@@ -533,7 +533,7 @@
   "sheets/streetwear/fx/enrage/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -612,7 +612,7 @@
   "sheets/streetwear/fx/gate/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -703,29 +703,29 @@
   "sheets/streetwear/fx/plain/shot": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 540,
-        "y": 1393,
+        "x": 1668,
+        "y": 1463,
         "w": 43,
         "h": 43
       },
       "frame_001": {
-        "x": 584,
-        "y": 1393,
+        "x": 1712,
+        "y": 1463,
         "w": 43,
         "h": 43
       },
       "frame_002": {
-        "x": 628,
-        "y": 1393,
+        "x": 1756,
+        "y": 1463,
         "w": 43,
         "h": 43
       },
       "frame_003": {
-        "x": 672,
-        "y": 1393,
+        "x": 1800,
+        "y": 1463,
         "w": 43,
         "h": 43
       }
@@ -734,41 +734,41 @@
   "sheets/streetwear/fx/plain/hit": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 1512,
-        "y": 1338,
+        "x": 852,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_001": {
-        "x": 1558,
-        "y": 1338,
+        "x": 898,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_002": {
-        "x": 1604,
-        "y": 1338,
+        "x": 944,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_003": {
-        "x": 1650,
-        "y": 1338,
+        "x": 990,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_004": {
-        "x": 1696,
-        "y": 1338,
+        "x": 1036,
+        "y": 1463,
         "w": 45,
         "h": 45
       },
       "frame_005": {
-        "x": 1742,
-        "y": 1338,
+        "x": 1082,
+        "y": 1463,
         "w": 45,
         "h": 45
       }
@@ -777,7 +777,7 @@
   "sheets/streetwear/fx/plain/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 936,
@@ -832,7 +832,7 @@
   "sheets/streetwear/fx/plain/slash": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -881,138 +881,413 @@
   "sheets/streetwear/fx/pop/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 1348,
-        "y": 1393,
+        "x": 632,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_001": {
-        "x": 1385,
-        "y": 1393,
+        "x": 669,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_002": {
-        "x": 1422,
-        "y": 1393,
+        "x": 706,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_003": {
-        "x": 1459,
-        "y": 1393,
+        "x": 743,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_004": {
-        "x": 1496,
-        "y": 1393,
+        "x": 780,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_005": {
-        "x": 1533,
-        "y": 1393,
+        "x": 817,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_006": {
-        "x": 1570,
-        "y": 1393,
+        "x": 854,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_007": {
-        "x": 1607,
-        "y": 1393,
+        "x": 891,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_008": {
-        "x": 1644,
-        "y": 1393,
+        "x": 928,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_009": {
-        "x": 1681,
-        "y": 1393,
+        "x": 965,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_010": {
-        "x": 1718,
-        "y": 1393,
+        "x": 1002,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_011": {
-        "x": 1755,
-        "y": 1393,
+        "x": 1039,
+        "y": 1511,
         "w": 36,
         "h": 36
       },
       "frame_012": {
-        "x": 1792,
-        "y": 1393,
+        "x": 1076,
+        "y": 1511,
         "w": 36,
         "h": 36
+      }
+    }
+  },
+  "sheets/streetwear/fx/ringember/status": {
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "sheetW": 1917,
+    "sheetH": 1554,
+    "frames": {
+      "frame_000": {
+        "x": 869,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_001": {
+        "x": 934,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_002": {
+        "x": 999,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_003": {
+        "x": 1064,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_004": {
+        "x": 1129,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_005": {
+        "x": 1194,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_006": {
+        "x": 1259,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_007": {
+        "x": 1324,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "sheets/streetwear/fx/ringroot/status": {
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "sheetW": 1917,
+    "sheetH": 1554,
+    "frames": {
+      "frame_000": {
+        "x": 1389,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_001": {
+        "x": 1454,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_002": {
+        "x": 1519,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_003": {
+        "x": 1584,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_004": {
+        "x": 1649,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_005": {
+        "x": 1714,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_006": {
+        "x": 1779,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      },
+      "frame_007": {
+        "x": 1844,
+        "y": 1215,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "sheets/streetwear/fx/ringspark/status": {
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "sheetW": 1917,
+    "sheetH": 1554,
+    "frames": {
+      "frame_000": {
+        "x": 0,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_001": {
+        "x": 65,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_002": {
+        "x": 130,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_003": {
+        "x": 195,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_004": {
+        "x": 260,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_005": {
+        "x": 325,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_006": {
+        "x": 390,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_007": {
+        "x": 455,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "sheets/streetwear/fx/ringtide/status": {
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "sheetW": 1917,
+    "sheetH": 1554,
+    "frames": {
+      "frame_000": {
+        "x": 520,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_001": {
+        "x": 585,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_002": {
+        "x": 650,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_003": {
+        "x": 715,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_004": {
+        "x": 780,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_005": {
+        "x": 845,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_006": {
+        "x": 910,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_007": {
+        "x": 975,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      }
+    }
+  },
+  "sheets/streetwear/fx/ringvoid/status": {
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "sheetW": 1917,
+    "sheetH": 1554,
+    "frames": {
+      "frame_000": {
+        "x": 1040,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_001": {
+        "x": 1105,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_002": {
+        "x": 1170,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_003": {
+        "x": 1235,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_004": {
+        "x": 1300,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_005": {
+        "x": 1365,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_006": {
+        "x": 1430,
+        "y": 1283,
+        "w": 64,
+        "h": 64
+      },
+      "frame_007": {
+        "x": 1495,
+        "y": 1283,
+        "w": 64,
+        "h": 64
       }
     }
   },
   "sheets/streetwear/fx/root/shot": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 440,
-        "y": 1283,
+        "x": 1220,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_001": {
-        "x": 495,
-        "y": 1283,
+        "x": 1275,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_002": {
-        "x": 550,
-        "y": 1283,
+        "x": 1330,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_003": {
-        "x": 605,
-        "y": 1283,
+        "x": 1385,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_004": {
-        "x": 660,
-        "y": 1283,
+        "x": 1440,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_005": {
-        "x": 715,
-        "y": 1283,
+        "x": 1495,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_006": {
-        "x": 770,
-        "y": 1283,
+        "x": 1550,
+        "y": 1348,
         "w": 54,
         "h": 54
       },
       "frame_007": {
-        "x": 825,
-        "y": 1283,
+        "x": 1605,
+        "y": 1348,
         "w": 54,
         "h": 54
       }
@@ -1021,7 +1296,7 @@
   "sheets/streetwear/fx/root/hit": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 690,
@@ -1076,7 +1351,7 @@
   "sheets/streetwear/fx/root/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -1155,83 +1430,83 @@
   "sheets/streetwear/fx/root/status": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 869,
-        "y": 1215,
+        "x": 0,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_001": {
-        "x": 929,
-        "y": 1215,
+        "x": 60,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_002": {
-        "x": 989,
-        "y": 1215,
+        "x": 120,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_003": {
-        "x": 1049,
-        "y": 1215,
+        "x": 180,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_004": {
-        "x": 1109,
-        "y": 1215,
+        "x": 240,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_005": {
-        "x": 1169,
-        "y": 1215,
+        "x": 300,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_006": {
-        "x": 1229,
-        "y": 1215,
+        "x": 360,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_007": {
-        "x": 1289,
-        "y": 1215,
+        "x": 420,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_008": {
-        "x": 1349,
-        "y": 1215,
+        "x": 480,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_009": {
-        "x": 1409,
-        "y": 1215,
+        "x": 540,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_010": {
-        "x": 1469,
-        "y": 1215,
+        "x": 600,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_011": {
-        "x": 1529,
-        "y": 1215,
+        "x": 660,
+        "y": 1348,
         "w": 59,
         "h": 59
       },
       "frame_012": {
-        "x": 1589,
-        "y": 1215,
+        "x": 720,
+        "y": 1348,
         "w": 59,
         "h": 59
       }
@@ -1240,7 +1515,7 @@
   "sheets/streetwear/fx/root/slash": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 679,
@@ -1289,29 +1564,29 @@
   "sheets/streetwear/fx/spark/shot": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 716,
-        "y": 1393,
+        "x": 0,
+        "y": 1511,
         "w": 43,
         "h": 43
       },
       "frame_001": {
-        "x": 760,
-        "y": 1393,
+        "x": 44,
+        "y": 1511,
         "w": 43,
         "h": 43
       },
       "frame_002": {
-        "x": 804,
-        "y": 1393,
+        "x": 88,
+        "y": 1511,
         "w": 43,
         "h": 43
       },
       "frame_003": {
-        "x": 848,
-        "y": 1393,
+        "x": 132,
+        "y": 1511,
         "w": 43,
         "h": 43
       }
@@ -1320,7 +1595,7 @@
   "sheets/streetwear/fx/spark/hit": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 1234,
@@ -1375,7 +1650,7 @@
   "sheets/streetwear/fx/spark/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -1442,77 +1717,77 @@
   "sheets/streetwear/fx/spark/status": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 0,
-        "y": 1393,
+        "x": 1128,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_001": {
-        "x": 45,
-        "y": 1393,
+        "x": 1173,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_002": {
-        "x": 90,
-        "y": 1393,
+        "x": 1218,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_003": {
-        "x": 135,
-        "y": 1393,
+        "x": 1263,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_004": {
-        "x": 180,
-        "y": 1393,
+        "x": 1308,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_005": {
-        "x": 225,
-        "y": 1393,
+        "x": 1353,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_006": {
-        "x": 270,
-        "y": 1393,
+        "x": 1398,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_007": {
-        "x": 315,
-        "y": 1393,
+        "x": 1443,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_008": {
-        "x": 360,
-        "y": 1393,
+        "x": 1488,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_009": {
-        "x": 405,
-        "y": 1393,
+        "x": 1533,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_010": {
-        "x": 450,
-        "y": 1393,
+        "x": 1578,
+        "y": 1463,
         "w": 44,
         "h": 44
       },
       "frame_011": {
-        "x": 495,
-        "y": 1393,
+        "x": 1623,
+        "y": 1463,
         "w": 44,
         "h": 44
       }
@@ -1521,7 +1796,7 @@
   "sheets/streetwear/fx/spark/slash": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -1570,7 +1845,7 @@
   "sheets/streetwear/fx/summon/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -1637,53 +1912,53 @@
   "sheets/streetwear/fx/tide/shot": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 880,
-        "y": 1283,
+        "x": 0,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_001": {
-        "x": 935,
-        "y": 1283,
+        "x": 55,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_002": {
-        "x": 990,
-        "y": 1283,
+        "x": 110,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_003": {
-        "x": 1045,
-        "y": 1283,
+        "x": 165,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_004": {
-        "x": 1100,
-        "y": 1283,
+        "x": 220,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_005": {
-        "x": 1155,
-        "y": 1283,
+        "x": 275,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_006": {
-        "x": 1210,
-        "y": 1283,
+        "x": 330,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_007": {
-        "x": 1265,
-        "y": 1283,
+        "x": 385,
+        "y": 1408,
         "w": 54,
         "h": 54
       }
@@ -1692,7 +1967,7 @@
   "sheets/streetwear/fx/tide/hit": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 900,
@@ -1747,7 +2022,7 @@
   "sheets/streetwear/fx/tide/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -1802,77 +2077,77 @@
   "sheets/streetwear/fx/tide/status": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 892,
-        "y": 1393,
+        "x": 176,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_001": {
-        "x": 930,
-        "y": 1393,
+        "x": 214,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_002": {
-        "x": 968,
-        "y": 1393,
+        "x": 252,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_003": {
-        "x": 1006,
-        "y": 1393,
+        "x": 290,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_004": {
-        "x": 1044,
-        "y": 1393,
+        "x": 328,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_005": {
-        "x": 1082,
-        "y": 1393,
+        "x": 366,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_006": {
-        "x": 1120,
-        "y": 1393,
+        "x": 404,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_007": {
-        "x": 1158,
-        "y": 1393,
+        "x": 442,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_008": {
-        "x": 1196,
-        "y": 1393,
+        "x": 480,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_009": {
-        "x": 1234,
-        "y": 1393,
+        "x": 518,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_010": {
-        "x": 1272,
-        "y": 1393,
+        "x": 556,
+        "y": 1511,
         "w": 37,
         "h": 37
       },
       "frame_011": {
-        "x": 1310,
-        "y": 1393,
+        "x": 594,
+        "y": 1511,
         "w": 37,
         "h": 37
       }
@@ -1881,7 +2156,7 @@
   "sheets/streetwear/fx/tide/slash": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 679,
@@ -1930,53 +2205,53 @@
   "sheets/streetwear/fx/void/shot": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 1320,
-        "y": 1283,
+        "x": 440,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_001": {
-        "x": 1375,
-        "y": 1283,
+        "x": 495,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_002": {
-        "x": 1430,
-        "y": 1283,
+        "x": 550,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_003": {
-        "x": 1485,
-        "y": 1283,
+        "x": 605,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_004": {
-        "x": 1540,
-        "y": 1283,
+        "x": 660,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_005": {
-        "x": 1595,
-        "y": 1283,
+        "x": 715,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_006": {
-        "x": 1650,
-        "y": 1283,
+        "x": 770,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_007": {
-        "x": 1705,
-        "y": 1283,
+        "x": 825,
+        "y": 1408,
         "w": 54,
         "h": 54
       }
@@ -1985,7 +2260,7 @@
   "sheets/streetwear/fx/void/hit": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -2040,7 +2315,7 @@
   "sheets/streetwear/fx/void/burst": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,
@@ -2095,77 +2370,77 @@
   "sheets/streetwear/fx/void/status": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
-        "x": 0,
-        "y": 1338,
+        "x": 880,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_001": {
-        "x": 55,
-        "y": 1338,
+        "x": 935,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_002": {
-        "x": 110,
-        "y": 1338,
+        "x": 990,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_003": {
-        "x": 165,
-        "y": 1338,
+        "x": 1045,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_004": {
-        "x": 220,
-        "y": 1338,
+        "x": 1100,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_005": {
-        "x": 275,
-        "y": 1338,
+        "x": 1155,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_006": {
-        "x": 330,
-        "y": 1338,
+        "x": 1210,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_007": {
-        "x": 385,
-        "y": 1338,
+        "x": 1265,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_008": {
-        "x": 440,
-        "y": 1338,
+        "x": 1320,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_009": {
-        "x": 495,
-        "y": 1338,
+        "x": 1375,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_010": {
-        "x": 550,
-        "y": 1338,
+        "x": 1430,
+        "y": 1408,
         "w": 54,
         "h": 54
       },
       "frame_011": {
-        "x": 605,
-        "y": 1338,
+        "x": 1485,
+        "y": 1408,
         "w": 54,
         "h": 54
       }
@@ -2174,7 +2449,7 @@
   "sheets/streetwear/fx/void/slash": {
     "sheet": "sheets/streetwear/fx/atlas.png",
     "sheetW": 1917,
-    "sheetH": 1467,
+    "sheetH": 1554,
     "frames": {
       "frame_000": {
         "x": 0,

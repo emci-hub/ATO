@@ -2335,6 +2335,21 @@ export const SHEET = {
     pop: {
       burst: 'sheets/streetwear/fx/pop/burst',
     },
+    ringember: {
+      status: 'sheets/streetwear/fx/ringember/status',
+    },
+    ringroot: {
+      status: 'sheets/streetwear/fx/ringroot/status',
+    },
+    ringspark: {
+      status: 'sheets/streetwear/fx/ringspark/status',
+    },
+    ringtide: {
+      status: 'sheets/streetwear/fx/ringtide/status',
+    },
+    ringvoid: {
+      status: 'sheets/streetwear/fx/ringvoid/status',
+    },
     root: {
       shot: 'sheets/streetwear/fx/root/shot',
       hit: 'sheets/streetwear/fx/root/hit',
