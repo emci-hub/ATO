@@ -79,11 +79,22 @@ async function main() {
   assert.doesNotMatch(fn.slice(denyAt, approveAt), /sendInviteEmail|api\.resend\.com/);
   ok('approve emails via Resend; deny path does not send mail');
 
+  // A2 (emci 2026-10-22): sign-up is public, so the landing invite form is gone and wave111 purges
+  // access_requests. The table and the dev-hub review path stay for old links.
+  const landingFormProblems = (html: string): string[] => {
+    const out: string[] = [];
+    if (/id="access-form"|<form\b/i.test(html)) out.push('landing still has a form');
+    if (/rest\/v1\/access_requests/.test(html)) out.push('landing still posts to access_requests');
+    if (/SUPABASE_ANON_KEY/.test(html)) out.push('landing still carries the anon key');
+    return out;
+  };
   const landing = read('landing/index.html');
-  assert.match(landing, /id="access-form"/);
-  assert.match(landing, /type="email"/);
-  assert.match(landing, /rest\/v1\/access_requests/);
-  ok('landing page posts an email-only form to access_requests');
+  assert.deepEqual(landingFormProblems(landing), [], landingFormProblems(landing).join('; '));
+  assert.ok(landingFormProblems('<form id="access-form"><input type="email"></form>').length > 0, 'fail: the old form');
+  assert.ok(landingFormProblems("fetch(`${SUPABASE_URL}/rest/v1/access_requests`)").length > 0, 'fail: a stray POST');
+  assert.deepEqual(landingFormProblems('<a href="/support.html">support</a>'), [], 'pass: a support link');
+  assert.match(read('supabase/migrations/wave111_retention.sql'), /delete from public\.access_requests;/);
+  ok('landing has no invite form or anon key (pass/fail pairs); wave111 clears the old requests');
 
   const supabase = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
