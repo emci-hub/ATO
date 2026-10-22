@@ -1050,3 +1050,20 @@ About 5 min. Streetwear look, Effects Quality on Full, Motion on. Run on the OTA
 - [ ] **6** A boss wave. -> The boss flash is still brighter and longer than a creep's, now in the element colour on an element hit.
 - [ ] **7** Settings: Reduce Motion on (or Effects Off). -> No flash at all, white or coloured.
 - [ ] **8** Wave runs at normal speed; nothing stutters.
+
+## Box 72 — Turf War element rings under towers, hero towers and the helper (Divecore run order (c), 2026-10-22)
+
+About 8 min. Streetwear look, Effects Quality on Full, Motion on. Run on the OTA group `8539dd48` (restart the app twice to load it). One ring per tower, in the tower's element colour; the Archer has none.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Build a Vine, then a Crystal, then an Archer. -> The Vine gets a **green** ring on its pad, the Crystal a **yellow** one, the Archer **none**. The ring is a thin twin ring with small white flecks marching round it, drawn under the tower.
+- [ ] **2** Watch a ring for a few seconds. -> It loops smoothly (8 frames), the frames move and the ring is never cut off or stuck; no black box around it.
+- [ ] **3** Upgrade a tower to level 2, then 3. -> The ring gets a bit bigger each level and stays centred on the pad.
+- [ ] **4** Put a hero tower on a pad (a fire hero like Archangel or Kitsune). -> An **orange** ring under it; a tide hero (Elowen, Morwen) **blue**; root **green**; spark **yellow**; void **violet**.
+- [ ] **5** Sell a tower. -> Its ring disappears; the other rings keep playing (no jump or restart).
+- [ ] **6** Add the helper (Turf team). -> A ring in the helper's element colour sits under its feet and follows it as it walks; swap to a hero of another element in setup -> the ring changes to the new colour.
+- [ ] **7** Creeps walk over a ring. -> Creeps draw on top of tower rings (the helper's ring may sit above creeps near its feet, like the helper itself).
+- [ ] **8** Settings: Effects Quality Minimal, then Off. -> Minimal: about half the rings loop, the rest hold a still frame; Off: every ring is a still frame.
+- [ ] **9** Settings: Reduce Motion on (or Motion Off). -> Reduce Motion: rings play at half speed; Motion Off: still frames. No flashing.
+- [ ] **10** Wave with 6 towers + 2 hero towers + helper at normal speed. -> No stutter, still about 60 fps.
