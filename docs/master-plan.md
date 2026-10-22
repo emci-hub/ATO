@@ -299,7 +299,8 @@ Launch-ready table (evidence):
  5. Privacy/terms/labels/manifests: manifests + labels DONE (`check:floor`); **OPEN-YOURS: D12 + lawyer read, 46 `[CONFIRM]` tags
     (23 in `src/app/legal`, 23 in `landing`), landing redeploy, support inbox confirmed monitored.**
  6. Live `delete-account` check: **OPEN-YOURS** (never run live; Box 68 E2 covers the in-app path).
- 7. Copy reviewed / flags: **OPEN-YOURS / ACCEPT**: 16 `*_COPY_REVIEWED` flags are false on purpose; those surfaces ship hidden or unreviewed per
+ 7. Copy reviewed / flags: **OPEN-YOURS / ACCEPT**: (corrected 2026-10-22, roadmap v2: 17 flags are false, and a false flag hides NOTHING;
+    with `PRE_LAUNCH_DEV` off the copy is live with no badge. Decision = roadmap v2 step A4.) Original line: 16 `*_COPY_REVIEWED` flags are false on purpose; those surfaces ship hidden or unreviewed per
     Ledger A. Say "accept" or read them.
  8. Divecore reachable, real economy: DONE (Step 12, Box 67). 9. public signup: DONE (wave107); brand-new-email on a clean phone = Box 68 A.
  10. wave80: DONE (verified read-only 2026-10-21). "Old bundles not in use": accepted risk (Ledger A).

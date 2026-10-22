@@ -432,8 +432,14 @@ consent / Report / Block / Delete are; Box 68 B1/B3 fixed; Box 76 written. Check
 pre-existing on the base commit in a clean worktree (`*.key` in `.gitignore` hid the `icon.streetwear.key` previews from
 every fresh clone); fixed in `c06ef0ff`, that check re-run green. Reviewer (Opus): FAIL → fixed (1 critical, 2 warnings);
 open warnings: the header Report sheet does not preview which message it reports; Report/Block show no visible disabled
-state while busy (pre-existing). **Left for emci:** D20 (password line), OTA OK, Box 76 + Box 68 on a phone, demo account
-per `app-store-pack.md` step 2b.
+state while busy (pre-existing). **Left for emci:** OTA OK, Box 76 + Box 68 on a phone, demo account per `app-store-pack.md` step 2b.
+**D20 settled (emci 2026-10-22):** remove only the "set a password in Settings" promise; password login stays; no auth
+feature added or removed. Done in the login intro, the hint and the failure line (`login.tsx`, `auth-password.ts`).
+**S6 done (2026-10-22, read-only SQL on the live project):** cron jobs `ai-library-fill` (*/10), `chat-retention-30d`
+(daily 04:23), `dev-trace-expire` (hourly) and `profile-history-monthly` (1st, 03:07) all exist and are active; every run in
+the last 3 days succeeded (432 / 1 / 72); the monthly job calls `snapshot_profiles_monthly()`, which exists (first run
+2026-11-01). Docs truth pass (part of S12) done: CLAUDE.md header, wave80/wave100 status, deep-dive "crisis day", AI-token
+line; NOW superseded notes; OPEN-QUESTIONS 8; sage-cleanup §4; master-plan line 302.
 
 ### Step AN0: Merge the art PR (82)
 Model: Sonnet

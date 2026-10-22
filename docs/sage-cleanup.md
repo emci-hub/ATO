@@ -39,7 +39,9 @@ mixed with app edits). Suggested wording: "Home, Check and Insights…".
 
 ## 4. Widget header
 
-`targets/widget/widgets.swift:45`: `Text("SAGE · COACH")`. Swift, so it changes only with
+**DONE (master-plan Step 3, 2026-10-20): the header now reads "ATO" (`widgets.swift:45,68`).** What is still stale
+in the widget is the "READ" / "DO" labels and "Today's Read and Do." description (roadmap v2 S13, next native build).
+Original note: `targets/widget/widgets.swift:45`: `Text("SAGE · COACH")`. Swift, so it changes only with
 the next native build, not an OTA. Suggested: an ATO / Insights header.
 `scripts/floor-check.ts` and `scripts/push-check.ts` pin that string; update them together.
 The `'sage'` default `callType` in `supabase/functions/ai-generate/index.ts:359` is the

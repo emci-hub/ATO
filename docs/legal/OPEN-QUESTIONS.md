@@ -31,7 +31,7 @@ This is not legal advice. It lists what only emci or a lawyer can answer before 
    - a lawful-basis statement
    - an access / export / correction process beyond in-app delete
    - a statement about data hosted abroad (Supabase, AI vendors)
-8. **Age-rating answers (App Store Connect).** The app is 18+ with no chat, has user-to-user Circle features (handles, preset gifts, friends' strengths), AI-generated cards, "going" to 18+ nights, and adult humor and strong swearing under the content policy. Pick the questionnaire answers and confirm the rating. Report and block now exist, and the support email is the contact point.
+8. **Age-rating answers (App Store Connect).** The app is 18+, has 1:1 end-to-end encrypted chat between accepted friends from version 1.1, has user-to-user Circle features (handles, preset gifts, friends' strengths), AI-generated cards, "going" to 18+ nights, and adult humor and strong swearing under the content policy. Pick the questionnaire answers and confirm the rating. Report and block now exist, and the support email is the contact point.
 9. **Label categories.**
    - (a) Keep `OtherUsageData` (it now covers only the AI usage log) or fold it into `ProductInteraction`? Changing it means editing the plist, `app.json`, the labels doc and `check:floor` together.
    - (b) Is the Divecore save right under `OtherUserContent`?
