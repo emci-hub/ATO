@@ -283,8 +283,18 @@ Nothing below blocks the next job; emci runs or accepts each.
    `check:turf-war-layout`. Art critique score not entered (candidate; only emci sets approved).
    **(d) Minigames M1: built + published 2026-10-22** (OTA group `ea99eae5`, commit `f9e2f0d8`; phone check = Box 73, not
    done): 3-2-1, result card that waits for Continue, star / X-bomb shapes, +n pops, combo strip, haptics, shared-value
-   fall + marker; **Easy pays 2 tokens** (Normal+ 5; emci OK'd); pinned in `check:pet-games`; save stays v33. Left for M2:
-   Streetwear food / bomb / dummy art, Hideout-style Catch background, the pet's real aura, happy / "oof" faces.
+   fall + marker; **Easy pays 2 tokens** (Normal+ 5; emci OK'd); pinned in `check:pet-games`; save stays v33.
+   **(e) Minigames M2: built + published 2026-10-22** (OTA group `a16f5e57`, commit `2e580a4f`; phone check = Box 74, not
+   done; emci OK'd up to ~60 PixelLab generations, 5 used): Catch food = PixelLab pizza / donut / burger (32 px,
+   `icon.streetwear.*`), golden = the library star on a star halo, bomb = the library bomb with a red X overlay; Train
+   dummy = a PixelLab hanging punching bag (`prop.streetwear.punching-bag`, swings from the top, shadow); Catch wears the
+   Hideout's wall + floor + neon at 1 pt per art px (uniform scale on wide stages; no furniture); the flat glow square is a
+   radial ×3 combo pool and the pet now wears its grade aura, sword-element aura, finish and shiny ring / glimmer
+   (`GamePet` gained optional look fields, built in `pet-screen.tsx`); happy = the pet's skill clip (golden catch, perfect
+   hit; dash if none), oof = its hurt clip on a Train miss (red flash if none). No new "happy" clip exists, so faces are
+   existing clips only. Pinned in `check:pet-games` (incl. an encoding pin). Train keeps the classic room plate. Library
+   entries are `resource` status with no critique score yet. Save stays v33. Left: **(f) Minigames M3** (depth; may need
+   new `game_records` fields: ask emci first).
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
    being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12

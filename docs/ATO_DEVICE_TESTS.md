@@ -1085,3 +1085,21 @@ About 10 min. Feed → Catch the food, and Play → Tap to train. Run on the OTA
 - [ ] **9** Settings: Larger Text on. -> The status line under the title is not cut off and the top bar keeps its size; the 2-line hint is unchanged.
 - [ ] **10** Settings: Reduce Motion on (or Effects Off). -> The 3-2-1 and the "+n" show without movement; no squash, wobble, shake or buzzing.
 - [ ] **11** Back out mid-round with **< Pet**. -> No card, nothing counted (as before).
+
+## Box 74 — Minigames M2: look (Divecore run order (e), 2026-10-22)
+
+About 10 min. Feed → Catch the food, and Play → Tap to train. Run on the OTA group `a16f5e57` (restart the app twice to load it). Rules and tokens are unchanged from Box 73.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Start Catch the food. -> The background is the Hideout's own room (brick wall with the window, wood floor, a little neon glow), not the underwater reef. No bare dark bands at the sides or top.
+- [ ] **2** Look at the falling items. -> Pizza slice, donut and burger fall (pixel art, not coloured circles); a golden one is a **star on a pale halo**; the bomb is a round bomb with a **red X** over it. You still tell them apart without colour.
+- [ ] **3** Catch a golden star. -> The pet does its **skill move** (or at least dashes) and the +n pops as before. Catch normal food -> it dashes as before.
+- [ ] **4** Look at the pet while playing (a pet with an aura, a grade, a finish or a shiny). -> It shows the **same aura / finish / shiny ring as in the Hideout**, not a flat coloured square. At a ×3 combo a soft glow pool lights behind it.
+- [ ] **5** Tap a bomb. -> The pet's hurt move (or a red flash) and the flash as before.
+- [ ] **6** Tap to train. -> The dummy is a **red hanging punching bag with a soft shadow**; a hit swings it from the top; the old scribble crate is gone.
+- [ ] **7** Miss a tap in Train. -> The pet does its **"oof"** (hurt move, or a red flash) and stumbles; a Perfect hit plays its skill move.
+- [ ] **8** On the biggest phone you have (or Display Zoom off): Catch background. -> No bare bands; the room just looks a bit bigger.
+- [ ] **9** Settings: Reduce Motion on (or Effects Off). -> No aura motes / sparkles moving, no combo pulse, no swing / squash / shake; the finish rests.
+- [ ] **10** Larger Text on. -> Status line and 2-line hint are not cut off; the dock does not resize.
+- [ ] **11** Play a few rounds. -> Still smooth (about 60 fps), nothing flickers when many items are on screen.
