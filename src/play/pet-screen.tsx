@@ -1090,6 +1090,11 @@ export function PetScreen({
     eggColor,
     recolor: revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn, pet.shiny_style) : null,
     glow: revealed && pet.grade ? GRADE_COLOR[pet.grade] : ELEMENT_COLOR[view.legendElement],
+    grade: revealed ? pet.grade : null,
+    shiny: revealed && pet.shiny,
+    shinyStyle: pet.shiny_style,
+    glimmer: revealed && !pet.shiny && pet.glimmer,
+    auraElement: view.swords.equipped?.element ?? null,
   };
   const shownName = petShownName(pet);
   // Today (Divecore finish step 4): what is ready right now, derived from the live view (no save, no timer: it

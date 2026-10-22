@@ -105,9 +105,12 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'icon.streetwear.backpack': require('@/assets/art/icons/in-use/streetwear/backpack.png'),
   'icon.streetwear.bandana': require('@/assets/art/icons/in-use/streetwear/bandana.png'),
   'icon.streetwear.bat': require('@/assets/art/icons/in-use/streetwear/bat.png'),
+  'icon.streetwear.bomb': require('@/assets/art/icons/in-use/streetwear/bomb.png'),
   'icon.streetwear.bucket-hat': require('@/assets/art/icons/in-use/streetwear/bucket-hat.png'),
+  'icon.streetwear.burger': require('@/assets/art/icons/in-use/streetwear/burger.png'),
   'icon.streetwear.cap': require('@/assets/art/icons/in-use/streetwear/cap.png'),
   'icon.streetwear.coin-stack': require('@/assets/art/icons/in-use/streetwear/coin-stack.png'),
+  'icon.streetwear.donut': require('@/assets/art/icons/in-use/streetwear/donut.png'),
   'icon.streetwear.dpad': require('@/assets/art/icons/in-use/streetwear/dpad.png'),
   'icon.streetwear.flame': require('@/assets/art/icons/in-use/streetwear/flame.png'),
   'icon.streetwear.gem': require('@/assets/art/icons/in-use/streetwear/gem.png'),
@@ -116,6 +119,7 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'icon.streetwear.lamp': require('@/assets/art/icons/in-use/streetwear/lamp.png'),
   'icon.streetwear.marker': require('@/assets/art/icons/in-use/streetwear/marker.png'),
   'icon.streetwear.padlock': require('@/assets/art/icons/in-use/streetwear/padlock.png'),
+  'icon.streetwear.pizza': require('@/assets/art/icons/in-use/streetwear/pizza.png'),
   'icon.streetwear.potion': require('@/assets/art/icons/in-use/streetwear/potion.png'),
   'icon.streetwear.shades': require('@/assets/art/icons/in-use/streetwear/shades.png'),
   'icon.streetwear.shield': require('@/assets/art/icons/in-use/streetwear/shield.png'),
@@ -141,6 +145,7 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'prop.streetwear.barrel-fire': require('@/assets/art/props/in-use/streetwear/barrel-fire.png'),
   'prop.streetwear.boombox': require('@/assets/art/props/in-use/streetwear/boombox.png'),
   'prop.streetwear.crate': require('@/assets/art/props/in-use/streetwear/crate.png'),
+  'prop.streetwear.punching-bag': require('@/assets/art/props/in-use/streetwear/punching-bag.png'),
   'prop.streetwear.tire-stack': require('@/assets/art/props/in-use/streetwear/tire-stack.png'),
   'prop.streetwear.traffic-cone': require('@/assets/art/props/in-use/streetwear/traffic-cone.png'),
   'prop.streetwear.trash-bags': require('@/assets/art/props/in-use/streetwear/trash-bags.png'),
@@ -373,6 +378,7 @@ export type ArtId =
   | 'icon.streetwear.brick-paint'
   | 'icon.streetwear.brick-wall'
   | 'icon.streetwear.bucket-hat'
+  | 'icon.streetwear.burger'
   | 'icon.streetwear.cap'
   | 'icon.streetwear.card'
   | 'icon.streetwear.cassette'
@@ -382,6 +388,7 @@ export type ArtId =
   | 'icon.streetwear.coin-stack'
   | 'icon.streetwear.crown'
   | 'icon.streetwear.dice'
+  | 'icon.streetwear.donut'
   | 'icon.streetwear.dpad'
   | 'icon.streetwear.drop'
   | 'icon.streetwear.fist'
@@ -401,6 +408,7 @@ export type ArtId =
   | 'icon.streetwear.padlock-chain'
   | 'icon.streetwear.paint-bucket'
   | 'icon.streetwear.paint-roller'
+  | 'icon.streetwear.pizza'
   | 'icon.streetwear.potion'
   | 'icon.streetwear.price-tag'
   | 'icon.streetwear.shades'
@@ -635,6 +643,7 @@ export type ArtId =
   | 'prop.streetwear.pad-manhole-splat'
   | 'prop.streetwear.pad-sticker-slab'
   | 'prop.streetwear.paint-splat-decal'
+  | 'prop.streetwear.punching-bag'
   | 'prop.streetwear.shopping-cart'
   | 'prop.streetwear.shopping-cart-tipped'
   | 'prop.streetwear.spray-can-single'
@@ -1533,6 +1542,7 @@ export const ART = {
       brickPaint: 'icon.streetwear.brick-paint',
       brickWall: 'icon.streetwear.brick-wall',
       bucketHat: 'icon.streetwear.bucket-hat',
+      burger: 'icon.streetwear.burger',
       cap: 'icon.streetwear.cap',
       card: 'icon.streetwear.card',
       cassette: 'icon.streetwear.cassette',
@@ -1542,6 +1552,7 @@ export const ART = {
       coinStack: 'icon.streetwear.coin-stack',
       crown: 'icon.streetwear.crown',
       dice: 'icon.streetwear.dice',
+      donut: 'icon.streetwear.donut',
       dpad: 'icon.streetwear.dpad',
       drop: 'icon.streetwear.drop',
       fist: 'icon.streetwear.fist',
@@ -1561,6 +1572,7 @@ export const ART = {
       padlockChain: 'icon.streetwear.padlock-chain',
       paintBucket: 'icon.streetwear.paint-bucket',
       paintRoller: 'icon.streetwear.paint-roller',
+      pizza: 'icon.streetwear.pizza',
       potion: 'icon.streetwear.potion',
       priceTag: 'icon.streetwear.price-tag',
       shades: 'icon.streetwear.shades',
@@ -1899,6 +1911,7 @@ export const ART = {
       padManholeSplat: 'prop.streetwear.pad-manhole-splat',
       padStickerSlab: 'prop.streetwear.pad-sticker-slab',
       paintSplatDecal: 'prop.streetwear.paint-splat-decal',
+      punchingBag: 'prop.streetwear.punching-bag',
       shoppingCart: 'prop.streetwear.shopping-cart',
       shoppingCartTipped: 'prop.streetwear.shopping-cart-tipped',
       sprayCanSingle: 'prop.streetwear.spray-can-single',

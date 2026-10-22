@@ -8,38 +8,43 @@
  *
  * v26: a level (Easy / Normal / Hard / Insane), a combo multiplier shown big
  * (×2 / ×3 / ×5), a live score, and the pet ON SCREEN (existing clips only):
- *   - Catch: it stands at the bottom, dashes toward each catch and hops; a
- *     bomb plays its hurt clip (or a red flash when it has none); at ×3 and up
- *     it glows.
- *   - Train: a dungeon crate is the training dummy; a hit plays the pet's
- *     attack clip and knocks the crate back; a miss makes it stumble; a
- *     perfect hit (the middle of the zone) adds a flash and a small shake.
+ *   - Catch: it stands at the bottom, dashes toward each catch and hops (a
+ *     golden catch plays its skill clip: the happy beat); a bomb plays its hurt
+ *     clip (or a red flash when it has none); at ×3 and up a soft glow lights up.
+ *   - Train: a Streetwear punching bag is the training dummy; a hit plays the
+ *     pet's attack clip and swings the bag; a miss plays "oof" (hurt) and makes
+ *     it stumble; a perfect hit (the middle of the zone) plays its skill clip
+ *     and adds a flash and a small shake.
+ *   - M2 look: the pet wears its real grade / element aura, finish and shiny
+ *     ring, as in the Hideout; the food, bomb and dummy are library sprites.
  *   - Reduced motion or Effects Low: still poses, no shake.
  * The daily challenge passes a seeded `rng`, so its pattern is fixed per date.
  * Each game reports once, when the round ends: the outcome and its score.
  *
  * Both rounds mount full screen (the Play sheet is only the hub). They share
  * one plate: Dive's top chrome, a framed stage that fills the safe area, and
- * a framed dock. Catch wears the reef plate; Train wears the pet-room plate.
- * Both are darkened so the food, the pet, and the dummy stay in front. The
- * path dither, caustic sparkles, dust, and bubbles stay. No new tileset.
+ * a framed dock. Catch wears the Hideout's own room (wall, floor, neon);
+ * Train wears the pet-room plate. Both are darkened so the food, the pet, and
+ * the dummy stay in front. The path dither, dust and sparkle stay.
  */
 import { Image } from 'expo-image';
 import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
-import Svg, { Circle, Path, Polygon } from 'react-native-svg';
+import Svg, { Defs, Ellipse, Path, Polygon, RadialGradient, Stop } from 'react-native-svg';
 
-import { BubbleRing } from '@/play/dive-world';
+import { ART, ROOM, getArtSource } from '@/art/art';
 import { GAME_LABEL } from '@/play/game-records';
-import { PLAY_ART } from '@/play/generated-play-assets';
-import { Drift, Flicker, MoteRise, Sway, Twinkle } from '@/play/pixel-ambient';
-import { AtlasSprite, MOCKUP_DIVE, MOCKUP_ROOM, placePlate } from '@/play/pixel-atlas';
-import { ART_PT, PIXEL, PIXEL_CAPTION_PT, pixelBodyLine } from '@/play/pixel-theme';
-import { CausticWash, DitherPool, useHitJuice } from '@/play/pixel-fx';
+import { Flicker, MoteRise, Twinkle } from '@/play/pixel-ambient';
+import { AtlasSprite, MOCKUP_ROOM, placePlate } from '@/play/pixel-atlas';
+import { ART_PT, PIXEL, PIXEL_CAPTION_PT, pixelBodyLine, pixelRenderStyle } from '@/play/pixel-theme';
+import { DitherPool, useHitJuice } from '@/play/pixel-fx';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import type { PetState } from '@/play/pet';
+import type { Grade, ShinyStyle } from '@/play/pet-eggs';
+import { GlimmerGlow, GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import { petPose, petPoseMs, type PetPose } from '@/play/pet-actor';
+import { roleGroundAt } from '@/play/skin';
 import { GameScreen, useStageFrame } from '@/play/stage-layout';
 import { PetAnimSprite, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
 import type { PetWear } from '@/play/pet-cosmetics';
@@ -82,8 +87,14 @@ export type GamePet = {
   wear: PetWear;
   eggColor: string;
   recolor: string | null;
-  /** Its glow colour (the Legend element / grade colour). */
+  /** Its glow colour (the Legend element / grade colour); lights up behind it at a ×3 combo. */
   glow: string;
+  /** Its real look, as the Hideout draws it (M2): grade aura, shiny ring, glimmer, sword-element aura. */
+  grade?: Grade | null;
+  shiny?: boolean;
+  shinyStyle?: ShinyStyle | null;
+  glimmer?: boolean;
+  auraElement?: string | null;
 };
 
 export type GameProps = {
@@ -111,9 +122,14 @@ function useGameActor(gp: GamePet | null | undefined) {
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
-  const play = (want: 'dash' | 'attack' | 'hurt', face: PetFace) => {
+  // `skill` is the "happy" beat (a golden catch, a perfect hit); `hurt` is "oof". Both are existing clips.
+  const play = (want: 'dash' | 'attack' | 'hurt' | 'skill', face: PetFace) => {
     if (!gp) return;
     const pose = petPose(gp.art.kit, want);
+    if (!pose && want === 'skill') {
+      play('dash', face); // a pet without a skill clip still moves for the happy beat
+      return;
+    }
     if (!pose) {
       // No such clip: a hurt is a red flash; anything else just faces.
       if (want === 'hurt') {
@@ -134,7 +150,29 @@ function useGameActor(gp: GamePet | null | undefined) {
   return { act, flash, play };
 }
 
-/** Memoized: the games re-render every tick; the pet only when its act changes. */
+/** The ×3-combo light behind the pet: a soft radial pool in its colour (not a flat square). */
+function ComboGlow({ color, still }: { color: string; still: boolean }) {
+  const r = GAME_PET_BOX * 0.7;
+  return (
+    <View pointerEvents="none" style={[styles.glow, still && styles.glowStill]}>
+      <Svg width={r * 2} height={r * 2}>
+        <Defs>
+          <RadialGradient id="combo-glow" cx="50%" cy="55%" r="50%">
+            <Stop offset="0" stopColor={color} stopOpacity={0.6} />
+            <Stop offset="1" stopColor={color} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Ellipse cx={r} cy={r} rx={r} ry={r} fill="url(#combo-glow)" />
+      </Svg>
+    </View>
+  );
+}
+
+/**
+ * Memoized: the games re-render every tick; the pet only when its act changes.
+ * M2: the pet wears what it wears in the Hideout (grade aura, sword-element aura,
+ * finish, shiny ring, glimmer), through the same `PetAnimSprite` + overlays.
+ */
 const GamePetSprite = memo(function GamePetSprite({
   gp,
   act,
@@ -148,14 +186,11 @@ const GamePetSprite = memo(function GamePetSprite({
   still: boolean;
   glow: boolean;
 }) {
+  const groundAt = gp.pet.stage === 'egg' ? 1 : roleGroundAt(gp.art.role);
   return (
     <View style={{ width: GAME_PET_BOX, height: GAME_PET_BOX }}>
-      {glow ? (
-        <View
-          pointerEvents="none"
-          style={[styles.glow, { backgroundColor: gp.glow }, still && styles.glowStill]}
-        />
-      ) : null}
+      {glow ? <ComboGlow color={gp.glow} still={still} /> : null}
+      <GradeAura grade={gp.grade ?? null} size={GAME_PET_BOX} animate={!still} trail={null} />
       <PetAnimSprite
         pet={gp.pet}
         art={gp.art}
@@ -168,7 +203,12 @@ const GamePetSprite = memo(function GamePetSprite({
         box={GAME_PET_BOX}
         animate={!still}
         recolor={gp.recolor}
+        lockColour={gp.shiny === true}
+        reduceMotion={still}
+        auraElement={gp.auraElement ?? null}
       />
+      {gp.shiny ? <ShinyOverlay size={GAME_PET_BOX} groundAt={groundAt} animate={!still} style={gp.shinyStyle ?? null} /> : null}
+      {!gp.shiny && gp.glimmer ? <GlimmerGlow size={GAME_PET_BOX} groundAt={groundAt} animate={!still} /> : null}
       {flash ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.hurtFlash]} /> : null}
     </View>
   );
@@ -192,20 +232,21 @@ function ComboBadge({ mult }: { mult: number }) {
 
 /* ------------------------------------------------------- shared plate --- */
 
-/** Deepest water cell. Shows at the crop when the reef plate does not cover the stage. */
-const ARENA = '#0B3E48';
-/** Night wall, so a cropped room plate does not fall back to teal. */
+/** Night wall, so a cropped room plate does not fall back to a flat colour. */
 const DOJO = '#140E1C';
 /** Ink over the plate. The actors sit above this, so they stay the bright layer. */
 const SCRIM = 'rgba(5,7,13,0.42)';
+/** Catch's room is the Hideout's own, so the scrim can be lighter (the food has a dark outline). */
+const CATCH_SCRIM = 'rgba(5,7,13,0.3)';
 
-/** Bubble rises, in shares of the stage. Radii match Dive's mockup rings. */
-const ARENA_BUBBLES = [
-  { x: 0.2, y: 0.78, r: 2, ms: 4200, delay: 0 },
-  { x: 0.7, y: 0.66, r: 1, ms: 5000, delay: 420 },
-  { x: 0.46, y: 0.86, r: 3, ms: 5400, delay: 860 },
-  { x: 0.84, y: 0.58, r: 2, ms: 4600, delay: 180 },
-] as const;
+/**
+ * The Catch room is the Hideout's wall, floor and neon glow at the Hideout's own
+ * scale (1 pt per art px, no furniture: nothing sits where the food falls).
+ */
+const CATCH_ROOM_W = 352;
+const CATCH_ROOM_H = 576;
+const CATCH_ROOM_LAYERS = [getArtSource(ROOM.hideout.back), getArtSource(ROOM.hideout.floor)] as const;
+const CATCH_ROOM_NEON = getArtSource(ROOM.hideout.neonA);
 
 /** Room dust, in shares of the stage. */
 const ARENA_MOTES = [
@@ -216,18 +257,39 @@ const ARENA_MOTES = [
 
 /**
  * Stage atmosphere. DitherPool is one path of Bayer cells (not an SVG
- * Pattern). CausticWash is a few cycling sparkles — a wide cell would paint
- * column bars, so that component stays small. Bubbles are Dive's rings;
- * dust and the sparkle are the room's. `alive` is false under Reduce Motion
- * and Effects Low: the pool holds, the sparkle rests, particles are not mounted.
+ * Pattern). Dust and the sparkle are the room's. `alive` is false under Reduce
+ * Motion and Effects Low: the pool holds, the sparkle rests, particles are not mounted.
  */
 type ArenaKind = 'catch' | 'train';
 
 /**
- * The place behind the round. Catch clips the reef plate (ruins, kelp, seabed).
+ * The Hideout's wall, floor and neon glow behind Catch: top-anchored so the brick
+ * and the window show above the floor the pet stands on; a tall stage anchors the
+ * floor's end to the bottom instead. Crops left and right when the stage is narrow.
+ */
+function CatchRoom({ width, height }: { width: number; height: number }) {
+  // Uniform scale (never stretched): 1 on a normal phone, a little more on a wide stage so no bare band shows at the sides.
+  const s = Math.max(1, width / CATCH_ROOM_W);
+  const w = Math.ceil(CATCH_ROOM_W * s);
+  const h = Math.ceil(CATCH_ROOM_H * s);
+  const left = Math.round((width - w) / 2);
+  const top = height > h - 16 ? Math.round(height - h) : 0;
+  const frame = { position: 'absolute' as const, left, top, width: w, height: h, ...pixelRenderStyle };
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      {CATCH_ROOM_LAYERS.map((src, i) =>
+        src ? <Image key={i} source={src} contentFit="fill" style={frame} /> : null,
+      )}
+      {CATCH_ROOM_NEON ? <Image source={CATCH_ROOM_NEON} contentFit="fill" style={[frame, styles.roomNeon]} /> : null}
+    </View>
+  );
+}
+
+/**
+ * The place behind the round. Catch wears the Hideout's room (above).
  * Train clips the pet room (window, lamp, brick). A short stage hides the
- * ceiling, so the window, lamp glow, and a ruin head are pinned when the crop
- * cuts them off. An ink scrim sits on the art; the pet, food, and dummy do not.
+ * ceiling, so the window and lamp glow are pinned when the crop cuts them off.
+ * An ink scrim sits on the art; the pet, food, and dummy do not.
  */
 function ArenaDressing({
   kind,
@@ -241,86 +303,56 @@ function ArenaDressing({
   height: number;
 }) {
   if (width < 8 || height < 8) return null;
+  if (kind === 'catch') {
+    return (
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <CatchRoom width={width} height={height} />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: CATCH_SCRIM }]} />
+      </View>
+    );
+  }
   const k = ART_PT;
-  const anchor = kind === 'catch' ? MOCKUP_DIVE.feet : MOCKUP_ROOM.feet;
-  const origin = placePlate(width, height, anchor, 16);
+  const origin = placePlate(width, height, MOCKUP_ROOM.feet, 16);
   const artTop = Math.max(0, -origin.top / k);
-  const pinCeiling = artTop > (kind === 'catch' ? 48 : MOCKUP_ROOM.sky.y);
+  const pinCeiling = artTop > MOCKUP_ROOM.sky.y;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>
-        <AtlasSprite atlas={kind === 'catch' ? 'dive' : 'room'} frame="plate" />
-        {kind === 'catch' ? (
-          <View style={{ position: 'absolute', left: MOCKUP_DIVE.shimmer.x * k, top: MOCKUP_DIVE.shimmer.y * k }}>
-            <Flicker alive={alive} peak={0.4} ms={1400}>
-              <AtlasSprite atlas="dive" frame="shimmer" />
+        <AtlasSprite atlas="room" frame="plate" />
+        <View style={{ position: 'absolute', left: MOCKUP_ROOM.glow.x * k, top: MOCKUP_ROOM.glow.y * k }}>
+          <Flicker alive={alive} peak={0.55} ms={480}>
+            <AtlasSprite atlas="room" frame="glow" />
+          </Flicker>
+        </View>
+        <View style={{ position: 'absolute', left: MOCKUP_ROOM.sky.x * k, top: MOCKUP_ROOM.sky.y * k }}>
+          <Twinkle alive={alive} ms={1100} rest={1}>
+            <AtlasSprite atlas="room" frame="sky" />
+          </Twinkle>
+        </View>
+      </View>
+      <View style={{ position: 'absolute', left: 6, bottom: 6 }}>
+        <AtlasSprite atlas="dive" frame="crate" />
+      </View>
+      <View style={{ position: 'absolute', left: 34, bottom: 16 }}>
+        <AtlasSprite atlas="dive" frame="crate-small" />
+      </View>
+      <View style={{ position: 'absolute', right: 8, bottom: 8 }}>
+        <AtlasSprite atlas="dive" frame="chest" />
+      </View>
+      {pinCeiling ? (
+        <>
+          <View style={{ position: 'absolute', left: 10, top: 8 }}>
+            <Twinkle alive={alive} ms={1100} rest={1}>
+              <AtlasSprite atlas="room" frame="sky" />
+            </Twinkle>
+          </View>
+          <View style={styles.lampClip}>
+            <Flicker alive={alive} peak={0.5} ms={520}>
+              <AtlasSprite atlas="room" frame="glow" scale={1} />
             </Flicker>
           </View>
-        ) : (
-          <>
-            <View style={{ position: 'absolute', left: MOCKUP_ROOM.glow.x * k, top: MOCKUP_ROOM.glow.y * k }}>
-              <Flicker alive={alive} peak={0.55} ms={480}>
-                <AtlasSprite atlas="room" frame="glow" />
-              </Flicker>
-            </View>
-            <View style={{ position: 'absolute', left: MOCKUP_ROOM.sky.x * k, top: MOCKUP_ROOM.sky.y * k }}>
-              <Twinkle alive={alive} ms={1100} rest={1}>
-                <AtlasSprite atlas="room" frame="sky" />
-              </Twinkle>
-            </View>
-          </>
-        )}
-      </View>
-      {kind === 'catch' ? (
-        <>
-          <View style={{ position: 'absolute', left: -12, bottom: 4 }}>
-            <Sway alive={alive} deg={2.2} ms={2400}>
-              <AtlasSprite atlas="dive" frame="weed" />
-            </Sway>
-          </View>
-          <View style={{ position: 'absolute', right: -8, bottom: 12 }}>
-            <AtlasSprite atlas="dive" frame="coral" />
-          </View>
-          {pinCeiling ? (
-            <View style={styles.ruinClip}>
-              <View style={{ position: 'absolute', left: -16, top: -8 }}>
-                <AtlasSprite atlas="dive" frame="statue-deep" scale={1} />
-              </View>
-            </View>
-          ) : null}
-          <View style={{ position: 'absolute', left: width * 0.12, top: height * 0.2, opacity: 0.55 }}>
-            <Drift alive={alive} dx={Math.min(96, width * 0.28)} dy={4} ms={7200}>
-              <AtlasSprite atlas="dive" frame="fish0" />
-            </Drift>
-          </View>
         </>
-      ) : (
-        <>
-          <View style={{ position: 'absolute', left: 6, bottom: 6 }}>
-            <AtlasSprite atlas="dive" frame="crate" />
-          </View>
-          <View style={{ position: 'absolute', left: 34, bottom: 16 }}>
-            <AtlasSprite atlas="dive" frame="crate-small" />
-          </View>
-          <View style={{ position: 'absolute', right: 8, bottom: 8 }}>
-            <AtlasSprite atlas="dive" frame="chest" />
-          </View>
-          {pinCeiling ? (
-            <>
-              <View style={{ position: 'absolute', left: 10, top: 8 }}>
-                <Twinkle alive={alive} ms={1100} rest={1}>
-                  <AtlasSprite atlas="room" frame="sky" />
-                </Twinkle>
-              </View>
-              <View style={styles.lampClip}>
-                <Flicker alive={alive} peak={0.5} ms={520}>
-                  <AtlasSprite atlas="room" frame="glow" scale={1} />
-                </Flicker>
-              </View>
-            </>
-          ) : null}
-        </>
-      )}
+      ) : null}
       <View style={[StyleSheet.absoluteFill, { backgroundColor: SCRIM }]} />
     </View>
   );
@@ -349,23 +381,10 @@ function ArenaAmbient({
         cy={Math.max(8, artH - 12)}
         rx={Math.max(12, Math.round(artW * 0.42))}
         ry={14}
-        color={kind === 'train' ? PIXEL.amber : PIXEL.cyan}
+        color={PIXEL.amber}
         lit={2}
-        gain={kind === 'train' ? 0.28 : 0.4}
+        gain={kind === 'train' ? 0.28 : 0.2}
       />
-      {kind === 'catch' ? <CausticWash alive={alive} width={width} height={height} /> : null}
-      {ARENA_BUBBLES.map((b, i) => (
-        <MoteRise
-          key={`b${i}`}
-          alive={alive}
-          left={b.x * width}
-          top={b.y * height}
-          distance={Math.min(120, height * 0.35)}
-          ms={b.ms}
-          delay={b.delay}>
-          <BubbleRing r={b.r} />
-        </MoteRise>
-      ))}
       {ARENA_MOTES.map((m, i) => (
         <MoteRise
           key={`m${i}`}
@@ -462,7 +481,7 @@ function GamePlate({
         }
         stage={
       <View style={styles.stageWrap}>
-        <PixelFrame align="stretch" padded={false} glow fill={kind === 'catch' ? ARENA : DOJO} border={PIXEL.cyan} grow>
+        <PixelFrame align="stretch" padded={false} glow fill={DOJO} border={PIXEL.cyan} grow>
           <View style={styles.stage} onLayout={onLayout}>
             <ArenaDressing kind={kind} alive={alive} width={box.width} height={box.height} />
             <ArenaAmbient kind={kind} alive={alive} width={box.width} height={box.height} />
@@ -682,33 +701,40 @@ const STAR_POINTS = Array.from({ length: 10 }, (_, i) => {
   return `${(20 + r * Math.cos(a)).toFixed(1)},${(22 + r * Math.sin(a)).toFixed(1)}`;
 }).join(' ');
 
+/** Streetwear food (pizza, donut, burger), one per FOOD_COLORS slot; golden is the library star, the bomb the library bomb. */
+const FOOD_SPRITES = [ART.icon.streetwear.pizza, ART.icon.streetwear.donut, ART.icon.streetwear.burger].map((id) => getArtSource(id));
+const STAR_SPRITE = getArtSource(ART.icon.streetwear.star);
+const BOMB_SPRITE = getArtSource(ART.icon.streetwear.bomb);
+
+/**
+ * Normal food is a snack sprite; golden is the star sprite on a pale star halo, so it
+ * reads by shape as well as colour; the bomb keeps its own shape + a red X.
+ */
 function FoodShape({ color, golden = false }: { color: string; golden?: boolean }) {
   if (golden) {
     return (
-      <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40">
-        <Polygon points={STAR_POINTS} fill="#FFF3B0" fillOpacity={0.5} stroke="#FFF3B0" strokeWidth={4} strokeLinejoin="round" />
-        <Polygon points={STAR_POINTS} fill={color} stroke="#B8860B" strokeWidth={1.5} strokeLinejoin="round" />
-      </Svg>
+      <View style={styles.foodArt}>
+        <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40" style={StyleSheet.absoluteFill}>
+          <Polygon points={STAR_POINTS} fill="#FFF3B0" fillOpacity={0.5} stroke="#FFF3B0" strokeWidth={4} strokeLinejoin="round" />
+        </Svg>
+        {STAR_SPRITE ? <Image source={STAR_SPRITE} contentFit="contain" style={styles.foodImg} /> : null}
+      </View>
     );
   }
-  return (
-    <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40">
-      <Circle cx="20" cy="23" r="13" fill={color} />
-      <Circle cx="15" cy="19" r="3.5" fill="#FFFFFF" fillOpacity={0.45} />
-      <Path d="M20 10 Q24 4 29 6 Q26 11 20 10 Z" fill="#7CE38B" />
-    </Svg>
-  );
+  const sprite = FOOD_SPRITES[Math.max(0, FOOD_COLORS.indexOf(color as (typeof FOOD_COLORS)[number]))];
+  return sprite ? <Image source={sprite} contentFit="contain" style={styles.foodImg} /> : null;
 }
 
-/** The bomb: a dark round body with a red X (a shape cue, not the emoji). */
+/** The bomb: the library bomb with a red X over its body (a shape cue that survives greyscale; not the emoji). */
 function BombShape() {
   return (
-    <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40">
-      <Path d="M24 11 Q29 5 33 8" stroke="#C9A66B" strokeWidth={2.5} fill="none" strokeLinecap="round" />
-      <Circle cx="34" cy="7" r="2.5" fill="#FFB020" />
-      <Circle cx="19" cy="24" r="13" fill="#1B1F2A" stroke="#FF3B5C" strokeWidth={2} />
-      <Path d="M13 18 L25 30 M25 18 L13 30" stroke="#FF3B5C" strokeWidth={3.5} strokeLinecap="round" />
-    </Svg>
+    <View style={styles.foodArt}>
+      {BOMB_SPRITE ? <Image source={BOMB_SPRITE} contentFit="contain" style={styles.foodImg} /> : null}
+      <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40" style={StyleSheet.absoluteFill}>
+        <Path d="M12 22 L24 34 M24 22 L12 34" stroke="#05070D" strokeWidth={6} strokeLinecap="round" />
+        <Path d="M12 22 L24 34 M24 22 L12 34" stroke="#FF3B5C" strokeWidth={3.5} strokeLinecap="round" />
+      </Svg>
+    </View>
   );
 }
 
@@ -877,7 +903,7 @@ export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.ran
     if (gained > 0) addPop(item.x * (box.width - FOOD_SIZE), item.y * Math.max(0, box.height - FOOD_SIZE), `+${gained}`);
     // The pet dashes toward the catch and hops.
     const toward = Math.max(0.08, Math.min(0.92, item.x + 0.04));
-    play('dash', toward < petX.value ? 'w' : 'e');
+    play(item.kind === 'golden' ? 'skill' : 'dash', toward < petX.value ? 'w' : 'e');
     if (!still) {
       if (item.kind === 'golden') rewardHaptic();
       else tapHaptic();
@@ -945,7 +971,9 @@ export const TRAIN_REPS = TRAIN.taps;
 /** Where a Train "+n" floats up from (over the crate side of the floor). */
 const TRAIN_POP_X = 190;
 const TRAIN_POP_Y = 60;
-const CRATE_ART = PLAY_ART['tiles/scribble-dungeons/crate'];
+/** The Train dummy: the library's Streetwear punching bag (it hangs, so it swings from the top). */
+const DUMMY_ART = getArtSource(ART.prop.streetwear.punchingBag);
+const DUMMY_SIZE = 64;
 
 function randomZone(width: number, r: () => number): number {
   return width / 2 + 0.05 + r() * (1 - width - 0.1);
@@ -1013,13 +1041,14 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
       else alertHaptic();
     }
     if (hit) {
-      play('attack', 'e');
+      play(perfect ? 'skill' : 'attack', 'e');
       if (!still) {
         knock.value = withSequence(withTiming(18, { duration: 90 }), withTiming(0, { duration: 260, easing: Easing.bounce }));
         if (perfect) juice.play();
       }
-    } else if (!still) {
-      stumble.value = withSequence(withTiming(-8, { duration: 90 }), withTiming(0, { duration: 200 }));
+    } else {
+      play('hurt', 'e'); // "oof": its hurt clip, or the red flash when it has none
+      if (!still) stumble.value = withSequence(withTiming(-8, { duration: 90 }), withTiming(0, { duration: 200 }));
     }
     const nextZone = randomZone(next.zone, rngRef.current);
     zoneRef.current = nextZone;
@@ -1107,10 +1136,13 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
           ) : (
             <View style={{ width: GAME_PET_BOX }} />
           )}
-          {CRATE_ART ? (
-            <Animated.View style={crateStyle}>
-              <Image source={CRATE_ART} contentFit="contain" style={styles.crate} accessibilityLabel="Training dummy" />
-            </Animated.View>
+          {DUMMY_ART ? (
+            <View style={styles.dummy}>
+              <View pointerEvents="none" style={styles.dummyShadow} />
+              <Animated.View style={[styles.dummySwing, crateStyle]}>
+                <Image source={DUMMY_ART} contentFit="contain" style={styles.dummyArt} accessibilityLabel="Training dummy" />
+              </Animated.View>
+            </View>
           ) : null}
         </View>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.perfectFlash, flashVeil]} />
@@ -1137,7 +1169,7 @@ const styles = StyleSheet.create({
   statusLine: { textAlign: 'center', minHeight: pixelBodyLine(PIXEL_CAPTION_PT) },
   stageWrap: { flex: 1, minHeight: 0, paddingHorizontal: 8, paddingVertical: 6 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' },
-  ruinClip: { position: 'absolute', right: 4, top: 4, width: 72, height: 88, overflow: 'hidden', opacity: 0.55 },
+  roomNeon: { opacity: 0.6 },
   lampClip: { position: 'absolute', right: 4, top: 4, width: 88, height: 120, overflow: 'hidden', opacity: 0.7 },
   dock: { flex: 1, width: '100%', paddingHorizontal: 8, paddingBottom: 8 },
   dockPad: { width: '100%', padding: 12, gap: 8 },
@@ -1157,6 +1189,8 @@ const styles = StyleSheet.create({
     height: FOOD_SIZE,
   },
   foodHit: { width: FOOD_SIZE, height: FOOD_SIZE },
+  foodArt: { width: FOOD_SIZE, height: FOOD_SIZE },
+  foodImg: { width: FOOD_SIZE, height: FOOD_SIZE, ...pixelRenderStyle },
   hostFill: { flex: 1, minHeight: 0, width: '100%' },
   countVeil: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
   countText: { fontSize: 64, lineHeight: 72 },
@@ -1182,7 +1216,18 @@ const styles = StyleSheet.create({
   cardLine: { textAlign: 'center' },
   // Fixed regions: always 2 lines tall, so a longer hint never shrinks the playfield.
   hint: { textAlign: 'center', minHeight: pixelBodyLine(PIXEL_CAPTION_PT) * 2 },
-  crate: { width: 56, height: 56 },
+  dummy: { width: DUMMY_SIZE, height: DUMMY_SIZE },
+  dummyShadow: {
+    position: 'absolute',
+    left: DUMMY_SIZE * 0.2,
+    width: DUMMY_SIZE * 0.6,
+    bottom: 0,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(5,7,13,0.4)',
+  },
+  dummySwing: { width: DUMMY_SIZE, height: DUMMY_SIZE, transformOrigin: 'top' },
+  dummyArt: { width: DUMMY_SIZE, height: DUMMY_SIZE, ...pixelRenderStyle },
   bar: {
     height: 36,
     width: '100%',
@@ -1213,15 +1258,9 @@ const styles = StyleSheet.create({
   bombFlash: { backgroundColor: '#FF3B5C', opacity: 0.4 },
   perfectFlash: { backgroundColor: '#FFFFFF' },
   hurtFlash: { backgroundColor: '#FF3B5C', opacity: 0.45 },
-  glow: {
-    position: 'absolute',
-    left: -ART_PT * 2,
-    top: -ART_PT * 2,
-    right: -ART_PT * 2,
-    bottom: -ART_PT * 2,
-    opacity: 0.28,
-  },
-  glowStill: { opacity: 0.22 },
+  // Centred on the pet's box (the pool is 1.4 boxes wide).
+  glow: { position: 'absolute', left: -GAME_PET_BOX * 0.2, top: -GAME_PET_BOX * 0.2, opacity: 0.9 },
+  glowStill: { opacity: 0.6 },
   combo: {
     position: 'absolute',
     top: 8,

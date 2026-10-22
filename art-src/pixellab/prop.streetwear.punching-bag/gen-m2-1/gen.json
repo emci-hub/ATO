@@ -1,0 +1,22 @@
+{
+  "tool": "pixellab",
+  "model": "pixflux",
+  "prompt": "boxing heavy bag hanging from a chain, red leather, empty no person, pictorial, no text",
+  "negative": null,
+  "seed": "22",
+  "size": "32",
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {},
+  "cost": null,
+  "createdAt": "2026-10-22T16:14:38.965Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": ""
+  },
+  "dirMap": {}
+}

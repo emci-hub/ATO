@@ -379,4 +379,27 @@ ok('daily challenge: one fixed pattern per date and game; best only rises; bonus
 }
 ok('Minigames M1: bomb + star shapes, UI-thread fall and marker, 3-2-1, result card on Continue, haptics gated by still, bomb timer cleared');
 
+{
+  // Minigames M2 (2026-10-22): the look. Art is named through the library tree, never a loose path or the old placeholders.
+  const games = readFileSync('src/play/pet-games.tsx', 'utf8');
+  const screen = readFileSync('src/play/pet-screen.tsx', 'utf8');
+  for (const id of ['pizza', 'donut', 'burger', 'star', 'bomb']) {
+    assert.ok(new RegExp(`ART\\.icon\\.streetwear\\.${id}\\b`).test(games), `${id} is a Streetwear library sprite`);
+  }
+  assert.ok(/ART\.prop\.streetwear\.punchingBag/.test(games), 'the Train dummy is the Streetwear punching bag');
+  assert.ok(!/scribble-dungeons|CRATE_ART|PLAY_ART/.test(games), 'no off-style scribble crate');
+  assert.ok(/ROOM\.hideout\.back/.test(games) && /ROOM\.hideout\.floor/.test(games), 'Catch wears the Hideout room');
+  assert.ok(!/MOCKUP_DIVE|BubbleRing|CausticWash/.test(games), 'Catch no longer wears the reef plate, bubbles or caustics');
+  assert.ok(!/styles\.glow, \{ backgroundColor/.test(games), 'no flat tinted square: the glow is a radial pool');
+  assert.ok(/<GradeAura /.test(games) && /<ShinyOverlay /.test(games) && /auraElement=\{gp\.auraElement/.test(games), 'the pet shows its real aura / finish / shiny ring');
+  assert.ok(/lockColour=\{gp\.shiny === true\}/.test(games) && /reduceMotion=\{still\}/.test(games), 'a shiny keeps its colour; the finish rests under Reduce Motion');
+  assert.ok(/play\('hurt', 'e'\)/.test(games) && /item\.kind === 'golden' \? 'skill' : 'dash'/.test(games) && /perfect \? 'skill' : 'attack'/.test(games), 'happy (skill clip) and oof (hurt clip) come from existing clips');
+  assert.ok(/auraElement: view\.swords\.equipped/.test(screen) && /grade: revealed \? pet\.grade : null/.test(screen), 'the pet room hands the games the real look');
+  assert.ok(/hint: \{ textAlign: 'center', minHeight: pixelBodyLine\(PIXEL_CAPTION_PT\) \* 2 \}/.test(games), 'the hint stays two lines (fixed regions)');
+  assert.ok(!/Ã|â€|ðŸ/.test(games), 'pet-games.tsx is clean UTF-8 (no double-encoded x, dash or bomb characters)');
+  assert.ok(/!pose && want === 'skill'/.test(games), 'a pet with no skill clip still moves for the happy beat');
+  assert.ok(/const s = Math\.max\(1, width \/ CATCH_ROOM_W\)/.test(games), 'the Catch room scales uniformly on a wide stage');
+}
+ok('Minigames M2: Streetwear food / bomb / dummy sprites, Hideout room behind Catch, real aura + finish on the pet, happy / oof from existing clips');
+
 console.log(`\ncheck:pet-games — ${passed} groups passed.`);

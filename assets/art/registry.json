@@ -4441,7 +4441,7 @@
     },
     {
       "id": "icon.streetwear.bomb",
-      "path": "assets/art/icons/unused/streetwear/bomb.png",
+      "path": "assets/art/icons/in-use/streetwear/bomb.png",
       "type": "icon",
       "theme": "streetwear",
       "placement": "hud",
@@ -4457,9 +4457,11 @@
       "format": "png32",
       "notes": "md5:1e49281374dd955be805e2b8f25028d6",
       "tags": [],
-      "usedBy": [],
+      "usedBy": [
+        "src/play/pet-games.tsx"
+      ],
       "category": "icons",
-      "inUse": false,
+      "inUse": true,
       "set": "streetwear",
       "variant": "streetwear",
       "part": "bomb",
@@ -4608,6 +4610,33 @@
       "legacyKeys": [
         "ui.ui-streetwear-icons-bucket-hat"
       ]
+    },
+    {
+      "id": "icon.streetwear.burger",
+      "path": "assets/art/icons/in-use/streetwear/burger.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1366,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:bdec99a0448c1aaaeb00e7a9c5bc8591",
+      "inUse": true,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/pet-games.tsx"
+      ],
+      "part": "burger"
     },
     {
       "id": "icon.streetwear.cap",
@@ -4866,6 +4895,33 @@
       "legacyKeys": [
         "ui.ui-streetwear-icons-dice"
       ]
+    },
+    {
+      "id": "icon.streetwear.donut",
+      "path": "assets/art/icons/in-use/streetwear/donut.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 1363,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:7a0b931b2f8259666c52e932a11ebc14",
+      "inUse": true,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/pet-games.tsx"
+      ],
+      "part": "donut"
     },
     {
       "id": "icon.streetwear.dpad",
@@ -5414,6 +5470,33 @@
       ]
     },
     {
+      "id": "icon.streetwear.pizza",
+      "path": "assets/art/icons/in-use/streetwear/pizza.png",
+      "category": "icons",
+      "type": "icon",
+      "theme": "streetwear",
+      "placement": "hud",
+      "camera": "flat-ui",
+      "size": {
+        "w": 32,
+        "h": 32
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 663,
+      "decodedBytes": 4096,
+      "format": "png32",
+      "notes": "md5:058b7f9559a49070442d0d31da0559dc",
+      "inUse": true,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/pet-games.tsx"
+      ],
+      "part": "pizza"
+    },
+    {
       "id": "icon.streetwear.potion",
       "path": "assets/art/icons/in-use/streetwear/potion.png",
       "type": "icon",
@@ -5723,7 +5806,8 @@
       "tags": [],
       "usedBy": [
         "src/play/dive-hud.tsx",
-        "src/play/hideout-art.ts"
+        "src/play/hideout-art.ts",
+        "src/play/pet-games.tsx"
       ],
       "category": "icons",
       "inUse": true,
@@ -13864,6 +13948,33 @@
       ]
     },
     {
+      "id": "prop.streetwear.punching-bag",
+      "path": "assets/art/props/in-use/streetwear/punching-bag.png",
+      "category": "props",
+      "type": "prop",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "td-3q-low",
+      "size": {
+        "w": 64,
+        "h": 64
+      },
+      "status": "resource",
+      "source": "pixellab",
+      "diskBytes": 955,
+      "decodedBytes": 16384,
+      "format": "png32",
+      "notes": "md5:db7dfcdf1b284e257083389c7f29ad92",
+      "inUse": true,
+      "set": "streetwear",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "src/play/pet-games.tsx"
+      ],
+      "part": "punching-bag"
+    },
+    {
       "id": "prop.streetwear.shopping-cart",
       "path": "assets/art/props/unused/streetwear/shopping-cart.png",
       "type": "prop",
@@ -14196,7 +14307,8 @@
       "notes": "md5:e474680b31560959ab758344e0399b9c",
       "tags": [],
       "usedBy": [
-        "src/play/hideout-art.ts"
+        "src/play/hideout-art.ts",
+        "src/play/pet-games.tsx"
       ],
       "category": "rooms",
       "inUse": true,
@@ -14277,7 +14389,8 @@
       "notes": "md5:4bd98145080077397e29940e51148c87",
       "tags": [],
       "usedBy": [
-        "src/play/hideout-art.ts"
+        "src/play/hideout-art.ts",
+        "src/play/pet-games.tsx"
       ],
       "category": "rooms",
       "inUse": true,
@@ -14580,7 +14693,8 @@
       "notes": "md5:27c2ab48e0fbc8763803f7f1ba345e01",
       "tags": [],
       "usedBy": [
-        "src/play/hideout-art.ts"
+        "src/play/hideout-art.ts",
+        "src/play/pet-games.tsx"
       ],
       "category": "rooms",
       "inUse": true,
