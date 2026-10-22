@@ -265,6 +265,9 @@ Nothing below blocks the next job; emci runs or accepts each.
    chilled creeps (`statusGlowColor`, `src/play/status-icons.ts`; drawn in `defend-screen.tsx`, Streetwear only, display
    only; pinned in `check:kits`); **phone check PASSED** (emci, 2026-10-21; OTA group `8b2c2691`). Chain bolts were already element-tinted. **Not built:** an
    element-coloured hit flash and a Turf-scale tower/hero aura (pet auras don't fit; needs new PixelLab art).
+   **Run order (emci, 2026-10-21: "all", one chat each, one OTA each):** (a) balance leftovers, (b) element-coloured hit
+   flash, (c) Turf-scale tower/hero aura (new PixelLab art, samples first), (d) Minigames M1, (e) M2, (f) M3. Locker icon
+   approval stays emci's. Tick each here when its phone box passes. Done: Box 58, Element look glow.
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
    being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12
