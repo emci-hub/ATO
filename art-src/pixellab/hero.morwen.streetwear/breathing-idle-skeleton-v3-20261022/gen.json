@@ -1,0 +1,11 @@
+{
+  "tool": "pixellab",
+  "operator": "claude (Morwen identity retry, emci: skeleton-v3 east only)",
+  "createdAt": "2026-10-22",
+  "source": "character e1c19bb1-e57e-4837-a2f7-07a787dcfcaa (imported from art-src/pixellab/hero.morwen.streetwear/migrated/raw/rotations, 192x192)",
+  "animation": {"tool": "animate_character", "mode": "skeleton-v3", "template_animation_id": "breathing-idle", "directions": ["east"], "frames": 4, "canvas": "192x192", "generations": 3, "group": "ecfcc9d0-81cd-4560-b626-309717537f1a", "animation_id": "7a1ddab1-0744-416a-aa54-8e4fa08c4b00", "job": "010e60f5-9294-4ce2-a98a-86261e66ddd3"},
+  "seed": null,
+  "picked": false,
+  "installed": false,
+  "critique": {"score": null, "notes": "east only. Height 105 px (current 104-105), feet on row 150 (current 150), 1326-1964 changed px/frame. Identity kept: hat, hair, robe flare and trim. Drift: sleeve/arm reaches forward-low (current tucks the hand), hem motifs softer, hat tilted slightly. Awaiting emci's ok; west not generated."}
+}
