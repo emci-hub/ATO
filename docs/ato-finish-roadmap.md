@@ -422,8 +422,23 @@ RULES: no dependency/auth/env changes without emci's OK; Play and app in separat
 END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
 ```
 
-**Step A1 status (2026-10-22): built, checked, pushed on `claude/brave-mendel-wbhxaq` (draft PR #83); NOT merged, OTA NOT
-published.** Done: token copy matches `AI_USE_DISCLOSURE` (no Story, no frozen reroll / free name-style price; only deep
+**Step A2 status (2026-10-22): built on `feature/ato-a2-legal` (A1 PR #83 merged into master first, emci OK).** emci's answers:
+"ATO, operated by Michael Malig"; inbox `support@emgens.com` (ImprovMX, live); Gemini only (D26: DeepSeek dropped by unsetting
+`DEEPSEEK_API_KEY`, no AI code touched; AI removal is PR #84, still a draft with its switch off, so the AI paragraph is worded
+to be true before and after #84); D27 Gemini plan unconfirmed, so the text states Google's terms for both plans; invite form
+removed; public card kept and disclosed. emci OK'd the fill-in table: retention (reports + deletion record 2 years, backups ≤30
+days, chat 30, Resend 30, Sentry ≤90, ImprovMX 7), 24 h report target, 30-day access requests + privacy contact, Alberta law and
+courts, breach plan (`docs/legal/breach-plan.md`). Built: `src/app/legal/{privacy,terms,app-privacy-labels}.md` and
+`landing/{privacy,terms,index}.html` final (0 `[CONFIRM`, 0 "Draft"), new `landing/support.html`; `wave111_retention.sql`
+(daily purge, copy of the wave108 chat cleanup; one-time delete of `access_requests`) **NOT applied**; in-app mailto lines
+(You, Under-18, Circle) moved to support@emgens.com, so an OTA is needed; encryption reasoning in `app-store-pack.md` §9 (Apple +
+BIS 2021 rule: standard algorithms, not in France, mass-market end item, no document and no report, `false` stays; no
+professional review needed); `check:floor` rewritten (final-text rules, app/landing sentence sync, wave111 pins, pass/fail
+pairs), `check:founder-access` (no landing form, pass/fail pairs). Box 77 written. **Left for emci:** unset the DeepSeek key,
+apply wave111, redeploy the landing site, OTA, Box 77, confirm the Gemini plan.
+
+**Step A1 status (2026-10-22): built, checked, pushed on `claude/brave-mendel-wbhxaq` (draft PR #83); MERGED into master
+2026-10-22 (A2 chat), OTA NOT published.** Done: token copy matches `AI_USE_DISCLOSURE` (no Story, no frozen reroll / free name-style price; only deep
 dives are free from the library, up to 10 a day: the reviewer caught a wrong "library cards are free" line, fixed);
 visible Report in the chat header (latest friend message; hidden while Block is armed); Divecore's automatic Build ask
 respects the app's "Not now" (Play commit `655fa0bc`); review notes (§5 of `app-store-pack.md`) describe 1.1 and where AI

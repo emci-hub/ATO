@@ -8,11 +8,11 @@ this file: the demo password is typed by emci into ASC and never written anywher
 
 | Field | Value |
 |---|---|
-| Support URL | `https://ato.emgens.com/` (the landing footer has a Support mailto). **Gap:** there is no dedicated /support page; ASC accepts the landing page, but Apple wants a way to reach you on it. It has `mailto:support@asstrollogs.com`. |
+| Support URL | `https://ato.emgens.com/support.html` (A2, 2026-10-22: contact, report/block, delete account, data requests, helplines) |
 | Marketing URL | leave empty |
 | Privacy Policy URL | `https://ato.emgens.com/privacy.html` (must be redeployed from `landing/` first, see blockers) |
 | Terms (EULA) | Apple's standard EULA, or paste `https://ato.emgens.com/terms.html` in the App Description |
-| Contact email for review | `support@asstrollogs.com` [CONFIRM the spelling and that the inbox is monitored: BUSINESS.md line 86 is still unticked] |
+| Contact email for review | `support@emgens.com` (live: ImprovMX forwarding, MX + SPF verified on Vercel DNS; emci 2026-10-22) |
 
 ## 2. Age rating (Apple's questionnaire)
 
@@ -38,7 +38,7 @@ UGC safeguards to state in the review notes (all built and pinned by checks):
 - Block and Report in the Circle tab (Circle tab → the ⋯ menu on a friend; six fixed report reasons); a blocked pair sees nothing of each other.
 - Names and handles pass the name filter before they are saved.
 - Circle needs acceptance from both sides; reports survive account deletion.
-- Published contact: `support@asstrollogs.com` (You tab, legal pages).
+- Published contact: `support@emgens.com` (You tab, Circle tab, legal pages, `ato.emgens.com/support.html`).
 - In-app account deletion: More → You → "Delete account" (final button "Delete my account forever"; also revokes the Apple token).
 
 Expected result: **18+** (a "17+" or "18+" band in Apple's current scheme). Do not select a lower band.
@@ -120,18 +120,18 @@ No screenshots exist in the repo. Capture these 6, light mode, no personal data,
 
 ## 7. Store text defaults
 
-- Name `ATO`; category Lifestyle (primary), Entertainment (secondary); copyright `© 2026 emgens` [CONFIRM the entity, D12].
+- Name `ATO`; category Lifestyle (primary), Entertainment (secondary); copyright `© 2026 Michael Malig` (emci 2026-10-22: "ATO, operated by Michael Malig").
 - Promotional text and description: write from `docs/ME.md`; do not claim diagnosis, therapy or clinical results.
 - Version 1.0.0; "What's New": "First release."
-- Pricing: Free. Availability: your choice; the privacy and terms text names no country-specific law yet [CONFIRM, D12].
+- Pricing: Free. Availability: USA and Canada (as set in ASC). Keep France off unless a French encryption declaration is filed (§9). The terms name Alberta law and courts, with local consumer rights kept.
 
 ## 8. Submission blockers (as of 2026-10-21)
 
 | # | Blocker | Who | State |
 |---|---|---|---|
-| D12 | Legal facts + lawyer read (`docs/legal/OPEN-QUESTIONS.md` items 1-16; 46 `[CONFIRM]` tags in `src/app/legal/*` and `landing/*.html`) | emci + lawyer | **OPEN** |
-| LP | Landing pages (`landing/privacy.html`, `terms.html`) redeployed so the privacy URL shows the Step 10 text | emci (Vercel redeploy) | confirm |
-| SUP | `support@asstrollogs.com` is a real, monitored inbox (BUSINESS.md:86) | emci | confirm |
+| D12 | Legal facts (`docs/legal/OPEN-QUESTIONS.md`) | emci | **DONE 2026-10-22 (A2):** every `[CONFIRM]` filled from emci's answers + official sources; no lawyer needed (CLAUDE.md compliance rule) |
+| LP | Landing pages (`landing/privacy.html`, `terms.html`, `support.html`, `index.html`) redeployed | emci (Vercel redeploy) | open: after `DEEPSEEK_API_KEY` is unset |
+| SUP | `support@emgens.com` is a real, monitored inbox | emci | **DONE** (ImprovMX, 2026-10-22) |
 | DEMO | Apple demo account created with an 18+ birthday | emci | open |
 | D8 | Gemini key rotation | emci | recorded as rotated (master plan line 166, 2026-10-20/21); confirm and delete the line in `.env.local` |
 | D13 | Drop `play_dev_logs` (small migration) | emci OK needed | open, not a blocker if you accept it |
@@ -155,8 +155,21 @@ for the 1.0 commit). Change these in ASC only when you submit the 1.1 build (it 
 **Export compliance (1.1).** ATO now encrypts chat itself with libsodium (X25519 + XSalsa20-Poly1305, standard published
 algorithms). When ASC asks after upload: "Does your app use encryption?" Yes. "Does it qualify for an exemption?" Choose the
 answer for **standard encryption algorithms** (not proprietary, not Apple-OS-only); this is the mass-market case, so no
-documents are uploaded. [CONFIRM with the lawyer (D12): whether a France encryption declaration is needed if ATO is
-offered in France, and whether a US annual self-classification report applies. Not legal advice.]
+documents are uploaded.
+
+**Encryption reasoning (A2, 2026-10-22; researched from official sources, no lawyer needed).**
+
+| Question | Answer | Source | Label |
+|---|---|---|---|
+| What does ATO encrypt itself? | 1:1 chat with libsodium: X25519 key exchange (RFC 7748) and XSalsa20-Poly1305 (NaCl `crypto_box`; Poly1305 in RFC 8439; XSalsa20 published by its author and used in NaCl since 2008). Everything else is HTTPS through Apple's OS. | code (`src/lib/chat/`) | fact |
+| Is it "standard" or "proprietary" for Apple? | Standard. Apple counts as non-standard only algorithms "that have not been adopted or approved by a duly recognized international standards body ... and haven't otherwise been published". These are published and widely used. | Apple, "Overview of export compliance" | fact |
+| What does Apple need uploaded? | For "an industry standard algorithm, not provided within the Apple operating system": only a French encryption declaration, and only "if you're distributing your app on the App Store in France". ATO is USA + Canada only, so nothing. | Apple, "Export compliance documentation for encryption" | **mandatory** (and met) |
+| Does the US need a BIS classification (CCATS)? | No. A consumer chat app using standard crypto is a mass-market item (Cat. 5 Part 2 Note 3), classified by the developer as ECCN 5D992.c and exported with no licence required (NLR) to the US and Canada. The 2021 rule says mass-market items "no longer require classification by BIS". | 15 CFR 740.17; Federal Register 2021-05481 (2021-03-29) | fact |
+| Does the US need a yearly self-classification report? | No. After the 2021 rule the mass-market report is kept only for the items listed in 740.17(e)(3) (mass-market "components" and "executable software"; toolsets and non-mass-market items have their own rules that don't apply here), and "'Executable software' does not include complete binary images of the 'software' running on an end item". ATO is a finished end-user app. | Federal Register 2021-05481 | fact |
+| Is `ITSAppUsesNonExemptEncryption = false` right? | Yes. ASC's questionnaire for standard algorithms outside France ends in "no documentation required", and Apple then says to set the Info.plist key so the questions are skipped. Build 18 was accepted with `false`; `true` without a document code was refused (error 90592). | Apple pages above; ASC upload result | fact |
+| What would change the answer? | (1) Offering ATO in France: file the French declaration (ANSSI) first. (2) Adding a home-made or unpublished algorithm: CCATS needed. (3) Selling a crypto library or SDK on its own: different rules. | same | **mandatory if it happens** |
+
+Professional review: not needed. Every question above is answered by Apple's own pages and the published US rule.
 
 **Update 2026-10-21 (emci).** Build 17 (`true`, no compliance code) was rejected by Apple on upload: error 90592, "Invalid Export
 Compliance Code". ASC had no encryption document on file. Apple's table
@@ -164,8 +177,8 @@ Compliance Code". ASC had no encryption document on file. Apple's table
 upload for standard algorithms when the app is not distributed in France; ATO is available in USA and Canada only (2 available,
 173 not). We first removed the key, but `eas build` asked "iOS app only uses standard/exempt encryption?", emci answered yes
 and EAS wrote `ITSAppUsesNonExemptEncryption: false` back into `app.json`; 1.1 ships as build 18 with `false` (the one fix an
-Expo issue reports for 90592). This is an exemption claim we cannot fully back: open is the legal read (D12) and whether
-XSalsa20-Poly1305 counts as a published standard (X25519 does). If Apple or the lawyer says a document is needed, upload it,
+Expo issue reports for 90592). A2 (2026-10-22) settled the two open points from Apple's and BIS's own pages (table above):
+XSalsa20-Poly1305 is a published algorithm, and no US report or document applies. If Apple ever says a document is needed, upload it,
 take the code, and set `ITSAppUsesNonExemptEncryption` true with `ITSEncryptionExportComplianceCode`.
 
 **UGC safeguards to add to the 1.1 review notes:**

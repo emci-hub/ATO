@@ -1137,3 +1137,17 @@ and (for item 5) a phone where you once tapped "Not now" on "Want a nudge now an
 - [ ] **5** Divecore: start a room Build (phone from the setup line, notifications never allowed). -> NO iOS notification dialog appears. Divecore → Settings → switch a notice on -> the iOS dialog DOES appear (you asked).
 - [ ] **5b** Chat, tap Block once (armed). -> Report hides while "Tap again…" shows, the title and Block text fit on the screen; wait 4 s -> Block disarms and Report comes back.
 - [ ] **6** VoiceOver on, chat screen. -> The new button reads "Report a message from @friend, button".
+
+## Box 77 — Legal + support pages are final (roadmap v2 step A2, 2026-10-22)
+
+About 5 min. Needs: the landing site redeployed from `landing/` (after `DEEPSEEK_API_KEY` is unset), and the A2 OTA
+(restart the app twice to load it).
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Sign-up screen → tap Privacy. -> ato.emgens.com/privacy.html opens. Top says "Last updated: October 22, 2026", no "Draft", and "operated by Michael Malig". No "[CONFIRM" anywhere (scroll to the end). No "DeepSeek".
+- [ ] **2** Same screen → tap Terms. -> terms.html, same date, no "Draft", §13 says courts of Alberta.
+- [ ] **3** More → You → the legal links. -> The same two pages open.
+- [ ] **4** In the browser, open ato.emgens.com/support.html. -> The Support page, with support@emgens.com, Report/Block, Delete account, data requests and helplines.
+- [ ] **5** ato.emgens.com home page. -> No email form. The footer links Privacy · Terms · Support, and says "operated by Michael Malig".
+- [ ] **6** You → Send feedback (and Circle tab → the support line at the bottom). -> A mail draft to **support@emgens.com** (not the old asstrollogs address). Send one test mail to yourself through it -> it arrives in your inbox.
