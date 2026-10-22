@@ -1655,14 +1655,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 975,
-        "h": 794
+        "h": 802
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 71507,
-      "decodedBytes": 3096600,
+      "diskBytes": 74317,
+      "decodedBytes": 3127800,
       "format": "png8",
-      "notes": "md5:40fef74b0d60d2e0a8b6385cb97f45fc",
+      "notes": "md5:a64fdada032a90bbbf76d413196d3163",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",

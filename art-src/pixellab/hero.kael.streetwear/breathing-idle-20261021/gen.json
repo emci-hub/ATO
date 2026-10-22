@@ -45,7 +45,7 @@
     "from": "pixellab-out/ (unreduced, emci go 2026-10-22: no palette step)",
     "post": "each frame shifted vertically so its lowest pixel sits on the old Idle foot row (south 149, east 150, north 147, west 150; dy -2..-10); x unchanged; colours untouched",
     "old": "art-src/archive/2026-10/hero.kael.streetwear-Idle-pre-breathing-20261022",
-    "packed": false,
-    "note": "atlas not repacked yet: run npx tsx scripts/art-pack.ts --id hero_kael_streetwear (needs oxipng on PATH), then art:sync + anim:library"
+    "packed": true,
+    "note": "packed 2026-10-22 into hero_kael_streetwear.core (png8, 975x802); check:art-registry hero frame gold passes"
   }
 }

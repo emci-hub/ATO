@@ -287,7 +287,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.kael.streetwear.combat` | 1087×1089 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kael/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.kael.streetwear.core` | 975×794 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kael/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.kael.streetwear.core` | 975×802 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kael/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · kitsune · cast · in-use
 
