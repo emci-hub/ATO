@@ -21,6 +21,7 @@ export {
   checkRepeats,
   storyTotalWords,
 } from './validate';
-export { expandGrammar } from './tracery';
+export { expandGrammar, fill, librarySlotCompatible, selectEnding, selectEntry, PRONOUNS } from './tracery';
+export type { FillOptions } from './tracery';
 export { lineText, lineWords } from './lines';
 export type { StoryScript, StoryLine, StoryCard6 } from './types';

@@ -94,14 +94,4 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     location: 'src/app/(tabs)/explore.tsx → routeExplore()',
     meta: EXPLORE_OBSERVATIONS_META,
   },
-  {
-    feature: 'Legend figure story',
-    location: 'src/lib/legend-figures/generate.ts → writeLegendStory()',
-    meta: LEGEND_FIGURE_META,
-  },
-  {
-    feature: 'Category deep dive',
-    location: 'src/lib/category-deep-dive/generate.ts → writeCategoryDeepDive()',
-    meta: CATEGORY_DEEP_DIVE_META,
-  },
 ];

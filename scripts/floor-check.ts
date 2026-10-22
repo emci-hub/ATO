@@ -328,8 +328,10 @@ assert.match(home, /\{AI_USE_DISCLOSURE\}/);
 // cards and category deep dives — the disclosure names exactly those two.
 assert.match(
   consent,
-  /AI_USE_DISCLOSURE =\s*'ATO uses AI only to write your Legends cards and your category deep dives\. These cards are shared between people with similar leanings and never include your name or your answers\.'/,
+  /AI_USE_DISCLOSURE_MODEL =\s*'ATO uses AI only to write your Legends cards and your category deep dives\. These cards are shared between people with similar leanings and never include your name or your answers\.'/,
 );
+assert.match(consent, /AI_USE_DISCLOSURE = STORY_LIBRARY_RUNTIME \? AI_USE_DISCLOSURE_LIBRARY : AI_USE_DISCLOSURE_MODEL/);
+assert.match(consent, /No model writes them/);
 // The AI mark (emci 2026-10-07): a small icon you tap to read what it means,
 // on every mounted surface that shows model output (today: the Story fold).
 const aiBadge = read('src/components/ai-badge.tsx');

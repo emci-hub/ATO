@@ -2,7 +2,9 @@
 
 Ordered by what a person can still get from a model today. Do not start by ripping out the insight bank. That bank is already the safe version of this idea. Start where Gemini is still in the loop.
 
-None of this is built. The prototype is the spec for step 0.
+Owner decision (2026-10-22): deep dives and Legends move together. The filler, the starter bank (including mid), and both taps are on this branch behind `STORY_LIBRARY_RUNTIME` (default **off**). The client `generateText` fallbacks are removed. The cron unschedule and the writer refusal are prepared under `shutdown/` and are **not** applied. The validator runs as `npm run check:story-library`.
+
+The prototype in this folder stays the design sample. The shipping engine is `src/lib/story-v3/tracery.ts`.
 
 ## Step 0 — Accept the schema
 
@@ -93,16 +95,20 @@ Do these only when someone wants one authoring tool for all copy. They are not A
 - **Mid is easy to forget.** A lot of current copy only has high and low (`leanHighLow` at 0.5). If mid is missing, the fallback generic line shows, and it may feel like the wrong person. Author mid, or decide in public that mid uses the generic on purpose.
 - **Shared frames travel.** One verb frame used in two sentences has to work in both. Prefer a frame per backbone when the sentences diverge.
 - **The cron will keep drifting until it is turned off.** Shipping the library on the phone without stopping `ai-library-fill` means new model cards still appear.
-- **The 410 fallback is a trap.** `writeLegendStory` and `writeCategoryDeepDive` still call `generateText`. If someone reopened `ai-generate`, those taps would generate again. Remove the calls in the same change that switches the tap to the library.
+- **The 410 fallback was a trap.** Those `generateText` calls are removed. Do not put them back. With the flag off, a missing shared library uses the museum words (Legends) or says unavailable (deep dives). It does not call a model from the phone.
 - **Facts in legends.** A filled line that mentions a date or a quote not in the museum entry repeats the bug the legend parser already rejects. Run that check on filled text.
 - **Disclosure lag.** Shipping the library while the consent card still says AI writes the cards is the wrong claim in both directions. Change them together.
 - **Play isolation.** This design touches app copy and, later, Play lines. Those are separate changes. Do not put pet lines and deep-dive templates in one commit. `check:play-isolation` will fail the mix.
 
 ## Open questions for emci
 
-1. Is the first real library Explore deep dives, or Legends? Dives remove more model spend. Legends already have a hand-written fallback, so they are safer to switch.
-2. Should mid-tier copy be written for all 16 traits before a surface ships, or is a dull generic line acceptable in the middle?
-3. Do deep dives keep a joke line? If yes, it should be a picked bank, not a slot the model used to improvise.
-4. Is authoring JSON in the repo enough for the first batches, with the in-app tool after, or does the tool have to exist before any template is approved?
-5. When the model taps are gone, do those buttons stay as "show me another" over the library, and what happens to the token price?
-6. Story v3: leave it alone until the filler is proven on dives and legends, or port it in the same effort? Leaving it alone is the smaller risk. The Story is already not a model.
+Decided on this branch: both surfaces together; mid wording for all 16 traits is in the starter bank; the dev-lab editor exists and the shipped copy still lives in TypeScript, not a separate JSON file. The Story stays on `expandGrammar`.
+
+Still open:
+
+1. Joke line. The starter omits it. If it comes back, it should be a picked bank.
+2. Token price once the flag is on. This branch makes those taps free and skips the charge. Confirm that is the product, and whether "show me another" should walk the bank.
+3. When to flip `STORY_LIBRARY_RUNTIME` and apply `shutdown/`. Not until a phone check of the library cards.
+4. The means line repeats the shows-up aside. A later edit can give the ending its own sentence.
+5. Legend won-lines share one museum moment. Per-trait moments are not in the starter.
+6. Session edits in the dev lab do not rewrite the bundle. Saving an approved edit back into the repo is still a code change.

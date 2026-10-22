@@ -61,7 +61,8 @@ export interface CategoryDive {
   joke?: string;
   /** A bundled extra card opens on this UTC day (YYYY-MM-DD); absent = open now. */
   opensOn?: string;
-  source: 'ai';
+  /** 'library' = assembled from the Story Library (no model). */
+  source: 'ai' | 'library';
 }
 
 export const SHOWS_MIN_WORDS = 10;
@@ -434,6 +435,6 @@ export function parseStoredDive(raw: unknown): CategoryDive | null {
     whatItMeansForYou: obj.whatItMeansForYou,
     ...(typeof obj.joke === 'string' ? { joke: obj.joke } : {}),
     ...(typeof obj.opensOn === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(obj.opensOn) ? { opensOn: obj.opensOn } : {}),
-    source: 'ai',
+    source: obj.source === 'library' ? 'library' : 'ai',
   };
 }

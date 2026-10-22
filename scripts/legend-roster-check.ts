@@ -579,17 +579,20 @@ assert.ok(revealStart > 0 && screen.indexOf('revealLegendStory(') > revealStart,
 assert.equal(screen.split('revealLegendStory(').length - 1, 1, 'exactly one call site');
 assert.match(screen, /legendsUnlocked\(tracks\)/, 'same unlock as the rest of the app');
 const gen = read('src/lib/legend-figures/generate.ts');
-assert.ok(gen.indexOf('claimLegendStory()') < gen.indexOf('generateText('), 'the server claim comes before the call');
-assert.match(gen, /if \(!\(await claimLegendStory\(\)\)\) return fallback\(\);/, 'no claim, no AI call');
+assert.doesNotMatch(gen, /generateText\(/, 'the client writer no longer calls a model');
+assert.doesNotMatch(gen, /claimLegendStory\(/, 'the closed client writer does not claim');
+assert.match(gen, /return fallbackLegendStory\(input\)/, 'a missing library uses the museum words');
+assert.match(gen, /if \(STORY_LIBRARY_RUNTIME\)/, 'the story library flag short-circuits the server');
 assert.match(screen, /meetingRef\.current\) return;/, 'a second tap while a story is being written does nothing');
 // wave92: past the free reveal(s), one more is an AI view paid in tokens; no AI card → no reveal.
 assert.match(
   screen,
-  /const free = revealsLeft\(revealedBefore, bonus\) > 0;\s*if \(!free && !\(consentGranted && \(me \? atoTokenBalanceOf\(me\) : 0\) >= AI_TOKEN_PRICE\)\) return;/,
-  'no reveal past the day’s allowance unless it is paid for',
+  /const free = STORY_LIBRARY_RUNTIME \|\| revealsLeft\(revealedBefore, bonus\) > 0;\s*if \(!free && !\(consentGranted && \(me \? atoTokenBalanceOf\(me\) : 0\) >= AI_TOKEN_PRICE\)\) return;/,
+  'no reveal past the day’s allowance unless it is paid for, and the story library is free',
 );
 assert.match(screen, /if \(!free && story\.source !== 'ai'\) \{/, 'a paid reveal without an AI card is never saved');
-assert.match(gen, /await refundAiTokens\('legend'\);\s*return fallback\(\);/, 'charged but no AI card → refunded');
+assert.match(screen, /if \(!free\) await refundAiTokens\('legend'\)/, 'a paid reveal that times out is refunded');
+assert.doesNotMatch(gen, /refundAiTokens\(/, 'the closed client writer never charged, so it does not refund');
 assert.match(screen, /if \(!meetingRef\.current\) persist\(next\);/, 'a reload never overwrites a reveal being saved');
 assert.match(screen, /LegendShareSheet/, 'share uses the on-screen Modal capture (share-card.tsx pattern)');
 const cardSrc = read('src/components/legend-figure-card.tsx');

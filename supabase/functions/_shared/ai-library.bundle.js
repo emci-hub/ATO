@@ -1863,7 +1863,7 @@ function parseStoredLegendStory(raw) {
     ...typeof obj.joke === "string" ? { joke: obj.joke } : {},
     ...typeof obj.libraryId === "string" && /^[0-9a-f-]{36}$/.test(obj.libraryId) ? { libraryId: obj.libraryId } : {},
     ...typeof obj.others === "number" ? { others: obj.others } : {},
-    source: obj.source === "ai" ? "ai" : "fallback"
+    source: obj.source === "ai" ? "ai" : obj.source === "library" ? "library" : "fallback"
   };
 }
 function storedDiffer(raw) {
@@ -2223,7 +2223,7 @@ function parseStoredDive(raw) {
     whatItMeansForYou: obj.whatItMeansForYou,
     ...typeof obj.joke === "string" ? { joke: obj.joke } : {},
     ...typeof obj.opensOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(obj.opensOn) ? { opensOn: obj.opensOn } : {},
-    source: "ai"
+    source: obj.source === "library" ? "library" : "ai"
   };
 }
 
