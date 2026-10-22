@@ -59,10 +59,27 @@ Independent of the ATO finish roadmap (app work), so it can run between those st
 | Step | What | PixelLab | Needs first | Ships |
 |---|---|---|---|---|
 | AN0 | emci reviews and merges PR 82 (this branch) so master has Kael + Morwen Idles, the docs, the research | 0 | emci | — |
-| AN1 | Rig format + recipe engine (`art-src/rigs/<hero>.json`, `breathing-idle` recipe, per-part masks, gates: foot row, height, silhouette overlap, palette, prop pixels, loop seam). Pilot Maldrath E+W incl. sword mask; GIF vs current vs skeleton-v3 | 0 | AN0 | test only |
+| AN1 | **Art engine v1** (build tooling only, `scripts/` + `art-src/`, never in the app bundle; see below). First user: rig format + recipe engine (`art-src/rigs/<hero>.json`, `breathing-idle` recipe, per-part masks, gates: foot row, height, silhouette overlap, palette, prop pixels, loop seam). Pilot Maldrath E+W incl. sword mask; GIF vs current vs skeleton-v3 | 0 | AN0 | test only |
 | AN2 | Rigs for all heroes (auto-guessed lines, hand-checked prop/cape masks), Idle for every hero, one contact sheet, emci marks approve/keep per hero, install approved, Idle `ms[]` holds | 0 | AN1 ok | 1 OTA + phone box |
 | AN3 | Timing pass for the other clips (per-frame holds; clears the audit's "flat timing"). Check first whether play code reads `ms[]` or still uses flat fps — if code must change, it is its own Play step | 0 | AN2 | 1 OTA + phone box |
 | AN4 | Optional: creeps / boss / tower Idles with the same rigs | 0 | AN2 | with AN3 or own OTA |
 | AN5 | Optional, credits: Tier B anchored AI (`animate_with_skeleton_v3`, pinned joints, fixed seed, lock pass) only for clips emci wants with real motion (cape sway, attacks) | ~3 / direction | emci picks clips; token-secret decision | per batch |
 
 Credits: AN1–AN4 spend 0 PixelLab generations (vs ~84 in the old plan). AN5 is the only paid step and is opt-in.
+
+## Art engine (emci 2026-10-22): one structure for every future asset
+Goal: every new character, UI piece or object enters through the same structure, so nothing PixelLab makes is wasted
+and everything looks consistent. Lives in build tooling (`scripts/art-engine/`, specs in `art-src/`), feeds the
+existing registry / `art:sync` / gates; the app only ever sees packed sheets (no PixelLab call or key in the app).
+
+| Part | Characters | UI | Objects / props |
+|---|---|---|---|
+| Spec file (once per asset) | rig: foot row, hip/shoulder lines, anchor skeleton, part masks (prop, cape, head) | frame/slice spec: 9-slice insets, states (idle/press/disabled), target size on the ladder | footprint tiles, height vs hero (guide §2 table), occluder line, states |
+| Recipes (shared, in repo) | breathing-idle, blink, hit-flash… (procedural first); AI motion via `animate_with_skeleton_v3` with the spec's pinned joints + fixed seed | press/hover offsets, glow pulse | idle flicker, open/close states |
+| Gates (automatic) | foot row, height band, silhouette overlap, palette ⊆ hero atlas, prop pixels, loop seam | size on ladder, 9-slice edges clean, palette | scale check vs hero, footprint, palette |
+| PixelLab path | import 0.25 → only AI for real motion | PixelLab UI tools → slice spec | map objects / object states → spec |
+
+Keeping it current with PixelLab: `PIXELLAB_ANIMATION.md` §0 pre-flight (`search_help`) + `npm run pixellab:watch`
+already detect tool changes; the engine keeps tool names, costs and limits in ONE config file that the pre-flight
+updates, so a PixelLab change is a one-file edit, not a hunt through scripts.
+Build order: characters first (AN1 pilot), then props/objects, then UI — each added when its first real asset needs it.
