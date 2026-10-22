@@ -73,13 +73,33 @@ async function writeLog(kind: NotifKind, next: PetReminderLog): Promise<void> {
   }
 }
 
-/** Ask for notification permission (when a notice is switched on). */
-export async function askPetReminderPermission(): Promise<boolean> {
+/**
+ * The app's own one-time notification ask (`src/lib/push.ts` ASKED_KEY, the "Want a nudge now and
+ * then?" sheet). Its "Not now" is stored only on the phone, so the OS still reads "undetermined";
+ * an automatic Divecore ask must not override that answer (roadmap v2 step A1).
+ */
+export const APP_PUSH_ASKED_KEY = 'ato.push.asked';
+
+/**
+ * Ask for notification permission. `auto` = Divecore asks on its own (e.g. after the first Build):
+ * skipped once the app's sheet has been answered. A tap on a notice switch in Divecore Settings is
+ * the person asking, so it is never skipped.
+ */
+export async function askPetReminderPermission(opts: { auto?: boolean } = {}): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   try {
     const current = await Notifications.getPermissionsAsync();
     if (current.granted) return true;
     if (current.status !== 'undetermined') return false;
+    if (opts.auto) {
+      let appAsked = false;
+      try {
+        appAsked = (await AsyncStorage.getItem(APP_PUSH_ASKED_KEY)) === '1';
+      } catch {
+        appAsked = false;
+      }
+      if (appAsked) return false;
+    }
     const asked = await Notifications.requestPermissionsAsync({
       ios: { allowAlert: true, allowBadge: false, allowSound: false },
     });

@@ -452,6 +452,18 @@ const HOUR = 60 * 60 * 1000;
   assert.ok(HIDEOUT_LOG_KINDS.includes('build_done'));
   assert.equal(hideoutLogLine({ t: T0, kind: 'build_done', room: 'loft' }), 'build_done loft');
   ok('save field, NotifKind build, per-room notice id');
+
+  // Roadmap v2 A1: the automatic ask after a Build respects the app's one-time ask ("Not now").
+  const pushSrc = readFileSync(path.join(ROOT, 'src/lib/push.ts'), 'utf8');
+  const appKey = pushSrc.match(/const ASKED_KEY = '([^']+)';/)?.[1];
+  assert.ok(appKey, 'push.ts names its ASKED_KEY');
+  assert.ok(remind.includes(`export const APP_PUSH_ASKED_KEY = '${appKey}';`), 'Divecore reads the same key the app writes');
+  assert.match(remind, /if \(opts\.auto\) \{[\s\S]*?if \(appAsked\) return false;/, 'an auto ask stops when the app already asked');
+  const screen = readFileSync(path.join(ROOT, 'src/play/pet-screen.tsx'), 'utf8');
+  assert.match(screen, /askPetReminderPermission\(\{ auto: true \}\)/, 'the Build ask is marked auto');
+  const dcSettings = readFileSync(path.join(ROOT, 'src/play/divecore-settings.tsx'), 'utf8');
+  assert.doesNotMatch(dcSettings, /askPetReminderPermission\(\{ auto: true \}\)/, 'a tap in Divecore Settings is the person asking (never auto)');
+  ok('Build ask respects the app one-time ask; Settings switches still ask');
 }
 
 void countDeepSurface;
