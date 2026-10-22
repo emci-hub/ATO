@@ -59,7 +59,11 @@ async function main() {
   assert.match(login, /LOGIN_PASSWORD_HINT/);
   ok('Log in has Apple, optional password (via the password-login Edge Function), and OTP fallback that does not create users');
 
-  assert.match(you, /PasswordSettingsFold/);
+  // emci 2026-10-22: no screen sets a password today (PasswordSettingsFold is not mounted), so no sign-in copy may
+  // promise one "in Settings". Password login itself stays (password-login Edge Function).
+  assert.doesNotMatch(you, /PasswordSettingsFold/, 'You does not offer a password setting (unchanged)');
+  for (const text of [login, passwordLib]) assert.doesNotMatch(text, /in Settings/, 'no sign-in copy promises a Settings password');
+  assert.match('Only if you have set a password in Settings.', /in Settings/, 'pair: the old hint is what this catches');
   assert.match(settings, /setAuthPassword/);
   assert.match(settings, /changeAuthPassword/);
   assert.match(settings, /Confirm password/);
