@@ -471,12 +471,15 @@ const campaign = campaignVariants.map(({ strat, noStartScrap, label }) => {
 const ELEMENTAL_WAVES = WAVES.filter((w) => w.phase === 'main' && w.wave >= 4);
 const NEUTRAL_WAVES = WAVES.filter((w) => !(w.phase === 'main' && w.wave >= 4));
 const LEGEND_ELEMENTS: Element[] = ['ember', 'tide', 'spark', 'root', 'void'];
-const legendStrat = (legend: Element, heroId = HERO_ID, level = 1): Strategy => ({
-  id: `legend:${legend}:${heroId}:${level}`,
+// Board = "Mixed + helper" (since step 6 follow-up, 2026-10-21): the board a player fields once hero
+// towers cost 40 scrap. `heroId` absent = the average helper; the helper takes the Legend's element
+// and the hero affinity through the real engine (`defend.ts` helper power).
+const legendStrat = (legend: Element, heroId?: string, level = 1): Strategy => ({
+  id: `legend:${legend}:${heroId ?? 'avg'}:${level}`,
   label: legend,
-  towers: ['archer', 'vine', 'crystal'],
-  heroTowers: 2,
-  heroId,
+  towers: MIXED,
+  heroTowers: 0,
+  helper: heroId ? { ...AVG_HELPER, heroId } : AVG_HELPER,
   legend,
   legendLevel: level,
 });
@@ -511,9 +514,9 @@ const gearOne = bucketFor(1);
 const gearAll = bucketFor(4);
 const resistWave = ELEMENTAL_WAVES[0];
 const resistEl = waveDefFor(resistWave.phase, resistWave.wave)?.element as Element;
-const resistLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, HERO_ID, 1), 1);
-const resistLv20 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, HERO_ID, 20), 1);
-const neutralLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat('void', HERO_ID, 1), 1);
+const resistLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, undefined, 1), 1);
+const resistLv20 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, undefined, 20), 1);
+const neutralLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat('void', undefined, 1), 1);
 
 // Pet (v20, 2026-09-29): the once-per-wave pounce per stage (Standard form,
 // and a Battle God), over every wave. Measured on the "Mixed + helper" board
@@ -787,11 +790,11 @@ lines.push('|---|---|---|---|');
 for (const r of bossRows) lines.push(`| ${waveName(r.w)} | ${r.dazes} | ${(r.downMs / 1000).toFixed(1)} | ${(r.clearMs / 1000).toFixed(1)} |`);
 lines.push('');
 
-lines.push('## Legends (cycle 0, Mixed + 2 Archangel)');
+lines.push('## Legends (cycle 0, Mixed + average helper)');
 lines.push('');
 lines.push('Damage needed on each elemental stage with each Legend at Lv1. Lower = better; the best Legend for a stage is the one its element is weak to.');
 lines.push('');
-lines.push(`Note (step 6): this section, affinity and the stacked-boost table still use the "Mixed + 2 hero towers" board. With hero towers at ${HERO_TOWER_STATS.placeCost} scrap a fresh board spends the 80 start scrap on the two heroes and builds no plain towers until kills pay, so these numbers rose against the 2026-09-30 report partly from that thinner board, not from any Legend change.`);
+lines.push('Note (step 6 follow-up): this section, affinity and the stacked-boost table use the "Mixed + helper" board (the average helper; the affinity and stacked tables put the named hero in the helper slot). They used "Mixed + 2 hero towers" until now, so these numbers are not comparable with reports before this date.');
 lines.push('');
 lines.push(`| Stage | Element | ${LEGEND_ELEMENTS.map((e) => e).join(' | ')} |`);
 lines.push(`|---|---|${LEGEND_ELEMENTS.map(() => '---').join('|')}|`);
@@ -841,7 +844,7 @@ findings.push(
 );
 if (resistLv1 != null && resistLv20 != null && neutralLv1 != null) {
   findings.push(
-    `- **Resisted stage (${waveName(resistWave)}, ${resistEl}):** a Lv1 ${resistEl} Legend needs ${resistLv1.toFixed(2)}×, a Lv20 one ${resistLv20.toFixed(2)}× (neutral Void: ${neutralLv1.toFixed(2)}×) — levelling recovers part of the penalty but never erases it.`,
+    `- **Resisted stage (${waveName(resistWave)}, ${resistEl}):** a Lv1 ${resistEl} Legend needs ${resistLv1.toFixed(2)}×, a Lv20 one ${resistLv20.toFixed(2)}× (neutral Void: ${neutralLv1.toFixed(2)}×) — ${resistLv1 > neutralLv1 ? 'levelling recovers part of the penalty but never erases it' : 'on this board a Lv1 resisted Legend is no worse than neutral (the helper board is forgiving), and levelling widens the lead'}.`,
   );
 }
 
