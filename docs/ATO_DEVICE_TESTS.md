@@ -1103,3 +1103,22 @@ About 10 min. Feed → Catch the food, and Play → Tap to train. Run on the OTA
 - [ ] **9** Settings: Reduce Motion on (or Effects Off). -> No aura motes / sparkles moving, no combo pulse, no swing / squash / shake; the finish rests.
 - [ ] **10** Larger Text on. -> Status line and 2-line hint are not cut off; the dock does not resize.
 - [ ] **11** Play a few rounds. -> Still smooth (about 60 fps), nothing flickers when many items are on screen.
+
+## Box 75 — Minigames M3: depth (Divecore run order (f), 2026-10-22)
+
+About 15 min. Feed → Catch the food; Play → Tap to train and Lane dash. Run on the OTA group `34f63cfb` (restart the app twice to load it). Tokens, the 30 a day cap and the pass rule are unchanged.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Catch the food, any level, play 25 s. -> Now and then a round pickup falls (a **shield** icon or a red **horseshoe magnet** in a cyan ring), after the first 4 s. They look nothing like food or the bomb.
+- [ ] **2** Tap a shield. -> A SHIELD tag shows top-left. Then tap a bomb -> "BLOCKED", no strike, no −3, the combo holds, the tag goes.
+- [ ] **3** Tap a magnet. -> "MAGNET 4s" counts down; food that falls past the middle is collected for you with a "+n". When it ends the tag goes.
+- [ ] **4** Pass check: finish a round leaning on the magnet. -> Magnet food gives points but does NOT count as caught: the result line "Caught x/y" does not jump because of it.
+- [ ] **5** Tap to train on Hard (or Normal, past tap 10). -> The lit zone starts as before, then **drifts side to side** a little; on Hard from tap 10 it **splits into two shorter zones** and a tap in either one hits. The hint says so.
+- [ ] **6** Reduce Motion on, Tap to train on Normal. -> The zone does not drift.
+- [ ] **7** Play → Lane dash (new card under Tap to train). -> Three lanes with faint lines; the pet stands in the middle. Tap a lane to step there. Food in your lane is caught on its own (+n, combo), a bomb in your lane is a strike, food falling past in another lane is a miss. Three strikes end it.
+- [ ] **8** Finish a Lane dash pass. -> Result card, then the sheet: +1 training, +2 mood, +5 tokens (+2 on Easy), counted in the same 30 a day. Rank "Sidestepper" shows on the card, and in Info. Easy / Normal / Hard / Insane unlock like the others.
+- [ ] **9** Practice button on Catch, Train and Lane dash. -> No timer, no strikes, nothing ends it; "practice" shows in the status line; **Back** leaves. Afterwards: no tokens, no care, no record, no medal, no daily change.
+- [ ] **10** Open an old save (a phone that already played). -> Catch / Train records and medals are still there; Lane dash starts empty.
+- [ ] **11** Larger Text on, Lane dash and Catch. -> The status line and the 2-line hint are not cut off; the dock does not resize; the lane taps still work.
+- [ ] **12** Play a few Lane dash and Catch rounds. -> Still smooth; food that visibly passes the pet is not caught late (tell me if it feels off).

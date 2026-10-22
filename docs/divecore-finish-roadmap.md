@@ -293,8 +293,17 @@ Nothing below blocks the next job; emci runs or accepts each.
    (`GamePet` gained optional look fields, built in `pet-screen.tsx`); happy = the pet's skill clip (golden catch, perfect
    hit; dash if none), oof = its hurt clip on a Train miss (red flash if none). No new "happy" clip exists, so faces are
    existing clips only. Pinned in `check:pet-games` (incl. an encoding pin). Train keeps the classic room plate. Library
-   entries are `resource` status with no critique score yet. Save stays v33. Left: **(f) Minigames M3** (depth; may need
-   new `game_records` fields: ask emci first).
+   entries are `resource` status with no critique score yet. Save stays v33.
+   **(f) Minigames M3: built + published 2026-10-22** (OTA group `34f63cfb`, commit `6d1366ba`; phone check = Box 75,
+   not done; emci OK'd the scope and a third game): Catch shield + magnet pickups (magnet food scores but counts as NOT
+   caught, so it can't lift the pass share or farm tokens; shield blocks one bomb tap; slow was dropped), Train zone waves
+   (drifts on Normal+ later taps, splits into two half-width zones on Hard / Insane; total lit width never grows; still under
+   Reduce Motion), a Practice button on every game (no clock, no strikes, never reports a round: nothing counts), and
+   **Lane dash** (3 lanes, Catch's pass rule and combo, trains the pet, same 5 / 2 token rule and 30 a day cap). New
+   `dash` key inside `game_records` and `daily_games` (additive; an older save reads it as empty; **save stays v33**, not
+   v34 as first said: a bump would break ~15 checks). Dash medal bars are scaled from Catch and **not sim-tuned yet**
+   (`npm run sim:games`). Pinned in `check:pet-games` and `check:fixed-regions`. **Run order (a)-(f) is now all built.**
+   Next: the outside-Divecore assessment (prompt at the end of step 9).
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
    being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12
