@@ -116,9 +116,11 @@ import {
   CATCH,
   COMBO_MULTS,
   COMBO_STEPS,
+  DASH_LANES,
   DIFFICULTIES,
   DIFFICULTY_LABEL,
   PASS_SHARE,
+  POWERUP,
   SCORE_MULT,
   TRAIN,
 } from '@/play/pet-game-rules';
@@ -313,6 +315,7 @@ function gamesSection(): string[] {
   const ranks = GAMES.map((g) => `${GAME_LABEL[g]}: ${RANK_TITLES[g].join(' → ')}`).join(' · ');
   return [
     `Pass rules (every level): Catch the food — catch ${pct(PASS_SHARE)} of the food that falls in ${span(CATCH.roundMs)}; ${CATCH.bombStrikes} bombs end the round as a fail. Tap to train — ${TRAIN.passHits} hits out of ${TRAIN.taps}; ${TRAIN.missStreakEnd} misses in a row end it. A pass feeds or trains your pet and pays ${PET_TOKENS_PER_ROUND} tokens, or ${PET_TOKENS_PER_ROUND_EASY} on Easy (${PET_TOKENS_DAILY_CAP} a day). A fail gives nothing.`,
+    `Lane dash — step between ${DASH_LANES} lanes (tap a lane) to catch food and dodge bombs; a bomb in your lane is a strike. It uses Catch's pass rule and trains your pet like Tap to train. Catch also drops a shield (blocks one bomb tap) and a magnet (pulls food in for ${POWERUP.magnetMs / 1000}s); magnet food scores points but does not count as caught for the pass. In Tap to train the zone drifts or splits on later taps (never wider overall). Every game has a Practice button: no clock, no strikes, nothing counts (no tokens, care, records or daily).`,
     `Egg care: only a pass with ${pct(CARE_SKILL_SHARE)}+ on Normal or harder is "skilled". An Easy pass counts as a plain pass, and harder levels never give more care than Normal.`,
     `Combo: ${combo}. A miss or a bomb resets it.`,
     `Levels: ${levels}.`,

@@ -290,7 +290,13 @@ function GameChip({
 }
 
 /** v26 — a round being played: which game, at which level, daily or not. */
-export type GameRun = { kind: PetRoundKind; level: Difficulty; daily: boolean };
+export type GameRun = {
+  kind: PetRoundKind;
+  level: Difficulty;
+  daily: boolean;
+  /** M3: no timer, nothing counts (no tokens, care, record or daily); leave with Back. */
+  practice?: boolean;
+};
 
 /**
  * One mini-game card: levels, best, medals, Play / Daily. Catch the food sits in the Feed sheet (under "? Your pet",
@@ -368,6 +374,14 @@ export function GameCard({
               style={styles.shareButton}
             />
           </View>
+          <View style={styles.buttons}>
+            <PixelButton
+              label={`Practice · ${DIFFICULTY_LABEL[lv]}`}
+              variant="cyan"
+              onPress={() => onStart({ kind: g, level: lv, daily: false, practice: true })}
+              style={styles.shareButton}
+            />
+          </View>
         </View>
       </PixelFrame>
       {hint ? <PixelBody color={PIXEL.cyan}>{hint}</PixelBody> : null}
@@ -416,6 +430,10 @@ export function PlaySheetBody({
         {`Tap to train cheers it up (+2 mood) — only if you pass (50%+). Catch the food now lives in Feed. +${PET_TOKENS_PER_ROUND} tokens a passed round (+${PET_TOKENS_PER_ROUND_EASY} on Easy) · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
       </PixelBody>
       <GameCard g="train" view={view} onStart={onStart} />
+      <PixelBody>
+        {`Lane dash trains it too (+1 training, +2 mood): step between 3 lanes to catch food and dodge 💣. Same pass rule and token cap.`}
+      </PixelBody>
+      <GameCard g="dash" view={view} onStart={onStart} />
       {lastRound ? (
         <ScoreBurst score={lastRound.score} strong={lastRound.strong} runKey={lastRound.key} animate={!still} />
       ) : null}

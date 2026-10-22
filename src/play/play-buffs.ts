@@ -21,7 +21,7 @@
  * through release and rebirth, and only spend a use when they actually apply
  * (Pumped needs a pounce, Focused a trip you send).
  */
-import type { Medal } from '@/play/game-records';
+import type { Game, Medal } from '@/play/game-records';
 
 export const BUFF_IDS = ['hearty', 'snack', 'pumped', 'focused'] as const;
 export type BuffId = (typeof BUFF_IDS)[number];
@@ -56,7 +56,7 @@ export const TD_HELP_BAND = { min: 0.03, max: 0.08 } as const;
 export const FOCUSED_TRIP_MULT = 0.75;
 
 /** Which buff a medal gives (Gold beats Silver; Bronze gives none). */
-export function buffForMedal(game: 'catch' | 'train', medal: Medal | null): BuffId | null {
+export function buffForMedal(game: Game, medal: Medal | null): BuffId | null {
   if (medal === 'gold') return game === 'catch' ? 'hearty' : 'pumped';
   if (medal === 'silver') return game === 'catch' ? 'snack' : 'focused';
   return null;

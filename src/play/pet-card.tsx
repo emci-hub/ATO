@@ -65,7 +65,7 @@ export type PetCardInfo = {
   /** v28 — a looks-only Tide frame while a Tide Pass is on. */
   tide?: boolean;
   /** v26 — your mini-game rank titles (the live pet's card). */
-  ranks?: { catch: string; train: string } | null;
+  ranks?: { catch: string; train: string; dash?: string } | null;
   /** v27 — resting in the Den (frozen). */
   resting?: boolean;
   /** v27 — every shiny style of this hero owned: the prism frame (looks only). */

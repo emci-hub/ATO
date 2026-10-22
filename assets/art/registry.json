@@ -5604,7 +5604,8 @@
       "tags": [],
       "usedBy": [
         "src/play/dive-hud.tsx",
-        "src/play/generated-play-assets.ts"
+        "src/play/generated-play-assets.ts",
+        "src/play/pet-games.tsx"
       ],
       "category": "icons",
       "inUse": true,

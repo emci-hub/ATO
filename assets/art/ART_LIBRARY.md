@@ -745,7 +745,7 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.pizza` | 32×32 | resource | — | src/play/pet-games.tsx |
 | `icon.streetwear.potion` | 32×32 | resource | — | src/play/dive-hud.tsx |
 | `icon.streetwear.shades` | 32×32 | resource | — | src/play/generated-play-assets.ts |
-| `icon.streetwear.shield` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
+| `icon.streetwear.shield` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts, src/play/pet-games.tsx |
 | `icon.streetwear.sleep` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.sneaker` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.speech` | 32×32 | resource | — | src/play/hideout-art.ts |

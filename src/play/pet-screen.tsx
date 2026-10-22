@@ -1018,6 +1018,8 @@ export function PetScreen({
 
   const roundClaim = useRef<{ run: GameRun | null; key: string }>({ run: null, key: '' });
   const finishRound = (run: GameRun) => (outcome: RoundOutcome, score: number) => {
+    // Practice counts for nothing, even if a game ever reported by mistake.
+    if (run.practice) return;
     if (roundClaim.current.run !== run) {
       roundClaim.current = { run, key: `pet:${run.kind}:${run.level}:${run.daily ? 'daily' : 'free'}:${Date.now()}` };
     }
@@ -1739,10 +1741,11 @@ export function PetScreen({
       {game ? (
         <View style={styles.gameOverlay} accessibilityViewIsModal>
           <PetGameHost
-            key={`${game.kind}:${game.level}:${game.daily}`}
+            key={`${game.kind}:${game.level}:${game.daily}:${game.practice ? 'p' : 'r'}`}
             kind={game.kind}
             level={game.level}
             daily={game.daily}
+            practice={game.practice === true}
             ymd={pv.daily.ymd ?? ''}
             gamePet={gamePet}
             still={reduceMotion || fxQuality !== 'full'}

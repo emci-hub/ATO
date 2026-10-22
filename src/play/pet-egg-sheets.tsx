@@ -571,6 +571,7 @@ export function JournalTab({ view, commit }: { view: PlayView; commit: Commit })
     // v26: mini-game ranks + bests.
     ['Catch rank', `${view.pet.ranks.catch} · best ${Math.max(...Object.values(view.pet.records.catch).map((r) => r.best))}`],
     ['Train rank', `${view.pet.ranks.train} · best ${Math.max(...Object.values(view.pet.records.train).map((r) => r.best))}`],
+    ['Dash rank', `${view.pet.ranks.dash} · best ${Math.max(...Object.values(view.pet.records.dash).map((r) => r.best))}`],
   ];
   return (
     <>
