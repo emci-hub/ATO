@@ -11,8 +11,8 @@ The brief for this chat assumed launch work was still ahead. It mostly is not:
 
 - **Live since 2026-10-21:** `PRE_LAUNCH_DEV = false`, public sign-up (`wave107`), the trait lock (`wave80`), wave98-109
   applied and verified read-only, leaked-password protection on, rotations done (master-plan Step 12, Ledger A).
-- **Store:** 1.0 is built from tag `v1.0.0`; **1.1 (Circle chat, runtime 1.1.0) was submitted 2026-10-21** (submission
-  `9cc1261b`) and was waiting on App Review at the last record. Whether 1.0 was ever submitted on its own is not recorded
+- **Store:** 1.0 is built from tag `v1.0.0`; **1.1 (Circle chat, runtime 1.1.0) is LIVE on the App Store (emci,
+  2026-10-22)**; it was submitted 2026-10-21 (submission `9cc1261b`). Whether 1.0 was ever submitted on its own is not recorded
   (master-plan row 13 still lists "EAS build, TestFlight, Box 68" as emci's). **emci: say which build is in review / live.**
 - **Divecore:** done; run order (a)-(f) built; Box 75 passed (2026-10-22).
 - **Gate:** 191 offline checks, last recorded green; `check:release-mode` 47 pass.
@@ -446,7 +446,7 @@ line; NOW superseded notes; OPEN-QUESTIONS 8; sage-cleanup §4; master-plan line
   `me_name_guard`. On a change, `show_up` / `talk_style` take only the app's chips; NULL and '' pass; stored values are not
   touched. Read-only count 2026-10-22: 9 accounts, 1 holds the older chip "getting through it", which stays readable.
   Pinned in `check:circle-safety` (lists = `intake.ts` chips, pass/fail pairs); listed in `under18-server` NOT_LIVE.
-  **emci: apply it in the SQL editor when convenient** (no app update needed; the app only offers chips).
+  **APPLIED by emci 2026-10-22; verified read-only: trigger `me_card_fields_guard` present and enabled on `public.me`.**
 - **S4 finding (read-only):** no AI-written Story card exists since 2026-10-13 (28 seed-only Story cards). 6 old Story
   queue rows are version l1/l3, which the fill job skips (current l4). So no AI writes Story today. Removing `story`
   from `ai-library` is still tidy but needs `gen:ai-library` + a deploy (emci's OK), so it waits for the rest of A3.
