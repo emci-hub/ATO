@@ -141,4 +141,34 @@ assert.match(read('src/app/(tabs)/you.tsx'), new RegExp(`'${supportEmail!.replac
 assert.ok(!/from\('connections'\)\s*\.insert/.test(read('src/lib/circle.ts')), 'circle.ts never inserts a connection');
 ok('Circle tab: ⋯ on every friend row → Report / Block (2 taps); support email matches You');
 
+// wave110 (roadmap v2 S3, 2026-10-22, NOT applied until emci runs it): the public card's show_up / talk_style
+// accept only the app's chips on a change; NULL / '' pass; stored older values are left alone.
+{
+  const w110 = read('supabase/migrations/wave110_public_card_fields_guard.sql');
+  const intake = read('src/lib/intake.ts');
+  const chips = (name: string) => {
+    const block = intake.slice(intake.indexOf(`export const ${name}`), intake.indexOf('];', intake.indexOf(`export const ${name}`)));
+    return [...block.matchAll(/value: '([^']+)'/g)].map((m) => m[1]!);
+  };
+  const sqlIn = (col: string) => {
+    const m = w110.match(new RegExp(`new\\.${col} not in \\(([^)]*)\\)`));
+    assert.ok(m, `${col} list in wave110`);
+    return [...m[1]!.matchAll(/'([^']+)'/g)].map((x) => x[1]!);
+  };
+  assert.deepEqual(sqlIn('show_up'), chips('SHOW_UP_CHIPS'), 'show_up: SQL list = app chips');
+  assert.deepEqual(sqlIn('talk_style'), chips('TALK_STYLE_CHIPS'), 'talk_style: SQL list = app chips');
+  assert.match(w110, /coalesce\(auth\.jwt\(\) ->> 'role', ''\) <> 'authenticated'/, 'only people using the app are checked (same as me_name_guard)');
+  assert.match(w110, /tg_op = 'INSERT' or new\.show_up is distinct from old\.show_up/, 'only a CHANGED value is checked (old stored chips stay)');
+  assert.match(w110, /nullif\(btrim\(coalesce\(new\.show_up, ''\)\), ''\) is not null/, "NULL and '' pass");
+  assert.match(w110, /before insert or update of show_up, talk_style on public\.me/);
+  assert.match(w110, /revoke all on function public\.me_card_fields_guard\(\) from public, anon, authenticated;/);
+  // Pairs (the same rule in TS): app chips pass, free text fails, blank passes.
+  const allowed = (v: string | null, list: string[]) => v == null || v.trim() === '' || list.includes(v);
+  assert.ok(allowed('stay steady', chips('SHOW_UP_CHIPS')), 'pass: a chip');
+  assert.ok(allowed('', chips('SHOW_UP_CHIPS')) && allowed(null, chips('SHOW_UP_CHIPS')), 'pass: blank');
+  assert.ok(!allowed('visit my site example.com', chips('SHOW_UP_CHIPS')), 'fail: free text');
+  assert.ok(!allowed('shout', chips('TALK_STYLE_CHIPS')), 'fail: not a talk-style chip');
+  ok('wave110: public-card fields take only the app chips on change; lists match intake.ts');
+}
+
 console.log(`\ncheck:circle-safety ok — ${groups} groups`);

@@ -441,6 +441,22 @@ the last 3 days succeeded (432 / 1 / 72); the monthly job calls `snapshot_profil
 2026-11-01). Docs truth pass (part of S12) done: CLAUDE.md header, wave80/wave100 status, deep-dive "crisis day", AI-token
 line; NOW superseded notes; OPEN-QUESTIONS 8; sage-cleanup §4; master-plan line 302.
 
+**Step A3 progress (2026-10-22, no input needed so far; nothing applied or deployed):**
+- **S3 built, NOT applied:** `supabase/migrations/wave110_public_card_fields_guard.sql`, a trigger like the live
+  `me_name_guard`. On a change, `show_up` / `talk_style` take only the app's chips; NULL and '' pass; stored values are not
+  touched. Read-only count 2026-10-22: 9 accounts, 1 holds the older chip "getting through it", which stays readable.
+  Pinned in `check:circle-safety` (lists = `intake.ts` chips, pass/fail pairs); listed in `under18-server` NOT_LIVE.
+  **emci: apply it in the SQL editor when convenient** (no app update needed; the app only offers chips).
+- **S4 finding (read-only):** no AI-written Story card exists since 2026-10-13 (28 seed-only Story cards). 6 old Story
+  queue rows are version l1/l3, which the fill job skips (current l4). So no AI writes Story today. Removing `story`
+  from `ai-library` is still tidy but needs `gen:ai-library` + a deploy (emci's OK), so it waits for the rest of A3.
+- **S2 (refund hole): recommend DEFER.** Path traced: a signed-in person can call `refund_ai_tokens` by hand within
+  15 minutes of a successful paid card and get the 5 tokens back once a day per kind. The worst case is one free card per
+  kind per day; tokens have no cash value and there is no purchase path. A real fix needs the Legends screen, the server
+  function and a migration changed together, with old app versions in mind. That is more code than the loss it prevents.
+  Revisit if tokens ever gain value.
+- **S6 done** (above).
+
 ### Step AN0: Merge the art PR (82)
 Model: Sonnet
 ```
