@@ -258,16 +258,20 @@ Nothing below blocks the next job; emci runs or accepts each.
 2. **Locker icons not approved:** only emci sets `approved` (they are `resource` in the registry). The other two looks per
    item sit unused in the library for a swap (Box 56).
 3. **Minigames makeover M1-M3 (section 7):** still waiting for emci's yes; not part of "done".
-4. **Balance leftovers (step 6):** hero-tower kit spread is 1.59× (Archangel 1.13× … Morwen 1.80×); the Legends /
-   affinity / stacked-boost sections of the sim still use the 2-hero-tower board; "Main 10" needs 2.13× on a fresh board
-   (0.85× kept + helper).
+4. **Balance leftovers (step 6): DONE, OTA published (2026-10-21; group `f278776c`, commit `50e6fccb`), phone check
+   not needed (numbers only).** Hero-tower Splash and Pull damage share 0.6/0.55 → 0.7 (`KIT_TUNING.heroDamageShare`):
+   kit spread 1.59× → **1.41×** (Archangel 1.13× … Morwen 1.60×; weakest of the rest Elowen 1.49×). The Legends /
+   affinity / resisted / stacked-boost sections of the sim now use the "Mixed + average helper" board (affinity now 4%,
+   Legend choice gap 1.44×, stacked ×1.70). **Main 10 accepted as a residual (emci, 2026-10-21):** 2.13× fresh,
+   0.85× kept + helper (inside the ×2.0 rule); the roadmap never set a fresh-board target for the finale.
 5. **Element look in Turf War** (emci chose code-only, 2026-10-21): **built** a still ground glow under stunned / burning /
    chilled creeps (`statusGlowColor`, `src/play/status-icons.ts`; drawn in `defend-screen.tsx`, Streetwear only, display
    only; pinned in `check:kits`); **phone check PASSED** (emci, 2026-10-21; OTA group `8b2c2691`). Chain bolts were already element-tinted. **Not built:** an
    element-coloured hit flash and a Turf-scale tower/hero aura (pet auras don't fit; needs new PixelLab art).
    **Run order (emci, 2026-10-21: "all", one chat each, one OTA each):** (a) balance leftovers, (b) element-coloured hit
    flash, (c) Turf-scale tower/hero aura (new PixelLab art, samples first), (d) Minigames M1, (e) M2, (f) M3. Locker icon
-   approval stays emci's. Tick each here when its phone box passes. Done: Box 58, Element look glow.
+   approval stays emci's. Tick each here when its phone box passes. Done: Box 58, Element look glow, **(a) balance
+   leftovers** (OTA `f278776c`, 2026-10-21).
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
    being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12
@@ -783,8 +787,8 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   test, the hero-tower finding wording, the Legends-board note, Box 55 wording). **OTA published**: iOS
   `01a154cc-e1b9-730d-a536-b8757bfad0dd`, Android `01a154cc-e1b9-748e-a58f-d74b70d33d69`, group
   `2f5b8fca-cf7c-437d-9475-eb382a0a66f2` (message `divecore-finish-step6-balance`). Phone check: **Box 55** (not done).
-  **Open (not tuned, report flags it):** the hero-tower kit spread is 1.59× (Archangel 1.13× … Morwen 1.80×) with
-  paid hero towers; and the board most players field (Mixed + helper + hero towers) is not its own sim column.
+  **Open at the time (since tuned, section 3 item 4):** the hero-tower kit spread was 1.59× (Archangel 1.13× … Morwen
+  1.80×) with paid hero towers, now 1.41×; the board most players field (Mixed + helper + hero towers) is still not its own sim column.
   **Next: step 7 (Locker icons through PixelLab); Minigames M1 still waits for emci's yes.**
 - **Step 7 built + published 2026-10-19** (Play commits `80d9f9e4`, `f5854622`; docs `f573040a`). **13 own Streetwear
   icons**, one per item (was 13 items on 10 shared stand-ins: one shield for Bark Aegis and Ember Ward, a hoodie, a
