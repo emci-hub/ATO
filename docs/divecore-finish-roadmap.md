@@ -263,7 +263,7 @@ Nothing below blocks the next job; emci runs or accepts each.
    (0.85× kept + helper).
 5. **Element look in Turf War** (emci chose code-only, 2026-10-21): **built** a still ground glow under stunned / burning /
    chilled creeps (`statusGlowColor`, `src/play/status-icons.ts`; drawn in `defend-screen.tsx`, Streetwear only, display
-   only; pinned in `check:kits`); phone check pending. Chain bolts were already element-tinted. **Not built:** an
+   only; pinned in `check:kits`); **phone check PASSED** (emci, 2026-10-21; OTA group `8b2c2691`). Chain bolts were already element-tinted. **Not built:** an
    element-coloured hit flash and a Turf-scale tower/hero aura (pet auras don't fit; needs new PixelLab art).
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
