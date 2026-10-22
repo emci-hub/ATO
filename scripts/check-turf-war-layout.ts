@@ -449,6 +449,11 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(src, /const combatFlags = combatFxFlags\(fxQuality, playMotion\)/, 'flags come from Effects Quality + Motion');
   assert.match(src, /if \(flags\.flash && fxLayer && drawn && now - lastFlash >= FLASH_COOLDOWN_MS\)/, 'flash only when allowed, at most once per cooldown (a DoT never strobes)');
   assert.ok(FLASH_COOLDOWN_MS >= 200, 'flash cooldown ≥ 200 ms (≤ 5 flashes a second)');
+  // Divecore step (b): the hit flash takes the element colour of the hit; a neutral hit stays white.
+  assert.match(src, /fxLayer\.flash\(drawn\.drawable, drawn\.box, p\.kind === 'boss', hitColor\.get\(p\.id\)\)/, 'the hit flash is tinted with the creep\'s hitColor (element-tagged hits only)');
+  assert.ok(src.indexOf('const hitColor = new Map<number, string>()') < src.indexOf('hitColor.get(p.id)'), 'hitColor is built before the flash loop reads it');
+  assert.match(fx, /tintColor=\{item\.color \?\? '#FFFFFF'\}/, 'no colour = the white flash, unchanged');
+  assert.match(fx, /flash: \(drawable, box, boss = false, color\) => add\(\{ kind: 'flash'/, 'the flash call carries the colour');
   assert.ok(HIT_STOP_TIMER_MS + 15 <= HIT_STOP_MS, 'hit-stop timer + a commit stays ≤ 60 ms');
   assert.match(src, /setTimeout\(\(\) => setHitStop\(false\), HIT_STOP_TIMER_MS\)/, 'hit stop uses the short timer');
   const c1 = nextChip(undefined, 1, 0.9, 0);

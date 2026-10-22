@@ -2467,7 +2467,8 @@ export function DefendScreen({
         if (flags.flash && fxLayer && drawn && now - lastFlash >= FLASH_COOLDOWN_MS) {
           flashAtRef.current.set(p.id, now);
           // T6: a boss flashes brighter and longer (BOSS_FLASH_MS); same allow rule and cooldown.
-          fxLayer.flash(drawn.drawable, drawn.box, p.kind === 'boss');
+          // Step (b): an element-tagged hit flashes in that element's colour (`hitColor`); a neutral hit stays white.
+          fxLayer.flash(drawn.drawable, drawn.box, p.kind === 'boss', hitColor.get(p.id));
         }
       }
       for (const id of [...hpChipRef.current.keys()]) if (!aliveIds.has(id)) hpChipRef.current.delete(id);
