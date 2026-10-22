@@ -1,0 +1,13 @@
+{
+  "tool": "pixellab",
+  "operator": "claude (next-hero test, Kael method)",
+  "createdAt": "2026-10-22",
+  "source": "art-src/pixellab/hero.morwen.streetwear/migrated/raw/rotations/{south,east,north,west}.png (192x192)",
+  "character_id": "e1c19bb1-e57e-4837-a2f7-07a787dcfcaa",
+  "import": {"tool": "create_character", "mode": "v3", "n_directions": 4, "direction_images": "east,north,west", "generations": 0.25},
+  "animation": {"tool": "animate_character", "mode": "template", "template_animation_id": "breathing-idle", "directions": ["east", "west"], "frames": 4, "canvas": "192x192", "generations": 2, "group": "f0e6ee8d-1903-4030-8133-a9c44d7f11b3"},
+  "seed": null,
+  "picked": false,
+  "installed": false,
+  "critique": {"score": null, "notes": "REJECTED as a swap: the template redrew Morwen without her staff, slimmer plain robe, taller upright stance (131-135 px vs 104-108). Identity lost. Frames kept in pixellab-out/ for reference only."}
+}
