@@ -156,6 +156,17 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   fixed boxes, loading keeps final size; a deliberate screen switch like Turf War setup → wave may
   re-lay out once, marked `fixed-regions: screen switch`). Kit `src/play/fixed-region.tsx`, rule `.cursor/rules/fixed-regions.mdc`,
   gate `check:fixed-regions` — a new game screen adds its pins there.
+- **Compliance is researched, built, tested and documented, not handed to a lawyer (emci 2026-10-22).** Hiring a
+  lawyer is never a default requirement or a launch blocker. For privacy, terms, AI-provider disclosures, encryption
+  declarations and App Store rules: (1) start from current official docs (Apple, regulators, our providers);
+  (2) comparable apps are implementation examples only, never proof of compliance, and their legal text is never copied;
+  (3) label every item **mandatory** (cite the rule), **recommended safeguard** or **optional precaution**, and never
+  present a recommendation as a legal requirement; (4) read our code, config and data flows before any claim, so the
+  policies describe what the app really does; (5) prefer practical, lower-risk implementations, but never remove a
+  feature or change an AI provider without emci's approval; (6) when uncertain, write the exact question, the sources,
+  and the simplest compliant option, with no "ask a lawyer" default and no unsupported reassurance; (7) flag professional
+  review only for a specific, material unresolved issue, saying why the guidance doesn't resolve it and whether it really
+  blocks launch, and keep doing unrelated work. Evidence goes in the roadmap or the doc for that area.
 - Do not change dependencies, auth, env config, or secrets without emci's ok.
 - **Schema changes that copy a tested path need no ask (emci 2026-10-02).** A new table /
   RLS / RPC built the same way as one already live here (e.g. the question pool) is

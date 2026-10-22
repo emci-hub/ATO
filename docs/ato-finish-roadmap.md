@@ -26,31 +26,36 @@ interleaved between app steps.
 - **Must + should-fix:** steps A1-A7 and art AN0-AN4, interleaved as in §5. AN5 (paid motion) stays opt-in. Nice-to-have
   waits.
 - **D23: sign-up stays public** while the legal pages are finished.
-- **No lawyer (emci).** Step A2 follows the no-lawyer path below instead of "lawyer read". Wherever this file says "lawyer"
-  (M1, M3, D12), read it as that path.
+- **Compliance by research, not a lawyer (emci, standing rule in CLAUDE.md "Compliance is researched…").** A lawyer is
+  never a default or a launch blocker. Every "lawyer" mention in this file and in v1 (M1, M3, D12, OPEN-QUESTIONS) is
+  replaced by the compliance path below.
 
-## No-lawyer path (research 2026-10-22; this is not legal advice)
+## Compliance path (standing rule; research 2026-10-22; findings, not legal advice)
 
-**Is a lawyer required?** No. No law requires a small developer to hire one for a privacy policy or terms. Apple requires a
-privacy policy and in-app deletion, not a lawyer's review (guidelines 5.1.1). Sources: termly.io and getterms.io articles
-"Do I need a lawyer for a privacy policy" (vendors, so biased toward their generators), revenuecat.com app privacy guide.
+**Is a lawyer required?** No rule we found requires one. Apple requires a privacy policy that covers collection, use,
+retention/deletion and consent revocation, plus in-app deletion (guideline 5.1.1(i), (v)); it does not require legal
+review. (Secondary: termly.io, getterms.io, revenuecat.com app-privacy guides; vendors, so treat as examples.)
 
-**Why one was suggested** (the v1/v2 drafts flagged these), and what removes each risk without a lawyer:
+Each row: **M** = mandatory (rule cited), **R** = recommended safeguard, **O** = optional precaution. "Open" = an exact
+question still to settle in A2 from primary sources; nothing here is reassurance.
 
-| Risk the drafts flagged | Why it is risky | No-lawyer fix |
-|---|---|---|
-| DeepSeek fallback (China-based) gets AI requests | cross-border disclosure of personal data; unclear training/retention terms | **D26: drop DeepSeek, Gemini only** (one secret + `_shared/ai-vendors.ts` + text + `check:floor`). Removes the hardest question. |
-| Gemini training on requests | Gemini API: the **paid** tier says prompts/responses are not used to improve products; the **free** tier allows training and human review (Gemini API terms as quoted by simonwillison.net, 2024-10-17; check ai.google.dev for the current text) | emci confirms billing is on for the key (paid tier), then the text can say "not used to train". If free tier: the text must say requests may be used to improve Google's products and read by reviewers. |
-| Encryption export claim (1.1, libsodium) | `false` claims exempt encryption | US rule since 2021-03-29: mass-market software with **standard, published algorithms** needs no self-classification report (developer write-ups citing the BIS change); libsodium uses published algorithms (X25519, XSalsa20-Poly1305 from NaCl); ATO is not offered in France. Keep `false`, write the reasoning in `app-store-pack.md` §9, and answer Apple's question the same way. Low risk; revisit only if Apple asks. |
-| Canadian privacy law (Alberta PIPA + PIPEDA for cross-border data) | duties, not a lawyer requirement: a named privacy contact, purposes stated at collection, safeguards, access/correction requests (~30 days), breach notice to the Alberta OIPC for real-risk breaches (clym.io PIPA summary; mondaq.com app-privacy article) | Name emci (or the business) as the privacy contact with the support email; add a short "your rights / access requests within 30 days" paragraph; keep a one-page breach plan in `docs/`. |
-| Who "AsTrollOGs" is (entity) | the documents name a business that may not be registered | Per `docs/BUSINESS.md` M0 ATO is a sole proprietorship under emci's legal name: say "operated by [emci's legal name] (AsTrollOGs)" until a trade name is registered. |
-| Terms: liability limits, governing law | enforceability for consumers varies | Plain Alberta, Canada governing law; keep standard "as is" wording; reference Apple's standard EULA. No lawyer needed to publish; it only limits how strong the clauses are. |
-| Wellness content, no crisis detection | stores and readers expect a clear "not a professional service" line | Keep the static helpline row + one clear "ATO is not therapy or medical advice" line in terms and on You. |
-| Retention periods | Apple 5.1.1(i) asks for retention/deletion | Pick them ourselves (A2 proposes numbers: deletion record kept as the legal minimum, reports 1 year, Supabase backups per plan, Sentry per its plan, `access_requests` deleted at launch) and write them in. |
+| Topic | Class | What the source says | What ATO does / must do | Open question → simplest compliant option |
+|---|---|---|---|---|
+| Third-party AI disclosure + consent | **M** Apple 5.1.2(i) | "clearly disclose … third-party AI, and obtain explicit permission before doing so" | consent card + server 403 without consent (§1.3); disclosure names Legends + deep dives | must name each provider that receives data. Today: Gemini + DeepSeek (`_shared/ai-vendors.ts`). Keep both and name both, unless emci decides D26 |
+| AI provider data use | **M** (5.1.1(i): "all uses of that data") | Gemini API terms as quoted 2024-10-17: paid tier not used to improve products; free tier may be used and human-reviewed (re-read ai.google.dev in A2) | unknown which tier the key is on (D27); DeepSeek terms not yet read | A2 reads both providers' current terms and the policy states what they say. No "not used to train" claim unless the terms say so for our tier |
+| DeepSeek (China-based fallback) | **R** (cross-border transparency, PIPEDA principle of openness) | — | fallback is live | D26 is emci's call (no provider change without approval). If kept: the policy says data may be processed in China under DeepSeek's terms |
+| Encryption export (1.1, libsodium) | **M** answer Apple's export questions truthfully | US BIS change 2021-03-29: mass-market items with standard published algorithms no longer need a self-classification report (secondary: developer write-ups; A2 reads the BIS page) | `ITSAppUsesNonExemptEncryption: false`; X25519 + XSalsa20-Poly1305 (NaCl, published); not offered in France | Open: does `false` match Apple's current wording for mass-market standard encryption? A2 reads Apple's export-compliance help page + BIS 740.17 and records the answer in `app-store-pack.md` §9 |
+| Canadian privacy law (Alberta PIPA, PIPEDA) | **M** | a responsible person, purposes at or before collection, safeguards, access/correction requests (~30 days), breach notice to the Alberta OIPC for real risk of significant harm (clym.io summary, mondaq.com; A2 reads the OIPC page) | none of the contact/access text exists yet | add a privacy-contact + access-request paragraph; one-page breach plan in `docs/` |
+| Operator name | **M** (5.1.1 contact; PIPA contact) | — | documents say "AsTrollOGs"; `docs/BUSINESS.md` M0: sole proprietor under emci's legal name | emci gives the legal name; text says "operated by [name] (AsTrollOGs)" |
+| Retention periods | **M** Apple 5.1.1(i) | "Explain its data retention/deletion policies" | text says only "while your account exists" | A2 proposes numbers from the code (deletion record, reports, backups per Supabase plan, Sentry per plan, `access_requests`) for emci's OK |
+| Governing law, liability wording | **O** | — | drafts name Alberta | keep plain wording; no rule requires more |
+| "Not therapy or medical advice" | **R** (1.4.1 scrutiny for medical-adjacent apps) | — | helpline row exists | one clear line in terms and on You |
+| UGC safeguards | **M** Apple 1.2 | filter, report + timely response, block, published contact | built (§1.4); report alert missing; inbox unconfirmed | S1 + M2 |
 
-**Optional free check (not a hired lawyer):** the University of Calgary BLG Business Venture Clinic gives Calgary
-entrepreneurs free, lawyer-supervised legal information (ucalgary.ca news, 2014-2021; confirm it still runs). Use it only if
-emci wants a second pair of eyes; nothing in the plan waits on it.
+**Professional review:** not needed for any row today. If A2's reading of Apple + BIS leaves the encryption row unresolved
+(the only row where a wrong answer has a legal consequence outside the store), A2 will say exactly why and whether it
+blocks; it does not block A1, A3 or the art steps. A free, optional second look exists (University of Calgary BLG Business
+Venture Clinic) but nothing waits on it.
 
 ## 1. Findings per area (facts, file:line; investigators were read-only)
 
@@ -317,7 +322,7 @@ until the pages are final. Recommendation: (a) if the lawyer read is days away; 
 | D23 | While legal pages are drafts: stay public or back to invite-only? | see above |
 | D24 | Report alert: email per report (trigger + pg_net, a new pattern) or a cron that emails a daily digest? | daily digest by cron (copies the cron pattern already live), plus emci keeps the 24 h promise |
 | D25 | Supabase plan for backups (Pro) before real users? | yes, Pro + MFA on the account |
-| D26 | Drop the DeepSeek fallback (Gemini only)? | yes: removes the cross-border AI question; on a Gemini outage the card falls back to the free library / hand-written card as today |
+| D26 | Keep the DeepSeek fallback, or Gemini only? (provider change = emci's call) | either is compliant if disclosed. Dropping it is simpler (no China processing to disclose; on a Gemini outage the card uses the free library / hand-written card as today). Keeping it needs one disclosure sentence and DeepSeek's terms read in A2 |
 | D27 | Is the Gemini key on the paid tier (billing on)? | emci checks in Google AI Studio; paid tier lets the text say "not used to train" |
 
 ## 6. Step prompts (copy one per new chat)
@@ -363,8 +368,10 @@ Model: Opus
 ```
 Repo emci-hub/ATO, branch master (pull first). Read PROJECT_CONTEXT.md, CLAUDE.md, docs/ato-finish-roadmap.md (v2 §1.6, §3
 M1-M3, Step A2), docs/legal/OPEN-QUESTIONS.md, src/app/legal/*.md, landing/*.html, docs/app-store-pack.md §8-9.
-NO LAWYER (emci 2026-10-22): follow the roadmap's "No-lawyer path" table. NEEDS FIRST from emci: legal name for
-"operated by", support inbox confirmed, D26 (drop DeepSeek?), D27 (Gemini paid tier?), OPEN-QUESTIONS 10 + 16 choices.
+COMPLIANCE RULE (CLAUDE.md, emci 2026-10-22): follow the roadmap's "Compliance path" table: official sources first,
+label mandatory / recommended / optional, describe only what the code does, no lawyer default, no provider change without
+emci. NEEDS FIRST from emci: legal name for "operated by", support inbox confirmed, D26 (keep or drop DeepSeek), D27 (Gemini
+paid tier?), OPEN-QUESTIONS 10 + 16 choices.
 TASK (step A2): propose retention numbers and the other [CONFIRM] fills in ONE table for emci's OK (never guess a fact),
 then fill every [CONFIRM], set "Last updated", remove "Draft, pending lawyer review", add the privacy-contact / access-request
 (30 days) paragraph and a "not therapy or medical advice" line, fix item 8 (chat exists in 1.1), the landing access_requests

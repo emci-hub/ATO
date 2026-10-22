@@ -946,9 +946,9 @@ binary with `PRE_LAUNCH_DEV = false` baked in, the "ATO" widget header and hapti
 
 ### Part B — Core loop
 
-- [ ] **B1** Home → tap the daily insight. → It loads and unfolds; one light haptic.
+- [ ] **B1** Insights tab → tap "Load insight". → Today's Focus · try · watch loads; one light haptic. (Fixed 2026-10-22, roadmap v2 A1: the insight moved from Home to Insights on 2026-10-14.)
 - [ ] **B2** Answer 3 questions. → They save; Insights and the profile update.
-- [ ] **B3** Mark a Check did/skip. → Saves; the profile card renders.
+- [ ] **B3** Home → "Check in · +5 tokens". → Saves; the line under it reads "1 of 7 check-ins toward your next bonus" (or the next count); More → You shows the identity card. (Fixed 2026-10-22: the Did/Skip Check loop is parked.)
 
 ### Part C — Divecore and Circle
 
@@ -1122,3 +1122,17 @@ About 15 min. Feed → Catch the food; Play → Tap to train and Lane dash. Run 
 - [ ] **10** Open an old save (a phone that already played). -> Catch / Train records and medals are still there; Lane dash starts empty.
 - [ ] **11** Larger Text on, Lane dash and Catch. -> The status line and the 2-line hint are not cut off; the dock does not resize; the lane taps still work.
 - [ ] **12** Play a few Lane dash and Catch rounds. -> Still smooth; food that visibly passes the pet is not caught late (tell me if it feels off).
+
+## Box 76 — Honest promises + reviewer path (roadmap v2 step A1, 2026-10-22)
+
+About 10 min. Needs the A1 OTA (runtime 1.1.0; restart the app twice to load it), two accounts that are Circle friends,
+and (for item 5) a phone where you once tapped "Not now" on "Want a nudge now and then?" and never allowed notifications.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Home → the check-in card (account that finished the 48). -> The balance line reads "Each AI view costs 5: a Legends AI card or a deep dive on Explore." No "Story".
+- [ ] **2** More → You → the ATO tokens card → how it works. -> The spend line names a Legends AI card and a deep dive only, says cards already in the shared library are free, and there is NO "reroll" or "name style" price line.
+- [ ] **3** Open a chat with a friend who has sent you a message. -> The top bar shows Back · @friend · **Report** · Block. Tap Report -> the sheet says "Report their latest message" with the hint "To report an earlier message, press and hold it."; pick a reason -> "Thanks. We read every report within a day."
+- [ ] **4** Same chat, the friend has sent nothing yet (or only you wrote). -> Tap Report -> the note says "Nothing from them to report yet." Long-press on a received message still opens "Report this message".
+- [ ] **5** Divecore: start a room Build (phone from the setup line, notifications never allowed). -> NO iOS notification dialog appears. Divecore → Settings → switch a notice on -> the iOS dialog DOES appear (you asked).
+- [ ] **6** VoiceOver on, chat screen. -> The new button reads "Report a message from @friend, button".
