@@ -73,27 +73,38 @@ password through our own server). Email codes are not needed for this account.
   Handle:   <DEMO HANDLE>
   Password: <DEMO PASSWORD>   (entered by the developer in App Store Connect)
 
-The demo account is over 18, has finished sign-up and the first question set, and has one accepted Circle friend so you
-can see Block and Report.
+The demo account is over 18, has answered the first 48 questions (so Insights is open), has NOT answered the AI consent
+question yet, and has one accepted Circle friend who has sent one chat message.
 
 What to look at (bottom bar: Home, Insights, Questions, Explore, More):
-- Home: one daily insight, loaded on a tap.
+- Home: the daily check-in and Today's Pick. The AI consent card ("ATO's AI") is on Home until it is answered
+  (at the bottom of Home for this account). After that, the same choice is in More → You → "ATO's AI" (On/Off).
+- Insights: one daily insight (Focus · try · watch), loaded on a tap. Written from stored text, not by AI.
 - Questions: the multiple-choice profile questions; answers build the trait profile.
 - Circle tab (More → Circle if it is not in the bar): a person is added by @handle and must accept. Every friend row has
-  a ⋯ menu with Block and Report. More → Divecore is the pixel-art pet game; friends can visit each other's Hideout there. There is no chat or messaging between people.
+  a ⋯ menu with Message, Report and Block. Inside a chat, Report and Block are buttons at the top of the screen;
+  long-press a received message to report that one. More → Divecore is the pixel-art pet game; friends can visit each
+  other's Hideout there.
 - More → You: account, legal links (Privacy, Terms), "Delete account" (works in-app, confirms by typing DELETE), and a
   fixed helpline row.
 
-AI: a few cards (Legends cards and category deep dives) are written by a language model on our server (Google Gemini, with
-DeepSeek as a fallback); the phone sends no typed text and no personal data. The app asks for consent first.
+AI: only Legends cards and category deep dives are written by a language model on our server (Google Gemini, with
+DeepSeek as a fallback). The phone sends only a trait group, never typed text, a name or answers. Nothing is sent until
+the person says yes on the consent card; the server refuses AI requests without that consent.
+Chat: friends only, end-to-end encrypted; a report sends the reported message and up to 5 before it.
 Sign in with Apple is offered on the sign-in screen.
 Age: the app is 18+ only and checks the birthday at sign-up.
 ```
+
+(For a 1.0-only build without chat, drop the "Message" / chat lines. Current submission is 1.1.)
 
 Demo account (emci does this; I never touch accounts):
 1. Create the account the normal way on a phone (or the dev-test route), with an 18+ birthday, then finish the first set.
 2. Befriend a second account by @handle (the second account accepts) so the Circle tab shows a friend. Check the Circle tab
    opens and the friend's ⋯ menu shows Block and Report before you submit.
+2b. (Roadmap v2 A1, Apple 5.1.2(i)) Leave the demo account's AI consent UNANSWERED, so the reviewer sees the consent card
+   on Home. A developer-forum rejection (developer.apple.com/forums/thread/820209) came from reviewers not seeing the prompt.
+   Finish all 48 questions so Insights opens; have the friend open chat once and send one message.
 3. Type the handle/password into ASC's "Sign-in required" fields. Never put them in this repo.
 
 ## 6. Screenshots (iPhone 6.9" and 6.5" are required; capture on a real phone from TestFlight)
@@ -159,7 +170,8 @@ take the code, and set `ITSAppUsesNonExemptEncryption` true with `ITSEncryptionE
 
 **UGC safeguards to add to the 1.1 review notes:**
 - Chat is only between accepted friends who have not blocked each other (checked on the server for every read and send).
-- Report on any received message (long-press, six fixed reasons): the reporter's phone sends that message + up to 5 before it.
+- Report from the chat header (reports the friend's latest message) or by long-press on any received message (six fixed
+  reasons): the reporter's phone sends that message + up to 5 before it.
 - Block from the chat header (silent). On-phone filter hides slurs and explicit sexual words behind "Tap to show" and asks
   for a second tap before sending one.
 - Moderation: reports are read daily by the developer (24 h target); ladder warn → chat off → ban (`admin_chat_restrict`,
@@ -167,5 +179,6 @@ take the code, and set `ITSAppUsesNonExemptEncryption` true with `ITSEncryptionE
 
 Review-notes line to replace for 1.1: "There is no chat or messaging between people." → "Friends can message each other
 one to one (⋯ → Message). Chat is end-to-end encrypted; long-press a received message to report it."
+(Done in §5 on 2026-10-22, roadmap v2 A1: the notes block now describes 1.1, with the header Report button.)
 Demo account (1.1): the demo friend must open chat once (it publishes their key) and send one message, so the reviewer
 sees a thread.

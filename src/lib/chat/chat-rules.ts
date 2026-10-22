@@ -36,6 +36,18 @@ export function reportContext(
     .map((l) => ({ id: l.id, mine: l.mine, text: l.text.slice(0, 2000), at: l.at }));
 }
 
+/**
+ * The header Report button (roadmap v2 step A1): reports the friend's latest message this phone can
+ * open, so Report is visible without knowing about long-press. Null when there is nothing to report.
+ */
+export function latestReportable(lines: readonly ChatLine[]): ChatLine | null {
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const l = lines[i]!;
+    if (!l.mine && l.text != null) return l;
+  }
+  return null;
+}
+
 export const CHAT_UI = {
   title: (handle: string) => `@${handle}`,
   privacyLine: `Only you two can read this. Messages delete after ${CHAT_RETENTION_DAYS} days. A report sends us the message you report and the ${CHAT_REPORT_CONTEXT_BEFORE} before it.`,
@@ -52,6 +64,10 @@ export const CHAT_UI = {
   tooLong: (n: number) => `${n} over the limit`,
   report: 'Report',
   reportTitle: 'Report this message',
+  reportLatestTitle: 'Report their latest message',
+  reportEarlierHint: 'To report an earlier message, press and hold it.',
+  reportNothing: 'Nothing from them to report yet.',
+  reportLabel: (handle: string) => `Report a message from @${handle}`,
   reportReasons: {
     harassment: 'Harassing me',
     hate: 'Hate or slurs',
