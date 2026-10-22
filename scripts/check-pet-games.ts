@@ -10,6 +10,7 @@
  *     needs — and random mashing can't get there (simulated).
  */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { careBand, careScore, roundSkillPoints, CARE_ACT } from '../src/play/pet-eggs';
 import {
@@ -274,7 +275,18 @@ ok('combo: ×1 → ×2 → ×3 → ×5 by streak (Catch 5/10/20, Train 3/6/10); 
   assert.equal(normal.doc.pet.care_skill, 25, 'Normal 90%: skilled (25) as before');
   const insane = finishPetRound(baby, 1000, 'catch', great, { level: 'insane', score: 500, daily: false });
   assert.equal(insane.doc.pet.care_skill, 25, 'Insane never gives more than Normal');
-  assert.equal(easy.result.tokensGranted, normal.result.tokensGranted, 'tokens are the same on every level');
+  assert.equal(normal.result.tokensGranted, insane.result.tokensGranted, 'Normal and harder pay the same tokens');
+  assert.equal(easy.result.tokensGranted, 2, 'Easy pays 2 tokens a round (Minigames M1)');
+  assert.equal(normal.result.tokensGranted, 5, 'Normal pays 5');
+  // Six Easy passes cannot fill the daily cap of 30.
+  let farm = baby as typeof easy.doc;
+  let farmPaid = 0;
+  for (let i = 0; i < 6; i += 1) {
+    const r = finishPetRound(farm, 1000 + i, 'catch', great, { level: 'easy', score: 50, daily: false }, `farm:${i}`);
+    farm = r.doc;
+    farmPaid += r.result.tokensGranted;
+  }
+  assert.equal(farmPaid, 12, 'six Easy passes pay 12, not the 30 cap');
 }
 ok('care: pass/fail unchanged on every level; only Normal+ can be skilled (Easy can’t farm care); harder never gives more care');
 
@@ -348,5 +360,23 @@ ok('records: best only rises; medals by score (pass only); Hard needs Silver on 
   assert.equal(recordDaily(again.daily, '2026-09-30', 'train', 5, true).bonusShells, DAILY_BONUS_SHELLS, 'per game');
 }
 ok('daily challenge: one fixed pattern per date and game; best only rises; bonus once a day per game; clock-back safe');
+
+{
+  // Minigames M1 (2026-10-22): the screen pins. Source reads, like the other check:* scripts.
+  const games = readFileSync('src/play/pet-games.tsx', 'utf8');
+  const screen = readFileSync('src/play/pet-screen.tsx', 'utf8');
+  assert.ok(!games.includes('💣</Text>') && /function BombShape/.test(games), 'the bomb is a shape with an X, not the emoji');
+  assert.ok(/<Polygon points=\{STAR_POINTS\}/.test(games), 'golden food is a star (shape cue beside the colour)');
+  assert.ok(/if \(spawned \|\| missed \+ dodged > 0\) setItems\(next\)/.test(games), 'the field is not re-rendered every tick (the fall is a shared value)');
+  assert.ok(/y\.value = withTiming\(1\.05/.test(games), 'each item falls on the UI thread');
+  assert.ok(/markerSv\.value = p/.test(games) && !/setMarker\(/.test(games), 'the Train marker is a shared value, not state');
+  assert.ok(/bombTimer\.current = setTimeout/.test(games) && /clearTimeout\(bombTimer\.current\)/.test(games), 'the bomb-flash timer is cleared on unmount');
+  assert.ok(/const countdown = useCountdown\(\)/.test(games) && /\[playing\]/.test(games), 'both rounds start their clock after a 3-2-1');
+  assert.ok(/function RoundCard/.test(games) && /onContinue/.test(games), 'a result card waits for Continue');
+  assert.ok(/!still\) \{\s*\n\s*juice\.play\(\);\s*\n\s*alertHaptic\(\)/.test(games), 'haptics are off with Reduce Motion / Effects Off');
+  assert.ok(/statusLine: \{[^}]*minHeight/.test(games), 'the status line keeps a full line of height (Larger Text)');
+  assert.ok(/setRoundCard\(\{/.test(screen) && /afterRound\.current = after/.test(screen), 'the room shows the card, then runs the sheet / notices on Continue');
+}
+ok('Minigames M1: bomb + star shapes, UI-thread fall and marker, 3-2-1, result card on Continue, haptics gated by still, bomb timer cleared');
 
 console.log(`\ncheck:pet-games — ${passed} groups passed.`);

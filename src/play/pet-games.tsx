@@ -26,9 +26,9 @@
  */
 import { Image } from 'expo-image';
 import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Polygon } from 'react-native-svg';
 
 import { BubbleRing } from '@/play/dive-world';
 import { GAME_LABEL } from '@/play/game-records';
@@ -43,8 +43,10 @@ import { petPose, petPoseMs, type PetPose } from '@/play/pet-actor';
 import { GameScreen, useStageFrame } from '@/play/stage-layout';
 import { PetAnimSprite, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
 import type { PetWear } from '@/play/pet-cosmetics';
+import { alertHaptic, rewardHaptic, tapHaptic } from '@/play/street-feel';
 import {
   CATCH,
+  COMBO_STEPS,
   EMPTY_CATCH,
   TRAIN,
   TRAIN_PERFECT_SHARE,
@@ -481,6 +483,154 @@ function GamePlate({
   );
 }
 
+/* ------------------------------------------- countdown, pops, result card --- */
+
+const COUNT_STEP_MS = 700;
+
+/** What the result card says once the round is counted (built by the Pet room). */
+export type RoundCardData = { pass: boolean; strong: boolean; lines: string[] };
+
+/**
+ * 3-2-1 before a round. Returns the number on screen (0 = go), so the game
+ * starts its clock only when it hits 0. Under `still` it is the same count
+ * without the pulse.
+ */
+function useCountdown(): number {
+  const [n, setN] = useState(3);
+  useEffect(() => {
+    if (n <= 0) return;
+    const id = setTimeout(() => setN((v) => v - 1), COUNT_STEP_MS);
+    return () => clearTimeout(id);
+  }, [n]);
+  return n;
+}
+
+/** The big 3-2-1, over the stage (a float layer: no region resizes). */
+function CountdownVeil({ n, still }: { n: number; still: boolean }) {
+  const s = useSharedValue(1);
+  useEffect(() => {
+    if (still || n <= 0) return;
+    s.value = 1.5;
+    s.value = withTiming(1, { duration: COUNT_STEP_MS - 100, easing: Easing.out(Easing.quad) });
+  }, [n, still, s]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  if (n <= 0) return null;
+  return (
+    <View pointerEvents="none" style={styles.countVeil} accessibilityLiveRegion="polite" accessibilityLabel={`Starting in ${n}`}>
+      <Animated.View style={style}>
+        <PixelLabel color={PIXEL.amberHi} numberOfLines={1} style={styles.countText}>
+          {`${n}`}
+        </PixelLabel>
+      </Animated.View>
+    </View>
+  );
+}
+
+/** A "+n" that floats up and fades where the score came from. */
+type Pop = { id: number; left: number; top: number; text: string };
+const POP_MS = 700;
+
+function PopText({ pop, still }: { pop: Pop; still: boolean }) {
+  const p = useSharedValue(0);
+  useEffect(() => {
+    if (!still) p.value = withTiming(1, { duration: POP_MS, easing: Easing.out(Easing.quad) });
+  }, [p, still]);
+  const style = useAnimatedStyle(() => ({ opacity: 1 - p.value * p.value, transform: [{ translateY: -28 * p.value }] }));
+  return (
+    <Animated.View pointerEvents="none" style={[styles.pop, { left: pop.left, top: pop.top }, style]}>
+      <PixelLabel color={PIXEL.amberHi} numberOfLines={1}>
+        {pop.text}
+      </PixelLabel>
+    </Animated.View>
+  );
+}
+
+/** Pops that clean themselves up (timers cleared on unmount). */
+function usePops() {
+  const [pops, setPops] = useState<Pop[]>([]);
+  const idRef = useRef(0);
+  const timers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  useEffect(() => {
+    const live = timers.current;
+    return () => {
+      live.forEach(clearTimeout);
+      live.clear();
+    };
+  }, []);
+  const add = (left: number, top: number, text: string) => {
+    const id = idRef.current++;
+    setPops((p) => [...p.slice(-5), { id, left, top, text }]);
+    const t = setTimeout(() => {
+      timers.current.delete(t);
+      setPops((p) => p.filter((x) => x.id !== id));
+    }, POP_MS + 60);
+    timers.current.add(t);
+  };
+  return { pops, add };
+}
+
+/** Combo progress to the next tier (a thin fixed-height strip; full at the top tier). */
+function ComboStrip({ game, streak }: { game: 'catch' | 'train'; streak: number }) {
+  const [a, b, c] = COMBO_STEPS[game];
+  const bounds = [0, a, b, c];
+  const tier = streak >= c ? 3 : streak >= b ? 2 : streak >= a ? 1 : 0;
+  const frac = tier === 3 ? 1 : (streak - bounds[tier]) / (bounds[tier + 1] - bounds[tier]);
+  return (
+    <View
+      pointerEvents="none"
+      style={styles.comboStrip}
+      accessibilityLabel={tier === 3 ? 'Combo at the top' : `Combo progress ${streak} of ${bounds[tier + 1]}`}>
+      <View style={[styles.comboFill, { width: `${Math.round(frac * 100)}%` }, tier === 3 && styles.comboFillTop]} />
+    </View>
+  );
+}
+
+/** The result card, over the finished game: what it paid, the medal and the record. */
+function RoundCard({ card, still, onContinue }: { card: RoundCardData; still: boolean; onContinue: () => void }) {
+  useEffect(() => {
+    if (!still && card.pass) rewardHaptic();
+  }, [card.pass, still]);
+  return (
+    <View style={styles.cardVeil} accessibilityViewIsModal>
+      <PixelFrame align="stretch" padded={false} glow={card.strong} fill={PIXEL.ink} border={card.pass ? PIXEL.amber : PIXEL.cyan}>
+        <View style={styles.cardPad}>
+          <PixelLabel color={card.pass ? PIXEL.amberHi : PIXEL.cyan} numberOfLines={1} accessibilityRole="header">
+            {card.pass ? 'ROUND PASSED' : 'NOT THIS TIME'}
+          </PixelLabel>
+          {card.lines.map((l, i) => (
+            <PixelBody key={i} size="sm" color={i === 0 ? PIXEL.text : PIXEL.dim} style={styles.cardLine}>
+              {l}
+            </PixelBody>
+          ))}
+          <Pressable
+            onPress={onContinue}
+            accessibilityRole="button"
+            accessibilityLabel="Continue"
+            style={({ pressed }) => [{ width: '100%', minHeight: 56, opacity: pressed ? 0.92 : 1 }]}>
+            {({ pressed }) => (
+              <PixelFrame
+                fill={PIXEL.cyan}
+                border={PIXEL.ink}
+                bevel="cyan"
+                sunk={pressed}
+                glow={false}
+                lined={false}
+                padded={false}
+                align="center"
+                minHeight={56}
+                style={{ width: '100%', height: 56 }}>
+                <PixelLabel color={PIXEL.onFill} shadowColor={PIXEL.cyanLo} numberOfLines={1}>
+                  CONTINUE
+                </PixelLabel>
+              </PixelFrame>
+            )}
+          </Pressable>
+        </View>
+      </PixelFrame>
+    </View>
+  );
+}
+
 /** Catch or Train, full screen. The daily pattern is seeded once per mount. */
 export function PetGameHost({
   kind,
@@ -489,6 +639,8 @@ export function PetGameHost({
   ymd,
   gamePet,
   still,
+  card = null,
+  onContinue,
   onBack,
   onDone,
 }: {
@@ -498,13 +650,21 @@ export function PetGameHost({
   ymd: string;
   gamePet: GamePet | null;
   still: boolean;
+  /** Set once the round is counted: the result card shows over the finished game. */
+  card?: RoundCardData | null;
+  onContinue: () => void;
   onBack: () => void;
   onDone: (outcome: RoundOutcome, score: number) => void;
 }) {
   const rngRef = useRef<(() => number) | null>(null);
   if (rngRef.current == null) rngRef.current = daily ? seededRng(dailySeed(ymd, kind)) : Math.random;
   const props: GameProps = { onDone, onBack, level, rng: rngRef.current, gamePet, still };
-  return kind === 'catch' ? <CatchFoodGame {...props} /> : <TapTrainGame {...props} />;
+  return (
+    <View style={styles.hostFill}>
+      {kind === 'catch' ? <CatchFoodGame {...props} /> : <TapTrainGame {...props} />}
+      {card ? <RoundCard card={card} still={still} onContinue={onContinue} /> : null}
+    </View>
+  );
 }
 
 /* ------------------------------------------------------ Catch the food --- */
@@ -515,10 +675,24 @@ const FOOD_COLORS = ['#FF6B6B', '#FFD86B', '#7CE38B'] as const;
 
 type Food = { id: number; x: number; y: number; speed: number; color: string; kind: SpawnKind };
 
+/** A five-point star (golden food), so it reads by shape as well as colour. */
+const STAR_POINTS = Array.from({ length: 10 }, (_, i) => {
+  const a = (-90 + i * 36) * (Math.PI / 180);
+  const r = i % 2 === 0 ? 17 : 7.5;
+  return `${(20 + r * Math.cos(a)).toFixed(1)},${(22 + r * Math.sin(a)).toFixed(1)}`;
+}).join(' ');
+
 function FoodShape({ color, golden = false }: { color: string; golden?: boolean }) {
+  if (golden) {
+    return (
+      <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40">
+        <Polygon points={STAR_POINTS} fill="#FFF3B0" fillOpacity={0.5} stroke="#FFF3B0" strokeWidth={4} strokeLinejoin="round" />
+        <Polygon points={STAR_POINTS} fill={color} stroke="#B8860B" strokeWidth={1.5} strokeLinejoin="round" />
+      </Svg>
+    );
+  }
   return (
     <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40">
-      {golden ? <Circle cx="20" cy="23" r="17" fill="#FFF3B0" fillOpacity={0.5} /> : null}
       <Circle cx="20" cy="23" r="13" fill={color} />
       <Circle cx="15" cy="19" r="3.5" fill="#FFFFFF" fillOpacity={0.45} />
       <Path d="M20 10 Q24 4 29 6 Q26 11 20 10 Z" fill="#7CE38B" />
@@ -526,13 +700,67 @@ function FoodShape({ color, golden = false }: { color: string; golden?: boolean 
   );
 }
 
+/** The bomb: a dark round body with a red X (a shape cue, not the emoji). */
+function BombShape() {
+  return (
+    <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40">
+      <Path d="M24 11 Q29 5 33 8" stroke="#C9A66B" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      <Circle cx="34" cy="7" r="2.5" fill="#FFB020" />
+      <Circle cx="19" cy="24" r="13" fill="#1B1F2A" stroke="#FF3B5C" strokeWidth={2} />
+      <Path d="M13 18 L25 30 M25 18 L13 30" stroke="#FF3B5C" strokeWidth={3.5} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/**
+ * One falling item. The fall runs on the UI thread (one linear timing from the
+ * spawn to past the floor), so the field is not re-rendered every tick; the
+ * game's own clock still decides misses.
+ */
+const FoodItem = memo(function FoodItem({
+  f,
+  boxW,
+  boxH,
+  onPress,
+}: {
+  f: Food;
+  boxW: number;
+  boxH: number;
+  onPress: (id: number) => void;
+}) {
+  const y = useSharedValue(f.y);
+  useEffect(() => {
+    y.value = withTiming(1.05, { duration: ((1.05 - f.y) / f.speed) * 1000, easing: Easing.linear });
+    // The fall is fixed at spawn.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const fall = useAnimatedStyle(() => ({ transform: [{ translateY: y.value * Math.max(0, boxH - FOOD_SIZE) }] }));
+  return (
+    <Animated.View style={[styles.food, { left: f.x * (boxW - FOOD_SIZE) }, fall]}>
+      <Pressable
+        onPressIn={() => onPress(f.id)}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={f.kind === 'bomb' ? 'Bomb — don’t tap' : f.kind === 'golden' ? 'Golden star food' : 'Catch food'}
+        style={styles.foodHit}>
+        {f.kind === 'bomb' ? <BombShape /> : <FoodShape color={f.kind === 'golden' ? '#FFD700' : f.color} golden={f.kind === 'golden'} />}
+      </Pressable>
+    </Animated.View>
+  );
+});
+
 export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.random, gamePet = null, still = false }: GameProps) {
   usePixelFonts();
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [items, setItems] = useState<Food[]>([]);
   const [tally, setTally] = useState<CatchTally>(EMPTY_CATCH);
-  const [leftMs, setLeftMs] = useState<number>(CATCH.roundMs);
+  const [leftSec, setLeftSec] = useState<number>(Math.ceil(CATCH.roundMs / 1000));
   const [bombFlash, setBombFlash] = useState(false);
+  const bombTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdown = useCountdown();
+  const { pops, add: addPop } = usePops();
+  const petWobble = useSharedValue(0);
+  const petSquash = useSharedValue(1);
   const itemsRef = useRef<Food[]>([]);
   const tallyRef = useRef<CatchTally>(EMPTY_CATCH);
   const elapsedRef = useRef(0);
@@ -552,10 +780,22 @@ export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.ran
   const finish = () => {
     if (doneRef.current) return;
     doneRef.current = true;
+    itemsRef.current = [];
+    setItems([]);
     onDoneRef.current(catchOutcome(tallyRef.current), catchScore(tallyRef.current, level));
   };
 
+  useEffect(
+    () => () => {
+      if (bombTimer.current) clearTimeout(bombTimer.current);
+    },
+    [],
+  );
+
+  // The clock starts when the 3-2-1 is over; the seeded pattern is drawn only from here.
+  const playing = countdown <= 0;
   useEffect(() => {
+    if (!playing) return;
     let nextId = 0;
     let sinceSpawn = 0;
     const r = rngRef.current;
@@ -565,34 +805,47 @@ export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.ran
       const elapsed = elapsedRef.current;
       sinceSpawn += TICK_MS;
       let missed = 0;
+      let dodged = 0;
       let next = itemsRef.current
         .map((f) => ({ ...f, y: f.y + (f.speed * TICK_MS) / 1000 }))
         .filter((f) => {
           if (f.y < 1.05) return true;
           if (f.kind !== 'bomb') missed += 1; // food that fell past = a miss
+          else dodged += 1; // a bomb that fell past = a near-miss for the pet
           return false;
         });
+      let spawned = false;
       if (sinceSpawn >= catchSpawnGapMs(elapsed, level) && elapsed < CATCH.roundMs - 800) {
         sinceSpawn = 0;
         const kind = catchSpawnKind(elapsed, r(), level);
         const speed = (0.32 + r() * 0.08) * catchSpeedMult(elapsed, level);
         next = [...next, { id: nextId++, x: 0.08 + r() * 0.84, y: -0.1, speed, kind, color: FOOD_COLORS[nextId % FOOD_COLORS.length] }];
+        spawned = true;
       }
       itemsRef.current = next;
-      setItems(next);
+      // Only a spawn or a fall-through changes what is mounted; the fall itself is on the UI thread.
+      if (spawned || missed + dodged > 0) setItems(next);
       if (missed > 0) {
         let t = tallyRef.current;
         for (let i = 0; i < missed; i += 1) t = missFood(t);
         setT(t);
       }
+      if (dodged > 0 && !still) {
+        petWobble.value = withSequence(
+          withTiming(-7, { duration: 60 }),
+          withTiming(7, { duration: 90 }),
+          withTiming(-4, { duration: 80 }),
+          withTiming(0, { duration: 70 }),
+        );
+      }
       const left = Math.max(0, CATCH.roundMs - elapsed);
-      setLeftMs(left);
+      setLeftSec(Math.ceil(left / 1000));
       if (left <= 0) finish();
     }, TICK_MS);
     return () => clearInterval(id);
     // The round's level and rng are fixed for its whole life.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [playing]);
 
   const tapItem = (itemId: number) => {
     if (doneRef.current) return;
@@ -601,30 +854,48 @@ export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.ran
     itemsRef.current = itemsRef.current.filter((f) => f.id !== itemId);
     setItems(itemsRef.current);
     if (item.kind === 'bomb') {
+      const scoreBefore = catchScore(tallyRef.current, level);
       const next = tapBomb(tallyRef.current);
       setT(next);
       setBombFlash(true);
-      setTimeout(() => setBombFlash(false), 80);
+      if (bombTimer.current) clearTimeout(bombTimer.current);
+      bombTimer.current = setTimeout(() => setBombFlash(false), 80);
       play('hurt', 'front');
-      if (!still) juice.play();
+      if (!still) {
+        juice.play();
+        alertHaptic();
+      }
+      const lost = scoreBefore - catchScore(next, level);
+      if (lost > 0) addPop(item.x * (box.width - FOOD_SIZE), item.y * Math.max(0, box.height - FOOD_SIZE), `−${lost}`);
       if (next.over) finish();
       return;
     }
+    const before = catchScore(tallyRef.current, level);
     const next = catchFood(tallyRef.current, elapsedRef.current, item.kind === 'golden');
     setT(next);
+    const gained = catchScore(next, level) - before;
+    if (gained > 0) addPop(item.x * (box.width - FOOD_SIZE), item.y * Math.max(0, box.height - FOOD_SIZE), `+${gained}`);
     // The pet dashes toward the catch and hops.
     const toward = Math.max(0.08, Math.min(0.92, item.x + 0.04));
     play('dash', toward < petX.value ? 'w' : 'e');
     if (!still) {
+      if (item.kind === 'golden') rewardHaptic();
+      else tapHaptic();
       petX.value = withTiming(toward, { duration: 220, easing: Easing.out(Easing.quad) });
       petHop.value = withSequence(withTiming(-12, { duration: 120 }), withTiming(0, { duration: 180, easing: Easing.bounce }));
+      petSquash.value = withSequence(withTiming(1.18, { duration: 80 }), withTiming(1, { duration: 140 }));
     } else {
       petX.value = toward;
     }
   };
 
   const petStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: petX.value * Math.max(0, box.width - GAME_PET_BOX) }, { translateY: petHop.value }],
+    transform: [
+      { translateX: petX.value * Math.max(0, box.width - GAME_PET_BOX) },
+      { translateY: petHop.value },
+      { rotate: `${petWobble.value}deg` },
+      { scale: petSquash.value },
+    ],
   }));
   const mult = comboMult('catch', tally.chain);
   const onField = (e: LayoutChangeEvent) => {
@@ -637,7 +908,7 @@ export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.ran
       kind="catch"
       title={GAME_LABEL.catch}
       score={`${catchScore(tally, level)}`}
-      status={`caught ${tally.caught} · 💣 ${tally.strikes}/${CATCH.bombStrikes} · ${Math.ceil(leftMs / 1000)}s`}
+      status={`caught ${tally.caught} · 💣 ${tally.strikes}/${CATCH.bombStrikes} · ${leftSec}s`}
       onBack={onBack}
       alive={!still}
       dock={
@@ -654,24 +925,15 @@ export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.ran
           </Animated.View>
         ) : null}
         {box.width > 0
-          ? items.map((f) => (
-              <Pressable
-                key={f.id}
-                onPressIn={() => tapItem(f.id)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={f.kind === 'bomb' ? 'Bomb — don’t tap' : f.kind === 'golden' ? 'Golden food' : 'Catch food'}
-                style={[styles.food, { left: f.x * (box.width - FOOD_SIZE), top: f.y * Math.max(0, box.height - FOOD_SIZE) }]}>
-                {f.kind === 'bomb' ? (
-                  <Text style={styles.emojiItem}>💣</Text>
-                ) : (
-                  <FoodShape color={f.kind === 'golden' ? '#FFD700' : f.color} golden={f.kind === 'golden'} />
-                )}
-              </Pressable>
-            ))
+          ? items.map((f) => <FoodItem key={f.id} f={f} boxW={box.width} boxH={box.height} onPress={tapItem} />)
           : null}
         {bombFlash ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.bombFlash]} /> : null}
+        <ComboStrip game="catch" streak={tally.chain} />
         <ComboBadge mult={mult} />
+        {pops.map((p) => (
+          <PopText key={p.id} pop={p} still={still} />
+        ))}
+        <CountdownVeil n={countdown} still={still} />
       </View>
     </GamePlate>
   );
@@ -680,6 +942,9 @@ export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.ran
 /* -------------------------------------------------------- Tap to train --- */
 
 export const TRAIN_REPS = TRAIN.taps;
+/** Where a Train "+n" floats up from (over the crate side of the floor). */
+const TRAIN_POP_X = 190;
+const TRAIN_POP_Y = 60;
 const CRATE_ART = PLAY_ART['tiles/scribble-dungeons/crate'];
 
 function randomZone(width: number, r: () => number): number {
@@ -689,7 +954,11 @@ function randomZone(width: number, r: () => number): number {
 export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.random, gamePet = null, still = false }: GameProps) {
   usePixelFonts();
   const start = startTrain(level);
-  const [marker, setMarker] = useState(0);
+  // The marker runs on a shared value (no re-render per tick); `markerRef` is the logical position for hit tests.
+  const markerSv = useSharedValue(0);
+  const [barW, setBarW] = useState(0);
+  const countdown = useCountdown();
+  const { pops, add: addPop } = usePops();
   const [tally, setTally] = useState<TrainTally>(start);
   const rngRef = useRef(rng);
   const [zone, setZone] = useState(() => randomZone(start.zone, rngRef.current));
@@ -706,7 +975,9 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
   const stumble = useSharedValue(0);
   const juice = useHitJuice();
 
+  const playing = countdown <= 0;
   useEffect(() => {
+    if (!playing) return;
     const id = setInterval(() => {
       if (doneRef.current) return;
       let p = markerRef.current + (dirRef.current * tallyRef.current.speed * TICK_MS) / 1000;
@@ -718,21 +989,29 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
         dirRef.current = 1;
       }
       markerRef.current = p;
-      setMarker(p);
+      markerSv.value = p;
     }, TICK_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [playing, markerSv]);
 
   const tap = () => {
-    if (doneRef.current) return;
+    if (doneRef.current || !playing) return;
     const width = tallyRef.current.zone;
     const off = Math.abs(markerRef.current - zoneRef.current);
     const hit = off <= width / 2;
     const perfect = hit && off <= width * TRAIN_PERFECT_SHARE;
+    const scoreBefore = trainScore(tallyRef.current, level);
     const next = trainTap(tallyRef.current, hit, level, perfect);
     tallyRef.current = next;
     setTally(next);
     setFlashState(perfect ? 'perfect' : hit ? 'hit' : 'miss');
+    const gained = trainScore(next, level) - scoreBefore;
+    if (hit && gained > 0) addPop(TRAIN_POP_X, TRAIN_POP_Y,`+${gained}`);
+    if (!still) {
+      if (perfect) rewardHaptic();
+      else if (hit) tapHaptic();
+      else alertHaptic();
+    }
     if (hit) {
       play('attack', 'e');
       if (!still) {
@@ -754,6 +1033,7 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
   const crateStyle = useAnimatedStyle(() => ({ transform: [{ translateX: knock.value }, { rotate: `${knock.value * 0.6}deg` }] }));
   const petStyle = useAnimatedStyle(() => ({ transform: [{ translateX: stumble.value }] }));
   const flashVeil = useAnimatedStyle(() => ({ opacity: juice.flash.value }));
+  const markerStyle = useAnimatedStyle(() => ({ transform: [{ translateX: markerSv.value * barW }] }));
   const mult = comboMult('train', tally.streak);
 
   const hint =
@@ -781,7 +1061,7 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
             {hint}
           </PixelBody>
           <PixelFrame align="stretch" padded={false} glow={false} lined={false} fill={PIXEL.ink} border={PIXEL.cyan} minHeight={36}>
-            <View style={styles.bar}>
+            <View style={styles.bar} onLayout={(e) => setBarW(e.nativeEvent.layout.width)}>
               <View style={[styles.zone, { left: `${(zone - tally.zone / 2) * 100}%`, width: `${tally.zone * 100}%` }]} />
               <View
                 style={[
@@ -789,7 +1069,7 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
                   { left: `${(zone - tally.zone * TRAIN_PERFECT_SHARE) * 100}%`, width: `${tally.zone * TRAIN_PERFECT_SHARE * 2 * 100}%` },
                 ]}
               />
-              <View style={[styles.marker, { left: `${marker * 100}%` }]} />
+              <Animated.View style={[styles.marker, markerStyle]} />
             </View>
           </PixelFrame>
           <Pressable
@@ -834,7 +1114,12 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
           ) : null}
         </View>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.perfectFlash, flashVeil]} />
+        <ComboStrip game="train" streak={tally.streak} />
         <ComboBadge mult={mult} />
+        {pops.map((p) => (
+          <PopText key={p.id} pop={p} still={still} />
+        ))}
+        <CountdownVeil n={countdown} still={still} />
       </View>
     </GamePlate>
   );
@@ -848,7 +1133,8 @@ const styles = StyleSheet.create({
   backHit: { width: 72, minHeight: 44, justifyContent: 'center' },
   topTitle: { flex: 1, minWidth: 0, textAlign: 'center' },
   scoreSlot: { width: 72, alignItems: 'flex-end' },
-  statusLine: { textAlign: 'center' },
+  // Larger Text: the line keeps a full line of height and shrinks to fit instead of clipping.
+  statusLine: { textAlign: 'center', minHeight: pixelBodyLine(PIXEL_CAPTION_PT) },
   stageWrap: { flex: 1, minHeight: 0, paddingHorizontal: 8, paddingVertical: 6 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' },
   ruinClip: { position: 'absolute', right: 4, top: 4, width: 72, height: 88, overflow: 'hidden', opacity: 0.55 },
@@ -866,9 +1152,34 @@ const styles = StyleSheet.create({
   catchPet: { position: 'absolute', left: 0, bottom: 4 },
   food: {
     position: 'absolute',
+    top: 0,
     width: FOOD_SIZE,
     height: FOOD_SIZE,
   },
+  foodHit: { width: FOOD_SIZE, height: FOOD_SIZE },
+  hostFill: { flex: 1, minHeight: 0, width: '100%' },
+  countVeil: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  countText: { fontSize: 64, lineHeight: 72 },
+  pop: { position: 'absolute' },
+  comboStrip: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    right: 8,
+    height: ART_PT * 2,
+    backgroundColor: 'rgba(5,7,13,0.55)',
+  },
+  comboFill: { height: '100%', backgroundColor: PIXEL.cyan },
+  comboFillTop: { backgroundColor: PIXEL.amberHi },
+  cardVeil: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(5,7,13,0.72)',
+  },
+  cardPad: { width: '100%', padding: 16, gap: 10, alignItems: 'stretch' },
+  cardLine: { textAlign: 'center' },
   // Fixed regions: always 2 lines tall, so a longer hint never shrinks the playfield.
   hint: { textAlign: 'center', minHeight: pixelBodyLine(PIXEL_CAPTION_PT) * 2 },
   crate: { width: 56, height: 56 },
@@ -896,9 +1207,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: ART_PT * 2,
     marginLeft: -ART_PT,
+    left: 0,
     backgroundColor: PIXEL.amber,
   },
-  emojiItem: { fontSize: 30, textAlign: 'center' },
   bombFlash: { backgroundColor: '#FF3B5C', opacity: 0.4 },
   perfectFlash: { backgroundColor: '#FFFFFF' },
   hurtFlash: { backgroundColor: '#FF3B5C', opacity: 0.45 },

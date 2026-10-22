@@ -46,6 +46,7 @@ import {
   PET_STAGE_MS,
   PET_TOKENS_DAILY_CAP,
   PET_TOKENS_PER_ROUND,
+  PET_TOKENS_PER_ROUND_EASY,
   branchFor,
   branchThresholds,
   petBustCutPp,
@@ -412,7 +413,7 @@ export function PlaySheetBody({
         </View>
       </View>
       <PixelBody>
-        {`Tap to train cheers it up (+2 mood) — only if you pass (50%+). Catch the food now lives in Feed. +${PET_TOKENS_PER_ROUND} tokens a passed round · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
+        {`Tap to train cheers it up (+2 mood) — only if you pass (50%+). Catch the food now lives in Feed. +${PET_TOKENS_PER_ROUND} tokens a passed round (+${PET_TOKENS_PER_ROUND_EASY} on Easy) · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
       </PixelBody>
       <GameCard g="train" view={view} onStart={onStart} />
       {lastRound ? (

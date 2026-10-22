@@ -70,6 +70,7 @@ import {
   PET_STAGE_MS,
   PET_TOKENS_DAILY_CAP,
   PET_TOKENS_PER_ROUND,
+  PET_TOKENS_PER_ROUND_EASY,
   PET_TRIP_BETTER_FROM,
   PET_TRIP_MULT,
   type PetStage,
@@ -311,7 +312,7 @@ function gamesSection(): string[] {
   ).join(' · ');
   const ranks = GAMES.map((g) => `${GAME_LABEL[g]}: ${RANK_TITLES[g].join(' → ')}`).join(' · ');
   return [
-    `Pass rules (every level): Catch the food — catch ${pct(PASS_SHARE)} of the food that falls in ${span(CATCH.roundMs)}; ${CATCH.bombStrikes} bombs end the round as a fail. Tap to train — ${TRAIN.passHits} hits out of ${TRAIN.taps}; ${TRAIN.missStreakEnd} misses in a row end it. A pass feeds or trains your pet and pays ${PET_TOKENS_PER_ROUND} tokens (${PET_TOKENS_DAILY_CAP} a day). A fail gives nothing.`,
+    `Pass rules (every level): Catch the food — catch ${pct(PASS_SHARE)} of the food that falls in ${span(CATCH.roundMs)}; ${CATCH.bombStrikes} bombs end the round as a fail. Tap to train — ${TRAIN.passHits} hits out of ${TRAIN.taps}; ${TRAIN.missStreakEnd} misses in a row end it. A pass feeds or trains your pet and pays ${PET_TOKENS_PER_ROUND} tokens, or ${PET_TOKENS_PER_ROUND_EASY} on Easy (${PET_TOKENS_DAILY_CAP} a day). A fail gives nothing.`,
     `Egg care: only a pass with ${pct(CARE_SKILL_SHARE)}+ on Normal or harder is "skilled". An Easy pass counts as a plain pass, and harder levels never give more care than Normal.`,
     `Combo: ${combo}. A miss or a bomb resets it.`,
     `Levels: ${levels}.`,

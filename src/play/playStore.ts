@@ -3290,7 +3290,7 @@ export function finishPetRound(
     kind === 'catch' ? CARE_ACT.fed : CARE_ACT.trained,
   );
   const pet = kind === 'catch' ? feedPet(cared, PET_FEED_CATCH) : trainPet(cared);
-  const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today);
+  const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today, level === 'easy');
   // v26: records, medal → buff (refreshed, never stacked), daily challenge.
   // A level that isn't open (e.g. after a reset) earns no record, medal,
   // buff or unlock — care and tokens still count as a normal pass.
