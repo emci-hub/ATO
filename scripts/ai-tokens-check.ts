@@ -77,6 +77,36 @@ assert.equal(AI_TOKEN_PRICE, 5);
 assert.ok(ATO_TOKEN_HOW_LINES.some((line) => line.includes('Check in on Home')), 'You says where tokens come from');
 assert.ok(ATO_TOKEN_HOW_LINES.some((line) => line.includes(`Spend: ${AI_TOKEN_PRICE}`)), 'and what they buy');
 assert.equal(atoTokenCopyClean(), true);
+// Honest token copy (roadmap v2 step A1, 2026-10-22): what tokens buy must match AI_USE_DISCLOSURE
+// (AI only for Legends cards + deep dives; Story is free templates), and no line may offer a spend the
+// app has switched off (rerolls frozen, name styles free).
+{
+  const disclosure = read('src/components/ai-consent-card.tsx');
+  assert.match(disclosure, /uses AI only to write your Legends cards and your category deep dives/, 'disclosure wording this pin relies on');
+  const rerollsFrozen = /export const REROLLS_FROZEN = true;/.test(read('src/lib/rerolls.ts'));
+  const nameStylesFree = /export const NAME_STYLES_FREE = true;/.test(read('src/lib/legends64/identity-store.ts'));
+  const tokenCopyProblem = (line: string): string | null => {
+    if (/\bStor(y|ies)\b/i.test(line) && /(AI view|tokens?|spend|costs?)/i.test(line)) return 'names the Story as a paid AI view';
+    if (/AI view/i.test(line) && !(/Legends/.test(line) && /deep dive/i.test(line))) return 'an AI-view line must name Legends cards and deep dives';
+    if (rerollsFrozen && /reroll/i.test(line)) return 'offers a reroll while rerolls are frozen';
+    if (nameStylesFree && /name style/i.test(line) && /\d/.test(line)) return 'prices a name style while name styles are free';
+    return null;
+  };
+  // Pairs: the old live lines fail, the new ones pass.
+  assert.ok(tokenCopyProblem('Spend: 5 for each AI view — a new Story on Home, a Legends AI card, or a deep dive on Explore (2 cards).'), 'fail: Story as a paid view');
+  assert.ok(tokenCopyProblem('You have 3 tokens. Each AI view costs 5: a new Story, a Legends AI card, or a deep dive on Explore.'), 'fail: check-in line with Story');
+  assert.ok(tokenCopyProblem('Each AI view costs 5: a Legends AI card.'), 'fail: AI line missing the deep dive');
+  if (rerollsFrozen) assert.ok(tokenCopyProblem('Also: 1 to reroll a question, 10 to unlock a name style.'), 'fail: frozen reroll / free name style offered');
+  assert.equal(tokenCopyProblem('Spend: 5 for each AI view: a new Legends AI card, or a new deep dive on Explore (2 cards).'), null, 'pass: Legends + deep dive');
+  assert.equal(tokenCopyProblem('Check in on Home once a day: +5.'), null, 'pass: earn line');
+  for (const line of ATO_TOKEN_HOW_LINES) assert.equal(tokenCopyProblem(line), null, `How-tokens line: ${line}`);
+  const checkinSrc = read('src/components/daily-checkin-card.tsx');
+  const balance = checkinSrc.match(/export const checkinBalanceLine = \(tokens: number\) =>\s*`([^`]*)`/);
+  assert.ok(balance, 'checkinBalanceLine is a single template string');
+  assert.equal(tokenCopyProblem(balance[1].replace(/\$\{[^}]*\}/g, '5')), null, 'check-in balance line is honest');
+  ok('token copy names only the disclosed AI uses (Legends + deep dives), never the free Story, frozen rerolls or free name styles');
+}
+
 // Insights (2026-10-14): the Story is template-only, so it never costs tokens.
 const story = read('src/components/insights/insights-story-card.tsx');
 assert.doesNotMatch(story, /refundAiTokens|AI_TOKEN_PRICE|AI_PRICE_LABEL|claimStoryGenerate/, 'Story: free, no token path');

@@ -17,7 +17,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { chatFlag } from '../src/lib/chat/chat-filter';
-import { CHAT_REPORT_CONTEXT_BEFORE, CHAT_RETENTION_DAYS, CHAT_UI, reportContext, type ChatLine } from '../src/lib/chat/chat-rules';
+import { CHAT_REPORT_CONTEXT_BEFORE, CHAT_RETENTION_DAYS, CHAT_UI, latestReportable, reportContext, type ChatLine } from '../src/lib/chat/chat-rules';
 
 let passed = 0;
 function ok(label: string) {
@@ -147,6 +147,19 @@ ok('wired as check:circle-chat');
   assert.equal(reportContext(lines, 'nope'), null);
   assert.ok(reportContext([line(0, false, 'x'.repeat(3000))], 'id0')![0]!.text.length <= 2000, 'capped at the server limit');
   ok('reportContext: reported + up to 5 before, readable only, never my own');
+
+  // Visible Report (roadmap v2 A1): the header button reports the friend's latest readable message.
+  assert.equal(latestReportable(lines)!.id, 'id7', 'pass: latest friend message');
+  assert.equal(latestReportable([line(0, false), line(1, true)])!.id, 'id0', 'pass: skips my own newer message');
+  assert.equal(latestReportable([line(0, false, null), line(1, true)]), null, 'fail: nothing readable from the friend');
+  assert.equal(latestReportable([]), null, 'fail: empty thread');
+  const chat = read('src/app/chat.tsx');
+  const header = chat.slice(chat.indexOf('styles.header, border'), chat.indexOf('{gateLine ?'));
+  assert.match(header, /latestReportable\(lines\)/, 'the header has a Report button');
+  assert.match(header, /accessibilityLabel=\{CHAT_UI\.reportLabel\(handle\)\}/, 'Report is labelled for VoiceOver');
+  assert.ok(header.indexOf('CHAT_UI.report}') < header.indexOf('doBlock'), 'Report sits next to Block in the header');
+  assert.match(chat, /onLongPress=\{/, 'long-press still reports an earlier message');
+  ok('chat header: visible Report (latest friend message) next to Block; long-press still works');
 }
 
 // --- disclosure --------------------------------------------------------------------------------------

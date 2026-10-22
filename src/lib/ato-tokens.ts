@@ -27,7 +27,11 @@ export const ATO_TOKEN_EARN = {
   checkin_week_bonus: 10,
 } as const;
 
-/** Every AI view costs the same (wave92): a Legends AI card, a deep dive (2 cards), a new Story. */
+/**
+ * Every AI view costs the same (wave92): a Legends AI card or a deep dive (2 cards). The Story is
+ * template-only since 2026-10-14 and costs nothing; 'story' stays in the kind type for the server
+ * ledger only. User-facing copy must name exactly the AI uses in AI_USE_DISCLOSURE (check:ai-tokens).
+ */
 export const AI_TOKEN_PRICE = 5;
 export type AiTokenKind = 'story' | 'legend' | 'deep_dive';
 export const AI_PRICE_LABEL = `${AI_TOKEN_PRICE} tokens`;
@@ -48,15 +52,15 @@ export const ATO_TOKEN_LEDE = 'Earned by checking in and answering questions. Sp
 /**
  * How the currency works, said before a limit is hit rather than after. Built
  * from the constants above so a price change cannot leave this stale. The
- * once-a-day limits are enforced in SQL (wave51); this only states them. The
- * `legend_reroll` price is what a name style on the identity card costs: the
- * Legends tab is a placeholder, and that spend function had no other caller.
+ * once-a-day limits are enforced in SQL (wave51); this only states them.
+ * Only spends a person can actually make are listed: rerolls are frozen
+ * (`REROLLS_FROZEN`) and name styles are free (`NAME_STYLES_FREE`), so neither
+ * is offered here; add a line back in the same change that turns one on.
  */
 export const ATO_TOKEN_HOW_LINES: readonly string[] = [
   `Check in on Home once a day: +${ATO_TOKEN_EARN.daily_checkin}. Every 7th check-in: +${ATO_TOKEN_EARN.checkin_week_bonus}. A missed day never resets your count. New check-in at midnight.`,
   `Answer a set of 16 questions: +${ATO_TOKEN_EARN.ongoing_round_complete} (up to ${ROUND_PAYOUTS_PER_DAY} sets a day). Finishing the first 48: +${ATO_TOKEN_EARN.full_profile_complete} once.`,
-  `Spend: ${AI_TOKEN_PRICE} for each AI view — a new Story on Home, a Legends AI card, or a deep dive on Explore (2 cards). If the AI fails, your tokens come back (once a day for each).`,
-  `Also: ${ATO_TOKEN_PRICE.question_reroll} to reroll a question, ${ATO_TOKEN_PRICE.legend_reroll} to unlock a name style.`,
+  `Spend: ${AI_TOKEN_PRICE} for each AI view: a new Legends AI card, or a new deep dive on Explore (2 cards). Cards already in the shared library are free. If the AI fails, your tokens come back (once a day for each).`,
 ];
 export const ATO_TOKEN_NEED_MORE = 'Not enough ATO tokens yet. Check in on Home or answer a set of 16 to earn more.';
 export const ATO_TOKEN_SPENT = 'Rerolled.';

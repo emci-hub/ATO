@@ -28,6 +28,7 @@ import {
   CHAT_MAX_CHARS,
   CHAT_REPORT_REASON_IDS,
   CHAT_UI,
+  latestReportable,
   reportContext,
   type ChatLevel,
   type ChatLine,
@@ -73,6 +74,8 @@ export default function ChatScreen() {
   const [blockArmed, setBlockArmed] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [reporting, setReporting] = useState<ChatLine | null>(null);
+  /** True when the header Report button opened the sheet (reports the latest message). */
+  const [reportingLatest, setReportingLatest] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const alive = useRef(true);
@@ -313,6 +316,27 @@ export default function ChatScreen() {
             </ThemedText>
             {gate === 'ready' ? (
               <Pressable
+                onPress={() => {
+                  const latest = latestReportable(lines);
+                  if (!latest) {
+                    setNote(CHAT_UI.reportNothing);
+                    return;
+                  }
+                  setReportingLatest(true);
+                  setReporting(latest);
+                }}
+                disabled={busy}
+                accessibilityRole="button"
+                accessibilityLabel={CHAT_UI.reportLabel(handle)}
+                hitSlop={12}
+                style={styles.headerBtn}>
+                <ThemedText type="smallBold" numberOfLines={1}>
+                  {CHAT_UI.report}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+            {gate === 'ready' ? (
+              <Pressable
                 onPress={() => void doBlock()}
                 disabled={busy}
                 accessibilityRole="button"
@@ -384,7 +408,14 @@ export default function ChatScreen() {
                   return (
                     <Pressable
                       onPress={hidden ? () => setRevealed((s) => new Set(s).add(item.id)) : undefined}
-                      onLongPress={!item.mine && item.text != null ? () => setReporting(item) : undefined}
+                      onLongPress={
+                        !item.mine && item.text != null
+                          ? () => {
+                              setReportingLatest(false);
+                              setReporting(item);
+                            }
+                          : undefined
+                      }
                       accessibilityHint={!item.mine && item.text != null ? CHAT_UI.report : undefined}
                       style={[
                         styles.bubble,
@@ -404,8 +435,13 @@ export default function ChatScreen() {
               {reporting ? (
                 <View style={[styles.sheet, border, { backgroundColor: theme.background }]} accessibilityViewIsModal>
                   <ThemedText type="smallBold" accessibilityRole="header">
-                    {CHAT_UI.reportTitle}
+                    {reportingLatest ? CHAT_UI.reportLatestTitle : CHAT_UI.reportTitle}
                   </ThemedText>
+                  {reportingLatest ? (
+                    <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+                      {CHAT_UI.reportEarlierHint}
+                    </ThemedText>
+                  ) : null}
                   {CHAT_REPORT_REASON_IDS.map((reason) => (
                     <Pressable
                       key={reason}
