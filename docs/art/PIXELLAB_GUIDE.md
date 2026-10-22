@@ -146,7 +146,7 @@ Run these steps for any request, whether it's "make a new hero", "edit the couch
 3. **Follow the recipe** for the type in §8. Edits never regenerate from scratch: they change the
    existing asset (identity and style drift come from regenerating).
 4. **Clean up and lock:** `reduce_colors` with `docs/art/palette-streetwear-night.png` (all frames
-   together), `pixelart_workbench repair` + `score` (≥ 90), no fake text, and the **scale check** (§2).
+   together; **not for hero clips** — see `PIXELLAB_ANIMATION.md` §4), `pixelart_workbench repair` + `score` (≥ 90), no fake text, and the **scale check** (§2).
 5. **Show emci a sample** (side by side with the anchors / the old version, phone size, plus the
    scale sheet). After emci's ok, save it into the library: `npm run art:import -- --from … --id …` (raw + `gen.json` to
    `art-src/`), `npm run art:pack -- --id …`, then `npm run art:sync` and commit the generated files

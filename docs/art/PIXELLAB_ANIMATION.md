@@ -54,14 +54,44 @@ victory → `emote-celebrate`. Pet blink/eat/sleep/happy: `eating-drinking`, `id
 ## 4. Limits and traps
 - **No per-frame timing** parameter: timing lives in our library (`ms[]`).
 - **No baseline/foot lock:** keep the canvas fixed, then check every frame's foot row (`scripts/animation-audit/`).
-- **Palette:** the help agent says animation tools take `palette` / `palette_name` / `max_colors`; the older guide
-  note says `target_palette` on most tools. They disagree — test on one clip, then **always** finish with
-  `reduce_colors(image_urls=[all frames], palette_image_url=docs/art/palette-streetwear-night.png)`.
+- **Palette — heroes (emci 2026-10-22): do NOT reduce to `palette-streetwear-night.png`.** The streetwear heroes
+  were drawn outside it (Kael: 0 of his Idle pixels are in it) and reducing shifts them (charcoal → brown,
+  red → orange). Keep the template output's colours; it already matches the hero. Only if a colour cap is needed
+  (the hero's core atlas must stay ≤256 colours to pack as PNG-8; above that the packer writes RGBA, larger but
+  lossless), snap the new frames to the hero's **own** atlas colours. Props, tiles and other new art still follow
+  the guide's streetwear-night step.
+- **Palette — tool params:** the help agent says animation tools take `palette` / `palette_name` / `max_colors`; the
+  older guide note says `target_palette`. Untested on ATO; don't pass a palette on hero clips (see above).
 - Templates move the stored character rather than redrawing it, so they keep identity but can look gentle.
 - Cost reality: one template × 4 directions = 4 generations. A full 8-clip hero set ≈ 32 generations + 0.25 import.
 - Source of truth for costs is `get_balance` before/after; fractions (0.05–0.25) are billed for small steps.
+
+## 4b. Standard: replacing a streetwear hero's Idle (proven on Kael, 2026-10-22)
+In play, hero Idle packs **east and west only** (`SW_DIRS` in `scripts/art-dirs.ts`), 4 frames, timing from the
+library (`ms[]`, 120 ms). So a hero Idle costs ~2 generations + 0.25 import.
+1. Pre-flight (§0): `search_help` on `create_character` / `animate_character`, `get_balance`.
+2. Check the south rotation faces the camera (`art-src/pixellab/hero.<slug>.streetwear/migrated/raw/rotations/`;
+   heroes are 192×192).
+3. Upload `south` + `east`/`north`/`west` with `get_upload_url` (one curl each), then
+   `create_character(mode="v3", n_directions=4, reference_image_url=<south>, direction_images={east,north,west})`
+   = **0.25**.
+4. `animate_character(mode="template", template_animation_id="breathing-idle", directions=["east","west"])` =
+   1 generation per direction at 192². Download frames from the backblaze URLs in `get_character`.
+5. **No palette reduction** (§4). Compare to the current Idle: 1×/3× GIFs, heights (101–111 px band), and
+   changed-pixels per frame (more and more even = better; watch the 3× for flicker). Show emci, wait for ok.
+6. On ok: `git mv` the old `migrated/raw/animations/Idle` to
+   `art-src/archive/2026-10/hero.<slug>.streetwear-Idle-pre-breathing-<date>/`; write the new frames to
+   `migrated/raw/animations/Idle/<dir>/frame_00N.png`, each frame shifted vertically so its **lowest pixel sits on
+   the old Idle's foot row** (x unchanged). Keep the raw PixelLab output in the gen folder **outside `raw/`**
+   (e.g. `<gen>/pixellab-out/`), or the packer packs it as an extra clip.
+7. `cargo install oxipng --locked` if missing (else disk sizes drift), then
+   `npx tsx scripts/art-pack.ts --id hero_<slug>_streetwear`, `npm run art:sync`, `npm run anim:library`.
+   `check:art-registry` "hero frame gold" fails until the pack runs (atlas vs source) — expected.
+8. `npm run check:ota-gate`, log in `animation-generation-log.md` and the gen folder's `gen.json`
+   (`installed` block), commit, push. Never publish an OTA; emci checks on the phone.
 
 ## 5. Change log
 - 2026-10-21 — first version. Balance at the time: 3,538 / 5,000 generations (Tier 2, resets 2026-11-11).
 - 2026-10-21 (Task B pre-flight) — kael's stored rotations (`art-src/pixellab/hero.kael.streetwear/migrated/raw/rotations/`) are **192×192**, not 128, and south faces the camera (import-valid). At a ~180 px canvas `breathing-idle` (4 frames) bills ~2 per direction (get_character receipt gives the exact ceiling), so 4 directions ≈ 8, not 4. Cloud sandbox: `api.pixellab.ai` is denied by the network policy (curl uploads fail with 403), and the MCP result downloads need the same host. Ask emci to allow it under the environment's Network access (Allowed domains), or run Task B from a machine that reaches it.
 - 2026-10-21 (Task B result) — import of 192² rotations = 0.25; `breathing-idle` template at 192² = **1 generation per direction** (the 2-batch ceiling was not reached), 4 frames. `reduce_colors` takes ≤512×512 px per call → 4 frames of 192² per call (one call per direction). Findings: (1) `palette-streetwear-night.png` is **not Kael's palette** (0 of his Idle pixels are in it); reducing to it turns the charcoal jacket brown and red blood orange. Do not reduce Kael to it without emci's decision (alternatives: skip, or `palette_image` = Kael's own Idle colours). (2) Template clips do not hold the foot line: feet land 3 (south), 9 (east/west), 6 (north) px below the current Idle (rows 149/150/147), so a per-direction anchor shift is needed. (3) Heights 97–111 px vs current 104–107 (guide band 101–111); south 97 is slightly short. Comparison GIFs: `docs/art/animation-tests/kael-breathing-idle/` (reduced) and `…/unreduced/`.
+- 2026-10-22 — heroes skip the streetwear-night reduction (§4, emci); Kael's Idle swap recorded as the standard (§4b).
