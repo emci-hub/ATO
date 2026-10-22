@@ -350,6 +350,19 @@ RULES: no dependency/auth/env changes without emci's OK; Play and app in separat
 END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
 ```
 
+**Step A1 status (2026-10-22): built, checked, pushed on `claude/brave-mendel-wbhxaq` (draft PR #83); NOT merged, OTA NOT
+published.** Done: token copy matches `AI_USE_DISCLOSURE` (no Story, no frozen reroll / free name-style price; only deep
+dives are free from the library, up to 10 a day: the reviewer caught a wrong "library cards are free" line, fixed);
+visible Report in the chat header (latest friend message; hidden while Block is armed); Divecore's automatic Build ask
+respects the app's "Not now" (Play commit `655fa0bc`); review notes (§5 of `app-store-pack.md`) describe 1.1 and where AI
+consent / Report / Block / Delete are; Box 68 B1/B3 fixed; Box 76 written. Checks: `ai-tokens`, `circle-chat`,
+`hideout-rooms` with pass/fail pairs; typecheck clean, lint 0 errors. Gate: one failure, `art-registry --fresh`, proven
+pre-existing on the base commit in a clean worktree (`*.key` in `.gitignore` hid the `icon.streetwear.key` previews from
+every fresh clone); fixed in `c06ef0ff`, that check re-run green. Reviewer (Opus): FAIL → fixed (1 critical, 2 warnings);
+open warnings: the header Report sheet does not preview which message it reports; Report/Block show no visible disabled
+state while busy (pre-existing). **Left for emci:** D20 (password line), OTA OK, Box 76 + Box 68 on a phone, demo account
+per `app-store-pack.md` step 2b.
+
 ### Step AN0: Merge the art PR (82)
 Model: Sonnet
 ```
