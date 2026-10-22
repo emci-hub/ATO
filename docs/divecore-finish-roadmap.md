@@ -281,6 +281,10 @@ Nothing below blocks the next job; emci runs or accepts each.
    so the grey sheet is baked into five coloured sheets (`ringember|tide|root|spark|void/status`, script
    `art-src/pixellab/fx.turf-ring.streetwear/bake_rings.py`); layer `src/play/turf-ground-rings.tsx`; pinned in
    `check:turf-war-layout`. Art critique score not entered (candidate; only emci sets approved).
+   **(d) Minigames M1: built + published 2026-10-22** (OTA group `ea99eae5`, commit `f9e2f0d8`; phone check = Box 73, not
+   done): 3-2-1, result card that waits for Continue, star / X-bomb shapes, +n pops, combo strip, haptics, shared-value
+   fall + marker; **Easy pays 2 tokens** (Normal+ 5; emci OK'd); pinned in `check:pet-games`; save stays v33. Left for M2:
+   Streetwear food / bomb / dummy art, Hideout-style Catch background, the pet's real aura, happy / "oof" faces.
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
    being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12

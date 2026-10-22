@@ -1067,3 +1067,21 @@ About 8 min. Streetwear look, Effects Quality on Full, Motion on. Run on the OTA
 - [ ] **8** Settings: Effects Quality Minimal, then Off. -> Minimal: about half the rings loop, the rest hold a still frame; Off: every ring is a still frame.
 - [ ] **9** Settings: Reduce Motion on (or Motion Off). -> Reduce Motion: rings play at half speed; Motion Off: still frames. No flashing.
 - [ ] **10** Wave with 6 towers + 2 hero towers + helper at normal speed. -> No stutter, still about 60 fps.
+
+## Box 73 — Minigames M1: feel + clarity (Divecore run order (d), 2026-10-22)
+
+About 10 min. Feed → Catch the food, and Play → Tap to train. Run on the OTA group `ea99eae5` (restart the app twice to load it). Easy now pays 2 tokens a passed round; Normal, Hard and Insane pay 5.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Start Catch the food (Normal). -> A big **3, 2, 1** over the field first (about 2 seconds), nothing falls until it ends; the timer starts after it.
+- [ ] **2** Catch some food. -> A small **+n** floats up where you tapped; the pet squashes a little; a thin strip at the top of the field fills toward the next combo (×2 at 5, ×3 at 10, ×5 at 20) and turns gold at ×5.
+- [ ] **3** Look at the items. -> Golden food is a **star** (not a round one); the bomb is a dark round **bomb with a red X** (no emoji). You can tell them apart without colour.
+- [ ] **4** Tap a bomb. -> A red flash, the pet shakes/hurts, a **−3** pops, and your phone buzzes harder than for a catch. Let a bomb fall past untouched -> the pet gives a small wobble.
+- [ ] **5** Let the round end (pass). -> The game stays on screen with a **ROUND PASSED** card (tokens, care, score, medal / record). Nothing closes by itself. Tap **CONTINUE** -> back to the Feed sheet with the result line, and any record / unlock notices show now.
+- [ ] **6** Fail a round (let everything fall). -> A **NOT THIS TIME** card; Continue returns with no tokens. Tap **< Pet** while the card is up -> same as Continue, and the round is not counted twice (check your tokens).
+- [ ] **7** Play Catch on **Easy** and pass. -> **+2 tokens** (not 5). A Normal pass -> +5. The Play sheet text says "+5 tokens a passed round (+2 on Easy)".
+- [ ] **8** Tap to train. -> Same 3-2-1; the marker sweeps smoothly with no stutter; a hit gives a **+n** and a light buzz, a Perfect a stronger one; the result card appears at the end.
+- [ ] **9** Settings: Larger Text on. -> The status line under the title is not cut off and the top bar keeps its size; the 2-line hint is unchanged.
+- [ ] **10** Settings: Reduce Motion on (or Effects Off). -> The 3-2-1 and the "+n" show without movement; no squash, wobble, shake or buzzing.
+- [ ] **11** Back out mid-round with **< Pet**. -> No card, nothing counted (as before).
