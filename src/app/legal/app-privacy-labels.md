@@ -54,7 +54,7 @@ Push token: not collected. Notifications are scheduled on the phone (`expo-notif
 ## Third parties (named in privacy.md)
 
 - **Supabase** — database, sign-in, profile, answers, Checks, Circle, reports, Divecore save, AI usage log, referrals.
-- **Google (Gemini API)**, with **DeepSeek** as a fallback — Legends cards and category deep dives only, called from the server (`supabase/functions/_shared/ai-vendors.ts`: Gemini first, DeepSeek if Gemini fails). The phone sends `{kind, bucket, mode}`; the server builds the prompt and it contains nothing personal. [CONFIRM: no-training and retention terms for both, and DeepSeek as a China-based processor]
+- **Google (Gemini API)**, with **DeepSeek** as a fallback — Legends cards and category deep dives only, called from the server (`supabase/functions/_shared/ai-vendors.ts`: Gemini first, DeepSeek if Gemini fails). The phone sends `{kind, bucket, mode}`; the server builds the prompt from the bucket alone: a coarse trait pattern shared by everyone in that group (deep dive: each of the category's traits high / low / middle; Legends: 1-3 matched sides + an optional differing side). No name, handle, email, user id, device id, exact score or answer reaches the provider, and the provider sees our server, not the phone (verified 2026-10-22, roadmap v2 "AI data flow"). ATO keeps the account ↔ card link (`ai_library_seen`, `ai_usage`). [CONFIRM: no-training and retention terms for both, and DeepSeek as a China-based processor]
 - **Resend** — one-time sign-in codes to email. [CONFIRM: other email uses, retention]
 - **Apple** — Sign in with Apple (may relay a private email); the Apple refresh token is stored to revoke it on account deletion.
 - **Sentry** — crash/diagnostic data, not linked to the ATO account.

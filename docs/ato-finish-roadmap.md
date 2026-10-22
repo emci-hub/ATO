@@ -41,7 +41,7 @@ question still to settle in A2 from primary sources; nothing here is reassurance
 
 | Topic | Class | What the source says | What ATO does / must do | Open question → simplest compliant option |
 |---|---|---|---|---|
-| Third-party AI disclosure + consent | **M** Apple 5.1.2(i) | "clearly disclose … third-party AI, and obtain explicit permission before doing so" | consent card + server 403 without consent (§1.3); disclosure names Legends + deep dives | must name each provider that receives data. Today: Gemini + DeepSeek (`_shared/ai-vendors.ts`). Keep both and name both, unless emci decides D26 |
+| Third-party AI disclosure + consent | **M** if the pattern counts as personal data (uncertain, see "AI data flow"); kept either way | 5.1.2(i): "clearly disclose … third-party AI, and obtain explicit permission before doing so" | consent card + server 403 without consent (§1.3); disclosure names Legends + deep dives; the provider gets a coarse shared trait pattern, no identifier (verified) | name each provider: Gemini + DeepSeek today (`_shared/ai-vendors.ts`), unless emci decides D26. Keep the built consent (simplest option) |
 | AI provider data use | **M** (5.1.1(i): "all uses of that data") | Gemini API terms as quoted 2024-10-17: paid tier not used to improve products; free tier may be used and human-reviewed (re-read ai.google.dev in A2) | unknown which tier the key is on (D27); DeepSeek terms not yet read | A2 reads both providers' current terms and the policy states what they say. No "not used to train" claim unless the terms say so for our tier |
 | DeepSeek (China-based fallback) | **R** (cross-border transparency, PIPEDA principle of openness) | — | fallback is live | D26 is emci's call (no provider change without approval). If kept: the policy says data may be processed in China under DeepSeek's terms |
 | Encryption export (1.1, libsodium) | **M** answer Apple's export questions truthfully | US BIS change 2021-03-29: mass-market items with standard published algorithms no longer need a self-classification report (secondary: developer write-ups; A2 reads the BIS page) | `ITSAppUsesNonExemptEncryption: false`; X25519 + XSalsa20-Poly1305 (NaCl, published); not offered in France | Open: does `false` match Apple's current wording for mass-market standard encryption? A2 reads Apple's export-compliance help page + BIS 740.17 and records the answer in `app-store-pack.md` §9 |
@@ -51,6 +51,78 @@ question still to settle in A2 from primary sources; nothing here is reassurance
 | Governing law, liability wording | **O** | — | drafts name Alberta | keep plain wording; no rule requires more |
 | "Not therapy or medical advice" | **R** (1.4.1 scrutiny for medical-adjacent apps) | — | helpline row exists | one clear line in terms and on You |
 | UGC safeguards | **M** Apple 1.2 | filter, report + timely response, block, published contact | built (§1.4); report alert missing; inbox unconfirmed | S1 + M2 |
+
+### AI data flow (verified in code 2026-10-22; pinned by `check:ai-library` "AI data flow")
+
+**Verdict:** matches the intended design. The provider gets a description of a **shared trait pattern**, not a person's
+profile. It is **not "anonymous" in every sense**: ATO's own database links the account to the cards it was shown, and the
+pattern is derived from that person's answers.
+
+**Route.** Phone → our `ai-library` Edge Function (Supabase) → Gemini, or DeepSeek on failure. The phone never talks to a
+provider and holds no provider key (`src/lib/ai-library/client.ts:80` → `supabase/functions/ai-library/index.ts`). The
+background fill job (`ai-library-fill`) uses the same path with no user at all (`p_user: null`).
+
+**What the phone sends to OUR server** (dummy values, real format):
+```
+POST /functions/v1/ai-library   Authorization: Bearer <the person's Supabase session JWT>
+{"kind":"deep_dive","bucket":"dd|cat_steadiness|conscientiousness:h,agreeableness:l,steadiness:m","mode":"paid"}
+{"kind":"legend","bucket":"lg|lf_marie_curie|a1|m1|p:openness.h|d:-","mode":"free_legend"}
+```
+The JWT tells **our** server who is asking (for consent, the token charge and the daily cap). It stays on our side.
+
+**What the provider receives** (`supabase/functions/_shared/ai-vendors.ts:20-69`):
+- Gemini: `POST …/models/<model>:generateContent`, header `x-goog-api-key: <ATO's key>`, body
+  `{contents:[{role:"user",parts:[{text:<prompt>}]}], generationConfig:{temperature, topP, maxOutputTokens,
+  responseMimeType, thinkingConfig}}`. (`role:"user"` is the chat role, not a person.)
+- DeepSeek: `POST /chat/completions`, `Authorization: Bearer <ATO's key>`, body `{model, messages:[{role:"user",
+  content:<prompt>}], temperature, top_p, max_tokens, stream, response_format}`.
+- **No** user / metadata / labels / safety-identifier field, no cached content, no forwarded client header. The provider
+  sees ATO's API account, the Supabase server's network address and the time. It does **not** see the person's IP address,
+  device, app version, account id, handle, name or email.
+
+**The prompt's "about the reader" part** (generated from the dummy bucket above with the app's own builder):
+```
+CARD 1 — THE CATEGORY: Steadiness
+LEANINGS (strongest first):
+- axis "conscientiousness": leans Structured (clearly; sounds like: I said I'd finish it, so I did.)
+- axis "agreeableness": leans Frank (clearly; sounds like: I don't love that plan.)
+- axis "steadiness": in the middle, between Steady and Sensitive (sounds like: …)
+ANGLE: with other people: friends, family, a group
+JOKE STYLE: deadpan
+```
+Legends: `THE READER: axis "openness": the reader leans Adventurous …`, paired with the legend's own hand-written facts.
+The rest of the prompt is fixed instructions.
+
+**Trait granularity (not interchangeable):**
+| Sent? | Item |
+|---|---|
+| **Yes** | Deep dive: the 2-6 traits of ONE category, each reduced to 3 states (high / low / middle; "middle" = under 60 on the 50-100 lean scale, `deep-dive.ts:29,47-50`). That makes 207 possible patterns across 11 categories (27 for Steadiness). The prompt uses fixed stand-ins (70 / 55), never the person's number. |
+| **Yes** | Legends: the legend id, angle, moment, and 1-3 trait SIDES the reader shares (high/low only) + at most one differing side (`legend.ts:39-49`). |
+| **No** | exact scores ("Adventurous 78%" stays on the phone), raw questionnaire answers, answer counts, told-vs-played, the other 10-14 traits, the full 16-axis profile. |
+| **No** | name, handle, email, account id, device id, birthday, city, timezone, Circle data, anything the person typed. |
+
+**Internal vs external linkage:**
+- **ATO's server knows:** the account (JWT), its full trait profile, the bucket it asked for, the claim and the token
+  charge (`claim_library_write`, `token_events`), the AI usage log (`ai_usage`), and which card it was shown
+  (`ai_library_seen`). A card's author id is cleared when the account is deleted (wave106).
+- **The provider knows:** that ATO's server asked for cards about one coarse pattern at a certain time. Everyone in that
+  bucket produces the identical prompt (pinned). The provider cannot tell which person, or how many people, a request
+  serves. Seed and fill requests (not tied to any tap) go through the same path.
+- **Residual (honest):** each paid or empty-bucket request happens because one person tapped, so the timing follows real
+  use. Early on, a rare bucket may have just one member. Neither lets the provider identify anyone without ATO's
+  database. What the provider keeps, and whether it trains on requests, depends on its terms (D27 / A2).
+
+**Discrepancies vs the intended design:** none in what reaches the provider. Two small items outside it, both already
+planned: (1) the server still accepts `kind:'story'` with an old prompt (S4, A3); (2) the docs overclaimed. The labels
+doc said the prompt "contains nothing personal" and the policy didn't say what the provider sees about the request.
+Both are corrected in this change. No code change is needed for the data flow.
+
+**Consent assessment (5.1.2(i)).** Apple requires disclosure and explicit permission when "personal data" goes to a
+third-party AI. Whether a coarse, shared, non-identifying trait pattern counts as personal data is **uncertain**. It is
+derived from the person's answers and sent because of their action, but the provider cannot identify them. **Simplest
+compliant option: keep the explicit consent that is already built** (consent card, server 403 without consent, revoke on
+You). It costs nothing extra and removes the question. The disclosure ("never include your name or your answers") is
+accurate as worded.
 
 **Professional review:** not needed for any row today. If A2's reading of Apple + BIS leaves the encryption row unresolved
 (the only row where a wrong answer has a legal consequence outside the store), A2 will say exactly why and whether it
