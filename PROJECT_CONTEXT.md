@@ -20,7 +20,9 @@ Pointer only below this. Live status lives in the three tracked docs — keep th
 
 Expo SDK **54** in this repo (`CLAUDE.md` / `AGENTS.md` point at the v54 docs).
 
-**ATO launch plan (2026-10-19):** state, decisions and the ten step prompts live in `docs/ato-finish-roadmap.md`. Decisions (emci): scope must + should-fix; hero economy clean slate when `PRE_LAUNCH_DEV` flips off; public signup (no invite gate); he reads only copy that ships, unread surfaces get hidden. Step 1 (server hardening) is next. Divecore is done.
+**ATO finish roadmap v2 (2026-10-22, current):** what is left after the launch flip and the 1.1 submission lives at the top of `docs/ato-finish-roadmap.md` (findings per area, ranked must/should/nice/cut, "ATO IS LAUNCH-READY WHEN", steps A1-A7 interleaved with art steps AN0-AN5, one prompt per step, new decisions D20-D25). Biggest finds: live legal pages still say "Draft" with `[DATE]` and 46 `[CONFIRM]`; the 1.1 encryption claim (`false` with libsodium) is unsettled; no `*_COPY_REVIEWED` flag hides anything; token copy calls Story a paid AI view; PR #82 (art) not merged. Next: step A1 (or the step emci picks).
+
+**ATO launch plan (2026-10-19, v1, all steps done):** state, decisions and the ten step prompts live in `docs/ato-finish-roadmap.md`. Decisions (emci): scope must + should-fix; hero economy clean slate when `PRE_LAUNCH_DEV` flips off; public signup (no invite gate); he reads only copy that ships, unread surfaces get hidden. Step 1 (server hardening) is next. Divecore is done.
 
 **Release A (2026-10-20, master plan Step 6, `docs/master-plan.md`):** LIVE. OTA published (production group `891dca00`), `ai-library` + `ai-library-fill` deployed, migrations wave99b, 99, 99c, 99d, 100, 100b, 101 (under-18 gate), 102, 103 (crisis tables dropped) applied and verified by read-only SQL. NOT done: Supabase security advisors, phone check. Next: Step 7 (Circle safety). Branch `feature/ato-copy-review`; the bundle commit `3ebdfe7a` is not pushed yet.
 
