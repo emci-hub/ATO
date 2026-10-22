@@ -24,8 +24,17 @@
     }
   },
   "seed": null,
-  "picked": false,
-  "installed": false,
+  "picked": true,
+  "installed": {
+    "date": "2026-10-22",
+    "approved_by": "emci (both sides, west frame 0 kept as generated)",
+    "to": "art-src/pixellab/hero.morwen.streetwear/migrated/raw/animations/Idle/{east,west}",
+    "from": "pixellab-out/",
+    "post": "no shift needed (lowest pixel already on row 150 in all 8 frames); colours untouched, no palette reduction",
+    "old": "art-src/archive/2026-10/hero.morwen.streetwear-Idle-pre-skeleton-20261022 (also holds the old north/south Idle frames, not packed in play)",
+    "packed": true,
+    "note": "packed into hero_morwen_streetwear.core (png8, 719x781); gate green incl. hero frame gold"
+  },
   "critique": {
     "score": null,
     "notes": "east only. Height 105 px (current 104-105), feet on row 150 (current 150), 1326-1964 changed px/frame. Identity kept: hat, hair, robe flare and trim. Drift: sleeve/arm reaches forward-low (current tucks the hand), hem motifs softer, hat tilted slightly. Awaiting emci's ok; west not generated. WEST (emci approved east, 2026-10-22): height 106 (current 106-108), feet row 150, 694-1658 changed px/frame; staff, hat, hair, robe kept. Drift: frame 0 hair flares out sideways like a flag, hem edge noisier. Awaiting emci's ok on west before install."
