@@ -271,7 +271,10 @@ Nothing below blocks the next job; emci runs or accepts each.
    **Run order (emci, 2026-10-21: "all", one chat each, one OTA each):** (a) balance leftovers, (b) element-coloured hit
    flash, (c) Turf-scale tower/hero aura (new PixelLab art, samples first), (d) Minigames M1, (e) M2, (f) M3. Locker icon
    approval stays emci's. Tick each here when its phone box passes. Done: Box 58, Element look glow, **(a) balance
-   leftovers** (OTA `f278776c`, 2026-10-21).
+   leftovers** (OTA `f278776c`, 2026-10-21). **(b) element-coloured hit flash: built + published 2026-10-22** (OTA group
+   `cb36f66c`, commit `0b077a42`; phone check = Box 71, not done): the 70 ms creep hit flash takes the element colour of
+   the hit (Vine green, Crystal yellow, a hero / helper / Legend hit in its element's colour; Archer and neutral hits stay
+   white); display-only, Streetwear only, Reduce Motion / Effects Off unchanged; pinned in `check:turf-war-layout`.
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
    being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12

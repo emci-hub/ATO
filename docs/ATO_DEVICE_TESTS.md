@@ -1035,3 +1035,18 @@ About 10 min. Two accounts that are Circle friends (your own + `atodev2`). Run o
 - [ ] **7** Support line. -> Opens a mail draft to support@asstrollogs.com.
 - [ ] **8** More -> Divecore -> Hideout -> Circle. -> Only the friend list with share switch + Visit (no Add field, no ⋯), a line pointing to the Circle tab; Visit and gifts still work.
 - [ ] **9** Larger Text and a small phone (375x667) on the Circle tab. -> Nothing cut off; keyboard does not cover Send.
+
+## Box 71 — Turf War element-coloured hit flash (Divecore run order (b), 2026-10-22)
+
+About 5 min. Streetwear look, Effects Quality on Full, Motion on. Run on the OTA group `cb36f66c` (restart the app twice to load it). Only a hit that carries an element changes colour; Archer hits stay white, which is the "nothing changed" check.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Turf Trial with Vines only. -> A creep hit by a Vine flashes **green** for a blink (the damage number is green too).
+- [ ] **2** Add a Crystal. -> A creep hit by it flashes **yellow**.
+- [ ] **3** Archers only (or watch an Archer hit). -> The flash is still plain **white**.
+- [ ] **4** Put a fire hero (Archangel or Kitsune) on as a tower or helper. -> Its hits flash **orange**. With a Legend set, hero and helper hits take the Legend's colour instead.
+- [ ] **5** A burning creep hit by an Archer. -> It may flash orange (the burn colour); it never strobes faster than about 5 times a second.
+- [ ] **6** A boss wave. -> The boss flash is still brighter and longer than a creep's, now in the element colour on an element hit.
+- [ ] **7** Settings: Reduce Motion on (or Effects Off). -> No flash at all, white or coloured.
+- [ ] **8** Wave runs at normal speed; nothing stutters.
