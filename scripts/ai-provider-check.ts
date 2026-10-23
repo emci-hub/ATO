@@ -117,15 +117,9 @@ assert.deepEqual(generateContentHits, []);
 ok('no vendor HTTP transport anywhere under src (Edge Function only)');
 
 // --- The server side: ai-generate stays closed; the live model table is ai-vendors ---
-// While the deployed function or its folder exists it must stay a 410 stub with no vendor key, no vendor
-// URL, no prompt field and no call into the shared vendor code (wave98). Once emci deletes it (roadmap
-// A5 / D14) the folder is gone and this part is vacuous; the invariant is "never an open proxy".
-if (existsSync(resolve(root, 'supabase/functions/ai-generate/index.ts'))) {
-  const edgeCode = code(read('supabase/functions/ai-generate/index.ts'));
-  assert.match(edgeCode, /status: 410/);
-  assert.doesNotMatch(edgeCode, /_API_KEY|Deno\.env|createClient|ai-vendors|claim_ai_call|\bprompt\b|fetch\(/);
-  assert.doesNotMatch(edgeCode, /googleapis|nvidia\.com|perplexity|anthropic\.com|x\.ai|deepseek\.com/);
-}
+// The function was a 410 stub since wave98 and was deleted on 2026-10-23 (roadmap A5 / D14). It must stay
+// gone: the invariant is "never an open proxy".
+assert.ok(!existsSync(resolve(root, 'supabase/functions/ai-generate')), 'supabase/functions/ai-generate must stay deleted');
 const vendorsSrc = read('supabase/functions/_shared/ai-vendors.ts');
 assert.match(vendorsSrc, /gemini-3\.7-flash/, 'the live Gemini default model is the one in _shared/ai-vendors.ts');
 for (const file of ['supabase/functions/ai-library/index.ts', 'supabase/functions/ai-library-fill/index.ts']) {

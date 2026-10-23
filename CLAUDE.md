@@ -32,15 +32,15 @@ chat. The new chat does its part and ends the same way — that is the loop.
 | Release mode | `RELEASE_MODE=1 npm run check:release-mode` (auto on EAS production builds) |
 
 Live checks (need real accounts / network / keys) are excluded from the gate and run by hand:
-`around`, `auth-password`, `apple-revoke`, `card-live`, `crisis-live`, `delete-account`,
-`founder-access`, `intake-live`, `invite`, `quota`, `sentry`, `style-live`, `talk-live`.
+`around`, `auth-password`, `apple-revoke`, `delete-account`, `founder-access`, `intake-live`,
+`invite`, `quota`, `sentry`.
 
 ## Hard invariants
 
 - **No vendor key in the bundle.** Every model call runs on the server in `ai-library` /
   `ai-library-fill`; keys are Supabase secrets. `ai-generate` (the old generic prompt proxy)
-  is CLOSED to a 410 stub since wave98 and is deleted in launch-flip step 9: never put a vendor
-  call or a caller-supplied prompt back (`check:ai-provider`). `check:ai-provider` also fails on
+  was closed to a 410 stub in wave98 and DELETED on 2026-10-23 (function and folder): never bring it
+  back or put a vendor call or a caller-supplied prompt anywhere (`check:ai-provider`). `check:ai-provider` also fails on
   any `EXPO_PUBLIC_*_API_KEY` reference under `src/`.
 - **Shared AI library (wave93, emci 2026-10-09).** Deep dives, Story and Legends cards are
   library first: a free unseen card from the reader's bucket (`library_serve`; Legends
@@ -194,7 +194,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 | **Making or editing any game art (PixelLab)** — tools order, size ladder, gates | `docs/art/PIXELLAB_GUIDE.md` (read first) · `npm run pixellab:watch` = has PixelLab changed? |
 | Old plan (reference only, not rules) | `docs/archive/OLD_PLAN.md` |
 | Schema + RLS + RPCs | `supabase/migrations/*.sql` (chronological: stage* → wave*) |
-| Edge Functions (Deno) | `supabase/functions/{ai-library,ai-library-fill,ai-generate (closed stub),apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` · rate limits: `_shared/rate-limit.ts` + wave98 · live schema snapshot: `supabase/baseline/` |
+| Edge Functions (Deno) | `supabase/functions/{ai-library,ai-library-fill,report-digest,apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` · rate limits: `_shared/rate-limit.ts` + wave98 · live schema snapshot: `supabase/baseline/` |
 
 Expo docs for this repo: https://docs.expo.dev/versions/v54.0.0/ (SDK 54 — check
 `package.json` before trusting any other version).
