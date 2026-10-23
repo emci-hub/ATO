@@ -435,7 +435,27 @@ courts, breach plan (`docs/legal/breach-plan.md`). Built: `src/app/legal/{privac
 BIS 2021 rule: standard algorithms, not in France, mass-market end item, no document and no report, `false` stays; no
 professional review needed); `check:floor` rewritten (final-text rules, app/landing sentence sync, wave111 pins, pass/fail
 pairs), `check:founder-access` (no landing form, pass/fail pairs). Box 77 written. **Left for emci:** unset the DeepSeek key,
-apply wave111, redeploy the landing site, OTA, Box 77, confirm the Gemini plan.
+apply wave111, redeploy the landing site, OTA, Box 77, confirm the Gemini plan. **OTA published by emci 2026-10-22** (production,
+runtime 1.1.0, group `828b0e62-de85-4330-8514-5b1112248199`, commit `73afa04d`); the other hand steps were not confirmed in the AN1 chat.
+
+**Step AN1 status (2026-10-23): built, checked, test only (nothing installed, no OTA, 0 PixelLab generations).** PR #82 was
+merged first (AN0: master had a conflict in three generated art files; fixed by merging master in and re-running `art:sync`).
+The art engine lives in build tooling only: `scripts/art-engine/` (rig loader, recipe registry, seven gates, GIF renderer,
+CLI `npm run art:engine -- --hero <name>`), specs in `art-src/rigs/<hero>.json`, **one PixelLab config file**
+`scripts/art-engine/pixellab.config.json` (tool names, costs, limits, `lastVerified`; the pre-flight in
+`PIXELLAB_ANIMATION.md` §0 updates only this; `check:art-engine` fails if a tool name is hardcoded in engine code).
+Rig format: foot row (lowest visible pixel), height band, hip line, and per-direction polygons claiming pixels for a
+role (`prop` rigid with the hand, `cape` a frame late and shallower, `head`, `locked`). Recipe `breathing-idle` (Tier A):
+body and head sink 0/1/2/1 px, legs and feet locked, sword rigid with the hand, cape 0/0/1/1, holds 400/250/400/250 ms;
+frame 0 is the hero's own drawing. Gates: foot row, height band, silhouette overlap (≥ 0.90), palette ⊆ the hero's own
+frames, prop pixels (original pixels found within ±3 px, ≥ 0.95), loop seam (last→first ≤ 1.25× the busiest step).
+**Maldrath east + west pilot (incl. the sword mask): all seven gates pass** (the seventh, no-tears, was added after review: parts sliding past each other left 6-7 one-pixel see-through specks that no other gate saw; the recipe now fills them with the hero's own pixels). The same gates fail the live Idle (sword pixels
+match only 17-43%, silhouette drifts to 0.79 east / 0.84 west) and the recorded skeleton-v3 east test (feet one row low,
+sword 15-17%, silhouette 0.65), which is the drift emci saw by eye. Comparison GIFs: `docs/art/animation-tests/maldrath-engine/`
+(`east|west-compare-3x.gif`, `…-1x.gif`, `…-frames-4x.png`; engine frames in
+`art-src/pixellab/hero.maldrath.streetwear/engine-breathing-idle-<date>/`). `check:art-engine` pins rigs, the recipe, byte-identical
+rebuilds and a pass/fail pair per gate. **Waiting on emci: go / no-go for AN2** (all hero Idles through the engine). Known limit:
+the engine moves whole parts by whole pixels, so there is no head turn or cape sway; those are AN5 (paid, opt-in).
 
 **Step A1 status (2026-10-22): built, checked, pushed on `claude/brave-mendel-wbhxaq` (draft PR #83); MERGED into master
 2026-10-22 (A2 chat), OTA NOT published.** Done: token copy matches `AI_USE_DISCLOSURE` (no Story, no frozen reroll / free name-style price; only deep

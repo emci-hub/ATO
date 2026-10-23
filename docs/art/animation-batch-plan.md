@@ -58,7 +58,7 @@ Independent of the ATO finish roadmap (app work), so it can run between those st
 
 | Step | What | PixelLab | Needs first | Ships |
 |---|---|---|---|---|
-| AN0 | emci reviews and merges PR 82 (this branch) so master has Kael + Morwen Idles, the docs, the research | 0 | emci | — |
+| AN0 | emci reviews and merges PR 82 (this branch) so master has Kael + Morwen Idles, the docs, the research | 0 | emci | — (**done 2026-10-23**) |
 | AN1 | **Art engine v1** (build tooling only, `scripts/` + `art-src/`, never in the app bundle; see below). First user: rig format + recipe engine (`art-src/rigs/<hero>.json`, `breathing-idle` recipe, per-part masks, gates: foot row, height, silhouette overlap, palette, prop pixels, loop seam). Pilot Maldrath E+W incl. sword mask; GIF vs current vs skeleton-v3 | 0 | AN0 | test only |
 | AN2 | Rigs for all heroes (auto-guessed lines, hand-checked prop/cape masks), Idle for every hero, one contact sheet, emci marks approve/keep per hero, install approved, Idle `ms[]` holds | 0 | AN1 ok | 1 OTA + phone box |
 | AN3 | Timing pass for the other clips (per-frame holds; clears the audit's "flat timing"). Check first whether play code reads `ms[]` or still uses flat fps — if code must change, it is its own Play step | 0 | AN2 | 1 OTA + phone box |
@@ -66,6 +66,12 @@ Independent of the ATO finish roadmap (app work), so it can run between those st
 | AN5 | Optional, credits: Tier B anchored AI (`animate_with_skeleton_v3`, pinned joints, fixed seed, lock pass) only for clips emci wants with real motion (cape sway, attacks) | ~3 / direction | emci picks clips; token-secret decision | per batch |
 
 Credits: AN1–AN4 spend 0 PixelLab generations (vs ~84 in the old plan). AN5 is the only paid step and is opt-in.
+
+**AN1 built 2026-10-23 (test only):** engine in `scripts/art-engine/`, rigs in `art-src/rigs/`, one PixelLab config
+`scripts/art-engine/pixellab.config.json`, `npm run art:engine -- --hero <name>`, `check:art-engine`. Maldrath E+W incl.
+the sword mask pass all seven gates (six from the plan + no-tears); the live Idle and the skeleton-v3 east test fail the same gates (sword and silhouette
+drift). GIFs: `docs/art/animation-tests/maldrath-engine/`. Next: emci's go / no-go for AN2. Status block:
+`docs/ato-finish-roadmap.md` "Step AN1 status".
 
 ## Art engine (emci 2026-10-22): one structure for every future asset
 Goal: every new character, UI piece or object enters through the same structure, so nothing PixelLab makes is wasted

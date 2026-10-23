@@ -10259,6 +10259,176 @@
     "legacyKey": "sheets/streetwear/fx/pop/burst"
    }
   },
+  "ringember": {
+   "status": {
+    "frames": 8,
+    "ms": [
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125
+    ],
+    "timing": "meta:fx.fps",
+    "loop": true,
+    "dirs": {
+     "none": {
+      "frames": 8,
+      "first": "frame_000"
+     }
+    },
+    "anchor": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "cell": {
+     "w": 64,
+     "h": 64
+    },
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "reducedMotion": "hold-first",
+    "legacyKey": "sheets/streetwear/fx/ringember/status"
+   }
+  },
+  "ringroot": {
+   "status": {
+    "frames": 8,
+    "ms": [
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125
+    ],
+    "timing": "meta:fx.fps",
+    "loop": true,
+    "dirs": {
+     "none": {
+      "frames": 8,
+      "first": "frame_000"
+     }
+    },
+    "anchor": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "cell": {
+     "w": 64,
+     "h": 64
+    },
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "reducedMotion": "hold-first",
+    "legacyKey": "sheets/streetwear/fx/ringroot/status"
+   }
+  },
+  "ringspark": {
+   "status": {
+    "frames": 8,
+    "ms": [
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125
+    ],
+    "timing": "meta:fx.fps",
+    "loop": true,
+    "dirs": {
+     "none": {
+      "frames": 8,
+      "first": "frame_000"
+     }
+    },
+    "anchor": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "cell": {
+     "w": 64,
+     "h": 64
+    },
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "reducedMotion": "hold-first",
+    "legacyKey": "sheets/streetwear/fx/ringspark/status"
+   }
+  },
+  "ringtide": {
+   "status": {
+    "frames": 8,
+    "ms": [
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125
+    ],
+    "timing": "meta:fx.fps",
+    "loop": true,
+    "dirs": {
+     "none": {
+      "frames": 8,
+      "first": "frame_000"
+     }
+    },
+    "anchor": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "cell": {
+     "w": 64,
+     "h": 64
+    },
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "reducedMotion": "hold-first",
+    "legacyKey": "sheets/streetwear/fx/ringtide/status"
+   }
+  },
+  "ringvoid": {
+   "status": {
+    "frames": 8,
+    "ms": [
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125,
+     125
+    ],
+    "timing": "meta:fx.fps",
+    "loop": true,
+    "dirs": {
+     "none": {
+      "frames": 8,
+      "first": "frame_000"
+     }
+    },
+    "anchor": {
+     "x": 0.5,
+     "y": 0.5
+    },
+    "cell": {
+     "w": 64,
+     "h": 64
+    },
+    "sheet": "sheets/streetwear/fx/atlas.png",
+    "reducedMotion": "hold-first",
+    "legacyKey": "sheets/streetwear/fx/ringvoid/status"
+   }
+  },
   "root": {
    "burst": {
     "frames": 12,

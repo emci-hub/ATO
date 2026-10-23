@@ -291,6 +291,8 @@
     "art:catalog": "tsx ./scripts/art-catalog.ts",
     "anim:library": "tsx ./scripts/animation-library.ts",
     "art:sync": "tsx ./scripts/art-sync.ts",
+    "art:engine": "tsx ./scripts/art-engine/run.ts",
+    "check:art-engine": "tsx ./scripts/check-art-engine.ts",
     "art:report": "tsx ./scripts/art-report.ts",
     "art:apply-decisions": "tsx ./scripts/art-apply-decisions.ts",
     "hooks:install": "node ./scripts/install-git-hooks.cjs",

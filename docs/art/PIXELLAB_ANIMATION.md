@@ -11,6 +11,9 @@ file when the answers differ. Parent guide: `docs/art/PIXELLAB_GUIDE.md`.
    (`Authorization: Bearer <token>`, **No sign-in**) is wrong; tell emci, don't ask for the token.
 3. **Learn what changed.** Ask `search_help` about every tool you are about to use (inputs, size/frame limits, cost,
    palette support). Compare with §1–§4 below. If anything differs, update this file in the same change and say so.
+   **Also update the art engine's ONE config file, `scripts/art-engine/pixellab.config.json`** (tool names, costs,
+   limits, `lastVerified`): engine code never hardcodes a PixelLab fact, so a PixelLab change is a one-file edit
+   (`check:art-engine` fails if a tool name creeps into engine code).
    Run `npm run pixellab:watch` when the machine can reach `api.pixellab.ai` (the cloud sandbox cannot: host blocked
    and `tsx` not installed there; use `search_help` instead).
 4. `get_balance` and report it. Estimate the cost of the job in generations; ask emci before a batch over ~20
