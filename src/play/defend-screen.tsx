@@ -238,21 +238,15 @@ import {
 import { tipForWave } from '@/play/coach';
 import { getTune, saveTune, setKnob } from '@/play/tune';
 import {
-  BENCH_MEASURE_MS,
-  BENCH_SETTLE_MS,
-  BENCH_STAGES,
   BenchPanel,
   FpsOverlay,
   StressFxLayer,
   benchReport,
-  benchVerdict,
   nextStressFxLevel,
   useFpsMeter,
   useFxBenchmark,
-  type BenchSendStatus,
   type StressFxLevel,
 } from '@/play/dev-fx-stress';
-import { sendPlayDevLog } from '@/play/dev-log';
 import { stageMatchupDetail, stageMatchupFor, stageMatchupShort } from '@/play/legend-copy';
 import { FxLayer, FX_LIFE_MS, FX_ULTIMATE_LIFE_MS, type FxEvent, type FxPoint } from '@/play/fx-layer';
 import { defendBackStep, defendEdgeSwipe, type InnerBack } from '@/play/edge-back';
@@ -1134,27 +1128,8 @@ export function DefendScreen({
   useEffect(() => {
     if (benchRunning && (paused || phase !== 'running')) cancelBench();
   }, [benchRunning, paused, phase, cancelBench]);
-  /** Auto-send each finished run once (wave73 `play_dev_logs`). */
-  const [benchSend, setBenchSend] = useState<BenchSendStatus>(null);
-  const benchSentRef = useRef<unknown>(null);
-  const benchResults = bench.state.results;
-  useEffect(() => {
-    if (benchRunning) {
-      setBenchSend(null);
-      return;
-    }
-    if (benchResults.length === 0 || benchSentRef.current === benchResults) return;
-    benchSentRef.current = benchResults;
-    setBenchSend('sending');
-    void sendPlayDevLog('fps_test', {
-      results: benchResults,
-      verdict: benchVerdict(benchResults),
-      complete: benchResults.length === BENCH_STAGES.length,
-      settleMs: BENCH_SETTLE_MS,
-      measureMs: BENCH_MEASURE_MS,
-      speed: speedRef.current,
-    }).then((ok) => setBenchSend(ok ? 'sent' : 'failed'));
-  }, [benchRunning, benchResults]);
+  // The FPS test no longer sends its results to the server (the `play_dev_logs` table was dropped,
+  // roadmap A5): "Share results" in the panel is the way to read them off the phone.
 
   // What this screen is fighting right now. The replay pick overrides the
   // campaign seat; the seat drives the default.
@@ -4298,7 +4273,6 @@ export function DefendScreen({
                 />
                 <BenchPanel
                   state={bench.state}
-                  sendStatus={benchSend}
                   onCancel={bench.cancel}
                   onShare={() => {
                     void Share.share({ message: benchReport(bench.state.results) });
