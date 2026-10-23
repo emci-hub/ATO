@@ -552,7 +552,7 @@ assert.doesNotMatch(wave100, /^-- APPLIED/m, 'wave100 is not applied yet');
 // The Change answers screen keeps retired answers visible, read-only.
 const finishFold = read('src/components/bank-finish-fold.tsx');
 assert.match(finishFold, /BANK_ROWS_BY_TRAIT\[axis\]\.filter\(\(q\) => progress\.answeredIds\.has\(q\.id\)\)/, 'answered retired questions stay in the list');
-assert.match(finishFold, /disabled=\{busy \|\| isPrior \|\| isRetired\}/, 'and cannot be changed');
+assert.match(finishFold, /disabled=\{busy \|\| isRetired\}/, 'and cannot be changed (the current answer of a live question stays tappable: it is the selected look and a no-op)');
 ok('wave100: retired_at added; serve_bank_set, _bank_all_done, dev_fill_bank, change_bank_answer and serve_bank_retest are their current definitions plus only the retired filter, same grants; answered ids, answering and Start Fresh untouched');
 
 // 5. Stages, firm, retest picks -------------------------------------------------------
