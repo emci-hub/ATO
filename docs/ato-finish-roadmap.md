@@ -530,8 +530,10 @@ was the category push line. So each flag was **accept / read / retire**, not hid
   progressive-unlock, story-bank). AI library bundle unchanged (no redeploy). The flips ride the next OTA (no visible change).
   Box 79 written (nothing should look different).
 
-**Step A5 status (2026-10-23): built, checked, committed (Play and app separately). OTA and the `ai-generate` function delete are
-waiting for emci's OK.** emci answered "everything listed" and "Play dev-log removal rides the same single OTA, separate commit".
+**Step A5 status (2026-10-23): DONE and PUBLISHED (OTA, emci's OK): production, runtime 1.1.0, update group
+`60102b63-c890-477c-9557-833443234083` (iOS `01a1694a-54fb-7004-8f23-453e3f92905b`, Android `01a1694a-54fb-7057-97af-55c72822cff5`),
+commit `e36c432a`. Gate green (192 checks), reviewer PASS (warnings fixed). Built as three commits: Play `79a276cd`, app `0d5b18bf`, review fixes
+`e36c432a`. The `ai-generate` function delete waits until the OTA has reached phones (emci's OK); Box 81 is emci's.** emci answered "everything listed" and "Play dev-log removal rides the same single OTA, separate commit".
 - **A2 hand steps and Box 78:** all confirmed by emci (DeepSeek key unset, wave111 applied, landing redeployed, Box 77, Gemini plan
   checked, Box 78 passed).
 - **Old AI client path removed (app):** `src/lib/ai/{edge,generate,http,call-sites,reject-log,reject-reason}.ts`, the green/red status dot
@@ -551,8 +553,8 @@ waiting for emci's OK.** emci answered "everything listed" and "Play dev-log rem
   `check:insight`, `check:insights-no-ai`, `check:daily-line`, `check:jargon`, `check:traits`, `check:framework-fence`, `check:wave20`, `check:wave22`,
   `check:story-thread` (the content-policy pass/fail pairs now run on the joke filter directly), `check:server-hardening`, `check:rebuilt`. Deleted
   with their code: `check:rolls-compose`, `check:rolls-store`, the `report:ai` script, `style-live`.
-- **Server:** ai-library bundle UNCHANGED (no redeploy). **Still to do, needs emci's OK:** (1) publish ONE OTA; (2) after the OTA has reached
-  phones, `supabase functions delete ai-generate` (no live code, SQL or function calls it: verified), then remove `supabase/functions/ai-generate/`,
+- **Server:** ai-library bundle UNCHANGED (no redeploy). **Still to do, needs emci's OK:** (1) ~~publish ONE OTA~~ done (above); (2) after the OTA has reached
+  phones (restart twice), `supabase functions delete ai-generate` (no live code, SQL or function calls it: verified), then remove `supabase/functions/ai-generate/`,
   the CLAUDE.md lines naming it, and master-plan D14.
 - **Docs:** NOW.md stale lines superseded, sage-cleanup §2/§4/§5, OPEN-QUESTIONS 3 and 8, MAP / FLOWS / GOTCHAS refreshed, obsolete device boxes
   marked (8, 11, 12.5, 22, 23, 24, 25, 26, 27 as written, 28), boxes 30-32 corrected (Story is free, on Insights), **new Box 81** (Change answers /
