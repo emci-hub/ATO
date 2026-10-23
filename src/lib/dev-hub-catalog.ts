@@ -231,6 +231,14 @@ export const HUB_TOOLS: readonly HubToolDef[] = [
     details: 'The shared AI library (wave93). Counts per kind and today’s free library cards vs. newly written ones. Newest cards, waiting first: Approve skips the 24-hour cooling period, Retire takes a card out for everyone. Fill writes approved cards for the thinnest deep-dive buckets on its own root cap. Root only (checked on the server). Two taps each.',
     keywords: ['ai', 'library', 'shared', 'cards', 'seed', 'retire', 'approve', 'report', 'deep dive', 'story', 'legends'],
   },
+  {
+    id: 'story-library',
+    section: 'ai',
+    name: 'Story library',
+    summary: 'Edit the trait bank and a template, preview the ending, validate, approve.',
+    details: 'Root only. The copy in this screen starts from the shipped Story Library. Save runs the validator. Approve is a second tap after a clean save. Nothing here rewrites the bundle or calls a model.',
+    keywords: ['story', 'library', 'template', 'bank', 'ending', 'approve', 'deep dive', 'legends'],
+  },
   // Labs
   {
     id: 'labs',

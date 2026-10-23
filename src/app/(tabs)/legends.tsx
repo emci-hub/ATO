@@ -24,6 +24,7 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { planLegendReveal, revealLegendStory } from '@/lib/legend-figures/generate';
+import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
 import { legendBucketKey } from '@/lib/ai-library/legend';
 import { wantLibraryCards } from '@/lib/ai-library/client';
 import {
@@ -275,7 +276,7 @@ export default function LegendsScreen() {
       const startDay = start.day?.ymd === today ? start.day : null;
       const revealedBefore = startDay?.revealed.length ?? 0;
       const bonus = revealedBefore >= 1 && startDay != null && hasNewSettledLean(startDay.fingerprint, settledFingerprint(tracks));
-      const free = revealsLeft(revealedBefore, bonus) > 0;
+      const free = STORY_LIBRARY_RUNTIME || revealsLeft(revealedBefore, bonus) > 0;
       if (!free && !(consentGranted && (me ? atoTokenBalanceOf(me) : 0) >= AI_TOKEN_PRICE)) return;
       setTokenNote(null);
       const { legendId, angleId } = parseFrameKey(key);
@@ -382,7 +383,7 @@ export default function LegendsScreen() {
   // reveal is then instant and from the library. Group keys only, never text.
   const frameKeysSig = frames.filter((key): key is string => key != null).join(',');
   useEffect(() => {
-    if (!consentGranted || !local || !frameKeysSig) return;
+    if (STORY_LIBRARY_RUNTIME || !consentGranted || !local || !frameKeysSig) return;
     let live = true;
     void (async () => {
       const buckets: string[] = [];

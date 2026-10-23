@@ -2,10 +2,10 @@
  * Explore — the category deep dive (emci, 2026-10-08; moved from Home 2026-10-09).
  *
  * Pick a category → your leanings in it ("Adventurous 78%", worked out on the
- * phone, no AI) → "Write my deep dive" runs the ONE model call
- * (`writeCategoryDeepDive`: consent, then the server's daily claim, then the
- * call). One new card a day; a saved card opens free. Nothing here calls a
- * model on mount (`check:no-auto-ai` lists this file).
+ * phone, no AI) → "Open my deep dive" reads the shared library. While
+ * `STORY_LIBRARY_RUNTIME` is on, the tap assembles approved Story Library
+ * copy on the phone instead (no model, no token). The client model fallback
+ * is closed. Nothing here calls a model on mount (`check:no-auto-ai`).
  *
  * Separate from the daily insight above it, which stays stored copy.
  */
@@ -36,6 +36,8 @@ import {
 } from '@/lib/category-deep-dive/dive';
 import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
 import { diveLibraryKey, openLibraryDive, writeNewDive, type LibraryDiveOutcome } from '@/lib/category-deep-dive/library';
+import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
+import { renderLibraryDive } from '@/lib/story-library/render';
 import { LIBRARY_VERSION } from '@/lib/ai-library/types';
 import { cardJokeStyle } from '@/lib/voice/card-joke';
 import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
@@ -242,6 +244,27 @@ export function CategoryDeepDiveCard({
    */
   const open = useCallback(
     async (mode: 'library' | 'new') => {
+      if (STORY_LIBRARY_RUNTIME) {
+        if (!def || writingRef.current || leans.length === 0) return;
+        writingRef.current = true;
+        setBusy(true);
+        setNote(null);
+        try {
+          const dive = renderLibraryDive({ categoryId: def.id, leans, seed: `${userId}|${def.id}|${key}` });
+          const today = diveDay();
+          const made: DiveEntry = { dive: { ...dive, leansKey: key }, madeOn: today };
+          const base = stateRef.current ?? { userId, dives: {} };
+          const next: DiveLocalState = { ...base, dives: { ...base.dives, [def.id]: made } };
+          stateRef.current = next;
+          setState(next);
+          void saveDiveState(next);
+          void saveServerDive(made);
+        } finally {
+          writingRef.current = false;
+          setBusy(false);
+        }
+        return;
+      }
       if (!def || writingRef.current || leans.length === 0) return;
       writingRef.current = true;
       setBusy(true);
@@ -352,13 +375,13 @@ export function CategoryDeepDiveCard({
         </ThemedText>
       ) : null}
 
-      {!consentGranted ? (
+      {!consentGranted && !STORY_LIBRARY_RUNTIME ? (
         fresh ? null : (
           <ThemedText type="small" themeColor="textSecondary">
             {DEEP_DIVE_AI_OFF}
           </ThemedText>
         )
-      ) : needNew !== def.id ? (
+      ) : needNew !== def.id || STORY_LIBRARY_RUNTIME ? (
         <Pressable
           onPress={() => void open('library')}
           disabled={busy || state == null}
@@ -474,6 +497,7 @@ export function CategoryDeepDiveCard({
 function DiveBody({ entry }: { entry: DiveEntry }) {
   const theme = useTheme();
   const { dive } = entry;
+  const ai = dive.source === 'ai';
   return (
     <View style={styles.body}>
       <View style={[styles.titleBox, { borderColor: theme.accent }]}>
@@ -481,11 +505,11 @@ function DiveBody({ entry }: { entry: DiveEntry }) {
           <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
             Your title here
           </ThemedText>
-          <AiBadge />
+          {ai ? <AiBadge /> : null}
         </View>
         <ThemedText type="subheading">{titleCase(dive.title)}</ThemedText>
       </View>
-      <Part title="Where it shows up">
+      <Part title="Where it shows up" ai={ai}>
         {dive.showsUp.map((row) => (
           <ThemedText key={row.axis}>
             <ThemedText type="smallBold">{AXIS_SHORT_NAME[row.axis]}: </ThemedText>
@@ -494,20 +518,20 @@ function DiveBody({ entry }: { entry: DiveEntry }) {
         ))}
       </Part>
       {dive.mix ? (
-        <Part title="How they mix">
+        <Part title="How they mix" ai={ai}>
           <ThemedText>{dive.mix}</ThemedText>
         </Part>
       ) : null}
       {dive.othersNotice ? (
-        <Part title="What others might notice">
+        <Part title="What others might notice" ai={ai}>
           <ThemedText>{dive.othersNotice}</ThemedText>
         </Part>
       ) : null}
-      <Part title="What it means for you">
+      <Part title="What it means for you" ai={ai}>
         <ThemedText>{dive.whatItMeansForYou}</ThemedText>
       </Part>
       {dive.joke ? (
-        <Part title="The funny part">
+        <Part title="The funny part" ai={ai}>
           <ThemedText>{dive.joke}</ThemedText>
         </Part>
       ) : null}
@@ -515,14 +539,14 @@ function DiveBody({ entry }: { entry: DiveEntry }) {
   );
 }
 
-function Part({ title, children }: { title: string; children: React.ReactNode }) {
+function Part({ title, children, ai = true }: { title: string; children: React.ReactNode; ai?: boolean }) {
   return (
     <View style={styles.part}>
       <View style={styles.head}>
         <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
           {title}
         </ThemedText>
-        <AiBadge />
+        {ai ? <AiBadge /> : null}
       </View>
       {children}
     </View>

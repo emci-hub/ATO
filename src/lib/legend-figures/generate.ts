@@ -1,31 +1,26 @@
 /**
- * Legend figures — the one AI call (manual tap only).
+ * Legend figures — one reveal, no client model call.
  *
- * claim on the server first (no claim = no call, hand-written fallback) →
- * `generateText` → `ai-generate` (keys stay server-side; the shared AI quota
- * is claimed there too) → `parseLegendStory`. One retry on a rejected answer,
- * then the fallback. Never throws to the screen.
+ * Library first (wave93): the phone sends only the bucket key. While
+ * `STORY_LIBRARY_RUNTIME` is off, a hit comes from the shared AI library and
+ * a miss uses the hand-written museum card. While it is on, the phone
+ * assembles approved Story Library copy and does not call the server.
+ * The old `generateText` fallback is closed and does not claim a token.
  */
-import { LEGEND_FIGURE_META } from '@/lib/ai/call-sites';
-import { generateText } from '@/lib/ai/generate';
-import { shouldUseLocalAi } from '@/lib/ai/override';
-import { logAiReject } from '@/lib/ai/reject-log';
-import { refundAiTokens } from '@/lib/ato-tokens-server';
 import { LEGEND_LIBRARY, legendBucketKey } from '@/lib/ai-library/legend';
 import { writeLibraryCard, type LibraryServed } from '@/lib/ai-library/client';
+import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
+import { renderLibraryLegend } from '@/lib/story-library/render';
 import type { CardJokeStyle } from '@/lib/voice/card-joke';
 import { rankStoryAxes } from '@/lib/story-thread';
 import type { TraitTrack } from '@/lib/trait-stability';
 
 import { chooseAngle, type AngleCounts } from './pick';
 
-import { claimLegendStory } from './museum-store';
 import {
-  buildLegendPrompt,
   fallbackLegendStory,
   legendDiffer,
   legendPairs,
-  parseLegendStoryResult,
   type LegendDiffer,
   type LegendPair,
   type LegendStory,
@@ -61,7 +56,8 @@ export function planLegendReveal(input: {
  *                else the hand-written card
  *   paid reveal  the server claims 5 tokens, then the same; a failed write is
  *                refunded on the server
- * 'missing' (wave93 not live yet) = the old one-person path below.
+ * 'missing' (wave93 not live yet) = the museum's own words. No client model call.
+ * Story Library on = approved copy on the phone, no server call and no charge.
  */
 export async function revealLegendStory(input: {
   legend: LegendFigure;
@@ -75,6 +71,10 @@ export async function revealLegendStory(input: {
   free: boolean;
 }): Promise<LegendStory> {
   const fallback = () => fallbackLegendStory(input);
+  if (STORY_LIBRARY_RUNTIME) {
+    if (input.pairs.length === 0) return fallback();
+    return renderLibraryLegend(input);
+  }
   if (!input.consentGranted || input.pairs.length === 0) return fallback();
   const bucket = legendBucketKey(input);
   const take = (served: LibraryServed<LegendStory>): LegendStory => ({
@@ -92,7 +92,7 @@ export async function revealLegendStory(input: {
   return fallback();
 }
 
-/** Before wave93 is live: the old one-person path (always a paid claim). */
+/** The client model writer is closed. A missing shared library uses the museum words. */
 export async function writeLegendStory(input: {
   legend: LegendFigure;
   angle: LegendAngle;
@@ -105,32 +105,5 @@ export async function writeLegendStory(input: {
   /** The person said yes to AI (the server refuses without it anyway). */
   consentGranted: boolean;
 }): Promise<LegendStory> {
-  const fallback = () => fallbackLegendStory(input);
-  if (!input.consentGranted || input.pairs.length === 0) return fallback();
-  if (await shouldUseLocalAi()) return fallback();
-  if (!(await claimLegendStory())) return fallback();
-  const prompt = buildLegendPrompt({
-    legend: input.legend,
-    angle: input.angle,
-    focusMomentId: input.momentId,
-    pairs: input.pairs,
-    differ: input.differ,
-    jokeStyle: input.jokeStyle,
-  });
-  for (let pass = 1; pass <= 2; pass += 1) {
-    try {
-      const request = { prompt, temperature: 0.9, maxOutputTokens: 600, responseFormat: 'json' as const };
-      const text = await generateText({ ...request }, LEGEND_FIGURE_META);
-      if (!text) break;
-      const { story, reason } = parseLegendStoryResult(text, input);
-      if (story) return story;
-      logAiReject('legend_figure', reason ?? 'unknown', pass);
-    } catch (err) {
-      console.log('[legend-figures] generate error:', err);
-      break;
-    }
-  }
-  // Charged at the claim but no AI card came back: give the tokens back (wave92).
-  await refundAiTokens('legend');
-  return fallback();
+  return fallbackLegendStory(input);
 }

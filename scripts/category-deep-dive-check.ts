@@ -268,7 +268,8 @@ assert.doesNotMatch(DIVE_PROMPT_STATIC, /no needy or clingy/, 'no blanket word b
 assert.equal(diveOutputTokens(1), 600, 'one card: a trimmed answer budget');
 assert.ok(diveOutputTokens(2) <= 1024, 'two cards stay under the server’s 1024 output cap');
 assert.equal(DIVE_CARDS_PER_CALL, 2);
-assert.match(read('src/lib/category-deep-dive/generate.ts'), /const specs = pass === 1 \? bundle : \[input\.main\];/, 'the retry asks for the tapped card only');
+assert.doesNotMatch(read('src/lib/category-deep-dive/generate.ts'), /generateText\(/, 'the client writer no longer calls a model');
+assert.match(read('src/lib/category-deep-dive/generate.ts'), /reason: 'unavailable'/, 'a missing client path says unavailable and does not invent a card');
 assert.equal(reasonOnly('moment line: name not in entry: Kyoto'), 'moment line: name not in entry', 'logs keep the rule, never the quoted word');
 assert.equal(reasonOnly('means: number not in entry: 5'), 'means: number not in entry');
 assert.equal(reasonOnly('not json'), 'not json');
@@ -304,10 +305,10 @@ assert.match(card, /if \(!def \|\| writingRef\.current \|\| leans\.length === 0\
 assert.match(card, /if \(epochRef\.current !== epochAtStart\) return;/, 'a wipe while writing is never written back');
 assert.doesNotMatch(card, /COPY_REVIEWED|[Dd]raft/, 'no draft badge in the app');
 const gen = read('src/lib/category-deep-dive/generate.ts');
-assert.ok(gen.indexOf('consentGranted') < gen.indexOf('claimCategoryDeepDive()'), 'consent before the claim');
-assert.ok(gen.indexOf('claimCategoryDeepDive()') < gen.indexOf('generateText('), 'the server claim before the call');
-assert.match(gen, /const claim = await claimCategoryDeepDive\(\);\s*if \(claim !== 'ok'\) \{\s*return \{\s*ok: false,/, 'no claim, no AI call');
-assert.match(gen, /await refundAiTokens\('deep_dive'\);\s*return \{ ok: false, reason: 'failed' \};/, 'charged but no card → refunded');
+assert.doesNotMatch(gen, /generateText\(/, 'the client writer no longer calls a model');
+assert.doesNotMatch(gen, /claimCategoryDeepDive\(/, 'the closed client writer does not claim a token');
+assert.doesNotMatch(gen, /refundAiTokens\(/, 'nothing was charged on the phone, so nothing is refunded here');
+assert.match(gen, /if \(!input\.consentGranted\) return \{ ok: false, reason: 'consent' \};/, 'consent is still refused before anything else');
 assert.match(read('src/lib/category-deep-dive/store.ts'), /PGRST202/, 'before wave90 is applied it says "not switched on yet", never "used"');
 // wave92: tokens decide how often (the server keeps a safety ceiling); the button shows the price.
 assert.match(card, /const affordable = tokens >= AI_TOKEN_PRICE;/, 'one deep dive needs one AI view of tokens');
@@ -346,7 +347,8 @@ assert.match(card, /opensLater \? \(/, 'and stays closed until then');
 ok('wave90: own rows only, written by RPC, one new card a day, wiped by Reset account');
 
 const consent = read('src/components/ai-consent-card.tsx');
-assert.match(consent, /AI_USE_DISCLOSURE =\s*'[^']*category deep dives/, 'the disclosure names this AI use (Apple 5.1.2)');
+assert.match(consent, /AI_USE_DISCLOSURE_MODEL =\s*'[^']*category deep dives/, 'the disclosure names this AI use while the model path is on (Apple 5.1.2)');
+assert.match(consent, /AI_USE_DISCLOSURE = STORY_LIBRARY_RUNTIME \? AI_USE_DISCLOSURE_LIBRARY : AI_USE_DISCLOSURE_MODEL/);
 assert.match(consent, /category deep dives you ask for/, 'so does the consent ask');
 assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY_REVIEWED/, 'listed on the dev hub copy list');

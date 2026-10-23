@@ -53,8 +53,8 @@ export interface LegendStory {
   differ?: { axis: TraitAxis; lean: TraitLean; line: string };
   /** AI only: "The funny part" — one joke line in the app-picked style. */
   joke?: string;
-  /** 'ai' = written by the model (shows the AI badge); 'fallback' = hand-written. */
-  source: 'ai' | 'fallback';
+  /** 'ai' = written by the model (shows the AI badge); 'library' = Story Library; 'fallback' = hand-written. */
+  source: 'ai' | 'fallback' | 'library';
   /** Shared library (wave93): the library card's id (Report) and "you and N others". */
   libraryId?: string;
   others?: number | null;
@@ -515,7 +515,7 @@ export function parseStoredLegendStory(raw: unknown): LegendStory | null {
     ...(typeof obj.joke === 'string' ? { joke: obj.joke } : {}),
     ...(typeof obj.libraryId === 'string' && /^[0-9a-f-]{36}$/.test(obj.libraryId) ? { libraryId: obj.libraryId } : {}),
     ...(typeof obj.others === 'number' ? { others: obj.others } : {}),
-    source: obj.source === 'ai' ? 'ai' : 'fallback',
+    source: obj.source === 'ai' ? 'ai' : obj.source === 'library' ? 'library' : 'fallback',
   };
 }
 
