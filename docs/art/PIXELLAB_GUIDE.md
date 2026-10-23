@@ -146,7 +146,7 @@ Run these steps for any request, whether it's "make a new hero", "edit the couch
 3. **Follow the recipe** for the type in §8. Edits never regenerate from scratch: they change the
    existing asset (identity and style drift come from regenerating).
 4. **Clean up and lock:** `reduce_colors` with `docs/art/palette-streetwear-night.png` (all frames
-   together), `pixelart_workbench repair` + `score` (≥ 90), no fake text, and the **scale check** (§2).
+   together; **not for hero clips** — see `PIXELLAB_ANIMATION.md` §4), `pixelart_workbench repair` + `score` (≥ 90), no fake text, and the **scale check** (§2).
 5. **Show emci a sample** (side by side with the anchors / the old version, phone size, plus the
    scale sheet). After emci's ok, save it into the library: `npm run art:import -- --from … --id …` (raw + `gen.json` to
    `art-src/`), `npm run art:pack -- --id …`, then `npm run art:sync` and commit the generated files
@@ -261,6 +261,9 @@ Same outline/shading/detail strings per type every time (the "style card"):
 | Heroes / pets | match the anchors (dark single-colour outline) | — | — | low top-down |
 
 ## 10. Staying current
+**Animation work has its own pre-flight: `docs/art/PIXELLAB_ANIMATION.md` §0** (learn/update what we know about
+PixelLab with `search_help`, then `get_balance`, then ONE test clip, then generate). Do it every new chat.
+
 `npm run pixellab:watch` downloads PixelLab's public docs, compares them with
 `docs/art/pixellab-snapshot.json`, and prints what changed (new/removed endpoints, changed
 parameters, changed doc sections). It never edits this guide. A weekly scheduled task runs it; when

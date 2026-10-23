@@ -1655,14 +1655,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 975,
-        "h": 794
+        "h": 802
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 71507,
-      "decodedBytes": 3096600,
+      "diskBytes": 74317,
+      "decodedBytes": 3127800,
       "format": "png8",
-      "notes": "md5:40fef74b0d60d2e0a8b6385cb97f45fc",
+      "notes": "md5:a64fdada032a90bbbf76d413196d3163",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1922,14 +1922,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 719,
-        "h": 785
+        "h": 781
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 81372,
-      "decodedBytes": 2257660,
+      "diskBytes": 82966,
+      "decodedBytes": 2246156,
       "format": "png8",
-      "notes": "md5:a959c825835bf29fff5ce134c497539f",
+      "notes": "md5:c9b16b3420213f1eabcf8939f306110b",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",

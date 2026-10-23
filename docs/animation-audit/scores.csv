@@ -1,0 +1,569 @@
+skin,group,character,clip,dir,frames,score,severity,issues
+cast,boss,oni,Breathing_Idle,east,4,4.0,ok,only 4 frames
+cast,boss,oni,Breathing_Idle,west,4,4.0,ok,only 4 frames
+cast,boss,oni,EPIC_DEATH_FALL_OF_THE_CRIMSON_LEGEND,east,9,5.0,ok,
+cast,boss,oni,EPIC_DEATH_FALL_OF_THE_CRIMSON_LEGEND,west,9,5.0,ok,
+cast,boss,oni,Running,east,8,5.0,ok,
+cast,boss,oni,Running,west,8,5.0,ok,
+cast,boss,oni,Walking,east,8,5.0,ok,
+cast,boss,oni,Walking,west,8,5.0,ok,
+cast,creeps,knight,Breathing_Idle,east,4,4.0,ok,only 4 frames
+cast,creeps,knight,Breathing_Idle,north,4,4.0,ok,only 4 frames
+cast,creeps,knight,Breathing_Idle,south,4,4.0,ok,only 4 frames
+cast,creeps,knight,Breathing_Idle,west,4,4.0,ok,only 4 frames
+cast,creeps,knight,Iron_Slash,east,9,5.0,ok,
+cast,creeps,knight,Iron_Slash,north,9,5.0,ok,
+cast,creeps,knight,Iron_Slash,south,9,5.0,ok,
+cast,creeps,knight,Iron_Slash,west,9,5.0,ok,
+cast,creeps,knight,Walking,east,6,5.0,ok,
+cast,creeps,knight,Walking,north,6,5.0,ok,
+cast,creeps,knight,Walking,south,6,5.0,ok,
+cast,creeps,knight,Walking,west,6,5.0,ok,
+cast,creeps,village-girl,Breathing_Idle,east,4,4.0,ok,only 4 frames
+cast,creeps,village-girl,Breathing_Idle,north,4,4.0,ok,only 4 frames
+cast,creeps,village-girl,Breathing_Idle,south,4,4.0,ok,only 4 frames
+cast,creeps,village-girl,Breathing_Idle,west,4,4.0,ok,only 4 frames
+cast,creeps,village-girl,Flower_Wave,south,9,5.0,ok,
+cast,creeps,village-girl,Pick_Up_item,east,9,5.0,ok,
+cast,creeps,village-girl,Pick_Up_item,north,9,5.0,ok,
+cast,creeps,village-girl,Pick_Up_item,south,9,5.0,ok,
+cast,creeps,village-girl,Pick_Up_item,west,9,5.0,ok,
+cast,creeps,village-girl,Walk,east,6,5.0,ok,
+cast,creeps,village-girl,Walk,north,6,5.0,ok,
+cast,creeps,village-girl,Walk,south,6,5.0,ok,
+cast,creeps,village-girl,Walk,west,6,5.0,ok,
+cast,creeps,wizard,Breathing_Idle,east,4,4.0,ok,only 4 frames
+cast,creeps,wizard,Breathing_Idle,south,4,4.0,ok,only 4 frames
+cast,creeps,wizard,Breathing_Idle,west,4,4.0,ok,only 4 frames
+cast,creeps,wizard,attack,east,9,5.0,ok,
+cast,creeps,wizard,attack,west,9,5.0,ok,
+cast,creeps,wizard,death,east,9,5.0,ok,
+cast,creeps,wizard,death,south,9,5.0,ok,
+cast,creeps,wizard,death,west,9,5.0,ok,
+cast,creeps,wizard,walk,east,9,5.0,ok,
+cast,creeps,wizard,walk,west,9,5.0,ok,
+cast,heroes,archangel,Angelic_Flinch,east,9,5.0,ok,
+cast,heroes,archangel,Angelic_Flinch,west,9,5.0,ok,
+cast,heroes,archangel,Attack_01_Seraph_Strike,east,11,5.0,ok,
+cast,heroes,archangel,Attack_01_Seraph_Strike,west,11,5.0,ok,
+cast,heroes,archangel,Celestial_Drift,east,11,5.0,ok,
+cast,heroes,archangel,Celestial_Drift,west,11,5.0,ok,
+cast,heroes,archangel,Celestial_Rush,east,11,5.0,ok,
+cast,heroes,archangel,Celestial_Rush,west,11,5.0,ok,
+cast,heroes,archangel,Divine_Flight,east,12,4.0,ok,loop-seam pop (0.10 vs avg 0.03)
+cast,heroes,archangel,Divine_Flight,west,12,4.0,ok,loop-seam pop (0.10 vs avg 0.03)
+cast,heroes,archangel,Hover_Idle,east,11,4.0,ok,feet slide 3.5px
+cast,heroes,archangel,Hover_Idle,west,11,4.0,ok,feet slide 3.5px
+cast,heroes,archangel,Ultimate_Final_Judgment,east,17,5.0,ok,
+cast,heroes,archangel,Ultimate_Final_Judgment,west,17,5.0,ok,
+cast,heroes,aurex,DRAGON_SLASH,east,11,5.0,ok,
+cast,heroes,aurex,DRAGON_SLASH,west,11,5.0,ok,
+cast,heroes,aurex,FIRE_WAVE,east,13,5.0,ok,
+cast,heroes,aurex,FIRE_WAVE,west,13,5.0,ok,
+cast,heroes,aurex,FLAME_DASH,east,9,5.0,ok,
+cast,heroes,aurex,FLAME_DASH,west,9,5.0,ok,
+cast,heroes,aurex,HURT,east,5,5.0,ok,
+cast,heroes,aurex,HURT,west,5,5.0,ok,
+cast,heroes,corvus,BLACK_DEATH_RITUAL,east,17,4.0,ok,baseline moves 23px
+cast,heroes,corvus,BLACK_DEATH_RITUAL,west,17,4.0,ok,baseline moves 23px
+cast,heroes,corvus,DOCTOR_WALK,east,9,5.0,ok,
+cast,heroes,corvus,DOCTOR_WALK,west,9,5.0,ok,
+cast,heroes,corvus,HURT,east,5,5.0,ok,
+cast,heroes,corvus,HURT,west,5,5.0,ok,
+cast,heroes,corvus,PESTILENCE_WAVE,east,13,5.0,ok,
+cast,heroes,corvus,PESTILENCE_WAVE,west,13,5.0,ok,
+cast,heroes,corvus,PLAGUE_IDLE,east,13,5.0,ok,
+cast,heroes,corvus,PLAGUE_IDLE,west,13,5.0,ok,
+cast,heroes,corvus,SHADOW_DASH,east,9,5.0,ok,
+cast,heroes,corvus,SHADOW_DASH,west,9,5.0,ok,
+cast,heroes,cyber-shinobi,Attack_11_frames,east,11,5.0,ok,
+cast,heroes,cyber-shinobi,Attack_11_frames,west,11,5.0,ok,
+cast,heroes,cyber-shinobi,Dash_11_frames,east,11,5.0,ok,
+cast,heroes,cyber-shinobi,Dash_11_frames,west,11,5.0,ok,
+cast,heroes,cyber-shinobi,Hurt_7_frames,east,7,5.0,ok,
+cast,heroes,cyber-shinobi,Hurt_7_frames,west,7,5.0,ok,
+cast,heroes,cyber-shinobi,Idle_11_frames,east,11,5.0,ok,
+cast,heroes,cyber-shinobi,Idle_11_frames,west,11,5.0,ok,
+cast,heroes,cyber-shinobi,Skill_17_frames,east,17,5.0,ok,
+cast,heroes,cyber-shinobi,Skill_17_frames,west,17,5.0,ok,
+cast,heroes,cyber-shinobi,Walk_11_frames,east,11,5.0,ok,
+cast,heroes,cyber-shinobi,Walk_11_frames,west,11,5.0,ok,
+cast,heroes,elowen,Crescent_Bloom,east,13,5.0,ok,
+cast,heroes,elowen,Crescent_Bloom,west,13,5.0,ok,
+cast,heroes,elowen,Forest_Idle,east,13,2.0,broken,foot drift 5px; feet slide 2.8px
+cast,heroes,elowen,Forest_Idle,west,13,2.0,broken,foot drift 5px; feet slide 2.8px
+cast,heroes,elowen,Moonlit_Walk,east,17,5.0,ok,
+cast,heroes,elowen,Moonlit_Walk,west,17,5.0,ok,
+cast,heroes,elowen,Nature_Slash,east,17,5.0,ok,
+cast,heroes,elowen,Nature_Slash,west,17,5.0,ok,
+cast,heroes,frost-lich,Frost_Nova,east,17,5.0,ok,
+cast,heroes,frost-lich,Frost_Nova,west,17,5.0,ok,
+cast,heroes,frost-lich,Frozen_Drift,east,11,5.0,ok,
+cast,heroes,frost-lich,Frozen_Drift,west,11,5.0,ok,
+cast,heroes,frost-lich,Hover_Idle,east,11,2.0,broken,foot drift 4px; feet slide 2.9px
+cast,heroes,frost-lich,Hover_Idle,west,11,2.0,broken,foot drift 4px; feet slide 2.9px
+cast,heroes,frost-lich,Royal_Cleave,east,13,5.0,ok,
+cast,heroes,frost-lich,Royal_Cleave,west,13,5.0,ok,
+cast,heroes,frost-lich,Soul_Stagger,east,9,5.0,ok,
+cast,heroes,frost-lich,Soul_Stagger,west,9,5.0,ok,
+cast,heroes,kael,DASH_BOOST,east,9,5.0,ok,
+cast,heroes,kael,DASH_BOOST,west,9,5.0,ok,
+cast,heroes,kael,EMP_BURST,east,9,5.0,ok,
+cast,heroes,kael,EMP_BURST,west,9,5.0,ok,
+cast,heroes,kael,ENERGY_SLASH,east,11,5.0,ok,
+cast,heroes,kael,ENERGY_SLASH,west,11,5.0,ok,
+cast,heroes,kael,HURT,east,5,5.0,ok,
+cast,heroes,kael,HURT,west,5,5.0,ok,
+cast,heroes,kael,Idle,east,13,5.0,ok,
+cast,heroes,kael,Idle,west,13,5.0,ok,
+cast,heroes,kael,TACTICAL_WALK,east,9,5.0,ok,
+cast,heroes,kael,TACTICAL_WALK,west,9,5.0,ok,
+cast,heroes,kitsune,Attack_01_Scarlet_Moon_Slash,east,9,5.0,ok,
+cast,heroes,kitsune,Attack_01_Scarlet_Moon_Slash,west,9,5.0,ok,
+cast,heroes,kitsune,Breathing_Idle,east,4,4.0,ok,only 4 frames
+cast,heroes,kitsune,Breathing_Idle,west,4,4.0,ok,only 4 frames
+cast,heroes,kitsune,Crimson_Run,east,9,5.0,ok,
+cast,heroes,kitsune,Crimson_Run,west,9,5.0,ok,
+cast,heroes,kitsune,Death_Animation_Fallen_Empress,east,11,5.0,ok,
+cast,heroes,kitsune,Death_Animation_Fallen_Empress,west,11,5.0,ok,
+cast,heroes,kitsune,Sexy_Walk,east,9,5.0,ok,
+cast,heroes,kitsune,Sexy_Walk,west,9,5.0,ok,
+cast,heroes,kitsune,Special_Skill_Foxfire_Step,east,17,5.0,ok,
+cast,heroes,kitsune,Special_Skill_Foxfire_Step,west,17,5.0,ok,
+cast,heroes,maldrath,CURSED_WALK,east,9,5.0,ok,
+cast,heroes,maldrath,CURSED_WALK,west,9,5.0,ok,
+cast,heroes,maldrath,DARK_IDLE,east,13,4.0,ok,feet slide 4.3px
+cast,heroes,maldrath,DARK_IDLE,west,13,4.0,ok,feet slide 4.3px
+cast,heroes,maldrath,GREATSWORD_SLASH,east,11,5.0,ok,
+cast,heroes,maldrath,GREATSWORD_SLASH,west,11,5.0,ok,
+cast,heroes,maldrath,HURT,east,5,5.0,ok,
+cast,heroes,maldrath,HURT,west,5,5.0,ok,
+cast,heroes,maldrath,SHADOW_DASH,east,9,5.0,ok,
+cast,heroes,maldrath,SHADOW_DASH,west,9,5.0,ok,
+cast,heroes,maldrath,SOUL_NOVA,east,17,5.0,ok,
+cast,heroes,maldrath,SOUL_NOVA,west,17,5.0,ok,
+cast,heroes,morwen,ARCANE_BLAST,east,13,5.0,ok,
+cast,heroes,morwen,ARCANE_BLAST,west,13,5.0,ok,
+cast,heroes,morwen,ARCANE_IDLE,east,13,3.0,ugly,foot drift 2px; feet slide 2.5px
+cast,heroes,morwen,ARCANE_IDLE,west,13,3.0,ugly,foot drift 2px; feet slide 2.5px
+cast,heroes,morwen,HURT,east,5,5.0,ok,
+cast,heroes,morwen,HURT,west,5,5.0,ok,
+cast,heroes,morwen,MOON_RITUAL,east,17,5.0,ok,
+cast,heroes,morwen,MOON_RITUAL,west,17,5.0,ok,
+cast,heroes,morwen,TELEPORT,east,11,5.0,ok,
+cast,heroes,morwen,TELEPORT,west,11,5.0,ok,
+cast,heroes,neon-viper,Breathing_Idle,east,4,4.0,ok,only 4 frames
+cast,heroes,neon-viper,Breathing_Idle,west,4,4.0,ok,only 4 frames
+cast,heroes,neon-viper,Cross_Punch,east,6,5.0,ok,
+cast,heroes,neon-viper,Cross_Punch,west,6,5.0,ok,
+cast,heroes,neon-viper,Falling_Back_Death,east,7,4.0,ok,baseline moves 16px
+cast,heroes,neon-viper,Falling_Back_Death,west,7,4.0,ok,baseline moves 13px
+cast,heroes,neon-viper,Jumping,east,9,5.0,ok,
+cast,heroes,neon-viper,Jumping,west,9,5.0,ok,
+cast,heroes,neon-viper,Surprise_Uppercut,east,7,5.0,ok,
+cast,heroes,neon-viper,Surprise_Uppercut,west,7,5.0,ok,
+cast,heroes,neon-viper,Walking,east,6,5.0,ok,
+cast,heroes,neon-viper,Walking,west,6,5.0,ok,
+cast,heroes,oni,ATTACK_01_Swift_Crescent_Slash,east,9,5.0,ok,
+cast,heroes,oni,ATTACK_01_Swift_Crescent_Slash,west,9,5.0,ok,
+cast,heroes,oni,BLOOD_MOON_IAIJUTSU,east,9,5.0,ok,
+cast,heroes,oni,BLOOD_MOON_IAIJUTSU,west,9,5.0,ok,
+cast,heroes,oni,Breathing_Idle,east,4,4.0,ok,only 4 frames
+cast,heroes,oni,Breathing_Idle,west,4,4.0,ok,only 4 frames
+cast,heroes,oni,DASH_Phantom_Step,east,9,5.0,ok,
+cast,heroes,oni,DASH_Phantom_Step,west,9,5.0,ok,
+cast,heroes,oni,Walking,east,8,5.0,ok,
+cast,heroes,oni,Walking,west,8,5.0,ok,
+cast,heroes,raven,Attack_11_frames,east,11,5.0,ok,
+cast,heroes,raven,Attack_11_frames,west,11,5.0,ok,
+cast,heroes,raven,Dash_11_frames,east,11,5.0,ok,
+cast,heroes,raven,Dash_11_frames,west,11,5.0,ok,
+cast,heroes,raven,Heavy_attack_11_frames,east,11,5.0,ok,
+cast,heroes,raven,Heavy_attack_11_frames,west,11,5.0,ok,
+cast,heroes,raven,Hurt_7_frames,east,7,5.0,ok,
+cast,heroes,raven,Hurt_7_frames,west,7,5.0,ok,
+cast,heroes,raven,Idle_11_frames,east,11,5.0,ok,
+cast,heroes,raven,Idle_11_frames,west,11,5.0,ok,
+cast,heroes,raven,Walking_11_frames,east,11,5.0,ok,
+cast,heroes,raven,Walking_11_frames,west,11,5.0,ok,
+cast,heroes,sak,Cat_Walk,east,11,5.0,ok,
+cast,heroes,sak,Cat_Walk,west,11,5.0,ok,
+cast,heroes,sak,Feline_Rush,east,13,5.0,ok,
+cast,heroes,sak,Feline_Rush,west,13,5.0,ok,
+cast,heroes,sak,Kingdom_of_Cats,east,17,5.0,ok,
+cast,heroes,sak,Kingdom_of_Cats,west,17,5.0,ok,
+cast,heroes,sak,Moonfang_Slash,east,11,5.0,ok,
+cast,heroes,sak,Moonfang_Slash,west,11,5.0,ok,
+cast,heroes,sak,Royal_Idle,east,13,4.0,ok,feet slide 3.1px
+cast,heroes,sak,Royal_Idle,west,13,4.0,ok,feet slide 3.1px
+cast,heroes,velkhar,BONE_SPEAR,east,11,5.0,ok,
+cast,heroes,velkhar,BONE_SPEAR,west,11,5.0,ok,
+cast,heroes,velkhar,DARK_IDLE,east,13,5.0,ok,
+cast,heroes,velkhar,DARK_IDLE,west,13,5.0,ok,
+cast,heroes,velkhar,HURT,east,5,5.0,ok,
+cast,heroes,velkhar,HURT,west,5,5.0,ok,
+cast,heroes,velkhar,NECROMANCER_WALK,east,13,5.0,ok,
+cast,heroes,velkhar,NECROMANCER_WALK,west,13,5.0,ok,
+cast,heroes,velkhar,SOUL_DASH,east,9,5.0,ok,
+cast,heroes,velkhar,SOUL_DASH,west,9,5.0,ok,
+cast,heroes,velkhar,SOUL_DRAIN,east,13,5.0,ok,
+cast,heroes,velkhar,SOUL_DRAIN,west,13,5.0,ok,
+cast,heroes,void-raven,Attack_11_frames,east,11,5.0,ok,
+cast,heroes,void-raven,Attack_11_frames,west,11,5.0,ok,
+cast,heroes,void-raven,Dash_11_frames,east,11,5.0,ok,
+cast,heroes,void-raven,Dash_11_frames,west,11,5.0,ok,
+cast,heroes,void-raven,Heavy_attack_11_frames,east,11,5.0,ok,
+cast,heroes,void-raven,Heavy_attack_11_frames,west,11,5.0,ok,
+cast,heroes,void-raven,Hurt_7_frames,east,7,5.0,ok,
+cast,heroes,void-raven,Hurt_7_frames,west,7,5.0,ok,
+cast,heroes,void-raven,Idle_11_frames,east,11,4.0,ok,feet slide 3.1px
+cast,heroes,void-raven,Idle_11_frames,west,11,4.0,ok,feet slide 3.1px
+cast,heroes,void-raven,Walk_11_frames,east,11,5.0,ok,
+cast,heroes,void-raven,Walk_11_frames,west,11,5.0,ok,
+streetwear,auras,earth,behind,x,8,5.0,ok,
+streetwear,auras,earth,front,x,8,5.0,ok,
+streetwear,auras,fire,behind,x,8,5.0,ok,
+streetwear,auras,fire,front,x,8,5.0,ok,
+streetwear,auras,rune,behind,x,8,5.0,ok,
+streetwear,auras,rune,front,x,8,5.0,ok,
+streetwear,auras,thunder,behind,x,8,4.0,ok,1 duplicate frame(s)
+streetwear,auras,thunder,front,x,8,5.0,ok,
+streetwear,auras,water,behind,x,8,5.0,ok,
+streetwear,auras,water,front,x,8,5.0,ok,
+streetwear,boss,oni,Death,east,8,4.5,ok,flat timing
+streetwear,boss,oni,Death,west,8,4.5,ok,flat timing
+streetwear,boss,oni,Idle,east,4,2.5,ugly,feet slide 2.9px; only 4 frames; flat timing
+streetwear,boss,oni,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,boss,oni,Run,east,8,4.5,ok,flat timing
+streetwear,boss,oni,Run,west,8,4.5,ok,flat timing
+streetwear,boss,oni,Walk,east,8,4.5,ok,flat timing
+streetwear,boss,oni,Walk,west,8,4.5,ok,flat timing
+streetwear,creeps,knight,Death,east,7,3.5,ugly,baseline moves 9px; flat timing
+streetwear,creeps,knight,Death,west,7,4.5,ok,flat timing
+streetwear,creeps,knight,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,creeps,knight,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,creeps,knight,Walk,east,8,4.5,ok,flat timing
+streetwear,creeps,knight,Walk,west,8,4.5,ok,flat timing
+streetwear,creeps,village-girl,Death,east,7,4.5,ok,flat timing
+streetwear,creeps,village-girl,Death,west,7,4.5,ok,flat timing
+streetwear,creeps,village-girl,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,creeps,village-girl,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,creeps,village-girl,Walk,east,8,4.5,ok,flat timing
+streetwear,creeps,village-girl,Walk,west,8,4.5,ok,flat timing
+streetwear,creeps,wizard,Death,east,7,4.5,ok,flat timing
+streetwear,creeps,wizard,Death,west,7,4.5,ok,flat timing
+streetwear,creeps,wizard,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,creeps,wizard,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,creeps,wizard,Walk,east,8,4.5,ok,flat timing
+streetwear,creeps,wizard,Walk,west,8,4.5,ok,flat timing
+streetwear,fx,archer,hit,x,6,5.0,ok,
+streetwear,fx,archer,shot,x,4,5.0,ok,
+streetwear,fx,bossko,burst,x,14,5.0,ok,
+streetwear,fx,cheer,burst,x,10,5.0,ok,
+streetwear,fx,ember,burst,x,12,5.0,ok,
+streetwear,fx,ember,hit,x,5,5.0,ok,
+streetwear,fx,ember,shot,x,8,5.0,ok,
+streetwear,fx,ember,slash,x,7,5.0,ok,
+streetwear,fx,ember,status,x,12,5.0,ok,
+streetwear,fx,enrage,burst,x,12,5.0,ok,
+streetwear,fx,gate,burst,x,14,5.0,ok,
+streetwear,fx,plain,burst,x,8,5.0,ok,
+streetwear,fx,plain,hit,x,6,5.0,ok,
+streetwear,fx,plain,shot,x,4,5.0,ok,
+streetwear,fx,plain,slash,x,7,5.0,ok,
+streetwear,fx,pop,burst,x,13,5.0,ok,
+streetwear,fx,root,burst,x,12,5.0,ok,
+streetwear,fx,root,hit,x,8,5.0,ok,
+streetwear,fx,root,shot,x,8,5.0,ok,
+streetwear,fx,root,slash,x,7,5.0,ok,
+streetwear,fx,root,status,x,13,5.0,ok,
+streetwear,fx,spark,burst,x,10,4.0,ok,1 duplicate frame(s)
+streetwear,fx,spark,hit,x,8,5.0,ok,
+streetwear,fx,spark,shot,x,4,5.0,ok,
+streetwear,fx,spark,slash,x,7,5.0,ok,
+streetwear,fx,spark,status,x,12,5.0,ok,
+streetwear,fx,summon,burst,x,10,5.0,ok,
+streetwear,fx,tide,burst,x,8,5.0,ok,
+streetwear,fx,tide,hit,x,8,5.0,ok,
+streetwear,fx,tide,shot,x,8,5.0,ok,
+streetwear,fx,tide,slash,x,7,5.0,ok,
+streetwear,fx,tide,status,x,12,5.0,ok,
+streetwear,fx,void,burst,x,8,5.0,ok,
+streetwear,fx,void,hit,x,8,5.0,ok,
+streetwear,fx,void,shot,x,8,5.0,ok,
+streetwear,fx,void,slash,x,7,5.0,ok,
+streetwear,fx,void,status,x,12,5.0,ok,
+streetwear,heroes,archangel,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Faint,east,7,3.5,ugly,1 duplicate frame(s); flat timing
+streetwear,heroes,archangel,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,archangel,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,archangel,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,archangel,Idle,east,4,2.5,ugly,feet slide 4.8px; only 4 frames; flat timing
+streetwear,heroes,archangel,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,archangel,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,archangel,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,aurex,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,aurex,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,aurex,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,aurex,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,aurex,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,aurex,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,aurex,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,corvus,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,corvus,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,corvus,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,corvus,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,corvus,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,corvus,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,corvus,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,cyber-shinobi,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,cyber-shinobi,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,cyber-shinobi,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,elowen,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,elowen,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,elowen,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,elowen,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,elowen,Idle,west,4,2.5,ugly,foot drift 2px; only 4 frames; flat timing
+streetwear,heroes,elowen,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,elowen,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,frost-lich,Idle,west,4,2.5,ugly,feet slide 2.8px; only 4 frames; flat timing
+streetwear,heroes,frost-lich,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,frost-lich,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,kael,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,kael,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,kael,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,kael,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,kael,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,kael,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,kael,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,kael,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,kael,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,kael,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,kael,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,kael,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,kael,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,kael,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,kael,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,kael,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,kitsune,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,kitsune,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,kitsune,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,kitsune,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,kitsune,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,kitsune,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,kitsune,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,maldrath,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,maldrath,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,maldrath,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,maldrath,Idle,east,4,2.5,ugly,feet slide 5.1px; only 4 frames; flat timing
+streetwear,heroes,maldrath,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,maldrath,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,maldrath,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,morwen,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,morwen,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,morwen,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,morwen,Idle,east,4,2.5,ugly,feet slide 5.7px; only 4 frames; flat timing
+streetwear,heroes,morwen,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,morwen,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,morwen,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,neon-viper,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,neon-viper,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,neon-viper,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,oni,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,oni,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,oni,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,oni,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,oni,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,oni,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,oni,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,oni,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,oni,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,oni,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,oni,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,oni,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,oni,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,oni,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,oni,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,oni,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,raven,Attack,east,6,4.5,ok,flat timing
+streetwear,heroes,raven,Attack,west,6,4.5,ok,flat timing
+streetwear,heroes,raven,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,raven,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,raven,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,raven,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,raven,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,raven,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,raven,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,raven,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,raven,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,raven,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,raven,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,raven,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,raven,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,raven,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,sak,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,sak,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,sak,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,sak,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,sak,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,sak,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,sak,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,sak,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,sak,Idle,east,4,2.5,ugly,feet slide 3.6px; only 4 frames; flat timing
+streetwear,heroes,sak,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,sak,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,sak,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,sak,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,sak,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,sak,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,sak,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,velkhar,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,velkhar,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,velkhar,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,velkhar,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,velkhar,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,velkhar,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,velkhar,Walk,west,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Attack,east,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Attack,west,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Dash,east,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Dash,west,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Faint,east,7,4.5,ok,flat timing
+streetwear,heroes,void-raven,Faint,west,7,4.5,ok,flat timing
+streetwear,heroes,void-raven,Hurt,east,6,4.5,ok,flat timing
+streetwear,heroes,void-raven,Hurt,west,6,4.5,ok,flat timing
+streetwear,heroes,void-raven,Idle,east,4,2.5,ugly,feet slide 3.3px; only 4 frames; flat timing
+streetwear,heroes,void-raven,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,heroes,void-raven,Skill,east,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Skill,west,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Walk,east,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Walk,north,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Walk,south,8,4.5,ok,flat timing
+streetwear,heroes,void-raven,Walk,west,8,4.5,ok,flat timing
+streetwear,towers,ghost,Attack,east,8,4.5,ok,flat timing
+streetwear,towers,ghost,Attack,west,8,4.5,ok,flat timing
+streetwear,towers,ghost,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,towers,ghost,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,towers,ghost,Skill,east,8,4.5,ok,flat timing
+streetwear,towers,ghost,Skill,west,8,4.5,ok,flat timing
+streetwear,towers,lux,Attack,east,8,4.5,ok,flat timing
+streetwear,towers,lux,Attack,west,8,4.5,ok,flat timing
+streetwear,towers,lux,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,towers,lux,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,towers,lux,Skill,east,8,4.5,ok,flat timing
+streetwear,towers,lux,Skill,west,8,4.5,ok,flat timing
+streetwear,towers,viper,Attack,east,8,4.5,ok,flat timing
+streetwear,towers,viper,Attack,west,8,4.5,ok,flat timing
+streetwear,towers,viper,Idle,east,4,3.5,ugly,only 4 frames; flat timing
+streetwear,towers,viper,Idle,west,4,3.5,ugly,only 4 frames; flat timing
+streetwear,towers,viper,Skill,east,8,4.5,ok,flat timing
+streetwear,towers,viper,Skill,west,8,4.5,ok,flat timing

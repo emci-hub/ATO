@@ -2,6 +2,8 @@
 
 Read `CLAUDE.md` first — it is the map (commands, hard invariants, where things are).
 
+**Before any PixelLab animation or art generation:** run the pre-flight in `docs/art/PIXELLAB_ANIMATION.md` §0 (relearn the tools with `search_help`, update the doc, `get_balance`, one test clip, log generations).
+
 **Active approved plan:** `docs/PLAN_PART_D.md` (Divecore Den, egg pacing, Legendary pity,
 Shine Stones — approved, not built). If you were asked to build it, follow that file.
 **Part E:** `docs/PLAN_PART_E.md` (Tide Pass, Tide shelf, Prism Stones you pick, login
