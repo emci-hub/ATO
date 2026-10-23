@@ -454,7 +454,7 @@ match only 17-43%, silhouette drifts to 0.79 east / 0.84 west) and the recorded 
 sword 15-17%, silhouette 0.65), which is the drift emci saw by eye. Comparison GIFs: `docs/art/animation-tests/maldrath-engine/`
 (`east|west-compare-3x.gif`, `…-1x.gif`, `…-frames-4x.png`; engine frames in
 `art-src/pixellab/hero.maldrath.streetwear/engine-breathing-idle-<date>/`). `check:art-engine` pins rigs, the recipe, byte-identical
-rebuilds and a pass/fail pair per gate. **Waiting on emci: go / no-go for AN2** (all hero Idles through the engine). Known limit:
+rebuilds and a pass/fail pair per gate. **emci said GO for AN2 after seeing the GIFs (2026-10-22)** (all hero Idles through the engine; AN2 runs in a fresh chat). Known limit:
 the engine moves whole parts by whole pixels, so there is no head turn or cape sway; those are AN5 (paid, opt-in).
 
 **Step A1 status (2026-10-22): built, checked, pushed on `claude/brave-mendel-wbhxaq` (draft PR #83); MERGED into master
