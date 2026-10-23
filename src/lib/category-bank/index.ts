@@ -7,8 +7,8 @@
  * from every history surface (`visibleStatementHistory`). The rows stay in the
  * database; nothing is deleted.
  *
- * UNREVIEWED: CATEGORY_BANK_COPY_REVIEWED stays false until emci ticks
- * docs/category-bank-review.md. Nothing in the app renders the flag (emci,
+ * Accepted by emci 2026-10-23 (roadmap A4): CATEGORY_BANK_COPY_REVIEWED is true;
+ * review doc docs/category-bank-review.md. Nothing in the app renders the flag (emci,
  * 2026-10-07: no draft badge for this bank).
  */
 import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
@@ -33,7 +33,7 @@ import type { BarCell, CardCell, CardPart, CategoryCardBank, MapCell } from './d
 
 export type { BarCell, CardCell, CardPart, CategoryCardBank, MapCell } from './define';
 
-export const CATEGORY_BANK_COPY_REVIEWED = false;
+export const CATEGORY_BANK_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)
 
 export const CATEGORY_BANK: Readonly<Record<CategoryId, CategoryCardBank>> = {
   cat_steadiness: CAT_STEADINESS,

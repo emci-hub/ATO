@@ -19,11 +19,11 @@ import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { BANK_BY_TRAIT, BANK_PER_TRAIT, BANK_ROWS_BY_TRAIT, type BankQuestion } from './bank/index';
 
 /**
- * The 352 new bank questions and this screen's copy have not had emci's read
- * yet (the 48 intake questions inside the bank are the already-approved
- * wording). Flip after review.
+ * The 352 new bank questions and this screen's copy: accepted by emci
+ * 2026-10-23 (roadmap A4); the 48 intake questions inside the bank were already
+ * approved wording.
  */
-export const BANK_COPY_REVIEWED = false;
+export const BANK_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)
 
 export const BANK_SET_SIZE = TRAIT_AXES.length;
 export const BANK_SET_COUNT = BANK_PER_TRAIT;

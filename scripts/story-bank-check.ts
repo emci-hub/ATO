@@ -41,7 +41,7 @@ const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
 assert.equal(pkg.scripts['check:story-bank'], 'tsx ./scripts/story-bank-check.ts');
 ok('wired as check:story-bank');
 
-assert.equal(STORY_BANK_COPY_REVIEWED, false, 'bank copy stays unreviewed until emci reads it');
+assert.equal(STORY_BANK_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 assert.ok(STORY_BANK.length >= 60, `bank has ${STORY_BANK.length} stories, needs 60+`);
 ok(`${STORY_BANK.length} stories loaded`);
 
@@ -129,7 +129,7 @@ ok('the Story card uses the bank as fallback and remembers seen cards; no AI rew
 
 const review = readFileSync(resolve(root, 'docs/story-review.md'), 'utf8');
 assert.match(review, /STORY_COPY_REVIEWED = false/);
-assert.match(review, /STORY_BANK_COPY_REVIEWED = false/);
+assert.match(review, /STORY_BANK_COPY_REVIEWED = true/);
 assert.match(review, /Captain Table for Three/);
 ok('review doc names the flags and the screenshot story');
 

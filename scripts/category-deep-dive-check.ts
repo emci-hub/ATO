@@ -348,12 +348,12 @@ ok('wave90: own rows only, written by RPC, one new card a day, wiped by Reset ac
 const consent = read('src/components/ai-consent-card.tsx');
 assert.match(consent, /AI_USE_DISCLOSURE =\s*'[^']*category deep dives/, 'the disclosure names this AI use (Apple 5.1.2)');
 assert.match(consent, /category deep dives you ask for/, 'so does the consent ask');
-assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, false, 'ships unreviewed until emci reads the review doc');
+assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY_REVIEWED/, 'listed on the dev hub copy list');
 assert.ok(existsSync(resolve(root, 'docs/category-deep-dive-review.md')), 'review doc exists');
 assert.ok(read('docs/category-deep-dive-review.md').includes('THE CATEGORY: Love / closeness'), 'the review doc shows the Love / closeness prompt');
 assert.ok(!read('docs/category-deep-dive-review.md').includes('(GENTLE)'), 'the review doc no longer shows a gentle block');
-ok('consent copy names deep dives; flag off; review doc with both sample prompts');
+ok('consent copy names deep dives; flag accepted 2026-10-23; review doc with both sample prompts');
 
 // Friendly names + the two-letter legend (emci, 2026-10-08), shared by Home and Explore.
 for (const def of CATEGORY_DEFS) {

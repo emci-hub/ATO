@@ -16,8 +16,8 @@
  * title is not in the bank was written by the old AI insight; it is hidden in
  * every history surface and ignored by the picker, never deleted.
  *
- * UNREVIEWED: INSIGHT_BANK_COPY_REVIEWED stays false until emci ticks
- * docs/insight-bank-review.md. Nothing in the app renders the flag (emci,
+ * Accepted by emci 2026-10-23 (roadmap A4): INSIGHT_BANK_COPY_REVIEWED is true;
+ * review doc docs/insight-bank-review.md. Nothing in the app renders the flag (emci,
  * 2026-10-07: no draft badge for this bank).
  */
 import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
@@ -46,7 +46,7 @@ import { STEADINESS_IDEAS } from './steadiness';
 
 export type { InsightIdea } from './define';
 
-export const INSIGHT_BANK_COPY_REVIEWED = false;
+export const INSIGHT_BANK_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)
 
 /** Ideas with at least one key, in trait order. */
 export const TRAIT_IDEAS: readonly InsightIdea[] = [

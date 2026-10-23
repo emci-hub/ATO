@@ -513,6 +513,23 @@ only, S7 delete. Built, applied and verified read-only:
   Revisit if tokens ever gain value.
 - **S6 done** (above).
 
+**Step A4 status (2026-10-23): DONE, code only, nothing hidden, no OTA needed on its own.** Box 78 (A3) passed (emci). The
+finding that shaped A4: a `false` flag hides nothing (draft badge only while `PRE_LAUNCH_DEV`, now off); the only real effect
+was the category push line. So each flag was **accept / read / retire**, not hide. emci said "accept all my picks":
+- **Accepted, now `true` (9, dated comment in each file):** INSIGHT_BANK, CATEGORY_BANK, STORY_BANK, DAILY_PICK, BANK,
+  STAGED_INTAKE (+ UNLOCK alias), POLISH, TEAM, CATEGORY_DEEP_DIVE. Review docs updated (story-review, team-names-review,
+  category-deep-dive-review, category-bank-review, insight-bank-review; two generators too).
+- **To read, stay `false` (4):** PROFILE_CARD (the render), CIRCLE_COMPARE (Box 62 lines), LEGEND_FIGURES (a sample of 120),
+  CATEGORY_STATEMENTS (flipping it turns the lock-screen category push ON; read real statements first).
+- **Retired, gate nothing (4):** DAILY_INSIGHT, TITLE, STORY (old AI prompt), CATEGORY_READ (old roll; verified: `composeRoll`
+  has no caller, so there is no text to show). Their dead files leave in step A5.
+- **Hidden: none.** New gating pattern NOT needed. The v1 line "unread surfaces get hidden" is withdrawn (annotated in this file
+  and master-plan line 302). Ledger A holds the table.
+- New `check:copy-flags` pins all 17 (pass/fail pairs; a new unlisted flag or a silent flip fails). Eight checks that pinned a
+  flag to `false` now pin `true` (ai-library, category-bank, category-deep-dive, daily-pick, insight-bank, polish,
+  progressive-unlock, story-bank). AI library bundle unchanged (no redeploy). The flips ride the next OTA (no visible change).
+  Box 79 written (nothing should look different).
+
 ### Step AN0: Merge the art PR (82)
 Model: Sonnet
 ```
@@ -716,6 +733,7 @@ This doc holds the plan's state; a new chat never needs an old chat's history.
    optional bonus, never a gate. Because signup is then open to the internet, step 1 (rate limits, OTP abuse) comes first.
 4. **Unreviewed copy:** emci reads only the copy that a launch surface shows; any set he does not read gets its surface
    hidden at launch (flag stays `false`, nothing ships unreviewed by accident).
+   **[Withdrawn 2026-10-23, step A4: a false flag never hid anything; emci accepted/read/retired per flag, see Ledger A.]**
 5. Already decided in the repo (still binding): no draft badges (2026-10-07), static helpline row, no streak guilt,
    token prices, AI library design, wave80 "apply only after the OTA reached phones".
 
@@ -928,7 +946,7 @@ Retest leftovers.
       Divecore cloud save, real AI providers); links in You and auth; a lawyer has read the policy (7)
       (the Larger Text + Reduce Motion pass is built in step 4, boxed in 8 and 10)
 - [ ] `check:delete-account` live: account, rows, Apple token all gone; cron job registered (7)
-- [ ] Every copy set that ships is reviewed by emci; every other set's surface is hidden; no flag is `false` on a shown surface (2)
+- [ ] Every copy set that ships is reviewed by emci; every other set's surface is hidden; no flag is `false` on a shown surface (2) **[Replaced 2026-10-23 (A4): 9 accepted, 4 still to read (profile card, Circle compare, Legends sample, category statements), 4 retired, none hidden; see master-plan Ledger A.]**
 - [ ] Divecore reachable with `PRE_LAUNCH_DEV=false` (route fixed and pinned); hero economy is the real one after the reset (9)
 - [ ] `signup_mode = public`; invite field gone; the full sign-up flow works for a brand-new email on a clean phone (9)
 - [ ] wave80 applied; direct trait writes refused; old bundles no longer in use (9)

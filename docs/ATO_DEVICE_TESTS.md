@@ -1164,3 +1164,15 @@ accounts that are Circle friends (the dev-test pair; never a real person's accou
 - [ ] **3** The day after that (no new report). -> No alert email.
 - [ ] **4** Afterwards: mark the test report handled with the daily query in `docs/circle-safety.md` (status `dismissed`, note "Box 78 test").
 - [ ] **5** Insights → the Story card (any account). -> It still shows a story (free templates; nothing changed for the reader).
+
+## Box 79 — Copy flags accepted: nothing should look different (roadmap v2 step A4, 2026-10-23)
+
+About 3 min. Needs the next OTA that carries the A4 flag flips (restart twice). The flags only record that you accepted the
+copy; no screen should change.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Insights → the daily insight and the Story card; Explore → a category card and the deep dive card. -> All show their text as before; no "Draft copy" badge anywhere.
+- [ ] **2** Today's Pick, a question set, and the set-done screen. -> Same as before, no badge.
+- [ ] **3** A deep dive (open one you have). -> The team name and icon behave as before (hidden until you choose to show it).
+- [ ] **4** Lock-screen notifications. -> You still get NO "category statement" push (that flag stays off until you read the statements).

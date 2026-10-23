@@ -6,7 +6,7 @@ Each idea shows one of its three focus wordings, its why, one of two tries and o
 **Review rules:** `docs/copy-review-rules.md` (fix unclear wording and meaning problems; keep honest lines plain; no keyword flags).
 
 **How to review:** change `- [ ]` to `- [x]` on every idea you approve. Edit wording right here if you like and tell me; I copy it into `src/lib/insight-bank/<trait>.ts`.
-When every idea is ticked, `INSIGHT_BANK_COPY_REVIEWED` flips to `true` (`src/lib/insight-bank/index.ts`).
+`INSIGHT_BANK_COPY_REVIEWED` is `true` (`src/lib/insight-bank/index.ts`): accepted by emci 2026-10-23 (roadmap A4) without ticking every idea. Ticks here are optional notes; an edit is made only for a specific problem.
 This flag is for this review only: the app shows these ideas to everyone and never shows a draft badge for them (emci, 2026-10-07).
 
 192 trait ideas (6 per trait lean, the 6th of each is a pair) + 16 starters = 208.

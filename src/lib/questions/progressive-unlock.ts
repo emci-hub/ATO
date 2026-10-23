@@ -40,8 +40,8 @@ export const LEGENDS_UNLOCK_STAGE = FULL_PROFILE_STAGE;
  *     Home "Load insight", Explore categories, Questions "Next 16 questions";
  *   - Story is offered then too, but `storyReady` decides when it has enough;
  *   - Sage and Legends open nothing yet.
- * emci approved the 50-era table 2026-10-02; the staged-intake rewording is a
- * draft again until emci reads it (docs/copy-review.md, Staged intake).
+ * emci approved the 50-era table 2026-10-02; the staged-intake rewording was
+ * accepted by emci 2026-10-23, roadmap A4 (docs/copy-review.md, Staged intake).
  */
 export const UNLOCK_COPY_REVIEWED = STAGED_INTAKE_COPY_REVIEWED;
 

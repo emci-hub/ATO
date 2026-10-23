@@ -20,7 +20,7 @@ import type { TraitLean } from '@/lib/traits';
 import { bankIdsToSkip } from './history';
 import raw from './stories.json';
 
-export const STORY_BANK_COPY_REVIEWED = false;
+export const STORY_BANK_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)
 
 export interface StoryBankEntry {
   id: string;

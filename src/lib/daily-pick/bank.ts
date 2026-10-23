@@ -6,8 +6,8 @@
  * shown (the high side is not always first).
  *
  * Written in the moment voice (lib/voice/moment-voice.ts): one concrete
- * modern moment, teased kindly, no advice, no slang, never "you are". Draft
- * until emci reads them.
+ * modern moment, teased kindly, no advice, no slang, never "you are".
+ * Accepted by emci 2026-10-23 (roadmap A4).
  *
  * The server keeps the same list (supabase/migrations/wave82_daily_pick.sql,
  * generated from this file by scripts/gen-wave82-picks.ts) and checks every
@@ -16,7 +16,7 @@
 import type { TraitAxis } from '@/lib/traits';
 import { daysBetweenYmd } from '@/lib/local-date';
 
-export const DAILY_PICK_COPY_REVIEWED = false;
+export const DAILY_PICK_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)
 
 export interface DailyPickOption {
   text: string;

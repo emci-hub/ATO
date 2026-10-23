@@ -6,4 +6,4 @@
  * rule (emci 2026-10-07) the app shows NO draft badge; the flag is listed on
  * the dev hub's copy list.
  */
-export const CATEGORY_DEEP_DIVE_COPY_REVIEWED = false;
+export const CATEGORY_DEEP_DIVE_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)

@@ -210,8 +210,9 @@ ok('the count-only branch skips the value blend (wiring)');
   assert.equal(
     UNLOCK_COPY_REVIEWED,
     STAGED_INTAKE_COPY_REVIEWED,
-    'the staged-intake rewording is a draft until emci reads it',
+    'the unlock flag is the staged-intake flag (accepted by emci 2026-10-23, roadmap A4)',
   );
+  assert.equal(STAGED_INTAKE_COPY_REVIEWED, true, 'staged-intake copy accepted 2026-10-23 (pinned by check:copy-flags)');
   assert.ok(
     MILESTONE_DEFS.some(
       (def) => def.id === INTAKE_REVEAL_MILESTONE_ID && def.metric === 'intakeStage' && def.threshold === 3,

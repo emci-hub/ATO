@@ -463,7 +463,7 @@ async function main() {
       assert.doesNotMatch(side.phrase, /anxi|insecur|needy|clingy|toxic|lazy|weird|rizz|slay|no-cap|bestie/i);
     }
   }
-  assert.equal(TEAM_COPY_REVIEWED, false, 'team names ship unreviewed');
+  assert.equal(TEAM_COPY_REVIEWED, true, 'team names accepted by emci 2026-10-23 (roadmap A4; pinned by check:copy-flags)');
   assert.ok(existsSync(resolve(root, 'docs/team-names-review.md')), 'review doc exists');
   const badge = read('src/components/team-badge.tsx');
   assert.ok(badge.includes('setShown(map[categoryId] === true)'), 'hidden by default, shown only by choice');

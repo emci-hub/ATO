@@ -17,8 +17,8 @@ import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 /**
  * The Strength line is the trait end's own words (axis-poles.ts); the Weakness
  * and Step lines come from the insight bank, so they are only as reviewed as
- * INSIGHT_BANK_COPY_REVIEWED (still false until emci's reading is applied).
- * Not AI. Flip this flag once emci has read the card layout.
+ * INSIGHT_BANK_COPY_REVIEWED (accepted by emci 2026-10-23, roadmap A4).
+ * Not AI. Flip this flag once emci has read the card layout (A4: he reads it first).
  */
 export const PROFILE_CARD_COPY_REVIEWED = false;
 

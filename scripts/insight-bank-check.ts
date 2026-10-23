@@ -229,7 +229,7 @@ if (back.idea.id === target) assert.equal(back.focusIndex, (a.focusIndex + 1) % 
 ok('focus variant = (fnv1a(user|idea) + times shown) % 3');
 
 // --- copy-review flag: doc only, never on screen (emci 2026-10-07) ------------------
-assert.equal(INSIGHT_BANK_COPY_REVIEWED, false, 'unreviewed until emci ticks the review doc');
+assert.equal(INSIGHT_BANK_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 assert.ok(existsSync(resolve(root, 'docs/insight-bank-review.md')), 'docs/insight-bank-review.md exists');
 function sourceFiles(dir: string): string[] {
   const out: string[] = [];
@@ -248,7 +248,7 @@ for (const rel of [...sourceFiles('src/app'), ...sourceFiles('src/components')])
 }
 assert.match(read(FLAG_LIST_FILE), /name: 'Daily insight \(stored\)', reviewed: INSIGHT_BANK_COPY_REVIEWED/, 'the dev flag list reads the real flag');
 assert.doesNotMatch(read(FLAG_LIST_FILE), /DAILY_INSIGHT_COPY_REVIEWED/, 'the dev flag list no longer reads the stale flag');
-ok('INSIGHT_BANK_COPY_REVIEWED is false, has its review doc, and no screen renders it');
+ok('INSIGHT_BANK_COPY_REVIEWED is true (accepted 2026-10-23), has its review doc, and no screen renders it');
 
 // --- the insight path cannot reach a model call --------------------------------------
 const insightPath = [

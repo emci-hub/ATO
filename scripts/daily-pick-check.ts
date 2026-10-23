@@ -55,8 +55,8 @@ for (const p of DAILY_PICKS) {
   for (const o of p.options) assert.ok(o.text.length <= 28, `${p.id}: "${o.text}" is too long for a button`);
 }
 assert.ok(DAILY_PICKS.filter((p) => p.options[0].value === 0.8).length >= 24, 'the high side is not always first');
-assert.equal(DAILY_PICK_COPY_REVIEWED, false, 'draft until emci reads them');
-ok('64 picks, 4 per trait in order, one high and one low answer each, moment-voice rules, draft');
+assert.equal(DAILY_PICK_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
+ok('64 picks, 4 per trait in order, one high and one low answer each, moment-voice rules, accepted 2026-10-23');
 
 // ── Rotation ─────────────────────────────────────────────────────────────────
 const seen = new Set<number>();

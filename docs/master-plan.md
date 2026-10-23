@@ -299,9 +299,9 @@ Launch-ready table (evidence):
  5. Privacy/terms/labels/manifests: manifests + labels DONE (`check:floor`); **OPEN-YOURS: D12 + lawyer read, 46 `[CONFIRM]` tags
     (23 in `src/app/legal`, 23 in `landing`), landing redeploy, support inbox confirmed monitored.**
  6. Live `delete-account` check: **OPEN-YOURS** (never run live; Box 68 E2 covers the in-app path).
- 7. Copy reviewed / flags: **OPEN-YOURS / ACCEPT**: (corrected 2026-10-22, roadmap v2: 17 flags are false, and a false flag hides NOTHING;
-    with `PRE_LAUNCH_DEV` off the copy is live with no badge. Decision = roadmap v2 step A4.) Original line: 16 `*_COPY_REVIEWED` flags are false on purpose; those surfaces ship hidden or unreviewed per
-    Ledger A. Say "accept" or read them.
+ 7. Copy reviewed / flags: **DECIDED 2026-10-23 (roadmap v2 step A4, Ledger A)**. A false flag never hid a surface: with
+    `PRE_LAUNCH_DEV` off the copy is live with no badge (the only flag with an effect was the category push). emci accepted 9
+    flags (now `true`), will read 4 (still `false`), 4 are retired, nothing is hidden. Table in Ledger A.
  8. Divecore reachable, real economy: DONE (Step 12, Box 67). 9. public signup: DONE (wave107); brand-new-email on a clean phone = Box 68 A.
  10. wave80: DONE (verified read-only 2026-10-21). "Old bundles not in use": accepted risk (Ledger A).
  11. gates green: DONE (this step). TestFlight run: **OPEN-YOURS** (Box 68).
@@ -380,6 +380,17 @@ Not verified: wave108 on a real database, any device run (needs the 1.1 build), 
   everyone (discussion, quotation, figurative, behavior vs a verdict on a real or addressed person). Style rules are contextual
   guidance, not blanket word bans; honest uncertainty is allowed.
 - Public signup, no invite gate (launch flip). One chat per step. Plan + model per step.
+- **Copy flags (step A4, emci 2026-10-23: "accept all my picks"; pinned by `check:copy-flags`).** A `false` flag hides nothing
+  (draft badge only while `PRE_LAUNCH_DEV`, which is off); nothing is hidden. Flag flips need no OTA by themselves (no visible change).
+  - **ACCEPTED, now `true`:** `INSIGHT_BANK` (208 ideas), `CATEGORY_BANK` (~37), `STORY_BANK` (66), `DAILY_PICK` (64), `BANK`
+    (352 questions), `STAGED_INTAKE` (+ `UNLOCK` alias), `POLISH`, `TEAM` (48 + 10), `CATEGORY_DEEP_DIVE` (prompt + card).
+    Accepted on the existing review docs and checks; an edit only for a specific problem (copy-review-rules).
+  - **READ (stay `false` until emci reads them):** `PROFILE_CARD` (profile card + history, read the render), `CIRCLE_COMPARE`
+    (friends' compare lines, Box 62), `LEGEND_FIGURES` (a sample of the 120), `CATEGORY_STATEMENTS` (flipping it turns ON the
+    category push line on the lock screen, `push-insight.ts`; flip only after he reads real statements).
+  - **RETIRED (gate nothing, not a decision):** `DAILY_INSIGHT` (replaced by the insight bank), `TITLE`, `STORY` (old AI prompt;
+    the live Story is the story bank), `CATEGORY_READ` (old roll, no screen). Their dead files leave in step A5.
+  - **HIDDEN:** none. (The v1 rule "unread surfaces get hidden" was never true in code and is withdrawn.)
 - Legal (Step 10, emci 2026-10-20): Privacy/Terms links open `https://ato.emgens.com/{privacy,terms}.html`; the legal text names
   Gemini + DeepSeek fallback; `dev_access_grants.granted_by` ON DELETE SET NULL (wave106). Legal text stays a lawyer draft.
 - Release order (D17, emci 2026-10-21): 1.0 is built from tag `v1.0.0` (6af79d2f, local, not pushed); Step 14 lives on
