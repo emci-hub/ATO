@@ -19,6 +19,8 @@ export type PlaySheet = {
   offsetX?: number;
   offsetY?: number;
   ms?: number;
+  /** ms per frame (one per frame); absent = the game's per-clip-type cadence. */
+  holds?: number[];
   dirs?: string[];
   tier?: 'core' | 'combat' | 'ui';
 };

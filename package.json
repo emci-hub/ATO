@@ -296,6 +296,7 @@
     "hooks:install": "node ./scripts/install-git-hooks.cjs",
     "prepare": "node ./scripts/install-git-hooks.cjs",
     "check:animation-library": "tsx ./scripts/animation-library.ts --check",
+    "check:clip-holds": "tsx ./scripts/check-clip-holds.ts",
     "check:art-registry": "tsx ./scripts/check-art-registry.ts --fresh",
     "check:play-isolation": "tsx ./scripts/check-play-isolation.ts",
     "check:ota-gate": "tsx ./scripts/ota-gate.ts",

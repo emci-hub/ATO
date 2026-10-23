@@ -19,7 +19,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "east",
       "clip": "Attack"
     },
@@ -42,7 +42,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "east",
       "clip": "Attack"
     },
@@ -65,7 +65,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "east",
       "clip": "Attack"
     },
@@ -88,7 +88,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "east",
       "clip": "Attack"
     },
@@ -111,7 +111,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "east",
       "clip": "Attack"
     },
@@ -134,7 +134,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "east",
       "clip": "Attack"
     },
@@ -157,7 +157,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "west",
       "clip": "Attack"
     },
@@ -180,7 +180,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "west",
       "clip": "Attack"
     },
@@ -203,7 +203,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "west",
       "clip": "Attack"
     },
@@ -226,7 +226,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "west",
       "clip": "Attack"
     },
@@ -249,7 +249,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "west",
       "clip": "Attack"
     },
@@ -272,7 +272,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 65,
       "dir": "west",
       "clip": "Attack"
     },
@@ -295,7 +295,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "east",
       "clip": "Dash"
     },
@@ -318,7 +318,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "east",
       "clip": "Dash"
     },
@@ -341,7 +341,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "east",
       "clip": "Dash"
     },
@@ -364,7 +364,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "east",
       "clip": "Dash"
     },
@@ -387,7 +387,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "east",
       "clip": "Dash"
     },
@@ -410,7 +410,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "east",
       "clip": "Dash"
     },
@@ -433,7 +433,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "east",
       "clip": "Dash"
     },
@@ -456,7 +456,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "east",
       "clip": "Dash"
     },
@@ -479,7 +479,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "west",
       "clip": "Dash"
     },
@@ -502,7 +502,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "west",
       "clip": "Dash"
     },
@@ -525,7 +525,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "west",
       "clip": "Dash"
     },
@@ -548,7 +548,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "west",
       "clip": "Dash"
     },
@@ -571,7 +571,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "west",
       "clip": "Dash"
     },
@@ -594,7 +594,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "west",
       "clip": "Dash"
     },
@@ -617,7 +617,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "west",
       "clip": "Dash"
     },
@@ -640,7 +640,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 50,
       "dir": "west",
       "clip": "Dash"
     },
@@ -663,7 +663,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "east",
       "clip": "Hurt"
     },
@@ -686,7 +686,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "east",
       "clip": "Hurt"
     },
@@ -709,7 +709,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "east",
       "clip": "Hurt"
     },
@@ -732,7 +732,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "east",
       "clip": "Hurt"
     },
@@ -755,7 +755,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "east",
       "clip": "Hurt"
     },
@@ -778,7 +778,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "east",
       "clip": "Hurt"
     },
@@ -801,7 +801,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "west",
       "clip": "Hurt"
     },
@@ -824,7 +824,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "west",
       "clip": "Hurt"
     },
@@ -847,7 +847,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "west",
       "clip": "Hurt"
     },
@@ -870,7 +870,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "west",
       "clip": "Hurt"
     },
@@ -893,7 +893,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "west",
       "clip": "Hurt"
     },
@@ -916,7 +916,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 140,
       "dir": "west",
       "clip": "Hurt"
     },
@@ -939,7 +939,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "east",
       "clip": "Skill"
     },
@@ -962,7 +962,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "east",
       "clip": "Skill"
     },
@@ -985,7 +985,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "east",
       "clip": "Skill"
     },
@@ -1008,7 +1008,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "east",
       "clip": "Skill"
     },
@@ -1031,7 +1031,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "east",
       "clip": "Skill"
     },
@@ -1054,7 +1054,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "east",
       "clip": "Skill"
     },
@@ -1077,7 +1077,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "east",
       "clip": "Skill"
     },
@@ -1100,7 +1100,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "east",
       "clip": "Skill"
     },
@@ -1123,7 +1123,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "west",
       "clip": "Skill"
     },
@@ -1146,7 +1146,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "west",
       "clip": "Skill"
     },
@@ -1169,7 +1169,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "west",
       "clip": "Skill"
     },
@@ -1192,7 +1192,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "west",
       "clip": "Skill"
     },
@@ -1215,7 +1215,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "west",
       "clip": "Skill"
     },
@@ -1238,7 +1238,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "west",
       "clip": "Skill"
     },
@@ -1261,7 +1261,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "west",
       "clip": "Skill"
     },
@@ -1284,7 +1284,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 70,
       "dir": "west",
       "clip": "Skill"
     },
@@ -1307,7 +1307,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "east",
       "clip": "Faint"
     },
@@ -1330,7 +1330,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "east",
       "clip": "Faint"
     },
@@ -1353,7 +1353,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "east",
       "clip": "Faint"
     },
@@ -1376,7 +1376,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "east",
       "clip": "Faint"
     },
@@ -1399,7 +1399,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "east",
       "clip": "Faint"
     },
@@ -1422,7 +1422,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "east",
       "clip": "Faint"
     },
@@ -1445,7 +1445,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "east",
       "clip": "Faint"
     },
@@ -1468,7 +1468,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "west",
       "clip": "Faint"
     },
@@ -1491,7 +1491,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "west",
       "clip": "Faint"
     },
@@ -1514,7 +1514,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "west",
       "clip": "Faint"
     },
@@ -1537,7 +1537,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "west",
       "clip": "Faint"
     },
@@ -1560,7 +1560,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "west",
       "clip": "Faint"
     },
@@ -1583,7 +1583,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "west",
       "clip": "Faint"
     },
@@ -1606,7 +1606,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 100,
+      "duration": 110,
       "dir": "west",
       "clip": "Faint"
     }

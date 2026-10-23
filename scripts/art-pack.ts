@@ -102,6 +102,8 @@ export type SheetEntry = {
   offsetX?: number;
   offsetY?: number;
   ms?: number;
+  /** ms per frame (one per frame); absent = the game's per-clip-type cadence. */
+  holds?: number[];
   dirs?: string[];
   tier?: 'core' | 'combat' | 'ui';
 };
@@ -322,17 +324,26 @@ function packClip(
   const sheetFile = `${keyBase}/${clipKey}.png`;
   const outPath = path.join(outDir, `${clipKey}.png`);
   writePackedPng(outPath, sheet);
-  // An engine-built clip carries its own flat speed (same loop length as the
-  // engine's per-frame holds) in `<clip>/ms.json`; the game plays one ms per clip.
+  // `<clip>/ms.json` carries the clip's timing: `ms` (one flat speed, the loop length
+  // divided by the frames) and optional `holds` (ms per frame, one entry per frame, same
+  // total). The game plays `holds` when present, else its own per-clip-type cadence.
   const msFile = path.join(clipPath, 'ms.json');
-  const ms = fs.existsSync(msFile) ? Number(JSON.parse(fs.readFileSync(msFile, 'utf8')).ms) : clipMs(clipKey);
+  const msDoc = fs.existsSync(msFile) ? JSON.parse(fs.readFileSync(msFile, 'utf8')) : undefined;
+  const ms = msDoc ? Number(msDoc.ms) : clipMs(clipKey);
   if (!Number.isFinite(ms) || ms <= 0) throw new Error(`${clipKey}: ${msFile} needs a positive "ms"`);
+  const holds: number[] | undefined = msDoc?.holds;
+  if (holds) {
+    const perDir = rows.map((r) => r.files.length);
+    if (!Array.isArray(holds) || holds.length !== Math.max(...perDir) || holds.some((h) => !Number.isInteger(h) || h <= 0)) {
+      throw new Error(`${clipKey}: ${msFile} "holds" needs ${Math.max(...perDir)} positive whole numbers (one per frame)`);
+    }
+  }
   const tier = isCoreClip(clipKey) ? 'core' : 'combat';
 
   return {
     key: `${keyBase}/${clipKey}`,
     action: clipKey,
-    entry: { sheet: sheetFile, sheetW, sheetH, frames, ...trim, ms, dirs: rows.map((r) => r.dir), tier },
+    entry: { sheet: sheetFile, sheetW, sheetH, frames, ...trim, ms, ...(holds ? { holds } : {}), dirs: rows.map((r) => r.dir), tier },
     footAt: measureFootAt(allPngs),
     dirs: rows.map((r) => r.dir),
     frameCount: cols,
@@ -1811,6 +1822,8 @@ export type PlaySheet = {
   offsetX?: number;
   offsetY?: number;
   ms?: number;
+  /** ms per frame (one per frame); absent = the game's per-clip-type cadence. */
+  holds?: number[];
   dirs?: string[];
   tier?: 'core' | 'combat' | 'ui';
 };
