@@ -1253,3 +1253,17 @@ About 5 min. Needs the AN3 OTA (restart the app twice). Until now the game ignor
 - [ ] **4** Pet room: your pet walking, dashing, showing off. -> Moves a little quicker than before (the pet used its own slower speeds; attack 0.64 s -> 0.52 s, skill 0.68 -> 0.56, dash 0.48 -> 0.40).
 - [ ] **5** Raven (6-frame attack) in Defend. -> Attack looks fine and is not slower than before.
 - [ ] **6** If a clip feels wrong: say hero + clip + "too fast" or "too slow". Nothing is deleted; timing lives in one small file per clip.
+
+## Box 84 — Native 1.2 build (roadmap step A7, 2026-10-23, TestFlight)
+
+About 10 min. Needs the 1.2.0 build from TestFlight (not an OTA: the camera plugin is gone and the widget changed, so it is a new binary on runtime 1.2.0). Install it over your current 1.1 app if you can, so the upgrade path is tested.
+
+**Report back in ONE message:** `pass`, or `fix` + the step number + what you saw.
+
+- [ ] **1** Open the app after updating from 1.1. -> You stay signed in, Insights/Circle/You tabs load, no crash on launch.
+- [ ] **2** Home Screen widget (small, medium, large): remove and re-add it if it still shows old words. -> The labels read FOCUS and TRY (not READ and DO); the picker description says "Today's Focus and Try."; after you load today's insight, the widget shows its text.
+- [ ] **3** Circle: add a friend by @handle. -> It works and there is no "Scan QR" option; iOS never asks for camera permission anywhere.
+- [ ] **4** Settings -> ATO in the iPhone Settings app. -> No Camera row is listed for ATO.
+- [ ] **5** Sign out and back in (Apple or password). -> Works; the widget clears on sign-out and fills again after sign-in.
+- [ ] **6** Send one Circle chat message to a friend on the same build (or yourself via a test account). -> It sends and decrypts on the other side (chat still works after the runtime bump).
+- [ ] **7** TestFlight (or the iPhone Settings -> ATO row). -> The build shows version 1.2.0.

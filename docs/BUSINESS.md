@@ -73,6 +73,15 @@ Nothing new to invent. The only thing left is applying that same name/palette/vo
 
 General principle (not a final answer — confirm with an accountant): a cost is deductible against business income if it was incurred to earn that income and is reasonable given the business. Software/AI tool subscriptions used to build ATO fit that description once there's a business to attach them to. The part worth a real accountant conversation: exactly how pre-revenue "startup costs" get treated in the year the business officially starts (deducted outright vs. carried forward) — that's a timing/technical question, not something to guess at. Keeping receipts from today (M0, above) means you'll have the records ready whenever that conversation happens, instead of reconstructing them later.
 
+## Database backups (roadmap S14, decision D25, emci 2026-10-23)
+
+- **Decision:** the Supabase project runs on the **Pro plan** with **MFA on the Supabase account**. The free tier has no daily backups, and the app now holds real users' data, so this is the baseline before public growth.
+- **What Pro gives:** daily backups kept 7 days. Point-in-time recovery (PITR) is a paid add-on and stays **optional** (recommended safeguard, not required); revisit if losing up to a day of data ever becomes unacceptable.
+- **Privacy tie-in:** backups are deleted on Supabase's schedule (not longer than 30 days), which matches the retention wording in the privacy policy.
+- **emci's hand steps (billing and account security, not done by an agent):** (1) upgrade the project to Pro in the Supabase dashboard; (2) turn on MFA for the Supabase account; (3) tick the box below when both are done.
+- [ ] Supabase Pro plan active
+- [ ] MFA on the Supabase account
+
 ---
 
 ## Open decisions log (revisit, don't let these get lost)
