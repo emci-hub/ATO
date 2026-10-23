@@ -11,7 +11,7 @@
  */
 
 import { containsFrameworkTerm, sanitizeFacts } from '@/lib/voice/framework-fence';
-import { SCENARIO_QUESTIONS } from '@/lib/vibe-check';
+import { SCENARIO_QUESTIONS, scenarioAnswers } from '@/lib/vibe-check';
 
 export const TRAIT_AXES = [
   'openness',
@@ -44,19 +44,35 @@ export const EXTRA_AXES = [
   'playfulness',
 ] as const;
 
-/** Direct writes are sticky: inferred sources cannot overwrite them. */
+/**
+ * Direct writes are sticky: inferred sources cannot overwrite them.
+ * `self_scenario` used to live here. It is still a known source (the history
+ * check keeps it in `TRAIT_SOURCES`, same slot) but it no longer locks a trait.
+ */
 export const DIRECT_TRAIT_SOURCES = [
   'self_slider',
   'self_tap',
   'self_confirm',
   'self_settings',
-  'self_scenario',
 ] as const;
 
 /** Ranked below direct. Last-write-wins among inferred only. */
 export const INFERRED_TRAIT_SOURCES = ['self_grid', 'self_situation', 'self_game'] as const;
 
-export const TRAIT_SOURCES = [...DIRECT_TRAIT_SOURCES, ...INFERRED_TRAIT_SOURCES] as const;
+/**
+ * Same order the `trait_history` source check stores. `self_scenario` stays
+ * in its original slot so that check does not move, and it is not direct.
+ */
+export const TRAIT_SOURCES = [
+  'self_slider',
+  'self_tap',
+  'self_confirm',
+  'self_settings',
+  'self_scenario',
+  'self_grid',
+  'self_situation',
+  'self_game',
+] as const;
 
 export type DirectTraitSource = (typeof DIRECT_TRAIT_SOURCES)[number];
 export type InferredTraitSource = (typeof INFERRED_TRAIT_SOURCES)[number];
@@ -184,9 +200,13 @@ export function mergeTraitWrite(
     // Sticky only while the trait has a value: a leftover direct label on an
     // empty trait (after a reset) must not block it forever (2026-10-03).
     if (current.values[axis] != null && isDirectTraitSource(current.sources[axis]) && !isDirectTraitSource(source)) continue;
-    values[axis] = isInferredTraitSource(source)
-      ? blendInferredTrait(raw, values[axis])
-      : clamp01(raw);
+    // A vibe-check scenario is an answer, not a direct edit: it blends, and
+    // a later answer can move it. (It is not in INFERRED_TRAIT_SOURCES only
+    // so TRAIT_SOURCES keeps the history-check order.)
+    values[axis] =
+      isInferredTraitSource(source) || source === 'self_scenario'
+        ? blendInferredTrait(raw, values[axis])
+        : clamp01(raw);
     sources[axis] = source;
     touched[axis] = now;
   }
@@ -267,28 +287,43 @@ export function optionalProgressLabel(n: number): string {
   return `extra ${n} of ${OPTIONAL_INTAKE_TOTAL}`;
 }
 
+export type OptionalScreenWrite = {
+  incoming: Partial<Record<TraitAxis, number>>;
+  /** How much of an answer each written trait is. The second trait is half. */
+  weights: Partial<Record<TraitAxis, number>>;
+  /**
+   * An ordinary answer, not a sticky scenario lock. Fold `weights` into
+   * `equalWeightScore`. Do not send this through `setTraitDirect`.
+   */
+  source: 'self_situation';
+  allowed: readonly TraitAxis[];
+};
+
 /**
- * Selecting an option writes both axes for that screen's scenario question,
- * as self_scenario — direct (full-replace, sticky), not blended toward 0.5
- * like an inferred source would be, and never overwritten by a later
- * inferred write. A later direct edit (e.g. Settings) can still replace it.
+ * One vibe-check tap. The first trait is one full answer. The second, when
+ * it is written at all, is a weaker different number (half weight, pulled
+ * toward 50%) so the tap cannot set two traits to the same score. Later
+ * answers outvote both: the source is not direct.
  */
 export function writeForOptionalScreen(input: {
   screen: OptionalScreen;
   optionId: string | null;
-}): {
-  incoming: Partial<Record<TraitAxis, number>>;
-  source: Exclude<TraitSource, 'self_confirm'>;
-  allowed: readonly TraitAxis[];
-} | null {
+}): OptionalScreenWrite | null {
   if (!input.optionId) return null;
   const question = SCENARIO_QUESTIONS[input.screen];
   const option = question?.options.find((item) => item.value === input.optionId);
-  if (!option) return null;
-  const [axisA, axisB] = question.axes;
+  if (!option || !question) return null;
+  const answers = scenarioAnswers(question, option);
+  const incoming: Partial<Record<TraitAxis, number>> = {};
+  const weights: Partial<Record<TraitAxis, number>> = {};
+  for (const answer of answers) {
+    incoming[answer.axis] = answer.value;
+    weights[answer.axis] = answer.weight;
+  }
   return {
-    incoming: { [axisA]: option.axisAValue, [axisB]: option.axisBValue },
-    source: 'self_scenario',
+    incoming,
+    weights,
+    source: 'self_situation',
     allowed: question.axes,
   };
 }
@@ -301,22 +336,21 @@ export function writeForOptionalScreen(input: {
 export function optionalFillWrite(
   values: TraitValues,
   input: Parameters<typeof writeForOptionalScreen>[0],
-): {
-  incoming: Partial<Record<TraitAxis, number>>;
-  source: Exclude<TraitSource, 'self_confirm'>;
-  allowed: readonly TraitAxis[];
-} | null {
+): OptionalScreenWrite | null {
   const write = writeForOptionalScreen(input);
   if (!write) return null;
   const incoming: Partial<Record<TraitAxis, number>> = {};
+  const weights: Partial<Record<TraitAxis, number>> = {};
   for (const axis of write.allowed) {
     const value = write.incoming[axis];
     if (typeof value !== 'number' || !Number.isFinite(value)) continue;
     if (values[axis] != null) continue;
     incoming[axis] = value;
+    const weight = write.weights[axis];
+    if (typeof weight === 'number') weights[axis] = weight;
   }
   if (Object.keys(incoming).length === 0) return null;
-  return { incoming, source: write.source, allowed: write.allowed };
+  return { incoming, weights, source: write.source, allowed: write.allowed };
 }
 
 export type TraitBand = 'low' | 'mid' | 'high';

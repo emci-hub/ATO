@@ -5,10 +5,11 @@ import { Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { identityTitle, identityView, nextLockedPoles } from '@/lib/legends64/identity';
+import { identityView, legendHeadline, nextLockedPoles } from '@/lib/legends64/identity';
 import { loadIdentityState, type IdentityState } from '@/lib/legends64/identity-store';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import type { TraitTrack } from '@/lib/trait-stability';
+import { traitSourcesFrom } from '@/lib/trait-tracks-store';
 import { useTheme } from '@/hooks/use-theme';
 
 export const IDENTITY_CHIP_KICKER = 'your ato';
@@ -28,9 +29,12 @@ export const IDENTITY_CHIP_HINT = 'Opens your card on You.';
 export function IdentityTitleChip({
   userId,
   tracks,
+  sources,
 }: {
   userId: string;
   tracks: readonly TraitTrack[];
+  /** Trait source tokens from the account, so a direct edit stays a direct edit. */
+  sources?: unknown;
 }) {
   const theme = useTheme();
   const [stored, setStored] = useState<IdentityState | null>(null);
@@ -50,12 +54,20 @@ export function IdentityTitleChip({
     }, [userId]),
   );
 
-  const view = useMemo(
-    () => identityView(nextLockedPoles(tracks, stored?.poles ?? {})),
-    [tracks, stored?.poles],
+  const parsedSources = useMemo(() => traitSourcesFrom(sources), [sources]);
+  const poles = useMemo(
+    () =>
+      nextLockedPoles(
+        tracks,
+        stored?.legendHistory.migrated ? stored.poles : {},
+        new Date(),
+        parsedSources,
+      ),
+    [tracks, stored, parsedSources],
   );
+  const view = useMemo(() => identityView(poles), [poles]);
   if (!stored || view.lockedCount === 0) return null;
-  const title = identityTitle(view, stored.skin);
+  const title = legendHeadline(tracks, poles, stored.skin, stored.pickedCode, parsedSources).title;
 
   return (
     <Pressable

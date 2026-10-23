@@ -147,7 +147,8 @@ function main() {
     true,
     'a real question answer after a jump must still blend into the score',
   );
-  assert.equal(shouldWriteReportTrack('self_scenario', 'self_situation'), false, 'the old direct source froze the axis');
+  assert.equal(shouldWriteReportTrack('self_scenario', 'self_situation'), true, 'a vibe-check scenario no longer freezes the axis');
+  assert.equal(shouldWriteReportTrack('self_settings', 'self_situation'), false, 'a real direct edit still blocks an inferred overwrite');
   ok('jumps write self_situation, so a real answer afterwards still moves the score');
 
   // Every bank-sized plan respects each axis's real bank size and sums to the target.

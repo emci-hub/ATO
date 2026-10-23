@@ -71,6 +71,11 @@ export function ShapedByList({ rows }: { rows: readonly ShapedByRow[] }) {
           <ThemedText type="small" themeColor="textSecondary">
             {row.lean ? quoted(row.line) : row.line}
           </ThemedText>
+          {row.confidenceCopy && row.confidenceCopy !== row.line ? (
+            <ThemedText type="code" themeColor="textSecondary">
+              {row.confidenceCopy}
+            </ThemedText>
+          ) : null}
         </View>
       ))}
     </>

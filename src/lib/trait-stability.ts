@@ -1,6 +1,11 @@
 /**
- * Per-axis EWMA tracks. Self-report and gut-call never mix.
+ * Per-axis tracks. Self-report and gut-call never mix.
  * Completeness is stability-weighted, not a raw fill count.
+ *
+ * `value` is the recency reading (EWMA / Kalman). It exists to detect real
+ * change (see `recencyReading` and `src/lib/rci.ts`). It is not the trait
+ * score. The score is `traitScore`: an equal-weight average of the answer
+ * log, shrunk toward 50% by a prior worth `SCORE_PRIOR_ANSWERS` answers.
  */
 import { MIXED_TRAIT_LINE } from '@/lib/questions/staged-intake-copy';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -102,8 +107,16 @@ export interface TraitTrack {
    * Per-write replay for this axis+track, attached read-side from the
    * existing `trait_history` table (see `attachEvidenceHistory` in
    * trait-history.ts) — reuses data that already exists, no schema change.
+   * These rows are score snapshots, not raw answers. The score uses
+   * `answerSamples` (the `trait_answers` log) instead.
    */
   evidenceHistory?: readonly EvidenceEntry[];
+  /**
+   * Raw answer samples for this axis, oldest first, attached at read time
+   * from `trait_answers`. Absent when the log was not loaded. Not persisted
+   * on `trait_tracks`.
+   */
+  answerSamples?: readonly number[];
 }
 
 /**
@@ -248,7 +261,108 @@ export function replayTraitAnswers(
   for (const sample of samples) {
     track = applyEwmaAnswer(track, axis, 'report', sample, nowIso);
   }
-  return track ? { ...track, lastDepthAt } : null;
+  return track ? { ...track, lastDepthAt, answerSamples: samples.map((sample) => clamp01(sample)) } : null;
+}
+
+/**
+ * Pseudo-answers of the prior, all sitting at 50%. Two is enough to stop
+ * three or four answers from reading like a finished trait, and small
+ * enough that a full bank (25) barely feels it.
+ */
+export const SCORE_PRIOR_ANSWERS = 2;
+export const SCORE_PRIOR_MEAN = 0.5;
+/** A pole name stays hidden until this many answers exist. */
+export const LABEL_MIN_ANSWERS = 3;
+/** At 8 answers the data outweighs the prior 4:1 (confidence 0.8). */
+export const SOLID_READ_MIN_ANSWERS = 8;
+export const CONFIDENCE_LEARNING_COPY = 'still learning you';
+export const CONFIDENCE_SOLID_COPY = 'solid read';
+
+export type ScoreSample = number | { value: number; weight?: number };
+
+/**
+ * Equal-weight mean of every answer, shrunk toward 50% by a prior worth
+ * `SCORE_PRIOR_ANSWERS` answers. A sample may carry a weight below 1 (a
+ * vibe-check's second trait). Order does not matter. Null when nothing
+ * counted.
+ */
+export function equalWeightScore(samples: readonly ScoreSample[]): number | null {
+  let weight = 0;
+  let sum = 0;
+  for (const sample of samples) {
+    const value = typeof sample === 'number' ? sample : sample.value;
+    const sampleWeight = typeof sample === 'number' ? 1 : (sample.weight ?? 1);
+    if (!Number.isFinite(value) || !Number.isFinite(sampleWeight) || sampleWeight <= 0) continue;
+    sum += clamp01(value) * sampleWeight;
+    weight += sampleWeight;
+  }
+  if (weight <= 0) return null;
+  return (SCORE_PRIOR_ANSWERS * SCORE_PRIOR_MEAN + sum) / (SCORE_PRIOR_ANSWERS + weight);
+}
+
+/**
+ * How much of the score is data rather than the prior.
+ * 0 with no answers, 0.6 at 3, 0.8 at 8, approaching 1 as answers pile up.
+ */
+export function traitConfidence(answerCount: number): number {
+  if (!Number.isFinite(answerCount) || answerCount <= 0) return 0;
+  return answerCount / (answerCount + SCORE_PRIOR_ANSWERS);
+}
+
+export type ConfidenceRead = 'hidden' | 'learning' | 'solid';
+
+export function confidenceRead(answerCount: number): ConfidenceRead {
+  if (!Number.isFinite(answerCount) || answerCount < LABEL_MIN_ANSWERS) return 'hidden';
+  if (answerCount < SOLID_READ_MIN_ANSWERS) return 'learning';
+  return 'solid';
+}
+
+/** The line under a trait. Null when there is nothing to say (no answers). */
+export function confidenceLabel(answerCount: number): string | null {
+  if (!Number.isFinite(answerCount) || answerCount <= 0) return null;
+  return confidenceRead(answerCount) === 'solid' ? CONFIDENCE_SOLID_COPY : CONFIDENCE_LEARNING_COPY;
+}
+
+/**
+ * The recency reading. Reliable-change checks compare this, not `traitScore`.
+ * `applyEwmaAnswer` is what moves it.
+ */
+export function recencyReading(row: TraitTrack | null): number | null {
+  if (!row || !Number.isFinite(row.value)) return null;
+  return row.value;
+}
+
+/**
+ * The trait score. A direct self-edit (slider, tap, settings, confirm)
+ * stays the stored number — the person set it. Everything else is the
+ * equal-weight answer average when the log is attached, otherwise the
+ * stored recency reading (the log was not on the phone).
+ */
+export function traitScore(row: TraitTrack | null, source?: TraitSource | null): number | null {
+  if (source && isDirectTraitSource(source) && row && Number.isFinite(row.value)) return row.value;
+  if (row?.answerSamples && row.answerSamples.length > 0) {
+    const scored = equalWeightScore(row.answerSamples);
+    if (scored != null) return scored;
+  }
+  if (row && Number.isFinite(row.value) && row.answerCount > 0) return row.value;
+  return null;
+}
+
+/** The least-answered of these axes, as the one confidence line for a group. */
+export function confidenceSummary(
+  rows: readonly TraitTrack[],
+  axes: readonly TraitAxis[],
+): string | null {
+  let min = Infinity;
+  let any = false;
+  for (const axis of axes) {
+    const count = trackFor(rows, axis, 'report')?.answerCount ?? 0;
+    if (count <= 0) continue;
+    any = true;
+    if (count < min) min = count;
+  }
+  if (!any) return null;
+  return confidenceLabel(min);
 }
 
 /**

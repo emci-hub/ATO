@@ -27,14 +27,13 @@ export interface AxisProvenance {
 }
 
 const TOLD_LINE: Record<
-  Exclude<TraitSource, 'self_game' | 'self_settings' | 'self_confirm'>,
+  Exclude<TraitSource, 'self_game' | 'self_settings' | 'self_confirm' | 'self_scenario'>,
   string
 > = {
   self_slider: 'You told us directly — a vibe-check you tapped.',
   self_grid: 'You told us directly — a type you already knew.',
   self_situation: 'You told us directly — a situation you picked.',
   self_tap: 'You told us directly — a ranking you sorted.',
-  self_scenario: 'You told us directly — a scenario you picked.',
 };
 
 export function traitValuesFromPartial(me: Partial<TraitValues>): TraitValues {
@@ -64,6 +63,9 @@ export function sourceProvenance(source: unknown): AxisProvenance | null {
   if (!isTraitSource(source)) return null;
   if (source === 'self_game') {
     return { kind: 'inferred', line: 'Inferred from a gut-call you played.' };
+  }
+  if (source === 'self_scenario') {
+    return { kind: 'inferred', line: 'A scenario you picked. Later answers can move this.' };
   }
   if (source === 'self_settings') {
     return { kind: 'corrected', line: 'You corrected this after ATO checked in.' };
@@ -98,6 +100,7 @@ export function profileCopyClean(): boolean {
     `0 of ${TRAIT_AXIS_TOTAL} settled`,
     ...Object.values(TOLD_LINE),
     'Inferred from a gut-call you played.',
+    'A scenario you picked. Later answers can move this.',
     'You corrected this after ATO checked in.',
     'You said this still fits.',
   ];

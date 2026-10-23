@@ -10,7 +10,7 @@
  */
 import type { Check } from '@/lib/checks';
 import { supabase } from '@/lib/supabase';
-import { parseTraitTrackRows } from '@/lib/trait-tracks-store';
+import { attachAnswerSamples, fetchTraitAnswerSamples, parseTraitTrackRows } from '@/lib/trait-tracks-store';
 import type { TraitTrack } from '@/lib/trait-stability';
 
 export interface HomeBootstrap {
@@ -36,7 +36,15 @@ export async function fetchHomeBootstrap(_timeZone?: string): Promise<HomeBootst
   };
 
   const checks = Array.isArray(row.checks) ? (row.checks as Check[]) : [];
-  const tracks = parseTraitTrackRows(Array.isArray(row.trait_tracks) ? row.trait_tracks : []);
+  const parsed = parseTraitTrackRows(Array.isArray(row.trait_tracks) ? row.trait_tracks : []);
+  let userId: string | undefined;
+  try {
+    const { data } = await supabase.auth.getUser();
+    userId = data.user?.id;
+  } catch {
+    userId = undefined;
+  }
+  const tracks = userId ? attachAnswerSamples(parsed, await fetchTraitAnswerSamples(userId)) : parsed;
 
   return { checks, tracks };
 }

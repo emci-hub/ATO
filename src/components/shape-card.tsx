@@ -18,6 +18,7 @@ import {
   SHAPE_TITLE,
 } from '@/lib/polish-copy';
 import { shapedByRow, YOUR_SIDE_LEAD } from '@/lib/shaped-by';
+import { traitStateFromRow } from '@/lib/traits';
 import { shapeFilledCount, traitShapePoints } from '@/lib/trait-shape';
 import type { TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
@@ -50,7 +51,8 @@ export function ShapeCard({
 
   if (filled === 0) return <ShapeEmptyCard />;
 
-  const detail = selected ? shapedByRow(selected, tracks) : null;
+const sources = traitStateFromRow({ trait_sources: me.trait_sources }).sources;
+  const detail = selected ? shapedByRow(selected, tracks, new Date(), sources[selected]) : null;
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       <View style={styles.head}>

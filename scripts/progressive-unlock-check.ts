@@ -131,12 +131,11 @@ ok('an account that finished the old 50 keeps every unlock and is offered its th
 }
 ok('rounds skip a moved extra only for the accounts that already answered it in the old intake');
 
-// --- Regression: the optional scenario phase must not strand the unlock ----
-// The optional 8-screen phase writes all 16 axes as `self_scenario` (direct).
-// Every frozen-intake answer is `self_situation` (inferred), which
-// `shouldWriteReportTrack` correctly refuses to blend into a direct axis. It
-// used to be dropped outright, so `answerCount` never moved and Legends was
-// unreachable for anyone who took that phase. It is now recorded count-only.
+// --- Regression: a direct edit must not strand the unlock ----
+// A settings edit is still direct, so a later question answer is count-only
+// on that axis. A vibe-check scenario is not direct anymore: later answers
+// can move the score. Count-only still has to increment answerCount, or a
+// direct-edited profile could never reach the Legends unlock.
 const seededAt = '2026-09-08T12:00:00.000Z';
 const answeredAt = '2026-09-11T12:00:00.000Z';
 
@@ -145,11 +144,12 @@ for (const axis of TRAIT_AXES) {
   scenarioSeeded.set(axis, applyEwmaAnswer(null, axis, 'report', 0.7, seededAt));
 }
 assert.equal(
-  shouldWriteReportTrack('self_scenario', 'self_situation'),
+  shouldWriteReportTrack('self_settings', 'self_situation'),
   false,
   'intake answers are still refused the value blend on a direct axis',
 );
-ok('direct-beats-inferred still blocks the value blend (rule unchanged)');
+assert.equal(shouldWriteReportTrack('self_scenario', 'self_situation'), true, 'a scenario no longer blocks the blend');
+ok('direct-beats-inferred still blocks the value blend; a scenario does not');
 
 const afterIntake = new Map(scenarioSeeded);
 for (const row of QUESTIONS_BANK) {

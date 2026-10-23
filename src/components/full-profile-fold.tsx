@@ -33,7 +33,7 @@ import {
   type TraitHistoryRow,
 } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
-import { settledAxisLabel, settlingLine, trackFor, type TraitTrack } from '@/lib/trait-stability';
+import { settledAxisLabel, settlingLine, trackFor, traitScore, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import {
   TRAIT_AXES,
@@ -138,12 +138,12 @@ export function FullProfileFold({
         </ThemedText>
         {TRAIT_AXES.map((axis) => {
           const report = trackFor(tracks, axis, 'report');
-          const value = report?.value ?? state.values[axis];
+          const value = traitScore(report, state.sources[axis]) ?? state.values[axis];
           const filled = value != null && Number.isFinite(value);
           const copy = AXIS_EDITOR_COPY[axis];
           const phrases = TRAIT_BAND_PHRASES[axis];
           const poles = AXIS_POLES[axis];
-          const shaped = shapedByRow(axis, tracks);
+          const shaped = shapedByRow(axis, tracks, new Date(), state.sources[axis]);
           // Inside the "?": the opposite end when they lean, both ends when they do not.
           const listedEnds: readonly TraitLean[] = shaped.lean
             ? [shaped.lean === 'high' ? 'low' : 'high']
@@ -192,6 +192,15 @@ export function FullProfileFold({
                 </ThemedText>
               ) : shaped.line === SHAPED_BY_MIDDLE ? (
                 <ThemedText type="small">{shaped.line}</ThemedText>
+              ) : shaped.confidenceCopy && shaped.line === shaped.confidenceCopy ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {shaped.line}
+                </ThemedText>
+              ) : null}
+              {shaped.confidenceCopy && shaped.confidenceCopy !== shaped.line ? (
+                <ThemedText type="code" themeColor="textSecondary">
+                  {shaped.confidenceCopy}
+                </ThemedText>
               ) : null}
               {!POLE_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
                 <ThemedText type="code" themeColor="textSecondary">
