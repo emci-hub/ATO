@@ -114,6 +114,7 @@ import {
   isPathWalker,
   roleAnimFaceIndex,
   roleArtDrawable,
+  getSkinRole,
   roleFaceArtIndex,
   roleFootAt,
   roleWalkFaceIndex,
@@ -4032,7 +4033,7 @@ export function DefendScreen({
                             spriteRole,
                             'idle',
                             skinAnimFaceIndex(spriteRole, 'idle', walkFace),
-                            castActorPathFrame('idle', Date.now(), 0, puff.id, idleFrames),
+                            castActorPathFrame('idle', Date.now(), 0, puff.id, idleFrames, getSkinRole(spriteRole)),
                           )
                         : undefined;
                     const spriteDrawable = idleSprite ?? walkSprite ?? sprite;

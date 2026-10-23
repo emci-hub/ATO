@@ -1,0 +1,768 @@
+{
+  "frames": {
+    "death/e/000": {
+      "frame": {
+        "x": 0,
+        "y": 402,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/001": {
+      "frame": {
+        "x": 216,
+        "y": 402,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/002": {
+      "frame": {
+        "x": 432,
+        "y": 402,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/003": {
+      "frame": {
+        "x": 648,
+        "y": 402,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/004": {
+      "frame": {
+        "x": 864,
+        "y": 402,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/005": {
+      "frame": {
+        "x": 1080,
+        "y": 402,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/006": {
+      "frame": {
+        "x": 1296,
+        "y": 402,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/007": {
+      "frame": {
+        "x": 1512,
+        "y": 402,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/w/000": {
+      "frame": {
+        "x": 0,
+        "y": 594,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/001": {
+      "frame": {
+        "x": 216,
+        "y": 594,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/002": {
+      "frame": {
+        "x": 432,
+        "y": 594,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/003": {
+      "frame": {
+        "x": 648,
+        "y": 594,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/004": {
+      "frame": {
+        "x": 864,
+        "y": 594,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/005": {
+      "frame": {
+        "x": 1080,
+        "y": 594,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/006": {
+      "frame": {
+        "x": 1296,
+        "y": 594,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/007": {
+      "frame": {
+        "x": 1512,
+        "y": 594,
+        "w": 215,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 37,
+        "w": 215,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "run/e/000": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Run"
+    },
+    "run/e/001": {
+      "frame": {
+        "x": 232,
+        "y": 0,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Run"
+    },
+    "run/e/002": {
+      "frame": {
+        "x": 464,
+        "y": 0,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Run"
+    },
+    "run/e/003": {
+      "frame": {
+        "x": 696,
+        "y": 0,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Run"
+    },
+    "run/e/004": {
+      "frame": {
+        "x": 928,
+        "y": 0,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Run"
+    },
+    "run/e/005": {
+      "frame": {
+        "x": 1160,
+        "y": 0,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Run"
+    },
+    "run/e/006": {
+      "frame": {
+        "x": 1392,
+        "y": 0,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Run"
+    },
+    "run/e/007": {
+      "frame": {
+        "x": 1624,
+        "y": 0,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Run"
+    },
+    "run/w/000": {
+      "frame": {
+        "x": 0,
+        "y": 201,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Run"
+    },
+    "run/w/001": {
+      "frame": {
+        "x": 232,
+        "y": 201,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Run"
+    },
+    "run/w/002": {
+      "frame": {
+        "x": 464,
+        "y": 201,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Run"
+    },
+    "run/w/003": {
+      "frame": {
+        "x": 696,
+        "y": 201,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Run"
+    },
+    "run/w/004": {
+      "frame": {
+        "x": 928,
+        "y": 201,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Run"
+    },
+    "run/w/005": {
+      "frame": {
+        "x": 1160,
+        "y": 201,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Run"
+    },
+    "run/w/006": {
+      "frame": {
+        "x": 1392,
+        "y": 201,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Run"
+    },
+    "run/w/007": {
+      "frame": {
+        "x": 1624,
+        "y": 201,
+        "w": 231,
+        "h": 200
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 40,
+        "w": 231,
+        "h": 200
+      },
+      "sourceSize": {
+        "w": 264,
+        "h": 264
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Run"
+    }
+  },
+  "meta": {
+    "app": "ATO art:pack",
+    "version": "1",
+    "image": "boss_oni_streetwear.combat.png",
+    "format": "png8",
+    "size": {
+      "w": 1855,
+      "h": 785
+    },
+    "scale": "1",
+    "frameTags": [
+      {
+        "name": "death",
+        "from": 0,
+        "to": 15,
+        "direction": "forward"
+      },
+      {
+        "name": "run",
+        "from": 16,
+        "to": 31,
+        "direction": "forward"
+      }
+    ],
+    "decodedBytes": 5824700,
+    "diskBytes": 206127,
+    "tier": "combat"
+  }
+}

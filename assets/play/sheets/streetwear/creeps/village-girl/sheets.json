@@ -1,306 +1,358 @@
 {
   "sheets/streetwear/creeps/village-girl/Death": {
-    "sheet": "sheets/streetwear/creeps/village-girl/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.combat.png",
+    "sheetW": 433,
+    "sheetH": 103,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 61,
+        "h": 51
       },
       "east/frame_001": {
-        "x": 97,
+        "x": 62,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 61,
+        "h": 51
       },
       "east/frame_002": {
-        "x": 194,
+        "x": 124,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 61,
+        "h": 51
       },
       "east/frame_003": {
-        "x": 291,
+        "x": 186,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 61,
+        "h": 51
       },
       "east/frame_004": {
-        "x": 388,
+        "x": 248,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 61,
+        "h": 51
       },
       "east/frame_005": {
-        "x": 485,
+        "x": 310,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 61,
+        "h": 51
       },
       "east/frame_006": {
-        "x": 582,
+        "x": 372,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 61,
+        "h": 51
       },
       "west/frame_000": {
         "x": 0,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "y": 52,
+        "w": 61,
+        "h": 51
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 62,
+        "y": 52,
+        "w": 61,
+        "h": 51
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 124,
+        "y": 52,
+        "w": 61,
+        "h": 51
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 186,
+        "y": 52,
+        "w": 61,
+        "h": 51
       },
       "west/frame_004": {
-        "x": 388,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 248,
+        "y": 52,
+        "w": 61,
+        "h": 51
       },
       "west/frame_005": {
-        "x": 485,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 310,
+        "y": 52,
+        "w": 61,
+        "h": 51
       },
       "west/frame_006": {
-        "x": 582,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 372,
+        "y": 52,
+        "w": 61,
+        "h": 51
       }
-    }
+    },
+    "offsetX": 17,
+    "offsetY": 27,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/creeps/village-girl/Idle": {
-    "sheet": "sheets/streetwear/creeps/village-girl/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.core.png",
+    "sheetW": 375,
+    "sheetH": 278,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "y": 112,
+        "w": 35,
+        "h": 54
       },
       "east/frame_001": {
-        "x": 97,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 36,
+        "y": 112,
+        "w": 35,
+        "h": 54
       },
       "east/frame_002": {
-        "x": 194,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 72,
+        "y": 112,
+        "w": 35,
+        "h": 54
       },
       "east/frame_003": {
-        "x": 291,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 108,
+        "y": 112,
+        "w": 35,
+        "h": 54
       },
       "west/frame_000": {
         "x": 0,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "y": 167,
+        "w": 35,
+        "h": 54
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 36,
+        "y": 167,
+        "w": 35,
+        "h": 54
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 72,
+        "y": 167,
+        "w": 35,
+        "h": 54
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 108,
+        "y": 167,
+        "w": 35,
+        "h": 54
       }
-    }
+    },
+    "offsetX": 31,
+    "offsetY": 24,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
   },
   "sheets/streetwear/creeps/village-girl/Walk": {
-    "sheet": "sheets/streetwear/creeps/village-girl/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.core.png",
+    "sheetW": 375,
+    "sheetH": 278,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "y": 0,
+        "w": 38,
+        "h": 55
       },
       "east/frame_001": {
-        "x": 97,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 39,
+        "y": 0,
+        "w": 38,
+        "h": 55
       },
       "east/frame_002": {
-        "x": 194,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 78,
+        "y": 0,
+        "w": 38,
+        "h": 55
       },
       "east/frame_003": {
-        "x": 291,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 117,
+        "y": 0,
+        "w": 38,
+        "h": 55
       },
       "east/frame_004": {
-        "x": 388,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 156,
+        "y": 0,
+        "w": 38,
+        "h": 55
       },
       "east/frame_005": {
-        "x": 485,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 195,
+        "y": 0,
+        "w": 38,
+        "h": 55
       },
       "east/frame_006": {
-        "x": 582,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 234,
+        "y": 0,
+        "w": 38,
+        "h": 55
       },
       "east/frame_007": {
-        "x": 679,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 273,
+        "y": 0,
+        "w": 38,
+        "h": 55
       },
       "west/frame_000": {
         "x": 0,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "y": 56,
+        "w": 38,
+        "h": 55
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 39,
+        "y": 56,
+        "w": 38,
+        "h": 55
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 78,
+        "y": 56,
+        "w": 38,
+        "h": 55
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 117,
+        "y": 56,
+        "w": 38,
+        "h": 55
       },
       "west/frame_004": {
-        "x": 388,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 156,
+        "y": 56,
+        "w": 38,
+        "h": 55
       },
       "west/frame_005": {
-        "x": 485,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 195,
+        "y": 56,
+        "w": 38,
+        "h": 55
       },
       "west/frame_006": {
-        "x": 582,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 234,
+        "y": 56,
+        "w": 38,
+        "h": 55
       },
       "west/frame_007": {
-        "x": 679,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 273,
+        "y": 56,
+        "w": 38,
+        "h": 55
       }
-    }
+    },
+    "offsetX": 29,
+    "offsetY": 24,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
   },
   "sheets/streetwear/creeps/village-girl/rotations": {
-    "sheet": "sheets/streetwear/creeps/village-girl/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.core.png",
+    "sheetW": 375,
+    "sheetH": 278,
     "frames": {
       "north": {
         "x": 0,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "y": 222,
+        "w": 46,
+        "h": 56
       },
       "north-east": {
-        "x": 97,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 47,
+        "y": 222,
+        "w": 46,
+        "h": 56
       },
       "east": {
-        "x": 194,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 94,
+        "y": 222,
+        "w": 46,
+        "h": 56
       },
       "south-east": {
-        "x": 291,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 141,
+        "y": 222,
+        "w": 46,
+        "h": 56
       },
       "south": {
-        "x": 388,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 188,
+        "y": 222,
+        "w": 46,
+        "h": 56
       },
       "south-west": {
-        "x": 485,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 235,
+        "y": 222,
+        "w": 46,
+        "h": 56
       },
       "west": {
-        "x": 582,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 282,
+        "y": 222,
+        "w": 46,
+        "h": 56
       },
       "north-west": {
-        "x": 679,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 329,
+        "y": 222,
+        "w": 46,
+        "h": 56
       }
-    }
+    },
+    "offsetX": 25,
+    "offsetY": 22,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "north-east",
+      "east",
+      "south-east",
+      "south",
+      "south-west",
+      "west",
+      "north-west"
+    ],
+    "tier": "core"
   }
 }

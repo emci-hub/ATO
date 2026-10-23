@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "hero": "creep-village-girl",
+  "slug": "creep.village-girl.streetwear",
+  "canvas": [
+    96,
+    96
+  ],
+  "rawDir": "art-src/pixellab/creep.village-girl.streetwear/migrated/raw",
+  "footRow": 73,
+  "heightBand": [
+    47,
+    49
+  ],
+  "lines": {
+    "hip": 63
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "parts": {},
+      "footRow": 76,
+      "heightBand": [
+        47,
+        49
+      ]
+    }
+  },
+  "notes": "AN4 first pass (test only): lines and masks read off a gridded rotation; check on the part map. East and west are drawn 3 rows apart, so west carries its own foot row.",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ]
+    }
+  }
+}

@@ -1,306 +1,358 @@
 {
   "sheets/streetwear/creeps/wizard/Death": {
-    "sheet": "sheets/streetwear/creeps/wizard/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.combat.png",
+    "sheetW": 503,
+    "sheetH": 101,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 71,
+        "h": 50
       },
       "east/frame_001": {
-        "x": 97,
+        "x": 72,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 71,
+        "h": 50
       },
       "east/frame_002": {
-        "x": 194,
+        "x": 144,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 71,
+        "h": 50
       },
       "east/frame_003": {
-        "x": 291,
+        "x": 216,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 71,
+        "h": 50
       },
       "east/frame_004": {
-        "x": 388,
+        "x": 288,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 71,
+        "h": 50
       },
       "east/frame_005": {
-        "x": 485,
+        "x": 360,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 71,
+        "h": 50
       },
       "east/frame_006": {
-        "x": 582,
+        "x": 432,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 71,
+        "h": 50
       },
       "west/frame_000": {
         "x": 0,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "y": 51,
+        "w": 71,
+        "h": 50
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 72,
+        "y": 51,
+        "w": 71,
+        "h": 50
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 144,
+        "y": 51,
+        "w": 71,
+        "h": 50
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 216,
+        "y": 51,
+        "w": 71,
+        "h": 50
       },
       "west/frame_004": {
-        "x": 388,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 288,
+        "y": 51,
+        "w": 71,
+        "h": 50
       },
       "west/frame_005": {
-        "x": 485,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 360,
+        "y": 51,
+        "w": 71,
+        "h": 50
       },
       "west/frame_006": {
-        "x": 582,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 432,
+        "y": 51,
+        "w": 71,
+        "h": 50
       }
-    }
+    },
+    "offsetX": 15,
+    "offsetY": 23,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/creeps/wizard/Idle": {
-    "sheet": "sheets/streetwear/creeps/wizard/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.core.png",
+    "sheetW": 311,
+    "sheetH": 242,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "y": 98,
+        "w": 38,
+        "h": 47
       },
       "east/frame_001": {
-        "x": 97,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 39,
+        "y": 98,
+        "w": 38,
+        "h": 47
       },
       "east/frame_002": {
-        "x": 194,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 78,
+        "y": 98,
+        "w": 38,
+        "h": 47
       },
       "east/frame_003": {
-        "x": 291,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 117,
+        "y": 98,
+        "w": 38,
+        "h": 47
       },
       "west/frame_000": {
         "x": 0,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "y": 146,
+        "w": 38,
+        "h": 47
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 39,
+        "y": 146,
+        "w": 38,
+        "h": 47
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 78,
+        "y": 146,
+        "w": 38,
+        "h": 47
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 117,
+        "y": 146,
+        "w": 38,
+        "h": 47
       }
-    }
+    },
+    "offsetX": 30,
+    "offsetY": 25,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
   },
   "sheets/streetwear/creeps/wizard/Walk": {
-    "sheet": "sheets/streetwear/creeps/wizard/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.core.png",
+    "sheetW": 311,
+    "sheetH": 242,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "y": 0,
+        "w": 37,
+        "h": 48
       },
       "east/frame_001": {
-        "x": 97,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 38,
+        "y": 0,
+        "w": 37,
+        "h": 48
       },
       "east/frame_002": {
-        "x": 194,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 76,
+        "y": 0,
+        "w": 37,
+        "h": 48
       },
       "east/frame_003": {
-        "x": 291,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 114,
+        "y": 0,
+        "w": 37,
+        "h": 48
       },
       "east/frame_004": {
-        "x": 388,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 152,
+        "y": 0,
+        "w": 37,
+        "h": 48
       },
       "east/frame_005": {
-        "x": 485,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 190,
+        "y": 0,
+        "w": 37,
+        "h": 48
       },
       "east/frame_006": {
-        "x": 582,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 228,
+        "y": 0,
+        "w": 37,
+        "h": 48
       },
       "east/frame_007": {
-        "x": 679,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 266,
+        "y": 0,
+        "w": 37,
+        "h": 48
       },
       "west/frame_000": {
         "x": 0,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "y": 49,
+        "w": 37,
+        "h": 48
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 38,
+        "y": 49,
+        "w": 37,
+        "h": 48
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 76,
+        "y": 49,
+        "w": 37,
+        "h": 48
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 114,
+        "y": 49,
+        "w": 37,
+        "h": 48
       },
       "west/frame_004": {
-        "x": 388,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 152,
+        "y": 49,
+        "w": 37,
+        "h": 48
       },
       "west/frame_005": {
-        "x": 485,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 190,
+        "y": 49,
+        "w": 37,
+        "h": 48
       },
       "west/frame_006": {
-        "x": 582,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 228,
+        "y": 49,
+        "w": 37,
+        "h": 48
       },
       "west/frame_007": {
-        "x": 679,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 266,
+        "y": 49,
+        "w": 37,
+        "h": 48
       }
-    }
+    },
+    "offsetX": 30,
+    "offsetY": 25,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
   },
   "sheets/streetwear/creeps/wizard/rotations": {
-    "sheet": "sheets/streetwear/creeps/wizard/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.core.png",
+    "sheetW": 311,
+    "sheetH": 242,
     "frames": {
       "north": {
         "x": 0,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "y": 194,
+        "w": 38,
+        "h": 48
       },
       "north-east": {
-        "x": 97,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 39,
+        "y": 194,
+        "w": 38,
+        "h": 48
       },
       "east": {
-        "x": 194,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 78,
+        "y": 194,
+        "w": 38,
+        "h": 48
       },
       "south-east": {
-        "x": 291,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 117,
+        "y": 194,
+        "w": 38,
+        "h": 48
       },
       "south": {
-        "x": 388,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 156,
+        "y": 194,
+        "w": 38,
+        "h": 48
       },
       "south-west": {
-        "x": 485,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 195,
+        "y": 194,
+        "w": 38,
+        "h": 48
       },
       "west": {
-        "x": 582,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 234,
+        "y": 194,
+        "w": 38,
+        "h": 48
       },
       "north-west": {
-        "x": 679,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 273,
+        "y": 194,
+        "w": 38,
+        "h": 48
       }
-    }
+    },
+    "offsetX": 30,
+    "offsetY": 24,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "north-east",
+      "east",
+      "south-east",
+      "south",
+      "south-west",
+      "west",
+      "north-west"
+    ],
+    "tier": "core"
   }
 }

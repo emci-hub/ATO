@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "hero": "creep-wizard",
+  "slug": "creep.wizard.streetwear",
+  "canvas": [
+    96,
+    96
+  ],
+  "rawDir": "art-src/pixellab/creep.wizard.streetwear/migrated/raw",
+  "footRow": 70,
+  "heightBand": [
+    43,
+    45
+  ],
+  "lines": {
+    "hip": 60
+  },
+  "directions": {
+    "east": {
+      "parts": {
+        "locked": [
+          [
+            51,
+            30
+          ],
+          [
+            56,
+            30
+          ],
+          [
+            56,
+            71
+          ],
+          [
+            51,
+            71
+          ]
+        ]
+      }
+    },
+    "west": {
+      "parts": {
+        "locked": [
+          [
+            38,
+            30
+          ],
+          [
+            46,
+            30
+          ],
+          [
+            46,
+            71
+          ],
+          [
+            38,
+            71
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "AN4 first pass (test only): lines and masks read off a gridded rotation; check on the part map. The staff reaches the foot row and is locked, the wizard sinks around it.",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ]
+    }
+  }
+}

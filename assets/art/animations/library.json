@@ -166,12 +166,12 @@
        "slot": "idle",
        "frames": 4,
        "ms": [
-        200,
-        200,
-        200,
-        200
+        400,
+        250,
+        400,
+        250
        ],
-       "timing": "cast-actor:path",
+       "timing": "sheet-holds",
        "loop": true,
        "dirs": {
         "east": {
@@ -191,7 +191,7 @@
         "w": 264,
         "h": 264
        },
-       "sheet": "sheets/streetwear/boss/oni/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/oni/streetwear/boss_oni_streetwear.core.png",
        "reducedMotion": "hold-first",
        "legacyKey": "sheets/streetwear/boss/oni/Idle"
       }
@@ -230,7 +230,7 @@
         "w": 264,
         "h": 264
        },
-       "sheet": "sheets/streetwear/boss/oni/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/oni/streetwear/boss_oni_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/boss/oni/Run"
       },
@@ -267,7 +267,7 @@
         "w": 264,
         "h": 264
        },
-       "sheet": "sheets/streetwear/boss/oni/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/oni/streetwear/boss_oni_streetwear.core.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/boss/oni/Walk"
       }
@@ -306,7 +306,7 @@
         "w": 264,
         "h": 264
        },
-       "sheet": "sheets/streetwear/boss/oni/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/oni/streetwear/boss_oni_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/boss/oni/Death"
       }
@@ -453,12 +453,12 @@
        "slot": "idle",
        "frames": 4,
        "ms": [
-        200,
-        200,
-        200,
-        200
+        400,
+        250,
+        400,
+        250
        ],
-       "timing": "cast-actor:path",
+       "timing": "sheet-holds",
        "loop": true,
        "dirs": {
         "east": {
@@ -478,7 +478,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/knight/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.core.png",
        "reducedMotion": "hold-first",
        "legacyKey": "sheets/streetwear/creeps/knight/Idle"
       }
@@ -517,7 +517,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/knight/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.core.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/creeps/knight/Walk"
       }
@@ -555,7 +555,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/knight/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/creeps/knight/Death"
       }
@@ -751,12 +751,12 @@
        "slot": "idle",
        "frames": 4,
        "ms": [
-        200,
-        200,
-        200,
-        200
+        400,
+        250,
+        400,
+        250
        ],
-       "timing": "cast-actor:path",
+       "timing": "sheet-holds",
        "loop": true,
        "dirs": {
         "east": {
@@ -776,7 +776,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/village-girl/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.core.png",
        "reducedMotion": "hold-first",
        "legacyKey": "sheets/streetwear/creeps/village-girl/Idle"
       }
@@ -815,7 +815,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/village-girl/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.core.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/creeps/village-girl/Walk"
       }
@@ -853,7 +853,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/village-girl/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/creeps/village-girl/Death"
       }
@@ -1042,12 +1042,12 @@
        "slot": "idle",
        "frames": 4,
        "ms": [
-        200,
-        200,
-        200,
-        200
+        400,
+        250,
+        400,
+        250
        ],
-       "timing": "cast-actor:path",
+       "timing": "sheet-holds",
        "loop": true,
        "dirs": {
         "east": {
@@ -1067,7 +1067,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/wizard/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.core.png",
        "reducedMotion": "hold-first",
        "legacyKey": "sheets/streetwear/creeps/wizard/Idle"
       }
@@ -1106,7 +1106,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/wizard/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.core.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/creeps/wizard/Walk"
       }
@@ -1144,7 +1144,7 @@
         "w": 96,
         "h": 96
        },
-       "sheet": "sheets/streetwear/creeps/wizard/atlas.png",
+       "sheet": "art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/creeps/wizard/Death"
       }
@@ -9368,12 +9368,12 @@
        "slot": "idle",
        "frames": 4,
        "ms": [
-        120,
-        120,
-        120,
-        120
+        400,
+        250,
+        400,
+        250
        ],
-       "timing": "cast-actor:tower",
+       "timing": "sheet-holds",
        "loop": true,
        "dirs": {
         "east": {
@@ -9393,7 +9393,7 @@
         "w": 240,
         "h": 240
        },
-       "sheet": "sheets/streetwear/towers/ghost/atlas-0.png",
+       "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.core.png",
        "reducedMotion": "hold-first",
        "legacyKey": "sheets/streetwear/towers/ghost/Idle"
       }
@@ -9432,7 +9432,7 @@
         "w": 240,
         "h": 240
        },
-       "sheet": "sheets/streetwear/towers/ghost/atlas-0.png",
+       "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/towers/ghost/Attack"
       },
@@ -9469,7 +9469,7 @@
         "w": 240,
         "h": 240
        },
-       "sheet": "sheets/streetwear/towers/ghost/atlas-1.png",
+       "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/towers/ghost/Skill"
       }
@@ -9487,12 +9487,12 @@
        "slot": "idle",
        "frames": 4,
        "ms": [
-        120,
-        120,
-        120,
-        120
+        400,
+        250,
+        400,
+        250
        ],
-       "timing": "cast-actor:tower",
+       "timing": "sheet-holds",
        "loop": true,
        "dirs": {
         "east": {
@@ -9512,7 +9512,7 @@
         "w": 244,
         "h": 244
        },
-       "sheet": "sheets/streetwear/towers/lux/atlas-1.png",
+       "sheet": "art/enemies-bosses/in-use/lux/streetwear/tower_lux_streetwear.core.png",
        "reducedMotion": "hold-first",
        "legacyKey": "sheets/streetwear/towers/lux/Idle"
       }
@@ -9551,7 +9551,7 @@
         "w": 244,
         "h": 244
        },
-       "sheet": "sheets/streetwear/towers/lux/atlas-0.png",
+       "sheet": "art/enemies-bosses/in-use/lux/streetwear/tower_lux_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/towers/lux/Attack"
       },
@@ -9588,7 +9588,7 @@
         "w": 244,
         "h": 244
        },
-       "sheet": "sheets/streetwear/towers/lux/atlas-0.png",
+       "sheet": "art/enemies-bosses/in-use/lux/streetwear/tower_lux_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/towers/lux/Skill"
       }
@@ -9606,12 +9606,12 @@
        "slot": "idle",
        "frames": 4,
        "ms": [
-        120,
-        120,
-        120,
-        120
+        400,
+        250,
+        400,
+        250
        ],
-       "timing": "cast-actor:tower",
+       "timing": "sheet-holds",
        "loop": true,
        "dirs": {
         "east": {
@@ -9631,7 +9631,7 @@
         "w": 236,
         "h": 236
        },
-       "sheet": "sheets/streetwear/towers/viper/atlas-0.png",
+       "sheet": "art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.core.png",
        "reducedMotion": "hold-first",
        "legacyKey": "sheets/streetwear/towers/viper/Idle"
       }
@@ -9670,7 +9670,7 @@
         "w": 236,
         "h": 236
        },
-       "sheet": "sheets/streetwear/towers/viper/atlas-0.png",
+       "sheet": "art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/towers/viper/Attack"
       },
@@ -9707,7 +9707,7 @@
         "w": 236,
         "h": 236
        },
-       "sheet": "sheets/streetwear/towers/viper/atlas-1.png",
+       "sheet": "art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.combat.png",
        "reducedMotion": "play",
        "legacyKey": "sheets/streetwear/towers/viper/Skill"
       }

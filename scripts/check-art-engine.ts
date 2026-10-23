@@ -165,10 +165,24 @@ for (const rig of rigs) {
     const feetBad = runGates(ctx, [shifted(f[0], 0, 1), ...f.slice(1)]);
     check(`${rig.hero}/${dir}: foot-row FAILS when a frame sinks one row`, !gate(feetBad, 'foot-row').ok);
 
+    // measured figure extent, so the negative tests scale to hero (~125 px) and creep/tower (~41-125 px) alike
+    let figTop = f[0].height;
+    let figBottom = -1;
+    for (let y = 0; y < f[0].height; y += 1) {
+      for (let x = 0; x < f[0].width; x += 1) {
+        if (alphaAt(f[0], x, y) > 0) {
+          if (y < figTop) figTop = y;
+          if (y > figBottom) figBottom = y;
+        }
+      }
+    }
+    const figHeight = figBottom - figTop + 1;
+    const cropFrom = figTop + Math.round(0.6 * figHeight);
+
     const tall = newPng(f[0].width, f[0].height);
     for (let y = 0; y < f[0].height; y += 1) {
       for (let x = 0; x < f[0].width; x += 1) {
-        if (y >= 60 && alphaAt(f[0], x, y) > 0) f[0].data.copy(tall.data, (y * f[0].width + x) * 4, (y * f[0].width + x) * 4, (y * f[0].width + x) * 4 + 4);
+        if (y >= cropFrom && alphaAt(f[0], x, y) > 0) f[0].data.copy(tall.data, (y * f[0].width + x) * 4, (y * f[0].width + x) * 4, (y * f[0].width + x) * 4 + 4);
       }
     }
     check(`${rig.hero}/${dir}: height-band FAILS on a cropped-down figure`, !gate(runGates(ctx, [tall, ...f.slice(1)]), 'height-band').ok);
@@ -211,10 +225,10 @@ for (const rig of rigs) {
       check(`${rig.hero}/${dir}: prop-pixels FAILS when the prop jumps 6 px`, !gate(runGates(ctx, [f[0], moved, f[2], f[3]]), 'prop-pixels').ok);
     }
 
-    // a figure that keeps changing in one direction (rows wiped from the top, 30 more each frame) never loops back
+    // a figure that keeps changing in one direction (rows wiped from the top, 30% of the figure more each frame) never loops back
     const drift = [0, 1, 2, 3].map((k) => {
       const d = clonePng(f[0]);
-      for (let y = 0; y < 40 + 30 * k; y += 1) {
+      for (let y = 0; y < figTop + Math.round(0.3 * figHeight * (k + 1)); y += 1) {
         for (let x = 0; x < d.width; x += 1) d.data[(y * d.width + x) * 4 + 3] = 0;
       }
       return d;

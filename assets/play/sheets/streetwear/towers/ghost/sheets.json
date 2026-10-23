@@ -1,318 +1,370 @@
 {
   "sheets/streetwear/towers/ghost/Attack": {
-    "sheet": "sheets/streetwear/towers/ghost/atlas-0.png",
+    "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.combat.png",
     "sheetW": 1927,
-    "sheetH": 963,
+    "sheetH": 619,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
+        "y": 336,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "east/frame_001": {
         "x": 241,
-        "y": 0,
+        "y": 336,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "east/frame_002": {
         "x": 482,
-        "y": 0,
+        "y": 336,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "east/frame_003": {
         "x": 723,
-        "y": 0,
+        "y": 336,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "east/frame_004": {
         "x": 964,
-        "y": 0,
+        "y": 336,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "east/frame_005": {
         "x": 1205,
-        "y": 0,
+        "y": 336,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "east/frame_006": {
         "x": 1446,
-        "y": 0,
+        "y": 336,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "east/frame_007": {
         "x": 1687,
-        "y": 0,
+        "y": 336,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "west/frame_000": {
         "x": 0,
-        "y": 241,
+        "y": 478,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "west/frame_001": {
         "x": 241,
-        "y": 241,
+        "y": 478,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "west/frame_002": {
         "x": 482,
-        "y": 241,
+        "y": 478,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "west/frame_003": {
         "x": 723,
-        "y": 241,
+        "y": 478,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "west/frame_004": {
         "x": 964,
-        "y": 241,
+        "y": 478,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "west/frame_005": {
         "x": 1205,
-        "y": 241,
+        "y": 478,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "west/frame_006": {
         "x": 1446,
-        "y": 241,
+        "y": 478,
         "w": 240,
-        "h": 240
+        "h": 141
       },
       "west/frame_007": {
         "x": 1687,
-        "y": 241,
+        "y": 478,
         "w": 240,
-        "h": 240
+        "h": 141
       }
-    }
+    },
+    "offsetX": 0,
+    "offsetY": 44,
+    "sourceW": 240,
+    "sourceH": 240,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/towers/ghost/Idle": {
-    "sheet": "sheets/streetwear/towers/ghost/atlas-0.png",
-    "sheetW": 1927,
-    "sheetH": 963,
+    "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.core.png",
+    "sheetW": 975,
+    "sheetH": 400,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 482,
-        "w": 240,
-        "h": 240
+        "y": 0,
+        "w": 87,
+        "h": 131
       },
       "east/frame_001": {
-        "x": 241,
-        "y": 482,
-        "w": 240,
-        "h": 240
+        "x": 88,
+        "y": 0,
+        "w": 87,
+        "h": 131
       },
       "east/frame_002": {
-        "x": 482,
-        "y": 482,
-        "w": 240,
-        "h": 240
+        "x": 176,
+        "y": 0,
+        "w": 87,
+        "h": 131
       },
       "east/frame_003": {
-        "x": 723,
-        "y": 482,
-        "w": 240,
-        "h": 240
+        "x": 264,
+        "y": 0,
+        "w": 87,
+        "h": 131
       },
       "west/frame_000": {
         "x": 0,
-        "y": 723,
-        "w": 240,
-        "h": 240
+        "y": 132,
+        "w": 87,
+        "h": 131
       },
       "west/frame_001": {
-        "x": 241,
-        "y": 723,
-        "w": 240,
-        "h": 240
+        "x": 88,
+        "y": 132,
+        "w": 87,
+        "h": 131
       },
       "west/frame_002": {
-        "x": 482,
-        "y": 723,
-        "w": 240,
-        "h": 240
+        "x": 176,
+        "y": 132,
+        "w": 87,
+        "h": 131
       },
       "west/frame_003": {
-        "x": 723,
-        "y": 723,
-        "w": 240,
-        "h": 240
+        "x": 264,
+        "y": 132,
+        "w": 87,
+        "h": 131
       }
-    }
+    },
+    "offsetX": 70,
+    "offsetY": 54,
+    "sourceW": 240,
+    "sourceH": 240,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
   },
   "sheets/streetwear/towers/ghost/Skill": {
-    "sheet": "sheets/streetwear/towers/ghost/atlas-1.png",
+    "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.combat.png",
     "sheetW": 1927,
-    "sheetH": 481,
+    "sheetH": 619,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 0,
-        "w": 240,
-        "h": 240
+        "w": 167,
+        "h": 167
       },
       "east/frame_001": {
-        "x": 241,
+        "x": 168,
         "y": 0,
-        "w": 240,
-        "h": 240
+        "w": 167,
+        "h": 167
       },
       "east/frame_002": {
-        "x": 482,
+        "x": 336,
         "y": 0,
-        "w": 240,
-        "h": 240
+        "w": 167,
+        "h": 167
       },
       "east/frame_003": {
-        "x": 723,
+        "x": 504,
         "y": 0,
-        "w": 240,
-        "h": 240
+        "w": 167,
+        "h": 167
       },
       "east/frame_004": {
-        "x": 964,
+        "x": 672,
         "y": 0,
-        "w": 240,
-        "h": 240
+        "w": 167,
+        "h": 167
       },
       "east/frame_005": {
-        "x": 1205,
+        "x": 840,
         "y": 0,
-        "w": 240,
-        "h": 240
+        "w": 167,
+        "h": 167
       },
       "east/frame_006": {
-        "x": 1446,
+        "x": 1008,
         "y": 0,
-        "w": 240,
-        "h": 240
+        "w": 167,
+        "h": 167
       },
       "east/frame_007": {
-        "x": 1687,
+        "x": 1176,
         "y": 0,
-        "w": 240,
-        "h": 240
+        "w": 167,
+        "h": 167
       },
       "west/frame_000": {
         "x": 0,
-        "y": 241,
-        "w": 240,
-        "h": 240
+        "y": 168,
+        "w": 167,
+        "h": 167
       },
       "west/frame_001": {
-        "x": 241,
-        "y": 241,
-        "w": 240,
-        "h": 240
+        "x": 168,
+        "y": 168,
+        "w": 167,
+        "h": 167
       },
       "west/frame_002": {
-        "x": 482,
-        "y": 241,
-        "w": 240,
-        "h": 240
+        "x": 336,
+        "y": 168,
+        "w": 167,
+        "h": 167
       },
       "west/frame_003": {
-        "x": 723,
-        "y": 241,
-        "w": 240,
-        "h": 240
+        "x": 504,
+        "y": 168,
+        "w": 167,
+        "h": 167
       },
       "west/frame_004": {
-        "x": 964,
-        "y": 241,
-        "w": 240,
-        "h": 240
+        "x": 672,
+        "y": 168,
+        "w": 167,
+        "h": 167
       },
       "west/frame_005": {
-        "x": 1205,
-        "y": 241,
-        "w": 240,
-        "h": 240
+        "x": 840,
+        "y": 168,
+        "w": 167,
+        "h": 167
       },
       "west/frame_006": {
-        "x": 1446,
-        "y": 241,
-        "w": 240,
-        "h": 240
+        "x": 1008,
+        "y": 168,
+        "w": 167,
+        "h": 167
       },
       "west/frame_007": {
-        "x": 1687,
-        "y": 241,
-        "w": 240,
-        "h": 240
+        "x": 1176,
+        "y": 168,
+        "w": 167,
+        "h": 167
       }
-    }
+    },
+    "offsetX": 33,
+    "offsetY": 38,
+    "sourceW": 240,
+    "sourceH": 240,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/towers/ghost/rotations": {
-    "sheet": "sheets/streetwear/towers/ghost/atlas-2.png",
-    "sheetW": 1927,
-    "sheetH": 240,
+    "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.core.png",
+    "sheetW": 975,
+    "sheetH": 400,
     "frames": {
       "north": {
         "x": 0,
-        "y": 0,
-        "w": 240,
-        "h": 240
+        "y": 264,
+        "w": 121,
+        "h": 136
       },
       "north-east": {
-        "x": 241,
-        "y": 0,
-        "w": 240,
-        "h": 240
+        "x": 122,
+        "y": 264,
+        "w": 121,
+        "h": 136
       },
       "east": {
-        "x": 482,
-        "y": 0,
-        "w": 240,
-        "h": 240
+        "x": 244,
+        "y": 264,
+        "w": 121,
+        "h": 136
       },
       "south-east": {
-        "x": 723,
-        "y": 0,
-        "w": 240,
-        "h": 240
+        "x": 366,
+        "y": 264,
+        "w": 121,
+        "h": 136
       },
       "south": {
-        "x": 964,
-        "y": 0,
-        "w": 240,
-        "h": 240
+        "x": 488,
+        "y": 264,
+        "w": 121,
+        "h": 136
       },
       "south-west": {
-        "x": 1205,
-        "y": 0,
-        "w": 240,
-        "h": 240
+        "x": 610,
+        "y": 264,
+        "w": 121,
+        "h": 136
       },
       "west": {
-        "x": 1446,
-        "y": 0,
-        "w": 240,
-        "h": 240
+        "x": 732,
+        "y": 264,
+        "w": 121,
+        "h": 136
       },
       "north-west": {
-        "x": 1687,
-        "y": 0,
-        "w": 240,
-        "h": 240
+        "x": 854,
+        "y": 264,
+        "w": 121,
+        "h": 136
       }
-    }
+    },
+    "offsetX": 60,
+    "offsetY": 53,
+    "sourceW": 240,
+    "sourceH": 240,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "north-east",
+      "east",
+      "south-east",
+      "south",
+      "south-west",
+      "west",
+      "north-west"
+    ],
+    "tier": "core"
   }
 }

@@ -1,0 +1,348 @@
+{
+  "frames": {
+    "death/e/000": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/001": {
+      "frame": {
+        "x": 62,
+        "y": 0,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/002": {
+      "frame": {
+        "x": 124,
+        "y": 0,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/003": {
+      "frame": {
+        "x": 186,
+        "y": 0,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/004": {
+      "frame": {
+        "x": 248,
+        "y": 0,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/005": {
+      "frame": {
+        "x": 310,
+        "y": 0,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/e/006": {
+      "frame": {
+        "x": 372,
+        "y": 0,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "east",
+      "clip": "Death"
+    },
+    "death/w/000": {
+      "frame": {
+        "x": 0,
+        "y": 52,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/001": {
+      "frame": {
+        "x": 62,
+        "y": 52,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/002": {
+      "frame": {
+        "x": 124,
+        "y": 52,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/003": {
+      "frame": {
+        "x": 186,
+        "y": 52,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/004": {
+      "frame": {
+        "x": 248,
+        "y": 52,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/005": {
+      "frame": {
+        "x": 310,
+        "y": 52,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    },
+    "death/w/006": {
+      "frame": {
+        "x": 372,
+        "y": 52,
+        "w": 61,
+        "h": 51
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 27,
+        "w": 61,
+        "h": 51
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      },
+      "duration": 100,
+      "dir": "west",
+      "clip": "Death"
+    }
+  },
+  "meta": {
+    "app": "ATO art:pack",
+    "version": "1",
+    "image": "creep_village-girl_streetwear.combat.png",
+    "format": "png8",
+    "size": {
+      "w": 433,
+      "h": 103
+    },
+    "scale": "1",
+    "frameTags": [
+      {
+        "name": "death",
+        "from": 0,
+        "to": 13,
+        "direction": "forward"
+      }
+    ],
+    "decodedBytes": 178396,
+    "diskBytes": 6954,
+    "tier": "combat"
+  }
+}

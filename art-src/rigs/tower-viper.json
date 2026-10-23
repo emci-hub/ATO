@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "hero": "tower-viper",
+  "slug": "tower.viper.streetwear",
+  "canvas": [
+    236,
+    236
+  ],
+  "rawDir": "art-src/pixellab/tower.viper.streetwear/migrated/raw",
+  "footRow": 177,
+  "heightBand": [
+    116,
+    118
+  ],
+  "lines": {
+    "hip": 137
+  },
+  "directions": {
+    "east": {
+      "parts": {
+        "cape": [
+          [
+            38,
+            128
+          ],
+          [
+            100,
+            128
+          ],
+          [
+            100,
+            178
+          ],
+          [
+            38,
+            178
+          ]
+        ],
+        "prop": [
+          [
+            140,
+            100
+          ],
+          [
+            195,
+            100
+          ],
+          [
+            195,
+            135
+          ],
+          [
+            140,
+            135
+          ]
+        ]
+      }
+    },
+    "west": {
+      "parts": {
+        "cape": [
+          [
+            130,
+            110
+          ],
+          [
+            194,
+            110
+          ],
+          [
+            194,
+            178
+          ],
+          [
+            130,
+            178
+          ]
+        ],
+        "prop": [
+          [
+            40,
+            105
+          ],
+          [
+            95,
+            105
+          ],
+          [
+            95,
+            150
+          ],
+          [
+            40,
+            150
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "AN4 first pass (test only): lines and masks read off a gridded rotation; check on the part map. Tail holds still, rifle moves with the hand.",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ]
+    }
+  }
+}

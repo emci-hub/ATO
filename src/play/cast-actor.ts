@@ -258,6 +258,7 @@ export function castActorPathFrame(
   clipStartAt: number,
   idleSeedFrames: number,
   frames: number,
+  role?: SkinRole,
 ): number {
   if (frames <= 1) return 0;
   const per = CAST_ACTOR_FRAME_MS.path[clip] ?? 120;
@@ -268,5 +269,6 @@ export function castActorPathFrame(
     clip === 'idle' ? idleSeedFrames * per : 0,
     frames,
     clip === 'death',
+    role ? castActorClipHolds(clip, role) : undefined,
   );
 }
