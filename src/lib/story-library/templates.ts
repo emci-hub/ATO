@@ -5,7 +5,7 @@
  */
 import { TRAIT_AXES } from '@/lib/traits';
 
-import { ENDING_TAIL, TRAIT_COPY, endingText } from './copy';
+import { ENDING_TAIL, endingText } from './copy';
 import type { EndingSpec, Intensity, SlotSpec, Template, Tone } from './types';
 
 const TONES: readonly Tone[] = ['calm', 'steady', 'warm', 'dry', 'bright'];
@@ -21,12 +21,18 @@ const verb = (id = 'verb'): SlotSpec =>
 const aside = (id: string, trait: SlotSpec['trait'] = 'dominant'): SlotSpec =>
   slot({ id, pos: 'phrase', form: 'clause', frame: 'aside', trait, tones: TONES, intensities: SOFT });
 
+const closer = (): SlotSpec =>
+  slot({ id: 'closer', pos: 'phrase', form: 'clause', frame: 'closer', trait: 'dominant', tones: TONES, intensities: SOFT });
+
+const joke = (): SlotSpec =>
+  slot({ id: 'joke', pos: 'phrase', form: 'clause', frame: 'joke', trait: 'dominant', tones: TONES, intensities: SOFT });
+
 const ENDINGS: EndingSpec[] = [
   ...TRAIT_AXES.flatMap((trait) =>
     (['low', 'mid', 'high'] as const).map((tier) => ({
       id: `end-${trait}-${tier}`,
       when: { trait, tier },
-      text: endingText(tier, TRAIT_COPY[trait][tier].aside),
+      text: endingText(tier),
     })),
   ),
   {
@@ -88,8 +94,17 @@ export const STORY_TEMPLATES: readonly Template[] = [
     version: 1,
     status: 'approved',
     body: '{ending}',
-    slots: [],
+    slots: [closer()],
     endings: ENDINGS,
+  }),
+  template({
+    id: 'dive-joke',
+    kind: 'explore',
+    version: 1,
+    status: 'approved',
+    body: '{joke}',
+    slots: [joke()],
+    endings: [],
   }),
   template({
     id: 'dive-lock',
@@ -167,8 +182,17 @@ export const STORY_TEMPLATES: readonly Template[] = [
     version: 1,
     status: 'approved',
     body: '{ending}',
-    slots: [],
+    slots: [closer()],
     endings: ENDINGS,
+  }),
+  template({
+    id: 'legend-joke',
+    kind: 'legend',
+    version: 1,
+    status: 'approved',
+    body: '{joke}',
+    slots: [joke()],
+    endings: [],
   }),
   template({
     id: 'legend-title',

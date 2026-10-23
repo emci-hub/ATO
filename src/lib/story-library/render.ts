@@ -12,8 +12,9 @@ import { fill, PRONOUNS } from '@/lib/story-v3/tracery';
 import type { TraitAxis, TraitLean } from '@/lib/traits';
 import { TRAIT_BAND_HIGH_CUT, TRAIT_BAND_LOW_CUT } from '@/lib/traits';
 
-import { STORY_LIBRARY, templateById } from './library';
-import type { Reader, StoryLibrary, Template, Tier } from './types';
+import { templateById } from './library';
+import { getStoryLibrary } from './persist';
+import type { Reader, StoryLibrary, Tier } from './types';
 
 const YOU = PRONOUNS.you;
 
@@ -33,19 +34,39 @@ function reader(trait: string, tier: Tier, secondary?: Reader['secondary']): Rea
   return { name: 'You', pronoun: YOU, dominant: { trait, tier }, ...(secondary ? { secondary } : {}) };
 }
 
-function must(id: string, library: StoryLibrary): Template {
+function must(id: string, library: StoryLibrary) {
   const found = templateById(id, library);
   if (!found) throw new Error(`story library missing ${id}`);
   return found;
 }
 
-function say(template: Template, who: Reader, seed: string, library: StoryLibrary, tokens?: Record<string, string>): string {
-  return fill(template, who, library.entries, seed, { requireApproved: true, tokens }).text;
+function normSentence(text: string): string {
+  return text.trim().toLowerCase().replace(/\s+/g, ' ').replace(/[.!?]+$/, '');
+}
+
+/** One card shares an avoid list, so a later line does not reprint an earlier sentence. */
+function cardSay(library: StoryLibrary) {
+  const avoid = new Set<string>();
+  const avoidText = new Set<string>();
+  return (id: string, who: Reader, seed: string, tokens?: Record<string, string>) => {
+    const result = fill(must(id, library), who, library.entries, seed, {
+      requireApproved: true,
+      tokens,
+      avoid: [...avoid],
+      avoidText: [...avoidText],
+    });
+    for (const picked of Object.values(result.picks)) avoid.add(picked);
+    for (const sentence of result.text.split(/(?<=[.!?])\s+/)) {
+      const norm = normSentence(sentence);
+      if (norm) avoidText.add(norm);
+    }
+    return result.text;
+  };
 }
 
 export function renderLibraryDive(
   input: { categoryId: string; leans: readonly DiveLean[]; seed: string },
-  library: StoryLibrary = STORY_LIBRARY,
+  library: StoryLibrary = getStoryLibrary(),
 ): CategoryDive {
   const top = [...input.leans].sort((a, b) => b.pct - a.pct).slice(0, DIVE_TOP_LEANS);
   const lead = top[0];
@@ -54,19 +75,18 @@ export function renderLibraryDive(
   const secondary = second ? { trait: second.axis, tier: tierForDiveLean(second) } : undefined;
   const who = reader(dominant.trait, dominant.tier, secondary);
   const seed = input.seed;
+  const say = cardSay(library);
 
   const showsUp = top.map((lean) => ({
     axis: lean.axis,
-    line: say(must('dive-shows', library), reader(lean.axis, tierForDiveLean(lean)), `${seed}|shows|${lean.axis}`, library),
+    line: say('dive-shows', reader(lean.axis, tierForDiveLean(lean)), `${seed}|shows|${lean.axis}`),
   }));
 
-  const mix =
-    top.length >= 2
-      ? say(must('dive-mix', library), who, `${seed}|mix`, library)
-      : null;
-  const notice = say(must('dive-notice', library), who, `${seed}|notice`, library);
-  const means = say(must('dive-means', library), who, `${seed}|means`, library);
-  const title = say(must('dive-title', library), who, `${seed}|title`, library);
+  const mix = top.length >= 2 ? say('dive-mix', who, `${seed}|mix`) : null;
+  const notice = say('dive-notice', who, `${seed}|notice`);
+  const means = say('dive-means', who, `${seed}|means`);
+  const title = say('dive-title', who, `${seed}|title`);
+  const joke = say('dive-joke', who, `${seed}|joke`);
 
   return {
     categoryId: input.categoryId,
@@ -76,6 +96,7 @@ export function renderLibraryDive(
     mix,
     othersNotice: notice,
     whatItMeansForYou: means,
+    joke,
     source: 'library',
   };
 }
@@ -89,7 +110,7 @@ export function renderLibraryLegend(
     differ: LegendDiffer | null;
     seed?: string;
   },
-  library: StoryLibrary = STORY_LIBRARY,
+  library: StoryLibrary = getStoryLibrary(),
 ): LegendStory {
   const pairs = input.pairs.slice(0, STORY_MAX_PAIRS);
   const lead = pairs[0];
@@ -101,9 +122,10 @@ export function renderLibraryLegend(
   const who = reader(dominant.trait, dominant.tier, secondary);
   const seed = input.seed ?? `${input.legend.id}|${input.angle.id}|${input.momentId}`;
   const tokens = { legend: input.legend.name };
+  const say = cardSay(library);
 
   const lineFor = (trait: TraitAxis, tier: Tier, slot: string) =>
-    say(must('legend-won', library), reader(trait, tier), `${seed}|won|${slot}`, library, tokens);
+    say('legend-won', reader(trait, tier), `${seed}|won|${slot}`, tokens);
 
   return {
     legendId: input.legend.id,
@@ -115,24 +137,24 @@ export function renderLibraryLegend(
       momentId: input.momentId,
       line: lineFor(pair.axis, tierForStrength(pair.lean, pair.strength), String(index)),
     })),
-    whatItMeansForYou: say(must('legend-means', library), who, `${seed}|means`, library, tokens),
-    title: say(must('legend-title', library), who, `${seed}|title`, library, tokens),
-    metScene: say(must('legend-scene', library), who, `${seed}|scene`, library, tokens),
+    whatItMeansForYou: say('legend-means', who, `${seed}|means`, tokens),
+    title: say('legend-title', who, `${seed}|title`, tokens),
+    metScene: say('legend-scene', who, `${seed}|scene`, tokens),
     ...(input.differ
       ? {
           differ: {
             axis: input.differ.axis,
             lean: input.differ.lean,
             line: say(
-              must('legend-differ', library),
+              'legend-differ',
               reader(input.differ.axis, input.differ.lean === 'high' ? 'high' : 'low'),
               `${seed}|differ`,
-              library,
               tokens,
             ),
           },
         }
       : {}),
+    joke: say('legend-joke', who, `${seed}|joke`, tokens),
     source: 'library',
   };
 }

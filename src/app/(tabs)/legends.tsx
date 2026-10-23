@@ -25,6 +25,7 @@ import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } 
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { planLegendReveal, revealLegendStory } from '@/lib/legend-figures/generate';
 import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
+import { hydrateStoryLibraryDevice } from '@/lib/story-library/device-store';
 import { legendBucketKey } from '@/lib/ai-library/legend';
 import { wantLibraryCards } from '@/lib/ai-library/client';
 import {
@@ -294,6 +295,7 @@ export default function LegendsScreen() {
         // The joke style is picked here, never by the model: seeded per card so neighbours differ.
         const jokeStyle = cardJokeStyle(`${start.userId}|${legend.id}|${chapter}`);
         const input = { legend, angle, momentId: plan.momentId, pairs, differ, jokeStyle };
+        if (STORY_LIBRARY_RUNTIME) await hydrateStoryLibraryDevice();
         let story;
         try {
           story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), AI_TAP_TIMEOUT_MS, 'legend-story');

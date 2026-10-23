@@ -106,9 +106,12 @@ Decided on this branch: both surfaces together; mid wording for all 16 traits is
 
 Still open:
 
-1. Joke line. The starter omits it. If it comes back, it should be a picked bank.
-2. Token price once the flag is on. This branch makes those taps free and skips the charge. Confirm that is the product, and whether "show me another" should walk the bank.
-3. When to flip `STORY_LIBRARY_RUNTIME` and apply `shutdown/`. Not until a phone check of the library cards.
-4. The means line repeats the shows-up aside. A later edit can give the ending its own sentence.
-5. Legend won-lines share one museum moment. Per-trait moments are not in the starter.
-6. Session edits in the dev lab do not rewrite the bundle. Saving an approved edit back into the repo is still a code change.
+1. Token price once the flag is on. This branch makes those taps free and skips the charge. Confirm that is the product, and whether "show me another" should walk the bank.
+2. When to flip `STORY_LIBRARY_RUNTIME` and apply `shutdown/`. The flag stays off. A phone-width render of the library cards is in the draft PR; it is not a signed-in device pass.
+3. Legend won-lines share one museum moment. Per-trait moments are not in the starter.
+
+Done on this branch, flag still off:
+
+- Joke line. Each trait and tier has two joke sentences. Deep dives and legends fill `{joke}`.
+- Repeated lines. Shows-up lines rotate across two verbs and two asides (4 lines, mode share about 0.31, was 1.00). The ending uses its own closer, so a card no longer reprints the shows-up sentence (within-card repeat 0, was 1). See [variety.md](variety.md).
+- Admin approve. A second tap validates the matrix and saves the approved copy. The runtime reads that copy; the shipped TypeScript stays the default until a save succeeds.

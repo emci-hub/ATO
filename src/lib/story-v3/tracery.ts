@@ -176,21 +176,36 @@ function ladder(
   return steps.map((step) => ({ name: step.name, rows: base.filter(step.pred) }));
 }
 
+function normSentence(text: string): string {
+  return text.trim().toLowerCase().replace(/\s+/g, ' ').replace(/[.!?]+$/, '');
+}
+
 export function selectEntry(
   entries: readonly WordEntry[],
   spec: SlotSpec,
   reader: Reader,
   seed: string,
   avoid: ReadonlySet<string>,
+  avoidText: ReadonlySet<string> = new Set(),
 ): { entry: WordEntry | null; via: 'trait-tier' | 'trait-any' | 'generic' | 'none' } {
   const steps = ladder(entries, spec, reader);
-  const pickFrom = (rows: WordEntry[], name: string): WordEntry => rows[fnv1a(`${seed}|${spec.id}|${name}`) % rows.length]!;
+  // Shift by the slot id so two slots on the same seed do not land on the same index.
+  const pickFrom = (rows: WordEntry[], name: string): WordEntry => {
+    const hash = fnv1a(`${seed}|${name}`);
+    const index = (hash >>> (spec.id.length % 16)) % rows.length;
+    return rows[index]!;
+  };
+  const textFresh = (entry: WordEntry) => !avoidText.has(normSentence(surface(entry, spec, reader)));
   for (const step of steps) {
-    const fresh = step.rows.filter((entry) => !avoid.has(entry.id));
+    const fresh = step.rows.filter((entry) => !avoid.has(entry.id) && textFresh(entry));
     if (fresh.length > 0) return { entry: pickFrom(fresh, step.name), via: step.name };
   }
   for (const step of steps) {
-    if (step.rows.length > 0) return { entry: pickFrom(step.rows, `${step.name}-repeat`), via: step.name };
+    const unseen = step.rows.filter(textFresh);
+    if (unseen.length > 0) return { entry: pickFrom(unseen, `${step.name}-repeat`), via: step.name };
+  }
+  for (const step of steps) {
+    if (step.rows.length > 0) return { entry: pickFrom(step.rows, `${step.name}-text`), via: step.name };
   }
   return { entry: null, via: 'none' };
 }
@@ -318,6 +333,11 @@ function agreementIssues(text: string, reader: Reader, picks: { spec: SlotSpec; 
 export interface FillOptions {
   /** Entry ids to skip until every fresh pool is empty. */
   avoid?: readonly string[];
+  /**
+   * Sentences already used on this card. A slot skips them until every pool
+   * is empty, so a closer cannot reprint the shows-up line.
+   */
+  avoidText?: readonly string[];
   /** When true, a draft entry or template is an issue. Shipping renders set this. */
   requireApproved?: boolean;
   /** Extra tokens such as `{legend}`. Pronouns and slot picks win on a clash. */
@@ -333,6 +353,7 @@ export function fill(
 ): FillResult {
   const issues: FillIssue[] = [];
   const avoid = new Set(options.avoid ?? []);
+  const avoidText = new Set((options.avoidText ?? []).map(normSentence));
   const locks = new Map<string, WordEntry>();
   const picks: Record<string, string> = {};
   const surfaces: Record<string, string> = {};
@@ -345,7 +366,7 @@ export function fill(
   for (const spec of template.slots) {
     let entry = spec.lock ? locks.get(spec.lock) ?? null : null;
     if (!entry) {
-      const selected = selectEntry(entries, spec, reader, seed, avoid);
+      const selected = selectEntry(entries, spec, reader, seed, avoid, avoidText);
       entry = selected.entry;
       if (entry && spec.lock) locks.set(spec.lock, entry);
     }
@@ -362,6 +383,7 @@ export function fill(
     surfaces[spec.id] = said;
     picked.push({ spec, entry, said });
     avoid.add(entry.id);
+    avoidText.add(normSentence(said));
   }
 
   const ending = template.body.includes('{ending}') ? selectEnding(template, reader, seed) : null;

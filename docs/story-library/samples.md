@@ -1,6 +1,6 @@
 # Story library samples
 
-Rendered from the starter library on this branch, seed `samples-md`. Each pair uses the same card and two readers with opposite leans. The joke slot is not in the bank yet, so none of these cards has a funny line.
+Rendered from the starter library before the joke slot and the variety pass (commit 8bb4e5dd), seed `samples-md`. Each pair uses the same card and two readers with opposite leans. The joke slot was not in the bank yet, so none of these cards has a funny line. Later renders are in [variety.md](variety.md).
 
 Insights is the stored Focus bank, not this filler. The card shape is the same (focus, why, watch). The sentences change with the lean.
 
@@ -46,4 +46,4 @@ Stored Focus card. Same shape, two readers.
 
 ## Joke line
 
-Not in the library yet. No sample.
+Not in this snapshot. The joke slot was added after this file.

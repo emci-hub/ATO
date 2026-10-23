@@ -2,7 +2,7 @@
  * Dev Hub → AI → Story library (root only, inside the tools branch).
  *
  * Edit the bank and a template, preview the ending, validate on save, then
- * approve. Two taps each. This session does not rewrite the shipped bundle.
+ * approve. Two taps each. Approve writes the copy the runtime reads.
  */
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
@@ -14,6 +14,7 @@ import { useMeContext } from '@/lib/me-context';
 import { legendById } from '@/lib/legend-figures/roster';
 import type { LegendPair } from '@/lib/legend-figures/story';
 import { STORY_LIBRARY } from '@/lib/story-library/library';
+import { persistStoryLibraryDevice } from '@/lib/story-library/device-store';
 import { renderLibraryDive, renderLibraryLegend } from '@/lib/story-library/render';
 import type { StoryLibrary, Template, Tier, WordEntry } from '@/lib/story-library/types';
 import { validateLibrary } from '@/lib/story-library/validate';
@@ -50,7 +51,7 @@ export function StoryLibraryDev() {
   const [trait, setTrait] = useState<(typeof TRAIT_AXES)[number]>('openness');
   const [tier, setTier] = useState<Tier>('mid');
   const [pronounId, setPronounId] = useState<(typeof PRONOUN_IDS)[number]>('you');
-  const [note, setNote] = useState('Session only. Save checks this copy. Approve does not rewrite the shipped bundle.');
+  const [note, setNote] = useState('Save checks this copy. Approve writes it into the library the next render reads.');
   const [issues, setIssues] = useState<string[]>([]);
   const [armed, setArmed] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -106,9 +107,19 @@ export function StoryLibraryDev() {
       return;
     }
     if (!confirm('approve')) return;
-    setTemplates((rows) => rows.map((row) => ({ ...row, status: 'approved' })));
-    setEntries((rows) => rows.map((row) => ({ ...row, status: 'approved' })));
-    setNote('Approved in this session. The shipped bundle is unchanged.');
+    const nextTemplates = templates.map((row) => ({ ...row, status: 'approved' as const }));
+    const nextEntries = entries.map((row) => ({ ...row, status: 'approved' as const }));
+    void persistStoryLibraryDevice({ version: STORY_LIBRARY.version, templates: nextTemplates, entries: nextEntries }).then((result) => {
+      if (!result.ok) {
+        setIssues(result.failures.slice(0, 8).map((row) => `${row.templateId} ${row.trait} ${row.tier} ${row.pronoun}: ${row.detail}`));
+        setNote(`Not approved. ${result.failures.length} problem${result.failures.length === 1 ? '' : 's'} in ${result.renders} renders.`);
+        return;
+      }
+      setTemplates(nextTemplates);
+      setEntries(nextEntries);
+      setIssues([]);
+      setNote(`Approved and saved. ${result.renders} renders passed. The next render reads this copy.`);
+    });
   };
 
   if (!devAccess.isRoot) return null;
@@ -237,6 +248,7 @@ function ShippedSample() {
       <ThemedText type="smallBold">Shipped sample</ThemedText>
       <ThemedText type="small">{dive.title}</ThemedText>
       <ThemedText type="small">{dive.whatItMeansForYou}</ThemedText>
+      {dive.joke ? <ThemedText type="small">{dive.joke}</ThemedText> : null}
       {story ? <ThemedText type="small">{story.metScene}</ThemedText> : null}
     </View>
   );

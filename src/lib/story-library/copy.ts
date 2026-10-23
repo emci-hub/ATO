@@ -415,6 +415,7 @@ export function noticeText(bit: string): string {
   return `A friend sees ${bit}, and the chat keeps moving anyway.`;
 }
 
-export function endingText(tier: Tier, aside: string): string {
-  return `${TIER_LEAD[tier]} ${aside} ${ENDING_TAIL}`;
+/** Lead, then a `{closer}` slot, then the tail. The closer is not the shows-up aside. */
+export function endingText(tier: Tier): string {
+  return `${TIER_LEAD[tier]} {closer} ${ENDING_TAIL}`;
 }
