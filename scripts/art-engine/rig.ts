@@ -26,7 +26,18 @@ export type PartRole = (typeof ROLES)[number];
 
 export type DirectionRig = {
   parts: Partial<Record<PartRole, Point[]>>;
+  /** Optional per-direction overrides for heroes whose east and west drawings differ by a row. */
+  footRow?: number;
+  heightBand?: [number, number];
 };
+
+export function dirFootRow(rig: Rig, dir: DirectionRig): number {
+  return dir.footRow ?? rig.footRow;
+}
+
+export function dirHeightBand(rig: Rig, dir: DirectionRig): [number, number] {
+  return dir.heightBand ?? rig.heightBand;
+}
 
 export type Rig = {
   version: 1;
@@ -88,6 +99,15 @@ export function validateRig(raw: unknown, file: string): Rig {
   for (const [dir, d] of Object.entries(dirs)) {
     if (!d || typeof d !== 'object' || !d.parts || typeof d.parts !== 'object') {
       fail(file, `directions.${dir}.parts missing`);
+    }
+    if (d.footRow !== undefined && (!Number.isInteger(d.footRow) || d.footRow < 0 || d.footRow >= ch)) {
+      fail(file, `directions.${dir}.footRow must be a row inside the canvas`);
+    }
+    if (
+      d.heightBand !== undefined &&
+      (!Array.isArray(d.heightBand) || d.heightBand.length !== 2 || !d.heightBand.every((n) => Number.isInteger(n)) || d.heightBand[0] > d.heightBand[1])
+    ) {
+      fail(file, `directions.${dir}.heightBand must be [min, max]`);
     }
     for (const [role, poly] of Object.entries(d.parts)) {
       if (!(ROLES as readonly string[]).includes(role)) fail(file, `directions.${dir}.parts.${role}: unknown role`);

@@ -14,7 +14,7 @@ import path from 'node:path';
 import { PNG } from 'pngjs';
 
 import { gateContext, loadAtlas } from './art-engine/engine';
-import { gatesPassed, runGates, type GateContext, type GateResult } from './art-engine/gates';
+import { countTears, gatesPassed, runGates, type GateContext, type GateResult } from './art-engine/gates';
 import { alphaAt, changedPixels, clonePng, inPolygon, newPng } from './art-engine/image';
 import { getRecipe, RECIPES } from './art-engine/recipes';
 import { listRigs, loadRig, validateRig, type Rig } from './art-engine/rig';
@@ -66,13 +66,17 @@ function mirrored(src: PNG): PNG {
 }
 
 /** A visible pixel whose four neighbours are all visible, so erasing it makes an enclosed 1 px speck. */
-function findSolidPixel(png: PNG): { x: number; y: number } {
+function findSolidPixels(png: PNG, count: number): { x: number; y: number }[] {
+  const found: { x: number; y: number }[] = [];
   for (let y = 1; y < png.height - 1; y += 1) {
     for (let x = 1; x < png.width - 1; x += 1) {
-      if ([[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => alphaAt(png, x + dx, y + dy) > 0)) return { x, y };
+      const solid = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => alphaAt(png, x + dx, y + dy) > 0);
+      // spaced apart so each erased pixel is its own speck
+      if (solid && found.every((p) => Math.abs(p.x - x) > 3 || Math.abs(p.y - y) > 3)) found.push({ x, y });
+      if (found.length === count) return found;
     }
   }
-  throw new Error('no solid pixel');
+  throw new Error('not enough solid pixels');
 }
 
 function cloneRig(rig: Rig, patch: Record<string, unknown>): unknown {
@@ -109,6 +113,18 @@ if (base) {
   check('a rig with a polygon outside the canvas is refused', bad({ directions: { east: { parts: { prop: [[1, 1], [999, 2], [3, 1]] } } } }));
   check('a rig with a backwards height band is refused', bad({ heightBand: [120, 100] }));
   check('a rig with version 2 is refused', bad({ version: 2 }));
+  check('a per-direction foot row outside the canvas is refused', bad({ directions: { east: { footRow: 999, parts: {} } } }));
+  check('a per-direction backwards height band is refused', bad({ directions: { east: { heightBand: [120, 100], parts: {} } } }));
+  // a per-direction foot row is honoured by the foot-row gate (and a wrong one fails it)
+  const footAtlas = loadAtlas(base, root);
+  const footCtx = gateContext(base, 'east', footAtlas, root);
+  const footFrames = getRecipe('breathing-idle').apply(footCtx.rotation, base, base.directions.east).frames;
+  const goodDir = { ...base.directions.east, footRow: base.footRow };
+  const badDir = { ...base.directions.east, footRow: base.footRow - 3 };
+  check('foot-row gate passes with a matching per-direction foot row', gate(runGates({ ...footCtx, dir: goodDir }, footFrames), 'foot-row').ok);
+  check('foot-row gate FAILS with a wrong per-direction foot row', !gate(runGates({ ...footCtx, dir: badDir }, footFrames), 'foot-row').ok);
+  const split = rigs.filter((r) => Object.values(r.directions).some((d) => d.footRow !== undefined));
+  check('rigs with different east/west foot rows use the per-direction override (corvus, cyber-shinobi, kitsune)', ['corvus', 'cyber-shinobi', 'kitsune'].every((h) => split.some((r) => r.hero === h)), split.map((r) => r.hero).join(','));
   // a prop mask that claims no pixels must fail the gate, not pass as "no prop"
   const emptyCtx = gateContext(
     { ...base, directions: { east: { parts: { prop: [[1, 1], [3, 1], [2, 3]] } } } } as Rig,
@@ -208,8 +224,10 @@ for (const rig of rigs) {
     check(`${rig.hero}/${dir}: loop-seam FAILS on a clip that never moves`, !gate(runGates(ctx, [f[0], f[0], f[0], f[0]]), 'loop-seam').ok);
 
     const punched = clonePng(f[1]);
-    const solid = findSolidPixel(punched);
-    punched.data[(solid.y * punched.width + solid.x) * 4 + 3] = 0;
+    // erase one more speck than the rotation itself already has (some drawings have 1-3 of their own)
+    for (const solid of findSolidPixels(punched, countTears(ctx.rotation) + 1)) {
+      punched.data[(solid.y * punched.width + solid.x) * 4 + 3] = 0;
+    }
     check(`${rig.hero}/${dir}: no-tears FAILS on a 1 px see-through speck`, !gate(runGates(ctx, [f[0], punched, f[2], f[3]]), 'no-tears').ok);
     check(`${rig.hero}/${dir}: the engine clip has no tears the rotation lacks`, gate(results, 'no-tears').ok);
     check(

@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "hero": "archangel",
+  "slug": "hero.archangel.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.archangel.streetwear/migrated/raw",
+  "footRow": 156,
+  "heightBand": [
+    105,
+    110
+  ],
+  "lines": {
+    "hip": 115,
+    "shoulder": 78
+  },
+  "directions": {
+    "east": {
+      "parts": {
+        "cape": [
+          [
+            58,
+            50
+          ],
+          [
+            82,
+            50
+          ],
+          [
+            84,
+            104
+          ],
+          [
+            84,
+            148
+          ],
+          [
+            58,
+            152
+          ]
+        ],
+        "prop": [
+          [
+            100,
+            106
+          ],
+          [
+            112,
+            106
+          ],
+          [
+            146,
+            138
+          ],
+          [
+            146,
+            154
+          ],
+          [
+            104,
+            154
+          ],
+          [
+            104,
+            118
+          ],
+          [
+            100,
+            116
+          ]
+        ]
+      }
+    },
+    "west": {
+      "parts": {
+        "cape": [
+          [
+            104,
+            50
+          ],
+          [
+            126,
+            50
+          ],
+          [
+            126,
+            150
+          ],
+          [
+            104,
+            150
+          ]
+        ],
+        "prop": [
+          [
+            46,
+            106
+          ],
+          [
+            88,
+            106
+          ],
+          [
+            94,
+            110
+          ],
+          [
+            94,
+            126
+          ],
+          [
+            88,
+            128
+          ],
+          [
+            88,
+            154
+          ],
+          [
+            46,
+            154
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "Wings + cape lag a frame; the sword moves rigidly with the hand. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map."
+}

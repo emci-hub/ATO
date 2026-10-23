@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "hero": "velkhar",
+  "slug": "hero.velkhar.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.velkhar.streetwear/migrated/raw",
+  "footRow": 152,
+  "heightBand": [
+    110,
+    119
+  ],
+  "lines": {
+    "hip": 132,
+    "shoulder": 80
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "parts": {}
+    }
+  },
+  "notes": "Long robe: hip line low; floating skulls breathe with the body. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map. Large silhouette: a 2 px sink fails the 0.90 overlap gate, so this hero breathes 1 px (rest, down, down, rest).",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        450,
+        300,
+        450,
+        300
+      ]
+    }
+  }
+}

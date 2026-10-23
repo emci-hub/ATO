@@ -457,6 +457,15 @@ sword 15-17%, silhouette 0.65), which is the drift emci saw by eye. Comparison G
 rebuilds and a pass/fail pair per gate. **emci said GO for AN2 after seeing the GIFs (2026-10-22)** (all hero Idles through the engine; AN2 runs in a fresh chat). Known limit:
 the engine moves whole parts by whole pixels, so there is no head turn or cape sway; those are AN5 (paid, opt-in).
 
+**Step AN2 status (2026-10-23): rigs + Idles built for all 16 heroes, TEST ONLY: waiting for emci's approve / keep marks (nothing installed, no OTA, 0 PixelLab generations).**
+15 new rigs in `art-src/rigs/` (guessed from 5x grid sheets, masks checked on the part maps `docs/art/animation-tests/<hero>-engine/parts-*.png`); Maldrath's AN1 rig reused. Every hero passes all seven gates on east and west
+(`npm run art:engine -- --hero <name>`; `check:art-engine` covers all 16 rigs). Engine change: a rig direction may carry its own `footRow` / `heightBand`
+(Corvus, Cyber-Shinobi and Kitsune draw east and west one row apart); the no-tears test now erases one more speck than the drawing already has. Five heroes with a big silhouette
+(Aurex, Kitsune, Sak, Velkhar, Void-Raven) breathe 1 px (rest, down, down, rest) because a 2 px sink fails the 0.90 overlap gate; the other eleven breathe 0/1/2/1 px.
+Review material: `docs/art/animation-tests/an2/contact-1..4.png` (current | new rest | new low, east then west) and one GIF per hero `docs/art/animation-tests/an2/<hero>-idle.gif`
+(now vs new, east + west; built by `scripts/art-engine/an2-sheet.py`). Note: for several heroes the live Idle already drifted from the hero's own drawing (Archangel west sword colour, Velkhar's floating pieces missing on east);
+the engine's rest frame is the hero's own drawing. **Left:** emci marks approve / keep per hero; then install the approved ones (archive the old Idle via art-decisions with `replaces`, `art:sync`, `anim:library`, Idle `ms[]` holds, `check:art-registry --fresh`, gate, reviewer), ONE Play-only OTA after his OK, Box 80. Installs are Play-scope: never in the same commit as app or docs.
+
 **Step A1 status (2026-10-22): built, checked, pushed on `claude/brave-mendel-wbhxaq` (draft PR #83); MERGED into master
 2026-10-22 (A2 chat), OTA NOT published.** Done: token copy matches `AI_USE_DISCLOSURE` (no Story, no frozen reroll / free name-style price; only deep
 dives are free from the library, up to 10 a day: the reviewer caught a wrong "library cards are free" line, fixed);
@@ -529,6 +538,8 @@ was the category push line. So each flag was **accept / read / retire**, not hid
   flag to `false` now pin `true` (ai-library, category-bank, category-deep-dive, daily-pick, insight-bank, polish,
   progressive-unlock, story-bank). AI library bundle unchanged (no redeploy). The flips ride the next OTA (no visible change).
   Box 79 written (nothing should look different).
+
+**A6 closed (emci 2026-10-23): Box 82 passed on his phone; he read the 240 new ideas and wants no changes.**
 
 **Step A6 status (2026-10-23): DONE and PUBLISHED (OTA, emci's OK): production, runtime 1.1.0, update group `0d5e6a1f-58c0-4195-a4dc-e8de3ea518b3` (iOS `01a169b2-80e1-755a-99e2-485d13165d51`, Android `01a169b2-80e1-7cc6-a34c-c8c9cd6f5d20`), commit `da838b38`; gate green, reviewer FAIL on one privacy point (mixed ideas on the lock screen) fixed before publish, fixes not re-reviewed; Box 82 is emci's.** Before it: `ai-generate` Edge Function deleted and its folder removed (emci OK, commit `fab37496`), and PR #20 (Change answers fix + 8-ball reel) merged into master (merge `0c4dd96d`). A6: 6 → 12 ideas per lean (384 trait ideas; a person with ONE clear lean now cycles 11, was 5), 3 new mixed ideas per trait (48, `ftw_<axis>_m_<nn>`, tag "<Trait>: Mixed", for a trait answered but near the middle), picker takes `mixedAxes`, D22 done as the early read: after set 1 (16 answers) the focus card opens on Insights with the line "Early read: based on your first 16 answers. It gets more accurate as you answer more."; everything else on Insights stays locked until the full 48. No model call. Review doc: `docs/insight-bank-review.md` (A6 additions, 240 ideas). `check:insight-bank` updated (counts, mixed, early read). Box 82.
 

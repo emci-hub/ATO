@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "hero": "cyber-shinobi",
+  "slug": "hero.cyber-shinobi.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.cyber-shinobi.streetwear/migrated/raw",
+  "footRow": 150,
+  "heightBand": [
+    107,
+    113
+  ],
+  "lines": {
+    "hip": 112,
+    "shoulder": 74
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "footRow": 151,
+      "parts": {}
+    }
+  },
+  "notes": "No held prop; plain body breath. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map."
+}

@@ -13,7 +13,7 @@
 import type { PNG } from 'pngjs';
 
 import { alphaAt, changedPixels, colorAt, findTears, inPolygon, visibleBounds, visibleColors } from './image';
-import type { DirectionRig, Rig } from './rig';
+import { dirFootRow, dirHeightBand, type DirectionRig, type Rig } from './rig';
 
 export const GATE_LIMITS = {
   silhouetteMin: 0.9,
@@ -111,15 +111,16 @@ export function runGates(ctx: GateContext, frames: PNG[]): GateResult[] {
   }
 
   const feet = bounds.map((b) => (b ? b.y1 : -1));
-  const feetBad = feet.filter((y) => y !== ctx.rig.footRow).length;
+  const footRow = dirFootRow(ctx.rig, ctx.dir);
+  const feetBad = feet.filter((y) => y !== footRow).length;
   results.push({
     gate: 'foot-row',
     ok: feetBad === 0,
-    detail: `feet rows ${feet.join('/')} (rig ${ctx.rig.footRow})`,
+    detail: `feet rows ${feet.join('/')} (rig ${footRow})`,
     values: feet,
   });
 
-  const [hMin, hMax] = ctx.rig.heightBand;
+  const [hMin, hMax] = dirHeightBand(ctx.rig, ctx.dir);
   const heights = bounds.map((b) => (b ? b.y1 - b.y0 + 1 : 0));
   const heightBad = heights.filter((h) => h < hMin || h > hMax).length;
   results.push({

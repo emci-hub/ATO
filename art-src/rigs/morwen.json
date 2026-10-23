@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "hero": "morwen",
+  "slug": "hero.morwen.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.morwen.streetwear/migrated/raw",
+  "footRow": 149,
+  "heightBand": [
+    103,
+    108
+  ],
+  "lines": {
+    "hip": 126,
+    "shoulder": 80
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "parts": {
+        "prop": [
+          [
+            78,
+            56
+          ],
+          [
+            90,
+            56
+          ],
+          [
+            90,
+            112
+          ],
+          [
+            78,
+            112
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "Robe is body; the staff foot is planted (below the hip line, locked). AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map."
+}

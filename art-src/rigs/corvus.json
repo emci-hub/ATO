@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "hero": "corvus",
+  "slug": "hero.corvus.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.corvus.streetwear/migrated/raw",
+  "footRow": 152,
+  "heightBand": [
+    103,
+    112
+  ],
+  "lines": {
+    "hip": 124,
+    "shoulder": 78
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "footRow": 153,
+      "parts": {}
+    }
+  },
+  "notes": "Long cloak: hip line low so the whole cloak breathes with the body; boots locked. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map."
+}
