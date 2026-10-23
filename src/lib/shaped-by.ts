@@ -14,9 +14,16 @@
  */
 import { AXIS_POLE_NAME, AXIS_POLES, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { CATEGORY_DEFS } from '@/lib/categories';
-import { CORE_AXES, MODIFIER_AXES, THIRD_AXES } from '@/lib/legends64/classify';
-import { isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
-import type { TraitAxis, TraitLean } from '@/lib/traits';
+import { CORE_AXES, LEGEND_HIGH_EDGE, LEGEND_LOW_EDGE, MODIFIER_AXES, THIRD_AXES } from '@/lib/legends64/classify';
+import {
+  confidenceLabel,
+  isAxisSettled,
+  labelMinAnswers,
+  trackFor,
+  traitScore,
+  type TraitTrack,
+} from '@/lib/trait-stability';
+import type { TraitAxis, TraitLean, TraitSource } from '@/lib/traits';
 
 export const SHAPED_BY_LABEL = 'What shapes this';
 export const SHAPED_BY_NOT_ANSWERED = 'Not answered yet.';
@@ -28,9 +35,6 @@ export const YOUR_SIDE_LEAD = 'You lean';
 export const IDENTITY_RECIPE_LABEL = 'How this name is made';
 export const IDENTITY_RECIPE_LEDE =
   'Every word comes from three traits. A word locks in once all three are settled.';
-
-/** How far from the middle before a lean is named at all. */
-const LEAN_MARGIN = 0.05;
 
 export interface ShapedByRow {
   axis: TraitAxis;
@@ -45,24 +49,54 @@ export interface ShapedByRow {
    */
   line: string;
   settled: boolean;
+  /**
+   * "still learning you" or "solid read". Null when the trait has no answers.
+   * The same words may also be `line` when the pole name is still hidden.
+   */
+  confidenceCopy: string | null;
 }
 
-export function shapedByRow(axis: TraitAxis, tracks: readonly TraitTrack[], now: Date = new Date()): ShapedByRow {
+export function shapedByRow(
+  axis: TraitAxis,
+  tracks: readonly TraitTrack[],
+  now: Date = new Date(),
+  source?: TraitSource | null,
+): ShapedByRow {
   const row = trackFor(tracks, axis, 'report');
   const label = AXIS_SHORT_NAME[axis];
-  if (!row || row.answerCount < 1 || !Number.isFinite(row.value)) {
-    return { axis, label, lean: null, poleName: null, line: SHAPED_BY_NOT_ANSWERED, settled: false };
+  const score = traitScore(row, source);
+  if (!row || row.answerCount < 1 || score == null) {
+    return {
+      axis,
+      label,
+      lean: null,
+      poleName: null,
+      line: SHAPED_BY_NOT_ANSWERED,
+      settled: false,
+      confidenceCopy: null,
+    };
   }
   const settled = isAxisSettled(row, now);
-  if (Math.abs(row.value - 0.5) < LEAN_MARGIN) {
-    return { axis, label, lean: null, poleName: null, line: SHAPED_BY_MIDDLE, settled };
+  const confidenceCopy = confidenceLabel(row.answerCount);
+  // The pole word ("Adventurous") stays hidden until 3 answers (5 for the
+  // closeness traits), and while the score sits in the legend middle zone.
+  if (row.answerCount < labelMinAnswers(axis)) {
+    return { axis, label, lean: null, poleName: null, line: confidenceCopy ?? SHAPED_BY_NOT_ANSWERED, settled, confidenceCopy };
   }
-  const lean: TraitLean = row.value >= 0.5 ? 'high' : 'low';
-  return { axis, label, lean, poleName: AXIS_POLE_NAME[axis][lean], line: AXIS_POLES[axis][lean], settled };
+  if (score >= LEGEND_LOW_EDGE && score <= LEGEND_HIGH_EDGE) {
+    return { axis, label, lean: null, poleName: null, line: SHAPED_BY_MIDDLE, settled, confidenceCopy };
+  }
+  const lean: TraitLean = score >= 0.5 ? 'high' : 'low';
+  return { axis, label, lean, poleName: AXIS_POLE_NAME[axis][lean], line: AXIS_POLES[axis][lean], settled, confidenceCopy };
 }
 
-export function shapedByRows(axes: readonly TraitAxis[], tracks: readonly TraitTrack[]): ShapedByRow[] {
-  return axes.map((axis) => shapedByRow(axis, tracks));
+export function shapedByRows(
+  axes: readonly TraitAxis[],
+  tracks: readonly TraitTrack[],
+  now: Date = new Date(),
+  sources?: Partial<Record<TraitAxis, TraitSource>>,
+): ShapedByRow[] {
+  return axes.map((axis) => shapedByRow(axis, tracks, now, sources?.[axis]));
 }
 
 /** Names of the categories a trait feeds, in catalog order. */
@@ -83,14 +117,17 @@ export function showsUpInLine(axis: TraitAxis): string {
  * (modifier axes), the role (core axes) and, for the three-word styles, the
  * extra word (Growth x Composure x Playfulness, name styles v2).
  */
-export function identityRecipe(tracks: readonly TraitTrack[]): {
+export function identityRecipe(
+  tracks: readonly TraitTrack[],
+  sources?: Partial<Record<TraitAxis, TraitSource>>,
+): {
   first: ShapedByRow[];
   second: ShapedByRow[];
   third: ShapedByRow[];
 } {
   return {
-    first: shapedByRows(MODIFIER_AXES, tracks),
-    second: shapedByRows(CORE_AXES, tracks),
-    third: shapedByRows(THIRD_AXES, tracks),
+    first: shapedByRows(MODIFIER_AXES, tracks, new Date(), sources),
+    second: shapedByRows(CORE_AXES, tracks, new Date(), sources),
+    third: shapedByRows(THIRD_AXES, tracks, new Date(), sources),
   };
 }

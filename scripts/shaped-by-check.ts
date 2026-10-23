@@ -22,7 +22,7 @@ import {
   shapedByRows,
   showsUpInLine,
 } from '../src/lib/shaped-by';
-import type { TraitTrack } from '../src/lib/trait-stability';
+import { CONFIDENCE_LEARNING_COPY, CONFIDENCE_SOLID_COPY, type TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
 
 let passed = 0;
@@ -86,9 +86,24 @@ assert.equal(high.poleName, AXIS_POLE_NAME.openness.high);
 assert.equal(shapedByRow('openness', []).poleName, null);
 assert.equal(high.settled, true);
 const low = shapedByRow('openness', [track('openness', 0.2, 2)]);
-assert.equal(low.line, AXIS_POLES.openness.low);
+assert.equal(low.poleName, null);
+assert.equal(low.lean, null);
+assert.equal(low.line, CONFIDENCE_LEARNING_COPY);
 assert.equal(low.settled, false);
-ok('a trait shows the quote for the side it leans to, says so when unanswered or in between, and knows if it is settled');
+const named = shapedByRow('openness', [track('openness', 0.2, 3)]);
+assert.equal(named.poleName, AXIS_POLE_NAME.openness.low);
+assert.equal(named.line, AXIS_POLES.openness.low);
+assert.equal(named.confidenceCopy, CONFIDENCE_LEARNING_COPY);
+const solid = shapedByRow('openness', [track('openness', 0.2, 8)]);
+assert.equal(solid.confidenceCopy, CONFIDENCE_SOLID_COPY);
+assert.equal(solid.poleName, AXIS_POLE_NAME.openness.low);
+const corrected = {
+  ...track('openness', 0.9, 8),
+  answerSamples: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
+};
+assert.equal(shapedByRow('openness', [corrected]).poleName, AXIS_POLE_NAME.openness.low);
+assert.equal(shapedByRow('openness', [corrected], new Date(), 'self_settings').poleName, AXIS_POLE_NAME.openness.high);
+ok('a pole name waits for 3 answers, then says still learning or a solid read');
 
 for (const row of shapedByRows(TRAIT_AXES, TRAIT_AXES.map((axis) => track(axis, 0.9)))) {
   assert.doesNotMatch(row.label, /_/, `internal name leaked: ${row.label}`);
@@ -118,7 +133,7 @@ ok('a reveal is closed until tapped, renders nothing while closed, and puts a qu
 
 const fold = read('src/components/categories-fold.tsx');
 assert.match(fold, /<InfoReveal label=\{SHAPED_BY_LABEL\}>/);
-assert.match(fold, /<ShapedByList rows=\{shapedByRows\(reading\.def\.axes, tracks\)\} \/>/);
+assert.match(fold, /<ShapedByList rows=\{shapedByRows\(reading\.def\.axes, tracks, new Date\(\), sources\)\} \/>/);
 // Inside the opened card, not on the list row: the list stays a clean list.
 assert.ok(fold.indexOf('<InfoReveal label={SHAPED_BY_LABEL}>') > fold.indexOf('{open ? ('));
 ok('a category card explains what shapes it, inside the opened card only');

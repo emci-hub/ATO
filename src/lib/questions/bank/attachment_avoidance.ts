@@ -3,7 +3,8 @@ import { intake, q, retired, traitBank } from './define';
 /** Personal space: "Come over, let's talk" (low) to "I'm good, I just need some space" (high). */
 export const ATTACHMENT_AVOIDANCE_BANK = traitBank('attachment_avoidance', [
   intake(1, q('attachment_avoidance_01', 'dating', 'high', 'Someone close to you wants to talk something out in person instead of over text.',
-    ["Sure, that's fine when it matters", 0.2], ["I'd rather keep it lighter, over text", 0.8])),
+    ["Sure, that's fine when it matters", 0.2], ["I'd rather keep it lighter, over text", 0.8],
+    ['Depends how the week went', 0.5], ["I'd rather skip the call", 0.95])),
   intake(2, q('attachment_avoidance_02', 'stress', 'high', "A rough week, and someone texts 'how are you, really?'",
     ['I tell them the real version', 0.2], ['I give them the short version', 0.5], ["I say I'm fine and change the subject", 0.8])),
   intake(3, q('attachment_avoidance_03', 'dating', 'neither', 'Someone starts texting you good morning every day.',

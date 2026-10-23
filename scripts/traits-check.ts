@@ -200,23 +200,26 @@ async function main() {
   ok('scenario screen with no tap produces no write');
 
   const openConWrite = writeForOptionalScreen({ screen: 0, optionId: 'new_thing' });
-  assert.deepEqual(openConWrite?.incoming, { openness: 0.8, conscientiousness: 0.2 });
-  assert.equal(openConWrite?.source, 'self_scenario');
+  assert.equal(openConWrite?.incoming.openness, 0.8);
+  assert.notEqual(openConWrite?.incoming.openness, openConWrite?.incoming.conscientiousness);
+  assert.equal(openConWrite?.weights.openness, 1);
+  assert.equal(openConWrite?.weights.conscientiousness, 0.5);
+  assert.equal(openConWrite?.source, 'self_situation');
   assert.deepEqual([...(openConWrite?.allowed ?? [])], ['openness', 'conscientiousness']);
-  ok('screen 0 writes both openness and conscientiousness from one tap, as direct self_scenario');
+  ok('screen 0 writes both traits as an ordinary answer, at different weights, not a sticky lock');
 
   const attachmentWrite = writeForOptionalScreen({ screen: 5, optionId: 'did_i_do' });
-  assert.deepEqual(attachmentWrite?.incoming, { attachment_anxiety: 0.8, attachment_avoidance: 0.2 });
-  assert.equal(attachmentWrite?.source, 'self_scenario');
-  ok('attachment screen writes anxiety and avoidance from one tap');
+  assert.equal(attachmentWrite?.incoming.attachment_anxiety, 0.8);
+  assert.notEqual(attachmentWrite?.incoming.attachment_anxiety, attachmentWrite?.incoming.attachment_avoidance);
+  assert.equal(attachmentWrite?.source, 'self_situation');
+  ok('attachment screen writes anxiety and avoidance as ordinary weighted answers');
 
-  const directScenario = mergeTraitWrite(emptyTraitState(), openConWrite!.incoming, 'self_scenario', openConWrite!.allowed);
-  assert.equal(directScenario.values.openness, 0.8);
-  assert.equal(directScenario.sources.openness, 'self_scenario');
-  const laterGuess = mergeTraitWrite(directScenario, { openness: 0.1 }, 'self_game', TRAIT_AXES);
-  assert.equal(laterGuess.values.openness, 0.8);
-  assert.equal(laterGuess.sources.openness, 'self_scenario');
-  ok('self_scenario full-replaces the number (not damped toward 0.5) and blocks a later inferred write');
+  const scenario = mergeTraitWrite(emptyTraitState(), openConWrite!.incoming, 'self_situation', openConWrite!.allowed);
+  assert.equal(scenario.sources.openness, 'self_situation');
+  const laterAnswer = mergeTraitWrite(scenario, { openness: 0.2 }, 'self_situation', ['openness']);
+  assert.notEqual(laterAnswer.values.openness, scenario.values.openness);
+  assert.equal(isDirectTraitSource('self_scenario'), false);
+  ok('a vibe-check answer does not lock the trait; a later answer moves the number');
 
   const unknownOption = writeForOptionalScreen({ screen: 0, optionId: 'not_a_real_option' });
   assert.equal(unknownOption, null);

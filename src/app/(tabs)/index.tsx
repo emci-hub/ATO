@@ -388,7 +388,9 @@ export default function HomeScreen() {
           ) : null}
 
           {/* The name you've earned — tap for the card and the styles on You. */}
-          {me && tracksUserId === me.id ? <IdentityTitleChip userId={me.id} tracks={tracks} /> : null}
+          {me && tracksUserId === me.id ? (
+            <IdentityTitleChip userId={me.id} tracks={tracks} sources={me.trait_sources} />
+          ) : null}
 
           {/* Before the profile is done (or if it failed to load) there is no
               Story or insight yet, so Today's Pick comes right after the name. */}

@@ -50,8 +50,10 @@ import {
   WAVE99_SCENARIO_HELD,
   WAVE100_NEW_ROWS,
   WAVE100_RETIRED_ROWS,
+  WAVE116_OPTION_IDS,
   legacyPromptsFor,
   wave100RowsSql,
+  wave116OptionsSql,
   wave85SeedSql,
   wave99WordingSql,
 } from './gen-wave85-bank';
@@ -76,9 +78,21 @@ for (const axis of TRAIT_AXES) {
     assert.equal(row.axis, axis);
     // Ids are never renumbered, reused or dropped: 01, 02 … in file order, retired rows in place.
     assert.equal(row.id, `${axis}_${String(i + 1).padStart(2, '0')}`, `${axis}: ids run 01..${all.length} in file order`);
-    assert.ok(row.options.length === 2 || row.options.length === 3, `${row.id}: 2-3 options`);
+    const expanded = (WAVE116_OPTION_IDS as readonly string[]).includes(row.id);
+    assert.ok(
+      (expanded ? row.options.length === 4 : row.options.length === 2 || row.options.length === 3),
+      `${row.id}: ${expanded ? '4' : '2-3'} options`,
+    );
     const values = row.options.map((o) => o.value).sort().join(',');
-    assert.ok(values === '0.2,0.5,0.8' || values === '0.2,0.8', `${row.id}: values ${values}`);
+    const allowed = expanded
+      ? values === '0.2,0.5,0.8,0.95' || values === '0.05,0.2,0.5,0.8'
+      : values === '0.2,0.5,0.8' || values === '0.2,0.8';
+    assert.ok(allowed, `${row.id}: values ${values}`);
+    if (expanded) {
+      assert.equal(row.options[2]!.value, 0.5, `${row.id}: the third option is the middle`);
+      const stronger = row.unflattering === 'low' ? 0.05 : 0.95;
+      assert.equal(row.options[3]!.value, stronger, `${row.id}: stronger end stays on the less-flattering side`);
+    }
     assert.ok(BANK_SETTINGS.includes(row.setting), `${row.id}: setting`);
   });
   const rows = BANK_BY_TRAIT[axis];
@@ -96,7 +110,7 @@ for (const axis of TRAIT_AXES) {
     );
   }
 }
-ok('400 active questions: 25 per trait, ids <trait>_01.. in order (retired rows kept in place), 2-3 options at 0.2/0.5/0.8, every setting twice, both sides unflattering, high option position varies');
+ok('400 active questions: 25 per trait, ids <trait>_01.. in order (retired rows kept in place), 2-4 options, every setting twice, both sides unflattering, high option position varies');
 
 // Retired rows (wave100, emci 2026-10-20): each is replaced by exactly one NEW
 // id in the same trait, with the same setting, direction (which end is less
@@ -243,6 +257,23 @@ const BOUNDARY_OPTION = /\b(private|privacy|separate|apart|password|passcode|som
 const boundaryRows = QUESTION_BANK.filter((q) => q.options.some((o) => BOUNDARY_OPTION.test(o.text))).map((q) => q.id);
 assert.deepEqual(boundaryRows, [], `no active option is a privacy/safety boundary: ${boundaryRows.join(', ')}`);
 ok('wave85b is unchanged as applied except the rows wave99 rewords; wave99 is exactly the generator output for those rows; SCENARIO and privacy rows are retired with their original question; no active location-sharing or boundary answer');
+
+const wave116 = read('supabase/migrations/wave116_question_four_options.sql');
+assert.equal(wave116, wave116OptionsSql().replace(/\r\n/g, '\n'), 'wave116 matches gen-wave85-bank.ts --wave116 (re-run the generator, never hand-edit)');
+assert.equal(new Set(WAVE116_OPTION_IDS).size, WAVE116_OPTION_IDS.length, 'wave116 ids are unique');
+for (const id of WAVE116_OPTION_IDS) {
+  const row = bankQuestionById(id);
+  assert.ok(row && !row.retired, `${id}: an active bank row`);
+  assert.equal(row.options.length, 4, `${id}: four options`);
+  assert.ok(wave116.includes(`where id = '${id}'`), `wave116 updates ${id}`);
+  const seedLine = seedLines.find((line) => rowIdOf(line) === id);
+  assert.ok(seedLine, `${id}: still in wave85b`);
+  const was = rowShape(seedLine);
+  assert.deepEqual(row.options.slice(0, 2).map((o) => o.value), was.values, `${id}: the original two values stay first`);
+  assert.equal(was.unflattering, row.unflattering, `${id}: the less-flattering tag stays`);
+}
+assert.doesNotMatch(wave116, /\bdelete\s+from\b|\btruncate\b|trait_answers|trait_tracks/i, 'wave116 touches no answer');
+ok(`${WAVE116_OPTION_IDS.length} two-option questions gain a middle and a stronger end; the original options and the less-flattering tag stay`);
 
 // wave100b: the new rows and the retirements, generated.
 const wave100b = read('supabase/migrations/wave100b_question_retire_rows.sql');
@@ -611,7 +642,8 @@ assert.equal(after.answerCount, before.answerCount, 'replacing never inflates th
 // The replay is exactly the live answer path folded in order.
 let live: TraitTrack | null = null;
 for (const v of [0.8, 0.2, 0.5, 0.8]) live = applyEwmaAnswer(live, 'openness', 'report', v, iso);
-assert.deepEqual(fold([0.8, 0.2, 0.5, 0.8]), { ...live!, lastDepthAt: null });
+const { answerSamples: _ignored, ...replayed } = fold([0.8, 0.2, 0.5, 0.8]);
+assert.deepEqual(replayed, { ...live!, lastDepthAt: null });
 ok('retest: new answers replace old ones (server deletes, logs, recomputes with the same step) and the trait moves');
 
 // 7. Start Fresh ----------------------------------------------------------------------

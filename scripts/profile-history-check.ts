@@ -14,7 +14,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { archetypeCode, CORE_AXES, MODIFIER_AXES, POLE_COMBOS, THIRD_AXES, thirdCode } from '../src/lib/legends64/classify';
+import { CORE_AXES, MODIFIER_AXES, POLE_COMBOS, THIRD_AXES, storedProfilePole } from '../src/lib/legends64/classify';
 import {
   CARD_HEROES,
   cardBars,
@@ -59,11 +59,16 @@ const rnd = () => {
   return seed / 2147483648;
 };
 const randomValues = (): ProfileValues => Object.fromEntries(TRAIT_AXES.map((a) => [a, Math.round(rnd() * 100) / 100]));
+const storedCode = (values: ProfileValues) => {
+  const part = (axes: readonly (typeof TRAIT_AXES)[number][]) =>
+    axes.map((axis) => storedProfilePole(values[axis] ?? null)).join('');
+  return `${part([...CORE_AXES])}-${part([...MODIFIER_AXES])}-${part([...THIRD_AXES])}`;
+};
 for (let i = 0; i < 200; i += 1) {
   const v = randomValues();
-  assert.equal(profileCode(v), `${archetypeCode(v)}-${thirdCode(v)}`, 'card code = the Legends code + third letters');
+  assert.equal(profileCode(v), storedCode(v), 'card code stays the server binary letters, not the legend middle zone');
 }
-assert.equal(profileCode({}), 'LLL-LLL-LLL', 'an unanswered trait reads low, as classify.ts does');
+assert.equal(profileCode({}), 'LLL-LLL-LLL', 'a saved card still reads an unanswered trait as low');
 const codeFn = fn('_profile_code');
 const axisList = [...CORE_AXES, ...MODIFIER_AXES, ...THIRD_AXES].map((a) => `'${a}'`).join(', ');
 assert.ok(codeFn.replace(/\s+/g, ' ').includes(axisList), 'the SQL code reads the same 9 axes in the same order');

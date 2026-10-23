@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { InfoReveal, ShapedByList } from '@/components/info-reveal';
@@ -27,6 +27,7 @@ import { sageKnowsWeekKey } from '@/lib/sage-knows';
 import { localYmd } from '@/lib/local-date';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import { traitStateFromRow } from '@/lib/traits';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { categoryWaitingLine } from '@/lib/questions/staged-intake-copy';
 import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
@@ -93,6 +94,10 @@ export function CategoriesFold({
   useCategoryDefs();
 
   const dataEpoch = useAccountDataEpoch();
+  const sources = useMemo(
+    () => traitStateFromRow({ trait_sources: me.trait_sources }).sources,
+    [me.trait_sources],
+  );
   const readings = readAllCategories(tracks);
   const ready = readings.filter((row) => row.ready);
   const todayYmd = localYmd(new Date(), me.timezone || 'UTC');
@@ -263,7 +268,7 @@ export function CategoriesFold({
                           <ThemedText type="small" themeColor="textSecondary">
                             {categoryConcept(id)}
                           </ThemedText>
-                          <ShapedByList rows={shapedByRows(reading.def.axes, tracks)} />
+                          <ShapedByList rows={shapedByRows(reading.def.axes, tracks, new Date(), sources)} />
                         </InfoReveal>
                       ) : null}
                     </ThemedView>

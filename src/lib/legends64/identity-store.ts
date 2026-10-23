@@ -3,18 +3,23 @@
  * chosen name style, and which styles are unlocked — plus the token spend that
  * unlocks a style.
  *
- * ON THE DEVICE ONLY (emci, 2026-10-01): no new table or column. The payment
- * itself IS on the server: unlocking a style spends through the existing
- * `spend_ato_tokens_legend_reroll` function (-10, once a day), which had no
- * caller since Legends became a placeholder. So if the phone loses this state,
- * the ledger still knows how many styles were paid for, and
- * `fetchPaidStyleCount` lets the person pick that many again for free.
+ * The letters and the chosen style stay on the device. The payment itself
+ * is on the server (`spend_ato_tokens_legend_reroll`). Legend history
+ * (wave115 `legend_forms`) is saved here too, and mirrored to the server
+ * when that migration is applied. The phone still shows it if the table
+ * is not there yet.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { spendAtoTokensLegendReroll } from '@/lib/ato-tokens-server';
 import { DEFAULT_LEGEND_SKIN, isLegendSkin, type LegendSkin } from '@/lib/legends64/archetypes';
 import { IDENTITY_AXES, type LockedPoles } from '@/lib/legends64/identity';
+import {
+  emptyLegendHistory,
+  parseLegendHistory,
+  type LegendHistory,
+  type LegendReveal,
+} from '@/lib/legends64/legend-forms';
 import { supabase } from '@/lib/supabase';
 
 export const IDENTITY_STATE_KEY = 'ato.identity.v1';
@@ -38,10 +43,20 @@ export interface IdentityState {
   skin: LegendSkin;
   /** Paid styles. The default style is free and never listed here. */
   unlocked: LegendSkin[];
+  /**
+   * When the name is borderline, the existing legend the person picked
+   * to display. It is not a collected legend. Absent means the balanced
+   * title, or "Between A and B" until they pick.
+   */
+  pickedCode?: string | null;
+  /** Computed names only. A picked code is never written here. */
+  legendHistory: LegendHistory;
+  /** Set when an archived name matches again. The animation PR clears it. */
+  reveal: LegendReveal | null;
 }
 
 function emptyState(userId: string): IdentityState {
-  return { userId, poles: {}, skin: DEFAULT_LEGEND_SKIN, unlocked: [] };
+  return { userId, poles: {}, skin: DEFAULT_LEGEND_SKIN, unlocked: [], legendHistory: emptyLegendHistory(), reveal: null };
 }
 
 export async function loadIdentityState(userId: string): Promise<IdentityState> {
@@ -53,8 +68,12 @@ export async function loadIdentityState(userId: string): Promise<IdentityState> 
     const poles: LockedPoles = {};
     for (const axis of IDENTITY_AXES) {
       const pole = parsed.poles?.[axis];
-      if (pole === 'H' || pole === 'L') poles[axis] = pole;
+      if (pole === 'H' || pole === 'L' || pole === 'M') poles[axis] = pole;
     }
+    const pickedCode =
+      typeof parsed.pickedCode === 'string' && /^[HL]{3}-[HL]{3}$/.test(parsed.pickedCode)
+        ? parsed.pickedCode
+        : null;
     const unlocked = Array.isArray(parsed.unlocked)
       ? parsed.unlocked.filter((s): s is LegendSkin => isLegendSkin(s) && s !== DEFAULT_LEGEND_SKIN)
       : [];
@@ -64,7 +83,14 @@ export async function loadIdentityState(userId: string): Promise<IdentityState> 
       (NAME_STYLES_FREE || parsed.skin === DEFAULT_LEGEND_SKIN || unlocked.includes(parsed.skin))
         ? parsed.skin
         : DEFAULT_LEGEND_SKIN;
-    return { userId, poles, skin, unlocked };
+    const reveal =
+      parsed.reveal &&
+      parsed.reveal.kind === 'restored' &&
+      typeof parsed.reveal.legendId === 'string' &&
+      /^[HL]{3}-[HL]{3}$/.test(parsed.reveal.legendId)
+        ? { kind: 'restored' as const, legendId: parsed.reveal.legendId }
+        : null;
+    return { userId, poles, skin, unlocked, pickedCode, legendHistory: parseLegendHistory(parsed.legendHistory), reveal };
   } catch {
     return emptyState(userId);
   }
@@ -104,5 +130,54 @@ export async function payForStyleUnlock(): Promise<StyleUnlockOutcome> {
     if ((err as { code?: string } | null)?.code === 'P0040') return 'not_enough';
     console.log('[identity] style unlock error:', err);
     return 'failed';
+  }
+}
+
+/**
+ * Server copy of the history, or null when wave115 is not applied yet.
+ * A new phone uses this so the one-time archive does not run twice.
+ */
+export async function fetchRemoteLegendHistory(): Promise<LegendHistory | null> {
+  try {
+    const [formsRes, stateRes] = await Promise.all([
+      supabase.from('legend_forms').select('legend_id, first_earned_at, archived_at, restored_at'),
+      supabase.from('legend_form_state').select('migrated_at').maybeSingle(),
+    ]);
+    if (formsRes.error || stateRes.error) return null;
+    const forms = (formsRes.data ?? [])
+      .map((row) => {
+        const item = row as {
+          legend_id?: unknown;
+          first_earned_at?: unknown;
+          archived_at?: unknown;
+          restored_at?: unknown;
+        };
+        return {
+          legendId: item.legend_id,
+          firstEarnedAt: item.first_earned_at,
+          archivedAt: item.archived_at,
+          restoredAt: item.restored_at,
+        };
+      });
+    const history = parseLegendHistory({ forms, migrated: stateRes.data != null });
+    return history.migrated || history.forms.length > 0 ? history : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Mirror one computed code. `archiveId` is sent only on the scoring
+ * migration. A picked display name is never passed.
+ */
+export async function recordLegendForm(current: string | null, archiveId: string | null): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('record_legend_form', {
+      p_current: current,
+      p_archive: archiveId,
+    });
+    if (error) console.log('[identity] legend form sync skipped:', error.message);
+  } catch (err) {
+    console.log('[identity] legend form sync skipped:', err);
   }
 }

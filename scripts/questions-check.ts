@@ -100,7 +100,7 @@ assert.deepEqual([...new Set(QUESTIONS_BANK.map((row) => row.axis))], [...TRAIT_
 const bankPrompts = QUESTIONS_BANK.map((row) => row.prompt);
 assert.equal(new Set(bankPrompts).size, bankPrompts.length, 'no duplicate bank prompts');
 for (const row of QUESTIONS_BANK) {
-  assert.ok(row.options.length >= 2 && row.options.length <= 3, row.prompt);
+  assert.ok(row.options.length >= 2 && row.options.length <= 4, row.prompt);
   assert.ok(row.prompt.length <= 400, row.prompt);
   assert.equal(questionDraftGuardHit(row), null, row.prompt);
 }
@@ -139,7 +139,7 @@ const local = composeLocalQuestionBatch();
 assert.equal(local.length, 5);
 assert.equal(local[0]?.axis, 'openness');
 for (const draft of local) {
-  assert.ok(draft.options.length >= 2 && draft.options.length <= 3);
+  assert.ok(draft.options.length >= 2 && draft.options.length <= 4);
   assert.equal(containsFrameworkTerm(draft.prompt), false, draft.prompt);
   for (const option of draft.options) {
     assert.equal(containsFrameworkTerm(option.text), false, option.text);

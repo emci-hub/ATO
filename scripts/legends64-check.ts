@@ -38,14 +38,21 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-assert.equal(midpointHighLow(0.5), 'H');
-assert.equal(midpointHighLow(0.4999), 'L');
+assert.equal(midpointHighLow(0.5), 'M');
+assert.equal(midpointHighLow(0.45), 'M');
+assert.equal(midpointHighLow(0.55), 'M');
+assert.equal(midpointHighLow(0.5501), 'H');
+assert.equal(midpointHighLow(0.4499), 'L');
 assert.equal(midpointHighLow(1), 'H');
 assert.equal(midpointHighLow(0), 'L');
-assert.equal(midpointHighLow(null), 'L');
-assert.equal(midpointHighLow(undefined), 'L');
-assert.equal(midpointHighLow(NaN), 'L');
-ok('midpointHighLow: straight >=0.5 split, unset/non-finite defaults low');
+assert.equal(midpointHighLow(null), 'U');
+assert.equal(midpointHighLow(undefined), 'U');
+assert.equal(midpointHighLow(NaN), 'U');
+assert.equal(midpointHighLow(0.5, 'H'), 'H');
+assert.equal(midpointHighLow(0.44, 'H'), 'L');
+assert.equal(midpointHighLow(0.5, 'L'), 'L');
+assert.equal(midpointHighLow(0.56, 'L'), 'H');
+ok('midpointHighLow: 45–55% is middle, hysteresis holds a letter, unset is unknown');
 
 assert.equal(
   coreCode({ conscientiousness: 0.9, extraversion: 0.1, openness: 0.9 }),

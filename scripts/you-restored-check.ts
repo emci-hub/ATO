@@ -59,12 +59,13 @@ ok('the two dead files (optional fill, old Explore panel) stay deleted');
 // The name on Home: display only.
 {
   const chip = read('src/components/identity-title-chip.tsx');
-  assert.match(chip, /nextLockedPoles\(tracks, stored\?\.poles \?\? \{\}\)/);
+  assert.match(chip, /stored\?\.legendHistory\.migrated \? stored\.poles : \{\}/);
+  assert.match(chip, /nextLockedPoles\([\s\S]*parsedSources,/);
   assert.doesNotMatch(chip, /saveIdentityState|supabase|generateText|\.rpc\(|spendAtoTokens/, 'Home only reads: no write, no model call, no spend');
   assert.match(chip, /view\.lockedCount === 0\) return null/, 'nothing shows until part of the name has settled');
   assert.doesNotMatch(chip, /identityProgressLine/, 'no "N of M settled" line on Home');
   assert.match(chip, /useFocusEffect/, 'reloads on focus so a style picked on You shows on Home');
-  assert.match(read('src/app/(tabs)/index.tsx'), /<IdentityTitleChip userId=\{me\.id\} tracks=\{tracks\} \/>/);
+  assert.match(read('src/app/(tabs)/index.tsx'), /<IdentityTitleChip userId=\{me\.id\} tracks=\{tracks\} sources=\{me\.trait_sources\} \/>/);
   ok('Home shows the earned name (display only, no write, no model call)');
 }
 

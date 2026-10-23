@@ -60,7 +60,12 @@ export interface BankQuestion {
    */
   intakeSlot?: 1 | 2 | 3;
   prompt: string;
-  /** 2 or 3 options. Value 0.8 is the high end, 0.2 the low end, 0.5 between. */
+  /**
+   * 2, 3, or 4 options. 0.8 is high, 0.2 is low, 0.5 is between.
+   * A 4-option row is a former 2-option row: the first two options stay, in
+   * order, and a middle plus a stronger end (0.95 or 0.05) are appended, so
+   * an answer already stored by option index still means the same thing.
+   */
   options: QuestionOption[];
   /**
    * Set when the question was retired (emci 2026-10-20): its scene changed, so

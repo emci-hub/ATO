@@ -16,9 +16,10 @@ import { ATO_TOKEN_NEED_MORE, ATO_TOKEN_PRICE, atoPriceLine } from '@/lib/ato-to
 import { AXIS_POLE_NAME } from '@/lib/axis-poles';
 import { pushBuddyNote } from '@/lib/buddy/notes';
 import { recipeForAccount } from '@/lib/kenney/registry';
-import { CORE_AXES } from '@/lib/legends64/classify';
+import { CORE_AXES, MODIFIER_AXES } from '@/lib/legends64/classify';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
+  archetypeName,
   DEFAULT_LEGEND_SKIN,
   LEGENDS64_COPY_REVIEWED,
   LEGEND_SKINS,
@@ -33,25 +34,45 @@ import {
   identityProgressLine,
   identityTitle,
   identityView,
+  legendHeadline,
   nextLockedPoles,
   samePoles,
   topTraitPhrases,
 } from '@/lib/legends64/identity';
 import {
+  activeLegendId,
+  archivedLegendForms,
+  exactLegendId,
+  LEGEND_GROWN_OUT_LINE,
+  LEGEND_PAST_FORM_LABEL,
+  LEGEND_RESTORED_LINE,
+  LEGEND_SHARPER_NOTE,
+  reconcileLegendForms,
+} from '@/lib/legends64/legend-forms';
+import {
   NAME_STYLES_FREE,
   fetchPaidStyleCount,
+  fetchRemoteLegendHistory,
   loadIdentityState,
   payForStyleUnlock,
+  recordLegendForm,
   saveIdentityState,
   type IdentityState,
 } from '@/lib/legends64/identity-store';
 import { STYLE_ROW_LABEL } from '@/lib/polish-copy';
+import { recordSelfCorrections } from '@/lib/me';
+import {
+  CORRECTION_SAVED,
+  LEGEND_CLOSER_LEAD,
+  LEGEND_NOT_ME,
+  legendCorrectionSamples,
+} from '@/lib/self-correction';
 import { IDENTITY_RECIPE_LABEL, IDENTITY_RECIPE_LEDE, identityRecipe } from '@/lib/shaped-by';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { useAppearance } from '@/lib/theme/context';
-import { traitShapePoints } from '@/lib/trait-shape';
-import type { TraitTrack } from '@/lib/trait-stability';
-import type { TraitAxis } from '@/lib/traits';
+import { publicCardPoints, traitShapePoints } from '@/lib/trait-shape';
+import { confidenceSummary, type TraitTrack } from '@/lib/trait-stability';
+import { traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 
 export const IDENTITY_KICKER = 'your ato';
@@ -72,7 +93,7 @@ export function IdentityCard({
   me,
   onUpdated,
 }: {
-  me: SharePerson & { id: string; recipe?: unknown } & Partial<Record<TraitAxis, number | null>>;
+  me: SharePerson & { id: string; recipe?: unknown; trait_sources?: unknown } & Partial<Record<TraitAxis, number | null>>;
   onUpdated?: () => void | Promise<void>;
 }) {
   const theme = useTheme();
@@ -87,26 +108,77 @@ export function IdentityCard({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [correctionNote, setCorrectionNote] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     Promise.all([fetchTraitTracks(me.id), loadIdentityState(me.id)])
       .then(async ([rows, stored]) => {
         if (cancelled) return;
-        const poles = nextLockedPoles(rows, stored.poles);
-        const next = samePoles(poles, stored.poles) ? stored : { ...stored, poles };
-        if (next !== stored) await saveIdentityState(next);
+        const sources = traitStateFromRow({ trait_sources: me.trait_sources }).sources;
+        const now = new Date();
+        const localMigrated = stored.legendHistory.migrated;
+        // Another phone may already have archived the old name. Don't do it again.
+        const remote = localMigrated ? null : await fetchRemoteLegendHistory();
+        if (cancelled) return;
+        const history = remote?.migrated ? remote : stored.legendHistory;
+        // The scoring migration classifies once with no previous letter.
+        // After that, hysteresis holds a letter until it clearly crosses.
+        const poles = nextLockedPoles(rows, localMigrated ? stored.poles : {}, now, sources);
+        const reconciled = reconcileLegendForms({
+          history,
+          previousPoles: stored.poles,
+          nextPoles: poles,
+          nowIso: now.toISOString(),
+        });
+        const headline = legendHeadline(rows, poles, stored.skin, stored.pickedCode, sources);
+        // The pick is a display choice. It is not passed to the history.
+        const pickedStillFits =
+          !stored.pickedCode || headline.choices.some((choice) => choice.code === stored.pickedCode) || headline.kind === 'exact';
+        const pickedCode = pickedStillFits ? stored.pickedCode : null;
+        const active = activeLegendId(reconciled.history);
+        const reveal =
+          reconciled.event?.kind === 'restored'
+            ? { kind: 'restored' as const, legendId: reconciled.event.legendId }
+            : stored.reveal?.legendId === active
+              ? stored.reveal
+              : null;
+        const next: IdentityState = {
+          ...stored,
+          poles,
+          pickedCode,
+          legendHistory: reconciled.history,
+          reveal,
+        };
+        const changed =
+          !samePoles(poles, stored.poles) ||
+          pickedCode !== (stored.pickedCode ?? null) ||
+          !localMigrated ||
+          remote?.migrated === true ||
+          JSON.stringify(reconciled.history) !== JSON.stringify(stored.legendHistory) ||
+          JSON.stringify(reveal) !== JSON.stringify(stored.reveal);
+        if (changed) await saveIdentityState(next);
+        if (!localMigrated) {
+          const archive = reconciled.event?.kind === 'sharper' ? reconciled.event.legendId : null;
+          await recordLegendForm(exactLegendId(poles), remote?.migrated ? null : archive);
+        } else {
+          const current = exactLegendId(poles);
+          if (current && current !== exactLegendId(stored.poles)) await recordLegendForm(current, null);
+        }
         if (cancelled) return;
         // The name just filled in, or changed: the mini guy says so, once per name.
+        // A scoring migration and a restore have their own lines on the card.
         const before = identityView(stored.poles);
         const after = identityView(poles);
-        // Only a whole name is announced (three words for a three-word style).
-        // Compared by the name itself: a letter that a two-word style doesn't
-        // use can lock without anything to announce.
         const wholeNow = identityCompleteFor(after, next.skin);
         const renamed = identityTitle(before, next.skin) !== identityTitle(after, next.skin);
-        if (wholeNow && (!identityCompleteFor(before, next.skin) || renamed)) {
-          const name = identityTitle(after, next.skin);
+        if (
+          reconciled.event?.kind !== 'sharper' &&
+          reconciled.event?.kind !== 'restored' &&
+          wholeNow &&
+          (!identityCompleteFor(before, next.skin) || renamed)
+        ) {
+          const name = legendHeadline(rows, poles, next.skin, pickedCode, sources).title;
           pushBuddyNote({ id: `identity:${name}`, title: IDENTITY_LOCKED_TITLE, body: name, loud: true });
         }
         setTracks(rows);
@@ -126,24 +198,37 @@ export function IdentityCard({
       cancelled = true;
     };
     // dataEpoch: a dev jump rewrote the account under this tab.
-  }, [me.id, dataEpoch]);
+  }, [me.id, me.trait_sources, dataEpoch]);
 
+  const sources = useMemo(
+    () => traitStateFromRow({ trait_sources: me.trait_sources }).sources,
+    [me.trait_sources],
+  );
   const view = useMemo(() => identityView(state?.poles ?? {}), [state?.poles]);
   // The three role traits, as the word for the end each one locked to
-  // ("Adventurous · Structured · Connected"). Only locked ones show.
+  // ("Adventurous · Structured · Connected"). Only a real high or low shows.
   const leanWords = useMemo(
     () =>
       CORE_AXES.flatMap((axis) => {
         const pole = state?.poles?.[axis];
-        return pole ? [AXIS_POLE_NAME[axis][pole === 'H' ? 'high' : 'low']] : [];
+        if (pole !== 'H' && pole !== 'L') return [];
+        return [AXIS_POLE_NAME[axis][pole === 'H' ? 'high' : 'low']];
       }),
     [state?.poles],
   );
   const traits = useMemo(() => (tracks ? topTraitPhrases(tracks) : []), [tracks]);
-  const recipe = useMemo(() => identityRecipe(tracks ?? []), [tracks]);
+  const recipe = useMemo(() => identityRecipe(tracks ?? [], sources), [tracks, sources]);
   const styleOptions = useMemo(
-    () => dedupeTitles(LEGEND_SKINS.map((skin) => ({ skin, title: identityTitle(view, skin) }))),
-    [view],
+    () =>
+      dedupeTitles(
+        LEGEND_SKINS.map((skin) => ({
+          skin,
+          title: tracks
+            ? legendHeadline(tracks, state?.poles ?? {}, skin, state?.pickedCode, sources).title
+            : identityTitle(view, skin),
+        })),
+      ),
+    [tracks, state?.poles, state?.pickedCode, sources, view],
   );
 
   const update = useCallback(async (next: IdentityState) => {
@@ -153,8 +238,10 @@ export function IdentityCard({
 
   if (!state || !tracks) return null;
 
-  const title = identityTitle(view, state.skin);
-  const progress = identityProgressLine(view, state.skin);
+  const headline = legendHeadline(tracks, state.poles, state.skin, state.pickedCode, sources);
+  const title = headline.title;
+  const progress = headline.kind === 'balanced' || headline.kind === 'choice' ? null : identityProgressLine(view, state.skin);
+  const confidence = confidenceSummary(tracks, [...CORE_AXES, ...MODIFIER_AXES]);
   const credits = Math.max(0, paidCount - state.unlocked.length);
   const border = controlBorderColor(theme);
 
@@ -197,6 +284,24 @@ export function IdentityCard({
       setNote(IDENTITY_STYLE_FAILED);
     }
     setBusy(false);
+  }
+
+  async function pickCloser(code: string) {
+    if (!state || !tracks || busy) return;
+    const rows = legendCorrectionSamples(tracks, sources, code);
+    setBusy(true);
+    try {
+      if (rows.length > 0) await recordSelfCorrections(me.id, rows);
+      const nextTracks = rows.length > 0 ? await fetchTraitTracks(me.id) : tracks;
+      if (rows.length > 0) setTracks(nextTracks);
+      await update({ ...state, pickedCode: code });
+      setCorrectionNote(rows.length > 0 ? CORRECTION_SAVED : null);
+      if (rows.length > 0) void onUpdated?.();
+    } catch (err) {
+      console.log('[identity] correction error:', err);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -244,9 +349,71 @@ export function IdentityCard({
         </ThemedText>
       ) : null}
 
-      <ThemedText style={styles.title} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>
+      <ThemedText style={styles.title} numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.7}>
         {title}
       </ThemedText>
+      {headline.flavour ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {headline.flavour}
+        </ThemedText>
+      ) : null}
+      {confidence ? (
+        <ThemedText type="code" themeColor="textSecondary">
+          {confidence}
+        </ThemedText>
+      ) : null}
+      {state.reveal?.kind === 'restored' ? (
+        <ThemedText type="small">{LEGEND_RESTORED_LINE}</ThemedText>
+      ) : null}
+      {archivedLegendForms(state.legendHistory).length > 0 ? (
+        <View style={styles.past}>
+          <ThemedText type="code" themeColor="textSecondary">
+            {LEGEND_SHARPER_NOTE}
+          </ThemedText>
+          <ThemedText type="smallBold">{LEGEND_PAST_FORM_LABEL}</ThemedText>
+          {archivedLegendForms(state.legendHistory).map((form) => (
+            <ThemedText key={form.legendId} type="small" themeColor="textSecondary">
+              {archetypeName(form.legendId, state.skin) ?? form.legendId}. {LEGEND_GROWN_OUT_LINE}
+            </ThemedText>
+          ))}
+        </View>
+      ) : null}
+      {headline.choices.length >= 2 && headline.kind !== 'exact' ? (
+        <View style={styles.styles}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {LEGEND_NOT_ME}. {LEGEND_CLOSER_LEAD}
+          </ThemedText>
+          {headline.choices.map((choice) => {
+            const selected = state.pickedCode === choice.code;
+            return (
+              <ThemedPressable
+                key={choice.code}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={choice.title}
+                disabled={busy}
+                onPress={() => {
+                  // Weighted answers on the traits that differ. Not a collected legend.
+                  void pickCloser(choice.code);
+                }}
+                style={[
+                  styles.choice,
+                  {
+                    borderColor: selected ? theme.accent : border,
+                    borderRadius: theme.cutCorners ? 0 : theme.radius,
+                  },
+                ]}>
+                <ThemedText type="smallBold">{choice.title}</ThemedText>
+              </ThemedPressable>
+            );
+          })}
+          {correctionNote ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {correctionNote}
+            </ThemedText>
+          ) : null}
+        </View>
+      ) : null}
       {progress ? (
         <ThemedText type="small" themeColor="textSecondary">
           {progress}
@@ -398,7 +565,7 @@ export function IdentityCard({
         visible={sharing}
         onClose={() => setSharing(false)}
         me={me}
-        content={{ kind: 'identity', title, traits, shape: traitShapePoints(me, tracks) }}
+        content={{ kind: 'identity', title, traits, shape: publicCardPoints(traitShapePoints(me, tracks)) }}
       />
     </ThemedView>
   );
@@ -439,6 +606,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.three,
   },
+  choice: {
+    borderWidth: 1,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
   styleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -470,6 +642,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     alignItems: 'center',
     marginTop: Spacing.two,
+  },
+  past: {
+    gap: Spacing.half,
   },
   kicker: {
     textTransform: 'uppercase',

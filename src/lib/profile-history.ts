@@ -11,7 +11,7 @@ import { AXIS_POLE_NAME, AXIS_POLES, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { lineKey } from '@/lib/daily-line/bank';
 import { TRAIT_IDEAS } from '@/lib/insight-bank';
 import { archetypeName, DEFAULT_LEGEND_SKIN } from '@/lib/legends64/archetypes';
-import { CORE_AXES, MODIFIER_AXES, POLE_COMBOS, THIRD_AXES, midpointHighLow } from '@/lib/legends64/classify';
+import { CORE_AXES, MODIFIER_AXES, POLE_COMBOS, THIRD_AXES, storedProfilePole } from '@/lib/legends64/classify';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 /**
@@ -53,9 +53,13 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** The 9-letter type code — the server's `_profile_code` (wave86), same letters. */
+/**
+ * The 9-letter type code — the server's `_profile_code` (wave86), same letters.
+ * Still the binary cut (unset reads low). Legends use the middle zone in
+ * `classify.ts` and do not read this code.
+ */
 export function profileCode(values: ProfileValues): string {
-  const part = (axes: readonly TraitAxis[]) => axes.map((a) => midpointHighLow(values[a] ?? null)).join('');
+  const part = (axes: readonly TraitAxis[]) => axes.map((a) => storedProfilePole(values[a] ?? null)).join('');
   return `${part(CORE_AXES)}-${part(MODIFIER_AXES)}-${part(THIRD_AXES)}`;
 }
 

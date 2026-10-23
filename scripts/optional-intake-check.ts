@@ -49,13 +49,15 @@ ok('fill-later sits on the Questions tab and still renders when every band is nu
 const directOpenness = mergeTraitWrite(emptyTraitState(), { openness: 0.8 }, 'self_tap', ['openness']);
 const scenarioWrite = writeForOptionalScreen({ screen: 0, optionId: 'new_thing' });
 assert.ok(scenarioWrite);
-assert.equal(scenarioWrite.source, 'self_scenario');
-ok('scenario write is self_scenario — direct, not damped toward 0.5 like an inferred write would be');
+assert.equal(scenarioWrite.source, 'self_situation');
+assert.notEqual(scenarioWrite.incoming.openness, scenarioWrite.incoming.conscientiousness);
+ok('scenario write is an ordinary answer, and the two traits are not set to the same number');
 
 assert.ok(unansweredOptionalScreens(directOpenness.values).includes(0));
 const guardedFill = optionalFillWrite(directOpenness.values, { screen: 0, optionId: 'new_thing' });
-assert.deepEqual(guardedFill?.incoming, { conscientiousness: 0.2 });
-assert.equal(guardedFill?.source, 'self_scenario');
+assert.equal(guardedFill?.incoming.conscientiousness != null, true);
+assert.equal(guardedFill?.incoming.openness, undefined);
+assert.equal(guardedFill?.source, 'self_situation');
 ok(
   'fill only writes the still-null axis (conscientiousness) when openness is already answered — ' +
     'the null-axis guard in optionalFillWrite protects the answered axis, not source priority',

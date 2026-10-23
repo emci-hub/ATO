@@ -19,6 +19,39 @@ export type ScenarioQuestion = {
   options: readonly ScenarioOption[];
 };
 
+/**
+ * The first trait of a scenario is one full answer. The second is half an
+ * answer, and its number is pulled halfway toward 50% so one tap cannot
+ * set both traits to the same score (the old 0.8/0.8 and 0.1/0.1 links).
+ */
+export const SCENARIO_PRIMARY_WEIGHT = 1;
+export const SCENARIO_SECONDARY_WEIGHT = 0.5;
+
+export type ScenarioAnswer = {
+  axis: TraitAxis;
+  value: number;
+  weight: number;
+};
+
+function round2(value: number): number {
+  const clamped = Math.min(1, Math.max(0, value));
+  return Math.round(clamped * 100) / 100;
+}
+
+/** One option, as weighted answers. The second trait is omitted when the pull would land on the same number as the first. */
+export function scenarioAnswers(question: ScenarioQuestion, option: ScenarioOption): ScenarioAnswer[] {
+  const [primary, secondary] = question.axes;
+  const primaryValue = round2(option.axisAValue);
+  const pulled = round2(0.5 + (option.axisBValue - 0.5) * SCENARIO_SECONDARY_WEIGHT);
+  const answers: ScenarioAnswer[] = [
+    { axis: primary, value: primaryValue, weight: SCENARIO_PRIMARY_WEIGHT },
+  ];
+  if (pulled !== primaryValue) {
+    answers.push({ axis: secondary, value: pulled, weight: SCENARIO_SECONDARY_WEIGHT });
+  }
+  return answers;
+}
+
 export const SCENARIO_QUESTIONS: readonly ScenarioQuestion[] = [
   {
     axes: ['openness', 'conscientiousness'],

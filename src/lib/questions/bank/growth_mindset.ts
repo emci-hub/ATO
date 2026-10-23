@@ -3,7 +3,8 @@ import { intake, q, traitBank } from './define';
 /** Growth: "Maybe this just isn't my thing" (low) to "Okay, what do I change?" (high). */
 export const GROWTH_MINDSET_BANK = traitBank('growth_mindset', [
   intake(1, q('growth_mindset_01', 'solo', 'low', 'Your first try at a recipe from a video goes badly. What actually happens next?',
-    ["I look at what I'd do differently", 0.8], ["I probably don't try that again", 0.2])),
+    ["I look at what I'd do differently", 0.8], ["I probably don't try that again", 0.2],
+    ['Depends what I missed', 0.5], ["That's just not for me", 0.05])),
   intake(2, q('growth_mindset_02', 'online', 'low', 'Someone online is much better than you at a thing you care about.',
     ['I want to know how they got there', 0.8], ['Good for them, different lane', 0.5], ['Some people just have it', 0.2])),
   intake(3, q('growth_mindset_03', 'online', 'neither', 'A friend posts day 60 of learning something new.',

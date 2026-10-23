@@ -149,7 +149,11 @@ ok('the dev sign-up reset and the delete-account count cover the six newer table
   const reset97 = w97.slice(w97.indexOf('create or replace function public.reset_my_account()'), w97.indexOf('create or replace function public.reset_dev_test_user()'));
   const dev97 = w97.slice(w97.indexOf('create or replace function public.reset_dev_test_user()'), w97.indexOf('create or replace function public.count_user_rows'));
   const count97 = w97.slice(w97.indexOf('create or replace function public.count_user_rows'));
-  assert.deepEqual(resetFiles.slice(-2), ['wave97_circle_visits.sql', 'wave103_drop_crisis_plumbing.sql'], 'wave97 holds the reset_my_account that wave103 restates (wave103 is the newest, not applied)');
+  assert.deepEqual(
+    resetFiles.slice(-3),
+    ['wave97_circle_visits.sql', 'wave103_drop_crisis_plumbing.sql', 'wave115_legend_forms.sql'],
+    'wave97 holds the reset_my_account that wave103 restates and wave115 extends',
+  );
   const reset97Full = reset97.slice(0, reset97.indexOf('$$;'));
   for (const t of ['circle_gifts', 'circle_visit_share']) {
     assert.match(reset97, new RegExp(`delete from public\\.${t} where user_id = uid or peer_id = uid;`), `Reset account wipes ${t} both ways (everything shared)`);
@@ -168,10 +172,19 @@ ok('the dev sign-up reset and the delete-account count cover the six newer table
   const strip = (s: string) => s.split('\n').filter((l) => !/circle_|Divecore Circle visits|friends' switches/.test(l)).join('\n');
   assert.equal(strip(reset97Full), body90, 'reset_my_account = wave90 + the two Circle deletes, nothing else changed');
   // wave103 (not applied) = wave97 minus the one crisis_flags delete, nothing else.
+  const wave103 = read('supabase/migrations/wave103_drop_crisis_plumbing.sql');
+  const reset103 = wave103.slice(
+    wave103.indexOf('create or replace function public.reset_my_account()'),
+    wave103.indexOf('$$;', wave103.indexOf('create or replace function public.reset_my_account()')),
+  );
   assert.match(reset97Full, /delete from public\.crisis_flags where user_id = uid;/, 'wave97 still deletes crisis_flags (the table is live until wave103)');
-  assert.doesNotMatch(resetFn, /crisis_flags/, 'wave103 reset_my_account no longer touches the dropped table');
+  assert.doesNotMatch(reset103, /crisis_flags/, 'wave103 reset_my_account no longer touches the dropped table');
   const noCrisisLine = (s: string) => s.split('\n').filter((l) => !/crisis_flags/.test(l)).join('\n');
-  assert.equal(resetFn, noCrisisLine(reset97Full), 'wave103 reset_my_account = wave97 minus the crisis_flags line');
+  assert.equal(reset103, noCrisisLine(reset97Full), 'wave103 reset_my_account = wave97 minus the crisis_flags line');
+  const stripForms = (s: string) => s.split('\n').filter((l) => !/legend_form/.test(l)).join('\n');
+  assert.equal(stripForms(resetFn), reset103, 'wave115 reset_my_account = wave103 plus the legend form deletes');
+  assert.match(resetFn, /delete from public\.legend_forms where user_id = uid/);
+  assert.match(resetFn, /delete from public\.legend_form_state where user_id = uid/);
   ok('wave97: circle_gifts + circle_visit_share wiped by Reset (both ways), cleared by the dev reset, counted for delete-account');
 }
 

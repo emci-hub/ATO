@@ -12,11 +12,23 @@
  *    a code on day one, which is fine for storage and wrong for a name someone
  *    is meant to send to a friend.
  * 2. A LOCKED LETTER DOES NOT FLIP ON A WOBBLE. It changes only when the trait
- *    crosses the middle by POLE_FLIP_MARGIN. Without this, one answer near the
- *    middle would rename the person from one day to the next.
+ *    crosses out of the middle zone (about 45–55%). A trait that has never
+ *    left that zone stays middle, and the name becomes a balanced variant
+ *    or a choice between the two nearest existing legends.
  */
-import { CORE_AXES, MODIFIER_AXES, THIRD_AXES, type Pole } from '@/lib/legends64/classify';
 import {
+  closestArchetypes,
+  CORE_AXES,
+  LEGEND_FLIP_MARGIN,
+  midpointHighLow,
+  MODIFIER_AXES,
+  THIRD_AXES,
+  type LegendPole,
+  type LegendValues,
+  type Pole,
+} from '@/lib/legends64/classify';
+import {
+  archetypeName,
   CORE_ROLES,
   DEFAULT_LEGEND_SKIN,
   MODIFIER_DESCRIPTORS,
@@ -29,18 +41,26 @@ import {
   type LegendSkin,
 } from '@/lib/legends64/archetypes';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
-import { isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
-import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
+import {
+  isAxisSettled,
+  isPublicCardAxis,
+  labelMinAnswers,
+  trackFor,
+  traitScore,
+  type TraitTrack,
+} from '@/lib/trait-stability';
+import { TRAIT_AXES, type TraitAxis, type TraitLean, type TraitSource } from '@/lib/traits';
 
 export const IDENTITY_AXES: readonly TraitAxis[] = [...CORE_AXES, ...MODIFIER_AXES, ...THIRD_AXES];
-export const POLE_FLIP_MARGIN = 0.05;
+/** Same margin `classify.ts` uses for the 45–55% middle zone. */
+export const POLE_FLIP_MARGIN = LEGEND_FLIP_MARGIN;
 
-export type LockedPoles = Partial<Record<TraitAxis, Pole>>;
+export type LockedPoles = Partial<Record<TraitAxis, LegendPole>>;
 
-function poleWithMemory(value: number, previous: Pole | undefined): Pole {
-  if (!previous) return value >= 0.5 ? 'H' : 'L';
-  if (previous === 'H') return value < 0.5 - POLE_FLIP_MARGIN ? 'L' : 'H';
-  return value >= 0.5 + POLE_FLIP_MARGIN ? 'H' : 'L';
+const NAME_AXES: readonly TraitAxis[] = [...CORE_AXES, ...MODIFIER_AXES];
+
+function isLetter(pole: LegendPole | undefined): pole is Pole {
+  return pole === 'H' || pole === 'L';
 }
 
 /**
@@ -52,13 +72,18 @@ export function nextLockedPoles(
   tracks: readonly TraitTrack[],
   previous: LockedPoles,
   now: Date = new Date(),
+  sources?: Partial<Record<TraitAxis, TraitSource>>,
 ): LockedPoles {
   const out: LockedPoles = {};
   for (const axis of IDENTITY_AXES) {
     const row = trackFor(tracks, axis, 'report');
-    if (row && isAxisSettled(row, now) && Number.isFinite(row.value)) {
-      out[axis] = poleWithMemory(row.value, previous[axis]);
-    } else if (previous[axis]) {
+    const score = traitScore(row, sources?.[axis]);
+    if (row && isAxisSettled(row, now) && score != null) {
+      const prior = previous[axis];
+      out[axis] = midpointHighLow(score, prior === 'U' ? null : prior);
+    } else if (row && row.answerCount >= 1 && previous[axis] && previous[axis] !== 'U') {
+      // A name that was earned does not dissolve while the trait is idle.
+      // An unanswered trait is not kept as a fake low.
       out[axis] = previous[axis];
     }
   }
@@ -71,7 +96,7 @@ export function samePoles(a: LockedPoles, b: LockedPoles): boolean {
 
 function codeFor(poles: LockedPoles, axes: readonly TraitAxis[]): string | null {
   const letters = axes.map((axis) => poles[axis]);
-  return letters.every(Boolean) ? letters.join('') : null;
+  return letters.every((letter) => letter === 'H' || letter === 'L') ? letters.join('') : null;
 }
 
 export interface IdentityView {
@@ -92,8 +117,8 @@ export function identityView(poles: LockedPoles): IdentityView {
   const coreCode = codeFor(poles, CORE_AXES);
   const modifierCode = codeFor(poles, MODIFIER_AXES);
   return {
-    lockedCount: IDENTITY_AXES.filter((axis) => poles[axis]).length,
-    lockedAxes: IDENTITY_AXES.filter((axis) => poles[axis]),
+    lockedCount: IDENTITY_AXES.filter((axis) => isLetter(poles[axis])).length,
+    lockedAxes: IDENTITY_AXES.filter((axis) => isLetter(poles[axis])),
     total: IDENTITY_AXES.length,
     coreCode,
     modifierCode,
@@ -124,6 +149,96 @@ export function identityTitle(view: IdentityView, skin: LegendSkin): string {
 }
 
 /** How many traits a style's name is made from: 9 for three words, 6 for two. */
+export type LegendKind = 'exact' | 'balanced' | 'choice' | 'forming';
+
+export interface LegendChoiceView {
+  code: string;
+  title: string;
+}
+
+export interface LegendHeadline {
+  kind: LegendKind;
+  title: string;
+  /** One line under the title. Null when the name is exact. */
+  flavour: string | null;
+  /** The two nearest existing legends, when the reading is borderline. */
+  choices: readonly LegendChoiceView[];
+}
+
+function scoreValues(
+  tracks: readonly TraitTrack[],
+  sources?: Partial<Record<TraitAxis, TraitSource>>,
+): LegendValues {
+  const values: Partial<Record<TraitAxis, number | null>> = {};
+  for (const axis of IDENTITY_AXES) {
+    values[axis] = traitScore(trackFor(tracks, axis, 'report'), sources?.[axis]);
+  }
+  return values;
+}
+
+/**
+ * What the card says.
+ *
+ * - exact: every name trait is high or low, so the existing 64-name is used.
+ * - balanced: the role (core) is settled and a modifier is in the middle.
+ *   The title is "Balanced {role}" — no new legend is authored. The flavour
+ *   names the two existing legends on either side.
+ * - choice: the role itself is in the middle. The two nearest existing
+ *   names are offered; until one is picked the title is "Between A and B".
+ * - forming: a name trait is still unanswered (unknown, not low) or not
+ *   settled. The old filling-in title is used.
+ */
+export function legendHeadline(
+  tracks: readonly TraitTrack[],
+  poles: LockedPoles,
+  skin: LegendSkin,
+  pickedCode?: string | null,
+  sources?: Partial<Record<TraitAxis, TraitSource>>,
+): LegendHeadline {
+  const view = identityView(poles);
+  const formingTitle = identityTitle(view, skin);
+  if (!isLegendSkin(skin)) {
+    return { kind: 'forming', title: formingTitle, flavour: null, choices: [] };
+  }
+  const unknown = NAME_AXES.some((axis) => poles[axis] == null || poles[axis] === 'U');
+  if (unknown) {
+    return { kind: 'forming', title: formingTitle, flavour: null, choices: [] };
+  }
+  const values = scoreValues(tracks, sources);
+  const nearest = closestArchetypes(values, poles);
+  const choices: LegendChoiceView[] = nearest.flatMap((row) => {
+    const title = archetypeName(row.code, skin);
+    return title ? [{ code: row.code, title }] : [];
+  });
+  const coreSettled = CORE_AXES.every((axis) => isLetter(poles[axis]));
+  const modifierSettled = MODIFIER_AXES.every((axis) => isLetter(poles[axis]));
+  if (coreSettled && modifierSettled) {
+    return { kind: 'exact', title: formingTitle, flavour: null, choices: [] };
+  }
+  const picked = pickedCode ? choices.find((choice) => choice.code === pickedCode) : undefined;
+  if (coreSettled && view.coreCode) {
+    const role = CORE_ROLES[skin][view.coreCode];
+    const title = role ? `Balanced ${role}` : formingTitle;
+    const flavour =
+      choices.length >= 2 ? `Between ${choices[0]!.title} and ${choices[1]!.title}.` : null;
+    if (picked) {
+      return { kind: 'balanced', title: picked.title, flavour, choices };
+    }
+    return { kind: 'balanced', title, flavour, choices };
+  }
+  const flavour = 'Two names fit. Pick the one that sounds like you.';
+  if (picked) return { kind: 'choice', title: picked.title, flavour, choices };
+  if (choices.length >= 2) {
+    return {
+      kind: 'choice',
+      title: `Between ${choices[0]!.title} and ${choices[1]!.title}`,
+      flavour,
+      choices,
+    };
+  }
+  return { kind: 'forming', title: formingTitle, flavour: null, choices: [] };
+}
+
 export function identityTraitCount(skin: LegendSkin): number {
   return isThreeWordSkin(skin) ? IDENTITY_AXES.length : CORE_AXES.length + MODIFIER_AXES.length;
 }
@@ -171,10 +286,13 @@ export function topTraitPhrases(tracks: readonly TraitTrack[], count = 3): strin
   const rows: { strength: number; phrase: string }[] = [];
   for (const axis of TRAIT_AXES) {
     const row = trackFor(tracks, axis, 'report');
-    if (!row || row.answerCount < 1 || !Number.isFinite(row.value)) continue;
-    const strength = Math.abs(row.value - 0.5);
+    if (!isPublicCardAxis(axis)) continue;
+    if (!row || row.answerCount < labelMinAnswers(axis) || !Number.isFinite(row.value)) continue;
+    const score = traitScore(row);
+    if (score == null) continue;
+    const strength = Math.abs(score - 0.5);
     if (strength < 0.1) continue;
-    const lean: TraitLean = row.value >= 0.5 ? 'high' : 'low';
+    const lean: TraitLean = score >= 0.5 ? 'high' : 'low';
     if (!isShareableLean(axis, lean)) continue;
     rows.push({ strength, phrase: sentenceCase(TRAIT_BAND_PHRASES[axis][lean]) });
   }

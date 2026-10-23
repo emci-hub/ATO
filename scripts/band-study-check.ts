@@ -406,12 +406,12 @@ for (const arm of ARMS.filter((a) => a.consistency > 0)) {
 }
 ok('median user retains at least 2 non-mid axes in every non-null arm');
 
-// (g) midpointHighLow is total and assigns the 0.50 point mass to H.
-assert.equal(midpointHighLow(0.5), 'H');
-assert.equal(midpointHighLow(null), 'L');
-assert.equal(midpointHighLow(undefined), 'L');
-assert.equal(midpointHighLow(Number.NaN), 'L');
-ok('midpointHighLow is total; exactly-0.50 resolves to H, unset to L');
+// (g) The middle of the line is its own pole. Unset is unknown, not low.
+assert.equal(midpointHighLow(0.5), 'M');
+assert.equal(midpointHighLow(null), 'U');
+assert.equal(midpointHighLow(undefined), 'U');
+assert.equal(midpointHighLow(Number.NaN), 'U');
+ok('midpointHighLow: exactly-0.50 is middle, unset is unknown');
 
 // (h) STABILITY_FLOOR_N is what makes a one-question-per-round axis unsettled.
 assert.equal(STABILITY_FLOOR_N, 3);
