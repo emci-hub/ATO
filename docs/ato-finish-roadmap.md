@@ -530,6 +530,44 @@ was the category push line. So each flag was **accept / read / retire**, not hid
   progressive-unlock, story-bank). AI library bundle unchanged (no redeploy). The flips ride the next OTA (no visible change).
   Box 79 written (nothing should look different).
 
+**Step A5 status (2026-10-23): built, checked, committed (Play and app separately). OTA and the `ai-generate` function delete are
+waiting for emci's OK.** emci answered "everything listed" and "Play dev-log removal rides the same single OTA, separate commit".
+- **A2 hand steps and Box 78:** all confirmed by emci (DeepSeek key unset, wave111 applied, landing redeployed, Box 77, Gemini plan
+  checked, Box 78 passed).
+- **Old AI client path removed (app):** `src/lib/ai/{edge,generate,http,call-sites,reject-log,reject-reason}.ts`, the green/red status dot
+  (`provider-status-dot.tsx`), `scripts/live-ai.ts`, `scripts/ai-call-sites-report.ts` + the live `style-live` check, and the two
+  one-person fallbacks (`writeOld` / `writeCategoryDeepDive` in the deep-dive card, `writeLegendStory` in Legends). One constant moved to
+  `src/lib/ai/timeouts.ts` (`AI_TAP_TIMEOUT_MS`). `claimAiCall`, the `EXPO_PUBLIC_AI_PROVIDER` / `MODEL_PROVIDER` reads, `buildAiConfig`
+  and `DEFAULT_MODELS` are gone; `AI_CONFIG` is a constant (Gemini). The developer AI lab keeps its provider labels and usage counts.
+- **Sage-era dead code removed:** `src/lib/rolls/*` (4 files), `legends64/{store,story-prompt}.ts`, `insight/generate-insight.ts` (the draft shape and
+  caps moved to `insight/draft.ts`), the AI Story prompt and parser in `sage-story.ts`, the title writer in `sage-title.ts` (both files keep only what
+  screens still read), the "Write as Sage" prompt builders in `story-card.ts`, `claimStoryGenerate`, `BANK_MARKDOWN` + `first_cards.md`. The four
+  retired copy flags (DAILY_INSIGHT, TITLE, STORY, CATEGORY_READ) are deleted with them. `check:no-sage-copy` now has ZERO exemptions.
+- **Small fixes:** the delete sheet no longer lists "saved facts"; the You → Delete account control and the sheet's close X now have a role and a
+  label (VoiceOver).
+- **Play commit:** `src/play/dev-log.ts` (table already dropped in A3) and its call/status line in the defend screen and the FPS panel are removed.
+- **Checks rewritten, never weakened (they prove more now):** `check:ai` (the old path stays deleted; no `generateText` / ping / edge client anywhere;
+  nothing reads the removed env vars), `check:copy-flags` (retired = deleted), `check:ai-library`, `check:category-deep-dive`, `check:legend-roster`,
+  `check:insight`, `check:insights-no-ai`, `check:daily-line`, `check:jargon`, `check:traits`, `check:framework-fence`, `check:wave20`, `check:wave22`,
+  `check:story-thread` (the content-policy pass/fail pairs now run on the joke filter directly), `check:server-hardening`, `check:rebuilt`. Deleted
+  with their code: `check:rolls-compose`, `check:rolls-store`, the `report:ai` script, `style-live`.
+- **Server:** ai-library bundle UNCHANGED (no redeploy). **Still to do, needs emci's OK:** (1) publish ONE OTA; (2) after the OTA has reached
+  phones, `supabase functions delete ai-generate` (no live code, SQL or function calls it: verified), then remove `supabase/functions/ai-generate/`,
+  the CLAUDE.md lines naming it, and master-plan D14.
+- **Docs:** NOW.md stale lines superseded, sage-cleanup §2/§4/§5, OPEN-QUESTIONS 3 and 8, MAP / FLOWS / GOTCHAS refreshed, obsolete device boxes
+  marked (8, 11, 12.5, 22, 23, 24, 25, 26, 27 as written, 28), boxes 30-32 corrected (Story is free, on Insights), **new Box 81** (Change answers /
+  Undo / Start fresh / card compare + the A5 changes). Boxes 29-42 are NOT obsolete as a whole (the roadmap's "18-39" was too wide).
+- **Open PRs / branches for emci (nothing was deleted):** close #16 and #17 (old Play drafts from 2026-10-05). **Do NOT close #20**: it carries a
+  real fix that master does not have (the previous answer is not shown for the first questions of each trait on the Change answers screen, plus the
+  8-ball reel) and it now conflicts with master: it needs its own small step. **Do NOT close #84** (the legal text refers to it). 51 remote branches are
+  already merged into master and safe to delete: `art/{aura-holo-impl,aura-holo-pixellab,pixellab-guide-2026-10-19}`;
+  `claude/{brave-mendel-wbhxaq,cleanup-red-team-audit-2ao3r1,divecore-phase2-notify,divecore-phase3-nav,divecore-phase4-help,divecore-phase5-trims,happy-fermi-k9x2um,hidden-dev-access-1w5pkj,jolly-cerf-q0gsov}`;
+  `cursor/{art-library-780b,divecore-holo-finishes-9b61,divecore-part-d-den-pity-stones-01cc,divecore-part-e-tide-pass-e701,fix-app-play-push-cancel-e701,foil-card-finish-37e4,hideout-multi-room-phase2-a31b,hideout-room-walk-hotspots-6d44,hideout-topdown-rooms-a8ff,pet-dive-layout-308a,pixel-neon-ui-f270,pixel-scenes-4f09,play-dev-fab-only-05cc,story-redesign-5226,sword-mix-combat-f165,titles-v5-f0de}`;
+  `feat/{fixed-question-bank,profile-history-cards,stored-ftw-category-cards}`;
+  `feature/{ato-copy-review,ato-server-hardening,away-card,circle-chat,circle-visits,circle-visits-server,daily-insights,daily-visitors,decor-slots,divecore-minimal,hideout-rails,insights-replace-sage,pet-knows-you,play-cloud-save-client,play-cloud-save-server}`;
+  `fix/{ai-badge-tap-and-consent-copy,hideout-aura,hideout-polish}`. About 40 more remote branches (turf-war, live-rooms, art room and play/*) are
+  unmerged and were not judged here.
+
 ### Step AN0: Merge the art PR (82)
 Model: Sonnet
 ```

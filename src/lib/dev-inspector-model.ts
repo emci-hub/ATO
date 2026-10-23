@@ -56,7 +56,7 @@ export type AxisInspect = {
   stability: number;
   /**
    * Settled = categories and the daily insight will use it. That is exactly
-   * `effectiveStability > 0` (categories.ts reportStable, generate-insight.ts) —
+   * `effectiveStability > 0` (categories.ts reportStable) —
    * NOT the stricter Sage-title rule.
    */
   settled: boolean;

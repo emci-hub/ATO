@@ -389,7 +389,7 @@ Not verified: wave108 on a real database, any device run (needs the 1.1 build), 
     (friends' compare lines, Box 62), `LEGEND_FIGURES` (a sample of the 120), `CATEGORY_STATEMENTS` (flipping it turns ON the
     category push line on the lock screen, `push-insight.ts`; flip only after he reads real statements).
   - **RETIRED (gate nothing, not a decision):** `DAILY_INSIGHT` (replaced by the insight bank), `TITLE`, `STORY` (old AI prompt;
-    the live Story is the story bank), `CATEGORY_READ` (old roll, no screen). Their dead files leave in step A5.
+    the live Story is the story bank), `CATEGORY_READ` (old roll, no screen). **Deleted with their dead code in step A5 (2026-10-23).**
   - **HIDDEN:** none. (The v1 rule "unread surfaces get hidden" was never true in code and is withdrawn.)
 - Legal (Step 10, emci 2026-10-20): Privacy/Terms links open `https://ato.emgens.com/{privacy,terms}.html`; the legal text names
   Gemini + DeepSeek fallback; `dev_access_grants.granted_by` ON DELETE SET NULL (wave106). Legal text stays a lawyer draft.
@@ -434,7 +434,7 @@ CATEGORY_DEEP_DIVE, LEGEND_FIGURES, STORY, STORY_BANK (+ dead: TITLE, CATEGORY_R
 | D10 | Web date row overflows at 375 px (`born-on-fields.tsx`); native not run | FIXED in step 8 (style only, `minWidth: 0`); check on a device in Box 64 |
 | D12 | Legal facts only you/a lawyer can answer (entity, AI vendor training/retention + DeepSeek, retention periods, kept reports, law, age rating, label categories, landing form, Kenney/PixelLab, public card with no hide switch): `docs/legal/OPEN-QUESTIONS.md` items 1-16 | answer before Step 13 (store submission); lawyer reads policy + terms |
 | D13 | Drop `public.play_dev_logs` (wave73 dev test results; deletes rows) before launch? | yes, one small migration after Step 12 |
-| D14 | Delete the `ai-generate` stub: needs `src/lib/ai/edge.ts` + `generateText` callers removed first | one small step after launch, or keep the 410 stub |
+| D14 | Delete the `ai-generate` stub: needs `src/lib/ai/edge.ts` + `generateText` callers removed first (**client path removed in step A5, 2026-10-23; the deployed function is deleted after emci's OK once the A5 OTA has reached phones**) | one small step after launch, or keep the 410 stub |
 | D15 | wave101's `*_adult_insert/_update` write policies on `trait_tracks`/`trait_history` outlived wave80 (inert: no client grant). Drop them? | yes, fold into the D13 cleanup migration after launch |
 | D16 | Remove the unused `expo-camera` plugin (camera permission text) from `app.json` and the dependency before the production build? Native/dependency change. | yes if you want a clean permission list; safe either way (no code calls the camera). Decide before the EAS build. |
 | D18 | Chat no longer reads `blocks` through RLS (it uses `_circle_blocked`), so the two-sided `blocks` read noted in Step 7 could become blocker-only (hides that a block exists). Policy change on a live table. | DONE 2026-10-21: `wave109_blocks_blocker_only.sql` applied + verified |

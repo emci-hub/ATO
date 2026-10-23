@@ -1,7 +1,7 @@
 # library.md — written-once grounding
 
 Static copy. Reviewed before anything reads from it. Never per-user generated.
-Same folder and job as `first_cards.md`: the markdown is the source of truth.
+The markdown is the source of truth.
 
 People may open these entries and read them. Framework names belong here.
 Sage does not quote this file. Sage may only use the **For Sage** lines —

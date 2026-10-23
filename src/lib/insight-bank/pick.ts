@@ -17,7 +17,7 @@ import {
 } from '@/lib/daily-line/pick';
 import type { TraitAxis } from '@/lib/traits';
 
-import type { DailyInsightDraft } from '@/lib/insight/generate-insight';
+import type { DailyInsightDraft } from '@/lib/insight/draft';
 
 import { ideaById, ideaTheme, STARTER_IDEAS, TRAIT_IDEAS, type InsightIdea } from './index';
 

@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Redirect, router } from 'expo-router';
 
-import { ProviderStatusDot } from '@/components/provider-status-dot';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -12,7 +11,6 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   AI_PROVIDER_IDS,
   PROVIDER_LIMITS,
-  REMOTE_AI_PROVIDER_IDS,
   configuredProvider,
   resolveActiveProvider,
   setProviderOverride,
@@ -124,17 +122,6 @@ function AiLab() {
             </ThemedText>
           </View>
 
-          <View style={styles.statusList}>
-            {REMOTE_AI_PROVIDER_IDS.map((id) => (
-              <View key={id} style={styles.statusRow}>
-                <ThemedText type="smallBold" style={styles.statusLabel}>
-                  {PROVIDER_LIMITS[id].label}
-                </ThemedText>
-                <ProviderStatusDot provider={id} />
-              </View>
-            ))}
-          </View>
-
           {AI_PROVIDER_IDS.map((id) => {
             const limit = PROVIDER_LIMITS[id];
             const selected = active === id;
@@ -221,18 +208,6 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: Spacing.half,
-  },
-  statusList: {
-    gap: Spacing.half,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: Spacing.one,
-  },
-  statusLabel: {
-    minWidth: 80,
   },
   back: {
     alignSelf: 'flex-start',

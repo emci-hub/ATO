@@ -111,9 +111,11 @@ ok('voice-reference.txt is behavior + few-shots, not a role noun');
 
 // The card/Talk prompt builders went with the voice provider lane (2026-09-14).
 // The surviving prompt builders carry the same preset guide.
-const insightPrompt = read('src/lib/insight/generate-insight.ts');
-assert.doesNotMatch(insightPrompt, /You are Sage, the coach/);
-ok('surviving prompt builders carry the preset and drop the coach role line');
+// (The AI daily-insight prompt was removed in roadmap A5; the prompts that remain are the deep dive's and the Legends one.)
+for (const rel of ['src/lib/category-deep-dive/dive.ts', 'src/lib/legend-figures/story.ts']) {
+  assert.doesNotMatch(read(rel), /You are Sage, the coach/, `${rel}: no coach role line`);
+}
+ok('surviving prompt builders drop the coach role line');
 
 assert.match(read('src/lib/voice/quota-server.ts'), /log_jargon_guard/);
 ok('jargon fires log to ai_usage without incrementing quota in the client helper');

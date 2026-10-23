@@ -16,12 +16,8 @@
  */
 import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { getCategoryDefs } from '@/lib/categories';
-import { pickCategoryCard } from '@/lib/category-bank';
 import { CATEGORY_DISPLAY_NAMES } from '@/lib/category-labels';
-import { localYmd } from '@/lib/local-date';
-import type { StoryThread } from '@/lib/story-thread';
-import type { TraitTrack } from '@/lib/trait-stability';
-import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
+import { TRAIT_AXES } from '@/lib/traits';
 import {
   jokeCrossesBoundary,
   pickBestPunchline,
@@ -31,7 +27,6 @@ import {
 import { CLINICAL_ADVICE, hasClinicalLabel } from '@/lib/voice/clinical';
 import { directiveAdviceViolation } from '@/lib/voice/directive-advice';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
-import { STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
 export const STORY_CARD_VERSION = 2 as const;
 
@@ -276,131 +271,6 @@ export const STORY_FEW_SHOTS: readonly StoryFewShot[] = [
     next: 'Next time: someone else picks the restaurant. Brave.',
   },
 ];
-
-function formatFewShot(row: StoryFewShot): string {
-  return `{"title":"${row.title}","hook":"${row.hook}","twist":"${row.twist}","move":"${row.move}","punchline":"${row.punchline}","reveal":"${row.reveal}","next":"${row.next}"}`;
-}
-
-const BANNED_CLICHE_PROMPT =
-  'like nothing happened, take a breath, shoulders drop, small hiccups, just another, a ruined schedule, sweat onto, the whole table, you might have, on a day like this, the real win, in that moment, little did, walk into a bar, that\'s what she said, plot twist, living the dream, it is what it is, say less, no cap, spoiler alert, everyone else';
-
-/** The byte-identical opening of every Story prompt (cache-friendly). */
-export const STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. Write a 100-word micro-story starring the reader ("you"), told in
-present tense, that shows one trait from the SIDES through what they DO — never by naming it.
-
-SHAPE (cold open → twist → move → punchline → reveal → teaser):
-"hook" ${STORY_HOOK_WORDS[0]}–${STORY_HOOK_WORDS[1]} words: open mid-action, the second something goes wrong. One vivid, specific detail. No setup.
-"twist" ${STORY_TWIST_WORDS[0]}–${STORY_TWIST_WORDS[1]} words: it escalates. Raise the stakes for the reader. You may include ONE short line someone says, in quotes.
-"move" ${STORY_MOVE_WORDS[0]}–${STORY_MOVE_WORDS[1]} words: the reader's surprising, specific response, plus how the others react. Show, don't explain.
-"punchline" ${STORY_PUNCHLINE_WORDS[0]}–${STORY_PUNCHLINE_WORDS[1]} words: call back to the hook's detail with a reversal or rule-of-three. Make a reader smirk.
-"reveal" ${STORY_REVEAL_WORDS[0]}–${STORY_REVEAL_WORDS[1]} words: the one line that names what this says about them, as a compliment. No trait labels. "You're the person who…" is allowed here only.
-"next" ${STORY_NEXT_WORDS[0]}–${STORY_NEXT_WORDS[1]} words: a cliffhanger for the next story, a statement, not a question.
-"title" ${STORY_TITLE_WORDS[0]}–${STORY_TITLE_WORDS[1]} words, Title Case: a memorable nickname from the story's best detail ("The Bread Basket Diplomat").
-"otherWay" ${STORY_OTHER_WAY_WORDS[0]}–${STORY_OTHER_WAY_WORDS[1]} words, optional: how the same moment goes if the reader leans the OTHER WAY. Interesting, never better or worse; no labels.
-"punchlines" — two or three candidate punchlines (the craft block). "punchline" is the best of them.
-
-VOICE: punchy, warm, a little cheeky, like the funniest friend retelling your night. Specific beats general.
-Present tense, second person, plus ONE other voice: a friend, sibling, boss or server says one short line in quotes.
-Exaggerated numbers are fine when funny ("the fourth any minute now", "all 212 of them"). Unnamed side characters are fine ("the hat guy").
-Vary sentence length. No "!", no emoji, no "always", no advice aimed at the reader ("you should…", "you need to…"); an ordinary "should" in a joke or an observation is fine.
-Show the trait through action. Only "reveal" may name what it shows, in plain words, never a trait or category label.
-
-NEVER: real names, brands, places, a diagnosis or label applied to the reader (everyday and contextual use of a word is fine), cruelty, trait/category words, hedges ("you might", "on a day like this"), or these clichés: ${BANNED_CLICHE_PROMPT}.
-Stay in ONE setting. Never leave square or angle brackets in the answer.
-
-${STORY_JOKE_RULES}
-
-SETTING (a story lives in one physical scene; the texting moments in the voice block are welcome as a detail inside it,
-but a whole story that is just a phone screen is not a scene)
-- Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
-  a shared chore, a busy commute. A phone can be a detail, voice notes, typing bubbles and read receipts included.
-- Unusual-but-plausible is good (a laminated dessert menu, a birthday balloon on the wrong table). If a detail needs a
-  footnote, cut it.
-
-The SIDES at the end say what to draw on; write from their meaning, never their labels.
-
-Plan silently first in "plan" (hook detail, stake, move, callback). Return JSON only:
-{"plan":"...","hook":"...","twist":"...","move":"...","punchline":"...","punchlines":["...","...","..."],"reveal":"...","next":"...","title":"...","otherWay":"..."}
-
-EXAMPLES (match the energy, never reuse the content):
-${STORY_FEW_SHOTS.map((row, i) => `${i + 1}. ${formatFewShot(row)}`).join('\n')}`;
-
-/** One side of a Story, ready for the prompt: its lead lean and its stored lines. */
-export interface StoryPromptSide {
-  lead: { axis: TraitAxis; lean: TraitLean } | null;
-  card: { summary: string; strength: string; watchOut: string } | null;
-}
-
-/**
- * The Story prompt from its parts (the shared library builds it from a bucket
- * key on the server, wave93). The told-vs-played line is NOT in it any more:
- * it is personal, so the phone shows it under the card instead.
- */
-export function buildStoryPromptFromSides(input: {
-  sides: readonly StoryPromptSide[];
-  jokeTarget: { axis: TraitAxis; lean: TraitLean } | null;
-  /** Shared library: the everyday setting this card is told in. */
-  setting?: string | null;
-}): string {
-  const sides = input.sides.map((row, index) => {
-    const label = index === 0 ? 'SIDE A' : 'SIDE B';
-    const bits = [
-      row.lead ? `- Lead lean, in one word (never print it): ${AXIS_POLE_NAME[row.lead.axis][row.lead.lean]}` : null,
-      row.card ? `- How it tends to show: ${row.card.summary}` : null,
-      row.card ? `- What it does well: ${row.card.strength}` : null,
-      row.card ? `- Where it can catch: ${row.card.watchOut}` : null,
-    ].filter((line): line is string => line != null);
-    return `${label} (internal; never name it)\n${bits.join('\n') || '- (no stored lines)'}`;
-  });
-  const jokeTarget = input.jokeTarget;
-  const otherWay = input.sides[0]?.lead ?? null;
-  return `${STORY_CARD_PROMPT_STATIC}
-
-${sides.join('\n\n')}
-
-TOLD-VS-PLAYED: none. Do not invent a split.
-${jokeTarget ? `JOKE TARGET: the ${AXIS_POLE_NAME[jokeTarget.axis][jokeTarget.lean]} side (never print that word). Let the punchline call back to the situation that side lands them in.` : 'JOKE TARGET: none. Keep the punchline warm, not dry-dark.'}
-${otherWay ? `OTHER WAY (for "otherWay"; never print the word): ${AXIS_POLE_NAME[otherWay.axis][otherWay.lean === 'high' ? 'low' : 'high']}` : 'OTHER WAY: the opposite of SIDE A’s lead lean.'}${
-    input.setting ? `\nSETTING FOR THIS STORY: ${input.setting}` : ''
-  }`;
-}
-
-/** Rewrite an older saved story into the six-beat shape. Same static opening. */
-export function buildStoryRewritePrompt(input: {
-  oldText: string;
-  sides: readonly StoryPromptSide[];
-  jokeTarget: { axis: TraitAxis; lean: TraitLean } | null;
-  setting?: string | null;
-}): string {
-  return `${buildStoryPromptFromSides(input)}
-
-REWRITE the older story below into the new shape. Keep the same setting and the same trait shown through action.
-Do not reuse hedged wording. Invent a stronger hook detail if the old one is generic.
-
-OLD STORY:
-${input.oldText.trim()}`;
-}
-
-/** The Story card prompt for one person (older callers and the check): their
- * thread's sides, with this week's stored lines. */
-export function buildStoryCardPrompt(input: {
-  tracks: readonly TraitTrack[];
-  divergenceNote: string | null;
-  divergenceAxis?: TraitAxis | null;
-  thread: StoryThread;
-  userId: string;
-  ymd?: string;
-}): string {
-  const { thread } = input;
-  const ymd = input.ymd ?? localYmd(new Date(), 'UTC');
-  return buildStoryPromptFromSides({
-    sides: thread.categories.map((row) => ({
-      lead: row.lead ? { axis: row.lead.axis, lean: row.lead.lean } : null,
-      card: pickCategoryCard({ userId: input.userId, reading: row.reading, ymd }),
-    })),
-    jokeTarget: thread.joke ?? thread.categories[0]?.lead ?? null,
-  });
-}
 
 export function words(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;

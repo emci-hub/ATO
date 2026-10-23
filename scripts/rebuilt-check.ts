@@ -185,6 +185,15 @@ assert.ok(youCode.includes('<AtoTokenCard me={me} />'), 'the token balance is vi
 assert.ok(!youCode.includes('SageFactsCard'), 'the saved-facts list is hidden on You');
 assert.match(youCode, /<DeleteAccountSheet/, 'delete account must stay reachable on You (App Store 5.1.1(v))');
 assert.match(youCode, /Delete account/, 'the delete-account control must be labelled');
+// Roadmap A5 (VoiceOver): the delete control and the sheet's close X announce themselves, and the
+// sheet no longer promises to delete "saved facts" (that feature and its column are gone).
+assert.match(youCode, /accessibilityRole="button"\s+accessibilityLabel="Delete account"\s+onPress=\{\(\) => setDeleting\(true\)\}/, 'the delete control has a role and a label');
+const deleteSheet = codeOnly(read('src/components/delete-account-sheet.tsx'));
+assert.match(deleteSheet, /accessibilityRole="button"\s+accessibilityLabel="Close"/, 'the sheet close X has a role and a label');
+assert.doesNotMatch(read('src/components/delete-account-sheet.tsx'), /saved facts/i, 'the delete sheet no longer lists saved facts');
+assert.match(read('src/components/delete-account-sheet.tsx'), /like your answers, profile cards and Legends/, 'pass: it names what is really saved');
+assert.doesNotMatch('Everything you saved in ATO, like your answers, profile cards and Legends', /saved facts/i, 'pass pair: the new wording');
+assert.match('Everything you saved in ATO, including saved facts', /saved facts/i, 'fail pair: the old wording would be caught');
 assert.match(youCode, /supabase\.auth\.signOut\(\)/, 'sign out must stay reachable on You');
 assert.match(youCode, /clearLocalAccountData\(\)/, "signing out must still clear this account's local keys");
 assert.match(youCode, /setAiConsent\(/, 'AI consent must stay changeable on You (Apple 5.1.2)');

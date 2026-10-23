@@ -2,10 +2,10 @@
  * Explore — the category deep dive (emci, 2026-10-08; moved from Home 2026-10-09).
  *
  * Pick a category → your leanings in it ("Adventurous 78%", worked out on the
- * phone, no AI) → "Write my deep dive" runs the ONE model call
- * (`writeCategoryDeepDive`: consent, then the server's daily claim, then the
- * call). One new card a day; a saved card opens free. Nothing here calls a
- * model on mount (`check:no-auto-ai` lists this file).
+ * phone, no AI) → "Write my deep dive" asks the `ai-library` Edge Function
+ * (`writeNewDive`: the server checks consent, claims the daily card and the
+ * tokens, then serves or writes it). One new card a day; a saved card opens
+ * free. Nothing here calls a model on mount (`check:no-auto-ai` lists this file).
  *
  * Separate from the daily insight above it, which stays stored copy.
  */
@@ -22,7 +22,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
-import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
+import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/timeouts';
 import { codeForAxis } from '@/lib/axis-codes';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { readCategory, type CategoryDef } from '@/lib/categories';
@@ -34,10 +34,8 @@ import {
   leanLabel,
   type DiveLean,
 } from '@/lib/category-deep-dive/dive';
-import { writeCategoryDeepDive } from '@/lib/category-deep-dive/generate';
 import { diveLibraryKey, openLibraryDive, writeNewDive, type LibraryDiveOutcome } from '@/lib/category-deep-dive/library';
 import { LIBRARY_VERSION } from '@/lib/ai-library/types';
-import { cardJokeStyle } from '@/lib/voice/card-joke';
 import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
 import {
   diveDay,
@@ -155,86 +153,6 @@ export function CategoryDeepDiveCard({
   // Tokens decide how often now (wave92); the server keeps a safety ceiling of 5 a day.
   const affordable = tokens >= AI_TOKEN_PRICE;
 
-  /** Before wave93 is live: the old one-person path (one paid call, two categories). */
-  const writeOld = useCallback(async () => {
-    if (!def || leans.length === 0) return;
-    const epochAtStart = epochRef.current;
-    {
-      // The day's claim is spent once the call starts, so a slow answer is
-      // waited for (with a note), never thrown away.
-      // Bundle: the next strongest open category without a fresh card rides
-      // along in the same call and opens tomorrow (emci, 2026-10-08).
-      const today = diveDay();
-      const extraRow = rows.find(
-        (row) =>
-          row.open &&
-          row.def.id !== def.id &&
-          row.rowLeans.length > 0 &&
-          // Only a category with no card yet: never overwrite one the person already has.
-          stateRef.current?.dives[row.def.id] == null,
-      );
-      const main = { def, leans, jokeStyle: cardJokeStyle(`${userId}|${def.id}|${today}`) };
-      const extra = extraRow
-        ? { def: extraRow.def, leans: extraRow.rowLeans, jokeStyle: cardJokeStyle(`${userId}|${extraRow.def.id}|${today}`) }
-        : null;
-      const pending = writeCategoryDeepDive({ main, extra, consentGranted }).catch(
-        () => ({ ok: false, reason: 'failed' }) as const,
-      );
-      let outcome = await withTimeout(pending, AI_TAP_TIMEOUT_MS, 'deep-dive').catch(() => null);
-      if (outcome == null) {
-        setNote(DEEP_DIVE_SLOW);
-        outcome = await pending;
-      }
-      // A wipe while it was being written wins: never write it back.
-      if (epochRef.current !== epochAtStart) return;
-      onSpent();
-      if (!outcome.ok) {
-        setNote(
-          outcome.reason === 'tokens'
-            ? AI_TOKENS_NEEDED
-            : outcome.reason === 'used'
-            ? DEEP_DIVE_USED
-            : outcome.reason === 'consent'
-              ? DEEP_DIVE_AI_OFF
-              : outcome.reason === 'unavailable'
-                ? DEEP_DIVE_UNAVAILABLE
-                : DEEP_DIVE_FAILED,
-        );
-        return;
-      }
-      setNote(null);
-      // Saved under the library key, so the card counts as fresh and the free button doesn't charge again.
-      const made: DiveEntry = { dive: { ...outcome.dive, leansKey: key }, madeOn: today };
-      const extraMade: DiveEntry | null =
-        outcome.extra && extraRow
-          ? {
-              dive: {
-                ...outcome.extra,
-                leansKey: diveLibraryKey(extraRow.def.id, extraRow.rowLeans),
-                opensOn: diveDay(new Date(Date.now() + 86_400_000)),
-              },
-              madeOn: today,
-            }
-          : null;
-      const base = stateRef.current ?? { userId, dives: {} };
-      const next: DiveLocalState = {
-        ...base,
-        dives: {
-          ...base.dives,
-          [def.id]: made,
-          ...(extraMade ? { [extraMade.dive.categoryId]: extraMade } : {}),
-        },
-      };
-      stateRef.current = next;
-      setState(next);
-      void saveDiveState(next);
-      void (async () => {
-        await saveServerDive(made);
-        if (extraMade) await saveServerDive(extraMade);
-      })();
-    }
-  }, [def, leans, key, consentGranted, userId, rows, onSpent]);
-
   /**
    * Library first (wave93): 'library' serves an unseen card from people with
    * leanings like yours, free; 'new' asks the server to write a brand-new one
@@ -260,10 +178,6 @@ export function CategoryDeepDiveCard({
         if (epochRef.current !== epochAtStart) return;
         if (mode === 'new') onSpent();
         if (!outcome.ok) {
-          if (outcome.reason === 'missing') {
-            await writeOld();
-            return;
-          }
           if (outcome.reason === 'empty' || outcome.reason === 'daily') setNeedNew(def.id);
           // Look-ahead (wave94): the hourly fill writes this group next, free.
           if (outcome.reason === 'empty') void wantLibraryCards('deep_dive', [diveBucketKey(def.id, leans)]);
@@ -302,7 +216,7 @@ export function CategoryDeepDiveCard({
         setBusy(false);
       }
     },
-    [def, leans, key, userId, onSpent, writeOld],
+    [def, leans, key, userId, onSpent],
   );
 
   const detail = def ? (

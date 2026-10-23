@@ -107,7 +107,9 @@ Everything here is sitting on your phone right now and just needs exercising.
       **F5 check (known, deferred):** read the regenerated text against its tagged axis — does the prose actually match the axis name (e.g. does an `openness`-tagged entry read like openness, not like sleep/recovery)? This is not fixed yet (Box 14). Use this tool to gauge how bad it looks on the Explore tab.
 - [ ] Confirm a Talk message in Sage still behaves normally — reply quality/tone should be unchanged, since Talk still uses the narrower 5-check history, not the fuller Explore history.
 
-## Box 8 — Home strip-down, two slots (deliberate override)
+## Box 8 — Home strip-down, two slots (deliberate override) — OBSOLETE (2026-10-23)
+
+> Obsolete: the Home crisis / missed-check slots no longer exist (crisis system removed 2026-10-14; Home was rebuilt). Do not run.
 
 **Dated reversal (Aug 31, 2026):** Box 8 originally locked Home to **one thing** below Did/Skip. Wave 21 **deliberately** extends that to a second, small, collapsed category teaser. This is not drift. Crisis and missed-check stay alone — the teaser never sits next to those two safety slots.
 
@@ -144,7 +146,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] Confirm an unfilled axis has no band and no detail — no gap line, no placeholder.
 - [ ] In `/dev-lab` → You, use "Band detail" to step through every filled axis for your test account without scrolling You manually. Confirm it's read-only — it shouldn't change any trait values.
 
-## Box 11 — AI consent as interstitial
+## Box 11 — AI consent as interstitial — OBSOLETE (2026-10-23)
+
+> Obsolete: written for Dawn and Sage Talk, which are gone. AI consent now guards only Legends cards and deep dives (see Boxes 29, 30 and 76).
 
 - [ ] On a fresh/reset account (ai_consent null), trigger Dawn. Confirm a full-screen modal appears and cannot be dismissed without answering — no back-button or backdrop-tap escape.
 - [ ] Same test on Sage: reach a point where consent is pending, confirm the same modal blocks the screen until answered.
@@ -166,7 +170,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] Confirm Dawn's crisis interrupt path still works the same way, unchanged.
 - [ ] Note: no dev-lab trigger exists for this yet — testing the crisis interrupt still requires using a real flagged phrase. Cursor flagged this as needing a deliberate fencing decision before building; not in scope for this box.
 
-## Box 12.5 — Dev Lab crisis card preview (fenced)
+## Box 12.5 — Dev Lab crisis card preview (fenced) — OBSOLETE (2026-10-23)
+
+> Obsolete: the crisis card is gone; the You tab carries a fixed helpline row (`check:helpline-row`).
 
 - [ ] In `/dev-lab` → System, tap "Preview crisis card." Confirm CrisisCard renders inline with real copy, no keyword typed.
 - [ ] Confirm this control does NOT appear anywhere in Talk or Dawn — only inside `/dev-lab`.
@@ -202,7 +208,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] If a regeneration ever comes back empty/null (this happened once during Cursor's own spot-check on `conscientiousness`), note it — not expected to block anything, but worth flagging if you see it repeat.
 - [ ] This closes F5. No further action expected unless a live mismatch turns up. JS is on OTA `8771f505-5cf5-4652-8d89-42f2ad57f05c` — regenerate on a binary 10+ device after it has pulled the update.
 
-## Box 22 — Dawn categories, Explore combine, Levity, The Story
+## Box 22 — Dawn categories, Explore combine, Levity, The Story — OBSOLETE (2026-10-23)
+
+> Obsolete: Dawn is gone and the Story is free templates on Insights (Box 31 covers it).
 
 All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines as final.
 
@@ -215,14 +223,18 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] On the Explore tab, confirm The Story fold (collapsed) sits under Categories. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
 - [ ] Flag every Story paragraph and every new Levity/Dawn/Explore line for emci before treating any of it as shippable.
 
-## Box 23 — Shared friend-voice style checklist (all 5 surfaces)
+## Box 23 — Shared friend-voice style checklist (all 5 surfaces) — OBSOLETE (2026-10-23)
+
+> Obsolete: four of the five surfaces (Read/Do, Dawn, Talk, Sage title) no longer exist; copy now follows `docs/copy-review-rules.md`.
 
 - [ ] Open a generated Dawn Read (Home/dawn), an Explore observation, the Sage Title + its Category lines, and The Story. For each, confirm the copy reads like a friend who noticed something: never "you are", never self-description ("this reflects", "a gap worth", "the data shows"), never "always" (prefers lately/this week/for now).
 - [ ] Confirm a title or category summary that names more than one quality joins them with but/yet/and — never a plain comma list. Example to match: "Grounded and self-driven, but happiest doing it alone", not "Steady, driven, and independent".
 - [ ] Confirm multi-trait sentences read as one whole person (Rule 6) and single-idea sentences stay one idea (Rule 3).
 - [ ] Confirm the checklist text never appears in rendered output (it's prompt-only scaffolding).
 
-## Box 24 — Circle Explore handshake (consent-gated comparison)
+## Box 24 — Circle Explore handshake (consent-gated comparison) — OBSOLETE (2026-10-23)
+
+> Obsolete: friends are added by @handle with accept-before-connect, and comparing is the Circle compare feature. Covered by Boxes 61, 62 and 76.
 
 - [ ] With two test accounts, scan a QR / paste a link to connect. Confirm Circle appears for **both** accounts and is not present before the connection.
 - [ ] On account A, tap "Share categories with them" (per-friend path). Confirm the copy flips to "Waiting for them to opt in too." Confirm **no** comparison is visible yet.
@@ -233,7 +245,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Unfriend from one side. Confirm Circle disappears for both and the connection row is gone.
 - [ ] Spot check Supabase: `category_share` / `close_friends_share` rows flip only with consent; `peer_category_pack` returns cached summaries only.
 
-## Box 25 — Thin-profile behavior (live 6/15 rule)
+## Box 25 — Thin-profile behavior (live 6/15 rule) — OBSOLETE (2026-10-23)
+
+> Obsolete: written around Sage and Talk. The thin-profile gate still exists in code (`check:wave20`, `check:wave22`), but the screens it described are gone.
 
 - [ ] **Actual live rule:** thin is `settledCount / TRAIT_AXES.length < 6/15`. With 16 axes today that means **fewer than 7 effective settled report-track axes = thin** (6/16 = 0.375 < 0.4; 7/16 = 0.4375 ≥ 0.4). Stability-weighted, report-track only — gut-call never counts.
 - [ ] On a brand-new account (0 settled): open Sage. Confirm the "N of 16 settled" line reads 0/16 and coaching copy is honest/thin (does not invent specifics, does not nag).
@@ -243,7 +257,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Confirm a gut-call (`self_game`) answer on an axis does **not** count toward settled (report-track only) — Sage's count stays put.
 - [ ] Confirm The Story fold is absent on a thin account even when Gemini is reachable (thin gate holds).
 
-## Box 26 — Tokens, Full Profile depth, trait_history timeline
+## Box 26 — Tokens, Full Profile depth, trait_history timeline — OBSOLETE (2026-10-23)
+
+> Obsolete: "Notes", "A closer look from Sage" and Gut call are gone; tokens are now ATO tokens (Boxes 32 and 76) and profile changes are Change answers / Undo (Box 81).
 
 - [ ] Log a Check. Confirm Notes balance went up by 3 (check-in earn), and the `token_events` ledger shows a +3 row.
 - [ ] Play a game round (Gut call). Confirm +5 and a ledger row.
@@ -254,7 +270,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Tap a filled axis to edit. Confirm 8s undo works (no persist/history if undone) and re-tapping the same axis immediately after loses undo.
 - [ ] Confirm Full Profile stays fully viewable at 0 Notes — spend only gates new depth/insight, never viewing.
 
-## Box 27 — Nav bar customization (edit mode)
+## Box 27 — Nav bar customization (edit mode) — OBSOLETE AS WRITTEN (2026-10-23)
+
+> Obsolete as written: it names a Sage tab and a five-item bar that no longer exist (the Sage tab became Insights). If the nav edit mode is still wanted on a phone, write a fresh box for the current tabs.
 
 - [ ] Confirm the bottom bar shows, by default: **Home / Sage / Explore / You / More** — 5 items, not 6. Around and Circle are in More. Circle appears only after a connection; before that it is not shown anywhere, but Around still is.
 - [ ] Long-press a reorderable tab (Explore/Around/You) → "Edit navigation" opens full-screen. Confirm Home and Sage are shown as pinned and there is a **Swap** affordance, not a drag handle.
@@ -266,7 +284,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Unfriend the last peer (Circle disappears) then reconnect. Confirm Circle returns to its stored slot (in More by default), not a new random position.
 - [ ] Confirm the pixel nav companion stays fixed top-right on every tab and does not remount on tab switch.
 
-## Box 28 — Sage toys pinned above the chat scroll (OTA `0ff16d9d`)
+## Box 28 — Sage toys pinned above the chat scroll (OTA `0ff16d9d`) — OBSOLETE (2026-10-23)
+
+> Obsolete: there is no Sage tab, chat or 8-ball card above a thread any more.
 
 - [ ] Open the Sage tab. Confirm the 8-ball and "What Sage remembers" (facts) card render **above** the message thread and do not scroll away — swipe the message list up/down and confirm the 8-ball/facts card stay fixed in place while only the messages scroll underneath.
 - [ ] Tap the facts card to expand it (if you have any stored facts) or tap it open/closed with none. Confirm expanding/collapsing it does **not** jump or scroll the message thread.
@@ -302,23 +322,25 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] Go back to the first category, kill and reopen the app. Confirm the written card is still there (no new AI call).
 - [ ] Open Love / closeness (next day). Confirm the wording is warm and never says anxious, insecure, avoidant or attachment.
 - [ ] Turn AI off on You. Confirm the leanings still show, with "Turn on AI on You to get the written deep dive."
-- [ ] Confirm Home's AI line now reads "Sage uses AI only to write your Story, your Legends cards and your category deep dives."
+- [ ] Confirm the AI-use line in the consent card names only Legends cards and category deep dives (the Story is free templates and is not an AI view).
 - [ ] Screenshot: a written deep dive with its leanings.
 
-## Box 31 — Home: The Story as script swipe cards (2026-10-13)
+## Box 31 — The Story as script swipe cards (2026-10-13; now on the Insights tab)
 
-- [ ] Home → The Story → Load story. Confirm a nickname title, script swipe cards (📍 setting on card 1, one sentence per line, bold speaker tags, card 5 = Next + italic reveal, card 6 = Why this is you). No recap card. Progress dots, Previous/Next beat buttons. **No** AI badge on a template card (`STORY_AI_POLISH` is off).
+> Updated 2026-10-23: the Story lives on **Insights** (not Home), is free templates with no AI, and no longer rewrites an older story on open.
+
+- [ ] Insights → The Story → Load story. Confirm a nickname title, script swipe cards (📍 setting on card 1, one sentence per line, bold speaker tags, card 5 = Next + italic reveal, card 6 = Why this is you). No recap card. Progress dots, Previous/Next beat buttons. **No** AI badge on a template card (`STORY_AI_POLISH` is off).
 - [ ] Confirm there is no "What they noticed" or "What it means for you". Optional tap: "The other way it could have gone". ⓘ opens Built from. Share title pastes title + reveal.
 - [ ] Confirm the story text never names a trait. Card 6 may use the real catalog category name. Romantic roles stay "your date" / "your partner" (never a name or he/she).
 - [ ] Settings → Reduce Motion on: beats still cross-fade (never freeze). Motion Full / Zen: a bigger fade-and-rise. VoiceOver: Previous/Next beat and the adjustable pager. Dynamic Type: text still grows.
-- [ ] An older labelled story (scene / moment / means) still shows until you open the fold; opening it rewrites once. If rewrite fails, the old card stays. Reopening Home must not fire another rewrite for that same card.
+- [ ] An older AI-written labelled story (scene / moment / means) is not shown on Insights any more; only template / bank cards are. Opening the Story never rewrites anything (the rewrite path was removed).
 - [ ] Load again: a different template, not an instant repeat. Captain Table for Three (first-date, social / high) is the screenshot story: cards 1, 3, 6 and the other-way tap.
 
 ## Box 32 — ATO tokens pay for AI (wave92, 2026-10-09)
 
 - [ ] Home (Questions finished): a "Daily check-in" card. Tap "Check in · +5 tokens". Confirm "+5 tokens", "Checked in today", the week count, and the balance line.
 - [ ] Tap again later the same day: it stays "Checked in today" (no second +5).
-- [ ] The Story button reads "Load a new story · 5 tokens"; loading one takes 5 tokens (balance on the check-in card drops by 5).
+- [ ] The Story is free (templates, since 2026-10-14): loading one on Insights takes no tokens and the balance does not move. Only a Legends AI card or a new deep dive costs 5.
 - [ ] Explore → deep dive button reads "Write my deep dive · 5 tokens"; writing one takes 5 (2 cards). With under 5 tokens it says how to earn more.
 - [ ] Legends: the first reveal of the day is free; with 5+ tokens it comes with the AI card (balance −5). After it, "Reveal one more for 5 tokens" works while you have tokens.
 - [ ] You → ATO tokens: "Check in on Home…", "Answer a set of 16…", "Spend: 5 for each AI view…"; history shows "Daily check-in" and "AI view".
@@ -1176,3 +1198,19 @@ copy; no screen should change.
 - [ ] **2** Today's Pick, a question set, and the set-done screen. -> Same as before, no badge.
 - [ ] **3** A deep dive (open one you have). -> The team name and icon behave as before (hidden until you choose to show it).
 - [ ] **4** Lock-screen notifications. -> You still get NO "category statement" push (that flag stays off until you read the statements).
+
+## Box 81 — Change answers, Undo, Start fresh, card compare + the A5 cleanup (roadmap v2 step A5, 2026-10-23)
+
+About 10 min. Needs the A5 OTA (restart the app twice) and the **dev-test account** (`@atodev`, never a real person's account) with all
+question sets done. Use the dev-test account for Start fresh: it wipes the traits.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Explore → Questions (all sets done). -> "All 25 sets done" style header, then one row per trait with its leaning and "Change answers · free".
+- [ ] **2** Tap "Change answers" on one trait, tap a different option. -> It asks "Tap again: change to “…”"; tap again. The row says "N answer changed this visit. Undo works until you leave this screen."
+- [ ] **3** Tap "Undo". -> It asks "Tap again to undo all of them"; tap again. The answer is back to "· your answer" on the original option.
+- [ ] **4** Leave the screen and come back. -> The Undo row is gone (it only works inside one visit), but a question we retired shows "We retired this question. Your answer stays as you gave it."
+- [ ] **5** Start fresh: pick **Keep my cards**, press and HOLD "Hold to start fresh" for about 2.5 seconds. -> A quick tap does nothing; holding wipes the 16 traits, keeps your tokens and account, and your old profile is saved as a card first.
+- [ ] **6** Your cards. -> The list shows the saved cards; "Tap two cards to compare them." Tap two: the newer card shows arrows for traits that moved (or "nothing changed").
+- [ ] **7** (A5) VoiceOver on, You → Delete account. -> It reads "Delete account, button". In the sheet, the X reads "Close, button", and the list says "Everything you saved in ATO, like your answers, profile cards and Legends" (no "saved facts"). Close it without deleting.
+- [ ] **8** (A5) Explore → open a deep dive you already have, and Legends → reveal one. -> Both work as before (no model call comes from the phone any more; the server writes the cards).

@@ -5,7 +5,7 @@
  * Pins the copy-flag decision table, one row per `*_COPY_REVIEWED` constant:
  *   accepted = `true` in code, listed as ACCEPTED in docs/master-plan.md Ledger A
  *   read     = still `false`: emci reads it first; flipping it is his call
- *   retired  = `false`, gates nothing; the file leaves in step A5
+ *   retired  = gates nothing; the flag and its dead code were deleted in step A5 (2026-10-23), so it must not be declared
  * A false flag never hides a surface (a draft badge shows only while PRE_LAUNCH_DEV; the one real effect is the
  * category push). So no flag may be added, flipped or dropped without this table and Ledger A saying why.
  */
@@ -39,6 +39,7 @@ export const DECISIONS: Record<string, { file: string; decision: Decision }> = {
   CIRCLE_COMPARE_COPY_REVIEWED: { file: 'src/play/circle-compare.ts', decision: 'read' },
   LEGEND_FIGURES_COPY_REVIEWED: { file: 'src/lib/legend-figures/flags.ts', decision: 'read' },
   CATEGORY_STATEMENTS_COPY_REVIEWED: { file: 'src/lib/category-statements/flags.ts', decision: 'read' },
+  // Retired: the flag and its AI writer were deleted in A5. `file` is where it used to live.
   DAILY_INSIGHT_COPY_REVIEWED: { file: 'src/lib/insight/generate-insight.ts', decision: 'retired' },
   TITLE_COPY_REVIEWED: { file: 'src/lib/sage-title.ts', decision: 'retired' },
   STORY_COPY_REVIEWED: { file: 'src/lib/sage-story.ts', decision: 'retired' },
@@ -83,8 +84,9 @@ export function scanFlags(src: string): { name: string; value: boolean | 'other'
 /** Flags that deliberately alias another flag (`= OTHER_FLAG`) instead of holding their own value. */
 export const ALIASES = ['UNLOCK_COPY_REVIEWED'];
 
-/** Does the decision agree with the code? accepted → true; read / retired → false. */
+/** Does the decision agree with the code? accepted → true; read → false; retired → not declared at all. */
 export function decisionHolds(value: boolean | null, decision: Decision): boolean {
+  if (decision === 'retired') return value === null;
   if (value === null) return false;
   return decision === 'accepted' ? value === true : value === false;
 }
@@ -111,19 +113,22 @@ function allFlagFiles(dir: string, out: string[] = []): string[] {
 
 // 1. The table matches the code, flag by flag.
 for (const [name, row] of Object.entries(DECISIONS)) {
-  const value = flagValue(read(row.file), name);
+  // A retired flag's file may be gone or trimmed; it must simply not declare the flag any more.
+  const value = row.decision === 'retired' ? null : flagValue(read(row.file), name);
   assert.ok(decisionHolds(value, row.decision), `${name} is ${value} in ${row.file} but the decision is "${row.decision}"`);
 }
 const counts = (d: Decision) => Object.values(DECISIONS).filter((row) => row.decision === d).length;
 assert.deepEqual([counts('accepted'), counts('read'), counts('retired')], [9, 4, 4], '9 accepted, 4 to read, 4 retired');
-ok('17 flags: 9 accepted (true), 4 to read (false), 4 retired (false); each matches its code');
+ok('17 flags: 9 accepted (true), 4 to read (false), 4 retired (deleted); each matches its code');
 
 // 2. Pairs: the rule itself.
 assert.equal(decisionHolds(true, 'accepted'), true, 'pass: an accepted flag is true');
 assert.equal(decisionHolds(false, 'accepted'), false, 'fail case: an accepted flag that is still false');
 assert.equal(decisionHolds(false, 'read'), true, 'pass: a flag to read stays false');
 assert.equal(decisionHolds(true, 'read'), false, 'fail case: a flag to read that someone flipped without his read');
-assert.equal(decisionHolds(true, 'retired'), false, 'fail case: a retired flag that turned true');
+assert.equal(decisionHolds(null, 'retired'), true, 'pass: a retired flag is gone from the code');
+assert.equal(decisionHolds(true, 'retired'), false, 'fail case: a retired flag that came back as true');
+assert.equal(decisionHolds(false, 'retired'), false, 'fail case: a retired flag that came back as false');
 assert.equal(decisionHolds(null, 'accepted'), false, 'fail case: a flag that is not declared in its file');
 assert.equal(flagValue('export const X_COPY_REVIEWED = true; // note', 'X_COPY_REVIEWED'), true);
 assert.equal(flagValue('export const X_COPY_REVIEWED = false;', 'X_COPY_REVIEWED'), false);
@@ -159,7 +164,11 @@ for (const rel of allFlagFiles('src')) {
     else declared.set(f.name, f.value);
   }
 }
-const known = new Set([...Object.keys(DECISIONS), ...TRUE_BEFORE]);
+// A retired flag is deliberately NOT known: if it is declared again, the scan below fails it.
+const known = new Set([
+  ...Object.entries(DECISIONS).filter(([, row]) => row.decision !== 'retired').map(([name]) => name),
+  ...TRUE_BEFORE,
+]);
 /** Names a scan finds that no decision covers (aliases must be listed in ALIASES). */
 export function unlisted(found: string[], knownNames: Set<string>, aliasNames: string[], aliasFound: string[]): string[] {
   return [...found.filter((n) => !knownNames.has(n)), ...aliasFound.filter((n) => !aliasNames.includes(n))];
@@ -169,15 +178,15 @@ assert.deepEqual(unknown, [], `new *_COPY_REVIEWED flag(s) with no decision in s
 for (const name of TRUE_BEFORE) assert.equal(declared.get(name), true, `${name} was true before A4 and must stay true`);
 assert.equal(
   [...declared.values()].filter((v) => v === false).length,
-  8,
-  'exactly 8 flags are false: the 4 to read + the 4 retired',
+  4,
+  'exactly 4 flags are false: the 4 to read (the 4 retired ones are deleted)',
 );
 // Pairs on the real helper: an unlisted literal flag and an unlisted alias are both caught; a listed alias passes.
 assert.deepEqual(unlisted(['A'], new Set(['A']), ALIASES, ['UNLOCK_COPY_REVIEWED']), [], 'pass: known flag + the listed alias');
 assert.deepEqual(unlisted(['A', 'NEW_COPY_REVIEWED'], new Set(['A']), ALIASES, []), ['NEW_COPY_REVIEWED'], 'fail case: a new unlisted flag');
 assert.deepEqual(unlisted([], new Set(), ALIASES, ['SNEAKY_COPY_REVIEWED']), ['SNEAKY_COPY_REVIEWED'], 'fail case: a new unlisted alias');
 assert.deepEqual(aliases, ALIASES, 'the only alias in src/ is UNLOCK_COPY_REVIEWED');
-ok('every *_COPY_REVIEWED in src/ has a decision; the 14 earlier ones stay true; exactly 8 stay false');
+ok('every *_COPY_REVIEWED in src/ has a decision; the 14 earlier ones stay true; exactly 4 stay false');
 
 // 4. Ledger A records each decision under the right heading.
 const ledgerStart = read('docs/master-plan.md').indexOf('Copy flags (step A4');

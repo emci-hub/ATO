@@ -9,8 +9,9 @@ no lawyer. The published text is `landing/*.html`; `src/app/legal/*.md` is the s
 1. **Operator:** "ATO, operated by Michael Malig" (emci). Copyright "© 2026 Michael Malig".
 2. **Contact:** `support@emgens.com` (ImprovMX forwarding, live). In-app mailto lines (You, Circle, Under-18) changed too.
    Resend still *sends* sign-in codes from `noreply@asstrollogs.com`; that is only a sending address.
-3. **AI provider:** Gemini only (emci). The DeepSeek fallback runs only when `DEEPSEEK_API_KEY` is set; emci unsets it.
-   No AI code was touched (the AI-removal work is PR #84). The text is true both before and after #84: cards come from a
+3. **AI provider:** Gemini only (emci). emci unset `DEEPSEEK_API_KEY` (confirmed by emci at the start of step A5, 2026-10-23).
+   The old `ai-generate` client path (and its DeepSeek fallback) was removed from the app in step A5; the only model
+   path is `ai-library` (the AI-removal work is PR #84). The text is true both before and after #84: cards come from a
    shared library, some written ahead of time with Gemini, and a new one may be written on request while the writer is on.
 4. **Gemini training:** the text states Google's terms for both plans (paid: not used to improve products; free: may be
    used and human-reviewed; both logged a limited time). Source: ai.google.dev/gemini-api/terms, updated 2026-04-28. If
@@ -32,7 +33,9 @@ no lawyer. The published text is `landing/*.html`; `src/app/legal/*.md` is the s
 
 ## Still open (not blockers)
 
-- **Gemini billing plan** (emci to check in Google AI Studio). Only shortens one sentence.
+- **Gemini billing plan:** emci says he checked it (2026-10-23) but the result is not recorded here. If it is the paid
+  plan, the free-plan sentence can go from both `landing/privacy.html` and `src/app/legal/privacy.md` (keep them in sync,
+  `check:floor`). Only shortens one sentence.
 - **Age-rating answers for 1.1:** `docs/app-store-pack.md` §2 and §9 (chat = Yes).
 - **"Reset account"** is root-only; if it is ever offered to everyone, the policy must say what it keeps.
 - **Hide-my-card switch** (item 13), later.

@@ -3,7 +3,7 @@
  * Run: npm run check:traits
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { writeForOptionalScreen } from '../src/lib/traits';
@@ -307,9 +307,10 @@ async function main() {
   // The promise it carried — a raw trait value never reaches a prompt, only a
   // paraphrase — is now the daily insight's, so it is asserted against that
   // builder's own grounding helper instead.
-  const insightGen = read('src/lib/insight/generate-insight.ts');
-  assert.match(insightGen, /TRAIT_BAND_PHRASES\[axis\]\[leanHighLow\(row\.value\)\]/);
-  assert.doesNotMatch(insightGen, /row\.value\}|\$\{value\}/);
+  // The AI daily-insight builder was removed in roadmap A5. The promise now lives in the shared-library
+  // prompts: a raw or exact trait value never reaches them (pass/fail pairs in scripts/ai-library-check.ts,
+  // "exact score never reaches the prompt"), and traitPromptLines below still paraphrases.
+  assert.ok(!existsSync(resolve(root, 'src/lib/insight/generate-insight.ts')), 'the AI daily-insight builder stays deleted');
   const extLines = traitPromptLines({ extraversion: 0.25 });
   assert.match(extLines, /quieter time/);
   assert.doesNotMatch(extLines, /0\.25/);
@@ -362,9 +363,11 @@ async function main() {
   // routeVoiceCard, which went with the card lane. The fence itself is
   // unchanged and still asserted directly above; the insight's own use of it
   // on all five fields is covered by scripts/insight-check.ts.
-  const insightFence = read('src/lib/insight/generate-insight.ts');
-  assert.match(insightFence, /if \(containsFrameworkTerm\(trimmed\)\) return null;/);
-  ok('the daily insight runs the same framework fence over its generated fields');
+  // The daily insight no longer has generated fields (hand-written bank, check:insight-bank); the fence on
+  // the remaining generated cards (deep dive, Legends) is asserted by check:framework-fence and check:ai-library.
+  assert.equal(containsFrameworkTerm('Your INFJ side is showing.'), true, 'fail case: a type code is caught');
+  assert.equal(containsFrameworkTerm('Day four is even.'), false, 'pass: ordinary copy');
+  ok('the framework fence still catches a type code and passes ordinary copy');
 
   assert.equal(
     resolveNudge({
@@ -400,7 +403,7 @@ async function main() {
   // Talk's own fence assertions went with its backend. The same fence still
   // guards every generated surface that survives, which is what actually
   // matters; asserting nothing here would print green over a real gap.
-  assert.match(insightFence, /containsFrameworkTerm/);
+  assert.match(read('src/lib/legend-figures/story.ts'), /containsFrameworkTerm/);
   assert.match(read('src/lib/category-statements/generate-statements.ts'), /containsFrameworkTerm/);
   ok('the surviving generated surfaces all run the framework fence');
 

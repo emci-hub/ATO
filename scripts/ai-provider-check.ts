@@ -1,16 +1,19 @@
 /**
- * Unified AI provider layer. Run: npm run check:ai
+ * AI provider layer, after roadmap A5 (2026-10-23). Run: npm run check:ai
+ *
+ * Every model call runs in the `ai-library` Edge Function. The phone has no model client:
+ * the old `ai-generate` client path (edge.ts, generate.ts, generateText, pingProvider,
+ * call-sites.ts, the status dot) is gone and must stay gone. What is left on the phone is
+ * the developer AI lab's provider labels and self-tracked usage counts.
  */
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { buildAiConfig, DEFAULT_MODELS } from '../src/lib/ai/config';
+import { AI_CONFIG } from '../src/lib/ai/config';
+import { AI_TAP_TIMEOUT_MS } from '../src/lib/ai/timeouts';
 import { PROVIDER_LIMITS } from '../src/lib/ai/limits';
 import { AI_PROVIDER_IDS, isAiProviderId } from '../src/lib/ai/types';
-import type { AiCallMetadata } from '../src/lib/ai/types';
-import { AI_CALL_SITES } from '../src/lib/ai/call-sites';
-import { isQuotaLimitError } from '../src/lib/ai/generate';
 
 let passed = 0;
 function ok(label: string) {
@@ -36,96 +39,102 @@ function walk(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-assert.equal(buildAiConfig({}).provider, 'gemini');
-assert.equal(buildAiConfig({ MODEL_PROVIDER: 'local' }).provider, 'local');
-assert.equal(buildAiConfig({ AI_PROVIDER: 'nvidia' }).provider, 'nvidia');
-assert.equal(buildAiConfig({ AI_PROVIDER: 'nvidia', MODEL_PROVIDER: 'local' }).provider, 'local');
-assert.equal(buildAiConfig({ AI_PROVIDER: 'claude' }).provider, 'claude');
-assert.ok(!isAiProviderId('groq'));
-ok('AI_PROVIDER selects the vendor; MODEL_PROVIDER=local still forces the fallback');
+/** Source text without comments, so a note about a removed function is not a call. */
+function code(text: string): string {
+  return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+}
 
-assert.equal(DEFAULT_MODELS.gemini, 'gemini-3.7-flash');
+const srcFiles = walk(resolve(root, 'src'));
+
+// --- Config: nothing is read from the build environment -------------------------
+assert.equal(AI_CONFIG.provider, 'gemini');
+assert.deepEqual(Object.keys(AI_CONFIG), ['provider']);
+assert.ok(isAiProviderId('gemini') && isAiProviderId('deepseek'));
+assert.ok(!isAiProviderId('groq'), 'fail case: an unknown vendor id is refused');
+assert.doesNotMatch(code(read('src/lib/ai/config.ts')), /process\.env/, 'config.ts reads no environment variable');
+const envReaders = srcFiles.filter((file) => /EXPO_PUBLIC_(AI_PROVIDER|MODEL_PROVIDER)/.test(code(readFileSync(file, 'utf8'))));
+assert.deepEqual(envReaders, [], 'nothing under src reads EXPO_PUBLIC_AI_PROVIDER or EXPO_PUBLIC_MODEL_PROVIDER');
+ok('the live vendor is a constant (Gemini, server-side); EXPO_PUBLIC_AI_PROVIDER / MODEL_PROVIDER are not read');
+
 assert.equal(PROVIDER_LIMITS.gemini.rpm, 12);
 assert.equal(PROVIDER_LIMITS.nvidia.rpm, 40);
 assert.equal(PROVIDER_LIMITS.perplexity.rpm, null);
 assert.equal(PROVIDER_LIMITS.claude.rpm, null);
 assert.equal(PROVIDER_LIMITS.grok.rpm, null);
-assert.ok(AI_PROVIDER_IDS.includes('local'));
+assert.equal(PROVIDER_LIMITS.deepseek.rpm, null);
+assert.ok(AI_PROVIDER_IDS.includes('local') && AI_PROVIDER_IDS.includes('deepseek'));
 ok('seeded reference limits match the known free-tier baselines');
 
-const generate = read('src/lib/ai/generate.ts');
-assert.match(generate, /export async function generateText/);
-assert.match(read('src/lib/ai/types.ts'), /responseFormat/);
-assert.match(generate, /completeViaEdge/);
-assert.doesNotMatch(generate, /completeGemini|completeNvidia|completePerplexity/);
-assert.match(read('src/lib/ai/edge.ts'), /functions\.invoke\('ai-generate'/);
-assert.match(read('src/lib/ai/edge.ts'), /isRemoteAiProviderId\(id\)/);
-ok('shared generateText sends every remote vendor through the Edge Function');
+// --- The old client path stays deleted --------------------------------------------
+for (const gone of [
+  'src/lib/ai/edge.ts',
+  'src/lib/ai/generate.ts',
+  'src/lib/ai/http.ts',
+  'src/lib/ai/call-sites.ts',
+  'src/lib/ai/reject-log.ts',
+  'src/lib/ai/gemini.ts',
+  'src/lib/category-deep-dive/generate.ts',
+  'src/components/provider-status-dot.tsx',
+  'scripts/live-ai.ts',
+  'scripts/ai-call-sites-report.ts',
+]) {
+  assert.ok(!existsSync(resolve(root, gone)), `${gone} must stay deleted (the ai-generate client path is gone)`);
+}
+const callers = srcFiles.filter((file) => /\b(generateText|pingProvider|completeViaEdge)\s*\(/.test(code(readFileSync(file, 'utf8'))));
+assert.deepEqual(callers, [], 'no model call or provider ping anywhere under src');
+// The client-side claim helper (voice/quota-server.ts) is gone: nothing defines or imports it. (explore/route.ts
+// still takes an injectable `claimAiCall` dependency for its offline check; that is a parameter name, not the helper.)
+assert.doesNotMatch(read('src/lib/voice/quota-server.ts'), /export async function claimAiCall/);
+const claimImporters = srcFiles.filter((file) => /import[^;]*\bclaimAiCall\b[^;]*from\s+'@\/lib\/voice\/quota-server'/.test(readFileSync(file, 'utf8')));
+assert.deepEqual(claimImporters, [], 'nothing imports a client-side AI claim');
+const invokers = srcFiles.filter((file) => /functions\.invoke\(\s*'ai-generate'/.test(code(readFileSync(file, 'utf8'))));
+assert.deepEqual(invokers, [], 'nothing under src calls the ai-generate Edge Function');
+assert.equal(AI_TAP_TIMEOUT_MS, 45000, 'the one live constant moved to timeouts.ts');
+// Pairs on the rule itself: a call is caught, a comment about the removed function is not.
+const callRule = /\b(generateText|pingProvider|completeViaEdge)\s*\(/;
+assert.equal(callRule.test(code('const t = await generateText({ prompt }, META);')), true, 'fail case: a generateText call is caught');
+assert.equal(callRule.test(code('// generateText( was removed in A5\nconst x = 1;')), false, 'pass: a comment is not a call');
+const aiIndex = read('src/lib/ai/index.ts');
+assert.doesNotMatch(aiIndex, /generateText|pingProvider|buildAiConfig|DEFAULT_MODELS|isRemoteReady/, 'the ai index exports no model client');
+ok('the ai-generate client path stays deleted: no generateText, ping, edge client, call-site registry or status dot');
 
 // No vendor key may be inlined into the bundle: only statically referenced
 // EXPO_PUBLIC_* vars are inlined, so the reference itself is the leak.
-const keyLeaks = walk(resolve(root, 'src')).filter((file) =>
-  /EXPO_PUBLIC_[A-Z_]*API_KEY/.test(readFileSync(file, 'utf8')),
-);
+const keyLeaks = srcFiles.filter((file) => /EXPO_PUBLIC_[A-Z_]*API_KEY/.test(readFileSync(file, 'utf8')));
 assert.deepEqual(keyLeaks, []);
 ok('no EXPO_PUBLIC_*_API_KEY reference anywhere in src');
 
-// ai-generate is CLOSED (wave98, M1): it must stay a 410 stub with no vendor key, no
-// vendor URL, no prompt field and no call into the shared vendor code. The only
-// model path is ai-library, which rebuilds its prompt on the server.
-const edge = read('supabase/functions/ai-generate/index.ts');
-const edgeCode = edge.replace(/\/\*[\s\S]*?\*\//g, '');
-assert.match(edgeCode, /status: 410/);
-assert.doesNotMatch(edgeCode, /_API_KEY|Deno\.env|createClient|ai-vendors|claim_ai_call|\bprompt\b|fetch\(/);
-assert.doesNotMatch(
-  edgeCode,
-  /googleapis|nvidia\.com|perplexity|anthropic\.com|x\.ai|deepseek\.com/,
-);
-assert.ok(existsSync(resolve(root, 'supabase/functions/_shared/ai-vendors.ts')));
-for (const file of ['supabase/functions/ai-library/index.ts', 'supabase/functions/ai-library-fill/index.ts']) {
-  const code = read(file).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-  assert.doesNotMatch(code, /ai-generate/, `${file} must not depend on ai-generate`);
-}
-assert.equal(PROVIDER_LIMITS.deepseek.rpm, null);
-assert.ok(AI_PROVIDER_IDS.includes('deepseek'));
-ok('ai-generate is a closed 410 stub: no vendor key, vendor URL or prompt field (open proxy closed)');
-
-const srcFiles = walk(resolve(root, 'src'));
-// No client-side vendor transport survives: the script-only Gemini adapter
-// (src/lib/ai/gemini.ts) was deleted 2026-09-03; live checks now go through
-// ai-generate like the app does.
-const generateContentHits = srcFiles.filter((file) =>
-  readFileSync(file, 'utf8').includes(':generateContent'),
-);
-assert.deepEqual(generateContentHits, []);
-assert.ok(!existsSync(resolve(root, 'src/lib/ai/gemini.ts')), 'src/lib/ai/gemini.ts must stay deleted');
-assert.doesNotMatch(read('src/lib/ai/http.ts'), /extract(Gemini|OpenAi|Claude)Text|fetch\(/);
-ok('no vendor HTTP transport anywhere under src (Edge Function only)');
-
-// The model is chosen server-side. A stale EXPO_PUBLIC_*_MODEL in an EAS
-// environment must not be able to influence the bundle, so nothing under src
-// may reference one; AiEnv/AiConfig carry only the provider selection.
-const modelLeaks = srcFiles.filter((file) =>
-  /EXPO_PUBLIC_[A-Z_]*_MODEL\b/.test(readFileSync(file, 'utf8')),
-);
+// The model is chosen server-side. A stale EXPO_PUBLIC_*_MODEL in an EAS environment must not be able
+// to influence the bundle, so nothing under src may reference one.
+const modelLeaks = srcFiles.filter((file) => /EXPO_PUBLIC_[A-Z_]*_MODEL\b/.test(readFileSync(file, 'utf8')));
 assert.deepEqual(modelLeaks, []);
-const aiConfigSrc = read('src/lib/ai/config.ts');
-assert.doesNotMatch(aiConfigSrc, /geminiModel|geminiApiKey|GEMINI_API_KEY|GEMINI_MODEL\?/);
-assert.deepEqual(Object.keys(buildAiConfig({ AI_PROVIDER: 'grok' })), ['provider']);
+assert.doesNotMatch(read('src/lib/ai/config.ts'), /geminiModel|geminiApiKey|GEMINI_API_KEY|GEMINI_MODEL\?/);
 ok('no EXPO_PUBLIC_*_MODEL reference in src; client config is provider-only');
 
-// DEFAULT_MODELS used to mirror ai-generate's table. That function is closed now; the
-// live model table is _shared/ai-vendors.ts (ai-library). The client copy goes with the
-// dead client path in step 6.
-const vendorsSrc = read('supabase/functions/_shared/ai-vendors.ts');
-assert.match(vendorsSrc, new RegExp(DEFAULT_MODELS.gemini.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')));
-ok('the live Gemini default model is the one in _shared/ai-vendors.ts');
+// No client-side vendor transport survives (Edge Function only).
+const generateContentHits = srcFiles.filter((file) => readFileSync(file, 'utf8').includes(':generateContent'));
+assert.deepEqual(generateContentHits, []);
+ok('no vendor HTTP transport anywhere under src (Edge Function only)');
 
-// The app-side Story writer (src/lib/explore/generate.ts) was deleted with
-// Sage (2026-10-14): the Story on Insights is template-only.
+// --- The server side: ai-generate stays closed; the live model table is ai-vendors ---
+// While the deployed function or its folder exists it must stay a 410 stub with no vendor key, no vendor
+// URL, no prompt field and no call into the shared vendor code (wave98). Once emci deletes it (roadmap
+// A5 / D14) the folder is gone and this part is vacuous; the invariant is "never an open proxy".
+if (existsSync(resolve(root, 'supabase/functions/ai-generate/index.ts'))) {
+  const edgeCode = code(read('supabase/functions/ai-generate/index.ts'));
+  assert.match(edgeCode, /status: 410/);
+  assert.doesNotMatch(edgeCode, /_API_KEY|Deno\.env|createClient|ai-vendors|claim_ai_call|\bprompt\b|fetch\(/);
+  assert.doesNotMatch(edgeCode, /googleapis|nvidia\.com|perplexity|anthropic\.com|x\.ai|deepseek\.com/);
+}
+const vendorsSrc = read('supabase/functions/_shared/ai-vendors.ts');
+assert.match(vendorsSrc, /gemini-3\.7-flash/, 'the live Gemini default model is the one in _shared/ai-vendors.ts');
+for (const file of ['supabase/functions/ai-library/index.ts', 'supabase/functions/ai-library-fill/index.ts']) {
+  assert.doesNotMatch(code(read(file)), /ai-generate/, `${file} must not depend on ai-generate`);
+}
+ok('ai-generate is never an open proxy; the live Gemini model is in _shared/ai-vendors.ts; ai-library does not use it');
+
+// --- Questions and Sage-era writers stay deleted -----------------------------------
 assert.ok(!existsSync(resolve(root, 'src/lib/explore/generate.ts')), 'the app-side Story writer stays deleted');
-// Questions come from the fixed bank (wave85, emci 2026-10-06): no model call
-// writes a question any more, so the old generator and its helpers stay gone.
 for (const gone of [
   'src/lib/questions/generate.ts',
   'src/lib/questions/prompt.ts',
@@ -134,124 +143,30 @@ for (const gone of [
   'src/lib/questions/prewarm.ts',
   'src/lib/questions/run-prewarm.ts',
   'src/lib/questions/question-lab.ts',
-]) {
-  assert.ok(!existsSync(resolve(root, gone)), `${gone} must stay deleted (no runtime AI questions)`);
-}
-// The "A faster pass" sweep (`src/lib/questions/sweep.ts`) was deleted
-// entirely 2026-09-15 (emci) — the 50 bank questions elsewhere already cover
-// it, so there is nothing left here to assert has no model call.
-assert.ok(
-  !existsSync(resolve(root, 'src/lib/questions/sweep.ts')),
-  'src/lib/questions/sweep.ts must stay deleted',
-);
-// Dead client-side writers (no callers) stay deleted; none may creep back with a vendor call.
-for (const gone of [
+  'src/lib/questions/sweep.ts',
+  'src/lib/questions/reroll.ts',
   'src/lib/rolls/run.ts',
   'src/lib/rolls/generate.ts',
-  'src/lib/questions/reroll.ts',
   'src/lib/legends64/generate-story.ts',
 ]) {
-  assert.ok(!existsSync(resolve(root, gone)), `${gone} must stay deleted`);
+  assert.ok(!existsSync(resolve(root, gone)), `${gone} must stay deleted (no runtime AI writers on the phone)`);
 }
 assert.doesNotMatch(read('src/lib/category-statements/generate-statements.ts'), /generateText|generateCategoryStatements/);
-assert.doesNotMatch(read('src/lib/ai/call-sites.ts'), /ROLL_META|LEGEND_STORY_META|CATEGORY_STATEMENTS_META|DAILY_INSIGHT_META/);
 assert.doesNotMatch(read('src/lib/explore/prompt.ts'), /generateText/);
-assert.doesNotMatch(read('src/lib/sage-title.ts'), /generateText/);
-assert.doesNotMatch(read('src/lib/sage-story.ts'), /generateText/);
-ok('call sites use generateText; prompt builders are untouched; the deleted sweep stays deleted');
+ok('questions come from the fixed bank; the Sage-era client writers stay deleted');
 
-// --- Required call-site metadata ------------------------------------------
-// generateText(request, meta) — meta is mandatory. Any src file that invokes
-// generateText must be a registered call site and pass the metadata argument;
-// this is what forces a new AI feature to declare its sharing model up front.
-const METADATA_CALL_FILES = new Set([
-  'src/lib/ai/generate.ts', // the dispatcher itself (definition, no self-calls)
-  'src/lib/legend-figures/generate.ts',
-  'src/lib/category-deep-dive/generate.ts',
-]);
-const CALL_WITH_META =
-  /generateText\(\s*\{[\s\S]*?\}\s*,\s*[A-Za-z0-9_$.[\]]+\s*\)/g;
-const relRoot = root.split('\\').join('/') + '/';
-const unregisteredSites: string[] = [];
-const callsMissingMeta: string[] = [];
-for (const file of srcFiles) {
-  const text = readFileSync(file, 'utf8');
-  if (!text.includes('generateText(')) continue;
-  const rel = file.split('\\').join('/').replace(relRoot, '');
-  if (!METADATA_CALL_FILES.has(rel)) {
-    unregisteredSites.push(rel);
-    continue;
-  }
-  if (rel === 'src/lib/ai/generate.ts') continue;
-  const callCount = text.split('generateText(').length - 1;
-  const withMetaCount = (text.match(CALL_WITH_META) ?? []).length;
-  if (callCount !== withMetaCount) {
-    callsMissingMeta.push(`${rel}: ${callCount - withMetaCount} generateText call(s) missing metadata`);
-  }
-}
-assert.deepEqual(
-  unregisteredSites,
-  [],
-  `generateText call site without declared metadata: ${unregisteredSites.join(', ')}`,
-);
-assert.deepEqual(
-  callsMissingMeta,
-  [],
-  `generateText call site missing the metadata argument: ${callsMissingMeta.join(', ')}`,
-);
-ok('every generateText call site passes the required metadata argument');
-
-const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
-  'personalized',
-  'cohortShareable',
-  'bucketShareable',
-  'latencySensitive',
-];
-// 11 → 7 (2026-10-14): Sage title, Sage story, Sage insight spend and the AI daily insight were removed.
-// 7 → 4 (2026-10-20): the dead Roll, Legend story and Category statements client writers were deleted.
-assert.equal(AI_CALL_SITES.length, 4, 'one catalog entry per AI call site');
-const features = new Set<string>();
-for (const site of AI_CALL_SITES) {
-  assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);
-  features.add(site.feature);
-  for (const flag of META_FLAGS) {
-    assert.equal(
-      typeof site.meta[flag],
-      'boolean',
-      `${site.feature} metadata.${flag} must be a boolean`,
-    );
-  }
-}
-ok('metadata catalog covers all 4 call sites with boolean flags');
-
-// --- Gemini -> DeepSeek fallback ------------------------------------------
-// Any Gemini failure falls back (not only quota); isQuotaLimitError only
-// classifies the log line.
-const generateSrc = read('src/lib/ai/generate.ts');
-assert.match(generateSrc, /if \(provider === 'gemini'\) \{[\s\S]*completeFor\('deepseek'/);
-assert.doesNotMatch(generateSrc, /provider === 'gemini' && isQuotaLimitError/);
-ok('every Gemini failure retries once on DeepSeek before the error state');
-assert.equal(isQuotaLimitError(new Error('Gemini 429: Resource has been exhausted')), true);
-assert.equal(isQuotaLimitError(new Error('Gemini 429: {"status":"RESOURCE_EXHAUSTED"}')), true);
-assert.equal(isQuotaLimitError(new Error('Gemini 429: RATE_LIMIT_EXCEEDED')), true);
-assert.equal(isQuotaLimitError(new Error('Gemini 400: prompt and maxOutputTokens are too long')), true);
-assert.equal(isQuotaLimitError(new Error('Gemini 400: INVALID_ARGUMENT')), false);
-assert.equal(isQuotaLimitError(new Error('Gemini 500: internal error')), false);
-assert.equal(isQuotaLimitError(new Error('Gemini 403: API key not valid')), false);
-assert.equal(isQuotaLimitError(new Error('network unreachable')), false);
-assert.equal(isQuotaLimitError(null), false);
-ok('isQuotaLimitError classifies quota / token-limit vs other Gemini failures');
-
+// --- The developer AI lab ------------------------------------------------------------
 const lab = read('src/app/ai-lab.tsx');
 assert.match(lab, /self-tracked call counts/);
 assert.match(lab, /not the provider(&apos;|')s/);
 assert.match(lab, /Refresh counts/);
 assert.match(lab, /This device only/);
+assert.doesNotMatch(lab, /ProviderStatusDot|pingProvider/, 'the lab no longer pings a provider');
 assert.match(read('src/components/running-update-line.tsx'), /secret\.current\.n >= 5/);
 assert.match(read('src/components/running-update-line.tsx'), /router\.push\('\/ai-lab'\)/);
 assert.match(read('src/app/_layout.tsx'), /name="ai-lab"/);
 assert.match(read('src/app/+native-intent.ts'), /voice\|ai\)-lab/);
-ok('hidden 5-tap switcher lists providers and self-tracked counts');
+ok('hidden 5-tap lab lists providers and self-tracked counts (no connectivity ping)');
 
 const migration = read('supabase/migrations/ai_provider_layer.sql');
 assert.match(migration, /create table public.ai_provider_log/);

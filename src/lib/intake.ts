@@ -76,7 +76,8 @@ export const KNOCKS_CHIPS: IntakeChip<KnocksChip>[] = [
 ];
 
 /**
- * Infinitive phrases that drop into first_cards.md: "After you {morning_cue}, …"
+ * Infinitive phrases that drop into "After you {morning_cue}, …" (the Day 1–3 first_cards.md
+ * cards were removed in roadmap A5).
  * Chip label is the bare phrase from the spec; stored value is the cue.
  */
 export const MORNING_CUE_CHIPS: IntakeChip[] = [
@@ -307,7 +308,8 @@ export function coreIntakeAnsweredLabel(answered: number, total = CORE_INTAKE_TO
 }
 
 /**
- * Pick which first_cards.md style slot to use for check_count < 3.
+ * Pick a quiet / even / loud style slot for check_count < 3 (the Day 1–3 first_cards.md
+ * cards it fed were removed in roadmap A5).
  *
  * support_style is the primary "how to meet you" axis (sharper than talk_style).
  * energy_pattern shifts one step: morning more activating, evening/night owl

@@ -259,6 +259,8 @@ Update: ${Updates.updateId ?? 'original build'}`);
           {/* Deletion lives below sign-out and opens a confirmation sheet — it
               never deletes on this tap. */}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Delete account"
             onPress={() => setDeleting(true)}
             style={({ pressed }) => [styles.deleteLink, pressed && styles.pressed]}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.deleteLinkText}>

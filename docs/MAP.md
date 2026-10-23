@@ -49,7 +49,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `ai-lab.tsx` | Hidden provider switcher (5-tap Build line) + status dots |
 | `*-lab.tsx` (theme, around, pixel, voice; the talk and crisis labs are removed) | Dev labs, behind `PRE_LAUNCH_DEV` |
 | `+native-intent.ts` | Deep-link → route mapping |
-| `copy/first_cards.md`, `copy/library.md` | Banked Day 1–3 cards; Library paraphrase lines |
+| `copy/library.md` | Library paraphrase lines (`first_cards.md`, the old Day 1–3 cards, was removed in A5) |
 | `voice/voice-reference.txt` | Shared voice register (was `voice/sage.txt`, now gone) |
 | `legal/*.md` | Privacy, terms, App Store privacy-label answers |
 
@@ -75,7 +75,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `share-poster.tsx`, `scan-sheet.tsx`, `city-picker.tsx` | Poster + QR scan; Around city |
 | `action-menu.tsx`, `report-sheet.tsx`, `delete-account-sheet.tsx`, `password-settings-fold.tsx`, `settings-fold.tsx` | Menus, moderation, account |
 | `auth-*.tsx`, `birthday-row.tsx`, `born-on-fields.tsx` | Auth scaffold, Apple block, OTP, age fields |
-| `ai-consent-card.tsx`, `provider-status-dot.tsx`, `running-update-line.tsx` | AI consent, provider ping dot, Build line (5-tap) |
+| `ai-consent-card.tsx`, `running-update-line.tsx` | AI consent, Build line (5-tap). (`provider-status-dot.tsx` was removed in A5.) |
 | `push-runtime.tsx`, `push-test-card.tsx`, `sentry-test-card.tsx`, `you-dev-tools.tsx`, `dev-probes-stub.ts` | Push scheduling runtime; dev probes |
 | `dev-unlock-gate.tsx` | 7-tap version number → password prompt → session-only Dev Tools unlock |
 | `kenney-character.tsx`, `kenney-credits-card.tsx`, `pixel-face.tsx`, `animated-icon*.tsx` | Sprite character, credits, splash |
@@ -92,12 +92,12 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | Traits | `traits.ts`, `trait-history*.ts`, `trait-tracks-store.ts`, `trait-stability.ts`, `trait-bands.ts`, `axis-codes.ts`, `axis-poles.ts` | 16 axes, merge rules, EWMA tracks, bands |
 | Checks | `checks.ts`, `checks-events.ts`, `check-window.ts`, `week-window.ts`, `local-date.ts`, `today-card.ts`, `today-card-events.ts`, `today-slot.ts` | Check write/read, day window, widget card, Home slot |
 | Home extras | `ask.ts`, `ranking.ts`, `scenario.ts`, `sage-knows.ts`, `reveal.ts`, `badges.ts`, `growth.ts`, `home-teaser.ts`, `running-update.ts` | Weekly Ask, reveal, badges, growth |
-| AI transport | `ai/{config,types,generate,edge,http,override,usage,limits,call-sites}.ts` | `generateText` → Edge Function; provider override; usage log. No vendor HTTP in the bundle |
+| AI labels (no model call on the phone) | `ai/{config,types,override,usage,limits,timeouts}.ts` | Developer AI lab provider labels, self-tracked usage counts, the tap timeout. The model path is the `ai-library` Edge Function (`ai-library/client.ts`). `generate`/`edge`/`http`/`call-sites` were removed in A5 |
 | Voice (cards; `talk`, `router` and other Sage-era files may be gone) | `voice/{router,talk,bank,filters,jargon,phrase-guard,framework-fence,style-checklist,quota,quota-server,select-provider,config,library,nudge,cue,preset,voice-reference}.ts`, `voice/providers/*` | Dawn card + Talk routing, guards, quota, providers |
 | Explore | `explore/{route,generate,prompt,combine,cadence,copy,local,store,types}.ts` | Observation entries |
 | Questions | `questions/{route,generate,prompt,bank,sweep,rotation,deferral,guards,parse,store,local,copy,context,types}.ts` | Infinite questions + sweep |
 | Categories | `categories.ts`, `category-bands.ts`, `category-share-store.ts`, `concept-explainers.ts`, `dawn-category.ts` | 11 categories in code (`cat_structure`/`cat_resilience` new, DB seed + OTA pending), bands, sharing, explainers |
-| Sage-era extras (names kept; no model call) | `sage-title*.ts`, `sage-story*.ts`, `sage-insight.ts`, `sage-messages.ts`, `sage-copy.ts`, `sage-eight-ball.ts`, `chat.ts`, `moderation.ts` | Title/Story templates, chat, block/mute/report. Some of these may already be deleted: check the tree |
+| Sage-era extras (names kept; no model call; `sage-title.ts` and `sage-story.ts` were trimmed to the saved shape in A5) | `sage-title*.ts`, `sage-story*.ts`, `sage-insight.ts`, `sage-messages.ts`, `sage-copy.ts`, `sage-eight-ball.ts`, `chat.ts`, `moderation.ts` | Title/Story templates, chat, block/mute/report. Some of these may already be deleted: check the tree |
 | Circle | `circle.ts`, `circle-context.tsx`, `share.ts`, `share-codec.ts` | Connections, poster link/QR |
 | Crisis | REMOVED (`src/lib/crisis/` no longer exists) | Replaced by the static `HelplineRow`; no detection, no logging |
 | Around | `around/{fetch,fixture,going,weekend,tickets,ages,slug,map-edmtrain,edmtrain-api,types}.ts` | Weekend shows, going |
@@ -135,9 +135,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 ## `scripts`
 
 `*-check.ts` — one static/pure-logic assertion file per feature (`npm run check:<name>`).
-`live-ai.ts` — shared transport for the live AI checks (`card-live`, `talk-live`, `style-live`):
-signs in as the dev-test user and calls `ai-generate`, so a live check spends that user's quota
-and never needs a vendor key on the machine.
+(`live-ai.ts` and the live AI checks `card-live` / `talk-live` / `style-live` were removed in A5 with the `ai-generate` client path.)
 `ota-gate.ts` runs typecheck + lint + all offline checks; `ota-publish.ts` wraps `eas update`
 behind it; `release-mode-check.ts` blocks production builds while `PRE_LAUNCH_DEV` is true.
 `pixellab-watch.ts` (`npm run pixellab:watch`, network, not in the gate) diffs PixelLab's public docs against

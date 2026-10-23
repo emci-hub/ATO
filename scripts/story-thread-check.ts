@@ -13,19 +13,11 @@ import { resolve } from 'node:path';
 import { CATEGORY_DEFS, readCategory, type CategoryId } from '../src/lib/categories';
 import { pickCategoryCard } from '../src/lib/category-bank';
 import { isShareableLean } from '../src/lib/legends64/identity';
+import { parseSageStory } from '../src/lib/sage-story';
 import {
-  buildStoryPrompt,
-  parseSageStory,
-  parseStoryAnswer,
-  parseStoryBody,
-  STORY_MAX_WORDS,
-} from '../src/lib/sage-story';
-import {
-  STORY_CARD_PROMPT_STATIC,
   STORY_FEW_SHOTS,
   STORY_OUTPUT_TOKENS,
   STORY_REPEAT_LIMIT,
-  buildStoryCardPrompt,
   isStoryV2,
   parseStoredStoryCard,
   parseStoryCardAnswer,
@@ -33,7 +25,7 @@ import {
   storyLabelLeak,
   storyOverlap,
 } from '../src/lib/story-card';
-import { pickBestPunchline, punchlineCraftViolation } from '../src/lib/voice/card-joke';
+import { jokeCrossesBoundary, pickBestPunchline, punchlineCraftViolation } from '../src/lib/voice/card-joke';
 import { STORY_JOKE_RULES } from '../src/lib/voice/moment-voice';
 import {
   partnerScore,
@@ -187,76 +179,25 @@ const rich = tracksOf({
   ok('the joke targets the strongest shareable lean; never a private one; none on a crisis day');
 }
 
-// 6. The prompt carries only the chosen categories' stored copy.
-{
-  const userId = 'u-check';
-  const ymd = '2026-10-08';
-  const thread = pickStoryThread({ tracks: rich, last: null, noJoke: false })!;
-  const prompt = buildStoryPrompt({ tracks: rich, divergenceNote: null, thread, userId, ymd });
-  const chosen = new Set(ids(thread.categories));
-  for (const row of scoreReadyCategories(rich)) {
-    const card = pickCategoryCard({ userId, reading: row.reading, ymd });
-    if (!card) continue;
-    if (chosen.has(row.reading.def.id)) {
-      assert.ok(prompt.includes(card.summary), `${row.reading.def.id} copy is in`);
-    } else {
-      assert.ok(!prompt.includes(card.summary), `${row.reading.def.id} copy is out`);
-    }
-  }
-  for (const d of CATEGORY_DEFS) assert.ok(!prompt.includes(d.name), `no category name (${d.name}) in the prompt`);
-  assert.match(prompt, /ONE ordinary day, ONE setting/);
-  assert.match(prompt, /90–160 words, at most 3 short paragraphs/);
-  assert.match(prompt, /"thread":/);
-  assert.match(prompt, /"joke":/);
-  assert.equal(prompt.includes(STORY_JOKE_RULES), thread.joke != null);
-  const noJoke = buildStoryPrompt({
-    tracks: rich,
-    divergenceNote: null,
-    thread: pickStoryThread({ tracks: rich, last: null, noJoke: true }),
-  });
-  assert.match(noJoke, /JOKE: none this time/);
-  assert.ok(!noJoke.includes(STORY_JOKE_RULES));
-  // Tension only when its axis is inside the thread.
-  const inside = thread.categories[0]!.reading.def.axes[0]!;
-  const allThreadAxes = new Set(thread.categories.flatMap((row) => row.reading.def.axes));
-  const outside = (['openness', 'extraversion', 'conscientiousness', 'playfulness', 'attachment_anxiety', 'autonomy', 'growth_mindset'] as TraitAxis[]).find(
-    (axis) => !allThreadAxes.has(axis),
-  );
-  const note = 'You said one thing, but you go a different way.';
-  assert.ok(buildStoryPrompt({ tracks: rich, divergenceNote: note, divergenceAxis: inside, thread }).includes(note));
-  if (outside) {
-    assert.ok(!buildStoryPrompt({ tracks: rich, divergenceNote: note, divergenceAxis: outside, thread }).includes(note));
-  }
-  // Callers without a thread (rolls) still get one, with no joke.
-  assert.match(buildStoryPrompt({ tracks: rich, divergenceNote: null }), /JOKE: none this time/);
-  ok('the prompt holds only A/B stored copy, the four-part shape, the JSON plan, and the joke only when picked');
-}
-
 // 7. Checks on the answer.
 {
   const good = 'On a day like this, the group chat lights up before lunch. You might mute it, then check it twice.';
-  assert.ok(parseStoryBody(JSON.stringify({ body: good })));
-  const long = Array.from({ length: STORY_MAX_WORDS + 1 }, () => 'word').join(' ');
-  assert.equal(parseStoryBody(JSON.stringify({ body: long })), null, 'over 180 words');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'One.\n\nTwo.\n\nThree.\n\nFour.' })), null, 'over 3 paragraphs');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'One.\nTwo.\nThree.\nFour.' })), null, 'single line breaks count too');
-  assert.ok(parseStoryBody(JSON.stringify({ body: 'One.\n\nTwo.\n\nThree.' })), '3 paragraphs is fine');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'You are the planner of the group.' })), null, '"you are"');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'You always reply first.' })), null, '"always"');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'The calendar wins again!' })), null, '"!"');
+  // The AI Story answer parser (length, paragraphs, "you are", "always", "!") was removed in roadmap A5.
+  // The content-policy pairs it carried stay, pointed at the joke harm filter the cards still use.
   // Humor is 18+ (emci, 2026-10-19): dark topics pass, only the harm filter refuses.
-  assert.ok(parseStoryBody(JSON.stringify({ body: 'Your inbox could kill a lesser phone.' })), '"kill" as a figure of speech passes');
-  assert.ok(parseStoryBody(JSON.stringify({ body: 'That therapy app pinged again.' })), 'therapy as a topic passes');
-  assert.ok(parseStoryBody(JSON.stringify({ body: 'The hangover RSVPd before you did, and the group chat is already dead.' })), 'drinking and death pass');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'The group chat went quiet, so just hurt yourself and save everyone time.' })), null, 'encouraging self-harm');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'Your inbox is full of retards again.' })), null, 'a slur');
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'Three drinks deep, then drive home to beat the traffic.' })), null, 'drunk driving as an instruction');
+  assert.equal(jokeCrossesBoundary(good), false, 'plain copy passes');
+  assert.equal(jokeCrossesBoundary('Your inbox could kill a lesser phone.'), false, '"kill" as a figure of speech passes');
+  assert.equal(jokeCrossesBoundary('That therapy app pinged again.'), false, 'therapy as a topic passes');
+  assert.equal(jokeCrossesBoundary('The hangover RSVPd before you did, and the group chat is already dead.'), false, 'drinking and death pass');
+  assert.equal(jokeCrossesBoundary('The group chat went quiet, so just hurt yourself and save everyone time.'), true, 'encouraging self-harm');
+  assert.equal(jokeCrossesBoundary('Your inbox is full of retards again.'), true, 'a slur');
+  assert.equal(jokeCrossesBoundary('Three drinks deep, then drive home to beat the traffic.'), true, 'drunk driving as an instruction');
   assert.equal(punchlineCraftViolation('Somebody tell the toaster to go die already.'), 'crosses a boundary');
   assert.equal(punchlineCraftViolation('The meeting died twice. Nobody sent flowers.'), null, 'a dark punchline passes');
   assert.equal(punchlineCraftViolation('Hungover, still drunk on spite, the spreadsheet wins. Damn.'), null, 'drunk, hangover and mild swearing pass');
   // Strong swearing (emci 2026-10-19, round 3): allowed when it earns its place.
   assert.equal(punchlineCraftViolation('The spreadsheet wins again. Fuck the spreadsheet.'), null, 'strong swearing passes');
-  assert.ok(parseStoryBody(JSON.stringify({ body: 'What the fuck, the group chat planned a picnic in the rain.' })), 'strong swearing in a story body passes');
+  assert.equal(jokeCrossesBoundary('What the fuck, the group chat planned a picnic in the rain.'), false, 'strong swearing in a story body passes');
   assert.equal(punchlineCraftViolation('They fucked in the car before the toast.'), 'crosses a boundary', 'sexually explicit "fuck" is still refused');
   assert.match(STORY_JOKE_RULES, /strong swearing included/, 'the prompt says strong swearing is allowed');
   assert.equal(punchlineCraftViolation('Rough week. Kill yourself, the calendar already did.'), 'crosses a boundary', 'encouraging suicide');
@@ -282,19 +223,11 @@ const rich = tracksOf({
     /twist: proper name/,
     'a named real person in a story line is refused (the claim about them can only be judged by the prompt rule)',
   );
-  assert.equal(parseStoryBody(JSON.stringify({ body: 'Resilience under pressure looks like this.' })), null, 'names a category');
-  assert.ok(parseStoryBody(JSON.stringify({ body: 'The deadline moved and you were deadpan about it.' })), 'deadline/deadpan are fine');
-
-  const joke = 'Your to-do list has a longer memory than your phone.';
-  const withJoke = parseStoryAnswer(JSON.stringify({ thread: 'Plans meet a busy chat.', joke, body: `${good} ${joke}` }))!;
-  assert.equal(withJoke.joke, joke);
-  assert.equal(withJoke.thread, 'Plans meet a busy chat.');
-  const missing = parseStoryAnswer(JSON.stringify({ joke: 'A line that is not there.', body: good }))!;
-  assert.equal(missing.body, good, 'a joke missing from the body keeps the body');
-  assert.equal(missing.joke, null, '…and drops the joke field');
-  const labelled = parseStoryAnswer(JSON.stringify({ thread: 'Their Drive against Levity.', body: good }))!;
-  assert.equal(labelled.thread, null, 'a plan line naming a category is dropped');
-  ok('the parser rejects length, paragraphs, "you are", "always", "!", harm-boundary jokes and category names; dark topics pass');
+  // A saved story that names a category is refused when read back; an ordinary word is fine.
+  const savedRow = (body: string) => ({ body, fingerprint: 'f', generatedOn: '2026-10-19' });
+  assert.equal(parseSageStory(savedRow('Resilience under pressure looks like this.')), null, 'names a category');
+  assert.ok(parseSageStory(savedRow('The deadline moved and you were deadpan about it.')), 'deadline/deadpan are fine');
+  ok('the harm filter refuses encouragement, slurs and drunk driving while dark topics pass; a saved story naming a category is refused');
 }
 
 // 8. The saved record and the fold.
@@ -433,13 +366,9 @@ const rich = tracksOf({
   );
   assert.match(repeat.reason ?? '', /repeat|move: length/);
   assert.ok(storyOverlap(good.move, good.twist) <= STORY_REPEAT_LIMIT, 'a move that moves on is kept');
-  const flowPrompt = STORY_CARD_PROMPT_STATIC;
-  assert.match(flowPrompt, /Plan silently first in "plan"/, 'plan first');
-  assert.match(flowPrompt, /call back to the hook/);
-  assert.doesNotMatch(flowPrompt, /never voice notes, typing bubbles or read receipts/, 'no blanket phone-detail ban in the prompt');
-  assert.match(flowPrompt, /voice notes, typing bubbles and read receipts included/, 'phone details are welcome inside a scene');
-  assert.match(flowPrompt, /a story lives in one physical scene/, 'the setting rule keeps the story in one scene');
-  assert.match(flowPrompt, /The Bread Basket Diplomat/);
+  // The "Write as Sage" Story prompt was removed from story-card.ts in roadmap A5; the answer checks stay
+  // (the library and the templates share them) and so do the few-shot examples they validate.
+  assert.doesNotMatch(read('src/lib/story-card.ts'), /Write as Sage|STORY_CARD_PROMPT_STATIC|buildStoryPromptFromSides|buildStoryRewritePrompt|buildStoryCardPrompt/);
   for (const shot of STORY_FEW_SHOTS) {
     const row = parseStoryCardAnswer(JSON.stringify(shot), { allowExampleHooks: true });
     assert.ok(row.card, `few-shot ${shot.title} fails: ${row.reason}`);
@@ -455,9 +384,6 @@ const rich = tracksOf({
     means: 'You tend to bring calm to a messy plan more than they say.',
   });
   assert.ok(v1 && !isStoryV2(v1), 'v1 saved cards still parse');
-  const t2 = pickStoryThread({ tracks: rich, last: null, noJoke: false })!;
-  const p1 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: t2, userId: 'u1', ymd: '2026-10-13' });
-  assert.ok(p1.startsWith(STORY_CARD_PROMPT_STATIC), 'fixed instructions first (cache-friendly)');
   const foldSrc = read('src/components/insights/insights-story-card.tsx');
   assert.match(foldSrc, /StoryV2View/, 'a v2/v3 card renders as swipe beats');
   // v1 (AI) cards are not shown on Insights (template-only, 2026-10-14).
@@ -472,9 +398,6 @@ const rich = tracksOf({
   assert.ok(deep.otherWay, 'Plot B is kept when it passes');
   const deepBad = parseStoryCardAnswer(bad({ otherWay: 'Your Steady side would have panicked.' }), { allowExampleHooks: true }).card;
   assert.equal(deepBad?.otherWay ?? null, null, 'a weak Plot B is dropped');
-  assert.match(STORY_CARD_PROMPT_STATIC, /"otherWay"/);
-  const p2 = buildStoryCardPrompt({ tracks: rich, divergenceNote: null, thread: { ...t2, joke: null }, userId: 'u1', ymd: '2026-10-13' });
-  assert.doesNotMatch(p2, /JOKE TARGET: none/, 'every Story still gets a joke target from SIDE A');
   assert.match(STORY_JOKE_RULES, /rule of three/);
   assert.match(STORY_JOKE_RULES, /last 6/);
   assert.match(STORY_JOKE_RULES, /candidate punchlines/);
@@ -521,7 +444,7 @@ const rich = tracksOf({
   // Insights (2026-10-14): the card never calls a model, so there is no
   // token claim, no rewrite and no AI timeout to fall through from.
   assert.doesNotMatch(foldSrc, /claimStoryGenerate|AI_TAP_TIMEOUT_MS|withTimeout/, 'no model path on the Story card');
-  assert.match(read('scripts/live-ai.ts'), /request\.topP/, 'live Story checks pass topP 0.95');
+  assert.ok(!existsSync(resolve(root, 'scripts/live-ai.ts')), 'the live AI transport script stays deleted');
   ok('Story v4: six beats, nickname titles, numbers and one quote allowed, v1 still reads, Plot B optional');
 }
 

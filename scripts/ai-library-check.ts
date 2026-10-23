@@ -359,7 +359,11 @@ async function main() {
   const gen = read('src/lib/legend-figures/generate.ts');
   assert.match(gen, /input\.free \? 'free_legend' : 'paid'/, 'the free Legends reveal is never charged');
   assert.doesNotMatch(gen, /serveLibraryCard\('legend'/, 'Legends never use the free library serve');
-  assert.match(card, /leansKey: key \}, madeOn: today \}/, 'the old deep-dive path saves under the library key (no repeat charge)');
+  // The old one-person deep-dive path (writeOld) was removed in roadmap A5; the library path saves the card under
+  // the library key, so it counts as fresh and the free button never charges twice.
+  assert.match(card, /dive: \{ \.\.\.served\.card, categoryId: def\.id, leansKey: key \}/, 'the library path saves under the library key (no repeat charge)');
+  assert.doesNotMatch(card, /writeOld|writeCategoryDeepDive/, 'the old one-person path is gone');
+  assert.doesNotMatch(gen.replace(/\/\*[\s\S]*?\*\//g, ''), /writeLegendStory|generateText/, 'the old Legends one-person path is gone');
   assert.match(read('src/app/(tabs)/legends.tsx'), /revealLegendStory\(\{ \.\.\.input, consentGranted, free \}\)/);
   assert.match(read('src/components/legend-figure-card.tsx'), /<LibraryCardFooter/);
   assert.equal(sharedCardLine(3), null);
