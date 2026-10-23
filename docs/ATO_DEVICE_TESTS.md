@@ -1240,3 +1240,16 @@ you answer the first set of 16 for real.
 - [ ] **3** Before that, on the same account with fewer than 16 answered (or right after sign-up). -> Insights still shows only "Answer the questions" with the locked line (nothing opens early).
 - [ ] **4** Answer the second and third sets (all 48), then Insights. -> The "Early read" line is gone; Try this today, the Story, Superpower and How you argue are back.
 - [ ] **5** Load insight on a few different days or accounts. -> Some focus lines you have not seen before (the bank is now twice as big); a tag reading "<trait>: Mixed" means that trait sits near the middle for you. Read them: do any feel wrong, harsh or unclear? Note the id from `docs/insight-bank-review.md` (A6 additions) for anything you want changed.
+
+## Box 83 — Hero animations play their real timing (roadmap step AN3, 2026-10-23, Play-only OTA)
+
+About 5 min. Needs the AN3 OTA (restart the app twice). Until now the game ignored the timing saved with each clip and played every frame for the same time, so the new Idle breathed about 2.7 times too fast (0.5 s a loop instead of 1.3 s). Now each frame holds its own time: the Idle breath is 400/250/400/250 ms, and Walk, Dash, Attack, Skill, Hurt and Faint have short holds on the key frames. Every clip except Idle keeps its old total length, so combat timing does not move.
+
+**Report back in ONE message:** `pass`, or `fix` + the hero + the clip + what you saw, per line.
+
+- [ ] **1** A hero standing still (Hideout / pet room / Turf War before a wave). -> A slow breath: rests a moment, small dip, rests, small dip. About 1.3 s per loop (this also settles Box 80).
+- [ ] **2** Defend: your hero walking, dashing, attacking, using the skill. -> Attack and skill look punchy (wind-up, quick strike, settle); walk has a gentle step rhythm; the time between swings feels the same as before.
+- [ ] **3** Get hit in Defend, and a Turf War helper getting knocked out. -> Hurt snaps then settles; the faint falls quickly and lies still.
+- [ ] **4** Pet room: your pet walking, dashing, showing off. -> Moves a little quicker than before (the pet used its own slower speeds; attack 0.64 s -> 0.52 s, skill 0.68 -> 0.56, dash 0.48 -> 0.40).
+- [ ] **5** Raven (6-frame attack) in Defend. -> Attack looks fine and is not slower than before.
+- [ ] **6** If a clip feels wrong: say hero + clip + "too fast" or "too slow". Nothing is deleted; timing lives in one small file per clip.
