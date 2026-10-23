@@ -317,62 +317,62 @@
   "sheets/streetwear/heroes/kitsune/Idle": {
     "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.core.png",
     "sheetW": 903,
-    "sheetH": 816,
+    "sheetH": 814,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 472,
-        "w": 83,
-        "h": 114
+        "w": 87,
+        "h": 113
       },
       "east/frame_001": {
-        "x": 84,
+        "x": 88,
         "y": 472,
-        "w": 83,
-        "h": 114
+        "w": 87,
+        "h": 113
       },
       "east/frame_002": {
-        "x": 168,
+        "x": 176,
         "y": 472,
-        "w": 83,
-        "h": 114
+        "w": 87,
+        "h": 113
       },
       "east/frame_003": {
-        "x": 252,
+        "x": 264,
         "y": 472,
-        "w": 83,
-        "h": 114
+        "w": 87,
+        "h": 113
       },
       "west/frame_000": {
         "x": 0,
-        "y": 587,
-        "w": 83,
-        "h": 114
+        "y": 586,
+        "w": 87,
+        "h": 113
       },
       "west/frame_001": {
-        "x": 84,
-        "y": 587,
-        "w": 83,
-        "h": 114
+        "x": 88,
+        "y": 586,
+        "w": 87,
+        "h": 113
       },
       "west/frame_002": {
-        "x": 168,
-        "y": 587,
-        "w": 83,
-        "h": 114
+        "x": 176,
+        "y": 586,
+        "w": 87,
+        "h": 113
       },
       "west/frame_003": {
-        "x": 252,
-        "y": 587,
-        "w": 83,
-        "h": 114
+        "x": 264,
+        "y": 586,
+        "w": 87,
+        "h": 113
       }
     },
-    "offsetX": 54,
-    "offsetY": 39,
+    "offsetX": 53,
+    "offsetY": 40,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 375,
     "dirs": [
       "east",
       "west"
@@ -495,7 +495,7 @@
   "sheets/streetwear/heroes/kitsune/Walk": {
     "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.core.png",
     "sheetW": 903,
-    "sheetH": 816,
+    "sheetH": 814,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -807,53 +807,53 @@
   "sheets/streetwear/heroes/kitsune/rotations": {
     "sheet": "art/heroes/in-use/kitsune/streetwear/hero_kitsune_streetwear.core.png",
     "sheetW": 903,
-    "sheetH": 816,
+    "sheetH": 814,
     "frames": {
       "north": {
         "x": 0,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
       "north-east": {
         "x": 112,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
       "east": {
         "x": 224,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
       "south-east": {
         "x": 336,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
       "south": {
         "x": 448,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
       "south-west": {
         "x": 560,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
       "west": {
         "x": 672,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
       "north-west": {
         "x": 784,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       }

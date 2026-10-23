@@ -67,7 +67,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.archangel.streetwear.combat` | 1263×1217 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/archangel/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.archangel.streetwear.core` | 1279×786 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/archangel/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.archangel.streetwear.core` | 1279×788 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/archangel/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · aurex · cast · in-use
 
@@ -80,7 +80,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.aurex.streetwear.combat` | 1055×1193 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/aurex/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.aurex.streetwear.core` | 1023×813 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/aurex/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.aurex.streetwear.core` | 1023×801 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/aurex/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · buffalo-earthshaker · primal · unused
 
@@ -119,7 +119,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.corvus.streetwear.combat` | 1015×1193 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/corvus/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.corvus.streetwear.core` | 967×808 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/corvus/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.corvus.streetwear.core` | 967×804 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/corvus/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · crystal-berserker · dungeon-legends · in-use
 
@@ -235,7 +235,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.elowen.streetwear.combat` | 1047×1197 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/elowen/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.elowen.streetwear.core` | 1055×823 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/elowen/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.elowen.streetwear.core` | 1055×813 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/elowen/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · frost-lich · cast · in-use
 
@@ -248,7 +248,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.frost-lich.streetwear.combat` | 1231×1223 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/frost-lich/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.frost-lich.streetwear.core` | 1119×842 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/frost-lich/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.frost-lich.streetwear.core` | 1119×838 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/frost-lich/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · gorilla-titan · primal · unused
 
@@ -287,7 +287,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.kael.streetwear.combat` | 1087×1089 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kael/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.kael.streetwear.core` | 975×802 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kael/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.kael.streetwear.core` | 975×796 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kael/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · kitsune · cast · in-use
 
@@ -300,7 +300,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.kitsune.streetwear.combat` | 879×1145 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kitsune/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.kitsune.streetwear.core` | 903×816 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kitsune/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.kitsune.streetwear.core` | 903×814 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/kitsune/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · lynx-huntress · primal · unused
 
@@ -365,7 +365,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.neon-viper.streetwear.combat` | 967×1093 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/neon-viper/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.neon-viper.streetwear.core` | 599×780 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/neon-viper/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.neon-viper.streetwear.core` | 599×778 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/neon-viper/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · oni · cast · in-use
 
@@ -378,7 +378,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.oni.streetwear.combat` | 1119×1161 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/oni/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.oni.streetwear.core` | 1263×769 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/oni/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.oni.streetwear.core` | 1263×767 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/oni/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · panther-shadowblade · primal · unused
 
@@ -422,7 +422,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.raven.streetwear.combat` | 1031×1133 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/raven/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.raven.streetwear.core` | 871×790 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/raven/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.raven.streetwear.core` | 871×784 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/raven/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · raven-deathcaller · primal · unused
 
@@ -461,7 +461,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.sak.streetwear.combat` | 1119×1185 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/sak/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.sak.streetwear.core` | 1239×814 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/sak/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.sak.streetwear.core` | 1239×810 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/sak/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · seraphic-dungeon-cleric · dungeon-legends · unused
 
@@ -498,7 +498,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.velkhar.streetwear.combat` | 1023×1263 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/velkhar/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.velkhar.streetwear.core` | 911×891 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/velkhar/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.velkhar.streetwear.core` | 911×899 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/velkhar/sheets.json, src/play/generated-play-sheets.ts |
 
 ## heroes · void-raven · cast · in-use
 
@@ -511,7 +511,7 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `hero.void-raven.streetwear.combat` | 1112×1175 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/void-raven/sheets.json, src/play/generated-play-sheets.ts |
-| `hero.void-raven.streetwear.core` | 871×803 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/void-raven/sheets.json, src/play/generated-play-sheets.ts |
+| `hero.void-raven.streetwear.core` | 871×797 | approved | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/heroes/void-raven/sheets.json, src/play/generated-play-sheets.ts |
 
 ## enemies-bosses · abyssal-demon-guardian · dungeon-legends · unused
 

@@ -317,62 +317,62 @@
   "sheets/streetwear/heroes/elowen/Idle": {
     "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.core.png",
     "sheetW": 1055,
-    "sheetH": 823,
+    "sheetH": 813,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 472,
-        "w": 97,
-        "h": 118
+        "w": 84,
+        "h": 113
       },
       "east/frame_001": {
-        "x": 98,
+        "x": 85,
         "y": 472,
-        "w": 97,
-        "h": 118
+        "w": 84,
+        "h": 113
       },
       "east/frame_002": {
-        "x": 196,
+        "x": 170,
         "y": 472,
-        "w": 97,
-        "h": 118
+        "w": 84,
+        "h": 113
       },
       "east/frame_003": {
-        "x": 294,
+        "x": 255,
         "y": 472,
-        "w": 97,
-        "h": 118
+        "w": 84,
+        "h": 113
       },
       "west/frame_000": {
         "x": 0,
-        "y": 591,
-        "w": 97,
-        "h": 118
+        "y": 586,
+        "w": 84,
+        "h": 113
       },
       "west/frame_001": {
-        "x": 98,
-        "y": 591,
-        "w": 97,
-        "h": 118
+        "x": 85,
+        "y": 586,
+        "w": 84,
+        "h": 113
       },
       "west/frame_002": {
-        "x": 196,
-        "y": 591,
-        "w": 97,
-        "h": 118
+        "x": 170,
+        "y": 586,
+        "w": 84,
+        "h": 113
       },
       "west/frame_003": {
-        "x": 294,
-        "y": 591,
-        "w": 97,
-        "h": 118
+        "x": 255,
+        "y": 586,
+        "w": 84,
+        "h": 113
       }
     },
-    "offsetX": 49,
-    "offsetY": 40,
+    "offsetX": 56,
+    "offsetY": 45,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 325,
     "dirs": [
       "east",
       "west"
@@ -495,7 +495,7 @@
   "sheets/streetwear/heroes/elowen/Walk": {
     "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.core.png",
     "sheetW": 1055,
-    "sheetH": 823,
+    "sheetH": 813,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -807,53 +807,53 @@
   "sheets/streetwear/heroes/elowen/rotations": {
     "sheet": "art/heroes/in-use/elowen/streetwear/hero_elowen_streetwear.core.png",
     "sheetW": 1055,
-    "sheetH": 823,
+    "sheetH": 813,
     "frames": {
       "north": {
         "x": 0,
-        "y": 710,
+        "y": 700,
         "w": 108,
         "h": 113
       },
       "north-east": {
         "x": 109,
-        "y": 710,
+        "y": 700,
         "w": 108,
         "h": 113
       },
       "east": {
         "x": 218,
-        "y": 710,
+        "y": 700,
         "w": 108,
         "h": 113
       },
       "south-east": {
         "x": 327,
-        "y": 710,
+        "y": 700,
         "w": 108,
         "h": 113
       },
       "south": {
         "x": 436,
-        "y": 710,
+        "y": 700,
         "w": 108,
         "h": 113
       },
       "south-west": {
         "x": 545,
-        "y": 710,
+        "y": 700,
         "w": 108,
         "h": 113
       },
       "west": {
         "x": 654,
-        "y": 710,
+        "y": 700,
         "w": 108,
         "h": 113
       },
       "north-west": {
         "x": 763,
-        "y": 710,
+        "y": 700,
         "w": 108,
         "h": 113
       }

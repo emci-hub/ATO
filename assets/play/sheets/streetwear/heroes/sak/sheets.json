@@ -317,62 +317,62 @@
   "sheets/streetwear/heroes/sak/Idle": {
     "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.core.png",
     "sheetW": 1239,
-    "sheetH": 814,
+    "sheetH": 810,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 464,
         "w": 114,
-        "h": 116
+        "h": 114
       },
       "east/frame_001": {
         "x": 115,
         "y": 464,
         "w": 114,
-        "h": 116
+        "h": 114
       },
       "east/frame_002": {
         "x": 230,
         "y": 464,
         "w": 114,
-        "h": 116
+        "h": 114
       },
       "east/frame_003": {
         "x": 345,
         "y": 464,
         "w": 114,
-        "h": 116
+        "h": 114
       },
       "west/frame_000": {
         "x": 0,
-        "y": 581,
+        "y": 579,
         "w": 114,
-        "h": 116
+        "h": 114
       },
       "west/frame_001": {
         "x": 115,
-        "y": 581,
+        "y": 579,
         "w": 114,
-        "h": 116
+        "h": 114
       },
       "west/frame_002": {
         "x": 230,
-        "y": 581,
+        "y": 579,
         "w": 114,
-        "h": 116
+        "h": 114
       },
       "west/frame_003": {
         "x": 345,
-        "y": 581,
+        "y": 579,
         "w": 114,
-        "h": 116
+        "h": 114
       }
     },
     "offsetX": 40,
-    "offsetY": 38,
+    "offsetY": 40,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 375,
     "dirs": [
       "east",
       "west"
@@ -495,7 +495,7 @@
   "sheets/streetwear/heroes/sak/Walk": {
     "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.core.png",
     "sheetW": 1239,
-    "sheetH": 814,
+    "sheetH": 810,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -807,53 +807,53 @@
   "sheets/streetwear/heroes/sak/rotations": {
     "sheet": "art/heroes/in-use/sak/streetwear/hero_sak_streetwear.core.png",
     "sheetW": 1239,
-    "sheetH": 814,
+    "sheetH": 810,
     "frames": {
       "north": {
         "x": 0,
-        "y": 698,
+        "y": 694,
         "w": 114,
         "h": 116
       },
       "north-east": {
         "x": 115,
-        "y": 698,
+        "y": 694,
         "w": 114,
         "h": 116
       },
       "east": {
         "x": 230,
-        "y": 698,
+        "y": 694,
         "w": 114,
         "h": 116
       },
       "south-east": {
         "x": 345,
-        "y": 698,
+        "y": 694,
         "w": 114,
         "h": 116
       },
       "south": {
         "x": 460,
-        "y": 698,
+        "y": 694,
         "w": 114,
         "h": 116
       },
       "south-west": {
         "x": 575,
-        "y": 698,
+        "y": 694,
         "w": 114,
         "h": 116
       },
       "west": {
         "x": 690,
-        "y": 698,
+        "y": 694,
         "w": 114,
         "h": 116
       },
       "north-west": {
         "x": 805,
-        "y": 698,
+        "y": 694,
         "w": 114,
         "h": 116
       }

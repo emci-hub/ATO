@@ -293,62 +293,62 @@
   "sheets/streetwear/heroes/raven/Idle": {
     "sheet": "art/heroes/in-use/raven/streetwear/hero_raven_streetwear.core.png",
     "sheetW": 871,
-    "sheetH": 790,
+    "sheetH": 784,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 460,
-        "w": 76,
-        "h": 109
+        "w": 71,
+        "h": 106
       },
       "east/frame_001": {
-        "x": 77,
+        "x": 72,
         "y": 460,
-        "w": 76,
-        "h": 109
+        "w": 71,
+        "h": 106
       },
       "east/frame_002": {
-        "x": 154,
+        "x": 144,
         "y": 460,
-        "w": 76,
-        "h": 109
+        "w": 71,
+        "h": 106
       },
       "east/frame_003": {
-        "x": 231,
+        "x": 216,
         "y": 460,
-        "w": 76,
-        "h": 109
+        "w": 71,
+        "h": 106
       },
       "west/frame_000": {
         "x": 0,
-        "y": 570,
-        "w": 76,
-        "h": 109
+        "y": 567,
+        "w": 71,
+        "h": 106
       },
       "west/frame_001": {
-        "x": 77,
-        "y": 570,
-        "w": 76,
-        "h": 109
+        "x": 72,
+        "y": 567,
+        "w": 71,
+        "h": 106
       },
       "west/frame_002": {
-        "x": 154,
-        "y": 570,
-        "w": 76,
-        "h": 109
+        "x": 144,
+        "y": 567,
+        "w": 71,
+        "h": 106
       },
       "west/frame_003": {
-        "x": 231,
-        "y": 570,
-        "w": 76,
-        "h": 109
+        "x": 216,
+        "y": 567,
+        "w": 71,
+        "h": 106
       }
     },
-    "offsetX": 60,
-    "offsetY": 41,
+    "offsetX": 62,
+    "offsetY": 44,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 325,
     "dirs": [
       "east",
       "west"
@@ -471,7 +471,7 @@
   "sheets/streetwear/heroes/raven/Walk": {
     "sheet": "art/heroes/in-use/raven/streetwear/hero_raven_streetwear.core.png",
     "sheetW": 871,
-    "sheetH": 790,
+    "sheetH": 784,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -783,53 +783,53 @@
   "sheets/streetwear/heroes/raven/rotations": {
     "sheet": "art/heroes/in-use/raven/streetwear/hero_raven_streetwear.core.png",
     "sheetW": 871,
-    "sheetH": 790,
+    "sheetH": 784,
     "frames": {
       "north": {
         "x": 0,
-        "y": 680,
+        "y": 674,
         "w": 107,
         "h": 110
       },
       "north-east": {
         "x": 108,
-        "y": 680,
+        "y": 674,
         "w": 107,
         "h": 110
       },
       "east": {
         "x": 216,
-        "y": 680,
+        "y": 674,
         "w": 107,
         "h": 110
       },
       "south-east": {
         "x": 324,
-        "y": 680,
+        "y": 674,
         "w": 107,
         "h": 110
       },
       "south": {
         "x": 432,
-        "y": 680,
+        "y": 674,
         "w": 107,
         "h": 110
       },
       "south-west": {
         "x": 540,
-        "y": 680,
+        "y": 674,
         "w": 107,
         "h": 110
       },
       "west": {
         "x": 648,
-        "y": 680,
+        "y": 674,
         "w": 107,
         "h": 110
       },
       "north-west": {
         "x": 756,
-        "y": 680,
+        "y": 674,
         "w": 107,
         "h": 110
       }

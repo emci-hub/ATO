@@ -4,183 +4,183 @@
       "frame": {
         "x": 0,
         "y": 472,
-        "w": 83,
-        "h": 114
+        "w": 87,
+        "h": 113
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 39,
-        "w": 83,
-        "h": 114
+        "x": 53,
+        "y": 40,
+        "w": 87,
+        "h": 113
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 375,
       "dir": "east",
       "clip": "Idle"
     },
     "idle/e/001": {
       "frame": {
-        "x": 84,
+        "x": 88,
         "y": 472,
-        "w": 83,
-        "h": 114
+        "w": 87,
+        "h": 113
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 39,
-        "w": 83,
-        "h": 114
+        "x": 53,
+        "y": 40,
+        "w": 87,
+        "h": 113
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 375,
       "dir": "east",
       "clip": "Idle"
     },
     "idle/e/002": {
       "frame": {
-        "x": 168,
+        "x": 176,
         "y": 472,
-        "w": 83,
-        "h": 114
+        "w": 87,
+        "h": 113
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 39,
-        "w": 83,
-        "h": 114
+        "x": 53,
+        "y": 40,
+        "w": 87,
+        "h": 113
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 375,
       "dir": "east",
       "clip": "Idle"
     },
     "idle/e/003": {
       "frame": {
-        "x": 252,
+        "x": 264,
         "y": 472,
-        "w": 83,
-        "h": 114
+        "w": 87,
+        "h": 113
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 39,
-        "w": 83,
-        "h": 114
+        "x": 53,
+        "y": 40,
+        "w": 87,
+        "h": 113
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 375,
       "dir": "east",
       "clip": "Idle"
     },
     "idle/w/000": {
       "frame": {
         "x": 0,
-        "y": 587,
-        "w": 83,
-        "h": 114
+        "y": 586,
+        "w": 87,
+        "h": 113
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 39,
-        "w": 83,
-        "h": 114
+        "x": 53,
+        "y": 40,
+        "w": 87,
+        "h": 113
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 375,
       "dir": "west",
       "clip": "Idle"
     },
     "idle/w/001": {
       "frame": {
-        "x": 84,
-        "y": 587,
-        "w": 83,
-        "h": 114
+        "x": 88,
+        "y": 586,
+        "w": 87,
+        "h": 113
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 39,
-        "w": 83,
-        "h": 114
+        "x": 53,
+        "y": 40,
+        "w": 87,
+        "h": 113
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 375,
       "dir": "west",
       "clip": "Idle"
     },
     "idle/w/002": {
       "frame": {
-        "x": 168,
-        "y": 587,
-        "w": 83,
-        "h": 114
+        "x": 176,
+        "y": 586,
+        "w": 87,
+        "h": 113
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 39,
-        "w": 83,
-        "h": 114
+        "x": 53,
+        "y": 40,
+        "w": 87,
+        "h": 113
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 375,
       "dir": "west",
       "clip": "Idle"
     },
     "idle/w/003": {
       "frame": {
-        "x": 252,
-        "y": 587,
-        "w": 83,
-        "h": 114
+        "x": 264,
+        "y": 586,
+        "w": 87,
+        "h": 113
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 54,
-        "y": 39,
-        "w": 83,
-        "h": 114
+        "x": 53,
+        "y": 40,
+        "w": 87,
+        "h": 113
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 375,
       "dir": "west",
       "clip": "Idle"
     },
@@ -923,7 +923,7 @@
     "rotations/n/000": {
       "frame": {
         "x": 0,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
@@ -946,7 +946,7 @@
     "rotations/ne/000": {
       "frame": {
         "x": 112,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
@@ -969,7 +969,7 @@
     "rotations/e/000": {
       "frame": {
         "x": 224,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
@@ -992,7 +992,7 @@
     "rotations/se/000": {
       "frame": {
         "x": 336,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
@@ -1015,7 +1015,7 @@
     "rotations/s/000": {
       "frame": {
         "x": 448,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
@@ -1038,7 +1038,7 @@
     "rotations/sw/000": {
       "frame": {
         "x": 560,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
@@ -1061,7 +1061,7 @@
     "rotations/w/000": {
       "frame": {
         "x": 672,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
@@ -1084,7 +1084,7 @@
     "rotations/nw/000": {
       "frame": {
         "x": 784,
-        "y": 702,
+        "y": 700,
         "w": 111,
         "h": 114
       },
@@ -1112,7 +1112,7 @@
     "format": "png8",
     "size": {
       "w": 903,
-      "h": 816
+      "h": 814
     },
     "scale": "1",
     "frameTags": [
@@ -1135,8 +1135,8 @@
         "direction": "forward"
       }
     ],
-    "decodedBytes": 2947392,
-    "diskBytes": 85871,
+    "decodedBytes": 2940168,
+    "diskBytes": 80943,
     "tier": "core"
   }
 }

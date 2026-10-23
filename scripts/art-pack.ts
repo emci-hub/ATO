@@ -322,7 +322,11 @@ function packClip(
   const sheetFile = `${keyBase}/${clipKey}.png`;
   const outPath = path.join(outDir, `${clipKey}.png`);
   writePackedPng(outPath, sheet);
-  const ms = clipMs(clipKey);
+  // An engine-built clip carries its own flat speed (same loop length as the
+  // engine's per-frame holds) in `<clip>/ms.json`; the game plays one ms per clip.
+  const msFile = path.join(clipPath, 'ms.json');
+  const ms = fs.existsSync(msFile) ? Number(JSON.parse(fs.readFileSync(msFile, 'utf8')).ms) : clipMs(clipKey);
+  if (!Number.isFinite(ms) || ms <= 0) throw new Error(`${clipKey}: ${msFile} needs a positive "ms"`);
   const tier = isCoreClip(clipKey) ? 'core' : 'combat';
 
   return {

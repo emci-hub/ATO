@@ -317,62 +317,62 @@
   "sheets/streetwear/heroes/oni/Idle": {
     "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.core.png",
     "sheetW": 1263,
-    "sheetH": 769,
+    "sheetH": 767,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 444,
-        "w": 111,
-        "h": 108
+        "w": 105,
+        "h": 107
       },
       "east/frame_001": {
-        "x": 112,
+        "x": 106,
         "y": 444,
-        "w": 111,
-        "h": 108
+        "w": 105,
+        "h": 107
       },
       "east/frame_002": {
-        "x": 224,
+        "x": 212,
         "y": 444,
-        "w": 111,
-        "h": 108
+        "w": 105,
+        "h": 107
       },
       "east/frame_003": {
-        "x": 336,
+        "x": 318,
         "y": 444,
-        "w": 111,
-        "h": 108
+        "w": 105,
+        "h": 107
       },
       "west/frame_000": {
         "x": 0,
-        "y": 553,
-        "w": 111,
-        "h": 108
+        "y": 552,
+        "w": 105,
+        "h": 107
       },
       "west/frame_001": {
-        "x": 112,
-        "y": 553,
-        "w": 111,
-        "h": 108
+        "x": 106,
+        "y": 552,
+        "w": 105,
+        "h": 107
       },
       "west/frame_002": {
-        "x": 224,
-        "y": 553,
-        "w": 111,
-        "h": 108
+        "x": 212,
+        "y": 552,
+        "w": 105,
+        "h": 107
       },
       "west/frame_003": {
-        "x": 336,
-        "y": 553,
-        "w": 111,
-        "h": 108
+        "x": 318,
+        "y": 552,
+        "w": 105,
+        "h": 107
       }
     },
-    "offsetX": 40,
-    "offsetY": 46,
+    "offsetX": 43,
+    "offsetY": 47,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 325,
     "dirs": [
       "east",
       "west"
@@ -495,7 +495,7 @@
   "sheets/streetwear/heroes/oni/Walk": {
     "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.core.png",
     "sheetW": 1263,
-    "sheetH": 769,
+    "sheetH": 767,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -807,53 +807,53 @@
   "sheets/streetwear/heroes/oni/rotations": {
     "sheet": "art/heroes/in-use/oni/streetwear/hero_oni_streetwear.core.png",
     "sheetW": 1263,
-    "sheetH": 769,
+    "sheetH": 767,
     "frames": {
       "north": {
         "x": 0,
-        "y": 662,
+        "y": 660,
         "w": 118,
         "h": 107
       },
       "north-east": {
         "x": 119,
-        "y": 662,
+        "y": 660,
         "w": 118,
         "h": 107
       },
       "east": {
         "x": 238,
-        "y": 662,
+        "y": 660,
         "w": 118,
         "h": 107
       },
       "south-east": {
         "x": 357,
-        "y": 662,
+        "y": 660,
         "w": 118,
         "h": 107
       },
       "south": {
         "x": 476,
-        "y": 662,
+        "y": 660,
         "w": 118,
         "h": 107
       },
       "south-west": {
         "x": 595,
-        "y": 662,
+        "y": 660,
         "w": 118,
         "h": 107
       },
       "west": {
         "x": 714,
-        "y": 662,
+        "y": 660,
         "w": 118,
         "h": 107
       },
       "north-west": {
         "x": 833,
-        "y": 662,
+        "y": 660,
         "w": 118,
         "h": 107
       }

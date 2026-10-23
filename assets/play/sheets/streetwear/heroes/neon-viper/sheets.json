@@ -317,62 +317,62 @@
   "sheets/streetwear/heroes/neon-viper/Idle": {
     "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.core.png",
     "sheetW": 599,
-    "sheetH": 780,
+    "sheetH": 778,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 452,
-        "w": 63,
-        "h": 109
+        "w": 61,
+        "h": 108
       },
       "east/frame_001": {
-        "x": 64,
+        "x": 62,
         "y": 452,
-        "w": 63,
-        "h": 109
+        "w": 61,
+        "h": 108
       },
       "east/frame_002": {
-        "x": 128,
+        "x": 124,
         "y": 452,
-        "w": 63,
-        "h": 109
+        "w": 61,
+        "h": 108
       },
       "east/frame_003": {
-        "x": 192,
+        "x": 186,
         "y": 452,
-        "w": 63,
-        "h": 109
+        "w": 61,
+        "h": 108
       },
       "west/frame_000": {
         "x": 0,
-        "y": 562,
-        "w": 63,
-        "h": 109
+        "y": 561,
+        "w": 61,
+        "h": 108
       },
       "west/frame_001": {
-        "x": 64,
-        "y": 562,
-        "w": 63,
-        "h": 109
+        "x": 62,
+        "y": 561,
+        "w": 61,
+        "h": 108
       },
       "west/frame_002": {
-        "x": 128,
-        "y": 562,
-        "w": 63,
-        "h": 109
+        "x": 124,
+        "y": 561,
+        "w": 61,
+        "h": 108
       },
       "west/frame_003": {
-        "x": 192,
-        "y": 562,
-        "w": 63,
-        "h": 109
+        "x": 186,
+        "y": 561,
+        "w": 61,
+        "h": 108
       }
     },
-    "offsetX": 63,
-    "offsetY": 42,
+    "offsetX": 64,
+    "offsetY": 43,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 325,
     "dirs": [
       "east",
       "west"
@@ -495,7 +495,7 @@
   "sheets/streetwear/heroes/neon-viper/Walk": {
     "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.core.png",
     "sheetW": 599,
-    "sheetH": 780,
+    "sheetH": 778,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -807,53 +807,53 @@
   "sheets/streetwear/heroes/neon-viper/rotations": {
     "sheet": "art/heroes/in-use/neon-viper/streetwear/hero_neon-viper_streetwear.core.png",
     "sheetW": 599,
-    "sheetH": 780,
+    "sheetH": 778,
     "frames": {
       "north": {
         "x": 0,
-        "y": 672,
+        "y": 670,
         "w": 61,
         "h": 108
       },
       "north-east": {
         "x": 62,
-        "y": 672,
+        "y": 670,
         "w": 61,
         "h": 108
       },
       "east": {
         "x": 124,
-        "y": 672,
+        "y": 670,
         "w": 61,
         "h": 108
       },
       "south-east": {
         "x": 186,
-        "y": 672,
+        "y": 670,
         "w": 61,
         "h": 108
       },
       "south": {
         "x": 248,
-        "y": 672,
+        "y": 670,
         "w": 61,
         "h": 108
       },
       "south-west": {
         "x": 310,
-        "y": 672,
+        "y": 670,
         "w": 61,
         "h": 108
       },
       "west": {
         "x": 372,
-        "y": 672,
+        "y": 670,
         "w": 61,
         "h": 108
       },
       "north-west": {
         "x": 434,
-        "y": 672,
+        "y": 670,
         "w": 61,
         "h": 108
       }

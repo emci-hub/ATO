@@ -19,7 +19,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "east",
       "clip": "Idle"
     },
@@ -42,7 +42,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "east",
       "clip": "Idle"
     },
@@ -65,7 +65,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "east",
       "clip": "Idle"
     },
@@ -88,7 +88,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "east",
       "clip": "Idle"
     },
@@ -111,7 +111,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "west",
       "clip": "Idle"
     },
@@ -134,7 +134,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "west",
       "clip": "Idle"
     },
@@ -157,7 +157,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "west",
       "clip": "Idle"
     },
@@ -180,7 +180,7 @@
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "west",
       "clip": "Idle"
     },
@@ -1136,7 +1136,7 @@
       }
     ],
     "decodedBytes": 2246156,
-    "diskBytes": 82966,
+    "diskBytes": 75522,
     "tier": "core"
   }
 }

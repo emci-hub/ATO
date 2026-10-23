@@ -1121,14 +1121,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1279,
-        "h": 786
+        "h": 788
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 91895,
-      "decodedBytes": 4021176,
+      "diskBytes": 85722,
+      "decodedBytes": 4031408,
       "format": "png8",
-      "notes": "md5:d26f825a9cc9895558c26849e4d344a0",
+      "notes": "md5:0c3b7870facedc964f5c1216c29d4c84",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1210,14 +1210,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1023,
-        "h": 813
+        "h": 801
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 114484,
-      "decodedBytes": 3326796,
+      "diskBytes": 105691,
+      "decodedBytes": 3277692,
       "format": "png8",
-      "notes": "md5:809672f8a7ceb3171a28cfa6e48c9974",
+      "notes": "md5:234d4d0cee75a2cdb192ace9f0ed2a4f",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1299,14 +1299,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 967,
-        "h": 808
+        "h": 804
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 68191,
-      "decodedBytes": 3125344,
+      "diskBytes": 62366,
+      "decodedBytes": 3109872,
       "format": "png8",
-      "notes": "md5:e14c1d8b2a8ecca50fc8641b337dc62d",
+      "notes": "md5:167e53121f372e1462100a0269205f2d",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1392,10 +1392,10 @@
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 69817,
+      "diskBytes": 67241,
       "decodedBytes": 2250612,
       "format": "png8",
-      "notes": "md5:72f3ed25de5f8427dbcfad0c1dd47219",
+      "notes": "md5:08dc07e6ac68402c0bf9c7d3ad096d0a",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1477,14 +1477,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1055,
-        "h": 823
+        "h": 813
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 122872,
-      "decodedBytes": 3473060,
-      "format": "png32",
-      "notes": "md5:19ab714aa24f3bf02485ffd8954828cd",
+      "diskBytes": 71475,
+      "decodedBytes": 3430860,
+      "format": "png8",
+      "notes": "md5:3ff4397f4b74417f5e46b78875e86191",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1566,14 +1566,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1119,
-        "h": 842
+        "h": 838
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 99375,
-      "decodedBytes": 3768792,
+      "diskBytes": 90461,
+      "decodedBytes": 3750888,
       "format": "png8",
-      "notes": "md5:c7c60daa0994ffd82df52a3c23e9404e",
+      "notes": "md5:44093ce7fe1b726e2764a806cb6d84c2",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1655,14 +1655,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 975,
-        "h": 802
+        "h": 796
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 74317,
-      "decodedBytes": 3127800,
+      "diskBytes": 67558,
+      "decodedBytes": 3104400,
       "format": "png8",
-      "notes": "md5:a64fdada032a90bbbf76d413196d3163",
+      "notes": "md5:2a3249103c5305c7effa854d86d4a79c",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1744,14 +1744,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 903,
-        "h": 816
+        "h": 814
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 85871,
-      "decodedBytes": 2947392,
+      "diskBytes": 80943,
+      "decodedBytes": 2940168,
       "format": "png8",
-      "notes": "md5:3b29b3dec72c59e8d56412bef071a638",
+      "notes": "md5:f41029037e9e1fe5e33c0c3b5086841c",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1837,10 +1837,10 @@
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 98102,
+      "diskBytes": 93191,
       "decodedBytes": 3822784,
       "format": "png8",
-      "notes": "md5:3aeb2464518c31cf54a16b20c720fc2c",
+      "notes": "md5:c4a9d55b6270666e771188484eca806f",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1926,10 +1926,10 @@
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 82966,
+      "diskBytes": 75522,
       "decodedBytes": 2246156,
       "format": "png8",
-      "notes": "md5:c9b16b3420213f1eabcf8939f306110b",
+      "notes": "md5:1eaa9ca8e783a05e91f1c716d6a9f69d",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2011,14 +2011,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 599,
-        "h": 780
+        "h": 778
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 100167,
-      "decodedBytes": 1868880,
-      "format": "png32",
-      "notes": "md5:815fc8f97992b8cb3c4e2793d135a57c",
+      "diskBytes": 64736,
+      "decodedBytes": 1864088,
+      "format": "png8",
+      "notes": "md5:11c97f68c5234abcb991e3d7e4475b89",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2100,14 +2100,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1263,
-        "h": 769
+        "h": 767
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 91248,
-      "decodedBytes": 3884988,
+      "diskBytes": 83988,
+      "decodedBytes": 3874884,
       "format": "png8",
-      "notes": "md5:e9944d888a4e21225fb233ecf95c0b05",
+      "notes": "md5:d5e663f4eab4ee7ecaed57768e50a6e7",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2189,14 +2189,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 871,
-        "h": 790
+        "h": 784
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 84384,
-      "decodedBytes": 2752360,
+      "diskBytes": 79851,
+      "decodedBytes": 2731456,
       "format": "png8",
-      "notes": "md5:12c69dc496e85ddd1ce1ca05c3c82947",
+      "notes": "md5:e062d12e602dab02a5d98dbe100f6802",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2278,14 +2278,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1239,
-        "h": 814
+        "h": 810
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 100211,
-      "decodedBytes": 4034184,
+      "diskBytes": 94426,
+      "decodedBytes": 4014360,
       "format": "png8",
-      "notes": "md5:b4372eb326f9e1a341c45fc7b30c92c1",
+      "notes": "md5:1488e9c80ad52712a1339aa3b9219343",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2367,14 +2367,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 911,
-        "h": 891
+        "h": 899
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 148928,
-      "decodedBytes": 3246804,
-      "format": "png32",
-      "notes": "md5:fc2e075631452bb27fca0fac12babffb",
+      "diskBytes": 98785,
+      "decodedBytes": 3275956,
+      "format": "png8",
+      "notes": "md5:d7c4b75dadd7957515c00ab9d55dc501",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2456,14 +2456,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 871,
-        "h": 803
+        "h": 797
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 78228,
-      "decodedBytes": 2797652,
+      "diskBytes": 73131,
+      "decodedBytes": 2776748,
       "format": "png8",
-      "notes": "md5:cc0974a16a928e28e12e5e7b707cdddd",
+      "notes": "md5:c7253167b2b527f142195800bedc3e80",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",

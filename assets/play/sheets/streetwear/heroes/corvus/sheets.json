@@ -317,62 +317,62 @@
   "sheets/streetwear/heroes/corvus/Idle": {
     "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.core.png",
     "sheetW": 967,
-    "sheetH": 808,
+    "sheetH": 804,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 464,
-        "w": 85,
-        "h": 114
+        "w": 81,
+        "h": 112
       },
       "east/frame_001": {
-        "x": 86,
+        "x": 82,
         "y": 464,
-        "w": 85,
-        "h": 114
+        "w": 81,
+        "h": 112
       },
       "east/frame_002": {
-        "x": 172,
+        "x": 164,
         "y": 464,
-        "w": 85,
-        "h": 114
+        "w": 81,
+        "h": 112
       },
       "east/frame_003": {
-        "x": 258,
+        "x": 246,
         "y": 464,
-        "w": 85,
-        "h": 114
+        "w": 81,
+        "h": 112
       },
       "west/frame_000": {
         "x": 0,
-        "y": 579,
-        "w": 85,
-        "h": 114
+        "y": 577,
+        "w": 81,
+        "h": 112
       },
       "west/frame_001": {
-        "x": 86,
-        "y": 579,
-        "w": 85,
-        "h": 114
+        "x": 82,
+        "y": 577,
+        "w": 81,
+        "h": 112
       },
       "west/frame_002": {
-        "x": 172,
-        "y": 579,
-        "w": 85,
-        "h": 114
+        "x": 164,
+        "y": 577,
+        "w": 81,
+        "h": 112
       },
       "west/frame_003": {
-        "x": 258,
-        "y": 579,
-        "w": 85,
-        "h": 114
+        "x": 246,
+        "y": 577,
+        "w": 81,
+        "h": 112
       }
     },
-    "offsetX": 48,
-    "offsetY": 41,
+    "offsetX": 55,
+    "offsetY": 43,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 325,
     "dirs": [
       "east",
       "west"
@@ -495,7 +495,7 @@
   "sheets/streetwear/heroes/corvus/Walk": {
     "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.core.png",
     "sheetW": 967,
-    "sheetH": 808,
+    "sheetH": 804,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -807,53 +807,53 @@
   "sheets/streetwear/heroes/corvus/rotations": {
     "sheet": "art/heroes/in-use/corvus/streetwear/hero_corvus_streetwear.core.png",
     "sheetW": 967,
-    "sheetH": 808,
+    "sheetH": 804,
     "frames": {
       "north": {
         "x": 0,
-        "y": 694,
+        "y": 690,
         "w": 107,
         "h": 114
       },
       "north-east": {
         "x": 108,
-        "y": 694,
+        "y": 690,
         "w": 107,
         "h": 114
       },
       "east": {
         "x": 216,
-        "y": 694,
+        "y": 690,
         "w": 107,
         "h": 114
       },
       "south-east": {
         "x": 324,
-        "y": 694,
+        "y": 690,
         "w": 107,
         "h": 114
       },
       "south": {
         "x": 432,
-        "y": 694,
+        "y": 690,
         "w": 107,
         "h": 114
       },
       "south-west": {
         "x": 540,
-        "y": 694,
+        "y": 690,
         "w": 107,
         "h": 114
       },
       "west": {
         "x": 648,
-        "y": 694,
+        "y": 690,
         "w": 107,
         "h": 114
       },
       "north-west": {
         "x": 756,
-        "y": 694,
+        "y": 690,
         "w": 107,
         "h": 114
       }

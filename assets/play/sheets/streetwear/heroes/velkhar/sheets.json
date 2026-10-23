@@ -317,62 +317,62 @@
   "sheets/streetwear/heroes/velkhar/Idle": {
     "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.core.png",
     "sheetW": 911,
-    "sheetH": 891,
+    "sheetH": 899,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 540,
         "w": 100,
-        "h": 115
+        "h": 119
       },
       "east/frame_001": {
         "x": 101,
         "y": 540,
         "w": 100,
-        "h": 115
+        "h": 119
       },
       "east/frame_002": {
         "x": 202,
         "y": 540,
         "w": 100,
-        "h": 115
+        "h": 119
       },
       "east/frame_003": {
         "x": 303,
         "y": 540,
         "w": 100,
-        "h": 115
+        "h": 119
       },
       "west/frame_000": {
         "x": 0,
-        "y": 656,
+        "y": 660,
         "w": 100,
-        "h": 115
+        "h": 119
       },
       "west/frame_001": {
         "x": 101,
-        "y": 656,
+        "y": 660,
         "w": 100,
-        "h": 115
+        "h": 119
       },
       "west/frame_002": {
         "x": 202,
-        "y": 656,
+        "y": 660,
         "w": 100,
-        "h": 115
+        "h": 119
       },
       "west/frame_003": {
         "x": 303,
-        "y": 656,
+        "y": 660,
         "w": 100,
-        "h": 115
+        "h": 119
       }
     },
     "offsetX": 42,
-    "offsetY": 39,
+    "offsetY": 35,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 375,
     "dirs": [
       "east",
       "west"
@@ -495,7 +495,7 @@
   "sheets/streetwear/heroes/velkhar/Walk": {
     "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.core.png",
     "sheetW": 911,
-    "sheetH": 891,
+    "sheetH": 899,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -807,53 +807,53 @@
   "sheets/streetwear/heroes/velkhar/rotations": {
     "sheet": "art/heroes/in-use/velkhar/streetwear/hero_velkhar_streetwear.core.png",
     "sheetW": 911,
-    "sheetH": 891,
+    "sheetH": 899,
     "frames": {
       "north": {
         "x": 0,
-        "y": 772,
+        "y": 780,
         "w": 108,
         "h": 119
       },
       "north-east": {
         "x": 109,
-        "y": 772,
+        "y": 780,
         "w": 108,
         "h": 119
       },
       "east": {
         "x": 218,
-        "y": 772,
+        "y": 780,
         "w": 108,
         "h": 119
       },
       "south-east": {
         "x": 327,
-        "y": 772,
+        "y": 780,
         "w": 108,
         "h": 119
       },
       "south": {
         "x": 436,
-        "y": 772,
+        "y": 780,
         "w": 108,
         "h": 119
       },
       "south-west": {
         "x": 545,
-        "y": 772,
+        "y": 780,
         "w": 108,
         "h": 119
       },
       "west": {
         "x": 654,
-        "y": 772,
+        "y": 780,
         "w": 108,
         "h": 119
       },
       "north-west": {
         "x": 763,
-        "y": 772,
+        "y": 780,
         "w": 108,
         "h": 119
       }

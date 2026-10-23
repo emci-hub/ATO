@@ -317,62 +317,62 @@
   "sheets/streetwear/heroes/aurex/Idle": {
     "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.core.png",
     "sheetW": 1023,
-    "sheetH": 813,
+    "sheetH": 801,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 476,
-        "w": 92,
-        "h": 113
+        "w": 91,
+        "h": 107
       },
       "east/frame_001": {
-        "x": 93,
+        "x": 92,
         "y": 476,
-        "w": 92,
-        "h": 113
+        "w": 91,
+        "h": 107
       },
       "east/frame_002": {
-        "x": 186,
+        "x": 184,
         "y": 476,
-        "w": 92,
-        "h": 113
+        "w": 91,
+        "h": 107
       },
       "east/frame_003": {
-        "x": 279,
+        "x": 276,
         "y": 476,
-        "w": 92,
-        "h": 113
+        "w": 91,
+        "h": 107
       },
       "west/frame_000": {
         "x": 0,
-        "y": 590,
-        "w": 92,
-        "h": 113
+        "y": 584,
+        "w": 91,
+        "h": 107
       },
       "west/frame_001": {
-        "x": 93,
-        "y": 590,
-        "w": 92,
-        "h": 113
+        "x": 92,
+        "y": 584,
+        "w": 91,
+        "h": 107
       },
       "west/frame_002": {
-        "x": 186,
-        "y": 590,
-        "w": 92,
-        "h": 113
+        "x": 184,
+        "y": 584,
+        "w": 91,
+        "h": 107
       },
       "west/frame_003": {
-        "x": 279,
-        "y": 590,
-        "w": 92,
-        "h": 113
+        "x": 276,
+        "y": 584,
+        "w": 91,
+        "h": 107
       }
     },
-    "offsetX": 51,
-    "offsetY": 41,
+    "offsetX": 52,
+    "offsetY": 47,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 375,
     "dirs": [
       "east",
       "west"
@@ -495,7 +495,7 @@
   "sheets/streetwear/heroes/aurex/Walk": {
     "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.core.png",
     "sheetW": 1023,
-    "sheetH": 813,
+    "sheetH": 801,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -807,53 +807,53 @@
   "sheets/streetwear/heroes/aurex/rotations": {
     "sheet": "art/heroes/in-use/aurex/streetwear/hero_aurex_streetwear.core.png",
     "sheetW": 1023,
-    "sheetH": 813,
+    "sheetH": 801,
     "frames": {
       "north": {
         "x": 0,
-        "y": 704,
+        "y": 692,
         "w": 109,
         "h": 109
       },
       "north-east": {
         "x": 110,
-        "y": 704,
+        "y": 692,
         "w": 109,
         "h": 109
       },
       "east": {
         "x": 220,
-        "y": 704,
+        "y": 692,
         "w": 109,
         "h": 109
       },
       "south-east": {
         "x": 330,
-        "y": 704,
+        "y": 692,
         "w": 109,
         "h": 109
       },
       "south": {
         "x": 440,
-        "y": 704,
+        "y": 692,
         "w": 109,
         "h": 109
       },
       "south-west": {
         "x": 550,
-        "y": 704,
+        "y": 692,
         "w": 109,
         "h": 109
       },
       "west": {
         "x": 660,
-        "y": 704,
+        "y": 692,
         "w": 109,
         "h": 109
       },
       "north-west": {
         "x": 770,
-        "y": 704,
+        "y": 692,
         "w": 109,
         "h": 109
       }
