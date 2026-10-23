@@ -7,11 +7,13 @@ import { DIVE_TOP_LEANS } from '@/lib/category-deep-dive/dive';
 import type { LegendDiffer, LegendPair, LegendStory } from '@/lib/legend-figures/story';
 import { STORY_MAX_PAIRS } from '@/lib/legend-figures/story';
 import type { LegendAngle, LegendFigure } from '@/lib/legend-figures/types';
+import { legendById } from '@/lib/legend-figures/roster';
 import { PRONOUNS } from '@/lib/story-v3/tracery';
 import type { TraitAxis } from '@/lib/traits';
 import { TRAIT_BAND_HIGH_CUT, TRAIT_BAND_LOW_CUT } from '@/lib/traits';
 import type { SentenceShape } from '@/lib/voice/player-copy';
 
+import { legendDeed } from './deed';
 import { getStoryLibrary } from './persist';
 import { lineShape, pickLine, preferredShape, speak, type PickContext } from './pick';
 import type { LineSlot, Reader, StoryLibrary, StoryLine, Tier } from './types';
@@ -36,6 +38,7 @@ export interface RenderFacts {
   shown?: ReadonlySet<string>;
   legend?: string;
   legendId?: string;
+  deed?: string;
 }
 
 interface Say {
@@ -63,6 +66,7 @@ function sayWith(library: StoryLibrary, facts: RenderFacts, pronoun = YOU, name 
       recent: facts.recent,
       legend: facts.legend,
       legendId: facts.legendId,
+      deed: facts.deed,
       alsoTrait: also?.trait,
       alsoTier: also?.tier,
       requireApproved: true,
@@ -71,7 +75,7 @@ function sayWith(library: StoryLibrary, facts: RenderFacts, pronoun = YOU, name 
     if (!line) return '';
     if (slot !== 'title' && slot !== 'legend-title') used.add(lineShape(line, ctx));
     ids.push(line.id);
-    return speak(line.text, pronoun, name, { legend: facts.legend, answer: facts.answer });
+    return speak(line.text, pronoun, name, { legend: facts.legend, answer: facts.answer, deed: facts.deed });
   };
   return { text, ids };
 }
@@ -143,12 +147,14 @@ export function renderLibraryLegend(
     ? { trait: lead.axis, tier: tierForStrength(lead.lean, lead.strength) }
     : { trait: 'openness', tier: 'mid' as const };
   const seed = input.seed ?? `${input.legend.id}|${input.angle.id}|${input.momentId}`;
+  const figure = legendById(input.legend.id);
   const say = sayWith(library, {
     answer: input.answer,
     recent: input.recent,
     shown: new Set(input.shown ?? []),
     legend: input.legend.name,
     legendId: input.legend.id,
+    deed: figure ? legendDeed(figure) : 'coined the word radioactivity',
   });
   const howTheTraitWon = pairs.map((pair, index) => ({
     axis: pair.axis,

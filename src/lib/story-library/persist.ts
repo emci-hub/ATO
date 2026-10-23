@@ -4,7 +4,7 @@
  * The store is synchronous so the offline check can round-trip a save without
  * a device. The phone adapter lives in `device-store.ts`.
  */
-import { sceneReuse, textIssues } from '@/lib/voice/player-copy';
+import { metaphorSymbolIssues, sceneReuse, textIssues } from '@/lib/voice/player-copy';
 
 import { STORY_LIBRARY } from './library';
 import type { MatrixFailure } from './validate';
@@ -60,6 +60,9 @@ export function libraryVoiceFailures(library: StoryLibrary): MatrixFailure[] {
   };
   for (const line of library.lines) {
     for (const issue of textIssues(`${line.text}\n${line.flip}`)) {
+      push(line.trait, String(line.tier), `${line.id}: ${issue.detail}`);
+    }
+    for (const issue of metaphorSymbolIssues(`${line.text}\n${line.flip}`)) {
       push(line.trait, String(line.tier), `${line.id}: ${issue.detail}`);
     }
     byTrait[line.trait] = `${byTrait[line.trait] ?? ''} ${line.text}`;

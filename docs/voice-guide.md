@@ -55,37 +55,39 @@ Contrast: "One of you needs a plan. The other already left to find out what's do
 
 Both people stay likable. Neither line names a score or a percent.
 
-## Scene objects
+## Scene phrases
 
-These belong to one trait. Don't reuse them on another trait.
+Each trait has one real phrase that shows up in that trait's lines and nowhere else. It is something a friend would say happened. It is not a private symbol for the trait.
 
-| Trait | Object |
+| Trait | Phrase |
 |---|---|
-| openness | specials board |
-| conscientiousness | checkbox |
-| extraversion | doorbell |
-| agreeableness | potluck |
-| steadiness | kettle |
-| attachment_anxiety | read receipt |
-| attachment_avoidance | doorway |
-| conflict_assertiveness | agenda |
-| conflict_cooperativeness | timeslot |
-| autonomy | ballot |
-| competence | red pen |
-| relatedness | couch night |
-| growth_mindset | practice rep |
-| locus_of_control | steering wheel |
-| self_efficacy | guest list |
-| playfulness | costume |
+| openness | group chat |
+| conscientiousness | packing list |
+| extraversion | said hi first |
+| agreeableness | split the bill |
+| steadiness | until morning |
+| attachment_anxiety | second text |
+| attachment_avoidance | went home early |
+| conflict_assertiveness | said it in the meeting |
+| conflict_cooperativeness | moved dinner |
+| autonomy | without a poll |
+| competence | hit send |
+| relatedness | on the couch |
+| growth_mindset | burned the rice |
+| locus_of_control | changed the reservation |
+| self_efficacy | started the hard part |
+| playfulness | side quest |
+
+Story Library lines also reject these words when they are used as metaphor code: ticket, specials board, kettle, loud option, fork, bag, chair, costume. A literal chair or bag in another bank can stay. A story line does not get a made-up object standing in for the trait.
 
 ## Whole lines
 
 Story, insight, and legend copy is written as finished lines. Do not assemble a verb, an aside, and a closer, and do not fill an "[adjective] [noun]" bank. Fewer good lines beat a big bank.
 
-- Slots are only names, pronouns, and the player's own facts: `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{answer}`.
+- Slots are only names, pronouns, the legend's name, a real deed, and the player's own facts: `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{deed}`, `{answer}`. `{deed}` is a short sourced clause about what that person did.
 - Each line has eligibility (trait pole, confidence tier, a specific answer, a legend, recency) and a priority. The highest-priority eligible line wins. A broad fallback is always in the pool.
 - Shown line ids are remembered for the player, on the device and inside the story JSON already saved for deep dives and legends. A line does not repeat until every eligible line has been used.
-- Where an answer exists, a line may quote it: You picked "I plan a whole new day", and the checkbox still got its own column.
+- Where an answer exists, a line may quote it: You picked "I plan a whole new day", and the packing list was done before anyone else had shoes on.
 - Every line has a flip field: the opposite pole's reaction, written out. The check requires it. It is not shown.
 
 ## Sentence shapes
@@ -106,15 +108,19 @@ Until a trait is a solid read, hedge it and keep it playful. "Early read: you mi
 
 Bad: "You dive when the group chat pings. The untried option gets the first look."
 
-Better: "Group chat pings, and you're already looking up tickets. The safe plan never stood a chance."
+Better: "You had the listing open when the group chat was still stuck on the safe plan."
 
 Bad: "You tend to be curious."
 
-Better: "The specials board wins, and a new ticket is already open."
+Better: "You saw the group chat name a new city, and the listing was already open."
 
 Bad low pole: "You avoid new things."
 
-Better low pole: "The specials board stays unread, and the usual dish gets ordered again."
+Better low pole: "You know the best thing on the menu, and you order it again."
+
+Bad legend: "Marie Curie reached the same fork with a different bag."
+
+Better legend: "You tried a place nobody at the table could name when Marie Curie coined the word radioactivity."
 
 ## Final friend test
 
@@ -131,6 +137,7 @@ Would a real friend say this out loud about another real friend? If not, rewrite
 - a tag question (", right?") on more than about 1 in 10 Story Library lines
 - a Story Library line with no flip field
 - "tend to" or "energy"
+- a Story Library line that uses ticket, specials board, kettle, loud option, fork, bag, chair, or costume as metaphor code
 - a "still learning you" line that is not an "Early read:"
 
 The same review runs when a Story Library draft is saved, before it can be approved.

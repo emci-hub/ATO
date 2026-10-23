@@ -10,8 +10,8 @@ Before writing or editing player-facing copy (stories, Story Library banks, insi
 
 The guide is the source of truth: core rule, banned phrases, flip test, both poles, match and contrast, whole lines, salience, no-repeat, variety caps, slang, low-confidence wording, good and bad examples.
 
-`npm run check:player-copy` and `npm run check:story-library` must pass. They refuse banned phrases (including "energy" and "tend to"), slang outside the casual tier, a repeated sentence shape on a Story Library card, a scene object reused across traits or twice on one card, a tag question on more than about 1 in 10 lines, and a Story Library line with no flip. A Story Library draft that fails the same review cannot be approved.
+`npm run check:player-copy` and `npm run check:story-library` must pass. They refuse banned phrases (including "energy" and "tend to"), slang outside the casual tier, a repeated sentence shape on a Story Library card, a scene phrase reused across traits or twice on one card, a tag question on more than about 1 in 10 lines, a Story Library line with no flip, and the metaphor code ticket / specials board / kettle / loud option / fork / bag / chair / costume inside a Story Library line. A Story Library draft that fails the same review cannot be approved.
 
-Story, insight, and legend lines are finished sentences. Slots are only names, pronouns, and the player's own facts. Each line has eligibility and a priority. The highest eligible line wins, and a shown line does not repeat until that pool is used up. Keep trait ids, data meaning, and `STORY_LIBRARY_RUNTIME` (it ships off).
+Story, insight, and legend lines are finished sentences a friend would say out loud. Slots are only names, pronouns, `{deed}` (what that real person did), and the player's own facts. Each line has eligibility and a priority. The highest eligible line wins, and a shown line does not repeat until that pool is used up. Keep trait ids, data meaning, and `STORY_LIBRARY_RUNTIME` (it ships off).
 
 Do not invent or redefine traits. Note flip-tested lines in `docs/copy-audit.md`.

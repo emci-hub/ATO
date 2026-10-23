@@ -84,7 +84,7 @@ export const LOCUS_OF_CONTROL_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_locus_of_control_h_06', ['locus_of_control:high', 'conscientiousness:high'], {
     focus: [
-      'You usually plan a thing carefully and then treat the result as yours to answer for.',
+      'You write the Saturday plan down, and if it falls apart you treat that as yours to fix.',
       'You can write the plan, do the steps, and still feel the outcome sits on you.',
       'When you set out to do something, you sometimes map it and then own how it turns out.',
     ],

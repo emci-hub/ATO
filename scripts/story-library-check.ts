@@ -120,8 +120,8 @@ const she = pickForReader(
   'lock',
 );
 assert.ok(she);
-assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /She opened a new ticket/);
-assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /specials board/);
+assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /She had the listing open/);
+assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /group chat/);
 
 const quoted = renderLibraryDive({
   categoryId: 'cat_structure',
@@ -191,8 +191,8 @@ between(dive.othersNotice, NOTICE_MIN_WORDS, NOTICE_MAX_WORDS, 'notice');
 assert.equal(diveLineViolation(dive.othersNotice, ''), null, dive.othersNotice);
 between(dive.whatItMeansForYou, DIVE_MEANS_MIN_WORDS, DIVE_MEANS_MAX_WORDS, 'means');
 assert.equal(diveLineViolation(dive.whatItMeansForYou, ''), null, dive.whatItMeansForYou);
-assert.match(dive.mix, /took the detour/, 'openness high + playfulness high takes the combo line');
-assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /\bwait\b/, 'mid steadiness lets the loud option wait');
+assert.match(dive.mix, /spreadsheet/, 'openness high + playfulness high takes the combo line');
+assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /\bwait\b/, 'mid steadiness lets the reply wait');
 assert.ok(dive.joke, 'a deep dive includes the joke line');
 assert.equal(cardJokeViolation(dive.joke ?? ''), null, dive.joke ?? '');
 assert.equal(diveLineViolation(dive.joke ?? '', ''), null, dive.joke ?? '');
@@ -253,7 +253,7 @@ const edited = {
   templates: STORY_LIBRARY.templates,
   entries: STORY_LIBRARY.entries,
   lines: STORY_LIBRARY.lines.map((line) =>
-    line.id === 'openness-high-shows-when' ? { ...line, text: 'The fresh option still gets a look when the specials board has room.' } : line,
+    line.id === 'openness-high-shows-when' ? { ...line, text: 'You had the listing open when the group chat still had room for one more idea.' } : line,
   ),
 };
 const saved = saveStoryLibrary(edited);
@@ -265,13 +265,13 @@ const persisted = renderLibraryDive(
   { categoryId: 'cat_openness', leans: [{ axis: 'openness', lean: 'high', pct: 88 }], seed: 'persisted' },
   loaded,
 );
-assert.match(persisted.showsUp[0]!.line, /The fresh option still gets a look/);
+assert.match(persisted.showsUp[0]!.line, /group chat still had room/);
 const refused = saveStoryLibrary({
   ...loaded,
   lines: loaded.lines.map((line) => (line.id === 'openness-high-shows-when' ? { ...line, text: 'TODO leave this in' } : line)),
 });
 assert.equal(refused.ok, false, 'a failing edit is not saved');
-assert.match(getStoryLibrary().lines.find((line) => line.id === 'openness-high-shows-when')?.text ?? '', /fresh option/);
+assert.match(getStoryLibrary().lines.find((line) => line.id === 'openness-high-shows-when')?.text ?? '', /group chat still had room/);
 resetStoryLibrary();
 setStoryLibraryStore(null);
 

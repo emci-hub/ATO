@@ -23,6 +23,8 @@ export interface PickContext {
   recent?: boolean;
   legend?: string;
   legendId?: string;
+  /** A short sourced clause: what the legend actually did. */
+  deed?: string;
   alsoTrait?: string;
   alsoTier?: StoryLine['tier'];
   requireApproved?: boolean;
@@ -39,12 +41,12 @@ export function preferredShape(slot: LineSlot, index: number): SentenceShape {
   return 'punch';
 }
 
-/** Names, pronouns, the legend, and the player's own answer. Nothing else. */
+/** Names, pronouns, the legend's name, a real deed, and the player's own answer. */
 export function speak(
   text: string,
   pronoun: PronounSet,
   name: string,
-  extras: { legend?: string; answer?: string } = {},
+  extras: { legend?: string; answer?: string; deed?: string } = {},
 ): string {
   const who = pronoun.id === 'you' ? pronoun.subjCap : name;
   return text
@@ -52,6 +54,7 @@ export function speak(
     .replaceAll('{Subj}', pronoun.subjCap)
     .replaceAll('{subj}', pronoun.subj)
     .replaceAll('{legend}', extras.legend ?? '')
+    .replaceAll('{deed}', extras.deed ?? '')
     .replaceAll('{answer}', extras.answer ?? '');
 }
 
@@ -81,7 +84,7 @@ function eligible(line: StoryLine, ctx: PickContext): boolean {
 }
 
 export function lineShape(line: StoryLine, ctx: PickContext): SentenceShape {
-  return sentenceShape(speak(line.text, ctx.pronoun, ctx.name, { legend: ctx.legend, answer: ctx.answer }));
+  return sentenceShape(speak(line.text, ctx.pronoun, ctx.name, { legend: ctx.legend, answer: ctx.answer, deed: ctx.deed }));
 }
 
 /**

@@ -6,7 +6,7 @@ This is the guide the admin authoring tool must send, unchanged, with every offl
 
 The guide sits on top of `docs/copy-review-rules.md`. If this file and that policy disagree, the policy wins and this file gets a new version. Do not add exceptions in a prompt.
 
-Version: `style-storylib-3`. Bump this version when the rules change. Old drafts stay stamped with the version that wrote them.
+Version: `style-storylib-4`. Bump this version when the rules change. Old drafts stay stamped with the version that wrote them.
 
 ## Voice
 
@@ -21,7 +21,7 @@ Version: `style-storylib-3`. Bump this version when the rules change. Old drafts
 
 A Story Library entry is one finished sentence. Do not assemble a verb, an aside, and a closer. Do not fill an "[adjective] [noun]" bank.
 
-- Tokens are only `{Subj}`, `{subj}`, `{Name}`, `{legend}`, and `{answer}`. `{answer}` is the player's own chosen answer, quoted.
+- Tokens are only `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{deed}`, and `{answer}`. `{answer}` is the player's own chosen answer, quoted. `{deed}` is a short sourced clause about what the legend did. A legend line has to mention that real deed. Do not invent a symbol (ticket, specials board, kettle, loud option, fork, bag, chair, costume) to stand in for a trait.
 - Every line has a flip: what the opposite pole would actually do. The flip is not shown. The check requires it.
 - Every line has a priority and eligibility (trait pole, confidence tier, a specific answer, a legend, recency). The highest-priority eligible line wins. A broad fallback stays available.
 - Shown line ids are remembered per player. A line does not repeat until every eligible line has been used.
@@ -34,12 +34,12 @@ The admin tool sends this, then up to six already-approved lines for that slot. 
 ```text
 You draft Story Library lines for ATO. You do not write a card about a real person. You do not see anyone's answers, name, or id.
 
-Follow docs/voice-guide.md, style-storylib-3, and the core content policy. Judge meaning, not keywords. Keep adult humor if the sample has it. Do not add a moral.
+Follow docs/voice-guide.md, style-storylib-4, and the core content policy. Judge meaning, not keywords. Keep adult humor if the sample has it. Do not add a moral.
 
-Return JSON only. Each entry is one finished sentence. Tokens are {Subj}, {subj}, {Name}, {legend}, and {answer}. Include flip, priority, and the eligibility conditions.
+Return JSON only. Each entry is one finished sentence. Tokens are {Subj}, {subj}, {Name}, {legend}, {deed}, and {answer}. Include flip, priority, and the eligibility conditions.
 
 Approved line:
-{"id":"openness-high-shows-when","slot":"shows","trait":"openness","tier":"high","priority":30,"text":"{Subj} opened a new ticket when the specials board still had a blank line.","flip":"The usual dish was the whole point, and a new ticket would have been a hassle."}
+{"id":"openness-high-shows-when","slot":"shows","trait":"openness","tier":"high","priority":30,"text":"{Subj} had the listing open when the group chat was still stuck on the safe plan.","flip":"The usual dish was already the plan, and a new listing would have been a hassle."}
 
 A bad line, which you must not imitate: "The untried option gets the first look." or "She always panics."
 

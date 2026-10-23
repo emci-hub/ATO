@@ -154,8 +154,9 @@ export type LineSlot =
   | 'legend-joke';
 
 /**
- * One finished line. Tokens are only names, pronouns, the legend's name, and
- * the player's own answer. `flip` is the opposite pole's reaction. It is not shown.
+ * One finished line. Tokens are only names, pronouns, the legend's name,
+ * a real deed (`{deed}`), and the player's own answer. `flip` is the opposite
+ * pole's reaction. It is not shown.
  */
 export interface StoryLine {
   id: string;

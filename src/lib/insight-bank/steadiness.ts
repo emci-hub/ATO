@@ -53,7 +53,7 @@ export const STEADINESS_IDEAS: readonly InsightIdea[] = [
   idea('ftw_steadiness_h_04', ['steadiness:high'], {
     focus: [
       'When you get bad news, you usually deal with it and carry on with the rest of the day.',
-      'A hard message can fail to take over your whole afternoon.',
+      'A hard text lands, and you still make the afternoon meeting.',
       'When something goes wrong, you sometimes feel more settled by the next morning.',
     ],
     why: 'Getting back to the day quickly is a real strength, but some things might deserve more of your attention than they get.',

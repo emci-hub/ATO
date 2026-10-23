@@ -68,25 +68,52 @@ export const SLANG_RES: readonly { re: RegExp; label: string }[] = [
 
 export const CASUAL_FRAMES = new Set(['casual', 'slang']);
 
-/** One scene phrase per trait. It may show up in that trait's lines and nowhere else. */
+/**
+ * One real scene phrase per trait. It shows up in that trait's lines and nowhere else.
+ * These are things a friend would say, not a private symbol for the trait.
+ */
 export const TRAIT_SCENES: Record<TraitAxis, readonly string[]> = {
-  openness: ['specials board'],
-  conscientiousness: ['checkbox'],
-  extraversion: ['doorbell'],
-  agreeableness: ['potluck'],
-  steadiness: ['kettle'],
-  attachment_anxiety: ['read receipt'],
-  attachment_avoidance: ['doorway'],
-  conflict_assertiveness: ['agenda'],
-  conflict_cooperativeness: ['timeslot'],
-  autonomy: ['ballot'],
-  competence: ['red pen'],
-  relatedness: ['couch night'],
-  growth_mindset: ['practice rep'],
-  locus_of_control: ['steering wheel'],
-  self_efficacy: ['guest list'],
-  playfulness: ['costume'],
+  openness: ['group chat'],
+  conscientiousness: ['packing list'],
+  extraversion: ['said hi first'],
+  agreeableness: ['split the bill'],
+  steadiness: ['until morning'],
+  attachment_anxiety: ['second text'],
+  attachment_avoidance: ['went home early'],
+  conflict_assertiveness: ['said it in the meeting'],
+  conflict_cooperativeness: ['moved dinner'],
+  autonomy: ['without a poll'],
+  competence: ['hit send'],
+  relatedness: ['on the couch'],
+  growth_mindset: ['burned the rice'],
+  locus_of_control: ['changed the reservation'],
+  self_efficacy: ['started the hard part'],
+  playfulness: ['side quest'],
 };
+
+/**
+ * Words that were used as a private code for a trait. A story line that needs
+ * them is not a scene a friend would recognize. Literal uses in other banks
+ * (a real chair, a real bag by the door) are not scanned here.
+ */
+export const METAPHOR_SYMBOL_RES: readonly { re: RegExp; label: string }[] = [
+  { re: /\btickets?\b/i, label: 'ticket' },
+  { re: /specials board/i, label: 'specials board' },
+  { re: /\bkettles?\b/i, label: 'kettle' },
+  { re: /loud option/i, label: 'loud option' },
+  { re: /\bforks?\b/i, label: 'fork' },
+  { re: /\bbags?\b/i, label: 'bag' },
+  { re: /\bchairs?\b/i, label: 'chair' },
+  { re: /\bcostumes?\b/i, label: 'costume' },
+];
+
+export function metaphorSymbolIssues(text: string): CopyIssue[] {
+  const issues: CopyIssue[] = [];
+  for (const row of METAPHOR_SYMBOL_RES) {
+    if (row.re.test(text)) issues.push({ label: row.label, detail: `metaphor symbol "${row.label}"` });
+  }
+  return issues;
+}
 
 export function sentenceShape(sentence: string): SentenceShape {
   const line = sentence.trim();

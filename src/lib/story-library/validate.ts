@@ -27,14 +27,16 @@ import {
 } from '@/lib/legend-figures/story';
 import { PRONOUNS } from '@/lib/story-v3/tracery';
 import { cardJokeViolation } from '@/lib/voice/card-joke';
-import { PROP_CAP_PER_TRAIT, TAG_QUESTION_CAP, phraseCount, tagQuestionShare, textIssues, TRAIT_SCENES } from '@/lib/voice/player-copy';
+import { metaphorSymbolIssues, PROP_CAP_PER_TRAIT, TAG_QUESTION_CAP, phraseCount, tagQuestionShare, textIssues, TRAIT_SCENES } from '@/lib/voice/player-copy';
 
 import { speak } from './pick';
 import type { StoryLibrary, StoryLine } from './types';
 import { BANNED_PATTERNS } from './types';
 
 const QUOTE_ANSWER = 'I plan a whole new day';
-const ALLOWED_TOKEN = /\{(?:Subj|subj|Name|legend|answer)\}/g;
+/** Same clause legendDeed returns for Marie Curie. Word counts stay stable. */
+const LEGEND_DEED = 'coined the word radioactivity';
+const ALLOWED_TOKEN = /\{(?:Subj|subj|Name|legend|answer|deed)\}/g;
 
 const DIVE_BANDS: Record<string, readonly [number, number]> = {
   shows: [SHOWS_MIN_WORDS, SHOWS_MAX_WORDS],
@@ -75,6 +77,7 @@ function spoken(line: StoryLine, legend = false): string {
   return speak(line.text, PRONOUNS.you, 'You', {
     legend: legend ? 'Marie Curie' : undefined,
     answer: line.text.includes('{answer}') ? QUOTE_ANSWER : undefined,
+    deed: legend ? LEGEND_DEED : undefined,
   });
 }
 
@@ -88,6 +91,7 @@ function lineIssues(line: StoryLine): string[] {
     if (ban.test(line.text) || ban.test(line.flip)) issues.push(`banned ${ban}`);
   }
   for (const issue of textIssues(`${line.text}\n${line.flip}`)) issues.push(issue.detail);
+  for (const issue of metaphorSymbolIssues(`${line.text}\n${line.flip}`)) issues.push(issue.detail);
   const legend = line.slot.startsWith('legend');
   const text = spoken(line, legend);
   const allowed = [legend ? 'Marie Curie' : '', line.text.includes('{answer}') ? QUOTE_ANSWER : ''].filter(Boolean).join(' ');

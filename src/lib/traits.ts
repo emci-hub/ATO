@@ -377,11 +377,11 @@ export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> 
     low: 'They wave once and keep the quiet corner.',
   },
   openness: {
-    high: 'They open a new ticket before the group has agreed.',
+    high: 'They have a listing open before the group has agreed.',
     low: 'They order the usual dish again, and it is still the best one.',
   },
   conscientiousness: {
-    high: 'They tick the last box and then sit down.',
+    high: 'They finish the packing list and then sit down.',
     low: 'They leave the list on the counter and still make dinner.',
   },
   agreeableness: {
@@ -389,8 +389,8 @@ export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> 
     low: 'They say the blunt thing and stay at the table.',
   },
   steadiness: {
-    high: 'They stay level after the spill.',
-    low: 'They let the wobble have a seat and stay anyway.',
+    high: 'They leave the reply until morning.',
+    low: 'They answer the thread at midnight and stay in it.',
   },
   attachment_anxiety: {
     high: 'They keep the thread open while they wait for the reply.',

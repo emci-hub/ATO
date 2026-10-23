@@ -31,7 +31,7 @@ export interface TraitBandPhrases {
 export const TRAIT_BAND_PHRASES: Record<TraitAxis, TraitBandPhrases> = {
   openness: {
     low: 'sticks with what works',
-    high: 'opens a new ticket',
+    high: 'tries a new place',
   },
   conscientiousness: {
     low: 'keeps plans loose',

@@ -116,7 +116,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_growth_mindset_l_02', ['growth_mindset:low'], {
     focus: [
-      'When something is not working, you usually leave it and get on with the day.',
+      'The recipe fails, and you order dinner instead of starting the whole thing over.',
       'A push to change your morning routine can get an easy “it is fine” from you.',
       'You can feel at ease with how the week runs, even when someone else would tweak it.',
     ],

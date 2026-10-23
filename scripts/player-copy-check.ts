@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { buildStoryLibraryDraftPrompt } from '../src/lib/story-library/draft-prompt';
-import { sceneReuse, SHAPE_CAP, shapeStats, textIssues } from '../src/lib/voice/player-copy';
+import { metaphorSymbolIssues, sceneReuse, SHAPE_CAP, shapeStats, textIssues } from '../src/lib/voice/player-copy';
 import { playerCopyIssues } from '../src/lib/voice/player-copy-scan';
 
 const bad = textIssues('The untried option gets the first look. You tend to embrace the journey.');
@@ -21,8 +21,13 @@ assert.ok(textIssues('People tend to call first.').some((issue) => issue.label =
 assert.ok(bad.some((issue) => issue.label === 'Embrace'));
 assert.ok(bad.some((issue) => issue.label === 'Journey'));
 
-const good = textIssues('The specials board wins, and a new ticket is already open.');
+const good = textIssues('The group chat names a new city, and the listing is already open.');
 assert.equal(good.length, 0, good.map((issue) => issue.detail).join('; '));
+const symbols = metaphorSymbolIssues('You opened a new ticket when the specials board still had a blank line, then let the loud option wait by the kettle.');
+for (const label of ['ticket', 'specials board', 'loud option', 'kettle']) {
+  assert.ok(symbols.some((issue) => issue.label === label), label);
+}
+assert.ok(metaphorSymbolIssues('She reached the same fork with a different bag and pulled up a chair in a costume.').length >= 4);
 
 assert.ok(textIssues('That was lowkey the whole plan.').some((issue) => issue.detail.includes('casual')));
 assert.equal(textIssues('That was lowkey the whole plan.', { casual: true }).length, 0);
@@ -34,9 +39,9 @@ assert.equal(textIssues('The real journey took years.', { allowJourney: true }).
 const capped = shapeStats(['One?', 'Two?', 'Three?', 'Four.']);
 assert.ok(capped.share > SHAPE_CAP);
 
-const reused = sceneReuse({ openness: 'the kettle boiled', conscientiousness: 'the checkbox held' });
-assert.ok(reused.some((issue) => issue.detail.includes('specials board')));
-assert.ok(reused.some((issue) => issue.detail.includes('kettle')));
+const reused = sceneReuse({ openness: 'left early', conscientiousness: 'the group chat held' });
+assert.ok(reused.some((issue) => issue.detail.includes('group chat') && issue.detail.includes('conscientiousness')));
+assert.ok(reused.some((issue) => issue.detail.includes('packing list')));
 
 const guide = readFileSync(resolve(__dirname, '../docs/voice-guide.md'), 'utf8');
 const prompt = buildStoryLibraryDraftPrompt(guide);
