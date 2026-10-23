@@ -19,7 +19,7 @@ import { ActivityIndicator, Linking, Modal, Pressable, StyleSheet, View } from '
 import { AiBadge } from '@/components/ai-badge';
 import { LibraryCardFooter } from '@/components/library-card-footer';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AXIS_POLE_NAME } from '@/lib/axis-poles';
 import { shownFacts, shownMoments, titleCase, type LegendStory } from '@/lib/legend-figures/story';
@@ -93,6 +93,14 @@ function HallBadge({ hall, size = 48 }: { hall: LegendHall; size?: number }) {
 }
 
 function LabelHead({ legend }: { legend: LegendFigure }) {
+  const theme = useTheme();
+  // The name is the card heading. Soft and the other display themes ship
+  // Rajdhani at 600, so this one step uses the bold face. Zen keeps its serif
+  // and only raises the weight. A numeric weight next to Rajdhani swaps the
+  // loaded face for a synthetic one, so the bold family carries the weight.
+  const nameFace = theme.useSerifHeadings
+    ? { fontWeight: '700' as const }
+    : { fontFamily: Fonts.displayBold, fontWeight: 'normal' as const };
   return (
     <>
       <View style={styles.chips}>
@@ -104,7 +112,9 @@ function LabelHead({ legend }: { legend: LegendFigure }) {
       <View style={styles.nameRow}>
         <HallBadge hall={legend.hall} />
         <View style={styles.flex}>
-          <ThemedText type="subheading">{legendTitle(legend)}</ThemedText>
+          <ThemedText type="heading" style={[styles.legendName, nameFace]}>
+            {legendTitle(legend)}
+          </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             {legend.essence}
           </ThemedText>
@@ -521,6 +531,8 @@ const styles = StyleSheet.create({
   // the card instead of running off its edge.
   chip: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, maxWidth: '100%' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  /** Long names wrap inside the row (min width 0) instead of running off the card. */
+  legendName: { flexShrink: 1, minWidth: 0 },
   badge: { alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1, minWidth: 0 },
   frame: {
