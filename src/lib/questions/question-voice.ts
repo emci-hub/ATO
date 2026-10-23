@@ -105,7 +105,7 @@ export function assessQuestion(q: QuestionDraft, opts: AssessOptions = {}): Voic
 
   // Options.
   const n = q.options.length;
-  if (n < 2 || n > 3) hard('options', `${n} options (2-3 allowed)`);
+  if (n < 2 || n > 4) hard('options', `${n} options (2-4 allowed)`);
   const lengths: number[] = [];
   for (const o of q.options) {
     const t = o.text.trim();

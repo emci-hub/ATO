@@ -41,7 +41,14 @@ import {
   type LegendSkin,
 } from '@/lib/legends64/archetypes';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
-import { isAxisSettled, LABEL_MIN_ANSWERS, trackFor, traitScore, type TraitTrack } from '@/lib/trait-stability';
+import {
+  isAxisSettled,
+  isPublicCardAxis,
+  labelMinAnswers,
+  trackFor,
+  traitScore,
+  type TraitTrack,
+} from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean, type TraitSource } from '@/lib/traits';
 
 export const IDENTITY_AXES: readonly TraitAxis[] = [...CORE_AXES, ...MODIFIER_AXES, ...THIRD_AXES];
@@ -279,7 +286,8 @@ export function topTraitPhrases(tracks: readonly TraitTrack[], count = 3): strin
   const rows: { strength: number; phrase: string }[] = [];
   for (const axis of TRAIT_AXES) {
     const row = trackFor(tracks, axis, 'report');
-    if (!row || row.answerCount < LABEL_MIN_ANSWERS || !Number.isFinite(row.value)) continue;
+    if (!isPublicCardAxis(axis)) continue;
+    if (!row || row.answerCount < labelMinAnswers(axis) || !Number.isFinite(row.value)) continue;
     const score = traitScore(row);
     if (score == null) continue;
     const strength = Math.abs(score - 0.5);

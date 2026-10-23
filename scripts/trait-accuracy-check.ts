@@ -12,7 +12,7 @@ import { resolve } from 'node:path';
 
 import { archetypeName } from '../src/lib/legends64/archetypes';
 import { closestArchetypes, midpointHighLow } from '../src/lib/legends64/classify';
-import { legendHeadline, type LockedPoles } from '../src/lib/legends64/identity';
+import { legendHeadline, topTraitPhrases, type LockedPoles } from '../src/lib/legends64/identity';
 import {
   collectedLegendIds,
   LEGEND_GROWN_OUT_LINE,
@@ -31,13 +31,25 @@ import {
   LABEL_MIN_ANSWERS,
   recencyReading,
   SCORE_PRIOR_ANSWERS,
+  ATTACHMENT_MIN_ANSWERS,
+  isAttachmentAxis,
+  isPublicCardAxis,
   traitConfidence,
   traitScore,
   type TraitTrack,
 } from '../src/lib/trait-stability';
-import { isDirectTraitSource } from '../src/lib/traits';
+import { shapedByRow } from '../src/lib/shaped-by';
+import {
+  CORRECTION_SAVED,
+  SELF_CORRECTION_WEIGHT,
+  legendCorrectionSamples,
+  traitNudgeValue,
+} from '../src/lib/self-correction';
+import { publicCardPoints, traitShapePoints } from '../src/lib/trait-shape';
+import { WAVE116_OPTION_IDS } from './gen-wave85-bank';
+import { cronbachAlpha, itemTotalCorrelations, retestStability } from '../src/lib/trait-item-stats';
+import { isDirectTraitSource, writeForOptionalScreen } from '../src/lib/traits';
 import { SCENARIO_QUESTIONS } from '../src/lib/vibe-check';
-import { writeForOptionalScreen } from '../src/lib/traits';
 
 let passed = 0;
 function ok(label: string) {
@@ -293,11 +305,77 @@ assert.equal(LEGEND_RESTORED_LINE, 'This name fits again.');
 const card = readFileSync(resolve(__dirname, '../src/components/identity-card.tsx'), 'utf8');
 const pick = card.slice(card.indexOf('headline.choices.map'), card.indexOf('{progress ?'));
 assert.doesNotMatch(pick, /recordLegendForm|reconcileLegendForms/);
-assert.match(pick, /Display only/);
+assert.match(pick, /Not a collected legend/);
+assert.match(pick, /pickCloser/);
+assert.match(card, /publicCardPoints/);
 const sql = readFileSync(resolve(__dirname, '../supabase/migrations/wave115_legend_forms.sql'), 'utf8');
 assert.match(sql, /p_archive is honoured only on the one-time migration/);
 assert.match(sql, /delete from public\.legend_forms where user_id = uid/);
 assert.match(sql, /delete from public\.legend_form_state where user_id = uid/);
 ok('the card pick does not record a legend, and the server keeps the archive to one migration');
+
+assert.equal(SELF_CORRECTION_WEIGHT, 1);
+assert.equal(traitNudgeValue(0.8, 'other'), 0.2);
+assert.equal(traitNudgeValue(0.2, 'other'), 0.8);
+assert.equal(traitNudgeValue(0.8, 'softer'), 0.65);
+const beforeNudge = equalWeightScore([0.8, 0.8, 0.8, 0.8]);
+const afterNudge = equalWeightScore([0.8, 0.8, 0.8, 0.8, { value: 0.2, weight: SELF_CORRECTION_WEIGHT }]);
+assert.ok(beforeNudge != null && afterNudge != null && afterNudge < beforeNudge && afterNudge > 0.6 && afterNudge !== 0.2);
+ok('Not me is one weighted answer; it nudges the score and does not lock the other end');
+
+function answered(axis: TraitTrack['axis'], n: number, value: number): TraitTrack {
+  let row: TraitTrack | null = null;
+  for (let i = 0; i < n; i += 1) row = applyEwmaAnswer(row, axis, 'report', value, NOW);
+  return { ...row!, answerSamples: Array.from({ length: n }, () => value) };
+}
+const closer = legendCorrectionSamples(
+  [answered('conscientiousness', 4, 0.8), answered('agreeableness', 4, 0.5)],
+  {},
+  'HHH-LHH',
+);
+assert.ok(!closer.some((row) => row.axis === 'conscientiousness'));
+assert.deepEqual(
+  closer.find((row) => row.axis === 'agreeableness'),
+  { axis: 'agreeableness', value: 0.2, weight: 1 },
+);
+assert.ok(closer.every((row) => row.weight === SELF_CORRECTION_WEIGHT));
+const correctionSql = readFileSync(resolve(__dirname, '../supabase/migrations/wave117_self_correction.sql'), 'utf8');
+assert.match(correctionSql, /does not set a direct source/);
+assert.match(correctionSql, /trait_sources ->> p_axis = 'self_confirm'/);
+assert.match(correctionSql, /'correction'/);
+const correctionBody = correctionSql.slice(correctionSql.indexOf('as $$'));
+assert.doesNotMatch(correctionBody, /self_slider|self_settings|self_tap/);
+assert.match(readFileSync(resolve(__dirname, '../src/components/full-profile-fold.tsx'), 'utf8'), /TraitResultCorrection/);
+assert.equal(CORRECTION_SAVED, 'Saved as one answer. Later answers can still move this.');
+ok('a closer legend writes weighted answers on the axes that differ, and never a direct lock');
+
+assert.equal(ATTACHMENT_MIN_ANSWERS, 5);
+assert.equal(isAttachmentAxis('attachment_anxiety'), true);
+assert.equal(isPublicCardAxis('attachment_anxiety'), false);
+const learning = shapedByRow('attachment_anxiety', [answered('attachment_anxiety', 4, 0.8)]);
+assert.equal(learning.lean, null);
+assert.equal(learning.line, CONFIDENCE_LEARNING_COPY);
+const shown = shapedByRow('attachment_anxiety', [answered('attachment_anxiety', 5, 0.8)]);
+assert.equal(shown.lean, 'high');
+const phrases = topTraitPhrases([answered('attachment_anxiety', 8, 0.9), answered('openness', 8, 0.8)]);
+assert.deepEqual(phrases, ['Goes for the untried option']);
+const shape = publicCardPoints(traitShapePoints(null, [answered('attachment_anxiety', 8, 0.9), answered('openness', 8, 0.8)]));
+assert.equal(shape.find((point) => point.axis === 'attachment_anxiety')?.lean, null);
+assert.equal(shape.find((point) => point.axis === 'openness')?.lean != null, true);
+ok('attachment traits stay unnamed until 5 answers and off the public card');
+
+assert.equal(WAVE116_OPTION_IDS.length, 17);
+assert.ok(WAVE116_OPTION_IDS.includes('openness_03'));
+assert.ok(WAVE116_OPTION_IDS.includes('growth_mindset_01'));
+const alpha = cronbachAlpha([
+  [1, 1, 1],
+  [2, 2, 2],
+  [3, 3, 3],
+  [4, 4, 4],
+]);
+assert.ok(alpha != null && Math.abs(alpha - 1) < 1e-9);
+assert.ok(itemTotalCorrelations([[1, 1], [2, 2], [3, 3], [4, 4]]).every((value) => value != null && value > 0.99));
+assert.ok(Math.abs((retestStability([0.2, 0.5, 0.8], [0.2, 0.5, 0.8]) ?? 0) - 1) < 1e-9);
+ok('item stats: alpha, item-total and retest are ready for a later run of about 300 people');
 
 console.log(`\n${passed} trait-accuracy checks passed`);

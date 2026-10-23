@@ -3,11 +3,13 @@ import { intake, q, retired, traitBank } from './define';
 /** Connection: "I'm good on my own today" (low) to "I need a real conversation" (high). */
 export const RELATEDNESS_BANK = traitBank('relatedness', [
   intake(1, q('relatedness_01', 'friends', 'neither', 'A friend cancels by text an hour before, no real reason given.',
-    ["I'd want to talk it through", 0.8], ["I'd let it go, check in eventually", 0.2])),
+    ["I'd want to talk it through", 0.8], ["I'd let it go, check in eventually", 0.2],
+    ['Depends what they said', 0.5], ['I call them that night', 0.95])),
   intake(2, q('relatedness_02', 'solo', 'neither', 'Good news pops up on your phone on an ordinary Tuesday.',
     ["I'm texting someone before I sit down", 0.8], ['It comes up next time we talk', 0.5], ['I just enjoy it', 0.2])),
   intake(3, q('relatedness_03', 'solo', 'neither', 'A whole day with no messages from anyone.',
-    ['I feel the gap', 0.8], ['Bliss', 0.2])),
+    ['I feel the gap', 0.8], ['Bliss', 0.2],
+    ['Depends today', 0.5], ['I miss the chat', 0.95])),
   q('relatedness_04', 'work', 'neither', 'Working from home all week, no meetings on the calendar.',
     ['I miss people by Wednesday', 0.8], ['A call or two would help', 0.5], ['Best week in months', 0.2]),
   q('relatedness_05', 'work', 'low', 'A coworker asks how your weekend was, and means it.',

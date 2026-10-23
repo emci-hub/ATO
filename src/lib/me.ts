@@ -25,9 +25,11 @@ import {
 import { forcedPickForAxis, rankingWritePreview, scoreForcedPick } from '@/lib/ranking';
 import { SCENARIO_DECK, type ExtraAxis, type ScenarioPole } from '@/lib/scenario';
 import { allowedAxesForSource, type TraitAxis, type TraitSource } from '@/lib/traits';
+import type { SelfCorrection } from '@/lib/self-correction';
 import {
   confirmTraitSources,
   recordGamePick,
+  recordSelfCorrection,
   setTraitDirect,
   type MeRowJson,
 } from '@/lib/trait-checkpoint';
@@ -486,6 +488,24 @@ export async function updateTraits(
 export async function confirmTraits(userId: string, axes: readonly TraitAxis[]): Promise<Me> {
   void userId;
   return rowToMe(await confirmTraitSources(axes));
+}
+
+/**
+ * "Not me": each row is one weighted answer. Not a settings write and not a
+ * confirm lock. The last row's account is what comes back.
+ */
+export async function recordSelfCorrections(userId: string, rows: readonly SelfCorrection[]): Promise<Me> {
+  void userId;
+  let latest: MeRowJson | null = null;
+  for (const row of rows) {
+    latest = await recordSelfCorrection(row.axis, row.value, row.weight);
+  }
+  if (!latest) {
+    const current = await fetchMe(userId);
+    if (!current) throw new Error('Not authenticated');
+    return current;
+  }
+  return rowToMe(latest);
 }
 
 async function persistMe(

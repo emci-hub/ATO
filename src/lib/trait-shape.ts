@@ -11,8 +11,8 @@
  * report-track value when there is one, else the raw `me` column. The game
  * track never mixes in.
  */
+import { isPublicCardAxis, isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
-import { isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
 
 export type ShapePointState = 'blank' | 'settling' | 'settled';
 
@@ -36,6 +36,17 @@ export function traitShapePoints(
     const lean = Math.min(1, Math.max(0, raw));
     return { axis, lean, state: isAxisSettled(row, now) ? ('settled' as const) : ('settling' as const) };
   });
+}
+
+/**
+ * The shape on a card someone else can see. Closeness traits sit on the
+ * middle ring, the same as an unanswered spoke, so the picture does not
+ * show which way those two lean.
+ */
+export function publicCardPoints(points: readonly ShapePoint[]): ShapePoint[] {
+  return points.map((point) =>
+    isPublicCardAxis(point.axis) ? point : { ...point, lean: null, state: 'blank' },
+  );
 }
 
 /** How many spokes have a point. Drives the empty / partial / full look. */

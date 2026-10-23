@@ -18,7 +18,7 @@ import { CORE_AXES, LEGEND_HIGH_EDGE, LEGEND_LOW_EDGE, MODIFIER_AXES, THIRD_AXES
 import {
   confidenceLabel,
   isAxisSettled,
-  LABEL_MIN_ANSWERS,
+  labelMinAnswers,
   trackFor,
   traitScore,
   type TraitTrack,
@@ -78,9 +78,9 @@ export function shapedByRow(
   }
   const settled = isAxisSettled(row, now);
   const confidenceCopy = confidenceLabel(row.answerCount);
-  // The pole word ("Adventurous") stays hidden until 3 answers, and while
-  // the score sits in the legend middle zone.
-  if (row.answerCount < LABEL_MIN_ANSWERS) {
+  // The pole word ("Adventurous") stays hidden until 3 answers (5 for the
+  // closeness traits), and while the score sits in the legend middle zone.
+  if (row.answerCount < labelMinAnswers(axis)) {
     return { axis, label, lean: null, poleName: null, line: confidenceCopy ?? SHAPED_BY_NOT_ANSWERED, settled, confidenceCopy };
   }
   if (score >= LEGEND_LOW_EDGE && score <= LEGEND_HIGH_EDGE) {

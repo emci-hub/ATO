@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { InfoReveal, quoted } from '@/components/info-reveal';
 import { AxisTaps } from '@/components/axis-taps';
+import { TraitResultCorrection } from '@/components/trait-correction';
 import { DepthDive } from '@/components/depth-dive';
 import { SettingsFold } from '@/components/settings-fold';
 import { TraitBandVisual } from '@/components/trait-bands-fold';
@@ -20,7 +21,8 @@ import {
   formatTraitTouchedAt,
   sourceProvenance,
 } from '@/lib/full-profile';
-import { updateTraits, type Me } from '@/lib/me';
+import { confirmTraits, recordSelfCorrections, updateTraits, type Me } from '@/lib/me';
+import { SELF_CORRECTION_WEIGHT } from '@/lib/self-correction';
 import { isTraitFirm, NOT_ME_LABEL, NOT_ME_ON_LINE } from '@/lib/questions/bank-sets';
 import { fetchTraitFlags, setTraitFlag } from '@/lib/questions/bank-sets-server';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
@@ -33,7 +35,15 @@ import {
   type TraitHistoryRow,
 } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
-import { settledAxisLabel, settlingLine, trackFor, traitScore, type TraitTrack } from '@/lib/trait-stability';
+import {
+  ATTACHMENT_MIN_ANSWERS,
+  isAttachmentAxis,
+  settledAxisLabel,
+  settlingLine,
+  trackFor,
+  traitScore,
+  type TraitTrack,
+} from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import {
   TRAIT_AXES,
@@ -156,6 +166,8 @@ export function FullProfileFold({
           // An axis you set yourself only counts question answers, it never
           // blends them, so "N more and this firms up" would not be true there.
           const settling = isDirectTraitSource(state.sources[axis]) ? null : settlingLine(report);
+          const hideAttachment =
+            isAttachmentAxis(axis) && (report?.answerCount ?? 0) < ATTACHMENT_MIN_ANSWERS;
           const open = editing === axis;
           const shifts = historyForAxis(history, axis);
           const showingShift = openShift === axis;
@@ -207,11 +219,11 @@ export function FullProfileFold({
                   Draft copy — waiting on emci review.
                 </ThemedText>
               ) : null}
-              {filled ? (
+              {filled && !hideAttachment ? (
                 <TraitBandVisual
                   band={{ axis, value, low: phrases.low, high: phrases.high }}
                 />
-              ) : (
+              ) : filled ? null : (
                 <ThemedText type="small" themeColor="textSecondary">
                   {NOT_ANSWERED_YET}
                 </ThemedText>
@@ -225,6 +237,22 @@ export function FullProfileFold({
                 <ThemedText type="code" themeColor="textSecondary">
                   Firm · your answers here mostly agree
                 </ThemedText>
+              ) : null}
+              {filled && typeof value === 'number' ? (
+                <TraitResultCorrection
+                  score={value}
+                  disabled={busy}
+                  onStillFits={async () => {
+                    await confirmTraits(me.id, [axis]);
+                    await onUpdated();
+                  }}
+                  onNudge={async (next) => {
+                    await recordSelfCorrections(me.id, [
+                      { axis, value: next, weight: SELF_CORRECTION_WEIGHT },
+                    ]);
+                    await onUpdated();
+                  }}
+                />
               ) : null}
               {provenance ? (
                 <ThemedText type="small" themeColor="textSecondary">

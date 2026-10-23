@@ -116,7 +116,7 @@ export interface TraitTrack {
    * from `trait_answers`. Absent when the log was not loaded. Not persisted
    * on `trait_tracks`.
    */
-  answerSamples?: readonly number[];
+  answerSamples?: readonly ScoreSample[];
 }
 
 /**
@@ -261,7 +261,13 @@ export function replayTraitAnswers(
   for (const sample of samples) {
     track = applyEwmaAnswer(track, axis, 'report', sample, nowIso);
   }
-  return track ? { ...track, lastDepthAt, answerSamples: samples.map((sample) => clamp01(sample)) } : null;
+  return track
+    ? {
+        ...track,
+        lastDepthAt,
+        answerSamples: samples.map((sample) => clamp01(sample)),
+      }
+    : null;
 }
 
 /**
@@ -273,6 +279,26 @@ export const SCORE_PRIOR_ANSWERS = 2;
 export const SCORE_PRIOR_MEAN = 0.5;
 /** A pole name stays hidden until this many answers exist. */
 export const LABEL_MIN_ANSWERS = 3;
+/**
+ * Closeness traits (attachment anxiety and avoidance) stay unnamed until
+ * more answers exist. One texting scene is not enough to show them.
+ */
+export const ATTACHMENT_MIN_ANSWERS = 5;
+
+export function isAttachmentAxis(axis: string): boolean {
+  return axis === 'attachment_anxiety' || axis === 'attachment_avoidance';
+}
+
+/** How many answers a trait needs before its pole name is shown. */
+export function labelMinAnswers(axis: string): number {
+  return isAttachmentAxis(axis) ? ATTACHMENT_MIN_ANSWERS : LABEL_MIN_ANSWERS;
+}
+
+/** Attachment leans never go on a card another person can see. */
+export function isPublicCardAxis(axis: string): boolean {
+  return !isAttachmentAxis(axis);
+}
+
 /** At 8 answers the data outweighs the prior 4:1 (confidence 0.8). */
 export const SOLID_READ_MIN_ANSWERS = 8;
 export const CONFIDENCE_LEARNING_COPY = 'still learning you';

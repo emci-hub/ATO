@@ -15,6 +15,7 @@
  *                         the value, never counts as an answer
  *   recordGamePick        the gut-call game: 0.2 or 0.8, game track
  *   confirmTraitSources   "still fits": source becomes self_confirm
+ *   recordSelfCorrection  "not me": one weighted answer, not a lock
  *   stampAxisDepth        the depth-dive timestamp
  *   applyDevTraitPreset   dev "Jump this account" (pre-launch only)
  *   answerDailyPick       Today's Pick (wave82): counts as an answer only on a
@@ -85,6 +86,11 @@ export function recordGamePick(axis: TraitAxis, value: 0.2 | 0.8): Promise<MeRow
 
 export function confirmTraitSources(axes: readonly TraitAxis[]): Promise<MeRowJson> {
   return call('confirm_trait_sources', { p_axes: [...axes] });
+}
+
+/** One weighted self-correction. Not a direct edit and not a legend collect. */
+export function recordSelfCorrection(axis: TraitAxis, value: number, weight: number): Promise<MeRowJson> {
+  return call('record_self_correction', { p_axis: axis, p_value: value, p_weight: weight });
 }
 
 export async function stampAxisDepth(axis: TraitAxis): Promise<void> {

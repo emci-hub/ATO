@@ -28,14 +28,22 @@ function optionsJson(draft: QuestionDraft): string {
   return JSON.stringify(draft.options.map((opt) => ({ text: opt.text, value: opt.value })));
 }
 
+/** Wave84 is frozen. Later option appends (wave116) are not part of that file. */
+function wave84Draft(current: QuestionDraft, frozen: QuestionDraft): QuestionDraft {
+  return { ...current, options: current.options.slice(0, frozen.options.length) };
+}
+
 export function wave84IntakeRows(): { draft: QuestionDraft; setNo: number }[] {
-  return intakeRowsOf(QUESTIONS_BANK);
+  return intakeRowsOf(QUESTIONS_BANK).map((row, i) => ({
+    ...row,
+    draft: wave84Draft(row.draft, QUESTIONS_BANK_V1[i]!),
+  }));
 }
 
 /** [old row, new row] for every authored pool row this bank seeded. */
 export function wave84PoolPairs(): [QuestionDraft, QuestionDraft][] {
   const out: [QuestionDraft, QuestionDraft][] = [];
-  QUESTIONS_BANK_V1.forEach((row, i) => out.push([row, QUESTIONS_BANK[i]!]));
+  QUESTIONS_BANK_V1.forEach((row, i) => out.push([row, wave84Draft(QUESTIONS_BANK[i]!, row)]));
   ROUND_ONLY_BANK_V1.forEach((row, i) => out.push([row, ROUND_ONLY_BANK[i]!]));
   return out;
 }

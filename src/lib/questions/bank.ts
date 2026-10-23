@@ -26,8 +26,8 @@ import type { QuestionDraft } from './types';
  * Several rows are quoted verbatim in QUESTIONS_FEW_SHOTS below; keep them in
  * step (`check:questions` asserts them).
  *
- * Multiple choice only, 2 or 3 options, never free text: `parseQuestionDraft`
- * and the `insert_question_pack` RPC both reject anything outside 2-3.
+ * Multiple choice, never free text. The fixed bank's former 2-option rows
+ * now have 4: the original two stay first, then a middle and a stronger end.
  * Higher `value` = higher on the axis, consistently within an axis group.
  *
  * Every stem and every option must clear `questionDraftGuardHit` (framework
@@ -65,6 +65,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: "I'm in, that's the fun part", value: 0.8 },
       { text: "I'd probably pass", value: 0.2 },
+      { text: 'Depends who else is going', value: 0.5 },
+      { text: 'I already said yes', value: 0.95 },
     ],
   },
   // --- conscientiousness --------------------------------------------------------
@@ -95,6 +97,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: 'I still send it', value: 0.8 },
       { text: 'It quietly disappears', value: 0.2 },
+      { text: 'Depends how tired I am', value: 0.5 },
+      { text: 'I forget it happened', value: 0.05 },
     ],
   },
   // --- extraversion -------------------------------------------------------------
@@ -125,6 +129,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: "I'm going to at least one", value: 0.8 },
       { text: 'Couch. Phone on silent', value: 0.2 },
+      { text: 'Depends who texted', value: 0.5 },
+      { text: "I'm going to all of them", value: 0.95 },
     ],
   },
   // --- agreeableness ------------------------------------------------------------
@@ -155,6 +161,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: 'I give them the benefit of the doubt', value: 0.8 },
       { text: 'Bad day or not, wrong is wrong', value: 0.2 },
+      { text: 'Depends how wrong it is', value: 0.5 },
+      { text: 'I say it, rough day or not', value: 0.05 },
     ],
   },
   // --- steadiness ---------------------------------------------------------------
@@ -227,6 +235,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: "Sure, that's fine when it matters", value: 0.2 },
       { text: "I'd rather keep it lighter, over text", value: 0.8 },
+      { text: 'Depends how the week went', value: 0.5 },
+      { text: "I'd rather skip the call", value: 0.95 },
     ],
   },
   {
@@ -277,6 +287,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: 'I ask anyway', value: 0.8 },
       { text: 'I let it go', value: 0.2 },
+      { text: 'Depends how big it is', value: 0.5 },
+      { text: 'I drop it completely', value: 0.05 },
     ],
   },
   // --- conflict_cooperativeness -------------------------------------------------
@@ -380,6 +392,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: "I'd want to talk it through", value: 0.8 },
       { text: "I'd let it go, check in eventually", value: 0.2 },
+      { text: 'Depends what they said', value: 0.5 },
+      { text: 'I call them that night', value: 0.95 },
     ],
   },
   {
@@ -399,6 +413,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: 'I feel the gap', value: 0.8 },
       { text: 'Bliss', value: 0.2 },
+      { text: 'Depends today', value: 0.5 },
+      { text: 'I miss the chat', value: 0.95 },
     ],
   },
   // --- growth_mindset -----------------------------------------------------------
@@ -409,6 +425,8 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: "I look at what I'd do differently", value: 0.8 },
       { text: "I probably don't try that again", value: 0.2 },
+      { text: 'Depends what I missed', value: 0.5 },
+      { text: "That's just not for me", value: 0.05 },
     ],
   },
   {
@@ -833,11 +851,11 @@ export const LEGACY_INTAKE_PROMPTS: readonly { axis: QuestionDraft['axis']; prom
  */
 export const QUESTIONS_FEW_SHOTS = `1. Openness: "A new place opened next to your usual spot, and your usual order is already in the app." Options: "I try the new place" / "I save it for next week" / "Usual order. It's right there"
 
-2. Relatedness: "A friend cancels by text an hour before, no real reason given." Options: "I'd want to talk it through" / "I'd let it go, check in eventually"
+2. Relatedness: "A friend cancels by text an hour before, no real reason given." Options: "I'd want to talk it through" / "I'd let it go, check in eventually" / "Depends what they said" / "I call them that night"
 
 3. Attachment_anxiety: "You sent a long message an hour ago. It says Read." Options: "I check back more than I'd admit" / "I notice, then put the phone down" / "I forget I sent it"
 
-4. Attachment_avoidance, balanced options: "Someone close to you wants to talk something out in person instead of over text." Options: "Sure, that's fine when it matters" / "I'd rather keep it lighter, over text"
+4. Attachment_avoidance, balanced options: "Someone close to you wants to talk something out in person instead of over text." Options: "Sure, that's fine when it matters" / "I'd rather keep it lighter, over text" / "Depends how the week went" / "I'd rather skip the call"
 
 5. Self-efficacy, low-stakes and fun: "Everyone at the table already knows their order. You don't." Options: "I panic-order whatever's closest" / "Takes a sec, but I land on something" / "I pick something and own it"
 

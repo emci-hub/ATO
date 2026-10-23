@@ -171,6 +171,7 @@
     "check:traits": "tsx ./scripts/traits-check.ts",
     "check:trait-stability": "tsx ./scripts/trait-stability-check.ts",
     "check:trait-accuracy": "tsx ./scripts/trait-accuracy-check.ts",
+    "trait:item-stats": "tsx ./scripts/trait-item-stats.ts",
     "check:kalman": "tsx ./scripts/kalman-check.ts",
     "check:tiered-axis-plan": "tsx ./scripts/tiered-axis-plan-check.ts",
     "check:milestones": "tsx ./scripts/milestones-check.ts",

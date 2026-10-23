@@ -42,7 +42,9 @@ for (const [before, after, name] of [
     const now = after[i]!;
     assert.equal(now.axis, old.axis, `${name} ${i}: trait`);
     assert.equal(now.category, old.category, `${name} ${i}: category`);
-    assert.deepEqual(now.options.map((o) => o.value), old.options.map((o) => o.value), `${name} ${i}: values in the same order`);
+    const nowValues = now.options.map((o) => o.value);
+    const oldValues = old.options.map((o) => o.value);
+    assert.deepEqual(nowValues.slice(0, oldValues.length), oldValues, `${name} ${i}: original values stay in order`);
   });
 }
 ok('70 rows reworded in place: same trait, category, set (position) and value at every option index');

@@ -60,10 +60,17 @@ import {
   type IdentityState,
 } from '@/lib/legends64/identity-store';
 import { STYLE_ROW_LABEL } from '@/lib/polish-copy';
+import { recordSelfCorrections } from '@/lib/me';
+import {
+  CORRECTION_SAVED,
+  LEGEND_CLOSER_LEAD,
+  LEGEND_NOT_ME,
+  legendCorrectionSamples,
+} from '@/lib/self-correction';
 import { IDENTITY_RECIPE_LABEL, IDENTITY_RECIPE_LEDE, identityRecipe } from '@/lib/shaped-by';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { useAppearance } from '@/lib/theme/context';
-import { traitShapePoints } from '@/lib/trait-shape';
+import { publicCardPoints, traitShapePoints } from '@/lib/trait-shape';
 import { confidenceSummary, type TraitTrack } from '@/lib/trait-stability';
 import { traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
@@ -101,6 +108,7 @@ export function IdentityCard({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [correctionNote, setCorrectionNote] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -278,6 +286,24 @@ export function IdentityCard({
     setBusy(false);
   }
 
+  async function pickCloser(code: string) {
+    if (!state || !tracks || busy) return;
+    const rows = legendCorrectionSamples(tracks, sources, code);
+    setBusy(true);
+    try {
+      if (rows.length > 0) await recordSelfCorrections(me.id, rows);
+      const nextTracks = rows.length > 0 ? await fetchTraitTracks(me.id) : tracks;
+      if (rows.length > 0) setTracks(nextTracks);
+      await update({ ...state, pickedCode: code });
+      setCorrectionNote(rows.length > 0 ? CORRECTION_SAVED : null);
+      if (rows.length > 0) void onUpdated?.();
+    } catch (err) {
+      console.log('[identity] correction error:', err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       {/* The hero band: your shape as the emblem, the mini guy beside it. */}
@@ -354,6 +380,9 @@ export function IdentityCard({
       ) : null}
       {headline.choices.length >= 2 && headline.kind !== 'exact' ? (
         <View style={styles.styles}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {LEGEND_NOT_ME}. {LEGEND_CLOSER_LEAD}
+          </ThemedText>
           {headline.choices.map((choice) => {
             const selected = state.pickedCode === choice.code;
             return (
@@ -362,9 +391,10 @@ export function IdentityCard({
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
                 accessibilityLabel={choice.title}
+                disabled={busy}
                 onPress={() => {
-                  // Display only. The tap is not a collected legend.
-                  void update({ ...state, pickedCode: selected ? null : choice.code });
+                  // Weighted answers on the traits that differ. Not a collected legend.
+                  void pickCloser(choice.code);
                 }}
                 style={[
                   styles.choice,
@@ -377,6 +407,11 @@ export function IdentityCard({
               </ThemedPressable>
             );
           })}
+          {correctionNote ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {correctionNote}
+            </ThemedText>
+          ) : null}
         </View>
       ) : null}
       {progress ? (
@@ -530,7 +565,7 @@ export function IdentityCard({
         visible={sharing}
         onClose={() => setSharing(false)}
         me={me}
-        content={{ kind: 'identity', title, traits, shape: traitShapePoints(me, tracks) }}
+        content={{ kind: 'identity', title, traits, shape: publicCardPoints(traitShapePoints(me, tracks)) }}
       />
     </ThemedView>
   );
