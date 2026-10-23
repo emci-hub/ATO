@@ -476,7 +476,28 @@ the last 3 days succeeded (432 / 1 / 72); the monthly job calls `snapshot_profil
 2026-11-01). Docs truth pass (part of S12) done: CLAUDE.md header, wave80/wave100 status, deep-dive "crisis day", AI-token
 line; NOW superseded notes; OPEN-QUESTIONS 8; sage-cleanup §4; master-plan line 302.
 
-**Step A3 progress (2026-10-22, no input needed so far; nothing applied or deployed):**
+**A2 hand steps (emci 2026-10-22): all done** — DeepSeek key unset, wave111 applied (verified: job `retention-daily`, 0 access requests), landing redeployed, Box 77 passed, Gemini plan checked.
+
+**Step A3 status (2026-10-22): DONE, server only, no OTA.** emci's answers: S2 defer (reason below), S5 drop, S1 count + ids
+only, S7 delete. Built, applied and verified read-only:
+- **S5:** `wave112_a3_cleanup.sql` APPLIED: `play_dev_logs` dropped (1 test row; its only writer `src/play/dev-log.ts` runs only
+  while `PRE_LAUNCH_DEV` is on, now off — dead code for A5), and wave101's `trait_tracks_adult_insert/_update` +
+  `trait_history_adult_insert` dropped (no client write grant on either table, checked first). Verified: table null, 0 policies.
+- **S1 (D24):** `wave113_report_digest.sql` APPLIED + new Edge Function `report-digest` (deployed `--no-verify-jwt`; the Vault
+  token `report_digest_token` is the auth, same as ai-library-fill). Job `report-digest-daily` at 15:05 UTC emails
+  support@emgens.com via Resend only when reports (person / chat message / shared card) arrived in the last 24 h: count, ids,
+  kind, open total. Never reason, text, handle or reporter. Live test: right token 200 `sent:false` (0 reports), wrong token 401.
+  Known limit: a failed send is not retried the next day (the open total still shows open person/chat reports).
+- **S4:** `story` removed from the shared library (`LIBRARY_KINDS`, `server.ts`, `ai-library` Kind/refund map; `story.ts`
+  keeps only `STORY_ANGLES` for the free templates). No version bump (deep_dive l2, legend l2 unchanged). Bundle regenerated;
+  `ai-library` + `ai-library-fill` deployed. The server bundle has no "Write as Sage" text now; the two client-side copies
+  (`story-card.ts`, `sage-story.ts`) are only used by dead `rolls/*` code and leave with it in A5.
+- **S7:** `mint-session-once` and `apple-secrets-check` were 410 "gone" stubs (source read first); deleted by CLI.
+- Checks with pass/fail pairs: `ai-library` (Story refused), `circle-safety` (wave113 + email text), `server-hardening`
+  (wave112 = exactly four drops); `delete-proof` / `reset-account` lists tidied. Gate green (193 checks), reviewer PASS.
+  Box 78 written (report → next-day email).
+
+**Step A3 progress notes (2026-10-22, earlier in the day):**
 - **S3 built, NOT applied:** `supabase/migrations/wave110_public_card_fields_guard.sql`, a trigger like the live
   `me_name_guard`. On a change, `show_up` / `talk_style` take only the app's chips; NULL and '' pass; stored values are not
   touched. Read-only count 2026-10-22: 9 accounts, 1 holds the older chip "getting through it", which stays readable.

@@ -25,10 +25,9 @@ import { resolve } from 'node:path';
 import { allDiveBuckets, diveBucketKey, parseDiveBucket, DEEP_DIVE_LIBRARY } from '../src/lib/ai-library/deep-dive';
 import { LEGEND_LIBRARY, legendBucketKey, parseLegendBucket } from '../src/lib/ai-library/legend';
 import { checkLibraryAnswer, planLibraryCall } from '../src/lib/ai-library/server';
-import { STORY_LIBRARY, parseStoryBucket } from '../src/lib/ai-library/story';
 import { TEAM_COPY_REVIEWED, TEAM_SIDES, teamForBucket } from '../src/lib/ai-library/teams';
 import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
-import { BUCKET_KEY_RE, LIBRARY_VERSION, sharedCardLine } from '../src/lib/ai-library/types';
+import { BUCKET_KEY_RE, LIBRARY_KINDS, LIBRARY_VERSION, isLibraryKind, sharedCardLine } from '../src/lib/ai-library/types';
 import { CATEGORY_DEFS } from '../src/lib/categories';
 import { legendPairs, legendDiffer } from '../src/lib/legend-figures/story';
 import { LEGEND_ROSTER } from '../src/lib/legend-figures/roster';
@@ -117,31 +116,23 @@ async function main() {
   assert.equal(checkLibraryAnswer('deep_dive', key, ['people'], clinical).cards.length, 0, 'a clinical word is rejected');
   ok('the server keeps only answers that pass the app’s own deep-dive checks');
 
-  // --- Story buckets --------------------------------------------------------------------
+  // --- Story left the library (roadmap A3 / S4, 2026-10-22) --------------------------------
+  // Story is free templates since 2026-10-14, so the server no longer writes Story cards.
+  // Pairs: the kinds that stay are planned (pass); 'story' is refused like any unknown kind (fail).
   const storyKey = 'st|cat_social:high:extraversion.h|cat_structure:hl:-|j:extraversion.h';
-  const sb = parseStoryBucket(storyKey);
-  assert.ok(sb, 'a two-side story bucket parses');
-  for (const bad of [
-    'st|cat_social:high:openness.h|j:-',
-    'st|cat_social:zz:-|j:-',
-    'st|cat_social:high:-|cat_social:low:-|j:-',
-    'st|cat_social:high:-|j:openness.h',
-    'st|j:-',
-  ]) {
-    assert.equal(parseStoryBucket(bad), null, `refused: ${bad}`);
-  }
-  const sp = planLibraryCall('story', storyKey, {});
-  assert.ok(sp.ok);
-  if (!sp.ok) return;
-  assert.equal(LIBRARY_VERSION.story, 'l4', 'story prompt/shape bump (honest-weaknesses rule in the prompt): old library cards stay on l3');
-  assert.equal(sp.maxOutputTokens, 800);
-  assert.match(sp.prompt, /Never invent a plot/);
-  assert.match(sp.prompt, /your date/);
-  assert.match(sp.prompt, /TOLD-VS-PLAYED: none\. Do not invent a split\./, 'the personal told-vs-played line never reaches a shared story');
-  assert.match(sp.prompt, /SETTING FOR THIS STORY: a plan with friends/);
-  const sp2 = planLibraryCall('story', storyKey, { friends: 1 });
-  assert.ok(sp2.ok && sp2.prompt !== sp.prompt && /SETTING FOR THIS STORY: a task at work/.test(sp2.prompt), 'another angle reads another setting and wording');
-  ok('Story buckets parse and refuse bad keys; no told-vs-played line, a setting per angle');
+  assert.deepEqual([...LIBRARY_KINDS], ['deep_dive', 'legend'], 'the library writes deep dives and Legends only');
+  assert.equal(isLibraryKind('deep_dive'), true, 'pass: deep_dive is a library kind');
+  assert.equal(isLibraryKind('story'), false, 'fail case: story is no longer a library kind');
+  assert.deepEqual(planLibraryCall('story', storyKey, {}), { ok: false, reason: 'kind' }, 'a story request is refused before anything is charged');
+  assert.ok(!('story' in LIBRARY_VERSION), 'no Story version left to serve');
+  assert.equal(LIBRARY_VERSION.deep_dive, 'l2', 'deep-dive shape unchanged (no bump)');
+  assert.equal(LIBRARY_VERSION.legend, 'l2', 'Legends shape unchanged (no bump)');
+  assert.doesNotMatch(built, /Write as Sage/, 'no "Write as Sage" prompt reaches the server');
+  assert.doesNotMatch(built, /STORY_LIBRARY|parseStoryBucket/, 'no Story prompt or bucket code in the server bundle');
+  const edgeKinds = read('supabase/functions/ai-library/index.ts');
+  assert.match(edgeKinds, /type Kind = 'deep_dive' \| 'legend';/, 'the Edge Function knows two kinds');
+  assert.doesNotMatch(edgeKinds, /story: 'story'/, 'no Story refund kind');
+  ok('Story is refused by the library; deep dives and Legends unchanged; no Sage prompt on the server');
 
   // --- Legends buckets ------------------------------------------------------------------
   let legendKeys = 0;
@@ -177,7 +168,7 @@ async function main() {
     const src = read(`src/lib/ai-library/${file}.ts`);
     assert.doesNotMatch(src, /userId|user_id|\bme\./, `${file}.ts never reads who the reader is`);
   }
-  for (const lib of [DEEP_DIVE_LIBRARY, STORY_LIBRARY, LEGEND_LIBRARY]) assert.equal(lib.readCard(null), null);
+  for (const lib of [DEEP_DIVE_LIBRARY, LEGEND_LIBRARY]) assert.equal(lib.readCard(null), null);
   ok('the shared prompts are built from the bucket only (no user id, no per-person seed)');
 
   // --- AI data flow, verified 2026-10-22 (roadmap v2 "AI data flow") ----------------------
@@ -362,7 +353,7 @@ async function main() {
   assert.match(card, /\{DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'a brand-new one shows its price');
   assert.match(card, /<LibraryCardFooter libraryId=\{entry\.libraryId\} others=\{entry\.others\} \/>/);
   // Insights (2026-10-14): the app no longer reads Story cards from the
-  // library (template-only). The server side of Story stays as it is.
+  // library (template-only); the server dropped Story on 2026-10-22 (A3 / S4).
   const fold = read('src/components/insights/insights-story-card.tsx');
   assert.doesNotMatch(fold, /serveLibraryCard|writeLibraryCard|wantLibraryCards/, 'the Story card never touches the AI library');
   const gen = read('src/lib/legend-figures/generate.ts');

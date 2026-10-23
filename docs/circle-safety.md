@@ -38,6 +38,12 @@ update public.reports set status = 'actioned', handled_at = now(), admin_note = 
 Actions available today: pause the profile (Dev Hub → Admin, root), delete it (`root_delete_profile`), or dismiss
 (`status = 'dismissed'`). Reports stay after either account is deleted (ids go null, handle + reason stay).
 
+**Daily alert (wave113, roadmap A3 / S1, 2026-10-22):** at 15:05 UTC (09:05 Alberta summer time, 08:05 in winter) the `report-digest` function
+emails support@emgens.com if any report (person, chat message or shared AI card) arrived in the last 24 hours: the count,
+each report id and its kind, and how many person/chat reports are still open. Never the reason, the text, a handle or who
+reported: read those with the queries here. No new report = no email. Job `report-digest-daily`; token in Vault
+(`report_digest_token`).
+
 ## Chat reports (Step 14, wave108, app 1.1+): emci owns this, daily, 24 h target
 
 Chat reports land in the same `reports` table with `context->>'kind' = 'chat'`. The same daily query shows them; to read

@@ -65,6 +65,26 @@ assert.match(sql, /revoke select on public\.play_dev_logs from anon, authenticat
 assert.doesNotMatch(read('src/play/dev-log.ts'), /\.select\(/, 'dev-log only inserts');
 ok('play_dev_logs has no anon / authenticated read');
 
+// --- A3 cleanup (wave112, roadmap v2 S5; D13 + D15, emci OK 2026-10-22) ---------
+{
+  const w112 = read('supabase/migrations/wave112_a3_cleanup.sql');
+  const code = w112.replace(/--[^\n]*/g, '');
+  const statements = code.split(';').map((s) => s.trim().replace(/\s+/g, ' ')).filter((s) => s && s !== 'begin' && s !== 'commit');
+  const expected = [
+    'drop table if exists public.play_dev_logs',
+    'drop policy if exists trait_tracks_adult_insert on public.trait_tracks',
+    'drop policy if exists trait_tracks_adult_update on public.trait_tracks',
+    'drop policy if exists trait_history_adult_insert on public.trait_history',
+  ];
+  assert.deepEqual(statements, expected, 'wave112 does exactly the four approved drops, nothing else');
+  // Pairs: the approved list passes; a drop of a policy that still guards a client write fails.
+  const onlyApproved = (list: string[]) => list.every((s) => expected.includes(s));
+  assert.equal(onlyApproved(statements), true, 'pass: only the approved drops');
+  assert.equal(onlyApproved([...statements, 'drop policy if exists messages_adult_insert on public.messages']), false, 'fail case: a live chat guard is never dropped here');
+  assert.match(read('src/play/dev-log.ts'), /if \(!PRE_LAUNCH_DEV\) return false;/, 'the only writer is off in public builds');
+  ok('wave112: drops play_dev_logs + the three inert trait policies only');
+}
+
 // --- Timezone farming (S1) ---------------------------------------------------
 assert.match(sql, /create trigger me_timezone_guard\s+before insert or update of timezone on public\.me/);
 assert.match(sql, /pg_timezone_names/);

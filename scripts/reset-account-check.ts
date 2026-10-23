@@ -88,7 +88,6 @@ const KEEP: Record<string, string> = {
   dev_access_grants: 'root-managed tester grants, not game data',
   dev_trace_sessions: 'debug traces, expire on their own',
   dev_trace_events: 'debug traces, expire on their own',
-  play_dev_logs: 'Divecore dev logs, not game data',
   play_saves: 'the Divecore save: a reset keeps the game (the phone keeps ato.play.* too); deleted with the account',
   invite_codes: 'the account’s invites (other people may hold them)',
   access_requests: 'join requests, not game data',

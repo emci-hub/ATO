@@ -67,7 +67,6 @@ for (const t of dropped) perAccount.delete(t);
 /** Point at an account but are deliberately not counted, each with its reason. */
 const NOT_COUNTED: Record<string, string> = {
   account_deletions: 'the deletion record itself (no FK; written after the count)',
-  play_dev_logs: 'Divecore dev logs, pre-launch tooling only',
   access_requests: 'landing-page join requests, keyed by email, not by an account',
 };
 

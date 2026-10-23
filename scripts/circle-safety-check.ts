@@ -15,6 +15,7 @@ import {
   STAFF_SUFFIXES,
   nameNotAllowed,
 } from '../src/lib/name-filter';
+import { DIGEST_TO, digestText } from '../supabase/functions/report-digest/digest';
 
 const root = path.resolve(__dirname, '..');
 const read = (p: string) => fs.readFileSync(path.join(root, p), 'utf8').replace(/\r\n/g, '\n');
@@ -141,7 +142,7 @@ assert.match(read('src/app/(tabs)/you.tsx'), new RegExp(`'${supportEmail!.replac
 assert.ok(!/from\('connections'\)\s*\.insert/.test(read('src/lib/circle.ts')), 'circle.ts never inserts a connection');
 ok('Circle tab: ⋯ on every friend row → Report / Block (2 taps); support email matches You');
 
-// wave110 (roadmap v2 S3, 2026-10-22, NOT applied until emci runs it): the public card's show_up / talk_style
+// wave110 (roadmap v2 S3, applied by emci 2026-10-22): the public card's show_up / talk_style
 // accept only the app's chips on a change; NULL / '' pass; stored older values are left alone.
 {
   const w110 = read('supabase/migrations/wave110_public_card_fields_guard.sql');
@@ -169,6 +170,52 @@ ok('Circle tab: ⋯ on every friend row → Report / Block (2 taps); support ema
   assert.ok(!allowed('visit my site example.com', chips('SHOW_UP_CHIPS')), 'fail: free text');
   assert.ok(!allowed('shout', chips('TALK_STYLE_CHIPS')), 'fail: not a talk-style chip');
   ok('wave110: public-card fields take only the app chips on change; lists match intake.ts');
+}
+
+// wave113 + report-digest (roadmap v2 S1 / D24, emci OK 2026-10-22): a daily email of new report counts + ids.
+// Copies wave94's timed-job path (Vault token, service-role check, pg_cron → net.http_post). Never the reason,
+// message text, handle or reporter in the email; nothing is sent on a day with no new report.
+{
+  const w113 = read('supabase/migrations/wave113_report_digest.sql');
+  const code = (s: string) => s.replace(/--[^\n]*/g, '');
+  const body = (name: string) => {
+    const s = code(w113);
+    const start = s.indexOf(`create or replace function public.${name}(`);
+    assert.ok(start >= 0, `${name} in wave113`);
+    return s.slice(start, s.indexOf('$$;', start));
+  };
+  for (const sig of ['report_digest_token_ok(text)', 'report_digest(integer)']) {
+    assert.ok(w113.includes(`revoke all on function public.${sig} from public, anon, authenticated;`), `${sig}: no phone`);
+    assert.ok(w113.includes(`grant execute on function public.${sig} to service_role;`), `${sig}: service role only`);
+  }
+  assert.match(body('report_digest_token_ok'), /vault\.decrypted_secrets\s+where name = 'report_digest_token'/, 'the token lives in Vault');
+  assert.match(body('report_digest_token_ok'), /length\(p_token\) >= 32/);
+  assert.match(code(w113), /cron\.schedule\(\s*'report-digest-daily',\s*'5 15 \* \* \*'/, 'once a day');
+  assert.match(code(w113), /functions\/v1\/report-digest/);
+  assert.doesNotMatch(code(w113), /\b(delete|update|insert|truncate|drop|alter)\b/i, 'additive: no row or schema change');
+  // Pairs: the digest's output fields carry ids and kind only.
+  const leaksDetail = (fnBody: string) => /'(reason|context|reported_handle|from|admin_note|user_id|message_id)',/.test(fnBody);
+  assert.equal(leaksDetail(body('report_digest')), false, 'pass: wave113 outputs ids + kind only');
+  assert.equal(leaksDetail(`'id', r.id, 'reason', r.reason,`), true, 'fail case: a reason field would be caught');
+  const fnSrc = read('supabase/functions/report-digest/index.ts');
+  assert.ok(fnSrc.indexOf("rpc('report_digest_token_ok'") < fnSrc.indexOf("rpc('report_digest',"), 'the token is checked first');
+  assert.match(fnSrc, /if \(!mail\) return json\(\{ ok: true, sent: false/, 'no email when nothing is new');
+  assert.doesNotMatch(fnSrc, /console\.log\([^)]*(text|mail|data)\b/, 'logs counts only');
+  assert.match(fnSrc, /Deno\.env\.get\('RESEND_API_KEY'\)/, 'same Resend key as review-access');
+  assert.equal(DIGEST_TO, supportEmail, 'the alert goes to the published support inbox');
+  const none = digestText({ hours: 24, reports: [], card_reports: [], open_total: 2 });
+  assert.equal(none, null, 'pass: no new report → no email');
+  const some = digestText({
+    hours: 24,
+    reports: [{ id: '11111111-1111-1111-1111-111111111111', kind: 'message' }, { id: '22222222-2222-2222-2222-222222222222', kind: 'person' }],
+    card_reports: [{ card_id: '33333333-3333-3333-3333-333333333333' }],
+    open_total: 2,
+  });
+  assert.ok(some, 'fail case: new reports → an email');
+  assert.equal(some!.subject, 'ATO: 3 new reports');
+  assert.match(some!.text, /chat message report 11111111/);
+  assert.match(some!.text, /shared card report, card 33333333/);
+  ok('wave113: daily report email = counts + ids only, Vault token, service role, no email on a quiet day');
 }
 
 console.log(`\ncheck:circle-safety ok — ${groups} groups`);

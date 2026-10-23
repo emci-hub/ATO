@@ -1151,3 +1151,16 @@ About 5 min. Needs: the landing site redeployed from `landing/` (after `DEEPSEEK
 - [ ] **4** In the browser, open ato.emgens.com/support.html. -> The Support page, with support@emgens.com, Report/Block, Delete account, data requests and helplines.
 - [ ] **5** ato.emgens.com home page. -> No email form. The footer links Privacy · Terms · Support, and says "operated by Michael Malig".
 - [ ] **6** You → Send feedback (and Circle tab → the support line at the bottom). -> A mail draft to **support@emgens.com** (not the old asstrollogs address). Send one test mail to yourself through it -> it arrives in your inbox.
+
+## Box 78 — Daily report alert + server cleanup (roadmap v2 step A3, 2026-10-22)
+
+About 5 min over two days. Server only, no OTA. Needs: wave112 + wave113 applied, `report-digest` deployed, and two
+accounts that are Circle friends (the dev-test pair; never a real person's account).
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Day 1: from account A, open the chat with B, press and hold one of B's messages → Report → pick a reason. -> "Thanks. We read every report within a day."
+- [ ] **2** Day 2, after 15:05 UTC (09:05 Alberta in summer, 08:05 in winter): the support@emgens.com inbox. -> One email "ATO: 1 new report" from noreply@asstrollogs.com, listing "chat message report <id>". It does NOT contain the reason, the message text, either handle or who reported.
+- [ ] **3** The day after that (no new report). -> No alert email.
+- [ ] **4** Afterwards: mark the test report handled with the daily query in `docs/circle-safety.md` (status `dismissed`, note "Box 78 test").
+- [ ] **5** Insights → the Story card (any account). -> It still shows a story (free templates; nothing changed for the reader).

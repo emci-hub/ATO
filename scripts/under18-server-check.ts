@@ -249,7 +249,11 @@ export const OPEN: Record<string, OpenClass> = {
 /** Helpers wave101 adds. is_adult(uuid) is internal; the zero-argument two are about the caller only. */
 export const NEW_HELPERS = ['is_adult(uuid)', 'is_adult()', 'require_adult()', 'me_adult_guard()', 'connections_adult_guard()'];
 
-/** Direct client write (or peer read) paths that get a RESTRICTIVE policy. */
+/**
+ * Direct client write (or peer read) paths that get a RESTRICTIVE policy (as written in wave101).
+ * wave112 (A3, 2026-10-22) later drops the three trait_* ones (inert: no client write grant since
+ * wave80) and play_dev_logs with its table; pinned by check:server-hardening.
+ */
 export const RESTRICTIVE: { table: string; name: string; cmd: 'insert' | 'update' | 'select' }[] = [
   { table: 'trait_tracks', name: 'trait_tracks_adult_insert', cmd: 'insert' },
   { table: 'trait_tracks', name: 'trait_tracks_adult_update', cmd: 'update' },
