@@ -1199,6 +1199,19 @@ copy; no screen should change.
 - [ ] **3** A deep dive (open one you have). -> The team name and icon behave as before (hidden until you choose to show it).
 - [ ] **4** Lock-screen notifications. -> You still get NO "category statement" push (that flag stays off until you read the statements).
 
+## Box 80 — New breathing Idle for all 16 heroes (roadmap step AN2, 2026-10-23, Play-only OTA)
+
+About 5 min. Needs the AN2 OTA (update group `5e2e34b3`; restart the app twice). The Idle is the standing animation of a hero (Hideout / pet room, hero pick, Turf War before a wave). The new Idle is slower than the old one on purpose: one breath is about 1.3 s (1.5 s for Aurex, Kitsune, Sak, Velkhar, Void-Raven), the old loop was 0.6 s.
+
+**Report back in ONE message:** `pass`, or `fix` + the hero + what you saw, per line.
+
+- [ ] **1** Open a hero that stands still (Hideout / pet room). -> A slow, calm breath: the body rises and settles, the feet never slide or jump, the loop has no hitch where it restarts.
+- [ ] **2** Look at Kael, Morwen and Maldrath (their Idle was replaced too). -> Same figure as before, slower breathing; Maldrath's sword and cape do not wobble.
+- [ ] **3** Look at the big-silhouette five (Aurex, Kitsune, Sak, Velkhar, Void-Raven). -> A smaller breath (1 px) but still visibly alive; Velkhar's floating pieces show on both facings.
+- [ ] **4** Walk or turn a hero left and right so you see both facings of the Idle. -> East and west both breathe; no hero flickers or changes colour (Archangel's sword colour matches on both sides).
+- [ ] **5** Walk, Attack, Skill, Hurt and Faint of any hero. -> Unchanged from before.
+- [ ] **6** If one hero looks wrong: say which, and whether to keep the old Idle (it is archived in `art-src/archive/2026-10/`, nothing was deleted).
+
 ## Box 81 — Change answers, Undo, Start fresh, card compare + the A5 cleanup (roadmap v2 step A5, 2026-10-23)
 
 About 10 min. Needs the A5 OTA (restart the app twice) and the **dev-test account** (`@atodev`, never a real person's account) with all

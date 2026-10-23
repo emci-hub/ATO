@@ -74,7 +74,7 @@ drift). GIFs: `docs/art/animation-tests/maldrath-engine/`. Next: emci's go / no-
 `docs/ato-finish-roadmap.md` "Step AN1 status".
 
 **AN2 built 2026-10-23 (test only):** rigs for all 16 heroes, every Idle passes the seven gates (E+W). Five big-silhouette heroes breathe 1 px.
-Review sheets and one GIF per hero: `docs/art/animation-tests/an2/`. Next: emci's approve / keep marks, then install. Status block: `docs/ato-finish-roadmap.md` "Step AN2 status".
+Review sheets and one GIF per hero: `docs/art/animation-tests/an2/`. **Installed + OTA 2026-10-23 (all 16 approved, commit `f0415e95`, group `5e2e34b3`, Box 80).** Idle plays flat 325/375 ms (the game has no per-frame ms yet). Next: AN3. Status block: `docs/ato-finish-roadmap.md` "Step AN2".
 
 ## Art engine (emci 2026-10-22): one structure for every future asset
 Goal: every new character, UI piece or object enters through the same structure, so nothing PixelLab makes is wasted
