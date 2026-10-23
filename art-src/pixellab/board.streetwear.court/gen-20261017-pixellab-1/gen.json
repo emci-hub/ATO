@@ -1,0 +1,96 @@
+{
+  "tool": "pixellab",
+  "model": "pixellab mcp",
+  "step": "Turf War T8 stop 1 (candidate, not picked yet)",
+  "view": "low top-down",
+  "palette": "docs/art/palette-streetwear-night.png (pro tilesets drawn with it; standard tileset-b and props snapped locally, nearest colour = reduce_colors with the palette image)",
+  "styleCard": {
+    "outline": "selective outline",
+    "shading": "medium shading",
+    "detail": "medium detail"
+  },
+  "scaleReference": "board hero 62 art px = 1.75 m (1 m = 35 px); scale sheet docs/divecore/turf-war-t8/samples/scale-sheet.png",
+  "painter": "scripts/turf-board-art.ts TURF_THEMES.<theme>",
+  "pro": {
+    "mode": "pro",
+    "tile_size": 32,
+    "transition_size": 0.25,
+    "roundness": 1
+  },
+  "standard": {
+    "mode": "standard",
+    "tile_size": 32,
+    "transition_size": 0.25
+  },
+  "createdAt": "2026-10-17T23:53:33.028Z",
+  "operator": "agent",
+  "picked": false,
+  "board": "ato · theme court (T8)",
+  "parts": {
+    "tileset": {
+      "id": "30344d28-defc-4fd2-8ba1-2e2ad41ce665",
+      "params": {
+        "boundary_amplitude": 0.08,
+        "boundary_seed": 7,
+        "raggedness": 0.15
+      },
+      "lower": "dark worn asphalt park footpath, small cracks, scattered leaves",
+      "upper": "faded teal painted outdoor basketball hardcourt surface, worn scuffed paint",
+      "transition": "worn white painted court boundary line",
+      "score": 95.1
+    },
+    "tileset-b": {
+      "id": "8c042b6e-a99f-4feb-a0dc-4701b5ab28e5",
+      "params": {
+        "shape_style": "round",
+        "boundary_amplitude": 0.1
+      },
+      "lower": "dark worn asphalt park path",
+      "upper": "pale dry park gravel ground with small tufts of dry grass",
+      "transition": "low concrete path edging"
+    },
+    "props": {
+      "bench": {
+        "id": "85a1a3fa-683a-4b23-a8ae-0ac0b7cc5d59",
+        "canvas": [
+          64,
+          44
+        ],
+        "box": [
+          52,
+          19
+        ],
+        "target": [
+          53,
+          37
+        ],
+        "score": 85.8,
+        "tries": 2,
+        "rejected": [
+          "5174c06c (38x21, small)"
+        ]
+      },
+      "bin": {
+        "id": "e35ab702-c0f2-4ac8-9299-ea7cb5f375d5",
+        "note": "same as underpass"
+      },
+      "ball-rack": {
+        "id": "347ccb21-f7c3-4584-a32f-f6f2a110c4c6",
+        "canvas": [
+          40,
+          40
+        ],
+        "box": [
+          29,
+          36
+        ],
+        "target": [
+          28,
+          41
+        ],
+        "score": 78
+      }
+    }
+  },
+  "pads": "library pads (streetwear-pack): see TURF_THEMES / samples A-C"
+}

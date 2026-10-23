@@ -88,18 +88,24 @@ export type HubTile = {
 export const HUB_TILES: HubTile[] = [
   { id: 'divecore', label: 'Divecore', subtitle: 'Enter the map', icon: 'divecore', to: 'defend' },
   { id: 'pet', label: 'Pet', subtitle: 'Raise your buddy', icon: 'pet', to: 'pet' },
-  { id: 'shop', label: 'Shop', subtitle: 'Spend scrap', icon: 'shop', to: 'shop' },
+  { id: 'shop', label: 'Shop', subtitle: 'Spend tokens', icon: 'shop', to: 'shop' },
   { id: 'dress', label: 'Dress', subtitle: 'Customize', icon: 'dress', to: 'dress' },
   { id: 'more', label: 'More', subtitle: 'About & credits', icon: 'more', to: 'about' },
 ];
 
-/** v27 (Part D): the Shop is hidden — reachable only with the Play dev
- * unlock in a pre-launch build. */
+/** The FULL shop (Tide shelf, Paid previews, "Coming soon" rows): the Play dev unlock in a pre-launch build only.
+ * Divecore finish step 3 (emci 2026-10-18): the Store itself is open to players with the Token shop tab alone
+ * (`storeOpen`, `storeTabsFor(false)`); nothing with a price label or a pass ever shows to a player. */
 export function shopUnlocked(devUnlocked: boolean, preLaunch: boolean = PRE_LAUNCH_DEV): boolean {
   return preLaunch && devUnlocked;
 }
 
-/** The Command Hub tiles to show: the Shop tile only when it is unlocked. */
-export function hubTilesFor(devUnlocked: boolean, preLaunch: boolean = PRE_LAUNCH_DEV): HubTile[] {
-  return HUB_TILES.filter((t) => t.to !== 'shop' || shopUnlocked(devUnlocked, preLaunch));
+/** The Store is open to everyone (its player view is the Token shop only). */
+export function storeOpen(): boolean {
+  return true;
+}
+
+/** The Command Hub tiles to show: all of them (the Store is open; what it lists depends on `shopUnlocked`). */
+export function hubTilesFor(_devUnlocked: boolean = false, _preLaunch: boolean = PRE_LAUNCH_DEV): HubTile[] {
+  return [...HUB_TILES];
 }

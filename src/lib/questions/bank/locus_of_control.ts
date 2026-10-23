@@ -1,4 +1,4 @@
-import { intake, q, traitBank } from './define';
+import { intake, q, retired, traitBank } from './define';
 
 /** Ownership: "It was bound to happen" (low) to "What could I have done differently?" (high). */
 export const LOCUS_OF_CONTROL_BANK = traitBank('locus_of_control', [
@@ -21,7 +21,7 @@ export const LOCUS_OF_CONTROL_BANK = traitBank('locus_of_control', [
   q('locus_of_control_09', 'dating', 'neither', 'A date never texts back after a good night.',
     ['Maybe a bit of both', 0.5], ['I wonder what I could change', 0.8], ['Not meant to be', 0.2]),
   q('locus_of_control_10', 'dating', 'high', 'Your partner is in a bad mood all evening.',
-    ['I wonder what I did', 0.8], ['I ask what is up', 0.5], ['Their mood, not mine', 0.2]),
+    ['I wonder what I did', 0.8], ["I ask what's up", 0.5], ['Their mood, not mine', 0.2]),
   q('locus_of_control_11', 'family', 'neither', 'You and your mom have the same argument again.',
     ["That's just how she is", 0.2], ['We both play a part', 0.5], ['I try something different this time', 0.8]),
   q('locus_of_control_12', 'family', 'low', 'Family dinner plans fall through again.',
@@ -48,8 +48,11 @@ export const LOCUS_OF_CONTROL_BANK = traitBank('locus_of_control', [
     ['I should have reminded her', 0.8], ['She has a lot going on', 0.5], ["That's on her", 0.2]),
   q('locus_of_control_23', 'solo', 'neither', 'The plant on your desk dies after a month.',
     ['Bad plant, honestly', 0.2], ['Maybe too much water', 0.5], ['I look up what I did wrong', 0.8]),
-  q('locus_of_control_24', 'money', 'low', 'You get a parking ticket.',
-    ['The sign was hard to see', 0.5], ['I should have read the sign', 0.8], ['The city is out to get me', 0.2]),
+  retired('locus_of_control_26', q('locus_of_control_24', 'money', 'low', 'You get a parking ticket.',
+    ['The sign was hard to see', 0.5], ['I should have read the sign', 0.8], ['The city is out to get me', 0.2])),
   q('locus_of_control_25', 'work', 'neither', 'You get passed over for a promotion at work.',
     ['I ask what I can improve', 0.8], ['Bit of me, bit of politics', 0.5], ['It was decided already', 0.2]),
+  // wave100 (emci 2026-10-20): new scene for retired _24.
+  q('locus_of_control_26', 'money', 'low', "You get back to your car and there's a parking ticket on it.",
+    ['Hard-to-see sign, and I rushed', 0.5], ['I should have read the sign', 0.8], ['The city is out to get me', 0.2]),
 ]);

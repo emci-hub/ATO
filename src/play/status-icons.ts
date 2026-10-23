@@ -23,6 +23,15 @@ export type StatusIcon = {
  * effect, not which element caused it. */
 export const STUN_ICON_COLOR = '#FDE68A';
 
+/** The one colour a creep's ground glow takes (display only): stun first, then burn, then chill; shred adds none. */
+export function statusGlowColor(icons: readonly StatusIcon[]): string | null {
+  for (const kind of ['stun', 'dot', 'slow'] as const) {
+    const hit = icons.find((i) => i.kind === kind);
+    if (hit) return hit.color;
+  }
+  return null;
+}
+
 export function statusIconsFor(creep: KitStatus & { slowMs: number }): StatusIcon[] {
   const icons: StatusIcon[] = [];
   if ((creep.stunMs ?? 0) > 0) icons.push({ kind: 'stun', color: STUN_ICON_COLOR, count: 1 });

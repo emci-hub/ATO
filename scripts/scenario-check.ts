@@ -204,7 +204,7 @@ assert.match(SCENARIO_LEDE, /Swipe or tap/);
 const card = read('src/components/scenario-card.tsx');
 const meSrc = read('src/lib/me.ts');
 const homeTab = read('src/app/(tabs)/index.tsx');
-const sageTab = read('src/app/(tabs)/sage.tsx');
+const sageTab = read('src/app/(tabs)/insights.tsx');
 const youTab = read('src/app/(tabs)/you.tsx');
 const themeLab = read('src/app/theme-lab.tsx');
 const logic = read('src/lib/scenario.ts');

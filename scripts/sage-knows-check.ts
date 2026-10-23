@@ -99,7 +99,7 @@ function resolveWith(
 const logic = read('src/lib/sage-knows.ts');
 const card = read('src/components/sage-knows-card.tsx');
 const meSrc = read('src/lib/me.ts');
-const sageTab = read('src/app/(tabs)/sage.tsx');
+const sageTab = read('src/app/(tabs)/insights.tsx');
 const homeTab = read('src/app/(tabs)/index.tsx');
 
 assert.doesNotMatch(logic, /claimAiCall|routeVoice|generateTalk|gemini|MODEL_PROVIDER/);
@@ -276,9 +276,9 @@ assert.match(meSrc, /recordSageKnowsCorrection/);
 assert.doesNotMatch(sageTab, /SageKnowsCard/);
 assert.doesNotMatch(homeTab, /SageKnowsCard/);
 assert.match(read('src/components/ask-sheet.tsx'), /kind === 'sage_knows'/);
-const talkBlock = sageTab.slice(sageTab.indexOf('messages.map'), sageTab.indexOf("busy === 'send'"));
-assert.doesNotMatch(talkBlock, /SageKnowsCard|resolveSageKnows/);
-ok('SageKnowsCard is not mounted on Home or Sage; AskSheet handles kind sage_knows; never inside Talk replies');
+// Talk was deleted (2026-10-14), so there are no replies to keep it out of.
+assert.doesNotMatch(sageTab, /resolveSageKnows/);
+ok('SageKnowsCard is not mounted on Home or Insights; AskSheet handles kind sage_knows');
 
 const composedCheckin = composeSageKnowsLine(TRAIT_POLE_LINES.extraversion.low, null);
 assert.match(composedCheckin.line, /quieter time/);

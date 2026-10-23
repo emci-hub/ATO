@@ -1,4 +1,4 @@
-import { AI_CONFIG, isRemoteReady } from './config';
+import { AI_CONFIG } from './config';
 import { isAiProviderId, type AiProviderId } from './types';
 
 export const AI_PROVIDER_OVERRIDE_KEY = 'ato.ai.provider.override.v1';
@@ -42,16 +42,10 @@ export async function setProviderOverride(id: AiProviderId | null): Promise<void
   }
 }
 
-/** Override (this device) wins; otherwise the bundled AI_PROVIDER. */
+/** Override (this device) wins; otherwise the bundled default. */
 export async function resolveActiveProvider(): Promise<AiProviderId> {
   const override = await readProviderOverride();
   return override ?? AI_CONFIG.provider;
-}
-
-export async function shouldUseLocalAi(): Promise<boolean> {
-  const id = await resolveActiveProvider();
-  if (id === 'local') return true;
-  return !isRemoteReady(AI_CONFIG, id);
 }
 
 export function configuredProvider(): AiProviderId {

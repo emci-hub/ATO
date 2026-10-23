@@ -1,0 +1,18 @@
+{
+  "step": "Turf War T6 boss effects",
+  "date": "2026-10-17",
+  "tool": "vfx_workbench (free, 0 generations)",
+  "picked_by": "emci at stop 1: Entrance B (new sigil), Enrage B (new red sigil, no rule change), Death B (new plum blast), Boss bar A (code)",
+  "samples": "docs/divecore/turf-war-t6/t6-*.png|gif",
+  "palette_note": "summon = magenta neon ramp #2a0f3d..#ffd6fb; enrage = red ramp #3d0a14..#ffd0d4; bossko = magenta flash + plum smoke #2a1840..#d9c8ff (the T5 pop family)",
+  "assets": [
+    { "file": "summon/burst.png", "effect_id": "79eab2ed-f56c-4efa-9993-04c9f0f62609", "parts": ["teleport_in x0.9", "square_sigil (0..1, core)"], "size": "74x85", "frames": 10, "fps": 12, "loop": false },
+    { "file": "enrage/burst.png", "effect_id": "7d2bcc7b-d507-4114-a9a4-4e0b6421b950", "parts": ["charge_up x0.8", "square_sigil (0..1, core)"], "size": "74x56", "frames": 12, "fps": 12, "loop": false },
+    { "file": "bossko/burst.png", "effect_id": "9d7ce7f2-7dab-446b-b13b-4cda5856df01", "parts": ["flash_burst x1.1 (0..0.3)", "smoke_poof x1.4 (0.08..1, core)", "spark_burst x1.2 (0.05..0.5)", "shockwave_ring x1.2 amount 0.55 (0.05..0.6)"], "size": "136x66", "frames": 14, "fps": 12, "loop": false }
+  ],
+  "rejected": [
+    { "name": "entrance A", "why": "library plain/burst gold ring: reused as-is, not picked" },
+    { "name": "enrage A", "why": "code-drawn red ring: not picked" },
+    { "name": "death A / C", "why": "library ember/burst and pop/burst x2.6: not picked" }
+  ]
+}

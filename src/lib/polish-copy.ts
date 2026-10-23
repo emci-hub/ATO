@@ -1,10 +1,10 @@
 /**
  * Every new line from the polish pass (emci approved the pass 2026-10-05).
- * Written in the moment voice (lib/voice/moment-voice.ts). Draft until emci
- * reads them: the draft badge shows in pre-launch builds while this is false.
+ * Written in the moment voice (lib/voice/moment-voice.ts). Accepted by emci
+ * 2026-10-23 (roadmap A4); the draft badge showed only in pre-launch builds while this was false.
  * Labels (button and section names) are plain on purpose.
  */
-export const POLISH_COPY_REVIEWED = false;
+export const POLISH_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)
 
 // ── Your shape ───────────────────────────────────────────────────────────────
 export const SHAPE_TITLE = 'Your shape';
@@ -12,12 +12,12 @@ export const SHAPE_CAPTION = 'Drawn from your answers, most of them given betwee
 export const SHAPE_TAP_HINT = 'Tap a point to see which trait it is.';
 export const SHAPE_EMPTY_TITLE = 'Your shape is blank';
 export const SHAPE_EMPTY_LINE =
-  'Like a group chat everyone muted. Sixteen answers draw the first lines.';
+  'Sixteen answers draw the first lines.';
 export const SHAPE_EMPTY_BUTTON = 'Answer the first 16';
 
 // ── Home ─────────────────────────────────────────────────────────────────────
 export const WEEK_STRIP_TITLE = 'This week';
-export const SEALED_READ_KICKER = 'Today’s read';
+export const SEALED_READ_KICKER = 'Today’s insight';
 export const SEALED_READ_LINE = 'Still sealed, like that voice note saved for later.';
 export const ROUND_RING_TITLE = 'This round';
 export function roundRingLine(left: number): string {
@@ -50,7 +50,7 @@ export const SET_DONE_COPY: Record<'set1' | 'set2' | 'all' | 'round', { title: s
 
 // ── You ──────────────────────────────────────────────────────────────────────
 export const STYLE_ROW_LABEL = 'Style';
-export const TOKEN_NEXT_LABEL = 'Next +21';
+export const TOKEN_NEXT_LABEL = 'Next +21 tokens';
 export const TOKEN_RULES_LABEL = 'How tokens work';
 export const YOUR_WEEK_TITLE = 'Your week';
 export const YOUR_WEEK_DAYS = 'days opened';
@@ -59,7 +59,7 @@ export const YOUR_WEEK_ME = 'That’s me';
 export function yourWeekLine(daysOpened: number): string {
   if (daysOpened >= 4) return 'Opened more often than the banking app. Probably.';
   if (daysOpened >= 1) return 'A few visits, like checking a tracking number.';
-  return 'A quiet week. Like a group chat on mute.';
+  return 'A quiet week. Nothing is lost.';
 }
 export const SETTINGS_TITLE = 'Settings';
 

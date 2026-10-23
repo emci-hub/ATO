@@ -26,7 +26,7 @@
 - **Current:** `When were you born?`
 - **File:** `src/app/onboarding.tsx:582` · `src/lib/age.ts:11`
 - **Why it reads wrong:** Medical-form field. Age gate is real; the wording is clinic clipboard.
-- **Rewrite:** `Birthday` as the label. Keep the under-16 error as it is (`ATO is for people 16 and older.`) — that’s a rule, not a diagnosis.
+- **Rewrite:** `Birthday` as the label. Keep the under-18 error as it is (`ATO is for people 18 and older.`) — that’s a rule, not a diagnosis.
 
 ---
 

@@ -70,6 +70,7 @@ import {
   PET_STAGE_MS,
   PET_TOKENS_DAILY_CAP,
   PET_TOKENS_PER_ROUND,
+  PET_TOKENS_PER_ROUND_EASY,
   PET_TRIP_BETTER_FROM,
   PET_TRIP_MULT,
   type PetStage,
@@ -115,9 +116,11 @@ import {
   CATCH,
   COMBO_MULTS,
   COMBO_STEPS,
+  DASH_LANES,
   DIFFICULTIES,
   DIFFICULTY_LABEL,
   PASS_SHARE,
+  POWERUP,
   SCORE_MULT,
   TRAIN,
 } from '@/play/pet-game-rules';
@@ -191,7 +194,7 @@ function petSection(): string[] {
   return [
     `Stages (real time, even when the app is closed): ${timeline} → ${PET_STAGE_LABEL.god}. It never dies.`,
     `Forms (picked from Teen on, by what you did in the stage before): ${PET_BRANCHES.map((b) => PET_BRANCH_LABEL[b]).join(', ')}. Lots of care mistakes make it Scruffy, lots of TD waves Battle, lots of deep dive surfaces Deep, good care and training Bright; otherwise Standard.`,
-    `Needs: hunger drops a heart every ${span(PET_HUNGER_TICK_MS)} and mood every ${span(PET_MOOD_TICK_MS)} (each up to ${PET_METER_MAX} hearts). A meter left empty for ${span(PET_GRACE_MS)} is a care mistake. Feed it from the pantry or with Catch the food; cheer it up with Tap to train, dives and TD waves.`,
+    `Needs: hunger drops a heart every ${span(PET_HUNGER_TICK_MS)} and mood every ${span(PET_MOOD_TICK_MS)} (each up to ${PET_METER_MAX} hearts). A meter left empty for ${span(PET_GRACE_MS)} is a care mistake. Feed it from the pantry or with Catch the food (both in the Feed sheet); cheer it up with Tap to train, dives and TD waves.`,
     `Sleep: it sleeps from ${clock(DEFAULT_WINDOW.from)} to ${clock(DEFAULT_WINDOW.to)} by default (Settings → Bedtime). That is looks only — hunger still drops overnight.`,
     `Rebirth (God) or Release (Child and up) retires it to the Hall; each rebirth adds +${pct(PET_REBIRTH_STEP)} TD damage for good, up to +${pct(PET_REBIRTH_CAP)}.`,
   ];
@@ -224,7 +227,7 @@ function denSection(): string[] {
     `The Den keeps your pets: ${DEN_START_SLOTS} slots to start (the active pet counts as one). More slots cost shells — ${prices}; ${DEN_MAX_SLOTS} at most.`,
     `One pet is active: it lives in the room and gives the perks, the pounce and Pumped. The others rest, frozen — they don't grow, get hungry, lose mood or lose warmth, and an egg's care only counts while it is active.`,
     `Swap from the Den any time except during a dive, while your pet is away on an expedition, or while a mini-game is open. Buffs, the expedition ladder, tokens, the Power ceiling, records and pity are yours — a swap never changes them.`,
-    `A new egg needs a free slot; it becomes the active pet and the old one rests. From the Den you can also view a card, rename, favourite (★ sorts to the top), sort by grade or shiny, and release (a shard, as always). Resting pets count in the Collection.`,
+    `A new egg needs a free slot; it becomes the active pet and the old one rests. From the Den you can also rename, favourite (★ sorts to the top), sort by grade or shiny, and release (a shard, as always). Resting pets count in the Collection.`,
   ];
 }
 
@@ -237,7 +240,7 @@ function stonesSection(): string[] {
     `Glimmers: every miss adds a glimmer (they are yours, not the pet's) and that pet keeps a faint glow. With ${GLIMMER_PITY} glimmers the next Stone always works; a success clears them. Each Stone's roll is set in advance, so closing the app can't change it.`,
     `Where Stones come from: the first daily-challenge Gold each day (either game) · the ${tripLabel(EXPEDITION_LADDER_MS[EXPEDITION_STONE_STEP])} expedition, ${pct(EXPEDITION_STONE_CHANCE)} (its Power chance is unchanged) · ${DIVE_TIER_LABEL.abyss} ${pct(stoneShare('abyss'))} and ${DIVE_TIER_LABEL.hadal} ${pct(stoneShare('hadal'))} of charged-dive finds · every ${ordinal(STONE_EVERY_DAYS)} day you play · milestones: ${rewards}.`,
     `Shiny styles: ${SHINY_STYLE_LABEL.classic} is the hero's own shiny colour — natural shinies and Shine Stones. It is never sold. Prism styles are pass-only — see Tide Pass & Shop. Styles are looks only, and dyes never cover a shiny. The Collection shows the styles each hero has.`,
-    `Finishes are a look you pick — holo in the art window behind the pet, or reverse holo on the card — in a named colour (${finishColors().map((c) => c.name).join(', ')}). The pet sprite stays plain. They are never rolled, so the odds on the egg picker stay the odds the egg uses. ${SHINY_STYLE_LABEL.classic} is still the only shiny you earn. Holo or reverse holo is ${finishPrice('holo', false)} tokens and includes one new colour; each extra colour is ${finishPrice('extra_color', false)}. A Tide Pass discounts those prices. Starpearl is the pass colour.`,
+    `Finishes are a look you pick, drawn on the pet: holo adds moving prism bands, a shine sweep and glints; reverse holo wraps a foil rim round it and keeps its own colours. Pick a prism or rim colour, a shine sweep colour and a glint colour (${finishColors().map((c) => c.name).join(', ')}). The card keeps only a quiet foil border. They are never rolled, so the odds on the egg picker stay the odds the egg uses. ${SHINY_STYLE_LABEL.classic} is still the only shiny you earn. Holo or reverse holo is ${finishPrice('holo', false)} tokens; single colours are free and each mix is ${finishPrice('extra_color', false)} once. A Tide Pass discounts those prices.`,
     `How long: with a Stone every few days, most players have a shiny in ${aboutWeeks(COLLECT_TIMELINES.shinyRegularDays)} (natural shinies are one in ${Math.round(1 / SHINY_ODDS)}).`,
   ];
 }
@@ -253,7 +256,7 @@ function tideSection(): string[] {
   const day1 = STREAK_REWARDS[1];
   const shells = day1?.kind === 'shells' ? day1.amount : STREAK_SHELLS;
   return [
-    `The Tide Pass lasts ${TIDE_PASS_DAYS} days you play. A day counts the first time you open Divecore that day, and days you skip don't count. Hold up to ${TIDE_PASS_MAX_DAYS} days.`,
+    `The Tide Pass lasts ${TIDE_PASS_DAYS} days you play. A day counts the first time you open Divecore that day; the days you're away just wait for you. Hold up to ${TIDE_PASS_MAX_DAYS} days.`,
     `Legendary progress ×${TIDE_PITY_STEP}: every egg revealed with the pass counts ${TIDE_PITY_STEP} toward the guarantee. From zero, egg ${tideEggs} is always Legendary, rising from egg ${tideSoft}. The odds table doesn't change; the bar fills faster. An egg counts double if it was picked or woken while the pass was on. An egg still incubating keeps that count if the pass ends; one woken after the pass ends counts as one.`,
     `Prism styles are pass only. Each pass brings ${TIDE_PRISM_GIFT} Prism Stone. Pick a style: ${styles}. Classic shinies are never sold. They come from play (one in ${Math.round(1 / SHINY_ODDS)}, and Shine Stones).`,
     `Tide shelf (soft tokens, while a pass is on): ${shelf}. A Star Pearl adds ${STAR_PEARL_PITY} Legendary progress, and it never skips the guarantee.`,
@@ -311,7 +314,8 @@ function gamesSection(): string[] {
   ).join(' · ');
   const ranks = GAMES.map((g) => `${GAME_LABEL[g]}: ${RANK_TITLES[g].join(' → ')}`).join(' · ');
   return [
-    `Pass rules (every level): Catch the food — catch ${pct(PASS_SHARE)} of the food that falls in ${span(CATCH.roundMs)}; ${CATCH.bombStrikes} bombs end the round as a fail. Tap to train — ${TRAIN.passHits} hits out of ${TRAIN.taps}; ${TRAIN.missStreakEnd} misses in a row end it. A pass feeds or trains your pet and pays ${PET_TOKENS_PER_ROUND} tokens (${PET_TOKENS_DAILY_CAP} a day). A fail gives nothing.`,
+    `Pass rules (every level): Catch the food — catch ${pct(PASS_SHARE)} of the food that falls in ${span(CATCH.roundMs)}; ${CATCH.bombStrikes} bombs end the round as a fail. Tap to train — ${TRAIN.passHits} hits out of ${TRAIN.taps}; ${TRAIN.missStreakEnd} misses in a row end it. A pass feeds or trains your pet and pays ${PET_TOKENS_PER_ROUND} tokens, or ${PET_TOKENS_PER_ROUND_EASY} on Easy (${PET_TOKENS_DAILY_CAP} a day). A fail gives nothing.`,
+    `Lane dash — step between ${DASH_LANES} lanes (tap a lane) to catch food and dodge bombs; a bomb in your lane is a strike. It uses Catch's pass rule and trains your pet like Tap to train. Catch also drops a shield (blocks one bomb tap) and a magnet (pulls food in for ${POWERUP.magnetMs / 1000}s); magnet food scores points but does not count as caught for the pass. In Tap to train the zone drifts or splits on later taps (never wider overall). Every game has a Practice button: no clock, no strikes, nothing counts (no tokens, care, records or daily).`,
     `Egg care: only a pass with ${pct(CARE_SKILL_SHARE)}+ on Normal or harder is "skilled". An Easy pass counts as a plain pass, and harder levels never give more care than Normal.`,
     `Combo: ${combo}. A miss or a bomb resets it.`,
     `Levels: ${levels}.`,

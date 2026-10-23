@@ -5,13 +5,16 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { AppState } from 'react-native';
 
+import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { refreshCategoryCatalog } from '@/lib/category-catalog';
 import { fetchMyDevAccess, type DevAccessSnapshot } from '@/lib/dev-access-server';
 import { fetchMe, Me, syncDeviceTimezone } from '@/lib/me';
+import { endPreviewIfAccountChanged, recoverPreviewSnapshot } from '@/lib/preview-session';
 import { supabase } from '@/lib/supabase';
 
 const EMPTY_DEV_ACCESS: DevAccessSnapshot = { isRoot: false, capabilities: [] };
@@ -142,6 +145,30 @@ export function MeProvider({ children }: { children: ReactNode }) {
     }
     void refreshCategoryCatalog({ force: true }).catch(() => {});
   }, [userId]);
+
+  // "Preview as new user" (lib/preview-session.ts) ends the moment this is not
+  // the account it started on, or the account stops being root. Judged only
+  // once dev access has loaded, so a slow load cannot end it by mistake.
+  useEffect(() => {
+    if (devAccessLoading) return;
+    endPreviewIfAccountChanged(userId, devAccess.isRoot);
+  }, [userId, devAccess.isRoot, devAccessLoading]);
+
+  // A preview the app never got to stop (killed, crashed, reloaded) left a copy
+  // of this account's phone data: put it back (same account) or drop it.
+  useEffect(() => {
+    if (!userId) return;
+    void recoverPreviewSnapshot(userId).catch(() => {});
+  }, [userId]);
+
+  // A dev tool rewrote this account (Reset, a jump) or preview started or
+  // stopped: read `me` again so balances, milestones and traits match.
+  const dataEpoch = useAccountDataEpoch();
+  const firstEpoch = useRef(dataEpoch);
+  useEffect(() => {
+    if (dataEpoch === firstEpoch.current) return;
+    void refresh();
+  }, [dataEpoch, refresh]);
 
   return (
     <MeContext.Provider value={{ me, loading, devAccess, devAccessLoading, refresh }}>

@@ -20,6 +20,9 @@ import {
   DAILY_PICK_COPY_REVIEWED,
   DAILY_PICKS,
   pickForYmd,
+  dailyPickById,
+  RETIRED_DAILY_PICKS,
+  RETIRED_PICK_POSITION_BASE,
   pickIndexForYmd,
 } from '../src/lib/daily-pick/bank';
 import { reactionLine } from '../src/lib/daily-pick/reaction';
@@ -52,8 +55,8 @@ for (const p of DAILY_PICKS) {
   for (const o of p.options) assert.ok(o.text.length <= 28, `${p.id}: "${o.text}" is too long for a button`);
 }
 assert.ok(DAILY_PICKS.filter((p) => p.options[0].value === 0.8).length >= 24, 'the high side is not always first');
-assert.equal(DAILY_PICK_COPY_REVIEWED, false, 'draft until emci reads them');
-ok('64 picks, 4 per trait in order, one high and one low answer each, moment-voice rules, draft');
+assert.equal(DAILY_PICK_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
+ok('64 picks, 4 per trait in order, one high and one low answer each, moment-voice rules, accepted 2026-10-23');
 
 // ── Rotation ─────────────────────────────────────────────────────────────────
 const seen = new Set<number>();
@@ -76,7 +79,28 @@ const rows = execFileSync('npx', ['tsx', 'scripts/gen-wave82-picks.ts'], {
   encoding: 'utf8',
   shell: process.platform === 'win32',
 }).trim();
-assert.ok(sql.replace(/\r\n/g, '\n').includes(rows.replace(/\r\n/g, '\n')), 'the migration pool rows match the app list (regenerate with scripts/gen-wave82-picks.ts)');
+assert.ok(sql.replace(/\r\n/g, '\n').includes(rows.replace(/\r\n/g, '\n')), 'the migration pool rows match the app list as wave82 created it (regenerate with scripts/gen-wave82-picks.ts)');
+// A pick whose scene changed is retired, never reworded in place (emci 2026-10-19): old answers keep
+// pointing at the original text, and a new id takes its place in the rotation (wave99c).
+const retireSql = execFileSync('npx', ['tsx', 'scripts/gen-wave82-picks.ts', '--retire'], {
+  cwd: root,
+  encoding: 'utf8',
+  shell: process.platform === 'win32',
+}).trim();
+assert.ok(
+  read('supabase/migrations/wave99c_daily_pick_p65.sql').replace(/\r\n/g, '\n').includes(retireSql.replace(/\r\n/g, '\n')),
+  'wave99c parks every retired pick and inserts its replacement (regenerate with gen-wave82-picks.ts --retire)',
+);
+for (const r of RETIRED_DAILY_PICKS) {
+  assert.equal(DAILY_PICKS[r.position]!.id, r.replacedBy, `${r.pick.id}: its replacement holds its old position`);
+  assert.ok(!DAILY_PICKS.some((p) => p.id === r.pick.id), `${r.pick.id}: a retired id is never served again`);
+  assert.equal(dailyPickById(r.pick.id)?.prompt, r.pick.prompt, `${r.pick.id}: old answers still find the original question`);
+  assert.ok(RETIRED_PICK_POSITION_BASE + r.position >= 64, 'a parked position is outside the 64-day rotation');
+}
+assert.ok(
+  !DAILY_PICKS.some((p) => /\blocations?\b/i.test(p.prompt) && p.axis.startsWith('attachment_')),
+  'declining to share a location is a boundary, never scored as closeness or distance',
+);
 // The server's date rule is the app's: (n % 16) * 4 + n / 16 over n = day % 64.
 assert.match(sql, /select \(\(\(\(p_ymd - date '2026-01-01'\) % 64\) \+ 64\) % 64 % 16\) \* 4\s*\+ \(\(\(\(p_ymd - date '2026-01-01'\) % 64\) \+ 64\) % 64 \/ 16\);/);
 assert.match(sql, /v_mode := case when v_count >= 3 then 'answer' else 'direct' end;/, 'counts only after the trait\'s intake');
@@ -109,9 +133,14 @@ const line = reactionLine(pick, 0, '2026-10-05');
 assert.ok(line && line.source === 'authored', 'a reaction is an approved line');
 assert.equal(reactionLine(pick, 0, '2026-10-05')?.id, line?.id, 'same day, same answer, same reaction');
 const home = read('src/app/(tabs)/index.tsx').replace(/\r\n/g, '\n');
-assert.ok(home.indexOf('<SageStoryFold') < home.indexOf('styles.sealedCard'), 'Home: Story above the insight');
-assert.ok(home.indexOf('styles.sealedCard') < home.indexOf('{pickBlock}\n'), 'Home: the insight above Today\'s Pick');
-assert.ok(home.lastIndexOf('{pickBlock}') < home.indexOf('<ProgressRing value='), 'Home: Today\'s Pick above the round ring');
-ok('no model call; share carries the question only; answers go through the checkpoint; Home order Story → insight → pick → round');
+// emci 2026-10-14: the Story and the focus moved to Insights. Home is the
+// check-in, the Insights link, Today's Pick, then the round ring.
+const state2 = home.indexOf('STATE 2');
+assert.ok(state2 > 0);
+assert.ok(home.indexOf('<DailyCheckinCard', state2) < home.indexOf('testID="home-see-insights"', state2), 'Home: check-in above the Insights link');
+assert.ok(home.indexOf('testID="home-see-insights"', state2) < home.indexOf('{pickBlock}', state2), 'Home: the Insights link above Today\'s Pick');
+assert.ok(home.indexOf('{pickBlock}', state2) < home.indexOf('<ProgressRing value=', state2), 'Home: Today\'s Pick above the round ring');
+assert.doesNotMatch(home, /SageStoryFold|styles\.sealedCard/, 'no Story or focus card on Home');
+ok('no model call; share carries the question only; answers go through the checkpoint; Home order check-in → Insights → pick → round');
 
 console.log(`\ndaily-pick-check: ${passed} passed`);

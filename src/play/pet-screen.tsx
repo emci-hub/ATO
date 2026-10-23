@@ -13,12 +13,18 @@
  *
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
-import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
+import { ManholeTransit } from '@/play/dive-street';
+import { usePlayMotion } from '@/play/play-motion';
+import { PixelBody, PixelButton, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
+import { uiDrawable, type UiPiece } from '@/art/art';
+import { ClipImage } from '@/play/sheet-sprite';
+import { tapHaptic } from '@/play/street-feel';
+import { STREET, STREET_FONT, streetUiOn } from '@/play/street-ui';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
@@ -27,13 +33,29 @@ import { usePetDevRoom } from '@/play/pet-dev-state';
 import { petBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { NEON } from '@/play/neon-viper';
-import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
-import { syncPlayNotices } from '@/play/pet-reminder';
+import { PET_BRANCH_LABEL, PET_STAGE_LABEL, petLookFor } from '@/play/pet';
+import { greetedToday, visitorFor } from '@/play/daily-visitors';
+import { VISITOR_UI } from '@/play/daily-visitors-bank';
+import { visitorOpenAtHour } from '@/play/visitor-walk';
+import { VisitorCard, type VisitorCardShow } from '@/play/daily-visitor-ui';
+import { DecorSheet } from '@/play/decor-slots-ui';
+import type { DecorItemId, DecorSlotId } from '@/play/decor-slots';
+import { CIRCLE_UI, nextCircleGift, type CircleFriend, type CircleGift, type CircleLook } from '@/play/circle-visits';
+import { CircleGiftCard, CircleSheet, CircleVisitStrip, type CircleListState } from '@/play/circle-visits-ui';
+import {
+  fetchCircleFriends,
+  fetchCircleInbox,
+  fetchCircleRoom,
+  markCircleGiftOpened,
+  sendCircleGift,
+  setCircleShare,
+} from '@/play/circle-visits-store';
+import { askPetReminderPermission, syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
+import { mergeLine } from '@/play/pet-merge';
 import { petPose, sharpPetBox } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt } from '@/play/pet-anim-sprite';
 import { PetCard, type PetCardInfo } from '@/play/pet-card';
-import { DivecoreSettingsSheet } from '@/play/divecore-settings';
 import { EggPickerBody, JournalTab, OddsPanel } from '@/play/pet-egg-sheets';
 import { PetMenuBody } from '@/play/pet-menu';
 import { DenSheetBody } from '@/play/den-sheet';
@@ -42,13 +64,17 @@ import { FinishPicker } from '@/play/finish-picker';
 import { FinishMotionHost } from '@/play/finish-motion';
 import { StoneSheetBody } from '@/play/stone-sheet';
 import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
-import { PetGameHost, type GamePet } from '@/play/pet-games';
-import { BUFF_HOW, BUFF_ICON, BUFF_LABEL } from '@/play/play-buffs';
+import { PetGameHost, type GamePet, type RoundCardData } from '@/play/pet-games';
+import { BUFF_ICON, BUFF_LABEL, BUFF_NOTICE } from '@/play/play-buffs';
+import { notify } from '@/play/notify/notify';
 import { useFxQuality } from '@/play/fx-quality';
 import { isStrongResult } from '@/play/score-burst-model';
 import type { GuideSection } from '@/play/guide-content';
 import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
+import { usePetKnowsYou } from '@/play/use-pet-knows-you';
+import { HideoutTeaseSheetCopy } from '@/play/hideout-tease';
+import { canStartBuild, nextBuildRoom, roomStage, type HideoutRoomId } from '@/play/hideout-progress';
 import { tripLabel } from '@/play/expedition-ladder';
 import {
   EGG_COLOR,
@@ -69,13 +95,23 @@ import { PetFigure } from '@/play/pet-figure';
 import { petRecolor } from '@/play/pet-looks';
 import { PetReveal } from '@/play/pet-reveal';
 import { PetRoom, type RoomSpeech } from '@/play/pet-room';
+import { GameScreen, useStageFrame } from '@/play/stage-layout';
+import { SPACE, layoutRegions } from '@/play/stage-frame';
+import { AwayCard } from '@/play/away-card';
+import type { AwaySummary } from '@/play/away-summary';
+import { StreetStatusStrip } from '@/play/street-room';
+import { HideoutRails } from '@/play/hideout-rails';
+import { CALL_BLOCK_NOTE, callBlocker, expeditionCallCopy, resolvePresence, sleepChosen, wokeUp } from '@/play/hideout-presence';
+import { roomDef } from '@/play/hideout-progress';
 import { loadSeenStage, saveSeenStage } from '@/play/pet-seen';
 import {
   BookTab,
   ExpeditionSheetBody,
   FeedSheetBody,
+  GameCard,
   HallTab,
   HelpTab,
+  INFO_SECTION_META,
   PlaySheetBody,
   type GameRun,
   StatusTab,
@@ -89,6 +125,7 @@ import { justEvolved, petStatus } from '@/play/pet-status';
 import {
   PET_IDLE_TALK_MAX_MS,
   PET_IDLE_TALK_MIN_MS,
+  PET_TALK_HOLD_MS,
   pickEggLine,
   pickEggTalk,
   pickPetLine,
@@ -98,21 +135,46 @@ import {
   type PetEggTalk,
   type PetTalkSituation,
 } from '@/play/pet-talk';
-import { PlaySheet, SheetTabs } from '@/play/play-sheet';
+import { PlaySheet } from '@/play/play-sheet';
+import { SheetSection } from '@/play/sheet-kit';
+import { GuideHost } from '@/play/guide-bubble';
+import { RAIL_BUTTON_PT, RAIL_EDGE_PT } from '@/play/hideout-rails-model';
+import { freeEggsWaiting, todayItems, TODAY_TITLE, type TodayAction } from '@/play/today';
+import { TodaySheetBody } from '@/play/today-sheet';
 import {
   ackPetRevealsDoc,
+  clearMergeNote,
   warmEggDoc,
   finishPetRound,
   type PetRoundKind,
   type PetRoundResult,
   type PlayView,
+  DIVE_CHARGE_CAP,
+  startHideoutBuild,
+  viewHideoutRoom,
+  callPetToRoom,
+  wakeHideoutPet,
+  sleepHideoutPet,
+  toggleLoftLamp,
+  markHideoutCoach,
+  markBuildNotifAsked,
+  stampHideoutPeekaboo,
+  greetDailyVisitor,
+  setHideoutDecor,
+  openCircleGift,
+  canClaimResearch,
+  localYmd,
+  setPlaySettings,
 } from '@/play/playStore';
+import { markTipSeen, pickCoachTip } from '@/play/ftue/coach-tips';
+import type { CoachTipId } from '@/play/play-settings';
+import { tipAnchorRef } from '@/play/ftue/tip-anchors';
 import type { PlayTransition } from '@/play/use-play-store';
 
 /** A pet-worthy moment the Play shell hands to the room (dive, TD, finds). */
 export type PetTalkEvent = { situation: PetTalkSituation; key: number } | null;
 
-type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu' | 'den' | 'stone' | 'prism';
+type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu' | 'den' | 'stone' | 'prism' | 'today';
 
 const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'feed', emoji: '🍖', label: 'Feed' },
@@ -134,6 +196,7 @@ const SHEET_TITLE: Record<SheetId, string> = {
   den: 'The Den',
   stone: 'Shine Stone',
   prism: 'Prism Stone',
+  today: TODAY_TITLE,
 };
 
 /** Keep every Divecore notice (hunger, egg, expedition, charges) in step with
@@ -160,6 +223,8 @@ export function usePlayNoticesSync(view: PlayView | null): void {
         view.pet.tide.daysHeld,
         view.pet.eggDay.nextPrice,
         view.pet.state.egg,
+        view.hideout.build?.room,
+        view.hideout.build?.remainingMs,
       ].join('|')
     : '';
   useEffect(() => {
@@ -179,6 +244,8 @@ export function usePlayNoticesSync(view: PlayView | null): void {
       tideActive: v.pet.tide.active,
       tideDaysHeld: v.pet.tide.daysHeld,
       freeEggsReady: v.pet.state.stage === 'egg' && v.pet.state.egg == null && v.pet.eggDay.nextPrice === 0,
+      buildRoom: v.hideout.build?.room ?? null,
+      buildRemainingMs: v.hideout.build?.remainingMs ?? null,
     });
   }, [key]);
 }
@@ -209,38 +276,75 @@ function RoomIcon({
   label,
   pulse,
   badge,
+  badgeCount,
+  badgeNoun = 'buffs',
   flexGrow,
   fontSize,
   onPress,
+  anchorRef,
 }: {
   emoji: string;
   label: string;
   pulse: boolean;
   badge: boolean;
+  badgeCount?: number;
+  /** What the count is, for the screen reader ("3 buffs", "3 things ready"). */
+  badgeNoun?: string;
   flexGrow: number;
   fontSize: number;
   onPress: () => void;
+  /** Coach-tip anchor (Phase 4): lets the tip layer find this button. */
+  anchorRef?: (node: View | null) => void;
 }) {
+  const street = streetUiOn();
   return (
     <Pressable
-      onPress={onPress}
+      ref={anchorRef}
+      onPress={() => {
+        if (street) tapHaptic();
+        onPress();
+      }}
       accessibilityRole="button"
-      accessibilityLabel={`${emoji} ${label}${badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
-      style={({ pressed }) => [styles.icon, { flexGrow }, pressed && styles.pressed]}>
-      <PixelFrame fill={pulse ? PIXEL.cyan : PIXEL.ink} border={PIXEL.cyan} minHeight={48} style={styles.iconFrame}>
+      accessibilityLabel={`${emoji} ${label}${badgeCount ? `, ${badgeCount} ${badgeNoun}` : badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
+      style={({ pressed }) => [styles.icon, { flexGrow }, pressed && (street ? styles.streetSquash : styles.pressed)]}>
+      <PixelFrame
+        fill={pulse ? PIXEL.cyan : PIXEL.ink}
+        border={PIXEL.cyan}
+        minHeight={48}
+        style={styles.iconFrame}
+        streetPiece={street ? (pulse ? 'button-primary' : 'button-secondary') : undefined}>
         <PixelLabel
-          color={pulse ? PIXEL.onFill : PIXEL.cyan}
+          color={street ? (pulse ? STREET.ink : STREET.paper) : pulse ? PIXEL.onFill : PIXEL.cyan}
+          shadowColor={street || pulse ? 'transparent' : undefined}
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.85}
-          style={{ fontSize, lineHeight: fontSize + 4, textAlign: 'center', width: '100%' }}>
+          style={{
+            fontSize,
+            lineHeight: fontSize + 4,
+            textAlign: 'center',
+            width: '100%',
+            ...(street ? { fontFamily: STREET_FONT.bold, textTransform: 'uppercase' as const } : null),
+          }}>
           {label}
         </PixelLabel>
       </PixelFrame>
-      {badge ? <View style={styles.badge} /> : null}
+      {badgeCount && badgeCount > 0 ? (
+        <View style={styles.countBadge} accessible={false}>
+          <Text style={styles.countBadgeText}>{badgeCount > 9 ? '9+' : String(badgeCount)}</Text>
+        </View>
+      ) : badge ? (
+        <View style={styles.badge} />
+      ) : null}
     </Pressable>
   );
 }
+
+/** The day the visitor's notice last showed in this app open (module scope: survives tab switches). */
+let visitorNoticeYmd: string | null = null;
+/** A friend's pet in their own Hideout just stands there (the gift is on the dock). */
+const noCircleTap = () => {};
+const VISITOR_NOTICE_DELAY_MS = 1200;
 
 export function PetScreen({
   view,
@@ -252,12 +356,19 @@ export function PetScreen({
   onGoDive,
   talkEvent = null,
   onTalkConsumed,
-  onReplayTutorial,
+  onOpenSettings,
+  settingsOpen = false,
+  onBusyChange,
   openJournal = false,
   onJournalOpened,
-  onBanner,
   openGuide: openGuideReq = false,
   onGuideOpened,
+  shellTop = null,
+  shellTabs = null,
+  away = null,
+  onAwayClose,
+  onOpenLocker,
+  onClaimResearch,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -273,19 +384,32 @@ export function PetScreen({
   talkEvent?: PetTalkEvent;
   /** Called once the room has said the event, so it is never replayed. */
   onTalkConsumed?: () => void;
-  /** v24 — Settings → Replay the tutorial. */
-  onReplayTutorial?: () => void;
+  /** Opens the one Divecore Settings sheet (Play shell, Phase 3), over whatever is showing. */
+  onOpenSettings?: () => void;
+  /** The shell's Settings sheet is open over the Hideout (the pet counts it as being busy). */
+  settingsOpen?: boolean;
+  /** True while a sheet or mini-game is open: the shell keeps the phone's own swipe-back off then. */
+  onBusyChange?: (busy: boolean) => void;
   /** v25 — a "Milestone ready" banner was tapped: open Info → Journal once,
    * then `onJournalOpened` clears the request. */
   openJournal?: boolean;
   onJournalOpened?: () => void;
-  /** v26 — open Info → Guide (from the hub ⚙ or the tutorial). */
+  /** v26 — open Info → Guide (from the hub ⚙ or a "?" sheet). */
   openGuide?: boolean;
   onGuideOpened?: () => void;
-  /** v26 — post a floating banner (NEW RECORD!, unlocks, buffs). */
-  onBanner?: (b: { title: string; body: string }) => void;
+  /** Stage layout: the shell's resource bar (TopBar) and tab bar for this GameScreen. */
+  shellTop?: ReactNode;
+  shellTabs?: ReactNode;
+  /** "While you were away" for this open (null = nothing to say). */
+  away?: AwaySummary | null;
+  onAwayClose?: () => void;
+  /** The Stash's "Open Locker" link (the shell switches to the Locker tab). */
+  onOpenLocker?: () => void;
+  /** Today's "Claim" row: the same claim the CLAIM button in the top bar makes. */
+  onClaimResearch?: () => void | Promise<void>;
 }) {
   const fontsReady = usePixelFonts();
+  const frame = useStageFrame('hideout');
   const devUnlocked = usePlayDevUnlocked();
   const dev = PRE_LAUNCH_DEV && devUnlocked;
   const pv = view.pet;
@@ -297,7 +421,7 @@ export function PetScreen({
     setStoneUid(uid);
     setSheet('stone');
   };
-  const [infoTab, setInfoTab] = useState<InfoTab>('status');
+  const [infoTab, setInfoTab] = useState<InfoTab | null>(null);
   useEffect(() => {
     if (!openJournal) return;
     setGame(null);
@@ -306,9 +430,23 @@ export function PetScreen({
     onJournalOpened?.();
   }, [openJournal, onJournalOpened]);
   const [game, setGame] = useState<GameRun | null>(null);
+  // Minigames M1: the counted round waits on a result card over the finished game; Continue runs `afterRound`.
+  const [roundCard, setRoundCard] = useState<RoundCardData | null>(null);
+  const roundCardRef = useRef<RoundCardData | null>(null);
+  roundCardRef.current = roundCard;
+  const afterRound = useRef<(() => void) | null>(null);
+  const leaveGame = () => {
+    const after = afterRound.current;
+    afterRound.current = null;
+    setRoundCard(null);
+    setGame(null);
+    if (after) after();
+    else setSheet(null);
+  };
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [lastKind, setLastKind] = useState<PetRoundKind | null>(null);
   const [lastRound, setLastRound] = useState<{ key: string; score: number; strong: boolean } | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [teaseOpen, setTeaseOpen] = useState(false);
 
   // Dev-only room hooks (Info → Dev).
   // Dev room toggles live in a store so the floating DEV kit can drive them too.
@@ -325,10 +463,10 @@ export function PetScreen({
   const fxQuality = useFxQuality();
   const [juiceKey, setJuiceKey] = useState(0);
   const [wipe, setWipe] = useState<'off' | 'cover' | 'reveal'>('off');
-  const motionOn = fxQuality === 'full' && !reduceMotion;
+  const playMotion = usePlayMotion();
   useEffect(() => {
-    if (motionOn && takeWipe('room')) setWipe('reveal');
-  }, [motionOn]);
+    if (takeWipe('room')) setWipe('reveal');
+  }, []);
   // v26 Guide: "?" buttons open Info → Guide at a section.
   const [guideSection, setGuideSection] = useState<GuideSection | null>(null);
   // Bumped on every "?" tap so the same section re-opens after you browsed away.
@@ -348,9 +486,100 @@ export function PetScreen({
     setSheet('info');
     onGuideOpened?.();
   }, [openGuideReq, onGuideOpened]);
+  // Info is a list of sections, all collapsed until tapped (step 0l). Each section's body renders only while open.
+  const infoSectionBody = (id: InfoTab) =>
+    id === 'status' ? (
+      <StatusTab view={view} onGuide={openGuide} onSettings={() => onOpenSettings?.()} />
+    ) : id === 'journal' ? (
+      <>
+        <JournalTab view={view} commit={commit} />
+        <GuideLink section="collection" onOpen={openGuide} />
+      </>
+    ) : id === 'book' ? (
+      <>
+        <BookTab view={view} commit={commit} eggColor={eggColor} />
+        <GuideLink section="collection" onOpen={openGuide} />
+      </>
+    ) : id === 'hall' ? (
+      <>
+        <HallTab view={view} eggColor={eggColor} />
+        <GuideLink section="collection" onOpen={openGuide} />
+      </>
+    ) : id === 'style' ? (
+      <StyleTab view={view} commit={commit} />
+    ) : id === 'guide' ? (
+      <HelpTab key={guideNonce} section={guideSection} />
+    ) : dev ? (
+      <PetDevPanel pet={pet} commit={commit} startOpen={[]} />
+    ) : null;
 
   const hour = useHour();
-  const night = devNight === 'auto' ? isBedtime(new Date(), view.settings.bedtime) : devNight === 'on';
+  const clockNight = isBedtime(new Date(), view.settings.bedtime);
+  const presence = resolvePresence({
+    pet,
+    hideout: view.hideout.state,
+    interaction: sheet != null || game != null || settingsOpen,
+    expeditionAway: pv.away,
+    bedtime: view.settings.bedtime,
+    now: new Date(),
+    todayYmd: localYmd(),
+  });
+  // The Loft's Sleep action: in bed by choice counts as night for the pet's pose, whatever the clock says.
+  const sleepByChoice = sleepChosen(view.hideout.state, pet) && presence.asleep && presence.room === 'loft';
+  const night =
+    devNight === 'auto'
+      ? (clockNight && !wokeUp(view.hideout.state, pet)) || sleepByChoice
+      : devNight === 'on';
+  // Why Call would not bring the pet over; a short note on the notice strip explains a dimmed Call / Light by day / Sleep.
+  const callBlock = callBlocker(pet, view.hideout.state);
+  const [railNoteState, setRailNoteState] = useState<{ text: string; n: number } | null>(null);
+  const railNote = railNoteState?.text ?? null;
+  // A nonce, so the same note tapped twice restarts its 3.5 s timer.
+  const setRailNote = useCallback((text: string | null) => setRailNoteState(text == null ? null : { text, n: Date.now() }), []);
+  useEffect(() => {
+    if (railNoteState == null) return;
+    const t = setTimeout(() => setRailNoteState(null), 3500);
+    return () => clearTimeout(t);
+  }, [railNoteState]);
+  // The pet talks (idle chatter, taps) only in the room it is in.
+  const petHereRef = useRef(true);
+  petHereRef.current = presence.room === view.hideout.viewed && !presence.away;
+  useEffect(() => {
+    if (!presence.peekaboo) return;
+    commit((doc, now) => stampHideoutPeekaboo(doc, now));
+  }, [presence.peekaboo, commit]);
+
+  // Daily visitors (roadmap step 4): today's visitor from the local date (offline), never your pet's
+  // own hero (a stand-in comes instead); none while the pet is still an egg. Street layout only.
+  const todayYmd = localYmd();
+  const petHeroId = useMemo(() => {
+    const look = petLookFor(pet.line, 'adult');
+    return look?.kind === 'hero' ? look.heroId : null;
+  }, [pet.line]);
+  const visitor = streetUiOn() && pet.stage !== 'egg' ? visitorFor(todayYmd, petHeroId) : null;
+  // Step 0o: it is in the Hideout 08:00–22:00 local time (walks in and out through the door); re-read each render (the store ticks).
+  const visitorOpen = visitorOpenAtHour(hour);
+  const visitorGreeted = greetedToday(view.hideout.state.visitors, todayYmd);
+  const [visitorCard, setVisitorCard] = useState<VisitorCardShow | null>(null);
+  const tapVisitor = () => {
+    if (!visitor) return;
+    // Re-read the day at the tap: past midnight it is already the next visitor's day (never a second greeting).
+    const tapYmd = localYmd();
+    const today = tapYmd === visitor.ymd ? visitor : visitorFor(tapYmd, petHeroId);
+    if (greetedToday(view.hideout.state.visitors, tapYmd)) {
+      // Said hi already today: it just chats (no reward, nothing saved).
+      setVisitorCard({ reward: { kind: 'visit', heroId: today.heroId }, greetN: view.hideout.state.visitors.greets[today.heroId] ?? 0 });
+      return;
+    }
+    let shown: VisitorCardShow | null = null;
+    commit((doc, now) => {
+      const res = greetDailyVisitor(doc, now, today);
+      if (!res) return null;
+      shown = { reward: res.reward, greetN: res.doc.hideout.visitors.greets[today.heroId] ?? 1 };
+      return res.doc;
+    });
+    if (shown) setVisitorCard(shown);
+  };
   const realStatus = petStatus({
     stage: pet.stage,
     hunger: pet.hunger,
@@ -392,7 +621,7 @@ export function PetScreen({
   awayRef.current = pv.away;
   const say = useCallback(
     (situation: PetTalkSituation) => {
-      if (awayRef.current) return;
+      if (awayRef.current || !petHereRef.current) return;
       if (eggRef.current) {
         sayText(pickEggLine(lastLineRef.current));
         return;
@@ -463,9 +692,28 @@ export function PetScreen({
     say('expedition_back');
   }, [pv.expeditionNote, say]);
 
+  // P1: an egg's duplicate joined the hero you keep. Said once, after the
+  // reveal's own line has had its time, then cleared.
+  // Refs, so a re-render never restarts the wait.
+  const mergeNote = pv.mergeNote;
+  const sayTextRef = useRef(sayText);
+  sayTextRef.current = sayText;
+  const commitRef = useRef(commit);
+  commitRef.current = commit;
+  useEffect(() => {
+    if (!mergeNote) return;
+    const t = setTimeout(() => {
+      sayTextRef.current(mergeLine(mergeNote, heroName(mergeNote.hero)));
+      commitRef.current((doc) => clearMergeNote(doc));
+    }, PET_TALK_HOLD_MS + 600);
+    return () => clearTimeout(t);
+  }, [mergeNote]);
+
   // Now and then while idle: its mood, the time of day, or chatter — as
   // often as the Chatter setting says (Off: never on its own).
   const chatter = view.settings.chatter;
+  // Rarely, instead of the usual line: one that shows the pet knows the person (pet-knows-you.ts).
+  const { maybeLine: maybePersonalLine } = usePetKnowsYou();
   useEffect(() => {
     const range = idleTalkDelayMs(chatter, PET_IDLE_TALK_MIN_MS, PET_IDLE_TALK_MAX_MS);
     if (!range) return;
@@ -476,16 +724,21 @@ export function PetScreen({
         if (sheetRef.current == null && statusRef.current === 'chilly') {
           sayEgg('keep_warm');
         } else if (sheetRef.current == null && statusRef.current !== 'sleepy' && statusRef.current !== 'choose_egg') {
-          const roll = Math.random();
-          const tod = timeOfDaySituation(hourRef.current);
-          say(roll < 0.5 ? talkSituationForStatus(statusRef.current) : roll < 0.7 && tod ? tod : 'chatter');
+          const personal = maybePersonalLine(eggRef.current || awayRef.current);
+          if (personal) {
+            sayText(personal);
+          } else {
+            const roll = Math.random();
+            const tod = timeOfDaySituation(hourRef.current);
+            say(roll < 0.5 ? talkSituationForStatus(statusRef.current) : roll < 0.7 && tod ? tod : 'chatter');
+          }
         }
         schedule();
       }, wait);
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [say, sayEgg, chatter]);
+  }, [say, sayEgg, sayText, maybePersonalLine, chatter]);
 
   // Shards ready to trade up: say so once per visit.
   const tradeSaidRef = useRef(false);
@@ -502,6 +755,9 @@ export function PetScreen({
   const tipNextRef = useRef(true);
   const tapPet = () => {
     setTapKey((k) => k + 1);
+    if ((clockNight || sleepChosen(view.hideout.state, pet)) && !eggRef.current) {
+      commit((doc, now) => wakeHideoutPet(doc, now));
+    }
     if (eggRef.current) {
       if (pet.egg == null) {
         setSheet('eggs');
@@ -524,14 +780,15 @@ export function PetScreen({
   const openIcon = (id: PetCoachIcon) => {
     if (id === 'dive') {
       setSheet(null);
-      if (motionOn) setWipe('cover');
-      else onGoDive();
+      setWipe('cover');
       return;
     }
-    if (id === 'info') setInfoTab('status');
+    if (id === 'info') setInfoTab(null);
     setSheet(id);
   };
   const startGame = (run: GameRun) => {
+    setRoundCard(null);
+    afterRound.current = null;
     setSheet(null);
     setGame(run);
   };
@@ -558,29 +815,211 @@ export function PetScreen({
     setSheet(null);
   };
 
+  // The away card shows when there is one, nothing covers it (Settings) and no reveal ceremony waits.
+  const awayShown = away != null && onAwayClose != null && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
+  // Busy (no coach tip, no iOS swipe-back): a sheet, a mini-game or the away card is up.
+  const busy = sheet != null || game != null || awayShown;
+  // The visitor card waits for the away card and hides under Settings, like it — and counts as busy too.
+  const visitorShown = visitorCard != null && !awayShown && !settingsOpen && (pet.reveals[revealStep] ?? null) == null;
+  // The decor picker (roadmap step 5) waits for the same things, and is busy too.
+  const [decorSlot, setDecorSlot] = useState<DecorSlotId | null>(null);
+  const decorShown = decorSlot != null && !awayShown && !settingsOpen && !visitorShown && (pet.reveals[revealStep] ?? null) == null;
+  const pickDecor = (item: DecorItemId | null) => {
+    if (decorSlot == null) return;
+    const slot = decorSlot;
+    commit((doc) => setHideoutDecor(doc, slot, item));
+    setDecorSlot(null);
+  };
+  // Circle visits (roadmap step 6): the friend list (float card), a friend's Hideout (the stage shows
+  // their room; the notice lane and the dock swap their contents, never their size) and gifts left for you.
+  const [circleOpen, setCircleOpen] = useState(false);
+  const circleOpenRef = useRef(false);
+  circleOpenRef.current = circleOpen && view.hideout.viewed === 'hideout';
+  const [circleList, setCircleList] = useState<CircleListState>({ kind: 'loading' });
+  const [circleBusy, setCircleBusy] = useState<string | null>(null);
+  const [circleNote, setCircleNote] = useState<string | null>(null);
+  const [circleVisit, setCircleVisit] = useState<{
+    friend: CircleFriend;
+    look: CircleLook;
+    gift: 'idle' | 'sending' | 'sent';
+    note: string | null;
+  } | null>(null);
+  const [circleInbox, setCircleInbox] = useState<CircleGift[]>([]);
+  const [circleGiftCard, setCircleGiftCard] = useState<CircleGift | null>(null);
+  const loadCircleInbox = useCallback(() => {
+    void fetchCircleInbox().then((res) => {
+      if (res.kind === 'ok') setCircleInbox(res.value);
+    });
+  }, []);
+  const circleOn = streetUiOn();
+  useEffect(() => {
+    if (circleOn) loadCircleInbox();
+  }, [circleOn, loadCircleInbox]);
+  const openCircle = () => {
+    setCircleOpen(true);
+    setCircleNote(null);
+    setCircleList({ kind: 'loading' });
+    void fetchCircleFriends().then((res) => setCircleList(res.kind === 'ok' ? { kind: 'ok', friends: res.value } : { kind: res.kind }));
+  };
+  const toggleCircleShare = (f: CircleFriend, on: boolean) => {
+    setCircleBusy(f.peer);
+    setCircleNote(null);
+    void setCircleShare(f.peer, on).then((res) => {
+      setCircleBusy(null);
+      if (res.kind !== 'ok') {
+        setCircleNote(res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error);
+        return;
+      }
+      setCircleList((s) =>
+        s.kind === 'ok'
+          ? { kind: 'ok', friends: s.friends.map((x) => (x.peer === f.peer ? { ...x, mine: on, allowed: res.value.allowed } : x)) }
+          : s,
+      );
+    });
+  };
+  const visitCircleFriend = (f: CircleFriend) => {
+    setCircleBusy(f.peer);
+    setCircleNote(null);
+    void fetchCircleRoom(f.peer).then((res) => {
+      setCircleBusy(null);
+      // Closed the list (or left the Hideout room) while it loaded: no visit starts.
+      if (!circleOpenRef.current) return;
+      if (res.kind !== 'ok') {
+        setCircleNote(res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error);
+        return;
+      }
+      if (res.value.kind !== 'room') {
+        setCircleNote(res.value.kind === 'no_save' ? CIRCLE_UI.noSave : CIRCLE_UI.notAllowed);
+        return;
+      }
+      // Their room is the Hideout room: switch the view there first (only from the Hideout's own rail).
+      setCircleVisit({ friend: f, look: res.value.look, gift: f.giftedToday ? 'sent' : 'idle', note: null });
+      setCircleOpen(false);
+    });
+  };
+  const leaveCircleGift = () => {
+    if (!circleVisit || circleVisit.gift !== 'idle') return;
+    const peer = circleVisit.friend.peer;
+    setCircleVisit((v) => (v ? { ...v, gift: 'sending', note: null } : v));
+    void sendCircleGift(peer).then((res) => {
+      setCircleVisit((v) => {
+        if (!v || v.friend.peer !== peer) return v;
+        if (res.kind === 'ok' && res.value !== 'not_allowed') return { ...v, gift: 'sent', note: null };
+        if (res.kind === 'ok') return { ...v, gift: 'idle', note: CIRCLE_UI.giftNotAllowed };
+        return { ...v, gift: 'idle', note: res.kind === 'off' ? CIRCLE_UI.off : CIRCLE_UI.error };
+      });
+    });
+  };
+  const leaveCircleVisit = () => {
+    setCircleVisit(null);
+    loadCircleInbox();
+  };
+  // A friend's pet with a gift stands where the daily visitor does, once today's visitor has had its hello.
+  const circleGift = circleOn && !circleVisit ? nextCircleGift(circleInbox, view.hideout.state.circle) : null;
+  const circleGiftHere = circleGift != null && (!visitor || !visitorOpen || visitorGreeted);
+  const tapCircleGift = () => {
+    if (!circleGift) return;
+    const gift = circleGift;
+    commit((doc) => openCircleGift(doc, gift));
+    setCircleGiftCard(gift);
+    void markCircleGiftOpened(gift.id);
+  };
+  const circleShown = circleOpen && !circleVisit && !awayShown && !settingsOpen && !visitorShown && !decorShown && (pet.reveals[revealStep] ?? null) == null;
+  const circleGiftShown = circleGiftCard != null && !awayShown && !settingsOpen && !visitorShown && !decorShown && (pet.reveals[revealStep] ?? null) == null;
+  const overlayBusy = busy || visitorShown || decorShown;
+  // Circle cards and a visit are busy too (a separate value: the decor-slots pin on overlayBusy is untouched).
+  const hideoutBusy = overlayBusy || circleShown || circleGiftShown || circleVisit != null;
+  const circleVisitOn = circleVisit != null;
+  const leaveVisitRef = useRef(leaveCircleVisit);
+  leaveVisitRef.current = leaveCircleVisit;
+
+  // The visitor's notice: once per day per app open (until you say hi), after the away card closes. A short wait
+  // lets an away card that is still being worked out on open come first (it cancels this timer).
+  const visitorHeroId = visitor?.heroId ?? null;
+  useEffect(() => {
+    if (!visitorHeroId || visitorGreeted || awayShown || !visitorOpen) return;
+    if (visitorNoticeYmd === todayYmd) return;
+    const t = setTimeout(() => {
+      visitorNoticeYmd = todayYmd;
+      notify({ kind: 'notify', title: VISITOR_UI.noticeTitle, body: VISITOR_UI.noticeBody(heroName(visitorHeroId)), priority: 'low' });
+    }, VISITOR_NOTICE_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [visitorHeroId, visitorGreeted, awayShown, todayYmd, visitorOpen]);
+
+  // Phase 4 coach tips: one at a time, on the Hideout only, when nothing is open over it. A short
+  // delay keeps a tip from flashing on mount. Any touch marks it seen (GameScreen's onTipSeen).
+  const tipCandidate = pickCoachTip(view.settings.tipsSeen, {
+    idle: streetUiOn() && !hideoutBusy && !settingsOpen && !teaseOpen && wipe === 'off' && !pv.away && !presence.peekaboo,
+    egg: pet.stage === 'egg',
+    eggPicked: pet.egg != null,
+  });
+  const [tipReadyId, setTipReadyId] = useState<string | null>(null);
+  const tipCandidateId = tipCandidate?.id ?? null;
+  useEffect(() => {
+    if (tipCandidateId == null) {
+      setTipReadyId(null);
+      return;
+    }
+    const t = setTimeout(() => setTipReadyId(tipCandidateId), 700);
+    return () => clearTimeout(t);
+  }, [tipCandidateId]);
+  const shownTip = tipCandidate && tipReadyId === tipCandidate.id ? tipCandidate : null;
+  // Newbie guide (finish step 5): the same "nothing is open over the Hideout" test the coach tips use, plus no
+  // reveal ceremony and no tip waiting — the guide never shows together with a coach tip.
+  const guideIdle =
+    streetUiOn() &&
+    !hideoutBusy &&
+    !settingsOpen &&
+    !teaseOpen &&
+    wipe === 'off' &&
+    !pv.away &&
+    !presence.peekaboo &&
+    tipCandidate == null &&
+    (pet.reveals[revealStep] ?? null) == null;
+  const seeTip = useCallback(
+    (id: CoachTipId) => {
+      commit((doc) =>
+        doc.play_settings.tipsSeen[id]
+          ? null
+          : setPlaySettings(doc, { tipsSeen: markTipSeen(doc.play_settings.tipsSeen, id) }),
+      );
+    },
+    [commit],
+  );
+
+  useEffect(() => {
+    onBusyChange?.(hideoutBusy);
+    return () => onBusyChange?.(false);
+  }, [hideoutBusy, onBusyChange]);
   useEffect(() => {
     if (!registerBack) return;
     registerBack({
       edgeSwipe: true,
       back: () => {
-        if (settingsOpen) {
-          setSettingsOpen(false);
+        // In a friend's Hideout, back = home (the edge swipe too).
+        if (circleVisitOn) {
+          leaveVisitRef.current();
           return true;
         }
         const step = petBackStep(sheet != null, game != null);
         if (step === 'hub') return false;
         if (step === 'close-game') {
-          setGame(null);
-          setSheet(null);
+          if (roundCardRef.current) leaveGame();
+          else {
+            setGame(null);
+            setSheet(null);
+          }
         } else setSheet(null);
         return true;
       },
     });
     return () => registerBack(null);
-  }, [registerBack, sheet, game, settingsOpen]);
+  }, [registerBack, sheet, game, circleVisitOn]);
 
   const roundClaim = useRef<{ run: GameRun | null; key: string }>({ run: null, key: '' });
   const finishRound = (run: GameRun) => (outcome: RoundOutcome, score: number) => {
+    // Practice counts for nothing, even if a game ever reported by mistake.
+    if (run.practice) return;
     if (roundClaim.current.run !== run) {
       roundClaim.current = { run, key: `pet:${run.kind}:${run.level}:${run.daily ? 'daily' : 'free'}:${Date.now()}` };
     }
@@ -591,27 +1030,34 @@ export function PetScreen({
       result = next.result;
       return next.doc;
     });
-    setGame(null);
-    if (result) {
+    if (!result) {
+      setGame(null);
+      return;
+    }
+    {
       const r: PetRoundResult = result;
+      // Everything below waits for Continue on the result card (or runs at once for a silent replay).
+      const after = () => {
       // A replay of the same round (background retry) comes back uncounted
       // and must not wipe the line the real win already showed.
       if (r.counted) {
-        setSheet('play');
+        // Back to the sheet the game lives in: Catch the food is in Feed, Tap to train in Play.
+        setSheet(kind === 'catch' ? 'feed' : 'play');
+        setLastKind(kind);
         setLastResult(roundResultLine(kind, outcome, r));
         setLastRound({ key: roundClaim.current.key, score: r.score, strong: isStrongResult(r) });
       }
-      // v26: a new record / unlock / buff gets the floating banner, and the
+      // v26: a new record / unlock / buff gets a notice (NoticeLane), and the
       // pet cheers (the tap hop + heart).
       if (r.newRecord) {
-        onBanner?.({ title: 'NEW RECORD!', body: `${r.score} pts on ${DIFFICULTY_LABEL[r.level]} (was ${r.prevBest}).` });
+        notify({ kind: 'celebrate', title: 'New record', body: `${r.score} pts on ${DIFFICULTY_LABEL[r.level]} (was ${r.prevBest}).` });
         tapPet();
       }
-      if (r.unlocked) onBanner?.({ title: `${DIFFICULTY_LABEL[r.unlocked]} unlocked`, body: 'A harder level is open in Play.' });
-      if (r.buff) onBanner?.({ title: `${BUFF_ICON[r.buff]} ${BUFF_LABEL[r.buff]}`, body: BUFF_HOW[r.buff] });
-      if (r.dailyBonusShells > 0) onBanner?.({ title: 'Daily best!', body: `+${r.dailyBonusShells} shells — come back tomorrow for a new pattern.` });
-      if (r.dailyEgg) onBanner?.({ title: '🥚 Daily egg', body: 'Daily challenge passed — one more free egg today.' });
-      if (r.dailyStone) onBanner?.({ title: '💎 Shine Stone', body: 'Your first daily Gold today — a Shine Stone is yours.' });
+      if (r.unlocked) notify({ kind: 'celebrate', title: `${DIFFICULTY_LABEL[r.unlocked]} unlocked`, body: 'A harder level is open in Play.' });
+      if (r.buff) notify({ kind: 'celebrate', title: `${BUFF_LABEL[r.buff]}`, body: BUFF_NOTICE[r.buff] });
+      if (r.dailyBonusShells > 0) notify({ kind: 'celebrate', title: 'Daily best', body: `+${r.dailyBonusShells} shells. New pattern tomorrow.` });
+      if (r.dailyEgg) notify({ kind: 'celebrate', title: 'Daily egg', body: 'Challenge passed: one more free egg today.' });
+      if (r.dailyStone) notify({ kind: 'celebrate', title: 'Shine Stone', body: 'First daily Gold: a Shine Stone is yours.' });
       // v25: it reacts to a pass, a skilled pass, a fail, or a bomb-out.
       const talk = !outcome.pass
         ? (outcome.bombs ?? 0) >= 3
@@ -621,6 +1067,18 @@ export function PetScreen({
           ? 'skilled'
           : 'pass';
       if (!awayRef.current) sayText(pickRoundTalk(talk, lastLineRef.current));
+      };
+      if (r.counted || !outcome.pass) {
+        afterRound.current = after;
+        setRoundCard({
+          pass: outcome.pass && r.counted,
+          strong: r.counted && isStrongResult(r),
+          lines: roundResultLine(kind, outcome, r).split('\n'),
+        });
+      } else {
+        setGame(null);
+        after();
+      }
     }
   };
 
@@ -634,8 +1092,42 @@ export function PetScreen({
     eggColor,
     recolor: revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn, pet.shiny_style) : null,
     glow: revealed && pet.grade ? GRADE_COLOR[pet.grade] : ELEMENT_COLOR[view.legendElement],
+    grade: revealed ? pet.grade : null,
+    shiny: revealed && pet.shiny,
+    shinyStyle: pet.shiny_style,
+    glimmer: revealed && !pet.shiny && pet.glimmer,
+    auraElement: view.swords.equipped?.element ?? null,
   };
   const shownName = petShownName(pet);
+  // Today (Divecore finish step 4): what is ready right now, derived from the live view (no save, no timer: it
+  // re-reads on the store's own ticks). Counted on the dock button; listed in the Today sheet.
+  const todayList = todayItems({
+    name: shownName,
+    researchFinds: canClaimResearch(view) ? view.research.readyFinds : 0,
+    status,
+    freeEggs: freeEggsWaiting(pet.stage, pet.egg, pv.eggDay.nextPrice, pv.eggDay.free, pv.eggDay.used),
+    expedition: pv.expedition,
+    tripBack: pv.expeditionNote != null && pv.expeditionNoteFresh,
+    visitorHere: visitor != null && visitorOpen && !visitorGreeted,
+    diveFull: view.dive.full,
+    diveActive: view.diveRun.active,
+  });
+  const onTodayAction = (action: TodayAction) => {
+    if (action === 'claim') {
+      void onClaimResearch?.();
+      return;
+    }
+    if (action === 'visitor') {
+      setSheet(null);
+      tapVisitor();
+      return;
+    }
+    if (action === 'dive') {
+      openIcon('dive');
+      return;
+    }
+    setSheet(action === 'feed' ? 'feed' : action === 'play' ? 'play' : action === 'eggs' ? 'eggs' : 'expedition');
+  };
   const heroLabel = revealed && pet.hero ? gradedName(pet.grade, pet.name ?? heroName(pet.hero)) : null;
   const title =
     pet.stage === 'egg'
@@ -727,97 +1219,332 @@ export function PetScreen({
   };
 
   if (!fontsReady) return <View style={styles.screen} />;
+  const street = streetUiOn();
+  const teaseRoom: HideoutRoomId = nextBuildRoom(view.hideout.state);
+  const teaseStage = roomStage(teaseRoom, view.hideout.state);
+  const teaseCopy = HideoutTeaseSheetCopy({
+    room: teaseRoom,
+    stage: teaseStage === 'building' ? 'building' : 'tease',
+    progress: view.hideout.progress,
+    build: view.hideout.state.builds[teaseRoom],
+    tokens: view.tokens,
+  });
+  const kitIcon = (name: UiPiece, size: number) => (
+    <View style={{ width: size, height: size }}>
+      <ClipImage drawable={uiDrawable(name)} />
+    </View>
+  );
 
   return (
     <View style={styles.screen}>
       <FinishMotionHost reduceMotion={reduceMotion} />
-      <View style={styles.topBar}>
-        <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Command Hub" style={styles.backHit}>
+      {street ? null : (
+        <View style={[styles.topBar, street && styles.streetGone]}>
+          <Pressable
+            onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Exit Play"
+            style={[styles.backHit, street && styles.streetGone]}>
+            <PixelLabel
+              color={PIXEL.cyan}
+              numberOfLines={1}
+              style={{ fontSize: headerTight ? 13 : 16, lineHeight: headerTight ? 16 : 20, maxWidth: backW }}>
+              ‹ Exit
+            </PixelLabel>
+          </Pressable>
           <PixelLabel
-            color={PIXEL.cyan}
             numberOfLines={1}
-            style={{ fontSize: headerTight ? 13 : 16, lineHeight: headerTight ? 16 : 20, maxWidth: backW }}>
-            ‹ Hub
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            style={[styles.title, { fontSize: titlePt, lineHeight: titlePt + 4 }, street && styles.streetTitle]}>
+            {title}
           </PixelLabel>
-        </Pressable>
-        <PixelLabel
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.7}
-          style={[styles.title, { fontSize: titlePt, lineHeight: titlePt + 4 }]}>
-          {title}
-        </PixelLabel>
-        <View style={styles.topActions}>
-          <Pressable
-            onPress={() => setSheet('den')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={`The Den, ${pv.den.used} of ${pv.den.slots} slots`}
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            <Text style={styles.topButtonText}>🏠</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setSheet('menu')}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Pet menu"
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            <Text style={styles.topButtonText}>⋯</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setSettingsOpen(true)}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Divecore settings"
-            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-            <Text style={styles.topButtonText}>⚙</Text>
-          </Pressable>
+          <View style={styles.topActions}>
+            <Pressable
+              onPress={() => setSheet('den')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={`${street ? 'The Stash' : 'The Den'}, ${pv.den.used} of ${pv.den.slots} slots`}
+              style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
+              {street ? kitIcon('nav-tab-locker', 26) : <Text style={styles.topButtonText}>🏠</Text>}
+            </Pressable>
+            <Pressable
+              onPress={() => setSheet('menu')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Pet menu"
+              style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetTopButton]}>
+              <Text style={[styles.topButtonText, street && styles.streetTopText]}>⋯</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onOpenSettings?.()}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Divecore settings"
+              // Street: the resource bar's gear opens this same sheet (one gear, not two).
+              style={[styles.topButton, { width: headerBtn, height: headerBtn }, street && styles.streetGone]}>
+              {street ? kitIcon('nav-settings', 26) : <Text style={styles.topButtonText}>⚙</Text>}
+            </Pressable>
+          </View>
         </View>
-      </View>
-
-      <PetRoom
-        pet={pet}
-        wear={pv.wear}
-        aura={pv.aura ?? view.legendElement}
-        eggColor={eggColor}
-        status={status}
-        coach={coach}
-        night={night}
-        pantry={pv.pantryTotal}
-        stageLeftMs={pv.stageLeftMs}
-        speech={speech}
-        name={shownName}
-        tapKey={tapKey}
-        juiceKey={juiceKey}
+      )}
+      <GameScreen
+        frame={frame}
+        topBar={shellTop}
+        tabBar={shellTabs}
+        fadeKey="hideout"
         reduceMotion={reduceMotion}
-        auraElement={view.swords.equipped?.element ?? null}
-        onTapPet={tapPet}
-        onCoach={pressCoach}
-        recolor={recolor}
-        onBadge={() => setSheet('card')}
-        buffs={roomBuffs}
-        maxedAura={pv.pumped.maxed}
-        onPickEgg={(e) => {
-          setFocusEgg(e);
-          setSheet('eggs');
-        }}
-        tide={pv.tide.active}
-      />
-
-      <View style={styles.iconRow}>
-        {ICONS.map((icon) => (
-          <RoomIcon
-            key={icon.id}
-            emoji={icon.emoji}
-            label={icon.label}
-            flexGrow={icon.id === 'expedition' ? 1.85 : 1}
-            fontSize={tabPt}
-            pulse={pulseIcon === icon.id}
-            badge={icon.id === 'dive' && view.diveRun.active}
-            onPress={() => openIcon(icon.id)}
+        background={NEON.ink}
+        help="hideout"
+        tip={shownTip}
+        float={
+          // Waits for a hatch / reveal ceremony to close and hides under Settings, so nothing stacks.
+          awayShown && away && onAwayClose ? (
+            <AwayCard summary={away} top={layoutRegions(frame).notice.height + SPACE.s} onClose={onAwayClose} />
+          ) : visitorShown && visitorCard ? (
+            <VisitorCard show={visitorCard} top={layoutRegions(frame).notice.height + SPACE.s} onClose={() => setVisitorCard(null)} />
+          ) : decorShown && decorSlot ? (
+            <DecorSheet
+              slot={decorSlot}
+              placed={view.hideout.state.decor[decorSlot] ?? null}
+              top={layoutRegions(frame).notice.height + SPACE.s}
+              onPick={pickDecor}
+              onClose={() => setDecorSlot(null)}
+            />
+          ) : circleGiftShown && circleGiftCard ? (
+            <CircleGiftCard gift={circleGiftCard} top={layoutRegions(frame).notice.height + SPACE.s} onClose={() => setCircleGiftCard(null)} />
+          ) : circleShown ? (
+            <CircleSheet
+              state={circleList}
+              busyPeer={circleBusy}
+              note={circleNote}
+              top={layoutRegions(frame).notice.height + SPACE.s}
+              onToggle={toggleCircleShare}
+              onVisit={visitCircleFriend}
+              onClose={() => setCircleOpen(false)}
+            />
+          ) : (
+            <GuideHost
+              screen="hideout"
+              view={view}
+              active={guideIdle}
+              bottom={layoutRegions(frame).dock.height + SPACE.s}
+              sideInset={RAIL_EDGE_PT + RAIL_BUTTON_PT + SPACE.s}
+            />
+          )
+        }
+        onTipSeen={seeTip}
+        notice={
+          street ? (
+            circleVisit ? (
+              <CircleVisitStrip handle={circleVisit.friend.handle} note={circleVisit.note} />
+            ) : railNote ? (
+              <Pressable
+                onPress={() => setRailNote(null)}
+                accessibilityRole="button"
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={`${railNote} Tap to hide.`}
+                style={styles.laneHint}>
+                <Text style={styles.laneHintText} numberOfLines={2} maxFontSizeMultiplier={1.2}>
+                  {railNote}
+                </Text>
+              </Pressable>
+            ) : !view.hideout.state.coach_swipe_seen && pet.stage !== 'egg' ? (
+              <Pressable
+                onPress={() => commit((doc, now) => markHideoutCoach(doc, now))}
+                accessibilityRole="button"
+                accessibilityLabel="Swipe between rooms. The marker on the right shows where your pet is. Tap to hide."
+                style={styles.laneHint}>
+                <Text style={styles.laneHintText} numberOfLines={2} maxFontSizeMultiplier={1.2}>
+                  Swipe for rooms. The marker shows where your pet is.
+                </Text>
+              </Pressable>
+            ) : (
+              <View style={styles.laneStrip}>
+                <StreetStatusStrip
+                  egg={pet.stage === 'egg'}
+                  picking={pet.stage === 'egg' && pet.egg == null}
+                  hunger={pet.hunger}
+                  mood={pet.mood}
+                  warmth={pet.warmth}
+                  stageLabel={PET_STAGE_LABEL[pet.stage]}
+                  name={shownName}
+                  grade={pet.hero != null && pet.stage !== 'egg' && pet.stage !== 'baby' ? pet.grade : null}
+                  shiny={pet.shiny}
+                  copies={pet.hero ? pv.heroes[pet.hero]?.copies ?? 0 : 0}
+                  gearWorn={pet.hero && pet.stage !== 'egg' && pet.stage !== 'baby' ? view.heroWorn[pet.hero] ?? 0 : null}
+                  reduceMotion={playMotion.cosmeticsStill}
+                />
+              </View>
+            )
+          ) : null
+        }
+        stage={
+          <PetRoom
+            stageSize={street ? { width: frame.stage.width, height: frame.stage.height } : undefined}
+            visitor={visitor ? { heroId: visitor.heroId, greeted: visitorGreeted, onTap: tapVisitor, open: visitorOpen } : null}
+            decor={street ? { placed: view.hideout.state.decor, onTap: setDecorSlot } : null}
+            circle={
+              circleVisit
+                ? { heroId: circleVisit.look.heroId, greeted: true, onTap: noCircleTap, decor: circleVisit.look.decor }
+                : circleGiftHere && circleGift
+                  ? { heroId: circleGift.look.heroId, greeted: false, onTap: tapCircleGift }
+                  : null
+            }
+            roomOutside={street}
+            pet={pet}
+            wear={pv.wear}
+            aura={pv.aura ?? view.legendElement}
+            eggColor={eggColor}
+            status={status}
+            coach={coach}
+            night={night}
+            pantry={pv.pantryTotal}
+            stageLeftMs={pv.stageLeftMs}
+            speech={speech}
+            name={shownName}
+            copies={pet.hero ? pv.heroes[pet.hero]?.copies ?? 0 : 0}
+            gearWorn={pet.hero && pet.stage !== 'egg' && pet.stage !== 'baby' ? view.heroWorn[pet.hero] ?? 0 : null}
+            tapKey={tapKey}
+            juiceKey={juiceKey}
+            reduceMotion={reduceMotion}
+            sceneActive={game == null && wipe === 'off'}
+            auraElement={view.swords.equipped?.element ?? null}
+            onTapPet={tapPet}
+            onCoach={pressCoach}
+            recolor={recolor}
+            onBadge={() => setSheet('card')}
+            buffs={roomBuffs}
+            maxedAura={pv.pumped.maxed}
+            rails={
+              street ? (
+                <HideoutRails
+                  onCircle={openCircle}
+                  hidden={circleVisit != null}
+                  hideout={view.hideout.state}
+                  viewed={view.hideout.viewed}
+                  petRoom={presence.room}
+                  stageH={frame.stage.height}
+                  onSpot={(spot) =>
+                    spot === 'den'
+                      ? view.hideout.viewed === 'loft'
+                        ? pv.away
+                          ? setRailNote('Out on a trip. It sleeps when it is back.')
+                          : callBlock === 'young' || callBlock === 'hungry'
+                            ? setRailNote(callBlock === 'young' ? 'Too young for the bed yet.' : 'Too hungry to sleep. Feed it first.')
+                            : commit((doc, now) => sleepHideoutPet(doc, now))
+                        : setSheet('den')
+                      : openIcon(spot)
+                  }
+                  onLamp={() => commit((doc, now) => toggleLoftLamp(doc, now))}
+                  onView={(id: HideoutRoomId) => commit((doc, now) => viewHideoutRoom(doc, now, id))}
+                  onTease={() => setTeaseOpen(true)}
+                  onCall={() => {
+                    if (pv.away) return;
+                    commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
+                  }}
+                  callBlockNote={callBlock ? CALL_BLOCK_NOTE[callBlock] : null}
+                  onNote={setRailNote}
+                  away={pv.away}
+                  callA11y={
+                    pv.away
+                      ? pv.expeditionBackInMs != null
+                        ? expeditionCallCopy(pv.expeditionBackInMs)
+                        : 'Out on a trip'
+                      : `Call pet to ${roomDef(view.hideout.viewed).label}`
+                  }
+                  pulse={pulseIcon === 'play' || pulseIcon === 'dive' || pulseIcon === 'expedition' ? pulseIcon : null}
+                  notes={{
+                    dive: view.diveRun.active ? 'Ride in progress' : `${view.dive.current}/${DIVE_CHARGE_CAP}`,
+                    expedition: pv.away ? 'Away' : undefined,
+                  }}
+                  nightLamp={{ night, on: view.hideout.state.lamp_on }}
+                  still={playMotion.cosmeticsStill}
+                  gentle={playMotion.vestibularSafe}
+                />
+              ) : null
+            }
+            onPickEgg={(e) => {
+              setFocusEgg(e);
+              setSheet('eggs');
+            }}
+            tide={pv.tide.active}
+            hideoutStage={
+              street
+                ? {
+                    hideout: view.hideout.state,
+                    progress: view.hideout.progress,
+                    presence,
+                    viewed: view.hideout.viewed,
+                    expeditionBackMs: pv.away ? pv.expeditionBackInMs : null,
+                    // While visiting a friend, a swipe stays in their room.
+                    onView: (id: HideoutRoomId) => (circleVisit ? undefined : commit((doc, now) => viewHideoutRoom(doc, now, id))),
+                    onTease: () => setTeaseOpen(true),
+                    onCall: () => {
+                      if (pv.away) return;
+                      commit((doc, now) => callPetToRoom(doc, now, view.hideout.viewed));
+                    },
+                    onCoachSeen: () => commit((doc, now) => markHideoutCoach(doc, now)),
+                  }
+                : null
+            }
           />
-        ))}
-      </View>
+        }
+        dock={
+          <>
+            <View style={styles.iconRow}>
+              {/* Streetwear: Play, Stash, Underground and Explore live on the left rail; the dock keeps Feed + Today + Info.
+                  In a friend's Hideout the same two slots are Leave a gift + Back home. */}
+              {circleVisit ? (
+                <>
+                  <RoomIcon
+                    emoji="🎁"
+                    label={circleVisit.gift === 'sent' ? CIRCLE_UI.giftSent : CIRCLE_UI.gift}
+                    flexGrow={1}
+                    fontSize={14}
+                    pulse={circleVisit.gift === 'idle'}
+                    badge={false}
+                    onPress={leaveCircleGift}
+                  />
+                  <RoomIcon emoji="🏠" label={CIRCLE_UI.home} flexGrow={1} fontSize={14} pulse={false} badge={false} onPress={leaveCircleVisit} />
+                </>
+              ) : null}
+              {(circleVisit ? [] : street ? ICONS.filter((icon) => icon.id === 'feed' || icon.id === 'info') : ICONS).map((icon) => (
+                <Fragment key={icon.id}>
+                  {/* Today (finish step 4): what is ready now. A count in the badge, never red, never pulsing. */}
+                  {street && icon.id === 'info' ? (
+                    <RoomIcon
+                      emoji="📋"
+                      label="Today"
+                      flexGrow={1}
+                      fontSize={14}
+                      pulse={false}
+                      badge={false}
+                      badgeCount={todayList.length}
+                      badgeNoun={todayList.length === 1 ? 'thing ready' : 'things ready'}
+                      onPress={() => {
+                        setGame(null);
+                        setSheet('today');
+                      }}
+                    />
+                  ) : null}
+                  <RoomIcon
+                    emoji={icon.emoji}
+                    label={icon.label}
+                    flexGrow={icon.id === 'expedition' ? 1.85 : 1}
+                    fontSize={street ? 14 : tabPt}
+                    pulse={pulseIcon === icon.id}
+                    badge={icon.id === 'dive' && view.diveRun.active}
+                    badgeCount={icon.id === 'info' ? roomBuffs.length : undefined}
+                    onPress={() => openIcon(icon.id)}
+                    anchorRef={icon.id === 'feed' ? tipAnchorRef('feed') : icon.id === 'info' ? tipAnchorRef('info') : undefined}
+                  />
+                </Fragment>
+              ))}
+            </View>
+          </>
+        }
+      />
 
       <PlaySheet open={sheet === 'feed'} title={SHEET_TITLE.feed} onClose={closeSheet} reduceMotion={reduceMotion}>
         {pet.stage === 'egg' ? (
@@ -826,13 +1553,30 @@ export function PetScreen({
           <FeedSheetBody view={view} commit={commit} onFed={() => setJuiceKey((n) => n + 1)} />
         )}
         <GuideLink section="pet" onOpen={openGuide} />
+        {/* Catch the food lives here, right under "? Your pet" (emci 2026-10-16): the round that fills the pantry. */}
+        {pet.stage === 'egg' ? null : (
+          <>
+            <PixelBody>Catch the food feeds it (+2 hunger) — only if you pass (50%+).</PixelBody>
+            <GameCard
+              g="catch"
+              view={view}
+              onStart={startGame}
+              lastResult={lastKind === 'catch' ? lastResult : null}
+              lastRound={lastKind === 'catch' ? lastRound : null}
+              still={reduceMotion || fxQuality !== 'full'}
+            />
+          </>
+        )}
+      </PlaySheet>
+      <PlaySheet open={sheet === 'today'} title={SHEET_TITLE.today} onClose={closeSheet} reduceMotion={reduceMotion}>
+        <TodaySheetBody items={todayList} onAction={onTodayAction} />
       </PlaySheet>
       <PlaySheet open={sheet === 'play'} title={SHEET_TITLE.play} onClose={closeSheet} reduceMotion={reduceMotion}>
         <PlaySheetBody
           view={view}
           onStart={startGame}
-          lastResult={lastResult}
-          lastRound={lastRound}
+          lastResult={lastKind === 'catch' ? null : lastResult}
+          lastRound={lastKind === 'catch' ? null : lastRound}
           still={reduceMotion || fxQuality !== 'full'}
           onGuide={() => openGuide('games')}
         />
@@ -843,6 +1587,25 @@ export function PetScreen({
         onClose={closeSheet}
         reduceMotion={reduceMotion}>
         <ExpeditionSheetBody view={view} commit={commit} onGuide={openGuide} />
+      </PlaySheet>
+      <PlaySheet open={teaseOpen} title={teaseCopy.title} onClose={() => setTeaseOpen(false)} reduceMotion={reduceMotion}>
+        <PixelBody>{teaseCopy.body}</PixelBody>
+        {teaseCopy.canStart ? (
+          <PixelButton
+            label={`Build for ${teaseCopy.price} tokens`}
+            onPress={() => {
+              const ok = canStartBuild(teaseRoom, view.hideout.state, view.hideout.progress, view.tokens);
+              if (!ok.ok) return;
+              commit((doc, now) => startHideoutBuild(doc, now, teaseRoom));
+              setTeaseOpen(false);
+              if (!view.hideout.state.build_notif_asked && view.settings.notif.build) {
+                void askPetReminderPermission({ auto: true }).then(() => {
+                  commit((doc, now) => markBuildNotifAsked(doc, now));
+                });
+              }
+            }}
+          />
+        ) : null}
       </PlaySheet>
       <PlaySheet open={sheet === 'eggs'} title={SHEET_TITLE.eggs} onClose={closeSheet} reduceMotion={reduceMotion}>
         {pet.egg == null ? (
@@ -882,22 +1645,28 @@ export function PetScreen({
           }}
         />
       </PlaySheet>
-      <PlaySheet open={sheet === 'den'} title={SHEET_TITLE.den} onClose={closeSheet} reduceMotion={reduceMotion}>
+      <PlaySheet
+        open={sheet === 'den'}
+        title={street ? 'The Stash' : SHEET_TITLE.den}
+        onClose={closeSheet}
+        reduceMotion={reduceMotion}>
         <DenSheetBody
           view={view}
           commit={commit}
           gameOpen={game != null}
-          reduceMotion={reduceMotion}
           onNewEgg={() => {
             setFocusEgg(null);
             setSheet('eggs');
           }}
-          onOpenStone={(uid) => openStone(uid)}
-          onOpenPrism={(uid) => {
-            setStoneUid(uid);
-            setSheet('prism');
-          }}
           onViewActiveCard={() => setSheet('card')}
+          onOpenLocker={
+            onOpenLocker
+              ? () => {
+                  closeSheet();
+                  onOpenLocker();
+                }
+              : undefined
+          }
         />
         <GuideLink section="den" onOpen={openGuide} />
       </PlaySheet>
@@ -909,45 +1678,26 @@ export function PetScreen({
         <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} mode="prism" />
         <GuideLink section="tide" onOpen={openGuide} />
       </PlaySheet>
-      <DivecoreSettingsSheet
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        view={view}
-        commit={commit}
-        reduceMotion={reduceMotion}
-        onReplayTutorial={() => onReplayTutorial?.()}
-        onOpenGuide={() => openGuide('pet')}
-      />
       <PlaySheet
         open={sheet === 'info'}
         title={SHEET_TITLE.info}
         onClose={closeSheet}
-        reduceMotion={reduceMotion}
-        header={<SheetTabs tabs={infoTabs(dev)} value={infoTab} onChange={setInfoTab} />}>
-        {infoTab === 'status' ? (
-          <StatusTab view={view} onGuide={openGuide} />
-        ) : infoTab === 'journal' ? (
-          <>
-            <JournalTab view={view} commit={commit} />
-            <GuideLink section="collection" onOpen={openGuide} />
-          </>
-        ) : infoTab === 'book' ? (
-          <>
-            <BookTab view={view} commit={commit} eggColor={eggColor} />
-            <GuideLink section="collection" onOpen={openGuide} />
-          </>
-        ) : infoTab === 'hall' ? (
-          <>
-            <HallTab view={view} eggColor={eggColor} />
-            <GuideLink section="collection" onOpen={openGuide} />
-          </>
-        ) : infoTab === 'style' ? (
-          <StyleTab view={view} commit={commit} />
-        ) : infoTab === 'guide' ? (
-          <HelpTab key={guideNonce} section={guideSection} />
-        ) : dev ? (
-          <PetDevPanel pet={pet} commit={commit} startOpen={['pet', 'eggs']} />
-        ) : null}
+        reduceMotion={reduceMotion}>
+        {infoTabs(dev).map((tab) => {
+          const meta = INFO_SECTION_META[tab.id];
+          const open = infoTab === tab.id;
+          return (
+            <SheetSection
+              key={tab.id}
+              title={tab.label}
+              summary={meta.summary}
+              icon={meta.icon}
+              open={open}
+              onToggle={() => setInfoTab(open ? null : tab.id)}>
+              {open ? infoSectionBody(tab.id) : null}
+            </SheetSection>
+          );
+        })}
       </PlaySheet>
       {pendingReveal ? (
         <PetReveal
@@ -991,14 +1741,21 @@ export function PetScreen({
       {game ? (
         <View style={styles.gameOverlay} accessibilityViewIsModal>
           <PetGameHost
-            key={`${game.kind}:${game.level}:${game.daily}`}
+            key={`${game.kind}:${game.level}:${game.daily}:${game.practice ? 'p' : 'r'}`}
             kind={game.kind}
             level={game.level}
             daily={game.daily}
+            practice={game.practice === true}
             ymd={pv.daily.ymd ?? ''}
             gamePet={gamePet}
             still={reduceMotion || fxQuality !== 'full'}
+            card={roundCard}
+            onContinue={leaveGame}
             onBack={() => {
+              if (roundCard) {
+                leaveGame();
+                return;
+              }
               setGame(null);
               setSheet(null);
             }}
@@ -1006,22 +1763,44 @@ export function PetScreen({
           />
         </View>
       ) : null}
-      <DiamondWipe
-        mode={wipe}
-        onDone={
-          wipe === 'cover'
-            ? () => {
-                armWipe('dive');
-                onGoDive();
-              }
-            : () => setWipe('off')
-        }
-      />
+      {street ? (
+        <ManholeTransit
+          mode={wipe}
+          gentle={playMotion.vestibularSafe}
+          onDone={
+            wipe === 'cover'
+              ? () => {
+                  armWipe('dive');
+                  onGoDive();
+                }
+              : () => setWipe('off')
+          }
+        />
+      ) : (
+        <DiamondWipe
+          mode={wipe}
+          onDone={
+            wipe === 'cover'
+              ? () => {
+                  armWipe('dive');
+                  onGoDive();
+                }
+              : () => setWipe('off')
+          }
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Streetwear art style (Hideout).
+  streetGone: { display: 'none' },
+  // Street top bar: kit icons on a quiet chip, 44pt taps, a 14pt Pixelify title.
+  streetTopButton: { borderWidth: 0, backgroundColor: 'rgba(43, 43, 46, 0.9)', minWidth: 44, minHeight: 44 },
+  streetTopText: { color: STREET.paper, fontSize: 18 },
+  streetTitle: { fontFamily: STREET_FONT.bold, fontSize: 14, lineHeight: 18, color: STREET.paper },
+  streetSquash: { transform: [{ scaleX: 0.96 }, { scaleY: 0.93 }] },
   screen: { flex: 1, backgroundColor: NEON.ink },
   gameOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 30, backgroundColor: PIXEL.ink },
   topBar: {
@@ -1041,6 +1820,10 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', flexShrink: 0, gap: 4 },
   topButton: { alignItems: 'center', justifyContent: 'center', borderWidth: ART_PT, borderColor: PIXEL.cyan },
   topButtonText: { fontSize: 16, color: PIXEL.cyan },
+  // NoticeLane: the pet strip when quiet; the swipe hint until it is seen.
+  laneStrip: { flex: 1, justifyContent: 'center', paddingHorizontal: 8 },
+  laneHint: { flex: 1, justifyContent: 'center', paddingHorizontal: 16, backgroundColor: 'rgba(8,9,15,0.72)' },
+  laneHintText: { color: STREET.paper, fontFamily: STREET_FONT.regular, fontSize: 14, lineHeight: 18, textAlign: 'center' },
   iconRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1064,6 +1847,20 @@ const styles = StyleSheet.create({
     height: 8,
     backgroundColor: NEON.pink,
   },
+  countBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    backgroundColor: STREET.mustard,
+    borderWidth: 1,
+    borderColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countBadgeText: { fontFamily: STREET_FONT.bold, fontSize: 10, color: STREET.ink, includeFontPadding: false },
   pressed: { opacity: 0.82 },
   cardCenter: { alignItems: 'center', paddingVertical: 8 },
 });

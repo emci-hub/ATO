@@ -1,0 +1,287 @@
+{
+ "frames": [
+  {
+   "filename": "ato-turf-win-sparks-t7 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 1.png",
+   "frame": {
+    "x": 68,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 2.png",
+   "frame": {
+    "x": 136,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 3.png",
+   "frame": {
+    "x": 204,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 4.png",
+   "frame": {
+    "x": 0,
+    "y": 64,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 5.png",
+   "frame": {
+    "x": 68,
+    "y": 64,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 6.png",
+   "frame": {
+    "x": 136,
+    "y": 64,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 7.png",
+   "frame": {
+    "x": 204,
+    "y": 64,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 8.png",
+   "frame": {
+    "x": 0,
+    "y": 128,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  },
+  {
+   "filename": "ato-turf-win-sparks-t7 9.png",
+   "frame": {
+    "x": 68,
+    "y": 128,
+    "w": 68,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 68,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 68,
+    "h": 64
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.515625
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "ato-turf-win-sparks-t7.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 272,
+   "h": 192
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 34,
+   "y": 33
+  },
+  "frameTags": [
+   {
+    "name": "ato-turf-win-sparks-t7",
+    "from": 0,
+    "to": 9,
+    "direction": "forward"
+   }
+  ]
+ }
+}

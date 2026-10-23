@@ -10,6 +10,7 @@
  *     needs — and random mashing can't get there (simulated).
  */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { careBand, careScore, roundSkillPoints, CARE_ACT } from '../src/play/pet-eggs';
 import {
@@ -58,6 +59,9 @@ import {
   unlockHint,
   EMPTY_DAILY,
 } from '../src/play/game-records';
+
+import * as rules from '../src/play/pet-game-rules';
+import * as recs from '../src/play/game-records';
 
 let passed = 0;
 function ok(label: string) {
@@ -274,7 +278,18 @@ ok('combo: ×1 → ×2 → ×3 → ×5 by streak (Catch 5/10/20, Train 3/6/10); 
   assert.equal(normal.doc.pet.care_skill, 25, 'Normal 90%: skilled (25) as before');
   const insane = finishPetRound(baby, 1000, 'catch', great, { level: 'insane', score: 500, daily: false });
   assert.equal(insane.doc.pet.care_skill, 25, 'Insane never gives more than Normal');
-  assert.equal(easy.result.tokensGranted, normal.result.tokensGranted, 'tokens are the same on every level');
+  assert.equal(normal.result.tokensGranted, insane.result.tokensGranted, 'Normal and harder pay the same tokens');
+  assert.equal(easy.result.tokensGranted, 2, 'Easy pays 2 tokens a round (Minigames M1)');
+  assert.equal(normal.result.tokensGranted, 5, 'Normal pays 5');
+  // Six Easy passes cannot fill the daily cap of 30.
+  let farm = baby as typeof easy.doc;
+  let farmPaid = 0;
+  for (let i = 0; i < 6; i += 1) {
+    const r = finishPetRound(farm, 1000 + i, 'catch', great, { level: 'easy', score: 50, daily: false }, `farm:${i}`);
+    farm = r.doc;
+    farmPaid += r.result.tokensGranted;
+  }
+  assert.equal(farmPaid, 12, 'six Easy passes pay 12, not the 30 cap');
 }
 ok('care: pass/fail unchanged on every level; only Normal+ can be skilled (Easy can’t farm care); harder never gives more care');
 
@@ -348,5 +363,200 @@ ok('records: best only rises; medals by score (pass only); Hard needs Silver on 
   assert.equal(recordDaily(again.daily, '2026-09-30', 'train', 5, true).bonusShells, DAILY_BONUS_SHELLS, 'per game');
 }
 ok('daily challenge: one fixed pattern per date and game; best only rises; bonus once a day per game; clock-back safe');
+
+{
+  // Minigames M1 (2026-10-22): the screen pins. Source reads, like the other check:* scripts.
+  const games = readFileSync('src/play/pet-games.tsx', 'utf8');
+  const screen = readFileSync('src/play/pet-screen.tsx', 'utf8');
+  assert.ok(!games.includes('💣</Text>') && /function BombShape/.test(games), 'the bomb is a shape with an X, not the emoji');
+  assert.ok(/<Polygon points=\{STAR_POINTS\}/.test(games), 'golden food is a star (shape cue beside the colour)');
+  assert.ok(/if \(spawned \|\| missed \+ dodged > 0\) setItems\(next\)/.test(games), 'the field is not re-rendered every tick (the fall is a shared value)');
+  assert.ok(/y\.value = withTiming\(1\.05/.test(games), 'each item falls on the UI thread');
+  assert.ok(/markerSv\.value = p/.test(games) && !/setMarker\(/.test(games), 'the Train marker is a shared value, not state');
+  assert.ok(/bombTimer\.current = setTimeout/.test(games) && /clearTimeout\(bombTimer\.current\)/.test(games), 'the bomb-flash timer is cleared on unmount');
+  assert.ok(/const countdown = useCountdown\(\)/.test(games) && /\[playing\]/.test(games), 'both rounds start their clock after a 3-2-1');
+  assert.ok(/function RoundCard/.test(games) && /onContinue/.test(games), 'a result card waits for Continue');
+  assert.ok(/!still\) \{\s*\n\s*juice\.play\(\);\s*\n\s*alertHaptic\(\)/.test(games), 'haptics are off with Reduce Motion / Effects Off');
+  assert.ok(/statusLine: \{[^}]*minHeight/.test(games), 'the status line keeps a full line of height (Larger Text)');
+  assert.ok(/setRoundCard\(\{/.test(screen) && /afterRound\.current = after/.test(screen), 'the room shows the card, then runs the sheet / notices on Continue');
+}
+ok('Minigames M1: bomb + star shapes, UI-thread fall and marker, 3-2-1, result card on Continue, haptics gated by still, bomb timer cleared');
+
+{
+  // Minigames M2 (2026-10-22): the look. Art is named through the library tree, never a loose path or the old placeholders.
+  const games = readFileSync('src/play/pet-games.tsx', 'utf8');
+  const screen = readFileSync('src/play/pet-screen.tsx', 'utf8');
+  for (const id of ['pizza', 'donut', 'burger', 'star', 'bomb']) {
+    assert.ok(new RegExp(`ART\\.icon\\.streetwear\\.${id}\\b`).test(games), `${id} is a Streetwear library sprite`);
+  }
+  assert.ok(/ART\.prop\.streetwear\.punchingBag/.test(games), 'the Train dummy is the Streetwear punching bag');
+  assert.ok(!/scribble-dungeons|CRATE_ART|PLAY_ART/.test(games), 'no off-style scribble crate');
+  assert.ok(/ROOM\.hideout\.back/.test(games) && /ROOM\.hideout\.floor/.test(games), 'Catch wears the Hideout room');
+  assert.ok(!/MOCKUP_DIVE|BubbleRing|CausticWash/.test(games), 'Catch no longer wears the reef plate, bubbles or caustics');
+  assert.ok(!/styles\.glow, \{ backgroundColor/.test(games), 'no flat tinted square: the glow is a radial pool');
+  assert.ok(/<GradeAura /.test(games) && /<ShinyOverlay /.test(games) && /auraElement=\{gp\.auraElement/.test(games), 'the pet shows its real aura / finish / shiny ring');
+  assert.ok(/lockColour=\{gp\.shiny === true\}/.test(games) && /reduceMotion=\{still\}/.test(games), 'a shiny keeps its colour; the finish rests under Reduce Motion');
+  assert.ok(/play\('hurt', 'e'\)/.test(games) && /item\.kind === 'golden' \? 'skill' : 'dash'/.test(games) && /perfect \? 'skill' : 'attack'/.test(games), 'happy (skill clip) and oof (hurt clip) come from existing clips');
+  assert.ok(/auraElement: view\.swords\.equipped/.test(screen) && /grade: revealed \? pet\.grade : null/.test(screen), 'the pet room hands the games the real look');
+  assert.ok(/hint: \{ textAlign: 'center', minHeight: pixelBodyLine\(PIXEL_CAPTION_PT\) \* 2 \}/.test(games), 'the hint stays two lines (fixed regions)');
+  assert.ok(!/Ã|â€|ðŸ/.test(games), 'pet-games.tsx is clean UTF-8 (no double-encoded x, dash or bomb characters)');
+  assert.ok(/!pose && want === 'skill'/.test(games), 'a pet with no skill clip still moves for the happy beat');
+  assert.ok(/const s = Math\.max\(1, width \/ CATCH_ROOM_W\)/.test(games), 'the Catch room scales uniformly on a wide stage');
+}
+ok('Minigames M2: Streetwear food / bomb / dummy sprites, Hideout room behind Catch, real aura + finish on the pet, happy / oof from existing clips');
+
+{
+  // Minigames M3 (2026-10-22): power-ups are score-only, the Train zone modes keep the lit width, Lane dash + practice.
+  const {
+    POWERUP,
+    DASH_LANES,
+    catchPowerKind,
+    magnetFood,
+    trainZoneMode,
+    trainZoneSegments,
+    trainZoneHit,
+    dashReaches,
+    dashSpawnKind,
+    dashSpawnGapMs,
+    dashOutcome,
+    dashScore,
+    DASH_LEVELS,
+  } = rules;
+
+  // Power-ups: a pickup only from 4 s, ~5% of food spawns, half shield / half magnet.
+  assert.equal(catchPowerKind(POWERUP.fromMs - 1, 0), null, 'no pickups in the first seconds');
+  assert.equal(catchPowerKind(5000, 0.01), 'shield');
+  assert.equal(catchPowerKind(5000, 0.03), 'magnet');
+  assert.equal(catchPowerKind(5000, 0.5), null);
+  const rng = seededRng('m3-powerups');
+  let picks = 0;
+  for (let i = 0; i < 4000; i += 1) if (catchPowerKind(10_000, rng())) picks += 1;
+  assert.ok(picks / 4000 > 0.03 && picks / 4000 < 0.07, `about 5% pickups (${picks / 4000})`);
+  // Magnet food scores but counts as NOT caught: it can never lift the pass share, so it cannot pass a round or farm tokens.
+  let mt: CatchTally = EMPTY_CATCH;
+  for (let i = 0; i < 40; i += 1) mt = magnetFood(mt, i % 5 === 0);
+  assert.equal(mt.caught, 0);
+  assert.equal(mt.missed, 40);
+  assert.equal(mt.chain, 0);
+  assert.ok(mt.points > 0, 'but it scores');
+  assert.equal(catchOutcome(mt).pass, false, 'a round of only magnet food is still a FAIL');
+  for (const caught of [3, 7, 10]) {
+    let base: CatchTally = EMPTY_CATCH;
+    for (let i = 0; i < caught; i += 1) base = catchFood(base, i * 2000, false);
+    for (let i = 0; i < 10; i += 1) base = missFood(base);
+    // The same round where 4 of the misses were pulled by the magnet instead: same share, never higher.
+    let pulled: CatchTally = base;
+    for (let i = 0; i < 4; i += 1) pulled = magnetFood({ ...pulled, missed: pulled.missed - 1 }, false);
+    assert.ok(catchOutcome(pulled).quality <= catchOutcome(base).quality + 1e-9, 'the magnet never raises the share');
+    assert.equal(catchOutcome(pulled).pass, catchOutcome(base).pass);
+    assert.ok(pulled.points > base.points, 'but scores more');
+  }
+
+  // Train zones: never wider than the single zone; split = two halves; easy stays single.
+  for (const level of DIFFICULTIES) {
+    assert.equal(trainZoneMode(level, 0), 'single', `${level}: the first tap is always the plain zone`);
+  }
+  assert.equal(trainZoneMode('easy', 14), 'single');
+  assert.equal(trainZoneMode('normal', 9), 'single');
+  assert.equal(trainZoneMode('normal', 10), 'moving');
+  assert.equal(trainZoneMode('hard', 5), 'moving');
+  assert.equal(trainZoneMode('hard', 10), 'split');
+  assert.equal(trainZoneMode('insane', 3), 'moving');
+  for (const mode of ['single', 'moving', 'split'] as const) {
+    for (const w of [0.3, 0.12, 0.08]) {
+      for (const base of [0.1, 0.5, 0.9]) {
+        for (const phase of [0, 600, 1200, 1800]) {
+          const segs = trainZoneSegments(mode, base, w, phase);
+          assert.equal(segs.length, mode === 'split' ? 2 : 1);
+          assert.ok(Math.abs(segs.reduce((s, z) => s + z.width, 0) - w) < 1e-9, `${mode}: the lit width stays ${w}`);
+          for (const z of segs) assert.ok(z.center - z.width / 2 >= -1e-9 && z.center + z.width / 2 <= 1 + 1e-9, 'inside the bar');
+        }
+      }
+    }
+  }
+  const two = trainZoneSegments('split', 0.5, 0.3, 0);
+  assert.equal(trainZoneHit(two, two[1].center).hit, true, 'either half is a hit');
+  assert.equal(trainZoneHit(two, 0.5).hit, false, 'the gap between the halves is a miss');
+  assert.equal(trainZoneHit(trainZoneSegments('single', 0.5, 0.3, 0), 0.5).perfect, true, 'the middle is perfect');
+
+  // Lane dash: only the pet's lane, inside the catch band; Catch's pass rule and combo; its own level table.
+  assert.equal(DASH_LANES, 3);
+  assert.equal(dashReaches(1, 1, 0.8), true);
+  assert.equal(dashReaches(0, 1, 0.8), false, 'another lane is not caught');
+  assert.equal(dashReaches(1, 1, 0.3), false, 'not before the band');
+  assert.equal(dashReaches(1, 1, 1.0), false, 'not after the band');
+  let dt: CatchTally = EMPTY_CATCH;
+  for (let i = 0; i < 6; i += 1) dt = catchFood(dt, i * 100, false);
+  for (let i = 0; i < 4; i += 1) dt = missFood(dt);
+  assert.equal(dashOutcome(dt).pass, true, '6 of 10 passes');
+  assert.equal(dashScore(dt, 'normal'), Math.round(dt.points * SCORE_MULT.dash.normal));
+  assert.equal(dashOutcome(tapBomb(tapBomb(tapBomb(dt)))).pass, false, 'a bomb-out is a FAIL');
+  for (let i = 1; i < DIFFICULTIES.length; i += 1) {
+    const a = DASH_LEVELS[DIFFICULTIES[i - 1]];
+    const b = DASH_LEVELS[DIFFICULTIES[i]];
+    assert.ok(b.spawnStartMs < a.spawnStartMs && b.speedEndMult > a.speedEndMult && b.bombShare > a.bombShare, 'each level is faster with more bombs');
+  }
+  assert.ok(dashSpawnGapMs(0) > dashSpawnGapMs(25_000), 'spawns speed up');
+  let bombs = 0;
+  const dr = seededRng('dash-bombs');
+  for (let i = 0; i < 4000; i += 1) if (dashSpawnKind(10_000, dr(), 'normal') === 'bomb') bombs += 1;
+  assert.ok(Math.abs(bombs / 4000 - DASH_LEVELS.normal.bombShare) < 0.03, 'Normal bombs match the level table');
+  for (const level of DIFFICULTIES) {
+    const [b, s, g] = recs.MEDAL_SCORES.dash[level];
+    assert.ok(b < s && s < g, `dash ${level}: bronze < silver < gold`);
+  }
+
+  // Records: Dash is a third key inside the SAME game_records shape; an older save (no dash) opens with empty defaults.
+  assert.deepEqual(Object.keys(emptyRecords()), ['catch', 'train', 'dash']);
+  const old = recs.parseRecords({ catch: { easy: { best: 9, medal: 'gold' } }, train: {} });
+  assert.equal(old.catch.easy.best, 9, 'old catch record survives');
+  assert.deepEqual(old.dash.normal, { best: 0, medal: null }, 'dash starts empty');
+  assert.deepEqual(recs.parseDaily({ ymd: '2026-10-01', catch: { best: 3, bonus: true } }).dash, { best: 0, bonus: false });
+  assert.equal(rankTitle(emptyRecords(), 'dash'), 'Sidestepper');
+  assert.equal(RANK_TITLES.dash.length, 4);
+
+  // Dash pays like any pass: 5 tokens (Easy 2), trains the pet, 30 a day cap, records under its own key.
+  const egg = chooseEggDoc(defaultPlayStore(0), 0, 'knight', null)!;
+  const child = { ...egg, pet: { ...egg.pet, stage: 'child' as const, stage_age_ms: 0, seen_at: 0 } };
+  const pass = { pass: true, quality: 0.8, got: 16, of: 20 };
+  const normalDash = finishPetRound(child, 1000, 'dash', pass, { level: 'normal', score: 60, daily: false }, 'dash:1');
+  assert.equal(normalDash.result.tokensGranted, 5);
+  assert.equal(normalDash.doc.game_records.dash.normal.best, 60, 'recorded under dash');
+  assert.equal(normalDash.doc.game_records.catch.normal.best, 0, 'catch untouched');
+  const easyDash = finishPetRound(child, 1000, 'dash', pass, { level: 'easy', score: 60, daily: false }, 'dash:2');
+  assert.equal(easyDash.result.tokensGranted, 2, 'Easy Dash pays 2 like Easy Catch');
+  let farm = child as typeof easyDash.doc;
+  let paid = 0;
+  for (let i = 0; i < 20; i += 1) {
+    const r = finishPetRound(farm, 1000 + i, 'dash', pass, { level: 'normal', score: 60, daily: false }, `dash-farm:${i}`);
+    farm = r.doc;
+    paid += r.result.tokensGranted;
+  }
+  assert.equal(paid, 30, 'Dash shares the 30-token daily cap');
+  assert.equal(finishPetRound(child, 1000, 'dash', { pass: false, quality: 0.2, got: 2, of: 10 }).result.tokensGranted, 0, 'a fail pays nothing');
+  assert.equal(defaultPlayStore(0).version, 33, 'the save stays v33 (additive key inside game_records)');
+
+  // Screen: practice never reports a round; Reduce Motion keeps the zone still; Lane dash is a full game.
+  const games = readFileSync('src/play/pet-games.tsx', 'utf8');
+  const screen = readFileSync('src/play/pet-screen.tsx', 'utf8');
+  const sheets = readFileSync('src/play/pet-sheets.tsx', 'utf8');
+  assert.ok(/if \(!practice && left <= 0\) finish\(\)/.test(games), 'Catch practice has no clock');
+  assert.ok(/next\.over && !practice/.test(games) && /practice \? \{ \.\.\.hit, strikes: 0, over: false \}/.test(games), 'Catch practice has no strikes');
+  assert.ok(/practice\s*\n?\s*\? \{ \.\.\.tapped, over: false, taps: 0, missStreak: 0/.test(games), 'Train practice never ends or ramps');
+  assert.ok(/!practice && \(left <= 0 \|\| t\.over\)/.test(games), 'Dash practice has no clock or strikes');
+  assert.equal((games.match(/onDoneRef\.current\(/g) ?? []).length, 3, 'one report per game, each behind finish() / the over check');
+  assert.ok(/const finishRound[^\n]*\n[^\n]*\n\s*if \(run\.practice\) return;/.test(screen), 'finishRound drops a practice report (nothing is counted)');
+  assert.ok(/baseRef = useRef<number>\(-1\);\s*\n\s*if \(baseRef\.current < 0\)/.test(games), 'the seeded Train zone takes one draw, not one per render');
+  assert.ok(/stillRef\.current/.test(games), 'the Train drift reads Reduce Motion live');
+  assert.ok(/practice\?: boolean/.test(sheets) && /practice: true/.test(sheets), 'the Play and Feed cards offer Practice');
+  assert.ok(/modeRef\.current === 'moving' && !still/.test(games), 'the drifting zone holds still under Reduce Motion');
+  assert.ok(/function LaneDashGame/.test(games) && /kind === 'dash' \? <LaneDashGame/.test(games), 'Lane dash is mounted by the host');
+  assert.ok(/ART\.icon\.streetwear\.shield\b/.test(games) && /function PowerShape/.test(games), 'the shield is a library sprite; the magnet a drawn shape');
+  assert.ok(/function PowerChips/.test(games) && /powerChips: \{ position: 'absolute'/.test(games), 'the power-up chips are a float layer (no region resizes)');
+  assert.ok(/<PowerChips /.test(games) && /<ComboStrip game="dash"/.test(games), 'the new overlays are mounted');
+  assert.ok(/g="dash"/.test(sheets), 'the Play sheet has the Lane dash card');
+  assert.ok(!/Ã|â€|ðŸ/.test(games), 'pet-games.tsx stays clean UTF-8');
+}
+ok('Minigames M3: power-ups are score-only, Train zone waves keep the lit width, Lane dash (own key, same pass/token rules), practice reports nothing');
 
 console.log(`\ncheck:pet-games — ${passed} groups passed.`);

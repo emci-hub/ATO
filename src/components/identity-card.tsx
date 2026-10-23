@@ -26,6 +26,7 @@ import {
   isThreeWordSkin,
   type LegendSkin,
 } from '@/lib/legends64/archetypes';
+import { dedupeTitles } from '@/lib/legends64/title-dedupe';
 import {
   SKIN_LABEL,
   identityCompleteFor,
@@ -140,6 +141,10 @@ export function IdentityCard({
   );
   const traits = useMemo(() => (tracks ? topTraitPhrases(tracks) : []), [tracks]);
   const recipe = useMemo(() => identityRecipe(tracks ?? []), [tracks]);
+  const styleOptions = useMemo(
+    () => dedupeTitles(LEGEND_SKINS.map((skin) => ({ skin, title: identityTitle(view, skin) }))),
+    [view],
+  );
 
   const update = useCallback(async (next: IdentityState) => {
     setState(next);
@@ -239,7 +244,9 @@ export function IdentityCard({
         </ThemedText>
       ) : null}
 
-      <ThemedText style={styles.title}>{title}</ThemedText>
+      <ThemedText style={styles.title} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.7}>
+        {title}
+      </ThemedText>
       {progress ? (
         <ThemedText type="small" themeColor="textSecondary">
           {progress}
@@ -337,7 +344,7 @@ export function IdentityCard({
       </ThemedText>
       {/* Nine styles: the list scrolls on a small phone. */}
       <ScrollView style={styles.sheetScroll} contentContainerStyle={styles.sheetList}>
-        {LEGEND_SKINS.map((skin) => {
+        {styleOptions.map(({ skin, title: styleTitle }) => {
           const owned = NAME_STYLES_FREE || skin === DEFAULT_LEGEND_SKIN || state.unlocked.includes(skin);
           const on = state.skin === skin;
           return (
@@ -362,7 +369,7 @@ export function IdentityCard({
               <ThemedText type="code" themeColor="textSecondary">
                 {owned ? SKIN_LABEL[skin] : `${SKIN_LABEL[skin]} · ${ATO_TOKEN_PRICE.legend_reroll}`}
               </ThemedText>
-              <ThemedText type="smallBold">{identityTitle(view, skin)}</ThemedText>
+              <ThemedText type="smallBold">{styleTitle}</ThemedText>
             </Pressable>
           );
         })}

@@ -2,6 +2,8 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
+> **⚠ Sage and crisis boxes below are OBSOLETE (2026-10-20).** Sage, Talk, the Support tap, the crisis card, the keyword interrupt and the crisis region picker were removed (2026-10-14). Skip every box about them. What to check instead: the You tab shows one static helpline row (988 for US/Canada, findahelpline.com elsewhere, a local-emergency line); typing anything anywhere triggers no card, flag or log. The full rewrite is queued in `docs/sage-cleanup.md` section 6.
+
 > **⚠ Boxes 5–28 below are the HISTORICAL pass (Sep 1, 2026, OTA `0028d5f5`).** They were written before the Sep 4–13 work and their OTA reference is stale. The **current outstanding pass is the section immediately below** — start there.
 
 ---
@@ -105,7 +107,9 @@ Everything here is sitting on your phone right now and just needs exercising.
       **F5 check (known, deferred):** read the regenerated text against its tagged axis — does the prose actually match the axis name (e.g. does an `openness`-tagged entry read like openness, not like sleep/recovery)? This is not fixed yet (Box 14). Use this tool to gauge how bad it looks on the Explore tab.
 - [ ] Confirm a Talk message in Sage still behaves normally — reply quality/tone should be unchanged, since Talk still uses the narrower 5-check history, not the fuller Explore history.
 
-## Box 8 — Home strip-down, two slots (deliberate override)
+## Box 8 — Home strip-down, two slots (deliberate override) — OBSOLETE (2026-10-23)
+
+> Obsolete: the Home crisis / missed-check slots no longer exist (crisis system removed 2026-10-14; Home was rebuilt). Do not run.
 
 **Dated reversal (Aug 31, 2026):** Box 8 originally locked Home to **one thing** below Did/Skip. Wave 21 **deliberately** extends that to a second, small, collapsed category teaser. This is not drift. Crisis and missed-check stay alone — the teaser never sits next to those two safety slots.
 
@@ -142,7 +146,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] Confirm an unfilled axis has no band and no detail — no gap line, no placeholder.
 - [ ] In `/dev-lab` → You, use "Band detail" to step through every filled axis for your test account without scrolling You manually. Confirm it's read-only — it shouldn't change any trait values.
 
-## Box 11 — AI consent as interstitial
+## Box 11 — AI consent as interstitial — OBSOLETE (2026-10-23)
+
+> Obsolete: written for Dawn and Sage Talk, which are gone. AI consent now guards only Legends cards and deep dives (see Boxes 29, 30 and 76).
 
 - [ ] On a fresh/reset account (ai_consent null), trigger Dawn. Confirm a full-screen modal appears and cannot be dismissed without answering — no back-button or backdrop-tap escape.
 - [ ] Same test on Sage: reach a point where consent is pending, confirm the same modal blocks the screen until answered.
@@ -164,7 +170,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] Confirm Dawn's crisis interrupt path still works the same way, unchanged.
 - [ ] Note: no dev-lab trigger exists for this yet — testing the crisis interrupt still requires using a real flagged phrase. Cursor flagged this as needing a deliberate fencing decision before building; not in scope for this box.
 
-## Box 12.5 — Dev Lab crisis card preview (fenced)
+## Box 12.5 — Dev Lab crisis card preview (fenced) — OBSOLETE (2026-10-23)
+
+> Obsolete: the crisis card is gone; the You tab carries a fixed helpline row (`check:helpline-row`).
 
 - [ ] In `/dev-lab` → System, tap "Preview crisis card." Confirm CrisisCard renders inline with real copy, no keyword typed.
 - [ ] Confirm this control does NOT appear anywhere in Talk or Dawn — only inside `/dev-lab`.
@@ -200,7 +208,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] If a regeneration ever comes back empty/null (this happened once during Cursor's own spot-check on `conscientiousness`), note it — not expected to block anything, but worth flagging if you see it repeat.
 - [ ] This closes F5. No further action expected unless a live mismatch turns up. JS is on OTA `8771f505-5cf5-4652-8d89-42f2ad57f05c` — regenerate on a binary 10+ device after it has pulled the update.
 
-## Box 22 — Dawn categories, Explore combine, Levity, The Story
+## Box 22 — Dawn categories, Explore combine, Levity, The Story — OBSOLETE (2026-10-23)
+
+> Obsolete: Dawn is gone and the Story is free templates on Insights (Box 31 covers it).
 
 All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines as final.
 
@@ -213,14 +223,18 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] On the Explore tab, confirm The Story fold (collapsed) sits under Categories. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
 - [ ] Flag every Story paragraph and every new Levity/Dawn/Explore line for emci before treating any of it as shippable.
 
-## Box 23 — Shared friend-voice style checklist (all 5 surfaces)
+## Box 23 — Shared friend-voice style checklist (all 5 surfaces) — OBSOLETE (2026-10-23)
+
+> Obsolete: four of the five surfaces (Read/Do, Dawn, Talk, Sage title) no longer exist; copy now follows `docs/copy-review-rules.md`.
 
 - [ ] Open a generated Dawn Read (Home/dawn), an Explore observation, the Sage Title + its Category lines, and The Story. For each, confirm the copy reads like a friend who noticed something: never "you are", never self-description ("this reflects", "a gap worth", "the data shows"), never "always" (prefers lately/this week/for now).
 - [ ] Confirm a title or category summary that names more than one quality joins them with but/yet/and — never a plain comma list. Example to match: "Grounded and self-driven, but happiest doing it alone", not "Steady, driven, and independent".
 - [ ] Confirm multi-trait sentences read as one whole person (Rule 6) and single-idea sentences stay one idea (Rule 3).
 - [ ] Confirm the checklist text never appears in rendered output (it's prompt-only scaffolding).
 
-## Box 24 — Circle Explore handshake (consent-gated comparison)
+## Box 24 — Circle Explore handshake (consent-gated comparison) — OBSOLETE (2026-10-23)
+
+> Obsolete: friends are added by @handle with accept-before-connect, and comparing is the Circle compare feature. Covered by Boxes 61, 62 and 76.
 
 - [ ] With two test accounts, scan a QR / paste a link to connect. Confirm Circle appears for **both** accounts and is not present before the connection.
 - [ ] On account A, tap "Share categories with them" (per-friend path). Confirm the copy flips to "Waiting for them to opt in too." Confirm **no** comparison is visible yet.
@@ -231,7 +245,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Unfriend from one side. Confirm Circle disappears for both and the connection row is gone.
 - [ ] Spot check Supabase: `category_share` / `close_friends_share` rows flip only with consent; `peer_category_pack` returns cached summaries only.
 
-## Box 25 — Thin-profile behavior (live 6/15 rule)
+## Box 25 — Thin-profile behavior (live 6/15 rule) — OBSOLETE (2026-10-23)
+
+> Obsolete: written around Sage and Talk. The thin-profile gate still exists in code (`check:wave20`, `check:wave22`), but the screens it described are gone.
 
 - [ ] **Actual live rule:** thin is `settledCount / TRAIT_AXES.length < 6/15`. With 16 axes today that means **fewer than 7 effective settled report-track axes = thin** (6/16 = 0.375 < 0.4; 7/16 = 0.4375 ≥ 0.4). Stability-weighted, report-track only — gut-call never counts.
 - [ ] On a brand-new account (0 settled): open Sage. Confirm the "N of 16 settled" line reads 0/16 and coaching copy is honest/thin (does not invent specifics, does not nag).
@@ -241,7 +257,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Confirm a gut-call (`self_game`) answer on an axis does **not** count toward settled (report-track only) — Sage's count stays put.
 - [ ] Confirm The Story fold is absent on a thin account even when Gemini is reachable (thin gate holds).
 
-## Box 26 — Tokens, Full Profile depth, trait_history timeline
+## Box 26 — Tokens, Full Profile depth, trait_history timeline — OBSOLETE (2026-10-23)
+
+> Obsolete: "Notes", "A closer look from Sage" and Gut call are gone; tokens are now ATO tokens (Boxes 32 and 76) and profile changes are Change answers / Undo (Box 81).
 
 - [ ] Log a Check. Confirm Notes balance went up by 3 (check-in earn), and the `token_events` ledger shows a +3 row.
 - [ ] Play a game round (Gut call). Confirm +5 and a ledger row.
@@ -252,7 +270,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Tap a filled axis to edit. Confirm 8s undo works (no persist/history if undone) and re-tapping the same axis immediately after loses undo.
 - [ ] Confirm Full Profile stays fully viewable at 0 Notes — spend only gates new depth/insight, never viewing.
 
-## Box 27 — Nav bar customization (edit mode)
+## Box 27 — Nav bar customization (edit mode) — OBSOLETE AS WRITTEN (2026-10-23)
+
+> Obsolete as written: it names a Sage tab and a five-item bar that no longer exist (the Sage tab became Insights). If the nav edit mode is still wanted on a phone, write a fresh box for the current tabs.
 
 - [ ] Confirm the bottom bar shows, by default: **Home / Sage / Explore / You / More** — 5 items, not 6. Around and Circle are in More. Circle appears only after a connection; before that it is not shown anywhere, but Around still is.
 - [ ] Long-press a reorderable tab (Explore/Around/You) → "Edit navigation" opens full-screen. Confirm Home and Sage are shown as pinned and there is a **Swap** affordance, not a drag handle.
@@ -264,7 +284,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Unfriend the last peer (Circle disappears) then reconnect. Confirm Circle returns to its stored slot (in More by default), not a new random position.
 - [ ] Confirm the pixel nav companion stays fixed top-right on every tab and does not remount on tab switch.
 
-## Box 28 — Sage toys pinned above the chat scroll (OTA `0ff16d9d`)
+## Box 28 — Sage toys pinned above the chat scroll (OTA `0ff16d9d`) — OBSOLETE (2026-10-23)
+
+> Obsolete: there is no Sage tab, chat or 8-ball card above a thread any more.
 
 - [ ] Open the Sage tab. Confirm the 8-ball and "What Sage remembers" (facts) card render **above** the message thread and do not scroll away — swipe the message list up/down and confirm the 8-ball/facts card stay fixed in place while only the messages scroll underneath.
 - [ ] Tap the facts card to expand it (if you have any stored facts) or tap it open/closed with none. Confirm expanding/collapsing it does **not** jump or scroll the message thread.
@@ -272,6 +294,923 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Open the keyboard (tap the composer). Confirm the thread still scrolls to keep the latest message visible above the keyboard.
 - [ ] Screenshot: Sage tab mid-scroll showing the 8-ball/facts card fixed at top with messages scrolled underneath.
 
+## Box 29 — Legends: the museum of legends (12 halls, "???" frames)
+
+Use the dev-test account (`@atodev`), or any account that has finished Questions.
+
+- [ ] Open Legends. Confirm 12 hall tiles (Science and invention … Animal legends), each with an icon, a progress bar and "0 of 120 legends met" above them.
+- [ ] Tap a hall. Confirm three dashed "???" frames with NO name or clue, and "One reveal a day. Pick a frame."
+- [ ] With VoiceOver on, swipe to a frame. Confirm it reads "Hidden legend 1 of 3, double tap to reveal" (never a name).
+- [ ] Leave the hall and come back (and kill/relaunch the app). Confirm the same three frames, in the same places.
+- [ ] Tap one frame. Confirm a spinner, then the card: hall + place chips, name, essence, "Matched on: … " line, Who they were, Famous for, Where you match, The moment it mattered, What it means for you, facts with sources, Share.
+- [ ] Confirm the tapped frame now holds a new "???" and the other two stayed put; all three are dimmed with "That’s today’s legend. Come back tomorrow…".
+- [ ] Tap a fact. Confirm it opens the Wikipedia page.
+- [ ] Open the Animal legends hall on another day (or after Dev Hub → Legends museum → Reset today’s frames). Confirm an animal card shows the "A real animal" chip.
+- [ ] Dev Hub → Legends museum → "Pretend a trait settled", then back to Legends. Confirm "Your answers changed who you’d meet. One more reveal is open today." and one more reveal works; a third does not.
+- [ ] Dev Hub → set a fake date on a legend's birthday (e.g. Marie Curie 11-07), Reset today’s frames, open Science and invention, reveal the first frame. Confirm "Born on this day" on the card.
+- [ ] Confirm "Find a new legend with AI · coming soon" shows greyed out, last in the hall, and tapping it does nothing.
+- [ ] Turn AI off on You, reveal a legend next day. Confirm the card says "AI is off, so this card uses the museum’s own words." and has no AI badge.
+- [ ] Share a met legend. Confirm the preview shows name, essence and hall, never the story.
+- [ ] Screenshot: a hall with three "???" frames, and one revealed card.
+
+## Box 30 — Explore: category deep dive (needs wave90 + wave91; moved from Home 2026-10-09)
+
+- [ ] Explore (Questions finished): between Categories and "How you've changed", a "Deep dive" list, one number per category, strongest first. Home no longer shows it.
+- [ ] Tap a category. Confirm "Your leanings in …" with a bar per trait, e.g. "Adventurous · Curiosity 78%", and the note "50% is the middle…".
+- [ ] Tap "Write my deep dive". Confirm a spinner, then: Your title here, Where it shows up (one line per top trait), How they mix, What others might notice, What it means for you — each with the small AI icon.
+- [ ] Tap another category. Confirm its leanings show and the button says you've had today's deep dive (1 a day).
+- [ ] Go back to the first category, kill and reopen the app. Confirm the written card is still there (no new AI call).
+- [ ] Open Love / closeness (next day). Confirm the wording is warm and never says anxious, insecure, avoidant or attachment.
+- [ ] Turn AI off on You. Confirm the leanings still show, with "Turn on AI on You to get the written deep dive."
+- [ ] Confirm the AI-use line in the consent card names only Legends cards and category deep dives (the Story is free templates and is not an AI view).
+- [ ] Screenshot: a written deep dive with its leanings.
+
+## Box 31 — The Story as script swipe cards (2026-10-13; now on the Insights tab)
+
+> Updated 2026-10-23: the Story lives on **Insights** (not Home), is free templates with no AI, and no longer rewrites an older story on open.
+
+- [ ] Insights → The Story → Load story. Confirm a nickname title, script swipe cards (📍 setting on card 1, one sentence per line, bold speaker tags, card 5 = Next + italic reveal, card 6 = Why this is you). No recap card. Progress dots, Previous/Next beat buttons. **No** AI badge on a template card (`STORY_AI_POLISH` is off).
+- [ ] Confirm there is no "What they noticed" or "What it means for you". Optional tap: "The other way it could have gone". ⓘ opens Built from. Share title pastes title + reveal.
+- [ ] Confirm the story text never names a trait. Card 6 may use the real catalog category name. Romantic roles stay "your date" / "your partner" (never a name or he/she).
+- [ ] Settings → Reduce Motion on: beats still cross-fade (never freeze). Motion Full / Zen: a bigger fade-and-rise. VoiceOver: Previous/Next beat and the adjustable pager. Dynamic Type: text still grows.
+- [ ] An older AI-written labelled story (scene / moment / means) is not shown on Insights any more; only template / bank cards are. Opening the Story never rewrites anything (the rewrite path was removed).
+- [ ] Load again: a different template, not an instant repeat. Captain Table for Three (first-date, social / high) is the screenshot story: cards 1, 3, 6 and the other-way tap.
+
+## Box 32 — ATO tokens pay for AI (wave92, 2026-10-09)
+
+- [ ] Home (Questions finished): a "Daily check-in" card. Tap "Check in · +5 tokens". Confirm "+5 tokens", "Checked in today", the week count, and the balance line.
+- [ ] Tap again later the same day: it stays "Checked in today" (no second +5).
+- [ ] The Story is free (templates, since 2026-10-14): loading one on Insights takes no tokens and the balance does not move. Only a Legends AI card or a new deep dive costs 5.
+- [ ] Explore → deep dive button reads "Write my deep dive · 5 tokens"; writing one takes 5 (2 cards). With under 5 tokens it says how to earn more.
+- [ ] Legends: the first reveal of the day is free; with 5+ tokens it comes with the AI card (balance −5). After it, "Reveal one more for 5 tokens" works while you have tokens.
+- [ ] You → ATO tokens: "Check in on Home…", "Answer a set of 16…", "Spend: 5 for each AI view…"; history shows "Daily check-in" and "AI view".
+- [ ] Dev Hub → Account → AI limits: leave the handle empty, tap twice. Confirm "AI limits cleared for this account". Type @atodev, tap twice: cleared for that handle.
+
+## Box 33 — Turf War polish (T7, 2026-10-17)
+
+Play → Turf War, Effects Quality Full, Motion Full, Notices All (Divecore Settings) unless a line says otherwise.
+
+- [ ] Tap Call wave. The line under the top bar says "WAVE n · <Main / Trial> · N puffs on the road", and a cyan swirling ring opens on the road start (bottom left) as the first creep steps out, then closes (~1 s).
+- [ ] Win a wave. On the last kill: a cyan ring closes at the exit (top right), gold + cyan sparks pop over each tower one after another, then the win card (~1.5–2 s later). The card's reward lines are the same as before.
+- [ ] Lose a wave (place no towers). A see-through red copy of the creep walks the last bit of road into the exit, leaving red dots, then the red ring; then the lost card. Retry works as before.
+- [ ] Settings → Motion Reduced (or phone Reduce Motion): start / win / lose again. Each beat is a still picture that fades in and out (no swirl, no walking ghost: the whole red trail shows at once, the ghost stands still), never a flash or a shake.
+- [ ] Effects Quality Off: no ring, no sparks, no red ghost; the cards show straight away; damage numbers still show.
+- [ ] Effects Quality Minimal: sparks on every other tower only.
+- [ ] Notices → Important only: start the Final boss wave. "BOSS INCOMING" still shows in the line under the top bar (the "WAVE n" line does not).
+- [ ] A busy wave (2x speed, many creeps) still feels smooth; nothing new covers the top bar, the dock or the notice line.
+- [ ] Screenshot: the win sparks and the lose ghost.
+
+## Box 34 — Turf War map themes (T8, 2026-10-17)
+
+Play → Turf War, in Setup (before Call wave).
+
+- [ ] Open Setup. Trial: a "Theme" card with five buttons: Alley · Rooftop · Underpass · Court · Docks. Alley is lit the first time.
+- [ ] Tap each theme. The map behind the sheet changes to that street; the road, the 15 round pads and your towers stay in the same spots.
+- [ ] Rooftop: dark tar road, pale gravel, AC units, little vents and two blinking lamps; pigeons; steam from a grate.
+- [ ] Underpass: dark concrete road with a yellow edge, pale tiles, boxes + a bin, steam from a grate; blue lights flicker.
+- [ ] Court: dark path, teal court, benches, bins, a ball rack; pigeons.
+- [ ] Docks: wooden pier road, pale concrete quay, bollards and crates; pigeons.
+- [ ] Every theme: the road is clearly darker than the ground beside it, every pad is easy to see and tap, nothing covers a pad.
+- [ ] Pick Docks, call a wave, win or lose: the rewards are the same as on the Alley. The map stays Docks for the whole wave.
+- [ ] Close the app fully and open Turf War again: still Docks.
+- [ ] Main (after Trial): the Maps card shows the Theme row under ATO / Neon Maze; picking Neon Maze hides the Theme row.
+- [ ] Screenshot: each theme in a wave.
+
 ---
 
 **All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–28).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`; Box 28 specifically needs OTA `0ff16d9d` or later), not per box.
+
+## Box 35 — Turf War next-wave card + top bar (T2b, 2026-10-18)
+
+**Result: passed, no changes (emci, 2026-10-18).**
+
+Play → Turf War → Call wave (a campaign run, not a replay).
+
+- [ ] The top bar is three separate dark pieces: the wave chip ("Trial wave n" + a small arrow), the caps pill (a gold dot + "N caps"), and a square pause button. Same height as before; the board does not move.
+- [ ] Tap the wave chip. A card opens right under it: "Next · wave n+1", and one chip per creep kind with a count (e.g. "5× swarm  2× runner"). The arrow flips. The board is not covered, and the "?" at the right of the line under the bar still shows.
+- [ ] Tap the card, or tap the empty strip beside it: it closes. Tap the chip again to reopen, then tap pause: the card closes and does not come back on its own after Resume.
+- [ ] The last Trial wave (5) previews "Next · Main wave 1". A boss wave next (e.g. Main 4 → 5) shows a red-edged "1× boss" chip.
+- [ ] Open the card, let a boss step in: the chip becomes the boss bar and the card goes away; after the boss dies it does not pop back open.
+- [ ] A replay (Setup → replay a cleared wave): tapping the wave chip does nothing.
+- [ ] Chip, caps and pause are easy to hit with a thumb (pause especially); SE: nothing is cut off, and a 3-kind wave (Main 9) still reads in the card.
+- [ ] Screenshot: the card open on a boss next wave.
+
+## Box 36 — Turf War notices wait behind the next-wave card (T9, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+Play → Turf War → Call wave (a campaign run, not a replay).
+
+- [x] Tap the wave chip to open the next-wave card.
+- [x] While it is open, trigger a notice (e.g. build or sell a tower, or let a wave line appear). Nothing shows under the card.
+- [x] Close the card (tap it, or the strip beside it). The notice appears in the lane, and stays its full time.
+- [x] Open the card just before a boss wave's boss arrives: BOSS INCOMING waits, then shows when the boss steps in (the boss bar replaces the chip and the card closes).
+
+## Box 37 — Bound Boss shows a wind-up on its first cast (T10, 2026-10-18)
+
+Play → Turf War, a run with a Bound Boss (the cycle boss, not a hero) bound.
+
+- [ ] Place the Bound Boss on a pad while creeps are already in range. About a second later its skill ring appears and closes in (~0.7 s) before the skill fires. It no longer fires the instant it is placed.
+- [ ] Repeat at 2x speed. The ring is still visible before the skill goes off.
+- [ ] A hero tower placed the same way still casts its skill right away (unchanged).
+
+## Box 38 — Turf War neon signs, pigeon wings, creep icons on the next-wave card (art loose ends, 2026-10-18)
+
+Play → Turf War, the default Alley map (other map themes have no sign; that is expected).
+
+- [ ] Top-right corner: a small cyan lightning-bolt sign on the sidewalk by the cyan glow; bottom-left: a heart sign on the bottom sidewalk near the pink glow. Both flicker with their glow and show no letters.
+- [ ] Call wave and let creeps walk past a pigeon: it flaps real wings as it flies off (no squash), then comes back after a few seconds.
+- [ ] With Reduce Motion on (phone setting): the pigeon only fades away, with no wings and no arc.
+- [ ] Tap the wave chip: each kind in the next-wave card shows that creep's face (swarm = Village Girl, runner = Wizard, tank = Knight, boss = its boss) with a coloured line under it, then the count and the name.
+- [ ] SE / small phone: a wave with three or four kinds still reads (names may shorten with "…"); nothing spills out of the card.
+
+## Box 39 — Boss wind-up after Retry, steady pigeon flap (T12, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+Play → Turf War, the default Alley map, a run with a Bound Boss (the cycle boss, not a hero) bound.
+
+- [ ] Place the Bound Boss, lose the wave and tap Retry. After Retry, when creeps come in range the boss's skill ring still appears and closes in (~0.7 s) before the skill fires. It does not fire the instant the wave starts.
+- [ ] A hero tower on the board still casts its skill right away after Retry (unchanged).
+- [ ] Let creeps walk past a pigeon: its wings flap at one even pace the whole way as it flies off (no slowing at the end), then it comes back.
+- [ ] With Reduce Motion on: the pigeon still only fades (no wings, no arc).
+
+## Box 40 — Next-wave card keeps whole role words on a small phone (T13, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+Play → Turf War on the smallest phone you have (SE / 375 pt wide if possible), Main phase.
+
+- [ ] Play until Main wave 8, then tap the wave chip. The card shows three chips: "6× swarm", "3× runner", "2× tank", every word whole (no "…"), nothing spilling out of the card.
+- [ ] The card is the same size as before and still closes on a tap; the help (?) button at the right is still free.
+- [ ] Any other wave's card (one or two kinds) also shows whole words.
+
+## Box 41 — Bolt neon sign readable at the top edge (T14, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+Play → Turf War, the default Alley map (other map themes have no sign; that is expected).
+
+- [ ] Look at the top-right corner of the board, next to the tire stack: the cyan bolt sign is clearly visible even at the dim moments of its flicker (before it was nearly black between flickers).
+- [ ] It still flickers with the cyan light around it, in the same spot and at the same size.
+- [ ] The magenta heart sign at the bottom-left looks the same as before.
+
+## Box 42 — Next-wave card keeps whole role words with iOS Larger Text (T15, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+First: iPhone Settings → Accessibility → Display & Text Size → Larger Text → turn on Larger Accessibility Sizes off, and drag the slider about 2–3 steps above the default (or use Control Center's Text Size). Then Play → Turf War, Main phase.
+
+- [ ] Play until Main wave 8, then tap the wave chip. The three chips ("6× swarm", "3× runner", "2× tank") show every word whole (no "…"), nothing spilling out of the card.
+- [ ] The card is the same size as before and still closes on a tap.
+- [ ] The card's title line may be larger than before; that is expected. The chip words stay the normal size; that is expected too.
+- [ ] Put the text size back to your usual setting afterwards.
+
+## Box 43 — Egg duplicates join up: one pet per hero (pet team P1, 2026-10-18)
+
+First: close and reopen the app so the update loads. Play → Hideout → Stash (the Den).
+
+- [ ] If your Den used to have the same hero more than once, it now shows that hero once. The grown one stayed, with the best grade it had (and shiny if either one was).
+- [ ] The hero's stars in the Collection are the same as before. Nothing went missing (shards, finishes, auras).
+- [ ] Hatch an egg until its Child reveal plays (dev kit "reveal now" is fine). If it is a hero you already keep, about 3 seconds after the reveal line the pet says "<Name> joined up! ★ → ★★" (plus "Now Epic!" or similar if the grade went up). The grown pet is now the one in the room, and the Den did not get a second copy.
+- [ ] A new hero still hatches as a new pet, as before.
+
+## Box 44 — One status badge everywhere (pet team P2, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+First: close and reopen the app so the update loads. Play → Hideout.
+
+- [ ] The strip at the top of the Hideout shows a small framed badge on the right: five stars (filled = how many copies of that hero you have), the grade word (Common / Rare / Epic / Legendary) and ✨ if shiny. The frame and stars are the grade's colour.
+- [ ] **Width check (the one to look at):** on a Legendary shiny pet the badge is not cut off at the right edge. If it is tight, the grade word may shorten with "…"; the stars always stay whole. Tell me if the name disappears or the badge is clipped.
+- [ ] The strip is still one row, same height as before, with an egg, a baby and a grown pet (an egg or baby shows no badge).
+- [ ] Open the Stash (Den). Each pet tile has a small star row under its name, in its grade colour. Tiles for an egg or unrevealed pet have the same height, nothing jumps.
+- [ ] Tap a pet in the Stash. The detail card shows the same badge beside the pet's name, and the line under it no longer repeats the grade. The buttons below are not cut off.
+- [ ] The badge on the Hideout strip, the Stash tile and the card show the same stars and grade for the same pet.
+- [ ] A hero with 3+ stars still lets you wear its dye, as before.
+- [ ] With the phone's text size set larger, the Stash tiles and the strip still show everything. Put it back afterwards.
+
+## Box 45 — Hero art repacked with a new faint clip (pet team P3, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+The faint clip itself is not played anywhere yet (Turf team, P5, uses it). This box only checks nothing broke when
+every hero's fight sheet was rebuilt. First: close and reopen the app so the update loads.
+
+- [ ] Play → Hideout: your pet idles and walks around as before, no blank or flickering frames, feet on the floor.
+- [ ] Play a Turf War wave with your Avatar: it walks, dashes, attacks, uses its skill and flinches when hit, all looking as before (no missing frames, no wrong hero).
+- [ ] Swap to a different hero (Avatar or a pet you hatched) and repeat one wave or a Hideout walk. Same result.
+- [ ] Optional look at the new art: the faint frames are in the art library viewer (hero cards → combat → Faint).
+
+## Box 46 — The active pet leads in Turf War (pet team P4, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+First: close and reopen the app so the update loads. Note which pet is active in the Hideout before you start.
+
+- [ ] Play a Turf War wave. The hero you fight as is your **active pet's** hero (same look and skill), not a separate Avatar. If your active pet is still an egg or baby, you fight as Corvus.
+- [ ] Stash (Den) → Make a different revealed pet active → start a Turf wave: the leader is now that pet's hero.
+- [ ] If you had picked an Avatar before (for example Oni or Archangel) and your update just loaded: that hero is now a pet in your Stash and is the active one. Your old pet is resting in the Stash, still there, with its stars. If an egg or baby was on the stage instead, the hero is waiting in the Stash and nothing was moved.
+- [ ] The Collection stars did not drop for any hero (a hero you had as an Avatar is 1★ if you had no pet of it).
+- [ ] Play → Dress → heroes: tapping a hero shows "Your active pet leads…" instead of a "Fight as this hero" button (while a revealed pet is active).
+- [ ] Clear a hero band for the first time (Main wave 5 gives Oni, wave 10 gives Archangel): you get the "owned" sheet, the hero gains a ★ copy in the Collection, and the sheet has no "Set as Avatar" button.
+- [ ] A hero bound as a tower never leads: bind one (Bind as tower), then make its pet active. You keep fighting as the previous leader, no crash.
+
+## Box 47 — Turf team of 3 (pet team P5, 2026-10-18) — PASSED (emci, 2026-10-18); helper lines REPLACED by Box 48 (P5b)
+
+The P5 helper lines (two slots, tap-to-place, Move, knocked out for the wave) no longer apply: P5b replaced
+them with one AI helper. Test the helper with Box 48. Still valid from here:
+
+- [ ] A **rare** pet on the team (leader or helper): the Pounce button works twice in one wave. Without a rare: once, as before.
+
+## Box 48 — One AI helper (pet team P5b, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+First: close and reopen the app so the update loads (OTA group `7362dc82`). You need at least one resting pet at Child stage or older.
+
+- [ ] Turf War → Setup ▲: the **Team** card shows your leader and ONE "Helper" slot (no Helper 2, no Move button). Tap it: only pets from Child up, each with its stars + grade badge. Pick one.
+- [ ] An old save with two helpers picked keeps just the first one, with no error.
+- [ ] Close the sheet: the helper stands beside your leader, off the road. Tap the board to walk the leader: the helper **walks after it** (walk clip, not sliding), then stops beside it and breathes idle. No bar, button row or the board changed size.
+- [ ] Call wave: the helper stays close to the leader (never wanders far), steps toward foes near it and attacks on its own (attack clip, hits and numbers). With normal foes it stays off the road.
+- [ ] About 6 s in, the helper **casts its own skill** (skill clip, foes near it slow / take damage), then again every ~14 s while foes are near.
+- [ ] A boss wave (Main 5 or 10): the helper goes for the boss first (it may step onto the road for it). After ~5 s next to the boss it gets hit: it falls over (faint clip, dimmed) and "… is dazed · Back in 4 s" shows. After ~4 s it gets up (the fall played backwards), runs back to the leader and fights again. For ~6 s after getting up the boss can't knock it down again.
+- [ ] The helper is **never** gone for the whole wave. Normal foes never knock it down.
+- [ ] Retry after a loss / next wave: the helper starts standing, beside the leader.
+- [ ] **Smoothness:** on a busy wave, at 1× and 2×, the helper's walking looks as smooth as the leader's (no 10-steps-a-second jumping), and the board feels as smooth as before. With the dev FPS overlay it stays near 60.
+- [ ] Pause mid-wave while the helper walks or is dazed: it freezes; resume continues where it was.
+- [ ] Settings → Larger Text (phone accessibility text size up): open Setup again. The Team card text grows and wraps inside the sheet (scrolls); nothing is cut off and the board and bars keep their size.
+
+## Box 49 — Per-hero Locker (pet team P6, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+First: close and reopen the app so the update loads (OTA group `8e7b7015`). Use a save that had gear worn before this update if you can.
+
+- [ ] **No gear lost:** open the Locker. The gear your active Legend was wearing is now worn by your **leader**. Gear that other Legends wore is back in the **bag**. Bag count + worn count is the same as before the update (check the "held" number next to Bag).
+- [ ] The Locker has a **Dress which hero?** row at the top of the gear section: a chip per hero with `worn/4`, your leader first (tagged "leader"), your Turf helper next (tagged "helper"). The panel titles read "Worn · <hero>" and "Equipped bonuses · <hero>".
+- [ ] Tap your helper's chip, then equip an item from the bag: it goes on the helper, the leader keeps what it wore. Tap the leader's chip: its own gear shows. A worn item leaves the bag (one wearer at a time); unequipping puts it back.
+- [ ] The Legend cards no longer show "n/4 worn". Level, stars, element and swords work as before.
+- [ ] Hideout: once a hero wears gear, the name tag shows a small **GEAR n/4** chip. The tag stays one row, the same height; the star badge is still fully visible, also on a small phone and with Larger Text.
+- [ ] Turf War: the leader's gear still makes the whole board hit harder as before (towers too). Dress the **helper** in strong gear: its hits and its skill visibly hit harder than before; with no gear on it, it fights like it did in Box 48.
+- [ ] **Smoothness:** a busy wave at 1× and 2× feels the same as Box 48 (gear adds no per-frame cost).
+- [ ] Settings → Larger Text: the Locker's hero chips scroll sideways, the Worn rows wrap, nothing is cut off.
+
+## Box 50 — Divecore finish step 1: helper daze, hidden Neon Maze, kinder copy, splash colour (2026-10-18) — PASSED (emci, 2026-10-18)
+
+First: close and reopen the app so the update loads. Also run the old **Box 43** (egg duplicates) while you have the phone: it was never marked.
+
+- [ ] **Helper stays up longer:** boss wave (Main 5 or 10), a boss parked next to the helper. After it gets up it takes **two** boss swings without falling (about 11 s), and is knocked down again only on the third (about 15 s after it stood). It still always gets up and is never gone for the wave. (Box 48's "about 6 s" line is replaced by this.)
+- [ ] **Neon Maze is gone for players:** Turf War → Setup on Main shows no "Maps" card with Neon Maze. The theme picker (Rooftop / Underpass / Court / Docks / Alley) still shows in its own card, the same as on Trial. The board is still the normal ATO board.
+- [ ] **Main 1–10:** the Setup line reads "Campaign climb — Trial 1–5, then Main 1–10. Clear Main 10 to Conquer a cycle." and fits its box (also with Larger Text).
+- [ ] **Kinder pet lines:** let the pet get hungry or sad (a Scruffy pet shows the changed lines): "Snack time?", "Is it snack o'clock?", "My bowl could use a refill.", "Up for a game?", "Bit bored over here.", "Play with me?". None blames you. When a meter is empty the status word reads **Very hungry** (not "Starving") and fits its chip, also with Larger Text. After an expedition the pet says "Glad you're here." / "Hi again!" instead of "Missed you".
+- [ ] **Tide Pass push** (last day, if you have a pass): reads "Legendary progress ×2 ends after today. Your days wait for you."
+- [ ] **Legendary helper splash:** put a **legendary** pet as the helper and fight a wave with foes bunched together. When its hit lands, the foes next to the target show a coloured ring in the helper's element and their damage numbers are the element colour (not plain white). No freeze or slow-down, and no second shot. Effects Quality Off: no ring, numbers still coloured.
+- [ ] **Smoothness:** a busy wave at 1× and 2× feels the same as Box 49.
+
+## Box 51 — Locker, honest and sorted (Divecore finish step 2, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+First: close and reopen the app so the update loads. Open the Locker (Play → Locker).
+
+- [ ] **Header:** the line under "Locker · Fits" reads "Powers change how the games play. Looks are just for style." (no "Basecore").
+- [ ] **Worn rows:** each worn Power has a coloured line "Works in: Turf War" / "Works in: Turf War · Dive" / "Works in: Hideout". A worn Look says "Style only".
+- [ ] **Equipped bonuses** are grouped under **Turf War**, **Dive** and **Hideout** (wave power / tower speed / token gain; dive luck; research finds). A group with nothing says "none yet".
+- [ ] **Bag:** with "All", the list shows a small heading "Powers · change the games" and then "Looks · style only, sell for tokens". The last filter chip reads **Looks** (not "Junk") and shows only Looks, with no headings. An empty tab reads "No Looks in the bag."
+- [ ] **Every Power in the bag** shows its "Works in" line; a Look shows "Style only". Open a Look: "Looks are for the eye. They change no game numbers."
+- [ ] **Help (?)** on the Locker: 3 short lines about Powers vs Looks, where a Power works, and equip / sell / merge.
+- [ ] **Token gain really works:** wear **Copper Keeper** (trinket) on your leader. Win a Turf wave with full pay: the result reads about 5% more tokens than before (50 → **53**; a half-pay or replay win 25 → 26). Take it off: back to 50. Mini-game rounds still pay 5.
+- [ ] **Research finds really work:** wear **Curator's Cloak** (cloak) or Ember Mantle on your leader. Claim a full research bag (about 10 h): you get about 1 extra find on top of the cycles (sometimes 2; a small bag has a small chance of +1). Without it, exactly one find per cycle.
+- [ ] **Larger Text:** the new "Works in" lines and the two headings wrap; nothing is cut off; the filter chips still scroll sideways.
+- [ ] (Replaced by Box 52: step 3 opens the Store to players, Token shop only.)
+
+## Box 52 — The Store opens, 5★ duplicates pay shards, the half-pay cap holds (Divecore finish step 3, 2026-10-18) — PASSED (emci, 2026-10-18)
+
+First: close and reopen the app so the update loads.
+
+- [ ] **A fourth tab:** the bottom bar now shows **Store** next to Hideout, Turf and Locker. All four labels fit on a small phone (375 pt) and with Larger Text; the bar keeps its height.
+- [ ] **Open the Store:** header "Corner Store" with the line "Spend tokens on a small boost." Your token count shows. There are **no tab chips** (no Tide shelf, no Paid shop), **no price in dollars**, and **no "Coming soon" rows**.
+- [ ] **Rows:** Dive refresh (40 tokens, "x/3 today" under it), Merge-fuel crate (30, 3 a day), **Big merge crate** (300 tokens, "Three random Powers…", "0/1 bought this week"), Shine Stone (120, 1 a week). The Big crate note does NOT say "held".
+- [ ] **Dive refresh limit:** with the charges below full, buy it 3 times: each gives a charge and the note counts up; the 4th shows "Daily limit reached". With full charges it shows "Charges full".
+- [ ] **Big crate:** buy it with 300+ tokens: you get 3 Powers in the Locker bag (or shells for any past your daily Power limit, with a notice) and the button then reads "Weekly limit reached".
+- [ ] **Help (?)** on the Store: 3 lines, the last one "Crates hold random Powers." (nothing about paid rows).
+- [ ] **5★ duplicate shards:** hatch an egg to a hero you already hold at 5★ (or use a 6th copy via the dev kit). When the pet's reveal plays, its line reads "<Name> joined up! +2 <Grade> shards" and the Collection shards go up by 2 (a Legendary duplicate gives 2 Epic shards). A duplicate that still adds a star pays nothing and reads as before.
+- [ ] **Half-pay cap:** after your 5th Turf win of the day the next win pays half. Set the phone clock back one day and win again: it is still half pay (it did not reset). Set the clock back to the right time afterwards.
+- [ ] **Larger Text:** the Store rows and notes wrap; nothing is cut off.
+
+## Box 53 — The Today button (Divecore finish step 4, 2026-10-19)
+
+First: close and reopen the app so the update loads. Open the Hideout (a pet at Child stage or older shows the most rows).
+
+- [ ] **Dock:** the bottom row of the Hideout now reads **Feed · Today · Info**. All three fit on a small phone (375 pt) and with Larger Text; the row keeps its height and nothing else moved. The top bar has no new chip.
+- [ ] **Count:** Today shows a small mustard number (never red, no dot, never pulsing) when something is ready, and no number when nothing is.
+- [ ] **Open it (tap Today):** a sheet titled "Today" lists plain sentences with one button each. Check the rows you can make appear:
+  - research banked → "Research: N finds ready" · **Claim** (it claims, the row goes, the count drops, the sheet stays open);
+  - pet at 1 heart of food → "<Name> would like a snack" · **Feed** (opens Feed); at 1 heart of mood → "… would like some play time" · **Play**;
+  - an egg not yet chosen with free eggs → "A free egg is waiting" / "Free eggs: N waiting" · **Eggs**;
+  - a trip can start → "Send <Name> exploring" · **Go**; a trip just came back (its "back" message is still new) → "<Name> is back with something" · **Look** (both open Expedition; an old, never-dismissed "brought back" note does NOT keep the count lit);
+  - between 08:00 and 22:00 with today's visitor un-greeted → "Today's visitor is here" · **Say hi** (greets, shows the visitor card);
+  - dive charges at 10/10 → "Dive charges are full" · **Dive** (opens Dive). At 9/10 there is **no** Dive row.
+- [ ] **Nothing ready:** the sheet reads "All caught up" in grey, with "Nothing here is urgent. Come back any time."; the dock shows no number.
+- [ ] **Calm:** no red anywhere, no "!", no timers or countdowns, no streak words, no Store / daily check-in rows.
+- [ ] **Back:** the swipe-back or the close button closes the sheet, then the Hideout; no stuck state.
+- [ ] **Larger Text:** the rows wrap and the buttons stay tappable; the sheet scrolls if needed.
+- [ ] **Screen reader:** the dock button reads "Today, N things ready" (with its small icon first, like the other dock buttons).
+- [ ] **Smoothness:** the Hideout feels as smooth as before (the button adds no animation or timer).
+
+## Box 54 — The newbie guide bubble (Divecore finish step 5, 2026-10-19)
+
+First: close and reopen the app so the update loads. Best checked on a **fresh** save (Settings → Reset Divecore, which also restarts the guide) and then on your **normal** save.
+
+- [ ] **First bubble:** on a fresh Hideout (after any coach-tip ring has passed) a small boxed bubble sits low on the stage, centred between the two side rails and just above the dock: "Pick an egg. It hatches into your first pet." with a **Got it** button. It never touches the rails or the dock and the room does not move.
+- [ ] **Never with a coach tip:** while a pulsing coach ring is showing, the bubble is not there; it appears after.
+- [ ] **The egg line changes by itself:** pick an egg (without tapping Got it) and the words change to "Tap your egg to keep it warm until it hatches." After it hatches the next step comes: "Tap Feed in the bottom row, then catch the food."
+- [ ] **Got it:** on any step, tap it: that step is gone for good (also after closing the app) and the next one you can do comes up. (Got it on the egg step hides both egg lines; the coach ring still guides you.)
+- [ ] **It does not get in the way:** on the Hideout the bubble covers the bottom of the room between the rails. If your pet or egg stands there, you can still tap it above the bubble, or tap Got it. On the Turf board it sits just above the dock: pads under it stay usable when you scroll/move the board, or hide it with Got it. The Locker's last row can scroll fully clear of it.
+- [ ] **The steps, one at a time** (each appears only when you can do it): Feed → Dive → "Your research bag fills while you're away. Tap CLAIM at the top." (only once a claim is ready) → "Defend your street: open Turf War and clear Trial 1." → "Put a Power on…" (only with a Power in the bag) → "You can build the Loft now…" (only when the Loft can be built) → "Send your pet exploring…" (only when a trip can start). After the last one, nothing.
+- [ ] **Turf setup:** while Trial 1 is not won, the bubble shows on the Turf board with "Clear Trial 1: place towers on the pads, then call the wave." It is hidden while the Setup sheet is open, during a wave and on the result card, and a build card sits on top of it.
+- [ ] **Locker:** with a Power in the bag and none worn, the Locker shows "Put a Power on: pick one in the bag and tap Equip." at the bottom; equipping a Power removes it. A worn **Look** does not count as a Power.
+- [ ] **Quiet when busy:** no bubble during a mini-game, a dive, a sheet, a hatch / evolve ceremony, the away card, Settings, or a friend's Hideout.
+- [ ] **Your normal save is not nagged:** if you already won Trial 1 / built the Loft / sent a trip, you do not see the early steps (at most a Power, Loft or trip step you can do right now).
+- [ ] **Settings → Help:** a **Guide bubble · On/Off** chip. Off: no bubble anywhere. **Replay tips** turns it back on and brings every step back. **Reset Divecore** also restarts it.
+- [ ] **Larger Text:** the words fit the box (up to 3 lines); the **Got it** button is easy to hit.
+- [ ] **Reduce Motion / Motion Off:** under Reduce Motion it fades in quickly; with Motion Off it just appears. It never pulses or slides.
+- [ ] **Screen reader:** each new step is read out once.
+- [ ] **Smoothness:** the Hideout, Locker and Turf board feel as smooth as before.
+
+## Box 55 — Turf War balance refresh (Divecore finish step 6, 2026-10-19)
+
+First: close and reopen the app so the update loads. Play on your **normal** save with a helper picked in the Setup sheet. Numbers come from `games/grove/BALANCE_REPORT.md`; this box checks how it feels.
+
+- [ ] **Hero tower price:** in Turf setup, tap an empty pad. A bound hero row now says **"40 scrap"** (not "free"). With under 40 scrap it is greyed out; placing one takes 40 scrap from the counter.
+- [ ] **A kept hero tower stays free:** a hero tower already on your board from an earlier wave is still there on the next wave, and no scrap was taken for it.
+- [ ] **Removing one does not refund:** Remove on a placed hero tower frees the pad but does not give the 40 scrap back (same as the cycle boss). Placing it again costs 40 again. Note if that feels unfair.
+- [ ] **Trial 4 is not a wall:** Trial 4 has one more minion (4) and its runners now come in a short line (two of them), not a tight pack. It should feel no harder than Trial 5 (the boss wave), which now has a longer line of minions before the boss.
+- [ ] **Main 4 and Main 7:** the runners come one after another instead of in one clump. Both should be winnable with your kept board and a helper, without extra gear.
+- [ ] **Main 3 and Main 6:** a few more minions than before (Main 3: one more, tanks a little earlier; Main 6: one more). They should feel like a small step up from the wave before, not a dip.
+- [ ] **Main 9 and Main 10:** with your kept board and a helper they clear (Main 10 can still need a retry or two; that is fine for the finale).
+- [ ] **Helper vs the boss:** on Trial 5 / Main 5 the helper gets dazed about once per boss; on Main 10 about twice. It is up and fighting most of the wave.
+- [ ] **Nothing else moved:** tower prices (40), upgrades (40 / 90), start scrap (80) and rewards are the same as before. Your save loads as usual.
+
+## Box 56 — Locker icons (Divecore finish step 7, 2026-10-19)
+
+First: close and reopen the app so the update loads. You need some gear in the bag (a few Powers and Looks) to see most icons. Dev tools can give you gear.
+
+- [ ] **Every item has its own picture:** open the Locker. Each of the 13 items shows its own colourful icon with a thin white outline (no more grey and gold stand-ins, no two items sharing a shield).
+- [ ] **They match the item:** Leaf Cape = green leaf cape, Glowveil = glowing red-orange cloak, Bud Staff = wooden staff with a green bud, Saltcrest Helm = pale blue helmet with a wave plume, Moss Habit = mossy green hooded robe, Deep Pearl = blue pearl pendant, Tide Blade = teal wave-shaped sword, Bark Aegis = round bark shield with a leaf, Copper Keeper = copper purse with a spark, Curator's Cloak = purple hooded cloak with a lens, Ember Edge = flame sword, Ember Ward = dark shield with a flame, Ember Mantle = orange collar mantle.
+- [ ] **Easy to tell apart:** the three ember cloaks (Glowveil, Curator's Cloak, Ember Mantle) are different shapes and colours at a glance. Note any pair that still looks too alike.
+- [ ] **Sharp, not fuzzy:** the icons are crisp pixel art in their square frame, not blurry or squashed. They fill the frame (a little bigger than before) and nothing is cut off at the edges. Check on your phone at normal size and with Larger Text on.
+- [ ] **Rows did not move:** the Locker rows, tabs and the bag list are the same height as before; nothing jumps when you open or close a row.
+- [ ] **Same icon everywhere:** the same item shows the same icon in the Dive bag / finds and on the pet's badge, if you have a Look worn as a badge.
+- [ ] **Which one do you like less?** Tell me any icon you would like swapped. Two other looks for every item are saved in the library (not shown in the game, no switch), so a swap needs no new generation.
+- [ ] **Nothing else changed:** gear still equips, bonuses and "Works in" tags are the same, and your save loads as usual.
+
+## Box 58 — Divecore done pass: one full run + Larger Text + Reduce Motion (Divecore finish step 9, 2026-10-19)
+
+This is the last Divecore box. It walks the same ground as Boxes 43 and 53-56 but shorter (it leaves out per-row detail like the Today sheet's screen-reader label, "a kept hero tower stays free / no refund" and each icon's match). Run those boxes as written, or tell me you accept this shorter pass in their place.
+First: close and reopen the app so the latest update loads. **Part A wipes your Divecore progress** (Settings → Reset Divecore). Do it on a spare phone or account if you want to keep your real game, or do Part B first and Part A last.
+
+### Part A — a brand-new player (Settings → Reset Divecore, or a fresh install)
+- [ ] **First minute:** you land in the Hideout with a small bubble that says what to do next (pick an egg). Nothing is red, timed or scary. **Got it** hides a step; the Settings → Help **Guide bubble** chip turns it off and **Replay tips** brings it back.
+- [ ] **The first loop, one step at a time, with the bubble pointing the way:** pick an egg → it hatches → Feed (Catch) → first Dive → claim research → clear **Trial 1** in Turf War → put a **Power** on in the Locker → build the **Loft** → send the pet on a **trip**. At every step the next one is clear without reading anything else.
+- [ ] **Copy is kind and plain:** nothing says "Main 20", "Basecore", "Starving" or tells you off for being away. Look at: the Turf setup sheet ("Protect your street…"), the dive bust line ("Your Hideout is safe"), the Avatar-unlocked notice ("joined your crew"), the pet's hungry / sad lines, the Tide Pass guide.
+- [ ] **Locker (Box 56 + Box 51):** every item has its own icon (13 different), "Works in" tags on Powers, Looks say "Style only", sorted into Powers and Looks. Same icon for the same item everywhere.
+- [ ] **Today button (Box 53):** the dock has **Today**; the count matches what is ready; at 0 it says "All caught up"; nothing red, no timers.
+- [ ] **Store:** you see only the Token shop with priced rows (Dive refresh, Merge-fuel crate, Big merge crate, Shine Stone). No paid tab, no pass, no "Coming soon", no dev button anywhere.
+- [ ] **Turf War balance (Box 55):** Trial 1-5 and Main 1-4 feel like a gentle climb (Trial 4 not harder than the Trial 5 boss). The hero tower row says **40 scrap**. Your helper is up and fighting most of each boss wave.
+- [ ] **Nothing dev-only is reachable:** Settings has no dev unlock row you can use, no floating DEV button, no testing groups. (If you are on your own invite-only test build these may still appear; note it. They must be gone in the public build.)
+
+### Part B — your normal (old) save
+- [ ] **Everything you had is still there:** pets, gear, Looks, Den, rooms, tokens and your Turf progress. The game opens without an error or a blank screen.
+- [ ] **You are not nagged:** the guide bubble only shows the next thing you have not done (at most a Power, the Loft or a trip), never the early steps you finished long ago.
+- [ ] **Gear moved cleanly:** the gear you wore is on your leader or in the bag, nothing lost (Locker → Dress which hero?).
+- [ ] **Egg duplicates (old Box 43):** a second copy of a hero joins its pet as a star instead of a second pet.
+
+### Part C — iOS Larger Text (iPhone Settings → Accessibility → Display & Text Size → Larger Text; one step above default, then max)
+Walk every screen and check: words fit their boxes (no cut-off, no overlap), buttons stay easy to tap, nothing jumps when text grows.
+- [ ] **Hideout** (name tag, rails, dock with Feed · Today · Info, the guide bubble), **Today sheet**, **Feed**, **Info** tabs and the Guide, **Away card**, **visitor card**
+- [ ] **Pet** / **Den** / **Eggs** / **Dress** and the Locker (rows, tabs, icons in their frame)
+- [ ] **Underground** (Dive) and the **find / bust** notices
+- [ ] **Turf War**: top bar, next-wave card, **Setup sheet** (helper picker), the pad build card (hero tower "40 scrap"), the wave screen, **result** card
+- [ ] **Store**, **Circle**, **Settings** and Help, mini-games
+
+### Part D — Reduce Motion (Settings → Accessibility → Motion → Reduce Motion)
+- [ ] The guide bubble only fades in quickly (no slide, no pulse); with Play's own Motion setting Off it just appears.
+- [ ] Sheets and cards open without big slides or bounces; **Today** has no pulse or glow.
+- [ ] **Turf War**: no heavy flashes, shakes or hit-stop on hits, boss and win / loss beats; the game is still playable and readable.
+- [ ] **Dive** and **mini-games**: no flashing; results still show clearly.
+
+## Box 59 — Server hardening still lets real people in (ATO finish step 1, 2026-10-19)
+
+Run this AFTER the wave98 SQL, the three function deploys and your three rotations are done (the exact commands are in `docs/ato-finish-roadmap.md` "Step 1 status"), and after the OTA that carries the Sentry scrubber if it has been published. Use your own phone; nothing here needs a second account. Nothing in this box wipes anything.
+- [ ] **Password sign-in still works:** sign out, then sign in with a handle (or e-mail) and your password. It signs you in. (Use the NEW dev-test password only on the dev-test account; never type a real account's password into a test.) **Then type a wrong password 11 times in a row** on a throw-away identifier: the 11th reply is still just "couldn't sign you in" (no crash, no hint it is a limit). Wait 15 minutes, a correct sign-in works again.
+- [ ] **E-mail code sign-in still works:** sign out, ask for a code, enter it, you are in. This is the main way in, so it must be untouched.
+- [ ] **Sign-up form handle check:** on a fresh sign-up screen (or the dev "re-run sign-up"), typing a free handle shows it is free and a taken one shows "already taken". If you tap through 31 different handles within 10 minutes the check says "Couldn't check that handle. Try again." (fine), and works again after the window.
+- [ ] **A share link page still opens:** open someone's `/@handle` poster link (yours is fine) while signed out or signed in. The poster shows. A made-up handle shows the "no ATO for that" state, not a crash.
+- [ ] **Daily check-in still pays once:** on Home, check in. It pays once; a second tap the same day says already done. Change your phone's time zone to another city and open the app: the check-in does NOT pay a second time for the same day, and the app does not error.
+- [ ] **Deep dive and Legends still write:** open one Explore deep dive and one Legends card. If one says it could not write it, tell me (it uses the AI library only; the old route is now closed on purpose).
+- [ ] **Dev unlock gate:** (only if you use it) tap the version number 7 times and type the NEW unlock password: it opens. A wrong password 6 times in 15 minutes stops answering for a while; that is the limit working.
+- [ ] **Nothing looks different:** no new screens, no new text, no new permission prompt.
+Report any "something I used to do now fails".
+
+### When you are done
+Tell me which parts passed, plus anything that looked wrong with the screen name. If everything passed and you accept this as the shorter pass, Boxes 43, 53, 54, 55, 56 and 58 can all be marked PASSED, and I will also note whether the Locker icons are approved (or which ones you want swapped).
+
+> **Boxes 60-65 are covered by ONE pass: Box 66 (bottom of this file). Do Box 66; use 60-65 below only as detail/history.**
+
+## Box 60 — The words you actually see (content review, master-plan Step 4, 2026-10-20) — DRAFT
+
+Run on your own phone AFTER the OTA and the `ai-library` bundle deploy (Release A). It is the short read-list: only copy a launch surface shows. Judge MEANING (docs/copy-review-rules.md): flag a specific confusing line, factual error, unsupported claim, verdict pinned on you, privacy exposure or harmful task, never a word or topic alone. Dark jokes, swearing and honest "you may…" weaknesses should be there. Full list with counts: `docs/copy-review-agent/step4-read-list.md`.
+- [ ] **Daily insight (Insights tab):** open it on 3 different days or accounts. Each reads clearly and tells you something true about the lean, not a diagnosis. A weakness line says "you may…", with one small step.
+- [ ] **Today's Pick:** read the 3 open prompts (p14, p25, p50) and say keep / fix each.
+- [ ] **Questions:** answer 5 across different traits; none scores a privacy, safety or money boundary as distance. Decide D1 (retired questions read-only) and D2 (houseguest question).
+- [ ] **Explore category cards:** open 4 categories; plain language, no verdict about you.
+- [ ] **Deep dive (Explore → Write my deep dive):** one for Love / closeness and one for another category. Closeness is treated like any category; no diagnosis, no label about you; a framework name (if any) is explained and never "your result".
+- [ ] **Legends (Daily / Legends card):** read U1–U4 from `applied-set8-legends.md`; facts look right, no invented tag.
+- [ ] **Story:** read the 3 open items from `applied-set9-10`; the "You scored …" fallback is acceptable or fixed.
+- [ ] **Profile card (after the 48):** strengths and weaknesses read honestly; "Still forming" is clear; nothing private appears on the shareable line.
+- [ ] **Helpline row (You tab):** 988 / findahelpline link / local-emergency line visible; nothing you type is checked.
+Report each as keep / fix + the screen name. Flags stay false until you approve a set.
+
+## Box 61 — Circle safety (master-plan Step 7, wave104, 2026-10-20)
+
+Run AFTER wave104 is applied and Release B is on the phone. Two phones or two accounts: your own + `atodev2` (never a real tester's account). Open the Circle tab (these tools moved there from the Divecore Circle sheet).
+- [ ] **Add by handle:** send a request to the other account. The other side sees it under Requests; nothing is shared until Accept. Accept → both see each other in the list.
+- [ ] **Wrong handle / yourself / twice:** each shows one short line ("No one with that handle.", etc.); nothing crashes.
+- [ ] **Read the new Circle lines** (requests, report reasons, block/remove, errors, support line): keep / fix each. They are in `CIRCLE_UI`, `src/play/circle-visits.ts`.
+- [ ] **⋯ → Report:** reached in two taps from the friend row; pick a reason → "Thanks. We read every report." The report shows in the triage query (`docs/circle-safety.md`).
+- [ ] **⋯ → Block:** first tap arms "Tap again to block @…", second blocks. The friend disappears on both phones; the blocked side cannot find you by handle; visits and gifts stop. Blocked (1) → Unblock (two taps) works.
+- [ ] **Remove:** two taps; the friend disappears on both sides.
+- [ ] **Screen layout:** the Circle tab scrolls cleanly as Requests / Blocked appear; at 375×667 the keyboard does not cover the Add field's Send button; the report panel fits.
+- [ ] **Support line:** tapping it opens a mail draft to support@asstrollogs.com.
+- [ ] **Name filter:** at sign-up (a throwaway test account) a staff-style handle like `atosupport` is refused with "That one isn't available. Pick another."; a swear-word handle is allowed.
+
+## Box 62 — Compare strengths (master-plan Step 7b, wave105, 2026-10-20)
+
+Run AFTER wave105 is applied and Release B is on the phone. Two accounts that are already in each other's Circle: your own + `atodev2`, both with some answered questions. Circle tab → ⋯ next to a friend → **Compare strengths**.
+- [ ] **Read the consent text** at the top: it must say exactly what a friend sees (up to 3 strengths + the ones you share, no scores or numbers, off any time). Keep / fix. Strings are in `COMPARE_UI`, `src/play/circle-compare.ts` (`CIRCLE_COMPARE_COPY_REVIEWED` stays false until you read them).
+- [ ] **"What @friend would see of you"** lists at most 3 plain phrases (no numbers, nothing about closeness/worry, nothing that reads as a weakness). Read each phrase: keep / fix.
+- [ ] **One side on:** switch it on; the row says "Waiting for @friend to switch it on too." No card yet.
+- [ ] **Both on:** the other phone switches on too; reopen Compare. "What you two share" and "@friend tends to…" show short phrases only. Nothing about attachment, no "more/less than", no numbers.
+- [ ] **Switch off** on either phone: the card disappears on both on the next open (immediately, no wait).
+- [ ] **Remove the friend and add them again:** Compare is off on both sides until switched on again.
+- [ ] **Block:** after a block the friend is gone and no compare card can be opened.
+- [ ] **Panel size:** the Compare panel fits the Circle tab at 375×667, scrolls instead of growing, and Back returns to the ⋯ menu.
+
+## Box 63 — Insight, notification ask, check-in line (master-plan Step 8+9, 2026-10-20)
+
+Run on Release B. Use a fresh or reset account that has never been asked for notifications (iOS: delete the app first, or Settings → ATO → Notifications is "not determined").
+- [ ] **Load insight:** Insights → Load insight shows the Focus · try · watch card. Airplane mode, tap again: "Couldn't load it just now — tap to try again." Back online, tap: it loads.
+- [ ] **Slow network:** with a very slow connection the skeleton gives up in about 10 seconds with a retry, not 45.
+- [ ] **Ask comes after the insight, never at launch:** cold start shows NO system dialog. After the FIRST insight loads, a small sheet appears: "Want a nudge now and then?" with **Turn on** and **Not now**. Read the two lines: keep / fix.
+- [ ] **Not now:** closes the sheet, NO iOS dialog, and it never comes back (reload another insight, restart the app).
+- [ ] **Turn on (second fresh account):** the iOS permission dialog opens; Allow → no sheet again. Settings → ATO → Notifications is on.
+- [ ] **Earlier-day label, widget try line / private line, the 7th-day +10:** as before (Box list in docs/ato-finish-roadmap.md step 5).
+- [ ] **Check-in line** reads "N of 7 check-ins toward your next bonus · the 7th pays +N." and never "0 of 7" (after the 7th check-in it says "Next check-in is 1 of 7").
+
+## Box 64 — Accessibility and the birthday row (master-plan Step 8+9, 2026-10-20)
+
+Run on Release B, iPhone, small phone if you have one (375 pt wide).
+- [ ] **VoiceOver on, sign-in:** swiping reads "Sign in with Apple", an email field, a password field, the buttons by name, and the sign-in code screen: "Sign-in code", "Verify code", "Resend code".
+- [ ] **VoiceOver on, onboarding:** every field is named (birthday year / month / day, name, handle, city) and Continue is a button.
+- [ ] **Larger Text at the biggest size (Settings → Accessibility → Display & Text Size → Larger Text):** You, sign-in, onboarding, Explore, Insights: nothing cut off or hidden behind another element (scroll is fine).
+- [ ] **Reduce Motion on:** the same screens have no motion that blocks anything.
+- [ ] **Birthday row at 375 pt:** the three birth fields sit on one line inside the card and do not run off the right edge (on the phone and, if you check, the web build at 375 px).
+
+## Box 65 — Privacy links and account deletion (master-plan Step 10, 2026-10-20)
+
+Run on Release B, iPhone. The landing pages at ato.emgens.com must be redeployed with the new text first (OPEN-QUESTIONS 15).
+- [ ] **Sign-up screen:** under "Already have an account? Log in" there are two links, "Privacy Policy · Terms of Service". Each opens the browser at ato.emgens.com/privacy.html or /terms.html. Both pages show the new text, which mentions Circle, block/report and "no direct messages between people", and says nothing about mute.
+- [ ] **You tab:** the same two links sit under "Send feedback". They open the same pages. With VoiceOver on, each one is read as a link.
+- [ ] **Delete account, throwaway account only** (never root or a real tester): make a throwaway account, send one friend request to @atodev, then You → Delete account → type the phrase → confirm. The app returns to sign-in, and signing in again with that email starts a fresh sign-up. On @atodev, the pending request has disappeared.
+- [ ] **Delete proof (emci, SQL, after wave105 + wave106 are applied):** run `npm run check:delete-account` once with the seeded `ato-delete-check@example.com` (SQL in the script header). The last line says "All N delete-account checks passed" and `rows_remaining` is 0.
+
+## Box 66 — Release B, ONE phone pass (master-plan Step 11, 2026-10-20)
+
+Covers Boxes 60-65 in one sitting (about 45 min). Release B is live: OTA group `b9c891db-5587-46c0-bef4-2b1ddadd5d06`, git `e02916b5`. Everything is applied; nothing is pending. Judge words by MEANING (`docs/copy-review-rules.md`): say "fix" only for a specific confusing line, factual error, unsupported claim, a verdict pinned on you, or a privacy exposure. Dark jokes and honest "you may…" lines should be there.
+
+**Report back in ONE message:** a line per part (A-G): `pass`, or `fix` + the screen name + what you saw.
+
+### Before you start (laptop, about 5 min)
+
+**Pre-step 1: the live delete check** (proves the server delete leaves 0 rows, including the new Circle and AI-library tables).
+1. Open the Supabase SQL editor for the ATO project and paste this seed (it creates one throwaway login, `ato-delete-check@example.com`; safe to run twice):
+
+```sql
+begin;
+delete from auth.users
+where email = 'ato-delete-check@example.com'
+  and id <> 'a70d3e0e-4c00-4a1e-8c0d-0000000de1c4';
+
+insert into auth.users
+  (instance_id, id, aud, role, email, encrypted_password,
+   email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+   created_at, updated_at,
+   confirmation_token, recovery_token, email_change_token_new, email_change,
+   email_change_token_current, phone_change, phone_change_token,
+   reauthentication_token, email_change_confirm_status)
+values
+  ('00000000-0000-0000-0000-000000000000',
+   'a70d3e0e-4c00-4a1e-8c0d-0000000de1c4',
+   'authenticated', 'authenticated',
+   'ato-delete-check@example.com',
+   extensions.crypt('DeleteCheck-123!', extensions.gen_salt('bf')),
+   now(), '{"provider":"email","providers":["email"]}', '{}',
+   now(), now(),
+   '', '', '', '', '', '', '', '', 0)
+on conflict (id) do update
+  set encrypted_password = excluded.encrypted_password,
+      email_confirmed_at = coalesce(auth.users.email_confirmed_at, now()),
+      updated_at = now();
+
+insert into auth.identities
+  (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+select id::text, id,
+       jsonb_build_object('sub', id::text, 'email', 'ato-delete-check@example.com'),
+       'email', now(), now(), now()
+from auth.users
+where id = 'a70d3e0e-4c00-4a1e-8c0d-0000000de1c4'
+on conflict (provider, provider_id) do update
+  set identity_data = excluded.identity_data,
+      updated_at = now();
+commit;
+```
+
+Expected: "Success. No rows returned." If the SQL editor complains about `extensions.crypt`, change it to `crypt(` and `gen_salt(` (the wave31 seed does that).
+
+2. In a terminal in the repo, run:
+
+```bash
+npm run check:delete-account
+```
+
+Expected: a list of ticks ending with "All N delete-account checks passed", and the delete line shows `rows_remaining: 0`.
+If it stops at `complete_signup` with an invite error, tell me (signup needs an invite code in `.env.local` as `ATO_INVITE_CODE`; I never edit that file). Anything else: paste the failing line to me. Don't retry in a loop.
+
+**Pre-step 2: accounts and phone.**
+- Phone on the Release B update: force-quit the app, reopen, wait 10 s, force-quit and reopen once more (an OTA applies on the second open).
+- Your own account (A) signed in on the phone. A second account `atodev2` (B) on a second phone, or sign out/in on the same phone when a step says "switch to B". Never a real tester's account.
+- One throwaway account (C) for Part G (made in Part A).
+- A fresh install for the notification ask (Part B): delete the app and reinstall, or use Settings → ATO → Notifications = "not determined". If you can't, skip B4-B5 and say so.
+
+### Part A — Sign-up, links, name filter, date row (sign out first)
+
+- [ ] **A1** On the sign-up screen (small phone if you have one), find "Privacy Policy · Terms of Service" under "Already have an account? Log in". → Two links, on one line, not cut off.
+- [ ] **A2** Tap Privacy Policy. → Browser opens `ato.emgens.com/privacy.html`; it mentions Circle, block/report and "no direct messages between people", and says nothing about mute. Go back.
+- [ ] **A3** Tap Terms of Service. → Opens `ato.emgens.com/terms.html`, new text. Go back.
+- [ ] **A4** Look at the birthday row (year / month / day). → All three sit on one line inside the card; nothing runs off the right edge.
+- [ ] **A5** Start a throwaway sign-up (account C). Type the handle `atosupport`. → "That one isn't available. Pick another." Then a swear-word handle is allowed. Finish the sign-up with a normal handle (use birthday 18+).
+- [ ] **A6** Answer the first few onboarding fields. → Fields have no overlap; Continue works.
+
+### Part B — Insight, notification ask, check-in line (use account C, then A)
+
+- [ ] **B1** Insights tab → **Load insight**. → The Focus · try · watch card appears. A weakness line says "you may…" with one small step, and tells you something true, not a diagnosis. Keep / fix.
+- [ ] **B2** Cold-start check: before the first insight, no system notification dialog appeared at launch. → None.
+- [ ] **B3** Right after the FIRST insight loads, a small sheet appears: "Want a nudge now and then?" with **Turn on** and **Not now**. → Read the two lines: keep / fix.
+- [ ] **B4** On account C tap **Not now**. → Sheet closes, no iOS dialog. Load another insight and restart the app. → The sheet never comes back.
+- [ ] **B5** On a second fresh account/install tap **Turn on**. → The iOS permission dialog opens; Allow. No sheet again. Settings → ATO → Notifications is on.
+- [ ] **B6** Airplane mode on, tap Load insight again. → "Couldn't load it just now — tap to try again." Airplane mode off, tap. → It loads. (On a very slow connection the skeleton gives up in about 10 s with a retry.)
+- [ ] **B7** Read the check-in line. → "N of 7 check-ins toward your next bonus · the 7th pays +N." Never "0 of 7".
+- [ ] **B9** (only if you have time, it is unchanged since before Release B) Earlier-day label, the widget try line / private line, and the 7th-day +10 payout: as in `docs/ato-finish-roadmap.md` step 5. Skip and say "skipped" if not.
+- [ ] **B8** On account A, open the insight on 3 different days (or 3 accounts). → Each reads clearly. Keep / fix.
+
+### Part C — Circle: requests, block, report (A and B; Circle tab)
+
+- [ ] **C1** On A, Add by handle: type `atodev2`, send. → Request sent. On B, Circle → Requests shows A. Nothing shared yet.
+- [ ] **C2** On B, **Accept**. → Both see each other in the friend list.
+- [ ] **C3** On A, add a handle that doesn't exist, then add yourself, then add `atodev2` again. → One short line each ("No one with that handle." etc.); no crash.
+- [ ] **C4** Read the Circle lines (requests, report reasons, block/remove, errors, support line). → Keep / fix each (`CIRCLE_UI`, `src/play/circle-visits.ts`).
+- [ ] **C5** On A, ⋯ next to B → **Report**. → Reached in two taps; pick a reason; "Thanks. We read every report."
+- [ ] **C6** On A, ⋯ → **Block**. First tap says "Tap again to block @…"; second tap blocks. → B disappears from A's list. On B, A is gone too, B cannot find A by handle, and visits and gifts stop.
+- [ ] **C7** On A, Blocked (1) → **Unblock** (two taps). → Works. Re-add B and accept again.
+- [ ] **C8** ⋯ → **Remove** (two taps). → The friend disappears on both sides. Re-add and accept again for Part D.
+- [ ] **C9** Watch the Circle card while Requests / Blocked appear. → It never grows or jumps; at 375×667 the keyboard doesn't cover the Add field's Send button; the report panel fits.
+- [ ] **C10** Tap the support line. → A mail draft to `support@asstrollogs.com`.
+
+### Part D — Compare strengths (A and B, friends, both with answered questions)
+
+- [ ] **D1** On A, ⋯ next to B → **Compare strengths**. Read the consent text. → It says exactly what a friend sees (up to 3 strengths plus the ones you share, no scores or numbers, off any time). Keep / fix.
+- [ ] **D2** Read "What @friend would see of you". → At most 3 plain phrases; no numbers, nothing about closeness or worry, nothing that reads as a weakness. Keep / fix each.
+- [ ] **D3** Switch it on (A only). → "Waiting for @friend to switch it on too." No card.
+- [ ] **D4** On B switch it on too, reopen Compare on A. → "What you two share" and "@friend tends to…" show short phrases only: no attachment, no "more/less than", no numbers.
+- [ ] **D5** Switch it off on A, reopen on B. → The card is gone on both.
+- [ ] **D6** Remove B and add them again. → Compare is off on both sides until switched on again.
+- [ ] **D7** Block B. → B is gone and no compare card can be opened.
+- [ ] **D8** At 375×667 the Compare panel fits inside the Circle card, scrolls instead of growing, and Back returns to the ⋯ menu.
+
+### Part E — The words you see (account A, keep / fix each, one line)
+
+- [ ] **E1** **Today's Pick**: read the 3 open prompts (p14, p25, p50). → keep / fix each.
+- [ ] **E2** **Questions**: answer 5 across different traits. → None scores a privacy, safety or money boundary as distance. Also say yes/no to D1 (retired questions read-only) and D2 (keep the houseguest question).
+- [ ] **E3** **Explore**: open 4 categories. → Plain language, no verdict about you.
+- [ ] **E4** **Deep dive** (Explore → Write my deep dive): one for Love / closeness and one for another category. → Closeness is treated like any category; no diagnosis or label about you; a framework name (if any) is explained and is never "your result".
+- [ ] **E5** **Legends** card: read the card. → Facts look right, no invented tag.
+- [ ] **E6** **Story**: read one. → The "You scored …" fallback is acceptable or tell me which line to fix.
+- [ ] **E7** **Profile card** (after the 48): strengths and weaknesses read honestly; "Still forming" is clear; nothing private on the shareable line.
+- [ ] **E8** **You tab → Helpline row**: 988 / findahelpline link / local-emergency line visible. → Nothing you type is checked. Under "Send feedback", the same Privacy / Terms links open the same two pages; with VoiceOver on, each is read as a link.
+
+### Part F — Accessibility (iPhone, small phone if you have one)
+
+- [ ] **F1** VoiceOver on, sign-in. → Swiping reads "Sign in with Apple", the email field, the password field, the buttons by name; on the code screen: "Sign-in code", "Verify code", "Resend code".
+- [ ] **F2** VoiceOver on, onboarding. → Birthday year / month / day, name, handle, city are each named; Continue is a button.
+- [ ] **F3** Settings → Accessibility → Display & Text Size → Larger Text at the biggest size. Open You, sign-in, onboarding, Explore, Insights. → Nothing cut off or hidden behind another element (scrolling is fine). Set it back after.
+- [ ] **F4** Reduce Motion on. → The same screens have no motion that blocks anything. Set it back after.
+
+### Part G — Delete the throwaway account (account C only, LAST)
+
+- [ ] **G1** On C (before deleting) send one friend request to `atodev`. → "Request sent."
+- [ ] **G2** You → **Delete account** → type the phrase → confirm. → The app returns to sign-in.
+- [ ] **G3** Sign in again with C's email. → It starts a fresh sign-up (the account is gone).
+- [ ] **G4** Sign in as `atodev` (dev-test) and open Circle → Requests. → C's pending request has disappeared.
+
+### Results (fill in)
+
+| Part | pass / fix | Screen + what you saw |
+|---|---|---|
+| Pre-step 1 (delete check) | | |
+| A Sign-up / links / date row | | |
+| B Insight / ask / check-in | | |
+| C Circle | | |
+| D Compare | | |
+| E Words | | |
+| F Accessibility | | |
+| G Delete | | |
+
+Boxes 60-65 are marked PASSED when Parts A-G pass; each "fix" becomes a new step in `docs/master-plan.md`.
+
+**Box 66 result (emci, 2026-10-20): Parts A-G all pass. Boxes 60-65 PASSED.**
+
+## Box 67 — Launch flip (master-plan Step 12, 2026-10-20)
+
+About 15 min, after the launch-flip OTA. Force-quit and reopen the app twice first (an OTA applies on the second open).
+
+**Report back in ONE message:** a line per part (A-C): `pass`, or `fix` + the screen + what you saw.
+
+### Part A — No dev tools (your own account)
+
+- [ ] **A1** Look at every tab. → No DEV bubble anywhere, no dev links on Home, no test-persona strip on Legends.
+- [ ] **A2** You → tap the Build line 5 times. → Nothing opens (no AI lab).
+- [ ] **A3** Open the Dev Hub the way you usually do. → Only the Admin group shows (you are root); no testing groups, no Jump this account, no Reset account.
+
+### Part B — Divecore, real economy
+
+- [ ] **B1** Open Divecore (Hideout). → It opens (it is no longer behind the dev switch).
+- [ ] **B2** Hero list. → Only Corvus is owned, plus any hero you hatched as a pet from an egg. The rest show as locked.
+- [ ] **B3** Auras and finishes on your pet. → None worn and none owned; each shows its token price instead of free.
+- [ ] **B4** Tokens. → Same count as before the update.
+- [ ] **B5** Force-quit and reopen Divecore. → Still only Corvus (the reset ran once and stays; it does not re-run on later opens).
+
+### Part C — After emci runs the wave80 + public-signup SQL
+
+- [ ] **C1** Answer 2 questions on Explore. → Both save; Insights and the profile still update.
+- [ ] **C2** Sign out. Start a new sign-up with a throwaway email. → No invite-code field; sign-up goes through (birthday 18+).
+- [ ] **C3** On that new account open Divecore. → Only Corvus; no dev tools anywhere. Then delete the account (You → Delete account).
+
+### Results (fill in)
+
+| Part | pass / fix | Screen + what you saw |
+|---|---|---|
+| A No dev tools | | |
+| B Divecore economy | | |
+| C After the SQL | | |
+
+## Box 68 — Production build on TestFlight (master-plan Step 13, 2026-10-21)
+
+About 30 min, on the TestFlight build (not the dev client), on a clean phone: delete any older ATO first. This is the first
+binary with `PRE_LAUNCH_DEV = false` baked in, the "ATO" widget header and haptics.
+
+**Report back in ONE message:** a line per part (A-F): `pass`, or `fix` + the screen + what you saw.
+
+### Part A — Clean install and sign-up
+
+- [ ] **A1** Install from TestFlight, open it. → Opens to sign-up; no invite-code field; Privacy and Terms links open ato.emgens.com pages.
+- [ ] **A2** Sign up with a brand-new email (birthday 18+). → The code arrives and sign-up completes.
+- [ ] **A3** Sign out, then "Sign in with Apple" and password login (@handle + password). → Both work.
+
+### Part B — Core loop
+
+- [ ] **B1** Insights tab → tap "Load insight". → Today's Focus · try · watch loads; one light haptic. (Fixed 2026-10-22, roadmap v2 A1: the insight moved from Home to Insights on 2026-10-14.)
+- [ ] **B2** Answer 3 questions. → They save; Insights and the profile update.
+- [ ] **B3** Home → "Check in · +5 tokens". → Saves; the line under it reads "1 of 7 check-ins toward your next bonus" (or the next count); More → You shows the identity card. (Fixed 2026-10-22: the Did/Skip Check loop is parked.)
+
+### Part C — Divecore and Circle
+
+- [ ] **C1** More → Divecore. → Opens; only Corvus owned; no dev tools anywhere (More, You, long-presses).
+- [ ] **C2** Circle tab. Add a second account by @handle, accept it there, open the ⋯ menu. → Block and Report are there; Block hides the person.
+- [ ] **C3** Tap around Divecore with sound/haptics on, then off in settings. → Haptic ticks only when on.
+
+### Part D — Widget and notifications
+
+- [ ] **D1** Add the ATO widget (small and medium). → The header says "ATO"; no "SAGE · COACH" anywhere.
+- [ ] **D2** Notification ask. → Asked once, only after a tap; declining works.
+
+### Part E — Legal and deletion
+
+- [ ] **E1** More → You: legal links, helpline row, support email. → All present and open.
+- [ ] **E2** Delete the throwaway account (You → Delete account). → Signs out; signing in with it fails.
+
+### Part F — Larger Text and Reduce Motion
+
+- [ ] **F1** Settings → Larger Text to a big size; open Home, Questions, You. → Nothing cut off or overlapping.
+- [ ] **F2** Reduce Motion ON; open the daily insight. → It skips to the copy (no animation).
+
+### Results (fill in)
+
+| Part | pass / fix | Screen + what you saw |
+|---|---|---|
+| A Clean install + sign-up | | |
+| B Core loop | | |
+| C Divecore + Circle | | |
+| D Widget + notifications | | |
+| E Legal + deletion | | |
+| F Larger Text + Reduce Motion | | |
+
+## Box 69 — Circle chat, 1.1 build (master-plan Step 14, 2026-10-21)
+
+About 20 min, on the **1.1 TestFlight build** (chat needs the new native module; an OTA can't add it), with TWO phones (or
+one phone + one simulator on the 1.1 dev build), two accounts that are Circle friends. Before: `wave108` applied.
+
+**Report back in ONE message:** a line per part (A-E): `pass`, or `fix` + the screen + what you saw.
+
+### Part A — Open and send
+- [ ] **A1** Phone 1: Circle tab → Message on the friend (or ⋯ → Message). → The chat opens with "@handle", the privacy line (30 days, report sends the message + 5 before), and "hasn't opened chat yet" if phone 2 never opened it.
+- [ ] **A2** Phone 2 opens the same chat once, then phone 1 sends "hi". → Phone 2 sees it within a few seconds without leaving the screen; both see it on the right side for the sender.
+- [ ] **A3** Supabase → Table editor → `chat_messages`. → `ciphertext` is unreadable; no plain "hi" anywhere.
+
+### Part B — Filter
+- [ ] **B1** Phone 1 types a slur-test word from `check:circle-chat` (e.g. "send nudes"), taps Send. → "This might land badly…", button says "Tap again to send"; the second tap sends.
+- [ ] **B2** Phone 2. → That message shows "Hidden: might be offensive. Tap to show."; a tap shows it. Normal swearing ("what the fuck") shows plainly.
+
+### Part C — Report
+- [ ] **C1** Phone 2: long-press that message → pick a reason. → "Thanks. We read every report within a day."
+- [ ] **C2** SQL editor: run the chat-report query in `docs/circle-safety.md`. → The row has the reported text + up to 5 lines before it.
+- [ ] **C3** Insert `warned` for phone 1's handle (circle-safety.md), reopen chat on phone 1. → One-time warning banner; "Got it" hides it. Set `chat_off`. → Sending is off with "Chat is off…". Then delete the row.
+
+### Part D — Block and unfriend
+- [ ] **D1** Phone 2: tap Block twice in the chat header. → "Blocked. They won't be told."; phone 1 reopens the chat → "You can only message people in your Circle.", no old messages, and the friend is gone from its Circle list.
+
+### Part E — Edge cases
+- [ ] **E1** On a 1.0 build (if one is still installed), there is no Message row in the ⋯ menu. On 1.1 with Airplane mode, sending shows "Something went wrong" and keeps the draft.
+- [ ] **E2** Larger Text at a big size. → Chat header, bubbles and the input row still fit; nothing overlaps.
+
+### Results (fill in)
+
+| Part | pass / fix | Screen + what you saw |
+|---|---|---|
+| A Open + send | pass | emci 2026-10-21, 1.1 TestFlight |
+| B Filter | pass | |
+| C Report + ladder | pass | |
+| D Block | pass | |
+| E Edge cases | pass | |
+
+## Box 70 — Circle tab tools (moved from the Divecore sheet, 2026-10-21)
+
+About 10 min. Two accounts that are Circle friends (your own + `atodev2`). Run on the build that has this change.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Circle tab. -> Add field + Send, friend rows with Message and a ⋯ button, a support line, and "Visits and gifts are in Divecore."
+- [ ] **2** Add `atodev2` by @handle. -> "Request sent."; on the other account, Requests shows it with Accept / Decline and a ⋯ button; Accept -> both see each other.
+- [ ] **3** ⋯ on a friend. -> Message, Compare strengths, Report, Block, Remove. Message opens the chat.
+- [ ] **4** Report. -> Six fixed reasons, no free text; pick one -> "Thanks. We read every report." and a "Block them too" button (two taps).
+- [ ] **5** Block (two taps), then Blocked (1) -> Unblock (two taps). -> Friend disappears and returns; the other side was never told.
+- [ ] **6** Compare strengths with both switches on. -> Consent text, preview, switch; Back returns to the ⋯ menu.
+- [ ] **7** Support line. -> Opens a mail draft to support@asstrollogs.com.
+- [ ] **8** More -> Divecore -> Hideout -> Circle. -> Only the friend list with share switch + Visit (no Add field, no ⋯), a line pointing to the Circle tab; Visit and gifts still work.
+- [ ] **9** Larger Text and a small phone (375x667) on the Circle tab. -> Nothing cut off; keyboard does not cover Send.
+
+## Box 71 — Turf War element-coloured hit flash (Divecore run order (b), 2026-10-22)
+
+About 5 min. Streetwear look, Effects Quality on Full, Motion on. Run on the OTA group `cb36f66c` (restart the app twice to load it). Only a hit that carries an element changes colour; Archer hits stay white, which is the "nothing changed" check.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Turf Trial with Vines only. -> A creep hit by a Vine flashes **green** for a blink (the damage number is green too).
+- [ ] **2** Add a Crystal. -> A creep hit by it flashes **yellow**.
+- [ ] **3** Archers only (or watch an Archer hit). -> The flash is still plain **white**.
+- [ ] **4** Put a fire hero (Archangel or Kitsune) on as a tower or helper. -> Its hits flash **orange**. With a Legend set, hero and helper hits take the Legend's colour instead.
+- [ ] **5** A burning creep hit by an Archer. -> It may flash orange (the burn colour); it never strobes faster than about 5 times a second.
+- [ ] **6** A boss wave. -> The boss flash is still brighter and longer than a creep's, now in the element colour on an element hit.
+- [ ] **7** Settings: Reduce Motion on (or Effects Off). -> No flash at all, white or coloured.
+- [ ] **8** Wave runs at normal speed; nothing stutters.
+
+## Box 72 — Turf War element rings under towers, hero towers and the helper (Divecore run order (c), 2026-10-22)
+
+About 8 min. Streetwear look, Effects Quality on Full, Motion on. Run on the OTA group `8539dd48` (restart the app twice to load it). One ring per tower, in the tower's element colour; the Archer has none.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Build a Vine, then a Crystal, then an Archer. -> The Vine gets a **green** ring on its pad, the Crystal a **yellow** one, the Archer **none**. The ring is a thin twin ring with small white flecks marching round it, drawn under the tower.
+- [ ] **2** Watch a ring for a few seconds. -> It loops smoothly (8 frames), the frames move and the ring is never cut off or stuck; no black box around it.
+- [ ] **3** Upgrade a tower to level 2, then 3. -> The ring gets a bit bigger each level and stays centred on the pad.
+- [ ] **4** Put a hero tower on a pad (a fire hero like Archangel or Kitsune). -> An **orange** ring under it; a tide hero (Elowen, Morwen) **blue**; root **green**; spark **yellow**; void **violet**.
+- [ ] **5** Sell a tower. -> Its ring disappears; the other rings keep playing (no jump or restart).
+- [ ] **6** Add the helper (Turf team). -> A ring in the helper's element colour sits under its feet and follows it as it walks; swap to a hero of another element in setup -> the ring changes to the new colour.
+- [ ] **7** Creeps walk over a ring. -> Creeps draw on top of tower rings (the helper's ring may sit above creeps near its feet, like the helper itself).
+- [ ] **8** Settings: Effects Quality Minimal, then Off. -> Minimal: about half the rings loop, the rest hold a still frame; Off: every ring is a still frame.
+- [ ] **9** Settings: Reduce Motion on (or Motion Off). -> Reduce Motion: rings play at half speed; Motion Off: still frames. No flashing.
+- [ ] **10** Wave with 6 towers + 2 hero towers + helper at normal speed. -> No stutter, still about 60 fps.
+
+## Box 73 — Minigames M1: feel + clarity (Divecore run order (d), 2026-10-22)
+
+About 10 min. Feed → Catch the food, and Play → Tap to train. Run on the OTA group `ea99eae5` (restart the app twice to load it). Easy now pays 2 tokens a passed round; Normal, Hard and Insane pay 5.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Start Catch the food (Normal). -> A big **3, 2, 1** over the field first (about 2 seconds), nothing falls until it ends; the timer starts after it.
+- [ ] **2** Catch some food. -> A small **+n** floats up where you tapped; the pet squashes a little; a thin strip at the top of the field fills toward the next combo (×2 at 5, ×3 at 10, ×5 at 20) and turns gold at ×5.
+- [ ] **3** Look at the items. -> Golden food is a **star** (not a round one); the bomb is a dark round **bomb with a red X** (no emoji). You can tell them apart without colour.
+- [ ] **4** Tap a bomb. -> A red flash, the pet shakes/hurts, a **−3** pops, and your phone buzzes harder than for a catch. Let a bomb fall past untouched -> the pet gives a small wobble.
+- [ ] **5** Let the round end (pass). -> The game stays on screen with a **ROUND PASSED** card (tokens, care, score, medal / record). Nothing closes by itself. Tap **CONTINUE** -> back to the Feed sheet with the result line, and any record / unlock notices show now.
+- [ ] **6** Fail a round (let everything fall). -> A **NOT THIS TIME** card; Continue returns with no tokens. Tap **< Pet** while the card is up -> same as Continue, and the round is not counted twice (check your tokens).
+- [ ] **7** Play Catch on **Easy** and pass. -> **+2 tokens** (not 5). A Normal pass -> +5. The Play sheet text says "+5 tokens a passed round (+2 on Easy)".
+- [ ] **8** Tap to train. -> Same 3-2-1; the marker sweeps smoothly with no stutter; a hit gives a **+n** and a light buzz, a Perfect a stronger one; the result card appears at the end.
+- [ ] **9** Settings: Larger Text on. -> The status line under the title is not cut off and the top bar keeps its size; the 2-line hint is unchanged.
+- [ ] **10** Settings: Reduce Motion on (or Effects Off). -> The 3-2-1 and the "+n" show without movement; no squash, wobble, shake or buzzing.
+- [ ] **11** Back out mid-round with **< Pet**. -> No card, nothing counted (as before).
+
+## Box 74 — Minigames M2: look (Divecore run order (e), 2026-10-22)
+
+About 10 min. Feed → Catch the food, and Play → Tap to train. Run on the OTA group `a16f5e57` (restart the app twice to load it). Rules and tokens are unchanged from Box 73.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Start Catch the food. -> The background is the Hideout's own room (brick wall with the window, wood floor, a little neon glow), not the underwater reef. No bare dark bands at the sides or top.
+- [ ] **2** Look at the falling items. -> Pizza slice, donut and burger fall (pixel art, not coloured circles); a golden one is a **star on a pale halo**; the bomb is a round bomb with a **red X** over it. You still tell them apart without colour.
+- [ ] **3** Catch a golden star. -> The pet does its **skill move** (or at least dashes) and the +n pops as before. Catch normal food -> it dashes as before.
+- [ ] **4** Look at the pet while playing (a pet with an aura, a grade, a finish or a shiny). -> It shows the **same aura / finish / shiny ring as in the Hideout**, not a flat coloured square. At a ×3 combo a soft glow pool lights behind it.
+- [ ] **5** Tap a bomb. -> The pet's hurt move (or a red flash) and the flash as before.
+- [ ] **6** Tap to train. -> The dummy is a **red hanging punching bag with a soft shadow**; a hit swings it from the top; the old scribble crate is gone.
+- [ ] **7** Miss a tap in Train. -> The pet does its **"oof"** (hurt move, or a red flash) and stumbles; a Perfect hit plays its skill move.
+- [ ] **8** On the biggest phone you have (or Display Zoom off): Catch background. -> No bare bands; the room just looks a bit bigger.
+- [ ] **9** Settings: Reduce Motion on (or Effects Off). -> No aura motes / sparkles moving, no combo pulse, no swing / squash / shake; the finish rests.
+- [ ] **10** Larger Text on. -> Status line and 2-line hint are not cut off; the dock does not resize.
+- [ ] **11** Play a few rounds. -> Still smooth (about 60 fps), nothing flickers when many items are on screen.
+
+## Box 75 — Minigames M3: depth (Divecore run order (f), 2026-10-22)
+
+About 15 min. Feed → Catch the food; Play → Tap to train and Lane dash. Run on the OTA group `34f63cfb` (restart the app twice to load it). Tokens, the 30 a day cap and the pass rule are unchanged.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Catch the food, any level, play 25 s. -> Now and then a round pickup falls (a **shield** icon or a red **horseshoe magnet** in a cyan ring), after the first 4 s. They look nothing like food or the bomb.
+- [ ] **2** Tap a shield. -> A SHIELD tag shows top-left. Then tap a bomb -> "BLOCKED", no strike, no −3, the combo holds, the tag goes.
+- [ ] **3** Tap a magnet. -> "MAGNET 4s" counts down; food that falls past the middle is collected for you with a "+n". When it ends the tag goes.
+- [ ] **4** Pass check: finish a round leaning on the magnet. -> Magnet food gives points but does NOT count as caught: the result line "Caught x/y" does not jump because of it.
+- [ ] **5** Tap to train on Hard (or Normal, past tap 10). -> The lit zone starts as before, then **drifts side to side** a little; on Hard from tap 10 it **splits into two shorter zones** and a tap in either one hits. The hint says so.
+- [ ] **6** Reduce Motion on, Tap to train on Normal. -> The zone does not drift.
+- [ ] **7** Play → Lane dash (new card under Tap to train). -> Three lanes with faint lines; the pet stands in the middle. Tap a lane to step there. Food in your lane is caught on its own (+n, combo), a bomb in your lane is a strike, food falling past in another lane is a miss. Three strikes end it.
+- [ ] **8** Finish a Lane dash pass. -> Result card, then the sheet: +1 training, +2 mood, +5 tokens (+2 on Easy), counted in the same 30 a day. Rank "Sidestepper" shows on the card, and in Info. Easy / Normal / Hard / Insane unlock like the others.
+- [ ] **9** Practice button on Catch, Train and Lane dash. -> No timer, no strikes, nothing ends it; "practice" shows in the status line; **Back** leaves. Afterwards: no tokens, no care, no record, no medal, no daily change.
+- [ ] **10** Open an old save (a phone that already played). -> Catch / Train records and medals are still there; Lane dash starts empty.
+- [ ] **11** Larger Text on, Lane dash and Catch. -> The status line and the 2-line hint are not cut off; the dock does not resize; the lane taps still work.
+- [ ] **12** Play a few Lane dash and Catch rounds. -> Still smooth; food that visibly passes the pet is not caught late (tell me if it feels off).
+
+## Box 76 — Honest promises + reviewer path (roadmap v2 step A1, 2026-10-22)
+
+About 10 min. Needs the A1 OTA (runtime 1.1.0; restart the app twice to load it), two accounts that are Circle friends,
+and (for item 5) a phone where you once tapped "Not now" on "Want a nudge now and then?" and never allowed notifications.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Home → the check-in card (account that finished the 48). -> The balance line reads "Each AI view costs 5: a Legends AI card or a deep dive on Explore." No "Story".
+- [ ] **2** More → You → the ATO tokens card → how it works. -> The spend line names a Legends AI card and a deep dive only, says a deep dive already in the shared library is free (up to 10 a day), and there is NO "reroll" or "name style" price line.
+- [ ] **3** Open a chat with a friend who has sent you a message. -> The top bar shows Back · @friend · **Report** · Block. Tap Report -> the sheet says "Report their latest message" with the hint "To report an earlier message, press and hold it."; pick a reason -> "Thanks. We read every report within a day."
+- [ ] **4** Same chat, the friend has sent nothing yet (or only you wrote). -> Tap Report -> the note says "Nothing from them to report yet." Long-press on a received message still opens "Report this message".
+- [ ] **5** Divecore: start a room Build (phone from the setup line, notifications never allowed). -> NO iOS notification dialog appears. Divecore → Settings → switch a notice on -> the iOS dialog DOES appear (you asked).
+- [ ] **5b** Chat, tap Block once (armed). -> Report hides while "Tap again…" shows, the title and Block text fit on the screen; wait 4 s -> Block disarms and Report comes back.
+- [ ] **6** VoiceOver on, chat screen. -> The new button reads "Report a message from @friend, button".
+
+## Box 77 — Legal + support pages are final (roadmap v2 step A2, 2026-10-22)
+
+About 5 min. Needs: the landing site redeployed from `landing/` (after `DEEPSEEK_API_KEY` is unset), and the A2 OTA
+(restart the app twice to load it).
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Sign-up screen → tap Privacy. -> ato.emgens.com/privacy.html opens. Top says "Last updated: October 22, 2026", no "Draft", and "operated by Michael Malig". No "[CONFIRM" anywhere (scroll to the end). No "DeepSeek".
+- [ ] **2** Same screen → tap Terms. -> terms.html, same date, no "Draft", §13 says courts of Alberta.
+- [ ] **3** More → You → the legal links. -> The same two pages open.
+- [ ] **4** In the browser, open ato.emgens.com/support.html. -> The Support page, with support@emgens.com, Report/Block, Delete account, data requests and helplines.
+- [ ] **5** ato.emgens.com home page. -> No email form. The footer links Privacy · Terms · Support, and says "operated by Michael Malig".
+- [ ] **6** You → Send feedback (and Circle tab → the support line at the bottom). -> A mail draft to **support@emgens.com** (not the old asstrollogs address). Send one test mail to yourself through it -> it arrives in your inbox.
+
+## Box 78 — Daily report alert + server cleanup (roadmap v2 step A3, 2026-10-22)
+
+About 5 min over two days. Server only, no OTA. Needs: wave112 + wave113 applied, `report-digest` deployed, and two
+accounts that are Circle friends (the dev-test pair; never a real person's account).
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Day 1: from account A, open the chat with B, press and hold one of B's messages → Report → pick a reason. -> "Thanks. We read every report within a day."
+- [ ] **2** Day 2, after 15:05 UTC (09:05 Alberta in summer, 08:05 in winter): the support@emgens.com inbox. -> One email "ATO: 1 new report" from noreply@asstrollogs.com, listing "chat message report <id>". It does NOT contain the reason, the message text, either handle or who reported.
+- [ ] **3** The day after that (no new report). -> No alert email.
+- [ ] **4** Afterwards: mark the test report handled with the daily query in `docs/circle-safety.md` (status `dismissed`, note "Box 78 test").
+- [ ] **5** Insights → the Story card (any account). -> It still shows a story (free templates; nothing changed for the reader).
+
+## Box 79 — Copy flags accepted: nothing should look different (roadmap v2 step A4, 2026-10-23)
+
+About 3 min. Needs the next OTA that carries the A4 flag flips (restart twice). The flags only record that you accepted the
+copy; no screen should change.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Insights → the daily insight and the Story card; Explore → a category card and the deep dive card. -> All show their text as before; no "Draft copy" badge anywhere.
+- [ ] **2** Today's Pick, a question set, and the set-done screen. -> Same as before, no badge.
+- [ ] **3** A deep dive (open one you have). -> The team name and icon behave as before (hidden until you choose to show it).
+- [ ] **4** Lock-screen notifications. -> You still get NO "category statement" push (that flag stays off until you read the statements).
+
+## Box 81 — Change answers, Undo, Start fresh, card compare + the A5 cleanup (roadmap v2 step A5, 2026-10-23)
+
+About 10 min. Needs the A5 OTA (restart the app twice) and the **dev-test account** (`@atodev`, never a real person's account) with all
+question sets done. Use the dev-test account for Start fresh: it wipes the traits.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Explore → Questions (all sets done). -> "All 25 sets done" style header, then one row per trait with its leaning and "Change answers · free".
+- [ ] **2** Tap "Change answers" on one trait, tap a different option. -> It asks "Tap again: change to “…”"; tap again. The row says "N answer changed this visit. Undo works until you leave this screen."
+- [ ] **3** Tap "Undo". -> It asks "Tap again to undo all of them"; tap again. The answer is back to "· your answer" on the original option.
+- [ ] **4** Leave the screen and come back. -> The Undo row is gone (it only works inside one visit). (Only if this account answered a question we later retired: open that trait's Change answers and it shows "We retired this question. Your answer stays as you gave it.")
+- [ ] **5** Start fresh: pick **Keep my cards**, press and HOLD "Hold to start fresh" for about 2.5 seconds. -> A quick tap does nothing; holding wipes the 16 traits, keeps your tokens and account, and your old profile is saved as a card first.
+- [ ] **6** Your cards. -> The list shows the saved cards; "Tap two cards to compare them." Tap two: the newer card shows arrows for traits that moved (or "Nothing moved much between these two.").
+- [ ] **7** (A5) VoiceOver on, You → Delete account. -> It reads "Delete account, button". In the sheet, the X reads "Close, button", and the list says "Everything you saved in ATO, like your answers, profile cards and Legends" (no "saved facts"). Close it without deleting.
+- [ ] **8** (A5) Explore → open a deep dive you already have, and Legends → reveal one. -> Both work as before (no model call comes from the phone any more; the server writes the cards).

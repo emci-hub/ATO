@@ -3,10 +3,9 @@ import { supabase } from '@/lib/supabase';
 export const PASSWORD_MIN_LENGTH = 8;
 
 export const LOGIN_PASSWORD_HINT =
-  'Only if you have set a password in Settings. Otherwise use a code.';
+  'Only if your account has a password. Otherwise use a code.';
 
-export const LOGIN_PASSWORD_FAILED =
-  'That didn’t work. Use a code, or set a password in Settings after you sign in.';
+export const LOGIN_PASSWORD_FAILED = 'That didn’t work. Check the password, or use a code.';
 
 export const PASSWORD_MISMATCH = 'Those two passwords do not match.';
 

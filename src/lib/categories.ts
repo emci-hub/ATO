@@ -277,6 +277,19 @@ function reportStable(
   return { value: row.value, stability };
 }
 
+/**
+ * Read-only: one axis's stable report-track value, or null below the floor.
+ * A thin wrapper over `reportStable` (unchanged) for the daily-insights
+ * Conflict style card, which needs per-axis values `readCategory` doesn't return.
+ */
+export function reportStableValue(
+  tracks: readonly TraitTrack[],
+  axis: TraitAxis,
+  now: Date = new Date(),
+): number | null {
+  return reportStable(tracks, axis, now)?.value ?? null;
+}
+
 export interface CategoryReading {
   def: CategoryDef;
   ready: boolean;

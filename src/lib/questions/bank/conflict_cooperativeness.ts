@@ -1,4 +1,4 @@
-import { intake, q, traitBank } from './define';
+import { intake, q, retired, traitBank } from './define';
 
 /** Compromise: "This is what I need" (low) to "What would work for you?" (high). */
 export const CONFLICT_COOPERATIVENESS_BANK = traitBank('conflict_cooperativeness', [
@@ -13,11 +13,11 @@ export const CONFLICT_COOPERATIVENESS_BANK = traitBank('conflict_cooperativeness
   q('conflict_cooperativeness_05', 'work', 'high', 'Your boss wants a change you think is a mistake.',
     ['I argue my case to the end', 0.2], ['I raise it once, then do it', 0.5], ['I find a version we both like', 0.8]),
   q('conflict_cooperativeness_06', 'friends', 'low', 'Friends disagree on where to go for the trip.',
-    ['I vote and go with the rest', 0.5], ['I look for a spot that fits all', 0.8], ['I lobby hard for my pick', 0.2]),
+    ['I vote and go with the rest', 0.5], ['I find a spot that works for everyone', 0.8], ['I lobby hard for my pick', 0.2]),
   q('conflict_cooperativeness_07', 'friends', 'high', 'A friend is upset you missed their party for work.',
     ['I offer to make it up to them', 0.8], ['I explain and apologize', 0.5], ['Work comes first, they know', 0.2]),
-  q('conflict_cooperativeness_08', 'dating', 'neither', 'You want a night in. Your partner wants a night out.',
-    ['I stay in, they go out', 0.2], ['We take turns each week', 0.5], ['Dinner out, early night', 0.8]),
+  retired('conflict_cooperativeness_26', q('conflict_cooperativeness_08', 'dating', 'neither', 'You want a night in. Your partner wants a night out.',
+    ['I stay in, they go out', 0.2], ['We take turns each week', 0.5], ['Dinner out, early night', 0.8])),
   q('conflict_cooperativeness_09', 'dating', 'high', 'Your partner wants to move to a new city for their job.',
     ['I need time to think', 0.5], ['We figure out how it works for both', 0.8], ['My life is here', 0.2]),
   q('conflict_cooperativeness_10', 'family', 'low', 'The family group chat argues about where to spend the holidays.',
@@ -46,10 +46,15 @@ export const CONFLICT_COOPERATIVENESS_BANK = traitBank('conflict_cooperativeness
     ['I watch mine alone', 0.5], ['We find a new one together', 0.8], ['They can learn to like it', 0.2]),
   q('conflict_cooperativeness_22', 'family', 'high', 'Your mom and dad disagree with a big choice you made.',
     ['I hear them out and adjust', 0.8], ['I listen, then do my thing', 0.5], ['My life, my choice', 0.2]),
-  q('conflict_cooperativeness_23', 'solo', 'neither', 'You and a stranger both reach for the last item on the shelf.',
-    ['I got it first', 0.2], ['Whoever grabbed first', 0.5], ['We split it or I let it go', 0.8]),
+  retired('conflict_cooperativeness_27', q('conflict_cooperativeness_23', 'solo', 'neither', 'You and a stranger both reach for the last item on the shelf.',
+    ['I got it first', 0.2], ['Whoever grabbed first', 0.5], ['We split it or I let it go', 0.8])),
   q('conflict_cooperativeness_24', 'money', 'high', 'Friends want a pricey restaurant for a birthday dinner.',
     ['I go and order light', 0.5], ['I suggest a place for all budgets', 0.8], ["I say it's too much for me", 0.2]),
   q('conflict_cooperativeness_25', 'online', 'neither', 'The group chat argues about the date for a reunion.',
     ['I make a poll in the chat', 0.8], ['I go with any date', 0.5], ['I say the date I can do', 0.2]),
+  // wave100 (emci 2026-10-20): new scenes for retired _08, _23.
+  q('conflict_cooperativeness_26', 'dating', 'neither', 'Friday night: you want to stay in, and your partner wants to go out.',
+    ['I make the case for staying in', 0.2], ['We take turns each week', 0.5], ['Dinner out, early night', 0.8]),
+  q('conflict_cooperativeness_27', 'solo', 'neither', 'You and a stranger both reach for the last pack of batteries at the store.',
+    ['I keep it, I saw it first', 0.2], ['Whoever got there first', 0.5], ['I ask if we can split it', 0.8]),
 ]);

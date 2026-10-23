@@ -339,14 +339,7 @@ const denied = await routeExplore({
 assert.equal(denied.kind, 'consent-denied');
 const pending = await routeExplore({ me: chipsOnly, history: [], aiConsent: null });
 assert.equal(pending.kind, 'consent-pending');
-const crisis = await routeExplore({
-  me: chipsOnly,
-  history: [],
-  aiConsent: true,
-  crisisToday: true,
-});
-assert.equal(crisis.kind, 'crisis');
-ok('consent and crisis are honest-empty, and consent precedes the completeness gate');
+ok('consent is honest-empty, and consent precedes the completeness gate (crisis removed 2026-10-14)');
 
 let jargonLogged = '';
 let phraseLogged = '';
@@ -495,21 +488,9 @@ const lockedOverCache = await routeExplore(
 assert.equal(lockedOverCache.kind, 'locked');
 ok('empty tracks lock Explore; omitted tracks leave the gate off for labs/tests');
 
-// Crisis must win over the gate: an unsettled profile in crisis is 'crisis',
-// never 'locked'.
-const crisisBeatsLock = await routeExplore(
-  {
-    me: { ...chipsOnly, extraversion: 0.8 },
-    history: [],
-    aiConsent: true,
-    crisisToday: true,
-    now: new Date('2026-08-29T15:00:00Z'),
-    tracks: [],
-  },
-  { useLocal: true },
-);
-assert.equal(crisisBeatsLock.kind, 'crisis');
-ok('crisis short-circuits before the completeness gate');
+// The crisis short-circuit was removed with the crisis system (2026-10-14).
+assert.doesNotMatch(read('src/lib/explore/route.ts'), /crisis/i);
+ok('no crisis branch before the completeness gate');
 
 const exploreUi = read('src/app/(tabs)/explore.tsx');
 // The observations fold that rendered the locked-copy branch is parked
@@ -544,17 +525,17 @@ assert.equal(cached.kind, 'cached');
 ok('cached pack is reused; no second generate the same day');
 
 const home = read('src/app/(tabs)/index.tsx');
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const exploreScreen = read('src/app/(tabs)/explore.tsx');
 const tabs = read('src/components/app-tabs.tsx');
 const navOrder = read('src/lib/nav/nav-order.ts');
 assert.doesNotMatch(home, /ExplorePanel/);
 assert.doesNotMatch(home, /HomeInnerTabs/);
-// §9 (2026-09-08): Story moved from Explore to Home, directly below the
-// daily check-in card, with a real locked state — Explore no longer
-// references it at all.
-assert.match(home, /SageStoryFold/);
-assert.doesNotMatch(exploreScreen, /SageStoryFold/);
+// §9 (2026-09-08): Story moved from Explore to Home; 2026-10-14 it moved on to
+// Insights as a template-only card. Neither Home nor Explore carries it.
+assert.match(sage, /<InsightsStoryCard/);
+assert.doesNotMatch(home, /SageStoryFold|InsightsStoryCard/);
+assert.doesNotMatch(exploreScreen, /SageStoryFold|InsightsStoryCard/);
 // Isolation Plan Card 5 (2026-09-15): Today's Read, intake settings, roll
 // history, insight spend, and the observations panel are parked pending
 // rebuild — inverted per the Card 2/3 "invert, don't delete" convention.
@@ -591,7 +572,7 @@ assert.match(navOrder, /explore: \{ label: 'Explore', href: '\/explore'/);
 assert.match(tabs, /NavEditOverlay/);
 assert.doesNotMatch(sage, /routeExplore|SageExploreObservations|ExplorePinnedCategories|SageStoryFold|SageTitleCard/);
 assert.doesNotMatch(sage, /EXPLORE_LEDE|EXPLORE_LABEL/);
-ok('Explore is its own tab; Sage stays clean chat; Home has no inner tabs; Story lives on Home (§9), not Explore');
+ok('Explore is its own tab; Insights stays clean; Home has no inner tabs; the Story lives on Insights');
 
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);
@@ -624,27 +605,22 @@ ok('the Explore route runs the framework fence and both guards before anything i
 assert.equal(EXPLORE_LABEL, 'Explore');
 assert.ok(pickExplorePackFocuses(chipsOnly, []).length >= 1);
 
-// --- Card E: Categories is the ONLY AI affordance on Explore, and it is gated ---
+// --- Card E: Categories on Explore, gated, and stored (no model call) ---
 // ISOLATION_PLAN §7 Card E (emci 2026-09-15), reshaped by the release pass
-// (emci 2026-09-16): the full category list is always shown, and a TAP on one
-// category loads that one category. Every call goes through loadCategory, and
-// loadCategory refuses — before any model call — when the shared unlock gate
-// is shut, when AI consent is off, or when the category is not ready. Nothing
-// on this screen may generate on mount (check:no-auto-ai covers the effect side).
+// (emci 2026-09-16), then made STORED copy (emci 2026-10-07): the full category
+// list is always shown, and a TAP opens that category's stored card
+// (lib/category-bank). Nothing on this screen calls a model or writes a row;
+// the card is still behind the shared unlock gate and the category's own
+// readiness. check:category-bank pins the card itself.
 const catFold = read('src/components/categories-fold.tsx');
-assert.equal(
-  catFold.split('generateCategoryStatements(').length - 1,
-  1,
-  'exactly one call site may spend a model call on Explore',
+assert.doesNotMatch(
+  catFold,
+  /generateCategoryStatements|generateText|saveCategoryStatements/,
+  'Explore categories spend no model call and write nothing',
 );
-const loadFn = catFold.slice(
-  catFold.indexOf('async function loadCategory'),
-  catFold.indexOf('generateCategoryStatements(['),
-);
-assert.ok(loadFn.startsWith('async function loadCategory'), 'the one call must live inside loadCategory');
-assert.match(loadFn, /if \(!unlocked\) \{\s*setRow\(id, 'locked'\);\s*return;/, 'locked: no model call');
-assert.match(loadFn, /if \(!consentGranted\) \{\s*setRow\(id, 'consent'\);\s*return;/, 'consent off: no model call');
-assert.match(loadFn, /if \(!reading\.ready\) \{\s*setRow\(id, 'not_ready'\);\s*return;/, 'not ready: no model call');
+assert.match(catFold, /pickCategoryCard\(\{ userId: me\.id, reading, ymd: todayYmd \}\)/, 'the open card is the stored one');
+assert.match(catFold, /: !unlocked\s*\n\s*\? 'locked'/, 'locked: the shared gate, before any card');
+assert.match(catFold, /: !reading\.ready\s*\n\s*\? 'not_ready'/, 'not ready: no card');
 assert.match(catFold, /FULL_PROFILE_LOCKED_COPY/, 'the locked state must use the one shared line');
 // 2026-10-05: the list became a 2-column tile grid; it still walks EVERY
 // reading (pairsOf keeps them all, in order).
@@ -656,7 +632,7 @@ assert.match(
   /unlocked=\{isFullProfileDone\(tracks, tracksReady\)\}/,
   'Explore must pass the shared gate, not its own derivation',
 );
-ok('Explore spends a model call only from a category tap, behind unlock, consent and readiness');
+ok('Explore categories open a stored card behind unlock and readiness, with no model call');
 
 console.log(`\nAll ${passed} explore checks passed.`);
 }

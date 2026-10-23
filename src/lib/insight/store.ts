@@ -7,7 +7,7 @@
  */
 import { supabase } from '@/lib/supabase';
 
-import type { DailyInsightDraft } from './generate-insight';
+import type { DailyInsightDraft } from './draft';
 
 export interface DailyInsight {
   id: string;

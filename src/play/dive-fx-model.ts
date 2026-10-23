@@ -166,9 +166,11 @@ export function findBoxArt(depth: number): 'crate-small' | 'crate' | 'chest' {
 
 /**
  * What the Dive world draws. The cut order for slow phones (Effects Low) is
- * shark → dragon → parallax → props → bubble trail; reduced motion keeps
- * the still scenery (walls, props, dragon) but drops everything that moves on
- * its own (shark, parallax, the jump arc, the bob, the chest shake).
+ * shark → dragon → parallax → props → bubble trail.
+ *
+ * Motion v2: vestibularSafe (OS RM or Reduced) drops REPLACE pans / shark /
+ * camera slides. KEEP idle life (`motion`) stays unless cosmeticsStill (Off).
+ * The screen is never static under Reduced.
  */
 export type DiveWorldCuts = {
   shark: boolean;
@@ -180,14 +182,18 @@ export type DiveWorldCuts = {
 };
 export const DIVE_CUT_ORDER = ['shark', 'dragon', 'parallax', 'props', 'trail'] as const;
 
-export function diveWorldCuts(fxLevel: 'full' | 'low', reduceMotion: boolean): DiveWorldCuts {
+export function diveWorldCuts(
+  fxLevel: 'full' | 'low',
+  vestibularSafe: boolean,
+  cosmeticsStill = false,
+): DiveWorldCuts {
   const full = fxLevel === 'full';
   return {
-    shark: full && !reduceMotion,
+    shark: full && !vestibularSafe,
     dragon: full,
-    parallax: full && !reduceMotion,
+    parallax: full && !vestibularSafe,
     props: true,
-    trail: full && !reduceMotion,
-    motion: !reduceMotion,
+    trail: full && !cosmeticsStill,
+    motion: !cosmeticsStill,
   };
 }

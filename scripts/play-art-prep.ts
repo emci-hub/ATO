@@ -1,4 +1,5 @@
 /**
+ * Thin one-release wrapper. New work uses `npm run art:registry`.
  * Play art-prep script.
  *
  * Scans the unpacked Play art packs under `assets/play/` (Scribble Dungeons
@@ -43,7 +44,19 @@ const EXTRA_FILES = ['tiles/scribble-dungeons/crate.png'] as const;
  * ~2100 files for zero benefit. Excluded from `skins` only — every other
  * `skins/**` path (towers, cycle bosses, fx) still bundles as before.
  */
-const PACKED_HERO_ART = /^skins\/cast\/heroes\/[^/]+\/(animations|rotations)\//;
+const PACKED_HERO_ART = /^skins\/cast\/(heroes|creeps|boss|towers)\/[^/]+\/(animations|rotations)\//;
+/**
+ * The Streetwear skin is drawn ONLY from `play-art-pack.ts --skin streetwear`
+ * sheets (characters, effects, auras). Its loose frames (~3,000 PNGs, north/
+ * south included) never enter the bundle; just the small shop/rarity/sword
+ * stills are bundled by key.
+ */
+// Legacy item stickers (art.ts no longer reads them since Divecore finish step 7: item icons come from
+// the art library, `ART.icon.items.streetwear`); the other ~44 stickers stay out of the bundle.
+const STREETWEAR_ICONS = ['hoodie', 'shades', 'bandana', 'flame', 'marker', 'cap', 'bucket-hat', 'gem', 'coin-stack', 'sword', 'bat', 'shield'];
+const STREETWEAR_UNBUNDLED = new RegExp(
+  `^skins/streetwear/(?!ui/(rarity|shop)/|ui/icons/(${STREETWEAR_ICONS.join('|')})$)`,
+);
 const HASH_SUFFIX = /-[0-9a-f]{8}(?=\/|$)/g;
 
 /**
@@ -115,7 +128,7 @@ function main() {
     }
     for (const file of walk(dir).sort((a, b) => a.localeCompare(b))) {
       const base = keyFor(root, file);
-      if (family === 'skins' && PACKED_HERO_ART.test(base)) continue;
+      if (family === 'skins' && (PACKED_HERO_ART.test(base) || STREETWEAR_UNBUNDLED.test(base))) continue;
       let key = base;
       // Two pack folders can share a name after the hash is stripped (e.g.
       // Masterpiece ships two `Walking/.../west` variants). Keep both, stable.

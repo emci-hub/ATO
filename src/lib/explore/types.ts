@@ -73,7 +73,6 @@ export interface RouteExploreInput {
   me: ExploreMeSlice;
   history: CheckHistory[];
   aiConsent?: boolean | null;
-  crisisToday?: boolean;
   now?: Date;
   tracks?: readonly TraitTrack[];
   pinnedLines?: string[];
@@ -84,7 +83,6 @@ export type ExploreKind =
   | 'cached'
   | 'consent-pending'
   | 'consent-denied'
-  | 'crisis'
   /** Profile not settled on every axis — locked UI, no model call, no claim. */
   | 'locked'
   | 'quota'

@@ -1,7 +1,9 @@
 /**
  * The fixed question bank (wave85, emci 2026-10-06). Run: npm run check:question-bank
  *
- * 1. The bank: 400 = 25 x 16, stable ids, tags, balance, voice gate.
+ * 1. The bank: 400 active = 25 x 16, stable ids, tags, balance, voice gate;
+ *    retired rows (wave100) kept with their original text, each replaced by
+ *    one new id with the same trait, setting, direction and values.
  * 2. The intake inside it: slots 1-3 are today's 48, word for word.
  * 3. The server copy: wave85b is exactly the generator's output.
  * 4. Serving: 16 per set, one per trait, no repeats, 25 sets, then done.
@@ -12,6 +14,7 @@
  * 9. No runtime AI and no user text anywhere in the question path.
  */
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -19,12 +22,17 @@ import { QUESTIONS_BANK } from '../src/lib/questions/bank';
 import {
   BANK_BY_TRAIT,
   BANK_PER_TRAIT,
+  BANK_ROWS_BY_TRAIT,
   BANK_SETTINGS,
   QUESTION_BANK,
+  QUESTION_BANK_ALL,
+  RETIRED_BANK_QUESTIONS,
   bankQuestionById,
+  type BankQuestion,
 } from '../src/lib/questions/bank/index';
 import {
   BANK_SET_COUNT,
+  answeredOnTrait,
   bankProgressFrom,
   isTraitFirm,
   pickBankSet,
@@ -36,7 +44,17 @@ import { generatedQuestionFailure } from '../src/lib/questions/question-voice';
 import { applyEwmaAnswer, replayTraitAnswers, type TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
 
-import { legacyPromptsFor, wave85SeedSql } from './gen-wave85-bank';
+import {
+  WAVE85B_ROWS,
+  WAVE99_IDS,
+  WAVE99_SCENARIO_HELD,
+  WAVE100_NEW_ROWS,
+  WAVE100_RETIRED_ROWS,
+  legacyPromptsFor,
+  wave100RowsSql,
+  wave85SeedSql,
+  wave99WordingSql,
+} from './gen-wave85-bank';
 
 let passed = 0;
 function ok(label: string) {
@@ -46,19 +64,25 @@ function ok(label: string) {
 const read = (rel: string) => readFileSync(resolve(__dirname, '..', rel), 'utf8').replace(/\r\n/g, '\n');
 
 // 1. The bank -----------------------------------------------------------------
-assert.equal(QUESTION_BANK.length, 400);
+// 400 ACTIVE (served) + every retired row kept forever with its original text.
+assert.equal(QUESTION_BANK.length, 400, '400 active questions');
 assert.equal(new Set(QUESTION_BANK.map((q) => q.id)).size, 400, 'ids unique');
+assert.equal(QUESTION_BANK_ALL.length, 400 + RETIRED_BANK_QUESTIONS.length, '400 active + the retired rows, nothing else');
+assert.equal(new Set(QUESTION_BANK_ALL.map((q) => q.id)).size, QUESTION_BANK_ALL.length, 'ids unique across active and retired');
+assert.ok(QUESTION_BANK.every((q) => !q.retired), 'QUESTION_BANK holds active rows only');
 for (const axis of TRAIT_AXES) {
-  const rows = BANK_BY_TRAIT[axis];
-  assert.equal(rows.length, BANK_PER_TRAIT, `${axis}: 25`);
-  rows.forEach((row, i) => {
+  const all = BANK_ROWS_BY_TRAIT[axis];
+  all.forEach((row, i) => {
     assert.equal(row.axis, axis);
-    assert.equal(row.id, `${axis}_${String(i + 1).padStart(2, '0')}`, `${axis}: ids run 01-25 in file order`);
+    // Ids are never renumbered, reused or dropped: 01, 02 … in file order, retired rows in place.
+    assert.equal(row.id, `${axis}_${String(i + 1).padStart(2, '0')}`, `${axis}: ids run 01..${all.length} in file order`);
     assert.ok(row.options.length === 2 || row.options.length === 3, `${row.id}: 2-3 options`);
     const values = row.options.map((o) => o.value).sort().join(',');
     assert.ok(values === '0.2,0.5,0.8' || values === '0.2,0.8', `${row.id}: values ${values}`);
     assert.ok(BANK_SETTINGS.includes(row.setting), `${row.id}: setting`);
   });
+  const rows = BANK_BY_TRAIT[axis];
+  assert.equal(rows.length, BANK_PER_TRAIT, `${axis}: 25 active`);
   for (const setting of BANK_SETTINGS) {
     assert.ok(rows.filter((r) => r.setting === setting).length >= 2, `${axis}: at least two ${setting} questions`);
   }
@@ -72,13 +96,43 @@ for (const axis of TRAIT_AXES) {
     );
   }
 }
-ok('400 questions: 25 per trait, ids <trait>_01..25, 2-3 options at 0.2/0.5/0.8, every setting twice, both sides unflattering, high option position varies');
+ok('400 active questions: 25 per trait, ids <trait>_01.. in order (retired rows kept in place), 2-3 options at 0.2/0.5/0.8, every setting twice, both sides unflattering, high option position varies');
 
-const allPrompts = QUESTION_BANK.map((q) => q.prompt);
-assert.equal(new Set(allPrompts).size, 400, 'no prompt twice');
+// Retired rows (wave100, emci 2026-10-20): each is replaced by exactly one NEW
+// id in the same trait, with the same setting, direction (which end is less
+// flattering), value scheme and high-option position, so balance never shifts.
+const highAt = (row: BankQuestion) => row.options.findIndex((o) => o.value === 0.8);
+const valueScheme = (row: BankQuestion) => row.options.map((o) => o.value).sort().join(',');
+const replacements = new Set<string>();
+for (const row of RETIRED_BANK_QUESTIONS) {
+  const next = bankQuestionById(row.retired!.replacedBy);
+  assert.ok(next, `${row.id}: replacement ${row.retired!.replacedBy} exists`);
+  assert.ok(!next.retired, `${row.id}: replacement is active`);
+  assert.equal(next.axis, row.axis, `${row.id}: replacement keeps the trait`);
+  assert.equal(next.setting, row.setting, `${row.id}: replacement keeps the setting`);
+  assert.equal(next.unflattering, row.unflattering, `${row.id}: replacement keeps the direction`);
+  assert.equal(valueScheme(next), valueScheme(row), `${row.id}: replacement keeps the value scheme`);
+  assert.equal(highAt(next), highAt(row), `${row.id}: replacement keeps the high option position`);
+  assert.ok(Number(next.id.slice(-2)) > 25, `${row.id}: replacement is a new id, never a reused one`);
+  assert.ok(!row.intakeSlot, `${row.id}: intake questions are never retired`);
+  assert.ok(!replacements.has(next.id), `${next.id} replaces only one row`);
+  replacements.add(next.id);
+}
+assert.deepEqual(
+  [...replacements].sort(),
+  QUESTION_BANK_ALL.filter((q) => Number(q.id.slice(-2)) > 25).map((q) => q.id).sort(),
+  'every id after 25 is the replacement of a retired row',
+);
+ok(`${RETIRED_BANK_QUESTIONS.length} retired rows, each replaced by one new id with the same trait, setting, direction, values and high-option position`);
+
+const allPrompts = QUESTION_BANK_ALL.map((q) => q.prompt);
+assert.equal(new Set(allPrompts).size, QUESTION_BANK_ALL.length, 'no prompt twice, retired rows included (a new scene never repeats the old stem)');
 for (const row of QUESTION_BANK) {
   const others = BANK_BY_TRAIT[row.axis].map((q) => q.prompt).filter((p) => p !== row.prompt);
   assert.equal(generatedQuestionFailure(row, others), null, `${row.id} fails the voice gate`);
+}
+for (const row of RETIRED_BANK_QUESTIONS) {
+  assert.equal(generatedQuestionFailure(row), null, `${row.id} (retired) fails the voice gate`);
 }
 ok('every question passes the voice gate (no "you are", jargon, loaded option, missing end, near-repeat within its trait)');
 
@@ -98,9 +152,111 @@ ok("intake slots 1-3 are today's approved 48, word for word, and carry their old
 
 // 3. The server copy -------------------------------------------------------------
 const seed = read('supabase/migrations/wave85b_question_bank_seed.sql');
-assert.equal(seed, wave85SeedSql().replace(/\r\n/g, '\n'), 'wave85b matches gen-wave85-bank.ts (re-run the generator, never hand-edit)');
+// wave85b is frozen as applied (2026-10-06). Every line matches the generator
+// except the rows wave99 rewords, and those must really differ (a listed id
+// that never changed, or a changed id that is not listed, both fail).
+const seedLines = seed.split('\n');
+const genLines = wave85SeedSql().replace(/\r\n/g, '\n').split('\n');
+assert.equal(seedLines.length, genLines.length, 'wave85b has the generator shape (re-run the generator, never hand-edit)');
+const rowIdOf = (line: string) => line.match(/^  \('([a-z_]+_\d\d)', /)?.[1] ?? null;
+// wave85b is applied: pin its exact bytes (line endings normalised) so no edit, to any row, goes unnoticed.
+const WAVE85B_SHA256 = '89288808fe4c15ac3d883efa0c71eb24a999698744c1fbe7540b5c2c39ef28d8';
+assert.equal(
+  createHash('sha256').update(seed).digest('hex'),
+  WAVE85B_SHA256,
+  'wave85b is applied to the live project and must never change: put new wording in a new migration (WAVE99_IDS)',
+);
+// Everything except the prompt and option label text of a row line.
+const rowShape = (line: string) => {
+  const m = line.match(/^  \('([a-z_]+_\d\d)', '([a-z_]+)', '([a-z_]+)', '([a-z_]+)', (null|\d+), '.*', '(\[\{.*\}\])'::jsonb/);
+  assert.ok(m, `cannot parse row: ${line.slice(0, 60)}`);
+  const options = JSON.parse(m[6]!.replace(/''/g, "'")) as { value: number }[];
+  return { id: m[1], axis: m[2], setting: m[3], unflattering: m[4], intakeSlot: m[5], values: options.map((o) => o.value) };
+};
+const wave99Lines = new Map<string, string>();
+for (const line of read('supabase/migrations/wave99_question_wording.sql').split('\n')) {
+  const id = rowIdOf(line);
+  if (id) wave99Lines.set(id, line);
+}
+assert.deepEqual([...wave99Lines.keys()].sort(), [...WAVE99_IDS].sort(), 'wave99 rewrites exactly the WAVE99 ids');
+const drifted: string[] = [];
+genLines.forEach((line, i) => {
+  const id = rowIdOf(line);
+  assert.equal(rowIdOf(seedLines[i]!), id, `wave85b line ${i + 1}: same row order as the generator`);
+  if (id && WAVE99_IDS.includes(id)) {
+    assert.notEqual(seedLines[i], line, `${id} is in WAVE99_IDS but its wording never changed`);
+    drifted.push(id);
+    const was = rowShape(seedLines[i]!);
+    assert.deepEqual(rowShape(line), was, `${id}: only wording may change (id, trait, setting, unflattering, intake slot, option values and order stay as in wave85b)`);
+    assert.deepEqual(rowShape(wave99Lines.get(id)!), was, `${id}: wave99 changes only wording against wave85b`);
+  } else {
+    assert.equal(seedLines[i], line, `wave85b line ${i + 1}${id ? ` (${id})` : ''} drifted from the code: reword it in a new migration (WAVE99_IDS), never edit wave85b`);
+  }
+});
+assert.deepEqual([...drifted].sort(), [...WAVE99_IDS].sort(), 'every WAVE99 id is a real bank row');
 assert.match(seed, /on conflict \(id\) do update/);
 assert.doesNotMatch(seed, /\bdelete\s+from\b|\btruncate\b|trait_answers|trait_tracks/i, 'the seed touches no answer');
+const wave99 = read('supabase/migrations/wave99_question_wording.sql');
+assert.equal(wave99, wave99WordingSql().replace(/\r\n/g, '\n'), 'wave99 matches gen-wave85-bank.ts --wave99 (re-run the generator, never hand-edit)');
+assert.match(wave99, /on conflict \(id\) do update/);
+assert.doesNotMatch(wave99, /\bdelete\s+from\b|\btruncate\b|trait_answers|trait_tracks/i, 'the wording migration touches no answer');
+assert.ok(WAVE99_IDS.every((id) => !bankQuestionById(id)?.intakeSlot), 'wave99 rewords no approved intake question');
+// SCENARIO changes (a new situation, or options that now mean something else)
+// are never written in place: existing answers must keep showing the question
+// they answered (emci 2026-10-19). Since wave100 they are retired (text kept,
+// never served) and their new scene is a new id.
+assert.equal(new Set(WAVE99_SCENARIO_HELD).size, WAVE99_SCENARIO_HELD.length, 'held ids are unique');
+for (const id of WAVE99_SCENARIO_HELD) {
+  assert.ok(bankQuestionById(id), `${id}: a real bank row`);
+  assert.ok(bankQuestionById(id)!.retired, `${id}: a held SCENARIO row is retired in wave100`);
+  assert.ok(!WAVE99_IDS.includes(id), `${id} is a SCENARIO change: never reword it in place (WAVE99_IDS)`);
+  assert.ok(!wave99Lines.has(id), `${id}: wave99 must not touch a held SCENARIO row`);
+  const i = genLines.findIndex((line) => rowIdOf(line) === id);
+  assert.equal(genLines[i], seedLines[i], `${id}: keeps its original wave85b question and options word for word`);
+}
+// Every retired row keeps its wave85b text word for word (the loop above
+// already compares every non-WAVE99 line; a retired row may never be a WAVE99 one).
+for (const row of RETIRED_BANK_QUESTIONS) {
+  assert.ok(!WAVE99_IDS.includes(row.id), `${row.id}: a retired row is never reworded`);
+  assert.ok(WAVE85B_ROWS.includes(row), `${row.id}: retired rows are wave85b rows`);
+}
+assert.equal(WAVE85B_ROWS.length, 400, 'wave85b holds ids 01-25 of every trait');
+// The retire list is pinned: the 15 held SCENARIO rows plus the privacy audit
+// (emci 2026-10-20: keeping accounts private, money separate, work and friends
+// apart, or meeting someone from online in public is not emotional distance).
+const PRIVACY_RETIRED = ['attachment_avoidance_16', 'attachment_avoidance_24', 'attachment_avoidance_25', 'relatedness_15'];
+assert.deepEqual(
+  RETIRED_BANK_QUESTIONS.map((q) => q.id).sort(),
+  [...WAVE99_SCENARIO_HELD, ...PRIVACY_RETIRED].sort(),
+  'retired = the held SCENARIO rows + the privacy-audit rows',
+);
+// Location sharing is a privacy boundary, not distance (emci 2026-10-19). The
+// only bank row about it is the original attachment_avoidance_09, now retired;
+// no active row may score sharing locations.
+const mentionsLocation = (q: BankQuestion) =>
+  /\blocations?\b|find my|track(ing)? (me|you|your)|where you are/i.test([q.prompt, ...q.options.map((o) => o.text)].join(' '));
+assert.deepEqual(QUESTION_BANK_ALL.filter(mentionsLocation).map((q) => q.id), ['attachment_avoidance_09'], 'only the retired original mentions location sharing');
+assert.deepEqual(QUESTION_BANK.filter(mentionsLocation).map((q) => q.id), [], 'no active question mentions location sharing');
+// No active answer is a privacy, money or safety boundary (it would score that
+// boundary as distance, or as less need for people).
+const BOUNDARY_OPTION = /\b(private|privacy|separate|apart|password|passcode|somewhere public|in public|joint account)\b/i;
+const boundaryRows = QUESTION_BANK.filter((q) => q.options.some((o) => BOUNDARY_OPTION.test(o.text))).map((q) => q.id);
+assert.deepEqual(boundaryRows, [], `no active option is a privacy/safety boundary: ${boundaryRows.join(', ')}`);
+ok('wave85b is unchanged as applied except the rows wave99 rewords; wave99 is exactly the generator output for those rows; SCENARIO and privacy rows are retired with their original question; no active location-sharing or boundary answer');
+
+// wave100b: the new rows and the retirements, generated.
+const wave100b = read('supabase/migrations/wave100b_question_retire_rows.sql');
+assert.equal(wave100b, wave100RowsSql().replace(/\r\n/g, '\n'), 'wave100b matches gen-wave85-bank.ts --wave100 (re-run the generator, never hand-edit)');
+const wave100bInserted = wave100b.split('\n').map(rowIdOf).filter((id): id is string => id !== null);
+assert.deepEqual(wave100bInserted, WAVE100_NEW_ROWS.map((q) => q.id), 'wave100b inserts exactly the new ids');
+assert.ok(wave100bInserted.every((id) => Number(id.slice(-2)) > 25), 'wave100b never rewrites a wave85b row');
+for (const row of WAVE100_RETIRED_ROWS) {
+  assert.ok(wave100b.includes(`'${row.id}'`), `wave100b retires ${row.id}`);
+}
+assert.match(wave100b, /update public\.question_bank\n   set retired_at = now\(\), updated_at = now\(\)\n where retired_at is null\n   and id in \(/);
+assert.match(wave100b, /raise exception 'wave100b: each trait needs 25 active questions, got %'/, 'the file rolls back unless every trait has 25 active');
+assert.doesNotMatch(wave100b, /\bdelete\s+from\b|\btruncate\b|trait_answers|trait_tracks|set prompt|set options/i, 'wave100b deletes nothing, touches no answer and rewords no row');
+ok(`wave100b is the generator output: ${WAVE100_NEW_ROWS.length} new ids inserted, ${WAVE100_RETIRED_ROWS.length} rows retired, nothing deleted or reworded, 25 active per trait enforced`);
 const sql = read('supabase/migrations/wave85_fixed_question_bank.sql');
 assert.match(sql, /^-- APPLIED 2026-10-06 to the live project/m, 'records that it is applied');
 assert.match(sql, /create table if not exists public\.question_bank \(\n  id text primary key/, 'the bank is its own table keyed by id');
@@ -122,6 +278,21 @@ ok('answer_bank_item checks the item, the question and the option, and scores wi
 
 // 4. Serving ------------------------------------------------------------------------
 const serveFn = sql.slice(sql.indexOf('create or replace function public.serve_bank_set()'), sql.indexOf('-- 7. Recomputing'));
+// The live definition after wave100 keeps every serving rule below.
+const serveFn100 = read('supabase/migrations/wave100_question_retire.sql');
+const serve100 = serveFn100.slice(serveFn100.indexOf('create or replace function public.serve_bank_set()'), serveFn100.indexOf('-- 5. Pre-launch test tool'));
+for (const fn of [serveFn, serve100]) {
+  assert.match(fn, /select distinct on \(b\.axis\) b\.id, b\.axis, b\.prompt, b\.options/, 'one per trait');
+  assert.match(fn, /where b\.id not in \(select question_id from ans\)/, 'only unanswered');
+  assert.match(fn, /order by b\.axis, random\(\)/, 'a random pick within each trait');
+  assert.match(fn, /\) pick\n    order by random\(\)/, 'random order across traits');
+  assert.match(fn, /v_kind := case when v_set <= 3 or v_fresh then 'bank_set' else 'ongoing_round' end;/);
+  assert.doesNotMatch(fn, /cooldown|interval/i, 'no cooldown');
+  assert.match(fn, /if idx < 16 then\n    for r in[\s\S]*?limit 16 - idx/, 'an uneven account still gets 16');
+  assert.match(fn, /if idx = 0 then\n    raise exception 'question bank is empty'/);
+  assert.match(fn, /if idx < 16 then\n    update public\.question_packs set kind = 'bank_set' where id = v_pack;/);
+}
+assert.equal((serve100.match(/b\.retired_at is null/g) ?? []).length, 2, 'wave100 serves only active rows, in both passes');
 assert.match(serveFn, /select distinct on \(b\.axis\) b\.id, b\.axis, b\.prompt, b\.options/, 'one per trait');
 assert.match(serveFn, /where b\.id not in \(select question_id from ans\)/, 'only unanswered');
 assert.match(serveFn, /order by b\.axis, random\(\)/, 'a random pick within each trait');
@@ -158,7 +329,231 @@ assert.notEqual(a, b, 'the pick is random, not fixed');
 assert.match(serveFn, /if idx < 16 then\n    for r in[\s\S]*?limit 16 - idx/, 'an uneven account still gets 16 (a second question from traits that have them)');
 assert.match(serveFn, /if idx = 0 then\n    raise exception 'question bank is empty'/, 'an empty bank never makes an empty set');
 assert.match(serveFn, /if idx < 16 then\n    update public\.question_packs set kind = 'bank_set' where id = v_pack;/, 'a short set never poses as a paying round');
+assert.ok([...answered].every((id) => !bankQuestionById(id)!.retired), 'a fresh account is never served a retired question');
 ok('25 sets of 16, one per trait, random, no repeats; all 400 answered after set 25 and nothing more is served');
+
+// 4b. Retiring never moves anyone's progress (wave100) -------------------------------
+// The phone counts like the server: answered on a trait = min(active rows,
+// every row answered on it, retired included).
+const originalIds = (axis: TraitAxis, upTo: number) =>
+  BANK_ROWS_BY_TRAIT[axis].filter((q) => Number(q.id.slice(-2)) <= upTo).map((q) => q.id);
+// Someone who finished all 25 sets before wave100 (their answers include the retired rows).
+const finishedBefore = TRAIT_AXES.flatMap((axis) => originalIds(axis, 25));
+assert.equal(bankProgressFrom(finishedBefore).stage, 'complete', 'a finished bank stays finished');
+assert.equal(bankProgressFrom(finishedBefore).completedSets, 25);
+assert.equal(pickBankSet(new Set(finishedBefore), rng).length, 0, 'and nothing new is served to them');
+// Someone mid-way (sets 1-10 under the old ids, so some retired answers among them).
+const midway = new Set(TRAIT_AXES.flatMap((axis) => originalIds(axis, 10)));
+assert.ok(RETIRED_BANK_QUESTIONS.some((q) => midway.has(q.id)), 'the test account answered retired questions');
+assert.equal(bankProgressFrom([...midway]).completedSets, 10, 'retired answers still count: progress does not go back');
+let extraSets = 0;
+while (bankProgressFrom([...midway]).currentSet !== null) {
+  const picks = pickBankSet(midway, rng);
+  assert.equal(picks.length, 16, 'a full set every time');
+  for (const q of picks) {
+    assert.ok(!q.retired, `${q.id}: a retired question is never served`);
+    assert.ok(!midway.has(q.id), `${q.id} repeated`);
+    midway.add(q.id);
+  }
+  extraSets += 1;
+  assert.ok(extraSets <= 15, 'never more sets than they had left');
+}
+assert.equal(extraSets, 15, '15 sets left after set 10, retirement or not: progress does not go forward either');
+for (const axis of TRAIT_AXES) {
+  const onTrait = BANK_ROWS_BY_TRAIT[axis].filter((q) => midway.has(q.id)).length;
+  assert.equal(onTrait, 25, `${axis}: exactly 25 answers in the end, never 26`);
+  assert.equal(answeredOnTrait(axis, midway), 25);
+}
+ok('retiring keeps progress where it was: a finished bank stays finished, a half-done one has the same sets left, retired answers count, nothing past 25 per trait');
+
+// 4c. The server side of retiring (wave100) -------------------------------------------
+// Every function wave100 replaces is its current definition word for word,
+// plus only the retired filter; grants are the same as live.
+const wave100 = read('supabase/migrations/wave100_question_retire.sql');
+const wave86sql = read('supabase/migrations/wave86_change_answers_history.sql');
+const fnOf = (text: string, sig: string) => {
+  const start = text.indexOf(`create or replace function public.${sig}`);
+  assert.ok(start >= 0, `${sig} is defined`);
+  const end = text.indexOf('\n$$;\n', start);
+  return text.slice(start, end + 4);
+};
+const grantsOf = (text: string, name: string) =>
+  text.split('\n').filter((line) => /^(revoke|grant) /.test(line) && line.includes(`function public.${name}(`)).join('\n');
+const applyEdits = (text: string, edits: readonly (readonly [string, string])[], name: string) =>
+  edits.reduce((acc, [from, to]) => {
+    assert.ok(acc.includes(from), `${name}: the source still has the text wave100 replaces`);
+    return acc.replace(from, to);
+  }, text);
+const WAVE100_COPIES: readonly { name: string; sig: string; source: string; edits: readonly (readonly [string, string])[] }[] = [
+  {
+    name: '_bank_all_done',
+    sig: '_bank_all_done(p_uid uuid)',
+    source: sql,
+    edits: [
+      ['  with ans as (select question_id from public._bank_answered_ids(p_uid))\n', ''],
+      [
+        'select 1 from public.question_bank b where b.id not in (select question_id from ans)',
+        'select 1 from public._bank_trait_progress(p_uid) p where p.answered_n < p.active_n',
+      ],
+    ],
+  },
+  {
+    name: 'serve_bank_set',
+    sig: 'serve_bank_set()',
+    source: sql,
+    edits: [
+      [
+        `  select coalesce(min(n), 0) into v_done
+    from (select b.axis, count(a.question_id) as n
+            from (select distinct axis from public.question_bank) b
+            left join public._bank_answered_ids(uid) a on a.axis = b.axis
+           group by b.axis) x;`,
+        `  select coalesce(min(p.answered_n), 0) into v_done
+    from public._bank_trait_progress(uid) p
+   where p.active_n > 0;`,
+      ],
+      [
+        `    with ans as (select question_id from public._bank_answered_ids(uid))
+    select pick.* from (
+      select distinct on (b.axis) b.id, b.axis, b.prompt, b.options
+        from public.question_bank b
+       where b.id not in (select question_id from ans)
+       order by b.axis, random()`,
+        `    with ans as (select question_id from public._bank_answered_ids(uid)),
+         open_axes as (select p.axis from public._bank_trait_progress(uid) p where p.answered_n < p.active_n)
+    select pick.* from (
+      select distinct on (b.axis) b.id, b.axis, b.prompt, b.options
+        from public.question_bank b
+       where b.id not in (select question_id from ans)
+         and b.retired_at is null
+         and b.axis in (select o.axis from open_axes o)
+       order by b.axis, random()`,
+      ],
+      [
+        `  -- (claim_ongoing_round_complete needs 16).
+  if idx < 16 then
+    for r in
+      with ans as (select question_id from public._bank_answered_ids(uid))
+      select b.id, b.axis, b.prompt, b.options
+        from public.question_bank b
+       where b.id not in (select question_id from ans)
+         and b.id not in (select i.bank_question_id from public.question_items i
+                           where i.pack_id = v_pack and i.bank_question_id is not null)
+       order by random()
+       limit 16 - idx`,
+        `  -- (claim_ongoing_round_complete needs 16).
+  -- wave100: a trait never gets more than it still needs (room = what it
+  -- needs minus the one the first pass already took), so a retired answer
+  -- can never push a trait past its active count.
+  if idx < 16 then
+    for r in
+      with ans as (select question_id from public._bank_answered_ids(uid)),
+           room as (select p.axis, p.active_n - p.answered_n - 1 as n
+                      from public._bank_trait_progress(uid) p where p.answered_n < p.active_n)
+      select x.id, x.axis, x.prompt, x.options from (
+        select b.id, b.axis, b.prompt, b.options, rm.n,
+               row_number() over (partition by b.axis order by random()) as rn
+          from public.question_bank b
+          join room rm on rm.axis = b.axis
+         where b.id not in (select question_id from ans)
+           and b.retired_at is null
+           and b.id not in (select i.bank_question_id from public.question_items i
+                             where i.pack_id = v_pack and i.bank_question_id is not null)
+      ) x
+       where x.rn <= x.n
+       order by random()
+       limit 16 - idx`,
+      ],
+    ],
+  },
+  {
+    name: 'dev_fill_bank',
+    sig: 'dev_fill_bank()',
+    source: sql,
+    edits: [
+      [
+        `    with ans as (select question_id from public._bank_answered_ids(uid))
+    select b.id, b.axis, b.options from public.question_bank b
+     where b.id not in (select question_id from ans)
+     order by b.id`,
+        `    with ans as (select question_id from public._bank_answered_ids(uid)),
+         room as (select p.axis, p.active_n - p.answered_n as n
+                    from public._bank_trait_progress(uid) p where p.answered_n < p.active_n)
+    select x.id, x.axis, x.options from (
+      select b.id, b.axis, b.options, rm.n,
+             row_number() over (partition by b.axis order by b.id) as rn
+        from public.question_bank b
+        join room rm on rm.axis = b.axis
+       where b.id not in (select question_id from ans)
+         and b.retired_at is null
+    ) x
+     where x.rn <= x.n
+     order by x.id`,
+      ],
+    ],
+  },
+  {
+    name: 'change_bank_answer',
+    sig: 'change_bank_answer(p_session uuid, p_question_id text, p_option_index int)',
+    source: wave86sql,
+    edits: [
+      [
+        `    raise exception 'unknown question' using errcode = '22023';
+  end if;
+`,
+        `    raise exception 'unknown question' using errcode = '22023';
+  end if;
+  -- wave100: a retired question keeps the answer it was given; it is never re-asked.
+  if q.retired_at is not null then
+    raise exception 'retired question' using errcode = 'P0001';
+  end if;
+`,
+      ],
+    ],
+  },
+  {
+    name: 'serve_bank_retest',
+    sig: 'serve_bank_retest(p_axis text, p_count int)',
+    source: sql,
+    edits: [['     where b.axis = p_axis\n', '     where b.axis = p_axis\n       and b.retired_at is null\n']],
+  },
+];
+for (const copy of WAVE100_COPIES) {
+  assert.equal(
+    fnOf(wave100, copy.sig),
+    applyEdits(fnOf(copy.source, copy.sig), copy.edits, copy.name),
+    `${copy.name}: wave100 is its current definition word for word plus the retired filter`,
+  );
+}
+assert.equal(grantsOf(wave100, 'serve_bank_set'), grantsOf(sql, 'serve_bank_set'), 'serve_bank_set: same grants');
+assert.equal(grantsOf(wave100, '_bank_all_done'), grantsOf(sql, '_bank_all_done'), '_bank_all_done: same grants');
+assert.equal(grantsOf(wave100, 'dev_fill_bank'), grantsOf(sql, 'dev_fill_bank'), 'dev_fill_bank: same grants');
+assert.equal(grantsOf(wave100, 'change_bank_answer'), grantsOf(wave86sql, 'change_bank_answer'), 'change_bank_answer: same grants');
+assert.equal(
+  grantsOf(wave100, 'serve_bank_retest'),
+  'revoke all on function public.serve_bank_retest(text, int) from public, anon;\nrevoke execute on function public.serve_bank_retest(text, int) from authenticated;',
+  'serve_bank_retest stays closed to clients, as wave86 left it',
+);
+assert.match(wave100, /alter table public\.question_bank add column if not exists retired_at timestamptz;/);
+assert.match(
+  fnOf(wave100, '_bank_trait_progress(p_uid uuid)'),
+  /least\(count\(\*\) filter \(where b\.retired_at is null\), count\(a\.question_id\)\)::int\n    from public\.question_bank b\n    left join public\._bank_answered_ids\(p_uid\) a on a\.question_id = b\.id/,
+  'answered = every answered row (retired included), capped at the active count',
+);
+assert.match(wave100, /revoke all on function public\._bank_trait_progress\(uuid\) from public, anon, authenticated;/, 'the helper is server-only');
+// Left alone on purpose: answered ids include retired rows, and an item served
+// before retirement still scores from its own row.
+for (const name of ['_bank_answered_ids', 'bank_answered', 'answer_bank_item', 'answer_round_item', 'start_fresh', 'set_trait_flag']) {
+  assert.ok(!wave100.includes(`create or replace function public.${name}(`), `wave100 leaves ${name} as it is`);
+}
+assert.doesNotMatch(wave100, /delete\s+from\s+public\.question_bank\b|\btruncate\b|\bdrop\s+(table|column|function)\b/i, 'wave100 deletes no bank row and drops nothing');
+assert.equal((wave100.match(/delete\s+from/gi) ?? []).length, 1, "the only delete is change_bank_answer's own replace, copied from wave86");
+assert.doesNotMatch(wave100, /^-- APPLIED/m, 'wave100 is not applied yet');
+// The Change answers screen keeps retired answers visible, read-only.
+const finishFold = read('src/components/bank-finish-fold.tsx');
+assert.match(finishFold, /BANK_ROWS_BY_TRAIT\[axis\]\.filter\(\(q\) => progress\.answeredIds\.has\(q\.id\)\)/, 'answered retired questions stay in the list');
+assert.match(finishFold, /disabled=\{busy \|\| isRetired\}/, 'and cannot be changed (the current answer of a live question stays tappable: it is the selected look and a no-op)');
+ok('wave100: retired_at added; serve_bank_set, _bank_all_done, dev_fill_bank, change_bank_answer and serve_bank_retest are their current definitions plus only the retired filter, same grants; answered ids, answering and Start Fresh untouched');
 
 // 5. Stages, firm, retest picks -------------------------------------------------------
 assert.equal(stageFor(0), 'first_read');

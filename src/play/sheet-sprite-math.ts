@@ -35,17 +35,27 @@ export type SheetSpritePlacement = {
  * `(-rect.x, -rect.y)`, sliding the wanted frame onto the origin, and the clip
  * hides every neighbouring frame.
  */
+/** Trim / crop-keep-position: the original cell the frame was authored in. */
+export type SpriteCell = { sourceW: number; sourceH: number; offsetX: number; offsetY: number };
+
 export function sheetSpritePlacement(
   rect: SpriteRect,
   x: number,
   y: number,
   size: number,
+  cell?: SpriteCell,
 ): SheetSpritePlacement {
+  const srcW = cell?.sourceW ?? rect.w;
+  const srcH = cell?.sourceH ?? rect.h;
+  const ox = cell?.offsetX ?? 0;
+  const oy = cell?.offsetY ?? 0;
+  // Scale the SOURCE cell (not the trimmed rect) so anchors stay identical.
+  // Clip to the trimmed frame at (ox, oy) so neighbouring atlas pixels stay hidden.
   return {
-    transform: `translate(${x}, ${y}) scale(${size / rect.w}, ${size / rect.h})`,
-    imageX: -rect.x,
-    imageY: -rect.y,
-    clip: { x: 0, y: 0, width: rect.w, height: rect.h },
+    transform: `translate(${x}, ${y}) scale(${size / srcW}, ${size / srcH})`,
+    imageX: ox - rect.x,
+    imageY: oy - rect.y,
+    clip: { x: ox, y: oy, width: rect.w, height: rect.h },
   };
 }
 

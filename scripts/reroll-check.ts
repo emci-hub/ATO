@@ -9,7 +9,7 @@
  * scope. Run: npm run check:reroll
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 let passed = 0;
@@ -18,58 +18,22 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-const rerollSrc = readFileSync(resolve(__dirname, '../src/lib/questions/reroll.ts'), 'utf8');
+// reroll.ts (rerollLegend) and legends64/generate-story.ts were dead code (no callers) and are
+// deleted (2026-10-20). The live legend reroll is identity-store.ts's spend; nothing may bring back
+// a client-side model call for it.
+const root = resolve(__dirname, '..');
+for (const gone of ['src/lib/questions/reroll.ts', 'src/lib/legends64/generate-story.ts']) {
+  assert.ok(!existsSync(resolve(root, gone)), gone + ' must stay deleted');
+}
+ok('reroll.ts and generate-story.ts (dead: no callers) stay deleted');
 
-assert.match(rerollSrc, /export async function rerollLegend\(/);
-// Question reroll removed with the shared AI pool (fixed bank, wave85).
-assert.doesNotMatch(rerollSrc, /export async function rerollQuestionItem\(|fetchBankCandidates|spendAtoTokensQuestionReroll/);
-assert.doesNotMatch(rerollSrc, /export async function rerollCategoryItem\(/, 'rerollCategoryItem must not exist — it was removed with the old category_question_items system');
-ok('reroll.ts exports rerollLegend only; question and category rerolls are gone');
-
-assert.match(rerollSrc, /trySpend\(spendAtoTokensLegendReroll\)/);
-assert.doesNotMatch(
-  rerollSrc,
-  /import\s*\{[^}]*spendAtoTokensCategoryReroll/,
-  'spendAtoTokensCategoryReroll must not be imported — it has no caller in reroll.ts until a new category-statements reroll is built',
-);
-ok('each remaining reroll function calls the matching spendAtoTokens*Reroll for its own surface, not another surface\'s; the category surface\'s spend is unimported, not just unused');
-
-// spend RPCs raise (not return {ok:false}) on insufficient balance — trySpend
-// must catch that specific errcode so the UI's "not enough tokens" copy is
-// reachable instead of an uncaught throw (found in review).
-assert.match(rerollSrc, /async function trySpend\(/);
-assert.match(rerollSrc, /code === 'P0040'/);
-ok('trySpend catches the insufficient-balance exception (errcode P0040) rather than letting it throw uncaught');
-
-// Legends 64-archetype rewrite (core loop redesign §4): rerollLegend now
-// takes the live archetype code and does its own generate-then-spend-then-
-// save, rather than taking a precomputed old/new variant pair (the old
-// figure-catalog system's shape). Order matters here even more than for
-// question reroll — it must generate BEFORE spending, and only persist the
-// new story AFTER the spend actually succeeds, otherwise a quota-exhausted
-// or failed generation could still cost the token, or a failed spend could
-// still leave a story saved for free.
-assert.match(
-  rerollSrc,
-  /export async function rerollLegend\(archetypeCode: string\): Promise<LegendRerollResult>/,
-);
-const legendFnStart = rerollSrc.indexOf('export async function rerollLegend');
-const legendFnBody = rerollSrc.slice(legendFnStart, rerollSrc.indexOf('\n}', legendFnStart));
-const legendGenerateIdx = legendFnBody.indexOf('generateLegendStory');
-const legendSpendIdx = legendFnBody.indexOf('spendAtoTokensLegendReroll');
-const legendSaveIdx = legendFnBody.indexOf('saveGeneration');
-assert.notEqual(legendGenerateIdx, -1, 'rerollLegend must call generateLegendStory');
-assert.notEqual(legendSpendIdx, -1, 'rerollLegend must call spendAtoTokensLegendReroll');
-assert.notEqual(legendSaveIdx, -1, 'rerollLegend must call saveGeneration');
-assert.ok(
-  legendGenerateIdx < legendSpendIdx,
-  'rerollLegend must generate the replacement story before spending',
-);
-assert.ok(
-  legendSpendIdx < legendSaveIdx,
-  'rerollLegend must only persist the new story after the spend actually succeeds',
-);
-ok('rerollLegend generates the story before spending, and only saves it after a successful spend');
+{
+  const identitySrc = readFileSync(resolve(root, 'src/lib/legends64/identity-store.ts'), 'utf8');
+  assert.match(identitySrc, /spendAtoTokensLegendReroll/, 'the live legend reroll still spends through identity-store');
+  assert.doesNotMatch(identitySrc, /generateText|generateLegendStory|rerollLegend/, 'the live legend reroll makes no client model call');
+  assert.doesNotMatch(identitySrc, /spendAtoTokensCategoryReroll|spendAtoTokensQuestionReroll/);
+}
+ok('the live legend reroll spends via identity-store with no client model call, and no category/question spend is wired in');
 
 {
   const src = readFileSync(resolve(__dirname, '../supabase/migrations/wave53_reroll_rpcs.sql'), 'utf8');
@@ -109,6 +73,21 @@ ok('LegendCard delegates reroll to an injected onReroll callback rather than cal
 const questionsFoldSrc = readFileSync(resolve(__dirname, '../src/components/questions-fold.tsx'), 'utf8');
 assert.doesNotMatch(questionsFoldSrc, /rerollQuestionItem\(|rerollCategoryItem\(/, 'no reroll on the Questions screen: sets come from the fixed bank (wave85)');
 ok('the Questions screen offers no reroll: there is no AI pool to swap from');
+
+// REROLLS_FROZEN (emci 2026-10-07): the daily insight and the category cards are
+// stored copy, so neither shows a reroll. The RPCs and client code stay.
+{
+  const flag = readFileSync(resolve(__dirname, '../src/lib/rerolls.ts'), 'utf8');
+  assert.match(flag, /export const REROLLS_FROZEN = true;/);
+  const home = readFileSync(resolve(__dirname, '../src/app/(tabs)/index.tsx'), 'utf8');
+  const cats = readFileSync(resolve(__dirname, '../src/components/categories-fold.tsx'), 'utf8');
+  for (const [name, src] of [['Home', home], ['categories-fold', cats]] as const) {
+    assert.doesNotMatch(src, /[Rr]eroll\(|spendCategoryReroll|CATEGORY_REWRITE_LABEL|Reroll ·/, `${name} shows no reroll while REROLLS_FROZEN`);
+  }
+  assert.match(readFileSync(resolve(__dirname, '../src/lib/category-statements/reroll-spend.ts'), 'utf8'), /export async function spendCategoryReroll\(/);
+  assert.ok(!existsSync(resolve(root, 'src/lib/questions/reroll.ts')));
+}
+ok('REROLLS_FROZEN: no reroll on the daily insight or the category cards; the spend code is kept');
 
 console.log(`
 ${passed} reroll checks passed`);

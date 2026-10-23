@@ -25,7 +25,7 @@ function ok(label: string) {
 const read = (rel: string) => readFileSync(resolve(__dirname, '..', rel), 'utf8');
 
 // ── Copy ─────────────────────────────────────────────────────────────────────
-assert.equal(POLISH_COPY_REVIEWED, false, 'new copy ships as draft until emci reads it');
+assert.equal(POLISH_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 for (const line of POLISH_LINES) {
   assert.equal(lineRuleViolation(line), null, `voice rule: ${line}`);
   assert.ok(!containsFrameworkTerm(line), `framework term: ${line}`);
@@ -114,6 +114,13 @@ ok('the +21 coin appears only when +21 was really paid');
 // ── Placement ────────────────────────────────────────────────────────────────
 const home = read('src/app/(tabs)/index.tsx');
 assert.match(home, /<WeekStrip userId=\{me\.id\} todayYmd=\{todayYmd\}/);
+// Home's title first, like Explore and You, then "This week" above every card (emci, 2026-10-07).
+const headerAt = home.indexOf('<View style={styles.header}>');
+assert.ok(headerAt > home.indexOf('<ScrollView'), 'the Home title is the first thing on the page');
+assert.match(home.slice(headerAt, headerAt + 200), /<ThemedText type="subtitle">\{HOME_TITLE\}<\/ThemedText>/, 'same title style as Explore and You');
+const stripAt = home.indexOf('<WeekStrip');
+// The crisis card was removed (2026-10-14); the identity chip is now the first card.
+assert.ok(stripAt > headerAt && stripAt < home.indexOf('<IdentityTitleChip'), 'This week sits right under the title, above every card');
 assert.match(home, /face=\{faceRecipe\}/);
 assert.match(home, /<ProgressRing value=\{roundAnswered \?\? 0\}/);
 assert.match(read('src/app/(tabs)/explore.tsx'), /<ShapeCard/);

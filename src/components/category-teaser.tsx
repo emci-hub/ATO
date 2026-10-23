@@ -21,6 +21,7 @@ import type { TraitTrack } from '@/lib/trait-stability';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { useTheme } from '@/hooks/use-theme';
 import type { CategoryId } from '@/lib/categories';
+import { categoryDisplayName } from '@/lib/category-labels';
 
 export function CategoryTeaser({ me }: { me: Me }) {
   const theme = useTheme();
@@ -80,8 +81,8 @@ export function CategoryTeaser({ me }: { me: Me }) {
         accessibilityRole="button"
         accessibilityState={{ expanded: peek }}
         style={({ pressed }) => [pressed && styles.pressed]}>
-        <ConceptHint explainer={categoryConcept(id)} label={def.name}>
-          <ThemedText type="smallBold">{def.name}</ThemedText>
+        <ConceptHint explainer={categoryConcept(id)} label={categoryDisplayName(def)}>
+          <ThemedText type="smallBold">{categoryDisplayName(def)}</ThemedText>
         </ConceptHint>
         <ThemedText type="small" themeColor="textSecondary">
           {line}
@@ -96,7 +97,7 @@ export function CategoryTeaser({ me }: { me: Me }) {
         <View style={styles.peek}>
           <ThemedText type="small">{full}</ThemedText>
           <Pressable
-            onPress={() => router.push('/sage')}
+            onPress={() => router.push('/explore')}
             accessibilityRole="button"
             accessibilityLabel="Open Explore for more"
             style={({ pressed }) => [styles.link, pressed && styles.pressed]}>

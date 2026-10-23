@@ -87,7 +87,7 @@ export type KitHit = {
 /** Every rule number, in one place. */
 export const KIT_TUNING = {
   /** Hero-tower damage share per behavior (plain towers use their own stats). */
-  heroDamageShare: { burst: 1, splash: 0.6, dot: 0.4, slow: 0.55, chain: 0.75, pull: 0.55 } as Record<Behavior, number>,
+  heroDamageShare: { burst: 1, splash: 0.7, dot: 0.4, slow: 0.55, chain: 0.75, pull: 0.7 } as Record<Behavior, number>,
   /** Hero-tower cooldown per behavior, ms (before the 600ms floor). */
   heroCooldownMs: { burst: 1300, splash: 1500, dot: 1400, slow: 1100, chain: 1400, pull: 1600 } as Record<Behavior, number>,
   splashRadiusPerLevel: 0.15,

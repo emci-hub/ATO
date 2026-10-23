@@ -25,7 +25,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ComponentProps, ReactNode } from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, Fragment, useContext, useEffect, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -39,6 +39,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { itemArtSource } from '@/play/art';
+import { pixelRenderStyle } from '@/play/pixel-theme';
 import { FinishPicker } from '@/play/finish-picker';
 import type { PlayTransition } from '@/play/use-play-store';
 import {
@@ -69,6 +70,7 @@ import {
   legendNextLine,
 } from '@/play/legend-copy';
 import { HeroGrid } from '@/play/hero-grid';
+import { heroById, heroName } from '@/play/heroes-data';
 import {
   NEON_ROW_LINE,
   NeonBackLink,
@@ -81,20 +83,26 @@ import {
   NeonPill,
 } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { streetUiOn } from '@/play/street-ui';
 import {
   formatItemStats,
   formatMult,
+  formatWorksIn,
   getItemDef,
   rarityRank,
+  STAT_PLACES,
+  STAT_WORKS_IN,
   type ItemDef,
   type ItemSlot,
   type ItemStat,
+  type StatPlace,
 } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
   INVENTORY_SOFT_CAP,
   LOOK_SELL_TOKENS,
   mergeSuccessPct,
+  setLockerHero,
   type ItemRef,
   type ItemStack,
   type MergeOutcome,
@@ -116,7 +124,7 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   trinket: 'star-four-points',
 };
 
-/** Item art from the Kenney pack, falling back to a slot glyph (§19). */
+/** The item's own Streetwear icon (32 px art library), falling back to a slot glyph. */
 function ItemIcon({
   art,
   slot,
@@ -130,7 +138,7 @@ function ItemIcon({
   return (
     <NeonIconFrame size={34} style={style}>
       {source ? (
-        <Image source={source} contentFit="contain" style={styles.itemIconArt} />
+        <Image source={source} contentFit="contain" transition={0} style={{ ...styles.itemIconArt, ...pixelRenderStyle }} accessibilityIgnoresInvertColors />
       ) : (
         <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={NEON.cyan} />
       )}
@@ -145,15 +153,15 @@ const STAT_ORDER: ItemStat[] = [
   'research_yield',
 ];
 
-/** §9c grouping for the Equipped bonuses card (display only — no math). */
+/** Grouping for the Equipped bonuses card: by WHERE each stat works (Turf War / Dive / Hideout), so a newcomer
+ * sees what a Power does and in which game (display only — no math). */
 const BONUS_CATEGORIES: {
-  title: 'Combat' | 'Economy' | 'Dive';
+  title: StatPlace;
   stats: ItemStat[];
-}[] = [
-  { title: 'Combat', stats: ['wave_power', 'tower_speed'] },
-  { title: 'Economy', stats: ['token_earn', 'research_yield'] },
-  { title: 'Dive', stats: ['dive_luck'] },
-];
+}[] = STAT_PLACES.map((place) => ({
+  title: place,
+  stats: STAT_ORDER.filter((stat) => STAT_WORKS_IN[stat] === place),
+}));
 
 /** One small icon per stat so a category never feels like a wall of text. */
 const BONUS_ICONS: Record<ItemStat, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
@@ -164,8 +172,8 @@ const BONUS_ICONS: Record<ItemStat, ComponentProps<typeof MaterialCommunityIcons
   dive_luck: 'waves',
 };
 
-/** Bag filter tabs: a slot, "all", or "junk" (= every Look, any slot). */
-type BagFilter = 'all' | ItemSlot | 'junk';
+/** Bag filter tabs: a slot, "all", or "look" (= every Look, any slot). */
+type BagFilter = 'all' | ItemSlot | 'look';
 
 const FILTER_TABS: { key: BagFilter; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -173,7 +181,7 @@ const FILTER_TABS: { key: BagFilter; label: string }[] = [
   { key: 'armor', label: 'Armor' },
   { key: 'cloak', label: 'Cloak' },
   { key: 'trinket', label: 'Trinket' },
-  { key: 'junk', label: 'Junk' },
+  { key: 'look', label: 'Looks' },
 ];
 
 export function DressScreen({
@@ -221,6 +229,18 @@ export function DressScreen({
   const activeBonuses = STAT_ORDER.filter((stat) => view.statSums[stat] > 0);
   const anyBonuses = activeBonuses.length > 0;
   const stacks = visibleStacks(view.inventory, filter);
+  // Powers first, then Looks (each keeps the best-rarity-first order); unknown rows ride with the Powers.
+  const ordered = [...stacks.filter((s) => !isLookStack(s)), ...stacks.filter(isLookStack)];
+  // Leader first, then the helper, then every other owned hero (and any hero already wearing gear).
+  const lockerHeroes = [
+    ...new Set([
+      view.activeAvatarHeroId,
+      ...(view.turfHelperHeroId ? [view.turfHelperHeroId] : []),
+      view.lockerHeroId,
+      ...view.ownedHeroIds,
+      ...Object.keys(view.heroWorn),
+    ]),
+  ].filter((id) => heroById(id) != null);
 
   const toggleRow = (key: string) =>
     setExpandedKey((current) => (current === key ? null : key));
@@ -230,8 +250,8 @@ export function DressScreen({
       <NeonBackLink onPress={onBackToGrove} />
 
       <NeonHeader
-        title="Dress"
-        lede="Four slots. Equip Powers to shape your Basecore — Looks are for the eye."
+        title={streetUiOn() ? 'Locker · Fits' : 'Dress'}
+        lede="Powers change how the games play. Looks are just for style."
       />
 
       <LegendFirstTip />
@@ -252,6 +272,7 @@ export function DressScreen({
       <HeroGrid
         activeHeroId={view.activeAvatarHeroId}
         ownedHeroIds={view.ownedHeroIds}
+        leaderFromPet={view.leaderFromPet}
         boundHeroIds={view.boundHeroIds}
         legendElement={view.legendElement}
         onSetAvatarHero={onSetAvatarHero}
@@ -265,8 +286,33 @@ export function DressScreen({
         onUnlockAvatar={onUnlockAvatar}
       />
 
+      {/* P6: gear is per hero. Pick whose four slots you are dressing (the leader and the Turf helper
+       * first); the bag below is shared, a worn copy sits on one hero at a time. */}
       <NeonPanel>
-        <NeonLabel>Worn</NeonLabel>
+        <NeonLabel>Dress which hero?</NeonLabel>
+        <View style={styles.filterRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
+            {lockerHeroes.map((id) => (
+              <NeonChip
+                key={id}
+                label={`${heroName(id)} · ${view.heroWorn[id] ?? 0}/4${id === view.activeAvatarHeroId ? ' · leader' : id === view.turfHelperHeroId ? ' · helper' : ''}`}
+                selected={id === view.lockerHeroId}
+                onPress={() => commit((doc) => {
+                  const next = setLockerHero(doc, id);
+                  return next === doc ? null : next;
+                })}
+                accessibilityLabel={`Dress ${heroName(id)}, ${view.heroWorn[id] ?? 0} of 4 slots worn`}
+              />
+            ))}
+          </ScrollView>
+        </View>
+        <ThemedText type="small" themeColor="textSecondary">
+          Gear on your leader boosts the whole board. Gear on your helper boosts only its own hits.
+        </ThemedText>
+      </NeonPanel>
+
+      <NeonPanel>
+        <NeonLabel>{`Worn · ${heroName(view.lockerHeroId)}`}</NeonLabel>
         {SLOT_ORDER.map((slot) => {
           const ref = view.equipped[slot] ?? null;
           const key = wornRowKey(slot, ref?.id ?? null);
@@ -290,7 +336,7 @@ export function DressScreen({
       </NeonPanel>
 
       <NeonPanel>
-        <NeonLabel>Equipped bonuses</NeonLabel>
+        <NeonLabel>{`Equipped bonuses · ${heroName(view.lockerHeroId)}`}</NeonLabel>
         {!anyBonuses ? (
           <ThemedText type="small" themeColor="textSecondary">
             No bonuses yet — find and equip a Power item.
@@ -359,27 +405,37 @@ export function DressScreen({
             {emptyCopy(filter)}
           </ThemedText>
         ) : (
-          stacks.map((stack) => {
+          ordered.map((stack, index) => {
             const def = getItemDef(stack.id);
             const wornRef = def ? view.equipped[def.core.slot] : undefined;
             const sameTierWorn =
               wornRef != null && wornRef.id === stack.id && wornRef.star === stack.star;
             const key = bagRowKey(stack.id, stack.star);
+            // Two sections (Powers, then Looks): a small heading where the kind changes. The Looks tab is one list.
+            const isLook = isLookStack(stack);
+            const startsSection =
+              filter !== 'look' && (index === 0 || isLookStack(ordered[index - 1]) !== isLook);
             return (
-              <StackRow
-                key={key}
-                stack={stack}
-                sameTierWorn={sameTierWorn}
-                expanded={expandedKey === key}
-                onToggle={() => toggleRow(key)}
-                mergeState={merge.buttonState(key)}
-                mergeLocked={merge.busy}
-                feedback={merge.feedbackFor(key)}
-                reduceMotion={reduceMotion}
-                onEquip={onEquip}
-                onSell={onSell}
-                onMerge={(target) => merge.press(key, target)}
-              />
+              <Fragment key={key}>
+                {startsSection ? (
+                  <ThemedText type="code" themeColor="textSecondary">
+                    {isLook ? 'Looks · style only, sell for tokens' : 'Powers · change the games'}
+                  </ThemedText>
+                ) : null}
+                <StackRow
+                  stack={stack}
+                  sameTierWorn={sameTierWorn}
+                  expanded={expandedKey === key}
+                  onToggle={() => toggleRow(key)}
+                  mergeState={merge.buttonState(key)}
+                  mergeLocked={merge.busy}
+                  feedback={merge.feedbackFor(key)}
+                  reduceMotion={reduceMotion}
+                  onEquip={onEquip}
+                  onSell={onSell}
+                  onMerge={(target) => merge.press(key, target)}
+                />
+              </Fragment>
             );
           })
         )}
@@ -394,12 +450,26 @@ const LegendElementContext = createContext<Element | null>(null);
 
 /** One-time first-visit tip key (device-local; dismissing it is permanent). */
 const LEGEND_TIP_KEY = 'ato.play.tip.legends.v1';
+// Fixed regions (rule 5): read the flag when the game loads, so the tip is decided before
+// the Locker paints — it used to pop in after a storage read and push the screen down.
+let legendTipSeen: boolean | null = null;
+AsyncStorage.getItem(LEGEND_TIP_KEY)
+  .then((seen) => {
+    legendTipSeen = !!seen;
+  })
+  .catch(() => {
+    legendTipSeen = true;
+  });
 
 /** The first-visit tip explaining Legend → hero → gear. Hidden until the
  * saved flag is read, so it never flashes for a player who dismissed it. */
 function LegendFirstTip() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(legendTipSeen === false);
   useEffect(() => {
+    if (legendTipSeen !== null) {
+      setShow(legendTipSeen === false);
+      return;
+    }
     let alive = true;
     AsyncStorage.getItem(LEGEND_TIP_KEY)
       .then((seen) => {
@@ -421,6 +491,7 @@ function LegendFirstTip() {
         label="Got it"
         onPress={() => {
           setShow(false);
+          legendTipSeen = true;
           AsyncStorage.setItem(LEGEND_TIP_KEY, '1').catch(() => {});
         }}
         variant="secondary"
@@ -444,12 +515,17 @@ function hasFuel(view: PlayView, ref: ItemRef): boolean {
   );
 }
 
+/** A bag stack of a Look (style only). */
+function isLookStack(stack: ItemStack): boolean {
+  return getItemDef(stack.id)?.core.kind === 'look';
+}
+
 /** Bag rows for the active filter, sorted best-rarity-first then by name. */
 function visibleStacks(inventory: readonly ItemStack[], filter: BagFilter): ItemStack[] {
   const rows = inventory.filter((stack) => {
     const def = getItemDef(stack.id);
     if (!def) return filter === 'all'; // dangling rows only under All
-    if (filter === 'junk') return def.core.kind === 'look';
+    if (filter === 'look') return def.core.kind === 'look';
     if (filter === 'all') return true;
     return def.core.slot === filter;
   });
@@ -467,7 +543,7 @@ function visibleStacks(inventory: readonly ItemStack[], filter: BagFilter): Item
 
 function emptyCopy(filter: BagFilter): string {
   if (filter === 'all') return 'Nothing in the bag yet. Claim or Dive to find items.';
-  const label = filter === 'junk' ? 'junk Looks' : `${SLOT_LABELS[filter]}s`;
+  const label = filter === 'look' ? 'Looks' : `${SLOT_LABELS[filter]}s`;
   return `No ${label} in the bag.`;
 }
 
@@ -545,6 +621,11 @@ function SlotRow({
             {def && ref ? (
               <ThemedText type="code" themeColor="textSecondary">
                 {describeItem(def, ref.star)}
+              </ThemedText>
+            ) : null}
+            {def && ref ? (
+              <ThemedText type="code" themeColor="emphasis">
+                {formatWorksIn(def)}
               </ThemedText>
             ) : null}
           </View>
@@ -644,6 +725,9 @@ function StackRow({
             </View>
             <ThemedText type="code" themeColor="textSecondary">
               {describeItem(def, stack.star)}
+            </ThemedText>
+            <ThemedText type="code" themeColor="emphasis">
+              {formatWorksIn(def)}
             </ThemedText>
           </View>
           <RowChevron expanded={expanded} />
@@ -769,7 +853,7 @@ function ItemDetails({
       </ThemedText>
       {def.core.kind === 'look' ? (
         <ThemedText type="small" themeColor="textSecondary">
-          Looks are for the eye — no bonuses.
+          Looks are for the eye. They change no game numbers.
         </ThemedText>
       ) : (
         <>
@@ -871,7 +955,7 @@ function AvatarPicker({
                     <>
                       <ThemedText type="code">{legendLevelLine(record.level)}</ThemedText>
                       <ThemedText type="code" themeColor="textSecondary">
-                        {`${legendNextLine(record.level)} · ★${record.stars}/${AVATAR_STAR_MAX} · ${record.worn}/4 worn`}
+                        {`${legendNextLine(record.level)} · ★${record.stars}/${AVATAR_STAR_MAX}`}
                       </ThemedText>
                     </>
                   ) : null}
@@ -951,9 +1035,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.one,
   },
+  /** 32 pt = one point per source pixel (1:1 on 1x, exact 2x / 3x on phones), inside the 34 pt frame. */
   itemIconArt: {
-    width: 22,
-    height: 22,
+    width: 32,
+    height: 32,
   },
   /** Expanded details sit under the text, indented past the 34px icon. */
   details: {

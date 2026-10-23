@@ -18,11 +18,11 @@
  *     cap (a clock set back doesn't reopen a day).
  */
 import { petDayHolds } from '@/play/pet';
-import { DIFFICULTIES, type Difficulty } from '@/play/pet-game-rules';
+import { DIFFICULTIES, type Difficulty, type RoundGame } from '@/play/pet-game-rules';
 
-export type Game = 'catch' | 'train';
-export const GAMES: readonly Game[] = ['catch', 'train'];
-export const GAME_LABEL: Record<Game, string> = { catch: 'Catch the food', train: 'Tap to train' };
+export type Game = RoundGame;
+export const GAMES: readonly Game[] = ['catch', 'train', 'dash'];
+export const GAME_LABEL: Record<Game, string> = { catch: 'Catch the food', train: 'Tap to train', dash: 'Lane dash' };
 
 export const MEDALS = ['bronze', 'silver', 'gold'] as const;
 export type Medal = (typeof MEDALS)[number];
@@ -46,6 +46,14 @@ export const MEDAL_SCORES: Record<Game, Record<Difficulty, readonly [number, num
     hard: [265, 315, 420],
     insane: [400, 460, 600],
   },
+  // Dash: Catch's pass/score rules at a slower spawn rhythm (about two thirds of
+  // Catch's food a round), so Catch's bars scaled down. Not yet sim-tuned (M3).
+  dash: {
+    easy: [22, 32, 50],
+    normal: [38, 55, 82],
+    hard: [55, 75, 108],
+    insane: [90, 115, 190],
+  },
 };
 
 /** What a level needs to open. */
@@ -59,6 +67,7 @@ export const UNLOCK_RULE: Record<Difficulty, { level: Difficulty; medal: Medal }
 export const RANK_TITLES: Record<Game, readonly [string, string, string, string]> = {
   catch: ['Food Catcher', 'Snack Hunter', 'Feast Master', 'Legendary Chef'],
   train: ['Rookie', 'Fighter', 'Champion', 'Grandmaster'],
+  dash: ['Sidestepper', 'Quick Feet', 'Lane Master', 'Untouchable'],
 };
 /** What each rank after the first needs: [level, medal]. */
 export const RANK_NEEDS: readonly [Difficulty, Medal][] = [
@@ -75,18 +84,27 @@ export type GameRecords = Record<Game, Record<Difficulty, LevelRecord>>;
 export type DailyEntry = { best: number; bonus: boolean };
 /** v27: `egg` = today's daily-challenge free egg was earned (a pass);
  * `stone` = today's first daily Gold already gave its Shine Stone. */
-export type DailyGames = { ymd: string | null; catch: DailyEntry; train: DailyEntry; egg: boolean; stone: boolean };
+export type DailyGames = {
+  ymd: string | null;
+  catch: DailyEntry;
+  train: DailyEntry;
+  /** M3: additive — an older save has none and reads as empty. */
+  dash: DailyEntry;
+  egg: boolean;
+  stone: boolean;
+};
 
 const EMPTY_LEVEL: LevelRecord = { best: 0, medal: null };
 export function emptyRecords(): GameRecords {
   const one = () =>
     Object.fromEntries(DIFFICULTIES.map((d) => [d, { ...EMPTY_LEVEL }])) as Record<Difficulty, LevelRecord>;
-  return { catch: one(), train: one() };
+  return { catch: one(), train: one(), dash: one() };
 }
 export const EMPTY_DAILY: DailyGames = {
   ymd: null,
   catch: { best: 0, bonus: false },
   train: { best: 0, bonus: false },
+  dash: { best: 0, bonus: false },
   egg: false,
   stone: false,
 };
@@ -221,6 +239,7 @@ export function parseDaily(raw: unknown): DailyGames {
     ymd: typeof r.ymd === 'string' ? r.ymd : null,
     catch: entry(r.catch),
     train: entry(r.train),
+    dash: entry(r.dash),
     egg: r.egg === true,
     stone: r.stone === true,
   };

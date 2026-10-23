@@ -1090,6 +1090,28 @@ var SYSTEM_MAP = {
       ]
     },
     {
+      "id": "s-e2echat",
+      "col": "storage",
+      "title": "chat_keys / chat_messages / chat_restrictions",
+      "status": "built",
+      "summary": "Circle chat (Step 14, app 1.1+): end-to-end encrypted 1:1 messages between accepted friends. The server stores ciphertext + public keys only, 30 days; reports carry the reporter's decrypted copy (message + 5 before).",
+      "facts": [
+        [
+          "Write path",
+          "RPCs only (chat_set_key, chat_send, chat_report); friends + not blocked + 18+ checked on every read/send. NOT applied until emci OKs wave108."
+        ],
+        [
+          "Phone",
+          "libsodium crypto_box; secret key in the Keychain (src/lib/chat/chat-crypto.ts). Filter on the phone (chat-filter.ts)."
+        ]
+      ],
+      "files": [
+        "supabase/migrations/wave108_circle_chat.sql",
+        "src/lib/chat/chat-store.ts",
+        "src/app/chat.tsx"
+      ]
+    },
+    {
       "id": "s-local",
       "col": "storage",
       "title": "On-device storage",
@@ -2294,7 +2316,7 @@ var SYSTEM_MAP = {
         ],
         [
           "Chat",
-          "Nothing links to it."
+          "Rebuilt as the encrypted Circle chat (Step 14, app 1.1+): opened from the Circle tab (Message button, or ⋯ → Message)."
         ]
       ],
       "files": [

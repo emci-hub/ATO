@@ -34,7 +34,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ExtensionStorage } from '@bacons/apple-targets';
 import { Platform } from 'react-native';
 
-import { APP_GROUP, WIDGET_KIND } from '@/lib/insight/today-insight';
+import { APP_GROUP, forgetWidgetTryToday, WIDGET_KIND } from '@/lib/insight/today-insight';
 import { resetAnsweredOptionCache } from '@/lib/questions/answered-option-storage';
 import { resetCategoryPagePositionCache } from '@/lib/questions/category-page-position';
 import { resetFullProfileUnlockCache } from '@/lib/full-profile-unlock';
@@ -44,8 +44,8 @@ export const ATO_KEY_NAMESPACE = 'ato.';
 
 /**
  * Device-level preferences that survive an account deletion, because they
- * describe the PHONE and not the person: how the app looks, which crisis region
- * it resolved, whether the OS push prompt has been shown, and the dev-only
+ * describe the PHONE and not the person: how the app looks, whether the OS
+ * push prompt has been shown, and the dev-only
  * provider override. None of them is derived from account content, and none of
  * them can leak one account's data into another.
  *
@@ -55,11 +55,13 @@ export const ATO_KEY_NAMESPACE = 'ato.';
  */
 export const DEVICE_LEVEL_KEYS: readonly string[] = [
   'ato.appearance.mode',
-  'ato.crisis.region.auto',
-  'ato.crisis.region.override',
   'ato.push.prefs.v1',
   'ato.push.asked',
   'ato.ai.provider.override.v1',
+  // Which Dev Tools Hub sections are open (dev-hub-catalog HUB_OPEN_SECTIONS_KEY).
+  'ato.devhub.open-sections.v1',
+  // "Preview as new user" copy of this account's phone data (lib/preview-session.ts).
+  'ato.preview.snapshot.v1',
 ];
 
 /** Prefixes left alone. Only auth, which `clearLocalSession` clears itself. */
@@ -83,6 +85,7 @@ export function isAccountScopedKey(key: string): boolean {
  * binary already on a home screen cannot be updated over OTA.
  */
 function clearWidget(): void {
+  forgetWidgetTryToday();
   if (Platform.OS !== 'ios') return;
   try {
     const storage = new ExtensionStorage(APP_GROUP);
@@ -156,9 +159,8 @@ export async function clearLocalQuestionState(options: { alsoInsight?: boolean }
  * Returns the keys it removed so the caller (and the Dev Lab panel) can show
  * what actually happened instead of assuming.
  */
-export async function clearLocalAccountData(): Promise<string[]> {
-  // In-memory first: these need no storage and must be cleared even if
-  // AsyncStorage is unavailable in this runtime.
+/** The in-memory copies of account state (answer stamps, page positions, unlock seen, AI lines, mini guy). */
+export function clearAccountMemoryCaches(): void {
   resetAnsweredOptionCache();
   resetCategoryPagePositionCache();
   resetFullProfileUnlockCache();
@@ -166,12 +168,21 @@ export async function clearLocalAccountData(): Promise<string[]> {
   forgetDailyLineAccount();
   // …and anything the mini guy was still waiting to say.
   resetBuddy();
+}
+
+export async function clearLocalAccountData(options: { keepPrefixes?: readonly string[] } = {}): Promise<string[]> {
+  // In-memory first: these need no storage and must be cleared even if
+  // AsyncStorage is unavailable in this runtime.
+  clearAccountMemoryCaches();
 
   let removed: string[] = [];
   try {
-    const keys = await AsyncStorage.getAllKeys();
-    removed = keys.filter(isAccountScopedKey);
+    const keep = options.keepPrefixes ?? [];
+    removed = (await listAccountScopedKeys()).filter((key) => !keep.some((prefix) => key.startsWith(prefix)));
     if (removed.length > 0) await AsyncStorage.multiRemove(removed);
+    // A full wipe (sign-out, account deletion) also drops any saved
+    // "Preview as new user" copy, which holds this account's phone data.
+    if (keep.length === 0) await AsyncStorage.removeItem('ato.preview.snapshot.v1');
   } catch (err) {
     console.log('[local-account-data] storage clear failed:', err);
   }

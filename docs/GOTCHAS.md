@@ -35,15 +35,48 @@ Read before editing the area. Each one has bitten this repo at least once.
   password", in Settings. That is correct, not a bug — the has-password check
   (`auth_has_password()` RPC) is reading real state. If you need to test the
   no-password → "Set Password" path, use an OTP-only account, not `@atodev`.
+- **Under-18 accounts are blocked, never deleted (emci 2026-10-20, `docs/under18-access.md`).** The root
+  layout's age gate routes an existing under-18 tester to `under-18.tsx` and an account with no usable
+  `born_on` (null, empty, malformed, future) to `confirm-age.tsx`; it is computed from `born_on` at render
+  (no flag), so they get back in on their 18th birthday with no action. `hasMe` now means "the app shell
+  may open" (me row AND gate open); use `meRow` for "has a me row". A missing birthday no longer opens the
+  app: it must be confirmed once (dev-test and root accounts too; there is no dev bypass, `PRE_LAUNCH_DEV`
+  does not skip it). Preview the screens with the dev `age-gate-lab` (synthetic fixtures), never with a
+  real account. `DeleteAccountSheet`'s `preview` prop is for that lab only. The client date is local; the server's
+  `is_at_least_age` uses `current_date` (UTC), so the two can disagree for a few hours on the birthday.
+  The server gate (`wave101_under18_server_gate.sql`, NOT applied) must ship after the app update.
 - **Root is `me.is_root`.** Never gate on a handle string again — `emci` was claimable.
   The column is trigger-protected; set it from the SQL editor / service role only.
 - **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the Home dev
   box and native-crash probe are `__DEV__`. `check:release-mode` blocks a production
   *build*; it does not block an OTA.
 - **Edge Functions must verify the JWT in code** (`auth.getUser()`); gateway
-  `verify_jwt` is not committed anywhere (no `supabase/config.toml`). `dev-unlock` and
-  `password-login` are the deliberate exceptions — both run pre-login or pre-unlock,
-  so there is no JWT to check yet; do not "fix" that.
+  `verify_jwt` is not committed anywhere (no `supabase/config.toml`; live values are listed in
+  `docs/ato-finish-roadmap.md` "Step 1 status"). `password-login` is the deliberate exception (it IS the
+  pre-login path; deploy it with `--no-verify-jwt`), plus the two cron functions `ai-library-fill` and
+  `refresh-around`. `dev-unlock` DOES require a JWT (this line used to say otherwise).
+- **Rate limits (wave98).** `rate_limit_hits` + `_rate_limit_check` count fixed windows; RPCs use
+  `_rate_limit_caller(bucket, max, seconds)`, Edge Functions use `rate_limit_hit` through
+  `supabase/functions/_shared/rate-limit.ts` (service role only; it fails OPEN on a limiter error so a broken
+  counter never blocks sign-in). A SQL function that RAISES rolls its own counter back, so a limit inside
+  `assert_invite_usable` / `complete_signup` can never count failures: do not add one there, add a status-returning
+  function instead. Anon callers are keyed by `cf-connecting-ip` / `x-forwarded-for`; no header = a shared
+  `noip` bucket with 20x room.
+- **`ai-generate` is closed (wave98).** It is a 410 stub with no vendor key. The only model path is `ai-library`
+  (and `ai-library-fill`). Do not put a vendor call, a secret or a caller-supplied prompt back; `check:ai-provider`
+  pins it. The function is deleted in step 9.
+- **`me.timezone` is guarded (wave98).** A signed-in client can only store a real zone name (bad value = old value
+  kept), and `claim_daily_checkin` clamps the check-in day to UTC ±1.
+- **Supabase default privileges give `anon` + `authenticated` EXECUTE on every new function** even after
+  `revoke … from public`. Always `revoke … from public, anon` explicitly, then `grant … to authenticated` (this is how
+  `handle_taken` ended up anon-callable). Run `supabase db advisors --linked --type security` after any migration.
+- **Sentry events are scrubbed** (`src/lib/sentry-scrub.ts`: no user, no request body, no console or input
+  breadcrumbs, emails / tokens / uuids / @handles / filter values redacted, strings capped). A new `extra` / tag
+  that holds free text is dropped by key name (`text`, `answer`, `prompt`, `message`, `note`, `name`, …).
+- **Deploy Edge Functions with `--use-api`** (`supabase functions deploy <name> --use-api`): without Docker the plain
+  command can leave the live function unchanged. Always confirm with `supabase functions list` (version and hash move).
+- **No Docker on this machine**, so `supabase db dump` / `pg_dump` do not run. Read the live schema and apply SQL with
+  `supabase db query --linked -f <file>` (the Management API). `supabase db push` skips our untimestamped migrations.
 - **`login_email_for_identifier` is service_role-only (wave36).** It used to be
   `anon`+`authenticated`-callable and returned the plain email for any handle — anyone
   signed out could enumerate handle→email pairs. Password login now goes through the
@@ -69,9 +102,10 @@ Read before editing the area. Each one has bitten this repo at least once.
   not superuser/owner) — wave42 superseded it with this table. Set the actual value with
   a plain `update public.app_secrets set qa_override_invite_code = '...' where id = 1;`
   from the Supabase SQL editor — never commit the value to git or reference it under
-  `src/`. It's also `anon`-probeable (the RPC that checks it is anon-callable), so use a
-  long, high-entropy value, and know that override signups leave `referred_by = null`
-  with no `invite_codes` audit trail.
+  `src/`. It's also `anon`-probeable (the RPC that checks it is anon-callable and cannot
+  count failed guesses, see the rate-limit note above), so use a long, high-entropy value
+  or set it to `null` once signup is public, and know that override signups leave
+  `referred_by = null` with no `invite_codes` audit trail.
 
 ## AI
 
@@ -82,24 +116,16 @@ Read before editing the area. Each one has bitten this repo at least once.
   `gemini-3.7-flash`; a wrong `GEMINI_MODEL` Supabase secret fails every call regardless
   of quota. The model is chosen only in the Edge Function — the client no longer reads
   any `EXPO_PUBLIC_*_MODEL` (an EAS env var by that name is inert; delete it).
-- **Live AI checks spend the dev-test user's quota** (`scripts/live-ai.ts`): card-live 3,
-  talk-live 2, style-live 12 of the 20/day cap. Run them on a day you are not also
-  device-testing as `@atodev`, or point `ATO_LIVE_EMAIL` / `ATO_LIVE_PASSWORD` elsewhere.
+- **(Removed 2026-10-23, A5.) The live AI checks (`card-live`, `talk-live`, `style-live`) and `scripts/live-ai.ts` are
+  gone** with the `ai-generate` client path; there is no script that spends the dev-test user's quota any more.
 - **Reasoning models eat the token budget.** Gemini `thinkingLevel: low` and
   `grok-3-mini` can spend a 16–64 token budget on hidden thinking and return empty text.
-- **Quota is claimed in the Edge Function.** The client `claimAiCall()` is a no-op for
-  remote providers; do not add a second claim or users get charged twice.
-- **Pings (`ping: true`) never reach a vendor.** They used to make a real, unmetered
-  64-token vendor call with no quota claim at all — a free real generation outside the
-  quota system. Now they only confirm the vendor's key secret is present (`keyFor`)
-  and return a fixed `{ text: 'ready' }`; `complete()` and `claim_ai_call` are never
-  reached for a ping.
-- **Any Gemini failure falls back to DeepSeek once** (not only quota). If DeepSeek's
-  secret is missing you get the empty-card state, not an error.
-- **Every AI await needs `withTimeout`** (25s where two sequential calls are possible).
+- **Quota is claimed on the server, first.** `ai-library` calls `claim_library_write` before any model call; the phone
+  has no `claimAiCall()` and no model client (removed in A5). Do not add a client-side claim.
+- **(Removed in A5.)** Provider pings, the Gemini → DeepSeek client fallback and the `AiCallMetadata` call-site registry
+  went with the `ai-generate` client path. DeepSeek was dropped in A2; `check:ai-provider` now fails if any of it returns.
+- **Every AI await needs `withTimeout`** (`AI_TAP_TIMEOUT_MS`, `src/lib/ai/timeouts.ts`, for a library card tap).
   RN fetch has no timeout; a stalled call leaves "Loading…" forever.
-- **Every `generateText` call site must pass `AiCallMetadata`** from
-  `src/lib/ai/call-sites.ts` or `check:ai-provider` fails.
 
 ## Data
 
@@ -131,8 +157,8 @@ Read before editing the area. Each one has bitten this repo at least once.
 - **The Questions AI path is gated on profile completeness.** `routeQuestions` serves
   the static bank — and claims no quota — until every axis has one answer. The gate
   reads `input.tracks`, and **absent tracks read as incomplete**, so anything newly
-  calling `routeQuestions` must pass tracks or it silently loses the AI path. Sage
-  chat is a separate route and stays open.
+  calling `routeQuestions` must pass tracks or it silently loses the AI path. (Historical:
+  Sage chat and the AI question path are gone; questions come from the fixed bank.)
 - **`complete_signup` re-save must coalesce every field.** One overwrite slipped
   through once (`recovery_style`, fixed in wave24).
 - **Legends' 64-archetype system has no "no match" state.** `archetypeCode()`
@@ -167,17 +193,49 @@ Read before editing the area. Each one has bitten this repo at least once.
   (`constants/appearance.ts`). A new component owes QA to all five.
 - **`checks` array identity churns** on every fetch; effects keyed on it re-run. Key on
   `todayDay`/ids, not the array.
+- **Game screens use fixed regions — content never resizes a region (emci 2026-10-13).**
+  A flex:1 scene next to a panel whose height depends on its buttons makes the picture
+  jump bigger/smaller on every state change (Dive did this). The game-UI rule:
+  1. The scene/viewport has one size per screen (it fills what the fixed bars leave).
+  2. HUD bars and bottom panels reserve their TALLEST state: hidden rows stay in layout
+     (`opacity: 0`, a11y hidden), button areas keep their max row count with invisible
+     spacers, status text keeps a min height (`dive-screen.tsx` `DIVE_DOCK_ROWS`,
+     `dive-scene.tsx` reserved Heat row + grow-only `dockMinH`).
+  3. Announcements (found, busted, rare, coach hints, speech) float on an overlay layer
+     (`position: absolute`) — never an in-flow row.
+  4. Text lives in boxes with a set width + `numberOfLines`, padded inside frame art.
+  5. Loading states keep the final size (a placeholder of the same height), never a
+     smaller spinner row.
+  Kit: `src/play/fixed-region.tsx` (`ReservedRegion`, `Reserve`, `useGrowOnlyHeight`);
+  rule `.cursor/rules/fixed-regions.mdc`; gate `check:fixed-regions` (pins + bans
+  unmarked run-phase collapses). Exception: a deliberate screen switch (Turf War setup →
+  wave) may re-lay out once, marked `fixed-regions: screen switch`. Applied to Dive, Turf
+  War's coach line, the Hideout strip, pet games, the Locker tip and the sword notice.
+
+- **Floor effects and auras centre on the GROUND point, not the toe edge (emci 2026-10-14).** `src/play/ground-point.ts`:
+  ground = lowest opaque row − ≈ 4 % of the figure height (the footprint's middle in the ¾ low top-down camera). Packed per
+  character as `groundAt` next to `footAt` in `meta.json`; `roleGroundAt(role)` for code. `GlimmerGlow`, `ShinyOverlay`, the
+  room floor ring and every aura use it. Pinned by `check:auras` / `check:pet-holo`.
+- **Aura art is one indexed atlas per style in a grey + green code (2026-10-14).** Grey = main colour, green = second colour,
+  < 28 luma = outline. A colourway rewrites only the PLTE chunk (`aura-palette.ts`); never re-export a colourway as new art.
+  Frames are trimmed crops of a source cell: sprite pixels are always read in CELL coordinates (`sprite-pixels.ts`).
+- **Holo is its own layer ON the pet (`PetHolo`), never on the card face (2026-10-14).** The card keeps a quiet foil border only.
+  All colour sets live in `data/finishes.json`; old finish colours migrate through its `migrate` map.
 
 ## Copy
 
+- **Copy review = clarity, accuracy, honesty; not sanitizing** (emci 2026-10-19). Rules: `docs/copy-review-rules.md`.
+  No keyword bans on ordinary words, no softening a true line into a euphemism, no forced upside, facts checked against a
+  source. Older "reframe in sensation words" notes (hideout-roadmap, memory) are superseded by it.
 - **Nine badge render sites are pinned in `check:copy-review-badges`'s `sites`
   array — one (`profile-fill-fold.tsx`) is reviewed, eight remain
   `*_COPY_REVIEWED = false`.** Story/Levity are diagnosis-adjacent; do not flip
   those without emci's own read. **The `containsFrameworkTerm` fence
   (`profileFillCopyClean()` etc.) is not what makes a flag reviewed** — every
   other clean-copy module passes that same fence and still ships `false`; the
-  fence only rules out banned type/framework language, it says nothing about
-  tone or whether the copy is fit to ship. `PROFILE_FILL_COPY_REVIEWED` was
+  fence only rules out framework language that implies a diagnosis or a validated
+  assessment (decision D6: a framework name is allowed when relevant, accurate and
+  explained), it says nothing about tone or whether the copy is fit to ship. `PROFILE_FILL_COPY_REVIEWED` was
   flipped to `true` on emci's explicit, flag-specific delegation ("flip it to
   true if it reads correctly") for copy judged genuinely non-diagnostic — a
   filled/unfilled checklist describing data state, not the person. Add any new
@@ -189,6 +247,25 @@ Read before editing the area. Each one has bitten this repo at least once.
   ships either way, but the internal review-status badge is now dev-only.
   `check:copy-review-badges` asserts every site (new ones included) requires
   `PRE_LAUNCH_DEV` alongside its `!*_COPY_REVIEWED` check.
-- **Never say "AI" or "tokens" in user copy** (`voice/quota.ts` comment); Sage is a
-  "coach", Notes are "notes".
-- **MBTI four-letter codes were removed for trademark reasons** — do not reintroduce.
+- **(Outdated, see CLAUDE.md.)** The old rule "never say AI or tokens in user copy"
+  and "Sage is a coach" no longer apply: Sage is gone, AI surfaces are labelled
+  (small AI icon, consent copy `AI_USE_DISCLOSURE`) and ATO tokens are named as such.
+- **MBTI four-letter codes were removed for trademark reasons** — do not present a type code as ATO's own
+  result or branding (decision D6: a framework or test may be named narrowly, when relevant, accurate and
+  explained, never as a validated assessment ATO is not).
+- **The shared AI library bundle goes stale silently on the server** (wave93). The
+  `ai-library` Edge Function runs `supabase/functions/_shared/ai-library.bundle.js`, a
+  build of `src/lib/ai-library/server.ts` and everything it imports (deep-dive, Story and
+  Legends prompts and validators, the category bank, the legend roster). Changing any of
+  those changes the app at once (OTA) but not the server until you run
+  `npm run gen:ai-library` and `supabase functions deploy ai-library`. `check:ai-library`
+  fails on a stale bundle. Deploy order for a library change: SQL first, then the
+  function, then the OTA. If a prompt or card shape changed, bump `LIBRARY_VERSION` so old
+  cards are not served to the new app (root: Dev Hub → AI → AI library, or
+  `library_retire_old_versions`).
+- **Postgres regex `` is a backspace, not a word boundary.** Use `\m` / `\M` / `\y`.
+- **`ai-library-fill` must be deployed with `--no-verify-jwt`** (wave94). The pg_cron job
+  sends a random token from Vault (`ai_library_fill_token`), not a user JWT; the function
+  checks it with `library_fill_token_ok`. Deployed with JWT checking on, every cron call
+  is refused at the gateway and the library silently stops filling. Pause the fill with
+  `update public.app_config set library_fill_daily_cap = 0 where id = 1;`.

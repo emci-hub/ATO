@@ -3,7 +3,7 @@
  * stacked as cards, moved as-is into the sheets the room's icon row opens:
  *
  *   Feed        — the pantry and its Feed buttons.
- *   Play        — the mini-game hub (Catch / Train). A round itself is full screen.
+ *   Play        — Tap to train (Catch the food lives in the Feed sheet). A round itself is full screen.
  *   Expedition  — status, the returned find, Send on expedition.
  *   Info        — tabs: Status (form, timers, perks, Today, what hatches,
  *                 rebirth, reminder) · Book (Logbook + Collection) · Hall ·
@@ -15,7 +15,7 @@
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
@@ -27,7 +27,6 @@ import {
   PANTRY_MAX,
   diveCollectibleIds,
   findKind,
-  findName,
   firstTierOf,
   type FoodId,
 } from '@/play/dive-loot';
@@ -36,6 +35,7 @@ import { ELEMENT_COLOR } from '@/play/kits';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
 import { PIXEL } from '@/play/pixel-theme';
 import { PixelBody, PixelButton, PixelFrame, PixelHearts, PixelLabel } from '@/play/pixel-ui';
+import { SHEET } from '@/play/sheet-kit';
 import { NEON } from '@/play/neon-viper';
 import {
   PET_BRANCH_LABEL,
@@ -46,6 +46,7 @@ import {
   PET_STAGE_MS,
   PET_TOKENS_DAILY_CAP,
   PET_TOKENS_PER_ROUND,
+  PET_TOKENS_PER_ROUND_EASY,
   branchFor,
   branchThresholds,
   petBustCutPp,
@@ -55,6 +56,8 @@ import {
   type PetState,
 } from '@/play/pet';
 import { COSMETICS, COSMETIC_SLOTS, cosmeticById, type CosmeticSlot } from '@/play/pet-cosmetics';
+import { VISITOR_UI } from '@/play/daily-visitors-bank';
+import { StickerBook } from '@/play/daily-visitor-ui';
 import {
   DIFFICULTIES,
   DIFFICULTY_LABEL,
@@ -79,8 +82,9 @@ import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
 import { ScoreBurst } from '@/play/score-burst';
 import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
-import { AURA_COLORS, AURA_HUES, AURA_VALUES, auraCustomParts, auraHueHex, auraPrice, auraStyles, auraTintLabel, type AuraTint } from '@/play/auras';
-import { swordElement } from '@/play/swords';
+import { streetUiOn } from '@/play/street-ui';
+import { AuraColourPicker } from '@/play/aura-colour-picker';
+import { auraPrice, auraStyles, auraTintLabel } from '@/play/auras';
 import {
   applyPetAura,
   setPetAuraColor,
@@ -95,6 +99,7 @@ import {
 } from '@/play/playStore';
 import { todayPlan } from '@/play/today-plan';
 import type { PlayTransition } from '@/play/use-play-store';
+import { shownFindName } from '@/play/dive-street-names';
 
 type Commit = (transition: PlayTransition) => boolean;
 
@@ -271,7 +276,7 @@ function GameChip({
         glow={false}
         lined={!selected}
         padded={false}
-        minHeight={36}>
+        minHeight={SHEET.tap}>
         <View style={styles.gameChipRow}>
           {locked ? <MaterialCommunityIcons name="lock" size={12} color={PIXEL.dim} /> : null}
           <PixelLabel color={text} shadowColor={chipShadow(fill)} numberOfLines={1} style={styles.gameChipLabel}>
@@ -285,7 +290,106 @@ function GameChip({
 }
 
 /** v26 — a round being played: which game, at which level, daily or not. */
-export type GameRun = { kind: PetRoundKind; level: Difficulty; daily: boolean };
+export type GameRun = {
+  kind: PetRoundKind;
+  level: Difficulty;
+  daily: boolean;
+  /** M3: no timer, nothing counts (no tokens, care, record or daily); leave with Back. */
+  practice?: boolean;
+};
+
+/**
+ * One mini-game card: levels, best, medals, Play / Daily. Catch the food sits in the Feed sheet (under "? Your pet",
+ * emci 2026-10-16); Tap to train stays in the Play sheet. Each card keeps its own level pick and unlock hint.
+ */
+export function GameCard({
+  g,
+  view,
+  onStart,
+  lastResult = null,
+  lastRound = null,
+  still = false,
+}: {
+  g: Game;
+  view: PlayView;
+  onStart: (run: GameRun) => void;
+  /** The last counted round of THIS game: its result line and score burst show under the card. */
+  lastResult?: string | null;
+  lastRound?: { key: string; score: number; strong: boolean } | null;
+  still?: boolean;
+}) {
+  const pv = view.pet;
+  const [pick, setPick] = useState<Difficulty>('normal');
+  const [hint, setHint] = useState<string | null>(null);
+  // A level picked earlier may have closed again (Reset Divecore): fall back to Normal.
+  const lv = levelUnlocked(pv.records, g, pick) ? pick : 'normal';
+  const rec = pv.records[g][lv];
+  const [b, sv, gd] = MEDAL_SCORES[g][lv];
+  const silverBuff = buffForMedal(g, 'silver');
+  const goldBuff = buffForMedal(g, 'gold');
+  const daily = pv.daily[g];
+  return (
+    <>
+      <PixelFrame streetPiece="panel" align="stretch" glow={false}>
+        <View style={styles.gameCard}>
+          <View style={styles.gameTitleRow}>
+            <PixelLabel numberOfLines={1} style={styles.gameTitle}>{GAME_LABEL[g]}</PixelLabel>
+            <PixelBody size="sm" color={PIXEL.amber} numberOfLines={1}>{pv.ranks[g]}</PixelBody>
+          </View>
+          <View style={styles.chips}>
+            {DIFFICULTIES.map((d) => {
+              const open = levelUnlocked(pv.records, g, d);
+              const r = pv.records[g][d];
+              return (
+                <GameChip
+                  key={d}
+                  label={DIFFICULTY_LABEL[d]}
+                  locked={!open}
+                  medal={r.medal ? MEDAL_ICON[r.medal] : null}
+                  selected={open && lv === d}
+                  onPress={() => {
+                    if (open) {
+                      setPick(d);
+                      setHint(null);
+                    } else setHint(`${GAME_LABEL[g]} · ${DIFFICULTY_LABEL[d]}: ${unlockHint(d)}.`);
+                  }}
+                />
+              );
+            })}
+          </View>
+          <PixelBody size="sm" color={PIXEL.dim}>
+            {`Best on ${DIFFICULTY_LABEL[lv]}: ${rec.best > 0 ? rec.best : '—'} · 🥉 ${b} · 🥈 ${sv} (${silverBuff ? BUFF_LABEL[silverBuff] : ''}) · 🥇 ${gd} (${goldBuff ? BUFF_LABEL[goldBuff] : ''})`}
+          </PixelBody>
+          <View style={styles.buttons}>
+            <PixelButton
+              label={`Play · ${DIFFICULTY_LABEL[lv]}`}
+              variant={g === 'catch' ? 'cyan' : 'amber'}
+              onPress={() => onStart({ kind: g, level: lv, daily: false })}
+              style={styles.shareButton}
+            />
+            <PixelButton
+              label={daily.best > 0 ? `Daily · best ${daily.best}` : 'Daily'}
+              variant="cyan"
+              onPress={() => onStart({ kind: g, level: 'normal', daily: true })}
+              style={styles.shareButton}
+            />
+          </View>
+          <View style={styles.buttons}>
+            <PixelButton
+              label={`Practice · ${DIFFICULTY_LABEL[lv]}`}
+              variant="cyan"
+              onPress={() => onStart({ kind: g, level: lv, daily: false, practice: true })}
+              style={styles.shareButton}
+            />
+          </View>
+        </View>
+      </PixelFrame>
+      {hint ? <PixelBody color={PIXEL.cyan}>{hint}</PixelBody> : null}
+      {lastRound ? <ScoreBurst score={lastRound.score} strong={lastRound.strong} runKey={lastRound.key} animate={!still} /> : null}
+      {lastResult ? <PixelBody color={PIXEL.cyan}>{lastResult}</PixelBody> : null}
+    </>
+  );
+}
 
 export function PlaySheetBody({
   view,
@@ -305,8 +409,6 @@ export function PlaySheetBody({
   onGuide?: () => void;
 }) {
   const pv = view.pet;
-  const [level, setLevel] = useState<Record<Game, Difficulty>>({ catch: 'normal', train: 'normal' });
-  const [hint, setHint] = useState<string | null>(null);
   if (pv.state.stage === 'egg') {
     return (
       <PixelBody>Games start once it hatches. For now, pick what it hatches into in Info.</PixelBody>
@@ -324,74 +426,21 @@ export function PlaySheetBody({
           <PixelHearts value={pv.state.mood} max={PET_METER_MAX} />
         </View>
       </View>
-      <PixelBody numberOfLines={4}>
-        {`Catch the food feeds it (+2 hunger); Tap to train cheers it up (+2 mood) — only if you pass (50%+). +${PET_TOKENS_PER_ROUND} tokens a passed round · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
+      <PixelBody>
+        {`Tap to train cheers it up (+2 mood) — only if you pass (50%+). Catch the food now lives in Feed. +${PET_TOKENS_PER_ROUND} tokens a passed round (+${PET_TOKENS_PER_ROUND_EASY} on Easy) · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
       </PixelBody>
-      {(['catch', 'train'] as const).map((g) => {
-        // A level picked earlier may have closed again (Reset Divecore): fall back to Normal.
-        const lv = levelUnlocked(pv.records, g, level[g]) ? level[g] : 'normal';
-        const rec = pv.records[g][lv];
-        const [b, sv, gd] = MEDAL_SCORES[g][lv];
-        const silverBuff = buffForMedal(g, 'silver');
-        const goldBuff = buffForMedal(g, 'gold');
-        const daily = pv.daily[g];
-        return (
-          <PixelFrame key={g} align="stretch" glow={false}>
-            <View style={styles.gameCard}>
-              <View style={styles.gameTitleRow}>
-                <PixelLabel numberOfLines={1} style={styles.gameTitle}>{GAME_LABEL[g]}</PixelLabel>
-                <PixelBody size="sm" color={PIXEL.amber} numberOfLines={1}>{pv.ranks[g]}</PixelBody>
-              </View>
-              <View style={styles.chips}>
-                {DIFFICULTIES.map((d) => {
-                  const open = levelUnlocked(pv.records, g, d);
-                  const r = pv.records[g][d];
-                  return (
-                    <GameChip
-                      key={d}
-                      label={DIFFICULTY_LABEL[d]}
-                      locked={!open}
-                      medal={r.medal ? MEDAL_ICON[r.medal] : null}
-                      selected={open && lv === d}
-                      onPress={() => {
-                        if (open) {
-                          setLevel((prev) => ({ ...prev, [g]: d }));
-                          setHint(null);
-                        } else setHint(`${GAME_LABEL[g]} · ${DIFFICULTY_LABEL[d]}: ${unlockHint(d)}.`);
-                      }}
-                    />
-                  );
-                })}
-              </View>
-              <PixelBody size="sm" color={PIXEL.dim} numberOfLines={3}>
-                {`Best on ${DIFFICULTY_LABEL[lv]}: ${rec.best > 0 ? rec.best : '—'} · 🥉 ${b} · 🥈 ${sv} (${silverBuff ? BUFF_LABEL[silverBuff] : ''}) · 🥇 ${gd} (${goldBuff ? BUFF_LABEL[goldBuff] : ''})`}
-              </PixelBody>
-              <View style={styles.buttons}>
-                <PixelButton
-                  label={`Play · ${DIFFICULTY_LABEL[lv]}`}
-                  variant={g === 'catch' ? 'cyan' : 'amber'}
-                  onPress={() => onStart({ kind: g, level: lv, daily: false })}
-                  style={styles.shareButton}
-                />
-                <PixelButton
-                  label={daily.best > 0 ? `Daily · best ${daily.best}` : 'Daily'}
-                  variant="cyan"
-                  onPress={() => onStart({ kind: g, level: 'normal', daily: true })}
-                  style={styles.shareButton}
-                />
-              </View>
-            </View>
-          </PixelFrame>
-        );
-      })}
-      {hint ? <PixelBody color={PIXEL.cyan}>{hint}</PixelBody> : null}
+      <GameCard g="train" view={view} onStart={onStart} />
+      <PixelBody>
+        {`Lane dash trains it too (+1 training, +2 mood): step between 3 lanes to catch food and dodge 💣. Same pass rule and token cap.`}
+      </PixelBody>
+      <GameCard g="dash" view={view} onStart={onStart} />
       {lastRound ? (
         <ScoreBurst score={lastRound.score} strong={lastRound.strong} runKey={lastRound.key} animate={!still} />
       ) : null}
       {lastResult ? <PixelBody color={PIXEL.cyan}>{lastResult}</PixelBody> : null}
       {onGuide ? (
-        <Pressable onPress={onGuide} accessibilityRole="button" accessibilityLabel="Mini-games in the Guide">
-          <PixelBody size="sm" color={PIXEL.cyan}>Mini-games in the Guide</PixelBody>
+        <Pressable onPress={onGuide} accessibilityRole="button" accessibilityLabel="Mini-game rules in the Guide">
+          <PixelBody size="sm" color={PIXEL.cyan}>Mini-game rules in the Guide</PixelBody>
         </Pressable>
       ) : null}
     </View>
@@ -444,7 +493,7 @@ export function ExpeditionSheetBody({
         : pv.expedition === 'away'
           ? `Away on a ${tripLabel(pv.expeditionTripMs ?? 0)} trip — back in ${durationLabel(pv.expeditionBackInMs ?? 0)}.`
           : 'Done for today — the next trip (1m) is at midnight.';
-  const noteName = pv.expeditionNote ? findName(pv.expeditionNote) : null;
+  const noteName = pv.expeditionNote ? shownFindName(pv.expeditionNote) : null;
   return (
     <>
       <Text style={styles.body}>{line}</Text>
@@ -491,7 +540,35 @@ export function infoTabs(dev: boolean): { id: InfoTab; label: string }[] {
   return dev ? [...tabs, { id: 'dev', label: 'Dev' }] : tabs;
 }
 
-export function StatusTab({ view, onGuide }: { view: PlayView; onGuide?: (s: GuideSection) => void }) {
+/** One-line label + glyph for each Info section row (step 0l; the sections themselves are unchanged). */
+export const INFO_SECTION_META: Record<InfoTab, { summary: string; icon: ComponentProps<typeof MaterialCommunityIcons>['name'] }> = {
+  status: { summary: 'Stage, hunger, mood, odds', icon: 'heart-pulse' },
+  journal: { summary: 'Stats, Tide, milestones', icon: 'notebook-outline' },
+  book: { summary: 'Logbook and collection', icon: 'book-open-variant' },
+  hall: { summary: 'Kept and released pets', icon: 'trophy-outline' },
+  style: { summary: 'Look, dye, aura, wear', icon: 'palette-outline' },
+  guide: { summary: 'How everything works', icon: 'help-circle-outline' },
+  dev: { summary: 'Test tools', icon: 'wrench-outline' },
+};
+
+function HideoutInfoExtras({ onSettings }: { onSettings?: () => void }) {
+  if (!onSettings) return null;
+  return (
+    <View style={styles.chips}>
+      <NeonChip label="Settings" onPress={onSettings} />
+    </View>
+  );
+}
+
+export function StatusTab({
+  view,
+  onGuide,
+  onSettings,
+}: {
+  view: PlayView;
+  onGuide?: (s: GuideSection) => void;
+  onSettings?: () => void;
+}) {
   const pv = view.pet;
   const pet = pv.state;
   const stageName = PET_STAGE_LABEL[pet.stage];
@@ -559,6 +636,7 @@ export function StatusTab({ view, onGuide }: { view: PlayView; onGuide?: (s: Gui
       <Text style={styles.body}>Right now: {perksNow}</Text>
       {pet.stage !== 'egg' ? <Text style={styles.body}>{stagePowerLine(pv.stagePower)}</Text> : null}
       <BuffLines view={view} />
+      {streetUiOn() ? <HideoutInfoExtras onSettings={onSettings} /> : null}
       {onGuide ? (
         <View style={styles.chips}>
           <GuideLink section="pet" onOpen={onGuide} />
@@ -613,7 +691,7 @@ function LogRow({ id, entry }: { id: string; entry: { depth: number; count: numb
         )}
       </View>
       <View style={styles.flex}>
-        <Text style={styles.logName}>{entry ? findName(id) : '???'}</Text>
+        <Text style={styles.logName}>{entry ? shownFindName(id) : '???'}</Text>
         <Text style={styles.subtleLeft}>
           {entry
             ? `found ×${entry.count} · first at ${entry.depth === 0 ? 'the surface' : `depth ${entry.depth}`}`
@@ -670,24 +748,25 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
   };
   return (
     <>
+      <StickerBook book={view.hideout.state.visitors} circle={view.hideout.state.circle} />
       <DyePanel view={view} commit={commit} />
       {pv.state.shiny ? (
         <Text style={styles.body}>✨ Your shiny keeps its own colour — tints don’t show on it.</Text>
       ) : null}
       <Text style={styles.body}>
-        Tokens: {view.tokens}. Wardrobe · {pv.cosmetics.length}/{COSMETICS.length}. Tints and badges are for
+        Tokens: {view.tokens}. Wardrobe · {pv.cosmetics.filter((id) => cosmeticById(id)?.source !== 'visitor').length}/
+        {COSMETICS.filter((c) => c.source !== 'visitor').length}. Tints and badges are for
         sale; rings come from the Trench and deeper, glows from the Abyss and deeper.
       </Text>
       <View style={styles.wardSlot}>
         <Text style={styles.logName}>Aura</Text>
         <Text style={styles.body}>
-          Wear any you own. Match the sword{pv.auraSlot.element ? ` (${pv.auraSlot.element})` : ''}, tap an element, or pick a hue. Colours are free.
+          Wear any you own. Match the sword{pv.auraSlot.element ? ` (${pv.auraSlot.element})` : ''} or pick a colour. Single colours are free; a two-colour set costs tokens once.
         </Text>
         {auraStyles().map((row) => {
           const wear = pv.auraSlot.worn.find((item) => item.style === row.id);
           const owned = pv.auraSlot.free || pv.auraSlot.owned.includes(row.id);
           const price = auraPrice(row.id, pv.auraSlot.pass);
-          const tints: AuraTint[] = ['sword', ...AURA_COLORS];
           return (
             <View key={row.id} style={styles.auraBlock}>
               <View style={styles.logRow}>
@@ -720,76 +799,31 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
                 )}
               </View>
               {wear ? (
-                <View style={styles.auraBlock}>
-                  <View style={styles.auraColors}>
-                    {tints.map((tint) => {
-                      const on = wear.color === tint;
-                      const hex = tint === 'sword' ? '#F4F7FF' : swordElement(tint)?.color ?? '#888';
-                      return (
-                        <Pressable
-                          key={tint}
-                          accessibilityRole="button"
-                          accessibilityLabel={`${row.name} colour ${auraTintLabel(tint)}`}
-                          accessibilityState={{ selected: on }}
-                          onPress={() => {
-                            if (on) return;
-                            commit((doc, now) => {
-                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, tint);
-                              return res.result.ok ? res.doc : null;
-                            });
-                          }}
-                          style={[styles.swatch, { backgroundColor: hex }, on && styles.swatchOn]}
-                        />
-                      );
-                    })}
-                  </View>
-                  <View style={styles.auraColors}>
-                    {AURA_HUES.map((hue) => {
-                      const parts = auraCustomParts(wear.color);
-                      const on = parts?.hue === hue;
-                      const hex = auraHueHex(hue, 1);
-                      return (
-                        <Pressable
-                          key={hue}
-                          accessibilityRole="button"
-                          accessibilityLabel={`${row.name} hue ${hue}`}
-                          accessibilityState={{ selected: on }}
-                          onPress={() => {
-                            const next = auraHueHex(hue, parts?.hue === hue ? parts.step : 1);
-                            commit((doc, now) => {
-                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, next);
-                              return res.result.ok ? res.doc : null;
-                            });
-                          }}
-                          style={[styles.swatch, { backgroundColor: hex }, on && styles.swatchOn]}
-                        />
-                      );
-                    })}
-                  </View>
-                  <View style={styles.auraColors}>
-                    {AURA_VALUES.map((_, step) => {
-                      const parts = auraCustomParts(wear.color);
-                      const hue = parts?.hue ?? 300;
-                      const hex = auraHueHex(hue, step);
-                      const on = parts?.step === step;
-                      return (
-                        <Pressable
-                          key={step}
-                          accessibilityRole="button"
-                          accessibilityLabel={`${row.name} tone ${step + 1}`}
-                          accessibilityState={{ selected: on }}
-                          onPress={() => {
-                            commit((doc, now) => {
-                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, hex);
-                              return res.result.ok ? res.doc : null;
-                            });
-                          }}
-                          style={[styles.tone, { backgroundColor: hex }, on && styles.swatchOn]}
-                        />
-                      );
-                    })}
-                  </View>
-                </View>
+                <AuraColourPicker
+                  style={row.id}
+                  name={row.name}
+                  tint={wear.color}
+                  sword={pv.auraSlot.element}
+                  mixes={pv.auraSlot.mixes}
+                  free={pv.auraSlot.free}
+                  pass={pv.auraSlot.pass}
+                  onPick={(tint) => {
+                    if (tint === wear.color) return;
+                    let msg = '';
+                    commit((doc, now) => {
+                      const res = setPetAuraColor(doc, now, pv.state.uid, row.id, tint);
+                      msg = res.result.ok
+                        ? res.result.cost > 0
+                          ? `${row.name} ${auraTintLabel(tint)} is on. ${res.result.cost} tokens spent.`
+                          : ''
+                        : res.result.reason === 'tokens'
+                          ? 'Not enough tokens yet.'
+                          : 'Couldn’t change that colour.';
+                      return res.result.ok ? res.doc : null;
+                    });
+                    setNote(msg || null);
+                  }}
+                />
               ) : null}
             </View>
           );
@@ -798,7 +832,8 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
       {COSMETIC_SLOTS.map((slot) => (
         <View key={slot} style={styles.wardSlot}>
           <Text style={styles.logName}>{SLOT_LABEL[slot]}</Text>
-          {COSMETICS.filter((c) => c.slot === slot).map((c) => {
+          {/* A visitor's rare look shows up here once it is yours (the sticker book shows what is still to find). */}
+          {COSMETICS.filter((c) => c.slot === slot && (c.source !== 'visitor' || pv.cosmetics.includes(c.id))).map((c) => {
             const owned = pv.cosmetics.includes(c.id);
             const worn = pv.wear[slot] === c.id;
             return (
@@ -820,7 +855,7 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
                 ) : c.price != null ? (
                   <NeonChip label={`Buy · ${c.price} tokens`} onPress={() => buy(c.id)} />
                 ) : (
-                  <Text style={styles.subtle}>Dive find</Text>
+                  <Text style={styles.subtle}>{c.source === 'visitor' ? VISITOR_UI.lookSource : 'Dive find'}</Text>
                 )}
               </View>
             );
@@ -859,34 +894,31 @@ const styles = StyleSheet.create({
   swatch: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
   tone: { width: 36, height: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
   swatchOn: { borderWidth: 2, borderColor: NEON.cyan },
-  collRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  collLabel: { width: 72, textAlign: 'left' },
-  collForms: { flexDirection: 'row', flex: 1, justifyContent: 'space-between' },
-  collCell: { alignItems: 'center', width: 44 },
-  collName: { fontFamily: Fonts.mono, fontSize: 8, color: NEON.textMuted },
   logName: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },
   stageTitle: {
     fontFamily: Fonts.displayBold,
-    fontSize: 20,
+    fontSize: SHEET.type.heading,
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: NEON.textPrimary,
   },
-  timer: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.cyan },
+  timer: { fontFamily: Fonts.monoBold, fontSize: SHEET.type.body, color: NEON.cyan },
   subtle: { fontFamily: Fonts.mono, fontSize: 12, color: NEON.textMuted, textAlign: 'center' },
   subtleLeft: { fontFamily: Fonts.mono, fontSize: 12, color: NEON.textMuted },
   body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
   result: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.cyan },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  gameCard: { width: '100%', gap: 8 },
+  // The panel art's border is ~28 pt thick; the frame itself only pads 10, so the content gets the rest here.
+  gameCard: { width: '100%', gap: SHEET.gap, paddingHorizontal: 16, paddingVertical: SHEET.pad },
   buttons: { flexDirection: 'row', width: '100%', gap: 8 },
   shareButton: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   playSheet: { width: '100%', gap: 10 },
   meterRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   meterBlock: { gap: 4 },
   gameTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  gameTitle: { flexShrink: 1 },
+  // Departure Mono sits on a 2 pt-per-pixel grid: 20 (not 18) keeps it crisp.
+  gameTitle: { flexShrink: 1, fontSize: 20, lineHeight: 24 },
   gameChip: { flexGrow: 0, flexShrink: 0 },
   gameChipRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4 },
   gameChipLabel: { fontSize: 12, lineHeight: 16 },

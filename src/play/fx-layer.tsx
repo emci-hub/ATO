@@ -21,9 +21,13 @@
 import type { ReactNode } from 'react';
 import { Circle, G, Path } from 'react-native-svg';
 
+import { artSkin } from '@/play/art-skin';
 import type { FxQuality } from '@/play/fx-quality';
 import type { KitHit } from '@/play/kit-combat';
 import { ELEMENT_COLOR, type Element } from '@/play/kits';
+import { SHEET } from '@/art/art';
+import { SheetSprite, sheetFrame } from '@/play/sheet-sprite';
+import { STREETWEAR_META } from '@/play/skin';
 
 export type FxPoint = { x: number; y: number };
 
@@ -47,6 +51,11 @@ export type FxEvent = {
   /** The area is centred on the firing pad (area ultimates), so there is no
    * travelling bolt first. */
   centredOnSource: boolean;
+  /** The Avatar's own weapon hit (sword / melee). Streetwear draws its element
+   * slash at the target instead of a travelling shot. Optional: towers omit it. */
+  melee?: boolean;
+  /** Streetwear sprite set to draw instead of the element's (Turf War T5: the plain Archer's `archer/*`). */
+  skin?: string;
 };
 
 export const FX_LIFE_MS = 280;
@@ -258,8 +267,91 @@ function renderOne(fx: FxEvent, now: number, quality: FxQuality) {
   return <G key={`fx-${fx.id}`}>{parts}</G>;
 }
 
+/* ------------------------------------------------ Streetwear sprite fx ---- */
+/* With the Streetwear art style on, each hit plays the element's packed
+ * PixelLab sprite (one colour AND one shape per element) instead of the vector
+ * strokes: a projectile that turns to face its flight, then the element's hit,
+ * or its burst for an area. Timing is the same `lifeMs` as the vector path, so
+ * nothing about the fight changes; the sprite's frames are spread over it. */
+
+/** Board-unit sizes of the sprite cells (a cell includes its padding). */
+const SW_SHOT_UNITS = 6;
+const SW_HIT_UNITS = 8;
+const SW_HIT_ULT_UNITS = 12;
+/** Burst cell edge per unit of blast radius (the ring art fills ~80% of the cell). */
+const SW_BURST_PER_RADIUS = 2.4;
+/** The weapon slash cell (96px art) on a melee hit, in board units. */
+const SW_SLASH_UNITS = 16;
+
+function swKey(element: Element | null, kind: string, skin?: string): string | null {
+  if (skin && STREETWEAR_META.fx[`${skin}/${kind}`]) return `${skin}/${kind}`;
+  const el = element ?? 'plain';
+  if (STREETWEAR_META.fx[`${el}/${kind}`]) return `${el}/${kind}`;
+  return STREETWEAR_META.fx[`plain/${kind}`] ? `plain/${kind}` : null;
+}
+
+/** One sprite frame at progress `t` (0..1), anchored on `at`, optionally rotated. */
+function swSprite(key: string, t: number, at: FxPoint, size: number, angle: number | null, id: string) {
+  const meta = STREETWEAR_META.fx[key];
+  if (!meta) return null;
+  const n = meta.frames;
+  const i = meta.loop ? Math.floor(t * n * 2) % n : Math.min(n - 1, Math.max(0, Math.floor(t * n)));
+  const [el, beat] = key.split('/');
+  const sheetKey = (SHEET.fx as Record<string, Record<string, string>>)[el]?.[beat];
+  const frame = sheetKey ? sheetFrame(sheetKey, `frame_${String(i).padStart(3, '0')}`) : undefined;
+  if (!frame) return null;
+  const sprite = <SheetSprite key={id} frame={frame} x={at.x - meta.anchorX * size} y={at.y - meta.anchorY * size} size={size} />;
+  return angle == null ? sprite : <G key={id} transform={`rotate(${angle.toFixed(1)} ${at.x.toFixed(1)} ${at.y.toFixed(1)})`}>{sprite}</G>;
+}
+
+function headingDeg(a: FxPoint, b: FxPoint): number {
+  return (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+}
+
+/** The Streetwear sprite version of one effect, or null to fall back to vector. */
+function renderSprite(fx: FxEvent, now: number) {
+  if (fx.behavior === 'chain') return null; // chain lightning keeps its vector bolts
+  const k = Math.max(0, Math.min(1, (now - fx.bornAt) / fx.lifeMs));
+  // A weapon hit: the element's slash sweeps over the target (no travelling bolt),
+  // then the hit pop under it; an area weapon hit still bursts.
+  if (fx.melee && fx.radius <= 0) {
+    const slash = swKey(fx.element, 'slash');
+    const hitKey = swKey(fx.element, 'hit');
+    const target = fx.points[0] ?? fx.center;
+    if (!slash && !hitKey) return null;
+    return (
+      <G key={`fx-${fx.id}`}>
+        {slash ? swSprite(slash, k, target, SW_SLASH_UNITS * (fx.ultimate ? 1.3 : 1), headingDeg(fx.from, target), 'slash') : null}
+        {hitKey && k > 0.35 ? swSprite(hitKey, (k - 0.35) / 0.65, target, SW_HIT_UNITS, null, 'hit') : null}
+      </G>
+    );
+  }
+  const shot = swKey(fx.element, 'shot', fx.skin);
+  const target = fx.radius > 0 ? fx.center : (fx.points[0] ?? fx.center);
+  const travelEnd = fx.radius > 0 ? 0.3 : 0.35;
+  const parts: ReactNode[] = [];
+  if (!fx.centredOnSource && k < travelEnd) {
+    if (!shot) return null;
+    const head = lerp(fx.from, target, k / travelEnd);
+    parts.push(swSprite(shot, k / travelEnd, head, SW_SHOT_UNITS, headingDeg(fx.from, target), 'shot'));
+  } else {
+    const t = fx.centredOnSource ? k : (k - travelEnd) / (1 - travelEnd);
+    if (fx.radius > 0) {
+      const burst = swKey(fx.element, 'burst');
+      if (!burst) return null;
+      parts.push(swSprite(burst, t, target, fx.radius * SW_BURST_PER_RADIUS, null, 'burst'));
+    } else {
+      const hit = swKey(fx.element, 'hit', fx.skin);
+      if (!hit) return null;
+      parts.push(swSprite(hit, t, target, fx.ultimate ? SW_HIT_ULT_UNITS : SW_HIT_UNITS, null, 'hit'));
+    }
+  }
+  return <G key={`fx-${fx.id}`}>{parts}</G>;
+}
+
 /** All live effects. The caller prunes expired ones and enforces the cap. */
 export function FxLayer({ events, now, quality }: { events: readonly FxEvent[]; now: number; quality: FxQuality }) {
   if (quality === 'off' || events.length === 0) return null;
-  return <G>{events.map((fx) => renderOne(fx, now, quality))}</G>;
+  const sprites = artSkin() === 'streetwear';
+  return <G>{events.map((fx) => (sprites ? renderSprite(fx, now) : null) ?? renderOne(fx, now, quality))}</G>;
 }

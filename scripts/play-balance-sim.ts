@@ -22,7 +22,17 @@
  *
  * Hero towers fight with their kits (EFFECTS_PLAN step 4), so the report
  * also compares all 16 heroes: "Mixed + 2 of this hero" over every wave at
- * cycle 0. The "+2 hero towers" column uses Archangel.
+ * cycle 0. The "+2 hero towers" column uses Archangel. Hero towers cost 40
+ * scrap to place since Divecore finish step 6 (they go down first when
+ * affordable; a kept board puts them back free).
+ *
+ * Turf team (Divecore finish step 6, 2026-10-19): the AI helper runs through
+ * the real engine (`placeTurfTeam`, standing at `helperFollowSpot` beside the
+ * parked leader) — 20 dmg, range 15, leash 15, its skill at 6 s then every
+ * 14 s, boss dazes with the 11 s daze-proof. The "average helper" is the
+ * median of all 16 heroes as helper (common grade, 2★, no gear). Gear: four
+ * average Powers on the leader (board wave_power bucket) and four on the
+ * helper (its own bucket, `TurfHelperSpec.gearPower`), unmatched.
  *
  * Run: npm run sim:balance   (writes games/grove/BALANCE_REPORT.md)
  */
@@ -40,6 +50,7 @@ import {
   boardLayoutOf,
   placeBoundBoss,
   placeTower,
+  placeTurfTeam,
   restoreBoardLayout,
   puffPosition,
   stepDefendLive,
@@ -57,6 +68,8 @@ import { kitLabel, type Element } from '../src/play/kits';
 import { PET_BRANCH_POUNCE, PET_POUNCE_BASE, PET_POUNCE_RADIUS, PET_REBIRTH_CAP } from '../src/play/pet';
 import { BUFF_USES, pumpedPounce } from '../src/play/play-buffs';
 import { getTune, setKnob } from '../src/play/tune';
+import { helperFollowSpot } from '../src/play/turf-team';
+import type { Grade } from '../src/play/pet-eggs';
 import rawItems from '../src/play/data/items.json';
 import { bucketMultiplier } from '../src/play/playStore';
 
@@ -83,14 +96,56 @@ type Strategy = {
   rebirthBonus?: number;
   /** Gear wave_power bucket (1 = no gear) — multiplies the tested damage. */
   gearMult?: number;
+  /** The Turf team helper (step 6). `heroId` absent = the average helper (median of the 16). */
+  helper?: { heroId?: string; stars: number; grade: Grade; gearPower: number };
 };
+
+// Four average Powers (items.json), unmatched, as one wave_power bucket — the
+// "average gear" the leader and the helper each wear in the gear columns.
+type RawMult = { stat: string; value: number } | null;
+type RawItem = { core: { kind: string }; mult_a: RawMult; mult_b: RawMult };
+const itemList = (Array.isArray(rawItems) ? rawItems : Object.values(rawItems)) as unknown as RawItem[];
+const powers = itemList.filter((item) => item.core.kind === 'power');
+const avgWavePower =
+  powers
+    .flatMap((item) => [item.mult_a, item.mult_b])
+    .filter((m): m is { stat: string; value: number } => m != null && m.stat === 'wave_power')
+    .reduce((acc, m, _i, arr) => acc + m.value / arr.length, 0);
+const gearBonus = getTune().gearMatchBonus;
+const bucketFor = (matched: number) => {
+  const sum = avgWavePower * (4 - matched) + avgWavePower * (1 + gearBonus) * matched;
+  return bucketMultiplier('wave_power', {
+    wave_power: sum,
+    tower_speed: 0,
+    token_earn: 0,
+    dive_luck: 0,
+    research_yield: 0,
+  });
+};
+const AVG_GEAR = bucketFor(0);
+
+/** The average helper: common grade, 2★ (one duplicate), at the follow spot. */
+const AVG_HELPER = { stars: 2, grade: 'common' as Grade, gearPower: 1 };
+/** Set once the helper ranking has run (the median hero as helper). */
+let avgHelperId = 'kitsune';
+
+const MIXED: TowerKind[] = ['archer', 'vine', 'crystal'];
 const STRATEGIES: Strategy[] = [
   { id: 'avatar', label: 'Avatar only', towers: [], heroTowers: 0 },
   { id: 'archer', label: 'Archers', towers: ['archer'], heroTowers: 0 },
   { id: 'vine', label: 'Vines', towers: ['vine'], heroTowers: 0 },
   { id: 'crystal', label: 'Crystals', towers: ['crystal'], heroTowers: 0 },
-  { id: 'mixed', label: 'Mixed', towers: ['archer', 'vine', 'crystal'], heroTowers: 0 },
-  { id: 'mixed+heroes', label: 'Mixed + 2 hero towers', towers: ['archer', 'vine', 'crystal'], heroTowers: 2 },
+  { id: 'mixed', label: 'Mixed', towers: MIXED, heroTowers: 0 },
+  { id: 'mixed+heroes', label: 'Mixed + 2 hero towers', towers: MIXED, heroTowers: 2 },
+  { id: 'mixed+helper', label: 'Mixed + helper', towers: MIXED, heroTowers: 0, helper: AVG_HELPER },
+  {
+    id: 'mixed+helper+gear',
+    label: 'Mixed + helper + gear',
+    towers: MIXED,
+    heroTowers: 0,
+    gearMult: AVG_GEAR,
+    helper: { ...AVG_HELPER, gearPower: AVG_GEAR },
+  },
 ];
 
 /** Conquered cycles to test (cycle power = 1 + cycles × tune.cyclePowerStep). */
@@ -125,6 +180,8 @@ const AVATAR_SPOT = PATH_SAMPLES.reduce(
   },
   { p: PATH_SAMPLES[0], score: -1 },
 ).p;
+/** Where the screen stands the helper at Call wave: beside the parked leader. */
+const HELPER_SPOT = helperFollowSpot(map, AVATAR_SPOT);
 
 type RunResult = {
   leaked: number;
@@ -137,6 +194,10 @@ type RunResult = {
   earned: number;
   /** Scrap left after setup spending (what a lost restage returns). */
   setupLeft: number;
+  /** Boss swings that dazed the helper. */
+  dazes: number;
+  /** Sim ms the helper spent down or getting up. */
+  downMs: number;
 };
 
 /** Campaign carry-over: the previous wave's layout (restored free) + banked
@@ -165,6 +226,14 @@ function simulate(
         : s.scrap + carry.bank,
     };
   }
+  if (strategy.helper) {
+    const h = strategy.helper;
+    s = placeTurfTeam(
+      s,
+      [{ slot: 0, heroId: h.heroId ?? avgHelperId, x: HELPER_SPOT.x, y: HELPER_SPOT.y, stars: h.stars, grade: h.grade, gearPower: h.gearPower }],
+      null,
+    );
+  }
   const buckets = {
     wavePower: damageMult * (strategy.gearMult ?? 1),
     towerSpeed: 1,
@@ -174,7 +243,7 @@ function simulate(
     rebirthBonus: strategy.rebirthBonus ?? 0,
   };
 
-  // Hero towers first (free), on the pads a 20-range tower covers best.
+  // Hero towers first when affordable (40 scrap each since step 6), on the pads a 20-range tower covers best.
   const heroPads = rankedPads(HERO_TOWER_STATS.range).slice(0, strategy.heroTowers);
   for (const pad of heroPads) s = placeBoundBoss(s, pad, strategy.heroId ?? HERO_ID, 1) ?? s;
 
@@ -205,6 +274,8 @@ function simulate(
 
   let leaked = 0;
   let t = 0;
+  let dazes = 0;
+  let downMs = 0;
   // Build in setup only — pads lock while a wave runs (emci, 2026-09-26).
   spend();
   const startScrap = s.scrap;
@@ -213,6 +284,8 @@ function simulate(
     const step = stepDefendLive(s, DEFEND_TICK_MS, buckets, AVATAR_SPOT);
     s = step.state;
     t += DEFEND_TICK_MS;
+    dazes += step.dazed.length;
+    if (s.helpers.some((h) => h.dazedMs > 0 || h.getUpMs > 0)) downMs += DEFEND_TICK_MS;
     if (step.leak) {
       const out = s.puffs.filter((p) => p.dist >= 1).length;
       leaked += out;
@@ -239,6 +312,8 @@ function simulate(
     endLayout,
     earned: Math.max(0, s.scrap - startScrap),
     setupLeft: startScrap,
+    dazes,
+    downMs,
   };
 }
 
@@ -275,6 +350,27 @@ const results = new Map<string, Cell>();
 const key = (c: number, w: { phase: Phase; wave: number }, s: Strategy) => `${c}|${w.phase}${w.wave}|${s.id}`;
 
 const started = Date.now();
+// Helper ranking (cycle 0, fresh board): Mixed towers + each hero as the helper
+// (common, 2★, no gear). The median hero is the "average helper" every other
+// helper column uses, so the report never leans on the best or worst kit.
+const helperRows = allHeroes()
+  .map((hero) => {
+    const strat: Strategy = {
+      id: `helper:${hero.id}`,
+      label: hero.name,
+      towers: MIXED,
+      heroTowers: 0,
+      helper: { ...AVG_HELPER, heroId: hero.id },
+    };
+    const needs = WAVES.map((w) => damageNeeded(w.phase, w.wave, strat, 1));
+    const clearable = needs.filter((n): n is number => n != null);
+    const avg = clearable.length ? clearable.reduce((a, b) => a + b, 0) / clearable.length : Infinity;
+    return { hero, avg, unclearable: needs.length - clearable.length };
+  })
+  .sort((a, b) => a.unclearable - b.unclearable || a.avg - b.avg || a.hero.id.localeCompare(b.hero.id));
+avgHelperId = helperRows[Math.floor((helperRows.length - 1) / 2)].hero.id;
+const avgHelperName = helperRows.find((r) => r.hero.id === avgHelperId)!.hero.name;
+
 for (const cycles of CYCLES) {
   const cp = 1 + cycles * step;
   for (const w of WAVES) {
@@ -312,15 +408,29 @@ const heroRows = allHeroes().map((hero) => {
 // since saved layouts. A wave's "damage needed" is measured from the board the
 // ×1 run actually had going into it.
 const campaignStrats = STRATEGIES.filter((st) => st.id === 'mixed' || st.id === 'mixed+heroes');
+const helperStrats = STRATEGIES.filter((st) => st.id === 'mixed+helper' || st.id === 'mixed+helper+gear');
 // Shipped rule (emci, 2026-09-27): start scrap only on an empty board; a kept
 // board runs on the whole balance banked from the last win. The old rule (+start
-// scrap every wave on top of a free kept board) stays for comparison.
-const campaignVariants = campaignStrats.flatMap((strat) => [
-  { strat, noStartScrap: true, label: `${strat.label} (shipped rule)` },
-  { strat, noStartScrap: false, label: `${strat.label}, old rule: start scrap every wave` },
-]);
+// scrap every wave on top of a free kept board) stays for comparison. The helper
+// boards (step 6) run the shipped rule only.
+const campaignVariants = [
+  ...campaignStrats.flatMap((strat) => [
+    { strat, noStartScrap: true, label: `${strat.label} (shipped rule)` },
+    { strat, noStartScrap: false, label: `${strat.label}, old rule: start scrap every wave` },
+  ]),
+  ...helperStrats.map((strat) => ({ strat, noStartScrap: true, label: `${strat.label} (shipped rule)` })),
+];
 const campaign = campaignVariants.map(({ strat, noStartScrap, label }) => {
-  const rows: { w: (typeof WAVES)[number]; fresh: number | null; kept: number | null; towers: number; avgLevel: number }[] = [];
+  const rows: {
+    w: (typeof WAVES)[number];
+    fresh: number | null;
+    kept: number | null;
+    towers: number;
+    avgLevel: number;
+    dazes: number;
+    downMs: number;
+    clearMs: number;
+  }[] = [];
   let carry: Carry = null;
   let lastPhase: Phase | null = null;
   for (const w of WAVES) {
@@ -333,6 +443,9 @@ const campaign = campaignVariants.map(({ strat, noStartScrap, label }) => {
       kept: damageNeeded(w.phase, w.wave, strat, 1, carry),
       towers: run.towersBuilt,
       avgLevel: run.avgLevel,
+      dazes: run.dazes,
+      downMs: run.downMs,
+      clearMs: run.clearSec * 1000,
     });
     // A lost wave keeps the board but banks nothing (only wins bank scrap).
     // Shipped rule: bank = this wave's kill scrap. The variant has no fresh
@@ -358,12 +471,15 @@ const campaign = campaignVariants.map(({ strat, noStartScrap, label }) => {
 const ELEMENTAL_WAVES = WAVES.filter((w) => w.phase === 'main' && w.wave >= 4);
 const NEUTRAL_WAVES = WAVES.filter((w) => !(w.phase === 'main' && w.wave >= 4));
 const LEGEND_ELEMENTS: Element[] = ['ember', 'tide', 'spark', 'root', 'void'];
-const legendStrat = (legend: Element, heroId = HERO_ID, level = 1): Strategy => ({
-  id: `legend:${legend}:${heroId}:${level}`,
+// Board = "Mixed + helper" (since step 6 follow-up, 2026-10-21): the board a player fields once hero
+// towers cost 40 scrap. `heroId` absent = the average helper; the helper takes the Legend's element
+// and the hero affinity through the real engine (`defend.ts` helper power).
+const legendStrat = (legend: Element, heroId?: string, level = 1): Strategy => ({
+  id: `legend:${legend}:${heroId ?? 'avg'}:${level}`,
   label: legend,
-  towers: ['archer', 'vine', 'crystal'],
-  heroTowers: 2,
-  heroId,
+  towers: MIXED,
+  heroTowers: 0,
+  helper: heroId ? { ...AVG_HELPER, heroId } : AVG_HELPER,
   legend,
   legendLevel: level,
 });
@@ -392,40 +508,22 @@ const affinityRows = allHeroes().map((hero) => {
 // Gear match: a full loadout of four average-strength Powers (from items.json),
 // then the same loadout with ONE / ALL FOUR pieces matching the Legend. The
 // wave_power bucket feeds board damage directly, so the board-damage change is
-// the bucket ratio.
-type RawMult = { stat: string; value: number } | null;
-type RawItem = { core: { kind: string }; mult_a: RawMult; mult_b: RawMult };
-const itemList = (Array.isArray(rawItems) ? rawItems : Object.values(rawItems)) as unknown as RawItem[];
-const powers = itemList.filter((item) => item.core.kind === 'power');
-const avgWavePower =
-  powers
-    .flatMap((item) => [item.mult_a, item.mult_b])
-    .filter((m): m is { stat: string; value: number } => m != null && m.stat === 'wave_power')
-    .reduce((acc, m, _i, arr) => acc + m.value / arr.length, 0);
-const gearBonus = getTune().gearMatchBonus;
-const bucketFor = (matched: number) => {
-  const sum = avgWavePower * (4 - matched) + avgWavePower * (1 + gearBonus) * matched;
-  return bucketMultiplier('wave_power', {
-    wave_power: sum,
-    tower_speed: 0,
-    token_earn: 0,
-    dive_luck: 0,
-    research_yield: 0,
-  });
-};
-const gearNone = bucketFor(0);
+// the bucket ratio. (`bucketFor` / `avgWavePower` are defined at the top.)
+const gearNone = AVG_GEAR;
 const gearOne = bucketFor(1);
 const gearAll = bucketFor(4);
 const resistWave = ELEMENTAL_WAVES[0];
 const resistEl = waveDefFor(resistWave.phase, resistWave.wave)?.element as Element;
-const resistLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, HERO_ID, 1), 1);
-const resistLv20 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, HERO_ID, 20), 1);
-const neutralLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat('void', HERO_ID, 1), 1);
+const resistLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, undefined, 1), 1);
+const resistLv20 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, undefined, 20), 1);
+const neutralLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat('void', undefined, 1), 1);
 
 // Pet (v20, 2026-09-29): the once-per-wave pounce per stage (Standard form,
-// and a Battle God), on the "Mixed + 2 hero towers" board over every wave.
-// Target: about 3-8% less damage needed — helps, never mandatory.
-const mixedHeroes = STRATEGIES.find((st) => st.id === 'mixed+heroes') as Strategy;
+// and a Battle God), over every wave. Measured on the "Mixed + helper" board
+// since step 6 (2026-10-19): with hero towers at 40 scrap, "Mixed + 2 hero
+// towers" spends the whole 80 start scrap on the two heroes and no longer is the
+// board a player fields. Target: about 3-8% less damage needed — helps, never mandatory.
+const petBoard = STRATEGIES.find((st) => st.id === 'mixed+helper') as Strategy;
 const perWaveGain = (base: Strategy, boosted: Strategy, waves: typeof WAVES) => {
   const ratios: number[] = [];
   for (const w of waves) {
@@ -441,7 +539,7 @@ const petRows = [
   { label: 'god (battle)', base: PET_POUNCE_BASE.god * PET_BRANCH_POUNCE.battle },
 ].map((row) => ({
   ...row,
-  gain: perWaveGain(mixedHeroes, { ...mixedHeroes, id: `pet:${row.label}`, petBase: row.base }, WAVES) - 1,
+  gain: perWaveGain(petBoard, { ...petBoard, id: `pet:${row.label}`, petBase: row.base }, WAVES) - 1,
 }));
 // v26 Pumped (Train Gold): pounce ×1.25, capped at PET_POUNCE_CAP — the pet's
 // in-run TD help (pounce + buff) must stay inside the 3-8% band. A capped-out
@@ -453,7 +551,7 @@ const pumpedRows = petRows.map((row) => {
     base: Number(pumped.pounce.toFixed(2)),
     gain: pumped.pounce === row.base
       ? row.gain
-      : perWaveGain(mixedHeroes, { ...mixedHeroes, id: `pump:${row.label}`, petBase: pumped.pounce }, WAVES) - 1,
+      : perWaveGain(petBoard, { ...petBoard, id: `pump:${row.label}`, petBase: pumped.pounce }, WAVES) - 1,
   };
 });
 
@@ -530,7 +628,7 @@ lines.push(`Generated by \`npm run sim:balance\` on ${new Date().toISOString().s
 lines.push('');
 lines.push('**How to read a cell:** `✓` = a no-gear player clears it; `✗3` = 3 creeps leak at ×1 damage (the wave is lost). The number is the **damage needed** to clear with zero leaks: under 1× is comfortable, 1×–' + gearCap.toFixed(1) + '× needs gear, over ' + gearCap.toFixed(1) + '× is beyond the gear soft cap.');
 lines.push('');
-lines.push('**Player model:** default ATO board only; fresh board each wave with ' + getTune().startScrap + ' scrap (the Campaign section keeps boards instead); building happens in setup only — pads lock during a wave; towers on the pads covering the most path; setup scrap spent in full (build to ' + MAX_TOWERS + ', then upgrade); Avatar parked at the best path spot, never casts its skill; no gear, no type match, no Avatar stars. Hero towers all share one stat block today, so one hero stands in for all 16 until effects step 4.');
+lines.push('**Player model:** default ATO board only; fresh board each wave with ' + getTune().startScrap + ' scrap (the Campaign section keeps boards instead); building happens in setup only — pads lock during a wave; towers on the pads covering the most path; setup scrap spent in full (build to ' + MAX_TOWERS + ', then upgrade); Avatar parked at the best path spot, never casts its skill; no gear, no type match, no Avatar stars (except the gear columns). Hero towers cost ' + HERO_TOWER_STATS.placeCost + ' scrap and go down first when affordable (Archangel stands in). **Turf team:** the helper columns put one AI helper on the board through the real engine — the average helper is ' + avgHelperName + ' (the median of all 16 heroes as helper), common grade, 2★, standing beside the leader at Call wave; "+ gear" = four average Powers, unmatched, on the leader (board ×' + AVG_GEAR.toFixed(3) + ') and four on the helper (its own ×' + AVG_GEAR.toFixed(3) + ').');
 lines.push('');
 
 for (const cycles of CYCLES) {
@@ -567,6 +665,69 @@ for (let i = 1; i < WAVES.length; i += 1) {
   if (cur < prev - 0.1) dips.push(`${waveName(WAVES[i])} (${fmtNeed(cur)}) is easier than ${waveName(WAVES[i - 1])} (${fmtNeed(prev)})`);
 }
 findings.push(dips.length ? `- **Difficulty dips (cycle 0, Mixed):** ${dips.join('; ')}.` : '- **Difficulty climbs smoothly** wave to wave (cycle 0, Mixed).');
+
+// Step 6 targets (Divecore finish roadmap, 2026-10-19): the curve a real player
+// meets is Mixed towers + the average helper.
+const helperStrat = STRATEGIES.find((s) => s.id === 'mixed+helper')!;
+const helperDips: string[] = [];
+for (let i = 1; i < WAVES.length; i += 1) {
+  if (WAVES[i].phase !== WAVES[i - 1].phase) continue;
+  const prev = results.get(key(0, WAVES[i - 1], helperStrat))!.need ?? 99;
+  const cur = results.get(key(0, WAVES[i], helperStrat))!.need ?? 99;
+  if (cur < prev - 0.1) helperDips.push(`${waveName(WAVES[i])} (${fmtNeed(cur)}) is easier than ${waveName(WAVES[i - 1])} (${fmtNeed(prev)})`);
+}
+findings.push(
+  helperDips.length
+    ? `- **Curve with the average helper (cycle 0, fresh board): dips** — ${helperDips.join('; ')}.`
+    : '- **Curve with the average helper (cycle 0, fresh board) climbs smoothly:** no wave is more than 0.1× easier than the one before it.',
+);
+const keptHelper = campaign.find((c) => c.strat.id === 'mixed+helper')!;
+const keptRow = (phase: Phase, wave: number) => keptHelper.rows.find((r) => r.w.phase === phase && r.w.wave === wave)!;
+const t4 = keptRow('trial', 4);
+const t5 = keptRow('trial', 5);
+const SEARCH_STEP = 0.02;
+const trialOk = (a: number | null, b: number | null) => a != null && b != null && a <= b + SEARCH_STEP;
+findings.push(
+  `- **Trial 4 vs Trial 5 (average helper):** fresh board ${fmtNeed(t4.fresh)} vs ${fmtNeed(t5.fresh)}, kept board ${fmtNeed(t4.kept)} vs ${fmtNeed(t5.kept)} — ` +
+    (trialOk(t4.fresh, t5.fresh) && trialOk(t4.kept, t5.kept)
+      ? `Trial 4 never needs more than the boss wave after it (within the ±${SEARCH_STEP} search step).`
+      : 'Trial 4 still needs more than Trial 5; retune.'),
+);
+const mainTargets = [4, 7, 9, 10].map((wave) => keptRow('main', wave));
+const overCap = mainTargets.filter((r) => (r.kept ?? 99) > gearCap);
+findings.push(
+  `- **Main 4 / 7 / 9 / 10, kept board + average helper:** ${mainTargets.map((r) => `${waveName(r.w)} ${fmtNeed(r.kept)}`).join(', ')} — ` +
+    (overCap.length ? `beyond the ×${gearCap.toFixed(1)} gear cap: ${overCap.map((r) => waveName(r.w)).join(', ')}.` : `all within ×${gearCap.toFixed(1)}.`),
+);
+const keptAvg = (id: string) => {
+  const c = campaign.find((x) => x.strat.id === id && x.label.includes('shipped'))!;
+  const vals = c.rows.map((r) => r.kept).filter((n): n is number => n != null);
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+};
+const freshAvg = (id: string) => {
+  const s = STRATEGIES.find((x) => x.id === id)!;
+  const vals = WAVES.map((w) => results.get(key(0, w, s))!.need).filter((n): n is number => n != null);
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+};
+findings.push(
+  `- **Hero towers (${HERO_TOWER_STATS.placeCost} scrap each):** Mixed + 2 hero towers needs ${freshAvg('mixed+heroes').toFixed(2)}× on a fresh board / ${keptAvg('mixed+heroes').toFixed(2)}× kept, ` +
+    `Mixed alone ${freshAvg('mixed').toFixed(2)}× / ${keptAvg('mixed').toFixed(2)}×, Mixed + helper ${freshAvg('mixed+helper').toFixed(2)}× / ${keptAvg('mixed+helper').toFixed(2)}× — ` +
+    `hero towers are no longer free and are ×${(keptAvg('mixed') / keptAvg('mixed+heroes')).toFixed(2)} stronger than plain towers on a kept board ` +
+    `(×${(freshAvg('mixed') / freshAvg('mixed+heroes')).toFixed(2)} fresh, was ×2.55 while free): still the best buy per scrap, no longer the dominant one. ` +
+    'The free helper stacks with either.',
+);
+const bossRows = keptHelper.rows.filter((r) => waveDefFor(r.w.phase, r.w.wave)?.groups.some((g) => g.role === 'boss'));
+findings.push(
+  `- **Helper vs bosses (11 s daze-proof, kept board):** ${bossRows
+    .map((r) => `${waveName(r.w)} ${r.dazes} daze${r.dazes === 1 ? '' : 's'}, down ${(r.downMs / 1000).toFixed(1)} s of ${(r.clearMs / 1000).toFixed(1)} s`)
+    .join('; ')}.`,
+);
+const helperAvgs = helperRows.filter((r) => Number.isFinite(r.avg)).map((r) => r.avg);
+findings.push(
+  `- **Helpers (cycle 0, Mixed + the hero as helper, fresh):** strongest ${helperRows[0].hero.name} ${helperRows[0].avg.toFixed(2)}×, ` +
+    `average ${avgHelperName} ${helperRows.find((r) => r.hero.id === avgHelperId)!.avg.toFixed(2)}×, weakest ${helperRows[helperRows.length - 1].hero.name} ` +
+    `${helperRows[helperRows.length - 1].avg.toFixed(2)}× — a ${(Math.max(...helperAvgs) / Math.min(...helperAvgs)).toFixed(2)}× spread.`,
+);
 // Strategy ranking by average damage needed at cycle 0, over the waves it can
 // clear at all; waves that still leak at 8× are counted separately, not
 // averaged in as a made-up number.
@@ -609,9 +770,31 @@ for (const r of heroRows) {
 }
 lines.push('');
 
-lines.push('## Legends (cycle 0, Mixed + 2 Archangel)');
+lines.push('## Turf team helper (cycle 0, Mixed towers + the hero as helper, fresh board)');
+lines.push('');
+lines.push(`Common grade, 2★, no gear. Lower = stronger. The median row (${avgHelperName}) is the "average helper" in every helper column.`);
+lines.push('');
+lines.push('| Helper | Kit | Avg damage needed |');
+lines.push('|---|---|---|');
+for (const r of helperRows) {
+  lines.push(
+    `| ${r.hero.id === avgHelperId ? `**${r.hero.name}** (average)` : r.hero.name} | ${kitLabel(r.hero.kit)} | ` +
+      `${Number.isFinite(r.avg) ? `${r.avg.toFixed(2)}×` : '—'}${r.unclearable ? ` (+${r.unclearable} unclearable)` : ''} |`,
+  );
+}
+lines.push('');
+lines.push('### Helper vs bosses (Mixed + average helper, kept board, ×1 run)');
+lines.push('');
+lines.push('| Wave | Dazes | Down (s) | Wave length (s) |');
+lines.push('|---|---|---|---|');
+for (const r of bossRows) lines.push(`| ${waveName(r.w)} | ${r.dazes} | ${(r.downMs / 1000).toFixed(1)} | ${(r.clearMs / 1000).toFixed(1)} |`);
+lines.push('');
+
+lines.push('## Legends (cycle 0, Mixed + average helper)');
 lines.push('');
 lines.push('Damage needed on each elemental stage with each Legend at Lv1. Lower = better; the best Legend for a stage is the one its element is weak to.');
+lines.push('');
+lines.push('Note (step 6 follow-up): this section, affinity and the stacked-boost table use the "Mixed + helper" board (the average helper; the affinity and stacked tables put the named hero in the helper slot). They used "Mixed + 2 hero towers" until now, so these numbers are not comparable with reports before this date.');
 lines.push('');
 lines.push(`| Stage | Element | ${LEGEND_ELEMENTS.map((e) => e).join(' | ')} |`);
 lines.push(`|---|---|${LEGEND_ELEMENTS.map(() => '---').join('|')}|`);
@@ -661,7 +844,7 @@ findings.push(
 );
 if (resistLv1 != null && resistLv20 != null && neutralLv1 != null) {
   findings.push(
-    `- **Resisted stage (${waveName(resistWave)}, ${resistEl}):** a Lv1 ${resistEl} Legend needs ${resistLv1.toFixed(2)}×, a Lv20 one ${resistLv20.toFixed(2)}× (neutral Void: ${neutralLv1.toFixed(2)}×) — levelling recovers part of the penalty but never erases it.`,
+    `- **Resisted stage (${waveName(resistWave)}, ${resistEl}):** a Lv1 ${resistEl} Legend needs ${resistLv1.toFixed(2)}×, a Lv20 one ${resistLv20.toFixed(2)}× (neutral Void: ${neutralLv1.toFixed(2)}×) — ${resistLv1 > neutralLv1 ? 'levelling recovers part of the penalty but never erases it' : 'on this board a Lv1 resisted Legend is no worse than neutral (the helper board is forgiving), and levelling widens the lead'}.`,
   );
 }
 
@@ -690,7 +873,7 @@ for (const c of campaign) {
 
 lines.push('## Pet (v20)');
 lines.push('');
-lines.push('Once-per-wave pounce on the "Mixed + 2 hero towers" board, every wave, cycle 0. Gain = average per-wave drop in damage needed.');
+lines.push('Once-per-wave pounce on the "Mixed + helper" board (since step 6; it was "Mixed + 2 hero towers" while hero towers were free), every wave, cycle 0. Gain = average per-wave drop in damage needed.');
 lines.push('');
 lines.push('| Pet | Pounce base | Less damage needed |');
 lines.push('|---|---|---|');

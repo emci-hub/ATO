@@ -16,7 +16,7 @@ import { EXPEDITION_NOTICE_MIN_MS } from './expedition-ladder';
 import { PET_STAGE_MS, petReminderTarget, type PetState } from './pet';
 import { chargesNoticeAt, deferForQuiet, type NotifKind, type PlaySettings } from './play-settings';
 
-export type PlannedNotice = { kind: NotifKind; at: number; title: string; body: string };
+export type PlannedNotice = { kind: NotifKind; at: number; title: string; body: string; room?: string };
 
 /** How far out a "still true if you haven't come back" nudge sits. */
 const NUDGE_MS = 60 * 60 * 1000;
@@ -41,6 +41,9 @@ export type NoticeInput = {
   tideDaysHeld?: number;
   /** v28 — the egg picker is up and the next egg is free. */
   freeEggsReady?: boolean;
+  /** v33 — a Hideout room build in progress (counted remaining ms). */
+  buildRoom?: string | null;
+  buildRemainingMs?: number | null;
 };
 
 /** Every notice to schedule right now (after quiet hours). */
@@ -56,7 +59,7 @@ export function planPlayNotices(input: NoticeInput): PlannedNotice[] {
         kind: 'hunger',
         at: quiet(at),
         title: `${name} is getting hungry`,
-        body: 'A cleared wave, the pantry or a round of Catch the food will fill it up.',
+        body: 'A cleared wave, the pantry or a round of Catch the food (in Feed) will fill it up.',
       });
     }
   }
@@ -111,7 +114,7 @@ export function planPlayNotices(input: NoticeInput): PlannedNotice[] {
       kind: 'tide',
       at: quiet(now + NUDGE_MS),
       title: 'Tide Pass: last day',
-      body: 'Legendary progress ×2 ends after today. Days you skip are not used.',
+      body: 'Legendary progress ×2 ends after today. Your days wait for you.',
     });
   }
   if (settings.notif.eggs_ready && input.freeEggsReady) {
@@ -120,6 +123,17 @@ export function planPlayNotices(input: NoticeInput): PlannedNotice[] {
       at: quiet(now + NUDGE_MS),
       title: 'Free eggs ready',
       body: 'Today’s free eggs are waiting in the Pet room.',
+    });
+  }
+
+  if (settings.notif.build && input.buildRoom && input.buildRemainingMs != null && input.buildRemainingMs > 5_000) {
+    const room = input.buildRoom;
+    out.push({
+      kind: 'build',
+      room,
+      at: quiet(now + input.buildRemainingMs),
+      title: `${room[0]?.toUpperCase()}${room.slice(1)} is ready`,
+      body: 'The scaffold is down — open the Hideout to go in.',
     });
   }
 

@@ -1,0 +1,28 @@
+{
+  "sheets/streetwear/board/ato": {
+    "sheet": "sheets/streetwear/board/atlas.png",
+    "sheetW": 512,
+    "sheetH": 1025,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      }
+    }
+  },
+  "sheets/streetwear/board/neon-maze": {
+    "sheet": "sheets/streetwear/board/atlas.png",
+    "sheetW": 512,
+    "sheetH": 1025,
+    "frames": {
+      "img": {
+        "x": 0,
+        "y": 513,
+        "w": 512,
+        "h": 512
+      }
+    }
+  }
+}

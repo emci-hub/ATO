@@ -6,6 +6,7 @@ import { Pressable, TextInput } from 'react-native';
 import { AuthAppleBlock } from '@/components/auth-apple-block';
 import { AuthOtpCodeCard } from '@/components/auth-otp-code';
 import { AuthScaffold, authStyles } from '@/components/auth-scaffold';
+import { LegalLinks } from '@/components/legal-links';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
@@ -154,6 +155,7 @@ export default function SignUpScreen() {
                   setError(null);
                 }}
                 placeholder="Invite code"
+                accessibilityLabel="Invite code"
                 placeholderTextColor={theme.textSecondary}
                 autoCapitalize="characters"
                 autoCorrect={false}
@@ -172,6 +174,7 @@ export default function SignUpScreen() {
                 setError(null);
               }}
               placeholder="you@example.com"
+              accessibilityLabel="Email address"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -193,6 +196,8 @@ export default function SignUpScreen() {
             <Pressable
               onPress={sendCode}
               disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel="Send code"
               style={({ pressed }) => [
                 authStyles.button,
                 { backgroundColor: theme.accentFill },
@@ -214,13 +219,18 @@ export default function SignUpScreen() {
           ) : null}
 
           <Link href="/auth/login" asChild>
-            <Pressable style={authStyles.switchRow}>
+            <Pressable
+              style={authStyles.switchRow}
+              accessibilityRole="link"
+              accessibilityLabel="Already have an account? Log in">
               <ThemedText type="small" themeColor="textSecondary">
                 Already have an account?
               </ThemedText>
               <ThemedText type="link">Log in</ThemedText>
             </Pressable>
           </Link>
+
+          <LegalLinks />
         </>
       ) : (
         <AuthOtpCodeCard

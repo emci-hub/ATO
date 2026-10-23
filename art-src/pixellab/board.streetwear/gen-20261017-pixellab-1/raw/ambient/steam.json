@@ -1,0 +1,339 @@
+{
+ "frames": [
+  {
+   "filename": "turf-vent-steam 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 1.png",
+   "frame": {
+    "x": 16,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 2.png",
+   "frame": {
+    "x": 32,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 3.png",
+   "frame": {
+    "x": 48,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 4.png",
+   "frame": {
+    "x": 0,
+    "y": 36,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 5.png",
+   "frame": {
+    "x": 16,
+    "y": 36,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 6.png",
+   "frame": {
+    "x": 32,
+    "y": 36,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 7.png",
+   "frame": {
+    "x": 48,
+    "y": 36,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 8.png",
+   "frame": {
+    "x": 0,
+    "y": 72,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 9.png",
+   "frame": {
+    "x": 16,
+    "y": 72,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 10.png",
+   "frame": {
+    "x": 32,
+    "y": 72,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  },
+  {
+   "filename": "turf-vent-steam 11.png",
+   "frame": {
+    "x": 48,
+    "y": 72,
+    "w": 16,
+    "h": 36
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 36
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 36
+   },
+   "pivot": {
+    "x": 0.375,
+    "y": 0.8888888888888888
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "turf-vent-steam.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 64,
+   "h": 108
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 6,
+   "y": 32
+  },
+  "frameTags": [
+   {
+    "name": "turf-vent-steam",
+    "from": 0,
+    "to": 11,
+    "direction": "forward"
+   }
+  ]
+ }
+}

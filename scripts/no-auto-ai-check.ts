@@ -49,10 +49,15 @@ const KEPT: string[] = [
   'src/app/(tabs)/index.tsx',
   'src/app/(tabs)/explore.tsx',
   'src/app/(tabs)/intake-sweep.tsx',
-  'src/components/sage-story-fold.tsx',
+  'src/components/insights/insights-story-card.tsx',
   'src/components/categories-fold.tsx',
   'src/components/questions-fold.tsx',
   'src/components/full-profile-fold.tsx',
+  // Museum of legends (2026-10-08): the story is written only on "Meet them".
+  'src/app/(tabs)/legends.tsx',
+  'src/components/legend-figure-card.tsx',
+  // Category deep dive on Home (2026-10-08): written only on its button.
+  'src/components/category-deep-dive-card.tsx',
 ];
 
 /**
@@ -69,6 +74,7 @@ const GENERATORS = [
   'generateText',
   'generateDailyInsight',
   'generateStoryBody',
+  'generateStoryCardText',
   'generateExploreBody',
   'generateQuestionBatch',
   'generateOngoingRoundBatch',
@@ -81,6 +87,8 @@ const GENERATORS = [
   'runOngoingRound',
   'composeOngoingRound',
   'prewarmBankPool',
+  'writeLegendStory',
+  'writeCategoryDeepDive',
 ];
 
 /**
@@ -189,13 +197,15 @@ ok('no mount-time generator component is mounted anywhere in the spine');
 // The two specific regressions this check was written for.
 // ---------------------------------------------------------------------------
 
-const home = codeOnly(read('src/app/(tabs)/index.tsx'));
-assert.match(home, /const loadInsight = useCallback/, 'Home must load the insight from a tap handler');
+// Today's focus moved from Home to Insights (2026-10-14); still a tap only.
+const home = codeOnly(read('src/components/insights/today-focus-card.tsx'));
+assert.match(home, /const loadInsight = useCallback/, 'the focus card must load the insight from a tap handler');
 assert.match(home, /onPress=\{\(\) => \{\s*void loadInsight\(\);/, 'the insight handler must be wired to a press');
 ok('Home generates the daily insight only from "Load insight"');
 
-const story = codeOnly(read('src/components/sage-story-fold.tsx'));
-assert.match(story, /const loadStory = useCallback/, 'the Story fold must load from a tap handler');
+// The Story moved to Insights as a template-only card (2026-10-14); it still loads on a tap only.
+const story = codeOnly(read('src/components/insights/insights-story-card.tsx'));
+assert.match(story, /const loadStory = useCallback/, 'the Story card must load from a tap handler');
 assert.match(story, /onPress=\{\(\) => \{\s*void loadStory\(\);/, 'the story handler must be wired to a press');
 // Readiness is reported, not paid for.
 assert.match(

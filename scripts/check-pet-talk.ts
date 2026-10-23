@@ -3,8 +3,8 @@
  *
  *   - Every form × situation has lines: 6+ for idle chatter, happy and hungry,
  *     3+ for everything else; no duplicates inside a pool.
- *   - Every line fits the bubble and never uses GAME_SPEC §7's banned words
- *     (gamble / casino / jackpot / bet).
+ *   - Every line fits the bubble and never encourages gambling or a risky
+ *     money move (core content policy 2026-10-20; the words alone are fine).
  *   - The picker never plays the same line twice in a row.
  *   - Every status and every time of day maps to a situation that has lines.
  */
@@ -13,7 +13,6 @@ import assert from 'node:assert/strict';
 import { PET_BRANCHES } from '../src/play/pet';
 import { PET_STATUSES } from '../src/play/pet-status';
 import {
-  PET_BANNED_WORDS,
   PET_EGG_LINES,
   PET_EGG_TALK,
   PET_EGG_TALK_LINES,
@@ -25,6 +24,7 @@ import {
   PET_TALK_SITUATIONS,
   pickEggLine,
   pickEggTalk,
+  petMoneyRiskViolation,
   pickPetLine,
   talkSituationForStatus,
   timeOfDaySituation,
@@ -36,7 +36,6 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-const banned = new RegExp(`\\b(${PET_BANNED_WORDS.join('|')})\\b`, 'i');
 let total = 0;
 for (const branch of PET_BRANCHES) {
   for (const situation of PET_TALK_SITUATIONS) {
@@ -48,12 +47,39 @@ for (const branch of PET_BRANCHES) {
       total += 1;
       assert.ok(line.trim().length > 0, `${branch}/${situation}: empty line`);
       assert.ok(line.length <= PET_TALK_MAX_CHARS, `${branch}/${situation}: "${line}" is over ${PET_TALK_MAX_CHARS} chars`);
-      assert.ok(!banned.test(line), `${branch}/${situation}: "${line}" uses a banned word`);
+      assert.equal(petMoneyRiskViolation(line), null, `${branch}/${situation}: "${line}" encourages gambling or a risky money move`);
     }
   }
 }
-assert.deepEqual([...PET_BANNED_WORDS].sort(), ['bet', 'casino', 'gamble', 'jackpot'], 'banned list is GAME_SPEC §7’s');
-ok(`${total} lines: every form × situation covered (6+ chatter/happy/hungry, 3+ others), short, no banned words`);
+ok(`${total} lines: every form × situation covered (6+ chatter/happy/hungry, 3+ others), short, no gambling encouragement`);
+
+// Core content policy (2026-10-20): judge the meaning, not the word. Paired cases.
+for (const line of [
+  'I bet you can’t catch me.',
+  'You bet! Snack time.',
+  'Jackpot, a snack!',
+  'The casino was loud, so I took a nap.',
+  'Betting on my nap spot again.',
+  'Gambling shows are on in the lounge.',
+]) {
+  assert.equal(petMoneyRiskViolation(line), null, `contextual use passes: "${line}"`);
+}
+for (const line of [
+  'Let’s gamble the rent money.',
+  'You should go all in at the casino.',
+  'Place a bet on the next round.',
+  'Risk your savings on it.',
+  'Bet your paycheck, it will work out.',
+  'Gambling is fun, try it.',
+  'Go to the casino tonight.',
+  'Bet it all on red.',
+  'Spin again, the jackpot is close.',
+  'Gambling is the best.',
+  'Let’s hit the slots.',
+]) {
+  assert.notEqual(petMoneyRiskViolation(line), null, `encouragement fails: "${line}"`);
+}
+ok('gambling rule: ordinary "bet", "jackpot", "casino" pass; encouraging a gamble or a risky money move fails');
 
 // Five forms have five different voices — no pool is copied between forms.
 for (const situation of PET_TALK_SITUATIONS) {
@@ -121,7 +147,7 @@ for (const moment of PET_EGG_TALK) {
   assert.ok(pool.length >= PET_TALK_MIN, `egg/${moment}: ${pool.length} lines, needs ${PET_TALK_MIN}`);
   for (const line of pool) {
     assert.ok(line.length <= PET_TALK_MAX_CHARS, `egg/${moment}: "${line}" too long`);
-    assert.ok(!banned.test(line), `egg/${moment}: "${line}" uses a banned word`);
+    assert.equal(petMoneyRiskViolation(line), null, `egg/${moment}: "${line}" encourages gambling or a risky money move`);
   }
   let last: string | null = null;
   for (let i = 0; i < 300; i += 1) {

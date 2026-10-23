@@ -76,7 +76,8 @@ export const KNOCKS_CHIPS: IntakeChip<KnocksChip>[] = [
 ];
 
 /**
- * Infinitive phrases that drop into first_cards.md: "After you {morning_cue}, …"
+ * Infinitive phrases that drop into "After you {morning_cue}, …" (the Day 1–3 first_cards.md
+ * cards were removed in roadmap A5).
  * Chip label is the bare phrase from the spec; stored value is the cue.
  */
 export const MORNING_CUE_CHIPS: IntakeChip[] = [
@@ -246,7 +247,7 @@ export function chipLabel(chips: IntakeChip[], value: string | null | undefined)
 
 /** You-tab labels. Same 8 fields as onboarding, shorter than the prompt. */
 export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
-  talk_style: 'How Sage talks to you',
+  talk_style: 'How ATO talks to you',
   show_up: 'Show up',
   knocks_you_off: 'Disruption',
   morning_cue: 'Your morning anchor',
@@ -307,7 +308,8 @@ export function coreIntakeAnsweredLabel(answered: number, total = CORE_INTAKE_TO
 }
 
 /**
- * Pick which first_cards.md style slot to use for check_count < 3.
+ * Pick a quiet / even / loud style slot for check_count < 3 (the Day 1–3 first_cards.md
+ * cards it fed were removed in roadmap A5).
  *
  * support_style is the primary "how to meet you" axis (sharper than talk_style).
  * energy_pattern shifts one step: morning more activating, evening/night owl

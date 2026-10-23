@@ -171,7 +171,7 @@ ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared
   const used = [...Object.values(APP_DEV_SCREENS).flatMap((x) => [...x.sections]), ...APP_DEV_EVERYWHERE];
   for (const s of used) assert.ok(fab.includes(`case '${s}':`), `the panel can draw ${s}`);
   const hub = read('src/app/dev-lab.tsx');
-  for (const n of ['TraitViewer', 'JumpThisAccount', 'StartOver', 'QuotaDashboard', 'FenceTester', 'TraceCapture']) {
+  for (const n of ['TraitViewer', 'JumpThisAccount', 'PreviewAsNewUser', 'QuotaDashboard', 'FenceTester', 'TraceCapture']) {
     assert.ok(new RegExp('export \\{[^}]*\\b' + n + ',').test(hub), `${n} is exported from the Hub`);
     assert.ok(hub.includes(`\nfunction ${n}() {`), `${n} keeps its plain declaration (other checks slice on it)`);
   }
@@ -223,11 +223,11 @@ ok('app button: root / grant / unlock only (not PRE_LAUNCH_DEV), hidden on Play,
   const play = read('src/app/play.tsx');
   assert.ok(play.includes('PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow />'), 'Divecore still shows its PIN box while locked');
 
-  // Start over's protection is the server's, not this lock's.
-  const wave76 = read('supabase/migrations/wave76_start_over_my_test_data.sql');
-  assert.ok(wave76.includes('if not public.is_root() then'), 'Start over stays root-only on the server');
-  const startAt = hub.indexOf('Start over (0 of 48)');
-  assert.ok(startAt > 0 && hub.lastIndexOf('{devAccess.isRoot ? (', startAt) > hub.lastIndexOf('function StartOver()', startAt), 'and its button sits inside the root-only block');
+  // Reset account's protection is the server's, not this lock's (wave88 require_root).
+  const wave88 = read('supabase/migrations/wave88_reset_my_account.sql');
+  assert.ok(wave88.includes('uid := public.require_root();'), 'Reset account stays root-only on the server');
+  const resetPanel = hub.slice(hub.indexOf('function ResetAccount()'), hub.indexOf('function ResetToFreshSignup()'));
+  assert.ok(resetPanel.indexOf('if (!devAccess.isRoot) {') > 0 && resetPanel.indexOf('if (!devAccess.isRoot) {') < resetPanel.indexOf('Reset this account'), 'and its button sits behind the root-only return');
   assert.ok(you.includes('automaticallyAdjustKeyboardInsets') && you.includes('keyboardShouldPersistTaps="handled"'), 'the PIN box on You is not hidden by the keyboard');
 }
 ok('dev PIN: one shared lock (Divecore’s), PIN box on You, opens the bubble and the Hub; root no longer needed to get in');

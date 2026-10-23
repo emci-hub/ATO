@@ -35,7 +35,7 @@ function ok(label: string, detail?: unknown) {
 async function main() {
   assert.equal(
     QUOTA_EMPTY_MESSAGE,
-    "Sage's out of things to say for today, back tomorrow",
+    "That's all for today, back tomorrow",
   );
   ok('honest-empty copy is the planned string');
 

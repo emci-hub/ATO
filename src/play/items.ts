@@ -143,8 +143,35 @@ const STAT_LABELS: Record<ItemStat, string> = {
   tower_speed: 'tower speed',
   token_earn: 'token gain',
   dive_luck: 'dive luck',
-  research_yield: 'research yield',
+  research_yield: 'research finds',
 };
+
+/** The games a stat takes effect in (Divecore finish step 2: every Power says where it works). */
+export const STAT_PLACES = ['Turf War', 'Dive', 'Hideout'] as const;
+export type StatPlace = (typeof STAT_PLACES)[number];
+
+/** Where each stat works: wave power / tower speed / token gain act in Turf War (token gain on a win's payout),
+ * dive luck in Dive, research yield on the research claim in the Hideout. */
+export const STAT_WORKS_IN: Record<ItemStat, StatPlace> = {
+  wave_power: 'Turf War',
+  tower_speed: 'Turf War',
+  token_earn: 'Turf War',
+  dive_luck: 'Dive',
+  research_yield: 'Hideout',
+};
+
+/** The places an item works in (empty for a Look), in `STAT_PLACES` order. */
+export function itemWorksIn(def: ItemDef): StatPlace[] {
+  const places = new Set<StatPlace>();
+  for (const mult of [def.mult_a, def.mult_b]) if (mult) places.add(STAT_WORKS_IN[mult.stat]);
+  return STAT_PLACES.filter((place) => places.has(place));
+}
+
+/** "Works in: Turf War · Dive" for a Power, "Style only" for a Look. */
+export function formatWorksIn(def: ItemDef): string {
+  const places = itemWorksIn(def);
+  return places.length > 0 ? `Works in: ${places.join(' · ')}` : 'Style only';
+}
 
 /** "+8% wave power" style line, e.g. for a Power find's card. */
 export function formatMult(mult: StatMult): string {

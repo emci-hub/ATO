@@ -1,0 +1,96 @@
+{
+  "tool": "pixellab",
+  "model": "pixellab mcp",
+  "step": "Turf War T8 stop 1 (candidate, not picked yet)",
+  "view": "low top-down",
+  "palette": "docs/art/palette-streetwear-night.png (pro tilesets drawn with it; standard tileset-b and props snapped locally, nearest colour = reduce_colors with the palette image)",
+  "styleCard": {
+    "outline": "selective outline",
+    "shading": "medium shading",
+    "detail": "medium detail"
+  },
+  "scaleReference": "board hero 62 art px = 1.75 m (1 m = 35 px); scale sheet docs/divecore/turf-war-t8/samples/scale-sheet.png",
+  "painter": "scripts/turf-board-art.ts TURF_THEMES.<theme>",
+  "pro": {
+    "mode": "pro",
+    "tile_size": 32,
+    "transition_size": 0.25,
+    "roundness": 1
+  },
+  "standard": {
+    "mode": "standard",
+    "tile_size": 32,
+    "transition_size": 0.25
+  },
+  "createdAt": "2026-10-17T23:53:33.028Z",
+  "operator": "agent",
+  "picked": false,
+  "board": "ato · theme docks (T8)",
+  "parts": {
+    "tileset": {
+      "id": "aae81b2a-f5df-4530-b58e-abe2d94214da",
+      "params": {
+        "boundary_amplitude": 0.12,
+        "boundary_seed": 9,
+        "raggedness": 0.25
+      },
+      "lower": "dark wet weathered wooden pier planks, tar seams, iron bolts",
+      "upper": "pale grey weathered concrete harbour quay slabs, faint rust stains",
+      "transition": "rusty steel quay edge with worn yellow paint",
+      "score": 99.2
+    },
+    "tileset-b": {
+      "id": "b5830d24-c526-4811-ac5f-8e77dbc82288",
+      "params": {
+        "shape_style": "round",
+        "boundary_amplitude": 0.1
+      },
+      "lower": "dark wet asphalt harbour quay road, oil sheen",
+      "upper": "pale weathered wooden boardwalk planks, iron bolts",
+      "transition": "rusty steel kerb with worn yellow paint"
+    },
+    "props": {
+      "bollard": {
+        "id": "b2ef9729-2adc-4d4f-884e-55802ceb88ce",
+        "canvas": [
+          32,
+          32
+        ],
+        "box": [
+          12,
+          26
+        ],
+        "target": [
+          12,
+          27
+        ],
+        "score": 92.1
+      },
+      "crate": {
+        "id": "3c482029-bfe8-46fe-a294-bdf2ab2851bf",
+        "canvas": [
+          32,
+          48
+        ],
+        "box": [
+          26,
+          41
+        ],
+        "target": [
+          27,
+          40
+        ],
+        "score": 76,
+        "tries": 2,
+        "rejected": [
+          "d75fb848 (26x27, squat)"
+        ]
+      },
+      "barrel": {
+        "reuse": "alley board.streetwear raw/props/barrel.png",
+        "role": "fire"
+      }
+    }
+  },
+  "pads": "library pads (streetwear-pack): see TURF_THEMES / samples A-C"
+}

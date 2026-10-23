@@ -1,0 +1,330 @@
+{
+  "_meta": {
+    "canvas": [
+      352,
+      576
+    ],
+    "tile": 16,
+    "cols": 22,
+    "rows": 36,
+    "floor": [
+      20,
+      26
+    ],
+    "doorTiles": 4,
+    "projection": "three-quarter-topdown",
+    "artTile": 32,
+    "heroCellPx": 192,
+    "heroFigurePx": 106,
+    "heroRenderScale": 1,
+    "contentBounds": [
+      0,
+      0,
+      352,
+      576
+    ],
+    "placeholder": false,
+    "sleepOnBed": false,
+    "source": "scripts/gen-hideout-td.ts + hideout-room-art.ts — PixelLab art (art-src/pixellab/room.underground.streetwear)"
+  },
+  "layers": {
+    "back": "underground-td-back.png",
+    "floor": "underground-td-floor.png",
+    "props": "underground-td-props.png",
+    "neonA": "underground-td-neon-a.png",
+    "neonB": "underground-td-neon-b.png",
+    "occluder": {
+      "day-a": "underground-td-occlude-day-a.png",
+      "day-b": "underground-td-occlude-day-b.png",
+      "night-a": "underground-td-occlude-night-a.png",
+      "night-b": "underground-td-occlude-night-b.png"
+    }
+  },
+  "collision": {
+    "tile": 16,
+    "cols": 22,
+    "rows": 36,
+    "walkable": [
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0000000000000000000000",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111100111111110011110",
+      "0111100111111110011110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0111111111111111111110",
+      "0000000001111000000000",
+      "0000000001111000000000"
+    ]
+  },
+  "props": [
+    {
+      "id": "speakerL",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        5,
+        15,
+        2,
+        2
+      ],
+      "sprite": [
+        84,
+        199,
+        25,
+        73
+      ],
+      "crop": [
+        84,
+        199,
+        25,
+        73
+      ],
+      "sortY": 272,
+      "baselineY": 272,
+      "occluder": true
+    },
+    {
+      "id": "speakerR",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        15,
+        15,
+        2,
+        2
+      ],
+      "sprite": [
+        244,
+        199,
+        25,
+        73
+      ],
+      "crop": [
+        244,
+        199,
+        25,
+        73
+      ],
+      "sortY": 272,
+      "baselineY": 272,
+      "occluder": true
+    },
+    {
+      "id": "hatch",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        9,
+        30,
+        4,
+        2
+      ],
+      "sprite": [
+        144,
+        480,
+        64,
+        32
+      ],
+      "crop": [
+        144,
+        480,
+        64,
+        32
+      ],
+      "sortY": 512,
+      "baselineY": 512,
+      "occluder": false
+    },
+    {
+      "id": "near-rim-l",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        1,
+        34,
+        8,
+        2
+      ],
+      "sprite": [
+        16,
+        544,
+        128,
+        32
+      ],
+      "crop": [
+        16,
+        544,
+        128,
+        32
+      ],
+      "sortY": 576,
+      "baselineY": 576,
+      "occluder": true
+    },
+    {
+      "id": "near-rim-r",
+      "facing": "down",
+      "rotated": false,
+      "footprint": [
+        13,
+        34,
+        8,
+        2
+      ],
+      "sprite": [
+        208,
+        544,
+        128,
+        32
+      ],
+      "crop": [
+        208,
+        544,
+        128,
+        32
+      ],
+      "sortY": 576,
+      "baselineY": 576,
+      "occluder": true
+    }
+  ],
+  "hotspots": [
+    {
+      "id": "manhole",
+      "kind": "hatch",
+      "ellipse": [
+        176,
+        496,
+        30,
+        15
+      ],
+      "footprint": [
+        9,
+        30,
+        4,
+        2
+      ],
+      "labelAnchor": [
+        176,
+        476
+      ],
+      "walk": [
+        176,
+        456
+      ],
+      "thing": "Hatch",
+      "action": "Hideout",
+      "coach": "dive"
+    },
+    {
+      "id": "door",
+      "kind": "door",
+      "ellipse": [
+        176,
+        560,
+        30,
+        10
+      ],
+      "footprint": [
+        9,
+        34,
+        4,
+        2
+      ],
+      "labelAnchor": [
+        176,
+        546
+      ],
+      "walk": [
+        176,
+        520
+      ],
+      "thing": "Door",
+      "action": "Up",
+      "coach": "expedition"
+    }
+  ],
+  "spawns": {
+    "default": [
+      176,
+      360
+    ],
+    "hatch": [
+      176,
+      456
+    ],
+    "door": [
+      176,
+      520
+    ]
+  },
+  "targets": {
+    "bowl": [
+      176,
+      400
+    ],
+    "bed": [
+      176,
+      336
+    ],
+    "cushion": [
+      176,
+      336
+    ],
+    "door": [
+      176,
+      520
+    ],
+    "chair": [
+      176,
+      360
+    ],
+    "boombox": [
+      176,
+      400
+    ]
+  },
+  "window": null,
+  "lights": [
+    [
+      128,
+      56
+    ],
+    [
+      176,
+      48
+    ],
+    [
+      272,
+      56
+    ]
+  ],
+  "rugs": []
+}

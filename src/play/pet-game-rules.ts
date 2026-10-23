@@ -65,20 +65,24 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
 /** Score multiplier per game and level. Train's climbs more steeply: a harder
  * Train round tends to end early (3 misses in a row), so its multiplier has
  * to outrun that for Hard to score above Normal (sim:games). */
-export const SCORE_MULT: Record<'catch' | 'train', Record<Difficulty, number>> = {
+export type RoundGame = 'catch' | 'train' | 'dash';
+
+export const SCORE_MULT: Record<RoundGame, Record<Difficulty, number>> = {
   catch: { easy: 1, normal: 1.5, hard: 2, insane: 3 },
   train: { easy: 1, normal: 1.5, hard: 2.5, insane: 4 },
+  dash: { easy: 1, normal: 1.5, hard: 2, insane: 3 },
 };
 
 /** Combo steps: the streak at which the multiplier becomes ×2, ×3, ×5. */
 export const COMBO_MULTS = [1, 2, 3, 5] as const;
-export const COMBO_STEPS: Record<'catch' | 'train', readonly [number, number, number]> = {
+export const COMBO_STEPS: Record<RoundGame, readonly [number, number, number]> = {
   catch: [5, 10, 20],
   train: [3, 6, 10],
+  dash: [5, 10, 20],
 };
 
 /** The combo multiplier for a streak. */
-export function comboMult(game: 'catch' | 'train', streak: number): number {
+export function comboMult(game: RoundGame, streak: number): number {
   const [a, b, c] = COMBO_STEPS[game];
   return streak >= c ? COMBO_MULTS[3] : streak >= b ? COMBO_MULTS[2] : streak >= a ? COMBO_MULTS[1] : COMBO_MULTS[0];
 }
@@ -101,7 +105,7 @@ export function seededRng(seed: string): () => number {
 }
 
 /** The daily challenge seed: the same pattern for everyone on that date. */
-export function dailySeed(ymd: string, game: 'catch' | 'train'): string {
+export function dailySeed(ymd: string, game: RoundGame): string {
   return `divecore-daily:${ymd}:${game}`;
 }
 
@@ -308,7 +312,135 @@ export function trainOutcome(t: TrainTally): RoundOutcome {
 }
 
 /** "Caught 23/38 (61%) · PASS". */
-export function outcomeLine(kind: 'catch' | 'train', o: RoundOutcome): string {
+export function outcomeLine(kind: RoundGame, o: RoundOutcome): string {
   const pct = Math.round(o.quality * 100);
-  return `${kind === 'catch' ? 'Caught' : 'Hit'} ${o.got}/${o.of} (${pct}%) · ${o.pass ? 'PASS' : 'FAIL'}`;
+  return `${kind === 'train' ? 'Hit' : 'Caught'} ${o.got}/${o.of} (${pct}%) · ${o.pass ? 'PASS' : 'FAIL'}`;
+}
+
+/* ------------------------------------------- M3: Catch power-ups (score-only) --- */
+
+/**
+ * Catch power-ups are pickups, not food (they are never "caught" or "missed").
+ * Shield absorbs the next bomb tap (no strike, no penalty). Magnet collects the
+ * food that falls past `magnetFromY` for a few seconds; magnet food adds its
+ * points once (no combo) but counts as not caught for the pass share, so the
+ * magnet cannot turn a failing round into a pass or farm tokens.
+ */
+export type PowerKind = 'shield' | 'magnet';
+export const POWERUP = {
+  /** Share of food spawns that are a pickup instead (after `fromMs`). */
+  share: 0.05,
+  fromMs: 4_000,
+  magnetMs: 4_000,
+  magnetFromY: 0.55,
+} as const;
+
+/** What a plain food spawn is, from one 0..1 draw: a pickup or null (stays food). */
+export function catchPowerKind(elapsedMs: number, u: number): PowerKind | null {
+  if (elapsedMs < POWERUP.fromMs || u >= POWERUP.share) return null;
+  return u < POWERUP.share / 2 ? 'shield' : 'magnet';
+}
+
+/**
+ * Magnet food: points once at ×1, no combo, chain untouched. For the pass share it
+ * counts as food that was NOT caught (it is pulled, never tapped), so a magnet can
+ * add score but never lift the share above what the same round without it gives.
+ */
+export function magnetFood(t: CatchTally, golden: boolean): CatchTally {
+  return t.over ? t : { ...t, missed: t.missed + 1, points: t.points + (golden ? CATCH.goldenPoints : 1) };
+}
+
+/* ------------------------------------------------- M3: Train zone modes --- */
+
+/** single = one lit zone; moving = it drifts side to side; split = two half-width zones. */
+export type ZoneMode = 'single' | 'moving' | 'split';
+
+/** Which zone the next tap faces (`tapsDone` = taps already made). Total lit width never grows. */
+export function trainZoneMode(level: Difficulty, tapsDone: number): ZoneMode {
+  if (level === 'easy') return 'single';
+  if (level === 'normal') return tapsDone >= 10 ? 'moving' : 'single';
+  if (level === 'hard') return tapsDone >= 10 ? 'split' : tapsDone >= 5 ? 'moving' : 'single';
+  return tapsDone >= 10 ? 'split' : tapsDone >= 3 ? 'moving' : 'single';
+}
+
+export const ZONE_DRIFT = 0.07;
+export const ZONE_DRIFT_MS = 2400;
+export const ZONE_SPLIT_GAP = 0.17;
+
+export type ZoneSeg = { center: number; width: number };
+
+/**
+ * The lit segments for a base centre and a zone width. `phaseMs` is the time on
+ * the drift; segments stay inside the bar.
+ */
+export function trainZoneSegments(mode: ZoneMode, base: number, width: number, phaseMs: number): ZoneSeg[] {
+  const clamp = (c: number, w: number) => Math.max(w / 2, Math.min(1 - w / 2, c));
+  if (mode === 'split') {
+    const w = width / 2;
+    return [
+      { center: clamp(base - ZONE_SPLIT_GAP, w), width: w },
+      { center: clamp(base + ZONE_SPLIT_GAP, w), width: w },
+    ];
+  }
+  const drift = mode === 'moving' ? Math.sin((phaseMs / ZONE_DRIFT_MS) * Math.PI * 2) * ZONE_DRIFT : 0;
+  return [{ center: clamp(base + drift, width), width }];
+}
+
+/** A tap against the segments: hit / perfect (perfect is judged on the segment hit). */
+export function trainZoneHit(segs: readonly ZoneSeg[], marker: number): { hit: boolean; perfect: boolean } {
+  for (const s of segs) {
+    const off = Math.abs(marker - s.center);
+    if (off <= s.width / 2) return { hit: true, perfect: off <= s.width * TRAIN_PERFECT_SHARE };
+  }
+  return { hit: false, perfect: false };
+}
+
+/* ------------------------------------------------------ M3: Dash (3 lanes) --- */
+
+/**
+ * Dash: the pet stands in one of 3 lanes; tap a lane to step there. Food and
+ * bombs fall in the lanes. Food that reaches the pet's lane is caught
+ * automatically; a bomb that reaches it is a strike (3 strikes end the round).
+ * Food that falls past in another lane is missed. PASS = same share rule as
+ * Catch (caught ≥ 50% of the food that finished, never bombed out), and the
+ * tally, combo steps and score multiplier are Catch's.
+ */
+export const DASH_LANES = 3;
+export const DASH = { roundMs: 25_000, catchFromY: 0.74, catchToY: 0.97 } as const;
+export const DASH_LEVELS: Record<Difficulty, CatchLevel> = {
+  easy: { spawnStartMs: 800, spawnEndMs: 600, speedEndMult: 1.4, bombShare: 0.1 },
+  normal: { spawnStartMs: 650, spawnEndMs: 430, speedEndMult: 1.7, bombShare: 0.2 },
+  hard: { spawnStartMs: 560, spawnEndMs: 360, speedEndMult: 2.0, bombShare: 0.25 },
+  insane: { spawnStartMs: 480, spawnEndMs: 300, speedEndMult: 2.3, bombShare: 0.3 },
+};
+
+export function dashSpawnGapMs(elapsedMs: number, level: Difficulty = 'normal'): number {
+  const L = DASH_LEVELS[level];
+  const t = Math.max(0, Math.min(1, elapsedMs / DASH.roundMs));
+  return Math.round(L.spawnStartMs + (L.spawnEndMs - L.spawnStartMs) * t);
+}
+
+export function dashSpeedMult(elapsedMs: number, level: Difficulty = 'normal'): number {
+  const t = Math.max(0, Math.min(1, elapsedMs / DASH.roundMs));
+  return 1 + (DASH_LEVELS[level].speedEndMult - 1) * t;
+}
+
+/** What a Dash spawn is, from one 0..1 draw (the bomb share is the level's own, from 3 s). */
+export function dashSpawnKind(elapsedMs: number, u: number, level: Difficulty = 'normal'): SpawnKind {
+  const bombShare = DASH_LEVELS[level].bombShare;
+  if (elapsedMs >= CATCH.bombFromMs && u < bombShare) return 'bomb';
+  const v = elapsedMs >= CATCH.bombFromMs ? (u - bombShare) / (1 - bombShare) : u;
+  return v < CATCH.goldenShare ? 'golden' : 'food';
+}
+
+/** Is an item in the pet's lane inside the pet's catch band? */
+export function dashReaches(itemLane: number, petLane: number, y: number): boolean {
+  return itemLane === petLane && y >= DASH.catchFromY && y <= DASH.catchToY;
+}
+
+export function dashOutcome(t: CatchTally): RoundOutcome {
+  return catchOutcome(t);
+}
+export function dashScore(t: CatchTally, level: Difficulty = 'normal'): number {
+  return Math.max(0, Math.round(t.points * SCORE_MULT.dash[level]));
 }

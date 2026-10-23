@@ -5,6 +5,7 @@ import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import type { CategoryId } from '@/lib/categories';
+import { visibleStatementHistory } from '@/lib/category-bank';
 import { fetchStatementHistory, type CategoryStatement } from '@/lib/category-statements/store';
 
 type LoadState = { status: 'idle' } | { status: 'loading' } | { status: 'ready' } | { status: 'error'; message: string };
@@ -48,7 +49,9 @@ export function CategoryStatementArchiveFold({
     setLoad({ status: 'loading' });
     try {
       const history = await fetchStatementHistory(userId, categoryId);
-      setRows(history.filter((row) => row.supersededAt != null));
+      // Every category_statements row is AI-written, and those are hidden from
+      // all history (emci, 2026-10-07). The rows stay in the database.
+      setRows(visibleStatementHistory(history.filter((row) => row.supersededAt != null)));
       setLoad({ status: 'ready' });
     } catch (err) {
       console.log('[category-statement-archive] fetch error:', err);

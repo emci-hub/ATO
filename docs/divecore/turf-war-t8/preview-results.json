@@ -1,0 +1,50 @@
+{
+ "alley-max": {
+  "callWave": true,
+  "frameMs": 4.8
+ },
+ "alley-se": {
+  "callWave": true,
+  "frameMs": 4.5
+ },
+ "rooftop-max": {
+  "callWave": true,
+  "frameMs": 4.7
+ },
+ "rooftop-se": {
+  "callWave": true,
+  "frameMs": 4.6
+ },
+ "underpass-max": {
+  "callWave": true,
+  "frameMs": 4.7
+ },
+ "underpass-se": {
+  "callWave": true,
+  "frameMs": 4.6
+ },
+ "court-max": {
+  "callWave": true,
+  "frameMs": 4.9
+ },
+ "court-se": {
+  "callWave": true,
+  "frameMs": 4.6
+ },
+ "docks-max": {
+  "callWave": true,
+  "frameMs": 4.9
+ },
+ "docks-se": {
+  "callWave": true,
+  "frameMs": 4.6
+ },
+ "picker-max": {
+  "themeRow": true,
+  "savedAfterTap": "court"
+ },
+ "picker-se": {
+  "themeRow": true,
+  "savedAfterTap": "court"
+ }
+}

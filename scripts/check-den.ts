@@ -1,7 +1,7 @@
 /**
  * Den checks (v27, Part D · T-D7). Run: npm run check:den
  *
- *   1. Slots: 6 to start (the active pet counts), 7th 100 … 12th 750, 12 max.
+ *   1. Slots: 6 to start (the active pet counts), 7th 100 … 12th 750 … 20th 3500, 20 max.
  *   2. Resting pets are frozen: no aging, hunger/mood loss, care mistakes or
  *      warmth loss, however long — only the active pet ever ages.
  *   3. Waking a pet: `seen_at = max(now, seen_at)` (no time passed while it
@@ -85,11 +85,14 @@ function revealActive(doc: PlayStoreDoc, now: number): PlayStoreDoc {
 
 {
   assert.equal(DEN_START_SLOTS, 6);
-  assert.deepEqual([...DEN_SLOT_PRICES], [100, 150, 225, 340, 500, 750]);
-  assert.equal(DEN_MAX_SLOTS, 12);
-  assert.deepEqual([6, 7, 8, 9, 10, 11, 12].map(denSlotPrice), [100, 150, 225, 340, 500, 750, null]);
+  assert.deepEqual([...DEN_SLOT_PRICES], [100, 150, 225, 340, 500, 750, 900, 1100, 1350, 1650, 2000, 2400, 2900, 3500]);
+  assert.equal(DEN_MAX_SLOTS, 20);
+  assert.deepEqual([6, 7, 8, 9, 10, 11, 12].map(denSlotPrice), [100, 150, 225, 340, 500, 750, 900]);
+  assert.equal(denSlotPrice(19), 3500);
+  assert.equal(denSlotPrice(20), null);
   assert.equal(clampDenSlots(3), 6);
-  assert.equal(clampDenSlots(99), 12);
+  assert.equal(clampDenSlots(12), 12, 'a save with 12 slots keeps them');
+  assert.equal(clampDenSlots(99), 20);
   assert.equal(clampDenSlots('x'), 6);
   const fresh = defaultPlayStore(T0);
   assert.equal(fresh.den_slots, 6);
@@ -98,7 +101,7 @@ function revealActive(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   assert.equal(v.used, 1, 'the active pet counts as one slot');
   assert.equal(v.nextSlotPrice, 100);
 
-  let doc: PlayStoreDoc = { ...fresh, shells: 10_000 };
+  let doc: PlayStoreDoc = { ...fresh, shells: 100_000 };
   for (const price of DEN_SLOT_PRICES) {
     const before = doc.shells;
     const r = buyDenSlot(doc);
@@ -106,13 +109,13 @@ function revealActive(doc: PlayStoreDoc, now: number): PlayStoreDoc {
     assert.equal(before - r.doc.shells, price, `slot ${r.doc.den_slots} costs ${price}`);
     doc = r.doc;
   }
-  assert.equal(doc.den_slots, 12);
+  assert.equal(doc.den_slots, 20);
   assert.deepEqual(buyDenSlot(doc).result, { ok: false, reason: 'max' });
   const poor = buyDenSlot({ ...fresh, shells: 99 });
   assert.deepEqual(poor.result, { ok: false, reason: 'shells' });
   assert.equal(poor.doc.shells, 99, 'a refused slot costs nothing');
 }
-ok('slots: 6 to start (active counts), 7th 100 … 12th 750, 12 max; short of shells refused at no cost');
+ok('slots: 6 to start (active counts), 7th 100 … 12th 750, 13th 900 … 20th 3500, 20 max; short of shells refused at no cost');
 
 /* -------------------------------------------------------- 2. frozen pets --- */
 
@@ -370,7 +373,7 @@ ok('Collection book: one count per pet; Den dye includes the active pet and does
   assert.ok(!('pet_den' in v26) && !('shine_stones' in v26));
   const up = parsePlayStore(JSON.stringify(v26), T0 + MIN)!;
   assert.ok(up, 'a v26 save loads');
-  assert.equal(up.version, 32);
+  assert.equal(up.version, 33);
   assert.deepEqual(up.pet_den, [], 'Den empty');
   assert.equal(up.den_slots, DEN_START_SLOTS, '6 slots');
   assert.equal(up.pet.uid, 1, 'the current pet is active in slot 1');
@@ -421,7 +424,7 @@ ok('Collection book: one count per pet; Den dye includes the active pet and does
   assert.equal(new Set(uids).size, uids.length, 'every pet has its own id');
   assert.ok(uids.every((u) => u > 0));
   assert.ok(fixed.pet_uid_next > Math.max(...uids), 'the next id is past every id');
-  assert.ok(fixed.pet_den.length <= DEN_MAX_SLOTS - 1, 'at most 11 resting');
+  assert.ok(fixed.pet_den.length <= DEN_MAX_SLOTS - 1, 'at most 19 resting');
   assert.ok(fixed.pet_den.every((p) => p.egg != null), 'blank rows dropped');
   assert.ok(fixed.den_slots >= fixed.pet_den.length + 1, 'slots never below the pets kept (nothing lost)');
   assert.deepEqual(parsePlayStore(JSON.stringify(fixed), T0 + MIN), fixed, 'v27 round-trips');
@@ -434,6 +437,11 @@ ok('old saves: v26 pet → active slot 1, Den empty, 6 slots, nothing lost; brok
   const sheet = fs.readFileSync(path.join(ROOT, 'src/play/den-sheet.tsx'), 'utf8');
   assert.ok(sheet.includes('<PetFigure'), 'the Den draws PetFigure');
   assert.ok(!/PetAnimSprite|usePetArt/.test(sheet), 'no animated sprites in the Den list');
+  // Step 0p: the Stash is plain — no finish picker, live card, holo / rim / sweep, wear or aura.
+  assert.ok(!/FinishPicker|PetCard|foilMotion|PetHolo|finish=|wear=|auraElement|animate=/.test(sheet), 'the Stash draws no finish effects');
+  assert.ok(sheet.includes('plainPet(pet)') && /auras:\s*\[\]/.test(sheet) && /finish_kind:\s*'none'/.test(sheet), 'tiles strip the pet’s own finish and auras (PetFigure would draw them)');
+  assert.ok(sheet.includes('Open Locker') && sheet.includes('onOpenLocker'), 'the Stash links to the Locker');
+  assert.ok(sheet.includes('Collected') && sheet.includes('DEN_MAX_SLOTS'), 'the Stash shows collected / max');
   const users = ['src/app/play.tsx', ...fs.readdirSync(path.join(ROOT, 'src/play')).map((f) => `src/play/${f}`)]
     .filter((f) => f.endsWith('.tsx') && !f.endsWith('den-sheet.tsx'))
     .filter((f) => fs.readFileSync(path.join(ROOT, f), 'utf8').includes('<DenSheetBody'));

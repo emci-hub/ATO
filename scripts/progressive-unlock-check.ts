@@ -39,6 +39,7 @@ import { isFullProfileDone } from '../src/lib/full-profile-gate';
 import { MILESTONE_DEFS } from '../src/lib/milestones';
 import { bankTotalProgress } from '../src/lib/questions/local';
 import { TRAIT_AXES } from '../src/lib/traits';
+import { ATO_TOKEN_EARN } from '../src/lib/ato-tokens';
 import {
   applyCountOnlyAnswer,
   applyEwmaAnswer,
@@ -209,8 +210,9 @@ ok('the count-only branch skips the value blend (wiring)');
   assert.equal(
     UNLOCK_COPY_REVIEWED,
     STAGED_INTAKE_COPY_REVIEWED,
-    'the staged-intake rewording is a draft until emci reads it',
+    'the unlock flag is the staged-intake flag (accepted by emci 2026-10-23, roadmap A4)',
   );
+  assert.equal(STAGED_INTAKE_COPY_REVIEWED, true, 'staged-intake copy accepted 2026-10-23 (pinned by check:copy-flags)');
   assert.ok(
     MILESTONE_DEFS.some(
       (def) => def.id === INTAKE_REVEAL_MILESTONE_ID && def.metric === 'intakeStage' && def.threshold === 3,
@@ -224,7 +226,8 @@ ok('the count-only branch skips the value blend (wiring)');
   const openNow = INTAKE_UNLOCKED.join(' ');
   assert.doesNotMatch(openNow, /Story|Sage|Legend/, '"Open now" must not promise Story or the two placeholders');
   assert.match(NEXT_ROUND_UNLOCKS.join(' '), /Story/, 'Story belongs to the next round');
-  assert.match(COMING_LATER_LINE, /Sage and Legends/);
+  assert.match(COMING_LATER_LINE, /Legends/);
+  assert.doesNotMatch(COMING_LATER_LINE, /Sage/, 'Sage is gone (2026-10-14)');
   // No milestone may announce a placeholder as open.
   for (const def of MILESTONE_DEFS) {
     assert.doesNotMatch(`${def.title} ${def.body}`, /Sage (is ready|unlocked)|Legends? (are ready|unlocked)|both open/i, `${def.id} announces a placeholder`);
@@ -233,9 +236,10 @@ ok('the count-only branch skips the value blend (wiring)');
 
   const unsettled = oldFifty;
   assert.doesNotMatch(roundCompleteBody(unsettled, false), /ATO tokens/, 'an unpaid round never names the +21');
-  assert.match(roundCompleteBody(unsettled, true), /^\+21 ATO tokens\. \d+ of 16 settled\./);
+  // The amount comes from the constant (wave92 changed it from 21 to 5).
+  assert.match(roundCompleteBody(unsettled, true), new RegExp(`^\\+${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens\\. \\d+ of 16 settled\\.`));
   assert.match(roundStandingLine(unsettled), /keep settling the rest/);
-  ok('round-end toast names the +21 only when paid, and always says where the profile stands');
+  ok('round-end toast names the round payout only when paid, and always says where the profile stands');
 
   const banner = readFileSync(resolve(__dirname, '../src/components/full-profile-banner.tsx'), 'utf8');
   assert.match(banner, /persistCelebratedMilestones\(userId, \[INTAKE_REVEAL_SEEN_ID\]\)/, 'seen is written to the account, not the device');

@@ -4,7 +4,16 @@ import { matchingPhrasePattern } from '@/lib/voice/phrase-guard';
 
 import type { QuestionDraft } from './types';
 
-/** First guard hit on one string — framework fence, then jargon, then phrase. */
+/**
+ * First guard hit on one string — framework fence, then jargon, then phrase.
+ *
+ * Context, not keywords (emci 2026-10-20): a question is dropped only for a real
+ * problem in what it SAYS — a framework result or test claim handed to the reader
+ * (fence), or a psychological verdict about the reader or another person (jargon:
+ * "You are an introvert", "your boss is a narcissist"). A question that mentions a
+ * term to ask about it ("Does a quiet night recharge introverts for you?") or uses an
+ * everyday word (competitive, ocean) is kept. The phrase guard is its own rule.
+ */
 export function questionTextGuardHit(text: string): string | null {
   if (containsFrameworkTerm(text)) return 'framework-echo';
   const jargon = matchingJargonTerm(text);

@@ -1,0 +1,45 @@
+{
+ "app": "PixelLab VFX Creator",
+ "name": "SW ember status",
+ "fps": 12,
+ "frame_ms": 83,
+ "frames": 12,
+ "loop": true,
+ "canvas": {
+  "w": 36,
+  "h": 60
+ },
+ "anchor": {
+  "kind": "feet",
+  "x": 18,
+  "y": 52
+ },
+ "clips": [
+  {
+   "name": "part-burn_status",
+   "title": "the burn status part",
+   "part": "burn_status",
+   "depth": "both",
+   "loop": true,
+   "start_frame": 0,
+   "frames": 12,
+   "frame": {
+    "w": 30,
+    "h": 47
+   },
+   "sheets": [
+    {
+     "file": "part-burn_status.png",
+     "first_frame": 0,
+     "frames": 12,
+     "columns": 4,
+     "rows": 3
+    }
+   ],
+   "offset": {
+    "x": -15,
+    "y": -42
+   }
+  }
+ ]
+}

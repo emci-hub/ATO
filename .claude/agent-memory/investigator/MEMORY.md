@@ -1,0 +1,37 @@
+- [AI surfaces map](ai_surfaces_map.md) — which AI calls are live vs parked, edge fn quota facts, category/legend locations
+- [Unlock/intake facts](unlock_intake_facts.md) — one gate, dead milestones, settled-label math, token claim edge cases
+- [Nav/tokens/crisis facts](nav_tokens_crisis_facts.md) — pinned-slot nav engine, ATO token RPC behavior, crisis_flags has no writer
+- [Dev tooling facts](dev_tooling_facts.md) — Hub/bubble wiring, dead dev tools, intake preset vs reset RPC gaps
+- [Dev kit red-team facts](dev_kit_redteam_facts.md) — per-entry gates, RLS/ledger limits, local cache coverage, pinned check text
+- [Content inventory facts](content_inventory_facts.md) — post-intake content assets, share mechanics absent, edge fn has no per-kind limits
+- [Empty traits after 50](intake_empty_traits_facts.md) — pager row order puts conflict/attachment axes on last 2 pages; gate math
+- [48-intake plan facts](intake_48_plan_facts.md) — server 50-row token gate, stale-tab deps, silent track save
+- [Draft copy inventory](draft_copy_inventory.md) — COPY_REVIEWED flag readers, dead copy components, prompt voice blocks, pinning checks
+- [Trait writers map](trait_writers_map.md) — all client trait writers, guard-trigger patterns, server-side migration gotchas
+- [Question round facts](question_round_facts.md) — per-trait count sites, chunking, bank exclusion quirk, single-axis writes
+- [You tab restore facts](you_tab_restore_facts.md) — You now vs pre-fcf4585, deleted notif fold, checks pinning You
+- [Reset/gate map](reset_gate_map_facts.md) — live gate = 3/trait or old 50; start_over/reset_dev_test_user/count_user_rows table gaps; no single tracks seam
+- [Server question/scoring facts](server_question_scoring_facts.md) — wave79 validation keys, pool tables, token claims, reset gaps
+- [Shared AI library facts](shared_ai_library_facts.md) — 3 AI card surfaces: inputs, claims, saves, trust; wave74 owner-only precedent; next = wave93
+- [Legends feature facts](legends_feature_facts.md) — Legends = 64-archetype names, no figure match; ai-generate no kind whitelist; check naming
+- [Sage/crisis inventory](sage_crisis_inventory_facts.md) — sage tab parked, Talk placeholder, live rewriteOldStory AI path, nav_layout server-side
+- [Play UI map](play_ui_map_facts.md) — one-route mode switch, 3 chrome systems, Defend HUD is in-scroll, no haptics/lottie/skia, isolation classes
+- [Divecore notices facts](divecore_notices_facts.md) — PlayBanner wiring/geometry (52 vs real 56), 80-row notice inventory, 3 known bugs
+- [Divecore layout facts](divecore_layout_facts.md) — stage sizing per scene, Turf board is width-square in ScrollView, real shell heights, 1 grow-only caller
+- [Divecore nav facts](divecore_nav_facts.md) — Street shell always on, orphaned About, hidden Hideout header, back mismatches, settings migration site
+- [Live rooms facts](live_rooms_garage_rooftop_facts.md) — liveIsLoft wiring, garage/rooftop go-live touchpoints, Call-only presence
+- [Art icon add path](art_icon_add_path.md) — flat icons: drop PNG in icons/in-use + art:sync; edit code first
+- [Expedition invisible facts](expedition_invisible_facts.md) — presence flips viewed room -> schedule room on return; touchPet seam
+- [Turf War map](turf_war_map_facts.md) — defend-screen layout/renderer/checks, no base HP, web screenshot recipe w/ Playwright 1148 workaround
+- [Play sheets style map](play_sheets_style_map.md) — Info/Feed sheet kits, GameCard border mismatch cause, dev panel default-open, gate pins
+- [Sprite clip pack path](sprite_clip_pack_path_facts.md) — art-pack inputs are hardcoded dirs, FX/board skeleton slots, loop drawers, checks for new clips/board variants
+- [Turf units/clips](turf_war_units_clips_facts.md) — towers, hero-bound tower + Avatar already exist, pet only pounce button, clip inventory, sword meaning
+- [FTUE/Today facts](divecore_ftue_today_facts.md) — coach-tip system, ready selectors, device-flag precedent, a11y helpers
+- [Divecore economy](divecore_economy_facts.md) — currencies/faucets/shop/drops, clock-trust gaps, save v33 local+cloud, no ATO-token link
+- [Turf balance numbers](turf_balance_numbers_facts.md) — Main is 10 not 20 (stale copy), HP/scrap/reward numbers, daze/splash/leash seams
+- [Turf elements/fx](turf_elements_fx_facts.md) — 4 elements vs 5 aura styles; auras PetFigure-only; fx status slot unwired
+- [Newbie guide signals](newbie_guide_signals_facts.md) — per-step done signals, play_stats has no claim/feed counters, settings sheet + float wiring
+- [AI launch audit](ai_launch_audit_facts.md) — live vs dead AI paths, ai-generate open proxy, dead crisis gate, check-in tz farming
+- [Server hardening step 1](server_hardening_step1_facts.md) — ai-generate callers/checks, invite/handle grants, timezone farming, Sentry, edge fn auth
+- [Gear per hero (P6)](gear_per_hero_p6_facts.md) — gear lives on 5 Legend records not heroes; boardMult board-wide; v33 pins
+- [Copy flags surface map](copy_flags_surface_map.md) — 16 false COPY_REVIEWED flags: surfaces, counts, docs, checks, bundle scope

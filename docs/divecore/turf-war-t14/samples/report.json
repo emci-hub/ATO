@@ -1,0 +1,90 @@
+{
+  "now": {
+    "bolt": {
+      "x": 482,
+      "y": 0,
+      "w": 20,
+      "h": 20,
+      "pool": 1
+    },
+    "heart": {
+      "x": 98,
+      "y": 481,
+      "w": 20,
+      "h": 20,
+      "pool": 0
+    },
+    "boltLuma": {
+      "unlit": 17,
+      "dim": 34,
+      "lit": 47
+    },
+    "boltLumaFull": 53
+  },
+  "A-move": {
+    "bolt": {
+      "x": 427,
+      "y": 98,
+      "w": 20,
+      "h": 20,
+      "pool": 1
+    },
+    "heart": {
+      "x": 98,
+      "y": 481,
+      "w": 20,
+      "h": 20,
+      "pool": 0
+    },
+    "boltLuma": {
+      "unlit": 24,
+      "dim": 38,
+      "lit": 49
+    },
+    "boltLumaFull": 53
+  },
+  "B-brighter": {
+    "bolt": {
+      "x": 482,
+      "y": 0,
+      "w": 20,
+      "h": 20,
+      "pool": 1
+    },
+    "heart": {
+      "x": 98,
+      "y": 481,
+      "w": 20,
+      "h": 20,
+      "pool": 0
+    },
+    "boltLuma": {
+      "unlit": 30,
+      "dim": 41,
+      "lit": 49
+    },
+    "boltLumaFull": 53
+  },
+  "C-no-vignette": {
+    "bolt": {
+      "x": 482,
+      "y": 0,
+      "w": 20,
+      "h": 20,
+      "pool": 1
+    },
+    "heart": {
+      "x": 98,
+      "y": 481,
+      "w": 20,
+      "h": 20,
+      "pool": 0
+    },
+    "boltLuma": {
+      "unlit": 24,
+      "dim": 38,
+      "lit": 49
+    },
+    "boltLumaFull": 53
+  }
+}

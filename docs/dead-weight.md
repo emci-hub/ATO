@@ -2,6 +2,8 @@
 
 DB fields no screen ever displays. Built from the screen-by-screen pass in `docs/screen-map.md`.
 
+> **Note (2026-10-20):** this pass predates the Sage/crisis removal. `crisis_flags`, `crisisYesterday` and Dawn are now gone or unused by the app; `crisis_flags` rows are slated for a drop (wave103, UNAPPLIED).
+
 ## Result: no confirmed dead weight found in this pass
 
 Every field flagged in screen-map.md as "loaded, not rendered" on a given screen was cross-checked (grep, not assumption) against the rest of `src/`, and in every case it turned out to be genuinely used — either rendered on a *different* screen, or consumed for logic/routing rather than display. None of these are safe to delete:

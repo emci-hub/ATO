@@ -31,6 +31,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { resolvePlaySource } from './art-sheets';
 import { CAST_CLIP_SLOTS } from '../src/play/cast-kits';
 import {
   TOWER_SKILL_COOLDOWN_DEFAULT,
@@ -163,7 +164,7 @@ const stubs: string[] = [];
 const bundledSkinIds = new Set<string>();
 
 for (const skin of skins) {
-  const animations = path.join(repoRoot, skin.folder, 'animations');
+  const animations = path.join(resolvePlaySource(repoRoot, 'tower', skin.id, 'cast'), 'animations');
   const onDisk = clipFolders(animations);
   const clips = Object.entries(skin.clips).map(([clip, name]) => ({
     clip,

@@ -74,6 +74,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+    maxWidth: '100%',
+    alignSelf: 'stretch',
   },
   input: {
     borderRadius: Spacing.three,
@@ -83,8 +85,10 @@ const styles = StyleSheet.create({
   },
   dateYear: {
     flex: 1.2,
+    minWidth: 0,
   },
   datePart: {
     flex: 1,
+    minWidth: 0,
   },
 });

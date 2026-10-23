@@ -11,8 +11,6 @@
  * UNREVIEWED. Same discipline as Story/category-read/every other new copy
  * this redesign has introduced — not shippable without emci's direct read.
  */
-import { generateText } from '@/lib/ai/generate';
-import { CATEGORY_STATEMENTS_META } from '@/lib/ai/call-sites';
 import { serializeCategoryCard } from '@/lib/category-statements/card';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import type { CategoryReading } from '@/lib/categories';
@@ -22,7 +20,7 @@ import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 
-export const CATEGORY_STATEMENTS_COPY_REVIEWED = false;
+export { CATEGORY_STATEMENTS_COPY_REVIEWED } from './flags';
 export const CATEGORY_STATEMENT_MAX_CHARS = 600;
 
 export interface CategoryStatementDraft {
@@ -52,7 +50,7 @@ function groundingLine(reading: CategoryReading): string {
  */
 export function buildCategoryStatementsPrompt(readings: readonly CategoryReading[]): string {
   const lines = readings.map(groundingLine).join('\n');
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. These are category cards — one short personalized card per category, each read-only (no follow-up questions), shown on the Explore screen.
+  return `Write in the ATO app’s voice. Follow the voice reference. Not a doctor. These are category cards — one short personalized card per category, each read-only (no follow-up questions), shown on the Explore screen.
 
 VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}
@@ -133,25 +131,4 @@ export function parseCategoryStatements(
   } catch {
     return null;
   }
-}
-
-/**
- * One AI call for every ready category at once. Returns null on any failure
- * (no response, unparseable, or every row filtered out) — never throws, so
- * the caller (categories-fold.tsx) can degrade to "try again" without a
- * crash, matching every other generation call site's contract in this repo.
- */
-export async function generateCategoryStatements(
-  readyReadings: readonly CategoryReading[],
-  validIds: ReadonlySet<string>,
-): Promise<CategoryStatementDraft[] | null> {
-  if (readyReadings.length === 0) return null;
-  const text = await generateText({
-    prompt: buildCategoryStatementsPrompt(readyReadings),
-    temperature: 0.9,
-    maxOutputTokens: 1024,
-    responseFormat: 'json',
-  }, CATEGORY_STATEMENTS_META);
-  if (!text) return null;
-  return parseCategoryStatements(text, validIds);
 }

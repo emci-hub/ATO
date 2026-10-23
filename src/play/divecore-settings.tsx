@@ -1,28 +1,32 @@
 /**
- * Divecore Settings (v24, 2026-09-30) — one sheet, opened from the ⚙ on the
- * Command Hub and in the Pet room.
+ * Divecore Settings (v24, 2026-09-30) — one sheet, opened in place from the ⚙ in
+ * the top bar on any screen that has one (Phase 3, 2026-10-14: no flip to a Block).
+ * First row = Exit Play.
  *
- *   Notifications (hunger, egg hatched / hero revealed, expedition back, dive
+ *   Exit Play, in-game Notices (All / Important only), Notifications (hunger, egg hatched / hero revealed, expedition back, dive
  *   charges full), quiet hours, pet bedtime (looks only), pet chatter,
  *   effects (Full / Low), skip reveal animations, reduce motion (follow the
- *   phone or override), when daily limits reset, replay the tutorial, and
+ *   phone or override), when daily limits reset, replay the tips, and
  *   Reset Divecore (a summary of exactly what goes, then a double confirm and
  *   typing RESET — the Play save only; settings and the main app are kept).
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { setFxQuality, useFxQuality } from '@/play/fx-quality';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
+import { streetUiOn } from '@/play/street-ui';
 import { NEON } from '@/play/neon-viper';
 import { GRADES, heroStars } from '@/play/pet-eggs';
 import { askPetReminderPermission, cancelPlayNotices, petNoticesAllowed } from '@/play/pet-reminder';
+import { resetGuide, setGuideOff, useGuideStore } from '@/play/guide-store';
 import { saveSeenStageReset } from '@/play/pet-seen';
 import { PLAY_MOTION_LABEL, PLAY_MOTION_MODES, setPlayMotionMode, usePlayMotionMode } from '@/play/play-motion';
 import {
   CHATTER_LABEL,
   CHATTER_LEVELS,
+  NOTICE_MODES,
   NOTIF_KINDS,
   NOTIF_LABEL,
   nextDailyReset,
@@ -95,17 +99,23 @@ export function DivecoreSettingsSheet({
   view,
   commit,
   reduceMotion,
-  onReplayTutorial,
+  onReplayTips,
   onOpenGuide,
+  onExit,
+  extra,
 }: {
   open: boolean;
   onClose: () => void;
   view: PlayView;
   commit: Commit;
   reduceMotion: boolean;
-  onReplayTutorial: () => void;
+  onReplayTips: () => void;
   /** v26 — open the Guide (Pet → Info → Guide). */
   onOpenGuide?: () => void;
+  /** Leaves Play. First row of the sheet. */
+  onExit?: () => void;
+  /** Pre-launch tools handed in by the Play shell (never built here). */
+  extra?: ReactNode;
 }) {
   const settings = view.settings;
   const fx = useFxQuality();
@@ -129,10 +139,12 @@ export function DivecoreSettingsSheet({
     };
   }, [open]);
   const anyOn = NOTIF_KINDS.some((k) => settings.notif[k]);
+  const guide = useGuideStore();
 
   const toggle = async (kind: NotifKind) => {
     const on = !settings.notif[kind];
-    if (on) {
+    // Build notices: don't ask for permission until the first build starts.
+    if (on && kind !== 'build') {
       const granted = await askPetReminderPermission();
       setAllowed(granted);
       setPermNote(granted ? null : 'Notifications are off for ATO — turn them on in your phone’s Settings to get these.');
@@ -144,6 +156,7 @@ export function DivecoreSettingsSheet({
     commit((doc, now) => resetDivecore(doc, now));
     void cancelPlayNotices();
     void saveSeenStageReset();
+    void resetGuide();
     setResetStep('idle');
     setTyped('');
     onClose();
@@ -153,6 +166,30 @@ export function DivecoreSettingsSheet({
 
   return (
     <PlaySheet open={open} title="Divecore settings" onClose={onClose} reduceMotion={reduceMotion}>
+      {onExit ? (
+        <NeonButton
+          label="Exit Play"
+          variant="secondary"
+          onPress={() => {
+            onClose();
+            onExit();
+          }}
+        />
+      ) : null}
+
+      <NeonLabel>Notices</NeonLabel>
+      <Text style={styles.body}>The one-line notices above the screen. Errors always show.</Text>
+      <View style={styles.chips}>
+        {NOTICE_MODES.map((m) => (
+          <NeonChip
+            key={m}
+            label={m === 'all' ? 'All' : 'Important only'}
+            selected={settings.notices === m}
+            onPress={() => commit((doc) => (doc.play_settings.notices === m ? null : setPlaySettings(doc, { notices: m })))}
+          />
+        ))}
+      </View>
+
       <NeonLabel>Notifications</NeonLabel>
       {NOTIF_KINDS.map((kind) => (
         <NeonChip
@@ -215,12 +252,23 @@ export function DivecoreSettingsSheet({
         selected={settings.skipReveals}
         onPress={() => commit((doc) => setPlaySettings(doc, { skipReveals: !doc.play_settings.skipReveals }))}
       />
-      <Text style={styles.body}>Reduce motion:</Text>
+      {/* Only the street shell vibrates, so the switch shows only there. */}
+      {streetUiOn() ? (
+        <NeonChip
+          label={`Vibration on taps · ${settings.haptics ? 'On' : 'Off'}`}
+          selected={settings.haptics}
+          onPress={() => commit((doc) => setPlaySettings(doc, { haptics: !doc.play_settings.haptics }))}
+        />
+      ) : null}
+      <Text style={styles.body}>Motion: Full / Reduced / Off</Text>
       <View style={styles.chips}>
         {PLAY_MOTION_MODES.map((m) => (
           <NeonChip key={m} label={PLAY_MOTION_LABEL[m]} selected={motion === m} onPress={() => setPlayMotionMode(m)} />
         ))}
       </View>
+      {motion === 'reduced' ? (
+        <Text style={styles.body}>Your phone’s Reduce Motion setting also turns this on for camera and shake.</Text>
+      ) : null}
 
       <NeonLabel>Daily limits</NeonLabel>
       <Text style={styles.body}>
@@ -239,13 +287,22 @@ export function DivecoreSettingsSheet({
         />
       ) : null}
       <NeonButton
-        label="Replay the tutorial"
+        label="Replay tips"
         variant="secondary"
         onPress={() => {
           onClose();
-          onReplayTutorial();
+          onReplayTips();
         }}
       />
+      {/* The newbie guide bubble (finish step 5): a device-only switch, not part of the save. */}
+      <NeonChip
+        label={`Guide bubble · ${guide.off ? 'Off' : 'On'}`}
+        selected={!guide.off}
+        onPress={() => setGuideOff(!guide.off)}
+        accessibilityLabel={`Guide bubble, ${guide.off ? 'off' : 'on'}. Tap to turn it ${guide.off ? 'on' : 'off'}`}
+      />
+
+      {extra}
 
       <NeonLabel>Reset Divecore</NeonLabel>
       {resetStep === 'idle' ? (

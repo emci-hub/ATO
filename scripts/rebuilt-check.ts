@@ -20,6 +20,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { isTabParked } from '../src/lib/nav/nav-order';
+
 let passed = 0;
 function ok(label: string) {
   passed += 1;
@@ -34,7 +36,7 @@ function read(rel: string): string {
 /**
  * Scoped to real code, not comments: a parked screen's docstring names the
  * modules it was disconnected from on purpose, explaining what was removed and
- * why. `sage.tsx` names `generateText` in exactly that way.
+ * why.
  */
 function codeOnly(source: string): string {
   return source
@@ -51,9 +53,12 @@ const NOTICE = 'src/components/rebuilt-notice.tsx';
  * its screen here: Around (Card 2), Legends + Roll (Card 3), Week (Card 4).
  */
 const PARKED_SCREENS: { rel: string; label: string }[] = [
-  { rel: 'src/app/(tabs)/sage.tsx', label: 'Sage' },
+  // Sage left this list 2026-10-14: the tab was replaced by Insights and the
+  // placeholder deleted; /sage is a redirect (check:tab-rename).
   { rel: 'src/app/(tabs)/around.tsx', label: 'Around' },
-  { rel: 'src/app/(tabs)/legends.tsx', label: 'Legends' },
+  // Legends was rebuilt 2026-10-08 as the museum of legends (src/lib/legend-figures):
+  // its gates are pinned in legend-roster-check.ts, no-auto-ai-check.ts and
+  // milestones-check.ts instead.
   { rel: 'src/app/(tabs)/roll.tsx', label: 'Roll' },
   // Card F (2026-09-15): everything outside the Home / Questions / Explore
   // spine. `you.tsx` is NOT here on purpose — it is parked but deliberately
@@ -62,9 +67,10 @@ const PARKED_SCREENS: { rel: string; label: string }[] = [
   // Its kept-controls contract is pinned at the bottom of THIS file instead
   // (`delete-account-check.ts` is a live check and is excluded from the gate,
   // so it cannot carry an App Store invariant).
-  { rel: 'src/app/(tabs)/circle.tsx', label: 'Circle' },
+  // Circle was rebuilt 2026-10-21 as a plain friend list with Message; pinned at the bottom of this file.
   { rel: 'src/app/week.tsx', label: 'This week' },
-  { rel: 'src/app/chat.tsx', label: 'Chat' },
+  // Chat was rebuilt 2026-10-21 (master plan Step 14) as the end-to-end encrypted Circle chat; its
+  // rules are pinned in circle-chat-check.ts instead.
 ];
 
 /**
@@ -174,13 +180,47 @@ const youCode = codeOnly(read(YOU));
 // half look broken. The App Store controls below are still pinned.
 assert.doesNotMatch(youCode, /<RebuiltNotice/, 'You no longer shows a Rebuilt notice');
 assert.ok(youCode.includes('<AtoTokenCard me={me} />'), 'the token balance is visible on You');
-assert.ok(youCode.includes('<SageFactsCard me={me} onUpdated={refresh} />'), 'saved facts can be seen and deleted on You');
+// 2026-10-14: the saved-facts list ("Teach Sage") is hidden; the data stays
+// until docs/sage-cleanup.md drops it.
+assert.ok(!youCode.includes('SageFactsCard'), 'the saved-facts list is hidden on You');
 assert.match(youCode, /<DeleteAccountSheet/, 'delete account must stay reachable on You (App Store 5.1.1(v))');
 assert.match(youCode, /Delete account/, 'the delete-account control must be labelled');
+// Roadmap A5 (VoiceOver): the delete control and the sheet's close X announce themselves, and the
+// sheet no longer promises to delete "saved facts" (that feature and its column are gone).
+assert.match(youCode, /accessibilityRole="button"\s+accessibilityLabel="Delete account"\s+onPress=\{\(\) => setDeleting\(true\)\}/, 'the delete control has a role and a label');
+const deleteSheet = codeOnly(read('src/components/delete-account-sheet.tsx'));
+assert.match(deleteSheet, /accessibilityRole="button"\s+accessibilityLabel="Close"/, 'the sheet close X has a role and a label');
+assert.doesNotMatch(read('src/components/delete-account-sheet.tsx'), /saved facts/i, 'the delete sheet no longer lists saved facts');
+assert.match(read('src/components/delete-account-sheet.tsx'), /like your answers, profile cards and Legends/, 'pass: it names what is really saved');
+assert.doesNotMatch('Everything you saved in ATO, like your answers, profile cards and Legends', /saved facts/i, 'pass pair: the new wording');
+assert.match('Everything you saved in ATO, including saved facts', /saved facts/i, 'fail pair: the old wording would be caught');
 assert.match(youCode, /supabase\.auth\.signOut\(\)/, 'sign out must stay reachable on You');
 assert.match(youCode, /clearLocalAccountData\(\)/, "signing out must still clear this account's local keys");
 assert.match(youCode, /setAiConsent\(/, 'AI consent must stay changeable on You (Apple 5.1.2)');
 assert.match(youCode, /\{AI_USE_DISCLOSURE\}/, 'the AI-use disclosure must RENDER beside the consent control, not just be imported');
-ok('You keeps delete account, sign out and AI consent, and shows tokens + saved facts');
+ok('You keeps delete account, sign out and AI consent, and shows tokens; saved facts are hidden');
+
+// ---------------------------------------------------------------------------
+// Circle is a real tab again: a friend list that opens chat, with no Divecore UI.
+// ---------------------------------------------------------------------------
+
+const circleCode = codeOnly(read('src/app/(tabs)/circle.tsx'));
+assert.doesNotMatch(circleCode, /<RebuiltNotice/, 'Circle is a real screen now, not a Rebuilt notice');
+assert.match(circleCode, /fetchCircleFriends\(\)/, 'Circle lists friends from the server list the Divecore sheet uses');
+assert.match(circleCode, /pathname:\s*'\/chat'/, 'Circle opens the standalone chat route');
+const circlePanelsCode = codeOnly(read('src/components/circle-panels.tsx'));
+assert.doesNotMatch(circleCode, /@\/play\/(?!circle-(visits|compare)(-store)?['"])/, 'Circle imports no Divecore UI (only the circle stores, copy and types)');
+assert.doesNotMatch(circlePanelsCode, /@\/play\/(?!circle-(visits|compare)(-store)?['"])/, 'Circle panels import no Divecore UI');
+// Safety tools live in the Circle tab (emci 2026-10-21); visits and gifts stay in Divecore.
+for (const f of ['sendCircleRequest', 'respondCircleRequest', 'cancelCircleRequest', 'blockCirclePeer', 'removeCirclePeer', 'reportCirclePeer', 'unblockCirclePeer', 'fetchCircleBlocked', 'fetchCircleRequests']) {
+  assert.match(circleCode, new RegExp(`\\b${f}\\(`), `Circle tab calls ${f}`);
+}
+assert.match(circleCode, /twoTap\.confirm\(`block:/, 'Block takes two taps in the Circle tab');
+assert.match(circleCode, /mailto:\$\{CIRCLE_SUPPORT_EMAIL\}/, 'Circle tab carries the support line');
+assert.match(circlePanelsCode, /CIRCLE_REPORT_REASON_IDS\.map/, 'Report lists the fixed reasons');
+const divecoreSheet = codeOnly(read('src/play/circle-visits-ui.tsx'));
+assert.doesNotMatch(divecoreSheet, /blockCirclePeer|reportCirclePeer|sendCircleRequest|respondCircleRequest|unblockCirclePeer|TextInput|circle-compare/, 'the Divecore sheet no longer carries the safety tools');
+assert.ok(!isTabParked('circle'), 'Circle is offered in the bar and More');
+ok('Circle is a real tab: friends, Message, requests, ⋯ menu (Report/Block), Blocked, support line; no Divecore UI');
 
 console.log(`\n${passed} rebuilt checks passed`);

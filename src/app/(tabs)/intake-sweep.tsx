@@ -23,7 +23,7 @@ import { fetchTraitTracks } from '@/lib/trait-tracks-store';
  * Questions — where the full profile gets built, and the only screen that can
  * add to it (ISOLATION_PLAN §7 Card D).
  *
- * One surface: `QuestionsFold` — the 50-question bank while it is unfinished,
+ * One surface: `QuestionsFold` — the 48-question intake while it is unfinished,
  * then the "Next 25 questions" round once it is. Renders `alwaysOpen`
  * (2026-09-15): the bank list is expanded immediately, no collapse header
  * and no tap needed — safe, since the bank is local/no-backend. The 25-item

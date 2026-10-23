@@ -1,0 +1,37 @@
+{
+  "tool": "pixellab",
+  "room": "hideout",
+  "approvedBy": "emci 2026-10-12 (sample + scale sheet)",
+  "view": "low top-down",
+  "styleCard": { "outline": "selective outline", "shading": "medium shading", "detail": "medium detail" },
+  "scaleReference": "hero.kael.streetwear south, H=106 px, guide §2 table",
+  "parts": {
+    "kit": { "tool": "create_building_kit", "id": "4428a7b7-f80c-472f-8970-ee31c981910f", "params": { "tile_type": "square_topdown", "tile_size": 32, "wall_tiles": 3, "layout": "materials" }, "wall": "worn red-brown brick walls at night, dim indigo shadows, a few darker bricks, no writing", "floor": "warm wooden plank floor, planks running left to right, slightly scuffed, dim plum shadows", "used": { "t0": "floor 32x24 (crop 10,79)", "t1": "back wall 32x81 (crop 10,7)", "t4": "side cap 12x24 (crop 10,7)" } },
+    "floor-variants": { "tool": "create_tiles_pro", "id": "637f98d3-4fe5-4d0b-a172-75216ab39b17", "style_images": ["kit t0 32x24"], "prompt": "1). wooden plank floor 2). scuff mark 3). dark knot 4). small crack" },
+    "props": {
+      "couch": { "tool": "create_map_object", "id": "dcb35366-5c2d-4ef2-8d2a-bd4ee1ed1a65", "canvas": [124, 110], "box": [118, 71], "tries": 4 },
+      "table": { "tool": "create_map_object", "id": "e5a60562-8e3c-4c99-896d-85ed82e36f0e", "canvas": [80, 56], "box": [69, 44], "tries": 3 },
+      "speaker": { "tool": "create_map_object", "id": "4a9af549-556b-4e1f-a6a4-e0dd87e385dd", "canvas": [32, 80], "box": [23, 74], "tries": 1 },
+      "lamp": { "tool": "create_map_object", "id": "b6dda73c-e0fe-4b49-81e4-d5289d0edffb", "canvas": [32, 120], "box": [22, 110], "tries": 1 },
+      "arcade": { "tool": "create_map_object", "id": "a7b4d047-302b-4b05-9c4f-90a73ad91d1a", "canvas": [44, 136], "box": [39, 123], "tries": 2 },
+      "plant": { "tool": "create_map_object", "id": "7e909004-22a7-4c32-bfc9-90b6b417d2d6", "canvas": [40, 80], "box": [36, 72], "tries": 1 },
+      "stereo": { "tool": "create_map_object", "id": "79ea5464-0862-455a-8c0b-59379e19de30", "canvas": [36, 82], "box": [30, 65], "tries": 3 },
+      "window": { "tool": "create_map_object", "view": "side", "id": "b7e32d8f-d243-4257-8f6c-14b0961c3082", "canvas": [60, 72], "box": [52, 65], "tries": 3 },
+      "beanbag": { "tool": "pipeline test 2026-10-12 (sample5)", "box": [52, 54] },
+      "manhole": { "tool": "create_map_object", "id": "4787f8b0-3538-45af-a2ad-155900455bc9", "canvas": [64, 32] },
+      "rug": { "tool": "create_map_object", "id": "25088e4b-57f2-42bd-93b5-865806e93956", "canvas": [120, 56] },
+      "bowl": { "tool": "create_map_object", "id": "f435fcd7-08ce-4650-b353-ce07eedb2a5d", "canvas": [32, 32] },
+      "cushion": { "tool": "create_map_object", "id": "340ff52e-320e-4c6e-86ed-e3b6c6f5de9d", "canvas": [72, 48] }
+    },
+    "states": {
+      "lamp-off": { "tool": "create_object_state", "id": "3101f3fe-0204-46c3-91a9-fe4ec23556c9", "source": "lamp" },
+      "arcade-off": { "tool": "create_object_state", "id": "48267f15-064f-4f33-800e-c5d5a4c13d08", "source": "arcade" }
+    }
+  },
+  "promptRules": "every prop: 'fills the whole canvas edge to edge, empty, no person, purely pictorial with zero writing'; canvas = guide target box + ~10% (PixelLab draws ~10-20% inside the canvas)",
+  "cost": { "generations": 52, "note": "approx., all room parts incl. retries" },
+  "createdAt": "2026-10-13T02:00:00Z",
+  "operator": "claude",
+  "picked": true,
+  "critique": { "score": null, "notes": "scale sheet: 8/9 within ±10%, couch at -10% height" }
+}

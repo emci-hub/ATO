@@ -1,7 +1,7 @@
 /**
- * Unified transport for every Sage model call. Prompt builders stay elsewhere;
- * this layer only ships a prompt and returns the raw text the existing parsers
- * already know how to read.
+ * Provider ids for the developer AI lab and the self-tracked usage counts.
+ * No model call is made from the phone: every call runs in the `ai-library`
+ * Edge Function (the old `ai-generate` client path was removed in roadmap A5).
  */
 
 export const AI_PROVIDER_IDS = [
@@ -27,36 +27,6 @@ export const REMOTE_AI_PROVIDER_IDS = [
 
 export type RemoteAiProviderId = (typeof REMOTE_AI_PROVIDER_IDS)[number];
 
-export type AiResponseFormat = 'json' | 'text';
-
-export interface GenerateRequest {
-  prompt: string;
-  temperature: number;
-  maxOutputTokens: number;
-  responseFormat: AiResponseFormat;
-}
-
-/**
- * Every generateText call site must declare how its output may be shared or
- * batched. Values live in src/lib/ai/call-sites.ts; scripts/ai-provider-check.ts
- * fails when any call site is missing this metadata, so a new AI feature has
- * to make the call before it ships.
- */
-export interface AiCallMetadata {
-  /** Output is per-user (name / history / messages / tone) and cannot be shared. */
-  personalized: boolean;
-  /** A single generation could serve every user (no user-specific input). */
-  cohortShareable: boolean;
-  /** One generation per trait-profile bucket could serve every user in that bucket. */
-  bucketShareable: boolean;
-  /** A user is waiting live on this call; it cannot move to a schedule without a cache. */
-  latencySensitive: boolean;
-}
-
 export function isAiProviderId(value: unknown): value is AiProviderId {
   return typeof value === 'string' && (AI_PROVIDER_IDS as readonly string[]).includes(value);
-}
-
-export function isRemoteAiProviderId(value: unknown): value is RemoteAiProviderId {
-  return typeof value === 'string' && (REMOTE_AI_PROVIDER_IDS as readonly string[]).includes(value);
 }

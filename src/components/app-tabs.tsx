@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { NavEditOverlay } from '@/components/nav-edit-overlay';
 import { NavMoreSheet } from '@/components/nav-more-sheet';
-import { SageTabIcon } from '@/components/sage-tab-icon';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -28,9 +27,9 @@ import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
  * Custom JS bottom tab bar: 5 slots. Slot 5 is always "More" (fixed, not
- * draggable). Slots 1–4 render Home + Sage (each once) interleaved with the
- * two pool tabs chosen in edit mode, in the user's saved order. Locked pool
- * tabs (e.g. Circle until a friend is scanned) are skipped visually but stay
+ * draggable). The other slots render Home + Insights (each once) interleaved
+ * with the pool tabs chosen in edit mode, in the user's saved order. Locked pool
+ * tabs (any tab with an `isUnlocked` gate; none right now) are skipped visually but stay
  * registered as routes via hidden triggers inside TabList.
  *
  * Replaces NativeTabs with one headless expo-router/ui navigator so order and
@@ -66,18 +65,18 @@ export default function AppTabs() {
     PARKED tab (ISOLATION_PLAN §7 Card F). A parked id keeps its slot in the
     saved layout — nothing rewrites `me.nav_layout` — it just renders no
     button, and gets a hidden trigger below so its route stays navigable. A
-    parked PINNED id (none right now — `sage` was un-parked 2026-09-15) would
-    drop out here the same way, via `PARKED_PINNED_IDS`.
+    parked PINNED id (none right now) would drop out here the same way, via
+    `PARKED_PINNED_IDS`.
   */
   const visibleSlots = layout.slots.filter(
-    (id) => !isTabParked(id) && (id === 'home' || id === 'sage' || !lockedSet.has(id)),
+    (id) => !isTabParked(id) && (id === 'home' || id === 'insights' || !lockedSet.has(id)),
   );
 
   // Every unlocked, unparked pool tab not currently shown in a slot → More +
   // hidden trigger. Parked tabs are NOT offered in More: landing on a
   // placeholder should take a deep link, never a menu tap.
   const shownPool = visibleSlots.filter(
-    (id): id is ReorderableTabId => id !== 'home' && id !== 'sage',
+    (id): id is ReorderableTabId => id !== 'home' && id !== 'insights',
   );
   const moreIds = NAV_TAB_IDS.filter(
     (id) => !shownPool.includes(id) && isTabUnlocked(id, unlockCtx) && !isTabParked(id),
@@ -102,10 +101,10 @@ export default function AppTabs() {
         </TabTrigger>
       );
     }
-    if (id === 'sage') {
+    if (id === 'insights') {
       return (
-        <TabTrigger key="sage" name="sage" href="/sage" asChild>
-          <NavTabButton label="Sage" iconNode={<SageTabIcon />} onLongPress={startEditing} />
+        <TabTrigger key="insights" name="insights" href="/insights" asChild>
+          <NavTabButton label="Insights" icon="lightbulb-on-outline" onLongPress={startEditing} />
         </TabTrigger>
       );
     }
@@ -156,6 +155,18 @@ export default function AppTabs() {
             />
           ))}
 
+          {lockedTabs
+            .filter((id) => !isTabParked(id))
+            .map((id) => (
+              <TabTrigger
+                key={`hidden-locked-${id}`}
+                name={id}
+                href={NAV_TABS[id].href}
+                style={styles.hidden}
+                accessible={false}
+              />
+            ))}
+
           {parkedTriggers.map((route) => (
             <TabTrigger
               key={`hidden-parked-${route.name}`}
@@ -181,7 +192,6 @@ export default function AppTabs() {
       <NavMoreSheet
         open={moreOpen}
         moreIds={moreIds}
-        showSage={isTabParked('sage')}
         onClose={() => setMoreOpen(false)}
       />
       {editing ? <NavEditOverlay lockedTabs={lockedTabs} /> : null}

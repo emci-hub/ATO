@@ -26,6 +26,9 @@ export const PET_EXPEDITION_PUSH_ID = 'ato.play.pet.expedition';
 export const DIVE_CHARGES_PUSH_ID = 'ato.play.dive.charges';
 export const TIDE_PASS_PUSH_ID = 'ato.play.pet.tide';
 export const FREE_EGGS_PUSH_ID = 'ato.play.pet.eggs';
+export const HIDEOUT_BUILD_PUSH_ID = 'ato.play.pet.build';
+
+const BUILD_PUSH_IDS = ['loft', 'garage', 'rooftop'].map((id) => `${HIDEOUT_BUILD_PUSH_ID}.${id}`);
 
 const PUSH_ID: Record<NotifKind, string> = {
   hunger: PET_HUNGER_PUSH_ID,
@@ -34,6 +37,7 @@ const PUSH_ID: Record<NotifKind, string> = {
   charges: DIVE_CHARGES_PUSH_ID,
   tide: TIDE_PASS_PUSH_ID,
   eggs_ready: FREE_EGGS_PUSH_ID,
+  build: HIDEOUT_BUILD_PUSH_ID,
 };
 
 /** Fired / pending logs for the notices with a minimum gap. */
@@ -69,13 +73,33 @@ async function writeLog(kind: NotifKind, next: PetReminderLog): Promise<void> {
   }
 }
 
-/** Ask for notification permission (when a notice is switched on). */
-export async function askPetReminderPermission(): Promise<boolean> {
+/**
+ * The app's own one-time notification ask (`src/lib/push.ts` ASKED_KEY, the "Want a nudge now and
+ * then?" sheet). Its "Not now" is stored only on the phone, so the OS still reads "undetermined";
+ * an automatic Divecore ask must not override that answer (roadmap v2 step A1).
+ */
+export const APP_PUSH_ASKED_KEY = 'ato.push.asked';
+
+/**
+ * Ask for notification permission. `auto` = Divecore asks on its own (e.g. after the first Build):
+ * skipped once the app's sheet has been answered. A tap on a notice switch in Divecore Settings is
+ * the person asking, so it is never skipped.
+ */
+export async function askPetReminderPermission(opts: { auto?: boolean } = {}): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   try {
     const current = await Notifications.getPermissionsAsync();
     if (current.granted) return true;
     if (current.status !== 'undetermined') return false;
+    if (opts.auto) {
+      let appAsked = false;
+      try {
+        appAsked = (await AsyncStorage.getItem(APP_PUSH_ASKED_KEY)) === '1';
+      } catch {
+        appAsked = false;
+      }
+      if (appAsked) return false;
+    }
     const asked = await Notifications.requestPermissionsAsync({
       ios: { allowAlert: true, allowBadge: false, allowSound: false },
     });
@@ -98,7 +122,7 @@ export async function petNoticesAllowed(): Promise<boolean> {
 /** Cancel every Divecore notice (reset, or nothing to send). */
 export async function cancelPlayNotices(): Promise<void> {
   if (Platform.OS === 'web') return;
-  for (const id of Object.values(PUSH_ID)) {
+  for (const id of [...Object.values(PUSH_ID), ...BUILD_PUSH_IDS]) {
     try {
       await Notifications.cancelScheduledNotificationAsync(id);
     } catch {
@@ -110,6 +134,17 @@ export async function cancelPlayNotices(): Promise<void> {
 /** Kept for callers from before v24 (sign-out uses push.ts's own literal). */
 export async function cancelPetReminder(): Promise<void> {
   await cancelPlayNotices();
+}
+
+/** When the hunger / charges push last fired (or would have), for the away card. Never throws. */
+export async function lastPushFiredAt(kind: 'hunger' | 'charges', now: number): Promise<number | null> {
+  try {
+    // With notifications off nothing was sent (the log still holds the planned time).
+    if (!(await petNoticesAllowed())) return null;
+    return petReminderLastFired(await readLog(kind), now);
+  } catch {
+    return null;
+  }
 }
 
 /** Re-plan and re-schedule every Divecore notice for this state. */
@@ -139,7 +174,7 @@ export async function syncPlayNotices(input: Omit<NoticeInput, 'hungerLastFiredA
     }
     for (const n of plan) {
       await Notifications.scheduleNotificationAsync({
-        identifier: PUSH_ID[n.kind],
+        identifier: n.kind === 'build' && n.room ? `${HIDEOUT_BUILD_PUSH_ID}.${n.room}` : PUSH_ID[n.kind],
         content: { title: n.title, body: n.body, sound: false },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,

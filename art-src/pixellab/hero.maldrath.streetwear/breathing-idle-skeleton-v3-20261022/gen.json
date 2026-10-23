@@ -1,0 +1,13 @@
+{
+  "tool": "pixellab",
+  "operator": "claude (next-hero test: skeleton-v3 east only, emci 'approve keep going')",
+  "createdAt": "2026-10-22",
+  "source": "art-src/pixellab/hero.maldrath.streetwear/migrated/raw/rotations/{south,east,north,west}.png (192x192)",
+  "character_id": "1cfc0e95-ded6-4d3d-911b-ceb18867fe16",
+  "import": {"tool": "create_character", "mode": "v3", "n_directions": 4, "direction_images": "east,north,west", "generations": 0.25},
+  "animation": {"tool": "animate_character", "mode": "skeleton-v3", "template_animation_id": "breathing-idle", "directions": ["east"], "frames": 4, "canvas": "192x192", "generations": 3, "group": "4ce61729-e94c-4a33-9363-62536b7a91a9", "animation_id": "9dee14cc-4280-4c33-9e7f-937b5d143fdd", "job": "02299b78-decc-4114-bfe5-72c33276db40", "note": "first attempt (job 0b8fd8c1-..., queued while the import was still finishing) failed: 'no stored 3D skeleton'; not charged; retried after the import completed"},
+  "seed": null,
+  "picked": false,
+  "installed": false,
+  "critique": {"score": null, "notes": "east only. Height 112-114 (current 110-116), feet row 154 (current 153 -> shift up 1 px), 1235-1904 changed px/frame (current 786-2545). Identity kept: crown, hood, cape with red stains, greatsword with runes, arm patch, sneakers. Drift: sword hangs lower/angled forward, cape softer and more slanted, chest vest/pouch rig mostly gone, eye glow dimmer. Awaiting emci's ok."}
+}

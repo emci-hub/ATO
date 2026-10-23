@@ -1,0 +1,19 @@
+{
+  "step": "Turf War T7 polish beats",
+  "date": "2026-10-17",
+  "tool": "vfx_workbench (free, 0 generations)",
+  "picked_by": "emci at stop 1, all recommended: Wave start B (new cyan street portal), Wave clear B (the same portal closes at the exit, reuse), Win B (new gold + cyan sparks per tower), Lose A (ghost replay, code; still trail for Reduce Motion / Off)",
+  "samples": "docs/divecore/turf-war-t7/t7-*.png|gif",
+  "palette_note": "gate = cyan neon ramp #062a33..#ecfeff + deep hole #0b0820..#22d3ee (cyan so it never reads as the magenta boss sigil); cheer = gold ramp #7a4a06..#fffbeb + cyan pop #0e6f80..#ecfeff",
+  "assets": [
+    { "file": "gate/burst.png", "effect_id": "b154844b-5a3e-4038-be2f-9c4cc94bcd88", "parts": ["own layers: hole (glow, deep ramp), swirl (spiral x3 arms), rim (ring w1), wave (ring 0..0.4), motes (rise 0.15..0.85) — all squash 0.42 (flat ground ellipse)"], "size": "80x56", "frames": 14, "fps": 12, "loop": false, "note": "opens f0-3, swirls f4-10, closes f11-13; the wave-clear beat plays frames 7..13 at the exit" },
+    { "file": "cheer/burst.png", "effect_id": "26d98b3e-8c09-4710-994d-779505893e98", "parts": ["spark_burst x1.0 amount 1.6 (0..0.7, core, gold)", "collect_pop x0.6 (0.1..1, cyan)"], "size": "68x64", "frames": 10, "fps": 12, "loop": false }
+  ],
+  "rejected": [
+    { "name": "start A", "why": "library void/burst x0.6: purple flame, too close to the boss colours" },
+    { "name": "start (first try)", "why": "teleport_in cyan column: read like the T6 boss light column" },
+    { "name": "clear A", "why": "code-drawn cyan sweep along the road: not picked" },
+    { "name": "win A", "why": "library spark/burst x0.5: its lightning bolt reads as a hit, not a reward" },
+    { "name": "lose B", "why": "still trail for everyone: kept only as the Reduce Motion / Off version of A" }
+  ]
+}

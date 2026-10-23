@@ -10,7 +10,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { shapeFilledCount, shapeGeometry, traitShapePoints } from '../src/lib/trait-shape';
+import { AXIS_SHORT_NAME } from '../src/lib/axis-poles';
+import {
+  SHAPE_LABEL_RING,
+  axisAtPoint,
+  labeledOuterRadius,
+  shapeFilledCount,
+  shapeGeometry,
+  traitShapePoints,
+} from '../src/lib/trait-shape';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES } from '../src/lib/traits';
 
@@ -68,5 +76,43 @@ assert.doesNotMatch(component, /toFixed|Math\.round|%`|stability|answerCount/);
 assert.match(component, /reduceMotion \|\| !animate/);
 assert.doesNotMatch(component, /generateText|supabase|\.rpc\(/);
 ok('the shape prints no numbers, honours Reduce Motion and calls nothing');
+
+// Bigger and easier to tap (emci, 2026-10-08).
+{
+  const names = TRAIT_AXES.map((a) => AXIS_SHORT_NAME[a]);
+  for (const size of [260, 313, 340]) {
+    const font = size >= 280 ? 10 : 9.5;
+    const outer = labeledOuterRadius(names, size, font);
+    assert.ok(outer > size * 0.25, `size ${size}: the shape is bigger than the old quarter (${outer.toFixed(1)})`);
+    // Every name still fits inside the square, anchored the way the component draws it.
+    names.forEach((name, i) => {
+      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / names.length;
+      const x = size / 2 + outer * SHAPE_LABEL_RING * Math.cos(angle);
+      const width = name.length * font * 0.56;
+      const cos = Math.cos(angle);
+      const left = cos > 0.05 ? x : cos < -0.05 ? x - width : x - width / 2;
+      const right = cos > 0.05 ? x + width : cos < -0.05 ? x : x + width / 2;
+      assert.ok(left >= 0 && right <= size, `size ${size}: "${name}" fits (${left.toFixed(0)}..${right.toFixed(0)})`);
+    });
+  }
+  const geo = shapeGeometry(traitShapePoints({} as never, []), 300, 100);
+  geo.coords.forEach((c, i) => {
+    assert.equal(axisAtPoint(geo, c.edgeX, c.edgeY), c.axis, 'a tap on a spoke is that trait');
+    // A tap just short of halfway to the next spoke still belongs to this one.
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / 16 + (Math.PI / 16) * 0.9;
+    assert.equal(axisAtPoint(geo, 150 + 60 * Math.cos(a), 150 + 60 * Math.sin(a)), c.axis, 'each trait owns its whole slice');
+  });
+  assert.equal(axisAtPoint(geo, 150, 150), null, 'the very centre picks nothing');
+  const shapeComponent = readFileSync(resolve(__dirname, '../src/components/trait-shape.tsx'), 'utf8');
+  assert.match(
+    shapeComponent,
+    /const axis = axisAtPoint\(geo, event\.nativeEvent\.locationX, event\.nativeEvent\.locationY\);/,
+    'one tap area over the whole diagram',
+  );
+  assert.match(shapeComponent, /accessibilityActions=\{geo\.coords\.map/, 'screen readers get one action per trait');
+  assert.doesNotMatch(shapeComponent, /const HIT = 26/, 'the old 26px dots are gone');
+}
+ok('the hero shape is as big as its names allow, and a tap anywhere in a trait’s slice opens it');
+
 
 console.log(`\ntrait-shape-check: ${passed} passed`);

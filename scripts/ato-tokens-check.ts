@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
+  AI_TOKEN_PRICE,
   ATO_TOKEN_EARN,
   ATO_TOKEN_PRICE,
   atoPriceLine,
@@ -21,9 +22,16 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-assert.deepEqual(ATO_TOKEN_EARN, { full_profile_complete: 21, ongoing_round_complete: 21 });
+// wave92 (emci 2026-10-09): one AI view = AI_TOKEN_PRICE; check-in and a set of 16 are one view each,
+// the 7th check-in two, the first 48 all three.
+assert.deepEqual(ATO_TOKEN_EARN, { full_profile_complete: 15, ongoing_round_complete: 5, daily_checkin: 5, checkin_week_bonus: 10 });
+assert.equal(AI_TOKEN_PRICE, 5);
+assert.equal(ATO_TOKEN_EARN.daily_checkin, AI_TOKEN_PRICE, 'a check-in buys one AI view');
+assert.equal(ATO_TOKEN_EARN.ongoing_round_complete, AI_TOKEN_PRICE, 'a set of 16 buys one AI view');
+assert.equal(ATO_TOKEN_EARN.checkin_week_bonus, AI_TOKEN_PRICE * 2, 'the 7th check-in buys two');
+assert.equal(ATO_TOKEN_EARN.full_profile_complete, AI_TOKEN_PRICE * 3, 'the first 48 buy one of each AI view');
 assert.deepEqual(ATO_TOKEN_PRICE, { legend_reroll: 10, category_reroll: 1, question_reroll: 1 });
-ok('earn/price constants match the finalized plan exactly (21/21 earn, 10/1/1 spend)');
+ok('earn/price constants match the plan exactly (wave92: 15 once, 5 per set, 5 check-in, 10 every 7th; AI 5; rerolls 10/1/1)');
 
 assert.equal(atoTokenBalanceOf({ ato_tokens: 42 }), 42);
 assert.equal(atoTokenBalanceOf({ ato_tokens: -3 }), 0, 'negative/invalid never displays as a negative balance');
@@ -126,24 +134,13 @@ for (const reason of [...Object.keys(ATO_TOKEN_EARN), ...Object.keys(ATO_TOKEN_P
 }
 ok('the token balance and recent history have a card (mounted on You — pinned by check:rebuilt)');
 
-// Category reroll: 1 token, once per category per day; spend only after a new
-// statement exists; refuse before any model call when the answer is known.
+// Category reroll: FROZEN (emci 2026-10-07). The category card is stored copy
+// now, so the control is gone from Explore; the spend RPC and its client stay
+// so the reroll can return without a migration (check:reroll pins the flag).
 const catSrc = src('src/components/categories-fold.tsx');
-assert.ok(catSrc.includes('onPress={() => void loadCategory(reading, true)}'), 'the reroll control goes through loadCategory (the one model call site)');
-// A failed reroll must not be retried for free: `reroll` defaults to "a saved
-// statement already exists", so the error row's Try again is priced like the
-// tap that started it. (Found in review 2026-10-01.)
-assert.ok(
-  catSrc.includes('async function loadCategory(reading: CategoryReading, reroll = statements.has(reading.def.id))'),
-  'reroll defaults to whether a statement is already saved',
-);
-const rerollGate = catSrc.slice(catSrc.indexOf('if (reroll) {'), catSrc.indexOf('// Gates, in order'));
-assert.ok(rerollGate.includes('rerolledTodayRef.current.has(id)'), 'a known "already today" is refused before any call');
-assert.ok(rerollGate.includes('atoTokenBalanceOf(me) < ATO_TOKEN_PRICE.category_reroll'), 'an empty balance is refused before any call');
-const genAt = catSrc.indexOf('generateCategoryStatements([');
-const spendAt = catSrc.indexOf('await spendCategoryReroll(id)');
-const saveAt = catSrc.indexOf('await saveCategoryStatements(drafts)');
-assert.ok(genAt > 0 && genAt < spendAt && spendAt < saveAt, 'generate, then spend, then save — a failed write never costs a token');
-ok('category reroll: 1 token via loadCategory, refused early when known, spent only after a new statement exists');
+assert.doesNotMatch(catSrc, /spendCategoryReroll|CATEGORY_REWRITE_LABEL|loadCategory\(reading, true\)/, 'no category reroll on Explore');
+const rerollSpendSrc = src('src/lib/category-statements/reroll-spend.ts');
+assert.match(rerollSpendSrc, /export async function spendCategoryReroll\(/, 'the spend client is kept, not deleted');
+ok('category reroll is frozen: no control on Explore, the spend client kept for later');
 
 console.log(`\n${passed} ato-tokens checks passed`);

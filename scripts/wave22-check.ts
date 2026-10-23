@@ -19,19 +19,13 @@ import {
 import { CONCEPT_COPY_REVIEWED, CATEGORY_CONCEPTS, conceptCopyClean } from '../src/lib/concept-explainers';
 import { repeatsPinnedCategories } from '../src/lib/explore/combine';
 import {
-  STORY_COPY_REVIEWED,
   STORY_LABEL,
-  STORY_TENSION_SAMPLES,
-  STORY_SAMPLES,
-  buildStoryPrompt,
-  parseStoryBody,
-  storyCopyClean,
+  formatStoryTensionNote,
   storyFingerprint,
   storyNamesACategory,
   storyReady,
 } from '../src/lib/sage-story';
 import { isThinProfile, settledCount, applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
-import { TITLE_COPY_REVIEWED } from '../src/lib/sage-title';
 import { TRAIT_AXES } from '../src/lib/traits';
 
 let passed = 0;
@@ -91,13 +85,14 @@ assert.ok(CATEGORY_CONCEPTS.cat_levity.length > 0);
 ok('Levity is a bar of playfulness + conflict axes; same stability floor; copy flagged unreviewed');
 
 console.log('PART 4 — The Story');
-assert.equal(STORY_COPY_REVIEWED, false);
-assert.equal(TITLE_COPY_REVIEWED, false);
 assert.equal(STORY_LABEL, 'The Story');
-assert.equal(STORY_TENSION_SAMPLES.length, 3);
-assert.doesNotMatch(STORY_TENSION_SAMPLES.join('\n'), /leaving visible|not a verdict|on paper|told us|gut-call/i);
-assert.doesNotMatch(STORY_SAMPLES[0]!.body, /on paper|none of this is a type|last stretch has been sitting/i);
-assert.equal(storyCopyClean(), true);
+// The old AI Story (prompt, answer parser, samples, STORY_COPY_REVIEWED) was removed in roadmap A5; the
+// told-vs-played note the template card still shows is pinned here (pass: plain wording, fail: a verdict).
+const tensionNote = formatStoryTensionNote([{ axis: 'extraversion', report: 0.8, game: 0.2 } as never]);
+assert.ok(tensionNote, 'a note for a real told-vs-played gap');
+assert.doesNotMatch(tensionNote!, /leaving visible|not a verdict|on paper|told us|gut-call/i);
+assert.match(tensionNote!, /Maybe you're just different depending on the moment/);
+assert.equal(formatStoryTensionNote([]), null, 'fail case: no gap, no note');
 assert.equal(storyNamesACategory('Openness to life showed up this week.'), true);
 assert.equal(storyNamesACategory('A hard talk can still have a bit of air in it.'), false);
 const thinTracks = [stableReport('openness', 0.5)];
@@ -129,17 +124,14 @@ ok('Story has its own quota lane, thin-profile gate, and no title-RPC reuse');
 
 const many: TraitTrack[] = TRAIT_AXES.map((axis) => stableReport(axis, 0.6));
 assert.equal(storyReady(many), true);
-const storyPrompt = buildStoryPrompt({ tracks: many, divergenceNote: 'told and played do not quite match.' });
-assert.match(storyPrompt, /TOLD-VS-PLAYED/);
-assert.match(storyPrompt, /Do not name categories/);
-assert.match(storyPrompt, /holistic/);
-assert.match(storyPrompt, /like a friend/);
-assert.equal(parseStoryBody('{"body":"You are an INTJ who needs agency."}'), null);
-assert.ok(parseStoryBody('{"body":"A hard week can still leave a little room to breathe."}'));
+// The AI Story prompt and answer parser are gone (roadmap A5). The fingerprint still moves on told-vs-played.
 assert.notEqual(storyFingerprint(many, null), storyFingerprint(many, 'gap'));
-ok('Story prompt is a separate holistic rewrite; fingerprint moves on told-vs-played');
+assert.equal(storyFingerprint(many, 'gap'), storyFingerprint(many, 'gap'), 'same input, same fingerprint');
+const storySrc = read('src/lib/sage-story.ts').replace(/\/\*[\s\S]*?\*\//g, ''); // code only: the header comment names what was removed
+assert.doesNotMatch(storySrc, /Write as Sage|buildStoryPrompt|parseStoryBody|parseStoryAnswer|STORY_COPY_REVIEWED|generateText/);
+ok('the Story fingerprint moves on told-vs-played; no AI Story prompt or parser remains');
 
-const fold = read('src/components/sage-story-fold.tsx');
+const fold = read('src/components/insights/insights-story-card.tsx');
 /**
  * REPINNED (ISOLATION_PLAN §7 Card B, 2026-09-15): the fold is now tap-only.
  * The old shape — generate from a `useEffect`, `if (!story?.body) return null`
@@ -148,28 +140,27 @@ const fold = read('src/components/sage-story-fold.tsx');
  * and it never checked AI consent. The invariants those assertions protected
  * are re-pinned here against the new shape.
  */
-assert.match(fold, /shouldUseLocalAi/);
+// Insights (2026-10-14): the Story is a template-only card. No model, no
+// local-AI switch, no crisis gate (the crisis system was removed).
+assert.doesNotMatch(fold, /shouldUseLocalAi|generateText|claimStoryGenerate/);
 assert.doesNotMatch(fold, /fallbackBandFor|TITLE_EMPTY|composeLocal/);
 assert.match(fold, /formatStoryTensionNote/);
 assert.doesNotMatch(fold, /formatDivergenceNote/);
-// Crisis still hides Story entirely, and must do so before anything else.
-const crisisIdx = fold.indexOf('if (crisisToday) return null;');
-const lockedIdx = fold.indexOf('if (!unlocked) {');
-assert.ok(crisisIdx > -1, 'crisis must still hide Story outright');
-assert.ok(lockedIdx > crisisIdx, 'the locked state must come after the crisis guard, never instead of it');
-// The locked state is the SHARED gate now, not Story's own settledness.
+assert.doesNotMatch(fold, /crisis/i);
+// The locked state is the SHARED gate, not Story's own settledness.
+assert.match(fold, /!unlocked \? \(/);
 assert.match(fold, /FULL_PROFILE_LOCKED_COPY/);
 assert.doesNotMatch(fold, /PROFILE_LOCKED_CTA/);
-// Nothing generates without a press, and an unready profile costs nothing.
+// Nothing is picked without a press, and an unready profile says so.
 assert.doesNotMatch(fold, /void run\(\)/);
 assert.match(fold, /void loadStory\(\)/);
 assert.match(fold, /STORY_NOT_READY_COPY/);
-ok('Story is tap-only: crisis hides it, the shared gate locks it, and Load is the only thing that can spend a call');
+ok('Story is tap-only and template-only: the shared gate locks it, Load picks a template');
 
-// §9 (2026-09-08): Story moved from Explore to Home, directly below the
-// daily check-in card — the assertion below moved with it. Explore no
-// longer imports SageStoryFold.
-assert.match(read('src/app/(tabs)/index.tsx'), /SageStoryFold/);
+// §9 (2026-09-08): Story moved from Explore to Home; 2026-10-14 it moved on to
+// Insights as a template-only card. Home and Explore carry no Story.
+assert.match(read('src/app/(tabs)/insights.tsx'), /<InsightsStoryCard/);
+assert.doesNotMatch(read('src/app/(tabs)/index.tsx'), /SageStoryFold|InsightsStoryCard/);
 // Categories is back inline on Explore, standalone route retired
 // (2026-09-14, T-E1) — reverses the 2026-09-12 judgment-pass.md §4A split.
 assert.match(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
@@ -179,10 +170,7 @@ assert.ok(
   'the /categories route must stay deleted — Categories lives inline on Explore',
 );
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
-assert.doesNotMatch(read('src/app/(tabs)/sage.tsx'), /SageStoryFold|ExplorePinnedCategories/);
-ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph; Story now lives on Home (§9), not Explore');
-
-assert.equal(STORY_SAMPLES.every((row) => row.shape.includes('thin') || row.body.length > 0 || row.body === ''), true);
-ok('draft Story samples and tension lines exist for emci review and are not treated as reviewed');
+assert.ok(!existsSync('src/app/(tabs)/sage.tsx'), 'the Sage tab is gone');
+ok('no generic fallback paragraph; the Story lives on Insights, not Home or Explore');
 
 console.log(`\n${passed} wave22 checks passed`);

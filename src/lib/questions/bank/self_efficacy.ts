@@ -1,4 +1,4 @@
-import { intake, q, traitBank } from './define';
+import { intake, q, retired, traitBank } from './define';
 
 /** Self-belief: "That's a lot. I don't know" (low) to "I can do that" (high). */
 export const SELF_EFFICACY_BANK = traitBank('self_efficacy', [
@@ -8,8 +8,8 @@ export const SELF_EFFICACY_BANK = traitBank('self_efficacy', [
     ["I'll figure it out", 0.8], ['I look it up first', 0.5], ['I find someone who knows', 0.2])),
   intake(3, q('self_efficacy_03', 'stress', 'low', 'A big task has sat in your to-do app for two weeks.',
     ['I pick any piece and start', 0.8], ['I break it down, then wait a bit', 0.5], ['I keep moving it to tomorrow', 0.2])),
-  q('self_efficacy_04', 'work', 'high', 'Your boss asks if you can take on one more project.',
-    ['Yes, I can fit it in', 0.8], ['Maybe, if something moves', 0.5], ["I'm already stretched", 0.2]),
+  retired('self_efficacy_26', q('self_efficacy_04', 'work', 'high', 'Your boss asks if you can take on one more project.',
+    ['Yes, I can fit it in', 0.8], ['Maybe, if something moves', 0.5], ["I'm already stretched", 0.2])),
   q('self_efficacy_05', 'work', 'low', 'A class assignment uses software you have never opened.',
     ['I ask to do it another way', 0.2], ['I find a tutorial first', 0.5], ["I'll learn it by Friday", 0.8]),
   q('self_efficacy_06', 'friends', 'neither', 'Friends need someone to organize the group trip.',
@@ -20,8 +20,8 @@ export const SELF_EFFICACY_BANK = traitBank('self_efficacy', [
     ['I wait for them to ask', 0.2], ['I draft it a few times', 0.5], ['I send it now', 0.8]),
   q('self_efficacy_09', 'dating', 'neither', 'Your partner asks you to meet their whole family this weekend.',
     ["Nervous, but I'll be fine", 0.5], ['I can win them over', 0.8], ['That sounds like a lot', 0.2]),
-  q('self_efficacy_10', 'family', 'high', "Your parents need help moving this weekend, and it's a big house.",
-    ['I can run the whole move', 0.8], ['I can handle a few rooms', 0.5], ['We should hire movers', 0.2]),
+  retired('self_efficacy_27', q('self_efficacy_10', 'family', 'high', "Your parents need help moving this weekend, and it's a big house.",
+    ['I can run the whole move', 0.8], ['I can handle a few rooms', 0.5], ['We should hire movers', 0.2])),
   q('self_efficacy_11', 'family', 'low', 'Your dad asks you to give a toast at his birthday dinner.',
     ['Ask someone else', 0.2], ["I'll write it out first", 0.5], ['I can do it, no notes', 0.8]),
   q('self_efficacy_12', 'solo', 'neither', 'A pipe under your kitchen sink starts dripping.',
@@ -52,4 +52,9 @@ export const SELF_EFFICACY_BANK = traitBank('self_efficacy', [
     ['I prep for weeks first', 0.5], ['I set up the meeting', 0.8], ['I wait for them to offer', 0.2]),
   q('self_efficacy_25', 'online', 'neither', 'Your laptop gets a weird error you have never seen.',
     ['I can sort it out', 0.8], ['I search the error first', 0.5], ['I ask a techy friend', 0.2]),
+  // wave100 (emci 2026-10-20): new scenes for retired _04, _10.
+  q('self_efficacy_26', 'work', 'high', "Your boss asks if you can lead a kind of project you've never run.",
+    ['Yes, I can handle it', 0.8], ['Maybe, with some help', 0.5], ['I doubt I could pull it off', 0.2]),
+  q('self_efficacy_27', 'family', 'high', 'Your parents ask you to organize their move to a new place.',
+    ['I can organize the whole move', 0.8], ['I can handle a few rooms', 0.5], ["It's too big for me", 0.2]),
 ]);

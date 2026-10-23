@@ -1,5 +1,6 @@
 import { bornOnFromParts, errorMessageForAge, signupAgeMessage } from '@/lib/age';
 import { slugifyCity } from '@/lib/around/slug';
+import { NAME_NOT_ALLOWED_MESSAGE, nameNotAllowed } from '@/lib/name-filter';
 import type {
   CurrentFocus,
   EnergyPattern,
@@ -30,8 +31,7 @@ import {
   setTraitDirect,
   type MeRowJson,
 } from '@/lib/trait-checkpoint';
-import { withoutFactAt } from '@/lib/facts';
-import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
+import { FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
 import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
@@ -298,7 +298,7 @@ export async function createMe(row: MeInsert): Promise<Me> {
 }
 
 /**
- * Post-onboarding write of `born_on`. Re-runs the same parse + 16+ check
+ * Post-onboarding write of `born_on`. Re-runs the same parse + 18+ check
  * onboarding uses. The Around 18+ gate still reads the stored date.
  */
 export async function setBornOn(userId: string, bornOn: string): Promise<Me> {
@@ -340,7 +340,7 @@ export async function setCity(userId: string, city: string | null): Promise<Me> 
   return withVisible(data as Me);
 }
 
-/** Sage voice. close_friend is the default. Does not bypass sage.txt rules. */
+/** Voice preset. close_friend is the default. Does not bypass voice-reference.txt rules. */
 export async function setVoicePreset(userId: string, voicePreset: VoicePreset): Promise<Me> {
   const { data, error } = await supabase
     .from('me')
@@ -666,6 +666,7 @@ export function handleFormatError(raw: string): string | null {
   if ((RESERVED_HANDLES as readonly string[]).includes(handle)) {
     return 'That handle is reserved.';
   }
+  if (nameNotAllowed(handle, 'handle')) return NAME_NOT_ALLOWED_MESSAGE;
   return null;
 }
 
@@ -696,6 +697,7 @@ export function errorMessageForHandle(error: unknown): string {
   const ageMessage = errorMessageForAge(error);
   if (ageMessage) return ageMessage;
   const code = (error as { code?: string })?.code;
+  if ((error as { message?: string })?.message?.includes('name_not_allowed')) return NAME_NOT_ALLOWED_MESSAGE;
   if (code === '23505') return 'That handle is already taken';
   if (code === '23514') return 'That handle is reserved';
   return 'Something went wrong saving your profile. Try again.';
@@ -775,57 +777,8 @@ export async function forgetCelebratedMilestone(userId: string, id: string): Pro
   return data;
 }
 
-/**
- * Appends a fact the user told Sage. Depth-axis input; Stage 7's "Teach Sage
- * this" will call this. Idempotent by exact string.
+/*
+ * `addFact` / `removeFact` were removed with Sage (2026-10-14): nothing writes
+ * or shows `me.facts` any more ("Teach Sage" is gone; the list on You is
+ * hidden). The column and its rows stay until docs/sage-cleanup.md drops them.
  */
-export async function addFact(userId: string, fact: string): Promise<Me> {
-  const trimmed = fact.trim();
-  if (!trimmed) throw new Error('Fact cannot be empty');
-  if (containsFrameworkTerm(trimmed)) throw new Error(FACT_FRAMEWORK_MESSAGE);
-  // Typed text → the keyword crisis check (no model). A hit raises the static
-  // card on Home today. Loaded lazily so this module stays Node-safe for the
-  // check scripts.
-  void import('@/lib/crisis/local-flag').then((m) => m.noteCrisisText(trimmed)).catch(() => {});
-
-  const { data: current } = await supabase
-    .from('me')
-    .select('facts')
-    .eq('id', userId)
-    .single();
-  const facts = Array.isArray(current?.facts) ? (current.facts as string[]) : [];
-  if (!facts.includes(trimmed)) facts.push(trimmed);
-
-  const { data, error } = await supabase
-    .from('me')
-    .update({ facts })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Removes one stored fact by index. Same ME update as addFact — no new
- * write channel. Empty `facts` after the last delete is valid.
- */
-export async function removeFact(userId: string, index: number): Promise<Me> {
-  const { data: current } = await supabase
-    .from('me')
-    .select('facts')
-    .eq('id', userId)
-    .single();
-  const facts = withoutFactAt(current?.facts, index);
-
-  const { data, error } = await supabase
-    .from('me')
-    .update({ facts })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}

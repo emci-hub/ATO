@@ -1,0 +1,1932 @@
+{
+  "chars": {
+    "heroes/archangel": {
+      "footAt": 0.8177,
+      "groundAt": 0.7969,
+      "bodyRatio": 0.5625,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/aurex": {
+      "footAt": 0.7969,
+      "groundAt": 0.776,
+      "bodyRatio": 0.5469,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/corvus": {
+      "footAt": 0.7969,
+      "groundAt": 0.776,
+      "bodyRatio": 0.5521,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/cyber-shinobi": {
+      "footAt": 0.7865,
+      "groundAt": 0.7656,
+      "bodyRatio": 0.5729,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/elowen": {
+      "footAt": 0.8177,
+      "groundAt": 0.7969,
+      "bodyRatio": 0.5781,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/frost-lich": {
+      "footAt": 0.7917,
+      "groundAt": 0.7656,
+      "bodyRatio": 0.5938,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/kael": {
+      "footAt": 0.7813,
+      "groundAt": 0.7604,
+      "bodyRatio": 0.5625,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/kitsune": {
+      "footAt": 0.7917,
+      "groundAt": 0.7708,
+      "bodyRatio": 0.5781,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/maldrath": {
+      "footAt": 0.7969,
+      "groundAt": 0.7708,
+      "bodyRatio": 0.6042,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/morwen": {
+      "footAt": 0.7813,
+      "groundAt": 0.7604,
+      "bodyRatio": 0.5521,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/neon-viper": {
+      "footAt": 0.7813,
+      "groundAt": 0.7604,
+      "bodyRatio": 0.5521,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/oni": {
+      "footAt": 0.7969,
+      "groundAt": 0.776,
+      "bodyRatio": 0.5469,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/raven": {
+      "footAt": 0.776,
+      "groundAt": 0.7552,
+      "bodyRatio": 0.5417,
+      "clips": {
+        "Attack": 6,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/sak": {
+      "footAt": 0.7969,
+      "groundAt": 0.776,
+      "bodyRatio": 0.5833,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/velkhar": {
+      "footAt": 0.7969,
+      "groundAt": 0.7708,
+      "bodyRatio": 0.5885,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "heroes/void-raven": {
+      "footAt": 0.7917,
+      "groundAt": 0.7708,
+      "bodyRatio": 0.5625,
+      "clips": {
+        "Attack": 8,
+        "Dash": 8,
+        "Hurt": 6,
+        "Idle": 4,
+        "Skill": 8,
+        "Walk": 8,
+        "Faint": 7
+      },
+      "walkOrder": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    },
+    "creeps/knight": {
+      "footAt": 0.7292,
+      "groundAt": 0.7083,
+      "bodyRatio": 0.4271,
+      "clips": {
+        "Death": 7,
+        "Idle": 4,
+        "Walk": 8
+      }
+    },
+    "creeps/village-girl": {
+      "footAt": 0.7708,
+      "groundAt": 0.75,
+      "bodyRatio": 0.5104,
+      "clips": {
+        "Death": 7,
+        "Idle": 4,
+        "Walk": 8
+      }
+    },
+    "creeps/wizard": {
+      "footAt": 0.7396,
+      "groundAt": 0.7188,
+      "bodyRatio": 0.4688,
+      "clips": {
+        "Death": 7,
+        "Idle": 4,
+        "Walk": 8
+      }
+    },
+    "towers/ghost": {
+      "footAt": 0.7667,
+      "groundAt": 0.7458,
+      "bodyRatio": 0.5375,
+      "clips": {
+        "Attack": 8,
+        "Idle": 4,
+        "Skill": 8
+      }
+    },
+    "towers/lux": {
+      "footAt": 0.7664,
+      "groundAt": 0.7459,
+      "bodyRatio": 0.5164,
+      "clips": {
+        "Attack": 8,
+        "Idle": 4,
+        "Skill": 8
+      }
+    },
+    "towers/viper": {
+      "footAt": 0.7542,
+      "groundAt": 0.7331,
+      "bodyRatio": 0.5,
+      "clips": {
+        "Attack": 8,
+        "Idle": 4,
+        "Skill": 8
+      }
+    },
+    "boss/oni": {
+      "footAt": 0.8523,
+      "groundAt": 0.8258,
+      "bodyRatio": 0.7008,
+      "clips": {
+        "Death": 8,
+        "Idle": 4,
+        "Run": 8,
+        "Walk": 8
+      }
+    },
+    "boss/titan-x": {
+      "footAt": 0.7787,
+      "groundAt": 0.7582,
+      "bodyRatio": 0.5246,
+      "clips": {}
+    }
+  },
+  "fx": {
+    "archer/shot": {
+      "frames": 4,
+      "fps": 12,
+      "loop": true,
+      "cell": 29,
+      "anchorX": 0.7586,
+      "anchorY": 0.4138
+    },
+    "archer/hit": {
+      "frames": 6,
+      "fps": 16,
+      "loop": false,
+      "cell": 45,
+      "anchorX": 0.4667,
+      "anchorY": 0.5111
+    },
+    "bossko/burst": {
+      "frames": 14,
+      "fps": 12,
+      "loop": false,
+      "cell": 136,
+      "anchorX": 0.5,
+      "anchorY": 0.5221
+    },
+    "cheer/burst": {
+      "frames": 10,
+      "fps": 12,
+      "loop": false,
+      "cell": 68,
+      "anchorX": 0.5,
+      "anchorY": 0.5147
+    },
+    "ember/shot": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.7593,
+      "anchorY": 0.4815
+    },
+    "ember/hit": {
+      "frames": 5,
+      "fps": 16,
+      "loop": false,
+      "cell": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "ember/burst": {
+      "frames": 12,
+      "fps": 12,
+      "loop": false,
+      "cell": 87,
+      "anchorX": 0.5287,
+      "anchorY": 0.6207
+    },
+    "ember/status": {
+      "frames": 12,
+      "fps": 12,
+      "loop": true,
+      "cell": 47,
+      "anchorX": 0.4894,
+      "anchorY": 0.8936
+    },
+    "ember/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "enrage/burst": {
+      "frames": 12,
+      "fps": 12,
+      "loop": false,
+      "cell": 74,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "gate/burst": {
+      "frames": 14,
+      "fps": 12,
+      "loop": false,
+      "cell": 80,
+      "anchorX": 0.5,
+      "anchorY": 0.575
+    },
+    "plain/shot": {
+      "frames": 4,
+      "fps": 12,
+      "loop": true,
+      "cell": 43,
+      "anchorX": 0.7907,
+      "anchorY": 0.4651
+    },
+    "plain/hit": {
+      "frames": 6,
+      "fps": 16,
+      "loop": false,
+      "cell": 45,
+      "anchorX": 0.4667,
+      "anchorY": 0.5111
+    },
+    "plain/burst": {
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "cell": 112,
+      "anchorX": 0.5,
+      "anchorY": 0.5714
+    },
+    "plain/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "pop/burst": {
+      "frames": 13,
+      "fps": 12,
+      "loop": false,
+      "cell": 36,
+      "anchorX": 0.5,
+      "anchorY": 0.5278
+    },
+    "ringember/status": {
+      "frames": 8,
+      "fps": 8,
+      "loop": true,
+      "cell": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "ringroot/status": {
+      "frames": 8,
+      "fps": 8,
+      "loop": true,
+      "cell": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "ringspark/status": {
+      "frames": 8,
+      "fps": 8,
+      "loop": true,
+      "cell": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "ringtide/status": {
+      "frames": 8,
+      "fps": 8,
+      "loop": true,
+      "cell": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "ringvoid/status": {
+      "frames": 8,
+      "fps": 8,
+      "loop": true,
+      "cell": 64,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "root/shot": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.7593,
+      "anchorY": 0.4815
+    },
+    "root/hit": {
+      "frames": 8,
+      "fps": 11,
+      "loop": false,
+      "cell": 67,
+      "anchorX": 0.5224,
+      "anchorY": 0.5672
+    },
+    "root/burst": {
+      "frames": 12,
+      "fps": 12,
+      "loop": false,
+      "cell": 116,
+      "anchorX": 0.5,
+      "anchorY": 0.5431
+    },
+    "root/status": {
+      "frames": 13,
+      "fps": 12,
+      "loop": false,
+      "cell": 59,
+      "anchorX": 0.4915,
+      "anchorY": 0.6949
+    },
+    "root/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "spark/shot": {
+      "frames": 4,
+      "fps": 12,
+      "loop": true,
+      "cell": 43,
+      "anchorX": 0.7907,
+      "anchorY": 0.4651
+    },
+    "spark/hit": {
+      "frames": 8,
+      "fps": 16,
+      "loop": false,
+      "cell": 67,
+      "anchorX": 0.4925,
+      "anchorY": 0.5075
+    },
+    "spark/burst": {
+      "frames": 10,
+      "fps": 14,
+      "loop": false,
+      "cell": 128,
+      "anchorX": 0.5,
+      "anchorY": 0.8594
+    },
+    "spark/status": {
+      "frames": 12,
+      "fps": 12,
+      "loop": true,
+      "cell": 44,
+      "anchorX": 0.4773,
+      "anchorY": 1.0909
+    },
+    "spark/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "summon/burst": {
+      "frames": 10,
+      "fps": 12,
+      "loop": false,
+      "cell": 85,
+      "anchorX": 0.4941,
+      "anchorY": 0.8118
+    },
+    "tide/shot": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.7593,
+      "anchorY": 0.4815
+    },
+    "tide/hit": {
+      "frames": 8,
+      "fps": 11,
+      "loop": false,
+      "cell": 70,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "tide/burst": {
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "cell": 112,
+      "anchorX": 0.5,
+      "anchorY": 0.5714
+    },
+    "tide/status": {
+      "frames": 12,
+      "fps": 10,
+      "loop": true,
+      "cell": 37,
+      "anchorX": 0.4595,
+      "anchorY": 0.8378
+    },
+    "tide/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    },
+    "void/shot": {
+      "frames": 8,
+      "fps": 12,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.7593,
+      "anchorY": 0.4815
+    },
+    "void/hit": {
+      "frames": 8,
+      "fps": 16,
+      "loop": false,
+      "cell": 67,
+      "anchorX": 0.4925,
+      "anchorY": 0.4925
+    },
+    "void/burst": {
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "cell": 116,
+      "anchorX": 0.5,
+      "anchorY": 0.6552
+    },
+    "void/status": {
+      "frames": 12,
+      "fps": 6,
+      "loop": true,
+      "cell": 54,
+      "anchorX": 0.5,
+      "anchorY": 0.9444
+    },
+    "void/slash": {
+      "frames": 7,
+      "fps": 16,
+      "loop": false,
+      "cell": 96,
+      "anchorX": 0.5,
+      "anchorY": 0.5
+    }
+  },
+  "auras": {
+    "earth": {
+      "frames": 8,
+      "fps": 5,
+      "loop": true,
+      "cell": 123,
+      "anchorX": 0.5285,
+      "anchorY": 0.9106,
+      "refBodyPx": 106
+    },
+    "fire": {
+      "frames": 8,
+      "fps": 4,
+      "loop": true,
+      "cell": 160,
+      "anchorX": 0.5,
+      "anchorY": 0.7063,
+      "refBodyPx": 106
+    },
+    "rune": {
+      "frames": 8,
+      "fps": 4,
+      "loop": true,
+      "cell": 173,
+      "anchorX": 0.4971,
+      "anchorY": 0.7341,
+      "refBodyPx": 106
+    },
+    "thunder": {
+      "frames": 8,
+      "fps": 4,
+      "loop": true,
+      "cell": 130,
+      "anchorX": 0.5077,
+      "anchorY": 0.9,
+      "refBodyPx": 106
+    },
+    "water": {
+      "frames": 8,
+      "fps": 6,
+      "loop": true,
+      "cell": 91,
+      "anchorX": 0.4945,
+      "anchorY": 0.8462,
+      "refBodyPx": 106
+    }
+  },
+  "ui": {
+    "panel": {
+      "w": 318,
+      "h": 239,
+      "inset": [
+        56,
+        56,
+        56,
+        56
+      ],
+      "scale": 0.5
+    },
+    "header": {
+      "w": 642,
+      "h": 335,
+      "inset": [
+        48,
+        96,
+        48,
+        96
+      ],
+      "scale": 0.3
+    },
+    "back": {
+      "w": 65,
+      "h": 65,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 0.6
+    },
+    "toggle": {
+      "w": 144,
+      "h": 44,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    },
+    "chip-on": {
+      "w": 450,
+      "h": 66,
+      "inset": [
+        16,
+        24,
+        16,
+        24
+      ],
+      "scale": 0.3
+    },
+    "chip-off": {
+      "w": 450,
+      "h": 66,
+      "inset": [
+        16,
+        24,
+        16,
+        24
+      ],
+      "scale": 0.3
+    },
+    "resbar": {
+      "w": 604,
+      "h": 88,
+      "inset": [
+        16,
+        40,
+        16,
+        40
+      ],
+      "scale": 0.5
+    },
+    "tabbar": {
+      "w": 611,
+      "h": 87,
+      "inset": [
+        20,
+        48,
+        16,
+        48
+      ],
+      "scale": 0.7
+    },
+    "sheet": {
+      "w": 448,
+      "h": 394,
+      "inset": [
+        120,
+        120,
+        40,
+        40
+      ],
+      "scale": 0.5
+    },
+    "sheet-handle": {
+      "w": 104,
+      "h": 30,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    },
+    "toast": {
+      "w": 653,
+      "h": 331,
+      "inset": [
+        24,
+        24,
+        24,
+        90
+      ],
+      "scale": 0.3
+    },
+    "pause": {
+      "w": 132,
+      "h": 125,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 0.3
+    },
+    "alert": {
+      "w": 261,
+      "h": 115,
+      "inset": [
+        30,
+        40,
+        30,
+        40
+      ],
+      "scale": 0.4
+    },
+    "portrait": {
+      "w": 159,
+      "h": 124,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 0.4
+    },
+    "nav-cur-caps": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-cur-prism": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-cur-shine": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-cur-token": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-settings": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-block": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-hideout": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-locker": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-store": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "nav-tab-turf": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso-bowl": {
+      "w": 14,
+      "h": 8,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso-cushion": {
+      "w": 22,
+      "h": 12,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso-front": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso-manhole": {
+      "w": 36,
+      "h": 18,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso-mask": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-hideout-iso": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-locker": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "room-underground": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-drip": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-moth": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-note": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-note2": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-pigeon-peck": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-pigeon": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-plane": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-rat-run": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-rat": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-spark": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-star": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-steam": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "amb-wisp": {
+      "w": 32,
+      "h": 32,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-core": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-ghost": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-platform": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-sewers": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-train": {
+      "w": 256,
+      "h": 80,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "stop-tunnels": {
+      "w": 256,
+      "h": 320,
+      "inset": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scale": 1
+    },
+    "button-primary": {
+      "w": 119,
+      "h": 44,
+      "inset": [
+        8,
+        12,
+        12,
+        12
+      ],
+      "scale": 0.75
+    },
+    "button-primary-pressed": {
+      "w": 119,
+      "h": 44,
+      "inset": [
+        8,
+        12,
+        12,
+        12
+      ],
+      "scale": 0.75
+    },
+    "button-secondary": {
+      "w": 119,
+      "h": 44,
+      "inset": [
+        8,
+        12,
+        12,
+        12
+      ],
+      "scale": 0.75
+    },
+    "button-secondary-pressed": {
+      "w": 119,
+      "h": 44,
+      "inset": [
+        8,
+        12,
+        12,
+        12
+      ],
+      "scale": 0.75
+    },
+    "button-danger": {
+      "w": 119,
+      "h": 44,
+      "inset": [
+        8,
+        12,
+        12,
+        12
+      ],
+      "scale": 0.75
+    },
+    "button-danger-pressed": {
+      "w": 119,
+      "h": 44,
+      "inset": [
+        8,
+        12,
+        12,
+        12
+      ],
+      "scale": 0.75
+    }
+  },
+  "boards": {
+    "ato": {
+      "pads": 15,
+      "ambient": {
+        "barrels": [
+          {
+            "x": 16,
+            "y": 29,
+            "smoke": true
+          },
+          {
+            "x": 496,
+            "y": 189,
+            "smoke": false
+          },
+          {
+            "x": 16,
+            "y": 413,
+            "smoke": true
+          }
+        ],
+        "cones": [
+          {
+            "x": 17,
+            "y": 157
+          },
+          {
+            "x": 497,
+            "y": 317
+          }
+        ],
+        "vent": {
+          "x": 496,
+          "y": 397
+        },
+        "pigeons": [
+          {
+            "x": 304,
+            "y": 26
+          },
+          {
+            "x": 144,
+            "y": 506
+          },
+          {
+            "x": 496,
+            "y": 282
+          },
+          {
+            "x": 304,
+            "y": 506
+          }
+        ],
+        "pools": [
+          {
+            "x": 0,
+            "y": 434,
+            "w": 118,
+            "h": 72
+          },
+          {
+            "x": 410,
+            "y": 0,
+            "w": 102,
+            "h": 76
+          },
+          {
+            "x": 180,
+            "y": 208,
+            "w": 140,
+            "h": 84
+          },
+          {
+            "x": 430,
+            "y": 270,
+            "w": 82,
+            "h": 60
+          },
+          {
+            "x": 80,
+            "y": 100,
+            "w": 100,
+            "h": 60
+          }
+        ],
+        "fires": [
+          {
+            "x": 0,
+            "y": 8,
+            "w": 60,
+            "h": 44
+          },
+          {
+            "x": 466,
+            "y": 168,
+            "w": 46,
+            "h": 44
+          },
+          {
+            "x": 0,
+            "y": 392,
+            "w": 60,
+            "h": 44
+          }
+        ],
+        "signs": [
+          {
+            "x": 482,
+            "y": 0,
+            "w": 20,
+            "h": 20,
+            "pool": 1
+          },
+          {
+            "x": 98,
+            "y": 481,
+            "w": 20,
+            "h": 20,
+            "pool": 0
+          }
+        ],
+        "clips": {
+          "flame": {
+            "frames": 8,
+            "fps": 12,
+            "w": 17,
+            "h": 28,
+            "ax": 8,
+            "ay": 24
+          },
+          "smoke": {
+            "frames": 16,
+            "fps": 10,
+            "w": 16,
+            "h": 29,
+            "ax": 7,
+            "ay": 26
+          },
+          "steam": {
+            "frames": 12,
+            "fps": 12,
+            "w": 16,
+            "h": 36,
+            "ax": 6,
+            "ay": 32
+          },
+          "pigeon": {
+            "frames": 5,
+            "fps": 12,
+            "w": 20,
+            "h": 26,
+            "ax": 12,
+            "ay": 25
+          }
+        }
+      }
+    },
+    "ato-rooftop": {
+      "pads": 15,
+      "ambient": {
+        "barrels": [],
+        "cones": [
+          {
+            "x": 17,
+            "y": 155
+          },
+          {
+            "x": 497,
+            "y": 315
+          }
+        ],
+        "vent": {
+          "x": 496,
+          "y": 493
+        },
+        "pigeons": [
+          {
+            "x": 400,
+            "y": 410
+          },
+          {
+            "x": 16,
+            "y": 122
+          },
+          {
+            "x": 496,
+            "y": 282
+          },
+          {
+            "x": 16,
+            "y": 378
+          }
+        ],
+        "pools": [
+          {
+            "x": 0,
+            "y": 18,
+            "w": 130,
+            "h": 84
+          },
+          {
+            "x": 380,
+            "y": 418,
+            "w": 132,
+            "h": 84
+          },
+          {
+            "x": 180,
+            "y": 208,
+            "w": 140,
+            "h": 84
+          },
+          {
+            "x": 420,
+            "y": 110,
+            "w": 92,
+            "h": 60
+          }
+        ],
+        "fires": [],
+        "signs": [],
+        "clips": {
+          "flame": {
+            "frames": 8,
+            "fps": 12,
+            "w": 17,
+            "h": 28,
+            "ax": 8,
+            "ay": 24
+          },
+          "smoke": {
+            "frames": 16,
+            "fps": 10,
+            "w": 16,
+            "h": 29,
+            "ax": 7,
+            "ay": 26
+          },
+          "steam": {
+            "frames": 12,
+            "fps": 12,
+            "w": 16,
+            "h": 36,
+            "ax": 6,
+            "ay": 32
+          },
+          "pigeon": {
+            "frames": 5,
+            "fps": 12,
+            "w": 20,
+            "h": 26,
+            "ax": 12,
+            "ay": 25
+          }
+        }
+      }
+    },
+    "ato-underpass": {
+      "pads": 15,
+      "ambient": {
+        "barrels": [],
+        "cones": [],
+        "vent": {
+          "x": 496,
+          "y": 493
+        },
+        "pigeons": [],
+        "pools": [
+          {
+            "x": 0,
+            "y": 434,
+            "w": 100,
+            "h": 72
+          },
+          {
+            "x": 410,
+            "y": 4,
+            "w": 102,
+            "h": 72
+          },
+          {
+            "x": 170,
+            "y": 202,
+            "w": 160,
+            "h": 96
+          },
+          {
+            "x": 80,
+            "y": 100,
+            "w": 100,
+            "h": 60
+          },
+          {
+            "x": 430,
+            "y": 270,
+            "w": 82,
+            "h": 60
+          }
+        ],
+        "fires": [],
+        "signs": [],
+        "clips": {
+          "flame": {
+            "frames": 8,
+            "fps": 12,
+            "w": 17,
+            "h": 28,
+            "ax": 8,
+            "ay": 24
+          },
+          "smoke": {
+            "frames": 16,
+            "fps": 10,
+            "w": 16,
+            "h": 29,
+            "ax": 7,
+            "ay": 26
+          },
+          "steam": {
+            "frames": 12,
+            "fps": 12,
+            "w": 16,
+            "h": 36,
+            "ax": 6,
+            "ay": 32
+          },
+          "pigeon": {
+            "frames": 5,
+            "fps": 12,
+            "w": 20,
+            "h": 26,
+            "ax": 12,
+            "ay": 25
+          }
+        }
+      }
+    },
+    "ato-court": {
+      "pads": 15,
+      "ambient": {
+        "barrels": [],
+        "cones": [],
+        "vent": null,
+        "pigeons": [
+          {
+            "x": 112,
+            "y": 26
+          },
+          {
+            "x": 16,
+            "y": 218
+          },
+          {
+            "x": 368,
+            "y": 506
+          },
+          {
+            "x": 240,
+            "y": 506
+          }
+        ],
+        "pools": [
+          {
+            "x": 0,
+            "y": 18,
+            "w": 130,
+            "h": 84
+          },
+          {
+            "x": 380,
+            "y": 408,
+            "w": 132,
+            "h": 84
+          },
+          {
+            "x": 180,
+            "y": 208,
+            "w": 140,
+            "h": 84
+          },
+          {
+            "x": 420,
+            "y": 90,
+            "w": 92,
+            "h": 60
+          }
+        ],
+        "fires": [],
+        "signs": [],
+        "clips": {
+          "flame": {
+            "frames": 8,
+            "fps": 12,
+            "w": 17,
+            "h": 28,
+            "ax": 8,
+            "ay": 24
+          },
+          "smoke": {
+            "frames": 16,
+            "fps": 10,
+            "w": 16,
+            "h": 29,
+            "ax": 7,
+            "ay": 26
+          },
+          "steam": {
+            "frames": 12,
+            "fps": 12,
+            "w": 16,
+            "h": 36,
+            "ax": 6,
+            "ay": 32
+          },
+          "pigeon": {
+            "frames": 5,
+            "fps": 12,
+            "w": 20,
+            "h": 26,
+            "ax": 12,
+            "ay": 25
+          }
+        }
+      }
+    },
+    "ato-docks": {
+      "pads": 15,
+      "ambient": {
+        "barrels": [],
+        "cones": [],
+        "vent": null,
+        "pigeons": [
+          {
+            "x": 176,
+            "y": 506
+          },
+          {
+            "x": 112,
+            "y": 26
+          },
+          {
+            "x": 496,
+            "y": 58
+          },
+          {
+            "x": 464,
+            "y": 506
+          }
+        ],
+        "pools": [
+          {
+            "x": 0,
+            "y": 434,
+            "w": 100,
+            "h": 72
+          },
+          {
+            "x": 410,
+            "y": 4,
+            "w": 102,
+            "h": 72
+          },
+          {
+            "x": 180,
+            "y": 208,
+            "w": 140,
+            "h": 84
+          },
+          {
+            "x": 80,
+            "y": 100,
+            "w": 100,
+            "h": 60
+          }
+        ],
+        "fires": [],
+        "signs": [],
+        "clips": {
+          "flame": {
+            "frames": 8,
+            "fps": 12,
+            "w": 17,
+            "h": 28,
+            "ax": 8,
+            "ay": 24
+          },
+          "smoke": {
+            "frames": 16,
+            "fps": 10,
+            "w": 16,
+            "h": 29,
+            "ax": 7,
+            "ay": 26
+          },
+          "steam": {
+            "frames": 12,
+            "fps": 12,
+            "w": 16,
+            "h": 36,
+            "ax": 6,
+            "ay": 32
+          },
+          "pigeon": {
+            "frames": 5,
+            "fps": 12,
+            "w": 20,
+            "h": 26,
+            "ax": 12,
+            "ay": 25
+          }
+        }
+      }
+    },
+    "neon-maze": {
+      "pads": 6
+    }
+  }
+}

@@ -61,16 +61,22 @@ const sheets = fs.readFileSync('src/play/pet-sheets.tsx', 'utf8');
 assert.ok(sheets.includes("return dev ? [...tabs, { id: 'dev', label: 'Dev' }] : tabs;"), 'infoTabs adds the Dev tab only when dev');
 assert.equal((sheets.match(/id: 'dev'/g) ?? []).length, 1, 'the Dev tab is added in one place only');
 const shell = fs.readFileSync('src/app/play.tsx', 'utf8');
-assert.match(shell, /PRE_LAUNCH_DEV && devUnlocked \? groveDevKitPanel\(\)/, 'hub: the Dev kit only when PRE_LAUNCH_DEV && devUnlocked');
-assert.match(shell, /PRE_LAUNCH_DEV && !devUnlocked \? <DevUnlockRow/, 'hub: the unlock row only pre-launch');
-ok('known gates pinned: Pet Dev tab, hub Dev kit and unlock row');
+assert.match(shell, /playDevFabVisible\(\{ preLaunchDev: PRE_LAUNCH_DEV, playDevUnlocked: devUnlocked \}\)/, 'the Dev kit (floating DEV button) only when PRE_LAUNCH_DEV && devUnlocked');
+assert.ok(!shell.includes('groveDevKitPanel() : null'), 'no Dev kit inline on a screen any more (the Block that carried it is gone)');
+assert.match(shell, /PRE_LAUNCH_DEV && !devUnlocked \? <DevUnlockRow/, 'Settings: the unlock row only pre-launch');
+ok('known gates pinned: Pet Dev tab, floating Dev kit and the Settings unlock row');
 
 // The new player-facing surfaces carry no dev tooling at all.
-for (const file of ['src/play/divecore-settings.tsx', 'src/play/pet-menu.tsx', 'src/play/divecore-tutorial.tsx']) {
+for (const file of [
+  'src/play/divecore-settings.tsx',
+  'src/play/pet-menu.tsx',
+  'src/play/help/help-sheet.tsx',
+  'src/play/ftue/coach-tip-layer.tsx',
+]) {
   const src = fs.readFileSync(file, 'utf8');
   assert.ok(!DEV_UI.test(src) && !src.includes('devUnlocked'), `${file} has no dev tooling`);
 }
-ok('Settings, the Pet menu and the tutorial contain no dev tooling');
+ok('Settings, the Pet menu, the help sheet and the coach tips contain no dev tooling');
 
 // And release builds force the flag off.
 const mode = fs.readFileSync('src/lib/dev-mode.ts', 'utf8');

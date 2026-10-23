@@ -36,8 +36,8 @@ export type TokenSpendReason = keyof typeof TOKEN_PRICE;
 
 export const TOKEN_LABEL = 'Notes';
 export const TOKEN_LEDE = 'Earned by showing up. Never bought.';
-export const TOKEN_INSIGHT_LABEL = 'A closer look from Sage';
-export const TOKEN_INSIGHT_HINT = 'One extra observation. Sage does not change how you lean.';
+export const TOKEN_INSIGHT_LABEL = 'A closer look';
+export const TOKEN_INSIGHT_HINT = 'One extra observation. It does not change how you lean.';
 export const TOKEN_DEPTH_LABEL = 'Go deeper on this one';
 export const TOKEN_DEPTH_HINT = 'Spend to answer this category again.';
 export const TOKEN_NEED_MORE = 'Not enough notes yet — check in or play to earn more.';

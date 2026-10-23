@@ -5,6 +5,10 @@
  * palette + Rajdhani / Space Mono faces the Command Hub uses, so the sub-screens
  * read as Hub siblings. Cards delegate to `PlayFrame` so the cyan glow has one
  * source; call sites only pass layout (padding / gap) through `style`.
+ *
+ * With the Streetwear art style on, every primitive here draws the street UI
+ * kit + Pixelify Sans instead (`street-ui.tsx`). Same props, same layout, so
+ * no screen changes; Classic is untouched.
  */
 import type { ReactNode } from 'react';
 import {
@@ -20,6 +24,18 @@ import {
 import { Fonts } from '@/constants/theme';
 import { NEON, NEON_VIPER_TOKENS } from '@/play/neon-viper';
 import { PlayFrame } from '@/play/play-frame';
+import {
+  STREET,
+  STREET_FONT,
+  StreetBackdrop,
+  StreetFrame,
+  streetButtonPiece,
+  streetButtonText,
+  streetPieceSize,
+  streetUiOn,
+  useStreetFonts,
+} from '@/play/street-ui';
+import { tapHaptic } from '@/play/street-feel';
 
 /** Hub tile-icon border/fill (rgba, kept local — the token set has no pair). */
 const ICON_BORDER = 'rgba(0, 234, 255, 0.1)';
@@ -29,18 +45,38 @@ export const NEON_ROW_LINE = 'rgba(0, 234, 255, 0.1)';
 /** Hub controls are near-square; the panel radius (8) comes from the tokens. */
 const RADIUS = 2;
 
-/** `‹ Command Hub` — mono cyan back link. */
+/** Phase 5: ≥ 44 pt tall (a 16-20 pt line + 14 above and below) and wide, without changing the layout. */
+const BACK_SLOP = { top: 14, bottom: 14, left: 12, right: 12 } as const;
+
+/** `‹ Hideout` — mono cyan back link (Hideout is home since Phase 3). */
 export function NeonBackLink({
-  label = 'Command Hub',
+  label = 'Hideout',
   onPress,
 }: {
   label?: string;
   onPress: () => void;
 }) {
+  useStreetFonts();
+  if (streetUiOn()) {
+    const size = streetPieceSize('back');
+    return (
+      <Pressable
+        onPress={onPress}
+        hitSlop={BACK_SLOP}
+        accessibilityRole="button"
+        accessibilityLabel={`Back to ${label}`}
+        style={({ pressed }) => [styles.backRow, styles.streetBackRow, pressed && styles.pressed]}>
+        <View style={{ width: size.width * 0.6, height: size.height * 0.6 }}>
+          <StreetBackdrop piece="back" />
+        </View>
+        <Text style={styles.streetBackText}>{label}</Text>
+      </Pressable>
+    );
+  }
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={12}
+      hitSlop={BACK_SLOP}
       accessibilityRole="button"
       accessibilityLabel={`Back to ${label}`}
       style={({ pressed }) => [styles.backRow, pressed && styles.pressed]}>
@@ -59,6 +95,18 @@ export function NeonHeader({
   title: string;
   lede?: string;
 }) {
+  useStreetFonts();
+  if (streetUiOn()) {
+    return (
+      <View style={styles.header}>
+        <StreetFrame piece="header" style={styles.streetPlate}>
+          <Text style={styles.streetEyebrow}>{eyebrow === 'NEON VIPER' ? 'DIVECORE' : eyebrow}</Text>
+          <Text style={styles.streetTitle}>{title}</Text>
+        </StreetFrame>
+        {lede ? <Text style={styles.lede}>{lede}</Text> : null}
+      </View>
+    );
+  }
   return (
     <View style={styles.header}>
       <Text style={styles.eyebrow}>{eyebrow}</Text>
@@ -76,7 +124,8 @@ export function NeonLabel({
   children: ReactNode;
   style?: StyleProp<TextStyle>;
 }) {
-  return <Text style={[styles.label, style]}>{children}</Text>;
+  useStreetFonts();
+  return <Text style={[styles.label, streetUiOn() && styles.streetLabel, style]}>{children}</Text>;
 }
 
 /** Neon card surface — PlayFrame with tight radius + standard padding. */
@@ -87,7 +136,8 @@ export function NeonPanel({
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  return <PlayFrame style={[styles.panel, style]}>{children}</PlayFrame>;
+  // The street panel's tape corners need a little more room than the ink card.
+  return <PlayFrame style={[styles.panel, streetUiOn() && styles.streetPanel, style]}>{children}</PlayFrame>;
 }
 
 /** Square neon icon frame (replaces the old circular Kenney-style chips). */
@@ -115,6 +165,20 @@ export function NeonChip({
   onPress: () => void;
   accessibilityLabel?: string;
 }) {
+  useStreetFonts();
+  if (streetUiOn()) {
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+        accessibilityLabel={accessibilityLabel}
+        style={({ pressed }) => [styles.streetChip, pressed && styles.pressed]}>
+        <StreetBackdrop piece={selected ? 'chip-on' : 'chip-off'} />
+        <Text style={[styles.streetChipText, selected && styles.streetChipTextSelected]}>{label}</Text>
+      </Pressable>
+    );
+  }
   return (
     <Pressable
       onPress={onPress}
@@ -141,9 +205,25 @@ export function NeonPill({
   tone?: 'muted' | 'emphasis';
   style?: StyleProp<ViewStyle>;
 }) {
+  useStreetFonts();
+  const street = streetUiOn();
+  const emphasis = tone === 'emphasis';
   return (
-    <View style={[styles.pill, tone === 'emphasis' && styles.pillEmphasis, style]}>
-      <Text style={[styles.pillText, tone === 'emphasis' && styles.pillTextEmphasis]}>
+    <View
+      style={[
+        styles.pill,
+        emphasis && styles.pillEmphasis,
+        street && styles.streetPill,
+        street && emphasis && styles.streetPillEmphasis,
+        style,
+      ]}>
+      <Text
+        style={[
+          styles.pillText,
+          emphasis && styles.pillTextEmphasis,
+          street && styles.streetPillText,
+          street && emphasis && styles.streetPillTextEmphasis,
+        ]}>
         {label}
       </Text>
     </View>
@@ -168,6 +248,42 @@ export function NeonButton({
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
 }) {
+  useStreetFonts();
+  if (streetUiOn()) {
+    const art = disabled ? 'secondary' : variant;
+    return (
+      <Pressable
+        onPress={() => {
+          tapHaptic();
+          onPress();
+        }}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityState={{ disabled }}
+        accessibilityLabel={accessibilityLabel}
+        style={({ pressed }) => [
+          styles.button,
+          styles.streetButton,
+          disabled && styles.streetDisabled,
+          style,
+          pressed && !disabled && styles.streetSquash,
+        ]}>
+        {({ pressed }) => (
+          <>
+            <StreetBackdrop piece={streetButtonPiece(art, pressed && !disabled)} />
+            <Text
+              style={[
+                styles.streetButtonText,
+                { color: streetButtonText(art) },
+                pressed && !disabled && styles.streetButtonTextPressed,
+              ]}>
+              {label}
+            </Text>
+          </>
+        )}
+      </Pressable>
+    );
+  }
   return (
     <Pressable
       onPress={onPress}
@@ -342,5 +458,103 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.75,
+  },
+  // Streetwear art style (street-ui.tsx).
+  streetBackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  streetBackText: {
+    fontFamily: STREET_FONT.bold,
+    fontSize: 15,
+    color: STREET.paper,
+  },
+  streetPlate: {
+    paddingHorizontal: 36,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  streetEyebrow: {
+    fontFamily: STREET_FONT.regular,
+    fontSize: 11,
+    letterSpacing: 1.6,
+    color: STREET.mustard,
+  },
+  streetTitle: {
+    fontFamily: STREET_FONT.bold,
+    fontSize: 26,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: STREET.paper,
+    textAlign: 'center',
+  },
+  streetLabel: {
+    fontFamily: STREET_FONT.bold,
+    fontSize: 13,
+    letterSpacing: 1,
+    color: STREET.mustard,
+  },
+  streetPanel: {
+    padding: 22,
+  },
+  streetChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    minWidth: 56,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Readable on the plain asphalt chip (the striped ends are gone).
+  streetChipText: {
+    fontFamily: STREET_FONT.bold,
+    fontSize: 13,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: STREET.paper,
+  },
+  streetChipTextSelected: {
+    color: STREET.ink,
+  },
+  streetPill: {
+    borderColor: STREET.muted,
+    borderRadius: 0,
+  },
+  streetPillEmphasis: {
+    borderColor: STREET.mustard,
+    backgroundColor: 'rgba(224, 165, 38, 0.15)',
+  },
+  streetPillText: {
+    fontFamily: STREET_FONT.regular,
+    fontSize: 11,
+    color: STREET.muted,
+  },
+  streetPillTextEmphasis: {
+    color: STREET.mustard,
+  },
+  // Every street control is at least 48pt tall (plan: sizing system).
+  streetButton: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    minHeight: 48,
+    paddingHorizontal: 16,
+  },
+  streetDisabled: {
+    opacity: 0.45,
+  },
+  // Press squash (plan: 0.95, under 100ms) — the art also swaps to its pressed bevel.
+  streetSquash: {
+    transform: [{ scaleX: 0.96 }, { scaleY: 0.93 }],
+  },
+  streetButtonText: {
+    fontFamily: STREET_FONT.bold,
+    fontSize: 14,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginTop: -2,
+  },
+  streetButtonTextPressed: {
+    marginTop: 1,
   },
 });

@@ -6,7 +6,6 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useNavOrder } from '@/lib/nav/nav-context';
 import { NAV_TABS, type ReorderableTabId } from '@/lib/nav/nav-order';
 import { controlBorderColor } from '@/lib/theme/chrome';
@@ -17,9 +16,9 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * one navigates to it; long-press opens edit mode so it can be added to the
  * bar.
  *
- * Play (Grove) is appended as a fixed module row while PRE_LAUNCH_DEV — it is
- * a pushed room (root /play route), not a pool tab, so it never appears in
- * the bar or the edit pool and rides the same gate as its route.
+ * Divecore (Play) is appended as a fixed module row in every build (emci
+ * 2026-10-15: Divecore stays on) — it is a pushed room (root /play route), not
+ * a pool tab, so it never appears in the bar or the edit pool.
  */
 // RN's default Modal `animationType="fade"` runs ~300ms on both platforms.
 const MODAL_FADE_MS = 300;
@@ -27,13 +26,10 @@ const MODAL_FADE_MS = 300;
 export function NavMoreSheet({
   open,
   moreIds,
-  showSage = false,
   onClose,
 }: {
   open: boolean;
   moreIds: ReorderableTabId[];
-  /** Sage is off the bar while it is a placeholder; More keeps it reachable. */
-  showSage?: boolean;
   onClose: () => void;
 }) {
   const theme = useTheme();
@@ -58,99 +54,67 @@ export function NavMoreSheet({
             </Pressable>
           </View>
 
-          {moreIds.length === 0 && !showSage && !PRE_LAUNCH_DEV ? (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
-              Nothing here. Long-press a tab to edit the bar.
-            </ThemedText>
-          ) : (
-            <ScrollView contentContainerStyle={styles.list}>
-              {moreIds.map((id) => (
-                <Pressable
-                  key={id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Open ${NAV_TABS[id].label}`}
-                  onPress={() => {
-                    // Push first so closing the Modal cannot unmount before
-                    // the tab navigator receives the route.
-                    router.push(NAV_TABS[id].href as never);
-                    onClose();
-                  }}
-                  onLongPress={() => {
-                    // Close this Modal and wait for its fade-out to finish
-                    // before opening the edit overlay's Modal — two sibling
-                    // RN Modals toggling in the same tick (or mid-animation)
-                    // desyncs the native modal host until a screen focus
-                    // event forces a resync. Matches this Modal's fade
-                    // animationType duration.
-                    onClose();
-                    setTimeout(startEditing, MODAL_FADE_MS);
-                  }}
-                  style={({ pressed }) => [
-                    styles.row,
-                    { borderColor: controlBorderColor(theme) },
-                    pressed && styles.pressed,
-                  ]}>
-                  <MaterialCommunityIcons name={NAV_TABS[id].icon as never} size={22} color={theme.text} />
-                  <ThemedText type="small" style={styles.rowLabel}>
-                    {NAV_TABS[id].label}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    ›
-                  </ThemedText>
-                </Pressable>
-              ))}
+          <ScrollView contentContainerStyle={styles.list}>
+            {moreIds.map((id) => (
+              <Pressable
+                key={id}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${NAV_TABS[id].label}`}
+                onPress={() => {
+                  // Push first so closing the Modal cannot unmount before
+                  // the tab navigator receives the route.
+                  router.push(NAV_TABS[id].href as never);
+                  onClose();
+                }}
+                onLongPress={() => {
+                  // Close this Modal and wait for its fade-out to finish
+                  // before opening the edit overlay's Modal — two sibling
+                  // RN Modals toggling in the same tick (or mid-animation)
+                  // desyncs the native modal host until a screen focus
+                  // event forces a resync. Matches this Modal's fade
+                  // animationType duration.
+                  onClose();
+                  setTimeout(startEditing, MODAL_FADE_MS);
+                }}
+                style={({ pressed }) => [
+                  styles.row,
+                  { borderColor: controlBorderColor(theme) },
+                  pressed && styles.pressed,
+                ]}>
+                <MaterialCommunityIcons name={NAV_TABS[id].icon as never} size={22} color={theme.text} />
+                <ThemedText type="small" style={styles.rowLabel}>
+                  {NAV_TABS[id].label}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  ›
+                </ThemedText>
+              </Pressable>
+            ))}
 
-              {showSage ? (
-                <Pressable
-                  key="sage"
-                  accessibilityRole="button"
-                  accessibilityLabel="Open Sage"
-                  onPress={() => {
-                    router.push('/sage');
-                    onClose();
-                  }}
-                  style={({ pressed }) => [
-                    styles.row,
-                    { borderColor: controlBorderColor(theme) },
-                    pressed && styles.pressed,
-                  ]}>
-                  <MaterialCommunityIcons name="chat-outline" size={22} color={theme.text} />
-                  <ThemedText type="small" style={styles.rowLabel}>
-                    Sage
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    ›
-                  </ThemedText>
-                </Pressable>
-              ) : null}
-
-              {PRE_LAUNCH_DEV ? (
-                <Pressable
-                  key="play"
-                  accessibilityRole="button"
-                  accessibilityLabel="Open Divecore"
-                  onPress={() => {
-                    // Push first so closing the Modal cannot unmount before
-                    // the route is received (same pattern as the rows above).
-                    router.push('/play');
-                    onClose();
-                  }}
-                  style={({ pressed }) => [
-                    styles.row,
-                    { borderColor: controlBorderColor(theme) },
-                    pressed && styles.pressed,
-                  ]}>
-                  <MaterialCommunityIcons name="play-circle" size={22} color={theme.accent} />
-                  <ThemedText type="smallBold" style={styles.rowLabel}>
-                    Divecore
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    ›
-                  </ThemedText>
-                </Pressable>
-              ) : null}
-            </ScrollView>
-          )}
+            <Pressable
+              key="play"
+              accessibilityRole="button"
+              accessibilityLabel="Open Divecore"
+              onPress={() => {
+                // Push first so closing the Modal cannot unmount before
+                // the route is received (same pattern as the rows above).
+                router.push('/play');
+                onClose();
+              }}
+              style={({ pressed }) => [
+                styles.row,
+                { borderColor: controlBorderColor(theme) },
+                pressed && styles.pressed,
+              ]}>
+              <MaterialCommunityIcons name="play-circle" size={22} color={theme.accent} />
+              <ThemedText type="smallBold" style={styles.rowLabel}>
+                Divecore
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                ›
+              </ThemedText>
+            </Pressable>
+          </ScrollView>
         </SafeAreaView>
       </View>
       </SafeAreaProvider>
@@ -197,9 +161,6 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     flex: 1,
-  },
-  empty: {
-    paddingVertical: Spacing.three,
   },
   pressed: {
     opacity: 0.7,

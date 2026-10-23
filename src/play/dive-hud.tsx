@@ -9,12 +9,15 @@ import { type ComponentProps } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { itemArtSource } from '@/play/art';
-import { findKind } from '@/play/dive-loot';
+import { findCategory, findKind, type FindCategory } from '@/play/dive-loot';
+import { ART, getArtSource } from '@/art/art';
 import { GLOW_COLOR, findGlow } from '@/play/dive-fx-model';
 import { getItemDef, type ItemSlot } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { ART_PT, PIXEL, crispSpan } from '@/play/pixel-theme';
 import { PixelBody, PixelFrame, PixelLabel, pixelRenderStyle } from '@/play/pixel-ui';
+import { StreetLineMap } from '@/play/dive-street';
+import { STREET, streetUiOn } from '@/play/street-ui';
 import { cosmeticById } from '@/play/pet-cosmetics';
 
 const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
@@ -24,24 +27,41 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   trinket: 'star-four-points',
 };
 
+/** Streetwear library icon per find category (mystery finds). */
+const CATEGORY_ICON_ART: Record<FindCategory, ReturnType<typeof getArtSource>> = {
+  weapon: getArtSource(ART.icon.streetwear.sword),
+  gear: getArtSource(ART.icon.streetwear.shield),
+  trinket: getArtSource(ART.icon.streetwear.gem),
+  snack: getArtSource(ART.icon.streetwear.potion),
+  shells: getArtSource(ART.icon.streetwear.coinStack),
+  stone: getArtSource(ART.icon.streetwear.star),
+  style: getArtSource(ART.icon.streetwear.cap),
+  mystery: getArtSource(ART.icon.streetwear.voidEye),
+};
+
 /** One find as an icon with its rarity glow ring. */
 export function FindIcon({
   id,
   size = 34,
   dim = false,
   bare = false,
+  mystery = false,
 }: {
   id: string;
   size?: number;
   dim?: boolean;
   /** Skip the rarity frame — the haul slot draws its own. */
   bare?: boolean;
+  /** Show only the find's category icon (+ "?") — the name is revealed when you head up. */
+  mystery?: boolean;
 }) {
   const kind = findKind(id);
   const glow = GLOW_COLOR[findGlow(id)];
   const cos = kind === 'cosmetic' ? cosmeticById(id) : undefined;
   const def = kind === 'item' ? getItemDef(id) : undefined;
-  const art = def
+  const art = mystery
+    ? CATEGORY_ICON_ART[findCategory(id)]
+    : def
     ? itemArtSource(def.core.art)
     : cos?.itemId
       ? itemArtSource(getItemDef(cos.itemId)?.core.art ?? '')
@@ -74,8 +94,18 @@ export function FindIcon({
       color={cos?.color ?? (cos?.element ? ELEMENT_COLOR[cos.element] : glow)}
     />
   );
+  const badge = mystery ? (
+    <View pointerEvents="none" style={styles.mysteryBadge}>
+      <PixelLabel color={PIXEL.amber} style={styles.mysteryMark}>?</PixelLabel>
+    </View>
+  ) : null;
   if (bare) {
-    return <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', opacity: dim ? 0.45 : 1 }}>{glyph}</View>;
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', opacity: dim ? 0.45 : 1 }}>
+        {glyph}
+        {badge}
+      </View>
+    );
   }
   return (
     <PixelFrame
@@ -85,6 +115,7 @@ export function FindIcon({
       glow={false}
       style={{ width: artBox + ART_PT * 2, height: artBox + ART_PT * 2, opacity: dim ? 0.45 : 1 }}>
       {glyph}
+      {badge}
     </PixelFrame>
   );
 }
@@ -125,6 +156,9 @@ export function DepthMeter({ depth, max }: { depth: number; max: number }) {
   );
 }
 
+/** Phase 5: a 20-22 pt label + 12 pt above and below = a 44 pt tall tap; 8 pt either side, links 16 pt apart. */
+const TAP_SLOP = { top: 12, bottom: 12, left: 8, right: 8 } as const;
+
 export function DiveTopBar({
   zone,
   depth,
@@ -145,21 +179,27 @@ export function DiveTopBar({
   onGear: () => void;
 }) {
   const shortCharges = charges.split(' · ')[0] ?? charges;
+  // Streetwear: the subway line map + tokens (dive-street.tsx).
+  const street = streetUiOn();
   const { width } = useWindowDimensions();
   const labelPt = width < 400 ? 12 : 16;
   const labelLh = labelPt + 4;
   const label = { fontSize: labelPt, lineHeight: labelLh };
   return (
     <View style={styles.bar} pointerEvents="box-none">
-      <PixelFrame align="stretch" padded={false} enter style={styles.panel}>
-        <View style={styles.stack}>
+      <PixelFrame streetPiece="panel" align="stretch" padded={false} enter style={styles.panel}>
+        <View style={[styles.stack, street && styles.streetStack]}>
           <View style={styles.row}>
             <View style={styles.side}>
-              <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
-                <PixelLabel color={PIXEL.cyan} numberOfLines={1} style={label}>{'< Pet'}</PixelLabel>
+              <Pressable onPress={onBack} hitSlop={TAP_SLOP} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
+                <PixelLabel color={street ? STREET.paper : PIXEL.cyan} numberOfLines={1} style={label}>
+                  {street ? '< Hideout' : '< Pet'}
+                </PixelLabel>
               </Pressable>
             </View>
-            <PixelLabel numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.zone, label]}>{zone}</PixelLabel>
+            {street ? null : (
+              <PixelLabel numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.zone, label]}>{zone}</PixelLabel>
+            )}
             <View style={[styles.side, styles.sideEnd]}>
               <View style={styles.shells} accessible accessibilityLabel={`${shells} shells`}>
                 <ShellMark />
@@ -167,20 +207,26 @@ export function DiveTopBar({
               </View>
             </View>
           </View>
+          {/* Street: the line map gets its own full-width row with stop names
+              (the zone label squeezed between the sides shrank to ~6pt). */}
+          {street ? <StreetLineMap depth={depth} max={maxDepth} /> : null}
           <View style={styles.row}>
             <View style={styles.side}>
               <View style={styles.links}>
-                <Pressable onPress={onGear} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dive gear">
+                <Pressable onPress={onGear} hitSlop={TAP_SLOP} accessibilityRole="button" accessibilityLabel="Dive gear">
                   <PixelBody size="sm" color={PIXEL.dim}>Gear</PixelBody>
                 </Pressable>
-                <Pressable onPress={onInfo} hitSlop={8} accessibilityRole="button" accessibilityLabel="How Dive works">
+                <Pressable onPress={onInfo} hitSlop={TAP_SLOP} accessibilityRole="button" accessibilityLabel="How Dive works">
                   <PixelBody size="sm" color={PIXEL.dim}>info ›</PixelBody>
                 </Pressable>
               </View>
             </View>
-            <DepthMeter depth={depth} max={maxDepth} />
-            <View style={[styles.side, styles.sideEnd]} accessible accessibilityLabel={`Dive charges ${charges}`}>
-              <PixelBody size="sm" color={PIXEL.dim}>{shortCharges}</PixelBody>
+            {street ? null : <DepthMeter depth={depth} max={maxDepth} />}
+            <View
+              style={[styles.side, styles.sideEnd]}
+              accessible
+              accessibilityLabel={street ? `Subway Tokens ${charges}` : `Dive charges ${charges}`}>
+              <PixelBody size="sm" color={PIXEL.dim}>{street ? `${shortCharges} tokens` : shortCharges}</PixelBody>
             </View>
           </View>
         </View>
@@ -190,6 +236,8 @@ export function DiveTopBar({
 }
 
 const styles = StyleSheet.create({
+  mysteryBadge: { position: 'absolute', right: -2, bottom: -4 },
+  mysteryMark: { fontSize: 11, lineHeight: 12 },
   meter: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 3 },
   pip: { width: ART_PT * 8, height: ART_PT * 5, padding: ART_PT },
   pipOn: { backgroundColor: PIXEL.ink },
@@ -200,10 +248,12 @@ const styles = StyleSheet.create({
   bar: { paddingHorizontal: 8, paddingTop: 4 },
   panel: { alignSelf: 'stretch' },
   stack: { paddingHorizontal: 10, paddingVertical: 6, gap: 2 },
+  // Street: clear the panel's tape corners.
+  streetStack: { paddingHorizontal: 20, paddingVertical: 8 },
   row: { flexDirection: 'row', alignItems: 'center' },
   side: { flex: 1, justifyContent: 'center' },
   sideEnd: { alignItems: 'flex-end' },
-  links: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
+  links: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   zone: { flexShrink: 1, minWidth: 0, textAlign: 'center' },
   shells: { flexDirection: 'row', alignItems: 'center', gap: ART_PT },
 });

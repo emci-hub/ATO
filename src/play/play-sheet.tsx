@@ -12,6 +12,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { PixelLabel, usePixelFonts } from '@/play/pixel-ui';
+import { STREET, STREET_FONT, StreetBackdrop, streetPieceSize, streetUiOn } from '@/play/street-ui';
 
 const OPEN_MS = 240;
 const CLOSE_DRAG = 70;
@@ -70,16 +71,28 @@ export function PlaySheet({
   );
 
   if (!mounted) return null;
+  // Streetwear art style: the taped sheet frame + its handle piece, Pixelify title.
+  const street = streetUiOn();
+  const handle = streetPieceSize('sheet-handle');
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" accessibilityRole="button" />
       </Animated.View>
-      <Animated.View style={[styles.panel, { maxHeight: height * 0.8 }, panelStyle]} accessibilityViewIsModal>
-        <View {...drag.panHandlers} style={styles.handleZone}>
-          <View style={styles.handle} />
+      <Animated.View
+        style={[styles.panel, street && styles.streetPanel, { maxHeight: height * (street ? 0.85 : 0.8) }, panelStyle]}
+        accessibilityViewIsModal>
+        {street ? <StreetBackdrop piece="sheet" /> : null}
+        <View {...drag.panHandlers} style={[styles.handleZone, street && styles.streetHandleZone]}>
+          {street ? (
+            <View style={[styles.streetHandle, { width: handle.width, height: handle.height }]}>
+              <StreetBackdrop piece="sheet-handle" />
+            </View>
+          ) : (
+            <View style={styles.handle} />
+          )}
           <View style={styles.titleRow}>
-            <PixelLabel numberOfLines={1} style={styles.title} accessibilityRole="header">
+            <PixelLabel numberOfLines={1} style={[styles.title, street && styles.streetTitle]} accessibilityRole="header">
               {title}
             </PixelLabel>
             <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel={`Close ${title}`} style={styles.closeHit}>
@@ -96,39 +109,13 @@ export function PlaySheet({
   );
 }
 
-/** A row of tabs for a sheet header. */
-export function SheetTabs<T extends string>({
-  tabs,
-  value,
-  onChange,
-}: {
-  tabs: readonly { id: T; label: string }[];
-  value: T;
-  onChange: (id: T) => void;
-}) {
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-      {tabs.map((tab) => {
-        const on = tab.id === value;
-        return (
-          <Pressable
-            key={tab.id}
-            onPress={() => onChange(tab.id)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: on }}
-            style={[styles.tab, on && styles.tabOn]}>
-            <PixelLabel color={on ? PIXEL.ink : PIXEL.cyan} numberOfLines={1}>
-              {tab.label}
-            </PixelLabel>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-}
-
 const styles = StyleSheet.create({
   backdrop: { backgroundColor: '#000000' },
+  // Streetwear art style.
+  streetPanel: { backgroundColor: 'transparent', borderTopWidth: 0, paddingHorizontal: 8, paddingBottom: 20 },
+  streetHandleZone: { paddingTop: 14, paddingHorizontal: 18 },
+  streetHandle: { alignSelf: 'center', marginBottom: 6 },
+  streetTitle: { fontFamily: STREET_FONT.bold, color: STREET.paper, textTransform: 'uppercase' },
   panel: {
     position: 'absolute',
     left: 0,
@@ -151,14 +138,4 @@ const styles = StyleSheet.create({
   title: { flex: 1 },
   closeHit: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: 12, paddingBottom: 16, gap: 10 },
-  tabs: { paddingHorizontal: 12, gap: 8, paddingBottom: 10 },
-  tab: {
-    minHeight: 48,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    borderWidth: ART_PT,
-    borderColor: PIXEL.cyan,
-    backgroundColor: PIXEL.ink,
-  },
-  tabOn: { backgroundColor: PIXEL.cyan, borderColor: PIXEL.cyan },
 });

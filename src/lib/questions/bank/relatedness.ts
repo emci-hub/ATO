@@ -1,4 +1,4 @@
-import { intake, q, traitBank } from './define';
+import { intake, q, retired, traitBank } from './define';
 
 /** Connection: "I'm good on my own today" (low) to "I need a real conversation" (high). */
 export const RELATEDNESS_BANK = traitBank('relatedness', [
@@ -17,7 +17,7 @@ export const RELATEDNESS_BANK = traitBank('relatedness', [
   q('relatedness_07', 'friends', 'high', 'A friend replies "lol" to your long message about your day.',
     ['I call them to really talk', 0.8], ['A little let down', 0.5], ['Fair, it was long', 0.2]),
   q('relatedness_08', 'friends', 'low', "You haven't seen your closest friend in a month.",
-    ['We pick up where we left off', 0.2], ['We will catch up soon', 0.5], ['I set a date right now', 0.8]),
+    ['We pick up where we left off', 0.2], ["We'll catch up soon", 0.5], ['I set a date right now', 0.8]),
   q('relatedness_09', 'dating', 'neither', 'Your partner is away on a work trip for a week.',
     ['A few texts a day', 0.5], ['We call every night', 0.8], ['I enjoy the space', 0.2]),
   q('relatedness_10', 'dating', 'high', 'A date talks only about surface stuff all night.',
@@ -30,8 +30,10 @@ export const RELATEDNESS_BANK = traitBank('relatedness', [
     ["I'm up for a chat", 0.8], ['A few words, then headphones', 0.5], ['Headphones in right away', 0.2]),
   q('relatedness_14', 'online', 'neither', 'Your phone shows 30 likes on a post, but no comments.',
     ['Likes are plenty', 0.2], ['Nice enough', 0.5], ['I wish someone said something', 0.8]),
-  q('relatedness_15', 'online', 'high', 'A friend you only know from online wants to meet in person.',
-    ['Maybe, somewhere public', 0.5], ["Yes, let's make it real", 0.8], ['Online is fine as is', 0.2]),
+  // Retired (privacy audit, 2026-10-20): meeting someone from online "somewhere public" is a
+  // safety choice, and the scale scored it as less need for connection.
+  retired('relatedness_26', q('relatedness_15', 'online', 'high', 'A friend you only know from online wants to meet in person.',
+    ['Maybe, somewhere public', 0.5], ["Yes, let's make it real", 0.8], ['Online is fine as is', 0.2])),
   q('relatedness_16', 'money', 'neither', 'A free Friday and $40 to spend.',
     ['Dinner with a friend', 0.8], ['Something for us both', 0.5], ['Something just for me', 0.2]),
   q('relatedness_17', 'money', 'low', 'A friend offers to split a trip so you can go together.',
@@ -43,13 +45,16 @@ export const RELATEDNESS_BANK = traitBank('relatedness', [
   q('relatedness_20', 'friends', 'low', 'Your friends start a weekly dinner night.',
     ['Once a month, max', 0.2], ['Most weeks', 0.5], ['I never miss one', 0.8]),
   q('relatedness_21', 'dating', 'low', 'Your partner wants to talk about your feelings before bed.',
-    ['Sometimes, not every night', 0.5], ['I love those talks', 0.8], ['Can it wait until morning', 0.2]),
+    ['Sometimes, not every night', 0.5], ['I love those talks', 0.8], ['Can it wait until morning?', 0.2]),
   q('relatedness_22', 'family', 'high', 'Your mom texts the family chat a photo from your childhood.',
     ['I start a whole thread of memories', 0.8], ['A heart and a laugh', 0.5], ['I leave it on read', 0.2]),
-  q('relatedness_23', 'solo', 'low', 'You move for work to a new city where you know nobody.',
+  q('relatedness_23', 'solo', 'low', 'You move to a new city for work and know nobody there.',
     ['I enjoy being anonymous', 0.2], ['I meet people slowly', 0.5], ['I join a club in week one', 0.8]),
   q('relatedness_24', 'online', 'neither', 'A group chat you love goes quiet for a few weeks.',
     ['I miss it a bit', 0.5], ['I revive it with a meme', 0.8], ['I barely notice', 0.2]),
-  q('relatedness_25', 'work', 'neither', 'Your desk at the office gets moved to a quiet corner alone.',
+  q('relatedness_25', 'work', 'neither', 'Your desk at the office gets moved to a quiet corner, away from everyone.',
     ['I miss the chatter', 0.8], ['Fine, I visit people', 0.5], ['Finally, some peace', 0.2]),
+  // wave100: new scene for retired _15. A friend of years, so no stranger-safety call is in it.
+  q('relatedness_26', 'online', 'high', "An online friend you've talked to for years says they're visiting your city.",
+    ['Maybe coffee, if I have time', 0.5], ['I clear my weekend for them', 0.8], ["I'd rather keep it online", 0.2]),
 ]);

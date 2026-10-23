@@ -1,0 +1,235 @@
+{
+ "frames": [
+  {
+   "filename": "sw-void-burst 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.7126436781609196
+   },
+   "duration": 71
+  },
+  {
+   "filename": "sw-void-burst 1.png",
+   "frame": {
+    "x": 116,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.7126436781609196
+   },
+   "duration": 71
+  },
+  {
+   "filename": "sw-void-burst 2.png",
+   "frame": {
+    "x": 232,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.7126436781609196
+   },
+   "duration": 71
+  },
+  {
+   "filename": "sw-void-burst 3.png",
+   "frame": {
+    "x": 0,
+    "y": 87,
+    "w": 116,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.7126436781609196
+   },
+   "duration": 71
+  },
+  {
+   "filename": "sw-void-burst 4.png",
+   "frame": {
+    "x": 116,
+    "y": 87,
+    "w": 116,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.7126436781609196
+   },
+   "duration": 71
+  },
+  {
+   "filename": "sw-void-burst 5.png",
+   "frame": {
+    "x": 232,
+    "y": 87,
+    "w": 116,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.7126436781609196
+   },
+   "duration": 71
+  },
+  {
+   "filename": "sw-void-burst 6.png",
+   "frame": {
+    "x": 0,
+    "y": 174,
+    "w": 116,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.7126436781609196
+   },
+   "duration": 71
+  },
+  {
+   "filename": "sw-void-burst 7.png",
+   "frame": {
+    "x": 116,
+    "y": 174,
+    "w": 116,
+    "h": 87
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 116,
+    "h": 87
+   },
+   "sourceSize": {
+    "w": 116,
+    "h": 87
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.7126436781609196
+   },
+   "duration": 71
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "sw-void-burst.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 348,
+   "h": 261
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 58,
+   "y": 62
+  },
+  "frameTags": [
+   {
+    "name": "sw-void-burst",
+    "from": 0,
+    "to": 7,
+    "direction": "forward"
+   }
+  ]
+ }
+}

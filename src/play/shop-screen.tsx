@@ -27,7 +27,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { artSkin } from '@/play/art-skin';
 import { cursorIcon } from '@/play/art';
+import { PLAY_ART } from '@/play/generated-play-assets';
 import {
   NEON_ROW_LINE,
   NeonBackLink,
@@ -43,15 +45,21 @@ import { NEON } from '@/play/neon-viper';
 import { STAR_PEARL_PITY } from '@/play/pet-eggs';
 import { GuideView } from '@/play/guide-sheet';
 import { DIVE_CHARGE_CAP, type PlayView, type ShopPurchaseResult } from '@/play/playStore';
+import { streetUiOn } from '@/play/street-ui';
 import {
   paidShopRows,
+  storeTabsFor,
+  storeTokenRows,
   tideShopRows,
-  tokenShopRows,
   type ShopPaidRow,
   type ShopTokenRow,
+  type StoreTab,
 } from '@/play/shop';
 
-type ShopTab = 'token' | 'tide' | 'paid';
+type ShopTab = StoreTab;
+
+/** Tab chip labels. */
+const TAB_LABELS: Record<ShopTab, string> = { token: 'Token shop', tide: 'Tide shelf', paid: 'Paid shop' };
 
 type ShopIcon = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -92,17 +100,30 @@ const PAID_ICON_FILES: Record<ShopPaidRow['kind'], string | null> = {
   stub: 'tool_torch',
 };
 
-/** Shop row icon: Kenney Cursor Pack art, falling back to a glyph. */
+/** Streetwear pixel icons per row kind (shown only with that art style on). */
+const STREETWEAR_SHOP_ART: Partial<Record<string, string>> = {
+  dive_charge: 'dive-charge',
+  merge_crate: 'merge-crate',
+  shine_stone: 'shine-stone',
+  prism_stone: 'prism-stone',
+  star_pearl: 'star-pearl',
+};
+
+/** Shop row icon: the Streetwear icon when that style is on, else Kenney
+ * Cursor Pack art, falling back to a glyph. */
 function ShopRowIcon({
+  kind,
   file,
   fallback,
   color,
 }: {
+  kind: string;
   file: string | null;
   fallback: ShopIcon;
   color: string;
 }) {
-  const source = file ? cursorIcon(file) : undefined;
+  const sw = artSkin() === 'streetwear' ? STREETWEAR_SHOP_ART[kind] : undefined;
+  const source = (sw ? PLAY_ART[`skins/streetwear/ui/shop/${sw}`] : undefined) ?? (file ? cursorIcon(file) : undefined);
   return (
     <NeonIconFrame size={34}>
       {source ? (
@@ -151,16 +172,16 @@ function tokenRowState(view: PlayView, row: ShopTokenRow, busy: boolean): TokenR
   else if (dailyCapped) actionLabel = 'Daily limit reached';
   else if (weeklyCapped) actionLabel = 'Weekly limit reached';
   else if (passCapped) actionLabel = 'Pass limit reached';
-  else if (!affordable) actionLabel = `Need ${row.price} tokens`;
-  else actionLabel = `Buy · ${row.price} tokens`;
+  else if (!affordable) actionLabel = `Need ${row.price} ${streetUiOn() ? 'Caps' : 'tokens'}`;
+  else actionLabel = `Buy · ${row.price} ${streetUiOn() ? 'Caps' : 'tokens'}`;
 
   let note: string | null = null;
   if (row.kind === 'dive_charge') {
-    note = `${view.dive.current}/${DIVE_CHARGE_CAP} charges now`;
+    note = `${view.dive.current}/${DIVE_CHARGE_CAP} charges now${row.daily_limit != null ? ` · ${boughtToday}/${row.daily_limit} today` : ''}`;
   } else if (row.daily_limit != null) {
     note = `${boughtToday}/${row.daily_limit} bought today`;
   } else if (row.weekly_limit != null) {
-    note = `${boughtWeek}/${row.weekly_limit} bought this week · ${view.pet.stones.held} held`;
+    note = `${boughtWeek}/${row.weekly_limit} bought this week${row.kind === 'shine_stone' ? ` · ${view.pet.stones.held} held` : ''}`;
   } else if (row.per_pass_limit != null) {
     note = `${boughtPass}/${row.per_pass_limit} this pass`;
     if (row.kind === 'star_pearl') note = `${note} · +${STAR_PEARL_PITY} Legendary progress`;
@@ -184,14 +205,19 @@ function tokenRowState(view: PlayView, row: ShopTokenRow, busy: boolean): TokenR
 
 export function ShopScreen({
   view,
+  full,
   onBuyToken,
   onBackToDivecore,
 }: {
   view: PlayView;
+  /** The dev view: Tide shelf + Paid shop tabs and the "Coming soon" rows. A player sees the Token shop only. */
+  full: boolean;
   onBuyToken: (row: ShopTokenRow) => Promise<ShopPurchaseResult | null>;
   onBackToDivecore: () => void;
 }) {
-  const [tab, setTab] = useState<ShopTab>('token');
+  const [pickedTab, setTab] = useState<ShopTab>('token');
+  const tabs = storeTabsFor(full);
+  const tab: ShopTab = tabs.includes(pickedTab) ? pickedTab : 'token';
   const [busyRow, setBusyRow] = useState<string | null>(null);
   const [guide, setGuide] = useState(false);
 
@@ -208,7 +234,7 @@ export function ShopScreen({
   if (guide) {
     return (
       <>
-        <NeonBackLink onPress={() => setGuide(false)} />
+        <NeonBackLink label="Store" onPress={() => setGuide(false)} />
         <GuideView initial="tide" />
       </>
     );
@@ -219,38 +245,34 @@ export function ShopScreen({
       <NeonBackLink onPress={onBackToDivecore} />
 
       <NeonHeader
-        title="Shop"
-        lede="Spend soft tokens on a small boost — or window-shop what is coming."
+        title={streetUiOn() ? 'Corner Store' : 'Shop'}
+        lede={full ? 'Spend soft tokens on a small boost — or window-shop what is coming.' : 'Spend tokens on a small boost.'}
       />
 
       <NeonPanel>
         <View style={styles.statRow}>
-          <NeonLabel>Tokens</NeonLabel>
+          <NeonLabel>{streetUiOn() ? 'Caps' : 'Tokens'}</NeonLabel>
           <ThemedText type="subheading" themeColor="emphasis">
             {view.tokens}
           </ThemedText>
         </View>
-        <View style={styles.filterRow}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterContent}>
-            {(
-              [
-                { key: 'token' as const, label: 'Token shop' },
-                { key: 'tide' as const, label: 'Tide shelf' },
-                { key: 'paid' as const, label: 'Paid shop' },
-              ]
-            ).map((entry) => (
-              <NeonChip
-                key={entry.key}
-                label={entry.label}
-                selected={tab === entry.key}
-                onPress={() => setTab(entry.key)}
-              />
-            ))}
-          </ScrollView>
-        </View>
+        {tabs.length > 1 ? (
+          <View style={styles.filterRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterContent}>
+              {tabs.map((key) => (
+                <NeonChip
+                  key={key}
+                  label={TAB_LABELS[key]}
+                  selected={tab === key}
+                  onPress={() => setTab(key)}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
       </NeonPanel>
 
       {tab === 'tide' ? (
@@ -266,7 +288,7 @@ export function ShopScreen({
             const state = tokenRowState(view, row, busyRow === row.id);
             return (
               <View key={row.id} style={styles.row}>
-                <ShopRowIcon file={TOKEN_ICON_FILES[row.kind]} fallback={TOKEN_ICONS[row.kind]} color={NEON.cyan} />
+                <ShopRowIcon kind={row.kind} file={TOKEN_ICON_FILES[row.kind]} fallback={TOKEN_ICONS[row.kind]} color={NEON.cyan} />
                 <View style={styles.rowText}>
                   <ThemedText type="smallBold">{row.name}</ThemedText>
                   {row.blurb ? (
@@ -298,11 +320,12 @@ export function ShopScreen({
             Bought with soft tokens. Never sells permanent power or a cycle skip — those would
             break the climb.
           </ThemedText>
-          {tokenShopRows().map((row) => {
+          {storeTokenRows(full).map((row) => {
             const state = tokenRowState(view, row, busyRow === row.id);
             return (
               <View key={row.id} style={styles.row}>
                 <ShopRowIcon
+                  kind={row.kind}
                   file={TOKEN_ICON_FILES[row.kind]}
                   fallback={TOKEN_ICONS[row.kind]}
                   color={NEON.cyan}
@@ -341,6 +364,7 @@ export function ShopScreen({
           {paidShopRows().map((row) => (
             <View key={row.id} style={styles.row}>
               <ShopRowIcon
+                kind={row.kind}
                 file={PAID_ICON_FILES[row.kind]}
                 fallback={PAID_ICONS[row.kind]}
                 color={NEON.textMuted}

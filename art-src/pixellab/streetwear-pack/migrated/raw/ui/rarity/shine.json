@@ -1,0 +1,339 @@
+{
+ "frames": [
+  {
+   "filename": "sw-rarity-shine 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 1.png",
+   "frame": {
+    "x": 40,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 2.png",
+   "frame": {
+    "x": 80,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 3.png",
+   "frame": {
+    "x": 120,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 4.png",
+   "frame": {
+    "x": 0,
+    "y": 60,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 5.png",
+   "frame": {
+    "x": 40,
+    "y": 60,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 6.png",
+   "frame": {
+    "x": 80,
+    "y": 60,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 7.png",
+   "frame": {
+    "x": 120,
+    "y": 60,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 8.png",
+   "frame": {
+    "x": 0,
+    "y": 120,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 9.png",
+   "frame": {
+    "x": 40,
+    "y": 120,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 10.png",
+   "frame": {
+    "x": 80,
+    "y": 120,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-rarity-shine 11.png",
+   "frame": {
+    "x": 120,
+    "y": 120,
+    "w": 40,
+    "h": 60
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 40,
+    "h": 60
+   },
+   "sourceSize": {
+    "w": 40,
+    "h": 60
+   },
+   "pivot": {
+    "x": 0.325,
+    "y": 0.5
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "sw-rarity-shine.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 160,
+   "h": 180
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 13,
+   "y": 30
+  },
+  "frameTags": [
+   {
+    "name": "sw-rarity-shine",
+    "from": 0,
+    "to": 11,
+    "direction": "forward"
+   }
+  ]
+ }
+}

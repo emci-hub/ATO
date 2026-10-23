@@ -1,9 +1,11 @@
 /**
- * The Story — longer-form Sage prose from currently settled categories.
- * Own generation call and quota lane. No offline fallback.
+ * The Story card's saved shape and its small helpers.
  *
- * UNREVIEWED. Diagnosis-adjacent. Nothing here is shippable without emci's
- * direct read — same bar as the Crisis spec.
+ * The Story is free templates (story-v3 / story-bank), shown on Insights. The AI writer
+ * that used to live here (the "Write as Sage" prompt, the model-answer parser, the
+ * samples and `STORY_COPY_REVIEWED`) was removed in roadmap A5 (2026-10-23): no model
+ * writes a Story. What stays is what the card still reads: labels, the saved
+ * `SageStory` shape and its parser, the told-vs-played note, and the ready check.
  */
 import {
   getCategoryDefs,
@@ -11,18 +13,15 @@ import {
   readAllCategories,
   type CategoryId,
 } from '@/lib/categories';
-import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
+import { parseStoryThreadRecord, type StoryThreadRecord } from '@/lib/story-thread';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import type { AxisDivergence } from '@/lib/trait-history';
 import { reachedFullProfile } from '@/lib/questions/intake-stage';
 import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stability';
-import { leanComparative, leanHighLow } from '@/lib/traits';
+import { leanHighLow } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
-import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
-import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
-import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
+import { parseStoredStoryCard, type StoryCard } from '@/lib/story-card';
 
-export const STORY_COPY_REVIEWED = false;
 export const STORY_LABEL = 'The Story';
 export const STORY_LEDE = "How it's looking.";
 
@@ -31,39 +30,14 @@ export interface SageStory {
   fingerprint: string;
   generatedOn: string;
   categoryIds: CategoryId[];
+  /** Story v2: which 1–2 categories this story was about, so the next load takes a new angle. */
+  thread?: StoryThreadRecord;
+  /** Story v3 (2026-10-09): the card parts. Older stories have only `body`. */
+  card?: StoryCard;
+  /** Shared library (wave93): the library card's id (Report) and "you and N others". */
+  libraryId?: string;
+  others?: number | null;
 }
-
-export interface StorySample {
-  shape: string;
-  body: string;
-}
-
-/**
- * Drafts for emci's direct read. NOT shown in the app. NOT few-shots.
- * Flag every line. Do not treat as shippable.
- */
-export const STORY_SAMPLES: readonly StorySample[] = [
-  {
-    shape: 'settled follow-through + own path',
-    body:
-      "You've been keeping the plan, even when you'd rather keep the room small. You'd rather pick the path yourself than take the one already sitting there. Sometimes a real check-in with someone is what makes the day land. Sometimes the day is fine without it. Both have shown up. Maybe it just depends on the week.",
-  },
-  {
-    shape: 'thin — must not generate',
-    body: '',
-  },
-];
-
-/**
- * Told-vs-played tension. Soft, hedged, not an accusation, not smoothed over.
- * Drafts for emci's direct read. NOT shown in the app. NOT pasted into the
- * live prompt as templates. Flag every line. Do not treat as shippable.
- */
-export const STORY_TENSION_SAMPLES: readonly string[] = [
-  "You said one thing, but when it's not a big decision, you go a different way. Maybe you're just different depending on the moment — that's normal.",
-  "You talk about a hard day one way. Then when it's just a quick pick, you move another. Maybe both are true — it just depends on the moment.",
-  "When you had time to think, you went one way. When you didn't, you went another. Maybe you're just different depending on the moment — that's normal.",
-];
 
 /** Story-only. Talk still uses formatDivergenceNote. */
 export function formatStoryTensionNote(rows: readonly AxisDivergence[]): string | null {
@@ -112,23 +86,18 @@ export function parseSageStory(raw: unknown): SageStory | null {
       }
     }
   }
-  return { body, fingerprint, generatedOn, categoryIds };
-}
-
-export function parseStoryBody(text: string): string | null {
-  try {
-    const start = text.indexOf('{');
-    const end = text.lastIndexOf('}');
-    if (start < 0 || end <= start) return null;
-    const row = JSON.parse(text.slice(start, end + 1)) as { body?: unknown };
-    const body = typeof row.body === 'string' ? row.body.trim() : '';
-    if (!body) return null;
-    if (containsFrameworkTerm(body)) return null;
-    if (storyNamesACategory(body)) return null;
-    return body.slice(0, 1600);
-  } catch {
-    return null;
-  }
+  const thread = parseStoryThreadRecord(row.thread);
+  const card = parseStoredStoryCard(row.card);
+  return {
+    body,
+    fingerprint,
+    generatedOn,
+    categoryIds,
+    ...(thread ? { thread } : {}),
+    ...(card ? { card } : {}),
+    ...(typeof row.libraryId === 'string' && /^[0-9a-f-]{36}$/.test(row.libraryId) ? { libraryId: row.libraryId } : {}),
+    ...(typeof row.others === 'number' ? { others: row.others } : {}),
+  };
 }
 
 /** Distinctive multi-word category labels only — short English words stay allowed. */
@@ -141,70 +110,4 @@ export function storyNamesACategory(body: string): boolean {
     }
   }
   return false;
-}
-
-export function buildStoryPrompt(input: {
-  tracks: readonly TraitTrack[];
-  divergenceNote: string | null;
-}): string {
-  const lines: string[] = [];
-  for (const reading of readAllCategories(input.tracks)) {
-    if (!reading.ready) continue;
-    const bits = reading.stableAxes.map((axis) => AXIS_EDITOR_COPY[axis].label).join(', ');
-    if (reading.map) {
-      lines.push(
-        `- Settled merge (do not name this): ${bits}. Position is a mix of those two, not a coordinate. Texture only: ${
-          reading.texture.map((row) => AXIS_EDITOR_COPY[row.axis].label).join(', ') || 'none'
-        }.`,
-      );
-    } else {
-      lines.push(
-        `- Settled merge (do not name this): ${bits}. Lean ${leanComparative(reading.bar)}.`,
-      );
-    }
-  }
-
-  const tension = input.divergenceNote
-    ? `TOLD-VS-PLAYED (present — name it like a friend would, inside the prose. Warm, second person. Not an accusation. Do not pick a winner. Do not explain yourself.)\n- ${input.divergenceNote}`
-    : 'TOLD-VS-PLAYED: none on the current tracks. Do not invent a split.';
-
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is The Story — one cohesive narrative, not a stitched list of summaries.
-
-VOICE REFERENCE (register only — do NOT reuse these lines):
-${VOICE_REFERENCE}
-
-Job: rewrite the settled notes below into one holistic piece of prose. Same discipline as a title: generated, not looked up, not a concatenation of category lines. Fully prose. Never put a category name in the text.
-
-${STYLE_BLOCK}
-
-SETTLED NOTES (internal — write from the meaning, never the label)
-${lines.join('\n') || '- none'}
-
-${tension}
-
-RULES
-1. 2–3 short paragraphs, or 5–8 sentences. Everyday language. Not a diagnosis, not a type, not a test result.
-2. Never Myers-Briggs, never a four-letter code, never "you are." Reflect as maybes, not facts.
-3. Do not name categories (not Steadiness, not Agency, not Drive, not the others). Do not name axes.
-4. Do not stitch the category summaries. Rewrite as one picture of how they tend to move.
-5. If told-vs-played tension is present, say it like a friend: they named one way of moving, and in a small snap choice they go another. Maybe they just move differently depending on the moment — that's normal. Do not explain the observation. Never "not a verdict", "gap", "leaving visible", "on paper", "told us", or "gut-call". If it is not present, do not invent it.
-6. Hedge lives inside the sentence. No bolted-on closing after a dash or period, except the "that's normal" shape above when tension is present.
-7. Completeness is not an input. Do not mention leftover notes or a fuller picture.
-
-MOMENT VOICE (emci's approved voice, 2026-10-02)
-Build the story out of concrete, recognizable moments set in how they live now, not general statements about them. It is still one flowing piece of prose (rules 1-7 above), in the second person. Follow every rule below; "short" here means each sentence, not the whole story.
-${MOMENT_VOICE_BLOCK}
-
-Respond with JSON only:
-{"body":"<the story>"}`;
-}
-
-export function storyCopyClean(): boolean {
-  const lines = [
-    STORY_LABEL,
-    STORY_LEDE,
-    ...STORY_SAMPLES.map((row) => row.body),
-    ...STORY_TENSION_SAMPLES,
-  ];
-  return lines.every((line) => !line || !containsFrameworkTerm(line));
 }

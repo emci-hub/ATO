@@ -1,9 +1,9 @@
 /**
- * Daily insight (T-H1) — the generator, the store, and wave69's schema.
+ * Daily insight (T-H1) — the stored shape, the store, and wave69's schema.
+ * The AI writer was removed in roadmap A5 (2026-10-23); the shape and caps live in
+ * src/lib/insight/draft.ts.
  *
- * Source-text assertions, same convention as the wave checks: the generator's
- * import chain reaches the edge client, so importing it here would drag a
- * network-shaped module into an offline gate check.
+ * Source-text assertions, same convention as the wave checks.
  *
  * The load-bearing assertion in this file is the caps drift guard: the
  * per-field character caps exist twice, once in TypeScript and once as CHECK
@@ -12,7 +12,7 @@
  * failed insert rather than a visible error.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 let passed = 0;
 function ok(label: string) {
@@ -24,40 +24,29 @@ function read(rel: string): string {
   return readFileSync(rel, 'utf8');
 }
 
-const gen = read('src/lib/insight/generate-insight.ts');
+const gen = read('src/lib/insight/draft.ts');
 const store = read('src/lib/insight/store.ts');
 const migration = read('supabase/migrations/wave69_daily_insights.sql');
-const callSites = read('src/lib/ai/call-sites.ts');
+// wave87 (emci 2026-10-07) raised the title cap to 120 for the stored focus
+// sentences and restated insert_daily_insight. For each cap, the latest
+// migration that sets it is the one the database runs.
+const wave87 = read('supabase/migrations/wave87_insight_title_120.sql');
+const CAP_SOURCES: readonly (readonly [string, string])[] = [
+  ['wave87', wave87],
+  ['wave69', migration],
+];
 
-// --- copy discipline -------------------------------------------------------
-// INVARIANT. The insight describes the user to themselves — `reflection` and
-// `watchFor` are diagnosis-adjacent. It is not shippable as reviewed without
-// emci's direct read, same lane as Story and Levity.
-assert.match(gen, /export const DAILY_INSIGHT_COPY_REVIEWED = false;/);
-ok('DAILY_INSIGHT_COPY_REVIEWED is false — insight copy is unreviewed');
-
-// INVARIANT. The framework fence runs on every one of the five fields, not
-// just the prose ones: a framework term in `theme` reaches Home exactly like
-// one in `reflection`.
-assert.match(gen, /import \{ containsFrameworkTerm \}/);
-assert.match(gen, /if \(containsFrameworkTerm\(trimmed\)\) return null;/);
-for (const field of ['theme', 'title', 'reflection', 'tryToday', 'watchFor']) {
-  assert.match(
-    gen,
-    new RegExp(`const ${field} = cleanField\\(parsed\\.${field}, INSIGHT_FIELD_CAPS\\.${field}\\)`),
-    `${field} must go through cleanField, which is where the fence and the cap are applied`,
-  );
-}
-ok('all five fields run through the framework fence and a length cap');
-
-// A partial insight would render as a broken card and there is no sensible
-// per-field fallback, so the parser is all-or-nothing.
-assert.match(gen, /if \(!theme \|\| !title \|\| !reflection \|\| !tryToday \|\| !watchFor\) return null;/);
-ok('parseDailyInsight returns null unless all five fields survive validation');
-
-assert.match(gen, /\$\{VOICE_REFERENCE\}/);
-assert.match(gen, /\$\{STYLE_BLOCK\}/);
-ok('prompt carries the voice reference and the style block');
+// --- the AI writer is gone (roadmap A5) -----------------------------------
+// The framework fence, the all-or-nothing parser and the prompt belonged to the AI writer, which no
+// longer exists: the daily insight is a hand-written bank pick (src/lib/insight-bank/, pinned by
+// check:insight-bank, which also keeps the stored copy through the clear-voice rules).
+assert.ok(!existsSync('src/lib/insight/generate-insight.ts'), 'the AI daily-insight writer stays deleted');
+assert.doesNotMatch(
+  gen.replace(/\/\*[\s\S]*?\*\//g, ''),
+  /generateText|buildDailyInsightPrompt|parseDailyInsight|DAILY_INSIGHT_COPY_REVIEWED/,
+  'draft.ts code is only the shape and the caps (its header comment names what was removed)',
+);
+ok('the AI daily-insight writer and its stale review flag are gone');
 
 // --- caps drift guard ------------------------------------------------------
 const capsBlock: string | undefined = /INSIGHT_FIELD_CAPS = \{([\s\S]*?)\} as const;/.exec(gen)?.[1];
@@ -75,25 +64,43 @@ for (const [tsField, sqlColumn] of Object.entries(SQL_COLUMN)) {
   const tsCap: string | undefined = new RegExp(`${tsField}:\\s*(\\d+)`).exec(capsBlock)?.[1];
   assert.ok(tsCap, `${tsField} must have a cap in INSIGHT_FIELD_CAPS`);
 
-  const sqlCap: string | undefined = new RegExp(
+  const capRe = new RegExp(
     `char_length\\(${sqlColumn}\\) > 0 and char_length\\(${sqlColumn}\\) <= (\\d+)`,
-  ).exec(migration)?.[1];
-  assert.ok(sqlCap, `${sqlColumn} must have a CHECK constraint in wave69`);
+  );
+  const capHit = CAP_SOURCES.map(([name, sql]) => [name, capRe.exec(sql)?.[1]] as const).find(([, cap]) => cap);
+  const sqlCap: string | undefined = capHit?.[1];
+  assert.ok(sqlCap, `${sqlColumn} must have a CHECK constraint in wave69 or wave87`);
 
   assert.equal(
     tsCap,
     sqlCap,
-    `${tsField}: TypeScript caps at ${tsCap} but wave69 caps at ${sqlCap} — the client would truncate to one length and the database reject at another`,
+    `${tsField}: TypeScript caps at ${tsCap} but ${capHit?.[0]} caps at ${sqlCap} — the client would truncate to one length and the database reject at another`,
   );
 
   // The RPC re-truncates server-side, so a direct call cannot get past the cap.
+  // wave87 restates the whole function, so every field's truncation is read there.
   assert.match(
-    migration,
+    wave87,
     new RegExp(`left\\(btrim\\(p_${sqlColumn}\\), ${sqlCap}\\)`),
     `insert_daily_insight must truncate ${sqlColumn} to its own cap`,
   );
 }
-ok('per-field caps agree across generate-insight.ts, the CHECK constraints, and the RPC');
+ok('per-field caps agree across draft.ts, the CHECK constraints, and the RPC');
+
+// wave87 changes only the title cap, restates the RPC with the same guards,
+// and adds no policy (emci approved the cap, not a data change).
+assert.match(wave87, /drop constraint if exists daily_insights_title_check;/);
+assert.match(
+  wave87,
+  /add constraint daily_insights_title_check\s*\n\s*check \(char_length\(title\) > 0 and char_length\(title\) <= 120\);/,
+);
+assert.match(wave87, /create or replace function public\.insert_daily_insight\(/);
+assert.match(wave87, /security definer/);
+assert.match(wave87, /uid uuid := auth\.uid\(\);/);
+assert.match(wave87, /raise exception 'not authenticated'/);
+assert.match(wave87, /revoke all on function public\.insert_daily_insight[^;]*from public, anon;/);
+assert.doesNotMatch(wave87, /create policy|for (insert|update|delete)/);
+ok('wave87 raises only the title cap to 120 and restates the guarded RPC, with no new policy');
 
 // --- schema ----------------------------------------------------------------
 // INVARIANT. Owner-only read, and deliberately no peer-visible view — unlike
@@ -151,14 +158,10 @@ assert.match(store, /export async function fetchInsightHistory/);
 assert.match(store, /\.is\('superseded_at', null\)/);
 ok('store exposes fetchTodayInsight / saveInsight / fetchInsightHistory, reading the live row only');
 
-// --- call-site metadata ----------------------------------------------------
-// INVARIANT. check:ai fails when a generateText call site has no declared
-// metadata; this pins the declaration to the registry as well as the const.
-assert.match(callSites, /export const DAILY_INSIGHT_META: AiCallMetadata = \{/);
-assert.match(callSites, /feature: 'Daily insight',/);
-assert.match(callSites, /meta: DAILY_INSIGHT_META,/);
-assert.match(gen, /import \{ DAILY_INSIGHT_META \} from '@\/lib\/ai\/call-sites';/);
-assert.match(gen, /\}, DAILY_INSIGHT_META\);/);
-ok('DAILY_INSIGHT_META is declared, registered in AI_CALL_SITES, and passed to generateText');
+// --- no AI writer any more ------------------------------------------------
+// The AI daily-insight writer was removed on 2026-10-14 (Insights is template-only) and its file in A5.
+assert.ok(!existsSync('src/lib/ai/call-sites.ts'), 'there is no call-site registry any more');
+assert.doesNotMatch(store, /generateText|generateDailyInsight/);
+ok('the AI daily-insight writer is gone: no call-site registry, no model call in the store');
 
 console.log(`\n${passed} insight checks passed`);

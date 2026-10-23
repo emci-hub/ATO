@@ -36,7 +36,7 @@ const SET_AVATAR_REFUSAL: Record<HeroSetReason, string> = {
 const BIND_REFUSAL: Record<HeroBindReason, string> = {
   unknown_hero: 'That Hero is not in this build.',
   not_owned: 'You do not own that Hero yet.',
-  active_avatar: 'Unequip as Avatar first — a Hero cannot be your Avatar and a tower at once.',
+  active_avatar: 'This hero is your leader — make another pet active first. A hero cannot lead and be a tower at once.',
   cap: 'Tower slots are full — unbind a Hero first.',
 };
 
@@ -44,6 +44,7 @@ export function HeroOwnSheet({
   offer,
   /** True when this hero is the save's active Avatar hero. */
   isActiveAvatar,
+  leaderFromPet = false,
   onSetAvatar,
   onBind,
   onDismiss,
@@ -53,6 +54,8 @@ export function HeroOwnSheet({
 }: {
   offer: HeroOffer;
   isActiveAvatar: boolean;
+  /** P4: the active pet leads, so "Set as Avatar" is not offered. */
+  leaderFromPet?: boolean;
   onSetAvatar: () => Promise<HeroSetReason | null>;
   onBind: () => Promise<HeroBindReason | null>;
   onDismiss: () => void;
@@ -109,7 +112,9 @@ export function HeroOwnSheet({
         <ThemedText type="small" themeColor="textSecondary">
           {settled
             ? settled.body
-            : `${offer.label} joins your roster. Fight as this Hero, or bind it as a tower — not both at once.`}
+            : leaderFromPet
+              ? `${offer.label} joins your roster, and you got a ★ copy of it. Bind it as a tower, or hatch its pet to lead with it.`
+              : `${offer.label} joins your roster. Fight as this Hero, or bind it as a tower — not both at once.`}
         </ThemedText>
         {!settled && isActiveAvatar ? (
           <ThemedText type="code" themeColor="emphasis">
@@ -126,12 +131,14 @@ export function HeroOwnSheet({
           <NeonButton label="Done" onPress={onDismiss} accessibilityLabel="Close hero sheet" />
         ) : (
           <>
-            <NeonButton
-              label="Set as Avatar"
-              onPress={() => void setAvatar()}
-              disabled={busy}
-              accessibilityLabel={`Set ${offer.label} as your Avatar`}
-            />
+            {leaderFromPet ? null : (
+              <NeonButton
+                label="Set as Avatar"
+                onPress={() => void setAvatar()}
+                disabled={busy}
+                accessibilityLabel={`Set ${offer.label} as your Avatar`}
+              />
+            )}
             <NeonButton
               label="Bind as tower"
               variant="secondary"
@@ -144,7 +151,7 @@ export function HeroOwnSheet({
               variant="secondary"
               onPress={onOpenDress}
               disabled={busy}
-              accessibilityLabel="Open Dress to switch Heroes"
+              accessibilityLabel="Open Dress to see your Heroes"
             />
             <NeonButton
               label="Later"

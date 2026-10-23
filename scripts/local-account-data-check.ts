@@ -58,10 +58,11 @@ ok('ato.auth.* is left to clearLocalSession, not erased here');
 
 // The keep-list is device state only. A key that holds anything derived from
 // account content must never appear in it.
+// The crisis region keys left the keep-list with the crisis system
+// (2026-10-14): nothing reads them, so a sign-out now clears them too.
+assert.ok(!lib.includes("'ato.crisis.region.auto'") && !lib.includes("'ato.crisis.region.override'"));
 for (const keep of [
   'ato.appearance.mode',
-  'ato.crisis.region.auto',
-  'ato.crisis.region.override',
   'ato.push.prefs.v1',
   'ato.push.asked',
   'ato.ai.provider.override.v1',
@@ -107,8 +108,6 @@ for (const wiped of [
 // ...device prefs, auth artifacts and foreign namespaces must survive.
 for (const kept of [
   'ato.appearance.mode',
-  'ato.crisis.region.auto',
-  'ato.crisis.region.override',
   'ato.push.prefs.v1',
   'ato.push.asked',
   'ato.ai.provider.override.v1',
@@ -123,7 +122,14 @@ ok('the keep-list rule, run over real key shapes, wipes account data and spares 
 // --- never throws ----------------------------------------------------------
 // INVARIANT. This runs AFTER the server confirms the account is gone. A storage
 // failure must not surface as "we could not delete your account".
-assert.match(lib, /export async function clearLocalAccountData\(\): Promise<string\[\]> \{/);
+assert.match(
+  lib,
+  /export async function clearLocalAccountData\(options: \{ keepPrefixes\?: readonly string\[\] \} = \{\}\): Promise<string\[\]> \{/,
+);
+// Account deletion and sign-out call it with no options: everything goes. Only
+// the dev Reset passes keepPrefixes (the Divecore save).
+assert.match(lib, /const keep = options\.keepPrefixes \?\? \[\];/);
+assert.match(you, /await clearLocalAccountData\(\);/, 'account deletion keeps nothing back');
 assert.match(lib, /\} catch \(err\) \{\s*\n\s*console\.log\('\[local-account-data\] storage clear failed:'/);
 ok('clearLocalAccountData swallows storage failures — deletion already succeeded');
 
@@ -185,8 +191,9 @@ ok('loadCachedInsight refuses an insight written by a different account');
 
 assert.match(hook, /export function useDailyInsight\(expectedUserId\?: string\)/);
 assert.match(hook, /loadCachedInsight\(expectedUserId\)/);
-assert.match(home, /useDailyInsight\(userId\)/);
-ok('Home passes its signed-in user id through to the cache read');
+assert.doesNotMatch(home, /useDailyInsight\(/);
+assert.match(read('src/components/insights/today-focus-card.tsx'), /useDailyInsight\(userId\)/);
+ok('the Insights focus card (Home no longer reads it) passes its signed-in user id through to the cache read');
 
 // INVARIANT, found in review. The session resolves asynchronously, so Home's
 // first renders have no user id. The hook must hold at null rather than read

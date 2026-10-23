@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "mix_price": 150,
+  "mix_pass_price": 110,
+  "sword_map": {
+    "fire": "ember",
+    "water": "azure",
+    "earth": "verdant",
+    "wind": "chrome",
+    "light": "gold",
+    "dark": "violet",
+    "lightning": "neon",
+    "frost": "azure"
+  },
+  "ramps": {
+    "ember": ["#3a0c04", "#8c2410", "#d4541a", "#ffb83a", "#fff6c8"],
+    "azure": ["#0a1c4a", "#1450b0", "#3c98f0", "#8cd4ff", "#f0faff"],
+    "verdant": ["#062a10", "#12702a", "#2eb848", "#86f090", "#f2fff4"],
+    "violet": ["#1e0a4a", "#5a22a8", "#9a48e8", "#d49aff", "#faf0ff"],
+    "gold": ["#4a2800", "#a86a08", "#f0b020", "#fff0a0", "#ffffff"],
+    "neon": ["#4a0058", "#b01090", "#ff2fd0", "#7af0ff", "#ffffff"],
+    "chrome": ["#20242c", "#5a6272", "#9aa4b6", "#dce4f2", "#ffffff"],
+    "spectrum": ["#3a1a8a", "#e03ab0", "#ffb830", "#a8f060", "#f0ffff"],
+    "petal": ["#4a1030", "#b02a5c", "#ff7aa8", "#ffd8e4", "#fff0f4"],
+    "ice": ["#10384c", "#2a6a88", "#7acce8", "#d8f8ff", "#ffffff"],
+    "lime": ["#2c3404", "#5a6a08", "#a8c820", "#f0ff90", "#ffffff"],
+    "pink": ["#5a1030", "#b02a5c", "#ff6a9c", "#ffd8e4", "#ffffff"],
+    "orange": ["#5a1c08", "#c8441a", "#ff8a30", "#ffc060", "#fff0c8"],
+    "cyan": ["#04303c", "#0a6070", "#20c0d8", "#a0f4fa", "#ffffff"],
+    "magenta": ["#4a0848", "#d020c0", "#ff6ae8", "#ffe0fa", "#ffffff"],
+    "cyanwhite": ["#0a3c58", "#1a8ab0", "#6ad4f0", "#d0f6ff", "#ffffff"],
+    "yellow": ["#4a3004", "#d89a10", "#ffd23f", "#fff8d0", "#ffffff"],
+    "brown": ["#2a1608", "#7a5428", "#a87a3c", "#c8a058", "#ecd8a8"],
+    "brick": ["#3a0e0c", "#8a2a24", "#b8543a", "#d8744a", "#f0b890"],
+    "indigo": ["#14123a", "#443e7a", "#6a62a8", "#8a80c0", "#c8c4ec"],
+    "bronze": ["#2a1608", "#7a5428", "#a87a3c", "#c8a058", "#ecd8a8"],
+    "steel": ["#14161c", "#3a404c", "#5a6272", "#707a8e", "#b0bace"],
+    "blue": ["#0a1a48", "#2a4aa8", "#5a86d8", "#a0c8ff", "#e4f0ff"]
+  },
+  "natural": {
+    "rune": ["azure", "ice"],
+    "fire": ["ember", "gold"],
+    "water": ["azure", "cyanwhite"],
+    "earth": ["petal", "brown"],
+    "thunder": ["azure", "yellow"]
+  },
+  "colourways": [
+    { "id": "natural", "name": "Natural", "group": "Natural", "main": null },
+    { "id": "ember", "name": "Ember", "group": "Standard", "main": "ember", "pairs": { "default": "gold", "earth": "brick" } },
+    { "id": "azure", "name": "Azure", "group": "Standard", "main": "azure", "pairs": { "default": "ice", "earth": "indigo" } },
+    { "id": "verdant", "name": "Verdant", "group": "Standard", "main": "verdant", "pairs": { "default": "lime", "earth": "brown" } },
+    { "id": "violet", "name": "Violet", "group": "Standard", "main": "violet", "pairs": { "default": "pink", "thunder": "cyan", "earth": "indigo" } },
+    { "id": "gold", "name": "Gold", "group": "Metallic", "main": "gold", "pairs": { "default": "orange", "earth": "bronze" } },
+    { "id": "chrome", "name": "Chrome", "group": "Metallic", "main": "chrome", "pairs": { "default": "ice", "earth": "steel" } },
+    { "id": "neon", "name": "Neon", "group": "Neon and mix", "main": "neon", "pairs": { "default": "cyan" } },
+    { "id": "spectrum", "name": "Spectrum", "group": "Neon and mix", "main": "spectrum", "pairs": { "default": "magenta", "earth": "blue" } }
+  ]
+}

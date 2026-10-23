@@ -13,7 +13,6 @@ export const SLOT_OVERRIDE_KEY = 'ato.dev.slot-override.v1';
 export const ASK_OVERRIDE_KEY = 'ato.dev.ask-override.v1';
 
 export const SLOT_OVERRIDE_KINDS: readonly TodaySlot['kind'][] = [
-  'crisis',
   'missed_check',
   'note',
   'ask',

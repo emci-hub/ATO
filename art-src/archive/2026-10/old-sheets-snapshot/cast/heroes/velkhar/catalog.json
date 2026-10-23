@@ -1,0 +1,80 @@
+{
+  "hero": "velkhar",
+  "actions": {
+    "BONE_SPEAR": {
+      "sheetKey": "sheets/cast/heroes/velkhar/BONE_SPEAR",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.7419
+    },
+    "DARK_IDLE": {
+      "sheetKey": "sheets/cast/heroes/velkhar/DARK_IDLE",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.7419
+    },
+    "HURT": {
+      "sheetKey": "sheets/cast/heroes/velkhar/HURT",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 5,
+      "footAt": 0.7419
+    },
+    "NECROMANCER_WALK": {
+      "sheetKey": "sheets/cast/heroes/velkhar/NECROMANCER_WALK",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.7419
+    },
+    "SOUL_DASH": {
+      "sheetKey": "sheets/cast/heroes/velkhar/SOUL_DASH",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.8226
+    },
+    "SOUL_DRAIN": {
+      "sheetKey": "sheets/cast/heroes/velkhar/SOUL_DRAIN",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.7419
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/velkhar/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.7419
+    }
+  },
+  "proposedRoles": {
+    "idle": "DARK_IDLE",
+    "hurt": "HURT",
+    "walk": "NECROMANCER_WALK",
+    "dash": "SOUL_DASH"
+  }
+}

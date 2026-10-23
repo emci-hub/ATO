@@ -10,11 +10,12 @@ import { BirthdayRow } from '@/components/birthday-row';
 import { CityPicker } from '@/components/city-picker';
 import { NotificationPrefsFold } from '@/components/notification-prefs-fold';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
+import { HelplineRow } from '@/components/helpline-row';
+import { LegalLinks } from '@/components/legal-links';
 import { AtoTokenCard } from '@/components/ato-token-card';
 import { IdentityCard } from '@/components/identity-card';
 import { YourWeekCard } from '@/components/your-week-card';
 import { RunningUpdateLine } from '@/components/running-update-line';
-import { SageFactsCard } from '@/components/sage-facts';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -31,13 +32,14 @@ import { SETTINGS_TITLE } from '@/lib/polish-copy';
 import { supabase } from '@/lib/supabase';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
-export const FEEDBACK_EMAIL = 'support@asstrollogs.com';
+export const FEEDBACK_EMAIL = 'support@emgens.com';
 export const SEND_FEEDBACK_LABEL = 'Send feedback';
 
 /**
  * You — no longer shown as parked (2026-10-01, emci): the full-screen "Rebuilt"
  * notice is gone because half the screen works. It now also shows the ATO token
- * balance + recent history, and what Sage has saved about you (see / delete).
+ * balance + recent history. The saved-facts list ("Teach Sage") is hidden since
+ * 2026-10-14; the data stays until docs/sage-cleanup.md drops it.
  * The rest below is the history of what was kept alive while it was parked.
  *
  * Was: PARKED, with four things deliberately kept alive (emci 2026-09-15,
@@ -45,17 +47,17 @@ export const SEND_FEEDBACK_LABEL = 'Send feedback';
  *
  * Everything this screen used to hold is gone pending rebuild: the profile
  * card and share poster, growth bars and milestone badges, invites and
- * referrals, the scan sheet, city / birthday / crisis-region / appearance /
- * voice / talk-style pickers, notification prefs, tokens, Sage usage, password
+ * referrals, the scan sheet, city / birthday / appearance /
+ * voice / talk-style pickers, notification prefs, tokens, AI usage, password
  * settings, facts, Kenney credits, and the dev-tools slot.
  *
  * What stays, and why it is not up for parking:
  * 1. **Delete account** — App Store review requires in-app account deletion
  *    (guideline 5.1.1(v)). Parking it would fail review outright.
  * 2. **Sign out** — without it there is no way off an account on a device.
- * 3. **Sage's AI consent** — Apple 5.1.2, and it is the switch the Home
- *    insight and Story generation read. It must be revocable somewhere other
- *    than the one-time ask on Home.
+ * 3. **AI consent** — Apple 5.1.2, and it is the switch Legends cards and
+ *    category deep dives read. It must be revocable somewhere other than the
+ *    one-time ask on Home.
  * 4. **Build/update info** (`RunningUpdateLine`) — app version + build, the
  *    running OTA update's short id, when it was published (local time),
  *    channel/runtime, and an "Original build" vs "OTA update" label. Not a
@@ -162,9 +164,6 @@ Update: ${Updates.updateId ?? 'original build'}`);
           {/* The last seven days in three counts. Local + one read, no AI. */}
           {me ? <YourWeekCard me={me} /> : null}
 
-          {/* What Sage has saved about you — the only place to see and delete it. */}
-          {me ? <SageFactsCard me={me} onUpdated={refresh} /> : null}
-
           <RunningUpdateLine />
 
           <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
@@ -192,7 +191,10 @@ Update: ${Updates.updateId ?? 'original build'}`);
 
           <NotificationPrefsFold />
 
-          <SettingsFold title="Sage's AI" defaultOpen>
+          {/* One static helpline row (emci 2026-10-14). Never generated. */}
+          <HelplineRow />
+
+          <SettingsFold title="ATO's AI" defaultOpen>
             <View style={styles.body}>
               <ThemedText type="small" themeColor="textSecondary">
                 {AI_USE_DISCLOSURE}
@@ -213,7 +215,7 @@ Update: ${Updates.updateId ?? 'original build'}`);
                   }}
                   style={({ pressed }) => [styles.detailRow, pressed && styles.pressed]}>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Sage&apos;s AI
+                    ATO&apos;s AI
                   </ThemedText>
                   <ThemedText type="small">
                     {consentBusy ? 'Saving…' : consent === 'granted' ? 'On' : 'Off'}
@@ -238,6 +240,8 @@ Update: ${Updates.updateId ?? 'original build'}`);
             </ThemedText>
           ) : null}
 
+          <LegalLinks />
+
           <Pressable
             onPress={handleSignOut}
             disabled={signingOut}
@@ -255,6 +259,8 @@ Update: ${Updates.updateId ?? 'original build'}`);
           {/* Deletion lives below sign-out and opens a confirmation sheet — it
               never deletes on this tap. */}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Delete account"
             onPress={() => setDeleting(true)}
             style={({ pressed }) => [styles.deleteLink, pressed && styles.pressed]}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.deleteLinkText}>

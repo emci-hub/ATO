@@ -1,8 +1,8 @@
-import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ActivityIndicator, BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PlayDevFab } from '@/components/play-dev-fab';
 import { DevSlotOutlet } from '@/play/dev-slot';
@@ -17,25 +17,30 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { AboutScreen } from '@/play/about-screen';
 import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
-import { CommandHub } from '@/play/command-hub';
-import { NEON, shopUnlocked, type HubDestination } from '@/play/neon-viper';
-import { PlayThemeProvider } from '@/play/play-theme';
-import { PlayBanner } from '@/play/play-banner';
 import {
-  EMPTY_BANNERS,
-  bannerEvents,
-  currentBanner,
-  dismissBanner,
-  enqueueBanner,
-  type Banner,
-  type BannerQueue,
-  type BannerWatch,
-} from '@/play/play-banner-queue';
+  StreetLockerTabs,
+  StreetResourceBar,
+  StreetTabBar,
+  type StreetTab,
+} from '@/play/street-shell';
+import { streetUiOn } from '@/play/street-ui';
+import { NEON, shopUnlocked, storeOpen } from '@/play/neon-viper';
+import { NeonButton } from '@/play/neon-ui';
+import { backTarget, modeForTab, tabForMode, type PlayMode } from '@/play/play-nav';
+import { PlayThemeProvider } from '@/play/play-theme';
+import { GuideHost } from '@/play/guide-bubble';
+import { resetGuide } from '@/play/guide-store';
+import { GameScreen, useStageFrame } from '@/play/stage-layout';
+import { noticeEvents, type NoticeWatch } from '@/play/notify/events';
+import { notify, useNoticeOptions, useNoticePause, useNoticeTargets, type NoticeTarget } from '@/play/notify/notify';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen, type DiveDeeperResult, type DiveSurfaceSummary } from '@/play/dive-screen';
-import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS, findName, type DivePath } from '@/play/dive-loot';
+import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS, type DivePath } from '@/play/dive-loot';
+import { shownFindName } from '@/play/dive-street-names';
+import { fitWords, joinParts, shopBuyBody, skipBody, surfaceBody } from '@/play/notify/copy';
+import { NOTICE_BODY_MAX_WORDS } from '@/play/notify/queue';
 import { DressScreen } from '@/play/dress-screen';
 import {
   backDecision,
@@ -46,7 +51,8 @@ import {
 } from '@/play/edge-back';
 import { findGlow } from '@/play/dive-fx-model';
 import { DivecoreSettingsSheet } from '@/play/divecore-settings';
-import { DivecoreTutorial } from '@/play/divecore-tutorial';
+import { replayTipsPatch } from '@/play/ftue/coach-tips';
+import { setGuideOpener } from '@/play/help/help-sheet';
 import { resolveReduceMotion, usePlayMotionMode } from '@/play/play-motion';
 import { LayoutShot, type LayoutInset, type LayoutShotKind } from '@/play/layout-shot';
 import { PetScreen, usePlayNoticesSync, type PetTalkEvent } from '@/play/pet-screen';
@@ -64,6 +70,7 @@ import {
   canClaimResearch,
   devAddDiveCharge,
   devAddTokens,
+  devBuildAllRooms,
   devFillDiveCharges,
   devFillResearchFull,
   devFillResearchOne,
@@ -80,6 +87,7 @@ import {
   devEquipSword,
   markExpeditionToasted,
   noteDefendLeak,
+  setTurfHelpers,
   setPlaySettings,
   unlockAvatar,
   type ClaimResult,
@@ -96,6 +104,7 @@ import type { SwordTier } from '@/play/swords';
 import type { ShopTokenRow } from '@/play/shop';
 import { ShopScreen } from '@/play/shop-screen';
 import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
+import { countOnce, countPlayOpen } from '@/play/play-counters';
 
 /**
  * Play room — Grove + Dive + Dress (GAME_SPEC §3, §7, §9c, §11 screens 1–4).
@@ -109,42 +118,12 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * collection, sells Looks over the soft cap, and shows the equipped-stat
  * buckets. Defend (step 5a) is a board skeleton: one path with puff
  * placeholders, leak = fail, Retry replays, Pause freezes, next wave = highest
- * cleared + 1. No Supabase — local AsyncStorage only. Hidden outside
- * pre-launch builds via PRE_LAUNCH_DEV.
+ * cleared + 1. Local AsyncStorage first, with a cloud copy per account (wave96, cloud-save.ts).
+ * On in every build (emci 2026-10-15); only the dev tooling sits behind PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab' | 'swords' | 'swordlab';
-
-type PlayToast =
-  | { kind: 'claim'; result: ClaimResult }
-  | { kind: 'find'; foundName: string }
-  | {
-      kind: 'surface';
-      itemIds: string[];
-      petMood: boolean;
-      shells: number;
-      free: boolean;
-      netFind: string | null;
-      /** v26 — the Hearty meal's find, Powers past today's ceiling, and the
-       * Powers-today count after this surface. */
-      heartyFind: string | null;
-      powersConverted: number;
-      powersToday: number;
-      swordDrop: string | null;
-    }
-  | { kind: 'bust'; rescued: string[]; petMood: boolean }
-  | { kind: 'message'; title: string; body: string };
-
-/** v25: every Play notice goes through one queued floating banner. */
-type BannerAction = PlayToast | { kind: 'banner'; banner: Omit<Banner, 'id'> } | { kind: 'dismiss'; id: number };
-
-function bannerReducer(q: BannerQueue, action: BannerAction): BannerQueue {
-  if (action.kind === 'dismiss') return dismissBanner(q, action.id);
-  return enqueueBanner(q, action.kind === 'banner' ? action.banner : toastBanner(action));
-}
 
 export default function PlayScreen() {
-  const theme = useTheme();
   // Reduce motion (v24): follows the phone unless overridden in Divecore
   // Settings — Play only; the rest of the app keeps following the phone.
   const { reduceMotion: phoneReduceMotion } = useAppearance();
@@ -152,6 +131,8 @@ export default function PlayScreen() {
   const reduceMotion = resolveReduceMotion(motionMode, phoneReduceMotion);
   const {
     view,
+    away,
+    dismissAway,
     claim,
     commit,
     commitSaved,
@@ -199,11 +180,24 @@ export default function PlayScreen() {
     buyShopRow,
   } = usePlayStore();
   const shotParams = useLocalSearchParams<{ shot?: string; inset?: string; phase?: string }>();
-  const [mode, setMode] = useState<PlayMode>('grove');
+  const [mode, setMode] = useState<PlayMode>('pet');
   // Fullscreen while on the Defend board (setup and waves): the status bar
   // hides and comes back on leaving Defend or exiting Play. Shared hook —
   // any screen opts in the same way.
   useImmersiveMode(mode === 'defend');
+  // Anonymous daily counters (wave96): Play opened (and a next-day return), the Hideout seen.
+  useEffect(() => {
+    countPlayOpen();
+  }, []);
+  useEffect(() => {
+    if (mode === 'pet') countOnce('hideout_open');
+    // Leaving the Hideout closes the away card (it never comes back stale).
+    else dismissAway();
+  }, [mode, dismissAway]);
+  // Street shell (Streetwear art style): the bars own the top/bottom safe area.
+  const insets = useSafeAreaInsets();
+  /** The list screens' fixed frame (Block, Locker, Store); game screens take their own. */
+  const listFrame = useStageFrame('list');
   // Pet (v20): keep the opt-in hunger reminder in step with the pet from
   // anywhere in Play (a TD win feeds it too), not only the Pet screen.
   usePlayNoticesSync(view ?? null);
@@ -219,10 +213,16 @@ export default function PlayScreen() {
   }, []);
   const modeRef = useRef(mode);
   modeRef.current = mode;
-  /** Dive only opens from the Pet room now (overhaul, 2026-09-29), so its
-   * back always returns to the room; every other sub-screen goes to the hub. */
+  /** Phase 3 (2026-10-14): Hideout is home (the Block is gone). Dive's back returns to the
+   * screen that opened it (the Hideout hatch; a notice can open it from elsewhere); every
+   * other sub-screen goes to the Hideout. */
+  const diveFromRef = useRef<PlayMode>('pet');
+  const openDive = useCallback(() => {
+    if (modeRef.current !== 'dive') diveFromRef.current = modeRef.current;
+    setMode('dive');
+  }, []);
   const leaveSubScreen = useCallback(() => {
-    setMode(modeRef.current === 'dive' ? 'pet' : 'grove');
+    setMode(backTarget(modeRef.current, diveFromRef.current));
   }, []);
   /** A dive / TD / find moment for the pet to talk about once (room overhaul). */
   const [petTalk, setPetTalk] = useState<PetTalkEvent>(null);
@@ -233,17 +233,23 @@ export default function PlayScreen() {
     petTalkSeq.current += 1;
     setPetTalk({ situation, key: petTalkSeq.current });
   }, []);
-  /** v24: the hub's Settings sheet and the tutorial close first on back. */
+  /** v24: the hub's Settings sheet closes first on back. */
   const [hubSettingsOpen, setHubSettingsOpen] = useState(false);
-  const [tutorialReplay, setTutorialReplay] = useState(false);
+  /** A Hideout sheet or mini-game is open: the phone's own swipe-back must not leave Play. */
+  const [petBusy, setPetBusy] = useState(false);
+  // Hold notices (except errors) while the hub Settings sheet covers the screen. Coach tips never pause them.
+  useNoticePause(hubSettingsOpen);
   const overlayRef = useRef<(() => void) | null>(null);
   const goBackOneLevel = useCallback((source: BackSource): boolean => {
     if (overlayRef.current) {
       overlayRef.current();
       return true;
     }
-    const decision = backDecision(modeRef.current === 'grove', innerBackRef.current, source);
-    if (decision === 'native') return false;
+    const decision = backDecision(modeRef.current === 'pet', innerBackRef.current, source);
+    if (decision === 'native') {
+      // Home is the Hideout: a mini-game or sheet there closes first, then back leaves Play.
+      return innerBackRef.current?.back() === true;
+    }
     if (decision === 'ignore') return true;
     if (innerBackRef.current?.back()) return true;
     leaveSubScreen();
@@ -259,7 +265,7 @@ export default function PlayScreen() {
         // Capture only a move that starts at the left edge and runs sideways —
         // taps, scrolls and board drags elsewhere are never claimed.
         onMoveShouldSetPanResponderCapture: (_e, g) =>
-          modeRef.current !== 'grove' &&
+          modeRef.current !== 'pet' &&
           innerBackRef.current?.edgeSwipe !== false &&
           isEdgeSwipeStart(g.x0, g.dx, g.dy),
         onPanResponderTerminationRequest: () => false,
@@ -269,15 +275,31 @@ export default function PlayScreen() {
       }),
     [goBackOneLevel],
   );
-  // v25: `setToast` queues a floating banner (a stable reducer dispatch).
-  const [banners, setToast] = useReducer(bannerReducer, EMPTY_BANNERS);
-  const banner = currentBanner(banners);
-  /** A banner tapped through to the Journal (Pet → Info → Journal), until used. */
+  // Phase 2 (2026-10-14): every Play notice goes through notify() → the NoticeLane of the
+  // screen on top. Play sets the mode (All / Important only), Reduce Motion and tap targets.
+  useNoticeOptions({ mode: view?.settings.notices ?? 'all', reduceMotion });
+  /** A notice tapped through to the Journal (Pet → Info → Journal), until used. */
   const [openJournal, setOpenJournal] = useState(false);
   const journalOpened = useCallback(() => setOpenJournal(false), []);
-  /** v26: open Pet → Info → Guide from the hub ⚙ or the tutorial. */
+  const goNoticeTarget = useCallback((target: Exclude<NoticeTarget, null>) => {
+    if (target === 'dive') openDive();
+    else if (target === 'pet') setMode('pet');
+    else {
+      setMode('pet');
+      setOpenJournal(true);
+    }
+  }, [openDive]);
+  useNoticeTargets(goNoticeTarget);
+  /** v26: open Hideout → Info → Guide from ⚙ or a "?" sheet's Full guide link. */
   const [openGuide, setOpenGuide] = useState(false);
   const guideOpened = useCallback(() => setOpenGuide(false), []);
+  useEffect(() => {
+    setGuideOpener(() => {
+      setMode('pet');
+      setOpenGuide(true);
+    });
+    return () => setGuideOpener(null);
+  }, []);
   /** Dev kit only: one-shot forced bust on the next Deeper press. */
   const [forceBustArmed, setForceBustArmed] = useState(false);
   /** Dev kit only: skip the Dive searching beat + cooldown for fast testing. */
@@ -302,45 +324,48 @@ export default function PlayScreen() {
 
   const handleClaim = useCallback(async () => {
     const result = await claim();
-    if (result) setToast({ kind: 'claim', result });
+    if (result) {
+      notify({ kind: 'notify', title: `Claimed +${result.tendTokens + result.dailyBonusTokens} tokens`, body: claimNoticeBody(result) });
+    }
   }, [claim]);
 
-  /** Dev kit row: roll one find into the bag and name it in the toast. */
+  /** Dev kit row: roll one find into the bag and name it in the notice. */
   const handleGrantRandomFind = useCallback(async () => {
     const id = await grantRandomFind();
-    if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
+    if (id) notify({ kind: 'notify', title: 'Found', body: itemName(id) ?? id });
   }, [grantRandomFind]);
 
-  /** Dev kit row: grant one Power into the bag, named in the toast. */
+  /** Dev kit row: grant one Power into the bag, named in the notice. */
   const handleGrantRandomPower = useCallback(async () => {
     const id = await grantRandomPower();
-    if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
+    if (id) notify({ kind: 'notify', title: 'Found', body: itemName(id) ?? id });
   }, [grantRandomPower]);
 
   /** Dev kit row: grant 3× Tide Blade as one stack (stacking test). */
   const handleGrantTideBlades = useCallback(async () => {
     const id = await grantTideBlades();
-    if (id) {
-      const name = itemName(id) ?? id;
-      setToast({ kind: 'find', foundName: `${name} ×3` });
-    }
+    if (id) notify({ kind: 'notify', title: 'Found', body: `${itemName(id) ?? id} ×3` });
   }, [grantTideBlades]);
 
   /** Dev kit row: sell every Look in the bag. */
   const handleSellAllJunk = useCallback(async () => {
     const result = await sellAllJunk();
     if (result && result.sold > 0) {
-      setToast({
-        kind: 'message',
-        title: 'Junk sold',
-        body: `${result.sold} Looks · +${result.gainedTokens} tokens`,
-      });
+      notify({ kind: 'notify', title: 'Junk sold', body: `${result.sold} Looks · +${result.gainedTokens} tokens` });
     }
   }, [sellAllJunk]);
 
   /** Dive view handlers — commit through the shared store, toast on results. */
-  const handleSpendCharge = useCallback(async (): Promise<boolean> => beginDive(), [beginDive]);
-  const handleFreeDive = useCallback(async (): Promise<boolean> => beginFreeDive(), [beginFreeDive]);
+  const handleSpendCharge = useCallback(async (): Promise<boolean> => {
+    const ok = await beginDive();
+    if (ok) countOnce('dive_start');
+    return ok;
+  }, [beginDive]);
+  const handleFreeDive = useCallback(async (): Promise<boolean> => {
+    const ok = await beginFreeDive();
+    if (ok) countOnce('dive_start');
+    return ok;
+  }, [beginFreeDive]);
 
   /** Expedition return (v21): announce it once per return, wherever you are
    * in Play (the save remembers it was shown). On the Pet screen the note
@@ -350,20 +375,13 @@ export default function PlayScreen() {
   useEffect(() => {
     if (!expeditionNote || !expeditionNoteFresh) return;
     if (mode !== 'pet') {
-      setToast({
-        kind: 'banner',
-        banner: {
-          title: 'Your pet is back',
-          body: `It brought back ${findName(expeditionNote)} — it’s waiting for you.`,
-          target: 'pet',
-        },
-      });
+      notify({ kind: 'notify', title: 'Pet is back', body: `Brought back ${shownFindName(expeditionNote)}. Tap to visit.`, target: 'pet', dedupeKey: 'expedition' });
     }
     commit((doc) => markExpeditionToasted(doc));
   }, [commit, expeditionNote, expeditionNoteFresh, mode]);
 
-  /** v25: hatch / reveal / milestone-ready news → banners (see bannerEvents). */
-  const watchRef = useRef<BannerWatch | null>(null);
+  /** v25: hatch / reveal / milestone-ready news → notices (see noticeEvents). */
+  const watchRef = useRef<NoticeWatch | null>(null);
   const watchStage = view?.pet.state.stage ?? null;
   const watchOdds = view?.pet.oddsOpen ?? false;
   const watchReady = view ? view.milestones.filter((m) => m.done && !m.claimed).length : 0;
@@ -371,14 +389,14 @@ export default function PlayScreen() {
   const watchStreakDay = view?.pet.streak.last ?? null;
   useEffect(() => {
     if (watchStage == null) return;
-    const next: BannerWatch = {
+    const next: NoticeWatch = {
       stage: watchStage,
       oddsOpen: watchOdds,
       milestonesReady: watchReady,
       streakYmd: watchStreakYmd,
       streakDay: watchStreakDay,
     };
-    for (const b of bannerEvents(watchRef.current, next, mode === 'pet')) setToast({ kind: 'banner', banner: b });
+    for (const n of noticeEvents(watchRef.current, next, mode === 'pet')) notify(n);
     watchRef.current = next;
   }, [mode, watchOdds, watchReady, watchStage, watchStreakDay, watchStreakYmd]);
 
@@ -386,17 +404,21 @@ export default function PlayScreen() {
   const handleSurface = useCallback(async (): Promise<DiveSurfaceSummary | null> => {
     const surfaced = await surfaceRun();
     if (!surfaced) return null;
-    setToast({
-      kind: 'surface',
-      itemIds: surfaced.banked,
-      petMood: surfaced.petCared,
-      shells: surfaced.shellsGained,
-      free: surfaced.free,
-      netFind: surfaced.netFind,
-      heartyFind: surfaced.heartyFind,
-      powersConverted: surfaced.powersConverted,
-      powersToday: surfaced.powersToday,
-      swordDrop: surfaced.swordDrop,
+    notify({
+      kind: 'notify',
+      title: 'Surfaced',
+      body: surfaceBody({
+        banked: surfaced.banked,
+        shellsGained: surfaced.shellsGained,
+        free: surfaced.free,
+        swordDrop: surfaced.swordDrop,
+        netFind: surfaced.netFind ? shownFindName(surfaced.netFind) : null,
+        heartyFind: surfaced.heartyFind ? shownFindName(surfaced.heartyFind) : null,
+        powersToday: surfaced.powersToday,
+        powersCap: DIVECORE_POWERS_PER_DAY,
+        powersConverted: surfaced.powersConverted,
+        overflowShells: POWER_OVERFLOW_SHELLS,
+      }),
     });
     nudgePet(surfaced.banked.some((id) => findGlow(id) !== 'common') ? 'rare_find' : 'surfaced');
     return {
@@ -413,16 +435,12 @@ export default function PlayScreen() {
     async (path: DivePath, shownPct: number | null): Promise<DiveDeeperResult> => {
       const outcome = await pushDeeper(forceBustArmed, path, shownPct);
       if (outcome?.changed) {
-        setToast({
-          kind: 'message',
-          title: 'Odds updated',
-          body: `Your pet changed, so this path is now ${outcome.bustPct}%. Nothing was rolled — check it and tap again.`,
-        });
+        notify({ kind: 'error', title: 'Odds changed', body: `This path is now ${outcome.bustPct}%. Nothing rolled — tap again.` });
         return { outcome: 'changed', rescued: [] };
       }
       if (forceBustArmed) setForceBustArmed(false); // one-shot arm consumed
       if (outcome?.busted) {
-        setToast({ kind: 'bust', rescued: outcome.rescued, petMood: outcome.petCared });
+        notify({ kind: 'notify', title: 'Busted', body: bustNoticeBody(outcome.rescued) });
         nudgePet('busted');
       }
       if (outcome == null) return null;
@@ -436,11 +454,7 @@ export default function PlayScreen() {
     async (itemId: string, star: number) => {
       const outcome = await equip(itemId, star);
       if (!outcome.ok && outcome.reason === 'bag_full') {
-        setToast({
-          kind: 'message',
-          title: 'Bag full',
-          body: 'Your Basecore holds 80 finds — sell a Look to make room for a Power.',
-        });
+        notify({ kind: 'error', title: 'Bag full', body: 'Sell a Look to make room for a Power.' });
       }
     },
     [equip],
@@ -450,11 +464,7 @@ export default function PlayScreen() {
     async (itemId: string, star: number) => {
       const outcome = await sell(itemId, star);
       if (outcome.ok) {
-        setToast({
-          kind: 'message',
-          title: 'Sold',
-          body: `${outcome.name} · +${outcome.gainedTokens} tokens`,
-        });
+        notify({ kind: 'notify', title: 'Sold', body: `${outcome.name} · +${outcome.gainedTokens} tokens` });
       }
     },
     [sell],
@@ -490,11 +500,7 @@ export default function PlayScreen() {
       if (result?.milestoneLook) {
         const name =
           itemName(result.milestoneLook.itemId) ?? result.milestoneLook.itemId;
-        setToast({
-          kind: 'message',
-          title: 'Clear milestone',
-          body: `${result.milestoneLook.count} lifetime clears — found ${name}.`,
-        });
+        notify({ kind: 'celebrate', title: 'Clear milestone', body: `${result.milestoneLook.count} lifetime clears — found ${name}.` });
       }
       // Slice A2: a first-own also queues `hero_offer` in the save, which the
       // Defend screen renders as the hero sheet (owned + the two actions). No
@@ -508,11 +514,7 @@ export default function PlayScreen() {
   const handleGrantMilestoneWaveFive = useCallback(async () => {
     const id = await grantMilestoneWaveFive();
     if (id) {
-      setToast({
-        kind: 'message',
-        title: 'Wave 5 milestone',
-        body: `Found ${itemName(id) ?? id}.`,
-      });
+      notify({ kind: 'celebrate', title: 'Wave 5 milestone', body: `Found ${itemName(id) ?? id}.` });
     }
   }, [grantMilestoneWaveFive]);
 
@@ -564,7 +566,7 @@ export default function PlayScreen() {
     [setCycleTint],
   );
 
-  /** Dev kit: park the seat at the Final band (Main wave 20). */
+  /** Dev kit: park the seat at the Final band (Main wave 10). */
   const handleForceFinal = useCallback(() => {
     void forceFinal();
   }, [forceFinal]);
@@ -580,19 +582,17 @@ export default function PlayScreen() {
   const handleSkipToEven = useCallback(async (): Promise<SkipRewardResult | null> => {
     const result = await skipToEven();
     if (result) {
-      const parts: string[] = [
-        `+${result.tokensGranted} tokens · +${result.xpGranted} XP over ${result.skippedWaves} ${
-          result.skippedWaves === 1 ? 'wave' : 'waves'
-        }`,
-      ];
-      if (result.crateItemIds.length > 0) {
-        const crateName = result.crateItemIds.map((id) => itemName(id) ?? id).join(', ');
-        parts.push(`skip crate: ${crateName}`);
-      }
-      for (const look of result.milestoneLooks) {
-        parts.push(`${look.wave}th-clear milestone — ${itemName(look.itemId) ?? look.itemId}`);
-      }
-      setToast({ kind: 'message', title: 'Skipped ahead', body: parts.join(' · ') });
+      notify({
+        kind: 'notify',
+        title: 'Skipped ahead',
+        body: skipBody({
+          tokens: result.tokensGranted,
+          xp: result.xpGranted,
+          waves: result.skippedWaves,
+          crate: result.crateItemIds.map((id) => itemName(id) ?? id),
+          milestones: result.milestoneLooks.map((look) => ({ wave: look.wave, name: itemName(look.itemId) ?? look.itemId })),
+        }),
+      });
     }
     return result;
   }, [skipToEven]);
@@ -629,11 +629,7 @@ export default function PlayScreen() {
       const gained = await unlockAvatarStub(id);
       if (gained) {
         const def = avatarDef(id);
-        setToast({
-          kind: 'message',
-          title: 'Avatar unlocked',
-          body: `${def?.name ?? id} joined your Basecore — tap Use to make them active.`,
-        });
+        notify({ kind: 'celebrate', title: 'Avatar unlocked', body: `${def?.name ?? id} joined your crew.` });
       }
     },
     [unlockAvatarStub],
@@ -645,19 +641,18 @@ export default function PlayScreen() {
     async (row: ShopTokenRow): Promise<ShopPurchaseResult | null> => {
       const result = await buyShopRow(row);
       if (result?.ok) {
-        const parts: string[] = [`−${result.tokensSpent} tokens`];
-        if (result.grantedItemId) {
-          parts.push(`found ${itemName(result.grantedItemId) ?? result.grantedItemId}`);
-        }
-        if (row.kind === 'dive_charge') {
-          parts.push(`dive charges ${result.diveChargeNow}/${DIVE_CHARGE_CAP}`);
-        }
-        if (result.shellsInstead > 0) {
-          parts.push(`${result.shellsInstead} shells (Powers for today were full)`);
-        }
-        setToast({ kind: 'message', title: row.name, body: parts.join(' · ') });
+        notify({
+          kind: 'notify',
+          title: `${row.name}`,
+          body: shopBuyBody({
+            tokensSpent: result.tokensSpent,
+            grantedName: result.grantedItemId ? (itemName(result.grantedItemId) ?? result.grantedItemId) : null,
+            diveCharges: row.kind === 'dive_charge' ? { now: result.diveChargeNow, cap: DIVE_CHARGE_CAP } : null,
+            shellsInstead: result.shellsInstead,
+          }),
+        });
       } else if (result) {
-        setToast({ kind: 'message', title: row.name, body: shopRefusalCopy(result.reason) });
+        notify({ kind: 'error', title: `${row.name}`, body: shopRefusalCopy(result.reason) });
       }
       return result;
     },
@@ -673,18 +668,16 @@ export default function PlayScreen() {
     }
   }
 
-  if (!PRE_LAUNCH_DEV) {
-    return <Redirect href="/" />;
-  }
-
-  // Dev-only device frames for the pet room and Dive (layout shots). The
-  // query never changes a normal visit to /play.
+  // Divecore stays on in every build (emci 2026-10-15); only its dev tooling sits behind
+  // PRE_LAUNCH_DEV. Dev-only device frames for the pet room and Dive (layout shots): the
+  // query never changes a normal visit to /play, and does nothing outside pre-launch builds.
   if (
-    shotParams.shot === 'pet' ||
+    PRE_LAUNCH_DEV &&
+    (shotParams.shot === 'pet' ||
     shotParams.shot === 'dive' ||
     shotParams.shot === 'catch' ||
     shotParams.shot === 'train' ||
-    shotParams.shot === 'play'
+    shotParams.shot === 'play')
   ) {
     const inset: LayoutInset =
       shotParams.inset === 'se' || shotParams.inset === 'max' || shotParams.inset === 'and' || shotParams.inset === '15'
@@ -699,27 +692,11 @@ export default function PlayScreen() {
     );
   }
 
-  const researchLine =
-    view == null
-      ? '…'
-      : researchReady
-        ? 'Research ready — Claim gathers your finds.'
-        : `Next find in ~${minutesUntilLabel(view.research.nextFindAt)}.`;
-  const claimLabel =
-    view == null ? '…' : researchReady ? 'Claim' : `~${minutesUntilLabel(view.research.nextFindAt)}`;
+  const claimLabel = view == null ? '…' : `~${minutesUntilLabel(view.research.nextFindAt)}`;
 
-  // v24: the tutorial shows once (a save with progress counts as seen), and
-  // whenever it is replayed from Settings.
-  const showTutorial = view != null && (tutorialReplay || !view.settings.tutorialSeen);
-  const hubOverlayOpen = hubSettingsOpen || showTutorial;
-  overlayRef.current = showTutorial
-    ? () => {
-        setTutorialReplay(false);
-        commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
-      }
-    : hubSettingsOpen && mode === 'grove'
-      ? () => setHubSettingsOpen(false)
-      : null;
+  // Phase 4: the first-time tutorial is four coach tips on the Hideout (src/play/ftue); nothing here blocks.
+  const hubOverlayOpen = hubSettingsOpen;
+  overlayRef.current = hubSettingsOpen ? () => setHubSettingsOpen(false) : null;
 
   const groveDevKitPanel = (afterNavigate?: () => void, focus: readonly GroveDevSectionId[] = []) => (
     <GroveDevKit
@@ -739,7 +716,9 @@ export default function PlayScreen() {
       onSetForceMerge={setForceMerge}
       onToggleTune={() => {
         afterNavigate?.();
-        setShowTune((open) => !open);
+        const next = !showTune;
+        setShowTune(next);
+        if (next) setHubSettingsOpen(true);
       }}
       onOpenSheetLab={() => {
         afterNavigate?.();
@@ -752,243 +731,282 @@ export default function PlayScreen() {
     />
   );
 
+  // Street shell (Streetwear art style, emci 2026-10-11): resource bar + tab bar
+  // wrap the screens; The Block replaces the hub's tile wall. Paint and layout
+  // only — every tab calls the same setMode the Classic tiles use.
+  const street = streetUiOn() && view != null && mode !== 'dive' && mode !== 'sheetlab' && mode !== 'swordlab';
+  const streetTab: StreetTab | null = tabForMode(mode);
+  const goStreetTab = (tab: StreetTab) => {
+    const to = modeForTab(tab);
+    if (to === mode) return;
+    setMode(to);
+  };
+  /** Pre-launch tools, handed to the Settings sheet (the Block that carried them is gone). */
+  const settingsExtra = (
+    <>
+      {showTune ? <TunePanel onClose={() => setShowTune(false)} /> : null}
+      {PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow /> : null}
+    </>
+  );
+
+  // Stage layout (Phase 1, emci 2026-10-14): every Street screen is a GameScreen with fixed
+  // regions — the shell hands each one its resource bar (TopBar) and tab bar, so no screen is
+  // sized by what a flex column leaves over. Bars never resize; only the middle fades on a switch.
+  const shellTop =
+    street && view ? (
+      <StreetResourceBar
+        caps={view.tokens}
+        tokens={view.dive.current}
+        tokensMax={DIVE_CHARGE_CAP}
+        shine={view.pet.stones.held}
+        prism={view.pet.stones.prism}
+        reduceMotion={reduceMotion}
+        claim={{ ready: researchReady, label: claimLabel, onPress: handleClaim }}
+        onSettings={() => setHubSettingsOpen(true)}
+      />
+    ) : null;
+  const shellTabs =
+    street && view ? (
+      <StreetTabBar
+        active={streetTab}
+        showStore={storeOpen()}
+        reduceMotion={reduceMotion}
+        bottomInset={insets.bottom}
+        onTab={goStreetTab}
+      />
+    ) : null;
+  /** A list screen (Block, Locker, Store, About): the stage is the scroll body. */
+  const listScreen = (content: ReactNode) => (
+    <GameScreen
+      frame={listFrame}
+      help={mode === 'dress' ? 'locker' : mode === 'swords' ? 'blades' : mode === 'shop' ? 'store' : undefined}
+      topBar={shellTop}
+      tabBar={shellTabs}
+      fadeKey={mode}
+      reduceMotion={reduceMotion}
+      background={NEON.ink}
+      // Newbie guide (finish step 5): on the Locker only, for "put a Power on". Hidden while Settings is open.
+      float={
+        mode === 'dress' && view ? (
+          <GuideHost screen="locker" view={view} active={!hubSettingsOpen} bottom={8} sideInset={12} />
+        ) : undefined
+      }
+      stage={
+        <ScrollView
+          style={styles.listScroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.listColumn}>{content}</View>
+        </ScrollView>
+      }
+    />
+  );
+
+  const diveEl = view ? (
+    <DiveScreen
+      view={view}
+      skipDelays={skipDelays}
+      reduceMotion={reduceMotion}
+      onSpendCharge={handleSpendCharge}
+      onFreeDive={handleFreeDive}
+      commit={commit}
+      onSurface={handleSurface}
+      onDeeper={handleDeeper}
+      registerBack={registerBack}
+      onBack={leaveSubScreen}
+    />
+  ) : null;
+  const petEl = view ? (
+    <PetScreen
+      view={view}
+      commit={commit}
+      commitSaved={commitSaved}
+      registerBack={registerBack}
+      reduceMotion={reduceMotion}
+      talkEvent={petTalk}
+      onTalkConsumed={clearPetTalk}
+      onBack={closePlay}
+      onGoDive={openDive}
+      onOpenSettings={() => setHubSettingsOpen(true)}
+      settingsOpen={hubSettingsOpen}
+      onBusyChange={setPetBusy}
+      openJournal={openJournal}
+      onJournalOpened={journalOpened}
+      openGuide={openGuide}
+      onGuideOpened={guideOpened}
+      shellTop={shellTop}
+      shellTabs={shellTabs}
+      away={away}
+      onAwayClose={dismissAway}
+      onOpenLocker={() => setMode('dress')}
+      onClaimResearch={handleClaim}
+    />
+  ) : null;
+  const defendEl = view ? (
+    <DefendScreen
+      view={view}
+      reduceMotion={reduceMotion}
+      onWin={handleRecordDefendWin}
+      onResetDailyClears={handleResetDailyClears}
+      onSetClearsTodayFive={handleSetClearsTodayFive}
+      onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
+      onResetMilestones={handleResetMilestones}
+      onResetCampaign={handleResetCampaign}
+      onJumpMain9={handleJumpMain9}
+      onJumpScout={handleJumpScout}
+      onForceConquered={handleForceConquered}
+      onSpendStarToken={handleSpendStarToken}
+      onGrantStarToken={handleGrantStarToken}
+      onSetCycleTint={handleSetCycleTint}
+      onForceFinal={handleForceFinal}
+      onResetAvatarStarCycle={handleResetAvatarStarCycle}
+      onSkipToEven={handleSkipToEven}
+      onDevOvergear={handleDevOvergear}
+      onDevForceSkipOffer={handleDevForceSkipOffer}
+      onSaveAvatarPark={handleSaveAvatarPark}
+      onSaveTurfHelpers={(picks) =>
+        commit((doc) => {
+          const next = setTurfHelpers(doc, picks);
+          return next === doc ? null : next;
+        })
+      }
+      onSetAvatarHero={setAvatarHero}
+      onBindHeroAsTower={bindHeroAsTower}
+      onDismissHeroOffer={() => void dismissHeroOffer()}
+      onDevOwnHero={devOwnHero}
+      onDevOwnAllHeroes={devOwnAllHeroes}
+      onDevSetAvatarHero={devSetAvatarHero}
+      onDevClearHeroOffer={devClearHeroOffer}
+      onDevClearOwnedHeroes={devClearOwnedHeroes}
+      onOpenDress={() => setMode('dress')}
+      onOpenSwords={() => setMode('swords')}
+      onLeak={() => commit(noteDefendLeak)}
+      registerBack={registerBack}
+      onBackToGrove={() => setMode('pet')}
+      shellTop={shellTop}
+      shellTabs={shellTabs}
+    />
+  ) : null;
+  /** Locker, Store, About, the labs: plain scroll content. */
+  const listContent =
+    mode === 'dress' && view ? (
+      <DressScreen
+        view={view}
+        skipDelays={skipDelays}
+        reduceMotion={reduceMotion}
+        onEquip={handleEquip}
+        onSell={handleSell}
+        onUnequip={handleUnequip}
+        onMerge={handleMerge}
+        onActivateAvatar={handleActivateAvatar}
+        onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
+        onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
+        onBackToGrove={() => setMode('pet')}
+        commit={commit}
+      />
+    ) : mode === 'shop' && view ? (
+      <ShopScreen
+        view={view}
+        full={shopUnlocked(devUnlocked)}
+        onBuyToken={handleBuyShopRow}
+        onBackToDivecore={() => setMode('pet')}
+      />
+    ) : mode === 'about' ? (
+      <AboutScreen onBackToDivecore={() => setMode('pet')} />
+    ) : mode === 'sheetlab' ? (
+      <SheetLabScreen onBack={() => setMode('pet')} />
+    ) : mode === 'swords' && view ? (
+      <SwordForgeScreen
+        swords={view.swords}
+        notice={swordNotice}
+        onAction={(action: SwordAction) => {
+          const ok = commit((doc) => applySwordAction(doc, action));
+          setSwordNotice(ok ? null : 'Could not do that. Unequip it, or bring more copies.');
+        }}
+        onBack={() => setMode('pet')}
+      />
+    ) : mode === 'swordlab' && PRE_LAUNCH_DEV && devUnlocked ? (
+      <SwordLabScreen
+        onBack={() => setMode('pet')}
+        onEquip={(element: string, tier: SwordTier) => {
+          commit((doc) => devEquipSword(doc, element, tier));
+        }}
+      />
+    ) : null;
+
+  const streetScreens = !street || !view ? null : mode === 'pet' ? (
+    petEl
+  ) : mode === 'defend' ? (
+    defendEl
+  ) : (
+    listScreen(
+      <>
+        {mode === 'dress' || mode === 'swords' ? (
+          <StreetLockerTabs
+            active={mode === 'swords' ? 'blades' : 'fits'}
+            onFits={() => setMode('dress')}
+            onBlades={() => setMode('swords')}
+          />
+        ) : null}
+        {listContent}
+      </>,
+    )
+  );
+
+  // Loading (no save yet) and the full-screen modes (Dive, the labs): the old column.
+  const screens = !view ? (
+    <View style={styles.loading}>
+      <ActivityIndicator color={NEON.cyanDim} />
+      <NeonButton label="Exit Play" variant="secondary" onPress={closePlay} />
+    </View>
+  ) : (
+    <View style={styles.edgeWrap} {...edgeSwipe.panHandlers}>
+      {mode === 'dive' ? (
+        // Dive owns the whole screen: its GameScreen reads the safe area itself.
+        <View style={styles.fullSafeArea}>{diveEl}</View>
+      ) : (
+        <ThemedView style={styles.container}>
+          <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>{listContent}</ScrollView>
+          </SafeAreaView>
+        </ThemedView>
+      )}
+    </View>
+  );
+
   return (
     <PlayThemeProvider>
       {/* Forced ink chrome is dark regardless of the app-wide mode. */}
       <StatusBar style="light" />
-      {/* The phone's own swipe-back leaves Play — only from the hub. */}
-      <Stack.Screen options={{ gestureEnabled: mode === 'grove' && !hubOverlayOpen }} />
-      {mode === 'grove' ? (
-        <SafeAreaView style={styles.hubSafeArea}>
-          <ScrollView contentContainerStyle={styles.hubScroll} showsVerticalScrollIndicator={false}>
-            <CommandHub
-              diveActive={view?.diveRun.active ?? false}
-              devUnlocked={devUnlocked}
-              scrap={view?.tokens ?? null}
-              wave={view?.campaign.wave_in_phase ?? 1}
-              onTile={(to: HubDestination) => {
-                if (to !== 'shop' || shopUnlocked(devUnlocked)) setMode(to);
-              }}
-              onSettings={() => setHubSettingsOpen(true)}>
-              {/* Research / Claim — the token income the old Grove card carried,
-               * kept reachable now that the hub replaces that card. */}
-              <View style={styles.claimCard}>
-                <View style={styles.claimText}>
-                  <ThemedText type="smallBold">Basecore</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {researchLine}
-                  </ThemedText>
-                </View>
-                <Pressable
-                  disabled={!researchReady}
-                  onPress={handleClaim}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !researchReady }}
-                  style={({ pressed }) => [
-                    styles.claimButton,
-                    {
-                      backgroundColor: researchReady ? theme.accentFill : NEON.panel,
-                      borderColor: NEON.cyanDim,
-                    },
-                    pressed && researchReady && styles.pressed,
-                  ]}>
-                  <ThemedText
-                    type="smallBold"
-                    style={{ color: researchReady ? theme.onAccent : theme.textSecondary }}>
-                    {claimLabel}
-                  </ThemedText>
-                </Pressable>
-              </View>
-
-              <Pressable
-                onPress={closePlay}
-                hitSlop={12}
-                accessibilityRole="button"
-                accessibilityLabel="Exit Play"
-                style={({ pressed }) => [styles.exitRow, pressed && styles.pressed]}>
-                <ThemedText type="small" themeColor="textSecondary">
-                  ‹ Exit Play
-                </ThemedText>
-              </Pressable>
-
-              {showTune ? <TunePanel onClose={() => setShowTune(false)} /> : null}
-
-              {PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow /> : null}
-              {PRE_LAUNCH_DEV && devUnlocked ? groveDevKitPanel() : null}
-            </CommandHub>
-          </ScrollView>
-        </SafeAreaView>
-      ) : (
-        <View style={styles.edgeWrap} {...edgeSwipe.panHandlers}>
-          {(mode === 'dive' || mode === 'pet') && view ? (
-            // Pet room + Dive own the whole screen (overhaul, 2026-09-29):
-            // no scroll view; the banner floats over every mode (below).
-            <SafeAreaView style={styles.fullSafeArea}>
-              {mode === 'dive' ? (
-                <DiveScreen
-                  view={view}
-                  skipDelays={skipDelays}
-                  reduceMotion={reduceMotion}
-                  onSpendCharge={handleSpendCharge}
-                  onFreeDive={handleFreeDive}
-                  commit={commit}
-                  onSurface={handleSurface}
-                  onDeeper={handleDeeper}
-                  registerBack={registerBack}
-                  onBack={leaveSubScreen}
-                />
-              ) : (
-                <PetScreen
-                  view={view}
-                  commit={commit}
-                  commitSaved={commitSaved}
-                  registerBack={registerBack}
-                  reduceMotion={reduceMotion}
-                  talkEvent={petTalk}
-                  onTalkConsumed={clearPetTalk}
-                  onBack={() => setMode('grove')}
-                  onGoDive={() => setMode('dive')}
-                  onReplayTutorial={() => setTutorialReplay(true)}
-                  openJournal={openJournal}
-                  onJournalOpened={journalOpened}
-                  openGuide={openGuide}
-                  onGuideOpened={guideOpened}
-                  onBanner={(b) => setToast({ kind: 'banner', banner: { ...b, target: null } })}
-                />
-              )}
-            </SafeAreaView>
-          ) : (
-          <ThemedView style={styles.container}>
-            <SafeAreaView style={styles.safeArea}>
-              <ScrollView contentContainerStyle={styles.scrollContent}>
-                {mode === 'dress' && view ? (
-                  <DressScreen
-                    view={view}
-                    skipDelays={skipDelays}
-                    reduceMotion={reduceMotion}
-                    onEquip={handleEquip}
-                    onSell={handleSell}
-                    onUnequip={handleUnequip}
-                    onMerge={handleMerge}
-                    onActivateAvatar={handleActivateAvatar}
-                    onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
-                    onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
-                    onBackToGrove={() => setMode('grove')}
-                    commit={commit}
-                  />
-                ) : mode === 'defend' && view ? (
-                  <DefendScreen
-                    view={view}
-                    reduceMotion={reduceMotion}
-                    onWin={handleRecordDefendWin}
-                    onResetDailyClears={handleResetDailyClears}
-                    onSetClearsTodayFive={handleSetClearsTodayFive}
-                    onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
-                    onResetMilestones={handleResetMilestones}
-                    onResetCampaign={handleResetCampaign}
-                    onJumpMain9={handleJumpMain9}
-                    onJumpScout={handleJumpScout}
-                    onForceConquered={handleForceConquered}
-                    onSpendStarToken={handleSpendStarToken}
-                    onGrantStarToken={handleGrantStarToken}
-                    onSetCycleTint={handleSetCycleTint}
-                    onForceFinal={handleForceFinal}
-                    onResetAvatarStarCycle={handleResetAvatarStarCycle}
-                    onSkipToEven={handleSkipToEven}
-                    onDevOvergear={handleDevOvergear}
-                    onDevForceSkipOffer={handleDevForceSkipOffer}
-                    onSaveAvatarPark={handleSaveAvatarPark}
-                    onSetAvatarHero={setAvatarHero}
-                    onBindHeroAsTower={bindHeroAsTower}
-                    onDismissHeroOffer={() => void dismissHeroOffer()}
-                    onDevOwnHero={devOwnHero}
-                    onDevOwnAllHeroes={devOwnAllHeroes}
-                    onDevSetAvatarHero={devSetAvatarHero}
-                    onDevClearHeroOffer={devClearHeroOffer}
-                    onDevClearOwnedHeroes={devClearOwnedHeroes}
-                    onOpenDress={() => setMode('dress')}
-                    onOpenSwords={() => setMode('swords')}
-                    onLeak={() => commit(noteDefendLeak)}
-                    registerBack={registerBack}
-                    onBackToGrove={() => setMode('grove')}
-                  />
-                ) : mode === 'shop' && view && shopUnlocked(devUnlocked) ? (
-                  <ShopScreen
-                    view={view}
-                    onBuyToken={handleBuyShopRow}
-                    onBackToDivecore={() => setMode('grove')}
-                  />
-                ) : mode === 'about' ? (
-                  <AboutScreen onBackToDivecore={() => setMode('grove')} />
-                ) : mode === 'sheetlab' ? (
-                  <SheetLabScreen onBack={() => setMode('grove')} />
-                ) : mode === 'swords' && view ? (
-                  <SwordForgeScreen
-                    swords={view.swords}
-                    notice={swordNotice}
-                    onAction={(action: SwordAction) => {
-                      const ok = commit((doc) => applySwordAction(doc, action));
-                      setSwordNotice(ok ? null : 'Could not do that. Unequip it, or bring more copies.');
-                    }}
-                    onBack={() => setMode('defend')}
-                  />
-                ) : mode === 'swordlab' && PRE_LAUNCH_DEV && devUnlocked ? (
-                  <SwordLabScreen
-                    onBack={() => setMode('grove')}
-                    onEquip={(element: string, tier: SwordTier) => {
-                      commit((doc) => devEquipSword(doc, element, tier));
-                    }}
-                  />
-                ) : null}
-              </ScrollView>
-            </SafeAreaView>
-          </ThemedView>
-          )}
+      {/* The phone's own swipe-back leaves Play — only from home (the Hideout). */}
+      <Stack.Screen options={{ gestureEnabled: mode === 'pet' && !hubOverlayOpen && !petBusy }} />
+      {streetScreens ? (
+        <View style={styles.streetRoot} {...(mode === 'pet' ? null : edgeSwipe.panHandlers)}>
+          {streetScreens}
         </View>
+      ) : (
+        screens
       )}
-      {banner ? (
-        <PlayBanner
-          key={banner.id}
-          banner={banner}
-          reduceMotion={reduceMotion}
-          onDismiss={(id) => setToast({ kind: 'dismiss', id })}
-          onTap={(b) => {
-            setToast({ kind: 'dismiss', id: b.id });
-            if (b.target === 'dive') setMode('dive');
-            else if (b.target === 'pet') setMode('pet');
-            else if (b.target === 'journal') {
-              setMode('pet');
-              setOpenJournal(true);
-            }
-          }}
-        />
-      ) : null}
-      {view && mode === 'grove' ? (
+      {view ? (
         <DivecoreSettingsSheet
           open={hubSettingsOpen}
           onClose={() => setHubSettingsOpen(false)}
           view={view}
           commit={commit}
           reduceMotion={reduceMotion}
-          onReplayTutorial={() => setTutorialReplay(true)}
+          onReplayTips={() => {
+            // The tips live on the Hideout: bring the player there and make all four unseen again.
+            setMode('pet');
+            commit((doc) => setPlaySettings(doc, replayTipsPatch()));
+            // The newbie guide starts over too (on, nothing dismissed).
+            void resetGuide();
+          }}
           onOpenGuide={() => {
             setMode('pet');
             setOpenGuide(true);
           }}
-        />
-      ) : null}
-      {showTutorial ? (
-        <DivecoreTutorial
-          onDone={() => {
-            setTutorialReplay(false);
-            commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
-          }}
-          onGuide={() => {
-            setTutorialReplay(false);
-            commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
-            setMode('pet');
-            setOpenGuide(true);
-          }}
+          onExit={closePlay}
+          extra={settingsExtra}
         />
       ) : null}
       {showPlayDevFab ? (
@@ -1003,7 +1021,7 @@ export default function PlayScreen() {
                 {DEV_MODE_LABEL[mode]} tools
               </ThemedText>
               {mode === 'pet' && view ? (
-                <PetDevPanel pet={view.pet.state} commit={commit} startOpen={['pet', 'eggs', 'room']} />
+                <PetDevPanel pet={view.pet.state} commit={commit} startOpen={[]} />
               ) : null}
               {/* A screen that owns live state (Defend) hands its buttons over here. */}
               <DevSlotOutlet />
@@ -1019,8 +1037,8 @@ export default function PlayScreen() {
 /**
  * Standing test panel — extend per feature.
  *
- * The one debug surface for Play: PRE_LAUNCH_DEV-only (the route above already
- * redirects when the gate is off, so this can never render in production).
+ * The one debug surface for Play: PRE_LAUNCH_DEV-only (the shell renders it only
+ * when PRE_LAUNCH_DEV and the dev PIN are on, so players never see it).
  * Whenever a step adds a time/RNG-gated Play feature, add its fill/reset
  * transition to `playStore.ts` (dev*) and a row here in that same step — do
  * not start a second debug menu. All rows run pure transitions through
@@ -1039,7 +1057,6 @@ type GroveDevSectionId = 'dive' | 'bag' | 'tokens' | 'avatars' | 'campaign' | 'm
 
 /** What the floating DEV kit calls each mode. */
 const DEV_MODE_LABEL: Record<PlayMode, string> = {
-  grove: 'Hub',
   dive: 'Dive',
   pet: 'Pet',
   dress: 'Bag',
@@ -1100,6 +1117,7 @@ function GroveDevKit({
 }) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
+  const [roomsArmed, setRoomsArmed] = useState(false);
   const disarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Which Dev kit sections are expanded. ALL collapsed on entry — the kit is a
    * long list, so a tester opens just the group they need. */
@@ -1121,6 +1139,7 @@ function GroveDevKit({
       disarmTimer.current = null;
     }
     setResetArmed(false);
+    setRoomsArmed(false);
   }, []);
 
   const run = useCallback(
@@ -1131,12 +1150,25 @@ function GroveDevKit({
     [clearResetArm, commit],
   );
 
+  // Two taps: the first arms for 4 s, the second marks every Hideout room built.
+  const pressBuildRooms = useCallback(() => {
+    if (roomsArmed) {
+      clearResetArm();
+      commit(devBuildAllRooms);
+      return;
+    }
+    clearResetArm();
+    setRoomsArmed(true);
+    disarmTimer.current = setTimeout(() => setRoomsArmed(false), 4000);
+  }, [clearResetArm, commit, roomsArmed]);
+
   const pressReset = useCallback(() => {
     if (resetArmed) {
       clearResetArm();
       commit(devResetPlayStore);
       return;
     }
+    clearResetArm(); // one armed row at a time (also drops a pending Build-rooms arm and its timer)
     setResetArmed(true);
     disarmTimer.current = setTimeout(() => setResetArmed(false), 4000);
   }, [clearResetArm, commit, resetArmed]);
@@ -1256,6 +1288,11 @@ function GroveDevKit({
           onPress: () => run(devFillResearchFull),
         },
         { key: 'tokens', label: '+10 tokens', onPress: () => run(devAddTokens) },
+        {
+          key: 'build-all-rooms',
+          label: roomsArmed ? 'Tap again: build Loft, Garage, Rooftop' : 'Build all Hideout rooms',
+          onPress: pressBuildRooms,
+        },
         {
           key: 'shop-reset-daily',
           label: 'Reset shop daily caps',
@@ -1424,83 +1461,71 @@ function minutesUntilLabel(nextAt: number | null): string {
   return `${minutes}m`;
 }
 
-/** Names for a haul, capped at 3 so a long claim/bank stays readable. */
-/** A Play result / message → the floating banner (no tap target). */
-function toastBanner(toast: PlayToast): Omit<Banner, 'id'> {
-  return {
-    title:
-      toast.kind === 'claim'
-        ? `Claimed +${toast.result.tendTokens + toast.result.dailyBonusTokens} tokens`
-        : toast.kind === 'find'
-          ? 'Found'
-          : toast.kind === 'surface'
-            ? 'Surfaced'
-            : toast.kind === 'bust'
-              ? 'Bust'
-              : toast.title,
-    body:
-      toast.kind === 'claim'
-        ? claimToastBody(toast.result)
-        : toast.kind === 'find'
-          ? toast.foundName
-          : toast.kind === 'surface'
-            ? (toast.free
-                ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''}`
-                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${findName(toast.heartyFind)}.` : ''}${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
-              (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
-            : toast.kind === 'bust'
-              ? (toast.rescued.length > 0
-                  ? `Your pet saved ${summarizeNames(toast.rescued)} — the rest of the haul is lost.`
-                  : 'This haul is lost — the charge was already spent. Your Basecore is untouched.') +
-                (toast.petMood ? ' Your pet still had fun (+1 mood).' : '')
-              : toast.body,
-    target: null,
-  };
-}
+/*
+ * Notice bodies: one line in the NoticeLane, most important first (the line ends in "…" when it
+ * runs out of room). The full haul is in the Dive's haul reveal and the Locker.
+ */
 
+/** Names for a haul, capped at 3 so a long claim/bank stays readable. */
 function summarizeNames(itemIds: readonly string[]): string {
   const shown = Math.min(itemIds.length, 3);
   const names = itemIds
     .slice(0, shown)
-    .map((id) => findName(id))
+    .map((id) => shownFindName(id))
     .join(', ');
   const hidden = itemIds.length - shown;
   return hidden > 0 ? `${names} +${hidden} more` : names;
 }
 
-function foundSummary(itemIds: string[]): string {
-  return itemIds.length === 0 ? 'nothing found' : `Found ${summarizeNames(itemIds)}`;
+function finds(n: number): string {
+  return `${n} ${n === 1 ? 'find' : 'finds'}`;
 }
 
-function claimToastBody(result: ClaimResult): string {
-  const parts: string[] = [`+${result.tendTokens} tend`];
-  if (result.dailyBonusTokens > 0) parts.push(`+${result.dailyBonusTokens} daily`);
-  if (result.diveChargeGranted) parts.push('+1 dive charge');
-  parts.push(foundSummary(result.items));
-  return parts.join(' · ');
+function claimNoticeBody(result: ClaimResult): string {
+  return joinParts([
+    `+${result.tendTokens} tend`,
+    ...(result.dailyBonusTokens > 0 ? [`+${result.dailyBonusTokens} daily`] : []),
+    ...(result.diveChargeGranted ? ['+1 charge'] : []),
+    result.items.length === 0 ? 'no finds' : finds(result.items.length),
+  ]);
 }
 
-/** Honest copy for a token-shop refusal (why the buy didn't happen). */
+function bustNoticeBody(rescued: readonly string[]): string {
+  // "The rest sank." (3 words) always stays whole; the saved names get the other 7.
+  return rescued.length > 0
+    ? `${fitWords(`Pet saved ${summarizeNames(rescued)}`, NOTICE_BODY_MAX_WORDS - 3)}. The rest sank.`
+    : 'The haul sank. Your Hideout is safe.';
+}
+
+/** Honest copy for a token-shop refusal (why the buy didn't happen) — ≤ 10 words. */
 function shopRefusalCopy(reason: ShopRefusal): string {
   switch (reason) {
     case 'coming_soon':
-      return 'Not for sale yet — coming soon.';
+      return 'Not for sale yet.';
     case 'insufficient':
-      return 'Not enough tokens — Claim or clear a wave to earn more.';
+      return 'Not enough tokens. Claim or clear a wave.';
     case 'daily_cap':
-      return 'Daily limit reached — come back tomorrow.';
+      return 'Daily limit reached. Back tomorrow.';
     case 'weekly_cap':
-      return 'Weekly limit reached — come back next week.';
+      return 'Weekly limit reached. Back next week.';
     case 'tide_only':
       return 'Tide Pass only.';
     case 'pass_cap':
       return "That's the limit for this pass.";
     case 'dive_full':
-      return 'Dive charges are already full — nothing to add.';
+      return 'Dive charges are already full.';
   }
 }
 
 const styles = StyleSheet.create({
+  /** Street screens: each one is a GameScreen (src/play/stage-layout.tsx). */
+  streetRoot: {
+    flex: 1,
+    backgroundColor: NEON.ink,
+  },
+  /** A list screen's stage: the scroll body fills the fixed stage region. */
+  listScroll: { flex: 1 },
+  listColumn: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', gap: Spacing.three },
   /** Pet room + Dive: the whole screen, ink behind the safe area. */
   fullSafeArea: {
     flex: 1,
@@ -1527,41 +1552,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.three,
     paddingTop: Spacing.three,
-    paddingBottom: Spacing.six,
+    // The newbie guide bubble (76 pt + 8 pt) can float over the Locker's bottom: leave room so the last row scrolls clear.
+    paddingBottom: Spacing.six + 24,
   },
-  /** Command Hub owns the full screen — no max width, no horizontal padding. */
-  hubSafeArea: {
+  /** Loading (no save yet): ink, nothing else. */
+  loading: {
     flex: 1,
     backgroundColor: NEON.ink,
-  },
-  hubScroll: {
-    flexGrow: 1,
-  },
-  exitRow: {
-    alignSelf: 'center',
-    paddingVertical: Spacing.three,
-  },
-  claimCard: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: Spacing.three,
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    backgroundColor: 'rgba(9, 15, 28, 0.92)',
-  },
-  claimText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  claimButton: {
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
+    justifyContent: 'center',
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.four,
   },
   devFabPanel: { gap: Spacing.two },
   devKitCard: {

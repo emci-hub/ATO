@@ -32,10 +32,12 @@
  * parallax (then props, trail) — see `diveWorldCuts`.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { PixelRatio, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
+  runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -64,8 +66,17 @@ import {
   type FindGlow,
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
+import { notify, useNoticePause } from '@/play/notify/notify';
 import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
-import { findName } from '@/play/dive-loot';
+import { FIND_CATEGORY_LABEL, FIND_CATEGORY_PHRASE, findCategory, findName } from '@/play/dive-loot';
+import { HaulReveal } from '@/play/dive-reveal';
+import { GameScreen, useStageFrame } from '@/play/stage-layout';
+import { StopAmbience, StreetUndergroundWorld, SubwayDoors } from '@/play/dive-street';
+import { streetFindName, streetStop } from '@/play/dive-street-names';
+import { hideoutIntegerScale, hideoutPetBox } from '@/play/hideout-iso';
+import { usePlayMotion } from '@/play/play-motion';
+import { alertHaptic, rewardHaptic } from '@/play/street-feel';
+import { STREET_FONT, streetUiOn } from '@/play/street-ui';
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { MOCKUP_DIVE, placePlate } from '@/play/pixel-atlas';
 import { PixelBody, PixelFrame, PixelLabel, PixelRisk, usePixelFonts } from '@/play/pixel-ui';
@@ -76,6 +87,7 @@ import { PetAnimSprite, usePetArt, type PetArt, type PetFace } from '@/play/pet-
 import type { Grade } from '@/play/pet-eggs';
 import { GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import type { PetWear } from '@/play/pet-cosmetics';
+import { GROUND_FRACTION } from '@/play/ground-point';
 import { roleFootAt } from '@/play/skin';
 
 const SLOT = 40;
@@ -116,6 +128,9 @@ export type DiveSceneEvent = {
 
 /** A new find to reveal: rises from the pet into haul slot `slot`. */
 export type DiveReveal = { id: string; key: number; glow: FindGlow; slot: number } | null;
+
+/** Underground pet size vs the whole-pixel fit (which drew it ~30pt tall on a phone). */
+const DIVE_STREET_PET_ZOOM = 2;
 
 /* --------------------------------------------------------------- life --- */
 
@@ -182,6 +197,7 @@ function SwimmingPet({
   tilt,
   auraElement = null,
   flash = null,
+  faceFrom = null,
 }: {
   pet: PetState;
   art: PetArt;
@@ -199,18 +215,28 @@ function SwimmingPet({
   tilt: SharedValue<number>;
   auraElement?: string | null;
   flash?: SharedValue<number> | null;
+  /** Face the way this x offset is moving (the Underground wander) instead of flipping on a timer. */
+  faceFrom?: SharedValue<number> | null;
 }) {
   const [face, setFace] = useState<PetFace>('e');
   const facingEast = face === 'e';
   const tiltStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${tilt.value * (facingEast ? 32 : -32)}deg` }] }));
   useEffect(() => {
-    if (!turn) return;
+    if (!turn || faceFrom) return;
     const id = setInterval(() => setFace((f) => (f === 'e' ? 'w' : 'e')), 1300);
     return () => clearInterval(id);
-  }, [turn]);
+  }, [turn, faceFrom]);
+  useAnimatedReaction(
+    () => (faceFrom ? faceFrom.value : 0),
+    (cur, prev) => {
+      if (!faceFrom || prev == null || Math.abs(cur - prev) < 0.05) return;
+      runOnJS(setFace)(cur > prev ? 'e' : 'w');
+    },
+    [faceFrom],
+  );
   return (
     <>
-      <GradeAura grade={grade} size={box} animate={turn} trail={face === 'front' ? null : face} />
+      <GradeAura grade={grade} size={box} animate={turn} trail={face === 'e' || face === 'w' ? face : null} />
       {trail
         ? [0, 1, 2].map((i) => (
             <Bubble key={i} x={face === 'e' ? box * 0.2 : box * 0.75} height={box * 0.6} dur={1400 + i * 300} delay={i * 450} alive={turn} />
@@ -234,7 +260,7 @@ function SwimmingPet({
           flash={flash}
         />
       </Animated.View>
-      {shiny ? <ShinyOverlay size={box} footAt={0.75} animate={turn} /> : null}
+      {shiny ? <ShinyOverlay size={box} groundAt={0.75 - GROUND_FRACTION * 0.75} animate={turn} /> : null}
     </>
   );
 }
@@ -261,7 +287,10 @@ export function DiveScene({
   recolor = null,
   atSurface = false,
   auraElement = null,
+  status = null,
 }: {
+  /** One-line live status (Powers, Lamp, Snack…) for the lane's idle slot; the dock has no room for it. */
+  status?: string | null;
   pet: PetState;
   wear: PetWear;
   eggColor: string;
@@ -299,13 +328,16 @@ export function DiveScene({
   playHit.current = hit.play;
   playPop.current = pop.play;
   const [popSlot, setPopSlot] = useState(-1);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const onLayout = (e: LayoutChangeEvent) =>
-    setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
-  const { width, height } = size;
-  const full = fxLevel === 'full' && !reduceMotion;
-  const cuts = diveWorldCuts(fxLevel, reduceMotion);
+  // Stage layout: the picture's size comes from the frame (fixed before first paint), not onLayout.
+  const frame = useStageFrame('dive');
+  const { width, height } = frame.stage;
+  const playMotion = usePlayMotion();
+  const full = fxLevel === 'full' && !playMotion.vestibularSafe;
+  const cuts = diveWorldCuts(fxLevel, playMotion.vestibularSafe, playMotion.cosmeticsStill);
   const band = Math.max(1, height * 0.9);
+  // Streetwear: the Underground (subway stops) instead of the reef; paint only.
+  const street = streetUiOn();
+  const nameOf = street ? streetFindName : findName;
 
   // -- Camera: one band per Deeper; after a bust it waits for the pet to
   // shoot up, then rises. Reduced motion snaps.
@@ -313,27 +345,46 @@ export function DiveScene({
   const lastEventKey = useRef(event?.key ?? 0);
   useEffect(() => {
     const freshBust = event?.kind === 'bust' && event.key !== lastEventKey.current;
-    if (reduceMotion) {
+    if (playMotion.vestibularSafe) {
       cam.value = depth;
       return;
     }
     cam.value = freshBust
       ? withDelay(750, withTiming(depth, { duration: 650, easing: Easing.inOut(Easing.cubic) }))
       : withTiming(depth, { duration: 800, easing: Easing.inOut(Easing.cubic) });
-  }, [cam, depth, event?.key, event?.kind, reduceMotion]);
+  }, [cam, depth, event?.key, event?.kind, playMotion.vestibularSafe]);
 
   const worldStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band }] }));
 
   // -- The pet: swims (walk clip) with a gentle sway; reacts to the shown %.
   const art = usePetArt(pet);
   // 1 sprite px = 2pt. The room pet stays on its own enlarged scale.
-  const box = pet.stage === 'egg' ? 70 : art.cellPx * ART_PT;
+  const classicBox = pet.stage === 'egg' ? 70 : art.cellPx * ART_PT;
+  // Street: the pet stands big on the platform. The sprite canvas is mostly
+  // transparent padding, so the BOX may reach 80% of the stage (the figure is
+  // ~a third of it); on whole device pixels; the feet stay on the floor line.
+  const ugScale =
+    street && width > 0 && height > 0
+      ? hideoutIntegerScale({
+          availW: width,
+          availH: height,
+          pixelRatio: PixelRatio.get(),
+          canvas: [256, 320],
+          content: [0, 0, 256, 320],
+        })
+      : null;
+  // Underground: the whole-pixel cap drew the pet ~30pt tall on a phone; it stands about
+  // twice that now (emci 2026-10-13, "pet tiny in the Dive").
+  const box =
+    street && pet.stage !== 'egg' && ugScale
+      ? hideoutPetBox(art.cellPx, ugScale, PixelRatio.get()) * DIVE_STREET_PET_ZOOM
+      : classicBox;
   // The mockup pet hovers over the ledge. The surface perch uses the same spot,
   // so the reef composition stays put when a dive hasn't started.
   const origin = placePlate(Math.max(width, 1), Math.max(height, 1), MOCKUP_DIVE.feet, 24);
   const footAt = roleFootAt(art.role);
-  const petX = origin.left + MOCKUP_DIVE.petX * ART_PT;
-  const petFeet = origin.top + MOCKUP_DIVE.feet * ART_PT;
+  const petX = street ? width / 2 : origin.left + MOCKUP_DIVE.petX * ART_PT;
+  const petFeet = street ? height * 0.9 : origin.top + MOCKUP_DIVE.feet * ART_PT;
   const petY = petFeet - footAt * box + box / 2;
   const edgeX = petX;
   const edgeY = petY;
@@ -398,19 +449,25 @@ export function DiveScene({
     return () => cancelAnimation(bob);
   }, [bob, cuts.motion, away]);
 
+  const swayArtW = ugScale ? ugScale.canvasW : width;
   useEffect(() => {
     cancelAnimation(sway);
     sway.value = 0;
-    if (reduceMotion || away) return;
+    if (playMotion.cosmeticsStill || away) return;
+    // Underground: the pet wanders the platform (about a third of the scene each way); the
+    // reef keeps its small swim sway.
+    // Stay on the drawn picture (it can be narrower than the stage), feet within ~30 % of centre.
+    const amp = playMotion.vestibularSafe ? 6 : street ? Math.max(18, swayArtW * 0.3 - box * 0.15) : 18;
+    const legMs = street && !playMotion.vestibularSafe ? 3200 : 1300;
     sway.value = withRepeat(
       withSequence(
-        withTiming(18, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-18, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+        withTiming(amp, { duration: legMs, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-amp, { duration: legMs, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
     );
     return () => cancelAnimation(sway);
-  }, [sway, reduceMotion, away]);
+  }, [sway, playMotion.cosmeticsStill, playMotion.vestibularSafe, away, street, swayArtW, box]);
 
   useEffect(() => {
     cancelAnimation(wiggle);
@@ -435,6 +492,7 @@ export function DiveScene({
     const timers: ReturnType<typeof setTimeout>[] = [];
     const now = () => Date.now();
     if (event.kind === 'bust') {
+      if (street) alertHaptic();
       setShown(null);
       const hurt = petPose(art.kit, 'hurt');
       if (hurt) setPose({ pose: hurt, loop: false, at: now() });
@@ -522,9 +580,15 @@ export function DiveScene({
   const slotX = (slot: number) => ROW_PAD + slot * SLOT;
   useEffect(() => {
     if (!reveal) return;
-    if (reduceMotion) {
-      setLandedKey(reveal.key);
-      return;
+    if (playMotion.vestibularSafe) {
+      rv.value = 0;
+      rv.value = withTiming(2, { duration: 240 });
+      const id = setTimeout(() => {
+        setLandedKey(reveal.key);
+        setPopSlot(reveal.slot);
+        if (street) rewardHaptic();
+      }, 260);
+      return () => clearTimeout(id);
     }
     const rare = isRareOrBetter(reveal.glow);
     rv.value = 0;
@@ -538,13 +602,14 @@ export function DiveScene({
     const id = setTimeout(() => {
       setLandedKey(reveal.key);
       setPopSlot(reveal.slot);
+      if (street) rewardHaptic();
       if (fxLevel === 'full' && !reduceMotion) {
         playHit.current();
         playPop.current();
       }
     }, revealMs(reveal.glow));
     return () => clearTimeout(id);
-  }, [reveal, reduceMotion, rv, flash, fxLevel]);
+  }, [reveal, playMotion.vestibularSafe, rv, flash, fxLevel, street]);
   const revealTo = reveal ? slotX(reveal.slot) : 0;
   // v25: the find bursts out of a crate / chest on the right-hand ledge.
   const boxX = origin.left + 124 * ART_PT;
@@ -596,25 +661,29 @@ export function DiveScene({
           ? event.saved.map((id) => ({ id, hidden: false }))
           : [];
   const sinking = haul.length === 0 && event?.kind === 'bust' ? event.lost : [];
+  // Mystery finds: names stay hidden while diving; the haul sheet reveals them on surfacing.
+  const diving = haul.length > 0;
+  const [revealedKey, setRevealedKey] = useState(event?.key ?? 0);
+  const showHaulReveal =
+    event?.kind === 'surface' && event.finds > 0 && event.ids.length > 0 && event.key !== revealedKey;
+  // The haul reveal covers the lane: hold notices (except errors) until it closes.
+  useNoticePause(showHaulReveal);
 
-  const caption = away
-    ? 'Your pet is away on an expedition — diving solo.'
-    : haul.length > 0
-      ? revealing
-        ? null
-        : `Found ${findName(haul[haul.length - 1])}`
-      : event?.kind === 'bust'
-        ? event.saved.length > 0
-          ? `Bust — the haul sank. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
-          : 'Bust — the haul sank. Your pet is fine.'
-        : event?.kind === 'surface' && shown && event.finds === 0 && event.ids.length > 0
-          ? `Back up! ${event.ids.length} ${event.ids.length === 1 ? 'sighting' : 'sightings'} for the Logbook${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
-        : event?.kind === 'surface' && shown
-          ? `Back up! ${shown.finds} ${shown.finds === 1 ? 'find' : 'finds'}${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
-          : null;
-  const lastId = haul.length > 0 ? haul[haul.length - 1] : null;
-  const rareFind =
-    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? findName(lastId) : null;
+  // Phase 2: a find that lands is a notice (NoticeLane, via notify()); the surface / bust results
+  // are play.tsx's notices. The lane's idle line is the live status (Phase 5), plus "Pet away" while it is away.
+  const caption = away ? 'Your pet is away on an expedition — diving solo.' : null;
+  const announcedKey = useRef(landedKey);
+  useEffect(() => {
+    if (landedKey === announcedKey.current) return;
+    announcedKey.current = landedKey;
+    const id = haul[haul.length - 1];
+    if (!id) return;
+    if (isRareOrBetter(findGlow(id))) {
+      notify({ kind: 'celebrate', title: 'Rare find', body: `${FIND_CATEGORY_LABEL[findCategory(id)]} ?`, dedupeKey: 'dive-rare' });
+    } else {
+      notify({ kind: 'notify', title: 'Found', body: `${FIND_CATEGORY_PHRASE[findCategory(id)]}`, dedupeKey: 'dive-find' });
+    }
+  }, [haul, landedKey]);
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
 
@@ -622,39 +691,43 @@ export function DiveScene({
     return <View style={styles.scene} />;
   }
 
-  const toast = rareFind && lastId ? (
-    <View pointerEvents="none" style={styles.toast}>
-      <PixelFrame fill={PIXEL.ink} border={PIXEL.amber} padded={false} align="center">
-        <View style={styles.rareRow}>
-          <FindIcon id={lastId} size={14} bare />
-          <PixelLabel color={PIXEL.amber}>Rare find</PixelLabel>
-          <PixelBody size="sm" color={PIXEL.text} numberOfLines={1}>{rareFind}</PixelBody>
-        </View>
-      </PixelFrame>
-    </View>
-  ) : caption ? (
-    <View pointerEvents="none" style={styles.toast}>
-      <PixelFrame>
-        <PixelBody numberOfLines={2} style={styles.captionText}>{caption}</PixelBody>
-      </PixelFrame>
-    </View>
+  // NoticeLane idle line (stage layout): one line above the picture, never on it.
+  // Away: keep the live status (Lamp, Powers, buffs) and add a short "Pet away" instead of replacing it.
+  const idleText = caption ? [status, 'Pet away'].filter(Boolean).join(' · ') : status;
+  const laneLine = idleText ? (
+    <PixelBody size="sm" numberOfLines={1} style={styles.laneText}>{idleText.replace(/\n/g, ' ')}</PixelBody>
   ) : null;
 
   return (
-    <View style={styles.scene} accessibilityLabel={`${diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
-      <View style={styles.topSlot}>{children}</View>
-      <Animated.View style={[styles.stage, shakeStyle]} onLayout={onLayout}>
+    <View
+      style={[styles.scene, street && styles.streetScene]}
+      accessibilityLabel={`${street ? streetStop(depth).name : diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
+      <GameScreen
+        frame={frame}
+        help="dive"
+        background={street ? STREET_SCENE_BG : REEF_BG}
+        topBar={<View style={styles.topSlot}>{children}</View>}
+        notice={<View style={styles.lane}>{laneLine}</View>}
+        stage={
+      <Animated.View style={[styles.stageFill, shakeStyle]}>
       {width > 0 ? (
         <>
           {/* Approved reef plate. Fixed to the viewport; kelp, fish, bubbles and the ray shimmer sit on it. */}
-          <MockupReef width={width} height={height} alive={full} />
+          {street ? (
+            <>
+              <StreetUndergroundWorld width={width} height={height} depth={depth} cuts={cuts} />
+              <StopAmbience width={width} height={height} depth={depth} cuts={cuts} />
+            </>
+          ) : (
+            <MockupReef width={width} height={height} alive={full} />
+          )}
 
           {/* The abyss statue scrolls in with the camera. Props stay on the plate. */}
           <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: worldH }, worldStyle]}>
-            {cuts.dragon ? <AbyssDragon width={width} band={band} /> : null}
+            {cuts.dragon && !street ? <AbyssDragon width={width} band={band} /> : null}
           </Animated.View>
 
-          {cuts.shark && !atSurface && SHARK_DEPTHS.includes(depth) ? (
+          {!street && cuts.shark && !atSurface && SHARK_DEPTHS.includes(depth) ? (
             <SharkGlide key={depth} width={width} height={height} rightward={depth % 2 === 1} />
           ) : null}
 
@@ -669,7 +742,7 @@ export function DiveScene({
                 eggColor={eggColor}
                 pose={pose}
                 box={box}
-                turn={!reduceMotion}
+                turn={!playMotion.cosmeticsStill}
                 trail={cuts.trail && pet.stage !== 'egg'}
                 tilt={tilt}
                 grade={grade}
@@ -677,6 +750,7 @@ export function DiveScene({
                 recolor={recolor}
                 auraElement={auraElement}
                 flash={hit.flash}
+                faceFrom={street && !playMotion.vestibularSafe ? sway : null}
               />
               {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}
               </Animated.View>
@@ -695,7 +769,7 @@ export function DiveScene({
               <Rect x={0} y={0} width={width} height={height} fill="url(#sun)" />
             </Svg>
           </Animated.View>
-          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: 90 }, splashStyle]}>
+          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: 90 }, splashStyle, street && styles.gone]}>
             <Svg width={width} height={90}>
               {[-3, -2, -1, 1, 2, 3].map((k) => (
                 <Ellipse key={k} cx={width / 2 + k * 22} cy={60 - Math.abs(k) * 6} rx={4} ry={7} fill="#FFFFFF" fillOpacity={0.8} />
@@ -728,7 +802,7 @@ export function DiveScene({
           {reveal && revealing ? (
             <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0 }, revealStyle]}>
               <View style={[styles.revealGlow, { backgroundColor: GLOW_COLOR[reveal.glow] }]} />
-              <FindIcon id={reveal.id} size={ICON} />
+              <FindIcon id={reveal.id} size={ICON} mystery />
             </Animated.View>
           ) : null}
 
@@ -739,24 +813,43 @@ export function DiveScene({
             </Animated.View>
           ) : null}
 
+          {/* Street: subway doors between stops (start, each Deeper, head up). */}
+          {street ? (
+            <SubwayDoors
+              cue={atSurface ? -1 : depth}
+              label={atSurface ? 'Street level' : streetStop(depth).name}
+              alive={cuts.motion}
+              gentle={!cuts.parallax}
+              width={width}
+              height={height}
+            />
+          ) : null}
           {sinking.map((id, i) => (
             <Sinking key={`${id}-${i}-${event?.key}`} id={id} left={slotX(event?.saved.length ?? 0) + i * SLOT} top={rowY} drop={height * 0.4} reduceMotion={reduceMotion} />
           ))}
         </>
       ) : null}
       </Animated.View>
-      {toast}
-      {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
+        }
+        dock={
+      // HAUL, RISK, and the controls share one framed panel under the scene, at the frame's
+      // fixed dock height (it no longer grows or shrinks with its state).
       <View style={styles.dock}>
-        <PixelFrame align="stretch" padded={false}>
-          <View style={styles.dockPad}>
-            <View pointerEvents="none" style={styles.haulRow}>
-              <PixelLabel color={PIXEL.cyan}>Haul</PixelLabel>
+        <PixelFrame streetPiece="panel" align="stretch" padded={false} style={styles.dockFrame}>
+          <View style={[styles.dockPad, street && styles.streetDockPad]}>
+            {/* Phase 5: Bag + Heat share ONE 24 pt row (dock 152 = 24 + two 48 pt rows + gaps). */}
+            <View pointerEvents="none" style={styles.bagHeatRow}>
+            <View style={styles.haulRow}>
+              <PixelLabel color={street ? STREET_DIM : PIXEL.cyan} style={street ? styles.streetLabel : undefined}>
+                {street ? 'Bag' : 'Haul'}
+              </PixelLabel>
               {Array.from({ length: 4 }, (_, i) => {
                 const item = rowItems[i];
                 const icon = item ? (
-                  <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={findName(item.id)}>
-                    <FindIcon id={item.id} size={11 * ART_PT} bare />
+                  <View
+                    style={item.hidden ? styles.hidden : undefined}
+                    accessibilityLabel={diving ? `${FIND_CATEGORY_LABEL[findCategory(item.id)]}, not revealed yet` : nameOf(item.id)}>
+                    <FindIcon id={item.id} size={10 * ART_PT} bare mystery={diving} />
                   </View>
                 ) : null;
                 return (
@@ -766,32 +859,63 @@ export function DiveScene({
                     lined={false}
                     padded={false}
                     step={1}
-                    border={PIXEL.slot}
-                    style={{ width: 13 * ART_PT, height: 13 * ART_PT }}>
+                    border={item && diving ? GLOW_COLOR[findGlow(item.id)] : PIXEL.slot}
+                    style={{ width: 12 * ART_PT, height: 12 * ART_PT }}>
                     {i === popSlot && item && !item.hidden ? <Animated.View style={pop.style}>{icon}</Animated.View> : icon}
                   </PixelFrame>
                 );
               })}
             </View>
-            {bustPct != null ? (
-              <View pointerEvents="none">
-                <PixelRisk pct={bustPct} />
+            {/* Heat takes its space even off a run (hidden) so the panel keeps one height. */}
+            <View style={styles.heatGroup}>
+              <View
+                style={bustPct == null ? styles.reserved : undefined}
+                accessibilityElementsHidden={bustPct == null}
+                importantForAccessibility={bustPct == null ? 'no-hide-descendants' : 'auto'}>
+                <PixelRisk
+                  compact
+                  pct={bustPct ?? 0}
+                  label={street ? 'Heat' : undefined}
+                  labelColor={street ? STREET_DIM : undefined}
+                  labelStyle={street ? styles.streetLabel : undefined}
+                />
               </View>
-            ) : null}
+            </View>
+            </View>
             {dock}
           </View>
         </PixelFrame>
       </View>
+        }
+        modal={
+          showHaulReveal && event ? (
+            <HaulReveal ids={event.ids} still={playMotion.cosmeticsStill} onDone={() => setRevealedKey(event.key)} />
+          ) : null
+        }
+      />
     </View>
   );
 }
 
+/** Street label grey (Bag, Heat). */
+const STREET_DIM = '#9AA3AD';
+/** Scene backgrounds (also behind the bars). */
+const STREET_SCENE_BG = '#0b1020';
+const REEF_BG = '#0b5e65';
+
 const styles = StyleSheet.create({
   scene: { flex: 1, minHeight: 0, backgroundColor: '#0b5e65' },
+  streetScene: { backgroundColor: '#0b1020' },
+  gone: { display: 'none' },
   topSlot: { flexGrow: 0, flexShrink: 0, zIndex: 2 },
-  stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
-  toast: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 12, paddingBottom: 4, alignItems: 'center' },
+  // Stage layout: the picture fills the frame's fixed stage region.
+  stageFill: { flex: 1, overflow: 'hidden' },
+  lane: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 12 },
+  laneText: { textAlign: 'center' },
   abs: { position: 'absolute' },
+  reserved: { opacity: 0 },
+  // The panel art fills the reserved height (e.g. while "Searching…" shows one short row).
+  dockFrame: { flexGrow: 1 },
   hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
   flash: { backgroundColor: '#FFFFFF' },
   revealGlow: {
@@ -803,13 +927,22 @@ const styles = StyleSheet.create({
     borderRadius: (ICON + 16) / 2,
     opacity: 0.35,
   },
-  dock: { flexGrow: 0, flexShrink: 0, width: '100%', paddingHorizontal: 8, paddingBottom: 8 },
-  dockPad: { width: '100%', padding: 12, gap: 8 },
+  // 152 = frame margins 4 + top pad 8 + Bag·Heat 24 + 8 + two 48 rows + 8 + bottom pad 4 (the 8 pt screen-edge pad is the frame's).
+  dock: { flex: 1, width: '100%', paddingHorizontal: 8 },
+  dockPad: { width: '100%', paddingTop: 8, paddingBottom: 4, paddingHorizontal: 4, gap: 8 },
+  bagHeatRow: { flexDirection: 'row', alignItems: 'center', height: 24, gap: 8 },
+  heatGroup: { flex: 1, minWidth: 0 },
   haulRow: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
-  rareRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 2 },
+  // Street: Bag / Heat are small quiet labels (the mockup), not 16pt headers.
+  streetLabel: { fontFamily: STREET_FONT.bold, fontSize: 14, lineHeight: 18 },
+  // Street: clear the panel's tape corners.
+  streetDockPad: { paddingHorizontal: 18 },
+  rareRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
   row: { position: 'absolute', left: ROW_PAD, right: ROW_PAD, flexDirection: 'row' },
   slot: { width: SLOT },
   hidden: { opacity: 0 },
   caption: { alignItems: 'center' },
-  captionText: { textAlign: 'center' },
+  // Room inside the panel's corner tape so the words never touch the frame.
+  captionFrame: { maxWidth: '88%' },
+  captionText: { textAlign: 'center', fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 6 },
 });

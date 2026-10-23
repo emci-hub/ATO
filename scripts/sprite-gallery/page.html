@@ -1,0 +1,360 @@
+<title>Streetwear Skin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Pixelify+Sans:wght@400;700&family=Chivo:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a contact-sheet wall — sticky section nav, dense card grids, every sprite on a dark "asphalt" tile */
+:root {
+  color-scheme: dark;
+  --bg: #1d1d20;
+  --panel: #26262a;
+  --tile: #141416;
+  --line: #3a3a3f;
+  --fg: #f2ede4;
+  --muted: #a9a49b;
+  --mustard: #e0a526;
+  --red: #c8202b;
+  --display: "Bungee", "Arial Black", Impact, sans-serif;
+  --body: "Chivo", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; }
+h1, h2 { font-family: var(--display); font-weight: 400; letter-spacing: .01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(34px, 7vw, 64px); line-height: 1; }
+h1 span { color: var(--mustard); }
+h2 { font-size: clamp(22px, 3.4vw, 30px); display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h2 small { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); margin-top: 12px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.stat { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); padding: 4px 10px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+.stat b { color: var(--mustard); font-weight: 600; }
+.palette { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+.swatch { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.swatch i { width: 18px; height: 18px; border: 2px solid #000; display: inline-block; }
+nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); margin-top: 24px; }
+nav .in { display: flex; gap: 4px; overflow-x: auto; padding-block: 10px; }
+nav a { font-family: var(--mono); font-size: 12px; color: var(--fg); text-decoration: none; padding: 5px 10px; border-radius: 3px; white-space: nowrap; text-transform: uppercase; letter-spacing: .05em; }
+nav a:hover, nav a:focus-visible { background: var(--mustard); color: #1d1d20; outline: none; }
+section { margin-top: 44px; display: grid; gap: 16px; }
+.controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.controls .lbl { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
+button.chip { font-family: var(--mono); font-size: 12px; background: transparent; color: var(--fg); border: 1px solid var(--line); border-radius: 3px; padding: 4px 9px; cursor: pointer; }
+button.chip:hover { border-color: var(--mustard); }
+button.chip[aria-pressed="true"] { background: var(--mustard); border-color: var(--mustard); color: #1d1d20; font-weight: 600; }
+button.chip:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px; display: grid; gap: 8px; min-width: 0; }
+.card h3 { margin: 0; font-family: var(--body); font-weight: 800; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+.card h3 span { font-family: var(--mono); font-weight: 400; font-size: 11px; color: var(--muted); }
+.card .move { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.35; }
+.stage { background: var(--tile); border-radius: 3px; position: relative; overflow: hidden; }
+.stage::after { content: ""; position: absolute; left: 8%; right: 8%; bottom: 14%; height: 1px; background: rgba(224,165,38,.18); }
+.sprite { width: 100%; aspect-ratio: 1; image-rendering: pixelated; background-repeat: no-repeat; position: relative; z-index: 1; }
+.card .controls button.chip { font-size: 11px; padding: 3px 7px; }
+.stills { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.still { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 8px; display: grid; gap: 6px; min-width: 0; }
+.still .pic { background: var(--tile); border-radius: 3px; display: grid; place-items: center; aspect-ratio: 1; padding: 6px; }
+.still img { image-rendering: pixelated; width: 100%; height: 100%; object-fit: contain; }
+.still .cap { font-family: var(--mono); font-size: 11px; color: var(--muted); overflow-wrap: anywhere; line-height: 1.35; }
+.still.flag { border-color: var(--red); }
+.still.flag .cap::before { content: "REVIEW · "; color: var(--red); font-weight: 600; }
+.icons { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+.wide { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.wide .pic { aspect-ratio: auto; min-height: 160px; }
+.wide img { max-height: 320px; }
+.sub { font-family: var(--mono); font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 8px; }
+.issues { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 4px; padding: 14px 16px; }
+.issues ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.issues li { max-width: 80ch; }
+footer { margin-top: 48px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .sprite { transition: none; } }
+#menu .menu-demo { display: flex; justify-content: center; margin: 12px 0 20px; }
+.m-screen { width: min(360px, 100%); background: #121214; padding: 16px; display: flex; flex-direction: column; gap: 12px; border-radius: 6px; }
+.m-screen, .m-screen * { font-family: 'Pixelify Sans', monospace; image-rendering: pixelated; box-sizing: border-box; }
+.m-back { display: flex; align-items: center; gap: 8px; color: #F2EDE4; font-weight: 700; }
+.m-plate { display: flex; flex-direction: column; align-items: center; }
+.m-eyebrow { color: #E0A526; font-size: 11px; letter-spacing: .16em; }
+.m-title { color: #F2EDE4; font-weight: 700; font-size: 26px; text-transform: uppercase; line-height: 1.1; }
+.m-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.m-chip { font-weight: 700; font-size: 12px; text-transform: uppercase; color: #A1A1AA; padding: 0 2px; }
+.m-chip.on { color: #1A1A1D; }
+.m-panel { color: #D4D4D8; display: flex; flex-direction: column; gap: 10px; }
+.m-panel p { margin: 0; font-size: 13px; }
+.m-label { color: #E0A526; font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+.m-row { display: flex; gap: 8px; }
+.m-btn { flex: 1; text-align: center; font-weight: 700; font-size: 14px; text-transform: uppercase; color: #F2EDE4; }
+.m-btn.m-primary { color: #1A1A1D; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Streetwear <span>Skin</span></h1>
+    <p class="lede">Every piece of art PixelLab made for ATO on 2026-10-10 and 11. Characters play live in all four facings; pick a clip on each card, turn it with ↻, or switch them all at once. Attack and Skill are each hero's own weapon move. In the game behind the Streetwear art style switch (Pet → Info → Dev, two taps; Classic stays the default).</p>
+    <div class="stats">
+      <span class="stat"><b>16</b> heroes</span><span class="stat"><b>3</b> road enemies</span><span class="stat"><b>3</b> towers</span><span class="stat"><b>2</b> bosses</span><span class="stat"><b>4</b> facings</span><span class="stat"><b>32</b> props</span><span class="stat"><b>56</b> icons</span><span class="stat"><b>6</b> hit splats</span><span class="stat"><b>~2,250</b> generations used</span>
+    </div>
+    <div class="palette">
+      <span class="swatch"><i style="background:#E0A526"></i>#E0A526</span>
+      <span class="swatch"><i style="background:#2B2B2E"></i>#2B2B2E</span>
+      <span class="swatch"><i style="background:#F2EDE4"></i>#F2EDE4</span>
+      <span class="swatch"><i style="background:#C8202B"></i>#C8202B</span>
+    </div>
+  </header>
+
+  <nav aria-label="Sections"><div class="in">
+    <a href="#heroes">Heroes</a><a href="#enemies">Enemies</a><a href="#towers">Towers</a><a href="#bosses">Bosses</a><a href="#effects">Effects</a><a href="#auras">Auras</a><a href="#shop">Shop</a><a href="#menu">Menus</a><a href="#anchor">Anchor</a><a href="#map">Map</a><a href="#props">Props</a><a href="#fx">FX</a><a href="#ui">UI</a><a href="#icons">Icons</a><a href="#issues">Known issues</a><a href="#update">How to update</a>
+  </div></nav>
+
+  <section id="heroes">
+    <h2>Heroes <small>192px canvas · 4 facings · weapon attacks</small></h2>
+    <div class="controls" id="heroAll"></div>
+    <div class="grid" id="heroGrid"></div>
+  </section>
+
+  <section id="enemies">
+    <h2>Road enemies <small>96px canvas · 4 facings</small></h2>
+    <div class="controls" id="creepAll"></div>
+    <div class="grid" id="creepGrid"></div>
+  </section>
+
+  <section id="towers">
+    <h2>Towers <small>8 directions · Idle / Attack / Skill east + west · ~240px canvas</small></h2>
+    <div class="grid" id="towerGrid"></div>
+  </section>
+
+  <section id="bosses">
+    <h2>Bosses <small>Oni Warlord: 4 facings · Titan-X: 8 directions</small></h2>
+    <div class="grid" id="bossGrid"></div>
+  </section>
+
+  <section id="effects">
+    <h2>Element effects <small>shot · hit · skill burst · status · slash — one colour and one shape per element</small></h2>
+    <div class="grid fxgrid" id="effectGrid"></div>
+  </section>
+
+  <section id="auras">
+    <h2>Pet auras <small>drawn in greyscale, coloured by the game · behind + in front of the pet</small></h2>
+    <div class="grid fxgrid" id="auraGrid"></div>
+  </section>
+
+  <section id="shop">
+    <h2>Shop &amp; rarity <small>tier = colour + gem shape · swords tinted per element</small></h2>
+    <div class="stills wide" id="cardGrid"></div>
+    <div class="stills icons" id="shopIconGrid"></div>
+  </section>
+
+  <section id="menu">
+    <h2>Menus <small>9-slice UI kit + Pixelify Sans · how a Divecore screen looks with Streetwear on</small></h2>
+    <div class="menu-demo" id="menuDemo"></div>
+    <div class="stills icons" id="menuPieces"></div>
+  </section>
+
+  <section id="anchor">
+    <h2>Style anchor <small>the look every asset copied</small></h2>
+    <div class="grid" id="anchorGrid"></div>
+  </section>
+
+  <section id="map">
+    <h2>Map <small>32px tiles</small></h2>
+    <div class="stills wide" id="mapGrid"></div>
+    <p class="sub">Road pieces · edge mask N=1 E=2 S=4 W=8</p>
+    <div class="stills icons" id="roadGrid"></div>
+  </section>
+
+  <section id="props">
+    <h2>Props <small>64px · tower pads first</small></h2>
+    <div class="stills" id="propsGrid"></div>
+  </section>
+
+  <section id="fx">
+    <h2>FX <small>shots · coins · hit splats</small></h2>
+    <div class="stills icons" id="fxGrid"></div>
+    <div class="grid" id="splatGrid"></div>
+  </section>
+
+  <section id="ui">
+    <h2>UI frames</h2>
+    <div class="stills wide" id="uiGrid"></div>
+  </section>
+
+  <section id="icons">
+    <h2>Sticker icons <small>32px</small></h2>
+    <div class="stills icons" id="iconGrid"></div>
+  </section>
+
+  <section id="issues">
+    <h2>Known issues</h2>
+    <div class="issues">
+      <ul>
+        <li>Attack and Skill are each hero's own weapon move. They are redrawn per frame, so a weapon can wobble slightly between frames.</li>
+        <li>Dash and Hurt still come from body templates; a few heroes lower or hide their weapon during those.</li>
+        <li>The game only plays east and west today; north and south are ready for a future top-down use.</li>
+        <li>The knight's side views read paler than its front.</li>
+        <li>Fixed 2026-10-11: the 4 flagged icons are replaced (oak leaf, blank price tag, plain chain, boxing glove); panel, card and health bar re-made without drips, skull or barcode; both buttons are one 150×68 box.</li>
+        <li>Fixed 2026-10-11: every hero Idle re-made holding its weapon (the old template idles made hair, capes and weapons blink in and out); leftover grey background patches cut out of the Oni Warlord's Walk, Run and Idle.</li>
+        <li>The two buttons still carry red paint drips.</li>
+        <li>Towers have Idle / Attack / Skill in east and west only (all the game reads for towers).</li>
+        <li>Oni Warlord needs a 264px canvas: its flaming katana and cape fill the whole frame. Its east Death ends kneeling; south ends flat.</li>
+        <li>Titan-X swaps which arm holds the cannon between some directions.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="update">
+    <h2>How to update this page</h2>
+    <div class="issues" style="border-left-color: var(--mustard)">
+      <p>This page does not refresh by itself. After any sprite change, open Claude Code in the ATO repo (any chat) and say:</p>
+      <pre style="font-family: var(--mono); background: var(--tile); padding: 10px 12px; border-radius: 3px; overflow-x: auto; margin: 10px 0">update the sprite gallery</pre>
+      <ul>
+        <li>Claude runs <code>npx tsx scripts/sprite-gallery/build.ts</code>, then republishes to this same link. Full steps: <code>scripts/sprite-gallery/README.md</code>.</li>
+        <li>Where everything lives: art in <code>assets/play/skins/streetwear/</code>; every PixelLab id, cost and weapon move in its <code>MANIFEST.md</code>; working log and raw exports in <code>games/grove/ref/streetwear-source/</code> (<code>STATE.md</code>).</li>
+        <li>Sprite rules: Walk/Dash/Hurt use PixelLab skeleton-v3; Attack/Skill are custom v3 weapon moves; every frame is padded to one canvas per character (heroes 192px, enemies 96px, towers 236-244px like the cast, Oni Warlord 264px, Titan-X 244px) with feet aligned; 4 facings per clip.</li>
+        <li>Link to keep: https://claude.ai/artifact/9wjcLv4FQu4S8dwqT2RBho</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Source: assets/play/skins/streetwear · MANIFEST.md has every PixelLab id, cost and weapon move.</footer>
+</div>
+
+<script>
+const DATA = __DATA__;
+const NAMES = { archangel: 'Archangel', aurex: 'Aurex', corvus: 'Corvus', kitsune: 'Kitsune', oni: 'Crimson Oni', 'cyber-shinobi': 'Cyber Shinobi', elowen: 'Elowen', kael: 'Kael-09', maldrath: 'Maldrath', morwen: 'Morwen', 'neon-viper': 'Neon Viper', raven: 'Raven', sak: 'Sak', 'frost-lich': 'Frost Lich', velkhar: 'Velkhar', 'void-raven': 'Void Raven', 'village-girl': 'Village Girl', wizard: 'Wizard', knight: 'Knight', anchor: 'Street Ninja', ghost: 'Ghost', lux: 'Lux', viper: 'Viper', 'boss-oni': 'Oni Warlord', 'boss-titan-x': 'Titan-X' };
+const ROLES = { ghost: 'Vine tower · drone bolts · energy-ring pulse', lux: 'Crystal tower · light beams · lightning burst', viper: 'Archer tower · rifle shot · kneeling burst', 'boss-oni': 'Boss scout + mini-boss', 'boss-titan-x': 'Spare boss art · no game role yet' };
+const MOVES = { corvus: 'Claw slash · crow swarm', archangel: 'Sword slash · overhead strike', oni: 'Katana slash · rising flame slash', aurex: 'Greatsword swing · flame spin', kitsune: 'Dual X-slash · blade flurry', 'cyber-shinobi': 'Draw slash · iaido strike', elowen: 'Sword thrust · leaf spin', kael: 'Energy slash · energy wave', maldrath: 'Ground slam · wide sweep', morwen: 'Staff swing · magic bolt', 'neon-viper': 'Roundhouse kick · neon dash punch', raven: 'Punch · axe chop', sak: 'Ice slash · ghost thrust', 'frost-lich': 'Ice swing · ice spikes', velkhar: 'Staff strike · purple flame', 'void-raven': 'Scythe sweep · spinning slash' };
+const HERO_ORDER = ['corvus', 'archangel', 'oni', 'aurex', 'kitsune', 'cyber-shinobi', 'elowen', 'kael', 'maldrath', 'morwen', 'neon-viper', 'raven', 'sak', 'frost-lich', 'velkhar', 'void-raven'];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const actors = [];
+const el = (tag, attrs = {}, kids = []) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) k === 'text' ? (e.textContent = v) : e.setAttribute(k, v); kids.forEach((c) => e.append(c)); return e; };
+
+const io = new IntersectionObserver((entries) => entries.forEach((en) => { if (en.isIntersecting) { en.target.style.backgroundImage = `url("${en.target.dataset.src}")`; io.unobserve(en.target); } }), { rootMargin: '400px' });
+
+function actor(slug, info, clips, startClip) {
+  const cols = Math.max(...info.rows.map((r) => r.n));
+  const rows = info.rows.length;
+  const rowOf = (k) => info.rows.find((r) => r.key === k);
+  const st = { clip: startClip, face: 'east', frame: 0, turning: false };
+  const sprite = el('div', { class: 'sprite', role: 'img', 'aria-label': `${NAMES[slug] || slug} sprite` });
+  sprite.dataset.src = info.sheet;
+  sprite.style.backgroundSize = `${cols * 100}% ${rows * 100}%`;
+  io.observe(sprite);
+  const label = el('span');
+  const draw = () => {
+    const r = st.turning ? rowOf('rotations') : (rowOf(`${st.clip}/${st.face}`) || rowOf(`${st.clip}/east`));
+    if (!r) return;
+    const f = st.frame % r.n;
+    sprite.style.backgroundPosition = `${cols > 1 ? (f / (cols - 1)) * 100 : 0}% ${rows > 1 ? (r.row / (rows - 1)) * 100 : 0}%`;
+    label.textContent = st.turning ? 'turning' : `${st.clip} · ${st.face[0].toUpperCase()} · ${r.n}f`;
+  };
+  const clipBtns = clips.map((c) => { const b = el('button', { class: 'chip', type: 'button', 'aria-pressed': String(c === st.clip), text: c }); b.onclick = () => set({ clip: c, turning: false }); return b; });
+  const FACES = ['east', 'south', 'west', 'north'];
+  const faceBtn = el('button', { class: 'chip', type: 'button', 'aria-pressed': 'false', text: 'Turn ↻' });
+  faceBtn.onclick = () => set({ face: FACES[(FACES.indexOf(st.face) + 1) % 4], turning: false });
+  const turnBtn = el('button', { class: 'chip', type: 'button', 'aria-pressed': 'false', text: '8 dirs' });
+  turnBtn.onclick = () => set({ turning: !st.turning });
+  function set(p) {
+    Object.assign(st, p); st.frame = 0;
+    clipBtns.forEach((b) => b.setAttribute('aria-pressed', String(!st.turning && b.textContent === st.clip)));
+    turnBtn.setAttribute('aria-pressed', String(st.turning));
+    draw();
+  }
+  const kids = [el('h3', {}, [document.createTextNode(NAMES[slug] || slug), label])];
+  if (MOVES[slug] || ROLES[slug]) kids.push(el('div', { class: 'move', text: MOVES[slug] || ROLES[slug] }));
+  kids.push(el('div', { class: 'stage' }, [sprite]));
+  kids.push(el('div', { class: 'controls' }, clips.length ? [...clipBtns, faceBtn, turnBtn] : [turnBtn]));
+  const card = el('article', { class: 'card' }, kids);
+  const a = { tick() { st.frame++; draw(); }, set, draw, sprite };
+  actors.push(a); draw();
+  return { card, actor: a };
+}
+
+function groupControls(host, clips, list) {
+  host.append(el('span', { class: 'lbl', text: 'All:' }));
+  clips.forEach((c) => { const b = el('button', { class: 'chip', type: 'button', text: c }); b.onclick = () => list.forEach((a) => a.set({ clip: c, turning: false })); host.append(b); });
+  const faces = [['E', 'east'], ['W', 'west'], ['N', 'north'], ['S', 'south']].map(([l, f]) => { const b = el('button', { class: 'chip', type: 'button', text: 'Face ' + l }); b.onclick = () => list.forEach((a) => a.set({ face: f, turning: false })); return b; });
+  const t = el('button', { class: 'chip', type: 'button', text: '8 dirs' }); t.onclick = () => list.forEach((a) => a.set({ turning: true }));
+  host.append(...faces, t);
+}
+
+const HERO_CLIPS = ['Idle', 'Walk', 'Dash', 'Attack', 'Skill', 'Hurt'];
+const heroActors = HERO_ORDER.map((h) => { const x = actor(h, DATA.heroes[h], HERO_CLIPS, 'Attack'); document.getElementById('heroGrid').append(x.card); return x.actor; });
+groupControls(document.getElementById('heroAll'), HERO_CLIPS, heroActors);
+const CREEP_CLIPS = ['Idle', 'Walk', 'Death'];
+const creepActors = ['village-girl', 'wizard', 'knight'].map((c) => { const x = actor(c, DATA.creeps[c], CREEP_CLIPS, 'Walk'); document.getElementById('creepGrid').append(x.card); return x.actor; });
+groupControls(document.getElementById('creepAll'), CREEP_CLIPS, creepActors);
+const TOWER_CLIPS = ['Idle', 'Attack', 'Skill'];
+['ghost', 'lux', 'viper'].forEach((t) => { const x = actor(t, DATA.towers[t], TOWER_CLIPS, 'Attack'); document.getElementById('towerGrid').append(x.card); });
+const BOSS_CLIPS = ['Idle', 'Walk', 'Run', 'Death'];
+const oniBoss = actor('boss-oni', DATA.bosses.oni, BOSS_CLIPS, 'Walk'); document.getElementById('bossGrid').append(oniBoss.card);const titan = actor('boss-titan-x', DATA.bosses['titan-x'], [], 'Idle'); titan.actor.set({ turning: true }); document.getElementById('bossGrid').append(titan.card);
+const anc = actor('anchor', DATA.anchor, [], 'Idle'); anc.actor.set({ turning: true }); document.getElementById('anchorGrid').append(anc.card);
+
+const SPLAT = { 'hit-splat': 'Paint (base)', 'hit-splat-ember': 'Ember', 'hit-splat-tide': 'Tide', 'hit-splat-spark': 'Spark', 'hit-splat-root': 'Root', 'hit-splat-void': 'Void' };
+for (const [k, label] of Object.entries(SPLAT)) {
+  const s = DATA.splats[k];
+  const sprite = el('div', { class: 'sprite', role: 'img', 'aria-label': `${label} hit splat` });
+  sprite.dataset.src = s.sheet; sprite.style.backgroundSize = `${s.n * 100}% 100%`; io.observe(sprite);
+  let f = 0; const draw = () => { sprite.style.backgroundPosition = `${(f % s.n) / (s.n - 1) * 100}% 0%`; };
+  actors.push({ tick() { f++; draw(); } }); draw();
+  document.getElementById('splatGrid').append(el('article', { class: 'card' }, [el('h3', {}, [document.createTextNode(label), el('span', { text: `${s.n}f` })]), el('div', { class: 'stage' }, [sprite])]));
+}
+
+function strip(hostId, label, sub, s) {
+  const sprite = el('div', { class: 'sprite', role: 'img', 'aria-label': `${label} ${sub}` });
+  sprite.dataset.src = s.sheet; sprite.style.backgroundSize = `${s.n * 100}% 100%`; sprite.style.aspectRatio = `${s.w} / ${s.h}`; io.observe(sprite);
+  let f = 0; const draw = () => { sprite.style.backgroundPosition = `${s.n > 1 ? ((f % s.n) / (s.n - 1)) * 100 : 0}% 0%`; };
+  actors.push({ tick() { f++; draw(); } }); draw();
+  document.getElementById(hostId).append(el('article', { class: 'card' }, [el('h3', {}, [document.createTextNode(label), el('span', { text: `${sub} · ${s.n}f` })]), el('div', { class: 'stage' }, [sprite])]));
+}
+const EL_ORDER = ['ember', 'tide', 'root', 'spark', 'void', 'plain'];
+for (const e of EL_ORDER) for (const k of ['shot', 'hit', 'burst', 'status', 'slash']) { const s = DATA.effects[e]?.[k]; if (s) strip('effectGrid', e[0].toUpperCase() + e.slice(1), k, s); }
+for (const [style, byEl] of Object.entries(DATA.auras)) for (const e of EL_ORDER) if (byEl[e]) strip('auraGrid', style[0].toUpperCase() + style.slice(1), e, byEl[e]);
+
+const ROAD_MASK = { 0: 'ground', 1: 'ground', 2: 'N', 3: 'E', 4: 'S', 5: 'W', 6: 'E+W', 7: 'N+S', 8: 'E+S', 9: 'S+W', 10: 'N+E', 11: 'N+W', 12: 'E+S+W', 13: 'N+S+W', 14: 'N+E+W', 15: 'N+E+S', 16: 'cross', 17: 'stamp' };
+function stills(id, items, capFn = (i) => i.name, flagFn = () => false) {
+  const host = document.getElementById(id);
+  items.forEach((it, i) => {
+    const img = el('img', { src: it.src, alt: capFn(it, i), loading: 'lazy', width: String(it.w), height: String(it.h) });
+    host.append(el('figure', { class: 'still' + (flagFn(it) ? ' flag' : ''), style: 'margin:0' }, [el('div', { class: 'pic' }, [img]), el('figcaption', { class: 'cap', text: capFn(it, i) })]));
+  });
+}
+const S = DATA.stills;
+stills('mapGrid', S.map, (i) => ({ 'asphalt-sidewalk': 'Asphalt → sidewalk (Wang 16)', 'sidewalk-lot': 'Sidewalk → lot (Wang 16)', 'brick-graffiti-sidescroller': 'Brick graffiti wall (side view)' }[i.name] || i.name));
+stills('roadGrid', S.road, (i, n) => `${i.name.replace('tile_', 't')} · ${ROAD_MASK[n] ?? ''}`);
+const pads = S.props.filter((p) => p.name.startsWith('pad-')), rest = S.props.filter((p) => !p.name.startsWith('pad-'));
+stills('propsGrid', [...pads, ...rest], (i) => i.name.replace(/-/g, ' '));
+stills('fxGrid', S.fx, (i) => i.name.replace(/-/g, ' '));
+stills('uiGrid', S.ui, (i) => `${i.name.replace(/-/g, ' ')} · ${i.w}×${i.h}`);
+stills('cardGrid', DATA.shop.cards);
+stills('shopIconGrid', DATA.shop.icons, (i) => i.name.replace(/-/g, ' '));
+// Menus: the game's 9-slice (corners fixed, edges + middle stretch), via CSS border-image.
+function slice(name, extra = '') {
+  const p = DATA.menu && DATA.menu[name];
+  if (!p) return '';
+  const [t, r, b, l] = p.inset;
+  const s = p.scale * 1.6;
+  return `border-style:solid;border-width:${t * s}px ${r * s}px ${b * s}px ${l * s}px;border-image:url(${p.src}) ${t} ${r} ${b} ${l} fill / ${t * s}px ${r * s}px ${b * s}px ${l * s}px stretch;${extra}`;
+}
+if (DATA.menu && DATA.menu.panel) {
+  const btn = (v, label, pressed) => `<div class="m-btn m-${v}" style="${slice(`button-${v}${pressed ? '-pressed' : ''}`)}">${label}</div>`;
+  const back = DATA.menu.back;
+  document.getElementById('menuDemo').innerHTML = `
+    <div class="m-screen">
+      <div class="m-back"><img src="${back.src}" width="${back.w * 0.6}" height="${back.h * 0.6}" alt="">Command Hub</div>
+      <div class="m-plate" style="${slice('header')}"><span class="m-eyebrow">DIVECORE</span><span class="m-title">Shop</span></div>
+      <div class="m-chips"><span class="m-chip on" style="${slice('chip-on')}">All</span><span class="m-chip" style="${slice('chip-off')}">Stones</span><span class="m-chip" style="${slice('chip-off')}">Crates</span></div>
+      <div class="m-panel" style="${slice('panel')}">
+        <div class="m-label">Merge crate</div>
+        <p>Open for a random sword. Three of one tier merge up.</p>
+        <div class="m-row">${btn('primary', 'Open', false)}${btn('secondary', 'Later', false)}</div>
+        <div class="m-row">${btn('danger', 'Sell', false)}${btn('primary', 'Pressed', true)}</div>
+      </div>
+    </div>`;
+  stills('menuPieces', Object.entries(DATA.menu).map(([name, p]) => ({ src: p.src, name, w: p.w, h: p.h })));
+}
+stills('iconGrid', S.icons, (i) => i.name.replace('REVIEW-', '').replace(/-/g, ' '), (i) => i.name.startsWith('REVIEW-'));
+
+if (!reduce) setInterval(() => actors.forEach((a) => a.tick()), 110);
+</script>

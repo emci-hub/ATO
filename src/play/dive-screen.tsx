@@ -39,6 +39,8 @@ import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
+import { ManholeTransit } from '@/play/dive-street';
+import { usePlayMotion } from '@/play/play-motion';
 import { PixelBody, PixelButton, PixelLabel, usePixelFonts, type PixelButtonVariant } from '@/play/pixel-ui';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { petRecolor } from '@/play/pet-looks';
@@ -49,6 +51,8 @@ import { GuideView } from '@/play/guide-sheet';
 import { stagePowerLine } from '@/play/guide-content';
 import { SNACK_BUST_PP } from '@/play/play-buffs';
 import type { PlayTransition } from '@/play/use-play-store';
+import { streetDiveA11y, streetDiveLabel, streetStop } from '@/play/dive-street-names';
+import { streetUiOn } from '@/play/street-ui';
 
 /** The pet dive buddy, in one honest line (v20; away + Dive care in v21). */
 export function diveBuddyLine(view: PlayView): string {
@@ -96,6 +100,9 @@ function lostFinds(haul: readonly string[], saved: readonly string[]): string[] 
 
 type SheetId = 'info' | 'gear';
 
+/** Most button rows any dive state shows (Local/Express, then Head up). */
+const DIVE_DOCK_ROWS = 2;
+
 export function DiveScreen({
   view,
   skipDelays,
@@ -135,8 +142,8 @@ export function DiveScreen({
   const leaveRef = useRef<() => void>(() => onBack());
 
   useEffect(() => {
-    if (fxLevel === 'full' && !reduceMotion && takeWipe('dive')) setWipe('reveal');
-  }, [fxLevel, reduceMotion]);
+    if (takeWipe('dive')) setWipe('reveal');
+  }, []);
 
   useEffect(() => {
     if (!registerBack) return;
@@ -213,6 +220,9 @@ export function DiveScreen({
     });
   };
   const [gearNote, setGearNote] = useState<string | null>(null);
+  // Measured width of the action rows. Each button gets an exact width: a
+  // flex-grow row stayed at its 96pt floor on iPhone (half-width buttons).
+  const [actionsW, setActionsW] = useState(0);
   const buyGear = (gear: DiveGear) => {
     let note = '';
     commit((doc) => {
@@ -232,6 +242,8 @@ export function DiveScreen({
   const depth = run.active ? run.deepers : 0;
   // The control strip, from one pure model (every state has a real label —
   // check:dive-fx holds it). The % is run.bustPct exactly.
+  // Streetwear: Underground names over the same buttons (dive-street-names.ts).
+  const street = streetUiOn();
   const buttons = diveButtons({
     active: run.active,
     canDeeper: run.canDeeper,
@@ -253,12 +265,8 @@ export function DiveScreen({
   const revealed = st.hero != null && st.stage !== 'egg' && st.stage !== 'baby';
   const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
 
-  const motionOn = fxLevel === 'full' && !reduceMotion;
+  const playMotion = usePlayMotion();
   const leave = () => {
-    if (!motionOn) {
-      onBack();
-      return;
-    }
     setWipe('cover');
   };
   leaveRef.current = leave;
@@ -285,6 +293,7 @@ export function DiveScreen({
         recolor={revealed ? petRecolor(view.pet.state.hero, view.pet.state.shiny, view.pet.dyeOn, view.pet.state.shiny_style) : null}
         auraElement={view.swords.equipped?.element ?? null}
         atSurface={!run.active}
+        status={dockStatus(run, charges)}
         dock={
           showSplash ? (
             <View style={styles.splashRow}>
@@ -293,23 +302,47 @@ export function DiveScreen({
             </View>
           ) : (
             <View style={styles.dockButtons}>
-              <PixelBody size="sm" numberOfLines={2} style={styles.note}>
-                {dockStatus(run, charges)}
-              </PixelBody>
-              <View style={styles.actions}>
+              <View
+                style={styles.actions}
+                onLayout={(e) => {
+                  const w = Math.floor(e.nativeEvent.layout.width);
+                  setActionsW((prev) => (prev === w ? prev : w));
+                }}>
                 {buttonRows.map((row, i) => (
                   <View key={i} style={styles.buttonRow}>
                     {row.map((b) => (
                       <PixelButton
                         key={b.id}
-                        label={b.label}
-                        variant={diveButtonVariant(b)}
+                        label={street ? streetDiveLabel(b) : b.label}
+                        variant={
+                          street
+                            ? // Head up is the safe, positive choice; Express is the risky one.
+                              b.id === 'surface' || b.id === 'dive' || b.id === 'free'
+                              ? 'cyan'
+                              : b.id === 'deeper_rich'
+                                ? 'amber'
+                                : 'muted'
+                            : diveButtonVariant(b)
+                        }
                         disabled={busy || !b.enabled}
                         onPress={() => pressButton(b)}
-                        accessibilityLabel={b.label.toLowerCase()}
-                        style={styles.button}
+                        accessibilityLabel={street ? streetDiveA11y(b) : b.label.toLowerCase()}
+                        width={actionsW > 0 ? Math.floor((actionsW - 8 * (row.length - 1)) / row.length) : undefined}
+                        style={actionsW > 0 ? styles.buttonFixed : styles.button}
                       />
                     ))}
+                  </View>
+                ))}
+                {/* Reserve the tallest state (2 rows: Local/Express + Head up) so the panel —
+                    and the scene above it — never changes size between states. */}
+                {Array.from({ length: Math.max(0, DIVE_DOCK_ROWS - buttonRows.length) }, (_, i) => (
+                  <View
+                    key={`spacer-${i}`}
+                    style={[styles.buttonRow, styles.spacerRow]}
+                    pointerEvents="none"
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants">
+                    <PixelButton label="x · x" variant="muted" disabled onPress={() => undefined} style={styles.button} />
                   </View>
                 ))}
               </View>
@@ -317,7 +350,7 @@ export function DiveScreen({
           )
         }>
         <DiveTopBar
-          zone={diveZone(depth)}
+          zone={street ? streetStop(depth).name : diveZone(depth)}
           depth={depth}
           maxDepth={maxDepth}
           charges={chargeText(view)}
@@ -328,7 +361,20 @@ export function DiveScreen({
         />
       </DiveScene>
 
-      <PlaySheet open={sheet === 'info'} title="Dive · info" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
+      <PlaySheet
+        open={sheet === 'info'}
+        title={street ? 'Underground · info' : 'Dive · info'}
+        onClose={() => setSheet(null)}
+        reduceMotion={reduceMotion}>
+        {street ? (
+          <>
+            <PixelLabel>Street words</PixelLabel>
+            <PixelBody>
+              Local = Deeper, safer · Express = Deeper, richer · Head up = Surface · Bag = your haul · Heat = the chance
+              to lose it · Subway Token = one charge. Stops: Platform, Tunnels, Sewers, Ghost Station, The Core.
+            </PixelBody>
+          </>
+        ) : null}
         <PixelBody>{diveBuddyLine(view)}</PixelBody>
         {view.pet.state.stage !== 'egg' ? <PixelBody>{stagePowerLine(view.pet.stagePower)}</PixelBody> : null}
         <PixelBody>
@@ -381,17 +427,32 @@ export function DiveScreen({
         })}
         {gearNote ? <PixelBody>{gearNote}</PixelBody> : null}
       </PlaySheet>
-      <DiamondWipe
-        mode={wipe}
-        onDone={
-          wipe === 'cover'
-            ? () => {
-                armWipe('room');
-                onBack();
-              }
-            : () => setWipe('off')
-        }
-      />
+      {street ? (
+        <ManholeTransit
+          mode={wipe}
+          gentle={playMotion.vestibularSafe}
+          onDone={
+            wipe === 'cover'
+              ? () => {
+                  armWipe('room');
+                  onBack();
+                }
+              : () => setWipe('off')
+          }
+        />
+      ) : (
+        <DiamondWipe
+          mode={wipe}
+          onDone={
+            wipe === 'cover'
+              ? () => {
+                  armWipe('room');
+                  onBack();
+                }
+              : () => setWipe('off')
+          }
+        />
+      )}
     </View>
   );
 }
@@ -403,14 +464,16 @@ function diveButtonVariant(b: DiveButton): PixelButtonVariant {
   return 'cyan';
 }
 
-/** Live dock line. Rules stay in the Info sheet. */
+/** Live status line (one line in the NoticeLane's idle slot). The Lamp preview comes first on a run: it is
+ * shown nowhere else and the tail is what an ellipsis cuts. Rules stay in the Info sheet. */
 function dockStatus(run: PlayView['diveRun'], charges: number): string {
-  const bits = [`Powers ${run.powersToday}/${run.powersCap}`];
-  if (run.snack) bits.push(`Snack −${SNACK_BUST_PP}`);
-  if (run.hearty > 0 && !run.free) bits.push(run.hearty > 1 ? `+1 find ×${run.hearty}` : '+1 find');
+  const bits: string[] = [];
   if (run.active && run.preview) {
     bits.push(`Lamp ${findName(run.preview.safe)} · ${findName(run.preview.rich)}`);
   }
+  bits.push(`Powers ${run.powersToday}/${run.powersCap}`);
+  if (run.snack) bits.push(`Snack −${SNACK_BUST_PP}`);
+  if (run.hearty > 0 && !run.free) bits.push(run.hearty > 1 ? `+1 find ×${run.hearty}` : '+1 find');
   if (run.active && run.netOn && !run.free) bits.push('Net adds a find');
   if (run.active && run.free) bits.push(`Free dive · ${run.freeShellsNow ?? 0} shells up`);
   if (!run.active && charges < 1) bits.push('Free dive keeps shells and mood');
@@ -436,8 +499,9 @@ const styles = StyleSheet.create({
   // flexBasis is a percent, and minWidth is a real floor. flexBasis 0 with
   // minWidth 0 collapses this row to ~0 width on iOS (empty ink gap).
   buttonRow: { flexDirection: 'row', width: '100%', gap: 8, alignItems: 'stretch' },
-  button: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
-  note: { textAlign: 'center' },
+  button: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 48 },
+  buttonFixed: { minHeight: 48 },
+  spacerRow: { opacity: 0 },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   buyButton: { flexGrow: 0 },
   splashRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },

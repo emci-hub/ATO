@@ -83,7 +83,9 @@ export function LegendCard({
           </Pressable>
         ))}
       </View>
-      <ThemedText type="smallBold">{name}</ThemedText>
+      <ThemedText type="smallBold" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}>
+        {name}
+      </ThemedText>
       <ThemedText type="small" style={styles.story}>
         {story}
       </ThemedText>

@@ -262,8 +262,8 @@ const settledSix = [
 const locked = nextLockedPoles(settledSix, {});
 // Name styles v2 (2026-10-05): two-word styles are whole at six traits; the
 // three-word default (Primal Genius) shows "…" until its third word settles.
-assert.equal(identityTitle(identityView(locked), 'highFantasy'), 'Golden Pathfinder');
-assert.equal(identityTitle(identityView(locked), 'primal'), '… Warm Ringmaster');
+assert.equal(identityTitle(identityView(locked), 'highFantasy'), 'Prophesied Dragon-Tamer');
+assert.equal(identityTitle(identityView(locked), 'primal'), 'Grinning Pathfinder, …');
 const settledNine = [
   ...settledSix,
   track('growth_mindset', 0.8),
@@ -271,14 +271,14 @@ const settledNine = [
   track('playfulness', 0.2),
 ];
 const lockedNine = nextLockedPoles(settledNine, {});
-assert.equal(identityTitle(identityView(lockedNine), 'primal'), 'Hungry Warm Ringmaster');
-assert.equal(identityTitle(identityView(lockedNine), 'oxymoron'), 'Polite Overachiever Leader');
+assert.equal(identityTitle(identityView(lockedNine), 'primal'), 'Grinning Pathfinder, Hungry');
+assert.equal(identityTitle(identityView(lockedNine), 'oxymoron'), 'Polite Overachiever Ambassador');
 ok('six settled traits give the two-word name; nine give the three-word name');
 
 const unsettled = settledSix.map((row) => ({ ...row, answerCount: 2 }));
 assert.equal(identityTitle(identityView(nextLockedPoles(unsettled, {})), 'primal'), IDENTITY_FORMING_TITLE);
 const coreOnly = nextLockedPoles(settledSix.slice(0, 3), {});
-assert.equal(identityTitle(identityView(coreOnly), 'highFantasy'), '… Pathfinder');
+assert.equal(identityTitle(identityView(coreOnly), 'highFantasy'), 'Paladin of the …');
 ok('unsettled traits stay "forming" and a half-locked name shows the half');
 
 const wobble = settledSix.map((row) => (row.axis === 'openness' ? { ...row, value: 0.48 } : row));
@@ -332,9 +332,14 @@ ok('the change card reports real movement inside the window and nothing else');
 // --- wiring -----------------------------------------------------------------
 const home = read('src/app/(tabs)/index.tsx');
 assert.match(home, /<TodayPickCard/);
-assert.match(home, /todayLine: todayLineText/);
-assert.match(home, /recentTitles/);
-ok('Home renders the daily line and hands it, with recent titles, to the insight prompt');
+// The insight stopped being a prompt on 2026-10-07 (stored bank, emci): it is
+// picked from the same clear leans the daily line reads, so the two agree.
+// It moved to the Today's focus card on Insights (2026-10-14).
+assert.match(
+  read('src/components/insights/today-focus-card.tsx'),
+  /pickIdea\(\{ userId, ymd: todayYmd, leans: clearLeans\(tracks\), history \}\)/,
+);
+ok('Home renders the daily line; the focus card picks the stored insight from the same clear leans');
 
 for (const rel of ['src/lib/daily-line/bank.ts', 'src/lib/daily-line/pick.ts', 'src/lib/daily-line/state.ts']) {
   const src = read(rel);
@@ -375,12 +380,12 @@ assert.ok(Number(capSql) >= 120, 'the pool line cap must not be shorter than DAI
 assert.match(wave, /values \(v_key, v_line, 'ai', uid\)/);
 ok('wave77: the pool accepts every line the app allows, and AI rows are stamped with their owner');
 
-const gen = read('src/lib/insight/generate-insight.ts');
-assert.match(gen, /export function parseInsightLines\(/);
-assert.match(gen, /return \{ draft, lines: parseInsightLines\(text, groundedLeans\(grounding\.tracks\)\) \};/);
+// The AI insight call was removed (2026-10-14) and its file, with the line parser, in roadmap A5: no AI lines
+// arrive any more. The rule gate in sync.ts stays for any line already in the pool.
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/lib/insight/generate-insight.ts')), 'the AI insight writer stays deleted');
 const sync = read('src/lib/daily-line/sync.ts');
 assert.match(sync, /lineRuleViolation\(text\) \?\?/);
-ok('AI lines ride on the insight call, and each is run through the line rules before it is kept');
+ok('no AI insight call is left; any stored line still passes the line rules before it is kept');
 
 // 2026-10-05: Today's Pick replaced the line card on Home. Its share image
 // carries the question only (never the answer, never an AI line).

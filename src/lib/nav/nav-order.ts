@@ -1,11 +1,11 @@
 import type { Href } from 'expo-router';
 
 /**
- * Persisted 5-slot bottom-nav layout, per user (`me.nav_layout` jsonb).
+ * Persisted bottom-nav layout, per user (`me.nav_layout` jsonb).
  *
- * Slot 5 is always "More" — fixed, not draggable, never reorderable. Slots
- * 1–4 always contain Home and Sage exactly once each, in user-draggable
- * positions; the remaining two slots hold pool tabs. The pool is the whole
+ * The last button is always "More" — fixed, not draggable, never reorderable.
+ * The layout always contains Home and Insights exactly once each, in
+ * user-draggable positions; the remaining POOL_SLOTS entries hold pool tabs. The pool is the whole
  * `NAV_TABS` registry (Explore / You / Questions / Around / Legends / Circle),
  * so a future tab is added with one registry entry — the slot/drag/edit logic
  * is generic over the registry and never hardcoded to today's set.
@@ -21,7 +21,7 @@ export type ReorderableTabId =
   | 'circle';
 
 /** The two always-present tabs (not pool tabs; can never leave slots 1–4). */
-export type PinnedTabId = 'home' | 'sage';
+export type PinnedTabId = 'home' | 'insights';
 
 /** Anything that can occupy one of slots 1–4. */
 export type BarSlotId = PinnedTabId | ReorderableTabId;
@@ -33,7 +33,7 @@ export interface NavUnlockContext {
 
 export interface NavTabMeta {
   label: string;
-  /** expo-router href for the tab route (Home/Sage are handled separately). */
+  /** expo-router href for the tab route (Home/Insights are handled separately). */
   href: Href;
   /** MaterialCommunityIcons glyph name. */
   icon: string;
@@ -55,13 +55,8 @@ export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
   explore: { label: 'Explore', href: '/explore', icon: 'compass-outline' },
   around: { label: 'Around', href: '/around', icon: 'map-marker-radius-outline' },
   you: { label: 'You', href: '/you', icon: 'account' },
-  circle: {
-    label: 'Circle',
-    href: '/circle',
-    icon: 'account-group',
-    isUnlocked: (ctx) => ctx.hasCircle,
-    unlockReason: 'Scan a friend to unlock Circle.',
-  },
+  // Not gated on a friend: Add by handle lives inside this tab, so a gate would lock out the first friend.
+  circle: { label: 'Circle', href: '/circle', icon: 'account-group' },
   questions: { label: 'Questions', href: '/intake-sweep', icon: 'comment-question-outline' },
   legends: { label: 'Legends', href: '/legends', icon: 'book-open-page-variant-outline' },
 };
@@ -87,18 +82,16 @@ export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
  *
  * **`sage` and `legends` were UN-PARKED 2026-09-15** (emci: restore both tabs
  * with their original icons/labels; each still opens only its RebuiltNotice —
- * no backend or AI code revived, only visibility changed). `around` and
- * `circle` stay parked and hidden.
+ * no backend or AI code revived, only visibility changed). `around` stays
+ * parked and hidden. `circle` was un-parked 2026-10-21 (plain friend list + Message).
  */
-export const PARKED_TAB_IDS: readonly ReorderableTabId[] = ['around', 'circle'];
+export const PARKED_TAB_IDS: readonly ReorderableTabId[] = ['around'];
 
-/** Parked pinned tabs. Same rule, different slot type. */
 /**
- * `sage` is parked again (2026-10-01, emci): a placeholder must not hold a main
- * slot. It keeps its route (hidden trigger) and is offered in More as a plain
- * row, so it is still reachable — it just is not on the bar.
+ * Parked pinned tabs. Same rule, different slot type. Empty since 2026-10-14:
+ * the parked Sage placeholder was replaced by Insights, which is a real tab.
  */
-export const PARKED_PINNED_IDS: readonly PinnedTabId[] = ['sage'];
+export const PARKED_PINNED_IDS: readonly PinnedTabId[] = [];
 
 export function isTabParked(id: BarSlotId): boolean {
   return (
@@ -108,17 +101,26 @@ export function isTabParked(id: BarSlotId): boolean {
 }
 
 
-export const PINNED_IDS: readonly PinnedTabId[] = ['home', 'sage'];
+export const PINNED_IDS: readonly PinnedTabId[] = ['home', 'insights'];
 
 /**
- * Entries in a layout: Home + Sage + POOL_SLOTS pool tabs. Sage is parked, so
- * it holds an entry but draws no button — the bar SHOWS VISIBLE_SLOT_COUNT
- * tabs, then the fixed "More".
+ * Entries in a layout: Home + Insights + POOL_SLOTS pool tabs. The bar SHOWS
+ * VISIBLE_SLOT_COUNT tabs, then the fixed "More" — five buttons in all.
  */
-export const SLOT_COUNT = 5;
+export const SLOT_COUNT = 4;
 
-/** How many entries hold pool tabs (the other 2 are Home + Sage). */
-export const POOL_SLOTS = 3;
+/** How many entries hold pool tabs (the other 2 are Home + Insights). */
+export const POOL_SLOTS = 2;
+
+/**
+ * Saved layouts written before 2026-10-14 name the old `sage` tab. Read and
+ * write both map it to `insights` in place, so the user's order is kept.
+ */
+export const LEGACY_TAB_ID_MAP: Readonly<Record<string, PinnedTabId>> = { sage: 'insights' };
+
+function isPinnedId(value: unknown): value is PinnedTabId {
+  return value === 'home' || value === 'insights';
+}
 
 /** Buttons the bar actually draws before "More" (parked pinned ids draw none). */
 export const VISIBLE_SLOT_COUNT = SLOT_COUNT - PARKED_PINNED_IDS.length;
@@ -137,7 +139,7 @@ export function isTabUnlocked(id: ReorderableTabId, ctx: NavUnlockContext): bool
 }
 
 export interface NavLayout {
-  /** Exactly SLOT_COUNT entries: home + sage once each, plus POOL_SLOTS pool ids. */
+  /** Exactly SLOT_COUNT entries: home + insights once each, plus POOL_SLOTS pool ids. */
   slots: BarSlotId[];
 }
 
@@ -150,13 +152,12 @@ export interface NavLayout {
  * the fallback a fresh account or a corrupted layout falls back to.
  */
 /*
- * 2026-10-01 (emci): the bar shows what works — Home, Questions, Explore, You.
- * Questions is the core loop and was two taps deep in More; Sage and Legends
- * are placeholders and move to More until they are rebuilt. `sage` stays in the
- * layout (the slot engine always carries it) but is parked, so it draws nothing.
+ * 2026-10-14 (emci): Insights replaces the parked Sage tab and sits on the bar
+ * next to Home. The bar keeps five buttons, so the default pool is Questions +
+ * Explore; You moves to More.
  */
 export const DEFAULT_NAV_LAYOUT: NavLayout = {
-  slots: ['home', 'questions', 'explore', 'you', 'sage'],
+  slots: ['home', 'insights', 'questions', 'explore'],
 };
 
 function isValidPoolId(value: unknown): value is ReorderableTabId {
@@ -165,11 +166,11 @@ function isValidPoolId(value: unknown): value is ReorderableTabId {
 
 /** The pool tabs currently occupying slots 1–4, in left-to-right order. */
 export function poolIdsInLayout(layout: NavLayout): ReorderableTabId[] {
-  return layout.slots.filter((id): id is ReorderableTabId => id !== 'home' && id !== 'sage');
+  return layout.slots.filter((id): id is ReorderableTabId => !isPinnedId(id));
 }
 
 /**
- * Coerce arbitrary storage into a valid NavLayout: home + sage exactly once
+ * Coerce arbitrary storage into a valid NavLayout: home + insights exactly once
  * each (their interleaving preserved), plus exactly POOL_SLOTS distinct valid
  * pool ids. Duplicate/invalid entries are dropped; gaps backfill from the
  * default layout first, then the registry. Accepts both the stored
@@ -193,8 +194,12 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
   const ordered: BarSlotId[] = [];
   if (Array.isArray(incoming)) {
     const seen = new Set<BarSlotId>();
-    for (const value of incoming) {
-      if (value === 'home' || value === 'sage' || isValidPoolId(value)) {
+    for (const entry of incoming) {
+      const value =
+        typeof entry === 'string' && Object.prototype.hasOwnProperty.call(LEGACY_TAB_ID_MAP, entry)
+          ? LEGACY_TAB_ID_MAP[entry]
+          : entry;
+      if (isPinnedId(value) || isValidPoolId(value)) {
         const id = value as BarSlotId;
         if (!seen.has(id)) {
           seen.add(id);
@@ -205,7 +210,7 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
   }
 
   // No valid incoming slots (null / unset / empty / all-invalid) → the default
-  // layout, exactly as specified (Home / Questions / Explore / You).
+  // layout, exactly as specified (Home / Insights / Questions / Explore).
   if (ordered.length === 0) {
     return { slots: [...DEFAULT_NAV_LAYOUT.slots] };
   }
@@ -214,14 +219,14 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
   // POOL_SLOTS. Anything short of a full set resets ONCE to the new default
   // rather than being padded into a bar nobody chose. A layout saved from the
   // edit screen always has the full set, so a real choice is never overridden.
-  if (resetShort && ordered.filter((id) => id !== 'home' && id !== 'sage').length < POOL_SLOTS) {
+  if (resetShort && ordered.filter((id) => !isPinnedId(id)).length < POOL_SLOTS) {
     return { slots: [...DEFAULT_NAV_LAYOUT.slots] };
   }
 
-  // Preserve interleaving while enforcing home/sage once each and POOL_SLOTS pool ids.
+  // Preserve interleaving while enforcing home/insights once each and POOL_SLOTS pool ids.
   const slots: BarSlotId[] = [];
   let home = 0;
-  let sage = 0;
+  let insights = 0;
   let pool = 0;
   for (const id of ordered) {
     if (id === 'home') {
@@ -231,10 +236,10 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
       }
       continue;
     }
-    if (id === 'sage') {
-      if (sage === 0) {
+    if (id === 'insights') {
+      if (insights === 0) {
         slots.push(id);
-        sage += 1;
+        insights += 1;
       }
       continue;
     }
@@ -246,14 +251,14 @@ export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } 
 
   // Backfill any missing pinned, then any missing pool ids (default first, then registry).
   if (home === 0) slots.unshift('home');
-  if (sage === 0) {
+  if (insights === 0) {
     const homeIdx = slots.indexOf('home');
-    slots.splice(homeIdx >= 0 ? homeIdx + 1 : 0, 0, 'sage');
+    slots.splice(homeIdx >= 0 ? homeIdx + 1 : 0, 0, 'insights');
   }
   if (pool < POOL_SLOTS) {
     const have = new Set<BarSlotId>(slots);
     for (const id of [...DEFAULT_NAV_LAYOUT.slots, ...NAV_TAB_IDS]) {
-      if (id === 'home' || id === 'sage' || have.has(id)) continue;
+      if (isPinnedId(id) || have.has(id)) continue;
       slots.push(id);
       have.add(id);
       pool += 1;

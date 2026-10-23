@@ -132,8 +132,7 @@ export default function LoginScreen() {
         <>
           <ThemedText type="subtitle">Log in</ThemedText>
           <ThemedText themeColor="textSecondary" style={authStyles.lede}>
-            Apple is the fast path. A code always works. Password is optional —
-            set it in Settings after you&apos;re in.
+            Apple is the fast path. A code always works. If your account has a password, you can use it below.
           </ThemedText>
 
           {appleAvailable ? (
@@ -152,6 +151,7 @@ export default function LoginScreen() {
                 setError(null);
               }}
               placeholder="Email or @handle"
+              accessibilityLabel="Email or handle"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -176,6 +176,7 @@ export default function LoginScreen() {
                 setError(null);
               }}
               placeholder="Password"
+              accessibilityLabel="Password"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -198,6 +199,8 @@ export default function LoginScreen() {
             <Pressable
               onPress={handlePasswordSignIn}
               disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel="Log in with password"
               style={({ pressed }) => [
                 authStyles.button,
                 { backgroundColor: theme.accentFill },
@@ -212,6 +215,8 @@ export default function LoginScreen() {
             <Pressable
               onPress={sendCode}
               disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel="Email me a code instead"
               style={({ pressed }) => [authStyles.passwordLink, pressed && authStyles.pressed]}>
               <ThemedText type="link">
                 {busy ? 'Sending…' : 'Email me a code instead'}
@@ -220,7 +225,10 @@ export default function LoginScreen() {
           </ThemedView>
 
           <Link href="/auth" asChild>
-            <Pressable style={authStyles.switchRow}>
+            <Pressable
+              style={authStyles.switchRow}
+              accessibilityRole="link"
+              accessibilityLabel="New here? Sign up">
               <ThemedText type="small" themeColor="textSecondary">
                 New here?
               </ThemedText>

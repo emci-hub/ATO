@@ -1,0 +1,123 @@
+{
+  "_meta": {
+    "canvas": [256, 320],
+    "units": "art px, origin top-left of the 256x320 canvas (same registration as loft-iso.png)",
+    "contentBounds": [15, 42, 226, 237],
+    "source": "PLACEHOLDER — swap loft-iso.png + this map when Sprite Smith delivers Loft art. Schema matches hideout-iso.map.json.",
+    "placeholder": true,
+    "floorDiamond": {
+      "left": [39, 224],
+      "back": [128, 180],
+      "right": [216, 224],
+      "front": [128, 270]
+    },
+    "drawOrder": [
+      "loft-iso",
+      "window (day or night — drives ambient light)",
+      "bed decal",
+      "lamp",
+      "glow overlay when lamp on at night (baked, no code spotlight)",
+      "pet (sleep target = bed top, not the walk floor)",
+      "loft-iso-front when pet is behind a prop"
+    ],
+    "depthRule": "iso box rule: for each prop, edgeY(x) = frontCorner.y - |x - frontCorner.x| / 2. Pet is BEHIND the prop when pet feet y < edgeY(feet x) and the pet sprite overlaps the prop rect.",
+    "sleep": "targets.bed is ON TOP of the bed (inside the bed footprint). Do not clamp sleep to the walk polygon.",
+    "lamp": "spots.lamp is a tap target. It toggles the baked loft-glow overlay at night only."
+  },
+  "spots": {
+    "lamp": [196, 148, 28, 48],
+    "bed": [132, 188, 64, 28]
+  },
+  "labelAnchors": {
+    "lamp": [210, 144],
+    "bed": [164, 186]
+  },
+  "labelSide": {
+    "lamp": "above",
+    "bed": "above"
+  },
+  "floor": [
+    [49, 224],
+    [128, 185],
+    [206, 224],
+    [128, 264]
+  ],
+  "props": [
+    {
+      "id": "bed",
+      "rect": [132, 188, 64, 28],
+      "baselineY": 214,
+      "frontCorner": [164, 214],
+      "frontEdge": [
+        [132, 200],
+        [148, 210],
+        [164, 214],
+        [180, 210],
+        [196, 200]
+      ],
+      "footprint": [
+        [132, 200],
+        [148, 210],
+        [164, 214],
+        [180, 210],
+        [196, 200],
+        [196, 218],
+        [164, 228],
+        [132, 218]
+      ]
+    },
+    {
+      "id": "lampTable",
+      "rect": [196, 168, 32, 42],
+      "baselineY": 208,
+      "frontCorner": [212, 208],
+      "frontEdge": [
+        [196, 190],
+        [204, 200],
+        [212, 208],
+        [220, 200],
+        [228, 188]
+      ],
+      "footprint": [
+        [196, 190],
+        [204, 200],
+        [212, 208],
+        [220, 200],
+        [228, 188],
+        [228, 214],
+        [212, 222],
+        [196, 214]
+      ]
+    }
+  ],
+  "targets": {
+    "bed": [164, 206],
+    "cushion": [164, 206],
+    "bowl": [98, 238],
+    "door": [100, 202],
+    "lamp": [210, 200]
+  },
+  "lights": [
+    [168, 86],
+    [184, 92],
+    [200, 98]
+  ],
+  "decals": [
+    { "id": "bed", "sprite": "loft-bed.png", "pos": [132, 188] },
+    { "id": "lamp", "sprite": "loft-lamp.png", "pos": [200, 152] }
+  ],
+  "interior": {
+    "polygon": [
+      [15, 97],
+      [103, 53],
+      [126, 42],
+      [130, 42],
+      [240, 97],
+      [240, 222],
+      [128, 278],
+      [127, 278],
+      [15, 222]
+    ],
+    "note": "PLACEHOLDER hull copied from hideout-iso so integer scale / clip math match until real Loft art lands."
+  }
+}

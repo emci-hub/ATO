@@ -5,7 +5,7 @@
  * app path cannot exceed the cap, and usage rows cannot be reset by the client.
  */
 
-export const QUOTA_EMPTY_MESSAGE = "Sage's out of things to say for today, back tomorrow";
+export const QUOTA_EMPTY_MESSAGE = "That's all for today, back tomorrow";
 
 /** Read-only usage snapshot. Caps come from app_config; counts from ai_usage. */
 export type SageUsageSnapshot = {

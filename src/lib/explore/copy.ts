@@ -3,7 +3,7 @@
 export const EXPLORE_LABEL = 'Explore';
 export const TODAY_LABEL = 'Today';
 
-export const EXPLORE_LEDE = 'Patterns Sage noticed. Not daily.';
+export const EXPLORE_LEDE = 'Patterns ATO noticed. Not daily.';
 
 export const EXPLORE_LAND_Q = 'Did this land?';
 export const EXPLORE_LAND_YES = 'It landed';
@@ -20,12 +20,12 @@ export const EXPLORE_EMPTY_TRY =
   "Couldn't land this. Try again later.";
 
 export const EXPLORE_EMPTY_CONSENT =
-  'Sage stays off until you turn it on in You.';
+  'AI stays off until you turn it on in You.';
 
 export const EXPLORE_EMPTY_DENIED =
-  'Sage stays off for this account.';
+  'AI stays off for this account.';
 
-export const EXPLORE_EMPTY_CRISIS = 'Not the moment for this.';
+export const EXPLORE_EMPTY_PAUSED = 'Not the moment for this.';
 
 export const EXPLORE_EMPTY_QUOTA =
-  "Sage's out of things to say for today, back tomorrow";
+  "That's all for today, back tomorrow";

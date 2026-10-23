@@ -1,0 +1,443 @@
+{
+ "frames": [
+  {
+   "filename": "turf-barrel-smoke 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 1.png",
+   "frame": {
+    "x": 16,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 2.png",
+   "frame": {
+    "x": 32,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 3.png",
+   "frame": {
+    "x": 48,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 4.png",
+   "frame": {
+    "x": 0,
+    "y": 29,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 5.png",
+   "frame": {
+    "x": 16,
+    "y": 29,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 6.png",
+   "frame": {
+    "x": 32,
+    "y": 29,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 7.png",
+   "frame": {
+    "x": 48,
+    "y": 29,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 8.png",
+   "frame": {
+    "x": 0,
+    "y": 58,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 9.png",
+   "frame": {
+    "x": 16,
+    "y": 58,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 10.png",
+   "frame": {
+    "x": 32,
+    "y": 58,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 11.png",
+   "frame": {
+    "x": 48,
+    "y": 58,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 12.png",
+   "frame": {
+    "x": 0,
+    "y": 87,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 13.png",
+   "frame": {
+    "x": 16,
+    "y": 87,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 14.png",
+   "frame": {
+    "x": 32,
+    "y": 87,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  },
+  {
+   "filename": "turf-barrel-smoke 15.png",
+   "frame": {
+    "x": 48,
+    "y": 87,
+    "w": 16,
+    "h": 29
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 29
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 29
+   },
+   "pivot": {
+    "x": 0.4375,
+    "y": 0.896551724137931
+   },
+   "duration": 100
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "turf-barrel-smoke.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 64,
+   "h": 116
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 7,
+   "y": 26
+  },
+  "frameTags": [
+   {
+    "name": "turf-barrel-smoke",
+    "from": 0,
+    "to": 15,
+    "direction": "forward"
+   }
+  ]
+ }
+}

@@ -12,8 +12,9 @@ import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
 import { router, type Href } from 'expo-router';
 import * as Updates from 'expo-updates';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -23,7 +24,17 @@ import { AXIS_SHORT_NAME, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
 import { ROUND_PAYOUTS_PER_DAY, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { fetchAtoTokenEvents, type AtoTokenEvent } from '@/lib/ato-tokens-server';
 import { pushBuddyNote } from '@/lib/buddy/notes';
+import {
+  HUB_OPEN_SECTIONS_KEY,
+  hubSection,
+  hubTool,
+  sectionMatchCount,
+  sectionToolCount,
+  toolMatches,
+  type HubSectionId,
+} from '@/lib/dev-hub-catalog';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { usePreviewing } from '@/lib/preview-session';
 import { localYmd } from '@/lib/local-date';
 import { forgetCelebratedMilestone } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
@@ -45,60 +56,191 @@ import { CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
 import { CATEGORY_STATEMENTS_COPY_REVIEWED } from '@/lib/category-statements/generate-statements';
 import { CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { DAILY_LINE_COPY_REVIEWED } from '@/lib/daily-line/bank';
-import { DAILY_INSIGHT_COPY_REVIEWED } from '@/lib/insight/generate-insight';
+import { INSIGHT_BANK_COPY_REVIEWED } from '@/lib/insight-bank';
 import { LEGENDS64_COPY_REVIEWED, NAME_STYLES_V2_COPY_REVIEWED } from '@/lib/legends64/archetypes';
+import { LEGEND_FIGURES_COPY_REVIEWED } from '@/lib/legend-figures/flags';
+import { CATEGORY_DEEP_DIVE_COPY_REVIEWED } from '@/lib/category-deep-dive/flags';
+import { TEAM_COPY_REVIEWED } from '@/lib/ai-library/teams';
 import { DAILY_PICK_COPY_REVIEWED } from '@/lib/daily-pick/bank';
 import { POLISH_COPY_REVIEWED } from '@/lib/polish-copy';
 import { PROFILE_FILL_COPY_REVIEWED } from '@/lib/profile-fill';
-import { CATEGORY_READ_COPY_REVIEWED } from '@/lib/rolls/category-read';
-import { STORY_COPY_REVIEWED } from '@/lib/sage-story';
-import { TITLE_COPY_REVIEWED } from '@/lib/sage-title';
+import { STORY_BANK_COPY_REVIEWED } from '@/lib/story-bank';
 import { STAGED_INTAKE_COPY_REVIEWED } from '@/lib/questions/staged-intake-copy';
 
 /* -------------------------------------------------------------------------
  * Shell
  * ---------------------------------------------------------------------- */
 
-/** One Hub group: a title, how many tools it holds, folded or open. */
+/** What is typed in the Hub's search box. Empty means "show everything". */
+export const HubSearchContext = createContext('');
+
+/** Section ids open on this phone, loaded once and kept in memory after. */
+let openSections: Set<string> | null = null;
+const openListeners = new Set<() => void>();
+
+async function loadOpenSections(): Promise<void> {
+  if (openSections) return;
+  try {
+    const raw = await AsyncStorage.getItem(HUB_OPEN_SECTIONS_KEY);
+    const ids = raw ? (JSON.parse(raw) as unknown) : [];
+    openSections = new Set(Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : []);
+  } catch {
+    openSections = new Set();
+  }
+  for (const listener of openListeners) listener();
+}
+
+function setSectionOpen(id: string, open: boolean): void {
+  if (!openSections) openSections = new Set();
+  if (open) openSections.add(id);
+  else openSections.delete(id);
+  void AsyncStorage.setItem(HUB_OPEN_SECTIONS_KEY, JSON.stringify([...openSections])).catch(() => {});
+  for (const listener of openListeners) listener();
+}
+
+/**
+ * One Hub group, folded by default (this phone remembers which are open). While
+ * searching, a group with a matching tool opens and a group with none hides.
+ * The Danger zone is drawn red, at the very bottom.
+ */
 export function HubSection({
-  title,
-  hint,
-  count,
+  id,
   defaultOpen = false,
   children,
 }: {
-  title: string;
-  hint?: string;
-  count: number;
+  id: HubSectionId;
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
   const theme = useTheme();
-  const [open, setOpen] = useState(defaultOpen);
+  const query = useContext(HubSearchContext);
+  const def = hubSection(id);
+  const danger = id === 'danger';
+  const [, rerender] = useState(0);
+  useEffect(() => {
+    const listener = () => rerender((n) => n + 1);
+    openListeners.add(listener);
+    void loadOpenSections();
+    return () => {
+      openListeners.delete(listener);
+    };
+  }, []);
+  const searching = query.trim().length > 0;
+  const matches = searching ? sectionMatchCount(id, query) : sectionToolCount(id);
+  if (searching && matches === 0) return null;
+  const open = searching || (openSections ? openSections.has(id) : false) || defaultOpen;
   return (
-    <View style={[styles.section, { borderColor: controlBorderColor(theme) }]}>
+    <View
+      style={[
+        styles.section,
+        { borderColor: danger ? DANGER_RED : controlBorderColor(theme) },
+        danger && styles.dangerSection,
+      ]}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        accessibilityLabel={`${title}, ${count} tools`}
-        onPress={() => setOpen((v) => !v)}
+        accessibilityLabel={`${def.title}, ${matches} tools`}
+        onPress={() => setSectionOpen(id, !open)}
         style={styles.sectionHead}>
-        <ThemedText type="smallBold">
-          {open ? '▾' : '▸'} {title}
+        <ThemedText type="smallBold" style={danger ? { color: DANGER_RED } : undefined}>
+          {open ? '▾' : '▸'} {def.title}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          {count}
+          {matches}
         </ThemedText>
       </Pressable>
-      {open && hint ? (
+      {open ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {hint}
+          {def.hint}
         </ThemedText>
       ) : null}
       {open ? <View style={styles.sectionBody}>{children}</View> : null}
     </View>
   );
 }
+
+/**
+ * One tool: its name and one line, an (i) for the details, and the tool itself
+ * behind a tap on the name. Hidden while a search does not match it. The name,
+ * line and details come from lib/dev-hub-catalog.ts, the one list of Hub tools.
+ */
+export function HubTool({ id, children }: { id: string; children: ReactNode }) {
+  const theme = useTheme();
+  const query = useContext(HubSearchContext);
+  const [info, setInfo] = useState(false);
+  const [open, setOpen] = useState(false);
+  const tool = hubTool(id);
+  if (!tool) return null;
+  if (!toolMatches(tool, query)) return null;
+  const danger = tool.section === 'danger';
+  return (
+    <View style={[styles.tool, { borderColor: danger ? DANGER_RED : controlBorderColor(theme) }]}>
+      <View style={styles.toolHead}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+          accessibilityLabel={`${tool.name}. ${tool.summary}`}
+          onPress={() => setOpen((v) => !v)}
+          style={styles.toolText}>
+          <ThemedText type="smallBold" style={danger ? { color: DANGER_RED } : undefined}>
+            {open ? '▾' : '▸'} {tool.name}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {tool.summary}
+          </ThemedText>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`About ${tool.name}`}
+          accessibilityState={{ expanded: info }}
+          hitSlop={10}
+          onPress={() => setInfo((v) => !v)}
+          style={[
+            styles.infoButton,
+            { borderColor: controlBorderColor(theme) },
+            info && { backgroundColor: theme.backgroundSelected },
+          ]}>
+          <ThemedText type="code" themeColor="textSecondary">
+            i
+          </ThemedText>
+        </Pressable>
+      </View>
+      {info ? (
+        <ThemedText
+          type="small"
+          themeColor="textSecondary"
+          style={[styles.toolInfo, { backgroundColor: theme.backgroundSelected }]}>
+          {tool.details}
+        </ThemedText>
+      ) : null}
+      {open ? <View style={styles.toolBody}>{children}</View> : null}
+    </View>
+  );
+}
+
+/** The search box at the top of the Hub. */
+export function HubSearchBox({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+  const theme = useTheme();
+  return (
+    <TextInput
+      value={value}
+      onChangeText={onChange}
+      placeholder="Search tools (e.g. reset, tokens, preview)"
+      placeholderTextColor={theme.textSecondary}
+      autoCapitalize="none"
+      autoCorrect={false}
+      clearButtonMode="while-editing"
+      accessibilityLabel="Search Dev Tools Hub"
+      style={[
+        styles.search,
+        { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+      ]}
+    />
+  );
+}
+
+/** The Danger zone's red. Fixed, so it reads as a warning in every appearance. */
+export const DANGER_RED = '#D92D20';
 
 function Button({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
   const theme = useTheme();
@@ -174,6 +316,7 @@ function useMyTracks(): { tracks: TraitTrack[]; ready: boolean } {
 /** Who and what this is, at a glance. Tap the id to copy it. */
 export function BuildStrip() {
   const { me, devAccess } = useMeContext();
+  const previewing = usePreviewing();
   const [copied, setCopied] = useState(false);
   return (
     <View style={styles.block}>
@@ -181,6 +324,11 @@ export function BuildStrip() {
         @{me?.handle ?? '—'} · root {devAccess.isRoot ? 'yes' : 'no'} · pre-launch dev{' '}
         {PRE_LAUNCH_DEV ? 'on' : 'off'} · {__DEV__ ? 'dev build' : 'release build'}
       </ThemedText>
+      {previewing ? (
+        <ThemedText type="code" style={{ color: DANGER_RED }}>
+          ● PREVIEW AS NEW USER IS ON · nothing is saved
+        </ThemedText>
+      ) : null}
       {me ? (
         <Pressable
           accessibilityRole="button"
@@ -416,11 +564,9 @@ export function QuestionBankPanel() {
 
 const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Staged intake (sets, round cap, mixed trait)', reviewed: STAGED_INTAKE_COPY_REVIEWED },
-  { name: 'Daily insight (AI)', reviewed: DAILY_INSIGHT_COPY_REVIEWED },
+  { name: 'Daily insight (stored)', reviewed: INSIGHT_BANK_COPY_REVIEWED },
   { name: 'Category statements (AI)', reviewed: CATEGORY_STATEMENTS_COPY_REVIEWED },
-  { name: 'Category read (rolls)', reviewed: CATEGORY_READ_COPY_REVIEWED },
-  { name: 'Story', reviewed: STORY_COPY_REVIEWED },
-  { name: 'Sage title', reviewed: TITLE_COPY_REVIEWED },
+  { name: 'Story bank (66 hand-written six-beat cards)', reviewed: STORY_BANK_COPY_REVIEWED },
   { name: 'Daily lines', reviewed: DAILY_LINE_COPY_REVIEWED },
   { name: 'Today’s Pick (64 daily questions)', reviewed: DAILY_PICK_COPY_REVIEWED },
   { name: 'Mini guy idle lines', reviewed: BUDDY_COPY_REVIEWED },
@@ -429,6 +575,9 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Category bands', reviewed: CATEGORY_BAND_COPY_REVIEWED },
   { name: 'Concept explainers', reviewed: CONCEPT_COPY_REVIEWED },
   { name: 'Archetype names', reviewed: LEGENDS64_COPY_REVIEWED },
+  { name: 'Legends museum (120 legends, teasers, AI prompt)', reviewed: LEGEND_FIGURES_COPY_REVIEWED },
+  { name: 'Category deep dive (Explore, AI prompt + card wording)', reviewed: CATEGORY_DEEP_DIVE_COPY_REVIEWED },
+  { name: 'Deep-dive team names + icons (48 phrases, 10 endings)', reviewed: TEAM_COPY_REVIEWED },
   { name: 'Name styles v2 (Primal Genius, High Fantasy, Corporate Realist, Oxymoron)', reviewed: NAME_STYLES_V2_COPY_REVIEWED },
   { name: 'Profile fill', reviewed: PROFILE_FILL_COPY_REVIEWED },
   { name: 'Polish pass (shape, week, set done, sealed read)', reviewed: POLISH_COPY_REVIEWED },
@@ -523,7 +672,6 @@ export function PushStatus() {
 
 const LABS: readonly { label: string; href: Href; note: string }[] = [
   { label: 'AI lab', href: '/ai-lab', note: 'switch the AI provider' },
-  { label: 'Crisis lab', href: '/crisis-lab', note: 'the static crisis card' },
   { label: 'Theme lab', href: '/theme-lab', note: 'appearance modes' },
   { label: 'Pixel lab', href: '/pixel-lab', note: 'sprites' },
   { label: 'Profile cards lab', href: '/profile-card-lab', note: 'Change answers + card binder, sample data' },
@@ -555,7 +703,48 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
   },
   sectionBody: {
-    gap: Spacing.three,
+    gap: Spacing.two,
+  },
+  dangerSection: {
+    borderWidth: 2,
+  },
+  tool: {
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    padding: Spacing.two,
+    gap: Spacing.one,
+  },
+  toolHead: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.two,
+  },
+  toolText: {
+    flex: 1,
+    gap: Spacing.half,
+  },
+  infoButton: {
+    width: 24,
+    height: 24,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolInfo: {
+    padding: Spacing.two,
+    borderRadius: Spacing.two,
+  },
+  toolBody: {
+    gap: Spacing.two,
+    paddingTop: Spacing.one,
+  },
+  search: {
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    fontSize: 15,
   },
   block: {
     gap: Spacing.one,

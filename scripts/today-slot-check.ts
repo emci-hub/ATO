@@ -14,16 +14,12 @@ function ok(label: string) {
 }
 
 const off: TodaySlotInput = {
-  crisisActive: false,
   missedCheck: false,
   noteAvailable: false,
   noteOpenedToday: false,
   askPending: false,
   isSunday: false,
 };
-
-assert.deepEqual(resolveTodaySlot({ ...off, crisisActive: true }), { kind: 'crisis' });
-ok('crisisActive alone resolves to crisis');
 
 assert.deepEqual(resolveTodaySlot({ ...off, missedCheck: true }), { kind: 'missed_check' });
 ok('missedCheck alone resolves to missed_check');
@@ -40,18 +36,19 @@ ok('isSunday alone resolves to week');
 assert.deepEqual(resolveTodaySlot(off), { kind: 'none' });
 ok('all inputs false resolves to none');
 
+// The crisis slot was removed with the crisis system (2026-10-14): a
+// missed check-in is now the first match.
 assert.deepEqual(
   resolveTodaySlot({
-    crisisActive: true,
     missedCheck: true,
     noteAvailable: true,
     noteOpenedToday: true,
     askPending: true,
     isSunday: true,
   }),
-  { kind: 'crisis' },
+  { kind: 'missed_check' },
 );
-ok('crisisActive wins over every other input set to true');
+ok('missedCheck wins over every other input set to true');
 
 assert.deepEqual(
   resolveTodaySlot({
@@ -86,7 +83,6 @@ assert.deepEqual(
 );
 ok('askPending wins over isSunday');
 
-assert.equal(canShowCategoryTeaser('crisis'), false);
 assert.equal(canShowCategoryTeaser('missed_check'), false);
 assert.equal(canShowCategoryTeaser('note'), true);
 assert.equal(canShowCategoryTeaser('ask'), true);

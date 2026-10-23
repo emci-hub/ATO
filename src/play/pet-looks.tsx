@@ -175,12 +175,13 @@ function Twinkle({ x, y, delay, color }: { x: number; y: number; delay: number; 
  * (still when not animating). */
 export function ShinyOverlay({
   size,
-  footAt,
+  groundAt,
   animate,
   style = null,
 }: {
   size: number;
-  footAt: number;
+  /** The ground point (fraction of the box from the top), not the toe edge. */
+  groundAt: number;
   animate: boolean;
   style?: ShinyStyle | null;
 }) {
@@ -189,9 +190,10 @@ export function ShinyOverlay({
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
         <Ellipse
           cx={size / 2}
-          cy={footAt * size}
-          rx={size * 0.3}
-          ry={size * 0.07}
+          cy={groundAt * size}
+          // Hugs the footprint (about the figure's width), not the whole sprite box: a wide ring read as a halo.
+          rx={size * 0.18}
+          ry={size * 0.045}
           fill="none"
           stroke="#FFD86B"
           strokeWidth={2}
@@ -216,7 +218,7 @@ export function ShinyOverlay({
 
 /** v27 — the glimmer glow: a pet that missed a Shine Stone shimmers softly at
  * its feet (looks only; it goes when the pet turns shiny). */
-export function GlimmerGlow({ size, footAt, animate }: { size: number; footAt: number; animate: boolean }) {
+export function GlimmerGlow({ size, groundAt, animate }: { size: number; groundAt: number; animate: boolean }) {
   const t = useSharedValue(0.5);
   useEffect(() => {
     if (!animate) {
@@ -236,7 +238,7 @@ export function GlimmerGlow({ size, footAt, animate }: { size: number; footAt: n
             <Stop offset="1" stopColor="#9FD8FF" stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <Ellipse cx={size / 2} cy={footAt * size} rx={size * 0.34} ry={size * 0.1} fill="url(#glimmer)" />
+        <Ellipse cx={size / 2} cy={groundAt * size} rx={size * 0.34} ry={size * 0.1} fill="url(#glimmer)" />
       </Svg>
     </Animated.View>
   );

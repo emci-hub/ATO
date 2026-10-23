@@ -66,7 +66,7 @@ export function sourceProvenance(source: unknown): AxisProvenance | null {
     return { kind: 'inferred', line: 'Inferred from a gut-call you played.' };
   }
   if (source === 'self_settings') {
-    return { kind: 'corrected', line: 'You corrected this after Sage checked in.' };
+    return { kind: 'corrected', line: 'You corrected this after ATO checked in.' };
   }
   if (source === 'self_confirm') {
     return { kind: 'confirmed', line: 'You said this still fits.' };
@@ -98,7 +98,7 @@ export function profileCopyClean(): boolean {
     `0 of ${TRAIT_AXIS_TOTAL} settled`,
     ...Object.values(TOLD_LINE),
     'Inferred from a gut-call you played.',
-    'You corrected this after Sage checked in.',
+    'You corrected this after ATO checked in.',
     'You said this still fits.',
   ];
   return lines.every((line) => !containsFrameworkTerm(line));

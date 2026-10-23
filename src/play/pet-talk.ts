@@ -70,7 +70,7 @@ const STANDARD: Lines = {
   surfaced: ['Back up. Good haul.', 'That went well.', 'Fresh air again.'],
   busted: ['That one got away.', 'Oof. Next time.', 'Lost it. Still here!'],
   rare_find: ['Ooh, a rare one!', 'Look what we found!', 'That’s a good find.'],
-  expedition_back: ['I’m back!', 'Found something out there.', 'Good trip. Missed you.'],
+  expedition_back: ['I’m back!', 'Found something out there.', 'Good trip. Glad you’re here.'],
   evolving_soon: ['I feel different…', 'Something’s changing.', 'Almost time to grow.'],
   evolved: ['I grew!', 'New me. What do you think?', 'Look how big I am!'],
   waves_cleared: ['Nice defending.', 'Waves cleared. Well done.', 'We held the line.'],
@@ -110,7 +110,7 @@ const BRIGHT: Lines = {
   surfaced: ['We did it, we did it!', 'Treasure time!', 'Splash! We’re back!'],
   busted: ['Oopsie! It’s okay!', 'Next dive will be great!', 'Bubbles got us! Hehe.'],
   rare_find: ['So shiny! I love it!', 'Wow wow wow!', 'A sparkly one!'],
-  expedition_back: ['I’m home! Missed you!', 'I brought a present!', 'What an adventure!'],
+  expedition_back: ['I’m home! Hi again!', 'I brought a present!', 'What an adventure!'],
   evolving_soon: ['I feel all tingly!', 'Something exciting is coming!', 'Ooh, I’m glowing!'],
   evolved: ['Ta-da! New me!', 'I’m even brighter now!', 'Look, look! I grew!'],
   waves_cleared: ['You’re amazing!', 'Wave party!', 'We rock!'],
@@ -140,12 +140,12 @@ const SCRUFFY: Lines = {
   hungry: [
     'Where’s my food?',
     'Feed me. Now.',
-    'Starving over here.',
+    'Snack time?',
     'Food. Food. Food.',
-    'You forgot me again.',
-    'My bowl’s empty. Again.',
+    'Is it snack o’clock?',
+    'My bowl could use a refill.',
   ],
-  sad: ['Nobody plays with me.', 'Whatever.', 'Leave me alone… or play.'],
+  sad: ['Up for a game?', 'Bit bored over here.', 'Play with me?'],
   sleepy: ['Go away, I’m sleeping.', 'Zzz. Don’t poke me.', 'Lights off.'],
   surfaced: ['Wet. But worth it.', 'Fine haul, I guess.', 'Dry me off.'],
   busted: ['Told you so.', 'Ugh. Soggy for nothing.', 'Typical.'],
@@ -250,8 +250,35 @@ export const PET_TALK_LINES: Record<PetBranch, Lines> = {
 /** The egg can't talk yet — it wobbles and says one of these. */
 export const PET_EGG_LINES: readonly string[] = ['*wobble*', '*tap tap*', '*wiggle*', '…'];
 
-/** Words GAME_SPEC §7 bans from Play copy. */
-export const PET_BANNED_WORDS: readonly string[] = ['gamble', 'casino', 'jackpot', 'bet'];
+/**
+ * Core content policy (emci 2026-10-20; replaces the old word list gamble /
+ * casino / jackpot / bet). Play copy may not ENCOURAGE gambling or a risky
+ * money move; the words alone are fine ("I bet you can't catch me", "jackpot,
+ * a snack", "the casino was loud"). Returns why a line may not ship, or null.
+ */
+const PET_MONEY_RISK_PATTERNS: readonly [RegExp, string][] = [
+  [
+    /\b(?:let['’]?s|time to|go ahead and|you should|you could|you ought to|why not|come on,?|wanna|want to|try your luck and)\s+(?:\w+\s+){0,3}?(?:gambl\w*|bet|wager|roll the dice|hit the casino|go all[- ]in|slots?|slot machines?|the casino)\b/i,
+    'invites the reader to gamble',
+  ],
+  [
+    /\b(?:go to|head to|head over to|hit|visit|play)\s+(?:the |a )?(?:casino|slots?|slot machines?|roulette|blackjack|poker tables?)\b/i,
+    'sends the reader to gamble',
+  ],
+  [
+    /(?:^|[.!?]\s*)(?:bet|gamble|wager|put)\s+(?:it all|everything|all of it|all in|big|double|more|on (?:red|black|\w+))\b/i,
+    'tells the reader to bet big',
+  ],
+  [/(?:^|[.!?]\s*)(?:spin|roll|pull)\s+(?:again|once more|the lever|the dice)\b|\bjackpot (?:is|['’]s) (?:close|near|coming|next|yours)\b/i, 'urges another gamble'],
+  [/\b(?:place|put|make|lay)\s+(?:a|an|your|some|another)\s+(?:\w+\s+){0,2}?(?:bet|wager)\b/i, 'tells the reader to place a bet'],
+  [/\b(?:bet|gamble|wager|stake|risk)\s+(?:\w+\s+){0,3}?(?:rent|savings|paycheck|salary|life savings|everything you (?:have|own))\b/i, 'risks essential money'],
+  [/\b(?:gambling|casinos?)\s+(?:is|are)\s+(?:fun|smart|easy|worth it|a great idea|the best|great|awesome|amazing|so good)\b/i, 'praises gambling'],
+];
+
+export function petMoneyRiskViolation(text: string): string | null {
+  for (const [re, why] of PET_MONEY_RISK_PATTERNS) if (re.test(text)) return why;
+  return null;
+}
 
 /**
  * A line for `situation` in the form's voice that is never `last` (so the

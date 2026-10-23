@@ -1,0 +1,23 @@
+{
+  "tool": "pixellab",
+  "room": "underground",
+  "approvedBy": "emci 2026-10-15 (speaker B, hatch A, kit + floor mix as sampled; sheets in docs/divecore/underground-room/)",
+  "view": "low top-down",
+  "styleCard": { "outline": "selective outline", "shading": "medium shading", "detail": "medium detail" },
+  "scaleReference": "hero.kael.streetwear south, H=106 px, guide §2 table",
+  "parts": {
+    "kit": { "tool": "create_building_kit", "id": "66d95bd7-73b3-49f9-b177-525f0f135b61", "params": { "tile_type": "square_topdown", "tile_size": 32, "wall_tiles": 3, "layout": "materials" }, "wall": "dark corrugated steel garage walls in cool blue-grey with a few rust streaks and a faint cyan neon strip near the top, dim indigo shadows, no writing", "floor": "dark poured concrete floor with faint oil stains and hairline cracks, cool blue-grey, dim indigo shadows", "used": { "t0": "floor 32x24 (crop 10,79)", "t1": "back wall 32x81 (crop 10,7)", "t4": "side cap 12x24 (crop 10,7)" } },
+    "floor-variants": { "tool": "create_tiles_pro", "id": "c01ed6f5-5da5-4642-b030-e85589fdb2d5", "style_images": ["kit t0 32x24 (upload)"], "prompt": "1). dark poured concrete floor 2). oil stain on concrete 3). small crack in concrete 4). faded paint scuff on concrete", "kept": "f1 f3 f4 f7 f8 f12 (+ the kit floor as base, 60 %)", "dropped": "f0 f13 f15 checker noise, f2 f9 yellow paint, f14 red, f5 f10 white blotches, f6 f11 flat dark squares" },
+    "props": {
+      "speaker": { "tool": "create_map_object", "id": "0b705854-bdef-4368-a5c1-0fa6d893e430", "canvas": [32, 80], "box": [18, 71], "view": "low top-down", "tries": 2, "note": "picked B (25x73); A (040bba1b, 26x66) kept as speaker-a.png. One sprite for both speakers. Library check: the Hideout speaker (23x74) is purple Hideout set art, not reused" },
+      "hatch": { "tool": "create_map_object", "id": "8bd72be4-4125-4705-aaab-a75265ff1dfb", "canvas": [72, 36], "box": [64, 32], "view": "low top-down", "tries": 2, "note": "picked A (64x29); B (38ea20b2) kept as hatch-b.png. Flat on the floor layer (the map's hatch is not a blocker)" }
+    },
+    "states": {}
+  },
+  "promptRules": "every prop: 'fills the whole canvas edge to edge, empty, no person, purely pictorial with zero writing'; canvas = guide target box + ~10%",
+  "cost": { "generations": 85, "note": "approx.: kit ~25, floor variants ~25 (16 tiles), 2 speakers, 2 hatches" },
+  "createdAt": "2026-10-16T04:30:00Z",
+  "operator": "claude",
+  "picked": true,
+  "critique": { "score": null, "notes": "scale sheet: speaker 25x73 vs 18x71 box, hatch 64x29 vs 64x32; speakers moved in to cols 5-6 / 15-16 to clear the rails" }
+}

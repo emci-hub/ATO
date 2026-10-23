@@ -2,7 +2,12 @@
 
 Everything below is static text in the app that is now marked as reviewed. AI-written
 text (insight, category cards, Story, AI questions, AI daily lines) is not here: it is
-written fresh each time and stays marked as draft.
+written fresh each time and stays marked as draft. The Story redesign (2026-10-13)
+and its v3 templates are in `docs/story-review.md` + `docs/story/`; both flags stay false and the
+app shows no draft badge on Story.
+
+Reviewing rules for this and every other copy sheet: `docs/copy-review-rules.md` (clarity, accuracy, honesty; no
+sanitizing, no keyword flags; audience adults 18+).
 
 Tell me any line to change and I fix it before publishing. The 340 daily lines are in
 docs/daily-line-review.md.
@@ -87,33 +92,66 @@ For three categories, a more exact version is used once both of their traits are
 - You like a set path and you stay on it, even on the boring days.
 - You chase the new thing and still finish the plan you already made.
 
-## 2. Archetype names (13 words replaced)
+## 2. Archetype names — name styles v5 (emci, 2026-10-12)
 
-Each name is one describing word plus one role. Plain is the free default.
+Each style has its own template. Codes still come from the same traits: role =
+Follow-through · Sociability · Curiosity; describer / place / verb / epithet =
+Harmony · Directness · Connection; extra / domain / sharp =
+Growth · Composure · Playfulness (three-word styles only). 2–4 words, 34
+characters max, no trait-end words, no token or stem reused across or within
+styles. Pinned by `check:legends64` against `src/lib/legends64/ato-titles-v5.csv`.
+Order below is HHH, HHL, HLH, HLL, LHH, LHL, LLH, LLL.
 
-**Plain**
-- Describing words: People-First, Self-Made, Team-Oriented, Independent, Results-Driven, Self-Reliant, Behind-the-Scenes, Low-Key
-- Roles: Founder, Executive, Inventor, Specialist, Creative Director, Account Manager, Consultant, Freelancer
+**Primal Genius** (`{Describer} {Role}, {Extra}`)
+- Extra: Caffeinated, Hungry, Sugar-High, Dawn-Ready, Sun-Warmed, Well-Rested, Barefoot, Nocturnal
+- Describers: Grinning, Breezy, Snuggly, Moonstruck, Fierce, Stubborn, Dry-Witted, Stoic
+- Roles: Pathfinder, Wrangler, Tinkerer, Fossil Fan, Muralist, Crooner, Stargazer, Burrower
 
-**Gaming**
-- Describing words: Healing, Valiant, Supportive, Sylvan, Fierce, Untamed, Vigilant, Elusive
-- Roles: Vanguard, Warlord, Artificer, Engineer, Bard, Ranger, Mystic, Wanderer
+**High Fantasy** (`{Role} of the {Place}`)
+- Places: Tavern, Court, Glade, Stars, Vanguard, Anvil, Riddles, Moors
+- Roles: Paladin, Knight-Errant, Wizard, Scribe, Bard, Innkeeper, Druid, Truffle-Hunter
 
-**Mythic**
-- Describing words: Devoted, Radiant, Gentle, Serene, Vengeful, Unbending, Veiled, Solitary
-- Roles: Herald, Sovereign, Forgemaster, Artisan, Reveler, Hearthkeeper, Oracle, Wildkeeper
+**Corporate Realist** (`{Describer} {Role} of {Domain}`)
+- Domains: Synergy, KPIs, Inboxes, Focus, Pivots, Overtime, Memes, Pings
+- Describers: Visionary, Win-Win, On-Brand, Documented, Disruptive, Escalating, Contrarian, Async
+- Roles: Founder, Scheduler, Strategist, Quant, Creative, Schmoozer, Consultant, Contractor
 
-**Anime**
-- Describing words: Prickly-Sweet, Genki, Shy, Deadpan, Protective, Effortless, Watchful, Mysterious
-- Roles: Hot-Blooded Hero, Class President, Lone Genius, Silent Ace, Wildcard Sidekick, Senpai, Dreaming Outsider, Ronin
+**Oxymoron** (`{Soft} {Sharp} {Role}`)
+- Soft: Polite, Cheerful, Huggable, Mellow, Friendly, Low-Key, Bashful, Whispering
+- Sharp: Anarchist, Overachiever, Firestarter, Kingpin, Troublemaker, Hardliner, Wildcard, Outlaw
+- Roles: Ambassador, Enforcer, Inventor, Tactician, Impresario, Emcee, Poet, Loafer
 
-**Funny**
-- Describing words: Charming, Unbothered, Soft, Cozy, Scorekeeping, No-Filter, Side-Eye, Do-Not-Disturb
-- Roles: Main Character, Group Chat CEO, Mad Scientist, Spreadsheet Goblin, Feral Party Gremlin, Group Mom Friend, 3AM Thoughts Poster, Airplane Mode Icon
+**Gaming** (`{Describer} {Role}`; team roles, never Boss)
+- Describers: MVP, Hype, Clutch, Stealth-Mode, Tryhard, Salty, Min-Maxing, Solo-Queue
+- Roles: Raid Leader, Lobby Host, Theorycrafter, Frontline Tank, Shot Caller, Pocket Healer, Speedrunner, Side-Quest NPC
 
-**Dark**
-- Describing words: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Silent, Shadowy
-- Roles: Conqueror, Usurper, Necromancer, Gravekeeper, Trickster Fiend, Ringleader, Wandering Ghost, Reaper
+**Mythic** (`The {Role} Who {Verb}`)
+- Verbs: Rallies, Bargains, Listens, Wonders, Charges, Haggles, Smirks, Vanishes
+- Roles: Storm-Herald, Oathbinder, Artificer, Weaver, Reveler, Hearth-Warden, Oracle, Mist-Walker
+
+**Anime** (`{Describer} {Role}`; plain-English tropes)
+- Describers: Secretly-Sweet, Sunshine, Ice-Cool, Daydreaming, Ride-or-Die, Unstoppable, Mysterious, Lone-Wolf
+- Roles: Chosen One, Council President, Rival, Library Ghost, Comic Relief, Club Captain, Transfer Student, Background Extra
+
+**Funny** (`{Describer} {Role}`)
+- Describers: Smooth-Talking, Snack-Bringing, Overthinking, Playlist-Hogging, Receipt-Saving, No-Filter, Eyebrow-Raising, Emoji-Only
+- Roles: Main Character, Designated Driver, Mad Scientist, Hall Monitor, Party Crasher, Mom Friend, Group-Chat Lurker, Homebody
+
+**Dark** (`{Role} the {Epithet}`)
+- Epithets: Adored, Alluring, Velvet-Gloved, Elegant, Relentless, Unrepentant, Sinister, Cold-Blooded
+- Roles: Conqueror, Dread Tyrant, Necromancer, Crypt Curator, Puppeteer, Warlock, Heretic, Reaper
+
+**Legendary ★** — fires only when every code the style uses is all-High (all-Low
+for Mythic and Anime):
+- Primal Genius (all HHH): Pure Sunbeam Energy
+- High Fantasy (all HHH): Prophesied Dragon-Tamer
+- Corporate Realist (all HHH): Employee of Every Month
+- Oxymoron (all HHH): Courteous Apocalypse
+- Gaming (all HHH): Undisputed Final Boss
+- Mythic (all LLL): The Rumor Who Lingers
+- Anime (all LLL): Mid-Credits Twist
+- Funny (all HHH): Plot Armor Personified
+- Dark (all HHH): Beloved Doom Incarnate
 
 ## 3. Traits: names, the word for each end, and what it sounds like (approved 2026-10-02)
 

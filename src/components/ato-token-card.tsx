@@ -28,7 +28,12 @@ import { INTAKE_TOTAL } from '@/lib/questions/intake-stage';
 /** Plain words for each ledger reason. An unknown reason shows as "Tokens". */
 export const ATO_TOKEN_REASON_LABEL: Record<string, string> = {
   full_profile_complete: 'Finished the intake questions',
-  ongoing_round_complete: 'Finished a round',
+  ongoing_round_complete: 'Finished a set of 16',
+  // wave92: the daily check-in (every 7th pays the week bonus) and AI views.
+  daily_checkin: 'Daily check-in',
+  checkin_week_bonus: '7th check-in bonus',
+  ai_spend: 'AI view',
+  ai_refund: 'AI view refunded',
   // The 10-token spend now unlocks a name style on the identity card (You).
   legend_reroll: 'Name style unlocked',
   category_reroll: 'Category reroll',

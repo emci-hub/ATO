@@ -1,0 +1,1921 @@
+style,codes(core-modifier/third),title,chars,fun,sense,style_signal,flattering,overall
+primal,HHH-HHH/HHH,Pure Sunbeam Energy ★,19,4,4.5,3,4.33,3.96
+primal,HHH-HHH/HHL,"Grinning Pathfinder, Hungry",27,3.67,4.5,3,4.33,3.88
+primal,HHH-HHH/HLH,"Grinning Pathfinder, Sugar-High",31,4,4.5,3,4.33,3.96
+primal,HHH-HHH/HLL,"Grinning Pathfinder, Dawn-Ready",31,3.33,4.5,2.67,4.33,3.71
+primal,HHH-HHH/LHH,"Grinning Pathfinder, Sun-Warmed",31,3.67,4.5,3,4.67,3.96
+primal,HHH-HHH/LHL,"Grinning Pathfinder, Well-Rested",32,3.67,4.5,3,4.67,3.96
+primal,HHH-HHH/LLH,"Grinning Pathfinder, Barefoot",29,3.67,4.5,3,4.33,3.88
+primal,HHH-HHH/LLL,"Grinning Pathfinder, Nocturnal",30,3.67,4.5,3,4.33,3.88
+primal,HHH-HHL/HHH,"Breezy Pathfinder, Caffeinated",30,3.67,4.5,3,4.33,3.88
+primal,HHH-HHL/HHL,"Breezy Pathfinder, Hungry",25,3.33,4.5,3,4.33,3.79
+primal,HHH-HHL/HLH,"Breezy Pathfinder, Sugar-High",29,3.67,4.5,3,4.33,3.88
+primal,HHH-HHL/HLL,"Breezy Pathfinder, Dawn-Ready",29,3,4.5,2.67,4.33,3.62
+primal,HHH-HHL/LHH,"Breezy Pathfinder, Sun-Warmed",29,3.33,4.5,3,4.67,3.88
+primal,HHH-HHL/LHL,"Breezy Pathfinder, Well-Rested",30,3.33,4.5,3,4.67,3.88
+primal,HHH-HHL/LLH,"Breezy Pathfinder, Barefoot",27,3.33,4.5,3,4.33,3.79
+primal,HHH-HHL/LLL,"Breezy Pathfinder, Nocturnal",28,3.33,4.5,3,4.33,3.79
+primal,HHH-HLH/HHH,"Snuggly Pathfinder, Caffeinated",31,4,4.5,3,4.33,3.96
+primal,HHH-HLH/HHL,"Snuggly Pathfinder, Hungry",26,3.67,4.5,3,4.33,3.88
+primal,HHH-HLH/HLH,"Snuggly Pathfinder, Sugar-High",30,4,4.5,3,4.33,3.96
+primal,HHH-HLH/HLL,"Snuggly Pathfinder, Dawn-Ready",30,3.33,4.5,2.67,4.33,3.71
+primal,HHH-HLH/LHH,"Snuggly Pathfinder, Sun-Warmed",30,3.67,4.5,3,4.67,3.96
+primal,HHH-HLH/LHL,"Snuggly Pathfinder, Well-Rested",31,3.67,4.5,3,4.67,3.96
+primal,HHH-HLH/LLH,"Snuggly Pathfinder, Barefoot",28,3.67,4.5,3,4.33,3.88
+primal,HHH-HLH/LLL,"Snuggly Pathfinder, Nocturnal",29,3.67,4.5,3,4.33,3.88
+primal,HHH-HLL/HHH,"Moonstruck Pathfinder, Caffeinated",34,4,4.5,3,4,3.88
+primal,HHH-HLL/HHL,"Moonstruck Pathfinder, Hungry",29,3.67,4.5,3,4,3.79
+primal,HHH-HLL/HLH,"Moonstruck Pathfinder, Sugar-High",33,4,4.5,3,4,3.88
+primal,HHH-HLL/HLL,"Moonstruck Pathfinder, Dawn-Ready",33,3.33,4.5,2.67,4,3.62
+primal,HHH-HLL/LHH,"Moonstruck Pathfinder, Sun-Warmed",33,3.67,4.5,3,4.33,3.88
+primal,HHH-HLL/LHL,"Moonstruck Pathfinder, Well-Rested",34,3.67,4.5,3,4.33,3.88
+primal,HHH-HLL/LLH,"Moonstruck Pathfinder, Barefoot",31,3.67,4.5,3,4,3.79
+primal,HHH-HLL/LLL,"Moonstruck Pathfinder, Nocturnal",32,3.67,4.5,3,4,3.79
+primal,HHH-LHH/HHH,"Fierce Pathfinder, Caffeinated",30,4,4.5,3,4.33,3.96
+primal,HHH-LHH/HHL,"Fierce Pathfinder, Hungry",25,3.67,4.5,3,4.33,3.88
+primal,HHH-LHH/HLH,"Fierce Pathfinder, Sugar-High",29,4,4.5,3,4.33,3.96
+primal,HHH-LHH/HLL,"Fierce Pathfinder, Dawn-Ready",29,3.33,4.5,2.67,4.33,3.71
+primal,HHH-LHH/LHH,"Fierce Pathfinder, Sun-Warmed",29,3.67,4.5,3,4.67,3.96
+primal,HHH-LHH/LHL,"Fierce Pathfinder, Well-Rested",30,3.67,4.5,3,4.67,3.96
+primal,HHH-LHH/LLH,"Fierce Pathfinder, Barefoot",27,3.67,4.5,3,4.33,3.88
+primal,HHH-LHH/LLL,"Fierce Pathfinder, Nocturnal",28,3.67,4.5,3,4.33,3.88
+primal,HHH-LHL/HHH,"Stubborn Pathfinder, Caffeinated",32,4,4.5,3,3.67,3.79
+primal,HHH-LHL/HHL,"Stubborn Pathfinder, Hungry",27,3.67,4.5,3,3.67,3.71
+primal,HHH-LHL/HLH,"Stubborn Pathfinder, Sugar-High",31,4,4.5,3,3.67,3.79
+primal,HHH-LHL/HLL,"Stubborn Pathfinder, Dawn-Ready",31,3.33,4.5,2.67,3.67,3.54
+primal,HHH-LHL/LHH,"Stubborn Pathfinder, Sun-Warmed",31,3.67,4.5,3,4,3.79
+primal,HHH-LHL/LHL,"Stubborn Pathfinder, Well-Rested",32,3.67,4.5,3,4,3.79
+primal,HHH-LHL/LLH,"Stubborn Pathfinder, Barefoot",29,3.67,4.5,3,3.67,3.71
+primal,HHH-LHL/LLL,"Stubborn Pathfinder, Nocturnal",30,3.67,4.5,3,3.67,3.71
+primal,HHH-LLH/HHH,"Dry-Witted Pathfinder, Caffeinated",34,4,4.5,3,4,3.88
+primal,HHH-LLH/HHL,"Dry-Witted Pathfinder, Hungry",29,3.67,4.5,3,4,3.79
+primal,HHH-LLH/HLH,"Dry-Witted Pathfinder, Sugar-High",33,4,4.5,3,4,3.88
+primal,HHH-LLH/HLL,"Dry-Witted Pathfinder, Dawn-Ready",33,3.33,4.5,2.67,4,3.62
+primal,HHH-LLH/LHH,"Dry-Witted Pathfinder, Sun-Warmed",33,3.67,4.5,3,4.33,3.88
+primal,HHH-LLH/LHL,"Dry-Witted Pathfinder, Well-Rested",34,3.67,4.5,3,4.33,3.88
+primal,HHH-LLH/LLH,"Dry-Witted Pathfinder, Barefoot",31,3.67,4.5,3,4,3.79
+primal,HHH-LLH/LLL,"Dry-Witted Pathfinder, Nocturnal",32,3.67,4.5,3,4,3.79
+primal,HHH-LLL/HHH,"Stoic Pathfinder, Caffeinated",29,3.67,4.5,3,4,3.79
+primal,HHH-LLL/HHL,"Stoic Pathfinder, Hungry",24,3.33,4.5,3,4,3.71
+primal,HHH-LLL/HLH,"Stoic Pathfinder, Sugar-High",28,3.67,4.5,3,4,3.79
+primal,HHH-LLL/HLL,"Stoic Pathfinder, Dawn-Ready",28,3,4.5,2.67,4,3.54
+primal,HHH-LLL/LHH,"Stoic Pathfinder, Sun-Warmed",28,3.33,4.5,3,4.33,3.79
+primal,HHH-LLL/LHL,"Stoic Pathfinder, Well-Rested",29,3.33,4.5,3,4.33,3.79
+primal,HHH-LLL/LLH,"Stoic Pathfinder, Barefoot",26,3.33,4.5,3,4,3.71
+primal,HHH-LLL/LLL,"Stoic Pathfinder, Nocturnal",27,3.33,4.5,3,4,3.71
+primal,HHL-HHH/HHH,"Grinning Wrangler, Caffeinated",30,4.33,4.5,3.33,4.33,4.12
+primal,HHL-HHH/HHL,"Grinning Wrangler, Hungry",25,4,4.5,3.33,4.33,4.04
+primal,HHL-HHH/HLH,"Grinning Wrangler, Sugar-High",29,4.33,4.5,3.33,4.33,4.12
+primal,HHL-HHH/HLL,"Grinning Wrangler, Dawn-Ready",29,3.67,4.5,3,4.33,3.88
+primal,HHL-HHH/LHH,"Grinning Wrangler, Sun-Warmed",29,4,4.5,3.33,4.67,4.12
+primal,HHL-HHH/LHL,"Grinning Wrangler, Well-Rested",30,4,4.5,3.33,4.67,4.12
+primal,HHL-HHH/LLH,"Grinning Wrangler, Barefoot",27,4,4.5,3.33,4.33,4.04
+primal,HHL-HHH/LLL,"Grinning Wrangler, Nocturnal",28,4,4.5,3.33,4.33,4.04
+primal,HHL-HHL/HHH,"Breezy Wrangler, Caffeinated",28,4,4.5,3.33,4.33,4.04
+primal,HHL-HHL/HHL,"Breezy Wrangler, Hungry",23,3.67,4.5,3.33,4.33,3.96
+primal,HHL-HHL/HLH,"Breezy Wrangler, Sugar-High",27,4,4.5,3.33,4.33,4.04
+primal,HHL-HHL/HLL,"Breezy Wrangler, Dawn-Ready",27,3.33,4.5,3,4.33,3.79
+primal,HHL-HHL/LHH,"Breezy Wrangler, Sun-Warmed",27,3.67,4.5,3.33,4.67,4.04
+primal,HHL-HHL/LHL,"Breezy Wrangler, Well-Rested",28,3.67,4.5,3.33,4.67,4.04
+primal,HHL-HHL/LLH,"Breezy Wrangler, Barefoot",25,3.67,4.5,3.33,4.33,3.96
+primal,HHL-HHL/LLL,"Breezy Wrangler, Nocturnal",26,3.67,4.5,3.33,4.33,3.96
+primal,HHL-HLH/HHH,"Snuggly Wrangler, Caffeinated",29,4.33,4.5,3.33,4.33,4.12
+primal,HHL-HLH/HHL,"Snuggly Wrangler, Hungry",24,4,4.5,3.33,4.33,4.04
+primal,HHL-HLH/HLH,"Snuggly Wrangler, Sugar-High",28,4.33,4.5,3.33,4.33,4.12
+primal,HHL-HLH/HLL,"Snuggly Wrangler, Dawn-Ready",28,3.67,4.5,3,4.33,3.88
+primal,HHL-HLH/LHH,"Snuggly Wrangler, Sun-Warmed",28,4,4.5,3.33,4.67,4.12
+primal,HHL-HLH/LHL,"Snuggly Wrangler, Well-Rested",29,4,4.5,3.33,4.67,4.12
+primal,HHL-HLH/LLH,"Snuggly Wrangler, Barefoot",26,4,4.5,3.33,4.33,4.04
+primal,HHL-HLH/LLL,"Snuggly Wrangler, Nocturnal",27,4,4.5,3.33,4.33,4.04
+primal,HHL-HLL/HHH,"Moonstruck Wrangler, Caffeinated",32,4.33,4.5,3.33,4,4.04
+primal,HHL-HLL/HHL,"Moonstruck Wrangler, Hungry",27,4,4.5,3.33,4,3.96
+primal,HHL-HLL/HLH,"Moonstruck Wrangler, Sugar-High",31,4.33,4.5,3.33,4,4.04
+primal,HHL-HLL/HLL,"Moonstruck Wrangler, Dawn-Ready",31,3.67,4.5,3,4,3.79
+primal,HHL-HLL/LHH,"Moonstruck Wrangler, Sun-Warmed",31,4,4.5,3.33,4.33,4.04
+primal,HHL-HLL/LHL,"Moonstruck Wrangler, Well-Rested",32,4,4.5,3.33,4.33,4.04
+primal,HHL-HLL/LLH,"Moonstruck Wrangler, Barefoot",29,4,4.5,3.33,4,3.96
+primal,HHL-HLL/LLL,"Moonstruck Wrangler, Nocturnal",30,4,4.5,3.33,4,3.96
+primal,HHL-LHH/HHH,"Fierce Wrangler, Caffeinated",28,4.33,4.5,3.33,4.33,4.12
+primal,HHL-LHH/HHL,"Fierce Wrangler, Hungry",23,4,4.5,3.33,4.33,4.04
+primal,HHL-LHH/HLH,"Fierce Wrangler, Sugar-High",27,4.33,4.5,3.33,4.33,4.12
+primal,HHL-LHH/HLL,"Fierce Wrangler, Dawn-Ready",27,3.67,4.5,3,4.33,3.88
+primal,HHL-LHH/LHH,"Fierce Wrangler, Sun-Warmed",27,4,4.5,3.33,4.67,4.12
+primal,HHL-LHH/LHL,"Fierce Wrangler, Well-Rested",28,4,4.5,3.33,4.67,4.12
+primal,HHL-LHH/LLH,"Fierce Wrangler, Barefoot",25,4,4.5,3.33,4.33,4.04
+primal,HHL-LHH/LLL,"Fierce Wrangler, Nocturnal",26,4,4.5,3.33,4.33,4.04
+primal,HHL-LHL/HHH,"Stubborn Wrangler, Caffeinated",30,4.33,4.5,3.33,3.67,3.96
+primal,HHL-LHL/HHL,"Stubborn Wrangler, Hungry",25,4,4.5,3.33,3.67,3.88
+primal,HHL-LHL/HLH,"Stubborn Wrangler, Sugar-High",29,4.33,4.5,3.33,3.67,3.96
+primal,HHL-LHL/HLL,"Stubborn Wrangler, Dawn-Ready",29,3.67,4.5,3,3.67,3.71
+primal,HHL-LHL/LHH,"Stubborn Wrangler, Sun-Warmed",29,4,4.5,3.33,4,3.96
+primal,HHL-LHL/LHL,"Stubborn Wrangler, Well-Rested",30,4,4.5,3.33,4,3.96
+primal,HHL-LHL/LLH,"Stubborn Wrangler, Barefoot",27,4,4.5,3.33,3.67,3.88
+primal,HHL-LHL/LLL,"Stubborn Wrangler, Nocturnal",28,4,4.5,3.33,3.67,3.88
+primal,HHL-LLH/HHH,"Dry-Witted Wrangler, Caffeinated",32,4.33,4.5,3.33,4,4.04
+primal,HHL-LLH/HHL,"Dry-Witted Wrangler, Hungry",27,4,4.5,3.33,4,3.96
+primal,HHL-LLH/HLH,"Dry-Witted Wrangler, Sugar-High",31,4.33,4.5,3.33,4,4.04
+primal,HHL-LLH/HLL,"Dry-Witted Wrangler, Dawn-Ready",31,3.67,4.5,3,4,3.79
+primal,HHL-LLH/LHH,"Dry-Witted Wrangler, Sun-Warmed",31,4,4.5,3.33,4.33,4.04
+primal,HHL-LLH/LHL,"Dry-Witted Wrangler, Well-Rested",32,4,4.5,3.33,4.33,4.04
+primal,HHL-LLH/LLH,"Dry-Witted Wrangler, Barefoot",29,4,4.5,3.33,4,3.96
+primal,HHL-LLH/LLL,"Dry-Witted Wrangler, Nocturnal",30,4,4.5,3.33,4,3.96
+primal,HHL-LLL/HHH,"Stoic Wrangler, Caffeinated",27,4,4.5,3.33,4,3.96
+primal,HHL-LLL/HHL,"Stoic Wrangler, Hungry",22,3.67,4.5,3.33,4,3.88
+primal,HHL-LLL/HLH,"Stoic Wrangler, Sugar-High",26,4,4.5,3.33,4,3.96
+primal,HHL-LLL/HLL,"Stoic Wrangler, Dawn-Ready",26,3.33,4.5,3,4,3.71
+primal,HHL-LLL/LHH,"Stoic Wrangler, Sun-Warmed",26,3.67,4.5,3.33,4.33,3.96
+primal,HHL-LLL/LHL,"Stoic Wrangler, Well-Rested",27,3.67,4.5,3.33,4.33,3.96
+primal,HHL-LLL/LLH,"Stoic Wrangler, Barefoot",24,3.67,4.5,3.33,4,3.88
+primal,HHL-LLL/LLL,"Stoic Wrangler, Nocturnal",25,3.67,4.5,3.33,4,3.88
+primal,HLH-HHH/HHH,"Grinning Tinkerer, Caffeinated",30,4.33,4.5,3.33,4.33,4.12
+primal,HLH-HHH/HHL,"Grinning Tinkerer, Hungry",25,4,4.5,3.33,4.33,4.04
+primal,HLH-HHH/HLH,"Grinning Tinkerer, Sugar-High",29,4.33,4.5,3.33,4.33,4.12
+primal,HLH-HHH/HLL,"Grinning Tinkerer, Dawn-Ready",29,3.67,4.5,3,4.33,3.88
+primal,HLH-HHH/LHH,"Grinning Tinkerer, Sun-Warmed",29,4,4.5,3.33,4.67,4.12
+primal,HLH-HHH/LHL,"Grinning Tinkerer, Well-Rested",30,4,4.5,3.33,4.67,4.12
+primal,HLH-HHH/LLH,"Grinning Tinkerer, Barefoot",27,4,4.5,3.33,4.33,4.04
+primal,HLH-HHH/LLL,"Grinning Tinkerer, Nocturnal",28,4,4.5,3.33,4.33,4.04
+primal,HLH-HHL/HHH,"Breezy Tinkerer, Caffeinated",28,4,4.5,3.33,4.33,4.04
+primal,HLH-HHL/HHL,"Breezy Tinkerer, Hungry",23,3.67,4.5,3.33,4.33,3.96
+primal,HLH-HHL/HLH,"Breezy Tinkerer, Sugar-High",27,4,4.5,3.33,4.33,4.04
+primal,HLH-HHL/HLL,"Breezy Tinkerer, Dawn-Ready",27,3.33,4.5,3,4.33,3.79
+primal,HLH-HHL/LHH,"Breezy Tinkerer, Sun-Warmed",27,3.67,4.5,3.33,4.67,4.04
+primal,HLH-HHL/LHL,"Breezy Tinkerer, Well-Rested",28,3.67,4.5,3.33,4.67,4.04
+primal,HLH-HHL/LLH,"Breezy Tinkerer, Barefoot",25,3.67,4.5,3.33,4.33,3.96
+primal,HLH-HHL/LLL,"Breezy Tinkerer, Nocturnal",26,3.67,4.5,3.33,4.33,3.96
+primal,HLH-HLH/HHH,"Snuggly Tinkerer, Caffeinated",29,4.33,4.5,3.33,4.33,4.12
+primal,HLH-HLH/HHL,"Snuggly Tinkerer, Hungry",24,4,4.5,3.33,4.33,4.04
+primal,HLH-HLH/HLH,"Snuggly Tinkerer, Sugar-High",28,4.33,4.5,3.33,4.33,4.12
+primal,HLH-HLH/HLL,"Snuggly Tinkerer, Dawn-Ready",28,3.67,4.5,3,4.33,3.88
+primal,HLH-HLH/LHH,"Snuggly Tinkerer, Sun-Warmed",28,4,4.5,3.33,4.67,4.12
+primal,HLH-HLH/LHL,"Snuggly Tinkerer, Well-Rested",29,4,4.5,3.33,4.67,4.12
+primal,HLH-HLH/LLH,"Snuggly Tinkerer, Barefoot",26,4,4.5,3.33,4.33,4.04
+primal,HLH-HLH/LLL,"Snuggly Tinkerer, Nocturnal",27,4,4.5,3.33,4.33,4.04
+primal,HLH-HLL/HHH,"Moonstruck Tinkerer, Caffeinated",32,4.33,4.5,3.33,4,4.04
+primal,HLH-HLL/HHL,"Moonstruck Tinkerer, Hungry",27,4,4.5,3.33,4,3.96
+primal,HLH-HLL/HLH,"Moonstruck Tinkerer, Sugar-High",31,4.33,4.5,3.33,4,4.04
+primal,HLH-HLL/HLL,"Moonstruck Tinkerer, Dawn-Ready",31,3.67,4.5,3,4,3.79
+primal,HLH-HLL/LHH,"Moonstruck Tinkerer, Sun-Warmed",31,4,4.5,3.33,4.33,4.04
+primal,HLH-HLL/LHL,"Moonstruck Tinkerer, Well-Rested",32,4,4.5,3.33,4.33,4.04
+primal,HLH-HLL/LLH,"Moonstruck Tinkerer, Barefoot",29,4,4.5,3.33,4,3.96
+primal,HLH-HLL/LLL,"Moonstruck Tinkerer, Nocturnal",30,4,4.5,3.33,4,3.96
+primal,HLH-LHH/HHH,"Fierce Tinkerer, Caffeinated",28,4.33,4.5,3.33,4.33,4.12
+primal,HLH-LHH/HHL,"Fierce Tinkerer, Hungry",23,4,4.5,3.33,4.33,4.04
+primal,HLH-LHH/HLH,"Fierce Tinkerer, Sugar-High",27,4.33,4.5,3.33,4.33,4.12
+primal,HLH-LHH/HLL,"Fierce Tinkerer, Dawn-Ready",27,3.67,4.5,3,4.33,3.88
+primal,HLH-LHH/LHH,"Fierce Tinkerer, Sun-Warmed",27,4,4.5,3.33,4.67,4.12
+primal,HLH-LHH/LHL,"Fierce Tinkerer, Well-Rested",28,4,4.5,3.33,4.67,4.12
+primal,HLH-LHH/LLH,"Fierce Tinkerer, Barefoot",25,4,4.5,3.33,4.33,4.04
+primal,HLH-LHH/LLL,"Fierce Tinkerer, Nocturnal",26,4,4.5,3.33,4.33,4.04
+primal,HLH-LHL/HHH,"Stubborn Tinkerer, Caffeinated",30,4.33,4.5,3.33,3.67,3.96
+primal,HLH-LHL/HHL,"Stubborn Tinkerer, Hungry",25,4,4.5,3.33,3.67,3.88
+primal,HLH-LHL/HLH,"Stubborn Tinkerer, Sugar-High",29,4.33,4.5,3.33,3.67,3.96
+primal,HLH-LHL/HLL,"Stubborn Tinkerer, Dawn-Ready",29,3.67,4.5,3,3.67,3.71
+primal,HLH-LHL/LHH,"Stubborn Tinkerer, Sun-Warmed",29,4,4.5,3.33,4,3.96
+primal,HLH-LHL/LHL,"Stubborn Tinkerer, Well-Rested",30,4,4.5,3.33,4,3.96
+primal,HLH-LHL/LLH,"Stubborn Tinkerer, Barefoot",27,4,4.5,3.33,3.67,3.88
+primal,HLH-LHL/LLL,"Stubborn Tinkerer, Nocturnal",28,4,4.5,3.33,3.67,3.88
+primal,HLH-LLH/HHH,"Dry-Witted Tinkerer, Caffeinated",32,4.33,4.5,3.33,4,4.04
+primal,HLH-LLH/HHL,"Dry-Witted Tinkerer, Hungry",27,4,4.5,3.33,4,3.96
+primal,HLH-LLH/HLH,"Dry-Witted Tinkerer, Sugar-High",31,4.33,4.5,3.33,4,4.04
+primal,HLH-LLH/HLL,"Dry-Witted Tinkerer, Dawn-Ready",31,3.67,4.5,3,4,3.79
+primal,HLH-LLH/LHH,"Dry-Witted Tinkerer, Sun-Warmed",31,4,4.5,3.33,4.33,4.04
+primal,HLH-LLH/LHL,"Dry-Witted Tinkerer, Well-Rested",32,4,4.5,3.33,4.33,4.04
+primal,HLH-LLH/LLH,"Dry-Witted Tinkerer, Barefoot",29,4,4.5,3.33,4,3.96
+primal,HLH-LLH/LLL,"Dry-Witted Tinkerer, Nocturnal",30,4,4.5,3.33,4,3.96
+primal,HLH-LLL/HHH,"Stoic Tinkerer, Caffeinated",27,4,4.5,3.33,4,3.96
+primal,HLH-LLL/HHL,"Stoic Tinkerer, Hungry",22,3.67,4.5,3.33,4,3.88
+primal,HLH-LLL/HLH,"Stoic Tinkerer, Sugar-High",26,4,4.5,3.33,4,3.96
+primal,HLH-LLL/HLL,"Stoic Tinkerer, Dawn-Ready",26,3.33,4.5,3,4,3.71
+primal,HLH-LLL/LHH,"Stoic Tinkerer, Sun-Warmed",26,3.67,4.5,3.33,4.33,3.96
+primal,HLH-LLL/LHL,"Stoic Tinkerer, Well-Rested",27,3.67,4.5,3.33,4.33,3.96
+primal,HLH-LLL/LLH,"Stoic Tinkerer, Barefoot",24,3.67,4.5,3.33,4,3.88
+primal,HLH-LLL/LLL,"Stoic Tinkerer, Nocturnal",25,3.67,4.5,3.33,4,3.88
+primal,HLL-HHH/HHH,"Grinning Fossil Fan, Caffeinated",32,4.33,4.5,3.67,4.33,4.21
+primal,HLL-HHH/HHL,"Grinning Fossil Fan, Hungry",27,4,4.5,3.67,4.33,4.12
+primal,HLL-HHH/HLH,"Grinning Fossil Fan, Sugar-High",31,4.33,4.5,3.67,4.33,4.21
+primal,HLL-HHH/HLL,"Grinning Fossil Fan, Dawn-Ready",31,3.67,4.5,3.33,4.33,3.96
+primal,HLL-HHH/LHH,"Grinning Fossil Fan, Sun-Warmed",31,4,4.5,3.67,4.67,4.21
+primal,HLL-HHH/LHL,"Grinning Fossil Fan, Well-Rested",32,4,4.5,3.67,4.67,4.21
+primal,HLL-HHH/LLH,"Grinning Fossil Fan, Barefoot",29,4,4.5,3.67,4.33,4.12
+primal,HLL-HHH/LLL,"Grinning Fossil Fan, Nocturnal",30,4,4.5,3.67,4.33,4.12
+primal,HLL-HHL/HHH,"Breezy Fossil Fan, Caffeinated",30,4,4.5,3.67,4.33,4.12
+primal,HLL-HHL/HHL,"Breezy Fossil Fan, Hungry",25,3.67,4.5,3.67,4.33,4.04
+primal,HLL-HHL/HLH,"Breezy Fossil Fan, Sugar-High",29,4,4.5,3.67,4.33,4.12
+primal,HLL-HHL/HLL,"Breezy Fossil Fan, Dawn-Ready",29,3.33,4.5,3.33,4.33,3.88
+primal,HLL-HHL/LHH,"Breezy Fossil Fan, Sun-Warmed",29,3.67,4.5,3.67,4.67,4.12
+primal,HLL-HHL/LHL,"Breezy Fossil Fan, Well-Rested",30,3.67,4.5,3.67,4.67,4.12
+primal,HLL-HHL/LLH,"Breezy Fossil Fan, Barefoot",27,3.67,4.5,3.67,4.33,4.04
+primal,HLL-HHL/LLL,"Breezy Fossil Fan, Nocturnal",28,3.67,4.5,3.67,4.33,4.04
+primal,HLL-HLH/HHH,"Snuggly Fossil Fan, Caffeinated",31,4.33,4.5,3.67,4.33,4.21
+primal,HLL-HLH/HHL,"Snuggly Fossil Fan, Hungry",26,4,4.5,3.67,4.33,4.12
+primal,HLL-HLH/HLH,"Snuggly Fossil Fan, Sugar-High",30,4.33,4.5,3.67,4.33,4.21
+primal,HLL-HLH/HLL,"Snuggly Fossil Fan, Dawn-Ready",30,3.67,4.5,3.33,4.33,3.96
+primal,HLL-HLH/LHH,"Snuggly Fossil Fan, Sun-Warmed",30,4,4.5,3.67,4.67,4.21
+primal,HLL-HLH/LHL,"Snuggly Fossil Fan, Well-Rested",31,4,4.5,3.67,4.67,4.21
+primal,HLL-HLH/LLH,"Snuggly Fossil Fan, Barefoot",28,4,4.5,3.67,4.33,4.12
+primal,HLL-HLH/LLL,"Snuggly Fossil Fan, Nocturnal",29,4,4.5,3.67,4.33,4.12
+primal,HLL-HLL/HHH,"Moonstruck Fossil Fan, Caffeinated",34,4.33,4.5,3.67,4,4.12
+primal,HLL-HLL/HHL,"Moonstruck Fossil Fan, Hungry",29,4,4.5,3.67,4,4.04
+primal,HLL-HLL/HLH,"Moonstruck Fossil Fan, Sugar-High",33,4.33,4.5,3.67,4,4.12
+primal,HLL-HLL/HLL,"Moonstruck Fossil Fan, Dawn-Ready",33,3.67,4.5,3.33,4,3.88
+primal,HLL-HLL/LHH,"Moonstruck Fossil Fan, Sun-Warmed",33,4,4.5,3.67,4.33,4.12
+primal,HLL-HLL/LHL,"Moonstruck Fossil Fan, Well-Rested",34,4,4.5,3.67,4.33,4.12
+primal,HLL-HLL/LLH,"Moonstruck Fossil Fan, Barefoot",31,4,4.5,3.67,4,4.04
+primal,HLL-HLL/LLL,"Moonstruck Fossil Fan, Nocturnal",32,4,4.5,3.67,4,4.04
+primal,HLL-LHH/HHH,"Fierce Fossil Fan, Caffeinated",30,4.33,4.5,3.67,4.33,4.21
+primal,HLL-LHH/HHL,"Fierce Fossil Fan, Hungry",25,4,4.5,3.67,4.33,4.12
+primal,HLL-LHH/HLH,"Fierce Fossil Fan, Sugar-High",29,4.33,4.5,3.67,4.33,4.21
+primal,HLL-LHH/HLL,"Fierce Fossil Fan, Dawn-Ready",29,3.67,4.5,3.33,4.33,3.96
+primal,HLL-LHH/LHH,"Fierce Fossil Fan, Sun-Warmed",29,4,4.5,3.67,4.67,4.21
+primal,HLL-LHH/LHL,"Fierce Fossil Fan, Well-Rested",30,4,4.5,3.67,4.67,4.21
+primal,HLL-LHH/LLH,"Fierce Fossil Fan, Barefoot",27,4,4.5,3.67,4.33,4.12
+primal,HLL-LHH/LLL,"Fierce Fossil Fan, Nocturnal",28,4,4.5,3.67,4.33,4.12
+primal,HLL-LHL/HHH,"Stubborn Fossil Fan, Caffeinated",32,4.33,4.5,3.67,3.67,4.04
+primal,HLL-LHL/HHL,"Stubborn Fossil Fan, Hungry",27,4,4.5,3.67,3.67,3.96
+primal,HLL-LHL/HLH,"Stubborn Fossil Fan, Sugar-High",31,4.33,4.5,3.67,3.67,4.04
+primal,HLL-LHL/HLL,"Stubborn Fossil Fan, Dawn-Ready",31,3.67,4.5,3.33,3.67,3.79
+primal,HLL-LHL/LHH,"Stubborn Fossil Fan, Sun-Warmed",31,4,4.5,3.67,4,4.04
+primal,HLL-LHL/LHL,"Stubborn Fossil Fan, Well-Rested",32,4,4.5,3.67,4,4.04
+primal,HLL-LHL/LLH,"Stubborn Fossil Fan, Barefoot",29,4,4.5,3.67,3.67,3.96
+primal,HLL-LHL/LLL,"Stubborn Fossil Fan, Nocturnal",30,4,4.5,3.67,3.67,3.96
+primal,HLL-LLH/HHH,"Dry-Witted Fossil Fan, Caffeinated",34,4.33,4.5,3.67,4,4.12
+primal,HLL-LLH/HHL,"Dry-Witted Fossil Fan, Hungry",29,4,4.5,3.67,4,4.04
+primal,HLL-LLH/HLH,"Dry-Witted Fossil Fan, Sugar-High",33,4.33,4.5,3.67,4,4.12
+primal,HLL-LLH/HLL,"Dry-Witted Fossil Fan, Dawn-Ready",33,3.67,4.5,3.33,4,3.88
+primal,HLL-LLH/LHH,"Dry-Witted Fossil Fan, Sun-Warmed",33,4,4.5,3.67,4.33,4.12
+primal,HLL-LLH/LHL,"Dry-Witted Fossil Fan, Well-Rested",34,4,4.5,3.67,4.33,4.12
+primal,HLL-LLH/LLH,"Dry-Witted Fossil Fan, Barefoot",31,4,4.5,3.67,4,4.04
+primal,HLL-LLH/LLL,"Dry-Witted Fossil Fan, Nocturnal",32,4,4.5,3.67,4,4.04
+primal,HLL-LLL/HHH,"Stoic Fossil Fan, Caffeinated",29,4,4.5,3.67,4,4.04
+primal,HLL-LLL/HHL,"Stoic Fossil Fan, Hungry",24,3.67,4.5,3.67,4,3.96
+primal,HLL-LLL/HLH,"Stoic Fossil Fan, Sugar-High",28,4,4.5,3.67,4,4.04
+primal,HLL-LLL/HLL,"Stoic Fossil Fan, Dawn-Ready",28,3.33,4.5,3.33,4,3.79
+primal,HLL-LLL/LHH,"Stoic Fossil Fan, Sun-Warmed",28,3.67,4.5,3.67,4.33,4.04
+primal,HLL-LLL/LHL,"Stoic Fossil Fan, Well-Rested",29,3.67,4.5,3.67,4.33,4.04
+primal,HLL-LLL/LLH,"Stoic Fossil Fan, Barefoot",26,3.67,4.5,3.67,4,3.96
+primal,HLL-LLL/LLL,"Stoic Fossil Fan, Nocturnal",27,3.67,4.5,3.67,4,3.96
+primal,LHH-HHH/HHH,"Grinning Muralist, Caffeinated",30,4,4.5,3.33,4.33,4.04
+primal,LHH-HHH/HHL,"Grinning Muralist, Hungry",25,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HHH/HLH,"Grinning Muralist, Sugar-High",29,4,4.5,3.33,4.33,4.04
+primal,LHH-HHH/HLL,"Grinning Muralist, Dawn-Ready",29,3.33,4.5,3,4.33,3.79
+primal,LHH-HHH/LHH,"Grinning Muralist, Sun-Warmed",29,3.67,4.5,3.33,4.67,4.04
+primal,LHH-HHH/LHL,"Grinning Muralist, Well-Rested",30,3.67,4.5,3.33,4.67,4.04
+primal,LHH-HHH/LLH,"Grinning Muralist, Barefoot",27,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HHH/LLL,"Grinning Muralist, Nocturnal",28,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HHL/HHH,"Breezy Muralist, Caffeinated",28,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HHL/HHL,"Breezy Muralist, Hungry",23,3.33,4.5,3.33,4.33,3.88
+primal,LHH-HHL/HLH,"Breezy Muralist, Sugar-High",27,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HHL/HLL,"Breezy Muralist, Dawn-Ready",27,3,4.5,3,4.33,3.71
+primal,LHH-HHL/LHH,"Breezy Muralist, Sun-Warmed",27,3.33,4.5,3.33,4.67,3.96
+primal,LHH-HHL/LHL,"Breezy Muralist, Well-Rested",28,3.33,4.5,3.33,4.67,3.96
+primal,LHH-HHL/LLH,"Breezy Muralist, Barefoot",25,3.33,4.5,3.33,4.33,3.88
+primal,LHH-HHL/LLL,"Breezy Muralist, Nocturnal",26,3.33,4.5,3.33,4.33,3.88
+primal,LHH-HLH/HHH,"Snuggly Muralist, Caffeinated",29,4,4.5,3.33,4.33,4.04
+primal,LHH-HLH/HHL,"Snuggly Muralist, Hungry",24,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HLH/HLH,"Snuggly Muralist, Sugar-High",28,4,4.5,3.33,4.33,4.04
+primal,LHH-HLH/HLL,"Snuggly Muralist, Dawn-Ready",28,3.33,4.5,3,4.33,3.79
+primal,LHH-HLH/LHH,"Snuggly Muralist, Sun-Warmed",28,3.67,4.5,3.33,4.67,4.04
+primal,LHH-HLH/LHL,"Snuggly Muralist, Well-Rested",29,3.67,4.5,3.33,4.67,4.04
+primal,LHH-HLH/LLH,"Snuggly Muralist, Barefoot",26,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HLH/LLL,"Snuggly Muralist, Nocturnal",27,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HLL/HHH,"Moonstruck Muralist, Caffeinated",32,4,4.5,3.33,4,3.96
+primal,LHH-HLL/HHL,"Moonstruck Muralist, Hungry",27,3.67,4.5,3.33,4,3.88
+primal,LHH-HLL/HLH,"Moonstruck Muralist, Sugar-High",31,4,4.5,3.33,4,3.96
+primal,LHH-HLL/HLL,"Moonstruck Muralist, Dawn-Ready",31,3.33,4.5,3,4,3.71
+primal,LHH-HLL/LHH,"Moonstruck Muralist, Sun-Warmed",31,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HLL/LHL,"Moonstruck Muralist, Well-Rested",32,3.67,4.5,3.33,4.33,3.96
+primal,LHH-HLL/LLH,"Moonstruck Muralist, Barefoot",29,3.67,4.5,3.33,4,3.88
+primal,LHH-HLL/LLL,"Moonstruck Muralist, Nocturnal",30,3.67,4.5,3.33,4,3.88
+primal,LHH-LHH/HHH,"Fierce Muralist, Caffeinated",28,4,4.5,3.33,4.33,4.04
+primal,LHH-LHH/HHL,"Fierce Muralist, Hungry",23,3.67,4.5,3.33,4.33,3.96
+primal,LHH-LHH/HLH,"Fierce Muralist, Sugar-High",27,4,4.5,3.33,4.33,4.04
+primal,LHH-LHH/HLL,"Fierce Muralist, Dawn-Ready",27,3.33,4.5,3,4.33,3.79
+primal,LHH-LHH/LHH,"Fierce Muralist, Sun-Warmed",27,3.67,4.5,3.33,4.67,4.04
+primal,LHH-LHH/LHL,"Fierce Muralist, Well-Rested",28,3.67,4.5,3.33,4.67,4.04
+primal,LHH-LHH/LLH,"Fierce Muralist, Barefoot",25,3.67,4.5,3.33,4.33,3.96
+primal,LHH-LHH/LLL,"Fierce Muralist, Nocturnal",26,3.67,4.5,3.33,4.33,3.96
+primal,LHH-LHL/HHH,"Stubborn Muralist, Caffeinated",30,4,4.5,3.33,3.67,3.88
+primal,LHH-LHL/HHL,"Stubborn Muralist, Hungry",25,3.67,4.5,3.33,3.67,3.79
+primal,LHH-LHL/HLH,"Stubborn Muralist, Sugar-High",29,4,4.5,3.33,3.67,3.88
+primal,LHH-LHL/HLL,"Stubborn Muralist, Dawn-Ready",29,3.33,4.5,3,3.67,3.62
+primal,LHH-LHL/LHH,"Stubborn Muralist, Sun-Warmed",29,3.67,4.5,3.33,4,3.88
+primal,LHH-LHL/LHL,"Stubborn Muralist, Well-Rested",30,3.67,4.5,3.33,4,3.88
+primal,LHH-LHL/LLH,"Stubborn Muralist, Barefoot",27,3.67,4.5,3.33,3.67,3.79
+primal,LHH-LHL/LLL,"Stubborn Muralist, Nocturnal",28,3.67,4.5,3.33,3.67,3.79
+primal,LHH-LLH/HHH,"Dry-Witted Muralist, Caffeinated",32,4,4.5,3.33,4,3.96
+primal,LHH-LLH/HHL,"Dry-Witted Muralist, Hungry",27,3.67,4.5,3.33,4,3.88
+primal,LHH-LLH/HLH,"Dry-Witted Muralist, Sugar-High",31,4,4.5,3.33,4,3.96
+primal,LHH-LLH/HLL,"Dry-Witted Muralist, Dawn-Ready",31,3.33,4.5,3,4,3.71
+primal,LHH-LLH/LHH,"Dry-Witted Muralist, Sun-Warmed",31,3.67,4.5,3.33,4.33,3.96
+primal,LHH-LLH/LHL,"Dry-Witted Muralist, Well-Rested",32,3.67,4.5,3.33,4.33,3.96
+primal,LHH-LLH/LLH,"Dry-Witted Muralist, Barefoot",29,3.67,4.5,3.33,4,3.88
+primal,LHH-LLH/LLL,"Dry-Witted Muralist, Nocturnal",30,3.67,4.5,3.33,4,3.88
+primal,LHH-LLL/HHH,"Stoic Muralist, Caffeinated",27,3.67,4.5,3.33,4,3.88
+primal,LHH-LLL/HHL,"Stoic Muralist, Hungry",22,3.33,4.5,3.33,4,3.79
+primal,LHH-LLL/HLH,"Stoic Muralist, Sugar-High",26,3.67,4.5,3.33,4,3.88
+primal,LHH-LLL/HLL,"Stoic Muralist, Dawn-Ready",26,3,4.5,3,4,3.62
+primal,LHH-LLL/LHH,"Stoic Muralist, Sun-Warmed",26,3.33,4.5,3.33,4.33,3.88
+primal,LHH-LLL/LHL,"Stoic Muralist, Well-Rested",27,3.33,4.5,3.33,4.33,3.88
+primal,LHH-LLL/LLH,"Stoic Muralist, Barefoot",24,3.33,4.5,3.33,4,3.79
+primal,LHH-LLL/LLL,"Stoic Muralist, Nocturnal",25,3.33,4.5,3.33,4,3.79
+primal,LHL-HHH/HHH,"Grinning Crooner, Caffeinated",29,4.33,4.5,3.33,4.33,4.12
+primal,LHL-HHH/HHL,"Grinning Crooner, Hungry",24,4,4.5,3.33,4.33,4.04
+primal,LHL-HHH/HLH,"Grinning Crooner, Sugar-High",28,4.33,4.5,3.33,4.33,4.12
+primal,LHL-HHH/HLL,"Grinning Crooner, Dawn-Ready",28,3.67,4.5,3,4.33,3.88
+primal,LHL-HHH/LHH,"Grinning Crooner, Sun-Warmed",28,4,4.5,3.33,4.67,4.12
+primal,LHL-HHH/LHL,"Grinning Crooner, Well-Rested",29,4,4.5,3.33,4.67,4.12
+primal,LHL-HHH/LLH,"Grinning Crooner, Barefoot",26,4,4.5,3.33,4.33,4.04
+primal,LHL-HHH/LLL,"Grinning Crooner, Nocturnal",27,4,4.5,3.33,4.33,4.04
+primal,LHL-HHL/HHH,"Breezy Crooner, Caffeinated",27,4,4.5,3.33,4.33,4.04
+primal,LHL-HHL/HHL,"Breezy Crooner, Hungry",22,3.67,4.5,3.33,4.33,3.96
+primal,LHL-HHL/HLH,"Breezy Crooner, Sugar-High",26,4,4.5,3.33,4.33,4.04
+primal,LHL-HHL/HLL,"Breezy Crooner, Dawn-Ready",26,3.33,4.5,3,4.33,3.79
+primal,LHL-HHL/LHH,"Breezy Crooner, Sun-Warmed",26,3.67,4.5,3.33,4.67,4.04
+primal,LHL-HHL/LHL,"Breezy Crooner, Well-Rested",27,3.67,4.5,3.33,4.67,4.04
+primal,LHL-HHL/LLH,"Breezy Crooner, Barefoot",24,3.67,4.5,3.33,4.33,3.96
+primal,LHL-HHL/LLL,"Breezy Crooner, Nocturnal",25,3.67,4.5,3.33,4.33,3.96
+primal,LHL-HLH/HHH,"Snuggly Crooner, Caffeinated",28,4.33,4.5,3.33,4.33,4.12
+primal,LHL-HLH/HHL,"Snuggly Crooner, Hungry",23,4,4.5,3.33,4.33,4.04
+primal,LHL-HLH/HLH,"Snuggly Crooner, Sugar-High",27,4.33,4.5,3.33,4.33,4.12
+primal,LHL-HLH/HLL,"Snuggly Crooner, Dawn-Ready",27,3.67,4.5,3,4.33,3.88
+primal,LHL-HLH/LHH,"Snuggly Crooner, Sun-Warmed",27,4,4.5,3.33,4.67,4.12
+primal,LHL-HLH/LHL,"Snuggly Crooner, Well-Rested",28,4,4.5,3.33,4.67,4.12
+primal,LHL-HLH/LLH,"Snuggly Crooner, Barefoot",25,4,4.5,3.33,4.33,4.04
+primal,LHL-HLH/LLL,"Snuggly Crooner, Nocturnal",26,4,4.5,3.33,4.33,4.04
+primal,LHL-HLL/HHH,"Moonstruck Crooner, Caffeinated",31,4.33,4.5,3.33,4,4.04
+primal,LHL-HLL/HHL,"Moonstruck Crooner, Hungry",26,4,4.5,3.33,4,3.96
+primal,LHL-HLL/HLH,"Moonstruck Crooner, Sugar-High",30,4.33,4.5,3.33,4,4.04
+primal,LHL-HLL/HLL,"Moonstruck Crooner, Dawn-Ready",30,3.67,4.5,3,4,3.79
+primal,LHL-HLL/LHH,"Moonstruck Crooner, Sun-Warmed",30,4,4.5,3.33,4.33,4.04
+primal,LHL-HLL/LHL,"Moonstruck Crooner, Well-Rested",31,4,4.5,3.33,4.33,4.04
+primal,LHL-HLL/LLH,"Moonstruck Crooner, Barefoot",28,4,4.5,3.33,4,3.96
+primal,LHL-HLL/LLL,"Moonstruck Crooner, Nocturnal",29,4,4.5,3.33,4,3.96
+primal,LHL-LHH/HHH,"Fierce Crooner, Caffeinated",27,4.33,4.5,3.33,4.33,4.12
+primal,LHL-LHH/HHL,"Fierce Crooner, Hungry",22,4,4.5,3.33,4.33,4.04
+primal,LHL-LHH/HLH,"Fierce Crooner, Sugar-High",26,4.33,4.5,3.33,4.33,4.12
+primal,LHL-LHH/HLL,"Fierce Crooner, Dawn-Ready",26,3.67,4.5,3,4.33,3.88
+primal,LHL-LHH/LHH,"Fierce Crooner, Sun-Warmed",26,4,4.5,3.33,4.67,4.12
+primal,LHL-LHH/LHL,"Fierce Crooner, Well-Rested",27,4,4.5,3.33,4.67,4.12
+primal,LHL-LHH/LLH,"Fierce Crooner, Barefoot",24,4,4.5,3.33,4.33,4.04
+primal,LHL-LHH/LLL,"Fierce Crooner, Nocturnal",25,4,4.5,3.33,4.33,4.04
+primal,LHL-LHL/HHH,"Stubborn Crooner, Caffeinated",29,4.33,4.5,3.33,3.67,3.96
+primal,LHL-LHL/HHL,"Stubborn Crooner, Hungry",24,4,4.5,3.33,3.67,3.88
+primal,LHL-LHL/HLH,"Stubborn Crooner, Sugar-High",28,4.33,4.5,3.33,3.67,3.96
+primal,LHL-LHL/HLL,"Stubborn Crooner, Dawn-Ready",28,3.67,4.5,3,3.67,3.71
+primal,LHL-LHL/LHH,"Stubborn Crooner, Sun-Warmed",28,4,4.5,3.33,4,3.96
+primal,LHL-LHL/LHL,"Stubborn Crooner, Well-Rested",29,4,4.5,3.33,4,3.96
+primal,LHL-LHL/LLH,"Stubborn Crooner, Barefoot",26,4,4.5,3.33,3.67,3.88
+primal,LHL-LHL/LLL,"Stubborn Crooner, Nocturnal",27,4,4.5,3.33,3.67,3.88
+primal,LHL-LLH/HHH,"Dry-Witted Crooner, Caffeinated",31,4.33,4.5,3.33,4,4.04
+primal,LHL-LLH/HHL,"Dry-Witted Crooner, Hungry",26,4,4.5,3.33,4,3.96
+primal,LHL-LLH/HLH,"Dry-Witted Crooner, Sugar-High",30,4.33,4.5,3.33,4,4.04
+primal,LHL-LLH/HLL,"Dry-Witted Crooner, Dawn-Ready",30,3.67,4.5,3,4,3.79
+primal,LHL-LLH/LHH,"Dry-Witted Crooner, Sun-Warmed",30,4,4.5,3.33,4.33,4.04
+primal,LHL-LLH/LHL,"Dry-Witted Crooner, Well-Rested",31,4,4.5,3.33,4.33,4.04
+primal,LHL-LLH/LLH,"Dry-Witted Crooner, Barefoot",28,4,4.5,3.33,4,3.96
+primal,LHL-LLH/LLL,"Dry-Witted Crooner, Nocturnal",29,4,4.5,3.33,4,3.96
+primal,LHL-LLL/HHH,"Stoic Crooner, Caffeinated",26,4,4.5,3.33,4,3.96
+primal,LHL-LLL/HHL,"Stoic Crooner, Hungry",21,3.67,4.5,3.33,4,3.88
+primal,LHL-LLL/HLH,"Stoic Crooner, Sugar-High",25,4,4.5,3.33,4,3.96
+primal,LHL-LLL/HLL,"Stoic Crooner, Dawn-Ready",25,3.33,4.5,3,4,3.71
+primal,LHL-LLL/LHH,"Stoic Crooner, Sun-Warmed",25,3.67,4.5,3.33,4.33,3.96
+primal,LHL-LLL/LHL,"Stoic Crooner, Well-Rested",26,3.67,4.5,3.33,4.33,3.96
+primal,LHL-LLL/LLH,"Stoic Crooner, Barefoot",23,3.67,4.5,3.33,4,3.88
+primal,LHL-LLL/LLL,"Stoic Crooner, Nocturnal",24,3.67,4.5,3.33,4,3.88
+primal,LLH-HHH/HHH,"Grinning Stargazer, Caffeinated",31,4.33,4.5,3.33,4.67,4.21
+primal,LLH-HHH/HHL,"Grinning Stargazer, Hungry",26,4,4.5,3.33,4.67,4.12
+primal,LLH-HHH/HLH,"Grinning Stargazer, Sugar-High",30,4.33,4.5,3.33,4.67,4.21
+primal,LLH-HHH/HLL,"Grinning Stargazer, Dawn-Ready",30,3.67,4.5,3,4.67,3.96
+primal,LLH-HHH/LHH,"Grinning Stargazer, Sun-Warmed",30,4,4.5,3.33,5,4.21
+primal,LLH-HHH/LHL,"Grinning Stargazer, Well-Rested",31,4,4.5,3.33,5,4.21
+primal,LLH-HHH/LLH,"Grinning Stargazer, Barefoot",28,4,4.5,3.33,4.67,4.12
+primal,LLH-HHH/LLL,"Grinning Stargazer, Nocturnal",29,4,4.5,3.33,4.67,4.12
+primal,LLH-HHL/HHH,"Breezy Stargazer, Caffeinated",29,4,4.5,3.33,4.67,4.12
+primal,LLH-HHL/HHL,"Breezy Stargazer, Hungry",24,3.67,4.5,3.33,4.67,4.04
+primal,LLH-HHL/HLH,"Breezy Stargazer, Sugar-High",28,4,4.5,3.33,4.67,4.12
+primal,LLH-HHL/HLL,"Breezy Stargazer, Dawn-Ready",28,3.33,4.5,3,4.67,3.88
+primal,LLH-HHL/LHH,"Breezy Stargazer, Sun-Warmed",28,3.67,4.5,3.33,5,4.12
+primal,LLH-HHL/LHL,"Breezy Stargazer, Well-Rested",29,3.67,4.5,3.33,5,4.12
+primal,LLH-HHL/LLH,"Breezy Stargazer, Barefoot",26,3.67,4.5,3.33,4.67,4.04
+primal,LLH-HHL/LLL,"Breezy Stargazer, Nocturnal",27,3.67,4.5,3.33,4.67,4.04
+primal,LLH-HLH/HHH,"Snuggly Stargazer, Caffeinated",30,4.33,4.5,3.33,4.67,4.21
+primal,LLH-HLH/HHL,"Snuggly Stargazer, Hungry",25,4,4.5,3.33,4.67,4.12
+primal,LLH-HLH/HLH,"Snuggly Stargazer, Sugar-High",29,4.33,4.5,3.33,4.67,4.21
+primal,LLH-HLH/HLL,"Snuggly Stargazer, Dawn-Ready",29,3.67,4.5,3,4.67,3.96
+primal,LLH-HLH/LHH,"Snuggly Stargazer, Sun-Warmed",29,4,4.5,3.33,5,4.21
+primal,LLH-HLH/LHL,"Snuggly Stargazer, Well-Rested",30,4,4.5,3.33,5,4.21
+primal,LLH-HLH/LLH,"Snuggly Stargazer, Barefoot",27,4,4.5,3.33,4.67,4.12
+primal,LLH-HLH/LLL,"Snuggly Stargazer, Nocturnal",28,4,4.5,3.33,4.67,4.12
+primal,LLH-HLL/HHH,"Moonstruck Stargazer, Caffeinated",33,4.33,4.5,3.33,4.33,4.12
+primal,LLH-HLL/HHL,"Moonstruck Stargazer, Hungry",28,4,4.5,3.33,4.33,4.04
+primal,LLH-HLL/HLH,"Moonstruck Stargazer, Sugar-High",32,4.33,4.5,3.33,4.33,4.12
+primal,LLH-HLL/HLL,"Moonstruck Stargazer, Dawn-Ready",32,3.67,4.5,3,4.33,3.88
+primal,LLH-HLL/LHH,"Moonstruck Stargazer, Sun-Warmed",32,4,4.5,3.33,4.67,4.12
+primal,LLH-HLL/LHL,"Moonstruck Stargazer, Well-Rested",33,4,4.5,3.33,4.67,4.12
+primal,LLH-HLL/LLH,"Moonstruck Stargazer, Barefoot",30,4,4.5,3.33,4.33,4.04
+primal,LLH-HLL/LLL,"Moonstruck Stargazer, Nocturnal",31,4,4.5,3.33,4.33,4.04
+primal,LLH-LHH/HHH,"Fierce Stargazer, Caffeinated",29,4.33,4.5,3.33,4.67,4.21
+primal,LLH-LHH/HHL,"Fierce Stargazer, Hungry",24,4,4.5,3.33,4.67,4.12
+primal,LLH-LHH/HLH,"Fierce Stargazer, Sugar-High",28,4.33,4.5,3.33,4.67,4.21
+primal,LLH-LHH/HLL,"Fierce Stargazer, Dawn-Ready",28,3.67,4.5,3,4.67,3.96
+primal,LLH-LHH/LHH,"Fierce Stargazer, Sun-Warmed",28,4,4.5,3.33,5,4.21
+primal,LLH-LHH/LHL,"Fierce Stargazer, Well-Rested",29,4,4.5,3.33,5,4.21
+primal,LLH-LHH/LLH,"Fierce Stargazer, Barefoot",26,4,4.5,3.33,4.67,4.12
+primal,LLH-LHH/LLL,"Fierce Stargazer, Nocturnal",27,4,4.5,3.33,4.67,4.12
+primal,LLH-LHL/HHH,"Stubborn Stargazer, Caffeinated",31,4.33,4.5,3.33,4,4.04
+primal,LLH-LHL/HHL,"Stubborn Stargazer, Hungry",26,4,4.5,3.33,4,3.96
+primal,LLH-LHL/HLH,"Stubborn Stargazer, Sugar-High",30,4.33,4.5,3.33,4,4.04
+primal,LLH-LHL/HLL,"Stubborn Stargazer, Dawn-Ready",30,3.67,4.5,3,4,3.79
+primal,LLH-LHL/LHH,"Stubborn Stargazer, Sun-Warmed",30,4,4.5,3.33,4.33,4.04
+primal,LLH-LHL/LHL,"Stubborn Stargazer, Well-Rested",31,4,4.5,3.33,4.33,4.04
+primal,LLH-LHL/LLH,"Stubborn Stargazer, Barefoot",28,4,4.5,3.33,4,3.96
+primal,LLH-LHL/LLL,"Stubborn Stargazer, Nocturnal",29,4,4.5,3.33,4,3.96
+primal,LLH-LLH/HHH,"Dry-Witted Stargazer, Caffeinated",33,4.33,4.5,3.33,4.33,4.12
+primal,LLH-LLH/HHL,"Dry-Witted Stargazer, Hungry",28,4,4.5,3.33,4.33,4.04
+primal,LLH-LLH/HLH,"Dry-Witted Stargazer, Sugar-High",32,4.33,4.5,3.33,4.33,4.12
+primal,LLH-LLH/HLL,"Dry-Witted Stargazer, Dawn-Ready",32,3.67,4.5,3,4.33,3.88
+primal,LLH-LLH/LHH,"Dry-Witted Stargazer, Sun-Warmed",32,4,4.5,3.33,4.67,4.12
+primal,LLH-LLH/LHL,"Dry-Witted Stargazer, Well-Rested",33,4,4.5,3.33,4.67,4.12
+primal,LLH-LLH/LLH,"Dry-Witted Stargazer, Barefoot",30,4,4.5,3.33,4.33,4.04
+primal,LLH-LLH/LLL,"Dry-Witted Stargazer, Nocturnal",31,4,4.5,3.33,4.33,4.04
+primal,LLH-LLL/HHH,"Stoic Stargazer, Caffeinated",28,4,4.5,3.33,4.33,4.04
+primal,LLH-LLL/HHL,"Stoic Stargazer, Hungry",23,3.67,4.5,3.33,4.33,3.96
+primal,LLH-LLL/HLH,"Stoic Stargazer, Sugar-High",27,4,4.5,3.33,4.33,4.04
+primal,LLH-LLL/HLL,"Stoic Stargazer, Dawn-Ready",27,3.33,4.5,3,4.33,3.79
+primal,LLH-LLL/LHH,"Stoic Stargazer, Sun-Warmed",27,3.67,4.5,3.33,4.67,4.04
+primal,LLH-LLL/LHL,"Stoic Stargazer, Well-Rested",28,3.67,4.5,3.33,4.67,4.04
+primal,LLH-LLL/LLH,"Stoic Stargazer, Barefoot",25,3.67,4.5,3.33,4.33,3.96
+primal,LLH-LLL/LLL,"Stoic Stargazer, Nocturnal",26,3.67,4.5,3.33,4.33,3.96
+primal,LLL-HHH/HHH,"Grinning Burrower, Caffeinated",30,4.33,4.5,3.67,4.33,4.21
+primal,LLL-HHH/HHL,"Grinning Burrower, Hungry",25,4,4.5,3.67,4.33,4.12
+primal,LLL-HHH/HLH,"Grinning Burrower, Sugar-High",29,4.33,4.5,3.67,4.33,4.21
+primal,LLL-HHH/HLL,"Grinning Burrower, Dawn-Ready",29,3.67,4.5,3.33,4.33,3.96
+primal,LLL-HHH/LHH,"Grinning Burrower, Sun-Warmed",29,4,4.5,3.67,4.67,4.21
+primal,LLL-HHH/LHL,"Grinning Burrower, Well-Rested",30,4,4.5,3.67,4.67,4.21
+primal,LLL-HHH/LLH,"Grinning Burrower, Barefoot",27,4,4.5,3.67,4.33,4.12
+primal,LLL-HHH/LLL,"Grinning Burrower, Nocturnal",28,4,4.5,3.67,4.33,4.12
+primal,LLL-HHL/HHH,"Breezy Burrower, Caffeinated",28,4,4.5,3.67,4.33,4.12
+primal,LLL-HHL/HHL,"Breezy Burrower, Hungry",23,3.67,4.5,3.67,4.33,4.04
+primal,LLL-HHL/HLH,"Breezy Burrower, Sugar-High",27,4,4.5,3.67,4.33,4.12
+primal,LLL-HHL/HLL,"Breezy Burrower, Dawn-Ready",27,3.33,4.5,3.33,4.33,3.88
+primal,LLL-HHL/LHH,"Breezy Burrower, Sun-Warmed",27,3.67,4.5,3.67,4.67,4.12
+primal,LLL-HHL/LHL,"Breezy Burrower, Well-Rested",28,3.67,4.5,3.67,4.67,4.12
+primal,LLL-HHL/LLH,"Breezy Burrower, Barefoot",25,3.67,4.5,3.67,4.33,4.04
+primal,LLL-HHL/LLL,"Breezy Burrower, Nocturnal",26,3.67,4.5,3.67,4.33,4.04
+primal,LLL-HLH/HHH,"Snuggly Burrower, Caffeinated",29,4.33,4.5,3.67,4.33,4.21
+primal,LLL-HLH/HHL,"Snuggly Burrower, Hungry",24,4,4.5,3.67,4.33,4.12
+primal,LLL-HLH/HLH,"Snuggly Burrower, Sugar-High",28,4.33,4.5,3.67,4.33,4.21
+primal,LLL-HLH/HLL,"Snuggly Burrower, Dawn-Ready",28,3.67,4.5,3.33,4.33,3.96
+primal,LLL-HLH/LHH,"Snuggly Burrower, Sun-Warmed",28,4,4.5,3.67,4.67,4.21
+primal,LLL-HLH/LHL,"Snuggly Burrower, Well-Rested",29,4,4.5,3.67,4.67,4.21
+primal,LLL-HLH/LLH,"Snuggly Burrower, Barefoot",26,4,4.5,3.67,4.33,4.12
+primal,LLL-HLH/LLL,"Snuggly Burrower, Nocturnal",27,4,4.5,3.67,4.33,4.12
+primal,LLL-HLL/HHH,"Moonstruck Burrower, Caffeinated",32,4.33,4.5,3.67,4,4.12
+primal,LLL-HLL/HHL,"Moonstruck Burrower, Hungry",27,4,4.5,3.67,4,4.04
+primal,LLL-HLL/HLH,"Moonstruck Burrower, Sugar-High",31,4.33,4.5,3.67,4,4.12
+primal,LLL-HLL/HLL,"Moonstruck Burrower, Dawn-Ready",31,3.67,4.5,3.33,4,3.88
+primal,LLL-HLL/LHH,"Moonstruck Burrower, Sun-Warmed",31,4,4.5,3.67,4.33,4.12
+primal,LLL-HLL/LHL,"Moonstruck Burrower, Well-Rested",32,4,4.5,3.67,4.33,4.12
+primal,LLL-HLL/LLH,"Moonstruck Burrower, Barefoot",29,4,4.5,3.67,4,4.04
+primal,LLL-HLL/LLL,"Moonstruck Burrower, Nocturnal",30,4,4.5,3.67,4,4.04
+primal,LLL-LHH/HHH,"Fierce Burrower, Caffeinated",28,4.33,4.5,3.67,4.33,4.21
+primal,LLL-LHH/HHL,"Fierce Burrower, Hungry",23,4,4.5,3.67,4.33,4.12
+primal,LLL-LHH/HLH,"Fierce Burrower, Sugar-High",27,4.33,4.5,3.67,4.33,4.21
+primal,LLL-LHH/HLL,"Fierce Burrower, Dawn-Ready",27,3.67,4.5,3.33,4.33,3.96
+primal,LLL-LHH/LHH,"Fierce Burrower, Sun-Warmed",27,4,4.5,3.67,4.67,4.21
+primal,LLL-LHH/LHL,"Fierce Burrower, Well-Rested",28,4,4.5,3.67,4.67,4.21
+primal,LLL-LHH/LLH,"Fierce Burrower, Barefoot",25,4,4.5,3.67,4.33,4.12
+primal,LLL-LHH/LLL,"Fierce Burrower, Nocturnal",26,4,4.5,3.67,4.33,4.12
+primal,LLL-LHL/HHH,"Stubborn Burrower, Caffeinated",30,4.33,4.5,3.67,3.67,4.04
+primal,LLL-LHL/HHL,"Stubborn Burrower, Hungry",25,4,4.5,3.67,3.67,3.96
+primal,LLL-LHL/HLH,"Stubborn Burrower, Sugar-High",29,4.33,4.5,3.67,3.67,4.04
+primal,LLL-LHL/HLL,"Stubborn Burrower, Dawn-Ready",29,3.67,4.5,3.33,3.67,3.79
+primal,LLL-LHL/LHH,"Stubborn Burrower, Sun-Warmed",29,4,4.5,3.67,4,4.04
+primal,LLL-LHL/LHL,"Stubborn Burrower, Well-Rested",30,4,4.5,3.67,4,4.04
+primal,LLL-LHL/LLH,"Stubborn Burrower, Barefoot",27,4,4.5,3.67,3.67,3.96
+primal,LLL-LHL/LLL,"Stubborn Burrower, Nocturnal",28,4,4.5,3.67,3.67,3.96
+primal,LLL-LLH/HHH,"Dry-Witted Burrower, Caffeinated",32,4.33,4.5,3.67,4,4.12
+primal,LLL-LLH/HHL,"Dry-Witted Burrower, Hungry",27,4,4.5,3.67,4,4.04
+primal,LLL-LLH/HLH,"Dry-Witted Burrower, Sugar-High",31,4.33,4.5,3.67,4,4.12
+primal,LLL-LLH/HLL,"Dry-Witted Burrower, Dawn-Ready",31,3.67,4.5,3.33,4,3.88
+primal,LLL-LLH/LHH,"Dry-Witted Burrower, Sun-Warmed",31,4,4.5,3.67,4.33,4.12
+primal,LLL-LLH/LHL,"Dry-Witted Burrower, Well-Rested",32,4,4.5,3.67,4.33,4.12
+primal,LLL-LLH/LLH,"Dry-Witted Burrower, Barefoot",29,4,4.5,3.67,4,4.04
+primal,LLL-LLH/LLL,"Dry-Witted Burrower, Nocturnal",30,4,4.5,3.67,4,4.04
+primal,LLL-LLL/HHH,"Stoic Burrower, Caffeinated",27,4,4.5,3.67,4,4.04
+primal,LLL-LLL/HHL,"Stoic Burrower, Hungry",22,3.67,4.5,3.67,4,3.96
+primal,LLL-LLL/HLH,"Stoic Burrower, Sugar-High",26,4,4.5,3.67,4,4.04
+primal,LLL-LLL/HLL,"Stoic Burrower, Dawn-Ready",26,3.33,4.5,3.33,4,3.79
+primal,LLL-LLL/LHH,"Stoic Burrower, Sun-Warmed",26,3.67,4.5,3.67,4.33,4.04
+primal,LLL-LLL/LHL,"Stoic Burrower, Well-Rested",27,3.67,4.5,3.67,4.33,4.04
+primal,LLL-LLL/LLH,"Stoic Burrower, Barefoot",24,3.67,4.5,3.67,4,3.96
+primal,LLL-LLL/LLL,"Stoic Burrower, Nocturnal",25,3.67,4.5,3.67,4,3.96
+highFantasy,HHH-HHH,Prophesied Dragon-Tamer ★,23,4,4.5,5,4.5,4.5
+highFantasy,HHH-HHL,Paladin of the Court,20,3.5,4.5,4.5,4.5,4.25
+highFantasy,HHH-HLH,Paladin of the Glade,20,4,4.5,5,4.5,4.5
+highFantasy,HHH-HLL,Paladin of the Stars,20,4,4.5,4.5,5,4.5
+highFantasy,HHH-LHH,Paladin of the Vanguard,23,4,4.5,4.5,5,4.5
+highFantasy,HHH-LHL,Paladin of the Anvil,20,4,4.5,4.5,4.5,4.38
+highFantasy,HHH-LLH,Paladin of the Riddles,22,4.5,4.5,4.5,4.5,4.5
+highFantasy,HHH-LLL,Paladin of the Moors,20,4,4.5,5,4.5,4.5
+highFantasy,HHL-HHH,Knight-Errant of the Tavern,27,4,4.5,5,4,4.38
+highFantasy,HHL-HHL,Knight-Errant of the Court,26,3.5,4.5,4.5,4,4.12
+highFantasy,HHL-HLH,Knight-Errant of the Glade,26,4,4.5,5,4,4.38
+highFantasy,HHL-HLL,Knight-Errant of the Stars,26,4,4.5,4.5,4.5,4.38
+highFantasy,HHL-LHH,Knight-Errant of the Vanguard,29,4,4.5,4.5,4.5,4.38
+highFantasy,HHL-LHL,Knight-Errant of the Anvil,26,4,4.5,4.5,4,4.25
+highFantasy,HHL-LLH,Knight-Errant of the Riddles,28,4.5,4.5,4.5,4,4.38
+highFantasy,HHL-LLL,Knight-Errant of the Moors,26,4,4.5,5,4,4.38
+highFantasy,HLH-HHH,Wizard of the Tavern,20,4,4.5,5,4.5,4.5
+highFantasy,HLH-HHL,Wizard of the Court,19,3.5,4.5,4.5,4.5,4.25
+highFantasy,HLH-HLH,Wizard of the Glade,19,4,4.5,5,4.5,4.5
+highFantasy,HLH-HLL,Wizard of the Stars,19,4,4.5,4.5,5,4.5
+highFantasy,HLH-LHH,Wizard of the Vanguard,22,4,4.5,4.5,5,4.5
+highFantasy,HLH-LHL,Wizard of the Anvil,19,4,4.5,4.5,4.5,4.38
+highFantasy,HLH-LLH,Wizard of the Riddles,21,4.5,4.5,4.5,4.5,4.5
+highFantasy,HLH-LLL,Wizard of the Moors,19,4,4.5,5,4.5,4.5
+highFantasy,HLL-HHH,Scribe of the Tavern,20,3.5,4.5,5,4,4.25
+highFantasy,HLL-HHL,Scribe of the Court,19,3,4.5,4.5,4,4.0
+highFantasy,HLL-HLH,Scribe of the Glade,19,3.5,4.5,5,4,4.25
+highFantasy,HLL-HLL,Scribe of the Stars,19,3.5,4.5,4.5,4.5,4.25
+highFantasy,HLL-LHH,Scribe of the Vanguard,22,3.5,4.5,4.5,4.5,4.25
+highFantasy,HLL-LHL,Scribe of the Anvil,19,3.5,4.5,4.5,4,4.12
+highFantasy,HLL-LLH,Scribe of the Riddles,21,4,4.5,4.5,4,4.25
+highFantasy,HLL-LLL,Scribe of the Moors,19,3.5,4.5,5,4,4.25
+highFantasy,LHH-HHH,Bard of the Tavern,18,4,4.5,5,4,4.38
+highFantasy,LHH-HHL,Bard of the Court,17,3.5,4.5,4.5,4,4.12
+highFantasy,LHH-HLH,Bard of the Glade,17,4,4.5,5,4,4.38
+highFantasy,LHH-HLL,Bard of the Stars,17,4,4.5,4.5,4.5,4.38
+highFantasy,LHH-LHH,Bard of the Vanguard,20,4,4.5,4.5,4.5,4.38
+highFantasy,LHH-LHL,Bard of the Anvil,17,4,4.5,4.5,4,4.25
+highFantasy,LHH-LLH,Bard of the Riddles,19,4.5,4.5,4.5,4,4.38
+highFantasy,LHH-LLL,Bard of the Moors,17,4,4.5,5,4,4.38
+highFantasy,LHL-HHH,Innkeeper of the Tavern,23,4,4.5,5,4,4.38
+highFantasy,LHL-HHL,Innkeeper of the Court,22,3.5,4.5,4.5,4,4.12
+highFantasy,LHL-HLH,Innkeeper of the Glade,22,4,4.5,5,4,4.38
+highFantasy,LHL-HLL,Innkeeper of the Stars,22,4,4.5,4.5,4.5,4.38
+highFantasy,LHL-LHH,Innkeeper of the Vanguard,25,4,4.5,4.5,4.5,4.38
+highFantasy,LHL-LHL,Innkeeper of the Anvil,22,4,4.5,4.5,4,4.25
+highFantasy,LHL-LLH,Innkeeper of the Riddles,24,4.5,4.5,4.5,4,4.38
+highFantasy,LHL-LLL,Innkeeper of the Moors,22,4,4.5,5,4,4.38
+highFantasy,LLH-HHH,Druid of the Tavern,19,4,4.5,5,4,4.38
+highFantasy,LLH-HHL,Druid of the Court,18,3.5,4.5,4.5,4,4.12
+highFantasy,LLH-HLH,Druid of the Glade,18,4,4.5,5,4,4.38
+highFantasy,LLH-HLL,Druid of the Stars,18,4,4.5,4.5,4.5,4.38
+highFantasy,LLH-LHH,Druid of the Vanguard,21,4,4.5,4.5,4.5,4.38
+highFantasy,LLH-LHL,Druid of the Anvil,18,4,4.5,4.5,4,4.25
+highFantasy,LLH-LLH,Druid of the Riddles,20,4.5,4.5,4.5,4,4.38
+highFantasy,LLH-LLL,Druid of the Moors,18,4,4.5,5,4,4.38
+highFantasy,LLL-HHH,Truffle-Hunter of the Tavern,28,4.5,4.5,4.5,4,4.38
+highFantasy,LLL-HHL,Truffle-Hunter of the Court,27,4,4.5,4,4,4.12
+highFantasy,LLL-HLH,Truffle-Hunter of the Glade,27,4.5,4.5,4.5,4,4.38
+highFantasy,LLL-HLL,Truffle-Hunter of the Stars,27,4.5,4.5,4,4.5,4.38
+highFantasy,LLL-LHH,Truffle-Hunter of the Vanguard,30,4.5,4.5,4,4.5,4.38
+highFantasy,LLL-LHL,Truffle-Hunter of the Anvil,27,4.5,4.5,4,4,4.25
+highFantasy,LLL-LLH,Truffle-Hunter of the Riddles,29,5,4.5,4,4,4.38
+highFantasy,LLL-LLL,Truffle-Hunter of the Moors,27,4.5,4.5,4.5,4,4.38
+corporate,HHH-HHH/HHH,Employee of Every Month ★,23,3.67,4.5,4.33,4.67,4.29
+corporate,HHH-HHH/HHL,Visionary Founder of KPIs,25,3.67,4.5,4.33,4.67,4.29
+corporate,HHH-HHH/HLH,Visionary Founder of Inboxes,28,3.67,4.5,4,4.67,4.21
+corporate,HHH-HHH/HLL,Visionary Founder of Focus,26,3.33,4.5,4,4.67,4.12
+corporate,HHH-HHH/LHH,Visionary Founder of Pivots,27,4,4.5,4.33,4.67,4.38
+corporate,HHH-HHH/LHL,Visionary Founder of Overtime,29,3.67,4.5,4,4.33,4.12
+corporate,HHH-HHH/LLH,Visionary Founder of Memes,26,4,4.5,3.67,4.67,4.21
+corporate,HHH-HHH/LLL,Visionary Founder of Pings,26,3.67,4.5,4,4.33,4.12
+corporate,HHH-HHL/HHH,Win-Win Founder of Synergy,26,3.67,4.5,4.33,4.33,4.21
+corporate,HHH-HHL/HHL,Win-Win Founder of KPIs,23,3.67,4.5,4.33,4.33,4.21
+corporate,HHH-HHL/HLH,Win-Win Founder of Inboxes,26,3.67,4.5,4,4.33,4.12
+corporate,HHH-HHL/HLL,Win-Win Founder of Focus,24,3.33,4.5,4,4.33,4.04
+corporate,HHH-HHL/LHH,Win-Win Founder of Pivots,25,4,4.5,4.33,4.33,4.29
+corporate,HHH-HHL/LHL,Win-Win Founder of Overtime,27,3.67,4.5,4,4,4.04
+corporate,HHH-HHL/LLH,Win-Win Founder of Memes,24,4,4.5,3.67,4.33,4.12
+corporate,HHH-HHL/LLL,Win-Win Founder of Pings,24,3.67,4.5,4,4,4.04
+corporate,HHH-HLH/HHH,On-Brand Founder of Synergy,27,3.67,4.5,4.67,4.33,4.29
+corporate,HHH-HLH/HHL,On-Brand Founder of KPIs,24,3.67,4.5,4.67,4.33,4.29
+corporate,HHH-HLH/HLH,On-Brand Founder of Inboxes,27,3.67,4.5,4.33,4.33,4.21
+corporate,HHH-HLH/HLL,On-Brand Founder of Focus,25,3.33,4.5,4.33,4.33,4.12
+corporate,HHH-HLH/LHH,On-Brand Founder of Pivots,26,4,4.5,4.67,4.33,4.38
+corporate,HHH-HLH/LHL,On-Brand Founder of Overtime,28,3.67,4.5,4.33,4,4.12
+corporate,HHH-HLH/LLH,On-Brand Founder of Memes,25,4,4.5,4,4.33,4.21
+corporate,HHH-HLH/LLL,On-Brand Founder of Pings,25,3.67,4.5,4.33,4,4.12
+corporate,HHH-HLL/HHH,Documented Founder of Synergy,29,3.33,4.5,4.33,4,4.04
+corporate,HHH-HLL/HHL,Documented Founder of KPIs,26,3.33,4.5,4.33,4,4.04
+corporate,HHH-HLL/HLH,Documented Founder of Inboxes,29,3.33,4.5,4,4,3.96
+corporate,HHH-HLL/HLL,Documented Founder of Focus,27,3,4.5,4,4,3.88
+corporate,HHH-HLL/LHH,Documented Founder of Pivots,28,3.67,4.5,4.33,4,4.12
+corporate,HHH-HLL/LHL,Documented Founder of Overtime,30,3.33,4.5,4,3.67,3.88
+corporate,HHH-HLL/LLH,Documented Founder of Memes,27,3.67,4.5,3.67,4,3.96
+corporate,HHH-HLL/LLL,Documented Founder of Pings,27,3.33,4.5,4,3.67,3.88
+corporate,HHH-LHH/HHH,Disruptive Founder of Synergy,29,3.67,4.5,4.67,4.33,4.29
+corporate,HHH-LHH/HHL,Disruptive Founder of KPIs,26,3.67,4.5,4.67,4.33,4.29
+corporate,HHH-LHH/HLH,Disruptive Founder of Inboxes,29,3.67,4.5,4.33,4.33,4.21
+corporate,HHH-LHH/HLL,Disruptive Founder of Focus,27,3.33,4.5,4.33,4.33,4.12
+corporate,HHH-LHH/LHH,Disruptive Founder of Pivots,28,4,4.5,4.67,4.33,4.38
+corporate,HHH-LHH/LHL,Disruptive Founder of Overtime,30,3.67,4.5,4.33,4,4.12
+corporate,HHH-LHH/LLH,Disruptive Founder of Memes,27,4,4.5,4,4.33,4.21
+corporate,HHH-LHH/LLL,Disruptive Founder of Pings,27,3.67,4.5,4.33,4,4.12
+corporate,HHH-LHL/HHH,Escalating Founder of Synergy,29,3.67,4.5,4.67,4,4.21
+corporate,HHH-LHL/HHL,Escalating Founder of KPIs,26,3.67,4.5,4.67,4,4.21
+corporate,HHH-LHL/HLH,Escalating Founder of Inboxes,29,3.67,4.5,4.33,4,4.12
+corporate,HHH-LHL/HLL,Escalating Founder of Focus,27,3.33,4.5,4.33,4,4.04
+corporate,HHH-LHL/LHH,Escalating Founder of Pivots,28,4,4.5,4.67,4,4.29
+corporate,HHH-LHL/LHL,Escalating Founder of Overtime,30,3.67,4.5,4.33,3.67,4.04
+corporate,HHH-LHL/LLH,Escalating Founder of Memes,27,4,4.5,4,4,4.12
+corporate,HHH-LHL/LLL,Escalating Founder of Pings,27,3.67,4.5,4.33,3.67,4.04
+corporate,HHH-LLH/HHH,Contrarian Founder of Synergy,29,3.67,4.5,4,4.33,4.12
+corporate,HHH-LLH/HHL,Contrarian Founder of KPIs,26,3.67,4.5,4,4.33,4.12
+corporate,HHH-LLH/HLH,Contrarian Founder of Inboxes,29,3.67,4.5,3.67,4.33,4.04
+corporate,HHH-LLH/HLL,Contrarian Founder of Focus,27,3.33,4.5,3.67,4.33,3.96
+corporate,HHH-LLH/LHH,Contrarian Founder of Pivots,28,4,4.5,4,4.33,4.21
+corporate,HHH-LLH/LHL,Contrarian Founder of Overtime,30,3.67,4.5,3.67,4,3.96
+corporate,HHH-LLH/LLH,Contrarian Founder of Memes,27,4,4.5,3.33,4.33,4.04
+corporate,HHH-LLH/LLL,Contrarian Founder of Pings,27,3.67,4.5,3.67,4,3.96
+corporate,HHH-LLL/HHH,Async Founder of Synergy,24,3.33,3.0,4.33,4,3.67
+corporate,HHH-LLL/HHL,Async Founder of KPIs,21,3.33,3.0,4.33,4,3.67
+corporate,HHH-LLL/HLH,Async Founder of Inboxes,24,3.33,3.0,4,4,3.58
+corporate,HHH-LLL/HLL,Async Founder of Focus,22,3,3.0,4,4,3.5
+corporate,HHH-LLL/LHH,Async Founder of Pivots,23,3.67,3.0,4.33,4,3.75
+corporate,HHH-LLL/LHL,Async Founder of Overtime,25,3.33,3.0,4,3.67,3.5
+corporate,HHH-LLL/LLH,Async Founder of Memes,22,3.67,3.0,3.67,4,3.58
+corporate,HHH-LLL/LLL,Async Founder of Pings,22,3.33,3.0,4,3.67,3.5
+corporate,HHL-HHH/HHH,Visionary Scheduler of Synergy,30,4,4.5,4.33,4.33,4.29
+corporate,HHL-HHH/HHL,Visionary Scheduler of KPIs,27,4,4.5,4.33,4.33,4.29
+corporate,HHL-HHH/HLH,Visionary Scheduler of Inboxes,30,4,4.5,4,4.33,4.21
+corporate,HHL-HHH/HLL,Visionary Scheduler of Focus,28,3.67,4.5,4,4.33,4.12
+corporate,HHL-HHH/LHH,Visionary Scheduler of Pivots,29,4.33,4.5,4.33,4.33,4.37
+corporate,HHL-HHH/LHL,Visionary Scheduler of Overtime,31,4,4.5,4,4,4.12
+corporate,HHL-HHH/LLH,Visionary Scheduler of Memes,28,4.33,4.5,3.67,4.33,4.21
+corporate,HHL-HHH/LLL,Visionary Scheduler of Pings,28,4,4.5,4,4,4.12
+corporate,HHL-HHL/HHH,Win-Win Scheduler of Synergy,28,4,4.5,4.33,4,4.21
+corporate,HHL-HHL/HHL,Win-Win Scheduler of KPIs,25,4,4.5,4.33,4,4.21
+corporate,HHL-HHL/HLH,Win-Win Scheduler of Inboxes,28,4,4.5,4,4,4.12
+corporate,HHL-HHL/HLL,Win-Win Scheduler of Focus,26,3.67,4.5,4,4,4.04
+corporate,HHL-HHL/LHH,Win-Win Scheduler of Pivots,27,4.33,4.5,4.33,4,4.29
+corporate,HHL-HHL/LHL,Win-Win Scheduler of Overtime,29,4,4.5,4,3.67,4.04
+corporate,HHL-HHL/LLH,Win-Win Scheduler of Memes,26,4.33,4.5,3.67,4,4.12
+corporate,HHL-HHL/LLL,Win-Win Scheduler of Pings,26,4,4.5,4,3.67,4.04
+corporate,HHL-HLH/HHH,On-Brand Scheduler of Synergy,29,4,4.5,4.67,4,4.29
+corporate,HHL-HLH/HHL,On-Brand Scheduler of KPIs,26,4,4.5,4.67,4,4.29
+corporate,HHL-HLH/HLH,On-Brand Scheduler of Inboxes,29,4,4.5,4.33,4,4.21
+corporate,HHL-HLH/HLL,On-Brand Scheduler of Focus,27,3.67,4.5,4.33,4,4.12
+corporate,HHL-HLH/LHH,On-Brand Scheduler of Pivots,28,4.33,4.5,4.67,4,4.38
+corporate,HHL-HLH/LHL,On-Brand Scheduler of Overtime,30,4,4.5,4.33,3.67,4.12
+corporate,HHL-HLH/LLH,On-Brand Scheduler of Memes,27,4.33,4.5,4,4,4.21
+corporate,HHL-HLH/LLL,On-Brand Scheduler of Pings,27,4,4.5,4.33,3.67,4.12
+corporate,HHL-HLL/HHH,Documented Scheduler of Synergy,31,3.67,4.5,4.33,3.67,4.04
+corporate,HHL-HLL/HHL,Documented Scheduler of KPIs,28,3.67,4.5,4.33,3.67,4.04
+corporate,HHL-HLL/HLH,Documented Scheduler of Inboxes,31,3.67,4.5,4,3.67,3.96
+corporate,HHL-HLL/HLL,Documented Scheduler of Focus,29,3.33,4.5,4,3.67,3.88
+corporate,HHL-HLL/LHH,Documented Scheduler of Pivots,30,4,4.5,4.33,3.67,4.12
+corporate,HHL-HLL/LHL,Documented Scheduler of Overtime,32,3.67,4.5,4,3.33,3.88
+corporate,HHL-HLL/LLH,Documented Scheduler of Memes,29,4,4.5,3.67,3.67,3.96
+corporate,HHL-HLL/LLL,Documented Scheduler of Pings,29,3.67,4.5,4,3.33,3.88
+corporate,HHL-LHH/HHH,Disruptive Scheduler of Synergy,31,4,4.5,4.67,4,4.29
+corporate,HHL-LHH/HHL,Disruptive Scheduler of KPIs,28,4,4.5,4.67,4,4.29
+corporate,HHL-LHH/HLH,Disruptive Scheduler of Inboxes,31,4,4.5,4.33,4,4.21
+corporate,HHL-LHH/HLL,Disruptive Scheduler of Focus,29,3.67,4.5,4.33,4,4.12
+corporate,HHL-LHH/LHH,Disruptive Scheduler of Pivots,30,4.33,4.5,4.67,4,4.38
+corporate,HHL-LHH/LHL,Disruptive Scheduler of Overtime,32,4,4.5,4.33,3.67,4.12
+corporate,HHL-LHH/LLH,Disruptive Scheduler of Memes,29,4.33,4.5,4,4,4.21
+corporate,HHL-LHH/LLL,Disruptive Scheduler of Pings,29,4,4.5,4.33,3.67,4.12
+corporate,HHL-LHL/HHH,Escalating Scheduler of Synergy,31,4,4.5,4.67,3.67,4.21
+corporate,HHL-LHL/HHL,Escalating Scheduler of KPIs,28,4,4.5,4.67,3.67,4.21
+corporate,HHL-LHL/HLH,Escalating Scheduler of Inboxes,31,4,4.5,4.33,3.67,4.12
+corporate,HHL-LHL/HLL,Escalating Scheduler of Focus,29,3.67,4.5,4.33,3.67,4.04
+corporate,HHL-LHL/LHH,Escalating Scheduler of Pivots,30,4.33,4.5,4.67,3.67,4.29
+corporate,HHL-LHL/LHL,Escalating Scheduler of Overtime,32,4,4.5,4.33,3.33,4.04
+corporate,HHL-LHL/LLH,Escalating Scheduler of Memes,29,4.33,4.5,4,3.67,4.12
+corporate,HHL-LHL/LLL,Escalating Scheduler of Pings,29,4,4.5,4.33,3.33,4.04
+corporate,HHL-LLH/HHH,Contrarian Scheduler of Synergy,31,4,4.5,4,4,4.12
+corporate,HHL-LLH/HHL,Contrarian Scheduler of KPIs,28,4,4.5,4,4,4.12
+corporate,HHL-LLH/HLH,Contrarian Scheduler of Inboxes,31,4,4.5,3.67,4,4.04
+corporate,HHL-LLH/HLL,Contrarian Scheduler of Focus,29,3.67,4.5,3.67,4,3.96
+corporate,HHL-LLH/LHH,Contrarian Scheduler of Pivots,30,4.33,4.5,4,4,4.21
+corporate,HHL-LLH/LHL,Contrarian Scheduler of Overtime,32,4,4.5,3.67,3.67,3.96
+corporate,HHL-LLH/LLH,Contrarian Scheduler of Memes,29,4.33,4.5,3.33,4,4.04
+corporate,HHL-LLH/LLL,Contrarian Scheduler of Pings,29,4,4.5,3.67,3.67,3.96
+corporate,HHL-LLL/HHH,Async Scheduler of Synergy,26,3.67,4.5,4.33,3.67,4.04
+corporate,HHL-LLL/HHL,Async Scheduler of KPIs,23,3.67,4.5,4.33,3.67,4.04
+corporate,HHL-LLL/HLH,Async Scheduler of Inboxes,26,3.67,4.5,4,3.67,3.96
+corporate,HHL-LLL/HLL,Async Scheduler of Focus,24,3.33,4.5,4,3.67,3.88
+corporate,HHL-LLL/LHH,Async Scheduler of Pivots,25,4,4.5,4.33,3.67,4.12
+corporate,HHL-LLL/LHL,Async Scheduler of Overtime,27,3.67,4.5,4,3.33,3.88
+corporate,HHL-LLL/LLH,Async Scheduler of Memes,24,4,4.5,3.67,3.67,3.96
+corporate,HHL-LLL/LLL,Async Scheduler of Pings,24,3.67,4.5,4,3.33,3.88
+corporate,HLH-HHH/HHH,Visionary Strategist of Synergy,31,3.67,4.5,4.33,4.33,4.21
+corporate,HLH-HHH/HHL,Visionary Strategist of KPIs,28,3.67,4.5,4.33,4.33,4.21
+corporate,HLH-HHH/HLH,Visionary Strategist of Inboxes,31,3.67,4.5,4,4.33,4.12
+corporate,HLH-HHH/HLL,Visionary Strategist of Focus,29,3.33,4.5,4,4.33,4.04
+corporate,HLH-HHH/LHH,Visionary Strategist of Pivots,30,4,4.5,4.33,4.33,4.29
+corporate,HLH-HHH/LHL,Visionary Strategist of Overtime,32,3.67,4.5,4,4,4.04
+corporate,HLH-HHH/LLH,Visionary Strategist of Memes,29,4,4.5,3.67,4.33,4.12
+corporate,HLH-HHH/LLL,Visionary Strategist of Pings,29,3.67,4.5,4,4,4.04
+corporate,HLH-HHL/HHH,Win-Win Strategist of Synergy,29,3.67,4.5,4.33,4,4.12
+corporate,HLH-HHL/HHL,Win-Win Strategist of KPIs,26,3.67,4.5,4.33,4,4.12
+corporate,HLH-HHL/HLH,Win-Win Strategist of Inboxes,29,3.67,4.5,4,4,4.04
+corporate,HLH-HHL/HLL,Win-Win Strategist of Focus,27,3.33,4.5,4,4,3.96
+corporate,HLH-HHL/LHH,Win-Win Strategist of Pivots,28,4,4.5,4.33,4,4.21
+corporate,HLH-HHL/LHL,Win-Win Strategist of Overtime,30,3.67,4.5,4,3.67,3.96
+corporate,HLH-HHL/LLH,Win-Win Strategist of Memes,27,4,4.5,3.67,4,4.04
+corporate,HLH-HHL/LLL,Win-Win Strategist of Pings,27,3.67,4.5,4,3.67,3.96
+corporate,HLH-HLH/HHH,On-Brand Strategist of Synergy,30,3.67,4.5,4.67,4,4.21
+corporate,HLH-HLH/HHL,On-Brand Strategist of KPIs,27,3.67,4.5,4.67,4,4.21
+corporate,HLH-HLH/HLH,On-Brand Strategist of Inboxes,30,3.67,4.5,4.33,4,4.12
+corporate,HLH-HLH/HLL,On-Brand Strategist of Focus,28,3.33,4.5,4.33,4,4.04
+corporate,HLH-HLH/LHH,On-Brand Strategist of Pivots,29,4,4.5,4.67,4,4.29
+corporate,HLH-HLH/LHL,On-Brand Strategist of Overtime,31,3.67,4.5,4.33,3.67,4.04
+corporate,HLH-HLH/LLH,On-Brand Strategist of Memes,28,4,4.5,4,4,4.12
+corporate,HLH-HLH/LLL,On-Brand Strategist of Pings,28,3.67,4.5,4.33,3.67,4.04
+corporate,HLH-HLL/HHH,Documented Strategist of Synergy,32,3.33,4.5,4.33,3.67,3.96
+corporate,HLH-HLL/HHL,Documented Strategist of KPIs,29,3.33,4.5,4.33,3.67,3.96
+corporate,HLH-HLL/HLH,Documented Strategist of Inboxes,32,3.33,4.5,4,3.67,3.88
+corporate,HLH-HLL/HLL,Documented Strategist of Focus,30,3,4.5,4,3.67,3.79
+corporate,HLH-HLL/LHH,Documented Strategist of Pivots,31,3.67,4.5,4.33,3.67,4.04
+corporate,HLH-HLL/LHL,Documented Strategist of Overtime,33,3.33,4.5,4,3.33,3.79
+corporate,HLH-HLL/LLH,Documented Strategist of Memes,30,3.67,4.5,3.67,3.67,3.87
+corporate,HLH-HLL/LLL,Documented Strategist of Pings,30,3.33,4.5,4,3.33,3.79
+corporate,HLH-LHH/HHH,Disruptive Strategist of Synergy,32,3.67,4.5,4.67,4,4.21
+corporate,HLH-LHH/HHL,Disruptive Strategist of KPIs,29,3.67,4.5,4.67,4,4.21
+corporate,HLH-LHH/HLH,Disruptive Strategist of Inboxes,32,3.67,4.5,4.33,4,4.12
+corporate,HLH-LHH/HLL,Disruptive Strategist of Focus,30,3.33,4.5,4.33,4,4.04
+corporate,HLH-LHH/LHH,Disruptive Strategist of Pivots,31,4,4.5,4.67,4,4.29
+corporate,HLH-LHH/LHL,Disruptive Strategist of Overtime,33,3.67,4.5,4.33,3.67,4.04
+corporate,HLH-LHH/LLH,Disruptive Strategist of Memes,30,4,4.5,4,4,4.12
+corporate,HLH-LHH/LLL,Disruptive Strategist of Pings,30,3.67,4.5,4.33,3.67,4.04
+corporate,HLH-LHL/HHH,Escalating Strategist of Synergy,32,3.67,4.5,4.67,3.67,4.12
+corporate,HLH-LHL/HHL,Escalating Strategist of KPIs,29,3.67,4.5,4.67,3.67,4.12
+corporate,HLH-LHL/HLH,Escalating Strategist of Inboxes,32,3.67,4.5,4.33,3.67,4.04
+corporate,HLH-LHL/HLL,Escalating Strategist of Focus,30,3.33,4.5,4.33,3.67,3.96
+corporate,HLH-LHL/LHH,Escalating Strategist of Pivots,31,4,4.5,4.67,3.67,4.21
+corporate,HLH-LHL/LHL,Escalating Strategist of Overtime,33,3.67,4.5,4.33,3.33,3.96
+corporate,HLH-LHL/LLH,Escalating Strategist of Memes,30,4,4.5,4,3.67,4.04
+corporate,HLH-LHL/LLL,Escalating Strategist of Pings,30,3.67,4.5,4.33,3.33,3.96
+corporate,HLH-LLH/HHH,Contrarian Strategist of Synergy,32,3.67,4.5,4,4,4.04
+corporate,HLH-LLH/HHL,Contrarian Strategist of KPIs,29,3.67,4.5,4,4,4.04
+corporate,HLH-LLH/HLH,Contrarian Strategist of Inboxes,32,3.67,4.5,3.67,4,3.96
+corporate,HLH-LLH/HLL,Contrarian Strategist of Focus,30,3.33,4.5,3.67,4,3.88
+corporate,HLH-LLH/LHH,Contrarian Strategist of Pivots,31,4,4.5,4,4,4.12
+corporate,HLH-LLH/LHL,Contrarian Strategist of Overtime,33,3.67,4.5,3.67,3.67,3.87
+corporate,HLH-LLH/LLH,Contrarian Strategist of Memes,30,4,4.5,3.33,4,3.96
+corporate,HLH-LLH/LLL,Contrarian Strategist of Pings,30,3.67,4.5,3.67,3.67,3.87
+corporate,HLH-LLL/HHH,Async Strategist of Synergy,27,3.33,4.5,4.33,3.67,3.96
+corporate,HLH-LLL/HHL,Async Strategist of KPIs,24,3.33,4.5,4.33,3.67,3.96
+corporate,HLH-LLL/HLH,Async Strategist of Inboxes,27,3.33,4.5,4,3.67,3.88
+corporate,HLH-LLL/HLL,Async Strategist of Focus,25,3,4.5,4,3.67,3.79
+corporate,HLH-LLL/LHH,Async Strategist of Pivots,26,3.67,4.5,4.33,3.67,4.04
+corporate,HLH-LLL/LHL,Async Strategist of Overtime,28,3.33,4.5,4,3.33,3.79
+corporate,HLH-LLL/LLH,Async Strategist of Memes,25,3.67,4.5,3.67,3.67,3.87
+corporate,HLH-LLL/LLL,Async Strategist of Pings,25,3.33,4.5,4,3.33,3.79
+corporate,HLL-HHH/HHH,Visionary Quant of Synergy,26,4,4.5,4.33,4.33,4.29
+corporate,HLL-HHH/HHL,Visionary Quant of KPIs,23,4,4.5,4.33,4.33,4.29
+corporate,HLL-HHH/HLH,Visionary Quant of Inboxes,26,4,4.5,4,4.33,4.21
+corporate,HLL-HHH/HLL,Visionary Quant of Focus,24,3.67,4.5,4,4.33,4.12
+corporate,HLL-HHH/LHH,Visionary Quant of Pivots,25,4.33,4.5,4.33,4.33,4.37
+corporate,HLL-HHH/LHL,Visionary Quant of Overtime,27,4,4.5,4,4,4.12
+corporate,HLL-HHH/LLH,Visionary Quant of Memes,24,4.33,4.5,3.67,4.33,4.21
+corporate,HLL-HHH/LLL,Visionary Quant of Pings,24,4,4.5,4,4,4.12
+corporate,HLL-HHL/HHH,Win-Win Quant of Synergy,24,4,4.5,4.33,4,4.21
+corporate,HLL-HHL/HHL,Win-Win Quant of KPIs,21,4,4.5,4.33,4,4.21
+corporate,HLL-HHL/HLH,Win-Win Quant of Inboxes,24,4,4.5,4,4,4.12
+corporate,HLL-HHL/HLL,Win-Win Quant of Focus,22,3.67,4.5,4,4,4.04
+corporate,HLL-HHL/LHH,Win-Win Quant of Pivots,23,4.33,4.5,4.33,4,4.29
+corporate,HLL-HHL/LHL,Win-Win Quant of Overtime,25,4,4.5,4,3.67,4.04
+corporate,HLL-HHL/LLH,Win-Win Quant of Memes,22,4.33,4.5,3.67,4,4.12
+corporate,HLL-HHL/LLL,Win-Win Quant of Pings,22,4,4.5,4,3.67,4.04
+corporate,HLL-HLH/HHH,On-Brand Quant of Synergy,25,4,4.5,4.67,4,4.29
+corporate,HLL-HLH/HHL,On-Brand Quant of KPIs,22,4,4.5,4.67,4,4.29
+corporate,HLL-HLH/HLH,On-Brand Quant of Inboxes,25,4,4.5,4.33,4,4.21
+corporate,HLL-HLH/HLL,On-Brand Quant of Focus,23,3.67,4.5,4.33,4,4.12
+corporate,HLL-HLH/LHH,On-Brand Quant of Pivots,24,4.33,4.5,4.67,4,4.38
+corporate,HLL-HLH/LHL,On-Brand Quant of Overtime,26,4,4.5,4.33,3.67,4.12
+corporate,HLL-HLH/LLH,On-Brand Quant of Memes,23,4.33,4.5,4,4,4.21
+corporate,HLL-HLH/LLL,On-Brand Quant of Pings,23,4,4.5,4.33,3.67,4.12
+corporate,HLL-HLL/HHH,Documented Quant of Synergy,27,3.67,4.5,4.33,3.67,4.04
+corporate,HLL-HLL/HHL,Documented Quant of KPIs,24,3.67,4.5,4.33,3.67,4.04
+corporate,HLL-HLL/HLH,Documented Quant of Inboxes,27,3.67,4.5,4,3.67,3.96
+corporate,HLL-HLL/HLL,Documented Quant of Focus,25,3.33,4.5,4,3.67,3.88
+corporate,HLL-HLL/LHH,Documented Quant of Pivots,26,4,4.5,4.33,3.67,4.12
+corporate,HLL-HLL/LHL,Documented Quant of Overtime,28,3.67,4.5,4,3.33,3.88
+corporate,HLL-HLL/LLH,Documented Quant of Memes,25,4,4.5,3.67,3.67,3.96
+corporate,HLL-HLL/LLL,Documented Quant of Pings,25,3.67,4.5,4,3.33,3.88
+corporate,HLL-LHH/HHH,Disruptive Quant of Synergy,27,4,4.5,4.67,4,4.29
+corporate,HLL-LHH/HHL,Disruptive Quant of KPIs,24,4,4.5,4.67,4,4.29
+corporate,HLL-LHH/HLH,Disruptive Quant of Inboxes,27,4,4.5,4.33,4,4.21
+corporate,HLL-LHH/HLL,Disruptive Quant of Focus,25,3.67,4.5,4.33,4,4.12
+corporate,HLL-LHH/LHH,Disruptive Quant of Pivots,26,4.33,4.5,4.67,4,4.38
+corporate,HLL-LHH/LHL,Disruptive Quant of Overtime,28,4,4.5,4.33,3.67,4.12
+corporate,HLL-LHH/LLH,Disruptive Quant of Memes,25,4.33,4.5,4,4,4.21
+corporate,HLL-LHH/LLL,Disruptive Quant of Pings,25,4,4.5,4.33,3.67,4.12
+corporate,HLL-LHL/HHH,Escalating Quant of Synergy,27,4,4.5,4.67,3.67,4.21
+corporate,HLL-LHL/HHL,Escalating Quant of KPIs,24,4,4.5,4.67,3.67,4.21
+corporate,HLL-LHL/HLH,Escalating Quant of Inboxes,27,4,4.5,4.33,3.67,4.12
+corporate,HLL-LHL/HLL,Escalating Quant of Focus,25,3.67,4.5,4.33,3.67,4.04
+corporate,HLL-LHL/LHH,Escalating Quant of Pivots,26,4.33,4.5,4.67,3.67,4.29
+corporate,HLL-LHL/LHL,Escalating Quant of Overtime,28,4,4.5,4.33,3.33,4.04
+corporate,HLL-LHL/LLH,Escalating Quant of Memes,25,4.33,4.5,4,3.67,4.12
+corporate,HLL-LHL/LLL,Escalating Quant of Pings,25,4,4.5,4.33,3.33,4.04
+corporate,HLL-LLH/HHH,Contrarian Quant of Synergy,27,4,4.5,4,4,4.12
+corporate,HLL-LLH/HHL,Contrarian Quant of KPIs,24,4,4.5,4,4,4.12
+corporate,HLL-LLH/HLH,Contrarian Quant of Inboxes,27,4,4.5,3.67,4,4.04
+corporate,HLL-LLH/HLL,Contrarian Quant of Focus,25,3.67,4.5,3.67,4,3.96
+corporate,HLL-LLH/LHH,Contrarian Quant of Pivots,26,4.33,4.5,4,4,4.21
+corporate,HLL-LLH/LHL,Contrarian Quant of Overtime,28,4,4.5,3.67,3.67,3.96
+corporate,HLL-LLH/LLH,Contrarian Quant of Memes,25,4.33,4.5,3.33,4,4.04
+corporate,HLL-LLH/LLL,Contrarian Quant of Pings,25,4,4.5,3.67,3.67,3.96
+corporate,HLL-LLL/HHH,Async Quant of Synergy,22,3.67,4.5,4.33,3.67,4.04
+corporate,HLL-LLL/HHL,Async Quant of KPIs,19,3.67,4.5,4.33,3.67,4.04
+corporate,HLL-LLL/HLH,Async Quant of Inboxes,22,3.67,4.5,4,3.67,3.96
+corporate,HLL-LLL/HLL,Async Quant of Focus,20,3.33,4.5,4,3.67,3.88
+corporate,HLL-LLL/LHH,Async Quant of Pivots,21,4,4.5,4.33,3.67,4.12
+corporate,HLL-LLL/LHL,Async Quant of Overtime,23,3.67,4.5,4,3.33,3.88
+corporate,HLL-LLL/LLH,Async Quant of Memes,20,4,4.5,3.67,3.67,3.96
+corporate,HLL-LLL/LLL,Async Quant of Pings,20,3.67,4.5,4,3.33,3.88
+corporate,LHH-HHH/HHH,Visionary Creative of Synergy,29,3.67,4.5,4.33,4.33,4.21
+corporate,LHH-HHH/HHL,Visionary Creative of KPIs,26,3.67,4.5,4.33,4.33,4.21
+corporate,LHH-HHH/HLH,Visionary Creative of Inboxes,29,3.67,4.5,4,4.33,4.12
+corporate,LHH-HHH/HLL,Visionary Creative of Focus,27,3.33,4.5,4,4.33,4.04
+corporate,LHH-HHH/LHH,Visionary Creative of Pivots,28,4,4.5,4.33,4.33,4.29
+corporate,LHH-HHH/LHL,Visionary Creative of Overtime,30,3.67,4.5,4,4,4.04
+corporate,LHH-HHH/LLH,Visionary Creative of Memes,27,4,4.5,3.67,4.33,4.12
+corporate,LHH-HHH/LLL,Visionary Creative of Pings,27,3.67,4.5,4,4,4.04
+corporate,LHH-HHL/HHH,Win-Win Creative of Synergy,27,3.67,4.5,4.33,4,4.12
+corporate,LHH-HHL/HHL,Win-Win Creative of KPIs,24,3.67,4.5,4.33,4,4.12
+corporate,LHH-HHL/HLH,Win-Win Creative of Inboxes,27,3.67,4.5,4,4,4.04
+corporate,LHH-HHL/HLL,Win-Win Creative of Focus,25,3.33,4.5,4,4,3.96
+corporate,LHH-HHL/LHH,Win-Win Creative of Pivots,26,4,4.5,4.33,4,4.21
+corporate,LHH-HHL/LHL,Win-Win Creative of Overtime,28,3.67,4.5,4,3.67,3.96
+corporate,LHH-HHL/LLH,Win-Win Creative of Memes,25,4,4.5,3.67,4,4.04
+corporate,LHH-HHL/LLL,Win-Win Creative of Pings,25,3.67,4.5,4,3.67,3.96
+corporate,LHH-HLH/HHH,On-Brand Creative of Synergy,28,3.67,4.5,4.67,4,4.21
+corporate,LHH-HLH/HHL,On-Brand Creative of KPIs,25,3.67,4.5,4.67,4,4.21
+corporate,LHH-HLH/HLH,On-Brand Creative of Inboxes,28,3.67,4.5,4.33,4,4.12
+corporate,LHH-HLH/HLL,On-Brand Creative of Focus,26,3.33,4.5,4.33,4,4.04
+corporate,LHH-HLH/LHH,On-Brand Creative of Pivots,27,4,4.5,4.67,4,4.29
+corporate,LHH-HLH/LHL,On-Brand Creative of Overtime,29,3.67,4.5,4.33,3.67,4.04
+corporate,LHH-HLH/LLH,On-Brand Creative of Memes,26,4,4.5,4,4,4.12
+corporate,LHH-HLH/LLL,On-Brand Creative of Pings,26,3.67,4.5,4.33,3.67,4.04
+corporate,LHH-HLL/HHH,Documented Creative of Synergy,30,3.33,4.5,4.33,3.67,3.96
+corporate,LHH-HLL/HHL,Documented Creative of KPIs,27,3.33,4.5,4.33,3.67,3.96
+corporate,LHH-HLL/HLH,Documented Creative of Inboxes,30,3.33,4.5,4,3.67,3.88
+corporate,LHH-HLL/HLL,Documented Creative of Focus,28,3,4.5,4,3.67,3.79
+corporate,LHH-HLL/LHH,Documented Creative of Pivots,29,3.67,4.5,4.33,3.67,4.04
+corporate,LHH-HLL/LHL,Documented Creative of Overtime,31,3.33,4.5,4,3.33,3.79
+corporate,LHH-HLL/LLH,Documented Creative of Memes,28,3.67,4.5,3.67,3.67,3.87
+corporate,LHH-HLL/LLL,Documented Creative of Pings,28,3.33,4.5,4,3.33,3.79
+corporate,LHH-LHH/HHH,Disruptive Creative of Synergy,30,3.67,4.5,4.67,4,4.21
+corporate,LHH-LHH/HHL,Disruptive Creative of KPIs,27,3.67,4.5,4.67,4,4.21
+corporate,LHH-LHH/HLH,Disruptive Creative of Inboxes,30,3.67,4.5,4.33,4,4.12
+corporate,LHH-LHH/HLL,Disruptive Creative of Focus,28,3.33,4.5,4.33,4,4.04
+corporate,LHH-LHH/LHH,Disruptive Creative of Pivots,29,4,4.5,4.67,4,4.29
+corporate,LHH-LHH/LHL,Disruptive Creative of Overtime,31,3.67,4.5,4.33,3.67,4.04
+corporate,LHH-LHH/LLH,Disruptive Creative of Memes,28,4,4.5,4,4,4.12
+corporate,LHH-LHH/LLL,Disruptive Creative of Pings,28,3.67,4.5,4.33,3.67,4.04
+corporate,LHH-LHL/HHH,Escalating Creative of Synergy,30,3.67,4.5,4.67,3.67,4.12
+corporate,LHH-LHL/HHL,Escalating Creative of KPIs,27,3.67,4.5,4.67,3.67,4.12
+corporate,LHH-LHL/HLH,Escalating Creative of Inboxes,30,3.67,4.5,4.33,3.67,4.04
+corporate,LHH-LHL/HLL,Escalating Creative of Focus,28,3.33,4.5,4.33,3.67,3.96
+corporate,LHH-LHL/LHH,Escalating Creative of Pivots,29,4,4.5,4.67,3.67,4.21
+corporate,LHH-LHL/LHL,Escalating Creative of Overtime,31,3.67,4.5,4.33,3.33,3.96
+corporate,LHH-LHL/LLH,Escalating Creative of Memes,28,4,4.5,4,3.67,4.04
+corporate,LHH-LHL/LLL,Escalating Creative of Pings,28,3.67,4.5,4.33,3.33,3.96
+corporate,LHH-LLH/HHH,Contrarian Creative of Synergy,30,3.67,4.5,4,4,4.04
+corporate,LHH-LLH/HHL,Contrarian Creative of KPIs,27,3.67,4.5,4,4,4.04
+corporate,LHH-LLH/HLH,Contrarian Creative of Inboxes,30,3.67,4.5,3.67,4,3.96
+corporate,LHH-LLH/HLL,Contrarian Creative of Focus,28,3.33,4.5,3.67,4,3.88
+corporate,LHH-LLH/LHH,Contrarian Creative of Pivots,29,4,4.5,4,4,4.12
+corporate,LHH-LLH/LHL,Contrarian Creative of Overtime,31,3.67,4.5,3.67,3.67,3.87
+corporate,LHH-LLH/LLH,Contrarian Creative of Memes,28,4,4.5,3.33,4,3.96
+corporate,LHH-LLH/LLL,Contrarian Creative of Pings,28,3.67,4.5,3.67,3.67,3.87
+corporate,LHH-LLL/HHH,Async Creative of Synergy,25,3.33,4.5,4.33,3.67,3.96
+corporate,LHH-LLL/HHL,Async Creative of KPIs,22,3.33,4.5,4.33,3.67,3.96
+corporate,LHH-LLL/HLH,Async Creative of Inboxes,25,3.33,4.5,4,3.67,3.88
+corporate,LHH-LLL/HLL,Async Creative of Focus,23,3,4.5,4,3.67,3.79
+corporate,LHH-LLL/LHH,Async Creative of Pivots,24,3.67,4.5,4.33,3.67,4.04
+corporate,LHH-LLL/LHL,Async Creative of Overtime,26,3.33,4.5,4,3.33,3.79
+corporate,LHH-LLL/LLH,Async Creative of Memes,23,3.67,4.5,3.67,3.67,3.87
+corporate,LHH-LLL/LLL,Async Creative of Pings,23,3.33,4.5,4,3.33,3.79
+corporate,LHL-HHH/HHH,Visionary Schmoozer of Synergy,30,4,4.5,4,4,4.12
+corporate,LHL-HHH/HHL,Visionary Schmoozer of KPIs,27,4,4.5,4,4,4.12
+corporate,LHL-HHH/HLH,Visionary Schmoozer of Inboxes,30,4,4.5,3.67,4,4.04
+corporate,LHL-HHH/HLL,Visionary Schmoozer of Focus,28,3.67,4.5,3.67,4,3.96
+corporate,LHL-HHH/LHH,Visionary Schmoozer of Pivots,29,4.33,4.5,4,4,4.21
+corporate,LHL-HHH/LHL,Visionary Schmoozer of Overtime,31,4,4.5,3.67,3.67,3.96
+corporate,LHL-HHH/LLH,Visionary Schmoozer of Memes,28,4.33,4.5,3.33,4,4.04
+corporate,LHL-HHH/LLL,Visionary Schmoozer of Pings,28,4,4.5,3.67,3.67,3.96
+corporate,LHL-HHL/HHH,Win-Win Schmoozer of Synergy,28,4,4.5,4,3.67,4.04
+corporate,LHL-HHL/HHL,Win-Win Schmoozer of KPIs,25,4,4.5,4,3.67,4.04
+corporate,LHL-HHL/HLH,Win-Win Schmoozer of Inboxes,28,4,4.5,3.67,3.67,3.96
+corporate,LHL-HHL/HLL,Win-Win Schmoozer of Focus,26,3.67,4.5,3.67,3.67,3.87
+corporate,LHL-HHL/LHH,Win-Win Schmoozer of Pivots,27,4.33,4.5,4,3.67,4.12
+corporate,LHL-HHL/LHL,Win-Win Schmoozer of Overtime,29,4,4.5,3.67,3.33,3.88
+corporate,LHL-HHL/LLH,Win-Win Schmoozer of Memes,26,4.33,4.5,3.33,3.67,3.96
+corporate,LHL-HHL/LLL,Win-Win Schmoozer of Pings,26,4,4.5,3.67,3.33,3.88
+corporate,LHL-HLH/HHH,On-Brand Schmoozer of Synergy,29,4,4.5,4.33,3.67,4.12
+corporate,LHL-HLH/HHL,On-Brand Schmoozer of KPIs,26,4,4.5,4.33,3.67,4.12
+corporate,LHL-HLH/HLH,On-Brand Schmoozer of Inboxes,29,4,4.5,4,3.67,4.04
+corporate,LHL-HLH/HLL,On-Brand Schmoozer of Focus,27,3.67,4.5,4,3.67,3.96
+corporate,LHL-HLH/LHH,On-Brand Schmoozer of Pivots,28,4.33,4.5,4.33,3.67,4.21
+corporate,LHL-HLH/LHL,On-Brand Schmoozer of Overtime,30,4,4.5,4,3.33,3.96
+corporate,LHL-HLH/LLH,On-Brand Schmoozer of Memes,27,4.33,4.5,3.67,3.67,4.04
+corporate,LHL-HLH/LLL,On-Brand Schmoozer of Pings,27,4,4.5,4,3.33,3.96
+corporate,LHL-HLL/HHH,Documented Schmoozer of Synergy,31,3.67,4.5,4,3.33,3.88
+corporate,LHL-HLL/HHL,Documented Schmoozer of KPIs,28,3.67,4.5,4,3.33,3.88
+corporate,LHL-HLL/HLH,Documented Schmoozer of Inboxes,31,3.67,4.5,3.67,3.33,3.79
+corporate,LHL-HLL/HLL,Documented Schmoozer of Focus,29,3.33,4.5,3.67,3.33,3.71
+corporate,LHL-HLL/LHH,Documented Schmoozer of Pivots,30,4,4.5,4,3.33,3.96
+corporate,LHL-HLL/LHL,Documented Schmoozer of Overtime,32,3.67,4.5,3.67,3,3.71
+corporate,LHL-HLL/LLH,Documented Schmoozer of Memes,29,4,4.5,3.33,3.33,3.79
+corporate,LHL-HLL/LLL,Documented Schmoozer of Pings,29,3.67,4.5,3.67,3,3.71
+corporate,LHL-LHH/HHH,Disruptive Schmoozer of Synergy,31,4,4.5,4.33,3.67,4.12
+corporate,LHL-LHH/HHL,Disruptive Schmoozer of KPIs,28,4,4.5,4.33,3.67,4.12
+corporate,LHL-LHH/HLH,Disruptive Schmoozer of Inboxes,31,4,4.5,4,3.67,4.04
+corporate,LHL-LHH/HLL,Disruptive Schmoozer of Focus,29,3.67,4.5,4,3.67,3.96
+corporate,LHL-LHH/LHH,Disruptive Schmoozer of Pivots,30,4.33,4.5,4.33,3.67,4.21
+corporate,LHL-LHH/LHL,Disruptive Schmoozer of Overtime,32,4,4.5,4,3.33,3.96
+corporate,LHL-LHH/LLH,Disruptive Schmoozer of Memes,29,4.33,4.5,3.67,3.67,4.04
+corporate,LHL-LHH/LLL,Disruptive Schmoozer of Pings,29,4,4.5,4,3.33,3.96
+corporate,LHL-LHL/HHH,Escalating Schmoozer of Synergy,31,4,4.5,4.33,3.33,4.04
+corporate,LHL-LHL/HHL,Escalating Schmoozer of KPIs,28,4,4.5,4.33,3.33,4.04
+corporate,LHL-LHL/HLH,Escalating Schmoozer of Inboxes,31,4,4.5,4,3.33,3.96
+corporate,LHL-LHL/HLL,Escalating Schmoozer of Focus,29,3.67,4.5,4,3.33,3.88
+corporate,LHL-LHL/LHH,Escalating Schmoozer of Pivots,30,4.33,4.5,4.33,3.33,4.12
+corporate,LHL-LHL/LHL,Escalating Schmoozer of Overtime,32,4,4.5,4,3,3.88
+corporate,LHL-LHL/LLH,Escalating Schmoozer of Memes,29,4.33,4.5,3.67,3.33,3.96
+corporate,LHL-LHL/LLL,Escalating Schmoozer of Pings,29,4,4.5,4,3,3.88
+corporate,LHL-LLH/HHH,Contrarian Schmoozer of Synergy,31,4,4.5,3.67,3.67,3.96
+corporate,LHL-LLH/HHL,Contrarian Schmoozer of KPIs,28,4,4.5,3.67,3.67,3.96
+corporate,LHL-LLH/HLH,Contrarian Schmoozer of Inboxes,31,4,4.5,3.33,3.67,3.88
+corporate,LHL-LLH/HLL,Contrarian Schmoozer of Focus,29,3.67,4.5,3.33,3.67,3.79
+corporate,LHL-LLH/LHH,Contrarian Schmoozer of Pivots,30,4.33,4.5,3.67,3.67,4.04
+corporate,LHL-LLH/LHL,Contrarian Schmoozer of Overtime,32,4,4.5,3.33,3.33,3.79
+corporate,LHL-LLH/LLH,Contrarian Schmoozer of Memes,29,4.33,4.5,3,3.67,3.87
+corporate,LHL-LLH/LLL,Contrarian Schmoozer of Pings,29,4,4.5,3.33,3.33,3.79
+corporate,LHL-LLL/HHH,Async Schmoozer of Synergy,26,3.67,4.5,4,3.33,3.88
+corporate,LHL-LLL/HHL,Async Schmoozer of KPIs,23,3.67,4.5,4,3.33,3.88
+corporate,LHL-LLL/HLH,Async Schmoozer of Inboxes,26,3.67,4.5,3.67,3.33,3.79
+corporate,LHL-LLL/HLL,Async Schmoozer of Focus,24,3.33,4.5,3.67,3.33,3.71
+corporate,LHL-LLL/LHH,Async Schmoozer of Pivots,25,4,4.5,4,3.33,3.96
+corporate,LHL-LLL/LHL,Async Schmoozer of Overtime,27,3.67,4.5,3.67,3,3.71
+corporate,LHL-LLL/LLH,Async Schmoozer of Memes,24,4,4.5,3.33,3.33,3.79
+corporate,LHL-LLL/LLL,Async Schmoozer of Pings,24,3.67,4.5,3.67,3,3.71
+corporate,LLH-HHH/HHH,Visionary Consultant of Synergy,31,4,4.5,4.67,4,4.29
+corporate,LLH-HHH/HHL,Visionary Consultant of KPIs,28,4,4.5,4.67,4,4.29
+corporate,LLH-HHH/HLH,Visionary Consultant of Inboxes,31,4,4.5,4.33,4,4.21
+corporate,LLH-HHH/HLL,Visionary Consultant of Focus,29,3.67,4.5,4.33,4,4.12
+corporate,LLH-HHH/LHH,Visionary Consultant of Pivots,30,4.33,4.5,4.67,4,4.38
+corporate,LLH-HHH/LHL,Visionary Consultant of Overtime,32,4,4.5,4.33,3.67,4.12
+corporate,LLH-HHH/LLH,Visionary Consultant of Memes,29,4.33,4.5,4,4,4.21
+corporate,LLH-HHH/LLL,Visionary Consultant of Pings,29,4,4.5,4.33,3.67,4.12
+corporate,LLH-HHL/HHH,Win-Win Consultant of Synergy,29,4,4.5,4.67,3.67,4.21
+corporate,LLH-HHL/HHL,Win-Win Consultant of KPIs,26,4,4.5,4.67,3.67,4.21
+corporate,LLH-HHL/HLH,Win-Win Consultant of Inboxes,29,4,4.5,4.33,3.67,4.12
+corporate,LLH-HHL/HLL,Win-Win Consultant of Focus,27,3.67,4.5,4.33,3.67,4.04
+corporate,LLH-HHL/LHH,Win-Win Consultant of Pivots,28,4.33,4.5,4.67,3.67,4.29
+corporate,LLH-HHL/LHL,Win-Win Consultant of Overtime,30,4,4.5,4.33,3.33,4.04
+corporate,LLH-HHL/LLH,Win-Win Consultant of Memes,27,4.33,4.5,4,3.67,4.12
+corporate,LLH-HHL/LLL,Win-Win Consultant of Pings,27,4,4.5,4.33,3.33,4.04
+corporate,LLH-HLH/HHH,On-Brand Consultant of Synergy,30,4,4.5,5,3.67,4.29
+corporate,LLH-HLH/HHL,On-Brand Consultant of KPIs,27,4,4.5,5,3.67,4.29
+corporate,LLH-HLH/HLH,On-Brand Consultant of Inboxes,30,4,4.5,4.67,3.67,4.21
+corporate,LLH-HLH/HLL,On-Brand Consultant of Focus,28,3.67,4.5,4.67,3.67,4.12
+corporate,LLH-HLH/LHH,On-Brand Consultant of Pivots,29,4.33,4.5,5,3.67,4.38
+corporate,LLH-HLH/LHL,On-Brand Consultant of Overtime,31,4,4.5,4.67,3.33,4.12
+corporate,LLH-HLH/LLH,On-Brand Consultant of Memes,28,4.33,4.5,4.33,3.67,4.21
+corporate,LLH-HLH/LLL,On-Brand Consultant of Pings,28,4,4.5,4.67,3.33,4.12
+corporate,LLH-HLL/HHH,Documented Consultant of Synergy,32,3.67,4.5,4.67,3.33,4.04
+corporate,LLH-HLL/HHL,Documented Consultant of KPIs,29,3.67,4.5,4.67,3.33,4.04
+corporate,LLH-HLL/HLH,Documented Consultant of Inboxes,32,3.67,4.5,4.33,3.33,3.96
+corporate,LLH-HLL/HLL,Documented Consultant of Focus,30,3.33,4.5,4.33,3.33,3.88
+corporate,LLH-HLL/LHH,Documented Consultant of Pivots,31,4,4.5,4.67,3.33,4.12
+corporate,LLH-HLL/LHL,Documented Consultant of Overtime,33,3.67,4.5,4.33,3,3.88
+corporate,LLH-HLL/LLH,Documented Consultant of Memes,30,4,4.5,4,3.33,3.96
+corporate,LLH-HLL/LLL,Documented Consultant of Pings,30,3.67,4.5,4.33,3,3.88
+corporate,LLH-LHH/HHH,Disruptive Consultant of Synergy,32,4,4.5,5,3.67,4.29
+corporate,LLH-LHH/HHL,Disruptive Consultant of KPIs,29,4,4.5,5,3.67,4.29
+corporate,LLH-LHH/HLH,Disruptive Consultant of Inboxes,32,4,4.5,4.67,3.67,4.21
+corporate,LLH-LHH/HLL,Disruptive Consultant of Focus,30,3.67,4.5,4.67,3.67,4.12
+corporate,LLH-LHH/LHH,Disruptive Consultant of Pivots,31,4.33,4.5,5,3.67,4.38
+corporate,LLH-LHH/LHL,Disruptive Consultant of Overtime,33,4,4.5,4.67,3.33,4.12
+corporate,LLH-LHH/LLH,Disruptive Consultant of Memes,30,4.33,4.5,4.33,3.67,4.21
+corporate,LLH-LHH/LLL,Disruptive Consultant of Pings,30,4,4.5,4.67,3.33,4.12
+corporate,LLH-LHL/HHH,Escalating Consultant of Synergy,32,4,4.5,5,3.33,4.21
+corporate,LLH-LHL/HHL,Escalating Consultant of KPIs,29,4,4.5,5,3.33,4.21
+corporate,LLH-LHL/HLH,Escalating Consultant of Inboxes,32,4,4.5,4.67,3.33,4.12
+corporate,LLH-LHL/HLL,Escalating Consultant of Focus,30,3.67,4.5,4.67,3.33,4.04
+corporate,LLH-LHL/LHH,Escalating Consultant of Pivots,31,4.33,4.5,5,3.33,4.29
+corporate,LLH-LHL/LHL,Escalating Consultant of Overtime,33,4,4.5,4.67,3,4.04
+corporate,LLH-LHL/LLH,Escalating Consultant of Memes,30,4.33,4.5,4.33,3.33,4.12
+corporate,LLH-LHL/LLL,Escalating Consultant of Pings,30,4,4.5,4.67,3,4.04
+corporate,LLH-LLH/HHH,Contrarian Consultant of Synergy,32,4,4.5,4.33,3.67,4.12
+corporate,LLH-LLH/HHL,Contrarian Consultant of KPIs,29,4,4.5,4.33,3.67,4.12
+corporate,LLH-LLH/HLH,Contrarian Consultant of Inboxes,32,4,4.5,4,3.67,4.04
+corporate,LLH-LLH/HLL,Contrarian Consultant of Focus,30,3.67,4.5,4,3.67,3.96
+corporate,LLH-LLH/LHH,Contrarian Consultant of Pivots,31,4.33,4.5,4.33,3.67,4.21
+corporate,LLH-LLH/LHL,Contrarian Consultant of Overtime,33,4,4.5,4,3.33,3.96
+corporate,LLH-LLH/LLH,Contrarian Consultant of Memes,30,4.33,4.5,3.67,3.67,4.04
+corporate,LLH-LLH/LLL,Contrarian Consultant of Pings,30,4,4.5,4,3.33,3.96
+corporate,LLH-LLL/HHH,Async Consultant of Synergy,27,3.67,4.5,4.67,3.33,4.04
+corporate,LLH-LLL/HHL,Async Consultant of KPIs,24,3.67,4.5,4.67,3.33,4.04
+corporate,LLH-LLL/HLH,Async Consultant of Inboxes,27,3.67,4.5,4.33,3.33,3.96
+corporate,LLH-LLL/HLL,Async Consultant of Focus,25,3.33,4.5,4.33,3.33,3.88
+corporate,LLH-LLL/LHH,Async Consultant of Pivots,26,4,4.5,4.67,3.33,4.12
+corporate,LLH-LLL/LHL,Async Consultant of Overtime,28,3.67,4.5,4.33,3,3.88
+corporate,LLH-LLL/LLH,Async Consultant of Memes,25,4,4.5,4,3.33,3.96
+corporate,LLH-LLL/LLL,Async Consultant of Pings,25,3.67,4.5,4.33,3,3.88
+corporate,LLL-HHH/HHH,Visionary Contractor of Synergy,31,3.67,4.5,4.67,4,4.21
+corporate,LLL-HHH/HHL,Visionary Contractor of KPIs,28,3.67,4.5,4.67,4,4.21
+corporate,LLL-HHH/HLH,Visionary Contractor of Inboxes,31,3.67,4.5,4.33,4,4.12
+corporate,LLL-HHH/HLL,Visionary Contractor of Focus,29,3.33,4.5,4.33,4,4.04
+corporate,LLL-HHH/LHH,Visionary Contractor of Pivots,30,4,4.5,4.67,4,4.29
+corporate,LLL-HHH/LHL,Visionary Contractor of Overtime,32,3.67,4.5,4.33,3.67,4.04
+corporate,LLL-HHH/LLH,Visionary Contractor of Memes,29,4,4.5,4,4,4.12
+corporate,LLL-HHH/LLL,Visionary Contractor of Pings,29,3.67,4.5,4.33,3.67,4.04
+corporate,LLL-HHL/HHH,Win-Win Contractor of Synergy,29,3.67,4.5,4.67,3.67,4.12
+corporate,LLL-HHL/HHL,Win-Win Contractor of KPIs,26,3.67,4.5,4.67,3.67,4.12
+corporate,LLL-HHL/HLH,Win-Win Contractor of Inboxes,29,3.67,4.5,4.33,3.67,4.04
+corporate,LLL-HHL/HLL,Win-Win Contractor of Focus,27,3.33,4.5,4.33,3.67,3.96
+corporate,LLL-HHL/LHH,Win-Win Contractor of Pivots,28,4,4.5,4.67,3.67,4.21
+corporate,LLL-HHL/LHL,Win-Win Contractor of Overtime,30,3.67,4.5,4.33,3.33,3.96
+corporate,LLL-HHL/LLH,Win-Win Contractor of Memes,27,4,4.5,4,3.67,4.04
+corporate,LLL-HHL/LLL,Win-Win Contractor of Pings,27,3.67,4.5,4.33,3.33,3.96
+corporate,LLL-HLH/HHH,On-Brand Contractor of Synergy,30,3.67,4.5,5,3.67,4.21
+corporate,LLL-HLH/HHL,On-Brand Contractor of KPIs,27,3.67,4.5,5,3.67,4.21
+corporate,LLL-HLH/HLH,On-Brand Contractor of Inboxes,30,3.67,4.5,4.67,3.67,4.12
+corporate,LLL-HLH/HLL,On-Brand Contractor of Focus,28,3.33,4.5,4.67,3.67,4.04
+corporate,LLL-HLH/LHH,On-Brand Contractor of Pivots,29,4,4.5,5,3.67,4.29
+corporate,LLL-HLH/LHL,On-Brand Contractor of Overtime,31,3.67,4.5,4.67,3.33,4.04
+corporate,LLL-HLH/LLH,On-Brand Contractor of Memes,28,4,4.5,4.33,3.67,4.12
+corporate,LLL-HLH/LLL,On-Brand Contractor of Pings,28,3.67,4.5,4.67,3.33,4.04
+corporate,LLL-HLL/HHH,Documented Contractor of Synergy,32,3.33,4.5,4.67,3.33,3.96
+corporate,LLL-HLL/HHL,Documented Contractor of KPIs,29,3.33,4.5,4.67,3.33,3.96
+corporate,LLL-HLL/HLH,Documented Contractor of Inboxes,32,3.33,4.5,4.33,3.33,3.88
+corporate,LLL-HLL/HLL,Documented Contractor of Focus,30,3,4.5,4.33,3.33,3.79
+corporate,LLL-HLL/LHH,Documented Contractor of Pivots,31,3.67,4.5,4.67,3.33,4.04
+corporate,LLL-HLL/LHL,Documented Contractor of Overtime,33,3.33,4.5,4.33,3,3.79
+corporate,LLL-HLL/LLH,Documented Contractor of Memes,30,3.67,4.5,4,3.33,3.88
+corporate,LLL-HLL/LLL,Documented Contractor of Pings,30,3.33,4.5,4.33,3,3.79
+corporate,LLL-LHH/HHH,Disruptive Contractor of Synergy,32,3.67,4.5,5,3.67,4.21
+corporate,LLL-LHH/HHL,Disruptive Contractor of KPIs,29,3.67,4.5,5,3.67,4.21
+corporate,LLL-LHH/HLH,Disruptive Contractor of Inboxes,32,3.67,4.5,4.67,3.67,4.12
+corporate,LLL-LHH/HLL,Disruptive Contractor of Focus,30,3.33,4.5,4.67,3.67,4.04
+corporate,LLL-LHH/LHH,Disruptive Contractor of Pivots,31,4,4.5,5,3.67,4.29
+corporate,LLL-LHH/LHL,Disruptive Contractor of Overtime,33,3.67,4.5,4.67,3.33,4.04
+corporate,LLL-LHH/LLH,Disruptive Contractor of Memes,30,4,4.5,4.33,3.67,4.12
+corporate,LLL-LHH/LLL,Disruptive Contractor of Pings,30,3.67,4.5,4.67,3.33,4.04
+corporate,LLL-LHL/HHH,Escalating Contractor of Synergy,32,3.67,4.5,5,3.33,4.12
+corporate,LLL-LHL/HHL,Escalating Contractor of KPIs,29,3.67,4.5,5,3.33,4.12
+corporate,LLL-LHL/HLH,Escalating Contractor of Inboxes,32,3.67,4.5,4.67,3.33,4.04
+corporate,LLL-LHL/HLL,Escalating Contractor of Focus,30,3.33,4.5,4.67,3.33,3.96
+corporate,LLL-LHL/LHH,Escalating Contractor of Pivots,31,4,4.5,5,3.33,4.21
+corporate,LLL-LHL/LHL,Escalating Contractor of Overtime,33,3.67,4.5,4.67,3,3.96
+corporate,LLL-LHL/LLH,Escalating Contractor of Memes,30,4,4.5,4.33,3.33,4.04
+corporate,LLL-LHL/LLL,Escalating Contractor of Pings,30,3.67,4.5,4.67,3,3.96
+corporate,LLL-LLH/HHH,Contrarian Contractor of Synergy,32,3.67,4.5,4.33,3.67,4.04
+corporate,LLL-LLH/HHL,Contrarian Contractor of KPIs,29,3.67,4.5,4.33,3.67,4.04
+corporate,LLL-LLH/HLH,Contrarian Contractor of Inboxes,32,3.67,4.5,4,3.67,3.96
+corporate,LLL-LLH/HLL,Contrarian Contractor of Focus,30,3.33,4.5,4,3.67,3.88
+corporate,LLL-LLH/LHH,Contrarian Contractor of Pivots,31,4,4.5,4.33,3.67,4.12
+corporate,LLL-LLH/LHL,Contrarian Contractor of Overtime,33,3.67,4.5,4,3.33,3.88
+corporate,LLL-LLH/LLH,Contrarian Contractor of Memes,30,4,4.5,3.67,3.67,3.96
+corporate,LLL-LLH/LLL,Contrarian Contractor of Pings,30,3.67,4.5,4,3.33,3.88
+corporate,LLL-LLL/HHH,Async Contractor of Synergy,27,3.33,4.5,4.67,3.33,3.96
+corporate,LLL-LLL/HHL,Async Contractor of KPIs,24,3.33,4.5,4.67,3.33,3.96
+corporate,LLL-LLL/HLH,Async Contractor of Inboxes,27,3.33,4.5,4.33,3.33,3.88
+corporate,LLL-LLL/HLL,Async Contractor of Focus,25,3,4.5,4.33,3.33,3.79
+corporate,LLL-LLL/LHH,Async Contractor of Pivots,26,3.67,4.5,4.67,3.33,4.04
+corporate,LLL-LLL/LHL,Async Contractor of Overtime,28,3.33,4.5,4.33,3,3.79
+corporate,LLL-LLL/LLH,Async Contractor of Memes,25,3.67,4.5,4,3.33,3.88
+corporate,LLL-LLL/LLL,Async Contractor of Pings,25,3.33,4.5,4.33,3,3.79
+oxymoron,HHH-HHH/HHH,Courteous Apocalypse ★,20,4.33,4,3.67,4.33,4.08
+oxymoron,HHH-HHH/HHL,Polite Overachiever Ambassador,30,4,4,3.67,4.67,4.08
+oxymoron,HHH-HHH/HLH,Polite Firestarter Ambassador,29,4,4,3.67,4.33,4.0
+oxymoron,HHH-HHH/HLL,Polite Kingpin Ambassador,25,4,4,3.67,4.33,4.0
+oxymoron,HHH-HHH/LHH,Polite Troublemaker Ambassador,30,4,4,3.67,4.33,4.0
+oxymoron,HHH-HHH/LHL,Polite Hardliner Ambassador,27,4,4,3.67,4,3.92
+oxymoron,HHH-HHH/LLH,Polite Wildcard Ambassador,26,4,4,3.67,4.33,4.0
+oxymoron,HHH-HHH/LLL,Polite Outlaw Ambassador,24,4,4,3.67,4.33,4.0
+oxymoron,HHH-HHL/HHH,Cheerful Anarchist Ambassador,29,4.33,4,3.33,4.67,4.08
+oxymoron,HHH-HHL/HHL,Cheerful Overachiever Ambassador,32,4,4,3.33,5,4.08
+oxymoron,HHH-HHL/HLH,Cheerful Firestarter Ambassador,31,4,4,3.33,4.67,4.0
+oxymoron,HHH-HHL/HLL,Cheerful Kingpin Ambassador,27,4,4,3.33,4.67,4.0
+oxymoron,HHH-HHL/LHH,Cheerful Troublemaker Ambassador,32,4,4,3.33,4.67,4.0
+oxymoron,HHH-HHL/LHL,Cheerful Hardliner Ambassador,29,4,4,3.33,4.33,3.92
+oxymoron,HHH-HHL/LLH,Cheerful Wildcard Ambassador,28,4,4,3.33,4.67,4.0
+oxymoron,HHH-HHL/LLL,Cheerful Outlaw Ambassador,26,4,4,3.33,4.67,4.0
+oxymoron,HHH-HLH/HHH,Huggable Anarchist Ambassador,29,4.33,4,3.33,4.67,4.08
+oxymoron,HHH-HLH/HHL,Huggable Overachiever Ambassador,32,4,4,3.33,5,4.08
+oxymoron,HHH-HLH/HLH,Huggable Firestarter Ambassador,31,4,4,3.33,4.67,4.0
+oxymoron,HHH-HLH/HLL,Huggable Kingpin Ambassador,27,4,4,3.33,4.67,4.0
+oxymoron,HHH-HLH/LHH,Huggable Troublemaker Ambassador,32,4,4,3.33,4.67,4.0
+oxymoron,HHH-HLH/LHL,Huggable Hardliner Ambassador,29,4,4,3.33,4.33,3.92
+oxymoron,HHH-HLH/LLH,Huggable Wildcard Ambassador,28,4,4,3.33,4.67,4.0
+oxymoron,HHH-HLH/LLL,Huggable Outlaw Ambassador,26,4,4,3.33,4.67,4.0
+oxymoron,HHH-HLL/HHH,Mellow Anarchist Ambassador,27,4.33,4,3.33,4.33,4.0
+oxymoron,HHH-HLL/HHL,Mellow Overachiever Ambassador,30,4,4,3.33,4.67,4.0
+oxymoron,HHH-HLL/HLH,Mellow Firestarter Ambassador,29,4,4,3.33,4.33,3.92
+oxymoron,HHH-HLL/HLL,Mellow Kingpin Ambassador,25,4,4,3.33,4.33,3.92
+oxymoron,HHH-HLL/LHH,Mellow Troublemaker Ambassador,30,4,4,3.33,4.33,3.92
+oxymoron,HHH-HLL/LHL,Mellow Hardliner Ambassador,27,4,4,3.33,4,3.83
+oxymoron,HHH-HLL/LLH,Mellow Wildcard Ambassador,26,4,4,3.33,4.33,3.92
+oxymoron,HHH-HLL/LLL,Mellow Outlaw Ambassador,24,4,4,3.33,4.33,3.92
+oxymoron,HHH-LHH/HHH,Friendly Anarchist Ambassador,29,4.33,4,3.33,4.67,4.08
+oxymoron,HHH-LHH/HHL,Friendly Overachiever Ambassador,32,4,4,3.33,5,4.08
+oxymoron,HHH-LHH/HLH,Friendly Firestarter Ambassador,31,4,4,3.33,4.67,4.0
+oxymoron,HHH-LHH/HLL,Friendly Kingpin Ambassador,27,4,4,3.33,4.67,4.0
+oxymoron,HHH-LHH/LHH,Friendly Troublemaker Ambassador,32,4,4,3.33,4.67,4.0
+oxymoron,HHH-LHH/LHL,Friendly Hardliner Ambassador,29,4,4,3.33,4.33,3.92
+oxymoron,HHH-LHH/LLH,Friendly Wildcard Ambassador,28,4,4,3.33,4.67,4.0
+oxymoron,HHH-LHH/LLL,Friendly Outlaw Ambassador,26,4,4,3.33,4.67,4.0
+oxymoron,HHH-LHL/HHH,Low-Key Anarchist Ambassador,28,4.33,4,3.33,4.33,4.0
+oxymoron,HHH-LHL/HHL,Low-Key Overachiever Ambassador,31,4,4,3.33,4.67,4.0
+oxymoron,HHH-LHL/HLH,Low-Key Firestarter Ambassador,30,4,4,3.33,4.33,3.92
+oxymoron,HHH-LHL/HLL,Low-Key Kingpin Ambassador,26,4,4,3.33,4.33,3.92
+oxymoron,HHH-LHL/LHH,Low-Key Troublemaker Ambassador,31,4,4,3.33,4.33,3.92
+oxymoron,HHH-LHL/LHL,Low-Key Hardliner Ambassador,28,4,4,3.33,4,3.83
+oxymoron,HHH-LHL/LLH,Low-Key Wildcard Ambassador,27,4,4,3.33,4.33,3.92
+oxymoron,HHH-LHL/LLL,Low-Key Outlaw Ambassador,25,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLH/HHH,Bashful Anarchist Ambassador,28,4.33,4,3.33,4.33,4.0
+oxymoron,HHH-LLH/HHL,Bashful Overachiever Ambassador,31,4,4,3.33,4.67,4.0
+oxymoron,HHH-LLH/HLH,Bashful Firestarter Ambassador,30,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLH/HLL,Bashful Kingpin Ambassador,26,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLH/LHH,Bashful Troublemaker Ambassador,31,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLH/LHL,Bashful Hardliner Ambassador,28,4,4,3.33,4,3.83
+oxymoron,HHH-LLH/LLH,Bashful Wildcard Ambassador,27,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLH/LLL,Bashful Outlaw Ambassador,25,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLL/HHH,Whispering Anarchist Ambassador,31,4.33,4,3.33,4.33,4.0
+oxymoron,HHH-LLL/HHL,Whispering Overachiever Ambassador,34,4,4,3.33,4.67,4.0
+oxymoron,HHH-LLL/HLH,Whispering Firestarter Ambassador,33,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLL/HLL,Whispering Kingpin Ambassador,29,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLL/LHH,Whispering Troublemaker Ambassador,34,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLL/LHL,Whispering Hardliner Ambassador,31,4,4,3.33,4,3.83
+oxymoron,HHH-LLL/LLH,Whispering Wildcard Ambassador,30,4,4,3.33,4.33,3.92
+oxymoron,HHH-LLL/LLL,Whispering Outlaw Ambassador,28,4,4,3.33,4.33,3.92
+oxymoron,HHL-HHH/HHH,Polite Anarchist Enforcer,25,4.33,4,3.67,4,4.0
+oxymoron,HHL-HHH/HHL,Polite Overachiever Enforcer,28,4,4,3.67,4.33,4.0
+oxymoron,HHL-HHH/HLH,Polite Firestarter Enforcer,27,4,4,3.67,4,3.92
+oxymoron,HHL-HHH/HLL,Polite Kingpin Enforcer,23,4,4,3.67,4,3.92
+oxymoron,HHL-HHH/LHH,Polite Troublemaker Enforcer,28,4,4,3.67,4,3.92
+oxymoron,HHL-HHH/LHL,Polite Hardliner Enforcer,25,4,4,3.67,3.67,3.83
+oxymoron,HHL-HHH/LLH,Polite Wildcard Enforcer,24,4,4,3.67,4,3.92
+oxymoron,HHL-HHH/LLL,Polite Outlaw Enforcer,22,4,4,3.67,4,3.92
+oxymoron,HHL-HHL/HHH,Cheerful Anarchist Enforcer,27,4.33,4,3.33,4.33,4.0
+oxymoron,HHL-HHL/HHL,Cheerful Overachiever Enforcer,30,4,4,3.33,4.67,4.0
+oxymoron,HHL-HHL/HLH,Cheerful Firestarter Enforcer,29,4,4,3.33,4.33,3.92
+oxymoron,HHL-HHL/HLL,Cheerful Kingpin Enforcer,25,4,4,3.33,4.33,3.92
+oxymoron,HHL-HHL/LHH,Cheerful Troublemaker Enforcer,30,4,4,3.33,4.33,3.92
+oxymoron,HHL-HHL/LHL,Cheerful Hardliner Enforcer,27,4,4,3.33,4,3.83
+oxymoron,HHL-HHL/LLH,Cheerful Wildcard Enforcer,26,4,4,3.33,4.33,3.92
+oxymoron,HHL-HHL/LLL,Cheerful Outlaw Enforcer,24,4,4,3.33,4.33,3.92
+oxymoron,HHL-HLH/HHH,Huggable Anarchist Enforcer,27,4.33,4,3.33,4.33,4.0
+oxymoron,HHL-HLH/HHL,Huggable Overachiever Enforcer,30,4,4,3.33,4.67,4.0
+oxymoron,HHL-HLH/HLH,Huggable Firestarter Enforcer,29,4,4,3.33,4.33,3.92
+oxymoron,HHL-HLH/HLL,Huggable Kingpin Enforcer,25,4,4,3.33,4.33,3.92
+oxymoron,HHL-HLH/LHH,Huggable Troublemaker Enforcer,30,4,4,3.33,4.33,3.92
+oxymoron,HHL-HLH/LHL,Huggable Hardliner Enforcer,27,4,4,3.33,4,3.83
+oxymoron,HHL-HLH/LLH,Huggable Wildcard Enforcer,26,4,4,3.33,4.33,3.92
+oxymoron,HHL-HLH/LLL,Huggable Outlaw Enforcer,24,4,4,3.33,4.33,3.92
+oxymoron,HHL-HLL/HHH,Mellow Anarchist Enforcer,25,4.33,4,3.33,4,3.92
+oxymoron,HHL-HLL/HHL,Mellow Overachiever Enforcer,28,4,4,3.33,4.33,3.92
+oxymoron,HHL-HLL/HLH,Mellow Firestarter Enforcer,27,4,4,3.33,4,3.83
+oxymoron,HHL-HLL/HLL,Mellow Kingpin Enforcer,23,4,4,3.33,4,3.83
+oxymoron,HHL-HLL/LHH,Mellow Troublemaker Enforcer,28,4,4,3.33,4,3.83
+oxymoron,HHL-HLL/LHL,Mellow Hardliner Enforcer,25,4,4,3.33,3.67,3.75
+oxymoron,HHL-HLL/LLH,Mellow Wildcard Enforcer,24,4,4,3.33,4,3.83
+oxymoron,HHL-HLL/LLL,Mellow Outlaw Enforcer,22,4,4,3.33,4,3.83
+oxymoron,HHL-LHH/HHH,Friendly Anarchist Enforcer,27,4.33,4,3.33,4.33,4.0
+oxymoron,HHL-LHH/HHL,Friendly Overachiever Enforcer,30,4,4,3.33,4.67,4.0
+oxymoron,HHL-LHH/HLH,Friendly Firestarter Enforcer,29,4,4,3.33,4.33,3.92
+oxymoron,HHL-LHH/HLL,Friendly Kingpin Enforcer,25,4,4,3.33,4.33,3.92
+oxymoron,HHL-LHH/LHH,Friendly Troublemaker Enforcer,30,4,4,3.33,4.33,3.92
+oxymoron,HHL-LHH/LHL,Friendly Hardliner Enforcer,27,4,4,3.33,4,3.83
+oxymoron,HHL-LHH/LLH,Friendly Wildcard Enforcer,26,4,4,3.33,4.33,3.92
+oxymoron,HHL-LHH/LLL,Friendly Outlaw Enforcer,24,4,4,3.33,4.33,3.92
+oxymoron,HHL-LHL/HHH,Low-Key Anarchist Enforcer,26,4.33,4,3.33,4,3.92
+oxymoron,HHL-LHL/HHL,Low-Key Overachiever Enforcer,29,4,4,3.33,4.33,3.92
+oxymoron,HHL-LHL/HLH,Low-Key Firestarter Enforcer,28,4,4,3.33,4,3.83
+oxymoron,HHL-LHL/HLL,Low-Key Kingpin Enforcer,24,4,4,3.33,4,3.83
+oxymoron,HHL-LHL/LHH,Low-Key Troublemaker Enforcer,29,4,4,3.33,4,3.83
+oxymoron,HHL-LHL/LHL,Low-Key Hardliner Enforcer,26,4,4,3.33,3.67,3.75
+oxymoron,HHL-LHL/LLH,Low-Key Wildcard Enforcer,25,4,4,3.33,4,3.83
+oxymoron,HHL-LHL/LLL,Low-Key Outlaw Enforcer,23,4,4,3.33,4,3.83
+oxymoron,HHL-LLH/HHH,Bashful Anarchist Enforcer,26,4.33,4,3.33,4,3.92
+oxymoron,HHL-LLH/HHL,Bashful Overachiever Enforcer,29,4,4,3.33,4.33,3.92
+oxymoron,HHL-LLH/HLH,Bashful Firestarter Enforcer,28,4,4,3.33,4,3.83
+oxymoron,HHL-LLH/HLL,Bashful Kingpin Enforcer,24,4,4,3.33,4,3.83
+oxymoron,HHL-LLH/LHH,Bashful Troublemaker Enforcer,29,4,4,3.33,4,3.83
+oxymoron,HHL-LLH/LHL,Bashful Hardliner Enforcer,26,4,4,3.33,3.67,3.75
+oxymoron,HHL-LLH/LLH,Bashful Wildcard Enforcer,25,4,4,3.33,4,3.83
+oxymoron,HHL-LLH/LLL,Bashful Outlaw Enforcer,23,4,4,3.33,4,3.83
+oxymoron,HHL-LLL/HHH,Whispering Anarchist Enforcer,29,4.33,4,3.33,4,3.92
+oxymoron,HHL-LLL/HHL,Whispering Overachiever Enforcer,32,4,4,3.33,4.33,3.92
+oxymoron,HHL-LLL/HLH,Whispering Firestarter Enforcer,31,4,4,3.33,4,3.83
+oxymoron,HHL-LLL/HLL,Whispering Kingpin Enforcer,27,4,4,3.33,4,3.83
+oxymoron,HHL-LLL/LHH,Whispering Troublemaker Enforcer,32,4,4,3.33,4,3.83
+oxymoron,HHL-LLL/LHL,Whispering Hardliner Enforcer,29,4,4,3.33,3.67,3.75
+oxymoron,HHL-LLL/LLH,Whispering Wildcard Enforcer,28,4,4,3.33,4,3.83
+oxymoron,HHL-LLL/LLL,Whispering Outlaw Enforcer,26,4,4,3.33,4,3.83
+oxymoron,HLH-HHH/HHH,Polite Anarchist Inventor,25,4,4,3.67,4.33,4.0
+oxymoron,HLH-HHH/HHL,Polite Overachiever Inventor,28,3.67,4,3.67,4.67,4.0
+oxymoron,HLH-HHH/HLH,Polite Firestarter Inventor,27,3.67,4,3.67,4.33,3.92
+oxymoron,HLH-HHH/HLL,Polite Kingpin Inventor,23,3.67,4,3.67,4.33,3.92
+oxymoron,HLH-HHH/LHH,Polite Troublemaker Inventor,28,3.67,4,3.67,4.33,3.92
+oxymoron,HLH-HHH/LHL,Polite Hardliner Inventor,25,3.67,4,3.67,4,3.83
+oxymoron,HLH-HHH/LLH,Polite Wildcard Inventor,24,3.67,4,3.67,4.33,3.92
+oxymoron,HLH-HHH/LLL,Polite Outlaw Inventor,22,3.67,4,3.67,4.33,3.92
+oxymoron,HLH-HHL/HHH,Cheerful Anarchist Inventor,27,4,4,3.33,4.67,4.0
+oxymoron,HLH-HHL/HHL,Cheerful Overachiever Inventor,30,3.67,4,3.33,5,4.0
+oxymoron,HLH-HHL/HLH,Cheerful Firestarter Inventor,29,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HHL/HLL,Cheerful Kingpin Inventor,25,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HHL/LHH,Cheerful Troublemaker Inventor,30,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HHL/LHL,Cheerful Hardliner Inventor,27,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-HHL/LLH,Cheerful Wildcard Inventor,26,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HHL/LLL,Cheerful Outlaw Inventor,24,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HLH/HHH,Huggable Anarchist Inventor,27,4,4,3.33,4.67,4.0
+oxymoron,HLH-HLH/HHL,Huggable Overachiever Inventor,30,3.67,4,3.33,5,4.0
+oxymoron,HLH-HLH/HLH,Huggable Firestarter Inventor,29,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HLH/HLL,Huggable Kingpin Inventor,25,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HLH/LHH,Huggable Troublemaker Inventor,30,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HLH/LHL,Huggable Hardliner Inventor,27,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-HLH/LLH,Huggable Wildcard Inventor,26,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HLH/LLL,Huggable Outlaw Inventor,24,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HLL/HHH,Mellow Anarchist Inventor,25,4,4,3.33,4.33,3.92
+oxymoron,HLH-HLL/HHL,Mellow Overachiever Inventor,28,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-HLL/HLH,Mellow Firestarter Inventor,27,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-HLL/HLL,Mellow Kingpin Inventor,23,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-HLL/LHH,Mellow Troublemaker Inventor,28,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-HLL/LHL,Mellow Hardliner Inventor,25,3.67,4,3.33,4,3.75
+oxymoron,HLH-HLL/LLH,Mellow Wildcard Inventor,24,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-HLL/LLL,Mellow Outlaw Inventor,22,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LHH/HHH,Friendly Anarchist Inventor,27,4,4,3.33,4.67,4.0
+oxymoron,HLH-LHH/HHL,Friendly Overachiever Inventor,30,3.67,4,3.33,5,4.0
+oxymoron,HLH-LHH/HLH,Friendly Firestarter Inventor,29,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-LHH/HLL,Friendly Kingpin Inventor,25,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-LHH/LHH,Friendly Troublemaker Inventor,30,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-LHH/LHL,Friendly Hardliner Inventor,27,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LHH/LLH,Friendly Wildcard Inventor,26,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-LHH/LLL,Friendly Outlaw Inventor,24,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-LHL/HHH,Low-Key Anarchist Inventor,26,4,4,3.33,4.33,3.92
+oxymoron,HLH-LHL/HHL,Low-Key Overachiever Inventor,29,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-LHL/HLH,Low-Key Firestarter Inventor,28,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LHL/HLL,Low-Key Kingpin Inventor,24,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LHL/LHH,Low-Key Troublemaker Inventor,29,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LHL/LHL,Low-Key Hardliner Inventor,26,3.67,4,3.33,4,3.75
+oxymoron,HLH-LHL/LLH,Low-Key Wildcard Inventor,25,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LHL/LLL,Low-Key Outlaw Inventor,23,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLH/HHH,Bashful Anarchist Inventor,26,4,4,3.33,4.33,3.92
+oxymoron,HLH-LLH/HHL,Bashful Overachiever Inventor,29,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-LLH/HLH,Bashful Firestarter Inventor,28,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLH/HLL,Bashful Kingpin Inventor,24,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLH/LHH,Bashful Troublemaker Inventor,29,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLH/LHL,Bashful Hardliner Inventor,26,3.67,4,3.33,4,3.75
+oxymoron,HLH-LLH/LLH,Bashful Wildcard Inventor,25,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLH/LLL,Bashful Outlaw Inventor,23,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLL/HHH,Whispering Anarchist Inventor,29,4,4,3.33,4.33,3.92
+oxymoron,HLH-LLL/HHL,Whispering Overachiever Inventor,32,3.67,4,3.33,4.67,3.92
+oxymoron,HLH-LLL/HLH,Whispering Firestarter Inventor,31,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLL/HLL,Whispering Kingpin Inventor,27,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLL/LHH,Whispering Troublemaker Inventor,32,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLL/LHL,Whispering Hardliner Inventor,29,3.67,4,3.33,4,3.75
+oxymoron,HLH-LLL/LLH,Whispering Wildcard Inventor,28,3.67,4,3.33,4.33,3.83
+oxymoron,HLH-LLL/LLL,Whispering Outlaw Inventor,26,3.67,4,3.33,4.33,3.83
+oxymoron,HLL-HHH/HHH,Polite Anarchist Tactician,26,4.33,4,3.67,4.33,4.08
+oxymoron,HLL-HHH/HHL,Polite Overachiever Tactician,29,4,4,3.67,4.67,4.08
+oxymoron,HLL-HHH/HLH,Polite Firestarter Tactician,28,4,4,3.67,4.33,4.0
+oxymoron,HLL-HHH/HLL,Polite Kingpin Tactician,24,4,4,3.67,4.33,4.0
+oxymoron,HLL-HHH/LHH,Polite Troublemaker Tactician,29,4,4,3.67,4.33,4.0
+oxymoron,HLL-HHH/LHL,Polite Hardliner Tactician,26,4,4,3.67,4,3.92
+oxymoron,HLL-HHH/LLH,Polite Wildcard Tactician,25,4,4,3.67,4.33,4.0
+oxymoron,HLL-HHH/LLL,Polite Outlaw Tactician,23,4,4,3.67,4.33,4.0
+oxymoron,HLL-HHL/HHH,Cheerful Anarchist Tactician,28,4.33,4,3.33,4.67,4.08
+oxymoron,HLL-HHL/HHL,Cheerful Overachiever Tactician,31,4,4,3.33,5,4.08
+oxymoron,HLL-HHL/HLH,Cheerful Firestarter Tactician,30,4,4,3.33,4.67,4.0
+oxymoron,HLL-HHL/HLL,Cheerful Kingpin Tactician,26,4,4,3.33,4.67,4.0
+oxymoron,HLL-HHL/LHH,Cheerful Troublemaker Tactician,31,4,4,3.33,4.67,4.0
+oxymoron,HLL-HHL/LHL,Cheerful Hardliner Tactician,28,4,4,3.33,4.33,3.92
+oxymoron,HLL-HHL/LLH,Cheerful Wildcard Tactician,27,4,4,3.33,4.67,4.0
+oxymoron,HLL-HHL/LLL,Cheerful Outlaw Tactician,25,4,4,3.33,4.67,4.0
+oxymoron,HLL-HLH/HHH,Huggable Anarchist Tactician,28,4.33,4,3.33,4.67,4.08
+oxymoron,HLL-HLH/HHL,Huggable Overachiever Tactician,31,4,4,3.33,5,4.08
+oxymoron,HLL-HLH/HLH,Huggable Firestarter Tactician,30,4,4,3.33,4.67,4.0
+oxymoron,HLL-HLH/HLL,Huggable Kingpin Tactician,26,4,4,3.33,4.67,4.0
+oxymoron,HLL-HLH/LHH,Huggable Troublemaker Tactician,31,4,4,3.33,4.67,4.0
+oxymoron,HLL-HLH/LHL,Huggable Hardliner Tactician,28,4,4,3.33,4.33,3.92
+oxymoron,HLL-HLH/LLH,Huggable Wildcard Tactician,27,4,4,3.33,4.67,4.0
+oxymoron,HLL-HLH/LLL,Huggable Outlaw Tactician,25,4,4,3.33,4.67,4.0
+oxymoron,HLL-HLL/HHH,Mellow Anarchist Tactician,26,4.33,4,3.33,4.33,4.0
+oxymoron,HLL-HLL/HHL,Mellow Overachiever Tactician,29,4,4,3.33,4.67,4.0
+oxymoron,HLL-HLL/HLH,Mellow Firestarter Tactician,28,4,4,3.33,4.33,3.92
+oxymoron,HLL-HLL/HLL,Mellow Kingpin Tactician,24,4,4,3.33,4.33,3.92
+oxymoron,HLL-HLL/LHH,Mellow Troublemaker Tactician,29,4,4,3.33,4.33,3.92
+oxymoron,HLL-HLL/LHL,Mellow Hardliner Tactician,26,4,4,3.33,4,3.83
+oxymoron,HLL-HLL/LLH,Mellow Wildcard Tactician,25,4,4,3.33,4.33,3.92
+oxymoron,HLL-HLL/LLL,Mellow Outlaw Tactician,23,4,4,3.33,4.33,3.92
+oxymoron,HLL-LHH/HHH,Friendly Anarchist Tactician,28,4.33,4,3.33,4.67,4.08
+oxymoron,HLL-LHH/HHL,Friendly Overachiever Tactician,31,4,4,3.33,5,4.08
+oxymoron,HLL-LHH/HLH,Friendly Firestarter Tactician,30,4,4,3.33,4.67,4.0
+oxymoron,HLL-LHH/HLL,Friendly Kingpin Tactician,26,4,4,3.33,4.67,4.0
+oxymoron,HLL-LHH/LHH,Friendly Troublemaker Tactician,31,4,4,3.33,4.67,4.0
+oxymoron,HLL-LHH/LHL,Friendly Hardliner Tactician,28,4,4,3.33,4.33,3.92
+oxymoron,HLL-LHH/LLH,Friendly Wildcard Tactician,27,4,4,3.33,4.67,4.0
+oxymoron,HLL-LHH/LLL,Friendly Outlaw Tactician,25,4,4,3.33,4.67,4.0
+oxymoron,HLL-LHL/HHH,Low-Key Anarchist Tactician,27,4.33,4,3.33,4.33,4.0
+oxymoron,HLL-LHL/HHL,Low-Key Overachiever Tactician,30,4,4,3.33,4.67,4.0
+oxymoron,HLL-LHL/HLH,Low-Key Firestarter Tactician,29,4,4,3.33,4.33,3.92
+oxymoron,HLL-LHL/HLL,Low-Key Kingpin Tactician,25,4,4,3.33,4.33,3.92
+oxymoron,HLL-LHL/LHH,Low-Key Troublemaker Tactician,30,4,4,3.33,4.33,3.92
+oxymoron,HLL-LHL/LHL,Low-Key Hardliner Tactician,27,4,4,3.33,4,3.83
+oxymoron,HLL-LHL/LLH,Low-Key Wildcard Tactician,26,4,4,3.33,4.33,3.92
+oxymoron,HLL-LHL/LLL,Low-Key Outlaw Tactician,24,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLH/HHH,Bashful Anarchist Tactician,27,4.33,4,3.33,4.33,4.0
+oxymoron,HLL-LLH/HHL,Bashful Overachiever Tactician,30,4,4,3.33,4.67,4.0
+oxymoron,HLL-LLH/HLH,Bashful Firestarter Tactician,29,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLH/HLL,Bashful Kingpin Tactician,25,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLH/LHH,Bashful Troublemaker Tactician,30,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLH/LHL,Bashful Hardliner Tactician,27,4,4,3.33,4,3.83
+oxymoron,HLL-LLH/LLH,Bashful Wildcard Tactician,26,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLH/LLL,Bashful Outlaw Tactician,24,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLL/HHH,Whispering Anarchist Tactician,30,4.33,4,3.33,4.33,4.0
+oxymoron,HLL-LLL/HHL,Whispering Overachiever Tactician,33,4,4,3.33,4.67,4.0
+oxymoron,HLL-LLL/HLH,Whispering Firestarter Tactician,32,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLL/HLL,Whispering Kingpin Tactician,28,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLL/LHH,Whispering Troublemaker Tactician,33,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLL/LHL,Whispering Hardliner Tactician,30,4,4,3.33,4,3.83
+oxymoron,HLL-LLL/LLH,Whispering Wildcard Tactician,29,4,4,3.33,4.33,3.92
+oxymoron,HLL-LLL/LLL,Whispering Outlaw Tactician,27,4,4,3.33,4.33,3.92
+oxymoron,LHH-HHH/HHH,Polite Anarchist Impresario,27,4.33,4,3.67,4,4.0
+oxymoron,LHH-HHH/HHL,Polite Overachiever Impresario,30,4,4,3.67,4.33,4.0
+oxymoron,LHH-HHH/HLH,Polite Firestarter Impresario,29,4,4,3.67,4,3.92
+oxymoron,LHH-HHH/HLL,Polite Kingpin Impresario,25,4,4,3.67,4,3.92
+oxymoron,LHH-HHH/LHH,Polite Troublemaker Impresario,30,4,4,3.67,4,3.92
+oxymoron,LHH-HHH/LHL,Polite Hardliner Impresario,27,4,4,3.67,3.67,3.83
+oxymoron,LHH-HHH/LLH,Polite Wildcard Impresario,26,4,4,3.67,4,3.92
+oxymoron,LHH-HHH/LLL,Polite Outlaw Impresario,24,4,4,3.67,4,3.92
+oxymoron,LHH-HHL/HHH,Cheerful Anarchist Impresario,29,4.33,4,3.33,4.33,4.0
+oxymoron,LHH-HHL/HHL,Cheerful Overachiever Impresario,32,4,4,3.33,4.67,4.0
+oxymoron,LHH-HHL/HLH,Cheerful Firestarter Impresario,31,4,4,3.33,4.33,3.92
+oxymoron,LHH-HHL/HLL,Cheerful Kingpin Impresario,27,4,4,3.33,4.33,3.92
+oxymoron,LHH-HHL/LHH,Cheerful Troublemaker Impresario,32,4,4,3.33,4.33,3.92
+oxymoron,LHH-HHL/LHL,Cheerful Hardliner Impresario,29,4,4,3.33,4,3.83
+oxymoron,LHH-HHL/LLH,Cheerful Wildcard Impresario,28,4,4,3.33,4.33,3.92
+oxymoron,LHH-HHL/LLL,Cheerful Outlaw Impresario,26,4,4,3.33,4.33,3.92
+oxymoron,LHH-HLH/HHH,Huggable Anarchist Impresario,29,4.33,4,3.33,4.33,4.0
+oxymoron,LHH-HLH/HHL,Huggable Overachiever Impresario,32,4,4,3.33,4.67,4.0
+oxymoron,LHH-HLH/HLH,Huggable Firestarter Impresario,31,4,4,3.33,4.33,3.92
+oxymoron,LHH-HLH/HLL,Huggable Kingpin Impresario,27,4,4,3.33,4.33,3.92
+oxymoron,LHH-HLH/LHH,Huggable Troublemaker Impresario,32,4,4,3.33,4.33,3.92
+oxymoron,LHH-HLH/LHL,Huggable Hardliner Impresario,29,4,4,3.33,4,3.83
+oxymoron,LHH-HLH/LLH,Huggable Wildcard Impresario,28,4,4,3.33,4.33,3.92
+oxymoron,LHH-HLH/LLL,Huggable Outlaw Impresario,26,4,4,3.33,4.33,3.92
+oxymoron,LHH-HLL/HHH,Mellow Anarchist Impresario,27,4.33,4,3.33,4,3.92
+oxymoron,LHH-HLL/HHL,Mellow Overachiever Impresario,30,4,4,3.33,4.33,3.92
+oxymoron,LHH-HLL/HLH,Mellow Firestarter Impresario,29,4,4,3.33,4,3.83
+oxymoron,LHH-HLL/HLL,Mellow Kingpin Impresario,25,4,4,3.33,4,3.83
+oxymoron,LHH-HLL/LHH,Mellow Troublemaker Impresario,30,4,4,3.33,4,3.83
+oxymoron,LHH-HLL/LHL,Mellow Hardliner Impresario,27,4,4,3.33,3.67,3.75
+oxymoron,LHH-HLL/LLH,Mellow Wildcard Impresario,26,4,4,3.33,4,3.83
+oxymoron,LHH-HLL/LLL,Mellow Outlaw Impresario,24,4,4,3.33,4,3.83
+oxymoron,LHH-LHH/HHH,Friendly Anarchist Impresario,29,4.33,4,3.33,4.33,4.0
+oxymoron,LHH-LHH/HHL,Friendly Overachiever Impresario,32,4,4,3.33,4.67,4.0
+oxymoron,LHH-LHH/HLH,Friendly Firestarter Impresario,31,4,4,3.33,4.33,3.92
+oxymoron,LHH-LHH/HLL,Friendly Kingpin Impresario,27,4,4,3.33,4.33,3.92
+oxymoron,LHH-LHH/LHH,Friendly Troublemaker Impresario,32,4,4,3.33,4.33,3.92
+oxymoron,LHH-LHH/LHL,Friendly Hardliner Impresario,29,4,4,3.33,4,3.83
+oxymoron,LHH-LHH/LLH,Friendly Wildcard Impresario,28,4,4,3.33,4.33,3.92
+oxymoron,LHH-LHH/LLL,Friendly Outlaw Impresario,26,4,4,3.33,4.33,3.92
+oxymoron,LHH-LHL/HHH,Low-Key Anarchist Impresario,28,4.33,4,3.33,4,3.92
+oxymoron,LHH-LHL/HHL,Low-Key Overachiever Impresario,31,4,4,3.33,4.33,3.92
+oxymoron,LHH-LHL/HLH,Low-Key Firestarter Impresario,30,4,4,3.33,4,3.83
+oxymoron,LHH-LHL/HLL,Low-Key Kingpin Impresario,26,4,4,3.33,4,3.83
+oxymoron,LHH-LHL/LHH,Low-Key Troublemaker Impresario,31,4,4,3.33,4,3.83
+oxymoron,LHH-LHL/LHL,Low-Key Hardliner Impresario,28,4,4,3.33,3.67,3.75
+oxymoron,LHH-LHL/LLH,Low-Key Wildcard Impresario,27,4,4,3.33,4,3.83
+oxymoron,LHH-LHL/LLL,Low-Key Outlaw Impresario,25,4,4,3.33,4,3.83
+oxymoron,LHH-LLH/HHH,Bashful Anarchist Impresario,28,4.33,4,3.33,4,3.92
+oxymoron,LHH-LLH/HHL,Bashful Overachiever Impresario,31,4,4,3.33,4.33,3.92
+oxymoron,LHH-LLH/HLH,Bashful Firestarter Impresario,30,4,4,3.33,4,3.83
+oxymoron,LHH-LLH/HLL,Bashful Kingpin Impresario,26,4,4,3.33,4,3.83
+oxymoron,LHH-LLH/LHH,Bashful Troublemaker Impresario,31,4,4,3.33,4,3.83
+oxymoron,LHH-LLH/LHL,Bashful Hardliner Impresario,28,4,4,3.33,3.67,3.75
+oxymoron,LHH-LLH/LLH,Bashful Wildcard Impresario,27,4,4,3.33,4,3.83
+oxymoron,LHH-LLH/LLL,Bashful Outlaw Impresario,25,4,4,3.33,4,3.83
+oxymoron,LHH-LLL/HHH,Whispering Anarchist Impresario,31,4.33,4,3.33,4,3.92
+oxymoron,LHH-LLL/HHL,Whispering Overachiever Impresario,34,4,4,3.33,4.33,3.92
+oxymoron,LHH-LLL/HLH,Whispering Firestarter Impresario,33,4,4,3.33,4,3.83
+oxymoron,LHH-LLL/HLL,Whispering Kingpin Impresario,29,4,4,3.33,4,3.83
+oxymoron,LHH-LLL/LHH,Whispering Troublemaker Impresario,34,4,4,3.33,4,3.83
+oxymoron,LHH-LLL/LHL,Whispering Hardliner Impresario,31,4,4,3.33,3.67,3.75
+oxymoron,LHH-LLL/LLH,Whispering Wildcard Impresario,30,4,4,3.33,4,3.83
+oxymoron,LHH-LLL/LLL,Whispering Outlaw Impresario,28,4,4,3.33,4,3.83
+oxymoron,LHL-HHH/HHH,Polite Anarchist Emcee,22,4.33,4,3.67,4,4.0
+oxymoron,LHL-HHH/HHL,Polite Overachiever Emcee,25,4,4,3.67,4.33,4.0
+oxymoron,LHL-HHH/HLH,Polite Firestarter Emcee,24,4,4,3.67,4,3.92
+oxymoron,LHL-HHH/HLL,Polite Kingpin Emcee,20,4,4,3.67,4,3.92
+oxymoron,LHL-HHH/LHH,Polite Troublemaker Emcee,25,4,4,3.67,4,3.92
+oxymoron,LHL-HHH/LHL,Polite Hardliner Emcee,22,4,4,3.67,3.67,3.83
+oxymoron,LHL-HHH/LLH,Polite Wildcard Emcee,21,4,4,3.67,4,3.92
+oxymoron,LHL-HHH/LLL,Polite Outlaw Emcee,19,4,4,3.67,4,3.92
+oxymoron,LHL-HHL/HHH,Cheerful Anarchist Emcee,24,4.33,4,3.33,4.33,4.0
+oxymoron,LHL-HHL/HHL,Cheerful Overachiever Emcee,27,4,4,3.33,4.67,4.0
+oxymoron,LHL-HHL/HLH,Cheerful Firestarter Emcee,26,4,4,3.33,4.33,3.92
+oxymoron,LHL-HHL/HLL,Cheerful Kingpin Emcee,22,4,4,3.33,4.33,3.92
+oxymoron,LHL-HHL/LHH,Cheerful Troublemaker Emcee,27,4,4,3.33,4.33,3.92
+oxymoron,LHL-HHL/LHL,Cheerful Hardliner Emcee,24,4,4,3.33,4,3.83
+oxymoron,LHL-HHL/LLH,Cheerful Wildcard Emcee,23,4,4,3.33,4.33,3.92
+oxymoron,LHL-HHL/LLL,Cheerful Outlaw Emcee,21,4,4,3.33,4.33,3.92
+oxymoron,LHL-HLH/HHH,Huggable Anarchist Emcee,24,4.33,4,3.33,4.33,4.0
+oxymoron,LHL-HLH/HHL,Huggable Overachiever Emcee,27,4,4,3.33,4.67,4.0
+oxymoron,LHL-HLH/HLH,Huggable Firestarter Emcee,26,4,4,3.33,4.33,3.92
+oxymoron,LHL-HLH/HLL,Huggable Kingpin Emcee,22,4,4,3.33,4.33,3.92
+oxymoron,LHL-HLH/LHH,Huggable Troublemaker Emcee,27,4,4,3.33,4.33,3.92
+oxymoron,LHL-HLH/LHL,Huggable Hardliner Emcee,24,4,4,3.33,4,3.83
+oxymoron,LHL-HLH/LLH,Huggable Wildcard Emcee,23,4,4,3.33,4.33,3.92
+oxymoron,LHL-HLH/LLL,Huggable Outlaw Emcee,21,4,4,3.33,4.33,3.92
+oxymoron,LHL-HLL/HHH,Mellow Anarchist Emcee,22,4.33,4,3.33,4,3.92
+oxymoron,LHL-HLL/HHL,Mellow Overachiever Emcee,25,4,4,3.33,4.33,3.92
+oxymoron,LHL-HLL/HLH,Mellow Firestarter Emcee,24,4,4,3.33,4,3.83
+oxymoron,LHL-HLL/HLL,Mellow Kingpin Emcee,20,4,4,3.33,4,3.83
+oxymoron,LHL-HLL/LHH,Mellow Troublemaker Emcee,25,4,4,3.33,4,3.83
+oxymoron,LHL-HLL/LHL,Mellow Hardliner Emcee,22,4,4,3.33,3.67,3.75
+oxymoron,LHL-HLL/LLH,Mellow Wildcard Emcee,21,4,4,3.33,4,3.83
+oxymoron,LHL-HLL/LLL,Mellow Outlaw Emcee,19,4,4,3.33,4,3.83
+oxymoron,LHL-LHH/HHH,Friendly Anarchist Emcee,24,4.33,4,3.33,4.33,4.0
+oxymoron,LHL-LHH/HHL,Friendly Overachiever Emcee,27,4,4,3.33,4.67,4.0
+oxymoron,LHL-LHH/HLH,Friendly Firestarter Emcee,26,4,4,3.33,4.33,3.92
+oxymoron,LHL-LHH/HLL,Friendly Kingpin Emcee,22,4,4,3.33,4.33,3.92
+oxymoron,LHL-LHH/LHH,Friendly Troublemaker Emcee,27,4,4,3.33,4.33,3.92
+oxymoron,LHL-LHH/LHL,Friendly Hardliner Emcee,24,4,4,3.33,4,3.83
+oxymoron,LHL-LHH/LLH,Friendly Wildcard Emcee,23,4,4,3.33,4.33,3.92
+oxymoron,LHL-LHH/LLL,Friendly Outlaw Emcee,21,4,4,3.33,4.33,3.92
+oxymoron,LHL-LHL/HHH,Low-Key Anarchist Emcee,23,4.33,4,3.33,4,3.92
+oxymoron,LHL-LHL/HHL,Low-Key Overachiever Emcee,26,4,4,3.33,4.33,3.92
+oxymoron,LHL-LHL/HLH,Low-Key Firestarter Emcee,25,4,4,3.33,4,3.83
+oxymoron,LHL-LHL/HLL,Low-Key Kingpin Emcee,21,4,4,3.33,4,3.83
+oxymoron,LHL-LHL/LHH,Low-Key Troublemaker Emcee,26,4,4,3.33,4,3.83
+oxymoron,LHL-LHL/LHL,Low-Key Hardliner Emcee,23,4,4,3.33,3.67,3.75
+oxymoron,LHL-LHL/LLH,Low-Key Wildcard Emcee,22,4,4,3.33,4,3.83
+oxymoron,LHL-LHL/LLL,Low-Key Outlaw Emcee,20,4,4,3.33,4,3.83
+oxymoron,LHL-LLH/HHH,Bashful Anarchist Emcee,23,4.33,4,3.33,4,3.92
+oxymoron,LHL-LLH/HHL,Bashful Overachiever Emcee,26,4,4,3.33,4.33,3.92
+oxymoron,LHL-LLH/HLH,Bashful Firestarter Emcee,25,4,4,3.33,4,3.83
+oxymoron,LHL-LLH/HLL,Bashful Kingpin Emcee,21,4,4,3.33,4,3.83
+oxymoron,LHL-LLH/LHH,Bashful Troublemaker Emcee,26,4,4,3.33,4,3.83
+oxymoron,LHL-LLH/LHL,Bashful Hardliner Emcee,23,4,4,3.33,3.67,3.75
+oxymoron,LHL-LLH/LLH,Bashful Wildcard Emcee,22,4,4,3.33,4,3.83
+oxymoron,LHL-LLH/LLL,Bashful Outlaw Emcee,20,4,4,3.33,4,3.83
+oxymoron,LHL-LLL/HHH,Whispering Anarchist Emcee,26,4.33,4,3.33,4,3.92
+oxymoron,LHL-LLL/HHL,Whispering Overachiever Emcee,29,4,4,3.33,4.33,3.92
+oxymoron,LHL-LLL/HLH,Whispering Firestarter Emcee,28,4,4,3.33,4,3.83
+oxymoron,LHL-LLL/HLL,Whispering Kingpin Emcee,24,4,4,3.33,4,3.83
+oxymoron,LHL-LLL/LHH,Whispering Troublemaker Emcee,29,4,4,3.33,4,3.83
+oxymoron,LHL-LLL/LHL,Whispering Hardliner Emcee,26,4,4,3.33,3.67,3.75
+oxymoron,LHL-LLL/LLH,Whispering Wildcard Emcee,25,4,4,3.33,4,3.83
+oxymoron,LHL-LLL/LLL,Whispering Outlaw Emcee,23,4,4,3.33,4,3.83
+oxymoron,LLH-HHH/HHH,Polite Anarchist Poet,21,4,4,3.67,4,3.92
+oxymoron,LLH-HHH/HHL,Polite Overachiever Poet,24,3.67,4,3.67,4.33,3.92
+oxymoron,LLH-HHH/HLH,Polite Firestarter Poet,23,3.67,4,3.67,4,3.83
+oxymoron,LLH-HHH/HLL,Polite Kingpin Poet,19,3.67,4,3.67,4,3.83
+oxymoron,LLH-HHH/LHH,Polite Troublemaker Poet,24,3.67,4,3.67,4,3.83
+oxymoron,LLH-HHH/LHL,Polite Hardliner Poet,21,3.67,4,3.67,3.67,3.75
+oxymoron,LLH-HHH/LLH,Polite Wildcard Poet,20,3.67,4,3.67,4,3.83
+oxymoron,LLH-HHH/LLL,Polite Outlaw Poet,18,3.67,4,3.67,4,3.83
+oxymoron,LLH-HHL/HHH,Cheerful Anarchist Poet,23,4,4,3.33,4.33,3.92
+oxymoron,LLH-HHL/HHL,Cheerful Overachiever Poet,26,3.67,4,3.33,4.67,3.92
+oxymoron,LLH-HHL/HLH,Cheerful Firestarter Poet,25,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HHL/HLL,Cheerful Kingpin Poet,21,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HHL/LHH,Cheerful Troublemaker Poet,26,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HHL/LHL,Cheerful Hardliner Poet,23,3.67,4,3.33,4,3.75
+oxymoron,LLH-HHL/LLH,Cheerful Wildcard Poet,22,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HHL/LLL,Cheerful Outlaw Poet,20,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HLH/HHH,Huggable Anarchist Poet,23,4,4,3.33,4.33,3.92
+oxymoron,LLH-HLH/HHL,Huggable Overachiever Poet,26,3.67,4,3.33,4.67,3.92
+oxymoron,LLH-HLH/HLH,Huggable Firestarter Poet,25,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HLH/HLL,Huggable Kingpin Poet,21,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HLH/LHH,Huggable Troublemaker Poet,26,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HLH/LHL,Huggable Hardliner Poet,23,3.67,4,3.33,4,3.75
+oxymoron,LLH-HLH/LLH,Huggable Wildcard Poet,22,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HLH/LLL,Huggable Outlaw Poet,20,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HLL/HHH,Mellow Anarchist Poet,21,4,4,3.33,4,3.83
+oxymoron,LLH-HLL/HHL,Mellow Overachiever Poet,24,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-HLL/HLH,Mellow Firestarter Poet,23,3.67,4,3.33,4,3.75
+oxymoron,LLH-HLL/HLL,Mellow Kingpin Poet,19,3.67,4,3.33,4,3.75
+oxymoron,LLH-HLL/LHH,Mellow Troublemaker Poet,24,3.67,4,3.33,4,3.75
+oxymoron,LLH-HLL/LHL,Mellow Hardliner Poet,21,3.67,4,3.33,3.67,3.67
+oxymoron,LLH-HLL/LLH,Mellow Wildcard Poet,20,3.67,4,3.33,4,3.75
+oxymoron,LLH-HLL/LLL,Mellow Outlaw Poet,18,3.67,4,3.33,4,3.75
+oxymoron,LLH-LHH/HHH,Friendly Anarchist Poet,23,4,4,3.33,4.33,3.92
+oxymoron,LLH-LHH/HHL,Friendly Overachiever Poet,26,3.67,4,3.33,4.67,3.92
+oxymoron,LLH-LHH/HLH,Friendly Firestarter Poet,25,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-LHH/HLL,Friendly Kingpin Poet,21,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-LHH/LHH,Friendly Troublemaker Poet,26,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-LHH/LHL,Friendly Hardliner Poet,23,3.67,4,3.33,4,3.75
+oxymoron,LLH-LHH/LLH,Friendly Wildcard Poet,22,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-LHH/LLL,Friendly Outlaw Poet,20,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-LHL/HHH,Low-Key Anarchist Poet,22,4,4,3.33,4,3.83
+oxymoron,LLH-LHL/HHL,Low-Key Overachiever Poet,25,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-LHL/HLH,Low-Key Firestarter Poet,24,3.67,4,3.33,4,3.75
+oxymoron,LLH-LHL/HLL,Low-Key Kingpin Poet,20,3.67,4,3.33,4,3.75
+oxymoron,LLH-LHL/LHH,Low-Key Troublemaker Poet,25,3.67,4,3.33,4,3.75
+oxymoron,LLH-LHL/LHL,Low-Key Hardliner Poet,22,3.67,4,3.33,3.67,3.67
+oxymoron,LLH-LHL/LLH,Low-Key Wildcard Poet,21,3.67,4,3.33,4,3.75
+oxymoron,LLH-LHL/LLL,Low-Key Outlaw Poet,19,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLH/HHH,Bashful Anarchist Poet,22,4,4,3.33,4,3.83
+oxymoron,LLH-LLH/HHL,Bashful Overachiever Poet,25,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-LLH/HLH,Bashful Firestarter Poet,24,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLH/HLL,Bashful Kingpin Poet,20,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLH/LHH,Bashful Troublemaker Poet,25,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLH/LHL,Bashful Hardliner Poet,22,3.67,4,3.33,3.67,3.67
+oxymoron,LLH-LLH/LLH,Bashful Wildcard Poet,21,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLH/LLL,Bashful Outlaw Poet,19,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLL/HHH,Whispering Anarchist Poet,25,4,4,3.33,4,3.83
+oxymoron,LLH-LLL/HHL,Whispering Overachiever Poet,28,3.67,4,3.33,4.33,3.83
+oxymoron,LLH-LLL/HLH,Whispering Firestarter Poet,27,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLL/HLL,Whispering Kingpin Poet,23,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLL/LHH,Whispering Troublemaker Poet,28,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLL/LHL,Whispering Hardliner Poet,25,3.67,4,3.33,3.67,3.67
+oxymoron,LLH-LLL/LLH,Whispering Wildcard Poet,24,3.67,4,3.33,4,3.75
+oxymoron,LLH-LLL/LLL,Whispering Outlaw Poet,22,3.67,4,3.33,4,3.75
+oxymoron,LLL-HHH/HHH,Polite Anarchist Loafer,23,4.33,4,3.67,3.67,3.92
+oxymoron,LLL-HHH/HHL,Polite Overachiever Loafer,26,4,4,3.67,4,3.92
+oxymoron,LLL-HHH/HLH,Polite Firestarter Loafer,25,4,4,3.67,3.67,3.83
+oxymoron,LLL-HHH/HLL,Polite Kingpin Loafer,21,4,4,3.67,3.67,3.83
+oxymoron,LLL-HHH/LHH,Polite Troublemaker Loafer,26,4,4,3.67,3.67,3.83
+oxymoron,LLL-HHH/LHL,Polite Hardliner Loafer,23,4,4,3.67,3.33,3.75
+oxymoron,LLL-HHH/LLH,Polite Wildcard Loafer,22,4,4,3.67,3.67,3.83
+oxymoron,LLL-HHH/LLL,Polite Outlaw Loafer,20,4,4,3.67,3.67,3.83
+oxymoron,LLL-HHL/HHH,Cheerful Anarchist Loafer,25,4.33,4,3.33,4,3.92
+oxymoron,LLL-HHL/HHL,Cheerful Overachiever Loafer,28,4,4,3.33,4.33,3.92
+oxymoron,LLL-HHL/HLH,Cheerful Firestarter Loafer,27,4,4,3.33,4,3.83
+oxymoron,LLL-HHL/HLL,Cheerful Kingpin Loafer,23,4,4,3.33,4,3.83
+oxymoron,LLL-HHL/LHH,Cheerful Troublemaker Loafer,28,4,4,3.33,4,3.83
+oxymoron,LLL-HHL/LHL,Cheerful Hardliner Loafer,25,4,4,3.33,3.67,3.75
+oxymoron,LLL-HHL/LLH,Cheerful Wildcard Loafer,24,4,4,3.33,4,3.83
+oxymoron,LLL-HHL/LLL,Cheerful Outlaw Loafer,22,4,4,3.33,4,3.83
+oxymoron,LLL-HLH/HHH,Huggable Anarchist Loafer,25,4.33,4,3.33,4,3.92
+oxymoron,LLL-HLH/HHL,Huggable Overachiever Loafer,28,4,4,3.33,4.33,3.92
+oxymoron,LLL-HLH/HLH,Huggable Firestarter Loafer,27,4,4,3.33,4,3.83
+oxymoron,LLL-HLH/HLL,Huggable Kingpin Loafer,23,4,4,3.33,4,3.83
+oxymoron,LLL-HLH/LHH,Huggable Troublemaker Loafer,28,4,4,3.33,4,3.83
+oxymoron,LLL-HLH/LHL,Huggable Hardliner Loafer,25,4,4,3.33,3.67,3.75
+oxymoron,LLL-HLH/LLH,Huggable Wildcard Loafer,24,4,4,3.33,4,3.83
+oxymoron,LLL-HLH/LLL,Huggable Outlaw Loafer,22,4,4,3.33,4,3.83
+oxymoron,LLL-HLL/HHH,Mellow Anarchist Loafer,23,4.33,4,3.33,3.67,3.83
+oxymoron,LLL-HLL/HHL,Mellow Overachiever Loafer,26,4,4,3.33,4,3.83
+oxymoron,LLL-HLL/HLH,Mellow Firestarter Loafer,25,4,4,3.33,3.67,3.75
+oxymoron,LLL-HLL/HLL,Mellow Kingpin Loafer,21,4,4,3.33,3.67,3.75
+oxymoron,LLL-HLL/LHH,Mellow Troublemaker Loafer,26,4,4,3.33,3.67,3.75
+oxymoron,LLL-HLL/LHL,Mellow Hardliner Loafer,23,4,4,3.33,3.33,3.67
+oxymoron,LLL-HLL/LLH,Mellow Wildcard Loafer,22,4,4,3.33,3.67,3.75
+oxymoron,LLL-HLL/LLL,Mellow Outlaw Loafer,20,4,4,3.33,3.67,3.75
+oxymoron,LLL-LHH/HHH,Friendly Anarchist Loafer,25,4.33,4,3.33,4,3.92
+oxymoron,LLL-LHH/HHL,Friendly Overachiever Loafer,28,4,4,3.33,4.33,3.92
+oxymoron,LLL-LHH/HLH,Friendly Firestarter Loafer,27,4,4,3.33,4,3.83
+oxymoron,LLL-LHH/HLL,Friendly Kingpin Loafer,23,4,4,3.33,4,3.83
+oxymoron,LLL-LHH/LHH,Friendly Troublemaker Loafer,28,4,4,3.33,4,3.83
+oxymoron,LLL-LHH/LHL,Friendly Hardliner Loafer,25,4,4,3.33,3.67,3.75
+oxymoron,LLL-LHH/LLH,Friendly Wildcard Loafer,24,4,4,3.33,4,3.83
+oxymoron,LLL-LHH/LLL,Friendly Outlaw Loafer,22,4,4,3.33,4,3.83
+oxymoron,LLL-LHL/HHH,Low-Key Anarchist Loafer,24,4.33,4,3.33,3.67,3.83
+oxymoron,LLL-LHL/HHL,Low-Key Overachiever Loafer,27,4,4,3.33,4,3.83
+oxymoron,LLL-LHL/HLH,Low-Key Firestarter Loafer,26,4,4,3.33,3.67,3.75
+oxymoron,LLL-LHL/HLL,Low-Key Kingpin Loafer,22,4,4,3.33,3.67,3.75
+oxymoron,LLL-LHL/LHH,Low-Key Troublemaker Loafer,27,4,4,3.33,3.67,3.75
+oxymoron,LLL-LHL/LHL,Low-Key Hardliner Loafer,24,4,4,3.33,3.33,3.67
+oxymoron,LLL-LHL/LLH,Low-Key Wildcard Loafer,23,4,4,3.33,3.67,3.75
+oxymoron,LLL-LHL/LLL,Low-Key Outlaw Loafer,21,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLH/HHH,Bashful Anarchist Loafer,24,4.33,4,3.33,3.67,3.83
+oxymoron,LLL-LLH/HHL,Bashful Overachiever Loafer,27,4,4,3.33,4,3.83
+oxymoron,LLL-LLH/HLH,Bashful Firestarter Loafer,26,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLH/HLL,Bashful Kingpin Loafer,22,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLH/LHH,Bashful Troublemaker Loafer,27,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLH/LHL,Bashful Hardliner Loafer,24,4,4,3.33,3.33,3.67
+oxymoron,LLL-LLH/LLH,Bashful Wildcard Loafer,23,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLH/LLL,Bashful Outlaw Loafer,21,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLL/HHH,Whispering Anarchist Loafer,27,4.33,4,3.33,3.67,3.83
+oxymoron,LLL-LLL/HHL,Whispering Overachiever Loafer,30,4,4,3.33,4,3.83
+oxymoron,LLL-LLL/HLH,Whispering Firestarter Loafer,29,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLL/HLL,Whispering Kingpin Loafer,25,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLL/LHH,Whispering Troublemaker Loafer,30,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLL/LHL,Whispering Hardliner Loafer,27,4,4,3.33,3.33,3.67
+oxymoron,LLL-LLL/LLH,Whispering Wildcard Loafer,26,4,4,3.33,3.67,3.75
+oxymoron,LLL-LLL/LLL,Whispering Outlaw Loafer,24,4,4,3.33,3.67,3.75
+gaming,HHH-HHH,Undisputed Final Boss ★,21,4,4,5,5,4.5
+gaming,HHH-HHL,Hype Raid Leader,16,4,4,5,4.5,4.38
+gaming,HHH-HLH,Clutch Raid Leader,18,4,4,5,5,4.5
+gaming,HHH-HLL,Stealth-Mode Raid Leader,24,4,4,5,4.5,4.38
+gaming,HHH-LHH,Tryhard Raid Leader,19,4,4,5,4,4.25
+gaming,HHH-LHL,Salty Raid Leader,17,4,4,5,4,4.25
+gaming,HHH-LLH,Min-Maxing Raid Leader,22,4,4,5,4.5,4.38
+gaming,HHH-LLL,Solo-Queue Raid Leader,22,4,4,5,4.5,4.38
+gaming,HHL-HHH,MVP Lobby Host,14,3.5,4,5,4.5,4.25
+gaming,HHL-HHL,Hype Lobby Host,15,3.5,4,5,4,4.12
+gaming,HHL-HLH,Clutch Lobby Host,17,3.5,4,5,4.5,4.25
+gaming,HHL-HLL,Stealth-Mode Lobby Host,23,3.5,4,5,4,4.12
+gaming,HHL-LHH,Tryhard Lobby Host,18,3.5,4,5,3.5,4.0
+gaming,HHL-LHL,Salty Lobby Host,16,3.5,4,5,3.5,4.0
+gaming,HHL-LLH,Min-Maxing Lobby Host,21,3.5,4,5,4,4.12
+gaming,HHL-LLL,Solo-Queue Lobby Host,21,3.5,4,5,4,4.12
+gaming,HLH-HHH,MVP Theorycrafter,17,4,4,5,4.5,4.38
+gaming,HLH-HHL,Hype Theorycrafter,18,4,4,5,4,4.25
+gaming,HLH-HLH,Clutch Theorycrafter,20,4,4,5,4.5,4.38
+gaming,HLH-HLL,Stealth-Mode Theorycrafter,26,4,4,5,4,4.25
+gaming,HLH-LHH,Tryhard Theorycrafter,21,4,4,5,3.5,4.12
+gaming,HLH-LHL,Salty Theorycrafter,19,4,4,5,3.5,4.12
+gaming,HLH-LLH,Min-Maxing Theorycrafter,24,4,4,5,4,4.25
+gaming,HLH-LLL,Solo-Queue Theorycrafter,24,4,4,5,4,4.25
+gaming,HLL-HHH,MVP Frontline Tank,18,4,4,5,5,4.5
+gaming,HLL-HHL,Hype Frontline Tank,19,4,4,5,4.5,4.38
+gaming,HLL-HLH,Clutch Frontline Tank,21,4,4,5,5,4.5
+gaming,HLL-HLL,Stealth-Mode Frontline Tank,27,4,4,5,4.5,4.38
+gaming,HLL-LHH,Tryhard Frontline Tank,22,4,4,5,4,4.25
+gaming,HLL-LHL,Salty Frontline Tank,20,4,4,5,4,4.25
+gaming,HLL-LLH,Min-Maxing Frontline Tank,25,4,4,5,4.5,4.38
+gaming,HLL-LLL,Solo-Queue Frontline Tank,25,4,4,5,4.5,4.38
+gaming,LHH-HHH,MVP Shot Caller,15,4,4,5,5,4.5
+gaming,LHH-HHL,Hype Shot Caller,16,4,4,5,4.5,4.38
+gaming,LHH-HLH,Clutch Shot Caller,18,4,4,5,5,4.5
+gaming,LHH-HLL,Stealth-Mode Shot Caller,24,4,4,5,4.5,4.38
+gaming,LHH-LHH,Tryhard Shot Caller,19,4,4,5,4,4.25
+gaming,LHH-LHL,Salty Shot Caller,17,4,4,5,4,4.25
+gaming,LHH-LLH,Min-Maxing Shot Caller,22,4,4,5,4.5,4.38
+gaming,LHH-LLL,Solo-Queue Shot Caller,22,4,4,5,4.5,4.38
+gaming,LHL-HHH,MVP Pocket Healer,17,4,4,5,5,4.5
+gaming,LHL-HHL,Hype Pocket Healer,18,4,4,5,4.5,4.38
+gaming,LHL-HLH,Clutch Pocket Healer,20,4,4,5,5,4.5
+gaming,LHL-HLL,Stealth-Mode Pocket Healer,26,4,4,5,4.5,4.38
+gaming,LHL-LHH,Tryhard Pocket Healer,21,4,4,5,4,4.25
+gaming,LHL-LHL,Salty Pocket Healer,19,4,4,5,4,4.25
+gaming,LHL-LLH,Min-Maxing Pocket Healer,24,4,4,5,4.5,4.38
+gaming,LHL-LLL,Solo-Queue Pocket Healer,24,4,4,5,4.5,4.38
+gaming,LLH-HHH,MVP Speedrunner,15,4,4,5,4.5,4.38
+gaming,LLH-HHL,Hype Speedrunner,16,4,4,5,4,4.25
+gaming,LLH-HLH,Clutch Speedrunner,18,4,4,5,4.5,4.38
+gaming,LLH-HLL,Stealth-Mode Speedrunner,24,4,4,5,4,4.25
+gaming,LLH-LHH,Tryhard Speedrunner,19,4,4,5,3.5,4.12
+gaming,LLH-LHL,Salty Speedrunner,17,4,4,5,3.5,4.12
+gaming,LLH-LLH,Min-Maxing Speedrunner,22,4,4,5,4,4.25
+gaming,LLH-LLL,Solo-Queue Speedrunner,22,4,4,5,4,4.25
+gaming,LLL-HHH,MVP Side-Quest NPC,18,4.5,4,5,4,4.38
+gaming,LLL-HHL,Hype Side-Quest NPC,19,4.5,4,5,3.5,4.25
+gaming,LLL-HLH,Clutch Side-Quest NPC,21,4.5,4,5,4,4.38
+gaming,LLL-HLL,Stealth-Mode Side-Quest NPC,27,4.5,4,5,3.5,4.25
+gaming,LLL-LHH,Tryhard Side-Quest NPC,22,4.5,4,5,3,4.12
+gaming,LLL-LHL,Salty Side-Quest NPC,20,4.5,4,5,3,4.12
+gaming,LLL-LLH,Min-Maxing Side-Quest NPC,25,4.5,4,5,3.5,4.25
+gaming,LLL-LLL,Solo-Queue Side-Quest NPC,25,4.5,4,5,3.5,4.25
+godType,HHH-HHH,The Storm-Herald Who Rallies,28,4,4.5,4.5,5,4.5
+godType,HHH-HHL,The Storm-Herald Who Bargains,29,4,4.5,4.5,4.5,4.38
+godType,HHH-HLH,The Storm-Herald Who Listens,28,3.5,4.5,4.5,5,4.38
+godType,HHH-HLL,The Storm-Herald Who Wonders,28,4,4.5,4.5,5,4.5
+godType,HHH-LHH,The Storm-Herald Who Charges,28,4,4.5,4.5,4.5,4.38
+godType,HHH-LHL,The Storm-Herald Who Haggles,28,4.5,4.5,4.5,4.5,4.5
+godType,HHH-LLH,The Storm-Herald Who Smirks,27,4,4.5,4.5,4.5,4.38
+godType,HHH-LLL,The Storm-Herald Who Vanishes,29,4,4.5,4.5,4.5,4.38
+godType,HHL-HHH,The Oathbinder Who Rallies,26,4,4.5,4.5,4.5,4.38
+godType,HHL-HHL,The Oathbinder Who Bargains,27,4,4.5,4.5,4,4.25
+godType,HHL-HLH,The Oathbinder Who Listens,26,3.5,4.5,4.5,4.5,4.25
+godType,HHL-HLL,The Oathbinder Who Wonders,26,4,4.5,4.5,4.5,4.38
+godType,HHL-LHH,The Oathbinder Who Charges,26,4,4.5,4.5,4,4.25
+godType,HHL-LHL,The Oathbinder Who Haggles,26,4.5,4.5,4.5,4,4.38
+godType,HHL-LLH,The Oathbinder Who Smirks,25,4,4.5,4.5,4,4.25
+godType,HHL-LLL,The Oathbinder Who Vanishes,27,4,4.5,4.5,4,4.25
+godType,HLH-HHH,The Artificer Who Rallies,25,4,4.5,4.5,4.5,4.38
+godType,HLH-HHL,The Artificer Who Bargains,26,4,4.5,4.5,4,4.25
+godType,HLH-HLH,The Artificer Who Listens,25,3.5,4.5,4.5,4.5,4.25
+godType,HLH-HLL,The Artificer Who Wonders,25,4,4.5,4.5,4.5,4.38
+godType,HLH-LHH,The Artificer Who Charges,25,4,4.5,4.5,4,4.25
+godType,HLH-LHL,The Artificer Who Haggles,25,4.5,4.5,4.5,4,4.38
+godType,HLH-LLH,The Artificer Who Smirks,24,4,4.5,4.5,4,4.25
+godType,HLH-LLL,The Artificer Who Vanishes,26,4,4.5,4.5,4,4.25
+godType,HLL-HHH,The Weaver Who Rallies,22,3.5,4.5,4,4.5,4.12
+godType,HLL-HHL,The Weaver Who Bargains,23,3.5,4.5,4,4,4.0
+godType,HLL-HLH,The Weaver Who Listens,22,3,4.5,4,4.5,4.0
+godType,HLL-HLL,The Weaver Who Wonders,22,3.5,4.5,4,4.5,4.12
+godType,HLL-LHH,The Weaver Who Charges,22,3.5,4.5,4,4,4.0
+godType,HLL-LHL,The Weaver Who Haggles,22,4,4.5,4,4,4.12
+godType,HLL-LLH,The Weaver Who Smirks,21,3.5,4.5,4,4,4.0
+godType,HLL-LLL,The Weaver Who Vanishes,23,3.5,4.5,4,4,4.0
+godType,LHH-HHH,The Reveler Who Rallies,23,4,4.5,4,4.5,4.25
+godType,LHH-HHL,The Reveler Who Bargains,24,4,4.5,4,4,4.12
+godType,LHH-HLH,The Reveler Who Listens,23,3.5,4.5,4,4.5,4.12
+godType,LHH-HLL,The Reveler Who Wonders,23,4,4.5,4,4.5,4.25
+godType,LHH-LHH,The Reveler Who Charges,23,4,4.5,4,4,4.12
+godType,LHH-LHL,The Reveler Who Haggles,23,4.5,4.5,4,4,4.25
+godType,LHH-LLH,The Reveler Who Smirks,22,4,4.5,4,4,4.12
+godType,LHH-LLL,The Reveler Who Vanishes,24,4,4.5,4,4,4.12
+godType,LHL-HHH,The Hearth-Warden Who Rallies,29,4,4.5,4.5,5,4.5
+godType,LHL-HHL,The Hearth-Warden Who Bargains,30,4,4.5,4.5,4.5,4.38
+godType,LHL-HLH,The Hearth-Warden Who Listens,29,3.5,4.5,4.5,5,4.38
+godType,LHL-HLL,The Hearth-Warden Who Wonders,29,4,4.5,4.5,5,4.5
+godType,LHL-LHH,The Hearth-Warden Who Charges,29,4,4.5,4.5,4.5,4.38
+godType,LHL-LHL,The Hearth-Warden Who Haggles,29,4.5,4.5,4.5,4.5,4.5
+godType,LHL-LLH,The Hearth-Warden Who Smirks,28,4,4.5,4.5,4.5,4.38
+godType,LHL-LLL,The Hearth-Warden Who Vanishes,30,4,4.5,4.5,4.5,4.38
+godType,LLH-HHH,The Oracle Who Rallies,22,4,4.5,4.5,5,4.5
+godType,LLH-HHL,The Oracle Who Bargains,23,4,4.5,4.5,4.5,4.38
+godType,LLH-HLH,The Oracle Who Listens,22,3.5,4.5,4.5,5,4.38
+godType,LLH-HLL,The Oracle Who Wonders,22,4,4.5,4.5,5,4.5
+godType,LLH-LHH,The Oracle Who Charges,22,4,4.5,4.5,4.5,4.38
+godType,LLH-LHL,The Oracle Who Haggles,22,4.5,4.5,4.5,4.5,4.5
+godType,LLH-LLH,The Oracle Who Smirks,21,4,4.5,4.5,4.5,4.38
+godType,LLH-LLL,The Oracle Who Vanishes,23,4,4.5,4.5,4.5,4.38
+godType,LLL-HHH,The Mist-Walker Who Rallies,27,4,4.5,4.5,4.5,4.38
+godType,LLL-HHL,The Mist-Walker Who Bargains,28,4,4.5,4.5,4,4.25
+godType,LLL-HLH,The Mist-Walker Who Listens,27,3.5,4.5,4.5,4.5,4.25
+godType,LLL-HLL,The Mist-Walker Who Wonders,27,4,4.5,4.5,4.5,4.38
+godType,LLL-LHH,The Mist-Walker Who Charges,27,4,4.5,4.5,4,4.25
+godType,LLL-LHL,The Mist-Walker Who Haggles,27,4.5,4.5,4.5,4,4.38
+godType,LLL-LLH,The Mist-Walker Who Smirks,26,4,4.5,4.5,4,4.25
+godType,LLL-LLL,The Rumor Who Lingers ★,21,4,4.5,4.5,4,4.25
+anime,HHH-HHH,Secretly-Sweet Chosen One,25,4.5,4,5,5,4.62
+anime,HHH-HHL,Sunshine Chosen One,19,4,4,4.5,5,4.38
+anime,HHH-HLH,Ice-Cool Chosen One,19,4,4,4.5,4.5,4.25
+anime,HHH-HLL,Daydreaming Chosen One,22,4,4,4.5,4.5,4.25
+anime,HHH-LHH,Ride-or-Die Chosen One,22,4.5,4,4.5,5,4.5
+anime,HHH-LHL,Unstoppable Chosen One,22,4,4,4.5,5,4.38
+anime,HHH-LLH,Mysterious Chosen One,21,4,4,4.5,5,4.38
+anime,HHH-LLL,Lone-Wolf Chosen One,20,4,4,4.5,4.5,4.25
+anime,HHL-HHH,Secretly-Sweet Council President,32,4.5,4,5,4.5,4.5
+anime,HHL-HHL,Sunshine Council President,26,4,4,4.5,4.5,4.25
+anime,HHL-HLH,Ice-Cool Council President,26,4,4,4.5,4,4.12
+anime,HHL-HLL,Daydreaming Council President,29,4,4,4.5,4,4.12
+anime,HHL-LHH,Ride-or-Die Council President,29,4.5,4,4.5,4.5,4.38
+anime,HHL-LHL,Unstoppable Council President,29,4,4,4.5,4.5,4.25
+anime,HHL-LLH,Mysterious Council President,28,4,4,4.5,4.5,4.25
+anime,HHL-LLL,Lone-Wolf Council President,27,4,4,4.5,4,4.12
+anime,HLH-HHH,Secretly-Sweet Rival,20,4.5,4,5,4.5,4.5
+anime,HLH-HHL,Sunshine Rival,14,4,4,4.5,4.5,4.25
+anime,HLH-HLH,Ice-Cool Rival,14,4,4,4.5,4,4.12
+anime,HLH-HLL,Daydreaming Rival,17,4,4,4.5,4,4.12
+anime,HLH-LHH,Ride-or-Die Rival,17,4.5,4,4.5,4.5,4.38
+anime,HLH-LHL,Unstoppable Rival,17,4,4,4.5,4.5,4.25
+anime,HLH-LLH,Mysterious Rival,16,4,4,4.5,4.5,4.25
+anime,HLH-LLL,Lone-Wolf Rival,15,4,4,4.5,4,4.12
+anime,HLL-HHH,Secretly-Sweet Library Ghost,28,4.5,4,4.5,4.5,4.38
+anime,HLL-HHL,Sunshine Library Ghost,22,4,4,4,4.5,4.12
+anime,HLL-HLH,Ice-Cool Library Ghost,22,4,4,4,4,4.0
+anime,HLL-HLL,Daydreaming Library Ghost,25,4,4,4,4,4.0
+anime,HLL-LHH,Ride-or-Die Library Ghost,25,4.5,4,4,4.5,4.25
+anime,HLL-LHL,Unstoppable Library Ghost,25,4,4,4,4.5,4.12
+anime,HLL-LLH,Mysterious Library Ghost,24,4,4,4,4.5,4.12
+anime,HLL-LLL,Lone-Wolf Library Ghost,23,4,4,4,4,4.0
+anime,LHH-HHH,Secretly-Sweet Comic Relief,27,5,4,5,4.5,4.62
+anime,LHH-HHL,Sunshine Comic Relief,21,4.5,4,4.5,4.5,4.38
+anime,LHH-HLH,Ice-Cool Comic Relief,21,4.5,4,4.5,4,4.25
+anime,LHH-HLL,Daydreaming Comic Relief,24,4.5,4,4.5,4,4.25
+anime,LHH-LHH,Ride-or-Die Comic Relief,24,5,4,4.5,4.5,4.5
+anime,LHH-LHL,Unstoppable Comic Relief,24,4.5,4,4.5,4.5,4.38
+anime,LHH-LLH,Mysterious Comic Relief,23,4.5,4,4.5,4.5,4.38
+anime,LHH-LLL,Lone-Wolf Comic Relief,22,4.5,4,4.5,4,4.25
+anime,LHL-HHH,Secretly-Sweet Club Captain,27,4,4,4.5,4.5,4.25
+anime,LHL-HHL,Sunshine Club Captain,21,3.5,4,4,4.5,4.0
+anime,LHL-HLH,Ice-Cool Club Captain,21,3.5,4,4,4,3.88
+anime,LHL-HLL,Daydreaming Club Captain,24,3.5,4,4,4,3.88
+anime,LHL-LHH,Ride-or-Die Club Captain,24,4,4,4,4.5,4.12
+anime,LHL-LHL,Unstoppable Club Captain,24,3.5,4,4,4.5,4.0
+anime,LHL-LLH,Mysterious Club Captain,23,3.5,4,4,4.5,4.0
+anime,LHL-LLL,Lone-Wolf Club Captain,22,3.5,4,4,4,3.88
+anime,LLH-HHH,Secretly-Sweet Transfer Student,31,4.5,4,5,4.5,4.5
+anime,LLH-HHL,Sunshine Transfer Student,25,4,4,4.5,4.5,4.25
+anime,LLH-HLH,Ice-Cool Transfer Student,25,4,4,4.5,4,4.12
+anime,LLH-HLL,Daydreaming Transfer Student,28,4,4,4.5,4,4.12
+anime,LLH-LHH,Ride-or-Die Transfer Student,28,4.5,4,4.5,4.5,4.38
+anime,LLH-LHL,Unstoppable Transfer Student,28,4,4,4.5,4.5,4.25
+anime,LLH-LLH,Mysterious Transfer Student,27,4,4,4.5,4.5,4.25
+anime,LLH-LLL,Lone-Wolf Transfer Student,26,4,4,4.5,4,4.12
+anime,LLL-HHH,Secretly-Sweet Background Extra,31,5,4,5,4,4.5
+anime,LLL-HHL,Sunshine Background Extra,25,4.5,4,4.5,4,4.25
+anime,LLL-HLH,Ice-Cool Background Extra,25,4.5,4,4.5,3.5,4.12
+anime,LLL-HLL,Daydreaming Background Extra,28,4.5,4,4.5,3.5,4.12
+anime,LLL-LHH,Ride-or-Die Background Extra,28,5,4,4.5,4,4.38
+anime,LLL-LHL,Unstoppable Background Extra,28,4.5,4,4.5,4,4.25
+anime,LLL-LLH,Mysterious Background Extra,27,4.5,4,4.5,4,4.25
+anime,LLL-LLL,Mid-Credits Twist ★,17,4.5,4,4.5,3.5,4.12
+funny,HHH-HHH,Plot Armor Personified ★,22,4.5,4,4.5,5,4.5
+funny,HHH-HHL,Snack-Bringing Main Character,29,5,4,4.5,5,4.62
+funny,HHH-HLH,Overthinking Main Character,27,4.5,4,4.5,4,4.25
+funny,HHH-HLL,Playlist-Hogging Main Character,31,5,4,4.5,4.5,4.5
+funny,HHH-LHH,Receipt-Saving Main Character,29,4.5,4,4.5,4,4.25
+funny,HHH-LHL,No-Filter Main Character,24,4.5,4,4.5,4,4.25
+funny,HHH-LLH,Eyebrow-Raising Main Character,30,5,4,4.5,4.5,4.5
+funny,HHH-LLL,Emoji-Only Main Character,25,5,4,4.5,4.5,4.5
+funny,HHL-HHH,Smooth-Talking Designated Driver,32,4.5,4,4.5,5,4.5
+funny,HHL-HHL,Snack-Bringing Designated Driver,32,5,4,4.5,5,4.62
+funny,HHL-HLH,Overthinking Designated Driver,30,4.5,4,4.5,4,4.25
+funny,HHL-HLL,Playlist-Hogging Designated Driver,34,5,4,4.5,4.5,4.5
+funny,HHL-LHH,Receipt-Saving Designated Driver,32,4.5,4,4.5,4,4.25
+funny,HHL-LHL,No-Filter Designated Driver,27,4.5,4,4.5,4,4.25
+funny,HHL-LLH,Eyebrow-Raising Designated Driver,33,5,4,4.5,4.5,4.5
+funny,HHL-LLL,Emoji-Only Designated Driver,28,5,4,4.5,4.5,4.5
+funny,HLH-HHH,Smooth-Talking Mad Scientist,28,4,4,4,4.5,4.12
+funny,HLH-HHL,Snack-Bringing Mad Scientist,28,4.5,4,4,4.5,4.25
+funny,HLH-HLH,Overthinking Mad Scientist,26,4,4,4,3.5,3.88
+funny,HLH-HLL,Playlist-Hogging Mad Scientist,30,4.5,4,4,4,4.12
+funny,HLH-LHH,Receipt-Saving Mad Scientist,28,4,4,4,3.5,3.88
+funny,HLH-LHL,No-Filter Mad Scientist,23,4,4,4,3.5,3.88
+funny,HLH-LLH,Eyebrow-Raising Mad Scientist,29,4.5,4,4,4,4.12
+funny,HLH-LLL,Emoji-Only Mad Scientist,24,4.5,4,4,4,4.12
+funny,HLL-HHH,Smooth-Talking Hall Monitor,27,4,4,4,4,4.0
+funny,HLL-HHL,Snack-Bringing Hall Monitor,27,4.5,4,4,4,4.12
+funny,HLL-HLH,Overthinking Hall Monitor,25,4,4,4,3,3.75
+funny,HLL-HLL,Playlist-Hogging Hall Monitor,29,4.5,4,4,3.5,4.0
+funny,HLL-LHH,Receipt-Saving Hall Monitor,27,4,4,4,3,3.75
+funny,HLL-LHL,No-Filter Hall Monitor,22,4,4,4,3,3.75
+funny,HLL-LLH,Eyebrow-Raising Hall Monitor,28,4.5,4,4,3.5,4.0
+funny,HLL-LLL,Emoji-Only Hall Monitor,23,4.5,4,4,3.5,4.0
+funny,LHH-HHH,Smooth-Talking Party Crasher,28,4.5,4,4,4.5,4.25
+funny,LHH-HHL,Snack-Bringing Party Crasher,28,5,4,4,4.5,4.38
+funny,LHH-HLH,Overthinking Party Crasher,26,4.5,4,4,3.5,4.0
+funny,LHH-HLL,Playlist-Hogging Party Crasher,30,5,4,4,4,4.25
+funny,LHH-LHH,Receipt-Saving Party Crasher,28,4.5,4,4,3.5,4.0
+funny,LHH-LHL,No-Filter Party Crasher,23,4.5,4,4,3.5,4.0
+funny,LHH-LLH,Eyebrow-Raising Party Crasher,29,5,4,4,4,4.25
+funny,LHH-LLL,Emoji-Only Party Crasher,24,5,4,4,4,4.25
+funny,LHL-HHH,Smooth-Talking Mom Friend,25,4.5,4,4.5,5,4.5
+funny,LHL-HHL,Snack-Bringing Mom Friend,25,5,4,4.5,5,4.62
+funny,LHL-HLH,Overthinking Mom Friend,23,4.5,4,4.5,4,4.25
+funny,LHL-HLL,Playlist-Hogging Mom Friend,27,5,4,4.5,4.5,4.5
+funny,LHL-LHH,Receipt-Saving Mom Friend,25,4.5,4,4.5,4,4.25
+funny,LHL-LHL,No-Filter Mom Friend,20,4.5,4,4.5,4,4.25
+funny,LHL-LLH,Eyebrow-Raising Mom Friend,26,5,4,4.5,4.5,4.5
+funny,LHL-LLL,Emoji-Only Mom Friend,21,5,4,4.5,4.5,4.5
+funny,LLH-HHH,Smooth-Talking Group-Chat Lurker,32,4.5,4,4.5,4,4.25
+funny,LLH-HHL,Snack-Bringing Group-Chat Lurker,32,5,4,4.5,4,4.38
+funny,LLH-HLH,Overthinking Group-Chat Lurker,30,4.5,4,4.5,3,4.0
+funny,LLH-HLL,Playlist-Hogging Group-Chat Lurker,34,5,4,4.5,3.5,4.25
+funny,LLH-LHH,Receipt-Saving Group-Chat Lurker,32,4.5,4,4.5,3,4.0
+funny,LLH-LHL,No-Filter Group-Chat Lurker,27,4.5,4,4.5,3,4.0
+funny,LLH-LLH,Eyebrow-Raising Group-Chat Lurker,33,5,4,4.5,3.5,4.25
+funny,LLH-LLL,Emoji-Only Group-Chat Lurker,28,5,4,4.5,3.5,4.25
+funny,LLL-HHH,Smooth-Talking Homebody,23,4,4,4,4.5,4.12
+funny,LLL-HHL,Snack-Bringing Homebody,23,4.5,4,4,4.5,4.25
+funny,LLL-HLH,Overthinking Homebody,21,4,4,4,3.5,3.88
+funny,LLL-HLL,Playlist-Hogging Homebody,25,4.5,4,4,4,4.12
+funny,LLL-LHH,Receipt-Saving Homebody,23,4,4,4,3.5,3.88
+funny,LLL-LHL,No-Filter Homebody,18,4,4,4,3.5,3.88
+funny,LLL-LLH,Eyebrow-Raising Homebody,24,4.5,4,4,4,4.12
+funny,LLL-LLL,Emoji-Only Homebody,19,4.5,4,4,4,4.12
+dark,HHH-HHH,Beloved Doom Incarnate ★,22,4,4.5,4,5,4.38
+dark,HHH-HHL,Conqueror the Alluring,22,4,4.5,4.5,5,4.5
+dark,HHH-HLH,Conqueror the Velvet-Gloved,27,4.5,4.5,4.5,4.5,4.5
+dark,HHH-HLL,Conqueror the Elegant,21,3.5,4.5,4,5,4.25
+dark,HHH-LHH,Conqueror the Relentless,24,4,4.5,4.5,4.5,4.38
+dark,HHH-LHL,Conqueror the Unrepentant,25,4,4.5,4.5,4.5,4.38
+dark,HHH-LLH,Conqueror the Sinister,22,4,4.5,5,4,4.38
+dark,HHH-LLL,Conqueror the Cold-Blooded,26,4,4.5,5,4,4.38
+dark,HHL-HHH,Dread Tyrant the Adored,23,4,4.5,4,4,4.12
+dark,HHL-HHL,Dread Tyrant the Alluring,25,4,4.5,4.5,4,4.25
+dark,HHL-HLH,Dread Tyrant the Velvet-Gloved,30,4.5,4.5,4.5,3.5,4.25
+dark,HHL-HLL,Dread Tyrant the Elegant,24,3.5,4.5,4,4,4.0
+dark,HHL-LHH,Dread Tyrant the Relentless,27,4,4.5,4.5,3.5,4.12
+dark,HHL-LHL,Dread Tyrant the Unrepentant,28,4,4.5,4.5,3.5,4.12
+dark,HHL-LLH,Dread Tyrant the Sinister,25,4,4.5,5,3,4.12
+dark,HHL-LLL,Dread Tyrant the Cold-Blooded,29,4,4.5,5,3,4.12
+dark,HLH-HHH,Necromancer the Adored,22,4.5,4.5,4,4.5,4.38
+dark,HLH-HHL,Necromancer the Alluring,24,4.5,4.5,4.5,4.5,4.5
+dark,HLH-HLH,Necromancer the Velvet-Gloved,29,5,4.5,4.5,4,4.5
+dark,HLH-HLL,Necromancer the Elegant,23,4,4.5,4,4.5,4.25
+dark,HLH-LHH,Necromancer the Relentless,26,4.5,4.5,4.5,4,4.38
+dark,HLH-LHL,Necromancer the Unrepentant,27,4.5,4.5,4.5,4,4.38
+dark,HLH-LLH,Necromancer the Sinister,24,4.5,4.5,5,3.5,4.38
+dark,HLH-LLL,Necromancer the Cold-Blooded,28,4.5,4.5,5,3.5,4.38
+dark,HLL-HHH,Crypt Curator the Adored,24,4.5,4.5,3.5,4.5,4.25
+dark,HLL-HHL,Crypt Curator the Alluring,26,4.5,4.5,4,4.5,4.38
+dark,HLL-HLH,Crypt Curator the Velvet-Gloved,31,5,4.5,4,4,4.38
+dark,HLL-HLL,Crypt Curator the Elegant,25,4,4.5,3.5,4.5,4.12
+dark,HLL-LHH,Crypt Curator the Relentless,28,4.5,4.5,4,4,4.25
+dark,HLL-LHL,Crypt Curator the Unrepentant,29,4.5,4.5,4,4,4.25
+dark,HLL-LLH,Crypt Curator the Sinister,26,4.5,4.5,4.5,3.5,4.25
+dark,HLL-LLL,Crypt Curator the Cold-Blooded,30,4.5,4.5,4.5,3.5,4.25
+dark,LHH-HHH,Puppeteer the Adored,20,4,4.5,3.5,4.5,4.12
+dark,LHH-HHL,Puppeteer the Alluring,22,4,4.5,4,4.5,4.25
+dark,LHH-HLH,Puppeteer the Velvet-Gloved,27,4.5,4.5,4,4,4.25
+dark,LHH-HLL,Puppeteer the Elegant,21,3.5,4.5,3.5,4.5,4.0
+dark,LHH-LHH,Puppeteer the Relentless,24,4,4.5,4,4,4.12
+dark,LHH-LHL,Puppeteer the Unrepentant,25,4,4.5,4,4,4.12
+dark,LHH-LLH,Puppeteer the Sinister,22,4,4.5,4.5,3.5,4.12
+dark,LHH-LLL,Puppeteer the Cold-Blooded,26,4,4.5,4.5,3.5,4.12
+dark,LHL-HHH,Warlock the Adored,18,4,4.5,4,4.5,4.25
+dark,LHL-HHL,Warlock the Alluring,20,4,4.5,4.5,4.5,4.38
+dark,LHL-HLH,Warlock the Velvet-Gloved,25,4.5,4.5,4.5,4,4.38
+dark,LHL-HLL,Warlock the Elegant,19,3.5,4.5,4,4.5,4.12
+dark,LHL-LHH,Warlock the Relentless,22,4,4.5,4.5,4,4.25
+dark,LHL-LHL,Warlock the Unrepentant,23,4,4.5,4.5,4,4.25
+dark,LHL-LLH,Warlock the Sinister,20,4,4.5,5,3.5,4.25
+dark,LHL-LLL,Warlock the Cold-Blooded,24,4,4.5,5,3.5,4.25
+dark,LLH-HHH,Heretic the Adored,18,4,4.5,4,4.5,4.25
+dark,LLH-HHL,Heretic the Alluring,20,4,4.5,4.5,4.5,4.38
+dark,LLH-HLH,Heretic the Velvet-Gloved,25,4.5,4.5,4.5,4,4.38
+dark,LLH-HLL,Heretic the Elegant,19,3.5,4.5,4,4.5,4.12
+dark,LLH-LHH,Heretic the Relentless,22,4,4.5,4.5,4,4.25
+dark,LLH-LHL,Heretic the Unrepentant,23,4,4.5,4.5,4,4.25
+dark,LLH-LLH,Heretic the Sinister,20,4,4.5,5,3.5,4.25
+dark,LLH-LLL,Heretic the Cold-Blooded,24,4,4.5,5,3.5,4.25
+dark,LLL-HHH,Reaper the Adored,17,4,4.5,4,4,4.12
+dark,LLL-HHL,Reaper the Alluring,19,4,4.5,4.5,4,4.25
+dark,LLL-HLH,Reaper the Velvet-Gloved,24,4.5,4.5,4.5,3.5,4.25
+dark,LLL-HLL,Reaper the Elegant,18,3.5,4.5,4,4,4.0
+dark,LLL-LHH,Reaper the Relentless,21,4,4.5,4.5,3.5,4.12
+dark,LLL-LHL,Reaper the Unrepentant,22,4,4.5,4.5,3.5,4.12
+dark,LLL-LLH,Reaper the Sinister,19,4,4.5,5,3,4.12
+dark,LLL-LLL,Reaper the Cold-Blooded,23,4,4.5,5,3,4.12

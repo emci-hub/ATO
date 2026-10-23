@@ -27,7 +27,7 @@ import {
   emptyTraitValues,
   mergeTraitWrite,
 } from '../src/lib/traits';
-import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
+import { containsFrameworkTerm, matchingFrameworkTerms } from '../src/lib/voice/framework-fence';
 
 let passed = 0;
 function ok(label: string) {
@@ -79,7 +79,7 @@ assert.deepEqual(sourceProvenance('self_game'), {
 });
 assert.deepEqual(sourceProvenance('self_settings'), {
   kind: 'corrected',
-  line: 'You corrected this after Sage checked in.',
+  line: 'You corrected this after ATO checked in.',
 });
 assert.deepEqual(sourceProvenance('self_confirm'), {
   kind: 'confirmed',
@@ -106,10 +106,16 @@ for (const axis of TRAIT_AXES) {
   assert.equal(containsFrameworkTerm(copy.hint), false, copy.hint);
 }
 const ui = [read('src/lib/full-profile.ts'), read('src/components/full-profile-fold.tsx')].join('\n');
-for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'INFJ', 'INFP']) {
-  assert.equal(ui.toLowerCase().includes(banned.toLowerCase()), false, `leaked "${banned}"`);
+// D6 (2026-10-20): a framework may be named and explained; the Full Profile never hands out a framework
+// result, a type code or an "official test" claim. Paired so the check can still fail.
+assert.deepEqual(matchingFrameworkTerms(ui), [], `Full Profile claims a framework result: ${matchingFrameworkTerms(ui).join(', ')}`);
+for (const claim of ['Your MBTI type is INFJ.', 'Your Big Five score is high.', 'You are an INFP.', 'Your attachment style is anxious.', 'ATO is a clinically validated test.']) {
+  assert.ok(containsFrameworkTerm(claim), `a result claim fails: ${claim}`);
 }
-ok('Full Profile copy names no framework, type code, or diagnosis');
+for (const fine of ['The Big Five is a model psychologists use; ATO is not that test.', 'MBTI sorts people into 16 types such as INFJ; this is different.', 'Neuroticism is a trait name some tests use.']) {
+  assert.ok(!containsFrameworkTerm(fine), `explaining a framework passes: ${fine}`);
+}
+ok('Full Profile copy hands out no framework result, type code or diagnosis; naming one to explain it is fine');
 
 const fold = read('src/components/full-profile-fold.tsx');
 assert.match(fold, /updateTraits/);
@@ -148,7 +154,7 @@ ok('Full Profile sits on Explore after trait bands; fill-later lives on the Ques
 const poster = read('src/components/share-poster.tsx');
 const handlePage = read('src/app/[handle].tsx');
 const home = read('src/app/(tabs)/index.tsx');
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const widget = read('targets/widget/widgets.swift');
 const push = read('src/lib/push-copy.ts');
 for (const [name, source] of [

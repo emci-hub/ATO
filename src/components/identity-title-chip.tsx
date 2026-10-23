@@ -67,7 +67,9 @@ export function IdentityTitleChip({
         <ThemedText type="code" themeColor="textSecondary">
           {IDENTITY_CHIP_KICKER}
         </ThemedText>
-        <ThemedText type="subtitle">{title}</ThemedText>
+        <ThemedText type="subtitle" numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}>
+          {title}
+        </ThemedText>
       </ThemedView>
     </Pressable>
   );

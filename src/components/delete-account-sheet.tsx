@@ -32,18 +32,21 @@ const WHAT_GOES = [
   'Every Check you have ever made',
   'Your Circle connections, on both sides',
   'Your chat threads and the messages in them',
-  'Everything you told Sage, including saved facts',
+  'Everything you saved in ATO, like your answers, profile cards and Legends',
 ];
 
 export function DeleteAccountSheet({
   visible,
   onClose,
   hasAppleIdentity,
+  preview = false,
 }: {
   visible: boolean;
   onClose: () => void;
   /** Drives the revocation line in the copy so we only promise what we do. */
   hasAppleIdentity?: boolean;
+  /** Dev age-gate preview only (synthetic fixtures): the final button never calls deleteAccount. */
+  preview?: boolean;
 }) {
   const theme = useTheme();
   const [typed, setTyped] = useState('');
@@ -62,6 +65,10 @@ export function DeleteAccountSheet({
 
   async function handleDelete() {
     if (!confirmed || working) return;
+    if (preview) {
+      setError('Preview: nothing was deleted. This is a synthetic account.');
+      return;
+    }
     setWorking(true);
     setError(null);
     try {
@@ -89,6 +96,8 @@ export function DeleteAccountSheet({
             <View style={styles.header}>
               <ThemedText type="subtitle">Delete your account</ThemedText>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close"
                 onPress={onClose}
                 disabled={working}
                 hitSlop={12}

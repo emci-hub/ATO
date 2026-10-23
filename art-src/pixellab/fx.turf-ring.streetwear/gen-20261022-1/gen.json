@@ -1,0 +1,22 @@
+{
+  "tool": "pixellab",
+  "model": "pixellab vfx_workbench (free), My effects c556ec72-4085-47ce-97ea-2674a506a834",
+  "prompt": "Turf War ground aura: twin ellipse ring (outer + dim inner) with white flecks marching one tick-gap per loop, grey/white ramp, camera tilt 0.38, 64x32, 8 frames, loop; baked per element by scripts-free recolour (dark x0.55, mid, light 70% white)",
+  "negative": null,
+  "seed": null,
+  "size": null,
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {},
+  "cost": null,
+  "createdAt": "2026-10-22T15:03:42.231Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": ""
+  },
+  "dirMap": {}
+}

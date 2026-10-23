@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BankFinishFold } from '@/components/bank-finish-fold';
+import { ProfileCharacter } from '@/components/profile-character';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -72,6 +73,27 @@ const TRACKS: TraitTrack[] = TRAIT_AXES.map((axis, i) => ({
   lastDepthAt: null,
 }));
 
+/** Synthetic first-read users (3 answers per trait) for the character preview. */
+const lab = (values: Partial<Record<TraitAxis, number>>, answerCount = 3): TraitTrack[] =>
+  TRAIT_AXES.map((axis) => ({
+    axis,
+    track: 'report',
+    value: values[axis] ?? 0.5,
+    stability: 0.8,
+    answerCount: values[axis] == null ? 1 : answerCount,
+    lastTouched: '2026-10-20T00:00:00Z',
+    lastDepthAt: null,
+  }));
+
+const CHARACTER_USERS: { label: string; tracks: TraitTrack[] }[] = [
+  { label: 'Clear leans', tracks: lab({ ...NOW_VALUES }) },
+  {
+    label: 'Near the line (could tip)',
+    tracks: lab({ ...NOW_VALUES, extraversion: 0.52, openness: 0.47, conscientiousness: 0.8 }),
+  },
+  { label: 'Mostly early (few traits settled)', tracks: lab({ openness: 0.2, playfulness: 0.85 }) },
+];
+
 const ALL_IDS = QUESTION_BANK.map((q) => q.id);
 const ANSWERS = new Map(QUESTION_BANK.map((q, i) => [q.id, i % q.options.length]));
 const noop = async () => {};
@@ -86,6 +108,15 @@ function ProfileCardLab() {
             <ThemedText type="small" themeColor="textSecondary">
               Sample data. Nothing here reads or writes the server.
             </ThemedText>
+            <ThemedText type="smallBold">Profile character (after the first read)</ThemedText>
+            {CHARACTER_USERS.map((u) => (
+              <View key={u.label} style={styles.inner}>
+                <ThemedText type="code" themeColor="textSecondary">
+                  {u.label}
+                </ThemedText>
+                <ProfileCharacter tracks={u.tracks} />
+              </View>
+            ))}
             <BankFinishFold
               me={ME}
               tracks={TRACKS}

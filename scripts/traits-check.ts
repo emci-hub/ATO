@@ -3,7 +3,7 @@
  * Run: npm run check:traits
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { writeForOptionalScreen } from '../src/lib/traits';
@@ -54,22 +54,24 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-const BANNED = [
-  'MBTI',
-  'Myers-Briggs',
-  '16Personalities',
-  'Big Five',
-  'OCEAN',
-  'neuroticism',
-  'INFJ',
-  'attachment style',
-  'TKI',
-  'Thomas-Kilmann',
-  'growth mindset',
-  'fixed mindset',
-  'locus of control',
-  'self-efficacy',
-  'self-determination',
+// Rule D6 (emci 2026-10-20): a framework may be NAMED and explained; a RESULT handed to the reader, an
+// "ATO measures it" claim or a trademark affiliation fails. Each framework has a failing and a passing form.
+const FRAMEWORK_PAIRS: [name: string, fail: string, pass: string][] = [
+  ['MBTI', 'Your MBTI type is INTJ.', 'MBTI is a popular sorting model; ATO does not use it.'],
+  ['Myers-Briggs', 'ATO is based on Myers-Briggs.', 'Myers-Briggs is a test some people take at work; this is a different thing.'],
+  ['16Personalities', 'Your 16Personalities result says you plan ahead.', '16Personalities is a free quiz some people compare notes on.'],
+  ['Big Five', 'Your Big Five score is high on openness.', 'The Big Five is a model psychologists use; ATO is not that test.'],
+  ['OCEAN', 'You scored high in the OCEAN traits.', 'We swam in the ocean, and ocean is also a Big Five acronym.'],
+  ['neuroticism', 'You scored high in neuroticism.', 'Neuroticism is one of the Big Five traits psychologists measure.'],
+  ['INFJ', 'You are an INFJ.', 'INFJ is one of the 16 MBTI types; it is a model, not a diagnosis.'],
+  ['attachment style', 'Your attachment style explains this.', 'Attachment style is a theory about how people bond; ATO does not measure it.'],
+  ['TKI', 'Your TKI score shows you compromise.', 'The Thomas-Kilmann conflict modes are a workplace model; ATO is not that test.'],
+  ['Thomas-Kilmann', 'ATO uses Thomas-Kilmann to score you.', 'Thomas-Kilmann describes five ways people handle conflict.'],
+  ['growth mindset', 'You have a growth mindset.', 'Growth mindset is the idea that skills can be trained.'],
+  ['fixed mindset', 'You have a fixed mindset.', 'Fixed mindset is the opposite idea, that skills are set.'],
+  ['locus of control', 'Your locus of control is external.', 'Locus of control is a theory about who you think steers events.'],
+  ['self-efficacy', 'You scored low in self-efficacy.', 'Self-efficacy is the belief that you can pull a task off.'],
+  ['self-determination', 'You have strong self-determination.', 'Self-determination theory covers autonomy, competence and relatedness.'],
 ];
 
 function meBase(over: Partial<VoiceMe> = {}): VoiceMe {
@@ -264,9 +266,12 @@ async function main() {
     read('src/lib/full-profile.ts'),
     read('src/components/full-profile-fold.tsx'),
   ].join('\n');
-  for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {
-    assert.equal(copyBlob.toLowerCase().includes(banned.toLowerCase()), false, `UI leaked "${banned}"`);
-  }
+  // D6 (2026-10-20): the intake UI may mention a framework to explain it, but never hands the reader a result
+  // or claims an official test. The old substring ban (which also caught the word "ocean") is replaced by the
+  // claim fence, with a pair so the check cannot go blind.
+  assert.deepEqual(matchingFrameworkTerms(copyBlob), [], `UI hands out a framework result or claims a test: ${matchingFrameworkTerms(copyBlob).join(', ')}`);
+  assert.ok(containsFrameworkTerm(`${copyBlob}\nYour Big Five score is shown here.`), 'the UI check still catches a result claim');
+  assert.ok(!containsFrameworkTerm(`${copyBlob}\nThe Big Five is a model; ATO is not that test.`), 'and still lets an explanation through');
   assert.doesNotMatch(read('src/app/(tabs)/you.tsx'), /openness|INFJ|attachment_anxiety|steadiness|autonomy|growth_mindset|self_efficacy/);
   ok('no framework labels in intake UI, poster, or You-tab identity');
 
@@ -302,9 +307,10 @@ async function main() {
   // The promise it carried — a raw trait value never reaches a prompt, only a
   // paraphrase — is now the daily insight's, so it is asserted against that
   // builder's own grounding helper instead.
-  const insightGen = read('src/lib/insight/generate-insight.ts');
-  assert.match(insightGen, /TRAIT_BAND_PHRASES\[axis\]\[leanHighLow\(row\.value\)\]/);
-  assert.doesNotMatch(insightGen, /row\.value\}|\$\{value\}/);
+  // The AI daily-insight builder was removed in roadmap A5. The promise now lives in the shared-library
+  // prompts: a raw or exact trait value never reaches them (pass/fail pairs in scripts/ai-library-check.ts,
+  // "exact score never reaches the prompt"), and traitPromptLines below still paraphrases.
+  assert.ok(!existsSync(resolve(root, 'src/lib/insight/generate-insight.ts')), 'the AI daily-insight builder stays deleted');
   const extLines = traitPromptLines({ extraversion: 0.25 });
   assert.match(extLines, /quieter time/);
   assert.doesNotMatch(extLines, /0\.25/);
@@ -313,8 +319,12 @@ async function main() {
   // check against the builder would fail on the very instruction that forbids
   // them. What matters is that generated output carrying one is dropped, which
   // parseDailyInsight does via containsFrameworkTerm on all five fields.
-  for (const banned of BANNED) {
-    assert.equal(containsFrameworkTerm(banned), true, `${banned} should be a banned term`);
+  for (const [name, fail, pass] of FRAMEWORK_PAIRS) {
+    assert.equal(containsFrameworkTerm(fail), true, `${name}: a result / measurement claim must fail: "${fail}"`);
+    assert.equal(containsFrameworkTerm(pass), false, `${name}: naming and explaining it must pass: "${pass}"`);
+  }
+  for (const ordinary of ['A competitive streak runs in the family.', 'Compromising photos leaked.', 'The ocean was cold.', 'Collaborative, accommodating and a little bit competitive.']) {
+    assert.equal(containsFrameworkTerm(ordinary), false, `ordinary words are not frameworks: ${ordinary}`);
   }
   const omitted = traitPromptLines({ extraversion: null, openness: null, autonomy: null, growth_mindset: null });
   assert.equal(omitted, '');
@@ -327,22 +337,25 @@ async function main() {
   assert.equal(
     filterCard(
       { read: 'Your INFJ side is showing.', do: 'After you make coffee, write one line.' },
-      { shownCards: [], crisisToday: false, previousHadCut: false },
+      { shownCards: [], previousHadCut: false },
     ),
     'framework-echo',
   );
   assert.equal(
     filterCard(
       { read: 'Day four is even.', do: 'After you make coffee, write one line about the week.' },
-      { shownCards: [], crisisToday: false, previousHadCut: false },
+      { shownCards: [], previousHadCut: false },
     ),
     null,
   );
   assert.deepEqual(matchingFrameworkTerms('Your INFJ side is showing.'), ['INFJ']);
   assert.equal(matchingFrameworkTerms('Day four is even.').length, 0);
-  assert.equal(containsFrameworkTerm('growth mindset'), true);
-  assert.equal(containsFrameworkTerm('locus of control'), true);
-  assert.equal(containsFrameworkTerm('self-efficacy'), true);
+  assert.equal(containsFrameworkTerm('You have a growth mindset.'), true);
+  assert.equal(containsFrameworkTerm('Growth mindset is a theory about effort.'), false);
+  assert.equal(containsFrameworkTerm('Your locus of control is external.'), true);
+  assert.equal(containsFrameworkTerm('Locus of control is a theory, not a score here.'), false);
+  assert.equal(containsFrameworkTerm('You scored low in self-efficacy.'), true);
+  assert.equal(containsFrameworkTerm('Self-efficacy is a belief about your own ability.'), false);
   assert.equal(containsFrameworkTerm('They picked their own way through it.'), false);
   ok('runtime fence drops generated Read/Do that names a type');
 
@@ -350,9 +363,11 @@ async function main() {
   // routeVoiceCard, which went with the card lane. The fence itself is
   // unchanged and still asserted directly above; the insight's own use of it
   // on all five fields is covered by scripts/insight-check.ts.
-  const insightFence = read('src/lib/insight/generate-insight.ts');
-  assert.match(insightFence, /if \(containsFrameworkTerm\(trimmed\)\) return null;/);
-  ok('the daily insight runs the same framework fence over its generated fields');
+  // The daily insight no longer has generated fields (hand-written bank, check:insight-bank); the fence on
+  // the remaining generated cards (deep dive, Legends) is asserted by check:framework-fence and check:ai-library.
+  assert.equal(containsFrameworkTerm('Your INFJ side is showing.'), true, 'fail case: a type code is caught');
+  assert.equal(containsFrameworkTerm('Day four is even.'), false, 'pass: ordinary copy');
+  ok('the framework fence still catches a type code and passes ordinary copy');
 
   assert.equal(
     resolveNudge({
@@ -368,7 +383,9 @@ async function main() {
   ok('Teach Sage facts that name a type never become Nudge copy');
 
   const addFact = read('src/lib/me.ts');
-  assert.match(addFact, /containsFrameworkTerm/);
+  // Teach Sage was removed with the Sage tab: no fact is persisted any more,
+  // so the fence has no write path left to guard in me.ts.
+  assert.doesNotMatch(addFact, /export async function addFact/);
   assert.match(addFact, /FACT_FRAMEWORK_MESSAGE/);
   assert.match(addFact, /export async function confirmTraits\(userId: string, axes: readonly TraitAxis\[\]\)/);
   assert.doesNotMatch(
@@ -378,7 +395,7 @@ async function main() {
     ),
     /incoming|number/,
   );
-  ok('addFact rejects a leaked phrase before it is persisted');
+  ok('addFact is gone, so no free-text fact is persisted');
   ok('confirmTraits persists source+timestamp only — no numeric incoming');
 
   // Talk's backend was deleted 2026-09-14 and the Sage tab is an inert
@@ -386,7 +403,7 @@ async function main() {
   // Talk's own fence assertions went with its backend. The same fence still
   // guards every generated surface that survives, which is what actually
   // matters; asserting nothing here would print green over a real gap.
-  assert.match(insightFence, /containsFrameworkTerm/);
+  assert.match(read('src/lib/legend-figures/story.ts'), /containsFrameworkTerm/);
   assert.match(read('src/lib/category-statements/generate-statements.ts'), /containsFrameworkTerm/);
   ok('the surviving generated surfaces all run the framework fence');
 

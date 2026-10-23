@@ -81,9 +81,6 @@ export async function routeExplore(
   if (consent !== true) {
     return { kind: 'consent-pending', pack: null };
   }
-  if (input.crisisToday) {
-    return { kind: 'crisis', pack: null };
-  }
 
   // ---- Profile-completeness gate ----------------------------------------
   // Explore observations are locked outright until every axis is settled:

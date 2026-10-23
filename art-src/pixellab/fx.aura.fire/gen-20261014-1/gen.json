@@ -1,0 +1,22 @@
+{
+  "tool": "pixellab",
+  "model": null,
+  "prompt": "PixelLab VFX workbench: burning silhouette fire aura, greyscale main ramp + green spark ramp (runtime recolour code), 8 frames",
+  "negative": null,
+  "seed": null,
+  "size": null,
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {},
+  "cost": null,
+  "createdAt": "2026-10-14T18:09:26.227Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": ""
+  },
+  "dirMap": {}
+}

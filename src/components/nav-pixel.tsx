@@ -10,7 +10,6 @@ import { useGrowth } from '@/hooks/use-growth';
 import { nextIdleNote } from '@/lib/buddy/idle';
 import { tapBuddy } from '@/lib/buddy/notes';
 import { resolveFacePalette } from '@/lib/color';
-import { isCrisisActive } from '@/lib/kenney/gesture-actions';
 import { recipeForAccount } from '@/lib/kenney/registry';
 import { pickTapMood, type TapMood, type TapMoodId } from '@/lib/kenney/tap-moods';
 import { useMeContext } from '@/lib/me-context';
@@ -33,7 +32,7 @@ export const NAV_PIXEL_HEADER_INSET = NAV_PIXEL_SLOT;
  * scroll. Idle / event-gesture / tap-mood animation all run here.
  *
  * Current-you (Home, Around, You, Circle): recipe + idle, no growth glow.
- * Aspirational-you (Sage): same instance, presence glow + depth sparkle.
+ * Aspirational-you (Insights): same instance, presence glow + depth sparkle.
  * Tap: a short coherent mood (wave / thumbs-up / happy bounce / hug). Rapid
  * re-taps interrupt-and-restart so nothing queues. He is also the app's one
  * notification character (lib/buddy/notes): a tap says the next waiting note,
@@ -48,14 +47,12 @@ export function NavPixel() {
   const lastMoodRef = useRef<TapMoodId | null>(null);
   const tapCountRef = useRef(0);
   const recipe = useMemo(() => recipeForAccount(me?.id, me?.recipe), [me]);
-  const onSage = pathname === '/sage' || pathname.endsWith('/sage');
+  const onInsights = pathname === '/insights' || pathname.endsWith('/insights');
 
   if (!me) return null;
 
   function onTap() {
-    // Same crisis hard rule as event gestures: no hands while the card is up.
-    if (isCrisisActive()) return;
-    const mood = pickTapMood(onSage, lastMoodRef.current);
+    const mood = pickTapMood(onInsights, lastMoodRef.current);
     lastMoodRef.current = mood.id;
     tapMoodRef.current?.(mood);
     // He also says something: the next waiting note, or a small idle line
@@ -81,8 +78,8 @@ export function NavPixel() {
         hitSlop={8}
         style={styles.slot}>
         <GrowthMarkers
-          presence={onSage ? state.presence : 0}
-          depth={onSage ? state.depth : 0}
+          presence={onInsights ? state.presence : 0}
+          depth={onInsights ? state.depth : 0}
           color={resolveFacePalette(recipe.palette, me.show_up)}
         />
         <PixelFace

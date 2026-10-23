@@ -1,0 +1,235 @@
+{
+ "frames": [
+  {
+   "filename": "sw-root-shot 0.png",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 25
+   },
+   "pivot": {
+    "x": 0.7592592592592593,
+    "y": 0.48
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-root-shot 1.png",
+   "frame": {
+    "x": 54,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 25
+   },
+   "pivot": {
+    "x": 0.7592592592592593,
+    "y": 0.48
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-root-shot 2.png",
+   "frame": {
+    "x": 108,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 25
+   },
+   "pivot": {
+    "x": 0.7592592592592593,
+    "y": 0.48
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-root-shot 3.png",
+   "frame": {
+    "x": 0,
+    "y": 25,
+    "w": 54,
+    "h": 25
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 25
+   },
+   "pivot": {
+    "x": 0.7592592592592593,
+    "y": 0.48
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-root-shot 4.png",
+   "frame": {
+    "x": 54,
+    "y": 25,
+    "w": 54,
+    "h": 25
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 25
+   },
+   "pivot": {
+    "x": 0.7592592592592593,
+    "y": 0.48
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-root-shot 5.png",
+   "frame": {
+    "x": 108,
+    "y": 25,
+    "w": 54,
+    "h": 25
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 25
+   },
+   "pivot": {
+    "x": 0.7592592592592593,
+    "y": 0.48
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-root-shot 6.png",
+   "frame": {
+    "x": 0,
+    "y": 50,
+    "w": 54,
+    "h": 25
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 25
+   },
+   "pivot": {
+    "x": 0.7592592592592593,
+    "y": 0.48
+   },
+   "duration": 83
+  },
+  {
+   "filename": "sw-root-shot 7.png",
+   "frame": {
+    "x": 54,
+    "y": 50,
+    "w": 54,
+    "h": 25
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 54,
+    "h": 25
+   },
+   "sourceSize": {
+    "w": 54,
+    "h": 25
+   },
+   "pivot": {
+    "x": 0.7592592592592593,
+    "y": 0.48
+   },
+   "duration": 83
+  }
+ ],
+ "meta": {
+  "app": "PixelLab VFX Creator",
+  "image": "sw-root-shot.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 162,
+   "h": 75
+  },
+  "scale": "1",
+  "anchor": {
+   "kind": "origin",
+   "x": 41,
+   "y": 12
+  },
+  "frameTags": [
+   {
+    "name": "sw-root-shot",
+    "from": 0,
+    "to": 7,
+    "direction": "forward"
+   }
+  ]
+ }
+}

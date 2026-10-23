@@ -18,7 +18,12 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
+import { setArtSkin } from '@/play/art-skin';
+import { setStreetHaptics } from '@/play/street-feel';
 import type { ItemSlot } from '@/play/items';
+import { AWAY_MIN_MS, awaySummary, type AwaySummary } from '@/play/away-summary';
+import { queueCloudSave, restoreFromCloud } from '@/play/cloud-save';
+import { lastPushFiredAt } from '@/play/pet-reminder';
 import { bumpSaveEpoch, enqueuePlaySave, saveEpoch, saveIsCurrent, whenPlaySavesSettled } from '@/play/play-save';
 import {
   claimResearch,
@@ -104,14 +109,21 @@ export type PlayTransition = (doc: PlayStoreDoc, now: number) => PlayStoreDoc | 
 export function usePlayStore() {
   const [doc, setDoc] = useState<PlayStoreDoc | null>(null);
   const docRef = useRef<PlayStoreDoc | null>(null);
+  /** "While you were away" (roadmap step 1): set on an open after an hour or more away. */
+  const [away, setAway] = useState<AwaySummary | null>(null);
+  const dismissAway = useCallback(() => setAway(null), []);
   const [, tick] = useReducer((n: number) => n + 1, 0);
 
   /** Publish `next` as the latest commit and queue its save. `paint` updates
    * the screen now; the Stone path paints only after the save resolves. */
   const remember = useCallback((next: PlayStoreDoc, paint: boolean): Promise<void> => {
     bumpSaveEpoch();
+    setArtSkin(next.play_settings.artSkin);
+    setStreetHaptics(next.play_settings.haptics);
     docRef.current = next;
     if (paint) setDoc(next);
+    // Cloud save (wave96): the newest doc goes up shortly after; the phone's own save stays the source.
+    queueCloudSave(next);
     return enqueuePlaySave(() => savePlayStore(next));
   }, []);
 
@@ -121,19 +133,34 @@ export function usePlayStore() {
     const started = saveEpoch();
     await whenPlaySavesSettled();
     if (!saveIsCurrent(started)) return;
+    // A reinstall or a new phone (no Divecore save here yet): bring the account's save back first.
+    const restored = await restoreFromCloud();
+    if (!saveIsCurrent(started)) return;
+    if (restored) await savePlayStore(restored);
     const loaded = await loadPlayStore();
     if (!saveIsCurrent(started)) return;
     // Pet (v20): age the pet on every open and save the new clock high-water
     // mark, so time away is counted once (the view alone never saves it).
-    const next = touchPet(loaded, Date.now());
+    const now = Date.now();
+    const next = touchPet(loaded, now);
     if (!saveIsCurrent(started)) return;
+    // Art style (paint only) is applied before anything draws this doc.
+    setArtSkin(next.play_settings.artSkin);
+    setStreetHaptics(next.play_settings.haptics);
     docRef.current = next;
     setDoc(next);
     if (next !== loaded) {
       bumpSaveEpoch();
+      queueCloudSave(next);
       enqueuePlaySave(() => savePlayStore(next)).catch(() => {
         // Next open re-ages from the stored mark; nothing is lost.
       });
+    }
+    // The away card: what changed between the save as loaded and after the catch-up. A push that
+    // already said it (hunger, full charges) is not repeated.
+    if (now - loaded.pet.seen_at >= AWAY_MIN_MS) {
+      const [hungerAt, chargesAt] = await Promise.all([lastPushFiredAt('hunger', now), lastPushFiredAt('charges', now)]);
+      setAway(awaySummary(loaded, next, now, { hungerAt, chargesAt }));
     }
   }, []);
 
@@ -186,7 +213,10 @@ export function usePlayStore() {
     try {
       await remember(next, false);
     } catch {
-      if (docRef.current === next) docRef.current = current;
+      if (docRef.current === next) {
+        docRef.current = current;
+        setArtSkin(current.play_settings.artSkin);
+      }
       return false;
     }
     if (docRef.current === next) setDoc(next);
@@ -546,7 +576,7 @@ export function usePlayStore() {
     [commit],
   );
 
-  /** Dev kit only: park the seat at the Final band (Main wave 20). */
+  /** Dev kit only: park the seat at the Final band (Main wave 10). */
   const forceFinal = useCallback(async (): Promise<boolean> => {
     let ok = false;
     commit((current) => {
@@ -792,6 +822,8 @@ export function usePlayStore() {
 
   return {
     view,
+    away,
+    dismissAway,
     claim,
     commit,
     commitSaved,

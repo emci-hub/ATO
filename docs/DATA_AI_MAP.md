@@ -1,5 +1,7 @@
 # DATA_AI_MAP
 
+> **Historical audit (Aug 29, 2026).** Sage, Talk, the crisis card, `sage_messages`, `crisis_flags`, "Teach Sage" facts and the 8-ball described below were removed or replaced (2026-10-14). Today AI is used only for Legends cards and category deep dives (server-side `ai-library`), and nothing a person types is scanned, flagged or logged. Do not use this file as a description of current behavior.
+
 Read-only inventory. Every piece of user data and every AI-generated output, traced from
 creation → storage → render. Built for a UI rearrangement decision. **No code was changed.**
 
@@ -53,8 +55,10 @@ live regeneration.
 
 - **G1 Maybe, not fact** — patterns reflected as hypotheses. No "you are X".
   (`sage.txt`: "Never a verdict. Never 'you are X'"; hedge inside the sentence, never bolted on.)
-- **G2 No framework names** — no MBTI / OCEAN / attachment / locus / mindset / SDT labels
-  surfaced. Enforced by `containsFrameworkTerm` (`src/lib/voice/framework-fence.ts`),
+- **G2 Framework names (decision D6, core content policy 2026-10-20)** — a framework or theory name
+  (OCEAN, attachment, locus, mindset, SDT …) is allowed when it is relevant, accurate and explained in plain
+  words; never as a diagnosis, never implying a validated assessment ATO is not, and a type code (MBTI) is
+  never presented as ATO's own result. Mechanical fence (judges the claim, not the word): `containsFrameworkTerm` (`src/lib/voice/framework-fence.ts`),
   word-level `matchingJargonTerm` (`jargon.ts`), phrase-level `matchingPhrasePattern`
   (`phrase-guard.ts`).
 - **G3 One trait at a time** — one axis per surface. Explore may combine 2–3 only on a
@@ -80,7 +84,7 @@ live regeneration.
 | `current_focus` | Stage 9 intake chip | `me.current_focus` (CHECK habit/through_it/like_yourself/show_up) | You → `intake-settings.tsx` via `displayIntakeValue` (id→label map, so `through_it` never leaks) | Summary | "How you show up" card | REAL (`test`): `like_yourself` | G2 | Y — mapped to a label before display |
 | `name` | Onboarding identity step | `me.name` | You → `share-poster.tsx`; `src/app/[handle].tsx`; Circle peer cards | Summary | Poster only (not in Settings rows) | REAL (`test`): `Em` | — | — |
 | `handle` | Onboarding identity step (uniqueness checked on account step) | `me.handle` (UNIQUE + reserved CHECK) | You → poster caption; `[handle].tsx`; invite/referral lists | Summary | Poster | REAL: `test`, `emci`, `yeezy` | — | — |
-| `born_on` | Onboarding account step, `bornOnFromParts` | `me.born_on` (CHECK ≥1900, trigger locks after set) | Never rendered after signup. Gates 16+ signup and 18+ Around via `is_at_least_age` | n/a (not rendered) | — | REAL (`test`): `1991-02-28` | Privacy: not displayed | Y — write-once, never shown |
+| `born_on` | Onboarding account step, `bornOnFromParts` | `me.born_on` (CHECK ≥1900, trigger locks after set) | Never rendered after signup. Gates 18+ signup and 18+ Around via `is_at_least_age` | n/a (not rendered) | — | REAL (`test`): `1991-02-28` | Privacy: not displayed | Y — write-once, never shown |
 | `timezone` | Device TZ at signup | `me.timezone` | You → `DetailRow` "Timezone" | Summary | You detail card, top-level | REAL: `America/Edmonton` (all 6 rows) | — | — |
 | `city` | You → `city-picker.tsx` → `setCity` (typed, not GPS) | `me.city` (slug CHECK) | Around tab uses it to fetch `weekend.json` | Summary | You `CityPicker`, top-level | REAL: `calgary` (4 of 6 rows) | Privacy: typed city, no GPS | Y |
 | `visible` | You → Around section → `setVisible` | `me.visible` (default true) | Controls face visibility in `night_snapshot`; toggle copy on You | Summary | You "Around" detail card | REAL: `true` (all 6 rows) | — | — |

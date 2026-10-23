@@ -17,12 +17,16 @@
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
+
+import { playSheetsSearchText } from './art-sheets';
 
 import { PET_COACH_ICON, petCoachTip, type PetCoachInput } from '../src/play/coach';
 import { allHeroes } from '../src/play/heroes-data';
 import { PET_BRANCHES, PET_STAGES, PET_STAGE_MS, petLines, petLookFor, type PetStage } from '../src/play/pet';
 import {
   PET_CLIPS,
+  PET_FRAME_MS,
   PET_ROOM_BOX,
   kitHas,
   petFrameAt,
@@ -56,7 +60,7 @@ function ok(label: string) {
 
 /* ------------------------------------------------------------- kits --- */
 
-const sheetsText = fs.readFileSync('src/play/generated-play-sheets.ts', 'utf8');
+const sheetsText = playSheetsSearchText(path.resolve(__dirname, '..'));
 /** East-facing frame count of a packed hero clip sheet (0 = not packed). */
 function sheetFrames(heroId: string, clip: string): number {
   const key = `"sheets/cast/heroes/${heroId}/${clip}": {`;
@@ -264,7 +268,7 @@ assert.equal(coach({ status: 'okay', diveCharges: 1 }).action, 'dive');
 assert.equal(coach({ status: 'away', backIn: '2h 5m' }).tip, 'Out exploring — back in 2h 5m.');
 // The button opens the right sheet (and that icon pulses).
 assert.equal(PET_COACH_ICON.feed, 'feed');
-assert.equal(PET_COACH_ICON.catch, 'play');
+assert.equal(PET_COACH_ICON.catch, 'feed', 'Catch the food lives in the Feed sheet (emci 2026-10-16), so the Feed icon pulses');
 assert.equal(PET_COACH_ICON.play, 'play');
 assert.equal(PET_COACH_ICON.dive, 'dive');
 assert.equal(PET_COACH_ICON.expedition, 'expedition');
@@ -304,9 +308,75 @@ ok('pixel grid: art snap, integer icon scale, Departure Mono size');
 
 // The room screen wires the pure pieces (not a stub).
 const room = fs.readFileSync('src/play/pet-room.tsx', 'utf8');
-for (const needle of ['planPetStep', 'petStatus(', 'petCoachTip(', 'pickPetLine(', 'PET_COACH_ICON']) {
+for (const needle of ['planPetStep', 'planHideoutStep', 'petStatus(', 'petCoachTip(', 'pickPetLine(', 'PET_COACH_ICON']) {
   assert.ok(room.includes(needle) || fs.readFileSync('src/play/pet-screen.tsx', 'utf8').includes(needle), `room uses ${needle}`);
 }
 ok('room screen uses the planner, status, coach and talk picker');
+
+{
+  const { onWalkFloor, planHideoutStep, randomWalkPoint, HIDEOUT_WALK } = require('../src/play/hideout-iso') as typeof import('../src/play/hideout-iso');
+  const kit: PetClipKit = { idle: 4, walk: 4 };
+  let seed = 1;
+  const rng = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const seen = new Set<string>();
+  let x = 132;
+  let y = 336;
+  for (let i = 0; i < 40; i += 1) {
+    const step = planHideoutStep({ kit, mood: 'happy', branch: 'standard', stage: 'teen', x, y, rng });
+    assert.ok(onWalkFloor(step.toX, step.toY) || Math.hypot(step.toX - x, step.toY - y) < 1, 'hideout step lands on the walk floor');
+    seen.add(`${Math.round(step.toX / 16)}:${Math.round(step.toY / 16)}`);
+    x = step.toX;
+    y = step.toY;
+  }
+  assert.ok(seen.size >= 3, '2D roam visits more than one floor cell');
+  const a = randomWalkPoint(() => 0.2);
+  const b = randomWalkPoint(() => 0.8);
+  assert.ok(onWalkFloor(a[0], a[1]) && onWalkFloor(b[0], b[1]), 'random walk points sit on the floor');
+  assert.ok(HIDEOUT_WALK.length >= 3, 'walk polygon has vertices');
+}
+ok('Hideout 2D roam: walk polygon, spread targets, every kit pose');
+
+// Catch the food sits in the Feed sheet, directly under "? Your pet" (emci 2026-10-16); the Play sheet keeps only Tap to train.
+{
+  const screenSrc = fs.readFileSync('src/play/pet-screen.tsx', 'utf8');
+  const sheetsSrc = fs.readFileSync('src/play/pet-sheets.tsx', 'utf8');
+  const feed = screenSrc.slice(screenSrc.indexOf("open={sheet === 'feed'}"), screenSrc.indexOf("open={sheet === 'play'}"));
+  assert.ok(feed.indexOf('<GuideLink section="pet"') >= 0, 'the Feed sheet still ends with "? Your pet"');
+  const catchAt = feed.search(/<GameCard\s+g="catch"/);
+  assert.ok(catchAt > feed.indexOf('<GuideLink section="pet"'), 'Catch the food comes right after the "? Your pet" chip');
+  assert.ok(/<GameCard\s+g="catch"\s+view=\{view\}\s+onStart=\{startGame\}/.test(feed), 'the Feed sheet card starts the round with startGame');
+  assert.ok(/lastKind === 'catch' \? lastResult : null/.test(feed), 'the Feed card shows the Catch result line and score burst');
+  assert.ok(!/<GameCard g="catch"/.test(sheetsSrc), 'the Play sheet no longer shows Catch the food');
+  assert.match(screenSrc, /setSheet\(kind === 'catch' \? 'feed' : 'play'\)/, 'a counted Catch round returns to the Feed sheet, Train to Play');
+  assert.ok(/<GameCard g="train"/.test(sheetsSrc), 'the Play sheet keeps Tap to train');
+}
+ok('Catch the food lives in the Feed sheet under "? Your pet"; the Play sheet keeps Tap to train');
+
+// Pet frames come off the shared timer tick (pet-anim-sprite.tsx). A 100 ms tick skipped frames of 60/80/85 ms clips
+// (a dash showed 0,1,3,5,6,8…); the 20 ms tick must show every frame in order, each at least frame-length − 1 tick.
+{
+  const TICK = 20;
+  const src = fs.readFileSync('src/play/pet-anim-sprite.tsx', 'utf8');
+  assert.match(src, /const TICK_MS = 20;/, 'the shared timer ticks every 20 ms');
+  const seen = (clip: (typeof PET_CLIPS)[number], tick: number) => {
+    const out: number[] = [];
+    for (let t = 0; t < PET_FRAME_MS[clip] * 8 * 3; t += tick) {
+      const f = petFrameAt({ [clip]: 8 }, { clip, hold: false }, t, true);
+      if (out[out.length - 1] !== f) out.push(f);
+    }
+    return out;
+  };
+  for (const clip of PET_CLIPS) {
+    const frames = seen(clip, TICK);
+    for (let i = 1; i < frames.length; i += 1) {
+      assert.equal(frames[i], (frames[i - 1] + 1) % 8, `${clip}: at ${TICK} ms ticks no frame is skipped (${frames.slice(0, 10)})`);
+    }
+  }
+  assert.notDeepEqual(seen('dash', 100).slice(0, 4), [0, 1, 2, 3], 'sanity: the old 100 ms tick did skip dash frames');
+}
+ok('pet frames: the 20 ms shared tick shows every frame in order (the 100 ms tick skipped dash/attack frames)');
 
 console.log(`\ncheck:pet-room — ${passed} groups passed.`);

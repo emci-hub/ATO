@@ -43,7 +43,10 @@ import {
   vignetteFor,
 } from '../src/play/dive-fx-model';
 import { diveButtons } from '../src/play/dive-buttons';
+import { STREET_STOPS, streetDiveLabel, streetFindName } from '../src/play/dive-street-names';
+import { diveCollectibleIds, findName } from '../src/play/dive-loot';
 import { COSMETICS } from '../src/play/pet-cosmetics';
+import { petMoneyRiskViolation } from '../src/play/pet-talk';
 import { HUB_TILES } from '../src/play/neon-viper';
 
 let passed = 0;
@@ -57,10 +60,15 @@ const UI_FILES = [
   'src/play/dive-screen.tsx',
   'src/play/dive-scene.tsx',
   'src/play/dive-hud.tsx',
+  'src/play/dive-reveal.tsx',
   'src/play/dive-buttons.ts',
   'src/play/dive-fx-model.ts',
   'src/play/dive-fx-level.ts',
   'src/play/dive-world.tsx',
+  // Streetwear Underground (2026-10-11): same odds isolation + no Math.random.
+  'src/play/dive-street.tsx',
+  'src/play/dive-street-names.ts',
+  'src/play/street-ambient.tsx',
 ];
 const ODDS_NAMES = [
   'pathBaseBust',
@@ -109,7 +117,7 @@ assert.match(screen, /bustPct: run\.bustPct,/, 'the buttons are built from run.b
   );
   // The button layout never uses a bare flex:1 (that could collapse the label).
   assert.ok(!screen.includes('button: { flex: 1'), 'no flex:1 button outside a row');
-  assert.ok(screen.includes('minHeight: 50'), 'buttons keep room for their text');
+  assert.ok(screen.includes('minHeight: 48'), 'buttons keep room for their text (48 pt, Phase 5 spec)');
   // iOS Yoga: flexBasis 0 + minWidth 0 collapses the face to ~0 width. The row
   // keeps its height, so the dock shows an empty ink gap and no DIVE / DEEPER / SURFACE.
   assert.ok(!/button:\s*\{[^}]*flexBasis:\s*0[,}]/.test(screen), 'buttons do not use flexBasis 0');
@@ -156,7 +164,6 @@ if (tint) assert.equal(findGlow(tint.id), 'rare');
 assert.ok(GLOW_COLOR.common && GLOW_COLOR.rare && GLOW_COLOR.epic);
 ok('looks: tension reads the shown %, heartbeat over 40%, neon zones, rarity glow');
 
-const banned = /\b(gamble|gambling|casino|jackpot|bet|bets|betting)\b/i;
 for (const file of [
   ...UI_FILES,
   'src/play/pet-screen.tsx',
@@ -166,14 +173,18 @@ for (const file of [
   'src/play/coach.ts',
 ]) {
   // Strings only: comments may name the rule itself.
-  // The banned-word list itself (pet-talk.ts) is the one allowed mention.
-  const source = read(file).replace(/export const PET_BANNED_WORDS[^;]*;/, '');
+  // Core content policy 2026-10-20: the rule is "do not encourage gambling or a
+  // risky money move", not the words. The rule's own patterns (pet-talk.ts) are
+  // regexes, not copy, so they are skipped here.
+  const source = read(file).replace(/const PET_MONEY_RISK_PATTERNS[\s\S]*?\n\];/, '');
   const strings = source.match(/(['"`])(?:\\.|(?!\1).)*\1/g) ?? [];
-  for (const s of strings) assert.ok(!banned.test(s), `${file}: banned word in ${s}`);
+  for (const s of strings) assert.equal(petMoneyRiskViolation(s), null, `${file}: encourages gambling in ${s}`);
 }
 const jsxText = screen.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-assert.ok(!banned.test(jsxText), 'dive-screen copy has no banned words');
-ok('wording: no gamble / casino / jackpot / bet in Dive or Pet copy');
+assert.equal(petMoneyRiskViolation(jsxText), null, 'dive-screen copy does not encourage gambling');
+assert.equal(petMoneyRiskViolation('I bet the box is full.'), null, 'ordinary "bet" passes');
+assert.notEqual(petMoneyRiskViolation('Place a bet on the box.'), null, 'encouraging a bet fails');
+ok('wording: Dive and Pet copy never encourages gambling or a risky money move');
 
 assert.ok(!HUB_TILES.some((t) => t.to === 'dive'), 'no Dive tile on the hub');
 assert.ok(HUB_TILES.some((t) => t.to === 'pet'), 'the Pet tile stays');
@@ -203,14 +214,40 @@ ok('hub: Dive tile gone, Pet tile shows a dive in progress');
   const full = diveWorldCuts('full', false);
   const low = diveWorldCuts('low', false);
   const still = diveWorldCuts('full', true);
+  const off = diveWorldCuts('full', true, true);
   assert.ok(full.shark && full.dragon && full.parallax && full.props && full.trail && full.motion, 'full draws it all');
   assert.ok(!low.shark && !low.dragon && !low.parallax && low.props, 'Low cuts shark, dragon, parallax; keeps props');
-  assert.ok(!still.shark && !still.parallax && !still.trail && !still.motion && still.props, 'reduced motion: scenery only');
+  assert.ok(!still.shark && !still.parallax && still.motion && still.props, 'reduced motion: no pans, idle life stays');
+  assert.ok(!off.motion && !off.trail && !off.shark, 'Motion Off freezes KEEP loops');
   const scene = read('src/play/dive-scene.tsx');
   assert.match(scene, /cuts\.shark && !atSurface && SHARK_DEPTHS\.includes\(depth\)/, 'the shark obeys the cut and the zones');
   assert.match(scene, /findBoxArt\(depth\)/, 'the chest is picked by depth, not a roll');
   assert.match(read('src/play/dive-screen.tsx'), /atSurface=\{!run\.active\}/, 'the surface start shows before a dive');
 }
 ok('sunken ruin: bundled art only, shark in Reef/Trench, Low cuts shark → dragon → parallax');
+
+// Streetwear Underground: display names only — one stop per depth band, the SAME
+// % on Local / Express as the Classic Deeper buttons, every find still named.
+{
+  assert.equal(STREET_STOPS.length, ZONE_BANDS.length, 'a street stop for every depth band');
+  const live = diveButtons({ active: true, canDeeper: true, bustPct: { safe: 20, rich: 36 }, charges: 1, nextChargeInMs: null });
+  for (const b of live) {
+    const street = streetDiveLabel(b);
+    assert.ok(street.length > 0, `${b.id} has a street label`);
+    const pct = /(\d+)%/.exec(b.label)?.[1];
+    if (pct) assert.ok(street.includes(`${pct}%`), `${b.id}: street label keeps the shown ${pct}%`);
+  }
+  assert.equal(streetDiveLabel(live[0]), 'LOCAL · SAFER 20%');
+  assert.equal(streetDiveLabel(live[1]), 'EXPRESS · RICHER 36%');
+  for (const id of diveCollectibleIds()) {
+    assert.ok(streetFindName(id).length > 0 && streetFindName(id) !== 'Unknown find', `${id} has a street name`);
+    if (!id.startsWith('food_')) assert.equal(streetFindName(id), findName(id), `${id}: only foods are renamed`);
+  }
+  const ui = (JSON.parse(read('assets/play/sheets/streetwear/meta.json')) as { ui: Record<string, unknown> }).ui;
+  for (const piece of [...new Set(STREET_STOPS.map((x) => x.art)), 'stop-train', 'room-hideout-iso', 'room-hideout-iso-front', 'room-hideout-iso-manhole', 'room-hideout-iso-bowl', 'room-hideout-iso-cushion', 'amb-rat-run', 'amb-pigeon', 'amb-note', 'amb-drip', 'amb-spark', 'amb-wisp']) {
+    assert.ok(ui[piece], `street art ${piece} is packed`);
+  }
+}
+ok('Underground street names: a stop per band, same % on Local / Express, foods only renamed, art packed');
 
 console.log(`\ncheck:dive-fx — ${passed} groups passed.`);

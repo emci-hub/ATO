@@ -7,6 +7,7 @@ import { getCategoryDefs, type CategoryId } from '@/lib/categories';
 import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import type { CategoryCopy } from '@/lib/sage-title';
+import { categoryDisplayName } from '@/lib/category-labels';
 
 export function CategoryCompactCard({
   id,
@@ -21,8 +22,8 @@ export function CategoryCompactCard({
   if (!def) return null;
   return (
     <View style={styles.card}>
-      <ConceptHint explainer={categoryConcept(id)} label={def.name}>
-        <ThemedText type="smallBold">{def.name}</ThemedText>
+      <ConceptHint explainer={categoryConcept(id)} label={categoryDisplayName(def)}>
+        <ThemedText type="smallBold">{categoryDisplayName(def)}</ThemedText>
       </ConceptHint>
       <ThemedText type="small" themeColor="textSecondary">
         {copy?.line ?? empty ?? 'Not showing yet.'}

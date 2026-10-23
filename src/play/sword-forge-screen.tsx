@@ -2,12 +2,40 @@
  * Element swords — bag, mix, merge, undo. Opened from Defend.
  * The rules live in `swords.ts`; this screen only sends an action up.
  */
+import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { NeonBackLink, NeonHeader, NeonPanel } from '@/play/neon-ui';
+import { artSkin } from '@/play/art-skin';
+import { PLAY_ART } from '@/play/generated-play-assets';
+import { pixelRenderStyle } from '@/play/pixel-theme';
+import { SHEET } from '@/art/art';
+import { ClipImage, sheetFrame } from '@/play/sheet-sprite';
 import type { SwordAction } from '@/play/playStore';
 import { tierWord, type SwordPanel, type SwordTier } from '@/play/swords';
+import { streetUiOn } from '@/play/street-ui';
+
+/**
+ * The sword's badge. With the Streetwear art style: a rarity card — the tier's
+ * frame + gem (colour AND gem cut differ per tier) holding the tier's sword in
+ * its element colour (pre-baked into one packed strip per tier). Otherwise the element colour swatch.
+ */
+function SwordBadge({ element, tier, color }: { element: string; tier: SwordTier; color: string }) {
+  const frame = artSkin() === 'streetwear' ? PLAY_ART[`skins/streetwear/ui/rarity/frame-${tier}`] : undefined;
+  const sword = sheetFrame(SHEET.sword[tier], element);
+  const gem = PLAY_ART[`skins/streetwear/ui/rarity/gem-${tier}`];
+  if (!frame || !sword) return <View style={[styles.swatch, { backgroundColor: color }]} />;
+  return (
+    <View style={styles.card} accessibilityLabel={`${tierWord(tier)} sword`}>
+      <Image source={frame} contentFit="contain" style={{ ...StyleSheet.absoluteFillObject, ...pixelRenderStyle }} />
+      <View style={styles.cardSword}>
+        <ClipImage drawable={{ kind: 'sheet', sheetKey: SHEET.sword[tier], frameKey: element }} />
+      </View>
+      {gem ? <Image source={gem} contentFit="contain" style={{ ...styles.cardGem, ...pixelRenderStyle }} /> : null}
+    </View>
+  );
+}
 
 export function SwordForgeScreen({
   swords,
@@ -25,7 +53,7 @@ export function SwordForgeScreen({
     <ScrollView contentContainerStyle={styles.wrap}>
       <NeonBackLink onPress={onBack} />
       <NeonHeader
-        title="Swords"
+        title={streetUiOn() ? 'Locker · Blades' : 'Swords'}
         lede="Mix two base swords of the same tier. Merge 3 to climb, or 5 to climb and keep a Common. Epic mixes with a Relic become Legendary. Divine needs a Legendary and 3 Relics."
       />
       <NeonPanel>
@@ -49,11 +77,17 @@ export function SwordForgeScreen({
             <ThemedText type="smallBold">Undo last merge</ThemedText>
           </Pressable>
         ) : null}
-        {notice ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {notice}
-          </ThemedText>
-        ) : null}
+        {/* Fixed regions: the notice line always holds its 2 lines, so a message appearing
+            never pushes the list down. */}
+        <ThemedText
+          type="small"
+          themeColor="textSecondary"
+          numberOfLines={2}
+          style={{ minHeight: 40 }}
+          accessibilityElementsHidden={!notice}
+          importantForAccessibility={notice ? 'auto' : 'no-hide-descendants'}>
+          {notice ?? ' '}
+        </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {swords.swords}/{swords.swordCap} swords · {swords.relicCount}/{swords.relicCap} relics
         </ThemedText>
@@ -70,7 +104,7 @@ export function SwordForgeScreen({
       ) : (
         swords.groups.map((group) => (
           <View key={`${group.element}-${group.tier}`} style={styles.row}>
-            <View style={[styles.swatch, { backgroundColor: group.color }]} />
+            <SwordBadge element={group.element} tier={group.tier} color={group.color} />
             <View style={styles.copy}>
               <ThemedText type="smallBold">
                 {group.name} ×{group.count}
@@ -152,6 +186,9 @@ const styles = StyleSheet.create({
   wrap: { padding: 16, gap: 12, paddingBottom: 48 },
   row: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   swatch: { width: 14, height: 14, borderRadius: 7, marginTop: 4 },
+  card: { width: 56, height: 56 },
+  cardSword: { position: 'absolute', left: 10, top: 10, width: 36, height: 36 },
+  cardGem: { position: 'absolute', left: 20, top: -6, width: 16, height: 16 },
   copy: { flex: 1, gap: 4 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   action: { paddingVertical: 4, paddingHorizontal: 8 },

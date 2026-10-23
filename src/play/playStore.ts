@@ -98,6 +98,7 @@ import {
   PET_METER_MAX,
   PET_STAGES,
   PET_STAGE_MS,
+  PET_DEEP_MIN_DEPTH,
   advancePet,
   expeditionBlock,
   expeditionStepsToday,
@@ -147,6 +148,7 @@ import {
 import {
   CARE_ACT,
   SHARDS_PER_TICKET,
+  STAR_MAX,
   DYE_STARS,
   DAILY_EGG_BONUS,
   EGGS_PER_DAY_MAX,
@@ -167,6 +169,8 @@ import {
   dyeApplies,
   emptyGradeCounts,
   gradeOdds,
+  bestGrade,
+  heroEgg,
   heroOfLine,
   heroStars,
   newEggSeed,
@@ -193,10 +197,12 @@ import {
   type FinishWallet,
 } from '@/play/finishes';
 import {
-  canonAuraTint,
   isAuraTint,
+  parseAuraMixes,
   parseAuraOwned,
+  planAuraColour,
   planAuraWear,
+  type AuraColourId,
   type AuraRefusal,
   type AuraStyle,
   type AuraTint,
@@ -214,6 +220,15 @@ import {
   wakePet,
   type DenSwapBlock,
 } from '@/play/den';
+import {
+  livePicks,
+  parseTurfHelpers,
+  turfCandidates,
+  TURF_HELPER_SLOTS,
+  type TurfCandidate,
+  type TurfHelperPick,
+} from '@/play/turf-team';
+import { parseMergeNote, planMerges, type PetMergeNote } from '@/play/pet-merge';
 import {
   MILESTONES,
   STREAK_DAYS,
@@ -235,6 +250,28 @@ import {
   type StreakAdvance,
   type StreakState,
 } from '@/play/play-settings';
+import {
+  applySpeedup,
+  careTokenBonus,
+  canStartBuild,
+  countDeepSurface,
+  countTendDay,
+  emptyHideout,
+  hideoutProgressOf,
+  inProgressBuild,
+  logReadyRooms,
+  markEverChild,
+  migrateHideout,
+  noteTokens,
+  pushHideoutEvent,
+  roomTokenPrice,
+  startBuild,
+  tickHideoutBuilds,
+  type HideoutProgressInput,
+  type HideoutRoomId,
+  type HideoutState,
+} from '@/play/hideout-progress';
+import { callBlocker, sleepChosen, startCall, stampPeekaboo, tapSleep, tapWake } from '@/play/hideout-presence';
 import {
   TIDE_PASS_DAYS,
   emptyTide,
@@ -272,6 +309,9 @@ import {
   type DivePath,
   type FoodId,
 } from '@/play/dive-loot';
+import { greetVisitor, type TodayVisitor, type VisitorReward } from '@/play/daily-visitors';
+import { decorKey, setDecorSlot } from '@/play/decor-slots';
+import { openCircleGiftBook, type CircleGift } from '@/play/circle-visits';
 import {
   COSMETIC_DUPE_SHELLS,
   NO_WEAR,
@@ -308,7 +348,9 @@ import {
   recordDaily,
   recordRound,
   EMPTY_DAILY,
+  GAMES,
   type DailyGames,
+  type Game,
   type GameRecords,
   type Medal,
 } from '@/play/game-records';
@@ -726,12 +768,85 @@ export function patchActiveAvatar(
   return replaceAvatarRecord(doc, active.id, { ...active, ...patch });
 }
 
-/** Worn copies held by EVERY Avatar (the bag is shared, so "held" counts the
- * bag plus every Avatar's four slots — not just the active one's). */
+/** P6 — one hero's (or Legend's) worn gear by slot. */
+export type Loadout = Partial<Record<ItemSlot, ItemRef>>;
+const NO_LOADOUT: Readonly<Loadout> = Object.freeze({});
+
+/** A hero's worn gear (empty when it wears none). */
+export function heroLoadoutOf(doc: PlayStoreDoc, heroId: string): Readonly<Loadout> {
+  return doc.hero_gear[heroId] ?? NO_LOADOUT;
+}
+
+/** The Turf leader's worn gear — it boosts the whole board, as it always did. */
+export function leaderLoadoutOf(doc: PlayStoreDoc): Readonly<Loadout> {
+  return heroLoadoutOf(doc, normalizedAvatarHeroId(doc));
+}
+
+/** The hero the Locker is dressing: the saved pick when it is still owned, else the leader. */
+export function lockerHeroIdOf(doc: PlayStoreDoc): string {
+  const id = doc.locker_hero_id;
+  return id && lockerCanDress(doc, id) ? id : normalizedAvatarHeroId(doc);
+}
+
+/** A hero the Locker may dress: an owned one, or one that still wears gear (so gear on a hero the save no
+ * longer owns can always be taken off). */
+function lockerCanDress(doc: PlayStoreDoc, heroId: string): boolean {
+  return heroById(heroId) != null && (heroOwned(doc, heroId) || wornItemCount(heroLoadoutOf(doc, heroId)) > 0);
+}
+
+/** Pick the hero the Locker dresses. Unknown / unowned ids are ignored; unchanged → same doc. */
+export function setLockerHero(doc: PlayStoreDoc, heroId: string): PlayStoreDoc {
+  if (!lockerCanDress(doc, heroId) || doc.locker_hero_id === heroId) return doc;
+  return { ...doc, locker_hero_id: heroId };
+}
+
+/** Replace one hero's worn gear (an empty loadout drops the key, so the save stays small). */
+function patchHeroLoadout(doc: PlayStoreDoc, heroId: string, equipped: Loadout): PlayStoreDoc {
+  const hero_gear = { ...doc.hero_gear };
+  if (wornItemCount(equipped) === 0) delete hero_gear[heroId];
+  else hero_gear[heroId] = equipped;
+  return { ...doc, hero_gear };
+}
+
+/** The gear of the hero the Locker is dressing. */
+function dressedLoadoutOf(doc: PlayStoreDoc): Readonly<Loadout> {
+  return heroLoadoutOf(doc, lockerHeroIdOf(doc));
+}
+
+/** Write the gear of the hero the Locker is dressing. */
+function patchDressedLoadout(doc: PlayStoreDoc, equipped: Loadout): PlayStoreDoc {
+  return patchHeroLoadout(doc, lockerHeroIdOf(doc), equipped);
+}
+
+/** The Turf helper's hero id, or null with no helper picked. */
+export function helperHeroIdOf(doc: PlayStoreDoc): string | null {
+  const team = turfTeamOf(doc);
+  const pick = team.picks[0];
+  return pick ? team.candidates.find((c) => c.uid === pick.uid)?.heroId ?? null : null;
+}
+
+/** Worn copies held by EVERY hero and every Legend record (the bag is shared, so "held" counts the
+ * bag plus every loadout — not just the dressed one). */
 export function wornCountAcrossAvatars(doc: PlayStoreDoc): number {
   let worn = 0;
   for (const avatar of doc.avatars) worn += wornItemCount(avatar.equipped);
+  for (const gear of Object.values(doc.hero_gear)) worn += wornItemCount(gear);
   return worn;
+}
+
+/** Worn POWERS (not Looks) across every hero and Legend — the newbie guide's "put a Power on" signal. */
+export function wornPowerCountOf(doc: PlayStoreDoc): number {
+  const powers = (equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>) =>
+    Object.values(equipped).filter((ref): ref is ItemRef => ref != null && getItemDef(ref.id)?.core.kind === 'power').length;
+  let worn = 0;
+  for (const avatar of doc.avatars) worn += powers(avatar.equipped);
+  for (const gear of Object.values(doc.hero_gear)) worn += powers(gear);
+  return worn;
+}
+
+/** Power copies in the bag (Looks do not count). */
+export function bagPowerCountOf(inventory: readonly ItemStack[]): number {
+  return inventory.reduce((n, stack) => (getItemDef(stack.id)?.core.kind === 'power' ? n + stack.count : n), 0);
 }
 
 /** Total owned items — bag stacks + every Avatar's worn copies. */
@@ -747,8 +862,8 @@ export function ownedCountsAcross(doc: PlayStoreDoc): Record<string, number> {
   for (const stack of doc.inventory) {
     counts[stack.id] = (counts[stack.id] ?? 0) + stack.count;
   }
-  for (const avatar of doc.avatars) {
-    for (const ref of Object.values(avatar.equipped)) {
+  for (const loadout of [...doc.avatars.map((a) => a.equipped), ...Object.values(doc.hero_gear)]) {
+    for (const ref of Object.values(loadout)) {
       if (ref) counts[ref.id] = (counts[ref.id] ?? 0) + 1;
     }
   }
@@ -762,8 +877,8 @@ export function ownedBestStarsAcross(doc: PlayStoreDoc): Record<string, number> 
   for (const stack of doc.inventory) {
     stars[stack.id] = Math.max(stars[stack.id] ?? 0, stack.star);
   }
-  for (const avatar of doc.avatars) {
-    for (const ref of Object.values(avatar.equipped)) {
+  for (const loadout of [...doc.avatars.map((a) => a.equipped), ...Object.values(doc.hero_gear)]) {
+    for (const ref of Object.values(loadout)) {
       if (ref) stars[ref.id] = Math.max(stars[ref.id] ?? 0, ref.star);
     }
   }
@@ -841,7 +956,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 32;
+  version: 33;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -902,6 +1017,27 @@ export type PlayStoreDoc = {
    * this hero's own sprite set (A3, `heroAvatarRole`), so this id names the art
    * AND the skill kit in play. */
   active_avatar_hero_id: string;
+  /** P4 (pet team, 2026-10-18): the Avatar hero has been folded into the pet book.
+   * Since then the Turf leader is the ACTIVE PET's hero (`normalizedAvatarHeroId`);
+   * `active_avatar_hero_id` is only the fallback while the active pet is an egg or
+   * baby. A save without this flag runs the one-time fold (`foldAvatarIntoPets`).
+   * An additive v33 field, so a phone on an older bundle still opens the save. */
+  leader_folded: boolean;
+  /** P5 (pet team, 2026-10-18): the two Turf War helpers picked at setup — Den id + where each
+   * stands (board units). Read through `parseTurfHelpers` (tolerant); a pick whose pet can no longer
+   * help is ignored by the view. An additive v33 field, like `leader_folded`. */
+  turf_helpers: TurfHelperPick[];
+  /** P6 (pet team, 2026-10-18): the Locker is per hero. Worn gear by hero id (4 slots each, same items and
+   * refs as before; the bag stays shared and a worn copy is not in the bag). Additive v33 field. Legend
+   * records keep level, stars, element and park; their old `equipped` is emptied by the one-time move. */
+  hero_gear: Record<string, Partial<Record<ItemSlot, ItemRef>>>;
+  /** P6: the one-time move of the old per-Legend loadouts into `hero_gear` has run (`foldGearIntoHeroes`). */
+  gear_moved: boolean;
+  /** Launch flip (2026-10-20): the one-time clean slate has run (`launchCleanSlate`): owned heroes, auras and
+   * finishes from the free pre-launch build are gone. A fresh save starts true. Additive v33 field. */
+  launch_reset: boolean;
+  /** P6: the hero the Locker is dressing ('' or unowned = the leader). */
+  locker_hero_id: string;
   /** One-shot "you own a hero" offer awaiting the player's decision (v18,
    * Slice A2). Set when a hero is first owned; the hero sheet shows it once and
    * every action (Avatar / bind / dismiss) clears it, so it can never re-fire
@@ -928,6 +1064,9 @@ export type PlayStoreDoc = {
   pet_expedition_note: string | null;
   /** The Play shell has already announced that return (once per return). */
   pet_expedition_toasted: boolean;
+  /** P1 (2026-10-18) — an egg's duplicate just joined the hero you keep;
+   * the pet says it once, then it is cleared. */
+  pet_merge_note: PetMergeNote | null;
   /** Every find the pet's dives / expeditions made (v21, kept through rebirth). */
   pet_logbook: PetLogbook;
   /** v22 — Dive-gear currency (TD waves, dives, free dives). */
@@ -973,7 +1112,7 @@ export type PlayStoreDoc = {
   /* ---- v27 (Part D): the Den, egg pacing, Legendary pity, Shine Stones ---- */
   /** Resting pets (frozen — nothing ages them). The active pet is `pet`. */
   pet_den: PetState[];
-  /** Den slots owned (the active pet counts as one; 6..12). */
+  /** Den slots owned (the active pet counts as one; 6..20). */
   den_slots: number;
   /** Next Den id to hand out (a pet's `uid`). */
   pet_uid_next: number;
@@ -1004,6 +1143,10 @@ export type PlayStoreDoc = {
   finish_wallet: FinishWallet;
   /** v31 — aura styles this save has bought. The colour is the equipped sword. */
   aura_owned: AuraStyle[];
+  /** Two-colour aura sets this save has bought (one entry per colourway). Single colours are free. */
+  aura_mixes: AuraColourId[];
+  /** v33 — multi-room Hideout. Unlocks survive rebirth; builds use counted time. */
+  hideout: HideoutState;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -1058,11 +1201,24 @@ export type PlayView = {
   /** Total owned items — bag + EVERY Avatar's worn copies (the bag is
    * shared, so an inactive Avatar's gear still counts toward the cap). */
   totalOwned: number;
-  /** The ACTIVE Avatar's worn refs by slot; Dress renders it. */
+  /** P6: the DRESSED hero's worn refs by slot (the Locker's hero, default the leader); Dress renders it. */
   equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>;
-  /** Raw additive mult sums from the ACTIVE Avatar's equipped items (§9c
+  /** Raw additive mult sums from the dressed hero's equipped items (§9c
    * same-stat adds, scaled +10% per worn star so a merged ★2 beats a ★1). */
   statSums: StatSums;
+  /** P6: the same sums for the Turf LEADER's gear (feeds the board-wide wave_power / tower_speed buckets). */
+  leaderStatSums: StatSums;
+  /** P6: and for the Turf HELPER's gear (zero with no helper); scales the helper's own hits only. */
+  helperStatSums: StatSums;
+  /** P6: the hero the Locker is dressing right now. */
+  lockerHeroId: string;
+  /** P6: the Turf helper's hero id (null with no helper picked). */
+  turfHelperHeroId: string | null;
+  /** P6: worn slots (0..4) per hero, for the Hideout gear badge (heroes wearing nothing are absent). */
+  heroWorn: Readonly<Record<string, number>>;
+  /** Worn Powers across every hero (Looks excluded) and Powers in the bag — the guide's signals. */
+  wornPowers: number;
+  bagPowers: number;
   /** The active Legend's element — every Avatar + hero attack uses it, and a
    * worn Power of the same element gets its stats raised (2026-09-28). */
   legendElement: Element;
@@ -1117,6 +1273,15 @@ export type PlayView = {
   /** The hero the player has set as their Avatar (Slice A2). Falls back to the
    * starter hero when the stored id is unknown/corrupt. */
   activeAvatarHeroId: string;
+  /** P4: that hero is the ACTIVE PET's (the Avatar is not picked any more). */
+  leaderFromPet: boolean;
+  /** P5 Turf team: pets that may help, the saved picks still valid, and the leader's stars/grade. */
+  turfTeam: {
+    candidates: readonly TurfCandidate[];
+    picks: readonly TurfHelperPick[];
+    leaderStars: number;
+    leaderGrade: Grade | null;
+  };
   /** Hero ids currently bound as towers (Slice A2) — the hero subset of
    * `boundBosses`, which is what the cap and the exclusivity rule read. */
   boundHeroIds: readonly string[];
@@ -1137,6 +1302,8 @@ export type PlayView = {
   chargesArmed: boolean;
   /** v29 — element swords (bag, equipped, relics, undo). */
   swords: SwordPanel;
+  /** v33 — multi-room Hideout. */
+  hideout: HideoutView;
 };
 
 /** Read-model of the pet for the screens. */
@@ -1175,6 +1342,8 @@ export type PetView = {
   expeditionNote: string | null;
   /** That return still needs its one-time "Your pet is back" message. */
   expeditionNoteFresh: boolean;
+  /** P1 — "Kael ★★ → ★★★": a duplicate just joined up (until said). */
+  mergeNote: PetMergeNote | null;
   logbook: PetLogbook;
   /** v22 — food in the pantry, and its total (max PANTRY_MAX). */
   pantry: Partial<Record<FoodId, number>>;
@@ -1207,7 +1376,7 @@ export type PetView = {
   stagePower: { bustPp: number; lucky: number; tripMult: number; tripBetter: boolean };
   /** v26 — mini-game records, rank titles and today's daily challenge. */
   records: GameRecords;
-  ranks: Record<'catch' | 'train', string>;
+  ranks: Record<Game, string>;
   daily: DailyGames;
   /** v27 — the Den: resting pets (frozen), slots owned / in use, the next
    * slot's price (null = at the most), and why a swap is blocked right now
@@ -1237,8 +1406,22 @@ export type PetView = {
   streak: { next: number; last: number | null; ymd: string | null; claimedToday: boolean };
   /** v30 — finishes this save can wear. `free` is the pre-launch unlock. */
   finish: { wallet: FinishWallet; pass: boolean; free: boolean };
-  /** v32 — worn auras. `element` is the equipped sword, or null. Colours are free. */
-  auraSlot: { worn: readonly AuraWear[]; owned: readonly AuraStyle[]; element: string | null; pass: boolean; free: boolean };
+  /** v32 — worn auras. `element` is the equipped sword, or null. Single colours are free; `mixes` are the two-colour sets owned. */
+  auraSlot: {
+    worn: readonly AuraWear[];
+    owned: readonly AuraStyle[];
+    mixes: readonly AuraColourId[];
+    element: string | null;
+    pass: boolean;
+    free: boolean;
+  };
+};
+
+export type HideoutView = {
+  state: HideoutState;
+  progress: HideoutProgressInput;
+  viewed: HideoutRoomId;
+  build: { room: HideoutRoomId; remainingMs: number } | null;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -1285,8 +1468,10 @@ export type DiveRunView = {
 export type ClaimResult = {
   /** Whole cycles dumped from the bag (= number of item finds granted). */
   cyclesClaimed: number;
-  /** Granted item ids (one roll per claimed cycle), appended to `inventory`. */
+  /** Granted item ids (one roll per claimed cycle, plus any research-yield bonus finds), appended to `inventory`. */
   items: string[];
+  /** Extra finds from worn research yield (Curator's Cloak, Ember Mantle); already counted in `items`. */
+  bonusFinds: number;
   tendTokens: number;
   dailyBonusTokens: number;
   diveChargeGranted: boolean;
@@ -1304,7 +1489,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 32,
+    version: 33,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1334,6 +1519,12 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     // the active Avatar hero (what `unit.avatar` already draws).
     owned_hero_ids: [DEFAULT_AVATAR_HERO_ID],
     active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID,
+    leader_folded: true,
+    turf_helpers: [],
+    hero_gear: {},
+    gear_moved: true,
+    launch_reset: true,
+    locker_hero_id: '',
     hero_offer: null,
     pet: newPet(now),
     pet_hall: [],
@@ -1346,6 +1537,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     pet_expedition_steps: 0,
     pet_expedition_note: null,
     pet_expedition_toasted: true,
+    pet_merge_note: null,
     pet_logbook: {},
     shells: 0,
     dive_gear: { ...NO_DIVE_GEAR },
@@ -1385,6 +1577,8 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     sword_bag: emptySwordBag(),
     finish_wallet: emptyFinishWallet(),
     aura_owned: [],
+    aura_mixes: [],
+    hideout: emptyHideout(),
   };
 }
 
@@ -1439,8 +1633,21 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     tendBonusAvailable: doc.last_tend_bonus_ymd !== localYmd(new Date(now)),
     inventory: doc.inventory,
     totalOwned: totalOwnedAcrossAvatars(doc),
-    equipped: active.equipped,
-    statSums: equippedStatSums(active.equipped, legendElementOf(active.id)),
+    equipped: dressedLoadoutOf(doc),
+    statSums: equippedStatSums(dressedLoadoutOf(doc), legendElementOf(active.id)),
+    leaderStatSums: equippedStatSums(leaderLoadoutOf(doc), legendElementOf(active.id)),
+    helperStatSums: equippedStatSums(
+      (() => {
+        const helper = helperHeroIdOf(doc);
+        return helper ? heroLoadoutOf(doc, helper) : NO_LOADOUT;
+      })(),
+      legendElementOf(active.id),
+    ),
+    lockerHeroId: lockerHeroIdOf(doc),
+    turfHelperHeroId: helperHeroIdOf(doc),
+    heroWorn: Object.fromEntries(Object.entries(doc.hero_gear).map(([hero, gear]) => [hero, wornItemCount(gear)])),
+    wornPowers: wornPowerCountOf(doc),
+    bagPowers: bagPowerCountOf(doc.inventory),
     legendElement: legendElementOf(active.id),
     avatars: doc.avatars.map((avatar) => ({
       id: avatar.id,
@@ -1470,8 +1677,10 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     shopWeekCounts: shopWeekCountsOf(doc, now),
     shopPassCounts: shopPassCountsOf(doc),
     avatarPark: active.park,
-    ownedHeroIds: doc.owned_hero_ids,
+    ownedHeroIds: ownedHeroIdsOf(doc),
     activeAvatarHeroId: normalizedAvatarHeroId(doc),
+    leaderFromPet: leaderFromPetOf(doc),
+    turfTeam: turfTeamOf(doc),
     boundHeroIds: boundHeroIdsOf(doc),
     heroOffer: doc.hero_offer,
     pet: petViewOf(doc, now),
@@ -1483,6 +1692,12 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     chargesFullAt: chargesFullAt(doc, now),
     chargesArmed: doc.charges_armed,
     swords: swordPanel(doc.sword_bag),
+    hideout: {
+      state: doc.hideout,
+      progress: hideoutProgressOf(doc),
+      viewed: doc.hideout.viewed_room,
+      build: inProgressBuild(doc.hideout, now),
+    },
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
       return {
@@ -1573,7 +1788,7 @@ function nextDeeperBustPct(
   // v26: a Snack buff rides the whole dive; the half-table floor still holds.
   return effectiveBustPct(
     pathBaseBust(diveBustChanceAt(run.deepers), path),
-    active.equipped,
+    leaderLoadoutOf(doc),
     legendElementOf(active.id),
     petBustCutPp(pet, away) + (run.snack ? SNACK_BUST_PP : 0),
   );
@@ -1779,6 +1994,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     tripsToday: stepsToday,
     expeditionNote: doc.pet_expedition_note,
     expeditionNoteFresh: doc.pet_expedition_note != null && !doc.pet_expedition_toasted,
+    mergeNote: doc.pet_merge_note,
     logbook: doc.pet_logbook,
     pantry: doc.pet_pantry,
     pantryTotal: pantryTotal(doc.pet_pantry),
@@ -1802,7 +2018,11 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
       tripBetter: petTripBetter(pet),
     },
     records: doc.game_records,
-    ranks: { catch: rankTitle(doc.game_records, 'catch'), train: rankTitle(doc.game_records, 'train') },
+    ranks: {
+      catch: rankTitle(doc.game_records, 'catch'),
+      train: rankTitle(doc.game_records, 'train'),
+      dash: rankTitle(doc.game_records, 'dash'),
+    },
     daily: dailyFor(doc.daily_games, today),
     den: {
       resting: doc.pet_den,
@@ -1840,6 +2060,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     auraSlot: {
       worn: pet.auras,
       owned: doc.aura_owned,
+      mixes: doc.aura_mixes,
       element: swordPanel(doc.sword_bag).equipped?.element ?? null,
       pass: tideActive(doc.tide, today),
       free: PLAY_EVERYTHING_FREE,
@@ -1857,6 +2078,13 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
  * collect an expedition whose time is up: one find to the bag, a Logbook
  * entry (depth 0), and the "brought back" note (v21). Returns
  * the same doc when nothing changed. */
+function syncHideout(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  let h = tickHideoutBuilds(doc.hideout, now);
+  h = markEverChild(h, doc.pet, doc.pet_hall, doc.pet_rebirths);
+  h = logReadyRooms(h, hideoutProgressOf({ ...doc, hideout: h }), now);
+  return h === doc.hideout ? doc : { ...doc, hideout: h };
+}
+
 export function touchPet(
   doc: PlayStoreDoc,
   now: number,
@@ -1868,6 +2096,8 @@ export function touchPet(
   doc = countPlayDay(settlePetAging(doc, doc.pet, pet), now);
   const armed = doc.charges_armed && !diveChargeAt(doc, now).full;
   if (armed !== doc.charges_armed) doc = { ...doc, charges_armed: armed };
+  const withPet = pet === doc.pet ? doc : { ...doc, pet };
+  doc = syncHideout(withPet, now);
   const exp = doc.pet_expedition;
   if (exp && expeditionLeftMs(pet, exp) <= 0) {
     // A solo dive: it can't bust, it always brings back one find — what, by
@@ -1879,6 +2109,9 @@ export function touchPet(
     return {
       ...banked,
       pet_expedition: null,
+      // Step 0m: the pet comes home into the room being viewed (a normal call stay), so the
+      // viewed room is never left empty when presence falls back to the clock (loft / bedtime).
+      hideout: startCall(banked.hideout, pet, banked.hideout.viewed_room),
       // v26: a Power past today's ceiling came back as shells — say so.
       pet_expedition_note: bankedRes.powersConverted > 0 ? `shells_${POWER_OVERFLOW_SHELLS}` : find,
       pet_expedition_toasted: false,
@@ -2191,7 +2424,9 @@ export function warmEggDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null 
 export function ackPetRevealsDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
   const touched = touchPet(doc, now);
   if (touched.pet.reveals.length === 0) return touched === doc ? null : touched;
-  return { ...touched, pet: ackPetReveals(touched.pet) };
+  // P1: once the Child reveal has played, a hero you already keep joins up.
+  const folded = foldDuplicatePets({ ...touched, pet: ackPetReveals(touched.pet) }, now);
+  return folded.note ? { ...folded.doc, pet_merge_note: folded.note } : folded.doc;
 }
 
 /** A pet leaving (release / rebirth): into the Collection, and a shard of
@@ -2338,7 +2573,10 @@ function milestoneInputOf(doc: PlayStoreDoc, now: number) {
     anyShiny: recs.some((r) => r.shinies > 0),
     anyFiveStar: recs.some((r) => heroStars(r.copies) >= 5),
     eggsHatched: doc.play_stats.eggs_hatched,
-    insaneGold: doc.game_records.catch.insane.medal === 'gold' || doc.game_records.train.insane.medal === 'gold',
+    insaneGold:
+      doc.game_records.catch.insane.medal === 'gold' ||
+      doc.game_records.train.insane.medal === 'gold' ||
+      doc.game_records.dash.insane.medal === 'gold',
   };
 }
 
@@ -2473,6 +2711,98 @@ export function releaseDenPet(doc: PlayStoreDoc, now: number, uid: number): Play
   };
 }
 
+/** P1 (emci 2026-10-18): one pet per hero. Every revealed duplicate, active
+ * or resting, joins the hero you keep (rules in `pet-merge.ts`); its copy goes
+ * into the Collection, so stars are unchanged. A hero whose merge involves the
+ * active pet waits while its reveal is still to play, and a merge that would
+ * swap the active pet waits mid-dive or while it is away. `note` is set when
+ * the active pet's hero merged (for the one-time "joined up" line). */
+export function foldDuplicatePets(doc: PlayStoreDoc, now: number): { doc: PlayStoreDoc; note: PetMergeNote | null } {
+  const active = doc.pet;
+  const before = [active, ...doc.pet_den];
+  const plans = planMerges(before, active.uid);
+  if (plans.length === 0) return { doc, note: null };
+  let next = doc;
+  let noteHero: { hero: string; was: PetState; kept: PetState; shards: number; shardGrade: Grade | null } | null = null;
+  for (const plan of plans) {
+    const activeIn = plan.kept.uid === active.uid || plan.dropped.some((p) => p.uid === active.uid);
+    // Any pet of the group with a reveal still to play waits for it.
+    if ([plan.kept, ...plan.dropped].some((p) => p.reveals.length > 0)) continue;
+    const swap = activeIn && plan.kept.uid !== active.uid;
+    if (swap && (next.dive_run != null || next.pet_expedition != null)) continue;
+    const gone = new Set(plan.dropped.map((p) => p.uid));
+    const keptWas = before.find((p) => p.uid === plan.kept.uid) ?? plan.kept;
+    let heroes = next.pet_heroes;
+    // A shiny the kept pet took over is counted through the kept pet only.
+    let shinyMoved = keptWas.shiny;
+    for (const p of plan.dropped) {
+      const entry = bookEntryOf(p);
+      if (!entry) continue;
+      const moves = !shinyMoved && entry.shiny;
+      if (moves) shinyMoved = true;
+      heroes = addToBook(heroes, moves ? { ...entry, shiny: false, style: null } : entry);
+    }
+    let pet = next.pet;
+    let den = next.pet_den.filter((p) => !gone.has(p.uid));
+    if (plan.kept.uid === active.uid) {
+      pet = plan.kept;
+    } else if (swap) {
+      den = den.filter((p) => p.uid !== plan.kept.uid);
+      pet = wakePet(plan.kept, now, next.eggs_since_legendary, tidePityStep(next.tide, localYmd(new Date(now))));
+    } else {
+      den = den.map((p) => (p.uid === plan.kept.uid ? plan.kept : p));
+    }
+    next = { ...next, pet, pet_den: den, pet_heroes: heroes };
+    // A duplicate that joins a hero already at 5★ adds nothing to its stars: it pays shards instead (the live
+    // pet moved into the Collection, so the book total is unchanged and the join order is last-to-first).
+    let shards = 0;
+    let shardGrade: Grade | null = null;
+    if (plan.kept.hero) {
+      const total = heroBookOf(next)[plan.kept.hero]?.copies ?? 0;
+      const first = total - plan.dropped.length;
+      plan.dropped.forEach((p, i) => {
+        if (first + i < STAR_MAX) return;
+        const grade = dupShardGrade(p.grade);
+        next = { ...next, pet_shards: { ...next.pet_shards, [grade]: next.pet_shards[grade] + DUP_SHARDS } };
+        // The line names the first grade paid and only the shards of that grade (a fold with several grades
+        // pays each grade in full; the line stays true instead of summing different grades).
+        shardGrade ??= grade;
+        if (grade === shardGrade) shards += DUP_SHARDS;
+      });
+    }
+    if (activeIn && plan.kept.hero) noteHero = { hero: plan.kept.hero, was: keptWas, kept: plan.kept, shards, shardGrade };
+  }
+  if (!noteHero) return { doc: next, note: null };
+  const copies = heroBookOf(next)[noteHero.hero]?.copies ?? 0;
+  const { was, kept } = noteHero;
+  return {
+    doc: next,
+    note: {
+      hero: noteHero.hero,
+      stars_from: heroStars(copies - 1),
+      stars_to: heroStars(copies),
+      grade_up: kept.grade != null && kept.grade !== was.grade ? kept.grade : null,
+      shiny_up: kept.shiny && !was.shiny,
+      shards: noteHero.shards,
+      shard_grade: noteHero.shardGrade,
+    },
+  };
+}
+
+/** Shards a duplicate pays when its hero is already 5★ (existing currency: 5 shards = a ticket). */
+export const DUP_SHARDS = 2;
+
+/** The grade a 5★ duplicate's shards come in: its own, except Legendary (Legendary shards trade up to nothing) → Epic. */
+export function dupShardGrade(grade: Grade | null): Grade {
+  if (grade == null) return 'common';
+  return grade === 'legendary' ? 'epic' : grade;
+}
+
+/** The pet has said its "joined up" line. */
+export function clearMergeNote(doc: PlayStoreDoc): PlayStoreDoc | null {
+  return doc.pet_merge_note == null ? null : { ...doc, pet_merge_note: null };
+}
+
 export type DenSlotResult = { ok: true } | { ok: false; reason: 'max' | 'shells' };
 
 /** Buy the next Den slot with shells (7th 100 … 12th 750). */
@@ -2587,7 +2917,7 @@ export function applyPrismStone(
  * ------------------------------------------------------------------------- */
 
 export type FinishApplyResult =
-  | { ok: true; cost: number; left: number; kind: FinishKind; color: string | null }
+  | { ok: true; cost: number; left: number; kind: FinishKind; color: string | null; sweep: string; glint: string }
   | { ok: false; reason: FinishRefusal | 'missing' | 'not_revealed' };
 
 /** Wear a finish on a revealed pet, spending tokens for any unlock it needs. */
@@ -2597,6 +2927,8 @@ export function applyPetFinish(
   uid: number,
   kind: FinishKind,
   color: string | null,
+  sweep: string | null = null,
+  glint: string | null = null,
 ): { doc: PlayStoreDoc; result: FinishApplyResult } {
   const touched = touchPet(doc, now);
   const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
@@ -2610,13 +2942,29 @@ export function applyPetFinish(
     free: PLAY_EVERYTHING_FREE,
     kind,
     color,
+    sweep,
+    glint,
   });
   if (!plan.ok) return { doc: touched, result: plan };
-  const next = withPetByUid(touched, uid, (p) => ({ ...p, finish_kind: plan.kind, finish_color: plan.color }));
+  const next = withPetByUid(touched, uid, (p) => ({
+    ...p,
+    finish_kind: plan.kind,
+    finish_color: plan.color,
+    finish_sweep: plan.sweep,
+    finish_glint: plan.glint,
+  }));
   if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
   return {
     doc: { ...next, tokens: touched.tokens - plan.cost, finish_wallet: plan.wallet },
-    result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost, kind: plan.kind, color: plan.color },
+    result: {
+      ok: true,
+      cost: plan.cost,
+      left: touched.tokens - plan.cost,
+      kind: plan.kind,
+      color: plan.color,
+      sweep: plan.sweep,
+      glint: plan.glint,
+    },
   };
 }
 
@@ -2655,25 +3003,42 @@ export function applyPetAura(
   };
 }
 
-/** Colour is free, and only changes an aura the pet is already wearing. */
+export type AuraColourResult =
+  | { ok: true; cost: number; left: number }
+  | { ok: false; reason: 'missing' | 'style' | 'tokens' };
+
+/**
+ * Colour only changes an aura the pet is already wearing. Single colours are
+ * free; a two-colour set costs once per colourway (any style), like a finish mix.
+ */
 export function setPetAuraColor(
   doc: PlayStoreDoc,
   now: number,
   uid: number,
   style: AuraStyle,
   color: AuraTint,
-): { doc: PlayStoreDoc; result: { ok: true } | { ok: false; reason: 'missing' | 'style' } } {
+): { doc: PlayStoreDoc; result: AuraColourResult } {
   if (!isAuraTint(color)) return { doc, result: { ok: false, reason: 'style' } };
-  const picked = canonAuraTint(color);
   const touched = touchPet(doc, now);
   const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
   if (!pet || !pet.auras.some((wear) => wear.style === style)) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  const plan = planAuraColour({
+    tint: color,
+    mixes: touched.aura_mixes,
+    tokens: touched.tokens,
+    pass: tideActive(touched.tide, localYmd(new Date(now))),
+    free: PLAY_EVERYTHING_FREE,
+  });
+  if (!plan.ok) return { doc: touched, result: { ok: false, reason: plan.reason === 'tokens' ? 'tokens' : 'style' } };
   const next = withPetByUid(touched, uid, (p) => ({
     ...p,
-    auras: p.auras.map((wear) => (wear.style === style ? { style, color: picked } : wear)),
+    auras: p.auras.map((wear) => (wear.style === style ? { style, color: plan.tint } : wear)),
   }));
   if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
-  return { doc: next, result: { ok: true } };
+  return {
+    doc: { ...next, tokens: touched.tokens - plan.cost, aura_mixes: plan.mixes },
+    result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost },
+  };
 }
 
 /** Dev kit: toggle one aura, or clear them. Does not spend tokens or mint ownership. */
@@ -2693,12 +3058,16 @@ export function devSetPetFinish(
   uid: number,
   kind: FinishKind,
   color: string | null,
+  sweep: string | null = null,
+  glint: string | null = null,
 ): PlayStoreDoc | null {
   if (kind !== 'none' && (color == null || !isFinishColor(color))) return null;
   return withPetByUid(touchPet(doc, now), uid, (p) => ({
     ...p,
     finish_kind: kind === 'none' ? 'none' : kind,
     finish_color: kind === 'none' ? null : color,
+    finish_sweep: sweep ?? p.finish_sweep,
+    finish_glint: glint ?? p.finish_glint,
   }));
 }
 
@@ -2735,6 +3104,106 @@ export function setPlaySettings(doc: PlayStoreDoc, patch: Partial<PlaySettings>)
   return { ...doc, play_settings: settings, pet_remind: settings.notif.hunger };
 }
 
+export function startHideoutBuild(doc: PlayStoreDoc, now: number, room: HideoutRoomId): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  const p = hideoutProgressOf(touched);
+  const gate = canStartBuild(room, touched.hideout, p, touched.tokens);
+  if (!gate.ok) return null;
+  return {
+    ...touched,
+    tokens: touched.tokens - roomTokenPrice(room),
+    hideout: startBuild(touched.hideout, room, now),
+  };
+}
+
+export function viewHideoutRoom(doc: PlayStoreDoc, now: number, room: HideoutRoomId): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  const vis = touched.hideout.rooms_unlocked[room] || touched.hideout.builds[room] != null || room === 'hideout';
+  const stageOk = vis || touched.hideout.rooms_unlocked.hideout;
+  if (!stageOk) return touched;
+  return {
+    ...touched,
+    hideout: pushHideoutEvent({ ...touched.hideout, viewed_room: room }, { t: now, kind: 'room_swipe', room }),
+  };
+}
+
+export function callPetToRoom(doc: PlayStoreDoc, now: number, room: HideoutRoomId): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  if (touched.pet_expedition) return null;
+  if (!touched.hideout.rooms_unlocked[room]) return null;
+  if (callBlocker(touched.pet, touched.hideout)) return null;
+  const h = startCall({ ...touched.hideout, viewed_room: room }, touched.pet, room);
+  return { ...touched, hideout: pushHideoutEvent(h, { t: now, kind: 'call_used', room }) };
+}
+
+export function wakeHideoutPet(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return {
+    ...touched,
+    hideout: pushHideoutEvent(tapWake(touched.hideout, touched.pet), { t: now, kind: 'pet_asleep_tap' }),
+  };
+}
+
+/** Loft rail "Sleep": puts the pet to bed; tapped again while it sleeps by choice, wakes it. Cosmetic, moves nothing. */
+export function sleepHideoutPet(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  if (sleepChosen(touched.hideout, touched.pet)) {
+    return { ...touched, hideout: pushHideoutEvent(tapWake(touched.hideout, touched.pet), { t: now, kind: 'pet_asleep_tap' }) };
+  }
+  return { ...touched, hideout: tapSleep(touched.hideout, touched.pet) };
+}
+
+export function toggleLoftLamp(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return { ...touched, hideout: { ...touched.hideout, lamp_on: !touched.hideout.lamp_on } };
+}
+
+export function markHideoutCoach(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return { ...touched, hideout: { ...touched.hideout, coach_swipe_seen: true } };
+}
+
+export function markBuildNotifAsked(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return { ...touched, hideout: { ...touched.hideout, build_notif_asked: true } };
+}
+
+export function stampHideoutPeekaboo(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return { ...touched, hideout: stampPeekaboo(touched.hideout, localYmd(new Date(now))) };
+}
+
+/** Daily visitors (roadmap step 4): say hi to today's visitor — once a day. A rare look joins the
+ * wardrobe (`pet_cosmetics`); nothing else moves (no tokens, shells or stones). Null = already greeted. */
+export function greetDailyVisitor(
+  doc: PlayStoreDoc,
+  now: number,
+  visitor: TodayVisitor,
+): { doc: PlayStoreDoc; reward: VisitorReward } | null {
+  const touched = touchPet(doc, now);
+  const res = greetVisitor(touched.hideout.visitors, visitor, touched.pet_cosmetics);
+  if (!res) return null;
+  const pet_cosmetics =
+    res.reward.kind === 'look' ? [...touched.pet_cosmetics, res.reward.cosmeticId] : touched.pet_cosmetics;
+  return { doc: { ...touched, pet_cosmetics, hideout: { ...touched.hideout, visitors: res.book } }, reward: res.reward };
+}
+
+/** Circle visits (roadmap step 6): open one gift from a Circle friend into the sticker book. Free: nothing
+ * but `hideout.circle` changes (the pet's day is not touched, nothing is paid). Null = already opened here. */
+export function openCircleGift(doc: PlayStoreDoc, gift: CircleGift): PlayStoreDoc | null {
+  const circle = openCircleGiftBook(doc.hideout.circle, gift);
+  if (!circle) return null;
+  return { ...doc, hideout: { ...doc.hideout, circle } };
+}
+
+/** Decor slots (roadmap step 5): fill, swap or (item = null) empty one spot in the Hideout room. Free:
+ * nothing but `hideout.decor` changes (no touchPet, so not even passive income moves). Null = no change. */
+export function setHideoutDecor(doc: PlayStoreDoc, slot: string, item: string | null): PlayStoreDoc | null {
+  const next = setDecorSlot(doc.hideout.decor, slot, item);
+  if (next === doc.hideout.decor || decorKey(next) === decorKey(doc.hideout.decor)) return null;
+  return { ...doc, hideout: { ...doc.hideout, decor: next } };
+}
+
 /** Reset Divecore progress: a brand-new Play save that keeps the settings.
  * Never touches the main app's data (a different store). */
 export function resetDivecore(doc: PlayStoreDoc, now: number): PlayStoreDoc {
@@ -2742,7 +3211,8 @@ export function resetDivecore(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   return { ...fresh, play_settings: doc.play_settings, pet_remind: doc.play_settings.notif.hunger };
 }
 
-export type PetRoundKind = 'catch' | 'train';
+/** Catch feeds; Tap to train and Lane dash train (+1 training, +2 mood). */
+export type PetRoundKind = Game;
 export type PetRoundResult = {
   counted: boolean;
   tokensGranted: number;
@@ -2830,7 +3300,7 @@ export function finishPetRound(
     kind === 'catch' ? CARE_ACT.fed : CARE_ACT.trained,
   );
   const pet = kind === 'catch' ? feedPet(cared, PET_FEED_CATCH) : trainPet(cared);
-  const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today);
+  const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today, level === 'easy');
   // v26: records, medal → buff (refreshed, never stacked), daily challenge.
   // A level that isn't open (e.g. after a reset) earns no record, medal,
   // buff or unlock — care and tokens still count as a normal pass.
@@ -2861,12 +3331,16 @@ export function finishPetRound(
       ? `${sworded.grant.name} (bag full)`
       : sworded.grant.name
     : null;
+  const loftGames = careTokenBonus(pay.tokens, 'games', touchedDoc.hideout);
+  let hideout = noteTokens(touchedDoc.hideout, today, 'games', pay.tokens);
+  if (loftGames) hideout = noteTokens(hideout, today, 'loft_bonus', loftGames);
   return {
     doc: {
       ...touchedDoc,
       sword_bag: sworded.bag,
       pet,
-      tokens: doc.tokens + pay.tokens,
+      tokens: doc.tokens + pay.tokens + loftGames,
+      hideout,
       pet_tokens_today: pay.paid,
       pet_tokens_ymd: pay.ymd,
       game_records: rec.records,
@@ -2903,7 +3377,7 @@ export function devGrantAllBuffs(doc: PlayStoreDoc): PlayStoreDoc {
 /** Dev kit: Gold on every level of both games (opens everything). */
 export function devGoldAllGames(doc: PlayStoreDoc): PlayStoreDoc {
   const records = emptyRecords();
-  for (const g of ['catch', 'train'] as const) {
+  for (const g of GAMES) {
     for (const d of Object.keys(records[g]) as Difficulty[]) records[g][d] = { best: 1, medal: 'gold' };
   }
   return { ...doc, game_records: records };
@@ -2924,6 +3398,7 @@ export function rebirthPetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | nu
     pet: next.pet,
     pet_hall: next.hall,
     pet_rebirths: next.rebirths,
+    hideout: { ...touched.hideout, call_until_age_ms: null, wake_until_age_ms: null, sleep_until_age_ms: null },
   };
 }
 
@@ -3015,12 +3490,17 @@ export function devSetStreakDay(doc: PlayStoreDoc, now: number, day: number): Pl
 export function devFillDen(doc: PlayStoreDoc, now: number, rng: () => number = Math.random): PlayStoreDoc {
   const den = [...doc.pet_den];
   let uid = doc.pet_uid_next;
-  while (denUsed(den) < doc.den_slots) {
+  // P1: one pet per hero — only heroes not kept yet (a repeat would just fold).
+  const kept = new Set([doc.pet, ...den].filter(petRevealed).map((p) => p.hero));
+  for (let tries = 0; denUsed(den) < doc.den_slots && tries < 64; tries += 1) {
     const egg = EGG_TYPES[Math.min(EGG_TYPES.length - 1, Math.floor(rng() * EGG_TYPES.length))];
     const picked = chooseEgg(newPet(now), egg, newEggSeed(rng), null, now);
     if (!picked) break;
     const baby: PetState = { ...picked, stage: 'baby', stage_age_ms: PET_STAGE_MS.baby - 1, seen_at: now - 1, uid };
-    den.push(advancePet(baby, now));
+    const grown = advancePet(baby, now);
+    if (petRevealed(grown) && kept.has(grown.hero)) continue;
+    if (petRevealed(grown)) kept.add(grown.hero);
+    den.push(grown);
     uid += 1;
   }
   return { ...doc, pet_den: den, pet_uid_next: uid };
@@ -3289,11 +3769,14 @@ export function recordDefendWin(
     tokensGranted = Math.floor(tokensGranted / 2);
     xpGranted = Math.floor(xpGranted / 2);
   } else {
-    const priorClears = doc.clears_ymd === todayYmd ? doc.clears_today : 0;
+    // The daily half-pay count holds when the clock is set back a little (`petDayHolds`, like every pet-day cap):
+    // the stored day stays, so it cannot be reset early by moving the phone clock back.
+    const held = petDayHolds(todayYmd, doc.clears_ymd);
+    const priorClears = held ? doc.clears_today : 0;
     halved = priorClears >= tune.dailyClearHalfAfter;
     if (halved) tokensGranted = Math.floor(tokensGranted / 2);
     clearsToday = priorClears + 1;
-    clearsYmd = todayYmd;
+    clearsYmd = held ? doc.clears_ymd : todayYmd;
     // Lifetime clear count (never resets on a Conquered) + milestones.
     lifetimeAfter = doc.lifetime_waves_cleared + 1;
     milestone = (MILESTONE_WAVES as readonly number[]).includes(lifetimeAfter)
@@ -3301,9 +3784,12 @@ export function recordDefendWin(
       : null;
   }
 
+  // Gear: token gain scales the win's token payout (after the replay / daily halving, before the flat cycle bonus).
+  tokensGranted = scaleTokens(tokensGranted, tokenEarnMultOf(doc));
+
   // Campaign seat advance + Conquered. A campaign-mode win only advances when
   // it matches the seat — a stale/duplicate win after the seat already moved
-  // (e.g. Main 20 conquered) grants rewards but never double-advances.
+  // (e.g. Main 10 conquered) grants rewards but never double-advances.
   let campaign = doc.campaign;
   let conquered = false;
   let conqueredCycles = doc.conquered_cycles;
@@ -3365,11 +3851,12 @@ export function recordDefendWin(
   // hero — Main w5 (Scout) → Oni, Main w10 (Final) → Archangel — and queues the
   // one-shot "owned" offer. Replays never grant (the farm lane must not re-own
   // or re-offer), and `ownHero` is idempotent, so a re-clear of an owned band
-  // stays silent. Product lock: the Final band is fightable free; the Premium
-  // gate on USING it as Avatar/Bound Boss is TODO(A5) inside `ownHero`.
+  // stays silent. Product lock: the Final band is fightable free; at launch
+  // there is no Premium gate (see `ownHero`).
   let ownedHeroIds = doc.owned_hero_ids;
   let heroOffer = doc.hero_offer;
   let heroOwned: DefendWinResult['heroOwned'] = null;
+  let petHeroes = doc.pet_heroes;
   if (!isReplay && band) {
     const heroId = HERO_BY_BAND_KIND[band.kind as keyof typeof HERO_BY_BAND_KIND];
     const granted = heroId ? ownHero(doc, heroId) : null;
@@ -3377,6 +3864,12 @@ export function recordDefendWin(
       ownedHeroIds = granted.doc.owned_hero_ids;
       heroOffer = granted.doc.hero_offer;
       heroOwned = { heroId, label: heroName(heroId) };
+    }
+    // P4 (pet team): the clear also gives an egg copy of that hero (a star toward
+    // it, kept even if you already hold it). The Avatar choice is gone: the
+    // active pet leads, so a hero leads once its pet is yours (egg or hatch).
+    if (heroId && heroEgg(heroId)) {
+      petHeroes = addToBook(petHeroes, { hero: heroId, grade: 'common', shiny: false, forms: [], style: null });
     }
   }
 
@@ -3420,6 +3913,7 @@ export function recordDefendWin(
       bound_bosses,
       owned_hero_ids: ownedHeroIds,
       hero_offer: heroOffer,
+      pet_heroes: petHeroes,
       sword_bag: sworded.bag,
       // Pet (v20): every cleared wave (campaign or replay) feeds the pet a
       // heart, counts toward its Battle form and tallies the Legend element
@@ -3428,6 +3922,15 @@ export function recordDefendWin(
       // v26 Pumped: a use only on a wave where it actually changed the pounce
       // (never while it is a "Maxed aura", or with no pounce).
       buffs: pumpedStateOf(doc, now).boosted ? spendBuff(doc.buffs, 'pumped') : doc.buffs,
+      hideout: (() => {
+        const today = localYmd(new Date(now));
+        let h = noteTokens(doc.hideout, today, 'defend', tokensGranted);
+        if (!isReplay) {
+          const sped = applySpeedup(h, now);
+          h = sped.hideout;
+        }
+        return h;
+      })(),
       // v24 Journal: a hatch / reveal that happens in this same aging counts;
       // v27 and so does its pity step.
       ...settledPetFields(doc, now),
@@ -3721,14 +4224,162 @@ export function boundHeroIdsOf(doc: PlayStoreDoc): string[] {
 
 /** True when the save owns `heroId`. */
 export function heroOwned(doc: PlayStoreDoc, heroId: string): boolean {
-  return doc.owned_hero_ids.includes(heroId);
+  // P4: a hero you hold in the pet book (a pet or a copy) is owned too.
+  return doc.owned_hero_ids.includes(heroId) || (heroBookOf(doc)[heroId]?.copies ?? 0) > 0;
+}
+
+/** Owned hero ids for the hero roster: the old list plus every hero in the pet book. */
+export function ownedHeroIdsOf(doc: PlayStoreDoc): string[] {
+  const ids = new Set(doc.owned_hero_ids);
+  for (const [hero, rec] of Object.entries(heroBookOf(doc))) if (rec.copies > 0 && heroById(hero)) ids.add(hero);
+  return [...ids];
+}
+
+/** True when the Turf leader is the active pet's hero (not the stored fallback). */
+export function leaderFromPetOf(doc: PlayStoreDoc): boolean {
+  return petRevealed(doc.pet) && doc.pet.hero != null && normalizedAvatarHeroId(doc) === doc.pet.hero;
+}
+
+/** P5 Turf team for the view: who may help (Child+, not the leader's hero, not a bound tower hero), the
+ * saved picks still valid, and the leader's stars + grade (a pet leader only; the egg/baby fallback
+ * leader fights at ×1 with no grade perk). */
+export function turfTeamOf(doc: PlayStoreDoc): PlayView['turfTeam'] {
+  const book = heroBookOf(doc);
+  const leaderHeroId = normalizedAvatarHeroId(doc);
+  const candidates = turfCandidates([doc.pet, ...doc.pet_den], {
+    leaderHeroId,
+    boundHeroIds: boundHeroIdsOf(doc),
+    copiesOf: (hero) => book[hero]?.copies ?? 0,
+  });
+  const fromPet = leaderFromPetOf(doc);
+  return {
+    candidates,
+    picks: livePicks(doc.turf_helpers, candidates),
+    leaderStars: fromPet ? heroStars(book[leaderHeroId]?.copies ?? 0) : 1,
+    leaderGrade: fromPet ? doc.pet.grade : null,
+  };
+}
+
+/** Save the Turf helper picks (P5). Tolerant: up to 2, distinct, spots clamped. Unchanged → same doc. */
+export function setTurfHelpers(doc: PlayStoreDoc, picks: readonly TurfHelperPick[]): PlayStoreDoc {
+  const next = parseTurfHelpers(picks.slice(0, TURF_HELPER_SLOTS));
+  if (JSON.stringify(next) === JSON.stringify(doc.turf_helpers)) return doc;
+  return { ...doc, turf_helpers: next };
 }
 
 /** The active Avatar hero, falling back to the starter when the stored id is
  * unknown/corrupt (mirrors `avatarRecordOf`'s tolerant read). */
-export function normalizedAvatarHeroId(doc: PlayStoreDoc): string {
+export function storedAvatarHeroId(doc: PlayStoreDoc): string {
   const id = doc.active_avatar_hero_id;
   return heroOwned(doc, id) && heroById(id) ? id : DEFAULT_AVATAR_HERO_ID;
+}
+
+/**
+ * The Turf leader (pet team P4, emci 2026-10-18): the ACTIVE PET's hero. While
+ * the active pet is still an egg or baby (no hero yet) the stored Avatar hero
+ * leads, as before. A hero bound as a tower never leads (the exclusivity lock
+ * stays): the stored Avatar leads instead until it is unbound.
+ */
+export function normalizedAvatarHeroId(doc: PlayStoreDoc): string {
+  const stored = storedAvatarHeroId(doc);
+  const fallback = boundHeroIdsOf(doc).includes(stored) ? DEFAULT_AVATAR_HERO_ID : stored;
+  const pet = doc.pet;
+  if (!petRevealed(pet) || !pet.hero || !heroById(pet.hero)) return fallback;
+  return boundHeroIdsOf(doc).includes(pet.hero) ? fallback : pet.hero;
+}
+
+/**
+ * P4 one-time fold of the old Avatar choice into the pet book. A save from
+ * before P4 has no `leader_folded`. If its Avatar hero is a real choice (not
+ * the starter, and one of the 16 egg heroes) that hero becomes a pet, hatched at
+ * Child if the book only has a copy or nothing, and the active pet. Nothing is
+ * lost: the old active pet rests in the Den (slots grow to fit), and the hero
+ * keeps every copy, grade and shiny it had. Waits (no flag set, tries again on
+ * the next load) while mid-dive, away, or a reveal is still to play. With an
+ * egg or baby on the stage the hero is still added to the Den but the stage is
+ * left alone (the new pet leads once it hatches). Once folded, the stored
+ * Avatar goes back to the starter, so an older bundle that drops the flag and
+ * folds again finds nothing to do. Idempotent.
+ */
+export function foldAvatarIntoPets(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  if (doc.leader_folded) return doc;
+  const hero = storedAvatarHeroId(doc);
+  const done = (d: PlayStoreDoc): PlayStoreDoc => ({ ...d, leader_folded: true });
+  if (hero === DEFAULT_AVATAR_HERO_ID || !heroEgg(hero)) return done(doc);
+  if (petRevealed(doc.pet) && doc.pet.hero === hero) return done({ ...doc, active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID });
+  // A hero bound as a tower is not a leader; leave the choice to the player.
+  if (boundHeroIdsOf(doc).includes(hero)) return done(doc);
+  // Wait for a quiet moment (retry next load).
+  if (doc.dive_run != null || doc.pet_expedition != null) return doc;
+  if (doc.pet.reveals.length > 0) return doc;
+
+  let next = doc;
+  let target = next.pet_den.find((p) => petRevealed(p) && p.hero === hero) ?? null;
+  if (target && target.reveals.length > 0) return doc;
+  if (!target) {
+    // The Den is at its most: nothing to hatch into. The revealed active pet leads; the old choice stays as the fallback.
+    if (denUsed(next.pet_den) + 1 > DEN_MAX_SLOTS) return done(doc);
+    const entry = next.pet_heroes[hero];
+    const uid = Math.max(1, next.pet_uid_next);
+    target = {
+      ...newPet(now, `solo_${hero}`),
+      stage: 'child',
+      egg: heroEgg(hero),
+      hero,
+      grade: bestGrade(entry) ?? 'common',
+      band: 'good',
+      uid,
+    };
+    // The new pet takes over one of the hero's copies (no double count).
+    const pet_heroes = entry && entry.copies > 0
+      ? { ...next.pet_heroes, [hero]: { ...entry, copies: entry.copies - 1 } }
+      : next.pet_heroes;
+    next = {
+      ...next,
+      pet_den: [...next.pet_den, target],
+      pet_heroes,
+      pet_uid_next: uid + 1,
+      den_slots: Math.max(next.den_slots, Math.min(DEN_MAX_SLOTS, denUsed(next.pet_den) + 1)),
+    };
+  }
+  const reset = (d: PlayStoreDoc): PlayStoreDoc => done({ ...d, active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID });
+  // An egg or baby on the stage stays put; the hero waits in the Den.
+  if (!petRevealed(next.pet)) return reset(next);
+  // The same swap the Stash's "Make active" does (ages the outgoing pet first).
+  const swapped = activateDenPet(next, now, target.uid);
+  return swapped.result.ok ? reset(swapped.doc) : doc;
+}
+
+/**
+ * P6 one-time move of the old per-Legend loadouts onto heroes. The ACTIVE Legend's worn gear goes to the
+ * Turf leader's hero (a slot the hero already wears keeps its item and the older one goes to the bag);
+ * every other Legend's worn gear goes back to the bag (a Legend has no hero, so any mapping would be a
+ * guess; the player re-dresses). A move, never a copy: worn items are not in the bag, so each one lands in
+ * exactly one place and the total owned count does not change. The Legend records' `equipped` end empty.
+ * Idempotent (`gear_moved`).
+ */
+export function foldGearIntoHeroes(doc: PlayStoreDoc): PlayStoreDoc {
+  if (doc.gear_moved) return doc;
+  // Wait for P4's leader fold (it may still be waiting on a dive / away trip): the leader can change once
+  // it runs, and the gear should land on the hero that really leads. Until then the gear stays on the
+  // Legend records (still counted, nothing lost) and the move retries on the next load.
+  if (!doc.leader_folded) return doc;
+  if (doc.avatars.every((a) => wornItemCount(a.equipped) === 0)) return { ...doc, gear_moved: true };
+  const leader = normalizedAvatarHeroId(doc);
+  const activeId = activeAvatarOf(doc).id;
+  const mine: Loadout = { ...(doc.hero_gear[leader] ?? {}) };
+  let inventory = doc.inventory;
+  const avatars = doc.avatars.map((avatar) => {
+    for (const ref of Object.values(avatar.equipped)) {
+      if (!ref) continue;
+      const slot = getItemDef(ref.id)?.core.slot;
+      if (avatar.id === activeId && slot && !mine[slot]) mine[slot] = ref;
+      else if (getItemDef(ref.id)) inventory = addCopiesToBag(inventory, ref.id, ref.star, 1);
+    }
+    return { ...avatar, equipped: {} };
+  });
+  const moved: PlayStoreDoc = { ...doc, avatars, inventory, gear_moved: true };
+  return patchHeroLoadout(moved, leader, mine);
 }
 
 /**
@@ -3737,15 +4388,16 @@ export function normalizedAvatarHeroId(doc: PlayStoreDoc): string {
  * sheet shows ("Archangel owned" → Set as Avatar / Bind as tower).
  *
  * Economy assumption (locked product call): the Final band grants Archangel and
- * the Scout band grants Oni for FREE on a campaign clear. TODO(A5): the Premium
- * gate — owning Final as Avatar/Bound Boss is gated per the existing economy —
- * belongs here, so when the paywall lands this becomes the one place to check.
+ * the Scout band grants Oni for FREE on a campaign clear. Launch (emci
+ * 2026-10-20): no purchase path; heroes come only from eggs and band clears.
+ * If a paywall ever lands, this is the one place to check it.
  */
 export function ownHero(
   doc: PlayStoreDoc,
   heroId: string,
 ): { doc: PlayStoreDoc; gained: boolean } {
-  if (!heroById(heroId) || heroOwned(doc, heroId)) {
+  // The list itself decides (a hero held only as a pet still gets listed, so older bundles see it too).
+  if (!heroById(heroId) || doc.owned_hero_ids.includes(heroId)) {
     return { doc, gained: false };
   }
   return {
@@ -3774,13 +4426,15 @@ export function setAvatarHero(
   if (!heroById(heroId)) return { doc, ok: false, reason: 'unknown_hero' };
   if (!heroOwned(doc, heroId)) return { doc, ok: false, reason: 'not_owned' };
   const bound = doc.bound_bosses.some((record) => record.id === heroId);
-  if (normalizedAvatarHeroId(doc) === heroId && !bound) {
+  if (storedAvatarHeroId(doc) === heroId && !bound) {
     return { doc: clearHeroOffer(doc), ok: true, reason: null };
   }
   return {
     doc: {
       ...doc,
       active_avatar_hero_id: heroId,
+      // A hero held only as a pet is listed too, or the next load would reset the choice to Corvus.
+      owned_hero_ids: doc.owned_hero_ids.includes(heroId) ? doc.owned_hero_ids : [...doc.owned_hero_ids, heroId],
       // Exclusivity: an Avatar cannot also be a bound tower.
       bound_bosses: bound
         ? doc.bound_bosses.filter((record) => record.id !== heroId)
@@ -3935,13 +4589,13 @@ export type SkipPlan = {
   fromSeat: CampaignState;
   /** Seat after skipping (== fromSeat when nothing was skippable). */
   toSeat: CampaignState;
-  /** Why the walk stopped at `toSeat` ('end' is a guard — Main 20 is a boss
+  /** Why the walk stopped at `toSeat` ('end' is a guard — Main 10 is a boss
    * band and always stops as 'boss' first). */
   stopReason: SkipStopReason;
 };
 
 /** Advance the campaign seat one display wave (Trial 5 → Main 1). Null when
- * there is no normal wave left to fast-forward past (Main 20 is a boss band). */
+ * there is no normal wave left to fast-forward past (Main 10 is a boss band). */
 export function campaignNextSeat(seat: CampaignState): CampaignState | null {
   if (seat.phase === 'trial') {
     return seat.wave_in_phase >= TRIAL_WAVE_COUNT
@@ -3958,9 +4612,30 @@ export function gearScoreOf(doc: PlayStoreDoc): number {
   const active = activeAvatarOf(doc);
   const wavePowerBucket = bucketMultiplier(
     'wave_power',
-    equippedStatSums(active.equipped, legendElementOf(active.id)),
+    equippedStatSums(leaderLoadoutOf(doc), legendElementOf(active.id)),
   );
   return gearScore(wavePowerBucket, active.level, active.stars);
+}
+
+/** Raw gear sums of the Turf LEADER's hero: the one source Gear Score, dive luck and the economy stats read. */
+export function leaderStatSumsOf(doc: PlayStoreDoc): StatSums {
+  return equippedStatSums(leaderLoadoutOf(doc), legendElementOf(activeAvatarOf(doc).id));
+}
+
+/** Token gain (Copper Keeper): the soft-capped multiplier on Divecore tokens from Turf wins (and Skip). Never ATO
+ * tokens, never the flat cycle bonus, never mini-game rounds (a 5-token round would round the bonus away). */
+export function tokenEarnMultOf(doc: PlayStoreDoc): number {
+  return bucketMultiplier('token_earn', leaderStatSumsOf(doc));
+}
+
+/** Research yield (Curator's Cloak, Ember Mantle): the soft-capped multiplier on a research claim's FINDS. */
+export function researchYieldMultOf(doc: PlayStoreDoc): number {
+  return bucketMultiplier('research_yield', leaderStatSumsOf(doc));
+}
+
+/** Scale a token payout by a gear multiplier, to the nearest whole token (never below 0). */
+export function scaleTokens(base: number, mult: number): number {
+  return base <= 0 ? 0 : Math.max(0, Math.round(base * mult));
 }
 
 /**
@@ -4047,6 +4722,8 @@ export function skipCampaignToEven(
     xpGranted += Math.floor(xpForClear(step.wave_in_phase) * payFraction);
     highestWave = Math.max(highestWave, step.wave_in_phase);
   }
+  // Gear: token gain scales the (reduced) skip pay the same way it scales a win.
+  tokensGranted = scaleTokens(tokensGranted, tokenEarnMultOf(doc));
 
   // Lifetime clear count + milestones crossing 5/10/25 (§18 lock).
   const lifetimeAfter = doc.lifetime_waves_cleared + plan.steps.length;
@@ -4178,18 +4855,19 @@ export function devResetAvatarStarCycle(doc: PlayStoreDoc): PlayStoreDoc {
  * are fabricated directly (dev-only); nothing in a game path calls this.
  */
 export function devOvergear(doc: PlayStoreDoc): PlayStoreDoc {
-  const active = activeAvatarOf(doc);
-  const equipped: Partial<Record<ItemSlot, ItemRef>> = { ...active.equipped };
+  const equipped: Loadout = { ...dressedLoadoutOf(doc) };
   for (const id of OVERGEAR_POWER_IDS) {
     const def = getItemDef(id);
     if (!def) continue;
     equipped[def.core.slot] = { id, star: MERGE_MAX_STAR };
   }
-  return patchActiveAvatar(doc, {
-    level: DEV_OVERGEAR_LEVEL,
-    stars: AVATAR_STAR_MAX,
+  return patchDressedLoadout(
+    patchActiveAvatar(doc, {
+      level: DEV_OVERGEAR_LEVEL,
+      stars: AVATAR_STAR_MAX,
+    }),
     equipped,
-  });
+  );
 }
 
 /** Dev kit only: overgear AND reset the campaign to Trial wave 1, so the Skip
@@ -4359,6 +5037,8 @@ export function claimResearch(
   const todayYmd = localYmd(new Date(now));
   const dailyBonusTokens =
     doc.last_tend_bonus_ymd === todayYmd ? 0 : DAILY_TEND_BONUS_TOKENS;
+  const loftTend = careTokenBonus(tendTokens, 'tend', doc.hideout);
+  const loftBonus = careTokenBonus(dailyBonusTokens, 'tend_bonus', doc.hideout);
 
   const dive = diveChargeAt(doc, now);
   const diveChargeGranted =
@@ -4372,9 +5052,27 @@ export function claimResearch(
   // keeps the raw rolls so the UI can name them.
   const items = Array.from({ length: research.readyFinds }, () => rollResearchFind(rng));
 
+  // Gear: research yield (Curator's Cloak, Ember Mantle) adds finds. Expected extra = cycles × bonus: the whole
+  // part always, the fraction by one dice roll. Nothing worn = no roll, so the draws stay exactly as before.
+  const yieldBonus = researchYieldMultOf(doc) - 1;
+  let bonusFinds = 0;
+  if (yieldBonus > 0) {
+    const extra = research.readyFinds * yieldBonus;
+    const whole = Math.floor(extra);
+    bonusFinds = whole + (rng() < extra - whole ? 1 : 0);
+    for (let i = 0; i < bonusFinds; i += 1) items.push(rollResearchFind(rng));
+  }
+
+  let hideout = countTendDay(doc.hideout, todayYmd);
+  hideout = noteTokens(hideout, todayYmd, 'tend', tendTokens);
+  if (dailyBonusTokens) hideout = noteTokens(hideout, todayYmd, 'tend_bonus', dailyBonusTokens);
+  if (loftTend) hideout = noteTokens(hideout, todayYmd, 'loft_bonus', loftTend);
+  if (loftBonus) hideout = noteTokens(hideout, todayYmd, 'loft_bonus', loftBonus);
+
   const next: PlayStoreDoc = {
     ...doc,
-    tokens: doc.tokens + tendTokens + dailyBonusTokens,
+    tokens: doc.tokens + tendTokens + dailyBonusTokens + loftTend + loftBonus,
+    hideout,
     ...nextDive,
     inventory: addManyToBag(doc.inventory, items),
     research_accrued_ms: 0,
@@ -4387,6 +5085,7 @@ export function claimResearch(
     result: {
       cyclesClaimed: research.readyFinds,
       items,
+      bonusFinds,
       tendTokens,
       dailyBonusTokens,
       diveChargeGranted,
@@ -4572,8 +5271,12 @@ export function surfaceDive(
       ? `${sworded.grant.name} (bag full)`
       : sworded.grant.name
     : null;
+  let hideout = countDeepSurface(next.hideout, run.deepers, free);
+  if (!free && run.deepers >= PET_DEEP_MIN_DEPTH) {
+    hideout = applySpeedup(hideout, now).hideout;
+  }
   return {
-    doc: { ...next, sword_bag: sworded.bag },
+    doc: { ...next, sword_bag: sworded.bag, hideout },
     banked: brought,
     netFind,
     heartyFind,
@@ -4718,8 +5421,8 @@ export function equipItem(
     return { doc, outcome: { ok: false, reason: 'not_owned' } };
   }
   const slot = def.core.slot;
-  const active = activeAvatarOf(doc);
-  const occupied = active.equipped[slot];
+  const dressed = dressedLoadoutOf(doc);
+  const occupied = dressed[slot];
   if (occupied && occupied.id === itemId && occupied.star === star) {
     return { doc, outcome: { ok: false, reason: 'already_equipped' } };
   }
@@ -4731,30 +5434,30 @@ export function equipItem(
   // its own (id, star) stack.
   let inventory = takeOneFromBag(doc.inventory, itemId, star);
   if (occupied) inventory = addCopiesToBag(inventory, occupied.id, occupied.star, 1);
-  const equipped = { ...active.equipped, [slot]: { id: itemId, star } };
+  const equipped = { ...dressed, [slot]: { id: itemId, star } };
   return {
-    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+    doc: patchDressedLoadout({ ...doc, inventory }, equipped),
     outcome: { ok: true },
   };
 }
 
-/** Take an item off the ACTIVE Avatar's slot and return exactly one copy to
+/** Take an item off the dressed hero's slot and return exactly one copy to
  * its bag stack (the matching (id, star) tier). */
 export function unequipItem(
   doc: PlayStoreDoc,
   slot: ItemSlot,
 ): { doc: PlayStoreDoc } {
-  const active = activeAvatarOf(doc);
-  const ref = active.equipped[slot];
+  const dressed = dressedLoadoutOf(doc);
+  const ref = dressed[slot];
   if (!ref) return { doc };
-  const equipped = { ...active.equipped };
+  const equipped = { ...dressed };
   delete equipped[slot];
   // Only return known items; a corrupt id is dropped rather than bagged.
   const inventory = getItemDef(ref.id)
     ? addCopiesToBag(doc.inventory, ref.id, ref.star, 1)
     : doc.inventory;
   return {
-    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+    doc: patchDressedLoadout({ ...doc, inventory }, equipped),
   };
 }
 
@@ -4825,7 +5528,7 @@ export function canMergeWorn(
   doc: PlayStoreDoc,
   slot: ItemSlot,
 ): boolean {
-  const ref = activeAvatarOf(doc).equipped[slot];
+  const ref = dressedLoadoutOf(doc)[slot];
   if (!ref) return false;
   const def = getItemDef(ref.id);
   if (!def || def.core.kind !== 'power') return false;
@@ -4863,9 +5566,9 @@ export function mergeItem(
 
   // Validate the main (the ACTIVE Avatar's worn copy or a bagged copy) and
   // that enough fuel of the same tier exists.
-  const active = activeAvatarOf(doc);
+  const dressed = dressedLoadoutOf(doc);
   if (target.main === 'worn') {
-    const worn = active.equipped[slot];
+    const worn = dressed[slot];
     if (!worn || worn.id !== target.id || worn.star !== target.star) return null;
     const fuel = doc.inventory.find((stack) => sameTier(stack, target.id, target.star));
     if (!fuel || fuel.count < 1) return null;
@@ -4879,7 +5582,7 @@ export function mergeItem(
 
   // Fuel always goes first.
   let inventory = takeOneFromBag(doc.inventory, target.id, target.star);
-  let equipped = active.equipped;
+  let equipped: Loadout = { ...dressed };
 
   if (success) {
     if (target.main === 'worn') {
@@ -4892,14 +5595,14 @@ export function mergeItem(
       inventory = addCopiesToBag(inventory, target.id, target.star + 1, 1);
     }
     return {
-      doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+      doc: patchDressedLoadout({ ...doc, inventory }, equipped),
       outcome: { success: true, pct, fromStar: target.star, toStar: target.star + 1 },
     };
   }
 
   // Fail: main untouched (bag main = the remaining copy of its stack), fuel gone.
   return {
-    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+    doc: patchDressedLoadout({ ...doc, inventory }, equipped),
     outcome: { success: false, pct, fromStar: target.star },
   };
 }
@@ -5126,6 +5829,18 @@ export function devAddTokens(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, tokens: doc.tokens + 10 };
 }
 
+/** Dev kit (PRE_LAUNCH_DEV only): mark Loft, Garage and Rooftop built on this Play save, so the live rooms can be phone-checked. */
+export function devBuildAllRooms(doc: PlayStoreDoc): PlayStoreDoc {
+  return {
+    ...doc,
+    hideout: {
+      ...doc.hideout,
+      builds: {},
+      rooms_unlocked: { hideout: true, loft: true, garage: true, rooftop: true },
+    },
+  };
+}
+
 /** Dev kit: clear today's shop purchase counts (re-test daily caps). */
 export function devResetShopDaily(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   return { ...doc, shop_daily: { ymd: localYmd(new Date(now)), counts: {} } };
@@ -5207,9 +5922,9 @@ export function devSellAllJunk(
   };
 }
 
-/** Dev kit: take every slot off the ACTIVE Avatar (items stay in the bag). */
+/** Dev kit: take every slot off the dressed hero (items stay in the bag). */
 export function devClearEquipped(doc: PlayStoreDoc): PlayStoreDoc {
-  return patchActiveAvatar(doc, { equipped: {} });
+  return patchDressedLoadout(doc, {});
 }
 
 /** Dev kit: fill junk Looks until total owned (bag + every Avatar's worn) is
@@ -5326,7 +6041,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
       version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
-      version !== 26 && version !== 27 && version !== 28 &&       version !== 29 && version !== 30 && version !== 31 && version !== 32
+      version !== 26 && version !== 27 && version !== 28 &&       version !== 29 && version !== 30 && version !== 31 && version !== 32 && version !== 33
     ) {
       return null;
     }
@@ -5459,8 +6174,8 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const shineStones =
       (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
       retroShineStones(typeof version === 'number' ? version : 28, milestones);
-    return {
-      version: 32,
+    const parsed: PlayStoreDoc = {
+      version: 33,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -5491,6 +6206,12 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       shop_daily: shopDaily,
       owned_hero_ids: ownedHeroIds,
       active_avatar_hero_id: activeAvatarHeroId,
+      leader_folded: data.leader_folded === true,
+      turf_helpers: parseTurfHelpers(data.turf_helpers),
+      hero_gear: parseHeroGear(data.hero_gear),
+      gear_moved: data.gear_moved === true,
+      launch_reset: data.launch_reset === true,
+      locker_hero_id: typeof data.locker_hero_id === 'string' ? data.locker_hero_id : '',
       hero_offer: heroOffer,
       pet: den.pet,
       pet_hall: hall,
@@ -5511,6 +6232,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       pet_expedition_note: v21 && typeof data.pet_expedition_note === 'string' ? data.pet_expedition_note : null,
       // Missing = already announced (never re-toast an old note).
       pet_expedition_toasted: !(v21 && data.pet_expedition_toasted === false),
+      pet_merge_note: parseMergeNote(data.pet_merge_note, (h) => heroById(h) != null),
       pet_logbook: v21 ? parsePetLogbook(data.pet_logbook) : {},
       shells: v22 ? Math.max(0, Math.floor(finiteNumber(data.shells) ?? 0)) : 0,
       dive_gear: v22 ? parseDiveGear(data.dive_gear) : { ...NO_DIVE_GEAR },
@@ -5571,7 +6293,28 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       sword_bag: v29 ? parseSwordBag(data.sword_bag) : emptySwordBag(),
       finish_wallet: v30 ? parseFinishWallet(data.finish_wallet) : emptyFinishWallet(),
       aura_owned: v31 ? parseAuraOwned(data.aura_owned) : [],
+      aura_mixes: parseAuraMixes(data.aura_mixes),
+      hideout: migrateHideout({
+        version: typeof version === 'number' ? version : 0,
+        raw: data.hideout,
+        pet,
+        hall,
+        rebirths: petRebirths,
+        lastTendYmd: lastTend,
+        daysPlayed: v24 && typeof data.play_stats === 'object' && data.play_stats != null
+          ? Math.max(0, Math.floor(finiteNumber((data.play_stats as Record<string, unknown>).days_played) ?? 0))
+          : 0,
+        lifetimeWaves: Math.max(0, Math.floor(lifetimeWaves)),
+        campaignPhase: campaign.phase,
+        conqueredCycles,
+        now,
+      }),
     };
+    // P1 (2026-10-18): a save that still keeps a hero twice folds into one
+    // pet per hero (copies kept, nothing lost). Idempotent, so every load.
+    // P4: then the old Avatar hero joins the pet book once (and leads).
+    // P6: then the old per-Legend gear moves onto heroes once (the active Legend's loadout → the leader).
+    return foldGearIntoHeroes(foldAvatarIntoPets(foldDuplicatePets(parsed, now).doc, now));
   } catch {
     return null;
   }
@@ -5879,6 +6622,18 @@ function parseEquipped(raw: unknown): Partial<Record<ItemSlot, ItemRef>> {
   return equipped;
 }
 
+/** P6: loose read of `hero_gear` — known hero ids only, each loadout through `parseEquipped`, empty ones dropped. */
+function parseHeroGear(raw: unknown): Record<string, Partial<Record<ItemSlot, ItemRef>>> {
+  const out: Record<string, Partial<Record<ItemSlot, ItemRef>>> = {};
+  if (!isRecord(raw)) return out;
+  for (const [hero, value] of Object.entries(raw)) {
+    if (!heroById(hero)) continue;
+    const gear = parseEquipped(value);
+    if (wornItemCount(gear) > 0) out[hero] = gear;
+  }
+  return out;
+}
+
 /** Loose-shape read of the persisted run; anything malformed → no run. v21
  * runs have no `free_n` / `next`: a charged dive with no preview. */
 function parseDiveRun(raw: unknown): DiveRun | null {
@@ -5982,6 +6737,32 @@ function airportFree(doc: PlayStoreDoc): PlayStoreDoc {
 }
 
 /**
+ * Launch flip clean slate (emci, clean-slate policy: no grandfathering). Once per save, the first
+ * time it loads with `PLAY_EVERYTHING_FREE` off: owned heroes back to the starter (pets hatched
+ * from eggs keep their heroes, `heroOwned` reads the pet book), hero bindings to unowned heroes
+ * dropped, the Avatar hero falls back to the starter if it is no longer owned, and every aura and
+ * finish (owned, mixes, and what pets wear) is cleared. Tokens and everything else stay.
+ * Idempotent through `launch_reset`; an old save restored from the cloud runs it on load too.
+ */
+export function launchCleanSlate(doc: PlayStoreDoc): PlayStoreDoc {
+  if (PLAY_EVERYTHING_FREE || doc.launch_reset) return doc;
+  const bare = (pet: PetState): PetState => ({ ...pet, finish_kind: 'none', finish_color: null, auras: [] });
+  const heroes = { ...doc, owned_hero_ids: [DEFAULT_AVATAR_HERO_ID] };
+  return {
+    ...heroes,
+    active_avatar_hero_id: heroOwned(heroes, doc.active_avatar_hero_id) ? doc.active_avatar_hero_id : DEFAULT_AVATAR_HERO_ID,
+    bound_bosses: doc.bound_bosses.filter((record) => heroById(record.id) == null || heroOwned(heroes, record.id)),
+    hero_offer: null,
+    aura_owned: [],
+    aura_mixes: [],
+    finish_wallet: emptyFinishWallet(),
+    pet: bare(doc.pet),
+    pet_den: doc.pet_den.map(bare),
+    launch_reset: true,
+  };
+}
+
+/**
  * Load the persisted doc, falling back to (and persisting) a fresh default so
  * offline timers are anchored even on a first open before any Claim.
  */
@@ -5990,7 +6771,11 @@ export async function loadPlayStore(now: number = Date.now()): Promise<PlayStore
     const raw = await AsyncStorage.getItem(PLAY_STORE_KEY);
     if (raw) {
       const parsed = parsePlayStore(raw, now);
-      if (parsed) return airportFree(parsed);
+      if (parsed) {
+        const reset = launchCleanSlate(parsed);
+        if (reset !== parsed) savePlayStore(reset).catch(() => {});
+        return airportFree(reset);
+      }
     }
   } catch {
     // Fall through to a fresh default below.

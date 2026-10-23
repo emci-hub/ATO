@@ -96,8 +96,9 @@ const factNudge = resolveNudge({
   history: oneDone,
   hasDo: true,
 });
-assert.ok(factNudge && factNudge.includes('I finish work at four'));
-ok('stored safe fact is a real signal');
+// 2026-10-14: stored facts ("Teach Sage") are no longer read by anything.
+assert.equal(factNudge, null);
+ok('a stored fact is never a signal (nothing a person typed feeds a line)');
 
 assert.equal(
   findNudgeSignal({ knocksYouOff: '', facts: [], history: oneDone }),
@@ -113,7 +114,7 @@ assert.equal(
   }),
   null,
 );
-ok('crisis-keyword facts are not used as Nudge signal');
+ok('no fact of any kind is used as a Nudge signal');
 
 assert.equal(
   resolveNudge({
@@ -126,37 +127,9 @@ assert.equal(
 );
 ok('no Do → no Nudge');
 
-assert.equal(
-  resolveNudge({
-    knocksYouOff: '',
-    facts: ['I finish work at four'],
-    history: twoSkips,
-    hasDo: true,
-    crisisToday: true,
-  }),
-  null,
-);
-assert.equal(
-  resolveNudge({
-    knocksYouOff: '',
-    facts: ['I finish work at four'],
-    history: twoSkips,
-    hasDo: true,
-    crisisYesterday: true,
-  }),
-  null,
-);
-assert.equal(
-  resolveNudge({
-    knocksYouOff: '',
-    facts: ['I finish work at four'],
-    history: twoSkips,
-    hasDo: true,
-    crisisDetected: true,
-  }),
-  null,
-);
-ok('crisis today / yesterday / detected → empty');
+// The crisis gates were removed with the crisis system (2026-10-14).
+assert.doesNotMatch(read('src/lib/voice/nudge.ts'), /crisis/i);
+ok('no crisis gate left in the Nudge');
 
 assert.equal(
   resolveNudge({
@@ -182,17 +155,18 @@ const circle = read('src/app/(tabs)/circle.tsx');
 const circleLib = read('src/lib/circle.ts');
 const checksLib = read('src/lib/checks.ts');
 const peerChecksSql = read('supabase/migrations/peer_checks.sql');
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const widget = read('targets/widget/widgets.swift');
 const push = read('src/lib/push-copy.ts');
 const insightCache = read('src/lib/insight/today-insight.ts');
 const copy = read('src/lib/sage-copy.ts');
 const nudgeSrc = read('src/lib/voice/nudge.ts');
 
-assert.match(home, /SAGE_NPC_LABEL|homeSageLabel/);
-assert.match(copy, /Sage · npc/);
+// The focus card (and its kicker) moved from Home to Insights, 2026-10-14.
+assert.match(read('src/components/insights/today-focus-card.tsx'), /SAGE_NPC_LABEL|homeSageLabel/);
+assert.match(copy, /SAGE_NPC_LABEL = 'Focus · try · watch'/);
 assert.doesNotMatch(circle, /NUDGE_LABEL|nudge_text|Nudge/);
-assert.doesNotMatch(sage, /NUDGE_LABEL|Sage · npc/);
+assert.doesNotMatch(sage, /NUDGE_LABEL|SAGE_NPC_LABEL/);
 assert.doesNotMatch(widget, /[Nn]udge|npc/i);
 assert.doesNotMatch(push, /[Nn]udge/);
 // The widget still gets exactly two text keys and never a third. Sourced

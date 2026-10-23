@@ -27,7 +27,7 @@ export function todayPlan(view: PlayView): TodayPlan {
   if (st.stage === 'egg') pet = 'Pet: it’s still an egg — a dive or two now fills its Logbook for later.';
   else if (expeditionReady) pet = 'Pet: send it on its expedition — one free find, back in an hour.';
   else if (!pv.away && st.hunger <= 1 && pv.pantryTotal > 0) pet = 'Pet: it’s hungry — tap Feed (pantry).';
-  else if (!pv.away && st.hunger <= 1) pet = 'Pet: it’s hungry — play Catch the food.';
+  else if (!pv.away && st.hunger <= 1) pet = 'Pet: it’s hungry — play Catch the food (Feed sheet).';
   else if (view.dive.current >= 1) pet = `Pet: dive together (${view.dive.current} charges) — finds, shells and +2 mood.`;
   else pet = `Pet: free dive for shells and mood (${view.freeDivesToday} today — the first 10 pay full).`;
 

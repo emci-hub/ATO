@@ -78,6 +78,7 @@ const EXPECTED_TYPES = [
   'NSPrivacyCollectedDataTypeDateOfBirth',
   'NSPrivacyCollectedDataTypeUserID',
   'NSPrivacyCollectedDataTypeOtherUserContent',
+  'NSPrivacyCollectedDataTypeEmailsOrTextMessages',
   'NSPrivacyCollectedDataTypeCustomerSupport',
   'NSPrivacyCollectedDataTypeProductInteraction',
   'NSPrivacyCollectedDataTypeOtherUsageData',
@@ -95,16 +96,229 @@ for (const type of jsonTypes) {
 }
 ok('collected data types match across PrivacyInfo.xcprivacy, app.json, and nutrition-label doc');
 
-assert.match(policy, /Supabase/);
-assert.match(policy, /Gemini/);
-assert.match(policy, /Resend/);
-assert.match(policy, /not end-to-end encrypted/i);
-assert.match(labels, /Supabase/);
-assert.match(labels, /Gemini/);
-assert.match(labels, /Resend/);
-assert.match(labels, /Apple/);
-assert.match(labels, /Sentry/);
-ok('privacy.md and nutrition labels name the third parties');
+for (const name of ['Supabase', 'Gemini', 'Resend', 'Sentry', 'ImprovMX', 'Apple']) {
+  assert.match(policy, new RegExp(name), `privacy.md names ${name}`);
+  assert.match(labels, new RegExp(name), `labels name ${name}`);
+}
+// A2 (emci 2026-10-22): Gemini only. DeepSeek runs only when DEEPSEEK_API_KEY is set, and emci unsets it.
+assert.doesNotMatch(policy, /DeepSeek/, 'privacy.md no longer names DeepSeek');
+ok('privacy.md and nutrition labels name the third parties (Gemini only, no DeepSeek; ImprovMX for support mail)');
+
+// A2 (roadmap v2, 2026-10-22): legal text is final. No placeholders, the real operator and contact,
+// retention numbers, the access-request promise and the breach line. Same rules on app source and landing.
+export function legalFinalProblems(text: string, kind: 'privacy' | 'terms' | 'support'): string[] {
+  const out: string[] = [];
+  if (/\[CONFIRM/i.test(text)) out.push('has a [CONFIRM] tag');
+  if (/\bdraft\b/i.test(text)) out.push('says Draft');
+  if (/\[DATE/i.test(text)) out.push('has a date placeholder');
+  if (/AsTrollOGs|asstrollogs/i.test(text)) out.push('names the old entity or address');
+  if (/DeepSeek/i.test(text)) out.push('names DeepSeek');
+  if (!/Last updated:?\**:? (January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, 20\d\d/.test(text)) out.push('missing: a real Last updated date');
+  if (!/support@emgens\.com/.test(text)) out.push('missing: support@emgens.com');
+  if (kind !== 'support' && !/Michael Malig/.test(text)) out.push('missing: operator');
+  if (kind === 'privacy') {
+    for (const [need, why] of [
+      [/Reports:?\**:? 2 years/i, 'report retention'],
+      [/deletion record[\s\S]{0,80}2 years/i, 'deletion-record retention'],
+      [/backups[\s\S]{0,60}within 30 days/i, 'backup retention'],
+      [/We answer within 30 days/, 'access-request answer time'],
+      [/responsible for privacy/, 'privacy contact'],
+      [/Information and Privacy Commissioner/, 'breach notice'],
+      [/not therapy/i, 'not-therapy line'],
+      [/paid plan[\s\S]{0,200}free plan/i, 'Gemini terms for both plans'],
+    ] as const) {
+      if (!need.test(text)) out.push(`missing: ${why}`);
+    }
+  }
+  if (kind === 'terms' && !/courts of Alberta/.test(text)) out.push('missing: governing courts');
+  return out;
+}
+const htmlText = (f: string) =>
+  read(f).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').replace(/ ([,.;:!?)])/g, '$1');
+for (const [f, kind, text] of [
+  ['src/app/legal/privacy.md', 'privacy', policy],
+  ['landing/privacy.html', 'privacy', htmlText('landing/privacy.html')],
+  ['src/app/legal/terms.md', 'terms', read('src/app/legal/terms.md')],
+  ['landing/terms.html', 'terms', htmlText('landing/terms.html')],
+  ['landing/support.html', 'support', htmlText('landing/support.html')],
+] as const) {
+  assert.deepEqual(legalFinalProblems(text, kind), [], `${f}: ${legalFinalProblems(text, kind).join('; ')}`);
+}
+assert.doesNotMatch(labels, /\[CONFIRM/, 'labels doc has no [CONFIRM] tag');
+assert.doesNotMatch(read('landing/index.html'), /\[CONFIRM|asstrollogs|AsTrollOGs/i, 'landing index is final');
+// pass/fail pairs
+assert.ok(legalFinalProblems(policy + ' [CONFIRM: x]', 'privacy').includes('has a [CONFIRM] tag'), 'fail: a tag');
+assert.ok(legalFinalProblems(policy.replace(/October 22, 2026/, '[DATE — fill in on publish]'), 'privacy').includes('has a date placeholder'), 'fail: no date');
+assert.ok(legalFinalProblems(policy + ' Draft, pending lawyer review', 'privacy').includes('says Draft'), 'fail: Draft');
+assert.ok(legalFinalProblems(policy + ' DRAFT', 'privacy').includes('says Draft'), 'fail: DRAFT in capitals');
+assert.ok(legalFinalProblems(policy + ' with DeepSeek as a fallback', 'privacy').includes('names DeepSeek'), 'fail: DeepSeek');
+assert.ok(legalFinalProblems(policy.replace(/support@emgens\.com/g, 'support@asstrollogs.com'), 'privacy').includes('names the old entity or address'), 'fail: old address');
+assert.ok(legalFinalProblems(policy.replace(/Reports:\*\* 2 years/, 'Reports:** forever'), 'privacy').includes('missing: report retention'), 'fail: report retention dropped');
+assert.ok(legalFinalProblems(policy.replace(/We answer within 30 days/g, 'We answer'), 'privacy').includes('missing: access-request answer time'), 'fail: no answer time');
+assert.ok(legalFinalProblems(policy.replace(/free plan/g, 'other plan'), 'privacy').includes('missing: Gemini terms for both plans'), 'fail: one-plan claim');
+assert.deepEqual(legalFinalProblems('Last updated: October 22, 2026 support@emgens.com', 'support'), [], 'pass: a minimal support page');
+ok('legal text is final on app source + landing: no placeholders, operator, contact, retention, access, breach (pass/fail pairs)');
+
+// The landing page and the repo copy say the same thing: every sentence of privacy.md / terms.md is on the page.
+export function missingSentences(md: string, html: string): string[] {
+  const plain = (s: string) =>
+    s.replace(/\*\*|__|`/g, '').replace(/https?:\/\/\S+/g, '').replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
+  const page = plain(html);
+  return md
+    .split('\n')
+    .filter((l) => !/^#|^---|^\*\*Last updated/.test(l.trim()))
+    .map((l) => plain(l.replace(/^\s*-\s+/, '')))
+    .flatMap((l) => l.split(/(?<=[.!?])\s+/))
+    .map((s) => s.replace(/^[^A-Za-z(]+/, '').trim())
+    .filter((s) => s.length > 30 && !page.includes(s));
+}
+for (const [md, html] of [
+  ['src/app/legal/privacy.md', 'landing/privacy.html'],
+  ['src/app/legal/terms.md', 'landing/terms.html'],
+] as const) {
+  const miss = missingSentences(read(md), htmlText(html));
+  assert.deepEqual(miss, [], `${html} is out of sync with ${md}: ${miss.slice(0, 3).join(' | ')}`);
+}
+assert.deepEqual(missingSentences('- We keep chat for 30 days, then delete it.', '<p>We keep chat for 30 days, then delete it.</p>'), [], 'pass: same sentence');
+assert.equal(missingSentences('- We keep chat for 30 days, then delete it.', '<p>We keep chat for 60 days, then delete it.</p>').length, 1, 'fail: a changed number');
+ok('landing privacy/terms carry every sentence of src/app/legal (pass/fail pairs)');
+
+// wave111: the retention the policy promises is a real daily job.
+{
+  const sql = read('supabase/migrations/wave111_retention.sql');
+  assert.match(sql, /delete from public\.reports where at < now\(\) - interval '2 years'/);
+  assert.match(sql, /delete from public\.account_deletions where deleted_at < now\(\) - interval '2 years'/);
+  assert.match(sql, /cron\.schedule\(\s*'retention-daily'/);
+  assert.match(sql, /delete from public\.access_requests where requested_at < now\(\) - interval '30 days'/);
+  assert.match(sql, /returns jsonb\s+language plpgsql\s+security definer\s+set search_path = public/);
+  assert.match(sql, /revoke all on function public\.purge_retention\(\) from public, anon, authenticated/);
+  ok('wave111 purges reports and deletion records after 2 years and access requests after 30 days, daily, definer, not callable by clients');
+}
+
+// A2: sign-up is public, so the landing page has no invite form (the gate copy of check:founder-access).
+export function landingFormProblems(html: string): string[] {
+  const out: string[] = [];
+  if (/id="access-form"|<form\b/i.test(html)) out.push('landing still has a form');
+  if (/rest\/v1\/access_requests/.test(html)) out.push('landing still posts to access_requests');
+  if (/SUPABASE_ANON_KEY/.test(html)) out.push('landing still carries the anon key');
+  return out;
+}
+for (const f of ['landing/index.html', 'landing/privacy.html', 'landing/terms.html', 'landing/support.html']) {
+  assert.deepEqual(landingFormProblems(read(f)), [], `${f}: ${landingFormProblems(read(f)).join('; ')}`);
+}
+assert.ok(landingFormProblems('<form id="access-form"><input type="email"></form>').length > 0, 'fail: the old form');
+assert.ok(landingFormProblems('fetch(`${SUPABASE_URL}/rest/v1/access_requests`)').length > 0, 'fail: a stray POST');
+assert.deepEqual(landingFormProblems('<a href="/support.html">support</a>'), [], 'pass: a support link');
+ok('landing pages carry no invite form or anon key (pass/fail pairs)');
+
+// The landing pages add no claim the repo copy lacks: every page sentence is in the .md (headings, link text excepted).
+export function extraPageSentences(htmlRaw: string, mdRaw: string): string[] {
+  const mdText = mdRaw.replace(/(^|\n)\s*-\s+/g, '$1').replace(/\*\*|`/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ');
+  const body = (htmlRaw.split('<p class="updated">')[1] ?? htmlRaw).split('<footer>')[0]!;
+  const page = body.replace(/<h[12][^>]*>[\s\S]*?<\/h[12]>/g, ' ');
+  return page
+    .split(/<\/?(?:p|li|ul)\b[^>]*>/)
+    .map((b) => b.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').replace(/ ([,.;:!?)])/g, '$1').trim())
+    .flatMap((b) => b.split(/(?<=[.!?]\)?)\s+/))
+    .map((s) => s.replace(/^[^A-Za-z(]+/, '').trim())
+    .filter((s) => s.length > 30 && /\s/.test(s) && !mdText.includes(s));
+}
+for (const [html, md] of [
+  ['landing/privacy.html', 'src/app/legal/privacy.md'],
+  ['landing/terms.html', 'src/app/legal/terms.md'],
+] as const) {
+  const extra = extraPageSentences(read(html), read(md));
+  assert.deepEqual(extra, [], `${html} says things ${md} does not: ${extra.slice(0, 3).join(' | ')}`);
+}
+assert.deepEqual(extraPageSentences('<p>We keep chat for 30 days, then delete it.</p>', '- We keep chat for 30 days, then delete it.'), [], 'pass: same sentence');
+assert.equal(extraPageSentences('<p>We keep chat for 30 days. We also sell your data to partners.</p>', 'We keep chat for 30 days.').length, 1, 'fail: a claim only on the page');
+ok('landing privacy/terms add no sentence the repo copy lacks (both directions in sync, pass/fail pairs)');
+
+// Step 10 (2026-10-20): the policy describes what is built; "mute" is not built. Step 14 (2026-10-21):
+// chat is built (app 1.1+, wave108), so the policy must describe it as built: end-to-end encrypted,
+// 30-day retention, reports send the message + up to 5 before; the old "no direct messages" line is stale.
+export function policyRuleProblems(text: string): string[] {
+  const out: string[] = [];
+  if (/no direct messages between people/i.test(text)) out.push('still says there are no direct messages (chat is built)');
+  if (!/end-to-end encrypted[\s\S]{0,200}ATO cannot read them/i.test(text)) out.push('missing: chat is end-to-end encrypted');
+  if (!/for 30 days, then deletes it/i.test(text)) out.push('missing: 30-day chat retention');
+  if (!/that message and up to 5 before it/i.test(text)) out.push('missing: what a chat report sends');
+  if (/\bmute\b/i.test(text)) out.push('mentions mute (not built)');
+  // Every sentence that names a push token must deny collecting one (local notifications only).
+  for (const s of text.split(/(?<=[.!?])\s+|\n/)) {
+    if (/push (notification )?token/i.test(s) && !/\b(?:does not|doesn't|do not|never|no)\b/i.test(s)) {
+      out.push('claims a push token');
+      break;
+    }
+  }
+  for (const [need, why] of [
+    [/friend request|accept their request/i, 'friend requests with accept'],
+    [/\bBlock\b[\s\S]{0,200}silent/i, 'silent block'],
+    [/Report[\s\S]{0,200}six fixed reasons/i, 'report with fixed reasons'],
+    [/(?:keep|kept)[\s\S]{0,120}(?:if either account is later deleted|without your account ID)/i, 'reports survive deletion'],
+    [/Compare strengths[\s\S]{0,200}both/i, 'compare needs both switches'],
+    [/visits? (?:are )?switched on|visits and compare/i, 'per-friend visits switch'],
+    [/slurs/i, 'name / handle filter'],
+    [/Divecore game save/i, 'Divecore save'],
+    [/Legends cards and category deep dives/i, 'the two AI uses'],
+    [/asks once, after your first insight/i, 'the notification ask'],
+  ] as const) {
+    if (!need.test(text)) out.push(`missing: ${why}`);
+  }
+  return out;
+}
+assert.deepEqual(policyRuleProblems(policy), [], `privacy.md: ${policyRuleProblems(policy).join('; ')}`);
+for (const f of ['landing/privacy.html']) {
+  const html = read(f).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&');
+  assert.deepEqual(policyRuleProblems(html), [], `${f}: ${policyRuleProblems(html).join('; ')}`);
+}
+for (const f of ['src/app/legal/terms.md', 'landing/terms.html']) {
+  const t = read(f);
+  assert.doesNotMatch(t, /\bmute\b/i, `${f} mentions mute`);
+  assert.doesNotMatch(t, /\bin Chat\b|chat history/i, `${f} describes Chat as live`);
+}
+// pass/fail pairs
+assert.ok(policyRuleProblems('Block, mute, report on any Chat conversation.').length > 0, 'fail: the old chat line');
+assert.ok(policyRuleProblems(policy.replace(/six fixed reasons/g, 'a reason')).includes('missing: report with fixed reasons'), 'fail: report reasons dropped');
+assert.ok(policyRuleProblems(policy + '\nPush notification token, if you enable notifications.').includes('claims a push token'), 'fail: a stray claim next to the denial is still caught');
+assert.ok(!policyRuleProblems(policy).includes('claims a push token'), 'pass: the denial sentence alone');
+assert.ok(policyRuleProblems('We collect your push token.').includes('claims a push token'), 'fail: a push-token claim without the denial');
+assert.ok(policyRuleProblems(policy + '\nATO has no direct messages between people.').some((p) => p.startsWith('still says')), 'fail: the stale no-chat line');
+assert.ok(policyRuleProblems(policy.replace(/for 30 days, then deletes it/g, 'for a while')).includes('missing: 30-day chat retention'), 'fail: retention dropped');
+assert.ok(policyRuleProblems(policy.replace(/up to 5 before it/g, 'some context')).includes('missing: what a chat report sends'), 'fail: report scope dropped');
+ok('privacy policy (app + landing) describes Circle, chat (E2E, 30 days, reports), AI, Divecore and notifications as built; no mute; pass/fail pairs');
+
+// The Linked column of the label table matches app.json for every type.
+export function labelLinked(doc: string, type: string): boolean | null {
+  const row = doc.split('\n').find((l) => l.startsWith(`| ${type} |`));
+  if (!row) return null;
+  const cells = row.split('|').map((c) => c.trim());
+  return cells[3] === 'Linked' ? true : cells[3] === 'Not linked' ? false : null;
+}
+const APPLE_NAME: Record<string, string> = {
+  EmailAddress: 'Email Address', Name: 'Name', DateOfBirth: 'Date of Birth', UserID: 'User ID',
+  OtherUserContent: 'Other User Content', EmailsOrTextMessages: 'Emails or Text Messages', CustomerSupport: 'Customer Support', ProductInteraction: 'Product Interaction',
+  OtherUsageData: 'Other Usage Data', CrashData: 'Crash Data', OtherDiagnosticData: 'Other Diagnostic Data', DeviceID: 'Device ID',
+};
+for (const t of manifests.NSPrivacyCollectedDataTypes) {
+  const name = APPLE_NAME[t.NSPrivacyCollectedDataType.replace('NSPrivacyCollectedDataType', '')]!;
+  assert.equal(labelLinked(labels, name), t.NSPrivacyCollectedDataTypeLinked, `labels table Linked column for ${name}`);
+}
+assert.equal(labelLinked('| Crash Data | Yes | Linked | No |', 'Crash Data'), true, 'pair: Linked');
+assert.equal(labelLinked('| Crash Data | Yes | Not linked | No |', 'Crash Data'), false, 'pair: Not linked');
+assert.equal(labelLinked('| Crash Data | Yes |', 'Device ID'), null, 'pair: missing row');
+ok('label table Linked column matches app.json for all 12 types');
+
+// M8 (Step 10): Privacy + Terms links on sign-up and on You, opening the landing pages.
+{
+  const links = read('src/components/legal-links.tsx');
+  assert.match(links, /PRIVACY_URL = 'https:\/\/ato\.emgens\.com\/privacy\.html'/);
+  assert.match(links, /TERMS_URL = 'https:\/\/ato\.emgens\.com\/terms\.html'/);
+  assert.equal((links.match(/accessibilityRole="link"/g) ?? []).length, 2, 'both links are labelled links');
+  assert.match(read('src/app/auth/index.tsx'), /<LegalLinks \/>/, 'sign-up shows the links');
+  assert.match(read('src/app/(tabs)/you.tsx'), /<LegalLinks \/>/, 'You shows the links');
+  ok('Privacy + Terms links on sign-up and You open ato.emgens.com/{privacy,terms}.html');
+}
 
 assert.equal(
   manifests.NSPrivacyCollectedDataTypes.every((t) => t.NSPrivacyCollectedDataTypeTracking === false),
@@ -126,47 +340,47 @@ ok('required-reason API codes match, including App Group UserDefaults C56D.1');
 assert.match(widgetPlist, /C56D\.1/);
 ok('widget PrivacyInfo declares App Group UserDefaults C56D.1');
 
-const sage = read('src/app/(tabs)/sage.tsx');
+const sage = read('src/app/(tabs)/insights.tsx');
 const home = read('src/app/(tabs)/index.tsx');
 const push = read('src/lib/push-copy.ts');
 const widget = read('targets/widget/widgets.swift');
 const copy = read('src/lib/sage-copy.ts');
 const consent = read('src/components/ai-consent-card.tsx');
-const crisis = read('src/lib/crisis/copy.ts');
-assert.match(copy, /Sage is a coach, not a person/);
-assert.match(copy, /SAGE_NPC_LABEL/);
-assert.match(copy, /Sage · npc/);
-// Sage is an inert placeholder while Talk is rebuilt; only the coach label
-// survives on it. Its own contract is pinned by scripts/sage-load-check.ts.
+const focusCard = read('src/components/insights/today-focus-card.tsx');
+// Sage was replaced by Insights (2026-10-14). Nothing a user sees says Sage
+// (check:no-sage-copy); Insights says plainly that nothing there is AI-written.
+assert.doesNotMatch(copy, /Sage is a coach/);
+assert.match(copy, /SAGE_COACH_LABEL = 'Insights'/);
+assert.match(copy, /SAGE_NOT_A_PERSON = 'Picked from your answers\. No AI writes anything here\.'/);
+assert.match(copy, /SAGE_NPC_LABEL = 'Focus · try · watch'/);
 assert.match(sage, /SAGE_COACH_LABEL/);
+assert.match(sage, /SAGE_NOT_A_PERSON/);
 assert.doesNotMatch(sage, /from '@\/lib\/voice\/router'/);
 assert.doesNotMatch(sage, /routeVoiceCard/);
-assert.doesNotMatch(sage, /Ask Sage anything/);
-assert.doesNotMatch(sage, /Sage is writing/);
-assert.doesNotMatch(sage, /Sage · npc/);
+assert.doesNotMatch(sage, /SAGE_NPC_LABEL|Focus · try · watch/);
 assert.match(home, /homeSageLede/);
-// PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): SAGE_COACH_LABEL reached Home only
-// through the parked Ask sheet's fixtures. The two live Sage strings on Home
-// (`homeSageLede`, `homeSageLabel`) are still pinned above and below.
 assert.doesNotMatch(home, /SAGE_COACH_LABEL/);
-assert.match(home, /homeSageLabel/);
+// The focus card (and its kicker) moved from Home to Insights.
+assert.match(focusCard, /homeSageLabel/);
+assert.doesNotMatch(home, /homeSageLabel/);
 assert.match(push, /MORNING_PUSH_TITLE = 'ATO'/);
-assert.match(widget, /SAGE · COACH/);
-assert.match(consent, /Sage is a coach in the app, not a person/);
-assert.match(crisis, /Sage is a coach, not emergency support/);
-assert.doesNotMatch(sage, /Sage listens/);
-assert.doesNotMatch(home, /Sage listens/);
+// The widget's native header (next native build) no longer says Sage.
+assert.doesNotMatch(widget, /SAGE · COACH/);
+assert.match(widget, /Text\("ATO"\)/);
+assert.doesNotMatch(consent, /'[^'\n]*\bSage\b[^'\n]*'/, 'no consent string says Sage');
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is a whole-screen park
 // (it was Circle's per-peer chat, and Circle is parked). The copy rule itself
 // is unchanged and still asserted against every live surface above; this line
 // asserts the parked screen carries none of it.
 assert.doesNotMatch(read('src/app/chat.tsx'), /Sage is a coach/);
-ok('Talk, Home, consent, crisis, push, widget, and Teach Sage label Sage as a coach; Quest Home may use npc');
+ok('no Sage on Insights, Home, consent or push; the focus kicker is Focus · try · watch (on Insights)');
 
-assert.match(home, /No insight yet/);
+// The empty state is the sealed card with its one honest note (stored bank, 2026-10-07).
+assert.match(focusCard, /\{INSIGHT_STORED_NOTE\}/);
+assert.match(focusCard, /SEALED_READ_LINE/);
 assert.doesNotMatch(home, /fake poster|Fake Person|open box|fake card media|fake ·/i);
 assert.doesNotMatch(home, /<PixelFace/);
-ok('Home has an honest empty card state and no Stage 1 fake fixtures');
+ok('the focus card has an honest empty state; Home has no Stage 1 fake fixtures');
 
 const tabsLayout = read('src/app/(tabs)/_layout.tsx');
 const navPixel = read('src/components/nav-pixel.tsx');
@@ -187,9 +401,8 @@ assert.match(poster, /ecl="M"/);
 ok('nav companion is shell-mounted top-right; You poster keeps its own soft-dark palette and dark-on-light M QR');
 
 const chrome = read('src/lib/theme/chrome.ts');
-const crisisSrc = read('src/components/crisis-card.tsx');
 assert.match(chrome, /controlBorderColor/);
-assert.match(crisisSrc, /borderColor: theme\.accent/);
+assert.match(read('src/components/helpline-row.tsx'), /borderColor: controlBorderColor\(theme\)/);
 assert.match(sage, /NO_PINCH_ZOOM/);
 assert.match(read('src/components/app-tabs.tsx'), /backgroundColor: theme\.background/);
 assert.match(read('src/components/app-tabs.tsx'), /useSafeAreaInsets/);
@@ -198,7 +411,7 @@ assert.match(read('src/lib/theme/context.tsx'), /typeof Appearance\.setColorSche
 assert.match(read('src/lib/theme/context.tsx'), /ready: boolean/);
 assert.match(read('src/components/themed-tab-bar.tsx'), /backgroundColor: theme\.background/);
 assert.doesNotMatch(read('src/components/themed-tab-bar.tsx'), /backgroundElement/);
-ok('crisis dismiss uses accent border; outline controls share a visible hairline; Sage pinch-zoom is off; tab bar is opaque and appearance-themed');
+ok('the helpline row uses the shared hairline; Insights pinch-zoom is off; tab bar is opaque and appearance-themed');
 
 const sentryLib = read('src/lib/sentry.ts');
 assert.match(sentryLib, /enableNative:\s*Platform\.OS !== 'web'/);
@@ -235,9 +448,25 @@ assert.match(
   /\{offerConsent \?[\s\S]{0,300}<AiConsentCard[\s\S]{0,120}context="home"/,
 );
 assert.doesNotMatch(home, /needsConsentPrompt/);
-assert.match(home, /const consentGranted = consent === 'granted';/);
+assert.match(home, /const consent = me \? aiConsentFor\(me\) : 'pending';/);
 assert.match(home, /\{AI_USE_DISCLOSURE\}/);
-assert.match(consent, /AI_USE_DISCLOSURE = 'Sage uses AI to personalize your insights\.'/);
+// 2026-10-14: the Story is template-only, so the real AI uses are Legends
+// cards and category deep dives — the disclosure names exactly those two.
+assert.match(
+  consent,
+  /AI_USE_DISCLOSURE =\s*'ATO uses AI only to write your Legends cards and your category deep dives\. These cards are shared between people with similar leanings and never include your name or your answers\.'/,
+);
+// The AI mark (emci 2026-10-07): a small icon you tap to read what it means,
+// on every mounted surface that shows model output (today: the Story fold).
+const aiBadge = read('src/components/ai-badge.tsx');
+assert.match(aiBadge, /<Pressable[\s\S]*accessibilityRole="button"[\s\S]*onPress=\{\(\) => setOpen\(\(v\) => !v\)\}/);
+assert.match(aiBadge, /MaterialCommunityIcons name="creation"/);
+assert.match(aiBadge, /\{open \? \([\s\S]*\{AI_BADGE_DESCRIPTION\}/);
+// The Story on Insights is template-only, so it carries no AI badge at all.
+assert.doesNotMatch(read('src/components/insights/insights-story-card.tsx'), /AiBadge/);
+// The consent copy names only what still uses AI, never the stored focus,
+// questions, categories or the Story (emci 2026-10-07, 2026-10-14).
+assert.doesNotMatch(consent, /writes your daily insight|written insights|personalize your insights/);
 assert.match(home, /setAiConsent/);
 assert.doesNotMatch(sage, /setAiConsent/);
 // REPINNED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked, but AI
@@ -246,13 +475,13 @@ assert.doesNotMatch(sage, /setAiConsent/);
 // its own "Sage's AI" fold, and the three-state row collapsed to a toggle plus
 // the full consent card while the answer is still pending — so "Not set yet"
 // is no longer a label, the card itself is that state.
-assert.match(youTab, /Sage(&apos;|')s AI/);
+assert.match(youTab, /ATO(&apos;|')s AI/);
 assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
 assert.match(youTab, /<AiConsentCard/);
 assert.match(youTab, /setAiConsent/);
 // The Account fold is back (2026-10-04) but holds only the birthday row: AI
-// consent stays in its own "Sage's AI" fold, never inside Account.
+// consent stays in its own "ATO's AI" fold, never inside Account.
 {
   const at = youTab.indexOf('<SettingsFold title="Account">');
   const accountFold = youTab.slice(at, youTab.indexOf('</SettingsFold>', at));
@@ -260,28 +489,26 @@ assert.match(youTab, /setAiConsent/);
 }
 ok('AiConsentCard is inline on Home and still reachable on You; the AI-use disclosure is unconditional on both');
 
-// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): the crisis REGION picker is
-// off the parked You. This is not the crisis card itself — `CrisisCard` is
-// still Active on Home (§0 decision 3), still static, and still asserted
-// elsewhere in this file. What is parked is only the per-region setting, which
-// had no effect while the picker's own region list is being rebuilt.
-assert.ok(youTab.indexOf('<CrisisRegionPicker') === -1, 'the region picker is parked with the rest of You');
-ok('the crisis REGION picker is parked; the static crisis card on Home is untouched');
+// The crisis system was removed 2026-10-14 (it existed only because Sage read
+// what people typed). One static helpline row on You replaced it
+// (check:helpline-row pins it).
+assert.ok(youTab.indexOf('<CrisisRegionPicker') === -1, 'no region picker');
+assert.match(youTab, /<HelplineRow \/>/);
+ok('no crisis region picker; the static helpline row is on You');
 
-// Same no-flash promise, new source: the Check row no longer carries card
-// text, so Home paints from the cached insight and reconciles against
-// daily_insights behind it.
-assert.match(home, /useDailyInsight/);
-assert.match(home, /fetchTodayInsight/);
+// Same no-flash promise, new home (2026-10-14): the focus card on Insights
+// paints from the cached insight and reconciles against daily_insights.
+assert.match(focusCard, /useDailyInsight/);
+assert.match(focusCard, /fetchTodayInsight/);
 assert.match(read('src/lib/insight/today-insight.ts'), /export async function loadCachedInsight/);
-ok('Home paints today\'s insight from cache before any fetch or generation');
+ok('the focus card paints today\'s insight from cache before any fetch');
 
 // Talk's quota/crisis-ordering assertions went with its backend (2026-09-14).
 // The user-facing quota copy still exists and is still the only thing shown
 // when the cap is hit, so that stays pinned; the surfaces that actually claim
 // are asserted where they live.
 const quota = read('src/lib/voice/quota.ts');
-assert.match(quota, /Sage's out of things to say for today, back tomorrow/);
+assert.match(quota, /That's all for today, back tomorrow/);
 assert.match(read('src/lib/voice/quota-server.ts'), /claim_ai_call/);
 assert.match(
   read('supabase/migrations/stage8_ai_quota.sql'),

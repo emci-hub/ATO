@@ -33,6 +33,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { playSheetsSearchText, resolvePlaySource } from './art-sheets';
 import {
   DEFAULT_AVATAR_HERO_ID,
   HERO_CLIPS,
@@ -124,10 +125,7 @@ const registryText = fs.readFileSync(
 // --all packs them into a sheet instead, and play-art-prep.ts excludes them
 // from generated-play-assets.ts to avoid doubling ~2000 files) — so "is this
 // clip actually bundled" now has two places to look, not one.
-const sheetRegistryText = fs.readFileSync(
-  path.resolve(repoRoot, 'src/play/generated-play-sheets.ts'),
-  'utf8',
-);
+const sheetRegistryText = playSheetsSearchText(repoRoot);
 
 let passed = 0;
 function ok(label: string) {
@@ -250,7 +248,7 @@ const stubs: string[] = [];
 const bundledHeroIds = new Set<string>();
 
 for (const hero of heroes) {
-  const animations = path.join(repoRoot, hero.folder, 'animations');
+  const animations = path.join(resolvePlaySource(repoRoot, 'hero', hero.id, 'cast'), 'animations');
   const onDisk = clipFolders(animations);
   const authored = Object.entries(hero.clips);
   assert.ok(authored.length > 0, `${hero.id}: authors at least one clip`);
@@ -580,7 +578,7 @@ const v17 = JSON.stringify({
 });
 const migrated = parsePlayStore(v17, 0);
 assert.ok(migrated, 'a v17 save still parses');
-assert.equal(migrated.version, 32, "and is written back as the current version (v32)");
+assert.equal(migrated.version, 33, "and is written back as the current version (v33)");
 assert.equal(migrated.tokens, 1234, 'its tokens survive');
 assert.equal(migrated.lifetime_waves_cleared, 42, 'its lifetime clears survive');
 assert.equal(migrated.avatars[0]?.level, 7, 'its Avatar level survives');
@@ -704,22 +702,23 @@ for (const hero of heroes) {
 ok('boundHeroTowerClips resolves each hero to its tower subset (idle/attack/skill)');
 
 /* ------------------------------------------------------------- A6 --------
- * Bound Boss PLACE: a hero bound as a tower places on a pad (FREE for v1),
+ * Bound Boss PLACE: a hero bound as a tower places on a pad (40 scrap, step 6),
  * auto-attacks like a crystal/chunk tower, and auto-casts its skill when the
  * hero authors `clips.skill` (Archangel Ultimate / Oni Iaijutsu). The engine
  * (`defend.ts`) is pure, so the whole place/remove/combat contract is
  * assertable offline.
  * ------------------------------------------------------------------------- */
 
-// The documented stats pick: crystal-like, and FREE place for v1.
-assert.equal(HERO_TOWER_STATS.placeCost, 0, 'a hero tower places free for v1 (economy TBD)');
+// The documented stats pick: crystal-like, and 40 scrap to place (Divecore finish step 6, 2026-10-19:
+// free hero towers were the dominant answer in `sim:balance`).
+assert.equal(HERO_TOWER_STATS.placeCost, 40, 'a hero tower costs 40 scrap to place, the same as a normal tower');
 assert.ok(HERO_TOWER_STATS.baseAttack > 0 && HERO_TOWER_STATS.cooldownMs > 0 && HERO_TOWER_STATS.range > 0, 'hero tower has a full stat block');
 assert.equal(HERO_TOWER_SKILL_COOLDOWN_MS, 12_000, 'hero tower skill CD mirrors the archer tower default');
 assert.equal(isHeroBoundTower('archangel'), true, 'archangel is a hero tower');
 assert.equal(isHeroBoundTower('oni'), true, 'oni is a hero tower');
 assert.equal(isHeroBoundTower('ember_sovereign'), false, 'the cycle boss is not a hero tower');
 assert.equal(isHeroBoundTower('nobody'), false, 'an unknown id is not a hero tower');
-ok('hero-tower stats are fixed + free, and isHeroBoundTower splits hero vs cycle boss');
+ok('hero-tower stats are fixed + 40 scrap, and isHeroBoundTower splits hero vs cycle boss');
 
 // Cycle-boss ART mapping (PRODUCT LOCK): the Final cycle boss draws the
 // Archangel kit; a hero tower resolves itself; an unmapped id has no hero art.
@@ -729,11 +728,13 @@ assert.equal(boundBossHeroId('oni'), 'oni', 'Oni resolves itself as a hero tower
 assert.equal(boundBossHeroId('nobody'), null, 'an unmapped id has no hero art');
 ok('boundBossHeroId maps the Final cycle boss → Archangel and resolves hero towers');
 
-// Place: a hero tower lands on an empty pad free, and blocks on occupied / cap.
-const live = createDefendLive(1, { boardId: 'ato', scrap: 100 });
+// Place: a hero tower lands on an empty pad for 40 scrap, and blocks on short scrap / occupied / cap.
+// 200 scrap: enough for a third place, so the cap (not the price) is what refuses it below.
+const live = createDefendLive(1, { boardId: 'ato', scrap: 200 });
 const placedHero = placeBoundBoss(live, 0, 'archangel', 1);
 assert.ok(placedHero, 'a hero bound as a tower places on an empty pad');
-assert.equal(placedHero.scrap, 100, 'and places FREE — no scrap is deducted');
+assert.equal(placedHero.scrap, 160, 'and costs 40 scrap');
+assert.equal(placeBoundBoss({ ...live, scrap: 39 }, 0, 'archangel', 1), null, 'short of 40 scrap is refused');
 assert.equal(placedHero.boundBosses[0]?.bossId, 'archangel');
 assert.equal(placeBoundBoss(placedHero, 0, 'oni', 1), null, 'an occupied pad is refused');
 const twoHeroes = placeBoundBoss(placedHero, 1, 'oni', 1);
@@ -744,7 +745,7 @@ assert.equal(
   `a third Bound Boss is refused at BOUND_BOSS_MAX_ON_BOARD (${BOUND_BOSS_MAX_ON_BOARD})`,
 );
 assert.equal(placeBoundBoss(live, 0, 'nobody', 1), null, 'an unknown bound-boss id is refused');
-ok('placeBoundBoss places hero towers free and enforces pad + board caps');
+ok('placeBoundBoss charges hero towers 40 scrap and enforces pad + board caps');
 
 // Remove: frees the pad, keeps the OWNED + BOUND record (store is untouched).
 const removed = removeBoundBoss(twoHeroes, twoHeroes.boundBosses[0].id);

@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
-import { isAtLeastAge, NIGHT_GOING_AGE_YEARS } from '@/lib/age';
+import { CONFIRM_AGE_MESSAGE, isAtLeastAge, isReadableBornOn, NIGHT_GOING_AGE_YEARS } from '@/lib/age';
 import { aroundEmptyCopy, fetchWeekendJson } from '@/lib/around/fetch';
 import { GOING_UNDER_18_MESSAGE, showRequires18 } from '@/lib/around/ages';
 import { fetchNight, setGoing, type NightSnapshot } from '@/lib/around/going';
@@ -44,7 +44,7 @@ export default function AroundLabScreen() {
 
   const agesString = goingAges === '18+' ? '18+' : null;
   const gated = showRequires18(agesString);
-  const oldEnough = me?.born_on ? isAtLeastAge(me.born_on, NIGHT_GOING_AGE_YEARS) : false;
+  const oldEnough = isAtLeastAge(me?.born_on, NIGHT_GOING_AGE_YEARS);
   const canGo = !gated || oldEnough;
   // Prefer a real seeded show (fixture city) so the RPC round-trip actually
   // succeeds; the placeholder UUID still proves the call wires up if no
@@ -63,7 +63,8 @@ export default function AroundLabScreen() {
   async function toggleGoing() {
     if (goingBusy) return;
     if (gated && !oldEnough) {
-      setGoingError(GOING_UNDER_18_MESSAGE);
+      // No usable birthday: ask to confirm the age instead of saying "under 18".
+      setGoingError(isReadableBornOn(me?.born_on) ? GOING_UNDER_18_MESSAGE : CONFIRM_AGE_MESSAGE);
       return;
     }
     setGoingBusy(true);

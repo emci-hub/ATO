@@ -1,0 +1,250 @@
+{
+ "alley-now": {
+  "road": 30,
+  "walk": 93,
+  "props": [
+   "barrel",
+   "tire-stack",
+   "traffic-cone",
+   "barrel",
+   "tire-stack",
+   "traffic-cone",
+   "barrel",
+   "tire-stack"
+  ],
+  "ambient": {
+   "barrels": 3,
+   "cones": 2,
+   "vent": true,
+   "pigeons": 4
+  }
+ },
+ "rooftop-a": {
+  "road": 25,
+  "walk": 129,
+  "props": [
+   "ac-unit",
+   "roof-vent",
+   "roof-lamp",
+   "ac-unit",
+   "roof-vent",
+   "roof-lamp",
+   "roof-lamp"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 3,
+   "vent": true,
+   "pigeons": 4
+  }
+ },
+ "rooftop-b": {
+  "road": 24,
+  "walk": 106,
+  "props": [
+   "ac-unit",
+   "roof-vent",
+   "roof-lamp",
+   "ac-unit",
+   "roof-vent",
+   "roof-lamp",
+   "roof-lamp"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 3,
+   "vent": true,
+   "pigeons": 4
+  }
+ },
+ "rooftop-c": {
+  "road": 26,
+  "walk": 108,
+  "props": [
+   "ac-unit",
+   "roof-vent",
+   "roof-lamp",
+   "ac-unit",
+   "roof-vent",
+   "roof-lamp",
+   "roof-lamp"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 3,
+   "vent": true,
+   "pigeons": 4
+  }
+ },
+ "underpass-a": {
+  "road": 29,
+  "walk": 100,
+  "props": [
+   "boxes",
+   "boxes",
+   "boxes",
+   "boxes",
+   "traffic-cone",
+   "boxes"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 1,
+   "vent": true,
+   "pigeons": 0
+  }
+ },
+ "underpass-b": {
+  "road": 30,
+  "walk": 127,
+  "props": [
+   "boxes",
+   "boxes",
+   "boxes",
+   "boxes",
+   "traffic-cone",
+   "boxes"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 1,
+   "vent": true,
+   "pigeons": 0
+  }
+ },
+ "underpass-c": {
+  "road": 29,
+  "walk": 139,
+  "props": [
+   "boxes",
+   "boxes",
+   "boxes",
+   "boxes",
+   "traffic-cone",
+   "boxes"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 1,
+   "vent": true,
+   "pigeons": 0
+  }
+ },
+ "court-a": {
+  "road": 37,
+  "walk": 105,
+  "props": [
+   "bench",
+   "bench",
+   "bench",
+   "bin",
+   "bin",
+   "ball-rack",
+   "bin"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 0,
+   "vent": false,
+   "pigeons": 4
+  }
+ },
+ "court-b": {
+  "road": 42,
+  "walk": 113,
+  "props": [
+   "bench",
+   "bench",
+   "bench",
+   "bin",
+   "bin",
+   "ball-rack",
+   "bin"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 0,
+   "vent": false,
+   "pigeons": 4
+  }
+ },
+ "court-c": {
+  "road": 37,
+  "walk": 76,
+  "props": [
+   "bench",
+   "bench",
+   "bench",
+   "bin",
+   "bin",
+   "ball-rack",
+   "bin"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 0,
+   "vent": false,
+   "pigeons": 4
+  }
+ },
+ "docks-a": {
+  "road": 44,
+  "walk": 94,
+  "props": [
+   "bollard",
+   "bollard",
+   "bollard",
+   "bollard",
+   "crate",
+   "bollard",
+   "bollard",
+   "crate"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 0,
+   "vent": false,
+   "pigeons": 4
+  }
+ },
+ "docks-b": {
+  "road": 26,
+  "walk": 61,
+  "props": [
+   "bollard",
+   "bollard",
+   "bollard",
+   "bollard",
+   "crate",
+   "bollard",
+   "bollard",
+   "crate"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 0,
+   "vent": false,
+   "pigeons": 4
+  }
+ },
+ "docks-c": {
+  "road": 44,
+  "walk": 117,
+  "props": [
+   "bollard",
+   "bollard",
+   "bollard",
+   "bollard",
+   "crate",
+   "bollard",
+   "bollard",
+   "crate"
+  ],
+  "ambient": {
+   "barrels": 0,
+   "cones": 0,
+   "vent": false,
+   "pigeons": 4
+  }
+ }
+}

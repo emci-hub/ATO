@@ -1,23 +1,54 @@
 /**
- * Reduce motion inside Divecore (v24, 2026-09-30) — follows the phone by
- * default, with an in-game override. Device-only (AsyncStorage), Play-only:
- * the app-wide theme still follows the phone; Play passes the resolved value
- * down to every Play screen as it already did.
+ * Play motion policy v2 (2026-10-12) — BEAST sign-off pending.
+ *
+ * Modes: Full (default) | Reduced | Off.
+ *   - vestibularSafe = OS Reduce Motion OR mode !== 'full'
+ *     Only swaps the REPLACE list (shake, zoom, big slides, parallax, tilt).
+ *   - cosmeticsStill = mode === 'off'
+ *     Freezes cosmetics to a still frame. Walk / auras / room life KEEP
+ *     running unless this is on.
+ *   - Under vestibularSafe, KEEP loops stay alive but gentler (≤24pt travel,
+ *     scale pulse ≤1.04). Never a static screen.
+ *
+ * Stored values migrate: phone→full, off→full, on→reduced.
+ * Effects Quality stays a separate performance switch.
+ *
+ * Fence: "OS RM or Reduced swaps vestibular triggers; cosmetics freeze only
+ * on Off." Do not claim App Store "Supports Reduced Motion" yet.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import { AccessibilityInfo } from 'react-native';
 
 export const PLAY_MOTION_KEY = 'ato.play.reduceMotion.v1';
-export const PLAY_MOTION_MODES = ['phone', 'on', 'off'] as const;
+export const PLAY_MOTION_MODES = ['full', 'reduced', 'off'] as const;
 export type PlayMotionMode = (typeof PLAY_MOTION_MODES)[number];
 export const PLAY_MOTION_LABEL: Record<PlayMotionMode, string> = {
-  phone: 'Follow phone',
-  on: 'On',
+  full: 'Full',
+  reduced: 'Reduced',
   off: 'Off',
 };
 
-let current: PlayMotionMode = 'phone';
+const LEGACY: Record<string, PlayMotionMode> = {
+  phone: 'full',
+  off: 'full',
+  on: 'reduced',
+  full: 'full',
+  reduced: 'reduced',
+};
+
+export type PlayMotionFlags = {
+  mode: PlayMotionMode;
+  osReduce: boolean;
+  /** OS RM or in-game mode is not Full — REPLACE list only. */
+  vestibularSafe: boolean;
+  /** In-game Motion is Off — freeze cosmetics to a still frame. */
+  cosmeticsStill: boolean;
+  /** In-game mode is Reduced (gentler KEEP loops). */
+  reduced: boolean;
+};
+
+let current: PlayMotionMode = 'full';
 let loaded = false;
 const listeners = new Set<() => void>();
 
@@ -34,8 +65,13 @@ export function setPlayMotionMode(next: PlayMotionMode): void {
   current = next;
   emit();
   AsyncStorage.setItem(PLAY_MOTION_KEY, next).catch(() => {
-    // Device preference only — a failed save just means it follows the phone.
+    // Device preference only — a failed save just means it stays in memory.
   });
+}
+
+function migrate(raw: string | null): PlayMotionMode | null {
+  if (!raw) return null;
+  return LEGACY[raw] ?? null;
 }
 
 async function loadOnce(): Promise<void> {
@@ -43,12 +79,16 @@ async function loadOnce(): Promise<void> {
   loaded = true;
   try {
     const raw = await AsyncStorage.getItem(PLAY_MOTION_KEY);
-    if ((PLAY_MOTION_MODES as readonly string[]).includes(raw ?? '') && raw !== current) {
-      current = raw as PlayMotionMode;
+    const next = migrate(raw);
+    if (next && next !== current) {
+      current = next;
       emit();
     }
+    if (raw && raw !== current && next) {
+      AsyncStorage.setItem(PLAY_MOTION_KEY, next).catch(() => {});
+    }
   } catch {
-    // Keep following the phone.
+    // Keep Full.
   }
 }
 
@@ -64,9 +104,19 @@ export function usePlayMotionMode(): PlayMotionMode {
   return useSyncExternalStore(subscribe, getPlayMotionMode, getPlayMotionMode);
 }
 
-/** The reduce-motion value Play uses, given the phone's own setting. */
+export function resolvePlayMotion(mode: PlayMotionMode, osReduce: boolean): PlayMotionFlags {
+  return {
+    mode,
+    osReduce,
+    vestibularSafe: osReduce || mode !== 'full',
+    cosmeticsStill: mode === 'off',
+    reduced: mode === 'reduced',
+  };
+}
+
+/** @deprecated v1 name — equals vestibularSafe. Prefer usePlayMotion(). */
 export function resolveReduceMotion(mode: PlayMotionMode, phone: boolean): boolean {
-  return mode === 'phone' ? phone : mode === 'on';
+  return resolvePlayMotion(mode, phone).vestibularSafe;
 }
 
 let phoneReduce = false;
@@ -92,7 +142,6 @@ function watchPhoneReduceMotion(): void {
   });
 }
 
-/** The phone's Reduce Motion flag, one listener for every Play control. */
 export function usePhoneReduceMotion(): boolean {
   return useSyncExternalStore(
     (listener) => {
@@ -107,7 +156,19 @@ export function usePhoneReduceMotion(): boolean {
   );
 }
 
-/** Play's resolved Reduce Motion: the in-game override, else the phone. */
-export function usePlayReduceMotion(): boolean {
-  return resolveReduceMotion(usePlayMotionMode(), usePhoneReduceMotion());
+export function usePlayMotion(): PlayMotionFlags {
+  return resolvePlayMotion(usePlayMotionMode(), usePhoneReduceMotion());
 }
+
+/** Vestibular REPLACE flag (OS RM or mode ≠ Full). */
+export function usePlayReduceMotion(): boolean {
+  return usePlayMotion().vestibularSafe;
+}
+
+/** Scale a KEEP pop: Full can burst, vestibularSafe caps at 1.04. */
+export function keepPopScale(vestibularSafe: boolean, fullPeak = 1.08): number {
+  return vestibularSafe ? 1.04 : fullPeak;
+}
+
+/** Travel cap for KEEP loops under vestibularSafe (art/screen pt). */
+export const KEEP_TRAVEL_PT = 24;

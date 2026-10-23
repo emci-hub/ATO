@@ -20,7 +20,6 @@ import { nextRoundLabel, roundCapLine, STAGED_INTAKE_COPY_REVIEWED } from './sta
 import { ONGOING_ROUND_SIZE } from './tiered-axis-plan';
 import { ATO_TOKEN_EARN, ROUND_PAYOUTS_PER_DAY } from '@/lib/ato-tokens';
 import { isProfileSettled, settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
-import { TRAIT_AXES } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
 /**
@@ -41,8 +40,8 @@ export const LEGENDS_UNLOCK_STAGE = FULL_PROFILE_STAGE;
  *     Home "Load insight", Explore categories, Questions "Next 16 questions";
  *   - Story is offered then too, but `storyReady` decides when it has enough;
  *   - Sage and Legends open nothing yet.
- * emci approved the 50-era table 2026-10-02; the staged-intake rewording is a
- * draft again until emci reads it (docs/copy-review.md, Staged intake).
+ * emci approved the 50-era table 2026-10-02; the staged-intake rewording was
+ * accepted by emci 2026-10-23, roadmap A4 (docs/copy-review.md, Staged intake).
  */
 export const UNLOCK_COPY_REVIEWED = STAGED_INTAKE_COPY_REVIEWED;
 
@@ -65,14 +64,14 @@ export const INTAKE_UNLOCKED: readonly string[] = [
 
 export const NEXT_ROUND_HEADING = `What your next ${ONGOING_ROUND_SIZE} are for`;
 export const NEXT_ROUND_UNLOCKS: readonly string[] = [
-  `Another look at the traits that are still settling or pulled two ways, out of your ${TRAIT_AXES.length}`,
+  `Another look at traits that are still settling or pulled two ways`,
   'Your Story on Home, as more traits settle',
   'More categories on Explore',
   `+${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens`,
 ];
 
 export const COMING_LATER_HEADING = 'Not open yet';
-export const COMING_LATER_LINE = 'Sage and Legends are being rebuilt. Nothing you do here unlocks them yet.';
+export const COMING_LATER_LINE = 'Legends is being rebuilt. Nothing you do here unlocks it yet.';
 
 export const INTAKE_TOKENS_PAID_LINE = `+${ATO_TOKEN_EARN.full_profile_complete} ATO tokens, in your balance on You`;
 
