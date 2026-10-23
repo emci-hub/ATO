@@ -348,7 +348,9 @@ import {
   recordDaily,
   recordRound,
   EMPTY_DAILY,
+  GAMES,
   type DailyGames,
+  type Game,
   type GameRecords,
   type Medal,
 } from '@/play/game-records';
@@ -1374,7 +1376,7 @@ export type PetView = {
   stagePower: { bustPp: number; lucky: number; tripMult: number; tripBetter: boolean };
   /** v26 — mini-game records, rank titles and today's daily challenge. */
   records: GameRecords;
-  ranks: Record<'catch' | 'train', string>;
+  ranks: Record<Game, string>;
   daily: DailyGames;
   /** v27 — the Den: resting pets (frozen), slots owned / in use, the next
    * slot's price (null = at the most), and why a swap is blocked right now
@@ -2016,7 +2018,11 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
       tripBetter: petTripBetter(pet),
     },
     records: doc.game_records,
-    ranks: { catch: rankTitle(doc.game_records, 'catch'), train: rankTitle(doc.game_records, 'train') },
+    ranks: {
+      catch: rankTitle(doc.game_records, 'catch'),
+      train: rankTitle(doc.game_records, 'train'),
+      dash: rankTitle(doc.game_records, 'dash'),
+    },
     daily: dailyFor(doc.daily_games, today),
     den: {
       resting: doc.pet_den,
@@ -2567,7 +2573,10 @@ function milestoneInputOf(doc: PlayStoreDoc, now: number) {
     anyShiny: recs.some((r) => r.shinies > 0),
     anyFiveStar: recs.some((r) => heroStars(r.copies) >= 5),
     eggsHatched: doc.play_stats.eggs_hatched,
-    insaneGold: doc.game_records.catch.insane.medal === 'gold' || doc.game_records.train.insane.medal === 'gold',
+    insaneGold:
+      doc.game_records.catch.insane.medal === 'gold' ||
+      doc.game_records.train.insane.medal === 'gold' ||
+      doc.game_records.dash.insane.medal === 'gold',
   };
 }
 
@@ -3202,7 +3211,8 @@ export function resetDivecore(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   return { ...fresh, play_settings: doc.play_settings, pet_remind: doc.play_settings.notif.hunger };
 }
 
-export type PetRoundKind = 'catch' | 'train';
+/** Catch feeds; Tap to train and Lane dash train (+1 training, +2 mood). */
+export type PetRoundKind = Game;
 export type PetRoundResult = {
   counted: boolean;
   tokensGranted: number;
@@ -3290,7 +3300,7 @@ export function finishPetRound(
     kind === 'catch' ? CARE_ACT.fed : CARE_ACT.trained,
   );
   const pet = kind === 'catch' ? feedPet(cared, PET_FEED_CATCH) : trainPet(cared);
-  const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today);
+  const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today, level === 'easy');
   // v26: records, medal → buff (refreshed, never stacked), daily challenge.
   // A level that isn't open (e.g. after a reset) earns no record, medal,
   // buff or unlock — care and tokens still count as a normal pass.
@@ -3367,7 +3377,7 @@ export function devGrantAllBuffs(doc: PlayStoreDoc): PlayStoreDoc {
 /** Dev kit: Gold on every level of both games (opens everything). */
 export function devGoldAllGames(doc: PlayStoreDoc): PlayStoreDoc {
   const records = emptyRecords();
-  for (const g of ['catch', 'train'] as const) {
+  for (const g of GAMES) {
     for (const d of Object.keys(records[g]) as Difficulty[]) records[g][d] = { best: 1, medal: 'gold' };
   }
   return { ...doc, game_records: records };

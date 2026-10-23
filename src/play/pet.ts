@@ -176,6 +176,8 @@ export const PET_EXPEDITION_MIN_STAGE: PetStage = 'child';
 
 /** Mini-game token trickle: per finished round, capped per device-local day. */
 export const PET_TOKENS_PER_ROUND = 5;
+/** Easy pays less (Minigames M1, emci 2026-10-22), so six Easy passes cannot fill the daily cap. */
+export const PET_TOKENS_PER_ROUND_EASY = 2;
 export const PET_TOKENS_DAILY_CAP = 30;
 /** A round must score at least this to count (care + tokens). */
 export const PET_MIN_ROUND_SCORE = 3;
@@ -811,11 +813,13 @@ export function petTokensForRound(
   today: string,
   storedYmd: string | null,
   paidToday: number,
+  easy = false,
 ): { tokens: number; ymd: string; paid: number } {
   const sameOrBack = petDayHolds(today, storedYmd);
   const ymd = sameOrBack ? (storedYmd as string) : today;
   const paid = sameOrBack ? paidToday : 0;
-  const tokens = Math.max(0, Math.min(PET_TOKENS_PER_ROUND, PET_TOKENS_DAILY_CAP - paid));
+  const per = easy ? PET_TOKENS_PER_ROUND_EASY : PET_TOKENS_PER_ROUND;
+  const tokens = Math.max(0, Math.min(per, PET_TOKENS_DAILY_CAP - paid));
   return { tokens, ymd, paid: paid + tokens };
 }
 

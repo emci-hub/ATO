@@ -1,0 +1,22 @@
+{
+  "tool": "pixellab",
+  "model": "pixflux",
+  "prompt": "cheeseburger, pictorial icon, no text",
+  "negative": null,
+  "seed": "13",
+  "size": "32",
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {},
+  "cost": null,
+  "createdAt": "2026-10-22T16:14:36.871Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": ""
+  },
+  "dirMap": {}
+}

@@ -252,17 +252,58 @@ still open (listed under "Open items" below).
 
 Nothing below blocks the next job; emci runs or accepts each.
 
-1. **Phone boxes open:** 43, 53, 54, 55, 56, 58. Box 58 is one full pass over the same ground but shorter than 53-56
+1. **Phone boxes: Box 58 PASSED (emci, 2026-10-21), closing 43, 53, 54, 55, 56.** (Original note:) Box 58 is one full pass over the same ground but shorter than 53-56
    (it leaves out per-row detail such as Box 53's screen-reader label, Box 55's "kept tower stays free / no refund" and
    Box 56's per-icon match); emci can run 53-56 as written, or accept Box 58 as the shorter pass that closes them.
 2. **Locker icons not approved:** only emci sets `approved` (they are `resource` in the registry). The other two looks per
    item sit unused in the library for a swap (Box 56).
 3. **Minigames makeover M1-M3 (section 7):** still waiting for emci's yes; not part of "done".
-4. **Balance leftovers (step 6):** hero-tower kit spread is 1.59× (Archangel 1.13× … Morwen 1.80×); the Legends /
-   affinity / stacked-boost sections of the sim still use the 2-hero-tower board; "Main 10" needs 2.13× on a fresh board
-   (0.85× kept + helper).
-5. **Element look in Turf War** (auras are pet-only, chain bolts plain, burn/chill overlays unwired): raised in step 1,
-   not decided, not built.
+4. **Balance leftovers (step 6): DONE, OTA published (2026-10-21; group `f278776c`, commit `50e6fccb`), phone check
+   not needed (numbers only).** Hero-tower Splash and Pull damage share 0.6/0.55 → 0.7 (`KIT_TUNING.heroDamageShare`):
+   kit spread 1.59× → **1.41×** (Archangel 1.13× … Morwen 1.60×; weakest of the rest Elowen 1.49×). The Legends /
+   affinity / resisted / stacked-boost sections of the sim now use the "Mixed + average helper" board (affinity now 4%,
+   Legend choice gap 1.44×, stacked ×1.70). **Main 10 accepted as a residual (emci, 2026-10-21):** 2.13× fresh,
+   0.85× kept + helper (inside the ×2.0 rule); the roadmap never set a fresh-board target for the finale.
+5. **Element look in Turf War** (emci chose code-only, 2026-10-21): **built** a still ground glow under stunned / burning /
+   chilled creeps (`statusGlowColor`, `src/play/status-icons.ts`; drawn in `defend-screen.tsx`, Streetwear only, display
+   only; pinned in `check:kits`); **phone check PASSED** (emci, 2026-10-21; OTA group `8b2c2691`). Chain bolts were already element-tinted. **Not built:** an
+   element-coloured hit flash and a Turf-scale tower/hero aura (pet auras don't fit; needs new PixelLab art).
+   **Run order (emci, 2026-10-21: "all", one chat each, one OTA each):** (a) balance leftovers, (b) element-coloured hit
+   flash, (c) Turf-scale tower/hero aura (new PixelLab art, samples first), (d) Minigames M1, (e) M2, (f) M3. Locker icon
+   approval stays emci's. Tick each here when its phone box passes. Done: Box 58, Element look glow, **(a) balance
+   leftovers** (OTA `f278776c`, 2026-10-21). **(c) element ring** built (below). **(b) element-coloured hit flash: built + published 2026-10-22** (OTA group
+   `cb36f66c`, commit `0b077a42`; phone check = Box 71, not done): the 70 ms creep hit flash takes the element colour of
+   the hit (Vine green, Crystal yellow, a hero / helper / Legend hit in its element's colour; Archer and neutral hits stay
+   white); display-only, Streetwear only, Reduce Motion / Effects Off unchanged; pinned in `check:turf-war-layout`.
+   **(c) Turf-scale element ring: built + published 2026-10-22** (OTA group `8539dd48`, commit `15d2005f`; phone check =
+   Box 72, not done): a looping PixelLab twin ring (64×32, 8 frames, "Ring 2", emci's pick from samples) under every
+   element-tagged tower, hero tower and the helper (the Archer has none), in the element's colour. The game's tint is flat,
+   so the grey sheet is baked into five coloured sheets (`ringember|tide|root|spark|void/status`, script
+   `art-src/pixellab/fx.turf-ring.streetwear/bake_rings.py`); layer `src/play/turf-ground-rings.tsx`; pinned in
+   `check:turf-war-layout`. Art critique score not entered (candidate; only emci sets approved).
+   **(d) Minigames M1: built + published 2026-10-22** (OTA group `ea99eae5`, commit `f9e2f0d8`; phone check = Box 73, not
+   done): 3-2-1, result card that waits for Continue, star / X-bomb shapes, +n pops, combo strip, haptics, shared-value
+   fall + marker; **Easy pays 2 tokens** (Normal+ 5; emci OK'd); pinned in `check:pet-games`; save stays v33.
+   **(e) Minigames M2: built + published 2026-10-22** (OTA group `a16f5e57`, commit `2e580a4f`; phone check = Box 74, not
+   done; emci OK'd up to ~60 PixelLab generations, 5 used): Catch food = PixelLab pizza / donut / burger (32 px,
+   `icon.streetwear.*`), golden = the library star on a star halo, bomb = the library bomb with a red X overlay; Train
+   dummy = a PixelLab hanging punching bag (`prop.streetwear.punching-bag`, swings from the top, shadow); Catch wears the
+   Hideout's wall + floor + neon at 1 pt per art px (uniform scale on wide stages; no furniture); the flat glow square is a
+   radial ×3 combo pool and the pet now wears its grade aura, sword-element aura, finish and shiny ring / glimmer
+   (`GamePet` gained optional look fields, built in `pet-screen.tsx`); happy = the pet's skill clip (golden catch, perfect
+   hit; dash if none), oof = its hurt clip on a Train miss (red flash if none). No new "happy" clip exists, so faces are
+   existing clips only. Pinned in `check:pet-games` (incl. an encoding pin). Train keeps the classic room plate. Library
+   entries are `resource` status with no critique score yet. Save stays v33.
+   **(f) Minigames M3: built + published 2026-10-22** (OTA group `34f63cfb`, commit `6d1366ba`; phone check = Box 75,
+   **PASSED by emci 2026-10-22**; emci OK'd the scope and a third game): Catch shield + magnet pickups (magnet food scores but counts as NOT
+   caught, so it can't lift the pass share or farm tokens; shield blocks one bomb tap; slow was dropped), Train zone waves
+   (drifts on Normal+ later taps, splits into two half-width zones on Hard / Insane; total lit width never grows; still under
+   Reduce Motion), a Practice button on every game (no clock, no strikes, never reports a round: nothing counts), and
+   **Lane dash** (3 lanes, Catch's pass rule and combo, trains the pet, same 5 / 2 token rule and 30 a day cap). New
+   `dash` key inside `game_records` and `daily_games` (additive; an older save reads it as empty; **save stays v33**, not
+   v34 as first said: a bump would break ~15 checks). Dash medal bars are scaled from Catch and **not sim-tuned yet**
+   (`npm run sim:games`). Pinned in `check:pet-games` and `check:fixed-regions`. **Run order (a)-(f) is now all built.**
+   Next: the outside-Divecore assessment (prompt at the end of step 9).
 6. **Launch items that touch Divecore, owned by the next assessment:** `PRE_LAUNCH_DEV` is still `true` (invite-only);
    `PLAY_EVERYTHING_FREE` follows it, so **today every hero is free**, and when the flag flips off the roster stops
    being handed out: the hero economy must be checked then. Also: forward clock jumps are an accepted risk (step 3); 12
@@ -778,8 +819,8 @@ also drops the countdown animation, the squash and the shake. **PixelLab spend:*
   test, the hero-tower finding wording, the Legends-board note, Box 55 wording). **OTA published**: iOS
   `01a154cc-e1b9-730d-a536-b8757bfad0dd`, Android `01a154cc-e1b9-748e-a58f-d74b70d33d69`, group
   `2f5b8fca-cf7c-437d-9475-eb382a0a66f2` (message `divecore-finish-step6-balance`). Phone check: **Box 55** (not done).
-  **Open (not tuned, report flags it):** the hero-tower kit spread is 1.59× (Archangel 1.13× … Morwen 1.80×) with
-  paid hero towers; and the board most players field (Mixed + helper + hero towers) is not its own sim column.
+  **Open at the time (since tuned, section 3 item 4):** the hero-tower kit spread was 1.59× (Archangel 1.13× … Morwen
+  1.80×) with paid hero towers, now 1.41×; the board most players field (Mixed + helper + hero towers) is still not its own sim column.
   **Next: step 7 (Locker icons through PixelLab); Minigames M1 still waits for emci's yes.**
 - **Step 7 built + published 2026-10-19** (Play commits `80d9f9e4`, `f5854622`; docs `f573040a`). **13 own Streetwear
   icons**, one per item (was 13 items on 10 shared stand-ins: one shield for Bark Aegis and Ember Ward, a hoodie, a

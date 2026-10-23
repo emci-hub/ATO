@@ -49,7 +49,7 @@ import {
   type Behavior,
   type Element,
 } from '../src/play/kits';
-import { STUN_ICON_COLOR, statusIconsFor } from '../src/play/status-icons';
+import { STUN_ICON_COLOR, statusGlowColor, statusIconsFor } from '../src/play/status-icons';
 
 let passed = 0;
 function ok(label: string) {
@@ -285,5 +285,13 @@ assert.equal(loaded[1].color, ELEMENT_COLOR.void, 'the DoT icon takes the strong
 assert.equal(loaded[2].color, ELEMENT_COLOR.tide);
 assert.equal(loaded[3].color, ELEMENT_COLOR.void);
 ok('status icons: none when clean; stun, DoT (with stack count), slow, shred in a fixed order');
+
+// Ground glow under an affected creep (Element look): stun > burn > chill; clean and shred-only get none.
+assert.equal(statusGlowColor(statusIconsFor(plain)), null, 'a clean creep has no glow');
+assert.equal(statusGlowColor(loaded), STUN_ICON_COLOR, 'stun wins the glow');
+assert.equal(statusGlowColor(statusIconsFor({ ...plain, dots: [{ element: 'ember', dps: 2, ms: 1000 }], slowMs: 500 })), ELEMENT_COLOR.ember, 'burn beats chill');
+assert.equal(statusGlowColor(statusIconsFor({ ...plain, slowMs: 500 })), ELEMENT_COLOR.tide, 'chill glows tide');
+assert.equal(statusGlowColor(statusIconsFor({ ...plain, shredMs: 500 })), null, 'shred alone adds no glow');
+ok('status glow: stun > burn > chill, none when clean or shred-only');
 
 console.log(`\nAll ${passed} kit checks passed.`);

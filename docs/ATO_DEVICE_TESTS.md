@@ -946,9 +946,9 @@ binary with `PRE_LAUNCH_DEV = false` baked in, the "ATO" widget header and hapti
 
 ### Part B — Core loop
 
-- [ ] **B1** Home → tap the daily insight. → It loads and unfolds; one light haptic.
+- [ ] **B1** Insights tab → tap "Load insight". → Today's Focus · try · watch loads; one light haptic. (Fixed 2026-10-22, roadmap v2 A1: the insight moved from Home to Insights on 2026-10-14.)
 - [ ] **B2** Answer 3 questions. → They save; Insights and the profile update.
-- [ ] **B3** Mark a Check did/skip. → Saves; the profile card renders.
+- [ ] **B3** Home → "Check in · +5 tokens". → Saves; the line under it reads "1 of 7 check-ins toward your next bonus" (or the next count); More → You shows the identity card. (Fixed 2026-10-22: the Did/Skip Check loop is parked.)
 
 ### Part C — Divecore and Circle
 
@@ -1035,3 +1035,119 @@ About 10 min. Two accounts that are Circle friends (your own + `atodev2`). Run o
 - [ ] **7** Support line. -> Opens a mail draft to support@asstrollogs.com.
 - [ ] **8** More -> Divecore -> Hideout -> Circle. -> Only the friend list with share switch + Visit (no Add field, no ⋯), a line pointing to the Circle tab; Visit and gifts still work.
 - [ ] **9** Larger Text and a small phone (375x667) on the Circle tab. -> Nothing cut off; keyboard does not cover Send.
+
+## Box 71 — Turf War element-coloured hit flash (Divecore run order (b), 2026-10-22)
+
+About 5 min. Streetwear look, Effects Quality on Full, Motion on. Run on the OTA group `cb36f66c` (restart the app twice to load it). Only a hit that carries an element changes colour; Archer hits stay white, which is the "nothing changed" check.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Turf Trial with Vines only. -> A creep hit by a Vine flashes **green** for a blink (the damage number is green too).
+- [ ] **2** Add a Crystal. -> A creep hit by it flashes **yellow**.
+- [ ] **3** Archers only (or watch an Archer hit). -> The flash is still plain **white**.
+- [ ] **4** Put a fire hero (Archangel or Kitsune) on as a tower or helper. -> Its hits flash **orange**. With a Legend set, hero and helper hits take the Legend's colour instead.
+- [ ] **5** A burning creep hit by an Archer. -> It may flash orange (the burn colour); it never strobes faster than about 5 times a second.
+- [ ] **6** A boss wave. -> The boss flash is still brighter and longer than a creep's, now in the element colour on an element hit.
+- [ ] **7** Settings: Reduce Motion on (or Effects Off). -> No flash at all, white or coloured.
+- [ ] **8** Wave runs at normal speed; nothing stutters.
+
+## Box 72 — Turf War element rings under towers, hero towers and the helper (Divecore run order (c), 2026-10-22)
+
+About 8 min. Streetwear look, Effects Quality on Full, Motion on. Run on the OTA group `8539dd48` (restart the app twice to load it). One ring per tower, in the tower's element colour; the Archer has none.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Build a Vine, then a Crystal, then an Archer. -> The Vine gets a **green** ring on its pad, the Crystal a **yellow** one, the Archer **none**. The ring is a thin twin ring with small white flecks marching round it, drawn under the tower.
+- [ ] **2** Watch a ring for a few seconds. -> It loops smoothly (8 frames), the frames move and the ring is never cut off or stuck; no black box around it.
+- [ ] **3** Upgrade a tower to level 2, then 3. -> The ring gets a bit bigger each level and stays centred on the pad.
+- [ ] **4** Put a hero tower on a pad (a fire hero like Archangel or Kitsune). -> An **orange** ring under it; a tide hero (Elowen, Morwen) **blue**; root **green**; spark **yellow**; void **violet**.
+- [ ] **5** Sell a tower. -> Its ring disappears; the other rings keep playing (no jump or restart).
+- [ ] **6** Add the helper (Turf team). -> A ring in the helper's element colour sits under its feet and follows it as it walks; swap to a hero of another element in setup -> the ring changes to the new colour.
+- [ ] **7** Creeps walk over a ring. -> Creeps draw on top of tower rings (the helper's ring may sit above creeps near its feet, like the helper itself).
+- [ ] **8** Settings: Effects Quality Minimal, then Off. -> Minimal: about half the rings loop, the rest hold a still frame; Off: every ring is a still frame.
+- [ ] **9** Settings: Reduce Motion on (or Motion Off). -> Reduce Motion: rings play at half speed; Motion Off: still frames. No flashing.
+- [ ] **10** Wave with 6 towers + 2 hero towers + helper at normal speed. -> No stutter, still about 60 fps.
+
+## Box 73 — Minigames M1: feel + clarity (Divecore run order (d), 2026-10-22)
+
+About 10 min. Feed → Catch the food, and Play → Tap to train. Run on the OTA group `ea99eae5` (restart the app twice to load it). Easy now pays 2 tokens a passed round; Normal, Hard and Insane pay 5.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Start Catch the food (Normal). -> A big **3, 2, 1** over the field first (about 2 seconds), nothing falls until it ends; the timer starts after it.
+- [ ] **2** Catch some food. -> A small **+n** floats up where you tapped; the pet squashes a little; a thin strip at the top of the field fills toward the next combo (×2 at 5, ×3 at 10, ×5 at 20) and turns gold at ×5.
+- [ ] **3** Look at the items. -> Golden food is a **star** (not a round one); the bomb is a dark round **bomb with a red X** (no emoji). You can tell them apart without colour.
+- [ ] **4** Tap a bomb. -> A red flash, the pet shakes/hurts, a **−3** pops, and your phone buzzes harder than for a catch. Let a bomb fall past untouched -> the pet gives a small wobble.
+- [ ] **5** Let the round end (pass). -> The game stays on screen with a **ROUND PASSED** card (tokens, care, score, medal / record). Nothing closes by itself. Tap **CONTINUE** -> back to the Feed sheet with the result line, and any record / unlock notices show now.
+- [ ] **6** Fail a round (let everything fall). -> A **NOT THIS TIME** card; Continue returns with no tokens. Tap **< Pet** while the card is up -> same as Continue, and the round is not counted twice (check your tokens).
+- [ ] **7** Play Catch on **Easy** and pass. -> **+2 tokens** (not 5). A Normal pass -> +5. The Play sheet text says "+5 tokens a passed round (+2 on Easy)".
+- [ ] **8** Tap to train. -> Same 3-2-1; the marker sweeps smoothly with no stutter; a hit gives a **+n** and a light buzz, a Perfect a stronger one; the result card appears at the end.
+- [ ] **9** Settings: Larger Text on. -> The status line under the title is not cut off and the top bar keeps its size; the 2-line hint is unchanged.
+- [ ] **10** Settings: Reduce Motion on (or Effects Off). -> The 3-2-1 and the "+n" show without movement; no squash, wobble, shake or buzzing.
+- [ ] **11** Back out mid-round with **< Pet**. -> No card, nothing counted (as before).
+
+## Box 74 — Minigames M2: look (Divecore run order (e), 2026-10-22)
+
+About 10 min. Feed → Catch the food, and Play → Tap to train. Run on the OTA group `a16f5e57` (restart the app twice to load it). Rules and tokens are unchanged from Box 73.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Start Catch the food. -> The background is the Hideout's own room (brick wall with the window, wood floor, a little neon glow), not the underwater reef. No bare dark bands at the sides or top.
+- [ ] **2** Look at the falling items. -> Pizza slice, donut and burger fall (pixel art, not coloured circles); a golden one is a **star on a pale halo**; the bomb is a round bomb with a **red X** over it. You still tell them apart without colour.
+- [ ] **3** Catch a golden star. -> The pet does its **skill move** (or at least dashes) and the +n pops as before. Catch normal food -> it dashes as before.
+- [ ] **4** Look at the pet while playing (a pet with an aura, a grade, a finish or a shiny). -> It shows the **same aura / finish / shiny ring as in the Hideout**, not a flat coloured square. At a ×3 combo a soft glow pool lights behind it.
+- [ ] **5** Tap a bomb. -> The pet's hurt move (or a red flash) and the flash as before.
+- [ ] **6** Tap to train. -> The dummy is a **red hanging punching bag with a soft shadow**; a hit swings it from the top; the old scribble crate is gone.
+- [ ] **7** Miss a tap in Train. -> The pet does its **"oof"** (hurt move, or a red flash) and stumbles; a Perfect hit plays its skill move.
+- [ ] **8** On the biggest phone you have (or Display Zoom off): Catch background. -> No bare bands; the room just looks a bit bigger.
+- [ ] **9** Settings: Reduce Motion on (or Effects Off). -> No aura motes / sparkles moving, no combo pulse, no swing / squash / shake; the finish rests.
+- [ ] **10** Larger Text on. -> Status line and 2-line hint are not cut off; the dock does not resize.
+- [ ] **11** Play a few rounds. -> Still smooth (about 60 fps), nothing flickers when many items are on screen.
+
+## Box 75 — Minigames M3: depth (Divecore run order (f), 2026-10-22)
+
+About 15 min. Feed → Catch the food; Play → Tap to train and Lane dash. Run on the OTA group `34f63cfb` (restart the app twice to load it). Tokens, the 30 a day cap and the pass rule are unchanged.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Catch the food, any level, play 25 s. -> Now and then a round pickup falls (a **shield** icon or a red **horseshoe magnet** in a cyan ring), after the first 4 s. They look nothing like food or the bomb.
+- [ ] **2** Tap a shield. -> A SHIELD tag shows top-left. Then tap a bomb -> "BLOCKED", no strike, no −3, the combo holds, the tag goes.
+- [ ] **3** Tap a magnet. -> "MAGNET 4s" counts down; food that falls past the middle is collected for you with a "+n". When it ends the tag goes.
+- [ ] **4** Pass check: finish a round leaning on the magnet. -> Magnet food gives points but does NOT count as caught: the result line "Caught x/y" does not jump because of it.
+- [ ] **5** Tap to train on Hard (or Normal, past tap 10). -> The lit zone starts as before, then **drifts side to side** a little; on Hard from tap 10 it **splits into two shorter zones** and a tap in either one hits. The hint says so.
+- [ ] **6** Reduce Motion on, Tap to train on Normal. -> The zone does not drift.
+- [ ] **7** Play → Lane dash (new card under Tap to train). -> Three lanes with faint lines; the pet stands in the middle. Tap a lane to step there. Food in your lane is caught on its own (+n, combo), a bomb in your lane is a strike, food falling past in another lane is a miss. Three strikes end it.
+- [ ] **8** Finish a Lane dash pass. -> Result card, then the sheet: +1 training, +2 mood, +5 tokens (+2 on Easy), counted in the same 30 a day. Rank "Sidestepper" shows on the card, and in Info. Easy / Normal / Hard / Insane unlock like the others.
+- [ ] **9** Practice button on Catch, Train and Lane dash. -> No timer, no strikes, nothing ends it; "practice" shows in the status line; **Back** leaves. Afterwards: no tokens, no care, no record, no medal, no daily change.
+- [ ] **10** Open an old save (a phone that already played). -> Catch / Train records and medals are still there; Lane dash starts empty.
+- [ ] **11** Larger Text on, Lane dash and Catch. -> The status line and the 2-line hint are not cut off; the dock does not resize; the lane taps still work.
+- [ ] **12** Play a few Lane dash and Catch rounds. -> Still smooth; food that visibly passes the pet is not caught late (tell me if it feels off).
+
+## Box 76 — Honest promises + reviewer path (roadmap v2 step A1, 2026-10-22)
+
+About 10 min. Needs the A1 OTA (runtime 1.1.0; restart the app twice to load it), two accounts that are Circle friends,
+and (for item 5) a phone where you once tapped "Not now" on "Want a nudge now and then?" and never allowed notifications.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Home → the check-in card (account that finished the 48). -> The balance line reads "Each AI view costs 5: a Legends AI card or a deep dive on Explore." No "Story".
+- [ ] **2** More → You → the ATO tokens card → how it works. -> The spend line names a Legends AI card and a deep dive only, says a deep dive already in the shared library is free (up to 10 a day), and there is NO "reroll" or "name style" price line.
+- [ ] **3** Open a chat with a friend who has sent you a message. -> The top bar shows Back · @friend · **Report** · Block. Tap Report -> the sheet says "Report their latest message" with the hint "To report an earlier message, press and hold it."; pick a reason -> "Thanks. We read every report within a day."
+- [ ] **4** Same chat, the friend has sent nothing yet (or only you wrote). -> Tap Report -> the note says "Nothing from them to report yet." Long-press on a received message still opens "Report this message".
+- [ ] **5** Divecore: start a room Build (phone from the setup line, notifications never allowed). -> NO iOS notification dialog appears. Divecore → Settings → switch a notice on -> the iOS dialog DOES appear (you asked).
+- [ ] **5b** Chat, tap Block once (armed). -> Report hides while "Tap again…" shows, the title and Block text fit on the screen; wait 4 s -> Block disarms and Report comes back.
+- [ ] **6** VoiceOver on, chat screen. -> The new button reads "Report a message from @friend, button".
+
+## Box 77 — Legal + support pages are final (roadmap v2 step A2, 2026-10-22)
+
+About 5 min. Needs: the landing site redeployed from `landing/` (after `DEEPSEEK_API_KEY` is unset), and the A2 OTA
+(restart the app twice to load it).
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Sign-up screen → tap Privacy. -> ato.emgens.com/privacy.html opens. Top says "Last updated: October 22, 2026", no "Draft", and "operated by Michael Malig". No "[CONFIRM" anywhere (scroll to the end). No "DeepSeek".
+- [ ] **2** Same screen → tap Terms. -> terms.html, same date, no "Draft", §13 says courts of Alberta.
+- [ ] **3** More → You → the legal links. -> The same two pages open.
+- [ ] **4** In the browser, open ato.emgens.com/support.html. -> The Support page, with support@emgens.com, Report/Block, Delete account, data requests and helplines.
+- [ ] **5** ato.emgens.com home page. -> No email form. The footer links Privacy · Terms · Support, and says "operated by Michael Malig".
+- [ ] **6** You → Send feedback (and Circle tab → the support line at the bottom). -> A mail draft to **support@emgens.com** (not the old asstrollogs address). Send one test mail to yourself through it -> it arrives in your inbox.

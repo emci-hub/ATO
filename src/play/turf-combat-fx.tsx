@@ -52,8 +52,8 @@ import { Strip } from '@/play/turf-fx-strip';
 export type FxBox = { x: number; y: number; size: number };
 
 export type TurfCombatFxHandle = {
-  /** White tint over one creep sprite for HIT_FLASH_MS (a boss: brighter, BOSS_FLASH_MS). */
-  flash: (drawable: ClipDrawable, box: FxBox, boss?: boolean) => void;
+  /** Tint over one creep sprite for HIT_FLASH_MS (a boss: brighter, BOSS_FLASH_MS): white, or the hit's element colour. */
+  flash: (drawable: ClipDrawable, box: FxBox, boss?: boolean, color?: string) => void;
   /** The death pop centred on a creep's body (board units). */
   pop: (x: number, y: number) => void;
   /** Red ring at the path end (board units). `still` (Reduce Motion / Motion Off): full size, fade only. */
@@ -77,7 +77,7 @@ export type TurfCombatFxHandle = {
 };
 
 type Item =
-  | { kind: 'flash'; id: number; drawable: ClipDrawable; box: FxBox; boss: boolean }
+  | { kind: 'flash'; id: number; drawable: ClipDrawable; box: FxBox; boss: boolean; color?: string }
   | { kind: 'pop'; id: number; x: number; y: number }
   | { kind: 'leak'; id: number; x: number; y: number; still: boolean }
   | { kind: 'portal'; id: number; x: number; y: number; still: boolean; close: boolean }
@@ -125,7 +125,7 @@ function Flash({ item, unit }: { item: Extract<Item, { kind: 'flash' }>; unit: n
   const { box } = item;
   return (
     <Animated.View pointerEvents="none" style={[styles.abs, { left: box.x * unit, top: box.y * unit, width: box.size * unit, height: box.size * unit }, style]}>
-      <ClipImage drawable={item.drawable} tintColor="#FFFFFF" />
+      <ClipImage drawable={item.drawable} tintColor={item.color ?? '#FFFFFF'} />
     </Animated.View>
   );
 }
@@ -273,7 +273,7 @@ export const TurfCombatFx = memo(
     useImperativeHandle(
       ref,
       () => ({
-        flash: (drawable, box, boss = false) => add({ kind: 'flash', id: ++seq.current, drawable, box, boss }),
+        flash: (drawable, box, boss = false, color) => add({ kind: 'flash', id: ++seq.current, drawable, box, boss, color }),
         pop: (x, y) => add({ kind: 'pop', id: ++seq.current, x, y }),
         leak: (x, y, still = false) => add({ kind: 'leak', id: ++seq.current, x, y, still }),
         summon: (x, y, mode) => add({ kind: 'summon', id: ++seq.current, x, y, still: mode === 'still' }),

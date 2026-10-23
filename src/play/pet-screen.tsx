@@ -64,7 +64,7 @@ import { FinishPicker } from '@/play/finish-picker';
 import { FinishMotionHost } from '@/play/finish-motion';
 import { StoneSheetBody } from '@/play/stone-sheet';
 import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
-import { PetGameHost, type GamePet } from '@/play/pet-games';
+import { PetGameHost, type GamePet, type RoundCardData } from '@/play/pet-games';
 import { BUFF_ICON, BUFF_LABEL, BUFF_NOTICE } from '@/play/play-buffs';
 import { notify } from '@/play/notify/notify';
 import { useFxQuality } from '@/play/fx-quality';
@@ -430,6 +430,19 @@ export function PetScreen({
     onJournalOpened?.();
   }, [openJournal, onJournalOpened]);
   const [game, setGame] = useState<GameRun | null>(null);
+  // Minigames M1: the counted round waits on a result card over the finished game; Continue runs `afterRound`.
+  const [roundCard, setRoundCard] = useState<RoundCardData | null>(null);
+  const roundCardRef = useRef<RoundCardData | null>(null);
+  roundCardRef.current = roundCard;
+  const afterRound = useRef<(() => void) | null>(null);
+  const leaveGame = () => {
+    const after = afterRound.current;
+    afterRound.current = null;
+    setRoundCard(null);
+    setGame(null);
+    if (after) after();
+    else setSheet(null);
+  };
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [lastKind, setLastKind] = useState<PetRoundKind | null>(null);
   const [lastRound, setLastRound] = useState<{ key: string; score: number; strong: boolean } | null>(null);
@@ -774,6 +787,8 @@ export function PetScreen({
     setSheet(id);
   };
   const startGame = (run: GameRun) => {
+    setRoundCard(null);
+    afterRound.current = null;
     setSheet(null);
     setGame(run);
   };
@@ -989,8 +1004,11 @@ export function PetScreen({
         const step = petBackStep(sheet != null, game != null);
         if (step === 'hub') return false;
         if (step === 'close-game') {
-          setGame(null);
-          setSheet(null);
+          if (roundCardRef.current) leaveGame();
+          else {
+            setGame(null);
+            setSheet(null);
+          }
         } else setSheet(null);
         return true;
       },
@@ -1000,6 +1018,8 @@ export function PetScreen({
 
   const roundClaim = useRef<{ run: GameRun | null; key: string }>({ run: null, key: '' });
   const finishRound = (run: GameRun) => (outcome: RoundOutcome, score: number) => {
+    // Practice counts for nothing, even if a game ever reported by mistake.
+    if (run.practice) return;
     if (roundClaim.current.run !== run) {
       roundClaim.current = { run, key: `pet:${run.kind}:${run.level}:${run.daily ? 'daily' : 'free'}:${Date.now()}` };
     }
@@ -1010,9 +1030,14 @@ export function PetScreen({
       result = next.result;
       return next.doc;
     });
-    setGame(null);
-    if (result) {
+    if (!result) {
+      setGame(null);
+      return;
+    }
+    {
       const r: PetRoundResult = result;
+      // Everything below waits for Continue on the result card (or runs at once for a silent replay).
+      const after = () => {
       // A replay of the same round (background retry) comes back uncounted
       // and must not wipe the line the real win already showed.
       if (r.counted) {
@@ -1042,6 +1067,18 @@ export function PetScreen({
           ? 'skilled'
           : 'pass';
       if (!awayRef.current) sayText(pickRoundTalk(talk, lastLineRef.current));
+      };
+      if (r.counted || !outcome.pass) {
+        afterRound.current = after;
+        setRoundCard({
+          pass: outcome.pass && r.counted,
+          strong: r.counted && isStrongResult(r),
+          lines: roundResultLine(kind, outcome, r).split('\n'),
+        });
+      } else {
+        setGame(null);
+        after();
+      }
     }
   };
 
@@ -1055,6 +1092,11 @@ export function PetScreen({
     eggColor,
     recolor: revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn, pet.shiny_style) : null,
     glow: revealed && pet.grade ? GRADE_COLOR[pet.grade] : ELEMENT_COLOR[view.legendElement],
+    grade: revealed ? pet.grade : null,
+    shiny: revealed && pet.shiny,
+    shinyStyle: pet.shiny_style,
+    glimmer: revealed && !pet.shiny && pet.glimmer,
+    auraElement: view.swords.equipped?.element ?? null,
   };
   const shownName = petShownName(pet);
   // Today (Divecore finish step 4): what is ready right now, derived from the live view (no save, no timer: it
@@ -1557,7 +1599,7 @@ export function PetScreen({
               commit((doc, now) => startHideoutBuild(doc, now, teaseRoom));
               setTeaseOpen(false);
               if (!view.hideout.state.build_notif_asked && view.settings.notif.build) {
-                void askPetReminderPermission().then(() => {
+                void askPetReminderPermission({ auto: true }).then(() => {
                   commit((doc, now) => markBuildNotifAsked(doc, now));
                 });
               }
@@ -1699,14 +1741,21 @@ export function PetScreen({
       {game ? (
         <View style={styles.gameOverlay} accessibilityViewIsModal>
           <PetGameHost
-            key={`${game.kind}:${game.level}:${game.daily}`}
+            key={`${game.kind}:${game.level}:${game.daily}:${game.practice ? 'p' : 'r'}`}
             kind={game.kind}
             level={game.level}
             daily={game.daily}
+            practice={game.practice === true}
             ymd={pv.daily.ymd ?? ''}
             gamePet={gamePet}
             still={reduceMotion || fxQuality !== 'full'}
+            card={roundCard}
+            onContinue={leaveGame}
             onBack={() => {
+              if (roundCard) {
+                leaveGame();
+                return;
+              }
               setGame(null);
               setSheet(null);
             }}

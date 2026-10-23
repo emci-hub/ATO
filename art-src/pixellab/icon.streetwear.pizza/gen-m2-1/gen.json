@@ -1,0 +1,22 @@
+{
+  "tool": "pixellab",
+  "model": "pixflux",
+  "prompt": "slice of pepperoni pizza, pictorial icon, no text",
+  "negative": null,
+  "seed": "11",
+  "size": "32",
+  "view": "low top-down",
+  "direction": null,
+  "palette": "streetwear-v4",
+  "referenceImageIds": [],
+  "params": {},
+  "cost": null,
+  "createdAt": "2026-10-22T16:14:37.989Z",
+  "operator": "agent",
+  "picked": true,
+  "critique": {
+    "score": null,
+    "notes": ""
+  },
+  "dirMap": {}
+}

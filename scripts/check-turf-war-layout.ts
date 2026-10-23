@@ -372,6 +372,35 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
 }
 
 {
+  // Divecore step (c): element rings under towers, hero towers and the helper (display only, Streetwear only).
+  const meta = JSON.parse(read('assets/play/sheets/streetwear/meta.json')) as { fx: Record<string, { frames: number; fps: number; loop: boolean; cell: number } | undefined> };
+  for (const el of ['ember', 'tide', 'root', 'spark', 'void']) {
+    const m = meta.fx[`ring${el}/status`];
+    assert.ok(m && m.frames === 8 && m.fps === 8 && m.loop && m.cell === 64, `ring${el}/status is packed: 8 frames @ 8 fps, looping, 64 cell`);
+  }
+  const rings = read('src/play/turf-ground-rings.tsx');
+  assert.ok(!/react-native-svg/.test(rings), 'the ring layer is not an SVG (nothing inside the sim <Svg>)');
+  assert.ok(!/useState/.test(rings), 'no React state in the ring layer (nothing re-renders per tick)');
+  assert.match(rings, /useFxQuality\(\)/, 'rings honour fx-quality');
+  assert.match(rings, /motion\.cosmeticsStill/, 'Motion Off = a still frame');
+  assert.match(rings, /motion\.vestibularSafe \? 0\.5 : 1/, 'Reduce Motion = half speed');
+  assert.match(rings, /t\.value = 0;\s+t\.value = withRepeat/, 'an animated ring starts at frame 0');
+  assert.match(rings, /export const TurfGroundRings = memo\(/, 'the static ring layer is memoised');
+  const scr = read('src/play/defend-screen.tsx');
+  const ringAt = scr.indexOf('<TurfGroundRings ');
+  const ambAt = scr.indexOf('<TurfAmbient ');
+  const svgAt = scr.indexOf('<Svg width="100%" height="100%" viewBox="0 0 100 100">');
+  assert.ok(ambAt > 0 && ringAt > ambAt && svgAt > ringAt, 'order: ambient layer, element rings, then the units SVG (towers draw on top)');
+  assert.equal((scr.match(/<TurfGroundRings /g) ?? []).length, 1, 'one mount');
+  assert.match(scr, /const element = TOWER_KITS\[tower\.kind\]\.element;/, 'a tower ring uses the tower kit element (the Archer, no element, gets none)');
+  assert.match(scr, /ringsCache\.current\.key !== ringsKey/, 'the ring list is rebuilt only when the set of rings changes (not per sim tick)');
+  assert.match(scr, /street && helperRingElement \?/, 'the helper ring is Streetwear only');
+  assert.match(scr, /<TurfRingFill key=\{helperRingElement\}/, 'swapping the helper remounts its ring (a new element = a new colour)');
+  assert.match(rings, /\}, \[n, sheetW, sheetH, element\]\);/, 'the frame slide re-reads the sheet when the element changes (all rings share one atlas)');
+  ok('element rings: five looping ring sheets packed, layer outside the sim SVG under the towers, list rebuilt only on build / sell, Off / Minimal / Reduce Motion handled, helper ring Streetwear only');
+}
+
+{
   // T8: map themes — paint only. The pick lives in the Setup sheet (no new region, nothing floats), is device-local,
   // defaults to the alley, swaps the board image + its light layers together, and never reaches rules or rewards.
   assert.deepEqual([...TURF_THEME_IDS], ['alley', 'rooftop', 'underpass', 'court', 'docks'], 'five themes, alley first');
@@ -449,6 +478,11 @@ ok('build-card rule: above the pad (below for the top 30 %), clamped inside the 
   assert.match(src, /const combatFlags = combatFxFlags\(fxQuality, playMotion\)/, 'flags come from Effects Quality + Motion');
   assert.match(src, /if \(flags\.flash && fxLayer && drawn && now - lastFlash >= FLASH_COOLDOWN_MS\)/, 'flash only when allowed, at most once per cooldown (a DoT never strobes)');
   assert.ok(FLASH_COOLDOWN_MS >= 200, 'flash cooldown ≥ 200 ms (≤ 5 flashes a second)');
+  // Divecore step (b): the hit flash takes the element colour of the hit; a neutral hit stays white.
+  assert.match(src, /fxLayer\.flash\(drawn\.drawable, drawn\.box, p\.kind === 'boss', hitColor\.get\(p\.id\)\)/, 'the hit flash is tinted with the creep\'s hitColor (element-tagged hits only)');
+  assert.ok(src.indexOf('const hitColor = new Map<number, string>()') < src.indexOf('hitColor.get(p.id)'), 'hitColor is built before the flash loop reads it');
+  assert.match(fx, /tintColor=\{item\.color \?\? '#FFFFFF'\}/, 'no colour = the white flash, unchanged');
+  assert.match(fx, /flash: \(drawable, box, boss = false, color\) => add\(\{ kind: 'flash'/, 'the flash call carries the colour');
   assert.ok(HIT_STOP_TIMER_MS + 15 <= HIT_STOP_MS, 'hit-stop timer + a commit stays ≤ 60 ms');
   assert.match(src, /setTimeout\(\(\) => setHitStop\(false\), HIT_STOP_TIMER_MS\)/, 'hit stop uses the short timer');
   const c1 = nextChip(undefined, 1, 0.9, 0);

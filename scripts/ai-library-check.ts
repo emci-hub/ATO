@@ -180,6 +180,38 @@ async function main() {
   for (const lib of [DEEP_DIVE_LIBRARY, STORY_LIBRARY, LEGEND_LIBRARY]) assert.equal(lib.readCard(null), null);
   ok('the shared prompts are built from the bucket only (no user id, no per-person seed)');
 
+  // --- AI data flow, verified 2026-10-22 (roadmap v2 "AI data flow") ----------------------
+  // Pairs: two readers with different exact leanings in the same bucket get the SAME key and the SAME prompt,
+  // and neither reader's exact percentage appears in it. A reader on the other side gets a different key.
+  {
+    const def = CATEGORY_DEFS.find((d) => d.id === 'cat_steadiness')!;
+    const reader = (pcts: number[], flip = false) =>
+      def.axes.map((axis, i) => ({ axis, lean: (i % 2 === 0) !== flip ? ('high' as const) : ('low' as const), pct: pcts[i % pcts.length]! }));
+    const a = diveBucketKey(def.id, reader([78, 64, 52]) as never);
+    const b = diveBucketKey(def.id, reader([93, 61, 57]) as never);
+    const c = diveBucketKey(def.id, reader([78, 64, 52], true) as never);
+    assert.equal(a, b, 'pass: different exact scores, same bucket');
+    assert.notEqual(a, c, 'fail case: the other side is a different bucket');
+    const pa = DEEP_DIVE_LIBRARY.buildPrompt(parseDiveBucket(a)!, ['people', 'work']).prompt;
+    const pb = DEEP_DIVE_LIBRARY.buildPrompt(parseDiveBucket(b)!, ['people', 'work']).prompt;
+    assert.equal(pa, pb, 'same bucket → byte-identical prompt');
+    for (const pct of [78, 64, 52, 93, 61, 57]) assert.ok(!pa.includes(`${pct}%`), `exact score ${pct}% never reaches the prompt`);
+  }
+  {
+    // The provider call carries only the prompt and generation settings: no user, metadata, labels or
+    // safety identifier field, and no header from the person's request is forwarded.
+    const vendors = read('supabase/functions/_shared/ai-vendors.ts');
+    assert.match(vendors, /export async function complete\(prompt: string, maxOutputTokens: number\)/, 'complete() takes only the prompt + a token cap');
+    assert.doesNotMatch(vendors, /\b(user|user_id|userId|metadata|labels|safety_identifier|safetyIdentifier|cachedContent)\s*:/, 'no per-person field in a provider body');
+    assert.doesNotMatch(vendors, /x-forwarded-for|x-real-ip|request\.headers/i, 'no client header forwarded to a provider');
+    const fn = read('supabase/functions/ai-library/index.ts');
+    assert.match(fn, /await complete\(prompt, maxOutputTokens\)/, 'ai-library passes only the bucket-built prompt');
+    assert.doesNotMatch(fn, /complete\([^)]*(user|bucket|authHeader)/, 'never the user, the raw key or the auth header');
+    const fill = read('supabase/functions/ai-library-fill/index.ts');
+    assert.doesNotMatch(fill, /complete(Detailed)?\([^)]*user/i, 'the fill job never passes a user to a provider');
+  }
+  ok('AI data flow: same bucket = same prompt, no exact score; provider gets only prompt + settings from our server');
+
   // --- wave93 SQL ------------------------------------------------------------------------
   const sql = read('supabase/migrations/wave93_ai_library.sql').replace(/--[^\n]*/g, '');
   for (const t of ['ai_library_cards', 'ai_library_seen', 'ai_library_reports']) {

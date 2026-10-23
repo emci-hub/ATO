@@ -32,7 +32,7 @@ import { SETTINGS_TITLE } from '@/lib/polish-copy';
 import { supabase } from '@/lib/supabase';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
-export const FEEDBACK_EMAIL = 'support@asstrollogs.com';
+export const FEEDBACK_EMAIL = 'support@emgens.com';
 export const SEND_FEEDBACK_LABEL = 'Send feedback';
 
 /**

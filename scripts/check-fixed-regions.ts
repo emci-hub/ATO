@@ -83,6 +83,12 @@ const ok = (msg: string) => {
   assert.match(room, /flexWrap: 'nowrap',\s*height: 36,/, 'Hideout status strip is one fixed row');
   const games = read('src/play/pet-games.tsx');
   assert.match(games, /hint: \{ textAlign: 'center', minHeight: pixelBodyLine\(PIXEL_CAPTION_PT\) \* 2 \}/, 'pet game hint keeps 2 lines');
+  // M3: Lane dash is a third screen in the same fixed frame; its lanes, the power-up chips and every overlay float.
+  assert.match(games, /<GamePlate\s+kind="dash"/, 'Lane dash uses the shared pet-game plate (fixed regions)');
+  assert.match(games, /laneRow: \{ \.\.\.StyleSheet\.absoluteFillObject, flexDirection: 'row' \}/, 'Lane dash lanes are an overlay, not a layout row');
+  assert.match(games, /powerChips: \{ position: 'absolute'/, 'power-up chips float over the stage');
+  const dashDock = games.slice(games.indexOf('export function LaneDashGame'));
+  assert.match(dashDock, /numberOfLines=\{2\} style=\{styles\.hint\}/, 'Lane dash hint is the same 2-line box');
   const dress = read('src/play/dress-screen.tsx');
   assert.match(dress, /useState\(legendTipSeen === false\)/, 'Locker tip is decided before first paint');
   const forge = read('src/play/sword-forge-screen.tsx');

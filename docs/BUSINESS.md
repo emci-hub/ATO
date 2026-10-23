@@ -83,6 +83,6 @@ General principle (not a final answer — confirm with an accountant): a cost is
 - [ ] Whether/when to incorporate
 - [x] Social handle across platforms — `@whatsyourato`, decided
 - [ ] Confirm `@whatsyourato` actually secured on X, Instagram, TikTok (per-platform fallback: `emgensato` / `atoapp` / `heyato`)
-- [ ] Confirm `support@asstrollogs.com` is a real, monitored inbox (used in privacy.md / terms.md / landing footer)
+- [x] Support inbox is `support@emgens.com` (ImprovMX forwarding, live; emci 2026-10-22). Replaced asstrollogs in the app, privacy, terms, landing and support page.
 - [ ] Link `ato.emgens.com` Vercel project to a git repo, if Cursor needs to touch the landing page directly
 - [ ] Legal/copy review: personality-style profile titles (written by hand/templates, not by a model; age is 18+ now). Draft poles + sample titles unreviewed. No extra code. Same lane as the lawyer pass on the helpline / "not a professional service" wording (see `docs/legal/OPEN-QUESTIONS.md`).

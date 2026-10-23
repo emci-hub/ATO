@@ -14,7 +14,7 @@ change. The Divecore sheet keeps visits and gifts only. UI: `src/app/(tabs)/circ
 - **⋯ on any friend row** (and on an incoming request) → **Report** (6 fixed reasons, no free text) or **Block**
   (confirm with a second tap). Both are reached in 2 taps (⋯, then Report / Block). Block is silent: it removes the friendship and pending requests; the other person is never told and
   their request to you looks like "No one with that handle." **Blocked (n)** at the bottom → Unblock.
-- **Support line** at the bottom of the Circle tab: support@asstrollogs.com (same address as You → Send feedback).
+- **Support line** at the bottom of the Circle tab: support@emgens.com (since 2026-10-22; same address as You → Send feedback).
 - Names and handles with slurs or staff-impersonation ("atoteam", "…support") are refused at sign-up and on the
   server (`me_name_guard`). Swearing is allowed (content policy).
 

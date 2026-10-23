@@ -1,3 +1,664 @@
+# ATO finish roadmap v2 (2026-10-22): from "submitted" to "launch-ready and kept honest"
+
+Written 2026-10-22 by the outside-Divecore assessment (docs only, no code changed). The **v1 plan (2026-10-19)** is kept
+unchanged below the line "Archive: v1" because `docs/master-plan.md` points at its findings and prompts. Every v1 step is
+done (master-plan rows 0-15). `docs/master-plan.md` stays the ledger of DECISIONS (Ledger A/C); this file is the ORDER for
+what is left. If they disagree on order, this file wins; on a settled decision, the master plan wins.
+
+## 0. Where ATO really is (read this first)
+
+The brief for this chat assumed launch work was still ahead. It mostly is not:
+
+- **Live since 2026-10-21:** `PRE_LAUNCH_DEV = false`, public sign-up (`wave107`), the trait lock (`wave80`), wave98-109
+  applied and verified read-only, leaked-password protection on, rotations done (master-plan Step 12, Ledger A).
+- **Store:** 1.0 is built from tag `v1.0.0`; **1.1 (Circle chat, runtime 1.1.0) is LIVE on the App Store (emci,
+  2026-10-22)**; it was submitted 2026-10-21 (submission `9cc1261b`). Whether 1.0 was ever submitted on its own is not recorded
+  (master-plan row 13 still lists "EAS build, TestFlight, Box 68" as emci's). **emci: say which build is in review / live.**
+- **Divecore:** done; run order (a)-(f) built; Box 75 passed (2026-10-22).
+- **Gate:** 191 offline checks, last recorded green; `check:release-mode` 47 pass.
+
+So this roadmap is about: (1) the few things that can still fail review or embarrass a public launch, (2) honest
+copy and promises, (3) server cleanup the v1 plan deferred, (4) depth of the daily content, and (5) the art track
+interleaved between app steps.
+
+## Scope chosen (emci, 2026-10-22; do not re-ask)
+
+- **Must + should-fix:** steps A1-A7 and art AN0-AN4, interleaved as in §5. AN5 (paid motion) stays opt-in. Nice-to-have
+  waits.
+- **D23: sign-up stays public** while the legal pages are finished.
+- **Compliance by research, not a lawyer (emci, standing rule in CLAUDE.md "Compliance is researched…").** A lawyer is
+  never a default or a launch blocker. Every "lawyer" mention in this file and in v1 (M1, M3, D12, OPEN-QUESTIONS) is
+  replaced by the compliance path below.
+
+## Compliance path (standing rule; research 2026-10-22; findings, not legal advice)
+
+**Is a lawyer required?** No rule we found requires one. Apple requires a privacy policy that covers collection, use,
+retention/deletion and consent revocation, plus in-app deletion (guideline 5.1.1(i), (v)); it does not require legal
+review. (Secondary: termly.io, getterms.io, revenuecat.com app-privacy guides; vendors, so treat as examples.)
+
+Each row: **M** = mandatory (rule cited), **R** = recommended safeguard, **O** = optional precaution. "Open" = an exact
+question still to settle in A2 from primary sources; nothing here is reassurance.
+
+| Topic | Class | What the source says | What ATO does / must do | Open question → simplest compliant option |
+|---|---|---|---|---|
+| Third-party AI disclosure + consent | **M** if the pattern counts as personal data (uncertain, see "AI data flow"); kept either way | 5.1.2(i): "clearly disclose … third-party AI, and obtain explicit permission before doing so" | consent card + server 403 without consent (§1.3); disclosure names Legends + deep dives; the provider gets a coarse shared trait pattern, no identifier (verified) | name each provider: Gemini + DeepSeek today (`_shared/ai-vendors.ts`), unless emci decides D26. Keep the built consent (simplest option) |
+| AI provider data use | **M** (5.1.1(i): "all uses of that data") | Gemini API terms as quoted 2024-10-17: paid tier not used to improve products; free tier may be used and human-reviewed (re-read ai.google.dev in A2) | unknown which tier the key is on (D27); DeepSeek terms not yet read | A2 reads both providers' current terms and the policy states what they say. No "not used to train" claim unless the terms say so for our tier |
+| DeepSeek (China-based fallback) | **R** (cross-border transparency, PIPEDA principle of openness) | — | fallback is live | D26 is emci's call (no provider change without approval). If kept: the policy says data may be processed in China under DeepSeek's terms |
+| Encryption export (1.1, libsodium) | **M** answer Apple's export questions truthfully | US BIS change 2021-03-29: mass-market items with standard published algorithms no longer need a self-classification report (secondary: developer write-ups; A2 reads the BIS page) | `ITSAppUsesNonExemptEncryption: false`; X25519 + XSalsa20-Poly1305 (NaCl, published); not offered in France | Open: does `false` match Apple's current wording for mass-market standard encryption? A2 reads Apple's export-compliance help page + BIS 740.17 and records the answer in `app-store-pack.md` §9 |
+| Canadian privacy law (Alberta PIPA, PIPEDA) | **M** | a responsible person, purposes at or before collection, safeguards, access/correction requests (~30 days), breach notice to the Alberta OIPC for real risk of significant harm (clym.io summary, mondaq.com; A2 reads the OIPC page) | none of the contact/access text exists yet | add a privacy-contact + access-request paragraph; one-page breach plan in `docs/` |
+| Operator name | **M** (5.1.1 contact; PIPA contact) | — | documents say "AsTrollOGs"; `docs/BUSINESS.md` M0: sole proprietor under emci's legal name | emci gives the legal name; text says "operated by [name] (AsTrollOGs)" |
+| Retention periods | **M** Apple 5.1.1(i) | "Explain its data retention/deletion policies" | text says only "while your account exists" | A2 proposes numbers from the code (deletion record, reports, backups per Supabase plan, Sentry per plan, `access_requests`) for emci's OK |
+| Governing law, liability wording | **O** | — | drafts name Alberta | keep plain wording; no rule requires more |
+| "Not therapy or medical advice" | **R** (1.4.1 scrutiny for medical-adjacent apps) | — | helpline row exists | one clear line in terms and on You |
+| UGC safeguards | **M** Apple 1.2 | filter, report + timely response, block, published contact | built (§1.4); report alert missing; inbox unconfirmed | S1 + M2 |
+
+### AI data flow (verified in code 2026-10-22; pinned by `check:ai-library` "AI data flow")
+
+**Verdict:** matches the intended design. The provider gets a description of a **shared trait pattern**, not a person's
+profile. It is **not "anonymous" in every sense**: ATO's own database links the account to the cards it was shown, and the
+pattern is derived from that person's answers.
+
+**Route.** Phone → our `ai-library` Edge Function (Supabase) → Gemini, or DeepSeek on failure. The phone never talks to a
+provider and holds no provider key (`src/lib/ai-library/client.ts:80` → `supabase/functions/ai-library/index.ts`). The
+background fill job (`ai-library-fill`) uses the same path with no user at all (`p_user: null`).
+
+**What the phone sends to OUR server** (dummy values, real format):
+```
+POST /functions/v1/ai-library   Authorization: Bearer <the person's Supabase session JWT>
+{"kind":"deep_dive","bucket":"dd|cat_steadiness|conscientiousness:h,agreeableness:l,steadiness:m","mode":"paid"}
+{"kind":"legend","bucket":"lg|lf_marie_curie|a1|m1|p:openness.h|d:-","mode":"free_legend"}
+```
+The JWT tells **our** server who is asking (for consent, the token charge and the daily cap). It stays on our side.
+
+**What the provider receives** (`supabase/functions/_shared/ai-vendors.ts:20-69`):
+- Gemini: `POST …/models/<model>:generateContent`, header `x-goog-api-key: <ATO's key>`, body
+  `{contents:[{role:"user",parts:[{text:<prompt>}]}], generationConfig:{temperature, topP, maxOutputTokens,
+  responseMimeType, thinkingConfig}}`. (`role:"user"` is the chat role, not a person.)
+- DeepSeek: `POST /chat/completions`, `Authorization: Bearer <ATO's key>`, body `{model, messages:[{role:"user",
+  content:<prompt>}], temperature, top_p, max_tokens, stream, response_format}`.
+- **No** user / metadata / labels / safety-identifier field, no cached content, no forwarded client header. The provider
+  sees ATO's API account, the Supabase server's network address and the time. It does **not** see the person's IP address,
+  device, app version, account id, handle, name or email.
+
+**The prompt's "about the reader" part** (generated from the dummy bucket above with the app's own builder):
+```
+CARD 1 — THE CATEGORY: Steadiness
+LEANINGS (strongest first):
+- axis "conscientiousness": leans Structured (clearly; sounds like: I said I'd finish it, so I did.)
+- axis "agreeableness": leans Frank (clearly; sounds like: I don't love that plan.)
+- axis "steadiness": in the middle, between Steady and Sensitive (sounds like: …)
+ANGLE: with other people: friends, family, a group
+JOKE STYLE: deadpan
+```
+Legends: `THE READER: axis "openness": the reader leans Adventurous …`, paired with the legend's own hand-written facts.
+The rest of the prompt is fixed instructions.
+
+**Trait granularity (not interchangeable):**
+| Sent? | Item |
+|---|---|
+| **Yes** | Deep dive: the 2-6 traits of ONE category, each reduced to 3 states (high / low / middle; "middle" = under 60 on the 50-100 lean scale, `deep-dive.ts:29,47-50`). That makes 207 possible patterns across 11 categories (27 for Steadiness). The prompt uses fixed stand-ins (70 / 55), never the person's number. |
+| **Yes** | Legends: the legend id, angle, moment, and 1-3 trait SIDES the reader shares (high/low only) + at most one differing side (`legend.ts:39-49`). |
+| **No** | exact scores ("Adventurous 78%" stays on the phone), raw questionnaire answers, answer counts, told-vs-played, the other 10-14 traits, the full 16-axis profile. |
+| **No** | name, handle, email, account id, device id, birthday, city, timezone, Circle data, anything the person typed. |
+
+**Internal vs external linkage:**
+- **ATO's server knows:** the account (JWT), its full trait profile, the bucket it asked for, the claim and the token
+  charge (`claim_library_write`, `token_events`), the AI usage log (`ai_usage`), and which card it was shown
+  (`ai_library_seen`). A card's author id is cleared when the account is deleted (wave106).
+- **The provider knows:** that ATO's server asked for cards about one coarse pattern at a certain time. Everyone in that
+  bucket produces the identical prompt (pinned). The provider cannot tell which person, or how many people, a request
+  serves. Seed and fill requests (not tied to any tap) go through the same path.
+- **Residual (honest):** each paid or empty-bucket request happens because one person tapped, so the timing follows real
+  use. Early on, a rare bucket may have just one member. Neither lets the provider identify anyone without ATO's
+  database. What the provider keeps, and whether it trains on requests, depends on its terms (D27 / A2).
+
+**Discrepancies vs the intended design:** none in what reaches the provider. Two small items outside it, both already
+planned: (1) the server still accepts `kind:'story'` with an old prompt (S4, A3); (2) the docs overclaimed. The labels
+doc said the prompt "contains nothing personal" and the policy didn't say what the provider sees about the request.
+Both are corrected in this change. No code change is needed for the data flow.
+
+**Consent assessment (5.1.2(i)).** Apple requires disclosure and explicit permission when "personal data" goes to a
+third-party AI. Whether a coarse, shared, non-identifying trait pattern counts as personal data is **uncertain**. It is
+derived from the person's answers and sent because of their action, but the provider cannot identify them. **Simplest
+compliant option: keep the explicit consent that is already built** (consent card, server 403 without consent, revoke on
+You). It costs nothing extra and removes the question. The disclosure ("never include your name or your answers") is
+accurate as worded.
+
+**Professional review:** not needed for any row today. If A2's reading of Apple + BIS leaves the encryption row unresolved
+(the only row where a wrong answer has a legal consequence outside the store), A2 will say exactly why and whether it
+blocks; it does not block A1, A3 or the art steps. A free, optional second look exists (University of Calgary BLG Business
+Venture Clinic) but nothing waits on it.
+
+## 1. Findings per area (facts, file:line; investigators were read-only)
+
+### 1. Daily insight + Home
+- The Focus · try · watch card is on the **Insights tab**, not Home: `src/app/(tabs)/insights.tsx:177-185` →
+  `src/components/insights/today-focus-card.tsx`; loaded only by the "Load insight" button (`:82-134`, `:192-208`).
+  Home keeps the title, week strip, identity chip, Today's Pick, check-in (+5), "See today's Insights →", round ring,
+  consent card (`src/app/(tabs)/index.tsx:379-519`).
+- Picker `src/lib/insight-bank/pick.ts:68-115`: deterministic; an idea is eligible only if every key is a clear lean;
+  no clear lean → 16 starters; no-repeat window `min(60, floor(pool×0.8))`.
+- Bank: 192 trait ideas (6 per `ftw_<axis>_<h|l>`, the 6th a pair) + 16 starters. **A person with one clear lean sees only
+  5 ideas** (repeat every ~5 days); a person with no clear lean only the 16 starters. No mid/neutral ideas.
+- `INSIGHT_BANK_COPY_REVIEWED = false` (`src/lib/insight-bank/index.ts:49`); `docs/insight-bank-review.md`: 208 `[ ]`, 0 `[x]`.
+- Streak copy is non-punitive: "a missed day never resets" (`daily-checkin-card.tsx:4,87`), push bans
+  streak/losing/don't-miss (`src/lib/push-copy.ts:103`). One live 🔥 N-days line on Try this today
+  (`try-today-card.tsx:107-109`), hidden at 0. Dead pressure copy: `BANK_MARKDOWN` in `src/lib/voice/content.generated.ts:8`
+  ("Keep the streak breathing"), imported nowhere.
+- Provisional Love / Independence / Structure leans: `src/lib/daily-insights/pick-try-today.ts:40` (TODO(emci)),
+  `story-v3/lean-phrases.ts:7-15`.
+- `feature/insights-replace-sage` is **superseded by master** (master has `insights.tsx`, `helpline-row.tsx`,
+  `check:insights-no-ai`, and newer insight-bank code). `docs/NOW.md:62` still says "NOT merged" (stale).
+
+### 2. Trait profile, questions, history, cards
+- 16 axes `src/lib/traits.ts:16-33`. Every trait write goes through `src/lib/trait-checkpoint.ts` (wave79 RPCs); no client
+  insert/update on `trait_tracks` / `trait_history` / `me` trait columns (selects only: `trait-tracks-store.ts:47`,
+  `trait-history-store.ts:12`). wave80 lock is applied (master-plan Step 12, verified read-only 2026-10-21).
+- Bank: exactly 25 active per trait, 19 `retired(...)` rows, 419 rows (`src/lib/questions/bank/`, `define.ts:83,102`).
+  wave99/100/100b applied (master-plan Step 6: 400 active / 19 retired verified).
+- History: `trait_profile_snapshots`; `snapshot_profiles_monthly` + cron `profile-history-monthly` (`7 3 1 * *`,
+  `wave86_change_answers_history.sql:453,500`). **First run 2026-11-01; registration in prod never verified** (if pg_cron
+  were missing it only raises a notice).
+- Weakness gate `WEAKNESS_MIN_LEAN = 0.15` (`src/lib/profile-history.ts:176`), `isShareableLean`
+  (`src/lib/legends64/identity.ts:161`).
+- Flags false here: `PROFILE_CARD`, `BANK` (352 questions), `STAGED_INTAKE`, `TITLE`.
+- **No phone box exists** for set 25 → Change answers + Undo, Start Fresh keep/wipe, card compare, monthly snapshot.
+- Open decisions D1 (retired answers read-only) and D2 (houseguest question) still in Ledger C.
+
+### 3. Explore, deep dive, Story, Legends, AI, tokens
+- Explore order `src/app/(tabs)/explore.tsx:93-140`: shape, categories (stored, `CATEGORY_BANK_COPY_REVIEWED = false`),
+  deep dive (after the 48), changes, bands, fill, full profile.
+- Deep dive: library first, then a paid write (5 tokens), phone sends only the bucket; server refuses without consent
+  (`supabase/functions/ai-library/index.ts:82-84`). Legacy `writeOld` (`category-deep-dive-card.tsx:159`) still goes
+  through `generateText` → `src/lib/ai/edge.ts:24` → the `ai-generate` 410 stub, so a "missing" library answer charges,
+  fails, then refunds (once a day).
+- Story = templates only (`STORY_AI_POLISH = false`, `story-v3/polish.ts:6`), on Insights. But the server still accepts
+  `kind:'story'` (`ai-library/index.ts:35`) with the old "Write as Sage" prompt in the bundle
+  (`_shared/ai-library.bundle.js:9577`; sources `sage-story.ts:286`, `story-card.ts:288`).
+- **User-facing token copy is wrong:** `src/lib/ato-tokens.ts:58` ("a new Story on Home") and
+  `src/components/daily-checkin-card.tsx:32` ("a new Story") say Story costs tokens / is AI. That contradicts
+  `AI_USE_DISCLOSURE` (`ai-consent-card.tsx:24`: AI only for Legends + deep dives), which Apple 5.1.2 reads.
+- **Refund hole (reading of the SQL, not exploited):** `refund_ai_tokens` (`wave92_ai_tokens.sql:234`, restated wave101)
+  refunds the latest spend of that kind within 15 min without checking that the AI call failed: one free AI view per kind
+  per day by a hand-made call.
+- Legends: 120 in 12 halls, Wikipedia-sourced; 3 trait sides with no legend (`conflict_assertiveness:low`,
+  `competence:low`, `growth_mindset:low`), Africa 2, Oceania 1 (D5 accepted).
+- Consent: card on Home (new account near the top, finished account at the bottom) while `ai_consent` is null; You → "ATO's
+  AI" On/Off is the revoke path. **Apple 5.1.2(i) now names "third-party AI" and needs explicit permission; a developer was
+  rejected because reviewers "were not presented with the consent prompt"** (see §2). The review notes
+  (`docs/app-store-pack.md:87-88`) don't say where the prompt is.
+- `LIBRARY_VERSION` deep_dive l2 / story l4 / legend l2 match the bundle; no bundled source changed since `9f1fc02c`.
+- Unused: `rolls/compose.ts`, `rolls/results.ts`, `rolls/store.ts`, `legends64/store.ts`; `'sage'` callType
+  (`voice/quota-server.ts:32`); stale comments (`category-deep-dive/generate.ts:4-5`, `index.tsx:323-326`,
+  `ato-tokens.ts:50-53`).
+
+### 4. Circle + social safety (Apple 1.2: filter, report + timely response, block, contact)
+- Circle tab ⋯ = Message · Compare · Report · Block · Remove (`src/app/(tabs)/circle.tsx:253-281`, two taps on
+  Block/Remove); 6 fixed reasons, no free text; "Block them too" after a report; request caps 20/20/20 per hour; block row
+  readable only by the blocker (wave109).
+- Chat: on-phone filter (`src/lib/chat/chat-filter.ts`), report = message + 5 before (`chat-rules.ts:8,26-38`), server
+  checks ids, 10 reports/day, send 200/h, 30-day ciphertext cron (wave108:416-438).
+- **Chat Report is long-press on a message only** (`src/app/chat.tsx:387-388`); the header has Block but no Report. A
+  reviewer can miss it.
+- **No alert when a report arrives.** Triage is a daily manual SQL query (`docs/circle-safety.md`), while the copy
+  promises "We read every report within a day." (`chat-rules.ts:67`). A Resend path already exists
+  (`supabase/functions/review-access/index.ts:30-48`).
+- Public `/[handle]` page (`src/app/[handle].tsx:57-75`) has no Report/Block; `public_profile` shows name, handle,
+  `show_up`, `talk_style`, recipe to anyone (60/10 min). **`show_up` / `talk_style` are written raw on the server**
+  (`wave39_drop_recovery_style.sql:67-68,131`, no allow-list), so a hand-made call could put unfiltered text on a public card.
+- No hide switch for the public card (OPEN-QUESTIONS 16). Name filter has no sexual terms (policy call, not a bug).
+- Support: `support@asstrollogs.com` mailto in Circle, You, Under-18; support URL = landing page; **no /support page; inbox
+  not confirmed monitored** (`docs/app-store-pack.md:11,15,123`).
+
+### 5. You tab, sign-up, onboarding, notifications, widget
+- You order (`src/app/(tabs)/you.tsx:155-272`): identity, tokens, your week, settings (appearance, city), Account
+  (birthday), notification prefs, helpline row, ATO's AI, feedback, legal links, sign out, delete, dev PIN (dead in release:
+  `src/lib/dev-pin.ts:28`).
+- Delete: link → type DELETE → one tap (`delete-account-sheet.tsx:26,64,181`), no email needed, honest copy. The list
+  still names "saved facts" (stale concept); the link has no `accessibilityRole`.
+- **Broken promise:** login says "Password is optional — set it in Settings after you're in" (`src/app/auth/login.tsx:135`,
+  `src/lib/auth-password.ts:5`), but `PasswordSettingsFold` (`src/components/password-settings-fold.tsx:21`) is mounted
+  nowhere; `scripts/auth-password-check.ts:62` (live) still asserts it on You.
+- First run: email → code → one onboarding form (birthday 18+, name, handle, city) → Home. **Insights unlock only after
+  all 48 questions** (`index.tsx:455-457`, ~12 pages of 4). Before that: Today's Pick, the trait shape, set-done jokes.
+- Notifications are local: morning Today's Pick (6-10 h by `energy_pattern`), Sunday recap if opened that week; evening off;
+  insight push always null (flag). Ask once, after the first insight (`push-policy.ts:7-13`). Per-kind toggles,
+  device-local (reset on reinstall); no quiet hours in the app (fixed windows only).
+- **Divecore asks for notification permission itself** on Build (`src/play/pet-reminder.ts:77-90`,
+  `pet-screen.tsx:1601-1604`) without the explainer and regardless of the app's "Not now" (stored only in AsyncStorage).
+- **Widget still says "READ" / "DO" and "Today's Read and Do."** (`targets/widget/widgets.swift:49,56,89`); header is "ATO"
+  (`:45,68`). Native build only. Privacy: gated by `isShareableLean`, wiped on sign-out.
+- `docs/sage-cleanup.md` §4 is stale (widget header already fixed).
+
+### 6. Launch readiness
+- Release mode: flag false; labs behind `Stack.Protected guard={PRE_LAUNCH_DEV}` (`src/app/_layout.tsx:136-143`);
+  `/dev-lab` + `/ai-lab` stay registered for root's Admin group only (`_layout.tsx:128-129`, intended).
+- **Legal pages: `landing/privacy.html:19` and `landing/terms.html:19` read "Last updated: [DATE — fill in on publish] ·
+  Draft, pending lawyer review"; 46 `[CONFIRM]` tags (23 in `src/app/legal`, 23 in `landing`).** Public sign-up is live and
+  the in-app links open these pages (`src/components/legal-links.tsx:10-11`). OPEN-QUESTIONS 1-16 all open; item 8 is stale
+  (says "no chat").
+- **Encryption:** `app.json:152` `ITSAppUsesNonExemptEncryption: false` while 1.1 ships `react-native-libsodium`
+  (`package.json:44`). `docs/app-store-pack.md` §9 records why (Apple error 90592 on build 17) and calls it "an exemption
+  claim we cannot fully back". Lawyer read (D12) open.
+- Account deletion: in-app path works; **live `check:delete-account` never run** (excluded from the gate,
+  `scripts/ota-gate.ts:35`); Box 68 (TestFlight) 0 of 20 ticked, with stale steps B1 ("Home → tap the daily insight") and B3
+  ("Mark a Check").
+- **Copy flags: 17 `*_COPY_REVIEWED` are false and NONE of them hides its surface.** A false flag only shows a "Draft
+  copy" badge when `PRE_LAUNCH_DEV` is true, so with the flag off the copy is live with no badge. This contradicts the v1
+  decision "unread surfaces get hidden" (v1 Decisions below) and master-plan line 302 ("16 flags ... hidden or unreviewed").
+  False: INSIGHT_BANK, CATEGORY_BANK, CATEGORY_DEEP_DIVE, LEGEND_FIGURES, STORY, STORY_BANK, DAILY_PICK, BANK,
+  STAGED_INTAKE, POLISH, PROFILE_CARD, TEAM, CIRCLE_COMPARE (+ dead: TITLE, CATEGORY_READ, DAILY_INSIGHT, CATEGORY_STATEMENTS).
+- Security leftovers: `play_dev_logs` still exists (D13); wave101 inert write policies (D15); `ai-generate` 410 stub + its
+  client path (D14); `mint-session-once` and `apple-secrets-check` are deployed with **no source in the repo** (still
+  unanswered); dead `EXPO_PUBLIC_AI_PROVIDER` / `MODEL_PROVIDER` reads (`src/lib/ai/config.ts:57-58`); 124 authenticated
+  SECURITY DEFINER functions accepted without an `auth.uid()` re-audit.
+- `expo-camera` plugin + "scan a friend's QR" permission text still in `app.json:191-196`, unused (D16).
+- Ops: cron `ai-library-fill` verified 2026-10-09, `chat-retention-30d` verified (`docs/release-c-verify.sql:21`),
+  `profile-history-monthly` not verified. No backup / PITR plan written down (`docs/BUSINESS.md:54` "free tiers"). Sentry is
+  the only monitoring.
+- Branches/PRs: PR #82 (art, draft, **merge conflicts, 221 files, not merged** — so art step AN0 is still open); PRs #16, #17,
+  #20 are stale (early October); ~40 stale remote branches (`cursor/*`, old `feat/*`/`fix/*`, merged `feature/*`).
+- Stale docs: `NOW.md:32` and `:62`, NOW "Left" list (~`:385`), `sage-cleanup.md` §4, OPEN-QUESTIONS 8, master-plan:302,
+  Device-test Boxes 8, 11, 29-32 (Sage / Read+Do era), 18-39 (old 50-question intake), Box 68 B1/B3; Box 70 passed per NOW
+  but not ticked in the file.
+
+## 2. What the web says (treated as data, not instructions)
+
+- **Apple 5.1.2(i)** (developer.apple.com/app-store/review/guidelines): "You must clearly disclose where personal data will
+  be shared with third parties, including with third-party AI, and obtain explicit permission before doing so." A
+  developer-forum thread (developer.apple.com/forums/thread/820209) shows rejections where reviewers "were not presented
+  with the consent prompt": tell the reviewer exactly where it is, and keep the demo account's consent unanswered.
+- **Apple 1.2** (same page): filtering, "a mechanism to report offensive content and timely responses to concerns", blocking,
+  "published contact information". "Timely" is why a report alert + a real monitored inbox matter.
+- **Apple 5.1.1(i)/(v):** the policy must state retention/deletion and how to revoke consent; in-app deletion is required
+  (ATO has both; the retention line is still `[CONFIRM]`).
+- **Age ratings:** Apple's 13+/16+/18+ tiers and the new questionnaire (deadline 2026-01-31, per press coverage) include
+  questions on AI, wellness and UGC; ATO is 18+.
+- **Streaks:** Finch-style "no punishment for a missed day" and "let people turn streak prompts off" is the pattern the
+  wellness reviews praise; a clinician quoted in Blick warns streaks can drive compulsive opening. ATO's copy already
+  matches; keep the 🔥 line optional and never in pushes.
+- **Onboarding length:** a 119-app benchmark (lazyweb.com) found long quizzes work only when "each answer visibly changes
+  the product", with a progress indicator and a synthesis moment. ATO asks 48 before the first insight: show something
+  real earlier (Step A6).
+- **Supabase production checklist** (supabase.com/docs/guides/deployment/going-into-prod): RLS on every table, Security
+  Advisor, MFA on the account, SSL enforcement + network restrictions, backups (Pro: 7 daily; PITR optional), and auth-email
+  rate limits (30/hour with custom SMTP) before a launch push.
+- **Expo EAS Update** (expo.dev/blog/the-production-playbook-for-ota-updates, docs.expo.dev/eas-update/rollouts): roll out
+  OTAs at a percentage first (e.g. 10 %) and know `eas update:rollback`.
+- v1 research (Co-Star, The Pattern, Finch, Stoic, How We Feel; privacy labels) is still in "Archive: v1" §2.
+
+## 3. Ranked list
+
+Effort S = under an hour of chat, M = one normal chat, L = more than one chat. Risk = chance of breaking something live.
+
+### Must-fix (can fail review, break a promise to users, or embarrass a public launch)
+| # | Item | Where | Effort | Risk | Needs |
+|---|---|---|---|---|---|
+| M1 | Legal pages publish-ready: lawyer read, answer D12, fill the 46 `[CONFIRM]`, real "Last updated", remove "Draft"; fix OPEN-QUESTIONS 8; landing form wording (OQ10) | `landing/*.html`, `src/app/legal/*.md` | M | low | **emci + lawyer first**; Vercel redeploy (emci) |
+| M2 | Support: a monitored inbox + a `/support` page on the landing site | landing | S | low | emci confirms inbox; redeploy |
+| M3 | Encryption claim for 1.1: lawyer/Apple answer; if a document is needed, upload it and set `true` + compliance code | `app.json:152`, ASC | S | med | emci + lawyer; a native build only if it changes |
+| M4 | Token copy says Story is a paid AI view (contradicts the AI disclosure) | `ato-tokens.ts:58`, `daily-checkin-card.tsx:32` | S | low | OTA |
+| M5 | Visible Report in the chat header (not only long-press) + review notes say where Report, Block and AI consent are | `src/app/chat.tsx`, `docs/app-store-pack.md` | S | low | OTA (runtime 1.1.0) |
+| M6 | Password promise: mount `PasswordSettingsFold` on You or change the login line; fix `check:auth-password` | `login.tsx:135`, `you.tsx` | S | low | OTA (decision D20) |
+| M7 | Live `check:delete-account` run + Box 68 rewritten (B1/B3) and run on the store build | scripts, Box 68 | S | low | emci runs |
+| M8 | Copy flags: the v1 rule "unread surfaces get hidden" is not true in code. emci either says "accept" per surface or the step hides the ones he won't read | 17 flags | M | med | decision D21 |
+
+### Should-fix
+| # | Item | Effort | Risk | Needs |
+|---|---|---|---|---|
+| S1 | Report alert: email emci (Resend, existing path) when a report row lands, so "within a day" is true | M | low | SQL trigger + edge function = **new pattern (pg_net or a cron poll): emci OK** |
+| S2 | `refund_ai_tokens` refunds only a recorded failure | S | med | SQL (restate one function) |
+| S3 | Server allow-list for `show_up` / `talk_style` (public card text) | S | low | SQL; check existing rows first |
+| S4 | Drop `kind:'story'` from `ai-library` + the "Write as Sage" prompts; `gen:ai-library` + deploy | S | med | deploy (emci OK) |
+| S5 | Cleanup migration: drop `play_dev_logs` (D13, deletes rows), wave101 inert policies (D15) | S | low | SQL, deletes data → emci OK |
+| S6 | Verify cron jobs before 2026-11-01 (`profile-history-monthly`, `chat-retention-30d`, `ai-library-fill`) | S | none | read-only SQL |
+| S7 | `mint-session-once` / `apple-secrets-check`: download the source or delete them | S | low | emci decision |
+| S8 | Divecore notification ask respects the app's one-time ask ("Not now" shared) | S | low | Play commit (separate) |
+| S9 | Insight depth: more ideas per lean (a single-lean person sees 5) + "mixed" ideas for no-clear-lean people, clear voice, ids forever | M | low | OTA; copy for emci's read |
+| S10 | First real insight earlier than the 48 (e.g. after set 1, from starters + any clear lean), honest "early read" label | M | med | product decision D22, OTA |
+| S11 | Dead code: `ai-generate` client path + function (D14), `EXPO_PUBLIC_AI_PROVIDER/MODEL_PROVIDER`, rolls/legends64 stores, `BANK_MARKDOWN`, stale comments, "saved facts" in the delete list, delete-link a11y role | M | low | OTA + function delete |
+| S12 | Docs truth pass: NOW stale lines, sage-cleanup §4, OPEN-QUESTIONS 8, master-plan flag count, obsolete device boxes, new boxes for Change answers / Start Fresh / card compare | S | none | docs only |
+| S13 | Native 1.2 build: widget labels (READ/DO → Focus/Try), drop `expo-camera` (D16), encryption flag if M3 says so | M | med | **binary build + store submission** |
+| S14 | Backups: decide Supabase plan (Pro = daily backups; PITR optional) + MFA on the Supabase account; write it down | S | none | emci (billing) |
+| S15 | Art track AN0-AN4 (below) | per step | low | Play scope only |
+
+### Nice-to-have
+- Report/Block on the public `/[handle]` page; a "hide my card" switch (OQ16).
+- Notification quiet hours / chosen time; sync prefs to the account.
+- Dev Hub button for the chat ladder (D19).
+- Legends for the 3 empty trait sides + more Africa/Oceania (D5).
+- `sage-*` module renames (D11), one codemod.
+- `auth.uid()` re-audit of the 124 SECURITY DEFINER functions (L; do once real users exist).
+- Staged OTA rollouts (10 % first) as the default for `ota:publish`.
+- Close stale PRs #16 #17 #20 and delete ~40 merged/stale branches (emci OK; list in Step A3).
+
+### Cut (recommend not doing)
+- Re-enabling Story AI polish (`STORY_AI_POLISH`): templates are approved and the disclosure no longer names Story.
+- Restoring the Check / Read+Do loop on Home.
+- AN5 paid anchored-AI motion until AN2 is on phones and emci names specific clips.
+
+## 4. ATO IS LAUNCH-READY WHEN
+
+- [x] `PRE_LAUNCH_DEV = false`; `RELEASE_MODE=1 npm run check:release-mode` green (47).
+- [x] Public sign-up, wave80 trait lock, wave98-109 applied and verified.
+- [x] No vendor key in the bundle; `ai-generate` closed; quota and charges on the server.
+- [x] Report, block, filter in Circle and chat; Circle tab reachable.
+- [x] In-app account deletion; delete proof counts every table (wave106).
+- [ ] **Legal pages final:** no "Draft", no `[DATE]`, no `[CONFIRM]`, filled by the no-lawyer path (M1).
+- [ ] **Support inbox monitored + a support page** (M2).
+- [ ] **Encryption answer settled** for the shipped build (M3).
+- [ ] **Every promise in the app is true:** token copy (M4), password line (M6), "we read every report within a day"
+      (S1 or emci's daily triage confirmed), AI disclosure names every AI use.
+- [ ] **Reviewer can find** AI consent, Report (visible in chat), Block, Delete; review notes say where (M5).
+- [ ] **Copy:** every surface either read by emci or explicitly accepted as is (M8, D21).
+- [ ] Live `check:delete-account` passed; Box 68 run on the store build (M7).
+- [ ] Cron jobs verified (S6); backup plan written down (S14).
+- [ ] Gate green on the release commit; one phone box per step passed.
+- [ ] The build in review is approved by Apple (emci).
+
+## 5. Step order (one chat each; at most one OTA / SQL set / build each; one phone box each)
+
+App steps = A*, art steps = AN*. Art is Play scope: its own commits and its own OTA, never mixed with app work
+(`check:play-isolation`), and it only fills gaps (while emci phone-tests, waits on a lawyer or on Apple). **No art step
+may delay A1, A2 or A3.** Box numbers continue from 75.
+
+| Step | What | Rank items | Ships | Server / SQL | Binary | Phone box | PixelLab | Chat size |
+|---|---|---|---|---|---|---|---|---|
+| A1 | Honest promises + reviewer path | M4, M5, M6, S8, review notes, Box 68 B1/B3 | 1 OTA (app + a separate Play commit) | none | no | Box 76 | 0 | M (Sonnet) |
+| AN0 | Merge PR 82 (art docs + Kael/Morwen Idles): resolve conflicts, Play-only | AN0 | none (docs/art merge) | none | no | — | 0 | S-M (Sonnet) |
+| A2 | Legal + support go final (after emci's D12 answers + lawyer read) | M1, M2, M3 (text side), OQ8, OQ10 | landing redeploy (emci), no OTA unless in-app text changes | none | no | Box 77 (open links on a phone) | 0 | M (Opus) |
+| AN1 | Art engine v1 + Maldrath pilot (test only) | AN1 | nothing installed | none | no | — (GIF review) | 0 | M (Sonnet) |
+| A3 | Server cleanup + safety | S2, S3, S4, S5, S6, S7, S1 (if OK'd) | `gen:ai-library` + deploy if S4; no OTA | **yes: one migration set + maybe an edge function** | no | Box 78 (report → email arrives; deep dive still works) | 0 | M (Opus) |
+| A4 | Copy decision + hide what won't be read | M8 | 1 OTA if anything is hidden | none | no | Box 79 | 0 | S-M (Sonnet) |
+| AN2 | All hero Idles via the engine, install approved | AN2 | 1 OTA (Play only) | none | no | Box 80 | 0 | M (Sonnet) |
+| A5 | Dead code + docs truth pass | S11, S12 | 1 OTA | `ai-generate` function delete (emci OK) | no | Box 81 | 0 | M (Sonnet) |
+| A6 | Insight depth + earlier first insight | S9, S10 | 1 OTA | none (stored copy) | no | Box 82 | 0 | M-L (Sonnet; Opus for D22 design) |
+| AN3 | Clip timing holds (`ms[]`) | AN3 | 1 OTA (Play) | none | no | Box 83 | 0 | S-M (Sonnet) |
+| A7 | Native 1.2 build | S13, S14 write-up | **EAS production build + TestFlight + submit** | none | **yes** | Box 84 | 0 | M (Sonnet) |
+| AN4 | Creep / boss / tower Idles | AN4 | with its own OTA | none | no | Box 85 | 0 | M (Sonnet) |
+| AN5 | Optional paid anchored-AI motion | AN5 | per batch | none | no | per batch | ~3 / direction, emci picks | M |
+
+Interleaving: A1 → (emci runs Box 76 + Box 68) AN0 → A2 as soon as the lawyer answers (if the lawyer is slow, run AN1
+and A3 first; A2 stays top priority the moment answers exist) → AN1 → A3 → A4 → AN2 → A5 → A6 → AN3 → A7 → AN4.
+
+**Interim choice while M1 waits on the lawyer (D23):** sign-up is public and the pages say "Draft". Options: (a) keep
+public and finish M1 fast; (b) set `signup_mode` back to `invite_only` (one config row, tested path wave107 in reverse)
+until the pages are final. Recommendation: (a) if the lawyer read is days away; (b) if it is weeks.
+
+### Open decisions this roadmap adds (answer once; recommendation first)
+| # | Question | Recommendation |
+|---|---|---|
+| D20 | Password: show the "set a password" fold on You, or drop the promise from the login screen? | drop the promise (email code + Apple are enough; one less auth surface). Mounting it is an auth change |
+| D21 | Copy flags: per surface "read", "accept as is", or "hide until read"? | accept: Story, Daily Pick, Legends (already sourced), questions (QUESTION_VOICE approved); read first: insight bank, deep dive, profile card; hide nothing unless emci says so |
+| D22 | First insight earlier than the 48: after set 1 (16) with an "early read" label? | yes, after set 1, starters + clear leans only |
+| D23 | While legal pages are drafts: stay public or back to invite-only? | see above |
+| D24 | Report alert: email per report (trigger + pg_net, a new pattern) or a cron that emails a daily digest? | daily digest by cron (copies the cron pattern already live), plus emci keeps the 24 h promise |
+| D25 | Supabase plan for backups (Pro) before real users? | yes, Pro + MFA on the account |
+| D26 | Keep the DeepSeek fallback, or Gemini only? (provider change = emci's call) | either is compliant if disclosed. Dropping it is simpler (no China processing to disclose; on a Gemini outage the card uses the free library / hand-written card as today). Keeping it needs one disclosure sentence and DeepSeek's terms read in A2 |
+| D27 | Is the Gemini key on the paid tier (billing on)? | emci checks in Google AI Studio; paid tier lets the text say "not used to train" |
+
+## 6. Step prompts (copy one per new chat)
+
+Every step ends the chat the CLAUDE.md way: 3-5 line assessment, next step + anything emci must do, a new-chat prompt.
+Common rules for every prompt: pull first; plan ≤15 lines and wait for emci's OK; max 2 agents; one gate run at the end;
+one reviewer pass; ask before any migration, deploy, OTA, merge, build or data deletion; Play files in their own commit;
+tick this file's step and the master-plan ledgers; commit message in a file.
+
+### Step A1: Honest promises + reviewer path
+Model: Sonnet
+```
+Repo emci-hub/ATO, branch master (git fetch origin; git checkout master; git pull). Read PROJECT_CONTEXT.md, CLAUDE.md,
+docs/ato-finish-roadmap.md (v2 §1.3-§1.5, §3 M4 M5 M6 S8, Step A1), docs/master-plan.md (Ledger A/C), docs/app-store-pack.md.
+TASK (step A1): (1) fix the token copy that calls Story a paid AI view (src/lib/ato-tokens.ts:58,
+src/components/daily-checkin-card.tsx:32) so it names only Legends AI cards and deep dives; (2) add a visible Report in the
+chat thread header (src/app/chat.tsx), same report flow as long-press; (3) D20 password line: ask emci, then either change
+src/app/auth/login.tsx:135 + src/lib/auth-password.ts:5 or mount PasswordSettingsFold on You; fix scripts/auth-password-check.ts;
+(4) Divecore's own notification ask (src/play/pet-reminder.ts, pet-screen.tsx ~1601) respects the app's one-time ask and
+"Not now" (Play commit on its own); (5) docs/app-store-pack.md review notes: where AI consent, Report, Block, Delete are;
+(6) rewrite Box 68 B1/B3 and write Box 76.
+DONE WHEN: copy matches AI_USE_DISCLOSURE (pin it in a check with pass/fail pairs), Report visible in chat, password promise
+true, gate green, reviewer PASS, ONE OTA after emci's OK (runtime 1.1.0), Box 76 written. Update NOW.md + this roadmap.
+RULES: no dependency/auth/env changes without emci's OK; Play and app in separate commits; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+**Step A2 status (2026-10-22): built on `feature/ato-a2-legal` (A1 PR #83 merged into master first, emci OK).** emci's answers:
+"ATO, operated by Michael Malig"; inbox `support@emgens.com` (ImprovMX, live); Gemini only (D26: DeepSeek dropped by unsetting
+`DEEPSEEK_API_KEY`, no AI code touched; AI removal is PR #84, still a draft with its switch off, so the AI paragraph is worded
+to be true before and after #84); D27 Gemini plan unconfirmed, so the text states Google's terms for both plans; invite form
+removed; public card kept and disclosed. emci OK'd the fill-in table: retention (reports + deletion record 2 years, backups ≤30
+days, chat 30, Resend 30, Sentry ≤90, ImprovMX 7), 24 h report target, 30-day access requests + privacy contact, Alberta law and
+courts, breach plan (`docs/legal/breach-plan.md`). Built: `src/app/legal/{privacy,terms,app-privacy-labels}.md` and
+`landing/{privacy,terms,index}.html` final (0 `[CONFIRM`, 0 "Draft"), new `landing/support.html`; `wave111_retention.sql`
+(daily purge, copy of the wave108 chat cleanup; one-time delete of `access_requests`) **NOT applied**; in-app mailto lines
+(You, Under-18, Circle) moved to support@emgens.com, so an OTA is needed; encryption reasoning in `app-store-pack.md` §9 (Apple +
+BIS 2021 rule: standard algorithms, not in France, mass-market end item, no document and no report, `false` stays; no
+professional review needed); `check:floor` rewritten (final-text rules, app/landing sentence sync, wave111 pins, pass/fail
+pairs), `check:founder-access` (no landing form, pass/fail pairs). Box 77 written. **Left for emci:** unset the DeepSeek key,
+apply wave111, redeploy the landing site, OTA, Box 77, confirm the Gemini plan.
+
+**Step A1 status (2026-10-22): built, checked, pushed on `claude/brave-mendel-wbhxaq` (draft PR #83); MERGED into master
+2026-10-22 (A2 chat), OTA NOT published.** Done: token copy matches `AI_USE_DISCLOSURE` (no Story, no frozen reroll / free name-style price; only deep
+dives are free from the library, up to 10 a day: the reviewer caught a wrong "library cards are free" line, fixed);
+visible Report in the chat header (latest friend message; hidden while Block is armed); Divecore's automatic Build ask
+respects the app's "Not now" (Play commit `655fa0bc`); review notes (§5 of `app-store-pack.md`) describe 1.1 and where AI
+consent / Report / Block / Delete are; Box 68 B1/B3 fixed; Box 76 written. Checks: `ai-tokens`, `circle-chat`,
+`hideout-rooms` with pass/fail pairs; typecheck clean, lint 0 errors. Gate: one failure, `art-registry --fresh`, proven
+pre-existing on the base commit in a clean worktree (`*.key` in `.gitignore` hid the `icon.streetwear.key` previews from
+every fresh clone); fixed in `c06ef0ff`, that check re-run green. Reviewer (Opus): FAIL → fixed (1 critical, 2 warnings);
+open warnings: the header Report sheet does not preview which message it reports; Report/Block show no visible disabled
+state while busy (pre-existing). **Left for emci:** OTA OK, Box 76 + Box 68 on a phone, demo account per `app-store-pack.md` step 2b.
+**D20 settled (emci 2026-10-22):** remove only the "set a password in Settings" promise; password login stays; no auth
+feature added or removed. Done in the login intro, the hint and the failure line (`login.tsx`, `auth-password.ts`).
+**S6 done (2026-10-22, read-only SQL on the live project):** cron jobs `ai-library-fill` (*/10), `chat-retention-30d`
+(daily 04:23), `dev-trace-expire` (hourly) and `profile-history-monthly` (1st, 03:07) all exist and are active; every run in
+the last 3 days succeeded (432 / 1 / 72); the monthly job calls `snapshot_profiles_monthly()`, which exists (first run
+2026-11-01). Docs truth pass (part of S12) done: CLAUDE.md header, wave80/wave100 status, deep-dive "crisis day", AI-token
+line; NOW superseded notes; OPEN-QUESTIONS 8; sage-cleanup §4; master-plan line 302.
+
+**Step A3 progress (2026-10-22, no input needed so far; nothing applied or deployed):**
+- **S3 built, NOT applied:** `supabase/migrations/wave110_public_card_fields_guard.sql`, a trigger like the live
+  `me_name_guard`. On a change, `show_up` / `talk_style` take only the app's chips; NULL and '' pass; stored values are not
+  touched. Read-only count 2026-10-22: 9 accounts, 1 holds the older chip "getting through it", which stays readable.
+  Pinned in `check:circle-safety` (lists = `intake.ts` chips, pass/fail pairs); listed in `under18-server` NOT_LIVE.
+  **APPLIED by emci 2026-10-22; verified read-only: trigger `me_card_fields_guard` present and enabled on `public.me`.**
+- **S4 finding (read-only):** no AI-written Story card exists since 2026-10-13 (28 seed-only Story cards). 6 old Story
+  queue rows are version l1/l3, which the fill job skips (current l4). So no AI writes Story today. Removing `story`
+  from `ai-library` is still tidy but needs `gen:ai-library` + a deploy (emci's OK), so it waits for the rest of A3.
+- **S2 (refund hole): recommend DEFER.** Path traced: a signed-in person can call `refund_ai_tokens` by hand within
+  15 minutes of a successful paid card and get the 5 tokens back once a day per kind. The worst case is one free card per
+  kind per day; tokens have no cash value and there is no purchase path. A real fix needs the Legends screen, the server
+  function and a migration changed together, with old app versions in mind. That is more code than the loss it prevents.
+  Revisit if tokens ever gain value.
+- **S6 done** (above).
+
+### Step AN0: Merge the art PR (82)
+Model: Sonnet
+```
+Repo emci-hub/ATO. Read PROJECT_CONTEXT.md, CLAUDE.md, docs/art/PIXELLAB_GUIDE.md, and on branch claude/happy-fermi-k9x2um:
+docs/art/animation-batch-plan.md ("Replan", "Art engine") + docs/art/animation-pipeline-research.md.
+TASK (step AN0): PR #82 is a draft with merge conflicts (221 files). Merge master INTO that branch (no rebase, no force push),
+resolve conflicts keeping master's app files and the branch's art/docs, run art:sync, check:art-registry --fresh,
+check:play-isolation, the gate once. Show emci the Kael + Morwen Idle GIFs before asking to merge. No OTA, no PixelLab calls.
+DONE WHEN: PR #82 is conflict-free and green, emci merged it (or said no), docs point to the batch plan on master.
+RULES: Play/art scope only, never mixed with app work; ask before merge; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step A2: Legal and support go final
+Model: Opus
+```
+Repo emci-hub/ATO, branch master (pull first). Read PROJECT_CONTEXT.md, CLAUDE.md, docs/ato-finish-roadmap.md (v2 §1.6, §3
+M1-M3, Step A2), docs/legal/OPEN-QUESTIONS.md, src/app/legal/*.md, landing/*.html, docs/app-store-pack.md §8-9.
+COMPLIANCE RULE (CLAUDE.md, emci 2026-10-22): follow the roadmap's "Compliance path" table: official sources first,
+label mandatory / recommended / optional, describe only what the code does, no lawyer default, no provider change without
+emci. NEEDS FIRST from emci: legal name for "operated by", support inbox confirmed, D26 (keep or drop DeepSeek), D27 (Gemini
+paid tier?), OPEN-QUESTIONS 10 + 16 choices.
+TASK (step A2): propose retention numbers and the other [CONFIRM] fills in ONE table for emci's OK (never guess a fact),
+then fill every [CONFIRM], set "Last updated", remove "Draft, pending lawyer review", add the privacy-contact / access-request
+(30 days) paragraph and a "not therapy or medical advice" line, fix item 8 (chat exists in 1.1), the landing access_requests
+form (item 10), add landing/support.html, write the encryption reasoning (no-lawyer table) into app-store-pack.md §9, a
+one-page breach plan in docs/, keep src/app/legal and landing in sync; if D26 = yes, remove DeepSeek from
+_shared/ai-vendors.ts + text + check:floor (deploy ai-library after emci's OK, emci removes the secret); check:floor and
+check:founder-access rewritten to the new text with pass/fail pairs.
+DONE WHEN: grep finds 0 "[CONFIRM" and 0 "Draft" in landing/ and src/app/legal/, gate green, reviewer PASS, emci redeployed
+the landing site, Box 77 (open Privacy/Terms/Support from the app on a phone) written. No OTA unless in-app text changed.
+RULES: not legal advice — use only emci's/lawyer's answers; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step AN1: Art engine v1 + Maldrath pilot
+Model: Sonnet
+```
+Repo emci-hub/ATO, branch master (pull; PR #82 must be merged). Read PROJECT_CONTEXT.md, CLAUDE.md,
+docs/art/PIXELLAB_GUIDE.md, docs/art/animation-batch-plan.md ("Replan" row AN1 + "Art engine"),
+docs/art/animation-pipeline-research.md, PIXELLAB_ANIMATION.md §0.
+TASK (step AN1): build the art engine in build tooling only (scripts/art-engine/, specs in art-src/rigs/), never in the app
+bundle: rig format, breathing-idle recipe, gates (foot row, height band, silhouette overlap, palette ⊆ atlas, prop pixels,
+loop seam), ONE PixelLab config file the pre-flight updates. Pilot Maldrath E+W incl. the sword mask; show emci GIF vs current
+vs skeleton-v3. 0 PixelLab generations. Nothing installed, no OTA.
+DONE WHEN: engine + gates run on Maldrath, emci saw the comparison and said go/no-go for AN2, check:play-isolation green.
+RULES: Play scope only; no dependency changes without emci's OK; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step A3: Server cleanup + safety
+Model: Opus
+```
+Repo emci-hub/ATO, branch master (pull first). Read PROJECT_CONTEXT.md, CLAUDE.md, docs/ato-finish-roadmap.md (v2 §1.3,
+§1.4, §1.6, §3 S1-S7, D24), docs/master-plan.md (Ledger C D13-D15), docs/circle-safety.md, supabase/migrations/wave92*,
+wave39*, wave101*, wave104*, wave108*, supabase/functions/ai-library/, _shared/rate-limit.ts.
+TASK (step A3): one migration set (copy live function bodies via read-only SQL before restating): refund_ai_tokens refunds only
+a recorded failure (S2); allow-list show_up / talk_style on the server, after counting existing rows that would fail (S3);
+drop play_dev_logs + wave101 inert policies (S5, deletes rows: emci OK). Drop kind 'story' from ai-library and the "Write as
+Sage" prompts, bump LIBRARY_VERSION only if a served shape changes, gen:ai-library + deploy (S4). Read-only SQL: verify cron
+jobs profile-history-monthly, chat-retention-30d, ai-library-fill (S6). S1 report alert per D24 (emci OK first: new pattern
+if pg_net). S7: ask emci about mint-session-once / apple-secrets-check.
+DONE WHEN: migrations applied by emci and verified read-only, deploys done, checks with pass/fail pairs, reviewer PASS, Box 78.
+RULES: ask before every apply/deploy/deletion; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step A4: Copy decision
+Model: Sonnet
+```
+Repo emci-hub/ATO, branch master (pull first). Read PROJECT_CONTEXT.md, CLAUDE.md, docs/copy-review-rules.md,
+docs/ato-finish-roadmap.md (v2 §1.6 copy flags, M8, D21), every *_COPY_REVIEWED constant (grep src/).
+TASK (step A4): give emci ONE table: each of the 17 false flags → surface, how many lines, who sees it, review doc, your
+recommendation (accept / read / hide). After his answers: flip accepted flags with the date in a comment, hide surfaces he
+wants hidden (a NEW gating pattern: plan it, ask first), fix master-plan line 302 and the v1 "unread surfaces get hidden" line.
+DONE WHEN: every flag has emci's decision recorded in docs/master-plan.md Ledger A, checks pinning flags updated with pairs,
+gate green, one OTA only if something is hidden, Box 79.
+RULES: never edit copy meaning without a concrete problem (copy-review-rules); no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step AN2: All hero Idles
+Model: Sonnet
+```
+Repo emci-hub/ATO, branch master (pull; AN1 done with emci's go). Read PROJECT_CONTEXT.md, CLAUDE.md,
+docs/art/PIXELLAB_GUIDE.md, docs/art/animation-batch-plan.md (row AN2), the AN1 notes.
+TASK (step AN2): rigs for every hero (auto-guessed lines, hand-checked prop/cape masks), Idle through the engine, ONE contact
+sheet (identity 4x, current vs new) + one GIF per hero; emci marks approve/keep; install approved (archive old Idle via
+art-decisions, replaces, art:sync, anim:library), Idle ms[] holds. 0 PixelLab generations.
+DONE WHEN: approved Idles installed, check:art-registry --fresh + gate green, ONE Play-only OTA after emci's OK, Box 80.
+RULES: Play scope only; never with app work; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step A5: Dead code + docs truth
+Model: Sonnet
+```
+Repo emci-hub/ATO, branch master (pull first). Read PROJECT_CONTEXT.md, CLAUDE.md, docs/ato-finish-roadmap.md (v2 §1, S11,
+S12), docs/sage-cleanup.md, docs/master-plan.md (D11, D14).
+TASK (step A5): remove the ai-generate client path (src/lib/ai/edge.ts generateText + callers incl. category-deep-dive
+writeOld, legend-figures/generate.ts, pingProvider), then emci deletes the function (D14); remove EXPO_PUBLIC_AI_PROVIDER /
+MODEL_PROVIDER reads, rolls/* and legends64/store.ts dead files, BANK_MARKDOWN, stale comments; delete list "saved facts" +
+delete-link accessibilityRole. Docs: NOW.md:32/:62 + "Left", sage-cleanup §4, OPEN-QUESTIONS 8, obsolete device boxes
+(8, 11, 18-39, 29-32) marked obsolete, new box for Change answers / Undo / Start Fresh / card compare; list stale branches and
+PRs #16 #17 #20 for emci to close.
+DONE WHEN: checks rewritten (ai-provider etc.) never weakened, gate green, reviewer PASS, ONE OTA after OK, Box 81.
+RULES: no Bash cd, no && chains; ask before deleting the function or branches.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step A6: Insight depth + earlier first insight
+Model: Sonnet (Opus for the D22 design only)
+```
+Repo emci-hub/ATO, branch master (pull first). Read PROJECT_CONTEXT.md, CLAUDE.md, src/lib/voice/clear-voice.ts,
+src/lib/insight-bank/ (pick.ts, index.ts), docs/insight-bank-review.md, docs/ato-finish-roadmap.md (v2 §1.1, S9, S10, D22).
+TASK (step A6): (1) more stored ideas per lean so a single-lean person is not cycling 5 (target and count in the plan), plus
+"mixed" ideas for people with no clear lean; new ids only (ftw_<axis>_<h|l>_<nn>, never reuse), clear voice, tipRuleViolation;
+(2) per D22, the first insight after set 1 with an honest "early read" line. No model call (check:insights-no-ai).
+DONE WHEN: check:insight-bank counts updated with pairs, review doc lists the new ideas for emci, gate green, reviewer PASS,
+ONE OTA after OK, Box 82.
+RULES: no streak or pressure copy; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step AN3: Clip timing holds
+Model: Sonnet
+```
+Repo emci-hub/ATO, branch master (pull; AN2 on phones). Read PROJECT_CONTEXT.md, CLAUDE.md, docs/art/animation-batch-plan.md
+(row AN3), docs/ANIMATION-AUDIT.md.
+TASK (step AN3): first check whether play code reads per-frame ms[] or a flat fps; if code must change, say so and plan it as
+its own Play step. Then per-frame holds for Walk/Run/Dash/Attack/Skill/Hurt/Faint/Death (the audit's "flat timing").
+0 PixelLab generations.
+DONE WHEN: timings in the library, art:sync + gate green, ONE Play-only OTA after OK, Box 83.
+RULES: Play scope only; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step A7: Native 1.2 build
+Model: Sonnet
+```
+Repo emci-hub/ATO, branch master (pull first). Read PROJECT_CONTEXT.md, CLAUDE.md, docs/app-store-pack.md,
+docs/ato-finish-roadmap.md (v2 §1.5 widget, §1.6 encryption/camera, S13, S14), targets/widget/widgets.swift, app.json.
+TASK (step A7): widget labels READ/DO → the insight's own words, description line; remove expo-camera plugin + permission
+text + dependency (D16, emci OK); encryption key per the A2 answer; bump version/runtime; write the backup decision (S14).
+emci runs the EAS production build, TestFlight, Box 84, ASC (What's New, notes), submit.
+DONE WHEN: release-mode + gate green on the build commit, reviewer PASS, build submitted (emci), Box 84 passed.
+RULES: dependency change only with emci's OK; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Step AN4: Creep / boss / tower Idles
+Model: Sonnet
+```
+Repo emci-hub/ATO, branch master (pull; AN2 done). Read PROJECT_CONTEXT.md, CLAUDE.md, docs/art/PIXELLAB_GUIDE.md,
+docs/art/animation-batch-plan.md (row AN4).
+TASK (step AN4): rigs + Idle for the 7 creep / boss / tower characters with the engine, one contact sheet, emci approves,
+install, art:sync. 0 PixelLab generations.
+DONE WHEN: installed, gate green, ONE Play-only OTA after OK, Box 85.
+RULES: Play scope only; no Bash cd, no && chains.
+END THIS CHAT THE SAME WAY: assessment, next step, new-chat prompt.
+```
+
+### Credit cost summary
+PixelLab: 0 generations for every step above; AN5 is the only paid one (~3 per direction, emci picks clips; 2026-10-22 balance
+3,521.95, resets 2026-11-11). Chat size: S ≈ a short chat (few reads), M ≈ one normal chat with 2 agents, L ≈ split it.
+Opus only for A2 (legal accuracy), A3 (SQL on live functions) and design calls; everything else Sonnet.
+
+## Sources (web, 2026-10-22)
+- https://developer.apple.com/app-store/review/guidelines/ (1.2, 5.1.1, 5.1.2(i))
+- https://developer.apple.com/forums/thread/820209 (AI consent not seen by reviewer)
+- https://www.igeeksblog.com/apple-app-store-ai-data-disclosure-guidelines (5.1.2(i) change, Nov 2025)
+- https://www.iphoneincanada.ca/2025/07/25/updated-app-store-age-ratings (age tiers)
+- https://supabase.com/docs/guides/deployment/going-into-prod
+- https://expo.dev/blog/the-production-playbook-for-ota-updates ; https://docs.expo.dev/eas-update/rollouts/
+- https://www.lazyweb.com/research/longest-onboarding-quizzes-benchmark
+- https://makeheadway.com/blog/finch-app-review/ ; https://www.blick.ch/life/tamagotchi-fuer-die-seele-psychisch-gesund-dank-selfcare-app-id21160050.html
+- https://screensdesign.com/articles/mobile-app-streak-design-examples/
+- No-lawyer path: https://termly.io/resources/articles/do-i-need-a-lawyer-for-a-privacy-policy ;
+  https://getterms.io/blog/do-i-need-a-lawyer-for-a-privacy-policy ; https://www.revenuecat.com/blog/engineering/creating-a-privacy-policy-for-your-app ;
+  https://www.clym.io/regulations/pipa-ab ; https://www.mondaq.com/canada/privacy-protection/1113606/is-your-app-privacy-compliant-four-key-questions ;
+  https://simonwillison.net/2024/Oct/17/gemini-terms-of-service ; https://lists.proxmox.com/pipermail/pve-devel/2025-September/075587.html (2021 BIS change, secondary) ;
+  https://ucalgary.ca/news/ucalgary-pro-bono-student-law-clinic-and-uceed-team-support-new-ventures
+
+---
+
+# Archive: v1 (2026-10-19). Kept unchanged; every step below is done (see docs/master-plan.md rows 0-15).
+
 # ATO finish roadmap (everything outside Divecore, to launch-ready)
 
 Status: **PLAN APPROVED 2026-10-19 (scope: must + should-fix, steps 1-10).** Written by the outside-Divecore assessment chat

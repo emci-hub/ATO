@@ -1,6 +1,6 @@
 # ATO art library
 
-Generated. 557 live entries.
+Generated. 561 live entries.
 Open `assets/art/_contact/library.html` (desktop / file://) or `library-portable.html` on a phone.
 Every tile is a preview (animated main clip, still, or individual sprites) — not the raw sheet.
 Reuse before create. New art goes in `assets/art/<category>/in-use|unused/<set>/<variant>/`.
@@ -11,9 +11,9 @@ Viewer lists one card per set (not each clip/file).
 - **heroes** (198: 56 in use / 142 unused) — Heroes
 - **enemies-bosses** (18: 10 in use / 8 unused) — Enemies / bosses
 - **ui** (26: 11 in use / 15 unused) — UI
-- **icons** (145: 63 in use / 82 unused) — Icons
+- **icons** (148: 67 in use / 81 unused) — Icons
 - **rooms** (71: 49 in use / 22 unused) — Rooms
-- **props** (49: 10 in use / 39 unused) — Props
+- **props** (50: 11 in use / 39 unused) — Props
 - **tiles** (21: 0 in use / 21 unused) — Tiles
 - **fx** (14: 1 in use / 13 unused) — FX
 - **backgrounds** (2: 2 in use / 0 unused) — Backgrounds
@@ -728,9 +728,12 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.backpack` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.bandana` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.bat` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.bomb` | 32×32 | resource | — | src/play/pet-games.tsx |
 | `icon.streetwear.bucket-hat` | 32×32 | resource | — | src/play/generated-play-assets.ts |
+| `icon.streetwear.burger` | 32×32 | resource | — | src/play/pet-games.tsx |
 | `icon.streetwear.cap` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
 | `icon.streetwear.coin-stack` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
+| `icon.streetwear.donut` | 32×32 | resource | — | src/play/pet-games.tsx |
 | `icon.streetwear.dpad` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.flame` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.gem` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
@@ -739,13 +742,14 @@ Viewer lists one card per set (not each clip/file).
 | `icon.streetwear.lamp` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.marker` | 32×32 | resource | — | src/play/generated-play-assets.ts |
 | `icon.streetwear.padlock` | 32×32 | resource | — | src/play/hideout-art.ts |
+| `icon.streetwear.pizza` | 32×32 | resource | — | src/play/pet-games.tsx |
 | `icon.streetwear.potion` | 32×32 | resource | — | src/play/dive-hud.tsx |
 | `icon.streetwear.shades` | 32×32 | resource | — | src/play/generated-play-assets.ts |
-| `icon.streetwear.shield` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
+| `icon.streetwear.shield` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts, src/play/pet-games.tsx |
 | `icon.streetwear.sleep` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.sneaker` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.speech` | 32×32 | resource | — | src/play/hideout-art.ts |
-| `icon.streetwear.star` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/hideout-art.ts |
+| `icon.streetwear.star` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/hideout-art.ts, src/play/pet-games.tsx |
 | `icon.streetwear.subway-train` | 32×32 | resource | — | src/play/hideout-art.ts |
 | `icon.streetwear.sword` | 32×32 | resource | — | src/play/dive-hud.tsx, src/play/generated-play-assets.ts |
 | `icon.streetwear.void-eye` | 32×32 | resource | — | src/play/dive-hud.tsx |
@@ -755,7 +759,6 @@ Viewer lists one card per set (not each clip/file).
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
 | `icon.streetwear.bolt` | 32×32 | resource | — | — |
-| `icon.streetwear.bomb` | 32×32 | resource | — | — |
 | `icon.streetwear.boombox` | 32×32 | resource | — | — |
 | `icon.streetwear.boxing-glove` | 32×32 | resource | — | — |
 | `icon.streetwear.brick-paint` | 32×32 | resource | — | — |
@@ -826,12 +829,12 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `room.hideout.back` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.back` | 352×576 | candidate | — | src/play/hideout-art.ts, src/play/pet-games.tsx |
 | `room.hideout.boarded` | 38×88 | candidate | — | src/play/hideout-art.ts |
 | `room.hideout.build-sign` | 48×36 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.floor` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.floor` | 352×576 | candidate | — | src/play/hideout-art.ts, src/play/pet-games.tsx |
 | `room.hideout.neighbor-boarded-td` | 352×576 | candidate | — | src/play/hideout-art.ts |
-| `room.hideout.neon-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
+| `room.hideout.neon-a` | 352×576 | candidate | — | src/play/hideout-art.ts, src/play/pet-games.tsx |
 | `room.hideout.neon-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
 | `room.hideout.occluder-day-a` | 352×576 | candidate | — | src/play/hideout-art.ts |
 | `room.hideout.occluder-day-b` | 352×576 | candidate | — | src/play/hideout-art.ts |
@@ -977,6 +980,7 @@ Viewer lists one card per set (not each clip/file).
 | `prop.streetwear.barrel-fire` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
 | `prop.streetwear.boombox` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
 | `prop.streetwear.crate` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
+| `prop.streetwear.punching-bag` | 64×64 | resource | — | src/play/pet-games.tsx |
 | `prop.streetwear.tire-stack` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
 | `prop.streetwear.traffic-cone` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |
 | `prop.streetwear.trash-bags` | 64×64 | resource | — | src/play/decor-slots-ui.tsx |

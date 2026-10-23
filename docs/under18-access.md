@@ -29,7 +29,7 @@ closed to them until their 18th birthday. If they want, they can delete their ac
 **Block screen** (`under-18.tsx`): ATO is for people 18 and older; your account and everything in it are
 safe; nothing has been deleted or changed; you'll get back in on your 18th birthday (the date, in the
 phone's locale); nothing to do. Actions:
-- **Email support** (`support@asstrollogs.com`, the same address as You's "Send feedback" and the legal pages).
+- **Email support** (`support@emgens.com` since 2026-10-22, the same address as You's "Send feedback" and the legal pages).
 - **Sign out** (`clearLocalSession`, the onboarding sign-out: ends the session on this phone and clears
   this phone's cache; nothing on the server).
 - **Delete my account**, with the line "Deleting your account is permanent. If you leave it, we keep your

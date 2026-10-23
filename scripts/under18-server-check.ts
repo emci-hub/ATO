@@ -45,6 +45,9 @@ const NOT_LIVE = new Set([
   // by scripts/circle-chat-check.ts. chat_my_status / chat_ack_warning only touch the caller's own row;
   // admin_chat_restrict is root only.
   'wave108_circle_chat.sql',
+  // Roadmap v2 S3 (2026-10-22, NOT applied): a trigger on me (show_up / talk_style chips only); no
+  // client-callable function. Pinned by scripts/circle-safety-check.ts.
+  'wave110_public_card_fields_guard.sql',
 ]);
 
 /** Apply order of the migrations that existed when wave101 was written (git history order). */
