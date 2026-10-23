@@ -1267,3 +1267,15 @@ About 10 min. Needs the 1.2.0 build from TestFlight (not an OTA: the camera plug
 - [ ] **5** Sign out and back in (Apple or password). -> Works; the widget clears on sign-out and fills again after sign-in.
 - [ ] **6** Send one Circle chat message to a friend on the same build (or yourself via a test account). -> It sends and decrypts on the other side (chat still works after the runtime bump).
 - [ ] **7** TestFlight (or the iPhone Settings -> ATO row). -> The build shows version 1.2.0.
+
+## Box 85 — Creeps, boss and towers breathe (roadmap step AN4, 2026-10-23, Play-only OTA on runtime 1.2.0)
+
+About 5 min. Needs the AN4 OTA, which is published only after 1.2 is live in the store (it targets runtime 1.2.0, so restart the 1.2 app twice). Seven characters got the same slow breath the heroes have (rest, small dip, rest, small dip; 1.3 s per loop): creeps Knight, Village-girl, Wizard; the Oni boss; towers Ghost, Lux, Viper. Creeps and the boss only show it when they stand still; their Walk and Death are unchanged.
+
+**Report back in ONE message:** `pass`, or `fix` + the character + what you saw, per line.
+
+- [ ] **1** Defend: towers Ghost, Lux and Viper standing idle between shots. -> A slow breath, about 1.3 s a loop, not jittery; the Viper's rifle moves with its hand (1 px), no jitter.
+- [ ] **2** Defend: a creep (Knight, Village-girl, Wizard) stalled by a blocker or at a wall. -> A slow breath; several stalled creeps are not all in lockstep. The Wizard's staff stays steady.
+- [ ] **3** Defend: the Oni boss when it stops. -> A slow 1 px breath, flame blade moves with the hand, no jitter; nothing floats or clips the ground.
+- [ ] **4** A walking creep and a creep dying. -> Walk and Death look exactly as before.
+- [ ] **5** If one looks wrong: say character + "too fast" / "too slow" / "wobbles". Nothing is deleted: the old Idles are archived in art-src/archive/2026-10.
