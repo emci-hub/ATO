@@ -58,6 +58,8 @@ export interface LegendStory {
   /** Shared library (wave93): the library card's id (Report) and "you and N others". */
   libraryId?: string;
   others?: number | null;
+  /** Story Library line ids already shown on this card. Saved with the story. */
+  lineIds?: string[];
 }
 
 /** A side of the reader the legend does not share: the opposite of one of its
@@ -516,6 +518,7 @@ export function parseStoredLegendStory(raw: unknown): LegendStory | null {
     ...(typeof obj.libraryId === 'string' && /^[0-9a-f-]{36}$/.test(obj.libraryId) ? { libraryId: obj.libraryId } : {}),
     ...(typeof obj.others === 'number' ? { others: obj.others } : {}),
     source: obj.source === 'ai' ? 'ai' : obj.source === 'library' ? 'library' : 'fallback',
+    ...(Array.isArray(obj.lineIds) ? { lineIds: obj.lineIds.filter((id): id is string => typeof id === 'string') } : {}),
   };
 }
 

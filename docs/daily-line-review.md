@@ -286,7 +286,7 @@ Nothing in this file is in the app until it is ticked and loaded.
 ### `extraversion:high+relatedness:low`
 - [ ] You were great at the party. You couldn't name three things anyone said.
 - [ ] You love a crowd the way you love weather.
-- [ ] You met six people and remembered the vibe.
+- [ ] You met six people and remembered the quiet one.
 
 ### `conscientiousness:high+playfulness:low`
 - [ ] You finished everything and then looked for more everything.

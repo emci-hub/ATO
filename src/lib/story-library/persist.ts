@@ -4,6 +4,8 @@
  * The store is synchronous so the offline check can round-trip a save without
  * a device. The phone adapter lives in `device-store.ts`.
  */
+import { sceneReuse, textIssues } from '@/lib/voice/player-copy';
+
 import { STORY_LIBRARY } from './library';
 import type { MatrixFailure } from './validate';
 import { validateLibrary } from './validate';
@@ -49,10 +51,29 @@ export function getStoryLibrary(): StoryLibrary {
  * Approve a library into the runtime copy. Refuses the write when the matrix
  * is not clean, and leaves the previous copy in place.
  */
+/** Banned phrases, slang, and scene reuse. A failing draft never becomes the approved copy. */
+export function libraryVoiceFailures(library: StoryLibrary): MatrixFailure[] {
+  const byTrait: Record<string, string> = {};
+  const failures: MatrixFailure[] = [];
+  const push = (trait: string, tier: string, detail: string) => {
+    failures.push({ templateId: 'voice', trait, tier, pronoun: '-', detail });
+  };
+  for (const line of library.lines) {
+    for (const issue of textIssues(`${line.text}\n${line.flip}`)) {
+      push(line.trait, String(line.tier), `${line.id}: ${issue.detail}`);
+    }
+    byTrait[line.trait] = `${byTrait[line.trait] ?? ''} ${line.text}`;
+  }
+  for (const issue of sceneReuse(byTrait)) push(issue.label, '-', issue.detail);
+  return failures;
+}
+
 export function saveStoryLibrary(library: StoryLibrary): SaveResult {
+  const voice = libraryVoiceFailures(library);
   const report = validateLibrary(library, { requireApproved: true });
-  if (report.failures.length > 0) {
-    return { ok: false, renders: report.renders, failures: report.failures };
+  const failures = [...voice, ...report.failures];
+  if (failures.length > 0) {
+    return { ok: false, renders: report.renders, failures };
   }
   installed = library;
   store?.write(library);

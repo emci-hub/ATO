@@ -175,7 +175,7 @@ export function cardStrengthWeakness(
 /** How far from the middle a lean must be before the card names a possible drawback. */
 export const WEAKNESS_MIN_LEAN = 0.15;
 /** The weakness line is always a possibility, never a verdict. */
-export const WEAKNESS_LEAD = 'You may find it cuts both ways.';
+export const WEAKNESS_LEAD = 'You may see it cut both ways.';
 
 export type CompareArrow = 'up' | 'down' | 'same';
 

@@ -63,6 +63,8 @@ export interface CategoryDive {
   opensOn?: string;
   /** 'library' = assembled from the Story Library (no model). */
   source: 'ai' | 'library';
+  /** Story Library line ids already shown on this card. Saved with the story. */
+  lineIds?: string[];
 }
 
 export const SHOWS_MIN_WORDS = 10;
@@ -436,5 +438,6 @@ export function parseStoredDive(raw: unknown): CategoryDive | null {
     ...(typeof obj.joke === 'string' ? { joke: obj.joke } : {}),
     ...(typeof obj.opensOn === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(obj.opensOn) ? { opensOn: obj.opensOn } : {}),
     source: obj.source === 'library' ? 'library' : 'ai',
+    ...(Array.isArray(obj.lineIds) ? { lineIds: obj.lineIds.filter((id): id is string => typeof id === 'string') } : {}),
   };
 }

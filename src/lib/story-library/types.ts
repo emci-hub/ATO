@@ -139,10 +139,51 @@ export interface FillResult {
   issues: FillIssue[];
 }
 
+export type LineSlot =
+  | 'shows'
+  | 'mix'
+  | 'notice'
+  | 'means'
+  | 'joke'
+  | 'title'
+  | 'legend-won'
+  | 'legend-scene'
+  | 'legend-differ'
+  | 'legend-means'
+  | 'legend-title'
+  | 'legend-joke';
+
+/**
+ * One finished line. Tokens are only names, pronouns, the legend's name, and
+ * the player's own answer. `flip` is the opposite pole's reaction. It is not shown.
+ */
+export interface StoryLine {
+  id: string;
+  slot: LineSlot;
+  trait: string | 'any';
+  tier: Tier | 'any';
+  /** Higher wins. A quote of their answer beats a trait line. A trait line beats the fallback. */
+  priority: number;
+  text: string;
+  flip: string;
+  /** Eligible only when the player's answer contains this text. */
+  answerIncludes?: string;
+  /** Eligible only when some chosen answer was passed in. */
+  requiresAnswer?: boolean;
+  legendId?: string;
+  /** Eligible only when the answer is a recent one. */
+  recency?: 'recent';
+  /** Mix and combo lines: the second trait must match. */
+  alsoTrait?: string;
+  alsoTier?: Tier;
+  status: Approval;
+}
+
 export interface StoryLibrary {
   version: string;
   templates: Template[];
   entries: WordEntry[];
+  lines: StoryLine[];
 }
 
 /** Tokens the filler replaces. Slot ids must not use these names. */

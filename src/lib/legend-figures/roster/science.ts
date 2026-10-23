@@ -48,8 +48,8 @@ export const SCIENCE_LEGENDS: readonly LegendFigure[] = [
       angle('a4', 'twice, in two fields', 'How does one person win twice, in two different sciences?', 'Going deep on one question can open doors in more than one direction.'),
     ],
     tags: [
-      tag('openness', 'high', 'chased an unknown glow', 'She studied a new kind of radiation that nobody understood yet.'),
-      tag('conscientiousness', 'high', 'measured everything, twice', 'Her discoveries came from systematic, repeated measurement.'),
+      tag('openness', 'high', 'studied what nobody had named', 'She studied a new kind of radiation that nobody understood yet.'),
+      tag('conscientiousness', 'high', 'weighed the sample twice', 'Her discoveries came from systematic, repeated measurement.'),
       tag('growth_mindset', 'high', 'learned a new field', 'She moved from physics into chemistry and won in both.'),
     ],
     vetting: 'Scientist, died 1934; no political office; broadly admired worldwide.',

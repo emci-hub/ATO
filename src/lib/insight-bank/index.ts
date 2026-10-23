@@ -97,15 +97,25 @@ for (const entry of ALL_IDEAS) {
  */
 export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   'You usually keep every promise you make, even the ones you said yes to too fast.':
-    'You usually keep your promises, even the ones you said yes to too fast.',
+    'A promise you made too fast on Tuesday can still own your Thursday night.',
+  'You usually keep your promises, even the ones you said yes to too fast.':
+    'A promise you made too fast on Tuesday can still own your Thursday night.',
   'You adapt to new plans easily, but small tasks tend to stack up when there’s no deadline.':
-    'You handle changing plans well, but small tasks can pile up when there’s no deadline.',
+    'You handle a shifted meeting fine, and small errands can wait when the calendar does not force them.',
+  'You handle changing plans well, but small tasks can pile up when there’s no deadline.':
+    'You handle a shifted meeting fine, and small errands can wait when the calendar does not force them.',
   'You usually see problems as smaller than others do, which can feel like you’re not taking them seriously.':
-    'You usually see problems as smaller than others do, so people may feel you’re not taking them seriously.',
+    'A worry that looks small to you can have you calming the person down before you have heard the whole story.',
+  'You usually see problems as smaller than others do, so people may feel you’re not taking them seriously.':
+    'A worry that looks small to you can have you calming the person down before you have heard the whole story.',
   'When something goes wrong, you tend to sleep fine and feel better by morning.':
-    'When something goes wrong, you tend to feel more settled by the next day.',
+    'When something goes wrong, you sometimes feel more settled by the next morning.',
+  'When something goes wrong, you tend to feel more settled by the next day.':
+    'When something goes wrong, you sometimes feel more settled by the next morning.',
   'You’re usually the person people call when something goes wrong.':
-    'People tend to call you first when something goes wrong.',
+    'A crisis in the group chat can land in your messages first.',
+  'People tend to call you first when something goes wrong.':
+    'A crisis in the group chat can land in your messages first.',
 };
 for (const [oldText, currentText] of Object.entries(RETIRED_FOCUS_TEXT)) {
   const match = BY_TITLE.get(currentText);

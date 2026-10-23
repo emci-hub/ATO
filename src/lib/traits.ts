@@ -373,68 +373,68 @@ export function leanComparative(value: number | null | undefined): 'higher' | 'l
  */
 export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> = {
   extraversion: {
-    high: 'They tend to get energy from being around people.',
-    low: 'They tend to get energy from quieter time.',
+    high: 'They are at the door before the text lands.',
+    low: 'They wave once and keep the quiet corner.',
   },
   openness: {
-    high: 'They tend to like new ideas and untried paths.',
-    low: 'They tend to prefer the known path over a new one.',
+    high: 'They open a new ticket before the group has agreed.',
+    low: 'They order the usual dish again, and it is still the best one.',
   },
   conscientiousness: {
-    high: 'They tend to follow a plan through.',
-    low: 'They tend to keep plans loose and change them as they go.',
+    high: 'They tick the last box and then sit down.',
+    low: 'They leave the list on the counter and still make dinner.',
   },
   agreeableness: {
-    high: 'They tend to go along when it keeps things easy.',
-    low: 'They tend to hold their own view even when it rubs.',
+    high: 'They give the other plan the yes and stay for dessert.',
+    low: 'They say the blunt thing and stay at the table.',
   },
   steadiness: {
-    high: 'They tend to stay even when things wobble.',
-    low: 'They tend to feel it strongly when things wobble.',
+    high: 'They stay level after the spill.',
+    low: 'They let the wobble have a seat and stay anyway.',
   },
   attachment_anxiety: {
-    high: 'They tend to worry people will pull away.',
-    low: 'They tend not to spend much time worrying people will leave.',
+    high: 'They keep the thread open while they wait for the reply.',
+    low: 'They leave the ping unread and keep the afternoon.',
   },
   attachment_avoidance: {
-    high: 'They tend to keep some distance even with people they like.',
-    low: 'They tend to stay close once they are in.',
+    high: 'They close the thread and keep the hour.',
+    low: 'They come in from the hall and stay for the long reply.',
   },
   conflict_assertiveness: {
-    high: 'In a disagreement they tend to put their own point on the table.',
-    low: 'In a disagreement they tend to step back rather than push.',
+    high: 'In a disagreement they leave their own point on the table.',
+    low: 'In a disagreement they send the soft version and keep the point.',
   },
   conflict_cooperativeness: {
-    high: 'In a disagreement they tend to look for something the other person can live with.',
-    low: 'In a disagreement they tend to protect their own outcome first.',
+    high: 'In a disagreement they widen the plan until both people fit.',
+    low: 'In a disagreement they hold their corner without a fight.',
   },
   autonomy: {
-    high: 'They tend to want to do things their own way.',
-    low: 'They tend to be fine following a path someone else already set.',
+    high: 'They decide before the poll closes.',
+    low: 'They follow the group plan and mean it.',
   },
   competence: {
-    high: 'They tend to feel they can handle a hard thing.',
-    low: 'They tend to doubt they can pull a hard thing off.',
+    high: 'They trust the work and put the pen down.',
+    low: 'They send the tiny draft and let it stay small.',
   },
   relatedness: {
-    high: 'They tend to need a real connection with people for a day to land.',
-    low: 'They tend to feel a day landed without needing much connection.',
+    high: 'They keep the chat going without turning it into a show.',
+    low: 'They notice the quiet and let it stay quiet.',
   },
   growth_mindset: {
-    high: 'After a miss they tend to look for what went wrong so they can try again.',
-    low: 'After a miss they tend to treat it as a sign they are not good at that thing.',
+    high: 'After a miss they start the next try while it is still warm.',
+    low: 'After a miss they name the stuck spot and stay for dinner.',
   },
   locus_of_control: {
-    high: 'When something falls apart, first thought tends to go to what they might have done differently.',
-    low: 'When something falls apart, first thought tends to go to how it was bound to happen.',
+    high: 'When something falls apart, they look at the part they could steer.',
+    low: 'When something falls apart, they figure the day was going to do that anyway.',
   },
   self_efficacy: {
-    high: 'Facing a big task they tend to feel they can pull it off.',
-    low: 'Facing a big task they tend to feel unsure they can pull it off.',
+    high: 'Facing a big task, they start and expect to finish.',
+    low: 'Facing a big task, they pause and still start with the small version.',
   },
   playfulness: {
-    high: 'They tend to look for a lighter take. A bit of play is how a day lands.',
-    low: 'They tend to treat the day as a job to get through. Jokes can wait.',
+    high: 'They leave with the laugh first.',
+    low: 'They read the joke straight and answer the actual question.',
   },
 };
 
@@ -480,7 +480,7 @@ export function traitPromptLines(me: Partial<TraitValues>): string {
 
   const kept = lines.filter((line) => !containsFrameworkTerm(line));
   if (kept.length === 0) return '';
-  return `${kept.map((line) => `- ${line}`).join('\n')}\n- Treat the lines above as self-report about how they tend to move, never as a type or a diagnosis.\n`;
+  return `${kept.map((line) => `- ${line}`).join('\n')}\n- Treat the lines above as self-report about how they move, never as a type or a diagnosis.\n`;
 }
 
 export { sanitizeFacts };

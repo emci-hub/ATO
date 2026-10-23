@@ -2,7 +2,7 @@
 
 ATO is an invite-only iOS app (Expo SDK 54 / expo-router / Supabase): one daily insight
 (loaded on a tap; it replaced the old Read + Do card), a 16-axis trait profile that every AI surface reads from, and a small
-scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live status.
+scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live status. Player-facing copy follows `docs/voice-guide.md`.
 
 ## When to move to a new chat (emci 2026-10-15: saves credits)
 
@@ -130,7 +130,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   meaningful change (`_profile_changed` = `profileChanged`, pinned by `check:profile-history`).
   Retest is retired: after set 25 it is Change answers + Undo. No AI anywhere in cards/history.
 - **Weaknesses on the profile card (emci 2026-10-19):** the Strengths/Weaknesses labels stay. A possible drawback is
-  named only for a clear lean (`WEAKNESS_MIN_LEAN`), always as a possibility ("You may find it cuts both ways."), with
+  named only for a clear lean (`WEAKNESS_MIN_LEAN`), always as a possibility ("You may see it cut both ways."), with
   one practical step; shareable titles, push and widget lines keep struggle-side lines out (`isShareableLean`).
 - **Core content policy (emci 2026-10-20; replaces every conflicting earlier writing rule): `docs/copy-review-rules.md`.**
   Clarity, natural language, accurate meaning, honest feedback, adult humor. Judge MEANING, not keywords: no word or

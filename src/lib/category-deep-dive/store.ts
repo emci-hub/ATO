@@ -13,6 +13,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { lineIdsOf, rememberShown } from '@/lib/story-library/shown';
 import { supabase } from '@/lib/supabase';
 
 import {
@@ -51,7 +52,7 @@ export async function fetchServerDives(): Promise<DiveEntry[] | null> {
       .order('created_at', { ascending: false })
       .limit(60);
     if (error || !Array.isArray(data)) return null;
-    return data
+    const entries = data
       .map((row) =>
         parseDiveEntry({
           dive: (row as { story?: unknown }).story,
@@ -59,6 +60,8 @@ export async function fetchServerDives(): Promise<DiveEntry[] | null> {
         }),
       )
       .filter((row): row is DiveEntry => row != null);
+    rememberShown(entries.flatMap((entry) => lineIdsOf(entry.dive)));
+    return entries;
   } catch {
     return null;
   }

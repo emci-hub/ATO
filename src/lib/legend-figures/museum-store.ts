@@ -19,6 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 
 import type { AngleCounts } from './pick';
+import { lineIdsOf, rememberShown } from '@/lib/story-library/shown';
+
 import { parseStoredLegendStory, type LegendStory } from './story';
 import { LEGEND_HALLS, type LegendHall } from './types';
 
@@ -113,7 +115,9 @@ export function parseLocalState(raw: string | null, userId: string): LegendLocal
 
 export async function loadLocalState(userId: string): Promise<LegendLocalState> {
   try {
-    return parseLocalState(await AsyncStorage.getItem(LEGEND_MUSEUM_KEY), userId);
+    const state = parseLocalState(await AsyncStorage.getItem(LEGEND_MUSEUM_KEY), userId);
+    rememberShown(state.museum.flatMap((entry) => lineIdsOf(entry.story)));
+    return state;
   } catch {
     return emptyState(userId);
   }
@@ -171,7 +175,7 @@ export async function fetchServerMuseum(): Promise<MuseumEntry[] | null> {
       .select('legend_id, chapter, story, met_on')
       .order('met_on', { ascending: false });
     if (error || !Array.isArray(data)) return null;
-    return data
+    const entries = data
       .map((row) =>
         parseEntry({
           legendId: (row as { legend_id?: unknown }).legend_id,
@@ -181,6 +185,8 @@ export async function fetchServerMuseum(): Promise<MuseumEntry[] | null> {
         }),
       )
       .filter((row): row is MuseumEntry => row != null);
+    rememberShown(entries.flatMap((entry) => lineIdsOf(entry.story)));
+    return entries;
   } catch {
     return null;
   }

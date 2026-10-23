@@ -19,6 +19,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import type { ClearLean } from '../src/lib/daily-line/pick';
+import { insightCopyIssues } from '../src/lib/voice/player-copy-scan';
 import {
   ALL_IDEAS,
   INSIGHT_BANK_COPY_REVIEWED,
@@ -271,5 +272,16 @@ assert.match(home, /pickIdea\(/, 'the focus card picks from the bank');
 assert.match(home, /saveInsight\(/, 'the focus card saves through insert_daily_insight');
 assert.doesNotMatch(home, /consentGranted/, 'the stored insight has no AI consent gate');
 ok('nothing on the insight path imports generateText or the generator; the focus card picks and saves without a consent gate');
+
+const voiceIssues = insightCopyIssues();
+assert.equal(
+  voiceIssues.length,
+  0,
+  voiceIssues
+    .slice(0, 8)
+    .map((issue) => `${issue.where}: ${issue.detail}`)
+    .join('\n'),
+);
+ok('insight copy passes the player-facing voice check');
 
 console.log(`\n${passed} insight-bank checks passed`);

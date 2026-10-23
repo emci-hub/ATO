@@ -16,48 +16,48 @@ export const STORY_MAP_CATEGORY_LEAN_TODO: readonly CategoryId[] = [
 
 export const STORY_LEAN_PHRASES: Readonly<Record<CategoryId, Record<TraitLean, string>>> = {
   cat_steadiness: {
-    high: 'you stay even when things wobble',
-    low: 'you feel the wobble, then ride it',
+    high: 'you keep the plan and your voice level',
+    low: 'you feel the bad text past lunch',
   },
   cat_openness: {
-    high: 'you say yes to the untried path',
-    low: 'you like the known path, done well',
+    high: 'you say yes before the plan has a name',
+    low: 'you order the usual with people you know',
   },
   cat_drive: {
-    high: 'you push until it\'s done',
-    low: 'you go at your own pace and still get there',
+    high: 'you push until the work is done',
+    low: 'you go at your pace and still finish',
   },
   cat_agency: {
-    high: 'you treat the outcome as yours to shape',
-    low: 'you roll with what the day deals',
+    high: 'you change one piece and try it again',
+    low: 'you leave the outcome to the day',
   },
   cat_social: {
-    high: 'people charge you up, even strangers',
-    low: 'you recharge in quieter company',
+    high: 'you get a quiet table talking',
+    low: 'you stay with one person',
   },
   cat_communication: {
-    high: 'you say the hard thing, and keep it kind',
-    low: 'you\'d rather step back than push',
+    high: 'you say the hard part, then ask what works',
+    low: 'you step back and let them talk',
   },
   cat_love: {
-    high: 'you lean in close',
-    low: 'you keep a little room, even with people you like',
+    high: 'you sit close and text back',
+    low: 'you like them and still leave a gap',
   },
   cat_independence: {
-    high: 'you like doing things your own way',
-    low: 'you\'re happy sharing someone else\'s path',
+    high: 'you pick the route before they do',
+    low: 'you take the plan they made',
   },
   cat_levity: {
-    high: 'you reach for the lighter take',
-    low: 'you keep a straight face and get it done',
+    high: 'you joke, then say it plain',
+    low: 'you keep a straight face through the hard talk',
   },
   cat_structure: {
-    high: 'you like a plan and follow it through',
-    low: 'you keep plans loose and change them as you go',
+    high: 'you write the list and follow it through',
+    low: 'you change the plan as you go',
   },
   cat_resilience: {
-    high: 'pressure makes you sharper',
-    low: 'pressure hits hard, but you find a side door',
+    high: 'you stay and try again',
+    low: 'the bad day stays, and you still finish',
   },
 };
 

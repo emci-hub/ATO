@@ -39,7 +39,7 @@ export function composeLocalExplore(me: ExploreMeSlice, focus: ExploreFocus): Ex
       .replace(/\s+/g, ' ')
       .trim();
   } else if (traits.length >= 2) {
-    const a = poleLine(me, traits[0]!) ?? 'They tend to move a certain way.';
+    const a = poleLine(me, traits[0]!) ?? 'They move through the week in their own way.';
     const b = poleLine(me, traits[1]!) ?? 'Another pattern sits next to it.';
     const signalBit = signal
       ? signal.kind === 'check'
