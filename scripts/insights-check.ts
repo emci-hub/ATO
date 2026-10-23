@@ -205,8 +205,10 @@ function bar(id: CategoryId, value: number): CategoryReading {
 // --- 6. order, flags, widget -------------------------------------------------------
 {
   const screen = read('src/app/(tabs)/insights.tsx');
+  // The focus card is on the screen twice since A6: once in the locked branch (early read after set 1) and
+  // once in the unlocked list; the order below is the unlocked list (its last occurrence).
   const order = ['<TryTodayCard', '<TodayFocusCard', '<InsightsStoryCard', '<SuperpowerCard', '<ConflictStyleCard'].map(
-    (tag) => screen.indexOf(tag),
+    (tag) => (tag === '<TodayFocusCard' ? screen.lastIndexOf(tag) : screen.indexOf(tag)),
   );
   assert.ok(order.every((i) => i > 0), 'all five cards are on the screen');
   assert.deepEqual([...order].sort((a, b) => a - b), order, 'Try → focus → Story → Superpower → How you argue');

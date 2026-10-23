@@ -194,4 +194,196 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
       'Notice which people make you feel most like yourself.',
     ],
   }),
+  idea('ftw_attachment_avoidance_h_07', ['attachment_avoidance:high'], {
+    focus: [
+      'When a friend or partner wants to talk about feelings, you tend to keep it short.',
+      'You usually find it easier to talk about plans and facts than about how you feel.',
+      'When a talk gets personal, you tend to steer it to something lighter.',
+    ],
+    why: 'Keeping it light protects your comfort, but people close to you may feel they only know part of what you think.',
+    try: [
+      'Share one real feeling with someone you trust this week, in a sentence or two, so they know a bit more.',
+      'Tell a friend “I need a minute, and I’ll come back to this,” so a pause doesn’t feel like a closed door.',
+    ],
+    watch: [
+      'Notice the moment you change the subject.',
+      'Notice how a friend reacts when you share a little more than usual.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_h_08', ['attachment_avoidance:high'], {
+    focus: [
+      'After a weekend with a partner or family, you tend to want time alone to feel like yourself.',
+      'You usually need a quiet day after lots of time with people close to you.',
+      'When you spend several days together on a trip, you tend to look for a bit of space.',
+    ],
+    why: 'Needing space is normal, but a person who loves you may take your need to withdraw as a sign that something is wrong.',
+    try: [
+      'Tell the person “I need an hour to myself, and then I’d love to hang out,” so they know it isn’t about them.',
+      'Plan your alone time before a long trip, so you can ask for it calmly.',
+    ],
+    watch: [
+      'Notice how the other person feels when you step away without saying why.',
+      'Notice how long you need to feel like yourself again.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_h_09', ['attachment_avoidance:high'], {
+    focus: [
+      'When someone says they miss you, you tend to feel pleased and a bit pressured.',
+      'You usually like knowing you’re missed, but you don’t always know how to respond.',
+      'When a friend wants more contact than you do, you tend to pull back a little.',
+    ],
+    why: 'Mixed feelings about closeness are common, but a friend who wants more may not know you feel warmly too.',
+    try: [
+      'Reply to “I miss you” with one warm sentence, so they know you care even if you don’t say much.',
+      'Set a regular time to talk to someone close, so contact doesn’t depend on a mood.',
+    ],
+    watch: [
+      'Notice what you feel in the first second after someone says they miss you.',
+      'Notice how you feel when a friend goes a long time without reaching out.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_h_10', ['attachment_avoidance:high'], {
+    focus: [
+      'When a friend or partner is going through something hard, you tend to help with tasks more than with talk.',
+      'You usually show you care by fixing something practical, like a ride or a meal.',
+      'When someone close is upset, you tend to feel unsure what to say and offer help instead.',
+    ],
+    why: 'Practical help is real care, but some people also need to hear you say you’re there.',
+    try: [
+      'Add one sentence like “I’m here if you want to talk” when you offer help, so they hear it too.',
+      'Ask the person “do you want help or just company?” so you give the kind they need.',
+    ],
+    watch: [
+      'Notice which kind of support you find easy to give.',
+      'Notice how people react when you add a few warm words.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_h_11', ['attachment_avoidance:high'], {
+    focus: [
+      'When you’re with someone new, you tend to take a long time to share personal things.',
+      'You usually wait until you trust someone before you open up.',
+      'When a new friend asks about your family or past, you tend to give short answers.',
+    ],
+    why: 'Taking time to trust protects you, but a friend may not realize you like them if you keep most things private.',
+    try: [
+      'Share one small personal detail with a new friend, so the friendship has something to build on.',
+      'Tell a new friend you like them in a simple way, so they know you’re interested even if you’re quiet.',
+    ],
+    watch: [
+      'Notice how much you share in the first few months of a friendship.',
+      'Notice who knows the most about you and why.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_h_12', ['attachment_avoidance:high'], {
+    focus: [
+      'When your plans depend on another person, you tend to want a way to do things on your own too.',
+      'You usually keep your own money, space or routine, even with someone close.',
+      'When a relationship asks for more of your time, you tend to feel your independence is at stake.',
+    ],
+    why: 'Holding on to your own life keeps you steady, but a partner might read it as you not being fully in.',
+    try: [
+      'Tell your partner what part of your independence matters most to you, so they know what you’re protecting.',
+      'Choose one thing to share more fully this month, so closeness has room to grow on your terms.',
+    ],
+    watch: [
+      'Notice which parts of your independence you guard most.',
+      'Notice how your partner feels about the way you split time and space.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_l_07', ['attachment_avoidance:low'], {
+    focus: [
+      'When you’re happy about something, you tend to want to tell someone right away.',
+      'You usually share good news with a friend or partner within minutes.',
+      'When something funny happens, you tend to text it to someone close.',
+    ],
+    why: 'Sharing your day builds closeness, but someone with a busy day may not have the room to match your pace.',
+    try: [
+      'Keep a story for when a friend has time, so they can give it their full attention.',
+      'Ask a friend how their day is before you share yours, so you meet them where they are.',
+    ],
+    watch: [
+      'Notice how quickly a friend replies when you text during their workday.',
+      'Notice who loves to hear your news and who prefers it later.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_l_08', ['attachment_avoidance:low'], {
+    focus: [
+      'When your partner or a friend wants time alone, you tend to wonder if something is wrong.',
+      'You usually feel a little hurt when someone close asks for space.',
+      'When a friend needs a quiet weekend, you tend to take it a bit personally.',
+    ],
+    why: 'Valuing closeness is a strength, but someone else’s need for space is usually about energy, not about you.',
+    try: [
+      'Ask the person “is this just a recharge?” so you check instead of assume.',
+      'Plan something you enjoy while they have space, so the time apart has its own purpose.',
+    ],
+    watch: [
+      'Notice what you think when a friend says they need time alone.',
+      'Notice how the friend feels after the space.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_l_09', ['attachment_avoidance:low'], {
+    focus: [
+      'When you’re upset, you tend to reach for someone close rather than deal with it alone.',
+      'You usually feel better after you talk to a partner, friend or family member.',
+      'When a hard day ends, you tend to want to debrief with someone you trust.',
+    ],
+    why: 'Talking things out helps you feel supported, but relying on one person can leave them feeling like the only listener.',
+    try: [
+      'Talk to two or three different people this week, so no one carries it all.',
+      'Write down what you want to say before you call, so the conversation is easy for both of you.',
+    ],
+    watch: [
+      'Notice who you turn to first when you’re upset.',
+      'Notice whether that person has the energy to listen that day.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_l_10', ['attachment_avoidance:low'], {
+    focus: [
+      'When you’re alone for a whole weekend, you tend to feel a little flat.',
+      'You usually find long stretches without company hard.',
+      'On a quiet Sunday, you tend to look for someone to talk to or do something with.',
+    ],
+    why: 'Wanting people around keeps your life warm, but time on your own is also a skill that gets easier with practice.',
+    try: [
+      'Spend one hour alone doing something you enjoy, so you see that it can feel good.',
+      'Plan your solo time on a day you’re in a good mood, so it starts well.',
+    ],
+    watch: [
+      'Notice how long it takes before you want company.',
+      'Notice what you enjoy doing on your own.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_l_11', ['attachment_avoidance:low'], {
+    focus: [
+      'When you care about someone, you tend to want to know their whole life, not just the surface.',
+      'You usually ask personal questions and hope the other person asks you back.',
+      'When you meet someone you like, you tend to share a lot early on.',
+    ],
+    why: 'Opening up quickly makes people feel welcome, but some take longer to warm up and may feel rushed by you.',
+    try: [
+      'Ask a new friend one question and let them answer fully before you share, so they set the pace.',
+      'Share a little less than you could in the first few chats, so the other person can catch up.',
+    ],
+    watch: [
+      'Notice whether the other person matches how much you share.',
+      'Notice how a friend acts if you slow down.',
+    ],
+  }),
+  idea('ftw_attachment_avoidance_l_12', ['attachment_avoidance:low'], {
+    focus: [
+      'When you plan your future, you tend to picture the people you love in it.',
+      'You usually make big choices with the people close to you in mind.',
+      'When you think about moving or changing jobs, you tend to think first about who you’d leave behind.',
+    ],
+    why: 'Keeping people in your plans makes your choices warm, but it can slow down a decision that mostly affects you.',
+    try: [
+      'Write down what you want from a choice before you talk to anyone, so you know your own view.',
+      'Ask someone close what they’d do in your place, so you hear a view without handing the choice over.',
+    ],
+    watch: [
+      'Notice how much weight you give others when you decide.',
+      'Notice what you would pick if no one else were affected.',
+    ],
+  }),
 ];

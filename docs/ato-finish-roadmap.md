@@ -530,6 +530,8 @@ was the category push line. So each flag was **accept / read / retire**, not hid
   progressive-unlock, story-bank). AI library bundle unchanged (no redeploy). The flips ride the next OTA (no visible change).
   Box 79 written (nothing should look different).
 
+**Step A6 status (2026-10-23): BUILT, gate/reviewer pending OTA OK.** Before it: `ai-generate` Edge Function deleted and its folder removed (emci OK, commit `fab37496`), and PR #20 (Change answers fix + 8-ball reel) merged into master (merge `0c4dd96d`). A6: 6 → 12 ideas per lean (384 trait ideas; a person with ONE clear lean now cycles 11, was 5), 3 new mixed ideas per trait (48, `ftw_<axis>_m_<nn>`, tag "<Trait>: Mixed", for a trait answered but near the middle), picker takes `mixedAxes`, D22 done as the early read: after set 1 (16 answers) the focus card opens on Insights with the line "Early read: based on your first 16 answers. It gets more accurate as you answer more."; everything else on Insights stays locked until the full 48. No model call. Review doc: `docs/insight-bank-review.md` (A6 additions, 240 ideas). `check:insight-bank` updated (counts, mixed, early read). Box 82.
+
 **Step A5 status (2026-10-23): DONE and PUBLISHED (OTA, emci's OK): production, runtime 1.1.0, update group
 `60102b63-c890-477c-9557-833443234083` (iOS `01a1694a-54fb-7004-8f23-453e3f92905b`, Android `01a1694a-54fb-7057-97af-55c72822cff5`),
 commit `e36c432a`. Gate green (192 checks), reviewer PASS (warnings fixed). Built as three commits: Play `79a276cd`, app `0d5b18bf`, review fixes

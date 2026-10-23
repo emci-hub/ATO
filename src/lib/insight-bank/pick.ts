@@ -6,8 +6,9 @@
  * Reuses the daily line's lean reading and weights (lib/daily-line/pick.ts)
  * rather than a second copy: a clear lean is the same thing for both.
  */
-import { axisOfKey, fnv1a, lineKey, type LineKey } from '@/lib/daily-line/bank';
+import { fnv1a, lineKey, type LineKey } from '@/lib/daily-line/bank';
 import {
+  CLEAR_LEAN_MARGIN,
   daysApart,
   NO_REPEAT_DAYS,
   PAIR_WEIGHT,
@@ -15,11 +16,12 @@ import {
   YESTERDAY_AXIS_WEIGHT,
   type ClearLean,
 } from '@/lib/daily-line/pick';
-import type { TraitAxis } from '@/lib/traits';
+import { trackFor, type TraitTrack } from '@/lib/trait-stability';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 import type { DailyInsightDraft } from '@/lib/insight/draft';
 
-import { ideaById, ideaTheme, STARTER_IDEAS, TRAIT_IDEAS, type InsightIdea } from './index';
+import { ideaAxes, ideaById, ideaTheme, MIXED_IDEAS, STARTER_IDEAS, TRAIT_IDEAS, type InsightIdea } from './index';
 
 /** One day already shown: which idea, from the reverse title map. */
 export interface IdeaDay {
@@ -31,6 +33,26 @@ export interface IdeaDay {
 export function eligibleIdeas(leans: readonly ClearLean[]): InsightIdea[] {
   const have = new Set<LineKey>(leans.map((l) => lineKey(l.axis, l.lean)));
   return TRAIT_IDEAS.filter((entry) => entry.keys.length > 0 && entry.keys.every((key) => have.has(key)));
+}
+
+/**
+ * Traits the account has answered on but that sit near the middle, so no lean
+ * is clear (the same margin the leans use). A mixed idea speaks about these.
+ */
+export function mixedAxesFrom(tracks: readonly TraitTrack[]): TraitAxis[] {
+  const out: TraitAxis[] = [];
+  for (const axis of TRAIT_AXES) {
+    const row = trackFor(tracks, axis, 'report');
+    if (!row || row.answerCount < 1 || !Number.isFinite(row.value)) continue;
+    if (Math.abs(row.value - 0.5) < CLEAR_LEAN_MARGIN) out.push(axis);
+  }
+  return out;
+}
+
+/** Mixed ideas for the given traits. */
+export function eligibleMixedIdeas(mixedAxes: readonly TraitAxis[]): InsightIdea[] {
+  const have = new Set<TraitAxis>(mixedAxes);
+  return MIXED_IDEAS.filter((entry) => entry.mixed != null && have.has(entry.mixed));
 }
 
 /**
@@ -56,6 +78,8 @@ export interface IdeaPickInput {
   userId: string;
   ymd: string;
   leans: readonly ClearLean[];
+  /** Traits answered but near the middle (`mixedAxesFrom`). Optional: none means no mixed ideas. */
+  mixedAxes?: readonly TraitAxis[];
   /** Days already shown (unknown titles already dropped), in any order. */
   history: readonly IdeaDay[];
 }
@@ -69,7 +93,7 @@ export interface IdeaPick {
 
 export function pickIdea(input: IdeaPickInput): IdeaPick {
   const { userId, ymd, leans, history } = input;
-  const matched = eligibleIdeas(leans);
+  const matched = [...eligibleIdeas(leans), ...eligibleMixedIdeas(input.mixedAxes ?? [])];
   const pool = matched.length > 0 ? matched : [...STARTER_IDEAS];
   const today = dayNumber(ymd);
   const past = history.filter((day) => dayNumber(day.ymd) < today);
@@ -83,15 +107,14 @@ export function pickIdea(input: IdeaPickInput): IdeaPick {
   const settled = new Set(leans.filter((l) => l.settled).map((l) => l.axis));
   const previous = [...past].sort((a, b) => dayNumber(b.ymd) - dayNumber(a.ymd))[0];
   const previousAxes = new Set<TraitAxis>(
-    previous ? (ideaById(previous.ideaId)?.keys ?? []).map((key) => axisOfKey(key)) : [],
+    previous ? (ideaById(previous.ideaId) ? ideaAxes(ideaById(previous.ideaId)!) : []) : [],
   );
 
   let best: InsightIdea = candidates[0]!;
   let bestScore = -Infinity;
   for (const entry of candidates) {
     let weight = entry.keys.length >= 2 ? PAIR_WEIGHT : 1;
-    for (const key of entry.keys) {
-      const axis = axisOfKey(key);
+    for (const axis of ideaAxes(entry)) {
       if (settled.has(axis)) weight *= SETTLED_WEIGHT;
       if (previousAxes.has(axis)) weight *= YESTERDAY_AXIS_WEIGHT;
     }

@@ -28,6 +28,7 @@ import {
 } from '@/lib/daily-insights';
 import { fullProfileLockedLine, fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
 import { useMeContext } from '@/lib/me-context';
+import { FIRST_READ_STAGE, intakeStage } from '@/lib/questions/intake-stage';
 import { SAGE_COACH_LABEL, SAGE_NOT_A_PERSON } from '@/lib/sage-copy';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import type { TraitTrack } from '@/lib/trait-stability';
@@ -97,6 +98,9 @@ export default function InsightsScreen() {
 
   const ownTracks = tracksOwner === userId;
   const unlocked = ownTracks && isFullProfileDone(tracks, tracksReady);
+  // D22 (A6): after the first 16 answers the focus card opens with an "Early read" line.
+  // Everything else on Insights stays locked until the full profile.
+  const earlyRead = ownTracks && tracksReady && !unlocked && intakeStage(tracks) >= FIRST_READ_STAGE;
   const window = me ? checkWindowFor(me, []) : null;
   // Insights has no Today slot of its own; the missed-check slot lives on Home.
   const cardsVisible = unlocked && dailyInsightsVisible({ slotKind: 'none' });
@@ -140,25 +144,39 @@ export default function InsightsScreen() {
               <SkeletonCard />
             </>
           ) : !unlocked ? (
-            /* New user, no scores yet: one honest line and one way forward. */
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Answer the questions"
-              onPress={() => router.push('/intake-sweep')}
-              testID="insights-locked"
-              style={({ pressed }) => [
-                styles.lockedRow,
-                { borderColor: controlBorderColor(theme) },
-                pressed && styles.pressed,
-              ]}>
-              <View style={styles.flexText}>
-                <ThemedText type="smallBold">Answer the questions</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {fullProfileLockedLine(fullProfileProgress(tracks))} Insights opens once they are done.
-                </ThemedText>
-              </View>
-              <ThemedText themeColor="textSecondary">›</ThemedText>
-            </Pressable>
+            <>
+              {/* After set 1: today's focus with an "Early read" line (D22). */}
+              {earlyRead && userId && window ? (
+                <TodayFocusCard
+                  userId={userId}
+                  tracks={tracks}
+                  todayYmd={window.todayYmd}
+                  todayDay={window.todayDay}
+                  showTryToday={focusTry}
+                  early
+                />
+              ) : null}
+              {/* Not far enough yet, or the rest of Insights: one honest line and one way forward. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Answer the questions"
+                onPress={() => router.push('/intake-sweep')}
+                testID="insights-locked"
+                style={({ pressed }) => [
+                  styles.lockedRow,
+                  { borderColor: controlBorderColor(theme) },
+                  pressed && styles.pressed,
+                ]}>
+                <View style={styles.flexText}>
+                  <ThemedText type="smallBold">Answer the questions</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {fullProfileLockedLine(fullProfileProgress(tracks))}{' '}
+                    {earlyRead ? 'The rest of Insights opens once they are done.' : 'Insights opens once they are done.'}
+                  </ThemedText>
+                </View>
+                <ThemedText themeColor="textSecondary">›</ThemedText>
+              </Pressable>
+            </>
           ) : (
             <>
               {tryTodayVisible && tryToday.pick ? (

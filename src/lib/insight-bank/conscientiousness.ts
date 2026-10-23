@@ -194,4 +194,196 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
       'Notice which unfinished things still matter to you.',
     ],
   }),
+  idea('ftw_conscientiousness_h_07', ['conscientiousness:high'], {
+    focus: [
+      'Before a trip, you tend to pack early and double-check the list.',
+      'You usually have your bag, tickets and plans sorted well before you leave.',
+      'When you travel, you tend to prepare for problems that may never come.',
+    ],
+    why: 'Preparing well means fewer surprises, but extra planning can take time and energy that you might have enjoyed more.',
+    try: [
+      'Drop one item from your next packing list, so you practice trusting that you can buy it if needed.',
+      'Set a time to stop packing and stick to it, so the prep doesn’t take over your evening.',
+    ],
+    watch: [
+      'Notice which prep tasks you do for peace of mind and not because you need them.',
+      'Notice how you feel once the bag is closed.',
+    ],
+  }),
+  idea('ftw_conscientiousness_h_08', ['conscientiousness:high'], {
+    focus: [
+      'When you have a free hour, you tend to look for something useful to do with it.',
+      'You usually find resting harder than finishing a task.',
+      'On a day off, you tend to feel better after you’ve checked a few things off your list.',
+    ],
+    why: 'Getting things done feels good, but a rest that always has to be earned can leave you tired.',
+    try: [
+      'Pick one hour this weekend with no tasks in it, so you practice resting without a reason.',
+      'Put one enjoyable thing on your list, so doing it counts as getting something done.',
+    ],
+    watch: [
+      'Notice when you feel guilty about sitting still.',
+      'Notice how you feel after a day with nothing on the list.',
+    ],
+  }),
+  idea('ftw_conscientiousness_h_09', ['conscientiousness:high'], {
+    focus: [
+      'When a coworker hands in work late or half-done, you tend to feel it more than they do.',
+      'You usually notice when someone else doesn’t follow through, and it bothers you.',
+      'When a friend says they’ll do something and doesn’t, you tend to remember it.',
+    ],
+    why: 'Your own reliability makes it easy to notice gaps in others, but they may not know how much it matters to you.',
+    try: [
+      'Next time someone misses a deadline, ask what got in the way, so you understand before you decide how you feel.',
+      'Tell a coworker or friend what you need from them and by when, so you aren’t relying on guesses.',
+    ],
+    watch: [
+      'Notice when you take on someone else’s unfinished work without being asked.',
+      'Notice how often your own standard is the one others are missing.',
+    ],
+  }),
+  idea('ftw_conscientiousness_h_10', ['conscientiousness:high'], {
+    focus: [
+      'When you spend money, you tend to track it and know where it went.',
+      'You usually keep an eye on your budget and notice small charges.',
+      'When bills come due, you tend to pay them early so nothing slips.',
+    ],
+    why: 'Watching your money protects you from surprises, but checking it all the time can make small purchases feel heavy.',
+    try: [
+      'Set a small amount each month for spending without tracking, so some choices stay easy.',
+      'Check your accounts on one set day each week, so you aren’t checking all week.',
+    ],
+    watch: [
+      'Notice how you feel after a small, unplanned purchase.',
+      'Notice how often you check your balance in a week.',
+    ],
+  }),
+  idea('ftw_conscientiousness_h_11', ['conscientiousness:high'], {
+    focus: [
+      'When guests are coming over, you tend to clean and prepare more than anyone expects.',
+      'You usually put in a lot of work before hosting, so the home is just right.',
+      'Before friends visit, you tend to tidy up even when they say not to bother.',
+    ],
+    why: 'Your effort makes people feel welcome, but being worn out before they arrive can make it hard to enjoy the visit.',
+    try: [
+      'Pick two things to do before guests come and skip the rest, so you have energy left for them.',
+      'Ask a friend to bring something next time you host, so you share the work.',
+    ],
+    watch: [
+      'Notice whether guests care about the things you spend time on.',
+      'Notice how much energy you have when they arrive.',
+    ],
+  }),
+  idea('ftw_conscientiousness_h_12', ['conscientiousness:high'], {
+    focus: [
+      'When you start a task, you tend to want to finish it in one sitting.',
+      'You usually find it hard to leave a project half-done at the end of the day.',
+      'When you’re in the middle of something, you tend to keep going past the time you planned.',
+    ],
+    why: 'Finishing in one go keeps your work tidy, but staying late can cut into rest and time with other people.',
+    try: [
+      'Write the next step at the end of your workday, so stopping feels safe.',
+      'Set an alarm for when you plan to stop, so the evening stays yours.',
+    ],
+    watch: [
+      'Notice what time you actually stop on days you plan to stop early.',
+      'Notice whether a half-done task looks worse at night than it does in the morning.',
+    ],
+  }),
+  idea('ftw_conscientiousness_l_07', ['conscientiousness:low'], {
+    focus: [
+      'When a deadline is far away, you tend to put it off until the pressure builds.',
+      'You usually do your best focus in the last stretch before something is due.',
+      'When you have lots of time, you tend to leave the work until it gets close.',
+    ],
+    why: 'Pressure can help you focus, but starting late leaves no room for surprises and can feel stressful at the end.',
+    try: [
+      'Do the first ten minutes of a task today that’s due next week, so it already has a start.',
+      'Put a smaller deadline on the calendar halfway to the real one, so the work spreads out.',
+    ],
+    watch: [
+      'Notice how you feel in the day or two before a deadline.',
+      'Notice what makes a task easier to start.',
+    ],
+  }),
+  idea('ftw_conscientiousness_l_08', ['conscientiousness:low'], {
+    focus: [
+      'When you plan to meet someone, you tend to leave later than you meant to.',
+      'You usually underestimate how long it takes to get ready or get there.',
+      'When you set a time, you tend to arrive close to it or a few minutes after.',
+    ],
+    why: 'Fitting a lot into your day shows you enjoy it, but running late can make the people waiting feel less important.',
+    try: [
+      'Add ten minutes to how long you think it takes to get somewhere today, so you arrive on time.',
+      'Text a friend when you leave, so they know when to expect you.',
+    ],
+    watch: [
+      'Notice what you do in the last ten minutes before you leave.',
+      'Notice how people react when you arrive a bit late.',
+    ],
+  }),
+  idea('ftw_conscientiousness_l_09', ['conscientiousness:low'], {
+    focus: [
+      'When you finish eating or cooking, you tend to leave the dishes for later.',
+      'You usually leave small chores undone until they start to bother you.',
+      'When your space gets messy, you tend to clean it all at once instead of a little each day.',
+    ],
+    why: 'Leaving small jobs saves effort in the moment, but they can pile into one big job that feels harder for you to start.',
+    try: [
+      'Do one small chore right now, like a single plate or a drawer, so the pile stops growing.',
+      'Do one chore during something you already do, like a call, so it gets done without extra effort.',
+    ],
+    watch: [
+      'Notice which chores you leave first and why.',
+      'Notice how you feel after you clear a small space.',
+    ],
+  }),
+  idea('ftw_conscientiousness_l_10', ['conscientiousness:low'], {
+    focus: [
+      'When bills, appointments or forms need doing, you tend to wait until the last day.',
+      'You usually leave boring paperwork until you have to deal with it.',
+      'When a reminder pops up, you tend to dismiss it and plan to do it later.',
+    ],
+    why: 'Putting off boring tasks keeps your day lighter now, but missed dates can cost you money or time later.',
+    try: [
+      'Book one appointment or pay one bill right now, so it’s off your mind.',
+      'Set a reminder for a time you’re free instead of during work, so you can act on it.',
+    ],
+    watch: [
+      'Notice which tasks you dismiss the most.',
+      'Notice how it feels when something small is finally done.',
+    ],
+  }),
+  idea('ftw_conscientiousness_l_11', ['conscientiousness:low'], {
+    focus: [
+      'When someone asks you to follow a detailed process, you tend to skip steps that seem small.',
+      'You usually get the main part right and miss the small details.',
+      'When you fill out something long, you tend to rush the last part.',
+    ],
+    why: 'Moving fast gets the main work done, but small missed details can mean you go back to fix them later.',
+    try: [
+      'Before you hand something in, read it once more from the end, so you catch missed details.',
+      'Ask a coworker to look over one piece of your work, so a second pair of eyes catches the little things.',
+    ],
+    watch: [
+      'Notice which kinds of details you miss most often.',
+      'Notice how much time you spend fixing small errors later.',
+    ],
+  }),
+  idea('ftw_conscientiousness_l_12', ['conscientiousness:low'], {
+    focus: [
+      'When you make a promise to a friend, you mean it but might forget about it a week later.',
+      'You usually say yes with good intentions, then lose track of the detail.',
+      'When a friend asks for a favor, you tend to agree and then the day gets away from you.',
+    ],
+    why: 'Your yes is sincere, but forgetting can leave a friend feeling like it didn’t matter to you.',
+    try: [
+      'Put every yes in your phone with a date right away, so you don’t have to remember it.',
+      'Text a friend a short update on something you promised, so they know you haven’t forgotten.',
+    ],
+    watch: [
+      'Notice which promises you remember and which slip.',
+      'Notice how a friend reacts when you follow up on something small.',
+    ],
+  }),
 ];

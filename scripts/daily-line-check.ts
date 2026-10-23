@@ -337,7 +337,7 @@ assert.match(home, /<TodayPickCard/);
 // It moved to the Today's focus card on Insights (2026-10-14).
 assert.match(
   read('src/components/insights/today-focus-card.tsx'),
-  /pickIdea\(\{ userId, ymd: todayYmd, leans: clearLeans\(tracks\), history \}\)/,
+  /pickIdea\(\{ userId, ymd: todayYmd, leans: clearLeans\(tracks\), mixedAxes: mixedAxesFrom\(tracks\), history \}\)/,
 );
 ok('Home renders the daily line; the focus card picks the stored insight from the same clear leans');
 

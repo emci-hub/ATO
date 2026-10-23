@@ -22,6 +22,7 @@ import type { ClearLean } from '../src/lib/daily-line/pick';
 import {
   ALL_IDEAS,
   INSIGHT_BANK_COPY_REVIEWED,
+  MIXED_IDEAS,
   STARTER_IDEAS,
   STARTER_TAG_LABEL,
   TRAIT_IDEAS,
@@ -33,7 +34,16 @@ import {
   RETIRED_FOCUS_TEXT,
   themeTags,
 } from '../src/lib/insight-bank';
-import { draftFromPick, pickIdea, repeatWindowDays, type IdeaDay } from '../src/lib/insight-bank/pick';
+import {
+  draftFromPick,
+  eligibleMixedIdeas,
+  mixedAxesFrom,
+  pickIdea,
+  repeatWindowDays,
+  type IdeaDay,
+} from '../src/lib/insight-bank/pick';
+import { isShareableLean } from '../src/lib/legends64/identity';
+import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '../src/lib/traits';
 import { tipRuleViolation } from '../src/lib/voice/clear-voice';
 
@@ -58,28 +68,42 @@ for (const axis of TRAIT_AXES) {
   for (const lean of ['high', 'low'] as const) {
     const prefix = `ftw_${axis}_${lean === 'high' ? 'h' : 'l'}_`;
     const own = TRAIT_IDEAS.filter((entry) => entry.id.startsWith(prefix));
-    assert.equal(own.length, 6, `${axis}:${lean} has ${own.length} ideas, needs 6`);
+    assert.equal(own.length, 12, `${axis}:${lean} has ${own.length} ideas, needs 12`);
     for (const entry of own) {
       assert.equal(entry.keys[0], `${axis}:${lean}`, `${entry.id}: the first key must be its own lean`);
     }
   }
+  // A6 (2026-10-23): three mixed ideas per trait, for someone near the middle.
+  const mixedOwn = MIXED_IDEAS.filter((entry) => entry.id.startsWith(`ftw_${axis}_m_`));
+  assert.equal(mixedOwn.length, 3, `${axis} has ${mixedOwn.length} mixed ideas, needs 3`);
+  for (const entry of mixedOwn) {
+    assert.equal(entry.mixed, axis, `${entry.id}: mixed names its own trait`);
+    assert.equal(entry.keys.length, 0, `${entry.id}: a mixed idea has no lean key`);
+  }
 }
-assert.equal(TRAIT_IDEAS.length, 192);
-ok('192 trait ideas (6 per trait lean) and 16 starters');
+assert.equal(TRAIT_IDEAS.length, 384);
+assert.equal(MIXED_IDEAS.length, 48);
+assert.equal(ALL_IDEAS.length, 384 + 48 + 16);
+ok('384 trait ideas (12 per trait lean, the 6 from before untouched), 48 mixed ideas (3 per trait) and 16 starters');
+// The first six per lean are the pre-A6 ideas: their ids and focus wordings are history keys and never change.
+for (const id of ['ftw_openness_h_01', 'ftw_playfulness_l_06', 'ftw_extraversion_l_06']) {
+  assert.ok(TRAIT_IDEAS.some((entry) => entry.id === id), `${id} still exists`);
+}
 
 // --- ids --------------------------------------------------------------------
 const ids = new Set<string>();
 for (const entry of ALL_IDEAS) {
   assert.ok(!ids.has(entry.id), `duplicate id ${entry.id}`);
   ids.add(entry.id);
-  assert.match(entry.id, /^ftw_([a-z_]+_[hl]|starter)_\d{2}$/, `${entry.id}: id shape`);
+  assert.match(entry.id, /^ftw_([a-z_]+_[hlm]|starter)_\d{2}$/, `${entry.id}: id shape`);
   assert.ok(entry.keys.length <= 2, `${entry.id}: at most two keys`);
   if (entry.keys.length === 2) {
     assert.notEqual(entry.keys[0]!.split(':')[0], entry.keys[1]!.split(':')[0], `${entry.id}: a pair is two traits`);
   }
   if (entry.id.startsWith('ftw_starter_')) assert.equal(entry.keys.length, 0, `${entry.id}: a starter has no key`);
+  if (entry.id.startsWith('ftw_starter_')) assert.equal(entry.mixed, undefined, `${entry.id}: a starter is not mixed`);
 }
-ok('ids are unique and stable-shaped (ftw_<axis>_<h|l>_<nn>, ftw_starter_<nn>)');
+ok('ids are unique and stable-shaped (ftw_<axis>_<h|l|m>_<nn>, ftw_starter_<nn>)');
 
 // --- copy rules ---------------------------------------------------------------
 const failures: string[] = [];
@@ -227,6 +251,53 @@ const back = pickIdea({
 });
 if (back.idea.id === target) assert.equal(back.focusIndex, (a.focusIndex + 1) % 3);
 ok('focus variant = (fnv1a(user|idea) + times shown) % 3');
+
+// Mixed ideas (A6): traits answered but near the middle get their own ideas.
+function track(axis: TraitAxis, value: number, answerCount = 1): TraitTrack {
+  return { axis, track: 'report', value, stability: 0, answerCount, lastTouched: '2026-10-23', lastDepthAt: null };
+}
+const midTracks: TraitTrack[] = TRAIT_AXES.map((axis) => track(axis, 0.5));
+assert.deepEqual(mixedAxesFrom(midTracks), [...TRAIT_AXES], 'every answered trait at the middle is mixed');
+assert.deepEqual(mixedAxesFrom([track('openness', 0.8), track('playfulness', 0.45)]), ['playfulness'], 'a clear lean is not mixed');
+assert.deepEqual(mixedAxesFrom([track('openness', 0.5, 0)]), [], 'an unanswered trait is not mixed');
+assert.equal(eligibleMixedIdeas(['openness']).length, 3);
+assert.ok(eligibleMixedIdeas(['openness']).every((entry) => entry.mixed === 'openness'));
+const mixedPick = pickIdea({ userId: 'u-mid', ymd: '2026-10-23', leans: [], mixedAxes: ['openness', 'steadiness'], history: [] });
+assert.ok(mixedPick.idea.mixed === 'openness' || mixedPick.idea.mixed === 'steadiness', 'no lean but mixed traits → a mixed idea, not a starter');
+assert.equal(pickIdea({ userId: 'u-mid', ymd: '2026-10-23', leans: [], history: [] }).idea.keys.length, 0, 'no lean and no mixed trait → a starter');
+const withBoth = pickIdea({ userId: 'u-both', ymd: '2026-10-23', leans: [lean('openness', 'high')], mixedAxes: ['steadiness'], history: [] });
+assert.ok(withBoth.idea.keys[0] === 'openness:high' || withBoth.idea.mixed === 'steadiness', 'a lean idea or a mixed idea of a mixed trait');
+assert.deepEqual(ideaTags(MIXED_IDEAS.find((e) => e.id === 'ftw_openness_m_01')!), ['Curiosity: Mixed']);
+assert.equal(ideaShareable(MIXED_IDEAS.find((e) => e.id === 'ftw_openness_m_01')!), true, 'a mixed idea on an open topic may leave the app');
+assert.equal(
+  ideaShareable(MIXED_IDEAS.find((e) => e.id === 'ftw_attachment_anxiety_m_01')!),
+  false,
+  'a mixed idea follows its topic: the worry topic never reaches the lock screen, widget or share image',
+);
+for (const entry of MIXED_IDEAS) {
+  const axis = entry.mixed!;
+  assert.equal(ideaShareable(entry), isShareableLean(axis, 'high') && isShareableLean(axis, 'low'), `${entry.id}: shareable only if both sides are`);
+}
+// A person with ONE clear lean now has 11 ideas to cycle (the 12th is a pair idea that needs a second lean), not 5.
+const oneLean = pickIdea({ userId: 'u-one', ymd: '2026-10-23', leans: [lean('openness', 'high')], history: [] });
+assert.equal(TRAIT_IDEAS.filter((e) => e.keys.every((k) => k === 'openness:high')).length, 11);
+assert.ok(oneLean.idea.keys.length === 1);
+ok('mixed ideas: mixedAxesFrom uses the lean margin, a near-middle trait gets its mixed ideas, a single lean has 11 ideas');
+
+// --- early read after set 1 (D22, A6) -----------------------------------------------
+const insightsScreen = read('src/app/(tabs)/insights.tsx');
+assert.match(insightsScreen, /intakeStage\(tracks\) >= FIRST_READ_STAGE/, 'the early read opens at set 1');
+assert.match(insightsScreen, /earlyRead && userId && window/, 'the focus card shows when earlyRead');
+assert.match(insightsScreen, /\bearly\b\s*\/>/, 'the early card is told it is early');
+assert.doesNotMatch(
+  insightsScreen.slice(insightsScreen.indexOf('!unlocked ?'), insightsScreen.indexOf(') : (', insightsScreen.indexOf('!unlocked ?'))),
+  /TryTodayCard|SuperpowerCard|ConflictStyleCard|InsightsStoryCard/,
+  'before the full profile only the focus card opens; Try, Story, Superpower and How you argue stay locked',
+);
+const focusCard = read('src/components/insights/today-focus-card.tsx');
+assert.match(focusCard, /INSIGHT_EARLY_READ_COPY = 'Early read: based on your first 16 answers\. It gets more accurate as you answer more\.'/);
+assert.match(focusCard, /mixedAxes: mixedAxesFrom\(tracks\)/, 'the focus card gives the picker the near-middle traits');
+ok('after set 1 Insights opens the focus card with an "Early read" line; the rest stays locked until the full profile');
 
 // --- copy-review flag: doc only, never on screen (emci 2026-10-07) ------------------
 assert.equal(INSIGHT_BANK_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');

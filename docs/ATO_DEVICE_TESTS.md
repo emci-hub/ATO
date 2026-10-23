@@ -1214,3 +1214,16 @@ question sets done. Use the dev-test account for Start fresh: it wipes the trait
 - [ ] **6** Your cards. -> The list shows the saved cards; "Tap two cards to compare them." Tap two: the newer card shows arrows for traits that moved (or "Nothing moved much between these two.").
 - [ ] **7** (A5) VoiceOver on, You → Delete account. -> It reads "Delete account, button". In the sheet, the X reads "Close, button", and the list says "Everything you saved in ATO, like your answers, profile cards and Legends" (no "saved facts"). Close it without deleting.
 - [ ] **8** (A5) Explore → open a deep dive you already have, and Legends → reveal one. -> Both work as before (no model call comes from the phone any more; the server writes the cards).
+
+## Box 82 — More ideas per lean, mixed ideas, and the early read after 16 answers (roadmap v2 step A6, 2026-10-23)
+
+About 8 min. Needs the A6 OTA (restart the app twice). Use a **new throwaway account of your own** (sign up with a spare email): the Dev Hub's Jump stages are hidden in the public build, so
+you answer the first set of 16 for real.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** New account, first set of 16 answered (not the other two sets): Insights tab. -> Today's focus card is open (a "Load insight" card) and, once loaded, shows the line "Early read: based on your first 16 answers. It gets more accurate as you answer more." Below it the "Answer the questions" row says "The rest of Insights opens once they are done." Try this today, the Story, Superpower and How you argue are NOT shown yet.
+- [ ] **2** Tap "Load insight" after the first 16. -> A focus, why and watch for you appear with the tag chips (a trait and its side, or "General", or "<trait>: Mixed"). No error.
+- [ ] **3** Before that, on the same account with fewer than 16 answered (or right after sign-up). -> Insights still shows only "Answer the questions" with the locked line (nothing opens early).
+- [ ] **4** Answer the second and third sets (all 48), then Insights. -> The "Early read" line is gone; Try this today, the Story, Superpower and How you argue are back.
+- [ ] **5** Load insight on a few different days or accounts. -> Some focus lines you have not seen before (the bank is now twice as big); a tag reading "<trait>: Mixed" means that trait sits near the middle for you. Read them: do any feel wrong, harsh or unclear? Note the id from `docs/insight-bank-review.md` (A6 additions) for anything you want changed.
