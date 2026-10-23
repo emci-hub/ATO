@@ -192,7 +192,9 @@ export function CategoryDeepDiveCard({
                     ? DEEP_DIVE_USED
                     : outcome.reason === 'consent'
                       ? DEEP_DIVE_AI_OFF
-                      : DEEP_DIVE_FAILED,
+                      : outcome.reason === 'missing'
+                        ? DEEP_DIVE_UNAVAILABLE
+                        : DEEP_DIVE_FAILED,
           );
           return;
         }

@@ -135,7 +135,7 @@ function ensureHall(
  * Pick a hall → three "???" frames (no clue) → reveal one a day (plus one bonus
  * when a new trait side settles). Nothing here spends on its own: the frames
  * are picked on the phone with no AI (`pick.ts`), and the one model call runs
- * only on a reveal tap (`writeLegendStory`, claimed on the server first).
+ * only on a reveal tap (`revealLegendStory` → the `ai-library` function, claimed on the server first).
  * Opening a met legend is free — the story was saved.
  */
 export default function LegendsScreen() {

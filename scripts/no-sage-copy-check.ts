@@ -75,8 +75,8 @@ ok('scanner finds literals, JSX text and templates; skips comments, imports and 
  * name so nothing else can hide here. Renaming them is in docs/sage-cleanup.md:
  *  - the voice reference docs fed to prompts (generated / framing notes);
  *  - (the two "Write as Sage" prompts that used to be exempted here, in sage-story.ts and
- *    story-card.ts, were removed in roadmap A5: there are no exemptions left, and the server bundle
- *    carries none either — check:ai-library pins that.)
+ *    story-card.ts, were removed in roadmap A5: no server-bundle exemptions are left, and the server
+ *    bundle carries none either — check:ai-library pins that. Only the two prompt-only files above stay skipped.)
  */
 export const PROMPT_ONLY_FILES: readonly string[] = [
   'src/lib/voice/content.generated.ts',

@@ -135,7 +135,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 ## `scripts`
 
 `*-check.ts` — one static/pure-logic assertion file per feature (`npm run check:<name>`).
-(`live-ai.ts` and the live AI checks `card-live` / `talk-live` / `style-live` were removed in A5 with the `ai-generate` client path.)
+(`live-ai.ts` and the live `style-live` check were removed in A5 with the `ai-generate` client path; `card-live` and `talk-live` were already gone.)
 `ota-gate.ts` runs typecheck + lint + all offline checks; `ota-publish.ts` wraps `eas update`
 behind it; `release-mode-check.ts` blocks production builds while `PRE_LAUNCH_DEV` is true.
 `pixellab-watch.ts` (`npm run pixellab:watch`, network, not in the gate) diffs PixelLab's public docs against

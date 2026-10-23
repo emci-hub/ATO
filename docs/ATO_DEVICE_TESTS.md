@@ -1209,8 +1209,8 @@ question sets done. Use the dev-test account for Start fresh: it wipes the trait
 - [ ] **1** Explore → Questions (all sets done). -> "All 25 sets done" style header, then one row per trait with its leaning and "Change answers · free".
 - [ ] **2** Tap "Change answers" on one trait, tap a different option. -> It asks "Tap again: change to “…”"; tap again. The row says "N answer changed this visit. Undo works until you leave this screen."
 - [ ] **3** Tap "Undo". -> It asks "Tap again to undo all of them"; tap again. The answer is back to "· your answer" on the original option.
-- [ ] **4** Leave the screen and come back. -> The Undo row is gone (it only works inside one visit), but a question we retired shows "We retired this question. Your answer stays as you gave it."
+- [ ] **4** Leave the screen and come back. -> The Undo row is gone (it only works inside one visit). (Only if this account answered a question we later retired: open that trait's Change answers and it shows "We retired this question. Your answer stays as you gave it.")
 - [ ] **5** Start fresh: pick **Keep my cards**, press and HOLD "Hold to start fresh" for about 2.5 seconds. -> A quick tap does nothing; holding wipes the 16 traits, keeps your tokens and account, and your old profile is saved as a card first.
-- [ ] **6** Your cards. -> The list shows the saved cards; "Tap two cards to compare them." Tap two: the newer card shows arrows for traits that moved (or "nothing changed").
+- [ ] **6** Your cards. -> The list shows the saved cards; "Tap two cards to compare them." Tap two: the newer card shows arrows for traits that moved (or "Nothing moved much between these two.").
 - [ ] **7** (A5) VoiceOver on, You → Delete account. -> It reads "Delete account, button". In the sheet, the X reads "Close, button", and the list says "Everything you saved in ATO, like your answers, profile cards and Legends" (no "saved facts"). Close it without deleting.
 - [ ] **8** (A5) Explore → open a deep dive you already have, and Legends → reveal one. -> Both work as before (no model call comes from the phone any more; the server writes the cards).

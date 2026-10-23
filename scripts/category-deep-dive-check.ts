@@ -293,7 +293,9 @@ assert.doesNotMatch(card, /generateText\(/, 'the card never calls the model dire
 // missing) was removed in roadmap A5: there is no model call on the phone at all.
 assert.ok(card.includes('const open = useCallback'), 'the button runs open()');
 assert.doesNotMatch(card, /writeOld|writeCategoryDeepDive|category-deep-dive\/generate/, 'the old one-person path is gone');
-assert.doesNotMatch(card, /outcome\.reason === 'missing'/, 'no special branch for a missing wave93');
+// A missing server (wave93 not live) is only a note, never a fallback call: it maps to the "not switched on yet" line.
+assert.match(card, /outcome\.reason === 'missing'\s*\? DEEP_DIVE_UNAVAILABLE/, 'a missing server says deep dives are not switched on yet');
+assert.doesNotMatch(card, /outcome\.reason === 'missing'\) \{/, 'no fallback branch for a missing server');
 assert.match(card, /onPress=\{\(\) => void open\('library'\)\}/, 'the free library card is a tap');
 assert.match(card, /onPress=\{\(\) => void open\('new'\)\}/, 'the brand-new card is a tap');
 assert.match(card, /if \(!def \|\| writingRef\.current \|\| leans\.length === 0\) return;/, 'a double tap does nothing');
