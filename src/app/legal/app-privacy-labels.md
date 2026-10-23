@@ -40,7 +40,7 @@ NSPrivacyCollectedDataTypeDeviceID
 
 ## Declared Not Collected
 
-Health, Fitness, Location (precise or coarse), Photos or Videos (the app has no camera feature today; the Camera permission text in `app.json` is left over from an earlier QR-scan plan, see master plan Step 13), Contacts, Browsing History, Search History, Purchases, Advertising Data, Sensitive Info, Payment Info, Phone Number, Audio.
+Health, Fitness, Location (precise or coarse), Photos or Videos (the app has no camera feature, and the camera plugin and permission were removed in the 1.2 build), Contacts, Browsing History, Search History, Purchases, Advertising Data, Sensitive Info, Payment Info, Phone Number, Audio.
 
 Timezone is an IANA string on `me` for the local day — not GPS, so not Location.
 

@@ -42,13 +42,13 @@ ok('wired as check:circle-chat');
   assert.equal(pkg.dependencies['react-native-libsodium'], '1.7.0', 'libsodium pinned exactly');
   assert.equal(pkg.allowScripts?.['react-native-libsodium@1.7.0'], true, 'its unpack script is allowed (the native build needs it)');
   const app = JSON.parse(read('app.json')) as { expo: { version: string; runtimeVersion: string; plugins: unknown[]; ios: { infoPlist?: Record<string, unknown> } } };
-  assert.equal(app.expo.runtimeVersion, '1.1.0', 'new native module = new runtime: 1.0 phones never get chat code over OTA');
-  assert.equal(app.expo.version, '1.1.0');
+  assert.equal(app.expo.runtimeVersion, '1.2.0', '1.2 build (widget labels, camera plugin removed) = new runtime: 1.1 phones never get 1.2 native-dependent code over OTA');
+  assert.equal(app.expo.version, '1.2.0');
   assert.ok(app.expo.plugins.includes('react-native-libsodium'), 'config plugin listed');
   // 2026-10-21: `true` with no compliance code was rejected by Apple (90592). EAS's own prompt ("only standard/exempt
   // encryption?", answered yes by emci) wrote `false`; US + Canada only, legal read still open (D12, app-store-pack §9).
   assert.equal(app.expo.ios.infoPlist?.ITSAppUsesNonExemptEncryption, false, 'exempt-from-documentation answer (see app-store-pack §9 update)');
-  ok('1.1 build: libsodium 1.7.0 + allowed script, runtime 1.1.0, plugin, ITSAppUsesNonExemptEncryption = false');
+  ok('1.2 build: libsodium 1.7.0 + allowed script, runtime 1.2.0, plugin, ITSAppUsesNonExemptEncryption = false');
 }
 
 // --- no plain text leaves the phone ----------------------------------------------------------------
