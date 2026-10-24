@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { buildStoryLibraryDraftPrompt } from '../src/lib/story-library/draft-prompt';
+import { buildCopyReviewPrompt, parseCopyReviewResponse, reviewBeforeQueue } from '../src/lib/voice/copy-review-prompt';
 import { TRAIT_AXES, TRAIT_POLE_LINES } from '../src/lib/traits';
 import { metaphorSymbolIssues, openerKey, openerOveruse, sceneReuse, SHAPE_CAP, shapeStats, textIssues } from '../src/lib/voice/player-copy';
 import { playerCopyIssues } from '../src/lib/voice/player-copy-scan';
@@ -63,6 +64,19 @@ assert.match(prompt, /Player-facing voice/);
 assert.match(prompt, /Meaning first/);
 assert.match(prompt, /do not invent/i);
 assert.throws(() => buildStoryLibraryDraftPrompt('not the guide'));
+assert.match(prompt, /approval queue/);
+
+const sampleLine = [{ id: 'sample', file: 'src/lib/story-library/lines.ts', text: 'The answers put two things together for you.' }];
+const reviewPrompt = reviewBeforeQueue(guide, sampleLine);
+assert.equal(reviewPrompt, buildCopyReviewPrompt(guide, sampleLine));
+assert.match(reviewPrompt, /Meaning first/);
+assert.match(reviewPrompt, /the answers/i);
+assert.throws(() => buildCopyReviewPrompt('not the guide', []));
+const parsed = parseCopyReviewResponse(
+  '{"fixes":[{"id":"sample","new":"You like trying new things.","reason":"Says who and what."}]}',
+);
+assert.equal(parsed[0]?.newText, 'You like trying new things.');
+assert.equal(parsed[0]?.reason, 'Says who and what.');
 
 const issues = playerCopyIssues();
 assert.equal(

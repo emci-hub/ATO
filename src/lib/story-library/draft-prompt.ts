@@ -1,8 +1,10 @@
 /**
  * Offline draft prompt for Story Library entries. The caller passes the
  * text of docs/voice-guide.md. The model sees the guide and the slot, never
- * a person's answers, name, or id. People still approve. A draft that fails
- * `reviewLibraryVoice` does not enter the approval queue.
+ * a person's answers, name, or id. People still approve. Before a suggestion
+ * enters the approval queue, `reviewBeforeQueue` reviews it with this guide.
+ * `reviewLibraryVoice` still runs after any rewrite. A draft that fails it
+ * does not enter the queue.
  */
 export function buildStoryLibraryDraftPrompt(voiceGuide: string): string {
   const guide = voiceGuide.trim();
@@ -13,7 +15,7 @@ export function buildStoryLibraryDraftPrompt(voiceGuide: string): string {
 
 You draft Story Library entries for ATO. You do not write a card about a real person. You do not see anyone's answers, name, or id.
 
-Follow the voice guide above. Meaning first. Say what the line means. Do not invent an event the player did. Do not glue a legend's deed onto the player's week with "when" unless they are actually the same event. Use a legend fact once. Vary the opening so "You'd rather" does not start most lines. A hypothetical hour opens with "Picture an hour with {legend}." Humor is optional. Cut it when it makes the line less accurate. No slang: these lines also render on Legends.
+Follow the voice guide above. Meaning first. A suggestion is reviewed with this guide before it enters the approval queue, and the mechanical checks run after any rewrite. Say what the line means. Do not invent an event the player did. Do not glue a legend's deed onto the player's week with "when" unless they are actually the same event. Use a legend fact once. Vary the opening so "You'd rather" does not start most lines. A hypothetical hour opens with "Picture an hour with {legend}." Humor is optional. Cut it when it makes the line less accurate. No slang: these lines also render on Legends.
 
 Return JSON only. Each entry is one finished line. The only tokens are {Subj}, {subj}, {Name}, {legend}, {deed}, and {answer}. {deed} is a short sourced clause about what that real person did. {answer} is the player's own option. A flip note is optional, not shown, and must not be an invented opposite scene. Give the line a priority and the conditions that make it eligible (trait, pole, confidence, a specific answer, a legend, recency). A broad fallback stays in the bank.
 
