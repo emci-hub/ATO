@@ -1,51 +1,51 @@
 # Frozen style guide
 
+Player-facing wording follows `docs/voice-guide.md`. This file is the slot contract on top of that guide. The admin draft prompt loads the voice guide, then these slot rules.
+
 This is the guide the admin authoring tool must send, unchanged, with every offline AI draft. A model that does not follow it does not get a save. People still approve. The model never publishes.
 
 The guide sits on top of `docs/copy-review-rules.md`. If this file and that policy disagree, the policy wins and this file gets a new version. Do not add exceptions in a prompt.
 
-Version: `style-storylib-1`. Bump this version when the rules change. Old drafts stay stamped with the version that wrote them.
+Version: `style-storylib-6`. Bump this version when the rules change. Old drafts stay stamped with the version that wrote them.
 
 ## Voice
 
-- Insights and Explore cards use the clear voice (`src/lib/voice/clear-voice.ts`): one concrete situation, plain words, no slang, no "you always".
-- Short Play lines and legend asides use the moment voice (`src/lib/voice/moment-voice.ts`): one recognizable moment, then stop.
-- Adult humor is allowed. A joke has to land. Do not sand it down.
+Meaning first (`docs/voice-guide.md`). Say what the line means. Do not invent the player's history.
+
+- Insights and Explore cards use the clear voice (`src/lib/voice/clear-voice.ts`): plain words, no slang, no "you always". A scene is optional.
+- The generation block in `src/lib/voice/moment-voice.ts` is the same policy. The export name is historical. A story may use a scene. A trait line should not.
+- Adult humor is allowed when it does not weaken accuracy. Cut a joke that does.
 - A weakness is a possibility ("you may", "can") unless the answers already show it. Do not invent a diagnosis. Do not pin a label on the reader.
 - No "you should". A try-this line, when one exists, is a small action with a reason, the way the insight bank already writes `try`.
 - Second person for app copy. A named character only in a legend or a Play line, and that name comes from the approved list in `src/lib/story-v3/names.ts` (Alex, Sam, Jordan, and the rest). Default pronouns are they/them.
 
-## How to fill a slot
+## Whole lines
 
-Write the whole phrase for the frame, not a lonely adjective dropped into a sentence you have not read.
+A Story Library entry is one finished sentence. Do not assemble a verb, an aside, and a closer. Do not fill an "[adjective] [noun]" bank.
 
-- A verb entry stores all four forms. Irregulars are written out (`read` / `reads` / `read` / `reading`). Never rely on adding "-s".
-- A noun says `a`, `an`, `the`, or `none`.
-- A phrase is a finished clause or sentence. It does not contain `you`, `they`, `she`, or `he` unless it uses the tokens `{Subj}`, `{subj}`, `{poss}`, `{be}`, `{have}`.
-- Tone and intensity must be ones the slot already allows. A sharp word does not go in a plain slot.
-- The frame name is the contract. If the backbone says "when the {place} pings", the place is something that can ping.
+- Tokens are only `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{deed}`, and `{answer}`. `{answer}` is the player's own chosen answer, quoted. `{deed}` is a short sourced clause about what the legend did. Put that fact on the match line once. Do not repeat it on the scene, the meaning, or a later match line. Do not use an object as a private code for a trait.
+- A flip note is optional. It is not shown. It does not have to be a scene.
+- Every line has a priority and eligibility (trait pole, confidence tier, a specific answer, a legend, recency). The highest-priority eligible line wins. A broad fallback stays available.
+- Shown line ids are remembered per player. A line does not repeat until every eligible line has been used.
+- Tag questions like ", right?" stay at or under about 1 in 10 lines. A sentence shape may repeat. Do not add a "when" only to change the shape. Vary the opening: one opener on more than about a third of a pool fails. A scene phrase is not required. A hypothetical hour opens with "Picture an hour with {legend}."
 
 ## Few-shot prompt
 
-The admin tool sends this, then the slot list, then up to six already-approved entries for that frame. It asks for entries only. It does not ask for a finished card about a real person.
+The admin tool sends this, then up to six already-approved lines for that slot. It asks for lines only. It does not ask for a finished card about a real person.
 
 ```text
-You draft Story Library entries for ATO. You do not write a card about a real person. You do not see anyone's answers, name, or id.
+You draft Story Library lines for ATO. You do not write a card about a real person. You do not see anyone's answers, name, or id.
 
-Follow style-storylib-1 and the core content policy. Judge meaning, not keywords. Keep adult humor if the sample has it. Do not add a moral.
+Follow docs/voice-guide.md, style-storylib-6, and the core content policy. Judge meaning, not keywords. Humor is optional. Do not add a moral.
 
-Return JSON only. Each entry must copy the slot's pos, form, and frame. Verbs include base, s, ed, and ing. Nouns include an article of a, an, the, or none. Phrases are finished sentences and do not hard-code he, she, or they.
+Return JSON only. Each entry is one finished sentence. Tokens are {Subj}, {subj}, {Name}, {legend}, {deed}, and {answer}. Include priority and the eligibility conditions. A flip note is optional.
 
-Approved examples for frame "react" (the sentence is "{Subj} {verb} when the {place} pings."):
-{"id":"openness-low-pause","pos":"verb","trait":"openness","tier":"low","frame":"react","tone":"calm","intensity":"soft","forms":{"base":"pause","s":"pauses","ed":"paused","ing":"pausing"}}
-{"id":"playfulness-high-laugh","pos":"verb","trait":"playfulness","tier":"high","frame":"react","tone":"bright","intensity":"plain","forms":{"base":"laugh","s":"laughs","ed":"laughed","ing":"laughing"}}
+Approved line:
+{"id":"openness-high-shows-when","slot":"shows","trait":"openness","tier":"high","priority":30,"text":"{Subj} would rather try something new, even when other people stick with what they know.","flip":"Preferring a familiar option would not match this description."}
 
-Approved aside (frame "aside", a full sentence, no pronoun):
-{"id":"openness-low-aside","text":"One look is enough, and the rest can wait."}
+A bad line, which you must not imitate: "The untried option gets the first look." or "She always panics."
 
-A bad entry, which you must not imitate: a verb of "screech" marked sharp in a plain slot, or a phrase that says "She always panics". Sharp is the wrong intensity, and "always" plus a label is a claim the answers did not make.
-
-If you cannot fit the frame, return {"entries":[]} and a one-line reason. Do not force a word in.
+If you cannot write the whole line, return {"entries":[]} and a one-line reason. Do not force a word in.
 ```
 
 The tool then runs the validator. A draft the validator rejects is shown with the failure. It is not saved as approved.

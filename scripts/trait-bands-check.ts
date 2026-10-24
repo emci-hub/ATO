@@ -31,10 +31,10 @@ function read(rel: string): string {
 
 assert.equal(Object.keys(TRAIT_BAND_PHRASES).length, TRAIT_AXES.length);
 assert.equal(TRAIT_BAND_PHRASES.openness.low, 'sticks with what works');
-assert.equal(TRAIT_BAND_PHRASES.openness.high, 'goes for the untried option');
+assert.equal(TRAIT_BAND_PHRASES.openness.high, 'tries something new');
 assert.equal(TRAIT_BAND_PHRASES.conscientiousness.low, 'keeps plans loose');
 assert.equal(TRAIT_BAND_PHRASES.conscientiousness.high, 'sees a plan through');
-assert.equal(TRAIT_BAND_PHRASES.extraversion.low, 'leans toward quiet time');
+assert.equal(TRAIT_BAND_PHRASES.extraversion.low, 'recharges with time alone');
 assert.equal(TRAIT_BAND_PHRASES.extraversion.high, 'leans toward people around');
 assert.equal(TRAIT_BAND_PHRASES.agreeableness.low, 'holds their ground');
 assert.equal(TRAIT_BAND_PHRASES.agreeableness.high, 'goes along to keep it easy');

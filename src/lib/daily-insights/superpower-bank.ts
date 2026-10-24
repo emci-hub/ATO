@@ -29,7 +29,7 @@ export const SUPERPOWER_BANK: readonly SuperpowerLine[] = [
   row('cat_social', 'superpower', 'People charger', 'Being around people fills your tank.', 'Start the group plan nobody else will.'),
   row('cat_social', 'kryptonite', 'Crowd drain', 'Big groups empty your tank fast.', 'Plan your exit before you arrive.'),
   row('cat_communication', 'superpower', 'Kind but clear', 'You can say the hard thing without a fight.', 'Use it once this week, gently.'),
-  row('cat_communication', 'kryptonite', 'Swallowed words', "You'd rather step back than push your view.", 'Write it down first, then say it.'),
+  row('cat_communication', 'kryptonite', 'Swallowed words', 'You step back instead of pushing your view.', 'Write it down first, then say it.'),
   row('cat_levity', 'superpower', 'Mood lifter', 'You find the funny side when rooms get heavy.', 'Save one joke for the worst meeting.'),
   row('cat_levity', 'kryptonite', 'Straight face', "Jokes don't come easy when things get tense.", 'Let someone else be funny. Laugh anyway.'),
   row('cat_resilience', 'superpower', 'Pressure sharpens', 'Deadlines make you better, not worse.', "Take the scary task. You'll enjoy it, weirdly."),

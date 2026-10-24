@@ -19,6 +19,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import type { ClearLean } from '../src/lib/daily-line/pick';
+import { insightCopyIssues } from '../src/lib/voice/player-copy-scan';
 import {
   ALL_IDEAS,
   INSIGHT_BANK_COPY_REVIEWED,
@@ -36,6 +37,7 @@ import {
 import { draftFromPick, pickIdea, repeatWindowDays, type IdeaDay } from '../src/lib/insight-bank/pick';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '../src/lib/traits';
 import { tipRuleViolation } from '../src/lib/voice/clear-voice';
+import { openerOveruse } from '../src/lib/voice/player-copy';
 
 let passed = 0;
 function ok(label: string) {
@@ -106,6 +108,11 @@ for (const entry of ALL_IDEAS) {
 }
 assert.deepEqual(failures, [], `clear-voice violations:\n${failures.join('\n')}`);
 ok('every focus / why / try / watch passes tipRuleViolation, and every focus wording is unique');
+for (const entry of ALL_IDEAS) {
+  const hit = openerOveruse([...entry.focus]);
+  assert.equal(hit, null, hit ? `${entry.id}: opener "${hit.key}" on ${hit.count}/${hit.total}` : entry.id);
+}
+ok('no focus opener is used by more than a third of an idea');
 
 // --- tags -------------------------------------------------------------------
 for (const entry of ALL_IDEAS) {
@@ -271,5 +278,16 @@ assert.match(home, /pickIdea\(/, 'the focus card picks from the bank');
 assert.match(home, /saveInsight\(/, 'the focus card saves through insert_daily_insight');
 assert.doesNotMatch(home, /consentGranted/, 'the stored insight has no AI consent gate');
 ok('nothing on the insight path imports generateText or the generator; the focus card picks and saves without a consent gate');
+
+const voiceIssues = insightCopyIssues();
+assert.equal(
+  voiceIssues.length,
+  0,
+  voiceIssues
+    .slice(0, 8)
+    .map((issue) => `${issue.where}: ${issue.detail}`)
+    .join('\n'),
+);
+ok('insight copy passes the player-facing voice check');
 
 console.log(`\n${passed} insight-bank checks passed`);

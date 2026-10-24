@@ -1,8 +1,8 @@
 /**
  * Dev Hub → AI → Story library (root only, inside the tools branch).
  *
- * Edit the bank and a template, preview the ending, validate on save, then
- * approve. Two taps each. Approve writes the copy the runtime reads.
+ * Edit a whole line, preview the ending, validate on save, then approve.
+ * Two taps each. Approve writes the copy the runtime reads.
  */
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
@@ -16,64 +16,51 @@ import type { LegendPair } from '@/lib/legend-figures/story';
 import { STORY_LIBRARY } from '@/lib/story-library/library';
 import { persistStoryLibraryDevice } from '@/lib/story-library/device-store';
 import { renderLibraryDive, renderLibraryLegend } from '@/lib/story-library/render';
-import type { StoryLibrary, Template, Tier, WordEntry } from '@/lib/story-library/types';
+import type { StoryLibrary, StoryLine, Tier } from '@/lib/story-library/types';
 import { validateLibrary } from '@/lib/story-library/validate';
-import { fill, PRONOUNS } from '@/lib/story-v3/tracery';
+import { reviewLibraryVoice } from '@/lib/story-library/voice-review';
 import { TRAIT_AXES } from '@/lib/traits';
 
 const TIERS: readonly Tier[] = ['low', 'mid', 'high'];
-const PRONOUN_IDS = ['you', 'they', 'she', 'he'] as const;
 
 function cycle<T>(list: readonly T[], current: T, step: number): T {
   const index = list.indexOf(current);
   return list[(index + step + list.length) % list.length]!;
 }
 
-function cloneLibrary(): { templates: Template[]; entries: WordEntry[] } {
-  return {
-    templates: STORY_LIBRARY.templates.map((row) => ({
-      ...row,
-      slots: row.slots.map((spec) => ({ ...spec, tones: [...spec.tones], intensities: spec.intensities ? [...spec.intensities] : undefined })),
-      endings: row.endings.map((ending) => ({ ...ending, when: { ...ending.when } })),
-    })),
-    entries: STORY_LIBRARY.entries.map((entry) => ({ ...entry, forms: entry.forms ? { ...entry.forms } : undefined })),
-  };
+function cloneLines(): StoryLine[] {
+  return STORY_LIBRARY.lines.map((line) => ({ ...line }));
 }
 
 export function StoryLibraryDev() {
   const theme = useTheme();
   const { devAccess } = useMeContext();
-  const seeded = useRef(cloneLibrary());
-  const [templates, setTemplates] = useState(seeded.current.templates);
-  const [entries, setEntries] = useState(seeded.current.entries);
-  const [templateId, setTemplateId] = useState(templates[0]?.id ?? 'dive-means');
-  const [entryId, setEntryId] = useState(entries[0]?.id ?? '');
+  const seeded = useRef(cloneLines());
+  const [lines, setLines] = useState(seeded.current);
+  const [lineId, setLineId] = useState(lines[0]?.id ?? '');
   const [trait, setTrait] = useState<(typeof TRAIT_AXES)[number]>('openness');
-  const [tier, setTier] = useState<Tier>('mid');
-  const [pronounId, setPronounId] = useState<(typeof PRONOUN_IDS)[number]>('you');
+  const [tier, setTier] = useState<Tier>('high');
   const [note, setNote] = useState('Save checks this copy. Approve writes it into the library the next render reads.');
   const [issues, setIssues] = useState<string[]>([]);
   const [armed, setArmed] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const template = templates.find((row) => row.id === templateId) ?? templates[0];
-  const entry = entries.find((row) => row.id === entryId) ?? entries[0];
+  const line = lines.find((row) => row.id === lineId) ?? lines[0];
 
   const preview = useMemo(() => {
-    if (!template) return null;
-    return fill(
-      template,
+    const library: StoryLibrary = { version: STORY_LIBRARY.version, templates: [], entries: [], lines };
+    return renderLibraryDive(
       {
-        name: 'Alex',
-        pronoun: PRONOUNS[pronounId],
-        dominant: { trait, tier },
-        secondary: { trait: trait === 'playfulness' ? 'openness' : 'playfulness', tier: 'high' },
+        categoryId: 'cat_openness',
+        leans: [
+          { axis: trait, lean: tier === 'low' ? 'low' : 'high', pct: tier === 'mid' ? 52 : 82, middle: tier === 'mid' },
+          { axis: trait === 'playfulness' ? 'openness' : 'playfulness', lean: 'high', pct: 78 },
+        ],
+        seed: `admin|${trait}|${tier}`,
       },
-      entries,
-      `admin|${template.id}|${trait}|${tier}|${pronounId}`,
-      { tokens: template.kind === 'legend' ? { legend: 'Marie Curie' } : undefined },
+      library,
     );
-  }, [template, entries, trait, tier, pronounId]);
+  }, [lines, trait, tier]);
 
   const confirm = (id: string) => {
     if (timer.current) clearTimeout(timer.current);
@@ -88,42 +75,47 @@ export function StoryLibraryDev() {
 
   const save = () => {
     if (!confirm('save')) return;
-    const library: StoryLibrary = { version: STORY_LIBRARY.version, templates, entries };
+    const library: StoryLibrary = { version: STORY_LIBRARY.version, templates: [], entries: [], lines };
+    const voice = reviewLibraryVoice(library);
     const report = validateLibrary(library, { requireApproved: false });
-    if (report.failures.length > 0) {
-      setIssues(report.failures.slice(0, 8).map((row) => `${row.templateId} ${row.trait} ${row.tier} ${row.pronoun}: ${row.detail}`));
-      setNote(`Not saved. ${report.failures.length} problem${report.failures.length === 1 ? '' : 's'} in ${report.renders} renders.`);
+    const failures = [...voice, ...report.failures];
+    if (failures.length > 0) {
+      setIssues(failures.slice(0, 8).map((row) => `${row.templateId} ${row.trait} ${row.tier} ${row.pronoun}: ${row.detail}`));
+      setNote(`Not saved. ${failures.length} problem${failures.length === 1 ? '' : 's'} before a draft can be validated.`);
       return;
     }
-    setTemplates((rows) => rows.map((row) => (row.status === 'draft' ? { ...row, status: 'validated' } : row)));
-    setEntries((rows) => rows.map((row) => (row.status === 'draft' ? { ...row, status: 'validated' } : row)));
+    setLines((rows) => rows.map((row) => (row.status === 'draft' ? { ...row, status: 'validated' } : row)));
     setIssues([]);
-    setNote(`Saved. ${report.renders} renders passed. Draft rows are now validated.`);
+    setNote(`Saved. ${report.renders} checks passed. Draft rows are now validated.`);
   };
 
   const approve = () => {
-    if (templates.some((row) => row.status === 'draft') || entries.some((row) => row.status === 'draft')) {
+    if (lines.some((row) => row.status === 'draft')) {
       setNote('Validate on save before approve. A draft is still open.');
       return;
     }
     if (!confirm('approve')) return;
-    const nextTemplates = templates.map((row) => ({ ...row, status: 'approved' as const }));
-    const nextEntries = entries.map((row) => ({ ...row, status: 'approved' as const }));
-    void persistStoryLibraryDevice({ version: STORY_LIBRARY.version, templates: nextTemplates, entries: nextEntries }).then((result) => {
+    const nextLines = lines.map((row) => ({ ...row, status: 'approved' as const }));
+    const voice = reviewLibraryVoice({ version: STORY_LIBRARY.version, templates: [], entries: [], lines: nextLines });
+    if (voice.length > 0) {
+      setIssues(voice.slice(0, 8).map((row) => `${row.templateId} ${row.trait} ${row.tier} ${row.pronoun}: ${row.detail}`));
+      setNote(`Not approved. ${voice.length} voice problem${voice.length === 1 ? '' : 's'} before the queue.`);
+      return;
+    }
+    void persistStoryLibraryDevice({ version: STORY_LIBRARY.version, templates: [], entries: [], lines: nextLines }).then((result) => {
       if (!result.ok) {
         setIssues(result.failures.slice(0, 8).map((row) => `${row.templateId} ${row.trait} ${row.tier} ${row.pronoun}: ${row.detail}`));
-        setNote(`Not approved. ${result.failures.length} problem${result.failures.length === 1 ? '' : 's'} in ${result.renders} renders.`);
+        setNote(`Not approved. ${result.failures.length} problem${result.failures.length === 1 ? '' : 's'} in ${result.renders} checks.`);
         return;
       }
-      setTemplates(nextTemplates);
-      setEntries(nextEntries);
+      setLines(nextLines);
       setIssues([]);
-      setNote(`Approved and saved. ${result.renders} renders passed. The next render reads this copy.`);
+      setNote(`Approved and saved. ${result.renders} checks passed. The next render reads this copy.`);
     });
   };
 
   if (!devAccess.isRoot) return null;
-  if (!template || !entry || !preview) return null;
+  if (!line) return null;
 
   const inputStyle = [styles.input, { color: theme.text, borderColor: theme.border }];
 
@@ -133,51 +125,28 @@ export function StoryLibraryDev() {
         {note}
       </ThemedText>
 
-      <View style={styles.row}>
-        <Cycle label="Template" value={`${template.id} · ${template.status}`} onPrev={() => setTemplateId(cycle(templates, template, -1).id)} onNext={() => setTemplateId(cycle(templates, template, 1).id)} />
-      </View>
+      <Cycle label="Line" value={`${line.id} · ${line.status}`} onPrev={() => setLineId(cycle(lines, line, -1).id)} onNext={() => setLineId(cycle(lines, line, 1).id)} />
       <TextInput
-        value={template.body}
-        onChangeText={(body) => setTemplates((rows) => rows.map((row) => (row.id === template.id ? { ...row, body, status: 'draft' } : row)))}
+        value={line.text}
+        onChangeText={(text) => setLines((rows) => rows.map((row) => (row.id === line.id ? { ...row, text, status: 'draft' } : row)))}
         multiline
         style={inputStyle}
       />
-
-      <Cycle label="Bank" value={entry.id} onPrev={() => setEntryId(cycle(entries, entry, -1).id)} onNext={() => setEntryId(cycle(entries, entry, 1).id)} />
-      {entry.forms ? (
-        (['base', 's', 'ed', 'ing'] as const).map((form) => (
-          <TextInput
-            key={form}
-            value={entry.forms?.[form] ?? ''}
-            onChangeText={(value) =>
-              setEntries((rows) =>
-                rows.map((row) =>
-                  row.id === entry.id && row.forms ? { ...row, status: 'draft', forms: { ...row.forms, [form]: value } } : row,
-                ),
-              )
-            }
-            style={inputStyle}
-          />
-        ))
-      ) : (
-        <TextInput
-          value={entry.text ?? ''}
-          onChangeText={(text) => setEntries((rows) => rows.map((row) => (row.id === entry.id ? { ...row, text, status: 'draft' } : row)))}
-          style={inputStyle}
-        />
-      )}
+      <TextInput
+        value={line.flip}
+        onChangeText={(flip) => setLines((rows) => rows.map((row) => (row.id === line.id ? { ...row, flip, status: 'draft' } : row)))}
+        multiline
+        style={inputStyle}
+      />
 
       <ThemedText type="smallBold">Ending preview</ThemedText>
       <View style={styles.row}>
         <Cycle label="Trait" value={trait} onPrev={() => setTrait(cycle(TRAIT_AXES, trait, -1))} onNext={() => setTrait(cycle(TRAIT_AXES, trait, 1))} />
         <Cycle label="Tier" value={tier} onPrev={() => setTier(cycle(TIERS, tier, -1))} onNext={() => setTier(cycle(TIERS, tier, 1))} />
-        <Cycle label="Pronoun" value={pronounId} onPrev={() => setPronounId(cycle(PRONOUN_IDS, pronounId, -1))} onNext={() => setPronounId(cycle(PRONOUN_IDS, pronounId, 1))} />
       </View>
-      <ThemedText>{preview.text}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Ending {preview.endingId ?? 'none'}
-        {preview.issues.length > 0 ? ` · ${preview.issues.map((issue) => issue.code).join(', ')}` : ''}
-      </ThemedText>
+      <ThemedText>{preview.title}</ThemedText>
+      <ThemedText>{preview.showsUp.map((row) => row.line).join(' ')}</ThemedText>
+      <ThemedText>{preview.whatItMeansForYou}</ThemedText>
 
       <View style={styles.row}>
         <Pressable onPress={save} style={[styles.button, { borderColor: theme.border }]}>
@@ -187,9 +156,9 @@ export function StoryLibraryDev() {
           <ThemedText type="smallBold">{armed === 'approve' ? 'Tap again to approve' : 'Approve'}</ThemedText>
         </Pressable>
       </View>
-      {issues.map((line) => (
-        <ThemedText key={line} type="small" themeColor="textSecondary">
-          {line}
+      {issues.map((issue) => (
+        <ThemedText key={issue} type="small" themeColor="textSecondary">
+          {issue}
         </ThemedText>
       ))}
       <ShippedSample />

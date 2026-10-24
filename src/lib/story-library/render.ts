@@ -1,20 +1,22 @@
 /**
- * Assemble a CategoryDive or a LegendStory from approved library copy.
- * Percents, museum facts, and "where you match" stay hand-worked. This file
- * only fills the words.
+ * Assemble a CategoryDive or a LegendStory from whole approved lines.
+ * Percents, museum facts, and "where you match" stay hand-worked.
  */
 import type { CategoryDive, DiveLean } from '@/lib/category-deep-dive/dive';
 import { DIVE_TOP_LEANS } from '@/lib/category-deep-dive/dive';
 import type { LegendDiffer, LegendPair, LegendStory } from '@/lib/legend-figures/story';
 import { STORY_MAX_PAIRS } from '@/lib/legend-figures/story';
 import type { LegendAngle, LegendFigure } from '@/lib/legend-figures/types';
-import { fill, PRONOUNS } from '@/lib/story-v3/tracery';
-import type { TraitAxis, TraitLean } from '@/lib/traits';
+import { legendById } from '@/lib/legend-figures/roster';
+import { PRONOUNS } from '@/lib/story-v3/tracery';
+import type { TraitAxis } from '@/lib/traits';
 import { TRAIT_BAND_HIGH_CUT, TRAIT_BAND_LOW_CUT } from '@/lib/traits';
+import type { SentenceShape } from '@/lib/voice/player-copy';
 
-import { templateById } from './library';
+import { legendDeed } from './deed';
 import { getStoryLibrary } from './persist';
-import type { Reader, StoryLibrary, Tier } from './types';
+import { pickLine, preferredShape, speak, type PickContext } from './pick';
+import type { LineSlot, Reader, StoryLibrary, StoryLine, Tier } from './types';
 
 const YOU = PRONOUNS.you;
 
@@ -25,79 +27,103 @@ export function tierForDiveLean(lean: Pick<DiveLean, 'lean' | 'pct' | 'middle'>)
 }
 
 /** `strength` is `abs(value - 0.5)` from the story ranker. */
-export function tierForStrength(lean: TraitLean, strength: number): Tier {
+export function tierForStrength(lean: 'high' | 'low', strength: number): Tier {
   if (lean === 'high') return strength >= TRAIT_BAND_HIGH_CUT - 0.5 ? 'high' : 'mid';
   return strength > 0.5 - TRAIT_BAND_LOW_CUT ? 'low' : 'mid';
 }
 
-function reader(trait: string, tier: Tier, secondary?: Reader['secondary']): Reader {
-  return { name: 'You', pronoun: YOU, dominant: { trait, tier }, ...(secondary ? { secondary } : {}) };
+export interface RenderFacts {
+  answer?: string;
+  recent?: boolean;
+  shown?: ReadonlySet<string>;
+  legend?: string;
+  legendId?: string;
+  deed?: string;
 }
 
-function must(id: string, library: StoryLibrary) {
-  const found = templateById(id, library);
-  if (!found) throw new Error(`story library missing ${id}`);
-  return found;
+interface Say {
+  text: (slot: LineSlot, who: { trait: string; tier: Tier }, seed: string, index?: number, also?: { trait: string; tier: Tier }) => string;
+  ids: string[];
 }
 
-function normSentence(text: string): string {
-  return text.trim().toLowerCase().replace(/\s+/g, ' ').replace(/[.!?]+$/, '');
-}
-
-/** One card shares an avoid list, so a later line does not reprint an earlier sentence. */
-function cardSay(library: StoryLibrary) {
-  const avoid = new Set<string>();
-  const avoidText = new Set<string>();
-  return (id: string, who: Reader, seed: string, tokens?: Record<string, string>) => {
-    const result = fill(must(id, library), who, library.entries, seed, {
+function sayWith(library: StoryLibrary, facts: RenderFacts, pronoun = YOU, name = 'You'): Say {
+  const ids: string[] = [];
+  const shown = facts.shown ?? new Set<string>();
+  const text = (slot: LineSlot, who: { trait: string; tier: Tier }, seed: string, index = 0, also?: { trait: string; tier: Tier }) => {
+    const prefer = slot === 'title' || slot === 'legend-title' ? undefined : preferredShape(slot, index);
+    const ctx: PickContext = {
+      slot,
+      trait: who.trait,
+      tier: who.tier,
+      pronoun,
+      name,
+      seed,
+      shown,
+      // A used shape used to knock out the next plain sentence and pull in a
+      // different-shaped line, which is how a false "when" got onto the card.
+      usedShapes: new Set<SentenceShape>(),
+      preferShape: prefer,
+      answer: facts.answer,
+      recent: facts.recent,
+      legend: facts.legend,
+      legendId: facts.legendId,
+      deed: facts.deed,
+      alsoTrait: also?.trait,
+      alsoTier: also?.tier,
       requireApproved: true,
-      tokens,
-      avoid: [...avoid],
-      avoidText: [...avoidText],
-    });
-    for (const picked of Object.values(result.picks)) avoid.add(picked);
-    for (const sentence of result.text.split(/(?<=[.!?])\s+/)) {
-      const norm = normSentence(sentence);
-      if (norm) avoidText.add(norm);
-    }
-    return result.text;
+    };
+    const line = pickLine(library.lines, ctx);
+    if (!line) return '';
+    ids.push(line.id);
+    return speak(line.text, pronoun, name, { legend: facts.legend, answer: facts.answer, deed: facts.deed });
   };
+  return { text, ids };
 }
 
 export function renderLibraryDive(
-  input: { categoryId: string; leans: readonly DiveLean[]; seed: string },
+  input: {
+    categoryId: string;
+    leans: readonly DiveLean[];
+    seed: string;
+    answer?: string;
+    recent?: boolean;
+    shown?: readonly string[];
+  },
   library: StoryLibrary = getStoryLibrary(),
-): CategoryDive {
+): CategoryDive & { lineIds: string[] } {
   const top = [...input.leans].sort((a, b) => b.pct - a.pct).slice(0, DIVE_TOP_LEANS);
   const lead = top[0];
   const second = top[1];
   const dominant = lead ? { trait: lead.axis, tier: tierForDiveLean(lead) } : { trait: 'openness', tier: 'mid' as const };
   const secondary = second ? { trait: second.axis, tier: tierForDiveLean(second) } : undefined;
-  const who = reader(dominant.trait, dominant.tier, secondary);
-  const seed = input.seed;
-  const say = cardSay(library);
-
-  const showsUp = top.map((lean) => ({
+  const say = sayWith(library, {
+    answer: input.answer,
+    recent: input.recent,
+    shown: new Set(input.shown ?? []),
+  });
+  const showsUp = top.map((lean, index) => ({
     axis: lean.axis,
-    line: say('dive-shows', reader(lean.axis, tierForDiveLean(lean)), `${seed}|shows|${lean.axis}`),
+    line: say.text('shows', { trait: lean.axis, tier: tierForDiveLean(lean) }, `${input.seed}|shows|${lean.axis}`, index),
   }));
-
-  const mix = top.length >= 2 ? say('dive-mix', who, `${seed}|mix`) : null;
-  const notice = say('dive-notice', who, `${seed}|notice`);
-  const means = say('dive-means', who, `${seed}|means`);
-  const title = say('dive-title', who, `${seed}|title`);
-  const joke = say('dive-joke', who, `${seed}|joke`);
-
+  const mix =
+    top.length >= 2
+      ? say.text('mix', dominant, `${input.seed}|mix`, 0, secondary)
+      : null;
+  const notice = say.text('notice', dominant, `${input.seed}|notice`);
+  const means = say.text('means', dominant, `${input.seed}|means`);
+  const joke = say.text('joke', dominant, `${input.seed}|joke`);
+  const title = say.text('title', dominant, `${input.seed}|title`);
   return {
     categoryId: input.categoryId,
     leansKey: `storylib|${input.categoryId}`,
     title,
     showsUp,
-    mix,
-    othersNotice: notice,
+    mix: mix || null,
+    othersNotice: notice || null,
     whatItMeansForYou: means,
-    joke,
+    joke: joke || undefined,
     source: 'library',
+    lineIds: say.ids,
   };
 }
 
@@ -109,52 +135,82 @@ export function renderLibraryLegend(
     pairs: readonly LegendPair[];
     differ: LegendDiffer | null;
     seed?: string;
+    answer?: string;
+    recent?: boolean;
+    shown?: readonly string[];
   },
   library: StoryLibrary = getStoryLibrary(),
-): LegendStory {
+): LegendStory & { lineIds: string[] } {
   const pairs = input.pairs.slice(0, STORY_MAX_PAIRS);
   const lead = pairs[0];
-  const second = pairs[1];
   const dominant = lead
     ? { trait: lead.axis, tier: tierForStrength(lead.lean, lead.strength) }
     : { trait: 'openness', tier: 'mid' as const };
-  const secondary = second ? { trait: second.axis, tier: tierForStrength(second.lean, second.strength) } : undefined;
-  const who = reader(dominant.trait, dominant.tier, secondary);
   const seed = input.seed ?? `${input.legend.id}|${input.angle.id}|${input.momentId}`;
-  const tokens = { legend: input.legend.name };
-  const say = cardSay(library);
-
-  const lineFor = (trait: TraitAxis, tier: Tier, slot: string) =>
-    say('legend-won', reader(trait, tier), `${seed}|won|${slot}`, tokens);
-
+  const figure = legendById(input.legend.id);
+  const say = sayWith(library, {
+    answer: input.answer,
+    recent: input.recent,
+    shown: new Set(input.shown ?? []),
+    legend: input.legend.name,
+    legendId: input.legend.id,
+    deed: figure ? legendDeed(figure) : 'coined the word radioactivity',
+  });
+  const howTheTraitWon = pairs.map((pair, index) => ({
+    axis: pair.axis,
+    momentId: input.momentId,
+    line: say.text('legend-won', { trait: pair.axis, tier: tierForStrength(pair.lean, pair.strength) }, `${seed}|won|${index}`, index),
+  }));
+  const metScene = say.text('legend-scene', dominant, `${seed}|scene`);
+  const means = say.text('legend-means', dominant, `${seed}|means`);
+  const title = say.text('legend-title', dominant, `${seed}|title`);
+  const joke = say.text('legend-joke', dominant, `${seed}|joke`);
+  const differ = input.differ
+    ? {
+        axis: input.differ.axis,
+        lean: input.differ.lean,
+        line: say.text(
+          'legend-differ',
+          { trait: input.differ.axis, tier: input.differ.lean === 'high' ? 'high' : 'low' },
+          `${seed}|differ`,
+        ),
+      }
+    : undefined;
   return {
     legendId: input.legend.id,
     angleId: input.angle.id,
     momentId: input.momentId,
     whereYouMatch: pairs.map((pair) => ({ axis: pair.axis, lean: pair.lean, them: pair.tag.them })),
-    howTheTraitWon: pairs.map((pair, index) => ({
-      axis: pair.axis,
-      momentId: input.momentId,
-      line: lineFor(pair.axis, tierForStrength(pair.lean, pair.strength), String(index)),
-    })),
-    whatItMeansForYou: say('legend-means', who, `${seed}|means`, tokens),
-    title: say('legend-title', who, `${seed}|title`, tokens),
-    metScene: say('legend-scene', who, `${seed}|scene`, tokens),
-    ...(input.differ
-      ? {
-          differ: {
-            axis: input.differ.axis,
-            lean: input.differ.lean,
-            line: say(
-              'legend-differ',
-              reader(input.differ.axis, input.differ.lean === 'high' ? 'high' : 'low'),
-              `${seed}|differ`,
-              tokens,
-            ),
-          },
-        }
-      : {}),
-    joke: say('legend-joke', who, `${seed}|joke`, tokens),
+    howTheTraitWon,
+    whatItMeansForYou: means,
+    title,
+    metScene,
+    ...(differ ? { differ } : {}),
+    joke: joke || undefined,
     source: 'library',
+    lineIds: say.ids,
   };
 }
+
+/** A reader-shaped pick, for the admin preview and the salience check. */
+export function pickForReader(library: StoryLibrary, slot: LineSlot, reader: Reader, seed: string, facts: RenderFacts = {}): StoryLine | null {
+  return pickLine(library.lines, {
+    slot,
+    trait: reader.dominant.trait,
+    tier: reader.dominant.tier,
+    pronoun: reader.pronoun,
+    name: reader.name,
+    seed,
+    shown: facts.shown ?? new Set(),
+    usedShapes: new Set(),
+    preferShape: preferredShape(slot, 0),
+    answer: facts.answer,
+    recent: facts.recent,
+    legend: facts.legend,
+    legendId: facts.legendId,
+    alsoTrait: reader.secondary?.trait,
+    alsoTier: reader.secondary?.tier,
+  });
+}
+
+export type { TraitAxis };

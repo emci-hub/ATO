@@ -1,6 +1,6 @@
 # Agents
 
-Read `CLAUDE.md` first — it is the map (commands, hard invariants, where things are).
+Read `CLAUDE.md` first — it is the map (commands, hard invariants, where things are). Player-facing copy follows `docs/voice-guide.md`.
 
 **Active approved plan:** `docs/PLAN_PART_D.md` (Divecore Den, egg pacing, Legendary pity,
 Shine Stones — approved, not built). If you were asked to build it, follow that file.

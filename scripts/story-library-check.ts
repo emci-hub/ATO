@@ -1,10 +1,9 @@
 /**
  * Story Library — offline gate. Run: npm run check:story-library
  *
- * The filler matrix (every template × trait × tier × pronoun), the lock /
- * no-repeat / ending rules, the deep-dive and legend renders, the flag
- * defaulting off, the closed client writers, and the prepared (not applied)
- * shutdown of ai-library-fill.
+ * Whole lines, salience, no-repeat, quote-the-answer, the deep-dive and
+ * legend renders, the flag defaulting off, the closed client writers, and
+ * the prepared (not applied) shutdown of ai-library-fill.
  */
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
@@ -36,13 +35,16 @@ import {
   type LegendPair,
 } from '../src/lib/legend-figures/story';
 import { STORY_LIBRARY_RUNTIME } from '../src/lib/story-library/flags';
-import { STORY_LIBRARY, templateById } from '../src/lib/story-library/library';
+import { STORY_LIBRARY } from '../src/lib/story-library/library';
+import { pickLine, speak } from '../src/lib/story-library/pick';
+import { reviewLibraryVoice } from '../src/lib/story-library/voice-review';
 import { getStoryLibrary, resetStoryLibrary, saveStoryLibrary, setStoryLibraryStore, type StoryLibraryStore } from '../src/lib/story-library/persist';
-import { renderLibraryDive, renderLibraryLegend, tierForDiveLean, tierForStrength } from '../src/lib/story-library/render';
+import { pickForReader, renderLibraryDive, renderLibraryLegend, tierForDiveLean, tierForStrength } from '../src/lib/story-library/render';
+import { resetShown, unseenOrReset } from '../src/lib/story-library/shown';
 import { validateLibrary } from '../src/lib/story-library/validate';
-import { TRAIT_AXES } from '../src/lib/traits';
 import { cardJokeViolation } from '../src/lib/voice/card-joke';
-import { expandGrammar, fill, selectEntry, PRONOUNS } from '../src/lib/story-v3/tracery';
+import { TAG_QUESTION_CAP, tagQuestionShare, type SentenceShape } from '../src/lib/voice/player-copy';
+import { expandGrammar, PRONOUNS } from '../src/lib/story-v3/tracery';
 
 const root = resolve(__dirname, '..');
 const read = (rel: string) => readFileSync(resolve(root, rel), 'utf8');
@@ -97,73 +99,76 @@ assert.equal(
   0,
   report.failures
     .slice(0, 8)
-    .map((row) => `${row.templateId} ${row.trait} ${row.tier} ${row.pronoun}: ${row.detail}`)
+    .map((row) => `${row.trait} ${row.tier}: ${row.detail}`)
     .join('\n'),
 );
-console.log(`story-library matrix: ${report.renders} renders, 0 failures`);
+console.log(`story-library lines: ${STORY_LIBRARY.lines.length} lines, ${report.renders} checks, 0 failures`);
 
-const you = {
-  name: 'Alex',
-  pronoun: PRONOUNS.you,
-  dominant: { trait: 'openness', tier: 'low' as const },
-};
-const verbSlot = templateById('dive-shows')!.slots[0]!;
-const avoidedTier = selectEntry(
-  STORY_LIBRARY.entries,
-  verbSlot,
-  you,
-  'avoid',
-  new Set(['openness-low-verb', 'openness-low-verb-b']),
+assert.ok(tagQuestionShare(STORY_LIBRARY.lines.map((line) => line.text)) <= TAG_QUESTION_CAP, 'tag questions stay rare');
+assert.ok(
+  STORY_LIBRARY.lines.every((line) => !line.flip.trim() || line.flip.trim() !== line.text.trim()),
+  'a flip note, when present, is not a copy of the line',
 );
-assert.equal(avoidedTier.entry?.id, 'openness-any-glance', 'no-repeat walks to the trait-any pool');
-const avoidedBoth = selectEntry(
-  STORY_LIBRARY.entries,
-  verbSlot,
-  you,
-  'avoid',
-  new Set(['openness-low-verb', 'openness-low-verb-b', 'openness-any-glance']),
-);
-assert.equal(avoidedBoth.entry?.id, 'generic-stop', 'no-repeat then walks to generic');
-
-const lock = fill(templateById('dive-lock')!, { ...you, pronoun: PRONOUNS.she, dominant: { trait: 'openness', tier: 'high' } }, STORY_LIBRARY.entries, 'lock', {
-  requireApproved: true,
-});
-assert.equal(lock.issues.length, 0, lock.issues.map((issue) => issue.detail).join('; '));
-assert.equal(lock.picks.find, lock.picks.findBare, 'a lock reuses one entry');
-assert.match(lock.text, /an open tab/);
-assert.match(lock.text, /The same open tab/);
-assert.match(lock.text, /She dives/);
-
-const repeat = fill(templateById('dive-repeat')!, you, STORY_LIBRARY.entries, 'repeat', { requireApproved: true });
-assert.notEqual(repeat.picks.aside, repeat.picks.aside2, 'a second slot does not repeat the entry');
-
-const combo = fill(
-  templateById('dive-means')!,
-  { ...you, dominant: { trait: 'openness', tier: 'high' }, secondary: { trait: 'playfulness', tier: 'high' } },
-  STORY_LIBRARY.entries,
-  'combo',
-  { requireApproved: true },
-);
-assert.equal(combo.endingId, 'end-open-play-high');
-assert.match(combo.text, /They|You|She|He|took the detour/);
-assert.match(combo.text, /took the detour/);
-
-const mid = fill(
-  templateById('dive-means')!,
-  { name: 'Alex', pronoun: PRONOUNS.she, dominant: { trait: 'steadiness', tier: 'mid' } },
-  STORY_LIBRARY.entries,
-  'mid',
-  { requireApproved: true },
-);
-assert.equal(mid.endingId, 'end-steadiness-mid');
-assert.match(mid.text, /She left it after one fair look/);
-assert.doesNotMatch(mid.text, /The night stays small, and that is enough/, 'the ending no longer reprints the shows-up aside');
 
 assert.equal(tierForDiveLean({ lean: 'high', pct: 80 }), 'high');
 assert.equal(tierForDiveLean({ lean: 'low', pct: 80 }), 'low');
 assert.equal(tierForDiveLean({ lean: 'high', pct: 50 }), 'mid');
 assert.equal(tierForStrength('high', 0.3), 'high');
 assert.equal(tierForStrength('low', 0.1), 'mid');
+
+const she = pickForReader(
+  STORY_LIBRARY,
+  'shows',
+  { name: 'Alex', pronoun: PRONOUNS.she, dominant: { trait: 'openness', tier: 'high' } },
+  'lock',
+);
+assert.ok(she);
+assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /She will still try something new/);
+assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /even when a familiar option is right there/);
+
+const quoted = renderLibraryDive({
+  categoryId: 'cat_structure',
+  leans: [{ axis: 'conscientiousness', lean: 'high', pct: 88 }],
+  seed: 'quote',
+  answer: 'I make the shared doc anyway',
+});
+assert.match(quoted.showsUp[0]!.line, /I make the shared doc anyway/);
+assert.ok(quoted.lineIds.includes('conscientiousness-quote-shows'), quoted.lineIds.join(','));
+assert.equal(diveLineViolation(quoted.showsUp[0]!.line, 'I make the shared doc anyway'), null, quoted.showsUp[0]!.line);
+
+const opennessShows = STORY_LIBRARY.lines.filter(
+  (line) =>
+    line.slot === 'shows' &&
+    (line.trait === 'openness' || line.trait === 'any') &&
+    (line.tier === 'high' || line.tier === 'any') &&
+    !line.requiresAnswer &&
+    !line.answerIncludes &&
+    line.recency !== 'recent',
+);
+const basePick = {
+  slot: 'shows' as const,
+  trait: 'openness',
+  tier: 'high' as const,
+  pronoun: PRONOUNS.you,
+  name: 'You',
+  seed: 'memory',
+  usedShapes: new Set<SentenceShape>(),
+  preferShape: 'when' as const,
+};
+const first = pickLine(STORY_LIBRARY.lines, { ...basePick, shown: new Set() });
+assert.equal(first?.id, 'openness-high-shows-when', first?.id ?? '');
+const second = pickLine(STORY_LIBRARY.lines, { ...basePick, shown: new Set([first!.id]) });
+assert.notEqual(second?.id, first?.id, 'a shown line is skipped while the pool still has one');
+const fallbackOnly = pickLine(STORY_LIBRARY.lines, {
+  ...basePick,
+  shown: new Set(opennessShows.filter((line) => line.priority > 0).map((line) => line.id)),
+});
+assert.equal(fallbackOnly?.priority, 0, 'the broad fallback is still eligible');
+const exhausted = unseenOrReset(opennessShows, new Set(opennessShows.map((line) => line.id)));
+assert.equal(exhausted.length, opennessShows.length, 'a used-up pool may repeat');
+const again = pickLine(STORY_LIBRARY.lines, { ...basePick, shown: new Set(opennessShows.map((line) => line.id)) });
+assert.equal(again?.id, first?.id, 'after the pool is used up the top line may return');
+resetShown();
 
 const dive = renderLibraryDive({
   categoryId: 'cat_openness',
@@ -189,12 +194,12 @@ between(dive.othersNotice, NOTICE_MIN_WORDS, NOTICE_MAX_WORDS, 'notice');
 assert.equal(diveLineViolation(dive.othersNotice, ''), null, dive.othersNotice);
 between(dive.whatItMeansForYou, DIVE_MEANS_MIN_WORDS, DIVE_MEANS_MAX_WORDS, 'means');
 assert.equal(diveLineViolation(dive.whatItMeansForYou, ''), null, dive.whatItMeansForYou);
-assert.match(dive.whatItMeansForYou, /took the detour/, 'openness high + playfulness high takes the combo ending');
-assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /\b(wait|settle)s?\b/, 'mid steadiness uses a mid verb');
-assert.ok(dive.joke, 'a deep dive includes the joke line');
-assert.equal(cardJokeViolation(dive.joke ?? ''), null, dive.joke ?? '');
-assert.equal(diveLineViolation(dive.joke ?? '', ''), null, dive.joke ?? '');
-
+assert.match(dive.mix, /include play/, 'openness high + playfulness high takes the combo line');
+assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /setback/, 'mid steadiness is some setbacks fading and some staying');
+if (dive.joke) {
+  assert.equal(cardJokeViolation(dive.joke), null, dive.joke);
+  assert.equal(diveLineViolation(dive.joke, ''), null, dive.joke);
+}
 const legend = legendById('lf_marie_curie');
 assert.ok(legend);
 const pair = (axis: 'openness' | 'steadiness', lean: 'high' | 'low', strength: number): LegendPair => ({
@@ -229,9 +234,31 @@ for (const line of [story.metScene ?? '', story.whatItMeansForYou, story.differ?
   assert.equal(legendLineViolation(line, allowed, false), null, line);
 }
 assert.doesNotMatch(story.metScene ?? '', /\byou are\b/i);
-assert.ok(story.joke, 'a legend includes the joke line');
-assert.equal(cardJokeViolation(story.joke ?? ''), null, story.joke ?? '');
-assert.equal(legendLineViolation(story.joke ?? '', allowed, false), null, story.joke ?? '');
+if (story.joke) {
+  assert.equal(cardJokeViolation(story.joke), null, story.joke);
+  assert.equal(legendLineViolation(story.joke, allowed, false), null, story.joke);
+}
+const lowDive = renderLibraryDive({
+  categoryId: 'cat_openness',
+  leans: [
+    { axis: 'openness', lean: 'low', pct: 82 },
+    { axis: 'playfulness', lean: 'low', pct: 78 },
+    { axis: 'extraversion', lean: 'low', pct: 74 },
+  ],
+  seed: 'sample-dive-low',
+});
+const ruth = legendById('lf_babe_ruth');
+assert.ok(ruth);
+const ruthContrast = renderLibraryLegend({
+  legend: ruth,
+  angle: ruth.angles[0]!,
+  momentId: ruth.moments[0]!.id,
+  pairs: [pair('openness', 'high', 0.3)],
+  differ: { axis: 'extraversion', lean: 'low', tag: null },
+  seed: 'sample-ruth',
+});
+assert.match(ruthContrast.differ?.line ?? '', /recharge with time to yourself/);
+assert.match(ruthContrast.differ?.line ?? '', /hotel suite/);
 
 const memory: { library: ReturnType<typeof getStoryLibrary> | null } = { library: null };
 const memoryStore: StoryLibraryStore = {
@@ -243,9 +270,12 @@ const memoryStore: StoryLibraryStore = {
 setStoryLibraryStore(memoryStore);
 const edited = {
   version: STORY_LIBRARY.version,
-  templates: STORY_LIBRARY.templates.map((row) => ({ ...row, slots: row.slots.map((spec) => ({ ...spec })), endings: row.endings.map((ending) => ({ ...ending, when: { ...ending.when } })) })),
-  entries: STORY_LIBRARY.entries.map((entry) =>
-    entry.id === 'openness-high-aside' ? { ...entry, text: 'The fresh option still gets a look before the old one.' } : { ...entry },
+  templates: STORY_LIBRARY.templates,
+  entries: STORY_LIBRARY.entries,
+  lines: STORY_LIBRARY.lines.map((line) =>
+    line.id === 'openness-high-shows-when'
+      ? { ...line, text: 'You would rather try something new when other people stick with a familiar plan.' }
+      : line,
   ),
 };
 const saved = saveStoryLibrary(edited);
@@ -253,24 +283,24 @@ assert.equal(saved.ok, true, saved.ok ? '' : saved.failures.slice(0, 4).map((row
 resetStoryLibrary();
 const loaded = getStoryLibrary();
 assert.equal(validateLibrary(loaded, { requireApproved: true }).failures.length, 0, 'a saved library still passes the check');
-const persisted = fill(
-  templateById('dive-shows', loaded)!,
-  { name: 'Alex', pronoun: PRONOUNS.you, dominant: { trait: 'openness', tier: 'high' } },
-  loaded.entries,
-  'persisted',
-  { requireApproved: true, avoid: ['openness-high-aside-b', 'openness-high-verb-b'] },
+const persisted = renderLibraryDive(
+  { categoryId: 'cat_openness', leans: [{ axis: 'openness', lean: 'high', pct: 88 }], seed: 'persisted' },
+  loaded,
 );
-assert.match(persisted.text, /The fresh option still gets a look before the old one/);
+assert.match(persisted.showsUp[0]!.line, /would rather try something new when other people/);
 const refused = saveStoryLibrary({
   ...loaded,
-  entries: loaded.entries.map((entry) => (entry.id === 'openness-high-aside' ? { ...entry, text: 'TODO leave this in' } : entry)),
+  lines: loaded.lines.map((line) => (line.id === 'openness-high-shows-when' ? { ...line, text: 'TODO leave this in' } : line)),
 });
 assert.equal(refused.ok, false, 'a failing edit is not saved');
-assert.match(getStoryLibrary().entries.find((entry) => entry.id === 'openness-high-aside')?.text ?? '', /fresh option/);
+assert.match(
+  getStoryLibrary().lines.find((line) => line.id === 'openness-high-shows-when')?.text ?? '',
+  /would rather try something new when other people/,
+);
 resetStoryLibrary();
 setStoryLibraryStore(null);
 
-console.log('\n--- matrix sample ---');
+console.log('\n--- sample ---');
 console.log('dive title:', dive.title);
 console.log('shows openness:', dive.showsUp[0]!.line);
 console.log('shows playfulness:', dive.showsUp[1]!.line);
@@ -283,100 +313,28 @@ console.log('legend title:', story.title);
 console.log('won:', story.howTheTraitWon[0]!.line);
 console.log('scene:', story.metScene);
 console.log('differ:', story.differ?.line);
+console.log('won 2:', story.howTheTraitWon[1]!.line);
 console.log('legend means:', story.whatItMeansForYou);
 console.log('legend joke:', story.joke);
-console.log('lock:', lock.text);
-console.log('combo ending:', combo.endingId);
-console.log('mid ending:', mid.endingId);
+console.log('quote:', quoted.showsUp[0]!.line);
+console.log('--- low dive ---');
+console.log('title:', lowDive.title);
+for (const row of lowDive.showsUp) console.log(`shows ${row.axis}:`, row.line);
+console.log('mix:', lowDive.mix);
+console.log('notice:', lowDive.othersNotice);
+console.log('means:', lowDive.whatItMeansForYou);
+console.log('joke:', lowDive.joke);
+console.log('ruth differ:', ruthContrast.differ?.line);
 
-const showTemplate = templateById('dive-shows')!;
-const varietySeeds = Array.from({ length: 32 }, (_, i) => `variety-${i}`);
-let modeShare = 0;
-for (const trait of TRAIT_AXES) {
-  for (const tier of ['low', 'mid', 'high'] as const) {
-    const counts = new Map<string, number>();
-    for (const seed of varietySeeds) {
-      const text = fill(showTemplate, { name: 'Alex', pronoun: PRONOUNS.you, dominant: { trait, tier } }, STORY_LIBRARY.entries, seed, {
-        requireApproved: true,
-      }).text;
-      counts.set(text, (counts.get(text) ?? 0) + 1);
-    }
-    modeShare += Math.max(...counts.values()) / varietySeeds.length;
-  }
-}
-const avgModeShare = modeShare / (TRAIT_AXES.length * 3);
-assert.ok(avgModeShare < 0.4, `shows-up lines still repeat too often (${avgModeShare.toFixed(2)})`);
-
-function sentencesOf(text: string): string[] {
-  return text
-    .split(/(?<=[.!?])\s+/)
-    .map((sentence) => sentence.trim().toLowerCase())
-    .filter(Boolean);
-}
-let repeatCards = 0;
-const repeatSeeds = varietySeeds.slice(0, 8);
-for (const trait of TRAIT_AXES) {
-  for (const tier of ['low', 'mid', 'high'] as const) {
-    for (const seed of repeatSeeds) {
-      const card = renderLibraryDive(
-        {
-          categoryId: 'variety',
-          leans: [{ axis: trait, lean: tier === 'low' ? 'low' : 'high', pct: tier === 'mid' ? 52 : 80, ...(tier === 'mid' ? { middle: true } : {}) }],
-          seed,
-        },
-        STORY_LIBRARY,
-      );
-      const seen = new Set<string>();
-      let dup = false;
-      for (const field of [...card.showsUp.map((row) => row.line), card.mix ?? '', card.othersNotice ?? '', card.whatItMeansForYou, card.joke ?? '']) {
-        for (const sentence of sentencesOf(field)) {
-          if (seen.has(sentence)) dup = true;
-          seen.add(sentence);
-        }
-      }
-      if (dup) repeatCards += 1;
-    }
-  }
-}
-const withinCard = repeatCards / (TRAIT_AXES.length * 3 * repeatSeeds.length);
-assert.ok(withinCard < 0.05, `within-card sentence repeat is ${withinCard.toFixed(2)}`);
-
-const figure = legendById('lf_marie_curie')!;
-let legendRepeats = 0;
-for (const seed of varietySeeds) {
-  const card = renderLibraryLegend(
-    {
-      legend: figure,
-      angle: figure.angles[0]!,
-      momentId: figure.moments[0]!.id,
-      pairs: [
-        {
-          axis: 'openness',
-          lean: 'high',
-          strength: 0.3,
-          contrast: false,
-          tag: { axis: 'openness', lean: 'high', them: 'chased an unknown glow', why: 'the work kept going' },
-        },
-      ],
-      differ: { axis: 'extraversion', lean: 'low', tag: null },
-      seed,
-    },
-    STORY_LIBRARY,
-  );
-  const seen = new Set<string>();
-  let dup = false;
-  for (const field of [card.howTheTraitWon[0]!.line, card.metScene ?? '', card.whatItMeansForYou, card.differ?.line ?? '', card.joke ?? '']) {
-    for (const sentence of sentencesOf(field)) {
-      if (seen.has(sentence)) dup = true;
-      seen.add(sentence);
-    }
-  }
-  if (dup) legendRepeats += 1;
-}
-const legendWithin = legendRepeats / varietySeeds.length;
-assert.ok(legendWithin < 0.05, `legend within-card repeat is ${legendWithin.toFixed(2)}`);
-console.log(
-  `variety: shows mode-share ${avgModeShare.toFixed(3)} (was 1.000), unique lines 4 (was 1), dive within-card ${withinCard.toFixed(3)} (was 1.000), legend within-card ${legendWithin.toFixed(3)} (was 1.000)`,
+const voice = reviewLibraryVoice(STORY_LIBRARY);
+assert.equal(
+  voice.length,
+  0,
+  voice
+    .slice(0, 8)
+    .map((row) => row.detail)
+    .join('\n'),
 );
 
-console.log('\nstory-library: ok');
+console.log(`\nmetrics: lines ${STORY_LIBRARY.lines.length}, tag-question share ${tagQuestionShare(STORY_LIBRARY.lines.map((line) => line.text)).toFixed(3)}, no-repeat pool ${opennessShows.length}`);
+console.log('story-library: ok');

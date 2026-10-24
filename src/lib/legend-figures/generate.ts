@@ -73,7 +73,14 @@ export async function revealLegendStory(input: {
   const fallback = () => fallbackLegendStory(input);
   if (STORY_LIBRARY_RUNTIME) {
     if (input.pairs.length === 0) return fallback();
-    return renderLibraryLegend(input);
+    const { getShownIds, rememberShown } = await import('@/lib/story-library/shown');
+    const { persistShownDevice } = await import('@/lib/story-library/device-store');
+    const { hydrateStoryLibraryDevice } = await import('@/lib/story-library/device-store');
+    await hydrateStoryLibraryDevice();
+    const story = renderLibraryLegend({ ...input, shown: getShownIds() });
+    rememberShown(story.lineIds ?? []);
+    void persistShownDevice();
+    return story;
   }
   if (!input.consentGranted || input.pairs.length === 0) return fallback();
   const bucket = legendBucketKey(input);

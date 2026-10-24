@@ -5,9 +5,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { saveStoryLibrary, type SaveResult } from './persist';
+import { getShownIds, rememberShown, replaceShown } from './shown';
 import type { StoryLibrary } from './types';
 
 const KEY = 'ato.story-library.approved';
+const SHOWN_KEY = 'ato.story-library.shown';
 
 let hydrated: Promise<void> | null = null;
 
@@ -20,12 +22,27 @@ export function hydrateStoryLibraryDevice(): Promise<void> {
         if (!raw) return;
         const parsed = JSON.parse(raw) as StoryLibrary;
         saveStoryLibrary(parsed);
+        const shownRaw = await AsyncStorage.getItem(SHOWN_KEY);
+        if (shownRaw) {
+          const ids = JSON.parse(shownRaw) as unknown;
+          if (Array.isArray(ids)) replaceShown(ids.filter((id): id is string => typeof id === 'string'));
+        }
       } catch {
         // Keep the shipped library.
       }
     })();
   }
   return hydrated;
+}
+
+/** Remember line ids already shown, on this phone, separate from the approved copy. */
+export async function persistShownDevice(ids: readonly string[] = getShownIds()): Promise<void> {
+  rememberShown(ids);
+  try {
+    await AsyncStorage.setItem(SHOWN_KEY, JSON.stringify(getShownIds()));
+  } catch {
+    // The in-memory set still skips them for this session.
+  }
 }
 
 /** Validate, then keep the approved copy in memory and on the phone. */

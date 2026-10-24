@@ -14,7 +14,7 @@ import {
   type TraitAxis,
 } from '@/lib/traits';
 
-export const TRAIT_BANDS_LABEL = 'How you tend to move';
+export const TRAIT_BANDS_LABEL = 'How you move';
 export const TRAIT_BANDS_LEDE =
   'Where you sit between two ways of being — the lean ATO reads your days through.';
 
@@ -31,14 +31,14 @@ export interface TraitBandPhrases {
 export const TRAIT_BAND_PHRASES: Record<TraitAxis, TraitBandPhrases> = {
   openness: {
     low: 'sticks with what works',
-    high: 'goes for the untried option',
+    high: 'tries something new',
   },
   conscientiousness: {
     low: 'keeps plans loose',
     high: 'sees a plan through',
   },
   extraversion: {
-    low: 'leans toward quiet time',
+    low: 'recharges with time alone',
     high: 'leans toward people around',
   },
   agreeableness: {
@@ -105,7 +105,7 @@ export interface FilledTraitBand {
 /**
  * Axes with a real number, in TRAIT_AXES order. Value = the report-track EWMA
  * when present (matching Full Profile / Categories / Title / Story), else the
- * raw me column. This keeps "How you tend to move" in lock-step with "How
+ * raw me column. This keeps "How you move" in lock-step with "How
  * you're currently leaning" for the same axis.
  */
 export function filledTraitBands(
