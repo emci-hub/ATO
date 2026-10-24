@@ -17,8 +17,8 @@ App Store review submission is on hold until emci says so.
 | Step | What | Cost | Who/Model | Status |
 |---|---|---|---|---|
 | G1 | Fix the ~12 glitchy clips (Tier A), emci eyeballs sheets first | 0 gens | Sonnet | DONE 2026-10-24 (commit 4c8376b2, not published as OTA). Fixed: ghost Attack E f5 + W f7 stray streaks erased (originals in art-src/archive/2026-10/tower.ghost.streetwear-Attack-pre-edgefix-20261024). Left on purpose: Walk drift 4-6 px (gait bob, lifted foot, no planted-foot slide on sheets), archangel Faint E (identical end-pose frames already one 310 ms hold, no visual change), Oni Run (real leap; not listed by emci), lunges. |
-| M0 | emci fixes the PixelLab MCP connector (401 Invalid API token) | 0 | emci | not started |
-| M1 | Pre-flight (docs + search_help + get_balance) and 5 concept sketches as samples + scale sheet next to Kael | est 20-40 gens, ask first (Pro) | Sonnet | blocked on M0 |
+| M0 | emci fixes the PixelLab MCP connector (401 Invalid API token) | 0 | emci | DONE 2026-10-24 (connector works) |
+| M1 | Pre-flight (docs + search_help + get_balance) and 5 concept sketches as samples + scale sheet next to Kael | est 20-40 gens, ask first (Pro) | Sonnet | DONE 2026-10-24: 5 south-facing 128 sketches (Pro Flash, 6 gens each = 30, balance 3,515.95 -> 3,485.95, Kael cropped as style image with colours off, seeds 11-15). Files + scale sheet in `docs/art/mecha-m1/`. Waiting for emci's picks (M2). Heights vs Kael 106: Kabuto 117, Shade 111, Kabuki 118, Hush 100, Gearbreaker 116 (wide: Kabuto 100, Kabuki 105, Gearbreaker 113 px); three are at the +10% limit, so M2 decides keep or regenerate smaller. |
 | M2 | emci picks/edits the 5 (or swaps); lock names, element/behavior, palette | 0 | emci | - |
 | M3 | Build heroes one per chat: rotation, Walk/Dash/Attack/Skill/Hurt, free engine Idle, rig, install, art:sync, gate, reviewer | about 25 gens per hero (est) | Sonnet | - |
 | M4 | One Play-only OTA on runtime 1.2.0 for all five (or per hero), phone check box | 0 | Sonnet | - |

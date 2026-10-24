@@ -93,7 +93,15 @@ library (`ms[]`, 120 ms). So a hero Idle costs ~2 generations + 0.25 import.
 8. `npm run check:ota-gate`, log in `animation-generation-log.md` and the gen folder's `gen.json`
    (`installed` block), commit, push. Never publish an OTA; emci checks on the phone.
 
+## 4c. Concept stills and rig choice (search_help, 2026-10-24)
+- One 128x128 concept still: `create_image_pro_flash` = 6 gens (64x64 = 5), one `style_image` (outline/shading/detail on, `color_palette`
+  off so colours come from the prompt); `create_image_pro` with `reference_images` = 10 gens (Pro). `create_image_pixflux` and
+  `create_map_object` = 1 gen but take no style reference. A style image must fit the target canvas: crop the 192 hero sprite to its tight box.
+- Rigs: `animate_with_skeleton_v3` is COCO-18 only (no extra bones); body templates are mannequin, bear, cat, dog, horse, lion. Use
+  `mannequin` for bipedal mechs; quadruped templates only for real four-legged movement. Extra limbs (blade fans) have no rig: repair after animating.
+
 ## 5. Change log
+- 2026-10-24 (M1 mecha sketches) — five south-facing 128 sketches cost 30 gens (6 each, ~5 min each when 5 run at once); see 4c.
 - 2026-10-21 — first version. Balance at the time: 3,538 / 5,000 generations (Tier 2, resets 2026-11-11).
 - 2026-10-21 (Task B pre-flight) — kael's stored rotations (`art-src/pixellab/hero.kael.streetwear/migrated/raw/rotations/`) are **192×192**, not 128, and south faces the camera (import-valid). At a ~180 px canvas `breathing-idle` (4 frames) bills ~2 per direction (get_character receipt gives the exact ceiling), so 4 directions ≈ 8, not 4. Cloud sandbox: `api.pixellab.ai` is denied by the network policy (curl uploads fail with 403), and the MCP result downloads need the same host. Ask emci to allow it under the environment's Network access (Allowed domains), or run Task B from a machine that reaches it.
 - 2026-10-21 (Task B result) — import of 192² rotations = 0.25; `breathing-idle` template at 192² = **1 generation per direction** (the 2-batch ceiling was not reached), 4 frames. `reduce_colors` takes ≤512×512 px per call → 4 frames of 192² per call (one call per direction). Findings: (1) `palette-streetwear-night.png` is **not Kael's palette** (0 of his Idle pixels are in it); reducing to it turns the charcoal jacket brown and red blood orange. Do not reduce Kael to it without emci's decision (alternatives: skip, or `palette_image` = Kael's own Idle colours). (2) Template clips do not hold the foot line: feet land 3 (south), 9 (east/west), 6 (north) px below the current Idle (rows 149/150/147), so a per-direction anchor shift is needed. (3) Heights 97–111 px vs current 104–107 (guide band 101–111); south 97 is slightly short. Comparison GIFs: `docs/art/animation-tests/kael-breathing-idle/` (reduced) and `…/unreduced/`.
