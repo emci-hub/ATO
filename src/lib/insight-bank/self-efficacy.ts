@@ -86,7 +86,7 @@ export const SELF_EFFICACY_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you expect to finish, and you try new things.",
       "Both can be true for you in the same week: you expect to finish, and you try new things.",
-      "A week can hold both for you, so you expect to finish, and you try new things.",
+      "In the same week, you expect to finish, and you try new things.",
     ],
     why: "The upside for you is a start that continues. The catch is a start that ignores the size.",
     try: [
@@ -182,7 +182,7 @@ export const SELF_EFFICACY_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you pause on the big task, and you doubt the hard task.",
       "Both can be true for you in the same week: you pause on the big task, and you doubt the hard task.",
-      "A week can hold both for you, so you pause on the big task, and you doubt the hard task.",
+      "In the same week, you pause on the big task, and you doubt the hard task.",
     ],
     why: "The upside for you is a careful pause. The catch is a pause that never becomes a start.",
     try: [

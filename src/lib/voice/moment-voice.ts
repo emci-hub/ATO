@@ -42,7 +42,7 @@ export const MOMENT_VOICE_RULES: readonly string[] = [
 /** Examples of the register. For prompts: match the clarity, never reuse them. */
 export const MOMENT_VOICE_EXAMPLES: readonly string[] = [
   'You like trying new things, even when everyone else would rather stick with what they know.',
-  'You stick with familiar options you already know you enjoy.',
+  'You stick with what you already know you enjoy.',
   'Your answers suggest you like a new option even when a familiar one is already there.',
 ];
 

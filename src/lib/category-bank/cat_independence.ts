@@ -19,7 +19,7 @@ export const CAT_INDEPENDENCE: MapCard = {
       watchOut: [
         'Sometimes you want company on your terms, which can be hard for a friend to match.',
         'Sometimes you feel pulled between your plan and your people.',
-        'Sometimes other people are asked to join a plan you already chose.',
+        'Sometimes you ask people to join a plan you already chose.',
       ],
       tryThis: [
         'Ask a friend what they would like to do next, so the next plan isn’t only yours.',

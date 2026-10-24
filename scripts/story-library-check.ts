@@ -194,7 +194,7 @@ between(dive.othersNotice, NOTICE_MIN_WORDS, NOTICE_MAX_WORDS, 'notice');
 assert.equal(diveLineViolation(dive.othersNotice, ''), null, dive.othersNotice);
 between(dive.whatItMeansForYou, DIVE_MEANS_MIN_WORDS, DIVE_MEANS_MAX_WORDS, 'means');
 assert.equal(diveLineViolation(dive.whatItMeansForYou, ''), null, dive.whatItMeansForYou);
-assert.match(dive.mix, /two things together/, 'openness high + playfulness high takes the combo line');
+assert.match(dive.mix, /turn ordinary tasks into a game/, 'openness high + playfulness high takes the combo line');
 assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /setbacks/, 'mid steadiness is some setbacks fading and some staying');
 if (dive.joke) {
   assert.equal(cardJokeViolation(dive.joke), null, dive.joke);

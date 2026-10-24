@@ -86,7 +86,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you trust the hard task, and you expect to finish.",
       "Both can be true for you in the same week: you trust the hard task, and you expect to finish.",
-      "A week can hold both for you, so you trust the hard task, and you expect to finish.",
+      "In the same week, you trust the hard task, and you expect to finish.",
     ],
     why: "The upside for you is a hard task that moves. The catch is a trust that skips a needed check.",
     try: [
@@ -182,7 +182,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you doubt the hard task, and you look for the change.",
       "Both can be true for you in the same week: you doubt the hard task, and you look for the change.",
-      "A week can hold both for you, so you doubt the hard task, and you look for the change.",
+      "In the same week, you doubt the hard task, and you look for the change.",
     ],
     why: "The upside for you is an honest doubt. The catch is a doubt that stops the start.",
     try: [

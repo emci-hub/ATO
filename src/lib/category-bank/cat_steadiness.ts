@@ -18,7 +18,7 @@ export const CAT_STEADINESS: BarCard = {
       watchOut: [
         'Sometimes you stay so even that nobody sees you needed help with the hard part.',
         'Sometimes you sit on a problem that needed saying.',
-        'Sometimes the extra task lands with you.',
+        'Sometimes you pick up the extra task.',
       ],
       tryThis: [
         'Tell one person one thing that bothered you this week, so they see the hard day too.',

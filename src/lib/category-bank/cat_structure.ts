@@ -88,7 +88,7 @@ export const CAT_STRUCTURE: MapCard = {
       watchOut: [
         'Sometimes a task with no deadline drifts for a long time on your list.',
         'Sometimes a bigger goal of yours can slip.',
-        'Sometimes you stay with the usual thing.',
+        'Sometimes you reach for the usual option.',
       ],
       tryThis: [
         'Set a deadline for one task you’ve been putting off, so it gets a finish.',

@@ -86,7 +86,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you keep some distance, and you choose the way.",
       "Both can be true for you in the same week: you keep some distance, and you choose the way.",
-      "A week can hold both for you, so you keep some distance, and you choose the way.",
+      "In the same week, you keep some distance, and you choose the way.",
     ],
     why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
@@ -182,7 +182,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you stay close, and you need a real tie.",
       "Both can be true for you in the same week: you stay close, and you need a real tie.",
-      "A week can hold both for you, so you stay close, and you need a real tie.",
+      "In the same week, you stay close, and you need a real tie.",
     ],
     why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [

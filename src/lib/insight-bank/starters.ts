@@ -20,7 +20,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_starter_02", [], {
     focus: [
-      "Some of your chats get a fast reply, and some sit.",
+      "Some of your chats get a fast reply, and some sit for days.",
       "Your easy messages can get answered first, and the harder ones can pile in the thread.",
       "You might clear the short texts and leave the one that needs a real answer.",
     ],
@@ -148,7 +148,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_starter_10", [], {
     focus: [
-      "A friend’s story can have your reply lined up before they finish.",
+      "A reply can be ready before your friend has finished talking.",
       "Your reply can start before the other person has finished the story.",
       "Someone else’s story might pull a similar story of yours into your head before they finish.",
     ],

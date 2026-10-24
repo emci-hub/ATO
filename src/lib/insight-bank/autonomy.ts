@@ -86,7 +86,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you choose the way, and you can skip the tie.",
       "Both can be true for you in the same week: you choose the way, and you can skip the tie.",
-      "A week can hold both for you, so you choose the way, and you can skip the tie.",
+      "In the same week, you choose the way, and you can skip the tie.",
     ],
     why: "The upside for you is a way that fits. The catch is a way that ignores a good set path.",
     try: [
@@ -182,7 +182,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you take the set path, and you need a real tie.",
       "Both can be true for you in the same week: you take the set path, and you need a real tie.",
-      "A week can hold both for you, so you take the set path, and you need a real tie.",
+      "In the same week, you take the set path, and you need a real tie.",
     ],
     why: "The upside for you is a path that works. The catch is a path that was never questioned.",
     try: [

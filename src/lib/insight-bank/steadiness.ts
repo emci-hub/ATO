@@ -86,7 +86,7 @@ export const STEADINESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you shake a bad day off, and you let a gap pass.",
       "Both can be true for you in the same week: you shake a bad day off, and you let a gap pass.",
-      "A week can hold both for you, so you shake a bad day off, and you let a gap pass.",
+      "In the same week, you shake a bad day off, and you let a gap pass.",
     ],
     why: "The upside for you is a shorter bad day. The catch is a problem that needed more time.",
     try: [
@@ -182,7 +182,7 @@ export const STEADINESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you feel a bad day longer, and you check they will stay.",
       "Both can be true for you in the same week: you feel a bad day longer, and you check they will stay.",
-      "A week can hold both for you, so you feel a bad day longer, and you check they will stay.",
+      "In the same week, you feel a bad day longer, and you check they will stay.",
     ],
     why: "The upside for you is an honest read of a hard day. The catch is a hard day that takes over the next one.",
     try: [

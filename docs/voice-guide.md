@@ -86,7 +86,7 @@ Clear: "You like trying new things, even when everyone else would rather stick w
 
 Unclear: "You knew the best thing on the menu, and the group chat could not change the order."
 
-Clear: "You stick with familiar options you already know you enjoy."
+Clear: "You stick with what you already know you enjoy."
 
 Unrelated, if it was attached to familiar-preference: "You heard the joke and then answered the actual question." Check the trait first. Familiar-preference does not mean ignoring jokes.
 

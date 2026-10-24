@@ -86,7 +86,7 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you widen the plan, and you go along.",
       "Both can be true for you in the same week: you widen the plan, and you go along.",
-      "A week can hold both for you, so you widen the plan, and you go along.",
+      "In the same week, you widen the plan, and you go along.",
     ],
     why: "The upside for you is a plan both people can use. The catch is a plan that gives away too much.",
     try: [
@@ -182,7 +182,7 @@ export const CONFLICT_COOPERATIVENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you protect the outcome, and you say your point.",
       "Both can be true for you in the same week: you protect the outcome, and you say your point.",
-      "A week can hold both for you, so you protect the outcome, and you say your point.",
+      "In the same week, you protect the outcome, and you say your point.",
     ],
     why: "The upside for you is a protected outcome. The catch is an outcome that leaves the other person out.",
     try: [

@@ -86,7 +86,7 @@ export const RELATEDNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you need a real tie, and you turn it into play.",
       "Both can be true for you in the same week: you need a real tie, and you turn it into play.",
-      "A week can hold both for you, so you need a real tie, and you turn it into play.",
+      "In the same week, you need a real tie, and you turn it into play.",
     ],
     why: "The upside for you is a day with a real tie. The catch is a day that depends on other people too much.",
     try: [
@@ -182,7 +182,7 @@ export const RELATEDNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you can skip the tie, and you recharge with time to yourself.",
       "Both can be true for you in the same week: you can skip the tie, and you recharge with time to yourself.",
-      "A week can hold both for you, so you can skip the tie, and you recharge with time to yourself.",
+      "In the same week, you can skip the tie, and you recharge with time to yourself.",
     ],
     why: "The upside for you is a day that can stand on its own. The catch is a day that gets too cut off.",
     try: [

@@ -6,7 +6,7 @@ export const CAT_COMMUNICATION: BarCard = {
   cells: {
     high: {
       summary: [
-        'When you disagree, you say your view in a way you can both live with.',
+        'When you disagree, you say the hard part, then look for what works for both of you.',
         'You speak clearly, and you still pay attention to how the other person feels.',
         'You take a hard talk straight on, and you still try to make the ending fair.',
       ],

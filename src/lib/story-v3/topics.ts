@@ -546,7 +546,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
         reveal: 'You say the hard thing, and keep it kind.',
         otherWay: 'The other way, you would have built a carton shrine.',
         evidence: 'you left a kind note and a clear ask',
-        tip: 'Watch out: a note with a drawing can read as a dig. A plain "we\'re out" is kinder.',
+        tip: 'Watch out: a note can read as a dig. A plain "we\'re out" is kinder.',
         jokeLight: { beat: 'move', line: 1 },
         jokeDark: { beat: 'twist', line: 3 },
       },
@@ -643,7 +643,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
       narrator('The door-holder nods like a teammate.'),
       narrator('The doors close on nobody, and look slightly disappointed.'),
     ],
-    next: 'a bus that leaves before your pass taps.',
+    next: 'a bus that leaves before you tap your pass.',
     leans: {
       high: {
         title: 'Captain Beep Beep',

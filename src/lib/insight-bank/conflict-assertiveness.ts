@@ -86,7 +86,7 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you say your point, and you widen the plan.",
       "Both can be true for you in the same week: you say your point, and you widen the plan.",
-      "A week can hold both for you, so you say your point, and you widen the plan.",
+      "In the same week, you say your point, and you widen the plan.",
     ],
     why: "The upside for you is a point that gets said. The catch is a point that takes over the talk.",
     try: [
@@ -182,7 +182,7 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you step back, and you widen the plan.",
       "Both can be true for you in the same week: you step back, and you widen the plan.",
-      "A week can hold both for you, so you step back, and you widen the plan.",
+      "In the same week, you step back, and you widen the plan.",
     ],
     why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [

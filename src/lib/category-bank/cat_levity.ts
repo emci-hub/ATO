@@ -8,7 +8,7 @@ export const CAT_LEVITY: BarCard = {
       summary: [
         'You bring a joke into a tense moment, and you still say what you actually think.',
         'When things get tense, you lighten the mood and help people look for a fix.',
-        'A hard moment gets a lighter line from you, said plain.',
+        'You lighten a hard moment, and you still say it plain.',
       ],
       strength: [
         'You ease the tension, so the person across from you can keep talking.',

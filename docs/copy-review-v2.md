@@ -15,7 +15,7 @@ emci approved a tighter pass on the lines that still joined two ideas, or that n
 | Where | Before | After | Reason |
 |---|---|---|---|
 | Shows, steadiness | You might look at both choices and then let one setback fade while another stays. | Some setbacks you shake off fast, but others stick around. | One idea. Some fade, some stay. |
-| Mix | Trying something new can include play for you, because a task can be new and still be a game. | The answers put two things together for you: trying something new, and play in an ordinary task. | Both leans are on the card. No cause the answers do not show. |
+| Mix | Trying something new can include play for you, because a task can be new and still be a game. | You like trying new things, and you turn ordinary tasks into a game. | Both leans, said the way a friend would. |
 | Curie scene | Picture an hour with Marie Curie. In that hour you would try something new if that choice came up, and the talk would stay on the known work. | Picture an hour with Marie Curie: she'd be testing something nobody understood yet, and you'd want in. | One imagined scene. The roster fact is that she studied a kind of radiation nobody understood yet. |
 | Curie, steadiness | You can let one setback fade while another stays, and that is separate from what Marie Curie is known for. | Some setbacks you shake off fast, but others stick around. | She has no steadiness fact, so her name is not on the line. |
 | Curie differ | You recharge with time to yourself rather than with a crowd, because the answers land on that side. | You recharge with time to yourself after time with other people. | Reader only. Reserved wording kept. Her entry does not say how she spent time with people. |
@@ -23,7 +23,7 @@ emci approved a tighter pass on the lines that still joined two ideas, or that n
 | Insight watch | Notice when the new option wins only because it is new. | Notice when the new option wins only for being new. | Same watch. The cause word is gone. |
 | Starter focus | Your lock screen might take the first minute of the morning, while the kettle is still cold. | Your lock screen might take the first minute of the morning. | One idea: the phone. The kettle was a second scene. |
 | Category, openness | You name a new option while the familiar one is still on the table. | You name a new option even when the familiar one is still on the table. | One contrast. |
-| Card 6 lean, communication | you say the hard part and then ask what works | you say the hard part in a way that can work for both | One idea. The "and then" was a second step. |
+| Card 6 lean, communication | you say the hard part and then ask what works | you say the hard part, then look for what works for both of you | The hard part, then the shared fix. |
 
 ## Where player-facing text comes from
 
@@ -106,14 +106,14 @@ Seed `sample-dive`. Openness high, playfulness high, steadiness in the middle.
 | Slot | Old | New | Reason |
 |---|---|---|---|
 | Shows, openness | You'd rather try something new, even when other people stick with what they know. | You will still try something new even when a familiar option is right there. | The preference, with a real "even when." |
-| Shows, playfulness | You'd rather turn an ordinary task into play, and it can take longer on purpose. | You can turn an ordinary task into play on an ordinary day as well. | Play, as one idea. |
+| Shows, playfulness | You'd rather turn an ordinary task into play, and it can take longer on purpose. | You can turn an ordinary task into play, and that is just a normal day for you. | Play, said as a normal day. |
 | Shows, steadiness | You'd let some of a rough moment land and then let the rest go. | Some setbacks you shake off fast, but others stick around. | One idea. Some fade, some stay. |
-| Mix | You'd rather keep both of these than pretend they are one habit. | The answers put two things together for you: trying something new, and play in an ordinary task. | Both leans are on the card. No invented cause. |
-| Notice | You'd notice a new option before other people settle on a familiar one. | Other people can see that you will try something new before the choice is settled. | What someone else could see, not a private "you'd notice." |
-| Means | You'd rather try something new… The upside is variety, and the catch is passing on something that would have been more fun. | What the answers suggest, in plain words, is that you will try something new even when a familiar option is right there. | One idea. The upside and the catch were a second claim on the same line. |
+| Mix | You'd rather keep both of these than pretend they are one habit. | You like trying new things, and you turn ordinary tasks into a game. | Both leans, in one spoken line. |
+| Notice | You'd notice a new option before other people settle on a familiar one. | Other people can see that you will try something new before you pick one. | What someone else could see, not a private "you'd notice." |
+| Means | You'd rather try something new… The upside is variety, and the catch is passing on something that would have been more fun. | You still try something new even when a familiar option is right there. You do this in a normal week too. | Said out loud. No "the answers suggest." |
 | Joke | The new option won. | The new option won. | This closer belongs to high openness only. Playfulness high is "Play took the long way." Steadiness mid is "Some of it stayed." |
 
-Low card (`sample-dive-low`): extraversion shows as "You will come back to this choice: to recharge with time to yourself." Joke: "The familiar one stayed."
+Low card (`sample-dive-low`): extraversion shows as "You will recharge with time to yourself the next time it comes up." Joke: "The familiar one stayed."
 
 ### Legend comparison
 
@@ -123,7 +123,7 @@ Seed `sample-legend` (Marie Curie). Radioactivity is in the first match line onl
 |---|---|---|---|
 | Match | You'd rather head toward what isn't known yet, like Marie Curie. She studied a new kind of radiation that nobody understood yet, and she named it radioactivity. | You will still try something new even when a familiar option is right there. | Reader line. The roster fact is told once, in the imagined hour, so this line does not repeat it. |
 | Scene | You might picture one ordinary hour beside Marie Curie, who coined the word radioactivity. That hour is imagined, not a memory. | Picture an hour with Marie Curie: she'd be testing something nobody understood yet, and you'd want in. | One imagined scene from the openness tag. It does not say "radioactivity," so the deed is not said twice. |
-| Means | You'd rather head toward what isn't known yet. Marie Curie coined the word radioactivity. Those two point the same way… | What the answers suggest, in plain words, is that you will still try something new even when a familiar option is right there. | The likeness is the leaning. Her name is not on this line. |
+| Means | You'd rather head toward what isn't known yet. Marie Curie coined the word radioactivity. Those two point the same way… | You still try something new even when a familiar option is right there. You do this in a normal week too. | The likeness is the leaning. Her name is not on this line. |
 | Joke | The new option won. | The new option won. | Openness high's own closer, not a shared joke. The sentence ends there. |
 | Second pair, steadiness | You'd let some of a rough moment land and then let the rest go. | Some setbacks you shake off fast, but others stick around. | She has no steadiness fact, so her name is not on the line. |
 | Differ | You'd rather recharge with time alone than with a crowd. | You recharge with time to yourself after time with other people. | Reader only. Reserved wording kept. |
@@ -159,11 +159,11 @@ Phase 1 wording stays. Empty state: "Answer 16 questions and this chart starts t
 ### High dive
 
 - You will still try something new even when a familiar option is right there.
-- You can turn an ordinary task into play on an ordinary day as well.
+- You can turn an ordinary task into play, and that is just a normal day for you.
 - Some setbacks you shake off fast, but others stick around.
-- The answers put two things together for you: trying something new, and play in an ordinary task.
-- Other people can see that you will try something new before the choice is settled.
-- What the answers suggest, in plain words, is that you will try something new even when a familiar option is right there.
+- You like trying new things, and you turn ordinary tasks into a game.
+- Other people can see that you will try something new before you pick one.
+- You still try something new even when a familiar option is right there. You do this in a normal week too.
 - The new option won.
 
 ### Curie card
@@ -171,7 +171,7 @@ Phase 1 wording stays. Empty state: "Answer 16 questions and this chart starts t
 - You will still try something new even when a familiar option is right there.
 - Some setbacks you shake off fast, but others stick around.
 - Picture an hour with Marie Curie: she'd be testing something nobody understood yet, and you'd want in.
-- What the answers suggest, in plain words, is that you will still try something new even when a familiar option is right there.
+- You still try something new even when a familiar option is right there. You do this in a normal week too.
 - You recharge with time to yourself after time with other people.
 - The new option won.
 - Ruth, for the sourced contrast: You recharge with time to yourself. After games, a crowd would gather in Babe Ruth's hotel suite.

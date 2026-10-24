@@ -86,7 +86,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you finish the plan, and you feel a bad day longer.",
       "Both can be true for you in the same week: you finish the plan, and you feel a bad day longer.",
-      "A week can hold both for you, so you finish the plan, and you feel a bad day longer.",
+      "In the same week, you finish the plan, and you feel a bad day longer.",
     ],
     why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
@@ -182,7 +182,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you keep plans loose, and you try new things.",
       "Both can be true for you in the same week: you keep plans loose, and you try new things.",
-      "A week can hold both for you, so you keep plans loose, and you try new things.",
+      "In the same week, you keep plans loose, and you try new things.",
     ],
     why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [

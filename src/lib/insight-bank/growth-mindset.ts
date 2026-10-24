@@ -86,7 +86,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you look for the change, and you look at your part.",
       "Both can be true for you in the same week: you look for the change, and you look at your part.",
-      "A week can hold both for you, so you look for the change, and you look at your part.",
+      "In the same week, you look for the change, and you look at your part.",
     ],
     why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
@@ -182,7 +182,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you close the path, and you keep a known favorite.",
       "Both can be true for you in the same week: you close the path, and you keep a known favorite.",
-      "A week can hold both for you, so you close the path, and you keep a known favorite.",
+      "In the same week, you close the path, and you keep a known favorite.",
     ],
     why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
