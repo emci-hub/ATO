@@ -2,203 +2,203 @@
 import { idea, type InsightIdea } from './define';
 
 export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_attachment_avoidance_h_01', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_01", ["attachment_avoidance:high"], {
     focus: [
-      'When a relationship gets very close, you tend to want a little more space.',
-      'You usually need time to yourself, even with people you love.',
-      'When someone wants to spend every day together, you tend to feel crowded.',
+      "Your answers suggest you keep some distance once things get close.",
+      "From your answers, you keep some distance once things get close.",
+      "The pattern in your answers is that you keep some distance once things get close.",
     ],
-    why: 'Needing space is normal for you, but a partner might read it as distance unless you explain it.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Tell your partner or a close friend when you need time alone, so they don’t take it personally.',
-      'Plan your alone time ahead, so the people close to you know when to expect you back.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you pull back right after a very close moment.',
-      'Notice how people respond when you explain what you need.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_02', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_02", ["attachment_avoidance:high"], {
     focus: [
-      'When someone asks how you’re really doing, you tend to say you’re fine.',
-      'You usually keep your feelings to yourself, even with people you trust.',
-      'When something is hard, you tend to deal with it on your own before telling anyone.',
+      "The catch in your answers is a distance that shuts a good thing out.",
+      "What this can cost you is a distance that shuts a good thing out.",
+      "A cost worth naming for you is a distance that shuts a good thing out.",
     ],
-    why: 'Handling things yourself feels safer to you, but people who care about you might want the chance to help.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Tell one person something small that’s been on your mind, so sharing gets a little easier.',
-      'Answer the next “how are you” with one honest detail, so the conversation can go deeper.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you say “fine” out of habit.',
-      'Notice how it feels when you do share something.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_03', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_03", ["attachment_avoidance:high"], {
     focus: [
-      'When you’re struggling, you tend to figure it out alone instead of asking for help.',
-      'You usually handle problems yourself, even when a friend would gladly help.',
-      'When work gets to be too much, you tend to push through on your own.',
+      "Someone else might notice that you step back when closeness is on offer.",
+      "From the outside, you step back when closeness is on offer.",
+      "Other people can see that you step back when closeness is on offer.",
     ],
-    why: 'Being able to handle things alone is a real strength, but help can make hard things lighter for you.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Ask one person for help with something small this week, so asking feels normal.',
-      'Text a friend about something hard you’re handling, so they know what’s going on.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you turn down help you could actually use.',
-      'Notice how people react when you do ask.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_04', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_04", ["attachment_avoidance:high"], {
     focus: [
-      'When a partner talks about long-term plans, you tend to feel uneasy and change the subject.',
-      'You usually prefer to keep things light when people talk about the future together.',
-      'When someone asks where things are going, you tend to want more time to answer.',
+      "What you might miss is a closeness you would have wanted.",
+      "Your answers leave room to miss a closeness you would have wanted.",
+      "A thing you might skip is a closeness you would have wanted.",
     ],
-    why: 'Taking your time with big steps protects your space, but a partner may need to know you’re thinking about it.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Tell your partner one thing you look forward to doing together, so they know you’re in it.',
-      'Write down what makes you uneasy about future plans, so you can explain it when you’re ready.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you change the subject during serious talks.',
-      'Notice which future plans actually feel good to you.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_05', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_05", ["attachment_avoidance:high"], {
     focus: [
-      'When someone is very affectionate with you, you tend to feel a bit uncomfortable.',
-      'You usually show you care through actions rather than words or hugs.',
-      'When a friend says something very emotional, you tend to not know what to say back.',
+      "The helpful side for you shows up when a little room can keep the bond workable.",
+      "Your answers also show a use when a little room can keep the bond workable.",
+      "There is a use for you when a little room can keep the bond workable.",
     ],
-    why: 'Showing care through actions is real care, but the people close to you might also need to hear it.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Say one kind thing out loud to someone close today, so they hear what you usually show.',
-      'Send a short message telling a friend you appreciate them, so the words are there for them to keep.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice how you show love without saying it.',
-      'Notice what you feel when someone says something kind to you.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_06', ['attachment_avoidance:high', 'autonomy:high'], {
+  idea("ftw_attachment_avoidance_h_06", ["attachment_avoidance:high", "autonomy:high"], {
     focus: [
-      'You tend to like doing things your own way and on your own time, even in a relationship.',
-      'When you share a home or plans with someone, you usually want room to decide things yourself.',
-      'You tend to keep your own routines and plans, even when you’re close with someone.',
+      "Your answers suggest two things at once: you keep some distance, and you choose the way.",
+      "Both can be true for you in the same week: you keep some distance, and you choose the way.",
+      "In the same week, you keep some distance, and you choose the way.",
     ],
-    why: 'Your independence keeps you true to yourself, but a partner might feel left out of decisions that affect them.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Ask your partner or roommate for input on one small decision, so they feel included.',
-      'Tell someone close about a plan you made on your own, so they don’t feel shut out.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you make a decision that affects someone else without asking them.',
-      'Notice whether people close to you feel part of your plans.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_01', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_01", ["attachment_avoidance:low"], {
     focus: [
-      'When you’re close to someone, you tend to want to share your day and spend lots of time together.',
-      'You usually feel happiest when you’re in regular contact with the people you love.',
-      'When something happens, you tend to want to tell your partner or best friend right away.',
+      "Your answers suggest you stay close once things have started.",
+      "From your answers, you stay close once things have started.",
+      "The pattern in your answers is that you stay close once things have started.",
     ],
-    why: 'Your openness makes people feel wanted, but someone who needs more space might feel a bit crowded.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Ask your partner or a close friend how much time together feels good to them, so you can match it.',
-      'Plan one thing you enjoy doing alone this week, so your time apart feels good too.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice when someone close needs time to themselves.',
-      'Notice how you feel during time apart.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_02', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_02", ["attachment_avoidance:low"], {
     focus: [
-      'When something is bothering you, you tend to share it with someone close right away.',
-      'You usually talk about your feelings openly with people you trust.',
-      'When you feel something, you tend to say it rather than keep it inside.',
+      "The catch in your answers is closeness with no room to breathe.",
+      "What this can cost you is closeness with no room to breathe.",
+      "A cost worth naming for you is closeness with no room to breathe.",
     ],
-    why: 'Sharing openly builds closeness, but some friends might need a moment before they’re ready to share back with you.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Ask a friend how they’re doing before you share your news, so the talk goes both ways.',
-      'Write your feelings in a note first, so you can choose which part to share.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice whether the people you talk to share back.',
-      'Notice when someone seems unsure how to respond to what you share.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_03', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_03", ["attachment_avoidance:low"], {
     focus: [
-      'When you have a problem, you tend to ask friends or family for help early.',
-      'You usually feel comfortable leaning on people you trust.',
-      'When you’re stuck, you tend to reach out instead of figuring it out alone.',
+      "Someone else might notice that you stay in once closeness has started.",
+      "From the outside, you stay in once closeness has started.",
+      "Other people can see that you stay in once closeness has started.",
     ],
-    why: 'Asking for help makes problems lighter, and it lets people feel trusted, as long as you also help back.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Offer to help a friend with something this week, so the support goes both ways.',
-      'Try one small problem on your own first, so you see what you can handle.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice how often you help the people who help you.',
-      'Notice which problems you could solve yourself.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_04', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_04", ["attachment_avoidance:low"], {
     focus: [
-      'When you care about someone, you tend to show it with hugs, kind words and lots of contact.',
-      'You usually say how you feel about people out loud.',
-      'When a friend does something kind, you tend to tell them how much it meant.',
+      "What you might miss is a little room you also needed.",
+      "Your answers leave room to miss a little room you also needed.",
+      "A thing you might skip is a little room you also needed.",
     ],
-    why: 'Showing warmth openly makes people feel loved, but some people you care about might be less comfortable with lots of it.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Ask a friend how they like to be shown care, so your warmth reaches them the way they like.',
-      'Send one friend a thank-you message today, so they know their help mattered.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice who leans in when you show warmth and who pulls back a little.',
-      'Notice how different friends show care back to you.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_05', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_05", ["attachment_avoidance:low"], {
     focus: [
-      'When you’re in a relationship, you tend to enjoy talking about plans for the future together.',
-      'You usually like making long-term plans with the people you’re close to.',
-      'When things are going well, you tend to want to talk about what’s next.',
+      "The helpful side for you shows up when staying close is the point.",
+      "Your answers also show a use when staying close is the point.",
+      "There is a use for you when staying close is the point.",
     ],
-    why: 'Planning together shows commitment, but a partner who moves slower might need more time to get there with you.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Ask your partner what they’re excited about right now, so you plan around both of you.',
-      'Pick one near-term plan to enjoy together, so the future talk doesn’t take over.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice when a partner goes quiet during future talks.',
-      'Notice how it feels to enjoy right now without planning ahead.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_06', ['attachment_avoidance:low', 'relatedness:high'], {
+  idea("ftw_attachment_avoidance_l_06", ["attachment_avoidance:low", "relatedness:high"], {
     focus: [
-      'You tend to feel happiest when you’re close to people and talking often.',
-      'When your friends or partner are around, you usually feel more like yourself.',
-      'You tend to need real connection with people to feel good about your week.',
+      "Your answers suggest two things at once: you stay close, and you need a real tie.",
+      "Both can be true for you in the same week: you stay close, and you need a real tie.",
+      "In the same week, you stay close, and you need a real tie.",
     ],
-    why: 'Your need for closeness keeps your relationships strong, but busy weeks can leave you feeling lonely.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Text two friends to plan something this week, so you have connection to look forward to.',
-      'Call someone you love on a quiet evening, so the day ends with a real talk.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice how your mood changes after a week with little contact.',
-      'Notice which people make you feel most like yourself.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
   idea('ftw_attachment_avoidance_h_07', ['attachment_avoidance:high'], {
     focus: [
       'When a friend or partner wants to talk about feelings, you tend to keep it short.',
       'You usually find it easier to talk about plans and facts than about how you feel.',
-      'When a talk gets personal, you tend to steer it to something lighter.',
+      'You tend to steer a talk to something lighter once it gets personal.',
     ],
     why: 'Keeping it light protects your comfort, but people close to you may feel they only know part of what you think.',
     try: [
@@ -312,7 +312,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
       'You usually feel a little hurt when someone close asks for space.',
       'When a friend needs a quiet weekend, you tend to take it a bit personally.',
     ],
-    why: 'Valuing closeness is a strength, but someone else’s need for space is usually about energy, not about you.',
+    why: 'Valuing closeness is a strength, but someone else’s need for space is usually about their own limits, not about you.',
     try: [
       'Ask the person “is this just a recharge?” so you check instead of assume.',
       'Plan something you enjoy while they have space, so the time apart has its own purpose.',
@@ -335,7 +335,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice who you turn to first when you’re upset.',
-      'Notice whether that person has the energy to listen that day.',
+      'Notice whether that person can listen that day.',
     ],
   }),
   idea('ftw_attachment_avoidance_l_10', ['attachment_avoidance:low'], {
@@ -358,7 +358,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When you care about someone, you tend to want to know their whole life, not just the surface.',
       'You usually ask personal questions and hope the other person asks you back.',
-      'When you meet someone you like, you tend to share a lot early on.',
+      'You tend to share a lot early on when you meet someone you like.',
     ],
     why: 'Opening up quickly makes people feel welcome, but some take longer to warm up and may feel rushed by you.',
     try: [
@@ -374,7 +374,7 @@ export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When you plan your future, you tend to picture the people you love in it.',
       'You usually make big choices with the people close to you in mind.',
-      'When you think about moving or changing jobs, you tend to think first about who you’d leave behind.',
+      'You tend to think first about who you’d leave behind when you think about moving or changing jobs.',
     ],
     why: 'Keeping people in your plans makes your choices warm, but it can slow down a decision that mostly affects you.',
     try: [

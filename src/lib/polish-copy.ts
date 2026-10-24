@@ -11,9 +11,8 @@ export const SHAPE_TITLE = 'Your shape';
 export const SHAPE_CAPTION = 'Drawn from your answers, most of them given between notifications.';
 export const SHAPE_TAP_HINT = 'Tap a point to see which trait it is.';
 export const SHAPE_EMPTY_TITLE = 'Your shape is blank';
-export const SHAPE_EMPTY_LINE =
-  'Sixteen answers draw the first lines.';
-export const SHAPE_EMPTY_BUTTON = 'Answer the first 16';
+export const SHAPE_EMPTY_LINE = 'Answer 16 questions and this chart starts to fill in.';
+export const SHAPE_EMPTY_BUTTON = 'Answer the first 16 questions';
 
 // ── Home ─────────────────────────────────────────────────────────────────────
 export const WEEK_STRIP_TITLE = 'This week';

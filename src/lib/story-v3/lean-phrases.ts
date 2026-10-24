@@ -2,11 +2,8 @@ import { CATEGORY_DEFS, type CategoryId } from '@/lib/categories';
 import type { TraitLean } from '@/lib/traits';
 
 /**
- * Card 6 lean phrases (writer bible §3b).
- *
- * TODO(emci): cat_love, cat_independence, and cat_structure are map
- * categories. High/low here is provisional — the repo only defines high/low
- * per axis. Do not treat these three as signed off.
+ * Card 6 lean phrases. Plain meaning of the category lean.
+ * cat_love, cat_independence, and cat_structure stay provisional.
  */
 export const STORY_MAP_CATEGORY_LEAN_TODO: readonly CategoryId[] = [
   'cat_love',
@@ -16,48 +13,48 @@ export const STORY_MAP_CATEGORY_LEAN_TODO: readonly CategoryId[] = [
 
 export const STORY_LEAN_PHRASES: Readonly<Record<CategoryId, Record<TraitLean, string>>> = {
   cat_steadiness: {
-    high: 'you stay even when things wobble',
-    low: 'you feel the wobble, then ride it',
+    high: 'you shake a bad day off and keep going',
+    low: 'you feel a bad day for longer',
   },
   cat_openness: {
-    high: 'you say yes to the untried path',
-    low: 'you like the known path, done well',
+    high: 'you try something new',
+    low: 'you stick with what you already like',
   },
   cat_drive: {
-    high: 'you push until it\'s done',
-    low: 'you go at your own pace and still get there',
+    high: 'you push until the work is done',
+    low: 'you go at your own pace and still finish',
   },
   cat_agency: {
-    high: 'you treat the outcome as yours to shape',
-    low: 'you roll with what the day deals',
+    high: 'you change one piece and try it again',
+    low: 'you leave the outcome to the day',
   },
   cat_social: {
-    high: 'people charge you up, even strangers',
-    low: 'you recharge in quieter company',
+    high: 'you want time with other people',
+    low: 'you want less time in a crowd',
   },
   cat_communication: {
-    high: 'you say the hard thing, and keep it kind',
-    low: 'you\'d rather step back than push',
+    high: 'you say the hard part, then look for what works for both of you',
+    low: 'you step back and let the other person talk',
   },
   cat_love: {
-    high: 'you lean in close',
-    low: 'you keep a little room, even with people you like',
+    high: 'you stay close and answer',
+    low: 'you care and still leave a little room',
   },
   cat_independence: {
-    high: 'you like doing things your own way',
-    low: 'you\'re happy sharing someone else\'s path',
+    high: 'you choose the way before anyone else does',
+    low: 'you take a plan someone else already made',
   },
   cat_levity: {
-    high: 'you reach for the lighter take',
-    low: 'you keep a straight face and get it done',
+    high: 'you lighten a hard thing, then say it plain',
+    low: 'you take a hard talk straight',
   },
   cat_structure: {
-    high: 'you like a plan and follow it through',
-    low: 'you keep plans loose and change them as you go',
+    high: 'you make a plan and follow it through',
+    low: 'you change the plan as you go',
   },
   cat_resilience: {
-    high: 'pressure makes you sharper',
-    low: 'pressure hits hard, but you find a side door',
+    high: 'you stay and try again after a miss',
+    low: 'a bad day stays with you and you still finish',
   },
 };
 

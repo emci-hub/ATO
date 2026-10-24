@@ -5,7 +5,9 @@
  * phone, no AI) → "Write my deep dive" asks the `ai-library` Edge Function
  * (`writeNewDive`: the server checks consent, claims the daily card and the
  * tokens, then serves or writes it). One new card a day; a saved card opens
- * free. Nothing here calls a model on mount (`check:no-auto-ai` lists this file).
+ * free. While `STORY_LIBRARY_RUNTIME` is on, the tap assembles approved Story
+ * Library copy on the phone instead (no model, no token). The flag ships off.
+ * Nothing here calls a model on mount (`check:no-auto-ai` lists this file).
  *
  * Separate from the daily insight above it, which stays stored copy.
  */
@@ -35,6 +37,10 @@ import {
   type DiveLean,
 } from '@/lib/category-deep-dive/dive';
 import { diveLibraryKey, openLibraryDive, writeNewDive, type LibraryDiveOutcome } from '@/lib/category-deep-dive/library';
+import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
+import { hydrateStoryLibraryDevice, persistShownDevice } from '@/lib/story-library/device-store';
+import { renderLibraryDive } from '@/lib/story-library/render';
+import { getShownIds, lineIdsOf, rememberShown } from '@/lib/story-library/shown';
 import { LIBRARY_VERSION } from '@/lib/ai-library/types';
 import { AI_PRICE_LABEL, AI_TOKEN_PRICE, AI_TOKENS_NEEDED } from '@/lib/ato-tokens';
 import {
@@ -122,6 +128,7 @@ export function CategoryDeepDiveCard({
         dives: mergeDives(server ?? [], { ...local.dives, ...(stateRef.current?.dives ?? {}) }),
       };
       stateRef.current = next;
+      rememberShown(Object.values(next.dives).flatMap((entry) => lineIdsOf(entry.dive)));
       setState(next);
     })();
     return () => {
@@ -160,6 +167,35 @@ export function CategoryDeepDiveCard({
    */
   const open = useCallback(
     async (mode: 'library' | 'new') => {
+      if (STORY_LIBRARY_RUNTIME) {
+        if (!def || writingRef.current || leans.length === 0) return;
+        writingRef.current = true;
+        setBusy(true);
+        setNote(null);
+        try {
+          await hydrateStoryLibraryDevice();
+          const dive = renderLibraryDive({
+            categoryId: def.id,
+            leans,
+            seed: `${userId}|${def.id}|${key}`,
+            shown: getShownIds(),
+          });
+          rememberShown(dive.lineIds);
+          void persistShownDevice();
+          const today = diveDay();
+          const made: DiveEntry = { dive: { ...dive, leansKey: key }, madeOn: today };
+          const base = stateRef.current ?? { userId, dives: {} };
+          const next: DiveLocalState = { ...base, dives: { ...base.dives, [def.id]: made } };
+          stateRef.current = next;
+          setState(next);
+          void saveDiveState(next);
+          void saveServerDive(made);
+        } finally {
+          writingRef.current = false;
+          setBusy(false);
+        }
+        return;
+      }
       if (!def || writingRef.current || leans.length === 0) return;
       writingRef.current = true;
       setBusy(true);
@@ -268,13 +304,13 @@ export function CategoryDeepDiveCard({
         </ThemedText>
       ) : null}
 
-      {!consentGranted ? (
+      {!consentGranted && !STORY_LIBRARY_RUNTIME ? (
         fresh ? null : (
           <ThemedText type="small" themeColor="textSecondary">
             {DEEP_DIVE_AI_OFF}
           </ThemedText>
         )
-      ) : needNew !== def.id ? (
+      ) : needNew !== def.id || STORY_LIBRARY_RUNTIME ? (
         <Pressable
           onPress={() => void open('library')}
           disabled={busy || state == null}
@@ -390,6 +426,7 @@ export function CategoryDeepDiveCard({
 function DiveBody({ entry }: { entry: DiveEntry }) {
   const theme = useTheme();
   const { dive } = entry;
+  const ai = dive.source === 'ai';
   return (
     <View style={styles.body}>
       <View style={[styles.titleBox, { borderColor: theme.accent }]}>
@@ -397,11 +434,11 @@ function DiveBody({ entry }: { entry: DiveEntry }) {
           <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
             Your title here
           </ThemedText>
-          <AiBadge />
+          {ai ? <AiBadge /> : null}
         </View>
         <ThemedText type="subheading">{titleCase(dive.title)}</ThemedText>
       </View>
-      <Part title="Where it shows up">
+      <Part title="Where it shows up" ai={ai}>
         {dive.showsUp.map((row) => (
           <ThemedText key={row.axis}>
             <ThemedText type="smallBold">{AXIS_SHORT_NAME[row.axis]}: </ThemedText>
@@ -410,20 +447,20 @@ function DiveBody({ entry }: { entry: DiveEntry }) {
         ))}
       </Part>
       {dive.mix ? (
-        <Part title="How they mix">
+        <Part title="How they mix" ai={ai}>
           <ThemedText>{dive.mix}</ThemedText>
         </Part>
       ) : null}
       {dive.othersNotice ? (
-        <Part title="What others might notice">
+        <Part title="What others might notice" ai={ai}>
           <ThemedText>{dive.othersNotice}</ThemedText>
         </Part>
       ) : null}
-      <Part title="What it means for you">
+      <Part title="What it means for you" ai={ai}>
         <ThemedText>{dive.whatItMeansForYou}</ThemedText>
       </Part>
       {dive.joke ? (
-        <Part title="The funny part">
+        <Part title="The funny part" ai={ai}>
           <ThemedText>{dive.joke}</ThemedText>
         </Part>
       ) : null}
@@ -431,14 +468,14 @@ function DiveBody({ entry }: { entry: DiveEntry }) {
   );
 }
 
-function Part({ title, children }: { title: string; children: React.ReactNode }) {
+function Part({ title, children, ai = true }: { title: string; children: React.ReactNode; ai?: boolean }) {
   return (
     <View style={styles.part}>
       <View style={styles.head}>
         <ThemedText type="small" themeColor="textSecondary" style={styles.flex}>
           {title}
         </ThemedText>
-        <AiBadge />
+        {ai ? <AiBadge /> : null}
       </View>
       {children}
     </View>
@@ -458,8 +495,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   locked: { opacity: 0.55 },
-  nameRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
-  name: { flexShrink: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 4, flexWrap: 'wrap' },
+  name: { flexShrink: 1, minWidth: 0 },
   /** The two-letter trait legend, small and raised like a superscript. */
   codes: { fontSize: 10, lineHeight: 12, letterSpacing: 0.5 },
   chevron: { fontSize: 20 },
@@ -468,7 +505,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.7 },
   leanRow: { gap: 4 },
   leanHead: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },
   fill: { height: 6, borderRadius: 3 },
   body: { gap: Spacing.two, marginTop: Spacing.one },
@@ -481,9 +518,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'stretch',
     paddingHorizontal: Spacing.three,
     marginTop: Spacing.one,
   },
-  button: { minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.three, marginTop: Spacing.one },
-  buttonText: { flexShrink: 1, textAlign: 'center' },
+  button: { minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch', paddingHorizontal: Spacing.three, marginTop: Spacing.one },
+  buttonText: { flexShrink: 1, minWidth: 0, alignSelf: 'stretch', textAlign: 'center' },
 });

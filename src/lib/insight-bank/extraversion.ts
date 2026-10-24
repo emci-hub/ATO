@@ -2,201 +2,201 @@
 import { idea, type InsightIdea } from './define';
 
 export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_extraversion_h_01', ['extraversion:high'], {
+  idea("ftw_extraversion_h_01", ["extraversion:high"], {
     focus: [
-      'After a long week, you tend to feel better by seeing friends rather than staying home.',
-      'When you’re low on energy, being around people usually helps you more than being alone.',
-      'You tend to recharge by making plans, even on days when others would want a quiet night.',
+      "Your answers suggest you look for time with other people.",
+      "From your answers, you look for time with other people.",
+      "The pattern in your answers is that you look for time with other people.",
     ],
-    why: 'Being around people gives you energy, but friends who need quiet nights might not keep up with your pace.',
+    why: "The upside for you is company. The catch is a week with no time left to come back.",
     try: [
-      'Text a friend to make a plan for this week, so you have something to look forward to.',
-      'Ask a quieter friend what kind of hangout they’d enjoy, so you find a plan that works for both of you.',
+      "Next time you choose, name whether the week still has time to yourself first.",
+      "Before you decide, check whether you want the plan or just the company.",
     ],
     watch: [
-      'Notice how your energy changes after a day with no plans.',
-      'Notice when a friend says yes to plans but seems tired.',
+      "Notice when the week fills up and you have no time left.",
+      "Notice if you wanted the quiet evening instead.",
     ],
   }),
-  idea('ftw_extraversion_h_02', ['extraversion:high'], {
+  idea("ftw_extraversion_h_02", ["extraversion:high"], {
     focus: [
-      'When something’s on your mind, you tend to talk it through with someone before you know what you think.',
-      'You usually figure out how you feel by talking about it with a friend or partner.',
-      'When you have a problem, you tend to call someone instead of thinking it over alone.',
+      "The catch in your answers is a week with no time left to come back.",
+      "What this can cost you is a week with no time left to come back.",
+      "A cost worth naming for you is a week with no time left to come back.",
     ],
-    why: 'Talking out loud helps you sort your thoughts, but it can mean you share before you’ve decided what you want.',
+    why: "The upside for you is company. The catch is a week with no time left to come back.",
     try: [
-      'Before you call someone about a problem, write your own view in one line, so you start from it.',
-      'Ask the friend you vent to if they have time first, so they can really listen.',
+      "Next time you choose, name whether the week still has time to yourself first.",
+      "Before you decide, check whether you want the plan or just the company.",
     ],
     watch: [
-      'Notice whether you feel clearer after talking or just more wound up.',
-      'Notice how often you ask friends to listen versus to help.',
+      "Notice when the week fills up and you have no time left.",
+      "Notice if you wanted the quiet evening instead.",
     ],
   }),
-  idea('ftw_extraversion_h_03', ['extraversion:high'], {
+  idea("ftw_extraversion_h_03", ["extraversion:high"], {
     focus: [
-      'When a conversation goes quiet, you tend to jump in and fill the silence.',
-      'You usually keep the conversation going in a group, especially when it starts to drag.',
-      'In a quiet room, you tend to be the one who starts talking first.',
+      "Someone else might notice that you pick time with other people over a quiet evening.",
+      "From the outside, you pick time with other people over a quiet evening.",
+      "Other people can see that you pick time with other people over a quiet evening.",
     ],
-    why: 'Keeping conversations going helps people feel at ease, but quieter people might need a pause from you before they speak up.',
+    why: "The upside for you is company. The catch is a week with no time left to come back.",
     try: [
-      'Next time a group goes quiet, wait five seconds before you speak, so someone else gets a chance.',
-      'Ask the quietest person in your next conversation a direct question, so they get space to talk.',
+      "Next time you choose, name whether the week still has time to yourself first.",
+      "Before you decide, check whether you want the plan or just the company.",
     ],
     watch: [
-      'Notice when you fill a silence that someone else was about to fill.',
-      'Notice who speaks up when you hold back.',
+      "Notice when the week fills up and you have no time left.",
+      "Notice if you wanted the quiet evening instead.",
     ],
   }),
-  idea('ftw_extraversion_h_04', ['extraversion:high'], {
+  idea("ftw_extraversion_h_04", ["extraversion:high"], {
     focus: [
-      'When invites come in, you tend to say yes to most of them, even when your week is already full.',
-      'You usually fill your calendar with plans and then find there’s no time left for yourself.',
-      'When friends are going out, you tend to join even when you need rest.',
+      "What you might miss is time to yourself after a full week.",
+      "Your answers leave room to miss time to yourself after a full week.",
+      "A thing you might skip is time to yourself after a full week.",
     ],
-    why: 'You usually don’t want to miss time with people, but a full calendar can leave you tired for the plans that matter most.',
+    why: "The upside for you is company. The catch is a week with no time left to come back.",
     try: [
-      'Look at your week and pick one plan to skip, so you have a free night.',
-      'Block off one evening as a night in, so your friends know you’re not free.',
+      "Next time you choose, name whether the week still has time to yourself first.",
+      "Before you decide, check whether you want the plan or just the company.",
     ],
     watch: [
-      'Notice which plans you’re excited about and which you agreed to by default.',
-      'Notice how you feel the day after a packed weekend.',
+      "Notice when the week fills up and you have no time left.",
+      "Notice if you wanted the quiet evening instead.",
     ],
   }),
-  idea('ftw_extraversion_h_05', ['extraversion:high'], {
+  idea("ftw_extraversion_h_05", ["extraversion:high"], {
     focus: [
-      'When you meet someone new, you tend to make conversation easily and keep it going.',
-      'At parties or new jobs, you usually find it easy to talk to people you don’t know.',
-      'You tend to warm up to new people fast and like getting to know them.',
+      "The helpful side for you shows up when company is what the day needs.",
+      "Your answers also show a use when company is what the day needs.",
+      "There is a use for you when company is what the day needs.",
     ],
-    why: 'Your ease with new people helps others relax, but people who warm up slowly might need more time before they open up.',
+    why: "The upside for you is company. The catch is a week with no time left to come back.",
     try: [
-      'Ask someone you met recently a follow-up question about something they said, so they know you listened.',
-      'Introduce two people you know who should meet, so your ease with people helps someone else.',
+      "Next time you choose, name whether the week still has time to yourself first.",
+      "Before you decide, check whether you want the plan or just the company.",
     ],
     watch: [
-      'Notice when someone gives short answers and might need a slower pace.',
-      'Notice which new people you actually follow up with.',
+      "Notice when the week fills up and you have no time left.",
+      "Notice if you wanted the quiet evening instead.",
     ],
   }),
-  idea('ftw_extraversion_h_06', ['extraversion:high', 'playfulness:high'], {
+  idea("ftw_extraversion_h_06", ["extraversion:high", "playfulness:high"], {
     focus: [
-      'In a group, you tend to bring the jokes and the energy that get everyone talking.',
-      'When friends get together, you’re usually the one getting people laughing.',
-      'You tend to make group hangouts more fun by joking around and keeping things moving.',
+      "Your answers suggest two things at once: you want people around, and you turn it into play.",
+      "Both can be true for you in the same week: you want people around, and you turn it into play.",
+      "In the same week, you want people around, and you turn it into play.",
     ],
-    why: 'Your humor and energy lift a room, but sometimes a friend might want to talk about something serious.',
+    why: "The upside for you is company. The catch is a week with no time left to come back.",
     try: [
-      'Next time you’re with a friend, ask how they’re really doing, so there’s room for more than jokes.',
-      'Text a friend something that made you think of them, so you connect one-on-one too.',
+      "Next time you choose, name whether the week still has time to yourself first.",
+      "Before you decide, check whether you want the plan or just the company.",
     ],
     watch: [
-      'Notice when a friend laughs along but seems quieter than usual.',
-      'Notice what conversations you have when the jokes stop.',
+      "Notice when the week fills up and you have no time left.",
+      "Notice if you wanted the quiet evening instead.",
     ],
   }),
-  idea('ftw_extraversion_l_01', ['extraversion:low'], {
+  idea("ftw_extraversion_l_01", ["extraversion:low"], {
     focus: [
-      'After a busy week, you tend to want a quiet night at home more than a night out.',
-      'When your calendar gets full of social plans, you usually feel tired before the week is over.',
-      'You tend to recharge best with time alone, especially after a lot of time around people.',
+      "You recharge with time to yourself.",
+      "From your answers, you recharge with time to yourself.",
+      "The pattern in your answers is that you recharge with time to yourself.",
     ],
-    why: 'Quiet time helps you reset, and protecting it means you show up as yourself when you do see people.',
+    why: "The upside for you is time to come back. The catch is a next plan that feels like too much.",
     try: [
-      'Block one evening this week for yourself, so you have time to recharge.',
-      'Text a friend to suggest coffee for an hour, so you see them without draining yourself.',
+      "Next time you choose, name one block that is just yours first.",
+      "Before you decide, check whether the next plan leaves you time to yourself.",
     ],
     watch: [
-      'Notice how many social plans you can do before you need a break.',
-      'Notice the difference between needing quiet and avoiding something.',
+      "Notice when the next plan feels like too much.",
+      "Notice if you skipped a plan you would have liked.",
     ],
   }),
-  idea('ftw_extraversion_l_02', ['extraversion:low'], {
+  idea("ftw_extraversion_l_02", ["extraversion:low"], {
     focus: [
-      'In meetings, you tend to have a good idea but wait so long that the moment passes.',
-      'When a group is talking fast, you usually think of your point after the conversation moves on.',
-      'You tend to think before you speak, so in busy group chats your reply can come late.',
+      "You recharge with time to yourself, and the next plan can feel like too much.",
+      "What this can cost you is a next plan that feels like too much.",
+      "A cost worth naming for you is a next plan that feels like too much.",
     ],
-    why: 'You think things through before you speak, which makes your points good, but fast groups rarely leave a gap for you.',
+    why: "The upside for you is time to come back. The catch is a next plan that feels like too much.",
     try: [
-      'Write one point down before your next meeting, so you can share it early.',
-      'Send your idea to your boss or a coworker after the meeting, so it still gets heard.',
+      "Next time you choose, name one block that is just yours first.",
+      "Before you decide, check whether the next plan leaves you time to yourself.",
     ],
     watch: [
-      'Notice when you hold back an idea that someone else says later.',
-      'Notice which settings make it easier for you to speak up.',
+      "Notice when the next plan feels like too much.",
+      "Notice if you skipped a plan you would have liked.",
     ],
   }),
-  idea('ftw_extraversion_l_03', ['extraversion:low'], {
+  idea("ftw_extraversion_l_03", ["extraversion:low"], {
     focus: [
-      'When someone calls you, you tend to let it ring and text back instead.',
-      'You usually prefer texting over phone calls, even with close friends.',
-      'When a call comes in unexpectedly, you tend to wait and reply by message.',
+      "You recharge with time to yourself after time around other people.",
+      "From the outside, you recharge with time to yourself after time with other people.",
+      "Other people can see that you recharge with time to yourself after time with other people.",
     ],
-    why: 'Texting gives you time to think, but some friends or family might feel closer to you after a quick call.',
+    why: "The upside for you is time to come back. The catch is a next plan that feels like too much.",
     try: [
-      'Call one friend or family member for five minutes this week, so they hear your voice.',
-      'Text a friend to set a time for a call, so it’s planned and easier for you.',
+      "Next time you choose, name one block that is just yours first.",
+      "Before you decide, check whether the next plan leaves you time to yourself.",
     ],
     watch: [
-      'Notice how you feel after a call you didn’t want to take.',
-      'Notice which people you’re happy to call and why.',
+      "Notice when the next plan feels like too much.",
+      "Notice if you skipped a plan you would have liked.",
     ],
   }),
-  idea('ftw_extraversion_l_04', ['extraversion:low'], {
+  idea("ftw_extraversion_l_04", ["extraversion:low"], {
     focus: [
-      'At parties, you tend to find one person to talk to and stay with them most of the night.',
-      'You usually prefer one long conversation with a friend over meeting lots of people.',
-      'When you’re at a big event, you tend to look for a quiet corner or a familiar face.',
+      "You recharge with time to yourself, so a plan you like can still wait.",
+      "Your answers leave room to miss a plan you would have enjoyed.",
+      "A thing you might skip is a plan you would have enjoyed.",
     ],
-    why: 'One real conversation can mean more to you than a lot of small ones, and that’s a strength in close friendships.',
+    why: "The upside for you is time to come back. The catch is a next plan that feels like too much.",
     try: [
-      'Before your next event, decide when you’ll leave, so you can enjoy it without watching the clock.',
-      'Pick one new person to say hi to at your next event, so you meet someone without forcing it.',
+      "Next time you choose, name one block that is just yours first.",
+      "Before you decide, check whether the next plan leaves you time to yourself.",
     ],
     watch: [
-      'Notice which kinds of gatherings leave you tired and which leave you happy.',
-      'Notice when you stay longer than you wanted to.',
+      "Notice when the next plan feels like too much.",
+      "Notice if you skipped a plan you would have liked.",
     ],
   }),
-  idea('ftw_extraversion_l_05', ['extraversion:low'], {
+  idea("ftw_extraversion_l_05", ["extraversion:low"], {
     focus: [
-      'When you’re quiet in a group, people sometimes think you’re upset or not interested.',
-      'You tend to be quiet around new people, and some of them read it as you not liking them.',
-      'When you’re listening instead of talking, coworkers might think you’re checked out.',
+      "You recharge with time to yourself before you add another plan.",
+      "Your answers also show a use when you need time to yourself before the next plan.",
+      "There is a use for you when you need time to yourself before the next plan.",
     ],
-    why: 'Your quiet is usually just you listening, but people who don’t know you yet can’t tell that from the outside.',
+    why: "The upside for you is time to come back. The catch is a next plan that feels like too much.",
     try: [
-      'Tell one coworker or new friend that you’re quiet at first, so they don’t take it personally.',
-      'Send a short message after a hangout saying you had fun, so people know you enjoyed it.',
+      "Next time you choose, name one block that is just yours first.",
+      "Before you decide, check whether the next plan leaves you time to yourself.",
     ],
     watch: [
-      'Notice when someone checks in on you because you’re quiet.',
-      'Notice how you show people you like them without many words.',
+      "Notice when the next plan feels like too much.",
+      "Notice if you skipped a plan you would have liked.",
     ],
   }),
-  idea('ftw_extraversion_l_06', ['extraversion:low', 'relatedness:high'], {
+  idea("ftw_extraversion_l_06", ["extraversion:low", "relatedness:high"], {
     focus: [
-      'You tend to need time alone, but you also miss your close friends when you don’t see them.',
-      'You usually want quiet time and close friends, so big group plans can feel like the wrong fit.',
-      'When you’ve been alone a while, you tend to want one real talk with someone close.',
+      "You recharge with time to yourself, and you need a real tie.",
+      "Both can be true for you in the same week: you recharge with time to yourself, and you need a real tie.",
+      "In the same week, you recharge with time to yourself, and you need a real tie.",
     ],
-    why: 'You need both space and connection, so small plans with close friends tend to give you the best of both.',
+    why: "The upside for you is time to come back. The catch is a next plan that feels like too much.",
     try: [
-      'Text one close friend to plan a quiet one-on-one, so you get connection without a crowd.',
-      'Call someone you miss for ten minutes, so you stay close without a big plan.',
+      "Next time you choose, name one block that is just yours first.",
+      "Before you decide, check whether the next plan leaves you time to yourself.",
     ],
     watch: [
-      'Notice when time alone starts to feel lonely instead of restful.',
-      'Notice which friends you feel rested around.',
+      "Notice when the next plan feels like too much.",
+      "Notice if you skipped a plan you would have liked.",
     ],
   }),
   idea('ftw_extraversion_h_07', ['extraversion:high'], {
     focus: [
-      'When you work alone for a long stretch, you tend to feel your energy drop.',
+      'When you work alone for a long stretch, you tend to feel worn out.',
       'You usually do your best work with other people around, even if you’re not talking.',
       'After a full day at home alone, you tend to feel restless and want to see someone.',
     ],
@@ -207,7 +207,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       'Notice how long you can focus alone before you reach for your phone.',
-      'Notice what your energy is like after an hour of quiet work.',
+      'Notice how you feel after an hour of quiet work.',
     ],
   }),
   idea('ftw_extraversion_h_08', ['extraversion:high'], {
@@ -260,11 +260,11 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_extraversion_h_11', ['extraversion:high'], {
     focus: [
-      'When you tell a story, you tend to add detail and energy so it lands well.',
+      'When you tell a story, you tend to add detail and pace so it lands well.',
       'You usually hold the room when you talk, and others tend to listen.',
       'In a group, you tend to talk a lot more than the quieter people there.',
     ],
-    why: 'Your energy makes conversations lively, but quieter people might not get a chance to share what they think.',
+    why: 'The way you tell it makes conversations lively, but quieter people might not get a chance to share what they think.',
     try: [
       'Ask one quieter person in the group a direct question, so they have a way into the talk.',
       'Wait three seconds after you finish a story, so others can jump in.',
@@ -294,9 +294,9 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When coworkers chat in the hall, you tend to say a short hello and keep walking.',
       'You usually find small talk with people you don’t know well tiring.',
-      'At work, you tend to save your energy for the conversations that matter most.',
+      'At work, you tend to save your attention for the conversations that matter most.',
     ],
-    why: 'Saving your energy lets you do better at the big conversations, but coworkers might see short hellos as distance.',
+    why: 'Saving your attention lets you do better at the big conversations, but coworkers might see short hellos as distance.',
     try: [
       'Ask one coworker one friendly question this week, so they see you’re approachable.',
       'Pick one short chat a day to stay in a minute longer, so small talk adds up to a connection.',
@@ -318,7 +318,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
       'Plan a short break outside during the event, so you can stay longer.',
     ],
     watch: [
-      'Notice how many people are around when your energy starts to drop.',
+      'Notice how many people are around when you start to feel worn out.',
       'Notice whether you feel better after a short break.',
     ],
   }),

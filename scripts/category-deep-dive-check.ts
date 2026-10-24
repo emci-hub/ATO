@@ -106,7 +106,7 @@ assert.doesNotMatch(lovePrompt, /GENTLE/, 'no special gentle block: closeness is
 assert.doesNotMatch(DIVE_PROMPT_STATIC, /GENTLE/, 'no gentle rules block in the shared prompt');
 assert.doesNotMatch(prompt, /\(GENTLE\)/);
 assert.match(buildDivePrompt(openDef, leans.slice(0, 1)), /MIX: no/, 'one leaning → no mix asked');
-assert.match(prompt, /CLEAR FIRST, MOMENT SECOND/, 'plain insight first, one realistic example second');
+assert.match(prompt, /MEANING FIRST/, 'plain meaning first; an example only if it clarifies');
 assert.match(prompt, /No counting and no exaggeration/);
 assert.match(prompt, /Be honest about both sides/);
 assert.doesNotMatch(prompt, /never a weakness/, 'a real limitation is stated plainly (emci 2026-10-19)');
@@ -347,7 +347,8 @@ assert.match(card, /opensLater \? \(/, 'a card saved earlier with an opening day
 ok('wave90: own rows only, written by RPC, one new card a day, wiped by Reset account');
 
 const consent = read('src/components/ai-consent-card.tsx');
-assert.match(consent, /AI_USE_DISCLOSURE =\s*'[^']*category deep dives/, 'the disclosure names this AI use (Apple 5.1.2)');
+assert.match(consent, /AI_USE_DISCLOSURE_MODEL =\s*'[^']*category deep dives/, 'the disclosure names this AI use while the model path is on (Apple 5.1.2)');
+assert.match(consent, /AI_USE_DISCLOSURE = STORY_LIBRARY_RUNTIME \? AI_USE_DISCLOSURE_LIBRARY : AI_USE_DISCLOSURE_MODEL/);
 assert.match(consent, /category deep dives you ask for/, 'so does the consent ask');
 assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY_REVIEWED/, 'listed on the dev hub copy list');

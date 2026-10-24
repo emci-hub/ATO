@@ -1,6 +1,6 @@
 # Agents
 
-Read `CLAUDE.md` first — it is the map (commands, hard invariants, where things are).
+Read `CLAUDE.md` first — it is the map (commands, hard invariants, where things are). Player-facing copy follows `docs/voice-guide.md`.
 
 **Before any PixelLab animation or art generation:** run the pre-flight in `docs/art/PIXELLAB_ANIMATION.md` §0 (relearn the tools with `search_help`, update the doc, `get_balance`, one test clip, log generations).
 

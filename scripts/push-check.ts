@@ -48,10 +48,10 @@ assert.equal(shouldAskNotificationPermission({ insightCount: 1, alreadyAsked: tr
 assert.equal(shouldAskNotificationPermission({ insightCount: 8, alreadyAsked: true }), false);
 ok('permission asked only after the first insight loads, and only once');
 
-assert.equal(NOTIFICATION_ASK_TITLE, 'Want a nudge now and then?');
+assert.equal(NOTIFICATION_ASK_TITLE, 'Allow a reminder?');
 assert.equal(
   NOTIFICATION_ASK_BODY,
-  'ATO can send a short note when your insight is ready. You can change this any time.',
+  'ATO can send a short note when your daily insight is ready. You can turn this off later.',
 );
 assert.equal(NOTIFICATION_ASK_YES, 'Turn on');
 assert.equal(NOTIFICATION_ASK_NO, 'Not now');

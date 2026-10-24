@@ -586,7 +586,7 @@ var LOADED_LINES = [
   { tag: "extraversion:low+relatedness:high", text: "You skipped the party and missed everyone at it." },
   { tag: "extraversion:high+relatedness:low", text: "You were great at the party. You couldn't name three things anyone said." },
   { tag: "extraversion:high+relatedness:low", text: "You love a crowd the way you love weather." },
-  { tag: "extraversion:high+relatedness:low", text: "You met six people and remembered the vibe." },
+  { tag: "extraversion:high+relatedness:low", text: "You met six people and remembered the quiet one." },
   { tag: "conscientiousness:high+playfulness:low", text: "You finished everything and then looked for more everything." },
   { tag: "conscientiousness:high+playfulness:low", text: "The holiday had a spreadsheet. The spreadsheet had tabs." },
   { tag: "conscientiousness:high+playfulness:low", text: "You earned the break, took it, and timed it." },
@@ -752,290 +752,290 @@ function parseLeanTag(tag2) {
 var SOLO = {
   openness: {
     high: [
-      "New tends to pull harder than proven for you. Lately that pull might be the plan itself.",
-      "You lean toward the door nobody has opened yet. Notice what gets left half-open behind you.",
-      "Something untried will probably look better than it is today. Go anyway, with one eye open.",
-      "You tend to get bored before you get finished. The boring part might be where it pays off.",
-      "A different route usually feels like the point to you. Today the usual one might surprise you.",
-      "Curiosity tends to do your deciding. Let it, and ask what it is steering you away from."
+      "The menu had a usual order. You pointed at the dish you couldn\u2019t pronounce.",
+      "A friend named a place none of you know. You were already checking the train.",
+      "You opened a new app while the last tutorial was still on the screen.",
+      "The chat said the same bar. You sent a pin for somewhere else.",
+      "You bought the supplies before you had done the thing even once.",
+      "Someone said they had never tried it. You said yes before there was a time."
     ],
     low: [
-      "You tend to trust what has already worked. That is not stubborn, it is a filing system.",
-      "The known path keeps earning your vote. One small detour today would not cancel it.",
-      "New ideas usually get a look from you and then a seat in the waiting room. One might be ready.",
-      "You lean toward what is proven. Lately the proven thing may have quietly stopped working.",
-      "Familiar tends to feel like safe to you. They overlap most days, not every day.",
-      "You rarely chase a thing just because it is new. Someone near you probably relies on that."
+      "Same coffee, same table, same seat by the window. It was good last time.",
+      "A friend sent a new restaurant. You sent back the place you already like.",
+      "The app moved one button. You spent the morning hunting for the old one.",
+      "You read a stack of reviews and bought the thing you already own.",
+      "The playlist is four years old. You hit play and left it.",
+      "Someone offered a different way home. You took the street you walk every day."
     ]
   },
   conscientiousness: {
     high: [
-      "You tend to finish what you start, even after the fun runs out. Check that today\u2019s thing still deserves it.",
-      "Follow-through comes easy to you lately. Rest might be the item that keeps slipping off the list.",
-      "A plan in your hands usually gets done. The question today is whether it is still your plan.",
-      "You lean on structure the way some people lean on luck. Leave one hour unassigned.",
-      "Lately you keep your word to the calendar. Keeping one to yourself counts too.",
-      "Done tends to matter more to you than well-timed. Someone may need you to go slower today."
+      "You added a task to the list so you could cross it off before lunch.",
+      "It was due Friday. You finished Wednesday and read it again Thursday.",
+      "You said you were on your way, and you were, keys in hand.",
+      "The inbox hit zero. You refreshed it once more to be sure.",
+      "You kept the hour you promised yourself after the fun part was over.",
+      "The dull task had a block on the calendar. You did it inside that block."
     ],
     low: [
-      "You tend to decide in the moment. One small decision made early could buy you the afternoon.",
-      "Loose plans suit you. The dull stretch right before you bail might be the last one.",
-      "You lean toward keeping options open. One of them has probably been waiting a while.",
-      "Lately the plan bends to your mood. Try letting it hold for twenty minutes first.",
-      "You tend to start strong and drift. Drifting is information, so notice where toward.",
-      "Structure tends to feel like a cage to you. A small one, built by you, might feel like a floor."
+      "The plan was later. Later showed up as a pile on the kitchen table.",
+      "You started the form, made tea, and the form was still open at dinner.",
+      "Two choices sat all week. You picked one in the doorway, coat already on.",
+      "The list had six lines. You did the interesting one and wandered off.",
+      "You meant to leave at seven. At eight the bag was still by the door.",
+      "A fixed hour felt tight, so the evening stayed loose and the task moved with it."
     ]
   },
   extraversion: {
     high: [
-      "People tend to wake you up. Notice who you reach for today when the room goes quiet.",
-      "You lean toward making something happen. Today the room might not need a spark, just a witness.",
-      "A full room usually charges you. The quiet one afterwards might be telling you something too.",
-      "You tend to think out loud. Someone close may be waiting for the sentence you have not said yet.",
-      "Lately your energy goes outward first. Save a little of it for the walk home.",
-      "You usually would rather be in it than watch it. Five minutes of watching could show you the whole board."
+      "The room went quiet. You were the one who asked the next question.",
+      "You said the thought out loud before you had decided to say it.",
+      "A full table woke you up. The walk home was the first quiet minute.",
+      "You would rather be in the group chat than watching it scroll past.",
+      "Someone had to start the plan. You sent the time, the place and the count.",
+      "After the party you were still talking. The dishes waited until morning."
     ],
     low: [
-      "Quiet tends to be how you reset. It is not hiding if you come back.",
-      "A full room costs you more than it costs most. Budget for it and go, or skip it on purpose.",
-      "You lean toward the edge of the group. The view is better there, and people notice you noticing.",
-      "You tend to say less and mean more. Today one extra sentence might land well.",
-      "Lately your best company has been your own. One person might be worth the interruption.",
-      "You usually leave before people tire you out. That might be why they light up when you arrive."
+      "The big table was loud. You took the chair at the end and stayed there.",
+      "You left while the night was still good, before the room started to cost you.",
+      "A full Friday takes more from you than it takes from most of that group.",
+      "You said one sentence at dinner. It was the one people repeated later.",
+      "The quiet hour did the reset. A friend\u2019s text sat on the counter, still unread.",
+      "You had the invite. You pictured the room, then the couch, and stayed home."
     ]
   },
   agreeableness: {
     high: [
-      "You tend to go along to keep it easy. Easy for whom is worth a second look today.",
-      "A fuss rarely feels worth it to you. One small no today would cost less than you think.",
-      "You lean toward yes. Lately some of those yeses might have been maybes in a hurry.",
-      "You usually smooth the room before anyone asks. Notice whether anyone smooths it for you.",
-      "Keeping the peace tends to fall to you. It is fine to hand it to someone else for a day.",
-      "You tend to give the benefit of the doubt. Give yourself the same rate."
+      "The group picked a place you didn\u2019t want. You said sure and put your shoes on.",
+      "A small no would have done it. You smoothed it over and paid for both coffees.",
+      "You said yes in the chat before you had checked if you meant maybe.",
+      "The room was tense. You changed the subject and passed the bread.",
+      "Keeping the peace landed on you again. Nobody asked. You just did it.",
+      "They were late again. You decided the train was the reason and let it go."
     ],
     low: [
-      "You tend to hold your ground. Today it might be worth checking the ground is still worth holding.",
-      "Pretending to like the plan is rarely your move. Saying why, kindly, might get you further.",
-      "You lean toward honest over easy. Someone today may only be able to hear the easy version.",
-      "Lately you have not bent much. One bend, chosen by you, is not the same as giving in.",
-      "You usually say the thing others are thinking. Leave a beat for them to say it first.",
-      "You tend to trust slowly. The people who waited it out have probably earned a look."
+      "The plan was bad. You said so before anyone had a polite version ready.",
+      "You didn\u2019t pretend to like the idea. You named the part that wouldn\u2019t work.",
+      "They wanted it easy. You wanted it accurate, and you said the accurate thing.",
+      "You haven\u2019t softened the email. It is still sitting in drafts.",
+      "You said what the rest of the table was thinking. The pause after was long.",
+      "A new person got a careful first month. The ones who stayed got a warmer second one."
     ]
   },
   steadiness: {
     high: [
-      "A bad start tends to slide off you by lunch. Someone near you may still be carrying theirs.",
-      "You usually recover fast. Fast enough, sometimes, to skip what the bad moment was pointing at.",
-      "Not much sticks to you lately. Worth asking if anything should.",
-      "You tend to steady the room without trying. Notice who is leaning on that today.",
-      "You lean toward calling it fine, and it often is. Today, check before you say it.",
-      "Rough patches tend to pass through you quickly. Let one finish its sentence."
+      "The morning went badly. By lunch you were on the next thing, plate cleared.",
+      "You were about to call it fine. Today you checked the clock before you said it.",
+      "A sharp email landed. You answered the question and left the sting on the screen.",
+      "The room was rattled. You kept your voice level and the meeting moved on.",
+      "Nothing from yesterday was still on you at breakfast. You drank the coffee and started the list.",
+      "The rough patch was gone before dinner. You were already talking about Thursday."
     ],
     low: [
-      "A small knock can color your whole day. Try naming it once and seeing how big it stays.",
-      "You tend to feel things for longer than the moment lasts. That is also why you remember what matters.",
-      "Lately a bad morning has a long tail. It is allowed to end at lunch.",
-      "You lean toward carrying it. Put one thing down today, even if only until tomorrow.",
-      "Things tend to land harder on you. They also tend to teach you more.",
-      "The mood might arrive before the reason today. You do not have to find the reason to let it pass."
+      "One short text before nine colored the meetings, the lunch and the ride home.",
+      "The moment ended at noon. You were still carrying it when you locked the door.",
+      "A bad morning grew a tail. It was still there when you opened the fridge at night.",
+      "You set the bag down. The feeling stayed in your coat pocket anyway.",
+      "The same small knock landed harder on you than on anyone else at the table.",
+      "The mood showed up before the reason. You stood in the kitchen with it."
     ]
   },
   attachment_anxiety: {
     high: [
-      "A slow reply can start to feel like a verdict. Today it is most likely just a slow reply.",
-      "You tend to read silence closely. Sometimes it is only someone being busy.",
-      "You lean toward checking where you stand. You probably stand where you stood yesterday.",
-      "Lately a pause from someone you like gets loud. Ask the question instead of answering it for them.",
-      "You tend to notice distance before anyone else does. Noticing it is not the same as it being there.",
-      "While waiting, the story in your head tends to get ahead of the facts. Wait for the actual ending."
+      "They took an hour to reply. You read the thread twice and checked the time again.",
+      "The silence was probably a meeting. Your head had already written a worse ending.",
+      "You opened the chat to see where you stood. The last message was still yours.",
+      "A pause from someone you like got loud. You typed three replies and sent none.",
+      "You noticed the gap before anyone else in the room had looked up.",
+      "While you waited, the story in your head ran ahead of the words on the screen."
     ],
     low: [
-      "A slow reply is just a slow reply to you. Someone close may need more reassurance than you would.",
-      "You tend not to dwell on people leaving. That calm can read as distance, so say the warm thing out loud.",
-      "You lean toward trusting that people will stay. Thank one of them for staying.",
-      "Lately you have not needed much proof from people. Offer some anyway.",
-      "You rarely keep score of who texted last. Someone you like might be keeping it for both of you.",
-      "Space does not tend to scare you. Check that the other person signed up for the same amount."
+      "A slow reply was a slow reply. You put the phone down and finished the dish.",
+      "Names come and go in the chat. You don\u2019t recount them at the end of the day.",
+      "You trusted they would still be there Friday. You thanked one of them out loud.",
+      "You hadn\u2019t asked for proof all month. You sent a photo anyway, no question on it.",
+      "You don\u2019t keep score of who texted last. Someone you like might be counting.",
+      "A quiet week didn\u2019t scare you. You still asked if they wanted the same amount of room."
     ]
   },
   attachment_avoidance: {
     high: [
-      "You tend to keep a little distance, even from people you like. Close one inch of it today.",
-      "Lighter and over text is usually easier for you. One thing today may deserve your actual voice.",
-      "You lean toward handling it alone. Letting someone help is not the same as owing them.",
-      "Lately you leave the room a moment before it gets real. Try staying for that moment.",
-      "You tend to need an exit in sight. Someone might be standing in the doorway hoping you stay.",
-      "Closeness tends to feel like a cost to you first. Sometimes it is the refund."
+      "You like them. You still left one seat between you on the couch.",
+      "The real thing was easier as a text. Your voice stayed in your pocket.",
+      "You did the hard part alone. Help was in the next room, and you didn\u2019t ask.",
+      "The talk was about to get honest. You were already by the door, jacket half on.",
+      "You like the door in sight. Someone there was hoping you would sit back down.",
+      "Sitting close felt like a cost at first. An hour later it just felt like company."
     ],
     low: [
-      "Once in, you tend to stay close. Make sure today that close still leaves room for you.",
-      "You lean toward talking it out in person. Not everyone can meet you there on the first try.",
-      "You tend to show up fully for your people. Notice which of them shows up the same way.",
-      "Lately you have been easy to reach. An unreachable hour is allowed.",
-      "Staying close comes naturally to you. Someone who needs space is not saying no.",
-      "You usually move toward people when it gets hard. That is rarer than you think."
+      "Once you were in, you stayed close. There was still a chair left for you.",
+      "You wanted to talk it out at the table. They needed a night before they could.",
+      "You showed up for your people. You noticed which of them showed up the same way.",
+      "You were easy to reach all week. You still put the phone in the other room for an hour.",
+      "Staying close came easily. Their quiet night was not a no.",
+      "When it got hard, you crossed the kitchen instead of hiding in the group chat."
     ]
   },
   conflict_assertiveness: {
     high: [
-      "You tend to put your point on the table. Today, leave room on the table for a second one.",
-      "A disagreement rarely scares you. The other person might need a softer start than you would.",
-      "You lean toward saying it straight. Straight and warm can fit in one sentence.",
-      "Lately you win the argument. Check whether you also kept the person.",
-      "You usually speak first in a standoff. Speaking second today might tell you more.",
-      "Your point tends to arrive a little sharp. It would land the same with the edge off."
+      "You put your point on the table and left a little room beside it for theirs.",
+      "The disagreement didn\u2019t scare you. They needed a softer first line than you had ready.",
+      "You said it straight. You tried the warm version out loud and it still fit.",
+      "You won the point in the thread. Then you checked whether you still had the person.",
+      "In a standoff you spoke first. Speaking second would have told you more.",
+      "Your point came out sharp. The same words would have landed with the edge taken off."
     ],
     low: [
-      "You tend to step back in a disagreement. One thing you let go lately might be worth picking back up.",
-      "Letting it go is usually your move. Today, check whether it actually went.",
-      "You lean toward peace over being right. Your side still deserves to be heard once.",
-      "Lately you have swallowed a few small things. They add up to one medium thing.",
-      "You tend to wait for a better moment to say it. This one may be good enough.",
-      "Backing off tends to feel safer to you. Say half of it today and see what happens."
+      "You stepped back. One thing you dropped last week was still worth picking up.",
+      "You let it go. On the walk home you weren\u2019t sure it had actually gone.",
+      "You picked peace over being right. Your side still had one sentence it never got.",
+      "You swallowed three small things this week. At dinner they were one medium thing.",
+      "You waited for a better moment. The moment in front of you was probably enough.",
+      "Backing off felt safer. You said half of it and watched what they did."
     ]
   },
   conflict_cooperativeness: {
     high: [
-      "You tend to look for what the other person can live with. Ask what you can live with too.",
-      "You usually give first. Today, wait and see if they will.",
-      "You lean toward the middle ground. Sometimes the middle is just both people unhappy.",
-      "Lately you have been the one who bends. It is fair to ask for the next bend back.",
-      "A fair deal tends to matter more to you than a win. Make sure fair includes you.",
-      "You tend to hear the other side out fully. Check that someone has heard yours."
+      "You looked for what they could live with. You had not yet asked what you could.",
+      "You gave first. Today you waited, and the next move was still theirs.",
+      "You aimed at the middle. Sometimes that middle leaves both people unhappy.",
+      "You were the one who bent. You still hadn\u2019t asked them for the next bend.",
+      "A fair deal mattered more than a win. Fair still had to include your half.",
+      "You heard their side all the way through. Yours was still waiting for a listener."
     ],
     low: [
-      "You tend to protect your outcome first. One small give today might buy a lot of goodwill.",
-      "You rarely give ground early. The other person may be closer to yes than they look.",
-      "You lean toward knowing what you want and holding it. Ask what they want before you defend it.",
-      "Lately you have not had to bend much. Bending once on something small costs you nothing.",
-      "You usually leave a negotiation with what you came for. Check what the other person left with.",
-      "Holding your line comes easy to you. Knowing which lines matter is the harder part."
+      "You protected what you wanted first. One small give was still sitting on the table.",
+      "You don\u2019t give ground early. They were closer to yes than their face showed.",
+      "You knew what you wanted and you held it. You hadn\u2019t asked what they wanted yet.",
+      "You haven\u2019t had to bend much. A bend on something small was still available.",
+      "You left with what you came for. You didn\u2019t check what they left with.",
+      "Holding the line came easy at the table. Sorting which lines mattered was harder."
     ]
   },
   autonomy: {
     high: [
-      "You tend to want to do it your way. Today someone else\u2019s way might save you an hour.",
-      "A plan handed to you rarely fits. Say which part you would change instead of dropping the whole thing.",
-      "You lean toward your own path, even when one is already paved. The paved one is not an insult.",
-      "Lately being told what to do sits badly. Notice whether the advice was actually wrong.",
-      "You usually need to choose it for it to count. Choose one thing today you were going to be told anyway.",
-      "Your way tends to work for you. It might not be the only way that does."
+      "You wanted it your way. Their way would have saved an hour, and you could see it.",
+      "The handed-over plan didn\u2019t fit. You named the one part you would change.",
+      "You redid the task your way after someone had written the steps. Their steps were fine.",
+      "A coworker handed you the steps. You checked whether those steps were actually wrong.",
+      "It had to be your choice. You picked the thing you were going to be told anyway.",
+      "Your way worked. Another way would have worked too, and you let that sit a minute."
     ],
     low: [
-      "A path already set tends to suit you fine. Pick one small thing today that nobody picked for you.",
-      "You lean toward letting someone else steer. It is fine to want a turn.",
-      "You usually feel relief when the plan is made. Notice what you would have chosen.",
-      "Lately you go with what is already decided. Your preference still exists, so say it once.",
-      "Not having to figure it out tends to feel like rest to you. Figure out one thing anyway.",
-      "You tend to trust the map you get handed. Today, check who drew it."
+      "The plan was already made, and that suited you. One small piece still had your name on it.",
+      "You let someone else steer. Your own turn was right there, and you almost took it.",
+      "Relief hit when the plan was made. You also noticed what you would have picked.",
+      "You went with the decision already in the chat. You still said your preference once.",
+      "Not having to figure it out felt like rest. You figured out one small thing anyway.",
+      "You trusted the map in your hand. Then you looked at the name on the corner."
     ]
   },
   competence: {
     high: [
-      "A hard task tends to feel like yours to handle. Today, check it is yours at all.",
-      "You usually trust yourself to pull it off. Someone next to you may need to borrow a little of that.",
-      "You lean toward the difficult version. The easy version is allowed sometimes.",
-      "Lately hard things have gone your way. Notice what you have been avoiding because it is only dull.",
-      "You tend to feel capable going in. Ask for help anyway and see how it changes the work.",
-      "You rarely doubt you can do it. The better question today might be whether you want to."
+      "The hard task felt like yours. You checked, once, whether it was yours at all.",
+      "You trusted yourself to pull it off. The person beside you needed to hear a bit of that.",
+      "You reached for the harder version. The easy one was sitting there, allowed.",
+      "Hard things have gone your way. The dull ones are the tasks you keep walking past.",
+      "You felt capable walking in. You asked for help anyway, and the work changed shape.",
+      "You walked in sure you could do the job. The open question was whether you wanted it."
     ],
     low: [
-      "A hard task can make you doubt yourself before you start. Start badly on purpose and see what happens.",
-      "You tend to count what could go wrong first. Count one thing that went right last time.",
-      "Lately the hard thing looks bigger from outside than it is. Do the first five minutes only.",
-      "You lean toward assuming others would do it better. They are mostly guessing too.",
-      "The doubt tends to show up before the evidence does. Wait for the evidence.",
-      "You usually underrate what you have already pulled off. Write one of them down today."
+      "The hard task made you doubt it before you touched it. You started with a messy first pass.",
+      "You listed what could go wrong. Then you wrote one thing that went right last time.",
+      "It looked bigger from the doorway than it did after five minutes at the desk.",
+      "You assumed someone else would do it better. Their pen was hovering too.",
+      "The doubt arrived before any evidence. You waited, and the evidence was smaller.",
+      "You brushed off a thing you had already finished. You wrote it on a sticky note."
     ]
   },
   relatedness: {
     high: [
-      "A day tends not to land for you without a real connection in it. Plan for one, do not hope for one.",
-      "You usually need one real conversation to feel like yourself. Start it.",
-      "You lean toward people being the point. Today the point might text first, or might need you to.",
-      "Lately small talk leaves you hungry. Ask the second question.",
-      "You tend to measure a day by who was in it. Someone is measuring theirs by you.",
-      "Being around people and being with them feel different to you. Close that gap once today."
+      "The day didn\u2019t land until you had one real talk, not a thread of logistics.",
+      "You needed one real conversation. You started it in the kitchen, not in the chat.",
+      "People were the point of the day. You texted first instead of waiting.",
+      "Small talk left you hungry. You asked the second question and stayed for it.",
+      "You measured the day by who was in it. Someone measured theirs by whether you showed.",
+      "Around them and with them felt different. You closed that gap once, at the table."
     ],
     low: [
-      "A day can land for you without much connection. One person may still be hoping to hear from you.",
-      "You tend to be fine on your own. Fine and full can be two different days.",
-      "You lean toward not needing much from people. Let someone give you something small anyway.",
-      "Lately you have gone a while without a real conversation and barely noticed. Notice.",
-      "You usually do not count the days between calls. Someone you like does.",
-      "Your own company tends to be enough. Share a little of it today."
+      "The day landed fine with almost no one in it. One person was still hoping for a text.",
+      "You were fine on your own. Fine and full were not the same evening.",
+      "You didn\u2019t need much from anyone. You let someone hand you something small anyway.",
+      "A long stretch with no real talk went by. You barely noticed. The calendar did.",
+      "You don\u2019t count the days between calls. Someone you like does, and they texted.",
+      "Your own company was enough. You still shared a piece of the evening."
     ]
   },
   growth_mindset: {
     high: [
-      "After a miss you tend to look for what to change. Today, also look at what to keep.",
-      "You usually treat a mistake as a draft. Let one thing be finished.",
-      'You lean toward "not yet" over "no". Someone near you needs to hear that version.',
-      "Lately everything looks like something to improve. Some of it is already good.",
-      "You tend to believe you can get better at most things. Pick the one that matters this week.",
-      "A setback tends to turn into a project for you. Rest first, then the project."
+      "After a miss you looked for what to change. You also looked at what to keep.",
+      "You treated the mistake like a draft. One page on the desk was allowed to be done.",
+      "You said not yet, not no. Someone near you needed that version out loud.",
+      "Lately every task looked like something to improve. Some of it was already good.",
+      "You figured you could get better at most of it. You picked the one for this week.",
+      "A setback turned into a project. You rested, then you opened it."
     ],
     low: [
-      "A miss can feel like the end of that road to you. It is more often a bend.",
-      "You tend to decide early what is not your thing. One of those verdicts is probably out of date.",
-      "Lately one bad try has been closing the door. Try it a second time before you lock it.",
-      "You lean toward sticking with what you already do well. One clumsy attempt today will not undo that.",
-      "You usually judge the first attempt as the final grade. It is the rough copy.",
-      "Some things tend to feel fixed to you. Test one of them gently."
+      "A miss felt like the end of that try. The same tools were still on the desk.",
+      "You decided early it wasn\u2019t your thing. One of those calls was out of date.",
+      "One bad try had you closing the doc. You opened it again and stopped on the second page.",
+      "You stayed with what you already do well. One clumsy try didn\u2019t undo that.",
+      "You graded the first attempt as the final grade. It was a rough copy on the table.",
+      "One skill felt fixed. You tested it for ten minutes and stopped there."
     ]
   },
   locus_of_control: {
     high: [
-      "When things go sideways you tend to look at your own part first. Not all of it was yours.",
-      "You usually ask what you could have done differently. Sometimes the answer is nothing.",
-      "You lean toward owning the outcome. Leave a share for luck and for other people.",
-      "Lately you take the blame quickly. Take the credit at the same speed.",
-      "You tend to believe your choices decide the day. Mostly true, and today there is weather too.",
-      "Your first move is usually to fix it yourself. Ask whether it is yours to fix."
+      "When it went sideways you looked at your part first. Not all of it was yours.",
+      "You asked what you could have done differently. Sometimes the answer was nothing.",
+      "You took the result as yours. Luck and other people still had a share of the day.",
+      "The blame arrived fast. The credit was slower, and you noticed that at the end.",
+      "You treated the day as something your choices made. The rain was not one of them.",
+      "Your first move was to fix it yourself. You asked once whether it was yours to fix."
     ],
     low: [
-      "You tend to figure it was bound to happen. One small part of today is still yours to move.",
-      "You usually let things play out. Nudge one of them.",
-      "Lately it feels like the day happens to you. Pick the next ten minutes on purpose.",
-      'You lean toward "that is just how it goes". Sometimes it goes how someone pushed it.',
-      "You rarely blame yourself for what you could not control. Check for the piece you could.",
-      "Timing and luck tend to get the credit from you. Give yourself a line in the credits too."
+      "You figured it was going to happen anyway. One small piece of the afternoon was still yours.",
+      "You let it play out. Then you nudged the piece nearest your hand.",
+      "The day felt like it happened to you. You picked the next ten minutes on purpose.",
+      "You said that is just how it goes. Sometimes it goes the way a person pushed it.",
+      "You didn\u2019t blame yourself for what you couldn\u2019t steer. You looked for the piece you could.",
+      "Timing and luck got the credit in your notes. You added one line with your name on it."
     ]
   },
   self_efficacy: {
     high: [
-      "A big task tends to look doable to you. Break it up anyway, your future self will thank you.",
-      "You usually back yourself. Today, back someone else out loud.",
-      "You lean toward yes when it is large. Check your week before you check your nerve.",
-      'Lately you have said "I can do that" a lot. You can, though maybe not all at once.',
-      "Confidence tends to get you through the door. Preparation keeps you in the room.",
-      "You tend to assume you will figure it out, and you usually do. Start earlier and enjoy it more."
+      "The big task looked doable. You split it anyway, for the Thursday version of you.",
+      "You backed yourself in the meeting. You also backed the person sitting next to you.",
+      "You said yes to the large thing. The week was full before you checked the calendar.",
+      "You have said you can do it a lot. You can, just not all of it this afternoon.",
+      "Confidence got you in the door. The prep is what kept you in the room.",
+      "You assumed you would sort it out. Starting earlier made the afternoon nicer."
     ],
     low: [
-      "A big task can look too big from the start. It tends to shrink once you touch it.",
-      "You tend to wait until you feel ready. Ready usually shows up after you begin.",
-      "Lately the size of the thing has been deciding for you. Pick the smallest piece and take that.",
-      'You lean toward "not sure I can". Being sure is optional, starting is the part that counts.',
-      "You usually see the whole mountain at once. Look at the next step only.",
-      "The big thing tends to stay big while you circle it. One clumsy pass will change its size."
+      "The big task looked too big at the start. It got smaller once your hands were on it.",
+      "You waited to feel ready. Ready showed up after you had already started.",
+      "The size of it was choosing for you. You took the smallest piece and began there.",
+      "You weren\u2019t sure you could. Starting was the part that changed the size.",
+      "You saw the whole project at once. Today only needed the next step.",
+      "The big task stayed big while you walked around the desk. One messy pass made it smaller."
     ]
   },
   playfulness: {
     high: [
-      "You tend to look for the lighter take. Make sure the joke is not doing a job a sentence should.",
-      "Fun usually finds you. One person in the room may need you to be serious for a minute.",
-      "You lean toward play, even in a dull task. That is a skill, not a distraction.",
-      "Lately you laugh it off fast. Check whether it is actually off.",
-      "You tend to turn a chore into a game. Invite someone into it today.",
-      "Light tends to be your default. It can carry something heavy if you let it."
+      "You reached for the lighter line. Then you checked it wasn\u2019t covering a real sentence.",
+      "Fun finds you. One person in the room needed you plain for a minute, and you saw them.",
+      "You played with a dull task until it moved. That was useful, not a detour.",
+      "You laughed it off fast. Afterward you checked whether it was actually off.",
+      "You turned the chore into a game and sent the invite so someone else could join.",
+      "You started with the joke. The serious part stayed in the next sentence."
     ],
     low: [
-      "You tend to treat the day as a job to get through. One part of it could be a game.",
-      "You usually get to the fun after the work, and the work rarely ends. Move the fun up.",
-      "Lately the day has been all list. Leave one line blank.",
-      "You lean toward serious. Something silly today will not cost you your edge.",
-      "You tend to earn your rest before you take it. Take five minutes unearned.",
-      "Getting through it is usually the goal for you. Today, try enjoying one piece of it."
+      "You treated the day as a list to finish. One part of it could have been a game.",
+      "Fun was booked for after the work. The work didn\u2019t end, so the fun stayed in the margin.",
+      "The day was all list. One line was blank, and you almost filled it in.",
+      "You stayed serious. A silly ten minutes wouldn\u2019t have cost you the work.",
+      "Rest had to be earned first. Five unearned minutes sat there, and you walked past.",
+      "Getting through it was the goal. You enjoyed the walk between rooms on purpose."
     ]
   }
 };
@@ -1043,325 +1043,325 @@ var PAIRS = [
   {
     keys: ["extraversion:high", "attachment_avoidance:high"],
     lines: [
-      "You tend to be easy to be around and slower to let people close. Someone may be hoping for the second part.",
-      "Lots of people, few who really know you. Lately that might be by design."
+      "The room likes having you in it. The people who want closer still get the short version.",
+      "Lots of faces, few who know the Tuesday version of you. That might be on purpose."
     ]
   },
   {
     keys: ["extraversion:low", "relatedness:high"],
     lines: [
-      "You tend to need real connection and also quiet. One person, one hour, is the size that fits.",
-      "Crowds drain you, and being unknown drains you more. Pick the one person today."
+      "You needed one real person, not a room. One hour at one table was the size that fit.",
+      "A crowd drained you. Being unknown drained you more. You picked the one person."
     ]
   },
   {
     keys: ["extraversion:high", "relatedness:low"],
     lines: [
-      "You tend to like the room without needing anyone in it. Someone there might want more than the room.",
-      "People energize you, though few of them get far in. Let one get a step further."
+      "You liked the room and didn\u2019t need anyone in it to stay. Someone there wanted more than the room.",
+      "People woke you up. Few of them got past the first story. You let one take the next step."
     ]
   },
   {
     keys: ["conscientiousness:high", "playfulness:low"],
     lines: [
-      "You tend to finish the list and skip the fun. The list will regrow by morning either way.",
-      "Work first is your rule, and work rarely ends. Put one light thing on the list itself."
+      "You finished the list and skipped the fun. The list had grown back by morning either way.",
+      "Work came first, and the work did not end. You put one light thing on the list itself."
     ]
   },
   {
     keys: ["conscientiousness:high", "openness:high"],
     lines: [
-      "You tend to chase the new thing and still finish it. That is rarer than it feels.",
-      "Lately you want it both new and done. Pick which matters more for today\u2019s thing."
+      "You went after the new thing and you still finished it, both, on the same task.",
+      "You wanted today\u2019s thing new and done. You had to pick which one it was."
     ]
   },
   {
     keys: ["conscientiousness:low", "openness:high"],
     lines: [
-      "New ideas come easy to you and finishing comes hard. Pick one idea today and give it an ending.",
-      "You tend to open more doors than you walk through. Walk through one."
+      "New ideas came easy. The ending was the hard part. You picked one and gave it a last line.",
+      "You opened more doors than you walked through. Today you walked through one."
     ]
   },
   {
     keys: ["conscientiousness:high", "openness:low"],
     lines: [
-      "You tend to do it the proven way and do it fully. Today a shortcut might actually be fine.",
-      "A plan and a known path is your home ground. Step off it once, on purpose, for ten minutes."
+      "You did it the way that already works, and you did all of it. A shortcut would have been fine.",
+      "A plan and a known route is home. You stepped off it for ten minutes, on purpose."
     ]
   },
   {
     keys: ["conscientiousness:low", "playfulness:high"],
     lines: [
-      "You tend to follow the fun and let the plan catch up. Give the plan a small head start today.",
-      "Loose and light is how you move lately. One fixed point would not spoil it."
+      "You followed the fun and let the plan catch up. You gave the plan a small head start.",
+      "Loose and light is how you moved. One fixed point on the calendar would not spoil it."
     ]
   },
   {
     keys: ["agreeableness:high", "conflict_assertiveness:low"],
     lines: [
-      "You tend to go along and then step back. Your opinion has been waiting a while for its turn.",
-      "Easy for everyone else has been costing you lately. Say one true preference before noon."
+      "You went along, then you stepped back. Your opinion has been waiting for a turn.",
+      "Easy for everyone else has been costing you. You said one true preference before noon."
     ]
   },
   {
     keys: ["agreeableness:high", "conflict_assertiveness:high"],
     lines: [
-      "You tend to keep things easy until it matters, then say it straight. People may not see that turn coming.",
-      "Kind and direct both live in you. Today, lead with whichever one you used less this week."
+      "You kept it easy until it mattered, then you said it straight. People missed the turn coming.",
+      "Kind and direct both show up in you. You led with the one you used less this week."
     ]
   },
   {
     keys: ["agreeableness:low", "conflict_assertiveness:high"],
     lines: [
-      "You tend to hold your ground and say so. Being right will land better today with a softer first line.",
-      "You rarely fold and rarely stay quiet. Ask one question before you make your point."
+      "You held your ground and you said so. The point landed better once the first line was softer.",
+      "You rarely fold and you rarely stay quiet. You asked one question before the point."
     ]
   },
   {
     keys: ["agreeableness:low", "conflict_assertiveness:low"],
     lines: [
-      "You tend to disagree quietly. The other person may think you agreed.",
-      "You hold your ground on the inside and step back on the outside. Let one of those show today."
+      "You disagreed quietly. From across the table it looked like you had agreed.",
+      "You held your ground inside and stepped back outside. One of those showed today."
     ]
   },
   {
     keys: ["attachment_anxiety:high", "attachment_avoidance:high"],
     lines: [
-      "You tend to want people close and keep them at arm\u2019s length. Both are you looking out for yourself.",
-      "Lately you may want more than you show. Show one inch more today."
+      "You wanted people close and you kept a seat between you. Both were you looking out for yourself.",
+      "You wanted more than you showed. You showed a little more, in one text."
     ]
   },
   {
     keys: ["attachment_anxiety:high", "attachment_avoidance:low"],
     lines: [
-      "You tend to stay close and still worry they will go. Staying is already your answer, so ask for theirs.",
-      "You show up fully and then check if it was too much. It probably was not."
+      "You stayed close and still worried they would leave. You asked them, instead of guessing.",
+      "You showed up fully, then checked if it had been too much. It probably had not."
     ]
   },
   {
     keys: ["attachment_anxiety:low", "attachment_avoidance:high"],
     lines: [
-      "You tend to be calm about people because you keep them at a distance. Try calm and close.",
-      "Not much rattles you with people lately, maybe because few get near. Let one near."
+      "You stayed calm about people by keeping them a step away. Close was the harder part.",
+      "Not much rattled you with people. Few got near enough to try. You let one near."
     ]
   },
   {
     keys: ["attachment_anxiety:low", "attachment_avoidance:low"],
     lines: [
-      "You tend to stay close without gripping. People around you probably rest easier for it.",
-      "Close comes easy and worry stays low lately. Lend that calm to someone who has less of it."
+      "You stayed close without gripping. The people around you had an easier evening for it.",
+      "Close came easily and the worry stayed low. You lent a little of that to someone with less."
     ]
   },
   {
     keys: ["autonomy:high", "relatedness:high"],
     lines: [
-      "You tend to want it your way and want company for it. Say both out loud, people cannot guess the mix.",
-      "Independent and hungry for connection is not a contradiction. It just needs explaining to people."
+      "You wanted it your way and you wanted company for it. You said both out loud.",
+      "Your own route, with people on it, needed one sentence. You sent the sentence."
     ]
   },
   {
     keys: ["autonomy:high", "relatedness:low"],
     lines: [
-      "You tend to do it your way and do it alone. Efficient, and a little unwitnessed.",
-      "Nobody steering and nobody needed is how you run lately. Let someone in on one decision."
+      "You did it your way and you did it alone. Quick, and nobody saw the good part.",
+      "Nobody steering and nobody needed. You let someone in on one decision anyway."
     ]
   },
   {
     keys: ["autonomy:low", "relatedness:high"],
     lines: [
-      "You tend to follow the plan if it keeps you near your people. Check the plan is going where you want.",
-      "Going along feels fine when the company is good. Your own pick still counts today."
+      "You followed the plan when it kept you near your people. You checked where that plan was going.",
+      "Going along felt fine while the company was good. Your own pick still counted at dinner."
     ]
   },
   {
     keys: ["autonomy:high", "agreeableness:high"],
     lines: [
-      "You tend to want your own way and still say yes to theirs. Today, notice which one wins.",
-      "You go along on the outside and plan your own route on the inside. Say the route."
+      "You wanted your own way and you still said yes to theirs. You noticed which one won.",
+      "You went along on the outside and kept your own route inside. You said the route."
     ]
   },
   {
     keys: ["competence:low", "growth_mindset:high"],
     lines: [
-      "You tend to doubt yourself going in and learn fast coming out. Trust the second half more.",
-      "The doubt arrives first and the progress arrives anyway. Notice the order."
+      "You doubted yourself on the way in and learned fast on the way out. The second half was the proof.",
+      "The doubt arrived first. The progress arrived anyway. You noticed the order."
     ]
   },
   {
     keys: ["competence:high", "growth_mindset:low"],
     lines: [
-      "You tend to feel capable at what you know and finished with what you do not. One of those is closer than it looks.",
-      "You trust yourself on home ground. A miss away from it does not have to close the road."
+      "You felt able at what you know, and finished with what you don\u2019t. One of those was closer than it looked.",
+      "You trusted yourself on familiar ground. A miss away from it did not have to end the try."
     ]
   },
   {
     keys: ["growth_mindset:high", "locus_of_control:high"],
     lines: [
-      'You tend to own the miss and then fix it. Leave room today for "that one was not on me".',
-      "Everything is a lesson and all of it is yours to learn. Some days it is just a day."
+      "You owned the miss and then you fixed it. You left room for the one that was not on you.",
+      "Every miss became a lesson, and all of it was yours to learn. Some days it was just a day."
     ]
   },
   {
     keys: ["growth_mindset:low", "locus_of_control:low"],
     lines: [
-      "When it goes wrong you tend to figure it was going to. Try one small change before you call it.",
-      "Lately it can feel bound to happen and not worth trying. Test that against one small thing."
+      "When it went wrong you figured it was going to. You tried one small change before you called it.",
+      "It felt bound to happen and not worth a try. You tested that on one small thing."
     ]
   },
   {
     keys: ["steadiness:high", "playfulness:high"],
     lines: [
-      "You tend to bounce back and find the joke. Check today that the joke is not skipping a step.",
-      "Light and hard to rattle. Someone on a heavier day may need you to slow down to their speed."
+      "You came back fast and found the joke. You checked the joke was not skipping a step.",
+      "Light, and hard to shake. Someone on a heavier day needed you at their speed."
     ]
   },
   {
     keys: ["steadiness:low", "playfulness:high"],
     lines: [
-      "You tend to feel it hard and laugh anyway. The laugh is real, and so is the other thing.",
-      "A lighter take is your way through a heavy day. Let one person see the heavy part too."
+      "You felt it hard and laughed anyway. The laugh was real, and so was the other thing.",
+      "A lighter take got you through a heavy day. You let one person see the heavy part too."
     ]
   },
   {
     keys: ["steadiness:low", "conscientiousness:high"],
     lines: [
-      "You tend to keep going on a bad day. Getting it done and being fine are two separate checks.",
-      "The work gets finished even when the mood does not lift. Give the mood ten minutes of its own."
+      "You kept going on a bad day. Getting it done and feeling fine were two separate checks.",
+      "The work got finished. The mood did not lift. You gave the mood ten minutes of its own."
     ]
   },
   {
     keys: ["steadiness:low", "attachment_anxiety:high"],
     lines: [
-      "A small thing with someone you like can take the whole day. Ask them, and get the day back.",
-      "You tend to feel it long and read into the quiet. Check one story against the facts today."
+      "A small thing with someone you like took the whole day. You asked them, and the day came back.",
+      "You felt it for a long time and read into the quiet. You checked one story against the texts."
     ]
   },
   {
     keys: ["steadiness:high", "agreeableness:high"],
     lines: [
-      "You tend to let it go and move on. That is easy to be around, so make sure you get heard once today.",
-      "Calm and easygoing makes you the steady one. Steady people get to have a bad day too."
+      "You let it go and moved on. Easy to be around, so you made sure you were heard once today.",
+      "Calm and easy made you the steady one in the room. You still took a bad hour for yourself."
     ]
   },
   {
     keys: ["extraversion:high", "conflict_assertiveness:high"],
     lines: [
-      "You tend to fill the room and say what you think. Quieter people today may need an opening.",
-      "You tend toward loud and clear. Try clear and quiet once."
+      "You filled the room and said what you thought. You left a quieter person an opening.",
+      "You went loud and clear. Once, you tried the same point quieter."
     ]
   },
   {
     keys: ["extraversion:low", "conflict_assertiveness:low"],
     lines: [
-      "You tend to stay quiet and let it go. The thing you did not say is still there.",
-      "Quiet in the room and quiet in a disagreement. Pick one place today to be heard."
+      "You stayed quiet and you let it go. The thing you did not say was still in the room.",
+      "Quiet at the table and quiet in a disagreement. You picked one place to be heard."
     ]
   },
   {
     keys: ["extraversion:low", "conflict_assertiveness:high"],
     lines: [
-      "You tend to say little, and then say exactly what you think. It lands harder for being rare.",
-      "Quiet until it matters. Give people a gentler line before the direct one."
+      "You said little, then you said exactly what you thought. It landed harder for being rare.",
+      "Quiet until it mattered. You gave a gentler line before the direct one."
     ]
   },
   {
     keys: ["openness:high", "autonomy:high"],
     lines: [
-      "You tend to want it new and want it your way. A good idea from someone else still counts.",
-      "Untried and unassisted is your favorite route. Take a passenger."
+      "You wanted it new and you wanted it your way. A good idea from someone else still counted.",
+      "You wanted the new plan, and you wanted to do it alone. You let someone come for one stop."
     ]
   },
   {
     keys: ["openness:low", "autonomy:low"],
     lines: [
-      "You tend to like a known path that someone else chose. Today, choose one thing and change one thing.",
-      "Set and familiar suits you. A small surprise you pick yourself will not break that."
+      "You liked a known route that someone else had chosen. Today you chose one thing and changed one thing.",
+      "Set and familiar suited you. A small surprise you picked yourself did not break that."
     ]
   },
   {
     keys: ["conflict_cooperativeness:high", "conflict_assertiveness:high"],
     lines: [
-      "You tend to say your piece and still look for the fair deal. That is a hard pair, and you carry it.",
-      "Direct and fair. Today the fair part may need to go first."
+      "You said your piece and still looked for a deal you could both stand. The talk used both.",
+      "Direct, then fair. Today the fair part went first."
     ]
   },
   {
     keys: ["conflict_cooperativeness:high", "conflict_assertiveness:low"],
     lines: [
-      "You tend to give first and say little. Check whether the deal still feels even to you.",
-      "You make room for them and step back yourself. Take up one square foot today."
+      "You gave first and said little. You checked whether the deal still felt even to you.",
+      "You made room for them and stepped back yourself. You took a little of that room back today."
     ]
   },
   {
     keys: ["conflict_cooperativeness:low", "conflict_assertiveness:high"],
     lines: [
-      "You tend to push your point and guard your outcome. You will likely win, so decide if winning is the goal.",
-      "Lately you lean sharp and unbending. Save that hand for something that matters."
+      "You pushed your point and guarded what you wanted. You paused to ask if winning was the point.",
+      "You leaned sharp and you did not bend. You saved that for the thing that actually mattered."
     ]
   },
   {
     keys: ["self_efficacy:high", "conscientiousness:low"],
     lines: [
-      "You tend to believe you can do it and then leave it for later. Later is getting crowded.",
-      "Sure you can pull it off, less sure when. Put a time on one thing."
+      "You believed you could do it, then you left it for later. Later was getting crowded.",
+      "Sure you could pull it off. Less sure when. You put a time on one thing."
     ]
   },
   {
     keys: ["self_efficacy:low", "conscientiousness:high"],
     lines: [
-      "You tend to doubt the big thing and do it anyway, step by step. The steps are the proof.",
-      "You finish what you were not sure you could start. Remember that at the next start."
+      "You doubted the big thing and did it anyway, step by step. The steps were the proof on the page.",
+      "You finished what you were not sure you could start. You remembered that at the next start."
     ]
   },
   {
     keys: ["relatedness:high", "attachment_avoidance:high"],
     lines: [
-      "You tend to need connection and keep it at a distance. That gap might be where some of the tiredness comes from.",
-      "A day needs real contact to land for you, and lately that is the part you step around. Step toward it once."
+      "You needed a real connection and you kept it a step away. Some of the tiredness sat in that gap.",
+      "The day needed real contact to land, and that was the part you walked around. You walked toward it once."
     ]
   },
   {
     keys: ["playfulness:high", "conflict_assertiveness:low"],
     lines: [
-      "You tend to joke instead of disagree. The joke gets a laugh and the issue stays.",
-      "Light is how you sidestep a fight. Say the plain version once today."
+      "You joked instead of disagreeing. The joke got a laugh. The issue stayed on the table.",
+      "Light is how you step around a fight. You said the plain version once, with no punchline."
     ]
   },
   {
     keys: ["playfulness:low", "extraversion:high"],
     lines: [
-      "You tend to bring the energy but not the play. Let the room be pointless for a minute.",
-      "Around people a lot, and usually on task. Try around people and off task."
+      "You brought the crowd and not the play. You let the room be pointless for a minute.",
+      "Around people a lot, and usually on a task. You tried around people and off the task."
     ]
   },
   {
     keys: ["locus_of_control:high", "steadiness:low"],
     lines: [
-      "You tend to blame yourself and then carry it all day. Put it down at the door tonight.",
-      "It was your part, you think, and it sits with you. Check how big your part really was."
+      "You blamed yourself and then carried it all day. You put it down at the door tonight.",
+      "You decided it was your part, and it sat with you. You checked how big that part really was."
     ]
   },
   {
     keys: ["agreeableness:high", "relatedness:high"],
     lines: [
-      "You tend to keep people happy because you need them near. They would stay for the honest version too.",
-      "You go along to stay close. Close survives a no."
+      "You kept people happy because you wanted them near. They would have stayed for the honest version.",
+      "You went along to stay close. Close survived a no, and you tried one."
     ]
   }
 ];
 var STARTERS = [
-  "Notice the first thing you put off today. It usually says more than the thing you do first.",
-  "Pick one small promise to yourself today and keep it. That is how the bigger ones get believable.",
-  "The person you reply to fastest today is telling you something. So is the one you leave on read.",
-  "One honest sentence today is worth ten polite ones.",
-  "Notice what you do in the first quiet minute. That tends to be the real default.",
-  "Somebody near you is waiting to be asked. Ask.",
-  "The thing you keep almost starting is probably the thing.",
-  "Watch what you defend today. It tends to be what you care about.",
-  "Tired and bored feel alike. Check which one it is before you quit.",
-  "Do one thing slower than usual today and see what shows up.",
-  "The opinion you held back yesterday is still an opinion. It might be worth saying.",
-  "Something small will annoy you today. It is usually pointing at something larger."
+  "The first thing you put off this morning said more than the thing you did first.",
+  "You kept one small promise to yourself before lunch. The bigger ones got a little closer.",
+  "The person you reply to fastest is a clue. So is the name still sitting there.",
+  "One honest sentence in the thread did more than ten polite ones.",
+  "What you did in the first quiet minute was the real default.",
+  "Somebody near you was waiting for one question. It was a single line.",
+  "You keep almost opening the same doc. That one is probably the task.",
+  "What you defended today gave away what you care about.",
+  "Tired and bored feel the same at four. You checked which one it was before you quit.",
+  "You did one thing slower than usual. Something showed up in the extra minute.",
+  "The opinion you held back yesterday was still an opinion this morning.",
+  "A small annoyance showed up. It was pointing at something larger, and you could see the shape."
 ];
 function fnv1a(text) {
   let hash = 2166136261;
@@ -1404,20 +1404,18 @@ var registry = new Map(DAILY_LINES.map((line) => [line.id, line]));
 
 // src/lib/voice/moment-voice.ts
 var MOMENT_VOICE_RULES = [
-  "One concrete, recognizable moment the person has probably lived. Past tense or plain present.",
-  "Set it in how people live now: texts, group chats, read receipts, the typing bubble, voice notes, open tabs, unread counts, calendars, apps. Use the situation, never slang words, because slang dates in a year and reads as trying too hard.",
-  'Describe the moment and stop. No advice, no "try", no lesson, no question to reflect on.',
-  "Tease kindly. Self-aware and a little funny, never cruel, never shaming. Honest is fine, even when it stings a little.",
-  `Specific beats general: "They said 'k.' You read it eleven ways." beats "you overthink messages."`,
-  `Short. Never "you are" or "you're". Never "always". No personality-type codes or test names presented as the reader's result (a framework name is allowed only when relevant, accurate and explained, which a short line rarely has room for). Never apply a diagnosis or a label to the reader (toxic, clingy, avoidant, a disorder); everyday and contextual use of those words is fine.`
+  "Say what you mean in plain language. One plain idea per line. Do not join two ideas with because, and then, or while. Do not add a scene, a joke, or a metaphor until the meaning is already clear.",
+  "Do not assume missing context. If the line can appear alone, it has to make sense alone. Do not mention a listing, a plan, a joke, or a question unless that thing is already visible.",
+  "Do not invent the reader's history. Do not turn a score or an answer into a claim that a specific event happened. Keep apart what the reader said, what the answers suggest, and a hypothetical. Mark a hypothetical as hypothetical.",
+  "Keep the link to the trait accurate. Do not add an unrelated habit.",
+  "Priority: accuracy, then clarity, then relevance, then a natural voice, then optional humor. Cut a joke or a metaphor that weakens a higher priority.",
+  "Match the purpose. A button names the action. An error says what happened and what to do. An insight says what the answers suggest and why. A comparison states the actual similarity or difference. A story may use a scene when the scene is established and is clearly fiction, not the reader's real week. Do not make every line sound like a story card.",
+  `Never "you are" or "you're" as an identity label. Never "always". No personality-type code presented as the reader's result. Never apply a diagnosis or a label to the reader; everyday and contextual use of those words is fine.`
 ];
 var MOMENT_VOICE_EXAMPLES = [
-  'They said "k." You read it eleven ways.',
-  'You said "on my way" from the shower.',
-  'You have 47 tabs open and every one of them is "for later."',
-  "You typed the whole reply, then held backspace.",
-  "The plans got cancelled and you felt it like a gift.",
-  "You hearted a message you disagreed with."
+  "You like trying new things, even when everyone else would rather stick with what they know.",
+  "You stick with what you already know you enjoy.",
+  "Your answers suggest you like a new option even when a familiar one is already there."
 ];
 var MOMENT_VOICE_BLOCK = `VOICE \u2014 every line must satisfy all of these:
 ${MOMENT_VOICE_RULES.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
@@ -1607,32 +1605,31 @@ ${MOMENT_VOICE_BLOCK}
 RULES
 - Use no fact, date, number, name, place or quote that is not written in THE LEGEND. No invented quotes.
 - Write numbers as words, use no quotation marks, and name no apps, brands or people other than the legend.
-  (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice lists.
 - Do not name the reader's trait sides with any word other than the ones given in THE READER.
-- Kind, specific, modern, warm. Write like a friend who just spotted the link and is a little delighted by it.
+- Kind, specific, and plain. State the link. Do not decorate it until the link is unclear.
 - Never leave square or angle brackets in the answer.
+- Do not say the reader did something the answers do not show. A meeting scene is hypothetical. Open it with "Picture an hour with [the legend]." Do not add a second disclaimer. Do not say the talk would stay on the known work.
 
-"whatItMeansForYou" \u2014 2 or 3 sentences, in this order (emci, 2026-10-08):
-  1. The bridge: say plainly what the legend did (in the story, for a tale), in a few words from the entry, and the side of the reader it shares.
-  2. One everyday moment the reader would recognise that shows that same side. It must make physical sense
-     (a voice note is recorded, not typed; a text is sent, not said) and it must clearly be the SAME trait as the bridge.
-  3. A short, kind closing line on what that says about the reader. No advice, no "should".
-  Never write a moment that has no link to the legend. Never stack two unrelated moments.
-  Shape only (do not copy the words, and vary how you open each sentence): "[Legend] did [thing from the entry]. You do a smaller version of that when [one modern moment showing the same side]. [What that quietly says about you]."
+"whatItMeansForYou" \u2014 2 or 3 sentences, in this order:
+  1. The bridge: say plainly what the legend did (in the story, for a tale), in a few words from the entry, and the side of the reader it shares. Say the similarity in plain words.
+  2. Optional: one example of that same side, only if it makes the similarity clearer. Mark it as an example. It must be the SAME trait as the bridge. Do not glue it to the legend's deed with "when" unless they are the same event.
+  3. A short closing line on what that says about the reader. No advice, no "should".
+  Never add a detail that has no link to the legend. Never stack two unrelated scenes.
+  Shape only (do not copy the words): "[Legend] did [thing from the entry]. You share [the plain similarity]. [What that says about you]."
   Reread it once: if a friend would ask "wait, what does that have to do with it?", rewrite it.
 
 "title" \u2014 a name for the reader, two to ${TITLE_MAX_WORDS} words, all lowercase, starting with "the".
   It names ONE side they share with the legend (from THE READER) in a fresh, flattering way the reader would want to share.
   Never about worry, doubt, overthinking, loneliness, sadness or struggle, even if that side is one of them. No names, no numbers, no trait words from a test.
 
-"metScene" \u2014 "If you'd met": ${SCENE_MIN_WORDS}\u2013${SCENE_MAX_WORDS} words, two sentences. Imagine one ordinary hour the reader spends
-  with the legend (inside the tale, for a story), built only from THE LEGEND's facts and moments: one thing you do together,
-  and one thing the legend would notice about the reader's shared side. Fun and specific; no new events, places, people or facts.
+"metScene" \u2014 "Picture an hour with [the legend]": ${SCENE_MIN_WORDS}\u2013${SCENE_MAX_WORDS} words. This is a hypothetical, not the reader's history. One plain imagined scene, only from THE LEGEND's facts and moments (inside the tale, for a story). No new events, places, people or facts.
+  Shape only (do not copy the words): "Picture an hour with [name]: they'd be [one fact from the entry], and you'd [the reader's shared side]."
+  The "Picture" opening is the hypothetical mark. Do not add "that hour is imagined." Do not say the talk would stay on the known work.
 
 "differ" \u2014 only when a DIFFERENCE is given at the end: "Where you differ", one sentence, ${DIFFER_MIN_WORDS}\u2013${DIFFER_MAX_WORDS} words, on that
-  difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry says nothing about that side of the legend,
-  do NOT claim they lacked it; contrast the reader's side with what the legend is known for.
+  difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry has a fact for that side, you may name the legend and that fact.
+  If the entry says nothing about that side, state the reader only. Do not name the legend. Do not claim they lacked the side. Do not say it is separate from what they are known for. Do not say the answers land on that side.
 
 ${CARD_JOKE_RULES}
 
@@ -1785,7 +1782,8 @@ function parseStoredLegendStory(raw) {
     ...typeof obj.joke === "string" ? { joke: obj.joke } : {},
     ...typeof obj.libraryId === "string" && /^[0-9a-f-]{36}$/.test(obj.libraryId) ? { libraryId: obj.libraryId } : {},
     ...typeof obj.others === "number" ? { others: obj.others } : {},
-    source: obj.source === "ai" ? "ai" : "fallback"
+    source: obj.source === "ai" ? "ai" : obj.source === "library" ? "library" : "fallback",
+    ...Array.isArray(obj.lineIds) ? { lineIds: obj.lineIds.filter((id) => typeof id === "string") } : {}
   };
 }
 function storedDiffer(raw) {
@@ -1968,7 +1966,7 @@ RULES
   you need in a few plain words. Never show a score or percentage. A framework or theory name is allowed only when it is
   relevant, accurate and explained, and never as a diagnosis or as a validated assessment ATO is not; never present a
   type code (MBTI and similar) as the reader's own result.
-- Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
+- If you add an example, it has to make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
 - Kind, specific, modern, warm, a little delighted. Never a diagnosis or label applied to the reader, never shaming.
 - Closeness (love, partners, family, friends) is an ordinary topic, judged by meaning like any other: describe habits
   with close people plainly and specifically. Never apply a
@@ -1980,8 +1978,8 @@ RULES
   the reader is on.
 - When a card gives an ANGLE, set every example in that part of life.
 
-STYLE \u2014 CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop" above, and the
-counts in the register examples there \u2014 "eleven ways", "47 tabs" \u2014 are exactly what NOT to do here):
+STYLE \u2014 MEANING FIRST (emci, 2026-10-23; this follows the voice block above. Do not
+invent a scene, and do not copy a count from an old example \u2014 "eleven ways", "47 tabs" \u2014 those are exactly what NOT to do here):
 - Every part opens with a plain, true sentence about the reader that a friend would nod at.
   Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
   not a strange one-off scene). Nobody should have to reread it to get the point.
@@ -2005,10 +2003,10 @@ FOR EACH CARD:
 "othersNotice" \u2014 ${NOTICE_MIN_WORDS}\u2013${NOTICE_MAX_WORDS} words: what the people around the reader probably notice about them here. Kind, specific.
 "whatItMeansForYou" \u2014 ${DIVE_MEANS_MIN_WORDS}\u2013${DIVE_MEANS_MAX_WORDS} words, 2 or 3 sentences, in this order:
   1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
-  2. One realistic everyday moment that shows it.
+  2. Optional: one realistic example, only if it makes that pattern clearer. Mark it as an example. Do not present it as something the reader did.
   3. A short, honest closing line: what that says about the reader, including the real cost if there is one, and where
      it fits one small step they could try.
-  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What it says about you, and its cost]."
+  Shape only (do not copy the words): "[Plain pattern]. [Optional example, marked as an example]. [What it says about you, and its cost]."
   Reread it once: if a friend would ask "wait, what?", rewrite it.
 ${CARD_JOKE_RULES}
 
@@ -2125,7 +2123,8 @@ function parseStoredDive(raw) {
     whatItMeansForYou: obj.whatItMeansForYou,
     ...typeof obj.joke === "string" ? { joke: obj.joke } : {},
     ...typeof obj.opensOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(obj.opensOn) ? { opensOn: obj.opensOn } : {},
-    source: "ai"
+    source: obj.source === "library" ? "library" : "ai",
+    ...Array.isArray(obj.lineIds) ? { lineIds: obj.lineIds.filter((id) => typeof id === "string") } : {}
   };
 }
 
@@ -5242,8 +5241,8 @@ var SCIENCE_LEGENDS = [
       angle("a4", "twice, in two fields", "How does one person win twice, in two different sciences?", "Going deep on one question can open doors in more than one direction.")
     ],
     tags: [
-      tag("openness", "high", "chased an unknown glow", "She studied a new kind of radiation that nobody understood yet."),
-      tag("conscientiousness", "high", "measured everything, twice", "Her discoveries came from systematic, repeated measurement."),
+      tag("openness", "high", "studied what nobody had named", "She studied a new kind of radiation that nobody understood yet."),
+      tag("conscientiousness", "high", "weighed the sample twice", "Her discoveries came from systematic, repeated measurement."),
       tag("growth_mindset", "high", "learned a new field", "She moved from physics into chemistry and won in both.")
     ],
     vetting: "Scientist, died 1934; no political office; broadly admired worldwide."
@@ -6224,7 +6223,7 @@ var SPORT_LEGENDS = [
       moment("m2", "His career home run total stood at 714.", src(wiki("Babe_Ruth"), "714"))
     ],
     angles: [
-      angle("a1", "pitcher to slugger", "What does a pitcher who became the greatest hitter have in common with you?", "Switching roles can unlock the thing you\u2019re best at."),
+      angle("a1", "pitcher to slugger", "What does a pitcher who became the greatest hitter have in common with you?", "Switching roles can show the thing you\u2019re best at."),
       angle("a2", "the big swing", "Why swing for the fences every time?", "Going big sometimes means missing, and that\u2019s part of it."),
       angle("a3", "the nickname", "What does it mean when the world gives you a nickname?", "Being yourself loudly is how people remember you."),
       angle("a4", "first five", "What does it take to be in the first group remembered?", "Doing something nobody had done sets the bar for everyone after.")

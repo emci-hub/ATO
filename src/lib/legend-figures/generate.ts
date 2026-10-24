@@ -1,14 +1,18 @@
 /**
- * Legend figures — the one AI call (manual tap only).
+ * Legend figures — one reveal, no client model call.
  *
  * The phone sends only the bucket key to the `ai-library` Edge Function, which
  * claims the reveal on the server first (no claim = no call, hand-written
  * fallback), serves an unseen library card or writes a new one. The old
  * one-person path (`generateText` → `ai-generate`) was removed in roadmap A5.
+ * While `STORY_LIBRARY_RUNTIME` is on, the phone assembles approved Story
+ * Library copy and does not call the server. The flag ships off.
  * Never throws to the screen.
  */
 import { LEGEND_LIBRARY, legendBucketKey } from '@/lib/ai-library/legend';
 import { writeLibraryCard, type LibraryServed } from '@/lib/ai-library/client';
+import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
+import { renderLibraryLegend } from '@/lib/story-library/render';
 import type { CardJokeStyle } from '@/lib/voice/card-joke';
 import { rankStoryAxes } from '@/lib/story-thread';
 import type { TraitTrack } from '@/lib/trait-stability';
@@ -55,6 +59,8 @@ export function planLegendReveal(input: {
  *   paid reveal  the server claims 5 tokens, then the same; a failed write is
  *                refunded on the server
  * Any other answer (including 'missing') gives the hand-written card.
+ * Story Library on = approved copy on the phone, no server call and no charge.
+ * The flag ships off, so this build still uses the server library.
  */
 export async function revealLegendStory(input: {
   legend: LegendFigure;
@@ -68,6 +74,17 @@ export async function revealLegendStory(input: {
   free: boolean;
 }): Promise<LegendStory> {
   const fallback = () => fallbackLegendStory(input);
+  if (STORY_LIBRARY_RUNTIME) {
+    if (input.pairs.length === 0) return fallback();
+    const { getShownIds, rememberShown } = await import('@/lib/story-library/shown');
+    const { persistShownDevice } = await import('@/lib/story-library/device-store');
+    const { hydrateStoryLibraryDevice } = await import('@/lib/story-library/device-store');
+    await hydrateStoryLibraryDevice();
+    const story = renderLibraryLegend({ ...input, shown: getShownIds() });
+    rememberShown(story.lineIds ?? []);
+    void persistShownDevice();
+    return story;
+  }
   if (!input.consentGranted || input.pairs.length === 0) return fallback();
   const bucket = legendBucketKey(input);
   const take = (served: LibraryServed<LegendStory>): LegendStory => ({

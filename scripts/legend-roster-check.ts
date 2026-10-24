@@ -488,7 +488,11 @@ assert.match(legendLineViolation('Your note to Émile can wait.', hokAllowed, fa
 assert.equal(legendLineViolation('He kept going. Your draft can too.', hokAllowed, false), null, 'a new sentence may start with a capital');
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /Write numbers as words, use no quotation marks, and name no apps, brands or people/);
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /The bridge: say plainly what the legend did/, 'what it means starts from what the legend did');
-assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /must make physical sense/, 'the everyday moment must make sense');
+assert.match(
+  buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }),
+  /Do not say the reader did something the answers do not show/,
+  'the link stays a similarity, not an invented event',
+);
 // Where you differ: asked only when the reader has a side the legend doesn't share.
 const differCtx = { ...ctx, differ: legendDiffer(hok, [{ axis: 'extraversion', lean: 'high', strength: 0.4 }]) };
 assert.ok(differCtx.differ && differCtx.differ.tag === null, 'a trait the label never shows');
@@ -567,7 +571,7 @@ for (const f of hok.facts.filter((x) => !x.source.verified)) assert.ok(!prompt.i
 assert.doesNotMatch(prompt, /userId|user_id|@|handle/i, 'no account details in the prompt');
 const storyPrompt = buildLegendPrompt({ legend: mulan, angle: mulan.angles[0]!, focusMomentId: 'm1', pairs: mulanPairs });
 assert.match(storyPrompt, /This is a story, not history/);
-ok('prompt: moment voice, entry-only facts, verified only, no account details, myths flagged');
+ok('prompt: meaning-first voice, entry-only facts, verified only, no account details, myths flagged');
 
 /* -------------------------------------------------------------- wiring --- */
 
@@ -580,8 +584,11 @@ assert.equal(screen.split('revealLegendStory(').length - 1, 1, 'exactly one call
 assert.match(screen, /legendsUnlocked\(tracks\)/, 'same unlock as the rest of the app');
 const gen = read('src/lib/legend-figures/generate.ts');
 // The old one-person path (claimLegendStory → generateText) was removed in roadmap A5. The claim now happens
-// on the server, before the model call, and the phone has no model call at all.
+// on the server, before the model call, and the phone has no model call at all. While STORY_LIBRARY_RUNTIME
+// is on, the phone assembles approved copy and does not call the server. The flag ships off.
 assert.doesNotMatch(gen.replace(/\/\*[\s\S]*?\*\//g, ''), /generateText|claimLegendStory|writeLegendStory/, 'no model call or client-side claim on the phone');
+assert.match(gen, /fallbackLegendStory\(input\)/, 'a missing library uses the museum words');
+assert.match(gen, /if \(STORY_LIBRARY_RUNTIME\)/, 'the story library flag short-circuits the server');
 const libraryServer = read('supabase/functions/ai-library/index.ts');
 assert.ok(libraryServer.indexOf("rpc('claim_library_write'") < libraryServer.indexOf('await complete('), 'the server claim comes before the call');
 assert.match(gen, /writeLibraryCard\('legend', bucket, input\.free \? 'free_legend' : 'paid'/, 'the phone only asks the server for a card');
@@ -589,10 +596,12 @@ assert.match(screen, /meetingRef\.current\) return;/, 'a second tap while a stor
 // wave92: past the free reveal(s), one more is an AI view paid in tokens; no AI card → no reveal.
 assert.match(
   screen,
-  /const free = revealsLeft\(revealedBefore, bonus\) > 0;\s*if \(!free && !\(consentGranted && \(me \? atoTokenBalanceOf\(me\) : 0\) >= AI_TOKEN_PRICE\)\) return;/,
-  'no reveal past the day’s allowance unless it is paid for',
+  /const free = STORY_LIBRARY_RUNTIME \|\| revealsLeft\(revealedBefore, bonus\) > 0;\s*if \(!free && !\(consentGranted && \(me \? atoTokenBalanceOf\(me\) : 0\) >= AI_TOKEN_PRICE\)\) return;/,
+  'no reveal past the day’s allowance unless it is paid for, and the story library is free',
 );
 assert.match(screen, /if \(!free && story\.source !== 'ai'\) \{/, 'a paid reveal without an AI card is never saved');
+assert.match(screen, /if \(!free\) await refundAiTokens\('legend'\)/, 'a paid reveal that times out is refunded');
+assert.doesNotMatch(gen, /refundAiTokens\(/, 'the legend writer never charged on the phone, so it does not refund');
 assert.match(libraryServer, /refund_ai_tokens/, 'charged but no AI card → refunded (on the server)');
 assert.match(screen, /if \(!meetingRef\.current\) persist\(next\);/, 'a reload never overwrites a reveal being saved');
 assert.match(screen, /LegendShareSheet/, 'share uses the on-screen Modal capture (share-card.tsx pattern)');

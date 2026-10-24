@@ -200,7 +200,7 @@ and `reset-account` (fixed, re-run green); typecheck + eslint clean [x] Opus rev
 verified: wave105 against a real database (no SQL run), the screens on a device. Pending: my OK to apply `wave105` (Release B), commit (Play files alone).
 
 **8+9.** [x] plan approved by me (rename only the dead `sage-*` files; in the end none were dead, see below) [x] notification ask: after the
-first insight loads, a sheet ("Want a nudge now and then?" · Turn on / Not now), asked once ever (`ato.push.asked`), no sheet if the system
+first insight loads, a sheet ("Allow a reminder?" · Turn on / Not now), asked once ever (`ato.push.asked`), no sheet if the system
 already decided (e.g. through Divecore's pet reminder), never at cold start or on web; the silent `checkCount` ask in `push-runtime.tsx` is
 gone; `push-policy.ts` gate = insightCount ≥ 1; `check:push` rewritten with pairs [x] accessibility: label + role on all 17 controls in
 `auth/index`, `auth/login`, `onboarding` plus the code screen `auth-otp-code.tsx`; new `check:a11y-auth` (4 files, synthetic pass/fail pair);

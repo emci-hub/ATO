@@ -124,7 +124,7 @@ const bank = traitPoleLine(withSignal.axis, 0.8) ?? traitPoleLine(withSignal.axi
 assert.ok(bank);
 assert.match(
   withSignal.line.toLowerCase(),
-  new RegExp(bank.replace(/^They /, '').replace(/\.$/, '').slice(0, 24).toLowerCase()),
+  new RegExp(bank.replace(/^They(?:'d|'re|'ve)? /, '').replace(/\.$/, '').slice(0, 24).toLowerCase()),
 );
 const quiet = resolveWith({ knocks: '', facts: [], history: [] });
 assert.ok(quiet);
@@ -281,7 +281,7 @@ assert.doesNotMatch(sageTab, /resolveSageKnows/);
 ok('SageKnowsCard is not mounted on Home or Insights; AskSheet handles kind sage_knows');
 
 const composedCheckin = composeSageKnowsLine(TRAIT_POLE_LINES.extraversion.low, null);
-assert.match(composedCheckin.line, /quieter time/);
+assert.match(composedCheckin.line, /recharge with time to yourself/);
 assert.match(composedCheckin.line, /Still in the neighborhood\?/);
 assert.doesNotMatch(composedCheckin.line, /They /);
 for (const axis of TRAIT_AXES) {

@@ -59,7 +59,7 @@ export const STORY_REFERENCES: readonly StoryScript[] = [
       'cat_communication',
       'high',
       'you rewrote the chat instead of deleting it',
-      'Watch out: not every slip needs a speech. Sometimes "my bad" is plenty.',
+      'Watch out: not every slip needs a speech. "My bad" is plenty.',
       true,
     ),
     jokeLight: { beat: 'move', line: 2 },

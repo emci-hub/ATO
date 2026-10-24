@@ -12,7 +12,7 @@ export const MIXED_IDEAS: readonly InsightIdea[] = [
     focus: [
       'Some days you want to try something new, and other days you want what you already know.',
       'When you choose where to eat or what to watch, you tend to go back and forth between new and familiar.',
-      'Your pull toward new things tends to depend on your mood and how much energy you have.',
+      'Your pull toward new things tends to depend on your mood and how rested you feel.',
     ],
     why: 'Having both sides is useful, but you may not notice which one you’re choosing, and that can leave you with a pick you don’t enjoy.',
     try: [
@@ -28,7 +28,7 @@ export const MIXED_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When a friend suggests a new plan, you tend to say yes to some and no to others.',
       'You usually need a reason to try something unfamiliar, but a small one is enough.',
-      'When a new idea shows up at work, you tend to be open to it if you can see how it helps.',
+      'You tend to be open to a new idea at work if you can see how it helps.',
     ],
     why: 'Wanting a reason keeps you from jumping at everything, but friends may not know what would get you to say yes.',
     try: [
@@ -66,7 +66,7 @@ export const MIXED_IDEAS: readonly InsightIdea[] = [
     why: 'Putting your effort where it matters is sensible, but small things you let slide can add up and nag at you.',
     try: [
       'Pick one small task you’ve skipped and do it today, so it stops nagging at you.',
-      'Write down which tasks matter most to you, so you protect your energy for them.',
+      'Write down which tasks matter most to you, so you keep your time for them.',
     ],
     watch: [
       'Notice which tasks you finish every time and which you put off.',
@@ -126,7 +126,7 @@ export const MIXED_IDEAS: readonly InsightIdea[] = [
     focus: [
       'In a group, you tend to talk more when you know the people and less when you don’t.',
       'You usually warm up after the first half hour at an event.',
-      'Your social energy tends to depend on who is in the room.',
+      'How social you feel tends to depend on who is in the room.',
     ],
     why: 'Warming up with the right people is natural, but others may only meet your quieter side if they see you in the first half hour.',
     try: [
@@ -616,9 +616,9 @@ export const MIXED_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When you make a mistake, you tend to learn from it on some days and feel stuck on others.',
       'You usually take feedback well when you’re rested and harder when you’re not.',
-      'Your reaction to a setback tends to depend on your energy.',
+      'Your reaction to a setback tends to depend on how tired you feel.',
     ],
-    why: 'How you handle setbacks depends on your energy, so the same mistake can feel like a lesson one day and a failure the next.',
+    why: 'How you handle setbacks depends on how tired you feel, so the same mistake can feel like a lesson one day and a failure the next.',
     try: [
       'Wait for a good day to review a mistake, so you learn from it with a clear head.',
       'Take some rest before you read hard feedback, so you take in more of it.',

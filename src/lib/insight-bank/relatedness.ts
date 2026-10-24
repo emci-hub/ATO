@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const RELATEDNESS_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_relatedness_h_01', ['relatedness:high'], {
+  idea("ftw_relatedness_h_01", ["relatedness:high"], {
     focus: [
-      'When your week has been busy, you tend to miss having a real conversation with someone close.',
-      'You usually need a few deep talks with friends to feel okay.',
-      'When you go a while without real connection, you tend to feel a bit off.',
+      "Your answers suggest you need a real connection for the day to feel right.",
+      "From your answers, you need a real connection for the day to feel right.",
+      "The pattern in your answers is that you need a real connection for the day to feel right.",
     ],
-    why: 'Connection matters a lot to you, so busy weeks without it can leave you feeling flat.',
+    why: "The upside for you is a day with a real tie. The catch is a day that depends on other people too much.",
     try: [
-      'Call a close friend for ten minutes today, so you get some real connection.',
-      'Plan a dinner with someone you love this week, so you have something to look forward to.',
+      "Next time you choose, name whether today actually needs that tie first.",
+      "Before you decide, check what the day still needs from you alone.",
     ],
     watch: [
-      'Notice how your mood changes after a real talk.',
-      'Notice when you’ve gone too long without one.',
+      "Notice when the day falls apart without other people.",
+      "Notice if you needed a day on your own.",
     ],
   }),
-  idea('ftw_relatedness_h_02', ['relatedness:high'], {
+  idea("ftw_relatedness_h_02", ["relatedness:high"], {
     focus: [
-      'At work, you tend to care a lot about getting along with your coworkers.',
-      'You usually enjoy your job more when you like the people around you.',
-      'When there’s tension on your team, you tend to feel it more than others.',
+      "The catch in your answers is a day that depends on other people too much.",
+      "What this can cost you is a day that depends on other people too much.",
+      "A cost worth naming for you is a day that depends on other people too much.",
     ],
-    why: 'Caring about people at work makes you a great teammate, but tension at work can affect you more.',
+    why: "The upside for you is a day with a real tie. The catch is a day that depends on other people too much.",
     try: [
-      'Ask a coworker how their week is going, so you build a small connection.',
-      'Eat lunch with someone from work this week, so you get to know them better.',
+      "Next time you choose, name whether today actually needs that tie first.",
+      "Before you decide, check what the day still needs from you alone.",
     ],
     watch: [
-      'Notice how your workday feels when your team is getting along.',
-      'Notice when work tension follows you home.',
+      "Notice when the day falls apart without other people.",
+      "Notice if you needed a day on your own.",
     ],
   }),
-  idea('ftw_relatedness_h_03', ['relatedness:high'], {
+  idea("ftw_relatedness_h_03", ["relatedness:high"], {
     focus: [
-      'When you spend a few days alone, you tend to start feeling lonely.',
-      'You usually feel low if you go too long without seeing friends.',
-      'When plans fall through, you tend to feel the empty evening more than others.',
+      "Someone else might notice that you want a real connection before the day feels right.",
+      "From the outside, you want a real connection before the day feels right.",
+      "Other people can see that you want a real connection before the day feels right.",
     ],
-    why: 'Needing people is normal for you, so planning connection ahead helps you avoid lonely stretches.',
+    why: "The upside for you is a day with a real tie. The catch is a day that depends on other people too much.",
     try: [
-      'Set up one plan for the weekend now, so you have connection to look forward to.',
-      'Text a friend while you’re home alone tonight, so the evening feels less quiet.',
+      "Next time you choose, name whether today actually needs that tie first.",
+      "Before you decide, check what the day still needs from you alone.",
     ],
     watch: [
-      'Notice how many days alone feel good and when it starts to feel lonely.',
-      'Notice which small contacts lift your mood.',
+      "Notice when the day falls apart without other people.",
+      "Notice if you needed a day on your own.",
     ],
   }),
-  idea('ftw_relatedness_h_04', ['relatedness:high'], {
+  idea("ftw_relatedness_h_04", ["relatedness:high"], {
     focus: [
-      'When a friend seems down, you tend to notice right away and reach out.',
-      'You usually keep track of how your close friends and family are doing.',
-      'When someone you love has a hard day, you tend to make time for them.',
+      "What you might miss is a day that could have stood on its own.",
+      "Your answers leave room to miss a day that could have stood on its own.",
+      "A thing you might skip is a day that could have stood on its own.",
     ],
-    why: 'Caring for others comes naturally to you, but you need people who check on you too.',
+    why: "The upside for you is a day with a real tie. The catch is a day that depends on other people too much.",
     try: [
-      'Tell a close friend how you’re doing, so they get a chance to support you.',
-      'Ask a friend to call you this week, so you get some care back.',
+      "Next time you choose, name whether today actually needs that tie first.",
+      "Before you decide, check what the day still needs from you alone.",
     ],
     watch: [
-      'Notice who checks in on you.',
-      'Notice when you’re supporting everyone else but nobody is supporting you.',
+      "Notice when the day falls apart without other people.",
+      "Notice if you needed a day on your own.",
     ],
   }),
-  idea('ftw_relatedness_h_05', ['relatedness:high'], {
+  idea("ftw_relatedness_h_05", ["relatedness:high"], {
     focus: [
-      'When a group of friends makes plans without you, you tend to feel left out.',
-      'You usually care a lot about being included in group plans.',
-      'When you see photos of friends out without you, you tend to feel it.',
+      "The helpful side for you shows up when a real tie can make the day land.",
+      "Your answers also show a use when a real tie can make the day land.",
+      "There is a use for you when a real tie can make the day land.",
     ],
-    why: 'Wanting to belong is human, and feeling left out can say more about how much you care than about the friendship.',
+    why: "The upside for you is a day with a real tie. The catch is a day that depends on other people too much.",
     try: [
-      'Text the group to suggest the next plan, so you’re part of it from the start.',
-      'Ask one friend if you can join next time, so they know you’d like to be included.',
+      "Next time you choose, name whether today actually needs that tie first.",
+      "Before you decide, check what the day still needs from you alone.",
     ],
     watch: [
-      'Notice when you assume being left out was on purpose.',
-      'Notice how often you’re included when you check.',
+      "Notice when the day falls apart without other people.",
+      "Notice if you needed a day on your own.",
     ],
   }),
-  idea('ftw_relatedness_h_06', ['relatedness:high', 'playfulness:high'], {
+  idea("ftw_relatedness_h_06", ["relatedness:high", "playfulness:high"], {
     focus: [
-      'You tend to connect with people through jokes, games and fun plans.',
-      'When you’re with friends, you usually want to laugh together.',
-      'You tend to feel closest to people after a fun night together.',
+      "Your answers suggest two things at once: you need a real tie, and you turn it into play.",
+      "Both can be true for you in the same week: you need a real tie, and you turn it into play.",
+      "In the same week, you need a real tie, and you turn it into play.",
     ],
-    why: 'Fun brings you closer to people, but some friends might want quiet time with you too.',
+    why: "The upside for you is a day with a real tie. The catch is a day that depends on other people too much.",
     try: [
-      'Plan a quiet hangout with a friend, so you connect in a different way.',
-      'Send a friend a funny message today, so they know you’re thinking of them.',
+      "Next time you choose, name whether today actually needs that tie first.",
+      "Before you decide, check what the day still needs from you alone.",
     ],
     watch: [
-      'Notice which friends you only see for fun plans.',
-      'Notice when a friend might want a slower talk.',
+      "Notice when the day falls apart without other people.",
+      "Notice if you needed a day on your own.",
     ],
   }),
-  idea('ftw_relatedness_l_01', ['relatedness:low'], {
+  idea("ftw_relatedness_l_01", ["relatedness:low"], {
     focus: [
-      'When you have a free day, you tend to enjoy spending it on your own.',
-      'You usually feel fine going a while without seeing friends.',
-      'When plans get cancelled, you tend to feel relieved to have time to yourself.',
+      "Your answers suggest you can let a day land without much connection.",
+      "From your answers, you can let a day land without much connection.",
+      "The pattern in your answers is that you can let a day land without much connection.",
     ],
-    why: 'Being fine alone gives you freedom, but friends might wonder if you still want to see them.',
+    why: "The upside for you is a day that can stand on its own. The catch is a day that gets too cut off.",
     try: [
-      'Text one friend to say hi this week, so they know you still think of them.',
-      'Plan one short hangout this month, so your friendships stay warm.',
+      "Next time you choose, name whether you are cut off or just fine first.",
+      "Before you decide, check who you would actually like to see.",
     ],
     watch: [
-      'Notice how long it’s been since you saw your close friends.',
-      'Notice if friends stop reaching out.',
+      "Notice when the day gets too cut off.",
+      "Notice if you wanted the plan with people.",
     ],
   }),
-  idea('ftw_relatedness_l_02', ['relatedness:low'], {
+  idea("ftw_relatedness_l_02", ["relatedness:low"], {
     focus: [
-      'At work, you tend to prefer focusing on your own tasks over team activities.',
-      'You usually work best without much social contact.',
-      'When there’s a team event, you tend to go for a little while and then head back to your work.',
+      "The catch in your answers is a day that gets too cut off.",
+      "What this can cost you is a day that gets too cut off.",
+      "A cost worth naming for you is a day that gets too cut off.",
     ],
-    why: 'Working alone helps you focus, but some connection with coworkers can make work easier for you.',
+    why: "The upside for you is a day that can stand on its own. The catch is a day that gets too cut off.",
     try: [
-      'Say hi to one coworker you don’t usually talk to, so the team feels more familiar.',
-      'Go to one team event this month, so coworkers get to know you.',
+      "Next time you choose, name whether you are cut off or just fine first.",
+      "Before you decide, check who you would actually like to see.",
     ],
     watch: [
-      'Notice how much easier work is when you know people.',
-      'Notice when a coworker reaches out to you.',
+      "Notice when the day gets too cut off.",
+      "Notice if you wanted the plan with people.",
     ],
   }),
-  idea('ftw_relatedness_l_03', ['relatedness:low'], {
+  idea("ftw_relatedness_l_03", ["relatedness:low"], {
     focus: [
-      'When you think of a friend, you tend not to text them unless there’s a reason.',
-      'You usually don’t reach out unless you have something specific to say.',
-      'When you miss someone, you tend to keep it to yourself.',
+      "Someone else might notice that you let a day land even when a plan with people is open.",
+      "From the outside, you let a day land even when a plan with people is open.",
+      "Other people can see that you let a day land even when a plan with people is open.",
     ],
-    why: 'You might not feel the need to stay in touch often, but friends often like hearing from you without a reason.',
+    why: "The upside for you is a day that can stand on its own. The catch is a day that gets too cut off.",
     try: [
-      'Text a friend when you think of them today, so they know it.',
-      'Send someone a link or photo that reminded you of them, so they feel remembered.',
+      "Next time you choose, name whether you are cut off or just fine first.",
+      "Before you decide, check who you would actually like to see.",
     ],
     watch: [
-      'Notice how often you think of friends without telling them.',
-      'Notice how people react when you reach out for no reason.',
+      "Notice when the day gets too cut off.",
+      "Notice if you wanted the plan with people.",
     ],
   }),
-  idea('ftw_relatedness_l_04', ['relatedness:low'], {
+  idea("ftw_relatedness_l_04", ["relatedness:low"], {
     focus: [
-      'When small talk starts, you tend to keep it short and get back to your day.',
-      'You usually don’t need much chat to feel good about your coworkers.',
-      'When a neighbor stops to chat, you tend to keep it brief.',
+      "What you might miss is a connection you would have wanted.",
+      "Your answers leave room to miss a connection you would have wanted.",
+      "A thing you might skip is a connection you would have wanted.",
     ],
-    why: 'Keeping chats short saves your energy, but a few extra minutes can make people feel noticed.',
+    why: "The upside for you is a day that can stand on its own. The catch is a day that gets too cut off.",
     try: [
-      'Ask one follow-up question in your next small talk, so the other person feels noticed.',
-      'Learn the name of someone you see often, so the next chat is easier.',
+      "Next time you choose, name whether you are cut off or just fine first.",
+      "Before you decide, check who you would actually like to see.",
     ],
     watch: [
-      'Notice how people respond when you chat a little longer.',
-      'Notice who you’d like to know better.',
+      "Notice when the day gets too cut off.",
+      "Notice if you wanted the plan with people.",
     ],
   }),
-  idea('ftw_relatedness_l_05', ['relatedness:low'], {
+  idea("ftw_relatedness_l_05", ["relatedness:low"], {
     focus: [
-      'When something hard happens, you tend to work through it alone before telling anyone.',
-      'You usually process tough moments on your own.',
-      'When you’re going through something, you tend not to mention it to friends.',
+      "The helpful side for you shows up when a day can land on its own.",
+      "Your answers also show a use when a day can land on its own.",
+      "There is a use for you when a day can land on its own.",
     ],
-    why: 'Handling things yourself is a strength, but the people close to you might want to know what’s happening.',
+    why: "The upside for you is a day that can stand on its own. The catch is a day that gets too cut off.",
     try: [
-      'Tell one friend about something you’re dealing with, so they’re not left out.',
-      'Text a friend a short update about a hard week, so they can check on you.',
+      "Next time you choose, name whether you are cut off or just fine first.",
+      "Before you decide, check who you would actually like to see.",
     ],
     watch: [
-      'Notice when keeping things to yourself makes them heavier.',
-      'Notice how it feels when someone knows.',
+      "Notice when the day gets too cut off.",
+      "Notice if you wanted the plan with people.",
     ],
   }),
-  idea('ftw_relatedness_l_06', ['relatedness:low', 'extraversion:low'], {
+  idea("ftw_relatedness_l_06", ["relatedness:low", "extraversion:low"], {
     focus: [
-      'You tend to enjoy quiet time alone and don’t feel a strong need to be social.',
-      'When the weekend comes, you usually want to stay in and do your own thing.',
-      'You tend to keep a small circle of friends and see them only now and then.',
+      "Your answers suggest two things at once: you can skip the tie, and you recharge with time to yourself.",
+      "Both can be true for you in the same week: you can skip the tie, and you recharge with time to yourself.",
+      "In the same week, you can skip the tie, and you recharge with time to yourself.",
     ],
-    why: 'Quiet time suits you, but your friendships still need a little contact to stay close.',
+    why: "The upside for you is a day that can stand on its own. The catch is a day that gets too cut off.",
     try: [
-      'Text one friend this week to check in, so the friendship stays warm.',
-      'Plan one short coffee with someone this month, so you stay in touch without a big outing.',
+      "Next time you choose, name whether you are cut off or just fine first.",
+      "Before you decide, check who you would actually like to see.",
     ],
     watch: [
-      'Notice when quiet time starts to feel lonely.',
-      'Notice which friendships fade without contact.',
+      "Notice when the day gets too cut off.",
+      "Notice if you wanted the plan with people.",
     ],
   }),
   idea('ftw_relatedness_h_07', ['relatedness:high'], {
@@ -280,7 +280,7 @@ export const RELATEDNESS_IDEAS: readonly InsightIdea[] = [
       'You usually drop what you’re doing to be there for someone close.',
       'When someone you love needs you, you tend to make time even when you’re tired.',
     ],
-    why: 'Showing up matters a lot to people, but giving everything can leave you with little energy for yourself.',
+    why: 'Showing up matters a lot to people, but giving everything can leave you with little left for yourself.',
     try: [
       'Tell a friend how much time you can give today, so they know what to expect and you can rest.',
       'Ask another friend to help support the person, so you’re not the only one.',

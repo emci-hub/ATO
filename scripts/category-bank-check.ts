@@ -15,6 +15,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { categoryCopyIssues } from '../src/lib/voice/player-copy-scan';
 import {
   CATEGORY_BANK,
   CATEGORY_BANK_COPY_REVIEWED,
@@ -194,5 +195,16 @@ for (const rel of sourceFiles('src/lib/category-bank')) {
   assert.doesNotMatch(read(rel), /\bgenerateText\b|@\/lib\/ai\//, `${rel}: no model call in the bank`);
 }
 ok('CATEGORY_BANK_COPY_REVIEWED is true (accepted 2026-10-23), has its review doc, no screen renders it, and the bank imports no AI');
+
+const categoryVoice = categoryCopyIssues();
+assert.equal(
+  categoryVoice.length,
+  0,
+  categoryVoice
+    .slice(0, 8)
+    .map((issue) => `${issue.where}: ${issue.detail}`)
+    .join('\n'),
+);
+ok('category copy passes the player-facing voice check');
 
 console.log(`\n${passed} category-bank checks passed`);

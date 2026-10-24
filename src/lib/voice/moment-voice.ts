@@ -1,13 +1,12 @@
 /**
- * The moment voice — ATO's voice for anything new (emci, 2026-10-02: "yes this
- * is the voice … I want this kind of voice throughout our app whenever we
- * create new things", for written copy and for what the AI generates).
+ * Player-facing voice block for generation prompts. The export is still
+ * named MOMENT_VOICE because existing prompts import it. The rules are v2,
+ * meaning first (emci, 2026-10-23). They replace "describe one concrete
+ * moment and stop."
  *
- * It came out of the daily-line rewrite: describe one concrete moment the
- * person recognizes from their own life, the way a friend would tease them
- * kindly, and stop. The lines emci approved are in
- * src/lib/daily-line/lines.generated.ts — read a page of them before writing
- * anything in this voice.
+ * A story may still use a scene. The scene has to be established, and it is
+ * fiction, not a claim that the reader did that thing. Insights, trait
+ * descriptions, buttons, errors, and notifications should say the meaning.
  *
  * WHERE IT IS USED (2026-10-02): the written daily lines, the mini guy, the
  * category fallback lines, and all four live AI prompts — the insight (its
@@ -31,22 +30,20 @@
  */
 
 export const MOMENT_VOICE_RULES: readonly string[] = [
-  'One concrete, recognizable moment the person has probably lived. Past tense or plain present.',
-  'Set it in how people live now: texts, group chats, read receipts, the typing bubble, voice notes, open tabs, unread counts, calendars, apps. Use the situation, never slang words, because slang dates in a year and reads as trying too hard.',
-  'Describe the moment and stop. No advice, no "try", no lesson, no question to reflect on.',
-  'Tease kindly. Self-aware and a little funny, never cruel, never shaming. Honest is fine, even when it stings a little.',
-  'Specific beats general: "They said \'k.\' You read it eleven ways." beats "you overthink messages."',
-  'Short. Never "you are" or "you\'re". Never "always". No personality-type codes or test names presented as the reader\'s result (a framework name is allowed only when relevant, accurate and explained, which a short line rarely has room for). Never apply a diagnosis or a label to the reader (toxic, clingy, avoidant, a disorder); everyday and contextual use of those words is fine.',
+  'Say what you mean in plain language. One plain idea per line. Do not join two ideas with because, and then, or while. Do not add a scene, a joke, or a metaphor until the meaning is already clear.',
+  'Do not assume missing context. If the line can appear alone, it has to make sense alone. Do not mention a listing, a plan, a joke, or a question unless that thing is already visible.',
+  'Do not invent the reader\'s history. Do not turn a score or an answer into a claim that a specific event happened. Keep apart what the reader said, what the answers suggest, and a hypothetical. Mark a hypothetical as hypothetical.',
+  'Keep the link to the trait accurate. Do not add an unrelated habit.',
+  'Priority: accuracy, then clarity, then relevance, then a natural voice, then optional humor. Cut a joke or a metaphor that weakens a higher priority.',
+  'Match the purpose. A button names the action. An error says what happened and what to do. An insight says what the answers suggest and why. A comparison states the actual similarity or difference. A story may use a scene when the scene is established and is clearly fiction, not the reader\'s real week. Do not make every line sound like a story card.',
+  'Never "you are" or "you\'re" as an identity label. Never "always". No personality-type code presented as the reader\'s result. Never apply a diagnosis or a label to the reader; everyday and contextual use of those words is fine.',
 ];
 
-/** Approved examples of the register. For prompts: match these, never reuse them. */
+/** Examples of the register. For prompts: match the clarity, never reuse them. */
 export const MOMENT_VOICE_EXAMPLES: readonly string[] = [
-  'They said "k." You read it eleven ways.',
-  'You said "on my way" from the shower.',
-  'You have 47 tabs open and every one of them is "for later."',
-  'You typed the whole reply, then held backspace.',
-  'The plans got cancelled and you felt it like a gift.',
-  'You hearted a message you disagreed with.',
+  'You like trying new things, even when everyone else would rather stick with what they know.',
+  'You stick with what you already know you enjoy.',
+  'Your answers suggest you like a new option even when a familiar one is already there.',
 ];
 
 /** One block to drop into any generation prompt that should write in this voice. */

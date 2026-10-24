@@ -9,7 +9,7 @@ Evidence for each theme is in the v1 table further down this file.
 **⭐ Muted while presenting** · cat_resilience · work
 📍 *Video call. 10:02 AM. Monday.*
 You give your best two minutes of the quarter.
-Nobody reacts, because you were on mute the whole time.
+Nobody reacts. You were on mute the whole time.
 **Avery (your manager):** "Whenever you're ready to start."
 
 **⭐ Called on with no idea** · cat_openness · work

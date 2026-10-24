@@ -24,6 +24,8 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { planLegendReveal, revealLegendStory } from '@/lib/legend-figures/generate';
+import { STORY_LIBRARY_RUNTIME } from '@/lib/story-library/flags';
+import { hydrateStoryLibraryDevice } from '@/lib/story-library/device-store';
 import { legendBucketKey } from '@/lib/ai-library/legend';
 import { wantLibraryCards } from '@/lib/ai-library/client';
 import {
@@ -81,7 +83,7 @@ export const LEGENDS_ONE_TODAY_COPY = 'One free reveal a day. Pick a frame.';
 export const legendsAiLine = (tokens: number) =>
   `With ${AI_TOKEN_PRICE} tokens it comes with your AI card (you have ${tokens}); without them you get the museum’s own words.`;
 export const LEGENDS_PAID_FAILED =
-  'The AI card didn’t come through, so this reveal didn’t happen. Your tokens come back (once a day). Try again in a bit.';
+  'The legend card did not load, so this reveal was not saved. Try again later. If tokens were charged for this try, they come back (a failed charge is refunded once a day).';
 export const legendsPaidLine = (tokens: number) =>
   `Want another? Reveal one more for ${AI_TOKEN_PRICE} tokens (you have ${tokens}).`;
 export const HALL_CHAPTERS_COPY = 'You’ve met every legend here. The frames now hide new chapters about them.';
@@ -275,7 +277,7 @@ export default function LegendsScreen() {
       const startDay = start.day?.ymd === today ? start.day : null;
       const revealedBefore = startDay?.revealed.length ?? 0;
       const bonus = revealedBefore >= 1 && startDay != null && hasNewSettledLean(startDay.fingerprint, settledFingerprint(tracks));
-      const free = revealsLeft(revealedBefore, bonus) > 0;
+      const free = STORY_LIBRARY_RUNTIME || revealsLeft(revealedBefore, bonus) > 0;
       if (!free && !(consentGranted && (me ? atoTokenBalanceOf(me) : 0) >= AI_TOKEN_PRICE)) return;
       setTokenNote(null);
       const { legendId, angleId } = parseFrameKey(key);
@@ -293,6 +295,7 @@ export default function LegendsScreen() {
         // The joke style is picked here, never by the model: seeded per card so neighbours differ.
         const jokeStyle = cardJokeStyle(`${start.userId}|${legend.id}|${chapter}`);
         const input = { legend, angle, momentId: plan.momentId, pairs, differ, jokeStyle };
+        if (STORY_LIBRARY_RUNTIME) await hydrateStoryLibraryDevice();
         let story;
         try {
           story = await withTimeout(revealLegendStory({ ...input, consentGranted, free }), AI_TAP_TIMEOUT_MS, 'legend-story');
@@ -382,7 +385,7 @@ export default function LegendsScreen() {
   // reveal is then instant and from the library. Group keys only, never text.
   const frameKeysSig = frames.filter((key): key is string => key != null).join(',');
   useEffect(() => {
-    if (!consentGranted || !local || !frameKeysSig) return;
+    if (STORY_LIBRARY_RUNTIME || !consentGranted || !local || !frameKeysSig) return;
     let live = true;
     void (async () => {
       const buckets: string[] = [];

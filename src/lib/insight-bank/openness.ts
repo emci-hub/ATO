@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const OPENNESS_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_openness_h_01', ['openness:high'], {
+  idea("ftw_openness_h_01", ["openness:high"], {
     focus: [
-      'When you pick a place to eat, you tend to choose somewhere you’ve never been over a sure thing.',
-      'You usually try the new thing on the menu, even when you already know what you like.',
-      'Given the choice, you tend to go for the place or plan you haven’t tried yet.',
+      "Your answers suggest you like trying new things, even when a favorite is right there.",
+      "From your answers, you like trying new things, even when a favorite is right there.",
+      "The pattern in your answers is that you like trying new things, even when a favorite is right there.",
     ],
-    why: 'Trying new things keeps you interested, but it can mean skipping the sure thing you’d actually enjoy more.',
+    why: "The upside for you is variety. The catch is passing on something that would have been more fun.",
     try: [
-      'Next time you order, ask yourself what you’d pick if newness didn’t count, so you choose on purpose.',
-      'Pick one old favorite this week and go back to it, so you can see what it still gives you.',
+      "Next time you choose, name the favorite you already like first.",
+      "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      'Notice whether you pick something because it’s new or because you actually want it.',
-      'Notice how you feel about a familiar plan once you’re actually there.',
+      "Notice when the new option wins just for being new.",
+      "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_h_02', ['openness:high'], {
+  idea("ftw_openness_h_02", ["openness:high"], {
     focus: [
-      'You tend to get excited starting new projects, but finishing them can feel slow once they stop being new.',
-      'When a project stops feeling new, you tend to lose interest before it’s done.',
-      'Starting something new comes easily to you, but the last stretch of a project can drag.',
+      "The catch in your answers is passing on something that would have been more fun.",
+      "What this can cost you is passing on something that would have been more fun.",
+      "A cost worth naming for you is passing on something that would have been more fun.",
     ],
-    why: 'New ideas give you energy, so the slow middle of a project can feel like nothing’s happening even when you’re close.',
+    why: "The upside for you is variety. The catch is passing on something that would have been more fun.",
     try: [
-      'Pick one half-finished project and write down the next small step, so it’s easier to pick back up.',
-      'Before you start anything new this week, spend ten minutes on something you already started.',
+      "Next time you choose, name the favorite you already like first.",
+      "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      'Notice when a new idea shows up right as an old project gets boring.',
-      'Notice how close to done your unfinished projects actually are.',
+      "Notice when the new option wins just for being new.",
+      "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_h_03', ['openness:high'], {
+  idea("ftw_openness_h_03", ["openness:high"], {
     focus: [
-      'When someone mentions something you don’t know about, you tend to ask a lot of questions.',
-      'You usually get curious when a coworker or friend brings up something unfamiliar.',
-      'When a conversation turns to a topic you’ve never heard of, you tend to dig in.',
+      "Someone else might notice that you reach for a new option even when a favorite is still there.",
+      "From the outside, you reach for a new option even when a favorite is still there.",
+      "Other people can see that you reach for a new option even when a favorite is still there.",
     ],
-    why: 'Your curiosity helps people feel interesting, but sometimes it can pull the conversation away from what they wanted to say.',
+    why: "The upside for you is variety. The catch is passing on something that would have been more fun.",
     try: [
-      'Next time a friend tells you something new, ask how they feel about it, so it stays about them.',
-      'Look up one thing you were curious about this week, so the question doesn’t just sit in your head.',
+      "Next time you choose, name the favorite you already like first.",
+      "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      'Notice when your questions move the conversation somewhere the other person didn’t mean to go.',
-      'Notice which topics you keep coming back to when you have free time.',
+      "Notice when the new option wins just for being new.",
+      "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_h_04', ['openness:high'], {
+  idea("ftw_openness_h_04", ["openness:high"], {
     focus: [
-      'When your week starts to look the same every day, you tend to get restless fast.',
-      'You usually feel bored by routines sooner than the people around you do.',
-      'Doing the same thing every day tends to wear on you faster than it does for most people.',
+      "What you might miss is a favorite you would have enjoyed.",
+      "Your answers leave room to miss a favorite you would have enjoyed.",
+      "A thing you might skip is a favorite you would have enjoyed.",
     ],
-    why: 'Variety keeps you engaged, but some routines are what free up your time and energy for the new stuff you like.',
+    why: "The upside for you is variety. The catch is passing on something that would have been more fun.",
     try: [
-      'Change one small thing in your routine today, like your route or lunch spot, so the day feels less flat.',
-      'Pick one routine that actually helps you and keep it as is this week, so you can see what it saves you.',
+      "Next time you choose, name the favorite you already like first.",
+      "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      'Notice whether you’re bored of a routine or just tired that day.',
-      'Notice which parts of your week you’d miss if they changed.',
+      "Notice when the new option wins just for being new.",
+      "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_h_05', ['openness:high'], {
+  idea("ftw_openness_h_05", ["openness:high"], {
     focus: [
-      'When you travel, you tend to want to wander and find things instead of following a plan.',
-      'On a trip, you usually prefer exploring over sticking to a list of sights.',
-      'You tend to enjoy finding things by chance more than planning every stop ahead.',
+      "The helpful side for you shows up when the new option is actually the better one.",
+      "Your answers also show a use when the new option is actually the better one.",
+      "There is a use for you when the new option is actually the better one.",
     ],
-    why: 'Leaving room for surprises can make plans more fun for you, but people traveling with you might want to know what’s next.',
+    why: "The upside for you is variety. The catch is passing on something that would have been more fun.",
     try: [
-      'Before your next outing with friends, plan just one fixed stop, so everyone has something to count on.',
-      'Ask whoever you’re going with how much they like to plan, so you can find a plan you both like.',
+      "Next time you choose, name the favorite you already like first.",
+      "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      'Notice when the people with you seem unsure about what’s happening next.',
-      'Notice how a little planning changes how much you enjoy the day.',
+      "Notice when the new option wins just for being new.",
+      "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_h_06', ['openness:high', 'extraversion:high'], {
+  idea("ftw_openness_h_06", ["openness:high", "extraversion:high"], {
     focus: [
-      'When friends suggest a new place or plan, you tend to say yes and bring more people along.',
-      'You usually jump at new plans with friends and love turning them into a group thing.',
-      'When there’s something new to try, you tend to want company to try it with.',
+      "Your answers suggest two things at once: you try new things, and you want people around.",
+      "Both can be true for you in the same week: you try new things, and you want people around.",
+      "In the same week, you try new things, and you want people around.",
     ],
-    why: 'Your mix of curiosity and energy makes plans happen, but quieter friends might feel pulled into more than they wanted.',
+    why: "The upside for you is variety. The catch is passing on something that would have been more fun.",
     try: [
-      'Next time you invite a group, text one quieter friend separately, so they can say yes or no easily.',
-      'Ask a friend what new thing they’ve wanted to try, so the next plan is theirs.',
+      "Next time you choose, name the favorite you already like first.",
+      "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      'Notice who goes quiet when a new plan gets bigger.',
-      'Notice whether you enjoy the new thing or mostly the crowd around it.',
+      "Notice when the new option wins just for being new.",
+      "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_l_01', ['openness:low'], {
+  idea("ftw_openness_l_01", ["openness:low"], {
     focus: [
-      'When you go out to eat, you tend to order what you already know you like.',
-      'You usually go back to the same few places because you know they’re good.',
-      'When choosing where to go, you tend to stick with the spots you already trust.',
+      "Your answers suggest you stick with something you already know you like.",
+      "From your answers, you stick with something you already know you like.",
+      "The pattern in your answers is that you stick with something you already know you like.",
     ],
-    why: 'Knowing what you like saves you time and disappointment, but it can mean missing something you’d enjoy just as much.',
+    why: "The upside for you is knowing what already works. The catch is skipping a change that would have been better.",
     try: [
-      'Next time you order, try one side or drink you haven’t had before, so the risk stays small.',
-      'Ask a friend for their favorite spot nearby and save it for a day you feel like trying something.',
+      "Next time you choose, name what you already like first.",
+      "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      'Notice whether you choose your usual because you want it or because it’s easier.',
-      'Notice how often a new thing turns out fine when you do try it.',
+      "Notice when you skip a change just for being new.",
+      "Notice if the new option was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_l_02', ['openness:low'], {
+  idea("ftw_openness_l_02", ["openness:low"], {
     focus: [
-      'When work changes a process that already worked, you tend to feel frustrated before you see the point.',
-      'You usually prefer the way things already work over a new system at your job.',
-      'When your boss brings in a new tool, you tend to miss the old way for a while.',
+      "The catch in your answers is skipping a change that would have been better.",
+      "What this can cost you is skipping a change that would have been better.",
+      "A cost worth naming for you is skipping a change that would have been better.",
     ],
-    why: 'You value what’s proven, which protects you from change for its own sake, but it can make good changes feel harder at first.',
+    why: "The upside for you is knowing what already works. The catch is skipping a change that would have been better.",
     try: [
-      'Write down one thing the new way does better, so you’re judging it on more than how new it feels.',
-      'Give a new process one honest week before deciding, so your first reaction isn’t the final one.',
+      "Next time you choose, name what you already like first.",
+      "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      'Notice whether your doubt about a change is about the change itself or just the newness.',
-      'Notice how many things you rely on now were new to you once.',
+      "Notice when you skip a change just for being new.",
+      "Notice if the new option was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_l_03', ['openness:low'], {
+  idea("ftw_openness_l_03", ["openness:low"], {
     focus: [
-      'When you want to relax, you tend to rewatch a show you already love instead of starting a new one.',
-      'You usually pick a familiar movie or playlist when you’re tired.',
-      'After a long day, you tend to go back to the shows and songs you already know.',
+      "Someone else might notice that you stay with a known favorite even when a new option waits.",
+      "From the outside, you stay with a known favorite even when a new option waits.",
+      "Other people can see that you stay with a known favorite even when a new option waits.",
     ],
-    why: 'Familiar things help you rest because they take no effort, and that’s a real need, not a lack of curiosity.',
+    why: "The upside for you is knowing what already works. The catch is skipping a change that would have been better.",
     try: [
-      'Keep your comfort show for tonight, and save one new recommendation for a day you have more energy.',
-      'Ask a friend what they’re watching, so you have one new option ready when you want it.',
+      "Next time you choose, name what you already like first.",
+      "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      'Notice which moods make you want something familiar.',
-      'Notice when you’re in the mood for something new and actually have the energy for it.',
+      "Notice when you skip a change just for being new.",
+      "Notice if the new option was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_l_04', ['openness:low'], {
+  idea("ftw_openness_l_04", ["openness:low"], {
     focus: [
-      'When you plan time off, you tend to go somewhere you’ve been before and know you’ll enjoy.',
-      'You usually prefer a trip you know will be good over a gamble on somewhere new.',
-      'When you get a free weekend, you tend to spend it doing what you already know you like.',
+      "What you might miss is a new option you would have liked.",
+      "Your answers leave room to miss a new option you would have liked.",
+      "A thing you might skip is a new option you would have liked.",
     ],
-    why: 'Going back to what you know makes your time off reliable, but friends might read it as not wanting to try their ideas.',
+    why: "The upside for you is knowing what already works. The catch is skipping a change that would have been better.",
     try: [
-      'Next time a friend suggests a new plan, say yes to one small part of it, so they know you’re open.',
-      'Look up one new thing near a place you already love, so you can try it without losing the familiar trip.',
+      "Next time you choose, name what you already like first.",
+      "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      'Notice how you react the first time someone suggests a plan you haven’t done.',
-      'Notice whether a familiar plan still feels as good as it did.',
+      "Notice when you skip a change just for being new.",
+      "Notice if the new option was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_l_05', ['openness:low'], {
+  idea("ftw_openness_l_05", ["openness:low"], {
     focus: [
-      'When someone shares a new idea, you tend to want proof it works before you get on board.',
-      'You usually wait to see if a new idea holds up before you say yes to it.',
-      'When a friend is excited about something new, you tend to ask how it’ll actually work.',
+      "The helpful side for you shows up when the favorite still fits.",
+      "Your answers also show a use when the favorite still fits.",
+      "There is a use for you when the favorite still fits.",
     ],
-    why: 'Your caution catches problems early, but people sharing ideas with you might feel shut down if the questions come first.',
+    why: "The upside for you is knowing what already works. The catch is skipping a change that would have been better.",
     try: [
-      'Next time someone shares an idea, say one thing you like before your first question, so they keep talking.',
-      'Pick one new idea you dismissed recently and give it a second look, so it gets a fair shot.',
+      "Next time you choose, name what you already like first.",
+      "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      'Notice whether your first reply to a new idea is a question or a doubt.',
-      'Notice how people react when you push back on something they’re excited about.',
+      "Notice when you skip a change just for being new.",
+      "Notice if the new option was the one you wanted.",
     ],
   }),
-  idea('ftw_openness_l_06', ['openness:low', 'conscientiousness:high'], {
+  idea("ftw_openness_l_06", ["openness:low", "conscientiousness:high"], {
     focus: [
-      'You tend to keep routines that work and follow them closely, even when others want to change them.',
-      'When you’ve found a system that works, you usually keep using it exactly the same way.',
-      'You tend to trust your proven routines and stick to them, even when someone suggests a new way.',
+      "Your answers suggest two things at once: you keep a known favorite, and you finish the plan.",
+      "Both can be true for you in the same week: you keep a known favorite, and you finish the plan.",
+      "In the same week, you keep a known favorite, and you finish the plan.",
     ],
-    why: 'Your routines make you reliable, but they can make it hard to notice when a small change would save you time.',
+    why: "The upside for you is knowing what already works. The catch is skipping a change that would have been better.",
     try: [
-      'Pick one routine and ask yourself if it still saves time, so you keep it for a reason.',
-      'Ask a coworker how they handle a task you both do, so you can borrow one idea if it helps.',
+      "Next time you choose, name what you already like first.",
+      "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      'Notice when you follow a routine even though the reason for it is gone.',
-      'Notice how you feel when someone does your task a different way.',
+      "Notice when you skip a change just for being new.",
+      "Notice if the new option was the one you wanted.",
     ],
   }),
   idea('ftw_openness_h_07', ['openness:high'], {
@@ -246,7 +246,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When you shop or spend money, you tend to be drawn to the unusual option over the safe one.',
       'You usually pick the item that looks different, even when a standard one would work fine.',
-      'When you choose between two things, you tend to like the one that’s less common.',
+      'You tend to like the less common one when you choose between two things.',
     ],
     why: 'Unusual choices can feel more like you, but they sometimes cost more or turn out harder to use than a plain version.',
     try: [
@@ -264,7 +264,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       'You usually fill an open day with something new instead of resting.',
       'On a free day, you tend to look for something different to do rather than a quiet one.',
     ],
-    why: 'New plans give you energy, but a free day with no rest in it can leave you tired by the time Monday comes.',
+    why: 'New plans get you going, but a free day with no rest in it can leave you tired by the time Monday comes.',
     try: [
       'Plan one new thing and one slow hour for your next free day, so you get both.',
       'Ask yourself tonight whether you want something new or something easy tomorrow, so you choose on purpose.',
@@ -326,7 +326,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When you have a task you’ve done before, you tend to do it the same way every time.',
       'You usually stick to the method you learned first, even when someone shows you a shortcut.',
-      'When you cook or clean, you tend to follow the same steps every time.',
+      'You tend to follow the same steps every time you cook or clean.',
     ],
     why: 'A set way of doing things makes you quick and sure, but a shortcut from someone else could save you a step.',
     try: [
@@ -358,7 +358,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       'When you decorate or pick clothes, you tend to choose things you know you like over a new style.',
       'You usually wear and buy the same kinds of things because they work for you.',
-      'When you shop, you tend to go back to the brands and styles you already trust.',
+      'You tend to go back to the brands and styles you already trust when you shop.',
     ],
     why: 'Knowing your own taste saves time and money, but a small change now and then can show you something you like even more.',
     try: [

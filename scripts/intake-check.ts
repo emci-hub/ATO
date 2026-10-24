@@ -80,7 +80,7 @@ async function main() {
   ok('core intake is one scrollable page reusing the sweep shape, with an answered counter');
 
   const energyQ = CORE_INTAKE_QUESTIONS.find((q) => q.field === 'energy_pattern');
-  assert.equal(energyQ?.prompt, 'When do you have the most energy during the day?');
+  assert.equal(energyQ?.prompt, 'When are you most awake during the day?');
   assert.equal(energyQ?.helper, 'Helps us pick a good time to check in with you.');
   ok('Q6 energy-pattern question and helper match the locked copy');
 
@@ -181,7 +181,7 @@ async function main() {
   assert.equal(INTAKE_SETTINGS_LABELS.morning_cue, 'Your morning anchor');
   assert.equal(
     CORE_INTAKE_QUESTIONS.find((q) => q.field === 'knocks_you_off')?.prompt,
-    'What tends to drain your energy or throw off your schedule?',
+    'What throws off your day, or your sleep?',
   );
   ok('Settings labels and display values cover all 8 fields');
 

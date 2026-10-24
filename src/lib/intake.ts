@@ -190,7 +190,7 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'knocks_you_off',
     n: 3,
-    prompt: 'What tends to drain your energy or throw off your schedule?',
+    prompt: 'What throws off your day, or your sleep?',
     multi: true,
     chips: KNOCKS_CHIPS,
   },
@@ -203,13 +203,13 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'evening_wind_down',
     n: 5,
-    prompt: 'What already happens at the end of your day? The evening Check bump hangs off this.',
+    prompt: 'What already happens at the end of your day? The evening reminder mentions the one you pick.',
     chips: EVENING_WIND_DOWN_CHIPS,
   },
   {
     field: 'energy_pattern',
     n: 6,
-    prompt: 'When do you have the most energy during the day?',
+    prompt: 'When are you most awake during the day?',
     helper: 'Helps us pick a good time to check in with you.',
     chips: ENERGY_PATTERN_CHIPS,
   },
@@ -252,7 +252,7 @@ export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
   knocks_you_off: 'Disruption',
   morning_cue: 'Your morning anchor',
   evening_wind_down: 'Evening wind-down',
-  energy_pattern: 'Most energy',
+  energy_pattern: 'Most awake',
   support_style: 'What helps',
   current_focus: 'Right now',
 };

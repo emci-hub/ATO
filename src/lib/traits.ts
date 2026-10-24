@@ -372,91 +372,89 @@ export function leanComparative(value: number | null | undefined): 'higher' | 'l
  * Mid-band lines stay in traitPromptLines only; the check-in surface skips mid.
  */
 export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> = {
-  extraversion: {
-    high: 'They tend to get energy from being around people.',
-    low: 'They tend to get energy from quieter time.',
-  },
   openness: {
-    high: 'They tend to like new ideas and untried paths.',
-    low: 'They tend to prefer the known path over a new one.',
+    high: "They will try something new, even when other people stick with a familiar option.",
+    low: "They stick with something already known to be liked.",
   },
   conscientiousness: {
-    high: 'They tend to follow a plan through.',
-    low: 'They tend to keep plans loose and change them as they go.',
+    high: "They finish a plan once it is started.",
+    low: "They keep plans loose on purpose.",
+  },
+  extraversion: {
+    high: "They look for time with other people.",
+    low: "They recharge with time to yourself.",
   },
   agreeableness: {
-    high: 'They tend to go along when it keeps things easy.',
-    low: 'They tend to hold their own view even when it rubs.',
+    high: "They give the other plan a yes to keep things easy.",
+    low: "They state a blunt point and stay with it.",
   },
   steadiness: {
-    high: 'They tend to stay even when things wobble.',
-    low: 'They tend to feel it strongly when things wobble.',
+    high: "They shake a bad day off quickly.",
+    low: "They feel a bad day for longer.",
   },
   attachment_anxiety: {
-    high: 'They tend to worry people will pull away.',
-    low: 'They tend not to spend much time worrying people will leave.',
+    high: "They worry people will pull away.",
+    low: "They let a gap in contact pass.",
   },
   attachment_avoidance: {
-    high: 'They tend to keep some distance even with people they like.',
-    low: 'They tend to stay close once they are in.',
+    high: "They keep some distance once things get close.",
+    low: "They stay close once the bond has started.",
   },
   conflict_assertiveness: {
-    high: 'In a disagreement they tend to put their own point on the table.',
-    low: 'In a disagreement they tend to step back rather than push.',
+    high: "They put a clear point on the table in a disagreement.",
+    low: "They step back in a disagreement.",
   },
   conflict_cooperativeness: {
-    high: 'In a disagreement they tend to look for something the other person can live with.',
-    low: 'In a disagreement they tend to protect their own outcome first.',
+    high: "They look for an option the other person can live with.",
+    low: "They protect a chosen outcome in a disagreement.",
   },
   autonomy: {
-    high: 'They tend to want to do things their own way.',
-    low: 'They tend to be fine following a path someone else already set.',
+    high: "They choose a way of doing the task.",
+    low: "They follow a path that is already set.",
   },
   competence: {
-    high: 'They tend to feel they can handle a hard thing.',
-    low: 'They tend to doubt they can pull a hard thing off.',
+    high: "They trust that a hard task can be handled.",
+    low: "They doubt a hard task can be pulled off.",
   },
   relatedness: {
-    high: 'They tend to need a real connection with people for a day to land.',
-    low: 'They tend to feel a day landed without needing much connection.',
+    high: "They need a real connection for a day to feel right.",
+    low: "They can let a day land without much connection.",
   },
   growth_mindset: {
-    high: 'After a miss they tend to look for what went wrong so they can try again.',
-    low: 'After a miss they tend to treat it as a sign they are not good at that thing.',
+    high: "They look for what to change after a miss.",
+    low: "They can treat a miss as the end of that path.",
   },
   locus_of_control: {
-    high: 'When something falls apart, first thought tends to go to what they might have done differently.',
-    low: 'When something falls apart, first thought tends to go to how it was bound to happen.',
+    high: "They look at the part of a problem that could be steered.",
+    low: "They figure a bad outcome was bound to happen.",
   },
   self_efficacy: {
-    high: 'Facing a big task they tend to feel they can pull it off.',
-    low: 'Facing a big task they tend to feel unsure they can pull it off.',
+    high: "They expect to finish a big task once it is started.",
+    low: "They pause before trusting a big task can be finished.",
   },
   playfulness: {
-    high: 'They tend to look for a lighter take. A bit of play is how a day lands.',
-    low: 'They tend to treat the day as a job to get through. Jokes can wait.',
+    high: "They look for a lighter take on an ordinary task.",
+    low: "They take a situation straight instead of turning it into play.",
   },
 };
 
 const TRAIT_MID_LINES: Partial<Record<TraitAxis, string>> = {
-  extraversion: 'They sit somewhere in the middle on people-time versus quiet time.',
-  openness: 'They mix familiar routines with the occasional new idea.',
-  conscientiousness: 'They plan some things and leave others open.',
-  agreeableness: 'They weigh going along against holding their ground.',
-  steadiness: 'Some wobble lands, some they shake off.',
-  attachment_anxiety: 'Closeness sometimes brings a worry that people will pull away.',
-  attachment_avoidance: 'They mix closeness with a bit of distance.',
-  conflict_assertiveness: 'In a disagreement they sometimes push and sometimes wait.',
-  conflict_cooperativeness:
-    'In a disagreement they split attention between their outcome and the other person.',
-  autonomy: 'They mix doing it their way with following a path that is already there.',
-  competence: 'Some hard things they feel they can handle, some they do not.',
-  relatedness: 'Some days they want connection, some they do not need it.',
-  growth_mindset: 'After a miss they sometimes look for what to change and sometimes take it as closed.',
-  locus_of_control:
-    'When something falls apart they sometimes look at what they might change and sometimes at what was out of their hands.',
-  self_efficacy: 'Facing a big task they sometimes feel they can pull it off and sometimes do not.',
-  playfulness: 'Some days want a lighter take. Some days the day is just a job to get through.',
+  extraversion: "They split time between other people and time to yourself.",
+  openness: "They mix a known favorite with a new option.",
+  conscientiousness: "They plan some things and leave others open.",
+  agreeableness: "They weigh going along against stating a blunt point.",
+  steadiness: "They let one setback fade and still sit with another.",
+  attachment_anxiety: "They mix a check-in with letting a gap in contact pass.",
+  attachment_avoidance: "They mix closeness with a bit of distance.",
+  conflict_assertiveness: "They push a point at some times and wait at others.",
+  conflict_cooperativeness: "They split attention between a chosen outcome and the other person.",
+  autonomy: "They mix a self-chosen way with a path that is already set.",
+  competence: "They trust some hard tasks and doubt others.",
+  relatedness: "They want connection on some days and not on others.",
+  growth_mindset: "They look for a change after some misses and close others.",
+  locus_of_control: "They look at a steerable part and at what was outside their hands.",
+  self_efficacy: "They expect to finish some tasks and pause on others.",
+  playfulness: "They take some tasks straight and turn others into play.",
 };
 
 /** High/low bank line, or null when the axis is empty or mid-band. */
@@ -480,7 +478,7 @@ export function traitPromptLines(me: Partial<TraitValues>): string {
 
   const kept = lines.filter((line) => !containsFrameworkTerm(line));
   if (kept.length === 0) return '';
-  return `${kept.map((line) => `- ${line}`).join('\n')}\n- Treat the lines above as self-report about how they tend to move, never as a type or a diagnosis.\n`;
+  return `${kept.map((line) => `- ${line}`).join('\n')}\n- Treat the lines above as self-report about how they move, never as a type or a diagnosis.\n`;
 }
 
 export { sanitizeFacts };

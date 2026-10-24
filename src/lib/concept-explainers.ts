@@ -15,7 +15,7 @@ export const AXIS_CONCEPTS: Record<TraitAxis, string> = {
   conscientiousness:
     'How much you see a plan through when it gets boring, versus deciding in the moment.',
   extraversion:
-    'Whether people around you tend to get you going, or quiet time is how you reset.',
+    'Whether people around you get you going, or quiet time is how you reset.',
   agreeableness:
     'How often you go along to keep things easy, versus holding your ground.',
   steadiness:
@@ -54,7 +54,7 @@ export const CATEGORY_CONCEPTS: Record<CategoryId, string> = {
   cat_agency:
     'What you tell yourself after a miss, and whether a bigger ask feels like yours to figure out.',
   cat_social:
-    'Everyday people-energy: rooms, going along, and whether the day wants a little play.',
+    'Everyday people-time: rooms, going along, and whether the day wants a little play.',
   cat_communication:
     'How you move in a disagreement — putting a point on the table, and leaving the other person a way through.',
   cat_love:

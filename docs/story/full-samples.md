@@ -49,7 +49,7 @@ Next: a voice note you didn't mean to send.
 This is your Communication: you say the hard thing, and keep it kind.
 You scored {traitScore}.
 Proof: you rewrote the chat instead of deleting it.
-Watch out: not every slip needs a speech. Sometimes "my bad" is plenty.
+Watch out: not every slip needs a speech. "My bad" is plenty.
 
 — tap: the other way —
 *The other way, you'd have deleted it and claimed your phone was stolen.*
