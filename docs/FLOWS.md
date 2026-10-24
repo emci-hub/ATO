@@ -46,11 +46,11 @@ line has drifted.
    (`src/lib/voice/router.ts:172`): bank copy for days 1–3, generated after; consent,
    crisis, anti-repeat, jargon + phrase guards; `pickVoiceProvider`
    (`src/lib/voice/select-provider.ts:7`).
-4. Remote provider `src/lib/voice/providers/remote.ts:13` → `generateText()`
-   (`src/lib/ai/generate.ts:57`) → `completeViaEdge()` (`src/lib/ai/edge.ts:15`) →
-   Edge Function `ai-generate` (`supabase/functions/ai-generate/index.ts`):
-   `auth.getUser()` (:271) → `claim_ai_call` (:312) → vendor (`complete()` :211).
-   Gemini failure of any kind retries once on DeepSeek (`generate.ts` catch block).
+4. **(Superseded 2026-10-23, roadmap A5: this remote route is gone.)** There is no `generateText()`, `completeViaEdge()`
+   or `ai-generate` call on the phone any more (the function itself is a closed 410 stub, deleted after emci's OK). The
+   only model path is the `ai-library` Edge Function (deep dives and Legends cards: the phone sends `{kind, bucket,
+   mode}`, the server claims `claim_library_write` first, then calls Gemini), and the daily insight is a hand-written
+   bank pick. The step list below is history.
 5. Result persisted: `persistRoutedCard()` (`src/lib/today-card.ts:87`) → AsyncStorage +
    App Group for the widget (`APP_GROUP` `today-card.ts:9`).
 6. Primary slot chosen by `resolveTodaySlot()` (`src/lib/today-slot.ts:23`): crisis >

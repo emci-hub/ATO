@@ -8,11 +8,4 @@ export async function saveSageStory(userId: string, story: SageStory): Promise<v
     .eq('id', userId);
   if (error) throw error;
 }
-
-export async function claimStoryGenerate(): Promise<{ ok: boolean; reason?: string }> {
-  const { data, error } = await supabase.rpc('claim_story_generate');
-  if (error) throw error;
-  if (!data || typeof data !== 'object') return { ok: false, reason: 'empty' };
-  const row = data as { ok?: unknown; reason?: unknown };
-  return { ok: row.ok === true, reason: typeof row.reason === 'string' ? row.reason : undefined };
-}
+// The Story is free templates: no client-side charge (`claimStoryGenerate` was removed in roadmap A5).

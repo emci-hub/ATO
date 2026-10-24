@@ -14,13 +14,19 @@
  * read word for word the same.
  */
 import type { LineKey } from '@/lib/daily-line/bank';
+import type { TraitAxis } from '@/lib/traits';
 
 export type { LineKey };
 
 export interface InsightIdea {
   id: string;
-  /** Empty for a starter, one key for a trait idea, two for a pair idea. */
+  /** Empty for a starter or a mixed idea, one key for a trait idea, two for a pair idea. */
   keys: readonly LineKey[];
+  /**
+   * Set only on a mixed idea (`ftw_<axis>_m_<nn>`, A6 2026-10-23): for someone who
+   * has answered on this trait but sits near the middle, so no lean is clear.
+   */
+  mixed?: TraitAxis;
   focus: readonly [string, string, string];
   why: string;
   try: readonly [string, string];
@@ -36,4 +42,9 @@ export interface IdeaCopy {
 
 export function idea(id: string, keys: readonly LineKey[], copy: IdeaCopy): InsightIdea {
   return { id, keys, ...copy };
+}
+
+/** A mixed idea: no clear lean on `axis` yet (id `ftw_<axis>_m_<nn>`). */
+export function mixedIdea(id: string, axis: TraitAxis, copy: IdeaCopy): InsightIdea {
+  return { id, keys: [], mixed: axis, ...copy };
 }

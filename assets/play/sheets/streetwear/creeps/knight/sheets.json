@@ -1,306 +1,358 @@
 {
   "sheets/streetwear/creeps/knight/Death": {
-    "sheet": "sheets/streetwear/creeps/knight/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.combat.png",
+    "sheetW": 377,
+    "sheetH": 103,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 53,
+        "h": 51
       },
       "east/frame_001": {
-        "x": 97,
+        "x": 54,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 53,
+        "h": 51
       },
       "east/frame_002": {
-        "x": 194,
+        "x": 108,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 53,
+        "h": 51
       },
       "east/frame_003": {
-        "x": 291,
+        "x": 162,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 53,
+        "h": 51
       },
       "east/frame_004": {
-        "x": 388,
+        "x": 216,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 53,
+        "h": 51
       },
       "east/frame_005": {
-        "x": 485,
+        "x": 270,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 53,
+        "h": 51
       },
       "east/frame_006": {
-        "x": 582,
+        "x": 324,
         "y": 0,
-        "w": 96,
-        "h": 96
+        "w": 53,
+        "h": 51
       },
       "west/frame_000": {
         "x": 0,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "y": 52,
+        "w": 53,
+        "h": 51
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 54,
+        "y": 52,
+        "w": 53,
+        "h": 51
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 108,
+        "y": 52,
+        "w": 53,
+        "h": 51
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 162,
+        "y": 52,
+        "w": 53,
+        "h": 51
       },
       "west/frame_004": {
-        "x": 388,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 216,
+        "y": 52,
+        "w": 53,
+        "h": 51
       },
       "west/frame_005": {
-        "x": 485,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 270,
+        "y": 52,
+        "w": 53,
+        "h": 51
       },
       "west/frame_006": {
-        "x": 582,
-        "y": 97,
-        "w": 96,
-        "h": 96
+        "x": 324,
+        "y": 52,
+        "w": 53,
+        "h": 51
       }
-    }
+    },
+    "offsetX": 22,
+    "offsetY": 23,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/creeps/knight/Idle": {
-    "sheet": "sheets/streetwear/creeps/knight/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.core.png",
+    "sheetW": 431,
+    "sheetH": 223,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "y": 92,
+        "w": 33,
+        "h": 43
       },
       "east/frame_001": {
-        "x": 97,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 34,
+        "y": 92,
+        "w": 33,
+        "h": 43
       },
       "east/frame_002": {
-        "x": 194,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 68,
+        "y": 92,
+        "w": 33,
+        "h": 43
       },
       "east/frame_003": {
-        "x": 291,
-        "y": 194,
-        "w": 96,
-        "h": 96
+        "x": 102,
+        "y": 92,
+        "w": 33,
+        "h": 43
       },
       "west/frame_000": {
         "x": 0,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "y": 136,
+        "w": 33,
+        "h": 43
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 34,
+        "y": 136,
+        "w": 33,
+        "h": 43
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 68,
+        "y": 136,
+        "w": 33,
+        "h": 43
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 291,
-        "w": 96,
-        "h": 96
+        "x": 102,
+        "y": 136,
+        "w": 33,
+        "h": 43
       }
-    }
+    },
+    "offsetX": 30,
+    "offsetY": 28,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
   },
   "sheets/streetwear/creeps/knight/Walk": {
-    "sheet": "sheets/streetwear/creeps/knight/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.core.png",
+    "sheetW": 431,
+    "sheetH": 223,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "y": 0,
+        "w": 45,
+        "h": 45
       },
       "east/frame_001": {
-        "x": 97,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 46,
+        "y": 0,
+        "w": 45,
+        "h": 45
       },
       "east/frame_002": {
-        "x": 194,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 92,
+        "y": 0,
+        "w": 45,
+        "h": 45
       },
       "east/frame_003": {
-        "x": 291,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 138,
+        "y": 0,
+        "w": 45,
+        "h": 45
       },
       "east/frame_004": {
-        "x": 388,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 184,
+        "y": 0,
+        "w": 45,
+        "h": 45
       },
       "east/frame_005": {
-        "x": 485,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 230,
+        "y": 0,
+        "w": 45,
+        "h": 45
       },
       "east/frame_006": {
-        "x": 582,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 276,
+        "y": 0,
+        "w": 45,
+        "h": 45
       },
       "east/frame_007": {
-        "x": 679,
-        "y": 388,
-        "w": 96,
-        "h": 96
+        "x": 322,
+        "y": 0,
+        "w": 45,
+        "h": 45
       },
       "west/frame_000": {
         "x": 0,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "y": 46,
+        "w": 45,
+        "h": 45
       },
       "west/frame_001": {
-        "x": 97,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 46,
+        "y": 46,
+        "w": 45,
+        "h": 45
       },
       "west/frame_002": {
-        "x": 194,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 92,
+        "y": 46,
+        "w": 45,
+        "h": 45
       },
       "west/frame_003": {
-        "x": 291,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 138,
+        "y": 46,
+        "w": 45,
+        "h": 45
       },
       "west/frame_004": {
-        "x": 388,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 184,
+        "y": 46,
+        "w": 45,
+        "h": 45
       },
       "west/frame_005": {
-        "x": 485,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 230,
+        "y": 46,
+        "w": 45,
+        "h": 45
       },
       "west/frame_006": {
-        "x": 582,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 276,
+        "y": 46,
+        "w": 45,
+        "h": 45
       },
       "west/frame_007": {
-        "x": 679,
-        "y": 485,
-        "w": 96,
-        "h": 96
+        "x": 322,
+        "y": 46,
+        "w": 45,
+        "h": 45
       }
-    }
+    },
+    "offsetX": 26,
+    "offsetY": 28,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
   },
   "sheets/streetwear/creeps/knight/rotations": {
-    "sheet": "sheets/streetwear/creeps/knight/atlas.png",
-    "sheetW": 775,
-    "sheetH": 678,
+    "sheet": "art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.core.png",
+    "sheetW": 431,
+    "sheetH": 223,
     "frames": {
       "north": {
         "x": 0,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "y": 180,
+        "w": 53,
+        "h": 43
       },
       "north-east": {
-        "x": 97,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 54,
+        "y": 180,
+        "w": 53,
+        "h": 43
       },
       "east": {
-        "x": 194,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 108,
+        "y": 180,
+        "w": 53,
+        "h": 43
       },
       "south-east": {
-        "x": 291,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 162,
+        "y": 180,
+        "w": 53,
+        "h": 43
       },
       "south": {
-        "x": 388,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 216,
+        "y": 180,
+        "w": 53,
+        "h": 43
       },
       "south-west": {
-        "x": 485,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 270,
+        "y": 180,
+        "w": 53,
+        "h": 43
       },
       "west": {
-        "x": 582,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 324,
+        "y": 180,
+        "w": 53,
+        "h": 43
       },
       "north-west": {
-        "x": 679,
-        "y": 582,
-        "w": 96,
-        "h": 96
+        "x": 378,
+        "y": 180,
+        "w": 53,
+        "h": 43
       }
-    }
+    },
+    "offsetX": 22,
+    "offsetY": 28,
+    "sourceW": 96,
+    "sourceH": 96,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "north-east",
+      "east",
+      "south-east",
+      "south",
+      "south-west",
+      "west",
+      "north-west"
+    ],
+    "tier": "core"
   }
 }

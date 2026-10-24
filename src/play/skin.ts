@@ -96,6 +96,9 @@ export type SkinWalk = {
   frames: number;
   /** Registry key base (hash-stripped) to the clip folder. */
   base: string;
+  /** ms each frame is held (one per frame), from the packed sheet. Absent = the
+   * player's per-clip-type cadence (`CAST_ACTOR_FRAME_MS` / `PET_FRAME_MS`). */
+  holds?: readonly number[];
 };
 
 export type SkinRole = {
@@ -798,10 +801,12 @@ function streetwearClip(char: string, name: string): SkinWalk | undefined {
   const base = `skins/streetwear/${char}/animations/${name}`;
   const sheetKey = sheetKeyForClipBase(base);
   if (frames <= 0 || !sheetKey || !PLAY_SHEETS[sheetKey]) return undefined;
+  const sheetHolds = PLAY_SHEETS[sheetKey].holds;
+  const holds = sheetHolds?.length === frames ? { holds: sheetHolds } : {};
   if (name === 'Walk' && fourDirWalkPacked(meta?.walkOrder, PLAY_SHEETS[sheetKey]?.frames)) {
-    return { dirs: 4, order: SKIN_WALK_4DIR_ORDER, frames, base };
+    return { dirs: 4, order: SKIN_WALK_4DIR_ORDER, frames, base, ...holds };
   }
-  return { dirs: 2, order: ['east', 'west'], frames, base };
+  return { dirs: 2, order: ['east', 'west'], frames, base, ...holds };
 }
 
 /** True when the packed Walk sheet (and meta.walkOrder) actually has N,E,S,W. */

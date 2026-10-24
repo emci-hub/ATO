@@ -1,8 +1,10 @@
 # ATO — map for agents
 
-ATO is an invite-only iOS app (Expo SDK 54 / expo-router / Supabase): one daily insight
-(loaded on a tap; it replaced the old Read + Do card), a 16-axis trait profile that every AI surface reads from, and a small
-scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live status. Player-facing copy follows `docs/voice-guide.md`.
+ATO is an 18+ iOS app (Expo SDK 54 / expo-router / Supabase; public sign-up since 2026-10-21, `PRE_LAUNCH_DEV = false`):
+one daily insight on the Insights tab (loaded on a tap; it replaced the old Read + Do card), a 16-axis trait profile that
+every AI surface reads from, and a small Circle of accepted friends added by @handle (1:1 encrypted chat from 1.1).
+`PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live status; `docs/ato-finish-roadmap.md` (v2) is the order of what is left.
+Player-facing copy follows `docs/voice-guide.md`.
 
 ## When to move to a new chat (emci 2026-10-15: saves credits)
 
@@ -31,15 +33,15 @@ chat. The new chat does its part and ends the same way — that is the loop.
 | Release mode | `RELEASE_MODE=1 npm run check:release-mode` (auto on EAS production builds) |
 
 Live checks (need real accounts / network / keys) are excluded from the gate and run by hand:
-`around`, `auth-password`, `apple-revoke`, `card-live`, `crisis-live`, `delete-account`,
-`founder-access`, `intake-live`, `invite`, `quota`, `sentry`, `style-live`, `talk-live`.
+`around`, `auth-password`, `apple-revoke`, `delete-account`, `founder-access`, `intake-live`,
+`invite`, `quota`, `sentry`.
 
 ## Hard invariants
 
 - **No vendor key in the bundle.** Every model call runs on the server in `ai-library` /
   `ai-library-fill`; keys are Supabase secrets. `ai-generate` (the old generic prompt proxy)
-  is CLOSED to a 410 stub since wave98 and is deleted in launch-flip step 9: never put a vendor
-  call or a caller-supplied prompt back (`check:ai-provider`). `check:ai-provider` also fails on
+  was closed to a 410 stub in wave98 and DELETED on 2026-10-23 (function and folder): never bring it
+  back or put a vendor call or a caller-supplied prompt anywhere (`check:ai-provider`). `check:ai-provider` also fails on
   any `EXPO_PUBLIC_*_API_KEY` reference under `src/`.
 - **Shared AI library (wave93, emci 2026-10-09).** Deep dives, Story and Legends cards are
   library first: a free unseen card from the reader's bucket (`library_serve`; Legends
@@ -62,7 +64,8 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   checks the question/option and runs the EWMA (port of `applyEwmaAnswer` /
   `mergeTraitWrite`, pinned by `check:trait-checkpoint`). No client code writes
   `trait_tracks`, `trait_history` or the `me` trait columns. A tap is not an answer:
-  it moves the value, never `answer_count`. wave80 (the lock) is prepared, NOT applied.
+  it moves the value, never `answer_count`. wave80 (the lock) is APPLIED (2026-10-21, verified read-only: no client
+  write grant on the trait tables).
 - **`PRE_LAUNCH_DEV`** (`src/lib/dev-mode.ts`) un-gates dev tooling while invite-only.
   Must be `false` before a public build — `check:release-mode` enforces it. With it
   off, no dev tool renders for anyone: no PIN, password unlock or grant opens the Hub's
@@ -100,13 +103,13 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   are written by hand, picked on the device, and never call a model. Ids are forever (`ftw_<axis>_<h|l>_<nn>`).
   Both ship with `*_COPY_REVIEWED = false` and a review doc, and show NO draft badge in the app (emci 2026-10-07).
 - **Category deep dive on Explore (emci 2026-10-08; moved from Home 2026-10-09).** Between Categories and
-  "How you've changed" (after Questions are finished, hidden on a crisis day): pick a category → leanings worked out on the phone ("Adventurous 78%") →
+  "How you've changed" (after Questions are finished): pick a category → leanings worked out on the phone ("Adventurous 78%") →
   "Write my deep dive" = one AI call (`src/lib/category-deep-dive/`: consent, then `claim_category_deep_dive`,
   1/day, wave90), strict validator (plain language, a necessary technical term explained, no diagnosis or label pinned on the reader, no directive "you should"; Love / closeness is judged by meaning like any other category, no special block). It never touches
   insight-bank or category-bank. `CATEGORY_DEEP_DIVE_COPY_REVIEWED = false`, review doc
   `docs/category-deep-dive-review.md`, pinned by `check:category-deep-dive`.
-- **AI views cost ATO tokens (wave92, emci 2026-10-09).** Every AI view (new Story, Legends AI card,
-  deep dive) costs `ai_token_price` (5), charged on the server inside its claim RPC (after the safety cap of
+- **AI views cost ATO tokens (wave92, emci 2026-10-09).** Every AI view (a new Legends AI card or a
+  new deep dive; the Story is free templates since 2026-10-14; library deep dives are free up to 10 a day) costs `ai_token_price` (5), charged on the server inside its claim RPC (after the safety cap of
   5/day), refunded once a day per feature on failure (`refund_ai_tokens`). Earn: daily check-in +5 (every
   7th +10), first 48 +15, set of 16 +5. The client never decides a charge. Root can clear today's AI counters
   for any handle from the Dev Hub (`dev_reset_ai_limits`). Pinned by `check:ai-tokens`.
@@ -121,7 +124,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   A SCENARIO change (new situation, or an option that now means something else) is never written in
   place (emci 2026-10-20): wrap the old row in `retired(newId, …)` with its text untouched and add the
   new scene as the next free id (`<trait>_26`…), same setting, direction and values; regenerate with
-  `--wave100`-style output. Retired rows (`question_bank.retired_at`, wave100/100b, NOT applied yet) are
+  `--wave100`-style output. Retired rows (`question_bank.retired_at`, wave100/100b, applied 2026-10-20) are
   never served or changed but still count for whoever answered them (answered = min(25, all answered)).
   Exactly 25 ACTIVE per trait. No question may score a privacy, money or safety boundary as distance.
 - **Profile history (wave86, emci 2026-10-06).** Saved profiles live in `trait_profile_snapshots`
@@ -151,11 +154,26 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   32 px ladder (option A: heroes 128 at 1:1); every new or edited asset passes the scale check against the
   grown hero (guide §2 table); show emci rendered samples + a scale sheet before any art choice; and the
   same change updates the library (import / `replaces` / archive via art-decisions, then `art:sync`).
+- **PixelLab pre-flight before ANY animation or art generation (emci 2026-10-21).** Every new chat relearns PixelLab
+  first: read `docs/art/PIXELLAB_GUIDE.md` + `docs/art/PIXELLAB_ANIMATION.md`, ask `search_help` about each tool you
+  will use, update those docs if the answers differ, then `get_balance`, estimate the cost, ONE test clip for emci's ok,
+  and log generations per asset. Never generate from memory. Over ~20 generations in a batch or any Pro call: ask first.
 - **Game screens use fixed regions (emci 2026-10-13).** Top bar · viewport · bottom panel + a floating
   overlay; content never resizes a region (bars reserve their tallest state, announcements float, text in
   fixed boxes, loading keeps final size; a deliberate screen switch like Turf War setup → wave may
   re-lay out once, marked `fixed-regions: screen switch`). Kit `src/play/fixed-region.tsx`, rule `.cursor/rules/fixed-regions.mdc`,
   gate `check:fixed-regions` — a new game screen adds its pins there.
+- **Compliance is researched, built, tested and documented, not handed to a lawyer (emci 2026-10-22).** Hiring a
+  lawyer is never a default requirement or a launch blocker. For privacy, terms, AI-provider disclosures, encryption
+  declarations and App Store rules: (1) start from current official docs (Apple, regulators, our providers);
+  (2) comparable apps are implementation examples only, never proof of compliance, and their legal text is never copied;
+  (3) label every item **mandatory** (cite the rule), **recommended safeguard** or **optional precaution**, and never
+  present a recommendation as a legal requirement; (4) read our code, config and data flows before any claim, so the
+  policies describe what the app really does; (5) prefer practical, lower-risk implementations, but never remove a
+  feature or change an AI provider without emci's approval; (6) when uncertain, write the exact question, the sources,
+  and the simplest compliant option, with no "ask a lawyer" default and no unsupported reassurance; (7) flag professional
+  review only for a specific, material unresolved issue, saying why the guidance doesn't resolve it and whether it really
+  blocks launch, and keep doing unrelated work. Evidence goes in the roadmap or the doc for that area.
 - Do not change dependencies, auth, env config, or secrets without emci's ok.
 - **Schema changes that copy a tested path need no ask (emci 2026-10-02).** A new table /
   RLS / RPC built the same way as one already live here (e.g. the question pool) is
@@ -177,7 +195,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 | **Making or editing any game art (PixelLab)** — tools order, size ladder, gates | `docs/art/PIXELLAB_GUIDE.md` (read first) · `npm run pixellab:watch` = has PixelLab changed? |
 | Old plan (reference only, not rules) | `docs/archive/OLD_PLAN.md` |
 | Schema + RLS + RPCs | `supabase/migrations/*.sql` (chronological: stage* → wave*) |
-| Edge Functions (Deno) | `supabase/functions/{ai-library,ai-library-fill,ai-generate (closed stub),apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` · rate limits: `_shared/rate-limit.ts` + wave98 · live schema snapshot: `supabase/baseline/` |
+| Edge Functions (Deno) | `supabase/functions/{ai-library,ai-library-fill,report-digest,apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` · rate limits: `_shared/rate-limit.ts` + wave98 · live schema snapshot: `supabase/baseline/` |
 
 Expo docs for this repo: https://docs.expo.dev/versions/v54.0.0/ (SDK 54 — check
 `package.json` before trusting any other version).

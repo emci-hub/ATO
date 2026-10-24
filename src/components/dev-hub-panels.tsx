@@ -64,10 +64,7 @@ import { TEAM_COPY_REVIEWED } from '@/lib/ai-library/teams';
 import { DAILY_PICK_COPY_REVIEWED } from '@/lib/daily-pick/bank';
 import { POLISH_COPY_REVIEWED } from '@/lib/polish-copy';
 import { PROFILE_FILL_COPY_REVIEWED } from '@/lib/profile-fill';
-import { CATEGORY_READ_COPY_REVIEWED } from '@/lib/rolls/category-read';
-import { STORY_COPY_REVIEWED } from '@/lib/sage-story';
 import { STORY_BANK_COPY_REVIEWED } from '@/lib/story-bank';
-import { TITLE_COPY_REVIEWED } from '@/lib/sage-title';
 import { STAGED_INTAKE_COPY_REVIEWED } from '@/lib/questions/staged-intake-copy';
 
 /* -------------------------------------------------------------------------
@@ -569,10 +566,7 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Staged intake (sets, round cap, mixed trait)', reviewed: STAGED_INTAKE_COPY_REVIEWED },
   { name: 'Daily insight (stored)', reviewed: INSIGHT_BANK_COPY_REVIEWED },
   { name: 'Category statements (AI)', reviewed: CATEGORY_STATEMENTS_COPY_REVIEWED },
-  { name: 'Category read (rolls)', reviewed: CATEGORY_READ_COPY_REVIEWED },
-  { name: 'Story', reviewed: STORY_COPY_REVIEWED },
   { name: 'Story bank (66 hand-written six-beat cards)', reviewed: STORY_BANK_COPY_REVIEWED },
-  { name: 'Title (AI, unused)', reviewed: TITLE_COPY_REVIEWED },
   { name: 'Daily lines', reviewed: DAILY_LINE_COPY_REVIEWED },
   { name: 'Today’s Pick (64 daily questions)', reviewed: DAILY_PICK_COPY_REVIEWED },
   { name: 'Mini guy idle lines', reviewed: BUDDY_COPY_REVIEWED },

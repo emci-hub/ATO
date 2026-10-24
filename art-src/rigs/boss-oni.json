@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "hero": "boss-oni",
+  "slug": "boss.oni.streetwear",
+  "canvas": [
+    264,
+    264
+  ],
+  "rawDir": "art-src/pixellab/boss.oni.streetwear/migrated/raw",
+  "footRow": 224,
+  "heightBand": [
+    183,
+    185
+  ],
+  "lines": {
+    "hip": 170
+  },
+  "directions": {
+    "east": {
+      "parts": {
+        "cape": [
+          [
+            44,
+            95
+          ],
+          [
+            118,
+            95
+          ],
+          [
+            118,
+            215
+          ],
+          [
+            44,
+            215
+          ]
+        ],
+        "prop": [
+          [
+            152,
+            148
+          ],
+          [
+            190,
+            106
+          ],
+          [
+            228,
+            106
+          ],
+          [
+            228,
+            172
+          ],
+          [
+            152,
+            172
+          ]
+        ]
+      }
+    },
+    "west": {
+      "parts": {
+        "cape": [
+          [
+            150,
+            100
+          ],
+          [
+            230,
+            100
+          ],
+          [
+            230,
+            214
+          ],
+          [
+            150,
+            214
+          ]
+        ],
+        "prop": [
+          [
+            116,
+            148
+          ],
+          [
+            78,
+            106
+          ],
+          [
+            40,
+            106
+          ],
+          [
+            40,
+            186
+          ],
+          [
+            116,
+            186
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "AN4 first pass (test only): lines and masks read off a gridded rotation; check on the part map. Big silhouette: 1 px breath, cape holds still, flame blade moves with the hand.",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ]
+    }
+  }
+}

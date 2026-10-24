@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "hero": "sak",
+  "slug": "hero.sak.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.sak.streetwear/migrated/raw",
+  "footRow": 152,
+  "heightBand": [
+    108,
+    114
+  ],
+  "lines": {
+    "hip": 118,
+    "shoulder": 76
+  },
+  "directions": {
+    "east": {
+      "parts": {
+        "prop": [
+          [
+            110,
+            106
+          ],
+          [
+            155,
+            106
+          ],
+          [
+            155,
+            138
+          ],
+          [
+            110,
+            138
+          ]
+        ]
+      }
+    },
+    "west": {
+      "parts": {
+        "prop": [
+          [
+            40,
+            106
+          ],
+          [
+            92,
+            106
+          ],
+          [
+            92,
+            134
+          ],
+          [
+            40,
+            134
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "Ice sword moves with the hand; floating shards breathe with the body. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map. Large silhouette: a 2 px sink fails the 0.90 overlap gate, so this hero breathes 1 px (rest, down, down, rest).",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        450,
+        300,
+        450,
+        300
+      ]
+    }
+  }
+}

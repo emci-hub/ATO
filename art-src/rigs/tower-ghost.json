@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "hero": "tower-ghost",
+  "slug": "tower.ghost.streetwear",
+  "canvas": [
+    240,
+    240
+  ],
+  "rawDir": "art-src/pixellab/tower.ghost.streetwear/migrated/raw",
+  "footRow": 183,
+  "heightBand": [
+    127,
+    129
+  ],
+  "lines": {
+    "hip": 150
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "parts": {},
+      "footRow": 182,
+      "heightBand": [
+        126,
+        128
+      ]
+    }
+  },
+  "notes": "AN4 first pass (test only): lines and masks read off a gridded rotation; check on the part map. Big silhouette, floating drones breathe with the body.",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ]
+    }
+  }
+}

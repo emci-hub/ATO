@@ -45,6 +45,7 @@ function ringSheetKey(element: Element): string | undefined {
 
 /** The ring's box edge on a board `boardSide` px across, in px (native art px x scale x the board scale). */
 export function ringEdgePx(boardSide: number, scale: number): number {
+  'worklet'; // the helper ring's useAnimatedStyle calls this on the UI thread (a plain function crashed Turf War on 1.2.0)
   return (RING_CELL_PX * scale * boardSide) / BOARD_ART_PX;
 }
 

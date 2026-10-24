@@ -12,14 +12,13 @@ import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
  *
  * This is Legends' reveal screen; parking Legends stranded it, so it is
  * parked in the same pass. The roll/reveal RPCs, trait-track reads, and
- * token spend are all disconnected. `src/lib/rolls/*` is untouched — only
- * this screen's call sites are gone, per the "delete the call site, not the
- * callee" rule.
+ * token spend are all disconnected. The old `src/lib/rolls/*` modules were
+ * deleted in roadmap A5 (2026-10-23); a rebuilt Roll starts from the server
+ * RPCs and the ai-library, not from them.
  *
  * This screen is deliberately kept as a registered route rendering a visible
  * "rebuild" state rather than removed, so it keeps working and ships over
- * OTA. When Roll is rebuilt, wire it back against the same `lib/rolls/*`
- * modules — they were never touched.
+ * OTA.
  */
 export default function RollScreen() {
   return (

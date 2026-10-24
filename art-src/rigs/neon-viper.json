@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "hero": "neon-viper",
+  "slug": "hero.neon-viper.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.neon-viper.streetwear/migrated/raw",
+  "footRow": 149,
+  "heightBand": [
+    103,
+    108
+  ],
+  "lines": {
+    "hip": 114,
+    "shoulder": 76
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "parts": {}
+    }
+  },
+  "notes": "No held prop; plain body breath. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map."
+}

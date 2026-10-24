@@ -15,7 +15,7 @@
  * the description and chooses to show the icons. Pure, no I/O.
  *
  * 42 phrases (14 traits × 3 sides; the two closeness traits only live in
- * "How You Love") + 10 endings. Draft copy, waiting on emci's read: TEAM_COPY_REVIEWED = false, review doc
+ * "How You Love") + 10 endings. Accepted by emci 2026-10-23 (roadmap A4): TEAM_COPY_REVIEWED = true, review doc
  * docs/team-names-review.md. Pinned by check:ai-library (every team unique,
  * names stable).
  */
@@ -25,7 +25,7 @@ import type { TraitAxis } from '@/lib/traits';
 
 import { parseDiveBucket, type DiveAxisState } from './deep-dive';
 
-export const TEAM_COPY_REVIEWED = false;
+export const TEAM_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)
 
 export interface TeamSide {
   phrase: string;

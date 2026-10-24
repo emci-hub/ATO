@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "hero": "kitsune",
+  "slug": "hero.kitsune.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.kitsune.streetwear/migrated/raw",
+  "footRow": 151,
+  "heightBand": [
+    107,
+    113
+  ],
+  "lines": {
+    "hip": 132,
+    "shoulder": 76
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "footRow": 150,
+      "parts": {}
+    }
+  },
+  "notes": "Long cloak and swords all breathe with the body; boots locked. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map. Large silhouette: a 2 px sink fails the 0.90 overlap gate, so this hero breathes 1 px (rest, down, down, rest).",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        450,
+        300,
+        450,
+        300
+      ]
+    }
+  }
+}

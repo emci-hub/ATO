@@ -132,8 +132,7 @@ export default function LoginScreen() {
         <>
           <ThemedText type="subtitle">Log in</ThemedText>
           <ThemedText themeColor="textSecondary" style={authStyles.lede}>
-            Apple is the fast path. A code always works. Password is optional —
-            set it in Settings after you&apos;re in.
+            Apple is the fast path. A code always works. If your account has a password, you can use it below.
           </ThemedText>
 
           {appleAvailable ? (

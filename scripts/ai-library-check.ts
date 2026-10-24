@@ -25,10 +25,9 @@ import { resolve } from 'node:path';
 import { allDiveBuckets, diveBucketKey, parseDiveBucket, DEEP_DIVE_LIBRARY } from '../src/lib/ai-library/deep-dive';
 import { LEGEND_LIBRARY, legendBucketKey, parseLegendBucket } from '../src/lib/ai-library/legend';
 import { checkLibraryAnswer, planLibraryCall } from '../src/lib/ai-library/server';
-import { STORY_LIBRARY, parseStoryBucket } from '../src/lib/ai-library/story';
 import { TEAM_COPY_REVIEWED, TEAM_SIDES, teamForBucket } from '../src/lib/ai-library/teams';
 import { AXIS_POLE_NAME } from '../src/lib/axis-poles';
-import { BUCKET_KEY_RE, LIBRARY_VERSION, sharedCardLine } from '../src/lib/ai-library/types';
+import { BUCKET_KEY_RE, LIBRARY_KINDS, LIBRARY_VERSION, isLibraryKind, sharedCardLine } from '../src/lib/ai-library/types';
 import { CATEGORY_DEFS } from '../src/lib/categories';
 import { legendPairs, legendDiffer } from '../src/lib/legend-figures/story';
 import { LEGEND_ROSTER } from '../src/lib/legend-figures/roster';
@@ -117,31 +116,23 @@ async function main() {
   assert.equal(checkLibraryAnswer('deep_dive', key, ['people'], clinical).cards.length, 0, 'a clinical word is rejected');
   ok('the server keeps only answers that pass the app’s own deep-dive checks');
 
-  // --- Story buckets --------------------------------------------------------------------
+  // --- Story left the library (roadmap A3 / S4, 2026-10-22) --------------------------------
+  // Story is free templates since 2026-10-14, so the server no longer writes Story cards.
+  // Pairs: the kinds that stay are planned (pass); 'story' is refused like any unknown kind (fail).
   const storyKey = 'st|cat_social:high:extraversion.h|cat_structure:hl:-|j:extraversion.h';
-  const sb = parseStoryBucket(storyKey);
-  assert.ok(sb, 'a two-side story bucket parses');
-  for (const bad of [
-    'st|cat_social:high:openness.h|j:-',
-    'st|cat_social:zz:-|j:-',
-    'st|cat_social:high:-|cat_social:low:-|j:-',
-    'st|cat_social:high:-|j:openness.h',
-    'st|j:-',
-  ]) {
-    assert.equal(parseStoryBucket(bad), null, `refused: ${bad}`);
-  }
-  const sp = planLibraryCall('story', storyKey, {});
-  assert.ok(sp.ok);
-  if (!sp.ok) return;
-  assert.equal(LIBRARY_VERSION.story, 'l4', 'story prompt/shape bump (honest-weaknesses rule in the prompt): old library cards stay on l3');
-  assert.equal(sp.maxOutputTokens, 800);
-  assert.match(sp.prompt, /Never invent a plot/);
-  assert.match(sp.prompt, /your date/);
-  assert.match(sp.prompt, /TOLD-VS-PLAYED: none\. Do not invent a split\./, 'the personal told-vs-played line never reaches a shared story');
-  assert.match(sp.prompt, /SETTING FOR THIS STORY: a plan with friends/);
-  const sp2 = planLibraryCall('story', storyKey, { friends: 1 });
-  assert.ok(sp2.ok && sp2.prompt !== sp.prompt && /SETTING FOR THIS STORY: a task at work/.test(sp2.prompt), 'another angle reads another setting and wording');
-  ok('Story buckets parse and refuse bad keys; no told-vs-played line, a setting per angle');
+  assert.deepEqual([...LIBRARY_KINDS], ['deep_dive', 'legend'], 'the library writes deep dives and Legends only');
+  assert.equal(isLibraryKind('deep_dive'), true, 'pass: deep_dive is a library kind');
+  assert.equal(isLibraryKind('story'), false, 'fail case: story is no longer a library kind');
+  assert.deepEqual(planLibraryCall('story', storyKey, {}), { ok: false, reason: 'kind' }, 'a story request is refused before anything is charged');
+  assert.ok(!('story' in LIBRARY_VERSION), 'no Story version left to serve');
+  assert.equal(LIBRARY_VERSION.deep_dive, 'l2', 'deep-dive shape unchanged (no bump)');
+  assert.equal(LIBRARY_VERSION.legend, 'l2', 'Legends shape unchanged (no bump)');
+  assert.doesNotMatch(built, /Write as Sage/, 'no "Write as Sage" prompt reaches the server');
+  assert.doesNotMatch(built, /STORY_LIBRARY|parseStoryBucket/, 'no Story prompt or bucket code in the server bundle');
+  const edgeKinds = read('supabase/functions/ai-library/index.ts');
+  assert.match(edgeKinds, /type Kind = 'deep_dive' \| 'legend';/, 'the Edge Function knows two kinds');
+  assert.doesNotMatch(edgeKinds, /story: 'story'/, 'no Story refund kind');
+  ok('Story is refused by the library; deep dives and Legends unchanged; no Sage prompt on the server');
 
   // --- Legends buckets ------------------------------------------------------------------
   let legendKeys = 0;
@@ -177,8 +168,40 @@ async function main() {
     const src = read(`src/lib/ai-library/${file}.ts`);
     assert.doesNotMatch(src, /userId|user_id|\bme\./, `${file}.ts never reads who the reader is`);
   }
-  for (const lib of [DEEP_DIVE_LIBRARY, STORY_LIBRARY, LEGEND_LIBRARY]) assert.equal(lib.readCard(null), null);
+  for (const lib of [DEEP_DIVE_LIBRARY, LEGEND_LIBRARY]) assert.equal(lib.readCard(null), null);
   ok('the shared prompts are built from the bucket only (no user id, no per-person seed)');
+
+  // --- AI data flow, verified 2026-10-22 (roadmap v2 "AI data flow") ----------------------
+  // Pairs: two readers with different exact leanings in the same bucket get the SAME key and the SAME prompt,
+  // and neither reader's exact percentage appears in it. A reader on the other side gets a different key.
+  {
+    const def = CATEGORY_DEFS.find((d) => d.id === 'cat_steadiness')!;
+    const reader = (pcts: number[], flip = false) =>
+      def.axes.map((axis, i) => ({ axis, lean: (i % 2 === 0) !== flip ? ('high' as const) : ('low' as const), pct: pcts[i % pcts.length]! }));
+    const a = diveBucketKey(def.id, reader([78, 64, 52]) as never);
+    const b = diveBucketKey(def.id, reader([93, 61, 57]) as never);
+    const c = diveBucketKey(def.id, reader([78, 64, 52], true) as never);
+    assert.equal(a, b, 'pass: different exact scores, same bucket');
+    assert.notEqual(a, c, 'fail case: the other side is a different bucket');
+    const pa = DEEP_DIVE_LIBRARY.buildPrompt(parseDiveBucket(a)!, ['people', 'work']).prompt;
+    const pb = DEEP_DIVE_LIBRARY.buildPrompt(parseDiveBucket(b)!, ['people', 'work']).prompt;
+    assert.equal(pa, pb, 'same bucket → byte-identical prompt');
+    for (const pct of [78, 64, 52, 93, 61, 57]) assert.ok(!pa.includes(`${pct}%`), `exact score ${pct}% never reaches the prompt`);
+  }
+  {
+    // The provider call carries only the prompt and generation settings: no user, metadata, labels or
+    // safety identifier field, and no header from the person's request is forwarded.
+    const vendors = read('supabase/functions/_shared/ai-vendors.ts');
+    assert.match(vendors, /export async function complete\(prompt: string, maxOutputTokens: number\)/, 'complete() takes only the prompt + a token cap');
+    assert.doesNotMatch(vendors, /\b(user|user_id|userId|metadata|labels|safety_identifier|safetyIdentifier|cachedContent)\s*:/, 'no per-person field in a provider body');
+    assert.doesNotMatch(vendors, /x-forwarded-for|x-real-ip|request\.headers/i, 'no client header forwarded to a provider');
+    const fn = read('supabase/functions/ai-library/index.ts');
+    assert.match(fn, /await complete\(prompt, maxOutputTokens\)/, 'ai-library passes only the bucket-built prompt');
+    assert.doesNotMatch(fn, /complete\([^)]*(user|bucket|authHeader)/, 'never the user, the raw key or the auth header');
+    const fill = read('supabase/functions/ai-library-fill/index.ts');
+    assert.doesNotMatch(fill, /complete(Detailed)?\([^)]*user/i, 'the fill job never passes a user to a provider');
+  }
+  ok('AI data flow: same bucket = same prompt, no exact score; provider gets only prompt + settings from our server');
 
   // --- wave93 SQL ------------------------------------------------------------------------
   const sql = read('supabase/migrations/wave93_ai_library.sql').replace(/--[^\n]*/g, '');
@@ -330,13 +353,17 @@ async function main() {
   assert.match(card, /\{DEEP_DIVE_NEW_LABEL\} · \{AI_PRICE_LABEL\}/, 'a brand-new one shows its price');
   assert.match(card, /<LibraryCardFooter libraryId=\{entry\.libraryId\} others=\{entry\.others\} \/>/);
   // Insights (2026-10-14): the app no longer reads Story cards from the
-  // library (template-only). The server side of Story stays as it is.
+  // library (template-only); the server dropped Story on 2026-10-22 (A3 / S4).
   const fold = read('src/components/insights/insights-story-card.tsx');
   assert.doesNotMatch(fold, /serveLibraryCard|writeLibraryCard|wantLibraryCards/, 'the Story card never touches the AI library');
   const gen = read('src/lib/legend-figures/generate.ts');
   assert.match(gen, /input\.free \? 'free_legend' : 'paid'/, 'the free Legends reveal is never charged');
   assert.doesNotMatch(gen, /serveLibraryCard\('legend'/, 'Legends never use the free library serve');
-  assert.match(card, /leansKey: key \}, madeOn: today \}/, 'the old deep-dive path saves under the library key (no repeat charge)');
+  // The old one-person deep-dive path (writeOld) was removed in roadmap A5; the library path saves the card under
+  // the library key, so it counts as fresh and the free button never charges twice.
+  assert.match(card, /dive: \{ \.\.\.served\.card, categoryId: def\.id, leansKey: key \}/, 'the library path saves under the library key (no repeat charge)');
+  assert.doesNotMatch(card, /writeOld|writeCategoryDeepDive/, 'the old one-person path is gone');
+  assert.doesNotMatch(gen.replace(/\/\*[\s\S]*?\*\//g, ''), /writeLegendStory|generateText/, 'the old Legends one-person path is gone');
   assert.match(read('src/app/(tabs)/legends.tsx'), /revealLegendStory\(\{ \.\.\.input, consentGranted, free \}\)/);
   assert.match(read('src/components/legend-figure-card.tsx'), /<LibraryCardFooter/);
   assert.equal(sharedCardLine(3), null);
@@ -440,7 +467,7 @@ async function main() {
       assert.doesNotMatch(side.phrase, /anxi|insecur|needy|clingy|toxic|lazy|weird|rizz|slay|no-cap|bestie/i);
     }
   }
-  assert.equal(TEAM_COPY_REVIEWED, false, 'team names ship unreviewed');
+  assert.equal(TEAM_COPY_REVIEWED, true, 'team names accepted by emci 2026-10-23 (roadmap A4; pinned by check:copy-flags)');
   assert.ok(existsSync(resolve(root, 'docs/team-names-review.md')), 'review doc exists');
   const badge = read('src/components/team-badge.tsx');
   assert.ok(badge.includes('setShown(map[categoryId] === true)'), 'hidden by default, shown only by choice');

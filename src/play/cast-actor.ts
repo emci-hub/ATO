@@ -116,6 +116,21 @@ export function castActorClipFrames(clip: CastActorClip, role: SkinRole): number
     : role.anims?.[clip]?.frames ?? 0;
 }
 
+/** Per-frame holds (ms each) a role's clip authors, or undefined when it has none
+ * (the clip then plays at the mode's flat cadence). Only a full set counts. */
+export function castActorClipHolds(clip: CastActorClip, role: SkinRole): readonly number[] | undefined {
+  const art = clip === 'walk' ? role.walk : role.anims?.[clip];
+  const holds = art?.holds;
+  return holds && holds.length === art?.frames && holds.length > 0 ? holds : undefined;
+}
+
+/** Total length of a clip in ms: the sum of its holds, else frames x the flat cadence. */
+function castActorClipMs(mode: CastActorMode, clip: CastActorClip, role: SkinRole): number {
+  const holds = castActorClipHolds(clip, role);
+  if (holds) return holds.reduce((a, b) => a + b, 0);
+  return Math.max(1, castActorClipFrames(clip, role)) * castActorFrameMs(mode, clip);
+}
+
 /** Cadence for a clip in a mode (ms per frame), defaulting to the idle cadence. */
 export function castActorFrameMs(mode: CastActorMode, clip: CastActorClip): number {
   return CAST_ACTOR_FRAME_MS[mode][clip] ?? 120;
@@ -150,12 +165,12 @@ export function castActorStartOnce(
   if (!castActorCanStart(actor, clip, now)) return false;
   actor.clip = clip;
   actor.clipStartAt = now;
-  actor.onceEndAt =
-    now + Math.max(1, castActorClipFrames(clip, role)) * castActorFrameMs(actor.mode, clip);
+  actor.onceEndAt = now + castActorClipMs(actor.mode, clip, role);
   return true;
 }
 
-/** The wrap/hold frame math shared by `castActorFrame` and `castActorPathFrame`. */
+/** The wrap/hold frame math shared by every clip reader. With `holds` (ms per
+ * frame) each frame lasts its own time; without, every frame lasts `perMs`. */
 function frameIndex(
   now: number,
   clipStartAt: number,
@@ -163,7 +178,19 @@ function frameIndex(
   seedMs: number,
   frames: number,
   holdLast: boolean,
+  holds?: readonly number[],
 ): number {
+  if (holds) {
+    const total = holds.reduce((a, b) => a + b, 0);
+    let t = Math.max(0, now - clipStartAt + seedMs);
+    if (holdLast && t >= total) return frames - 1;
+    t %= total;
+    for (let i = 0; i < holds.length; i += 1) {
+      if (t < holds[i]) return i;
+      t -= holds[i];
+    }
+    return frames - 1;
+  }
   const raw = Math.floor((now - clipStartAt + seedMs) / perMs);
   return holdLast ? Math.min(raw, frames - 1) : raw % frames;
 }
@@ -182,6 +209,7 @@ export function castActorFrame(actor: CastActor, now: number, role: SkinRole): n
     actor.clip === 'idle' ? actor.idleSeedMs : 0,
     frames,
     actor.onceEndAt > 0,
+    castActorClipHolds(actor.clip, role),
   );
 }
 
@@ -193,7 +221,7 @@ export function castActorFrame(actor: CastActor, now: number, role: SkinRole): n
 export function castActorFaintFrame(now: number, koAt: number, role: SkinRole): number {
   const frames = castActorClipFrames('faint', role);
   if (frames <= 1) return 0;
-  return frameIndex(now, koAt, castActorFrameMs('tower', 'faint'), 0, frames, true);
+  return frameIndex(now, koAt, castActorFrameMs('tower', 'faint'), 0, frames, true, castActorClipHolds('faint', role));
 }
 
 /**
@@ -213,7 +241,7 @@ export function castActorGetUpFrame(now: number, upAt: number, durationMs: numbe
 export function castActorWalkFrame(now: number, walkAt: number, role: SkinRole): number {
   const frames = castActorClipFrames('walk', role);
   if (frames <= 1) return 0;
-  return frameIndex(now, walkAt, castActorFrameMs('avatar', 'walk'), 0, frames, false);
+  return frameIndex(now, walkAt, castActorFrameMs('avatar', 'walk'), 0, frames, false, castActorClipHolds('walk', role));
 }
 
 /**
@@ -230,6 +258,7 @@ export function castActorPathFrame(
   clipStartAt: number,
   idleSeedFrames: number,
   frames: number,
+  role?: SkinRole,
 ): number {
   if (frames <= 1) return 0;
   const per = CAST_ACTOR_FRAME_MS.path[clip] ?? 120;
@@ -240,5 +269,6 @@ export function castActorPathFrame(
     clip === 'idle' ? idleSeedFrames * per : 0,
     frames,
     clip === 'death',
+    role ? castActorClipHolds(clip, role) : undefined,
   );
 }

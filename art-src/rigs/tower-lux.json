@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "hero": "tower-lux",
+  "slug": "tower.lux.streetwear",
+  "canvas": [
+    244,
+    244
+  ],
+  "rawDir": "art-src/pixellab/tower.lux.streetwear/migrated/raw",
+  "footRow": 186,
+  "heightBand": [
+    124,
+    126
+  ],
+  "lines": {
+    "hip": 140
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "parts": {},
+      "footRow": 184,
+      "heightBand": [
+        121,
+        123
+      ]
+    }
+  },
+  "notes": "AN4 first pass (test only): lines and masks read off a gridded rotation; check on the part map. Big silhouette.",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ]
+    }
+  }
+}

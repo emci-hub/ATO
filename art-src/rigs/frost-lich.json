@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "hero": "frost-lich",
+  "slug": "hero.frost-lich.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.frost-lich.streetwear/migrated/raw",
+  "footRow": 151,
+  "heightBand": [
+    111,
+    116
+  ],
+  "lines": {
+    "hip": 124,
+    "shoulder": 72
+  },
+  "directions": {
+    "east": {
+      "parts": {
+        "prop": [
+          [
+            107,
+            100
+          ],
+          [
+            148,
+            100
+          ],
+          [
+            148,
+            126
+          ],
+          [
+            107,
+            126
+          ]
+        ]
+      }
+    },
+    "west": {
+      "parts": {
+        "prop": [
+          [
+            64,
+            98
+          ],
+          [
+            84,
+            98
+          ],
+          [
+            84,
+            146
+          ],
+          [
+            64,
+            146
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "Cape is body; ice sword moves with the hand. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map."
+}

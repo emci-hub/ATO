@@ -107,7 +107,9 @@ Everything here is sitting on your phone right now and just needs exercising.
       **F5 check (known, deferred):** read the regenerated text against its tagged axis — does the prose actually match the axis name (e.g. does an `openness`-tagged entry read like openness, not like sleep/recovery)? This is not fixed yet (Box 14). Use this tool to gauge how bad it looks on the Explore tab.
 - [ ] Confirm a Talk message in Sage still behaves normally — reply quality/tone should be unchanged, since Talk still uses the narrower 5-check history, not the fuller Explore history.
 
-## Box 8 — Home strip-down, two slots (deliberate override)
+## Box 8 — Home strip-down, two slots (deliberate override) — OBSOLETE (2026-10-23)
+
+> Obsolete: the Home crisis / missed-check slots no longer exist (crisis system removed 2026-10-14; Home was rebuilt). Do not run.
 
 **Dated reversal (Aug 31, 2026):** Box 8 originally locked Home to **one thing** below Did/Skip. Wave 21 **deliberately** extends that to a second, small, collapsed category teaser. This is not drift. Crisis and missed-check stay alone — the teaser never sits next to those two safety slots.
 
@@ -144,7 +146,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] Confirm an unfilled axis has no band and no detail — no gap line, no placeholder.
 - [ ] In `/dev-lab` → You, use "Band detail" to step through every filled axis for your test account without scrolling You manually. Confirm it's read-only — it shouldn't change any trait values.
 
-## Box 11 — AI consent as interstitial
+## Box 11 — AI consent as interstitial — OBSOLETE (2026-10-23)
+
+> Obsolete: written for Dawn and Sage Talk, which are gone. AI consent now guards only Legends cards and deep dives (see Boxes 29, 30 and 76).
 
 - [ ] On a fresh/reset account (ai_consent null), trigger Dawn. Confirm a full-screen modal appears and cannot be dismissed without answering — no back-button or backdrop-tap escape.
 - [ ] Same test on Sage: reach a point where consent is pending, confirm the same modal blocks the screen until answered.
@@ -166,7 +170,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] Confirm Dawn's crisis interrupt path still works the same way, unchanged.
 - [ ] Note: no dev-lab trigger exists for this yet — testing the crisis interrupt still requires using a real flagged phrase. Cursor flagged this as needing a deliberate fencing decision before building; not in scope for this box.
 
-## Box 12.5 — Dev Lab crisis card preview (fenced)
+## Box 12.5 — Dev Lab crisis card preview (fenced) — OBSOLETE (2026-10-23)
+
+> Obsolete: the crisis card is gone; the You tab carries a fixed helpline row (`check:helpline-row`).
 
 - [ ] In `/dev-lab` → System, tap "Preview crisis card." Confirm CrisisCard renders inline with real copy, no keyword typed.
 - [ ] Confirm this control does NOT appear anywhere in Talk or Dawn — only inside `/dev-lab`.
@@ -202,7 +208,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] If a regeneration ever comes back empty/null (this happened once during Cursor's own spot-check on `conscientiousness`), note it — not expected to block anything, but worth flagging if you see it repeat.
 - [ ] This closes F5. No further action expected unless a live mismatch turns up. JS is on OTA `8771f505-5cf5-4652-8d89-42f2ad57f05c` — regenerate on a binary 10+ device after it has pulled the update.
 
-## Box 22 — Dawn categories, Explore combine, Levity, The Story
+## Box 22 — Dawn categories, Explore combine, Levity, The Story — OBSOLETE (2026-10-23)
+
+> Obsolete: Dawn is gone and the Story is free templates on Insights (Box 31 covers it).
 
 All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines as final.
 
@@ -215,14 +223,18 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] On the Explore tab, confirm The Story fold (collapsed) sits under Categories. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
 - [ ] Flag every Story paragraph and every new Levity/Dawn/Explore line for emci before treating any of it as shippable.
 
-## Box 23 — Shared friend-voice style checklist (all 5 surfaces)
+## Box 23 — Shared friend-voice style checklist (all 5 surfaces) — OBSOLETE (2026-10-23)
+
+> Obsolete: four of the five surfaces (Read/Do, Dawn, Talk, Sage title) no longer exist; copy now follows `docs/copy-review-rules.md`.
 
 - [ ] Open a generated Dawn Read (Home/dawn), an Explore observation, the Sage Title + its Category lines, and The Story. For each, confirm the copy reads like a friend who noticed something: never "you are", never self-description ("this reflects", "a gap worth", "the data shows"), never "always" (prefers lately/this week/for now).
 - [ ] Confirm a title or category summary that names more than one quality joins them with but/yet/and — never a plain comma list. Example to match: "Grounded and self-driven, but happiest doing it alone", not "Steady, driven, and independent".
 - [ ] Confirm multi-trait sentences read as one whole person (Rule 6) and single-idea sentences stay one idea (Rule 3).
 - [ ] Confirm the checklist text never appears in rendered output (it's prompt-only scaffolding).
 
-## Box 24 — Circle Explore handshake (consent-gated comparison)
+## Box 24 — Circle Explore handshake (consent-gated comparison) — OBSOLETE (2026-10-23)
+
+> Obsolete: friends are added by @handle with accept-before-connect, and comparing is the Circle compare feature. Covered by Boxes 61, 62 and 76.
 
 - [ ] With two test accounts, scan a QR / paste a link to connect. Confirm Circle appears for **both** accounts and is not present before the connection.
 - [ ] On account A, tap "Share categories with them" (per-friend path). Confirm the copy flips to "Waiting for them to opt in too." Confirm **no** comparison is visible yet.
@@ -233,7 +245,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Unfriend from one side. Confirm Circle disappears for both and the connection row is gone.
 - [ ] Spot check Supabase: `category_share` / `close_friends_share` rows flip only with consent; `peer_category_pack` returns cached summaries only.
 
-## Box 25 — Thin-profile behavior (live 6/15 rule)
+## Box 25 — Thin-profile behavior (live 6/15 rule) — OBSOLETE (2026-10-23)
+
+> Obsolete: written around Sage and Talk. The thin-profile gate still exists in code (`check:wave20`, `check:wave22`), but the screens it described are gone.
 
 - [ ] **Actual live rule:** thin is `settledCount / TRAIT_AXES.length < 6/15`. With 16 axes today that means **fewer than 7 effective settled report-track axes = thin** (6/16 = 0.375 < 0.4; 7/16 = 0.4375 ≥ 0.4). Stability-weighted, report-track only — gut-call never counts.
 - [ ] On a brand-new account (0 settled): open Sage. Confirm the "N of 16 settled" line reads 0/16 and coaching copy is honest/thin (does not invent specifics, does not nag).
@@ -243,7 +257,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Confirm a gut-call (`self_game`) answer on an axis does **not** count toward settled (report-track only) — Sage's count stays put.
 - [ ] Confirm The Story fold is absent on a thin account even when Gemini is reachable (thin gate holds).
 
-## Box 26 — Tokens, Full Profile depth, trait_history timeline
+## Box 26 — Tokens, Full Profile depth, trait_history timeline — OBSOLETE (2026-10-23)
+
+> Obsolete: "Notes", "A closer look from Sage" and Gut call are gone; tokens are now ATO tokens (Boxes 32 and 76) and profile changes are Change answers / Undo (Box 81).
 
 - [ ] Log a Check. Confirm Notes balance went up by 3 (check-in earn), and the `token_events` ledger shows a +3 row.
 - [ ] Play a game round (Gut call). Confirm +5 and a ledger row.
@@ -254,7 +270,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Tap a filled axis to edit. Confirm 8s undo works (no persist/history if undone) and re-tapping the same axis immediately after loses undo.
 - [ ] Confirm Full Profile stays fully viewable at 0 Notes — spend only gates new depth/insight, never viewing.
 
-## Box 27 — Nav bar customization (edit mode)
+## Box 27 — Nav bar customization (edit mode) — OBSOLETE AS WRITTEN (2026-10-23)
+
+> Obsolete as written: it names a Sage tab and a five-item bar that no longer exist (the Sage tab became Insights). If the nav edit mode is still wanted on a phone, write a fresh box for the current tabs.
 
 - [ ] Confirm the bottom bar shows, by default: **Home / Sage / Explore / You / More** — 5 items, not 6. Around and Circle are in More. Circle appears only after a connection; before that it is not shown anywhere, but Around still is.
 - [ ] Long-press a reorderable tab (Explore/Around/You) → "Edit navigation" opens full-screen. Confirm Home and Sage are shown as pinned and there is a **Swap** affordance, not a drag handle.
@@ -266,7 +284,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Unfriend the last peer (Circle disappears) then reconnect. Confirm Circle returns to its stored slot (in More by default), not a new random position.
 - [ ] Confirm the pixel nav companion stays fixed top-right on every tab and does not remount on tab switch.
 
-## Box 28 — Sage toys pinned above the chat scroll (OTA `0ff16d9d`)
+## Box 28 — Sage toys pinned above the chat scroll (OTA `0ff16d9d`) — OBSOLETE (2026-10-23)
+
+> Obsolete: there is no Sage tab, chat or 8-ball card above a thread any more.
 
 - [ ] Open the Sage tab. Confirm the 8-ball and "What Sage remembers" (facts) card render **above** the message thread and do not scroll away — swipe the message list up/down and confirm the 8-ball/facts card stay fixed in place while only the messages scroll underneath.
 - [ ] Tap the facts card to expand it (if you have any stored facts) or tap it open/closed with none. Confirm expanding/collapsing it does **not** jump or scroll the message thread.
@@ -302,23 +322,25 @@ Use the dev-test account (`@atodev`), or any account that has finished Questions
 - [ ] Go back to the first category, kill and reopen the app. Confirm the written card is still there (no new AI call).
 - [ ] Open Love / closeness (next day). Confirm the wording is warm and never says anxious, insecure, avoidant or attachment.
 - [ ] Turn AI off on You. Confirm the leanings still show, with "Turn on AI on You to get the written deep dive."
-- [ ] Confirm Home's AI line now reads "Sage uses AI only to write your Story, your Legends cards and your category deep dives."
+- [ ] Confirm the AI-use line in the consent card names only Legends cards and category deep dives (the Story is free templates and is not an AI view).
 - [ ] Screenshot: a written deep dive with its leanings.
 
-## Box 31 — Home: The Story as script swipe cards (2026-10-13)
+## Box 31 — The Story as script swipe cards (2026-10-13; now on the Insights tab)
 
-- [ ] Home → The Story → Load story. Confirm a nickname title, script swipe cards (📍 setting on card 1, one sentence per line, bold speaker tags, card 5 = Next + italic reveal, card 6 = Why this is you). No recap card. Progress dots, Previous/Next beat buttons. **No** AI badge on a template card (`STORY_AI_POLISH` is off).
+> Updated 2026-10-23: the Story lives on **Insights** (not Home), is free templates with no AI, and no longer rewrites an older story on open.
+
+- [ ] Insights → The Story → Load story. Confirm a nickname title, script swipe cards (📍 setting on card 1, one sentence per line, bold speaker tags, card 5 = Next + italic reveal, card 6 = Why this is you). No recap card. Progress dots, Previous/Next beat buttons. **No** AI badge on a template card (`STORY_AI_POLISH` is off).
 - [ ] Confirm there is no "What they noticed" or "What it means for you". Optional tap: "The other way it could have gone". ⓘ opens Built from. Share title pastes title + reveal.
 - [ ] Confirm the story text never names a trait. Card 6 may use the real catalog category name. Romantic roles stay "your date" / "your partner" (never a name or he/she).
 - [ ] Settings → Reduce Motion on: beats still cross-fade (never freeze). Motion Full / Zen: a bigger fade-and-rise. VoiceOver: Previous/Next beat and the adjustable pager. Dynamic Type: text still grows.
-- [ ] An older labelled story (scene / moment / means) still shows until you open the fold; opening it rewrites once. If rewrite fails, the old card stays. Reopening Home must not fire another rewrite for that same card.
+- [ ] An older AI-written labelled story (scene / moment / means) is not shown on Insights any more; only template / bank cards are. Opening the Story never rewrites anything (the rewrite path was removed).
 - [ ] Load again: a different template, not an instant repeat. Captain Table for Three (first-date, social / high) is the screenshot story: cards 1, 3, 6 and the other-way tap.
 
 ## Box 32 — ATO tokens pay for AI (wave92, 2026-10-09)
 
 - [ ] Home (Questions finished): a "Daily check-in" card. Tap "Check in · +5 tokens". Confirm "+5 tokens", "Checked in today", the week count, and the balance line.
 - [ ] Tap again later the same day: it stays "Checked in today" (no second +5).
-- [ ] The Story button reads "Load a new story · 5 tokens"; loading one takes 5 tokens (balance on the check-in card drops by 5).
+- [ ] The Story is free (templates, since 2026-10-14): loading one on Insights takes no tokens and the balance does not move. Only a Legends AI card or a new deep dive costs 5.
 - [ ] Explore → deep dive button reads "Write my deep dive · 5 tokens"; writing one takes 5 (2 cards). With under 5 tokens it says how to earn more.
 - [ ] Legends: the first reveal of the day is free; with 5+ tokens it comes with the AI card (balance −5). After it, "Reveal one more for 5 tokens" works while you have tokens.
 - [ ] You → ATO tokens: "Check in on Home…", "Answer a set of 16…", "Spend: 5 for each AI view…"; history shows "Daily check-in" and "AI view".
@@ -946,9 +968,9 @@ binary with `PRE_LAUNCH_DEV = false` baked in, the "ATO" widget header and hapti
 
 ### Part B — Core loop
 
-- [ ] **B1** Home → tap the daily insight. → It loads and unfolds; one light haptic.
+- [ ] **B1** Insights tab → tap "Load insight". → Today's Focus · try · watch loads; one light haptic. (Fixed 2026-10-22, roadmap v2 A1: the insight moved from Home to Insights on 2026-10-14.)
 - [ ] **B2** Answer 3 questions. → They save; Insights and the profile update.
-- [ ] **B3** Mark a Check did/skip. → Saves; the profile card renders.
+- [ ] **B3** Home → "Check in · +5 tokens". → Saves; the line under it reads "1 of 7 check-ins toward your next bonus" (or the next count); More → You shows the identity card. (Fixed 2026-10-22: the Did/Skip Check loop is parked.)
 
 ### Part C — Divecore and Circle
 
@@ -1122,3 +1144,138 @@ About 15 min. Feed → Catch the food; Play → Tap to train and Lane dash. Run 
 - [ ] **10** Open an old save (a phone that already played). -> Catch / Train records and medals are still there; Lane dash starts empty.
 - [ ] **11** Larger Text on, Lane dash and Catch. -> The status line and the 2-line hint are not cut off; the dock does not resize; the lane taps still work.
 - [ ] **12** Play a few Lane dash and Catch rounds. -> Still smooth; food that visibly passes the pet is not caught late (tell me if it feels off).
+
+## Box 76 — Honest promises + reviewer path (roadmap v2 step A1, 2026-10-22)
+
+About 10 min. Needs the A1 OTA (runtime 1.1.0; restart the app twice to load it), two accounts that are Circle friends,
+and (for item 5) a phone where you once tapped "Not now" on "Want a nudge now and then?" and never allowed notifications.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Home → the check-in card (account that finished the 48). -> The balance line reads "Each AI view costs 5: a Legends AI card or a deep dive on Explore." No "Story".
+- [ ] **2** More → You → the ATO tokens card → how it works. -> The spend line names a Legends AI card and a deep dive only, says a deep dive already in the shared library is free (up to 10 a day), and there is NO "reroll" or "name style" price line.
+- [ ] **3** Open a chat with a friend who has sent you a message. -> The top bar shows Back · @friend · **Report** · Block. Tap Report -> the sheet says "Report their latest message" with the hint "To report an earlier message, press and hold it."; pick a reason -> "Thanks. We read every report within a day."
+- [ ] **4** Same chat, the friend has sent nothing yet (or only you wrote). -> Tap Report -> the note says "Nothing from them to report yet." Long-press on a received message still opens "Report this message".
+- [ ] **5** Divecore: start a room Build (phone from the setup line, notifications never allowed). -> NO iOS notification dialog appears. Divecore → Settings → switch a notice on -> the iOS dialog DOES appear (you asked).
+- [ ] **5b** Chat, tap Block once (armed). -> Report hides while "Tap again…" shows, the title and Block text fit on the screen; wait 4 s -> Block disarms and Report comes back.
+- [ ] **6** VoiceOver on, chat screen. -> The new button reads "Report a message from @friend, button".
+
+## Box 77 — Legal + support pages are final (roadmap v2 step A2, 2026-10-22)
+
+About 5 min. Needs: the landing site redeployed from `landing/` (after `DEEPSEEK_API_KEY` is unset), and the A2 OTA
+(restart the app twice to load it).
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Sign-up screen → tap Privacy. -> ato.emgens.com/privacy.html opens. Top says "Last updated: October 22, 2026", no "Draft", and "operated by Michael Malig". No "[CONFIRM" anywhere (scroll to the end). No "DeepSeek".
+- [ ] **2** Same screen → tap Terms. -> terms.html, same date, no "Draft", §13 says courts of Alberta.
+- [ ] **3** More → You → the legal links. -> The same two pages open.
+- [ ] **4** In the browser, open ato.emgens.com/support.html. -> The Support page, with support@emgens.com, Report/Block, Delete account, data requests and helplines.
+- [ ] **5** ato.emgens.com home page. -> No email form. The footer links Privacy · Terms · Support, and says "operated by Michael Malig".
+- [ ] **6** You → Send feedback (and Circle tab → the support line at the bottom). -> A mail draft to **support@emgens.com** (not the old asstrollogs address). Send one test mail to yourself through it -> it arrives in your inbox.
+
+## Box 78 — Daily report alert + server cleanup (roadmap v2 step A3, 2026-10-22)
+
+About 5 min over two days. Server only, no OTA. Needs: wave112 + wave113 applied, `report-digest` deployed, and two
+accounts that are Circle friends (the dev-test pair; never a real person's account).
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Day 1: from account A, open the chat with B, press and hold one of B's messages → Report → pick a reason. -> "Thanks. We read every report within a day."
+- [ ] **2** Day 2, after 15:05 UTC (09:05 Alberta in summer, 08:05 in winter): the support@emgens.com inbox. -> One email "ATO: 1 new report" from noreply@asstrollogs.com, listing "chat message report <id>". It does NOT contain the reason, the message text, either handle or who reported.
+- [ ] **3** The day after that (no new report). -> No alert email.
+- [ ] **4** Afterwards: mark the test report handled with the daily query in `docs/circle-safety.md` (status `dismissed`, note "Box 78 test").
+- [ ] **5** Insights → the Story card (any account). -> It still shows a story (free templates; nothing changed for the reader).
+
+## Box 79 — Copy flags accepted: nothing should look different (roadmap v2 step A4, 2026-10-23)
+
+About 3 min. Needs the next OTA that carries the A4 flag flips (restart twice). The flags only record that you accepted the
+copy; no screen should change.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Insights → the daily insight and the Story card; Explore → a category card and the deep dive card. -> All show their text as before; no "Draft copy" badge anywhere.
+- [ ] **2** Today's Pick, a question set, and the set-done screen. -> Same as before, no badge.
+- [ ] **3** A deep dive (open one you have). -> The team name and icon behave as before (hidden until you choose to show it).
+- [ ] **4** Lock-screen notifications. -> You still get NO "category statement" push (that flag stays off until you read the statements).
+
+## Box 80 — New breathing Idle for all 16 heroes (roadmap step AN2, 2026-10-23, Play-only OTA)
+
+About 5 min. Needs the AN2 OTA (update group `5e2e34b3`; restart the app twice). The Idle is the standing animation of a hero (Hideout / pet room, hero pick, Turf War before a wave). The new Idle is slower than the old one on purpose: one breath is about 1.3 s (1.5 s for Aurex, Kitsune, Sak, Velkhar, Void-Raven), the old loop was 0.6 s.
+
+**Report back in ONE message:** `pass`, or `fix` + the hero + what you saw, per line.
+
+- [ ] **1** Open a hero that stands still (Hideout / pet room). -> A slow, calm breath: the body rises and settles, the feet never slide or jump, the loop has no hitch where it restarts.
+- [ ] **2** Look at Kael, Morwen and Maldrath (their Idle was replaced too). -> Same figure as before, slower breathing; Maldrath's sword and cape do not wobble.
+- [ ] **3** Look at the big-silhouette five (Aurex, Kitsune, Sak, Velkhar, Void-Raven). -> A smaller breath (1 px) but still visibly alive; Velkhar's floating pieces show on both facings.
+- [ ] **4** Walk or turn a hero left and right so you see both facings of the Idle. -> East and west both breathe; no hero flickers or changes colour (Archangel's sword colour matches on both sides).
+- [ ] **5** Walk, Attack, Skill, Hurt and Faint of any hero. -> Unchanged from before.
+- [ ] **6** If one hero looks wrong: say which, and whether to keep the old Idle (it is archived in `art-src/archive/2026-10/`, nothing was deleted).
+
+## Box 81 — Change answers, Undo, Start fresh, card compare + the A5 cleanup (roadmap v2 step A5, 2026-10-23)
+
+About 10 min. Needs the A5 OTA (restart the app twice) and the **dev-test account** (`@atodev`, never a real person's account) with all
+question sets done. Use the dev-test account for Start fresh: it wipes the traits.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** Explore → Questions (all sets done). -> "All 25 sets done" style header, then one row per trait with its leaning and "Change answers · free".
+- [ ] **2** Tap "Change answers" on one trait, tap a different option. -> It asks "Tap again: change to “…”"; tap again. The row says "N answer changed this visit. Undo works until you leave this screen."
+- [ ] **3** Tap "Undo". -> It asks "Tap again to undo all of them"; tap again. The answer is back to "· your answer" on the original option.
+- [ ] **4** Leave the screen and come back. -> The Undo row is gone (it only works inside one visit). (Only if this account answered a question we later retired: open that trait's Change answers and it shows "We retired this question. Your answer stays as you gave it.")
+- [ ] **5** Start fresh: pick **Keep my cards**, press and HOLD "Hold to start fresh" for about 2.5 seconds. -> A quick tap does nothing; holding wipes the 16 traits, keeps your tokens and account, and your old profile is saved as a card first.
+- [ ] **6** Your cards. -> The list shows the saved cards; "Tap two cards to compare them." Tap two: the newer card shows arrows for traits that moved (or "Nothing moved much between these two.").
+- [ ] **7** (A5) VoiceOver on, You → Delete account. -> It reads "Delete account, button". In the sheet, the X reads "Close, button", and the list says "Everything you saved in ATO, like your answers, profile cards and Legends" (no "saved facts"). Close it without deleting.
+- [ ] **8** (A5) Explore → open a deep dive you already have, and Legends → reveal one. -> Both work as before (no model call comes from the phone any more; the server writes the cards).
+
+## Box 82 — More ideas per lean, mixed ideas, and the early read after 16 answers (roadmap v2 step A6, 2026-10-23)
+
+About 8 min. Needs the A6 OTA (restart the app twice). Use a **new throwaway account of your own** (sign up with a spare email): the Dev Hub's Jump stages are hidden in the public build, so
+you answer the first set of 16 for real.
+
+**Report back in ONE message:** `pass`, or `fix` + the screen + what you saw, per line.
+
+- [ ] **1** New account, first set of 16 answered (not the other two sets): Insights tab. -> Today's focus card is open (a "Load insight" card) and, once loaded, shows the line "Early read: based on your first 16 answers. It gets more accurate as you answer more." Below it the "Answer the questions" row says "The rest of Insights opens once they are done." Try this today, the Story, Superpower and How you argue are NOT shown yet.
+- [ ] **2** Tap "Load insight" after the first 16. -> A focus, why and watch for you appear with the tag chips (a trait and its side, or "General", or "<trait>: Mixed"). No error.
+- [ ] **3** Before that, on the same account with fewer than 16 answered (or right after sign-up). -> Insights still shows only "Answer the questions" with the locked line (nothing opens early).
+- [ ] **4** Answer the second and third sets (all 48), then Insights. -> The "Early read" line is gone; Try this today, the Story, Superpower and How you argue are back.
+- [ ] **5** Load insight on a few different days or accounts. -> Some focus lines you have not seen before (the bank is now twice as big); a tag reading "<trait>: Mixed" means that trait sits near the middle for you. Read them: do any feel wrong, harsh or unclear? Note the id from `docs/insight-bank-review.md` (A6 additions) for anything you want changed.
+
+## Box 83 — Hero animations play their real timing (roadmap step AN3, 2026-10-23, Play-only OTA)
+
+About 5 min. Needs the AN3 OTA (restart the app twice). Until now the game ignored the timing saved with each clip and played every frame for the same time, so the new Idle breathed about 2.7 times too fast (0.5 s a loop instead of 1.3 s). Now each frame holds its own time: the Idle breath is 400/250/400/250 ms, and Walk, Dash, Attack, Skill, Hurt and Faint have short holds on the key frames. Every clip except Idle keeps its old total length, so combat timing does not move.
+
+**Report back in ONE message:** `pass`, or `fix` + the hero + the clip + what you saw, per line.
+
+- [ ] **1** A hero standing still (Hideout / pet room / Turf War before a wave). -> A slow breath: rests a moment, small dip, rests, small dip. About 1.3 s per loop (this also settles Box 80).
+- [ ] **2** Defend: your hero walking, dashing, attacking, using the skill. -> Attack and skill look punchy (wind-up, quick strike, settle); walk has a gentle step rhythm; the time between swings feels the same as before.
+- [ ] **3** Get hit in Defend, and a Turf War helper getting knocked out. -> Hurt snaps then settles; the faint falls quickly and lies still.
+- [ ] **4** Pet room: your pet walking, dashing, showing off. -> Moves a little quicker than before (the pet used its own slower speeds; attack 0.64 s -> 0.52 s, skill 0.68 -> 0.56, dash 0.48 -> 0.40).
+- [ ] **5** Raven (6-frame attack) in Defend. -> Attack looks fine and is not slower than before.
+- [ ] **6** If a clip feels wrong: say hero + clip + "too fast" or "too slow". Nothing is deleted; timing lives in one small file per clip.
+
+## Box 84 — Native 1.2 build (roadmap step A7, 2026-10-23, TestFlight)
+
+About 10 min. Needs the 1.2.0 build from TestFlight (not an OTA: the camera plugin is gone and the widget changed, so it is a new binary on runtime 1.2.0). Install it over your current 1.1 app if you can, so the upgrade path is tested.
+
+**Report back in ONE message:** `pass`, or `fix` + the step number + what you saw.
+
+- [ ] **1** Open the app after updating from 1.1. -> You stay signed in, Insights/Circle/You tabs load, no crash on launch.
+- [ ] **2** Home Screen widget (small, medium, large): remove and re-add it if it still shows old words. -> The labels read FOCUS and TRY (not READ and DO); the picker description says "Today's Focus and Try."; after you load today's insight, the widget shows its text.
+- [ ] **3** Circle: add a friend by @handle. -> It works and there is no "Scan QR" option; iOS never asks for camera permission anywhere.
+- [ ] **4** Settings -> ATO in the iPhone Settings app. -> No Camera row is listed for ATO.
+- [ ] **5** Sign out and back in (Apple or password). -> Works; the widget clears on sign-out and fills again after sign-in.
+- [ ] **6** Send one Circle chat message to a friend on the same build (or yourself via a test account). -> It sends and decrypts on the other side (chat still works after the runtime bump).
+- [ ] **7** TestFlight (or the iPhone Settings -> ATO row). -> The build shows version 1.2.0.
+
+## Box 85 — Creeps, boss and towers breathe (roadmap step AN4, 2026-10-23, Play-only OTA on runtime 1.2.0)
+
+About 5 min. Needs the AN4 OTA, which is published only after 1.2 is live in the store (it targets runtime 1.2.0, so restart the 1.2 app twice). Seven characters got the same slow breath the heroes have (rest, small dip, rest, small dip; 1.3 s per loop): creeps Knight, Village-girl, Wizard; the Oni boss; towers Ghost, Lux, Viper. Creeps and the boss only show it when they stand still; their Walk and Death are unchanged.
+
+**Report back in ONE message:** `pass`, or `fix` + the character + what you saw, per line.
+
+- [ ] **1** Defend: towers Ghost, Lux and Viper standing idle between shots. -> A slow breath, about 1.3 s a loop, not jittery; the Viper's rifle moves with its hand (1 px), no jitter.
+- [ ] **2** Defend: a creep (Knight, Village-girl, Wizard) stalled by a blocker or at a wall. -> A slow breath; several stalled creeps are not all in lockstep. The Wizard's staff stays steady.
+- [ ] **3** Defend: the Oni boss when it stops. -> A slow 1 px breath, flame blade moves with the hand, no jitter; nothing floats or clips the ground.
+- [ ] **4** A walking creep and a creep dying. -> Walk and Death look exactly as before.
+- [ ] **5** If one looks wrong: say character + "too fast" / "too slow" / "wobbles". Nothing is deleted: the old Idles are archived in art-src/archive/2026-10.

@@ -130,7 +130,10 @@ ok('stored copy lists (poles, bands, categories, tokens) still pass their own fe
 
 // 11. Prompt rule (D6): the old blanket "no framework names / no clinical words" text is gone from the
 // prompts that carried it; the settled rule text is present. Fail form = old text, pass form = new text.
-for (const file of ['src/lib/sage-title.ts', 'src/lib/explore/prompt.ts']) {
+// (sage-title.ts carried this rule in its AI prompt; that prompt was removed in roadmap A5, so the file now
+// only has to stay free of the old blanket ban.)
+assert.doesNotMatch(readFileSync(resolve(root, 'src/lib/sage-title.ts'), 'utf8'), /No framework names\. No clinical words\./, 'sage-title.ts: old blanket ban must be gone');
+for (const file of ['src/lib/explore/prompt.ts']) {
   const src = readFileSync(resolve(root, file), 'utf8');
   assert.doesNotMatch(src, /No framework names\. No clinical words\./, `${file}: old blanket ban must be gone`);
   assert.doesNotMatch(src, /No "you are\."\s+No framework names \(MBTI/, `${file}: old blanket ban must be gone`);
@@ -140,6 +143,6 @@ for (const file of ['src/lib/sage-title.ts', 'src/lib/explore/prompt.ts']) {
   assert.match(src, /type code as ATO's own result/, `${file}: never a type code as ATO's own result`);
   assert.match(src, /clinical word/, `${file}: no clinical word as a label on the reader`);
 }
-ok('sage-title and explore prompts carry the D6 framework rule, not the old blanket ban');
+ok('the explore prompt carries the D6 framework rule, not the old blanket ban; sage-title has no prompt left');
 
 console.log(`\n${passed} framework-fence checks passed`);

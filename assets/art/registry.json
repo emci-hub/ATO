@@ -105,6 +105,64 @@
       ]
     },
     {
+      "id": "boss.oni.streetwear.combat",
+      "path": "assets/art/enemies-bosses/in-use/oni/streetwear/boss_oni_streetwear.combat.png",
+      "category": "enemies-bosses",
+      "type": "boss",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 1855,
+        "h": 785
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 206127,
+      "decodedBytes": 5824700,
+      "format": "png8",
+      "notes": "md5:da8c2d5af4fd8d23a0c762cdc23e3dcf",
+      "inUse": true,
+      "set": "oni",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/boss/oni/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "boss.oni.streetwear.core",
+      "path": "assets/art/enemies-bosses/in-use/oni/streetwear/boss_oni_streetwear.core.png",
+      "category": "enemies-bosses",
+      "type": "boss",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 1879,
+        "h": 944
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 186381,
+      "decodedBytes": 7095104,
+      "format": "png8",
+      "notes": "md5:6c215a3f9293fb3c013dcd0576480d51",
+      "inUse": true,
+      "set": "oni",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/boss/oni/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "boss.titan-x.cast.atlas",
       "path": "assets/art/enemies-bosses/in-use/titan-x/cast/atlas.png",
       "type": "boss",
@@ -535,6 +593,64 @@
       ]
     },
     {
+      "id": "creep.knight.streetwear.combat",
+      "path": "assets/art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.combat.png",
+      "category": "enemies-bosses",
+      "type": "creep",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 377,
+        "h": 103
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 6026,
+      "decodedBytes": 155324,
+      "format": "png8",
+      "notes": "md5:f290a209c8249a57f2814e8da60b80b1",
+      "inUse": true,
+      "set": "knight",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/creeps/knight/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "creep.knight.streetwear.core",
+      "path": "assets/art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.core.png",
+      "category": "enemies-bosses",
+      "type": "creep",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 431,
+        "h": 223
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 9278,
+      "decodedBytes": 384452,
+      "format": "png8",
+      "notes": "md5:df435c03a2da5dd874747937d723cd19",
+      "inUse": true,
+      "set": "knight",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/creeps/knight/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "creep.village-girl.cast.atlas-0",
       "path": "assets/art/enemies-bosses/in-use/village-girl/cast/atlas-0.png",
       "type": "creep",
@@ -597,6 +713,64 @@
       ]
     },
     {
+      "id": "creep.village-girl.streetwear.combat",
+      "path": "assets/art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.combat.png",
+      "category": "enemies-bosses",
+      "type": "creep",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 433,
+        "h": 103
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 6954,
+      "decodedBytes": 178396,
+      "format": "png8",
+      "notes": "md5:777bf3759e77d2a2c57e8cf1f439bb1f",
+      "inUse": true,
+      "set": "village-girl",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/creeps/village-girl/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "creep.village-girl.streetwear.core",
+      "path": "assets/art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.core.png",
+      "category": "enemies-bosses",
+      "type": "creep",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 375,
+        "h": 278
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 9660,
+      "decodedBytes": 417000,
+      "format": "png8",
+      "notes": "md5:6d50c0c383b8e8e2742d3f46acb61fd4",
+      "inUse": true,
+      "set": "village-girl",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/creeps/village-girl/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "creep.wizard.cast.atlas-0",
       "path": "assets/art/enemies-bosses/in-use/wizard/cast/atlas-0.png",
       "type": "creep",
@@ -657,6 +831,64 @@
       "legacyKeys": [
         "creep.wizard.cast.core"
       ]
+    },
+    {
+      "id": "creep.wizard.streetwear.combat",
+      "path": "assets/art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.combat.png",
+      "category": "enemies-bosses",
+      "type": "creep",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 503,
+        "h": 101
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 6005,
+      "decodedBytes": 203212,
+      "format": "png8",
+      "notes": "md5:e449b2330972195a9af2cbf5b4a91c5d",
+      "inUse": true,
+      "set": "wizard",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/creeps/wizard/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "creep.wizard.streetwear.core",
+      "path": "assets/art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.core.png",
+      "category": "enemies-bosses",
+      "type": "creep",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 311,
+        "h": 242
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 8880,
+      "decodedBytes": 301048,
+      "format": "png8",
+      "notes": "md5:e75e25c233daa529d1dda33b081749a1",
+      "inUse": true,
+      "set": "wizard",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/creeps/wizard/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
     },
     {
       "id": "fx.drip.streetwear",
@@ -1121,14 +1353,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1279,
-        "h": 786
+        "h": 788
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 91895,
-      "decodedBytes": 4021176,
+      "diskBytes": 85722,
+      "decodedBytes": 4031408,
       "format": "png8",
-      "notes": "md5:d26f825a9cc9895558c26849e4d344a0",
+      "notes": "md5:0c3b7870facedc964f5c1216c29d4c84",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1210,14 +1442,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1023,
-        "h": 813
+        "h": 801
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 114484,
-      "decodedBytes": 3326796,
+      "diskBytes": 105691,
+      "decodedBytes": 3277692,
       "format": "png8",
-      "notes": "md5:809672f8a7ceb3171a28cfa6e48c9974",
+      "notes": "md5:234d4d0cee75a2cdb192ace9f0ed2a4f",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1299,14 +1531,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 967,
-        "h": 808
+        "h": 804
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 68191,
-      "decodedBytes": 3125344,
+      "diskBytes": 62366,
+      "decodedBytes": 3109872,
       "format": "png8",
-      "notes": "md5:e14c1d8b2a8ecca50fc8641b337dc62d",
+      "notes": "md5:167e53121f372e1462100a0269205f2d",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1392,10 +1624,10 @@
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 69817,
+      "diskBytes": 67241,
       "decodedBytes": 2250612,
       "format": "png8",
-      "notes": "md5:72f3ed25de5f8427dbcfad0c1dd47219",
+      "notes": "md5:08dc07e6ac68402c0bf9c7d3ad096d0a",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1477,14 +1709,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1055,
-        "h": 823
+        "h": 813
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 122872,
-      "decodedBytes": 3473060,
-      "format": "png32",
-      "notes": "md5:19ab714aa24f3bf02485ffd8954828cd",
+      "diskBytes": 71475,
+      "decodedBytes": 3430860,
+      "format": "png8",
+      "notes": "md5:3ff4397f4b74417f5e46b78875e86191",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1566,14 +1798,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1119,
-        "h": 842
+        "h": 838
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 99375,
-      "decodedBytes": 3768792,
+      "diskBytes": 90461,
+      "decodedBytes": 3750888,
       "format": "png8",
-      "notes": "md5:c7c60daa0994ffd82df52a3c23e9404e",
+      "notes": "md5:44093ce7fe1b726e2764a806cb6d84c2",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1655,14 +1887,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 975,
-        "h": 794
+        "h": 796
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 71507,
-      "decodedBytes": 3096600,
+      "diskBytes": 67558,
+      "decodedBytes": 3104400,
       "format": "png8",
-      "notes": "md5:40fef74b0d60d2e0a8b6385cb97f45fc",
+      "notes": "md5:2a3249103c5305c7effa854d86d4a79c",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1744,14 +1976,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 903,
-        "h": 816
+        "h": 814
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 85871,
-      "decodedBytes": 2947392,
+      "diskBytes": 80943,
+      "decodedBytes": 2940168,
       "format": "png8",
-      "notes": "md5:3b29b3dec72c59e8d56412bef071a638",
+      "notes": "md5:f41029037e9e1fe5e33c0c3b5086841c",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1837,10 +2069,10 @@
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 98102,
+      "diskBytes": 93191,
       "decodedBytes": 3822784,
       "format": "png8",
-      "notes": "md5:3aeb2464518c31cf54a16b20c720fc2c",
+      "notes": "md5:c4a9d55b6270666e771188484eca806f",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -1922,14 +2154,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 719,
-        "h": 785
+        "h": 781
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 81372,
-      "decodedBytes": 2257660,
+      "diskBytes": 75522,
+      "decodedBytes": 2246156,
       "format": "png8",
-      "notes": "md5:a959c825835bf29fff5ce134c497539f",
+      "notes": "md5:1eaa9ca8e783a05e91f1c716d6a9f69d",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2011,14 +2243,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 599,
-        "h": 780
+        "h": 778
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 100167,
-      "decodedBytes": 1868880,
-      "format": "png32",
-      "notes": "md5:815fc8f97992b8cb3c4e2793d135a57c",
+      "diskBytes": 64736,
+      "decodedBytes": 1864088,
+      "format": "png8",
+      "notes": "md5:11c97f68c5234abcb991e3d7e4475b89",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2100,14 +2332,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1263,
-        "h": 769
+        "h": 767
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 91248,
-      "decodedBytes": 3884988,
+      "diskBytes": 83988,
+      "decodedBytes": 3874884,
       "format": "png8",
-      "notes": "md5:e9944d888a4e21225fb233ecf95c0b05",
+      "notes": "md5:d5e663f4eab4ee7ecaed57768e50a6e7",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2189,14 +2421,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 871,
-        "h": 790
+        "h": 784
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 84384,
-      "decodedBytes": 2752360,
+      "diskBytes": 79851,
+      "decodedBytes": 2731456,
       "format": "png8",
-      "notes": "md5:12c69dc496e85ddd1ce1ca05c3c82947",
+      "notes": "md5:e062d12e602dab02a5d98dbe100f6802",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2278,14 +2510,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 1239,
-        "h": 814
+        "h": 810
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 100211,
-      "decodedBytes": 4034184,
+      "diskBytes": 94426,
+      "decodedBytes": 4014360,
       "format": "png8",
-      "notes": "md5:b4372eb326f9e1a341c45fc7b30c92c1",
+      "notes": "md5:1488e9c80ad52712a1339aa3b9219343",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2367,14 +2599,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 911,
-        "h": 891
+        "h": 899
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 148928,
-      "decodedBytes": 3246804,
-      "format": "png32",
-      "notes": "md5:fc2e075631452bb27fca0fac12babffb",
+      "diskBytes": 98785,
+      "decodedBytes": 3275956,
+      "format": "png8",
+      "notes": "md5:d7c4b75dadd7957515c00ab9d55dc501",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -2456,14 +2688,14 @@
       "camera": "td-3q-low",
       "size": {
         "w": 871,
-        "h": 803
+        "h": 797
       },
       "status": "approved",
       "source": "pixellab",
-      "diskBytes": 78228,
-      "decodedBytes": 2797652,
+      "diskBytes": 73131,
+      "decodedBytes": 2776748,
       "format": "png8",
-      "notes": "md5:cc0974a16a928e28e12e5e7b707cdddd",
+      "notes": "md5:c7253167b2b527f142195800bedc3e80",
       "tags": [],
       "usedBy": [
         "assets/art/legacy-play-sheets.json",
@@ -19333,6 +19565,64 @@
       ]
     },
     {
+      "id": "tower.ghost.streetwear.combat",
+      "path": "assets/art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.combat.png",
+      "category": "enemies-bosses",
+      "type": "tower",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 1599,
+        "h": 619
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 131867,
+      "decodedBytes": 3959124,
+      "format": "png32",
+      "notes": "md5:48cc42e709a337dfd83ebe9a54757e50",
+      "inUse": true,
+      "set": "ghost",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/towers/ghost/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "tower.ghost.streetwear.core",
+      "path": "assets/art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.core.png",
+      "category": "enemies-bosses",
+      "type": "tower",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 975,
+        "h": 400
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 38028,
+      "decodedBytes": 1560000,
+      "format": "png8",
+      "notes": "md5:dda73b8b37f396811a12d13f8255cb01",
+      "inUse": true,
+      "set": "ghost",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/towers/ghost/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "tower.lux.cast.atlas",
       "path": "assets/art/enemies-bosses/in-use/lux/cast/atlas.png",
       "type": "tower",
@@ -19364,6 +19654,64 @@
       ]
     },
     {
+      "id": "tower.lux.streetwear.combat",
+      "path": "assets/art/enemies-bosses/in-use/lux/streetwear/tower_lux_streetwear.combat.png",
+      "category": "enemies-bosses",
+      "type": "tower",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 1439,
+        "h": 613
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 124054,
+      "decodedBytes": 3528428,
+      "format": "png32",
+      "notes": "md5:c755f8a36c4c79749b156ab711e7c698",
+      "inUse": true,
+      "set": "lux",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/towers/lux/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "tower.lux.streetwear.core",
+      "path": "assets/art/enemies-bosses/in-use/lux/streetwear/tower_lux_streetwear.core.png",
+      "category": "enemies-bosses",
+      "type": "tower",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 959,
+        "h": 387
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 36905,
+      "decodedBytes": 1484532,
+      "format": "png8",
+      "notes": "md5:d9f3efe4236a706aafd8ad7125a50719",
+      "inUse": true,
+      "set": "lux",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/towers/lux/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
+    },
+    {
       "id": "tower.viper.cast.atlas",
       "path": "assets/art/enemies-bosses/in-use/viper/cast/atlas.png",
       "type": "tower",
@@ -19393,6 +19741,64 @@
       "legacyKeys": [
         "tower.viper.cast.core"
       ]
+    },
+    {
+      "id": "tower.viper.streetwear.combat",
+      "path": "assets/art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.combat.png",
+      "category": "enemies-bosses",
+      "type": "tower",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 1607,
+        "h": 493
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 124530,
+      "decodedBytes": 3169004,
+      "format": "png32",
+      "notes": "md5:026caf734a4eedd27f9f773ef842f95f",
+      "inUse": true,
+      "set": "viper",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/towers/viper/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "combat"
+    },
+    {
+      "id": "tower.viper.streetwear.core",
+      "path": "assets/art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.core.png",
+      "category": "enemies-bosses",
+      "type": "tower",
+      "theme": "streetwear",
+      "placement": "floor",
+      "camera": "front",
+      "size": {
+        "w": 1359,
+        "h": 369
+      },
+      "status": "needs-restyle",
+      "source": "pixellab",
+      "diskBytes": 39058,
+      "decodedBytes": 2005884,
+      "format": "png8",
+      "notes": "md5:c1ec28f7ea28829e0d26bf73bff46dbc",
+      "inUse": true,
+      "set": "viper",
+      "variant": "streetwear",
+      "tags": [],
+      "usedBy": [
+        "assets/art/legacy-play-sheets.json",
+        "assets/play/sheets/streetwear/towers/viper/sheets.json",
+        "src/play/generated-play-sheets.ts"
+      ],
+      "part": "core"
     },
     {
       "id": "ui.frames.streetwear.frame-base",

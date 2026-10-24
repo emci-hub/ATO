@@ -34,7 +34,6 @@ import {
 } from '../src/lib/category-deep-dive/dive';
 import { CATEGORY_DEEP_DIVE_COPY_REVIEWED } from '../src/lib/category-deep-dive/flags';
 import { cardJokeStyle } from '../src/lib/voice/card-joke';
-import { reasonOnly } from '../src/lib/ai/reject-reason';
 import { madeToday, mergeDives, parseDiveState } from '../src/lib/category-deep-dive/state';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
@@ -268,11 +267,10 @@ assert.doesNotMatch(DIVE_PROMPT_STATIC, /no needy or clingy/, 'no blanket word b
 assert.equal(diveOutputTokens(1), 600, 'one card: a trimmed answer budget');
 assert.ok(diveOutputTokens(2) <= 1024, 'two cards stay under the server’s 1024 output cap');
 assert.equal(DIVE_CARDS_PER_CALL, 2);
-assert.doesNotMatch(read('src/lib/category-deep-dive/generate.ts'), /generateText\(/, 'the client writer no longer calls a model');
-assert.match(read('src/lib/category-deep-dive/generate.ts'), /reason: 'unavailable'/, 'a missing client path says unavailable and does not invent a card');
-assert.equal(reasonOnly('moment line: name not in entry: Kyoto'), 'moment line: name not in entry', 'logs keep the rule, never the quoted word');
-assert.equal(reasonOnly('means: number not in entry: 5'), 'means: number not in entry');
-assert.equal(reasonOnly('not json'), 'not json');
+// The old one-person writer (src/lib/category-deep-dive/generate.ts) was removed in roadmap A5; the retry that asks
+// for the tapped card only now lives in the server (planLibraryCall's maxCards, pinned by check:ai-library).
+assert.ok(!existsSync(resolve(root, 'src/lib/category-deep-dive/generate.ts')), 'the old one-person writer stays deleted');
+assert.ok(!existsSync(resolve(root, 'src/lib/ai/reject-reason.ts')) && !existsSync(resolve(root, 'src/lib/ai/reject-log.ts')), 'the phone-side reject log stays deleted (the server logs reasons only)');
 ok(`AI answers: grounded ones pass; ${rejects.length} kinds of made-up, clinical or off-voice answers are rejected`);
 
 const stored = parseStoredDive(JSON.parse(JSON.stringify(parsed)));
@@ -291,24 +289,24 @@ ok('saved cards: read back the same, per account only, newest per category, one 
 const card = read('src/components/category-deep-dive-card.tsx');
 assert.doesNotMatch(card, /generateText\(/, 'the card never calls the model directly');
 // wave93: library first. The button runs `open` (free library card, or a brand-new
-// one written on the server); the old one-person call lives only in `writeOld`,
-// which only `open` reaches, and only when wave93 isn't live yet.
-const writeAt = card.indexOf('const writeOld = useCallback');
-const openAt = card.indexOf('const open = useCallback');
-assert.ok(writeAt > 0 && card.indexOf('writeCategoryDeepDive(') > writeAt && card.indexOf('writeCategoryDeepDive(') < openAt, 'the old call is only inside writeOld');
-assert.equal(card.split('writeCategoryDeepDive(').length - 1, 1, 'exactly one call site');
-assert.equal(card.split('await writeOld()').length - 1, 1, 'writeOld only runs from open, when wave93 is missing');
-assert.match(card, /if \(outcome\.reason === 'missing'\) \{\s*await writeOld\(\);/);
+// one written on the server). The old one-person call (`writeOld`, only when wave93 was
+// missing) was removed in roadmap A5: there is no model call on the phone at all.
+assert.ok(card.includes('const open = useCallback'), 'the button runs open()');
+assert.doesNotMatch(card, /writeOld|writeCategoryDeepDive|category-deep-dive\/generate/, 'the old one-person path is gone');
+// A missing server (wave93 not live) is only a note, never a fallback call: it maps to the "not switched on yet" line.
+assert.match(card, /outcome\.reason === 'missing'\s*\? DEEP_DIVE_UNAVAILABLE/, 'a missing server says deep dives are not switched on yet');
+assert.doesNotMatch(card, /outcome\.reason === 'missing'\) \{/, 'no fallback branch for a missing server');
 assert.match(card, /onPress=\{\(\) => void open\('library'\)\}/, 'the free library card is a tap');
 assert.match(card, /onPress=\{\(\) => void open\('new'\)\}/, 'the brand-new card is a tap');
 assert.match(card, /if \(!def \|\| writingRef\.current \|\| leans\.length === 0\) return;/, 'a double tap does nothing');
 assert.match(card, /if \(epochRef\.current !== epochAtStart\) return;/, 'a wipe while writing is never written back');
 assert.doesNotMatch(card, /COPY_REVIEWED|[Dd]raft/, 'no draft badge in the app');
-const gen = read('src/lib/category-deep-dive/generate.ts');
-assert.doesNotMatch(gen, /generateText\(/, 'the client writer no longer calls a model');
-assert.doesNotMatch(gen, /claimCategoryDeepDive\(/, 'the closed client writer does not claim a token');
-assert.doesNotMatch(gen, /refundAiTokens\(/, 'nothing was charged on the phone, so nothing is refunded here');
-assert.match(gen, /if \(!input\.consentGranted\) return \{ ok: false, reason: 'consent' \};/, 'consent is still refused before anything else');
+// Consent, the server claim (no claim = no call) and the refund on failure now live only in the server:
+// ai-library checks consent, claims first (claim_library_write) and refunds a failed paid call.
+const libraryFn = read('supabase/functions/ai-library/index.ts');
+assert.ok(libraryFn.indexOf("ai_consent !== true") < libraryFn.indexOf("rpc('claim_library_write'"), 'consent before the claim (server)');
+assert.ok(libraryFn.indexOf("rpc('claim_library_write'") < libraryFn.indexOf('await complete('), 'the server claim before the call');
+assert.match(libraryFn, /refund_ai_tokens/, 'charged but no card → refunded (server)');
 assert.match(read('src/lib/category-deep-dive/store.ts'), /PGRST202/, 'before wave90 is applied it says "not switched on yet", never "used"');
 // wave92: tokens decide how often (the server keeps a safety ceiling); the button shows the price.
 assert.match(card, /const affordable = tokens >= AI_TOKEN_PRICE;/, 'one deep dive needs one AI view of tokens');
@@ -342,20 +340,22 @@ assert.match(sql, /delete from public\.category_deep_dives where user_id = uid;/
 const sql91 = read('supabase/migrations/wave91_category_deep_dive_bundle.sql');
 assert.match(sql91, /added_today >= cap \* 2 then\s+raise exception 'daily limit'/, 'wave91: two new cards per claimed call (the bundle)');
 assert.doesNotMatch(sql91, /claim_category_deep_dive\(\)\s*returns/, 'the one-call-a-day claim is unchanged');
-assert.match(card, /opensOn: diveDay\(new Date\(Date\.now\(\) \+ 86_400_000\)\)/, 'the extra card opens tomorrow');
-assert.match(card, /opensLater \? \(/, 'and stays closed until then');
+// The old bundled "extra card" writer (writeOld) was removed in roadmap A5, so nothing writes an `opensOn`
+// date any more; a card saved earlier with one still stays closed until its day.
+assert.doesNotMatch(card, /opensOn: diveDay\(new Date\(Date\.now\(\) \+ 86_400_000\)\)/, 'nothing on the phone writes a tomorrow-card any more');
+assert.match(card, /opensLater \? \(/, 'a card saved earlier with an opening day stays closed until then');
 ok('wave90: own rows only, written by RPC, one new card a day, wiped by Reset account');
 
 const consent = read('src/components/ai-consent-card.tsx');
 assert.match(consent, /AI_USE_DISCLOSURE_MODEL =\s*'[^']*category deep dives/, 'the disclosure names this AI use while the model path is on (Apple 5.1.2)');
 assert.match(consent, /AI_USE_DISCLOSURE = STORY_LIBRARY_RUNTIME \? AI_USE_DISCLOSURE_LIBRARY : AI_USE_DISCLOSURE_MODEL/);
 assert.match(consent, /category deep dives you ask for/, 'so does the consent ask');
-assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, false, 'ships unreviewed until emci reads the review doc');
+assert.equal(CATEGORY_DEEP_DIVE_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 assert.match(read('src/components/dev-hub-panels.tsx'), /CATEGORY_DEEP_DIVE_COPY_REVIEWED/, 'listed on the dev hub copy list');
 assert.ok(existsSync(resolve(root, 'docs/category-deep-dive-review.md')), 'review doc exists');
 assert.ok(read('docs/category-deep-dive-review.md').includes('THE CATEGORY: Love / closeness'), 'the review doc shows the Love / closeness prompt');
 assert.ok(!read('docs/category-deep-dive-review.md').includes('(GENTLE)'), 'the review doc no longer shows a gentle block');
-ok('consent copy names deep dives; flag off; review doc with both sample prompts');
+ok('consent copy names deep dives; flag accepted 2026-10-23; review doc with both sample prompts');
 
 // Friendly names + the two-letter legend (emci, 2026-10-08), shared by Home and Explore.
 for (const def of CATEGORY_DEFS) {

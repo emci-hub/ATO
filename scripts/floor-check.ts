@@ -96,17 +96,143 @@ for (const type of jsonTypes) {
 }
 ok('collected data types match across PrivacyInfo.xcprivacy, app.json, and nutrition-label doc');
 
-assert.match(policy, /Supabase/);
-assert.match(policy, /Gemini/);
-assert.match(policy, /DeepSeek/);
-assert.match(policy, /Resend/);
-assert.match(labels, /Supabase/);
-assert.match(labels, /Gemini/);
-assert.match(labels, /DeepSeek/);
-assert.match(labels, /Resend/);
-assert.match(labels, /Apple/);
-assert.match(labels, /Sentry/);
-ok('privacy.md and nutrition labels name the third parties (Gemini first, DeepSeek fallback: ai-vendors.ts)');
+for (const name of ['Supabase', 'Gemini', 'Resend', 'Sentry', 'ImprovMX', 'Apple']) {
+  assert.match(policy, new RegExp(name), `privacy.md names ${name}`);
+  assert.match(labels, new RegExp(name), `labels name ${name}`);
+}
+// A2 (emci 2026-10-22): Gemini only. DeepSeek runs only when DEEPSEEK_API_KEY is set, and emci unsets it.
+assert.doesNotMatch(policy, /DeepSeek/, 'privacy.md no longer names DeepSeek');
+ok('privacy.md and nutrition labels name the third parties (Gemini only, no DeepSeek; ImprovMX for support mail)');
+
+// A2 (roadmap v2, 2026-10-22): legal text is final. No placeholders, the real operator and contact,
+// retention numbers, the access-request promise and the breach line. Same rules on app source and landing.
+export function legalFinalProblems(text: string, kind: 'privacy' | 'terms' | 'support'): string[] {
+  const out: string[] = [];
+  if (/\[CONFIRM/i.test(text)) out.push('has a [CONFIRM] tag');
+  if (/\bdraft\b/i.test(text)) out.push('says Draft');
+  if (/\[DATE/i.test(text)) out.push('has a date placeholder');
+  if (/AsTrollOGs|asstrollogs/i.test(text)) out.push('names the old entity or address');
+  if (/DeepSeek/i.test(text)) out.push('names DeepSeek');
+  if (!/Last updated:?\**:? (January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, 20\d\d/.test(text)) out.push('missing: a real Last updated date');
+  if (!/support@emgens\.com/.test(text)) out.push('missing: support@emgens.com');
+  if (kind !== 'support' && !/Michael Malig/.test(text)) out.push('missing: operator');
+  if (kind === 'privacy') {
+    for (const [need, why] of [
+      [/Reports:?\**:? 2 years/i, 'report retention'],
+      [/deletion record[\s\S]{0,80}2 years/i, 'deletion-record retention'],
+      [/backups[\s\S]{0,60}within 30 days/i, 'backup retention'],
+      [/We answer within 30 days/, 'access-request answer time'],
+      [/responsible for privacy/, 'privacy contact'],
+      [/Information and Privacy Commissioner/, 'breach notice'],
+      [/not therapy/i, 'not-therapy line'],
+      [/paid plan[\s\S]{0,200}free plan/i, 'Gemini terms for both plans'],
+    ] as const) {
+      if (!need.test(text)) out.push(`missing: ${why}`);
+    }
+  }
+  if (kind === 'terms' && !/courts of Alberta/.test(text)) out.push('missing: governing courts');
+  return out;
+}
+const htmlText = (f: string) =>
+  read(f).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').replace(/ ([,.;:!?)])/g, '$1');
+for (const [f, kind, text] of [
+  ['src/app/legal/privacy.md', 'privacy', policy],
+  ['landing/privacy.html', 'privacy', htmlText('landing/privacy.html')],
+  ['src/app/legal/terms.md', 'terms', read('src/app/legal/terms.md')],
+  ['landing/terms.html', 'terms', htmlText('landing/terms.html')],
+  ['landing/support.html', 'support', htmlText('landing/support.html')],
+] as const) {
+  assert.deepEqual(legalFinalProblems(text, kind), [], `${f}: ${legalFinalProblems(text, kind).join('; ')}`);
+}
+assert.doesNotMatch(labels, /\[CONFIRM/, 'labels doc has no [CONFIRM] tag');
+assert.doesNotMatch(read('landing/index.html'), /\[CONFIRM|asstrollogs|AsTrollOGs/i, 'landing index is final');
+// pass/fail pairs
+assert.ok(legalFinalProblems(policy + ' [CONFIRM: x]', 'privacy').includes('has a [CONFIRM] tag'), 'fail: a tag');
+assert.ok(legalFinalProblems(policy.replace(/October 22, 2026/, '[DATE — fill in on publish]'), 'privacy').includes('has a date placeholder'), 'fail: no date');
+assert.ok(legalFinalProblems(policy + ' Draft, pending lawyer review', 'privacy').includes('says Draft'), 'fail: Draft');
+assert.ok(legalFinalProblems(policy + ' DRAFT', 'privacy').includes('says Draft'), 'fail: DRAFT in capitals');
+assert.ok(legalFinalProblems(policy + ' with DeepSeek as a fallback', 'privacy').includes('names DeepSeek'), 'fail: DeepSeek');
+assert.ok(legalFinalProblems(policy.replace(/support@emgens\.com/g, 'support@asstrollogs.com'), 'privacy').includes('names the old entity or address'), 'fail: old address');
+assert.ok(legalFinalProblems(policy.replace(/Reports:\*\* 2 years/, 'Reports:** forever'), 'privacy').includes('missing: report retention'), 'fail: report retention dropped');
+assert.ok(legalFinalProblems(policy.replace(/We answer within 30 days/g, 'We answer'), 'privacy').includes('missing: access-request answer time'), 'fail: no answer time');
+assert.ok(legalFinalProblems(policy.replace(/free plan/g, 'other plan'), 'privacy').includes('missing: Gemini terms for both plans'), 'fail: one-plan claim');
+assert.deepEqual(legalFinalProblems('Last updated: October 22, 2026 support@emgens.com', 'support'), [], 'pass: a minimal support page');
+ok('legal text is final on app source + landing: no placeholders, operator, contact, retention, access, breach (pass/fail pairs)');
+
+// The landing page and the repo copy say the same thing: every sentence of privacy.md / terms.md is on the page.
+export function missingSentences(md: string, html: string): string[] {
+  const plain = (s: string) =>
+    s.replace(/\*\*|__|`/g, '').replace(/https?:\/\/\S+/g, '').replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
+  const page = plain(html);
+  return md
+    .split('\n')
+    .filter((l) => !/^#|^---|^\*\*Last updated/.test(l.trim()))
+    .map((l) => plain(l.replace(/^\s*-\s+/, '')))
+    .flatMap((l) => l.split(/(?<=[.!?])\s+/))
+    .map((s) => s.replace(/^[^A-Za-z(]+/, '').trim())
+    .filter((s) => s.length > 30 && !page.includes(s));
+}
+for (const [md, html] of [
+  ['src/app/legal/privacy.md', 'landing/privacy.html'],
+  ['src/app/legal/terms.md', 'landing/terms.html'],
+] as const) {
+  const miss = missingSentences(read(md), htmlText(html));
+  assert.deepEqual(miss, [], `${html} is out of sync with ${md}: ${miss.slice(0, 3).join(' | ')}`);
+}
+assert.deepEqual(missingSentences('- We keep chat for 30 days, then delete it.', '<p>We keep chat for 30 days, then delete it.</p>'), [], 'pass: same sentence');
+assert.equal(missingSentences('- We keep chat for 30 days, then delete it.', '<p>We keep chat for 60 days, then delete it.</p>').length, 1, 'fail: a changed number');
+ok('landing privacy/terms carry every sentence of src/app/legal (pass/fail pairs)');
+
+// wave111: the retention the policy promises is a real daily job.
+{
+  const sql = read('supabase/migrations/wave111_retention.sql');
+  assert.match(sql, /delete from public\.reports where at < now\(\) - interval '2 years'/);
+  assert.match(sql, /delete from public\.account_deletions where deleted_at < now\(\) - interval '2 years'/);
+  assert.match(sql, /cron\.schedule\(\s*'retention-daily'/);
+  assert.match(sql, /delete from public\.access_requests where requested_at < now\(\) - interval '30 days'/);
+  assert.match(sql, /returns jsonb\s+language plpgsql\s+security definer\s+set search_path = public/);
+  assert.match(sql, /revoke all on function public\.purge_retention\(\) from public, anon, authenticated/);
+  ok('wave111 purges reports and deletion records after 2 years and access requests after 30 days, daily, definer, not callable by clients');
+}
+
+// A2: sign-up is public, so the landing page has no invite form (the gate copy of check:founder-access).
+export function landingFormProblems(html: string): string[] {
+  const out: string[] = [];
+  if (/id="access-form"|<form\b/i.test(html)) out.push('landing still has a form');
+  if (/rest\/v1\/access_requests/.test(html)) out.push('landing still posts to access_requests');
+  if (/SUPABASE_ANON_KEY/.test(html)) out.push('landing still carries the anon key');
+  return out;
+}
+for (const f of ['landing/index.html', 'landing/privacy.html', 'landing/terms.html', 'landing/support.html']) {
+  assert.deepEqual(landingFormProblems(read(f)), [], `${f}: ${landingFormProblems(read(f)).join('; ')}`);
+}
+assert.ok(landingFormProblems('<form id="access-form"><input type="email"></form>').length > 0, 'fail: the old form');
+assert.ok(landingFormProblems('fetch(`${SUPABASE_URL}/rest/v1/access_requests`)').length > 0, 'fail: a stray POST');
+assert.deepEqual(landingFormProblems('<a href="/support.html">support</a>'), [], 'pass: a support link');
+ok('landing pages carry no invite form or anon key (pass/fail pairs)');
+
+// The landing pages add no claim the repo copy lacks: every page sentence is in the .md (headings, link text excepted).
+export function extraPageSentences(htmlRaw: string, mdRaw: string): string[] {
+  const mdText = mdRaw.replace(/(^|\n)\s*-\s+/g, '$1').replace(/\*\*|`/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ');
+  const body = (htmlRaw.split('<p class="updated">')[1] ?? htmlRaw).split('<footer>')[0]!;
+  const page = body.replace(/<h[12][^>]*>[\s\S]*?<\/h[12]>/g, ' ');
+  return page
+    .split(/<\/?(?:p|li|ul)\b[^>]*>/)
+    .map((b) => b.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').replace(/ ([,.;:!?)])/g, '$1').trim())
+    .flatMap((b) => b.split(/(?<=[.!?]\)?)\s+/))
+    .map((s) => s.replace(/^[^A-Za-z(]+/, '').trim())
+    .filter((s) => s.length > 30 && /\s/.test(s) && !mdText.includes(s));
+}
+for (const [html, md] of [
+  ['landing/privacy.html', 'src/app/legal/privacy.md'],
+  ['landing/terms.html', 'src/app/legal/terms.md'],
+] as const) {
+  const extra = extraPageSentences(read(html), read(md));
+  assert.deepEqual(extra, [], `${html} says things ${md} does not: ${extra.slice(0, 3).join(' | ')}`);
+}
+assert.deepEqual(extraPageSentences('<p>We keep chat for 30 days, then delete it.</p>', '- We keep chat for 30 days, then delete it.'), [], 'pass: same sentence');
+assert.equal(extraPageSentences('<p>We keep chat for 30 days. We also sell your data to partners.</p>', 'We keep chat for 30 days.').length, 1, 'fail: a claim only on the page');
+ok('landing privacy/terms add no sentence the repo copy lacks (both directions in sync, pass/fail pairs)');
 
 // Step 10 (2026-10-20): the policy describes what is built; "mute" is not built. Step 14 (2026-10-21):
 // chat is built (app 1.1+, wave108), so the policy must describe it as built: end-to-end encrypted,

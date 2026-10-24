@@ -27,7 +27,7 @@ import { DEPTH_AXES, depthKindFor } from '../src/lib/depth-dive';
 import { QUESTIONS_BANK } from '../src/lib/questions/bank';
 import { RANKING_ROUNDS } from '../src/lib/ranking';
 import { SCENARIO_DECK } from '../src/lib/scenario';
-import { TITLE_COPY_REVIEWED, combinedFingerprint, parseCombinedBody, titleCopyClean } from '../src/lib/sage-title';
+import { parseSageTitle } from '../src/lib/sage-title';
 import { canShowCategoryTeaser } from '../src/lib/today-slot';
 import { EXTRA_AXES, TRAIT_AXES } from '../src/lib/traits';
 import { applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
@@ -123,10 +123,9 @@ ok('maps require BOTH axes independently past the stability floor');
 const fp1 = categoriesFingerprint(reportSocial);
 const fp2 = categoriesFingerprint(reportSocial);
 assert.equal(fp1, fp2);
-const combined1 = combinedFingerprint(reportSocial);
-const combined2 = combinedFingerprint(reportSocial);
-assert.equal(combined1, combined2);
-ok('confirm-upgrade cannot change category fingerprint: same numbers, same hash');
+// A different number changes the fingerprint (pass: same input same hash, above; fail case: a changed input).
+assert.notEqual(categoriesFingerprint([stableReport('extraversion', 0.2), stableReport('agreeableness', 0.2)]), fp1);
+ok('confirm-upgrade cannot change category fingerprint: same numbers, same hash; other numbers, other hash');
 
 assert.equal(allCategoriesReady(reportSocial), false);
 ok('full picture stays locked until all live categories are ready');
@@ -143,26 +142,34 @@ const pick = pickTeaserCategory(ready, ['playfulness'], 0.1);
 assert.equal(pick, 'cat_social');
 ok('teaser roll is stable per seed; hidden on a missed-check day (the crisis slot is gone)');
 
-assert.equal(TITLE_COPY_REVIEWED, false);
 assert.equal(CATEGORY_COPY_REVIEWED, true); // emci approved 2026-10-02
 assert.equal(CATEGORY_BAND_COPY_REVIEWED, true);
 assert.equal(CONCEPT_COPY_REVIEWED, true);
 assert.equal(poleCopyClean(), true);
-assert.equal(titleCopyClean(), true);
 assert.equal(categoryBandCopyClean(), true);
 assert.equal(conceptCopyClean(), true);
 assert.equal(Object.keys(AXIS_CONCEPTS).length, TRAIT_AXES.length);
 assert.equal(Object.keys(CATEGORY_CONCEPTS).length, CATEGORY_DEFS.length);
 assert.ok(fallbackForReading(loveReady).length > 0);
-ok(`${TRAIT_AXES.length + CATEGORY_DEFS.length} concept explainers + poles + bands flagged unreviewed and fence-clean`);
+ok(`${TRAIT_AXES.length + CATEGORY_DEFS.length} concept explainers + poles + bands approved and fence-clean`);
 
-assert.equal(parseCombinedBody('{"title":"INTJ Visionary","lede":"You are an INTJ."}'), null);
-const parsed = parseCombinedBody(
-  '{"title":"Quiet follow-through","lede":"Keeps the plan.","categories":{"cat_social":{"line":"Makes the room happen.","full":"Would rather text people and keep it a little light."}}}',
-);
-assert.equal(parsed?.title, 'Quiet follow-through');
-assert.equal(parsed?.categories.cat_social?.line, 'Makes the room happen.');
-ok('combined parser keeps title+category copy and rejects type-branding');
+// The AI title writer and its combined parser were removed in roadmap A5. The saved-title reader keeps
+// the category copy it reads back, and still refuses type-branding (pass: plain copy, fail: a type code).
+const saved = parseSageTitle({
+  title: 'Quiet follow-through',
+  lede: 'Keeps the plan.',
+  fingerprint: 'x',
+  categories: { cat_social: { line: 'Makes the room happen.', full: 'Would rather text people and keep it a little light.' } },
+});
+assert.equal(saved?.categories.cat_social?.line, 'Makes the room happen.');
+const branded = parseSageTitle({
+  title: 'Quiet follow-through',
+  lede: 'Keeps the plan.',
+  fingerprint: 'x',
+  categories: { cat_social: { line: 'A classic INTJ Visionary.', full: 'You are an INTJ.' } },
+});
+assert.equal(branded?.categories.cat_social, undefined, 'fail case: type-branded category copy is dropped');
+ok('the saved-title reader keeps category copy and drops type-branding');
 
 const sql = read('supabase/migrations/wave21_playfulness_categories.sql');
 assert.match(sql, /playfulness/);

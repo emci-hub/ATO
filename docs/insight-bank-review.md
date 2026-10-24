@@ -6,10 +6,10 @@ Each idea shows one of its three focus wordings, its why, one of two tries and o
 **Review rules:** `docs/copy-review-rules.md` (fix unclear wording and meaning problems; keep honest lines plain; no keyword flags).
 
 **How to review:** change `- [ ]` to `- [x]` on every idea you approve. Edit wording right here if you like and tell me; I copy it into `src/lib/insight-bank/<trait>.ts`.
-When every idea is ticked, `INSIGHT_BANK_COPY_REVIEWED` flips to `true` (`src/lib/insight-bank/index.ts`).
+`INSIGHT_BANK_COPY_REVIEWED` is `true` (`src/lib/insight-bank/index.ts`): accepted by emci 2026-10-23 (roadmap A4) without ticking every idea. Ticks here are optional notes; an edit is made only for a specific problem.
 This flag is for this review only: the app shows these ideas to everyone and never shows a draft badge for them (emci, 2026-10-07).
 
-192 trait ideas (6 per trait lean, the 6th of each is a pair) + 16 starters = 208.
+Before A6: 192 trait ideas (6 per trait lean, the 6th of each is a pair) + 16 starters = 208. **After A6 (2026-10-23): 384 trait ideas (12 per lean) + 48 mixed ideas (3 per trait) + 16 starters = 448.** The A6 ideas are in the last section of this file.
 
 ## Curiosity: Adventurous (`openness:high`)
 
@@ -1981,3 +1981,2264 @@ This flag is for this review only: the app shows these ideas to everyone and nev
   - Try 2: Write down one thing you did well today, so you end the day fairly.
   - Watch 1: Notice how you talk to yourself after a mistake.
   - Watch 2: Notice when you’d forgive a friend faster than yourself.
+
+## A6 additions (2026-10-23): 192 new trait ideas + 48 mixed ideas, waiting for emci’s read
+
+Written for roadmap step A6. The first six ideas per lean above are unchanged. Ids `_07`–`_12` are new per lean; `ftw_<trait>_m_01`–`03` are the new **mixed** ideas, shown to someone who has answered on a trait but sits near the middle (no clear lean). Same rules: clear voice, `tipRuleViolation`, no AI. Tick, edit, or just tell me what to change.
+
+### Curiosity: Adventurous
+
+- [ ] `ftw_openness_h_07` — *Curiosity: Adventurous*
+  - Focus 1: When a friend recommends a book, show or podcast, you tend to start it that same week.
+  - Focus 2: You usually say yes to a recommendation right away and start it before your current one is done.
+  - Focus 3: When someone you trust says “you’d love this,” you tend to try it quickly.
+  - Why: Saying yes to recommendations keeps your days interesting, but a growing pile can leave you with many things half-finished.
+  - Try 1: Finish or drop one thing you’ve started this week, so a new one doesn’t crowd it out.
+  - Try 2: Write your recommendations in one list and pick one a week, so none get lost.
+  - Watch 1: Notice how many things you have going at once.
+  - Watch 2: Notice whether you’re still enjoying what you started last week.
+- [ ] `ftw_openness_h_08` — *Curiosity: Adventurous*
+  - Focus 1: When you learn something new, you tend to want to tell someone about it right away.
+  - Focus 2: You usually share the interesting thing you just read or heard, even when no one asked.
+  - Focus 3: When a topic grabs you, you tend to bring it up with friends and coworkers.
+  - Why: Sharing what you learn makes conversations lively, but others might not be as interested in the topic as you are.
+  - Try 1: Next time you share something, ask the other person what they’ve been into lately, so it goes both ways.
+  - Try 2: Tell a friend one thing you learned in a single sentence, so they can ask for more if they want.
+  - Watch 1: Notice when the person you’re talking to stops asking questions.
+  - Watch 2: Notice which topics get a friend’s full attention.
+- [ ] `ftw_openness_h_09` — *Curiosity: Adventurous*
+  - Focus 1: When someone describes their life or job, you tend to find it more interesting than they expect.
+  - Focus 2: You usually want to hear how other people see things, even when it’s very different from you.
+  - Focus 3: When you meet someone with a different background, you tend to ask a lot of questions.
+  - Why: Your interest in other views helps people open up, but some questions can feel like too much from someone they just met.
+  - Try 1: Next time you meet someone new, let them lead where the conversation goes, so they stay comfortable.
+  - Try 2: Pick one friend with a very different view and ask what shaped it, so you hear their full story.
+  - Watch 1: Notice when a person gives short answers to your questions.
+  - Watch 2: Notice which conversations leave you with a new way of thinking.
+- [ ] `ftw_openness_h_10` — *Curiosity: Adventurous*
+  - Focus 1: When you shop or spend money, you tend to be drawn to the unusual option over the safe one.
+  - Focus 2: You usually pick the item that looks different, even when a standard one would work fine.
+  - Focus 3: When you choose between two things, you tend to like the one that’s less common.
+  - Why: Unusual choices can feel more like you, but they sometimes cost more or turn out harder to use than a plain version.
+  - Try 1: Before you buy something unusual, ask yourself how you’ll use it next week, so the choice holds up.
+  - Try 2: Pick one plain, reliable thing you own and notice how often you use it, so you see what it gives you.
+  - Watch 1: Notice whether you still like an unusual pick a month later.
+  - Watch 2: Notice how often you choose the odd one just because it’s different.
+- [ ] `ftw_openness_h_11` — *Curiosity: Adventurous*
+  - Focus 1: When you have a day with nothing planned, you tend to wander into something you didn’t expect.
+  - Focus 2: You usually fill an open day with something new instead of resting.
+  - Focus 3: On a free day, you tend to look for something different to do rather than a quiet one.
+  - Why: New plans give you energy, but a free day with no rest in it can leave you tired by the time Monday comes.
+  - Try 1: Plan one new thing and one slow hour for your next free day, so you get both.
+  - Try 2: Ask yourself tonight whether you want something new or something easy tomorrow, so you choose on purpose.
+  - Watch 1: Notice how tired you feel after a full free day.
+  - Watch 2: Notice whether you want something new or just something different from work.
+- [ ] `ftw_openness_h_12` — *Curiosity: Adventurous*
+  - Focus 1: When someone tells you a rule is just how things are done, you tend to ask why.
+  - Focus 2: You usually question a habit or rule at work that no one else seems to notice.
+  - Focus 3: When your team does something the same way every time, you tend to wonder if there’s a better way.
+  - Why: Questioning how things are done can find better ways, but coworkers might hear it as criticism of what they built, even when you mean well.
+  - Try 1: Before you suggest a change, ask a coworker how the current way started, so your idea fits what they know.
+  - Try 2: Write your idea down and share it with one person first, so you hear their view before the group does.
+  - Watch 1: Notice how coworkers react when you ask why something is done a certain way.
+  - Watch 2: Notice whether your idea solves a problem others feel too.
+### Curiosity: Familiar
+
+- [ ] `ftw_openness_l_07` — *Curiosity: Familiar*
+  - Focus 1: When you get a new phone or app, you tend to keep your old settings and way of using it.
+  - Focus 2: You usually learn a new tool only as much as you need to get your task done.
+  - Focus 3: When an app changes its layout, you tend to feel annoyed until you get used to it.
+  - Why: Sticking with what works saves effort, but an update can sometimes include a feature that would save you time.
+  - Try 1: Spend five minutes looking at what changed in an app you use every day, so you know what’s new.
+  - Try 2: Ask a friend which feature of an app they use most, so you can try one thing from them.
+  - Watch 1: Notice whether your annoyance at a change fades after a few days.
+  - Watch 2: Notice which tools you use the same way every day.
+- [ ] `ftw_openness_l_08` — *Curiosity: Familiar*
+  - Focus 1: When someone invites you to something outside your usual plans, you tend to say you’ll think about it.
+  - Focus 2: You usually need time to warm up to an invitation that isn’t part of your normal week.
+  - Focus 3: When a friend suggests something new, you tend to ask a lot of questions before you agree.
+  - Why: Taking time to decide keeps you from plans you wouldn’t enjoy, but friends might feel your “maybe” means no.
+  - Try 1: Next time a friend invites you somewhere new, give a yes or no within a day, so they can plan.
+  - Try 2: Ask the friend what the plan involves, so you can say yes to the parts that suit you.
+  - Watch 1: Notice how often a plan you doubted turned out fine.
+  - Watch 2: Notice which questions you ask before saying yes.
+- [ ] `ftw_openness_l_09` — *Curiosity: Familiar*
+  - Focus 1: When you have a task you’ve done before, you tend to do it the same way every time.
+  - Focus 2: You usually stick to the method you learned first, even when someone shows you a shortcut.
+  - Focus 3: When you cook or clean, you tend to follow the same steps every time.
+  - Why: A set way of doing things makes you quick and sure, but a shortcut from someone else could save you a step.
+  - Try 1: Next time someone shows you a different way to do a chore, try it once, so you see if it’s faster.
+  - Try 2: Check how long a routine task takes today, so you know what your usual way costs.
+  - Watch 1: Notice when you reject a new method before trying it.
+  - Watch 2: Notice how much time your usual way actually takes.
+- [ ] `ftw_openness_l_10` — *Curiosity: Familiar*
+  - Focus 1: When you talk with someone about big ideas or what-ifs, you tend to bring it back to what’s real.
+  - Focus 2: You usually prefer to talk about things that happened over things that might happen.
+  - Focus 3: When a friend talks about an unusual theory, you tend to ask for the facts behind it.
+  - Why: Staying with what’s real keeps conversations clear, but a friend sharing a what-if might just want you to play along.
+  - Try 1: Next time a friend shares a what-if, answer with one idea of your own before asking for facts, so they feel heard.
+  - Try 2: Pick a what-if question to ask a friend this week, so you see how they think.
+  - Watch 1: Notice when a friend’s idea gets quieter after your first question.
+  - Watch 2: Notice which what-if topics you actually enjoy.
+- [ ] `ftw_openness_l_11` — *Curiosity: Familiar*
+  - Focus 1: When you decorate or pick clothes, you tend to choose things you know you like over a new style.
+  - Focus 2: You usually wear and buy the same kinds of things because they work for you.
+  - Focus 3: When you shop, you tend to go back to the brands and styles you already trust.
+  - Why: Knowing your own taste saves time and money, but a small change now and then can show you something you like even more.
+  - Try 1: Try one item that’s a little different from your usual this month, so you test your taste.
+  - Try 2: Ask a friend what they’d pick for you, so you see one new option without much risk.
+  - Watch 1: Notice whether you pick the usual because you love it or because it’s easy.
+  - Watch 2: Notice what you’d change if you had no cost to think about.
+- [ ] `ftw_openness_l_12` — *Curiosity: Familiar*
+  - Focus 1: When you’re at work and a new project comes up, you tend to prefer ones that look like past work.
+  - Focus 2: You usually do your best work on tasks that follow a pattern you’ve already learned.
+  - Focus 3: When your boss offers you something unfamiliar, you tend to worry about getting it wrong.
+  - Why: Doing what you know well makes you dependable, but staying with familiar tasks can leave out chances to grow.
+  - Try 1: Next time a new task comes up, ask your boss what support you’d have, so it feels less risky.
+  - Try 2: Pick one small part of a new task you could try first, so you build up to the whole thing.
+  - Watch 1: Notice which new tasks you turn down and why.
+  - Watch 2: Notice how you feel once you’ve done an unfamiliar task a second time.
+### Follow-through: Structured
+
+- [ ] `ftw_conscientiousness_h_07` — *Follow-through: Structured*
+  - Focus 1: Before a trip, you tend to pack early and double-check the list.
+  - Focus 2: You usually have your bag, tickets and plans sorted well before you leave.
+  - Focus 3: When you travel, you tend to prepare for problems that may never come.
+  - Why: Preparing well means fewer surprises, but extra planning can take time and energy that you might have enjoyed more.
+  - Try 1: Drop one item from your next packing list, so you practice trusting that you can buy it if needed.
+  - Try 2: Set a time to stop packing and stick to it, so the prep doesn’t take over your evening.
+  - Watch 1: Notice which prep tasks you do for peace of mind and not because you need them.
+  - Watch 2: Notice how you feel once the bag is closed.
+- [ ] `ftw_conscientiousness_h_08` — *Follow-through: Structured*
+  - Focus 1: When you have a free hour, you tend to look for something useful to do with it.
+  - Focus 2: You usually find resting harder than finishing a task.
+  - Focus 3: On a day off, you tend to feel better after you’ve checked a few things off your list.
+  - Why: Getting things done feels good, but a rest that always has to be earned can leave you tired.
+  - Try 1: Pick one hour this weekend with no tasks in it, so you practice resting without a reason.
+  - Try 2: Put one enjoyable thing on your list, so doing it counts as getting something done.
+  - Watch 1: Notice when you feel guilty about sitting still.
+  - Watch 2: Notice how you feel after a day with nothing on the list.
+- [ ] `ftw_conscientiousness_h_09` — *Follow-through: Structured*
+  - Focus 1: When a coworker hands in work late or half-done, you tend to feel it more than they do.
+  - Focus 2: You usually notice when someone else doesn’t follow through, and it bothers you.
+  - Focus 3: When a friend says they’ll do something and doesn’t, you tend to remember it.
+  - Why: Your own reliability makes it easy to notice gaps in others, but they may not know how much it matters to you.
+  - Try 1: Next time someone misses a deadline, ask what got in the way, so you understand before you decide how you feel.
+  - Try 2: Tell a coworker or friend what you need from them and by when, so you aren’t relying on guesses.
+  - Watch 1: Notice when you take on someone else’s unfinished work without being asked.
+  - Watch 2: Notice how often your own standard is the one others are missing.
+- [ ] `ftw_conscientiousness_h_10` — *Follow-through: Structured*
+  - Focus 1: When you spend money, you tend to track it and know where it went.
+  - Focus 2: You usually keep an eye on your budget and notice small charges.
+  - Focus 3: When bills come due, you tend to pay them early so nothing slips.
+  - Why: Watching your money protects you from surprises, but checking it all the time can make small purchases feel heavy.
+  - Try 1: Set a small amount each month for spending without tracking, so some choices stay easy.
+  - Try 2: Check your accounts on one set day each week, so you aren’t checking all week.
+  - Watch 1: Notice how you feel after a small, unplanned purchase.
+  - Watch 2: Notice how often you check your balance in a week.
+- [ ] `ftw_conscientiousness_h_11` — *Follow-through: Structured*
+  - Focus 1: When guests are coming over, you tend to clean and prepare more than anyone expects.
+  - Focus 2: You usually put in a lot of work before hosting, so the home is just right.
+  - Focus 3: Before friends visit, you tend to tidy up even when they say not to bother.
+  - Why: Your effort makes people feel welcome, but being worn out before they arrive can make it hard to enjoy the visit.
+  - Try 1: Pick two things to do before guests come and skip the rest, so you have energy left for them.
+  - Try 2: Ask a friend to bring something next time you host, so you share the work.
+  - Watch 1: Notice whether guests care about the things you spend time on.
+  - Watch 2: Notice how much energy you have when they arrive.
+- [ ] `ftw_conscientiousness_h_12` — *Follow-through: Structured*
+  - Focus 1: When you start a task, you tend to want to finish it in one sitting.
+  - Focus 2: You usually find it hard to leave a project half-done at the end of the day.
+  - Focus 3: When you’re in the middle of something, you tend to keep going past the time you planned.
+  - Why: Finishing in one go keeps your work tidy, but staying late can cut into rest and time with other people.
+  - Try 1: Write the next step at the end of your workday, so stopping feels safe.
+  - Try 2: Set an alarm for when you plan to stop, so the evening stays yours.
+  - Watch 1: Notice what time you actually stop on days you plan to stop early.
+  - Watch 2: Notice whether a half-done task looks worse at night than it does in the morning.
+### Follow-through: Flexible
+
+- [ ] `ftw_conscientiousness_l_07` — *Follow-through: Flexible*
+  - Focus 1: When a deadline is far away, you tend to put it off until the pressure builds.
+  - Focus 2: You usually do your best focus in the last stretch before something is due.
+  - Focus 3: When you have lots of time, you tend to leave the work until it gets close.
+  - Why: Pressure can help you focus, but starting late leaves no room for surprises and can feel stressful at the end.
+  - Try 1: Do the first ten minutes of a task today that’s due next week, so it already has a start.
+  - Try 2: Put a smaller deadline on the calendar halfway to the real one, so the work spreads out.
+  - Watch 1: Notice how you feel in the day or two before a deadline.
+  - Watch 2: Notice what makes a task easier to start.
+- [ ] `ftw_conscientiousness_l_08` — *Follow-through: Flexible*
+  - Focus 1: When you plan to meet someone, you tend to leave later than you meant to.
+  - Focus 2: You usually underestimate how long it takes to get ready or get there.
+  - Focus 3: When you set a time, you tend to arrive close to it or a few minutes after.
+  - Why: Fitting a lot into your day shows you enjoy it, but running late can make the people waiting feel less important.
+  - Try 1: Add ten minutes to how long you think it takes to get somewhere today, so you arrive on time.
+  - Try 2: Text a friend when you leave, so they know when to expect you.
+  - Watch 1: Notice what you do in the last ten minutes before you leave.
+  - Watch 2: Notice how people react when you arrive a bit late.
+- [ ] `ftw_conscientiousness_l_09` — *Follow-through: Flexible*
+  - Focus 1: When you finish eating or cooking, you tend to leave the dishes for later.
+  - Focus 2: You usually leave small chores undone until they start to bother you.
+  - Focus 3: When your space gets messy, you tend to clean it all at once instead of a little each day.
+  - Why: Leaving small jobs saves effort in the moment, but they can pile into one big job that feels harder for you to start.
+  - Try 1: Do one small chore right now, like a single plate or a drawer, so the pile stops growing.
+  - Try 2: Do one chore during something you already do, like a call, so it gets done without extra effort.
+  - Watch 1: Notice which chores you leave first and why.
+  - Watch 2: Notice how you feel after you clear a small space.
+- [ ] `ftw_conscientiousness_l_10` — *Follow-through: Flexible*
+  - Focus 1: When bills, appointments or forms need doing, you tend to wait until the last day.
+  - Focus 2: You usually leave boring paperwork until you have to deal with it.
+  - Focus 3: When a reminder pops up, you tend to dismiss it and plan to do it later.
+  - Why: Putting off boring tasks keeps your day lighter now, but missed dates can cost you money or time later.
+  - Try 1: Book one appointment or pay one bill right now, so it’s off your mind.
+  - Try 2: Set a reminder for a time you’re free instead of during work, so you can act on it.
+  - Watch 1: Notice which tasks you dismiss the most.
+  - Watch 2: Notice how it feels when something small is finally done.
+- [ ] `ftw_conscientiousness_l_11` — *Follow-through: Flexible*
+  - Focus 1: When someone asks you to follow a detailed process, you tend to skip steps that seem small.
+  - Focus 2: You usually get the main part right and miss the small details.
+  - Focus 3: When you fill out something long, you tend to rush the last part.
+  - Why: Moving fast gets the main work done, but small missed details can mean you go back to fix them later.
+  - Try 1: Before you hand something in, read it once more from the end, so you catch missed details.
+  - Try 2: Ask a coworker to look over one piece of your work, so a second pair of eyes catches the little things.
+  - Watch 1: Notice which kinds of details you miss most often.
+  - Watch 2: Notice how much time you spend fixing small errors later.
+- [ ] `ftw_conscientiousness_l_12` — *Follow-through: Flexible*
+  - Focus 1: When you make a promise to a friend, you mean it but might forget about it a week later.
+  - Focus 2: You usually say yes with good intentions, then lose track of the detail.
+  - Focus 3: When a friend asks for a favor, you tend to agree and then the day gets away from you.
+  - Why: Your yes is sincere, but forgetting can leave a friend feeling like it didn’t matter to you.
+  - Try 1: Put every yes in your phone with a date right away, so you don’t have to remember it.
+  - Try 2: Text a friend a short update on something you promised, so they know you haven’t forgotten.
+  - Watch 1: Notice which promises you remember and which slip.
+  - Watch 2: Notice how a friend reacts when you follow up on something small.
+### Sociability: Outgoing
+
+- [ ] `ftw_extraversion_h_07` — *Sociability: Outgoing*
+  - Focus 1: When you work alone for a long stretch, you tend to feel your energy drop.
+  - Focus 2: You usually do your best work with other people around, even if you’re not talking.
+  - Focus 3: After a full day at home alone, you tend to feel restless and want to see someone.
+  - Why: Having people around keeps you going, but some tasks need quiet time that you might avoid without noticing.
+  - Try 1: Plan a quiet hour for focused work, then time with people after it, so you have something to look forward to.
+  - Try 2: Go work from a café or call a friend on a break, so alone time doesn’t drain you.
+  - Watch 1: Notice how long you can focus alone before you reach for your phone.
+  - Watch 2: Notice what your energy is like after an hour of quiet work.
+- [ ] `ftw_extraversion_h_08` — *Sociability: Outgoing*
+  - Focus 1: When a group chat is active, you tend to reply quickly and often.
+  - Focus 2: You usually have lots to say in group chats, and silence there bothers you a little.
+  - Focus 3: When friends text, you tend to answer within minutes and expect the same back.
+  - Why: Fast replies keep you close to friends, but others may answer on their own schedule and not mean anything by it.
+  - Try 1: Next time a friend takes a day to reply, wait before assuming anything, so you give them room.
+  - Try 2: Mute one busy chat for an afternoon, so you can focus without missing anything important.
+  - Watch 1: Notice how you feel when a chat goes quiet.
+  - Watch 2: Notice how many times you check a chat in an hour.
+- [ ] `ftw_extraversion_h_09` — *Sociability: Outgoing*
+  - Focus 1: When you’re at an event, you tend to be one of the last to leave.
+  - Focus 2: You usually don’t want a good night out to end, even when it’s getting late.
+  - Focus 3: When friends start heading home, you tend to suggest one more stop.
+  - Why: Keeping a good night going makes memories, but the next morning can feel harder if you stay out longer than you planned.
+  - Try 1: Pick a time to leave before you go out, so the night ends on your terms.
+  - Try 2: Plan something you enjoy the next morning, so heading home earlier feels like a trade.
+  - Watch 1: Notice how you feel the morning after a late night.
+  - Watch 2: Notice whether the last hour of the night is as fun as the first.
+- [ ] `ftw_extraversion_h_10` — *Sociability: Outgoing*
+  - Focus 1: When you meet people from different parts of your life, you tend to connect them to each other.
+  - Focus 2: You usually introduce friends who haven’t met and like seeing them get along.
+  - Focus 3: When someone is new to a group, you tend to make sure they feel included.
+  - Why: Bringing people together makes your circle warmer, but you can end up planning for everyone and forget what you want.
+  - Try 1: Ask a friend to organize the next get-together, so you get to show up and enjoy it.
+  - Try 2: Tell one friend what you’d like to do this month, so your own plans get a turn.
+  - Watch 1: Notice how often you plan things for others.
+  - Watch 2: Notice whether people reach out to you or you reach out first.
+- [ ] `ftw_extraversion_h_11` — *Sociability: Outgoing*
+  - Focus 1: When you tell a story, you tend to add detail and energy so it lands well.
+  - Focus 2: You usually hold the room when you talk, and others tend to listen.
+  - Focus 3: In a group, you tend to talk a lot more than the quieter people there.
+  - Why: Your energy makes conversations lively, but quieter people might not get a chance to share what they think.
+  - Try 1: Ask one quieter person in the group a direct question, so they have a way into the talk.
+  - Try 2: Wait three seconds after you finish a story, so others can jump in.
+  - Watch 1: Notice who in the group hasn’t spoken yet.
+  - Watch 2: Notice how you feel when someone else takes the lead.
+- [ ] `ftw_extraversion_h_12` — *Sociability: Outgoing*
+  - Focus 1: When you’re stressed, you tend to call or visit someone instead of working it out alone.
+  - Focus 2: You usually feel better after talking a hard day out loud with another person.
+  - Focus 3: When something goes wrong, you tend to tell a friend right away.
+  - Why: Talking things out helps you feel lighter, but friends are not always free, and some problems need quiet thinking too.
+  - Try 1: Write down what’s bothering you before you call, so you know what you want to say.
+  - Try 2: Ask a friend if it’s a good time before you vent, so they can give you their full attention.
+  - Watch 1: Notice how you feel after ten quiet minutes alone with the problem.
+  - Watch 2: Notice which friends are good at listening when you’re upset.
+### Sociability: Reserved
+
+- [ ] `ftw_extraversion_l_07` — *Sociability: Reserved*
+  - Focus 1: When coworkers chat in the hall, you tend to say a short hello and keep walking.
+  - Focus 2: You usually find small talk with people you don’t know well tiring.
+  - Focus 3: At work, you tend to save your energy for the conversations that matter most.
+  - Why: Saving your energy lets you do better at the big conversations, but coworkers might see short hellos as distance.
+  - Try 1: Ask one coworker one friendly question this week, so they see you’re approachable.
+  - Try 2: Pick one short chat a day to stay in a minute longer, so small talk adds up to a connection.
+  - Watch 1: Notice which small talk feels easy and which feels like effort.
+  - Watch 2: Notice how coworkers respond when you stay for a minute longer.
+- [ ] `ftw_extraversion_l_08` — *Sociability: Reserved*
+  - Focus 1: When you’re in a big, loud group, you tend to get tired faster than the people around you.
+  - Focus 2: You usually do better in a small group than in a crowd.
+  - Focus 3: At a busy event, you tend to look for a quiet corner or a break outside.
+  - Why: Smaller settings let you be at your best, but staying away from big events can mean missing people you care about.
+  - Try 1: Go to a big event early, when it’s quiet, so you meet people before the crowd.
+  - Try 2: Plan a short break outside during the event, so you can stay longer.
+  - Watch 1: Notice how many people are around when your energy starts to drop.
+  - Watch 2: Notice whether you feel better after a short break.
+- [ ] `ftw_extraversion_l_09` — *Sociability: Reserved*
+  - Focus 1: After a social event, you tend to need time alone before you feel like yourself again.
+  - Focus 2: You usually need a quiet evening after a full weekend with people.
+  - Focus 3: When your calendar gets full of plans, you tend to feel worn out even if the plans were fun.
+  - Why: Time alone is how you recharge, but friends may take a quick exit or a slow reply as a sign you didn’t enjoy yourself.
+  - Try 1: Tell a friend you had a good time before you head home, so they know you enjoyed it.
+  - Try 2: Leave one evening a week with no plans, so you have time to recover.
+  - Watch 1: Notice how many plans in a row it takes before you feel drained.
+  - Watch 2: Notice what you do to recharge and how long it takes.
+- [ ] `ftw_extraversion_l_10` — *Sociability: Reserved*
+  - Focus 1: When you have something to say, you tend to think it through before you speak.
+  - Focus 2: You usually prefer to send a message once you’ve thought about it than answer on the spot.
+  - Focus 3: In a quick back-and-forth, you tend to have your best answer a few minutes too late.
+  - Why: Thinking first makes your words clear, but in fast talks people may not wait for what you would have said.
+  - Try 1: Tell people “let me think about that” in a meeting, so you get time without going quiet.
+  - Try 2: Send a follow-up message with your full thought after a talk, so your idea is heard.
+  - Watch 1: Notice when you have an answer ready just after the moment has passed.
+  - Watch 2: Notice which people give you time to think.
+- [ ] `ftw_extraversion_l_11` — *Sociability: Reserved*
+  - Focus 1: When it’s your birthday or you’re the center of attention, you tend to feel a little uncomfortable.
+  - Focus 2: You usually prefer a small dinner with a few people to a big party in your honor.
+  - Focus 3: When people make a fuss over you, you tend to wish it were over sooner.
+  - Why: A quieter celebration fits how you feel, but friends who plan something big are usually trying to show they care.
+  - Try 1: Tell a friend what kind of celebration you’d enjoy, so they can plan around it.
+  - Try 2: When someone makes a fuss, say thank you before you change the subject, so they know it landed.
+  - Watch 1: Notice what part of being the center of attention feels hardest.
+  - Watch 2: Notice how friends react when you tell them what you’d like.
+- [ ] `ftw_extraversion_l_12` — *Sociability: Reserved*
+  - Focus 1: When you talk with one person at a time, you tend to go deeper than you do in a group.
+  - Focus 2: You usually open up more in a one-on-one chat than at a big gathering.
+  - Focus 3: With a close friend, you tend to have long, honest conversations.
+  - Why: Deep one-on-one talks build strong friendships, but friends you only see in groups might not get to know you.
+  - Try 1: Invite one person from a group you like to coffee, so you can talk the way you prefer.
+  - Try 2: Send a friend one honest sentence about how you’ve been, so they get a glimpse of what you share one-on-one.
+  - Watch 1: Notice which friends you only see in groups.
+  - Watch 2: Notice how you feel after a one-on-one conversation compared with a group night.
+### Harmony: Easygoing
+
+- [ ] `ftw_agreeableness_h_07` — *Harmony: Easygoing*
+  - Focus 1: When you bump into someone or make a small mistake, you tend to say sorry first.
+  - Focus 2: You usually apologize quickly, even in moments where it wasn’t your fault.
+  - Focus 3: When there’s a little tension, you tend to say sorry to make it go away.
+  - Why: Saying sorry keeps things friendly, but doing it for everything can make your real apologies mean less to you and others.
+  - Try 1: Swap one “sorry” today for “thank you” or “excuse me,” so you say what you mean.
+  - Try 2: Before you apologize, ask yourself if you did something wrong, so your sorry means something.
+  - Watch 1: Notice how many times you say sorry in a day.
+  - Watch 2: Notice when you apologize to end a tense moment.
+- [ ] `ftw_agreeableness_h_08` — *Harmony: Easygoing*
+  - Focus 1: When you need a favor, you tend to wait because you don’t want to bother anyone.
+  - Focus 2: You usually find it easier to help others than to ask for help.
+  - Focus 3: When someone offers to help you, you tend to say you’re fine.
+  - Why: You like to be easy on people, but friends often want to help and may feel shut out when you don’t ask.
+  - Try 1: Ask one person for a small favor this week, so you see how willing they are.
+  - Try 2: Say yes to the next offer of help you get, so people see you let them in.
+  - Watch 1: Notice when you need help and don’t ask.
+  - Watch 2: Notice how a friend reacts when you ask for something small.
+- [ ] `ftw_agreeableness_h_09` — *Harmony: Easygoing*
+  - Focus 1: When a coworker asks you to take on one more thing, you tend to say yes even when you’re full.
+  - Focus 2: You usually find it hard to say no to a request at work.
+  - Focus 3: When your boss or a friend asks for a favor, you tend to agree before you check your time.
+  - Why: Saying yes builds goodwill, but too many yeses can leave you stretched and unable to do your best on any of them.
+  - Try 1: Say “let me check my week and get back to you” to the next request, so you have time to decide.
+  - Try 2: Pick one request this week to turn down kindly, so your yeses mean more.
+  - Watch 1: Notice how full your week is when you say yes.
+  - Watch 2: Notice how people react to a kind no.
+- [ ] `ftw_agreeableness_h_10` — *Harmony: Easygoing*
+  - Focus 1: When a friend is late or cancels, you tend to say it’s okay even if it bothered you.
+  - Focus 2: You usually give people the benefit of the doubt when they let you down.
+  - Focus 3: When someone forgets something they promised, you tend to let it slide.
+  - Why: Giving people room keeps friendships easy, but if you never say it bothered you, they may not know to change.
+  - Try 1: Tell a friend one small thing that bothered you, in a calm sentence, so they know.
+  - Try 2: Next time a plan changes, say you were looking forward to it, so they know it mattered.
+  - Watch 1: Notice how often you say it’s fine when it isn’t.
+  - Watch 2: Notice whether the same thing keeps happening with the same person.
+- [ ] `ftw_agreeableness_h_11` — *Harmony: Easygoing*
+  - Focus 1: When someone complains to you, you tend to listen and agree even if you see it differently.
+  - Focus 2: You usually take a friend’s side when they vent, even if you’re not sure they’re right.
+  - Focus 3: When a coworker talks about a problem, you tend to say what they want to hear.
+  - Why: Being on someone’s side feels kind in the moment, but it can keep a friend from hearing a view that you think would help them.
+  - Try 1: Next time a friend vents, ask what they want from you, so you know whether to listen or give your view.
+  - Try 2: Share one honest thought gently after listening, so your support goes a bit further.
+  - Watch 1: Notice when you agree on the outside but think something else.
+  - Watch 2: Notice whether a friend wants advice or just a listener.
+- [ ] `ftw_agreeableness_h_12` — *Harmony: Easygoing*
+  - Focus 1: When a server or customer service worker makes a mistake, you tend to stay patient and kind.
+  - Focus 2: You usually stay friendly with people who are having a rough day, even when it costs you.
+  - Focus 3: When a stranger is rude, you tend to let it go without saying anything.
+  - Why: Kindness makes hard moments easier for others, but you can end up taking on rudeness that you’d be fine pushing back on.
+  - Try 1: When something is truly not okay, say one calm sentence about it, so it doesn’t sit with you afterward.
+  - Try 2: Keep your patience, and add a small thank-you to the person who handled it well, so kindness goes both ways.
+  - Watch 1: Notice how you feel an hour after a rude moment you let go.
+  - Watch 2: Notice when being kind and being quiet turn out to be different things.
+### Harmony: Frank
+
+- [ ] `ftw_agreeableness_l_07` — *Harmony: Frank*
+  - Focus 1: When a conversation turns into a debate, you tend to enjoy pushing back on an idea.
+  - Focus 2: You usually argue a point hard because you like testing whether it holds up.
+  - Focus 3: When friends disagree with you, you tend to treat it as a good discussion.
+  - Why: Debating sharpens ideas, but friends may feel attacked when you meant it as a game.
+  - Try 1: Tell a friend “I’m just testing the idea” before you push back, so they know it isn’t personal.
+  - Try 2: Ask a friend what they think before you share your view, so the talk feels like a two-way street.
+  - Watch 1: Notice who in the group looks uncomfortable when you push back.
+  - Watch 2: Notice whether you enjoy the debate more than the other person does.
+- [ ] `ftw_agreeableness_l_08` — *Harmony: Frank*
+  - Focus 1: When someone praises you, you tend to wonder if they mean it.
+  - Focus 2: You usually take compliments with a pinch of salt until you see proof.
+  - Focus 3: When people are very positive, you tend to look for what they’re leaving out.
+  - Why: Being skeptical protects you from empty flattery, but real praise can slip past you unnoticed.
+  - Try 1: Next time someone says something kind, say thank you and nothing more, so you let it in.
+  - Try 2: Write down one compliment you got this week, so you see it more than once.
+  - Watch 1: Notice how quickly you question a compliment.
+  - Watch 2: Notice which people’s praise you believe right away.
+- [ ] `ftw_agreeableness_l_09` — *Harmony: Frank*
+  - Focus 1: When you text, you tend to keep it short and to the point.
+  - Focus 2: You usually say what you need in the fewest words, without extra warm-up.
+  - Focus 3: When you write an email, you tend to skip the pleasantries and get to the request.
+  - Why: Short messages save you time, but a warm word at the start can keep a short message from sounding cold.
+  - Try 1: Add a short friendly line to your next message, like “hope your day’s good,” so it reads warmer.
+  - Try 2: Read one message aloud before you send it, so you can hear how it might sound to the other person.
+  - Watch 1: Notice which people reply warmly to your short messages and which go quiet.
+  - Watch 2: Notice how a friendly opener changes the reply you get.
+- [ ] `ftw_agreeableness_l_10` — *Harmony: Frank*
+  - Focus 1: When someone asks you to do something you think is a bad idea, you tend to say so.
+  - Focus 2: You usually don’t go along with a plan you don’t believe in.
+  - Focus 3: When a group is excited about something you doubt, you tend to speak up instead of staying quiet.
+  - Why: Your honesty can save the group from mistakes, but excited people may hear it as you not wanting them to enjoy it.
+  - Try 1: Name one thing you like about a plan before you raise your concern, so people hear you’re on their side.
+  - Try 2: Offer a different option along with your doubt, so the group has something to work with.
+  - Watch 1: Notice how a group reacts when you start with what you like.
+  - Watch 2: Notice whether your doubt is about the plan or about how it was brought up.
+- [ ] `ftw_agreeableness_l_11` — *Harmony: Frank*
+  - Focus 1: When you have to split something fairly, you tend to look out for your share.
+  - Focus 2: You usually make sure you’re not giving up more than you’re getting.
+  - Focus 3: When money or time is shared, you tend to keep track so it stays even.
+  - Why: Keeping things fair protects you from being taken advantage of, but counting too closely can make friends feel watched.
+  - Try 1: Let one small thing go unevenly this week and see how it feels, so you test whether the count matters.
+  - Try 2: Offer to cover something small for a friend, so they know the count isn’t the point.
+  - Watch 1: Notice which things you keep count of.
+  - Watch 2: Notice how you feel when a friend gives more than they get.
+- [ ] `ftw_agreeableness_l_12` — *Harmony: Frank*
+  - Focus 1: When a family member gives you advice you didn’t ask for, you tend to say you’ll do it your way.
+  - Focus 2: You usually push back on unwanted advice instead of nodding along.
+  - Focus 3: At family gatherings, you tend to hold your ground when someone pushes an opinion on you.
+  - Why: Holding your ground keeps your choices yours, but the people who offered the advice may have only wanted to help.
+  - Try 1: Say “thanks, I’ll think about it” to the next piece of advice you don’t want, so the talk stays kind.
+  - Try 2: Ask the person why they gave the advice, so you know what they were worried about.
+  - Watch 1: Notice when advice is really worry from someone who cares.
+  - Watch 2: Notice how family reacts when you answer calmly.
+### Composure: Steady
+
+- [ ] `ftw_steadiness_h_07` — *Composure: Steady*
+  - Focus 1: When something unexpected happens, like a delay or a change of plans, you tend to take it in stride.
+  - Focus 2: You usually stay level when things go sideways, even when others are rattled.
+  - Focus 3: When a plan falls apart at the last minute, you tend to work out a new one calmly.
+  - Why: Staying level helps you act while others freeze, but friends might not realize something is bothering you.
+  - Try 1: Tell someone close how a stressful moment felt for you, so they know what is going on behind the calm.
+  - Try 2: Say out loud what you’re doing next in a tense moment, so others can follow your lead.
+  - Watch 1: Notice how others look to you when things go wrong.
+  - Watch 2: Notice whether you feel the stress later, after the moment is over.
+- [ ] `ftw_steadiness_h_08` — *Composure: Steady*
+  - Focus 1: When someone cries or gets very emotional near you, you tend to stay calm and stay close.
+  - Focus 2: You usually stay steady when a friend is upset instead of getting upset with them.
+  - Focus 3: When a friend tells you something heavy, you tend to listen without reacting a lot.
+  - Why: Your calm can make it feel safe to talk, but a friend might read a quiet face as you not being moved.
+  - Try 1: Say one sentence about how it feels to hear what a friend shared, so they know you care.
+  - Try 2: Ask “how can I help?” when a friend is upset, so your calm turns into support.
+  - Watch 1: Notice how friends react to your calm when they’re upset.
+  - Watch 2: Notice whether you show care with words or only by staying.
+- [ ] `ftw_steadiness_h_09` — *Composure: Steady*
+  - Focus 1: When you get criticism at work, you tend to think it over without taking it personally.
+  - Focus 2: You usually hear feedback as information and decide what to do with it.
+  - Focus 3: After a hard review, you tend to feel okay by the end of the day.
+  - Why: Taking feedback without getting shaken helps you improve, but you might skip over a point that matters because it didn’t sting.
+  - Try 1: Write down one piece of feedback and one action you’ll take, so it doesn’t fade away.
+  - Try 2: Ask your boss a follow-up question about the feedback, so you know what they care about most.
+  - Watch 1: Notice which feedback you let go of too fast.
+  - Watch 2: Notice whether you bring it up again after a few days.
+- [ ] `ftw_steadiness_h_10` — *Composure: Steady*
+  - Focus 1: When you’re in a stressful stretch, you tend to keep going and say little about how it feels.
+  - Focus 2: You usually handle busy weeks without complaining, so people may not notice you’re stretched.
+  - Focus 3: During a rough month, you tend to look fine on the outside even when you’re tired.
+  - Why: Handling things quietly shows strength, but people can’t help if they can’t tell you’re carrying a lot.
+  - Try 1: Tell one person this week that you’ve had a lot on, so they can check in with you.
+  - Try 2: Cancel or move one small thing in a busy week, so you have some space.
+  - Watch 1: Notice how tired you are on the days you say you’re fine.
+  - Watch 2: Notice who would help if you told them.
+- [ ] `ftw_steadiness_h_11` — *Composure: Steady*
+  - Focus 1: When you wake up after a bad day, you tend to feel like it’s a fresh start.
+  - Focus 2: You usually don’t carry yesterday’s mood into today.
+  - Focus 3: After a hard night of sleep, you tend to bounce back quickly once the day gets going.
+  - Why: Starting fresh helps you keep going, but a mood you skip past can come back if it’s not looked at.
+  - Try 1: Take two minutes at the end of a bad day to note what caused it, so you can fix it for tomorrow.
+  - Try 2: Plan one easy, enjoyable thing after a rough day, so it ends well.
+  - Watch 1: Notice whether the same thing keeps ruining your days.
+  - Watch 2: Notice what helps you reset the fastest.
+- [ ] `ftw_steadiness_h_12` — *Composure: Steady*
+  - Focus 1: When a friend is panicking about something, you tend to tell them it will work out.
+  - Focus 2: You usually try to calm a worried friend with reasons not to worry.
+  - Focus 3: When someone near you is anxious about a decision, you tend to say it’s going to be fine.
+  - Why: Reassurance can help, but a worried friend may feel unheard if you jump to “it will be fine” before they finish.
+  - Try 1: Ask a worried friend what part is hardest before you reassure them, so you answer the real worry.
+  - Try 2: Repeat back what a friend said in one sentence, so they know you heard them.
+  - Watch 1: Notice how a friend reacts when you reassure them quickly.
+  - Watch 2: Notice when you want to fix the feeling more than hear it.
+### Composure: Sensitive
+
+- [ ] `ftw_steadiness_l_07` — *Composure: Sensitive*
+  - Focus 1: After a stressful day, you tend to keep thinking about it at night.
+  - Focus 2: You usually find it hard to switch off when something is unresolved.
+  - Focus 3: When you lie down to sleep, you tend to replay the hard parts of the day.
+  - Why: Thinking things over means you take them seriously, but it can cost you sleep, which makes the next day harder.
+  - Try 1: Write down tomorrow’s first task before bed, so your mind has less to hold.
+  - Try 2: Take a ten-minute walk or shower after work, so the day has a clear end.
+  - Watch 1: Notice what time your mind starts to replay the day.
+  - Watch 2: Notice how you feel after you write a worry down.
+- [ ] `ftw_steadiness_l_08` — *Composure: Sensitive*
+  - Focus 1: When you get good news, you tend to feel it more strongly than the people around you.
+  - Focus 2: You usually feel happy moments deeply, and they can stay with you for a long time.
+  - Focus 3: When a friend does something kind, you tend to be moved by it.
+  - Why: Feeling strongly makes good moments richer for you, but the same strength can make the low moments hit harder.
+  - Try 1: Tell a friend about one thing that made you happy today, so you enjoy it twice.
+  - Try 2: Write one good moment down each day this week, so you can find them on a hard day.
+  - Watch 1: Notice what small things lift your mood the most.
+  - Watch 2: Notice how long a good feeling lasts compared with a bad one.
+- [ ] `ftw_steadiness_l_09` — *Composure: Sensitive*
+  - Focus 1: When you’re tired or hungry, you tend to feel upset about small things.
+  - Focus 2: You usually notice your mood dip when you haven’t slept or eaten well.
+  - Focus 3: On a day with little sleep, you tend to react more strongly than usual.
+  - Why: Your mood follows your body closely, so a basic need that isn’t met can look like a big problem.
+  - Try 1: Eat something and drink water before you decide how bad a problem is, so you judge it with a full tank.
+  - Try 2: Plan a hard conversation for after a good night’s sleep, so you can handle it better.
+  - Watch 1: Notice how often your worst moods come when you’re tired or hungry.
+  - Watch 2: Notice how a problem looks after you’ve eaten or slept.
+- [ ] `ftw_steadiness_l_10` — *Composure: Sensitive*
+  - Focus 1: When plans change suddenly, you tend to feel thrown for a while.
+  - Focus 2: You usually need a little time to adjust when something unexpected happens.
+  - Focus 3: When you hear bad news, you tend to feel it in your body before you can think clearly.
+  - Why: Feeling it first is a normal response, but making big decisions in that moment can lead to choices you’d change later.
+  - Try 1: Tell people “I need a few minutes” after surprising news, so you can take the time you need.
+  - Try 2: Take five slow breaths before you reply to an upsetting message, so your answer is calmer.
+  - Watch 1: Notice how long it takes before you can think clearly after a surprise.
+  - Watch 2: Notice whether you make a different choice after a night’s sleep.
+- [ ] `ftw_steadiness_l_11` — *Composure: Sensitive*
+  - Focus 1: When a friend sounds a little different on the phone, you tend to pick up on it right away.
+  - Focus 2: You usually notice small changes in how people act or sound.
+  - Focus 3: When someone’s tone shifts in a meeting, you tend to feel it even if no one says anything.
+  - Why: Noticing small changes makes you caring, but it can also lead you to read worry into something that was nothing.
+  - Try 1: Ask the person “is everything okay?” once, so you check instead of guess.
+  - Try 2: Wait a day before you act on a change you noticed, so you can see whether it was a one-time thing.
+  - Watch 1: Notice how often your guesses about someone’s mood turn out right.
+  - Watch 2: Notice what you do after you pick up on a shift.
+- [ ] `ftw_steadiness_l_12` — *Composure: Sensitive*
+  - Focus 1: When you watch a sad or intense show, you tend to feel it for a while afterward.
+  - Focus 2: You usually carry the mood of a movie or the news with you for the rest of the evening.
+  - Focus 3: After reading upsetting news, you tend to feel low even though it didn’t happen to you.
+  - Why: Feeling for other people is a strength, but too much heavy news in a day can leave you worn out.
+  - Try 1: Pick a set time for news each day instead of checking all day, so it has an end.
+  - Try 2: Follow a heavy show with something light, so your mood has a way to shift.
+  - Watch 1: Notice how much news you take in before your mood drops.
+  - Watch 2: Notice what helps your mood recover after heavy content.
+### Reassurance: Watchful
+
+- [ ] `ftw_attachment_anxiety_h_07` — *Reassurance: Watchful*
+  - Focus 1: When you see that a message was read but not answered, you tend to wonder what that means.
+  - Focus 2: You usually notice the “read” mark and feel uneasy when no reply comes.
+  - Focus 3: When someone is online but hasn’t texted you back, you tend to take it personally.
+  - Why: Noticing replies shows how much you value the person, but there are many reasons for a quiet phone that have nothing to do with you.
+  - Try 1: Write down two ordinary reasons someone might not have replied yet, so the worry has company.
+  - Try 2: Put your phone in another room for twenty minutes after you send a message, so you stop checking.
+  - Watch 1: Notice how often the reason for a slow reply turns out to be simple.
+  - Watch 2: Notice what you do with your hands and eyes while you wait.
+- [ ] `ftw_attachment_anxiety_h_08` — *Reassurance: Watchful*
+  - Focus 1: After an argument with someone close, you tend to want to make up right away.
+  - Focus 2: You usually find it hard to leave a disagreement unresolved overnight.
+  - Focus 3: When you and a friend or partner are on bad terms, you tend to feel it all day.
+  - Why: Wanting to repair things shows you care, but pushing to fix it right away can leave the other person without time to cool down.
+  - Try 1: Tell the person “I’d like to talk when you’re ready,” so you share your need without pressing.
+  - Try 2: Do something you enjoy for an hour while you wait for a reply, so the waiting is easier.
+  - Watch 1: Notice how the other person responds when you give them time.
+  - Watch 2: Notice what you feel in the hour before you reach out.
+- [ ] `ftw_attachment_anxiety_h_09` — *Reassurance: Watchful*
+  - Focus 1: When you feel unsure about a relationship, you tend to ask for reassurance more than once.
+  - Focus 2: You usually need to hear that things are okay, and the feeling fades after a day or two.
+  - Focus 3: When someone says they care about you, you tend to feel better for a while and then want to hear it again.
+  - Why: Asking for reassurance is a way of getting close, but if you ask often, the other person might start to feel pressure.
+  - Try 1: Write down three things the person has done that show they care, so you can read them when you doubt.
+  - Try 2: Wait one day before you ask the same question again, so you see how you feel on your own.
+  - Watch 1: Notice how long the reassurance lasts each time.
+  - Watch 2: Notice what is happening right before you ask for it.
+- [ ] `ftw_attachment_anxiety_h_10` — *Reassurance: Watchful*
+  - Focus 1: When you see a friend’s photos with other people, you tend to wonder where you fit in.
+  - Focus 2: You usually notice who’s invited and who’s not, and think about why.
+  - Focus 3: When a friend posts a night out you weren’t at, you tend to feel a little left out.
+  - Why: Seeing a friend’s plans can touch on your wish to be included, but a post shows one moment, not how much a friend values you.
+  - Try 1: Text the friend about something fun you want to do soon, so you make a plan of your own.
+  - Try 2: Skip photo feeds for one evening, so you see less of what you weren’t part of.
+  - Watch 1: Notice which posts make your mood dip.
+  - Watch 2: Notice how you feel after you reach out with a plan.
+- [ ] `ftw_attachment_anxiety_h_11` — *Reassurance: Watchful*
+  - Focus 1: When you write a message to someone close, you tend to reread it several times before sending.
+  - Focus 2: You usually think hard about how a message will sound before you send it.
+  - Focus 3: When you text a partner or a friend you care about, you tend to worry you said it wrong.
+  - Why: Taking care with words shows how much you value the person, but long rereading can make a simple message feel heavy.
+  - Try 1: Send the next message after one reread, so you practice letting it go.
+  - Try 2: Tell yourself “this is good enough” before you hit send, so the habit has a stopping point.
+  - Watch 1: Notice how many times you read a message before you send it.
+  - Watch 2: Notice whether the other person ever reacts to the wording you worried about.
+- [ ] `ftw_attachment_anxiety_h_12` — *Reassurance: Watchful*
+  - Focus 1: When your partner spends time with friends you don’t know, you tend to wonder if they’d rather be there.
+  - Focus 2: You usually feel a little uneasy when someone close is having fun without you.
+  - Focus 3: When a friend gets close to someone new, you tend to worry they’ll need you less.
+  - Why: Wanting to be important to the people you love is natural, but their other friendships rarely take anything away from yours.
+  - Try 1: Ask the person how their time with friends went, so you hear about it from them.
+  - Try 2: Plan something you look forward to while they’re out, so the time apart has its own point.
+  - Watch 1: Notice what you picture when you’re apart.
+  - Watch 2: Notice how things feel once they’re back.
+### Reassurance: Trusting
+
+- [ ] `ftw_attachment_anxiety_l_07` — *Reassurance: Trusting*
+  - Focus 1: When a friend is quiet for a week, you tend to assume they’re busy and reach out when it fits.
+  - Focus 2: You usually don’t take a gap in contact personally.
+  - Focus 3: When someone you like goes quiet, you tend to give them space without much thought.
+  - Why: Giving space keeps friendships relaxed, but a friend who is struggling might read your silence as not caring.
+  - Try 1: Send a quick “thinking of you” text to someone you haven’t heard from, so they know you’re around.
+  - Try 2: Ask a friend how they’ve been after a long gap, so you catch up on what you missed.
+  - Watch 1: Notice which friends are quiet because they’re busy and which because something’s wrong.
+  - Watch 2: Notice how a short check-in lands.
+- [ ] `ftw_attachment_anxiety_l_08` — *Reassurance: Trusting*
+  - Focus 1: When a plan is loose, you tend to trust that your friend will follow through.
+  - Focus 2: You usually don’t need a confirmation text to feel sure a plan is on.
+  - Focus 3: When someone says “let’s catch up soon,” you tend to take it at face value.
+  - Why: Trusting people makes plans feel light for you, but without a date, a loose plan can drift away.
+  - Try 1: Suggest a specific day to a friend you said “soon” to, so the plan becomes real.
+  - Try 2: Send a short message the day before a plan, so both of you remember.
+  - Watch 1: Notice which loose plans actually happened.
+  - Watch 2: Notice how often a date makes a plan more likely to happen.
+- [ ] `ftw_attachment_anxiety_l_09` — *Reassurance: Trusting*
+  - Focus 1: After an argument, you tend to feel okay about waiting until things calm down.
+  - Focus 2: You usually don’t need to settle a disagreement right away to feel secure.
+  - Focus 3: When a friend is upset with you, you tend to trust that things will be fine.
+  - Why: Waiting lets tempers cool, but a friend who needs to talk may feel you’re not as bothered as they are.
+  - Try 1: Tell the other person “I’m okay, and I’m up for talking whenever you are,” so they know you care.
+  - Try 2: Check in the next day after an argument, so it doesn’t sit open for a week.
+  - Watch 1: Notice whether the other person needs more attention than you gave.
+  - Watch 2: Notice how a quick check-in changes how things feel.
+- [ ] `ftw_attachment_anxiety_l_10` — *Reassurance: Trusting*
+  - Focus 1: When a close friend or partner needs reassurance, you tend to find it hard to see why.
+  - Focus 2: You usually feel secure without hearing it often, so a friend’s need for it can surprise you.
+  - Focus 3: When someone asks if you’re still okay, you tend to wonder why they’re asking.
+  - Why: Your steadiness can feel safe to others, but people who need more reassurance may read your calm as distance.
+  - Try 1: Tell a friend one thing you appreciate about them today, so they hear it without asking.
+  - Try 2: Ask someone close what helps them feel sure of you, so you can give it easily.
+  - Watch 1: Notice who in your life likes to hear that they matter.
+  - Watch 2: Notice how a kind word from you lands.
+- [ ] `ftw_attachment_anxiety_l_11` — *Reassurance: Trusting*
+  - Focus 1: When a relationship is going well, you tend to enjoy it without looking for signs it might end.
+  - Focus 2: You usually take good times at face value instead of waiting for a problem.
+  - Focus 3: In a new relationship, you tend to let it develop without much worry.
+  - Why: Enjoying things as they are keeps you relaxed, but small signs of trouble may go unnoticed until they feel bigger.
+  - Try 1: Ask your partner or friend once a month how things feel for them, so you hear it directly.
+  - Try 2: Say one small thing that bugged you recently, so it gets said while it’s small.
+  - Watch 1: Notice what you do when you sense a small tension.
+  - Watch 2: Notice how the other person responds when you check in.
+- [ ] `ftw_attachment_anxiety_l_12` — *Reassurance: Trusting*
+  - Focus 1: When you and a friend have a few busy weeks apart, you tend to pick up where you left off.
+  - Focus 2: You usually find friendships easy to return to after a long gap.
+  - Focus 3: When you see an old friend again, you tend to feel as close as you ever were.
+  - Why: Easy reunions help your friendships last, but a friend who felt dropped may need a word about it first.
+  - Try 1: Start your next catch-up with “I’ve missed you,” so the friend knows the gap wasn’t about them.
+  - Try 2: Set a rough date to talk again before you hang up, so the next gap is shorter.
+  - Watch 1: Notice how an old friend reacts when you say you missed them.
+  - Watch 2: Notice who you would call if you had a free hour today.
+### Personal space: Private
+
+- [ ] `ftw_attachment_avoidance_h_07` — *Personal space: Private*
+  - Focus 1: When a friend or partner wants to talk about feelings, you tend to keep it short.
+  - Focus 2: You usually find it easier to talk about plans and facts than about how you feel.
+  - Focus 3: When a talk gets personal, you tend to steer it to something lighter.
+  - Why: Keeping it light protects your comfort, but people close to you may feel they only know part of what you think.
+  - Try 1: Share one real feeling with someone you trust this week, in a sentence or two, so they know a bit more.
+  - Try 2: Tell a friend “I need a minute, and I’ll come back to this,” so a pause doesn’t feel like a closed door.
+  - Watch 1: Notice the moment you change the subject.
+  - Watch 2: Notice how a friend reacts when you share a little more than usual.
+- [ ] `ftw_attachment_avoidance_h_08` — *Personal space: Private*
+  - Focus 1: After a weekend with a partner or family, you tend to want time alone to feel like yourself.
+  - Focus 2: You usually need a quiet day after lots of time with people close to you.
+  - Focus 3: When you spend several days together on a trip, you tend to look for a bit of space.
+  - Why: Needing space is normal, but a person who loves you may take your need to withdraw as a sign that something is wrong.
+  - Try 1: Tell the person “I need an hour to myself, and then I’d love to hang out,” so they know it isn’t about them.
+  - Try 2: Plan your alone time before a long trip, so you can ask for it calmly.
+  - Watch 1: Notice how the other person feels when you step away without saying why.
+  - Watch 2: Notice how long you need to feel like yourself again.
+- [ ] `ftw_attachment_avoidance_h_09` — *Personal space: Private*
+  - Focus 1: When someone says they miss you, you tend to feel pleased and a bit pressured.
+  - Focus 2: You usually like knowing you’re missed, but you don’t always know how to respond.
+  - Focus 3: When a friend wants more contact than you do, you tend to pull back a little.
+  - Why: Mixed feelings about closeness are common, but a friend who wants more may not know you feel warmly too.
+  - Try 1: Reply to “I miss you” with one warm sentence, so they know you care even if you don’t say much.
+  - Try 2: Set a regular time to talk to someone close, so contact doesn’t depend on a mood.
+  - Watch 1: Notice what you feel in the first second after someone says they miss you.
+  - Watch 2: Notice how you feel when a friend goes a long time without reaching out.
+- [ ] `ftw_attachment_avoidance_h_10` — *Personal space: Private*
+  - Focus 1: When a friend or partner is going through something hard, you tend to help with tasks more than with talk.
+  - Focus 2: You usually show you care by fixing something practical, like a ride or a meal.
+  - Focus 3: When someone close is upset, you tend to feel unsure what to say and offer help instead.
+  - Why: Practical help is real care, but some people also need to hear you say you’re there.
+  - Try 1: Add one sentence like “I’m here if you want to talk” when you offer help, so they hear it too.
+  - Try 2: Ask the person “do you want help or just company?” so you give the kind they need.
+  - Watch 1: Notice which kind of support you find easy to give.
+  - Watch 2: Notice how people react when you add a few warm words.
+- [ ] `ftw_attachment_avoidance_h_11` — *Personal space: Private*
+  - Focus 1: When you’re with someone new, you tend to take a long time to share personal things.
+  - Focus 2: You usually wait until you trust someone before you open up.
+  - Focus 3: When a new friend asks about your family or past, you tend to give short answers.
+  - Why: Taking time to trust protects you, but a friend may not realize you like them if you keep most things private.
+  - Try 1: Share one small personal detail with a new friend, so the friendship has something to build on.
+  - Try 2: Tell a new friend you like them in a simple way, so they know you’re interested even if you’re quiet.
+  - Watch 1: Notice how much you share in the first few months of a friendship.
+  - Watch 2: Notice who knows the most about you and why.
+- [ ] `ftw_attachment_avoidance_h_12` — *Personal space: Private*
+  - Focus 1: When your plans depend on another person, you tend to want a way to do things on your own too.
+  - Focus 2: You usually keep your own money, space or routine, even with someone close.
+  - Focus 3: When a relationship asks for more of your time, you tend to feel your independence is at stake.
+  - Why: Holding on to your own life keeps you steady, but a partner might read it as you not being fully in.
+  - Try 1: Tell your partner what part of your independence matters most to you, so they know what you’re protecting.
+  - Try 2: Choose one thing to share more fully this month, so closeness has room to grow on your terms.
+  - Watch 1: Notice which parts of your independence you guard most.
+  - Watch 2: Notice how your partner feels about the way you split time and space.
+### Personal space: Close
+
+- [ ] `ftw_attachment_avoidance_l_07` — *Personal space: Close*
+  - Focus 1: When you’re happy about something, you tend to want to tell someone right away.
+  - Focus 2: You usually share good news with a friend or partner within minutes.
+  - Focus 3: When something funny happens, you tend to text it to someone close.
+  - Why: Sharing your day builds closeness, but someone with a busy day may not have the room to match your pace.
+  - Try 1: Keep a story for when a friend has time, so they can give it their full attention.
+  - Try 2: Ask a friend how their day is before you share yours, so you meet them where they are.
+  - Watch 1: Notice how quickly a friend replies when you text during their workday.
+  - Watch 2: Notice who loves to hear your news and who prefers it later.
+- [ ] `ftw_attachment_avoidance_l_08` — *Personal space: Close*
+  - Focus 1: When your partner or a friend wants time alone, you tend to wonder if something is wrong.
+  - Focus 2: You usually feel a little hurt when someone close asks for space.
+  - Focus 3: When a friend needs a quiet weekend, you tend to take it a bit personally.
+  - Why: Valuing closeness is a strength, but someone else’s need for space is usually about energy, not about you.
+  - Try 1: Ask the person “is this just a recharge?” so you check instead of assume.
+  - Try 2: Plan something you enjoy while they have space, so the time apart has its own purpose.
+  - Watch 1: Notice what you think when a friend says they need time alone.
+  - Watch 2: Notice how the friend feels after the space.
+- [ ] `ftw_attachment_avoidance_l_09` — *Personal space: Close*
+  - Focus 1: When you’re upset, you tend to reach for someone close rather than deal with it alone.
+  - Focus 2: You usually feel better after you talk to a partner, friend or family member.
+  - Focus 3: When a hard day ends, you tend to want to debrief with someone you trust.
+  - Why: Talking things out helps you feel supported, but relying on one person can leave them feeling like the only listener.
+  - Try 1: Talk to two or three different people this week, so no one carries it all.
+  - Try 2: Write down what you want to say before you call, so the conversation is easy for both of you.
+  - Watch 1: Notice who you turn to first when you’re upset.
+  - Watch 2: Notice whether that person has the energy to listen that day.
+- [ ] `ftw_attachment_avoidance_l_10` — *Personal space: Close*
+  - Focus 1: When you’re alone for a whole weekend, you tend to feel a little flat.
+  - Focus 2: You usually find long stretches without company hard.
+  - Focus 3: On a quiet Sunday, you tend to look for someone to talk to or do something with.
+  - Why: Wanting people around keeps your life warm, but time on your own is also a skill that gets easier with practice.
+  - Try 1: Spend one hour alone doing something you enjoy, so you see that it can feel good.
+  - Try 2: Plan your solo time on a day you’re in a good mood, so it starts well.
+  - Watch 1: Notice how long it takes before you want company.
+  - Watch 2: Notice what you enjoy doing on your own.
+- [ ] `ftw_attachment_avoidance_l_11` — *Personal space: Close*
+  - Focus 1: When you care about someone, you tend to want to know their whole life, not just the surface.
+  - Focus 2: You usually ask personal questions and hope the other person asks you back.
+  - Focus 3: When you meet someone you like, you tend to share a lot early on.
+  - Why: Opening up quickly makes people feel welcome, but some take longer to warm up and may feel rushed by you.
+  - Try 1: Ask a new friend one question and let them answer fully before you share, so they set the pace.
+  - Try 2: Share a little less than you could in the first few chats, so the other person can catch up.
+  - Watch 1: Notice whether the other person matches how much you share.
+  - Watch 2: Notice how a friend acts if you slow down.
+- [ ] `ftw_attachment_avoidance_l_12` — *Personal space: Close*
+  - Focus 1: When you plan your future, you tend to picture the people you love in it.
+  - Focus 2: You usually make big choices with the people close to you in mind.
+  - Focus 3: When you think about moving or changing jobs, you tend to think first about who you’d leave behind.
+  - Why: Keeping people in your plans makes your choices warm, but it can slow down a decision that mostly affects you.
+  - Try 1: Write down what you want from a choice before you talk to anyone, so you know your own view.
+  - Try 2: Ask someone close what they’d do in your place, so you hear a view without handing the choice over.
+  - Watch 1: Notice how much weight you give others when you decide.
+  - Watch 2: Notice what you would pick if no one else were affected.
+### Directness: Direct
+
+- [ ] `ftw_conflict_assertiveness_h_07` — *Directness: Direct*
+  - Focus 1: When a meal or a service isn’t right, you tend to say so politely and ask for a fix.
+  - Focus 2: You usually return something or ask for a refund when it’s not what you paid for.
+  - Focus 3: When a bill has a mistake on it, you tend to bring it up right away.
+  - Why: Speaking up gets you what you paid for, but a tense tone can make the other person less willing to help.
+  - Try 1: Start your next complaint with one friendly sentence, so the person on the other end wants to help.
+  - Try 2: Ask “what can we do about this?” in your next dispute, so the talk turns to a solution.
+  - Watch 1: Notice how the other person’s tone changes with yours.
+  - Watch 2: Notice whether you got what you wanted by being direct or by being friendly.
+- [ ] `ftw_conflict_assertiveness_h_08` — *Directness: Direct*
+  - Focus 1: When you ask for a raise or a better deal, you tend to name your number clearly.
+  - Focus 2: You usually ask for what you want in a negotiation instead of waiting for it to be offered.
+  - Focus 3: When you think you deserve more, you tend to say so.
+  - Why: Asking clearly often gets you results others miss, but pushing too hard can leave the other side feeling cornered.
+  - Try 1: Write two reasons for your next ask, so you show why and not just what you want.
+  - Try 2: Ask the other person what matters most to them, so you find a deal that works for both sides.
+  - Watch 1: Notice when the other person goes quiet during a negotiation.
+  - Watch 2: Notice whether the result felt fair to you both.
+- [ ] `ftw_conflict_assertiveness_h_09` — *Directness: Direct*
+  - Focus 1: When a friend makes a mistake, you tend to tell them plainly what went wrong.
+  - Focus 2: You usually give honest feedback to a friend or coworker instead of hinting.
+  - Focus 3: When someone is about to make a choice you disagree with, you tend to say so.
+  - Why: Plain feedback saves people time, but the same words can sting more than you intend when the person is already hard on themselves.
+  - Try 1: Ask “do you want my honest view?” before you give feedback, so the other person is ready to hear it.
+  - Try 2: Add one thing the person did well, so your feedback comes with a fair picture.
+  - Watch 1: Notice how the person looks right after you give your view.
+  - Watch 2: Notice who asks for your honest opinion and who just wants support.
+- [ ] `ftw_conflict_assertiveness_h_10` — *Directness: Direct*
+  - Focus 1: When a decision is being made in a group, you tend to say what you want early.
+  - Focus 2: You usually share your preference first, so others know where you stand.
+  - Focus 3: When the group seems stuck, you tend to push for a choice.
+  - Why: Naming what you want moves things along, but others might go quiet and not say what they prefer.
+  - Try 1: Ask the quietest person in the group what they’d choose before you push for a decision, so their view counts.
+  - Try 2: Say your preference second instead of first once this week, so you see what others bring up.
+  - Watch 1: Notice who hasn’t spoken before the group decides.
+  - Watch 2: Notice whether the decision changes when you wait to speak.
+- [ ] `ftw_conflict_assertiveness_h_11` — *Directness: Direct*
+  - Focus 1: When someone interrupts you, you tend to say so and finish your point.
+  - Focus 2: You usually don’t let a conversation run past something you wanted to say.
+  - Focus 3: When another person talks over you, you tend to bring the conversation back to your point.
+  - Why: Finishing your point makes sure you’re heard, but the other person may feel cut off in return.
+  - Try 1: Say “I’d like to finish, then I want to hear you” the next time you’re interrupted, so both of you get a turn.
+  - Try 2: Let someone finish a point fully once today, even if you disagree, so you hear all of it.
+  - Watch 1: Notice how often you start talking before someone has finished.
+  - Watch 2: Notice how the other person acts when you wait.
+- [ ] `ftw_conflict_assertiveness_h_12` — *Directness: Direct*
+  - Focus 1: When something at work isn’t working, you tend to bring it to your boss directly.
+  - Focus 2: You usually raise a problem with your team instead of hoping it goes away.
+  - Focus 3: When a rule seems unfair, you tend to ask the person in charge about it.
+  - Why: Raising a problem early can save everyone time, but a boss may need to hear the solution you have in mind too.
+  - Try 1: Offer one possible fix with the next problem you raise, so your boss can say yes to something.
+  - Try 2: Pick a quiet time to bring up a problem, so the talk isn’t rushed.
+  - Watch 1: Notice how your boss responds when you bring a fix.
+  - Watch 2: Notice which problems you raise that others stay quiet about.
+### Directness: Quiet
+
+- [ ] `ftw_conflict_assertiveness_l_07` — *Directness: Quiet*
+  - Focus 1: When a neighbor or roommate is too loud, you tend to put up with it instead of asking them to stop.
+  - Focus 2: You usually wait a long time before you tell someone their behavior bothers you.
+  - Focus 3: When someone does something annoying, you tend to let it build before you say anything.
+  - Why: Avoiding a fight keeps things calm for now, but a small problem can grow into one that feels harder for you to raise.
+  - Try 1: Tell the person about a small thing that bothers you in one calm sentence, so it stays small.
+  - Try 2: Write out what you’d say first, so the words are ready when the moment comes.
+  - Watch 1: Notice how long you wait before you say something.
+  - Watch 2: Notice how you feel once you’ve said it.
+- [ ] `ftw_conflict_assertiveness_l_08` — *Directness: Quiet*
+  - Focus 1: When you want a raise or a change at work, you tend to hope someone notices instead of asking.
+  - Focus 2: You usually wait for your boss to bring up your good work.
+  - Focus 3: When you think you deserve more, you tend to keep it to yourself.
+  - Why: Doing good work quietly is admirable, but your boss may not know what you want unless you tell them.
+  - Try 1: Write down three things you’ve done well this month, so you’re ready to share them if asked.
+  - Try 2: Ask your boss for ten minutes to talk about your role, so you can say what you’d like to grow into.
+  - Watch 1: Notice what you want that you haven’t said out loud.
+  - Watch 2: Notice how your boss reacts when you share a result.
+- [ ] `ftw_conflict_assertiveness_l_09` — *Directness: Quiet*
+  - Focus 1: When a friend asks what you want to do, you tend to say you don’t mind even if you do.
+  - Focus 2: You usually hold back your preference to avoid starting a debate.
+  - Focus 3: When a plan doesn’t suit you, you tend to go along and quietly wish it were different.
+  - Why: Going along keeps the mood easy, but over time your friends may not know what you actually enjoy.
+  - Try 1: Name one small preference this week, like the place for lunch, so it becomes a habit.
+  - Try 2: Tell a friend one thing you’d like to do next time, so your wishes become part of the plan.
+  - Watch 1: Notice how often you say “I don’t mind.”
+  - Watch 2: Notice how a friend reacts when you do share a choice.
+- [ ] `ftw_conflict_assertiveness_l_10` — *Directness: Quiet*
+  - Focus 1: When you get something you didn’t order or a gift you don’t like, you tend to say it’s fine.
+  - Focus 2: You usually accept something that isn’t right rather than ask for a change.
+  - Focus 3: When a service falls short, you tend to say nothing and don’t go back.
+  - Why: Not making a fuss feels polite, but the other side often wants to fix a mistake and can’t if you don’t say.
+  - Try 1: Say “could I get this fixed?” once this week, so you see how easy it can be.
+  - Try 2: Let a small mistake go and ask about the next one, so you pick your moments.
+  - Watch 1: Notice how people react when you ask politely for a change.
+  - Watch 2: Notice how it feels to accept something that isn’t right.
+- [ ] `ftw_conflict_assertiveness_l_11` — *Directness: Quiet*
+  - Focus 1: When someone cancels on you again, you tend to say it’s okay and feel upset later.
+  - Focus 2: You usually keep your feelings to yourself after a friend lets you down.
+  - Focus 3: When a partner does something that hurts, you tend to wait for it to pass.
+  - Why: Keeping the peace protects the moment, but feelings you don’t share can sit with you and shape how you see the person.
+  - Try 1: Tell the person one sentence about how it felt, with no demand attached, so it’s out.
+  - Try 2: Write the feeling in your notes first, so you know what you want to say.
+  - Watch 1: Notice what you feel later that you didn’t say at the time.
+  - Watch 2: Notice how the person reacts when you’re honest in a gentle way.
+- [ ] `ftw_conflict_assertiveness_l_12` — *Directness: Quiet*
+  - Focus 1: When a group makes a choice you disagree with, you tend to go along and say nothing.
+  - Focus 2: You usually wait until the meeting is over to share your concerns, if at all.
+  - Focus 3: When others sound sure, you tend to doubt your own view and stay quiet.
+  - Why: Your view might be the one the group is missing, and it only helps if someone hears it.
+  - Try 1: Share one question in the next meeting, so you speak up without needing to disagree.
+  - Try 2: Send a short message to the group after a meeting with your point, so it still gets heard.
+  - Watch 1: Notice how often your quiet concern turns out to matter later.
+  - Watch 2: Notice how it feels to speak first and not last.
+### Compromise: Giving
+
+- [ ] `ftw_conflict_cooperativeness_h_07` — *Compromise: Giving*
+  - Focus 1: When you and a partner want different things, you tend to offer to meet in the middle first.
+  - Focus 2: You usually suggest a compromise before the other person has said what they want.
+  - Focus 3: In a disagreement, you tend to move toward the other person’s side early.
+  - Why: Offering to meet in the middle shows you care, but giving up ground too soon can leave your own wish unheard.
+  - Try 1: Say what you want in one sentence before you offer a compromise, so both wishes are on the table.
+  - Try 2: Ask the other person to share their view first, so you can see how far apart you really are.
+  - Watch 1: Notice how often the compromise is closer to the other person’s wish than yours.
+  - Watch 2: Notice what you gave up in your last few agreements.
+- [ ] `ftw_conflict_cooperativeness_h_08` — *Compromise: Giving*
+  - Focus 1: When a friend picks a movie or a restaurant, you tend to go along even if you had another idea.
+  - Focus 2: You usually let others choose when the choice is small.
+  - Focus 3: When a group can’t decide, you tend to say whatever works for everyone.
+  - Why: Letting others pick makes plans smooth, but you may end up doing things you don’t enjoy most of the time.
+  - Try 1: Pick one small choice a week and say what you want, so your wishes get a regular turn.
+  - Try 2: Suggest an option when the group is stuck, so you help decide and not just follow.
+  - Watch 1: Notice how often you pick last.
+  - Watch 2: Notice how a friend reacts when you share a preference.
+- [ ] `ftw_conflict_cooperativeness_h_09` — *Compromise: Giving*
+  - Focus 1: When a coworker is overloaded, you tend to offer to take something off their plate.
+  - Focus 2: You usually cover for a teammate who is struggling, even when your own list is long.
+  - Focus 3: When a team has a gap, you tend to step in without being asked.
+  - Why: Helping out builds trust, but it can quietly turn into your job, and others may not see how much you carry.
+  - Try 1: Tell your boss what you’re covering for the team, so your effort is visible.
+  - Try 2: Offer help for a set time, like one afternoon, so the favor has a clear end.
+  - Watch 1: Notice who often gets your help and who gives it back.
+  - Watch 2: Notice how full your own list is when you offer.
+- [ ] `ftw_conflict_cooperativeness_h_10` — *Compromise: Giving*
+  - Focus 1: When someone is angry with you, you tend to agree quickly to calm things down.
+  - Focus 2: You usually try to end an argument fast by giving the other person what they ask for.
+  - Focus 3: When a talk gets heated, you tend to say what the other person wants to hear.
+  - Why: Calming things down helps in the moment, but agreeing before you mean it can build up into resentment.
+  - Try 1: Take a short pause before you agree in a heated talk, so you answer from what you think.
+  - Try 2: Say “I want to think about that” when a request feels too big, so you have room to answer well.
+  - Watch 1: Notice when you agree and don’t mean it.
+  - Watch 2: Notice how you feel an hour after giving in.
+- [ ] `ftw_conflict_cooperativeness_h_11` — *Compromise: Giving*
+  - Focus 1: When two coworkers disagree, you tend to look for the point they both can accept.
+  - Focus 2: You usually help others find common ground instead of choosing a side.
+  - Focus 3: When friends disagree about a plan, you tend to suggest a mix of both ideas.
+  - Why: Finding common ground keeps teams together, but sometimes one idea is simply better and a mix makes it worse for you all.
+  - Try 1: Ask the group which idea they’d choose if they had to pick one, so you test whether a mix is needed.
+  - Try 2: Give your own view on which idea is stronger, so the group hears your judgment.
+  - Watch 1: Notice when a mix of two ideas turns out worse than either.
+  - Watch 2: Notice whether you share your own pick or only the middle.
+- [ ] `ftw_conflict_cooperativeness_h_12` — *Compromise: Giving*
+  - Focus 1: When you and a friend both want the last say, you tend to let them have it.
+  - Focus 2: You usually let go of being right if it keeps the peace.
+  - Focus 3: When someone argues a point, you tend to drop yours to avoid a long debate.
+  - Why: Letting go of being right saves energy, but a point you drop may be one worth keeping.
+  - Try 1: Keep one point you believe in during your next debate, so you practice staying with it kindly.
+  - Try 2: Say “I see it differently, and that’s okay,” so you can disagree without a fight.
+  - Watch 1: Notice which points you drop that you still believe.
+  - Watch 2: Notice how a friend reacts when you hold your view calmly.
+### Compromise: Steadfast
+
+- [ ] `ftw_conflict_cooperativeness_l_07` — *Compromise: Steadfast*
+  - Focus 1: When someone suggests a middle option, you tend to feel you’re giving up too much.
+  - Focus 2: You usually see a compromise as losing part of what you wanted.
+  - Focus 3: When a deal asks you to meet halfway, you tend to ask whether halfway is fair.
+  - Why: Holding to what you need protects your interests, but a middle option can sometimes give you most of what you want.
+  - Try 1: Write down what you’d accept before a talk, so you know your real limits.
+  - Try 2: Ask what each side gets in a compromise before you decide, so you judge it on the whole.
+  - Watch 1: Notice what part of a compromise feels like a loss.
+  - Watch 2: Notice whether the middle option was actually worse for you.
+- [ ] `ftw_conflict_cooperativeness_l_08` — *Compromise: Steadfast*
+  - Focus 1: When a group changes the plan, you tend to stay with the one you made.
+  - Focus 2: You usually keep your own plan when others want to change theirs.
+  - Focus 3: When friends decide to go somewhere else, you tend to say you’ll do your own thing.
+  - Why: Following your own plan keeps you reliable to yourself, but friends might feel you don’t want to join them.
+  - Try 1: Join the group for the first hour and then head to your own plan, so you share some time.
+  - Try 2: Tell the group why your plan matters to you, so they know it isn’t about them.
+  - Watch 1: Notice how friends react when you stay with your plan.
+  - Watch 2: Notice whether you’d have enjoyed the new plan.
+- [ ] `ftw_conflict_cooperativeness_l_09` — *Compromise: Steadfast*
+  - Focus 1: When you work on a team project, you tend to want it done your way.
+  - Focus 2: You usually have a clear idea of how a task should go and push to keep it.
+  - Focus 3: When a teammate does a task differently than you would, you tend to redo it.
+  - Why: A clear sense of the right way gets you good results, but teammates may feel their work isn’t trusted.
+  - Try 1: Let a teammate finish a task their way once this week, so you see what they bring.
+  - Try 2: Name the goal you both share before you talk about how, so the method is easier to flex.
+  - Watch 1: Notice how often you redo someone’s work.
+  - Watch 2: Notice whether their way turned out fine.
+- [ ] `ftw_conflict_cooperativeness_l_10` — *Compromise: Steadfast*
+  - Focus 1: When you disagree with a friend about something that matters to you, you tend to hold firm.
+  - Focus 2: You usually don’t change your position to keep a conversation easy.
+  - Focus 3: When someone pushes you to agree, you tend to dig in more.
+  - Why: Standing firm shows people where you stand, but pushing back hard can make the other person stop listening.
+  - Try 1: Repeat back what the other person said before you answer, so they know they were heard.
+  - Try 2: Say what you can agree on first, so your disagreement has some common ground.
+  - Watch 1: Notice when the other person stops talking after you hold firm.
+  - Watch 2: Notice whether you would have moved if they had asked in a different way.
+- [ ] `ftw_conflict_cooperativeness_l_11` — *Compromise: Steadfast*
+  - Focus 1: When you set a deadline or a rule, you tend to keep to it even when others ask for more time.
+  - Focus 2: You usually hold a limit you set, even when it causes a little friction.
+  - Focus 3: When someone asks you to make an exception, you tend to say the rule is the rule.
+  - Why: Holding to a limit keeps things fair, but a small exception can sometimes help a person at little cost to you.
+  - Try 1: Ask what the exception is really for before you answer, so you decide on the reason.
+  - Try 2: Pick one small rule to bend this week for someone who needs it, so you see what changes.
+  - Watch 1: Notice which rules you hold most firmly and why.
+  - Watch 2: Notice how people respond when you explain the reason.
+- [ ] `ftw_conflict_cooperativeness_l_12` — *Compromise: Steadfast*
+  - Focus 1: When you plan a trip with others, you tend to know what you want and say it.
+  - Focus 2: You usually push for the plan you think is best for the group.
+  - Focus 3: When a group is deciding, you tend to argue for your option until the end.
+  - Why: Knowing what you want helps a group decide, but others may stop offering ideas if yours always lead.
+  - Try 1: Ask each person for one must-have before you plan, so everyone gets something.
+  - Try 2: Let someone else choose one part of the plan, so the trip feels shared.
+  - Watch 1: Notice whether the others sound excited about the plan.
+  - Watch 2: Notice who contributes ideas and who goes along.
+### Independence: Self-directed
+
+- [ ] `ftw_autonomy_h_07` — *Independence: Self-directed*
+  - Focus 1: When you learn a new tool or skill, you tend to dive in and work it out yourself.
+  - Focus 2: You usually skip the tutorial and figure things out by trying them.
+  - Focus 3: When something is new, you tend to prefer exploring it alone before asking anyone.
+  - Why: Learning by doing makes the skill yours, but a quick tip from someone who knows can save you hours.
+  - Try 1: Ask one person how they use a tool you’re learning, so you can pick up a shortcut.
+  - Try 2: Set a time limit on figuring something out alone, so you know when to ask.
+  - Watch 1: Notice how much time you spend solving something others could explain in a minute.
+  - Watch 2: Notice what you enjoy most about working it out yourself.
+- [ ] `ftw_autonomy_h_08` — *Independence: Self-directed*
+  - Focus 1: When you plan your day, you tend to want to set the order and the pace yourself.
+  - Focus 2: You usually do your best work when you pick when and how to do it.
+  - Focus 3: When your schedule is set by someone else, you tend to feel restless.
+  - Why: Setting your own pace gives you energy, but teammates may need to know when you’ll be available.
+  - Try 1: Share your plan for the day with one teammate, so they know when to expect your work.
+  - Try 2: Pick a fixed time each day for messages, so you keep your pace without leaving people waiting.
+  - Watch 1: Notice which parts of your day you want to control most.
+  - Watch 2: Notice how others cope when they can’t tell what you’re doing.
+- [ ] `ftw_autonomy_h_09` — *Independence: Self-directed*
+  - Focus 1: When someone offers advice you didn’t ask for, you tend to hear it as a sign they doubt you.
+  - Focus 2: You usually prefer to reach your own conclusion before hearing what others think.
+  - Focus 3: When people tell you what to do, you tend to want to do the opposite.
+  - Why: Wanting to decide for yourself keeps your choices your own, but advice is often meant as care and can have useful facts in it.
+  - Try 1: Say “thanks, I’ll think about it” to unwanted advice, so you keep both the peace and your choice.
+  - Try 2: Pick one piece of advice you got this month and test it, so you see whether it holds up.
+  - Watch 1: Notice when you reject advice before you’ve heard all of it.
+  - Watch 2: Notice how often advice turned out to be useful.
+- [ ] `ftw_autonomy_h_10` — *Independence: Self-directed*
+  - Focus 1: When you travel, you tend to want your own plan, even with a group.
+  - Focus 2: You usually need some time on a trip to wander off on your own.
+  - Focus 3: When friends plan everything together, you tend to want a free block of your own.
+  - Why: Having your own time keeps you enjoying the trip, but the group may wonder if you’d rather be elsewhere.
+  - Try 1: Tell the group early which block of time you’d like to keep for yourself, so they plan around it.
+  - Try 2: Join one group activity fully before you go off alone, so everyone feels included.
+  - Watch 1: Notice how the group feels when you step away.
+  - Watch 2: Notice how you feel when you return to them.
+- [ ] `ftw_autonomy_h_11` — *Independence: Self-directed*
+  - Focus 1: When you share a job with someone, you tend to split it so each of you has your own part.
+  - Focus 2: You usually prefer to own a piece of the work from start to finish.
+  - Focus 3: When you work on a team, you tend to want a clear area that is yours.
+  - Why: Owning a piece gives you pride in the result, but the parts have to fit together, and that takes some back-and-forth.
+  - Try 1: Check in with your teammate halfway through a split job, so the pieces fit at the end.
+  - Try 2: Share what you’re planning for your part in two sentences, so others can plan around it.
+  - Watch 1: Notice when pieces of your work don’t match what teammates expected.
+  - Watch 2: Notice how early you share what you’re doing.
+- [ ] `ftw_autonomy_h_12` — *Independence: Self-directed*
+  - Focus 1: When you ask for help, you tend to want it on your terms and not take over.
+  - Focus 2: You usually accept help best when it leaves the decision to you.
+  - Focus 3: When someone helps you too much, you tend to feel your choices are being taken away.
+  - Why: Wanting to stay in charge keeps you invested, but helpers may not know how much help you want unless you tell them.
+  - Try 1: Tell a helper what you want from them, like “just check my numbers,” so they match what you need.
+  - Try 2: Thank someone for help and say how it made your job easier, so they know what worked.
+  - Watch 1: Notice how much help feels right and how much feels like too much.
+  - Watch 2: Notice how people react when you say what you need.
+### Independence: Guided
+
+- [ ] `ftw_autonomy_l_07` — *Independence: Guided*
+  - Focus 1: When you get an open-ended task, you tend to want to know what a good result looks like first.
+  - Focus 2: You usually do your best when the goal and steps are clear.
+  - Focus 3: When there are no instructions, you tend to feel unsure where to start.
+  - Why: Clear goals help you do solid work, but waiting for them can slow you down when no one has time to explain.
+  - Try 1: Write down what you think a good result looks like and send it to your boss, so you can start with a check.
+  - Try 2: Ask one question about the goal before you begin, so you know what to aim at.
+  - Watch 1: Notice how long you wait for instructions before you begin.
+  - Watch 2: Notice how much you can do before you need an answer.
+- [ ] `ftw_autonomy_l_08` — *Independence: Guided*
+  - Focus 1: When a friend or partner makes a decision for both of you, you tend to feel relieved.
+  - Focus 2: You usually feel glad when someone else picks the plan and you can join in.
+  - Focus 3: When you have too many choices, you tend to ask someone else to decide.
+  - Why: Letting others decide takes pressure off you, but over time your own wishes may not get a chance to be heard.
+  - Try 1: Pick one small decision this week and make it yourself, so you build the habit.
+  - Try 2: Tell a friend your top choice before you ask what they think, so your view is in the mix.
+  - Watch 1: Notice which decisions you hand over and which you keep.
+  - Watch 2: Notice how it feels to decide something small on your own.
+- [ ] `ftw_autonomy_l_09` — *Independence: Guided*
+  - Focus 1: When you start at a new place, you tend to learn best by following someone who knows the ropes.
+  - Focus 2: You usually pick up a routine faster when someone shows you.
+  - Focus 3: When you join a team, you tend to watch how others do things before you start.
+  - Why: Learning from people who know saves you time, but you may need to step out on your own before you feel ready.
+  - Try 1: Ask your guide to watch you do one task on your own, so you get feedback while you try.
+  - Try 2: Suggest one small change you noticed, so you start to add your own touch.
+  - Watch 1: Notice when you could try something before being shown.
+  - Watch 2: Notice how others react when you offer an idea.
+- [ ] `ftw_autonomy_l_10` — *Independence: Guided*
+  - Focus 1: When your manager checks in on your work, you tend to find it helpful.
+  - Focus 2: You usually like to know you’re on the right track from someone you trust.
+  - Focus 3: When a mentor gives direction, you tend to follow it closely.
+  - Why: Regular check-ins keep your work on course, but relying on them too much can leave you waiting when no one is around.
+  - Try 1: Write down one decision you can make without checking, so you start to trust your call.
+  - Try 2: Ask your manager what you can decide on your own, so you know where the line is.
+  - Watch 1: Notice which decisions you check that you already know the answer to.
+  - Watch 2: Notice how your confidence changes when you make a call on your own.
+- [ ] `ftw_autonomy_l_11` — *Independence: Guided*
+  - Focus 1: When you plan something for yourself, you tend to ask what others would do first.
+  - Focus 2: You usually look for a model to follow before you make your own plan.
+  - Focus 3: When you set up a new routine, you tend to copy one that works for someone else.
+  - Why: Using proven examples saves you from guessing, but a routine that fits someone else may not fit you.
+  - Try 1: Change one part of a borrowed routine to suit you, so it becomes yours.
+  - Try 2: Write what you like about the plan you copied, so you know what to keep.
+  - Watch 1: Notice which parts of a borrowed plan don’t fit you.
+  - Watch 2: Notice what you would choose with no example to follow.
+- [ ] `ftw_autonomy_l_12` — *Independence: Guided*
+  - Focus 1: When a group has a leader you trust, you tend to be happy to follow.
+  - Focus 2: You usually do well in a team where someone sets the direction.
+  - Focus 3: When someone else takes charge of a project, you tend to feel you can focus on your part.
+  - Why: Trusting a leader lets you focus on doing your part well, but a leader may want your ideas and not know you have them.
+  - Try 1: Share one idea with your leader this week, so they hear what you think.
+  - Try 2: Offer to lead a small piece of the project, so you practice setting direction.
+  - Watch 1: Notice when you have a view you don’t share.
+  - Watch 2: Notice how your leader reacts when you offer one.
+### Confidence: Assured
+
+- [ ] `ftw_competence_h_07` — *Confidence: Assured*
+  - Focus 1: When someone asks how long a task will take, you tend to give a quick estimate and be confident in it.
+  - Focus 2: You usually think you can finish things faster than they end up taking.
+  - Focus 3: When you plan your day, you tend to fit in more than you can really do.
+  - Why: Believing you can get a lot done pushes you forward, but your plans may run out of time before they run out of tasks.
+  - Try 1: Add fifteen minutes to your next estimate, so you have room if something goes wrong.
+  - Try 2: Write down how long three tasks actually took, so your next guesses are closer.
+  - Watch 1: Notice how often a task takes longer than you said.
+  - Watch 2: Notice what you leave out when you make an estimate.
+- [ ] `ftw_competence_h_08` — *Confidence: Assured*
+  - Focus 1: When you don’t know something, you tend to find it hard to say so in front of others.
+  - Focus 2: You usually prefer to look it up quietly than ask in a meeting.
+  - Focus 3: When a topic is new to you, you tend to act as if you know it while you learn.
+  - Why: Staying confident helps you move, but saying “I don’t know” can build more trust than you expect.
+  - Try 1: Say “I’m not sure, let me find out” once this week, so you see how people react.
+  - Try 2: Ask one question in a meeting where you don’t know the answer, so others feel free to ask too.
+  - Watch 1: Notice when you pretend to know and what you feel after.
+  - Watch 2: Notice how people respond when someone else admits they don’t know.
+- [ ] `ftw_competence_h_09` — *Confidence: Assured*
+  - Focus 1: When a team asks who can handle a problem, you tend to be the first to say you can.
+  - Focus 2: You usually take on the hard problem because you trust yourself to solve it.
+  - Focus 3: When a project is at risk, you tend to step in and lead.
+  - Why: Stepping in helps teams that are stuck, but others may not get the chance to grow if you take the lead every time.
+  - Try 1: Ask a teammate to take the lead on one part, and offer to back them up, so they build their own skills.
+  - Try 2: Wait ten seconds before you volunteer next time, so someone else can speak first.
+  - Watch 1: Notice who else could have taken the task.
+  - Watch 2: Notice how a teammate responds when you give them the lead.
+- [ ] `ftw_competence_h_10` — *Confidence: Assured*
+  - Focus 1: When someone shows you a different way to do something, you tend to prefer your own method.
+  - Focus 2: You usually trust the way you already work, since it has served you well.
+  - Focus 3: When a coworker suggests a change to your process, you tend to explain why yours is better.
+  - Why: Trusting your methods keeps you quick, but another way can sometimes be faster or catch a problem you missed.
+  - Try 1: Try a coworker’s method once on a small task, so you can compare it with yours.
+  - Try 2: Ask “what does your way do better?” the next time someone suggests a change, so you hear the reason.
+  - Watch 1: Notice how quickly you defend your method.
+  - Watch 2: Notice what you learn when you try another way.
+- [ ] `ftw_competence_h_11` — *Confidence: Assured*
+  - Focus 1: When someone you know is learning, you tend to jump in with tips before they ask.
+  - Focus 2: You usually share what you know as soon as you see a friend struggle.
+  - Focus 3: When a friend is stuck on a task you know well, you tend to show them how.
+  - Why: Sharing what you know helps people, but a friend may want to work it out and not be told how.
+  - Try 1: Ask “do you want a tip or do you want to try first?” so the friend picks.
+  - Try 2: Wait until you’re asked before you give a tip once this week, so you see what the friend does.
+  - Watch 1: Notice how a friend reacts to your help.
+  - Watch 2: Notice when you jump in because it’s hard to watch someone struggle.
+- [ ] `ftw_competence_h_12` — *Confidence: Assured*
+  - Focus 1: When things go well, you tend to feel the result came from your skill.
+  - Focus 2: You usually give yourself credit for a win and move on to the next goal.
+  - Focus 3: When a project succeeds, you tend to feel you were the reason.
+  - Why: Believing in your skill keeps you motivated, but a team win often has other people’s work in it that deserves mention.
+  - Try 1: Name one person who helped with your last win and thank them, so they know it mattered.
+  - Try 2: Write down what luck or help played a part in a recent success, so your view of it stays fair.
+  - Watch 1: Notice who helped with your last success.
+  - Watch 2: Notice how people react when you thank them in front of others.
+### Confidence: Cautious
+
+- [ ] `ftw_competence_l_07` — *Confidence: Cautious*
+  - Focus 1: When you show someone your work, you tend to point out the flaws first.
+  - Focus 2: You usually say “it’s not great, but…” before you share something you made.
+  - Focus 3: When you finish a piece of work, you tend to focus on what could be better.
+  - Why: Seeing what could be better helps you improve, but pointing out flaws first can hide good work from the people looking at it.
+  - Try 1: Share your next piece of work without a disclaimer, so the other person sees it fresh.
+  - Try 2: Name one thing you like about your work before you name a flaw, so both get said.
+  - Watch 1: Notice how often you say sorry or “it’s not great” before sharing.
+  - Watch 2: Notice how people respond to your work when you leave the disclaimer out.
+- [ ] `ftw_competence_l_08` — *Confidence: Cautious*
+  - Focus 1: When you’re new at something, you tend to ask a lot of questions before you begin.
+  - Focus 2: You usually prefer to learn the basics well before you try the hard parts.
+  - Focus 3: When a task is unfamiliar, you tend to look for a guide first.
+  - Why: Learning well before you start helps you avoid mistakes, but some skills only come from trying and getting it slightly wrong.
+  - Try 1: Start a task with the first step you do know, so you begin before you feel fully ready.
+  - Try 2: Set a limit on prep, like thirty minutes, and then try, so learning turns into doing.
+  - Watch 1: Notice how much prep you do before you try.
+  - Watch 2: Notice how much you learn once you’re actually doing.
+- [ ] `ftw_competence_l_09` — *Confidence: Cautious*
+  - Focus 1: When a friend or coworker asks you to teach them something, you tend to say you’re not the right person.
+  - Focus 2: You usually think someone else knows a skill better than you do.
+  - Focus 3: When people ask for your help, you tend to doubt you know enough.
+  - Why: Being careful about what you know keeps you honest, but others may see skills in you that you don’t.
+  - Try 1: Say yes to teaching one small thing you know well, so you see how much you do know.
+  - Try 2: Ask a friend what they think you’re good at, so you hear it from outside.
+  - Watch 1: Notice how often people ask you for help.
+  - Watch 2: Notice what you know that the other person doesn’t.
+- [ ] `ftw_competence_l_10` — *Confidence: Cautious*
+  - Focus 1: When someone watches you work, you tend to feel your performance drop.
+  - Focus 2: You usually do better when no one is looking over your shoulder.
+  - Focus 3: When you have to demonstrate something live, you tend to worry you’ll make a mistake.
+  - Why: Being watched can make every small slip feel big, but most people watching are paying less attention to the details than you think.
+  - Try 1: Practice a task with one friendly person watching, so being seen feels more normal.
+  - Try 2: Tell the person watching “I work better with a little space,” so they give you room.
+  - Watch 1: Notice what changes in your work when someone is watching.
+  - Watch 2: Notice how closely the observer was actually paying attention.
+- [ ] `ftw_competence_l_11` — *Confidence: Cautious*
+  - Focus 1: When you finish something, you tend to check it many times before you let anyone see it.
+  - Focus 2: You usually need a few passes before you feel okay about handing work in.
+  - Focus 3: When you’ve done a task well, you tend to wonder if you missed something.
+  - Why: Checking your work catches real mistakes, but after a few passes the extra checking mostly adds stress.
+  - Try 1: Decide how many checks you’ll do before you start, then stop at that number, so the work gets sent.
+  - Try 2: Ask a coworker to look at it once, so you share the checking.
+  - Watch 1: Notice how many times you find a real mistake after the second check.
+  - Watch 2: Notice how you feel right after you hit send.
+- [ ] `ftw_competence_l_12` — *Confidence: Cautious*
+  - Focus 1: When you get a compliment on your skills, you tend to explain it away.
+  - Focus 2: You usually say “anyone could have done it” when someone praises you.
+  - Focus 3: When a boss says you did well, you tend to wonder what you got wrong.
+  - Why: Staying modest keeps you grounded, but brushing off praise can hide the proof that you are doing well.
+  - Try 1: Say “thank you, I worked hard on that” to the next compliment, so you take credit.
+  - Try 2: Keep a note of praise you get, so you can read it on days you doubt yourself.
+  - Watch 1: Notice how fast you explain a compliment away.
+  - Watch 2: Notice what people actually said about your work.
+### Connection: Connected
+
+- [ ] `ftw_relatedness_h_07` — *Connection: Connected*
+  - Focus 1: When a friend tells you something about their life, you tend to remember it and ask about it later.
+  - Focus 2: You usually keep track of the details in your friends’ lives, like their appointments and worries.
+  - Focus 3: When someone you know has a big day coming, you tend to check in on it.
+  - Why: Remembering details makes people feel seen, but keeping up with many lives can leave you with little time for your own.
+  - Try 1: Write the next big date for each close friend in your calendar, so you remember without effort.
+  - Try 2: Pick one evening this week with no check-ins to do, so you have time for yourself.
+  - Watch 1: Notice how many people you keep up with in a week.
+  - Watch 2: Notice how it feels to take a day off from it.
+- [ ] `ftw_relatedness_h_08` — *Connection: Connected*
+  - Focus 1: When a friend moves away or a group drifts apart, you tend to feel it for a long time.
+  - Focus 2: You usually find endings in friendships hard to accept.
+  - Focus 3: When someone close pulls back, you tend to work to keep the connection alive.
+  - Why: Valuing your friendships means you work to keep them, but not every friendship will stay the same size.
+  - Try 1: Set a call with a far-away friend this month, so the friendship has a regular rhythm.
+  - Try 2: Tell a friend you miss the old days, so the feeling is shared and not carried alone.
+  - Watch 1: Notice which friendships you keep working on and which are mutual.
+  - Watch 2: Notice how you feel when a friendship changes shape.
+- [ ] `ftw_relatedness_h_09` — *Connection: Connected*
+  - Focus 1: When you walk into a room of people you don’t know, you tend to look for someone to talk to.
+  - Focus 2: You usually start conversations with strangers at events, in lines or at work.
+  - Focus 3: When you’re new somewhere, you tend to meet people quickly.
+  - Why: Reaching out makes new places feel like home faster, but you might spread your time across many light contacts.
+  - Try 1: Pick two people from a new group to get to know better, so some connections go deeper.
+  - Try 2: Follow up with one new person this week, so a quick chat turns into a friendship.
+  - Watch 1: Notice which new contacts you follow up with.
+  - Watch 2: Notice who you feel known by after a few months.
+- [ ] `ftw_relatedness_h_10` — *Connection: Connected*
+  - Focus 1: When you’re happy about something, you tend to feel better once you share it.
+  - Focus 2: You usually don’t feel a good moment is complete until you tell someone.
+  - Focus 3: When you have news, you tend to want to share it with people who care.
+  - Why: Sharing doubles a good moment, but friends who are having a hard time may not have room to celebrate with you right then.
+  - Try 1: Ask a friend how they are before you share your news, so you know if the time is right.
+  - Try 2: Write the good news down first and share it later too, so it lasts longer.
+  - Watch 1: Notice what a friend is going through when you share news.
+  - Watch 2: Notice how you feel when no one is around to tell.
+- [ ] `ftw_relatedness_h_11` — *Connection: Connected*
+  - Focus 1: When you work from home for many days, you tend to miss having people around.
+  - Focus 2: You usually do better when you have a coworker or friend nearby, even if you’re not talking.
+  - Focus 3: When your day has no contact with anyone, you tend to feel a little flat by evening.
+  - Why: Having people around keeps you going, but a day alone is easier if you plan for it.
+  - Try 1: Plan one short call or a walk with someone on your longest solo day, so the day has contact in it.
+  - Try 2: Go to a place with other people to work once this week, so you get company without a plan.
+  - Watch 1: Notice at what point in a solo day your mood dips.
+  - Watch 2: Notice what kind of contact helps the most.
+- [ ] `ftw_relatedness_h_12` — *Connection: Connected*
+  - Focus 1: When a friend is going through a hard time, you tend to put your own plans aside to be with them.
+  - Focus 2: You usually drop what you’re doing to be there for someone close.
+  - Focus 3: When someone you love needs you, you tend to make time even when you’re tired.
+  - Why: Showing up matters a lot to people, but giving everything can leave you with little energy for yourself.
+  - Try 1: Tell a friend how much time you can give today, so they know what to expect and you can rest.
+  - Try 2: Ask another friend to help support the person, so you’re not the only one.
+  - Watch 1: Notice how tired you are after you support someone.
+  - Watch 2: Notice who supports you when you need it.
+### Connection: Self-contained
+
+- [ ] `ftw_relatedness_l_07` — *Connection: Self-contained*
+  - Focus 1: When a plan with friends falls through, you tend to feel a little relieved.
+  - Focus 2: You usually enjoy a canceled plan because it gives you the evening back.
+  - Focus 3: When you have a free night, you tend to choose staying in over going out.
+  - Why: Time to yourself is valuable, but friends can feel the relief when you cancel and may stop inviting you.
+  - Try 1: Say yes to one invitation this week that sounds easy, so friends know you still want in.
+  - Try 2: Tell a friend when you cancel that you’d like to reschedule, so they know it’s about the evening and not them.
+  - Watch 1: Notice how often you feel relieved when a plan is canceled.
+  - Watch 2: Notice how you feel the morning after you went out.
+- [ ] `ftw_relatedness_l_08` — *Connection: Self-contained*
+  - Focus 1: When you have a hobby, you tend to enjoy doing it alone more than in a group.
+  - Focus 2: You usually take on a project solo and prefer it that way.
+  - Focus 3: When your interest is specific, you tend to find fewer people who share it, and you’re fine with that.
+  - Why: Doing things solo lets you go deep, but a shared interest can add something you wouldn’t find alone.
+  - Try 1: Share one thing you made or learned with one person, so your interest has an audience.
+  - Try 2: Look for one online group about your hobby and read it for a week, so you see if it adds anything.
+  - Watch 1: Notice what you gain from doing a hobby alone.
+  - Watch 2: Notice how you feel when someone shows interest in it.
+- [ ] `ftw_relatedness_l_09` — *Connection: Self-contained*
+  - Focus 1: When you go to a group event, you tend to feel it’s more of a duty than a pleasure.
+  - Focus 2: You usually go to gatherings because you should and leave once you’ve been seen.
+  - Focus 3: When a family or work event comes up, you tend to count how long you need to stay.
+  - Why: Going out of duty shows you care in your own way, but spending the evening counting the minutes can make it feel longer for you.
+  - Try 1: Pick one person at the next event to talk to properly, so the evening has one good part.
+  - Try 2: Decide when you’ll leave before you arrive, so you can relax until then.
+  - Watch 1: Notice which gatherings you enjoy once you’re there.
+  - Watch 2: Notice which part of an event you dread most.
+- [ ] `ftw_relatedness_l_10` — *Connection: Self-contained*
+  - Focus 1: When you share news about your life, you tend to wait until it is settled.
+  - Focus 2: You usually tell people about a decision after you’ve made it and not while you’re deciding.
+  - Focus 3: When something is going on in your life, you tend to keep it to yourself for a while.
+  - Why: Handling things privately lets you think clearly, but friends may feel left out when they hear late.
+  - Try 1: Tell one close friend about something you’re still deciding, so they can be part of it.
+  - Try 2: Send a short note when something big happens, so people hear it from you.
+  - Watch 1: Notice who finds out about your news last.
+  - Watch 2: Notice how a friend reacts when you share before it’s settled.
+- [ ] `ftw_relatedness_l_11` — *Connection: Self-contained*
+  - Focus 1: When someone gets very close very fast, you tend to want to slow things down.
+  - Focus 2: You usually prefer a few close friends to a wide circle.
+  - Focus 3: When a new person wants to spend a lot of time with you, you tend to pull back a little.
+  - Why: A small circle gives you depth, but a friend who wants more may not understand that slowing down isn’t rejection.
+  - Try 1: Tell a new friend how you like friendship to go, like “I like to take things slowly,” so they know.
+  - Try 2: Suggest a regular time to meet, so the contact is steady without being too much.
+  - Watch 1: Notice how many people you consider close friends.
+  - Watch 2: Notice how a new friend responds when you set the pace.
+- [ ] `ftw_relatedness_l_12` — *Connection: Self-contained*
+  - Focus 1: When you could call a friend, you tend to go a long time without it.
+  - Focus 2: You usually think warmly of friends without reaching out to say so.
+  - Focus 3: When a friend’s birthday or event passes, you tend to remember a day late.
+  - Why: Your friends matter to you even when you don’t say it, but they can only know if you show it.
+  - Try 1: Send a two-line message to a friend today, so they know you were thinking of them.
+  - Try 2: Put your close friends’ birthdays in your calendar, so reaching out takes no memory.
+  - Watch 1: Notice who you think of but haven’t contacted.
+  - Watch 2: Notice how a friend reacts to a short message out of the blue.
+### Growth: Learning
+
+- [ ] `ftw_growth_mindset_h_07` — *Growth: Learning*
+  - Focus 1: When you want to get better at something, you tend to ask people who are good at it for feedback.
+  - Focus 2: You usually seek out advice from others who are further along than you.
+  - Focus 3: When you hit a plateau, you tend to look for a new way to practice.
+  - Why: Seeking feedback speeds up your learning, but too many opinions at once can make it hard to know what to do next.
+  - Try 1: Pick one person and one question to ask about your skill, so the feedback is focused.
+  - Try 2: Write down one change to try this week, and try only that one, so you can tell whether it helps.
+  - Watch 1: Notice which feedback changes how you practice.
+  - Watch 2: Notice how you feel after hearing too many views at once.
+- [ ] `ftw_growth_mindset_h_08` — *Growth: Learning*
+  - Focus 1: When you see a skill someone else has, you tend to wonder how you could learn it.
+  - Focus 2: You usually take someone’s talent as a sign of practice and not luck.
+  - Focus 3: When a friend does something impressive, you tend to ask how they got there.
+  - Why: Seeing skill as something learned keeps you open, but it can push you to chase many skills at once.
+  - Try 1: Choose one skill you want most this month and put the others on a list, so you can focus.
+  - Try 2: Ask the friend for the first step they took, so you start small.
+  - Watch 1: Notice how many skills you’re trying to build at the same time.
+  - Watch 2: Notice which one you would miss most if you dropped it.
+- [ ] `ftw_growth_mindset_h_09` — *Growth: Learning*
+  - Focus 1: When you compare yourself with others, you tend to compare with where you were before.
+  - Focus 2: You usually measure your progress against your own past more than against other people.
+  - Focus 3: When you feel behind, you tend to look at how far you’ve come.
+  - Why: Looking at your own progress keeps you steady, but you can miss that you are doing better than you think.
+  - Try 1: Write down three things you can do now that you couldn’t a year ago, so your progress is visible.
+  - Try 2: Tell a friend about one thing you improved at this month, so you enjoy it.
+  - Watch 1: Notice when you only look ahead and not back.
+  - Watch 2: Notice what you got better at that you didn’t plan on.
+- [ ] `ftw_growth_mindset_h_10` — *Growth: Learning*
+  - Focus 1: When you finish learning something, you tend to start looking for the next thing to learn.
+  - Focus 2: You usually feel restless once you’ve reached a level you were aiming for.
+  - Focus 3: After you master a task, you tend to look for a harder version.
+  - Why: Looking ahead all the time keeps you growing, but it can mean you don’t stop to enjoy what you’ve learned.
+  - Try 1: Keep using a new skill for a full week before you start the next one, so it sticks.
+  - Try 2: Tell someone what you just learned, so you enjoy it and make it last.
+  - Watch 1: Notice how quickly you move on from a finished goal.
+  - Watch 2: Notice how you feel when you stay with something you know.
+- [ ] `ftw_growth_mindset_h_11` — *Growth: Learning*
+  - Focus 1: When you fail at something, you tend to break down what went wrong.
+  - Focus 2: You usually look for the lesson after a setback, and often find one.
+  - Focus 3: When a plan doesn’t work, you tend to treat it as information.
+  - Why: Learning from setbacks makes you stronger, but looking for a lesson right away can leave little time to feel disappointed.
+  - Try 1: Give yourself one evening to be disappointed before you analyze, so the lesson comes with some rest.
+  - Try 2: Tell a friend what went wrong and how it felt, so you share the feeling and not just the plan.
+  - Watch 1: Notice whether you jump past the feeling to the fix.
+  - Watch 2: Notice how you feel after you let the disappointment sit.
+- [ ] `ftw_growth_mindset_h_12` — *Growth: Learning*
+  - Focus 1: When someone tells you that you’re naturally good at something, you tend to say you worked at it.
+  - Focus 2: You usually point to practice when you get a compliment on a skill.
+  - Focus 3: When someone calls your skill natural, you tend to feel it leaves out the effort.
+  - Why: Giving credit to practice reminds you that you can improve, but the person was likely trying to praise you.
+  - Try 1: Say “thanks” first and mention your practice second, so the compliment lands.
+  - Try 2: Tell a friend what you practice, so they see how you got there.
+  - Watch 1: Notice how people react when you mention the work behind it.
+  - Watch 2: Notice which parts of your skill came easily to you.
+### Growth: Settled
+
+- [ ] `ftw_growth_mindset_l_07` — *Growth: Settled*
+  - Focus 1: When a class or training is offered, you tend to skip it if you already do the job well.
+  - Focus 2: You usually feel you know enough about your work and don’t need much more.
+  - Focus 3: When your boss suggests learning something new, you tend to ask whether it is really needed.
+  - Why: Knowing your job well makes you dependable, but a field can change in small ways that are easy to miss.
+  - Try 1: Read one short article about your field this week, so you stay current without a big commitment.
+  - Try 2: Ask a coworker what changed in your area lately, so you hear it from someone close.
+  - Watch 1: Notice how much has changed since you last learned something at work.
+  - Watch 2: Notice what training you would pick if you had to pick one.
+- [ ] `ftw_growth_mindset_l_08` — *Growth: Settled*
+  - Focus 1: When you try something and aren’t good at first, you tend to feel it’s not for you.
+  - Focus 2: You usually stop an activity when the first few tries feel awkward.
+  - Focus 3: When you start from zero, you tend to feel uncomfortable and want to go back to what you know.
+  - Why: Wanting to be good at things is natural, but almost everyone feels awkward at the start, and it usually passes for you too.
+  - Try 1: Give a new activity three tries before you decide, so you see past the awkward start.
+  - Try 2: Tell a friend you’re new at something, so you feel free to be bad at it.
+  - Watch 1: Notice what you feel in the first ten minutes of something new.
+  - Watch 2: Notice how it feels on the third try.
+- [ ] `ftw_growth_mindset_l_09` — *Growth: Settled*
+  - Focus 1: When you describe yourself, you tend to say things like “I’m just not good at that.”
+  - Focus 2: You usually think of your skills as set, so you stick to what suits you.
+  - Focus 3: When someone suggests you try a new skill, you tend to say it’s not your thing.
+  - Why: Knowing your strengths helps you choose well, but saying “not my thing” too early can close doors you might enjoy.
+  - Try 1: Change “I can’t” to “I can’t yet” in your head once today, so the door stays open.
+  - Try 2: Pick one skill you’ve said you can’t do and try the first small step, so you test it.
+  - Watch 1: Notice how often you say you’re not good at something.
+  - Watch 2: Notice how many of those things you’ve actually tried.
+- [ ] `ftw_growth_mindset_l_10` — *Growth: Settled*
+  - Focus 1: When your life feels stable, you tend to want to keep it that way.
+  - Focus 2: You usually find a steady routine more comforting than a chance to change.
+  - Focus 3: When someone says “you could grow,” you tend to feel you’re fine as you are.
+  - Why: Being content is worth a lot, but small changes can keep you steady while giving you something fresh.
+  - Try 1: Add one small thing to your week that is new, so your stability has some variety.
+  - Try 2: Ask yourself what you would change if nothing could go wrong, so you hear what you actually want.
+  - Watch 1: Notice what you feel when someone suggests a change.
+  - Watch 2: Notice what you would miss if nothing ever changed.
+- [ ] `ftw_growth_mindset_l_11` — *Growth: Settled*
+  - Focus 1: When you get negative feedback, you tend to take it as proof you are not good at something.
+  - Focus 2: You usually feel discouraged for a while after hearing what you did wrong.
+  - Focus 3: When your work is corrected, you tend to feel it reflects on you as a whole.
+  - Why: Feedback can feel personal when you care about your work, but it is usually about one piece of it and not about you.
+  - Try 1: Ask the person which one thing to change first, so the feedback becomes a single step.
+  - Try 2: Write the feedback down and read it the next day, so it feels smaller.
+  - Watch 1: Notice how big the feedback seems on the day and the day after.
+  - Watch 2: Notice how many of your skills were not mentioned at all.
+- [ ] `ftw_growth_mindset_l_12` — *Growth: Settled*
+  - Focus 1: When you’ve found a way that works, you tend to use it again and again.
+  - Focus 2: You usually don’t look for new methods once something is working fine.
+  - Focus 3: When a task goes well, you tend to repeat the same steps next time.
+  - Why: Repeating what works makes you efficient, but a better method may be out there that you’d find with a small test.
+  - Try 1: Try one small change to a routine task this week, so you see whether it helps.
+  - Try 2: Ask a coworker how they do the same task, so you compare notes.
+  - Watch 1: Notice which tasks you could do faster with a new method.
+  - Watch 2: Notice how you feel when you change one step.
+### Ownership: Accountable
+
+- [ ] `ftw_locus_of_control_h_07` — *Ownership: Accountable*
+  - Focus 1: When something goes wrong that you only partly caused, you tend to take more of the blame than is fair.
+  - Focus 2: You usually look first at your own part when a group effort fails.
+  - Focus 3: When a friend makes a bad choice, you tend to wonder if you should have stopped them.
+  - Why: Owning your part builds trust, but taking more than your share can leave you feeling guilty about things you couldn’t control.
+  - Try 1: Write down what part of a problem was yours and what part wasn’t, so you see where the line is.
+  - Try 2: Ask a friend how much of an issue they think was on you, so you get another view.
+  - Watch 1: Notice how much of a problem you assign to yourself.
+  - Watch 2: Notice what other things played a part.
+- [ ] `ftw_locus_of_control_h_08` — *Ownership: Accountable*
+  - Focus 1: When you face a problem you can’t fix, you tend to keep looking for something you can do.
+  - Focus 2: You usually find it hard to accept that some things are out of your hands.
+  - Focus 3: When a situation drags on, you tend to feel responsible for finding a solution.
+  - Why: Looking for what you can do keeps you active, but some situations need patience more than action.
+  - Try 1: List what is in your control and what isn’t, then pick one thing from the first list, so you act where it counts.
+  - Try 2: Set aside the unchangeable part for the day, so your attention goes where it can help.
+  - Watch 1: Notice when you try to fix something that needs time.
+  - Watch 2: Notice how you feel after you let one thing go.
+- [ ] `ftw_locus_of_control_h_09` — *Ownership: Accountable*
+  - Focus 1: When you want to change something about your life, you tend to start with a small action right away.
+  - Focus 2: You usually believe your effort will change how things go.
+  - Focus 3: When a habit isn’t working, you tend to look for what you can do about it.
+  - Why: Believing in your effort gets you moving, but results sometimes take longer than you expect, and that can feel like failure.
+  - Try 1: Set a check-in date a month out for your next change, so you judge it over a fair stretch.
+  - Try 2: Celebrate the effort you put in this week, even if the result isn’t there yet, so you keep going.
+  - Watch 1: Notice how soon you expect results.
+  - Watch 2: Notice how you feel when effort doesn’t show yet.
+- [ ] `ftw_locus_of_control_h_10` — *Ownership: Accountable*
+  - Focus 1: When friends or family are struggling, you tend to want to help them solve it.
+  - Focus 2: You usually offer a plan to a person who just wanted to vent.
+  - Focus 3: When someone you love has a problem, you tend to feel you should be doing something.
+  - Why: Wanting to help comes from care, but people can feel pressured when you give a plan and not a listening ear.
+  - Try 1: Ask “do you want ideas or just a listener?” before you respond, so you give what’s needed.
+  - Try 2: Wait to give your first suggestion until the person has finished talking, so they feel heard.
+  - Watch 1: Notice how often you jump to solutions.
+  - Watch 2: Notice how the person reacts when you listen first.
+- [ ] `ftw_locus_of_control_h_11` — *Ownership: Accountable*
+  - Focus 1: When you plan for a big event, you tend to think about everything that could go wrong and prepare for it.
+  - Focus 2: You usually believe good planning prevents most problems.
+  - Focus 3: When a trip or project is coming up, you tend to take charge of the details.
+  - Why: Planning prevents a lot of trouble, but some surprises will happen anyway, and over-planning can leave you tired.
+  - Try 1: Plan for the top three risks only, so you save energy for the rest.
+  - Try 2: Say “we’ll figure it out” about one detail, so you practice leaving room for surprises.
+  - Watch 1: Notice which of your plans were never needed.
+  - Watch 2: Notice how you handle a surprise you didn’t plan for.
+- [ ] `ftw_locus_of_control_h_12` — *Ownership: Accountable*
+  - Focus 1: When you do well, you tend to credit your effort and your choices.
+  - Focus 2: You usually see your results as something you earned.
+  - Focus 3: When someone says you’re lucky, you tend to feel it misses the work you put in.
+  - Why: Seeing your success as earned keeps you driven, but timing and help usually played a part too.
+  - Try 1: Name one lucky break or helpful person behind your last success, so you see the whole picture.
+  - Try 2: Thank the person who helped you, so they know their part mattered.
+  - Watch 1: Notice what luck or help played a part in your wins.
+  - Watch 2: Notice how you feel about other people’s success.
+### Ownership: Accepting
+
+- [ ] `ftw_locus_of_control_l_07` — *Ownership: Accepting*
+  - Focus 1: When you miss out on something, you tend to say the timing wasn’t right.
+  - Focus 2: You usually put a disappointment down to circumstances instead of your choices.
+  - Focus 3: When a plan doesn’t work out, you tend to say it wasn’t meant to be.
+  - Why: Accepting circumstances keeps you from beating yourself up, but you may also skip a lesson that could help next time.
+  - Try 1: Ask yourself one question after a disappointment: “Was there anything I could do next time?” so you take what’s useful.
+  - Try 2: Tell a friend what happened and ask what they’d try, so you hear a different view.
+  - Watch 1: Notice when “bad timing” is the whole story and when it isn’t.
+  - Watch 2: Notice what you would do differently next time.
+- [ ] `ftw_locus_of_control_l_08` — *Ownership: Accepting*
+  - Focus 1: When you’re at work and a decision gets made above you, you tend to accept it and adapt.
+  - Focus 2: You usually go with changes at work without pushing back.
+  - Focus 3: When your team’s plan changes, you tend to shrug and carry on.
+  - Why: Adapting keeps you steady, but a change that affects you may go ahead without your view if you don’t share it.
+  - Try 1: Share one concern with your boss next time something changes, so your view is on the record.
+  - Try 2: Ask what’s behind a change, so you understand it and can plan around it.
+  - Watch 1: Notice what you would say if you thought it would be heard.
+  - Watch 2: Notice how your boss reacts when you ask questions.
+- [ ] `ftw_locus_of_control_l_09` — *Ownership: Accepting*
+  - Focus 1: When you set a goal, you tend to say you’ll see how it goes.
+  - Focus 2: You usually prefer to leave results open instead of promising yourself an outcome.
+  - Focus 3: When you start a new project, you tend to take it as it comes.
+  - Why: Taking things as they come keeps pressure low, but without a small plan you may drift away from what you wanted.
+  - Try 1: Write one small step for this week on your goal, so it has a place in your days.
+  - Try 2: Tell a friend what you hope for, so you have someone to check with.
+  - Watch 1: Notice which goals fade without a plan.
+  - Watch 2: Notice how a small step changes how real the goal feels.
+- [ ] `ftw_locus_of_control_l_10` — *Ownership: Accepting*
+  - Focus 1: When someone close is upset about something that happened, you tend to say these things happen.
+  - Focus 2: You usually respond to bad news with a calm “it is what it is.”
+  - Focus 3: When a friend feels it’s all their fault, you tend to tell them it wasn’t.
+  - Why: Your calm can help a friend feel less alone with it, but a friend may want to talk through what happened before letting go.
+  - Try 1: Ask a friend what happened before you reassure them, so they feel heard.
+  - Try 2: Say “that sounds hard” first, then add your view, so the comfort lands.
+  - Watch 1: Notice how quickly you move to “it is what it is.”
+  - Watch 2: Notice how a friend reacts when you ask for more detail.
+- [ ] `ftw_locus_of_control_l_11` — *Ownership: Accepting*
+  - Focus 1: When your health or money gets worse, you tend to think it’s partly out of your hands.
+  - Focus 2: You usually find big outcomes hard to link to your daily choices.
+  - Focus 3: When a result is far away, you tend to put your energy into the present instead.
+  - Why: Living in the present keeps you calm, but some small daily choices do add up to big results over time.
+  - Try 1: Pick one small daily habit that helps your health or money, so you can watch it add up.
+  - Try 2: Set a reminder to check one result in a month, so the link between effort and outcome shows.
+  - Watch 1: Notice which daily choices changed something later.
+  - Watch 2: Notice how it feels to see a small effort pay off.
+- [ ] `ftw_locus_of_control_l_12` — *Ownership: Accepting*
+  - Focus 1: When you have a stressful week, you tend to remind yourself you can only do so much.
+  - Focus 2: You usually let go of the parts of a problem you can’t change.
+  - Focus 3: When a deadline slips, you tend to say you did what you could.
+  - Why: Letting go protects your energy, but some parts you wrote off as out of your hands might have had a simple fix.
+  - Try 1: Check each stressful item and ask “is there a small thing I can do?” so you catch easy fixes.
+  - Try 2: Ask someone for help with one item, so you test what is possible.
+  - Watch 1: Notice which parts you let go of first.
+  - Watch 2: Notice whether any of them could have been fixed with a simple step.
+### Self-belief: Bold
+
+- [ ] `ftw_self_efficacy_h_07` — *Self-belief: Bold*
+  - Focus 1: When a job posting asks for skills you only partly have, you tend to apply anyway.
+  - Focus 2: You usually go for an opportunity even when you don’t meet every requirement.
+  - Focus 3: When a chance comes up that stretches you, you tend to say you’ll grow into it.
+  - Why: Applying anyway opens doors that cautious people miss, but a stretch with no support can leave you scrambling.
+  - Try 1: Ask someone who has done the role what the first three months are like, so you know what you’re taking on.
+  - Try 2: Write the one skill you most need to learn before you start, so you begin with a plan.
+  - Watch 1: Notice how ready you are on day one of something new.
+  - Watch 2: Notice who you can ask when you hit a gap.
+- [ ] `ftw_self_efficacy_h_08` — *Self-belief: Bold*
+  - Focus 1: When you say yes to a lot, you tend to trust you’ll find time for all of it.
+  - Focus 2: You usually take on more than your calendar allows because you believe you’ll manage.
+  - Focus 3: When a new project comes in, you tend to say yes before you check what’s already there.
+  - Why: Believing you can manage a lot gets you opportunities, but an overfull plan leaves you with no room for the unexpected.
+  - Try 1: Look at your week before you say yes to the next request, so the answer fits.
+  - Try 2: Drop one commitment this week, so you keep room for what matters most.
+  - Watch 1: Notice how many things you’re juggling right now.
+  - Watch 2: Notice which one you would drop first.
+- [ ] `ftw_self_efficacy_h_09` — *Self-belief: Bold*
+  - Focus 1: When you face a risk, like a move or a career change, you tend to focus on what could go right.
+  - Focus 2: You usually back yourself in big decisions.
+  - Focus 3: When people warn you about a risk, you tend to feel you can handle it.
+  - Why: Backing yourself lets you take chances that pay off, but warnings can carry real facts you’d want to hear.
+  - Try 1: Ask someone who has done it what went wrong for them, so you plan for the real risks.
+  - Try 2: Write your backup plan on one page, so your bold move has a safety net.
+  - Watch 1: Notice which warnings you wave away fastest.
+  - Watch 2: Notice whether any of them came true.
+- [ ] `ftw_self_efficacy_h_10` — *Self-belief: Bold*
+  - Focus 1: When you start learning something hard, you tend to believe you’ll get there with effort.
+  - Focus 2: You usually stay confident through the early, clumsy stage of a new skill.
+  - Focus 3: When you try something new, you tend to expect to improve fast.
+  - Why: Confidence keeps you practicing, but progress can slow down, and expecting fast gains may feel discouraging then.
+  - Try 1: Set a small weekly goal for a new skill, like two practice sessions, so progress feels steady.
+  - Try 2: Write down your level now, so you can see your growth in a month.
+  - Watch 1: Notice how you feel when progress slows.
+  - Watch 2: Notice how far you’ve come since you started.
+- [ ] `ftw_self_efficacy_h_11` — *Self-belief: Bold*
+  - Focus 1: When someone asks you to speak up or present, you tend to say yes.
+  - Focus 2: You usually feel okay being in front of a group, even when you’re not fully ready.
+  - Focus 3: When there’s a chance to share your ideas, you tend to take it.
+  - Why: Being willing to speak puts your ideas in front of people, but a bit of preparation can make them land better.
+  - Try 1: Write your main point in one sentence before you speak, so the talk has a clear center.
+  - Try 2: Practice once out loud before a presentation, so you catch what needs fixing.
+  - Watch 1: Notice how your talks go when you prepare and when you don’t.
+  - Watch 2: Notice what questions you wish you’d prepared for.
+- [ ] `ftw_self_efficacy_h_12` — *Self-belief: Bold*
+  - Focus 1: When a friend feels unsure, you tend to push them to go for it.
+  - Focus 2: You usually encourage others to take a chance because you would.
+  - Focus 3: When someone is nervous about a new step, you tend to tell them they’ll be fine.
+  - Why: Your belief can lift a friend, but a nervous person may need to feel their worry is heard before they can act.
+  - Try 1: Ask a nervous friend what worries them most before you encourage them, so your support fits.
+  - Try 2: Offer to help with one small first step, so the push comes with real help.
+  - Watch 1: Notice how a friend reacts to a push compared with a question.
+  - Watch 2: Notice whether your encouragement matches how they feel.
+### Self-belief: Hesitant
+
+- [ ] `ftw_self_efficacy_l_07` — *Self-belief: Hesitant*
+  - Focus 1: When a job or opportunity looks like a stretch, you tend to wait until you feel fully ready.
+  - Focus 2: You usually apply only when you meet every requirement.
+  - Focus 3: When you see a chance you’d love, you tend to find reasons you’re not ready.
+  - Why: Being careful keeps you from jumping in too early, but waiting for full readiness can mean the chance is gone.
+  - Try 1: Go for one thing where you meet most of the requirements, so you see how it goes.
+  - Try 2: Ask someone who has the role how they started, so you see that they weren’t ready either.
+  - Watch 1: Notice how many chances you’ve passed on because you weren’t ready.
+  - Watch 2: Notice how ready the people who got them were.
+- [ ] `ftw_self_efficacy_l_08` — *Self-belief: Hesitant*
+  - Focus 1: When you have to start something hard, you tend to picture how it could go wrong.
+  - Focus 2: You usually spend a while imagining problems before you take the first step.
+  - Focus 3: When a task feels big, you tend to think of all the ways it might fail.
+  - Why: Imagining problems helps you prepare, but too much of it can keep you from starting at all.
+  - Try 1: Write the three most likely problems and one fix for each, then start, so the worry becomes a plan.
+  - Try 2: Do just five minutes of the task today, so starting stops feeling so big.
+  - Watch 1: Notice how many of your imagined problems happen.
+  - Watch 2: Notice how you feel five minutes in.
+- [ ] `ftw_self_efficacy_l_09` — *Self-belief: Hesitant*
+  - Focus 1: When someone pushes you to try something, you tend to ask a lot of what-if questions.
+  - Focus 2: You usually need time and reassurance before you take on a new challenge.
+  - Focus 3: When an idea is new to you, you tend to want someone to go with you.
+  - Why: Wanting support is sensible, but waiting for the right person can slow a step you could take on your own.
+  - Try 1: Take the first step of a new thing on your own, even a tiny one, so you see you can.
+  - Try 2: Ask a friend to check in after, and not to come along, so you still get support.
+  - Watch 1: Notice how much of a challenge you can do alone.
+  - Watch 2: Notice how you feel afterward when you did it yourself.
+- [ ] `ftw_self_efficacy_l_10` — *Self-belief: Hesitant*
+  - Focus 1: When you have to speak up in a group, you tend to rehearse in your head and then stay quiet.
+  - Focus 2: You usually have a thought ready but doubt it’s worth saying.
+  - Focus 3: When someone asks for your view, you tend to say you have no strong opinion.
+  - Why: Doubting your view keeps you from sharing, but the thought you hold back may be useful to the people around you.
+  - Try 1: Share one thought in the next meeting, even a short one, so you build the habit.
+  - Try 2: Write your idea in the chat if speaking feels hard, so it still gets heard.
+  - Watch 1: Notice how often someone else says what you were thinking.
+  - Watch 2: Notice how the group reacts when you do speak.
+- [ ] `ftw_self_efficacy_l_11` — *Self-belief: Hesitant*
+  - Focus 1: When you succeed at something, you tend to say it was easy or that you were lucky.
+  - Focus 2: You usually find it hard to count a win as proof of your ability.
+  - Focus 3: When a task goes well, you tend to expect the next one to go badly.
+  - Why: Staying modest keeps you grounded, but discounting wins hides the evidence that you can do hard things.
+  - Try 1: Write down three things you did well this month, so you have a record.
+  - Try 2: Tell a friend about one win without adding “but,” so it stays a win.
+  - Watch 1: Notice how quickly you shrink a success.
+  - Watch 2: Notice how many wins you could list from this year.
+- [ ] `ftw_self_efficacy_l_12` — *Self-belief: Hesitant*
+  - Focus 1: When you make a plan, you tend to build in extra time and backups because you doubt it will go smoothly.
+  - Focus 2: You usually prepare for the worst case before you start.
+  - Focus 3: When something is uncertain, you tend to wait for more information before you act.
+  - Why: Careful planning protects you from problems, but waiting for certainty can use up the time you have.
+  - Try 1: Set a date to decide, so waiting for more information has an end.
+  - Try 2: Start on a small part of the plan now, so you learn what works while you plan the rest.
+  - Watch 1: Notice how much information you need before you act.
+  - Watch 2: Notice when more information stopped changing your choice.
+### Playfulness: Playful
+
+- [ ] `ftw_playfulness_h_07` — *Playfulness: Playful*
+  - Focus 1: When you text your friends, you tend to send memes, voice notes and silly nicknames.
+  - Focus 2: You usually keep group chats lively with jokes and running gags.
+  - Focus 3: When you talk to people you like, you tend to add a joke or a funny voice.
+  - Why: Humor keeps your friendships light, but a friend who is going through something may need a plain answer before the jokes.
+  - Try 1: Ask a friend how they really are before you start joking, so they know you’re listening.
+  - Try 2: Send one sincere message this week, so your friends see your serious side too.
+  - Watch 1: Notice how friends reply when you’re serious.
+  - Watch 2: Notice whether a joke covers a feeling you’d rather skip.
+- [ ] `ftw_playfulness_h_08` — *Playfulness: Playful*
+  - Focus 1: When you’re in a serious meeting, you tend to want to lighten it with a joke.
+  - Focus 2: You usually find long formal events hard to sit through without a laugh.
+  - Focus 3: When a talk gets stiff, you tend to say something funny to loosen it.
+  - Why: A joke can ease tension, but the wrong moment can make you look like you aren’t taking the topic seriously.
+  - Try 1: Wait until the mood eases before you joke in a serious meeting, so it fits.
+  - Try 2: Ask a question first in the meeting, so people see you take it seriously.
+  - Watch 1: Notice how people respond to your jokes in a formal setting.
+  - Watch 2: Notice who laughs and who looks away.
+- [ ] `ftw_playfulness_h_09` — *Playfulness: Playful*
+  - Focus 1: When you’re around kids or pets, you tend to join in the play instead of watching.
+  - Focus 2: You usually get down on the floor and play with them.
+  - Focus 3: When there is a game going on, you tend to jump in and get really into it.
+  - Why: Joining in is a gift to the people you play with, but a game you love can run longer than others want.
+  - Try 1: Ask the others if they want one more round before you start, so everyone enjoys it.
+  - Try 2: Invite a friend who rarely plays to join something easy, so they feel included.
+  - Watch 1: Notice how the others look when a game goes long.
+  - Watch 2: Notice who comes alive when you play.
+- [ ] `ftw_playfulness_h_10` — *Playfulness: Playful*
+  - Focus 1: When a day feels heavy, you tend to look for something that makes you laugh.
+  - Focus 2: You usually watch something funny or call a funny friend when you’re down.
+  - Focus 3: When you’re stressed, you tend to turn to humor to feel better.
+  - Why: Humor is a good way to reset, but a feeling you only joke about may still be waiting for you later.
+  - Try 1: Spend five minutes writing down what is bothering you, then watch something funny, so you do both.
+  - Try 2: Tell one friend what’s really going on, so the joke isn’t the only thing you share.
+  - Watch 1: Notice what you feel right after the laughter fades.
+  - Watch 2: Notice which feelings you tend to joke past.
+- [ ] `ftw_playfulness_h_11` — *Playfulness: Playful*
+  - Focus 1: When you plan a gift or a surprise, you tend to make it funny or creative.
+  - Focus 2: You usually put effort into a fun, odd detail that makes someone smile.
+  - Focus 3: When it’s someone’s birthday, you tend to think of a playful idea instead of a standard one.
+  - Why: Playful gifts show you know a person well, but some people prefer something simple and practical.
+  - Try 1: Ask yourself what the person would use or enjoy before you add the joke, so the gift fits them.
+  - Try 2: Add a short, sincere note to a funny gift, so the thought comes through.
+  - Watch 1: Notice how people react to a joke gift compared with a practical one.
+  - Watch 2: Notice who values the sincere note most.
+- [ ] `ftw_playfulness_h_12` — *Playfulness: Playful*
+  - Focus 1: When you have a task you don’t like, you tend to find a way to make it fun or take a game break.
+  - Focus 2: You usually need some enjoyment mixed in to keep going on dull work.
+  - Focus 3: When a project is dry, you tend to lose focus unless there is something interesting in it.
+  - Why: Adding fun keeps you going, but too many breaks can stretch a short task into an afternoon.
+  - Try 1: Set a timer for 25 minutes of work, then take a short fun break, so the fun comes after progress.
+  - Try 2: Pick one dull task and add a small reward, like a song or a snack, so it feels lighter.
+  - Watch 1: Notice how long your fun breaks last.
+  - Watch 2: Notice which tasks you can finish without a break.
+### Playfulness: Serious
+
+- [ ] `ftw_playfulness_l_07` — *Playfulness: Serious*
+  - Focus 1: When a friend suggests a silly game or activity, you tend to feel unsure about joining.
+  - Focus 2: You usually prefer a clear purpose for an activity, like a talk or a task.
+  - Focus 3: When the group starts playing, you tend to watch before you join in.
+  - Why: Wanting a point to what you do keeps you focused, but a silly game can also be a good way to feel closer to people.
+  - Try 1: Join the next game for just ten minutes, so you see how it feels once you’re in it.
+  - Try 2: Tell the group you’ll watch the first round, so you can join when you’re ready.
+  - Watch 1: Notice whether you have fun once you’re in a game.
+  - Watch 2: Notice what holds you back at the start.
+- [ ] `ftw_playfulness_l_08` — *Playfulness: Serious*
+  - Focus 1: When someone tells a joke at a serious moment, you tend to find it out of place.
+  - Focus 2: You usually prefer to deal with a problem plainly and not with humor.
+  - Focus 3: When people laugh while a problem is still open, you tend to want to get back to it.
+  - Why: Taking things seriously shows you care about the outcome, but others may be using a joke to cope and not to dodge.
+  - Try 1: Ask a coworker what the joke helps them with, so you understand what it’s for.
+  - Try 2: Smile at one joke today even if it isn’t your style, so the person feels received.
+  - Watch 1: Notice what a joke does for the people who tell it.
+  - Watch 2: Notice how the mood changes when you stay serious.
+- [ ] `ftw_playfulness_l_09` — *Playfulness: Serious*
+  - Focus 1: When you give or pick a gift, you tend to choose something useful.
+  - Focus 2: You usually go for a practical present over a funny or silly one.
+  - Focus 3: When you plan a party, you tend to focus on the logistics more than on games or themes.
+  - Why: Useful gifts show you pay attention to people’s needs, but a small playful touch can make them feel known in another way.
+  - Try 1: Add one small fun item to your next gift, so it has a little surprise in it.
+  - Try 2: Ask a friend what would make them laugh, so you get a sense of what playful means to them.
+  - Watch 1: Notice how a fun detail changes how a gift lands.
+  - Watch 2: Notice what kind of humor you do enjoy.
+- [ ] `ftw_playfulness_l_10` — *Playfulness: Serious*
+  - Focus 1: When people tease you, you tend to take it seriously for a moment before you see it as a joke.
+  - Focus 2: You usually need a clear signal that someone is joking.
+  - Focus 3: When a friend uses sarcasm, you tend to wonder what they actually mean.
+  - Why: Wanting clarity keeps communication honest, but you may miss that a friend was showing affection.
+  - Try 1: Ask “are you joking?” when it’s unclear, so you don’t guess and feel bad.
+  - Try 2: Tell a friend you prefer plain language, so they know how to talk to you.
+  - Watch 1: Notice which teasing feels friendly and which feels sharp.
+  - Watch 2: Notice how a friend reacts when you ask what they meant.
+- [ ] `ftw_playfulness_l_11` — *Playfulness: Serious*
+  - Focus 1: When you are on a trip or day off, you tend to plan activities that have a point.
+  - Focus 2: You usually pick things like sightseeing or projects over plain fun.
+  - Focus 3: When you have free time, you tend to feel better if you got something done during it.
+  - Why: Using your time well feels good, but fun with no goal is a kind of rest that your mind may need.
+  - Try 1: Plan one hour this weekend with no goal at all, so you try aimless fun.
+  - Try 2: Pick something you enjoyed as a kid and do it once, so you remember how play feels.
+  - Watch 1: Notice whether you can enjoy something without a result.
+  - Watch 2: Notice how you feel after an hour of doing nothing useful.
+- [ ] `ftw_playfulness_l_12` — *Playfulness: Serious*
+  - Focus 1: When you are at work or in a meeting, you tend to keep your tone steady and professional.
+  - Focus 2: You usually save jokes for people you know well.
+  - Focus 3: When you meet new people, you tend to stay formal for a while.
+  - Why: A steady tone builds trust, but a little humor can help new people see that you’re warm.
+  - Try 1: Share one light, friendly comment with a new coworker this week, so they see your warmer side.
+  - Try 2: Smile and say something about your weekend, so small talk starts easily.
+  - Watch 1: Notice how people respond when you show a bit of humor.
+  - Watch 2: Notice how long it takes before you relax around new people.
+### Curiosity: Mixed
+
+- [ ] `ftw_openness_m_01` — *Curiosity: Mixed*
+  - Focus 1: Some days you want to try something new, and other days you want what you already know.
+  - Focus 2: When you choose where to eat or what to watch, you tend to go back and forth between new and familiar.
+  - Focus 3: Your pull toward new things tends to depend on your mood and how much energy you have.
+  - Why: Having both sides is useful, but you may not notice which one you’re choosing, and that can leave you with a pick you don’t enjoy.
+  - Try 1: Ask yourself “new or familiar?” before your next choice, so you pick on purpose.
+  - Try 2: Plan one familiar favorite and one new thing this week, so you get both.
+  - Watch 1: Notice what kind of day makes you want something new.
+  - Watch 2: Notice what kind of day makes you want the usual.
+- [ ] `ftw_openness_m_02` — *Curiosity: Mixed*
+  - Focus 1: When a friend suggests a new plan, you tend to say yes to some and no to others.
+  - Focus 2: You usually need a reason to try something unfamiliar, but a small one is enough.
+  - Focus 3: When a new idea shows up at work, you tend to be open to it if you can see how it helps.
+  - Why: Wanting a reason keeps you from jumping at everything, but friends may not know what would get you to say yes.
+  - Try 1: Tell a friend what makes a new plan easy for you to say yes to, so they know how to ask.
+  - Try 2: Say yes to one plan this week that you’d normally think about, so you test your hunch.
+  - Watch 1: Notice what makes you say yes to something new.
+  - Watch 2: Notice what makes you say no.
+- [ ] `ftw_openness_m_03` — *Curiosity: Mixed*
+  - Focus 1: When you have a routine, you tend to like it until it starts to feel flat.
+  - Focus 2: You usually enjoy a steady week, with the occasional break from it.
+  - Focus 3: Your routines tend to feel comfortable for a while and then a little dull.
+  - Why: Enjoying both steadiness and change means you can adapt, but you may wait too long to change something that’s gone stale.
+  - Try 1: Change one small thing in your week when it starts to feel flat, so it stays fresh.
+  - Try 2: Keep one routine you love untouched, so you have something steady while you change others.
+  - Watch 1: Notice how long it takes before a routine starts to feel flat.
+  - Watch 2: Notice which routines you’d keep forever.
+### Follow-through: Mixed
+
+- [ ] `ftw_conscientiousness_m_01` — *Follow-through: Mixed*
+  - Focus 1: You follow through well on some things and let others slide, depending on how much they matter to you.
+  - Focus 2: When a task matters to you, you tend to finish it, and when it doesn’t, you tend to put it off.
+  - Focus 3: Your follow-through tends to be strong for work you care about and weaker for chores.
+  - Why: Putting your effort where it matters is sensible, but small things you let slide can add up and nag at you.
+  - Try 1: Pick one small task you’ve skipped and do it today, so it stops nagging at you.
+  - Try 2: Write down which tasks matter most to you, so you protect your energy for them.
+  - Watch 1: Notice which tasks you finish every time and which you put off.
+  - Watch 2: Notice what the two groups have in common.
+- [ ] `ftw_conscientiousness_m_02` — *Follow-through: Mixed*
+  - Focus 1: When you plan your week, you tend to plan some days closely and leave others open.
+  - Focus 2: You usually like some structure, with room to change it.
+  - Focus 3: You tend to keep a loose plan that you adjust as the week goes on.
+  - Why: A flexible plan fits your life, but without a few fixed points, important things can get squeezed out.
+  - Try 1: Pick two things that must happen this week and give them a time, so the rest can stay loose.
+  - Try 2: Look at Friday’s plan on Thursday night, so there’s time to adjust it.
+  - Watch 1: Notice which things you plan and which you leave open.
+  - Watch 2: Notice what gets squeezed out when the week is busy.
+- [ ] `ftw_conscientiousness_m_03` — *Follow-through: Mixed*
+  - Focus 1: When a deadline is coming, you tend to start sooner for big things and later for small ones.
+  - Focus 2: You usually manage deadlines well, though you sometimes leave a few for the last moment.
+  - Focus 3: Your work habits tend to change with the kind of task in front of you.
+  - Why: Adapting to the task works for you, but a small task left late can still cause stress for you.
+  - Try 1: Do one small task right when you get it, so it doesn’t wait for the deadline.
+  - Try 2: Put one deadline on your calendar a day early, so you have a cushion.
+  - Watch 1: Notice which tasks you start early and which you leave.
+  - Watch 2: Notice how you feel the day before a deadline.
+### Sociability: Mixed
+
+- [ ] `ftw_extraversion_m_01` — *Sociability: Mixed*
+  - Focus 1: After time with people, you tend to feel good for a while and then want some time alone.
+  - Focus 2: You usually enjoy social plans, and you also need quiet time to feel like yourself.
+  - Focus 3: Some weeks you want lots of company, and other weeks you want very little.
+  - Why: Needing both is normal, but friends and family may not know which week you’ll be in.
+  - Try 1: Tell a friend whether you’re in a social week or a quiet week, so they know what to expect.
+  - Try 2: Plan one social night and one quiet night this week, so you get both.
+  - Watch 1: Notice what tells you that you’re ready for company.
+  - Watch 2: Notice what tells you that you’re ready for quiet.
+- [ ] `ftw_extraversion_m_02` — *Sociability: Mixed*
+  - Focus 1: In a group, you tend to talk more when you know the people and less when you don’t.
+  - Focus 2: You usually warm up after the first half hour at an event.
+  - Focus 3: Your social energy tends to depend on who is in the room.
+  - Why: Warming up with the right people is natural, but others may only meet your quieter side if they see you in the first half hour.
+  - Try 1: Say one thing to someone new in the first ten minutes, so the warm-up starts early.
+  - Try 2: Sit near the person you know best at an event at first, so you ease in.
+  - Watch 1: Notice how long it takes before you feel at ease.
+  - Watch 2: Notice which people help you open up.
+- [ ] `ftw_extraversion_m_03` — *Sociability: Mixed*
+  - Focus 1: When you need to think something through, you tend to switch between talking it out and working it out alone.
+  - Focus 2: You usually pick the way you process based on how big the problem is.
+  - Focus 3: Sometimes you call a friend about a problem, and sometimes you want to think first.
+  - Why: Using both ways gives you options, but you may call a friend when quiet time would help, or the other way around.
+  - Try 1: Ask yourself “talk or think?” before you reach for the phone, so you pick on purpose.
+  - Try 2: Give a problem ten quiet minutes before you talk to anyone, so you know what you want to say.
+  - Watch 1: Notice which way helps you more for different problems.
+  - Watch 2: Notice how you feel after each.
+### Harmony: Mixed
+
+- [ ] `ftw_agreeableness_m_01` — *Harmony: Mixed*
+  - Focus 1: You go along with others on small things and speak up on the ones that matter to you.
+  - Focus 2: When you disagree, you tend to pick your moments.
+  - Focus 3: You usually keep the peace, unless something feels really important.
+  - Why: Picking your moments keeps things smooth, but others may not know which ones matter until you say so.
+  - Try 1: Tell a friend one thing that matters to you before it comes up, so they know.
+  - Try 2: Say “this one matters to me” the next time it does, so your voice stands out.
+  - Watch 1: Notice which things you go along with and which you don’t.
+  - Watch 2: Notice how people react when you speak up.
+- [ ] `ftw_agreeableness_m_02` — *Harmony: Mixed*
+  - Focus 1: When you give feedback, you tend to be honest with people you know well and softer with those you don’t.
+  - Focus 2: You usually adjust how direct you are depending on the person.
+  - Focus 3: Your honesty tends to rise with how close you are to someone.
+  - Why: Matching your tone to the person shows care, but a soft message can hide the point from someone who needs it plainly.
+  - Try 1: Write down the main point before you soften it, so it stays in your message.
+  - Try 2: Ask the person “do you want it straight?” before you give feedback, so you match what they prefer.
+  - Watch 1: Notice who gets your plain version and who gets the soft one.
+  - Watch 2: Notice whether the soft version gets understood.
+- [ ] `ftw_agreeableness_m_03` — *Harmony: Mixed*
+  - Focus 1: When someone asks for a favor, you tend to say yes if you can and no if you can’t.
+  - Focus 2: You usually help others and also protect your own time.
+  - Focus 3: Your answers to requests tend to depend on how full your week is.
+  - Why: Balancing helping with your own time is healthy, but it’s easy to say yes first and check your week second.
+  - Try 1: Check your calendar before you answer the next request, so your yes fits.
+  - Try 2: Say “not this week, but maybe next” once, so a no can come with a way forward.
+  - Watch 1: Notice how you feel after you say yes when you’re already busy.
+  - Watch 2: Notice how people take it when you say no kindly.
+### Composure: Mixed
+
+- [ ] `ftw_steadiness_m_01` — *Composure: Mixed*
+  - Focus 1: Some stressful things roll off you, and others stay with you for days.
+  - Focus 2: You usually handle small problems calmly, but a big one can shake you.
+  - Focus 3: Your reaction to stress tends to depend on how much sleep and time you have.
+  - Why: Handling most things well while feeling a few deeply is common, but you may not see which ones will stick until they do.
+  - Try 1: Write down after a stressful event whether it passed or stayed, so you learn your own pattern.
+  - Try 2: Plan some rest after a big event, so it has less room to stay with you.
+  - Watch 1: Notice what kinds of things stay with you.
+  - Watch 2: Notice what helps them pass.
+- [ ] `ftw_steadiness_m_02` — *Composure: Mixed*
+  - Focus 1: When someone around you is upset, you tend to stay calm sometimes and feel it too at other times.
+  - Focus 2: You usually pick up on other people’s moods, but not always in the same way.
+  - Focus 3: Your reaction to a friend’s bad mood tends to depend on your own day.
+  - Why: Being able to do both helps you support people, but on a hard day you may take on more of their mood than you mean to.
+  - Try 1: Check in with yourself before you help someone upset, so you know how much you have to give.
+  - Try 2: Take a few minutes alone after a heavy talk, so you can reset.
+  - Watch 1: Notice when you take on someone else’s mood.
+  - Watch 2: Notice what helps you stay steady.
+- [ ] `ftw_steadiness_m_03` — *Composure: Mixed*
+  - Focus 1: When you get critical feedback, you tend to feel it at first and then think it over.
+  - Focus 2: You usually need a little time before you can hear feedback clearly.
+  - Focus 3: Your first reaction to criticism tends to be stronger than your second.
+  - Why: Feeling it first and thinking second is a fair order, but replying in the first moment can lead to words you’d change.
+  - Try 1: Wait an hour before you reply to critical feedback, so your second reaction answers.
+  - Try 2: Write down the useful part of the feedback, so you keep it when the sting fades.
+  - Watch 1: Notice how your view of the feedback changes after an hour.
+  - Watch 2: Notice which feedback turns out to be useful.
+### Reassurance: Mixed
+
+- [ ] `ftw_attachment_anxiety_m_01` — *Reassurance: Mixed*
+  - Focus 1: Sometimes a slow reply from a friend doesn’t bother you, and other times you wonder about it.
+  - Focus 2: When someone close is quiet, you tend to worry on some days and not on others.
+  - Focus 3: Your feelings about where you stand with people tend to change with how your week is going.
+  - Why: Feeling secure on some days and unsure on others is common, and for you it may follow stress more than the relationship itself.
+  - Try 1: Ask yourself “is this about them or about my day?” when you feel unsure, so you check the source.
+  - Try 2: Do something absorbing while you wait for a reply, so waiting takes less of your attention.
+  - Watch 1: Notice what kind of day makes you feel less sure of people.
+  - Watch 2: Notice what helps you feel steady again.
+- [ ] `ftw_attachment_anxiety_m_02` — *Reassurance: Mixed*
+  - Focus 1: After an argument with someone close, you tend to feel okay with some people and worried with others.
+  - Focus 2: You usually trust some relationships more than others.
+  - Focus 3: Your sense of security tends to depend on how long you’ve known the person.
+  - Why: Feeling secure grows with time and history, so you may feel it more in older relationships than in newer ones.
+  - Try 1: Share one small thing with a newer friend this week, so trust has something to grow from.
+  - Try 2: Name one good moment with someone before you worry, so you start from what’s real.
+  - Watch 1: Notice which relationships feel most secure and what they have in common.
+  - Watch 2: Notice how a newer friend responds when you open up.
+- [ ] `ftw_attachment_anxiety_m_03` — *Reassurance: Mixed*
+  - Focus 1: You like to hear from people you care about, and you can also go a few days without it.
+  - Focus 2: When a friend cancels, you tend to be fine some of the time and bothered the rest.
+  - Focus 3: Your need for contact tends to rise when you’re stressed and fall when you’re busy.
+  - Why: A flexible need for contact is healthy, but it can be hard for others to guess when you want more of it.
+  - Try 1: Tell a close friend “I’d love to hear from you this week,” so you ask for what you want.
+  - Try 2: Plan a regular check-in with someone you care about, so contact doesn’t depend on your mood.
+  - Watch 1: Notice when you want more contact than usual.
+  - Watch 2: Notice when you want less.
+### Personal space: Mixed
+
+- [ ] `ftw_attachment_avoidance_m_01` — *Personal space: Mixed*
+  - Focus 1: You like being close to people, and you also need some time on your own.
+  - Focus 2: Some days you want to share everything, and other days you keep to yourself.
+  - Focus 3: Your need for closeness tends to shift with how much you have going on.
+  - Why: Wanting both closeness and space is common, but the people near you can’t tell which one you want unless you say.
+  - Try 1: Tell someone close what you need today, like “I’d love company” or “I need a quiet evening,” so they know.
+  - Try 2: Plan one evening together and one evening alone this week, so you get both.
+  - Watch 1: Notice what tells you that you need space.
+  - Watch 2: Notice what tells you that you need company.
+- [ ] `ftw_attachment_avoidance_m_02` — *Personal space: Mixed*
+  - Focus 1: When something is bothering you, you tend to tell some people and keep it from others.
+  - Focus 2: You usually share hard things with one or two people and not with everyone.
+  - Focus 3: Your willingness to open up tends to depend on who is asking and when.
+  - Why: Choosing who to open up to is wise, but a few people may feel shut out if you don’t say why.
+  - Try 1: Tell the people you trust most that they’re on your short list, so they know where they stand.
+  - Try 2: Share one small worry with someone new, so you test whether they can hold it.
+  - Watch 1: Notice who you tell first.
+  - Watch 2: Notice who you hold things back from and why.
+- [ ] `ftw_attachment_avoidance_m_03` — *Personal space: Mixed*
+  - Focus 1: When a relationship gets closer, you tend to enjoy it and also feel a pull to step back sometimes.
+  - Focus 2: You usually like affection, but not at every moment.
+  - Focus 3: Your comfort with closeness tends to rise and fall during the week.
+  - Why: Wanting some distance now and then is normal, but a partner or friend may wonder if your step back means something.
+  - Try 1: Say “I’m just recharging, and I’m still here,” when you need a step back, so it doesn’t sound like a pullback.
+  - Try 2: Plan a warm moment together after your quiet time, so closeness comes back easily.
+  - Watch 1: Notice what brings on the urge to step back.
+  - Watch 2: Notice how the other person feels when you explain it.
+### Directness: Mixed
+
+- [ ] `ftw_conflict_assertiveness_m_01` — *Directness: Mixed*
+  - Focus 1: You speak up about some things right away and let others go, depending on the person.
+  - Focus 2: When you disagree with someone, you tend to speak more freely with friends than with your boss.
+  - Focus 3: Your directness tends to depend on how much is at stake and who is there.
+  - Why: Choosing when to speak up helps you pick your battles, but you may stay quiet in places where your view would help.
+  - Try 1: Share one honest opinion this week in a place where you usually hold back, so your voice reaches more rooms.
+  - Try 2: Ask yourself “will I still care about this tomorrow?” before you decide to speak up or let go.
+  - Watch 1: Notice where you speak freely and where you hold back.
+  - Watch 2: Notice what changes in the places you hold back.
+- [ ] `ftw_conflict_assertiveness_m_02` — *Directness: Mixed*
+  - Focus 1: When someone does something that bothers you, you tend to tell them sometimes and drop it other times.
+  - Focus 2: You usually bring up bigger issues and let small ones slide.
+  - Focus 3: Your choice to raise a problem tends to depend on how often it happens.
+  - Why: Letting small things go keeps the peace, but a small thing that repeats can build up in you and come out later.
+  - Try 1: Keep a note of small things that repeat, so you can tell which ones to raise.
+  - Try 2: Say one repeated small thing out loud, calmly, this week, so it doesn’t build.
+  - Watch 1: Notice which small things repeat.
+  - Watch 2: Notice how you feel about them after a week.
+- [ ] `ftw_conflict_assertiveness_m_03` — *Directness: Mixed*
+  - Focus 1: When you want something, you tend to ask directly sometimes and hint at it other times.
+  - Focus 2: You usually say what you need when you feel comfortable and hold back when you don’t.
+  - Focus 3: Your way of asking tends to change with how safe the situation feels.
+  - Why: Adjusting how you ask is natural, but hints can be missed, and a missed hint can leave you without what you wanted.
+  - Try 1: Turn one hint into a plain request today, so you see how it lands.
+  - Try 2: Say what you want in one sentence with a reason, so your request is easy to say yes to.
+  - Watch 1: Notice when you hint and when you ask.
+  - Watch 2: Notice how often a hint gets missed.
+### Compromise: Mixed
+
+- [ ] `ftw_conflict_cooperativeness_m_01` — *Compromise: Mixed*
+  - Focus 1: In a disagreement, you tend to give way on some things and hold firm on others.
+  - Focus 2: You usually find a middle ground, unless the point matters a lot to you.
+  - Focus 3: Your willingness to compromise tends to depend on what is at stake.
+  - Why: Knowing when to give and when to hold is a skill, but the people you disagree with may not see where your line is.
+  - Try 1: Tell the other person which part matters most to you, so the rest is easier to settle.
+  - Try 2: Write down your must-have before a disagreement, so you know where to hold.
+  - Watch 1: Notice what you’re willing to give up easily.
+  - Watch 2: Notice what you won’t give up.
+- [ ] `ftw_conflict_cooperativeness_m_02` — *Compromise: Mixed*
+  - Focus 1: When a group has to decide, you tend to go along with it sometimes and push your idea at other times.
+  - Focus 2: You usually listen first and then decide if your idea is worth sharing.
+  - Focus 3: Your role in group decisions tends to change from one group to the next.
+  - Why: Switching between following and leading helps groups, but you might not notice which role you’re taking at the time.
+  - Try 1: Ask yourself “am I leading or following here?” at the start of a group talk, so you choose.
+  - Try 2: Share your idea in the first few minutes of one meeting this week, so you try the other role.
+  - Watch 1: Notice when you lead and when you follow.
+  - Watch 2: Notice what decides it.
+- [ ] `ftw_conflict_cooperativeness_m_03` — *Compromise: Mixed*
+  - Focus 1: When a friend wants something different from you, you tend to look for a way to do both.
+  - Focus 2: You usually try to make sure each person gets something.
+  - Focus 3: Your approach to a disagreement tends to be to trade a little for a little.
+  - Why: Trading a little for a little keeps things fair, but it can miss a better idea that neither of you thought of.
+  - Try 1: Ask the other person what they’re really after, so you look beyond the trade.
+  - Try 2: Ask for one new option together before you split the difference, so you find something better.
+  - Watch 1: Notice whether a trade left both of you happy.
+  - Watch 2: Notice when a new idea would have helped.
+### Independence: Mixed
+
+- [ ] `ftw_autonomy_m_01` — *Independence: Mixed*
+  - Focus 1: You like making your own decisions, and you also like having someone to check with.
+  - Focus 2: When you face a choice, you tend to decide for yourself on small things and ask others on big ones.
+  - Focus 3: Your need for independence tends to depend on how important the choice is.
+  - Why: Balancing your own judgment with other views is a strength, but you may ask for input out of habit and not need.
+  - Try 1: Decide first, then ask for a view, so you hear it against your own choice.
+  - Try 2: Skip checking with anyone on one small decision, so you see how it feels.
+  - Watch 1: Notice which choices you check with others.
+  - Watch 2: Notice whether their view changes your mind.
+- [ ] `ftw_autonomy_m_02` — *Independence: Mixed*
+  - Focus 1: At work, you tend to like having some direction and some freedom.
+  - Focus 2: You usually do well with a clear goal and room to decide how to get there.
+  - Focus 3: Your best work tends to come when someone sets the target and leaves the path to you.
+  - Why: Knowing what suits you helps you ask for it, but a boss or team may not know unless you tell them.
+  - Try 1: Ask your boss for a clear goal and say you’ll pick the method, so you get the mix you like.
+  - Try 2: Tell a teammate what kind of direction helps you most, so they can give it.
+  - Watch 1: Notice when too much direction feels tight.
+  - Watch 2: Notice when too little leaves you stuck.
+- [ ] `ftw_autonomy_m_03` — *Independence: Mixed*
+  - Focus 1: When someone gives you advice, you tend to take some of it and leave the rest.
+  - Focus 2: You usually listen to others and then make up your own mind.
+  - Focus 3: Your reaction to advice tends to depend on who gives it and how.
+  - Why: Taking what helps and leaving the rest is a good habit, but the person may want to know what you decided.
+  - Try 1: Tell the person which part of their advice you used, so they feel heard.
+  - Try 2: Say “thanks, I’m going to try part of that,” so you honor their effort without taking it all.
+  - Watch 1: Notice whose advice you tend to take.
+  - Watch 2: Notice what makes advice easier to hear.
+### Confidence: Mixed
+
+- [ ] `ftw_competence_m_01` — *Confidence: Mixed*
+  - Focus 1: You feel sure of yourself in some areas and less sure in others.
+  - Focus 2: When a task is in a field you know, you tend to feel capable, and when it’s new, you tend to feel unsure.
+  - Focus 3: Your confidence tends to follow how much experience you have with the task.
+  - Why: Confidence that follows experience is realistic, but doubt in new areas can keep you from starting them.
+  - Try 1: Look back at a time you learned something new before you start another, so you borrow that feeling.
+  - Try 2: Start a new task with the part that looks like something you know, so you build from there.
+  - Watch 1: Notice which areas make you feel capable.
+  - Watch 2: Notice how that feeling grows with practice.
+- [ ] `ftw_competence_m_02` — *Confidence: Mixed*
+  - Focus 1: When you finish a piece of work, you tend to feel good about it on some days and doubt it on others.
+  - Focus 2: You usually feel okay about your work until someone else looks at it.
+  - Focus 3: Your view of your own work tends to swing with your mood.
+  - Why: Judging your own work depends a lot on your mood, so a second look on a calmer day often gives a fairer view.
+  - Try 1: Look at your work again the next day before you judge it, so your mood doesn’t decide.
+  - Try 2: Ask one person for a view, so you have more than your mood to go on.
+  - Watch 1: Notice how your opinion of the same work changes from day to day.
+  - Watch 2: Notice what others say about it.
+- [ ] `ftw_competence_m_03` — *Confidence: Mixed*
+  - Focus 1: When someone asks for volunteers, you tend to step up for some things and wait on others.
+  - Focus 2: You usually volunteer when you know the task and hold back when you don’t.
+  - Focus 3: Your readiness to take on challenges tends to depend on how much support you’ll have.
+  - Why: Taking on what you can handle is smart, but you can miss chances to grow if you only pick what you know.
+  - Try 1: Volunteer for a small stretch task with a person you trust, so you grow with support.
+  - Try 2: Ask what help is available before you decide, so you know the risk.
+  - Watch 1: Notice which tasks you pick up fast.
+  - Watch 2: Notice which ones you wait on and why.
+### Connection: Mixed
+
+- [ ] `ftw_relatedness_m_01` — *Connection: Mixed*
+  - Focus 1: You enjoy spending time with people, and you also enjoy time on your own.
+  - Focus 2: Some weekends you want to be out with friends, and others you want to stay in.
+  - Focus 3: Your need for company tends to move with the week you’ve had.
+  - Why: Enjoying both is a good balance, but friends may not know which version of you to expect.
+  - Try 1: Tell a friend what you’re in the mood for before they invite you, so you get what fits.
+  - Try 2: Plan the weekend so it has both a social part and a quiet part, so you don’t have to choose.
+  - Watch 1: Notice what makes you want company.
+  - Watch 2: Notice what makes you want to stay in.
+- [ ] `ftw_relatedness_m_02` — *Connection: Mixed*
+  - Focus 1: You care about your close friends and keep up with them, but you don’t need constant contact.
+  - Focus 2: When you haven’t talked in a while, you tend to miss them a little and pick up easily.
+  - Focus 3: Your friendships tend to run on a steady pace, with gaps now and then.
+  - Why: A steady pace suits many friendships, but a long gap can feel different to a friend than it does to you.
+  - Try 1: Send a short message to a friend you haven’t talked to in a month, so the gap doesn’t grow.
+  - Try 2: Set a rough rhythm with your closest friends, like a call every few weeks, so no one drifts.
+  - Watch 1: Notice who you would like to hear from.
+  - Watch 2: Notice who might be waiting to hear from you.
+- [ ] `ftw_relatedness_m_03` — *Connection: Mixed*
+  - Focus 1: At work, you tend to enjoy team time sometimes and prefer to focus alone at others.
+  - Focus 2: You usually like a mix of working with people and working by yourself.
+  - Focus 3: Your best days at work tend to have some contact and some quiet.
+  - Why: Knowing your mix helps you plan better days, but a schedule you don’t control can tip it too far one way.
+  - Try 1: Block one stretch for solo work and one for team time in your day, so you get both.
+  - Try 2: Tell your team when you’re in focus mode, so they can find you after.
+  - Watch 1: Notice which part of the day suits quiet and which suits people.
+  - Watch 2: Notice how you feel when the mix is off.
+### Growth: Mixed
+
+- [ ] `ftw_growth_mindset_m_01` — *Growth: Mixed*
+  - Focus 1: You like learning in some areas and prefer to stay with what you know in others.
+  - Focus 2: When it comes to skills you care about, you tend to keep working at them.
+  - Focus 3: Your drive to improve tends to depend on how much the skill matters to you.
+  - Why: Putting your effort where it matters makes sense, but a skill you wrote off may have been easier to build than you thought.
+  - Try 1: Pick one skill you’ve skipped and spend an hour on it, so you test whether it’s harder than you think.
+  - Try 2: Ask a friend which skill they think you’d enjoy, so you get a fresh idea.
+  - Watch 1: Notice which areas you want to improve in.
+  - Watch 2: Notice which ones you’ve decided are not for you.
+- [ ] `ftw_growth_mindset_m_02` — *Growth: Mixed*
+  - Focus 1: When you make a mistake, you tend to learn from it on some days and feel stuck on others.
+  - Focus 2: You usually take feedback well when you’re rested and harder when you’re not.
+  - Focus 3: Your reaction to a setback tends to depend on your energy.
+  - Why: How you handle setbacks depends on your energy, so the same mistake can feel like a lesson one day and a failure the next.
+  - Try 1: Wait for a good day to review a mistake, so you learn from it with a clear head.
+  - Try 2: Take some rest before you read hard feedback, so you take in more of it.
+  - Watch 1: Notice how you react to a mistake when you’re tired.
+  - Watch 2: Notice how you react when you’re rested.
+- [ ] `ftw_growth_mindset_m_03` — *Growth: Mixed*
+  - Focus 1: You enjoy a new challenge when you have time for it, and you stick to what you know when you’re busy.
+  - Focus 2: When life is full, you tend to protect your routine.
+  - Focus 3: Your interest in trying new things tends to move with how much space you have.
+  - Why: Protecting your routine when you’re stretched is fair, but you may wait for a calm moment that doesn’t come.
+  - Try 1: Pick a tiny new thing that takes ten minutes, so growth fits even a full week.
+  - Try 2: Put one learning slot in your calendar each month, so it doesn’t depend on a quiet week.
+  - Watch 1: Notice when you have space for something new.
+  - Watch 2: Notice what fills that space instead.
+### Ownership: Mixed
+
+- [ ] `ftw_locus_of_control_m_01` — *Ownership: Mixed*
+  - Focus 1: When something goes wrong, you tend to look at your part sometimes and at the situation other times.
+  - Focus 2: You usually see both your choices and your circumstances in how things turn out.
+  - Focus 3: Your view of what caused a problem tends to change with the problem.
+  - Why: Seeing both your part and the situation is a balanced view, but on a hard day you may lean too far toward blaming yourself or the situation.
+  - Try 1: List a problem’s parts as “mine,” “theirs” and “luck” on paper, so you see the whole picture.
+  - Try 2: Ask a friend how they see it, so you hear a third view.
+  - Watch 1: Notice which way you lean when you’re tired.
+  - Watch 2: Notice which way you lean when you’re calm.
+- [ ] `ftw_locus_of_control_m_02` — *Ownership: Mixed*
+  - Focus 1: When you set a goal, you tend to work on it and also expect that some things are out of your control.
+  - Focus 2: You usually put in effort and accept that results aren’t guaranteed.
+  - Focus 3: Your sense of control tends to be strong for your actions and loose for outcomes.
+  - Why: Focusing on effort while accepting uncertainty is a steady stance, but it can help to check your progress now and then.
+  - Try 1: Set a small check-in date for each goal, so you see how your effort is paying off.
+  - Try 2: Write down what you can control about a goal, so your effort goes there.
+  - Watch 1: Notice what parts of a goal you can control.
+  - Watch 2: Notice how you feel about the parts you can’t.
+- [ ] `ftw_locus_of_control_m_03` — *Ownership: Mixed*
+  - Focus 1: When things go well, you tend to give credit to both your effort and some luck.
+  - Focus 2: You usually say a win came from work and good timing.
+  - Focus 3: Your explanation of a success tends to include other people and circumstances.
+  - Why: Crediting both effort and luck keeps you fair, but you can undersell what you did if you lean on luck too much.
+  - Try 1: Name one thing you did that made the win happen, so your part is clear.
+  - Try 2: Thank someone who helped, so their part is clear too.
+  - Watch 1: Notice how you explain your last win.
+  - Watch 2: Notice which part you leave out.
+### Self-belief: Mixed
+
+- [ ] `ftw_self_efficacy_m_01` — *Self-belief: Mixed*
+  - Focus 1: When something new comes up, you tend to feel ready for some things and unsure about others.
+  - Focus 2: You usually say yes to challenges that fit your skills and think twice about the rest.
+  - Focus 3: Your belief that you can handle something tends to depend on how well you know it.
+  - Why: Knowing when to say yes keeps you safe, but thinking twice every time can slow you down on things you could do.
+  - Try 1: Say yes to one challenge that feels a little beyond your skills, so you test your limits.
+  - Try 2: Ask someone who knows the task what it takes, so you judge it with facts.
+  - Watch 1: Notice which challenges you say yes to quickly.
+  - Watch 2: Notice which ones you think twice about.
+- [ ] `ftw_self_efficacy_m_02` — *Self-belief: Mixed*
+  - Focus 1: When you start a hard task, you tend to feel confident some days and doubtful on others.
+  - Focus 2: You usually begin well and then wonder halfway whether you can finish.
+  - Focus 3: Your belief in yourself tends to dip in the middle of a project.
+  - Why: A dip in the middle is common for many people, and it often passes if you keep going.
+  - Try 1: Write “this is the dip” on a note when you start, so you recognize it when it comes.
+  - Try 2: Do one small step on the day you doubt, so the doubt doesn’t decide for you.
+  - Watch 1: Notice where in a project your confidence drops.
+  - Watch 2: Notice what helps you keep going.
+- [ ] `ftw_self_efficacy_m_03` — *Self-belief: Mixed*
+  - Focus 1: When you succeed, you tend to count it as a win some of the time and call it luck at other times.
+  - Focus 2: You usually believe in yourself more after a good week than after a bad one.
+  - Focus 3: Your confidence tends to follow your recent results.
+  - Why: Confidence that follows results is normal, but one rough week doesn’t change what you’re able to do.
+  - Try 1: Keep a list of things you handled well, so a bad week has a record to answer it.
+  - Try 2: Look at the last three months, not the last three days, when you judge yourself.
+  - Watch 1: Notice how your confidence changes after a bad day.
+  - Watch 2: Notice how long it takes to come back.
+### Playfulness: Mixed
+
+- [ ] `ftw_playfulness_m_01` — *Playfulness: Mixed*
+  - Focus 1: You enjoy joking around with some people and keep a more serious side with others.
+  - Focus 2: Your sense of humor tends to come out more with friends than at work.
+  - Focus 3: You usually match the mood of the room, silly when it’s silly and serious when it isn’t.
+  - Why: Matching the room shows you’re paying attention, but people who only see one side may not know the other.
+  - Try 1: Share a little of your funny side with a coworker this week, so they know you.
+  - Try 2: Share something serious with a friend you usually joke with, so they know that side too.
+  - Watch 1: Notice where your humor comes out most.
+  - Watch 2: Notice where you keep it back.
+- [ ] `ftw_playfulness_m_02` — *Playfulness: Mixed*
+  - Focus 1: When you have free time, you tend to choose fun some days and something useful on others.
+  - Focus 2: You usually like to get things done before you play, but not always.
+  - Focus 3: Your free time tends to split between rest, play and tasks.
+  - Why: A mix of play and tasks gives you balance, but on a busy week play can slip off the list first.
+  - Try 1: Put one thing that’s just for fun on your calendar this week, so it has a spot.
+  - Try 2: Finish one task early so you can play without it hanging over you.
+  - Watch 1: Notice which gets dropped first when you’re busy.
+  - Watch 2: Notice how you feel after a week with no play.
+- [ ] `ftw_playfulness_m_03` — *Playfulness: Mixed*
+  - Focus 1: When things go wrong, you tend to joke about it sometimes and take it seriously at other times.
+  - Focus 2: You usually know whether a moment needs a laugh or a plain answer.
+  - Focus 3: Your use of humor under stress tends to depend on how big the problem is.
+  - Why: Reading the moment lets you use humor well, but you might misjudge now and then and a joke may land badly.
+  - Try 1: Ask “is this a joke moment?” before you make one in a tense talk, so you read the room.
+  - Try 2: Say sorry quickly if a joke lands badly, so the moment is repaired.
+  - Watch 1: Notice how your jokes land when things are tense.
+  - Watch 2: Notice which moments you’d rather you had stayed serious.

@@ -16,14 +16,14 @@
  * title is not in the bank was written by the old AI insight; it is hidden in
  * every history surface and ignored by the picker, never deleted.
  *
- * UNREVIEWED: INSIGHT_BANK_COPY_REVIEWED stays false until emci ticks
- * docs/insight-bank-review.md. Nothing in the app renders the flag (emci,
+ * Accepted by emci 2026-10-23 (roadmap A4): INSIGHT_BANK_COPY_REVIEWED is true;
+ * review doc docs/insight-bank-review.md. Nothing in the app renders the flag (emci,
  * 2026-10-07: no draft badge for this bank).
  */
 import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { axisOfKey, type LineKey } from '@/lib/daily-line/bank';
 import { isShareableLean } from '@/lib/legends64/identity';
-import type { TraitLean } from '@/lib/traits';
+import type { TraitAxis, TraitLean } from '@/lib/traits';
 
 import { AGREEABLENESS_IDEAS } from './agreeableness';
 import { ATTACHMENT_ANXIETY_IDEAS } from './attachment-anxiety';
@@ -37,6 +37,7 @@ import type { InsightIdea } from './define';
 import { EXTRAVERSION_IDEAS } from './extraversion';
 import { GROWTH_MINDSET_IDEAS } from './growth-mindset';
 import { LOCUS_OF_CONTROL_IDEAS } from './locus-of-control';
+import { MIXED_IDEAS } from './mixed';
 import { OPENNESS_IDEAS } from './openness';
 import { PLAYFULNESS_IDEAS } from './playfulness';
 import { RELATEDNESS_IDEAS } from './relatedness';
@@ -46,7 +47,9 @@ import { STEADINESS_IDEAS } from './steadiness';
 
 export type { InsightIdea } from './define';
 
-export const INSIGHT_BANK_COPY_REVIEWED = false;
+// emci accepted the original 208 ideas 2026-10-23 (roadmap A4). The A6 additions (ids _07-_12 per lean and
+// every mixed idea) are still to be read by emci: docs/insight-bank-review.md ("A6 additions"), Box 82 line 5.
+export const INSIGHT_BANK_COPY_REVIEWED = true;
 
 /** Ideas with at least one key, in trait order. */
 export const TRAIT_IDEAS: readonly InsightIdea[] = [
@@ -68,9 +71,15 @@ export const TRAIT_IDEAS: readonly InsightIdea[] = [
   ...PLAYFULNESS_IDEAS,
 ];
 
-export { STARTER_IDEAS };
+export { STARTER_IDEAS, MIXED_IDEAS };
 
-export const ALL_IDEAS: readonly InsightIdea[] = [...TRAIT_IDEAS, ...STARTER_IDEAS];
+export const ALL_IDEAS: readonly InsightIdea[] = [...TRAIT_IDEAS, ...MIXED_IDEAS, ...STARTER_IDEAS];
+
+/** The axis an idea speaks about, whatever its kind: its keys' axes, or its mixed axis. */
+export function ideaAxes(entry: InsightIdea): TraitAxis[] {
+  if (entry.mixed) return [entry.mixed];
+  return entry.keys.map((key) => axisOfKey(key));
+}
 
 const BY_ID = new Map(ALL_IDEAS.map((entry) => [entry.id, entry]));
 
@@ -1775,7 +1784,11 @@ export function keyTag(key: LineKey): string {
   return `${AXIS_SHORT_NAME[axis]}: ${AXIS_POLE_NAME[axis][lean]}`;
 }
 
+/** A mixed idea's tag: "Curiosity: Mixed". */
+export const MIXED_TAG_POLE = 'Mixed';
+
 export function ideaTags(entry: InsightIdea): string[] {
+  if (entry.mixed) return [`${AXIS_SHORT_NAME[entry.mixed]}: ${MIXED_TAG_POLE}`];
   return entry.keys.length === 0 ? [STARTER_TAG_LABEL] : entry.keys.map(keyTag);
 }
 
@@ -1798,6 +1811,8 @@ export function themeTags(theme: string | null | undefined): string[] {
  * side of a trait stay inside the app. Starters have no key and are fine.
  */
 export function ideaShareable(entry: InsightIdea): boolean {
+  // A mixed idea names no side, but its topic can be private (worry and closeness): it follows both sides.
+  if (entry.mixed) return isShareableLean(entry.mixed, 'high') && isShareableLean(entry.mixed, 'low');
   return entry.keys.every((key) => {
     const lean = key.slice(key.indexOf(':') + 1) as TraitLean;
     return isShareableLean(axisOfKey(key), lean);

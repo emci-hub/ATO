@@ -12,7 +12,8 @@
  * Pure: no I/O here, so the bundle runs on Deno and the check runs on Node.
  */
 
-export const LIBRARY_KINDS = ['deep_dive', 'story', 'legend'] as const;
+/** Story left the library on 2026-10-22 (roadmap A3 / S4): it is free templates since 2026-10-14. */
+export const LIBRARY_KINDS = ['deep_dive', 'legend'] as const;
 export type LibraryKind = (typeof LIBRARY_KINDS)[number];
 
 export function isLibraryKind(value: unknown): value is LibraryKind {
@@ -26,7 +27,6 @@ export function isLibraryKind(value: unknown): value is LibraryKind {
  */
 export const LIBRARY_VERSION: Readonly<Record<LibraryKind, string>> = {
   deep_dive: 'l2', // honest-weaknesses prompt, 2026-10-19
-  story: 'l4', // honest-weaknesses rule joins the prompt, 2026-10-19
   legend: 'l2', // humor is 18+: joke rules are contextual boundaries, not topic bans, 2026-10-19
 };
 

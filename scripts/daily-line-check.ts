@@ -337,7 +337,7 @@ assert.match(home, /<TodayPickCard/);
 // It moved to the Today's focus card on Insights (2026-10-14).
 assert.match(
   read('src/components/insights/today-focus-card.tsx'),
-  /pickIdea\(\{ userId, ymd: todayYmd, leans: clearLeans\(tracks\), history \}\)/,
+  /pickIdea\(\{ userId, ymd: todayYmd, leans: clearLeans\(tracks\), mixedAxes: mixedAxesFrom\(tracks\), history \}\)/,
 );
 ok('Home renders the daily line; the focus card picks the stored insight from the same clear leans');
 
@@ -380,11 +380,9 @@ assert.ok(Number(capSql) >= 120, 'the pool line cap must not be shorter than DAI
 assert.match(wave, /values \(v_key, v_line, 'ai', uid\)/);
 ok('wave77: the pool accepts every line the app allows, and AI rows are stamped with their owner');
 
-const gen = read('src/lib/insight/generate-insight.ts');
-assert.match(gen, /export function parseInsightLines\(/);
-// The AI insight call itself was removed (2026-10-14): no AI lines arrive any
-// more. The parser and the rule gate stay for any line already in the pool.
-assert.doesNotMatch(gen, /export async function generateDailyInsight/);
+// The AI insight call was removed (2026-10-14) and its file, with the line parser, in roadmap A5: no AI lines
+// arrive any more. The rule gate in sync.ts stays for any line already in the pool.
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/lib/insight/generate-insight.ts')), 'the AI insight writer stays deleted');
 const sync = read('src/lib/daily-line/sync.ts');
 assert.match(sync, /lineRuleViolation\(text\) \?\?/);
 ok('no AI insight call is left; any stored line still passes the line rules before it is kept');

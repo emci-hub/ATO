@@ -19,20 +19,13 @@ import {
 import { CONCEPT_COPY_REVIEWED, CATEGORY_CONCEPTS, conceptCopyClean } from '../src/lib/concept-explainers';
 import { repeatsPinnedCategories } from '../src/lib/explore/combine';
 import {
-  STORY_COPY_REVIEWED,
   STORY_LABEL,
-  STORY_TENSION_SAMPLES,
-  STORY_SAMPLES,
-  buildStoryPrompt,
-  parseStoryBody,
-  storyCopyClean,
+  formatStoryTensionNote,
   storyFingerprint,
   storyNamesACategory,
   storyReady,
 } from '../src/lib/sage-story';
-import { pickStoryThread, threadAxes } from '../src/lib/story-thread';
 import { isThinProfile, settledCount, applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
-import { TITLE_COPY_REVIEWED } from '../src/lib/sage-title';
 import { TRAIT_AXES } from '../src/lib/traits';
 
 let passed = 0;
@@ -92,13 +85,14 @@ assert.ok(CATEGORY_CONCEPTS.cat_levity.length > 0);
 ok('Levity is a bar of playfulness + conflict axes; same stability floor; copy flagged unreviewed');
 
 console.log('PART 4 — The Story');
-assert.equal(STORY_COPY_REVIEWED, false);
-assert.equal(TITLE_COPY_REVIEWED, false);
 assert.equal(STORY_LABEL, 'The Story');
-assert.equal(STORY_TENSION_SAMPLES.length, 3);
-assert.doesNotMatch(STORY_TENSION_SAMPLES.join('\n'), /leaving visible|not a verdict|on paper|told us|gut-call/i);
-assert.doesNotMatch(STORY_SAMPLES[0]!.body, /on paper|none of this is a type|last stretch has been sitting/i);
-assert.equal(storyCopyClean(), true);
+// The old AI Story (prompt, answer parser, samples, STORY_COPY_REVIEWED) was removed in roadmap A5; the
+// told-vs-played note the template card still shows is pinned here (pass: plain wording, fail: a verdict).
+const tensionNote = formatStoryTensionNote([{ axis: 'extraversion', report: 0.8, game: 0.2 } as never]);
+assert.ok(tensionNote, 'a note for a real told-vs-played gap');
+assert.doesNotMatch(tensionNote!, /leaving visible|not a verdict|on paper|told us|gut-call/i);
+assert.match(tensionNote!, /Maybe you're just different depending on the moment/);
+assert.equal(formatStoryTensionNote([]), null, 'fail case: no gap, no note');
 assert.equal(storyNamesACategory('Openness to life showed up this week.'), true);
 assert.equal(storyNamesACategory('A hard talk can still have a bit of air in it.'), false);
 const thinTracks = [stableReport('openness', 0.5)];
@@ -130,25 +124,12 @@ ok('Story has its own quota lane, thin-profile gate, and no title-RPC reuse');
 
 const many: TraitTrack[] = TRAIT_AXES.map((axis) => stableReport(axis, 0.6));
 assert.equal(storyReady(many), true);
-// Story v2 (2026-10-08): the prompt is one day built from the picked thread,
-// not a holistic rewrite of every category. The tension line now shows only
-// when its axis is inside the thread; story-thread-check pins the rest.
-const manyThread = pickStoryThread({ tracks: many, last: null, noJoke: false });
-assert.ok(manyThread);
-const storyPrompt = buildStoryPrompt({
-  tracks: many,
-  divergenceNote: 'told and played do not quite match.',
-  divergenceAxis: threadAxes(manyThread)[0]!,
-  thread: manyThread,
-});
-assert.match(storyPrompt, /TOLD-VS-PLAYED/);
-assert.match(storyPrompt, /Do not name categories/);
-assert.match(storyPrompt, /ONE ordinary day, ONE setting/);
-assert.match(storyPrompt, /like a friend/);
-assert.equal(parseStoryBody('{"body":"You are an INTJ who needs agency."}'), null);
-assert.ok(parseStoryBody('{"body":"A hard week can still leave a little room to breathe."}'));
+// The AI Story prompt and answer parser are gone (roadmap A5). The fingerprint still moves on told-vs-played.
 assert.notEqual(storyFingerprint(many, null), storyFingerprint(many, 'gap'));
-ok('Story prompt is one day from the picked thread; fingerprint moves on told-vs-played');
+assert.equal(storyFingerprint(many, 'gap'), storyFingerprint(many, 'gap'), 'same input, same fingerprint');
+const storySrc = read('src/lib/sage-story.ts').replace(/\/\*[\s\S]*?\*\//g, ''); // code only: the header comment names what was removed
+assert.doesNotMatch(storySrc, /Write as Sage|buildStoryPrompt|parseStoryBody|parseStoryAnswer|STORY_COPY_REVIEWED|generateText/);
+ok('the Story fingerprint moves on told-vs-played; no AI Story prompt or parser remains');
 
 const fold = read('src/components/insights/insights-story-card.tsx');
 /**
@@ -191,8 +172,5 @@ assert.ok(
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
 assert.ok(!existsSync('src/app/(tabs)/sage.tsx'), 'the Sage tab is gone');
 ok('no generic fallback paragraph; the Story lives on Insights, not Home or Explore');
-
-assert.equal(STORY_SAMPLES.every((row) => row.shape.includes('thin') || row.body.length > 0 || row.body === ''), true);
-ok('draft Story samples and tension lines exist for emci review and are not treated as reviewed');
 
 console.log(`\n${passed} wave22 checks passed`);

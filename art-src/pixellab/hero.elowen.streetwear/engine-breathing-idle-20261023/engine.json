@@ -1,0 +1,407 @@
+{
+  "hero": "elowen",
+  "recipe": "breathing-idle",
+  "generations": 0,
+  "dirs": {
+    "east": {
+      "gates": [
+        {
+          "gate": "foot-row",
+          "ok": true,
+          "detail": "feet rows 156/156/156/156 (rig 156)",
+          "values": [
+            156,
+            156,
+            156,
+            156
+          ]
+        },
+        {
+          "gate": "height-band",
+          "ok": true,
+          "detail": "heights 111/110/109/110 (band 107-113)",
+          "values": [
+            111,
+            110,
+            109,
+            110
+          ]
+        },
+        {
+          "gate": "silhouette",
+          "ok": true,
+          "detail": "overlap 1.000/0.958/0.918/0.958 (min 0.9)",
+          "values": [
+            1,
+            0.9582140812821981,
+            0.918194640338505,
+            0.9582140812821981
+          ]
+        },
+        {
+          "gate": "palette",
+          "ok": true,
+          "detail": "colours outside the hero's own frames 0/0/0/0 (need 0)",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "gate": "no-tears",
+          "ok": true,
+          "detail": "1-3 px see-through specks 0/0/0/0 (the rotation has 0)",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "gate": "prop-pixels",
+          "ok": true,
+          "detail": "230 prop px, match 1.000/1.000/1.000/1.000 (min 0.95)",
+          "values": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "gate": "loop-seam",
+          "ok": true,
+          "detail": "last->first 1406 px vs busiest step 1413 px (max x1.25)",
+          "values": [
+            1406,
+            1413,
+            1413,
+            1406
+          ]
+        }
+      ],
+      "compared": {
+        "current": [
+          {
+            "gate": "foot-row",
+            "ok": true,
+            "detail": "feet rows 156/156/156/156 (rig 156)",
+            "values": [
+              156,
+              156,
+              156,
+              156
+            ]
+          },
+          {
+            "gate": "height-band",
+            "ok": false,
+            "detail": "heights 113/115/115/112 (band 107-113)",
+            "values": [
+              113,
+              115,
+              115,
+              112
+            ]
+          },
+          {
+            "gate": "silhouette",
+            "ok": false,
+            "detail": "overlap 0.892/0.790/0.754/0.782 (min 0.9)",
+            "values": [
+              0.8923327895595432,
+              0.7897435897435897,
+              0.7536015896671634,
+              0.7818961169944528
+            ]
+          },
+          {
+            "gate": "palette",
+            "ok": true,
+            "detail": "colours outside the hero's own frames 0/0/0/0 (need 0)",
+            "values": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "gate": "no-tears",
+            "ok": false,
+            "detail": "1-3 px see-through specks 0/1/0/0 (the rotation has 0)",
+            "values": [
+              0,
+              1,
+              0,
+              0
+            ]
+          },
+          {
+            "gate": "prop-pixels",
+            "ok": false,
+            "detail": "230 prop px, match 0.322/0.209/0.170/0.143 (min 0.95)",
+            "values": [
+              0.3217391304347826,
+              0.20869565217391303,
+              0.16956521739130434,
+              0.14347826086956522
+            ]
+          },
+          {
+            "gate": "loop-seam",
+            "ok": true,
+            "detail": "last->first 2545 px vs busiest step 2355 px (max x1.25)",
+            "values": [
+              2179,
+              1394,
+              2355,
+              2545
+            ]
+          }
+        ]
+      },
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ],
+      "offsets": {
+        "locked": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cape": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "body": [
+          0,
+          1,
+          2,
+          1
+        ],
+        "head": [
+          0,
+          1,
+          2,
+          1
+        ],
+        "prop": [
+          0,
+          1,
+          2,
+          1
+        ]
+      }
+    },
+    "west": {
+      "gates": [
+        {
+          "gate": "foot-row",
+          "ok": true,
+          "detail": "feet rows 156/156/156/156 (rig 156)",
+          "values": [
+            156,
+            156,
+            156,
+            156
+          ]
+        },
+        {
+          "gate": "height-band",
+          "ok": true,
+          "detail": "heights 110/109/108/109 (band 107-113)",
+          "values": [
+            110,
+            109,
+            108,
+            109
+          ]
+        },
+        {
+          "gate": "silhouette",
+          "ok": true,
+          "detail": "overlap 1.000/0.954/0.910/0.954 (min 0.9)",
+          "values": [
+            1,
+            0.9542232722976964,
+            0.9099883855981417,
+            0.9542232722976964
+          ]
+        },
+        {
+          "gate": "palette",
+          "ok": true,
+          "detail": "colours outside the hero's own frames 0/0/0/0 (need 0)",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "gate": "no-tears",
+          "ok": true,
+          "detail": "1-3 px see-through specks 0/0/0/0 (the rotation has 0)",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "gate": "prop-pixels",
+          "ok": true,
+          "detail": "176 prop px, match 1.000/1.000/1.000/1.000 (min 0.95)",
+          "values": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "gate": "loop-seam",
+          "ok": true,
+          "detail": "last->first 1370 px vs busiest step 1372 px (max x1.25)",
+          "values": [
+            1370,
+            1372,
+            1372,
+            1370
+          ]
+        }
+      ],
+      "compared": {
+        "current": [
+          {
+            "gate": "foot-row",
+            "ok": false,
+            "detail": "feet rows 156/155/154/156 (rig 156)",
+            "values": [
+              156,
+              155,
+              154,
+              156
+            ]
+          },
+          {
+            "gate": "height-band",
+            "ok": false,
+            "detail": "heights 112/113/114/113 (band 107-113)",
+            "values": [
+              112,
+              113,
+              114,
+              113
+            ]
+          },
+          {
+            "gate": "silhouette",
+            "ok": false,
+            "detail": "overlap 0.919/0.831/0.741/0.743 (min 0.9)",
+            "values": [
+              0.9192240880138969,
+              0.8312951639799889,
+              0.7412987012987013,
+              0.7430268595041323
+            ]
+          },
+          {
+            "gate": "palette",
+            "ok": true,
+            "detail": "colours outside the hero's own frames 0/0/0/0 (need 0)",
+            "values": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "gate": "no-tears",
+            "ok": false,
+            "detail": "1-3 px see-through specks 1/0/0/0 (the rotation has 0)",
+            "values": [
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "gate": "prop-pixels",
+            "ok": false,
+            "detail": "176 prop px, match 0.313/0.330/0.324/0.267 (min 0.95)",
+            "values": [
+              0.3125,
+              0.32954545454545453,
+              0.32386363636363635,
+              0.26704545454545453
+            ]
+          },
+          {
+            "gate": "loop-seam",
+            "ok": true,
+            "detail": "last->first 3006 px vs busiest step 2516 px (max x1.25)",
+            "values": [
+              2221,
+              2516,
+              2501,
+              3006
+            ]
+          }
+        ]
+      },
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ],
+      "offsets": {
+        "locked": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cape": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "body": [
+          0,
+          1,
+          2,
+          1
+        ],
+        "head": [
+          0,
+          1,
+          2,
+          1
+        ],
+        "prop": [
+          0,
+          1,
+          2,
+          1
+        ]
+      }
+    }
+  }
+}

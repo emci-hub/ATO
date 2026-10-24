@@ -23,7 +23,7 @@ import { clearLocalSession } from '@/lib/supabase';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /** Same address as You's "Send feedback" and the legal pages (check:age pins the match). */
-export const SUPPORT_EMAIL = 'support@asstrollogs.com';
+export const SUPPORT_EMAIL = 'support@emgens.com';
 
 export const DELETE_NOTE =
   'Deleting your account is permanent. If you leave it, we keep your account and everything in it just as it is.';

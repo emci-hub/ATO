@@ -7,14 +7,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { AXIS_POLES, POLE_COPY_REVIEWED, poleCopyClean } from '../src/lib/axis-poles';
-import {
-  TITLE_COPY_REVIEWED,
-  TITLE_EMPTY,
-  TITLE_SAMPLES,
-  parseTitleBody,
-  titleCopyClean,
-  titleReady,
-} from '../src/lib/sage-title';
+import { parseSageTitle } from '../src/lib/sage-title';
 import {
   divergingAxes,
   divergingAxesFromTracks,
@@ -143,23 +136,23 @@ assert.equal(rawDiv.length, 1);
 ok('divergence helper walks every TRAIT_AXES entry, including Playfulness');
 
 assert.equal(POLE_COPY_REVIEWED, true); // emci approved the names, end words and quotes on 2026-10-02
-assert.equal(TITLE_COPY_REVIEWED, false);
 assert.equal(poleCopyClean(), true);
-assert.equal(titleCopyClean(), true);
 assert.equal(Object.keys(AXIS_POLES).length, TRAIT_AXES.length);
-assert.equal(TITLE_SAMPLES.length, 6);
 for (const axis of TRAIT_AXES) {
   assert.equal(containsFrameworkTerm(AXIS_POLES[axis].low), false, axis);
   assert.equal(containsFrameworkTerm(AXIS_POLES[axis].high), false, axis);
 }
-assert.equal(containsFrameworkTerm(TITLE_EMPTY), false);
-ok('pole + title drafts are flagged unreviewed and fence-clean');
+ok('pole copy is approved and fence-clean');
 
-assert.equal(parseTitleBody('{"title":"INTJ Visionary","lede":"You are an INTJ."}'), null);
-assert.equal(parseTitleBody('{"title":"Quiet follow-through","lede":"Keeps the plan, prefers a smaller room."}')?.title, 'Quiet follow-through');
-const thin: TraitTrack[] = [first];
-assert.equal(titleReady(thin), false);
-ok('title parser rejects type-branding; thin profiles stay unnamed');
+// The AI title writer (prompt, parser, samples, TITLE_COPY_REVIEWED) was removed in roadmap A5.
+// sage-title.ts keeps only the saved shape the category teaser reads back; the reader still refuses
+// a saved title that has no title, lede and fingerprint (pass: a complete row, fail: a missing field).
+const titleSrc = read('src/lib/sage-title.ts').replace(/\/\*[\s\S]*?\*\//g, ''); // code only: the header comment names what was removed
+assert.doesNotMatch(titleSrc, /buildTitlePrompt|parseTitleBody|parseCombinedBody|TITLE_SAMPLES|TITLE_COPY_REVIEWED|generateText/);
+assert.ok(parseSageTitle({ title: 'Quiet follow-through', lede: 'Keeps the plan.', fingerprint: 'x' }), 'pass: a complete saved title reads back');
+assert.equal(parseSageTitle({ title: 'Quiet follow-through', lede: 'Keeps the plan.' }), null, 'fail case: no fingerprint');
+assert.equal(parseSageTitle(null), null);
+ok('the title writer is gone; the saved-title reader keeps its guards');
 
 const sql = read('supabase/migrations/wave20_trait_tracks_titles.sql');
 assert.match(sql, /create table public.trait_tracks/);

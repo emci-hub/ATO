@@ -171,7 +171,7 @@ export function friendStatus(f: CircleFriend): 'sharing' | 'waiting' | 'off' {
 /* ---------------------------------------------------- safety (wave104) --- */
 
 /** Where a person writes about someone in their Circle (Apple 1.2). One string, used everywhere. */
-export const CIRCLE_SUPPORT_EMAIL = 'support@asstrollogs.com';
+export const CIRCLE_SUPPORT_EMAIL = 'support@emgens.com';
 
 /** A pending request, either direction: `id` answers it, `peer` is who, `handle` is what we show. */
 export type CircleRequest = { id: string; peer: string; handle: string };

@@ -16,6 +16,8 @@ expo-env.d.ts
 *.p8
 *.p12
 *.key
+# Art ids may end in ".key" (icon.streetwear.key): its generated preview folder is not a secret.
+!assets/art/_contact/preview/*.key/
 *.mobileprovision
 
 # Metro

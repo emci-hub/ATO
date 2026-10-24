@@ -74,18 +74,15 @@ ok('scanner finds literals, JSX text and templates; skips comments, imports and 
  * Model input only — never rendered, pushed or shared. Each one is listed by
  * name so nothing else can hide here. Renaming them is in docs/sage-cleanup.md:
  *  - the voice reference docs fed to prompts (generated / framing notes);
- *  - two prompts inside the ai-library SERVER bundle. Changing their text
- *    changes the bundle, which needs `gen:ai-library` + an Edge Function
- *    deploy — out of scope for the Insights PR (no edge-function changes).
+ *  - (the two "Write as Sage" prompts that used to be exempted here, in sage-story.ts and
+ *    story-card.ts, were removed in roadmap A5: no server-bundle exemptions are left, and the server
+ *    bundle carries none either — check:ai-library pins that. Only the two prompt-only files above stay skipped.)
  */
 export const PROMPT_ONLY_FILES: readonly string[] = [
   'src/lib/voice/content.generated.ts',
   'src/lib/voice/library.ts',
 ];
-export const SERVER_BUNDLE_PROMPTS: Readonly<Record<string, RegExp>> = {
-  'src/lib/sage-story.ts': /^Write as Sage in the ATO app\. Not a doctor\. This is The Story/,
-  'src/lib/story-card.ts': /^Write as Sage in the ATO app\. Not a doctor\. Write a 100-word micro-story/,
-};
+export const SERVER_BUNDLE_PROMPTS: Readonly<Record<string, RegExp>> = {};
 
 const hits: string[] = [];
 const exempted: string[] = [];
@@ -102,12 +99,9 @@ for (const file of walk(resolve(root, 'src'))) {
     hits.push(`${rel}:${piece.line}  ${JSON.stringify(piece.text.slice(0, 80))}`);
   }
 }
-// The exemptions stay exactly as narrow as listed: one prompt per file.
-assert.equal(
-  exempted.length,
-  Object.keys(SERVER_BUNDLE_PROMPTS).length,
-  `server-bundle prompt exemptions: ${exempted.join(', ')}`,
-);
+// No exemptions are left: every "Sage" in a user-visible string is a hit.
+assert.equal(Object.keys(SERVER_BUNDLE_PROMPTS).length, 0, 'no server-bundle prompt exemptions remain');
+assert.equal(exempted.length, 0, `server-bundle prompt exemptions: ${exempted.join(', ')}`);
 assert.deepEqual(hits, [], `"Sage" in user-visible copy:\n${hits.join('\n')}`);
 ok('no string, template or JSX text under src/ says "Sage"');
 

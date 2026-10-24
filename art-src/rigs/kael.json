@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "hero": "kael",
+  "slug": "hero.kael.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.kael.streetwear/migrated/raw",
+  "footRow": 149,
+  "heightBand": [
+    105,
+    110
+  ],
+  "lines": {
+    "hip": 112,
+    "shoulder": 70
+  },
+  "directions": {
+    "east": {
+      "parts": {
+        "prop": [
+          [
+            104,
+            104
+          ],
+          [
+            137,
+            104
+          ],
+          [
+            137,
+            124
+          ],
+          [
+            128,
+            125
+          ],
+          [
+            104,
+            114
+          ]
+        ]
+      }
+    },
+    "west": {
+      "parts": {
+        "prop": [
+          [
+            58,
+            121
+          ],
+          [
+            58,
+            132
+          ],
+          [
+            66,
+            132
+          ],
+          [
+            70,
+            124
+          ],
+          [
+            82,
+            112
+          ],
+          [
+            82,
+            100
+          ],
+          [
+            76,
+            98
+          ],
+          [
+            64,
+            112
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "Template Idle is live; this is the engine version for comparison. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map."
+}

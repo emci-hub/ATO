@@ -1,0 +1,387 @@
+{
+  "hero": "kitsune",
+  "recipe": "breathing-idle",
+  "generations": 0,
+  "dirs": {
+    "east": {
+      "gates": [
+        {
+          "gate": "foot-row",
+          "ok": true,
+          "detail": "feet rows 151/151/151/151 (rig 151)",
+          "values": [
+            151,
+            151,
+            151,
+            151
+          ]
+        },
+        {
+          "gate": "height-band",
+          "ok": true,
+          "detail": "heights 111/110/110/111 (band 107-113)",
+          "values": [
+            111,
+            110,
+            110,
+            111
+          ]
+        },
+        {
+          "gate": "silhouette",
+          "ok": true,
+          "detail": "overlap 1.000/0.908/0.908/1.000 (min 0.9)",
+          "values": [
+            1,
+            0.9075258239055582,
+            0.9075258239055582,
+            1
+          ]
+        },
+        {
+          "gate": "palette",
+          "ok": true,
+          "detail": "colours outside the hero's own frames 0/0/0/0 (need 0)",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "gate": "no-tears",
+          "ok": true,
+          "detail": "1-3 px see-through specks 0/0/0/0 (the rotation has 0)",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "gate": "prop-pixels",
+          "ok": true,
+          "detail": "no prop mask in this rig direction",
+          "values": []
+        },
+        {
+          "gate": "loop-seam",
+          "ok": true,
+          "detail": "last->first 0 px vs busiest step 1998 px (max x1.25)",
+          "values": [
+            1998,
+            0,
+            1998,
+            0
+          ]
+        }
+      ],
+      "compared": {
+        "current": [
+          {
+            "gate": "foot-row",
+            "ok": true,
+            "detail": "feet rows 151/151/151/151 (rig 151)",
+            "values": [
+              151,
+              151,
+              151,
+              151
+            ]
+          },
+          {
+            "gate": "height-band",
+            "ok": true,
+            "detail": "heights 111/111/112/112 (band 107-113)",
+            "values": [
+              111,
+              111,
+              112,
+              112
+            ]
+          },
+          {
+            "gate": "silhouette",
+            "ok": false,
+            "detail": "overlap 0.856/0.817/0.797/0.774 (min 0.9)",
+            "values": [
+              0.8556851311953353,
+              0.8173724735322425,
+              0.7965460137213154,
+              0.7744869402985075
+            ]
+          },
+          {
+            "gate": "palette",
+            "ok": true,
+            "detail": "colours outside the hero's own frames 0/0/0/0 (need 0)",
+            "values": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "gate": "no-tears",
+            "ok": false,
+            "detail": "1-3 px see-through specks 3/1/2/2 (the rotation has 0)",
+            "values": [
+              3,
+              1,
+              2,
+              2
+            ]
+          },
+          {
+            "gate": "prop-pixels",
+            "ok": true,
+            "detail": "no prop mask in this rig direction",
+            "values": []
+          },
+          {
+            "gate": "loop-seam",
+            "ok": false,
+            "detail": "last->first 1956 px vs busiest step 1426 px (max x1.25)",
+            "values": [
+              1426,
+              1415,
+              1188,
+              1956
+            ]
+          }
+        ]
+      },
+      "ms": [
+        450,
+        300,
+        450,
+        300
+      ],
+      "offsets": {
+        "locked": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cape": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "body": [
+          0,
+          1,
+          1,
+          0
+        ],
+        "head": [
+          0,
+          1,
+          1,
+          0
+        ],
+        "prop": [
+          0,
+          1,
+          1,
+          0
+        ]
+      }
+    },
+    "west": {
+      "gates": [
+        {
+          "gate": "foot-row",
+          "ok": true,
+          "detail": "feet rows 150/150/150/150 (rig 150)",
+          "values": [
+            150,
+            150,
+            150,
+            150
+          ]
+        },
+        {
+          "gate": "height-band",
+          "ok": true,
+          "detail": "heights 110/109/109/110 (band 107-113)",
+          "values": [
+            110,
+            109,
+            109,
+            110
+          ]
+        },
+        {
+          "gate": "silhouette",
+          "ok": true,
+          "detail": "overlap 1.000/0.923/0.923/1.000 (min 0.9)",
+          "values": [
+            1,
+            0.9226254002134472,
+            0.9226254002134472,
+            1
+          ]
+        },
+        {
+          "gate": "palette",
+          "ok": true,
+          "detail": "colours outside the hero's own frames 0/0/0/0 (need 0)",
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "gate": "no-tears",
+          "ok": true,
+          "detail": "1-3 px see-through specks 3/1/1/3 (the rotation has 3)",
+          "values": [
+            3,
+            1,
+            1,
+            3
+          ]
+        },
+        {
+          "gate": "prop-pixels",
+          "ok": true,
+          "detail": "no prop mask in this rig direction",
+          "values": []
+        },
+        {
+          "gate": "loop-seam",
+          "ok": true,
+          "detail": "last->first 0 px vs busiest step 1907 px (max x1.25)",
+          "values": [
+            1907,
+            0,
+            1907,
+            0
+          ]
+        }
+      ],
+      "compared": {
+        "current": [
+          {
+            "gate": "foot-row",
+            "ok": true,
+            "detail": "feet rows 150/150/150/150 (rig 150)",
+            "values": [
+              150,
+              150,
+              150,
+              150
+            ]
+          },
+          {
+            "gate": "height-band",
+            "ok": false,
+            "detail": "heights 105/105/108/109 (band 107-113)",
+            "values": [
+              105,
+              105,
+              108,
+              109
+            ]
+          },
+          {
+            "gate": "silhouette",
+            "ok": false,
+            "detail": "overlap 0.861/0.810/0.805/0.804 (min 0.9)",
+            "values": [
+              0.8609358569926393,
+              0.8101036269430052,
+              0.804530414863833,
+              0.8044365119836818
+            ]
+          },
+          {
+            "gate": "palette",
+            "ok": true,
+            "detail": "colours outside the hero's own frames 0/0/0/0 (need 0)",
+            "values": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "gate": "no-tears",
+            "ok": true,
+            "detail": "1-3 px see-through specks 2/0/0/1 (the rotation has 3)",
+            "values": [
+              2,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "gate": "prop-pixels",
+            "ok": true,
+            "detail": "no prop mask in this rig direction",
+            "values": []
+          },
+          {
+            "gate": "loop-seam",
+            "ok": true,
+            "detail": "last->first 2224 px vs busiest step 1846 px (max x1.25)",
+            "values": [
+              1846,
+              1301,
+              1295,
+              2224
+            ]
+          }
+        ]
+      },
+      "ms": [
+        450,
+        300,
+        450,
+        300
+      ],
+      "offsets": {
+        "locked": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cape": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "body": [
+          0,
+          1,
+          1,
+          0
+        ],
+        "head": [
+          0,
+          1,
+          1,
+          0
+        ],
+        "prop": [
+          0,
+          1,
+          1,
+          0
+        ]
+      }
+    }
+  }
+}

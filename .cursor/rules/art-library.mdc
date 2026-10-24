@@ -40,3 +40,6 @@ alwaysApply: false
     (in `check:ota-gate`) fails if they are stale. A pre-commit hook runs
     `art:sync` when staged files touch art. Never delete art; archive it
     (status archived, files to art-src/archive/).
+11. PixelLab pre-flight (emci 2026-10-21). Before ANY animation or art generation: read docs/art/PIXELLAB_GUIDE.md and
+    docs/art/PIXELLAB_ANIMATION.md, ask the pixellab MCP `search_help` about each tool you will use, update those docs if
+    answers differ, then get_balance, one test clip for emci's ok, and log generations per asset.

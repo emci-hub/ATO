@@ -63,7 +63,8 @@ assert.match(
 );
 assert.match(read('src/lib/story-library/flags.ts'), /return false/, 'the flag default is written down');
 
-assert.doesNotMatch(read('src/lib/category-deep-dive/generate.ts'), /generateText\(/);
+assert.equal(existsSync(resolve(root, 'src/lib/category-deep-dive/generate.ts')), false, 'the old deep-dive client writer stays deleted');
+assert.doesNotMatch(read('src/components/category-deep-dive-card.tsx'), /generateText\(/);
 assert.doesNotMatch(read('src/lib/legend-figures/generate.ts'), /generateText\(/);
 assert.match(read('src/components/category-deep-dive-card.tsx'), /STORY_LIBRARY_RUNTIME/);
 assert.match(read('src/app/(tabs)/legends.tsx'), /STORY_LIBRARY_RUNTIME/);

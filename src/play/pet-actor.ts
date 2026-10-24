@@ -23,8 +23,11 @@ import type { PetBranch, PetStage } from './pet';
 export const PET_CLIPS = ['idle', 'walk', 'dash', 'attack', 'skill', 'hurt'] as const;
 export type PetClip = (typeof PET_CLIPS)[number];
 
-/** Frames per clip the pet's art authors (absent / 0 = not authored). */
-export type PetClipKit = Partial<Record<PetClip, number>>;
+/** Frames per clip the pet's art authors (absent / 0 = not authored). `holds` carries
+ * the clips whose art authors per-frame holds (ms each); the rest play at `PET_FRAME_MS`. */
+export type PetClipKit = Partial<Record<PetClip, number>> & {
+  holds?: Partial<Record<PetClip, readonly number[]>>;
+};
 
 /** Heroes whose authored `hurt` slot is not fit for a pet (Kitsune's is a
  * death animation) — treated as missing, so a bust flashes instead. */
@@ -32,20 +35,28 @@ export const PET_NO_HURT_HEROES: readonly string[] = ['kitsune'];
 
 /** The slice of a skin role this module reads (structural — no skin import). */
 export type PetKitSource = {
-  walk?: { frames: number };
-  anims?: Partial<Record<string, { frames: number } | undefined>>;
+  walk?: { frames: number; holds?: readonly number[] };
+  anims?: Partial<Record<string, { frames: number; holds?: readonly number[] } | undefined>>;
 };
 
 /** The pet's clip kit from its resolved skin role. */
 export function petKitOfRole(role: PetKitSource | undefined, heroId?: string): PetClipKit {
   const kit: PetClipKit = {};
   if (!role) return kit;
-  if ((role.walk?.frames ?? 0) > 0) kit.walk = role.walk?.frames;
-  for (const clip of ['idle', 'dash', 'attack', 'skill', 'hurt'] as const) {
-    const frames = role.anims?.[clip]?.frames ?? 0;
-    if (frames > 0) kit[clip] = frames;
+  const holds: NonNullable<PetClipKit['holds']> = {};
+  const take = (clip: PetClip, art: { frames: number; holds?: readonly number[] } | undefined) => {
+    const frames = art?.frames ?? 0;
+    if (frames <= 0) return;
+    kit[clip] = frames;
+    if (art?.holds && art.holds.length === frames) holds[clip] = art.holds;
+  };
+  take('walk', role.walk);
+  for (const clip of ['idle', 'dash', 'attack', 'skill', 'hurt'] as const) take(clip, role.anims?.[clip]);
+  if (heroId && PET_NO_HURT_HEROES.includes(heroId)) {
+    delete kit.hurt;
+    delete holds.hurt;
   }
-  if (heroId && PET_NO_HURT_HEROES.includes(heroId)) delete kit.hurt;
+  if (Object.keys(holds).length > 0) kit.holds = holds;
   return kit;
 }
 
@@ -97,6 +108,8 @@ export const PET_SLEEP_SLOWDOWN = 3;
 /** One-shot length for a pose (a held pose lasts `fallbackMs`). */
 export function petPoseMs(kit: PetClipKit, pose: PetPose | null, fallbackMs = 700): number {
   if (!pose || pose.hold) return fallbackMs;
+  const holds = kit.holds?.[pose.clip];
+  if (holds) return holds.reduce((a, b) => a + b, 0);
   return Math.max(1, kit[pose.clip] ?? 1) * PET_FRAME_MS[pose.clip];
 }
 
@@ -111,6 +124,19 @@ export function petFrameAt(
 ): number {
   if (!pose || pose.hold) return 0;
   const frames = Math.max(1, kit[pose.clip] ?? 1);
+  const holds = kit.holds?.[pose.clip];
+  if (holds) {
+    const total = holds.reduce((a, b) => a + b, 0) * slow;
+    let t = Math.max(0, elapsedMs);
+    if (!loop && t >= total) return frames - 1;
+    t %= total;
+    for (let i = 0; i < holds.length; i += 1) {
+      const len = holds[i] * slow;
+      if (t < len) return i;
+      t -= len;
+    }
+    return frames - 1;
+  }
   const raw = Math.floor(Math.max(0, elapsedMs) / (PET_FRAME_MS[pose.clip] * slow));
   return loop ? raw % frames : Math.min(raw, frames - 1);
 }

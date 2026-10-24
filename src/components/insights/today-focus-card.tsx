@@ -12,7 +12,7 @@ import { useDailyInsight } from '@/hooks/use-daily-insight';
 import { useTheme } from '@/hooks/use-theme';
 import { clearLeans } from '@/lib/daily-line/pick';
 import { ideaForTitle, isBankInsightTitle, themeTags } from '@/lib/insight-bank';
-import { draftFromPick, pickIdea, type IdeaDay } from '@/lib/insight-bank/pick';
+import { draftFromPick, mixedAxesFrom, pickIdea, type IdeaDay } from '@/lib/insight-bank/pick';
 import { fetchInsightHistory, fetchTodayInsight, saveInsight } from '@/lib/insight/store';
 import { cachedFromInsight, saveCachedInsight } from '@/lib/insight/today-insight';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
@@ -37,6 +37,8 @@ export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to 
 export const INSIGHT_SAVE_FAILED_COPY = 'Picked it, but couldn’t save it. Tap to try again.';
 /** Shown on an insight that is not today's (it stays up until today's is loaded). */
 export const INSIGHT_EARLIER_DAY_COPY = 'From an earlier day. Load insight picks today’s.';
+/** After the first 16 answers, before the full profile (D22, A6): an honest label, not a verdict. */
+export const INSIGHT_EARLY_READ_COPY = 'Early read: based on your first 16 answers. It gets more accurate as you answer more.';
 
 /**
  * Today's focus on Insights (moved from Home, 2026-10-14). Stored copy from
@@ -54,12 +56,15 @@ export function TodayFocusCard({
   todayYmd,
   todayDay,
   showTryToday,
+  early = false,
 }: {
   userId: string;
   tracks: readonly TraitTrack[];
   todayYmd: string;
   todayDay: number;
   showTryToday: boolean;
+  /** True after set 1 and before the full profile: shows the "Early read" line. */
+  early?: boolean;
 }) {
   const theme = useTheme();
   const { insight: cachedInsight, reload: reloadInsight } = useDailyInsight(userId);
@@ -109,7 +114,7 @@ export function TodayFocusCard({
           }),
         )
         .catch(() => [] as IdeaDay[]);
-      const draft = draftFromPick(pickIdea({ userId, ymd: todayYmd, leans: clearLeans(tracks), history }));
+      const draft = draftFromPick(pickIdea({ userId, ymd: todayYmd, leans: clearLeans(tracks), mixedAxes: mixedAxesFrom(tracks), history }));
       stage = 'save';
       await saveInsight(draft, todayDay, todayYmd);
       await saveCachedInsight({
@@ -132,7 +137,6 @@ export function TodayFocusCard({
       if (generatingForYmd.current === todayYmd) generatingForYmd.current = null;
     }
   }, [userId, todayYmd, todayDay, insight?.ymd, tracks, reloadInsight, offerNotificationAsk]);
-
   return (
     <>
       {insight ? (
@@ -141,6 +145,11 @@ export function TodayFocusCard({
             {homeSageLabel(theme.id)}
           </ThemedText>
           <TraitTagRow tags={themeTags(insight.theme)} />
+          {early ? (
+            <ThemedText type="small" themeColor="textSecondary" testID="early-read-line">
+              {INSIGHT_EARLY_READ_COPY}
+            </ThemedText>
+          ) : null}
           {insight.ymd !== todayYmd ? (
             <ThemedText type="small" themeColor="textSecondary">
               {INSIGHT_EARLIER_DAY_COPY}
@@ -209,6 +218,11 @@ export function TodayFocusCard({
           <ThemedText type="small" themeColor="textSecondary">
             {INSIGHT_STORED_NOTE}
           </ThemedText>
+          {early ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {INSIGHT_EARLY_READ_COPY}
+            </ThemedText>
+          ) : null}
           {!POLISH_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
             <ThemedText type="code" themeColor="textSecondary">
               Draft copy — waiting on emci review.

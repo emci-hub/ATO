@@ -1599,7 +1599,7 @@ export function PetScreen({
               commit((doc, now) => startHideoutBuild(doc, now, teaseRoom));
               setTeaseOpen(false);
               if (!view.hideout.state.build_notif_asked && view.settings.notif.build) {
-                void askPetReminderPermission().then(() => {
+                void askPetReminderPermission({ auto: true }).then(() => {
                   commit((doc, now) => markBuildNotifAsked(doc, now));
                 });
               }

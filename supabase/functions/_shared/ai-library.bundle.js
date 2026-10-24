@@ -586,7 +586,7 @@ var LOADED_LINES = [
   { tag: "extraversion:low+relatedness:high", text: "You skipped the party and missed everyone at it." },
   { tag: "extraversion:high+relatedness:low", text: "You were great at the party. You couldn't name three things anyone said." },
   { tag: "extraversion:high+relatedness:low", text: "You love a crowd the way you love weather." },
-  { tag: "extraversion:high+relatedness:low", text: "You met six people and remembered the vibe." },
+  { tag: "extraversion:high+relatedness:low", text: "You met six people and remembered the quiet one." },
   { tag: "conscientiousness:high+playfulness:low", text: "You finished everything and then looked for more everything." },
   { tag: "conscientiousness:high+playfulness:low", text: "The holiday had a spreadsheet. The spreadsheet had tabs." },
   { tag: "conscientiousness:high+playfulness:low", text: "You earned the break, took it, and timed it." },
@@ -752,290 +752,290 @@ function parseLeanTag(tag2) {
 var SOLO = {
   openness: {
     high: [
-      "New tends to pull harder than proven for you. Lately that pull might be the plan itself.",
-      "You lean toward the door nobody has opened yet. Notice what gets left half-open behind you.",
-      "Something untried will probably look better than it is today. Go anyway, with one eye open.",
-      "You tend to get bored before you get finished. The boring part might be where it pays off.",
-      "A different route usually feels like the point to you. Today the usual one might surprise you.",
-      "Curiosity tends to do your deciding. Let it, and ask what it is steering you away from."
+      "The menu had a usual order. You pointed at the dish you couldn\u2019t pronounce.",
+      "A friend named a place none of you know. You were already checking the train.",
+      "You opened a new app while the last tutorial was still on the screen.",
+      "The chat said the same bar. You sent a pin for somewhere else.",
+      "You bought the supplies before you had done the thing even once.",
+      "Someone said they had never tried it. You said yes before there was a time."
     ],
     low: [
-      "You tend to trust what has already worked. That is not stubborn, it is a filing system.",
-      "The known path keeps earning your vote. One small detour today would not cancel it.",
-      "New ideas usually get a look from you and then a seat in the waiting room. One might be ready.",
-      "You lean toward what is proven. Lately the proven thing may have quietly stopped working.",
-      "Familiar tends to feel like safe to you. They overlap most days, not every day.",
-      "You rarely chase a thing just because it is new. Someone near you probably relies on that."
+      "Same coffee, same table, same seat by the window. It was good last time.",
+      "A friend sent a new restaurant. You sent back the place you already like.",
+      "The app moved one button. You spent the morning hunting for the old one.",
+      "You read a stack of reviews and bought the thing you already own.",
+      "The playlist is four years old. You hit play and left it.",
+      "Someone offered a different way home. You took the street you walk every day."
     ]
   },
   conscientiousness: {
     high: [
-      "You tend to finish what you start, even after the fun runs out. Check that today\u2019s thing still deserves it.",
-      "Follow-through comes easy to you lately. Rest might be the item that keeps slipping off the list.",
-      "A plan in your hands usually gets done. The question today is whether it is still your plan.",
-      "You lean on structure the way some people lean on luck. Leave one hour unassigned.",
-      "Lately you keep your word to the calendar. Keeping one to yourself counts too.",
-      "Done tends to matter more to you than well-timed. Someone may need you to go slower today."
+      "You added a task to the list so you could cross it off before lunch.",
+      "It was due Friday. You finished Wednesday and read it again Thursday.",
+      "You said you were on your way, and you were, keys in hand.",
+      "The inbox hit zero. You refreshed it once more to be sure.",
+      "You kept the hour you promised yourself after the fun part was over.",
+      "The dull task had a block on the calendar. You did it inside that block."
     ],
     low: [
-      "You tend to decide in the moment. One small decision made early could buy you the afternoon.",
-      "Loose plans suit you. The dull stretch right before you bail might be the last one.",
-      "You lean toward keeping options open. One of them has probably been waiting a while.",
-      "Lately the plan bends to your mood. Try letting it hold for twenty minutes first.",
-      "You tend to start strong and drift. Drifting is information, so notice where toward.",
-      "Structure tends to feel like a cage to you. A small one, built by you, might feel like a floor."
+      "The plan was later. Later showed up as a pile on the kitchen table.",
+      "You started the form, made tea, and the form was still open at dinner.",
+      "Two choices sat all week. You picked one in the doorway, coat already on.",
+      "The list had six lines. You did the interesting one and wandered off.",
+      "You meant to leave at seven. At eight the bag was still by the door.",
+      "A fixed hour felt tight, so the evening stayed loose and the task moved with it."
     ]
   },
   extraversion: {
     high: [
-      "People tend to wake you up. Notice who you reach for today when the room goes quiet.",
-      "You lean toward making something happen. Today the room might not need a spark, just a witness.",
-      "A full room usually charges you. The quiet one afterwards might be telling you something too.",
-      "You tend to think out loud. Someone close may be waiting for the sentence you have not said yet.",
-      "Lately your energy goes outward first. Save a little of it for the walk home.",
-      "You usually would rather be in it than watch it. Five minutes of watching could show you the whole board."
+      "The room went quiet. You were the one who asked the next question.",
+      "You said the thought out loud before you had decided to say it.",
+      "A full table woke you up. The walk home was the first quiet minute.",
+      "You would rather be in the group chat than watching it scroll past.",
+      "Someone had to start the plan. You sent the time, the place and the count.",
+      "After the party you were still talking. The dishes waited until morning."
     ],
     low: [
-      "Quiet tends to be how you reset. It is not hiding if you come back.",
-      "A full room costs you more than it costs most. Budget for it and go, or skip it on purpose.",
-      "You lean toward the edge of the group. The view is better there, and people notice you noticing.",
-      "You tend to say less and mean more. Today one extra sentence might land well.",
-      "Lately your best company has been your own. One person might be worth the interruption.",
-      "You usually leave before people tire you out. That might be why they light up when you arrive."
+      "The big table was loud. You took the chair at the end and stayed there.",
+      "You left while the night was still good, before the room started to cost you.",
+      "A full Friday takes more from you than it takes from most of that group.",
+      "You said one sentence at dinner. It was the one people repeated later.",
+      "The quiet hour did the reset. A friend\u2019s text sat on the counter, still unread.",
+      "You had the invite. You pictured the room, then the couch, and stayed home."
     ]
   },
   agreeableness: {
     high: [
-      "You tend to go along to keep it easy. Easy for whom is worth a second look today.",
-      "A fuss rarely feels worth it to you. One small no today would cost less than you think.",
-      "You lean toward yes. Lately some of those yeses might have been maybes in a hurry.",
-      "You usually smooth the room before anyone asks. Notice whether anyone smooths it for you.",
-      "Keeping the peace tends to fall to you. It is fine to hand it to someone else for a day.",
-      "You tend to give the benefit of the doubt. Give yourself the same rate."
+      "The group picked a place you didn\u2019t want. You said sure and put your shoes on.",
+      "A small no would have done it. You smoothed it over and paid for both coffees.",
+      "You said yes in the chat before you had checked if you meant maybe.",
+      "The room was tense. You changed the subject and passed the bread.",
+      "Keeping the peace landed on you again. Nobody asked. You just did it.",
+      "They were late again. You decided the train was the reason and let it go."
     ],
     low: [
-      "You tend to hold your ground. Today it might be worth checking the ground is still worth holding.",
-      "Pretending to like the plan is rarely your move. Saying why, kindly, might get you further.",
-      "You lean toward honest over easy. Someone today may only be able to hear the easy version.",
-      "Lately you have not bent much. One bend, chosen by you, is not the same as giving in.",
-      "You usually say the thing others are thinking. Leave a beat for them to say it first.",
-      "You tend to trust slowly. The people who waited it out have probably earned a look."
+      "The plan was bad. You said so before anyone had a polite version ready.",
+      "You didn\u2019t pretend to like the idea. You named the part that wouldn\u2019t work.",
+      "They wanted it easy. You wanted it accurate, and you said the accurate thing.",
+      "You haven\u2019t softened the email. It is still sitting in drafts.",
+      "You said what the rest of the table was thinking. The pause after was long.",
+      "A new person got a careful first month. The ones who stayed got a warmer second one."
     ]
   },
   steadiness: {
     high: [
-      "A bad start tends to slide off you by lunch. Someone near you may still be carrying theirs.",
-      "You usually recover fast. Fast enough, sometimes, to skip what the bad moment was pointing at.",
-      "Not much sticks to you lately. Worth asking if anything should.",
-      "You tend to steady the room without trying. Notice who is leaning on that today.",
-      "You lean toward calling it fine, and it often is. Today, check before you say it.",
-      "Rough patches tend to pass through you quickly. Let one finish its sentence."
+      "The morning went badly. By lunch you were on the next thing, plate cleared.",
+      "You were about to call it fine. Today you checked the clock before you said it.",
+      "A sharp email landed. You answered the question and left the sting on the screen.",
+      "The room was rattled. You kept your voice level and the meeting moved on.",
+      "Nothing from yesterday was still on you at breakfast. You drank the coffee and started the list.",
+      "The rough patch was gone before dinner. You were already talking about Thursday."
     ],
     low: [
-      "A small knock can color your whole day. Try naming it once and seeing how big it stays.",
-      "You tend to feel things for longer than the moment lasts. That is also why you remember what matters.",
-      "Lately a bad morning has a long tail. It is allowed to end at lunch.",
-      "You lean toward carrying it. Put one thing down today, even if only until tomorrow.",
-      "Things tend to land harder on you. They also tend to teach you more.",
-      "The mood might arrive before the reason today. You do not have to find the reason to let it pass."
+      "One short text before nine colored the meetings, the lunch and the ride home.",
+      "The moment ended at noon. You were still carrying it when you locked the door.",
+      "A bad morning grew a tail. It was still there when you opened the fridge at night.",
+      "You set the bag down. The feeling stayed in your coat pocket anyway.",
+      "The same small knock landed harder on you than on anyone else at the table.",
+      "The mood showed up before the reason. You stood in the kitchen with it."
     ]
   },
   attachment_anxiety: {
     high: [
-      "A slow reply can start to feel like a verdict. Today it is most likely just a slow reply.",
-      "You tend to read silence closely. Sometimes it is only someone being busy.",
-      "You lean toward checking where you stand. You probably stand where you stood yesterday.",
-      "Lately a pause from someone you like gets loud. Ask the question instead of answering it for them.",
-      "You tend to notice distance before anyone else does. Noticing it is not the same as it being there.",
-      "While waiting, the story in your head tends to get ahead of the facts. Wait for the actual ending."
+      "They took an hour to reply. You read the thread twice and checked the time again.",
+      "The silence was probably a meeting. Your head had already written a worse ending.",
+      "You opened the chat to see where you stood. The last message was still yours.",
+      "A pause from someone you like got loud. You typed three replies and sent none.",
+      "You noticed the gap before anyone else in the room had looked up.",
+      "While you waited, the story in your head ran ahead of the words on the screen."
     ],
     low: [
-      "A slow reply is just a slow reply to you. Someone close may need more reassurance than you would.",
-      "You tend not to dwell on people leaving. That calm can read as distance, so say the warm thing out loud.",
-      "You lean toward trusting that people will stay. Thank one of them for staying.",
-      "Lately you have not needed much proof from people. Offer some anyway.",
-      "You rarely keep score of who texted last. Someone you like might be keeping it for both of you.",
-      "Space does not tend to scare you. Check that the other person signed up for the same amount."
+      "A slow reply was a slow reply. You put the phone down and finished the dish.",
+      "Names come and go in the chat. You don\u2019t recount them at the end of the day.",
+      "You trusted they would still be there Friday. You thanked one of them out loud.",
+      "You hadn\u2019t asked for proof all month. You sent a photo anyway, no question on it.",
+      "You don\u2019t keep score of who texted last. Someone you like might be counting.",
+      "A quiet week didn\u2019t scare you. You still asked if they wanted the same amount of room."
     ]
   },
   attachment_avoidance: {
     high: [
-      "You tend to keep a little distance, even from people you like. Close one inch of it today.",
-      "Lighter and over text is usually easier for you. One thing today may deserve your actual voice.",
-      "You lean toward handling it alone. Letting someone help is not the same as owing them.",
-      "Lately you leave the room a moment before it gets real. Try staying for that moment.",
-      "You tend to need an exit in sight. Someone might be standing in the doorway hoping you stay.",
-      "Closeness tends to feel like a cost to you first. Sometimes it is the refund."
+      "You like them. You still left one seat between you on the couch.",
+      "The real thing was easier as a text. Your voice stayed in your pocket.",
+      "You did the hard part alone. Help was in the next room, and you didn\u2019t ask.",
+      "The talk was about to get honest. You were already by the door, jacket half on.",
+      "You like the door in sight. Someone there was hoping you would sit back down.",
+      "Sitting close felt like a cost at first. An hour later it just felt like company."
     ],
     low: [
-      "Once in, you tend to stay close. Make sure today that close still leaves room for you.",
-      "You lean toward talking it out in person. Not everyone can meet you there on the first try.",
-      "You tend to show up fully for your people. Notice which of them shows up the same way.",
-      "Lately you have been easy to reach. An unreachable hour is allowed.",
-      "Staying close comes naturally to you. Someone who needs space is not saying no.",
-      "You usually move toward people when it gets hard. That is rarer than you think."
+      "Once you were in, you stayed close. There was still a chair left for you.",
+      "You wanted to talk it out at the table. They needed a night before they could.",
+      "You showed up for your people. You noticed which of them showed up the same way.",
+      "You were easy to reach all week. You still put the phone in the other room for an hour.",
+      "Staying close came easily. Their quiet night was not a no.",
+      "When it got hard, you crossed the kitchen instead of hiding in the group chat."
     ]
   },
   conflict_assertiveness: {
     high: [
-      "You tend to put your point on the table. Today, leave room on the table for a second one.",
-      "A disagreement rarely scares you. The other person might need a softer start than you would.",
-      "You lean toward saying it straight. Straight and warm can fit in one sentence.",
-      "Lately you win the argument. Check whether you also kept the person.",
-      "You usually speak first in a standoff. Speaking second today might tell you more.",
-      "Your point tends to arrive a little sharp. It would land the same with the edge off."
+      "You put your point on the table and left a little room beside it for theirs.",
+      "The disagreement didn\u2019t scare you. They needed a softer first line than you had ready.",
+      "You said it straight. You tried the warm version out loud and it still fit.",
+      "You won the point in the thread. Then you checked whether you still had the person.",
+      "In a standoff you spoke first. Speaking second would have told you more.",
+      "Your point came out sharp. The same words would have landed with the edge taken off."
     ],
     low: [
-      "You tend to step back in a disagreement. One thing you let go lately might be worth picking back up.",
-      "Letting it go is usually your move. Today, check whether it actually went.",
-      "You lean toward peace over being right. Your side still deserves to be heard once.",
-      "Lately you have swallowed a few small things. They add up to one medium thing.",
-      "You tend to wait for a better moment to say it. This one may be good enough.",
-      "Backing off tends to feel safer to you. Say half of it today and see what happens."
+      "You stepped back. One thing you dropped last week was still worth picking up.",
+      "You let it go. On the walk home you weren\u2019t sure it had actually gone.",
+      "You picked peace over being right. Your side still had one sentence it never got.",
+      "You swallowed three small things this week. At dinner they were one medium thing.",
+      "You waited for a better moment. The moment in front of you was probably enough.",
+      "Backing off felt safer. You said half of it and watched what they did."
     ]
   },
   conflict_cooperativeness: {
     high: [
-      "You tend to look for what the other person can live with. Ask what you can live with too.",
-      "You usually give first. Today, wait and see if they will.",
-      "You lean toward the middle ground. Sometimes the middle is just both people unhappy.",
-      "Lately you have been the one who bends. It is fair to ask for the next bend back.",
-      "A fair deal tends to matter more to you than a win. Make sure fair includes you.",
-      "You tend to hear the other side out fully. Check that someone has heard yours."
+      "You looked for what they could live with. You had not yet asked what you could.",
+      "You gave first. Today you waited, and the next move was still theirs.",
+      "You aimed at the middle. Sometimes that middle leaves both people unhappy.",
+      "You were the one who bent. You still hadn\u2019t asked them for the next bend.",
+      "A fair deal mattered more than a win. Fair still had to include your half.",
+      "You heard their side all the way through. Yours was still waiting for a listener."
     ],
     low: [
-      "You tend to protect your outcome first. One small give today might buy a lot of goodwill.",
-      "You rarely give ground early. The other person may be closer to yes than they look.",
-      "You lean toward knowing what you want and holding it. Ask what they want before you defend it.",
-      "Lately you have not had to bend much. Bending once on something small costs you nothing.",
-      "You usually leave a negotiation with what you came for. Check what the other person left with.",
-      "Holding your line comes easy to you. Knowing which lines matter is the harder part."
+      "You protected what you wanted first. One small give was still sitting on the table.",
+      "You don\u2019t give ground early. They were closer to yes than their face showed.",
+      "You knew what you wanted and you held it. You hadn\u2019t asked what they wanted yet.",
+      "You haven\u2019t had to bend much. A bend on something small was still available.",
+      "You left with what you came for. You didn\u2019t check what they left with.",
+      "Holding the line came easy at the table. Sorting which lines mattered was harder."
     ]
   },
   autonomy: {
     high: [
-      "You tend to want to do it your way. Today someone else\u2019s way might save you an hour.",
-      "A plan handed to you rarely fits. Say which part you would change instead of dropping the whole thing.",
-      "You lean toward your own path, even when one is already paved. The paved one is not an insult.",
-      "Lately being told what to do sits badly. Notice whether the advice was actually wrong.",
-      "You usually need to choose it for it to count. Choose one thing today you were going to be told anyway.",
-      "Your way tends to work for you. It might not be the only way that does."
+      "You wanted it your way. Their way would have saved an hour, and you could see it.",
+      "The handed-over plan didn\u2019t fit. You named the one part you would change.",
+      "You redid the task your way after someone had written the steps. Their steps were fine.",
+      "A coworker handed you the steps. You checked whether those steps were actually wrong.",
+      "It had to be your choice. You picked the thing you were going to be told anyway.",
+      "Your way worked. Another way would have worked too, and you let that sit a minute."
     ],
     low: [
-      "A path already set tends to suit you fine. Pick one small thing today that nobody picked for you.",
-      "You lean toward letting someone else steer. It is fine to want a turn.",
-      "You usually feel relief when the plan is made. Notice what you would have chosen.",
-      "Lately you go with what is already decided. Your preference still exists, so say it once.",
-      "Not having to figure it out tends to feel like rest to you. Figure out one thing anyway.",
-      "You tend to trust the map you get handed. Today, check who drew it."
+      "The plan was already made, and that suited you. One small piece still had your name on it.",
+      "You let someone else steer. Your own turn was right there, and you almost took it.",
+      "Relief hit when the plan was made. You also noticed what you would have picked.",
+      "You went with the decision already in the chat. You still said your preference once.",
+      "Not having to figure it out felt like rest. You figured out one small thing anyway.",
+      "You trusted the map in your hand. Then you looked at the name on the corner."
     ]
   },
   competence: {
     high: [
-      "A hard task tends to feel like yours to handle. Today, check it is yours at all.",
-      "You usually trust yourself to pull it off. Someone next to you may need to borrow a little of that.",
-      "You lean toward the difficult version. The easy version is allowed sometimes.",
-      "Lately hard things have gone your way. Notice what you have been avoiding because it is only dull.",
-      "You tend to feel capable going in. Ask for help anyway and see how it changes the work.",
-      "You rarely doubt you can do it. The better question today might be whether you want to."
+      "The hard task felt like yours. You checked, once, whether it was yours at all.",
+      "You trusted yourself to pull it off. The person beside you needed to hear a bit of that.",
+      "You reached for the harder version. The easy one was sitting there, allowed.",
+      "Hard things have gone your way. The dull ones are the tasks you keep walking past.",
+      "You felt capable walking in. You asked for help anyway, and the work changed shape.",
+      "You walked in sure you could do the job. The open question was whether you wanted it."
     ],
     low: [
-      "A hard task can make you doubt yourself before you start. Start badly on purpose and see what happens.",
-      "You tend to count what could go wrong first. Count one thing that went right last time.",
-      "Lately the hard thing looks bigger from outside than it is. Do the first five minutes only.",
-      "You lean toward assuming others would do it better. They are mostly guessing too.",
-      "The doubt tends to show up before the evidence does. Wait for the evidence.",
-      "You usually underrate what you have already pulled off. Write one of them down today."
+      "The hard task made you doubt it before you touched it. You started with a messy first pass.",
+      "You listed what could go wrong. Then you wrote one thing that went right last time.",
+      "It looked bigger from the doorway than it did after five minutes at the desk.",
+      "You assumed someone else would do it better. Their pen was hovering too.",
+      "The doubt arrived before any evidence. You waited, and the evidence was smaller.",
+      "You brushed off a thing you had already finished. You wrote it on a sticky note."
     ]
   },
   relatedness: {
     high: [
-      "A day tends not to land for you without a real connection in it. Plan for one, do not hope for one.",
-      "You usually need one real conversation to feel like yourself. Start it.",
-      "You lean toward people being the point. Today the point might text first, or might need you to.",
-      "Lately small talk leaves you hungry. Ask the second question.",
-      "You tend to measure a day by who was in it. Someone is measuring theirs by you.",
-      "Being around people and being with them feel different to you. Close that gap once today."
+      "The day didn\u2019t land until you had one real talk, not a thread of logistics.",
+      "You needed one real conversation. You started it in the kitchen, not in the chat.",
+      "People were the point of the day. You texted first instead of waiting.",
+      "Small talk left you hungry. You asked the second question and stayed for it.",
+      "You measured the day by who was in it. Someone measured theirs by whether you showed.",
+      "Around them and with them felt different. You closed that gap once, at the table."
     ],
     low: [
-      "A day can land for you without much connection. One person may still be hoping to hear from you.",
-      "You tend to be fine on your own. Fine and full can be two different days.",
-      "You lean toward not needing much from people. Let someone give you something small anyway.",
-      "Lately you have gone a while without a real conversation and barely noticed. Notice.",
-      "You usually do not count the days between calls. Someone you like does.",
-      "Your own company tends to be enough. Share a little of it today."
+      "The day landed fine with almost no one in it. One person was still hoping for a text.",
+      "You were fine on your own. Fine and full were not the same evening.",
+      "You didn\u2019t need much from anyone. You let someone hand you something small anyway.",
+      "A long stretch with no real talk went by. You barely noticed. The calendar did.",
+      "You don\u2019t count the days between calls. Someone you like does, and they texted.",
+      "Your own company was enough. You still shared a piece of the evening."
     ]
   },
   growth_mindset: {
     high: [
-      "After a miss you tend to look for what to change. Today, also look at what to keep.",
-      "You usually treat a mistake as a draft. Let one thing be finished.",
-      'You lean toward "not yet" over "no". Someone near you needs to hear that version.',
-      "Lately everything looks like something to improve. Some of it is already good.",
-      "You tend to believe you can get better at most things. Pick the one that matters this week.",
-      "A setback tends to turn into a project for you. Rest first, then the project."
+      "After a miss you looked for what to change. You also looked at what to keep.",
+      "You treated the mistake like a draft. One page on the desk was allowed to be done.",
+      "You said not yet, not no. Someone near you needed that version out loud.",
+      "Lately every task looked like something to improve. Some of it was already good.",
+      "You figured you could get better at most of it. You picked the one for this week.",
+      "A setback turned into a project. You rested, then you opened it."
     ],
     low: [
-      "A miss can feel like the end of that road to you. It is more often a bend.",
-      "You tend to decide early what is not your thing. One of those verdicts is probably out of date.",
-      "Lately one bad try has been closing the door. Try it a second time before you lock it.",
-      "You lean toward sticking with what you already do well. One clumsy attempt today will not undo that.",
-      "You usually judge the first attempt as the final grade. It is the rough copy.",
-      "Some things tend to feel fixed to you. Test one of them gently."
+      "A miss felt like the end of that try. The same tools were still on the desk.",
+      "You decided early it wasn\u2019t your thing. One of those calls was out of date.",
+      "One bad try had you closing the doc. You opened it again and stopped on the second page.",
+      "You stayed with what you already do well. One clumsy try didn\u2019t undo that.",
+      "You graded the first attempt as the final grade. It was a rough copy on the table.",
+      "One skill felt fixed. You tested it for ten minutes and stopped there."
     ]
   },
   locus_of_control: {
     high: [
-      "When things go sideways you tend to look at your own part first. Not all of it was yours.",
-      "You usually ask what you could have done differently. Sometimes the answer is nothing.",
-      "You lean toward owning the outcome. Leave a share for luck and for other people.",
-      "Lately you take the blame quickly. Take the credit at the same speed.",
-      "You tend to believe your choices decide the day. Mostly true, and today there is weather too.",
-      "Your first move is usually to fix it yourself. Ask whether it is yours to fix."
+      "When it went sideways you looked at your part first. Not all of it was yours.",
+      "You asked what you could have done differently. Sometimes the answer was nothing.",
+      "You took the result as yours. Luck and other people still had a share of the day.",
+      "The blame arrived fast. The credit was slower, and you noticed that at the end.",
+      "You treated the day as something your choices made. The rain was not one of them.",
+      "Your first move was to fix it yourself. You asked once whether it was yours to fix."
     ],
     low: [
-      "You tend to figure it was bound to happen. One small part of today is still yours to move.",
-      "You usually let things play out. Nudge one of them.",
-      "Lately it feels like the day happens to you. Pick the next ten minutes on purpose.",
-      'You lean toward "that is just how it goes". Sometimes it goes how someone pushed it.',
-      "You rarely blame yourself for what you could not control. Check for the piece you could.",
-      "Timing and luck tend to get the credit from you. Give yourself a line in the credits too."
+      "You figured it was going to happen anyway. One small piece of the afternoon was still yours.",
+      "You let it play out. Then you nudged the piece nearest your hand.",
+      "The day felt like it happened to you. You picked the next ten minutes on purpose.",
+      "You said that is just how it goes. Sometimes it goes the way a person pushed it.",
+      "You didn\u2019t blame yourself for what you couldn\u2019t steer. You looked for the piece you could.",
+      "Timing and luck got the credit in your notes. You added one line with your name on it."
     ]
   },
   self_efficacy: {
     high: [
-      "A big task tends to look doable to you. Break it up anyway, your future self will thank you.",
-      "You usually back yourself. Today, back someone else out loud.",
-      "You lean toward yes when it is large. Check your week before you check your nerve.",
-      'Lately you have said "I can do that" a lot. You can, though maybe not all at once.',
-      "Confidence tends to get you through the door. Preparation keeps you in the room.",
-      "You tend to assume you will figure it out, and you usually do. Start earlier and enjoy it more."
+      "The big task looked doable. You split it anyway, for the Thursday version of you.",
+      "You backed yourself in the meeting. You also backed the person sitting next to you.",
+      "You said yes to the large thing. The week was full before you checked the calendar.",
+      "You have said you can do it a lot. You can, just not all of it this afternoon.",
+      "Confidence got you in the door. The prep is what kept you in the room.",
+      "You assumed you would sort it out. Starting earlier made the afternoon nicer."
     ],
     low: [
-      "A big task can look too big from the start. It tends to shrink once you touch it.",
-      "You tend to wait until you feel ready. Ready usually shows up after you begin.",
-      "Lately the size of the thing has been deciding for you. Pick the smallest piece and take that.",
-      'You lean toward "not sure I can". Being sure is optional, starting is the part that counts.',
-      "You usually see the whole mountain at once. Look at the next step only.",
-      "The big thing tends to stay big while you circle it. One clumsy pass will change its size."
+      "The big task looked too big at the start. It got smaller once your hands were on it.",
+      "You waited to feel ready. Ready showed up after you had already started.",
+      "The size of it was choosing for you. You took the smallest piece and began there.",
+      "You weren\u2019t sure you could. Starting was the part that changed the size.",
+      "You saw the whole project at once. Today only needed the next step.",
+      "The big task stayed big while you walked around the desk. One messy pass made it smaller."
     ]
   },
   playfulness: {
     high: [
-      "You tend to look for the lighter take. Make sure the joke is not doing a job a sentence should.",
-      "Fun usually finds you. One person in the room may need you to be serious for a minute.",
-      "You lean toward play, even in a dull task. That is a skill, not a distraction.",
-      "Lately you laugh it off fast. Check whether it is actually off.",
-      "You tend to turn a chore into a game. Invite someone into it today.",
-      "Light tends to be your default. It can carry something heavy if you let it."
+      "You reached for the lighter line. Then you checked it wasn\u2019t covering a real sentence.",
+      "Fun finds you. One person in the room needed you plain for a minute, and you saw them.",
+      "You played with a dull task until it moved. That was useful, not a detour.",
+      "You laughed it off fast. Afterward you checked whether it was actually off.",
+      "You turned the chore into a game and sent the invite so someone else could join.",
+      "You started with the joke. The serious part stayed in the next sentence."
     ],
     low: [
-      "You tend to treat the day as a job to get through. One part of it could be a game.",
-      "You usually get to the fun after the work, and the work rarely ends. Move the fun up.",
-      "Lately the day has been all list. Leave one line blank.",
-      "You lean toward serious. Something silly today will not cost you your edge.",
-      "You tend to earn your rest before you take it. Take five minutes unearned.",
-      "Getting through it is usually the goal for you. Today, try enjoying one piece of it."
+      "You treated the day as a list to finish. One part of it could have been a game.",
+      "Fun was booked for after the work. The work didn\u2019t end, so the fun stayed in the margin.",
+      "The day was all list. One line was blank, and you almost filled it in.",
+      "You stayed serious. A silly ten minutes wouldn\u2019t have cost you the work.",
+      "Rest had to be earned first. Five unearned minutes sat there, and you walked past.",
+      "Getting through it was the goal. You enjoyed the walk between rooms on purpose."
     ]
   }
 };
@@ -1043,325 +1043,325 @@ var PAIRS = [
   {
     keys: ["extraversion:high", "attachment_avoidance:high"],
     lines: [
-      "You tend to be easy to be around and slower to let people close. Someone may be hoping for the second part.",
-      "Lots of people, few who really know you. Lately that might be by design."
+      "The room likes having you in it. The people who want closer still get the short version.",
+      "Lots of faces, few who know the Tuesday version of you. That might be on purpose."
     ]
   },
   {
     keys: ["extraversion:low", "relatedness:high"],
     lines: [
-      "You tend to need real connection and also quiet. One person, one hour, is the size that fits.",
-      "Crowds drain you, and being unknown drains you more. Pick the one person today."
+      "You needed one real person, not a room. One hour at one table was the size that fit.",
+      "A crowd drained you. Being unknown drained you more. You picked the one person."
     ]
   },
   {
     keys: ["extraversion:high", "relatedness:low"],
     lines: [
-      "You tend to like the room without needing anyone in it. Someone there might want more than the room.",
-      "People energize you, though few of them get far in. Let one get a step further."
+      "You liked the room and didn\u2019t need anyone in it to stay. Someone there wanted more than the room.",
+      "People woke you up. Few of them got past the first story. You let one take the next step."
     ]
   },
   {
     keys: ["conscientiousness:high", "playfulness:low"],
     lines: [
-      "You tend to finish the list and skip the fun. The list will regrow by morning either way.",
-      "Work first is your rule, and work rarely ends. Put one light thing on the list itself."
+      "You finished the list and skipped the fun. The list had grown back by morning either way.",
+      "Work came first, and the work did not end. You put one light thing on the list itself."
     ]
   },
   {
     keys: ["conscientiousness:high", "openness:high"],
     lines: [
-      "You tend to chase the new thing and still finish it. That is rarer than it feels.",
-      "Lately you want it both new and done. Pick which matters more for today\u2019s thing."
+      "You went after the new thing and you still finished it, both, on the same task.",
+      "You wanted today\u2019s thing new and done. You had to pick which one it was."
     ]
   },
   {
     keys: ["conscientiousness:low", "openness:high"],
     lines: [
-      "New ideas come easy to you and finishing comes hard. Pick one idea today and give it an ending.",
-      "You tend to open more doors than you walk through. Walk through one."
+      "New ideas came easy. The ending was the hard part. You picked one and gave it a last line.",
+      "You opened more doors than you walked through. Today you walked through one."
     ]
   },
   {
     keys: ["conscientiousness:high", "openness:low"],
     lines: [
-      "You tend to do it the proven way and do it fully. Today a shortcut might actually be fine.",
-      "A plan and a known path is your home ground. Step off it once, on purpose, for ten minutes."
+      "You did it the way that already works, and you did all of it. A shortcut would have been fine.",
+      "A plan and a known route is home. You stepped off it for ten minutes, on purpose."
     ]
   },
   {
     keys: ["conscientiousness:low", "playfulness:high"],
     lines: [
-      "You tend to follow the fun and let the plan catch up. Give the plan a small head start today.",
-      "Loose and light is how you move lately. One fixed point would not spoil it."
+      "You followed the fun and let the plan catch up. You gave the plan a small head start.",
+      "Loose and light is how you moved. One fixed point on the calendar would not spoil it."
     ]
   },
   {
     keys: ["agreeableness:high", "conflict_assertiveness:low"],
     lines: [
-      "You tend to go along and then step back. Your opinion has been waiting a while for its turn.",
-      "Easy for everyone else has been costing you lately. Say one true preference before noon."
+      "You went along, then you stepped back. Your opinion has been waiting for a turn.",
+      "Easy for everyone else has been costing you. You said one true preference before noon."
     ]
   },
   {
     keys: ["agreeableness:high", "conflict_assertiveness:high"],
     lines: [
-      "You tend to keep things easy until it matters, then say it straight. People may not see that turn coming.",
-      "Kind and direct both live in you. Today, lead with whichever one you used less this week."
+      "You kept it easy until it mattered, then you said it straight. People missed the turn coming.",
+      "Kind and direct both show up in you. You led with the one you used less this week."
     ]
   },
   {
     keys: ["agreeableness:low", "conflict_assertiveness:high"],
     lines: [
-      "You tend to hold your ground and say so. Being right will land better today with a softer first line.",
-      "You rarely fold and rarely stay quiet. Ask one question before you make your point."
+      "You held your ground and you said so. The point landed better once the first line was softer.",
+      "You rarely fold and you rarely stay quiet. You asked one question before the point."
     ]
   },
   {
     keys: ["agreeableness:low", "conflict_assertiveness:low"],
     lines: [
-      "You tend to disagree quietly. The other person may think you agreed.",
-      "You hold your ground on the inside and step back on the outside. Let one of those show today."
+      "You disagreed quietly. From across the table it looked like you had agreed.",
+      "You held your ground inside and stepped back outside. One of those showed today."
     ]
   },
   {
     keys: ["attachment_anxiety:high", "attachment_avoidance:high"],
     lines: [
-      "You tend to want people close and keep them at arm\u2019s length. Both are you looking out for yourself.",
-      "Lately you may want more than you show. Show one inch more today."
+      "You wanted people close and you kept a seat between you. Both were you looking out for yourself.",
+      "You wanted more than you showed. You showed a little more, in one text."
     ]
   },
   {
     keys: ["attachment_anxiety:high", "attachment_avoidance:low"],
     lines: [
-      "You tend to stay close and still worry they will go. Staying is already your answer, so ask for theirs.",
-      "You show up fully and then check if it was too much. It probably was not."
+      "You stayed close and still worried they would leave. You asked them, instead of guessing.",
+      "You showed up fully, then checked if it had been too much. It probably had not."
     ]
   },
   {
     keys: ["attachment_anxiety:low", "attachment_avoidance:high"],
     lines: [
-      "You tend to be calm about people because you keep them at a distance. Try calm and close.",
-      "Not much rattles you with people lately, maybe because few get near. Let one near."
+      "You stayed calm about people by keeping them a step away. Close was the harder part.",
+      "Not much rattled you with people. Few got near enough to try. You let one near."
     ]
   },
   {
     keys: ["attachment_anxiety:low", "attachment_avoidance:low"],
     lines: [
-      "You tend to stay close without gripping. People around you probably rest easier for it.",
-      "Close comes easy and worry stays low lately. Lend that calm to someone who has less of it."
+      "You stayed close without gripping. The people around you had an easier evening for it.",
+      "Close came easily and the worry stayed low. You lent a little of that to someone with less."
     ]
   },
   {
     keys: ["autonomy:high", "relatedness:high"],
     lines: [
-      "You tend to want it your way and want company for it. Say both out loud, people cannot guess the mix.",
-      "Independent and hungry for connection is not a contradiction. It just needs explaining to people."
+      "You wanted it your way and you wanted company for it. You said both out loud.",
+      "Your own route, with people on it, needed one sentence. You sent the sentence."
     ]
   },
   {
     keys: ["autonomy:high", "relatedness:low"],
     lines: [
-      "You tend to do it your way and do it alone. Efficient, and a little unwitnessed.",
-      "Nobody steering and nobody needed is how you run lately. Let someone in on one decision."
+      "You did it your way and you did it alone. Quick, and nobody saw the good part.",
+      "Nobody steering and nobody needed. You let someone in on one decision anyway."
     ]
   },
   {
     keys: ["autonomy:low", "relatedness:high"],
     lines: [
-      "You tend to follow the plan if it keeps you near your people. Check the plan is going where you want.",
-      "Going along feels fine when the company is good. Your own pick still counts today."
+      "You followed the plan when it kept you near your people. You checked where that plan was going.",
+      "Going along felt fine while the company was good. Your own pick still counted at dinner."
     ]
   },
   {
     keys: ["autonomy:high", "agreeableness:high"],
     lines: [
-      "You tend to want your own way and still say yes to theirs. Today, notice which one wins.",
-      "You go along on the outside and plan your own route on the inside. Say the route."
+      "You wanted your own way and you still said yes to theirs. You noticed which one won.",
+      "You went along on the outside and kept your own route inside. You said the route."
     ]
   },
   {
     keys: ["competence:low", "growth_mindset:high"],
     lines: [
-      "You tend to doubt yourself going in and learn fast coming out. Trust the second half more.",
-      "The doubt arrives first and the progress arrives anyway. Notice the order."
+      "You doubted yourself on the way in and learned fast on the way out. The second half was the proof.",
+      "The doubt arrived first. The progress arrived anyway. You noticed the order."
     ]
   },
   {
     keys: ["competence:high", "growth_mindset:low"],
     lines: [
-      "You tend to feel capable at what you know and finished with what you do not. One of those is closer than it looks.",
-      "You trust yourself on home ground. A miss away from it does not have to close the road."
+      "You felt able at what you know, and finished with what you don\u2019t. One of those was closer than it looked.",
+      "You trusted yourself on familiar ground. A miss away from it did not have to end the try."
     ]
   },
   {
     keys: ["growth_mindset:high", "locus_of_control:high"],
     lines: [
-      'You tend to own the miss and then fix it. Leave room today for "that one was not on me".',
-      "Everything is a lesson and all of it is yours to learn. Some days it is just a day."
+      "You owned the miss and then you fixed it. You left room for the one that was not on you.",
+      "Every miss became a lesson, and all of it was yours to learn. Some days it was just a day."
     ]
   },
   {
     keys: ["growth_mindset:low", "locus_of_control:low"],
     lines: [
-      "When it goes wrong you tend to figure it was going to. Try one small change before you call it.",
-      "Lately it can feel bound to happen and not worth trying. Test that against one small thing."
+      "When it went wrong you figured it was going to. You tried one small change before you called it.",
+      "It felt bound to happen and not worth a try. You tested that on one small thing."
     ]
   },
   {
     keys: ["steadiness:high", "playfulness:high"],
     lines: [
-      "You tend to bounce back and find the joke. Check today that the joke is not skipping a step.",
-      "Light and hard to rattle. Someone on a heavier day may need you to slow down to their speed."
+      "You came back fast and found the joke. You checked the joke was not skipping a step.",
+      "Light, and hard to shake. Someone on a heavier day needed you at their speed."
     ]
   },
   {
     keys: ["steadiness:low", "playfulness:high"],
     lines: [
-      "You tend to feel it hard and laugh anyway. The laugh is real, and so is the other thing.",
-      "A lighter take is your way through a heavy day. Let one person see the heavy part too."
+      "You felt it hard and laughed anyway. The laugh was real, and so was the other thing.",
+      "A lighter take got you through a heavy day. You let one person see the heavy part too."
     ]
   },
   {
     keys: ["steadiness:low", "conscientiousness:high"],
     lines: [
-      "You tend to keep going on a bad day. Getting it done and being fine are two separate checks.",
-      "The work gets finished even when the mood does not lift. Give the mood ten minutes of its own."
+      "You kept going on a bad day. Getting it done and feeling fine were two separate checks.",
+      "The work got finished. The mood did not lift. You gave the mood ten minutes of its own."
     ]
   },
   {
     keys: ["steadiness:low", "attachment_anxiety:high"],
     lines: [
-      "A small thing with someone you like can take the whole day. Ask them, and get the day back.",
-      "You tend to feel it long and read into the quiet. Check one story against the facts today."
+      "A small thing with someone you like took the whole day. You asked them, and the day came back.",
+      "You felt it for a long time and read into the quiet. You checked one story against the texts."
     ]
   },
   {
     keys: ["steadiness:high", "agreeableness:high"],
     lines: [
-      "You tend to let it go and move on. That is easy to be around, so make sure you get heard once today.",
-      "Calm and easygoing makes you the steady one. Steady people get to have a bad day too."
+      "You let it go and moved on. Easy to be around, so you made sure you were heard once today.",
+      "Calm and easy made you the steady one in the room. You still took a bad hour for yourself."
     ]
   },
   {
     keys: ["extraversion:high", "conflict_assertiveness:high"],
     lines: [
-      "You tend to fill the room and say what you think. Quieter people today may need an opening.",
-      "You tend toward loud and clear. Try clear and quiet once."
+      "You filled the room and said what you thought. You left a quieter person an opening.",
+      "You went loud and clear. Once, you tried the same point quieter."
     ]
   },
   {
     keys: ["extraversion:low", "conflict_assertiveness:low"],
     lines: [
-      "You tend to stay quiet and let it go. The thing you did not say is still there.",
-      "Quiet in the room and quiet in a disagreement. Pick one place today to be heard."
+      "You stayed quiet and you let it go. The thing you did not say was still in the room.",
+      "Quiet at the table and quiet in a disagreement. You picked one place to be heard."
     ]
   },
   {
     keys: ["extraversion:low", "conflict_assertiveness:high"],
     lines: [
-      "You tend to say little, and then say exactly what you think. It lands harder for being rare.",
-      "Quiet until it matters. Give people a gentler line before the direct one."
+      "You said little, then you said exactly what you thought. It landed harder for being rare.",
+      "Quiet until it mattered. You gave a gentler line before the direct one."
     ]
   },
   {
     keys: ["openness:high", "autonomy:high"],
     lines: [
-      "You tend to want it new and want it your way. A good idea from someone else still counts.",
-      "Untried and unassisted is your favorite route. Take a passenger."
+      "You wanted it new and you wanted it your way. A good idea from someone else still counted.",
+      "You wanted the new plan, and you wanted to do it alone. You let someone come for one stop."
     ]
   },
   {
     keys: ["openness:low", "autonomy:low"],
     lines: [
-      "You tend to like a known path that someone else chose. Today, choose one thing and change one thing.",
-      "Set and familiar suits you. A small surprise you pick yourself will not break that."
+      "You liked a known route that someone else had chosen. Today you chose one thing and changed one thing.",
+      "Set and familiar suited you. A small surprise you picked yourself did not break that."
     ]
   },
   {
     keys: ["conflict_cooperativeness:high", "conflict_assertiveness:high"],
     lines: [
-      "You tend to say your piece and still look for the fair deal. That is a hard pair, and you carry it.",
-      "Direct and fair. Today the fair part may need to go first."
+      "You said your piece and still looked for a deal you could both stand. The talk used both.",
+      "Direct, then fair. Today the fair part went first."
     ]
   },
   {
     keys: ["conflict_cooperativeness:high", "conflict_assertiveness:low"],
     lines: [
-      "You tend to give first and say little. Check whether the deal still feels even to you.",
-      "You make room for them and step back yourself. Take up one square foot today."
+      "You gave first and said little. You checked whether the deal still felt even to you.",
+      "You made room for them and stepped back yourself. You took a little of that room back today."
     ]
   },
   {
     keys: ["conflict_cooperativeness:low", "conflict_assertiveness:high"],
     lines: [
-      "You tend to push your point and guard your outcome. You will likely win, so decide if winning is the goal.",
-      "Lately you lean sharp and unbending. Save that hand for something that matters."
+      "You pushed your point and guarded what you wanted. You paused to ask if winning was the point.",
+      "You leaned sharp and you did not bend. You saved that for the thing that actually mattered."
     ]
   },
   {
     keys: ["self_efficacy:high", "conscientiousness:low"],
     lines: [
-      "You tend to believe you can do it and then leave it for later. Later is getting crowded.",
-      "Sure you can pull it off, less sure when. Put a time on one thing."
+      "You believed you could do it, then you left it for later. Later was getting crowded.",
+      "Sure you could pull it off. Less sure when. You put a time on one thing."
     ]
   },
   {
     keys: ["self_efficacy:low", "conscientiousness:high"],
     lines: [
-      "You tend to doubt the big thing and do it anyway, step by step. The steps are the proof.",
-      "You finish what you were not sure you could start. Remember that at the next start."
+      "You doubted the big thing and did it anyway, step by step. The steps were the proof on the page.",
+      "You finished what you were not sure you could start. You remembered that at the next start."
     ]
   },
   {
     keys: ["relatedness:high", "attachment_avoidance:high"],
     lines: [
-      "You tend to need connection and keep it at a distance. That gap might be where some of the tiredness comes from.",
-      "A day needs real contact to land for you, and lately that is the part you step around. Step toward it once."
+      "You needed a real connection and you kept it a step away. Some of the tiredness sat in that gap.",
+      "The day needed real contact to land, and that was the part you walked around. You walked toward it once."
     ]
   },
   {
     keys: ["playfulness:high", "conflict_assertiveness:low"],
     lines: [
-      "You tend to joke instead of disagree. The joke gets a laugh and the issue stays.",
-      "Light is how you sidestep a fight. Say the plain version once today."
+      "You joked instead of disagreeing. The joke got a laugh. The issue stayed on the table.",
+      "Light is how you step around a fight. You said the plain version once, with no punchline."
     ]
   },
   {
     keys: ["playfulness:low", "extraversion:high"],
     lines: [
-      "You tend to bring the energy but not the play. Let the room be pointless for a minute.",
-      "Around people a lot, and usually on task. Try around people and off task."
+      "You brought the crowd and not the play. You let the room be pointless for a minute.",
+      "Around people a lot, and usually on a task. You tried around people and off the task."
     ]
   },
   {
     keys: ["locus_of_control:high", "steadiness:low"],
     lines: [
-      "You tend to blame yourself and then carry it all day. Put it down at the door tonight.",
-      "It was your part, you think, and it sits with you. Check how big your part really was."
+      "You blamed yourself and then carried it all day. You put it down at the door tonight.",
+      "You decided it was your part, and it sat with you. You checked how big that part really was."
     ]
   },
   {
     keys: ["agreeableness:high", "relatedness:high"],
     lines: [
-      "You tend to keep people happy because you need them near. They would stay for the honest version too.",
-      "You go along to stay close. Close survives a no."
+      "You kept people happy because you wanted them near. They would have stayed for the honest version.",
+      "You went along to stay close. Close survived a no, and you tried one."
     ]
   }
 ];
 var STARTERS = [
-  "Notice the first thing you put off today. It usually says more than the thing you do first.",
-  "Pick one small promise to yourself today and keep it. That is how the bigger ones get believable.",
-  "The person you reply to fastest today is telling you something. So is the one you leave on read.",
-  "One honest sentence today is worth ten polite ones.",
-  "Notice what you do in the first quiet minute. That tends to be the real default.",
-  "Somebody near you is waiting to be asked. Ask.",
-  "The thing you keep almost starting is probably the thing.",
-  "Watch what you defend today. It tends to be what you care about.",
-  "Tired and bored feel alike. Check which one it is before you quit.",
-  "Do one thing slower than usual today and see what shows up.",
-  "The opinion you held back yesterday is still an opinion. It might be worth saying.",
-  "Something small will annoy you today. It is usually pointing at something larger."
+  "The first thing you put off this morning said more than the thing you did first.",
+  "You kept one small promise to yourself before lunch. The bigger ones got a little closer.",
+  "The person you reply to fastest is a clue. So is the name still sitting there.",
+  "One honest sentence in the thread did more than ten polite ones.",
+  "What you did in the first quiet minute was the real default.",
+  "Somebody near you was waiting for one question. It was a single line.",
+  "You keep almost opening the same doc. That one is probably the task.",
+  "What you defended today gave away what you care about.",
+  "Tired and bored feel the same at four. You checked which one it was before you quit.",
+  "You did one thing slower than usual. Something showed up in the extra minute.",
+  "The opinion you held back yesterday was still an opinion this morning.",
+  "A small annoyance showed up. It was pointing at something larger, and you could see the shape."
 ];
 function fnv1a(text) {
   let hash = 2166136261;
@@ -1404,20 +1404,18 @@ var registry = new Map(DAILY_LINES.map((line) => [line.id, line]));
 
 // src/lib/voice/moment-voice.ts
 var MOMENT_VOICE_RULES = [
-  "One concrete, recognizable moment the person has probably lived. Past tense or plain present.",
-  "Set it in how people live now: texts, group chats, read receipts, the typing bubble, voice notes, open tabs, unread counts, calendars, apps. Use the situation, never slang words, because slang dates in a year and reads as trying too hard.",
-  'Describe the moment and stop. No advice, no "try", no lesson, no question to reflect on.',
-  "Tease kindly. Self-aware and a little funny, never cruel, never shaming. Honest is fine, even when it stings a little.",
-  `Specific beats general: "They said 'k.' You read it eleven ways." beats "you overthink messages."`,
-  `Short. Never "you are" or "you're". Never "always". No personality-type codes or test names presented as the reader's result (a framework name is allowed only when relevant, accurate and explained, which a short line rarely has room for). Never apply a diagnosis or a label to the reader (toxic, clingy, avoidant, a disorder); everyday and contextual use of those words is fine.`
+  "Say what you mean in plain language. One plain idea per line. Do not join two ideas with because, and then, or while. Do not add a scene, a joke, or a metaphor until the meaning is already clear.",
+  "Do not assume missing context. If the line can appear alone, it has to make sense alone. Do not mention a listing, a plan, a joke, or a question unless that thing is already visible.",
+  "Do not invent the reader's history. Do not turn a score or an answer into a claim that a specific event happened. Keep apart what the reader said, what the answers suggest, and a hypothetical. Mark a hypothetical as hypothetical.",
+  "Keep the link to the trait accurate. Do not add an unrelated habit.",
+  "Priority: accuracy, then clarity, then relevance, then a natural voice, then optional humor. Cut a joke or a metaphor that weakens a higher priority.",
+  "Match the purpose. A button names the action. An error says what happened and what to do. An insight says what the answers suggest and why. A comparison states the actual similarity or difference. A story may use a scene when the scene is established and is clearly fiction, not the reader's real week. Do not make every line sound like a story card.",
+  `Never "you are" or "you're" as an identity label. Never "always". No personality-type code presented as the reader's result. Never apply a diagnosis or a label to the reader; everyday and contextual use of those words is fine.`
 ];
 var MOMENT_VOICE_EXAMPLES = [
-  'They said "k." You read it eleven ways.',
-  'You said "on my way" from the shower.',
-  'You have 47 tabs open and every one of them is "for later."',
-  "You typed the whole reply, then held backspace.",
-  "The plans got cancelled and you felt it like a gift.",
-  "You hearted a message you disagreed with."
+  "You like trying new things, even when everyone else would rather stick with what they know.",
+  "You stick with what you already know you enjoy.",
+  "Your answers suggest you like a new option even when a familiar one is already there."
 ];
 var MOMENT_VOICE_BLOCK = `VOICE \u2014 every line must satisfy all of these:
 ${MOMENT_VOICE_RULES.map((rule, i) => `${i + 1}. ${rule}`).join("\n")}
@@ -1510,85 +1508,7 @@ var JOKE_HARM_FILTER = [
 function jokeCrossesBoundary(text) {
   return JOKE_HARM_FILTER.some((re) => re.test(text));
 }
-var STORY_BANNED_CLICHES = [
-  /\blike nothing happened\b/i,
-  /\btake a breath\b/i,
-  /\bshoulders drop\b/i,
-  /\bsmall hiccups\b/i,
-  /\bjust another\b/i,
-  /\ba ruined schedule\b/i,
-  /\bsweat onto\b/i,
-  /\bthe whole table\b/i,
-  /\byou might have\b/i,
-  /\bon a day like this\b/i,
-  /\bthe real win\b/i,
-  /\bin that moment\b/i,
-  /\blittle did\b/i,
-  /\bwalk(?:s|ed|ing)? into a bar\b/i,
-  /\bthat(?:'|’)s what she said\b/i,
-  /\bplot twist\b/i,
-  /\bliving the dream\b/i,
-  /\bit is what it is\b/i,
-  /\bsay less\b/i,
-  /\bno cap\b/i,
-  /\bspoiler alert\b/i,
-  /\beveryone else\b/i
-];
-function storyClicheViolation(text) {
-  for (const re of STORY_BANNED_CLICHES) {
-    if (re.test(text)) return "banned clich\xE9";
-  }
-  return null;
-}
 var EXPLAINS_THE_JOKE = /\b(which is (?:why|funny|hilarious)|the joke is|that(?:'|’)s the (?:joke|funny part)|get it\b|as a joke|ironically|pun intended)\b/i;
-function punchlineCraftViolation(text) {
-  const line = text.trim();
-  if (!line) return "empty";
-  if (jokeCrossesBoundary(line)) return "crosses a boundary";
-  if (/#/.test(line)) return "hashtag";
-  if (EXPLAINS_THE_JOKE.test(line)) return "explains the joke";
-  return storyClicheViolation(line);
-}
-function contentStems(text) {
-  return new Set((text.toLowerCase().match(/[a-z]{4,}/g) ?? []).map((w) => w.slice(0, 6)));
-}
-function scorePunchline(line, setup) {
-  if (punchlineCraftViolation(line)) return -1;
-  const stems = contentStems(line);
-  const hookStems = contentStems(setup.hook);
-  const prior = /* @__PURE__ */ new Set([...contentStems(setup.twist), ...contentStems(setup.move), ...hookStems]);
-  let sharedHook = 0;
-  for (const stem of stems) if (hookStems.has(stem)) sharedHook += 1;
-  let sharedPrior = 0;
-  for (const stem of stems) if (prior.has(stem)) sharedPrior += 1;
-  const words4 = line.trim().split(/\s+/).filter(Boolean);
-  const tail = words4.slice(-8).join(" ").toLowerCase();
-  const tailStems = contentStems(tail);
-  let tailCallback = 0;
-  for (const stem of tailStems) if (hookStems.has(stem)) tailCallback += 1;
-  const concrete = (line.match(/\b[a-z]{5,}\b/gi) ?? []).length;
-  const thirds = (line.match(/,/g) ?? []).length >= 2 || /\. .+\. .+\./.test(line) ? 1 : 0;
-  const lastClause = words4.slice(-6).join(" ");
-  const understated = /\b(quietly|just|only|still|already|never)\b/i.test(lastClause) ? 1 : 0;
-  return sharedHook * 3 + sharedPrior + tailCallback * 2 + Math.min(2, Math.floor(concrete / 4)) + thirds + understated;
-}
-function pickBestPunchline(candidates, setup, extraOk = () => true) {
-  let best = null;
-  let bestScore = -1;
-  const seen = /* @__PURE__ */ new Set();
-  for (const raw of candidates) {
-    const line = raw.trim();
-    if (!line || seen.has(line.toLowerCase())) continue;
-    seen.add(line.toLowerCase());
-    if (!extraOk(line)) continue;
-    const score = scorePunchline(line, setup);
-    if (score > bestScore) {
-      best = line;
-      bestScore = score;
-    }
-  }
-  return best;
-}
 function cardJokeStyle(seed) {
   return CARD_JOKE_STYLES[fnv1a(seed) % CARD_JOKE_STYLES.length];
 }
@@ -1685,32 +1605,31 @@ ${MOMENT_VOICE_BLOCK}
 RULES
 - Use no fact, date, number, name, place or quote that is not written in THE LEGEND. No invented quotes.
 - Write numbers as words, use no quotation marks, and name no apps, brands or people other than the legend.
-  (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice lists.
 - Do not name the reader's trait sides with any word other than the ones given in THE READER.
-- Kind, specific, modern, warm. Write like a friend who just spotted the link and is a little delighted by it.
+- Kind, specific, and plain. State the link. Do not decorate it until the link is unclear.
 - Never leave square or angle brackets in the answer.
+- Do not say the reader did something the answers do not show. A meeting scene is hypothetical. Open it with "Picture an hour with [the legend]." Do not add a second disclaimer. Do not say the talk would stay on the known work.
 
-"whatItMeansForYou" \u2014 2 or 3 sentences, in this order (emci, 2026-10-08):
-  1. The bridge: say plainly what the legend did (in the story, for a tale), in a few words from the entry, and the side of the reader it shares.
-  2. One everyday moment the reader would recognise that shows that same side. It must make physical sense
-     (a voice note is recorded, not typed; a text is sent, not said) and it must clearly be the SAME trait as the bridge.
-  3. A short, kind closing line on what that says about the reader. No advice, no "should".
-  Never write a moment that has no link to the legend. Never stack two unrelated moments.
-  Shape only (do not copy the words, and vary how you open each sentence): "[Legend] did [thing from the entry]. You do a smaller version of that when [one modern moment showing the same side]. [What that quietly says about you]."
+"whatItMeansForYou" \u2014 2 or 3 sentences, in this order:
+  1. The bridge: say plainly what the legend did (in the story, for a tale), in a few words from the entry, and the side of the reader it shares. Say the similarity in plain words.
+  2. Optional: one example of that same side, only if it makes the similarity clearer. Mark it as an example. It must be the SAME trait as the bridge. Do not glue it to the legend's deed with "when" unless they are the same event.
+  3. A short closing line on what that says about the reader. No advice, no "should".
+  Never add a detail that has no link to the legend. Never stack two unrelated scenes.
+  Shape only (do not copy the words): "[Legend] did [thing from the entry]. You share [the plain similarity]. [What that says about you]."
   Reread it once: if a friend would ask "wait, what does that have to do with it?", rewrite it.
 
 "title" \u2014 a name for the reader, two to ${TITLE_MAX_WORDS} words, all lowercase, starting with "the".
   It names ONE side they share with the legend (from THE READER) in a fresh, flattering way the reader would want to share.
   Never about worry, doubt, overthinking, loneliness, sadness or struggle, even if that side is one of them. No names, no numbers, no trait words from a test.
 
-"metScene" \u2014 "If you'd met": ${SCENE_MIN_WORDS}\u2013${SCENE_MAX_WORDS} words, two sentences. Imagine one ordinary hour the reader spends
-  with the legend (inside the tale, for a story), built only from THE LEGEND's facts and moments: one thing you do together,
-  and one thing the legend would notice about the reader's shared side. Fun and specific; no new events, places, people or facts.
+"metScene" \u2014 "Picture an hour with [the legend]": ${SCENE_MIN_WORDS}\u2013${SCENE_MAX_WORDS} words. This is a hypothetical, not the reader's history. One plain imagined scene, only from THE LEGEND's facts and moments (inside the tale, for a story). No new events, places, people or facts.
+  Shape only (do not copy the words): "Picture an hour with [name]: they'd be [one fact from the entry], and you'd [the reader's shared side]."
+  The "Picture" opening is the hypothetical mark. Do not add "that hour is imagined." Do not say the talk would stay on the known work.
 
 "differ" \u2014 only when a DIFFERENCE is given at the end: "Where you differ", one sentence, ${DIFFER_MIN_WORDS}\u2013${DIFFER_MAX_WORDS} words, on that
-  difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry says nothing about that side of the legend,
-  do NOT claim they lacked it; contrast the reader's side with what the legend is known for.
+  difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry has a fact for that side, you may name the legend and that fact.
+  If the entry says nothing about that side, state the reader only. Do not name the legend. Do not claim they lacked the side. Do not say it is separate from what they are known for. Do not say the answers land on that side.
 
 ${CARD_JOKE_RULES}
 
@@ -1863,7 +1782,8 @@ function parseStoredLegendStory(raw) {
     ...typeof obj.joke === "string" ? { joke: obj.joke } : {},
     ...typeof obj.libraryId === "string" && /^[0-9a-f-]{36}$/.test(obj.libraryId) ? { libraryId: obj.libraryId } : {},
     ...typeof obj.others === "number" ? { others: obj.others } : {},
-    source: obj.source === "ai" ? "ai" : obj.source === "library" ? "library" : "fallback"
+    source: obj.source === "ai" ? "ai" : obj.source === "library" ? "library" : "fallback",
+    ...Array.isArray(obj.lineIds) ? { lineIds: obj.lineIds.filter((id) => typeof id === "string") } : {}
   };
 }
 function storedDiffer(raw) {
@@ -1962,7 +1882,6 @@ var CLINICAL_ADVICE = /\b(?:(?:see|try|book|start|get|find|call|go to|you (?:mig
 function hasClinicalLabel(text) {
   return readerLabelHit(text) != null;
 }
-var VERDICT_PIECES = { FILL, YOU_ARE, YOUR_TAIL, YOUR_VERB };
 var PERSON = String.raw`(?:boss|manager|supervisor|ex|exes|mom|mum|mother|dad|father|brother|sister|sibling|siblings|friend|friends|coworker|co-worker|colleague|partner|girlfriend|boyfriend|husband|wife|roommate|flatmate|neighbou?r|teacher|professor|landlord|landlady|date|parent|parents|in-laws?|mother-in-law|father-in-law|cousin|aunt|uncle|grandma|grandpa|grandmother|grandfather|guy|girl|man|woman|kid|child|coach|therapist|doctor|dentist|president|senator|ceo|crush|situationship|stepmom|stepdad|colleague)`;
 var VERB3 = String.raw`(?:['’](?:s|re)|\s+(?:is|was|are|were|seems?(?: to be)?|seemed(?: to be)?|sounds? like|sounded like|acts? like|acted like|must be|might be|may be|has to be|turned out to be|turns out to be|is being|keeps being|really is|literally is|honestly is|definitely is|obviously is|clearly is))`;
 var CLINICAL_VERDICT_LABEL = String.raw`(?:narcissists?|narcissistic|psychopaths?|psychopathic|sociopaths?|sociopathic|gaslighters?|bipolar|adhd|ocd|ptsd|autistic|schizophrenic|psychotic|borderline personality|mentally ill|co-?dependent)`;
@@ -1985,26 +1904,7 @@ var THIRD_PARTY_RES = [
     )
   }
 ];
-function thirdPartyLabelHit(text) {
-  for (const rule of THIRD_PARTY_RES) {
-    if (rule.re.test(text)) return rule.name;
-  }
-  return null;
-}
-var ATTRIBUTION = /\b(?:said|says|saying|called|calls|calling|labell?ed|branded|accused|accuses|accusing|claims?|claimed|insists?|insisted|texted|wrote|tweeted|posted|replied|according to|allegedly|reportedly|rumou?red|swore|swears|thinks|thought|believes|believed|reckons|assumed|assumes|googled|told (?:me|us|him|her|them|you)|asked if|wondered if|wonders if|reads? (?:that|like))\b/i;
-var GENERIC_SPEAKER = /\b(?:people|everyone|everybody|anyone|nobody|others|folks|most people|the internet|online|society|the world|we all)\b/i;
 var READER_AIMED = new RegExp(String.raw`${YOU_ARE}|\b(?:called|calls|calling|labell?ed|branded|accused)\s+you\b|\bpeople like you\b`, "i");
-function isReportedSpeech(sentence) {
-  return ATTRIBUTION.test(sentence) && !GENERIC_SPEAKER.test(sentence) && !READER_AIMED.test(sentence);
-}
-function labelVerdictHit(text) {
-  for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
-    if (!sentence.trim() || isReportedSpeech(sentence)) continue;
-    const hit = readerLabelHit(sentence) ?? thirdPartyLabelHit(sentence);
-    if (hit) return hit;
-  }
-  return null;
-}
 
 // src/lib/voice/directive-advice.ts
 var DIRECTIVE_AT_READER = [
@@ -2066,7 +1966,7 @@ RULES
   you need in a few plain words. Never show a score or percentage. A framework or theory name is allowed only when it is
   relevant, accurate and explained, and never as a diagnosis or as a validated assessment ATO is not; never present a
   type code (MBTI and similar) as the reader's own result.
-- Every moment must make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
+- If you add an example, it has to make physical sense (a voice note is recorded, not typed) and clearly show the leaning it is for.
 - Kind, specific, modern, warm, a little delighted. Never a diagnosis or label applied to the reader, never shaming.
 - Closeness (love, partners, family, friends) is an ordinary topic, judged by meaning like any other: describe habits
   with close people plainly and specifically. Never apply a
@@ -2078,8 +1978,8 @@ RULES
   the reader is on.
 - When a card gives an ANGLE, set every example in that part of life.
 
-STYLE \u2014 CLEAR FIRST, MOMENT SECOND (emci, 2026-10-08; this overrides "Describe the moment and stop" above, and the
-counts in the register examples there \u2014 "eleven ways", "47 tabs" \u2014 are exactly what NOT to do here):
+STYLE \u2014 MEANING FIRST (emci, 2026-10-23; this follows the voice block above. Do not
+invent a scene, and do not copy a count from an old example \u2014 "eleven ways", "47 tabs" \u2014 those are exactly what NOT to do here):
 - Every part opens with a plain, true sentence about the reader that a friend would nod at.
   Only THEN, if it helps, add one short, realistic everyday example (the kind that happens every week,
   not a strange one-off scene). Nobody should have to reread it to get the point.
@@ -2103,10 +2003,10 @@ FOR EACH CARD:
 "othersNotice" \u2014 ${NOTICE_MIN_WORDS}\u2013${NOTICE_MAX_WORDS} words: what the people around the reader probably notice about them here. Kind, specific.
 "whatItMeansForYou" \u2014 ${DIVE_MEANS_MIN_WORDS}\u2013${DIVE_MEANS_MAX_WORDS} words, 2 or 3 sentences, in this order:
   1. Name the overall pattern in plain words (what these leanings add up to in this part of the reader's life).
-  2. One realistic everyday moment that shows it.
+  2. Optional: one realistic example, only if it makes that pattern clearer. Mark it as an example. Do not present it as something the reader did.
   3. A short, honest closing line: what that says about the reader, including the real cost if there is one, and where
      it fits one small step they could try.
-  Shape only (do not copy the words): "[Plain pattern]. You see it when [one realistic moment]. [What it says about you, and its cost]."
+  Shape only (do not copy the words): "[Plain pattern]. [Optional example, marked as an example]. [What it says about you, and its cost]."
   Reread it once: if a friend would ask "wait, what?", rewrite it.
 ${CARD_JOKE_RULES}
 
@@ -2223,20 +2123,19 @@ function parseStoredDive(raw) {
     whatItMeansForYou: obj.whatItMeansForYou,
     ...typeof obj.joke === "string" ? { joke: obj.joke } : {},
     ...typeof obj.opensOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(obj.opensOn) ? { opensOn: obj.opensOn } : {},
-    source: obj.source === "library" ? "library" : "ai"
+    source: obj.source === "library" ? "library" : "ai",
+    ...Array.isArray(obj.lineIds) ? { lineIds: obj.lineIds.filter((id) => typeof id === "string") } : {}
   };
 }
 
 // src/lib/ai-library/types.ts
-var LIBRARY_KINDS = ["deep_dive", "story", "legend"];
+var LIBRARY_KINDS = ["deep_dive", "legend"];
 function isLibraryKind(value) {
   return typeof value === "string" && LIBRARY_KINDS.includes(value);
 }
 var LIBRARY_VERSION = {
   deep_dive: "l2",
   // honest-weaknesses prompt, 2026-10-19
-  story: "l4",
-  // honest-weaknesses rule joins the prompt, 2026-10-19
   legend: "l2"
   // humor is 18+: joke rules are contextual boundaries, not topic bans, 2026-10-19
 };
@@ -5342,8 +5241,8 @@ var SCIENCE_LEGENDS = [
       angle("a4", "twice, in two fields", "How does one person win twice, in two different sciences?", "Going deep on one question can open doors in more than one direction.")
     ],
     tags: [
-      tag("openness", "high", "chased an unknown glow", "She studied a new kind of radiation that nobody understood yet."),
-      tag("conscientiousness", "high", "measured everything, twice", "Her discoveries came from systematic, repeated measurement."),
+      tag("openness", "high", "studied what nobody had named", "She studied a new kind of radiation that nobody understood yet."),
+      tag("conscientiousness", "high", "weighed the sample twice", "Her discoveries came from systematic, repeated measurement."),
       tag("growth_mindset", "high", "learned a new field", "She moved from physics into chemistry and won in both.")
     ],
     vetting: "Scientist, died 1934; no political office; broadly admired worldwide."
@@ -6324,7 +6223,7 @@ var SPORT_LEGENDS = [
       moment("m2", "His career home run total stood at 714.", src(wiki("Babe_Ruth"), "714"))
     ],
     angles: [
-      angle("a1", "pitcher to slugger", "What does a pitcher who became the greatest hitter have in common with you?", "Switching roles can unlock the thing you\u2019re best at."),
+      angle("a1", "pitcher to slugger", "What does a pitcher who became the greatest hitter have in common with you?", "Switching roles can show the thing you\u2019re best at."),
       angle("a2", "the big swing", "Why swing for the fences every time?", "Going big sometimes means missing, and that\u2019s part of it."),
       angle("a3", "the nickname", "What does it mean when the world gives you a nickname?", "Being yourself loudly is how people remember you."),
       angle("a4", "first five", "What does it take to be in the first group remembered?", "Doing something nobody had done sets the bar for everyone after.")
@@ -6900,3064 +6799,9 @@ var LEGEND_LIBRARY = {
   }
 };
 
-// src/lib/story-v3/polish.ts
-var STORY_POLISH_PROMPT_STATIC = `You polish tiny comic stories for the ATO app. You never invent a plot, a trait, a character, or a joke. If anything is unclear, return the input story unchanged.
-
-WHO YOU ARE
-You write tiny comic stories (~100 words, 6 beats) starring the user, in second person ("you"). Bright humor plus dark humor that stays absurd. The user is always the competent, lovable lead. Low lean is a different superpower, never a loser.
-
-HARD RULES
-ATO is 18+: dark, absurd and uncomfortable topics are allowed; judge the joke, keep its edge. Never encourage a dangerous act, never punch at someone's disclosed pain, no invented claims about real people as fact, no slurs, nothing sexually explicit.
-Stakes are tiny and treated as enormous.
-2-3 short dialogue lines (\u226412 words), from side characters only. You never speak in quotes.
-One LIGHT joke and one DARK joke. \u2264120 words. Reveal \u226415 words. No therapy-speak.
-Romantic roles are never named or gendered: "your date", "your partner", "an ex", "Rory's date".
-Named characters must use the approved list: Sam, Alex, Jordan, Kim, Ari, Rory, Casey, Jamie, Taylor, Riley, Quinn, Rowan, Avery, Morgan, Blair, Drew, Reese, Sky, Parker, Emerson, Remy, Shay, Dakota, Hayden, Kai, Phoenix.
-Family roles (Aunt Rosa) may keep natural pronouns. No two names sharing a first letter.
-
-SCRIPT FORMAT
-\u{1F4CD} *Room. Time. Day.*
-One sentence per line. Blank line between beats.
-Dialogue is **Name:** "line".
-Card 5 is Next: \u2026 then an italic reveal.
-Card 6 is Why this is you (categoryName from the catalog, leanPhrase, Proof, Tip/Watch out).
-
-POLISH ONLY
-Never invent plot or traits. Keep every beat, name, callback, and joke. You may fix grammar, split a long line, or swap a word for clarity. If you cannot polish, return the JSON unchanged.
-Return JSON only:
-{"title":"...","settingTag":"...","hook":["..."],"twist":["..."],"move":["..."],"punchline":["..."],"next":"...","reveal":"...","otherWay":"..."}`;
-
-// src/lib/legends64/classify.ts
-var CORE_AXES = ["conscientiousness", "extraversion", "openness"];
-var MODIFIER_AXES = [
-  "agreeableness",
-  "conflict_assertiveness",
-  "relatedness"
-];
-var THIRD_AXES = ["growth_mindset", "steadiness", "playfulness"];
-var POLE_COMBOS = [
-  "HHH",
-  "HHL",
-  "HLH",
-  "HLL",
-  "LHH",
-  "LHL",
-  "LLH",
-  "LLL"
-];
-var ALL_ARCHETYPE_CODES = POLE_COMBOS.flatMap(
-  (core) => POLE_COMBOS.map((modifier) => `${core}-${modifier}`)
-);
-
-// src/lib/legends64/identity.ts
-var IDENTITY_AXES = [...CORE_AXES, ...MODIFIER_AXES, ...THIRD_AXES];
-
-// src/lib/category-bank/cat_agency.ts
-var CAT_AGENCY = {
-  shape: "bar",
-  cells: {
-    high: {
-      summary: [
-        "You tend to believe your effort shapes how things turn out, and you keep learning when it\u2019s hard.",
-        "When something goes wrong, you usually look for what you can change and try again.",
-        "You tend to trust that you can get better at things and change how they turn out."
-      ],
-      strength: [
-        "You usually take responsibility and turn setbacks into a plan.",
-        "When something is hard, you tend to see it as a chance to learn.",
-        "You tend to believe you can handle new things, so you try them."
-      ],
-      watchOut: [
-        "Sometimes you blame yourself for things that weren\u2019t in your control.",
-        "Because you believe effort matters, you might push yourself too hard.",
-        "Sometimes you expect to fix everything yourself."
-      ],
-      tryThis: [
-        "Write down one thing this week that wasn\u2019t up to you, so you don\u2019t carry all of it.",
-        "Take one break from improving something, so you can enjoy what you\u2019ve already done.",
-        "Ask someone for help with one problem, so you don\u2019t have to solve it alone."
-      ]
-    },
-    mid: {
-      summary: [
-        "You tend to believe you can change some things and accept others, depending on the situation.",
-        "When things go wrong, you sometimes look for what to fix and sometimes let it go.",
-        "You usually try hard when you feel ready, and hold back when you\u2019re unsure."
-      ],
-      strength: [
-        "You can tell the difference between what you can change and what you can\u2019t.",
-        "You tend to keep a balanced view of your wins and your mistakes.",
-        "You can push when it matters and rest when it doesn\u2019t."
-      ],
-      watchOut: [
-        "Sometimes you let something go that you could have changed.",
-        "Because you\u2019re unsure some days, you might skip a chance to try.",
-        "Sometimes a setback makes you doubt yourself more than it should."
-      ],
-      tryThis: [
-        "Pick one thing you\u2019ve accepted and try one small change, so you see if it moves.",
-        "Write down one setback and one thing you learned from it, so it becomes useful.",
-        "Say yes to one small challenge this week, so you build on what you can do."
-      ]
-    },
-    low: {
-      summary: [
-        "You tend to accept things as they come and don\u2019t push hard to change them.",
-        "When something goes wrong, you usually see it as luck or timing more than your doing.",
-        "You tend to feel unsure about taking on hard things, and you\u2019re content with what you already know."
-      ],
-      strength: [
-        "You usually stay calm when things are out of your hands.",
-        "You tend not to blame yourself for things you couldn\u2019t control.",
-        "You can feel content without needing to improve everything."
-      ],
-      watchOut: [
-        "Sometimes you accept something you could have changed with a small step.",
-        "Because you credit luck, you might not see how much your effort mattered.",
-        "Sometimes doubt stops you from trying something you\u2019d handle fine."
-      ],
-      tryThis: [
-        "Pick one small problem and take one step on it today, so you see what you can change.",
-        "Write down one success and what you did to make it happen, so you see your part.",
-        "Try one new skill for ten minutes, so you see how it feels past the start."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_communication.ts
-var CAT_COMMUNICATION = {
-  shape: "bar",
-  cells: {
-    high: {
-      summary: [
-        "When there\u2019s a disagreement, you tend to say what you think and then look for a fix that works for both of you.",
-        "You usually speak up clearly and still care about how the other person feels.",
-        "You tend to handle hard talks directly and fairly."
-      ],
-      strength: [
-        "When you and a friend disagree, you usually keep the talk about the problem, not the person.",
-        "You tend to say what you need while also asking what the other person needs.",
-        "You usually make hard talks feel fair."
-      ],
-      watchOut: [
-        "Sometimes you offer a solution while the other person is still explaining how they feel.",
-        "Because you want to settle things, you might push to talk before others are ready.",
-        "Sometimes you work so hard at being fair that it wears you out."
-      ],
-      tryThis: [
-        "Ask the other person to finish their point before you suggest a fix, so they feel heard.",
-        "Let one small disagreement wait a day, so you both come in calmer.",
-        "Take a short break after a hard talk, so you have energy left for yourself."
-      ]
-    },
-    mid: {
-      summary: [
-        "You tend to speak up on some things and let others go, depending on how much they matter.",
-        "When there\u2019s a disagreement, you usually pick your moments to say what you think.",
-        "You can be direct or easygoing in a talk, depending on who you\u2019re with."
-      ],
-      strength: [
-        "You usually know which disagreements are worth having.",
-        "You can adjust how you talk to fit the person.",
-        "You tend to keep small things small."
-      ],
-      watchOut: [
-        "Sometimes you let something go that was worth saying.",
-        "Because you adjust to people, your own view might get lost.",
-        "Sometimes you hold back and then bring it all up later at once."
-      ],
-      tryThis: [
-        "Say one small thing that bothered you this week, so it doesn\u2019t build up.",
-        "Write down what you want before a hard talk, so you don\u2019t lose your view.",
-        "Ask a friend how they like to handle disagreements, so you can meet them halfway."
-      ]
-    },
-    low: {
-      summary: [
-        "You tend to keep quiet in disagreements and hold on to your own view inside.",
-        "When there\u2019s tension, you usually stay out of the argument and keep your opinion to yourself.",
-        "You tend to avoid arguing, but you don\u2019t easily change your mind either."
-      ],
-      strength: [
-        "You usually stay calm and don\u2019t make disagreements bigger.",
-        "You tend to think before you speak in a tense moment.",
-        "You know what you believe, even when you don\u2019t say it out loud."
-      ],
-      watchOut: [
-        "Sometimes people don\u2019t know you disagree until much later.",
-        "Because you stay quiet, a problem that bothers you might keep happening.",
-        "Sometimes keeping your view inside makes you feel unheard."
-      ],
-      tryThis: [
-        "Text the person one sentence about what you think, so your view is heard.",
-        "Ask one question in your next disagreement, so you\u2019re part of the talk.",
-        "Write down what you\u2019d want to say, so it\u2019s easier to share later."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_drive.ts
-var CAT_DRIVE = {
-  shape: "bar",
-  cells: {
-    high: {
-      summary: [
-        "You tend to go after what you want with confidence, and you care about the people you do it with.",
-        "When you set a goal, you usually believe you can reach it and want to share the win.",
-        "You tend to feel driven when you have freedom, a challenge and people who matter around you."
-      ],
-      strength: [
-        "You usually take charge of your goals and bring energy to whatever you start.",
-        "When something is hard, you tend to trust yourself and keep going.",
-        "You tend to motivate people around you because you care and you show up."
-      ],
-      watchOut: [
-        "Sometimes you take on so much that your rest gets pushed aside.",
-        "Because you\u2019re driven, you might expect the same pace from people around you.",
-        "Sometimes you push ahead before checking if others are ready."
-      ],
-      tryThis: [
-        "Pick one goal to pause this week, so you have energy for the rest.",
-        "Ask a teammate or friend how their goals are going, so it isn\u2019t all about yours.",
-        "Take one evening off from your goals, so you come back with more energy."
-      ]
-    },
-    mid: {
-      summary: [
-        "Your drive tends to come and go with the task: some things get you excited and others feel like a chore.",
-        "You usually push hard for things you care about and put in less effort on things you don\u2019t.",
-        "You can be very motivated, but it tends to depend on who you\u2019re working with and what it\u2019s for."
-      ],
-      strength: [
-        "You tend to save your energy for things that matter to you.",
-        "You can work alone or with people, depending on what the task needs.",
-        "You usually know which goals are worth pushing for."
-      ],
-      watchOut: [
-        "Sometimes tasks you don\u2019t care about slip until they become urgent.",
-        "Because your drive depends on interest, people might not know when you\u2019ll be fully in.",
-        "Sometimes you wait for motivation to show up before you start."
-      ],
-      tryThis: [
-        "Pick one task you\u2019ve been avoiding and do ten minutes now, so it starts moving.",
-        "Write down why one boring task matters, so you have a reason to finish it.",
-        "Ask a friend or coworker to do one task with you, so it feels less like a chore."
-      ]
-    },
-    low: {
-      summary: [
-        "You tend to work best with clear direction and a steady pace, rather than chasing big goals.",
-        "When a goal feels big, you usually take it slowly and like some guidance along the way.",
-        "You tend to prefer a calm, clear plan over pushing hard on your own."
-      ],
-      strength: [
-        "You tend to follow a plan well and do careful work.",
-        "You usually think before you jump into something, which saves you mistakes.",
-        "You can be content without chasing the next big thing."
-      ],
-      watchOut: [
-        "Sometimes you wait for someone else to set the goal instead of setting your own.",
-        "Because you take it slow, chances can pass before you\u2019re ready.",
-        "Sometimes you doubt you can do something you\u2019d actually do well."
-      ],
-      tryThis: [
-        "Set one small goal for yourself this week, so you get to choose the direction.",
-        "Write down one thing you did well recently, so you see what you can do.",
-        "Ask a friend to check in on one goal with you, so you have support."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_independence.ts
-var CAT_INDEPENDENCE = {
-  shape: "map",
-  cells: {
-    // Self-directed + Connected
-    hh: {
-      summary: [
-        "You tend to like doing things your own way, and you also need close people around you.",
-        "When you make plans, you usually want freedom and good company at the same time.",
-        "You tend to want both independence and real connection."
-      ],
-      strength: [
-        "You can lead your own life and still keep close friendships.",
-        "You tend to bring people into your plans without losing your own direction.",
-        "You usually know what you want and who you want it with."
-      ],
-      watchOut: [
-        "Sometimes you want company on your terms, which can be hard for friends to match.",
-        "Because you want both, you might feel pulled between your plans and your people.",
-        "Sometimes you decide alone and then expect others to join in."
-      ],
-      tryThis: [
-        "Ask a friend what they\u2019d like to do next, so the next plan isn\u2019t just yours.",
-        "Pick one evening for your own plans and one for friends, so you get both.",
-        "Tell a close friend about a plan before you decide, so they feel included."
-      ]
-    },
-    // Self-directed + Self-contained
-    hl: {
-      summary: [
-        "You tend to do things your own way and feel fine spending a lot of time on your own.",
-        "When you have free time, you usually spend it on your own projects.",
-        "You tend to rely on yourself more than on other people."
-      ],
-      strength: [
-        "You usually handle things on your own and don\u2019t need much help.",
-        "You tend to know your own mind and follow it.",
-        "You can enjoy your own company for long stretches."
-      ],
-      watchOut: [
-        "Sometimes friends feel left out because you don\u2019t reach out much.",
-        "Because you\u2019re fine alone, you might miss signs that someone wants more contact.",
-        "Sometimes you handle a hard thing alone even though someone nearby could help."
-      ],
-      tryThis: [
-        "Text one friend this week just to check in, so they know you think of them.",
-        "Invite someone to join part of a solo plan, so you share it without losing your space.",
-        "Ask for help with one small thing, so people get a chance to show up."
-      ]
-    },
-    // Guided + Connected
-    lh: {
-      summary: [
-        "You tend to feel best making plans with the people close to you and following their lead.",
-        "When there\u2019s a decision, you usually want input from friends or family.",
-        "You tend to enjoy being part of a team more than going your own way."
-      ],
-      strength: [
-        "You tend to be a great teammate and easy to plan with.",
-        "You usually value what other people think.",
-        "You tend to keep people close by including them."
-      ],
-      watchOut: [
-        "Sometimes your own wishes get lost in what the group wants.",
-        "Because you like input, you might wait for others before deciding.",
-        "Sometimes you feel unsure when you have to choose alone."
-      ],
-      tryThis: [
-        "Make one small choice today without asking anyone, so you practice trusting yourself.",
-        "Suggest the next plan with your friends, so your ideas get a turn.",
-        "Write down what you want before a group decision, so you bring your own view."
-      ]
-    },
-    // Guided + Self-contained
-    ll: {
-      summary: [
-        "You tend to like clear direction and a quiet life without many social demands.",
-        "When you work, you usually prefer clear steps and time on your own.",
-        "You tend to be content with a simple routine and a small circle of friends."
-      ],
-      strength: [
-        "You tend to keep things calm and easy to work with.",
-        "You usually follow a plan well and do it quietly.",
-        "You can be content without needing a lot from people."
-      ],
-      watchOut: [
-        "Sometimes you wait for direction that nobody gives you.",
-        "Because you keep to yourself, people might not know what you need.",
-        "Sometimes your friendships fade because nobody reaches out."
-      ],
-      tryThis: [
-        "Choose one small thing to do on your own this week, so the plan is yours.",
-        "Text one friend to say hi, so the friendship stays warm.",
-        "Tell someone at work how you like to get instructions, so you get what you need."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_levity.ts
-var CAT_LEVITY = {
-  shape: "bar",
-  cells: {
-    high: {
-      summary: [
-        "You tend to bring humor into tense moments and still say what you think.",
-        "When things get tense, you usually lighten the mood and help people find a fix.",
-        "You tend to use jokes and honesty to keep hard moments from getting heavy."
-      ],
-      strength: [
-        "You usually ease tension so people can talk to you more openly.",
-        "You tend to make hard talks feel less scary.",
-        "You can be funny and fair in the same conversation."
-      ],
-      watchOut: [
-        "Sometimes your joke lands at the wrong moment for someone who\u2019s upset.",
-        "Because you keep things light, people might think you\u2019re not taking it seriously.",
-        "Sometimes humor covers up something you really need to say."
-      ],
-      tryThis: [
-        "Ask how someone feels before you joke about a tense moment, so they feel heard.",
-        "Say the serious part first in your next hard talk, so the joke doesn\u2019t hide it.",
-        "Wait a moment before your next joke in a tense talk, so others can speak."
-      ]
-    },
-    mid: {
-      summary: [
-        "You can be funny in a tense moment or serious about it, depending on the people and the problem.",
-        "You tend to use humor sometimes and plain talk other times when there\u2019s conflict.",
-        "When things get tense, you usually read the room before deciding to joke or to speak up."
-      ],
-      strength: [
-        "You tend to know when a joke will help and when it won\u2019t.",
-        "You can shift between light and serious as a talk needs.",
-        "You usually keep hard moments from getting heavier than they need to be."
-      ],
-      watchOut: [
-        "Sometimes you misread the moment and joke when someone wanted quiet.",
-        "Because you adjust, people might not know how you really feel.",
-        "Sometimes you wait so long to decide that the moment passes you by."
-      ],
-      tryThis: [
-        "Ask a friend whether they want to laugh or talk, so you match their mood.",
-        "Share one honest thought in your next tense moment, so your view is heard.",
-        "Write down how you felt after a hard talk, so you know what you meant to say."
-      ]
-    },
-    low: {
-      summary: [
-        "You tend to take conflict seriously and keep quiet rather than joke or argue.",
-        "When there\u2019s tension, you usually stay serious and stay out of the back-and-forth.",
-        "You tend to handle hard moments quietly and without humor."
-      ],
-      strength: [
-        "You usually treat other people\u2019s problems with real care.",
-        "You tend not to make tense moments worse.",
-        "You can stay calm and respectful when others don\u2019t."
-      ],
-      watchOut: [
-        "Sometimes tense moments feel heavier for you than they need to.",
-        "Because you stay quiet, people might not know what you think.",
-        "Sometimes you carry a disagreement around long after it\u2019s over."
-      ],
-      tryThis: [
-        "Look for one small funny thing in a tense week, so it feels a little lighter.",
-        "Say one sentence about how you see it in your next disagreement, so you\u2019re heard.",
-        "Take a short walk after a hard talk, so it doesn\u2019t stay with you."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_love.ts
-var CAT_LOVE = {
-  shape: "map",
-  cells: {
-    // Watchful + Private
-    hh: {
-      summary: [
-        "You tend to want to feel close to people, but you also pull back when things get very close.",
-        "When a relationship matters, you usually worry about it and also need your space.",
-        "You tend to wonder where you stand with people while keeping some of yourself private."
-      ],
-      strength: [
-        "You tend to notice small changes in how people act toward you.",
-        "You care a lot about your relationships, even if you don\u2019t show it often.",
-        "You usually think carefully before letting someone close."
-      ],
-      watchOut: [
-        "Sometimes you pull away right when you most want reassurance.",
-        "Because you notice so much, you might worry and still not say anything.",
-        "Sometimes people can\u2019t tell what you need because you keep it private."
-      ],
-      tryThis: [
-        "Tell one person close to you one thing you need, so they don\u2019t have to guess.",
-        "Write down what you\u2019re worried about before pulling back, so you can see it clearly.",
-        "Text someone you care about a short check-in, so the connection stays open."
-      ]
-    },
-    // Watchful + Close
-    hl: {
-      summary: [
-        "You tend to want lots of closeness and contact, and quiet stretches can worry you.",
-        "When you\u2019re close to someone, you usually want to talk often and feel unsure on quiet days.",
-        "You tend to give a lot in relationships and want to know it\u2019s returned."
-      ],
-      strength: [
-        "You tend to be open and warm with the people you love.",
-        "You usually put real effort into staying close.",
-        "You tend to notice how people are doing and reach out."
-      ],
-      watchOut: [
-        "Sometimes a slow reply can feel like distance to you when it isn\u2019t.",
-        "Because you give so much, you might feel hurt when it isn\u2019t matched right away.",
-        "Sometimes you reach out to calm a worry rather than to connect."
-      ],
-      tryThis: [
-        "Put your phone away for twenty minutes after sending a message, so you\u2019re not waiting on it.",
-        "Tell your partner or a friend how often you like to talk, so you both know.",
-        "Plan something you enjoy alone tonight, so quiet time feels good."
-      ]
-    },
-    // Trusting + Private
-    lh: {
-      summary: [
-        "You tend to feel relaxed in relationships and like having plenty of your own space.",
-        "When you\u2019re close to someone, you usually don\u2019t worry much and you keep your independence.",
-        "You tend to trust people and also keep a lot of your life to yourself."
-      ],
-      strength: [
-        "You usually give people room and don\u2019t get jealous easily.",
-        "You tend to stay calm in relationships, even when things are quiet.",
-        "You can keep your own life going while being close to someone."
-      ],
-      watchOut: [
-        "Sometimes people close to you want more contact or sharing than you offer.",
-        "Because you\u2019re relaxed, a partner might read it as you not caring.",
-        "Sometimes you keep your feelings so private that others feel shut out."
-      ],
-      tryThis: [
-        "Tell someone close one thing you\u2019re feeling this week, so they know you better.",
-        "Ask your partner or a close friend if they\u2019d like more contact, so you can meet them.",
-        "Send a short message to someone you love, so they hear from you first."
-      ]
-    },
-    // Trusting + Close
-    ll: {
-      summary: [
-        "You tend to feel safe being close to people, and you don\u2019t worry much about where you stand.",
-        "When you\u2019re in a relationship, you usually share openly and trust the other person.",
-        "You tend to enjoy closeness and feel settled in it."
-      ],
-      strength: [
-        "You usually make people feel loved and trusted.",
-        "You tend to share your feelings and listen well.",
-        "You can be close to someone without much worry."
-      ],
-      watchOut: [
-        "Sometimes you share more than someone new is ready for.",
-        "Because you trust easily, you might miss early signs that something\u2019s off.",
-        "Sometimes people who need more space feel a bit crowded by your closeness."
-      ],
-      tryThis: [
-        "Ask a new friend about themselves before sharing your own news, so they open up at their pace.",
-        "Ask your partner how much time together feels good to them, so you can match it.",
-        "Pay attention to whether a new friend keeps small promises, so trust can build both ways."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_openness.ts
-var CAT_OPENNESS = {
-  shape: "bar",
-  cells: {
-    high: {
-      summary: [
-        "You tend to say yes to new places, new people and new plans, and you usually bring others along.",
-        "When something new comes up, you\u2019re usually curious about it and happy to try it with friends.",
-        "You tend to enjoy meeting new people and trying new things more than sticking to the usual."
-      ],
-      strength: [
-        "You usually make new plans happen and get people excited about them.",
-        "You tend to be easy to meet and quick to try something new.",
-        "When a group is stuck, you usually suggest something fresh to do."
-      ],
-      watchOut: [
-        "Sometimes you move on to the next new thing before friends are ready.",
-        "Because you love new plans, quieter friends might feel pulled along.",
-        "Sometimes you fill your calendar with so much that there\u2019s no time left for you to rest."
-      ],
-      tryThis: [
-        "Ask a quieter friend what they\u2019d like to do, so the next plan fits them too.",
-        "Leave one evening this week free, so you have time to rest.",
-        "Go back to one place you already love, so you see what the familiar still offers."
-      ]
-    },
-    mid: {
-      summary: [
-        "You can enjoy new things and new people, but you also like your familiar spots and quiet nights.",
-        "You tend to try new things when the mood is right and stick with what you know when it isn\u2019t.",
-        "You usually balance going out with staying in, and new plans with old favorites."
-      ],
-      strength: [
-        "You can enjoy a new adventure and a quiet night in, so you fit in with many kinds of friends.",
-        "You tend to pick new things on purpose, not just because they\u2019re new.",
-        "You can be social when it counts and recharge when you need to."
-      ],
-      watchOut: [
-        "Sometimes you say no to something new just because you\u2019re tired that day.",
-        "Because you\u2019re flexible, you might go along with plans that don\u2019t really suit you.",
-        "Sometimes you wait for the right mood and miss a chance you\u2019d have enjoyed."
-      ],
-      tryThis: [
-        "Say yes to one new plan this week, so you keep trying new things.",
-        "Plan one quiet night and one night out this week, so you get both.",
-        "Text a friend about something new you\u2019d like to try, so it becomes a real plan."
-      ]
-    },
-    low: {
-      summary: [
-        "You tend to enjoy familiar places, close friends and quiet plans more than big crowds or new things.",
-        "When you get free time, you usually stick with what you know you\u2019ll enjoy.",
-        "You tend to prefer a small group and a known plan over meeting lots of new people."
-      ],
-      strength: [
-        "You tend to know exactly what you enjoy, and you make time for it.",
-        "Your close friends usually get your full attention, because you don\u2019t spread yourself thin.",
-        "You tend to be steady and easy to plan with, because you know what you like."
-      ],
-      watchOut: [
-        "Sometimes you skip a new plan you might have enjoyed.",
-        "Because you like the familiar, friends might stop inviting you to new things.",
-        "Sometimes you miss meeting someone great because the setting felt too new to you."
-      ],
-      tryThis: [
-        "Say yes to one small new thing this week, so new feels a little more familiar.",
-        "Invite one close friend to try a new place with you, so it feels easier.",
-        "Ask a friend what they\u2019ve tried lately, so you hear about new things without pressure."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_resilience.ts
-var CAT_RESILIENCE = {
-  shape: "bar",
-  cells: {
-    high: {
-      summary: [
-        "When things go wrong, you tend to stay calm, trust your skills and look for what to learn.",
-        "You usually recover quickly from setbacks at work or at home.",
-        "You tend to handle pressure well and come out of it stronger."
-      ],
-      strength: [
-        "You usually stay steady when pressure builds.",
-        "When something fails, you tend to learn from it and try again.",
-        "You tend to trust yourself to handle hard things."
-      ],
-      watchOut: [
-        "Sometimes you push through stress that really needed a break.",
-        "Because you handle pressure well, people might give you more than your share.",
-        "Sometimes you expect others to recover as fast as you do."
-      ],
-      tryThis: [
-        "Take a real break after your next stressful day, so you have energy for the next one.",
-        "Ask a stressed friend what they need, so your steadiness helps them too.",
-        "Say no to one extra task this week, so you don\u2019t carry too much."
-      ]
-    },
-    mid: {
-      summary: [
-        "You tend to handle some kinds of pressure well, while others stay with you for a while.",
-        "When setbacks happen, you usually recover, but it can take you some time.",
-        "You can stay steady under pressure, but a hard week can still get to you."
-      ],
-      strength: [
-        "You tend to recover from setbacks and learn something along the way.",
-        "You usually know which stresses you handle well.",
-        "You can stay steady when you have time to prepare."
-      ],
-      watchOut: [
-        "Sometimes a surprise setback hits you harder than you expect.",
-        "Because some pressure gets to you, you might doubt your skills after a bad day.",
-        "Sometimes you hold on to a setback longer than you need to."
-      ],
-      tryThis: [
-        "Write down one setback you got through, so you remember you can do it.",
-        "Plan a calm evening after your next big deadline, so you have time to reset.",
-        "Ask a friend how they handle stress, so you get a new idea."
-      ]
-    },
-    low: {
-      summary: [
-        "You tend to feel pressure strongly, and setbacks can stay with you for a while.",
-        "When something goes wrong, you usually feel it deeply and doubt yourself afterward.",
-        "You tend to find stressful times hard and need extra time to recover."
-      ],
-      strength: [
-        "You tend to take problems seriously and prepare carefully.",
-        "You usually understand when others are struggling, because you\u2019ve been there.",
-        "You know your limits, so you can plan around them."
-      ],
-      watchOut: [
-        "Sometimes one setback makes your whole week feel harder.",
-        "Because you feel pressure deeply, you might avoid challenges you could handle.",
-        "Sometimes your doubt after a mistake lasts longer than the mistake does."
-      ],
-      tryThis: [
-        "Write down one rough week you got through before, so you have proof you can get through another.",
-        "Take three slow breaths before your next stressful task, so you start calmer.",
-        "Tell a friend about a setback this week, so you don\u2019t carry it alone."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_social.ts
-var CAT_SOCIAL = {
-  shape: "bar",
-  cells: {
-    high: {
-      summary: [
-        "You tend to bring warmth, jokes and easy energy to the people around you.",
-        "When you\u2019re with friends or coworkers, you usually keep things friendly and fun.",
-        "You tend to make social plans feel easy and light."
-      ],
-      strength: [
-        "You usually make people feel welcome and relaxed.",
-        "When a group is quiet, you tend to get the conversation and the laughs going.",
-        "You tend to get along with all kinds of people."
-      ],
-      watchOut: [
-        "Sometimes you keep things light when someone needs to talk to you about something serious.",
-        "Because you want everyone happy, you might skip saying something hard.",
-        "Sometimes you give so much energy to the group that you run low yourself."
-      ],
-      tryThis: [
-        "Ask one friend a real question about their week, so there\u2019s room for more than fun.",
-        "Take one quiet evening this week, so you recharge for the people you love.",
-        "Tell a friend one honest thought you\u2019ve held back, so the friendship stays real."
-      ]
-    },
-    mid: {
-      summary: [
-        "You can be warm and fun in a group, but you also like your quiet time and your own opinions.",
-        "You tend to be social when you have the energy and more reserved when you don\u2019t.",
-        "You usually get along with people, but you\u2019ll speak up or step back when you need to."
-      ],
-      strength: [
-        "You can join the fun and also say what you think.",
-        "You tend to read the room and match it.",
-        "You usually know when to be social and when to recharge."
-      ],
-      watchOut: [
-        "Sometimes you go quiet in a group and people read it as you not caring.",
-        "Because you match the room, your own mood might get lost.",
-        "Sometimes you say yes to plans when you needed a night in."
-      ],
-      tryThis: [
-        "Text a friend to say you had fun after your next hangout, so they know.",
-        "Pick one plan to skip this week, so you have energy for the ones you want.",
-        "Share one opinion in your next group chat, so your view is part of it."
-      ]
-    },
-    low: {
-      summary: [
-        "You tend to be more reserved, serious and direct in groups than most people.",
-        "When you\u2019re in a big group, you usually prefer to listen and say only what you mean.",
-        "You tend to like a few real friends and real talk more than lots of social plans."
-      ],
-      strength: [
-        "You usually say what you mean, so people can trust your words.",
-        "You tend to be a good listener in one-on-one talks.",
-        "Your friendships tend to be few but real."
-      ],
-      watchOut: [
-        "Sometimes people read your quiet or direct style as cold.",
-        "Because you skip small talk, new people might take longer to warm up to you.",
-        "Sometimes you miss the fun because the group felt like a lot to you."
-      ],
-      tryThis: [
-        "Smile and say hi to one new person this week, so they see your friendly side.",
-        "Join one group plan this month for an hour, so you stay part of things.",
-        "Send a friend a funny message today, so they see your lighter side."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_steadiness.ts
-var CAT_STEADINESS = {
-  shape: "bar",
-  cells: {
-    high: {
-      summary: [
-        "You tend to stay calm, keep your plans and get along with people, even when the week gets busy.",
-        "When things get stressful at work or at home, you usually stay even and keep going.",
-        "Your friends and coworkers can usually count on you to stay steady from day to day."
-      ],
-      strength: [
-        "When plans get messy, you usually stay calm and sort out what needs to happen next.",
-        "You tend to follow through on what you said and stay pleasant while you do it.",
-        "People can usually count on you to show up calm and ready."
-      ],
-      watchOut: [
-        "Sometimes you stay so even that people don\u2019t notice when you need help.",
-        "Because you keep things smooth, you might hold back a problem that needs saying.",
-        "Sometimes you carry more than your share because you make it look easy."
-      ],
-      tryThis: [
-        "Tell one person something that\u2019s been bothering you this week, so they know you have hard days too.",
-        "Ask for help with one task today, so you\u2019re not the only one holding things together.",
-        "Say no to one small request this week, so your calm doesn\u2019t turn into extra work."
-      ]
-    },
-    mid: {
-      summary: [
-        "You can be calm and organized on some days and more stirred up on others, depending on what\u2019s going on.",
-        "Your steadiness tends to depend on the week: some days you\u2019re on top of things, other days it feels like a lot.",
-        "You usually keep things together, but stress or a messy schedule can throw you off for a bit."
-      ],
-      strength: [
-        "You can adapt to the day, staying steady when it matters and loosening up when it doesn\u2019t.",
-        "You tend to notice when things are off, and you can usually get back on track.",
-        "You can relate to people who are calm and to people who are stressed, because you\u2019ve been both."
-      ],
-      watchOut: [
-        "Sometimes a hard week throws your routines off more than you\u2019d like.",
-        "Because your mood shifts with the day, people might not know which version of you to expect.",
-        "Sometimes you lose track of plans when stress shows up."
-      ],
-      tryThis: [
-        "Pick one small routine to keep this week no matter what, so busy days still have one steady part.",
-        "Write down what usually throws you off, so you can see it coming next time.",
-        "Plan a quiet hour after your busiest day this week, so you have time to reset."
-      ]
-    },
-    low: {
-      summary: [
-        "You tend to feel things strongly and go with the moment, so your days can change a lot.",
-        "When something upsets you, you usually feel it fully, and plans can shift with your mood.",
-        "You tend to react honestly and in the moment, rather than keeping everything even."
-      ],
-      strength: [
-        "You usually react honestly, so people know where they stand with you.",
-        "When something matters, you feel it and you show it, which makes you easy to read.",
-        "You can switch plans quickly when something feels off to you."
-      ],
-      watchOut: [
-        "Sometimes a strong feeling can push your plans or a talk off course.",
-        "Because you react in the moment, you might say something before you\u2019ve thought it through.",
-        "Sometimes your plans change so often that people around you lose track."
-      ],
-      tryThis: [
-        "Wait ten minutes before replying to the next message that upsets you, so you answer the way you mean to.",
-        "Write down one plan for tomorrow and keep it, so you have one fixed thing in your day.",
-        "Take three slow breaths before your next hard conversation, so you start calm."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/cat_structure.ts
-var CAT_STRUCTURE = {
-  shape: "map",
-  cells: {
-    // Adventurous + Structured
-    hh: {
-      summary: [
-        "You tend to love new ideas, and you also plan carefully to make them happen.",
-        "When something new excites you, you usually turn it into a clear plan.",
-        "You tend to mix curiosity with good follow-through."
-      ],
-      strength: [
-        "You usually make new ideas real instead of just talking about them.",
-        "You tend to plan trips, projects and changes well.",
-        "You can bring both fresh ideas and a solid plan."
-      ],
-      watchOut: [
-        "Sometimes you plan so many new things that there\u2019s no time left for you to rest.",
-        "Because you plan carefully, surprises inside your new plans can frustrate you.",
-        "Sometimes you expect others to keep up with both your ideas and your schedule."
-      ],
-      tryThis: [
-        "Leave one day this week with no plan, so you have room to rest.",
-        "Pick one new idea to finish before starting another, so your plans don\u2019t pile up.",
-        "Ask the people in your plan what pace works for them, so they can keep up."
-      ]
-    },
-    // Adventurous + Flexible
-    hl: {
-      summary: [
-        "You tend to follow new ideas and go with the moment instead of sticking to a plan.",
-        "When something new comes up, you usually jump in and figure it out as you go.",
-        "You tend to enjoy surprises and keep your plans loose."
-      ],
-      strength: [
-        "You usually adapt quickly and enjoy the unexpected.",
-        "You tend to find fun in last-minute changes.",
-        "You can try new things without needing everything figured out."
-      ],
-      watchOut: [
-        "Sometimes things you start don\u2019t get finished.",
-        "Because you keep plans loose, people who plan ahead might feel unsure about you.",
-        "Sometimes your small tasks pile up while you chase something new."
-      ],
-      tryThis: [
-        "Pick one unfinished thing and do the next small step today, so it moves forward.",
-        "Put two tasks on your calendar this week, so they get a time.",
-        "Text a friend a clear yes or no about a plan, so they can plan around you."
-      ]
-    },
-    // Familiar + Structured
-    lh: {
-      summary: [
-        "You tend to like routines that work and plans you can count on.",
-        "When you find a way of doing things that works, you usually stick to it.",
-        "You tend to feel best with a clear plan and familiar steps."
-      ],
-      strength: [
-        "You tend to be reliable and organized.",
-        "You usually get things done the same good way each time.",
-        "People can count on you to keep a plan on track."
-      ],
-      watchOut: [
-        "Sometimes a sudden change throws off your whole day.",
-        "Because you trust your routines, you might miss a better way.",
-        "Sometimes you stick with a plan after it\u2019s stopped working for you."
-      ],
-      tryThis: [
-        "Change one small thing in your routine today, so change feels easier.",
-        "Ask a coworker how they do a task you both do, so you can borrow one idea.",
-        "Leave one hour unplanned this week, so surprises have room."
-      ]
-    },
-    // Familiar + Flexible
-    ll: {
-      summary: [
-        "You tend to like what you know and take each day as it comes.",
-        "When it comes to plans, you usually keep things simple and loose.",
-        "You tend to be easygoing about schedules and happy with your usual things."
-      ],
-      strength: [
-        "You tend to stay relaxed and easy to be around.",
-        "You usually don\u2019t stress about plans changing.",
-        "You know what you enjoy and don\u2019t overthink it."
-      ],
-      watchOut: [
-        "Sometimes your tasks without a deadline drift for a long time.",
-        "Because you take each day as it comes, bigger goals can slip.",
-        "Sometimes you miss new things because the usual is easier."
-      ],
-      tryThis: [
-        "Set a deadline for one task you\u2019ve been putting off, so it gets done.",
-        "Try one small new thing this week, so your routine gets a little fresh.",
-        "Write down one goal for this month, so the days have a direction."
-      ]
-    }
-  }
-};
-
-// src/lib/category-bank/index.ts
-var CATEGORY_BANK = {
-  cat_steadiness: CAT_STEADINESS,
-  cat_openness: CAT_OPENNESS,
-  cat_drive: CAT_DRIVE,
-  cat_agency: CAT_AGENCY,
-  cat_social: CAT_SOCIAL,
-  cat_communication: CAT_COMMUNICATION,
-  cat_love: CAT_LOVE,
-  cat_independence: CAT_INDEPENDENCE,
-  cat_levity: CAT_LEVITY,
-  cat_structure: CAT_STRUCTURE,
-  cat_resilience: CAT_RESILIENCE
-};
-function bankForCategory(id) {
-  return Object.prototype.hasOwnProperty.call(CATEGORY_BANK, id) ? CATEGORY_BANK[id] : null;
-}
-
-// src/lib/voice/filters.ts
-var DEGRADING = "(?:a |an )?(?:lazy(?: person| human)?|worthless|hopeless|useless|pathetic|stupid|dumb|idiot|moron|failure|loser|disappointment|embarrassment|joke|burden|waste of (?:space|time|oxygen))";
-var INSULT_NOUN = "(?:idiot|moron|loser|failure|disappointment|embarrassment|waste of (?:space|time|oxygen))";
-var CRUEL_PATTERNS = [
-  // "What a loser you are." / "Such an idiot you are." (insult first, reader last).
-  new RegExp(`\\b(?:what|such)\\s+(?:a|an)\\s+${INSULT_NOUN}\\s+you(?:['\u2019]re| are| were)\\b`, "i"),
-  // "you are a loser", "you're SO lazy", "you're a total embarrassment", "people like you are useless".
-  new RegExp(
-    `\\b(?:you(?:['\u2019]re| are| were|['\u2019]ve been| have been)|people like you (?:are|get))\\s+(?:(?:so|really|just|too|that|such|utterly|completely|totally|a total|clearly|honestly|actually|still)\\s+){0,2}${DEGRADING}(?![-\\w])`,
-    "i"
-  ),
-  /\byou suck\b/i,
-  /\bwhat is wrong with you\b/i,
-  /\byou(?:['’]ve)? failed (?:at everything|everyone|again(?: and again)?|as a (?:person|friend|partner|human))\b/i,
-  /\byou (?:can['’]?t|cannot) do anything\b|\byou never do anything\b|\byou always (?:fail|quit)\b/i,
-  // Telling the reader to give up on themselves; "give up the third tab" is a different sentence.
-  /\bgive up on (?:yourself|you)\b|\b(?:just|might as well|time to|you should|better) give up\b(?!\s+(?:the|a|an|your|on the|on a|on your)\b)/i,
-  /\byou give up\s+(?:easily|too (?:soon|easily)|every time|always)\b/i,
-  /\bno point (?:in )?(?:you )?trying(?:\s+(?:again|anymore|any more|at this|at all))?\s*(?:[.,;!?]|$)/i
-];
-
-// src/lib/questions/bank-v1.ts
-var QUESTIONS_BANK_V1 = [
-  // --- openness -----------------------------------------------------------------
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "Your Do today was writing down one thing you're walking into. Was today's version the safe pick or the different one?",
-    options: [
-      { text: "The different one, easily", value: 0.8 },
-      { text: "Somewhere in between", value: 0.5 },
-      { text: "The safe, familiar one", value: 0.2 }
-    ]
-  },
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "Same restaurant, and there is a menu item you have never tried.",
-    options: [
-      { text: "New one. Obviously", value: 0.8 },
-      { text: "Depends on the day", value: 0.5 },
-      { text: "I know what I like", value: 0.2 }
-    ]
-  },
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "A friend wants to drag you to something you would never pick yourself.",
-    options: [
-      { text: "I'm in, that's the fun part", value: 0.8 },
-      { text: "I'd probably pass", value: 0.2 }
-    ]
-  },
-  // --- conscientiousness --------------------------------------------------------
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "A plan you made last week hits a boring stretch today.",
-    options: [
-      { text: "I still see it through", value: 0.8 },
-      { text: "I keep it if it stays easy", value: 0.5 },
-      { text: "I switch to whatever feels better", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "Something is due Friday. It is Monday.",
-    options: [
-      { text: "I start chipping at it now", value: 0.8 },
-      { text: "I start once it feels close", value: 0.5 },
-      { text: "Thursday night, same as always", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "You said you would do a small thing for someone and nobody followed up.",
-    options: [
-      { text: "I still do it", value: 0.8 },
-      { text: "It quietly disappears", value: 0.2 }
-    ]
-  },
-  // --- extraversion -------------------------------------------------------------
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "Saturday afternoon, nobody has plans yet.",
-    options: [
-      { text: "I'd rather text a few people and make something happen", value: 0.8 },
-      { text: "Either way, I'm fine", value: 0.5 },
-      { text: "I'd rather keep the time quiet", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "You walk into a party and know maybe two people.",
-    options: [
-      { text: "I start talking to someone new", value: 0.8 },
-      { text: "I find the two I know", value: 0.5 },
-      { text: "I'm counting the minutes", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "A long week just ended.",
-    options: [
-      { text: "Going out would recharge me", value: 0.8 },
-      { text: "Being alone would recharge me", value: 0.2 }
-    ]
-  },
-  // --- agreeableness ------------------------------------------------------------
-  {
-    axis: "agreeableness",
-    category: "cat_steadiness",
-    prompt: "A group chat is picking a place you don't really like.",
-    options: [
-      { text: "I go along, it's not worth a fuss", value: 0.8 },
-      { text: "I mention it once, then let it go", value: 0.5 },
-      { text: "I say I'd rather go somewhere else", value: 0.2 }
-    ]
-  },
-  {
-    axis: "agreeableness",
-    category: "cat_steadiness",
-    prompt: "Someone takes credit for something that was mostly yours.",
-    options: [
-      { text: "I let it slide", value: 0.8 },
-      { text: "I mention it lightly, later", value: 0.5 },
-      { text: "I correct it on the spot", value: 0.2 }
-    ]
-  },
-  {
-    axis: "agreeableness",
-    category: "cat_steadiness",
-    prompt: "A stranger is clearly in the wrong and clearly having a bad day.",
-    options: [
-      { text: "I give them the benefit of the doubt", value: 0.8 },
-      { text: "Bad day or not, wrong is wrong", value: 0.2 }
-    ]
-  },
-  // --- steadiness ---------------------------------------------------------------
-  {
-    axis: "steadiness",
-    category: "cat_steadiness",
-    prompt: "A small thing goes wrong first thing in the morning.",
-    options: [
-      { text: "I'm mostly over it by lunch", value: 0.8 },
-      { text: "It sits with me a bit, then fades", value: 0.5 },
-      { text: "It colors the rest of the day", value: 0.2 }
-    ]
-  },
-  {
-    axis: "steadiness",
-    category: "cat_steadiness",
-    prompt: "Plans change on you an hour before.",
-    options: [
-      { text: "Fine, I roll with it", value: 0.8 },
-      { text: "Mild whiplash, then fine", value: 0.5 },
-      { text: "It throws off the whole evening", value: 0.2 }
-    ]
-  },
-  {
-    axis: "steadiness",
-    category: "cat_steadiness",
-    prompt: "A one-word reply lands and it could be read two ways.",
-    options: [
-      { text: "I read it plain and move on", value: 0.8 },
-      { text: "I reread it once, then let it go", value: 0.5 },
-      { text: "I reread it a few times", value: 0.2 }
-    ]
-  },
-  // --- attachment_anxiety -------------------------------------------------------
-  {
-    axis: "attachment_anxiety",
-    category: "cat_love",
-    prompt: "Someone you like takes a while to reply.",
-    options: [
-      { text: "I start wondering if they're pulling away", value: 0.8 },
-      { text: "I notice, then I get on with my day", value: 0.5 },
-      { text: "I don't think much of it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "attachment_anxiety",
-    category: "cat_love",
-    prompt: "A close friend has been quieter than usual this week.",
-    options: [
-      { text: "I assume I did something", value: 0.8 },
-      { text: "I wonder for a second, then drop it", value: 0.5 },
-      { text: "People get busy", value: 0.2 }
-    ]
-  },
-  {
-    axis: "attachment_anxiety",
-    category: "cat_love",
-    prompt: "You sent a long message an hour ago. It says Read.",
-    options: [
-      { text: "I check back more than I'd admit", value: 0.8 },
-      { text: "I notice, then put the phone down", value: 0.5 },
-      { text: "I forget I sent it", value: 0.2 }
-    ]
-  },
-  // --- attachment_avoidance -----------------------------------------------------
-  {
-    axis: "attachment_avoidance",
-    category: "cat_love",
-    prompt: "Someone close to you wants to talk something out in person instead of over text.",
-    options: [
-      { text: "Sure, that's fine when it matters", value: 0.2 },
-      { text: "I'd rather keep it lighter, over text", value: 0.8 }
-    ]
-  },
-  {
-    axis: "attachment_avoidance",
-    category: "cat_love",
-    prompt: "A rough week. Someone asks how you actually are.",
-    options: [
-      { text: "I tell them the real version", value: 0.2 },
-      { text: "I give them the short version", value: 0.5 },
-      { text: "I say I am fine and change the subject", value: 0.8 }
-    ]
-  },
-  {
-    axis: "attachment_avoidance",
-    category: "cat_love",
-    prompt: "Someone starts texting you good morning every day.",
-    options: [
-      { text: "I like it", value: 0.2 },
-      { text: "Nice, in small doses", value: 0.5 },
-      { text: "My replies get slower", value: 0.8 }
-    ]
-  },
-  // --- conflict_assertiveness ---------------------------------------------------
-  {
-    axis: "conflict_assertiveness",
-    category: "cat_communication",
-    prompt: "You disagree with someone in the room.",
-    options: [
-      { text: "I say so, even if it gets a little sharp", value: 0.8 },
-      { text: "I wait to see if it blows over", value: 0.5 },
-      { text: "I let it go rather than push", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_assertiveness",
-    category: "cat_communication",
-    prompt: "The order is wrong and the place is busy.",
-    options: [
-      { text: "I send it back", value: 0.8 },
-      { text: "Depends how wrong", value: 0.5 },
-      { text: "I eat it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_assertiveness",
-    category: "cat_communication",
-    prompt: "You want something and asking might annoy someone.",
-    options: [
-      { text: "I ask anyway", value: 0.8 },
-      { text: "I let it go", value: 0.2 }
-    ]
-  },
-  // --- conflict_cooperativeness -------------------------------------------------
-  {
-    axis: "conflict_cooperativeness",
-    category: "cat_communication",
-    prompt: "When you and someone else both want different things with no obvious middle ground, who usually gives first?",
-    options: [
-      { text: "Probably me", value: 0.8 },
-      { text: "Depends who cares more", value: 0.5 },
-      { text: "Rarely me", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_cooperativeness",
-    category: "cat_communication",
-    prompt: "An argument is going nowhere and it is getting late.",
-    options: [
-      { text: "I look for something we both can live with", value: 0.8 },
-      { text: "I park it for tomorrow", value: 0.5 },
-      { text: "I hold my line", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_cooperativeness",
-    category: "cat_communication",
-    prompt: "The group chat is arguing and you know you're right.",
-    options: [
-      { text: "I let it go to keep the chat calm", value: 0.8 },
-      { text: "I say it once, then drop it", value: 0.5 },
-      { text: "I send the link that proves it", value: 0.2 }
-    ]
-  },
-  // --- autonomy -----------------------------------------------------------------
-  {
-    axis: "autonomy",
-    category: "cat_drive",
-    prompt: "Someone hands you a plan that would work fine.",
-    options: [
-      { text: "I'd still rather do it my way", value: 0.8 },
-      { text: "I'll use theirs if it saves time", value: 0.5 },
-      { text: "I'm glad I don't have to figure it out", value: 0.2 }
-    ]
-  },
-  {
-    axis: "autonomy",
-    category: "cat_drive",
-    prompt: "You get told exactly how to do something you already know how to do.",
-    options: [
-      { text: "It gets under my skin", value: 0.8 },
-      { text: "I notice it, then let it go", value: 0.5 },
-      { text: "Fine by me, less to think about", value: 0.2 }
-    ]
-  },
-  {
-    axis: "autonomy",
-    category: "cat_drive",
-    prompt: "Saturday's calendar is empty and nobody has texted.",
-    options: [
-      { text: "Perfect, the day is mine", value: 0.8 },
-      { text: "Nice for a morning, then I make plans", value: 0.5 },
-      { text: "I start texting people for plans", value: 0.2 }
-    ]
-  },
-  // --- competence ---------------------------------------------------------------
-  {
-    axis: "competence",
-    category: "cat_drive",
-    prompt: "A hard task lands on your plate.",
-    options: [
-      { text: "I feel like I can handle it", value: 0.8 },
-      { text: "Depends how hard, honestly", value: 0.5 },
-      { text: "I doubt I can pull it off", value: 0.2 }
-    ]
-  },
-  {
-    axis: "competence",
-    category: "cat_drive",
-    prompt: "You are learning something new and you are still bad at it.",
-    options: [
-      { text: "I can feel myself getting better", value: 0.8 },
-      { text: "Some days it clicks", value: 0.5 },
-      { text: "I mostly feel behind", value: 0.2 }
-    ]
-  },
-  {
-    axis: "competence",
-    category: "cat_drive",
-    prompt: "Someone at work says 'this is your area, right?'",
-    options: [
-      { text: "Fair, it is", value: 0.8 },
-      { text: "Probably, I'd double-check", value: 0.5 },
-      { text: "I'm sure they mean someone else", value: 0.2 }
-    ]
-  },
-  // --- relatedness --------------------------------------------------------------
-  {
-    axis: "relatedness",
-    category: "cat_drive",
-    prompt: "A friend cancels same-day, no real reason given.",
-    options: [
-      { text: "I'd want to talk it through", value: 0.8 },
-      { text: "I'd let it go, check in eventually", value: 0.2 }
-    ]
-  },
-  {
-    axis: "relatedness",
-    category: "cat_drive",
-    prompt: "Something good happens to you on an ordinary Tuesday.",
-    options: [
-      { text: "I'm texting someone before I sit down", value: 0.8 },
-      { text: "It comes up next time we talk", value: 0.5 },
-      { text: "I just enjoy it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "relatedness",
-    category: "cat_drive",
-    prompt: "A whole day with no messages from anyone.",
-    options: [
-      { text: "I feel the gap", value: 0.8 },
-      { text: "Bliss", value: 0.2 }
-    ]
-  },
-  // --- growth_mindset -----------------------------------------------------------
-  {
-    axis: "growth_mindset",
-    category: "cat_agency",
-    prompt: "You try something new and it goes badly the first time. What actually happens next?",
-    options: [
-      { text: "I look at what I'd do differently", value: 0.8 },
-      { text: "I probably don't try that again", value: 0.2 }
-    ]
-  },
-  {
-    axis: "growth_mindset",
-    category: "cat_agency",
-    prompt: "Someone is much better than you at a thing you care about.",
-    options: [
-      { text: "I want to know how they got there", value: 0.8 },
-      { text: "Good for them, different lane", value: 0.5 },
-      { text: "Some people just have it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "growth_mindset",
-    category: "cat_agency",
-    prompt: "A friend posts day 60 of learning something new.",
-    options: [
-      { text: "Give me 60 days and I could too", value: 0.8 },
-      { text: "Depends on the thing", value: 0.5 },
-      { text: "Some people are just built for it", value: 0.2 }
-    ]
-  },
-  // --- locus_of_control ---------------------------------------------------------
-  {
-    axis: "locus_of_control",
-    category: "cat_agency",
-    prompt: "A plan you were in on falls apart.",
-    options: [
-      { text: "I look first at what I might have done differently", value: 0.8 },
-      { text: "Some of it was me, some of it wasn't", value: 0.5 },
-      { text: "It was bound to happen", value: 0.2 }
-    ]
-  },
-  {
-    axis: "locus_of_control",
-    category: "cat_agency",
-    prompt: "A good week. Where does the credit actually go?",
-    options: [
-      { text: "Mostly to what I did", value: 0.8 },
-      { text: "A bit of both", value: 0.5 },
-      { text: "Mostly to how things fell", value: 0.2 }
-    ]
-  },
-  {
-    axis: "locus_of_control",
-    category: "cat_agency",
-    prompt: "Someone asks how next year's looking.",
-    options: [
-      { text: "Mostly up to what I do", value: 0.8 },
-      { text: "Half me, half luck", value: 0.5 },
-      { text: "Depends what happens", value: 0.2 }
-    ]
-  },
-  // --- self_efficacy ------------------------------------------------------------
-  {
-    axis: "self_efficacy",
-    category: "cat_agency",
-    prompt: "Everyone at the table already knows their order. You don't.",
-    options: [
-      { text: "I panic-order whatever's closest", value: 0.2 },
-      { text: "Takes me a sec but I land on something", value: 0.5 },
-      { text: "I ask what everyone else got", value: 0.8 }
-    ]
-  },
-  {
-    axis: "self_efficacy",
-    category: "cat_agency",
-    prompt: "Something breaks and you have never fixed one before.",
-    options: [
-      { text: "I'll figure it out", value: 0.8 },
-      { text: "I look it up first", value: 0.5 },
-      { text: "I find someone who knows", value: 0.2 }
-    ]
-  },
-  {
-    axis: "self_efficacy",
-    category: "cat_agency",
-    prompt: "A big task has sat in your to-do app for two weeks.",
-    options: [
-      { text: "I pick any piece and start", value: 0.8 },
-      { text: "I break it down, then wait a bit", value: 0.5 },
-      { text: "I keep moving it to tomorrow", value: 0.2 }
-    ]
-  },
-  // --- playfulness --------------------------------------------------------------
-  {
-    axis: "playfulness",
-    category: "cat_social",
-    prompt: "A dull stretch with nothing required of you.",
-    options: [
-      { text: "I'd mess around and see what happens", value: 0.8 },
-      { text: "Either way, I am fine", value: 0.5 },
-      { text: "I'd rather just get through it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "playfulness",
-    category: "cat_social",
-    prompt: "A serious conversation hits a genuinely funny moment.",
-    options: [
-      { text: "I take the joke", value: 0.8 },
-      { text: "Depends who is in the room", value: 0.5 },
-      { text: "I keep it serious", value: 0.2 }
-    ]
-  },
-  {
-    axis: "playfulness",
-    category: "cat_social",
-    prompt: "The group chat has a running joke.",
-    options: [
-      { text: "I started it", value: 0.8 },
-      { text: "I keep it going", value: 0.5 },
-      { text: "I just react with a laugh", value: 0.2 }
-    ]
-  }
-];
-var ROUND_ONLY_BANK_V1 = [
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "You're picking a show to watch and there's something new in your queue you haven't tried.",
-    options: [
-      { text: "New one", value: 0.8 },
-      { text: "Depends on my mood", value: 0.5 },
-      { text: "Something familiar", value: 0.2 }
-    ]
-  },
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "A coworker suggests doing the project a totally different way than you planned.",
-    options: [
-      { text: "I'm curious, let's see", value: 0.8 },
-      { text: "I'll hear them out", value: 0.5 },
-      { text: "I'd rather stick to the plan", value: 0.2 }
-    ]
-  },
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "You have a free Saturday and someone mentions a class or hobby you've never tried.",
-    options: [
-      { text: "I'd sign up", value: 0.8 },
-      { text: "Maybe another time", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "Your alarm goes off and you already know today's to-do list is long.",
-    options: [
-      { text: "I get moving right away", value: 0.8 },
-      { text: "I ease into it", value: 0.5 },
-      { text: "I hit snooze", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "You told yourself you'd clean up before bed, and you're tired.",
-    options: [
-      { text: "I still do it", value: 0.8 },
-      { text: "I do the bare minimum", value: 0.5 },
-      { text: "It waits until tomorrow", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "A form needs three pieces of information and you only have two handy.",
-    options: [
-      { text: "I track down the third one now", value: 0.8 },
-      { text: "I fill in what I can and come back", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "You've been working alone for hours and hit a wall.",
-    options: [
-      { text: "I go find someone to talk to", value: 0.8 },
-      { text: "Either way", value: 0.5 },
-      { text: "I push through alone", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "A coworker asks if you want to grab lunch with the group instead of eating at your desk.",
-    options: [
-      { text: "Yes, easily", value: 0.8 },
-      { text: "Depends on the day", value: 0.5 },
-      { text: "I'd rather eat alone", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "You're the one who has to make small talk with someone new at an event.",
-    options: [
-      { text: "I don't mind starting it", value: 0.8 },
-      { text: "I'll follow their lead", value: 0.2 }
-    ]
-  },
-  {
-    axis: "agreeableness",
-    category: "cat_steadiness",
-    prompt: "Someone asks for a favor that's a genuine inconvenience for you.",
-    options: [
-      { text: "I usually say yes anyway", value: 0.8 },
-      { text: "Depends how big a favor", value: 0.5 },
-      { text: "I say no if it's a real hassle", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_assertiveness",
-    category: "cat_communication",
-    prompt: "A friend keeps borrowing money and hasn't paid you back.",
-    options: [
-      { text: "I bring it up directly", value: 0.8 },
-      { text: "I hint at it", value: 0.5 },
-      { text: "I let it slide", value: 0.2 }
-    ]
-  },
-  {
-    axis: "relatedness",
-    category: "cat_drive",
-    prompt: "You just finished something you're proud of.",
-    options: [
-      { text: "I want to tell someone right away", value: 0.8 },
-      { text: "It can wait until it comes up", value: 0.5 },
-      { text: "I keep it to myself", value: 0.2 }
-    ]
-  },
-  {
-    axis: "steadiness",
-    category: "cat_steadiness",
-    prompt: "Someone sends a short reply that could be read two ways.",
-    options: [
-      { text: "I read it the plain way and move on", value: 0.8 },
-      { text: "I reread it a few times", value: 0.2 }
-    ]
-  },
-  {
-    axis: "attachment_anxiety",
-    category: "cat_love",
-    prompt: "You need reassurance more often than you would like to admit.",
-    options: [
-      { text: "Yeah, that lands", value: 0.8 },
-      { text: "Not really me", value: 0.2 }
-    ]
-  },
-  {
-    axis: "attachment_avoidance",
-    category: "cat_love",
-    prompt: "Things are getting closer with someone.",
-    options: [
-      { text: "I lean in", value: 0.2 },
-      { text: "I want a bit of room", value: 0.8 }
-    ]
-  },
-  {
-    axis: "conflict_cooperativeness",
-    category: "cat_communication",
-    prompt: "Winning the point matters more than keeping the peace.",
-    options: [
-      { text: "Not for me, usually", value: 0.8 },
-      { text: "Honestly, sometimes yes", value: 0.2 }
-    ]
-  },
-  {
-    axis: "autonomy",
-    category: "cat_drive",
-    prompt: "A free day with nothing scheduled and nobody asking anything of you.",
-    options: [
-      { text: "That is the best kind of day", value: 0.8 },
-      { text: "I'd rather have a plan", value: 0.2 }
-    ]
-  },
-  {
-    axis: "competence",
-    category: "cat_drive",
-    prompt: "Someone says you are good at something you do a lot.",
-    options: [
-      { text: "Yeah, I think so too", value: 0.8 },
-      { text: "I brush it off", value: 0.2 }
-    ]
-  },
-  {
-    axis: "growth_mindset",
-    category: "cat_agency",
-    prompt: "You can get noticeably better at almost anything with enough reps.",
-    options: [
-      { text: "I believe that", value: 0.8 },
-      { text: "Only up to a point", value: 0.2 }
-    ]
-  },
-  {
-    axis: "locus_of_control",
-    category: "cat_agency",
-    prompt: "How next year goes is mostly up to you.",
-    options: [
-      { text: "Mostly, yes", value: 0.8 },
-      { text: "Timing decides more than I do", value: 0.2 }
-    ]
-  },
-  {
-    axis: "self_efficacy",
-    category: "cat_agency",
-    prompt: "A big thing you have to do, and no obvious first step.",
-    options: [
-      { text: "I start somewhere and adjust", value: 0.8 },
-      { text: "I stall until it gets urgent", value: 0.2 }
-    ]
-  },
-  {
-    axis: "playfulness",
-    category: "cat_social",
-    prompt: "People would say you are one of the sillier people they know.",
-    options: [
-      { text: "That tracks", value: 0.8 },
-      { text: "Not the word they would use", value: 0.2 }
-    ]
-  }
-];
-
-// src/lib/questions/bank.ts
-var QUESTIONS_BANK = [
-  // --- openness -----------------------------------------------------------------
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "A new place opened next to your usual spot, and your usual order is already in the app.",
-    options: [
-      { text: "I try the new place", value: 0.8 },
-      { text: "I save it for next week", value: 0.5 },
-      { text: "Usual order. It's right there", value: 0.2 }
-    ]
-  },
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "Same restaurant, same order, and a dish you have never tried is on the menu.",
-    options: [
-      { text: "I order the new one", value: 0.8 },
-      { text: "Depends on the day", value: 0.5 },
-      { text: "I know what I like", value: 0.2 }
-    ]
-  },
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "A friend sends an invite to something you would never pick yourself.",
-    options: [
-      { text: "I'm in, that's the fun part", value: 0.8 },
-      { text: "I'd probably pass", value: 0.2 }
-    ]
-  },
-  // --- conscientiousness --------------------------------------------------------
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "The plan you put in your calendar last week hits its boring part today.",
-    options: [
-      { text: "I still see it through", value: 0.8 },
-      { text: "I keep it if it stays easy", value: 0.5 },
-      { text: "I switch to whatever feels better", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "Monday. Your calendar says it is due Friday.",
-    options: [
-      { text: "I start chipping at it now", value: 0.8 },
-      { text: "I start once it feels close", value: 0.5 },
-      { text: "Thursday night, like last time", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "You said you'd send someone a link. Nobody followed up.",
-    options: [
-      { text: "I still send it", value: 0.8 },
-      { text: "It quietly disappears", value: 0.2 }
-    ]
-  },
-  // --- extraversion -------------------------------------------------------------
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "Saturday afternoon and the group chat is quiet.",
-    options: [
-      { text: "I text a few people and make plans", value: 0.8 },
-      { text: "Either way, I'm fine", value: 0.5 },
-      { text: "I keep the afternoon quiet", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "You walk into a party and know two people. Both are on their phones.",
-    options: [
-      { text: "I start talking to someone new", value: 0.8 },
-      { text: "I go stand with the two I know", value: 0.5 },
-      { text: "I'm counting the minutes", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "Friday, 6pm. Three invites in the group chat.",
-    options: [
-      { text: "I'm going to at least one", value: 0.8 },
-      { text: "Couch. Phone on silent", value: 0.2 }
-    ]
-  },
-  // --- agreeableness ------------------------------------------------------------
-  {
-    axis: "agreeableness",
-    category: "cat_steadiness",
-    prompt: "A group chat is picking a place you don't really like.",
-    options: [
-      { text: "I go along, it's not worth a fuss", value: 0.8 },
-      { text: "I mention it once, then let it go", value: 0.5 },
-      { text: "I say I'd rather go somewhere else", value: 0.2 }
-    ]
-  },
-  {
-    axis: "agreeableness",
-    category: "cat_steadiness",
-    prompt: "On the team call, someone shares your idea as their own.",
-    options: [
-      { text: "I let it slide", value: 0.8 },
-      { text: "I mention it lightly, later", value: 0.5 },
-      { text: "I correct it on the spot", value: 0.2 }
-    ]
-  },
-  {
-    axis: "agreeableness",
-    category: "cat_steadiness",
-    prompt: "The delivery driver gets your order wrong and looks like their day has been rough.",
-    options: [
-      { text: "I give them the benefit of the doubt", value: 0.8 },
-      { text: "Bad day or not, wrong is wrong", value: 0.2 }
-    ]
-  },
-  // --- steadiness ---------------------------------------------------------------
-  {
-    axis: "steadiness",
-    category: "cat_steadiness",
-    prompt: "Your phone hits 3% before you have left the house.",
-    options: [
-      { text: "I'm mostly over it by lunch", value: 0.8 },
-      { text: "It sits with me a bit, then fades", value: 0.5 },
-      { text: "It colors the rest of the day", value: 0.2 }
-    ]
-  },
-  {
-    axis: "steadiness",
-    category: "cat_steadiness",
-    prompt: "An hour before, the group chat moves the plan somewhere else.",
-    options: [
-      { text: "Fine, I roll with it", value: 0.8 },
-      { text: "Mild whiplash, then fine", value: 0.5 },
-      { text: "It throws off the whole evening", value: 0.2 }
-    ]
-  },
-  {
-    axis: "steadiness",
-    category: "cat_steadiness",
-    prompt: "A one-word reply lands and it could be read two ways.",
-    options: [
-      { text: "I read it plain and move on", value: 0.8 },
-      { text: "I reread it once, then let it go", value: 0.5 },
-      { text: "I reread it a few times", value: 0.2 }
-    ]
-  },
-  // --- attachment_anxiety -------------------------------------------------------
-  {
-    axis: "attachment_anxiety",
-    category: "cat_love",
-    prompt: "Someone you like has had your message for three hours.",
-    options: [
-      { text: "I wonder if they're pulling away", value: 0.8 },
-      { text: "I notice, then get on with my day", value: 0.5 },
-      { text: "I don't think much of it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "attachment_anxiety",
-    category: "cat_love",
-    prompt: "Your closest friend has gone quiet in the chat this week.",
-    options: [
-      { text: "I assume I did something", value: 0.8 },
-      { text: "I wonder for a second, then drop it", value: 0.5 },
-      { text: "People get busy", value: 0.2 }
-    ]
-  },
-  {
-    axis: "attachment_anxiety",
-    category: "cat_love",
-    prompt: "You sent a long message an hour ago. It says Read.",
-    options: [
-      { text: "I check back more than I'd admit", value: 0.8 },
-      { text: "I notice, then put the phone down", value: 0.5 },
-      { text: "I forget I sent it", value: 0.2 }
-    ]
-  },
-  // --- attachment_avoidance -----------------------------------------------------
-  {
-    axis: "attachment_avoidance",
-    category: "cat_love",
-    prompt: "Someone close to you wants to talk something out in person instead of over text.",
-    options: [
-      { text: "Sure, that's fine when it matters", value: 0.2 },
-      { text: "I'd rather keep it lighter, over text", value: 0.8 }
-    ]
-  },
-  {
-    axis: "attachment_avoidance",
-    category: "cat_love",
-    prompt: "A rough week, and someone texts 'how are you, really?'",
-    options: [
-      { text: "I tell them the real version", value: 0.2 },
-      { text: "I give them the short version", value: 0.5 },
-      { text: "I say I'm fine and change the subject", value: 0.8 }
-    ]
-  },
-  {
-    axis: "attachment_avoidance",
-    category: "cat_love",
-    prompt: "Someone starts texting you good morning every day.",
-    options: [
-      { text: "I like it", value: 0.2 },
-      { text: "Nice, in small doses", value: 0.5 },
-      { text: "My replies get slower", value: 0.8 }
-    ]
-  },
-  // --- conflict_assertiveness ---------------------------------------------------
-  {
-    axis: "conflict_assertiveness",
-    category: "cat_communication",
-    prompt: "On a work call, someone says something you think is wrong.",
-    options: [
-      { text: "I say so, even if it gets a bit sharp", value: 0.8 },
-      { text: "I wait to see if it blows over", value: 0.5 },
-      { text: "I let it go rather than push", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_assertiveness",
-    category: "cat_communication",
-    prompt: "The order is wrong and the place is busy.",
-    options: [
-      { text: "I send it back", value: 0.8 },
-      { text: "Depends how wrong", value: 0.5 },
-      { text: "I eat it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_assertiveness",
-    category: "cat_communication",
-    prompt: "Your roommate's music is loud and asking might annoy them.",
-    options: [
-      { text: "I ask anyway", value: 0.8 },
-      { text: "I let it go", value: 0.2 }
-    ]
-  },
-  // --- conflict_cooperativeness -------------------------------------------------
-  {
-    axis: "conflict_cooperativeness",
-    category: "cat_communication",
-    prompt: "You and a friend each sent a different dinner spot. Who gives first?",
-    options: [
-      { text: "Probably me", value: 0.8 },
-      { text: "Depends who cares more", value: 0.5 },
-      { text: "Rarely me", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_cooperativeness",
-    category: "cat_communication",
-    prompt: "A text argument is ten messages deep and it is getting late.",
-    options: [
-      { text: "I find something we can both live with", value: 0.8 },
-      { text: "I park it for tomorrow", value: 0.5 },
-      { text: "I hold my line", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_cooperativeness",
-    category: "cat_communication",
-    prompt: "The group chat is arguing and you know the right answer.",
-    options: [
-      { text: "I let it go to keep the chat calm", value: 0.8 },
-      { text: "I say it once, then drop it", value: 0.5 },
-      { text: "I send the link that proves it", value: 0.2 }
-    ]
-  },
-  // --- autonomy -----------------------------------------------------------------
-  {
-    axis: "autonomy",
-    category: "cat_drive",
-    prompt: "A friend sends the whole trip plan in the chat, and it would work fine.",
-    options: [
-      { text: "I'd still rather do it my way", value: 0.8 },
-      { text: "I'll use theirs if it saves time", value: 0.5 },
-      { text: "I'm glad I don't have to figure it out", value: 0.2 }
-    ]
-  },
-  {
-    axis: "autonomy",
-    category: "cat_drive",
-    prompt: "Someone messages you step-by-step instructions for a thing you already know how to do.",
-    options: [
-      { text: "It gets under my skin", value: 0.8 },
-      { text: "I notice it, then let it go", value: 0.5 },
-      { text: "Fine by me, less to think about", value: 0.2 }
-    ]
-  },
-  {
-    axis: "autonomy",
-    category: "cat_drive",
-    prompt: "Saturday's calendar is empty and nobody has texted.",
-    options: [
-      { text: "Perfect, the day is mine", value: 0.8 },
-      { text: "Nice for a morning, then I make plans", value: 0.5 },
-      { text: "I start texting people for plans", value: 0.2 }
-    ]
-  },
-  // --- competence ---------------------------------------------------------------
-  {
-    axis: "competence",
-    category: "cat_drive",
-    prompt: "A hard task lands in your inbox with your name on it.",
-    options: [
-      { text: "I feel like I can handle it", value: 0.8 },
-      { text: "Depends how hard, honestly", value: 0.5 },
-      { text: "I doubt I can pull it off", value: 0.2 }
-    ]
-  },
-  {
-    axis: "competence",
-    category: "cat_drive",
-    prompt: "Three weeks into a language app, and it still marks you wrong.",
-    options: [
-      { text: "I can feel myself getting better", value: 0.8 },
-      { text: "Some days it clicks", value: 0.5 },
-      { text: "I mostly feel behind", value: 0.2 }
-    ]
-  },
-  {
-    axis: "competence",
-    category: "cat_drive",
-    prompt: "Someone at work messages: 'this is your area, right?'",
-    options: [
-      { text: "Fair, it is", value: 0.8 },
-      { text: "Probably, I'd double-check", value: 0.5 },
-      { text: "I'm sure they mean someone else", value: 0.2 }
-    ]
-  },
-  // --- relatedness --------------------------------------------------------------
-  {
-    axis: "relatedness",
-    category: "cat_drive",
-    prompt: "A friend cancels by text an hour before, no real reason given.",
-    options: [
-      { text: "I'd want to talk it through", value: 0.8 },
-      { text: "I'd let it go, check in eventually", value: 0.2 }
-    ]
-  },
-  {
-    axis: "relatedness",
-    category: "cat_drive",
-    prompt: "Good news pops up on your phone on an ordinary Tuesday.",
-    options: [
-      { text: "I'm texting someone before I sit down", value: 0.8 },
-      { text: "It comes up next time we talk", value: 0.5 },
-      { text: "I just enjoy it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "relatedness",
-    category: "cat_drive",
-    prompt: "A whole day with no messages from anyone.",
-    options: [
-      { text: "I feel the gap", value: 0.8 },
-      { text: "Bliss", value: 0.2 }
-    ]
-  },
-  // --- growth_mindset -----------------------------------------------------------
-  {
-    axis: "growth_mindset",
-    category: "cat_agency",
-    prompt: "Your first try at a recipe from a video goes badly. What actually happens next?",
-    options: [
-      { text: "I look at what I'd do differently", value: 0.8 },
-      { text: "I probably don't try that again", value: 0.2 }
-    ]
-  },
-  {
-    axis: "growth_mindset",
-    category: "cat_agency",
-    prompt: "Someone online is much better than you at a thing you care about.",
-    options: [
-      { text: "I want to know how they got there", value: 0.8 },
-      { text: "Good for them, different lane", value: 0.5 },
-      { text: "Some people just have it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "growth_mindset",
-    category: "cat_agency",
-    prompt: "A friend posts day 60 of learning something new.",
-    options: [
-      { text: "Give me 60 days and I could too", value: 0.8 },
-      { text: "Depends on the thing", value: 0.5 },
-      { text: "Some people are just built for it", value: 0.2 }
-    ]
-  },
-  // --- locus_of_control ---------------------------------------------------------
-  {
-    axis: "locus_of_control",
-    category: "cat_agency",
-    prompt: "The group trip you helped plan falls apart in the chat.",
-    options: [
-      { text: "I look at what I could have done", value: 0.8 },
-      { text: "Some of it was me, some wasn't", value: 0.5 },
-      { text: "It was bound to happen", value: 0.2 }
-    ]
-  },
-  {
-    axis: "locus_of_control",
-    category: "cat_agency",
-    prompt: "A good week, and someone texts 'how did you pull that off?'",
-    options: [
-      { text: "Honestly, I worked for it", value: 0.8 },
-      { text: "A bit of both", value: 0.5 },
-      { text: "Good timing, mostly", value: 0.2 }
-    ]
-  },
-  {
-    axis: "locus_of_control",
-    category: "cat_agency",
-    prompt: "New year, blank calendar. How it goes is mostly\u2026",
-    options: [
-      { text: "Up to what I do", value: 0.8 },
-      { text: "Half me, half luck", value: 0.5 },
-      { text: "Up to what happens", value: 0.2 }
-    ]
-  },
-  // --- self_efficacy ------------------------------------------------------------
-  {
-    axis: "self_efficacy",
-    category: "cat_agency",
-    prompt: "Everyone at the table already knows their order. You don't.",
-    options: [
-      { text: "I panic-order whatever's closest", value: 0.2 },
-      { text: "Takes a sec, but I land on something", value: 0.5 },
-      { text: "I pick something and own it", value: 0.8 }
-    ]
-  },
-  {
-    axis: "self_efficacy",
-    category: "cat_agency",
-    prompt: "The wifi drops and you have never fixed it yourself before.",
-    options: [
-      { text: "I'll figure it out", value: 0.8 },
-      { text: "I look it up first", value: 0.5 },
-      { text: "I find someone who knows", value: 0.2 }
-    ]
-  },
-  {
-    axis: "self_efficacy",
-    category: "cat_agency",
-    prompt: "A big task has sat in your to-do app for two weeks.",
-    options: [
-      { text: "I pick any piece and start", value: 0.8 },
-      { text: "I break it down, then wait a bit", value: 0.5 },
-      { text: "I keep moving it to tomorrow", value: 0.2 }
-    ]
-  },
-  // --- playfulness --------------------------------------------------------------
-  {
-    axis: "playfulness",
-    category: "cat_social",
-    prompt: "A 40-minute delay at the gate, and your phone is at 20%.",
-    options: [
-      { text: "I'd mess around and see what happens", value: 0.8 },
-      { text: "Either way, I am fine", value: 0.5 },
-      { text: "I'd rather just get through it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "playfulness",
-    category: "cat_social",
-    prompt: "A serious work call, and someone's cat walks across their keyboard.",
-    options: [
-      { text: "I take the joke", value: 0.8 },
-      { text: "Depends who is on the call", value: 0.5 },
-      { text: "I keep it serious", value: 0.2 }
-    ]
-  },
-  {
-    axis: "playfulness",
-    category: "cat_social",
-    prompt: "The group chat has a running joke.",
-    options: [
-      { text: "I started it", value: 0.8 },
-      { text: "I keep it going", value: 0.5 },
-      { text: "I just react with a laugh", value: 0.2 }
-    ]
-  }
-];
-var ROUND_ONLY_BANK = [
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "Something new is sitting in your watch queue, right next to an old favorite.",
-    options: [
-      { text: "New one", value: 0.8 },
-      { text: "Depends on my mood", value: 0.5 },
-      { text: "Something familiar", value: 0.2 }
-    ]
-  },
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "A coworker drops a totally different plan into the project chat.",
-    options: [
-      { text: "I'm curious, let's see", value: 0.8 },
-      { text: "I'll hear them out", value: 0.5 },
-      { text: "I'd rather stick to the plan", value: 0.2 }
-    ]
-  },
-  {
-    axis: "openness",
-    category: "cat_openness",
-    prompt: "A friend sends a link to a class for a hobby you have never tried.",
-    options: [
-      { text: "I'd sign up", value: 0.8 },
-      { text: "Maybe another time", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "Your alarm goes off and you already know today's to-do list is long.",
-    options: [
-      { text: "I get moving right away", value: 0.8 },
-      { text: "I ease into it", value: 0.5 },
-      { text: "I hit snooze", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "Midnight, dishes in the sink, and you promised yourself you'd do them tonight.",
-    options: [
-      { text: "I still do them", value: 0.8 },
-      { text: "I do the bare minimum", value: 0.5 },
-      { text: "They wait until tomorrow", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conscientiousness",
-    category: "cat_steadiness",
-    prompt: "An online form wants three things and you only have two handy.",
-    options: [
-      { text: "I track down the third one now", value: 0.8 },
-      { text: "I fill in what I can, come back later", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "Hours alone with your laptop, and you just hit a wall.",
-    options: [
-      { text: "I go find someone to talk to", value: 0.8 },
-      { text: "Either way", value: 0.5 },
-      { text: "I push through alone", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "The team chat asks who's in for lunch.",
-    options: [
-      { text: "Count me in", value: 0.8 },
-      { text: "Depends on the day", value: 0.5 },
-      { text: "I'd rather eat at my desk", value: 0.2 }
-    ]
-  },
-  {
-    axis: "extraversion",
-    category: "cat_openness",
-    prompt: "At an event, you end up next to someone new and nobody is talking.",
-    options: [
-      { text: "I don't mind starting it", value: 0.8 },
-      { text: "I'll follow their lead", value: 0.2 }
-    ]
-  },
-  {
-    axis: "agreeableness",
-    category: "cat_steadiness",
-    prompt: "A friend texts asking for a favor that would eat your whole evening.",
-    options: [
-      { text: "I usually say yes anyway", value: 0.8 },
-      { text: "Depends how big a favor", value: 0.5 },
-      { text: "I say no if it's a real hassle", value: 0.2 }
-    ]
-  },
-  {
-    axis: "conflict_assertiveness",
-    category: "cat_communication",
-    prompt: "A friend still hasn't paid you back for the last three dinners.",
-    options: [
-      { text: "I bring it up directly", value: 0.8 },
-      { text: "I hint at it", value: 0.5 },
-      { text: "I let it slide", value: 0.2 }
-    ]
-  },
-  {
-    axis: "relatedness",
-    category: "cat_drive",
-    prompt: "You just finished something and it came out better than you hoped.",
-    options: [
-      { text: "I want to tell someone right away", value: 0.8 },
-      { text: "It can wait until it comes up", value: 0.5 },
-      { text: "I keep it to myself", value: 0.2 }
-    ]
-  },
-  {
-    axis: "steadiness",
-    category: "cat_steadiness",
-    prompt: "Your manager messages 'can we talk tomorrow?' and nothing else.",
-    options: [
-      { text: "I read it plain and move on", value: 0.8 },
-      { text: "I reread it a few times", value: 0.2 }
-    ]
-  },
-  {
-    axis: "attachment_anxiety",
-    category: "cat_love",
-    prompt: "After a good night out, you scroll back through the chat to check it really went well.",
-    options: [
-      { text: "Yeah, that lands", value: 0.8 },
-      { text: "Not really me", value: 0.2 }
-    ]
-  },
-  {
-    axis: "attachment_avoidance",
-    category: "cat_love",
-    prompt: "The person you've been seeing starts saying 'we' in texts.",
-    options: [
-      { text: "I lean in", value: 0.2 },
-      { text: "I want a bit of room", value: 0.8 }
-    ]
-  },
-  {
-    axis: "conflict_cooperativeness",
-    category: "cat_communication",
-    prompt: "Mid-argument, you find the screenshot that proves your point.",
-    options: [
-      { text: "I keep it to myself", value: 0.8 },
-      { text: "I send it", value: 0.2 }
-    ]
-  },
-  {
-    axis: "autonomy",
-    category: "cat_drive",
-    prompt: "A day off, notifications muted, and nobody needs anything from you.",
-    options: [
-      { text: "That is the best kind of day", value: 0.8 },
-      { text: "I'd rather have a plan", value: 0.2 }
-    ]
-  },
-  {
-    axis: "competence",
-    category: "cat_drive",
-    prompt: "A coworker messages 'how are you so good at this?'",
-    options: [
-      { text: "Yeah, I think so too", value: 0.8 },
-      { text: "I brush it off", value: 0.2 }
-    ]
-  },
-  {
-    axis: "growth_mindset",
-    category: "cat_agency",
-    prompt: "Day 1 of a 30-day challenge in an app, and it shows.",
-    options: [
-      { text: "I'll be better by day 30", value: 0.8 },
-      { text: "Some things just are not for me", value: 0.2 }
-    ]
-  },
-  {
-    axis: "locus_of_control",
-    category: "cat_agency",
-    prompt: "The email lands: the job you wanted went to someone else.",
-    options: [
-      { text: "Next time I'll do it differently", value: 0.8 },
-      { text: "Timing decides more than I do", value: 0.2 }
-    ]
-  },
-  {
-    axis: "self_efficacy",
-    category: "cat_agency",
-    prompt: "You move apartments next month and the to-do list is just a title.",
-    options: [
-      { text: "I start somewhere and adjust", value: 0.8 },
-      { text: "I stall until it gets urgent", value: 0.2 }
-    ]
-  },
-  {
-    axis: "playfulness",
-    category: "cat_social",
-    prompt: "Someone asks who sends the most memes in the group chat.",
-    options: [
-      { text: "Guilty, that's me", value: 0.8 },
-      { text: "Not me, I just react", value: 0.2 }
-    ]
-  }
-];
-var LEGACY_INTAKE_AXIS_COUNTS = {
-  openness: 6,
-  conscientiousness: 6,
-  extraversion: 6,
-  agreeableness: 4,
-  steadiness: 2,
-  attachment_anxiety: 2,
-  attachment_avoidance: 2,
-  conflict_assertiveness: 4,
-  conflict_cooperativeness: 2,
-  autonomy: 2,
-  competence: 2,
-  relatedness: 4,
-  growth_mindset: 2,
-  locus_of_control: 2,
-  self_efficacy: 2,
-  playfulness: 2
-};
-var PROMPT_REWORDS = (() => {
-  const out = {};
-  const pairs = [
-    [QUESTIONS_BANK_V1, QUESTIONS_BANK],
-    [ROUND_ONLY_BANK_V1, ROUND_ONLY_BANK]
-  ];
-  for (const [before, after] of pairs) {
-    before.forEach((row, i) => {
-      if (row.prompt !== after[i].prompt) out[row.prompt] = after[i].prompt;
-    });
-  }
-  return out;
-})();
-var REWORDED_FROM = Object.fromEntries(
-  Object.entries(PROMPT_REWORDS).map(([before, after]) => [after, before])
-);
-
-// src/lib/questions/intake-stage.ts
-var INTAKE_SET_SIZE = TRAIT_AXES.length;
-var INTAKE_SETS = 3;
-var INTAKE_TOTAL = INTAKE_SET_SIZE * INTAKE_SETS;
-var LEGACY_INTAKE_TOTAL = Object.values(LEGACY_INTAKE_AXIS_COUNTS).reduce(
-  (sum, n) => sum + n,
-  0
-);
-
-// src/lib/voice/clear-voice.ts
-var BOUNDARY_VERBS = "set|sets|setting|enforc\\w+|establish\\w*|hold\\w*|keep\\w*|protect\\w*|respect\\w*|honou?r\\w*|maintain\\w*|communicat\\w*";
-var BANNED = [
-  [/\bhonou?r(?:ing|s)?\s+(?:your|their|his|her|my|our)\s+(?:feelings?|needs?|truth|emotions?|process|boundar\w+|journey|inner\s+\w+)\b/i, 'therapy-speak ("honor your feelings")'],
-  [/\bhold(?:ing)?\s+space\s+for\b/i, 'therapy-speak ("hold space for")'],
-  [new RegExp(`\\b(?:${BOUNDARY_VERBS})\\s+(?:(?:your|their|his|her|some|a few|healthy|clear|firm|better|those|these|good|strong)\\s+)*boundar(?:y|ies)\\b`, "i"), 'therapy-speak ("set healthy boundaries")'],
-  [/\bhealthy\s+boundar(?:y|ies)\b/i, 'therapy-speak ("healthy boundaries")'],
-  [/\b(?:healing|growth|personal|emotional|inner|self-discovery|wellness)\s+journey\b|\bjourney\s+of\s+(?:self|growth|healing|discovery)\b|\byour\s+(?:own\s+)?journey\b(?!\s+(?:to|home|back|from|into|across|through))/i, 'therapy-speak ("your journey")'],
-  [/\bself-care\b(?!\s+(?:aisle|section|products?|brand|app|kit))/i, 'therapy-speak ("self-care")'],
-  [/\b(?:trust|ask|thank|listen to|believe in)\s+(?:the\s+)?universe\b|\bthe universe\s+(?:wants|sends?|knows|conspires|provides|has your back)\b/i, 'horoscope-speak ("the universe wants\u2026")'],
-  [/\bmanifest(?:ing|s)?\s+(?:your|my|our|their|good|abundance|success|love|dreams?|the life|what you|a better)\b/i, 'horoscope-speak ("manifest your\u2026")'],
-  [/\blean(?:ing|s)?\s+into\s+(?:it|that|this|your|their|the\s+(?:discomfort|feeling|fear|uncertainty|awkward\w*|moment|pain|process|change|chaos|silence)|being|what)\b/i, 'coach-speak ("lean into\u2026")'],
-  [/(?:^|[.?!]\s+)it['’]s\s+(?:totally\s+|perfectly\s+|completely\s+)?(?:okay|ok|fine)\s+to\b/i, `opens with reassurance ("It's okay to\u2026")`],
-  [
-    /(?:^|[.?!:]\s*)consider\s+(?:trying|asking|taking|setting|making|doing|talking|reaching|letting|whether|how|what|that)\b|\b(?:want|try|might)\s+to\s+consider\b/i,
-    'advice voice ("Consider trying\u2026")'
-  ],
-  [/(?:^|[.?!]\s+)remember\s+that\s+(?:you|your|it|it['’]s|this|they|everyone|not|nobody|no one|mistakes|feelings|silence|small)\b/i, 'lecture voice ("Remember that\u2026")']
-];
-var SITUATIONAL_AFTER_YOU_ARE = "late|early|busy|tired|close|far|ready|full|soon|long|hungry|new|many|much|few|bit|little|lot|couple|next|first|last|done|here|there|on|in|at|off|out|about|not|going|trying|doing|getting|running|waiting|looking";
-var YOU_ARE2 = "you(?:['\u2019]re| are)";
-var IDENTITY_LABEL = new RegExp(
-  `\\b${YOU_ARE2}\\s+(?:(?:such|really|actually)\\s+)?(?:a|an)\\s+(?!${SITUATIONAL_AFTER_YOU_ARE}\\b)\\w+|\\b${YOU_ARE2}\\s+the\\s+(?:kind|type|sort)\\s+of\\b|\\b${YOU_ARE2}\\s+the\\s+(?:one|person|friend)\\s+who\\b|\\b${YOU_ARE2}\\s+(?:so|such|too|very|really)\\s+(?!${SITUATIONAL_AFTER_YOU_ARE}\\b)\\w+`,
-  "i"
-);
-var TRY_VERBS = [
-  "Add",
-  "Answer",
-  "Ask",
-  "Block",
-  "Book",
-  "Break",
-  "Call",
-  "Cancel",
-  "Celebrate",
-  "Change",
-  "Check",
-  "Choose",
-  "Close",
-  "Count",
-  "Cross",
-  "Decide",
-  "Delete",
-  "Do",
-  "Drop",
-  "Eat",
-  "Finish",
-  "Follow",
-  "Give",
-  "Go",
-  "Hand",
-  "Introduce",
-  "Invite",
-  "Join",
-  "Keep",
-  "Laugh",
-  "Learn",
-  "Leave",
-  "Let",
-  "List",
-  "Look",
-  "Make",
-  "Mute",
-  "Name",
-  "Offer",
-  "Open",
-  "Pay",
-  "Pick",
-  "Plan",
-  "Practice",
-  "Put",
-  "Read",
-  "Repeat",
-  "Reply",
-  "Say",
-  "Send",
-  "Set",
-  "Share",
-  "Sign",
-  "Sit",
-  "Skip",
-  "Smile",
-  "Spend",
-  "Start",
-  "Suggest",
-  "Swap",
-  "Take",
-  "Talk",
-  "Tell",
-  "Text",
-  "Thank",
-  "Try",
-  "Turn",
-  "Volunteer",
-  "Wait",
-  "Walk",
-  "Watch",
-  "Write"
-];
-var TRY_OPENER = new RegExp(`^(Next time\\b|Before\\b|When\\b|If\\b|(${TRY_VERBS.join("|")})\\b)`);
-
-// src/lib/category-labels.ts
-var CATEGORY_DISPLAY_NAMES = {
-  cat_steadiness: "Your Calm Core",
-  cat_openness: "Your Sense of Adventure",
-  cat_drive: "What Fuels You",
-  cat_agency: "Taking the Wheel",
-  cat_social: "Your Social Battery",
-  cat_communication: "How You Speak Up",
-  cat_love: "How You Love",
-  cat_independence: "Space vs. Together",
-  cat_levity: "Your Sense of Humor",
-  cat_structure: "Planner or Free Spirit",
-  cat_resilience: "When Things Get Hard"
-};
-
-// src/lib/story-card.ts
-var STORY_CARD_VERSION = 2;
-var STORY_HOOK_WORDS = [8, 18];
-var STORY_TWIST_WORDS = [12, 30];
-var STORY_MOVE_WORDS = [15, 35];
-var STORY_PUNCHLINE_WORDS = [6, 20];
-var STORY_REVEAL_WORDS = [6, 14];
-var STORY_NEXT_WORDS = [4, 12];
-var STORY_TITLE_WORDS = [2, 5];
-var STORY_TITLE_MAX_CHARS = 40;
-var STORY_OTHER_WAY_WORDS = [10, 35];
-var STORY_OUTPUT_TOKENS = 800;
-var LABEL_WORDS = [
-  ...TRAIT_AXES.flatMap((axis) => [AXIS_POLE_NAME[axis].high, AXIS_POLE_NAME[axis].low, AXIS_SHORT_NAME[axis]])
-];
-var CLINICAL2 = {
-  test: (text) => hasClinicalLabel(text) || CLINICAL_ADVICE.test(text)
-};
-var GENERIC_CAPS = /* @__PURE__ */ new Set([
-  "Mom",
-  "Dad",
-  "Grandma",
-  "Grandpa",
-  "Nana",
-  "Papa",
-  "Uncle",
-  "Aunt",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday"
-]);
-function storyLabelLeak(text) {
-  const lower = text.toLowerCase();
-  for (const word of LABEL_WORDS) {
-    const w = word.toLowerCase().replace(/[-]/g, "[- ]");
-    if (new RegExp(`\\b(your|the|their|that)\\s+${w}\\s+side\\b`).test(lower)) return `side label`;
-    if (new RegExp(`(?<![.?:;]\\s)(?<!^)\\b${word.replace(/-/g, "-")}\\b`).test(text)) return "capitalised trait word";
-  }
-  for (const name of Object.values(CATEGORY_DISPLAY_NAMES)) {
-    if (text.includes(name)) return "names a category";
-  }
-  for (const name of getCategoryDefs().map((def) => def.name)) {
-    if (/[\s/&]/.test(name)) {
-      if (lower.includes(name.toLowerCase())) return "names a category";
-    } else if (new RegExp(`(?<![.?:;]\\s)(?<!^)\\b${name}\\b`).test(text)) {
-      return "names a category";
-    }
-  }
-  return null;
-}
-function properNameLeak(text) {
-  const re = /(^|[.?:;][”"’)]?\s+|\n\s*|[“"(—–-]\s*)?(?<![\p{L}’'])(\p{Lu}[\p{L}’'-]*)/gu;
-  for (const m of text.matchAll(re)) {
-    const word = m[2];
-    const sentenceStart = m[1] != null || m.index === 0;
-    if (sentenceStart) continue;
-    if (word === "I" || GENERIC_CAPS.has(word)) continue;
-    return `proper name: ${word}`;
-  }
-  return null;
-}
-function quotedLineCount(text) {
-  return (text.match(/[“"]([^”"]+)[”"]/g) ?? []).length;
-}
-function storyCardLineViolation(text, opts = {}) {
-  if (jokeCrossesBoundary(text)) return "crosses a boundary";
-  if (/!/.test(text)) return "exclamation";
-  if (/[[\]<>]/.test(text)) return "template left in";
-  if (/\p{Extended_Pictographic}/u.test(text)) return "emoji";
-  if (/\balways\b/i.test(text)) return "always";
-  if (!opts.allowYouAre && /\byou(?:'|’)?re\b|\byou are\b/i.test(text)) return "you are";
-  if (directiveAdviceViolation(text)) return "advice";
-  if (CLINICAL2.test(text)) return "clinical word";
-  if (/\byou might\b/i.test(text)) return "hedge";
-  if (/\bon a day like this\b/i.test(text)) return "hedge";
-  const cliche = storyClicheViolation(text);
-  if (cliche) return cliche;
-  const leak = storyLabelLeak(text);
-  if (leak) return leak;
-  if (containsFrameworkTerm(text)) return "framework term";
-  return properNameLeak(text);
-}
-function storyOverlap(a, b) {
-  const bag = (text) => new Set((text.toLowerCase().match(/[a-z]{5,}/g) ?? []).map((w) => w.slice(0, 6)));
-  const left = bag(a);
-  if (left.size === 0) return 0;
-  const right = bag(b);
-  let shared = 0;
-  for (const word of left) if (right.has(word)) shared += 1;
-  return shared / left.size;
-}
-var STORY_REPEAT_LIMIT = 0.5;
-var STORY_HOOK_VARIETY_LIMIT = 0.6;
-function storyTitleViolation(title) {
-  const t = title.trim();
-  if (t.length > STORY_TITLE_MAX_CHARS) return "title: too long";
-  const parts = t.split(/\s+/).filter(Boolean);
-  if (parts.length < STORY_TITLE_WORDS[0] || parts.length > STORY_TITLE_WORDS[1]) return "title: length";
-  if (!parts.every((p) => /^[A-Z][A-Za-z'’-]*$/.test(p))) return "title: shape";
-  if (/\b(Anxi|Worr|Lonel|Alone|Sad|Fear|Struggl|Broken|Overthink|Doubt|Nerv|Insecur|Clingy|Needy|Lost|Fragile|Timid|Shy|Avoidant|Attach)/.test(
-    t
-  )) {
-    return "title: tone";
-  }
-  return storyLabelLeak(t);
-}
-var STORY_FEW_SHOTS = [
-  {
-    title: "The Bread Basket Diplomat",
-    hook: "Friday, 8:40. Your table has been staring at the kitchen door like it owes them money.",
-    twist: `The server arrives empty-handed. "So the kitchen lost your slip." Your friend's eye starts to twitch. Someone opens a delivery app under the table.`,
-    move: "You slide the bread basket to the middle like a peace treaty, order whatever is fastest plus fries for the hostages, and start a ranking of everyone's worst-ever restaurant disaster.",
-    punchline: "By the time the food lands, nobody wants it. They want round two of the rankings. And more bread.",
-    reveal: "When plans break, you quietly turn the delay into the good part.",
-    next: "Next time: you're first at the cinema. Your friends are not."
-  },
-  {
-    title: "The Spreadsheet Whisperer",
-    hook: "The projector cuts out four minutes before the client walks in.",
-    twist: 'Your boss mouths "slides?" across the room. The backup laptop asks for an update. All 212 of them.',
-    move: "You already printed the deck just in case. You hand out copies still warm from the printer and run the meeting like it was meant to be paper.",
-    punchline: "The client asks if printed decks are new. Your boss has never said yes faster.",
-    reveal: "Your just in case is the room's rescue.",
-    next: "Next: a group trip, and you're not the one planning it."
-  },
-  {
-    title: "The Detour Captain",
-    hook: "The hardware store is closed. The sign says back in 10 and it is clearly been weeks.",
-    twist: 'Your sibling wants to go home. The shelf you promised Mom is still in pieces in the trunk. "We are not driving across town," they say.',
-    move: "You turn toward the flea market. Twenty minutes later you haggle for a vintage drill with a man named only by his hat.",
-    punchline: "The shelf goes up crooked. Mom loves it. She loves the hat guy's drill more.",
-    reveal: "A closed door just looks like a side quest to you.",
-    next: "Next time: someone else picks the restaurant. Brave."
-  }
-];
-function formatFewShot(row) {
-  return `{"title":"${row.title}","hook":"${row.hook}","twist":"${row.twist}","move":"${row.move}","punchline":"${row.punchline}","reveal":"${row.reveal}","next":"${row.next}"}`;
-}
-var BANNED_CLICHE_PROMPT = "like nothing happened, take a breath, shoulders drop, small hiccups, just another, a ruined schedule, sweat onto, the whole table, you might have, on a day like this, the real win, in that moment, little did, walk into a bar, that's what she said, plot twist, living the dream, it is what it is, say less, no cap, spoiler alert, everyone else";
-var STORY_CARD_PROMPT_STATIC = `Write as Sage in the ATO app. Not a doctor. Write a 100-word micro-story starring the reader ("you"), told in
-present tense, that shows one trait from the SIDES through what they DO \u2014 never by naming it.
-
-SHAPE (cold open \u2192 twist \u2192 move \u2192 punchline \u2192 reveal \u2192 teaser):
-"hook" ${STORY_HOOK_WORDS[0]}\u2013${STORY_HOOK_WORDS[1]} words: open mid-action, the second something goes wrong. One vivid, specific detail. No setup.
-"twist" ${STORY_TWIST_WORDS[0]}\u2013${STORY_TWIST_WORDS[1]} words: it escalates. Raise the stakes for the reader. You may include ONE short line someone says, in quotes.
-"move" ${STORY_MOVE_WORDS[0]}\u2013${STORY_MOVE_WORDS[1]} words: the reader's surprising, specific response, plus how the others react. Show, don't explain.
-"punchline" ${STORY_PUNCHLINE_WORDS[0]}\u2013${STORY_PUNCHLINE_WORDS[1]} words: call back to the hook's detail with a reversal or rule-of-three. Make a reader smirk.
-"reveal" ${STORY_REVEAL_WORDS[0]}\u2013${STORY_REVEAL_WORDS[1]} words: the one line that names what this says about them, as a compliment. No trait labels. "You're the person who\u2026" is allowed here only.
-"next" ${STORY_NEXT_WORDS[0]}\u2013${STORY_NEXT_WORDS[1]} words: a cliffhanger for the next story, a statement, not a question.
-"title" ${STORY_TITLE_WORDS[0]}\u2013${STORY_TITLE_WORDS[1]} words, Title Case: a memorable nickname from the story's best detail ("The Bread Basket Diplomat").
-"otherWay" ${STORY_OTHER_WAY_WORDS[0]}\u2013${STORY_OTHER_WAY_WORDS[1]} words, optional: how the same moment goes if the reader leans the OTHER WAY. Interesting, never better or worse; no labels.
-"punchlines" \u2014 two or three candidate punchlines (the craft block). "punchline" is the best of them.
-
-VOICE: punchy, warm, a little cheeky, like the funniest friend retelling your night. Specific beats general.
-Present tense, second person, plus ONE other voice: a friend, sibling, boss or server says one short line in quotes.
-Exaggerated numbers are fine when funny ("the fourth any minute now", "all 212 of them"). Unnamed side characters are fine ("the hat guy").
-Vary sentence length. No "!", no emoji, no "always", no advice aimed at the reader ("you should\u2026", "you need to\u2026"); an ordinary "should" in a joke or an observation is fine.
-Show the trait through action. Only "reveal" may name what it shows, in plain words, never a trait or category label.
-
-NEVER: real names, brands, places, a diagnosis or label applied to the reader (everyday and contextual use of a word is fine), cruelty, trait/category words, hedges ("you might", "on a day like this"), or these clich\xE9s: ${BANNED_CLICHE_PROMPT}.
-Stay in ONE setting. Never leave square or angle brackets in the answer.
-
-${STORY_JOKE_RULES}
-
-SETTING (a story lives in one physical scene; the texting moments in the voice block are welcome as a detail inside it,
-but a whole story that is just a phone screen is not a scene)
-- Pick a situation almost every adult knows: a plan with friends, a task at work, a weekend errand, a family visit,
-  a shared chore, a busy commute. A phone can be a detail, voice notes, typing bubbles and read receipts included.
-- Unusual-but-plausible is good (a laminated dessert menu, a birthday balloon on the wrong table). If a detail needs a
-  footnote, cut it.
-
-The SIDES at the end say what to draw on; write from their meaning, never their labels.
-
-Plan silently first in "plan" (hook detail, stake, move, callback). Return JSON only:
-{"plan":"...","hook":"...","twist":"...","move":"...","punchline":"...","punchlines":["...","...","..."],"reveal":"...","next":"...","title":"...","otherWay":"..."}
-
-EXAMPLES (match the energy, never reuse the content):
-${STORY_FEW_SHOTS.map((row, i) => `${i + 1}. ${formatFewShot(row)}`).join("\n")}`;
-function words3(text) {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-function within(text, [min, max]) {
-  const n = words3(text);
-  return n >= min && n <= max;
-}
-function isStoryV2(card) {
-  return card.v === 2 && !!(card.hook && card.twist && card.move && card.punchline && card.reveal);
-}
-function isStoryV3(card) {
-  return card.v === 3 && !!(card.settingTag && (card.lines?.hook?.length || card.hook));
-}
-function beatsOverlap(parts) {
-  for (let i = 0; i < parts.length; i += 1) {
-    for (let j = i + 1; j < parts.length; j += 1) {
-      if (storyOverlap(parts[i], parts[j]) > STORY_REPEAT_LIMIT) return "repeat";
-    }
-  }
-  return null;
-}
-function parseStoryCardAnswer(raw, opts = {}) {
-  const reject = (reason) => ({ card: null, reason });
-  let data;
-  try {
-    const start = raw.indexOf("{");
-    const end = raw.lastIndexOf("}");
-    if (start < 0 || end <= start) return reject("not json");
-    data = JSON.parse(raw.slice(start, end + 1));
-  } catch {
-    return reject("not json");
-  }
-  if (typeof data !== "object" || data == null) return reject("not an object");
-  const obj = data;
-  const required = {
-    hook: STORY_HOOK_WORDS,
-    twist: STORY_TWIST_WORDS,
-    move: STORY_MOVE_WORDS,
-    reveal: STORY_REVEAL_WORDS
-  };
-  const core = { hook: "", twist: "", move: "", reveal: "" };
-  for (const key of Object.keys(required)) {
-    const value = obj[key];
-    if (typeof value !== "string") return reject(`${key} missing`);
-    const line = value.trim();
-    if (!within(line, required[key])) return reject(`${key}: length`);
-    const bad = storyCardLineViolation(line, { allowYouAre: key === "reveal" });
-    if (bad) return reject(`${key}: ${bad}`);
-    core[key] = line;
-  }
-  if (typeof obj.title !== "string") return reject("title missing");
-  const title = obj.title.trim();
-  const titleBad = storyTitleViolation(title);
-  if (titleBad) return reject(titleBad);
-  const candidatePunchlines = [];
-  if (typeof obj.punchline === "string" && obj.punchline.trim()) candidatePunchlines.push(obj.punchline.trim());
-  if (Array.isArray(obj.punchlines)) {
-    for (const item of obj.punchlines) {
-      if (typeof item === "string" && item.trim()) candidatePunchlines.push(item.trim());
-    }
-  }
-  const punchline = pickBestPunchline(candidatePunchlines, core, (line) => {
-    if (!within(line, STORY_PUNCHLINE_WORDS)) return false;
-    if (storyCardLineViolation(line)) return false;
-    if (punchlineCraftViolation(line)) return false;
-    return true;
-  });
-  if (!punchline) return reject("punchline");
-  const optional = (value, limit, allowYouAre = false) => {
-    if (typeof value !== "string") return null;
-    const line = value.trim();
-    return within(line, limit) && !storyCardLineViolation(line, { allowYouAre }) ? line : null;
-  };
-  const nextRaw = optional(obj.next, STORY_NEXT_WORDS, true);
-  const next = nextRaw && !/\?$/.test(nextRaw) ? nextRaw : null;
-  const otherWay = optional(obj.otherWay, STORY_OTHER_WAY_WORDS);
-  const allBeats = [core.hook, core.twist, core.move, punchline, core.reveal, next, otherWay].filter(
-    (part) => !!part
-  );
-  if (quotedLineCount(allBeats.join("\n")) > 1) return reject("too many quotes");
-  const overlap = beatsOverlap(allBeats);
-  if (overlap) return reject(overlap);
-  const recent = [
-    ...opts.recentHooks ?? [],
-    ...opts.allowExampleHooks ? [] : STORY_FEW_SHOTS.map((row) => row.hook)
-  ];
-  if (recent.some((hook) => storyOverlap(core.hook, hook) >= STORY_HOOK_VARIETY_LIMIT)) {
-    return reject("hook: too similar");
-  }
-  return {
-    card: {
-      v: STORY_CARD_VERSION,
-      title,
-      hook: core.hook,
-      twist: core.twist,
-      move: core.move,
-      punchline,
-      reveal: core.reveal,
-      next,
-      otherWay,
-      source: "ai"
-    },
-    reason: null
-  };
-}
-function storyCardBody(card) {
-  if (isStoryV3(card) && card.lines) {
-    const texts = [...card.lines.hook, ...card.lines.twist, ...card.lines.move, ...card.lines.punchline].map(
-      (line) => line.kind === "dialogue" ? line.text : line.text
-    );
-    return [...texts, card.reveal, card.next].filter(Boolean).join(" ");
-  }
-  if (isStoryV2(card) || isStoryV3(card)) {
-    return [card.hook, card.twist, card.move, card.punchline, card.reveal, card.next].filter(Boolean).join(" ");
-  }
-  return [card.scene, card.moment, card.handle, card.means].filter(Boolean).join(" ");
-}
-function s(v) {
-  return typeof v === "string" && v.trim() ? v.trim() : null;
-}
-function parseStoredStoryCard(raw) {
-  if (typeof raw !== "object" || raw == null) return null;
-  const obj = raw;
-  const hook = s(obj.hook);
-  const twist = s(obj.twist);
-  const move = s(obj.move);
-  const punchline = s(obj.punchline);
-  const reveal = s(obj.reveal);
-  if (obj.v === 3 || obj.v === 2 && hook && twist && move && punchline && reveal || hook && twist && move && punchline && reveal) {
-    if (!hook || !twist || !move || !punchline || !reveal) return null;
-    const source = obj.source === "bank" ? "bank" : obj.source === "template" ? "template" : "ai";
-    const lines = obj.lines && typeof obj.lines === "object" ? obj.lines : void 0;
-    const card6 = obj.card6 && typeof obj.card6 === "object" ? obj.card6 : void 0;
-    return {
-      v: obj.v === 3 ? 3 : 2,
-      title: s(obj.title),
-      hook,
-      twist,
-      move,
-      punchline,
-      reveal,
-      next: s(obj.next),
-      otherWay: s(obj.otherWay),
-      settingTag: s(obj.settingTag) ?? void 0,
-      ...lines ? { lines } : {},
-      ...card6 ? { card6 } : {},
-      source,
-      ...typeof obj.bankId === "string" && obj.bankId.trim() ? { bankId: obj.bankId.trim() } : {},
-      ...typeof obj.topicId === "string" ? { topicId: obj.topicId } : {},
-      ...obj.romance === true ? { romance: true } : {}
-    };
-  }
-  const scene = s(obj.scene);
-  const moment2 = s(obj.moment);
-  const means = s(obj.means);
-  if (!scene || !moment2 || !means) return null;
-  return {
-    v: 1,
-    title: s(obj.title),
-    scene,
-    moment: moment2,
-    handle: s(obj.handle),
-    means,
-    joke: s(obj.joke),
-    noticed: s(obj.noticed),
-    otherWay: s(obj.otherWay),
-    nextTime: s(obj.nextTime)
-  };
-}
-
-// src/lib/sage-story.ts
-function storyNamesACategory(body) {
-  const lower = body.toLowerCase();
-  for (const def of getCategoryDefs()) {
-    const name = def.name.toLowerCase();
-    if (name.includes(" ") || name.includes("/")) {
-      if (lower.includes(name)) return true;
-    }
-  }
-  return false;
-}
-
-// src/lib/voice/jargon.ts
-var { FILL: FILL2, YOU_ARE: YOU_ARE3, YOUR_TAIL: YOUR_TAIL2, YOUR_VERB: YOUR_VERB2 } = VERDICT_PIECES;
-var LABEL_TERMS = [
-  // `third`: also a verdict on a real third person. "My friend is an introvert" is a description, not a diagnosis.
-  { term: "introvert", label: String.raw`introvert(?:ed|s)?`, third: false },
-  { term: "extrovert", label: String.raw`extrovert(?:ed|s)?`, third: false },
-  { term: "extravert", label: String.raw`extravert(?:ed|s)?`, third: false },
-  { term: "ambivert", label: String.raw`ambivert(?:ed|s)?`, third: false },
-  { term: "narcissist", label: String.raw`narcissists?|narcissistic`, third: true },
-  { term: "gaslight", label: String.raw`gaslighters?|gaslighting`, third: true },
-  { term: "maladaptive", label: String.raw`maladaptive`, third: false }
-];
-function labelForms(label, third) {
-  return [
-    // "you are an introvert", "you're so extroverted", "you come across as a bit of a narcissist".
-    new RegExp(`${YOU_ARE3}${FILL2}(?:${label})(?![-\\w])`, "i"),
-    // "people like you are introverts".
-    new RegExp(String.raw`\bpeople like you (?:are|get|tend to be|can be|seem)\s+${FILL2}(?:${label})(?![-\w])`, "i"),
-    // "your introverted side is showing", "your narcissist streak wins".
-    new RegExp(String.raw`\byour (?:own |inner |classic |usual |old |little |whole )?(?:${label})${YOUR_TAIL2}${YOUR_VERB2}`, "i"),
-    // "so narcissistic of you".
-    new RegExp(String.raw`(?<![-\w])(?:${label})\s+(?:(?:move|thing|behaviou?r)\s+)?of you\b`, "i"),
-    // "As an introvert, you ...": takes it for granted that the reader is one.
-    new RegExp(String.raw`\bas (?:an?|the) (?:${label})\b[^.!?]{0,40}\byou\b`, "i"),
-    // A real person who is not the reader: "your boss is a narcissist", "she's an introvert" (clinical labels only in clinical.ts; here the jargon labels).
-    ...third ? thirdPartyVerdictRes(label) : []
-  ];
-}
-var LABEL_TERM_FORMS = LABEL_TERMS.map((entry) => ({ term: entry.term, res: labelForms(entry.label, entry.third) }));
-var CONCEPT_TERMS = [
-  { term: "love language", word: String.raw`love languages?` },
-  { term: "coping mechanism", word: String.raw`coping mechanisms?` },
-  { term: "inner child", word: String.raw`inner child` }
-];
-var CONCEPT_FORMS = CONCEPT_TERMS.map((entry) => ({
-  term: entry.term,
-  res: [
-    new RegExp(String.raw`\byour (?:own |primary |main |go-to |usual |old |little |secret )?(?:${entry.word})${YOUR_VERB2}`, "i"),
-    new RegExp(String.raw`\byou(?:['’]ve| have| had| use| used| rely on| developed| built| are using|['’]re using)\s+(?:an? |some |the )?(?:\w+ ){0,2}(?:${entry.word})\b`, "i"),
-    new RegExp(String.raw`\b(?:that|this|it)(?:['’]s| is)(?: just| probably| clearly| basically)? (?:your |a |an |the )?(?:${entry.word})\b`, "i")
-  ]
-}));
-var GASLIGHT_YOU = /\byou (?:always |keep |just |sometimes |constantly |literally )?gaslight(?:s|ed)?\b/i;
-var IDENTITY_VERDICTS = [
-  { term: "that's who you are", re: /\bthat(?:'|’)?s who you are\b/i },
-  { term: "thats who you are", re: /\bthats who you are\b/i },
-  { term: "this is who you are", re: /\bthis is who you are\b/i },
-  { term: "who you are as a person", re: /\bwho you are as a person\b/i },
-  { term: "your personality type", re: /\byour personality type\b/i },
-  { term: "your type", re: /\byour type (?:is|are|means|says|explains|shows|tells)\b/i }
-];
-function matchingJargonTerm(text) {
-  if (!text) return null;
-  const normalizedApostrophes = text.replace(/[‘’]/g, "'");
-  for (const sentence of normalizedApostrophes.split(/(?<=[.!?])\s+|\n+/)) {
-    if (!sentence.trim() || isReportedSpeech(sentence)) continue;
-    for (const { term, res } of LABEL_TERM_FORMS) {
-      if (res.some((re) => re.test(sentence))) return term;
-    }
-    for (const { term, res } of CONCEPT_FORMS) {
-      if (res.some((re) => re.test(sentence))) return term;
-    }
-    if (GASLIGHT_YOU.test(sentence)) return "gaslight";
-    for (const { term, re } of IDENTITY_VERDICTS) {
-      if (re.test(sentence)) return term;
-    }
-  }
-  const verdict = labelVerdictHit(normalizedApostrophes);
-  if (verdict) {
-    if (verdict !== "diagnosis") return verdict;
-    if (/\bdiagnosed\b/i.test(text)) return "diagnosed";
-    if (/\byour diagnosis\b/i.test(text)) return "your diagnosis";
-    return "a diagnosis";
-  }
-  return null;
-}
-
-// src/lib/ai-library/story.ts
-var STORY_ANGLES = {
-  friends: "a plan with friends",
-  work: "a task at work or school",
-  home: "a weekend at home, an errand or a family visit"
-};
-var ANGLE_IDS2 = Object.keys(STORY_ANGLES);
-var BAR = ["low", "mid", "high"];
-var MAP = ["hh", "hl", "lh", "ll"];
-function readLean(part) {
-  if (part === "-") return null;
-  const m = /^([a-z_]+)\.([hl])$/.exec(part);
-  if (!m || !TRAIT_AXES.includes(m[1])) return void 0;
-  return { axis: m[1], lean: m[2] === "h" ? "high" : "low" };
-}
-function parseStoryBucket(key) {
-  const parts = key.split("|");
-  if (parts[0] !== "st" || parts.length < 3 || parts.length > 4) return null;
-  const jokePart = parts[parts.length - 1];
-  if (!jokePart.startsWith("j:")) return null;
-  const joke = readLean(jokePart.slice(2));
-  if (joke === void 0) return null;
-  const sides = [];
-  for (const part of parts.slice(1, -1)) {
-    const m = /^(cat_[a-z]{2,20}):([a-z]{2,4}):(.+)$/.exec(part);
-    if (!m) return null;
-    const def = categoryById(m[1]);
-    if (!def) return null;
-    if (!(def.shape === "map" ? MAP : BAR).includes(m[2])) return null;
-    const lead = readLean(m[3]);
-    if (lead === void 0 || lead && !def.axes.includes(lead.axis)) return null;
-    if (sides.some((row) => row.categoryId === def.id)) return null;
-    sides.push({ categoryId: def.id, cell: m[2], lead });
-  }
-  if (joke && !sides.some((row) => categoryById(row.categoryId).axes.includes(joke.axis))) return null;
-  return { key, sides, joke };
-}
-function promptSides(bucket, angle2) {
-  const variant = Math.max(0, ANGLE_IDS2.indexOf(angle2)) % 3;
-  return bucket.sides.map((row) => {
-    const bank = bankForCategory(row.categoryId);
-    const cell = bank ? bank.cells[row.cell] ?? null : null;
-    return {
-      lead: row.lead,
-      card: cell ? { summary: cell.summary[variant], strength: cell.strength[variant], watchOut: cell.watchOut[variant] } : null
-    };
-  });
-}
-var STORY_LIBRARY = {
-  kind: "story",
-  parseBucket: parseStoryBucket,
-  angles: () => ANGLE_IDS2,
-  cardsPerCall: 1,
-  buildPrompt(bucket, angles) {
-    const angle2 = angles[0] ?? "friends";
-    const sides = promptSides(bucket, angle2);
-    return {
-      prompt: `${STORY_POLISH_PROMPT_STATIC}
-
-SETTING FOR THIS STORY: ${STORY_ANGLES[angle2] ?? "a plan with friends"}
-TOLD-VS-PLAYED: none. Do not invent a split.
-SIDES (internal; never name them, never invent a trait from them):
-${sides.map((row, i) => `${i === 0 ? "SIDE A" : "SIDE B"}: ${row.lead ? `${row.lead.axis}.${row.lead.lean}` : "none"}`).join("\n")}
-${bucket.joke ? `JOKE TARGET (never print the word): ${bucket.joke.axis}.${bucket.joke.lean}` : "JOKE TARGET: none."}
-
-If no finished template story is supplied below, return empty JSON {}. Never invent a plot.`,
-      maxOutputTokens: STORY_OUTPUT_TOKENS
-    };
-  },
-  parse(raw, _bucket, angles) {
-    const parsed = parseStoryCardAnswer(raw, { jokeAsked: true });
-    const c = parsed.card;
-    if (!c) return { cards: [], reason: parsed.reason ?? "no card" };
-    const joined = [storyCardBody(c), c.otherWay, c.title].filter(Boolean).join(" ");
-    if (containsFrameworkTerm(joined) || matchingJargonTerm(joined) || storyNamesACategory(joined)) {
-      return { cards: [], reason: "framework or jargon" };
-    }
-    return { cards: [{ angle: angles[0] ?? "friends", card: c }], reason: null };
-  },
-  readCard: parseStoredStoryCard
-};
-
 // src/lib/ai-library/server.ts
 var KINDS = {
   deep_dive: DEEP_DIVE_LIBRARY,
-  story: STORY_LIBRARY,
   legend: LEGEND_LIBRARY
 };
 function planLibraryCall(kind, key, angleCounts, maxCards) {

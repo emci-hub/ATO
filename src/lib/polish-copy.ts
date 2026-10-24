@@ -1,10 +1,10 @@
 /**
  * Every new line from the polish pass (emci approved the pass 2026-10-05).
- * Written in the moment voice (lib/voice/moment-voice.ts). Draft until emci
- * reads them: the draft badge shows in pre-launch builds while this is false.
+ * Written in the moment voice (lib/voice/moment-voice.ts). Accepted by emci
+ * 2026-10-23 (roadmap A4); the draft badge showed only in pre-launch builds while this was false.
  * Labels (button and section names) are plain on purpose.
  */
-export const POLISH_COPY_REVIEWED = false;
+export const POLISH_COPY_REVIEWED = true; // emci accepted 2026-10-23 (roadmap A4)
 
 // ── Your shape ───────────────────────────────────────────────────────────────
 export const SHAPE_TITLE = 'Your shape';

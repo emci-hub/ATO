@@ -116,24 +116,16 @@ Read before editing the area. Each one has bitten this repo at least once.
   `gemini-3.7-flash`; a wrong `GEMINI_MODEL` Supabase secret fails every call regardless
   of quota. The model is chosen only in the Edge Function — the client no longer reads
   any `EXPO_PUBLIC_*_MODEL` (an EAS env var by that name is inert; delete it).
-- **Live AI checks spend the dev-test user's quota** (`scripts/live-ai.ts`): card-live 3,
-  talk-live 2, style-live 12 of the 20/day cap. Run them on a day you are not also
-  device-testing as `@atodev`, or point `ATO_LIVE_EMAIL` / `ATO_LIVE_PASSWORD` elsewhere.
+- **(Removed 2026-10-23, A5.) The live AI checks (`card-live`, `talk-live`, `style-live`) and `scripts/live-ai.ts` are
+  gone** with the `ai-generate` client path; there is no script that spends the dev-test user's quota any more.
 - **Reasoning models eat the token budget.** Gemini `thinkingLevel: low` and
   `grok-3-mini` can spend a 16–64 token budget on hidden thinking and return empty text.
-- **Quota is claimed in the Edge Function.** The client `claimAiCall()` is a no-op for
-  remote providers; do not add a second claim or users get charged twice.
-- **Pings (`ping: true`) never reach a vendor.** They used to make a real, unmetered
-  64-token vendor call with no quota claim at all — a free real generation outside the
-  quota system. Now they only confirm the vendor's key secret is present (`keyFor`)
-  and return a fixed `{ text: 'ready' }`; `complete()` and `claim_ai_call` are never
-  reached for a ping.
-- **Any Gemini failure falls back to DeepSeek once** (not only quota). If DeepSeek's
-  secret is missing you get the empty-card state, not an error.
-- **Every AI await needs `withTimeout`** (25s where two sequential calls are possible).
+- **Quota is claimed on the server, first.** `ai-library` calls `claim_library_write` before any model call; the phone
+  has no `claimAiCall()` and no model client (removed in A5). Do not add a client-side claim.
+- **(Removed in A5.)** Provider pings, the Gemini → DeepSeek client fallback and the `AiCallMetadata` call-site registry
+  went with the `ai-generate` client path. DeepSeek was dropped in A2; `check:ai-provider` now fails if any of it returns.
+- **Every AI await needs `withTimeout`** (`AI_TAP_TIMEOUT_MS`, `src/lib/ai/timeouts.ts`, for a library card tap).
   RN fetch has no timeout; a stalled call leaves "Loading…" forever.
-- **Every `generateText` call site must pass `AiCallMetadata`** from
-  `src/lib/ai/call-sites.ts` or `check:ai-provider` fails.
 
 ## Data
 

@@ -11,7 +11,6 @@ import { CATEGORY_DEFS } from '@/lib/categories';
 
 import { DEEP_DIVE_LIBRARY, allDiveBuckets } from './deep-dive';
 import { LEGEND_LIBRARY } from './legend';
-import { STORY_LIBRARY } from './story';
 import { BUCKET_KEY_RE, LIBRARY_VERSION, isLibraryKind, type LibraryKind } from './types';
 
 export { BUCKET_KEY_RE, LIBRARY_VERSION, isLibraryKind };
@@ -19,7 +18,6 @@ export type { LibraryKind };
 
 const KINDS = {
   deep_dive: DEEP_DIVE_LIBRARY,
-  story: STORY_LIBRARY,
   legend: LEGEND_LIBRARY,
 } as const;
 

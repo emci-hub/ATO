@@ -1,0 +1,42 @@
+{
+  "_readme": "The ONE place the art engine keeps PixelLab facts: tool names, costs, limits. The pre-flight in docs/art/PIXELLAB_ANIMATION.md section 0 re-checks these with search_help and updates ONLY this file (then bump lastVerified). Engine code never hardcodes a tool name, price or limit.",
+  "lastVerified": "2026-10-22",
+  "verifiedBy": "search_help on the pixellab MCP server (see PIXELLAB_ANIMATION.md change log)",
+  "balance": { "note": "run get_balance before any paid step; Tier 2 cycle resets 2026-11-11", "askEmciAboveGenerations": 20 },
+  "tools": {
+    "importCharacter": {
+      "name": "create_character",
+      "mode": "v3",
+      "costGenerations": 0.25,
+      "note": "all direction_images supplied = nothing generated; south must face the camera; reference <= 256x256"
+    },
+    "templateAnimation": {
+      "name": "animate_character",
+      "mode": "template",
+      "costPerDirection": 1,
+      "note": "exploration only (Tier C); loses props on heavy silhouettes"
+    },
+    "skeletonAnimation": {
+      "name": "animate_character",
+      "mode": "skeleton-v3",
+      "costPerDirection": 3,
+      "note": "wait for get_character status completed before submitting; slow (3-8 min)"
+    },
+    "anchoredSkeleton": {
+      "name": "animate_with_skeleton_v3",
+      "costByFrames": { "3": 2, "8": 3, "15": 4 },
+      "frames": { "min": 3, "max": 15 },
+      "note": "Tier B: needs an 18-joint skeleton per frame + first_frame_keypoints; seed fixed; AN5 only, opt-in"
+    },
+    "pixelWorkbench": { "name": "pixelart_workbench", "costGenerations": 0 },
+    "vfxWorkbench": { "name": "vfx_workbench", "costGenerations": 0 }
+  },
+  "limits": {
+    "canvasMax": 256,
+    "heroCanvas": 192,
+    "reduceColorsMaxPx": 512,
+    "frameCount": { "template": 4, "anchoredMin": 3, "anchoredMax": 15 },
+    "perFrameTiming": false
+  },
+  "notNeeded": ["PixelLab keys or calls in the app bundle", "any generation for Tier A procedural clips"]
+}

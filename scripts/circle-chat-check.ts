@@ -17,7 +17,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { chatFlag } from '../src/lib/chat/chat-filter';
-import { CHAT_REPORT_CONTEXT_BEFORE, CHAT_RETENTION_DAYS, CHAT_UI, reportContext, type ChatLine } from '../src/lib/chat/chat-rules';
+import { CHAT_REPORT_CONTEXT_BEFORE, CHAT_RETENTION_DAYS, CHAT_UI, latestReportable, reportContext, type ChatLine } from '../src/lib/chat/chat-rules';
 
 let passed = 0;
 function ok(label: string) {
@@ -42,13 +42,13 @@ ok('wired as check:circle-chat');
   assert.equal(pkg.dependencies['react-native-libsodium'], '1.7.0', 'libsodium pinned exactly');
   assert.equal(pkg.allowScripts?.['react-native-libsodium@1.7.0'], true, 'its unpack script is allowed (the native build needs it)');
   const app = JSON.parse(read('app.json')) as { expo: { version: string; runtimeVersion: string; plugins: unknown[]; ios: { infoPlist?: Record<string, unknown> } } };
-  assert.equal(app.expo.runtimeVersion, '1.1.0', 'new native module = new runtime: 1.0 phones never get chat code over OTA');
-  assert.equal(app.expo.version, '1.1.0');
+  assert.equal(app.expo.runtimeVersion, '1.2.0', '1.2 build (widget labels, camera plugin removed) = new runtime: 1.1 phones never get 1.2 native-dependent code over OTA');
+  assert.equal(app.expo.version, '1.2.0');
   assert.ok(app.expo.plugins.includes('react-native-libsodium'), 'config plugin listed');
   // 2026-10-21: `true` with no compliance code was rejected by Apple (90592). EAS's own prompt ("only standard/exempt
   // encryption?", answered yes by emci) wrote `false`; US + Canada only, legal read still open (D12, app-store-pack §9).
   assert.equal(app.expo.ios.infoPlist?.ITSAppUsesNonExemptEncryption, false, 'exempt-from-documentation answer (see app-store-pack §9 update)');
-  ok('1.1 build: libsodium 1.7.0 + allowed script, runtime 1.1.0, plugin, ITSAppUsesNonExemptEncryption = false');
+  ok('1.2 build: libsodium 1.7.0 + allowed script, runtime 1.2.0, plugin, ITSAppUsesNonExemptEncryption = false');
 }
 
 // --- no plain text leaves the phone ----------------------------------------------------------------
@@ -147,6 +147,20 @@ ok('wired as check:circle-chat');
   assert.equal(reportContext(lines, 'nope'), null);
   assert.ok(reportContext([line(0, false, 'x'.repeat(3000))], 'id0')![0]!.text.length <= 2000, 'capped at the server limit');
   ok('reportContext: reported + up to 5 before, readable only, never my own');
+
+  // Visible Report (roadmap v2 A1): the header button reports the friend's latest readable message.
+  assert.equal(latestReportable(lines)!.id, 'id7', 'pass: latest friend message');
+  assert.equal(latestReportable([line(0, false), line(1, true)])!.id, 'id0', 'pass: skips my own newer message');
+  assert.equal(latestReportable([line(0, false, null), line(1, true)]), null, 'fail: nothing readable from the friend');
+  assert.equal(latestReportable([]), null, 'fail: empty thread');
+  const chat = read('src/app/chat.tsx');
+  const header = chat.slice(chat.indexOf('styles.header, border'), chat.indexOf('{gateLine ?'));
+  assert.match(header, /latestReportable\(lines\)/, 'the header has a Report button');
+  assert.match(header, /accessibilityLabel=\{CHAT_UI\.reportLabel\(handle\)\}/, 'Report is labelled for VoiceOver');
+  assert.ok(header.indexOf('CHAT_UI.report}') < header.indexOf('doBlock'), 'Report sits next to Block in the header');
+  assert.match(chat, /onLongPress=\{/, 'long-press still reports an earlier message');
+  assert.match(header, /gate === 'ready' && !blockArmed \?/, 'Report hides while Block is armed (the armed text needs the room)');
+  ok('chat header: visible Report (latest friend message) next to Block; long-press still works');
 }
 
 // --- disclosure --------------------------------------------------------------------------------------

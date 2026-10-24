@@ -32,7 +32,7 @@ import { SETTINGS_TITLE } from '@/lib/polish-copy';
 import { supabase } from '@/lib/supabase';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
-export const FEEDBACK_EMAIL = 'support@asstrollogs.com';
+export const FEEDBACK_EMAIL = 'support@emgens.com';
 export const SEND_FEEDBACK_LABEL = 'Send feedback';
 
 /**
@@ -259,6 +259,8 @@ Update: ${Updates.updateId ?? 'original build'}`);
           {/* Deletion lives below sign-out and opens a confirmation sheet — it
               never deletes on this tap. */}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Delete account"
             onPress={() => setDeleting(true)}
             style={({ pressed }) => [styles.deleteLink, pressed && styles.pressed]}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.deleteLinkText}>

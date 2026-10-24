@@ -1,6 +1,6 @@
-# The Story — review (STORY_COPY_REVIEWED = false, STORY_BANK_COPY_REVIEWED = false)
+# The Story — review (STORY_COPY_REVIEWED = false [retired, gates nothing], STORY_BANK_COPY_REVIEWED = true)
 
-Draft. emci 2026-10-13 v3 templates, not yet read as shippable copy. The app shows **no draft badge** on Story (same rule as 2026-10-08). Nothing here is approved until the flags flip.
+**Accepted by emci 2026-10-23 (roadmap A4):** the story bank (`STORY_BANK_COPY_REVIEWED = true`). `STORY_COPY_REVIEWED` belongs to the old AI Story prompt; it gates nothing today and is retired, not decided. The app shows **no draft badge** on Story (same rule as 2026-10-08).
 
 **What it is:** a ~100-word script-style micro-story on Home, starring the reader. Six swipe cards (📍 setting + hook, twist, move, punchline, next + italic reveal, Why this is you). Templates are primary. Optional tap: "The other way it could have gone". Specs: `docs/story/`.
 

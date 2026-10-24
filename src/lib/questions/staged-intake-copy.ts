@@ -9,8 +9,8 @@
  * from here, and anything heavier would make an import cycle.
  */
 
-/** Draft until emci reads it; shows the draft badge while PRE_LAUNCH_DEV. */
-export const STAGED_INTAKE_COPY_REVIEWED = false;
+/** emci accepted 2026-10-23 (roadmap A4). Was a draft badge while PRE_LAUNCH_DEV. */
+export const STAGED_INTAKE_COPY_REVIEWED = true;
 
 /** Questions header for the set in progress. */
 export function intakeSetHeader(set: number, sets: number): string {

@@ -14,7 +14,7 @@ change. The Divecore sheet keeps visits and gifts only. UI: `src/app/(tabs)/circ
 - **⋯ on any friend row** (and on an incoming request) → **Report** (6 fixed reasons, no free text) or **Block**
   (confirm with a second tap). Both are reached in 2 taps (⋯, then Report / Block). Block is silent: it removes the friendship and pending requests; the other person is never told and
   their request to you looks like "No one with that handle." **Blocked (n)** at the bottom → Unblock.
-- **Support line** at the bottom of the Circle tab: support@asstrollogs.com (same address as You → Send feedback).
+- **Support line** at the bottom of the Circle tab: support@emgens.com (since 2026-10-22; same address as You → Send feedback).
 - Names and handles with slurs or staff-impersonation ("atoteam", "…support") are refused at sign-up and on the
   server (`me_name_guard`). Swearing is allowed (content policy).
 
@@ -37,6 +37,12 @@ update public.reports set status = 'actioned', handled_at = now(), admin_note = 
 
 Actions available today: pause the profile (Dev Hub → Admin, root), delete it (`root_delete_profile`), or dismiss
 (`status = 'dismissed'`). Reports stay after either account is deleted (ids go null, handle + reason stay).
+
+**Daily alert (wave113, roadmap A3 / S1, 2026-10-22):** at 15:05 UTC (09:05 Alberta summer time, 08:05 in winter) the `report-digest` function
+emails support@emgens.com if any report (person, chat message or shared AI card) arrived in the last 24 hours: the count,
+each report id and its kind, and how many person/chat reports are still open. Never the reason, the text, a handle or who
+reported: read those with the queries here. No new report = no email. Job `report-digest-daily`; token in Vault
+(`report_digest_token`).
 
 ## Chat reports (Step 14, wave108, app 1.1+): emci owns this, daily, 24 h target
 

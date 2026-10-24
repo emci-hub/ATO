@@ -1,9 +1,9 @@
 /**
- * Daily insight (T-H1) — the generator, the store, and wave69's schema.
+ * Daily insight (T-H1) — the stored shape, the store, and wave69's schema.
+ * The AI writer was removed in roadmap A5 (2026-10-23); the shape and caps live in
+ * src/lib/insight/draft.ts.
  *
- * Source-text assertions, same convention as the wave checks: the generator's
- * import chain reaches the edge client, so importing it here would drag a
- * network-shaped module into an offline gate check.
+ * Source-text assertions, same convention as the wave checks.
  *
  * The load-bearing assertion in this file is the caps drift guard: the
  * per-field character caps exist twice, once in TypeScript and once as CHECK
@@ -12,7 +12,7 @@
  * failed insert rather than a visible error.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 let passed = 0;
 function ok(label: string) {
@@ -24,7 +24,7 @@ function read(rel: string): string {
   return readFileSync(rel, 'utf8');
 }
 
-const gen = read('src/lib/insight/generate-insight.ts');
+const gen = read('src/lib/insight/draft.ts');
 const store = read('src/lib/insight/store.ts');
 const migration = read('supabase/migrations/wave69_daily_insights.sql');
 // wave87 (emci 2026-10-07) raised the title cap to 120 for the stored focus
@@ -35,37 +35,18 @@ const CAP_SOURCES: readonly (readonly [string, string])[] = [
   ['wave87', wave87],
   ['wave69', migration],
 ];
-const callSites = read('src/lib/ai/call-sites.ts');
 
-// --- copy discipline -------------------------------------------------------
-// INVARIANT. The insight describes the user to themselves — `reflection` and
-// `watchFor` are diagnosis-adjacent. It is not shippable as reviewed without
-// emci's direct read, same lane as Story and Levity.
-assert.match(gen, /export const DAILY_INSIGHT_COPY_REVIEWED = false;/);
-ok('DAILY_INSIGHT_COPY_REVIEWED is false — insight copy is unreviewed');
-
-// INVARIANT. The framework fence runs on every one of the five fields, not
-// just the prose ones: a framework term in `theme` reaches Home exactly like
-// one in `reflection`.
-assert.match(gen, /import \{ containsFrameworkTerm \}/);
-assert.match(gen, /if \(containsFrameworkTerm\(trimmed\)\) return null;/);
-for (const field of ['theme', 'title', 'reflection', 'tryToday', 'watchFor']) {
-  assert.match(
-    gen,
-    new RegExp(`const ${field} = cleanField\\(parsed\\.${field}, INSIGHT_FIELD_CAPS\\.${field}\\)`),
-    `${field} must go through cleanField, which is where the fence and the cap are applied`,
-  );
-}
-ok('all five fields run through the framework fence and a length cap');
-
-// A partial insight would render as a broken card and there is no sensible
-// per-field fallback, so the parser is all-or-nothing.
-assert.match(gen, /if \(!theme \|\| !title \|\| !reflection \|\| !tryToday \|\| !watchFor\) return null;/);
-ok('parseDailyInsight returns null unless all five fields survive validation');
-
-assert.match(gen, /\$\{VOICE_REFERENCE\}/);
-assert.match(gen, /\$\{STYLE_BLOCK\}/);
-ok('prompt carries the voice reference and the style block');
+// --- the AI writer is gone (roadmap A5) -----------------------------------
+// The framework fence, the all-or-nothing parser and the prompt belonged to the AI writer, which no
+// longer exists: the daily insight is a hand-written bank pick (src/lib/insight-bank/, pinned by
+// check:insight-bank, which also keeps the stored copy through the clear-voice rules).
+assert.ok(!existsSync('src/lib/insight/generate-insight.ts'), 'the AI daily-insight writer stays deleted');
+assert.doesNotMatch(
+  gen.replace(/\/\*[\s\S]*?\*\//g, ''),
+  /generateText|buildDailyInsightPrompt|parseDailyInsight|DAILY_INSIGHT_COPY_REVIEWED/,
+  'draft.ts code is only the shape and the caps (its header comment names what was removed)',
+);
+ok('the AI daily-insight writer and its stale review flag are gone');
 
 // --- caps drift guard ------------------------------------------------------
 const capsBlock: string | undefined = /INSIGHT_FIELD_CAPS = \{([\s\S]*?)\} as const;/.exec(gen)?.[1];
@@ -104,7 +85,7 @@ for (const [tsField, sqlColumn] of Object.entries(SQL_COLUMN)) {
     `insert_daily_insight must truncate ${sqlColumn} to its own cap`,
   );
 }
-ok('per-field caps agree across generate-insight.ts, the CHECK constraints, and the RPC');
+ok('per-field caps agree across draft.ts, the CHECK constraints, and the RPC');
 
 // wave87 changes only the title cap, restates the RPC with the same guards,
 // and adds no policy (emci approved the cap, not a data change).
@@ -178,12 +159,9 @@ assert.match(store, /\.is\('superseded_at', null\)/);
 ok('store exposes fetchTodayInsight / saveInsight / fetchInsightHistory, reading the live row only');
 
 // --- no AI writer any more ------------------------------------------------
-// The AI daily-insight writer was removed on 2026-10-14 (Insights is
-// template-only). It is no longer a call site, so it is not registered and
-// nothing in the file calls a model.
-assert.doesNotMatch(callSites, /feature: 'Daily insight',/);
-assert.doesNotMatch(gen, /generateText|DAILY_INSIGHT_META/);
-assert.doesNotMatch(gen, /export async function generateDailyInsight/);
-ok('the AI daily-insight writer is gone: not a call site, no model call in the file');
+// The AI daily-insight writer was removed on 2026-10-14 (Insights is template-only) and its file in A5.
+assert.ok(!existsSync('src/lib/ai/call-sites.ts'), 'there is no call-site registry any more');
+assert.doesNotMatch(store, /generateText|generateDailyInsight/);
+ok('the AI daily-insight writer is gone: no call-site registry, no model call in the store');
 
 console.log(`\n${passed} insight checks passed`);

@@ -62,8 +62,33 @@ ok('chat / connection definer functions are not anon-callable');
 // --- play_dev_logs -----------------------------------------------------------
 assert.match(sql, /drop policy if exists play_dev_logs_select on public\.play_dev_logs/);
 assert.match(sql, /revoke select on public\.play_dev_logs from anon, authenticated/);
-assert.doesNotMatch(read('src/play/dev-log.ts'), /\.select\(/, 'dev-log only inserts');
-ok('play_dev_logs has no anon / authenticated read');
+// The only writer (src/play/dev-log.ts) was deleted in roadmap A5 together with the table: nothing in the
+// app may send to or read from play_dev_logs any more.
+assert.ok(!existsSync(resolve(root, 'src/play/dev-log.ts')), 'the dev-log sender stays deleted');
+for (const rel of ['src/play/defend-screen.tsx', 'src/play/dev-fx-stress.tsx']) {
+  assert.doesNotMatch(read(rel), /sendPlayDevLog|from\('play_dev_logs'\)/, `${rel} does not send dev logs`);
+}
+ok('play_dev_logs has no anon / authenticated read, and no app code writes to it');
+
+// --- A3 cleanup (wave112, roadmap v2 S5; D13 + D15, emci OK 2026-10-22) ---------
+{
+  const w112 = read('supabase/migrations/wave112_a3_cleanup.sql');
+  const code = w112.replace(/--[^\n]*/g, '');
+  const statements = code.split(';').map((s) => s.trim().replace(/\s+/g, ' ')).filter((s) => s && s !== 'begin' && s !== 'commit');
+  const expected = [
+    'drop table if exists public.play_dev_logs',
+    'drop policy if exists trait_tracks_adult_insert on public.trait_tracks',
+    'drop policy if exists trait_tracks_adult_update on public.trait_tracks',
+    'drop policy if exists trait_history_adult_insert on public.trait_history',
+  ];
+  assert.deepEqual(statements, expected, 'wave112 does exactly the four approved drops, nothing else');
+  // Pairs: the approved list passes; a drop of a policy that still guards a client write fails.
+  const onlyApproved = (list: string[]) => list.every((s) => expected.includes(s));
+  assert.equal(onlyApproved(statements), true, 'pass: only the approved drops');
+  assert.equal(onlyApproved([...statements, 'drop policy if exists messages_adult_insert on public.messages']), false, 'fail case: a live chat guard is never dropped here');
+  assert.ok(!existsSync(resolve(root, 'src/play/dev-log.ts')), 'the only writer is deleted (A5), so no app code can insert');
+  ok('wave112: drops play_dev_logs + the three inert trait policies only');
+}
 
 // --- Timezone farming (S1) ---------------------------------------------------
 assert.match(sql, /create trigger me_timezone_guard\s+before insert or update of timezone on public\.me/);

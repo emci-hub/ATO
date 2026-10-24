@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "hero": "creep-knight",
+  "slug": "creep.knight.streetwear",
+  "canvas": [
+    96,
+    96
+  ],
+  "rawDir": "art-src/pixellab/creep.knight.streetwear/migrated/raw",
+  "footRow": 69,
+  "heightBand": [
+    39,
+    41
+  ],
+  "lines": {
+    "hip": 61
+  },
+  "directions": {
+    "east": {
+      "parts": {}
+    },
+    "west": {
+      "parts": {}
+    }
+  },
+  "notes": "AN4 first pass (test only): lines and masks read off a gridded rotation; check on the part map. Small creep: 1 px breath. Sword tip reaches the foot row so everything at or below the hip stays locked.",
+  "recipes": {
+    "breathing-idle": {
+      "offsets": [
+        0,
+        1,
+        1,
+        0
+      ],
+      "capeOffsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "headExtra": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "ms": [
+        400,
+        250,
+        400,
+        250
+      ]
+    }
+  }
+}

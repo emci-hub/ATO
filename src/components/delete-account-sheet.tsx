@@ -32,7 +32,7 @@ const WHAT_GOES = [
   'Every Check you have ever made',
   'Your Circle connections, on both sides',
   'Your chat threads and the messages in them',
-  'Everything you saved in ATO, including saved facts',
+  'Everything you saved in ATO, like your answers, profile cards and Legends',
 ];
 
 export function DeleteAccountSheet({
@@ -96,6 +96,8 @@ export function DeleteAccountSheet({
             <View style={styles.header}>
               <ThemedText type="subtitle">Delete your account</ThemedText>
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close"
                 onPress={onClose}
                 disabled={working}
                 hitSlop={12}

@@ -20,16 +20,12 @@ Legal text is promoted: `src/app/legal/{terms,privacy,app-privacy-labels}.md` an
 | Story library rows | Story cards in the shared AI library | Rows written by "Write as Sage" prompts. They stay valid; re-seed under the new voice at the next `LIBRARY_VERSION` bump. |
 | `crisis_since` | `wave35_home_bootstrap.sql:66` (`home_bootstrap`) | The RPC still returns it; the client ignores it. Remove in a new migration that replaces `home_bootstrap` (copy the live function, drop the key). |
 
-## 2. The two "Write as Sage" prompts
+## 2. The two "Write as Sage" prompts — DONE
 
-- `src/lib/sage-story.ts:286` (`Write as Sage in the ATO app…`)
-- `src/lib/story-card.ts:277` (`STORY_CARD_PROMPT_STATIC`)
-
-Both are bundled into `supabase/functions/_shared/ai-library.bundle.js`. Changing either
-needs `npm run gen:ai-library` **and** `supabase functions deploy ai-library`
-(`check:ai-library` fails on a stale bundle). Bump `LIBRARY_VERSION` in the same change so
-cards written under the old persona are not served as current. This is a prompt/voice
-change, so it needs emci's read of sample output first.
+**Done (2026-10-22 / 2026-10-23):** `story` left the shared AI library (roadmap A3, `ai-library` + `ai-library-fill` redeployed,
+bundle regenerated), and the two prompts themselves (`sage-story.ts` and `story-card.ts`, `STORY_CARD_PROMPT_STATIC`)
+were deleted in step A5. The server bundle carries no "Write as Sage" text (`check:ai-library`) and `check:no-sage-copy`
+has zero exemptions. No `LIBRARY_VERSION` bump was needed for deep dives or Legends (their prompts did not change).
 
 ## 3. Play credits line
 
@@ -39,18 +35,21 @@ mixed with app edits). Suggested wording: "Home, Check and Insights…".
 
 ## 4. Widget header
 
-`targets/widget/widgets.swift:45`: `Text("SAGE · COACH")`. Swift, so it changes only with
+**DONE (master-plan Step 3, 2026-10-20): the header now reads "ATO" (`widgets.swift:45,68`).** What is still stale
+in the widget is the "READ" / "DO" labels and "Today's Read and Do." description (roadmap v2 S13, next native build).
+Original note: `targets/widget/widgets.swift:45`: `Text("SAGE · COACH")`. Swift, so it changes only with
 the next native build, not an OTA. Suggested: an ATO / Insights header.
 `scripts/floor-check.ts` and `scripts/push-check.ts` pin that string; update them together.
-The `'sage'` default `callType` in `supabase/functions/ai-generate/index.ts:359` is the
-write side of the `ai_usage` tag above.
+(The `'sage'` default `callType` in `supabase/functions/ai-generate/index.ts` is gone: that function is a 410 stub and,
+after emci's OK, is deleted — roadmap A5, D14. The `'sage'` tag on `ai_usage` keeps only historic rows.)
 
 ## 5. Module renames of `sage-*` files
 
 Pure renames, no behaviour change; do after the items above so imports move once.
 
-- `src/lib/sage-copy.ts`, `sage-eight-ball.ts`, `sage-knows.ts`, `sage-story.ts`,
-  `sage-story-store.ts`, `sage-title.ts`, `sage-title-store.ts`
+- `src/lib/sage-copy.ts`, `sage-eight-ball.ts`, `sage-knows.ts`, `sage-story.ts` (now only the saved-Story shape and helpers),
+  `sage-story-store.ts`, `sage-title.ts` (now only the saved-title reader). (`sage-title-store.ts` no longer exists.)
+  Renaming stays skipped (master-plan D11): invisible to users.
 - `src/components/sage-eight-ball.tsx`, `sage-knows-card.tsx`
 - Related identifiers: `SageEightBall`, `fetchSageUsage` / `SageUsageSnapshot` /
   `formatSageUsage` (`src/lib/voice/quota*.ts`), `recordSageKnowsFits` (`src/lib/me.ts`),

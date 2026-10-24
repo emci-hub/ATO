@@ -1,318 +1,370 @@
 {
   "sheets/streetwear/towers/viper/Attack": {
-    "sheet": "sheets/streetwear/towers/viper/atlas-0.png",
-    "sheetW": 1895,
-    "sheetH": 947,
+    "sheet": "art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.combat.png",
+    "sheetW": 1607,
+    "sheetH": 493,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "y": 248,
+        "w": 181,
+        "h": 122
       },
       "east/frame_001": {
-        "x": 237,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 182,
+        "y": 248,
+        "w": 181,
+        "h": 122
       },
       "east/frame_002": {
-        "x": 474,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 364,
+        "y": 248,
+        "w": 181,
+        "h": 122
       },
       "east/frame_003": {
-        "x": 711,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 546,
+        "y": 248,
+        "w": 181,
+        "h": 122
       },
       "east/frame_004": {
-        "x": 948,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 728,
+        "y": 248,
+        "w": 181,
+        "h": 122
       },
       "east/frame_005": {
-        "x": 1185,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 910,
+        "y": 248,
+        "w": 181,
+        "h": 122
       },
       "east/frame_006": {
-        "x": 1422,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 1092,
+        "y": 248,
+        "w": 181,
+        "h": 122
       },
       "east/frame_007": {
-        "x": 1659,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 1274,
+        "y": 248,
+        "w": 181,
+        "h": 122
       },
       "west/frame_000": {
         "x": 0,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "y": 371,
+        "w": 181,
+        "h": 122
       },
       "west/frame_001": {
-        "x": 237,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 182,
+        "y": 371,
+        "w": 181,
+        "h": 122
       },
       "west/frame_002": {
-        "x": 474,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 364,
+        "y": 371,
+        "w": 181,
+        "h": 122
       },
       "west/frame_003": {
-        "x": 711,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 546,
+        "y": 371,
+        "w": 181,
+        "h": 122
       },
       "west/frame_004": {
-        "x": 948,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 728,
+        "y": 371,
+        "w": 181,
+        "h": 122
       },
       "west/frame_005": {
-        "x": 1185,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 910,
+        "y": 371,
+        "w": 181,
+        "h": 122
       },
       "west/frame_006": {
-        "x": 1422,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 1092,
+        "y": 371,
+        "w": 181,
+        "h": 122
       },
       "west/frame_007": {
-        "x": 1659,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 1274,
+        "y": 371,
+        "w": 181,
+        "h": 122
       }
-    }
+    },
+    "offsetX": 27,
+    "offsetY": 58,
+    "sourceW": 236,
+    "sourceH": 236,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/towers/viper/Idle": {
-    "sheet": "sheets/streetwear/towers/viper/atlas-0.png",
-    "sheetW": 1895,
-    "sheetH": 947,
+    "sheet": "art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.core.png",
+    "sheetW": 1359,
+    "sheetH": 369,
     "frames": {
       "east/frame_000": {
         "x": 0,
-        "y": 474,
-        "w": 236,
-        "h": 236
+        "y": 0,
+        "w": 155,
+        "h": 120
       },
       "east/frame_001": {
-        "x": 237,
-        "y": 474,
-        "w": 236,
-        "h": 236
+        "x": 156,
+        "y": 0,
+        "w": 155,
+        "h": 120
       },
       "east/frame_002": {
-        "x": 474,
-        "y": 474,
-        "w": 236,
-        "h": 236
+        "x": 312,
+        "y": 0,
+        "w": 155,
+        "h": 120
       },
       "east/frame_003": {
-        "x": 711,
-        "y": 474,
-        "w": 236,
-        "h": 236
+        "x": 468,
+        "y": 0,
+        "w": 155,
+        "h": 120
       },
       "west/frame_000": {
         "x": 0,
-        "y": 711,
-        "w": 236,
-        "h": 236
+        "y": 121,
+        "w": 155,
+        "h": 120
       },
       "west/frame_001": {
-        "x": 237,
-        "y": 711,
-        "w": 236,
-        "h": 236
+        "x": 156,
+        "y": 121,
+        "w": 155,
+        "h": 120
       },
       "west/frame_002": {
-        "x": 474,
-        "y": 711,
-        "w": 236,
-        "h": 236
+        "x": 312,
+        "y": 121,
+        "w": 155,
+        "h": 120
       },
       "west/frame_003": {
-        "x": 711,
-        "y": 711,
-        "w": 236,
-        "h": 236
+        "x": 468,
+        "y": 121,
+        "w": 155,
+        "h": 120
       }
-    }
+    },
+    "offsetX": 39,
+    "offsetY": 59,
+    "sourceW": 236,
+    "sourceH": 236,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "core"
   },
   "sheets/streetwear/towers/viper/Skill": {
-    "sheet": "sheets/streetwear/towers/viper/atlas-1.png",
-    "sheetW": 1895,
-    "sheetH": 473,
+    "sheet": "art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.combat.png",
+    "sheetW": 1607,
+    "sheetH": 493,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 0,
-        "w": 236,
-        "h": 236
+        "w": 200,
+        "h": 123
       },
       "east/frame_001": {
-        "x": 237,
+        "x": 201,
         "y": 0,
-        "w": 236,
-        "h": 236
+        "w": 200,
+        "h": 123
       },
       "east/frame_002": {
-        "x": 474,
+        "x": 402,
         "y": 0,
-        "w": 236,
-        "h": 236
+        "w": 200,
+        "h": 123
       },
       "east/frame_003": {
-        "x": 711,
+        "x": 603,
         "y": 0,
-        "w": 236,
-        "h": 236
+        "w": 200,
+        "h": 123
       },
       "east/frame_004": {
-        "x": 948,
+        "x": 804,
         "y": 0,
-        "w": 236,
-        "h": 236
+        "w": 200,
+        "h": 123
       },
       "east/frame_005": {
-        "x": 1185,
+        "x": 1005,
         "y": 0,
-        "w": 236,
-        "h": 236
+        "w": 200,
+        "h": 123
       },
       "east/frame_006": {
-        "x": 1422,
+        "x": 1206,
         "y": 0,
-        "w": 236,
-        "h": 236
+        "w": 200,
+        "h": 123
       },
       "east/frame_007": {
-        "x": 1659,
+        "x": 1407,
         "y": 0,
-        "w": 236,
-        "h": 236
+        "w": 200,
+        "h": 123
       },
       "west/frame_000": {
         "x": 0,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "y": 124,
+        "w": 200,
+        "h": 123
       },
       "west/frame_001": {
-        "x": 237,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 201,
+        "y": 124,
+        "w": 200,
+        "h": 123
       },
       "west/frame_002": {
-        "x": 474,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 402,
+        "y": 124,
+        "w": 200,
+        "h": 123
       },
       "west/frame_003": {
-        "x": 711,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 603,
+        "y": 124,
+        "w": 200,
+        "h": 123
       },
       "west/frame_004": {
-        "x": 948,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 804,
+        "y": 124,
+        "w": 200,
+        "h": 123
       },
       "west/frame_005": {
-        "x": 1185,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 1005,
+        "y": 124,
+        "w": 200,
+        "h": 123
       },
       "west/frame_006": {
-        "x": 1422,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 1206,
+        "y": 124,
+        "w": 200,
+        "h": 123
       },
       "west/frame_007": {
-        "x": 1659,
-        "y": 237,
-        "w": 236,
-        "h": 236
+        "x": 1407,
+        "y": 124,
+        "w": 200,
+        "h": 123
       }
-    }
+    },
+    "offsetX": 17,
+    "offsetY": 56,
+    "sourceW": 236,
+    "sourceH": 236,
+    "ms": 100,
+    "dirs": [
+      "east",
+      "west"
+    ],
+    "tier": "combat"
   },
   "sheets/streetwear/towers/viper/rotations": {
-    "sheet": "sheets/streetwear/towers/viper/atlas-2.png",
-    "sheetW": 1895,
-    "sheetH": 236,
+    "sheet": "art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.core.png",
+    "sheetW": 1359,
+    "sheetH": 369,
     "frames": {
       "north": {
         "x": 0,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "y": 242,
+        "w": 169,
+        "h": 127
       },
       "north-east": {
-        "x": 237,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 170,
+        "y": 242,
+        "w": 169,
+        "h": 127
       },
       "east": {
-        "x": 474,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 340,
+        "y": 242,
+        "w": 169,
+        "h": 127
       },
       "south-east": {
-        "x": 711,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 510,
+        "y": 242,
+        "w": 169,
+        "h": 127
       },
       "south": {
-        "x": 948,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 680,
+        "y": 242,
+        "w": 169,
+        "h": 127
       },
       "south-west": {
-        "x": 1185,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 850,
+        "y": 242,
+        "w": 169,
+        "h": 127
       },
       "west": {
-        "x": 1422,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 1020,
+        "y": 242,
+        "w": 169,
+        "h": 127
       },
       "north-west": {
-        "x": 1659,
-        "y": 0,
-        "w": 236,
-        "h": 236
+        "x": 1190,
+        "y": 242,
+        "w": 169,
+        "h": 127
       }
-    }
+    },
+    "offsetX": 29,
+    "offsetY": 58,
+    "sourceW": 236,
+    "sourceH": 236,
+    "ms": 100,
+    "dirs": [
+      "north",
+      "north-east",
+      "east",
+      "south-east",
+      "south",
+      "south-west",
+      "west",
+      "north-west"
+    ],
+    "tier": "core"
   }
 }

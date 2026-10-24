@@ -19,7 +19,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
-import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
+import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/timeouts';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
@@ -137,7 +137,7 @@ function ensureHall(
  * Pick a hall → three "???" frames (no clue) → reveal one a day (plus one bonus
  * when a new trait side settles). Nothing here spends on its own: the frames
  * are picked on the phone with no AI (`pick.ts`), and the one model call runs
- * only on a reveal tap (`writeLegendStory`, claimed on the server first).
+ * only on a reveal tap (`revealLegendStory` → the `ai-library` function, claimed on the server first).
  * Opening a met legend is free — the story was saved.
  */
 export default function LegendsScreen() {

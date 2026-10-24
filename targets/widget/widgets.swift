@@ -12,8 +12,8 @@ struct AtoCardProvider: TimelineProvider {
   func placeholder(in context: Context) -> AtoCardEntry {
     AtoCardEntry(
       date: Date(),
-      read: "Your Read",
-      doText: "Your Do",
+      read: "Your Focus",
+      doText: "Your Try",
       hasCard: true
     )
   }
@@ -46,14 +46,14 @@ struct AtoCardView: View {
           .font(.caption)
           .fontWeight(.semibold)
           .foregroundStyle(.secondary)
-        Text("READ")
+        Text("FOCUS")
           .font(.caption)
           .fontWeight(.semibold)
           .foregroundStyle(.secondary)
         Text(entry.read)
           .font(.body)
           .lineLimit(4)
-        Text("DO")
+        Text("TRY")
           .font(.caption)
           .fontWeight(.semibold)
           .foregroundStyle(.secondary)
@@ -86,7 +86,7 @@ struct AtoCard: Widget {
         .widgetURL(URL(string: "ato:///"))
     }
     .configurationDisplayName("ATO")
-    .description("Today’s Read and Do.")
+    .description("Today’s Focus and Try.")
     .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
   }
 }

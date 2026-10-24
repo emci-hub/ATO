@@ -1,11 +1,13 @@
 /**
  * Legend figures — one reveal, no client model call.
  *
- * Library first (wave93): the phone sends only the bucket key. While
- * `STORY_LIBRARY_RUNTIME` is off, a hit comes from the shared AI library and
- * a miss uses the hand-written museum card. While it is on, the phone
- * assembles approved Story Library copy and does not call the server.
- * The old `generateText` fallback is closed and does not claim a token.
+ * The phone sends only the bucket key to the `ai-library` Edge Function, which
+ * claims the reveal on the server first (no claim = no call, hand-written
+ * fallback), serves an unseen library card or writes a new one. The old
+ * one-person path (`generateText` → `ai-generate`) was removed in roadmap A5.
+ * While `STORY_LIBRARY_RUNTIME` is on, the phone assembles approved Story
+ * Library copy and does not call the server. The flag ships off.
+ * Never throws to the screen.
  */
 import { LEGEND_LIBRARY, legendBucketKey } from '@/lib/ai-library/legend';
 import { writeLibraryCard, type LibraryServed } from '@/lib/ai-library/client';
@@ -56,8 +58,9 @@ export function planLegendReveal(input: {
  *                else the hand-written card
  *   paid reveal  the server claims 5 tokens, then the same; a failed write is
  *                refunded on the server
- * 'missing' (wave93 not live yet) = the museum's own words. No client model call.
+ * Any other answer (including 'missing') gives the hand-written card.
  * Story Library on = approved copy on the phone, no server call and no charge.
+ * The flag ships off, so this build still uses the server library.
  */
 export async function revealLegendStory(input: {
   legend: LegendFigure;
@@ -95,22 +98,5 @@ export async function revealLegendStory(input: {
   // unseen library card is given, or a new one is written.
   const res = await writeLibraryCard('legend', bucket, input.free ? 'free_legend' : 'paid', LEGEND_LIBRARY.readCard);
   if (res.ok && res.served) return take(res.served);
-  if (!res.ok && res.reason === 'missing') return writeLegendStory(input);
   return fallback();
-}
-
-/** The client model writer is closed. A missing shared library uses the museum words. */
-export async function writeLegendStory(input: {
-  legend: LegendFigure;
-  angle: LegendAngle;
-  momentId: string;
-  pairs: readonly LegendPair[];
-  /** The reader's side the legend doesn't share ("Where you differ"). */
-  differ: LegendDiffer | null;
-  /** The joke style for this card (seeded by the screen), or none. */
-  jokeStyle: CardJokeStyle | null;
-  /** The person said yes to AI (the server refuses without it anyway). */
-  consentGranted: boolean;
-}): Promise<LegendStory> {
-  return fallbackLegendStory(input);
 }

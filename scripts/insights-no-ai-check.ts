@@ -86,7 +86,7 @@ for (const rel of INSIGHTS_FILES) assert.ok(existsSync(resolve(root, rel)), `${r
 const graph = importGraph(INSIGHTS_FILES);
 assert.ok(graph.size > INSIGHTS_FILES.length, 'the walk follows imports');
 // Self-test: the walker does find an AI client when one is imported.
-assert.ok(importGraph(['src/components/category-deep-dive-card.tsx']).has('src/lib/ai/generate.ts'));
+assert.ok(importGraph(['src/components/category-deep-dive-card.tsx']).has('src/lib/ai-library/client.ts'));
 ok(`import walker follows ${graph.size} modules and finds an AI client where one is imported`);
 
 const reached = AI_CLIENT_MODULES.filter((mod) => graph.has(mod));
@@ -107,7 +107,7 @@ ok('Insights files: no model call, no library, no claim, no consent, no badge, n
 // The old AI Story path is gone, not just switched off.
 assert.ok(!existsSync(resolve(root, 'src/components/sage-story-fold.tsx')), 'the old Story fold is deleted');
 assert.ok(!existsSync(resolve(root, 'src/lib/explore/generate.ts')), 'the old Story rewrite generator is deleted');
-assert.doesNotMatch(read('src/lib/insight/generate-insight.ts'), /export async function generateDailyInsight/);
+assert.ok(!existsSync(resolve(root, 'src/lib/insight/generate-insight.ts')), 'the AI daily-insight writer is deleted');
 ok('the old AI Story fold, its rewrite path and the AI daily-insight writer are gone');
 
 console.log(`\ninsights-no-ai: ${passed} checks passed`);

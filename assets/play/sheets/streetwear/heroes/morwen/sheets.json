@@ -105,7 +105,17 @@
     "offsetY": 41,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 100,
+    "ms": 65,
+    "holds": [
+      90,
+      70,
+      45,
+      40,
+      45,
+      60,
+      80,
+      90
+    ],
     "dirs": [
       "east",
       "west"
@@ -218,7 +228,17 @@
     "offsetY": 43,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 100,
+    "ms": 50,
+    "holds": [
+      40,
+      40,
+      50,
+      60,
+      60,
+      50,
+      50,
+      50
+    ],
     "dirs": [
       "east",
       "west"
@@ -307,7 +327,15 @@
     "offsetY": 42,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 100,
+    "ms": 140,
+    "holds": [
+      70,
+      90,
+      130,
+      170,
+      180,
+      200
+    ],
     "dirs": [
       "east",
       "west"
@@ -317,62 +345,68 @@
   "sheets/streetwear/heroes/morwen/Idle": {
     "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.core.png",
     "sheetW": 719,
-    "sheetH": 785,
+    "sheetH": 781,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 452,
-        "w": 71,
-        "h": 110
+        "w": 75,
+        "h": 108
       },
       "east/frame_001": {
-        "x": 72,
+        "x": 76,
         "y": 452,
-        "w": 71,
-        "h": 110
+        "w": 75,
+        "h": 108
       },
       "east/frame_002": {
-        "x": 144,
+        "x": 152,
         "y": 452,
-        "w": 71,
-        "h": 110
+        "w": 75,
+        "h": 108
       },
       "east/frame_003": {
-        "x": 216,
+        "x": 228,
         "y": 452,
-        "w": 71,
-        "h": 110
+        "w": 75,
+        "h": 108
       },
       "west/frame_000": {
         "x": 0,
-        "y": 563,
-        "w": 71,
-        "h": 110
+        "y": 561,
+        "w": 75,
+        "h": 108
       },
       "west/frame_001": {
-        "x": 72,
-        "y": 563,
-        "w": 71,
-        "h": 110
+        "x": 76,
+        "y": 561,
+        "w": 75,
+        "h": 108
       },
       "west/frame_002": {
-        "x": 144,
-        "y": 563,
-        "w": 71,
-        "h": 110
+        "x": 152,
+        "y": 561,
+        "w": 75,
+        "h": 108
       },
       "west/frame_003": {
-        "x": 216,
-        "y": 563,
-        "w": 71,
-        "h": 110
+        "x": 228,
+        "y": 561,
+        "w": 75,
+        "h": 108
       }
     },
-    "offsetX": 62,
-    "offsetY": 41,
+    "offsetX": 58,
+    "offsetY": 43,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 150,
+    "ms": 325,
+    "holds": [
+      400,
+      250,
+      400,
+      250
+    ],
     "dirs": [
       "east",
       "west"
@@ -485,7 +519,17 @@
     "offsetY": 42,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 100,
+    "ms": 70,
+    "holds": [
+      100,
+      80,
+      60,
+      45,
+      45,
+      60,
+      80,
+      90
+    ],
     "dirs": [
       "east",
       "west"
@@ -495,7 +539,7 @@
   "sheets/streetwear/heroes/morwen/Walk": {
     "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.core.png",
     "sheetW": 719,
-    "sheetH": 785,
+    "sheetH": 781,
     "frames": {
       "north/frame_000": {
         "x": 0,
@@ -695,6 +739,16 @@
     "sourceW": 192,
     "sourceH": 192,
     "ms": 100,
+    "holds": [
+      120,
+      80,
+      120,
+      80,
+      120,
+      80,
+      120,
+      80
+    ],
     "dirs": [
       "north",
       "east",
@@ -797,7 +851,16 @@
     "offsetY": 45,
     "sourceW": 192,
     "sourceH": 192,
-    "ms": 100,
+    "ms": 110,
+    "holds": [
+      80,
+      80,
+      90,
+      100,
+      110,
+      130,
+      180
+    ],
     "dirs": [
       "east",
       "west"
@@ -807,53 +870,53 @@
   "sheets/streetwear/heroes/morwen/rotations": {
     "sheet": "art/heroes/in-use/morwen/streetwear/hero_morwen_streetwear.core.png",
     "sheetW": 719,
-    "sheetH": 785,
+    "sheetH": 781,
     "frames": {
       "north": {
         "x": 0,
-        "y": 674,
+        "y": 670,
         "w": 87,
         "h": 111
       },
       "north-east": {
         "x": 88,
-        "y": 674,
+        "y": 670,
         "w": 87,
         "h": 111
       },
       "east": {
         "x": 176,
-        "y": 674,
+        "y": 670,
         "w": 87,
         "h": 111
       },
       "south-east": {
         "x": 264,
-        "y": 674,
+        "y": 670,
         "w": 87,
         "h": 111
       },
       "south": {
         "x": 352,
-        "y": 674,
+        "y": 670,
         "w": 87,
         "h": 111
       },
       "south-west": {
         "x": 440,
-        "y": 674,
+        "y": 670,
         "w": 87,
         "h": 111
       },
       "west": {
         "x": 528,
-        "y": 674,
+        "y": 670,
         "w": 87,
         "h": 111
       },
       "north-west": {
         "x": 616,
-        "y": 674,
+        "y": 670,
         "w": 87,
         "h": 111
       }

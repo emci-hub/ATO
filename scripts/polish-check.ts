@@ -25,7 +25,7 @@ function ok(label: string) {
 const read = (rel: string) => readFileSync(resolve(__dirname, '..', rel), 'utf8');
 
 // ── Copy ─────────────────────────────────────────────────────────────────────
-assert.equal(POLISH_COPY_REVIEWED, false, 'new copy ships as draft until emci reads it');
+assert.equal(POLISH_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 for (const line of POLISH_LINES) {
   assert.equal(lineRuleViolation(line), null, `voice rule: ${line}`);
   assert.ok(!containsFrameworkTerm(line), `framework term: ${line}`);

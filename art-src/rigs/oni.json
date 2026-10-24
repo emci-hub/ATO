@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "hero": "oni",
+  "slug": "hero.oni.streetwear",
+  "canvas": [
+    192,
+    192
+  ],
+  "rawDir": "art-src/pixellab/hero.oni.streetwear/migrated/raw",
+  "footRow": 152,
+  "heightBand": [
+    102,
+    107
+  ],
+  "lines": {
+    "hip": 120,
+    "shoulder": 76
+  },
+  "directions": {
+    "east": {
+      "parts": {
+        "cape": [
+          [
+            44,
+            86
+          ],
+          [
+            90,
+            86
+          ],
+          [
+            94,
+            112
+          ],
+          [
+            94,
+            132
+          ],
+          [
+            44,
+            132
+          ]
+        ],
+        "prop": [
+          [
+            110,
+            108
+          ],
+          [
+            148,
+            108
+          ],
+          [
+            148,
+            134
+          ],
+          [
+            110,
+            134
+          ]
+        ]
+      }
+    },
+    "west": {
+      "parts": {
+        "cape": [
+          [
+            116,
+            92
+          ],
+          [
+            142,
+            92
+          ],
+          [
+            142,
+            132
+          ],
+          [
+            116,
+            132
+          ]
+        ],
+        "prop": [
+          [
+            42,
+            106
+          ],
+          [
+            84,
+            106
+          ],
+          [
+            84,
+            136
+          ],
+          [
+            42,
+            136
+          ]
+        ]
+      }
+    }
+  },
+  "notes": "Cape lags; flame blade moves with the hand. AN2 first pass: lines and masks guessed from the 5x grid sheets, to be checked on the part map."
+}

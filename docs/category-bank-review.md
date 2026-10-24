@@ -7,7 +7,7 @@ Each part has three wordings; a person sees one per week, turning every Monday.
 **Review rules:** `docs/copy-review-rules.md` (fix unclear wording and meaning problems; keep honest lines plain; no keyword flags).
 
 **How to review:** change `- [ ]` to `- [x]` on every cell you approve. Edit wording right here if you like and tell me; I copy it into `src/lib/category-bank/<id>.ts`.
-When every cell is ticked, `CATEGORY_BANK_COPY_REVIEWED` flips to `true` (`src/lib/category-bank/index.ts`).
+`CATEGORY_BANK_COPY_REVIEWED` is `true` (`src/lib/category-bank/index.ts`): accepted by emci 2026-10-23 (roadmap A4) without ticking every cell. Ticks here are optional notes; an edit is made only for a specific problem.
 This flag is for this review only: the app shows these cards to everyone and never shows a draft badge for them (emci, 2026-10-07).
 
 ## Steadiness (`cat_steadiness`, bar: Follow-through + Harmony + Composure)

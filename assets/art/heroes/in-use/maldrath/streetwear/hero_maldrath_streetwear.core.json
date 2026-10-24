@@ -4,91 +4,91 @@
       "frame": {
         "x": 0,
         "y": 492,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 44,
+        "x": 54,
         "y": 36,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "east",
       "clip": "Idle"
     },
     "idle/e/001": {
       "frame": {
-        "x": 104,
+        "x": 92,
         "y": 492,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 44,
+        "x": 54,
         "y": 36,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "east",
       "clip": "Idle"
     },
     "idle/e/002": {
       "frame": {
-        "x": 208,
+        "x": 184,
         "y": 492,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 44,
+        "x": 54,
         "y": 36,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "east",
       "clip": "Idle"
     },
     "idle/e/003": {
       "frame": {
-        "x": 312,
+        "x": 276,
         "y": 492,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 44,
+        "x": 54,
         "y": 36,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "east",
       "clip": "Idle"
     },
@@ -96,91 +96,91 @@
       "frame": {
         "x": 0,
         "y": 611,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 44,
+        "x": 54,
         "y": 36,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "west",
       "clip": "Idle"
     },
     "idle/w/001": {
       "frame": {
-        "x": 104,
+        "x": 92,
         "y": 611,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 44,
+        "x": 54,
         "y": 36,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "west",
       "clip": "Idle"
     },
     "idle/w/002": {
       "frame": {
-        "x": 208,
+        "x": 184,
         "y": 611,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 44,
+        "x": 54,
         "y": 36,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "west",
       "clip": "Idle"
     },
     "idle/w/003": {
       "frame": {
-        "x": 312,
+        "x": 276,
         "y": 611,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 44,
+        "x": 54,
         "y": 36,
-        "w": 103,
+        "w": 91,
         "h": 118
       },
       "sourceSize": {
         "w": 192,
         "h": 192
       },
-      "duration": 150,
+      "duration": 325,
       "dir": "west",
       "clip": "Idle"
     },
@@ -1136,7 +1136,7 @@
       }
     ],
     "decodedBytes": 3822784,
-    "diskBytes": 98102,
+    "diskBytes": 93191,
     "tier": "core"
   }
 }

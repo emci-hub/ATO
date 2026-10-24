@@ -6,14 +6,22 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'background.dive-atlas.classic': require('@/assets/art/backgrounds/in-use/classic/dive-atlas.png'),
   'background.room-atlas.classic': require('@/assets/art/backgrounds/in-use/classic/room-atlas.png'),
   'boss.oni.cast.atlas': require('@/assets/art/enemies-bosses/in-use/oni/cast/atlas.png'),
+  'boss.oni.streetwear.combat': require('@/assets/art/enemies-bosses/in-use/oni/streetwear/boss_oni_streetwear.combat.png'),
+  'boss.oni.streetwear.core': require('@/assets/art/enemies-bosses/in-use/oni/streetwear/boss_oni_streetwear.core.png'),
   'boss.titan-x.cast.atlas': require('@/assets/art/enemies-bosses/in-use/titan-x/cast/atlas.png'),
   'brand.logo-glow': require('@/assets/art/branding/in-use/brand_logo-glow.png'),
   'brand.splash': require('@/assets/art/branding/in-use/brand_splash.png'),
   'creep.knight.cast.atlas': require('@/assets/art/enemies-bosses/in-use/knight/cast/atlas.png'),
+  'creep.knight.streetwear.combat': require('@/assets/art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.combat.png'),
+  'creep.knight.streetwear.core': require('@/assets/art/enemies-bosses/in-use/knight/streetwear/creep_knight_streetwear.core.png'),
   'creep.village-girl.cast.atlas-0': require('@/assets/art/enemies-bosses/in-use/village-girl/cast/atlas-0.png'),
   'creep.village-girl.cast.atlas-1': require('@/assets/art/enemies-bosses/in-use/village-girl/cast/atlas-1.png'),
+  'creep.village-girl.streetwear.combat': require('@/assets/art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.combat.png'),
+  'creep.village-girl.streetwear.core': require('@/assets/art/enemies-bosses/in-use/village-girl/streetwear/creep_village-girl_streetwear.core.png'),
   'creep.wizard.cast.atlas-0': require('@/assets/art/enemies-bosses/in-use/wizard/cast/atlas-0.png'),
   'creep.wizard.cast.atlas-1': require('@/assets/art/enemies-bosses/in-use/wizard/cast/atlas-1.png'),
+  'creep.wizard.streetwear.combat': require('@/assets/art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.combat.png'),
+  'creep.wizard.streetwear.core': require('@/assets/art/enemies-bosses/in-use/wizard/streetwear/creep_wizard_streetwear.core.png'),
   'fx.shine.streetwear': require('@/assets/art/fx/in-use/streetwear/shine.png'),
   'hero.archangel.cast.atlas': require('@/assets/art/heroes/in-use/archangel/cast/atlas.png'),
   'hero.archangel.streetwear.combat': require('@/assets/art/heroes/in-use/archangel/streetwear/hero_archangel_streetwear.combat.png'),
@@ -199,8 +207,14 @@ export const ART_SOURCES: Record<string, ImageSourcePropType> = {
   'room.underground.props': require('@/assets/art/rooms/underground/underground-td-props.png'),
   'room.underground.snapshot': require('@/assets/art/rooms/underground/underground-td-snapshot.png'),
   'tower.ghost.cast.atlas': require('@/assets/art/enemies-bosses/in-use/ghost/cast/atlas.png'),
+  'tower.ghost.streetwear.combat': require('@/assets/art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.combat.png'),
+  'tower.ghost.streetwear.core': require('@/assets/art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.core.png'),
   'tower.lux.cast.atlas': require('@/assets/art/enemies-bosses/in-use/lux/cast/atlas.png'),
+  'tower.lux.streetwear.combat': require('@/assets/art/enemies-bosses/in-use/lux/streetwear/tower_lux_streetwear.combat.png'),
+  'tower.lux.streetwear.core': require('@/assets/art/enemies-bosses/in-use/lux/streetwear/tower_lux_streetwear.core.png'),
   'tower.viper.cast.atlas': require('@/assets/art/enemies-bosses/in-use/viper/cast/atlas.png'),
+  'tower.viper.streetwear.combat': require('@/assets/art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.combat.png'),
+  'tower.viper.streetwear.core': require('@/assets/art/enemies-bosses/in-use/viper/streetwear/tower_viper_streetwear.core.png'),
   'ui.frames.streetwear.frame-base': require('@/assets/art/ui/in-use/frames/streetwear/frame-base.png'),
   'ui.frames.streetwear.frame-common': require('@/assets/art/ui/in-use/frames/streetwear/frame-common.png'),
   'ui.frames.streetwear.frame-divine': require('@/assets/art/ui/in-use/frames/streetwear/frame-divine.png'),
@@ -218,6 +232,8 @@ export type ArtId =
   | 'background.dive-atlas.classic'
   | 'background.room-atlas.classic'
   | 'boss.oni.cast.atlas'
+  | 'boss.oni.streetwear.combat'
+  | 'boss.oni.streetwear.core'
   | 'boss.titan-x.cast.atlas'
   | 'brand.android-background'
   | 'brand.android-foreground'
@@ -233,10 +249,16 @@ export type ArtId =
   | 'brand.splash'
   | 'brand.tutorial-web.template'
   | 'creep.knight.cast.atlas'
+  | 'creep.knight.streetwear.combat'
+  | 'creep.knight.streetwear.core'
   | 'creep.village-girl.cast.atlas-0'
   | 'creep.village-girl.cast.atlas-1'
+  | 'creep.village-girl.streetwear.combat'
+  | 'creep.village-girl.streetwear.core'
   | 'creep.wizard.cast.atlas-0'
   | 'creep.wizard.cast.atlas-1'
+  | 'creep.wizard.streetwear.combat'
+  | 'creep.wizard.streetwear.core'
   | 'fx.drip.streetwear'
   | 'fx.moth.streetwear'
   | 'fx.note.streetwear.note'
@@ -748,8 +770,14 @@ export type ArtId =
   | 'tile.streetwear.road-path.tile-9'
   | 'tile.streetwear.sidewalk-lot'
   | 'tower.ghost.cast.atlas'
+  | 'tower.ghost.streetwear.combat'
+  | 'tower.ghost.streetwear.core'
   | 'tower.lux.cast.atlas'
+  | 'tower.lux.streetwear.combat'
+  | 'tower.lux.streetwear.core'
   | 'tower.viper.cast.atlas'
+  | 'tower.viper.streetwear.combat'
+  | 'tower.viper.streetwear.core'
   | 'ui.frames.streetwear.frame-base'
   | 'ui.frames.streetwear.frame-common'
   | 'ui.frames.streetwear.frame-divine'
@@ -1198,6 +1226,10 @@ export const ART = {
       cast: {
         atlas: 'boss.oni.cast.atlas',
       },
+      streetwear: {
+        combat: 'boss.oni.streetwear.combat',
+        core: 'boss.oni.streetwear.core',
+      },
     },
     titanX: {
       cast: {
@@ -1237,17 +1269,29 @@ export const ART = {
       cast: {
         atlas: 'creep.knight.cast.atlas',
       },
+      streetwear: {
+        combat: 'creep.knight.streetwear.combat',
+        core: 'creep.knight.streetwear.core',
+      },
     },
     villageGirl: {
       cast: {
         atlas0: 'creep.village-girl.cast.atlas-0',
         atlas1: 'creep.village-girl.cast.atlas-1',
       },
+      streetwear: {
+        combat: 'creep.village-girl.streetwear.combat',
+        core: 'creep.village-girl.streetwear.core',
+      },
     },
     wizard: {
       cast: {
         atlas0: 'creep.wizard.cast.atlas-0',
         atlas1: 'creep.wizard.cast.atlas-1',
+      },
+      streetwear: {
+        combat: 'creep.wizard.streetwear.combat',
+        core: 'creep.wizard.streetwear.core',
       },
     },
   },
@@ -2040,15 +2084,27 @@ export const ART = {
       cast: {
         atlas: 'tower.ghost.cast.atlas',
       },
+      streetwear: {
+        combat: 'tower.ghost.streetwear.combat',
+        core: 'tower.ghost.streetwear.core',
+      },
     },
     lux: {
       cast: {
         atlas: 'tower.lux.cast.atlas',
       },
+      streetwear: {
+        combat: 'tower.lux.streetwear.combat',
+        core: 'tower.lux.streetwear.core',
+      },
     },
     viper: {
       cast: {
         atlas: 'tower.viper.cast.atlas',
+      },
+      streetwear: {
+        combat: 'tower.viper.streetwear.combat',
+        core: 'tower.viper.streetwear.core',
       },
     },
   },

@@ -177,7 +177,7 @@ assert.doesNotMatch(fold, /AiBadge/, 'stored copy never carries the AI pill');
 ok('categories-fold renders the stored card with its tag row: no generation, no DB write, no reroll, no AI pill');
 
 // --- copy-review flag: doc only, never on screen (emci 2026-10-07) ----------------------
-assert.equal(CATEGORY_BANK_COPY_REVIEWED, false);
+assert.equal(CATEGORY_BANK_COPY_REVIEWED, true, 'accepted by emci 2026-10-23 (roadmap A4; the table is pinned by check:copy-flags)');
 assert.ok(existsSync(resolve(root, 'docs/category-bank-review.md')), 'docs/category-bank-review.md exists');
 function sourceFiles(dir: string): string[] {
   const out: string[] = [];
@@ -194,7 +194,7 @@ for (const rel of [...sourceFiles('src/app'), ...sourceFiles('src/components')])
 for (const rel of sourceFiles('src/lib/category-bank')) {
   assert.doesNotMatch(read(rel), /\bgenerateText\b|@\/lib\/ai\//, `${rel}: no model call in the bank`);
 }
-ok('CATEGORY_BANK_COPY_REVIEWED is false, has its review doc, no screen renders it, and the bank imports no AI');
+ok('CATEGORY_BANK_COPY_REVIEWED is true (accepted 2026-10-23), has its review doc, no screen renders it, and the bank imports no AI');
 
 const categoryVoice = categoryCopyIssues();
 assert.equal(

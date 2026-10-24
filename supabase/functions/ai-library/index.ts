@@ -32,13 +32,13 @@ const CORS = {
 };
 
 type Mode = 'paid' | 'free_legend' | 'seed';
-type Kind = 'deep_dive' | 'story' | 'legend';
+type Kind = 'deep_dive' | 'legend'; // Story left the library 2026-10-22 (free templates, roadmap A3 S4)
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, 'content-type': 'application/json' } });
 }
 
-const REFUND_KIND: Record<Kind, string> = { deep_dive: 'deep_dive', story: 'story', legend: 'legend' };
+const REFUND_KIND: Record<Kind, string> = { deep_dive: 'deep_dive', legend: 'legend' };
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: CORS });
