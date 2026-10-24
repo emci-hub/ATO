@@ -536,7 +536,7 @@ Viewer lists one card per set (not each clip/file).
 
 | id | size | status | score | usedBy |
 |---|---|---|---|---|
-| `tower.ghost.streetwear.combat` | 1927×619 | needs-restyle | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/towers/ghost/sheets.json, src/play/generated-play-sheets.ts |
+| `tower.ghost.streetwear.combat` | 1599×619 | needs-restyle | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/towers/ghost/sheets.json, src/play/generated-play-sheets.ts |
 | `tower.ghost.streetwear.core` | 975×400 | needs-restyle | — | assets/art/legacy-play-sheets.json, assets/play/sheets/streetwear/towers/ghost/sheets.json, src/play/generated-play-sheets.ts |
 
 ## enemies-bosses · knight · cast · in-use

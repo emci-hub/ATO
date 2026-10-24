@@ -4,15 +4,15 @@
       "frame": {
         "x": 0,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -25,17 +25,17 @@
     },
     "attack/e/001": {
       "frame": {
-        "x": 241,
+        "x": 200,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -48,17 +48,17 @@
     },
     "attack/e/002": {
       "frame": {
-        "x": 482,
+        "x": 400,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -71,17 +71,17 @@
     },
     "attack/e/003": {
       "frame": {
-        "x": 723,
+        "x": 600,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -94,17 +94,17 @@
     },
     "attack/e/004": {
       "frame": {
-        "x": 964,
+        "x": 800,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -117,17 +117,17 @@
     },
     "attack/e/005": {
       "frame": {
-        "x": 1205,
+        "x": 1000,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -140,17 +140,17 @@
     },
     "attack/e/006": {
       "frame": {
-        "x": 1446,
+        "x": 1200,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -163,17 +163,17 @@
     },
     "attack/e/007": {
       "frame": {
-        "x": 1687,
+        "x": 1400,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -188,15 +188,15 @@
       "frame": {
         "x": 0,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -209,17 +209,17 @@
     },
     "attack/w/001": {
       "frame": {
-        "x": 241,
+        "x": 200,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -232,17 +232,17 @@
     },
     "attack/w/002": {
       "frame": {
-        "x": 482,
+        "x": 400,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -255,17 +255,17 @@
     },
     "attack/w/003": {
       "frame": {
-        "x": 723,
+        "x": 600,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -278,17 +278,17 @@
     },
     "attack/w/004": {
       "frame": {
-        "x": 964,
+        "x": 800,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -301,17 +301,17 @@
     },
     "attack/w/005": {
       "frame": {
-        "x": 1205,
+        "x": 1000,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -324,17 +324,17 @@
     },
     "attack/w/006": {
       "frame": {
-        "x": 1446,
+        "x": 1200,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -347,17 +347,17 @@
     },
     "attack/w/007": {
       "frame": {
-        "x": 1687,
+        "x": 1400,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 0,
+        "x": 3,
         "y": 44,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "sourceSize": {
@@ -743,7 +743,7 @@
     "image": "tower_ghost_streetwear.combat.png",
     "format": "png32",
     "size": {
-      "w": 1927,
+      "w": 1599,
       "h": 619
     },
     "scale": "1",
@@ -761,8 +761,8 @@
         "direction": "forward"
       }
     ],
-    "decodedBytes": 4771252,
-    "diskBytes": 135812,
+    "decodedBytes": 3959124,
+    "diskBytes": 131867,
     "tier": "combat"
   }
 }

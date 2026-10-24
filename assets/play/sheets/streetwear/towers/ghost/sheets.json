@@ -1,107 +1,107 @@
 {
   "sheets/streetwear/towers/ghost/Attack": {
     "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.combat.png",
-    "sheetW": 1927,
+    "sheetW": 1599,
     "sheetH": 619,
     "frames": {
       "east/frame_000": {
         "x": 0,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "east/frame_001": {
-        "x": 241,
+        "x": 200,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "east/frame_002": {
-        "x": 482,
+        "x": 400,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "east/frame_003": {
-        "x": 723,
+        "x": 600,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "east/frame_004": {
-        "x": 964,
+        "x": 800,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "east/frame_005": {
-        "x": 1205,
+        "x": 1000,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "east/frame_006": {
-        "x": 1446,
+        "x": 1200,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "east/frame_007": {
-        "x": 1687,
+        "x": 1400,
         "y": 336,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "west/frame_000": {
         "x": 0,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "west/frame_001": {
-        "x": 241,
+        "x": 200,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "west/frame_002": {
-        "x": 482,
+        "x": 400,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "west/frame_003": {
-        "x": 723,
+        "x": 600,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "west/frame_004": {
-        "x": 964,
+        "x": 800,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "west/frame_005": {
-        "x": 1205,
+        "x": 1000,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "west/frame_006": {
-        "x": 1446,
+        "x": 1200,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       },
       "west/frame_007": {
-        "x": 1687,
+        "x": 1400,
         "y": 478,
-        "w": 240,
+        "w": 199,
         "h": 141
       }
     },
-    "offsetX": 0,
+    "offsetX": 3,
     "offsetY": 44,
     "sourceW": 240,
     "sourceH": 240,
@@ -185,7 +185,7 @@
   },
   "sheets/streetwear/towers/ghost/Skill": {
     "sheet": "art/enemies-bosses/in-use/ghost/streetwear/tower_ghost_streetwear.combat.png",
-    "sheetW": 1927,
+    "sheetW": 1599,
     "sheetH": 619,
     "frames": {
       "east/frame_000": {
