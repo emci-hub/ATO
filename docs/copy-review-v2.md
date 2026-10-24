@@ -2,7 +2,9 @@
 
 emci, 2026-10-23. This replaces "show every trait through a real moment."
 
-Phase 1 only. The guide, the rule, the checks that forced scenes, and the sample strings below are updated. The rest of the banks are not. Nothing here is an app-wide pass. `STORY_LIBRARY_RUNTIME` is still off. Trait ids, scores, and question option values are unchanged.
+Phase 1 set the policy and a first sample set. Round 2 (still not an app-wide pass) loosens the stiff lines, rewrites the leftover scenes on the sample cards, and drops the one-shape-per-card cap. The rest of the banks are not rewritten. `STORY_LIBRARY_RUNTIME` is still off. Trait ids, scores, and question option values are unchanged.
+
+Reserved (low extraversion), emci 2026-10-24: the plain meaning is "You recharge with time to yourself." Not "quieter." Applied on the sample trait line, the sample insight, and the sample contrasts only.
 
 If a row says the meaning is uncertain, that line was not given a guessed trait reading.
 
@@ -58,163 +60,193 @@ The sample dive card below still contains unrevised lines (side quest, the waiti
 | "Early read:" / snack-planner | A low-confidence line had to wear that costume | A plain hedge is enough |
 | Banned "tend to", "this suggests", "this reflects", "your pattern shows" | Those phrases failed the check, so writers hid the hedge inside a scene | Allowed when they hedge a suggestion |
 | Joke required on the sample card | `story-library-check` failed if the rendered card had no joke | A joke may be absent. If one is present it still has to pass the harm filter |
-| Sentence-shape cap | Still on: one shape per spoken card | Not removed. It can still push a false "when". Sample lines kept their old shape so the existing bank still renders. The Curie line uses "when compared with," which is a comparison, not a shared hour |
+| One-shape-per-card cap | A spoken card could not repeat a sentence shape, so a plain line lost to an old scene that still had "when" | Off. Plain sentences may share a shape. A real "even when" is allowed. A "when" that glues two unrelated facts is not |
 
 Still banned, because they hide the meaning: the untried option, gets the first look, one look is enough, the rest can wait, shared side, strong match, chased an unknown glow, measured everything twice, kept to the familiar choice, you are someone who, you may find, it's important to, embrace, navigate, unlock, coach-speak "journey", vibe, energy. Slang stays casual-only.
 
 Coach phrases, scoring, trait ids, `{answer}` / `{deed}` / `{Subj}`, and `STORY_LIBRARY_RUNTIME` (off) were left in place.
 
-## Before / after
+## Round 2 — final wording of the earlier rows
 
-Each "new" cell is the assembled line a player can see. Acceptance answers are in order: what it means; why it is here; is every referenced thing visible; does it follow from the trait or the answer; does it invent an event; is it clearer without the scene; does the whole message make sense.
+Each "new" cell is the assembled line a player can see. Old is the scene from before phase 1, unless a row says otherwise.
 
 ### 1. Trait description — high openness
 
-Where: Full-profile poles stay the approved quote "What's that? I'll try it." This row is `TRAIT_POLE_LINES.openness.high`, shown by Explore's offline fallback as "You …" (`src/lib/explore/local.ts`). Also the share-card phrase, which was "tries a new place" and is now "tries something new."
+Where: `TRAIT_POLE_LINES.openness.high`, Explore's offline fallback (`asYou` turns the leading "They'd" into "You'd"). Share-card phrase: "tries something new."
 
 Intended meaning: This person likes trying new things, even when other people stay with what they know.
 
 Old: They have a listing open before the group has agreed.
 
-New: They would rather try something new, even when other people stick with what they know.
+New: You'd rather try something new, even when other people stick with a familiar option.
 
-Acceptance: The preference for what is new. Shown on an openness-high fallback. No listing or group is required. It follows high openness. It does not claim a listing was opened. Clearer without the scene. The sentence stands alone.
+Acceptance: The preference. Shown on an openness-high fallback. No listing. It follows high openness. It does not claim a listing was opened. Clear, and it uses a contraction. The sentence stands alone.
 
 ### 2. Trait description — low openness
 
 Where: same fallback, `TRAIT_POLE_LINES.openness.low`.
 
-Intended meaning: This person prefers a familiar option because they already know they enjoy it.
+Intended meaning: This person would rather stick with something they already know they like.
 
 Old: They order the usual dish again, and it is still the best one.
 
-New: They would rather keep a familiar option, because that option is already known to be enjoyable.
+New: You'd rather stick with something you already know you like.
 
-Acceptance: Familiar preference. Shown for openness-low. Nothing else is referenced. It follows the low pole. It does not claim an order was placed. Clearer. Stands alone.
+Acceptance: Familiar preference. Shown for openness-low. Nothing else is referenced. It follows the low pole. It does not claim an order was placed. emci's wording, with the inner "they" turned to "you" because the card speaks to the reader.
 
 ### 3. Insight — Curiosity, Adventurous (`ftw_openness_h_01`)
 
-Where: Home insight card. Assembled from focus + why + one try + one watch. The other two focus wordings rotate; all three, plus why, try, and watch, were rewritten so the card is one meaning. Old focus titles are in `RETIRED_FOCUS_TEXT` so a saved row still maps. Id unchanged.
+Where: Home insight card. One focus, the why, one try, one watch. The other focuses rotate and do not repeat this paragraph. Id unchanged. Old focus titles stay in `RETIRED_FOCUS_TEXT`.
 
-Intended meaning: Your answers suggest you like trying something new, even when a familiar option is already there, and you might skip the one you already enjoy.
+Intended meaning: Your answers suggest you like trying new things even when a favorite is right there. Variety is the upside. Passing on something you'd enjoy more is the catch.
 
-Old: At a restaurant, you usually pick a dish you have never ordered, even when you already know a favorite. A new place keeps the night interesting, but you can skip the sure dish you would have enjoyed more. Next time you order, ask what you would pick if it did not have to be new…
+Old: At a restaurant, you usually pick a dish you have never ordered, even when you already know a favorite…
 
-New: Your answers suggest you like trying something new, even when a familiar option is already there. These answers point to liking what is new. You can also pass up an option you already enjoy. Next time you choose, ask whether you want the new option or the one you already know. Notice whether you picked something because it was new or because you wanted it.
+New: Your answers suggest you like trying new things, even when a favorite is right there. The upside is variety. The catch is you might pass on something you'd enjoy more. Next time you pick, name the favorite first, so you can see what you would be passing on. Notice when the new option won only because it was new.
 
-Acceptance: A suggestion from the answers, plus the cost, plus an optional next step. Shown on the insight for this idea. "Your answers" is the visible basis. It follows high openness. It does not claim a restaurant visit. Clearer. The card reads as one thought.
+Acceptance: A suggestion, the tradeoff, and one next step. "Your answers" is the basis. It does not claim a restaurant visit. The four parts do not repeat the same sentence.
 
-### 4. Quote of an answer — flagged, not interpreted
+### 4. Quote of an answer
 
-Where: Story Library shows-up line `conscientiousness-quote-shows`, only if the chosen option contains the words "I plan a whole new day." Seed `quote` in `scripts/story-library-check.ts`.
+Where: `conscientiousness-quote-shows`. The old match string was not in the question bank, so it was dropped. The line now matches a real option.
 
-Intended meaning: Uncertain. Those words are not an option in `src/lib/questions/bank/`. The nearest real scenes are questions such as "Friends want a spontaneous weekend trip and nobody has made a plan," whose high option is "I make the shared doc anyway." That is not this sentence. The line was not pointed at a different question, because that would change which answer selects it.
+Question (`conscientiousness_06`): "Friends want a spontaneous weekend trip and nobody has made a plan." High option: "I make the shared doc anyway."
+
+Intended meaning: In that situation, this answer says you would still put a plan together.
 
 Old: You picked "I plan a whole new day", and the packing list was done before anyone else had shoes on.
 
-New: You picked "I plan a whole new day", and that records the selected option only.
+New: You picked "I make the shared doc anyway" when friends wanted a spontaneous trip and nobody had a plan, so you would still put a plan together.
 
-Acceptance: It only repeats the option. It is shown only when that substring matches. The question is not on screen, because it does not exist in the bank. It does not claim a trait reading. It no longer invents the packing list. It is clearer. It does not explain the answer. Do not treat this as a finished conscientiousness line until the question is identified.
+Acceptance: It quotes the real option and says what that option means in that question. The question's situation is in the line because the question itself is not on this card. It does not invent a packing list. The "when" is the question, not a second event.
 
 ### 5. Legend match — Marie Curie, high openness
 
-Where: Legend card, "how the trait won," `openness-legend-won-when`. Assembled with `{legend}` and `{deed}`.
+Where: `openness-legend-won-when`, only for `lf_marie_curie`.
 
-Intended meaning: You would rather try something unfamiliar. Marie Curie coined the word radioactivity. The comparison is that both are a step toward something new. They are not the same event.
+Fact check: the roster tag says "She studied a new kind of radiation that nobody understood yet." Fact f3 says she coined the term radioactivity. "She spent years on a mystery other scientists ignored" is not in the entry, so it was not used.
+
+Intended meaning: You head toward what isn't known yet. So did she, and here is the sourced fact.
 
 Old: You tried a place nobody at the table could name when Marie Curie coined the word radioactivity.
 
-New: You would rather try something unfamiliar when compared with Marie Curie, who coined the word radioactivity.
+New: You'd rather head toward what isn't known yet, like Marie Curie. She studied a new kind of radiation that nobody understood yet, and she named it radioactivity.
 
-Acceptance: A preference set next to a sourced deed. Shown on a match with Curie. Her name and the deed are the legend's facts; the preference is the reader's leaning. It follows high openness and the sourced deed. It does not say you were at a table when she coined the word. Clearer. The "when compared with" is there so this line keeps the `when` shape the picker still expects. It reads as a comparison.
+Acceptance: A preference, then her fact. Shown on a Curie match. Her name and the radiation are from the entry. It follows high openness. It does not put you at a table in 1898. No "when compared with."
 
-### 6. Legend contrast — low extraversion next to Curie
+### 6. Legend contrast — Reserved
 
-Where: "Where you differ," `extraversion-legend-differ`. Curie is not tagged extraversion.
+Plain meaning, emci 2026-10-24: You recharge with time to yourself.
 
-Intended meaning: The reader prefers a quieter setting (Reserved; the profile quote is "I need a night in."). That is a different fact from Curie coining the word. The line must not claim she was outgoing, and must not claim the reader spent a night with one friend.
+Curie has no extraversion fact. The old extraversion tag was removed as an inference. The Curie card therefore does not say what she was like with people. That differ line states only the reader, and it is flagged.
 
-Old: You stayed with one friend because that was the choice, and Marie Curie coined the word radioactivity.
+Where the other side is sourced: Babe Ruth, tag "After games, a crowd would gather in his hotel suite." Line `ruth-extraversion-differ-low`, only for `lf_babe_ruth`.
 
-New: You would rather keep things quieter, because that preference is separate from Marie Curie, who coined the word radioactivity.
+Old (Curie, invented): You stayed with one friend because that was the choice, and Marie Curie coined the word radioactivity.
 
-Acceptance: A preference, marked as separate from her deed. Shown on a contrast. Her deed is on the card. "Quieter" is a reading of Reserved, not a quoted answer. It does not invent the one-friend night. Clearer than the old glue. Please confirm "quieter" is the reading you want for Reserved. If it is too vague, say so before the app-wide pass.
+New, reader only, on the Curie card (flagged, not a both-sides contrast): You'd rather recharge with time alone than with a crowd.
 
-### 7. Playfulness low — the joke line
+New, both sides, Babe Ruth: You'd rather recharge with time alone. After games, a crowd would gather in Babe Ruth's hotel suite.
 
-Where: `playfulness-low-shows-then`, and the offline pole line `TRAIT_POLE_LINES.playfulness.low` ("They read the joke straight and answer the actual question." is now "They would rather take a situation straight than turn it into play.").
+Acceptance for the Ruth line: Your side is time alone. His side is the crowd in the hotel suite, from the entry. It does not say you were there. It does not say "quieter."
 
-Intended meaning: Serious, not Familiar. They would rather take a situation straight than turn it into play. The profile quote is "Let's just get it done."
+### 7. Playfulness low
+
+Where: `TRAIT_POLE_LINES.playfulness.low`, and the low-playfulness show line.
+
+Intended meaning: They'd rather take a situation straight than turn it into play.
 
 Old: You heard the joke and then answered the actual question without a side quest.
 
-New: You would rather take a situation straight and then leave the playful version alone.
+New (profile fallback): You'd rather take a situation straight than turn it into play.
 
-Acceptance: Low playfulness. Shown on that pole. No joke is referenced, because none was asked. It does not say they dislike people or ignore humor as a personality type. It does not invent a joke they heard. Clearer. The "and then" is the slot's old shape. Stands alone.
+New (story card): You'd rather take a situation straight, and leave the playful version alone.
 
-### 8. Button and empty state — Your shape, before any answer
+Acceptance: Serious, not Familiar. No invented joke. The "and" is a real second beat, not a scene.
 
-Where: `ShapeCard` empty state. Title, line, and button together.
+### 8. Button and empty state
 
-Intended meaning: The chart is empty until 16 questions are answered. The button opens those questions.
+Where: `ShapeCard` before any answer.
 
 Old: Your shape is blank. Sixteen answers draw the first lines. [Answer the first 16]
 
 New: Your shape is blank. Answer 16 questions and this chart starts to fill in. [Answer the first 16 questions]
 
-Acceptance: The chart on this screen fills in after 16 questions. Shown when nothing is answered yet. "This chart" is the blank shape on the card. 16 is the first set. It does not invent a metaphor. The button names the action. The three lines agree.
-
 ### 9. Error — paid legend reveal failed
-
-Where: `LEGENDS_PAID_FAILED`, set when a paid reveal does not return an AI card (`src/app/(tabs)/legends.tsx`). That path includes "no tokens" and "the call failed." A timeout also calls `refundAiTokens('legend')`.
-
-Intended meaning: The card did not load, so the reveal was not saved. Try again. A charge, if there was one, is refunded once a day.
 
 Old: The AI card didn’t come through, so this reveal didn’t happen. Your tokens come back (once a day). Try again in a bit.
 
 New: The legend card did not load, so this reveal was not saved. Try again later. If tokens were charged for this try, they come back (a failed charge is refunded once a day).
 
-Acceptance: The load failed and the reveal was not kept. Shown right after that tap, so "this reveal" is the tap they just made. It no longer says tokens returned when none were charged. It does not invent a second event. Clearer. The sentence says what happened and what to do.
-
 ### 10. Notification ask
 
-Where: The sheet after the first insight loads. Title, body, Turn on, Not now.
+Old: Want a nudge now and then? ATO can send a short note when your insight is ready. You can change this any time.
 
-Intended meaning: Ask whether ATO may send a note when the daily insight is ready. They can turn it off later.
-
-Old: Want a nudge now and then? ATO can send a short note when your insight is ready. You can change this any time. [Turn on] [Not now]
-
-New: Allow a reminder? ATO can send a short note when your daily insight is ready. You can turn this off later. [Turn on] [Not now]
-
-Acceptance: A reminder for the daily insight. Shown after an insight exists, so "insight" has a referent. It follows that screen. It does not invent a habit. "Nudge" and "change this" are gone. The buttons name the choice.
+New: Allow a reminder? ATO can send a short note when your daily insight is ready. You can turn this off later.
 
 ### 11. Onboarding — end of the day
-
-Where: `CORE_INTAKE_QUESTIONS`, field `evening_wind_down`. The chips ("When I put my phone down," and the rest) are on the same screen. The stored value is the cue in the evening push body.
-
-Intended meaning: Which of these already happens at the end of your day? The evening reminder will mention the one you pick.
 
 Old: What already happens at the end of your day? The evening Check bump hangs off this.
 
 New: What already happens at the end of your day? The evening reminder mentions the one you pick.
 
-Acceptance: Asks for the end-of-day cue and says what the app does with it. The chips are the "one you pick." It does not mention an internal "Check bump." Chip values are unchanged. The evening push is still off while there is no Check to log; the question still collects the cue that push uses when it is on.
+### 12. Trait description and insight — Reserved
 
-## Assembled Story Library card, not yet clean
+Where: `TRAIT_POLE_LINES.extraversion.low` (Explore shows the You form). Share card: "recharges with time alone." Insight `ftw_extraversion_l_01`, one focus plus why, try, and watch.
 
-Seed `sample-dive` / `sample-legend`, after this phase. Only the openness show-line, the Curie match line, and the extraversion contrast were rewritten. The rest is the old scene bank. Do not read this card as finished.
+Intended meaning: You recharge with time to yourself.
 
-- Shows, openness: You would rather try something new, even when other people stick with what they know.
-- Shows, playfulness: You turned the grocery run into a side quest, and the list took longer on purpose. **Unrevised. Invents an errand.**
-- Shows, steadiness: You heard the new plan and then let it wait until morning. **Unrevised. Invents a plan.**
-- Mix: You said yes to the weird errand because the spreadsheet came along too. **Unrevised.**
-- Notice: You already had a new city pulled up before anyone sat down to pick a place. **Unrevised.**
-- Means: Would you still talk the table into a place nobody has tried if the usual restaurant were the only one with a free table tonight? **Unrevised.**
-- Joke: The safe plan lost. **Unrevised. The joke does not say what was safe.**
-- Legend match: You would rather try something unfamiliar when compared with Marie Curie, who coined the word radioactivity.
-- Legend scene: You spent one ordinary hour on those notes after Marie Curie coined the word radioactivity, with a new place still open on the phone. **Unrevised. Invents the hour and the phone.**
-- Legend contrast: You would rather keep things quieter, because that preference is separate from Marie Curie, who coined the word radioactivity.
-- Legend means: Would you still try a place nobody has named once everyone else had gone home and Marie Curie coined the word radioactivity? **Unrevised. Same false "when."**
+Old trait line: They wave once and keep the quiet corner.
+
+New trait line: You recharge with time to yourself.
+
+Old insight: After a busy week, a quiet night at home usually sounds better to you than a night out…
+
+New insight: You recharge with time to yourself, especially after a stretch around other people. You use that time alone so you can show up for the next plan. Without it, the next one can feel like too much. Next time the week fills up, keep one evening for yourself. Notice when you need time to yourself before you say yes to another plan.
+
+## Assembled cards
+
+Reviewed as a whole card, not as loose lines. Unflagged lines are the sample. Flagged lines are not a finished reading.
+
+### Explore deep dive — high reader
+
+Seed `sample-dive`. Openness high, playfulness high, steadiness in the middle.
+
+- Title: the new option
+- Shows, openness: You'd rather try something new, even when other people stick with what they know.
+- Shows, playfulness: You'd rather turn an ordinary task into play, and it can take longer on purpose.
+- Shows, steadiness: You'd let some of a rough moment land and then let the rest go.
+- Mix: You'd rather try something new, and you'd also turn an ordinary task into play.
+- Notice: You'd notice a new option before other people settle on a familiar one.
+- Means: You'd rather try something new, even when a familiar option is right there. The upside is variety, and the catch is passing on something that would have been more fun.
+- Joke: The new option won.
+
+The steadiness line is the middle of that trait ("some of it lands, some of it goes"), not a claim that a particular plan was left until morning.
+
+### Explore deep dive — low reader
+
+Seed `sample-dive-low`. Openness low, playfulness low, extraversion low.
+
+- Title: the familiar pick
+- Shows, openness: You'd rather stick with a known favorite, even when a new option is sitting right there.
+- Shows, playfulness: You'd rather take a situation straight, and leave the playful version alone.
+- Shows, extraversion: You'd rather recharge with time alone and then leave the crowd for later.
+- Mix: You'd rather keep both of these than pretend they are one habit.
+- Notice: You'd notice a familiar favorite before anyone argues for a new option.
+- Means: You'd rather stick with something already liked, even when a new option is available. The point is knowing what already works, not refusing every change.
+- Joke: The familiar one still wins.
+
+### Curie legend card
+
+Seed `sample-legend`. Match on openness. Second pair is mid steadiness. Differ is low extraversion.
+
+- Title: the new option
+- Match: You'd rather head toward what isn't known yet, like Marie Curie. She studied a new kind of radiation that nobody understood yet, and she named it radioactivity.
+- If you'd met: You might picture one ordinary hour beside Marie Curie, who coined the word radioactivity. That hour is imagined, not a memory.
+- Means: You'd rather head toward what isn't known yet. Marie Curie coined the word radioactivity. Those two point the same way: toward something that was not already named.
+- Joke: The new option won.
+- Second pair, steadiness: You'd let some of a rough moment land and then let the rest go. **Flagged.** Curie is not tagged steadiness, so this line does not borrow her deed.
+- Differ: You'd rather recharge with time alone than with a crowd. **Flagged.** Her entry does not say how she spent time with people. The both-sides contrast is the Babe Ruth line above.
 
 ## Not rewritten, on purpose
 

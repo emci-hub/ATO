@@ -97,11 +97,23 @@ for (const entry of ALL_IDEAS) {
  */
 export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   'At a restaurant, you usually pick a dish you have never ordered, even when you already know a favorite.':
-    'Your answers suggest you like trying something new, even when a familiar option is already there.',
+    'Your answers suggest you like trying new things, even when a favorite is right there.',
   'Choosing where to eat, you can skip the usual place for one you have not tried.':
-    'You like a new option even when you already know one you enjoy.',
+    'A new option can pull you in while a favorite is still available.',
   'The new item on the menu sometimes gets your order before the dish you already like.':
-    'Choosing something new can appeal to you even when a familiar choice is right there.',
+    'You can want the new thing and still have a favorite sitting there.',
+  'Your answers suggest you like trying something new, even when a familiar option is already there.':
+    'Your answers suggest you like trying new things, even when a favorite is right there.',
+  'You like a new option even when you already know one you enjoy.':
+    'A new option can pull you in while a favorite is still available.',
+  'Choosing something new can appeal to you even when a familiar choice is right there.':
+    'You can want the new thing and still have a favorite sitting there.',
+  'After a busy week, a quiet night at home usually sounds better to you than a night out.':
+    'You recharge with time to yourself, especially after a stretch around other people.',
+  'A calendar full of social plans can leave you tired before the week is over.':
+    'Time to yourself is how you come back after being around other people.',
+  'You sometimes come back to yourself in time alone, especially after a long day around people.':
+    'A stretch around other people can leave you wanting time to yourself afterward.',
   'You usually keep every promise you make, even the ones you said yes to too fast.':
     'A promise you made too fast on Tuesday can still own your Thursday night.',
   'You usually keep your promises, even the ones you said yes to too fast.':

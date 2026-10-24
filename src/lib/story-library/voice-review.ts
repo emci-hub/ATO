@@ -1,14 +1,15 @@
 /**
- * Full voice review for a Story Library: banned phrases, slang, and one
- * sentence shape per spoken line on a card. A flip scene is not required.
- * Save and approve both call this before a draft can be validated.
- * Persist cannot import the renderer (the renderer imports persist).
+ * Full voice review for a Story Library: banned phrases and slang. A flip
+ * scene is not required. The one-shape-per-card cap is off: it forced a
+ * false "when" onto lines that were not the same event. Save and approve
+ * both call this before a draft can be validated. Persist cannot import
+ * the renderer (the renderer imports persist).
  */
 import type { CategoryDive } from '@/lib/category-deep-dive/dive';
 import type { LegendStory } from '@/lib/legend-figures/story';
 import { legendById } from '@/lib/legend-figures/roster';
 import { TRAIT_AXES } from '@/lib/traits';
-import { cardSentences, repeatedShape } from '@/lib/voice/player-copy';
+import { cardSentences } from '@/lib/voice/player-copy';
 
 import { libraryVoiceFailures } from './persist';
 import { renderLibraryDive, renderLibraryLegend } from './render';
@@ -32,10 +33,11 @@ function legendSpoken(story: LegendStory): string[] {
 }
 
 function cardFailure(label: string, parts: readonly string[]): MatrixFailure | null {
-  const shape = repeatedShape(cardSentences(parts));
-  if (shape) {
-    return { templateId: 'voice', trait: label, tier: '-', pronoun: '-', detail: `${label} repeats shape "${shape}"` };
-  }
+  // Touch the sentences so a render that throws still fails the check.
+  // A repeated shape is not a failure: plain sentences share one shape,
+  // and refusing that pushed writers to glue a false "when" onto a deed.
+  cardSentences(parts);
+  void label;
   return null;
 }
 

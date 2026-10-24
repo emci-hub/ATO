@@ -4,18 +4,18 @@ import { idea, type InsightIdea } from './define';
 export const OPENNESS_IDEAS: readonly InsightIdea[] = [
   idea('ftw_openness_h_01', ['openness:high'], {
     focus: [
-      'Your answers suggest you like trying something new, even when a familiar option is already there.',
-      'You like a new option even when you already know one you enjoy.',
-      'Choosing something new can appeal to you even when a familiar choice is right there.',
+      'Your answers suggest you like trying new things, even when a favorite is right there.',
+      'A new option can pull you in while a favorite is still available.',
+      'You can want the new thing and still have a favorite sitting there.',
     ],
-    why: 'These answers point to liking what is new. You can also pass up an option you already enjoy.',
+    why: "The upside is variety. The catch is you might pass on something you'd enjoy more.",
     try: [
-      'Next time you choose, ask whether you want the new option or the one you already know.',
-      'Before you pick something new, name the familiar option you would also enjoy.',
+      'Next time you pick, name the favorite first, so you can see what you would be passing on.',
+      'Before you take the new option, check whether you would miss the favorite.',
     ],
     watch: [
-      'Notice whether you picked something because it was new or because you wanted it.',
-      'Notice when a familiar option would have been the one you actually wanted.',
+      'Notice when the new option won only because it was new.',
+      'Notice if a favorite you skipped was the one you wanted.',
     ],
   }),
   idea('ftw_openness_h_02', ['openness:high'], {

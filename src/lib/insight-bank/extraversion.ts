@@ -100,18 +100,18 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
   }),
   idea('ftw_extraversion_l_01', ['extraversion:low'], {
     focus: [
-      'After a busy week, a quiet night at home usually sounds better to you than a night out.',
-      'A calendar full of social plans can leave you tired before the week is over.',
-      'You sometimes come back to yourself in time alone, especially after a long day around people.',
+      'You recharge with time to yourself, especially after a stretch around other people.',
+      'Time to yourself is how you come back after being around other people.',
+      'A stretch around other people can leave you wanting time to yourself afterward.',
     ],
-    why: 'A quiet night helps you reset, and keeping one on the calendar means you show up as yourself when you do go out.',
+    why: 'You use that time alone so you can show up for the next plan. Without it, the next one can feel like too much.',
     try: [
-      'Block one evening this week on the calendar as yours, so you have a quiet night to recharge.',
-      'Text a friend to suggest coffee for an hour, so you see them without using the whole evening.',
+      'Next time the week fills up, keep one evening for yourself.',
+      'Before you add another plan, leave one block of time that is just yours.',
     ],
     watch: [
-      'Notice how many social plans you can do before you need a quiet night.',
-      'Notice the difference between wanting quiet and avoiding a specific plan.',
+      'Notice when you need time to yourself before you say yes to another plan.',
+      'Notice the difference between wanting time to yourself and avoiding one particular plan.',
     ],
   }),
   idea('ftw_extraversion_l_02', ['extraversion:low'], {

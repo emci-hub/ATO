@@ -33,7 +33,7 @@ import { speak } from './pick';
 import type { StoryLibrary, StoryLine } from './types';
 import { BANNED_PATTERNS } from './types';
 
-const QUOTE_ANSWER = 'I plan a whole new day';
+const QUOTE_ANSWER = 'I make the shared doc anyway';
 /** Same clause legendDeed returns for Marie Curie. Word counts stay stable. */
 const LEGEND_DEED = 'coined the word radioactivity';
 const ALLOWED_TOKEN = /\{(?:Subj|subj|Name|legend|answer|deed)\}/g;

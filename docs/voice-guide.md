@@ -46,7 +46,7 @@ These are no longer requirements:
 - A word ban on ticket, specials board, kettle, loud option, fork, bag, chair, or costume. Those words were banned to stop a private code, and the ban pushed writers into substitute imagery. Do not use an object as a code for a trait. The words themselves are allowed when they mean the actual object.
 - A playful "Early read:" costume for a low-confidence line. Say the read is early, in plain words.
 
-A Story Library card may still mix sentence shapes, and the check still refuses the same shape twice on one spoken card. That cap can push a false connector ("when" glued onto an unrelated deed). Prefer a true connection. Do not add a connector only to satisfy the shape.
+A Story Library card may use the same sentence shape more than once. The old one-shape cap pushed a false "when" onto lines that were not the same event. Do not add a connector only to satisfy a shape. A real "even when" is fine. A "when" that glues two unrelated facts is not.
 
 ## Purpose
 

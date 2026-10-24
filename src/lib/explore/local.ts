@@ -11,6 +11,19 @@ function poleLine(me: ExploreMeSlice, axis: TraitAxis): string | null {
   return null;
 }
 
+/** Pole lines are written as "They" / "They'd". Explore speaks to the reader. */
+function asYou(line: string, lead: 'You' | 'And you'): string {
+  const swapped = line
+    .replace(/^They'd /, lead === 'You' ? "You'd " : "And you'd ")
+    .replace(/^They're /, lead === 'You' ? "You're " : "And you're ")
+    .replace(/^They've /, lead === 'You' ? "You've " : "And you've ")
+    .replace(/^They /, lead === 'You' ? 'You ' : 'And you ');
+  if (line.includes('they already know they like')) {
+    return swapped.replace('they already know they like', 'you already know you like');
+  }
+  return swapped;
+}
+
 /**
  * Deterministic Explore copy when Gemini is unavailable. Hedge inside the
  * sentence. No completeness talk. No agency triple.
@@ -48,13 +61,13 @@ export function composeLocalExplore(me: ExploreMeSlice, focus: ExploreFocus): Ex
           ? `${signal.detail} showed up in this week's Reads.`
           : `Something you said is still around.`
       : '';
-    body = `${signalBit} ${a.replace(/^They /, 'You ')} ${b.replace(/^They /, 'And you ')} Maybe those two are in the same week, not a type.`.replace(
+    body = `${signalBit} ${asYou(a, 'You')} ${asYou(b, 'And you')} Maybe those two are in the same week, not a type.`.replace(
       /\s+/g,
       ' ',
     ).trim();
   } else if (traits.length === 1) {
     const a = poleLine(me, traits[0]!) ?? 'A pattern is sitting there.';
-    body = `${a.replace(/^They /, 'You ')} Noticing it next to ${chipCue} — maybe not a coincidence.`;
+    body = `${asYou(a, 'You')} Noticing it next to ${chipCue} — maybe not a coincidence.`;
   } else {
     body = `After ${chipCue} is when the day starts, and what you're mostly trying to do right now is ${focusChip.replace(/_/g, ' ')}. Noticing that the same window is being asked to do both.`;
   }

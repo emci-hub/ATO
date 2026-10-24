@@ -1,7 +1,7 @@
 /**
  * Mechanical half of docs/voice-guide.md (meaning first, v2). The guide is
- * the source of truth. This module refuses coach phrases, slang outside the
- * casual tier, and a repeated sentence shape on one card.
+ * the source of truth. This module refuses coach phrases and slang outside
+ * the casual tier. A repeated sentence shape is not a failure.
  *
  * It does not require a scene, a flip, a joke, or a ban on ordinary object
  * words. Those checks pushed lines into imagery. Accuracy stays a writer's job.
@@ -209,7 +209,7 @@ export function scenePropOveruse(_text: string, _cap: number): CopyIssue[] {
   return [];
 }
 
-/** Spoken lines on one card. A repeated shape fails. Titles are labels and stay out of this list. */
+/** Spoken lines on one card. A repeated shape is reported, not refused: plain sentences share a shape, and refusing that forced a false "when". */
 export function repeatedShape(sentences: readonly string[]): SentenceShape | null {
   const seen = new Set<SentenceShape>();
   for (const sentence of sentences) {

@@ -374,11 +374,11 @@ export function leanComparative(value: number | null | undefined): 'higher' | 'l
 export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> = {
   extraversion: {
     high: 'They are at the door before the text lands.',
-    low: 'They wave once and keep the quiet corner.',
+    low: 'They recharge with time to yourself.',
   },
   openness: {
-    high: 'They would rather try something new, even when other people stick with what they know.',
-    low: 'They would rather keep a familiar option, because that option is already known to be enjoyable.',
+    high: "They'd rather try something new, even when other people stick with a familiar option.",
+    low: "They'd rather stick with something they already know they like.",
   },
   conscientiousness: {
     high: 'They finish the packing list and then sit down.',
@@ -434,7 +434,7 @@ export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> 
   },
   playfulness: {
     high: 'They leave with the laugh first.',
-    low: 'They would rather take a situation straight than turn it into play.',
+    low: "They'd rather take a situation straight than turn it into play.",
   },
 };
 

@@ -43,7 +43,7 @@ import { pickForReader, renderLibraryDive, renderLibraryLegend, tierForDiveLean,
 import { resetShown, unseenOrReset } from '../src/lib/story-library/shown';
 import { validateLibrary } from '../src/lib/story-library/validate';
 import { cardJokeViolation } from '../src/lib/voice/card-joke';
-import { TAG_QUESTION_CAP, cardSentences, repeatedShape, tagQuestionShare, type SentenceShape } from '../src/lib/voice/player-copy';
+import { TAG_QUESTION_CAP, tagQuestionShare, type SentenceShape } from '../src/lib/voice/player-copy';
 import { expandGrammar, PRONOUNS } from '../src/lib/story-v3/tracery';
 
 const root = resolve(__dirname, '..');
@@ -123,18 +123,18 @@ const she = pickForReader(
   'lock',
 );
 assert.ok(she);
-assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /She would rather try something new/);
+assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /She'd rather try something new/);
 assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /even when other people stick with what they know/);
 
 const quoted = renderLibraryDive({
   categoryId: 'cat_structure',
   leans: [{ axis: 'conscientiousness', lean: 'high', pct: 88 }],
   seed: 'quote',
-  answer: 'I plan a whole new day',
+  answer: 'I make the shared doc anyway',
 });
-assert.match(quoted.showsUp[0]!.line, /I plan a whole new day/);
+assert.match(quoted.showsUp[0]!.line, /I make the shared doc anyway/);
 assert.ok(quoted.lineIds.includes('conscientiousness-quote-shows'), quoted.lineIds.join(','));
-assert.equal(diveLineViolation(quoted.showsUp[0]!.line, 'I plan a whole new day'), null, quoted.showsUp[0]!.line);
+assert.equal(diveLineViolation(quoted.showsUp[0]!.line, 'I make the shared doc anyway'), null, quoted.showsUp[0]!.line);
 
 const opennessShows = STORY_LIBRARY.lines.filter(
   (line) =>
@@ -194,14 +194,12 @@ between(dive.othersNotice, NOTICE_MIN_WORDS, NOTICE_MAX_WORDS, 'notice');
 assert.equal(diveLineViolation(dive.othersNotice, ''), null, dive.othersNotice);
 between(dive.whatItMeansForYou, DIVE_MEANS_MIN_WORDS, DIVE_MEANS_MAX_WORDS, 'means');
 assert.equal(diveLineViolation(dive.whatItMeansForYou, ''), null, dive.whatItMeansForYou);
-assert.match(dive.mix, /spreadsheet/, 'openness high + playfulness high takes the combo line');
-assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /\bwait\b/, 'mid steadiness lets the reply wait');
+assert.match(dive.mix, /turn an ordinary task into play/, 'openness high + playfulness high takes the combo line');
+assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /rough moment/, 'mid steadiness is some of it landing and some of it going');
 if (dive.joke) {
   assert.equal(cardJokeViolation(dive.joke), null, dive.joke);
   assert.equal(diveLineViolation(dive.joke, ''), null, dive.joke);
 }
-assert.equal(repeatedShape(cardSentences([dive.showsUp[0]!.line, dive.showsUp[1]!.line, dive.showsUp[2]!.line, dive.mix, dive.othersNotice, dive.whatItMeansForYou, dive.joke ?? ''])), null);
-
 const legend = legendById('lf_marie_curie');
 assert.ok(legend);
 const pair = (axis: 'openness' | 'steadiness', lean: 'high' | 'low', strength: number): LegendPair => ({
@@ -240,10 +238,27 @@ if (story.joke) {
   assert.equal(cardJokeViolation(story.joke), null, story.joke);
   assert.equal(legendLineViolation(story.joke, allowed, false), null, story.joke);
 }
-assert.equal(
-  repeatedShape(cardSentences([story.howTheTraitWon[0]!.line, story.howTheTraitWon[1]!.line, story.metScene ?? '', story.whatItMeansForYou, story.differ?.line ?? '', story.joke ?? ''])),
-  null,
-);
+const lowDive = renderLibraryDive({
+  categoryId: 'cat_openness',
+  leans: [
+    { axis: 'openness', lean: 'low', pct: 82 },
+    { axis: 'playfulness', lean: 'low', pct: 78 },
+    { axis: 'extraversion', lean: 'low', pct: 74 },
+  ],
+  seed: 'sample-dive-low',
+});
+const ruth = legendById('lf_babe_ruth');
+assert.ok(ruth);
+const ruthContrast = renderLibraryLegend({
+  legend: ruth,
+  angle: ruth.angles[0]!,
+  momentId: ruth.moments[0]!.id,
+  pairs: [pair('openness', 'high', 0.3)],
+  differ: { axis: 'extraversion', lean: 'low', tag: null },
+  seed: 'sample-ruth',
+});
+assert.match(ruthContrast.differ?.line ?? '', /recharge with time alone/);
+assert.match(ruthContrast.differ?.line ?? '', /hotel suite/);
 
 const memory: { library: ReturnType<typeof getStoryLibrary> | null } = { library: null };
 const memoryStore: StoryLibraryStore = {
@@ -298,9 +313,18 @@ console.log('legend title:', story.title);
 console.log('won:', story.howTheTraitWon[0]!.line);
 console.log('scene:', story.metScene);
 console.log('differ:', story.differ?.line);
+console.log('won 2:', story.howTheTraitWon[1]!.line);
 console.log('legend means:', story.whatItMeansForYou);
 console.log('legend joke:', story.joke);
 console.log('quote:', quoted.showsUp[0]!.line);
+console.log('--- low dive ---');
+console.log('title:', lowDive.title);
+for (const row of lowDive.showsUp) console.log(`shows ${row.axis}:`, row.line);
+console.log('mix:', lowDive.mix);
+console.log('notice:', lowDive.othersNotice);
+console.log('means:', lowDive.whatItMeansForYou);
+console.log('joke:', lowDive.joke);
+console.log('ruth differ:', ruthContrast.differ?.line);
 
 const voice = reviewLibraryVoice(STORY_LIBRARY);
 assert.equal(

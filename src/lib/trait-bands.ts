@@ -38,7 +38,7 @@ export const TRAIT_BAND_PHRASES: Record<TraitAxis, TraitBandPhrases> = {
     high: 'sees a plan through',
   },
   extraversion: {
-    low: 'leans toward quiet time',
+    low: 'recharges with time alone',
     high: 'leans toward people around',
   },
   agreeableness: {

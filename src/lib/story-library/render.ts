@@ -15,7 +15,7 @@ import type { SentenceShape } from '@/lib/voice/player-copy';
 
 import { legendDeed } from './deed';
 import { getStoryLibrary } from './persist';
-import { lineShape, pickLine, preferredShape, speak, type PickContext } from './pick';
+import { pickLine, preferredShape, speak, type PickContext } from './pick';
 import type { LineSlot, Reader, StoryLibrary, StoryLine, Tier } from './types';
 
 const YOU = PRONOUNS.you;
@@ -47,7 +47,6 @@ interface Say {
 }
 
 function sayWith(library: StoryLibrary, facts: RenderFacts, pronoun = YOU, name = 'You'): Say {
-  const used = new Set<SentenceShape>();
   const ids: string[] = [];
   const shown = facts.shown ?? new Set<string>();
   const text = (slot: LineSlot, who: { trait: string; tier: Tier }, seed: string, index = 0, also?: { trait: string; tier: Tier }) => {
@@ -60,7 +59,9 @@ function sayWith(library: StoryLibrary, facts: RenderFacts, pronoun = YOU, name 
       name,
       seed,
       shown,
-      usedShapes: used,
+      // A used shape used to knock out the next plain sentence and pull in a
+      // different-shaped line, which is how a false "when" got onto the card.
+      usedShapes: new Set<SentenceShape>(),
       preferShape: prefer,
       answer: facts.answer,
       recent: facts.recent,
@@ -73,7 +74,6 @@ function sayWith(library: StoryLibrary, facts: RenderFacts, pronoun = YOU, name 
     };
     const line = pickLine(library.lines, ctx);
     if (!line) return '';
-    if (slot !== 'title' && slot !== 'legend-title') used.add(lineShape(line, ctx));
     ids.push(line.id);
     return speak(line.text, pronoun, name, { legend: facts.legend, answer: facts.answer, deed: facts.deed });
   };
