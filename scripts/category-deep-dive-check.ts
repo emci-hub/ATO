@@ -107,7 +107,7 @@ assert.doesNotMatch(lovePrompt, /GENTLE/, 'no special gentle block: closeness is
 assert.doesNotMatch(DIVE_PROMPT_STATIC, /GENTLE/, 'no gentle rules block in the shared prompt');
 assert.doesNotMatch(prompt, /\(GENTLE\)/);
 assert.match(buildDivePrompt(openDef, leans.slice(0, 1)), /MIX: no/, 'one leaning → no mix asked');
-assert.match(prompt, /CLEAR FIRST, MOMENT SECOND/, 'plain insight first, one realistic example second');
+assert.match(prompt, /MEANING FIRST/, 'plain meaning first; an example only if it clarifies');
 assert.match(prompt, /No counting and no exaggeration/);
 assert.match(prompt, /Be honest about both sides/);
 assert.doesNotMatch(prompt, /never a weakness/, 'a real limitation is stated plainly (emci 2026-10-19)');

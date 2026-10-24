@@ -377,8 +377,8 @@ export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> 
     low: 'They wave once and keep the quiet corner.',
   },
   openness: {
-    high: 'They have a listing open before the group has agreed.',
-    low: 'They order the usual dish again, and it is still the best one.',
+    high: 'They would rather try something new, even when other people stick with what they know.',
+    low: 'They would rather keep a familiar option, because that option is already known to be enjoyable.',
   },
   conscientiousness: {
     high: 'They finish the packing list and then sit down.',
@@ -434,7 +434,7 @@ export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> 
   },
   playfulness: {
     high: 'They leave with the laugh first.',
-    low: 'They read the joke straight and answer the actual question.',
+    low: 'They would rather take a situation straight than turn it into play.',
   },
 };
 

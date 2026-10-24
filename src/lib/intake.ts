@@ -202,7 +202,7 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'evening_wind_down',
     n: 5,
-    prompt: 'What already happens at the end of your day? The evening Check bump hangs off this.',
+    prompt: 'What already happens at the end of your day? The evening reminder mentions the one you pick.',
     chips: EVENING_WIND_DOWN_CHIPS,
   },
   {

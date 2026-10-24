@@ -488,7 +488,11 @@ assert.match(legendLineViolation('Your note to Émile can wait.', hokAllowed, fa
 assert.equal(legendLineViolation('He kept going. Your draft can too.', hokAllowed, false), null, 'a new sentence may start with a capital');
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /Write numbers as words, use no quotation marks, and name no apps, brands or people/);
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /The bridge: say plainly what the legend did/, 'what it means starts from what the legend did');
-assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /must make physical sense/, 'the everyday moment must make sense');
+assert.match(
+  buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }),
+  /Do not say the reader did something the answers do not show/,
+  'the link stays a similarity, not an invented event',
+);
 // Where you differ: asked only when the reader has a side the legend doesn't share.
 const differCtx = { ...ctx, differ: legendDiffer(hok, [{ axis: 'extraversion', lean: 'high', strength: 0.4 }]) };
 assert.ok(differCtx.differ && differCtx.differ.tag === null, 'a trait the label never shows');
@@ -567,7 +571,7 @@ for (const f of hok.facts.filter((x) => !x.source.verified)) assert.ok(!prompt.i
 assert.doesNotMatch(prompt, /userId|user_id|@|handle/i, 'no account details in the prompt');
 const storyPrompt = buildLegendPrompt({ legend: mulan, angle: mulan.angles[0]!, focusMomentId: 'm1', pairs: mulanPairs });
 assert.match(storyPrompt, /This is a story, not history/);
-ok('prompt: moment voice, entry-only facts, verified only, no account details, myths flagged');
+ok('prompt: meaning-first voice, entry-only facts, verified only, no account details, myths flagged');
 
 /* -------------------------------------------------------------- wiring --- */
 

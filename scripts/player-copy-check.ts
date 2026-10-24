@@ -13,41 +13,37 @@ import { buildStoryLibraryDraftPrompt } from '../src/lib/story-library/draft-pro
 import { metaphorSymbolIssues, sceneReuse, SHAPE_CAP, shapeStats, textIssues } from '../src/lib/voice/player-copy';
 import { playerCopyIssues } from '../src/lib/voice/player-copy-scan';
 
-const bad = textIssues('The untried option gets the first look. You tend to embrace the journey.');
+const bad = textIssues('The untried option gets the first look. You embrace the journey.');
 assert.ok(bad.some((issue) => issue.label === 'The untried option'));
 assert.ok(bad.some((issue) => issue.label === 'Gets the first look'));
-assert.ok(bad.some((issue) => issue.label === 'You tend to'));
-assert.ok(textIssues('People tend to call first.').some((issue) => issue.label === 'tend to'));
+assert.equal(textIssues('Your answers suggest you tend to like a familiar option.').length, 0);
 assert.ok(bad.some((issue) => issue.label === 'Embrace'));
 assert.ok(bad.some((issue) => issue.label === 'Journey'));
 
-const good = textIssues('The group chat names a new city, and the listing is already open.');
+const good = textIssues('You like trying new things, even when everyone else would rather stick with what they know.');
 assert.equal(good.length, 0, good.map((issue) => issue.detail).join('; '));
-const symbols = metaphorSymbolIssues('You opened a new ticket when the specials board still had a blank line, then let the loud option wait by the kettle.');
-for (const label of ['ticket', 'specials board', 'loud option', 'kettle']) {
-  assert.ok(symbols.some((issue) => issue.label === label), label);
-}
-assert.ok(metaphorSymbolIssues('She reached the same fork with a different bag and pulled up a chair in a costume.').length >= 4);
+assert.equal(
+  metaphorSymbolIssues('You opened a new ticket when the specials board still had a blank line, then let the loud option wait by the kettle.').length,
+  0,
+);
+assert.equal(metaphorSymbolIssues('She reached the same fork with a different bag and pulled up a chair in a costume.').length, 0);
 
 assert.ok(textIssues('That was lowkey the whole plan.').some((issue) => issue.detail.includes('casual')));
 assert.equal(textIssues('That was lowkey the whole plan.', { casual: true }).length, 0);
 assert.ok(textIssues('That was lowkey a slay.', { casual: true }).some((issue) => issue.detail.includes('more than one slang')));
-assert.ok(textIssues('Still learning you on snacks.').some((issue) => issue.label === 'still learning'));
-assert.equal(textIssues('Early read: you might be the snack-planner. Still learning you.').length, 0);
+assert.equal(textIssues('This read is early.').length, 0);
 assert.equal(textIssues('The real journey took years.', { allowJourney: true }).length, 0);
 
 const capped = shapeStats(['One?', 'Two?', 'Three?', 'Four.']);
 assert.ok(capped.share > SHAPE_CAP);
 
-const reused = sceneReuse({ openness: 'left early', conscientiousness: 'the group chat held' });
-assert.ok(reused.some((issue) => issue.detail.includes('group chat') && issue.detail.includes('conscientiousness')));
-assert.ok(reused.some((issue) => issue.detail.includes('packing list')));
+assert.equal(sceneReuse({ openness: 'left early', conscientiousness: 'keeps a familiar plan' }).length, 0);
 
 const guide = readFileSync(resolve(__dirname, '../docs/voice-guide.md'), 'utf8');
 const prompt = buildStoryLibraryDraftPrompt(guide);
 assert.match(prompt, /Player-facing voice/);
-assert.match(prompt, /Flip test/);
-assert.match(prompt, /specials board/);
+assert.match(prompt, /Meaning first/);
+assert.match(prompt, /do not invent/i);
 assert.throws(() => buildStoryLibraryDraftPrompt('not the guide'));
 
 const issues = playerCopyIssues();

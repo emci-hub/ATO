@@ -1,6 +1,6 @@
 /**
- * Full voice review for a Story Library: banned phrases, slang, scene reuse,
- * a flip on every line, and one sentence shape per spoken line on a card.
+ * Full voice review for a Story Library: banned phrases, slang, and one
+ * sentence shape per spoken line on a card. A flip scene is not required.
  * Save and approve both call this before a draft can be validated.
  * Persist cannot import the renderer (the renderer imports persist).
  */
@@ -8,16 +8,12 @@ import type { CategoryDive } from '@/lib/category-deep-dive/dive';
 import type { LegendStory } from '@/lib/legend-figures/story';
 import { legendById } from '@/lib/legend-figures/roster';
 import { TRAIT_AXES } from '@/lib/traits';
-import { PROP_CAP_PER_CARD, cardSentences, repeatedShape, scenePropOveruse } from '@/lib/voice/player-copy';
+import { cardSentences, repeatedShape } from '@/lib/voice/player-copy';
 
 import { libraryVoiceFailures } from './persist';
 import { renderLibraryDive, renderLibraryLegend } from './render';
 import type { MatrixFailure } from './validate';
 import type { StoryLibrary, Tier } from './types';
-
-function push(failures: MatrixFailure[], trait: string, tier: string, detail: string): void {
-  failures.push({ templateId: 'voice', trait, tier, pronoun: '-', detail });
-}
 
 function diveSpoken(dive: CategoryDive): string[] {
   return [...dive.showsUp.map((row) => row.line), dive.mix ?? '', dive.othersNotice ?? '', dive.whatItMeansForYou, dive.joke ?? ''].filter(
@@ -39,10 +35,6 @@ function cardFailure(label: string, parts: readonly string[]): MatrixFailure | n
   const shape = repeatedShape(cardSentences(parts));
   if (shape) {
     return { templateId: 'voice', trait: label, tier: '-', pronoun: '-', detail: `${label} repeats shape "${shape}"` };
-  }
-  const prop = scenePropOveruse(parts.join('\n'), PROP_CAP_PER_CARD)[0];
-  if (prop) {
-    return { templateId: 'voice', trait: label, tier: '-', pronoun: '-', detail: `${label}: ${prop.detail}` };
   }
   return null;
 }
@@ -116,9 +108,5 @@ export function libraryShapeFailures(library: StoryLibrary): MatrixFailure[] {
 }
 
 export function reviewLibraryVoice(library: StoryLibrary): MatrixFailure[] {
-  const failures = [...libraryVoiceFailures(library)];
-  for (const line of library.lines) {
-    if (!line.flip.trim()) push(failures, line.trait, String(line.tier), `${line.id} is missing a flip`);
-  }
-  return [...failures, ...libraryShapeFailures(library)];
+  return [...libraryVoiceFailures(library), ...libraryShapeFailures(library)];
 }

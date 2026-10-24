@@ -295,7 +295,7 @@ const phrases = topTraitPhrases([
   track('competence', 0.05),
   track('openness', 0.8),
 ]);
-assert.deepEqual(phrases, ['Tries a new place']);
+assert.deepEqual(phrases, ['Tries something new']);
 ok('closeness-and-worry traits and struggle-side phrases never reach the share card');
 
 // --- change card ------------------------------------------------------------
@@ -322,7 +322,7 @@ const changes = traitChanges(
 );
 assert.equal(changes.length, 1);
 assert.equal(changes[0]!.axis, 'openness');
-assert.match(changes[0]!.line, /tries a new place/);
+assert.match(changes[0]!.line, /tries something new/);
 assert.deepEqual(traitChanges([], now), []);
 // A brand-new account: every reading is from the last few days.
 assert.deepEqual(traitChanges([hist('openness', 0.2, 3), hist('openness', 0.8, 1)], now), []);

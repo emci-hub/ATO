@@ -1,9 +1,9 @@
 /**
  * The clear voice — the voice for STORED tips (emci, 2026-10-07): the Focus ·
  * try · watch bank (src/lib/insight-bank) and the category cards
- * (src/lib/category-bank). Not the moment voice: a tip has to make sense to a
- * stranger reading it cold, so it names who is involved, says the trait
- * plainly and says when it shows up. The daily lines keep the moment voice and
+ * (src/lib/category-bank). Meaning first (docs/voice-guide.md): a tip has to
+ * make sense to a stranger reading it cold. Say what the answers suggest.
+ * Do not invent a scene to stand in for the trait. Daily lines still use
  * `lineRuleViolation`; nothing here touches them.
  *
  * `tipRuleViolation` is the mechanical half of these rules. The check scripts
@@ -15,8 +15,8 @@ import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
 export const CLEAR_VOICE_RULES: readonly string[] = [
   'Self-contained: a stranger reading it cold understands it. No mid-scene openings; never "they", "it" or "that" without saying who or what.',
-  'Name who is involved: a friend, your partner, coworkers, your boss, family.',
-  'State the trait plainly and when it shows up. Focus and summary: "When X, you tend to Y." or "You do X easily, but Y."',
+  'Name a person only when that person is part of the meaning. Do not add a friend, a group chat, or a place to decorate a trait.',
+  'State the meaning plainly. A direct sentence is enough. A "when" scene is optional, and only when it clarifies. Hedge with "your answers suggest", "usually", "sometimes", or "can" when the answers do not prove a specific event.',
   'Why: one plain sentence on why it happens or why it matters ("can", "tends to").',
   'Try: one clear action, doable today, alone, in a few minutes, with a reason or an obvious payoff ("…, so …").',
   'Watch: one plain signal to notice in yourself, starting "Notice when/if/whether…". No warnings or predictions.',

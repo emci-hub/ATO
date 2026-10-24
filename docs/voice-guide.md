@@ -1,143 +1,108 @@
 # Player-facing voice
 
-This is the single source of truth for player-facing copy: stories, the Story Library, insights and Focus, trait descriptions, legends, buttons, tooltips, empty states, onboarding, and notifications.
+This is the source of truth for player-facing copy: stories, the Story Library, insights and Focus, trait descriptions, legends, buttons, tooltips, empty states, onboarding, and notifications.
 
-`src/lib/voice/player-copy.ts` enforces the mechanical half. `npm run check:player-copy` runs it. The Story Library save refuses a draft that fails it, before that draft can be approved. Flip test, both poles, and the couch test's judgment are still a writer's job. The check cannot taste a line.
+Policy v2, meaning first (emci, 2026-10-23). It replaces the rule "show every trait through a real moment." A line does not have to be a scene, a joke, or a metaphor. A simple, direct explanation is often best.
 
-If this file and `docs/copy-review-rules.md` disagree, the content policy wins and this file gets a revision. Do not add exceptions in a prompt.
+`src/lib/voice/player-copy.ts` enforces the mechanical half. `npm run check:player-copy` runs it. The Story Library save still refuses a draft that fails the mechanical check. Accuracy, the trait link, and whether a line invents the player's history are a writer's job. The check cannot taste a line.
 
-## Core rule
+If this file and `docs/copy-review-rules.md` disagree, the content policy wins and this file gets a revision. Do not add exceptions in a prompt. Adult humor is still allowed there when it does not weaken a higher priority below.
 
-Don't describe a trait. Show what it looks like in a real, recognizable moment. If a line could appear in a personality test, a therapy app, a science article, a motivational poster, or product docs, rewrite it.
+## Meaning first
 
-## Writing rules
+Every player-facing message must make sense where it actually appears. The reader should not have to invent missing information.
 
-- Real person to real person. Everyday words.
-- A concrete action, place, or object. Show it. Don't label it.
-- Keep the meaning accurate. Don't flatter and don't dramatize.
-- Vary the rhythm. One to three sentences.
-- A little attitude is welcome. Don't explain the system.
-- Tease the habit, never the person's worth.
-- No repeated sentence shapes across traits. Each trait keeps its own places and objects.
+1. Say what you actually mean. State the intended meaning in one plain sentence first. Write that naturally. Do not decorate it until the meaning is unclear.
+2. Do not assume missing context. Do not refer to a listing, a plan, a joke, a question, or an order unless that thing is introduced and visible. If a message can appear alone, it must make sense alone.
+3. Do not invent the player's history. Never turn a score or an answer into a claim that an event happened. Keep three things separate: what the player said, what the answers reasonably suggest, and a hypothetical example. Never present the third as the first.
+4. Keep the trait-to-description link accurate. Do not add an unrelated habit (preferring familiar things is not the same as being serious, ignoring jokes, disliking people, or planning everything).
+5. Use an example only when it clarifies. Give it enough context. Mark a hypothetical as hypothetical.
+6. Priority: accuracy, then clarity, then relevance, then a natural voice, then optional humor. Cut any joke or metaphor that weakens a higher priority.
+7. Match the writing to the purpose. A button names the action. An error says what happened and what to do. A question makes the ask clear. An insight says what the answers suggest and why. A comparison states the actual similarity or difference. A story or a legend may use a creative scene, but the scene has to be established, and fiction stays distinct from a claim about the player's real life. Do not make every screen sound like a story card.
+8. Use ordinary, direct wording. Specific nouns, clear connections. Do not replace a plain word with vague imagery. Do not force slang, jokes, side quests, group chats, or punchlines.
 
-## Discrimination
+## Acceptance check
 
-A high-pole line fits someone high on that trait and does not fit someone low. A low-pole line is a real, likeable way of being, never an insult and never a lesser version of the high pole. Both poles are something to brag about.
+For every message, before it is called done:
 
-Low openness sounds like: "You know the best thing on the menu, and you're ordering it again." It does not sound like "you are closed" or "you are afraid of new things."
+- What does this mean, in one plain sentence?
+- Why is it shown here?
+- Is every referenced thing introduced or visible?
+- Does it follow from the answer or the trait?
+- Does it invent something the player did?
+- Is it clearer without the joke or the scene?
+- Does the complete assembled message make sense?
 
-## Acceptance checks
+Shorter, casual, vivid, or grammatical is not enough. The line has to be understandable and grounded. If the meaning is uncertain, flag it. Do not guess.
 
-1. **Specific enough to be wrong.** No flattering line everyone would nod at (Barnum).
-2. **Couch test.** How would a friend say it on the couch? No "energy". No "vibes".
-3. **Tease the habit, never the person's worth.**
-4. **One concrete detail beats a summary.** "14 tabs open about one documentary" beats "you are curious."
-5. **Flip test.** Read the high-pole line to a low-pole person. If they would nod too, rewrite. Note the lines you flip-tested in `docs/copy-audit.md`.
-6. **Both poles are a skill.** The low pole is its own brag, not a discount high pole.
-7. **Match and contrast.** Match is one shared moment with a small difference. Contrast is both people reacting to the same thing, both likable. Never mention scores, "strong match", or "shared side".
-8. **Variety.** Each trait has its own places and objects, and those don't cross over. Mix line shapes on a card (question, "X, and then Y", short punchline, quote). On a Story Library card each shape appears at most once. Elsewhere, no shape is over 25% of one card.
-9. **Slang.** One term max, seasoning not the joke, still readable to someone who has never heard it. Skip very new or group-specific terms. Casual tier only. Never Legends, serious moments, or formal UI. Tap-to-see meaning, no brackets.
-10. **Low confidence.** A trait that is "still learning" gets a hedged, playful line: "Early read: you might be the snack-planner."
+## What changed from the moment rule
 
-## Banned phrases
+These are no longer requirements:
 
-The untried option. Gets the first look. One look is enough. The rest can wait. Shared side. No shared side. Strong match. No match. Chased an unknown glow. Measured everything, twice. You kept to the familiar choice. You tend to. You are someone who. This suggests. This reflects. Your pattern shows. You may find. It's important to. Embrace. Navigate. Unlock. Journey (coach use; a sourced history fact that names a real journey can stay). Vibe check. Anything that sounds like a horoscope, a therapist, a scientist, a coach, or a product manager.
+- A scene, a place, or an object on every line.
+- One private scene phrase per trait (group chat, packing list, side quest, and the rest).
+- A joke or a tease on every surface.
+- A flip field that invents the opposite pole's scene. A flip note is optional, it is not shown, and it does not have to be a scene.
+- A word ban on ticket, specials board, kettle, loud option, fork, bag, chair, or costume. Those words were banned to stop a private code, and the ban pushed writers into substitute imagery. Do not use an object as a code for a trait. The words themselves are allowed when they mean the actual object.
+- A playful "Early read:" costume for a low-confidence line. Say the read is early, in plain words.
 
-Also banned in player-facing lines: "energy", "vibe", "vibes", and "tend to". A question the player answers is not rewritten to chase that ban. A retired insight key stays so old history still maps.
+A Story Library card may still mix sentence shapes, and the check still refuses the same shape twice on one spoken card. That cap can push a false connector ("when" glued onto an unrelated deed). Prefer a true connection. Do not add a connector only to satisfy the shape.
 
-A profile drawback still opens with "You may" and then a concrete cost. It does not say "You may find".
+## Purpose
 
-## Match and contrast
+- **Trait description.** What this side of the trait means. Not a memory of the player's week.
+- **Insight.** What the answers suggest, and why that matters. Hedge when it is a suggestion. Do not narrate an event that was not reported.
+- **Quote of an answer.** Repeat the player's option and say what that option means in the question they were asked. If the question cannot be found, do not invent a consequence. Flag it.
+- **Legend match.** The actual similarity between the player's leaning and a sourced fact about that person. The player's leaning is not something they did in the legend's life.
+- **Legend contrast.** The actual difference. Both sides stay accurate. Do not glue the two with a shared scene they did not share.
+- **Button.** The action.
+- **Error.** What happened, and what to do.
+- **Empty state.** What is empty, and the way forward.
+- **Notification.** What the note is, and what it asks. It must make sense on a lock screen.
+- **Onboarding question.** The ask, plus why it is asked, in words the player can check against the choices on the screen.
+- **Story.** A scene is allowed. Establish it. Keep it fiction.
 
-Match: "You both say yes to the weird side quest. You just bring a spreadsheet."
+## Examples
 
-Contrast: "One of you needs a plan. The other already left to find out what's down that road."
+Direction, not templates.
 
-Both people stay likable. Neither line names a score or a percent.
+Unclear: "You had the listing open when the group chat was still stuck on the safe plan."
 
-## Scene phrases
+Clear: "You like trying new things, even when everyone else would rather stick with what they know."
 
-Each trait has one real phrase that shows up in that trait's lines and nowhere else. It is something a friend would say happened. It is not a private symbol for the trait.
+Unclear: "You knew the best thing on the menu, and the group chat could not change the order."
 
-| Trait | Phrase |
-|---|---|
-| openness | group chat |
-| conscientiousness | packing list |
-| extraversion | said hi first |
-| agreeableness | split the bill |
-| steadiness | until morning |
-| attachment_anxiety | second text |
-| attachment_avoidance | went home early |
-| conflict_assertiveness | said it in the meeting |
-| conflict_cooperativeness | moved dinner |
-| autonomy | without a poll |
-| competence | hit send |
-| relatedness | on the couch |
-| growth_mindset | burned the rice |
-| locus_of_control | changed the reservation |
-| self_efficacy | started the hard part |
-| playfulness | side quest |
+Clear: "You prefer familiar options because you already know what you enjoy."
 
-Story Library lines also reject these words when they are used as metaphor code: ticket, specials board, kettle, loud option, fork, bag, chair, costume. A literal chair or bag in another bank can stay. A story line does not get a made-up object standing in for the trait.
+Unrelated, if it was attached to familiar-preference: "You heard the joke and then answered the actual question." Check the trait first. Familiar-preference does not mean ignoring jokes.
 
-## Whole lines
+Unsupported: "You picked 'I plan a whole new day,' and the packing list was done before anyone else had shoes on." Say what that option means in the question. Do not invent a packing list. If the question is not in the bank, flag it.
 
-Story, insight, and legend copy is written as finished lines. Do not assemble a verb, an aside, and a closer, and do not fill an "[adjective] [noun]" bank. Fewer good lines beat a big bank.
+Bad legend link: "You tried a place nobody at the table could name when Marie Curie coined the word radioactivity." The deed is real. The dinner is not, and "when" makes them one event.
 
-- Slots are only names, pronouns, the legend's name, a real deed, and the player's own facts: `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{deed}`, `{answer}`. `{deed}` is a short sourced clause about what that person did.
-- Each line has eligibility (trait pole, confidence tier, a specific answer, a legend, recency) and a priority. The highest-priority eligible line wins. A broad fallback is always in the pool.
-- Shown line ids are remembered for the player, on the device and inside the story JSON already saved for deep dives and legends. A line does not repeat until every eligible line has been used.
-- Where an answer exists, a line may quote it: You picked "I plan a whole new day", and the packing list was done before anyone else had shoes on.
-- Every line has a flip field: the opposite pole's reaction, written out. The check requires it. It is not shown.
+## Phrases that still fail the check
 
-## Sentence shapes
+These stay banned because they hide the meaning: The untried option. Gets the first look. One look is enough. The rest can wait. Shared side. No shared side. Strong match. No match. Chased an unknown glow. Measured everything, twice. You kept to the familiar choice. You are someone who. You may find. It's important to. Embrace. Navigate. Unlock. Journey, when it is coach-speak (a sourced fact that names a real journey can stay). Vibe. Vibes. Energy.
 
-A card mixes question, "X, and then Y", compound ("X, and Y"), because, when, short punchline (six words or fewer), quote, and other. On a Story Library card each of those shapes appears at most once. Titles are labels and are not part of that count. Tag questions like ", right?" stay at or under about 1 in 10 lines. Each trait's scene object stays in that trait's world, and shows at most once on a card.
+"Tend to", "this suggests", "this reflects", and "your pattern shows" are allowed when they hedge a suggestion. A direct sentence is better when the meaning is solid. "Your answers suggest…" is the right register for an insight.
 
-A quote in the Story Library is the player's own answer, passed in as `{answer}`. The line does not invent a quotation.
+Slang stays casual-only, one term a sentence, and never required.
 
-## Slang tier
+Low confidence is a plain hedge. "This read is early" is enough. Do not costume it as a snack-planner.
 
-Casual frames are `casual` and `slang`. Everywhere else, including Legends and Story Library jokes (they render on Legends), slang fails the check. One slang term per sentence. The term is seasoning. The line still makes sense if the reader has never heard it.
+## Slots
 
-## Low confidence
+Story, insight, and legend copy that is stored as a line stays a finished line. Slots are only names, pronouns, the legend's name, a real deed, and the player's own answer: `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{deed}`, `{answer}`. `{deed}` is a short sourced clause. `{answer}` is the option the player chose. Do not invent a quotation.
 
-Until a trait is a solid read, hedge it and keep it playful. "Early read: you might be the snack-planner." Don't hand out a verdict.
-
-## Good and bad
-
-Bad: "You dive when the group chat pings. The untried option gets the first look."
-
-Better: "You had the listing open when the group chat was still stuck on the safe plan."
-
-Bad: "You tend to be curious."
-
-Better: "You saw the group chat name a new city, and the listing was already open."
-
-Bad low pole: "You avoid new things."
-
-Better low pole: "You know the best thing on the menu, and you order it again."
-
-Bad legend: "Marie Curie reached the same fork with a different bag."
-
-Better legend: "You tried a place nobody at the table could name when Marie Curie coined the word radioactivity."
-
-## Final friend test
-
-Would a real friend say this out loud about another real friend? If not, rewrite it.
+Each line keeps its id, eligibility, and priority. The highest-priority eligible line wins. A shown line does not repeat until the eligible pool is used. `STORY_LIBRARY_RUNTIME` stays off.
 
 ## What the check enforces
 
 `npm run check:player-copy` fails on:
 
-- a banned phrase in a player-facing bank
+- a banned phrase from the list above
 - slang outside the casual tier, or two slang terms in one sentence
-- a rendered Story Library card that repeats a sentence shape
-- a scene object that is missing from its trait, that shows up on another trait, or that appears more than once on a card
-- a tag question (", right?") on more than about 1 in 10 Story Library lines
-- a Story Library line with no flip field
-- "tend to" or "energy"
-- a Story Library line that uses ticket, specials board, kettle, loud option, fork, bag, chair, or costume as metaphor code
-- a "still learning you" line that is not an "Early read:"
+- a repeated sentence shape on one spoken Story Library card
+- "energy"
 
-The same review runs when a Story Library draft is saved, before it can be approved.
+It does not fail on a missing scene phrase, a missing flip, a joke that is absent, or the words ticket, kettle, fork, bag, chair, or costume.

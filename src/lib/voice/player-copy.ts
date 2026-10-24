@@ -1,12 +1,10 @@
 /**
- * Mechanical half of docs/voice-guide.md. The guide is the source of truth
- * for the writing rules. This module is the part a check can refuse:
- * banned phrases, slang outside the casual tier, the sentence-shape cap,
- * and cross-trait scene reuse.
+ * Mechanical half of docs/voice-guide.md (meaning first, v2). The guide is
+ * the source of truth. This module refuses coach phrases, slang outside the
+ * casual tier, and a repeated sentence shape on one card.
  *
- * Flip test, both-poles taste, and the couch test's judgment stay in the
- * guide. Agents run those before a line ships. This file only catches what
- * a regex can prove.
+ * It does not require a scene, a flip, a joke, or a ban on ordinary object
+ * words. Those checks pushed lines into imagery. Accuracy stays a writer's job.
  */
 import type { TraitAxis } from '@/lib/traits';
 
@@ -27,12 +25,7 @@ export const BANNED_PHRASE_RES: readonly { re: RegExp; label: string }[] = [
   { re: /chased an unknown glow/i, label: 'Chased an unknown glow' },
   { re: /measured everything, twice/i, label: 'Measured everything, twice' },
   { re: /kept to the familiar choice/i, label: 'You kept to the familiar choice' },
-  { re: /\b(?:you|they) tend to\b/i, label: 'You tend to' },
-  { re: /\btend to\b/i, label: 'tend to' },
   { re: /you are someone who/i, label: 'You are someone who' },
-  { re: /\bthis suggests\b/i, label: 'This suggests' },
-  { re: /\bthis reflects\b/i, label: 'This reflects' },
-  { re: /your pattern shows/i, label: 'Your pattern shows' },
   { re: /you may find/i, label: 'You may find' },
   { re: /it['’]s important to/i, label: "It's important to" },
   { re: /\bembrace\b/i, label: 'Embrace' },
@@ -69,8 +62,8 @@ export const SLANG_RES: readonly { re: RegExp; label: string }[] = [
 export const CASUAL_FRAMES = new Set(['casual', 'slang']);
 
 /**
- * One real scene phrase per trait. It shows up in that trait's lines and nowhere else.
- * These are things a friend would say, not a private symbol for the trait.
+ * Old scene phrases. v2 does not require them and does not reserve them for
+ * one trait. Kept so older notes can still name what a line used.
  */
 export const TRAIT_SCENES: Record<TraitAxis, readonly string[]> = {
   openness: ['group chat'],
@@ -92,27 +85,12 @@ export const TRAIT_SCENES: Record<TraitAxis, readonly string[]> = {
 };
 
 /**
- * Words that were used as a private code for a trait. A story line that needs
- * them is not a scene a friend would recognize. Literal uses in other banks
- * (a real chair, a real bag by the door) are not scanned here.
+ * v2 dropped the word ban on ticket, kettle, fork, bag, chair, costume, and
+ * the rest. The ban pushed writers to invent a substitute image. Do not use
+ * an object as a code for a trait; the check no longer polices the words.
  */
-export const METAPHOR_SYMBOL_RES: readonly { re: RegExp; label: string }[] = [
-  { re: /\btickets?\b/i, label: 'ticket' },
-  { re: /specials board/i, label: 'specials board' },
-  { re: /\bkettles?\b/i, label: 'kettle' },
-  { re: /loud option/i, label: 'loud option' },
-  { re: /\bforks?\b/i, label: 'fork' },
-  { re: /\bbags?\b/i, label: 'bag' },
-  { re: /\bchairs?\b/i, label: 'chair' },
-  { re: /\bcostumes?\b/i, label: 'costume' },
-];
-
-export function metaphorSymbolIssues(text: string): CopyIssue[] {
-  const issues: CopyIssue[] = [];
-  for (const row of METAPHOR_SYMBOL_RES) {
-    if (row.re.test(text)) issues.push({ label: row.label, detail: `metaphor symbol "${row.label}"` });
-  }
-  return issues;
+export function metaphorSymbolIssues(_text: string): CopyIssue[] {
+  return [];
 }
 
 export function sentenceShape(sentence: string): SentenceShape {
@@ -195,9 +173,6 @@ export function textIssues(text: string, options: { casual?: boolean; allowJourn
       issues.push({ label: 'slang', detail: `more than one slang term in "${sentence}"` });
     }
   }
-  if (/still learning you/i.test(text) && !/Early read:/i.test(text)) {
-    issues.push({ label: 'still learning', detail: 'a low-confidence line needs the Early read hedge' });
-  }
   return issues;
 }
 
@@ -229,16 +204,9 @@ export function tagQuestionShare(texts: readonly string[]): number {
   return hits / texts.length;
 }
 
-/** Scene props over the cap. `cap` is the most times one prop may appear in `text`. */
-export function scenePropOveruse(text: string, cap: number): CopyIssue[] {
-  const issues: CopyIssue[] = [];
-  for (const [owner, phrases] of Object.entries(TRAIT_SCENES)) {
-    for (const phrase of phrases) {
-      const count = phraseCount(text, phrase);
-      if (count > cap) issues.push({ label: owner, detail: `"${phrase}" appears ${count} times, cap ${cap}` });
-    }
-  }
-  return issues;
+/** v2: a repeated scene phrase is not a failure. The cap args stay for callers. */
+export function scenePropOveruse(_text: string, _cap: number): CopyIssue[] {
+  return [];
 }
 
 /** Spoken lines on one card. A repeated shape fails. Titles are labels and stay out of this list. */
@@ -252,22 +220,7 @@ export function repeatedShape(sentences: readonly string[]): SentenceShape | nul
   return null;
 }
 
-export function sceneReuse(byTrait: Readonly<Record<string, string>>): CopyIssue[] {
-  const issues: CopyIssue[] = [];
-  const blob = (trait: string) => (byTrait[trait] ?? '').toLowerCase();
-  for (const [owner, phrases] of Object.entries(TRAIT_SCENES)) {
-    for (const phrase of phrases) {
-      const needle = phrase.toLowerCase();
-      if (!blob(owner).includes(needle)) {
-        issues.push({ label: owner, detail: `scene "${phrase}" is missing from ${owner}` });
-      }
-      for (const other of Object.keys(byTrait)) {
-        if (other === owner) continue;
-        if (blob(other).includes(needle)) {
-          issues.push({ label: phrase, detail: `"${phrase}" belongs to ${owner} and also appears in ${other}` });
-        }
-      }
-    }
-  }
-  return issues;
+/** v2: a trait does not need a private scene phrase, and phrases may overlap. */
+export function sceneReuse(_byTrait: Readonly<Record<string, string>>): CopyIssue[] {
+  return [];
 }

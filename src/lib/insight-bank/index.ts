@@ -96,6 +96,12 @@ for (const entry of ALL_IDEAS) {
  * working). Add a line here whenever a focus text is reworded.
  */
 export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
+  'At a restaurant, you usually pick a dish you have never ordered, even when you already know a favorite.':
+    'Your answers suggest you like trying something new, even when a familiar option is already there.',
+  'Choosing where to eat, you can skip the usual place for one you have not tried.':
+    'You like a new option even when you already know one you enjoy.',
+  'The new item on the menu sometimes gets your order before the dish you already like.':
+    'Choosing something new can appeal to you even when a familiar choice is right there.',
   'You usually keep every promise you make, even the ones you said yes to too fast.':
     'A promise you made too fast on Tuesday can still own your Thursday night.',
   'You usually keep your promises, even the ones you said yes to too fast.':

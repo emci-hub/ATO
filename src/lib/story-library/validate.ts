@@ -1,8 +1,8 @@
 /**
- * Whole-line gate. Every line needs a flip, the bank stays inside the budgets,
- * and a rendered card keeps one shape per spoken line.
+ * Whole-line gate. Length, slots, and the voice bans. A flip note is optional
+ * and is not required to be a scene. Scene phrases are not required.
  */
-import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { type TraitAxis } from '@/lib/traits';
 import {
   DIVE_MEANS_MAX_WORDS,
   DIVE_MEANS_MIN_WORDS,
@@ -27,7 +27,7 @@ import {
 } from '@/lib/legend-figures/story';
 import { PRONOUNS } from '@/lib/story-v3/tracery';
 import { cardJokeViolation } from '@/lib/voice/card-joke';
-import { metaphorSymbolIssues, PROP_CAP_PER_TRAIT, TAG_QUESTION_CAP, phraseCount, tagQuestionShare, textIssues, TRAIT_SCENES } from '@/lib/voice/player-copy';
+import { TAG_QUESTION_CAP, tagQuestionShare, textIssues } from '@/lib/voice/player-copy';
 
 import { speak } from './pick';
 import type { StoryLibrary, StoryLine } from './types';
@@ -83,15 +83,13 @@ function spoken(line: StoryLine, legend = false): string {
 
 function lineIssues(line: StoryLine): string[] {
   const issues: string[] = [];
-  if (!line.flip.trim()) issues.push('flip is empty');
-  if (line.flip.trim() === line.text.trim()) issues.push('flip repeats the line');
+  if (line.flip.trim() && line.flip.trim() === line.text.trim()) issues.push('flip repeats the line');
   const bare = line.text.replace(ALLOWED_TOKEN, '');
   if (/[{}]/.test(bare)) issues.push('unknown slot');
   for (const ban of BANNED_PATTERNS) {
     if (ban.test(line.text) || ban.test(line.flip)) issues.push(`banned ${ban}`);
   }
   for (const issue of textIssues(`${line.text}\n${line.flip}`)) issues.push(issue.detail);
-  for (const issue of metaphorSymbolIssues(`${line.text}\n${line.flip}`)) issues.push(issue.detail);
   const legend = line.slot.startsWith('legend');
   const text = spoken(line, legend);
   const allowed = [legend ? 'Marie Curie' : '', line.text.includes('{answer}') ? QUOTE_ANSWER : ''].filter(Boolean).join(' ');
@@ -119,25 +117,6 @@ function budgetIssues(lines: readonly StoryLine[]): string[] {
   const issues: string[] = [];
   if (tagQuestionShare(lines.map((line) => line.text)) > TAG_QUESTION_CAP) {
     issues.push(`tag questions are over ${TAG_QUESTION_CAP}`);
-  }
-  const byTrait: Record<string, string> = {};
-  for (const line of lines) byTrait[line.trait] = `${byTrait[line.trait] ?? ''} ${line.text}`;
-  for (const trait of TRAIT_AXES) {
-    const blob = byTrait[trait] ?? '';
-    for (const phrase of TRAIT_SCENES[trait]) {
-      const count = phraseCount(blob, phrase);
-      if (count === 0) issues.push(`${trait} is missing "${phrase}"`);
-      if (count > PROP_CAP_PER_TRAIT) issues.push(`${trait} "${phrase}" appears ${count} times`);
-    }
-  }
-  for (const [owner, phrases] of Object.entries(TRAIT_SCENES)) {
-    for (const phrase of phrases) {
-      for (const [trait, blob] of Object.entries(byTrait)) {
-        if (trait !== owner && blob.toLowerCase().includes(phrase.toLowerCase())) {
-          issues.push(`"${phrase}" belongs to ${owner} and also appears in ${trait}`);
-        }
-      }
-    }
   }
   return issues;
 }

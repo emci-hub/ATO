@@ -1,5 +1,5 @@
 ---
-description: Player-facing copy follows docs/voice-guide.md. Stories, banks, insights, legends, onboarding, and notifications.
+description: Player-facing copy follows docs/voice-guide.md (meaning first, v2). Stories, banks, insights, legends, onboarding, and notifications.
 globs: src/lib/**/*.{ts,tsx},src/app/**/*.{ts,tsx},src/components/**/*.{ts,tsx},docs/voice-guide.md
 alwaysApply: true
 ---
@@ -8,10 +8,10 @@ alwaysApply: true
 
 Before writing or editing player-facing copy (stories, Story Library banks, insights, Focus, trait descriptions, legends, buttons, tooltips, empty states, onboarding, notifications), read `docs/voice-guide.md` and follow it.
 
-The guide is the source of truth: core rule, banned phrases, flip test, both poles, match and contrast, whole lines, salience, no-repeat, variety caps, slang, low-confidence wording, good and bad examples.
+Meaning first (emci, 2026-10-23). This replaces "show every trait through a real moment." Say what the line means. Do not invent the player's history. Do not refer to a thing that is not on screen. Match the purpose: a button names the action, an error says what happened and what to do, an insight says what the answers suggest, a comparison states the real similarity or difference. A story may use a scene. Other screens should not all sound like a story card. Humor is optional. Cut it when it makes the line less accurate.
 
-`npm run check:player-copy` and `npm run check:story-library` must pass. They refuse banned phrases (including "energy" and "tend to"), slang outside the casual tier, a repeated sentence shape on a Story Library card, a scene phrase reused across traits or twice on one card, a tag question on more than about 1 in 10 lines, a Story Library line with no flip, and the metaphor code ticket / specials board / kettle / loud option / fork / bag / chair / costume inside a Story Library line. A Story Library draft that fails the same review cannot be approved.
+`npm run check:player-copy` and `npm run check:story-library` must pass. They refuse the coach phrases in the voice guide (including "energy"), slang outside the casual tier, and a repeated sentence shape on a Story Library card. They do not require a scene phrase, a flip scene, a joke, or a ban on ticket / kettle / fork / bag / chair / costume. The sentence-shape cap is still on and can push a false "when". Prefer a true connection.
 
-Story, insight, and legend lines are finished sentences a friend would say out loud. Slots are only names, pronouns, `{deed}` (what that real person did), and the player's own facts. Each line has eligibility and a priority. The highest eligible line wins, and a shown line does not repeat until that pool is used up. Keep trait ids, data meaning, and `STORY_LIBRARY_RUNTIME` (it ships off).
+Slots are only names, pronouns, `{deed}` (a sourced clause), and the player's own answer. Each line has eligibility and a priority. The highest eligible line wins, and a shown line does not repeat until that pool is used up. Keep trait ids, data meaning, and `STORY_LIBRARY_RUNTIME` (it ships off).
 
-Do not invent or redefine traits. Note flip-tested lines in `docs/copy-audit.md`.
+Do not invent or redefine traits. If the meaning of a line is uncertain, flag it. Do not guess a new meaning.

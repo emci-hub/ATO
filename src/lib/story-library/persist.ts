@@ -4,7 +4,7 @@
  * The store is synchronous so the offline check can round-trip a save without
  * a device. The phone adapter lives in `device-store.ts`.
  */
-import { metaphorSymbolIssues, sceneReuse, textIssues } from '@/lib/voice/player-copy';
+import { textIssues } from '@/lib/voice/player-copy';
 
 import { STORY_LIBRARY } from './library';
 import type { MatrixFailure } from './validate';
@@ -51,9 +51,8 @@ export function getStoryLibrary(): StoryLibrary {
  * Approve a library into the runtime copy. Refuses the write when the matrix
  * is not clean, and leaves the previous copy in place.
  */
-/** Banned phrases, slang, and scene reuse. A failing draft never becomes the approved copy. */
+/** Banned phrases and slang. A failing draft never becomes the approved copy. */
 export function libraryVoiceFailures(library: StoryLibrary): MatrixFailure[] {
-  const byTrait: Record<string, string> = {};
   const failures: MatrixFailure[] = [];
   const push = (trait: string, tier: string, detail: string) => {
     failures.push({ templateId: 'voice', trait, tier, pronoun: '-', detail });
@@ -62,12 +61,7 @@ export function libraryVoiceFailures(library: StoryLibrary): MatrixFailure[] {
     for (const issue of textIssues(`${line.text}\n${line.flip}`)) {
       push(line.trait, String(line.tier), `${line.id}: ${issue.detail}`);
     }
-    for (const issue of metaphorSymbolIssues(`${line.text}\n${line.flip}`)) {
-      push(line.trait, String(line.tier), `${line.id}: ${issue.detail}`);
-    }
-    byTrait[line.trait] = `${byTrait[line.trait] ?? ''} ${line.text}`;
   }
-  for (const issue of sceneReuse(byTrait)) push(issue.label, '-', issue.detail);
   return failures;
 }
 

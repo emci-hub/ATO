@@ -4,18 +4,18 @@ import { idea, type InsightIdea } from './define';
 export const OPENNESS_IDEAS: readonly InsightIdea[] = [
   idea('ftw_openness_h_01', ['openness:high'], {
     focus: [
-      'At a restaurant, you usually pick a dish you have never ordered, even when you already know a favorite.',
-      'Choosing where to eat, you can skip the usual place for one you have not tried.',
-      'The new item on the menu sometimes gets your order before the dish you already like.',
+      'Your answers suggest you like trying something new, even when a familiar option is already there.',
+      'You like a new option even when you already know one you enjoy.',
+      'Choosing something new can appeal to you even when a familiar choice is right there.',
     ],
-    why: 'A new place keeps the night interesting, but you can skip the sure dish you would have enjoyed more.',
+    why: 'These answers point to liking what is new. You can also pass up an option you already enjoy.',
     try: [
-      'Next time you order, ask what you would pick if it did not have to be new, so you choose on purpose.',
-      'Pick one old favorite restaurant this week and go back, so you can see what it still gives you.',
+      'Next time you choose, ask whether you want the new option or the one you already know.',
+      'Before you pick something new, name the familiar option you would also enjoy.',
     ],
     watch: [
-      'Notice whether you pick a dish because it is new or because you actually want it.',
-      'Notice how a familiar restaurant feels once you are actually there.',
+      'Notice whether you picked something because it was new or because you wanted it.',
+      'Notice when a familiar option would have been the one you actually wanted.',
     ],
   }),
   idea('ftw_openness_h_02', ['openness:high'], {
