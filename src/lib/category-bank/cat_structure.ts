@@ -18,7 +18,7 @@ export const CAT_STRUCTURE: MapCard = {
       ],
       watchOut: [
         'Sometimes you plan so many new things that there’s no evening left for you to rest.',
-        'Because you plan with care, a surprise inside your new plan can frustrate you.',
+        'Sometimes a surprise inside your new plan frustrates you.',
         'Sometimes you expect other people to keep up with both your ideas and your calendar.',
       ],
       tryThis: [
@@ -41,8 +41,8 @@ export const CAT_STRUCTURE: MapCard = {
       ],
       watchOut: [
         'Sometimes a thing you start doesn’t get a finish.',
-        'Because you keep plans loose, someone who plans ahead can feel unsure about you.',
-        'Sometimes your small tasks pile up while you go after something new.',
+        'Sometimes someone who plans ahead feels unsure about you.',
+        'Sometimes your small tasks pile up behind a new one.',
       ],
       tryThis: [
         'Pick one unfinished thing and do the next small step today, so it moves.',
@@ -64,7 +64,7 @@ export const CAT_STRUCTURE: MapCard = {
       ],
       watchOut: [
         'Sometimes a sudden change throws your whole day off.',
-        'Because you trust your routine, you might miss a better way to do the task.',
+        'Sometimes you miss a better way to do the task.',
         'Sometimes you stick with a plan after it has stopped working for you.',
       ],
       tryThis: [
@@ -87,8 +87,8 @@ export const CAT_STRUCTURE: MapCard = {
       ],
       watchOut: [
         'Sometimes a task with no deadline drifts for a long time on your list.',
-        'Because you take each day as it comes, a bigger goal of yours can slip.',
-        'Sometimes you miss a new thing because the usual one is easier to reach.',
+        'Sometimes a bigger goal of yours can slip.',
+        'Sometimes you stay with the usual thing.',
       ],
       tryThis: [
         'Set a deadline for one task you’ve been putting off, so it gets a finish.',

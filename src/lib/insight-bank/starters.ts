@@ -6,7 +6,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
     focus: [
       "When you wake up, you might reach for your phone before your feet are on the floor.",
       "The first minutes of the day can go to your phone, before you have had a glass of water.",
-      "Your lock screen might take the first minute of the morning, while the kettle is still cold.",
+      "Your lock screen might take the first minute of the morning.",
     ],
     why: "Starting with your phone can set your mood from other people’s news before you have had a moment for yourself.",
     try: [
@@ -20,7 +20,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_starter_02", [], {
     focus: [
-      "A friend’s text might get a fast reply from you, while another chat sits for days.",
+      "Some of your chats get a fast reply, and some sit.",
       "Your easy messages can get answered first, and the harder ones can pile in the thread.",
       "You might clear the short texts and leave the one that needs a real answer.",
     ],
@@ -63,7 +63,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
     ],
     watch: [
       "Notice which plans you are looking forward to and which you are not.",
-      "Notice how often you say yes because it is the habit.",
+      "Notice how often your yes is just the habit.",
     ],
   }),
   idea("ftw_starter_05", [], {
@@ -90,7 +90,7 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
     ],
     why: "A late night can feel like the only hour that is yours, but less sleep can make the next day harder.",
     try: [
-      "Set an alarm thirty minutes before bed, so you close the laptop while you still mean to.",
+      "Set an alarm thirty minutes before bed, so you close the laptop before you change your mind.",
       "Plan a small break for yourself during the day, so you do not have to stay up to get it.",
     ],
     watch: [
@@ -148,8 +148,8 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_starter_10", [], {
     focus: [
-      "While a friend is talking, you might already be lining up what you will say next.",
-      "Your reply can be forming while the other person is still in the middle of the story.",
+      "A friend’s story can have your reply lined up before they finish.",
+      "Your reply can start before the other person has finished the story.",
       "Someone else’s story might pull a similar story of yours into your head before they finish.",
     ],
     why: "Planning your reply is ordinary, but people feel more heard when you stay with what they are saying.",
@@ -228,8 +228,8 @@ export const STARTER_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_starter_15", [], {
     focus: [
-      "While you are working, you might switch between the task and your messages every few minutes.",
-      "Several tabs and chats can stay open while you try to do one piece of work.",
+      "You might switch between the task and your messages every few minutes.",
+      "Several tabs and chats can stay open on one piece of your work.",
       "A notification might pull you off the task before the sentence is finished.",
     ],
     why: "Switching often makes the work feel busier and slower, and it can leave you tired with little finished.",

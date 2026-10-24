@@ -17,7 +17,7 @@ export const CAT_DRIVE: BarCard = {
       ],
       watchOut: [
         'Sometimes you stack so many goals that rest gets pushed to next week.',
-        'Because you move fast, you might expect the same pace from the people next to you.',
+        'Sometimes you expect the same pace from the people next to you.',
         'Sometimes you start before you’ve checked whether the others are ready to go.',
       ],
       tryThis: [
@@ -39,7 +39,7 @@ export const CAT_DRIVE: BarCard = {
       ],
       watchOut: [
         'Sometimes a task you don’t care about sits there until it is due tomorrow.',
-        'Because your attention follows your interest, people might not know when you’ll be fully in.',
+        'Sometimes people don’t know when you’ll be fully in.',
         'Sometimes you wait to feel like starting, and the task is still sitting there at dinner.',
       ],
       tryThis: [
@@ -61,7 +61,7 @@ export const CAT_DRIVE: BarCard = {
       ],
       watchOut: [
         'Sometimes you wait for someone else to name the goal instead of naming one yourself.',
-        'Because you take it slow, a chance can pass before you feel ready to take it.',
+        'Sometimes a chance passes before you feel ready to take it.',
         'Sometimes you doubt a task you would actually do well once you started.',
       ],
       tryThis: [

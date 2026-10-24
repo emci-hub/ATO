@@ -17,7 +17,7 @@ export const CAT_RESILIENCE: BarCard = {
       ],
       watchOut: [
         'Sometimes you push through stress that really needed a break.',
-        'Because you handle pressure well, people might hand you more than your share.',
+        'Sometimes people hand you more than your share.',
         'Sometimes you expect other people to come back as fast as you do.',
       ],
       tryThis: [
@@ -39,7 +39,7 @@ export const CAT_RESILIENCE: BarCard = {
       ],
       watchOut: [
         'Sometimes a surprise setback hits you harder than you expected.',
-        'Because a bad day gets to you, you might doubt the work you can usually do.',
+        'Sometimes you doubt the work you can usually do.',
         'Sometimes you hold a setback longer than the actual problem lasted.',
       ],
       tryThis: [
@@ -56,12 +56,12 @@ export const CAT_RESILIENCE: BarCard = {
       ],
       strength: [
         'You take a problem seriously, and you prepare for it with care.',
-        'You can tell when someone else is struggling, because you’ve been in that spot.',
+        'You can tell when someone else is struggling.',
         'You know where your limits are, so you can plan the week around them.',
       ],
       watchOut: [
         'Sometimes one bad meeting makes the rest of your week feel harder.',
-        'Because you feel pressure deeply, you might skip a challenge you could have handled.',
+        'Sometimes you skip a challenge you could have handled.',
         'Sometimes your doubt after a mistake lasts longer than the mistake did.',
       ],
       tryThis: [

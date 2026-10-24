@@ -30,7 +30,7 @@
  */
 
 export const MOMENT_VOICE_RULES: readonly string[] = [
-  'Say what you mean in plain language. A direct sentence is enough. Do not add a scene, a joke, or a metaphor until the meaning is already clear.',
+  'Say what you mean in plain language. One plain idea per line. Do not join two ideas with because, and then, or while. Do not add a scene, a joke, or a metaphor until the meaning is already clear.',
   'Do not assume missing context. If the line can appear alone, it has to make sense alone. Do not mention a listing, a plan, a joke, or a question unless that thing is already visible.',
   'Do not invent the reader\'s history. Do not turn a score or an answer into a claim that a specific event happened. Keep apart what the reader said, what the answers suggest, and a hypothetical. Mark a hypothetical as hypothetical.',
   'Keep the link to the trait accurate. Do not add an unrelated habit.',
@@ -42,7 +42,7 @@ export const MOMENT_VOICE_RULES: readonly string[] = [
 /** Examples of the register. For prompts: match the clarity, never reuse them. */
 export const MOMENT_VOICE_EXAMPLES: readonly string[] = [
   'You like trying new things, even when everyone else would rather stick with what they know.',
-  'You prefer familiar options because you already know what you enjoy.',
+  'You stick with familiar options you already know you enjoy.',
   'Your answers suggest you like a new option even when a familiar one is already there.',
 ];
 

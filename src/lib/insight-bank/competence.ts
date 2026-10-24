@@ -36,9 +36,9 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_competence_h_03", ["competence:high"], {
     focus: [
-      "Someone else might notice that you trust a hard task while doubt is available.",
-      "From the outside, you trust a hard task while doubt is available.",
-      "Other people can see that you trust a hard task while doubt is available.",
+      "Someone else might notice that you trust a hard task even when doubt is available.",
+      "From the outside, you trust a hard task even when doubt is available.",
+      "Other people can see that you trust a hard task even when doubt is available.",
     ],
     why: "The upside for you is a hard task that moves. The catch is a trust that skips a needed check.",
     try: [
@@ -86,7 +86,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you trust the hard task, and you expect to finish.",
       "Both can be true for you in the same week: you trust the hard task, and you expect to finish.",
-      "A week can hold both for you, so you trust the hard task, while you expect to finish.",
+      "A week can hold both for you, so you trust the hard task, and you expect to finish.",
     ],
     why: "The upside for you is a hard task that moves. The catch is a trust that skips a needed check.",
     try: [
@@ -182,7 +182,7 @@ export const COMPETENCE_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you doubt the hard task, and you look for the change.",
       "Both can be true for you in the same week: you doubt the hard task, and you look for the change.",
-      "A week can hold both for you, so you doubt the hard task, while you look for the change.",
+      "A week can hold both for you, so you doubt the hard task, and you look for the change.",
     ],
     why: "The upside for you is an honest doubt. The catch is a doubt that stops the start.",
     try: [

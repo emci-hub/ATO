@@ -17,8 +17,8 @@ export const CAT_STEADINESS: BarCard = {
       ],
       watchOut: [
         'Sometimes you stay so even that nobody sees you needed help with the hard part.',
-        'Because you keep the room smooth, you might sit on a problem that needed saying.',
-        'Sometimes you take the extra task because you made the last one look easy.',
+        'Sometimes you sit on a problem that needed saying.',
+        'Sometimes the extra task lands with you.',
       ],
       tryThis: [
         'Tell one person one thing that bothered you this week, so they see the hard day too.',
@@ -35,11 +35,11 @@ export const CAT_STEADINESS: BarCard = {
       strength: [
         'You stay steady for the meeting that matters and loosen up once you are home.',
         'You notice when the day is off, and you can usually get the next hour back on track.',
-        'You can sit with a calm friend and a stressed one, because you’ve had both kinds of days.',
+        'You can sit with a calm friend and a stressed one.',
       ],
       watchOut: [
         'Sometimes a hard week knocks your routines off more than you wanted.',
-        'Because your mood moves with the day, people might not know which version of you is coming to dinner.',
+        'Sometimes people don’t know which version of you is coming to dinner.',
         'Sometimes you lose the plan when the stress shows up in the same afternoon.',
       ],
       tryThis: [
@@ -61,7 +61,7 @@ export const CAT_STEADINESS: BarCard = {
       ],
       watchOut: [
         'Sometimes a strong feeling pushes the plan, or the talk, off the evening you meant to keep.',
-        'Because you answer in the moment, you might send the text before you’ve read it back.',
+        'Sometimes you send the text before you’ve read it back.',
         'Sometimes your plans change so often that the people around you can’t keep up.',
       ],
       tryThis: [

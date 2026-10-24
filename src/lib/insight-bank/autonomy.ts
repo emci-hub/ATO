@@ -36,9 +36,9 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_autonomy_h_03", ["autonomy:high"], {
     focus: [
-      "Someone else might notice that you pick your own way while a set path is available.",
-      "From the outside, you pick your own way while a set path is available.",
-      "Other people can see that you pick your own way while a set path is available.",
+      "Someone else might notice that you pick your own way even when a set path is available.",
+      "From the outside, you pick your own way even when a set path is available.",
+      "Other people can see that you pick your own way even when a set path is available.",
     ],
     why: "The upside for you is a way that fits. The catch is a way that ignores a good set path.",
     try: [
@@ -86,7 +86,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you choose the way, and you can skip the tie.",
       "Both can be true for you in the same week: you choose the way, and you can skip the tie.",
-      "A week can hold both for you, so you choose the way, while you can skip the tie.",
+      "A week can hold both for you, so you choose the way, and you can skip the tie.",
     ],
     why: "The upside for you is a way that fits. The catch is a way that ignores a good set path.",
     try: [
@@ -132,9 +132,9 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_autonomy_l_03", ["autonomy:low"], {
     focus: [
-      "Someone else might notice that you take the set path while your own way is available.",
-      "From the outside, you take the set path while your own way is available.",
-      "Other people can see that you take the set path while your own way is available.",
+      "Someone else might notice that you take the set path even when your own way is available.",
+      "From the outside, you take the set path even when your own way is available.",
+      "Other people can see that you take the set path even when your own way is available.",
     ],
     why: "The upside for you is a path that works. The catch is a path that was never questioned.",
     try: [
@@ -182,7 +182,7 @@ export const AUTONOMY_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you take the set path, and you need a real tie.",
       "Both can be true for you in the same week: you take the set path, and you need a real tie.",
-      "A week can hold both for you, so you take the set path, while you need a real tie.",
+      "A week can hold both for you, so you take the set path, and you need a real tie.",
     ],
     why: "The upside for you is a path that works. The catch is a path that was never questioned.",
     try: [

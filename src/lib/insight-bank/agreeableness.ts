@@ -36,9 +36,9 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_agreeableness_h_03", ["agreeableness:high"], {
     focus: [
-      "Someone else might notice that you give the easy yes while a blunt no is available.",
-      "From the outside, you give the easy yes while a blunt no is available.",
-      "Other people can see that you give the easy yes while a blunt no is available.",
+      "Someone else might notice that you give the easy yes even when a blunt no is available.",
+      "From the outside, you give the easy yes even when a blunt no is available.",
+      "Other people can see that you give the easy yes even when a blunt no is available.",
     ],
     why: "The upside for you is an easy yes. The catch is a yes that was not meant.",
     try: [
@@ -86,7 +86,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you go along, and you step back.",
       "Both can be true for you in the same week: you go along, and you step back.",
-      "A week can hold both for you, so you go along, while you step back.",
+      "A week can hold both for you, so you go along, and you step back.",
     ],
     why: "The upside for you is an easy yes. The catch is a yes that was not meant.",
     try: [
@@ -182,7 +182,7 @@ export const AGREEABLENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you state the point, and you say your point.",
       "Both can be true for you in the same week: you state the point, and you say your point.",
-      "A week can hold both for you, so you state the point, while you say your point.",
+      "A week can hold both for you, so you state the point, and you say your point.",
     ],
     why: "The upside for you is a clear point. The catch is a blunt point that lands harder than it needed to.",
     try: [

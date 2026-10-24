@@ -86,7 +86,7 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you check they will stay, and you stay close.",
       "Both can be true for you in the same week: you check they will stay, and you stay close.",
-      "A week can hold both for you, so you check they will stay, while you stay close.",
+      "A week can hold both for you, so you check they will stay, and you stay close.",
     ],
     why: "The upside for you is a close watch on the bond. The catch is a worry that outruns what was actually said.",
     try: [
@@ -182,7 +182,7 @@ export const ATTACHMENT_ANXIETY_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you let a gap pass, and you want people around.",
       "Both can be true for you in the same week: you let a gap pass, and you want people around.",
-      "A week can hold both for you, so you let a gap pass, while you want people around.",
+      "A week can hold both for you, so you let a gap pass, and you want people around.",
     ],
     why: "The upside for you is a calmer gap. The catch is a gap that actually mattered.",
     try: [

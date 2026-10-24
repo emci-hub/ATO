@@ -36,9 +36,9 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_growth_mindset_h_03", ["growth_mindset:high"], {
     focus: [
-      "Someone else might notice that you look for a change while the miss could stay closed.",
-      "From the outside, you look for a change while the miss could stay closed.",
-      "Other people can see that you look for a change while the miss could stay closed.",
+      "Someone else might notice that you look for a change even when the miss could stay closed.",
+      "From the outside, you look for a change even when the miss could stay closed.",
+      "Other people can see that you look for a change even when the miss could stay closed.",
     ],
     why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
@@ -86,7 +86,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you look for the change, and you look at your part.",
       "Both can be true for you in the same week: you look for the change, and you look at your part.",
-      "A week can hold both for you, so you look for the change, while you look at your part.",
+      "A week can hold both for you, so you look for the change, and you look at your part.",
     ],
     why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
@@ -132,9 +132,9 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_growth_mindset_l_03", ["growth_mindset:low"], {
     focus: [
-      "Someone else might notice that you treat a miss as final while another try is available.",
-      "From the outside, you treat a miss as final while another try is available.",
-      "Other people can see that you treat a miss as final while another try is available.",
+      "Someone else might notice that you treat a miss as final even when another try is available.",
+      "From the outside, you treat a miss as final even when another try is available.",
+      "Other people can see that you treat a miss as final even when another try is available.",
     ],
     why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
@@ -182,7 +182,7 @@ export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you close the path, and you keep a known favorite.",
       "Both can be true for you in the same week: you close the path, and you keep a known favorite.",
-      "A week can hold both for you, so you close the path, while you keep a known favorite.",
+      "A week can hold both for you, so you close the path, and you keep a known favorite.",
     ],
     why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [

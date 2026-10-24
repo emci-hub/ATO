@@ -123,10 +123,10 @@ Proof: {evidenceMove}.                                ← L3 (required; the spec
 | cat_drive | Drive | you push until the work is done | you go at your own pace and still finish |
 | cat_agency | Agency | you change one piece and try it again | you leave the outcome to the day |
 | cat_social | Everyday social energy | you want time with other people | you want less time in a crowd |
-| cat_communication | Communication | you say the hard part and then ask what works | you step back and let the other person talk |
+| cat_communication | Communication | you say the hard part in a way that can work for both | you step back and let the other person talk |
 | cat_love | Love / closeness ⚠️ map | you stay close and answer | you care and still leave a little room |
 | cat_independence | Independence & closeness ⚠️ map | you choose the way before anyone else does | you take a plan someone else already made |
-| cat_levity | Levity | you look for a lighter take and then say it plain | you take a hard talk straight |
+| cat_levity | Levity | you say a hard thing in a lighter, plain way | you take a hard talk straight |
 | cat_structure | Structure vs. spontaneity ⚠️ map | you make a plan and follow it through | you change the plan as you go |
 | cat_resilience | Resilience under pressure | you stay and try again after a miss | a bad day stays with you and you still finish |
 

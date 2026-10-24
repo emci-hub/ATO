@@ -7,7 +7,7 @@ export const CAT_OPENNESS: BarCard = {
     high: {
       summary: [
         'You say yes to something new, and you want other people in on it.',
-        'You name a new option while the familiar one is still on the table.',
+        'You name a new option even when the familiar one is still on the table.',
         'A new option can get you moving before the details are settled.',
       ],
       strength: [
@@ -17,7 +17,7 @@ export const CAT_OPENNESS: BarCard = {
       ],
       watchOut: [
         'Sometimes you start the next new thing before the last one is finished.',
-        'Because you say yes fast, someone quieter can end up in a plan they never picked.',
+        'Sometimes you say yes before you have checked who else wanted a say.',
         'Sometimes your week fills with new plans and you have no evening left.',
       ],
       tryThis: [
@@ -34,12 +34,12 @@ export const CAT_OPENNESS: BarCard = {
       ],
       strength: [
         'You can do a busy day with people and a quiet day, so different plans can include you.',
-        'You pick a new option because you want it, not only because other people are loud about it.',
+        'You pick a new option you actually want, even when other people are loud about a different one.',
         'You show up for the group plan and you still leave when you need time to yourself.',
       ],
       watchOut: [
-        'Sometimes you say no to a new place only because that day already ran long.',
-        'Because you can go either way, you might join a plan that doesn’t fit the night you needed.',
+        'Sometimes you say no to a new place on a day that already ran long.',
+        'Sometimes you join a plan that doesn’t fit the night you needed.',
         'Sometimes you wait for the right evening and the invite is already gone.',
       ],
       tryThis: [
@@ -56,13 +56,13 @@ export const CAT_OPENNESS: BarCard = {
       ],
       strength: [
         'You know the places you like, and you put them on the calendar on purpose.',
-        'Your close friends get the whole evening, because you are not splitting it across a crowd.',
-        'Friends can plan with you, because you name the place and the time and you stick to them.',
+        'Your close friends get the whole evening.',
+        'You name the place and the time, and you stick to them.',
       ],
       watchOut: [
         'Sometimes you skip a new place you might have liked once you were in the door.',
-        'Because you keep the usual plan, friends can stop texting you the new ones.',
-        'Sometimes you miss a person you would have liked, because the room felt too new.',
+        'Sometimes friends stop sending you the new plans.',
+        'Sometimes you skip a room that felt too new.',
       ],
       tryThis: [
         'Say yes to one small new thing this week, so a new place gets one try.',

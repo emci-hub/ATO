@@ -17,7 +17,7 @@ export const CAT_AGENCY: BarCard = {
       ],
       watchOut: [
         'Sometimes you blame yourself for a result that was never in your hands.',
-        'Because you believe effort matters, you might keep pushing past the hour you needed to stop.',
+        'Sometimes you keep pushing past the hour you needed to stop.',
         'Sometimes you expect to fix the whole problem yourself, with nobody else in it.',
       ],
       tryThis: [
@@ -39,7 +39,7 @@ export const CAT_AGENCY: BarCard = {
       ],
       watchOut: [
         'Sometimes you let a thing go that one small step from you could have changed.',
-        'Because some days you feel unsure, you might skip a chance you could have tried.',
+        'Sometimes you skip a chance you could have tried.',
         'Sometimes one setback makes you doubt yourself more than the miss was worth.',
       ],
       tryThis: [
@@ -61,7 +61,7 @@ export const CAT_AGENCY: BarCard = {
       ],
       watchOut: [
         'Sometimes you accept a result you could have moved with one small step.',
-        'Because you give the credit to luck, you might miss how much your own work mattered.',
+        'Sometimes you miss how much your own work mattered.',
         'Sometimes doubt stops you from trying a task you would have handled fine.',
       ],
       tryThis: [

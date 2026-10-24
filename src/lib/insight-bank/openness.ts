@@ -14,7 +14,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      "Notice when the new option wins only because it is new.",
+      "Notice when the new option wins only for being new.",
       "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
@@ -30,15 +30,15 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      "Notice when the new option wins only because it is new.",
+      "Notice when the new option wins only for being new.",
       "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
   idea("ftw_openness_h_03", ["openness:high"], {
     focus: [
-      "Someone else might notice that you reach for a new option while a favorite is still there.",
-      "From the outside, you reach for a new option while a favorite is still there.",
-      "Other people can see that you reach for a new option while a favorite is still there.",
+      "Someone else might notice that you reach for a new option even when a favorite is still there.",
+      "From the outside, you reach for a new option even when a favorite is still there.",
+      "Other people can see that you reach for a new option even when a favorite is still there.",
     ],
     why: "The upside for you is variety. The catch is passing on something that would have been more fun.",
     try: [
@@ -46,7 +46,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      "Notice when the new option wins only because it is new.",
+      "Notice when the new option wins only for being new.",
       "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
@@ -62,7 +62,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      "Notice when the new option wins only because it is new.",
+      "Notice when the new option wins only for being new.",
       "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
@@ -78,7 +78,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      "Notice when the new option wins only because it is new.",
+      "Notice when the new option wins only for being new.",
       "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
@@ -86,7 +86,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you try new things, and you want people around.",
       "Both can be true for you in the same week: you try new things, and you want people around.",
-      "A week can hold both for you, so you try new things, while you want people around.",
+      "A week can hold both for you, so you try new things, and you want people around.",
     ],
     why: "The upside for you is variety. The catch is passing on something that would have been more fun.",
     try: [
@@ -94,7 +94,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether you would miss that favorite.",
     ],
     watch: [
-      "Notice when the new option wins only because it is new.",
+      "Notice when the new option wins only for being new.",
       "Notice if a skipped favorite was the one you wanted.",
     ],
   }),
@@ -110,7 +110,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      "Notice when you skip a change only because it is new.",
+      "Notice when you skip a change only for being new.",
       "Notice if the new option was the one you wanted.",
     ],
   }),
@@ -126,15 +126,15 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      "Notice when you skip a change only because it is new.",
+      "Notice when you skip a change only for being new.",
       "Notice if the new option was the one you wanted.",
     ],
   }),
   idea("ftw_openness_l_03", ["openness:low"], {
     focus: [
-      "Someone else might notice that you stay with a known favorite while a new option waits.",
-      "From the outside, you stay with a known favorite while a new option waits.",
-      "Other people can see that you stay with a known favorite while a new option waits.",
+      "Someone else might notice that you stay with a known favorite even when a new option waits.",
+      "From the outside, you stay with a known favorite even when a new option waits.",
+      "Other people can see that you stay with a known favorite even when a new option waits.",
     ],
     why: "The upside for you is knowing what already works. The catch is skipping a change that would have been better.",
     try: [
@@ -142,7 +142,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      "Notice when you skip a change only because it is new.",
+      "Notice when you skip a change only for being new.",
       "Notice if the new option was the one you wanted.",
     ],
   }),
@@ -158,7 +158,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      "Notice when you skip a change only because it is new.",
+      "Notice when you skip a change only for being new.",
       "Notice if the new option was the one you wanted.",
     ],
   }),
@@ -174,7 +174,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      "Notice when you skip a change only because it is new.",
+      "Notice when you skip a change only for being new.",
       "Notice if the new option was the one you wanted.",
     ],
   }),
@@ -182,7 +182,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you keep a known favorite, and you finish the plan.",
       "Both can be true for you in the same week: you keep a known favorite, and you finish the plan.",
-      "A week can hold both for you, so you keep a known favorite, while you finish the plan.",
+      "A week can hold both for you, so you keep a known favorite, and you finish the plan.",
     ],
     why: "The upside for you is knowing what already works. The catch is skipping a change that would have been better.",
     try: [
@@ -190,7 +190,7 @@ export const OPENNESS_IDEAS: readonly InsightIdea[] = [
       "Before you decide, check whether the new option is actually better.",
     ],
     watch: [
-      "Notice when you skip a change only because it is new.",
+      "Notice when you skip a change only for being new.",
       "Notice if the new option was the one you wanted.",
     ],
   })

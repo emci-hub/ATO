@@ -86,7 +86,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you want people around, and you turn it into play.",
       "Both can be true for you in the same week: you want people around, and you turn it into play.",
-      "A week can hold both for you, so you want people around, while you turn it into play.",
+      "A week can hold both for you, so you want people around, and you turn it into play.",
     ],
     why: "The upside for you is company. The catch is a week with no time left to come back.",
     try: [
@@ -182,7 +182,7 @@ export const EXTRAVERSION_IDEAS: readonly InsightIdea[] = [
     focus: [
       "You recharge with time to yourself, and you need a real tie.",
       "Both can be true for you in the same week: you recharge with time to yourself, and you need a real tie.",
-      "A week can hold both for you, so you recharge with time to yourself, while you need a real tie.",
+      "A week can hold both for you, so you recharge with time to yourself, and you need a real tie.",
     ],
     why: "The upside for you is time to come back. The catch is a next plan that feels like too much.",
     try: [

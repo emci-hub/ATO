@@ -86,7 +86,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you finish the plan, and you feel a bad day longer.",
       "Both can be true for you in the same week: you finish the plan, and you feel a bad day longer.",
-      "A week can hold both for you, so you finish the plan, while you feel a bad day longer.",
+      "A week can hold both for you, so you finish the plan, and you feel a bad day longer.",
     ],
     why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
@@ -132,9 +132,9 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_conscientiousness_l_03", ["conscientiousness:low"], {
     focus: [
-      "Someone else might notice that you leave the plan open while others want it locked.",
-      "From the outside, you leave the plan open while others want it locked.",
-      "Other people can see that you leave the plan open while others want it locked.",
+      "Someone else might notice that you leave the plan open even when others want it locked.",
+      "From the outside, you leave the plan open even when others want it locked.",
+      "Other people can see that you leave the plan open even when others want it locked.",
     ],
     why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
@@ -182,7 +182,7 @@ export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you keep plans loose, and you try new things.",
       "Both can be true for you in the same week: you keep plans loose, and you try new things.",
-      "A week can hold both for you, so you keep plans loose, while you try new things.",
+      "A week can hold both for you, so you keep plans loose, and you try new things.",
     ],
     why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [

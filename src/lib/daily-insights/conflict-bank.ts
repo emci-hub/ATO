@@ -35,7 +35,7 @@ export const CONFLICT_BANK: readonly ConflictLine[] = [
     text: 'You step out of a fight instead of joining it.',
     strength: "You don't waste energy on small fights.",
     watchOut: 'Big things can rot in the quiet. Ominously.',
-    tryLine: "Bring up one small thing while it's still small.",
+    tryLine: 'Bring up one small thing before it grows.',
   },
   {
     id: 'peacekeeper',

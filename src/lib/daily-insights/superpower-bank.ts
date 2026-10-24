@@ -18,7 +18,7 @@ function row(
 }
 
 export const SUPERPOWER_BANK: readonly SuperpowerLine[] = [
-  row('cat_steadiness', 'superpower', 'Calm on tap', 'You stay level while everyone else wobbles.', 'Be the one who says "here\'s the plan".'),
+  row('cat_steadiness', 'superpower', 'Calm on tap', 'You stay level even when everyone else wobbles.', 'Be the one who says "here\'s the plan".'),
   row('cat_steadiness', 'kryptonite', 'The wobble', 'Small shakes hit you harder than they should.', 'Name the wobble out loud. It shrinks.'),
   row('cat_openness', 'superpower', 'New-thing magnet', 'Untried paths look like fun to you, not risk.', 'Bring a friend on your next odd idea.'),
   row('cat_openness', 'kryptonite', 'Comfort lock', "New stuff can feel like more effort than it's worth.", 'Try one tiny new thing a week.'),

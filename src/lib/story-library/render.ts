@@ -51,6 +51,12 @@ function sayWith(library: StoryLibrary, facts: RenderFacts, pronoun = YOU, name 
   const shown = facts.shown ?? new Set<string>();
   const text = (slot: LineSlot, who: { trait: string; tier: Tier }, seed: string, index = 0, also?: { trait: string; tier: Tier }) => {
     const prefer = slot === 'title' || slot === 'legend-title' ? undefined : preferredShape(slot, index);
+    const role =
+      slot === 'shows'
+        ? (['shows-when', 'shows-compound', 'shows-then'][index] ?? undefined)
+        : slot === 'legend-won'
+          ? (['legend-won-when', 'legend-won-compound', 'legend-won-then'][index] ?? undefined)
+          : undefined;
     const ctx: PickContext = {
       slot,
       trait: who.trait,
@@ -63,6 +69,7 @@ function sayWith(library: StoryLibrary, facts: RenderFacts, pronoun = YOU, name 
       // different-shaped line, which is how a false "when" got onto the card.
       usedShapes: new Set<SentenceShape>(),
       preferShape: prefer,
+      preferIdPart: role,
       answer: facts.answer,
       recent: facts.recent,
       legend: facts.legend,

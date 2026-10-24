@@ -86,7 +86,7 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you say your point, and you widen the plan.",
       "Both can be true for you in the same week: you say your point, and you widen the plan.",
-      "A week can hold both for you, so you say your point, while you widen the plan.",
+      "A week can hold both for you, so you say your point, and you widen the plan.",
     ],
     why: "The upside for you is a point that gets said. The catch is a point that takes over the talk.",
     try: [
@@ -132,9 +132,9 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_conflict_assertiveness_l_03", ["conflict_assertiveness:low"], {
     focus: [
-      "Someone else might notice that you step back while the point is ready to say.",
-      "From the outside, you step back while the point is ready to say.",
-      "Other people can see that you step back while the point is ready to say.",
+      "Someone else might notice that you step back even when the point is ready to say.",
+      "From the outside, you step back even when the point is ready to say.",
+      "Other people can see that you step back even when the point is ready to say.",
     ],
     why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [
@@ -182,7 +182,7 @@ export const CONFLICT_ASSERTIVENESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you step back, and you widen the plan.",
       "Both can be true for you in the same week: you step back, and you widen the plan.",
-      "A week can hold both for you, so you step back, while you widen the plan.",
+      "A week can hold both for you, so you step back, and you widen the plan.",
     ],
     why: "The upside for you is a softer disagreement. The catch is a point that never gets said.",
     try: [

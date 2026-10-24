@@ -33,7 +33,7 @@ export const STORY_LEAN_PHRASES: Readonly<Record<CategoryId, Record<TraitLean, s
     low: 'you want less time in a crowd',
   },
   cat_communication: {
-    high: 'you say the hard part and then ask what works',
+    high: 'you say the hard part in a way that can work for both',
     low: 'you step back and let the other person talk',
   },
   cat_love: {
@@ -45,7 +45,7 @@ export const STORY_LEAN_PHRASES: Readonly<Record<CategoryId, Record<TraitLean, s
     low: 'you take a plan someone else already made',
   },
   cat_levity: {
-    high: 'you look for a lighter take and then say it plain',
+    high: 'you say a hard thing in a lighter, plain way',
     low: 'you take a hard talk straight',
   },
   cat_structure: {

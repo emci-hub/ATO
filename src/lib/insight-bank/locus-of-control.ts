@@ -86,7 +86,7 @@ export const LOCUS_OF_CONTROL_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you look at your part, and you finish the plan.",
       "Both can be true for you in the same week: you look at your part, and you finish the plan.",
-      "A week can hold both for you, so you look at your part, while you finish the plan.",
+      "A week can hold both for you, so you look at your part, and you finish the plan.",
     ],
     why: "The upside for you is a part that can change. The catch is a blame that lands only on you.",
     try: [
@@ -132,9 +132,9 @@ export const LOCUS_OF_CONTROL_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_locus_of_control_l_03", ["locus_of_control:low"], {
     focus: [
-      "Someone else might notice that you treat the outcome as bound to happen while a lever is visible.",
-      "From the outside, you treat the outcome as bound to happen while a lever is visible.",
-      "Other people can see that you treat the outcome as bound to happen while a lever is visible.",
+      "Someone else might notice that you treat the outcome as bound to happen even when a lever is visible.",
+      "From the outside, you treat the outcome as bound to happen even when a lever is visible.",
+      "Other people can see that you treat the outcome as bound to happen even when a lever is visible.",
     ],
     why: "The upside for you is a cause outside the choice. The catch is a cause that ignores a real lever.",
     try: [
@@ -182,7 +182,7 @@ export const LOCUS_OF_CONTROL_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you blame the day, and you shake a bad day off.",
       "Both can be true for you in the same week: you blame the day, and you shake a bad day off.",
-      "A week can hold both for you, so you blame the day, while you shake a bad day off.",
+      "A week can hold both for you, so you blame the day, and you shake a bad day off.",
     ],
     why: "The upside for you is a cause outside the choice. The catch is a cause that ignores a real lever.",
     try: [

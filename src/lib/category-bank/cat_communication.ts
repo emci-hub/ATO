@@ -6,7 +6,7 @@ export const CAT_COMMUNICATION: BarCard = {
   cells: {
     high: {
       summary: [
-        'When you disagree, you say what you think and then look for a fix you can both live with.',
+        'When you disagree, you say your view in a way you can both live with.',
         'You speak clearly, and you still pay attention to how the other person feels.',
         'You take a hard talk straight on, and you still try to make the ending fair.',
       ],
@@ -16,8 +16,8 @@ export const CAT_COMMUNICATION: BarCard = {
         'You make a hard talk feel fair to the person sitting across from you.',
       ],
       watchOut: [
-        'Sometimes you offer a fix while the other person is still saying how they feel.',
-        'Because you want it settled, you might push to talk before they are ready.',
+        'Sometimes you offer a fix before the other person has finished.',
+        'Sometimes you push to talk before they are ready.',
         'Sometimes you work so hard at being fair that the talk leaves you worn out.',
       ],
       tryThis: [
@@ -39,8 +39,8 @@ export const CAT_COMMUNICATION: BarCard = {
       ],
       watchOut: [
         'Sometimes you let something go that was worth saying out loud.',
-        'Because you adjust to the other person, your own view can get lost.',
-        'Sometimes you hold it back and then bring the whole pile up at once.',
+        'Sometimes your own view gets lost.',
+        'Sometimes you bring the whole pile up at once.',
       ],
       tryThis: [
         'Say one small thing that bothered you this week, so it doesn’t sit and grow.',
@@ -61,7 +61,7 @@ export const CAT_COMMUNICATION: BarCard = {
       ],
       watchOut: [
         'Sometimes people don’t know you disagree until long after the talk is over.',
-        'Because you stay quiet, a problem that bothers you can keep happening.',
+        'Sometimes a problem that bothers you keeps happening.',
         'Sometimes keeping your view inside leaves you feeling unheard.',
       ],
       tryThis: [

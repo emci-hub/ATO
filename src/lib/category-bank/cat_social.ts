@@ -17,7 +17,7 @@ export const CAT_SOCIAL: BarCard = {
       ],
       watchOut: [
         'Sometimes you keep the joke going when someone needs to talk about something serious.',
-        'Because you want everyone comfortable, you might skip the hard thing you needed to say.',
+        'Sometimes you skip the hard thing you needed to say.',
         'Sometimes you give so much of the evening to the group that you go home with nothing left.',
       ],
       tryThis: [
@@ -39,7 +39,7 @@ export const CAT_SOCIAL: BarCard = {
       ],
       watchOut: [
         'Sometimes you go quiet in a group and people read it as you not caring.',
-        'Because you match the room, your own mood can get lost in theirs.',
+        'Sometimes your own mood gets lost in the room.',
         'Sometimes you say yes to a plan on a night you needed to stay in.',
       ],
       tryThis: [
@@ -61,8 +61,8 @@ export const CAT_SOCIAL: BarCard = {
       ],
       watchOut: [
         'Sometimes people read your quiet, or your direct line, as cold.',
-        'Because you skip the small talk, a new person can take longer to feel easy with you.',
-        'Sometimes you miss the fun because the group felt like too much before you walked in.',
+        'Sometimes a new person takes longer to feel easy with you.',
+        'Sometimes a group feels like too much before you walk in.',
       ],
       tryThis: [
         'Smile and say hi to one new person this week, so they get a friendly hello from you.',

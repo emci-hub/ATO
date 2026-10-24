@@ -8,7 +8,7 @@ export const CAT_LEVITY: BarCard = {
       summary: [
         'You bring a joke into a tense moment, and you still say what you actually think.',
         'When things get tense, you lighten the mood and help people look for a fix.',
-        'You use a joke and then a straight sentence, so a hard moment doesn’t get heavy.',
+        'A hard moment gets a lighter line from you, said plain.',
       ],
       strength: [
         'You ease the tension, so the person across from you can keep talking.',
@@ -17,7 +17,7 @@ export const CAT_LEVITY: BarCard = {
       ],
       watchOut: [
         'Sometimes your joke lands at the wrong moment for someone who is upset.',
-        'Because you keep things light, people might think you aren’t taking it seriously.',
+        'Sometimes people think you aren’t taking it seriously.',
         'Sometimes the joke covers a thing you needed to say in plain words.',
       ],
       tryThis: [
@@ -39,7 +39,7 @@ export const CAT_LEVITY: BarCard = {
       ],
       watchOut: [
         'Sometimes you misread the moment and joke when someone wanted quiet.',
-        'Because you match their tone, people might not know what you actually feel.',
+        'Sometimes people don’t know what you actually feel.',
         'Sometimes you wait so long to pick a tone that the moment passes.',
       ],
       tryThis: [
@@ -61,7 +61,7 @@ export const CAT_LEVITY: BarCard = {
       ],
       watchOut: [
         'Sometimes a tense moment feels heavier for you than the problem calls for.',
-        'Because you stay quiet in the argument, people might not hear what you think.',
+        'Sometimes people don’t hear what you think.',
         'Sometimes you carry a disagreement around long after the talk is over.',
       ],
       tryThis: [

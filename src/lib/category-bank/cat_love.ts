@@ -21,8 +21,8 @@ export const CAT_LOVE: MapCard = {
       ],
       watchOut: [
         'Sometimes you pull away right when you most want a sign that they are still there.',
-        'Because you notice so much, you might worry and still say nothing about it.',
-        'Sometimes people can’t tell what you need, because you keep it to yourself.',
+        'Sometimes you worry and still say nothing about it.',
+        'Sometimes people can’t tell what you need.',
       ],
       tryThis: [
         'Tell one person close to you one thing you need, so they don’t have to guess.',
@@ -44,8 +44,8 @@ export const CAT_LOVE: MapCard = {
       ],
       watchOut: [
         'Sometimes a slow reply feels like distance to you when it is only a busy afternoon.',
-        'Because you send the long text, you might feel hurt when the reply is only a few words.',
-        'Sometimes you reach out to calm a worry, not because you had something to say.',
+        'Sometimes a short reply hurts you after a long text.',
+        'Sometimes you reach out only to calm a worry.',
       ],
       tryThis: [
         'Put your phone away for twenty minutes after you send a message, so you aren’t waiting on it.',
@@ -63,11 +63,11 @@ export const CAT_LOVE: MapCard = {
       strength: [
         'You give people room, and a quiet day doesn’t make you jealous.',
         'You stay calm in a relationship, even when the texts are few.',
-        'You can keep your own life going while you stay close to someone.',
+        'You can keep your own life going and stay close to someone.',
       ],
       watchOut: [
         'Sometimes people close to you want more contact, or more sharing, than you offer.',
-        'Because you stay relaxed, a partner might read the quiet as you not caring.',
+        'Sometimes a partner reads your quiet as you not caring.',
         'Sometimes you keep your feelings so private that the other person feels shut out.',
       ],
       tryThis: [
@@ -90,7 +90,7 @@ export const CAT_LOVE: MapCard = {
       ],
       watchOut: [
         'Sometimes you share more than someone new is ready to hear.',
-        'Because you trust easily, you might miss an early sign that something is off.',
+        'Sometimes you miss an early sign that something is off.',
         'Sometimes a person who needs more space feels crowded by how close you get.',
       ],
       tryThis: [

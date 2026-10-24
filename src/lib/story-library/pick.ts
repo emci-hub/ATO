@@ -19,6 +19,8 @@ export interface PickContext {
   shown: ReadonlySet<string>;
   usedShapes: ReadonlySet<SentenceShape>;
   preferShape?: SentenceShape;
+  /** Prefer a line whose id contains this, inside the top priority band. */
+  preferIdPart?: string;
   answer?: string;
   recent?: boolean;
   legend?: string;
@@ -99,8 +101,9 @@ export function pickLine(lines: readonly StoryLine[], ctx: PickContext): StoryLi
   const usable = free.length > 0 ? free : fresh;
   const top = Math.max(...usable.map((line) => line.priority));
   const band = usable.filter((line) => line.priority === top);
+  const byId = ctx.preferIdPart ? band.filter((line) => line.id.includes(ctx.preferIdPart!)) : [];
   const shaped = ctx.preferShape ? band.filter((line) => lineShape(line, ctx) === ctx.preferShape) : [];
-  const choice = (shaped.length > 0 ? shaped : band).slice().sort((a, b) => {
+  const choice = (byId.length > 0 ? byId : shaped.length > 0 ? shaped : band).slice().sort((a, b) => {
     const delta = hash(`${ctx.seed}|${a.id}`) - hash(`${ctx.seed}|${b.id}`);
     return delta !== 0 ? delta : a.id < b.id ? -1 : 1;
   });

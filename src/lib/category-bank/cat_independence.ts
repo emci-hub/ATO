@@ -7,7 +7,7 @@ export const CAT_INDEPENDENCE: MapCard = {
     // Self-directed + Connected
     hh: {
       summary: [
-        'You like doing a thing your own way, and you still want close people around while you do it.',
+        'You like doing a thing your own way, with close people around.',
         'When you make a plan, you want room to shape it and someone you like in it.',
         'You want your own say and a real connection in the same week.',
       ],
@@ -18,8 +18,8 @@ export const CAT_INDEPENDENCE: MapCard = {
       ],
       watchOut: [
         'Sometimes you want company on your terms, which can be hard for a friend to match.',
-        'Because you want both, you might feel pulled between your plan and your people.',
-        'Sometimes you decide alone and then expect others to join what you already chose.',
+        'Sometimes you feel pulled between your plan and your people.',
+        'Sometimes other people are asked to join a plan you already chose.',
       ],
       tryThis: [
         'Ask a friend what they would like to do next, so the next plan isn’t only yours.',
@@ -40,8 +40,8 @@ export const CAT_INDEPENDENCE: MapCard = {
         'You can enjoy your own company for a long stretch of days.',
       ],
       watchOut: [
-        'Sometimes friends feel left out because you don’t reach out much.',
-        'Because you feel fine on your own, you might miss a sign that someone wants more contact.',
+        'Sometimes a friend goes a long stretch without a text from you.',
+        'Sometimes you miss a sign that someone wants more contact.',
         'Sometimes you handle a hard thing alone even though someone nearby could help.',
       ],
       tryThis: [
@@ -64,7 +64,7 @@ export const CAT_INDEPENDENCE: MapCard = {
       ],
       watchOut: [
         'Sometimes your own wishes get lost in what the group wants.',
-        'Because you like their input, you might wait for others before you decide.',
+        'Sometimes you wait for others before you decide.',
         'Sometimes you feel unsure when you have to choose with nobody else in the room.',
       ],
       tryThis: [
@@ -87,8 +87,8 @@ export const CAT_INDEPENDENCE: MapCard = {
       ],
       watchOut: [
         'Sometimes you wait for a direction that nobody ends up giving you.',
-        'Because you keep to yourself, people might not know what you need.',
-        'Sometimes a friendship fades because nobody, you included, sends the text.',
+        'Sometimes people don’t know what you need.',
+        'Sometimes a friendship fades when you never send the text.',
       ],
       tryThis: [
         'Choose one small thing to do on your own this week, so the plan is yours.',

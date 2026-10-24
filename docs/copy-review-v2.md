@@ -8,6 +8,23 @@ Phase 1 set the policy. Round 2 rewrote the sample cards and dropped the one-sha
 
 If a row says the meaning is uncertain, that line was not given a guessed fact.
 
+## One idea per line (follow-up, same day)
+
+emci approved a tighter pass on the lines that still joined two ideas, or that named a legend with no fact for that side. Daily lines approved on 2026-10-02 are unchanged. The closer "The new option won." stays its own sentence. It is the high-openness joke only.
+
+| Where | Before | After | Reason |
+|---|---|---|---|
+| Shows, steadiness | You might look at both choices and then let one setback fade while another stays. | Some setbacks you shake off fast, but others stick around. | One idea. Some fade, some stay. |
+| Mix | Trying something new can include play for you, because a task can be new and still be a game. | The answers put two things together for you: trying something new, and play in an ordinary task. | Both leans are on the card. No cause the answers do not show. |
+| Curie scene | Picture an hour with Marie Curie. In that hour you would try something new if that choice came up, and the talk would stay on the known work. | Picture an hour with Marie Curie: she'd be testing something nobody understood yet, and you'd want in. | One imagined scene. The roster fact is that she studied a kind of radiation nobody understood yet. |
+| Curie, steadiness | You can let one setback fade while another stays, and that is separate from what Marie Curie is known for. | Some setbacks you shake off fast, but others stick around. | She has no steadiness fact, so her name is not on the line. |
+| Curie differ | You recharge with time to yourself rather than with a crowd, because the answers land on that side. | You recharge with time to yourself after time with other people. | Reader only. Reserved wording kept. Her entry does not say how she spent time with people. |
+| Babe Ruth differ | You recharge with time to yourself. After games, a crowd would gather in Babe Ruth's hotel suite. | Same sentence. | The hotel suite is a roster fact, so his name stays. |
+| Insight watch | Notice when the new option wins only because it is new. | Notice when the new option wins only for being new. | Same watch. The cause word is gone. |
+| Starter focus | Your lock screen might take the first minute of the morning, while the kettle is still cold. | Your lock screen might take the first minute of the morning. | One idea: the phone. The kettle was a second scene. |
+| Category, openness | You name a new option while the familiar one is still on the table. | You name a new option even when the familiar one is still on the table. | One contrast. |
+| Card 6 lean, communication | you say the hard part and then ask what works | you say the hard part in a way that can work for both | One idea. The "and then" was a second step. |
+
 ## Where player-facing text comes from
 
 There is no localization catalog. Player-facing English is the source string.
@@ -53,7 +70,7 @@ Round 2 fixed the sample sentences and then repeated one opener ("You'd rather")
 | Insights | Unique focus text | The three focuses of one idea are an opener pool |
 | Pole lines | — | All 32 high/low lines are one pool |
 | `docs/story-library/STYLE.md` | `style-storylib-5` | `style-storylib-6`. One fact. Varied openings. Picture an hour |
-| `src/lib/legend-figures/story.ts` | "If you'd met", plus "that hour is imagined" | "Picture an hour with [the legend]." No second disclaimer |
+| `src/lib/legend-figures/story.ts` | "If you'd met", plus "that hour is imagined" | "Picture an hour with [name]: they'd be [one roster fact], and you'd [the shared side]." If that side has no fact, the differ line names the reader only |
 | Category watch-outs | Must open with Sometimes or Because | Unchanged. That pool is not under the opener cap, because the check requires those two openings |
 
 Still banned: the untried option, gets the first look, one look is enough, the rest can wait, shared side, strong match, you are someone who, embrace, navigate, unlock, journey, vibe, energy as coach-speak. Slang stays casual-only.
@@ -89,14 +106,14 @@ Seed `sample-dive`. Openness high, playfulness high, steadiness in the middle.
 | Slot | Old | New | Reason |
 |---|---|---|---|
 | Shows, openness | You'd rather try something new, even when other people stick with what they know. | You will still try something new even when a familiar option is right there. | The preference, with a real "even when." |
-| Shows, playfulness | You'd rather turn an ordinary task into play, and it can take longer on purpose. | You can turn an ordinary task into play, and a different choice can stay available too. | Play can be true without erasing another choice. |
-| Shows, steadiness | You'd let some of a rough moment land and then let the rest go. | You might look at both choices and then let one setback fade while another stays. | "A rough moment" did not say what happens. A setback can fade while another stays. |
-| Mix | You'd rather keep both of these than pretend they are one habit. | Trying something new can include play for you, because a task can be new and still be a game. | Names the two leanings. On a card without that pair: "Both leanings can stay true for you in the same week, because neither one has to cancel the other." |
+| Shows, playfulness | You'd rather turn an ordinary task into play, and it can take longer on purpose. | You can turn an ordinary task into play on an ordinary day as well. | Play, as one idea. |
+| Shows, steadiness | You'd let some of a rough moment land and then let the rest go. | Some setbacks you shake off fast, but others stick around. | One idea. Some fade, some stay. |
+| Mix | You'd rather keep both of these than pretend they are one habit. | The answers put two things together for you: trying something new, and play in an ordinary task. | Both leans are on the card. No invented cause. |
 | Notice | You'd notice a new option before other people settle on a familiar one. | Other people can see that you will try something new before the choice is settled. | What someone else could see, not a private "you'd notice." |
-| Means | You'd rather try something new… The upside is variety, and the catch is passing on something that would have been more fun. | What the answers suggest is that you will try something new even when a familiar option is right there. The upside is variety. The catch is passing on something that would have been more fun. | The basis is the answers. |
+| Means | You'd rather try something new… The upside is variety, and the catch is passing on something that would have been more fun. | What the answers suggest, in plain words, is that you will try something new even when a familiar option is right there. | One idea. The upside and the catch were a second claim on the same line. |
 | Joke | The new option won. | The new option won. | This closer belongs to high openness only. Playfulness high is "Play took the long way." Steadiness mid is "Some of it stayed." |
 
-Low card (`sample-dive-low`): extraversion shows as "You might look at both choices and then recharge with time to yourself." Joke: "The familiar one stayed."
+Low card (`sample-dive-low`): extraversion shows as "You will come back to this choice: to recharge with time to yourself." Joke: "The familiar one stayed."
 
 ### Legend comparison
 
@@ -104,12 +121,12 @@ Seed `sample-legend` (Marie Curie). Radioactivity is in the first match line onl
 
 | Slot | Old | New | Reason |
 |---|---|---|---|
-| Match | You'd rather head toward what isn't known yet, like Marie Curie. She studied a new kind of radiation that nobody understood yet, and she named it radioactivity. | Like Marie Curie, who studied a new kind of radiation that nobody understood yet and named it radioactivity, you will still try something new even when a familiar option is right there. | Her sourced fact, once. The reader's side is high openness, not a dinner. |
-| Scene | You might picture one ordinary hour beside Marie Curie, who coined the word radioactivity. That hour is imagined, not a memory. | Picture an hour with Marie Curie. In that hour you would try something new if that choice came up, and the talk would stay on the known work. | The opening marks the hour as hypothetical. The fact is not repeated. |
-| Means | You'd rather head toward what isn't known yet. Marie Curie coined the word radioactivity. Those two point the same way… | The match stops at the leaning. You will still try something new even when a familiar option is right there. What Marie Curie is known for stays that person's own work. | Says the likeness is the leaning. Does not retell radioactivity. |
-| Joke | The new option won. | The new option won. | Openness high's own closer, not a shared joke. |
-| Second pair, steadiness | You'd let some of a rough moment land and then let the rest go. | You can let one setback fade while another stays, and that is separate from what Marie Curie is known for. | Flagged. She has no steadiness tag, so the line does not borrow a deed. |
-| Differ | You'd rather recharge with time alone than with a crowd. | You recharge with time to yourself rather than with a crowd, because the answers land on that side. | Flagged. Her entry does not say how she spent time with people. Reserved wording is exact. |
+| Match | You'd rather head toward what isn't known yet, like Marie Curie. She studied a new kind of radiation that nobody understood yet, and she named it radioactivity. | You will still try something new even when a familiar option is right there. | Reader line. The roster fact is told once, in the imagined hour, so this line does not repeat it. |
+| Scene | You might picture one ordinary hour beside Marie Curie, who coined the word radioactivity. That hour is imagined, not a memory. | Picture an hour with Marie Curie: she'd be testing something nobody understood yet, and you'd want in. | One imagined scene from the openness tag. It does not say "radioactivity," so the deed is not said twice. |
+| Means | You'd rather head toward what isn't known yet. Marie Curie coined the word radioactivity. Those two point the same way… | What the answers suggest, in plain words, is that you will still try something new even when a familiar option is right there. | The likeness is the leaning. Her name is not on this line. |
+| Joke | The new option won. | The new option won. | Openness high's own closer, not a shared joke. The sentence ends there. |
+| Second pair, steadiness | You'd let some of a rough moment land and then let the rest go. | Some setbacks you shake off fast, but others stick around. | She has no steadiness fact, so her name is not on the line. |
+| Differ | You'd rather recharge with time alone than with a crowd. | You recharge with time to yourself after time with other people. | Reader only. Reserved wording kept. |
 | Babe Ruth differ | You'd rather recharge with time alone. After games, a crowd would gather in Babe Ruth's hotel suite. | You recharge with time to yourself. After games, a crowd would gather in Babe Ruth's hotel suite. | His hotel-suite fact is in the roster. The reader's side is the reserved sentence. |
 
 ### Quote of an answer
@@ -123,7 +140,7 @@ Seed `sample-legend` (Marie Curie). Radioactivity is in the first match line onl
 
 | Where | Old | New | Reason |
 |---|---|---|---|
-| Openness to life, high | You open the group chat and name a spot nobody in it has tried yet. | You name a new option while the familiar one is still on the table. | The chat and the spot were not in the answers. |
+| Openness to life, high | You open the group chat and name a spot nobody in it has tried yet. | You name a new option even when the familiar one is still on the table. | The chat and the spot were not in the answers. One contrast. |
 | Openness to life, low | You would rather a small table and a known menu than a room full of new names. | You pick a small known group over a room full of new people. | Drops the menu and the "would rather" opener. |
 | Drive, low | You would rather a calm plan with clear steps than a push you have to lead alone. | You pick a calm plan with clear steps over a push you have to lead alone. | Same meaning, plain opener. |
 | Steadiness, high | You keep the Tuesday plan, stay even in the group chat… | You keep the plan, stay even when the talk gets loud, and still answer when work runs late. | Drops the invented Tuesday and the chat. |
@@ -142,31 +159,32 @@ Phase 1 wording stays. Empty state: "Answer 16 questions and this chart starts t
 ### High dive
 
 - You will still try something new even when a familiar option is right there.
-- You can turn an ordinary task into play, and a different choice can stay available too.
-- You might look at both choices and then let one setback fade while another stays.
-- Trying something new can include play for you, because a task can be new and still be a game.
+- You can turn an ordinary task into play on an ordinary day as well.
+- Some setbacks you shake off fast, but others stick around.
+- The answers put two things together for you: trying something new, and play in an ordinary task.
 - Other people can see that you will try something new before the choice is settled.
-- What the answers suggest is that you will try something new even when a familiar option is right there. The upside is variety. The catch is passing on something that would have been more fun.
+- What the answers suggest, in plain words, is that you will try something new even when a familiar option is right there.
 - The new option won.
 
 ### Curie card
 
-- Like Marie Curie, who studied a new kind of radiation that nobody understood yet and named it radioactivity, you will still try something new even when a familiar option is right there.
-- You can let one setback fade while another stays, and that is separate from what Marie Curie is known for. **Flagged.**
-- Picture an hour with Marie Curie. In that hour you would try something new if that choice came up, and the talk would stay on the known work.
-- The match stops at the leaning. You will still try something new even when a familiar option is right there. What Marie Curie is known for stays that person's own work.
-- You recharge with time to yourself rather than with a crowd, because the answers land on that side. **Flagged.**
+- You will still try something new even when a familiar option is right there.
+- Some setbacks you shake off fast, but others stick around.
+- Picture an hour with Marie Curie: she'd be testing something nobody understood yet, and you'd want in.
+- What the answers suggest, in plain words, is that you will still try something new even when a familiar option is right there.
+- You recharge with time to yourself after time with other people.
 - The new option won.
 - Ruth, for the sourced contrast: You recharge with time to yourself. After games, a crowd would gather in Babe Ruth's hotel suite.
 
 ## Flagged instead of inventing a fact
 
-- Curie has no steadiness tag and no extraversion tag. Those lines state the reader and say her known work is separate. They do not invent a lab habit or a night out.
-- A legend differ with no roster fact for that contrast states the reader only: "You will [do the thing] because the answers land on that side."
+- Curie has no steadiness fact and no extraversion fact. Those lines state the reader and do not name her.
+- A legend line with no roster fact for that side states the reader only. It does not say the side is separate from what they are known for, and it does not say the answers land on that side.
+- A generic imagined hour still names the legend with the famous-for deed (`{deed}`), because that deed is a roster fact. The Curie openness hour uses the openness tag instead, so the sample card does not also say "radioactivity."
 - Quote lines other than the real conscientiousness option do not describe what happened after the tap.
-- Daily lines stay as emci approved them on 2026-10-02. A few still open with "You'd rather." They were not rewritten.
+- Daily lines stay as emci approved them on 2026-10-02. A few still join two beats with "and then." They were not rewritten.
 - `AXIS_POLES` stay as the approved first-person quotes.
 - Question prompts and option scores stay. A scenario edit needs a retired row and a migration.
 - Legend roster facts, `whoTheyWere`, and `famousFor` stay.
-- Category try-lines stay suggested actions. A few watch-outs still use an ordinary setting (an inbox, dinner, a couch) as a possible cost, hedged with "Sometimes" or "Because." They are not a claim that this player had that evening.
+- Category watch-outs now open with "Sometimes" and state one possible cost. They are not a claim that this player had that evening. "For a while" stays where it means a length of time.
 - `docs/NOW.md`, `PROJECT_CONTEXT.md`, and `docs/ato-finish-roadmap.md` were not edited. Scoring was not edited.

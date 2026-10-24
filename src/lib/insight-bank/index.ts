@@ -123,9 +123,9 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You handle changing plans well, but small tasks can pile up when there’s no deadline.":
     "From your answers, you keep plans loose on purpose.",
   "You usually see problems as smaller than others do, which can feel like you’re not taking them seriously.":
-    "From the outside, you move on from a bad day while it is still going.",
+    "From the outside, you move on from a bad day even when it is still going.",
   "You usually see problems as smaller than others do, so people may feel you’re not taking them seriously.":
-    "From the outside, you move on from a bad day while it is still going.",
+    "From the outside, you move on from a bad day even when it is still going.",
   "When something goes wrong, you tend to sleep fine and feel better by morning.":
     "A thing you might skip is a problem that needed another look.",
   "When something goes wrong, you tend to feel more settled by the next day.":
@@ -145,11 +145,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A fresh doc is easy for you to open, and the slow middle of an old one can sit untouched.":
     "A cost worth naming for you is passing on something that would have been more fun.",
   "When a friend mentions a topic you do not know, you usually ask a string of questions about it.":
-    "Someone else might notice that you reach for a new option while a favorite is still there.",
+    "Someone else might notice that you reach for a new option even when a favorite is still there.",
   "A coworker bringing up something unfamiliar can pull a lot of questions out of you.":
-    "From the outside, you reach for a new option while a favorite is still there.",
+    "From the outside, you reach for a new option even when a favorite is still there.",
   "In the group chat, a subject you have never heard of sometimes gets you digging in.":
-    "Other people can see that you reach for a new option while a favorite is still there.",
+    "Other people can see that you reach for a new option even when a favorite is still there.",
   "When the week starts looking the same, you usually get restless before the people around you do.":
     "What you might miss is a favorite you would have enjoyed.",
   "The same lunch and the same route can bore you faster than they bore your coworkers.":
@@ -167,7 +167,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A new plan with friends can turn, in your hands, into a bigger group before the night arrives.":
     "Both can be true for you in the same week: you try new things, and you want people around.",
   "You sometimes want company for a thing you have not tried, and the invite list grows.":
-    "A week can hold both for you, so you try new things, while you want people around.",
+    "A week can hold both for you, so you try new things, and you want people around.",
   "When you go out to eat, you usually order the dish you already know you like.":
     "Your answers suggest you stick with something you already know you like.",
   "You can go back to the same few places because you already know they are good.":
@@ -181,11 +181,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You sometimes prefer the system that already works over the new one in the work chat.":
     "A cost worth naming for you is skipping a change that would have been better.",
   "When you want to relax, you usually rewatch a show you already love instead of starting a new one.":
-    "Someone else might notice that you stay with a known favorite while a new option waits.",
+    "Someone else might notice that you stay with a known favorite even when a new option waits.",
   "A tired night can send you back to a familiar movie or a playlist you already know.":
-    "From the outside, you stay with a known favorite while a new option waits.",
+    "From the outside, you stay with a known favorite even when a new option waits.",
   "After a long day, you sometimes reach for the songs and shows you already know by heart.":
-    "Other people can see that you stay with a known favorite while a new option waits.",
+    "Other people can see that you stay with a known favorite even when a new option waits.",
   "When you plan time off, you usually go somewhere you have been and know you will enjoy.":
     "What you might miss is a new option you would have liked.",
   "A free weekend can go to the same trip you already trust, rather than a place you have not seen.":
@@ -203,7 +203,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "Once you have a system, you can keep using it exactly, down to the same order in the morning.":
     "Both can be true for you in the same week: you keep a known favorite, and you finish the plan.",
   "You sometimes trust the proven checklist and stick to it, even when a coworker suggests another way.":
-    "A week can hold both for you, so you keep a known favorite, while you finish the plan.",
+    "A week can hold both for you, so you keep a known favorite, and you finish the plan.",
   "The sink is empty and your laptop is usually still open on the couch past the time you meant to stop.":
     "Your answers suggest you see a plan through once it is started.",
   "A blank Saturday can start with your to-do list, and the couch waits until the last box is checked.":
@@ -239,7 +239,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You usually hit the deadline, and the worry about it can outlast the work itself.":
     "Both can be true for you in the same week: you finish the plan, and you feel a bad day longer.",
   "A week of due dates gets finished, while your shoulders can stay tight the whole time.":
-    "A week can hold both for you, so you finish the plan, while you feel a bad day longer.",
+    "A week can hold both for you, so you finish the plan, and you feel a bad day longer.",
   "A moved dinner barely registers for you, but your dry cleaning can sit by the door for days.":
     "Your answers suggest you keep plans loose on purpose.",
   "You handle a shifted meeting fine, and small errands can wait when the calendar does not force them.":
@@ -253,11 +253,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A friend trying to book a table can get a maybe from you while the night stays open.":
     "A cost worth naming for you is a loose plan that never gets finished.",
   "Your desk looks messy to a roommate, and you can still pull the charger out of the pile.":
-    "Someone else might notice that you leave the plan open while others want it locked.",
+    "Someone else might notice that you leave the plan open even when others want it locked.",
   "The kitchen counter can look chaotic, and you usually know which bag has the keys.":
-    "From the outside, you leave the plan open while others want it locked.",
+    "From the outside, you leave the plan open even when others want it locked.",
   "Mail on your dresser sometimes sits there until someone else points at the pile.":
-    "Other people can see that you leave the plan open while others want it locked.",
+    "Other people can see that you leave the plan open even when others want it locked.",
   "A new morning alarm for a workout can go strong for a week, then you turn it off.":
     "What you might miss is a finish that needed a tighter plan.",
   "You usually open a habit app at full speed, and the streak can fade after a few weeks.":
@@ -275,7 +275,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "When a fresh plan shows up, you usually leave the open tab and start the new one.":
     "Both can be true for you in the same week: you keep plans loose, and you try new things.",
   "Your list sometimes holds more new starts than finished projects, because another idea keeps arriving.":
-    "A week can hold both for you, so you keep plans loose, while you try new things.",
+    "A week can hold both for you, so you keep plans loose, and you try new things.",
   "After a long week, a plan with a friend usually lifts you more than a quiet night on the couch.":
     "Your answers suggest you look for time with other people.",
   "On a quiet evening, the group chat can give you more of a lift than staying in with a show.":
@@ -311,7 +311,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "When friends get together, you can be the one pulling a laugh out of a flat moment.":
     "Both can be true for you in the same week: you want people around, and you turn it into play.",
   "A hangout sometimes gets its pace from you joking and keeping the night moving.":
-    "A week can hold both for you, so you want people around, while you turn it into play.",
+    "A week can hold both for you, so you want people around, and you turn it into play.",
   "You recharge with time to yourself, especially after a stretch around other people.":
     "You recharge with time to yourself.",
   "Time to yourself is how you come back after being around other people.":
@@ -347,7 +347,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A big group plan sometimes feels like the wrong shape, because you want quiet and one real person.":
     "Both can be true for you in the same week: you recharge with time to yourself, and you need a real tie.",
   "After a stretch alone, you usually want one real talk with someone close, not a crowded night.":
-    "A week can hold both for you, so you recharge with time to yourself, while you need a real tie.",
+    "A week can hold both for you, so you recharge with time to yourself, and you need a real tie.",
   "Friends pick where to eat, and you usually say you’re fine with anything even when you want the noodle place.":
     "Your answers suggest you go along to keep things easy.",
   "On a night out, the group’s pick can win even when you had a different place in mind.":
@@ -361,11 +361,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A conversation gets tense, and you usually agree just so it gets easier for everyone there.":
     "A cost worth naming for you is a yes that was not meant.",
   "Someone needs help, and you usually drop what you’re doing, even with your own list still open.":
-    "Someone else might notice that you give the easy yes while a blunt no is available.",
+    "Someone else might notice that you give the easy yes even when a blunt no is available.",
   "Friends’ needs can move ahead of the plan you had for your own afternoon.":
-    "From the outside, you give the easy yes while a blunt no is available.",
+    "From the outside, you give the easy yes even when a blunt no is available.",
   "A family member asks for something, and you can say yes before you’ve looked at your day.":
-    "Other people can see that you give the easy yes while a blunt no is available.",
+    "Other people can see that you give the easy yes even when a blunt no is available.",
   "Someone is rude to you, and you usually assume they’re having a bad day.":
     "What you might miss is a no you actually meant.",
   "A friend lets you down once, and you can still assume they had a good reason the next time.":
@@ -383,7 +383,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "Small annoyances can stay with you, unsent, so the evening stays calm.":
     "Both can be true for you in the same week: you go along, and you step back.",
   "A friend or partner upsets you, and you usually say it’s fine even when it isn’t.":
-    "A week can hold both for you, so you go along, while you step back.",
+    "A week can hold both for you, so you go along, and you step back.",
   "A friend asks for your opinion, and you usually give an honest answer even if it isn’t what they hoped.":
     "Your answers suggest you state a blunt point and stay with it.",
   "You can say what you think, even when other people in the room would soften the same point.":
@@ -419,7 +419,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You can raise a problem as soon as you see it, even when other people would wait until later.":
     "Both can be true for you in the same week: you state the point, and you say your point.",
   "A coworker does something that bothers you, and you usually tell them directly, the same day.":
-    "A week can hold both for you, so you state the point, while you say your point.",
+    "A week can hold both for you, so you state the point, and you say your point.",
   "When something goes wrong at work, you usually stay calm while other people get stressed.":
     "Your answers suggest you shake a bad day off quickly.",
   "A plan that falls apart can leave you steady, even when the people around you are upset.":
@@ -433,11 +433,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "Once a disagreement is over, you sometimes feel finished before the other person does.":
     "A cost worth naming for you is a problem that needed more time.",
   "When a friend is upset about something small, you usually tell them it is not a big deal.":
-    "Someone else might notice that you move on from a bad day while it is still going.",
+    "Someone else might notice that you move on from a bad day even when it is still going.",
   "A worry that looks small to you can have you calming the person down before you have heard the whole story.":
-    "From the outside, you move on from a bad day while it is still going.",
+    "From the outside, you move on from a bad day even when it is still going.",
   "You sometimes see a problem as smaller than the person telling it, and they can feel unheard.":
-    "Other people can see that you move on from a bad day while it is still going.",
+    "Other people can see that you move on from a bad day even when it is still going.",
   "When you get bad news, you usually deal with it and carry on with the rest of the day.":
     "What you might miss is a problem that needed another look.",
   "A hard text lands, and you still make the afternoon meeting.":
@@ -455,7 +455,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A slow reply can sit in your chat without you worrying about what it means.":
     "Both can be true for you in the same week: you shake a bad day off, and you let a gap pass.",
   "When plans with a friend go quiet, you sometimes trust it will work out and leave the thread.":
-    "A week can hold both for you, so you shake a bad day off, while you let a gap pass.",
+    "A week can hold both for you, so you shake a bad day off, and you let a gap pass.",
   "After a conversation, you usually replay what you said and wonder how it came across.":
     "Your answers suggest you feel a bad day for longer than the day itself.",
   "An awkward line can stay with you that night, long after everyone else has forgotten it.":
@@ -491,7 +491,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A small change in how someone texts you can have you wondering what shifted.":
     "Both can be true for you in the same week: you feel a bad day longer, and you check they will stay.",
   "If someone close seems distant in the chat, you sometimes feel it right away and start to worry.":
-    "A week can hold both for you, so you feel a bad day longer, while you check they will stay.",
+    "A week can hold both for you, so you feel a bad day longer, and you check they will stay.",
   "A friend is slow to text back, and you usually check your phone again before the bus stops.":
     "Your answers suggest you keep checking whether people will pull away.",
   "On the couch, your phone stays face up, and a slow reply can pull your eyes back to the screen.":
@@ -527,7 +527,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A quiet Sunday with someone close can leave you unsure, even after a week of daily check-ins.":
     "Both can be true for you in the same week: you check they will stay, and you stay close.",
   "Your week sits easier when a call is on the calendar, and a stretch with no plan can worry you.":
-    "A week can hold both for you, so you check they will stay, while you stay close.",
+    "A week can hold both for you, so you check they will stay, and you stay close.",
   "A friend is slow to reply, and you usually pocket your phone and finish the bus ride.":
     "Your answers suggest you let a gap in contact pass without dwelling on it.",
   "A few weeks can pass with no text, and you still trust the friendship is fine.":
@@ -563,7 +563,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "At a full table, you usually feel at ease and assume people are glad you came.":
     "Both can be true for you in the same week: you let a gap pass, and you want people around.",
   "A new group at dinner can feel easy, and you trust they’ll get comfortable with you once the food arrives.":
-    "A week can hold both for you, so you let a gap pass, while you want people around.",
+    "A week can hold both for you, so you let a gap pass, and you want people around.",
   "After a very close weekend, you usually want a night at home with the door shut.":
     "Your answers suggest you keep some distance once things get close.",
   "You can love someone and still need the couch to yourself before the week starts again.":
@@ -599,7 +599,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "Sharing a kitchen or a calendar, you usually still want to decide the small stuff yourself.":
     "Both can be true for you in the same week: you keep some distance, and you choose the way.",
   "You can be close with someone and still keep the routines that were yours before they moved in.":
-    "A week can hold both for you, so you keep some distance, while you choose the way.",
+    "A week can hold both for you, so you keep some distance, and you choose the way.",
   "When you’re close to someone, you usually want to share the day and spend a lot of the evening together.":
     "Your answers suggest you stay close once things have started.",
   "A regular text from the people you love can be the part of the day you feel happiest about.":
@@ -635,7 +635,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "With your friends or your partner in the room, you can feel more like yourself than you do alone.":
     "Both can be true for you in the same week: you stay close, and you need a real tie.",
   "A week without a real talk can leave you flat, even if the work chat was full.":
-    "A week can hold both for you, so you stay close, while you need a real tie.",
+    "A week can hold both for you, so you stay close, and you need a real tie.",
   "You disagree in a meeting, and you usually say so before the next slide is up.":
     "Your answers suggest you put a clear point on the table in a disagreement.",
   "A plan in the work chat looks like it won’t work, and you usually say that out loud.":
@@ -671,7 +671,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You can say what you think at dinner and still want both people to leave feeling all right.":
     "Both can be true for you in the same week: you say your point, and you widen the plan.",
   "Friends argue, and you usually share your view, then help them find a plan you can both accept.":
-    "A week can hold both for you, so you say your point, while you widen the plan.",
+    "A week can hold both for you, so you say your point, and you widen the plan.",
   "A roommate leaves dishes in the sink, and you usually wash them instead of saying anything.":
     "Your answers suggest you step back in a disagreement even when the point is ready.",
   "Small things that bother you can stay unsaid, and you keep the kitchen quiet.":
@@ -685,11 +685,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "Your boss suggests something you doubt, and you usually go along with it in the thread.":
     "A cost worth naming for you is a point that never gets said.",
   "You want something, and you usually hint at it instead of asking in a plain sentence.":
-    "Someone else might notice that you step back while the point is ready to say.",
+    "Someone else might notice that you step back even when the point is ready to say.",
   "You can hope people notice what you need, a ride, a quieter night, without you saying it.":
-    "From the outside, you step back while the point is ready to say.",
+    "From the outside, you step back even when the point is ready to say.",
   "A plan doesn’t suit you, and you usually go along and hope the evening works out.":
-    "Other people can see that you step back while the point is ready to say.",
+    "Other people can see that you step back even when the point is ready to say.",
   "An argument starts, and you usually stay quiet and wait for the voices to come down.":
     "What you might miss is the point you meant to say.",
   "When people disagree, you can listen more than you talk and keep your view for later.":
@@ -707,7 +707,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A friend wants something different, and you can go with their choice for the night.":
     "Both can be true for you in the same week: you step back, and you widen the plan.",
   "You both want different things, and you usually put their wish ahead of yours.":
-    "A week can hold both for you, so you step back, while you widen the plan.",
+    "A week can hold both for you, so you step back, and you widen the plan.",
   "A disagreement comes up, and you usually look for a fix that works for every person at the table.":
     "Your answers suggest you look for an option the other person can live with.",
   "People want different nights, and you can hunt for a time that gives each of them something.":
@@ -743,7 +743,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "In the group chat, you can let the easy plan win over the place you actually wanted.":
     "Both can be true for you in the same week: you widen the plan, and you go along.",
   "A choice comes up, and you usually pick the option that upsets the fewest people.":
-    "A week can hold both for you, so you widen the plan, while you go along.",
+    "A week can hold both for you, so you widen the plan, and you go along.",
   "You know what you need from a plan, and you usually stick to it even when others push in the chat.":
     "Your answers suggest you protect a chosen outcome in a disagreement.",
   "In a disagreement about the time, you can keep your slot instead of moving it to match theirs.":
@@ -779,7 +779,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You can argue your side clearly and not give in easily, even after a long back-and-forth.":
     "Both can be true for you in the same week: you protect the outcome, and you say your point.",
   "You disagree with someone, and you usually keep making the case until it’s settled.":
-    "A week can hold both for you, so you protect the outcome, while you say your point.",
+    "A week can hold both for you, so you protect the outcome, and you say your point.",
   "Your boss hands you a task, and you usually want to do it your way rather than from their steps.":
     "Your answers suggest you want to do a task in a way you chose.",
   "A set process in the work doc can feel too fixed, and you prefer to choose how the work gets done.":
@@ -793,11 +793,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A coworker’s third check-in of the morning can feel like they don’t trust you with the file.":
     "A cost worth naming for you is a way that ignores a good set path.",
   "You usually decide the plan first and tell people after, once it’s already on your calendar.":
-    "Someone else might notice that you pick your own way while a set path is available.",
+    "Someone else might notice that you pick your own way even when a set path is available.",
   "A choice can get made at your kitchen table, with very little input from anyone else.":
-    "From the outside, you pick your own way while a set path is available.",
+    "From the outside, you pick your own way even when a set path is available.",
   "Faced with a decision, you usually work it out alone before you bring it to the group chat.":
-    "Other people can see that you pick your own way while a set path is available.",
+    "Other people can see that you pick your own way even when a set path is available.",
   "A rule that doesn’t make sense can have you questioning it, or finding a way around the form.":
     "What you might miss is a set path that would have worked.",
   "You usually want the reason for a rule before you follow it on the next task.":
@@ -815,7 +815,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "Given an open Saturday, you usually spend it on your own work rather than a group plan.":
     "Both can be true for you in the same week: you choose the way, and you can skip the tie.",
   "You can do your best work alone and feel okay without a check-in from the group chat.":
-    "A week can hold both for you, so you choose the way, while you can skip the tie.",
+    "A week can hold both for you, so you choose the way, and you can skip the tie.",
   "A new task can feel better once someone explains what “done” looks like before you start.":
     "Your answers suggest you follow a path that is already set.",
   "You usually work best when your boss gives you the steps, not only the goal in the chat.":
@@ -829,11 +829,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A group that needs a decision usually gets your silence while someone else leads.":
     "A cost worth naming for you is a path that was never questioned.",
   "A decision on your plate usually starts with you asking a few people what they’d do.":
-    "Someone else might notice that you take the set path while your own way is available.",
+    "Someone else might notice that you take the set path even when your own way is available.",
   "You can like hearing advice in the group chat before you pick.":
-    "From the outside, you take the set path while your own way is available.",
+    "From the outside, you take the set path even when your own way is available.",
   "Unsure about a choice, you usually check with a friend or your family before you decide.":
-    "Other people can see that you take the set path while your own way is available.",
+    "Other people can see that you take the set path even when your own way is available.",
   "A job with a clear role and a steady routine can leave you settled, and the work goes well.":
     "What you might miss is a way you would have chosen.",
   "A project with a named lead usually feels better to you, because you know your part of the file.":
@@ -851,7 +851,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A choice on the calendar can have you wanting your partner or friends in the text before you lock it.":
     "Both can be true for you in the same week: you take the set path, and you need a real tie.",
   "Picking a place for dinner can feel better with your partner in the text than choosing alone.":
-    "A week can hold both for you, so you take the set path, while you need a real tie.",
+    "A week can hold both for you, so you take the set path, and you need a real tie.",
   "A hard task shows up in the work chat, and you usually volunteer before the thread moves on.":
     "Your answers suggest you trust that a hard task can be handled.",
   "A tough item on the agenda can feel doable to you, even when others in the meeting would skip it.":
@@ -865,11 +865,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A task gets hard, and you usually push on alone rather than ask the coworker next to you.":
     "A cost worth naming for you is a trust that skips a needed check.",
   "Someone slow on a task can have you wanting to take the keyboard and finish it yourself.":
-    "Someone else might notice that you trust a hard task while doubt is available.",
+    "Someone else might notice that you trust a hard task even when doubt is available.",
   "You usually find it faster to do the thing than to explain the steps in the chat.":
-    "From the outside, you trust a hard task while doubt is available.",
+    "From the outside, you trust a hard task even when doubt is available.",
   "A teammate struggles with the file, and you can step in and finish the last part for them.":
-    "Other people can see that you trust a hard task while doubt is available.",
+    "Other people can see that you trust a hard task even when doubt is available.",
   "You finish a piece of work and usually feel sure it’s good, so you send it the same hour.":
     "What you might miss is a check the trust skipped.",
   "Showing your work to other people can feel comfortable, even before a second read.":
@@ -887,7 +887,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A hard goal can feel possible to you, so you write a high one on the list.":
     "Both can be true for you in the same week: you trust the hard task, and you expect to finish.",
   "Someone doubts the plan in the chat, and you can feel even more sure you’ll do it anyway.":
-    "A week can hold both for you, so you trust the hard task, while you expect to finish.",
+    "A week can hold both for you, so you trust the hard task, and you expect to finish.",
   "A new task at work can have you wondering, before you open the file, if you can do it well.":
     "Your answers suggest you doubt that a hard task can be pulled off.",
   "You usually doubt yourself in the minutes before you start something you haven’t done.":
@@ -923,7 +923,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You can doubt yourself at the start and still stay with the work until it gets better.":
     "Both can be true for you in the same week: you doubt the hard task, and you look for the change.",
   "Something hard usually becomes a thing for you to learn, not a reason to close the laptop.":
-    "A week can hold both for you, so you doubt the hard task, while you look for the change.",
+    "A week can hold both for you, so you doubt the hard task, and you look for the change.",
   "After a busy week, you usually miss a real conversation with someone close more than you miss the sleep.":
     "Your answers suggest you need a real connection for the day to feel right.",
   "A few days without a deep talk can leave you a bit off, even if the calendar was full.":
@@ -959,7 +959,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "With friends, you can want the night to be one where you laugh together.":
     "Both can be true for you in the same week: you need a real tie, and you turn it into play.",
   "You sometimes feel closest to someone after a fun night, more than after a quiet coffee.":
-    "A week can hold both for you, so you need a real tie, while you turn it into play.",
+    "A week can hold both for you, so you need a real tie, and you turn it into play.",
   "A free day usually feels good to you spent on your own, with no plan on the calendar.":
     "Your answers suggest you can let a day land without much connection.",
   "You can feel fine going a while without seeing friends.":
@@ -995,7 +995,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "When the weekend comes, you usually want the couch and your own thing, not a group plan.":
     "Both can be true for you in the same week: you can skip the tie, and you recharge with time to yourself.",
   "You sometimes keep a small circle and see them only now and then.":
-    "A week can hold both for you, so you can skip the tie, while you recharge with time to yourself.",
+    "A week can hold both for you, so you can skip the tie, and you recharge with time to yourself.",
   "After you send the wrong file, you usually open a note and write what you would do on the next one.":
     "Your answers suggest you look for what to change after a miss.",
   "A burned pan can have you reading the recipe again before it is even in the sink.":
@@ -1009,11 +1009,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A comment on your doc sometimes reads to you as useful, not as a hit on you.":
     "A cost worth naming for you is a change that never settles.",
   "A hard task can look more appealing to you than the easy one sitting next to it.":
-    "Someone else might notice that you look for a change while the miss could stay closed.",
+    "Someone else might notice that you look for a change even when the miss could stay closed.",
   "You usually keep going on something new even when the steps have you frustrated.":
-    "From the outside, you look for a change while the miss could stay closed.",
+    "From the outside, you look for a change even when the miss could stay closed.",
   "When the choice is easy or hard, you sometimes pick the hard one because it stretches you.":
-    "Other people can see that you look for a change while the miss could stay closed.",
+    "Other people can see that you look for a change even when the miss could stay closed.",
   "When a friend says they are bad at cooking, you usually tell them they can learn the dish.":
     "What you might miss is a rest the next try did not allow.",
   "You can be the person in the chat who tells someone to try the thing one more time.":
@@ -1031,7 +1031,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A setback can have you making a new plan before you have sat with the fact that it failed.":
     "Both can be true for you in the same week: you look for the change, and you look at your part.",
   "You sometimes ask what you can change on the next try, and the question comes fast.":
-    "A week can hold both for you, so you look for the change, while you look at your part.",
+    "A week can hold both for you, so you look for the change, and you look at your part.",
   "Choosing what to do, you usually pick the task you already know you can do well.":
     "Your answers suggest you can treat a miss as the end of that path.",
   "A new skill that feels hard on the first try can get set aside by you as not for you.":
@@ -1045,11 +1045,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You can feel at ease with how the week runs, even when someone else would tweak it.":
     "A cost worth naming for you is an ending that closes a path too soon.",
   "A critical note on your work can land as a judgment of you, not of the paragraph.":
-    "Someone else might notice that you treat a miss as final while another try is available.",
+    "Someone else might notice that you treat a miss as final even when another try is available.",
   "You usually hear criticism as a sign you are not good at the thing itself.":
-    "From the outside, you treat a miss as final while another try is available.",
+    "From the outside, you treat a miss as final even when another try is available.",
   "After your work is critiqued, you can feel discouraged for the rest of the afternoon.":
-    "Other people can see that you treat a miss as final while another try is available.",
+    "Other people can see that you treat a miss as final even when another try is available.",
   "When things are going fine, you usually see no reason to change the routine that works.":
     "What you might miss is a try that was still open.",
   "You can feel happy with the skills you already have and the way your week already runs.":
@@ -1067,7 +1067,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "When friends try a new hobby, you can prefer to stay with the one you already like.":
     "Both can be true for you in the same week: you close the path, and you keep a known favorite.",
   "Your happiest evenings sometimes look like the things you have done for years.":
-    "A week can hold both for you, so you close the path, while you keep a known favorite.",
+    "A week can hold both for you, so you close the path, and you keep a known favorite.",
   "When something goes wrong, you usually ask what you could have done differently before anything else.":
     "Your answers suggest you look at the part of a problem you could steer.",
   "A failed plan can have you looking at your own part first, even when the delay was someone else’s.":
@@ -1103,7 +1103,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You can write the plan, do the steps, and still feel the outcome sits on you.":
     "Both can be true for you in the same week: you look at your part, and you finish the plan.",
   "When you set out to do something, you sometimes map it and then own how it turns out.":
-    "A week can hold both for you, so you look at your part, while you finish the plan.",
+    "A week can hold both for you, so you look at your part, and you finish the plan.",
   "When something goes wrong, you usually accept it and move on to the next thing.":
     "Your answers suggest you figure a bad outcome was bound to happen.",
   "A fallen plan can get a shrug from you, and then you adjust the rest of the day.":
@@ -1117,11 +1117,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A win sometimes gets credited by you to the team or the timing, and your part stays quiet.":
     "A cost worth naming for you is a cause that ignores a real lever.",
   "When you want something to change, you usually wait to see if it happens on its own.":
-    "Someone else might notice that you treat the outcome as bound to happen while a lever is visible.",
+    "Someone else might notice that you treat the outcome as bound to happen even when a lever is visible.",
   "A problem in the work chat can get time from you before you step in.":
-    "From the outside, you treat the outcome as bound to happen while a lever is visible.",
+    "From the outside, you treat the outcome as bound to happen even when a lever is visible.",
   "You sometimes give a mess a few days to sort itself before you touch it.":
-    "Other people can see that you treat the outcome as bound to happen while a lever is visible.",
+    "Other people can see that you treat the outcome as bound to happen even when a lever is visible.",
   "When a decision is out of your hands, you usually accept it without much stress.":
     "What you might miss is a lever you could have used.",
   "You can stay calm when your boss or a friend makes the big call.":
@@ -1139,7 +1139,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A setback can land with you as part of the day, and you move to something else.":
     "Both can be true for you in the same week: you blame the day, and you shake a bad day off.",
   "When a plan falls through, you sometimes stay relaxed and find another thing to do.":
-    "A week can hold both for you, so you blame the day, while you shake a bad day off.",
+    "A week can hold both for you, so you blame the day, and you shake a bad day off.",
   "When someone asks if you can handle a task, you usually say yes before you have heard the details.":
     "Your answers suggest you expect to finish a big task once it is started.",
   "A new problem can land and you already trust you will find a way through it.":
@@ -1175,7 +1175,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A chance you have never tried can get a yes from you before you have a plan.":
     "Both can be true for you in the same week: you expect to finish, and you try new things.",
   "You sometimes jump into a new thing without much worry about how it will go.":
-    "A week can hold both for you, so you expect to finish, while you try new things.",
+    "A week can hold both for you, so you expect to finish, and you try new things.",
   "When something big comes up, you usually wonder if you can handle it.":
     "Your answers suggest you pause before trusting a big task can be finished.",
   "A challenge on the calendar can bring doubt before you have even opened the file.":
@@ -1211,7 +1211,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You can feel unsure you can do a hard thing, even when you have done a similar one before.":
     "Both can be true for you in the same week: you pause on the big task, and you doubt the hard task.",
   "When the work gets challenging, you sometimes worry you are not up to it.":
-    "A week can hold both for you, so you pause on the big task, while you doubt the hard task.",
+    "A week can hold both for you, so you pause on the big task, and you doubt the hard task.",
   "When a meeting gets tense, you usually reach for a joke before the silence has settled.":
     "Your answers suggest you turn an ordinary task into play.",
   "An awkward pause at dinner can get a light line from you before anyone names the tension.":
@@ -1247,7 +1247,7 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "A stressful thread in the work chat can get a steady joke from you while other people panic.":
     "Both can be true for you in the same week: you turn it into play, and you shake a bad day off.",
   "You sometimes stay relaxed and lighten the mood once the people around you speed up.":
-    "A week can hold both for you, so you turn it into play, while you shake a bad day off.",
+    "A week can hold both for you, so you turn it into play, and you shake a bad day off.",
   "When there is work on the list, you usually want it done before anyone starts the fun.":
     "Your answers suggest you take a situation straight instead of turning it into play.",
   "A silly stretch in a meeting can have you wanting the group back on the agenda.":
@@ -1261,11 +1261,11 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "In a chat, you sometimes want to get to the point before the jokes have finished.":
     "A cost worth naming for you is a straight read that misses a useful joke.",
   "Free time on your calendar usually goes to something useful, not to play.":
-    "Someone else might notice that you take the straight version while a playful one is available.",
+    "Someone else might notice that you take the straight version even when a playful one is available.",
   "You can feel better crossing a task off than spending the hour on something silly.":
-    "From the outside, you take the straight version while a playful one is available.",
+    "From the outside, you take the straight version even when a playful one is available.",
   "When someone suggests a silly plan, you sometimes say you have things to do.":
-    "Other people can see that you take the straight version while a playful one is available.",
+    "Other people can see that you take the straight version even when a playful one is available.",
   "When something goes wrong, you usually take it seriously instead of joking about it.":
     "What you might miss is a joke that would have helped.",
   "A problem in the chat can get a direct reply from you, with the jokes left out.":
@@ -1283,9 +1283,9 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
   "You can finish the work on the list before you let yourself relax on the couch.":
     "Both can be true for you in the same week: you take it straight, and you finish the plan.",
   "Fun sometimes waits, in your week, until the work is done and the list is clear.":
-    "A week can hold both for you, so you take it straight, while you finish the plan.",
+    "A week can hold both for you, so you take it straight, and you finish the plan.",
   "Your lock screen sometimes takes the first minute of the morning, while the kettle is still cold.":
-    "Your lock screen might take the first minute of the morning, while the kettle is still cold.",
+    "Your lock screen might take the first minute of the morning.",
   "Your easy messages usually get answered first, and the harder ones can pile in the thread.":
     "Your easy messages can get answered first, and the harder ones can pile in the thread.",
   "You sometimes clear the short texts and leave the one that needs a real answer.":
@@ -1520,6 +1520,160 @@ export const RETIRED_FOCUS_TEXT: Readonly<Record<string, string>> = {
     "What this can cost you is a straight read that misses a useful joke.",
   "A cost worth naming for you is that a straight read that misses a useful joke.":
     "A cost worth naming for you is a straight read that misses a useful joke.",
+  "Someone else might notice that you give the easy yes while a blunt no is available.":
+    "Someone else might notice that you give the easy yes even when a blunt no is available.",
+  "From the outside, you give the easy yes while a blunt no is available.":
+    "From the outside, you give the easy yes even when a blunt no is available.",
+  "Other people can see that you give the easy yes while a blunt no is available.":
+    "Other people can see that you give the easy yes even when a blunt no is available.",
+  "A week can hold both for you, so you go along, while you step back.":
+    "A week can hold both for you, so you go along, and you step back.",
+  "A week can hold both for you, so you state the point, while you say your point.":
+    "A week can hold both for you, so you state the point, and you say your point.",
+  "A week can hold both for you, so you check they will stay, while you stay close.":
+    "A week can hold both for you, so you check they will stay, and you stay close.",
+  "A week can hold both for you, so you let a gap pass, while you want people around.":
+    "A week can hold both for you, so you let a gap pass, and you want people around.",
+  "A week can hold both for you, so you keep some distance, while you choose the way.":
+    "A week can hold both for you, so you keep some distance, and you choose the way.",
+  "A week can hold both for you, so you stay close, while you need a real tie.":
+    "A week can hold both for you, so you stay close, and you need a real tie.",
+  "Someone else might notice that you pick your own way while a set path is available.":
+    "Someone else might notice that you pick your own way even when a set path is available.",
+  "From the outside, you pick your own way while a set path is available.":
+    "From the outside, you pick your own way even when a set path is available.",
+  "Other people can see that you pick your own way while a set path is available.":
+    "Other people can see that you pick your own way even when a set path is available.",
+  "A week can hold both for you, so you choose the way, while you can skip the tie.":
+    "A week can hold both for you, so you choose the way, and you can skip the tie.",
+  "Someone else might notice that you take the set path while your own way is available.":
+    "Someone else might notice that you take the set path even when your own way is available.",
+  "From the outside, you take the set path while your own way is available.":
+    "From the outside, you take the set path even when your own way is available.",
+  "Other people can see that you take the set path while your own way is available.":
+    "Other people can see that you take the set path even when your own way is available.",
+  "A week can hold both for you, so you take the set path, while you need a real tie.":
+    "A week can hold both for you, so you take the set path, and you need a real tie.",
+  "Someone else might notice that you trust a hard task while doubt is available.":
+    "Someone else might notice that you trust a hard task even when doubt is available.",
+  "From the outside, you trust a hard task while doubt is available.":
+    "From the outside, you trust a hard task even when doubt is available.",
+  "Other people can see that you trust a hard task while doubt is available.":
+    "Other people can see that you trust a hard task even when doubt is available.",
+  "A week can hold both for you, so you trust the hard task, while you expect to finish.":
+    "A week can hold both for you, so you trust the hard task, and you expect to finish.",
+  "A week can hold both for you, so you doubt the hard task, while you look for the change.":
+    "A week can hold both for you, so you doubt the hard task, and you look for the change.",
+  "A week can hold both for you, so you say your point, while you widen the plan.":
+    "A week can hold both for you, so you say your point, and you widen the plan.",
+  "Someone else might notice that you step back while the point is ready to say.":
+    "Someone else might notice that you step back even when the point is ready to say.",
+  "From the outside, you step back while the point is ready to say.":
+    "From the outside, you step back even when the point is ready to say.",
+  "Other people can see that you step back while the point is ready to say.":
+    "Other people can see that you step back even when the point is ready to say.",
+  "A week can hold both for you, so you step back, while you widen the plan.":
+    "A week can hold both for you, so you step back, and you widen the plan.",
+  "A week can hold both for you, so you widen the plan, while you go along.":
+    "A week can hold both for you, so you widen the plan, and you go along.",
+  "A week can hold both for you, so you protect the outcome, while you say your point.":
+    "A week can hold both for you, so you protect the outcome, and you say your point.",
+  "A week can hold both for you, so you finish the plan, while you feel a bad day longer.":
+    "A week can hold both for you, so you finish the plan, and you feel a bad day longer.",
+  "Someone else might notice that you leave the plan open while others want it locked.":
+    "Someone else might notice that you leave the plan open even when others want it locked.",
+  "From the outside, you leave the plan open while others want it locked.":
+    "From the outside, you leave the plan open even when others want it locked.",
+  "Other people can see that you leave the plan open while others want it locked.":
+    "Other people can see that you leave the plan open even when others want it locked.",
+  "A week can hold both for you, so you keep plans loose, while you try new things.":
+    "A week can hold both for you, so you keep plans loose, and you try new things.",
+  "A week can hold both for you, so you want people around, while you turn it into play.":
+    "A week can hold both for you, so you want people around, and you turn it into play.",
+  "A week can hold both for you, so you recharge with time to yourself, while you need a real tie.":
+    "A week can hold both for you, so you recharge with time to yourself, and you need a real tie.",
+  "Someone else might notice that you look for a change while the miss could stay closed.":
+    "Someone else might notice that you look for a change even when the miss could stay closed.",
+  "From the outside, you look for a change while the miss could stay closed.":
+    "From the outside, you look for a change even when the miss could stay closed.",
+  "Other people can see that you look for a change while the miss could stay closed.":
+    "Other people can see that you look for a change even when the miss could stay closed.",
+  "A week can hold both for you, so you look for the change, while you look at your part.":
+    "A week can hold both for you, so you look for the change, and you look at your part.",
+  "Someone else might notice that you treat a miss as final while another try is available.":
+    "Someone else might notice that you treat a miss as final even when another try is available.",
+  "From the outside, you treat a miss as final while another try is available.":
+    "From the outside, you treat a miss as final even when another try is available.",
+  "Other people can see that you treat a miss as final while another try is available.":
+    "Other people can see that you treat a miss as final even when another try is available.",
+  "A week can hold both for you, so you close the path, while you keep a known favorite.":
+    "A week can hold both for you, so you close the path, and you keep a known favorite.",
+  "A week can hold both for you, so you look at your part, while you finish the plan.":
+    "A week can hold both for you, so you look at your part, and you finish the plan.",
+  "Someone else might notice that you treat the outcome as bound to happen while a lever is visible.":
+    "Someone else might notice that you treat the outcome as bound to happen even when a lever is visible.",
+  "From the outside, you treat the outcome as bound to happen while a lever is visible.":
+    "From the outside, you treat the outcome as bound to happen even when a lever is visible.",
+  "Other people can see that you treat the outcome as bound to happen while a lever is visible.":
+    "Other people can see that you treat the outcome as bound to happen even when a lever is visible.",
+  "A week can hold both for you, so you blame the day, while you shake a bad day off.":
+    "A week can hold both for you, so you blame the day, and you shake a bad day off.",
+  "Someone else might notice that you reach for a new option while a favorite is still there.":
+    "Someone else might notice that you reach for a new option even when a favorite is still there.",
+  "From the outside, you reach for a new option while a favorite is still there.":
+    "From the outside, you reach for a new option even when a favorite is still there.",
+  "Other people can see that you reach for a new option while a favorite is still there.":
+    "Other people can see that you reach for a new option even when a favorite is still there.",
+  "A week can hold both for you, so you try new things, while you want people around.":
+    "A week can hold both for you, so you try new things, and you want people around.",
+  "Someone else might notice that you stay with a known favorite while a new option waits.":
+    "Someone else might notice that you stay with a known favorite even when a new option waits.",
+  "From the outside, you stay with a known favorite while a new option waits.":
+    "From the outside, you stay with a known favorite even when a new option waits.",
+  "Other people can see that you stay with a known favorite while a new option waits.":
+    "Other people can see that you stay with a known favorite even when a new option waits.",
+  "A week can hold both for you, so you keep a known favorite, while you finish the plan.":
+    "A week can hold both for you, so you keep a known favorite, and you finish the plan.",
+  "A week can hold both for you, so you turn it into play, while you shake a bad day off.":
+    "A week can hold both for you, so you turn it into play, and you shake a bad day off.",
+  "Someone else might notice that you take the straight version while a playful one is available.":
+    "Someone else might notice that you take the straight version even when a playful one is available.",
+  "From the outside, you take the straight version while a playful one is available.":
+    "From the outside, you take the straight version even when a playful one is available.",
+  "Other people can see that you take the straight version while a playful one is available.":
+    "Other people can see that you take the straight version even when a playful one is available.",
+  "A week can hold both for you, so you take it straight, while you finish the plan.":
+    "A week can hold both for you, so you take it straight, and you finish the plan.",
+  "A week can hold both for you, so you need a real tie, while you turn it into play.":
+    "A week can hold both for you, so you need a real tie, and you turn it into play.",
+  "A week can hold both for you, so you can skip the tie, while you recharge with time to yourself.":
+    "A week can hold both for you, so you can skip the tie, and you recharge with time to yourself.",
+  "A week can hold both for you, so you expect to finish, while you try new things.":
+    "A week can hold both for you, so you expect to finish, and you try new things.",
+  "A week can hold both for you, so you pause on the big task, while you doubt the hard task.":
+    "A week can hold both for you, so you pause on the big task, and you doubt the hard task.",
+  "Your lock screen might take the first minute of the morning, while the kettle is still cold.":
+    "Your lock screen might take the first minute of the morning.",
+  "A friend’s text might get a fast reply from you, while another chat sits for days.":
+    "Some of your chats get a fast reply, and some sit.",
+  "While a friend is talking, you might already be lining up what you will say next.":
+    "A friend’s story can have your reply lined up before they finish.",
+  "Your reply can be forming while the other person is still in the middle of the story.":
+    "Your reply can start before the other person has finished the story.",
+  "While you are working, you might switch between the task and your messages every few minutes.":
+    "You might switch between the task and your messages every few minutes.",
+  "Several tabs and chats can stay open while you try to do one piece of work.":
+    "Several tabs and chats can stay open on one piece of your work.",
+  "Someone else might notice that you move on from a bad day while it is still going.":
+    "Someone else might notice that you move on from a bad day even when it is still going.",
+  "From the outside, you move on from a bad day while it is still going.":
+    "From the outside, you move on from a bad day even when it is still going.",
+  "Other people can see that you move on from a bad day while it is still going.":
+    "Other people can see that you move on from a bad day even when it is still going.",
+  "A week can hold both for you, so you shake a bad day off, while you let a gap pass.":
+    "A week can hold both for you, so you shake a bad day off, and you let a gap pass.",
+  "A week can hold both for you, so you feel a bad day longer, while you check they will stay.":
+    "A week can hold both for you, so you feel a bad day longer, and you check they will stay.",
 };
 for (const [oldText, currentText] of Object.entries(RETIRED_FOCUS_TEXT)) {
   const match = BY_TITLE.get(currentText);

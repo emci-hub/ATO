@@ -196,7 +196,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
     settingTag: 'Video call. 10:02 AM. Monday.',
     hook: [
       narrator('You give your best two minutes of the quarter.'),
-      narrator('Nobody reacts, because you were on mute the whole time.'),
+      narrator('Nobody reacts. You were on mute the whole time.'),
     ],
     twist: [
       narrator('Avery, your manager, waits with a polite smile.'),
@@ -643,7 +643,7 @@ export const STORY_STAR_TOPICS: readonly TopicTemplate[] = [
       narrator('The door-holder nods like a teammate.'),
       narrator('The doors close on nobody, and look slightly disappointed.'),
     ],
-    next: 'a bus that leaves while you are still tapping your pass.',
+    next: 'a bus that leaves before your pass taps.',
     leans: {
       high: {
         title: 'Captain Beep Beep',

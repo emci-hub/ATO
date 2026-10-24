@@ -52,7 +52,11 @@ Vary how a line opens. "You'd rather" must not start most lines in a pool. An op
 
 Use a legend fact once on a card. The match line may carry it. The scene, the meaning, and any later match line do not repeat it.
 
-A hypothetical meeting opens with "Picture an hour with {legend}." That opening is the mark that the hour is not a memory. Do not add "That hour is imagined, not a memory."
+A hypothetical meeting opens with "Picture an hour with {legend}." That opening is the mark that the hour is not a memory. Do not add "That hour is imagined, not a memory." Make it one imagined scene from a roster fact, such as "Picture an hour with Marie Curie: she'd be testing something nobody understood yet, and you'd want in." Do not say the talk would stay on the known work.
+
+Each line states one plain idea. Do not join two ideas with because, and then, or while. Do not add a cause the answers do not show. A real "even when" is one contrast. "For a while" is a length of time, not a second idea.
+
+Name a legend only when that side has a roster fact. If it does not, state the reader and leave the legend out. Do not say the side is separate from what they are known for, and do not say the answers land on that side.
 
 Each trait has its own closer. Do not reuse one joke, such as "The new option won.", across traits.
 
@@ -82,7 +86,7 @@ Clear: "You like trying new things, even when everyone else would rather stick w
 
 Unclear: "You knew the best thing on the menu, and the group chat could not change the order."
 
-Clear: "You prefer familiar options because you already know what you enjoy."
+Clear: "You stick with familiar options you already know you enjoy."
 
 Unrelated, if it was attached to familiar-preference: "You heard the joke and then answered the actual question." Check the trait first. Familiar-preference does not mean ignoring jokes.
 

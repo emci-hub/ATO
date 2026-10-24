@@ -86,7 +86,7 @@ export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you turn it into play, and you shake a bad day off.",
       "Both can be true for you in the same week: you turn it into play, and you shake a bad day off.",
-      "A week can hold both for you, so you turn it into play, while you shake a bad day off.",
+      "A week can hold both for you, so you turn it into play, and you shake a bad day off.",
     ],
     why: "The upside for you is a lighter task. The catch is play that makes the task late.",
     try: [
@@ -132,9 +132,9 @@ export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
   }),
   idea("ftw_playfulness_l_03", ["playfulness:low"], {
     focus: [
-      "Someone else might notice that you take the straight version while a playful one is available.",
-      "From the outside, you take the straight version while a playful one is available.",
-      "Other people can see that you take the straight version while a playful one is available.",
+      "Someone else might notice that you take the straight version even when a playful one is available.",
+      "From the outside, you take the straight version even when a playful one is available.",
+      "Other people can see that you take the straight version even when a playful one is available.",
     ],
     why: "The upside for you is a straight read. The catch is a straight read that misses a useful joke.",
     try: [
@@ -182,7 +182,7 @@ export const PLAYFULNESS_IDEAS: readonly InsightIdea[] = [
     focus: [
       "Your answers suggest two things at once: you take it straight, and you finish the plan.",
       "Both can be true for you in the same week: you take it straight, and you finish the plan.",
-      "A week can hold both for you, so you take it straight, while you finish the plan.",
+      "A week can hold both for you, so you take it straight, and you finish the plan.",
     ],
     why: "The upside for you is a straight read. The catch is a straight read that misses a useful joke.",
     try: [
