@@ -52,7 +52,7 @@ export const CAT_DRIVE: BarCard = {
       summary: [
         'You work best with a clear next step and a steady pace, not a big goal you have to invent.',
         'When a goal looks big, you take it slowly and you like someone to point at the next step.',
-        'You would rather a calm plan with clear steps than a push you have to lead alone.',
+        'You pick a calm plan with clear steps over a push you have to lead alone.',
       ],
       strength: [
         'You follow a clear plan and do the work carefully, one step at a time.',

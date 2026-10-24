@@ -10,6 +10,12 @@ import type { TraitAxis } from '@/lib/traits';
 
 export const SHAPE_CAP = 0.25;
 
+/**
+ * An opener used by more than about a third of the lines in a pool.
+ * Share must be strictly over this. A pool under 3 lines is not a pool.
+ */
+export const OPENER_CAP = 1 / 3;
+
 export type SentenceShape = 'question' | 'quote' | 'because' | 'then' | 'compound' | 'when' | 'punch' | 'other';
 
 /** Phrases the guide bans. Case-insensitive. Coach "journey" is banned; a sourced legend fact may still say journeys. */
@@ -223,4 +229,64 @@ export function repeatedShape(sentences: readonly string[]): SentenceShape | nul
 /** v2: a trait does not need a private scene phrase, and phrases may overlap. */
 export function sceneReuse(_byTrait: Readonly<Record<string, string>>): CopyIssue[] {
   return [];
+}
+
+export interface OpenerHit {
+  key: string;
+  share: number;
+  count: number;
+  total: number;
+}
+
+/**
+ * The first two words that open a spoken line, after the subject.
+ * "You'd rather" and "You would rather" are one key (`would rather`).
+ * "You will try" and "You will keep" stay different (`will try`, `will keep`).
+ */
+export function openerKey(spoken: string): string {
+  const first = spoken.trim().split(/(?<=[.!?])\s+/)[0] ?? spoken;
+  const s = first
+    .toLowerCase()
+    .replace(/[“”"]/g, '')
+    .replace(/’/g, "'")
+    .replace(/[.!?,;:]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!s) return '';
+  const sub = s.match(/^(you|she|he|they|i)\b/);
+  if (!sub) return s.split(/\s+/).slice(0, 2).join(' ');
+  let rest = s.slice(sub[0].length).trim();
+  const contraction: Record<string, string> = { "'d": 'would', "'ll": 'will', "'re": 'are', "'ve": 'have' };
+  for (const [token, aux] of Object.entries(contraction)) {
+    if (!rest.startsWith(token)) continue;
+    rest = rest.slice(token.length).trim();
+    if (aux === 'would' && rest.startsWith('rather')) return 'would rather';
+    const word = rest.split(/\s+/)[0] ?? '';
+    return word ? `${aux} ${word}` : aux;
+  }
+  const words = rest.split(/\s+/).filter(Boolean);
+  if (words[0] === 'would' && words[1] === 'rather') return 'would rather';
+  if (words[1] === 'rather' && (words[0] === 'will' || words[0] === 'can' || words[0] === 'might' || words[0] === 'may' || words[0] === 'could')) {
+    return 'would rather';
+  }
+  return words.slice(0, 2).join(' ');
+}
+
+/** Null when no opener is over the cap, or the list is too short to be a pool. */
+export function openerOveruse(lines: readonly string[], cap = OPENER_CAP): OpenerHit | null {
+  const keys = lines.map((line) => openerKey(line)).filter((key) => key.length > 0);
+  if (keys.length < 3) return null;
+  const counts = new Map<string, number>();
+  for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1);
+  let key = '';
+  let best = 0;
+  for (const [name, count] of counts) {
+    if (count > best) {
+      best = count;
+      key = name;
+    }
+  }
+  const share = best / keys.length;
+  if (share > cap) return { key, share, count: best, total: keys.length };
+  return null;
 }

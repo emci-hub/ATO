@@ -48,6 +48,16 @@ These are no longer requirements:
 
 A Story Library card may use the same sentence shape more than once. The old one-shape cap pushed a false "when" onto lines that were not the same event. Do not add a connector only to satisfy a shape. A real "even when" is fine. A "when" that glues two unrelated facts is not.
 
+Vary how a line opens. "You'd rather" must not start most lines in a pool. An opener used by more than about a third of the lines in a pool of three or more fails the check. A pool is the lines that share a slot, a trait, and a tier, and also the spoken lines on one assembled card. "You'd rather" and "You would rather" count as the same opener.
+
+Use a legend fact once on a card. The match line may carry it. The scene, the meaning, and any later match line do not repeat it.
+
+A hypothetical meeting opens with "Picture an hour with {legend}." That opening is the mark that the hour is not a memory. Do not add "That hour is imagined, not a memory."
+
+Each trait has its own closer. Do not reuse one joke, such as "The new option won.", across traits.
+
+Reserved (low extraversion) is "You recharge with time to yourself." Use that sentence on trait cards, insights, and legend comparisons.
+
 ## Purpose
 
 - **Trait description.** What this side of the trait means. Not a memory of the player's week.
@@ -102,7 +112,8 @@ Each line keeps its id, eligibility, and priority. The highest-priority eligible
 
 - a banned phrase from the list above
 - slang outside the casual tier, or two slang terms in one sentence
-- a repeated sentence shape on one spoken Story Library card
+- an opener used by more than about a third of a Story Library pool, or of the spoken lines on one assembled card
+- a legend deed, or the word radioactivity, repeated on one assembled legend card
 - "energy"
 
-It does not fail on a missing scene phrase, a missing flip, a joke that is absent, or the words ticket, kettle, fork, bag, chair, or costume.
+It does not fail on a missing scene phrase, a missing flip, a joke that is absent, a repeated sentence shape, or the words ticket, kettle, fork, bag, chair, or costume.

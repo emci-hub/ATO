@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const LOCUS_OF_CONTROL_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_locus_of_control_h_01', ['locus_of_control:high'], {
+  idea("ftw_locus_of_control_h_01", ["locus_of_control:high"], {
     focus: [
-      'When something goes wrong, you usually ask what you could have done differently before anything else.',
-      'A failed plan can have you looking at your own part first, even when the delay was someone else’s.',
-      'If a project goes badly, you sometimes take the whole thing on yourself when you talk it over.',
+      "Your answers suggest you look at the part of a problem you could steer.",
+      "From your answers, you look at the part of a problem you could steer.",
+      "The pattern in your answers is that you look at the part of a problem you could steer.",
     ],
-    why: 'Owning your part can help the next try, but you can end up blaming yourself for a delay you could not control.',
+    why: "The upside for you is a part that can change. The catch is a blame that lands only on you.",
     try: [
-      'Write down what was in your control and what was not, so you only carry your part.',
-      'Name one thing that went wrong that was not your fault, so the blame stays fair.',
+      "Next time you choose, name which part you could actually steer first.",
+      "Before you decide, check what was outside your hands.",
     ],
     watch: [
-      'Notice when you take the blame for a delay that sat outside your calendar.',
-      'Notice how other people split the responsibility when the same project is talked over.',
+      "Notice when you take the blame for a part you could not steer.",
+      "Notice if the day really did do that part.",
     ],
   }),
-  idea('ftw_locus_of_control_h_02', ['locus_of_control:high'], {
+  idea("ftw_locus_of_control_h_02", ["locus_of_control:high"], {
     focus: [
-      'When you want something, you usually make a plan and start working it the same day.',
-      'You can treat your own effort as the thing that decides how a project turns out.',
-      'A problem at work sometimes becomes a list of what you personally can do about it.',
+      "The catch in your answers is a blame that lands only on you.",
+      "What this can cost you is a blame that lands only on you.",
+      "A cost worth naming for you is a blame that lands only on you.",
     ],
-    why: 'Believing your actions matter can keep you moving, but some outcomes depend on luck or on other people.',
+    why: "The upside for you is a part that can change. The catch is a blame that lands only on you.",
     try: [
-      'Pick one thing you cannot control this week and leave it, so you keep the hours.',
-      'Write down your plan and one thing that might get in the way, so you are ready either way.',
+      "Next time you choose, name which part you could actually steer first.",
+      "Before you decide, check what was outside your hands.",
     ],
     watch: [
-      'Notice when things go wrong even after your best plan.',
-      'Notice how you react to a result you cannot change.',
+      "Notice when you take the blame for a part you could not steer.",
+      "Notice if the day really did do that part.",
     ],
   }),
-  idea('ftw_locus_of_control_h_03', ['locus_of_control:high'], {
+  idea("ftw_locus_of_control_h_03", ["locus_of_control:high"], {
     focus: [
-      'When a team project struggles, you usually feel it is on you to fix it.',
-      'A messy week at work can have you stepping in to save the shared doc.',
-      'You sometimes carry how the group turns out, even the parts that were never your task.',
+      "Someone else might notice that you look for the part you could steer instead of blaming the day.",
+      "From the outside, you look for the part you could steer instead of blaming the day.",
+      "Other people can see that you look for the part you could steer instead of blaming the day.",
     ],
-    why: 'Feeling responsible makes you the person people count on, but carrying the whole team can wear you out.',
+    why: "The upside for you is a part that can change. The catch is a blame that lands only on you.",
     try: [
-      'Ask one teammate to take a part of the fix, so it is not all on you.',
-      'Tell your boss what you need to fix it, so you get some support.',
+      "Next time you choose, name which part you could actually steer first.",
+      "Before you decide, check what was outside your hands.",
     ],
     watch: [
-      'Notice when you take on more than your share of the project.',
-      'Notice how tired you feel after saving a project that was slipping.',
+      "Notice when you take the blame for a part you could not steer.",
+      "Notice if the day really did do that part.",
     ],
   }),
-  idea('ftw_locus_of_control_h_04', ['locus_of_control:high'], {
+  idea("ftw_locus_of_control_h_04", ["locus_of_control:high"], {
     focus: [
-      'When something goes wrong, you usually skip blame and look at your own choices.',
-      'A bad outcome can have you asking what you can do, not whose fault the email was.',
-      'You sometimes leave other people’s part out of the story when you look back.',
+      "What you might miss is the part that was actually outside your hands.",
+      "Your answers leave room to miss the part that was actually outside your hands.",
+      "A thing you might skip is the part that was actually outside your hands.",
     ],
-    why: 'Staying on what you can do keeps you moving, but sometimes other people do share the blame.',
+    why: "The upside for you is a part that can change. The catch is a blame that lands only on you.",
     try: [
-      'Next time something goes wrong, name one factor outside your control, like the late train, so you see the full picture.',
-      'Ask the people involved what they would do differently too, so the lesson is shared.',
+      "Next time you choose, name which part you could actually steer first.",
+      "Before you decide, check what was outside your hands.",
     ],
     watch: [
-      'Notice when someone else’s part gets left out when you talk the problem over.',
-      'Notice how you split the blame when you look back at a problem.',
+      "Notice when you take the blame for a part you could not steer.",
+      "Notice if the day really did do that part.",
     ],
   }),
-  idea('ftw_locus_of_control_h_05', ['locus_of_control:high'], {
+  idea("ftw_locus_of_control_h_05", ["locus_of_control:high"], {
     focus: [
-      'A goal on your list usually stays on you, and you hold yourself to it harder than you would a friend.',
-      'When you are unhappy with something, you can try to change it yourself before you tell anyone.',
-      'You sometimes talk to yourself after a miss in a way you would never text a friend.',
+      "The helpful side for you shows up when a steerable part is worth finding.",
+      "Your answers also show a use when a steerable part is worth finding.",
+      "There is a use for you when a steerable part is worth finding.",
     ],
-    why: 'Holding yourself to the goal makes you reliable, but you can be harder on yourself than on anyone else.',
+    why: "The upside for you is a part that can change. The catch is a blame that lands only on you.",
     try: [
-      'Talk to yourself the way you would text a friend after a miss, so you stay fair.',
-      'Write down one goal you met this month, so you see what the effort did.',
+      "Next time you choose, name which part you could actually steer first.",
+      "Before you decide, check what was outside your hands.",
     ],
     watch: [
-      'Notice how you talk to yourself when you miss a goal on the list.',
-      'Notice whether you would judge a friend that harshly for the same miss.',
+      "Notice when you take the blame for a part you could not steer.",
+      "Notice if the day really did do that part.",
     ],
   }),
-  idea('ftw_locus_of_control_h_06', ['locus_of_control:high', 'conscientiousness:high'], {
+  idea("ftw_locus_of_control_h_06", ["locus_of_control:high", "conscientiousness:high"], {
     focus: [
-      'You write the Saturday plan down, and if it falls apart you treat that as yours to fix.',
-      'You can write the plan, do the steps, and still feel the outcome sits on you.',
-      'When you set out to do something, you sometimes map it and then own how it turns out.',
+      "Your answers suggest two things at once: you look at your part, and you finish the plan.",
+      "Both can be true for you in the same week: you look at your part, and you finish the plan.",
+      "A week can hold both for you, so you look at your part, while you finish the plan.",
     ],
-    why: 'Your planning and your ownership make you dependable, but a surprise can feel like your fault when it is not.',
+    why: "The upside for you is a part that can change. The catch is a blame that lands only on you.",
     try: [
-      'Leave one free hour in today’s plan, so a surprise has somewhere to sit.',
-      'Write down one thing that went right this week because of your planning, so you can see it work.',
+      "Next time you choose, name which part you could actually steer first.",
+      "Before you decide, check what was outside your hands.",
     ],
     watch: [
-      'Notice when you blame yourself for a surprise that was not on the plan.',
-      'Notice how often the plan actually works out.',
+      "Notice when you take the blame for a part you could not steer.",
+      "Notice if the day really did do that part.",
     ],
   }),
-  idea('ftw_locus_of_control_l_01', ['locus_of_control:low'], {
+  idea("ftw_locus_of_control_l_01", ["locus_of_control:low"], {
     focus: [
-      'When something goes wrong, you usually accept it and move on to the next thing.',
-      'A fallen plan can get a shrug from you, and then you adjust the rest of the day.',
-      'You sometimes feel a problem just happened, and pushing on it would not change the outcome.',
+      "Your answers suggest you figure a bad outcome was bound to happen.",
+      "From your answers, you figure a bad outcome was bound to happen.",
+      "The pattern in your answers is that you figure a bad outcome was bound to happen.",
     ],
-    why: 'Accepting a mess can save you a lot of stress, but some situations might be easier to change than they look.',
+    why: "The upside for you is a cause outside the choice. The catch is a cause that ignores a real lever.",
     try: [
-      'Pick one thing you have accepted lately and ask if one small action would change it, so you know.',
-      'Write down one thing on this week’s list you could control, so you see where you have a say.',
+      "Next time you choose, name whether a lever is actually visible first.",
+      "Before you decide, check what you could still change.",
     ],
     watch: [
-      'Notice when “that is just how it is” means you have not tried yet.',
-      'Notice what changes once you take one small step.',
+      "Notice when you ignore a lever that was real.",
+      "Notice if a part of it was yours to steer.",
     ],
   }),
-  idea('ftw_locus_of_control_l_02', ['locus_of_control:low'], {
+  idea("ftw_locus_of_control_l_02", ["locus_of_control:low"], {
     focus: [
-      'When something goes well, you usually say you got lucky.',
-      'Praise for a project can get “the timing was right” from you instead of what you did.',
-      'A win sometimes gets credited by you to the team or the timing, and your part stays quiet.',
+      "The catch in your answers is a cause that ignores a real lever.",
+      "What this can cost you is a cause that ignores a real lever.",
+      "A cost worth naming for you is a cause that ignores a real lever.",
     ],
-    why: 'Being modest about a win is kind, but it can hide how much your effort mattered.',
+    why: "The upside for you is a cause outside the choice. The catch is a cause that ignores a real lever.",
     try: [
-      'Write down one thing you did that helped a recent win at work, so you see your part.',
-      'Say “thanks, I worked on that” the next time someone praises you, so you own the work.',
+      "Next time you choose, name whether a lever is actually visible first.",
+      "Before you decide, check what you could still change.",
     ],
     watch: [
-      'Notice when you give the whole credit to luck or timing.',
-      'Notice what you actually did to make the thing go well.',
+      "Notice when you ignore a lever that was real.",
+      "Notice if a part of it was yours to steer.",
     ],
   }),
-  idea('ftw_locus_of_control_l_03', ['locus_of_control:low'], {
+  idea("ftw_locus_of_control_l_03", ["locus_of_control:low"], {
     focus: [
-      'When you want something to change, you usually wait to see if it happens on its own.',
-      'A problem in the work chat can get time from you before you step in.',
-      'You sometimes give a mess a few days to sort itself before you touch it.',
+      "Someone else might notice that you treat the outcome as bound to happen while a lever is visible.",
+      "From the outside, you treat the outcome as bound to happen while a lever is visible.",
+      "Other people can see that you treat the outcome as bound to happen while a lever is visible.",
     ],
-    why: 'Patience can help, but some problems get bigger if you wait too long.',
+    why: "The upside for you is a cause outside the choice. The catch is a cause that ignores a real lever.",
     try: [
-      'Pick one problem you have been waiting on and take one small step today, so it starts moving.',
-      'Set a date to act if nothing changes, so the waiting has an end.',
+      "Next time you choose, name whether a lever is actually visible first.",
+      "Before you decide, check what you could still change.",
     ],
     watch: [
-      'Notice which problems sorted themselves and which did not.',
-      'Notice when waiting turns into avoiding the message.',
+      "Notice when you ignore a lever that was real.",
+      "Notice if a part of it was yours to steer.",
     ],
   }),
-  idea('ftw_locus_of_control_l_04', ['locus_of_control:low'], {
+  idea("ftw_locus_of_control_l_04", ["locus_of_control:low"], {
     focus: [
-      'When a decision is out of your hands, you usually accept it without much stress.',
-      'You can stay calm when your boss or a friend makes the big call.',
-      'A changed plan from your boss sometimes gets a simple ok from you, with no pushback.',
+      "What you might miss is a lever you could have used.",
+      "Your answers leave room to miss a lever you could have used.",
+      "A thing you might skip is a lever you could have used.",
     ],
-    why: 'Staying calm when the call is not yours is a strength, but your input might still change the outcome.',
+    why: "The upside for you is a cause outside the choice. The catch is a cause that ignores a real lever.",
     try: [
-      'Share one thought in the work chat on a decision this week, so your view is part of it.',
-      'Ask how a decision in the meeting was made, so you know where you could have had a say.',
+      "Next time you choose, name whether a lever is actually visible first.",
+      "Before you decide, check what you could still change.",
     ],
     watch: [
-      'Notice when a decision you stayed quiet on still had room for your say.',
-      'Notice how a decision you stayed quiet on affects you later.',
+      "Notice when you ignore a lever that was real.",
+      "Notice if a part of it was yours to steer.",
     ],
   }),
-  idea('ftw_locus_of_control_l_05', ['locus_of_control:low'], {
+  idea("ftw_locus_of_control_l_05", ["locus_of_control:low"], {
     focus: [
-      'When things go wrong, you usually do not take the miss personally.',
-      'You can leave the blame off yourself when the cause sat outside your control.',
-      'A failed plan sometimes reads to you as not all on you, and you stay steady about it.',
+      "The helpful side for you shows up when some outcomes really are outside the choice.",
+      "Your answers also show a use when some outcomes really are outside the choice.",
+      "There is a use for you when some outcomes really are outside the choice.",
     ],
-    why: 'Not blaming yourself keeps you calm, and it helps when you also notice the parts you could change next time.',
+    why: "The upside for you is a cause outside the choice. The catch is a cause that ignores a real lever.",
     try: [
-      'Write down one thing you could do differently on the next try, so the miss teaches you something useful.',
-      'Ask a friend what they would change in your place, so you get a new idea.',
+      "Next time you choose, name whether a lever is actually visible first.",
+      "Before you decide, check what you could still change.",
     ],
     watch: [
-      'Notice the small parts of the miss you could control.',
-      'Notice how calm you stay when a plan goes wrong.',
+      "Notice when you ignore a lever that was real.",
+      "Notice if a part of it was yours to steer.",
     ],
   }),
-  idea('ftw_locus_of_control_l_06', ['locus_of_control:low', 'steadiness:high'], {
+  idea("ftw_locus_of_control_l_06", ["locus_of_control:low", "steadiness:high"], {
     focus: [
-      'When things go wrong, you usually stay calm and accept them instead of fighting the outcome.',
-      'A setback can land with you as part of the day, and you move to something else.',
-      'When a plan falls through, you sometimes stay relaxed and find another thing to do.',
+      "Your answers suggest two things at once: you blame the day, and you shake a bad day off.",
+      "Both can be true for you in the same week: you blame the day, and you shake a bad day off.",
+      "A week can hold both for you, so you blame the day, while you shake a bad day off.",
     ],
-    why: 'Your calm helps you handle a surprise, but a small push from you can sometimes change the outcome.',
+    why: "The upside for you is a cause outside the choice. The catch is a cause that ignores a real lever.",
     try: [
-      'Pick one setback on this week’s list and take one step to change it, so you see what you can do.',
-      'Ask yourself what one small action could help, so accepting does not turn into stopping.',
+      "Next time you choose, name whether a lever is actually visible first.",
+      "Before you decide, check what you could still change.",
     ],
     watch: [
-      'Notice when accepting a changed plan means missing a chance to change it.',
-      'Notice how calm you stay when a plan changes on you.',
+      "Notice when you ignore a lever that was real.",
+      "Notice if a part of it was yours to steer.",
     ],
-  }),
+  })
 ];

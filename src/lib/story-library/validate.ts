@@ -27,7 +27,7 @@ import {
 } from '@/lib/legend-figures/story';
 import { PRONOUNS } from '@/lib/story-v3/tracery';
 import { cardJokeViolation } from '@/lib/voice/card-joke';
-import { TAG_QUESTION_CAP, tagQuestionShare, textIssues } from '@/lib/voice/player-copy';
+import { TAG_QUESTION_CAP, openerOveruse, tagQuestionShare, textIssues } from '@/lib/voice/player-copy';
 
 import { speak } from './pick';
 import type { StoryLibrary, StoryLine } from './types';
@@ -117,6 +117,17 @@ function budgetIssues(lines: readonly StoryLine[]): string[] {
   const issues: string[] = [];
   if (tagQuestionShare(lines.map((line) => line.text)) > TAG_QUESTION_CAP) {
     issues.push(`tag questions are over ${TAG_QUESTION_CAP}`);
+  }
+  const groups = new Map<string, StoryLine[]>();
+  for (const line of lines) {
+    const key = `${line.slot}|${line.trait}|${line.tier}`;
+    const group = groups.get(key) ?? [];
+    group.push(line);
+    groups.set(key, group);
+  }
+  for (const [key, group] of groups) {
+    const hit = openerOveruse(group.map((line) => spoken(line, line.slot.startsWith('legend') || line.text.includes('{legend}') || line.text.includes('{deed}'))));
+    if (hit) issues.push(`${key}: opener "${hit.key}" on ${hit.count}/${hit.total}`);
   }
   return issues;
 }

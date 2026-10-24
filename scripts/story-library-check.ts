@@ -123,8 +123,8 @@ const she = pickForReader(
   'lock',
 );
 assert.ok(she);
-assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /She'd rather try something new/);
-assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /even when other people stick with what they know/);
+assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /She will still try something new/);
+assert.match(speak(she.text, PRONOUNS.she, 'Alex'), /even when a familiar option is right there/);
 
 const quoted = renderLibraryDive({
   categoryId: 'cat_structure',
@@ -194,8 +194,8 @@ between(dive.othersNotice, NOTICE_MIN_WORDS, NOTICE_MAX_WORDS, 'notice');
 assert.equal(diveLineViolation(dive.othersNotice, ''), null, dive.othersNotice);
 between(dive.whatItMeansForYou, DIVE_MEANS_MIN_WORDS, DIVE_MEANS_MAX_WORDS, 'means');
 assert.equal(diveLineViolation(dive.whatItMeansForYou, ''), null, dive.whatItMeansForYou);
-assert.match(dive.mix, /turn an ordinary task into play/, 'openness high + playfulness high takes the combo line');
-assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /rough moment/, 'mid steadiness is some of it landing and some of it going');
+assert.match(dive.mix, /include play/, 'openness high + playfulness high takes the combo line');
+assert.match(dive.showsUp.find((row) => row.axis === 'steadiness')!.line, /setback/, 'mid steadiness is some setbacks fading and some staying');
 if (dive.joke) {
   assert.equal(cardJokeViolation(dive.joke), null, dive.joke);
   assert.equal(diveLineViolation(dive.joke, ''), null, dive.joke);
@@ -257,7 +257,7 @@ const ruthContrast = renderLibraryLegend({
   differ: { axis: 'extraversion', lean: 'low', tag: null },
   seed: 'sample-ruth',
 });
-assert.match(ruthContrast.differ?.line ?? '', /recharge with time alone/);
+assert.match(ruthContrast.differ?.line ?? '', /recharge with time to yourself/);
 assert.match(ruthContrast.differ?.line ?? '', /hotel suite/);
 
 const memory: { library: ReturnType<typeof getStoryLibrary> | null } = { library: null };

@@ -1,12 +1,12 @@
-# Copy review v2 — meaning first (phase 1 samples)
+# Copy review v2 — meaning first (full pass)
 
-emci, 2026-10-23. This replaces "show every trait through a real moment."
+emci, 2026-10-24. This replaces "show every trait through a real moment."
 
-Phase 1 set the policy and a first sample set. Round 2 (still not an app-wide pass) loosens the stiff lines, rewrites the leftover scenes on the sample cards, and drops the one-shape-per-card cap. The rest of the banks are not rewritten. `STORY_LIBRARY_RUNTIME` is still off. Trait ids, scores, and question option values are unchanged.
+Phase 1 set the policy. Round 2 rewrote the sample cards and dropped the one-shape-per-card cap. This pass rewrites the player-facing banks those samples came from: Story Library lines, insights, Explore pole lines, category lean phrases, and the lines that still opened the same way or hid the meaning.
 
-Reserved (low extraversion), emci 2026-10-24: the plain meaning is "You recharge with time to yourself." Not "quieter." Applied on the sample trait line, the sample insight, and the sample contrasts only.
+`STORY_LIBRARY_RUNTIME` stays off. Trait ids, scores, and question option values are unchanged. Reserved (low extraversion) is final: **You recharge with time to yourself.** On trait cards, insights, and legend comparisons. The share-card band phrase stays "recharges with time alone" because that string is pinned.
 
-If a row says the meaning is uncertain, that line was not given a guessed trait reading.
+If a row says the meaning is uncertain, that line was not given a guessed fact.
 
 ## Where player-facing text comes from
 
@@ -14,240 +14,159 @@ There is no localization catalog. Player-facing English is the source string.
 
 | Kind | Where |
 |---|---|
-| Hardcoded UI | `src/lib/polish-copy.ts` (empty states, buttons, week lines), `src/lib/intake.ts` (onboarding), `src/lib/push-policy.ts` and `src/lib/push-copy.ts` (notifications), `src/app/(tabs)/legends.tsx` (legend errors and empty halls), component strings such as `DEEP_DIVE_FAILED`, check-in, delete-account, save failures |
-| Trait descriptions | `src/lib/axis-poles.ts` (`AXIS_POLES`, shown on the profile), `src/lib/traits.ts` (`TRAIT_POLE_LINES`, Explore's offline fallback), `src/lib/trait-bands.ts` (share card) |
-| Insights | `src/lib/insight-bank/**` (Focus, why, try, watch). Old focus wording is mapped in `RETIRED_FOCUS_TEXT` |
-| Questions | `src/lib/questions/bank/**` (not rewritten here) |
-| Story Library | `src/lib/story-library/lines.ts`, assembled by `render.ts`. Deeds: `src/lib/story-library/deed.ts` |
-| Legends (hand-written) | `src/lib/legend-figures/roster/**` |
-| Daily lines | `src/lib/daily-line/` (not rewritten here) |
-| Category cards | `src/lib/category-bank/**`, `src/lib/category-bands.ts` |
-| AI prompts | `src/lib/voice/moment-voice.ts` (the block prompts import; the rules are now v2), `src/lib/voice/clear-voice.ts`, `src/lib/story-library/draft-prompt.ts`, `src/lib/category-deep-dive/dive.ts`, `src/lib/legend-figures/story.ts`, `docs/story-library/STYLE.md` |
-| Previews and approval | Story Library dev tool (`src/components/story-library-dev.tsx`), Dev Hub copy flags, generated review docs under `docs/` |
-| Fallbacks | `src/lib/explore/local.ts` (pole lines when the model is off), legend fallback story, push fallbacks |
+| Hardcoded UI | `src/lib/polish-copy.ts`, `src/lib/intake.ts`, `src/lib/push-policy.ts`, `src/app/(tabs)/legends.tsx` |
+| Trait descriptions | `src/lib/axis-poles.ts` (`AXIS_POLES`, left as approved), `src/lib/traits.ts` (`TRAIT_POLE_LINES`), `src/lib/trait-bands.ts` |
+| Insights | `src/lib/insight-bank/**`. Old focus wording stays in `RETIRED_FOCUS_TEXT` |
+| Questions | `src/lib/questions/bank/**` (not rewritten; a scenario change needs a retired row) |
+| Story Library | `src/lib/story-library/lines.ts`. Deeds: `src/lib/story-library/deed.ts` |
+| Legends | Roster facts in `src/lib/legend-figures/roster/**` (not rewritten). The meeting prompt is in `src/lib/legend-figures/story.ts` |
+| Daily lines | `src/lib/daily-line/` (approved 2026-10-02, not rewritten) |
+| Category cards | `src/lib/category-bank/**` |
+| Story card 6 | `src/lib/story-v3/lean-phrases.ts` |
+| AI prompts | `src/lib/story-library/draft-prompt.ts`, `docs/story-library/STYLE.md` (`style-storylib-6`) |
 
 ## What caused the bad lines
 
-The previous voice guide required a scene on every line, one private phrase per trait (group chat, packing list, side quest), a flip scene, and a joke. The Story Library picker also prefers a sentence shape (`when`, `and then`, `because`). Writers filled those slots with objects that were not in the question and were not the trait.
+The previous voice guide required a scene on every line, one private phrase per trait, a flip scene, and a joke. The picker also preferred a sentence shape. Writers filled those slots with objects that were not in the answers.
 
-1. **"You had the listing open when the group chat was still stuck on the safe plan."** `openness-high-shows-when` in `src/lib/story-library/lines.ts`. High openness (Adventurous). The guide's approved "better" example, plus the required "group chat" phrase and the `when` shape. The listing and the chat are not in the player's answers. The picker shows this line first on a high-openness card.
-2. **"You knew the best thing on the menu, and the group chat could not change the order."** `openness-low-shows-compound`. Low openness (Familiar). Same scene rule. The menu order is invented. The trait is preferring what you already know.
-3. **"You heard the joke and then answered the actual question without a side quest."** `playfulness-low-shows-then`. This is **not** familiar-preference. It is playfulness low (Serious). The required scene phrase for that trait is "side quest," so the line invented a joke and an errand. The trait link (taking something straight) was buried under those objects.
-4. **"You picked 'I plan a whole new day,' and the packing list was done before anyone else had shoes on."** `conscientiousness-quote-shows`. The quote template was told to attach the conscientiousness scene ("packing list"). The match string `I plan a whole new day` is **not in the question bank**. No option contains it, so the line never meets a real answer, and there is no question to explain. Meaning of the option: uncertain. Flagged, not guessed.
-5. **"You tried a place nobody at the table could name when Marie Curie coined the word radioactivity."** `openness-legend-won-when`, filled by `{deed}` from `deed.ts` (`coined the word radioactivity`, a sourced fact). The `when` shape glued the player's invented dinner to that fact, so they read as one event.
-6. **"You stayed with one friend because that was the choice, and Marie Curie coined the word radioactivity."** `extraversion-legend-differ`. The contrast template glues "because that was the choice" to `{deed}`. Low extraversion became a specific night. Curie's extraversion tag was already removed as an inference (`docs/copy-review-agent/applied-set8-legends-tags.md`). The deed is not a sociability fact.
-7. **"They have a listing open before the group has agreed."** `TRAIT_POLE_LINES.openness.high`. The pole bank was rewritten into the moment voice. Explore's offline fallback shows it as "You have a listing…" by replacing the first "They".
-8. **"At a restaurant, you usually pick a dish you have never ordered…"** `ftw_openness_h_01` in `src/lib/insight-bank/openness.ts`. The clear-voice rule asked for a concrete situation, so curiosity was stated as a meal the player usually orders. The answers support a preference for what is new, not that dinner.
-9. **"The evening Check bump hangs off this."** Onboarding, `evening_wind_down` in `src/lib/intake.ts`. The prompt used an internal name. The stored chip is dropped into the evening notification (`eveningPush` in `src/lib/push-copy.ts`: "When you {cue}, log today's Check"). The send hour comes from `energy_pattern`, not from this question. The evening Check reminder itself is switched off while there is nothing to log (`push-check`).
-10. **Empty state, button, notification, error.** `polish-copy.ts` was written as moment-voice color: "Sixteen answers draw the first lines" and a button that never says "questions." The notification ask said "nudge" and "change this" without naming the reminder. `LEGENDS_PAID_FAILED` always said tokens come back, including when the card failed because there were no tokens to charge. The refund is once a day on a failed charge.
+1. A listing and a group chat stood in for high openness.
+2. A menu order stood in for low openness.
+3. A joke and a "side quest" stood in for low playfulness.
+4. A quote line matched an option that is not in the question bank, then invented a packing list.
+5. A `when` shape glued the player's week to Curie's radioactivity.
+6. The same deed was pasted onto a sociability contrast Curie is not tagged for.
+7. Pole lines were rewritten into the moment voice ("They have a listing open…").
+8. An insight stated curiosity as a dish the player usually orders.
+9. Onboarding used an internal name ("The evening Check bump hangs off this").
+10. Empty states, the legend error, and the notification ask hid the action.
 
-The sample dive card below still contains unrevised lines (side quest, the waiting plan, the spreadsheet, the new city, the joke "The safe plan lost.", the imagined hour with Curie). Those are the same cause. They are listed so the assembled card can be judged. They were not rewritten in this phase.
+Round 2 fixed the sample sentences and then repeated one opener ("You'd rather"), one joke ("The new option won."), and Curie's radioactivity on the same card. Those are the rows below.
 
 ## Rules and checks changed
 
 | Rule or check | What it used to require | What it does now |
 |---|---|---|
-| `docs/voice-guide.md` | A real moment on every line; one scene phrase per trait; a flip scene; friend-test jokes | Meaning first. Scene, joke, and flip scene are not required |
-| `.cursor/rules/player-copy.mdc` | Same, and the check refused a missing flip and the symbol words | Points at v2. The check no longer requires those |
-| `src/lib/voice/moment-voice.ts` | "One concrete moment… Describe the moment and stop," with group-chat examples | Same export name. The rules are v2. Stories may still use a scene if it is established and is fiction |
-| `src/lib/voice/clear-voice.ts` | Name a friend and write "When X, you tend to Y" | A direct sentence is enough. Do not add a person or a place to decorate a trait |
-| `src/lib/story-library/draft-prompt.ts` and `docs/story-library/STYLE.md` (`style-storylib-5`) | Taught the listing line as the better example; required a flip scene; banned ticket, kettle, fork, bag, chair, costume | Teaches the plain sentence. Flip is optional. Object words are not banned. Do not use an object as a code for a trait |
-| `src/lib/category-deep-dive/dive.ts` | "CLEAR FIRST, MOMENT SECOND," and a required everyday moment in the closing | Meaning first. An example is optional and must not be told as the reader's history |
-| `src/lib/legend-figures/story.ts` | "You do a smaller version of that when [one modern moment]" | State the similarity. Do not invent the event. "If you'd met" stays marked as hypothetical |
-| `sceneReuse`, `scenePropOveruse`, missing-scene budget in `validate.ts` | Each trait must contain its scene phrase, nowhere else, at most once a card and 12 times in the bank | Retired. Those gates pushed the substitute imagery |
-| `metaphorSymbolIssues` | Failed story lines that contained ticket, kettle, fork, bag, chair, costume, and the rest | Retired. The words are allowed when they mean the object |
-| Flip required (`validate.ts`, `voice-review.ts`, `story-library-check.ts`) | Every line needed an opposite-pole scene, not shown | A flip note is optional. If present, it must not copy the line |
-| "Early read:" / snack-planner | A low-confidence line had to wear that costume | A plain hedge is enough |
-| Banned "tend to", "this suggests", "this reflects", "your pattern shows" | Those phrases failed the check, so writers hid the hedge inside a scene | Allowed when they hedge a suggestion |
-| Joke required on the sample card | `story-library-check` failed if the rendered card had no joke | A joke may be absent. If one is present it still has to pass the harm filter |
-| One-shape-per-card cap | A spoken card could not repeat a sentence shape, so a plain line lost to an old scene that still had "when" | Off. Plain sentences may share a shape. A real "even when" is allowed. A "when" that glues two unrelated facts is not |
-
-Still banned, because they hide the meaning: the untried option, gets the first look, one look is enough, the rest can wait, shared side, strong match, chased an unknown glow, measured everything twice, kept to the familiar choice, you are someone who, you may find, it's important to, embrace, navigate, unlock, coach-speak "journey", vibe, energy. Slang stays casual-only.
-
-Coach phrases, scoring, trait ids, `{answer}` / `{deed}` / `{Subj}`, and `STORY_LIBRARY_RUNTIME` (off) were left in place.
-
-## Round 2 — final wording of the earlier rows
-
-Each "new" cell is the assembled line a player can see. Old is the scene from before phase 1, unless a row says otherwise.
-
-### 1. Trait description — high openness
-
-Where: `TRAIT_POLE_LINES.openness.high`, Explore's offline fallback (`asYou` turns the leading "They'd" into "You'd"). Share-card phrase: "tries something new."
-
-Intended meaning: This person likes trying new things, even when other people stay with what they know.
-
-Old: They have a listing open before the group has agreed.
-
-New: You'd rather try something new, even when other people stick with a familiar option.
-
-Acceptance: The preference. Shown on an openness-high fallback. No listing. It follows high openness. It does not claim a listing was opened. Clear, and it uses a contraction. The sentence stands alone.
-
-### 2. Trait description — low openness
-
-Where: same fallback, `TRAIT_POLE_LINES.openness.low`.
-
-Intended meaning: This person would rather stick with something they already know they like.
-
-Old: They order the usual dish again, and it is still the best one.
-
-New: You'd rather stick with something you already know you like.
-
-Acceptance: Familiar preference. Shown for openness-low. Nothing else is referenced. It follows the low pole. It does not claim an order was placed. emci's wording, with the inner "they" turned to "you" because the card speaks to the reader.
-
-### 3. Insight — Curiosity, Adventurous (`ftw_openness_h_01`)
-
-Where: Home insight card. One focus, the why, one try, one watch. The other focuses rotate and do not repeat this paragraph. Id unchanged. Old focus titles stay in `RETIRED_FOCUS_TEXT`.
-
-Intended meaning: Your answers suggest you like trying new things even when a favorite is right there. Variety is the upside. Passing on something you'd enjoy more is the catch.
-
-Old: At a restaurant, you usually pick a dish you have never ordered, even when you already know a favorite…
-
-New: Your answers suggest you like trying new things, even when a favorite is right there. The upside is variety. The catch is you might pass on something you'd enjoy more. Next time you pick, name the favorite first, so you can see what you would be passing on. Notice when the new option won only because it was new.
-
-Acceptance: A suggestion, the tradeoff, and one next step. "Your answers" is the basis. It does not claim a restaurant visit. The four parts do not repeat the same sentence.
-
-### 4. Quote of an answer
-
-Where: `conscientiousness-quote-shows`. The old match string was not in the question bank, so it was dropped. The line now matches a real option.
-
-Question (`conscientiousness_06`): "Friends want a spontaneous weekend trip and nobody has made a plan." High option: "I make the shared doc anyway."
-
-Intended meaning: In that situation, this answer says you would still put a plan together.
-
-Old: You picked "I plan a whole new day", and the packing list was done before anyone else had shoes on.
-
-New: You picked "I make the shared doc anyway" when friends wanted a spontaneous trip and nobody had a plan, so you would still put a plan together.
-
-Acceptance: It quotes the real option and says what that option means in that question. The question's situation is in the line because the question itself is not on this card. It does not invent a packing list. The "when" is the question, not a second event.
-
-### 5. Legend match — Marie Curie, high openness
-
-Where: `openness-legend-won-when`, only for `lf_marie_curie`.
-
-Fact check: the roster tag says "She studied a new kind of radiation that nobody understood yet." Fact f3 says she coined the term radioactivity. "She spent years on a mystery other scientists ignored" is not in the entry, so it was not used.
-
-Intended meaning: You head toward what isn't known yet. So did she, and here is the sourced fact.
-
-Old: You tried a place nobody at the table could name when Marie Curie coined the word radioactivity.
-
-New: You'd rather head toward what isn't known yet, like Marie Curie. She studied a new kind of radiation that nobody understood yet, and she named it radioactivity.
-
-Acceptance: A preference, then her fact. Shown on a Curie match. Her name and the radiation are from the entry. It follows high openness. It does not put you at a table in 1898. No "when compared with."
-
-### 6. Legend contrast — Reserved
-
-Plain meaning, emci 2026-10-24: You recharge with time to yourself.
-
-Curie has no extraversion fact. The old extraversion tag was removed as an inference. The Curie card therefore does not say what she was like with people. That differ line states only the reader, and it is flagged.
-
-Where the other side is sourced: Babe Ruth, tag "After games, a crowd would gather in his hotel suite." Line `ruth-extraversion-differ-low`, only for `lf_babe_ruth`.
-
-Old (Curie, invented): You stayed with one friend because that was the choice, and Marie Curie coined the word radioactivity.
-
-New, reader only, on the Curie card (flagged, not a both-sides contrast): You'd rather recharge with time alone than with a crowd.
-
-New, both sides, Babe Ruth: You'd rather recharge with time alone. After games, a crowd would gather in Babe Ruth's hotel suite.
-
-Acceptance for the Ruth line: Your side is time alone. His side is the crowd in the hotel suite, from the entry. It does not say you were there. It does not say "quieter."
-
-### 7. Playfulness low
-
-Where: `TRAIT_POLE_LINES.playfulness.low`, and the low-playfulness show line.
-
-Intended meaning: They'd rather take a situation straight than turn it into play.
-
-Old: You heard the joke and then answered the actual question without a side quest.
-
-New (profile fallback): You'd rather take a situation straight than turn it into play.
-
-New (story card): You'd rather take a situation straight, and leave the playful version alone.
-
-Acceptance: Serious, not Familiar. No invented joke. The "and" is a real second beat, not a scene.
-
-### 8. Button and empty state
-
-Where: `ShapeCard` before any answer.
-
-Old: Your shape is blank. Sixteen answers draw the first lines. [Answer the first 16]
-
-New: Your shape is blank. Answer 16 questions and this chart starts to fill in. [Answer the first 16 questions]
-
-### 9. Error — paid legend reveal failed
-
-Old: The AI card didn’t come through, so this reveal didn’t happen. Your tokens come back (once a day). Try again in a bit.
-
-New: The legend card did not load, so this reveal was not saved. Try again later. If tokens were charged for this try, they come back (a failed charge is refunded once a day).
-
-### 10. Notification ask
-
-Old: Want a nudge now and then? ATO can send a short note when your insight is ready. You can change this any time.
-
-New: Allow a reminder? ATO can send a short note when your daily insight is ready. You can turn this off later.
-
-### 11. Onboarding — end of the day
-
-Old: What already happens at the end of your day? The evening Check bump hangs off this.
-
-New: What already happens at the end of your day? The evening reminder mentions the one you pick.
-
-### 12. Trait description and insight — Reserved
-
-Where: `TRAIT_POLE_LINES.extraversion.low` (Explore shows the You form). Share card: "recharges with time alone." Insight `ftw_extraversion_l_01`, one focus plus why, try, and watch.
-
-Intended meaning: You recharge with time to yourself.
-
-Old trait line: They wave once and keep the quiet corner.
-
-New trait line: You recharge with time to yourself.
-
-Old insight: After a busy week, a quiet night at home usually sounds better to you than a night out…
-
-New insight: You recharge with time to yourself, especially after a stretch around other people. You use that time alone so you can show up for the next plan. Without it, the next one can feel like too much. Next time the week fills up, keep one evening for yourself. Notice when you need time to yourself before you say yes to another plan.
-
-## Assembled cards
-
-Reviewed as a whole card, not as loose lines. Unflagged lines are the sample. Flagged lines are not a finished reading.
-
-### Explore deep dive — high reader
+| `docs/voice-guide.md` | A real moment on every line | Meaning first. An opener used by more than a third of a pool fails. A legend fact is used once on a card. A hypothetical hour opens with "Picture an hour with…" |
+| `.cursor/rules/player-copy.mdc` | Same as the old guide | Points at v2, including the opener cap and the Picture framing |
+| `src/lib/voice/player-copy.ts` | Scene phrases, a required flip | `openerOveruse`. Share must be at most one third. Pools shorter than 3 lines are skipped. "You'd rather" and "You would rather" are one key |
+| Story Library (`validate.ts`, `voice-review.ts`) | One sentence shape per card | Shape may repeat. Each slot pool, and each assembled card, is an opener pool. `{deed}` and the word "radioactivity" may each appear once on a legend card |
+| Insights | Unique focus text | The three focuses of one idea are an opener pool |
+| Pole lines | — | All 32 high/low lines are one pool |
+| `docs/story-library/STYLE.md` | `style-storylib-5` | `style-storylib-6`. One fact. Varied openings. Picture an hour |
+| `src/lib/legend-figures/story.ts` | "If you'd met", plus "that hour is imagined" | "Picture an hour with [the legend]." No second disclaimer |
+| Category watch-outs | Must open with Sometimes or Because | Unchanged. That pool is not under the opener cap, because the check requires those two openings |
+
+Still banned: the untried option, gets the first look, one look is enough, the rest can wait, shared side, strong match, you are someone who, embrace, navigate, unlock, journey, vibe, energy as coach-speak. Slang stays casual-only.
+
+## Old / new / reason, by screen
+
+"Old" is the round-2 line a player could see, unless the row says otherwise. "New" is the assembled You-form.
+
+### Explore trait card
+
+| Trait | Old | New | Reason |
+|---|---|---|---|
+| Openness high | You'd rather try something new, even when other people stick with a familiar option. | You will try something new, even when other people stick with a familiar option. | Same meaning. "You'd rather" no longer opens the pole bank. |
+| Openness low | You'd rather stick with something you already know you like. | You stick with something already known to be liked. | The inner "they" would break the check-in stem. The sentence still means a known favorite. |
+| Playfulness low | You'd rather take a situation straight than turn it into play. | You take a situation straight instead of turning it into play. | Serious, not Familiar. No invented joke. |
+| Extraversion low | You recharge with time to yourself. | You recharge with time to yourself. | Reserved wording, left exact. |
+| Other poles | "They'd rather…" on most lines | A plain verb for that trait ("They finish a plan once it is started.", "They state a blunt point and stay with it.") | One opener was more than a third of the 32-line pool. |
+
+### Insight
+
+| Card | Old | New | Reason |
+|---|---|---|---|
+| `ftw_openness_h_01` focus | Your answers suggest you like trying new things, even when a favorite is right there. | Same sentence, plus two other openings: "From your answers, …" and "The pattern in your answers is that …" | The three wordings of one idea were opening the same way. |
+| `ftw_openness_h_01` why | The upside is variety. The catch is you might pass on something you'd enjoy more. | The upside for you is variety. The catch is passing on something that would have been more fun. | Names the tradeoff in plain words. "For you" keeps the you/your rule without "you take on passing on." |
+| `ftw_extraversion_l_01` focus | You recharge with time to yourself, especially after a stretch around other people. | You recharge with time to yourself. | The reserved sentence, exact. The other five low-extraversion ideas keep that sentence and add a different short clause so the focuses stay unique. |
+
+Ids are unchanged. Previous focus strings are in `RETIRED_FOCUS_TEXT`.
+
+### Story Library — dive card
 
 Seed `sample-dive`. Openness high, playfulness high, steadiness in the middle.
 
-- Title: the new option
-- Shows, openness: You'd rather try something new, even when other people stick with what they know.
-- Shows, playfulness: You'd rather turn an ordinary task into play, and it can take longer on purpose.
-- Shows, steadiness: You'd let some of a rough moment land and then let the rest go.
-- Mix: You'd rather try something new, and you'd also turn an ordinary task into play.
-- Notice: You'd notice a new option before other people settle on a familiar one.
-- Means: You'd rather try something new, even when a familiar option is right there. The upside is variety, and the catch is passing on something that would have been more fun.
-- Joke: The new option won.
+| Slot | Old | New | Reason |
+|---|---|---|---|
+| Shows, openness | You'd rather try something new, even when other people stick with what they know. | You will still try something new even when a familiar option is right there. | The preference, with a real "even when." |
+| Shows, playfulness | You'd rather turn an ordinary task into play, and it can take longer on purpose. | You can turn an ordinary task into play, and a different choice can stay available too. | Play can be true without erasing another choice. |
+| Shows, steadiness | You'd let some of a rough moment land and then let the rest go. | You might look at both choices and then let one setback fade while another stays. | "A rough moment" did not say what happens. A setback can fade while another stays. |
+| Mix | You'd rather keep both of these than pretend they are one habit. | Trying something new can include play for you, because a task can be new and still be a game. | Names the two leanings. On a card without that pair: "Both leanings can stay true for you in the same week, because neither one has to cancel the other." |
+| Notice | You'd notice a new option before other people settle on a familiar one. | Other people can see that you will try something new before the choice is settled. | What someone else could see, not a private "you'd notice." |
+| Means | You'd rather try something new… The upside is variety, and the catch is passing on something that would have been more fun. | What the answers suggest is that you will try something new even when a familiar option is right there. The upside is variety. The catch is passing on something that would have been more fun. | The basis is the answers. |
+| Joke | The new option won. | The new option won. | This closer belongs to high openness only. Playfulness high is "Play took the long way." Steadiness mid is "Some of it stayed." |
 
-The steadiness line is the middle of that trait ("some of it lands, some of it goes"), not a claim that a particular plan was left until morning.
+Low card (`sample-dive-low`): extraversion shows as "You might look at both choices and then recharge with time to yourself." Joke: "The familiar one stayed."
 
-### Explore deep dive — low reader
+### Legend comparison
 
-Seed `sample-dive-low`. Openness low, playfulness low, extraversion low.
+Seed `sample-legend` (Marie Curie). Radioactivity is in the first match line only.
 
-- Title: the familiar pick
-- Shows, openness: You'd rather stick with a known favorite, even when a new option is sitting right there.
-- Shows, playfulness: You'd rather take a situation straight, and leave the playful version alone.
-- Shows, extraversion: You'd rather recharge with time alone and then leave the crowd for later.
-- Mix: You'd rather keep both of these than pretend they are one habit.
-- Notice: You'd notice a familiar favorite before anyone argues for a new option.
-- Means: You'd rather stick with something already liked, even when a new option is available. The point is knowing what already works, not refusing every change.
-- Joke: The familiar one still wins.
+| Slot | Old | New | Reason |
+|---|---|---|---|
+| Match | You'd rather head toward what isn't known yet, like Marie Curie. She studied a new kind of radiation that nobody understood yet, and she named it radioactivity. | Like Marie Curie, who studied a new kind of radiation that nobody understood yet and named it radioactivity, you will still try something new even when a familiar option is right there. | Her sourced fact, once. The reader's side is high openness, not a dinner. |
+| Scene | You might picture one ordinary hour beside Marie Curie, who coined the word radioactivity. That hour is imagined, not a memory. | Picture an hour with Marie Curie. In that hour you would try something new if that choice came up, and the talk would stay on the known work. | The opening marks the hour as hypothetical. The fact is not repeated. |
+| Means | You'd rather head toward what isn't known yet. Marie Curie coined the word radioactivity. Those two point the same way… | The match stops at the leaning. You will still try something new even when a familiar option is right there. What Marie Curie is known for stays that person's own work. | Says the likeness is the leaning. Does not retell radioactivity. |
+| Joke | The new option won. | The new option won. | Openness high's own closer, not a shared joke. |
+| Second pair, steadiness | You'd let some of a rough moment land and then let the rest go. | You can let one setback fade while another stays, and that is separate from what Marie Curie is known for. | Flagged. She has no steadiness tag, so the line does not borrow a deed. |
+| Differ | You'd rather recharge with time alone than with a crowd. | You recharge with time to yourself rather than with a crowd, because the answers land on that side. | Flagged. Her entry does not say how she spent time with people. Reserved wording is exact. |
+| Babe Ruth differ | You'd rather recharge with time alone. After games, a crowd would gather in Babe Ruth's hotel suite. | You recharge with time to yourself. After games, a crowd would gather in Babe Ruth's hotel suite. | His hotel-suite fact is in the roster. The reader's side is the reserved sentence. |
 
-### Curie legend card
+### Quote of an answer
 
-Seed `sample-legend`. Match on openness. Second pair is mid steadiness. Differ is low extraversion.
+| Line | Old | New | Reason |
+|---|---|---|---|
+| `conscientiousness-quote-shows` | You picked "I make the shared doc anyway" when friends wanted a spontaneous trip and nobody had a plan, so you would still put a plan together. | You picked "I make the shared doc anyway" when friends wanted a spontaneous trip and nobody had a plan, so the choice was to make the plan anyway. | The question and the real option. The plan is what that option means. |
+| Other quote lines | A made-up scene attached to `{answer}` | You picked "[the option]", which is the option on the screen for that question. | Flagged. The consequence after the tap is not in the answers, so it is not invented. These lines sit at priority 5 so a trait line wins. |
 
-- Title: the new option
-- Match: You'd rather head toward what isn't known yet, like Marie Curie. She studied a new kind of radiation that nobody understood yet, and she named it radioactivity.
-- If you'd met: You might picture one ordinary hour beside Marie Curie, who coined the word radioactivity. That hour is imagined, not a memory.
-- Means: You'd rather head toward what isn't known yet. Marie Curie coined the word radioactivity. Those two point the same way: toward something that was not already named.
-- Joke: The new option won.
-- Second pair, steadiness: You'd let some of a rough moment land and then let the rest go. **Flagged.** Curie is not tagged steadiness, so this line does not borrow her deed.
-- Differ: You'd rather recharge with time alone than with a crowd. **Flagged.** Her entry does not say how she spent time with people. The both-sides contrast is the Babe Ruth line above.
+### Category cards and story card 6
 
-## Not rewritten, on purpose
+| Where | Old | New | Reason |
+|---|---|---|---|
+| Openness to life, high | You open the group chat and name a spot nobody in it has tried yet. | You name a new option while the familiar one is still on the table. | The chat and the spot were not in the answers. |
+| Openness to life, low | You would rather a small table and a known menu than a room full of new names. | You pick a small known group over a room full of new people. | Drops the menu and the "would rather" opener. |
+| Drive, low | You would rather a calm plan with clear steps than a push you have to lead alone. | You pick a calm plan with clear steps over a push you have to lead alone. | Same meaning, plain opener. |
+| Steadiness, high | You keep the Tuesday plan, stay even in the group chat… | You keep the plan, stay even when the talk gets loud, and still answer when work runs late. | Drops the invented Tuesday and the chat. |
+| Everyday social, try | Share one opinion in your next group chat… | Share one opinion with the people you are talking to, so your view is actually said. | A try is an action. It does not require a chat. |
+| Card 6 lean, social low | you recharge in quieter company | you want less time in a crowd | Blended category. Not the reserved extraversion sentence, and not "quieter." |
+| Story reveal, communication low | You'd rather step back than push. | You step back instead of pushing. | The story is fiction. The closer no longer uses the shared "You'd rather." |
+| How you argue, Quiet exit | You'd rather step out than step in. | You step out of a fight instead of joining it. | Names the behavior. |
+| Communication kryptonite | You'd rather step back than push your view. | You step back instead of pushing your view. | Same. |
 
-Question bank wording and scores. Daily lines. Category bank. Legend roster facts. Axis pole quotes emci already approved (`AXIS_POLES`), except where a sample above names one as the intended meaning. The other 700 Story Library lines. `docs/NOW.md`, `PROJECT_CONTEXT.md`, and `docs/ato-finish-roadmap.md`.
+### Buttons, errors, questions, notifications
+
+Phase 1 wording stays. Empty state: "Answer 16 questions and this chart starts to fill in." Legend error names a failed charge instead of always promising tokens back. The notification ask says "Allow a reminder?" The evening question says "The evening reminder mentions the one you pick."
+
+## Assembled cards now
+
+### High dive
+
+- You will still try something new even when a familiar option is right there.
+- You can turn an ordinary task into play, and a different choice can stay available too.
+- You might look at both choices and then let one setback fade while another stays.
+- Trying something new can include play for you, because a task can be new and still be a game.
+- Other people can see that you will try something new before the choice is settled.
+- What the answers suggest is that you will try something new even when a familiar option is right there. The upside is variety. The catch is passing on something that would have been more fun.
+- The new option won.
+
+### Curie card
+
+- Like Marie Curie, who studied a new kind of radiation that nobody understood yet and named it radioactivity, you will still try something new even when a familiar option is right there.
+- You can let one setback fade while another stays, and that is separate from what Marie Curie is known for. **Flagged.**
+- Picture an hour with Marie Curie. In that hour you would try something new if that choice came up, and the talk would stay on the known work.
+- The match stops at the leaning. You will still try something new even when a familiar option is right there. What Marie Curie is known for stays that person's own work.
+- You recharge with time to yourself rather than with a crowd, because the answers land on that side. **Flagged.**
+- The new option won.
+- Ruth, for the sourced contrast: You recharge with time to yourself. After games, a crowd would gather in Babe Ruth's hotel suite.
+
+## Flagged instead of inventing a fact
+
+- Curie has no steadiness tag and no extraversion tag. Those lines state the reader and say her known work is separate. They do not invent a lab habit or a night out.
+- A legend differ with no roster fact for that contrast states the reader only: "You will [do the thing] because the answers land on that side."
+- Quote lines other than the real conscientiousness option do not describe what happened after the tap.
+- Daily lines stay as emci approved them on 2026-10-02. A few still open with "You'd rather." They were not rewritten.
+- `AXIS_POLES` stay as the approved first-person quotes.
+- Question prompts and option scores stay. A scenario edit needs a retired row and a migration.
+- Legend roster facts, `whoTheyWere`, and `famousFor` stay.
+- Category try-lines stay suggested actions. A few watch-outs still use an ordinary setting (an inbox, dinner, a couch) as a possible cost, hedged with "Sometimes" or "Because." They are not a claim that this player had that evening.
+- `docs/NOW.md`, `PROJECT_CONTEXT.md`, and `docs/ato-finish-roadmap.md` were not edited. Scoring was not edited.

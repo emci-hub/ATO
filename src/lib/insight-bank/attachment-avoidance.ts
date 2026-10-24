@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const ATTACHMENT_AVOIDANCE_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_attachment_avoidance_h_01', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_01", ["attachment_avoidance:high"], {
     focus: [
-      'After a very close weekend, you usually want a night at home with the door shut.',
-      'You can love someone and still need the couch to yourself before the week starts again.',
-      'A plan to spend every evening together can leave you feeling crowded in your own kitchen.',
+      "Your answers suggest you keep some distance once things get close.",
+      "From your answers, you keep some distance once things get close.",
+      "The pattern in your answers is that you keep some distance once things get close.",
     ],
-    why: 'A night alone is something you need, but a partner might read the closed door as distance unless you say what it is.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Tell your partner when you need the evening alone, so they don’t take the closed door personally.',
-      'Plan that alone time on the calendar, so the people close to you know when you’ll be back.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you pull back right after a very close day.',
-      'Notice how people respond once you say you need the evening.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_02', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_02", ["attachment_avoidance:high"], {
     focus: [
-      'A friend asks how you’re really doing, and you usually say you’re fine and switch the topic.',
-      'Even with people you trust, a hard feeling can stay in your notes app instead of the chat.',
-      'When something is hard, you usually deal with it on your own before you tell anyone at all.',
+      "The catch in your answers is a distance that shuts a good thing out.",
+      "What this can cost you is a distance that shuts a good thing out.",
+      "A cost worth naming for you is a distance that shuts a good thing out.",
     ],
-    why: 'Handling it yourself can feel safer, but people who care might want a chance to help before you’ve already finished it.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Tell one person one small thing that’s been on your mind, so sharing starts with a single sentence.',
-      'Answer the next “how are you” with one honest detail, so the conversation can go past fine.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when “fine” comes out before you’ve decided to say it.',
-      'Notice how you feel once you do share one real detail.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_03', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_03", ["attachment_avoidance:high"], {
     focus: [
-      'A hard week at work usually has you figuring it out alone, even when a friend offered to help.',
-      'You can have a problem sitting in your inbox and still not ask, because you’d rather solve it yourself.',
-      'When the task list gets too long, you usually push through alone instead of saying it’s too much.',
+      "Someone else might notice that you step back when closeness is on offer.",
+      "From the outside, you step back when closeness is on offer.",
+      "Other people can see that you step back when closeness is on offer.",
     ],
-    why: 'Getting through a hard week alone is a real skill, but a bit of help can make the same list lighter for you.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Ask one person for help with something small this week, so asking starts with one easy task.',
-      'Text a friend about one hard thing you’re handling, so they know what’s on your list.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you turn down help you could actually use on the list.',
-      'Notice how people react the next time you do ask.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_04', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_04", ["attachment_avoidance:high"], {
     focus: [
-      'A partner brings up next year, and you can feel uneasy enough to change the subject at the table.',
-      'Future talk over dinner usually has you steering back to this weekend instead.',
-      'Someone asks where the relationship is going, and you usually want more time before you answer.',
+      "What you might miss is a closeness you would have wanted.",
+      "Your answers leave room to miss a closeness you would have wanted.",
+      "A thing you might skip is a closeness you would have wanted.",
     ],
-    why: 'Taking your time on big steps protects your space, but a partner may need to hear that you’re still thinking about it.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Tell your partner one outing you look forward to doing together, so they know you’re in it.',
-      'Write down what feels uneasy about the future talk, so you can explain it when you’re ready.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you change the subject during a serious dinner talk.',
-      'Notice which future plans actually feel good once you picture them.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_05', ['attachment_avoidance:high'], {
+  idea("ftw_attachment_avoidance_h_05", ["attachment_avoidance:high"], {
     focus: [
-      'A long hug or a very sweet text can leave you a bit uncomfortable, even from someone you care about.',
-      'You usually show care by doing the thing, the ride, the errand, more than by saying it.',
-      'A friend says something very emotional, and you can sit there unsure what to text back.',
+      "The helpful side for you shows up when a little room can keep the bond workable.",
+      "Your answers also show a use when a little room can keep the bond workable.",
+      "There is a use for you when a little room can keep the bond workable.",
     ],
-    why: 'Doing the errand is real care, but the people close to you might also need to hear it in words.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Say one kind thing out loud to someone close today, so they hear what you usually only show.',
-      'Send a short message telling a friend you appreciate them, so the words stay in the chat.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice how you show love with a ride or an errand and not a sentence.',
-      'Notice what you feel when someone says something kind straight to you.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_h_06', ['attachment_avoidance:high', 'autonomy:high'], {
+  idea("ftw_attachment_avoidance_h_06", ["attachment_avoidance:high", "autonomy:high"], {
     focus: [
-      'Even in a relationship, you usually keep your own Saturday plan and your own way of doing the errand.',
-      'Sharing a kitchen or a calendar, you usually still want to decide the small stuff yourself.',
-      'You can be close with someone and still keep the routines that were yours before they moved in.',
+      "Your answers suggest two things at once: you keep some distance, and you choose the way.",
+      "Both can be true for you in the same week: you keep some distance, and you choose the way.",
+      "A week can hold both for you, so you keep some distance, while you choose the way.",
     ],
-    why: 'Keeping your own plans lets you keep your routines, but a partner might feel left out of a decision that affects them too.',
+    why: "The upside for you is room. The catch is a distance that shuts a good thing out.",
     try: [
-      'Ask your partner or roommate for a view on one small decision, so they feel included.',
-      'Tell someone close about a plan you made on your own, so they don’t find it on the calendar later.',
+      "Next time you choose, name whether the distance is protecting you or hiding you first.",
+      "Before you decide, check what closeness is actually on offer.",
     ],
     watch: [
-      'Notice when you book something that affects someone else without asking them.',
-      'Notice whether people close to you hear about your plans before they happen.',
+      "Notice when the distance shuts out something you wanted.",
+      "Notice if you wanted to stay and stepped back.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_01', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_01", ["attachment_avoidance:low"], {
     focus: [
-      'When you’re close to someone, you usually want to share the day and spend a lot of the evening together.',
-      'A regular text from the people you love can be the part of the day you feel happiest about.',
-      'Something happens on the bus, and you usually want to tell your partner or best friend right away.',
+      "Your answers suggest you stay close once things have started.",
+      "From your answers, you stay close once things have started.",
+      "The pattern in your answers is that you stay close once things have started.",
     ],
-    why: 'Sharing your day makes people feel wanted, but someone who needs more space might feel crowded by the constant update.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Ask your partner or a close friend how much time together feels good, so you can match their week.',
-      'Plan one thing you enjoy doing alone this week, so time apart has a shape you chose.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice when someone close needs the evening to themselves.',
-      'Notice how you feel during an evening apart.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_02', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_02", ["attachment_avoidance:low"], {
     focus: [
-      'Something bothering you usually goes straight into a text to someone close, the same hour.',
-      'With people you trust, you usually say the feeling out loud instead of sitting on it.',
-      'A feeling shows up, and you can say it in the kitchen before you’ve had time to edit it.',
+      "The catch in your answers is closeness with no room to breathe.",
+      "What this can cost you is closeness with no room to breathe.",
+      "A cost worth naming for you is closeness with no room to breathe.",
     ],
-    why: 'Saying what you feel out loud builds closeness, but some friends might need a minute before they’re ready to share back.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Ask a friend how their day went before you share your news, so the talk goes both ways.',
-      'Write the feeling in a note first, so you can choose which part to send.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice whether the people you text share something back.',
-      'Notice when someone seems unsure how to answer what you just said.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_03', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_03", ["attachment_avoidance:low"], {
     focus: [
-      'A problem at home usually has you asking a friend or your family early, before you’ve tried it alone.',
-      'On a packed week, you can feel fine texting a trusted friend to take one task.',
-      'Stuck on a task, you usually reach out instead of sitting with it by yourself all evening.',
+      "Someone else might notice that you stay in once closeness has started.",
+      "From the outside, you stay in once closeness has started.",
+      "Other people can see that you stay in once closeness has started.",
     ],
-    why: 'Asking early can make a hard task lighter, and it lets a friend feel trusted when you help them back too.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Offer to help a friend with one thing this week, so the support goes both ways.',
-      'Try one small problem on your own first, so you can see what you can finish alone.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice how often you help the friends who helped you with a task.',
-      'Notice which problems you could have solved from the couch without a text.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_04', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_04", ["attachment_avoidance:low"], {
     focus: [
-      'When you care about someone, you usually show it with a hug, a kind text, and a lot of contact.',
-      'You can say how you feel about people out loud, at the table, not only in your head.',
-      'A friend does something kind, and you usually tell them the same day how much it meant.',
+      "What you might miss is a little room you also needed.",
+      "Your answers leave room to miss a little room you also needed.",
+      "A thing you might skip is a little room you also needed.",
     ],
-    why: 'Warmth out loud makes people feel loved, but some people you care about might be less comfortable with that much of it.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Ask a friend how they like care to show up, so your warmth reaches them the way they like.',
-      'Send one friend a thank-you message today, so they know the help mattered.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice who leans in when you show warmth and who steps back a little.',
-      'Notice how each friend shows care back, in a text, a favor, or time.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_05', ['attachment_avoidance:low'], {
+  idea("ftw_attachment_avoidance_l_05", ["attachment_avoidance:low"], {
     focus: [
-      'In a relationship, you usually enjoy talking about next month’s plans together over dinner.',
-      'You can like putting long-term dates on a shared calendar with the people you’re close to.',
-      'When things are going well, you usually want to talk about what’s next, not only tonight.',
+      "The helpful side for you shows up when staying close is the point.",
+      "Your answers also show a use when staying close is the point.",
+      "There is a use for you when staying close is the point.",
     ],
-    why: 'Planning the next month shows you’re in it, but a partner who moves slower might need more time to get there with you.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Ask your partner what they’re excited about right now, so the plan fits both of you.',
-      'Pick one near-term plan to enjoy together, so the future talk doesn’t take the whole dinner.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice when a partner goes quiet during a talk about next year.',
-      'Notice how it feels to enjoy tonight without booking the next month.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
   }),
-  idea('ftw_attachment_avoidance_l_06', ['attachment_avoidance:low', 'relatedness:high'], {
+  idea("ftw_attachment_avoidance_l_06", ["attachment_avoidance:low", "relatedness:high"], {
     focus: [
-      'Your best days usually have people close by and a real conversation, not only a busy calendar.',
-      'With your friends or your partner in the room, you can feel more like yourself than you do alone.',
-      'A week without a real talk can leave you flat, even if the work chat was full.',
+      "Your answers suggest two things at once: you stay close, and you need a real tie.",
+      "Both can be true for you in the same week: you stay close, and you need a real tie.",
+      "A week can hold both for you, so you stay close, while you need a real tie.",
     ],
-    why: 'Closeness keeps your relationships strong, but a packed week with no real talk can leave you lonely anyway.',
+    why: "The upside for you is closeness. The catch is closeness with no room to breathe.",
     try: [
-      'Text two friends to plan something this week, so you have a real conversation to look forward to.',
-      'Call someone you love on a quiet evening, so the day ends with an actual voice.',
+      "Next time you choose, name whether you still have room first.",
+      "Before you decide, check whether distance would help for an hour.",
     ],
     watch: [
-      'Notice how your mood shifts after a week with little real contact.',
-      'Notice which people make you feel most like yourself in the room.',
+      "Notice when closeness leaves you no room.",
+      "Notice if you needed an hour of distance.",
     ],
-  }),
+  })
 ];

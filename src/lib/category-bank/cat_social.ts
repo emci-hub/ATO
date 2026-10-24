@@ -45,7 +45,7 @@ export const CAT_SOCIAL: BarCard = {
       tryThis: [
         'Text a friend that you had fun after your next hangout, so they know it landed.',
         'Pick one plan to skip this week, so the ones you want still have you.',
-        'Share one opinion in your next group chat, so your view is in the thread.',
+        'Share one opinion with the people you are talking to, so your view is actually said.',
       ],
     },
     low: {

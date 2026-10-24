@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const GROWTH_MINDSET_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_growth_mindset_h_01', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_01", ["growth_mindset:high"], {
     focus: [
-      'After you send the wrong file, you usually open a note and write what you would do on the next one.',
-      'A burned pan can have you reading the recipe again before it is even in the sink.',
-      'The missed bus sometimes has you checking a better route before the annoyance fades.',
+      "Your answers suggest you look for what to change after a miss.",
+      "From your answers, you look for what to change after a miss.",
+      "The pattern in your answers is that you look for what to change after a miss.",
     ],
-    why: 'Pulling a lesson from a miss can help your next try, but not every mistake of yours needs a note; some can just be let go.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Write one lesson from a recent miss, then close the note, so you can move on.',
-      'Let one small mistake go today without picking it apart, so you get a break from the review.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when the lesson from a mistake turns into replaying it on the couch.',
-      'Notice which lessons you actually use the next time.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_02', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_02", ["growth_mindset:high"], {
     focus: [
-      'When a project is done, you usually ask what you could have done better before you enjoy it.',
-      'Notes from your boss can be welcome to you, even when they are hard to read.',
-      'A comment on your doc sometimes reads to you as useful, not as a hit on you.',
+      "The catch in your answers is a change that never settles.",
+      "What this can cost you is a change that never settles.",
+      "A cost worth naming for you is a change that never settles.",
     ],
-    why: 'Asking for notes can help you improve fast, but asking too often can make people feel they have to critique you.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Ask for a note on one specific part, so the answer is easy to give.',
-      'Name one thing that went well before you ask what to change, so you see the good too.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when you go straight to the critique and skip the praise in the same message.',
-      'Notice which notes actually changed the next version.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_03', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_03", ["growth_mindset:high"], {
     focus: [
-      'A hard task can look more appealing to you than the easy one sitting next to it.',
-      'You usually keep going on something new even when the steps have you frustrated.',
-      'When the choice is easy or hard, you sometimes pick the hard one because it stretches you.',
+      "Someone else might notice that you look for a change while the miss could stay closed.",
+      "From the outside, you look for a change while the miss could stay closed.",
+      "Other people can see that you look for a change while the miss could stay closed.",
     ],
-    why: 'A hard problem can pull you in, but an easy win and a real rest matter for you too.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Do one easy thing you enjoy today, like the show you keep skipping, so you get a break from pushing.',
-      'Pick one goal for this month, so you are not split across five of them.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when you pick the hard option just because it is hard.',
-      'Notice how you feel after an easy, fun day with nothing to improve.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_04', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_04", ["growth_mindset:high"], {
     focus: [
-      'When a friend says they are bad at cooking, you usually tell them they can learn the dish.',
-      'You can be the person in the chat who tells someone to try the thing one more time.',
-      'If a friend is ready to drop a class, you sometimes nudge them toward one more week.',
+      "What you might miss is a rest the next try did not allow.",
+      "Your answers leave room to miss a rest the next try did not allow.",
+      "A thing you might skip is a rest the next try did not allow.",
     ],
-    why: 'Believing a friend can get better can lift them, but sometimes they just need you to listen.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Ask a friend if they want encouragement or just to talk, so you give them what they asked for.',
-      'Share a time you struggled and then got better, so the encouragement has a real story.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when a friend wants to be heard, not told what to try.',
-      'Notice how people respond when you tell them to try again.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_05', ['growth_mindset:high'], {
+  idea("ftw_growth_mindset_h_05", ["growth_mindset:high"], {
     focus: [
-      'A look at your week can turn into a list of things you want to get better at.',
-      'You usually have a course tab and a skill video open beside the work you already do.',
-      'Free time on the couch sometimes goes to learning something instead of the show you meant to watch.',
+      "The helpful side for you shows up when a next try can be the right move.",
+      "Your answers also show a use when a next try can be the right move.",
+      "There is a use for you when a next try can be the right move.",
     ],
-    why: 'Wanting to get better keeps the week interesting, but it can make you forget to enjoy the life you already have.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Write down three things you like about your life right now, so you see what is already good.',
-      'Take one evening off from lessons and videos, so you get time to just enjoy the night.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when getting better starts to feel like pressure instead of fun.',
-      'Notice what you already do well and have stopped counting.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_h_06', ['growth_mindset:high', 'locus_of_control:high'], {
+  idea("ftw_growth_mindset_h_06", ["growth_mindset:high", "locus_of_control:high"], {
     focus: [
-      'When a plan fails, you usually look at your part and write what you would change next time.',
-      'A setback can have you making a new plan before you have sat with the fact that it failed.',
-      'You sometimes ask what you can change on the next try, and the question comes fast.',
+      "Your answers suggest two things at once: you look for the change, and you look at your part.",
+      "Both can be true for you in the same week: you look for the change, and you look at your part.",
+      "A week can hold both for you, so you look for the change, while you look at your part.",
     ],
-    why: 'Owning your part can help the next plan, but not every setback was something you could have changed.',
+    why: "The upside for you is a next try. The catch is a change that never settles.",
     try: [
-      'Write down one part of a recent setback that was not up to you, so you do not carry all of it.',
-      'Pick one change for next time and let the other ones go, so you can move forward.',
+      "Next time you choose, name what actually needs to change first.",
+      "Before you decide, check whether the miss can stay closed.",
     ],
     watch: [
-      'Notice when you take the blame for something the calendar or another person decided.',
-      'Notice how often the new plan actually works.',
+      "Notice when you change it again before it settles.",
+      "Notice if the miss was fine to leave closed.",
     ],
   }),
-  idea('ftw_growth_mindset_l_01', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_01", ["growth_mindset:low"], {
     focus: [
-      'Choosing what to do, you usually pick the task you already know you can do well.',
-      'A new skill that feels hard on the first try can get set aside by you as not for you.',
-      'You sometimes stay with the job you already do well and leave the unfamiliar one on the list.',
+      "Your answers suggest you can treat a miss as the end of that path.",
+      "From your answers, you can treat a miss as the end of that path.",
+      "The pattern in your answers is that you can treat a miss as the end of that path.",
     ],
-    why: 'Staying with what you do well makes sense, but some skills only feel hard in the first sitting.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Try one new skill for ten minutes today, a recipe or a short lesson, so you see how it feels after the start.',
-      'Ask a friend how long a skill took them, so the slow start has a real number on it.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when you decide you are bad at something after one try.',
-      'Notice how much easier a task gets once you have practiced it.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_02', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_02", ["growth_mindset:low"], {
     focus: [
-      'The recipe fails, and you order dinner instead of starting the whole thing over.',
-      'A push to change your morning routine can get an easy “it is fine” from you.',
-      'You can feel at ease with how the week runs, even when someone else would tweak it.',
+      "The catch in your answers is an ending that closes a path too soon.",
+      "What this can cost you is an ending that closes a path too soon.",
+      "A cost worth naming for you is an ending that closes a path too soon.",
     ],
-    why: 'Being content can save you a lot of stress, but a small change might make one annoying thing easier.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Pick one small thing that bugs you and change it this week, so you can see if it helps.',
-      'Ask a friend what they changed recently, so you get one new idea.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when something bothers you more than you say out loud.',
-      'Notice whether one small change would be worth the effort.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_03', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_03", ["growth_mindset:low"], {
     focus: [
-      'A critical note on your work can land as a judgment of you, not of the paragraph.',
-      'You usually hear criticism as a sign you are not good at the thing itself.',
-      'After your work is critiqued, you can feel discouraged for the rest of the afternoon.',
+      "Someone else might notice that you treat a miss as final while another try is available.",
+      "From the outside, you treat a miss as final while another try is available.",
+      "Other people can see that you treat a miss as final while another try is available.",
     ],
-    why: 'A critique can sting for the rest of the day, but it is usually about one paragraph, not about you as a person.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Write down one specific thing to try from the note, so it becomes a step instead of a verdict.',
-      'Ask the person what they think went well in the draft, so you hear more than the critique.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when a note makes you want to quit the task.',
-      'Notice how often a critique helped you on a later draft.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_04', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_04", ["growth_mindset:low"], {
     focus: [
-      'When things are going fine, you usually see no reason to change the routine that works.',
-      'You can feel happy with the skills you already have and the way your week already runs.',
-      'Talk of a new course sometimes sounds to you like something for other people.',
+      "What you might miss is a try that was still open.",
+      "Your answers leave room to miss a try that was still open.",
+      "A thing you might skip is a try that was still open.",
     ],
-    why: 'Being happy with what you have is a real strength, and a little learning can stay small and easy when you want it.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Pick one thing you enjoy and learn one new fact about it, so the learning feels like fun.',
-      'Watch one short video about a hobby you like, so you learn without a whole course.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice what you are curious about when nobody is pushing you.',
-      'Notice when you feel like trying something new on a day nobody is pushing you.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_05', ['growth_mindset:low'], {
+  idea("ftw_growth_mindset_l_05", ["growth_mindset:low"], {
     focus: [
-      'When something new does not work the first time, you usually stop and move on.',
-      'A new hobby that feels awkward can get dropped by you before the second try.',
-      'You sometimes read a rough start as proof the thing is not for you.',
+      "The helpful side for you shows up when some misses really are the end of a path.",
+      "Your answers also show a use when some misses really are the end of a path.",
+      "There is a use for you when some misses really are the end of a path.",
     ],
-    why: 'Moving on can save you the frustration, but a lot of skills feel awkward for everyone at the start.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Give a new skill three tries before you decide, so you see past the awkward start.',
-      'Write down one thing you got better at over time, so you remember a slow start can be normal.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when you quit a new thing right after the first hard moment.',
-      'Notice how other people struggle at the start of the same thing.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
   }),
-  idea('ftw_growth_mindset_l_06', ['growth_mindset:low', 'openness:low'], {
+  idea("ftw_growth_mindset_l_06", ["growth_mindset:low", "openness:low"], {
     focus: [
-      'You usually stick with hobbies you already know: the same show, the same walk, the same kitchen.',
-      'When friends try a new hobby, you can prefer to stay with the one you already like.',
-      'Your happiest evenings sometimes look like the things you have done for years.',
+      "Your answers suggest two things at once: you close the path, and you keep a known favorite.",
+      "Both can be true for you in the same week: you close the path, and you keep a known favorite.",
+      "A week can hold both for you, so you close the path, while you keep a known favorite.",
     ],
-    why: 'Knowing what you enjoy is a strength, but skipping every new idea can leave the week with nothing fresh in it.',
+    why: "The upside for you is a clear ending. The catch is an ending that closes a path too soon.",
     try: [
-      'Join a friend for one new activity this month, so the new thing has someone you trust in it.',
-      'Pick one familiar hobby and try a new version of it, so it feels new and still safe.',
+      "Next time you choose, name whether another try is still open first.",
+      "Before you decide, check what the miss actually showed.",
     ],
     watch: [
-      'Notice when you say no to a new plan out of habit.',
-      'Notice which old favorites, the show or the walk, still make you happy.',
+      "Notice when you close a path that still had a try in it.",
+      "Notice if another try would have changed it.",
     ],
-  }),
+  })
 ];

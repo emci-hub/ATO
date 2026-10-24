@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const CONSCIENTIOUSNESS_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_conscientiousness_h_01', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_01", ["conscientiousness:high"], {
     focus: [
-      'The sink is empty and your laptop is usually still open on the couch past the time you meant to stop.',
-      'A blank Saturday can start with your to-do list, and the couch waits until the last box is checked.',
-      'Your laundry usually gets folded before you sit down, even when nothing on the list is due.',
+      "Your answers suggest you see a plan through once it is started.",
+      "From your answers, you see a plan through once it is started.",
+      "The pattern in your answers is that you see a plan through once it is started.",
     ],
-    why: 'Checking off the list can settle the evening, but a rest on the couch starts to feel like something you have to earn.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Put a rest block on today’s calendar, so sitting on the couch counts as finished.',
-      'Pick a clock time tonight to close the laptop, so you stop with boxes still open.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when you feel guilty on the couch with one chore still on the list.',
-      'Notice how many of today’s boxes actually had to be done before dark.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_02', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_02", ["conscientiousness:high"], {
     focus: [
-      'A last-minute text that moves dinner can annoy you, even when the new restaurant is one you like.',
-      'Your calendar still shows 7pm after a friend moves it, and the change can stick on the bus home.',
-      'When Friday’s reservation slides, you sometimes stay irritated even though the new time works.',
+      "The catch in your answers is a plan that crowds the rest of the day.",
+      "What this can cost you is a plan that crowds the rest of the day.",
+      "A cost worth naming for you is a plan that crowds the rest of the day.",
     ],
-    why: 'Lining the week up ahead helps you feel ready, so a sudden text can feel like the prep you did was wasted.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Next time a plan moves, list what is still the same, so the change looks smaller.',
-      'Leave one evening this week empty on the calendar, so a change has room to land.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice whether you are mad about the new restaurant or about the calendar change.',
-      'Notice how fast you settle once you are sitting at the new plan.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_03', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_03", ["conscientiousness:high"], {
     focus: [
-      'In the work chat, you usually post the schedule before anyone else has typed a plan.',
-      'The shared doc for a group project can sit empty until you fill in the dates yourself.',
-      'On a friend trip, you sometimes end up holding the booking list because you want it done right.',
+      "Someone else might notice that you keep going until the plan is done.",
+      "From the outside, you keep going until the plan is done.",
+      "Other people can see that you keep going until the plan is done.",
     ],
-    why: 'Your dates keep the trip moving, but the group can start leaving every booking and time to you.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Ask one person to own the restaurant booking, so the plan is not all in your chat.',
-      'Write down what you are handling for the group this week, so you can see if the load is fair.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when you grab a task in the chat before anyone else has replied.',
-      'Notice whether the tiredness is from your own work or from everyone else’s list.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_04', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_04", ["conscientiousness:high"], {
     focus: [
-      'An email can sit in drafts while you reread it, even when the first version was already fine.',
-      'Before a hand-in, you usually go over the same paragraph in the doc more than once.',
-      'A text with your name on it sometimes gets one more comma fix right before you send it.',
+      "What you might miss is time the plan did not leave you.",
+      "Your answers leave room to miss time the plan did not leave you.",
+      "A thing you might skip is time the plan did not leave you.",
     ],
-    why: 'Care with the details makes the work strong, but that extra pass can eat time you wanted for something else.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Set a five-minute timer on the next review and send the email when it ends, so done is done.',
-      'Before you send the next message, read it once and then send it, so you see it land fine.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when the edits stop changing what the other person will actually see.',
-      'Notice how often anyone mentions the small detail you fixed.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_05', ['conscientiousness:high'], {
+  idea("ftw_conscientiousness_h_05", ["conscientiousness:high"], {
     focus: [
-      'A coworker asks for a favor in chat, you say yes, and the task usually stays on your list until it is done.',
-      'A promise you made too fast on Tuesday can still own your Thursday night.',
-      'When a friend needs a thing done, your name is usually the first one that comes up in the group chat.',
+      "The helpful side for you shows up when the plan is worth finishing.",
+      "Your answers also show a use when the plan is worth finishing.",
+      "There is a use for you when the plan is worth finishing.",
     ],
-    why: 'People trust you because the thing actually gets done, and that trust can fill your week with their tasks.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Before you say yes to the next ask, wait an hour, so you can check your calendar first.',
-      'List what you have promised people this week, so you can see what to hand back.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when you type yes in chat before you have opened your own calendar.',
-      'Notice which promises you make because saying yes is the habit.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_h_06', ['conscientiousness:high', 'steadiness:low'], {
+  idea("ftw_conscientiousness_h_06", ["conscientiousness:high", "steadiness:low"], {
     focus: [
-      'The file is in on time, and you can still be awake at midnight thinking about the slide deck.',
-      'You usually hit the deadline, and the worry about it can outlast the work itself.',
-      'A week of due dates gets finished, while your shoulders can stay tight the whole time.',
+      "Your answers suggest two things at once: you finish the plan, and you feel a bad day longer.",
+      "Both can be true for you in the same week: you finish the plan, and you feel a bad day longer.",
+      "A week can hold both for you, so you finish the plan, while you feel a bad day longer.",
     ],
-    why: 'Caring is part of why the file goes in on time, but carrying that worry to the couch can leave you worn out.',
+    why: "The upside for you is a finished plan. The catch is a plan that crowds the rest of the day.",
     try: [
-      'Write tomorrow’s first task on a note before bed, so your mind does not hold the deck overnight.',
-      'Take a five-minute walk after the next big send, so the day has a real stop.',
+      "Next time you choose, name what the plan is costing you first.",
+      "Before you decide, check whether the plan still needs to be finished.",
     ],
     watch: [
-      'Notice when you are still worrying about a file that is already sent.',
-      'Notice how your morning feels the day after a deadline passes.',
+      "Notice when you finish a plan that no longer matters.",
+      "Notice if an open item was the one that mattered.",
     ],
   }),
-  idea('ftw_conscientiousness_l_01', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_01", ["conscientiousness:low"], {
     focus: [
-      'A moved dinner barely registers for you, but your dry cleaning can sit by the door for days.',
-      'You handle a shifted meeting fine, and small errands can wait when the calendar does not force them.',
-      'With a blank Saturday, the pharmacy run usually waits until you are out of what you needed.',
+      "Your answers suggest you keep plans loose on purpose.",
+      "From your answers, you keep plans loose on purpose.",
+      "The pattern in your answers is that you keep plans loose on purpose.",
     ],
-    why: 'A flexible week handles a surprise well for you, but a chore with no time on your calendar can wait until it is stressful.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Pick one errand you have been skipping and do the first five minutes now, so it starts moving.',
-      'Put the pharmacy and one other errand on the calendar this week, so they get a time.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice which chores you keep sliding onto tomorrow’s list.',
-      'Notice how the kitchen feels once a chore you put off is finally done.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_02', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_02", ["conscientiousness:low"], {
     focus: [
-      'When friends ask about Saturday in the chat, your reply is usually closer to the day than a yes.',
-      'Your weekend plans usually get a real yes on Saturday morning, not when the group chat asks on Wednesday.',
-      'A friend trying to book a table can get a maybe from you while the night stays open.',
+      "The catch in your answers is a loose plan that never gets finished.",
+      "What this can cost you is a loose plan that never gets finished.",
+      "A cost worth naming for you is a loose plan that never gets finished.",
     ],
-    why: 'Leaving Saturday open lets you follow your mood, but a friend who books ahead can feel unsure you are coming.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Text one friend a clear yes or no about Saturday, so they can book the table.',
-      'Pick one weekend plan now and leave the other nights open, so you get both.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice when a friend asks twice in the chat about the same night.',
-      'Notice whether an open Saturday feels free or like you are stuck.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_03', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_03", ["conscientiousness:low"], {
     focus: [
-      'Your desk looks messy to a roommate, and you can still pull the charger out of the pile.',
-      'The kitchen counter can look chaotic, and you usually know which bag has the keys.',
-      'Mail on your dresser sometimes sits there until someone else points at the pile.',
+      "Someone else might notice that you leave the plan open while others want it locked.",
+      "From the outside, you leave the plan open while others want it locked.",
+      "Other people can see that you leave the plan open while others want it locked.",
     ],
-    why: 'A little mess does not slow you down, but it can stress a partner or roommate who shares the kitchen.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Spend ten minutes clearing one shared counter today, so the people you live with get a break.',
-      'Pick one hook for your keys and wallet, so the morning search gets shorter.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice when you spend a few minutes hunting for the keys you just had.',
-      'Notice how the people you live with react to the shared counter.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_04', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_04", ["conscientiousness:low"], {
     focus: [
-      'A new morning alarm for a workout can go strong for a week, then you turn it off.',
-      'You usually open a habit app at full speed, and the streak can fade after a few weeks.',
-      'When the same run route gets dull, you sometimes drift off it without a big decision.',
+      "What you might miss is a finish that needed a tighter plan.",
+      "Your answers leave room to miss a finish that needed a tighter plan.",
+      "A thing you might skip is a finish that needed a tighter plan.",
     ],
-    why: 'Interest pulls you more than a routine does, so a habit can stick when it stays a little fun.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Make today’s version five minutes instead of thirty, so it is easy to keep going.',
-      'Change one thing about a habit that is fading, like the route or the playlist, so it feels new enough.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice the morning a habit starts to feel like a chore on the list.',
-      'Notice which habits you kept and what was different about them.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_05', ['conscientiousness:low'], {
+  idea("ftw_conscientiousness_l_05", ["conscientiousness:low"], {
     focus: [
-      'A long text from a friend can sit opened while you wait for the right reply.',
-      'You usually mean to answer, and the message that needs a real thought can stay unanswered.',
-      'A voice note that needs a careful reply can slip past the evening you meant to send one.',
+      "The helpful side for you shows up when the day needs room to change.",
+      "Your answers also show a use when the day needs room to change.",
+      "There is a use for you when the day needs room to change.",
     ],
-    why: 'You want the reply to be a good one, but waiting for the perfect moment can leave a friend wondering if you saw the text.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Reply to one waiting text now with two honest lines, so the friend knows you saw it.',
-      'Set a reminder for the texts you want to answer properly, so they do not slip past the day.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice how many chats you have opened and not answered.',
-      'Notice whether a short reply would have been enough for that text.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
   }),
-  idea('ftw_conscientiousness_l_06', ['conscientiousness:low', 'openness:high'], {
+  idea("ftw_conscientiousness_l_06", ["conscientiousness:low", "openness:high"], {
     focus: [
-      'A new idea in your notes can pull you off the half-finished project sitting on the desk.',
-      'When a fresh plan shows up, you usually leave the open tab and start the new one.',
-      'Your list sometimes holds more new starts than finished projects, because another idea keeps arriving.',
+      "Your answers suggest two things at once: you keep plans loose, and you try new things.",
+      "Both can be true for you in the same week: you keep plans loose, and you try new things.",
+      "A week can hold both for you, so you keep plans loose, while you try new things.",
     ],
-    why: 'Following a new idea keeps the week interesting, but the project you care about most can need you to stay with it longer.',
+    why: "The upside for you is room to change the day. The catch is a loose plan that never gets finished.",
     try: [
-      'Write the new idea in a note instead of opening it, so you can finish the one on the desk first.',
-      'Pick the unfinished project you would be proudest to close and work on it for ten minutes.',
+      "Next time you choose, name the one piece that does need a plan first.",
+      "Before you decide, check whether this plan can stay loose.",
     ],
     watch: [
-      'Notice what was open on the desk the last time a new idea pulled you away.',
-      'Notice which unfinished projects you still care about.',
+      "Notice when a loose plan leaves the important part undone.",
+      "Notice if the loose part was the one that needed a plan.",
     ],
-  }),
+  })
 ];

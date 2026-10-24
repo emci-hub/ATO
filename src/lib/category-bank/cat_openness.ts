@@ -6,19 +6,19 @@ export const CAT_OPENNESS: BarCard = {
   cells: {
     high: {
       summary: [
-        'When a friend texts a new place, you say yes and ask who else can come.',
-        'You open the group chat and name a spot nobody in it has tried yet.',
-        'A new name on the plan gets you out the door before the time is even set.',
+        'You say yes to something new, and you want other people in on it.',
+        'You name a new option while the familiar one is still on the table.',
+        'A new option can get you moving before the details are settled.',
       ],
       strength: [
-        'You turn a maybe in the chat into a time, a place and a head count.',
-        'You meet someone new at the table and already have a next plan with them.',
-        'When the group is stuck on the same bar, you name a different one and people go.',
+        'You turn a maybe into a real plan, with a time and the people who want to come.',
+        'You meet someone new and you already want a next plan with them.',
+        'When other people stick with the usual, you name a different option.',
       ],
       watchOut: [
-        'Sometimes you book the next new place before your friends have finished the last one.',
-        'Because you say yes fast, a quieter friend can end up somewhere they never picked.',
-        'Sometimes your week fills with new plans and the couch never gets an evening.',
+        'Sometimes you start the next new thing before the last one is finished.',
+        'Because you say yes fast, someone quieter can end up in a plan they never picked.',
+        'Sometimes your week fills with new plans and you have no evening left.',
       ],
       tryThis: [
         'Ask a quieter friend which place they want, so the next plan starts with them.',
@@ -28,14 +28,14 @@ export const CAT_OPENNESS: BarCard = {
     },
     mid: {
       summary: [
-        'You will try a new place with friends, but you still keep one night for the spot you already like.',
-        'You try the new cafe when a friend is going, and you keep your own table when the day ran long.',
-        'You split the week between a night out and a night on the couch with a show you already know.',
+        'You will try something new with other people, and you still keep time for what you already like.',
+        'You try the new option when someone is going with you, and you keep the known one when the day ran long.',
+        'You split the week between time with people and time for something you already know.',
       ],
       strength: [
-        'You can do a loud Friday and a quiet Sunday, so different friends can plan with you.',
-        'You pick a new place because you want it, not only because the chat is loud about it.',
-        'You show up for the group dinner and still leave when you need the walk home alone.',
+        'You can do a busy day with people and a quiet day, so different plans can include you.',
+        'You pick a new option because you want it, not only because other people are loud about it.',
+        'You show up for the group plan and you still leave when you need time to yourself.',
       ],
       watchOut: [
         'Sometimes you say no to a new place only because that day already ran long.',
@@ -50,9 +50,9 @@ export const CAT_OPENNESS: BarCard = {
     },
     low: {
       summary: [
-        'You pick the same table, the same two friends and a plan you already know you’ll like.',
-        'When you get a free evening, you go back to the place and the people that already work.',
-        'You would rather a small table and a known menu than a room full of new names.',
+        'You stick with a few people you already like and a plan you already know.',
+        'When you get a free evening, you go back to the people and the plans that already work.',
+        'You pick a small known group over a room full of new people.',
       ],
       strength: [
         'You know the places you like, and you put them on the calendar on purpose.',

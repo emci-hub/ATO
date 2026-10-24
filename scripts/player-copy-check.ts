@@ -10,7 +10,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { buildStoryLibraryDraftPrompt } from '../src/lib/story-library/draft-prompt';
-import { metaphorSymbolIssues, sceneReuse, SHAPE_CAP, shapeStats, textIssues } from '../src/lib/voice/player-copy';
+import { TRAIT_AXES, TRAIT_POLE_LINES } from '../src/lib/traits';
+import { metaphorSymbolIssues, openerKey, openerOveruse, sceneReuse, SHAPE_CAP, shapeStats, textIssues } from '../src/lib/voice/player-copy';
 import { playerCopyIssues } from '../src/lib/voice/player-copy-scan';
 
 const bad = textIssues('The untried option gets the first look. You embrace the journey.');
@@ -36,6 +37,23 @@ assert.equal(textIssues('The real journey took years.', { allowJourney: true }).
 
 const capped = shapeStats(['One?', 'Two?', 'Three?', 'Four.']);
 assert.ok(capped.share > SHAPE_CAP);
+
+assert.equal(openerKey("You'd rather try something new."), 'would rather');
+assert.equal(openerKey('You would rather try something new.'), 'would rather');
+assert.equal(openerKey('You will try something new.'), 'will try');
+assert.equal(openerKey('You will keep the familiar one.'), 'will keep');
+assert.ok(openerOveruse(["You'd rather stay in tonight.", "You'd rather go out instead.", "You'd rather wait a bit."]));
+assert.equal(
+  openerOveruse([
+    'You will try the new one today and see.',
+    'A familiar plan can wait and still be fine for now.',
+    'From a recent answer, the choice was plain enough.',
+  ]),
+  null,
+);
+const poles = TRAIT_AXES.flatMap((axis) => [TRAIT_POLE_LINES[axis].low, TRAIT_POLE_LINES[axis].high]);
+const poleOpen = openerOveruse(poles);
+assert.equal(poleOpen, null, poleOpen ? `pole opener "${poleOpen.key}" on ${poleOpen.count}/${poleOpen.total}` : '');
 
 assert.equal(sceneReuse({ openness: 'left early', conscientiousness: 'keeps a familiar plan' }).length, 0);
 

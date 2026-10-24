@@ -372,91 +372,89 @@ export function leanComparative(value: number | null | undefined): 'higher' | 'l
  * Mid-band lines stay in traitPromptLines only; the check-in surface skips mid.
  */
 export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> = {
-  extraversion: {
-    high: 'They are at the door before the text lands.',
-    low: 'They recharge with time to yourself.',
-  },
   openness: {
-    high: "They'd rather try something new, even when other people stick with a familiar option.",
-    low: "They'd rather stick with something they already know they like.",
+    high: "They will try something new, even when other people stick with a familiar option.",
+    low: "They stick with something already known to be liked.",
   },
   conscientiousness: {
-    high: 'They finish the packing list and then sit down.',
-    low: 'They leave the list on the counter and still make dinner.',
+    high: "They finish a plan once it is started.",
+    low: "They keep plans loose on purpose.",
+  },
+  extraversion: {
+    high: "They look for time with other people.",
+    low: "They recharge with time to yourself.",
   },
   agreeableness: {
-    high: 'They give the other plan the yes and stay for dessert.',
-    low: 'They say the blunt thing and stay at the table.',
+    high: "They give the other plan a yes to keep things easy.",
+    low: "They state a blunt point and stay with it.",
   },
   steadiness: {
-    high: 'They leave the reply until morning.',
-    low: 'They answer the thread at midnight and stay in it.',
+    high: "They shake a bad day off quickly.",
+    low: "They feel a bad day for longer.",
   },
   attachment_anxiety: {
-    high: 'They keep the thread open while they wait for the reply.',
-    low: 'They leave the ping unread and keep the afternoon.',
+    high: "They worry people will pull away.",
+    low: "They let a gap in contact pass.",
   },
   attachment_avoidance: {
-    high: 'They close the thread and keep the hour.',
-    low: 'They come in from the hall and stay for the long reply.',
+    high: "They keep some distance once things get close.",
+    low: "They stay close once the bond has started.",
   },
   conflict_assertiveness: {
-    high: 'In a disagreement they leave their own point on the table.',
-    low: 'In a disagreement they send the soft version and keep the point.',
+    high: "They put a clear point on the table in a disagreement.",
+    low: "They step back in a disagreement.",
   },
   conflict_cooperativeness: {
-    high: 'In a disagreement they widen the plan until both people fit.',
-    low: 'In a disagreement they hold their corner without a fight.',
+    high: "They look for an option the other person can live with.",
+    low: "They protect a chosen outcome in a disagreement.",
   },
   autonomy: {
-    high: 'They decide before the poll closes.',
-    low: 'They follow the group plan and mean it.',
+    high: "They choose a way of doing the task.",
+    low: "They follow a path that is already set.",
   },
   competence: {
-    high: 'They trust the work and put the pen down.',
-    low: 'They send the tiny draft and let it stay small.',
+    high: "They trust that a hard task can be handled.",
+    low: "They doubt a hard task can be pulled off.",
   },
   relatedness: {
-    high: 'They keep the chat going without turning it into a show.',
-    low: 'They notice the quiet and let it stay quiet.',
+    high: "They need a real connection for a day to feel right.",
+    low: "They can let a day land without much connection.",
   },
   growth_mindset: {
-    high: 'After a miss they start the next try while it is still warm.',
-    low: 'After a miss they name the stuck spot and stay for dinner.',
+    high: "They look for what to change after a miss.",
+    low: "They can treat a miss as the end of that path.",
   },
   locus_of_control: {
-    high: 'When something falls apart, they look at the part they could steer.',
-    low: 'When something falls apart, they figure the day was going to do that anyway.',
+    high: "They look at the part of a problem that could be steered.",
+    low: "They figure a bad outcome was bound to happen.",
   },
   self_efficacy: {
-    high: 'Facing a big task, they start and expect to finish.',
-    low: 'Facing a big task, they pause and still start with the small version.',
+    high: "They expect to finish a big task once it is started.",
+    low: "They pause before trusting a big task can be finished.",
   },
   playfulness: {
-    high: 'They leave with the laugh first.',
-    low: "They'd rather take a situation straight than turn it into play.",
+    high: "They look for a lighter take on an ordinary task.",
+    low: "They take a situation straight instead of turning it into play.",
   },
 };
 
 const TRAIT_MID_LINES: Partial<Record<TraitAxis, string>> = {
-  extraversion: 'They sit somewhere in the middle on people-time versus quiet time.',
-  openness: 'They mix familiar routines with the occasional new idea.',
-  conscientiousness: 'They plan some things and leave others open.',
-  agreeableness: 'They weigh going along against holding their ground.',
-  steadiness: 'Some wobble lands, some they shake off.',
-  attachment_anxiety: 'Closeness sometimes brings a worry that people will pull away.',
-  attachment_avoidance: 'They mix closeness with a bit of distance.',
-  conflict_assertiveness: 'In a disagreement they sometimes push and sometimes wait.',
-  conflict_cooperativeness:
-    'In a disagreement they split attention between their outcome and the other person.',
-  autonomy: 'They mix doing it their way with following a path that is already there.',
-  competence: 'Some hard things they feel they can handle, some they do not.',
-  relatedness: 'Some days they want connection, some they do not need it.',
-  growth_mindset: 'After a miss they sometimes look for what to change and sometimes take it as closed.',
-  locus_of_control:
-    'When something falls apart they sometimes look at what they might change and sometimes at what was out of their hands.',
-  self_efficacy: 'Facing a big task they sometimes feel they can pull it off and sometimes do not.',
-  playfulness: 'Some days want a lighter take. Some days the day is just a job to get through.',
+  extraversion: "They split time between other people and time to yourself.",
+  openness: "They mix a known favorite with a new option.",
+  conscientiousness: "They plan some things and leave others open.",
+  agreeableness: "They weigh going along against stating a blunt point.",
+  steadiness: "They let one setback fade and still sit with another.",
+  attachment_anxiety: "They mix a check-in with letting a gap in contact pass.",
+  attachment_avoidance: "They mix closeness with a bit of distance.",
+  conflict_assertiveness: "They push a point at some times and wait at others.",
+  conflict_cooperativeness: "They split attention between a chosen outcome and the other person.",
+  autonomy: "They mix a self-chosen way with a path that is already set.",
+  competence: "They trust some hard tasks and doubt others.",
+  relatedness: "They want connection on some days and not on others.",
+  growth_mindset: "They look for a change after some misses and close others.",
+  locus_of_control: "They look at a steerable part and at what was outside their hands.",
+  self_efficacy: "They expect to finish some tasks and pause on others.",
+  playfulness: "They take some tasks straight and turn others into play.",
 };
 
 /** High/low bank line, or null when the axis is empty or mid-band. */

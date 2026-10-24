@@ -6,7 +6,7 @@ export const CAT_STEADINESS: BarCard = {
   cells: {
     high: {
       summary: [
-        'You keep the Tuesday plan, stay even in the group chat, and still answer when work runs late.',
+        'You keep the plan, stay even when the talk gets loud, and still answer when work runs late.',
         'When the week gets loud at work or at home, you finish what you said and keep your voice level.',
         'Your friends and coworkers can text you on a bad day and still get a calm reply.',
       ],

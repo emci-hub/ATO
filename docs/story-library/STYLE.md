@@ -6,7 +6,7 @@ This is the guide the admin authoring tool must send, unchanged, with every offl
 
 The guide sits on top of `docs/copy-review-rules.md`. If this file and that policy disagree, the policy wins and this file gets a new version. Do not add exceptions in a prompt.
 
-Version: `style-storylib-5`. Bump this version when the rules change. Old drafts stay stamped with the version that wrote them.
+Version: `style-storylib-6`. Bump this version when the rules change. Old drafts stay stamped with the version that wrote them.
 
 ## Voice
 
@@ -23,11 +23,11 @@ Meaning first (`docs/voice-guide.md`). Say what the line means. Do not invent th
 
 A Story Library entry is one finished sentence. Do not assemble a verb, an aside, and a closer. Do not fill an "[adjective] [noun]" bank.
 
-- Tokens are only `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{deed}`, and `{answer}`. `{answer}` is the player's own chosen answer, quoted. `{deed}` is a short sourced clause about what the legend did. A legend line has to mention that real deed. Do not use an object as a private code for a trait.
+- Tokens are only `{Subj}`, `{subj}`, `{Name}`, `{legend}`, `{deed}`, and `{answer}`. `{answer}` is the player's own chosen answer, quoted. `{deed}` is a short sourced clause about what the legend did. Put that fact on the match line once. Do not repeat it on the scene, the meaning, or a later match line. Do not use an object as a private code for a trait.
 - A flip note is optional. It is not shown. It does not have to be a scene.
 - Every line has a priority and eligibility (trait pole, confidence tier, a specific answer, a legend, recency). The highest-priority eligible line wins. A broad fallback stays available.
 - Shown line ids are remembered per player. A line does not repeat until every eligible line has been used.
-- Tag questions like ", right?" stay at or under about 1 in 10 lines. Each sentence shape appears at most once on a card. Do not add a "when" only to keep that cap. A scene phrase is not required.
+- Tag questions like ", right?" stay at or under about 1 in 10 lines. A sentence shape may repeat. Do not add a "when" only to change the shape. Vary the opening: one opener on more than about a third of a pool fails. A scene phrase is not required. A hypothetical hour opens with "Picture an hour with {legend}."
 
 ## Few-shot prompt
 
@@ -36,7 +36,7 @@ The admin tool sends this, then up to six already-approved lines for that slot. 
 ```text
 You draft Story Library lines for ATO. You do not write a card about a real person. You do not see anyone's answers, name, or id.
 
-Follow docs/voice-guide.md, style-storylib-5, and the core content policy. Judge meaning, not keywords. Humor is optional. Do not add a moral.
+Follow docs/voice-guide.md, style-storylib-6, and the core content policy. Judge meaning, not keywords. Humor is optional. Do not add a moral.
 
 Return JSON only. Each entry is one finished sentence. Tokens are {Subj}, {subj}, {Name}, {legend}, {deed}, and {answer}. Include priority and the eligibility conditions. A flip note is optional.
 

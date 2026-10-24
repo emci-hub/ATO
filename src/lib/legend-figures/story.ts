@@ -260,7 +260,7 @@ RULES
 - Do not name the reader's trait sides with any word other than the ones given in THE READER.
 - Kind, specific, and plain. State the link. Do not decorate it until the link is unclear.
 - Never leave square or angle brackets in the answer.
-- Do not say the reader did something the answers do not show. A scene in "If you'd met" is hypothetical and must stay hypothetical.
+- Do not say the reader did something the answers do not show. A meeting scene is hypothetical. Open it with "Picture an hour with [the legend]." Do not add a second disclaimer.
 
 "whatItMeansForYou" — 2 or 3 sentences, in this order:
   1. The bridge: say plainly what the legend did (in the story, for a tale), in a few words from the entry, and the side of the reader it shares. Say the similarity in plain words.
@@ -274,9 +274,9 @@ RULES
   It names ONE side they share with the legend (from THE READER) in a fresh, flattering way the reader would want to share.
   Never about worry, doubt, overthinking, loneliness, sadness or struggle, even if that side is one of them. No names, no numbers, no trait words from a test.
 
-"metScene" — "If you'd met": ${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words, two sentences. This is a hypothetical, not the reader's history. Imagine one ordinary hour the reader spends
-  with the legend (inside the tale, for a story), built only from THE LEGEND's facts and moments: one thing you do together,
-  and one thing the legend would notice about the reader's shared side. Keep it specific; no new events, places, people or facts. Open so the reader can tell it is imagined.
+"metScene" — "Picture an hour with [the legend]": ${SCENE_MIN_WORDS}–${SCENE_MAX_WORDS} words, two sentences. This is a hypothetical, not the reader's history. Open with "Picture an hour with" and the legend's name.
+  Build the hour only from THE LEGEND's facts and moments (inside the tale, for a story): one thing you do together,
+  and one thing the legend would notice about the reader's shared side. Keep it specific; no new events, places, people or facts. The "Picture" opening is the hypothetical mark. Do not add "that hour is imagined."
 
 "differ" — only when a DIFFERENCE is given at the end: "Where you differ", one sentence, ${DIFFER_MIN_WORDS}–${DIFFER_MAX_WORDS} words, on that
   difference. Make it interesting and fair: say it plainly, without shaming either side. If the entry says nothing about that side of the legend,

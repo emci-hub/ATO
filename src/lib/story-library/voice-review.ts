@@ -9,8 +9,9 @@ import type { CategoryDive } from '@/lib/category-deep-dive/dive';
 import type { LegendStory } from '@/lib/legend-figures/story';
 import { legendById } from '@/lib/legend-figures/roster';
 import { TRAIT_AXES } from '@/lib/traits';
-import { cardSentences } from '@/lib/voice/player-copy';
+import { cardSentences, openerOveruse } from '@/lib/voice/player-copy';
 
+import { legendDeed } from './deed';
 import { libraryVoiceFailures } from './persist';
 import { renderLibraryDive, renderLibraryLegend } from './render';
 import type { MatrixFailure } from './validate';
@@ -32,12 +33,38 @@ function legendSpoken(story: LegendStory): string[] {
   ].filter((part) => part.trim().length > 0);
 }
 
-function cardFailure(label: string, parts: readonly string[]): MatrixFailure | null {
+function phraseCount(text: string, phrase: string): number {
+  const hay = text.toLowerCase();
+  const needle = phrase.toLowerCase();
+  if (!needle) return 0;
+  let count = 0;
+  let from = 0;
+  while (from <= hay.length) {
+    const at = hay.indexOf(needle, from);
+    if (at < 0) break;
+    count += 1;
+    from = at + needle.length;
+  }
+  return count;
+}
+
+function cardFailure(label: string, parts: readonly string[], deed = ''): MatrixFailure | null {
   // Touch the sentences so a render that throws still fails the check.
   // A repeated shape is not a failure: plain sentences share one shape,
   // and refusing that pushed writers to glue a false "when" onto a deed.
   cardSentences(parts);
-  void label;
+  const fail = (detail: string): MatrixFailure => ({
+    templateId: 'line',
+    trait: '-',
+    tier: '-',
+    pronoun: '-',
+    detail: `${label}: ${detail}`,
+  });
+  const openers = openerOveruse(parts);
+  if (openers) return fail(`opener "${openers.key}" on ${openers.count}/${openers.total}`);
+  const blob = parts.join('\n');
+  if (deed && phraseCount(blob, deed) > 1) return fail(`deed repeated`);
+  if (phraseCount(blob, 'radioactivity') > 1) return fail('radioactivity repeated');
   return null;
 }
 
@@ -102,7 +129,11 @@ export function libraryShapeFailures(library: StoryLibrary): MatrixFailure[] {
         },
         library,
       );
-      const hit = cardFailure(`legend ${count} pair${count === 1 ? '' : 's'}${withDiffer ? ' plus differ' : ''}`, legendSpoken(story));
+      const hit = cardFailure(
+        `legend ${count} pair${count === 1 ? '' : 's'}${withDiffer ? ' plus differ' : ''}`,
+        legendSpoken(story),
+        legendDeed(legend),
+      );
       if (hit) failures.push(hit);
     }
   }

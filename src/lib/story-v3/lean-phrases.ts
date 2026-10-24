@@ -2,11 +2,8 @@ import { CATEGORY_DEFS, type CategoryId } from '@/lib/categories';
 import type { TraitLean } from '@/lib/traits';
 
 /**
- * Card 6 lean phrases (writer bible §3b).
- *
- * TODO(emci): cat_love, cat_independence, and cat_structure are map
- * categories. High/low here is provisional — the repo only defines high/low
- * per axis. Do not treat these three as signed off.
+ * Card 6 lean phrases. Plain meaning of the category lean.
+ * cat_love, cat_independence, and cat_structure stay provisional.
  */
 export const STORY_MAP_CATEGORY_LEAN_TODO: readonly CategoryId[] = [
   'cat_love',
@@ -16,48 +13,48 @@ export const STORY_MAP_CATEGORY_LEAN_TODO: readonly CategoryId[] = [
 
 export const STORY_LEAN_PHRASES: Readonly<Record<CategoryId, Record<TraitLean, string>>> = {
   cat_steadiness: {
-    high: 'you keep the plan and your voice level',
-    low: 'you feel the bad text past lunch',
+    high: 'you shake a bad day off and keep going',
+    low: 'you feel a bad day for longer',
   },
   cat_openness: {
-    high: 'you say yes before the plan has a name',
-    low: 'you order the usual with people you know',
+    high: 'you try something new',
+    low: 'you stick with what you already like',
   },
   cat_drive: {
     high: 'you push until the work is done',
-    low: 'you go at your pace and still finish',
+    low: 'you go at your own pace and still finish',
   },
   cat_agency: {
     high: 'you change one piece and try it again',
     low: 'you leave the outcome to the day',
   },
   cat_social: {
-    high: 'you get a quiet table talking',
-    low: 'you stay with one person',
+    high: 'you want time with other people',
+    low: 'you want less time in a crowd',
   },
   cat_communication: {
-    high: 'you say the hard part, then ask what works',
-    low: 'you step back and let them talk',
+    high: 'you say the hard part and then ask what works',
+    low: 'you step back and let the other person talk',
   },
   cat_love: {
-    high: 'you sit close and text back',
-    low: 'you like them and still leave a gap',
+    high: 'you stay close and answer',
+    low: 'you care and still leave a little room',
   },
   cat_independence: {
-    high: 'you pick the route before they do',
-    low: 'you take the plan they made',
+    high: 'you choose the way before anyone else does',
+    low: 'you take a plan someone else already made',
   },
   cat_levity: {
-    high: 'you joke, then say it plain',
-    low: 'you keep a straight face through the hard talk',
+    high: 'you look for a lighter take and then say it plain',
+    low: 'you take a hard talk straight',
   },
   cat_structure: {
-    high: 'you write the list and follow it through',
+    high: 'you make a plan and follow it through',
     low: 'you change the plan as you go',
   },
   cat_resilience: {
-    high: 'you stay and try again',
-    low: 'the bad day stays, and you still finish',
+    high: 'you stay and try again after a miss',
+    low: 'a bad day stays with you and you still finish',
   },
 };
 

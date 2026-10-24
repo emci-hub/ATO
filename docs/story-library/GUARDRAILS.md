@@ -58,7 +58,7 @@ When the real library exists, CI should run this against every approved template
 
 After the validator is green, an admin may press a review button. It sends:
 
-- the frozen prompt in [STYLE.md](STYLE.md) (`style-storylib-5`), on top of `docs/voice-guide.md`
+- the frozen prompt in [STYLE.md](STYLE.md) (`style-storylib-6`), on top of `docs/voice-guide.md`
 - the backbone
 - up to six approved entries for that frame
 - a sample of the matrix, not a person's profile

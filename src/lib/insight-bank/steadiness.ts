@@ -2,196 +2,196 @@
 import { idea, type InsightIdea } from './define';
 
 export const STEADINESS_IDEAS: readonly InsightIdea[] = [
-  idea('ftw_steadiness_h_01', ['steadiness:high'], {
+  idea("ftw_steadiness_h_01", ["steadiness:high"], {
     focus: [
-      'When something goes wrong at work, you usually stay calm while other people get stressed.',
-      'A plan that falls apart can leave you steady, even when the people around you are upset.',
-      'You sometimes deal with a problem in the work chat without getting upset about it.',
+      "Your answers suggest you shake a bad day off quickly.",
+      "From your answers, you shake a bad day off quickly.",
+      "The pattern in your answers is that you shake a bad day off quickly.",
     ],
-    why: 'Your calm can help other people settle, but they might not realize when something does bother you.',
+    why: "The upside for you is a shorter bad day. The catch is a problem that needed more time.",
     try: [
-      'Tell a friend or your partner one thing that stressed you this week, so they know you have hard days too.',
-      'Ask a stressed coworker what would help right now, so your calm becomes a useful offer.',
+      "Next time you choose, name whether the problem is actually finished first.",
+      "Before you decide, check whether you moved on too fast.",
     ],
     watch: [
-      'Notice when you say you are fine and feel tired later.',
-      'Notice how other people act when you stay calm.',
+      "Notice when you move on and the problem is still there.",
+      "Notice if the bad day needed more time.",
     ],
   }),
-  idea('ftw_steadiness_h_02', ['steadiness:high'], {
+  idea("ftw_steadiness_h_02", ["steadiness:high"], {
     focus: [
-      'After an argument, you usually move on while the other person is still upset.',
-      'A bad moment can leave you done with it fast, even when your partner is still thinking about it.',
-      'Once a disagreement is over, you sometimes feel finished before the other person does.',
+      "The catch in your answers is a problem that needed more time.",
+      "What this can cost you is a problem that needed more time.",
+      "A cost worth naming for you is a problem that needed more time.",
     ],
-    why: 'Moving on fast keeps you steady, but the other person might need to talk it through before they feel okay.',
+    why: "The upside for you is a shorter bad day. The catch is a problem that needed more time.",
     try: [
-      'Next time you disagree, ask if they want to talk more, so they do not feel rushed.',
-      'Text someone you argued with recently to check in, so you both know it is settled.',
+      "Next time you choose, name whether the problem is actually finished first.",
+      "Before you decide, check whether you moved on too fast.",
     ],
     watch: [
-      'Notice when you are ready to move on and the other person is not.',
-      'Notice whether a quick “it is fine” leaves things unsaid.',
+      "Notice when you move on and the problem is still there.",
+      "Notice if the bad day needed more time.",
     ],
   }),
-  idea('ftw_steadiness_h_03', ['steadiness:high'], {
+  idea("ftw_steadiness_h_03", ["steadiness:high"], {
     focus: [
-      'When a friend is upset about something small, you usually tell them it is not a big deal.',
-      'A worry that looks small to you can have you calming the person down before you have heard the whole story.',
-      'You sometimes see a problem as smaller than the person telling it, and they can feel unheard.',
+      "Someone else might notice that you move on from a bad day while it is still going.",
+      "From the outside, you move on from a bad day while it is still going.",
+      "Other people can see that you move on from a bad day while it is still going.",
     ],
-    why: 'Your steady view of a problem can help, but people often need to feel heard before they can calm down.',
+    why: "The upside for you is a shorter bad day. The catch is a problem that needed more time.",
     try: [
-      'Next time a friend is upset, say that it sounds hard before you shrink it, so they feel heard.',
-      'Ask one question about how a friend feels before you share your view, so they know you heard them.',
+      "Next time you choose, name whether the problem is actually finished first.",
+      "Before you decide, check whether you moved on too fast.",
     ],
     watch: [
-      'Notice when you try to shrink someone’s worry before they have finished talking.',
-      'Notice how a friend responds when you listen and do not fix it yet.',
+      "Notice when you move on and the problem is still there.",
+      "Notice if the bad day needed more time.",
     ],
   }),
-  idea('ftw_steadiness_h_04', ['steadiness:high'], {
+  idea("ftw_steadiness_h_04", ["steadiness:high"], {
     focus: [
-      'When you get bad news, you usually deal with it and carry on with the rest of the day.',
-      'A hard text lands, and you still make the afternoon meeting.',
-      'When something goes wrong, you sometimes feel more settled by the next morning.',
+      "What you might miss is a problem that needed another look.",
+      "Your answers leave room to miss a problem that needed another look.",
+      "A thing you might skip is a problem that needed another look.",
     ],
-    why: 'Getting back to the day quickly is a real strength, but some things might deserve more of your attention than they get.',
+    why: "The upside for you is a shorter bad day. The catch is a problem that needed more time.",
     try: [
-      'Take five minutes tonight to think about one hard thing from this week, so it gets a real look.',
-      'Write down how you actually felt about a recent setback, so you can see if it is really settled.',
+      "Next time you choose, name whether the problem is actually finished first.",
+      "Before you decide, check whether you moved on too fast.",
     ],
     watch: [
-      'Notice when moving on quickly means skipping something that deserved a closer look.',
-      'Notice which piece of bad news does bother you, even a little.',
+      "Notice when you move on and the problem is still there.",
+      "Notice if the bad day needed more time.",
     ],
   }),
-  idea('ftw_steadiness_h_05', ['steadiness:high'], {
+  idea("ftw_steadiness_h_05", ["steadiness:high"], {
     focus: [
-      'When friends or family are stressed, they usually come to you because you stay calm.',
-      'A crisis in the group chat can land in your messages first.',
-      'You sometimes end up as the person who handles it when something goes wrong in the family.',
+      "The helpful side for you shows up when the bad day does not need the whole week.",
+      "Your answers also show a use when the bad day does not need the whole week.",
+      "There is a use for you when the bad day does not need the whole week.",
     ],
-    why: 'Being the calm one helps the people you care about, but you might need someone who asks how you are too.',
+    why: "The upside for you is a shorter bad day. The catch is a problem that needed more time.",
     try: [
-      'Ask a friend how they are doing and then share something of your own, so support goes both ways.',
-      'Tell someone close one thing that has been on your mind, so you get a turn to be listened to.',
+      "Next time you choose, name whether the problem is actually finished first.",
+      "Before you decide, check whether you moved on too fast.",
     ],
     watch: [
-      'Notice whether anyone texts to check on you the way you check on them.',
-      'Notice when you feel tired from being the steady one in the chat.',
+      "Notice when you move on and the problem is still there.",
+      "Notice if the bad day needed more time.",
     ],
   }),
-  idea('ftw_steadiness_h_06', ['steadiness:high', 'attachment_anxiety:low'], {
+  idea("ftw_steadiness_h_06", ["steadiness:high", "attachment_anxiety:low"], {
     focus: [
-      'When a partner or a friend is quiet for a day, you usually assume they are just busy.',
-      'A slow reply can sit in your chat without you worrying about what it means.',
-      'When plans with a friend go quiet, you sometimes trust it will work out and leave the thread.',
+      "Your answers suggest two things at once: you shake a bad day off, and you let a gap pass.",
+      "Both can be true for you in the same week: you shake a bad day off, and you let a gap pass.",
+      "A week can hold both for you, so you shake a bad day off, while you let a gap pass.",
     ],
-    why: 'Your trust keeps a relationship relaxed, but a friend might sometimes need you to check in first.',
+    why: "The upside for you is a shorter bad day. The catch is a problem that needed more time.",
     try: [
-      'Text a friend you have not heard from in a while, so they know you are thinking of them.',
-      'Ask your partner or a close friend if anything is on their mind, so nothing gets missed.',
+      "Next time you choose, name whether the problem is actually finished first.",
+      "Before you decide, check whether you moved on too fast.",
     ],
     watch: [
-      'Notice when a friend’s silence in the chat lasts longer than usual.',
-      'Notice who usually sends the first text between you and your friends.',
+      "Notice when you move on and the problem is still there.",
+      "Notice if the bad day needed more time.",
     ],
   }),
-  idea('ftw_steadiness_l_01', ['steadiness:low'], {
+  idea("ftw_steadiness_l_01", ["steadiness:low"], {
     focus: [
-      'After a conversation, you usually replay what you said and wonder how it came across.',
-      'An awkward line can stay with you that night, long after everyone else has forgotten it.',
-      'You sometimes go over a thing you were unsure about once you are back on the couch.',
+      "Your answers suggest you feel a bad day for longer than the day itself.",
+      "From your answers, you feel a bad day for longer than the day itself.",
+      "The pattern in your answers is that you feel a bad day for longer than the day itself.",
     ],
-    why: 'Caring how you come across shows you value people, but replaying it can keep you up and drain the next day.',
+    why: "The upside for you is an honest read of a hard day. The catch is a hard day that takes over the next one.",
     try: [
-      'Write the moment down with one kinder way to see it, so it stops looping.',
-      'Text the person a quick follow-up if it is really bugging you, so you can stop guessing.',
+      "Next time you choose, name whether the bad day is still today first.",
+      "Before you decide, check what would help the next morning.",
     ],
     watch: [
-      'Notice when you replay a conversation on the couch more than once.',
-      'Notice how often the other person even remembers the line you keep replaying.',
+      "Notice when a bad day takes over the next one.",
+      "Notice if you were ready to leave it and did not.",
     ],
   }),
-  idea('ftw_steadiness_l_02', ['steadiness:low'], {
+  idea("ftw_steadiness_l_02", ["steadiness:low"], {
     focus: [
-      'A good thing or a bad thing can hit you harder than it hits the people around you.',
-      'You usually feel the ups and downs of the day more than the coworkers in the same room.',
-      'A small thing going wrong sometimes stays with you for the rest of the afternoon.',
+      "The catch in your answers is a hard day that takes over the next one.",
+      "What this can cost you is a hard day that takes over the next one.",
+      "A cost worth naming for you is a hard day that takes over the next one.",
     ],
-    why: 'Feeling things strongly can help you understand other people, but a small problem can take up a lot of your day.',
+    why: "The upside for you is an honest read of a hard day. The catch is a hard day that takes over the next one.",
     try: [
-      'Take three slow breaths before you answer the next bad text, so the feeling has a moment to settle.',
-      'Write down what is bothering you and rate it from one to ten, so you can see its size.',
+      "Next time you choose, name whether the bad day is still today first.",
+      "Before you decide, check what would help the next morning.",
     ],
     watch: [
-      'Notice how big a feeling is at the first text and how big it is an hour later.',
-      'Notice which kinds of news hit you harder than the rest of the day.',
+      "Notice when a bad day takes over the next one.",
+      "Notice if you were ready to leave it and did not.",
     ],
   }),
-  idea('ftw_steadiness_l_03', ['steadiness:low'], {
+  idea("ftw_steadiness_l_03", ["steadiness:low"], {
     focus: [
-      'When your boss gives you notes, you usually hear the criticism louder than the praise.',
-      'One critical line in a message can stay with you more than all the good lines around it.',
-      'A pointed-out mistake sometimes sits with you for a while after the meeting ends.',
+      "Someone else might notice that you are still in a bad day after it has moved on.",
+      "From the outside, you are still in a bad day after it has moved on.",
+      "Other people can see that you are still in a bad day after it has moved on.",
     ],
-    why: 'You take the notes seriously, which helps you improve, but one comment can feel bigger than it was meant to.',
+    why: "The upside for you is an honest read of a hard day. The catch is a hard day that takes over the next one.",
     try: [
-      'Next time you get notes, write down one good thing that was said too, so you keep the full picture.',
-      'Ask the person what they think you did well in the work, so you hear both sides of the note.',
+      "Next time you choose, name whether the bad day is still today first.",
+      "Before you decide, check what would help the next morning.",
     ],
     watch: [
-      'Notice when one critical comment shapes your whole view of the day.',
-      'Notice how often the note was meant more lightly than it felt.',
+      "Notice when a bad day takes over the next one.",
+      "Notice if you were ready to leave it and did not.",
     ],
   }),
-  idea('ftw_steadiness_l_04', ['steadiness:low'], {
+  idea("ftw_steadiness_l_04", ["steadiness:low"], {
     focus: [
-      'Before a big event, you usually worry through the ways it might go wrong.',
-      'A hard conversation on the calendar can make you nervous for days before it happens.',
-      'When something important is coming up, you sometimes picture the bad versions in detail.',
+      "What you might miss is the next day, if the bad one takes it over.",
+      "Your answers leave room to miss the next day, if the bad one takes it over.",
+      "A thing you might skip is the next day, if the bad one takes it over.",
     ],
-    why: 'Thinking ahead can help you prepare, but the worry can end up bigger than the event itself.',
+    why: "The upside for you is an honest read of a hard day. The catch is a hard day that takes over the next one.",
     try: [
-      'Write down your top worry about the event and one thing you can do about it, so it turns into a plan.',
-      'Plan something calming the night before your next big day, so you have a softer landing.',
+      "Next time you choose, name whether the bad day is still today first.",
+      "Before you decide, check what would help the next morning.",
     ],
     watch: [
-      'Notice how often the event goes better than the version you pictured.',
-      'Notice when the worry stops helping you prepare.',
+      "Notice when a bad day takes over the next one.",
+      "Notice if you were ready to leave it and did not.",
     ],
   }),
-  idea('ftw_steadiness_l_05', ['steadiness:low'], {
+  idea("ftw_steadiness_l_05", ["steadiness:low"], {
     focus: [
-      'When someone near you is in a bad mood, you usually feel it too.',
-      'Tension in a room can register with you before anyone has said what is wrong.',
-      'If a friend or your partner is upset, you sometimes feel upset along with them.',
+      "The helpful side for you shows up when the hard day deserves an honest read.",
+      "Your answers also show a use when the hard day deserves an honest read.",
+      "There is a use for you when the hard day deserves an honest read.",
     ],
-    why: 'Sensing other people’s moods helps you care for them, but their bad day can end up becoming yours.',
+    why: "The upside for you is an honest read of a hard day. The catch is a hard day that takes over the next one.",
     try: [
-      'Next time you catch someone’s bad mood, step out for a minute, so you can tell yours from theirs.',
-      'Ask yourself whose feeling it is before you react, so you do not carry what is not yours.',
+      "Next time you choose, name whether the bad day is still today first.",
+      "Before you decide, check what would help the next morning.",
     ],
     watch: [
-      'Notice when your mood shifts right after you have been around someone upset.',
-      'Notice which people leave you calmer after you leave the room.',
+      "Notice when a bad day takes over the next one.",
+      "Notice if you were ready to leave it and did not.",
     ],
   }),
-  idea('ftw_steadiness_l_06', ['steadiness:low', 'attachment_anxiety:high'], {
+  idea("ftw_steadiness_l_06", ["steadiness:low", "attachment_anxiety:high"], {
     focus: [
-      'When a partner’s reply is shorter than usual, you usually worry something is wrong.',
-      'A small change in how someone texts you can have you wondering what shifted.',
-      'If someone close seems distant in the chat, you sometimes feel it right away and start to worry.',
+      "Your answers suggest two things at once: you feel a bad day longer, and you check they will stay.",
+      "Both can be true for you in the same week: you feel a bad day longer, and you check they will stay.",
+      "A week can hold both for you, so you feel a bad day longer, while you check they will stay.",
     ],
-    why: 'Noticing a small change shows how much you care, but it can make you worry before you know anything is wrong.',
+    why: "The upside for you is an honest read of a hard day. The catch is a hard day that takes over the next one.",
     try: [
-      'Next time you feel that worry, ask how their day is going, so you get real information.',
-      'Put your phone in another room for half an hour after you send a message, so you are not waiting on the reply.',
+      "Next time you choose, name whether the bad day is still today first.",
+      "Before you decide, check what would help the next morning.",
     ],
     watch: [
-      'Notice what you assume when a partner’s reply is shorter than usual.',
-      'Notice how often the short reply turns out to have nothing to do with you.',
+      "Notice when a bad day takes over the next one.",
+      "Notice if you were ready to leave it and did not.",
     ],
-  }),
+  })
 ];
